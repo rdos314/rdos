@@ -148,151 +148,105 @@ void TQuizNd::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl)
+void TQuizNd::GetDxData()
 {
 	TQuizRow Row;
-    int res;
-	int g;
-	TReferer *ref;
-	int NoDx;
+	int DxArr[POP_TYPE_COUNT];
+	int i;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    NoDx = FALSE;
-	    
-	    if (OnlyNtControl)
-	    {
-			ref = FindReferer(Row.Referer);
-			if (ref && ref->NT)
-			    NoDx = TRUE;
-	    }
-	    else
-	        NoDx = TRUE;
+		for (i = 0; i < POP_TYPE_COUNT; i++)
+			DxArr[i] = DX_STATE_UNKNOWN;
 
-        res = 0;
-	    for (g = 0; g < MAX_GROUP_COUNT; g++)
-    	    res += Row.GroupResult[g] * GroupArr[g];
+		if (Row.Autism == 2)
+			DxArr[POP_TYPE_AUTISM] = DX_STATE_YES;
 
-	    if (res >= 0 && res < MAX_SCORE)
-	    {
+		if (Row.Autism == 0)
+			DxArr[POP_TYPE_AUTISM] = DX_STATE_NO;
 
-	        switch (PopType)
-		    {
-				case POP_TYPE_AUTISM:
-					 if (Row.Autism == 2)
-						  Arr[res][1]++;
+		if (Row.Aspie == 2)
+			DxArr[POP_TYPE_AS] = DX_STATE_YES;
 
-					 if (NoDx && (Row.Autism == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Aspie == 0)
+			DxArr[POP_TYPE_AS] = DX_STATE_NO;
 
-				case POP_TYPE_AS:
-					 if (Row.Aspie == 2)
-						  Arr[res][1]++;
+		if (Row.ADHD == 2)
+			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
 
-					 if (NoDx && (Row.Aspie == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.ADHD == 0)
+			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
 
-				case POP_TYPE_ADD:
-					 if (Row.ADHD == 2)
-						  Arr[res][1]++;
+		if (Row.TS == 2)
+			DxArr[POP_TYPE_TS] = DX_STATE_YES;
 
-					 if (NoDx && (Row.ADHD == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.TS == 0)
+			DxArr[POP_TYPE_TS] = DX_STATE_NO;
 
-				case POP_TYPE_TS:
-					 if (Row.TS == 2)
-						  Arr[res][1]++;
+		if (Row.Hyperlexia == 2)
+			DxArr[POP_TYPE_HYPERLEXIA] = DX_STATE_YES;
 
-					 if (NoDx && (Row.TS == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Hyperlexia == 0)
+			DxArr[POP_TYPE_HYPERLEXIA] = DX_STATE_NO;
 
-				case POP_TYPE_HYPERLEXIA:
-					 if (Row.Hyperlexia == 2)
-						  Arr[res][1]++;
+		if (Row.Dyspraxia == 2)
+			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_YES;
 
-					 if (NoDx && (Row.Hyperlexia == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Dyspraxia == 0)
+			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_NO;
 
-				case POP_TYPE_DYSPRAXIA:
-					 if (Row.Dyspraxia == 2)
-						  Arr[res][1]++;
+		if (Row.Dyslexia == 2)
+			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_YES;
 
-					 if (NoDx && (Row.Dyspraxia == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Dyslexia == 0)
+			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_NO;
 
-				case POP_TYPE_DYSLEXIA:
-					 if (Row.Dyslexia == 2)
-						  Arr[res][1]++;
+		if (Row.Dyscalculia == 2)
+			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_YES;
 
-					 if (NoDx && (Row.Dyslexia == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Dyscalculia == 0)
+			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_NO;
 
-				case POP_TYPE_DYSCALCULIA:
-					 if (Row.Dyscalculia == 2)
-						  Arr[res][1]++;
+		if (Row.OCD == 2)
+			DxArr[POP_TYPE_OCD] = DX_STATE_YES;
 
-					 if (NoDx && (Row.Dyscalculia == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.OCD == 0)
+			DxArr[POP_TYPE_OCD] = DX_STATE_NO;
 
-				case POP_TYPE_OCD:
-					 if (Row.OCD == 2)
-						  Arr[res][1]++;
+		if (Row.ODD == 2)
+			DxArr[POP_TYPE_ODD] = DX_STATE_YES;
 
-					 if (NoDx && (Row.OCD == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.ODD == 0)
+			DxArr[POP_TYPE_ODD] = DX_STATE_NO;
 
-				case POP_TYPE_ODD:
-					 if (Row.ODD == 2)
-						  Arr[res][1]++;
+		if (Row.Synaesthesia == 2)
+			DxArr[POP_TYPE_SYNAESTHESIA] = DX_STATE_YES;
 
-					 if (NoDx && (Row.ODD == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Synaesthesia == 0)
+			DxArr[POP_TYPE_SYNAESTHESIA] = DX_STATE_NO;
 
-				case POP_TYPE_SYNAESTHESIA:
-					 if (Row.Synaesthesia == 2)
-						  Arr[res][1]++;
+		if (Row.PA == 2)
+			DxArr[POP_TYPE_PA] = DX_STATE_YES;
 
-					 if (NoDx && (Row.Synaesthesia == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.PA == 0)
+			DxArr[POP_TYPE_PA] = DX_STATE_NO;
 
-				case POP_TYPE_PA:
-					 if (Row.PA == 2)
-						  Arr[res][1]++;
+		if (Row.Dysgraphia == 2)
+			DxArr[POP_TYPE_DYSGRAPHIA] = DX_STATE_YES;
 
-					 if (NoDx && (Row.PA == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Dysgraphia == 0)
+			DxArr[POP_TYPE_DYSGRAPHIA] = DX_STATE_NO;
 
-				case POP_TYPE_DYSGRAPHIA:
-					 if (Row.Dysgraphia == 2)
-						  Arr[res][1]++;
+		if (Row.Bipolar == 2)
+			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_YES;
 
-					 if (NoDx && (Row.Dysgraphia == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Bipolar == 0)
+			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_NO;
 
-				case POP_TYPE_BIPOLAR:
-					 if (Row.Bipolar == 2)
-						  Arr[res][1]++;
+		ProcessDxEntry(Row.GroupResult, DxArr);
 
-					 if (NoDx && (Row.Bipolar == 0))
-						  Arr[res][0]++;
-					 break;
-		    }
-	    }
-    }
+	}
 }
 
 /*##########################################################################

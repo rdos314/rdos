@@ -187,126 +187,86 @@ void TQuizS8::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS8::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl)
+void TQuizS8::GetDxData()
 {
 	TQuizRow Row;
-	int res;
-	int g;
-	TReferer *ref;
-	int NoDx;
+	int DxArr[POP_TYPE_COUNT];
+	int i;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    NoDx = FALSE;
-	    
-	    if (OnlyNtControl)
-	    {
-			ref = FindReferer(Row.Referer);
-			if (ref && ref->NT)
-			    NoDx = TRUE;
-	    }
-	    else
-	        NoDx = TRUE;
+		for (i = 0; i < POP_TYPE_COUNT; i++)
+			DxArr[i] = DX_STATE_UNKNOWN;
 
-        res = 0;
-	    for (g = 0; g < MAX_GROUP_COUNT; g++)
-    	    res += Row.GroupResult[g] * GroupArr[g];
+		if (Row.Autism == 2)
+			DxArr[POP_TYPE_AUTISM] = DX_STATE_YES;
 
-	    if (res >= 0 && res < MAX_SCORE)
-	    {
-			switch (PopType)
-			{
-				case POP_TYPE_AUTISM:
-					 if (Row.Autism == 2)
-						  Arr[res][1]++;
+		if (Row.Autism == 0)
+			DxArr[POP_TYPE_AUTISM] = DX_STATE_NO;
 
-					 if (NoDx && (Row.Autism == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Aspie == 2)
+			DxArr[POP_TYPE_AS] = DX_STATE_YES;
 
-				case POP_TYPE_AS:
-					 if (Row.Aspie == 2)
-						  Arr[res][1]++;
+		if (Row.Aspie == 0)
+			DxArr[POP_TYPE_AS] = DX_STATE_NO;
 
-					 if (NoDx && (Row.Aspie == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.ADHD == 2)
+			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
 
-				case POP_TYPE_ADD:
-					 if (Row.ADHD == 2)
-						  Arr[res][1]++;
+		if (Row.ADHD == 0)
+			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
 
-					 if (NoDx && (Row.ADHD == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.TS == 2)
+			DxArr[POP_TYPE_TS] = DX_STATE_YES;
 
-				case POP_TYPE_TS:
-					 if (Row.TS == 2)
-						  Arr[res][1]++;
+		if (Row.TS == 0)
+			DxArr[POP_TYPE_TS] = DX_STATE_NO;
 
-					 if (NoDx && (Row.TS == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Dyslexia == 2)
+			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_YES;
 
-				case POP_TYPE_DYSLEXIA:
-					 if (Row.Dyslexia == 2)
-						  Arr[res][1]++;
+		if (Row.Dyslexia == 0)
+			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_NO;
 
-					 if (NoDx && (Row.Dyslexia == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Dyscalculia == 2)
+			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_YES;
 
-				case POP_TYPE_DYSCALCULIA:
-					 if (Row.Dyscalculia == 2)
-						  Arr[res][1]++;
+		if (Row.Dyscalculia == 0)
+			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_NO;
 
-					 if (NoDx && (Row.Dyscalculia == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.OCD == 2)
+			DxArr[POP_TYPE_OCD] = DX_STATE_YES;
 
-				case POP_TYPE_OCD:
-					 if (Row.OCD == 2)
-						  Arr[res][1]++;
+		if (Row.OCD == 0)
+			DxArr[POP_TYPE_OCD] = DX_STATE_NO;
 
-					 if (NoDx && (Row.OCD == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.ODD == 2)
+			DxArr[POP_TYPE_ODD] = DX_STATE_YES;
 
-				case POP_TYPE_ODD:
-					 if (Row.ODD == 2)
-						  Arr[res][1]++;
+		if (Row.ODD == 0)
+			DxArr[POP_TYPE_ODD] = DX_STATE_NO;
 
-					 if (NoDx && (Row.ODD == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Bipolar == 2)
+			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_YES;
 
-				case POP_TYPE_BIPOLAR:
-					 if (Row.Bipolar == 2)
-						  Arr[res][1]++;
+		if (Row.Bipolar == 0)
+			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_NO;
 
-					 if (NoDx && (Row.Bipolar == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Schizophrenia == 2)
+			DxArr[POP_TYPE_SCHIZOPHRENIA] = DX_STATE_YES;
 
-				case POP_TYPE_SCHIZOPHRENIA:
-					 if (Row.Schizophrenia == 2)
-						  Arr[res][1]++;
+		if (Row.Schizophrenia == 0)
+			DxArr[POP_TYPE_SCHIZOPHRENIA] = DX_STATE_NO;
 
-					 if (NoDx && (Row.Schizophrenia == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Social == 2)
+			DxArr[POP_TYPE_SOCIAL_PHOBIA] = DX_STATE_YES;
 
-				case POP_TYPE_SOCIAL_PHOBIA:
-					 if (Row.Social == 2)
-						  Arr[res][1]++;
+		if (Row.Social == 0)
+			DxArr[POP_TYPE_SOCIAL_PHOBIA] = DX_STATE_NO;
 
-					 if (NoDx && (Row.Social == 0))
-						  Arr[res][0]++;
-					 break;
+		ProcessDxEntry(Row.GroupResult, DxArr);
 
-			}
-		}
 	}
 }
 

@@ -22,7 +22,7 @@
 #
 # quiz.cpp
 # Basic quiz class
-#                                        
+#
 ########################################################################*/
 
 #include <stdio.h>
@@ -77,18 +77,19 @@ TDsmPopulation TQuiz::DsmBipolar;
 TDsmPopulation TQuiz::DsmSchizophrenia;
 TDsmPopulation TQuiz::DsmSocialPhobia;
 
+int TQuiz::DxScoreArr[POP_TYPE_COUNT][14][101];
+int TQuiz::NoDxScoreArr[POP_TYPE_COUNT][14][101];
+int TQuiz::PredArr[POP_TYPE_COUNT][14];
+long double TQuiz::CutoffArr[POP_TYPE_COUNT];
+int TQuiz::PredYesOk[POP_TYPE_COUNT];
+int TQuiz::PredYesFail[POP_TYPE_COUNT];
+int TQuiz::PredNoOk[POP_TYPE_COUNT];
+int TQuiz::PredNoFail[POP_TYPE_COUNT];
+
 TBirthMonth TQuiz::BirthMonth;
 
 // diagnostic cutoffs
 
-long double AsCutoff = 5.2;
-long double AddCutoff = 6.2;
-long double DyspraxiaCutoff = 6.3;
-long double DyslexiaCutoff = 5.4;
-long double DyscalculiaCutoff = 5.6;
-long double BipolarCutoff = 6.2;
-long double SocialPhobiaCutoff = 6.5;
-long double SchizophreniaCutoff = 6.0;
 
 /*##################  TBirthMonth::TBirthMonth ##########################
 *   Purpose....: Initialize TBirthMonth                  			     	        #
@@ -335,7 +336,7 @@ TQuiz::TQuiz(int Questions)
     for (i = 0; i < MAX_CROSS; i++)
         CrossQuiz[i] = 0;
 
-    for (i = 0; i < MAX_USERS; i++)
+	for (i = 0; i < MAX_USERS; i++)
         UserInfo[i] = 0;
 
     for (i = 0; i < N; i++)
@@ -446,7 +447,7 @@ void TQuiz::Init()
     }
 
     for (g = 0; g < MAX_GROUP_COUNT; g++)
-    {
+	{
 		Group[g].PosName = "NO NAME";
 		Group[g].NegName = "NO NAME";
 	}
@@ -705,7 +706,7 @@ void TQuiz::RedefineText(int Question, int GlobalId, const char *Text)
     if (Question > 0 && Question <= MAX_QUESTIONS)
     {
         Quiz[Question - 1].GlobalId = GlobalId - 1;
-        Quiz[Question - 1].Text = Text;
+		Quiz[Question - 1].Text = Text;
         Quiz[Question - 1].Changed = TRUE;
     }
 }
@@ -742,7 +743,7 @@ void TQuiz::CheckCross()
     int group;
     int i;
     int curr;
-    TQuiz *quiz;
+	TQuiz *quiz;
     const char *text;
     int CrossArr[MAX_CROSS];
 	int cross;
@@ -816,7 +817,7 @@ const char *TQuiz::GetGlobalQuestionText(int GlobalId)
     for (cross = 0; cross < MAX_CROSS; cross++)
     {
         quiz = CrossQuiz[cross];
-        if (quiz)
+		if (quiz)
         {
 				for (q = 0; q < quiz->N; q++)
             {
@@ -853,7 +854,7 @@ void TQuiz::WritePhpQuestions(const char *filename)
 		if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
 		{
             quiz = GlobalTopQuiz[Quiz[i].GlobalId];
-            q = GlobalTopQuestion[Quiz[i].GlobalId];
+			q = GlobalTopQuestion[Quiz[i].GlobalId];
             if (quiz)
             {
                 sprintf(str, " $m[%d] = \"", i);
@@ -927,7 +928,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
         
         if (Quiz[i].GlobalId >= 0)
         {            
-            for (cross = 0; cross < MAX_CROSS && !found; cross++)
+			for (cross = 0; cross < MAX_CROSS && !found; cross++)
             {
                 quiz = CrossQuiz[cross];
                 if (quiz)
@@ -964,7 +965,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 break;
 
             case GROUP_ASPIE_TALENT:
-                file.Write("GROUP_ASPIE_TALENT");
+				file.Write("GROUP_ASPIE_TALENT");
                 break;
 
 			case GROUP_SOCIAL:
@@ -1001,7 +1002,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_ENVIRONMENT:
                 file.Write("GROUP_ENVIRONMENT");
-                break;
+				break;
 
             case GROUP_NT_OBSESSION:
                 file.Write("GROUP_NT_OBSESSION");
@@ -1038,7 +1039,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("\";\n");                            
                 found = TRUE;
             }
-        } 
+		}
 
         if (!found)
         {
@@ -1075,7 +1076,7 @@ void TQuiz::WriteSetupCross(const char *filename)
 
 	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 	{
-	    if (!GlobalArr[i])
+		if (!GlobalArr[i])
 	    {
 	        GlobalId = i;
 	        break;
@@ -1112,7 +1113,7 @@ void TQuiz::WriteSetupCross(const char *filename)
                                             if (cquiz->Quiz[cq].CrossInd == topq)
                                             {
                                                 topquiz = cquiz;
-                                                topq = cq;
+												topq = cq;
                                             }
                                         }
                                     }
@@ -1149,7 +1150,7 @@ void TQuiz::WriteSetupCross(const char *filename)
 int TQuiz::CalcAsNtDiff(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS], int *AsDiff, int *NtDiff)
 {
     int answers;
-    int e;
+	int e;
     int i;
     int ival;
     int astot;
@@ -1260,7 +1261,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
         if (Ntw[q])
             NtwCnt++;
     } 
-               
+
 	for (q = 0; q < N; q++)
 	{
 	    if (Asw[q] < 5 && Ntw[q] == 0)
@@ -1322,7 +1323,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
                 BestIsInc = FALSE;
             }
         }
-    }
+	}
 
     if (BestQ >= 0)
     {
@@ -1396,7 +1397,7 @@ void TQuiz::WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
             else
                 printf(",");
         }
-    }
+	}
 }
 
 /*##################  TQuiz::WriteWikiWeights ##########################
@@ -1433,7 +1434,7 @@ void TQuiz::OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
 {
     int i;
 
-    for (i = 0; i < 1000; i++)
+	for (i = 0; i < 1000; i++)
         if (!OptimizeAsOne(Asw, Ntw))
             break;
 
@@ -1507,7 +1508,7 @@ void TQuiz::SortReferers()
 
 		for (j = i + 1; j < RefCount; j++)
 		{
-		    if (RefArr[j]->Count > count)
+			if (RefArr[j]->Count > count)
 			{
 			    ref = RefArr[j];
 			    RefArr[j] = RefArr[i];
@@ -1692,7 +1693,7 @@ int TQuiz::GetGlobalId(int question)
 TPopulation *TQuiz::GetPop(int PopType)
 {
     switch (PopType)
-    {
+	{
 	    case POP_TYPE_ALL:
 			return &All;
 
@@ -1803,7 +1804,7 @@ void TQuiz::ClearUsed()
     int cross;
 
     for (i = 0; i < N; i++)
-        ClearUsed(i);
+		ClearUsed(i);
 
     for (cross = 0; cross < MAX_CROSS; cross++)
         if (CrossQuiz[cross])
@@ -1840,7 +1841,7 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
         while (CurrQuiz)
         {
             if (!CurrQuiz->Quiz[CurrQuestion].Used)
-            {
+			{
 //                corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
 //                        CurrQuiz->Quiz[CurrQuestion].Pca[1];
                 corr = CurrQuiz->Quiz[CurrQuestion].Corr;
@@ -1877,7 +1878,7 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
 //                        corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
 //                                CurrQuiz->Quiz[CurrQuestion].Pca[1];
                         corr = CurrQuiz->Quiz[CurrQuestion].Corr;
-                        if (corr < 0)
+						if (corr < 0)
                             corr = -corr;
 
 						if (corr > maxcorr)
@@ -1914,7 +1915,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
     int i;
     long double corr;
     long double maxcorr;
-    int q;
+	int q;
     int CurrQuestion;
     int cross;
     
@@ -1951,7 +1952,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
                 CurrQuestion = i;
             }
         }
-    }
+	}
 
     for (cross = MAX_CROSS - 1; cross >= 0; cross--)
     {
@@ -2099,7 +2100,7 @@ void TQuiz::Calculate()
     	Quiz[i].ChiCount[0] = Aspie.Count[i];
     	Quiz[i].ChiCount[1] = Nt.Count[i];
         
-	    for (j = 0; j < Quiz[i].Cats; j++)
+		for (j = 0; j < Quiz[i].Cats; j++)
 		{
 
 		    Quiz[i].ChiArr[0][j] = Aspie.ChiArr[i][j];
@@ -2543,7 +2544,7 @@ void TQuiz::CalcGlobal()
 		for (;;)
         {
             quiz->Quiz[q].Used = TRUE;
-        
+
             if (quiz->Quiz[q].CrossQuiz)
             {
                 j = quiz->Quiz[q].CrossInd;
@@ -2580,7 +2581,7 @@ void TQuiz::CalcGlobal()
     		for (;;)
             {    
                 for (j = 0; j < 2; j++)
-                {
+				{
                     ChiCount[j] += quiz->Quiz[q].ChiCount[j];
     
                     for (k = 0; k < Cats; k++)
@@ -2617,7 +2618,7 @@ void TQuiz::CalcGlobal()
 
                 for (a = 0; a < GROUP_COUNT - 1; a++)
                 {
-                    GlobalAxisSum[GlobalId][a] += quiz->Quiz[q].GroupPca[a] * w;
+					GlobalAxisSum[GlobalId][a] += quiz->Quiz[q].GroupPca[a] * w;
                     GlobalAxisCount[GlobalId][a] += w;
                 }
 
@@ -2654,7 +2655,7 @@ void TQuiz::CalcGlobal()
     		    	{
 	    		    	val = val2 - exp;
 		    		    rsum += val * val / exp;
-		    		}
+					}
 			    }
     		}
 		
@@ -2691,7 +2692,7 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
                 return 5.41;
 
 		    if (p >= 0.01)
-		        return 6.64;
+				return 6.64;
 
 			if (p >= 0.005)
 			    return 7.88;
@@ -2765,7 +2766,7 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
             if (p >= 0.01)
                 return 11.36;
 
-            if (p >= 0.005)
+			if (p >= 0.005)
                 return 12.86;
 
             if (p >= 0.002)
@@ -2802,7 +2803,7 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
                 return 13.29;
 
             if (p >= 0.005)
-                return 14.89;
+				return 14.89;
 
             if (p >= 0.002)
                 return 17.0;
@@ -3098,7 +3099,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
             {
 //                w = Axis[a].GroupCorr[g];
 //                w = w * w / Axis[a].MaxCorr; 
-                val += Quiz[q].AspiePca[a] * Axis[a].GroupCorr[g]; 
+				val += Quiz[q].AspiePca[a] * Axis[a].GroupCorr[g];
             }
             
             Quiz[q].GroupPca[g] = val;
@@ -3505,7 +3506,7 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 	    file.Write(str);
 	    WriteFieldFooter(file);
 
-	    if (UseNtResult)
+		if (UseNtResult)
 	    {
     	    WriteRightFieldHeader(file, 4);
 			sprintf(str, "%d", ref->AsResult / ref->Count);
@@ -3542,7 +3543,7 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
     	    WriteRightFieldHeader(file, 4);
 	        sprintf(str, "%d%", round(100.0 * ref->Result0_59 / ref->Count));
     	    file.Write(str);
-	        WriteFieldFooter(file);
+			WriteFieldFooter(file);
     
 	        WriteRightFieldHeader(file, 4);
     	    sprintf(str, "%d%", round(100.0 * ref->Result60_99 / ref->Count));
@@ -3616,7 +3617,7 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 *##########################################################################*/
 void TQuiz::WriteReferers(const char *filename)
 {
-    TFile file(filename, 0);
+	TFile file(filename, 0);
 	int i;
 
 	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
@@ -3653,7 +3654,7 @@ void TQuiz::WriteReferers(const char *filename)
 	{
     	WriteCenteredFieldHeader(file, 4);
         file.Write("Score");
-    	WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
     	WriteCenteredFieldHeader(file, 4);
         file.Write("0-59");
@@ -3764,7 +3765,7 @@ void TQuiz::WriteCI95(TFile &File, TPopulation *pop, int Question)
 {
     int count;
     long double mean;
-    long double sd;
+	long double sd;
     long double dev;
     long double val;
     long double maxval;
@@ -3838,7 +3839,7 @@ void TQuiz::WriteCorr95(TFile &File, long double corr, int count)
             {
 			    if (corr > 0.1)
             		File.Write("<span style='color:#002277'>");
-            	else
+				else
                     File.Write("<span>");
     	    }
         }
@@ -3875,7 +3876,7 @@ void TQuiz::WriteCorr95(TFile &File, long double corr, int count)
                     File.Write("-");
                     rlow = -rlow;
                     rhigh = -rhigh;
-                }
+				}
                 
                 ival = round(100 * rlow);
 		        sprintf(str, ".%02d", ival);
@@ -3949,7 +3950,7 @@ void TQuiz::WriteCorrVal(TFile &File, long double corr, int count)
 #else
         if (corr <= 0.0)
         {
-            File.Write("-");
+			File.Write("-");
             corr = -corr;
         }
                 
@@ -4319,7 +4320,7 @@ void TQuiz::WritePca(TFile &File, long double pca)
 *##########################################################################*/
 void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
 {
-    TPopulation *pop;
+	TPopulation *pop;
     long double val;
     long double aw;
     long double nw;
@@ -4356,7 +4357,7 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
                 
             case 0:
                 aw = quiz->Quiz[question].Pca[0];
-                nw = quiz->Quiz[question].Pca[1];
+				nw = quiz->Quiz[question].Pca[1];
 
                 if (!quiz->IsSubQuiz())
                 {
@@ -4430,7 +4431,7 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
     PcaSd = sqrtl(sum / (count - 1.0));
 
     sum = 0.0;
-    for (question = 0; question < quiz->GetQuizN(); question++)
+	for (question = 0; question < quiz->GetQuizN(); question++)
     {
         zx = (mean[question] - PopMean) / PopSd;
         zy = (pca[question] - PcaMean) / PcaSd;
@@ -4541,7 +4542,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 			        file.Write("<br>M/F");
         	    WriteFieldFooter(file);
 
-            	WriteCenteredFieldHeader(file, 6);
+				WriteCenteredFieldHeader(file, 6);
 	    		file.Write("NT");
 		    	if (UseGender && !OnlyMixed)
 			        file.Write("<br>M/F");
@@ -4578,7 +4579,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 	    	if (UseGender && !OnlyMixed)
 		    {
     		    WriteStaple(file, &AspieMale, i);
-	    	    WriteStaple(file, &AsMale, i);
+				WriteStaple(file, &AsMale, i);
 		    	WriteStaple(file, &YoungMale, i);
 		        WriteStaple(file, &MixMale, i);
 		        WriteStaple(file, &NtMale, i);
@@ -4615,7 +4616,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 	    		WritePca(file, Quiz[i].FemalePca[1]);
     			WriteFieldFooter(file);
 
-    			WriteCenteredFieldHeader(file, 6);
+				WriteCenteredFieldHeader(file, 6);
 	    		WriteCI95(file, &AspieMale, i);
 		    	file.Write("<br>");
 			    WriteCI95(file, &AspieFemale, i);
@@ -4643,7 +4644,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 			    WriteCI95(file, &NtMale, i);
     			file.Write("<br>");
 	    		WriteCI95(file, &NtFemale, i);
-		    	WriteFieldFooter(file);
+				WriteFieldFooter(file);
 
         		file.Write("</tr>");
 	    	}
@@ -4652,7 +4653,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
     			WriteCenteredFieldHeader(file, 6);
 	    		if (OnlyMixed)
 				    WritePca(file, Quiz[i].MixedPca[0]);
-	    		else
+				else
 		    		WritePca(file, Quiz[i].Pca[0]);
 				WriteFieldFooter(file);
     
@@ -4680,7 +4681,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 	    		WriteCI95(file, &Aspie, i);
 		    	WriteFieldFooter(file);
     
-	    		WriteCenteredFieldHeader(file, 6);
+				WriteCenteredFieldHeader(file, 6);
 		        WriteCI95(file, &As, i);
                 WriteFieldFooter(file);
 
@@ -4689,7 +4690,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
                 WriteFieldFooter(file);
     
     			WriteCenteredFieldHeader(file, 6);
-	    	    WriteCI95(file, &Mix, i);
+				WriteCI95(file, &Mix, i);
                 WriteFieldFooter(file);
     
                 WriteCenteredFieldHeader(file, 6);
@@ -4763,7 +4764,7 @@ void TQuiz::WriteCorrTable(const char *filename, const char *name1, const char *
 
             WriteFieldHeader(file, 10);
 			file.Write("Corr");
-            WriteFieldFooter(file);
+			WriteFieldFooter(file);
 
 			file.Write("</tr>");
 		}
@@ -4791,7 +4792,7 @@ void TQuiz::WriteCorrTable(const char *filename, const char *name1, const char *
             WriteCI95(file, pop2, ind);
             WriteFieldFooter(file);
 
-            WriteRightFieldHeader(file, 6);
+			WriteRightFieldHeader(file, 6);
 			ival = round(PopCorr.chi2[ind]);
 			sprintf(str, "%d", ival);
 			file.Write(str);
@@ -4828,7 +4829,7 @@ void TQuiz::WriteAsNtCorrelation(const char *filename)
 *##########################################################################*/
 void TQuiz::WriteAspieAsCorrelation(const char *filename)
 {
-    if (Aspie.ValueCount >= 5 && As.ValueCount >= 5)
+	if (Aspie.ValueCount >= 5 && As.ValueCount >= 5)
     	WriteCorrTable(filename, "Aspie control", "AS/HFA/PDD", &Aspie, &As, 0.05);
 }
 
@@ -4948,7 +4949,7 @@ void TQuiz::WriteAsCI95(TFile &File, int Question)
     int ival;
 	int count;
     char str[80];
-            
+
 	mean = Quiz[Question].AsMean;
 	sd = Quiz[Question].AsSd;
 	count = Quiz[Question].AsCount;
@@ -5161,7 +5162,7 @@ void TQuiz::WriteAsNtAll(const char *filename)
         WriteFieldFooter(file);
 
         TopQuiz->ClearUsed(TopQuestion);
-        WriteCenteredFieldHeader(file, 6);
+		WriteCenteredFieldHeader(file, 6);
         quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
         while (quiz)
         {
@@ -5170,7 +5171,7 @@ void TQuiz::WriteAsNtAll(const char *filename)
             if (quiz)
     			file.Write("<br>");
         }
-        WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
         TopQuiz->ClearUsed(TopQuestion);
         WriteRightFieldHeader(file, 6);
@@ -5272,7 +5273,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
         
 		file.Write("<tr style='height:24.75pt'>");
 
-        WriteCenteredFieldHeader(file, 3);
+		WriteCenteredFieldHeader(file, 3);
 		sprintf(str, "G:%d", g + 1);
 		file.Write(str);
         WriteFieldFooter(file);
@@ -5309,7 +5310,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 
     		WriteCenteredFieldHeader(file, 3);
 	    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-		    while (quiz)
+			while (quiz)
     		{
                 if (quiz->Quiz[q].Chi2 <= GetCutoffChi2(quiz->Quiz[q].Cats, 0.05))
     				file.Write("<span style='color:#EE0000'>");
@@ -5318,7 +5319,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
                     if (quiz->Quiz[q].Chi2 <= GetCutoffChi2(quiz->Quiz[q].Cats, 0.01))
         				file.Write("<span style='color:#990099'>");
         		}
-                
+
    		    	quiz->WriteName(file);
     			sprintf(str, ":%d", q + 1);
 	    		file.Write(str);
@@ -5346,7 +5347,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
             quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
             while (quiz)
             {
-                NormCorr[cross] = 0.0;
+				NormCorr[cross] = 0.0;
 				for (j = 0; j < GROUP_COUNT - 1; j++)
 				{
 					val = quiz->Quiz[q].Group[j].Corr;
@@ -5355,7 +5356,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 				}       
 				NormCorr[cross] = 0.9 * NormCorr[cross]; 
 
-#ifdef USE_PERCENT  
+#ifdef USE_PERCENT
 				ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
 				sprintf(str, "%d%", ival);
 				file.Write(str);
@@ -5383,7 +5384,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
             TopQuiz->ClearUsed(TopQuestion);
             WriteCenteredFieldHeader(file, 4);
             quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-            while (quiz)
+			while (quiz)
             {
                 NormCorr[cross] = 0.0;
 				for (j = 0; j < GROUP_COUNT - 1; j++)
@@ -5392,7 +5393,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 					if (val >= NormCorr[cross])
 						NormCorr[cross] = val;
 				}       
-				NormCorr[cross] = 0.9 * NormCorr[cross]; 
+				NormCorr[cross] = 0.9 * NormCorr[cross];
 
 				WriteP(file, quiz->Quiz[q].Cats, quiz->Quiz[q].Chi2);
 				
@@ -5420,7 +5421,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
                     {
 
     					if (val > NormCorr[cross])
-	    					file.Write("<span style='color:#009999'>");
+							file.Write("<span style='color:#009999'>");
     
 	    				if (val < 0.0)
 		    				file.Write("<span style='color:#990099'>");
@@ -5457,7 +5458,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 				}
 				WriteFieldFooter(file);
 			}
-			file.Write("</tr>");    
+			file.Write("</tr>");
         	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
 		}
     	file.Write("</table>");
@@ -5494,7 +5495,7 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 #ifdef ENGLISH
     file.Write("<h2>Principal components analysis (PCA) results</h2>\n");
     file.Write("<span style='color:#990099'>");
-    file.Write("Reversed score questions are showed in red color");
+	file.Write("Reversed score questions are showed in red color");
     file.Write("</span><br>");
 #endif
 
@@ -5568,7 +5569,7 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 		    while (quiz)
     		{
 		    	quiz->WriteName(file);
-    			sprintf(str, ":%d", q + 1);
+				sprintf(str, ":%d", q + 1);
 	    		file.Write(str);
 		    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 		    	if (quiz)
@@ -5614,7 +5615,7 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 				sprintf(str, ".%02d", ival);
 				file.Write(str);
 #endif
-				
+
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
                 if (quiz)
                 {   cross++;
@@ -5679,7 +5680,7 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 			while (quiz)
 			{
-			    if (quiz->GetPcaCount() > 3)
+				if (quiz->GetPcaCount() > 3)
     				WritePca(file, quiz->Quiz[q].Pca[3]);
 
 				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
@@ -5762,7 +5763,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 	 file.Write("högsta AS-NT korrelation först<br><br>");
 #endif
 
-    for (q = 0; q < MAX_GLOBAL_QUESTIONS; q++)
+	for (q = 0; q < MAX_GLOBAL_QUESTIONS; q++)
         Used[q] = FALSE;
 
 	for (g = 0; g < GROUP_COUNT; g++)
@@ -5836,7 +5837,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
     			{
                     if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
         				file.Write("<span style='color:#990099'>");
-        		}
+				}
 
 				sprintf(str, "%d", GlobalId + 1);
 				file.Write(str);
@@ -5938,7 +5939,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 			else
 			    break;
 	    }
-    	file.Write("</table>");
+		file.Write("</table>");
     	file.Write("<br><br>");
 	}
 }
@@ -5984,7 +5985,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 	 file.Write("</span><br>");
 #endif
 
-    for (q = 0; q < MAX_GLOBAL_QUESTIONS; q++)
+	for (q = 0; q < MAX_GLOBAL_QUESTIONS; q++)
         Used[q] = FALSE;
 
 	for (g = 0; g < GROUP_COUNT; g++)
@@ -6012,7 +6013,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 		file.Write("p < ");
         WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 3);
+		WriteCenteredFieldHeader(file, 3);
 		file.Write("Aspie loading");
         WriteFieldFooter(file);
 
@@ -6021,7 +6022,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 		WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
-	    file.Write("g loading");
+		file.Write("g loading");
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
@@ -6049,7 +6050,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 						LowestCorr = corrval;
                     }
                 }
-            }
+			}
 
             if (GlobalId >= 0)
             {
@@ -6095,7 +6096,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 				sprintf(str, "%d%", ival);
 				file.Write(str);
 #else
-	    		ival = round(100.0 * val);
+				ival = round(100.0 * val);
 		    	if (ival < 0)
 			    {
 					file.Write("-");
@@ -6234,7 +6235,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
                     corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
                     corrval = corrval * corrval;
                     if (corrval > LowestCorr)
-                    {
+					{
                         GlobalId = i;
 						LowestCorr = corrval;
                     }
@@ -6308,7 +6309,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 
 			    if (GlobalPcaCount[GlobalId][1])
 				    NtLoad = round(100 * GlobalPcaSum[GlobalId][1] / GlobalPcaCount[GlobalId][1]);
-			    else
+				else
                     NtLoad = 0;                    
 
 				if (AsLoad > 0 && NtLoad > 0)
@@ -6382,7 +6383,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 					    if (CorrArr[j] >= NormCorr)
 					    {
 					        if (CorrArr[j] > corrval)
-					        {
+							{
 					            grp = j;
 					            corrval = CorrArr[j];
 					            ok = TRUE;
@@ -6456,7 +6457,7 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	    case GROUP_ASPIE_BIOLOGY:
 	        file->Write("ASPIE_BIOLOGY");
 	        break;
-	            
+
 	    case GROUP_ASPIE_TALENT:
 	        file->Write("ASPIE_ABILITY");
 	        break;
@@ -6493,7 +6494,7 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("NT_OBSESSION");
 	        break;
 	            
-	    case GROUP_RELIGION:
+		case GROUP_RELIGION:
 	        file->Write("RELIGION");
 	        break;
 	            
@@ -6502,7 +6503,7 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        break;
 	            
 	    case GROUP_ENVIRONMENT:
-	        file->Write("ENVIRONMENT");
+			file->Write("ENVIRONMENT");
 	        break;
 	            
 		case GROUP_ACTIVITY:
@@ -7196,7 +7197,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
-	    file.Write("<h2>");
+		file.Write("<h2>");
 	    file.Write("<a name=\"");
         WriteLinkGroup(&file, g);
         file.Write("\">");
@@ -7205,7 +7206,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 		file.Write(Group[g].NegName);
         file.Write("</a>");
         file.Write("</h2>");
-        
+
         for (;;)
 		{
 			LowestCorr = -0.1;
@@ -7233,7 +7234,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 				TopQuestion = GlobalTopQuestion[GlobalId];
 
         	    file.Write("<h3>");
-	            file.Write("<a name=\"");
+				file.Write("<a name=\"");
 	            sprintf(str, "%d", GlobalId + 1);
 	            file.Write(str);
                 file.Write("\">");
@@ -7270,7 +7271,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	    		    file.Write(str);
 
 #ifdef ENGLISH
-        		    sprintf(str, " (%d)</li>\n", quiz->All.Count[q]);
+					sprintf(str, " (%d)</li>\n", quiz->All.Count[q]);
 #endif
 
 #ifdef SWEDISH
@@ -7279,7 +7280,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
     				file.Write(str);
 		    	    quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-    		    }
+				}
 
                 file.Write("<br>\n");
 
@@ -7418,7 +7419,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	    			file.Write("<h4>Poängberäkning i quizen</h4>\n");
 #endif
 
-                    file.Write("<ul>");
+					file.Write("<ul>");
 
 #ifdef ENGLISH
 			    	sprintf(str, "Aspie score: NO 0, YES %d", AsLoad);
@@ -7427,7 +7428,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 #ifdef SWEDISH
     				sprintf(str, "Aspie poäng: NEJ 0, JA %d", AsLoad);
 #endif
-	    			file.Write(str);
+					file.Write(str);
 		    		file.Write("<br>");
 
 
@@ -7464,7 +7465,7 @@ void TQuiz::WriteLinkReport(const char *filename)
     				file.Write("<h4>Faktor koefficienter från PCA</h4>\n");
 #endif
                     file.Write("<ul>");
-    
+
 	    			if (GlobalPcaCount[GlobalId][0])
 		    		{
 			    		file.Write("Aspie: ");
@@ -7612,7 +7613,7 @@ void TQuiz::WriteLinkReport(const char *filename)
                         CorrArr[k] = 0.0;
 
         		    if (CorrArr[k] * CorrArr[k] < 0.04)
-		                CorrArr[k] = 0.0;
+						CorrArr[k] = 0.0;
                 }
                 
                 corrlev = 0.8 * corrlev;
@@ -7640,7 +7641,7 @@ void TQuiz::WriteLinkReport(const char *filename)
                 	}
 
                     MaxCorr = CurrCorr;
-            
+
                 	if (q >= 0)
                 	{
                 	    if (j < 15)
@@ -7649,7 +7650,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
                             sprintf(str, "<a href=\"#%d\">", q + 1);
                         	file.Write(str);
-                        	sprintf(str, "%d. ", q + 1);
+							sprintf(str, "%d. ", q + 1);
         	                file.Write(str);
 
             				TopQuiz = GlobalTopQuiz[q];
@@ -7677,7 +7678,7 @@ void TQuiz::WriteLinkReport(const char *filename)
         	            break;
             	}
 
-                if (more)
+				if (more)
                 {
 #ifdef ENGLISH
                     sprintf(str, "<br><b>%d question(s) not listed</b>", more);
@@ -7686,7 +7687,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 #ifdef SWEDISH
 		        	sprintf(str, "<br><b>%d fråg(or) ej listade</b>", more);
 #endif
-            
+
                     file.Write(str);
                 }
     
@@ -7714,7 +7715,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 	int q;
     int count;
     TQuiz *quiz;
-    TQuiz *QuizArr[MAX_CROSS + 1];
+	TQuiz *QuizArr[MAX_CROSS + 1];
     int CountArr[MAX_CROSS + 1];
     int rows;
     char str[80];
@@ -7751,7 +7752,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
                     break;
 
                 case POP_TYPE_ADD:
-                    count = quiz->Add.ValueCount;
+					count = quiz->Add.ValueCount;
                     break;
 
                 case POP_TYPE_NT:
@@ -7760,7 +7761,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 
                 case POP_TYPE_NT_CONTROL:
                     count = quiz->NtControl.ValueCount;
-                    break;
+					break;
 
                 case POP_TYPE_HYPERLEXIA:
                     count = quiz->Hyperlexia.ValueCount;
@@ -7788,7 +7789,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 
                 case POP_TYPE_SYNAESTHESIA:
                     count = quiz->Synaesthesia.ValueCount;
-                    break;
+					break;
 
                 case POP_TYPE_PA:
                     count = quiz->PA.ValueCount;
@@ -7825,7 +7826,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
                 default:
                     count = 0;
                     break;
-            }
+			}
 
             if (count > 5)
             {
@@ -7834,7 +7835,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
                 rows++;
             }
         }
-    }
+	}
 
     switch (PopType)
     {
@@ -7862,7 +7863,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
             count = Nt.ValueCount;
             break;
 
-        case POP_TYPE_NT_CONTROL:
+		case POP_TYPE_NT_CONTROL:
             count = NtControl.ValueCount;
             break;
 
@@ -7871,7 +7872,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
             break;
 
         case POP_TYPE_DYSPRAXIA:
-            count = Dyspraxia.ValueCount;
+			count = Dyspraxia.ValueCount;
             break;
 
         case POP_TYPE_DYSLEXIA:
@@ -7899,7 +7900,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
             break;
 
         case POP_TYPE_DYSGRAPHIA:
-            count = Dysgraphia.ValueCount;
+			count = Dysgraphia.ValueCount;
             break;
 
         case POP_TYPE_BIPOLAR:
@@ -7908,7 +7909,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 
         case POP_TYPE_TS:
             count = Ts.ValueCount;
-            break;
+			break;
 
         case POP_TYPE_SCHIZOPHRENIA:
             count = Schizophrenia.ValueCount;
@@ -7945,7 +7946,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 			File.Write("<br>");
             		
 		QuizArr[q]->WriteName(File);
-    }
+	}
 	WriteFieldFooter(File);
 
 	WriteCenteredFieldHeader(File, 5);
@@ -8019,7 +8020,7 @@ void TQuiz::WritePcaCorrTable(const char *filename)
 	file.Write("Quiz");
     WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 5);
+	WriteCenteredFieldHeader(file, 5);
 	file.Write("N");
     WriteFieldFooter(file);
 
@@ -8084,7 +8085,7 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
     long double corrsum;
     int corrcount;
     int count;
-    int qcount;
+	int qcount;
 	char str[80];
 	int cross;
 	TFile file(filename, 0);
@@ -8093,7 +8094,7 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
         
 	file.Write("<tr style='height:24.75pt'>");
 
-    WriteCenteredFieldHeader(file, 3);
+	WriteCenteredFieldHeader(file, 3);
 	file.Write("#");
     WriteFieldFooter(file);
 
@@ -8130,7 +8131,7 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
 
             count = 0;
             corrsum = 0.0;
-            corrcount = 0;
+			corrcount = 0;
             
             for (cross = 0; cross < MAX_CROSS && Cross; cross++)
             {
@@ -8158,7 +8159,7 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
        			WriteCorrVal(file, corrval, count);
        		}
 
-            WriteFieldFooter(file);
+			WriteFieldFooter(file);
 	    }
 	}
 }
@@ -8204,7 +8205,7 @@ void TQuiz::WritePca(const char *filename)
 
         	WriteCenteredFieldHeader(file, 5);
 			file.Write("Young PCA #1/#2");
-        	WriteFieldFooter(file);
+			WriteFieldFooter(file);
 
         	WriteCenteredFieldHeader(file, 5);
 			file.Write("Old PCA #1/#2");
@@ -8232,7 +8233,7 @@ void TQuiz::WritePca(const char *filename)
         WriteAsCI95(file, i);
         WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 5);
+		WriteCenteredFieldHeader(file, 5);
         ival = round(100.0 * Quiz[i].Pca[0]);
 		sprintf(str, "%d%", ival);
 		file.Write(str);
@@ -8241,7 +8242,7 @@ void TQuiz::WritePca(const char *filename)
         ival = round(100.0 * Quiz[i].Pca[1]);
 		sprintf(str, "%d%", ival);
 		file.Write(str);
-        WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 5);
         ival = round(100.0 * Quiz[i].YoungPca[0]);
@@ -8315,7 +8316,7 @@ void TQuiz::WriteWeighting(const char *filename)
     TQuiz *CurrQuiz;
 	TFile file(filename, 0);
 
-    for (i = 0; i < N; i++)
+	for (i = 0; i < N; i++)
 	{
 	    if (All.Count[i] > 100)
 	    {
@@ -8352,7 +8353,7 @@ void TQuiz::WriteWeighting(const char *filename)
             Asw[i] = assum / (long double)count;
             Ntw[i] = ntsum / (long double)count;        
         }
-        else
+		else
         {
             Asw[i] = 0;
             Ntw[i] = 0;
@@ -8389,7 +8390,7 @@ void TQuiz::WriteWeighting(const char *filename)
 		file.Write(str);
 
 	    if (i != N - 1)
-    	    file.Write(",");		
+			file.Write(",");
 	}
 	file.Write("};\r\n\r\n");
 
@@ -8417,7 +8418,7 @@ void TQuiz::WritePhpWeighting(const char *filename)
     int count;
     long double assum;
     long double ntsum;
-    long double mas0, mas1, fas0, fas1;
+	long double mas0, mas1, fas0, fas1;
     long double oas0, oas1, yas0, yas1;
     TQuiz *CurrQuiz;
 	TFile file(filename, 0);
@@ -8426,7 +8427,7 @@ void TQuiz::WritePhpWeighting(const char *filename)
 	{
 	    if (All.Count[i] > 100)
 	    {
-    		assum = Quiz[i].Pca[0];
+			assum = Quiz[i].Pca[0];
 	    	ntsum = Quiz[i].Pca[1];
 		    count = 1;
 		}
@@ -8454,7 +8455,7 @@ void TQuiz::WritePhpWeighting(const char *filename)
             j = k;
         }
 
-        if (count)
+		if (count)
         {
             Asw[i] = assum / (long double)count;
             Ntw[i] = ntsum / (long double)count;        
@@ -8463,7 +8464,7 @@ void TQuiz::WritePhpWeighting(const char *filename)
         {
             Asw[i] = 0;
             Ntw[i] = 0;
-        }
+		}
     }
 
     file.Write("function GetAsWeights()\r\n");
@@ -8574,7 +8575,7 @@ void TQuiz::WriteDsmReport(const char *filename, int PopType)
         case POP_TYPE_AUTISM:
 
 #ifdef ENGLISH
-        	file.Write("<h2>Autism diagnosis correlations</h2>\n");
+			file.Write("<h2>Autism diagnosis correlations</h2>\n");
 #endif
 
 #ifdef SWEDISH
@@ -8602,7 +8603,7 @@ void TQuiz::WriteDsmReport(const char *filename, int PopType)
 #endif
 
 #ifdef SWEDISH
-	        file.Write("<h2>ADD/ADHD diagnos korrelationer</h2>\n");
+			file.Write("<h2>ADD/ADHD diagnos korrelationer</h2>\n");
 #endif
             WriteDsmReport(file, DsmAdd);
             break;
@@ -8713,7 +8714,7 @@ void TQuiz::WriteDsmReport(const char *filename, int PopType)
 	        file.Write("<h2>Prosopagnosi diagnos korrelationer</h2>\n");
 #endif
             WriteDsmReport(file, DsmPA);
-            break;
+			break;
             
         case POP_TYPE_DYSGRAPHIA:
 
@@ -8722,7 +8723,7 @@ void TQuiz::WriteDsmReport(const char *filename, int PopType)
 #endif
 
 #ifdef SWEDISH
-	        file.Write("<h2>Dysgrafi diagnos korrelationer</h2>\n");
+			file.Write("<h2>Dysgrafi diagnos korrelationer</h2>\n");
 #endif
             WriteDsmReport(file, DsmDysgraphia);
             break;
@@ -8750,7 +8751,7 @@ void TQuiz::WriteDsmReport(const char *filename, int PopType)
 #endif
             WriteDsmReport(file, DsmSchizophrenia);
             break;
-            
+
         case POP_TYPE_SOCIAL_PHOBIA:
 
 #ifdef ENGLISH
@@ -8787,7 +8788,7 @@ void TQuiz::ExportBirthMonthHistogram(const char *filename)
 void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int All)
 {
     char str[80];
-    int val;
+	int val;
     int i;
     int j;
     int e;
@@ -8796,7 +8797,7 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
     int count;
 	int HistAsCount[201];
 	int HistNtCount[201];
-    int HistScore[201];
+	int HistScore[201];
 	TFile file(filename, 0);
 	TPopulation *pop;
 
@@ -8824,7 +8825,7 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
 
 	if (All)
 	{
-	    for (cross = 0; cross < MAX_CROSS; cross++)
+		for (cross = 0; cross < MAX_CROSS; cross++)
 	    {
 	        quiz = CrossQuiz[cross];
 	        if (quiz && !quiz->IsSubQuiz())
@@ -8833,7 +8834,7 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
                 if (pop)
                 {
     	            count += pop->ValueCount;
-	            
+
                     for (e = 0; e < pop->ValueCount; e++)
                     {
                         i = pop->ValArr[e].AsScore / width;
@@ -8861,7 +8862,7 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
                 val = HistAsCount[i];
             else
             {
-                val = HistAsCount[i] * 10000;
+				val = HistAsCount[i] * 10000;
                 val = val / width / count;
             }
 	        sprintf(str, "%d\t", val);
@@ -8870,7 +8871,7 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
             if (All)
                 val = HistNtCount[i];
             else
-            {
+			{
                 val = HistNtCount[i] * 10000;
                 val = val / width / count;
             }
@@ -8898,7 +8899,7 @@ void TQuiz::ExportDiffHistogram(const char *filename, int PopType)
     TQuiz *quiz;
     int count;
 	int HistDiffCount[81];
-    int HistScore[81];
+	int HistScore[81];
 	TFile file(filename, 0);
 	TPopulation *pop;
 
@@ -8907,7 +8908,7 @@ void TQuiz::ExportDiffHistogram(const char *filename, int PopType)
         return;
 
     count = pop->ValueCount;
-        
+
     for (i = 0; i <= 80; i++)
     {
         HistDiffCount[i] = 0;
@@ -8935,7 +8936,7 @@ void TQuiz::ExportDiffHistogram(const char *filename, int PopType)
                 for (e = 0; e < pop->ValueCount; e++)
                 {
                     i = pop->ValArr[e].AsScore - pop->ValArr[e].NtScore;
-                    i += 200;
+					i += 200;
                     i = i / 5;
 
                     if (i <= 80)
@@ -8972,7 +8973,7 @@ void TQuiz::WritePhpGlobalQuestions(const char *filename)
 	TQuiz *quiz;
 	int found;
 	char str[128];
-    int id;
+	int id;
 
     for (id = 0; id < MAX_GLOBAL_QUESTIONS; id++)
     {	
@@ -8981,7 +8982,7 @@ void TQuiz::WritePhpGlobalQuestions(const char *filename)
             found = FALSE;
 
             for (cross = 0; cross < MAX_CROSS && !found; cross++)
-            {
+			{
                 quiz = CrossQuiz[cross];
                 if (quiz && !quiz->IsSubQuiz())
                 {
@@ -9009,7 +9010,7 @@ void TQuiz::WritePhpGlobalQuestions(const char *filename)
                         file.Write(str);
                         file.Write(Quiz[i].Text);
                         file.Write("\";\n");                            
-                        found = TRUE;
+						found = TRUE;
                     }
                 }
             }
@@ -9046,7 +9047,7 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 
 		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
 		{
-            if (GlobalAxisCount[GlobalId][grp])
+			if (GlobalAxisCount[GlobalId][grp])
             {
                 val = GlobalAxisSum[GlobalId][grp] / GlobalAxisCount[GlobalId][grp];
                 if (val < 0)
@@ -9055,7 +9056,7 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
             else
                 val = 0;
 
-            if (Quiz[q].Reverse)
+			if (Quiz[q].Reverse)
                 val = -val;
 
            	ival = round(100.0 * val);
@@ -9231,7 +9232,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
                                 mark = TRUE;
 
                             quiz = 0;
-                        }
+						}
                     }
                 }
 
@@ -9305,7 +9306,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 
     				sprintf(str, "%d. ", GlobalId + 1);
 	    			file.Write(str);
-		    		file.Write(TopQuiz->Quiz[TopQuestion].Text);
+					file.Write(TopQuiz->Quiz[TopQuestion].Text);
 			    	file.Write(" (");
 
     				val = CorrSum[GlobalId] / CorrCount[GlobalId];
@@ -9314,7 +9315,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 		    		ival = round(100.0 * val);
 			    	if (ival < 0)
 				    {
-    					file.Write("-");
+						file.Write("-");
 	    				ival = -ival;
 		    		}
 
@@ -9342,7 +9343,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
                 	    {
                         	cnt = GlobalCorrCount[GlobalId][k];
 
-                        	if (cnt > 1)
+							if (cnt > 1)
             	                corrval = GlobalCorrArr[GlobalId][k] / ((long double)cnt - 1);
                             else
                                 corrval = 0.0;
@@ -9351,7 +9352,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
             	    
                         	if (corrval > CurrCorr && corrval < MaxCorr)
                         	{
-                        	    CurrCorr = corrval;
+								CurrCorr = corrval;
                         	    q = k;
                         	}
                     	}
@@ -9379,7 +9380,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
             	            {
                         		file.Write("-");
             	            	ival = -ival;
-        		            }
+							}
 
                         	sprintf(str, ".%02d, ", ival);
 	                        file.Write(str);
@@ -9388,7 +9389,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
                    	        sprintf(str, "%d%), intercorr: ", ival);
                      	    file.Write(str);
 
-                        	cnt = GlobalCorrCount[GlobalId][q];
+							cnt = GlobalCorrCount[GlobalId][q];
 
                         	if (cnt > 1)
             	                val = GlobalCorrArr[GlobalId][q] / ((long double)cnt - 1);
@@ -9462,7 +9463,7 @@ void TQuiz::WriteQuizWiki(const char *filename)
 
             j = quiz->Quiz[q].CrossInd;
 			quiz = quiz->Quiz[q].CrossQuiz;
-            q = j;
+			q = j;
 		}
 	}
 
@@ -9499,7 +9500,7 @@ void TQuiz::WriteQuizWiki(const char *filename)
         		file.Write(Quiz[i].Text);
 	            file.Write(" (");
 
-            	val = sum / count;
+				val = sum / count;
 		        ival = round(100.0 * val);
         	    if (ival < 0)
 	            {
@@ -9527,7 +9528,7 @@ void TQuiz::WriteQuizWiki(const char *filename)
 		        {
         		    gid2 = GlobalIdArr[k];
 		    
-                	cnt = GlobalCorrCount[gid1][gid2];
+					cnt = GlobalCorrCount[gid1][gid2];
 
                 	if (cnt > 1)
                     	CorrArr[k] = GlobalCorrArr[gid1][gid2] / ((long double)cnt - 1);
@@ -9536,7 +9537,7 @@ void TQuiz::WriteQuizWiki(const char *filename)
 
         		}
 
-    	        MaxCorr = 1.0;
+				MaxCorr = 1.0;
 
             	for (j = 0; j < 10; j++)
     	        {
@@ -9564,7 +9565,7 @@ void TQuiz::WriteQuizWiki(const char *filename)
 
                 	    sum = 0;
 	                    count = 0;
-	            
+
                         quiz = this;
                         while (quiz)
                         {
@@ -9573,7 +9574,7 @@ void TQuiz::WriteQuizWiki(const char *filename)
 
                             j = quiz->Quiz[q].CrossInd;
 		                	quiz = quiz->Quiz[q].CrossQuiz;
-                            q = j;
+							q = j;
                         }
     
                         q = k;
@@ -9601,7 +9602,7 @@ void TQuiz::WriteQuizWiki(const char *filename)
             	        sprintf(str, ".%02d", ival);
                 	    file.Write(str);
         	            file.Write("\r\n");
-                	}
+					}
     	        }
     
             	file.Write("\r\n\r\n");
@@ -9638,7 +9639,7 @@ void TQuiz::WriteIntercorr(const char *filename)
 	int ival;
 	int mark;
 	int more;
-    long double val;
+	long double val;
     long double corrlev;
 	long double corrval;
 	long double CurrCorr;
@@ -9675,7 +9676,7 @@ void TQuiz::WriteIntercorr(const char *filename)
 	    count = 0;
 	    
         quiz = this;
-        q = i;
+		q = i;
         while (quiz)
         {
 	        sum += quiz->Quiz[q].Corr;
@@ -9749,7 +9750,7 @@ void TQuiz::WriteIntercorr(const char *filename)
             	if (corrval > CurrCorr && corrval < MaxCorr)
             	{
             	    CurrCorr = corrval;
-            	    q = k;
+					q = k;
             	}
         	}
 
@@ -9758,7 +9759,7 @@ void TQuiz::WriteIntercorr(const char *filename)
         	if (q >= 0)
         	{
         	    if (j < 15)
-        	    {
+				{
             	    k = q;
 
             	    sum = 0;
@@ -9795,7 +9796,7 @@ void TQuiz::WriteIntercorr(const char *filename)
             	    if (ival < 0)
 	                {
             	    	file.Write("-");
-    	            	ival = -ival;
+						ival = -ival;
             		}
     
                 	sprintf(str, ".%02d),", ival);
@@ -9823,7 +9824,7 @@ void TQuiz::WriteIntercorr(const char *filename)
         	    }
         	    else
         	        more++;
-        	}   
+			}
         	else
         	    break;
     	}
@@ -9860,7 +9861,7 @@ void TQuiz::WriteGlobalCorrelation(const char *filename, int count)
     int cnt;
     int ival;
     long double corr;
-    long double MaxCorr;
+	long double MaxCorr;
     long double CorrLev;
     char str[120];
 	TFile file(filename, 0);
@@ -9869,7 +9870,7 @@ void TQuiz::WriteGlobalCorrelation(const char *filename, int count)
 
 	for (i = 0; i < count; i++)
 	{
-    	MaxCorr = 0.0;
+		MaxCorr = 0.0;
 
     	for (gid1 = 0; gid1 < MAX_GLOBAL_QUESTIONS; gid1++)
     	{
@@ -9897,7 +9898,7 @@ void TQuiz::WriteGlobalCorrelation(const char *filename, int count)
         sprintf(str, "Question %d \"", maxgid1 + 1);
         file.Write(str);
         file.Write(GetGlobalQuestionText(maxgid1));
-        file.Write("\", ");
+		file.Write("\", ");
 
         sprintf(str, "Question %d \"", maxgid2 + 1);
         file.Write(str);
@@ -9934,7 +9935,7 @@ void TQuiz::PrintGlobalCorrelation(int q1, int q2)
     int ival;
     
     cnt = GlobalCorrCount[q1-1][q2-1];
-    corr = GlobalCorrArr[q1-1][q2-1] / ((long double)cnt - 1);
+	corr = GlobalCorrArr[q1-1][q2-1] / ((long double)cnt - 1);
 
 	ival = round(100.0 * corr);
 	if (ival < 0)
@@ -9980,7 +9981,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
 	long pos = 0;
 	TFile infile(wiki);
 
-    for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
     {
         found = FALSE;        
         quiz = 0;
@@ -10008,7 +10009,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
                     }
                 }
             }
-        }
+		}
 
         if (quiz)
         {
@@ -10017,7 +10018,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
 	    
             j = q;
             while (quiz)
-            {
+			{
 	            sum += quiz->Quiz[j].Corr;
     		    cnt++;
 
@@ -10045,7 +10046,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
 		if (rowstr)
 		{
             ptr = strchr(rowstr, 0xd);
-            if (ptr)
+			if (ptr)
                 *ptr = 0;
 
             ptr = strstr(rowstr, "'''");
@@ -10054,7 +10055,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
                 ptr += 3;
                 i = atoi(ptr);
                 if (i)
-                    Arr[i - 1] = TRUE;
+					Arr[i - 1] = TRUE;
                    
             }           
 		}
@@ -10082,7 +10083,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
                 	    if (cnt > 1)
         	            {
                             val1 = CorrArr[gid1] * CorrArr[gid1];
-                            val2 = CorrArr[gid2] * CorrArr[gid2];
+							val2 = CorrArr[gid2] * CorrArr[gid2];
 
 //                            val = sqrtl(val1 + val2);
         	            
@@ -10091,7 +10092,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
 
                     	    val = 1.0;
                     	    
-                    	    if (corr > val1 || corr > val2)
+							if (corr > val1 || corr > val2)
                     	    {
                     	        
                     	        if (val1 > val2)
@@ -10119,7 +10120,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
             }
         }
 
-        CorrLev = MaxCorr;
+		CorrLev = MaxCorr;
 
         sprintf(str, "Question %d \"", maxgid1 + 1);
         file.Write(str);
@@ -10165,7 +10166,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
 
     	if (ival < 0)
     	{
-    	    ival = -ival;
+			ival = -ival;
     	    file.Write("-");
     	}
     	
@@ -10193,7 +10194,7 @@ void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int c
 	long double CorrLev;
 	int MaxInd;
     int ival;
-    long double sum;
+	long double sum;
     char str[120];
 	TFile file(filename, 0);
 	int Selected[MAX_GLOBAL_QUESTIONS];
@@ -10239,7 +10240,7 @@ void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int c
 
             ptr = strstr(rowstr, "'''");
             if (ptr)
-            {
+			{
                 ptr += 3;
                 i = atoi(ptr);
                 if (i)
@@ -10304,7 +10305,7 @@ void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int c
                 if (Quiz[q].GlobalId == i)
                 {
                     quiz = this;
-                    found = TRUE;
+					found = TRUE;
                 }
             }
 
@@ -10313,7 +10314,7 @@ void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int c
                 quiz = CrossQuiz[cross];
                 if (quiz && !quiz->IsSubQuiz())
                 {
-			        for (q = 0; q < quiz->N && !found; q++)
+					for (q = 0; q < quiz->N && !found; q++)
                     {
                         if (quiz->Quiz[q].GlobalId == i)
                         {
@@ -10341,7 +10342,7 @@ void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int c
         		}
 
                 corr = sum / cnt;
-                corr = corr * corr;
+				corr = corr * corr;
 
                 CorrArr[i] = corr / CorrArr[i];
             }
@@ -10350,7 +10351,7 @@ void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int c
         }
         else
             CorrArr[i] = 0.0;
-    }
+	}
 
 	CorrLev = 1000000.0;
 
@@ -10452,7 +10453,7 @@ void TQuiz::MoveWiki(const char *fromwiki, const char *towiki, long double thres
                 if (i)
                     Use[i - 1] = TRUE;
                    
-            }           
+			}
 		}
 
 		pos += strlen(buf) + 1;
@@ -10607,7 +10608,7 @@ void TQuiz::WikiToQuiz(const char *wikifile, const char *quizfile)
 	TFile fromfile(wikifile);
 	TFile tofile(quizfile, 0);
 
-    id = 1;
+	id = 1;
     
 	while (size = fromfile.Read(buf, 4096))
 	{
@@ -10711,16 +10712,16 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 	    			sprintf(str, ".%02d", ival);
 		    		file.Write(str);
 #endif
-                    if (val * val > Axis[a].MaxCorr / 4.0)
+					if (val * val > Axis[a].MaxCorr / 4.0)
                     	file.Write("</span>");
                 }
                 else
                     file.Write("---");
                 
                 WriteFieldFooter(file);
-            }
+			}
         }
-    	
+
         file.Write("</tr>");
     }
 
@@ -10859,16 +10860,16 @@ void TQuiz::WriteVersionRetest(const char *filename)
         for (cross = 1; cross < MAX_CROSS; cross++)
         {
             quiz = CrossQuiz[cross];
-            if (quiz)
+			if (quiz)
             {
                 if (quiz->UserInfo[id])
                 {
                     if (count)
                     {
                         if (    BirthYear == quiz->UserInfo[id]->BirthYear &&
-                                BirthMonth == quiz->UserInfo[id]->BirthMonth)
+								BirthMonth == quiz->UserInfo[id]->BirthMonth)
                             count++;
-                    }
+					}
                     else
                     {
             	        count = 1;
@@ -10896,16 +10897,16 @@ void TQuiz::WriteVersionRetest(const char *filename)
 	    if (UseArr[id])
 	    {
             for (cross = 0; cross < MAX_CROSS; cross++)
-                UserArr[index].ScoreArr[cross] = 0;
+				UserArr[index].ScoreArr[cross] = 0;
         
             if (UserInfo[id])
             {
                 VerData = new TUserVersionQuiz;
                 UserArr[index].ScoreArr[0] = VerData;
                 VerData->Count = UserInfo[id]->Count;
-                VerData->AsScore = UserInfo[id]->AsSum / UserInfo[id]->Count;
+				VerData->AsScore = UserInfo[id]->AsSum / UserInfo[id]->Count;
                 VerData->NtScore = UserInfo[id]->NtSum / UserInfo[id]->Count;
-            }
+			}
 
             for (cross = 1; cross < MAX_CROSS; cross++)
             {
@@ -10933,16 +10934,16 @@ void TQuiz::WriteVersionRetest(const char *filename)
 	    count = 0;
 
         for (cross = 0; cross < MAX_CROSS; cross++)
-        {
+		{
             if (UserArr[index].ScoreArr[cross])
             {
                 count++;
                 AsSum += UserArr[index].ScoreArr[cross]->AsScore;
                 NtSum += UserArr[index].ScoreArr[cross]->NtScore;
             }
-        }
+		}
 
-        AsMean = AsSum / count;
+		AsMean = AsSum / count;
         NtMean = NtSum / count;
     
    		AsSum = 0;
@@ -10970,14 +10971,14 @@ void TQuiz::WriteVersionRetest(const char *filename)
 		NtCount++;
     }
         	        
-    for (index = 0; index < UserCount; index++)
+	for (index = 0; index < UserCount; index++)
     {
         for (cross = 0; cross < MAX_CROSS; cross++)
         {
             if (UserArr[index].ScoreArr[cross])
                 delete UserArr[index].ScoreArr[cross];
         }
-    }
+	}
     delete UserArr;        
 
 
@@ -11081,7 +11082,7 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
         WriteCenteredFieldHeader(file, 3);
 		sprintf(str, "G:%d", g + 1);
 		file.Write(str);
-        WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 26);
 		file.Write(Group[g].PosName);
@@ -11118,7 +11119,7 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
 	    		file.Write(str);
 		    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 		    	if (quiz)
-    	    		file.Write("<br>");
+					file.Write("<br>");
 		    }
 		    WriteFieldFooter(file);
 
@@ -11162,9 +11163,9 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
 #endif
 				
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-                if (quiz)
+				if (quiz)
                 {   cross++;
-    			    file.Write("<br>");
+					file.Write("<br>");
 				}
 			}
 			WriteFieldFooter(file);
@@ -11192,7 +11193,7 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
 			file.Write("</tr>");    
         	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
 		}
-    	file.Write("</table>");
+		file.Write("</table>");
     	file.Write("<br><br>");
 	}
 }
@@ -11266,7 +11267,7 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
         WriteFieldFooter(file);
 
         for (a = 0; a < GROUP_COUNT - 1; a++)
-        {
+		{
             WriteCenteredFieldHeader(file, 3);
             sprintf(str, "G:%d", a + 1);
 	    	file.Write(str);
@@ -11275,7 +11276,7 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
 
 		file.Write("</tr>");
 
-        for (;;)
+		for (;;)
 		{
 			LowestCorr = -0.1;
             GlobalId = -1;
@@ -11310,9 +11311,9 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
                     {   
                         val = GlobalAxisSum[GlobalId][a] / GlobalAxisCount[GlobalId][a];
                         if (val > max)
-                            max = val;
+							max = val;
 
-                        sum += val;
+						sum += val;
                     }
     		    }
 
@@ -11340,14 +11341,14 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
                     if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
         				file.Write("</span>");
 
-	    			WriteFieldFooter(file);
+					WriteFieldFooter(file);
 
 		    		WriteCenteredFieldHeader(file, 26);
 			    	if (quiz->Quiz[q].Reverse)
 					    file.Write("<span style='color:#990099'>");
 				    file.Write(quiz->Quiz[q].Text);
     				if (quiz->Quiz[q].Reverse)
-	    				file.Write("</span>");
+						file.Write("</span>");
 		    		WriteFieldFooter(file);
 
 			    	WriteCenteredFieldHeader(file, 6);
@@ -11377,16 +11378,16 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
                         if (GlobalAxisCount[GlobalId][a])
                         {
                             val = GlobalAxisSum[GlobalId][a] / GlobalAxisCount[GlobalId][a];
-                            if (val > 0)
+							if (val > 0)
                             {
                                 if (val > max)
                 			    	file.Write("<span style='color:#009999'>");
                             
 		        				WritePca(file, val);
 
-                                if (val > max)
+								if (val > max)
                     				file.Write("</span>");
-                    	    }
+							}
                     	}
 
     		    		WriteFieldFooter(file);
@@ -11414,14 +11415,14 @@ void TQuiz::ExportGlobalSql(const char *filename)
 {
     int first;
     int i;
-    int count;
+	int count;
     TQuiz *TopQuiz;
     int TopQuestion;
     TQuiz *quiz;
     int q;
     long double val;
 	const char *ptr;
-    char str[1024];
+	char str[1024];
 	TFile file(filename, 0);
 
 	file.Write("DROP TABLE IF EXISTS `global`;\n\n");
@@ -11451,14 +11452,14 @@ void TQuiz::ExportGlobalSql(const char *filename)
 		if (TopQuiz)
 		{
             if (first)
-                first = FALSE;
+				first = FALSE;
             else
     		    file.Write("),\n");
     					
             file.Write("(");
 
             sprintf(str, "%d, \"", i);
-            file.Write(str);
+			file.Write(str);
 
 			str[1] = 0;
 			ptr = TopQuiz->Quiz[TopQuestion].Text;
@@ -11497,7 +11498,7 @@ void TQuiz::ExportGlobalSql(const char *filename)
 
 			val = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
         	sprintf(str, "%4.3Lf, ", val);
-    		file.Write(str);
+			file.Write(str);
 
 			val = GlobalChi2[i];
         	sprintf(str, "%4.3Lf, ", val);
@@ -11525,14 +11526,14 @@ void TQuiz::ExportGlobalSql(const char *filename)
 
     		if (GlobalPcaCount[i][2])
     		    val = GlobalPcaSum[i][2] / GlobalPcaCount[i][2];
-    		else
+			else
     		    val = 0.0;
 
         	sprintf(str, "%4.3Lf", val);
     		file.Write(str);
         }
     }
-    file.Write(");\n");
+	file.Write(");\n");
 }
 
 /*##################  TQuiz::ExportQuizVerSql ##########################
@@ -11562,7 +11563,7 @@ void TQuiz::ExportQuizVerSql(const char *filename)
 
     for (q = 0; q < MAX_CROSS; q++)
     {
-        quiz = CrossQuiz[q];
+		quiz = CrossQuiz[q];
 
         if (quiz)
         {
@@ -11606,7 +11607,7 @@ void TQuiz::ExportQuizVerSql(const char *filename)
 *##########################################################################*/
 void TQuiz::ExportGroupSql(const char *filename)
 {
-    int g;
+	int g;
     char str[64];
 	TFile file(filename, 0);
 
@@ -11747,16 +11748,16 @@ void TQuiz::ExportGlobalCorrSql(const char *filename)
 
     file.Write("INSERT INTO `gcorr` (`ID1`, `ID2`, `Corr`, `Corr2`, `Count`) VALUES\n");
 
-    first = TRUE;
+	first = TRUE;
     
     for (gid1 = 0; gid1 < MAX_GLOBAL_QUESTIONS; gid1++)
     {
         for (gid2 = 0; gid2 < MAX_GLOBAL_QUESTIONS; gid2++)
         {
             if (gid1 != gid2)
-            {
+			{
                 if (GlobalCorrCount[gid1][gid2])
-                {
+				{
                     if (first)
                         first = FALSE;
                     else
@@ -11821,7 +11822,7 @@ void TQuiz::ExportGlobalAxisSql(const char *filename)
         for (group = 0; group < GROUP_COUNT - 1; group++)
         {
             if (GlobalAxisCount[id][group])
-            {
+			{
                 if (first)
                     first = FALSE;
                 else
@@ -11830,7 +11831,7 @@ void TQuiz::ExportGlobalAxisSql(const char *filename)
         		file.Write("(");
 
         		sprintf(str, "%d, ", id);
-		        file.Write(str);
+				file.Write(str);
 
         		sprintf(str, "%d, ", group);
 		        file.Write(str);
@@ -11865,9 +11866,9 @@ void TQuiz::ExportOneCatPopSql(TFile &file, TQuiz *quiz, int id, int q, int popt
     {
         pop = quiz->GetPop(poptype);
 
-        if (pop)
+		if (pop)
         {
-            if (pop->ChiArr[q][cat])
+			if (pop->ChiArr[q][cat])
             {
                 if (FFirst)
                     FFirst = FALSE;
@@ -11895,7 +11896,7 @@ void TQuiz::ExportOneCatPopSql(TFile &file, TQuiz *quiz, int id, int q, int popt
 		        file.Write(str);
 
         		sprintf(str, "%d", pop->FemaleChiArr[q][cat]);
-		        file.Write(str);
+				file.Write(str);
 			}
         }
     }            
@@ -11932,7 +11933,7 @@ void TQuiz::ExportOneQuizCatPopSql(TFile &file, TQuiz *quiz, int id)
         ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_TS);
         ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_SCHIZOPHRENIA);
         ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_LOW_IQ);
-        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_HIGH_IQ);
+		ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_HIGH_IQ);
         ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_SOCIAL_PHOBIA);
         ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_NT_CONTROL);
         ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_AUTISM);
@@ -11976,7 +11977,7 @@ void TQuiz::ExportQuizCatPopSql(const char *filename)
 		    ExportOneQuizCatPopSql(file, CrossQuiz[cross], cross);
 		}
 		
-    ExportOneQuizCatPopSql(file, this, CurrQuiz + 1);
+	ExportOneQuizCatPopSql(file, this, CurrQuiz + 1);
 
 	file.Write(");\n");
 }
@@ -12036,16 +12037,112 @@ void TQuiz::ExportQuizGlobalSql(const char *filename)
 		        file.Write(str);
 
             	sprintf(str, "%d, ", q);
-	    	    file.Write(str);
+				file.Write(str);
     
             	sprintf(str, "%d", quiz->All.Count[q]);
 		        file.Write(str);
 
     		    quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
             }
-        }
+		}
     }
 	file.Write(");\n");
+}
+
+/*##################  TQuiz::ProcessDxEntry ##########################
+*   Purpose....: Process dx data entry        	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ProcessDxEntry(int GroupResult[14], int DxArr[POP_TYPE_COUNT])
+{
+	int pop;
+	int g;
+	int sum;
+	int max;
+    long double ScoreCutoff;
+	long double ScoreArr[POP_TYPE_COUNT];
+
+	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	{
+		switch (DxArr[pop])
+		{
+			case DX_STATE_NO:
+				for (g = 0; g < 14; g++)
+					if (Group[g].Questions >= 3 && GroupResult[g] >= 0 && GroupResult[g] <= 100)
+						NoDxScoreArr[pop][g][GroupResult[g]]++;
+				break;
+
+			case DX_STATE_YES:
+				for (g = 0; g < 14; g++)
+					if (Group[g].Questions >= 3 && GroupResult[g] >= 0 && GroupResult[g] <= 100)
+						DxScoreArr[pop][g][GroupResult[g]]++;
+				break;
+		}
+
+		ScoreArr[pop] = -1.0;
+
+		if (CutoffArr[pop] > 0.0)
+		{
+			sum = 0;
+			max = 0;
+			for (g = 0; g < 14; g++)
+			{
+				if (GroupResult[g] >= 0 && GroupResult[g] <= 100)
+				{
+					sum += PredArr[pop][g] * GroupResult[g];
+					max += PredArr[pop][g];
+				}
+			}
+
+			if (max)
+				ScoreArr[pop] = (long double)sum / (long double)max / 10.0 / CutoffArr[pop];
+		}
+	}
+
+	ScoreCutoff = 0.0;
+
+	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+		if (ScoreArr[pop] > ScoreCutoff)
+			ScoreCutoff = ScoreArr[pop];
+
+	ScoreCutoff = ScoreCutoff * 0.9;
+
+	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	{
+		if (ScoreArr[pop] >= 0.0)
+		{
+			if (ScoreArr[pop] >= 1.0 && ScoreArr[pop] >= ScoreCutoff)
+			{
+				switch (DxArr[pop])
+				{
+					case DX_STATE_NO:
+						PredYesFail[pop]++;
+						break;
+
+					case DX_STATE_YES:
+						PredYesOk[pop]++;
+						break;
+				}
+			}
+			else
+			{
+				switch (DxArr[pop])
+				{
+					case DX_STATE_NO:
+						PredNoOk[pop]++;
+						break;
+
+					case DX_STATE_YES:
+						PredNoFail[pop]++;
+						break;
+				}
+			}
+		}
+	}
+
 }
 
 /*##################  TQuiz::RegressDsm ##########################
@@ -12059,9 +12156,6 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 {
 	int g;
 	int i;
-	int cross;
-	int ValArr[MAX_SCORE][2];
-	int GroupArr[MAX_GROUP_COUNT];
 	long double SlopeArr[14];
 	int DxArr[14];
 	int NoDxArr[14];
@@ -12079,85 +12173,58 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 
 	for (g = 0; g < 14; g++)
 	{
-		for (i = 0; i < MAX_GROUP_COUNT; i++)
-			if (i == g)
-				GroupArr[i] = 1;
-			else
-				GroupArr[i] = 0;
+		DxArr[g] = 0;
+		NoDxArr[g] = 0;
 
 		for (i = 0; i < 101; i++)
 		{
-			ValArr[i][0] = 0;
-			ValArr[i][1] = 0;
+			NoDxArr[g] += NoDxScoreArr[PopType][g][i];
+			DxArr[g] += DxScoreArr[PopType][g][i];
 		}
 
-		if (Group[g].Questions >= 3)
-			GetDxData(PopType, GroupArr, ValArr, FALSE);
-
-		for (cross = 0; cross < MAX_CROSS; cross++)
-			 if (CrossQuiz[cross])
-				if (CrossQuiz[cross]->Group[g].Questions >= 3)
-					CrossQuiz[cross]->GetDxData(PopType, GroupArr, ValArr, FALSE);
-
-		  DxArr[g] = 0;
-        NoDxArr[g] = 0;
-        
-        for (i = 0; i < 101; i++)
-        {   
-            NoDxArr[g] += ValArr[i][0];     
-            DxArr[g] += ValArr[i][1];
-        }
-            
 		count = 0;
 		for (i = 0; i < 101; i++)
 		{
-            if (ValArr[i][0])
-                count += ValArr[i][0];
+			count += NoDxScoreArr[PopType][g][i];
+			count += DxScoreArr[PopType][g][i];
+		}
 
-            if (ValArr[i][1])
-                count += ValArr[i][1];
-        }
-
-        if (count)
-        {
+		if (count)
+		{
 			sum = 0;
-	    	for (i = 0; i < 101; i++)
-		    {
-                if (ValArr[i][0])
-                    sum += i * ValArr[i][0];
+			for (i = 0; i < 101; i++)
+			{
+				sum += i * NoDxScoreArr[PopType][g][i];
+				sum += i * DxScoreArr[PopType][g][i];
+			}
+			xmean = sum / count;
 
-                if (ValArr[i][1])
-                    sum += i * ValArr[i][1];
-            }
-	    	xmean = sum / count;
+			sum = 0;
+			for (i = 0; i < 101; i++)
+				sum += DxScoreArr[PopType][g][i];
+			ymean = sum / count;
 
-    		sum = 0;
-    		for (i = 0; i < 101; i++)
-                if (ValArr[i][1])
-                    sum += ValArr[i][1];
-	    	ymean = sum / count;
+			sum = 0;
+			sum2 = 0;
+			for (i = 0; i < 101; i++)
+			{
+				if (NoDxScoreArr[PopType][g][i])
+				{
+					xdiff = i - xmean;
+					ydiff = 0.0 - ymean;
 
-    		sum = 0;
-	    	sum2 = 0;
-    		for (i = 0; i < 101; i++)
-	    	{
-                if (ValArr[i][0])
-                {
-                    xdiff = i - xmean;
-                    ydiff = 0.0 - ymean;
+					sum += xdiff * ydiff * NoDxScoreArr[PopType][g][i];
+					sum2 += xdiff * xdiff * NoDxScoreArr[PopType][g][i];
+				}
 
-                    sum += xdiff * ydiff * ValArr[i][0];
-                    sum2 += xdiff * xdiff * ValArr[i][0];
-                }
+				if (DxScoreArr[PopType][g][i])
+				{
+					xdiff = i - xmean;
+					ydiff = 1.0 - ymean;
 
-					 if (ValArr[i][1])
-                {
-                    xdiff = i - xmean;
-                    ydiff = 1.0 - ymean;
-
-                    sum += xdiff * ydiff * ValArr[i][1];
-                    sum2 += xdiff * xdiff * ValArr[i][1];
-                }
+					sum += xdiff * ydiff * DxScoreArr[PopType][g][i];
+					sum2 += xdiff * xdiff * DxScoreArr[PopType][g][i];
+				}
 
 			}
 
@@ -12176,12 +12243,12 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 		for (g = 0; g < 14; g++)
 			SlopeArr[g] = 14 * 100 * SlopeArr[g] / sum;
 
-    level = 0.0;
-    for (g = 0; g < 14; g++)
-        if (SlopeArr[g] >= level)
-            level = SlopeArr[g];
+	level = 0.0;
+	for (g = 0; g < 14; g++)
+		if (SlopeArr[g] >= level)
+			level = SlopeArr[g];
 
-    level = 0.9 * level;
+	level = 0.9 * level;
 
 	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
 
@@ -12191,53 +12258,53 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 	file.Write("Group");
 	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 10);
-    file.Write("Weight");
-    WriteFieldFooter(file);
+	WriteCenteredFieldHeader(file, 10);
+	file.Write("Weight");
+	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 20);
-    file.Write("Diagnosis");
-    WriteFieldFooter(file);
+	WriteCenteredFieldHeader(file, 20);
+	file.Write("Diagnosis");
+	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 20);
-    file.Write("No diagnosis");
-    WriteFieldFooter(file);
+	WriteCenteredFieldHeader(file, 20);
+	file.Write("No diagnosis");
+	WriteFieldFooter(file);
 
 	file.Write("</tr>");
 
 	for (g = 0; g < 14; g++)
 	{
-    	file.Write("<tr style='height:24.75pt'>");
+		file.Write("<tr style='height:24.75pt'>");
 
-    	WriteCenteredFieldHeader(file, 35);
+		WriteCenteredFieldHeader(file, 35);
 		file.Write(Group[g].PosName);
-	    WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 10);
+		WriteCenteredFieldHeader(file, 10);
 		slope = (int)SlopeArr[g];
 		sprintf(str, " %d\n", slope);
 
-        if (slope >= level)
-        	file.Write("<span style='color:#009999'>");
-		
+		if (slope >= level)
+			file.Write("<span style='color:#009999'>");
+
 		file.Write(str);
 
-        if (slope >= level)
-            file.Write("</span>");
+		if (slope >= level)
+			file.Write("</span>");
 
-        WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 20);
+		WriteCenteredFieldHeader(file, 20);
 		sprintf(str, " %d\n", DxArr[g]);
 		file.Write(str);
-        WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 20);
+		WriteCenteredFieldHeader(file, 20);
 		sprintf(str, " %d\n", NoDxArr[g]);
 		file.Write(str);
-        WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
-    	file.Write("</tr>\n");
+		file.Write("</tr>\n");
 
 	}
 
@@ -12253,7 +12320,37 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 *##########################################################################*/
 void TQuiz::RegressDsm(const char *filename)
 {
+	int pop;
+	int g;
+	int i;
+	int cross;
 	TFile file(filename, 0);
+
+	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	{
+		for (g = 0; g < 14; g++)
+		{
+			for (i = 0; i < 101; i++)
+			{
+				DxScoreArr[pop][g][i] = 0;
+				NoDxScoreArr[pop][g][i] = 0;
+			}
+		}
+	}
+
+	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	{
+		CutoffArr[pop] = 0.0;
+
+		for (g = 0; g < MAX_GROUP_COUNT; g++)
+			PredArr[pop][g] = 0;
+	}
+
+	GetDxData();
+
+	for (cross = 0; cross < MAX_CROSS; cross++)
+		if (CrossQuiz[cross])
+			CrossQuiz[cross]->GetDxData();
 
 #ifdef ENGLISH
 	file.Write("<h2>Autism</h2>\n");
@@ -12373,106 +12470,39 @@ void TQuiz::RegressDsm(const char *filename)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[MAX_GROUP_COUNT], long double Cutoff, int All)
+void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType)
 {
 	int g;
 	int i;
-	int cross;
-	int ValArr[MAX_SCORE][2];
-	int count;
-	int tot;
-	int groupsum;
-	int cutoff;
-	int fpos;
-	int errs;
+	int val;
 	char str[80];
 
-	groupsum = 0;
-	for (g = 0; g < 14; g++)
-		groupsum += GroupArr[g];
-
-	count = 0;
-	for (g = 0; g < 14; g++)
-		count += GroupArr[g] * Group[g].Questions;
-
-	for (i = 0; i < MAX_SCORE; i++)
+	if ((PredYesOk[PopType] + PredNoFail[PopType]) > 0 && (PredNoOk[PopType] + PredYesFail[PopType] > 0))
 	{
-		ValArr[i][0] = 0;
-		ValArr[i][1] = 0;
-	}
+		file.Write("<tr style='height:24.75pt'>");
 
-	if (count / groupsum >= 3)
-		GetDxData(PopType, GroupArr, ValArr, FALSE);
+		WriteCenteredFieldHeader(file, 35);
+		file.Write(Text);
+		WriteFieldFooter(file);
 
-	if (All)
-	{
-		for (cross = 0; cross < MAX_CROSS; cross++)
-		{
-			if (CrossQuiz[cross])
-			{
-				count = 0;
-				for (g = 0; g < 14; g++)
-					count += GroupArr[g] * CrossQuiz[cross]->Group[g].Questions;
+		WriteCenteredFieldHeader(file, 15);
+		sprintf(str, " %2.1Lf\n", CutoffArr[PopType]);
+		file.Write(str);
+		WriteFieldFooter(file);
 
-				if (count / groupsum >= 3)
-					CrossQuiz[cross]->GetDxData(PopType, GroupArr, ValArr, FALSE);
-			}
-		}
-	}
+		val = PredNoFail[PopType] * 100 / (PredYesOk[PopType] + PredNoFail[PopType]);
+		WriteCenteredFieldHeader(file, 15);
+		sprintf(str, " %d%\n", val);
+		file.Write(str);
+		WriteFieldFooter(file);
 
-	cutoff = (int)(Cutoff * 10 * (long double)groupsum);
+		val = PredYesFail[PopType] * 100 / (PredYesFail[PopType] + PredNoOk[PopType]);
+		WriteCenteredFieldHeader(file, 15);
+		sprintf(str, " %d%\n", val);
+		file.Write(str);
+		WriteFieldFooter(file);
 
-	tot = 0;
-
-	for (i = 0; i < MAX_SCORE; i++)
-		 tot += ValArr[i][1];
-
-	if (tot)
-	{
-		count = 0;
-
-		for (i = 0; i < cutoff; i++)
-			count += ValArr[i][1];
-
-		errs = 100 * count / tot;
-
-		tot = 0;
-
-		for (i = 0; i < MAX_SCORE; i++)
-			tot += ValArr[i][0];
-
-		if (tot)
-		{
-			count = 0;
-
-			for (i = cutoff; i < MAX_SCORE; i++)
-				count += ValArr[i][0];
-
-			fpos = 100 * count / tot;
-
-			file.Write("<tr style='height:24.75pt'>");
-
-			WriteCenteredFieldHeader(file, 35);
-			file.Write(Text);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 15);
-			sprintf(str, " %2.1Lf\n", Cutoff);
-			file.Write(str);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 15);
-			sprintf(str, " %d%\n", errs);
-			file.Write(str);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 15);
-			sprintf(str, " %d%\n", fpos);
-			file.Write(str);
-			WriteFieldFooter(file);
-
-			file.Write("</tr>\n");
-		}
+		file.Write("</tr>\n");
 	}
 }
 
@@ -12485,10 +12515,73 @@ void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[M
 *##########################################################################*/
 void TQuiz::DsmCutoff(const char *filename, int All)
 {
+	int pop;
 	int g;
-	int GroupArr[MAX_GROUP_COUNT];
+	int i;
+	int cross;
 	char str[80];
 	TFile file(filename, 0);
+
+	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	{
+		CutoffArr[pop] = 0.0;
+
+		PredYesOk[pop] = 0;
+		PredYesFail[pop] = 0;
+		PredNoOk[pop] = 0;
+		PredNoFail[pop] = 0;
+
+		for (g = 0; g < MAX_GROUP_COUNT; g++)
+			PredArr[pop][g] = 0;
+	}
+
+	CutoffArr[POP_TYPE_AS] = 4.1;
+	PredArr[POP_TYPE_AS][GROUP_ASPIE_NVC] = 2;
+	PredArr[POP_TYPE_AS][GROUP_NT_NVC] = 2;
+
+	CutoffArr[POP_TYPE_ADD] = 4.5;
+	PredArr[POP_TYPE_ADD][GROUP_ACTIVITY] = 2;
+
+	CutoffArr[POP_TYPE_DYSPRAXIA] = 4.2;
+	PredArr[POP_TYPE_DYSPRAXIA][GROUP_NT_SENSORY] = 2;
+
+	CutoffArr[POP_TYPE_DYSLEXIA] = 4.2;
+	PredArr[POP_TYPE_DYSLEXIA][GROUP_NT_HUNTING] = 2;
+	PredArr[POP_TYPE_DYSLEXIA][GROUP_ASPIE_HUNTING] = 1;
+
+	CutoffArr[POP_TYPE_DYSCALCULIA] = 4.2;
+	PredArr[POP_TYPE_DYSCALCULIA][GROUP_NT_HUNTING] = 2;
+	PredArr[POP_TYPE_DYSCALCULIA][GROUP_NT_SENSORY] = 1;
+
+	CutoffArr[POP_TYPE_BIPOLAR] = 4.5;
+	PredArr[POP_TYPE_BIPOLAR][GROUP_ACTIVITY] = 2;
+	PredArr[POP_TYPE_BIPOLAR][GROUP_ASPIE_SENSORY] = 1;
+
+	CutoffArr[POP_TYPE_SOCIAL_PHOBIA] = 5.0;
+	PredArr[POP_TYPE_SOCIAL_PHOBIA][GROUP_SOCIAL] = 2;
+	PredArr[POP_TYPE_SOCIAL_PHOBIA][GROUP_ENVIRONMENT] = 1;
+
+	CutoffArr[POP_TYPE_SCHIZOPHRENIA] = 4.5;
+	PredArr[POP_TYPE_SCHIZOPHRENIA][GROUP_PARANOID] = 2;
+
+	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	{
+		for (g = 0; g < 14; g++)
+		{
+			for (i = 0; i < 101; i++)
+			{
+				DxScoreArr[pop][g][i] = 0;
+				NoDxScoreArr[pop][g][i] = 0;
+			}
+		}
+	}
+
+	GetDxData();
+
+	if (All)
+		for (cross = 0; cross < MAX_CROSS; cross++)
+			if (CrossQuiz[cross])
+				CrossQuiz[cross]->GetDxData();
 
 	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
 
@@ -12521,12 +12614,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "AS/HFA/PDD");
 #endif
 
-	 for (g = 0; g < MAX_GROUP_COUNT; g++)
-		  GroupArr[g] = 0;
-
-	 GroupArr[GROUP_ASPIE_NVC] = 2;
-	 GroupArr[GROUP_NT_NVC] = 2;
-	 DsmCutoff(file, str, POP_TYPE_AS, GroupArr, AsCutoff, All);
+	 DsmCutoff(file, str, POP_TYPE_AS);
 
 
 #ifdef ENGLISH
@@ -12537,11 +12625,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "ADD/ADHD");
 #endif
 
-	 for (g = 0; g < MAX_GROUP_COUNT; g++)
-		  GroupArr[g] = 0;
-
-	 GroupArr[GROUP_ACTIVITY] = 2;
-	 DsmCutoff(file, str, POP_TYPE_ADD, GroupArr, AddCutoff, All);
+	 DsmCutoff(file, str, POP_TYPE_ADD);
 
 
 #ifdef ENGLISH
@@ -12552,11 +12636,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Dyspraxi");
 #endif
 
-	 for (g = 0; g < MAX_GROUP_COUNT; g++)
-		  GroupArr[g] = 0;
-
-	 GroupArr[GROUP_NT_SENSORY] = 2;
-	 DsmCutoff(file, str, POP_TYPE_DYSPRAXIA, GroupArr, DyspraxiaCutoff, All);
+	 DsmCutoff(file, str, POP_TYPE_DYSPRAXIA);
 
 
 #ifdef ENGLISH
@@ -12567,12 +12647,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Dyslexi");
 #endif
 
-	 for (g = 0; g < MAX_GROUP_COUNT; g++)
-		  GroupArr[g] = 0;
-
-	 GroupArr[GROUP_NT_HUNTING] = 2;
-	 GroupArr[GROUP_ASPIE_HUNTING] = 1;
-	 DsmCutoff(file, str, POP_TYPE_DYSLEXIA, GroupArr, DyslexiaCutoff, All);
+	 DsmCutoff(file, str, POP_TYPE_DYSLEXIA);
 
 
 #ifdef ENGLISH
@@ -12583,12 +12658,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Dyskalkuli");
 #endif
 
-	 for (g = 0; g < MAX_GROUP_COUNT; g++)
-		  GroupArr[g] = 0;
-
-	 GroupArr[GROUP_NT_HUNTING] = 2;
-	 GroupArr[GROUP_NT_SENSORY] = 1;
-	 DsmCutoff(file, str, POP_TYPE_DYSCALCULIA, GroupArr, DyscalculiaCutoff, All);
+	 DsmCutoff(file, str, POP_TYPE_DYSCALCULIA);
 
 
 #ifdef ENGLISH
@@ -12599,12 +12669,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Bipolär");
 #endif
 
-	 for (g = 0; g < MAX_GROUP_COUNT; g++)
-		  GroupArr[g] = 0;
-
-	 GroupArr[GROUP_ACTIVITY] = 2;
-	 GroupArr[GROUP_ASPIE_SENSORY] = 1;
-	 DsmCutoff(file, str, POP_TYPE_BIPOLAR, GroupArr, BipolarCutoff, All);
+	 DsmCutoff(file, str, POP_TYPE_BIPOLAR);
 
 
 #ifdef ENGLISH
@@ -12615,12 +12680,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Social fobi");
 #endif
 
-	 for (g = 0; g < MAX_GROUP_COUNT; g++)
-		  GroupArr[g] = 0;
-
-	 GroupArr[GROUP_SOCIAL] = 2;
-	 GroupArr[GROUP_ENVIRONMENT] = 1;
-	 DsmCutoff(file, str, POP_TYPE_SOCIAL_PHOBIA, GroupArr, SocialPhobiaCutoff, All);
+	 DsmCutoff(file, str, POP_TYPE_SOCIAL_PHOBIA);
 
 
 #ifdef ENGLISH
@@ -12631,12 +12691,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Schizofreni");
 #endif
 
-	 for (g = 0; g < MAX_GROUP_COUNT; g++)
-		  GroupArr[g] = 0;
-
-	 GroupArr[GROUP_PARANOID] = 2;
-	 DsmCutoff(file, str, POP_TYPE_SCHIZOPHRENIA, GroupArr, SchizophreniaCutoff, All);
-
+	 DsmCutoff(file, str, POP_TYPE_SCHIZOPHRENIA);
 
 	file.Write("</table>\n");
 }
@@ -12648,52 +12703,32 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::ExportHighestIntercorr(const char *filename, int Group)
+void TQuiz::ExportHighestIntercorr(const char *filename)
 {
-    int GlobalId;
-    TQuiz *quiz;
-	int q;
-	int use;
+	int GlobalId;
 	int k;
 	long double corr;
 	long double MaxCorr;
-    char str[80];
+	char str[80];
 	TFile file(filename, 0);
 
-    for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
-    {
-        if (GlobalCorrCount[GlobalId][k] > 1 && GlobalAsNtCorrCount[GlobalId] > 1)
-        {
-            if (Group == 0)
-                use = TRUE;
-            else
-            {
-                use = FALSE;
-                quiz = GlobalTopQuiz[GlobalId];
-                if (quiz)
-                {
-                    q = GlobalTopQuestion[GlobalId];
-                    if (quiz->Quiz[q].MyGroup == Group)
-                        use = TRUE;
-                }
-            }
-        }
+	for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
+	{
+		if (GlobalCorrCount[GlobalId][k] > 1 && GlobalAsNtCorrCount[GlobalId] > 1)
+		{
+			MaxCorr = 0.0;
 
-        if (use)
-        {
-            MaxCorr = 0.0;
-            	
-            for (k = 0; k < MAX_GLOBAL_QUESTIONS; k++)
-            {
-                if (GlobalCorrCount[GlobalId][k] > 1 && k != GlobalId)
-                {
-                    corr = GlobalCorrArr[GlobalId][k] / ((long double)GlobalCorrCount[GlobalId][k] - 1);
-                    if (corr > MaxCorr)
-                        MaxCorr = corr;
-                }                     
-            }
+			for (k = 0; k < MAX_GLOBAL_QUESTIONS; k++)
+			{
+				if (GlobalCorrCount[GlobalId][k] > 1 && k != GlobalId)
+				{
+					corr = GlobalCorrArr[GlobalId][k] / ((long double)GlobalCorrCount[GlobalId][k] - 1);
+					if (corr > MaxCorr)
+						MaxCorr = corr;
+				}
+			}
 
-            if (MaxCorr > 0.0)
+			if (MaxCorr > 0.0)
 				{
 				 corr = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
 
@@ -12717,12 +12752,9 @@ void TQuiz::ExportHighestIntercorr(const char *filename, int Group)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::ExportAverageIntercorr(const char *filename, int Group)
+void TQuiz::ExportAverageIntercorr(const char *filename)
 {
 	 int GlobalId;
-	 TQuiz *quiz;
-	int q;
-	int use;
 	int k;
 	long double corr;
 	long double sum;
@@ -12733,23 +12765,6 @@ void TQuiz::ExportAverageIntercorr(const char *filename, int Group)
 	 for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
 	 {
 		  if (GlobalCorrCount[GlobalId][k] > 1 && GlobalAsNtCorrCount[GlobalId] > 1)
-		  {
-				if (Group == 0)
-					 use = TRUE;
-				else
-				{
-					 use = FALSE;
-					 quiz = GlobalTopQuiz[GlobalId];
-					 if (quiz)
-					 {
-						  q = GlobalTopQuestion[GlobalId];
-						  if (quiz->Quiz[q].MyGroup == Group)
-								use = TRUE;
-					 }
-				}
-		  }
-
-		  if (use)
 		  {
 				count = 0;
 				sum = 0.0;
@@ -12784,3 +12799,86 @@ void TQuiz::ExportAverageIntercorr(const char *filename, int Group)
 		 }
 	}
 }
+
+/*##################  TQuiz::ExportGroupIntercorr ##########################
+*   Purpose....: Export AS-NT corr + group intercorr         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportGroupIntercorr(const char *filename, int Group)
+{
+	 int GlobalId;
+	 TQuiz *quiz;
+	int q;
+	int use;
+	int k;
+	long double corr;
+	long double sum;
+	int count;
+	 char str[80];
+	TFile file(filename, 0);
+
+	 for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
+	 {
+		  if (GlobalCorrCount[GlobalId][k] > 1 && GlobalAsNtCorrCount[GlobalId] > 1)
+		  {
+			use = FALSE;
+			quiz = GlobalTopQuiz[GlobalId];
+			if (quiz)
+			{
+				q = GlobalTopQuestion[GlobalId];
+				if (quiz->Quiz[q].MyGroup == Group)
+					use = TRUE;
+			}
+		  }
+
+		  if (use)
+		  {
+				count = 0;
+				sum = 0.0;
+
+				for (k = 0; k < MAX_GLOBAL_QUESTIONS; k++)
+				{
+					 if (GlobalCorrCount[GlobalId][k] > 1 && k != GlobalId)
+					 {
+						 use = FALSE;
+						 quiz = GlobalTopQuiz[k];
+						 if (quiz)
+						 {
+							  q = GlobalTopQuestion[k];
+							  if (quiz->Quiz[q].MyGroup == Group)
+								use = TRUE;
+						 }
+					 }
+
+					 if (use)
+					 {
+						  corr = GlobalCorrArr[GlobalId][k] / ((long double)GlobalCorrCount[GlobalId][k] - 1);
+
+						  if (corr < 0.0)
+								corr = -corr;
+
+						  sum += corr;
+						  count++;
+					 }
+				}
+
+				if (count)
+				{
+				 corr = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+
+				 if (corr < 0.0)
+					corr = -corr;
+
+				sprintf(str, "%Lf\t", corr);
+				file.Write(str);
+
+				sprintf(str, "%Lf\n", sum / (long double)count);
+				file.Write(str);
+			  }
+		 }
+	}
+}
+

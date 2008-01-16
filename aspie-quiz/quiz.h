@@ -79,6 +79,8 @@
 #define GROUP_SEX               16
 #define GROUP_MIXED             17
 
+#define POP_TYPE_COUNT			23
+
 #define POP_TYPE_ALL            0
 #define POP_TYPE_AS             1
 #define POP_TYPE_ASPIE          2
@@ -102,6 +104,10 @@
 #define POP_TYPE_NT_CONTROL     20
 #define POP_TYPE_AUTISM         21
 #define POP_TYPE_ASPIE_CONTROL  22
+
+#define DX_STATE_UNKNOWN		0
+#define DX_STATE_NO				1
+#define DX_STATE_YES			2
 
 class TBirthMonth
 {
@@ -132,7 +138,7 @@ struct TQuizQuestion
     int NtCount;
     long double NtMean;
     long double NtSd;
-    long double Chi2;
+	long double Chi2;
     int ChiArr[2][16];
     int ChiCount[2];
 	long double Corr;
@@ -206,7 +212,7 @@ struct TUserInfo
 
 struct TUserVersionQuiz
 {
-    int Count;
+	int Count;
     long double AsScore;
     long double NtScore;
 };
@@ -243,7 +249,7 @@ public:
     void WriteAveragePcaTable(const char *filename);
 	void WriteAveragePcaCorrTable(const char *filename);
 	void WriteLinkReport(const char *filename);
-    void WritePcaGroupCorr(const char *filename);
+	void WritePcaGroupCorr(const char *filename);
     void WriteAxisLoadTable(const char *filename);
     void WriteAverageAxisTable(const char *filename);
     void WriteVersionRetest(const char *filename);
@@ -271,8 +277,9 @@ public:
 	void ExportHistogram(const char *filename, int PopType, int Width, int All);
 	void ExportDiffHistogram(const char *filename, int PopType);
 
-	static void ExportHighestIntercorr(const char *filename, int Group);
-	static void ExportAverageIntercorr(const char *filename, int Group);
+	static void ExportHighestIntercorr(const char *filename);
+	static void ExportAverageIntercorr(const char *filename);
+	static void ExportGroupIntercorr(const char *filename, int Group);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 	void RegressDsm(const char *filename);
@@ -347,12 +354,13 @@ protected:
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
 
-	virtual void GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl) = 0; 
+	virtual void GetDxData() = 0;
+	void ProcessDxEntry(int GroupResult[14], int DxArr[POP_TYPE_COUNT]);
 
     int GetQuizId(TQuiz *quiz);
 
     TPopulation *GetPop(int PopType);
-    void DefineCross(int id, TQuiz *quiz);
+	void DefineCross(int id, TQuiz *quiz);
     void DefineGlobalId(int Id, int GlobalId);
     TReferer *FindReferer(char *Referer);
     TReferer *AddReferer(char *Search, char *Ref);
@@ -377,7 +385,7 @@ protected:
 	void DefineAspie(char *Referer);
 
 	void RegressDsm(TFile &file, int PopType);
-	void DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[MAX_GROUP_COUNT], long double Cutoff, int All);
+	void DsmCutoff(TFile &file, const char *Text, int PopType);
 
     void UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupResult[12]);
     void UpdateReferer(TReferer *ref, int Result);
@@ -417,48 +425,58 @@ protected:
     TPopulation LowAs;
     TPopulation As;
     TPopulation AsMale;
-    TPopulation AsFemale;
-    TPopulation Add;
-    TPopulation AddMale;
-    TPopulation AddFemale;
-    TPopulation Aspie;
-    TPopulation AspieMale;
-    TPopulation AspieFemale;    
-    TPopulation AspieControl;
-    TPopulation YoungMale;
-    TPopulation YoungFemale;
-    TPopulation Mix;
-    TPopulation MixMale;
-    TPopulation MixFemale;
+	TPopulation AsFemale;
+	TPopulation Add;
+	TPopulation AddMale;
+	TPopulation AddFemale;
+	TPopulation Aspie;
+	TPopulation AspieMale;
+	TPopulation AspieFemale;
+	TPopulation AspieControl;
+	TPopulation YoungMale;
+	TPopulation YoungFemale;
+	TPopulation Mix;
+	TPopulation MixMale;
+	TPopulation MixFemale;
 	TPopulation Nt;
 	TPopulation NtMale;
-    TPopulation NtFemale;    
-    TPopulation NtControl;
-    TPopulation Ts;
-    TPopulation Hyperlexia;
-    TPopulation Dyspraxia;
-    TPopulation Dyslexia;
-    TPopulation Dyscalculia;
-    TPopulation OCD;
-    TPopulation ODD;
-    TPopulation Synaesthesia;
-    TPopulation PA;
-    TPopulation Dysgraphia;
-    TPopulation Bipolar;
-    TPopulation Schizophrenia;
-    TPopulation SocialPhobia;
-    TPopulation LowIQ;
-    TPopulation HighIQ;
+	TPopulation NtFemale;
+	TPopulation NtControl;
+	TPopulation Ts;
+	TPopulation Hyperlexia;
+	TPopulation Dyspraxia;
+	TPopulation Dyslexia;
+	TPopulation Dyscalculia;
+	TPopulation OCD;
+	TPopulation ODD;
+	TPopulation Synaesthesia;
+	TPopulation PA;
+	TPopulation Dysgraphia;
+	TPopulation Bipolar;
+	TPopulation Schizophrenia;
+	TPopulation SocialPhobia;
+	TPopulation LowIQ;
+	TPopulation HighIQ;
 
-    static TBirthMonth BirthMonth;
-    
+	static int DxScoreArr[POP_TYPE_COUNT][14][101];
+	static int NoDxScoreArr[POP_TYPE_COUNT][14][101];
+
+	static int PredArr[POP_TYPE_COUNT][14];
+	static long double CutoffArr[POP_TYPE_COUNT];
+	static int PredYesOk[POP_TYPE_COUNT];
+	static int PredYesFail[POP_TYPE_COUNT];
+	static int PredNoOk[POP_TYPE_COUNT];
+	static int PredNoFail[POP_TYPE_COUNT];
+
+	static TBirthMonth BirthMonth;
+
     static TDsmPopulation DsmAutism;
     static TDsmPopulation DsmAs;
     static TDsmPopulation DsmAdd;
     static TDsmPopulation DsmTs;
     static TDsmPopulation DsmHyperlexia;
     static TDsmPopulation DsmDyspraxia;
-    static TDsmPopulation DsmDyslexia;
+	static TDsmPopulation DsmDyslexia;
     static TDsmPopulation DsmDyscalculia;
     static TDsmPopulation DsmOCD;
     static TDsmPopulation DsmODD;
@@ -486,7 +504,7 @@ protected:
     TReferer MaleNonAsRef;
     TReferer FemaleNonAsRef;
     TReferer HyperlexiaRef;
-    TReferer DyspraxiaRef;
+	TReferer DyspraxiaRef;
     TReferer DyslexiaRef;
     TReferer SocialPhobiaRef;
     TReferer DyscalculiaRef;
@@ -495,7 +513,7 @@ protected:
     TReferer SynaesthesiaRef;
     TReferer PARef;
     TReferer DysgraphiaRef;
-    TReferer BipolarRef;
+	TReferer BipolarRef;
     TReferer SchizophreniaRef;
     TReferer AmerindianRef;
     TReferer MixedAfroAmericanRef;

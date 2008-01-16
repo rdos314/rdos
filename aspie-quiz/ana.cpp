@@ -83,6 +83,9 @@ TQuiz *Quiz[30];
 *##########################################################################*/
 int main(int argc, char **argv)
 {
+	char str[80];
+	int g;
+
 	Quiz[0] = new TQuizI("quiz1.bin");
 	Quiz[1] = new TQuizII("quiz2.bin", Quiz[0]);
 	Quiz[2] = new TQuizIII("quiz3.bin", Quiz[0], Quiz[1]);
@@ -462,12 +465,53 @@ int main(int argc, char **argv)
 	 Quiz[26]->ImportMvspAspie("pca\\aspies11.txt");
 	 Quiz[27]->ImportMvspAspie("pca\\aspies12.txt");
 
+	 printf("Regression\r\n");
+	  Quiz[27]->RegressDsm("eval\\dx.htm");
+
+	 printf("Cutoff\r\n");
+	  Quiz[27]->DsmCutoff("eval\\cutoff.htm", TRUE);
+
+	  Quiz[0]->DsmCutoff("eval\\cut1.htm", FALSE);
+	  Quiz[1]->DsmCutoff("eval\\cut2.htm", FALSE);
+	  Quiz[2]->DsmCutoff("eval\\cut3.htm", FALSE);
+	  Quiz[3]->DsmCutoff("eval\\cutnd.htm", FALSE);
+	  Quiz[4]->DsmCutoff("eval\\cut5.htm", FALSE);
+	  Quiz[5]->DsmCutoff("eval\\cut6.htm", FALSE);
+	  Quiz[6]->DsmCutoff("eval\\cut7.htm", FALSE);
+	  Quiz[7]->DsmCutoff("eval\\cut8.htm", FALSE);
+	  Quiz[8]->DsmCutoff("eval\\cut9.htm", FALSE);
+	  Quiz[9]->DsmCutoff("eval\\cutr1.htm", FALSE);
+	  Quiz[10]->DsmCutoff("eval\\cutr2.htm", FALSE);
+	  Quiz[11]->DsmCutoff("eval\\cutr3.htm", FALSE);
+	  Quiz[12]->DsmCutoff("eval\\cutr4.htm", FALSE);
+	  Quiz[13]->DsmCutoff("eval\\cutr5.htm", FALSE);
+	  Quiz[14]->DsmCutoff("eval\\cutr6.htm", FALSE);
+	  Quiz[15]->DsmCutoff("eval\\cutr7.htm", FALSE);
+	  Quiz[16]->DsmCutoff("eval\\cuts1.htm", FALSE);
+	  Quiz[17]->DsmCutoff("eval\\cuts2.htm", FALSE);
+	  Quiz[18]->DsmCutoff("eval\\cuts3.htm", FALSE);
+	  Quiz[19]->DsmCutoff("eval\\cuts4.htm", FALSE);
+	  Quiz[20]->DsmCutoff("eval\\cuts5.htm", FALSE);
+	  Quiz[21]->DsmCutoff("eval\\cuts6.htm", FALSE);
+	  Quiz[22]->DsmCutoff("eval\\cuts7.htm", FALSE);
+	  Quiz[23]->DsmCutoff("eval\\cuts8.htm", FALSE);
+	  Quiz[24]->DsmCutoff("eval\\cuts9.htm", FALSE);
+	  Quiz[25]->DsmCutoff("eval\\cuts10.htm", FALSE);
+	  Quiz[26]->DsmCutoff("eval\\cuts11.htm", FALSE);
+	  Quiz[27]->DsmCutoff("eval\\cuts12.htm", FALSE);
+
 	printf("calc global\r\n");
 	 Quiz[27]->CalcGlobal();
 
 	 printf("export intercorr\n");
-	 TQuiz::ExportHighestIntercorr("csv\\highcorr.csv", 0);
-	 TQuiz::ExportAverageIntercorr("csv\\avgcorr.csv", 0);
+	 TQuiz::ExportHighestIntercorr("csv\\highcorr.csv");
+	 TQuiz::ExportAverageIntercorr("csv\\avgcorr.csv");
+
+	 for (g = 0; g < GROUP_MIXED; g++)
+	 {
+		sprintf(str, "csv\\corr%d.csv", g);
+		TQuiz::ExportGroupIntercorr(str, g);
+	 }
 
 //	 Quiz[27]->WritePhpQuestions("q.php");
 //	 Quiz[27]->WriteSetupTexts("q.cpp");
@@ -791,39 +835,6 @@ int main(int argc, char **argv)
 	 TQuiz::WriteDsmReport("eval\\bip.htm", POP_TYPE_BIPOLAR);
 	 TQuiz::WriteDsmReport("eval\\schizo.htm", POP_TYPE_SCHIZOPHRENIA);
 	 TQuiz::WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
-
-	 printf("Regression & cutoff\r\n");
-	  Quiz[27]->RegressDsm("eval\\dx.htm");
-	  Quiz[27]->DsmCutoff("eval\\cutoff.htm", TRUE);
-
-	  Quiz[0]->DsmCutoff("eval\\cut1.htm", FALSE);
-	  Quiz[1]->DsmCutoff("eval\\cut2.htm", FALSE);
-	  Quiz[2]->DsmCutoff("eval\\cut3.htm", FALSE);
-	  Quiz[3]->DsmCutoff("eval\\cutnd.htm", FALSE);
-	  Quiz[4]->DsmCutoff("eval\\cut5.htm", FALSE);
-	  Quiz[5]->DsmCutoff("eval\\cut6.htm", FALSE);
-	  Quiz[6]->DsmCutoff("eval\\cut7.htm", FALSE);
-	  Quiz[7]->DsmCutoff("eval\\cut8.htm", FALSE);
-	  Quiz[8]->DsmCutoff("eval\\cut9.htm", FALSE);
-	  Quiz[9]->DsmCutoff("eval\\cutr1.htm", FALSE);
-	  Quiz[10]->DsmCutoff("eval\\cutr2.htm", FALSE);
-	  Quiz[11]->DsmCutoff("eval\\cutr3.htm", FALSE);
-	  Quiz[12]->DsmCutoff("eval\\cutr4.htm", FALSE);
-	  Quiz[13]->DsmCutoff("eval\\cutr5.htm", FALSE);
-	  Quiz[14]->DsmCutoff("eval\\cutr6.htm", FALSE);
-	  Quiz[15]->DsmCutoff("eval\\cutr7.htm", FALSE);
-	  Quiz[16]->DsmCutoff("eval\\cuts1.htm", FALSE);
-	  Quiz[17]->DsmCutoff("eval\\cuts2.htm", FALSE);
-	  Quiz[18]->DsmCutoff("eval\\cuts3.htm", FALSE);
-	  Quiz[19]->DsmCutoff("eval\\cuts4.htm", FALSE);
-	  Quiz[20]->DsmCutoff("eval\\cuts5.htm", FALSE);
-	  Quiz[21]->DsmCutoff("eval\\cuts6.htm", FALSE);
-	  Quiz[22]->DsmCutoff("eval\\cuts7.htm", FALSE);
-	  Quiz[23]->DsmCutoff("eval\\cuts8.htm", FALSE);
-	  Quiz[24]->DsmCutoff("eval\\cuts9.htm", FALSE);
-	  Quiz[25]->DsmCutoff("eval\\cuts10.htm", FALSE);
-	  Quiz[26]->DsmCutoff("eval\\cuts11.htm", FALSE);
-	  Quiz[27]->DsmCutoff("eval\\cuts12.htm", FALSE);
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");

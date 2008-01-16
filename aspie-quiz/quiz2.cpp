@@ -134,63 +134,39 @@ void TQuizII::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizII::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl)
+void TQuizII::GetDxData()
 {
 	TQuizRow Row;
-	int res;
-	int g;
-	TReferer *ref;
-	int NoDx;
+	int DxArr[POP_TYPE_COUNT];
+	int i;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    NoDx = FALSE;
-	    
-	    if (OnlyNtControl)
-	    {
-			ref = FindReferer(Row.Referer);
-			if (ref && ref->NT)
-			    NoDx = TRUE;
-	    }
-	    else
-	        NoDx = TRUE;
+		for (i = 0; i < POP_TYPE_COUNT; i++)
+			DxArr[i] = DX_STATE_UNKNOWN;
 
-        res = 0;
-	    for (g = 0; g < MAX_GROUP_COUNT; g++)
-    	    res += Row.GroupResult[g] * GroupArr[g];
+		if (Row.Diagnos == DX_AS)
+			DxArr[POP_TYPE_AS] = DX_STATE_YES;
 
-    	if (res >= 0 && res < MAX_SCORE)
-	    {
+		if (Row.Diagnos == NO_DX)
+			DxArr[POP_TYPE_AS] = DX_STATE_NO;
 
-		    switch (PopType)
-		    {
-				case POP_TYPE_AS:
-					 if (Row.Diagnos == DX_AS)
-						  Arr[res][1]++;
+		if (Row.Diagnos == DX_ADD)
+			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
 
-					 if (NoDx && (Row.Diagnos == NO_DX))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Diagnos == NO_DX)
+			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
 
-				case POP_TYPE_ADD:
-					 if (Row.Diagnos == DX_ADD)
-						  Arr[res][1]++;
+		if (Row.Diagnos == DX_TS)
+			DxArr[POP_TYPE_TS] = DX_STATE_YES;
 
-					 if (NoDx && (Row.Diagnos == NO_DX))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Diagnos == NO_DX)
+			DxArr[POP_TYPE_TS] = DX_STATE_NO;
 
-				case POP_TYPE_TS:
-					 if (Row.Diagnos == DX_TS)
-						  Arr[res][1]++;
+		ProcessDxEntry(Row.GroupResult, DxArr);
 
-					 if (NoDx && (Row.Diagnos == NO_DX))
-						  Arr[res][0]++;
-					 break;
-		    }
-	    }
-    }
+	}
 }
 
 /*##########################################################################

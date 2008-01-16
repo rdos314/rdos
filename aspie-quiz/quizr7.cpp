@@ -152,62 +152,39 @@ void TQuizR7::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizR7::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl)
+void TQuizR7::GetDxData()
 {
 	TQuizRow Row;
-	int res;
-	int g;
-	TReferer *ref;
-	int NoDx;
+	int DxArr[POP_TYPE_COUNT];
+	int i;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    NoDx = FALSE;
-	    
-	    if (OnlyNtControl)
-	    {
-			ref = FindReferer(Row.Referer);
-			if (ref && ref->NT)
-			    NoDx = TRUE;
-	    }
-	    else
-	        NoDx = TRUE;
+		for (i = 0; i < POP_TYPE_COUNT; i++)
+			DxArr[i] = DX_STATE_UNKNOWN;
 
-        res = 0;
-	    for (g = 0; g < MAX_GROUP_COUNT; g++)
-    	    res += Row.GroupResult[g] * GroupArr[g];
+		if (Row.Autism == 2)
+			DxArr[POP_TYPE_AUTISM] = DX_STATE_YES;
 
-	    if (res >= 0 && res < MAX_SCORE)
-	    {
-		    switch (PopType)
-		    {
-				case POP_TYPE_AUTISM:
-					 if (Row.Autism == 2)
-						  Arr[res][1]++;
+		if (Row.Autism == 0)
+			DxArr[POP_TYPE_AUTISM] = DX_STATE_NO;
 
-					 if (NoDx && (Row.Autism == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.Aspie == 2)
+			DxArr[POP_TYPE_AS] = DX_STATE_YES;
 
-				case POP_TYPE_AS:
-					 if (Row.Aspie == 2)
-						  Arr[res][1]++;
+		if (Row.Aspie == 0)
+			DxArr[POP_TYPE_AS] = DX_STATE_NO;
 
-					 if (NoDx && (Row.Aspie == 0))
-						  Arr[res][0]++;
-					 break;
+		if (Row.ADHD == 2)
+			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
 
-				case POP_TYPE_ADD:
-					 if (Row.ADHD == 2)
-						  Arr[res][1]++;
+		if (Row.ADHD == 0)
+			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
 
-					 if (NoDx && (Row.ADHD == 0))
-						  Arr[res][0]++;
-					 break;
-		    }
-	    }
-    }
+		ProcessDxEntry(Row.GroupResult, DxArr);
+
+	}
 }
 
 /*##################  TQuizR7::DefineQuiz ##########################
