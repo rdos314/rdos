@@ -163,11 +163,17 @@ void TQuizNd::GetDxData()
 		if (Row.Autism == 2)
 			DxArr[POP_TYPE_AUTISM] = DX_STATE_YES;
 
+		if (Row.Autism == 1)
+			DxArr[POP_TYPE_AUTISM] = DX_STATE_SELF;
+
 		if (Row.Autism == 0)
 			DxArr[POP_TYPE_AUTISM] = DX_STATE_NO;
 
 		if (Row.Aspie == 2)
 			DxArr[POP_TYPE_AS] = DX_STATE_YES;
+
+		if (Row.Aspie == 1)
+			DxArr[POP_TYPE_AS] = DX_STATE_SELF;
 
 		if (Row.Aspie == 0)
 			DxArr[POP_TYPE_AS] = DX_STATE_NO;
@@ -175,11 +181,17 @@ void TQuizNd::GetDxData()
 		if (Row.ADHD == 2)
 			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
 
+		if (Row.ADHD == 1)
+			DxArr[POP_TYPE_ADD] = DX_STATE_SELF;
+
 		if (Row.ADHD == 0)
 			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
 
 		if (Row.TS == 2)
 			DxArr[POP_TYPE_TS] = DX_STATE_YES;
+
+		if (Row.TS == 1)
+			DxArr[POP_TYPE_TS] = DX_STATE_SELF;
 
 		if (Row.TS == 0)
 			DxArr[POP_TYPE_TS] = DX_STATE_NO;
@@ -187,11 +199,17 @@ void TQuizNd::GetDxData()
 		if (Row.Hyperlexia == 2)
 			DxArr[POP_TYPE_HYPERLEXIA] = DX_STATE_YES;
 
+		if (Row.Hyperlexia == 1)
+			DxArr[POP_TYPE_HYPERLEXIA] = DX_STATE_SELF;
+
 		if (Row.Hyperlexia == 0)
 			DxArr[POP_TYPE_HYPERLEXIA] = DX_STATE_NO;
 
 		if (Row.Dyspraxia == 2)
 			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_YES;
+
+		if (Row.Dyspraxia == 1)
+			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_SELF;
 
 		if (Row.Dyspraxia == 0)
 			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_NO;
@@ -199,11 +217,17 @@ void TQuizNd::GetDxData()
 		if (Row.Dyslexia == 2)
 			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_YES;
 
+		if (Row.Dyslexia == 1)
+			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_SELF;
+
 		if (Row.Dyslexia == 0)
 			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_NO;
 
 		if (Row.Dyscalculia == 2)
 			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_YES;
+
+		if (Row.Dyscalculia == 1)
+			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_SELF;
 
 		if (Row.Dyscalculia == 0)
 			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_NO;
@@ -211,11 +235,17 @@ void TQuizNd::GetDxData()
 		if (Row.OCD == 2)
 			DxArr[POP_TYPE_OCD] = DX_STATE_YES;
 
+		if (Row.OCD == 1)
+			DxArr[POP_TYPE_OCD] = DX_STATE_SELF;
+
 		if (Row.OCD == 0)
 			DxArr[POP_TYPE_OCD] = DX_STATE_NO;
 
 		if (Row.ODD == 2)
 			DxArr[POP_TYPE_ODD] = DX_STATE_YES;
+
+		if (Row.ODD == 1)
+			DxArr[POP_TYPE_ODD] = DX_STATE_SELF;
 
 		if (Row.ODD == 0)
 			DxArr[POP_TYPE_ODD] = DX_STATE_NO;
@@ -223,11 +253,17 @@ void TQuizNd::GetDxData()
 		if (Row.Synaesthesia == 2)
 			DxArr[POP_TYPE_SYNAESTHESIA] = DX_STATE_YES;
 
+		if (Row.Synaesthesia == 1)
+			DxArr[POP_TYPE_SYNAESTHESIA] = DX_STATE_SELF;
+
 		if (Row.Synaesthesia == 0)
 			DxArr[POP_TYPE_SYNAESTHESIA] = DX_STATE_NO;
 
 		if (Row.PA == 2)
 			DxArr[POP_TYPE_PA] = DX_STATE_YES;
+
+		if (Row.PA == 1)
+			DxArr[POP_TYPE_PA] = DX_STATE_SELF;
 
 		if (Row.PA == 0)
 			DxArr[POP_TYPE_PA] = DX_STATE_NO;
@@ -235,11 +271,17 @@ void TQuizNd::GetDxData()
 		if (Row.Dysgraphia == 2)
 			DxArr[POP_TYPE_DYSGRAPHIA] = DX_STATE_YES;
 
+		if (Row.Dysgraphia == 1)
+			DxArr[POP_TYPE_DYSGRAPHIA] = DX_STATE_SELF;
+
 		if (Row.Dysgraphia == 0)
 			DxArr[POP_TYPE_DYSGRAPHIA] = DX_STATE_NO;
 
 		if (Row.Bipolar == 2)
 			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_YES;
+
+		if (Row.Bipolar == 1)
+			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_SELF;
 
 		if (Row.Bipolar == 0)
 			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_NO;

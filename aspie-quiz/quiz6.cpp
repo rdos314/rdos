@@ -211,11 +211,17 @@ void TQuiz6::GetDxData()
 		if (Row.Autism == 2)
 			DxArr[POP_TYPE_AUTISM] = DX_STATE_YES;
 
+		if (Row.Autism == 1)
+			DxArr[POP_TYPE_AUTISM] = DX_STATE_SELF;
+
 		if (Row.Autism == 0)
 			DxArr[POP_TYPE_AUTISM] = DX_STATE_NO;
 
 		if (Row.Aspie == 2)
 			DxArr[POP_TYPE_AS] = DX_STATE_YES;
+
+		if (Row.Aspie == 1)
+			DxArr[POP_TYPE_AS] = DX_STATE_SELF;
 
 		if (Row.Aspie == 0)
 			DxArr[POP_TYPE_AS] = DX_STATE_NO;
@@ -223,11 +229,17 @@ void TQuiz6::GetDxData()
 		if (Row.ADHD == 2)
 			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
 
+		if (Row.ADHD == 1)
+			DxArr[POP_TYPE_ADD] = DX_STATE_SELF;
+
 		if (Row.ADHD == 0)
 			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
 
 		if (Row.Schizophrenia == 2)
 			DxArr[POP_TYPE_SCHIZOPHRENIA] = DX_STATE_YES;
+
+		if (Row.Schizophrenia == 1)
+			DxArr[POP_TYPE_SCHIZOPHRENIA] = DX_STATE_SELF;
 
 		if (Row.Schizophrenia == 0)
 			DxArr[POP_TYPE_SCHIZOPHRENIA] = DX_STATE_NO;

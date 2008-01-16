@@ -107,7 +107,8 @@
 
 #define DX_STATE_UNKNOWN		0
 #define DX_STATE_NO				1
-#define DX_STATE_YES			2
+#define DX_STATE_YES				2
+#define DX_STATE_SELF			3
 
 class TBirthMonth
 {
@@ -459,6 +460,7 @@ protected:
 	TPopulation HighIQ;
 
 	static int DxScoreArr[POP_TYPE_COUNT][14][101];
+	static int SelfScoreArr[POP_TYPE_COUNT][14][101];
 	static int NoDxScoreArr[POP_TYPE_COUNT][14][101];
 
 	static int PredArr[POP_TYPE_COUNT][14];
@@ -466,7 +468,9 @@ protected:
 	static int PredYesOk[POP_TYPE_COUNT];
 	static int PredYesFail[POP_TYPE_COUNT];
 	static int PredNoOk[POP_TYPE_COUNT];
-	static int PredNoFail[POP_TYPE_COUNT];
+	static int PredNoDxFail[POP_TYPE_COUNT];
+	static int PredSelfOk[POP_TYPE_COUNT];
+	static int PredNoSelfFail[POP_TYPE_COUNT];
 
 	static TBirthMonth BirthMonth;
 

@@ -205,11 +205,17 @@ void TQuizS11::GetDxData()
 		if (Row.Autism == 2)
 			DxArr[POP_TYPE_AUTISM] = DX_STATE_YES;
 
+		if (Row.Autism == 1)
+			DxArr[POP_TYPE_AUTISM] = DX_STATE_SELF;
+
 		if (Row.Autism == 0)
 			DxArr[POP_TYPE_AUTISM] = DX_STATE_NO;
 
 		if (Row.Aspie == 2)
 			DxArr[POP_TYPE_AS] = DX_STATE_YES;
+
+		if (Row.Aspie == 1)
+			DxArr[POP_TYPE_AS] = DX_STATE_SELF;
 
 		if (Row.Aspie == 0)
 			DxArr[POP_TYPE_AS] = DX_STATE_NO;
@@ -217,11 +223,17 @@ void TQuizS11::GetDxData()
 		if (Row.ADHD == 2)
 			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
 
+		if (Row.ADHD == 1)
+			DxArr[POP_TYPE_ADD] = DX_STATE_SELF;
+
 		if (Row.ADHD == 0)
 			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
 
 		if (Row.TS == 2)
 			DxArr[POP_TYPE_TS] = DX_STATE_YES;
+
+		if (Row.TS == 1)
+			DxArr[POP_TYPE_TS] = DX_STATE_SELF;
 
 		if (Row.TS == 0)
 			DxArr[POP_TYPE_TS] = DX_STATE_NO;
@@ -229,11 +241,17 @@ void TQuizS11::GetDxData()
 		if (Row.Dyspraxia == 2)
 			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_YES;
 
+		if (Row.Dyspraxia == 1)
+			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_SELF;
+
 		if (Row.Dyspraxia == 0)
 			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_NO;
 
 		if (Row.Dyslexia == 2)
 			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_YES;
+
+		if (Row.Dyslexia == 1)
+			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_SELF;
 
 		if (Row.Dyslexia == 0)
 			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_NO;
@@ -241,11 +259,17 @@ void TQuizS11::GetDxData()
 		if (Row.Dyscalculia == 2)
 			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_YES;
 
+		if (Row.Dyscalculia == 1)
+			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_SELF;
+
 		if (Row.Dyscalculia == 0)
 			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_NO;
 
 		if (Row.Bipolar == 2)
 			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_YES;
+
+		if (Row.Bipolar == 1)
+			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_SELF;
 
 		if (Row.Bipolar == 0)
 			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_NO;
@@ -253,11 +277,17 @@ void TQuizS11::GetDxData()
 		if (Row.Schizophrenia == 2)
 			DxArr[POP_TYPE_SCHIZOPHRENIA] = DX_STATE_YES;
 
+		if (Row.Schizophrenia == 1)
+			DxArr[POP_TYPE_SCHIZOPHRENIA] = DX_STATE_SELF;
+
 		if (Row.Schizophrenia == 0)
 			DxArr[POP_TYPE_SCHIZOPHRENIA] = DX_STATE_NO;
 
 		if (Row.Social == 2)
 			DxArr[POP_TYPE_SOCIAL_PHOBIA] = DX_STATE_YES;
+
+		if (Row.Social == 1)
+			DxArr[POP_TYPE_SOCIAL_PHOBIA] = DX_STATE_SELF;
 
 		if (Row.Social == 0)
 			DxArr[POP_TYPE_SOCIAL_PHOBIA] = DX_STATE_NO;

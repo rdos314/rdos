@@ -149,17 +149,26 @@ void TQuizII::GetDxData()
 		if (Row.Diagnos == DX_AS)
 			DxArr[POP_TYPE_AS] = DX_STATE_YES;
 
+		if (Row.Diagnos == SELF_AS)
+			DxArr[POP_TYPE_AS] = DX_STATE_SELF;
+
 		if (Row.Diagnos == NO_DX)
 			DxArr[POP_TYPE_AS] = DX_STATE_NO;
 
 		if (Row.Diagnos == DX_ADD)
 			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
 
+		if (Row.Diagnos == SELF_ADD)
+			DxArr[POP_TYPE_ADD] = DX_STATE_SELF;
+
 		if (Row.Diagnos == NO_DX)
 			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
 
 		if (Row.Diagnos == DX_TS)
 			DxArr[POP_TYPE_TS] = DX_STATE_YES;
+
+		if (Row.Diagnos == SELF_TS)
+			DxArr[POP_TYPE_TS] = DX_STATE_SELF;
 
 		if (Row.Diagnos == NO_DX)
 			DxArr[POP_TYPE_TS] = DX_STATE_NO;
