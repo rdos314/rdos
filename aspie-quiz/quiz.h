@@ -79,7 +79,7 @@
 #define GROUP_SEX               16
 #define GROUP_MIXED             17
 
-#define POP_TYPE_COUNT			23
+#define POP_TYPE_COUNT			25
 
 #define POP_TYPE_ALL            0
 #define POP_TYPE_AS             1
@@ -104,6 +104,8 @@
 #define POP_TYPE_NT_CONTROL     20
 #define POP_TYPE_AUTISM         21
 #define POP_TYPE_ASPIE_CONTROL  22
+#define POP_TYPE_AXIS_1			23
+#define POP_TYPE_AXIS_2			24
 
 #define DX_STATE_UNKNOWN		0
 #define DX_STATE_NO				1
@@ -271,7 +273,7 @@ public:
 
 	static void WikiToQuiz(const char *wikifile, const char *quizfile);
 
-	static void WriteDsmReport(const char *filename, int PopType);
+	void WriteDsmReport(const char *filename, int PopType);
 
 	static void ExportBirthMonthHistogram(const char *filename);
 
@@ -283,7 +285,7 @@ public:
 	static void ExportGroupIntercorr(const char *filename, int Group);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
-	void RegressDsm(const char *filename);
+	void RegressDsm(const char *filename, int MaxVersions);
 	void DsmCutoff(const char *filename, int All);
 
     virtual int IsSubQuiz();
@@ -346,7 +348,7 @@ protected:
     void WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
     void WriteWikiWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 
-    static void WriteDsmReport(TFile &File, TDsmPopulation &DsmPop);
+	void WriteDsmReport(TFile &File, TDsmPopulation &DsmPop);
 
 	virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
 	virtual void WriteName(TFile &File) = 0;
@@ -358,9 +360,11 @@ protected:
 	virtual void GetDxData() = 0;
 	void ProcessDxEntry(int GroupResult[14], int DxArr[POP_TYPE_COUNT]);
 
-    int GetQuizId(TQuiz *quiz);
+	int HasGlobalQuestion(int GlobalId);
 
-    TPopulation *GetPop(int PopType);
+	int GetQuizId(TQuiz *quiz);
+
+	TPopulation *GetPop(int PopType);
 	void DefineCross(int id, TQuiz *quiz);
     void DefineGlobalId(int Id, int GlobalId);
     TReferer *FindReferer(char *Referer);
@@ -463,8 +467,6 @@ protected:
 	static int SelfScoreArr[POP_TYPE_COUNT][14][101];
 	static int NoDxScoreArr[POP_TYPE_COUNT][14][101];
 
-	static int PredArr[POP_TYPE_COUNT][14];
-	static long double CutoffArr[POP_TYPE_COUNT];
 	static int PredYesOk[POP_TYPE_COUNT];
 	static int PredYesFail[POP_TYPE_COUNT];
 	static int PredNoOk[POP_TYPE_COUNT];

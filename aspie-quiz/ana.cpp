@@ -466,7 +466,8 @@ int main(int argc, char **argv)
 	 Quiz[27]->ImportMvspAspie("pca\\aspies12.txt");
 
 	 printf("Regression\r\n");
-	  Quiz[27]->RegressDsm("eval\\dx.htm");
+	  Quiz[27]->RegressDsm("eval\\dx.htm", 100);
+	  Quiz[27]->RegressDsm("eval\\dxnew.htm", 2);
 
 	 printf("Cutoff\r\n");
 	  Quiz[27]->DsmCutoff("eval\\cutoff.htm", TRUE);
@@ -821,20 +822,20 @@ int main(int argc, char **argv)
 	 TQuiz::ExportBirthMonthHistogram("csv\\birth.csv");
 
 	printf("DSM\r\n");
-	 TQuiz::WriteDsmReport("eval\\autism.htm", POP_TYPE_AUTISM);
-	 TQuiz::WriteDsmReport("eval\\as.htm", POP_TYPE_AS);
-	 TQuiz::WriteDsmReport("eval\\add.htm", POP_TYPE_ADD);
-	 TQuiz::WriteDsmReport("eval\\ts.htm", POP_TYPE_TS);
-	 TQuiz::WriteDsmReport("eval\\dysp.htm", POP_TYPE_DYSPRAXIA);
-	 TQuiz::WriteDsmReport("eval\\dysl.htm", POP_TYPE_DYSLEXIA);
-	 TQuiz::WriteDsmReport("eval\\dysc.htm", POP_TYPE_DYSCALCULIA);
-	 TQuiz::WriteDsmReport("eval\\ocd.htm", POP_TYPE_OCD);
-	 TQuiz::WriteDsmReport("eval\\odd.htm", POP_TYPE_ODD);
-	 TQuiz::WriteDsmReport("eval\\pa.htm", POP_TYPE_PA);
-	 TQuiz::WriteDsmReport("eval\\dysg.htm", POP_TYPE_DYSGRAPHIA);
-	 TQuiz::WriteDsmReport("eval\\bip.htm", POP_TYPE_BIPOLAR);
-	 TQuiz::WriteDsmReport("eval\\schizo.htm", POP_TYPE_SCHIZOPHRENIA);
-	 TQuiz::WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
+	 Quiz[27]->WriteDsmReport("eval\\autism.htm", POP_TYPE_AUTISM);
+	 Quiz[27]->WriteDsmReport("eval\\as.htm", POP_TYPE_AS);
+	 Quiz[27]->WriteDsmReport("eval\\add.htm", POP_TYPE_ADD);
+	 Quiz[27]->WriteDsmReport("eval\\ts.htm", POP_TYPE_TS);
+	 Quiz[27]->WriteDsmReport("eval\\dysp.htm", POP_TYPE_DYSPRAXIA);
+	 Quiz[27]->WriteDsmReport("eval\\dysl.htm", POP_TYPE_DYSLEXIA);
+	 Quiz[27]->WriteDsmReport("eval\\dysc.htm", POP_TYPE_DYSCALCULIA);
+	 Quiz[27]->WriteDsmReport("eval\\ocd.htm", POP_TYPE_OCD);
+	 Quiz[27]->WriteDsmReport("eval\\odd.htm", POP_TYPE_ODD);
+	 Quiz[27]->WriteDsmReport("eval\\pa.htm", POP_TYPE_PA);
+	 Quiz[27]->WriteDsmReport("eval\\dysg.htm", POP_TYPE_DYSGRAPHIA);
+	 Quiz[27]->WriteDsmReport("eval\\bip.htm", POP_TYPE_BIPOLAR);
+	 Quiz[27]->WriteDsmReport("eval\\schizo.htm", POP_TYPE_SCHIZOPHRENIA);
+	 Quiz[27]->WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
