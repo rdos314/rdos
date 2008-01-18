@@ -1196,24 +1196,24 @@ int TQuiz::CalcAsNtDiff(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS], int *AsD
     int ascnt = 0;
     int errorcnt = 0;
 
-    answers = All.ValueCount;
+	answers = All.ValueCount;
 
-    *AsDiff = 0;
-    *NtDiff = 0;
+	*AsDiff = 0;
+	*NtDiff = 0;
 
-    for (e = 0; e < answers; e++)
-    {
-        astot = 0;
-        nttot = 0;
-        assum = 0;
-        ntsum = 0;
-    
+	for (e = 0; e < answers; e++)
+	{
+		astot = 0;
+		nttot = 0;
+		assum = 0;
+		ntsum = 0;
+
 		for (i = 0; i < N; i++)
 		{
 			ival = All.ValArr[e].Quiz[i];
 			if (ival)
 			{
-			    w = Asw[i];
+				w = Asw[i];
 				assum += w * (ival - 1);
 				astot += w;
 
@@ -1224,26 +1224,26 @@ int TQuiz::CalcAsNtDiff(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS], int *AsD
 		}
 
 		if (astot)
-    		asresult = assum * 100 / astot;
-        else
-            asresult = 0;
+			asresult = assum * 100 / astot;
+		else
+			asresult = 0;
 
-        if (nttot)
-    		ntresult = ntsum * 100 / nttot;
-        else
-            ntresult = 0;
-            
+		if (nttot)
+			ntresult = ntsum * 100 / nttot;
+		else
+			ntresult = 0;
+
 		diff = asresult - ntresult;
 
-        if (All.ValArr[e].As)
-        {
-            ascnt++;
-            *AsDiff += diff;
+		if (All.ValArr[e].DxArr[DX_AS] == DX_STATE_SELF || All.ValArr[e].DxArr[DX_AS] == DX_STATE_YES)
+		{
+			ascnt++;
+			*AsDiff += diff;
 
-            if (diff < 0)
-                errorcnt++;
-        }
-        else
+			if (diff < 0)
+				errorcnt++;
+		}
+		else
             *NtDiff -= diff;
 	}
 
@@ -1562,7 +1562,7 @@ void TQuiz::SortReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuiz::UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupResult[12])
+void TQuiz::UpdateReferer(TReferer *ref, int AsResult, int NtResult, char GroupResult[ACTIVE_GROUP_COUNT])
 {
 	int diff;
 	int grp;
@@ -1583,8 +1583,8 @@ void TQuiz::UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupRe
 			ref->ResultMixed++;
 	}
 
-	for (grp = 0; grp < 12; grp++)
-	    ref->GroupResult[grp] += GroupResult[grp];
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		ref->GroupResult[grp] += GroupResult[grp];
 }
 
 /*##########################################################################
@@ -12071,10 +12071,10 @@ void TQuiz::ExportQuizGlobalSql(const char *filename)
                 file.Write("(");
 
             	sprintf(str, "%d, ", GlobalId);
-		        file.Write(str);
-    
-            	sprintf(str, "%d, ", GetQuizId(quiz));
-		        file.Write(str);
+				file.Write(str);
+
+				sprintf(str, "%d, ", GetQuizId(quiz));
+				file.Write(str);
 
 				sprintf(str, "%d, ", q);
 				file.Write(str);
@@ -12096,41 +12096,15 @@ void TQuiz::ExportQuizGlobalSql(const char *filename)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::ProcessDxEntry(int GroupResult[14], int DxArr[POP_TYPE_COUNT])
+void TQuiz::ProcessDxEntry(char GroupResult[ACTIVE_GROUP_COUNT], char DxArr[DX_COUNT])
 {
 	int pop;
 	int g;
 	int sum;
 	int max;
-	long double ScoreArr[POP_TYPE_COUNT];
+	long double ScoreArr[DX_COUNT];
 
-	if (DxArr[POP_TYPE_ADD] == DX_STATE_YES || DxArr[POP_TYPE_DYSLEXIA] == DX_STATE_YES || DxArr[POP_TYPE_DYSCALCULIA] == DX_STATE_YES)
-		DxArr[POP_TYPE_AXIS_1] = DX_STATE_YES;
-	else
-	{
-		if (DxArr[POP_TYPE_ADD] == DX_STATE_SELF || DxArr[POP_TYPE_DYSLEXIA] == DX_STATE_SELF || DxArr[POP_TYPE_DYSCALCULIA] == DX_STATE_SELF)
-			DxArr[POP_TYPE_AXIS_1] = DX_STATE_SELF;
-		else
-		{
-			if (DxArr[POP_TYPE_ADD] == DX_STATE_NO || DxArr[POP_TYPE_DYSLEXIA] == DX_STATE_NO || DxArr[POP_TYPE_DYSCALCULIA] == DX_STATE_NO)
-				DxArr[POP_TYPE_AXIS_1] = DX_STATE_NO;
-		}
-	}
-
-	if (DxArr[POP_TYPE_AUTISM] == DX_STATE_YES || DxArr[POP_TYPE_AS] == DX_STATE_YES || DxArr[POP_TYPE_DYSPRAXIA] == DX_STATE_YES)
-		DxArr[POP_TYPE_AXIS_2] = DX_STATE_YES;
-	else
-	{
-		if (DxArr[POP_TYPE_AUTISM] == DX_STATE_SELF || DxArr[POP_TYPE_AS] == DX_STATE_SELF || DxArr[POP_TYPE_DYSPRAXIA] == DX_STATE_SELF)
-			DxArr[POP_TYPE_AXIS_2] = DX_STATE_SELF;
-		else
-		{
-			if (DxArr[POP_TYPE_AUTISM] == DX_STATE_NO || DxArr[POP_TYPE_AS] == DX_STATE_NO || DxArr[POP_TYPE_DYSPRAXIA] == DX_STATE_NO)
-				DxArr[POP_TYPE_AXIS_2] = DX_STATE_NO;
-		}
-	}
-
-	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	for (pop = 0; pop < DX_COUNT; pop++)
 	{
 		switch (DxArr[pop])
 		{
@@ -12154,68 +12128,60 @@ void TQuiz::ProcessDxEntry(int GroupResult[14], int DxArr[POP_TYPE_COUNT])
 		}
 	}
 
-	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	for (pop = 0; pop < DX_COUNT; pop++)
 		ScoreArr[pop] = -1.0;
 
-	sum = GroupResult[GROUP_NT_HUNTING];
-	ScoreArr[POP_TYPE_AXIS_1] = (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_AXIS_1] = ScoreArr[POP_TYPE_AXIS_1] / 4.0;
-
-	sum = GroupResult[GROUP_NT_SENSORY];
-	ScoreArr[POP_TYPE_AXIS_2] = (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_AXIS_2] = ScoreArr[POP_TYPE_AXIS_2] / 4.0;
-
 	sum = GroupResult[GROUP_ACTIVITY];
-	ScoreArr[POP_TYPE_ADD] = ScoreArr[POP_TYPE_AXIS_1] * (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_ADD] = ScoreArr[POP_TYPE_ADD] / 5.9;
+	ScoreArr[DX_ADD] = (long double)sum  / 10.0;
+	ScoreArr[DX_ADD] = ScoreArr[DX_ADD] / 5.9;
 
 	sum = GroupResult[GROUP_ASPIE_HUNTING];
-	ScoreArr[POP_TYPE_DYSLEXIA] = ScoreArr[POP_TYPE_AXIS_1] * (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_DYSLEXIA] = ScoreArr[POP_TYPE_DYSLEXIA] / 4.9;
+	ScoreArr[DX_DYSLEXIA] = (long double)sum  / 10.0;
+	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 4.9;
 
 	sum = GroupResult[GROUP_NT_SENSORY];
-	ScoreArr[POP_TYPE_DYSCALCULIA] = ScoreArr[POP_TYPE_AXIS_1] * (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_DYSCALCULIA] = ScoreArr[POP_TYPE_DYSCALCULIA] / 5.2;
+	ScoreArr[DX_DYSCALCULIA] = (long double)sum  / 10.0;
+	ScoreArr[DX_DYSCALCULIA] = ScoreArr[DX_DYSCALCULIA] / 5.2;
 
-	if (ScoreArr[POP_TYPE_DYSLEXIA] > ScoreArr[POP_TYPE_DYSCALCULIA])
-		ScoreArr[POP_TYPE_DYSCALCULIA] = 1.0 * ScoreArr[POP_TYPE_DYSCALCULIA];
+	if (ScoreArr[DX_DYSLEXIA] > ScoreArr[DX_DYSCALCULIA])
+		ScoreArr[DX_DYSCALCULIA] = 1.0 * ScoreArr[DX_DYSCALCULIA];
 	else
-		ScoreArr[POP_TYPE_DYSLEXIA] = 1.0 * ScoreArr[POP_TYPE_DYSLEXIA];
+		ScoreArr[DX_DYSLEXIA] = 1.0 * ScoreArr[DX_DYSLEXIA];
 
 	sum = (GroupResult[GROUP_ASPIE_NVC] + GroupResult[GROUP_NT_HUNTING]) / 2;
-	ScoreArr[POP_TYPE_AUTISM] = ScoreArr[POP_TYPE_AXIS_2] * (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_AUTISM] = ScoreArr[POP_TYPE_AUTISM] / 5.5;
+	ScoreArr[DX_AUTISM] = (long double)sum  / 10.0;
+	ScoreArr[DX_AUTISM] = ScoreArr[DX_AUTISM] / 5.5;
 
 	sum = (GroupResult[GROUP_ASPIE_NVC] + GroupResult[GROUP_NT_NVC]) / 2;
-	ScoreArr[POP_TYPE_AS] = ScoreArr[POP_TYPE_AXIS_2] * (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_AS] = ScoreArr[POP_TYPE_AS] / 5.2;
+	ScoreArr[DX_AS] = (long double)sum  / 10.0;
+	ScoreArr[DX_AS] = ScoreArr[DX_AS] / 5.2;
 
 	sum = GroupResult[GROUP_NT_SENSORY];
-	ScoreArr[POP_TYPE_DYSPRAXIA] = ScoreArr[POP_TYPE_AXIS_2] * (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_DYSPRAXIA] = ScoreArr[POP_TYPE_DYSPRAXIA] / 6.3;
+	ScoreArr[DX_DYSPRAXIA] = (long double)sum  / 10.0;
+	ScoreArr[DX_DYSPRAXIA] = ScoreArr[DX_DYSPRAXIA] / 6.3;
 
-	if (ScoreArr[POP_TYPE_AUTISM] > ScoreArr[POP_TYPE_AS])
-		ScoreArr[POP_TYPE_AS] = 1.0 * ScoreArr[POP_TYPE_AS];
+	if (ScoreArr[DX_AUTISM] > ScoreArr[DX_AS])
+		ScoreArr[DX_AS] = 1.0 * ScoreArr[DX_AS];
 	else
-		ScoreArr[POP_TYPE_AUTISM] = 1.0 * ScoreArr[POP_TYPE_AUTISM];
+		ScoreArr[DX_AUTISM] = 1.0 * ScoreArr[DX_AUTISM];
 
 	sum = GroupResult[GROUP_ASPIE_OBSESSION];
-	ScoreArr[POP_TYPE_OCD] = (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_OCD] = ScoreArr[POP_TYPE_OCD] / 5.4;
+	ScoreArr[DX_OCD] = (long double)sum  / 10.0;
+	ScoreArr[DX_OCD] = ScoreArr[DX_OCD] / 5.4;
 
 	sum = (2 * GroupResult[GROUP_ACTIVITY] + GroupResult[GROUP_ASPIE_SENSORY]) / 3;
-	ScoreArr[POP_TYPE_BIPOLAR] = (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_BIPOLAR] = ScoreArr[POP_TYPE_BIPOLAR] / 5.7;
+	ScoreArr[DX_BIPOLAR] = (long double)sum  / 10.0;
+	ScoreArr[DX_BIPOLAR] = ScoreArr[DX_BIPOLAR] / 5.7;
 
 	sum = (2 * GroupResult[GROUP_SOCIAL] + GroupResult[GROUP_ENVIRONMENT]) / 3;
-	ScoreArr[POP_TYPE_SOCIAL_PHOBIA] = (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_SOCIAL_PHOBIA] = ScoreArr[POP_TYPE_SOCIAL_PHOBIA] / 6.2;
+	ScoreArr[DX_SOCIAL_PHOBIA] = (long double)sum  / 10.0;
+	ScoreArr[DX_SOCIAL_PHOBIA] = ScoreArr[DX_SOCIAL_PHOBIA] / 6.2;
 
 	sum = GroupResult[GROUP_PARANOID];
-	ScoreArr[POP_TYPE_SCHIZOPHRENIA] = (long double)sum  / 10.0;
-	ScoreArr[POP_TYPE_SCHIZOPHRENIA] = ScoreArr[POP_TYPE_SCHIZOPHRENIA] / 5.7;
+	ScoreArr[DX_SCHIZOPHRENIA] = (long double)sum  / 10.0;
+	ScoreArr[DX_SCHIZOPHRENIA] = ScoreArr[DX_SCHIZOPHRENIA] / 5.7;
 
-	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	for (pop = 0; pop < DX_COUNT; pop++)
 	{
 		if (ScoreArr[pop] >= 0.0)
 		{
@@ -12255,7 +12221,22 @@ void TQuiz::ProcessDxEntry(int GroupResult[14], int DxArr[POP_TYPE_COUNT])
 			}
 		}
 	}
+}
 
+/*##################  TQuiz::GetDxData ##########################
+*   Purpose....: Get dx data		       	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::GetDxData()
+{
+	int e;
+	int answers = All.ValueCount;
+
+	for (e = 0; e < answers; e++)
+		ProcessDxEntry(All.ValArr[e].GroupResult, All.ValArr[e].DxArr);
 }
 
 /*##################  TQuiz::RegressDsm ##########################
@@ -12439,7 +12420,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	int cross;
 	TFile file(filename, 0);
 
-	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	for (pop = 0; pop < DX_COUNT; pop++)
 	{
 		for (g = 0; g < 14; g++)
 		{
@@ -12472,7 +12453,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>Autism</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_AUTISM);
+	RegressDsm(file, DX_AUTISM);
 
 #ifdef ENGLISH
 	file.Write("<h2>AS/HFA/PDD</h2>\n");
@@ -12482,7 +12463,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>AS/HFA/PDD</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_AS);
+	RegressDsm(file, DX_AS);
 
 #ifdef ENGLISH
 	file.Write("<h2>ADD/ADHD</h2>\n");
@@ -12492,7 +12473,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>ADD/ADHD</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_ADD);
+	RegressDsm(file, DX_ADD);
 
 #ifdef ENGLISH
 	file.Write("<h2>Dyspraxia</h2>\n");
@@ -12502,7 +12483,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>Dyspraxi</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_DYSPRAXIA);
+	RegressDsm(file, DX_DYSPRAXIA);
 
 #ifdef ENGLISH
 	file.Write("<h2>Dyslexia</h2>\n");
@@ -12512,7 +12493,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>Dyslexi</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_DYSLEXIA);
+	RegressDsm(file, DX_DYSLEXIA);
 
 #ifdef ENGLISH
 	file.Write("<h2>Dyscalculia</h2>\n");
@@ -12522,7 +12503,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>Dyskalkuli</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_DYSCALCULIA);
+	RegressDsm(file, DX_DYSCALCULIA);
 
 #ifdef ENGLISH
 	file.Write("<h2>Obsessive Compulsive Disorder (OCD)</h2>\n");
@@ -12532,7 +12513,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>Tvångssyndrom (OCD)</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_OCD);
+	RegressDsm(file, DX_OCD);
 
 #ifdef ENGLISH
 	file.Write("<h2>Bipolar</h2>\n");
@@ -12542,7 +12523,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>Bipolär</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_BIPOLAR);
+	RegressDsm(file, DX_BIPOLAR);
 
 #ifdef ENGLISH
 	file.Write("<h2>Social phobia</h2>\n");
@@ -12552,7 +12533,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>Social fobi</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_SOCIAL_PHOBIA);
+	RegressDsm(file, DX_SOCIAL_PHOBIA);
 
 #ifdef ENGLISH
 	file.Write("<h2>Tourette</h2>\n");
@@ -12562,7 +12543,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>Tourette</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_TS);
+	RegressDsm(file, DX_TS);
 
 #ifdef ENGLISH
 	file.Write("<h2>Schizophrenia</h2>\n");
@@ -12572,7 +12553,7 @@ void TQuiz::RegressDsm(const char *filename, int MaxVersions)
 	file.Write("<h2>Schizofreni</h2>\n");
 #endif
 
-	RegressDsm(file, POP_TYPE_SCHIZOPHRENIA);
+	RegressDsm(file, DX_SCHIZOPHRENIA);
 }
 
 /*##################  TQuiz::DsmCutoff ##########################
@@ -12645,7 +12626,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 
 	DiffSum = 0;
 
-	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	for (pop = 0; pop < DX_COUNT; pop++)
 	{
 		PredYesOk[pop] = 0;
 		PredYesFail[pop] = 0;
@@ -12655,7 +12636,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 		PredNoDxFail[pop] = 0;
 	}
 
-	for (pop = 0; pop < POP_TYPE_COUNT; pop++)
+	for (pop = 0; pop < DX_COUNT; pop++)
 	{
 		for (g = 0; g < 14; g++)
 		{
@@ -12699,28 +12680,6 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 
 
 #ifdef ENGLISH
-	 strcpy(str, "Axis I");
-#endif
-
-#ifdef SWEDISH
-	 strcpy(str, "Axis I");
-#endif
-
-//	 DsmCutoff(file, str, POP_TYPE_AXIS_1);
-
-
-#ifdef ENGLISH
-	 strcpy(str, "Axis II");
-#endif
-
-#ifdef SWEDISH
-	 strcpy(str, "Axis II");
-#endif
-
-//	 DsmCutoff(file, str, POP_TYPE_AXIS_2);
-
-
-#ifdef ENGLISH
 	 strcpy(str, "Autism");
 #endif
 
@@ -12728,7 +12687,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Autism");
 #endif
 
-	 DsmCutoff(file, str, POP_TYPE_AUTISM);
+	 DsmCutoff(file, str, DX_AUTISM);
 
 
 #ifdef ENGLISH
@@ -12739,7 +12698,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "AS/HFA/PDD");
 #endif
 
-	 DsmCutoff(file, str, POP_TYPE_AS);
+	 DsmCutoff(file, str, DX_AS);
 
 
 #ifdef ENGLISH
@@ -12750,7 +12709,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "ADD/ADHD");
 #endif
 
-	 DsmCutoff(file, str, POP_TYPE_ADD);
+	 DsmCutoff(file, str, DX_ADD);
 
 
 #ifdef ENGLISH
@@ -12761,7 +12720,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Dyspraxi");
 #endif
 
-	 DsmCutoff(file, str, POP_TYPE_DYSPRAXIA);
+	 DsmCutoff(file, str, DX_DYSPRAXIA);
 
 
 #ifdef ENGLISH
@@ -12772,7 +12731,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Dyslexi");
 #endif
 
-	 DsmCutoff(file, str, POP_TYPE_DYSLEXIA);
+	 DsmCutoff(file, str, DX_DYSLEXIA);
 
 
 #ifdef ENGLISH
@@ -12783,7 +12742,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Dyskalkuli");
 #endif
 
-	 DsmCutoff(file, str, POP_TYPE_DYSCALCULIA);
+	 DsmCutoff(file, str, DX_DYSCALCULIA);
 
 #ifdef ENGLISH
 	 strcpy(str, "OCD");
@@ -12793,7 +12752,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Tvångssyndrom");
 #endif
 
-	 DsmCutoff(file, str, POP_TYPE_OCD);
+	 DsmCutoff(file, str, DX_OCD);
 
 
 #ifdef ENGLISH
@@ -12804,7 +12763,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Bipolär");
 #endif
 
-	 DsmCutoff(file, str, POP_TYPE_BIPOLAR);
+	 DsmCutoff(file, str, DX_BIPOLAR);
 
 
 #ifdef ENGLISH
@@ -12815,7 +12774,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Social fobi");
 #endif
 
-	 DsmCutoff(file, str, POP_TYPE_SOCIAL_PHOBIA);
+	 DsmCutoff(file, str, DX_SOCIAL_PHOBIA);
 
 
 #ifdef ENGLISH
@@ -12826,7 +12785,7 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	 strcpy(str, "Schizofreni");
 #endif
 
-	 DsmCutoff(file, str, POP_TYPE_SCHIZOPHRENIA);
+	 DsmCutoff(file, str, DX_SCHIZOPHRENIA);
 
 	file.Write("</table>\n");
 

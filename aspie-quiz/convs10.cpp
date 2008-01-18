@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "pop.h"
 #include "file.h"
 #include "quizds10.h"
 #include "convs10.h"

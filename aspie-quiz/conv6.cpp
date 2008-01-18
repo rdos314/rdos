@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "pop.h"
 #include "file.h"
 #include "quizdb6.h"
 #include "conv6.h"

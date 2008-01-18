@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "pop.h"
 #include "file.h"
 #include "quizdbs5.h"
 #include "convs5.h"

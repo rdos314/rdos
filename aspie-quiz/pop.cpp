@@ -79,8 +79,8 @@ TPopulation::TPopulation(int questions)
 ##########################################################################*/
 TPopulation::~TPopulation()
 {
-    if (ValArr)
-        delete ValArr;
+	if (ValArr)
+		delete ValArr;
 }
 
 /*##########################################################################
@@ -94,7 +94,7 @@ TPopulation::~TPopulation()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPopulation::Add(int AsScore, int NtScore, int As, int Gender, char Arr[MAX_QUESTIONS], int GroupScore[8])
+void TPopulation::Add(int AsScore, int NtScore, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT])
 {
 	 int val;
 	 int i;
@@ -118,7 +118,6 @@ void TPopulation::Add(int AsScore, int NtScore, int As, int Gender, char Arr[MAX
 		  ValArr = NewArr;
 	 }
 
-	 ValArr[ValueCount].As = As;
 	 ValArr[ValueCount].AsScore = AsScore;
 	 ValArr[ValueCount].NtScore = NtScore;
 	 for (i = 0; i < N; i++)
@@ -127,26 +126,29 @@ void TPopulation::Add(int AsScore, int NtScore, int As, int Gender, char Arr[MAX
 		ValArr[ValueCount].Quiz[i] = val;
 		if (val)
 		{
-		    val--;
+			val--;
 			ChiArr[i][val]++;
 			Sum[i] += val;
 			Count[i]++;
 
 			switch (Gender)
 			{
-			    case 1:
-			        MaleChiArr[i][val]++;
-			        break;
+				case 1:
+					MaleChiArr[i][val]++;
+					break;
 
-			    case 2:
-			        FemaleChiArr[i][val]++;
-			        break;
+				case 2:
+					FemaleChiArr[i][val]++;
+					break;
 			}
 		}
 	 }
 
-	 for (i = 0; i < 8; i++)
-	    ValArr[ValueCount].GroupScore[i] = GroupScore[i];
+	 for (i = 0; i < ACTIVE_GROUP_COUNT; i++)
+		ValArr[ValueCount].GroupResult[i] = GroupScore[i];
+
+	 for (i = 0; i < DX_COUNT; i++)
+		ValArr[ValueCount].DxArr[i] = DxArr[i];
 
 	 ValueCount++;
 }
@@ -162,7 +164,7 @@ void TPopulation::Add(int AsScore, int NtScore, int As, int Gender, char Arr[MAX
 #   Returns....: *
 #
 ##########################################################################*/
-void TPopulation::Add(int Score, int Gender, char Arr[MAX_QUESTIONS])
+void TPopulation::Add(int Score, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT])
 {
 	 int val;
 	 int i;
@@ -186,36 +188,38 @@ void TPopulation::Add(int Score, int Gender, char Arr[MAX_QUESTIONS])
 		  ValArr = NewArr;
 	 }
 
-	 ValArr[ValueCount].As = FALSE;
 	 ValArr[ValueCount].AsScore = Score;
 	 ValArr[ValueCount].NtScore = 0;
-	 
+
 	 for (i = 0; i < N; i++)
 	 {
 		val = Arr[i];
 		ValArr[ValueCount].Quiz[i] = val;
 		if (val)
 		{
-		    val--;
+			val--;
 			ChiArr[i][val]++;
 			Sum[i] += val;
 			Count[i]++;
 
 			switch (Gender)
 			{
-			    case 1:
-			        MaleChiArr[i][val]++;
-			        break;
+				case 1:
+					MaleChiArr[i][val]++;
+					break;
 
-			    case 2:
-			        FemaleChiArr[i][val]++;
-			        break;
+				case 2:
+					FemaleChiArr[i][val]++;
+					break;
 			}
 		}
 	 }
 
-	 for (i = 0; i < 8; i++)
-	    ValArr[ValueCount].GroupScore[i] = 0;
+	 for (i = 0; i < ACTIVE_GROUP_COUNT; i++)
+		ValArr[ValueCount].GroupResult[i] = GroupScore[i];
+
+	 for (i = 0; i < ACTIVE_GROUP_COUNT; i++)
+		ValArr[ValueCount].DxArr[i] = DxArr[i];
 
 	 ValueCount++;
 }

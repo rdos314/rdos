@@ -51,7 +51,6 @@ private:
     virtual int GetPcaCount();
     virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
-	virtual void GetDxData();
 
     void DefineQuiz();
     void SetupTexts();

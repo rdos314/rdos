@@ -125,61 +125,6 @@ void TQuizII::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
-#   Name       : TQuizII::GetDxData
-#
-#   Purpose....: Get diagnostic data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizII::GetDxData()
-{
-	TQuizRow Row;
-	int DxArr[POP_TYPE_COUNT];
-	int i;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		for (i = 0; i < POP_TYPE_COUNT; i++)
-			DxArr[i] = DX_STATE_UNKNOWN;
-
-		if (Row.Diagnos == DX_AS)
-			DxArr[POP_TYPE_AS] = DX_STATE_YES;
-
-		if (Row.Diagnos == SELF_AS)
-			DxArr[POP_TYPE_AS] = DX_STATE_SELF;
-
-		if (Row.Diagnos == NO_DX)
-			DxArr[POP_TYPE_AS] = DX_STATE_NO;
-
-		if (Row.Diagnos == DX_ADD)
-			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
-
-		if (Row.Diagnos == SELF_ADD)
-			DxArr[POP_TYPE_ADD] = DX_STATE_SELF;
-
-		if (Row.Diagnos == NO_DX)
-			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
-
-		if (Row.Diagnos == DX_TS)
-			DxArr[POP_TYPE_TS] = DX_STATE_YES;
-
-		if (Row.Diagnos == SELF_TS)
-			DxArr[POP_TYPE_TS] = DX_STATE_SELF;
-
-		if (Row.Diagnos == NO_DX)
-			DxArr[POP_TYPE_TS] = DX_STATE_NO;
-
-		ProcessDxEntry(Row.GroupResult, DxArr);
-
-	}
-}
-
-/*##########################################################################
-#
 #   Name       : TQuizII::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
@@ -197,7 +142,7 @@ void TQuizII::SetupTexts()
 	Quiz[44].Reverse = TRUE;
 	Quiz[46].Reverse = TRUE;
 	Quiz[47].Reverse = TRUE;
-    Quiz[54].Reverse = TRUE;
+	Quiz[54].Reverse = TRUE;
     Quiz[55].Reverse = TRUE;
     Quiz[73].Reverse = TRUE;
     Quiz[74].Reverse = TRUE;
@@ -382,7 +327,7 @@ void TQuizII::SetupTexts()
  	Quiz[68].Text = "Does it cause chaos in your body or mind if your plans, environment or daily routines suddenly get changed, or if an activity that is important to you gets interrupted?";
 	Quiz[69].Text = "Are you punctual, conscientious and perfectionist?";
  	Quiz[70].Text = "Are you so honest and sincere yourself that you assume everyone is, and therefore easily miss dishonesty and hidden agendas?";
- 	Quiz[71].Text = "Do you dislike shaking hands?";
+	Quiz[71].Text = "Do you dislike shaking hands?";
 	Quiz[72].Text = "Do you have values & views that are either very old-fashioned or way ahead of their time?";
  	Quiz[73].Text = "Do you have an interest for fashions?";
 	Quiz[74].Text = "Do you enjoy the status of a new car/new stereo/new TV?";
@@ -456,7 +401,7 @@ void TQuizII::SetupTexts()
  	Quiz[37].Text = "Tycker du det är lätt att beskriva dina känslor för andra?";
  	Quiz[38].Text = "Är du ibland väldigt lugn i situationer som andra blir stressade av?";
  	Quiz[39].Text = "Förväntar du dig att andra vet om dina tankar, upplevelser och åsikter?";
- 	Quiz[40].Text = "Har du problem med lagsporter och andra saker som kräver samarbete i grupp?";
+	Quiz[40].Text = "Har du problem med lagsporter och andra saker som kräver samarbete i grupp?";
  	Quiz[41].Text = "Är du oftast omedveten om outtalade sociala regler?";
  	Quiz[42].Text = "Tycker du att vanligt kallprat är svårt, plågsamt eller slöseri med tid? ";
 	Quiz[43].Text = "Tycker du om att möta nya människor varje dag?";
@@ -493,7 +438,7 @@ void TQuizII::SetupTexts()
  	Quiz[74].Text = "Njuter du av den status som en ny bil/stereo/TV ger?";
  	Quiz[75].Text = "Skaffar du dig oftare prylar för att du behöver dem än för att andra har dem?";
  	Quiz[76].Text = "Betyder dina vänner mer för dig än dina hobbies och intressen?";
- 	Quiz[77].Text = "Är din stil och image mycket viktig för dig?";
+	Quiz[77].Text = "Är din stil och image mycket viktig för dig?";
  	Quiz[78].Text = "Är ditt sinne för humor annorlunda än andras och / eller ansett som udda?";
  	Quiz[79].Text = "Är du väldigt intresserad av miljöfrågor?";
 	Quiz[80].Text = "Tycker du om skvaller?";
@@ -576,15 +521,15 @@ void TQuizII::LoadReferers()
 
 		switch (Row.Diagnos)
 		{
-			case DX_AS:
+			case DDX_AS:
 				ref = &DxAsRef;
 				break;
 
-			case DX_TS:
+			case DDX_TS:
 				ref = &DxTsRef;
 				break;
 
-			case DX_ADD:
+			case DDX_ADD:
 				ref = &DxAddRef;
 				break;
 
@@ -610,7 +555,7 @@ void TQuizII::LoadReferers()
 
 		switch (Row.Diagnos)
 		{
-			case DX_AS:
+			case DDX_AS:
 			case SELF_AS:
 				if (Row.Gender == 1)
 					ref = &MaleAsRef;
@@ -644,8 +589,8 @@ void TQuizII::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
-	 TReferer *ref;
-	 int aspie = FALSE;
+	TReferer *ref;
+	char DxArr[DX_COUNT];
 
 	 for (i = 0; i < N; i++)
 		  Quiz[i].NoAnswer = 0;
@@ -660,85 +605,115 @@ void TQuizII::LoadPopulations()
 
 		  }
 
+		for (i = 0; i < DX_COUNT; i++)
+			DxArr[i] = DX_STATE_UNKNOWN;
+
+		if (Row.Diagnos == DDX_AS)
+			DxArr[DX_AS] = DX_STATE_YES;
+
+		if (Row.Diagnos == SELF_AS)
+			DxArr[DX_AS] = DX_STATE_SELF;
+
+		if (Row.Diagnos == NO_DX)
+			DxArr[DX_AS] = DX_STATE_NO;
+
+		if (Row.Diagnos == DDX_ADD)
+			DxArr[DX_ADD] = DX_STATE_YES;
+
+		if (Row.Diagnos == SELF_ADD)
+			DxArr[DX_ADD] = DX_STATE_SELF;
+
+		if (Row.Diagnos == NO_DX)
+			DxArr[DX_ADD] = DX_STATE_NO;
+
+		if (Row.Diagnos == DDX_TS)
+			DxArr[DX_TS] = DX_STATE_YES;
+
+		if (Row.Diagnos == SELF_TS)
+			DxArr[DX_TS] = DX_STATE_SELF;
+
+		if (Row.Diagnos == NO_DX)
+			DxArr[DX_TS] = DX_STATE_NO;
+
+
 		switch (Row.Diagnos)
 		{
-			 case DX_AS:
+			 case DDX_AS:
 			 case SELF_AS:
-					aspie = TRUE;
 					 if (Row.AsResult < 100)
-						  LowAs.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+						  LowAs.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 					if (Row.Gender == 1)
 					{
 						if (Row.BirthYear > 1986)
-							YoungMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+							YoungMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
-						AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+						AsMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 					}
 					else
 					{
 						if (Row.BirthYear > 1986)
-							YoungFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+							YoungFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
-						AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+						AsFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 					}
 
 					if (Row.Diagnos == DX_AS)
-						As.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+						As.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 					if (Row.Diagnos == SELF_AS)
-						AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+						AspieControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 				break;
 
-			case DX_ADD:
+			case DDX_ADD:
 			case SELF_ADD:
-				 Add.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				 Add.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 				if (Row.Gender == 1)
-					AddMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+					AddMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 				else
-					AddFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+					AddFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 				break;
 
-			case DX_TS:
+			case DDX_TS:
 			case SELF_TS:
-				Ts.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				Ts.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 				break;
 		}
 
-		All.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+		All.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (strlen(Row.Referer) == 0)
 		{
-			 Mix.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			 Mix.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				MixMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				MixMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				MixFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 		else
 		{
 			ref = FindReferer(Row.Referer);
 			if (ref && ref->NT)
-				NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				NtControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.NtResult - Row.AsResult >= 35)
 		{
-			Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Nt.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				NtMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				NtFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.AsResult - Row.NtResult >= 35)
 		{
 
-			Aspie.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Aspie.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				AspieMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AspieMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				AspieFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AspieFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 	}
 }
@@ -956,13 +931,13 @@ static int IsPca(TQuizRow *row, int PcaType)
                 return FALSE;
 
         case PCA_TYPE_AS:
-            if (row->Diagnos == DX_AS)
+			if (row->Diagnos == DDX_AS)
 				return TRUE;
-            else
-                return FALSE;
-                
-    }
-    return FALSE;
+			else
+				return FALSE;
+
+	}
+	return FALSE;
 }
 
 /*##################  TQuizII::ExportExcelCases ##########################

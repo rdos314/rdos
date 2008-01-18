@@ -52,7 +52,6 @@ private:
     virtual void WriteLongName(TFile &File);
     virtual int GetPcaCount();
 	virtual int GetQuizN();
-	virtual void GetDxData();
 
     void DefineQuiz();
     void SetupTexts();

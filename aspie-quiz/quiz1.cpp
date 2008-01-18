@@ -125,46 +125,6 @@ void TQuizI::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
-#   Name       : TQuizI::GetDxData
-#
-#   Purpose....: Get diagnostic data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizI::GetDxData()
-{
-	TQuizRow Row;
-	int DxArr[POP_TYPE_COUNT];
-	int i;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		for (i = 0; i < POP_TYPE_COUNT; i++)
-			DxArr[i] = DX_STATE_UNKNOWN;
-
-		if (Row.Diagnos == DX_AS)
-			DxArr[POP_TYPE_AS] = DX_STATE_YES;
-
-		if (Row.Diagnos == DX_UNKNOWN)
-			DxArr[POP_TYPE_AS] = DX_STATE_NO;
-
-		if (Row.Diagnos == DX_ADD)
-			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
-
-		if (Row.Diagnos == DX_UNKNOWN)
-			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
-
-		ProcessDxEntry(Row.GroupResult, DxArr);
-
-	}
-}
-
-/*##########################################################################
-#
 #   Name       : TQuizI::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
@@ -471,7 +431,7 @@ void TQuizI::SetupTexts()
 	Quiz[81].Text = "Är du oftast omedveten om outtalade sociala regler?";
 	Quiz[82].Text = "I samtal, brukar du ibland ha problem med saker som timing, turtagning och ömsesidighet?";
 	Quiz[83].Text = "Brukar du ha svårt att uppfatta personliga och andra osynliga gränser om ingen talar om var de går ";
-	Quiz[84].Text = "Brukar du gärna prata om dina specialintressen oavsett om någon verkar intresserad eller inte?"; 
+	Quiz[84].Text = "Brukar du gärna prata om dina specialintressen oavsett om någon verkar intresserad eller inte?";
 	Quiz[85].Text = "Har du en tendens att tolka saker bokstavligt och/eller svara på retoriska frågor?";
 	Quiz[86].Text = "Har du svårt att förstå talesätt, allegorier, parodier, ironi och liknande?";
 	Quiz[87].Text = "Brukar du ha svårt att tolka kroppsspråk och ansiktsuttryck och att förstå vad andra känner och vill om de inte säger det rakt ut?";
@@ -562,11 +522,11 @@ void TQuizI::LoadReferers()
 
 		switch (Row.Diagnos)
 		{
-			case DX_AS:
+			case DDX_AS:
 				ref = &DxAsRef;
 				break;
 
-			case DX_ADD:
+			case DDX_ADD:
 				ref = &DxAddRef;
 				break;
 
@@ -598,7 +558,7 @@ void TQuizI::LoadReferers()
 
 		switch (Row.Diagnos)
 		{
-			case DX_AS:
+			case DDX_AS:
 				if (Row.Gender == 1)
 					ref = &MaleAsRef;
 				else
@@ -649,11 +609,11 @@ void TQuizI::LoadPopulations()
 	TQuizRow Row;
 	char ValArr[MAX_QUESTIONS];
 	int i;
-	 TReferer *ref;
-	 int aspie = FALSE;
+	TReferer *ref;
+	char DxArr[DX_COUNT];
 
-	 for (i = 0; i < N; i++)
-		  Quiz[i].NoAnswer = 0;
+	for (i = 0; i < N; i++)
+		Quiz[i].NoAnswer = 0;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
@@ -669,39 +629,53 @@ void TQuizI::LoadPopulations()
 				 ValArr[i] = 0;
 		}
 
+		for (i = 0; i < DX_COUNT; i++)
+			DxArr[i] = DX_STATE_UNKNOWN;
+
+		if (Row.Diagnos == DDX_AS)
+			DxArr[DX_AS] = DX_STATE_YES;
+
+		if (Row.Diagnos == DDX_UNKNOWN)
+			DxArr[DX_AS] = DX_STATE_NO;
+
+		if (Row.Diagnos == DDX_ADD)
+			DxArr[DX_ADD] = DX_STATE_YES;
+
+		if (Row.Diagnos == DDX_UNKNOWN)
+			DxArr[DX_ADD] = DX_STATE_NO;
+
 		switch (Row.Diagnos)
 		{
-			case DX_AS:
-				aspie = TRUE;
+			case DDX_AS:
 				 if (Row.ResultNow < 100)
-					  LowAs.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+					  LowAs.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 
-				  As.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+				  As.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 				if (Row.Gender == 1)
-					AsMale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+					AsMale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 				else
-					AsFemale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+					AsFemale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 				break;
 
-			case DX_ADD:
-				  Add.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+			case DDX_ADD:
+				  Add.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 				if (Row.Gender == 1)
-					AddMale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+					AddMale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 				else
-					AddFemale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+					AddFemale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 				break;
 		}
 
-		All.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+		All.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 
-		if (Row.Diagnos == DX_REFERER && strlen(Row.Referer) == 0)
-			 Mix.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+		if (Row.Diagnos == DDX_REFERER && strlen(Row.Referer) == 0)
+			 Mix.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 
 		if (Row.ResultNow  < 90)
-			Nt.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+			Nt.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 
 		if (Row.ResultNow  > 110)
-			Aspie.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
+			Aspie.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 	}
 }
 

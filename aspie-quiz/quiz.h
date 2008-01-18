@@ -40,7 +40,8 @@
 
 //#define USE_PERCENT     1     // write correlations in % variance explained
 
-#define MAX_GROUP_COUNT         18
+#define MAX_GROUP_COUNT      	18
+
 #define MAX_REFERERS            1024
 #define MAX_CROSS               30
 #define MAX_PCA_AXIS            8
@@ -106,11 +107,6 @@
 #define POP_TYPE_ASPIE_CONTROL  22
 #define POP_TYPE_AXIS_1			23
 #define POP_TYPE_AXIS_2			24
-
-#define DX_STATE_UNKNOWN		0
-#define DX_STATE_NO				1
-#define DX_STATE_YES				2
-#define DX_STATE_SELF			3
 
 class TBirthMonth
 {
@@ -357,8 +353,8 @@ protected:
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
 
-	virtual void GetDxData() = 0;
-	void ProcessDxEntry(int GroupResult[14], int DxArr[POP_TYPE_COUNT]);
+	void ProcessDxEntry(char GroupResult[ACTIVE_GROUP_COUNT], char DxArr[POP_TYPE_COUNT]);
+	void GetDxData();
 
 	int HasGlobalQuestion(int GlobalId);
 
@@ -392,7 +388,7 @@ protected:
 	void RegressDsm(TFile &file, int PopType);
 	void DsmCutoff(TFile &file, const char *Text, int PopType);
 
-    void UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupResult[12]);
+    void UpdateReferer(TReferer *ref, int AsResult, int NtResult, char GroupResult[ACTIVE_GROUP_COUNT]);
     void UpdateReferer(TReferer *ref, int Result);
 
     void WriteFieldHeader(TFile &File, int RelWidth);

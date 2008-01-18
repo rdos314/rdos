@@ -31,39 +31,65 @@
 #define MAX_CATS        16
 #define MAX_QUESTIONS   250
 
+#define ACTIVE_GROUP_COUNT      14
+
+#define DX_COUNT				16
+
+#define DX_AUTISM          		0
+#define DX_AS             		1
+#define DX_ADD            		2
+#define DX_HYPERLEXIA     		3
+#define DX_DYSPRAXIA      		4
+#define DX_DYSLEXIA       		5
+#define DX_DYSCALCULIA    		6
+#define DX_OCD		            7
+#define DX_ODD            		8
+#define DX_SYNAESTHESIA   		9
+#define DX_PA             		10
+#define DX_DYSGRAPHIA     		11
+#define DX_BIPOLAR        		12
+#define DX_TS             		13
+#define DX_SCHIZOPHRENIA  		14
+#define DX_SOCIAL_PHOBIA  		15
+
+#define DX_STATE_UNKNOWN		0
+#define DX_STATE_NO				1
+#define DX_STATE_YES			2
+#define DX_STATE_SELF			3
+
 struct TValArr
 {
-    int AsScore;
-    int NtScore;
-    int As;
-    char Quiz[MAX_QUESTIONS];
-    int GroupScore[8];
+	int AsScore;
+	int NtScore;
+	char DxArr[DX_COUNT];
+	char Quiz[MAX_QUESTIONS];
+	char GroupResult[ACTIVE_GROUP_COUNT];
 };
 
 class TPopulation
 {
 public:
-    TPopulation(int questions);
+	TPopulation(int questions);
 	~TPopulation();
 
-	void Add(int AsScore, int NtScore, int As, int Gender, char Arr[MAX_QUESTIONS], int GroupScore[8]);
-	void Add(int Score, int Gender, char Arr[MAX_QUESTIONS]);
+	void Add(int AsScore, int NtScore, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT]);
+	void Add(int Score, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT]);
 
-    long double GetMean(int QuestionNr);
-    long double GetSd(int QuestionNr);
+	long double GetMean(int QuestionNr);
+	long double GetSd(int QuestionNr);
 
-    int N;
-    
-    int Count[MAX_QUESTIONS];
+	int N;
+
+	int Count[MAX_QUESTIONS];
 	int Sum[MAX_QUESTIONS];
-    int ChiArr[MAX_QUESTIONS][MAX_CATS];
-    int MaleChiArr[MAX_QUESTIONS][MAX_CATS];
-    int FemaleChiArr[MAX_QUESTIONS][MAX_CATS];
+	int ChiArr[MAX_QUESTIONS][MAX_CATS];
+	int MaleChiArr[MAX_QUESTIONS][MAX_CATS];
+	int FemaleChiArr[MAX_QUESTIONS][MAX_CATS];
 
-    int Increment;
-    int ValueCount;
-    int MaxSize;
-    TValArr *ValArr;    
+	int Increment;
+	int ValueCount;
+	int MaxSize;
+	TValArr *ValArr;
 };
 
 #endif

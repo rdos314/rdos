@@ -1,7 +1,7 @@
-#define DX_AS       2
-#define DX_ADD      3
-#define DX_UNKNOWN  6
-#define DX_REFERER  7
+#define DDX_AS       2
+#define DDX_ADD      3
+#define DDX_UNKNOWN  6
+#define DDX_REFERER  7
 
 struct TQuizRow
 {
@@ -16,5 +16,5 @@ struct TQuizRow
     long ResultBefore;
     char Before[100];
     char Now[100];
-	int GroupResult[14];
+	char GroupResult[ACTIVE_GROUP_COUNT];
 };

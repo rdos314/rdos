@@ -188,61 +188,6 @@ void TQuiz5::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
-#   Name       : TQuiz5::GetDxData
-#
-#   Purpose....: Get diagnostic data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuiz5::GetDxData()
-{
-	TQuizRow Row;
-	int DxArr[POP_TYPE_COUNT];
-	int i;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		for (i = 0; i < POP_TYPE_COUNT; i++)
-			DxArr[i] = DX_STATE_UNKNOWN;
-
-		if (Row.Autism == 2)
-			DxArr[POP_TYPE_AUTISM] = DX_STATE_YES;
-
-		if (Row.Autism == 1)
-			DxArr[POP_TYPE_AUTISM] = DX_STATE_SELF;
-
-		if (Row.Autism == 0)
-			DxArr[POP_TYPE_AUTISM] = DX_STATE_NO;
-
-		if (Row.Aspie == 2)
-			DxArr[POP_TYPE_AS] = DX_STATE_YES;
-
-		if (Row.Aspie == 1)
-			DxArr[POP_TYPE_AS] = DX_STATE_SELF;
-
-		if (Row.Aspie == 0)
-			DxArr[POP_TYPE_AS] = DX_STATE_NO;
-
-		if (Row.ADHD == 2)
-			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
-
-		if (Row.ADHD == 1)
-			DxArr[POP_TYPE_ADD] = DX_STATE_SELF;
-
-		if (Row.ADHD == 0)
-			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
-
-		ProcessDxEntry(Row.GroupResult, DxArr);
-
-	}
-}
-
-/*##########################################################################
-#
 #   Name       : TQuiz5::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
@@ -734,7 +679,7 @@ void TQuiz5::LoadPopulations()
 	TQuizRow Row;
 	int i;
 	TReferer *ref;
-	int aspie;
+	char DxArr[DX_COUNT];
 	int id;
 	char score;
 	int IdArr[MAX_QUESTIONS];
@@ -743,7 +688,7 @@ void TQuiz5::LoadPopulations()
 	{
 		Quiz[i].NoAnswer = 0;
 		IdArr[i] = GetGlobalId(i);
-    }
+	}
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
@@ -754,102 +699,127 @@ void TQuiz5::LoadPopulations()
 		{
 			if (Row.Quiz[i] == 0)
 				Quiz[i].NoAnswer++;
-		    else
+			else
 			{
-			    score = Row.Quiz[i] - 1;
-			    id = IdArr[i];
-			    
-			    DsmAutism.Add(Row.Autism, id, score);
-			    DsmAs.Add(Row.Aspie, id, score);
-			    DsmAdd.Add(Row.ADHD, id, score);
+				score = Row.Quiz[i] - 1;
+				id = IdArr[i];
+
+				DsmAutism.Add(Row.Autism, id, score);
+				DsmAs.Add(Row.Aspie, id, score);
+				DsmAdd.Add(Row.ADHD, id, score);
 			}
 
 		}
 
-		aspie = FALSE;
+		for (i = 0; i < DX_COUNT; i++)
+			DxArr[i] = DX_STATE_UNKNOWN;
 
-		if (Row.Autism || Row.Aspie)
-			aspie = TRUE;
+		if (Row.Autism == 2)
+			DxArr[DX_AUTISM] = DX_STATE_YES;
 
-		All.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+		if (Row.Autism == 1)
+			DxArr[DX_AUTISM] = DX_STATE_SELF;
+
+		if (Row.Autism == 0)
+			DxArr[DX_AUTISM] = DX_STATE_NO;
+
+		if (Row.Aspie == 2)
+			DxArr[DX_AS] = DX_STATE_YES;
+
+		if (Row.Aspie == 1)
+			DxArr[DX_AS] = DX_STATE_SELF;
+
+		if (Row.Aspie == 0)
+			DxArr[DX_AS] = DX_STATE_NO;
+
+		if (Row.ADHD == 2)
+			DxArr[DX_ADD] = DX_STATE_YES;
+
+		if (Row.ADHD == 1)
+			DxArr[DX_ADD] = DX_STATE_SELF;
+
+		if (Row.ADHD == 0)
+			DxArr[DX_ADD] = DX_STATE_NO;
+
+		All.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.AsResult < Row.NtResult)
-				LowAs.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				LowAs.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 			if (Row.Gender == 1)
 			{
 				if (Row.BirthYear > 1986)
-					YoungMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+					YoungMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
-				AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AsMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			}
 			else
 			{
 				if (Row.BirthYear > 1986)
-					YoungFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+					YoungFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
-				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AsFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			}
 
 			if (Row.Autism == 2)
-				Autism.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				Autism.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 			if (Row.Aspie == 2)
-				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				As.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 			if (Row.Autism == 1 || Row.Aspie == 1)
-				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AspieControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.ADHD)
 		{
-			Add.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Add.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				AddMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AddMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				AddFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AddFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.IqResult <= 10)
-			LowIQ.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			LowIQ.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.IQ >= 120)
-			HighIQ.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			HighIQ.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (strlen(Row.Referer) == 0)
 		{
-			Mix.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Mix.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				MixMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				MixMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				MixFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 		else
 		{
 			ref = FindReferer(Row.Referer);
 			if (ref && ref->NT)
-				NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				NtControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.NtResult - Row.AsResult >= 35)
 		{
-			Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Nt.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				NtMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				NtFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.AsResult - Row.NtResult >= 35)
 		{
 
-			Aspie.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Aspie.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				AspieMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AspieMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				AspieFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AspieFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 	}
 }

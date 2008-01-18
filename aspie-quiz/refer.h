@@ -50,7 +50,7 @@ public:
 	int ResultMixed;
 	int ResultAs;
 
-    int GroupResult[12];
+	char GroupResult[ACTIVE_GROUP_COUNT];
     
 	int NT;
 	int Aspie;

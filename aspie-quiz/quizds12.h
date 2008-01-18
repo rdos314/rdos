@@ -22,6 +22,6 @@ struct TQuizRow
 	long NtResult;
 	long GiftedResult;
 	char Quiz[250];
-	int GroupResult[14];
+	char GroupResult[ACTIVE_GROUP_COUNT];
 };
 

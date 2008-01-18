@@ -139,160 +139,6 @@ void TQuizNd::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
-#   Name       : TQuizNd::GetDxData
-#
-#   Purpose....: Get diagnostic data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizNd::GetDxData()
-{
-	TQuizRow Row;
-	int DxArr[POP_TYPE_COUNT];
-	int i;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		for (i = 0; i < POP_TYPE_COUNT; i++)
-			DxArr[i] = DX_STATE_UNKNOWN;
-
-		if (Row.Autism == 2)
-			DxArr[POP_TYPE_AUTISM] = DX_STATE_YES;
-
-		if (Row.Autism == 1)
-			DxArr[POP_TYPE_AUTISM] = DX_STATE_SELF;
-
-		if (Row.Autism == 0)
-			DxArr[POP_TYPE_AUTISM] = DX_STATE_NO;
-
-		if (Row.Aspie == 2)
-			DxArr[POP_TYPE_AS] = DX_STATE_YES;
-
-		if (Row.Aspie == 1)
-			DxArr[POP_TYPE_AS] = DX_STATE_SELF;
-
-		if (Row.Aspie == 0)
-			DxArr[POP_TYPE_AS] = DX_STATE_NO;
-
-		if (Row.ADHD == 2)
-			DxArr[POP_TYPE_ADD] = DX_STATE_YES;
-
-		if (Row.ADHD == 1)
-			DxArr[POP_TYPE_ADD] = DX_STATE_SELF;
-
-		if (Row.ADHD == 0)
-			DxArr[POP_TYPE_ADD] = DX_STATE_NO;
-
-		if (Row.TS == 2)
-			DxArr[POP_TYPE_TS] = DX_STATE_YES;
-
-		if (Row.TS == 1)
-			DxArr[POP_TYPE_TS] = DX_STATE_SELF;
-
-		if (Row.TS == 0)
-			DxArr[POP_TYPE_TS] = DX_STATE_NO;
-
-		if (Row.Hyperlexia == 2)
-			DxArr[POP_TYPE_HYPERLEXIA] = DX_STATE_YES;
-
-		if (Row.Hyperlexia == 1)
-			DxArr[POP_TYPE_HYPERLEXIA] = DX_STATE_SELF;
-
-		if (Row.Hyperlexia == 0)
-			DxArr[POP_TYPE_HYPERLEXIA] = DX_STATE_NO;
-
-		if (Row.Dyspraxia == 2)
-			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_YES;
-
-		if (Row.Dyspraxia == 1)
-			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_SELF;
-
-		if (Row.Dyspraxia == 0)
-			DxArr[POP_TYPE_DYSPRAXIA] = DX_STATE_NO;
-
-		if (Row.Dyslexia == 2)
-			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_YES;
-
-		if (Row.Dyslexia == 1)
-			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_SELF;
-
-		if (Row.Dyslexia == 0)
-			DxArr[POP_TYPE_DYSLEXIA] = DX_STATE_NO;
-
-		if (Row.Dyscalculia == 2)
-			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_YES;
-
-		if (Row.Dyscalculia == 1)
-			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_SELF;
-
-		if (Row.Dyscalculia == 0)
-			DxArr[POP_TYPE_DYSCALCULIA] = DX_STATE_NO;
-
-		if (Row.OCD == 2)
-			DxArr[POP_TYPE_OCD] = DX_STATE_YES;
-
-		if (Row.OCD == 1)
-			DxArr[POP_TYPE_OCD] = DX_STATE_SELF;
-
-		if (Row.OCD == 0)
-			DxArr[POP_TYPE_OCD] = DX_STATE_NO;
-
-		if (Row.ODD == 2)
-			DxArr[POP_TYPE_ODD] = DX_STATE_YES;
-
-		if (Row.ODD == 1)
-			DxArr[POP_TYPE_ODD] = DX_STATE_SELF;
-
-		if (Row.ODD == 0)
-			DxArr[POP_TYPE_ODD] = DX_STATE_NO;
-
-		if (Row.Synaesthesia == 2)
-			DxArr[POP_TYPE_SYNAESTHESIA] = DX_STATE_YES;
-
-		if (Row.Synaesthesia == 1)
-			DxArr[POP_TYPE_SYNAESTHESIA] = DX_STATE_SELF;
-
-		if (Row.Synaesthesia == 0)
-			DxArr[POP_TYPE_SYNAESTHESIA] = DX_STATE_NO;
-
-		if (Row.PA == 2)
-			DxArr[POP_TYPE_PA] = DX_STATE_YES;
-
-		if (Row.PA == 1)
-			DxArr[POP_TYPE_PA] = DX_STATE_SELF;
-
-		if (Row.PA == 0)
-			DxArr[POP_TYPE_PA] = DX_STATE_NO;
-
-		if (Row.Dysgraphia == 2)
-			DxArr[POP_TYPE_DYSGRAPHIA] = DX_STATE_YES;
-
-		if (Row.Dysgraphia == 1)
-			DxArr[POP_TYPE_DYSGRAPHIA] = DX_STATE_SELF;
-
-		if (Row.Dysgraphia == 0)
-			DxArr[POP_TYPE_DYSGRAPHIA] = DX_STATE_NO;
-
-		if (Row.Bipolar == 2)
-			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_YES;
-
-		if (Row.Bipolar == 1)
-			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_SELF;
-
-		if (Row.Bipolar == 0)
-			DxArr[POP_TYPE_BIPOLAR] = DX_STATE_NO;
-
-		ProcessDxEntry(Row.GroupResult, DxArr);
-
-	}
-}
-
-/*##########################################################################
-#
 #   Name       : TQuizNd::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
@@ -607,7 +453,7 @@ void TQuizNd::SetupTexts()
  	Quiz[19].Text = "Were you quick to learn tasks requiring fine coordination?";
  	Quiz[20].Text = "Do you have difficulty with throwing and catching a ball?";
  	Quiz[21].Text = "Can you easily handle a ball?";
- 	Quiz[22].Text = "Did you enjoy classes like handi-work or gymnasics in school?";
+	Quiz[22].Text = "Did you enjoy classes like handi-work or gymnasics in school?";
  	Quiz[23].Text = "Do you have a better than average posture?";
  	Quiz[24].Text = "Do you excel in crafts requiring much patience and skill?";
  	Quiz[25].Text = "Do you enjoy playing musical instruments?";
@@ -644,7 +490,7 @@ void TQuizNd::SetupTexts()
  	Quiz[56].Text = "Do you swear a lot?";
  	Quiz[57].Text = "Do you stammer when stressed?";
  	Quiz[58].Text = "Do you have unconventional, often unique ways of solving problems?";
- 	Quiz[59].Text = "Do you focus on one interest at a time and become an expert on that subject?";
+	Quiz[59].Text = "Do you focus on one interest at a time and become an expert on that subject?";
  	Quiz[60].Text = "Do you prefer to take a more general interest in many areas?";
  	Quiz[61].Text = "Do you tend to get so absorbed in your projects that you forget everything else (e.g. eating, sleeping, taking a shower, other people)?";
  	Quiz[62].Text = "Do you like having other involved in your pursuits?";
@@ -681,7 +527,7 @@ void TQuizNd::SetupTexts()
  	Quiz[93].Text = "Do you get exceedingly tired after socializing, and need to regenerate alone?";
  	Quiz[94].Text = "Do you spend more time getting to know others than yourself?";
  	Quiz[95].Text = "Are you comfortable in social situations and with new people?";
- 	Quiz[96].Text = "Do you understand why the loss of a pen can be more devastating than the loss of a relationship?";
+	Quiz[96].Text = "Do you understand why the loss of a pen can be more devastating than the loss of a relationship?";
  	Quiz[97].Text = "Do you find social chitchat difficult, tiresome and/or a waste of time?";
  	Quiz[98].Text = "Have you been bullied, abused or taken advantage of in various situations?";
  	Quiz[99].Text = "Do you mostly prefer to play/work/do things on your own - unsupervised?";
@@ -718,7 +564,7 @@ void TQuizNd::SetupTexts()
  	Quiz[130].Text= "Are you trying to slow down at work because you run out of things to do?";
  	Quiz[131].Text= "Can you read between the lines?";
  	Quiz[132].Text= "Can you spot hidden agendas with ease?";
- 	Quiz[133].Text= "Are you always aware of other things going on around you even when reading or otherwise occupied?";
+	Quiz[133].Text= "Are you always aware of other things going on around you even when reading or otherwise occupied?";
  	Quiz[134].Text= "Are your dreams and fantasies much like those of your friends?";
  	Quiz[135].Text= "Do you get a firm feel for the big picture, before noticing details?";
  	Quiz[136].Text= "Do you find predictability and constancy mind-numbing?";
@@ -755,7 +601,7 @@ void TQuizNd::SetupTexts()
  	Quiz[167].Text= "Do you enjoy reading?";
  	Quiz[168].Text= "Is reading a chore?";
  	Quiz[169].Text= "Do you rely on recording devices rather than notes?";
- 	Quiz[170].Text= "Do you always carry a notepad?";
+	Quiz[170].Text= "Do you always carry a notepad?";
  	Quiz[171].Text= "Do you enjoy games but forget the rules?";
  	Quiz[172].Text= "Do you remember rules of a game but not enjoy playing?";
  	Quiz[173].Text= "Do you find it difficult to read written material unless it is very interesting or very easy?";
@@ -792,7 +638,7 @@ void TQuizNd::SetupTexts()
  	Quiz[204].Text= "OCD";
  	Quiz[205].Text= "ODD";
  	Quiz[206].Text= "Synaesthesia";
- 	Quiz[207].Text= "Prosapagnosia";
+	Quiz[207].Text= "Prosapagnosia";
  	Quiz[208].Text= "Dysgraphia";
  	Quiz[209].Text= "Bipolar";
 
@@ -829,7 +675,7 @@ void TQuizNd::SetupTexts()
  	Quiz[27].Text = "Är du sist med att avsluta manuella uppgifter?";
  	Quiz[28].Text = "I samtal, brukar du ibland ha problem med saker som timing, turtagning och ömsesidighet?";
  	Quiz[29].Text = "Har du lätt för att tolka kroppsspråk?";
- 	Quiz[30].Text = "Har du en tendens att tolka saker bokstavligt och/eller svara på retoriska frågor?";
+	Quiz[30].Text = "Har du en tendens att tolka saker bokstavligt och/eller svara på retoriska frågor?";
  	Quiz[31].Text = "Är du oftast omedveten om outtalade sociala regler?";
  	Quiz[32].Text = "Missförstår andra ofta dig?";
  	Quiz[33].Text = "Har du en monoton röst och/eller svårigheter att finjustera ljudnivå och hastighet när du talar?";
@@ -866,7 +712,7 @@ void TQuizNd::SetupTexts()
  	Quiz[64].Text = "Är din fantasi ovanlig med unika idéer som andra inte har?";
  	Quiz[65].Text = "Brukar du lägga märke till och intressera dig för detaljer som andra inte verkar se eller bry sig om?";
  	Quiz[66].Text = "Älskar du att samla på, sortera & organisera saker och/eller göra listor och diagram?";
- 	Quiz[67].Text = "Är du ovanligt begåvad inom ett eller flera områden?";
+	Quiz[67].Text = "Är du ovanligt begåvad inom ett eller flera områden?";
  	Quiz[68].Text = "Har du en speciell talang som du har jobbat med?";
  	Quiz[69].Text = "Tycker du om att lära lite om allt möjligt även om du inte är speciellt intresserad?";
  	Quiz[70].Text = "Är det svårt för dig att lära dig sånt som du inte är intresserad av?";
@@ -903,7 +749,7 @@ void TQuizNd::SetupTexts()
  	Quiz[101].Text= "Blir du lätt frustrerad och upprörd när du blir stressad, trött, hungrig, ifrågasatt, avbruten, överstimulerad, eller när saker inte går som du har tänkt dig och ställt in dig på?";
  	Quiz[102].Text= "Pratar du mestadels när du har något att tillföra en diskussion?";
  	Quiz[103].Text= "Känner du intuitivt av vad som är rätt socialt?";
- 	Quiz[104].Text= "Känner du på dig när det förväntas att du ska be folk om ursäkt?";
+	Quiz[104].Text= "Känner du på dig när det förväntas att du ska be folk om ursäkt?";
  	Quiz[105].Text= "Sätter du människor före saker och idéer?";
  	Quiz[106].Text= "Blir du förvånad och besviken när folk är ovänliga och inte tycks förstå eller acceptera dig som du är?";
  	Quiz[107].Text= "Ser du socialt avvisande som ett sätt att växa som människa?";
@@ -940,7 +786,7 @@ void TQuizNd::SetupTexts()
  	Quiz[138].Text= "Föredrar du felsökning framför att läsa en manual när tekniska problem uppstår?";
  	Quiz[139].Text= "Kan du komma ihåg en diskussion ordagrant dagar eller veckor efter?";
  	Quiz[140].Text= "Glömmer du ofta var du lagt saker?";
- 	Quiz[141].Text= "Glömmer du ofta planerade aktiviteter?";
+	Quiz[141].Text= "Glömmer du ofta planerade aktiviteter?";
  	Quiz[142].Text= "Litar andra på dig när det gäller att komma ihåg födelsedagar?";
  	Quiz[143].Text= "Dyker du ibland upp utan de anteckningar du behöver?";
  	Quiz[144].Text= "Har du allting med som du kan tänkas bli ombedd att visa?";
@@ -977,7 +823,7 @@ void TQuizNd::SetupTexts()
  	Quiz[175].Text= "Har du behov av att SE, ta i, eller själv bearbeta saker för att riktigt minnas dem?";
  	Quiz[176].Text= "Har du dålig tidsuppfattning?";
  	Quiz[177].Text= "Har du svårigheter att bedöma avstånd, höjd, djup och hastighet?";
- 	Quiz[178].Text= "Vet du instinktivt hur mycket klockan är när någon frågar dig?";
+	Quiz[178].Text= "Vet du instinktivt hur mycket klockan är när någon frågar dig?";
  	Quiz[179].Text= "Känner du behov av att rycka loss hudflisor från dig själv (eller andra)?";
  	Quiz[180].Text= "Blir du förvirrad av instruktioner - särskilt flera på en gång?";
  	Quiz[181].Text= "Är du vänsterhänt eller bådahänt?";
@@ -1146,7 +992,7 @@ void TQuizNd::LoadPopulations()
 	TQuizRow Row;
 	int i;
 	TReferer *ref;
-	int aspie;
+	char DxArr[DX_COUNT];
 	int id;
 	char score;
 	int IdArr[MAX_QUESTIONS];
@@ -1180,11 +1026,11 @@ void TQuizNd::LoadPopulations()
 			    if (i < 200)
 			    {
     			    score = Row.Quiz[i] - 1;
-	    		    id = IdArr[i];
+					id = IdArr[i];
 			    
 		    	    DsmAutism.Add(Row.Autism, id, score);
     			    DsmAs.Add(Row.Aspie, id, score);
-	    		    DsmAdd.Add(Row.ADHD, id, score);
+					DsmAdd.Add(Row.ADHD, id, score);
 		    	    DsmTs.Add(Row.TS, id, score);
 			        DsmHyperlexia.Add(Row.Hyperlexia, id, score);
 			        DsmDyspraxia.Add(Row.Dyspraxia, id, score);
@@ -1201,117 +1047,241 @@ void TQuizNd::LoadPopulations()
 
 		}
 
-		aspie = FALSE;
+		for (i = 0; i < DX_COUNT; i++)
+			DxArr[i] = DX_STATE_UNKNOWN;
 
-		if (Row.Autism || Row.Aspie)
-			aspie = TRUE;
+		if (Row.Autism == 2)
+			DxArr[DX_AUTISM] = DX_STATE_YES;
 
-		All.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+		if (Row.Autism == 1)
+			DxArr[DX_AUTISM] = DX_STATE_SELF;
+
+		if (Row.Autism == 0)
+			DxArr[DX_AUTISM] = DX_STATE_NO;
+
+		if (Row.Aspie == 2)
+			DxArr[DX_AS] = DX_STATE_YES;
+
+		if (Row.Aspie == 1)
+			DxArr[DX_AS] = DX_STATE_SELF;
+
+		if (Row.Aspie == 0)
+			DxArr[DX_AS] = DX_STATE_NO;
+
+		if (Row.ADHD == 2)
+			DxArr[DX_ADD] = DX_STATE_YES;
+
+		if (Row.ADHD == 1)
+			DxArr[DX_ADD] = DX_STATE_SELF;
+
+		if (Row.ADHD == 0)
+			DxArr[DX_ADD] = DX_STATE_NO;
+
+		if (Row.TS == 2)
+			DxArr[DX_TS] = DX_STATE_YES;
+
+		if (Row.TS == 1)
+			DxArr[DX_TS] = DX_STATE_SELF;
+
+		if (Row.TS == 0)
+			DxArr[DX_TS] = DX_STATE_NO;
+
+		if (Row.Hyperlexia == 2)
+			DxArr[DX_HYPERLEXIA] = DX_STATE_YES;
+
+		if (Row.Hyperlexia == 1)
+			DxArr[DX_HYPERLEXIA] = DX_STATE_SELF;
+
+		if (Row.Hyperlexia == 0)
+			DxArr[DX_HYPERLEXIA] = DX_STATE_NO;
+
+		if (Row.Dyspraxia == 2)
+			DxArr[DX_DYSPRAXIA] = DX_STATE_YES;
+
+		if (Row.Dyspraxia == 1)
+			DxArr[DX_DYSPRAXIA] = DX_STATE_SELF;
+
+		if (Row.Dyspraxia == 0)
+			DxArr[DX_DYSPRAXIA] = DX_STATE_NO;
+
+		if (Row.Dyslexia == 2)
+			DxArr[DX_DYSLEXIA] = DX_STATE_YES;
+
+		if (Row.Dyslexia == 1)
+			DxArr[DX_DYSLEXIA] = DX_STATE_SELF;
+
+		if (Row.Dyslexia == 0)
+			DxArr[DX_DYSLEXIA] = DX_STATE_NO;
+
+		if (Row.Dyscalculia == 2)
+			DxArr[DX_DYSCALCULIA] = DX_STATE_YES;
+
+		if (Row.Dyscalculia == 1)
+			DxArr[DX_DYSCALCULIA] = DX_STATE_SELF;
+
+		if (Row.Dyscalculia == 0)
+			DxArr[DX_DYSCALCULIA] = DX_STATE_NO;
+
+		if (Row.OCD == 2)
+			DxArr[DX_OCD] = DX_STATE_YES;
+
+		if (Row.OCD == 1)
+			DxArr[DX_OCD] = DX_STATE_SELF;
+
+		if (Row.OCD == 0)
+			DxArr[DX_OCD] = DX_STATE_NO;
+
+		if (Row.ODD == 2)
+			DxArr[DX_ODD] = DX_STATE_YES;
+
+		if (Row.ODD == 1)
+			DxArr[DX_ODD] = DX_STATE_SELF;
+
+		if (Row.ODD == 0)
+			DxArr[DX_ODD] = DX_STATE_NO;
+
+		if (Row.Synaesthesia == 2)
+			DxArr[DX_SYNAESTHESIA] = DX_STATE_YES;
+
+		if (Row.Synaesthesia == 1)
+			DxArr[DX_SYNAESTHESIA] = DX_STATE_SELF;
+
+		if (Row.Synaesthesia == 0)
+			DxArr[DX_SYNAESTHESIA] = DX_STATE_NO;
+
+		if (Row.PA == 2)
+			DxArr[DX_PA] = DX_STATE_YES;
+
+		if (Row.PA == 1)
+			DxArr[DX_PA] = DX_STATE_SELF;
+
+		if (Row.PA == 0)
+			DxArr[DX_PA] = DX_STATE_NO;
+
+		if (Row.Dysgraphia == 2)
+			DxArr[DX_DYSGRAPHIA] = DX_STATE_YES;
+
+		if (Row.Dysgraphia == 1)
+			DxArr[DX_DYSGRAPHIA] = DX_STATE_SELF;
+
+		if (Row.Dysgraphia == 0)
+			DxArr[DX_DYSGRAPHIA] = DX_STATE_NO;
+
+		if (Row.Bipolar == 2)
+			DxArr[DX_BIPOLAR] = DX_STATE_YES;
+
+		if (Row.Bipolar == 1)
+			DxArr[DX_BIPOLAR] = DX_STATE_SELF;
+
+		if (Row.Bipolar == 0)
+			DxArr[DX_BIPOLAR] = DX_STATE_NO;
+
+		All.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.AsResult < Row.NtResult)
-				LowAs.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				LowAs.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 			if (Row.Gender == 1)
 			{
 				if (Row.BirthYear > 1986)
-					YoungMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+					YoungMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
-				AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AsMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			}
 			else
 			{
 				if (Row.BirthYear > 1986)
-					YoungFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+					YoungFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
-				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AsFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			}
 
 			if (Row.Autism == 2)
-				Autism.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				Autism.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 			if (Row.Aspie == 2)
-				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				As.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 			if (Row.Autism == 1 || Row.Aspie == 1)
-				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AspieControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.ADHD)
 		{
-			Add.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Add.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				AddMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AddMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				AddFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AddFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.TS)
-			Ts.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Ts.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.Hyperlexia)
-			Hyperlexia.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Hyperlexia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.Dyspraxia)
-			Dyspraxia.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Dyspraxia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.Dyslexia)
-			Dyslexia.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Dyslexia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.Dyscalculia)
-			Dyscalculia.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Dyscalculia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.OCD)
-			OCD.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			OCD.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.ODD)
-			ODD.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			ODD.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.Synaesthesia)
-			Synaesthesia.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Synaesthesia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.PA)
-			PA.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			PA.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.Dysgraphia)
-			Dysgraphia.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Dysgraphia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (Row.Bipolar)
-			Bipolar.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Bipolar.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 
 		if (strlen(Row.Referer) == 0)
 		{
-			Mix.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Mix.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				MixMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				MixMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				MixFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 		else
 		{
 			ref = FindReferer(Row.Referer);
 			if (ref && ref->NT)
-				NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				NtControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.NtResult - Row.AsResult >= 35)
 		{
-			Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Nt.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				NtMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				NtFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.AsResult - Row.NtResult >= 35)
 		{
 
-			Aspie.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+			Aspie.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				AspieMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AspieMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 			else
-				AspieFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Gender, Row.Quiz, Row.GroupResult);
+				AspieFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 		}
 	}
 }
