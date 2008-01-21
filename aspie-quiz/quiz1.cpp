@@ -861,6 +861,10 @@ void TQuizI::GetReferer(const char *referer, TPopulation *pop)
 	TReferer *ref;
 	TQuizRow Row;
 	char ValArr[MAX_QUESTIONS];
+	char DxArr[DX_COUNT];
+
+	for (i = 0; i < DX_COUNT; i++)
+		DxArr[DX_COUNT] = DX_STATE_UNKNOWN;
 
 	for (i = 0; i < RefCount; i++)
 	{
@@ -880,7 +884,7 @@ void TQuizI::GetReferer(const char *referer, TPopulation *pop)
 					ValArr[i] = Row.Before[i] + 1;
 				else
 					ValArr[i] = Row.Now[i] + 1;
-				pop->Add(Row.ResultNow, 200 - Row.ResultNow, FALSE, Row.Gender, ValArr, Row.GroupResult);
+				pop->Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
 			}
 		}
 	}

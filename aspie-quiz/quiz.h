@@ -168,6 +168,7 @@ struct TQuizQuestion
     long double MixedPca[MAX_PCA_AXIS];
     long double AspiePca[MAX_ASPIE_PCA_AXIS];
 	long double GroupPca[MAX_GROUP_COUNT];
+	long double DxPca[DX_COUNT];
 };
 
 struct TGroupCorr
@@ -202,7 +203,9 @@ struct TGroup
 struct TAxis
 {
     long double MaxCorr;
+    long double MaxDxCorr;
 	long double PcaCorr[2];
+	long double DxCorr[DX_COUNT];
 	long double GroupCorr[MAX_GROUP_COUNT];
 };
 

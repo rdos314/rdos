@@ -6,7 +6,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or                  
 # (at your option) any later version. The only exception to this rule                          
-# is for commercial usage in embedded systems. For information on
+# is for commercial usage in embedded systems. For information on            
 # usage in commercial embedded systems, contact embedded@rdos.net
 #
 # This program is distributed in the hope that it will be useful,
@@ -2617,7 +2617,7 @@ void TQuiz::CalcGlobal()
 	int k;
 	int a;
     TQuiz *quiz;
-  	TQuiz *TopQuiz;
+	TQuiz *TopQuiz;
 	int TopQuestion;
 	int q;
 	int count;
@@ -2647,7 +2647,7 @@ void TQuiz::CalcGlobal()
     DsmOCD.Correlate();
     DsmODD.Correlate();
     DsmSynaesthesia.Correlate();
-    DsmPA.Correlate();
+	 DsmPA.Correlate();
     DsmDysgraphia.Correlate();
     DsmBipolar.Correlate();
     DsmSchizophrenia.Correlate();
@@ -2677,7 +2677,7 @@ void TQuiz::CalcGlobal()
         {
             GlobalAxisSum[i][j] = 0.0;
             GlobalAxisCount[i][j] = 0;
-        }
+		  }
 
 	}
 
@@ -2707,7 +2707,7 @@ void TQuiz::CalcGlobal()
 			}
 		}
 
-        if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
+		  if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
         {
             Cats = TopQuiz->GetCatCount(TopQuestion);
 
@@ -3042,7 +3042,8 @@ void TQuiz::ImportMvspAspie(const char *filename)
 	long double CorrSd;
 	long double LoadSd;
 	long double w;
-    long double val;
+	 long double val;
+	 int dx;
 
 	strcpy(formstr, "%d");
 	for (i = 0; i < MAX_ASPIE_PCA_AXIS; i++)
@@ -3111,8 +3112,8 @@ void TQuiz::ImportMvspAspie(const char *filename)
 			for (q = 0; q < N; q++)
 			{
 			    if (Quiz[q].Reverse)
-    	    		LoadArr[q] = -Quiz[q].AspiePca[a];
-			    else
+					LoadArr[q] = -Quiz[q].AspiePca[a];
+				 else
     	    		LoadArr[q] = Quiz[q].AspiePca[a];
 
                 CorrArr[q] = Quiz[q].Pca[g];
@@ -3161,13 +3162,13 @@ void TQuiz::ImportMvspAspie(const char *filename)
 			val = sum / (count - 1.0);
 
 			Axis[a].PcaCorr[g] = val;
-        }
-    }
+		  }
+	 }
 
 	for (a = 0; a < AspiePcaCount; a++)
 	{
-	    Axis[a].MaxCorr = 0.0;
-	    
+		 Axis[a].MaxCorr = 0.0;
+
 		for (g = 0; g < GROUP_COUNT - 1; g++)
 		{
 			count = 0;
@@ -3181,7 +3182,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
 				else
 					CorrArr[q] = 0;
 
-    	    	LoadArr[q] = Quiz[q].AspiePca[a];
+				LoadArr[q] = Quiz[q].AspiePca[a];
 			}
 
 			if (count > 1)
@@ -3229,36 +3230,36 @@ void TQuiz::ImportMvspAspie(const char *filename)
 				val = sum / (count - 1.0);
 
 				if (val * val > Axis[a].MaxCorr)
-				    Axis[a].MaxCorr = val * val;
+					 Axis[a].MaxCorr = val * val;
 
-			    Axis[a].GroupCorr[g] = val;
+				 Axis[a].GroupCorr[g] = val;
 			}
 			else
-			    Axis[a].GroupCorr[g] = 0;
-        }
-    }
+				 Axis[a].GroupCorr[g] = 0;
+		  }
+	 }
 
-    for (g = 0; g < GROUP_COUNT - 1; g++)
-    {
-        for (q = 0; q < N; q++)
-        {
-            val = 0;
-            
-            for (a = 1; a < AspiePcaCount; a++)
-            {
+	 for (g = 0; g < GROUP_COUNT - 1; g++)
+	 {
+		  for (q = 0; q < N; q++)
+		  {
+				val = 0;
+
+				for (a = 1; a < AspiePcaCount; a++)
+				{
 //                w = Axis[a].GroupCorr[g];
-//                w = w * w / Axis[a].MaxCorr; 
+//                w = w * w / Axis[a].MaxCorr;
 				val += Quiz[q].AspiePca[a] * Axis[a].GroupCorr[g];
-            }
-            
-            Quiz[q].GroupPca[g] = val;
-        }
-    }
+				}
+
+				Quiz[q].GroupPca[g] = val;
+		  }
+	 }
 
 	for (a = 0; a < GROUP_COUNT - 1; a++)
 	{
-	    Axis[a].MaxCorr = 0.0;
-	    
+		 Axis[a].MaxCorr = 0.0;
+
 		for (g = 0; g < GROUP_COUNT - 1; g++)
 		{
 			count = 0;
@@ -3272,7 +3273,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
 				else
 					CorrArr[q] = 0;
 
-    	    	LoadArr[q] = Quiz[q].GroupPca[a];
+				LoadArr[q] = Quiz[q].GroupPca[a];
 			}
 
 			if (count > 1)
@@ -3313,25 +3314,105 @@ void TQuiz::ImportMvspAspie(const char *filename)
 
 				if (CorrSd && LoadSd)
 				{
-    				for (q = 0; q < count; q++)
-	    			{
-		    			zx = (CorrArr[q] - CorrMean) / CorrSd;
-			    		zy = (LoadArr[q] - LoadMean) / LoadSd;
-				    	sum += zx * zy;
-				    }
+					for (q = 0; q < count; q++)
+					{
+						zx = (CorrArr[q] - CorrMean) / CorrSd;
+						zy = (LoadArr[q] - LoadMean) / LoadSd;
+						sum += zx * zy;
+					 }
 				}
 
 				val = sum / (count - 1.0);
 
 				if (val * val > Axis[a].MaxCorr)
-				    Axis[a].MaxCorr = val * val;
+					 Axis[a].MaxCorr = val * val;
 
 				Axis[a].GroupCorr[g] = val;
 			}
 			else
-			    Axis[a].GroupCorr[g] = 0;
-        }
-    }
+				 Axis[a].GroupCorr[g] = 0;
+		  }
+	 }
+
+
+	for (a = 0; a < AspiePcaCount; a++)
+	{
+		Axis[a].MaxDxCorr = 0.0;
+
+		for (dx = 0; dx < DX_COUNT; dx++)
+		{
+			for (q = 0; q < N; q++)
+			{
+				CorrArr[q] = Quiz[q].Dx[dx].Corr;
+				LoadArr[q] = Quiz[q].AspiePca[a];
+			}
+
+			sum = 0.0;
+			for (q = 0; q < N; q++)
+				sum += CorrArr[q];
+
+			CorrMean = sum / N;
+
+			sum = 0.0;
+			for (q = 0; q < N; q++)
+				sum += LoadArr[q];
+
+			LoadMean = sum / N;
+
+			sum = 0.0;
+			for (q = 0; q < N; q++)
+			{
+				val = CorrMean - CorrArr[q];
+				sum += val * val;
+			}
+
+			CorrSd = sqrtl(sum / ((long double)N - 1.0));
+
+			sum = 0.0;
+			for (q = 0; q < N; q++)
+			{
+				val = LoadMean - LoadArr[q];
+				sum += val * val;
+			}
+
+			LoadSd = sqrtl(sum / ((long double)N - 1.0));
+
+			if (CorrSd > 0.0 && LoadSd > 0.0)
+			{
+
+				sum = 0.0;
+				for (q = 0; q < N; q++)
+				{
+					zx = (CorrArr[q] - CorrMean) / CorrSd;
+					zy = (LoadArr[q] - LoadMean) / LoadSd;
+					sum += zx * zy;
+				}
+
+				val = sum / ((long double)N - 1.0);
+
+				if (val * val > Axis[a].MaxDxCorr)
+					 Axis[a].MaxDxCorr = val * val;
+
+				 Axis[a].DxCorr[dx] = val;
+			}
+			else
+				 Axis[a].DxCorr[dx] = 0;
+		  }
+	 }
+
+	 for (dx = 0; dx < DX_COUNT; dx++)
+	 {
+		  for (q = 0; q < N; q++)
+		  {
+				val = 0;
+
+				for (a = 1; a < AspiePcaCount; a++)
+					val += Quiz[q].AspiePca[a] * Axis[a].DxCorr[dx];
+
+				Quiz[q].DxPca[dx] = val;
+		  }
+	 }
+
 }
 
 /*##################  TQuiz::WriteIQ ##########################
@@ -10845,7 +10926,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 		{
 		    if (Axis[a].MaxCorr > 0.02)
 		    {
-    			WriteCenteredFieldHeader(file, 4);
+				WriteCenteredFieldHeader(file, 4);
 
 	    		val = Axis[a].GroupCorr[g];
 
@@ -10875,7 +10956,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
                 else
                     file.Write("---");
                 
-                WriteFieldFooter(file);
+					 WriteFieldFooter(file);
 			}
         }
 
@@ -11335,7 +11416,7 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
                 while (quiz)
 	    		{
-		    		WritePca(file, quiz->Quiz[q].GroupPca[a]);
+					WritePca(file, quiz->Quiz[q].GroupPca[a]);
 
 			    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 				    if (quiz)

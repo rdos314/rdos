@@ -1400,6 +1400,10 @@ void TQuizS11::GetReferer(const char *referer, TPopulation *pop)
 	int i;
 	TReferer *ref;
 	TQuizRow Row;
+	char DxArr[DX_COUNT];
+
+	for (i = 0; i < DX_COUNT; i++)
+		DxArr[DX_COUNT] = DX_STATE_UNKNOWN;
 
 	for (i = 0; i < RefCount; i++)
 	{
@@ -1411,7 +1415,7 @@ void TQuizS11::GetReferer(const char *referer, TPopulation *pop)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 		if (ref->IsMatch(Row.Referer))
-			pop->Add(Row.AsResult, Row.NtResult, FALSE, Row.Gender, Row.Quiz, Row.GroupResult);
+			pop->Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult);
 }
 
 /*##################  IsPca ##########################
