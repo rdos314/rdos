@@ -2106,15 +2106,21 @@ void TQuiz::Calculate()
 	int sum1;
 	int count2;
 	int sum2;
-    TQuiz *quiz;
-    int cq;
+	TQuiz *quiz;
+	int cq;
 	int q1, q2;
-    int ival1, ival2;
-    int gid1, gid2;
+	int ival1, ival2;
+	int gid1, gid2;
 	long double dcount1;
 	long double dcount2;
 	long double val1;
 	long double val2;
+
+	int dx;
+	int DxCount[DX_COUNT];
+	int DxSum[DX_COUNT];
+	long double DxMean[DX_COUNT];
+	long double DxSd[DX_COUNT];
 
 	PopCorr.Correlate(&Aspie, &Nt);
 
@@ -2129,15 +2135,15 @@ void TQuiz::Calculate()
 		Quiz[i].Corr = PopCorr.corr[i];
 		Quiz[i].Cats = GetCatCount(i);
 
-    	Quiz[i].ChiCount[0] = Aspie.Count[i];
-    	Quiz[i].ChiCount[1] = Nt.Count[i];
-        
+		Quiz[i].ChiCount[0] = Aspie.Count[i];
+		Quiz[i].ChiCount[1] = Nt.Count[i];
+
 		for (j = 0; j < Quiz[i].Cats; j++)
 		{
 
-		    Quiz[i].ChiArr[0][j] = Aspie.ChiArr[i][j];
-		    Quiz[i].ChiArr[1][j] = Nt.ChiArr[i][j];
-        }
+			Quiz[i].ChiArr[0][j] = Aspie.ChiArr[i][j];
+			Quiz[i].ChiArr[1][j] = Nt.ChiArr[i][j];
+		}
 
 		rsum = 0;
 		dcount1 = (long double)Quiz[i].ChiCount[0];
@@ -2145,17 +2151,17 @@ void TQuiz::Calculate()
 
 		if (dcount1 + dcount2)
 		{
-    		for (j = 0; j < Quiz[i].Cats; j++)
-	    	{
-		    	val1 = (long double)Quiz[i].ChiArr[0][j];
-			    val2 = (long double)Quiz[i].ChiArr[1][j];
+			for (j = 0; j < Quiz[i].Cats; j++)
+			{
+				val1 = (long double)Quiz[i].ChiArr[0][j];
+				val2 = (long double)Quiz[i].ChiArr[1][j];
 
-    			exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
-	    		if (exp >= 5.0)
-		    	{
-			    	val = val1 - exp;
-				    rsum += val * val / exp;
-    			}
+				exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
+				if (exp >= 5.0)
+				{
+					val = val1 - exp;
+					rsum += val * val / exp;
+				}
 
 				exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
 				if (exp >= 5.0)
@@ -2174,6 +2180,12 @@ void TQuiz::Calculate()
 	{
 		Quiz[i].Count = 0;
 		Quiz[i].Sum = 0;
+	}
+
+	for (dx = 0; dx < DX_COUNT; dx++)
+	{
+		DxSum[dx] = 0;
+		DxCount[dx] = 0;
 	}
 
 	for (i = 0; i < GROUP_COUNT; i++)
@@ -2205,6 +2217,27 @@ void TQuiz::Calculate()
 
 				Quiz[i].Sum += ival;
 				Quiz[i].Count++;
+
+			}
+		}
+
+		for (dx = 0; dx < DX_COUNT; dx++)
+		{
+			switch (All.ValArr[e].DxArr[dx])
+			{
+				case DX_STATE_YES:
+					DxSum[dx] += 2;
+					DxCount[dx]++;
+					break;
+
+				case DX_STATE_NO:
+					DxCount[dx]++;
+					break;
+
+				case DX_STATE_SELF:
+					DxSum[dx]++;
+					DxCount[dx]++;
+					break;
 			}
 		}
 
@@ -2282,6 +2315,90 @@ void TQuiz::Calculate()
 			csd[i] = 0;
 		}
 	}
+
+	for (dx = 0; dx < DX_COUNT; dx++)
+	{
+		if (DxCount[dx])
+			DxMean[dx] = (long double)DxSum[dx] / (long double)DxCount[dx];
+		else
+			DxMean[dx] = 0.0;
+
+		rsum = 0;
+
+		for (e = 0; e < GroupValCount; e++)
+		{
+			val = 0;
+			switch (All.ValArr[e].DxArr[dx])
+			{
+				case DX_STATE_YES:
+					val = 2.0 - DxMean[dx];
+					break;
+
+				case DX_STATE_NO:
+					val = -DxMean[dx];
+					break;
+
+				case DX_STATE_SELF:
+					val = 1.0 - DxMean[dx];
+					break;
+			}
+			rsum += val * val;
+		}
+
+		if (DxCount[dx] > 1)
+			DxSd[dx] = sqrtl(rsum / ((long double)DxCount[dx] - 1));
+		else
+			DxSd[dx] = 0.0;
+	}
+
+	for (q = 0; q < N; q++)
+	{
+		for (dx = 0; dx < DX_COUNT; dx++)
+		{
+			Quiz[q].Dx[dx].Corr = 0.0;
+
+			if (csd[q] && DxSd[dx])
+			{
+				rsum = 0;
+				count = 0;
+				for (e = 0; e < GroupValCount; e++)
+				{
+					ival = All.ValArr[e].Quiz[q];
+					if (ival && All.ValArr[e].DxArr[dx] != DX_STATE_UNKNOWN)
+					{
+						if (Quiz[q].Reverse)
+							ival = Quiz[q].Cats - ival;
+						else
+							ival--;
+
+						switch (All.ValArr[e].DxArr[dx])
+						{
+							case DX_STATE_YES:
+								val = 2.0 - DxMean[dx];
+								break;
+
+							case DX_STATE_NO:
+								val = -DxMean[dx];
+								break;
+
+							case DX_STATE_SELF:
+								val = 1.0 - DxMean[dx];
+								break;
+						}
+
+						count++;
+						zx = ((long double)ival - mean[q]) / csd[q];
+						zy = val / DxSd[dx];
+						rsum += zx * zy;
+					}
+				}
+
+				if (count > 1)
+					Quiz[q].Dx[dx].Corr = rsum / (long double)(count - 1);
+			}
+		}
+	}
+
 
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
@@ -2435,7 +2552,7 @@ void TQuiz::Calculate()
 			{
     			ival1 = All.ValArr[e].Quiz[q1];
     			if (ival1)
-    			{
+				{
     				if (Quiz[q1].Reverse)
 	    				ival1 = Quiz[q1].Cats - ival1;
 	    			else

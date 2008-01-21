@@ -128,31 +128,37 @@ struct TQuizGroup
 	int Count;
 };
 
+struct TQuizDx
+{
+	long double Corr;
+};
+
 struct TQuizQuestion
 {
-    const char *Text;
+	const char *Text;
 	int AsCount;
 	long double AsMean;
-    long double AsSd;
-    int NtCount;
-    long double NtMean;
-    long double NtSd;
+	long double AsSd;
+	int NtCount;
+	long double NtMean;
+	long double NtSd;
 	long double Chi2;
-    int ChiArr[2][16];
-    int ChiCount[2];
+	int ChiArr[2][16];
+	int ChiCount[2];
 	long double Corr;
 	int Count;
 	long double Sum;
-    int Used;
-    int NoAnswer;
-    int MyGroup;
-    int Reverse;
-    TQuiz *CrossQuiz;
-    int CrossInd;
-    int GlobalId;
-    int Changed;
-    int Cats;
-    TQuizGroup Group[MAX_GROUP_COUNT];
+	int Used;
+	int NoAnswer;
+	int MyGroup;
+	int Reverse;
+	TQuiz *CrossQuiz;
+	int CrossInd;
+	int GlobalId;
+	int Changed;
+	int Cats;
+	TQuizGroup Group[MAX_GROUP_COUNT];
+	TQuizDx Dx[DX_COUNT];
     long double Pca[MAX_PCA_AXIS];
     long double MalePca[MAX_PCA_AXIS];
 	long double FemalePca[MAX_PCA_AXIS];
@@ -161,7 +167,7 @@ struct TQuizQuestion
 	long double AsPca[MAX_PCA_AXIS];
     long double MixedPca[MAX_PCA_AXIS];
     long double AspiePca[MAX_ASPIE_PCA_AXIS];
-    long double GroupPca[MAX_GROUP_COUNT];
+	long double GroupPca[MAX_GROUP_COUNT];
 };
 
 struct TGroupCorr
@@ -353,7 +359,7 @@ protected:
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
 
-	void ProcessDxEntry(char GroupResult[ACTIVE_GROUP_COUNT], char DxArr[POP_TYPE_COUNT]);
+	void ProcessDxEntry(char GroupResult[ACTIVE_GROUP_COUNT], char DxArr[DX_COUNT]);
 	void GetDxData();
 
 	int HasGlobalQuestion(int GlobalId);
