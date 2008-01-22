@@ -51,16 +51,16 @@ TFile quizfile("quiz1.bin", 0);
 *##########################################################################*/
 void HandleRow(TQuizRow *Row)
 {
-    int grp;
+	int dx;
 
 	quizfile.Write(Row, sizeof(TQuizRow));
 	printf("%d Now: %d Before: %d, [", Row->ID, Row->ResultNow, Row->ResultBefore);
 
-	for (grp = 0; grp < 14; grp++)
+	for (dx = 0; dx < DX_COUNT; dx++)
 	{
-	    printf("%d", Row->GroupResult[grp]);
-	    if (grp != 13)
-	        printf(", ");
+		printf("%d", Row->DxResult[dx]);
+		if (dx != DX_COUNT - 1)
+			printf(", ");
 	}
 
 	printf("], Ref: %s\n", Row->Referer);
@@ -80,6 +80,7 @@ void CalcScore(TQuizRow *Row)
 	int fsum = 0;
 	int i;
 	int grp;
+	int dx;
 	int val;
 	int w;
 	int sum;
@@ -139,7 +140,7 @@ void CalcScore(TQuizRow *Row)
 		{
 			val = Row->Now[i];
 			if (Row->Before[i] > val)
-            	val = Row->Before[i];
+				val = Row->Before[i];
 
 			w = Gw[i][grp];
 
@@ -158,6 +159,36 @@ void CalcScore(TQuizRow *Row)
 		else
 			Row->GroupResult[grp] = 0;
 	}
+
+	for (dx = 0; dx < DX_COUNT; dx++)
+	{
+		sum = 0;
+		totsum = 0;
+
+		for (i = 0; i < 100; i++)
+		{
+			val = Row->Now[i];
+			if (Row->Before[i] > val)
+				val = Row->Before[i];
+
+			w = Dw[i][dx];
+
+			if (w < 0)
+			{
+				w = -w;
+				val = 2 - val;
+			}
+
+			sum += val * w;
+			totsum += 2 * w;
+		}
+
+		if (totsum)
+			Row->DxResult[dx] = 100 * sum / totsum;
+		else
+			Row->DxResult[dx] = 0;
+	}
+
 }
 
 /*##################  UpdateReferer ##########################
@@ -269,7 +300,7 @@ void ProcessRow(char *str)
 					 {
 				        Row.LsbTime = 0;
 				        Row.MsbTime = 0;
-				    }
+					}
                     break;
 
                 case 5:
@@ -305,7 +336,7 @@ void ProcessRow(char *str)
 						  Row.ResultBefore = atoi(valstr);
                     break;
 
-                case 1:
+				case 1:
                 case 2:
                 case 4:
                     break;

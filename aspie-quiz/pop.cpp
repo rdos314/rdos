@@ -94,7 +94,7 @@ TPopulation::~TPopulation()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPopulation::Add(int AsScore, int NtScore, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT])
+void TPopulation::Add(int AsScore, int NtScore, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT], char DxScore[DX_COUNT])
 {
 	 int val;
 	 int i;
@@ -148,7 +148,10 @@ void TPopulation::Add(int AsScore, int NtScore, char DxArr[DX_COUNT], int Gender
 		ValArr[ValueCount].GroupResult[i] = GroupScore[i];
 
 	 for (i = 0; i < DX_COUNT; i++)
+	 {
 		ValArr[ValueCount].DxArr[i] = DxArr[i];
+		ValArr[ValueCount].DxResult[i] = DxScore[i];
+	 }
 
 	 ValueCount++;
 }
@@ -164,7 +167,7 @@ void TPopulation::Add(int AsScore, int NtScore, char DxArr[DX_COUNT], int Gender
 #   Returns....: *
 #
 ##########################################################################*/
-void TPopulation::Add(int Score, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT])
+void TPopulation::Add(int Score, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT], char DxScore[DX_COUNT])
 {
 	 int val;
 	 int i;
@@ -219,7 +222,10 @@ void TPopulation::Add(int Score, char DxArr[DX_COUNT], int Gender, char Arr[MAX_
 		ValArr[ValueCount].GroupResult[i] = GroupScore[i];
 
 	 for (i = 0; i < ACTIVE_GROUP_COUNT; i++)
+	 {
 		ValArr[ValueCount].DxArr[i] = DxArr[i];
+		ValArr[ValueCount].DxResult[i] = DxScore[i];
+	 }
 
 	 ValueCount++;
 }

@@ -17,4 +17,5 @@ struct TQuizRow
     char Before[100];
     char Now[100];
 	char GroupResult[ACTIVE_GROUP_COUNT];
+    char DxResult[DX_COUNT];
 };

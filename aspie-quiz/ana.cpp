@@ -465,10 +465,6 @@ int main(int argc, char **argv)
 	 Quiz[26]->ImportMvspAspie("pca\\aspies11.txt");
 	 Quiz[27]->ImportMvspAspie("pca\\aspies12.txt");
 
-	 printf("Regression\r\n");
-	  Quiz[27]->RegressDsm("eval\\dx.htm", 100);
-	  Quiz[27]->RegressDsm("eval\\dxnew.htm", 2);
-
 	 printf("Cutoff\r\n");
 	  Quiz[27]->DsmCutoff("eval\\cutoff.htm", TRUE);
 
@@ -639,8 +635,15 @@ int main(int argc, char **argv)
 
 	printf("axisload\r\n");
 	 Quiz[27]->WriteAxisLoadTable("eval\\axisload.htm");
+
 	printf("avgaxis\r\n");
 	 Quiz[27]->WriteAverageAxisTable("eval\\avgaxis.htm");
+
+	printf("dxload\r\n");
+	 Quiz[27]->WriteDxLoadTable("eval\\dxload.htm");
+
+	printf("avgdx\r\n");
+	 Quiz[27]->WriteAverageDxTable("eval\\avgdx.htm");
 
 	printf("main\r\n");
 	 Quiz[27]->WriteLinkReport("eval\\index.htm");
@@ -839,8 +842,8 @@ int main(int argc, char **argv)
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-//	 Quiz[27]->WritePhpWeighting("weights.php");
-//	 Quiz[27]->WritePhpGroupWeighting("group.php");
+	 Quiz[27]->WritePhpWeighting("weights.php");
+	 Quiz[27]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 

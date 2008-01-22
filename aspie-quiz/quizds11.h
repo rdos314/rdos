@@ -23,5 +23,6 @@ struct TQuizRow
 	long TsResult;
 	char Quiz[250];
 	char GroupResult[ACTIVE_GROUP_COUNT];
+    char DxResult[DX_COUNT];
 };
 

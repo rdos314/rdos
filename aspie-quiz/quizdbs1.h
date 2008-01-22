@@ -22,6 +22,7 @@ struct TQuizRow
 	long NtResult;
 	char Quiz[200];
 	char GroupResult[ACTIVE_GROUP_COUNT];
+    char DxResult[DX_COUNT];
 	char Rating[15];
 	int  ViewTime[15];
 };

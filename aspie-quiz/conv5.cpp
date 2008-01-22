@@ -54,17 +54,17 @@ TFile quizfile("quiz5.bin", 0);
 *##########################################################################*/
 void HandleRow(TQuizRow *Row)
 {
-    int grp;
+	int dx;
 
 	quizfile.Write(Row, sizeof(TQuizRow));
 
 	printf("%d AS: %d, NT: %d, [", Row->ID, Row->AsResult, Row->NtResult);
 
-	for (grp = 0; grp < 14; grp++)
+	for (dx = 0; dx < DX_COUNT; dx++)
 	{
-	    printf("%d", Row->GroupResult[grp]);
-	    if (grp != 13)
-	        printf(", ");
+		printf("%d", Row->DxResult[dx]);
+		if (dx != DX_COUNT - 1)
+			printf(", ");
 	}
 
 	printf("], Ref: %s\n", Row->Referer);
@@ -146,32 +146,33 @@ void UpdateScore(TQuizRow *row)
 	int val;
 	int aw;
 	int nw;
-    int grp;
-    int w;
-    int sum;
-    int totsum;
+	int grp;
+	int dx;
+	int w;
+	int sum;
+	int totsum;
 
-    static int Asw[113] = {
-             12,   12,    7,   14,   11,   10,    9,    6,    3,    6,
-             11,    8,    4,    8,    8,    8,    7,    7,    7,    8,
-              3,    4,   10,    9,    6,    7,    9,   12,    8,    7,
-              6,    8,    8,    9,    8,    9,    9,    6,    6,   12,
-              8,   12,   12,   10,   12,   13,    9,   13,   12,    7,
-             10,   12,   11,    8,    8,    5,   10,    9,    5,   10,
-             12,   13,   13,    7,    8,    6,   14,    4,    6,   12,
-             11,   15,   13,    7,   12,    5,    7,    6,    6,    4,
-              7,    9,    9,    8,    8,    3,    6,    5,    4,   10,
-             10,   13,    6,    8,    5,    8,    4,    8,   11,    7,
-             11,    9,   10,   12,   10,   13,    4,    6,    9,    9,
-              8,    6,    9};
+	static int Asw[113] = {
+			 12,   12,    7,   14,   11,   10,    9,    6,    3,    6,
+			 11,    8,    4,    8,    8,    8,    7,    7,    7,    8,
+			  3,    4,   10,    9,    6,    7,    9,   12,    8,    7,
+			  6,    8,    8,    9,    8,    9,    9,    6,    6,   12,
+			  8,   12,   12,   10,   12,   13,    9,   13,   12,    7,
+			 10,   12,   11,    8,    8,    5,   10,    9,    5,   10,
+			 12,   13,   13,    7,    8,    6,   14,    4,    6,   12,
+			 11,   15,   13,    7,   12,    5,    7,    6,    6,    4,
+			  7,    9,    9,    8,    8,    3,    6,    5,    4,   10,
+			 10,   13,    6,    8,    5,    8,    4,    8,   11,    7,
+			 11,    9,   10,   12,   10,   13,    4,    6,    9,    9,
+			  8,    6,    9};
 
-    static int Ntw[113] = {
-             -5,   -3,   -3,    2,   -3,   -2,   -2,   -3,   -2,   -5,
-              0,   -3,   -3,   -4,   -5,    1,   -6,   -6,   -6,   -5,
-             -4,   -4,  -11,   18,   19,   18,   -9,   -7,   -8,   18,
-             16,   -6,   -9,   -9,   -7,   -4,   -7,   15,   -9,   17,
-             17,    0,   -5,   -3,   -3,    0,   -3,    0,    3,   -4,
-             -9,   -8,   -8,    0,   -9,   -5,   -5,   -6,   17,   -6,
+	static int Ntw[113] = {
+			 -5,   -3,   -3,    2,   -3,   -2,   -2,   -3,   -2,   -5,
+			  0,   -3,   -3,   -4,   -5,    1,   -6,   -6,   -6,   -5,
+			 -4,   -4,  -11,   18,   19,   18,   -9,   -7,   -8,   18,
+			 16,   -6,   -9,   -9,   -7,   -4,   -7,   15,   -9,   17,
+			 17,    0,   -5,   -3,   -3,    0,   -3,    0,    3,   -4,
+			 -9,   -8,   -8,    0,   -9,   -5,   -5,   -6,   17,   -6,
              -8,   -7,   -4,   16,   -8,   16,   -3,   13,   15,   -5,
              -3,    3,   -2,   18,   -3,   14,   18,   18,   10,    7,
              22,   21,   -3,   -6,   -4,   -2,    8,   -2,   -1,    0,
@@ -225,7 +226,7 @@ void UpdateScore(TQuizRow *row)
 	row->AsResult = assum * 100 / astotsum;
 	row->NtResult = ntsum * 100 / nttotsum;
 
-    for (grp = 0; grp < 14; grp++)
+	for (grp = 0; grp < 14; grp++)
     {
         sum = 0;
         totsum = 0;
@@ -255,8 +256,42 @@ void UpdateScore(TQuizRow *row)
         if (totsum)
 			row->GroupResult[grp] = 100 * sum / totsum;
 		else
-            row->GroupResult[grp] = 0;
-    }                         
+			row->GroupResult[grp] = 0;
+	}
+
+	for (dx = 0; dx < DX_COUNT; dx++)
+	{
+		sum = 0;
+		totsum = 0;
+
+		for (i = 0; i < 112; i++)
+		{
+			val = row->Quiz[i];
+
+			if (val)
+			{
+				w = Dw[i][dx];
+
+				if (w < 0)
+				{
+					w = -w;
+					val = 3 - val;
+				}
+				else
+					val--;
+
+				sum += val * w;
+				totsum += 2 * w;
+			}
+		}
+
+
+		if (totsum)
+			row->DxResult[dx] = 100 * sum / totsum;
+		else
+			row->DxResult[dx] = 0;
+	}
+
 }
 
 /*##################  ProcessRow ##########################

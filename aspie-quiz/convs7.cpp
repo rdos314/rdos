@@ -53,17 +53,17 @@ TFile quizfile("quizs7.bin", 0);
 *##########################################################################*/
 void HandleRow(TQuizRow *Row)
 {
-    int grp;
+	int dx;
 
 	quizfile.Write(Row, sizeof(TQuizRow));
 
 	printf("%d AS: %d, NT: %d, [", Row->ID, Row->AsResult, Row->NtResult);
 
-	for (grp = 0; grp < 14; grp++)
+	for (dx = 0; dx < DX_COUNT; dx++)
 	{
-	    printf("%d", Row->GroupResult[grp]);
-	    if (grp != 13)
-	        printf(", ");
+		printf("%d", Row->DxResult[dx]);
+		if (dx != DX_COUNT - 1)
+			printf(", ");
 	}
 
 	printf("], Ref: %s\n", Row->Referer);
@@ -137,8 +137,9 @@ char *GetQuoted(char *str)
 *##########################################################################*/
 void UpdateScore(TQuizRow *row)
 {
-    int grp;
-    int i;
+	int grp;
+	int dx;
+	int i;
     int val;
     int w;
     int sum;
@@ -174,8 +175,42 @@ void UpdateScore(TQuizRow *row)
         if (totsum)
 			row->GroupResult[grp] = 100 * sum / totsum;
 		else
-            row->GroupResult[grp] = 0;
-    }                         
+			row->GroupResult[grp] = 0;
+	}
+
+	for (dx = 0; dx < DX_COUNT; dx++)
+	{
+		sum = 0;
+		totsum = 0;
+
+		for (i = 0; i < 148; i++)
+		{
+			val = row->Quiz[i];
+
+			if (val)
+			{
+				w = Dw[i][dx];
+
+				if (w < 0)
+				{
+					w = -w;
+					val = 3 - val;
+				}
+				else
+					val--;
+
+				sum += val * w;
+				totsum += 2 * w;
+			}
+		}
+
+
+		if (totsum)
+			row->DxResult[dx] = 100 * sum / totsum;
+		else
+			row->DxResult[dx] = 0;
+	}
+
 }
 
 /*##################  ProcessRow ##########################

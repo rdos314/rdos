@@ -25,4 +25,5 @@ struct TQuizRow
     long Hn;
     char Quiz[210];
 	char GroupResult[ACTIVE_GROUP_COUNT];
+	char DxResult[DX_COUNT];
 };

@@ -648,34 +648,34 @@ void TQuizI::LoadPopulations()
 		{
 			case DDX_AS:
 				 if (Row.ResultNow < 100)
-					  LowAs.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+					  LowAs.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 
-				  As.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+				  As.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 				if (Row.Gender == 1)
-					AsMale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+					AsMale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 				else
-					AsFemale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+					AsFemale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 				break;
 
 			case DDX_ADD:
-				  Add.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+				  Add.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 				if (Row.Gender == 1)
-					AddMale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+					AddMale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 				else
-					AddFemale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+					AddFemale.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 				break;
 		}
 
-		All.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+		All.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 
 		if (Row.Diagnos == DDX_REFERER && strlen(Row.Referer) == 0)
-			 Mix.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+			 Mix.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 
 		if (Row.ResultNow  < 90)
-			Nt.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+			Nt.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 
 		if (Row.ResultNow  > 110)
-			Aspie.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+			Aspie.Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 	}
 }
 
@@ -884,7 +884,7 @@ void TQuizI::GetReferer(const char *referer, TPopulation *pop)
 					ValArr[i] = Row.Before[i] + 1;
 				else
 					ValArr[i] = Row.Now[i] + 1;
-				pop->Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult);
+				pop->Add(Row.ResultNow, 200 - Row.ResultNow, DxArr, Row.Gender, ValArr, Row.GroupResult, Row.DxResult);
 			}
 		}
 	}

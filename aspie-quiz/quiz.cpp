@@ -60,6 +60,9 @@ static int GlobalPcaCount[MAX_GLOBAL_QUESTIONS][4];
 static long double GlobalAxisSum[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
 static int GlobalAxisCount[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
 
+static long double GlobalDxSum[MAX_GLOBAL_QUESTIONS][DX_COUNT];
+static int GlobalDxCount[MAX_GLOBAL_QUESTIONS][DX_COUNT];
+
 TDsmPopulation TQuiz::DsmAutism;
 TDsmPopulation TQuiz::DsmAs;
 TDsmPopulation TQuiz::DsmAdd;
@@ -77,9 +80,6 @@ TDsmPopulation TQuiz::DsmBipolar;
 TDsmPopulation TQuiz::DsmSchizophrenia;
 TDsmPopulation TQuiz::DsmSocialPhobia;
 
-int TQuiz::DxScoreArr[POP_TYPE_COUNT][14][101];
-int TQuiz::SelfScoreArr[POP_TYPE_COUNT][14][101];
-int TQuiz::NoDxScoreArr[POP_TYPE_COUNT][14][101];
 int TQuiz::PredYesOk[POP_TYPE_COUNT];
 int TQuiz::PredYesFail[POP_TYPE_COUNT];
 int TQuiz::PredNoOk[POP_TYPE_COUNT];
@@ -441,19 +441,23 @@ void TQuiz::Init()
 {
 	int i;
 	int g;
+	int dx;
 
-    for (i = 0; i < N; i++)
-    {
-        Quiz[i].Text = "NO TEXT";
-        Quiz[i].Reverse = FALSE;
-        Quiz[i].GlobalId = -1;
-    }
+	for (i = 0; i < N; i++)
+	{
+		Quiz[i].Text = "NO TEXT";
+		Quiz[i].Reverse = FALSE;
+		Quiz[i].GlobalId = -1;
+	}
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
+	for (g = 0; g < MAX_GROUP_COUNT; g++)
 	{
 		Group[g].PosName = "NO NAME";
 		Group[g].NegName = "NO NAME";
 	}
+
+	for (dx = 0; dx < MAX_GROUP_COUNT; dx++)
+		Dx[dx].Name = "NO NAME";
 
 #ifdef ENGLISH
 
@@ -510,6 +514,23 @@ void TQuiz::Init()
 
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
+
+	Dx[DX_AUTISM].Name = "Autism";
+	Dx[DX_AS].Name = "AS/HFA/PDD";
+	Dx[DX_ADD].Name = "ADD/ADHD";
+	Dx[DX_HYPERLEXIA].Name = "Hyperlexia";
+	Dx[DX_DYSPRAXIA].Name = "Dyspraxia";
+	Dx[DX_DYSLEXIA].Name = "Dyslexia";
+	Dx[DX_DYSCALCULIA].Name = "Dyscalculia";
+	Dx[DX_OCD].Name = "OCD";
+	Dx[DX_ODD].Name = "ODD";
+	Dx[DX_SYNAESTHESIA].Name = "Synaesthesia";
+	Dx[DX_PA].Name = "PA";
+	Dx[DX_DYSGRAPHIA].Name = "Dysgraphia";
+	Dx[DX_BIPOLAR].Name = "Bipolar";
+	Dx[DX_TS].Name = "Tourette";
+	Dx[DX_SCHIZOPHRENIA].Name = "Schizophrenia";
+	Dx[DX_SOCIAL_PHOBIA].Name = "Social Phobia";
 
 #endif
 
@@ -568,6 +589,23 @@ void TQuiz::Init()
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
+
+	Dx[DX_AUTISM].Name = "Autism";
+	Dx[DX_AS].Name = "AS/HFA/PDD";
+	Dx[DX_ADD].Name = "ADD/ADHD";
+	Dx[DX_HYPERLEXIA].Name = "Hyperlexi";
+	Dx[DX_DYSPRAXIA].Name = "Dyspraxi";
+	Dx[DX_DYSLEXIA].Name = "Dyslexi";
+	Dx[DX_DYSCALCULIA].Name = "Dykcalkuli";
+	Dx[DX_OCD].Name = "OCD";
+	Dx[DX_ODD].Name = "ODD";
+	Dx[DX_SYNAESTHESIA].Name = "Synestesi";
+	Dx[DX_PA].Name = "PA";
+	Dx[DX_DYSGRAPHIA].Name = "Dysgrafi";
+	Dx[DX_BIPOLAR].Name = "Bipolär";
+	Dx[DX_TS].Name = "Tourette";
+	Dx[DX_SCHIZOPHRENIA].Name = "Schizofreni";
+	Dx[DX_SOCIAL_PHOBIA].Name = "Social Fobi";
 
 #endif
 }
@@ -2184,6 +2222,9 @@ void TQuiz::Calculate()
 
 	for (dx = 0; dx < DX_COUNT; dx++)
 	{
+		Dx[dx].Yes = 0;
+		Dx[dx].No = 0;
+		Dx[dx].Self = 0;
 		DxSum[dx] = 0;
 		DxCount[dx] = 0;
 	}
@@ -2226,15 +2267,18 @@ void TQuiz::Calculate()
 			switch (All.ValArr[e].DxArr[dx])
 			{
 				case DX_STATE_YES:
+					Dx[dx].Yes++;
 					DxSum[dx] += 2;
 					DxCount[dx]++;
 					break;
 
 				case DX_STATE_NO:
+					Dx[dx].No++;
 					DxCount[dx]++;
 					break;
 
 				case DX_STATE_SELF:
+					Dx[dx].Self++;
 					DxSum[dx]++;
 					DxCount[dx]++;
 					break;
@@ -2616,7 +2660,8 @@ void TQuiz::CalcGlobal()
 	int j;
 	int k;
 	int a;
-    TQuiz *quiz;
+	int dx;
+	TQuiz *quiz;
 	TQuiz *TopQuiz;
 	int TopQuestion;
 	int q;
@@ -2634,7 +2679,7 @@ void TQuiz::CalcGlobal()
 	long double val2;
 
 	if (GlobalInited)
-	    return;
+		return;
 
     DsmAutism.Correlate();
     DsmAs.Correlate();
@@ -2676,14 +2721,20 @@ void TQuiz::CalcGlobal()
         for (j = 0; j < MAX_GROUP_COUNT; j++)
         {
             GlobalAxisSum[i][j] = 0.0;
-            GlobalAxisCount[i][j] = 0;
-		  }
+			GlobalAxisCount[i][j] = 0;
+		}
+
+		for (j = 0; j < DX_COUNT; j++)
+		{
+			GlobalDxSum[i][j] = 0.0;
+			GlobalDxCount[i][j] = 0;
+		}
 
 	}
 
 	ClearUsed();
 
-    TopQuiz = GetTopQuizCorr(&TopQuestion);
+	TopQuiz = GetTopQuizCorr(&TopQuestion);
 
 	while (TopQuiz)
 	{
@@ -2771,6 +2822,13 @@ void TQuiz::CalcGlobal()
 					GlobalAxisCount[GlobalId][a] += w;
 				}
 
+				for (dx = 0; dx < DX_COUNT; dx++)
+				{
+					w = 2 * quiz->Dx[dx].Yes + quiz->Dx[dx].Self;
+					GlobalDxSum[GlobalId][dx] += quiz->Quiz[q].DxPca[dx] * w;
+					GlobalDxCount[GlobalId][dx] += w;
+				}
+
 				if (quiz->Quiz[q].CrossQuiz)
 				{
 					j = quiz->Quiz[q].CrossInd;
@@ -2785,13 +2843,13 @@ void TQuiz::CalcGlobal()
 			dcount1 = (long double)ChiCount[0];
 			dcount2 = (long double)ChiCount[1];
 
-    		if (dcount1 + dcount2)
-	    	{
-        		for (j = 0; j < Cats; j++)
-	        	{
-		        	val1 = (long double)ChiArr[0][j];
-		    	    val2 = (long double)ChiArr[1][j];
-			    
+			if (dcount1 + dcount2)
+			{
+				for (j = 0; j < Cats; j++)
+				{
+					val1 = (long double)ChiArr[0][j];
+					val2 = (long double)ChiArr[1][j];
+
            			exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
 	        		if (exp >= 5.0)
 		        	{
@@ -9267,18 +9325,19 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 {
     long double val;
 	int grp;
+	int dx;
 	int q;
 	int GlobalId;
 	int ival;
 	 char str[80];
 	TFile file(filename, 0);
 
-    file.Write("function GetGroupWeights()\r\n");
-    file.Write("{\r\n");
+	file.Write("function GetGroupWeights()\r\n");
+	file.Write("{\r\n");
 
 	for (q = 0; q < N; q++)
 	{
-    	sprintf(str, "  $gw[%d] = array(0 => ", q);
+		sprintf(str, "  $gw[%d] = array(0 => ", q);
 		file.Write(str);
 
 		GlobalId = GetGlobalId(q);
@@ -9286,25 +9345,61 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
 		{
 			if (GlobalAxisCount[GlobalId][grp])
-            {
-                val = GlobalAxisSum[GlobalId][grp] / GlobalAxisCount[GlobalId][grp];
-                if (val < 0)
-                    val = 0;
-            }
-            else
-                val = 0;
+			{
+				val = GlobalAxisSum[GlobalId][grp] / GlobalAxisCount[GlobalId][grp];
+				if (val < 0)
+					val = 0;
+			}
+			else
+				val = 0;
 
 			if (Quiz[q].Reverse)
-                val = -val;
+				val = -val;
 
-           	ival = round(100.0 * val);
+			ival = round(100.0 * val);
 
 			sprintf(str, "%d", ival);
-	    	file.Write(str);
+			file.Write(str);
 
-            if (grp != GROUP_COUNT - 2)
-                file.Write(", ");            
-			
+			if (grp != GROUP_COUNT - 2)
+				file.Write(", ");
+
+		}
+		file.Write(");\r\n");
+	}
+
+	file.Write("function GetDxWeights()\r\n");
+	file.Write("{\r\n");
+
+	for (q = 0; q < N; q++)
+	{
+		sprintf(str, "  $gw[%d] = array(0 => ", q);
+		file.Write(str);
+
+		GlobalId = GetGlobalId(q);
+
+		for (dx = 0; dx < DX_COUNT; dx++)
+		{
+			if (GlobalDxCount[GlobalId][dx])
+			{
+				val = GlobalDxSum[GlobalId][dx] / GlobalDxCount[GlobalId][dx];
+				if (val < 0)
+					val = 0;
+			}
+			else
+				val = 0;
+
+			if (Quiz[q].Reverse)
+				val = -val;
+
+			ival = round(100.0 * val);
+
+			sprintf(str, "%d", ival);
+			file.Write(str);
+
+			if (dx != DX_COUNT - 1)
+				file.Write(", ");
+
 		}
 		file.Write(");\r\n");
 	}
@@ -9319,50 +9414,93 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 *##########################################################################*/
 void TQuiz::WriteGroupWeighting(const char *filename)
 {
-    long double val;
+	long double val;
 	int grp;
+	int dx;
 	int q;
 	int ival;
 	int GlobalId;
 	char str[80];
 	TFile file(filename, 0);
 
-    sprintf(str, "  static int Gw[%d][%d] = \r\n{\r\n", N, GROUP_COUNT - 1);
+	sprintf(str, "  static int Gw[%d][%d] = \r\n{\r\n", N, GROUP_COUNT - 1);
 	file.Write(str);
 
 	for (q = 0; q < N; q++)
 	{
-        file.Write("    {");
+		file.Write("    {");
 
 		GlobalId = GetGlobalId(q);
-        
+
 		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
 		{
-            if (GlobalAxisCount[GlobalId][grp])
-            {
-                val = GlobalAxisSum[GlobalId][grp] / GlobalAxisCount[GlobalId][grp];
-                if (val < 0)
-                    val = 0;
-            }
-            else
-                val = 0;
+			if (GlobalAxisCount[GlobalId][grp])
+			{
+				val = GlobalAxisSum[GlobalId][grp] / GlobalAxisCount[GlobalId][grp];
+				if (val < 0)
+					val = 0;
+			}
+			else
+				val = 0;
 
-            if (Quiz[q].Reverse)
-                val = -val;
+			if (Quiz[q].Reverse)
+				val = -val;
 
-           	ival = round(100.0 * val);
+			ival = round(100.0 * val);
 
 			sprintf(str, "%d", ival);
-	    	file.Write(str);
+			file.Write(str);
 
-            if (grp != GROUP_COUNT - 2)
-                file.Write(", ");            
-			
+			if (grp != GROUP_COUNT - 2)
+				file.Write(", ");
+
 		}
 		file.Write("}");
 
 		if (q != N - 1)
-		    file.Write(",");
+			file.Write(",");
+
+		file.Write("\r\n");
+	}
+
+	file.Write("};\r\n");
+
+	sprintf(str, "  static int Dw[%d][%d] = \r\n{\r\n", N, DX_COUNT);
+	file.Write(str);
+
+	for (q = 0; q < N; q++)
+	{
+		file.Write("    {");
+
+		GlobalId = GetGlobalId(q);
+
+		for (dx = 0; dx < DX_COUNT; dx++)
+		{
+			if (GlobalDxCount[GlobalId][dx])
+			{
+				val = GlobalDxSum[GlobalId][dx] / GlobalDxCount[GlobalId][dx];
+				if (val < 0)
+					val = 0;
+			}
+			else
+				val = 0;
+
+			if (Quiz[q].Reverse)
+				val = -val;
+
+			ival = round(100.0 * val);
+
+			sprintf(str, "%d", ival);
+			file.Write(str);
+
+			if (dx != DX_COUNT - 1)
+				file.Write(", ");
+
+		}
+		file.Write("}");
+
+		if (q != N - 1)
+			file.Write(",");
 
 		file.Write("\r\n");
 	}
@@ -11263,7 +11401,7 @@ void TQuiz::WriteVersionRetest(const char *filename)
 
 	file.Write(str);
 	file.Write("<br><br>");
-	
+
 }
 
 /*##################  TQuiz::WriteAxisLoadTable ##########################
@@ -11337,7 +11475,7 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
             WriteCenteredFieldHeader(file, 3);
             sprintf(str, "G:%d", a + 1);
 	    	file.Write(str);
-            WriteFieldFooter(file);
+			WriteFieldFooter(file);
         }
 
 		file.Write("</tr>");
@@ -11353,7 +11491,7 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
 		    while (quiz)
     		{
 		    	quiz->WriteName(file);
-    			sprintf(str, ":%d", q + 1);
+				sprintf(str, ":%d", q + 1);
 	    		file.Write(str);
 		    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 		    	if (quiz)
@@ -11374,7 +11512,7 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
             WriteCenteredFieldHeader(file, 6);
             quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
             while (quiz)
-            {
+			{
                 NormCorr[cross] = 0.0;
 				for (j = 0; j < GROUP_COUNT - 1; j++)
 				{
@@ -11411,10 +11549,10 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
             for (a = 0; a < GROUP_COUNT - 1; a++)
             {					
                 cross = 0;
-                TopQuiz->ClearUsed(TopQuestion);
+				TopQuiz->ClearUsed(TopQuestion);
                 WriteCenteredFieldHeader(file, 6);
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-                while (quiz)
+				while (quiz)
 	    		{
 					WritePca(file, quiz->Quiz[q].GroupPca[a]);
 
@@ -11428,11 +11566,11 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
 			    WriteFieldFooter(file);
 			}
 
-			file.Write("</tr>");    
-        	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+			file.Write("</tr>");
+			TopQuiz = GetTopGroupCorr(g, &TopQuestion);
 		}
 		file.Write("</table>");
-    	file.Write("<br><br>");
+		file.Write("<br><br>");
 	}
 }
 
@@ -11481,7 +11619,7 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
 #endif
 
     for (q = 0; q < MAX_GLOBAL_QUESTIONS; q++)
-        Used[q] = FALSE;
+		Used[q] = FALSE;
 
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
@@ -11502,7 +11640,7 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
 
         WriteCenteredFieldHeader(file, 3);
 		file.Write("AS-NT Corr");
-        WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
         for (a = 0; a < GROUP_COUNT - 1; a++)
 		{
@@ -11510,7 +11648,7 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
             sprintf(str, "G:%d", a + 1);
 	    	file.Write(str);
             WriteFieldFooter(file);
-        }
+		}
 
 		file.Write("</tr>");
 
@@ -11525,122 +11663,500 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
 				q = GlobalTopQuestion[i];
 				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i])
 				{
-                    corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
-                    corrval = corrval * corrval;
-                    if (corrval > LowestCorr)
-                    {
-                        GlobalId = i;
+					corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
+					corrval = corrval * corrval;
+					if (corrval > LowestCorr)
+					{
+						GlobalId = i;
 						LowestCorr = corrval;
-                    }
-                }
-            }
+					}
+				}
+			}
 
-            if (GlobalId >= 0)
-            {
+			if (GlobalId >= 0)
+			{
 				quiz = GlobalTopQuiz[GlobalId];
 				q = GlobalTopQuestion[GlobalId];
 
-                sum = 0;
-                max = 0;
+				sum = 0;
+				max = 0;
 
 				for (a = 0; a < GROUP_COUNT - 1; a++)
 				{
-                    if (GlobalAxisCount[GlobalId][a])
-                    {   
-                        val = GlobalAxisSum[GlobalId][a] / GlobalAxisCount[GlobalId][a];
-                        if (val > max)
+					if (GlobalAxisCount[GlobalId][a])
+					{
+						val = GlobalAxisSum[GlobalId][a] / GlobalAxisCount[GlobalId][a];
+						if (val > max)
 							max = val;
 
 						sum += val;
-                    }
-    		    }
+					}
+				}
 
-    		    max = 0.9 * max;
+				max = 0.9 * max;
 
-	    		Used[GlobalId] = TRUE;
+				Used[GlobalId] = TRUE;
 
-                if (sum != 0)
-                {
-    				file.Write("<tr style='height:24.75pt'>");
+				if (sum != 0)
+				{
+					file.Write("<tr style='height:24.75pt'>");
 
-	    			WriteCenteredFieldHeader(file, 3);
+					WriteCenteredFieldHeader(file, 3);
 
-                    if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.05))
-        				file.Write("<span style='color:#EE0000'>");
-    	    		else
-    		    	{
-                        if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
-        			    	file.Write("<span style='color:#990099'>");
-            		}
+					if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.05))
+						file.Write("<span style='color:#EE0000'>");
+					else
+					{
+						if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
+							file.Write("<span style='color:#990099'>");
+					}
 
-	    			sprintf(str, "%d", GlobalId + 1);
-		    		file.Write(str);
-                    
-                    if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
-        				file.Write("</span>");
+					sprintf(str, "%d", GlobalId + 1);
+					file.Write(str);
+
+					if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
+						file.Write("</span>");
 
 					WriteFieldFooter(file);
 
-		    		WriteCenteredFieldHeader(file, 26);
-			    	if (quiz->Quiz[q].Reverse)
-					    file.Write("<span style='color:#990099'>");
-				    file.Write(quiz->Quiz[q].Text);
-    				if (quiz->Quiz[q].Reverse)
+					WriteCenteredFieldHeader(file, 26);
+					if (quiz->Quiz[q].Reverse)
+						file.Write("<span style='color:#990099'>");
+					file.Write(quiz->Quiz[q].Text);
+					if (quiz->Quiz[q].Reverse)
 						file.Write("</span>");
-		    		WriteFieldFooter(file);
+					WriteFieldFooter(file);
 
-			    	WriteCenteredFieldHeader(file, 6);
+					WriteCenteredFieldHeader(file, 6);
 
-    				val = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+					val = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
 
-#ifdef USE_PERCENT  
-		    	    ival = round(100.0 * val * val);
-			    	sprintf(str, "%d%", ival);
-				    file.Write(str);
+#ifdef USE_PERCENT
+					ival = round(100.0 * val * val);
+					sprintf(str, "%d%", ival);
+					file.Write(str);
 #else
-    	    		ival = round(100.0 * val);
-	    	    	if (ival < 0)
-		    	    {
-			    		file.Write("-");
-    				    ival = -ival;
-	    			}
+					ival = round(100.0 * val);
+					if (ival < 0)
+					{
+						file.Write("-");
+						ival = -ival;
+					}
 
-		    		sprintf(str, ".%02d", ival);
-			    	file.Write(str);
+					sprintf(str, ".%02d", ival);
+					file.Write(str);
 #endif
-    
-	    			for (a = 0; a < GROUP_COUNT - 1; a++)
-		    		{
-    		    		WriteCenteredFieldHeader(file, 6);
-    
-                        if (GlobalAxisCount[GlobalId][a])
-                        {
-                            val = GlobalAxisSum[GlobalId][a] / GlobalAxisCount[GlobalId][a];
+
+					for (a = 0; a < GROUP_COUNT - 1; a++)
+					{
+						WriteCenteredFieldHeader(file, 6);
+
+						if (GlobalAxisCount[GlobalId][a])
+						{
+							val = GlobalAxisSum[GlobalId][a] / GlobalAxisCount[GlobalId][a];
 							if (val > 0)
-                            {
-                                if (val > max)
-                			    	file.Write("<span style='color:#009999'>");
-                            
-		        				WritePca(file, val);
+							{
+								if (val > max)
+									file.Write("<span style='color:#009999'>");
+
+								WritePca(file, val);
 
 								if (val > max)
-                    				file.Write("</span>");
+									file.Write("</span>");
 							}
-                    	}
+						}
 
-    		    		WriteFieldFooter(file);
-    		        }
-    		    }
+						WriteFieldFooter(file);
+					}
+				}
 
 				file.Write("</tr>");
 			}
 			else
-			    break;
+				break;
 		}
 		file.Write("</table>");
 		file.Write("<br><br>");
 	}
 }
+
+/*##################  TQuiz::WriteDxLoadTable ##########################
+*   Purpose....: Write Axis loading table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteDxLoadTable(const char *filename)
+{
+	int j;
+	int g;
+	int dx;
+	int grp;
+	TQuiz *quiz;
+	TQuiz *TopQuiz;
+	int TopQuestion;
+	int q;
+	char str[80];
+	long double NormCorr[MAX_CROSS];
+	int cross;
+	int ival;
+	int count;
+	long double val;
+	TFile file(filename, 0);
+
+	ClearUsed();
+
+#ifdef ENGLISH
+	file.Write("<h2>Diagnosis load factors</h2>\n");
+	file.Write("<span style='color:#990099'>");
+	file.Write("Reversed score questions are showed in red color");
+	file.Write("</span><br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write("<h2>Loading faktorer för diagnoser</h2>\n");
+	 file.Write("<span style='color:#990099'>");
+	 file.Write("Reverserade frågor visas med röd färg");
+	 file.Write("</span><br>");
+
+	file.Write("<span style='color:#009999'>");
+	 file.Write("Hög korrelation visas i ljusblått");
+	 file.Write("</span><br>");
+#endif
+
+	for (g = 0; g < GROUP_COUNT; g++)
+	{
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		file.Write("<tr style='height:24.75pt'>");
+
+		WriteCenteredFieldHeader(file, 3);
+		sprintf(str, "G:%d", dx + 1);
+		file.Write(str);
+		WriteFieldFooter(file);
+
+		WriteCenteredFieldHeader(file, 26);
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
+		WriteFieldFooter(file);
+
+		WriteCenteredFieldHeader(file, 3);
+		file.Write("AS-NT Corr");
+		WriteFieldFooter(file);
+
+		for (dx = 0; dx < DX_COUNT ; dx++)
+		{
+			WriteCenteredFieldHeader(file, 3);
+//			sprintf(str, "DX:%d", a + 1);
+			file.Write(Dx[dx].Name);
+			WriteFieldFooter(file);
+		}
+
+		file.Write("</tr>");
+
+		TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+
+		while (TopQuiz)
+		{
+			file.Write("<tr style='height:24.75pt'>");
+
+			WriteCenteredFieldHeader(file, 3);
+			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+			while (quiz)
+			{
+				quiz->WriteName(file);
+				sprintf(str, ":%d", q + 1);
+				file.Write(str);
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				if (quiz)
+					file.Write("<br>");
+			}
+			WriteFieldFooter(file);
+
+			WriteCenteredFieldHeader(file, 26);
+			if (TopQuiz->Quiz[TopQuestion].Reverse)
+				file.Write("<span style='color:#990099'>");
+			file.Write(TopQuiz->Quiz[TopQuestion].Text);
+			if (TopQuiz->Quiz[TopQuestion].Reverse)
+				file.Write("</span>");
+			WriteFieldFooter(file);
+
+			cross = 0;
+			TopQuiz->ClearUsed(TopQuestion);
+			WriteCenteredFieldHeader(file, 6);
+			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+			while (quiz)
+			{
+				NormCorr[cross] = 0.0;
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+					val = quiz->Quiz[q].Group[j].Corr;
+					if (val >= NormCorr[cross])
+						NormCorr[cross] = val;
+				}
+				NormCorr[cross] = 0.9 * NormCorr[cross];
+
+#ifdef USE_PERCENT
+				ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
+				sprintf(str, "%d%", ival);
+				file.Write(str);
+#else
+				ival = round(100.0 * quiz->Quiz[q].Corr);
+				if (ival < 0)
+				{
+					file.Write("-");
+					ival = -ival;
+				}
+
+				sprintf(str, ".%02d", ival);
+				file.Write(str);
+#endif
+
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				if (quiz)
+				{   cross++;
+					file.Write("<br>");
+				}
+			}
+			WriteFieldFooter(file);
+
+			for (dx = 0; dx < DX_COUNT; dx++)
+			{
+				cross = 0;
+				TopQuiz->ClearUsed(TopQuestion);
+				WriteCenteredFieldHeader(file, 6);
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				while (quiz)
+				{
+					if (quiz->Dx[dx].Yes)
+						WritePca(file, quiz->Quiz[q].DxPca[dx]);
+
+					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					if (quiz)
+					{
+						cross++;
+						file.Write("<br>");
+					}
+				}
+				WriteFieldFooter(file);
+			}
+
+			file.Write("</tr>");
+			TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+		}
+		file.Write("</table>");
+		file.Write("<br><br>");
+	}
+}
+
+/*##################  TQuiz::WriteAverageDxTable ##########################
+*   Purpose....: Write averaged dx table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAverageDxTable(const char *filename)
+{
+	int Used[MAX_GLOBAL_QUESTIONS];
+	int GlobalId;
+	int i;
+	int j;
+	int g;
+	TQuiz *quiz;
+	int q;
+	int dx;
+	char str[80];
+	int ival;
+	long double val;
+	long double corrval;
+	long double LowestCorr;
+	long double sum;
+	long double max;
+	TFile file(filename, 0);
+
+	CalcGlobal();
+
+	ClearUsed();
+
+#ifdef ENGLISH
+	file.Write("<h2>Averaged diagnostic loading results</h2>\n");
+	file.Write("<span style='color:#990099'>");
+	file.Write("Reversed score questions are showed in red color");
+	file.Write("</span><br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write("<h2>Sammanslagna loading resultat för diagnoser</h2>\n");
+	 file.Write("<span style='color:#990099'>");
+	 file.Write("Reverserade frågor visas med röd färg");
+	 file.Write("</span><br>");
+#endif
+
+	for (q = 0; q < MAX_GLOBAL_QUESTIONS; q++)
+		Used[q] = FALSE;
+
+	for (g = 0; g < GROUP_COUNT; g++)
+	{
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		file.Write("<tr style='height:24.75pt'>");
+
+		WriteCenteredFieldHeader(file, 3);
+		sprintf(str, "G:%d", g + 1);
+		file.Write(str);
+		WriteFieldFooter(file);
+
+		WriteCenteredFieldHeader(file, 26);
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
+		WriteFieldFooter(file);
+
+		WriteCenteredFieldHeader(file, 3);
+		file.Write("AS-NT Corr");
+		WriteFieldFooter(file);
+
+		for (dx = 0; dx < DX_COUNT; dx++)
+		{
+			WriteCenteredFieldHeader(file, 3);
+//			sprintf(str, "G:%d", a + 1);
+			file.Write(Dx[dx].Name);
+			WriteFieldFooter(file);
+		}
+
+		file.Write("</tr>");
+
+		for (;;)
+		{
+			LowestCorr = -0.1;
+			GlobalId = -1;
+
+			for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+			{
+				quiz = GlobalTopQuiz[i];
+				q = GlobalTopQuestion[i];
+				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i])
+				{
+					corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
+					corrval = corrval * corrval;
+					if (corrval > LowestCorr)
+					{
+						GlobalId = i;
+						LowestCorr = corrval;
+					}
+				}
+			}
+
+			if (GlobalId >= 0)
+			{
+				quiz = GlobalTopQuiz[GlobalId];
+				q = GlobalTopQuestion[GlobalId];
+
+				sum = 0;
+				max = 0;
+
+				for (dx = 0; dx < DX_COUNT; dx++)
+				{
+					if (GlobalDxCount[GlobalId][dx])
+					{
+						val = GlobalDxSum[GlobalId][dx] / GlobalDxCount[GlobalId][dx];
+						if (val > max)
+							max = val;
+
+						sum += val;
+					}
+				}
+
+				max = 0.9 * max;
+
+				Used[GlobalId] = TRUE;
+
+				if (sum != 0)
+				{
+					file.Write("<tr style='height:24.75pt'>");
+
+					WriteCenteredFieldHeader(file, 3);
+
+					if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.05))
+						file.Write("<span style='color:#EE0000'>");
+					else
+					{
+						if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
+							file.Write("<span style='color:#990099'>");
+					}
+
+					sprintf(str, "%d", GlobalId + 1);
+					file.Write(str);
+
+					if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
+						file.Write("</span>");
+
+					WriteFieldFooter(file);
+
+					WriteCenteredFieldHeader(file, 26);
+					if (quiz->Quiz[q].Reverse)
+						file.Write("<span style='color:#990099'>");
+					file.Write(quiz->Quiz[q].Text);
+					if (quiz->Quiz[q].Reverse)
+						file.Write("</span>");
+					WriteFieldFooter(file);
+
+					WriteCenteredFieldHeader(file, 6);
+
+					val = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+
+#ifdef USE_PERCENT
+					ival = round(100.0 * val * val);
+					sprintf(str, "%d%", ival);
+					file.Write(str);
+#else
+					ival = round(100.0 * val);
+					if (ival < 0)
+					{
+						file.Write("-");
+						ival = -ival;
+					}
+
+					sprintf(str, ".%02d", ival);
+					file.Write(str);
+#endif
+
+					for (dx = 0; dx < DX_COUNT; dx++)
+					{
+						WriteCenteredFieldHeader(file, 6);
+
+						if (GlobalDxCount[GlobalId][dx])
+						{
+							val = GlobalDxSum[GlobalId][dx] / GlobalDxCount[GlobalId][dx];
+							if (val > 0)
+							{
+								if (val > max)
+									file.Write("<span style='color:#009999'>");
+
+								WritePca(file, val);
+
+								if (val > max)
+									file.Write("</span>");
+							}
+						}
+
+						WriteFieldFooter(file);
+					}
+				}
+
+				file.Write("</tr>");
+			}
+			else
+				break;
+		}
+		file.Write("</table>");
+		file.Write("<br><br>");
+	}
+}
+
 
 /*##################  TQuiz::ExportGlobalSql ##########################
 *   Purpose....: Export global SQL table	      			      	        #
@@ -11651,12 +12167,12 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
 *##########################################################################*/
 void TQuiz::ExportGlobalSql(const char *filename)
 {
-    int first;
-    int i;
+	int first;
+	int i;
 	int count;
-    TQuiz *TopQuiz;
-    int TopQuestion;
-    TQuiz *quiz;
+	TQuiz *TopQuiz;
+	int TopQuestion;
+	TQuiz *quiz;
     int q;
     long double val;
 	const char *ptr;
@@ -11693,7 +12209,7 @@ void TQuiz::ExportGlobalSql(const char *filename)
 				first = FALSE;
             else
     		    file.Write("),\n");
-    					
+
             file.Write("(");
 
             sprintf(str, "%d, \"", i);
@@ -12294,126 +12810,79 @@ void TQuiz::ExportQuizGlobalSql(const char *filename)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::ProcessDxEntry(char GroupResult[ACTIVE_GROUP_COUNT], char DxArr[DX_COUNT])
+void TQuiz::ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT])
 {
-	int pop;
-	int g;
-	int sum;
-	int max;
+	int dx;
 	long double ScoreArr[DX_COUNT];
 
-	for (pop = 0; pop < DX_COUNT; pop++)
-	{
-		switch (DxArr[pop])
-		{
-			case DX_STATE_NO:
-				for (g = 0; g < 14; g++)
-					if (Group[g].Questions >= 3 && GroupResult[g] >= 0 && GroupResult[g] <= 100)
-						NoDxScoreArr[pop][g][GroupResult[g]]++;
-				break;
+	for (dx = 0; dx < DX_COUNT; dx++)
+		ScoreArr[dx] = -1.0;
 
-			case DX_STATE_SELF:
-				for (g = 0; g < 14; g++)
-					if (Group[g].Questions >= 3 && GroupResult[g] >= 0 && GroupResult[g] <= 100)
-						SelfScoreArr[pop][g][GroupResult[g]]++;
-				break;
+	ScoreArr[DX_ADD] = (long double)DxResult[DX_ADD]  / 10.0;
+	ScoreArr[DX_ADD] = ScoreArr[DX_ADD] / 5.2;
 
-			case DX_STATE_YES:
-				for (g = 0; g < 14; g++)
-					if (Group[g].Questions >= 3 && GroupResult[g] >= 0 && GroupResult[g] <= 100)
-						DxScoreArr[pop][g][GroupResult[g]]++;
-				break;
-		}
-	}
+	ScoreArr[DX_DYSLEXIA] = (long double)DxResult[DX_DYSLEXIA]  / 10.0;
+	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 4.6;
 
-	for (pop = 0; pop < DX_COUNT; pop++)
-		ScoreArr[pop] = -1.0;
-
-	sum = GroupResult[GROUP_ACTIVITY];
-	ScoreArr[DX_ADD] = (long double)sum  / 10.0;
-	ScoreArr[DX_ADD] = ScoreArr[DX_ADD] / 5.9;
-
-	sum = GroupResult[GROUP_ASPIE_HUNTING];
-	ScoreArr[DX_DYSLEXIA] = (long double)sum  / 10.0;
-	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 4.9;
-
-	sum = GroupResult[GROUP_NT_SENSORY];
-	ScoreArr[DX_DYSCALCULIA] = (long double)sum  / 10.0;
+	ScoreArr[DX_DYSCALCULIA] = (long double)DxResult[DX_DYSCALCULIA]  / 10.0;
 	ScoreArr[DX_DYSCALCULIA] = ScoreArr[DX_DYSCALCULIA] / 5.2;
 
-	if (ScoreArr[DX_DYSLEXIA] > ScoreArr[DX_DYSCALCULIA])
-		ScoreArr[DX_DYSCALCULIA] = 1.0 * ScoreArr[DX_DYSCALCULIA];
-	else
-		ScoreArr[DX_DYSLEXIA] = 1.0 * ScoreArr[DX_DYSLEXIA];
-
-	sum = (GroupResult[GROUP_ASPIE_NVC] + GroupResult[GROUP_NT_HUNTING]) / 2;
-	ScoreArr[DX_AUTISM] = (long double)sum  / 10.0;
+	ScoreArr[DX_AUTISM] = (long double)DxResult[DX_AUTISM]  / 10.0;
 	ScoreArr[DX_AUTISM] = ScoreArr[DX_AUTISM] / 5.5;
 
-	sum = (GroupResult[GROUP_ASPIE_NVC] + GroupResult[GROUP_NT_NVC]) / 2;
-	ScoreArr[DX_AS] = (long double)sum  / 10.0;
+	ScoreArr[DX_AS] = (long double)DxResult[DX_AS]  / 10.0;
 	ScoreArr[DX_AS] = ScoreArr[DX_AS] / 5.2;
 
-	sum = GroupResult[GROUP_NT_SENSORY];
-	ScoreArr[DX_DYSPRAXIA] = (long double)sum  / 10.0;
-	ScoreArr[DX_DYSPRAXIA] = ScoreArr[DX_DYSPRAXIA] / 6.3;
+	ScoreArr[DX_DYSPRAXIA] = (long double)DxResult[DX_DYSPRAXIA]  / 10.0;
+	ScoreArr[DX_DYSPRAXIA] = ScoreArr[DX_DYSPRAXIA] / 5.6;
 
-	if (ScoreArr[DX_AUTISM] > ScoreArr[DX_AS])
-		ScoreArr[DX_AS] = 1.0 * ScoreArr[DX_AS];
-	else
-		ScoreArr[DX_AUTISM] = 1.0 * ScoreArr[DX_AUTISM];
-
-	sum = GroupResult[GROUP_ASPIE_OBSESSION];
-	ScoreArr[DX_OCD] = (long double)sum  / 10.0;
+	ScoreArr[DX_OCD] = (long double)DxResult[DX_OCD]  / 10.0;
 	ScoreArr[DX_OCD] = ScoreArr[DX_OCD] / 5.4;
 
-	sum = (2 * GroupResult[GROUP_ACTIVITY] + GroupResult[GROUP_ASPIE_SENSORY]) / 3;
-	ScoreArr[DX_BIPOLAR] = (long double)sum  / 10.0;
-	ScoreArr[DX_BIPOLAR] = ScoreArr[DX_BIPOLAR] / 5.7;
+	ScoreArr[DX_BIPOLAR] = (long double)DxResult[DX_BIPOLAR]  / 10.0;
+	ScoreArr[DX_BIPOLAR] = ScoreArr[DX_BIPOLAR] / 5.2;
 
-	sum = (2 * GroupResult[GROUP_SOCIAL] + GroupResult[GROUP_ENVIRONMENT]) / 3;
-	ScoreArr[DX_SOCIAL_PHOBIA] = (long double)sum  / 10.0;
+	ScoreArr[DX_SOCIAL_PHOBIA] = (long double)DxResult[DX_SOCIAL_PHOBIA]  / 10.0;
 	ScoreArr[DX_SOCIAL_PHOBIA] = ScoreArr[DX_SOCIAL_PHOBIA] / 6.2;
 
-	sum = GroupResult[GROUP_PARANOID];
-	ScoreArr[DX_SCHIZOPHRENIA] = (long double)sum  / 10.0;
-	ScoreArr[DX_SCHIZOPHRENIA] = ScoreArr[DX_SCHIZOPHRENIA] / 5.7;
+	ScoreArr[DX_SCHIZOPHRENIA] = (long double)DxResult[DX_SCHIZOPHRENIA]  / 10.0;
+	ScoreArr[DX_SCHIZOPHRENIA] = ScoreArr[DX_SCHIZOPHRENIA] / 4.9;
 
-	for (pop = 0; pop < DX_COUNT; pop++)
+	for (dx = 0; dx < DX_COUNT; dx++)
 	{
-		if (ScoreArr[pop] >= 0.0)
+		if (ScoreArr[dx] >= 0.0)
 		{
-			if (ScoreArr[pop] >= 1.0)
+			if (ScoreArr[dx] >= 1.0)
 			{
-				switch (DxArr[pop])
+				switch (DxArr[dx])
 				{
 					case DX_STATE_NO:
-						PredYesFail[pop]++;
+						PredYesFail[dx]++;
 						break;
 
 					case DX_STATE_SELF:
-						PredSelfOk[pop]++;
+						PredSelfOk[dx]++;
 						break;
 
 					case DX_STATE_YES:
-						PredYesOk[pop]++;
+						PredYesOk[dx]++;
 						break;
 				}
 			}
 			else
 			{
-				switch (DxArr[pop])
+				switch (DxArr[dx])
 				{
 					case DX_STATE_NO:
-						PredNoOk[pop]++;
+						PredNoOk[dx]++;
 						break;
 
 					case DX_STATE_SELF:
-						PredNoSelfFail[pop]++;
+						PredNoSelfFail[dx]++;
 						break;
 
 					case DX_STATE_YES:
-						PredNoDxFail[pop]++;
+						PredNoDxFail[dx]++;
 						break;
 				}
 			}
@@ -12434,324 +12903,7 @@ void TQuiz::GetDxData()
 	int answers = All.ValueCount;
 
 	for (e = 0; e < answers; e++)
-		ProcessDxEntry(All.ValArr[e].GroupResult, All.ValArr[e].DxArr);
-}
-
-/*##################  TQuiz::RegressDsm ##########################
-*   Purpose....: Regress DSM        	      			      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuiz::RegressDsm(TFile &file, int PopType)
-{
-	int g;
-	int i;
-	long double SlopeArr[14];
-	int DxArr[14];
-	int NoDxArr[14];
-	long double xmean;
-	long double ymean;
-	long double sum;
-	long double sum2;
-	long double val;
-	long double xdiff;
-	long double ydiff;
-	long double level;
-	int count;
-	int slope;
-	char str[80];
-
-	for (g = 0; g < 14; g++)
-	{
-		DxArr[g] = 0;
-		NoDxArr[g] = 0;
-
-		for (i = 0; i < 101; i++)
-		{
-			NoDxArr[g] += NoDxScoreArr[PopType][g][i];
-			DxArr[g] += DxScoreArr[PopType][g][i];
-		}
-
-		count = 0;
-		for (i = 0; i < 101; i++)
-		{
-			count += NoDxScoreArr[PopType][g][i];
-			count += DxScoreArr[PopType][g][i];
-		}
-
-		if (count)
-		{
-			sum = 0;
-			for (i = 0; i < 101; i++)
-			{
-				sum += i * NoDxScoreArr[PopType][g][i];
-				sum += i * DxScoreArr[PopType][g][i];
-			}
-			xmean = sum / count;
-
-			sum = 0;
-			for (i = 0; i < 101; i++)
-				sum += DxScoreArr[PopType][g][i];
-			ymean = sum / count;
-
-			sum = 0;
-			sum2 = 0;
-			for (i = 0; i < 101; i++)
-			{
-				if (NoDxScoreArr[PopType][g][i])
-				{
-					xdiff = i - xmean;
-					ydiff = 0.0 - ymean;
-
-					sum += xdiff * ydiff * NoDxScoreArr[PopType][g][i];
-					sum2 += xdiff * xdiff * NoDxScoreArr[PopType][g][i];
-				}
-
-				if (DxScoreArr[PopType][g][i])
-				{
-					xdiff = i - xmean;
-					ydiff = 1.0 - ymean;
-
-					sum += xdiff * ydiff * DxScoreArr[PopType][g][i];
-					sum2 += xdiff * xdiff * DxScoreArr[PopType][g][i];
-				}
-
-			}
-
-			SlopeArr[g] = sum / sum2;
-		}
-		else
-			SlopeArr[g] = 0;
-	}
-
-	sum = 0;
-
-	for (g = 0; g < 14; g++)
-		sum += SlopeArr[g];
-
-	if (sum)
-		for (g = 0; g < 14; g++)
-			SlopeArr[g] = 14 * 100 * SlopeArr[g] / sum;
-
-	level = 0.0;
-	for (g = 0; g < 14; g++)
-		if (SlopeArr[g] >= level)
-			level = SlopeArr[g];
-
-	level = 0.9 * level;
-
-	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 35);
-	file.Write("Group");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 10);
-	file.Write("Weight");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 20);
-	file.Write("Diagnosis");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 20);
-	file.Write("No diagnosis");
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-
-	for (g = 0; g < 14; g++)
-	{
-		file.Write("<tr style='height:24.75pt'>");
-
-		WriteCenteredFieldHeader(file, 35);
-		file.Write(Group[g].PosName);
-		WriteFieldFooter(file);
-
-		WriteCenteredFieldHeader(file, 10);
-		slope = (int)SlopeArr[g];
-		sprintf(str, " %d\n", slope);
-
-		if (slope >= level)
-			file.Write("<span style='color:#009999'>");
-
-		file.Write(str);
-
-		if (slope >= level)
-			file.Write("</span>");
-
-		WriteFieldFooter(file);
-
-		WriteCenteredFieldHeader(file, 20);
-		sprintf(str, " %d\n", DxArr[g]);
-		file.Write(str);
-		WriteFieldFooter(file);
-
-		WriteCenteredFieldHeader(file, 20);
-		sprintf(str, " %d\n", NoDxArr[g]);
-		file.Write(str);
-		WriteFieldFooter(file);
-
-		file.Write("</tr>\n");
-
-	}
-
-	file.Write("</table>\n");
-}
-
-/*##################  TQuiz::RegressDsm ##########################
-*   Purpose....: Regress DSM        	      			      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuiz::RegressDsm(const char *filename, int MaxVersions)
-{
-	int pop;
-	int g;
-	int i;
-	int cross;
-	TFile file(filename, 0);
-
-	for (pop = 0; pop < DX_COUNT; pop++)
-	{
-		for (g = 0; g < 14; g++)
-		{
-			for (i = 0; i < 101; i++)
-			{
-				DxScoreArr[pop][g][i] = 0;
-				SelfScoreArr[pop][g][i] = 0;
-				NoDxScoreArr[pop][g][i] = 0;
-			}
-		}
-	}
-
-	GetDxData();
-	MaxVersions--;
-
-	for (cross = MAX_CROSS - 1; cross >= 0 && MaxVersions > 0; cross--)
-	{
-		if (CrossQuiz[cross])
-		{
-			MaxVersions--;
-			CrossQuiz[cross]->GetDxData();
-		}
-	}
-
-#ifdef ENGLISH
-	file.Write("<h2>Autism</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>Autism</h2>\n");
-#endif
-
-	RegressDsm(file, DX_AUTISM);
-
-#ifdef ENGLISH
-	file.Write("<h2>AS/HFA/PDD</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>AS/HFA/PDD</h2>\n");
-#endif
-
-	RegressDsm(file, DX_AS);
-
-#ifdef ENGLISH
-	file.Write("<h2>ADD/ADHD</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>ADD/ADHD</h2>\n");
-#endif
-
-	RegressDsm(file, DX_ADD);
-
-#ifdef ENGLISH
-	file.Write("<h2>Dyspraxia</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>Dyspraxi</h2>\n");
-#endif
-
-	RegressDsm(file, DX_DYSPRAXIA);
-
-#ifdef ENGLISH
-	file.Write("<h2>Dyslexia</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>Dyslexi</h2>\n");
-#endif
-
-	RegressDsm(file, DX_DYSLEXIA);
-
-#ifdef ENGLISH
-	file.Write("<h2>Dyscalculia</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>Dyskalkuli</h2>\n");
-#endif
-
-	RegressDsm(file, DX_DYSCALCULIA);
-
-#ifdef ENGLISH
-	file.Write("<h2>Obsessive Compulsive Disorder (OCD)</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>Tvångssyndrom (OCD)</h2>\n");
-#endif
-
-	RegressDsm(file, DX_OCD);
-
-#ifdef ENGLISH
-	file.Write("<h2>Bipolar</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>Bipolär</h2>\n");
-#endif
-
-	RegressDsm(file, DX_BIPOLAR);
-
-#ifdef ENGLISH
-	file.Write("<h2>Social phobia</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>Social fobi</h2>\n");
-#endif
-
-	RegressDsm(file, DX_SOCIAL_PHOBIA);
-
-#ifdef ENGLISH
-	file.Write("<h2>Tourette</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>Tourette</h2>\n");
-#endif
-
-	RegressDsm(file, DX_TS);
-
-#ifdef ENGLISH
-	file.Write("<h2>Schizophrenia</h2>\n");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h2>Schizofreni</h2>\n");
-#endif
-
-	RegressDsm(file, DX_SCHIZOPHRENIA);
+		ProcessDxEntry(All.ValArr[e].DxArr, All.ValArr[e].DxResult);
 }
 
 /*##################  TQuiz::DsmCutoff ##########################
@@ -12832,19 +12984,6 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 		PredNoSelfFail[pop] = 0;
 		PredNoOk[pop] = 0;
 		PredNoDxFail[pop] = 0;
-	}
-
-	for (pop = 0; pop < DX_COUNT; pop++)
-	{
-		for (g = 0; g < 14; g++)
-		{
-			for (i = 0; i < 101; i++)
-			{
-				DxScoreArr[pop][g][i] = 0;
-				SelfScoreArr[pop][g][i] = 0;
-				NoDxScoreArr[pop][g][i] = 0;
-			}
-		}
 	}
 
 	GetDxData();

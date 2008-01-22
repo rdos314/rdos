@@ -173,25 +173,25 @@ struct TQuizQuestion
 
 struct TGroupCorr
 {
-    long double Corr;
+	long double Corr;
 	int Count;
 };
 
 struct TGroupVal
 {
-    int Count;
-    int Sum;
+	int Count;
+	int Sum;
 };
 
 struct TGroupValArr
 {
-    TGroupVal Group[MAX_GROUP_COUNT];    
+	TGroupVal Group[MAX_GROUP_COUNT];
 };
 
 struct TGroup
 {
-    const char *PosName;
-    const char *NegName;
+	const char *PosName;
+	const char *NegName;
 	long double Mean;
 	long double Sd;
 	int Answers;
@@ -200,10 +200,18 @@ struct TGroup
 	int Questions;
 };
 
+struct TDx
+{
+	const char *Name;
+	int Yes;
+	int No;
+	int Self;
+};
+
 struct TAxis
 {
-    long double MaxCorr;
-    long double MaxDxCorr;
+	long double MaxCorr;
+	long double MaxDxCorr;
 	long double PcaCorr[2];
 	long double DxCorr[DX_COUNT];
 	long double GroupCorr[MAX_GROUP_COUNT];
@@ -211,8 +219,8 @@ struct TAxis
 
 struct TUserInfo
 {
-    int BirthYear;
-    int BirthMonth;
+	int BirthYear;
+	int BirthMonth;
     int Count;
     int AsSum;
     int NtSum;
@@ -241,7 +249,7 @@ public:
     void WriteIntercorr(const char *filename);
     void WriteAsNtCorrelation(const char *filename);
     void WriteAspieAsCorrelation(const char *filename);
-    void WriteAddAsCorrelation(const char *filename);
+	void WriteAddAsCorrelation(const char *filename);
     void WriteGenderAsCorrelation(const char *filename);
     void WriteAddNtCorrelation(const char *filename);
     void WriteLowAsNtCorrelation(const char *filename);
@@ -260,7 +268,9 @@ public:
 	void WritePcaGroupCorr(const char *filename);
     void WriteAxisLoadTable(const char *filename);
     void WriteAverageAxisTable(const char *filename);
-    void WriteVersionRetest(const char *filename);
+	void WriteDxLoadTable(const char *filename);
+	void WriteAverageDxTable(const char *filename);
+	void WriteVersionRetest(const char *filename);
     void WriteWiki(const char *filename, long double threshold, long double intercorr);
     void WriteQuizWiki(const char *filename);
     void MoveWiki(const char *fromwiki, const char *towiki, long double threshold);
@@ -290,7 +300,6 @@ public:
 	static void ExportGroupIntercorr(const char *filename, int Group);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
-	void RegressDsm(const char *filename, int MaxVersions);
 	void DsmCutoff(const char *filename, int All);
 
     virtual int IsSubQuiz();
@@ -314,7 +323,7 @@ public:
     virtual void WriteRetest(const char *filename);
     virtual void WriteAQ(const char *filename);
     virtual void WriteSPQ(const char *filename);
-    virtual void WriteLSAS(const char *filename);
+	virtual void WriteLSAS(const char *filename);
 	virtual void WriteMDQ(const char *filename);
     virtual void WriteADD(const char *filename);
     virtual void WriteDyslexia(const char *filename);
@@ -322,7 +331,7 @@ public:
 	virtual void WriteGifted(const char *filename);
 	virtual void WritePictureRating(const char *filename);
 
-    void WritePhpGlobalQuestions(const char *filename);
+	void WritePhpGlobalQuestions(const char *filename);
 
 	void CheckCross();
 
@@ -334,7 +343,7 @@ public:
 
     void ExportGlobalSql(const char *filename);
     void ExportQuizVerSql(const char *filename);
-    void ExportGroupSql(const char *filename);
+	void ExportGroupSql(const char *filename);
     void ExportPopTypeSql(const char *filename);
 	void ExportGlobalCorrSql(const char *filename);
     void ExportGlobalAxisSql(const char *filename);
@@ -351,7 +360,7 @@ protected:
     int CalcAsNtDiff(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS], int *AsDiff, int *NtDiff);
     int OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
     void WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
-    void WriteWikiWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
+	void WriteWikiWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 
 	void WriteDsmReport(TFile &File, TDsmPopulation &DsmPop);
 
@@ -362,7 +371,7 @@ protected:
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
 
-	void ProcessDxEntry(char GroupResult[ACTIVE_GROUP_COUNT], char DxArr[DX_COUNT]);
+	void ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT]);
 	void GetDxData();
 
 	int HasGlobalQuestion(int GlobalId);
@@ -371,7 +380,7 @@ protected:
 
 	TPopulation *GetPop(int PopType);
 	void DefineCross(int id, TQuiz *quiz);
-    void DefineGlobalId(int Id, int GlobalId);
+	void DefineGlobalId(int Id, int GlobalId);
     TReferer *FindReferer(char *Referer);
     TReferer *AddReferer(char *Search, char *Ref);
     void SortReferers();
@@ -388,13 +397,12 @@ protected:
     void ClearUsed();
     void ClearUsed(int Question);
     TQuiz *GetTopQuizCorr(int *Question);
-    TQuiz *GetTopGroupCorr(int Group, int *Question);
+	TQuiz *GetTopGroupCorr(int Group, int *Question);
     TQuiz *GetHighestCorr(int MyQuestion, int *Question);
 
     void DefineNt(char *Referer);
 	void DefineAspie(char *Referer);
 
-	void RegressDsm(TFile &file, int PopType);
 	void DsmCutoff(TFile &file, const char *Text, int PopType);
 
     void UpdateReferer(TReferer *ref, int AsResult, int NtResult, char GroupResult[ACTIVE_GROUP_COUNT]);
@@ -425,7 +433,7 @@ protected:
     void WriteAsNtChi2(TFile &File, int Question);
     void WriteAsNtCorr95(TFile &File, int Question);
 
-    void ExportOneCatPopSql(TFile &file, TQuiz *quiz, int id, int q, int poptype);
+	void ExportOneCatPopSql(TFile &file, TQuiz *quiz, int id, int q, int poptype);
     void ExportOneQuizCatPopSql(TFile &file, TQuiz *quiz, int id);
 
 	TPopulationCorrelation PopCorr;
@@ -433,7 +441,7 @@ protected:
     TPopulation All;
     TPopulation Autism;
     TPopulation LowAs;
-    TPopulation As;
+	TPopulation As;
     TPopulation AsMale;
 	TPopulation AsFemale;
 	TPopulation Add;
@@ -468,10 +476,6 @@ protected:
 	TPopulation LowIQ;
 	TPopulation HighIQ;
 
-	static int DxScoreArr[POP_TYPE_COUNT][14][101];
-	static int SelfScoreArr[POP_TYPE_COUNT][14][101];
-	static int NoDxScoreArr[POP_TYPE_COUNT][14][101];
-
 	static int PredYesOk[POP_TYPE_COUNT];
 	static int PredYesFail[POP_TYPE_COUNT];
 	static int PredNoOk[POP_TYPE_COUNT];
@@ -482,7 +486,7 @@ protected:
 	static TBirthMonth BirthMonth;
 
     static TDsmPopulation DsmAutism;
-    static TDsmPopulation DsmAs;
+	static TDsmPopulation DsmAs;
     static TDsmPopulation DsmAdd;
     static TDsmPopulation DsmTs;
     static TDsmPopulation DsmHyperlexia;
@@ -499,7 +503,7 @@ protected:
     static TDsmPopulation DsmSocialPhobia;
     
     int UseNtResult;
-    int RefCount;
+	int RefCount;
     TReferer *RefArr[MAX_REFERERS];
     TReferer NoRef;
     TReferer NTRef;
@@ -507,7 +511,7 @@ protected:
     TReferer DxAsRef;
     TReferer DxTsRef;
     TReferer DxAddRef;
-    TReferer SelfAsRef;
+	TReferer SelfAsRef;
     TReferer SelfTsRef;
     TReferer SelfAddRef;
     TReferer MaleAsRef;
@@ -516,35 +520,36 @@ protected:
     TReferer FemaleNonAsRef;
     TReferer HyperlexiaRef;
 	TReferer DyspraxiaRef;
-    TReferer DyslexiaRef;
-    TReferer SocialPhobiaRef;
-    TReferer DyscalculiaRef;
-    TReferer OCDRef;
-    TReferer ODDRef;
-    TReferer SynaesthesiaRef;
-    TReferer PARef;
-    TReferer DysgraphiaRef;
+	TReferer DyslexiaRef;
+	TReferer SocialPhobiaRef;
+	TReferer DyscalculiaRef;
+	TReferer OCDRef;
+	TReferer ODDRef;
+	TReferer SynaesthesiaRef;
+	TReferer PARef;
+	TReferer DysgraphiaRef;
 	TReferer BipolarRef;
-    TReferer SchizophreniaRef;
-    TReferer AmerindianRef;
-    TReferer MixedAfroAmericanRef;
-    TReferer AfroAmericanRef;
-    TReferer AfricanRef;
-    TReferer MixedAfricanRef;
-    TReferer HispanicRef;
-    TReferer WhiteRef;
-    TReferer ArabRef;
-    TReferer AsianRef;
+	TReferer SchizophreniaRef;
+	TReferer AmerindianRef;
+	TReferer MixedAfroAmericanRef;
+	TReferer AfroAmericanRef;
+	TReferer AfricanRef;
+	TReferer MixedAfricanRef;
+	TReferer HispanicRef;
+	TReferer WhiteRef;
+	TReferer ArabRef;
+	TReferer AsianRef;
 
-    int FFirst;
+	int FFirst;
 
-    TQuiz *CrossQuiz[MAX_CROSS];
+	TQuiz *CrossQuiz[MAX_CROSS];
 
-    int AspiePcaCount;
-    int N;    
-    int GroupValCount;
-    TGroupValArr *GroupValArr;    
+	int AspiePcaCount;
+	int N;
+	int GroupValCount;
+	TGroupValArr *GroupValArr;
 	TGroup Group[MAX_GROUP_COUNT];
+	TDx Dx[DX_COUNT];
 	TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
 	TAxis Axis[MAX_ASPIE_PCA_AXIS];
 	TQuizQuestion Quiz[MAX_QUESTIONS];

@@ -64,6 +64,7 @@ struct TValArr
 	char DxArr[DX_COUNT];
 	char Quiz[MAX_QUESTIONS];
 	char GroupResult[ACTIVE_GROUP_COUNT];
+	char DxResult[DX_COUNT];
 };
 
 class TPopulation
@@ -72,8 +73,8 @@ public:
 	TPopulation(int questions);
 	~TPopulation();
 
-	void Add(int AsScore, int NtScore, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT]);
-	void Add(int Score, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT]);
+	void Add(int AsScore, int NtScore, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT], char DxScore[DX_COUNT]);
+	void Add(int Score, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT], char DxScore[DX_COUNT]);
 
 	long double GetMean(int QuestionNr);
 	long double GetSd(int QuestionNr);
