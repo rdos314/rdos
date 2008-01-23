@@ -3060,12 +3060,301 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
             if (p >= 0.0002)
                 return 34.6;
 
-            if (p >= 0.0001)
+			if (p >= 0.0001)
                 return 35.6;
 
             return 1000;
 	}
 	return 1000;
+}
+
+/*##################  TQuiz::RotatePair ##########################
+*   Purpose....: Do a rotation of a pair of axes			       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::RotatePair(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int Axis1, int Axis2, long double phi)
+{
+	int q;
+	long double cosphi = cos(phi);
+	long double sinphi = sin(phi);
+	long double xp;
+	long double yp;
+
+	for (q = 0; q < N; q++)
+	{
+		xp = cosphi * m[Axis1][q] - sinphi * m[Axis2][q];
+		yp = sinphi * m[Axis1][q] + cosphi * m[Axis2][q];
+		m[Axis1][q] = xp;
+		m[Axis2][q] = yp;
+	}
+}
+
+/*##################  TQuiz::CalcOneAxisCorr ##########################
+*   Purpose....: Calculate axis-correlation for one axis					       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long double TQuiz::GetAxisCorr(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int Axis,  long double CorrArr[MAX_QUESTIONS])
+{
+	int q;
+	long double val;
+	long double sum;
+	long double zx;
+	long double zy;
+	long double CorrMean;
+	long double CorrSd;
+	long double LoadMean;
+	long double LoadSd;
+
+	sum = 0.0;
+	for (q = 0; q < N; q++)
+		sum += CorrArr[q];
+
+	CorrMean = sum / N;
+
+	sum = 0.0;
+	for (q = 0; q < N; q++)
+		sum += m[Axis][q];
+
+	LoadMean = sum / N;
+
+	sum = 0.0;
+	for (q = 0; q < N; q++)
+	{
+		val = CorrMean - CorrArr[q];
+		sum += val * val;
+	}
+
+	CorrSd = sqrtl(sum / ((long double)N - 1.0));
+
+	sum = 0.0;
+	for (q = 0; q < N; q++)
+	{
+		val = LoadMean - m[Axis][q];
+		sum += val * val;
+	}
+
+	LoadSd = sqrtl(sum / ((long double)N - 1.0));
+
+	if (CorrSd > 0.0 && LoadSd > 0.0)
+	{
+		sum = 0.0;
+		for (q = 0; q < N; q++)
+		{
+			zx = (CorrArr[q] - CorrMean) / CorrSd;
+			zy = (m[Axis][q] - LoadMean) / LoadSd;
+			sum += zx * zy;
+		}
+
+		return sum / ((long double)N - 1.0);
+	}
+	else
+		return 0.0;
+}
+
+/*##################  TQuiz::CalcAxisCorr ##########################
+*   Purpose....: Calculate axis-correlation					       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::CalcAxisCorr(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount,  long double CorrArr[MAX_QUESTIONS], long double Result[MAX_ASPIE_PCA_AXIS])
+{
+	int a;
+
+	for (a = 0; a < AxisCount; a++)
+		Result[a] = GetAxisCorr(m, a, CorrArr);
+}
+
+/*##################  TQuiz::OptimizePair ##########################
+*   Purpose....: Optimize a pair of axises by rotation				       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::OptimizePair(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount, long double CorrArr[MAX_QUESTIONS], int ToAxis, int FromAxis)
+{
+	int rot;
+	int i;
+	int q;
+	long double phi;
+	long double corr;
+	long double RotCorrArr[9];
+	long double MaxCorr;
+	long double PhiLow;
+	long double PhiMid;
+	long double CorrMid;
+	long double PhiHigh;
+	long double SaveArr[2][MAX_QUESTIONS];
+
+	for (q = 0; q < N; q++)
+	{
+		SaveArr[0][q] = m[ToAxis][q];
+		SaveArr[1][q] = m[FromAxis][q];
+	}
+
+	for (rot = 0; rot < 8; rot++)
+	{
+		phi = M_PI * rot / 8.0;
+
+		RotatePair(m, ToAxis, FromAxis, phi);
+		corr = GetAxisCorr(m, ToAxis, CorrArr);
+		RotCorrArr[rot] = corr * corr;
+
+		for (q = 0; q < N; q++)
+		{
+			m[ToAxis][q] = SaveArr[0][q];
+			m[FromAxis][q] = SaveArr[1][q];
+		}
+	}
+	RotCorrArr[8] = RotCorrArr[0];
+
+	MaxCorr = 0.0;
+	for (rot = 0; rot < 8; rot++)
+	{
+		if (RotCorrArr[rot] > MaxCorr)
+		{
+			MaxCorr = RotCorrArr[rot];
+			i = rot;
+		}
+	}
+
+	if (MaxCorr > 0)
+	{
+		PhiMid = M_PI * i / 8.0;
+		CorrMid = RotCorrArr[i];
+
+		if (i == 0)
+			PhiLow = -M_PI / 8;
+		else
+		{
+			rot = i - 1;
+			PhiLow = M_PI * rot / 8.0;
+		}
+
+		rot = i + 1;
+		PhiHigh = M_PI * rot / 8.0;
+
+		for (i = 0; i < 8; i++)
+		{
+			phi = (PhiLow + PhiMid) / 2.0;
+			RotatePair(m, ToAxis, FromAxis, phi);
+			corr = GetAxisCorr(m, ToAxis, CorrArr);
+			corr = corr * corr;
+
+			for (q = 0; q < N; q++)
+			{
+				m[ToAxis][q] = SaveArr[0][q];
+				m[FromAxis][q] = SaveArr[1][q];
+			}
+
+			if (corr > CorrMid)
+			{
+				CorrMid = corr;
+				PhiMid = phi;
+			}
+			else
+				PhiLow = phi;
+
+			phi = (PhiHigh + PhiMid) / 2.0;
+			RotatePair(m, ToAxis, FromAxis, phi);
+			corr = GetAxisCorr(m, ToAxis, CorrArr);
+			corr = corr * corr;
+
+			for (q = 0; q < N; q++)
+			{
+				m[ToAxis][q] = SaveArr[0][q];
+				m[FromAxis][q] = SaveArr[1][q];
+			}
+
+			if (corr > CorrMid)
+			{
+				CorrMid = corr;
+				PhiMid = phi;
+			}
+			else
+				PhiHigh = phi;
+		}
+		RotatePair(m, ToAxis, FromAxis, PhiMid);
+	}
+}
+
+/*##################  TQuiz::OptimizeLoadings ##########################
+*   Purpose....: Optimize loadings by rotation				       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::OptimizeLoadings(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount, long double CorrArr[MAX_QUESTIONS])
+{
+	int a;
+	int q;
+	int BestAxis;
+	int RotateAxis;
+	int AvailableAxis;
+	long double corr;
+	long double MaxCorr;
+	int UsedAxisArr[MAX_ASPIE_PCA_AXIS];
+	long double AxisCorrArr[MAX_ASPIE_PCA_AXIS];
+
+	CalcAxisCorr(m, AxisCount, CorrArr, AxisCorrArr);
+
+	MaxCorr = 0.0;
+	for (a = 1; a < AxisCount; a++)
+	{
+		corr = AxisCorrArr[a];
+		corr = corr * corr;
+
+		if (corr > MaxCorr)
+		{
+			BestAxis = a;
+			MaxCorr = corr;
+		}
+	}
+
+	if (MaxCorr > 0)
+	{
+		for (a = 0; a < AxisCount; a++)
+			UsedAxisArr[a] = FALSE;
+
+		UsedAxisArr[BestAxis] = TRUE;
+		AvailableAxis = AxisCount - 1;
+
+		while (AvailableAxis && MaxCorr > 0)
+		{
+			MaxCorr = 0.0;
+
+			for (a = 1; a < AxisCount; a++)
+			{
+				if (!UsedAxisArr[a])
+				{
+					corr = AxisCorrArr[a];
+					corr = corr * corr;
+
+					if (corr > MaxCorr)
+					{
+						MaxCorr = corr;
+						RotateAxis = a;
+					}
+				}
+			}
+
+			if (MaxCorr > 0)
+			{
+				OptimizePair(m, AxisCount, CorrArr, BestAxis, RotateAxis);
+				UsedAxisArr[a] = TRUE;
+				CalcAxisCorr(m, AxisCount, CorrArr, AxisCorrArr);
+			}
+		}
+	}
 }
 
 /*##################  TQuiz::ImportMvspAspie ##########################
@@ -3090,7 +3379,6 @@ void TQuiz::ImportMvspAspie(const char *filename)
 	TFile infile(filename);
 	int a;
 	int g;
-	long double CorrArr[MAX_QUESTIONS];
 	long double LoadArr[MAX_QUESTIONS];
 	long double sum;
 	long double zx;
@@ -3099,16 +3387,18 @@ void TQuiz::ImportMvspAspie(const char *filename)
 	long double LoadMean;
 	long double CorrSd;
 	long double LoadSd;
-	long double w;
-	 long double val;
-	 int dx;
+	long double val;
+	int dx;
+
+	long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS];
+	long double CorrArr[MAX_QUESTIONS];
 
 	strcpy(formstr, "%d");
 	for (i = 0; i < MAX_ASPIE_PCA_AXIS; i++)
 	{
-	    d[i] = 0;
+		d[i] = 0;
 		strcat(formstr, " %Lf");
-    }
+	}
 
 	while (size = infile.Read(buf, 4096))
 	{
@@ -3144,22 +3434,29 @@ void TQuiz::ImportMvspAspie(const char *filename)
 				}
 			}
 
-			count = sscanf(rowstr, formstr, &q, 
-                        &d[0], &d[1], &d[2], &d[3], &d[4], &d[5], &d[6], &d[7],
-                        &d[8], &d[9], &d[10], &d[11], &d[12], &d[13], &d[14], &d[15],
-                        &d[16], &d[17], &d[18], &d[19], &d[20], &d[21], &d[22], &d[23],
+			count = sscanf(rowstr, formstr, &q,
+						&d[0], &d[1], &d[2], &d[3], &d[4], &d[5], &d[6], &d[7],
+						&d[8], &d[9], &d[10], &d[11], &d[12], &d[13], &d[14], &d[15],
+						&d[16], &d[17], &d[18], &d[19], &d[20], &d[21], &d[22], &d[23],
 						&d[24], &d[25], &d[26], &d[27], &d[28], &d[29], &d[30], &d[31]);
 
 			if (count)
 			{
-			    AspiePcaCount = count - 1;
-			    
+				AspiePcaCount = count - 1;
+
 				for (i = 0; i < count - 1; i++)
+				{
 					Quiz[q - 1].AspiePca[i] = d[i];
+					m[i][q - 1] = d[i];
+				}
 			}
 		}
 	}
 
+	for (q = 0; q < N; q++)
+		CorrArr[q] = Quiz[q].Group[0].Corr;
+
+	OptimizeLoadings(m, AspiePcaCount, CorrArr);
 
 	for (a = 0; a < AspiePcaCount; a++)
 	{
@@ -3169,12 +3466,12 @@ void TQuiz::ImportMvspAspie(const char *filename)
 
 			for (q = 0; q < N; q++)
 			{
-			    if (Quiz[q].Reverse)
+				if (Quiz[q].Reverse)
 					LoadArr[q] = -Quiz[q].AspiePca[a];
 				 else
-    	    		LoadArr[q] = Quiz[q].AspiePca[a];
+					LoadArr[q] = Quiz[q].AspiePca[a];
 
-                CorrArr[q] = Quiz[q].Pca[g];
+				CorrArr[q] = Quiz[q].Pca[g];
 			}
 
 			count = N;
@@ -5765,16 +6062,14 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 {
 	int j;
 	int g;
-	int grp;
 	 TQuiz *quiz;
-    TQuiz *TopQuiz;
-    int TopQuestion;
-    int q;
+	TQuiz *TopQuiz;
+	int TopQuestion;
+	int q;
 	char str[80];
 	long double NormCorr[MAX_CROSS];
 	int cross;
 	int ival;
-	int count;
 	long double val;
 	TFile file(filename, 0);
 
@@ -8282,11 +8577,7 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 *##########################################################################*/
 void TQuiz::WritePcaCorrTable(const char *filename)
 {
-    int i;
-	int q;
-    int count;
-    TQuiz *quiz;
-	TFile file(filename, 0);
+   	TFile file(filename, 0);
 
 #ifdef ENGLISH
     file.Write("<h2>Principal components analysis (PCA) correlates with psychiatric diagnosis</h2>\n");
@@ -8591,16 +8882,11 @@ void TQuiz::WriteWeighting(const char *filename)
 	int k;
 	char str[80];
 	int ival;
-	long double val;
 	long double Asw[MAX_QUESTIONS];
 	long double Ntw[MAX_QUESTIONS];
-	long double Asg[MAX_QUESTIONS];
-	long double Ntg[MAX_QUESTIONS];
-    int count;
+	int count;
     long double assum;
     long double ntsum;
-    long double mas0, mas1, fas0, fas1;
-    long double oas0, oas1, yas0, yas1;
     TQuiz *CurrQuiz;
 	TFile file(filename, 0);
 
@@ -8701,13 +8987,9 @@ void TQuiz::WritePhpWeighting(const char *filename)
 	long double val;
 	long double Asw[MAX_QUESTIONS];
 	long double Ntw[MAX_QUESTIONS];
-	long double Asg[MAX_QUESTIONS];
-	long double Ntg[MAX_QUESTIONS];
-    int count;
+	int count;
     long double assum;
     long double ntsum;
-	long double mas0, mas1, fas0, fas1;
-    long double oas0, oas1, yas0, yas1;
     TQuiz *CurrQuiz;
 	TFile file(filename, 0);
 
@@ -9187,12 +9469,10 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
 void TQuiz::ExportDiffHistogram(const char *filename, int PopType)
 {
     char str[80];
-    int val;
-    int i;
-    int j;
-    int e;
+  	int i;
+	int e;
     int cross;
-    TQuiz *quiz;
+	TQuiz *quiz;
     int count;
 	int HistDiffCount[81];
 	int HistScore[81];
@@ -9536,10 +9816,8 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 	int q;
 	char str[80];
 	int cnt;
-   int count;
 	int ival;
 	int mark;
-	long double sum;
 	long double MaxCorr;
    long double CurrCorr;
     long double val;
@@ -9805,22 +10083,18 @@ void TQuiz::WriteQuizWiki(const char *filename)
 {
 	long double sum;
 	int count;
-	int GlobalId;
 	int i;
 	int j;
 	int k;
 	int g;
 	TQuiz *quiz;
-	TQuiz *TopQuiz;
-	int TopQuestion;
 	int q;
 	int gid1;
 	int gid2;
 	int cnt;
 	char str[80];
 	int ival;
-	int mark;
-    long double val;
+	long double val;
     long double corrlev;
 	long double corrval;
 	long double CurrCorr;
@@ -9998,22 +10272,17 @@ void TQuiz::WriteIntercorr(const char *filename)
 {
 	long double sum;
 	int count;
-	int GlobalId;
 	int i;
 	int j;
 	int k;
 	int l;
-	int g;
 	TQuiz *quiz;
-	TQuiz *TopQuiz;
-	int TopQuestion;
 	int q;
 	int gid1;
 	int gid2;
 	int cnt;
 	char str[80];
 	int ival;
-	int mark;
 	int more;
 	long double val;
     long double corrlev;
@@ -10064,7 +10333,7 @@ void TQuiz::WriteIntercorr(const char *filename)
 		}
 
 	    file.Write("<b>");
-    	sprintf(str, "%d. ", GlobalIdArr[i] + 1);
+		sprintf(str, "%d. ", GlobalIdArr[i] + 1);
 	    file.Write(str);
 		file.Write(Quiz[i].Text);
 
@@ -10138,7 +10407,7 @@ void TQuiz::WriteIntercorr(const char *filename)
 				{
             	    k = q;
 
-            	    sum = 0;
+					sum = 0;
 	                count = 0;
 	               
                     quiz = this;
@@ -10175,7 +10444,7 @@ void TQuiz::WriteIntercorr(const char *filename)
 						ival = -ival;
             		}
     
-                	sprintf(str, ".%02d),", ival);
+					sprintf(str, ".%02d),", ival);
 	                file.Write(str);
 
 #ifdef ENGLISH
@@ -11415,17 +11684,15 @@ void TQuiz::WriteAxisLoadTable(const char *filename)
 {
 	int j;
 	int g;
-	int grp;
 	TQuiz *quiz;
-    TQuiz *TopQuiz;
-    int TopQuestion;
+	TQuiz *TopQuiz;
+	int TopQuestion;
 	int q;
-    int a;
+	int a;
 	char str[80];
 	long double NormCorr[MAX_CROSS];
 	int cross;
 	int ival;
-	int count;
 	long double val;
 	TFile file(filename, 0);
 
@@ -11792,7 +12059,6 @@ void TQuiz::WriteDxLoadTable(const char *filename)
 	int j;
 	int g;
 	int dx;
-	int grp;
 	TQuiz *quiz;
 	TQuiz *TopQuiz;
 	int TopQuestion;
@@ -11801,7 +12067,6 @@ void TQuiz::WriteDxLoadTable(const char *filename)
 	long double NormCorr[MAX_CROSS];
 	int cross;
 	int ival;
-	int count;
 	long double val;
 	TFile file(filename, 0);
 
@@ -11963,7 +12228,6 @@ void TQuiz::WriteAverageDxTable(const char *filename)
 	int Used[MAX_GLOBAL_QUESTIONS];
 	int GlobalId;
 	int i;
-	int j;
 	int g;
 	TQuiz *quiz;
 	int q;
@@ -12915,8 +13179,6 @@ void TQuiz::GetDxData()
 *##########################################################################*/
 void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType)
 {
-	int g;
-	int i;
 	int val;
 	char str[80];
 
@@ -12968,8 +13230,6 @@ void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType)
 void TQuiz::DsmCutoff(const char *filename, int All)
 {
 	int pop;
-	int g;
-	int i;
 	int cross;
 	char str[80];
 	TFile file(filename, 0);
