@@ -358,7 +358,7 @@ TQuiz::TQuiz(int Questions)
         Quiz[i].Reverse = FALSE;
         Quiz[i].CrossQuiz = 0;
         Quiz[i].CrossInd = 0;
-        Quiz[i].GlobalId = -1;
+		  Quiz[i].GlobalId = -1;
         Quiz[i].Changed = FALSE;
 
         for (g = 0; g < MAX_GROUP_COUNT; g++)
@@ -418,7 +418,7 @@ TQuiz::~TQuiz()
 {
     int i;
         
-    for (i = 0; i < MAX_REFERERS; i++)
+	 for (i = 0; i < MAX_REFERERS; i++)
         if (RefArr[i])
             delete RefArr[i];
 
@@ -688,7 +688,7 @@ int TQuiz::GetQuizId(TQuiz *quiz)
 		    maxcross = cross;
 
 		if (CrossQuiz[cross] == quiz)
-		    return cross;
+			 return cross;
     }
     return maxcross + 1;
 }
@@ -748,7 +748,7 @@ void TQuiz::RedefineText(int Question, int GlobalId, const char *Text)
     {
         Quiz[Question - 1].GlobalId = GlobalId - 1;
 		Quiz[Question - 1].Text = Text;
-        Quiz[Question - 1].Changed = TRUE;
+		  Quiz[Question - 1].Changed = TRUE;
     }
 }
 
@@ -988,7 +988,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                     }
                 }
             }
-        } 
+		  }
     }
 
     for (i = 0; i < N; i++)
@@ -1018,7 +1018,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
         if (!found)
             group = Quiz[i].MyGroup;
 
-        sprintf(str, "  Quiz[%d].MyGroup = ", i);
+		  sprintf(str, "  Quiz[%d].MyGroup = ", i);
         file.Write(str);
         switch (group)
         {
@@ -1048,7 +1048,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_NT_NVC:
                 file.Write("GROUP_NT_NVC");
-                break;
+					 break;
 
             case GROUP_SEX:
                 file.Write("GROUP_SEX");
@@ -1078,7 +1078,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_NT_OBSESSION");
                 break;
 
-            case GROUP_ACTIVITY:
+				case GROUP_ACTIVITY:
                 file.Write("GROUP_ACTIVITY");
                 break;
 
@@ -1168,7 +1168,7 @@ void TQuiz::WriteSetupCross(const char *filename)
                     {
                         if (Quiz[i].GlobalId == quiz->Quiz[q].GlobalId)
                         {
-                            topq = q;
+									 topq = q;
                             topquiz = quiz;
                             
                             for (clink = cross + 1; clink < MAX_CROSS; clink++)
@@ -1198,7 +1198,7 @@ void TQuiz::WriteSetupCross(const char *filename)
                         }
                     }
                 }
-            }
+				}
         } 
 
         if (!found)
@@ -1228,7 +1228,7 @@ int TQuiz::CalcAsNtDiff(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS], int *AsD
     int assum;
     int ntsum;
     int w;
-    int asresult;
+	 int asresult;
     int ntresult;
     int diff;
     int ascnt = 0;
@@ -1318,7 +1318,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
     CurrDiff = AsDiff + ntc * NtDiff - 10 * err / ntc;
     BestQ = -1;
     BestIsAs = FALSE;
-    BestIsInc = FALSE;
+	 BestIsInc = FALSE;
 
     AswCnt = 0;
     NtwCnt = 0;
@@ -1378,7 +1378,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
                 BestIsInc = TRUE;
             }
         }
-        
+
         if (Ntw[q] && NtwCnt > 15)
         {        
             Ntw[q]--;
@@ -1408,7 +1408,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
         {
             if (BestIsInc)
                 Ntw[BestQ]++;
-            else
+				else
                 Ntw[BestQ]--;
         }
     }
@@ -1438,7 +1438,7 @@ void TQuiz::WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
     printf("    static int Asw[200] = {\n");
 
     for (i = 0; i < 200; i++)
-    {
+	 {
         printf("%4d", Asw[i]);
 
         if (i == 199)
@@ -1708,7 +1708,7 @@ void TQuiz::DefineAspie(char *Referer)
 	    	 AspieRef.Count += ref->Count;
 		     AspieRef.Result0_59 += ref->Result0_59;
     		 AspieRef.Result60_99 += ref->Result60_99;
-	    	 AspieRef.Result100_139 += ref->Result100_139;
+			 AspieRef.Result100_139 += ref->Result100_139;
 		     AspieRef.Result140_200 += ref->Result140_200;
 		 }
 	}
@@ -1738,7 +1738,7 @@ int TQuiz::GetGlobalId(int question)
 {
     TQuiz *quiz;
     int q;
-    int i;
+	 int i;
 
     quiz = this;
     q = question;
@@ -1858,7 +1858,7 @@ void TQuiz::ClearUsed(int Question)
         i = quiz->Quiz[Question].CrossInd;
         quiz = quiz->Quiz[Question].CrossQuiz;
         Question = i;        
-    }
+	 }
 }
 
 /*##################  TQuiz::ClearUsed ##########################
@@ -1918,7 +1918,7 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
                 if (corr < 0)
                     corr = -corr;
 
-                if (corr > maxcorr)
+					 if (corr > maxcorr)
                 {
                     TopQuiz = this;
                     *Question = q;
@@ -2038,7 +2038,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
                     while (CurrQuiz)
                     {
                         if (!CurrQuiz->Quiz[CurrQuestion].Used)
-                        {
+								{
 //                            corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
 //                                    CurrQuiz->Quiz[CurrQuestion].Pca[1];
                             corr = CurrQuiz->Quiz[CurrQuestion].Corr;
@@ -2608,7 +2608,7 @@ void TQuiz::Calculate()
         				if (Quiz[q2].Reverse)
 	        				ival2 = Quiz[q2].Cats - ival2;
 	        			else
-    		    			ival2--;
+							ival2--;
 
     		    		if (csd[q1] != 0.0 && csd[q2] != 0.0)
     		    		{
@@ -2638,7 +2638,7 @@ void TQuiz::Calculate()
 
 				GlobalCorrCount[gid2][gid1] += count;
 				GlobalCorrArr[gid2][gid1] += rsum;
-	    	}
+			}
 		}
 	}
 
@@ -2908,7 +2908,7 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
 			    return 9.6;
 
 		    if (p >= 0.001)
-		        return 10.8;
+				  return 10.8;
 
             if (p >= 0.0005)
                 return 12;
@@ -2938,7 +2938,7 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
                 return 9.23;
 
             if (p >= 0.005)
-                return 10.62;
+					 return 10.62;
 
             if (p >= 0.002)
                 return 12.5;
@@ -2968,7 +2968,7 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
                 return 7.82;        
 
             if (p >= 0.02)
-                return 9.84;
+					 return 9.84;
 
             if (p >= 0.01)
                 return 11.36;
@@ -2998,7 +2998,7 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
                 return 5.99;
 
             if (p >= 0.1)
-                return 7.79;
+					 return 7.79;
 
             if (p >= 0.05)
                 return 9.50;        
@@ -3028,7 +3028,7 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
                 return 23.6;
 
             return 1000;
-                
+
 		case 11:
             if (p >= 0.2)
                 return 13.45;
@@ -3058,7 +3058,7 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
                 return 31.7;
 
             if (p >= 0.0002)
-                return 34.6;
+					 return 34.6;
 
 			if (p >= 0.0001)
                 return 35.6;
@@ -3286,73 +3286,155 @@ void TQuiz::OptimizePair(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int A
 	}
 }
 
-/*##################  TQuiz::OptimizeLoadings ##########################
-*   Purpose....: Optimize loadings by rotation				       	        #
+/*##################  TQuiz::OptimizeGroupLoadings ##########################
+*   Purpose....: Optimize group loadings by rotation				       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::OptimizeLoadings(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount, long double CorrArr[MAX_QUESTIONS])
+void TQuiz::OptimizeGroupLoadings()
 {
 	int a;
+	int g;
 	int q;
 	int BestAxis;
 	int RotateAxis;
 	int AvailableAxis;
 	long double corr;
 	long double MaxCorr;
+   int AxisCount;
+	int MaxGrp;
 	int UsedAxisArr[MAX_ASPIE_PCA_AXIS];
+	int UsedGroupArr[GROUP_COUNT];
+	int AllocedAxisArr[MAX_ASPIE_PCA_AXIS];
+	long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS];
 	long double AxisCorrArr[MAX_ASPIE_PCA_AXIS];
+	long double CorrArr[MAX_QUESTIONS];
+	long double MaxCorrArr[GROUP_COUNT];
 
-	CalcAxisCorr(m, AxisCount, CorrArr, AxisCorrArr);
+	AxisCount = AspiePcaCount;
 
-	MaxCorr = 0.0;
-	for (a = 1; a < AxisCount; a++)
+	for (a = 0; a < AxisCount; a++)
+		AllocedAxisArr[a] = FALSE;
+
+	AllocedAxisArr[0] = TRUE;
+
+	for (g = 0; g < GROUP_COUNT; g++)
+		UsedGroupArr[g] = FALSE;
+
+	for (a = 0; a < AxisCount; a++)
+		for (q = 0; q < N; q++)
+			m[a][q] = Quiz[q].AspiePca[a];
+
+	for (;;)
 	{
-		corr = AxisCorrArr[a];
-		corr = corr * corr;
-
-		if (corr > MaxCorr)
+		for (g = 0; g < GROUP_COUNT - 1; g++)
 		{
-			BestAxis = a;
-			MaxCorr = corr;
-		}
-	}
-
-	if (MaxCorr > 0)
-	{
-		for (a = 0; a < AxisCount; a++)
-			UsedAxisArr[a] = FALSE;
-
-		UsedAxisArr[BestAxis] = TRUE;
-		AvailableAxis = AxisCount - 1;
-
-		while (AvailableAxis && MaxCorr > 0)
-		{
-			MaxCorr = 0.0;
-
-			for (a = 1; a < AxisCount; a++)
+			if (UsedGroupArr[g])
+				MaxCorrArr[g] = 0.0;
+			else
 			{
-				if (!UsedAxisArr[a])
-				{
-					corr = AxisCorrArr[a];
-					corr = corr * corr;
+				for (q = 0; q < N; q++)
+					CorrArr[q] = Quiz[q].Group[g].Corr;
 
-					if (corr > MaxCorr)
+				CalcAxisCorr(m, AxisCount, CorrArr, AxisCorrArr);
+
+				MaxCorrArr[g] = 0.0;
+
+				for (a = 1; a < AxisCount; a++)
+				{
+					if (!AllocedAxisArr[a])
 					{
-						MaxCorr = corr;
-						RotateAxis = a;
+						corr = AxisCorrArr[a];
+						corr = corr * corr;
+
+						if (corr > MaxCorrArr[g])
+							MaxCorrArr[g] = corr;
 					}
 				}
 			}
+		}
 
-			if (MaxCorr > 0)
+		MaxCorr = 0.0;
+		for (g = 0; g < GROUP_COUNT - 1; g++)
+		{
+			if (MaxCorrArr[g] > MaxCorr)
 			{
-				OptimizePair(m, AxisCount, CorrArr, BestAxis, RotateAxis);
-				UsedAxisArr[a] = TRUE;
-				CalcAxisCorr(m, AxisCount, CorrArr, AxisCorrArr);
+				MaxCorr = MaxCorrArr[g];
+				MaxGrp = g;
 			}
+		}
+
+		if (MaxCorr == 0.0)
+			break;
+
+		g = MaxGrp;
+		MaxCorrArr[g] = 0.0;
+		UsedGroupArr[g] = TRUE;
+
+		for (q = 0; q < N; q++)
+			CorrArr[q] = Quiz[q].Group[g].Corr;
+
+		CalcAxisCorr(m, AxisCount, CorrArr, AxisCorrArr);
+
+		MaxCorr = 0.0;
+		for (a = 1; a < AxisCount; a++)
+		{
+			if (!AllocedAxisArr[a])
+			{
+				corr = AxisCorrArr[a];
+				corr = corr * corr;
+
+				if (corr > MaxCorr)
+				{
+					BestAxis = a;
+					MaxCorr = corr;
+				}
+			}
+		}
+
+		if (MaxCorr > 0)
+		{
+			for (a = 0; a < AxisCount; a++)
+				UsedAxisArr[a] = FALSE;
+
+			AllocedAxisArr[BestAxis] = TRUE;
+			AvailableAxis = AxisCount - 1;
+
+			while (AvailableAxis && MaxCorr > 0)
+			{
+				MaxCorr = 0.0;
+
+				for (a = 1; a < AxisCount; a++)
+				{
+					if (!UsedAxisArr[a] && !AllocedAxisArr[a])
+					{
+						corr = AxisCorrArr[a];
+						corr = corr * corr;
+
+						if (corr > MaxCorr)
+						{
+							MaxCorr = corr;
+							RotateAxis = a;
+						}
+					}
+				}
+
+				if (MaxCorr > 0)
+				{
+					OptimizePair(m, AxisCount, CorrArr, BestAxis, RotateAxis);
+					UsedAxisArr[RotateAxis] = TRUE;
+					CalcAxisCorr(m, AxisCount, CorrArr, AxisCorrArr);
+				}
+			}
+
+			for (q = 0; q < N; q++)
+				Quiz[q].GroupPca[g] = m[BestAxis][q];
+
+			for (a = 0; a < AxisCount; a++)
+				Axis[a].GroupCorr[g] = AxisCorrArr[a];
+
 		}
 	}
 }
@@ -3390,7 +3472,6 @@ void TQuiz::ImportMvspAspie(const char *filename)
 	long double val;
 	int dx;
 
-	long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS];
 	long double CorrArr[MAX_QUESTIONS];
 
 	strcpy(formstr, "%d");
@@ -3445,18 +3526,10 @@ void TQuiz::ImportMvspAspie(const char *filename)
 				AspiePcaCount = count - 1;
 
 				for (i = 0; i < count - 1; i++)
-				{
 					Quiz[q - 1].AspiePca[i] = d[i];
-					m[i][q - 1] = d[i];
-				}
 			}
 		}
 	}
-
-	for (q = 0; q < N; q++)
-		CorrArr[q] = Quiz[q].Group[0].Corr;
-
-	OptimizeLoadings(m, AspiePcaCount, CorrArr);
 
 	for (a = 0; a < AspiePcaCount; a++)
 	{
@@ -3689,6 +3762,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
 		  }
 	 }
 
+	OptimizeGroupLoadings();
 
 	for (a = 0; a < AspiePcaCount; a++)
 	{

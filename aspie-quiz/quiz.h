@@ -407,7 +407,7 @@ protected:
 	long double GetAxisCorr(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int Axis,  long double CorrArr[MAX_QUESTIONS]);
 	void CalcAxisCorr(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount,  long double CorrArr[MAX_QUESTIONS], long double Result[MAX_ASPIE_PCA_AXIS]);
 	void OptimizePair(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount, long double CorrArr[MAX_QUESTIONS], int ToAxis, int FromAxis);
-	void OptimizeLoadings(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount, long double CorrArr[MAX_QUESTIONS]);
+	void OptimizeGroupLoadings();
 
 	void DsmCutoff(TFile &file, const char *Text, int PopType);
 
