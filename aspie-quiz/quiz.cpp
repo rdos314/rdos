@@ -3430,11 +3430,182 @@ void TQuiz::OptimizeGroupLoadings()
 			}
 
 			for (q = 0; q < N; q++)
+				if (AxisCorrArr[BestAxis] < 0.0)
+					m[BestAxis][q] = -m[BestAxis][q];
+
+			if (AxisCorrArr[BestAxis] < 0.0)
+				AxisCorrArr[BestAxis] = - AxisCorrArr[BestAxis];
+
+			for (q = 0; q < N; q++)
 				Quiz[q].GroupPca[g] = m[BestAxis][q];
 
 			for (a = 0; a < AxisCount; a++)
 				Axis[a].GroupCorr[g] = AxisCorrArr[a];
 
+		}
+	}
+
+	for (a = 0; a < AxisCount; a++)
+		for (q = 0; q < N; q++)
+			Quiz[q].AspiePca[a] = m[a][q];
+
+}
+
+/*##################  TQuiz::OptimizeDxLoadings ##########################
+*   Purpose....: Optimize dx loadings by rotation				       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::OptimizeDxLoadings()
+{
+	int a;
+	int dx;
+	int q;
+	int BestAxis;
+	int RotateAxis;
+	int AvailableAxis;
+	long double corr;
+	long double MaxCorr;
+   int AxisCount;
+	int MaxDx;
+	int UsedAxisArr[MAX_ASPIE_PCA_AXIS];
+	int UsedDxArr[DX_COUNT];
+	int AllocedAxisArr[MAX_ASPIE_PCA_AXIS];
+	long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS];
+	long double AxisCorrArr[MAX_ASPIE_PCA_AXIS];
+	long double CorrArr[MAX_QUESTIONS];
+	long double MaxCorrArr[DX_COUNT];
+
+	AxisCount = AspiePcaCount;
+
+	for (a = 0; a < AxisCount; a++)
+		AllocedAxisArr[a] = FALSE;
+
+	AllocedAxisArr[0] = TRUE;
+
+	for (dx = 0; dx < DX_COUNT; dx++)
+		UsedDxArr[dx] = FALSE;
+
+	for (a = 0; a < AxisCount; a++)
+		for (q = 0; q < N; q++)
+			m[a][q] = Quiz[q].AspiePca[a];
+
+	for (;;)
+	{
+		for (dx = 0; dx < DX_COUNT; dx++)
+		{
+			if (UsedDxArr[dx])
+				MaxCorrArr[dx] = 0.0;
+			else
+			{
+				for (q = 0; q < N; q++)
+					CorrArr[q] = Quiz[q].Dx[dx].Corr;
+
+				CalcAxisCorr(m, AxisCount, CorrArr, AxisCorrArr);
+
+				MaxCorrArr[dx] = 0.0;
+
+				for (a = 1; a < AxisCount; a++)
+				{
+					if (!AllocedAxisArr[a])
+					{
+						corr = AxisCorrArr[a];
+						corr = corr * corr;
+
+						if (corr > MaxCorrArr[dx])
+							MaxCorrArr[dx] = corr;
+					}
+				}
+			}
+		}
+
+		MaxCorr = 0.0;
+		for (dx = 0; dx < DX_COUNT; dx++)
+		{
+			if (MaxCorrArr[dx] > MaxCorr)
+			{
+				MaxCorr = MaxCorrArr[dx];
+				MaxDx = dx;
+			}
+		}
+
+		if (MaxCorr == 0.0)
+			break;
+
+		dx = MaxDx;
+		MaxCorrArr[dx] = 0.0;
+		UsedDxArr[dx] = TRUE;
+
+		for (q = 0; q < N; q++)
+			CorrArr[q] = Quiz[q].Dx[dx].Corr;
+
+		CalcAxisCorr(m, AxisCount, CorrArr, AxisCorrArr);
+
+		MaxCorr = 0.0;
+		for (a = 1; a < AxisCount; a++)
+		{
+			if (!AllocedAxisArr[a])
+			{
+				corr = AxisCorrArr[a];
+				corr = corr * corr;
+
+				if (corr > MaxCorr)
+				{
+					BestAxis = a;
+					MaxCorr = corr;
+				}
+			}
+		}
+
+		if (MaxCorr > 0)
+		{
+			for (a = 0; a < AxisCount; a++)
+				UsedAxisArr[a] = FALSE;
+
+			AllocedAxisArr[BestAxis] = TRUE;
+			AvailableAxis = AxisCount - 1;
+
+			while (AvailableAxis && MaxCorr > 0)
+			{
+				MaxCorr = 0.0;
+
+				for (a = 1; a < AxisCount; a++)
+				{
+					if (!UsedAxisArr[a] && !AllocedAxisArr[a])
+					{
+						corr = AxisCorrArr[a];
+						corr = corr * corr;
+
+						if (corr > MaxCorr)
+						{
+							MaxCorr = corr;
+							RotateAxis = a;
+						}
+					}
+				}
+
+				if (MaxCorr > 0)
+				{
+					OptimizePair(m, AxisCount, CorrArr, BestAxis, RotateAxis);
+					UsedAxisArr[RotateAxis] = TRUE;
+					CalcAxisCorr(m, AxisCount, CorrArr, AxisCorrArr);
+				}
+			}
+
+			for (q = 0; q < N; q++)
+				if (AxisCorrArr[BestAxis] < 0.0)
+					m[BestAxis][q] = -m[BestAxis][q];
+
+			corr = AxisCorrArr[BestAxis];
+			Axis[BestAxis].MaxCorr = corr * corr;
+
+			if (AxisCorrArr[BestAxis] < 0.0)
+				AxisCorrArr[BestAxis] = - AxisCorrArr[BestAxis];
+
+			for (q = 0; q < N; q++)
+				Quiz[q].DxPca[dx] = m[BestAxis][q];
 		}
 	}
 }
@@ -3593,255 +3764,8 @@ void TQuiz::ImportMvspAspie(const char *filename)
 		  }
 	 }
 
-	for (a = 0; a < AspiePcaCount; a++)
-	{
-		 Axis[a].MaxCorr = 0.0;
-
-		for (g = 0; g < GROUP_COUNT - 1; g++)
-		{
-			count = 0;
-
-			for (q = 0; q < N; q++)
-			{
-				count += Quiz[q].Group[g].Count;
-
-				if (Quiz[q].Group[g].Count > 1)
-					CorrArr[q] = Quiz[q].Group[g].Corr;
-				else
-					CorrArr[q] = 0;
-
-				LoadArr[q] = Quiz[q].AspiePca[a];
-			}
-
-			if (count > 1)
-			{
-				count = N;
-
-				sum = 0.0;
-				for (q = 0; q < count; q++)
-					sum += CorrArr[q];
-
-				CorrMean = sum / count;
-
-				sum = 0.0;
-				for (q = 0; q < count; q++)
-					sum += LoadArr[q];
-
-				LoadMean = sum / count;
-
-				sum = 0.0;
-				for (q = 0; q < count; q++)
-				{
-					val = CorrMean - CorrArr[q];
-					sum += val * val;
-				}
-
-				CorrSd = sqrtl(sum / (count - 1.0));
-
-				sum = 0.0;
-				for (q = 0; q < count; q++)
-				{
-					val = LoadMean - LoadArr[q];
-					sum += val * val;
-				}
-
-				LoadSd = sqrtl(sum / (count - 1.0));
-
-				sum = 0.0;
-				for (q = 0; q < count; q++)
-				{
-					zx = (CorrArr[q] - CorrMean) / CorrSd;
-					zy = (LoadArr[q] - LoadMean) / LoadSd;
-					sum += zx * zy;
-				}
-
-				val = sum / (count - 1.0);
-
-				if (val * val > Axis[a].MaxCorr)
-					 Axis[a].MaxCorr = val * val;
-
-				 Axis[a].GroupCorr[g] = val;
-			}
-			else
-				 Axis[a].GroupCorr[g] = 0;
-		  }
-	 }
-
-	 for (g = 0; g < GROUP_COUNT - 1; g++)
-	 {
-		  for (q = 0; q < N; q++)
-		  {
-				val = 0;
-
-				for (a = 1; a < AspiePcaCount; a++)
-				{
-//                w = Axis[a].GroupCorr[g];
-//                w = w * w / Axis[a].MaxCorr;
-				val += Quiz[q].AspiePca[a] * Axis[a].GroupCorr[g];
-				}
-
-				Quiz[q].GroupPca[g] = val;
-		  }
-	 }
-
-	for (a = 0; a < GROUP_COUNT - 1; a++)
-	{
-		 Axis[a].MaxCorr = 0.0;
-
-		for (g = 0; g < GROUP_COUNT - 1; g++)
-		{
-			count = 0;
-
-			for (q = 0; q < N; q++)
-			{
-				count += Quiz[q].Group[g].Count;
-
-				if (Quiz[q].Group[g].Count > 1)
-					CorrArr[q] = Quiz[q].Group[g].Corr;
-				else
-					CorrArr[q] = 0;
-
-				LoadArr[q] = Quiz[q].GroupPca[a];
-			}
-
-			if (count > 1)
-			{
-				count = N;
-
-				sum = 0.0;
-				for (q = 0; q < count; q++)
-					sum += CorrArr[q];
-
-				CorrMean = sum / count;
-
-				sum = 0.0;
-				for (q = 0; q < count; q++)
-					sum += LoadArr[q];
-
-				LoadMean = sum / count;
-
-				sum = 0.0;
-				for (q = 0; q < count; q++)
-				{
-					val = CorrMean - CorrArr[q];
-					sum += val * val;
-				}
-
-				CorrSd = sqrtl(sum / (count - 1.0));
-
-				sum = 0.0;
-				for (q = 0; q < count; q++)
-				{
-					val = LoadMean - LoadArr[q];
-					sum += val * val;
-				}
-
-				LoadSd = sqrtl(sum / (count - 1.0));
-
-				sum = 0.0;
-
-				if (CorrSd && LoadSd)
-				{
-					for (q = 0; q < count; q++)
-					{
-						zx = (CorrArr[q] - CorrMean) / CorrSd;
-						zy = (LoadArr[q] - LoadMean) / LoadSd;
-						sum += zx * zy;
-					 }
-				}
-
-				val = sum / (count - 1.0);
-
-				if (val * val > Axis[a].MaxCorr)
-					 Axis[a].MaxCorr = val * val;
-
-				Axis[a].GroupCorr[g] = val;
-			}
-			else
-				 Axis[a].GroupCorr[g] = 0;
-		  }
-	 }
-
+	OptimizeDxLoadings();
 	OptimizeGroupLoadings();
-
-	for (a = 0; a < AspiePcaCount; a++)
-	{
-		Axis[a].MaxDxCorr = 0.0;
-
-		for (dx = 0; dx < DX_COUNT; dx++)
-		{
-			for (q = 0; q < N; q++)
-			{
-				CorrArr[q] = Quiz[q].Dx[dx].Corr;
-				LoadArr[q] = Quiz[q].AspiePca[a];
-			}
-
-			sum = 0.0;
-			for (q = 0; q < N; q++)
-				sum += CorrArr[q];
-
-			CorrMean = sum / N;
-
-			sum = 0.0;
-			for (q = 0; q < N; q++)
-				sum += LoadArr[q];
-
-			LoadMean = sum / N;
-
-			sum = 0.0;
-			for (q = 0; q < N; q++)
-			{
-				val = CorrMean - CorrArr[q];
-				sum += val * val;
-			}
-
-			CorrSd = sqrtl(sum / ((long double)N - 1.0));
-
-			sum = 0.0;
-			for (q = 0; q < N; q++)
-			{
-				val = LoadMean - LoadArr[q];
-				sum += val * val;
-			}
-
-			LoadSd = sqrtl(sum / ((long double)N - 1.0));
-
-			if (CorrSd > 0.0 && LoadSd > 0.0)
-			{
-
-				sum = 0.0;
-				for (q = 0; q < N; q++)
-				{
-					zx = (CorrArr[q] - CorrMean) / CorrSd;
-					zy = (LoadArr[q] - LoadMean) / LoadSd;
-					sum += zx * zy;
-				}
-
-				val = sum / ((long double)N - 1.0);
-
-				if (val * val > Axis[a].MaxDxCorr)
-					 Axis[a].MaxDxCorr = val * val;
-
-				 Axis[a].DxCorr[dx] = val;
-			}
-			else
-				 Axis[a].DxCorr[dx] = 0;
-		  }
-	 }
-
-	 for (dx = 0; dx < DX_COUNT; dx++)
-	 {
-		  for (q = 0; q < N; q++)
-		  {
-				val = 0;
-
-				for (a = 1; a < AspiePcaCount; a++)
-					val += Quiz[q].AspiePca[a] * Axis[a].DxCorr[dx];
-
-				Quiz[q].DxPca[dx] = val;
-		  }
-	 }
-
 }
 
 /*##################  TQuiz::WriteIQ ##########################
