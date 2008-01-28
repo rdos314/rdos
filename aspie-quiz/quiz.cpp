@@ -12145,19 +12145,15 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
 
 					WriteCenteredFieldHeader(file, 3);
 
-					if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.05))
-						file.Write("<span style='color:#EE0000'>");
-					else
-					{
-						if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
-							file.Write("<span style='color:#990099'>");
-					}
-
 					sprintf(str, "%d", GlobalId + 1);
-					file.Write(str);
-
-					if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
+					if (HasGlobalQuestion(GlobalId))
+					{
+						file.Write("<span style='color:#004488'>");
+						file.Write(str);
 						file.Write("</span>");
+					}
+					else
+						file.Write(str);
 
 					WriteFieldFooter(file);
 
@@ -12528,6 +12524,15 @@ void TQuiz::WriteAverageDxTable(const char *filename)
 					}
 
 					sprintf(str, "%d", GlobalId + 1);
+					if (HasGlobalQuestion(GlobalId))
+					{
+						file.Write("<span style='color:#004488'>");
+						file.Write(str);
+						file.Write("</span>");
+					}
+					else
+						file.Write(str);
+
 					file.Write(str);
 
 					if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
