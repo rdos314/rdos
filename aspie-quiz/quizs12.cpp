@@ -133,7 +133,7 @@ int TQuizS12::GetCatCount(int Question)
 	if (Question >= 144 && Question <= 181)
 		return 2;
 	else
-		return 5;
+		return 3;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -1788,8 +1788,8 @@ void TQuizS12::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
-						d2 = -d2;
+//					if (PcaType == PCA_TYPE_MALE)
+//						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;
