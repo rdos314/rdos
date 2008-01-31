@@ -1952,7 +1952,6 @@ void TQuizS11::WriteTS(const char *filename)
 	printf("TS - score diff correlation: %5.2Lf\r\n", DiffCorr);
 }
 
-
 /*##################  TQuizS11::WriteRetest ##########################
 *   Purpose....: Write retest report             			     	        #
 *   In params..: *                                                          #

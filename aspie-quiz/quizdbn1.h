@@ -17,6 +17,16 @@ struct TQuizRow
 	char Bipolar;
 	char Schizophrenia;
 	char Social;
+	int PredAutism;
+	int PredAs;
+	int PredAdd;
+	int PredDyspraxia;
+	int PredDyslexia;
+	int PredDyscalculia;
+	int PredOcd;
+	int PredBipolar;
+	int PredSchizo;
+	int PredSocial;
 	char Referer[100];
 	long AsResult;
 	long NtResult;
