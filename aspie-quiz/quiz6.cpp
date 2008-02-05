@@ -305,14 +305,14 @@ void TQuiz6::SetupTexts()
 	Quiz[65].MyGroup = GROUP_SOCIAL;
 	Quiz[66].MyGroup = GROUP_MIXED;
 	Quiz[67].MyGroup = GROUP_SOCIAL;
-	Quiz[68].MyGroup = GROUP_NT_NVC;
+	Quiz[68].MyGroup = GROUP_SOCIAL;
 	Quiz[69].MyGroup = GROUP_SOCIAL;
 	Quiz[70].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[71].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[72].MyGroup = GROUP_NT_NVC;
 	Quiz[73].MyGroup = GROUP_SOCIAL;
 	Quiz[74].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[75].MyGroup = GROUP_SOCIAL;
+	Quiz[75].MyGroup = GROUP_NT_NVC;
 	Quiz[76].MyGroup = GROUP_SOCIAL;
 	Quiz[77].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[78].MyGroup = GROUP_SOCIAL;

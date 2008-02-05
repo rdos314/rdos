@@ -344,7 +344,7 @@ void TQuizS3::SetupTexts()
   Quiz[120].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[121].MyGroup = GROUP_NT_NVC;
   Quiz[122].MyGroup = GROUP_NT_SENSORY;
-  Quiz[123].MyGroup = GROUP_SOCIAL;
+  Quiz[123].MyGroup = GROUP_NT_NVC;
   Quiz[124].MyGroup = GROUP_NT_NVC;
   Quiz[125].MyGroup = GROUP_NT_NVC;
   Quiz[126].MyGroup = GROUP_NT_NVC;
@@ -356,7 +356,7 @@ void TQuizS3::SetupTexts()
   Quiz[132].MyGroup = GROUP_SOCIAL;
   Quiz[133].MyGroup = GROUP_NT_TALENT;
 
-  Quiz[134].MyGroup = GROUP_RELIGION;
+  Quiz[134].MyGroup = GROUP_SOCIAL;
   Quiz[135].MyGroup = GROUP_ENVIRONMENT;
   Quiz[136].MyGroup = GROUP_RELIGION;
   Quiz[137].MyGroup = GROUP_SOCIAL;
@@ -400,14 +400,14 @@ void TQuizS3::SetupTexts()
   Quiz[175].MyGroup = GROUP_RELIGION;
   Quiz[176].MyGroup = GROUP_SOCIAL;
   Quiz[177].MyGroup = GROUP_PARANOID;
-  Quiz[178].MyGroup = GROUP_SOCIAL;
+  Quiz[178].MyGroup = GROUP_NT_NVC;
   Quiz[179].MyGroup = GROUP_PARANOID;
   Quiz[180].MyGroup = GROUP_PARANOID;
   Quiz[181].MyGroup = GROUP_SOCIAL;
   Quiz[182].MyGroup = GROUP_RELIGION;
   Quiz[183].MyGroup = GROUP_PARANOID;
-  Quiz[184].MyGroup = GROUP_PARANOID;
-  Quiz[185].MyGroup = GROUP_RELIGION;
+  Quiz[184].MyGroup = GROUP_SOCIAL;
+  Quiz[185].MyGroup = GROUP_ASPIE_NVC;
   Quiz[186].MyGroup = GROUP_SOCIAL;
   Quiz[187].MyGroup = GROUP_PARANOID;
   Quiz[188].MyGroup = GROUP_PARANOID;
@@ -429,7 +429,7 @@ void TQuizS3::SetupTexts()
   Quiz[204].MyGroup = GROUP_NT_NVC;
   Quiz[205].MyGroup = GROUP_ASPIE_NVC;
   Quiz[206].MyGroup = GROUP_SOCIAL;
-  Quiz[207].MyGroup = GROUP_PARANOID;
+  Quiz[207].MyGroup = GROUP_ASPIE_NVC;
   Quiz[208].MyGroup = GROUP_SOCIAL;
   Quiz[209].MyGroup = GROUP_PARANOID;
 

@@ -346,11 +346,11 @@ void TQuizS6::SetupTexts()
   Quiz[96].MyGroup = GROUP_NT_NVC;
   Quiz[97].MyGroup = GROUP_NT_NVC;
   Quiz[98].MyGroup = GROUP_NT_NVC;
-  Quiz[99].MyGroup = GROUP_SOCIAL;
+  Quiz[99].MyGroup = GROUP_NT_NVC;
   Quiz[100].MyGroup = GROUP_NT_NVC;
   Quiz[101].MyGroup = GROUP_NT_NVC;
   Quiz[102].MyGroup = GROUP_NT_NVC;
-  Quiz[103].MyGroup = GROUP_SOCIAL;
+  Quiz[103].MyGroup = GROUP_NT_NVC;
   Quiz[104].MyGroup = GROUP_NT_NVC;
   Quiz[105].MyGroup = GROUP_NT_TALENT;
   Quiz[106].MyGroup = GROUP_NT_NVC;

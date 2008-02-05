@@ -293,7 +293,7 @@ void TQuizN1::SetupTexts()
   Quiz[55].MyGroup = GROUP_SOCIAL;
   Quiz[56].MyGroup = GROUP_SOCIAL;
   Quiz[57].MyGroup = GROUP_SOCIAL;
-  Quiz[58].MyGroup = GROUP_SOCIAL;
+  Quiz[58].MyGroup = GROUP_NT_NVC;
   Quiz[59].MyGroup = GROUP_SOCIAL;
   Quiz[60].MyGroup = GROUP_SOCIAL;
   Quiz[61].MyGroup = GROUP_SOCIAL;
@@ -346,7 +346,7 @@ void TQuizN1::SetupTexts()
   Quiz[108].MyGroup = GROUP_NT_NVC;
   Quiz[109].MyGroup = GROUP_NT_NVC;
   Quiz[110].MyGroup = GROUP_NT_NVC;
-  Quiz[111].MyGroup = GROUP_NT_NVC;
+  Quiz[111].MyGroup = GROUP_NT_HUNTING;
   Quiz[112].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[113].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[114].MyGroup = GROUP_ASPIE_HUNTING;
@@ -411,25 +411,25 @@ void TQuizN1::SetupTexts()
   Quiz[173].MyGroup = GROUP_NT_NVC;
   Quiz[174].MyGroup = GROUP_NT_SENSORY;
   Quiz[175].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_NT_TALENT;
   Quiz[177].MyGroup = GROUP_ASPIE_SENSORY;
 
   Quiz[178].MyGroup = GROUP_MIXED;
-  Quiz[179].MyGroup = GROUP_MIXED;
-  Quiz[180].MyGroup = GROUP_MIXED;
-  Quiz[181].MyGroup = GROUP_MIXED;
-  Quiz[182].MyGroup = GROUP_MIXED;
-  Quiz[183].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[180].MyGroup = GROUP_NT_HUNTING;
+  Quiz[181].MyGroup = GROUP_NT_TALENT;
+  Quiz[182].MyGroup = GROUP_NT_SENSORY;
+  Quiz[183].MyGroup = GROUP_SOCIAL;
   Quiz[184].MyGroup = GROUP_MIXED;
-  Quiz[185].MyGroup = GROUP_MIXED;
-  Quiz[186].MyGroup = GROUP_MIXED;
+  Quiz[185].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[186].MyGroup = GROUP_NT_NVC;
   Quiz[187].MyGroup = GROUP_MIXED;
-  Quiz[188].MyGroup = GROUP_MIXED;
-  Quiz[189].MyGroup = GROUP_MIXED;
-  Quiz[190].MyGroup = GROUP_MIXED;
-  Quiz[191].MyGroup = GROUP_MIXED;
+  Quiz[188].MyGroup = GROUP_NT_HUNTING;
+  Quiz[189].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[190].MyGroup = GROUP_ACTIVITY;
+  Quiz[191].MyGroup = GROUP_SOCIAL;
   Quiz[192].MyGroup = GROUP_MIXED;
-  Quiz[193].MyGroup = GROUP_MIXED;
+  Quiz[193].MyGroup = GROUP_ASPIE_HUNTING;
 
   Quiz[194].MyGroup = GROUP_NT_HUNTING;
   Quiz[195].MyGroup = GROUP_NT_HUNTING;

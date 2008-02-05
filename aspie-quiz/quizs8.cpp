@@ -286,10 +286,10 @@ void TQuizS8::SetupTexts()
   Quiz[48].MyGroup = GROUP_SOCIAL;
   Quiz[49].MyGroup = GROUP_SOCIAL;
   Quiz[50].MyGroup = GROUP_SOCIAL;
-  Quiz[51].MyGroup = GROUP_SOCIAL;
+  Quiz[51].MyGroup = GROUP_NT_NVC;
   Quiz[52].MyGroup = GROUP_SOCIAL;
   Quiz[53].MyGroup = GROUP_NT_NVC;
-  Quiz[54].MyGroup = GROUP_SOCIAL;
+  Quiz[54].MyGroup = GROUP_NT_NVC;
   Quiz[55].MyGroup = GROUP_NT_OBSESSION;
   Quiz[56].MyGroup = GROUP_NT_NVC;
   Quiz[57].MyGroup = GROUP_NT_OBSESSION;

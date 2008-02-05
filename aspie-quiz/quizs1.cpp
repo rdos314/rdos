@@ -364,7 +364,7 @@ void TQuizS1::SetupTexts()
   Quiz[130].MyGroup = GROUP_NT_NVC;
   Quiz[131].MyGroup = GROUP_NT_SENSORY;
   Quiz[132].MyGroup = GROUP_NT_NVC;
-  Quiz[133].MyGroup = GROUP_SOCIAL;
+  Quiz[133].MyGroup = GROUP_NT_NVC;
   Quiz[134].MyGroup = GROUP_NT_NVC;
   Quiz[135].MyGroup = GROUP_NT_NVC;
   Quiz[136].MyGroup = GROUP_NT_NVC;

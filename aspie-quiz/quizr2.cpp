@@ -324,7 +324,7 @@ void TQuizR2::SetupTexts()
   Quiz[142].MyGroup = GROUP_NT_TALENT;
   Quiz[143].MyGroup = GROUP_SEX;
   Quiz[144].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[145].MyGroup = GROUP_SOCIAL;
+  Quiz[145].MyGroup = GROUP_NT_NVC;
   Quiz[146].MyGroup = GROUP_MIXED;
   Quiz[147].MyGroup = GROUP_NT_SENSORY;
   Quiz[148].MyGroup = GROUP_ACTIVITY;

@@ -340,7 +340,7 @@ void TQuizS4::SetupTexts()
   Quiz[118].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[119].MyGroup = GROUP_NT_TALENT;
   Quiz[120].MyGroup = GROUP_NT_NVC;
-  Quiz[121].MyGroup = GROUP_SOCIAL;
+  Quiz[121].MyGroup = GROUP_NT_NVC;
   Quiz[122].MyGroup = GROUP_NT_SENSORY;
   Quiz[123].MyGroup = GROUP_NT_NVC;
   Quiz[124].MyGroup = GROUP_NT_NVC;
@@ -352,7 +352,7 @@ void TQuizS4::SetupTexts()
   Quiz[130].MyGroup = GROUP_ENVIRONMENT;
   Quiz[131].MyGroup = GROUP_NT_SENSORY;
 
-  Quiz[132].MyGroup = GROUP_SOCIAL;
+  Quiz[132].MyGroup = GROUP_NT_NVC;
   Quiz[133].MyGroup = GROUP_ASPIE_NVC;
   Quiz[134].MyGroup = GROUP_SOCIAL;
   Quiz[135].MyGroup = GROUP_SOCIAL;

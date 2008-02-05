@@ -277,12 +277,12 @@ void TQuizS10::SetupTexts()
   Quiz[44].MyGroup = GROUP_SOCIAL;
   Quiz[45].MyGroup = GROUP_SOCIAL;
   Quiz[46].MyGroup = GROUP_SOCIAL;
-  Quiz[47].MyGroup = GROUP_SOCIAL;
+  Quiz[47].MyGroup = GROUP_NT_NVC;
   Quiz[48].MyGroup = GROUP_SOCIAL;
   Quiz[49].MyGroup = GROUP_SOCIAL;
   Quiz[50].MyGroup = GROUP_SOCIAL;
   Quiz[51].MyGroup = GROUP_SOCIAL;
-  Quiz[52].MyGroup = GROUP_SOCIAL;
+  Quiz[52].MyGroup = GROUP_NT_NVC;
   Quiz[53].MyGroup = GROUP_SOCIAL;
   Quiz[54].MyGroup = GROUP_SOCIAL;
   Quiz[55].MyGroup = GROUP_SOCIAL;
@@ -394,7 +394,7 @@ void TQuizS10::SetupTexts()
   Quiz[160].MyGroup = GROUP_ENVIRONMENT;
   Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_SOCIAL;
-  Quiz[163].MyGroup = GROUP_SOCIAL;
+  Quiz[163].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[164].MyGroup = GROUP_MIXED;
   Quiz[165].MyGroup = GROUP_ACTIVITY;
   Quiz[166].MyGroup = GROUP_ACTIVITY;

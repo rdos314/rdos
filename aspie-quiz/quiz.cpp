@@ -3450,7 +3450,7 @@ void TQuiz::OptimizeGroupLoadings()
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
 		UsedGroupArr[g] = FALSE;
-		GroupAxisArr[g] = 0;
+		GroupAxisArr[g] = -1;
 	}
 
 	for (a = 0; a < AxisCount; a++)
@@ -3472,7 +3472,7 @@ void TQuiz::OptimizeGroupLoadings()
 
 				MaxCorrArr[g] = 0.0;
 
-				for (a = 1; a < AxisCount; a++)
+				for (a = 0; a < AxisCount; a++)
 				{
 					if (!AllocedAxisArr[a])
 					{
@@ -3509,7 +3509,7 @@ void TQuiz::OptimizeGroupLoadings()
 		CalcAxisCorr(m, AxisCount, CorrArr1, AxisCorrArr);
 
 		MaxCorr = 0.0;
-		for (a = 1; a < AxisCount; a++)
+		for (a = 0; a < AxisCount; a++)
 		{
 			if (!AllocedAxisArr[a])
 			{
@@ -3538,7 +3538,7 @@ void TQuiz::OptimizeGroupLoadings()
 			{
 				MaxCorr = 0.0;
 
-				for (a = 1; a < AxisCount; a++)
+				for (a = 0; a < AxisCount; a++)
 				{
 					if (!UsedAxisArr[a] && !AllocedAxisArr[a])
 					{
@@ -3589,7 +3589,7 @@ void TQuiz::OptimizeGroupLoadings()
 
 			a1 = GroupAxisArr[g1];
 			a2 = GroupAxisArr[g2];
-			if (a1 && a2)
+			if (a1 >= 0 && a2 >= 0)
 				BalancePair(m, AxisCount, CorrArr1, CorrArr2, a1, a2);
 		}
 	}
@@ -3643,7 +3643,7 @@ void TQuiz::OptimizeDxLoadings()
 	for (dx = 0; dx < DX_COUNT; dx++)
 	{
 		UsedDxArr[dx] = FALSE;
-		DxAxisArr[dx] = 0;
+		DxAxisArr[dx] = -1;
 	}
 
 	for (a = 0; a < AxisCount; a++)
@@ -3665,7 +3665,7 @@ void TQuiz::OptimizeDxLoadings()
 
 				MaxCorrArr[dx] = 0.0;
 
-				for (a = 1; a < AxisCount; a++)
+				for (a = 0; a < AxisCount; a++)
 				{
 					if (!AllocedAxisArr[a])
 					{
@@ -3702,7 +3702,7 @@ void TQuiz::OptimizeDxLoadings()
 		CalcAxisCorr(m, AxisCount, CorrArr1, AxisCorrArr);
 
 		MaxCorr = 0.0;
-		for (a = 1; a < AxisCount; a++)
+		for (a = 0; a < AxisCount; a++)
 		{
 			if (!AllocedAxisArr[a])
 			{
@@ -3731,7 +3731,7 @@ void TQuiz::OptimizeDxLoadings()
 			{
 				MaxCorr = 0.0;
 
-				for (a = 1; a < AxisCount; a++)
+				for (a = 0; a < AxisCount; a++)
 				{
 					if (!UsedAxisArr[a] && !AllocedAxisArr[a])
 					{
@@ -3781,7 +3781,7 @@ void TQuiz::OptimizeDxLoadings()
 
 			a1 = DxAxisArr[dx1];
 			a2 = DxAxisArr[dx2];
-			if (a1 && a2)
+			if (a1 >= 0 && a2 >= 0)
 				BalancePair(m, AxisCount, CorrArr1, CorrArr2, a1, a2);
 		}
 	}

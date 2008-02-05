@@ -278,10 +278,10 @@ void TQuizS9::SetupTexts()
   Quiz[48].MyGroup = GROUP_SOCIAL;
   Quiz[49].MyGroup = GROUP_SOCIAL;
   Quiz[50].MyGroup = GROUP_SOCIAL;
-  Quiz[51].MyGroup = GROUP_SOCIAL;
+  Quiz[51].MyGroup = GROUP_NT_NVC;
   Quiz[52].MyGroup = GROUP_SOCIAL;
   Quiz[53].MyGroup = GROUP_NT_NVC;
-  Quiz[54].MyGroup = GROUP_SOCIAL;
+  Quiz[54].MyGroup = GROUP_NT_NVC;
   Quiz[55].MyGroup = GROUP_NT_OBSESSION;
   Quiz[56].MyGroup = GROUP_SOCIAL;
   Quiz[57].MyGroup = GROUP_SOCIAL;
@@ -463,7 +463,7 @@ void TQuizS9::SetupTexts()
   Quiz[231].MyGroup = GROUP_ACTIVITY;
   Quiz[232].MyGroup = GROUP_ACTIVITY;
   Quiz[233].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[234].MyGroup = GROUP_ACTIVITY;
+  Quiz[234].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[235].MyGroup = GROUP_ASPIE_SENSORY;
 
   Quiz[236].MyGroup = GROUP_NT_HUNTING;

@@ -285,7 +285,7 @@ void TQuizS12::SetupTexts()
   Quiz[43].MyGroup = GROUP_SOCIAL;
   Quiz[44].MyGroup = GROUP_SOCIAL;
   Quiz[45].MyGroup = GROUP_SOCIAL;
-  Quiz[46].MyGroup = GROUP_SOCIAL;
+  Quiz[46].MyGroup = GROUP_NT_NVC;
   Quiz[47].MyGroup = GROUP_SOCIAL;
   Quiz[48].MyGroup = GROUP_SOCIAL;
   Quiz[49].MyGroup = GROUP_SOCIAL;
@@ -380,10 +380,10 @@ void TQuizS12::SetupTexts()
   Quiz[138].MyGroup = GROUP_NT_NVC;
   Quiz[139].MyGroup = GROUP_NT_SENSORY;
   Quiz[140].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_NT_TALENT;
 
   Quiz[142].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_ASPIE_SENSORY;
 
   Quiz[144].MyGroup = GROUP_NT_TALENT;
   Quiz[145].MyGroup = GROUP_NT_TALENT;
@@ -2011,23 +2011,23 @@ void TQuizS12::WriteRetest(const char *filename)
 	long double NtSum;
 	long double AsMean;
 	long double NtMean;
-	long double QMean[194];
+	long double QMean[144];
 	long double AsSd;
 	long double NtSd;
-	long double QSd[194];
+	long double QSd[144];
 	long double AsTot;
 	long double NtTot;
 	int AsCount;
 	int NtCount;
-	long double QTot[194];
-	int QCount[194];
+	long double QTot[144];
+	int QCount[144];
 	long double sd;
 	int AsArr[20];
 	int NtArr[20];
 	int q;
 	int count;
 	long double sum;
-	int QArr[194][20];
+	int QArr[14][20];
 	int ok;
 	char str[80];
 	TFile file(filename, 0);
@@ -2061,7 +2061,7 @@ void TQuizS12::WriteRetest(const char *filename)
 	 AsTot = 0;
 	 NtTot = 0;
 
-	 for (q = 0; q < 194; q++)
+	 for (q = 0; q < 144; q++)
 	 {
 		  QTot[q] = 0;
 		  QCount[q] = 0;
@@ -2078,7 +2078,7 @@ void TQuizS12::WriteRetest(const char *filename)
 						  AsArr[i] = 0;
 						  NtArr[i] = 0;
 
-						  for (q = 0; q < 194; q++)
+						  for (q = 0; q < 14; q++)
 								QArr[q][i] = 0;
 					 }
 
@@ -2123,7 +2123,7 @@ void TQuizS12::WriteRetest(const char *filename)
 								  AsArr[index] = Row.AsResult;
 								  NtArr[index] = Row.NtResult;
 
-								  for (q = 0; q < 194; q++)
+								  for (q = 0; q < 14; q++)
 										QArr[q][index] = Row.Quiz[q];
 
 								 index++;
@@ -2145,7 +2145,7 @@ void TQuizS12::WriteRetest(const char *filename)
 					AsMean = AsSum / index;
 					NtMean = NtSum / index;
 
-					for (q = 0; q < 194; q++)
+					for (q = 0; q < 144; q++)
 					{
 						 count = 0;
 						  sum = 0;
@@ -2180,7 +2180,7 @@ void TQuizS12::WriteRetest(const char *filename)
 					 AsSd = sqrtl(AsSum / index);
 					NtSd = sqrtl(NtSum / index);
 
-					for (q = 0; q < 194; q++)
+					for (q = 0; q < 144; q++)
 					{
 						 count = 0;
 						  sum = 0;
@@ -2281,14 +2281,17 @@ void TQuizS12::WriteRetest(const char *filename)
 	file.Write("<h3>Standardavvikelser per fråga</h3>");
 #endif
 
-	for (q = 0; q < 194; q++)
+	for (q = 0; q < 144; q++)
 	{
 		 sprintf(str, "%d. ", q + 1);
 		 file.Write(str);
 
 		file.Write(Quiz[q].Text);
 
-		 sd = QTot[q] / QCount[q];
+		if (QCount[q])
+			sd = QTot[q] / QCount[q];
+		else
+			sd = 0;
 
 		  sprintf(str, " <b>%3.2Lf</b><br>", sd);
 		file.Write(str);

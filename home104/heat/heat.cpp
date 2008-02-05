@@ -93,15 +93,15 @@ void cdecl main()
 	RdosWriteSerialVal(2, 1, 0);
 
 
-	NtpIp = RdosNameToIp("ntp.lth.se");
-	RdosSyncTime(NtpIp);
+	NtpIp = RdosNameToIp("ntp.vlh.dk");
+//	RdosSyncTime(NtpIp);
 
 	log = new TLog("e:\\log");
 
 	vbe = new TVideoGraphicDevice(24, 640, 480);
 	vbe->SetFont(&Font);
 
-	graphic = new TGraphic(vbe, log);
+//	graphic = new TGraphic(vbe, log);
 
 	vbe->SetDrawColor(255, 255, 255);
 
@@ -468,12 +468,12 @@ void cdecl main()
 
 		if (SyncCount == 300)
 		{
-		    RdosSyncTime(NtpIp);
-		    SyncCount = 0;
+//			 RdosSyncTime(NtpIp);
+			 SyncCount = 0;
 		}
 		else
-		    SyncCount++;
-		    
+			 SyncCount++;
+
 	}
 }
 
