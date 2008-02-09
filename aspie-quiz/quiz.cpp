@@ -13273,6 +13273,7 @@ void TQuiz::ExportQuizGlobalSql(const char *filename)
 void TQuiz::ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT])
 {
 	int dx;
+	long double max;
 	long double ScoreArr[DX_COUNT];
 
 	for (dx = 0; dx < DX_COUNT; dx++)
@@ -13282,10 +13283,10 @@ void TQuiz::ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT])
 	ScoreArr[DX_ADD] = ScoreArr[DX_ADD] / 5.5;
 
 	ScoreArr[DX_DYSLEXIA] = (long double)DxResult[DX_DYSLEXIA]  / 10.0;
-	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 5.0;
+	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 5.2;
 
 	ScoreArr[DX_DYSCALCULIA] = (long double)DxResult[DX_DYSCALCULIA]  / 10.0;
-	ScoreArr[DX_DYSCALCULIA] = ScoreArr[DX_DYSCALCULIA] / 5.1;
+	ScoreArr[DX_DYSCALCULIA] = ScoreArr[DX_DYSCALCULIA] / 4.9;
 
 	ScoreArr[DX_AUTISM] = (long double)DxResult[DX_AUTISM]  / 10.0;
 	ScoreArr[DX_AUTISM] = ScoreArr[DX_AUTISM] / 4.5;
@@ -13308,11 +13309,17 @@ void TQuiz::ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT])
 	ScoreArr[DX_SCHIZOPHRENIA] = (long double)DxResult[DX_SCHIZOPHRENIA]  / 10.0;
 	ScoreArr[DX_SCHIZOPHRENIA] = ScoreArr[DX_SCHIZOPHRENIA] / 4.8;
 
+	max = -1.0;
+
+	for (dx = 0; dx < DX_COUNT; dx++)
+		if (ScoreArr[dx] > max)
+			max = ScoreArr[dx];
+
 	for (dx = 0; dx < DX_COUNT; dx++)
 	{
 		if (ScoreArr[dx] >= 0.0)
 		{
-			if (ScoreArr[dx] >= 1.0)
+			if (ScoreArr[dx] >= 1.0 && ScoreArr[dx] > 0.75 * max)
 			{
 				switch (DxArr[dx])
 				{
@@ -13472,16 +13479,6 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	file.Write("</tr>");
 
 
-#ifdef ENGLISH
-	 strcpy(str, "Autism");
-#endif
-
-#ifdef SWEDISH
-	 strcpy(str, "Autism");
-#endif
-
-	 DsmCutoff(file, str, DX_AUTISM);
-
 
 #ifdef ENGLISH
 	 strcpy(str, "AS/HFA/PDD");
@@ -13528,16 +13525,6 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 
 
 #ifdef ENGLISH
-	 strcpy(str, "Dyscalculia");
-#endif
-
-#ifdef SWEDISH
-	 strcpy(str, "Dyskalkuli");
-#endif
-
-	 DsmCutoff(file, str, DX_DYSCALCULIA);
-
-#ifdef ENGLISH
 	 strcpy(str, "OCD");
 #endif
 
@@ -13546,17 +13533,6 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 #endif
 
 	 DsmCutoff(file, str, DX_OCD);
-
-
-#ifdef ENGLISH
-	 strcpy(str, "Bipolar");
-#endif
-
-#ifdef SWEDISH
-	 strcpy(str, "Bipolär");
-#endif
-
-	 DsmCutoff(file, str, DX_BIPOLAR);
 
 
 #ifdef ENGLISH
@@ -13569,16 +13545,6 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 
 	 DsmCutoff(file, str, DX_SOCIAL_PHOBIA);
 
-
-#ifdef ENGLISH
-	 strcpy(str, "Schizophrenia");
-#endif
-
-#ifdef SWEDISH
-	 strcpy(str, "Schizofreni");
-#endif
-
-	 DsmCutoff(file, str, DX_SCHIZOPHRENIA);
 
 	file.Write("</table>\n");
 

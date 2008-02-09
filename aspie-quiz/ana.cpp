@@ -65,6 +65,7 @@
 #include "quizs11.h"
 #include "quizs12.h"
 #include "quizn1.h"
+#include "quizn2.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -73,7 +74,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TQuiz *Quiz[30];
+TQuiz *Quiz[35];
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
@@ -116,6 +117,7 @@ int main(int argc, char **argv)
 	Quiz[26] = new TQuizS11("quizs11.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25]);
 	Quiz[27] = new TQuizS12("quizs12.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26]);
 	Quiz[28] = new TQuizN1("quizn1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27]);
+	Quiz[29] = new TQuizN2("quizn2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28]);
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();
@@ -146,7 +148,8 @@ int main(int argc, char **argv)
 //	 Quiz[25]->CheckCross();
 //	 Quiz[26]->CheckCross();
 //	 Quiz[27]->CheckCross();
-	 Quiz[28]->CheckCross();
+//	 Quiz[28]->CheckCross();
+	 Quiz[29]->CheckCross();
 
 	printf("all1\r\n");
 	Quiz[0]->ExportExcelCase("pca\\all1.dat", PCA_TYPE_ALL);
@@ -283,12 +286,12 @@ int main(int argc, char **argv)
 	 Quiz[26]->ExportExcelCase("pca\\males11.dat", PCA_TYPE_MALE);
 	 Quiz[26]->ExportExcelCase("pca\\fems11.dat", PCA_TYPE_FEMALE);
 
-#endif
-
 	printf("alls12\r\n");
 	 Quiz[27]->ExportExcelCase("pca\\alls12.dat", PCA_TYPE_ALL);
 	 Quiz[27]->ExportExcelCase("pca\\males12.dat", PCA_TYPE_MALE);
 	 Quiz[27]->ExportExcelCase("pca\\fems12.dat", PCA_TYPE_FEMALE);
+
+#endif
 
 	printf("alln1\r\n");
 	 Quiz[28]->ExportExcelCase("pca\\alln1.dat", PCA_TYPE_ALL);
@@ -525,9 +528,9 @@ int main(int argc, char **argv)
 		TQuiz::ExportGroupIntercorr(str, g);
 	 }
 
-//	 Quiz[28]->WritePhpQuestions("q.php");
-//	 Quiz[28]->WriteSetupTexts("q.cpp");
-//	 Quiz[28]->WriteSetupCross("c.cpp");
+	 Quiz[29]->WritePhpQuestions("q.php");
+	 Quiz[29]->WriteSetupTexts("q.cpp");
+	 Quiz[29]->WriteSetupCross("c.cpp");
 
 	printf("referers\r\n");
 
@@ -873,12 +876,12 @@ int main(int argc, char **argv)
 //	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 //	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
-//	  Quiz[27]->WriteQuizWiki("n1.txt");
+//	  Quiz[28]->WriteQuizWiki("n2.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
-	 TQuiz::WikiToQuiz("wiki.txt", "n1.txt");
+	 TQuiz::WikiToQuiz("wiki.txt", "n2.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 
