@@ -528,9 +528,9 @@ int main(int argc, char **argv)
 		TQuiz::ExportGroupIntercorr(str, g);
 	 }
 
-	 Quiz[29]->WritePhpQuestions("q.php");
-	 Quiz[29]->WriteSetupTexts("q.cpp");
-	 Quiz[29]->WriteSetupCross("c.cpp");
+//	 Quiz[29]->WritePhpQuestions("q.php");
+//	 Quiz[29]->WriteSetupTexts("q.cpp");
+//	 Quiz[29]->WriteSetupCross("c.cpp");
 
 	printf("referers\r\n");
 
@@ -867,8 +867,8 @@ int main(int argc, char **argv)
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-//	 Quiz[28]->WritePhpWeighting("weights.php");
-//	 Quiz[28]->WritePhpGroupWeighting("group.php");
+//	 Quiz[29]->WritePhpWeighting("weights.php");
+//	 Quiz[29]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
