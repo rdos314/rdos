@@ -867,8 +867,8 @@ int main(int argc, char **argv)
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-//	 Quiz[29]->WritePhpWeighting("weights.php");
-//	 Quiz[29]->WritePhpGroupWeighting("group.php");
+	 Quiz[29]->WritePhpWeighting("weights.php");
+	 Quiz[29]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
@@ -881,7 +881,7 @@ int main(int argc, char **argv)
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
-	 TQuiz::WikiToQuiz("wiki.txt", "n2.txt");
+//	 TQuiz::WikiToQuiz("wiki.txt", "n2.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 
