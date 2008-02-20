@@ -13323,7 +13323,7 @@ void TQuiz::ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT])
 	ScoreArr[DX_ADD] = ScoreArr[DX_ADD] / 5.3;
 
 	ScoreArr[DX_DYSLEXIA] = (long double)DxResult[DX_DYSLEXIA]  / 10.0;
-	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 5.3;
+	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 5.1;
 
 	ScoreArr[DX_DYSCALCULIA] = (long double)DxResult[DX_DYSCALCULIA]  / 10.0;
 	ScoreArr[DX_DYSCALCULIA] = ScoreArr[DX_DYSCALCULIA] / 4.9;
@@ -13344,7 +13344,7 @@ void TQuiz::ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT])
 	ScoreArr[DX_BIPOLAR] = ScoreArr[DX_BIPOLAR] / 5.4;
 
 	ScoreArr[DX_SOCIAL_PHOBIA] = (long double)DxResult[DX_SOCIAL_PHOBIA]  / 10.0;
-	ScoreArr[DX_SOCIAL_PHOBIA] = ScoreArr[DX_SOCIAL_PHOBIA] / 5.6;
+	ScoreArr[DX_SOCIAL_PHOBIA] = ScoreArr[DX_SOCIAL_PHOBIA] / 5.8;
 
 	ScoreArr[DX_SCHIZOPHRENIA] = (long double)DxResult[DX_SCHIZOPHRENIA]  / 10.0;
 	ScoreArr[DX_SCHIZOPHRENIA] = ScoreArr[DX_SCHIZOPHRENIA] / 4.8;
