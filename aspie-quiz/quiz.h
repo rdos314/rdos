@@ -297,6 +297,8 @@ public:
 
 	static void ExportHighestIntercorr(const char *filename);
 	static void ExportAverageIntercorr(const char *filename);
+	static void ExportAveragePosIntercorr(const char *filename);
+	static void ExportAverageNegIntercorr(const char *filename);
 	static void ExportGroupIntercorr(const char *filename, int Group);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);

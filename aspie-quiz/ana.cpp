@@ -521,6 +521,8 @@ int main(int argc, char **argv)
 	 printf("export intercorr\n");
 	 TQuiz::ExportHighestIntercorr("csv\\highcorr.csv");
 	 TQuiz::ExportAverageIntercorr("csv\\avgcorr.csv");
+	 TQuiz::ExportAveragePosIntercorr("csv\\poscorr.csv");
+	 TQuiz::ExportAverageNegIntercorr("csv\\negcorr.csv");
 
 	 for (g = 0; g < GROUP_MIXED; g++)
 	 {
@@ -707,7 +709,8 @@ int main(int argc, char **argv)
 	 Quiz[25]->WriteRetest("eval\\retests10.htm");
 	 Quiz[26]->WriteRetest("eval\\retests11.htm");
 	 Quiz[27]->WriteRetest("eval\\retests12.htm");
-	 Quiz[27]->WriteVersionRetest("eval\\vervar.htm");
+	 Quiz[28]->WriteRetest("eval\\retestn1.htm");
+	 Quiz[28]->WriteVersionRetest("eval\\vervar.htm");
 
 #ifdef ALL
 	printf("imgrate\r\n");

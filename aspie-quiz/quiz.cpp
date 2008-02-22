@@ -7918,12 +7918,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizn1.htm\">overview</a> <a href=\"reln1.htm\">related questions</a> <a href=\"refn1.htm\">referer sites</a>");
+	file.Write(" <a href=\"quizn1.htm\">overview</a> <a href=\"reln1.htm\">related questions</a> <a href=\"refn1.htm\">referer sites</a> <a href=\"retestn1.htm\">score stability</a>");
 	file.Write("<br>");
 #endif
 
 #ifdef SWEDISH
-	 file.Write(" <a href=\"quizn1.htm\">översikt</a> <a href=\"reln1.htm\">relaterade frågor</a> <a href=\"refn1.htm\">referenssajter</a>");
+	 file.Write(" <a href=\"quizn1.htm\">översikt</a> <a href=\"reln1.htm\">relaterade frågor</a> <a href=\"refn1.htm\">referenssajter</a> <a href=\"retestn1.htm\">poäng stabilitet</a>");
 	 file.Write("<br>");
 #endif
 
@@ -13609,7 +13609,7 @@ void TQuiz::ExportHighestIntercorr(const char *filename)
 
 	for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
 	{
-		if (GlobalCorrCount[GlobalId][k] > 1 && GlobalAsNtCorrCount[GlobalId] > 1)
+		if (GlobalAsNtCorrCount[GlobalId] > 1)
 		{
 			MaxCorr = 0.0;
 
@@ -13659,7 +13659,7 @@ void TQuiz::ExportAverageIntercorr(const char *filename)
 
 	 for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
 	 {
-		  if (GlobalCorrCount[GlobalId][k] > 1 && GlobalAsNtCorrCount[GlobalId] > 1)
+		  if (GlobalAsNtCorrCount[GlobalId] > 1)
 		  {
 				count = 0;
 				sum = 0.0;
@@ -13671,6 +13671,116 @@ void TQuiz::ExportAverageIntercorr(const char *filename)
 						  corr = GlobalCorrArr[GlobalId][k] / ((long double)GlobalCorrCount[GlobalId][k] - 1);
 
 						  if (corr < 0.0)
+								corr = -corr;
+
+						  sum += corr;
+						  count++;
+					 }
+				}
+
+				if (count)
+				{
+				 corr = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+
+				 if (corr < 0.0)
+					corr = -corr;
+
+				sprintf(str, "%Lf\t", corr);
+				file.Write(str);
+
+				sprintf(str, "%Lf\n", sum / (long double)count);
+				file.Write(str);
+			  }
+		 }
+	}
+}
+
+/*##################  TQuiz::ExportAveragePosIntercorr ##########################
+*   Purpose....: Export AS-NT corr + average intercorr         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportAveragePosIntercorr(const char *filename)
+{
+	 int GlobalId;
+	int k;
+	long double corr;
+	long double sum;
+	int count;
+	 char str[80];
+	TFile file(filename, 0);
+
+	 for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
+	 {
+		  if (GlobalAsNtCorrCount[GlobalId] > 1 && GlobalAsNtCorrSum[GlobalId] > 0.0)
+		  {
+				count = 0;
+				sum = 0.0;
+
+				for (k = 0; k < MAX_GLOBAL_QUESTIONS; k++)
+				{
+					 if (GlobalCorrCount[GlobalId][k] > 1 && k != GlobalId)
+					 {
+						  corr = GlobalCorrArr[GlobalId][k] / ((long double)GlobalCorrCount[GlobalId][k] - 1);
+
+						  if (corr > 0.0)
+								corr = -corr;
+
+						  sum += corr;
+						  count++;
+					 }
+				}
+
+				if (count)
+				{
+				 corr = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+
+				 if (corr < 0.0)
+					corr = -corr;
+
+				sprintf(str, "%Lf\t", corr);
+				file.Write(str);
+
+				sprintf(str, "%Lf\n", sum / (long double)count);
+				file.Write(str);
+			  }
+		 }
+	}
+}
+
+/*##################  TQuiz::ExportAverageNegIntercorr ##########################
+*   Purpose....: Export AS-NT corr + average intercorr         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportAverageNegIntercorr(const char *filename)
+{
+	 int GlobalId;
+	int k;
+	long double corr;
+	long double sum;
+	int count;
+	 char str[80];
+	TFile file(filename, 0);
+
+	 for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
+	 {
+		  if (GlobalAsNtCorrCount[GlobalId] > 1 && GlobalAsNtCorrSum[GlobalId] < 0.0)
+		  {
+				count = 0;
+				sum = 0.0;
+
+				for (k = 0; k < MAX_GLOBAL_QUESTIONS; k++)
+				{
+					 if (GlobalCorrCount[GlobalId][k] > 1 && k != GlobalId)
+					 {
+						  corr = GlobalCorrArr[GlobalId][k] / ((long double)GlobalCorrCount[GlobalId][k] - 1);
+
+						  if (corr > 0.0)
 								corr = -corr;
 
 						  sum += corr;
@@ -13717,7 +13827,7 @@ void TQuiz::ExportGroupIntercorr(const char *filename, int Group)
 
 	 for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
 	 {
-		  if (GlobalCorrCount[GlobalId][k] > 1 && GlobalAsNtCorrCount[GlobalId] > 1)
+		  if (GlobalAsNtCorrCount[GlobalId] > 1)
 		  {
 			use = FALSE;
 			quiz = GlobalTopQuiz[GlobalId];
