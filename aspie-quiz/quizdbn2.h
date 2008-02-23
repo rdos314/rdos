@@ -22,11 +22,13 @@ struct TQuizRow
 	int PredDyspraxia;
 	int PredDyslexia;
 	int PredOcd;
+	int PredBipolar;
 	int PredSocial;
 	char Referer[100];
 	long AsResult;
 	long NtResult;
 	char Quiz[250];
+	char Rating[10];
 	char GroupResult[ACTIVE_GROUP_COUNT];
     char DxResult[DX_COUNT];
 };
