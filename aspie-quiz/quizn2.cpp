@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizN2::TQuizN2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1)
-  : TQuiz(161),
+  : TQuiz(171),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -132,7 +132,10 @@ int TQuizN2::GetPcaCount()
 *##########################################################################*/
 int TQuizN2::GetCatCount(int Question)
 {
-	return 3;
+	if (Question < 161)
+		return 3;
+	else
+		return 11;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -188,168 +191,6 @@ void TQuizN2::WriteLongName(TFile &File)
 *##########################################################################*/
 void TQuizN2::DefineQuiz()
 {
-  return;
-  
-  DefineID(1, 26);
-  DefineID(2, 151);
-  DefineID(3, 20);
-  DefineID(4, 85);
-  DefineID(5, 23);
-  DefineID(6, 100);
-  DefineID(7, 5);
-  DefineID(8, 695);
-  DefineID(9, 1153);
-  DefineID(10, 3);
-  DefineID(11, 6);
-  DefineID(12, 27);
-  DefineID(13, 397);
-  DefineID(14, 129);
-  DefineID(15, 743);
-  DefineID(16, 240);
-  DefineID(17, 319);
-  DefineID(18, 726);
-  DefineID(19, 165);
-  DefineID(20, 317);
-  DefineID(21, 25);
-  DefineID(22, 249);
-  DefineID(23, 37);
-  DefineID(24, 361);
-  DefineID(25, 39);
-  DefineID(26, 36);
-  DefineID(27, 596);
-  DefineID(28, 595);
-  DefineID(29, 613);
-  DefineID(30, 10);
-  DefineID(31, 740);
-  DefineID(32, 282);
-  DefineID(33, 97);
-  DefineID(34, 272);
-  DefineID(35, 153);
-  DefineID(36, 516);
-  DefineID(37, 1053);
-  DefineID(38, 616);
-  DefineID(39, 518);
-  DefineID(40, 1054);
-  DefineID(41, 614);
-  DefineID(42, 1044);
-  DefineID(43, 70);
-  DefineID(44, 767);
-  DefineID(45, 66);
-  DefineID(46, 923);
-  DefineID(47, 507);
-  DefineID(48, 858);
-  DefineID(49, 859);
-  DefineID(50, 73);
-  DefineID(51, 366);
-  DefineID(52, 454);
-  DefineID(53, 495);
-  DefineID(54, 378);
-  DefineID(55, 737);
-  DefineID(56, 1077);
-  DefineID(57, 1157);
-  DefineID(58, 1045);
-  DefineID(59, 380);
-  DefineID(60, 857);
-  DefineID(61, 115);
-  DefineID(62, 765);
-  DefineID(63, 731);
-  DefineID(64, 547);
-  DefineID(65, 403);
-  DefineID(66, 712);
-  DefineID(67, 359);
-  DefineID(68, 575);
-  DefineID(69, 55);
-  DefineID(70, 590);
-  DefineID(71, 402);
-  DefineID(72, 15);
-  DefineID(73, 589);
-  DefineID(74, 570);
-  DefineID(75, 17);
-  DefineID(76, 572);
-  DefineID(77, 739);
-  DefineID(78, 574);
-  DefineID(79, 234);
-  DefineID(80, 401);
-  DefineID(81, 229);
-  DefineID(82, 16);
-  DefineID(83, 487);
-  DefineID(84, 130);
-  DefineID(85, 83);
-  DefineID(86, 745);
-  DefineID(87, 1160);
-  DefineID(88, 86);
-  DefineID(89, 82);
-  DefineID(90, 551);
-  DefineID(91, 856);
-  DefineID(92, 707);
-  DefineID(93, 128);
-  DefineID(94, 714);
-  DefineID(95, 255);
-  DefineID(96, 265);
-  DefineID(97, 741);
-  DefineID(98, 92);
-  DefineID(99, 89);
-  DefineID(100, 708);
-  DefineID(101, 582);
-  DefineID(102, 448);
-  DefineID(103, 439);
-  DefineID(104, 926);
-  DefineID(105, 581);
-  DefineID(106, 925);
-  DefineID(107, 1076);
-  DefineID(108, 433);
-  DefineID(109, 1079);
-  DefineID(110, 316);
-  DefineID(111, 1082);
-  DefineID(112, 1080);
-  DefineID(113, 310);
-  DefineID(114, 318);
-  DefineID(115, 862);
-  DefineID(116, 53);
-  DefineID(117, 54);
-  DefineID(118, 61);
-  DefineID(119, 565);
-  DefineID(120, 48);
-  DefineID(121, 503);
-  DefineID(122, 385);
-  DefineID(123, 631);
-  DefineID(124, 871);
-  DefineID(125, 511);
-  DefineID(126, 509);
-  DefineID(127, 510);
-  DefineID(128, 50);
-  DefineID(129, 113);
-  DefineID(130, 46);
-  DefineID(131, 513);
-  DefineID(132, 1078);
-  DefineID(133, 443);
-  DefineID(134, 31);
-  DefineID(135, 718);
-  DefineID(136, 167);
-  DefineID(137, 623);
-  DefineID(138, 93);
-  DefineID(139, 1152);
-  DefineID(140, 278);
-  DefineID(141, 78);
-  DefineID(142, 549);
-  DefineID(143, 126);
-  DefineID(144, 174);
-  DefineID(145, 227);
-  DefineID(146, 1046);
-  DefineID(147, 1161);
-  DefineID(148, 123);
-  DefineID(149, 254);
-  DefineID(150, 1158);
-  DefineID(151, 715);
-  DefineID(152, 545);
-  DefineID(153, 262);
-  DefineID(154, 724);
-  DefineID(155, 250);
-  DefineID(156, 133);
-  DefineID(157, 489);
-  DefineID(158, 464);
-  DefineID(159, 381);
-  DefineID(160, 139);
 }
 
 /*##########################################################################
@@ -388,6 +229,17 @@ void TQuizN2::SetupTexts()
   Quiz[152].Reverse = TRUE;
   Quiz[153].Reverse = TRUE;
   Quiz[154].Reverse = TRUE;
+  Quiz[160].Reverse = TRUE;
+
+  Quiz[161].Reverse = TRUE;
+  Quiz[162].Reverse = TRUE;
+  Quiz[163].Reverse = TRUE;
+  Quiz[164].Reverse = TRUE;
+  Quiz[165].Reverse = TRUE;
+  Quiz[166].Reverse = TRUE;
+  Quiz[168].Reverse = TRUE;
+  Quiz[169].Reverse = TRUE;
+  Quiz[170].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -549,7 +401,18 @@ void TQuizN2::SetupTexts()
   Quiz[157].MyGroup = GROUP_SEX;
   Quiz[158].MyGroup = GROUP_SEX;
   Quiz[159].MyGroup = GROUP_SOCIAL;
-  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
 
@@ -713,8 +576,19 @@ void TQuizN2::SetupTexts()
   Quiz[157].Text = "Are you fairly insensitive to physical pain, or even enjoy some types of pain?";
   Quiz[158].Text = "Do you have unusual sexual preferences?";
   Quiz[159].Text = "Are you asexual?";
-  Quiz[160].Text = "If you were single, would you find casual sex (one-night stands) rewarding?";
+  Quiz[160].Text = "If you were single, would you find casual sex (one-night stands) rewarding?";
 
+  Quiz[161].Text = "Flirt rating - Jay Feierman #3";
+  Quiz[162].Text = "Flirt rating - Heather Kuzmich #2";
+  Quiz[163].Text = "Flirt rating - Jay Feierman #9";
+  Quiz[164].Text = "Flirt rating - Flirt #1";
+  Quiz[165].Text = "Flirt rating - Jay Feierman #12";
+  Quiz[166].Text = "Flirt rating - Jay Feierman #24";
+  Quiz[167].Text = "Flirt rating - Heather Kuzmich #1";
+  Quiz[168].Text = "Flirt rating - Jay Feierman #28";
+  Quiz[169].Text = "Flirt rating - Jay Feierman #31";
+  Quiz[170].Text = "Flirt rating - Jay Feierman #41";
+            	
 #endif
 
 #ifdef SWEDISH
@@ -879,7 +753,18 @@ void TQuizN2::SetupTexts()
   Quiz[157].Text = "Är du okänslig för smärta eller till och med tycker om viss sorts smärta?";
   Quiz[158].Text = "Har du ovanliga sexuella preferenser?";
   Quiz[159].Text = "Är du asexuell?";
-  Quiz[160].Text = "Om du var singel, skulle du tycka att tillfälliga sexuella kontakter vore givande?";
+  Quiz[160].Text = "Om du var singel, skulle du tycka att tillfälliga sexuella kontakter vore givande?";
+
+  Quiz[161].Text = "Fl”rt - Jay Feierman #3";
+  Quiz[162].Text = "Fl”rt - Heather Kuzmich #2";
+  Quiz[163].Text = "Fl”rt - Jay Feierman #9";
+  Quiz[164].Text = "Fl”rt - Flirt #1";
+  Quiz[165].Text = "Fl”rt - Jay Feierman #12";
+  Quiz[166].Text = "Fl”rt - Jay Feierman #24";
+  Quiz[167].Text = "Fl”rt - Heather Kuzmich #1";
+  Quiz[168].Text = "Fl”rt - Jay Feierman #28";
+  Quiz[169].Text = "Fl”rt - Jay Feierman #31";
+  Quiz[170].Text = "Fl”rt - Jay Feierman #41";
 
 #endif
 
@@ -944,37 +829,28 @@ void TQuizN2::LoadReferers()
 		if (ref)
 			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Autism == 1 || Row.Aspie == 1)
+		if (Row.Aspie == 1)
 			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD == 1)
 			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Aspie == 2 || Row.Autism == 2)
+		if (Row.Aspie == 2)
 			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD >= 1)
 			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Dyspraxia >= 1)
-			UpdateReferer(&DyspraxiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
-
 		if (Row.Dyslexia >= 1)
 			UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
-
-		if (Row.Dyscalculia >= 1)
-			UpdateReferer(&DyscalculiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Bipolar >= 1)
 			UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Schizophrenia >= 1)
-			UpdateReferer(&SchizophreniaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
-
 		if (Row.Social >= 1)
 			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Autism || Row.Aspie)
+		if (Row.Aspie)
 		{
 			if (Row.Gender == 1)
 				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
@@ -1017,8 +893,6 @@ void TQuizN2::LoadPopulations()
 		BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
 
 //		Row.Quiz[182] = Row.Dyslexia + 1;
-//		Row.Quiz[183] = Row.Dyscalculia + 1;
-//		Row.Quiz[184] = Row.Dyspraxia + 1;
 //		Row.Quiz[185] = Row.Bipolar + 1;
 //		Row.Quiz[186] = Row.Social + 1;
 
@@ -1033,14 +907,10 @@ void TQuizN2::LoadPopulations()
 					score = Row.Quiz[i] - 1;
 					id = IdArr[i];
 
-					DsmAutism.Add(Row.Autism, id, score);
 					DsmAs.Add(Row.Aspie, id, score);
 					DsmAdd.Add(Row.ADHD, id, score);
-					DsmDyspraxia.Add(Row.Dyspraxia, id, score);
 					DsmDyslexia.Add(Row.Dyslexia, id, score);
-					DsmDyscalculia.Add(Row.Dyscalculia, id, score);
 					DsmBipolar.Add(Row.Bipolar, id, score);
-					DsmSchizophrenia.Add(Row.Schizophrenia, id, score);
 					DsmSocialPhobia.Add(Row.Social, id, score);
 				}
 			}
@@ -1048,15 +918,6 @@ void TQuizN2::LoadPopulations()
 
 		for (i = 0; i < DX_COUNT; i++)
 			DxArr[i] = DX_STATE_UNKNOWN;
-
-		if (Row.Autism == 2)
-			DxArr[DX_AUTISM] = DX_STATE_YES;
-
-		if (Row.Autism == 1)
-			DxArr[DX_AUTISM] = DX_STATE_SELF;
-
-		if (Row.Autism == 0)
-			DxArr[DX_AUTISM] = DX_STATE_NO;
 
 		if (Row.Aspie == 2)
 			DxArr[DX_AS] = DX_STATE_YES;
@@ -1085,15 +946,6 @@ void TQuizN2::LoadPopulations()
 		if (Row.OCD == 0)
 			DxArr[DX_OCD] = DX_STATE_NO;
 
-		if (Row.Dyspraxia == 2)
-			DxArr[DX_DYSPRAXIA] = DX_STATE_YES;
-
-		if (Row.Dyspraxia == 1)
-			DxArr[DX_DYSPRAXIA] = DX_STATE_SELF;
-
-		if (Row.Dyspraxia == 0)
-			DxArr[DX_DYSPRAXIA] = DX_STATE_NO;
-
 		if (Row.Dyslexia == 2)
 			DxArr[DX_DYSLEXIA] = DX_STATE_YES;
 
@@ -1103,15 +955,6 @@ void TQuizN2::LoadPopulations()
 		if (Row.Dyslexia == 0)
 			DxArr[DX_DYSLEXIA] = DX_STATE_NO;
 
-		if (Row.Dyscalculia == 2)
-			DxArr[DX_DYSCALCULIA] = DX_STATE_YES;
-
-		if (Row.Dyscalculia == 1)
-			DxArr[DX_DYSCALCULIA] = DX_STATE_SELF;
-
-		if (Row.Dyscalculia == 0)
-			DxArr[DX_DYSCALCULIA] = DX_STATE_NO;
-
 		if (Row.Bipolar == 2)
 			DxArr[DX_BIPOLAR] = DX_STATE_YES;
 
@@ -1120,15 +963,6 @@ void TQuizN2::LoadPopulations()
 
 		if (Row.Bipolar == 0)
 			DxArr[DX_BIPOLAR] = DX_STATE_NO;
-
-		if (Row.Schizophrenia == 2)
-			DxArr[DX_SCHIZOPHRENIA] = DX_STATE_YES;
-
-		if (Row.Schizophrenia == 1)
-			DxArr[DX_SCHIZOPHRENIA] = DX_STATE_SELF;
-
-		if (Row.Schizophrenia == 0)
-			DxArr[DX_SCHIZOPHRENIA] = DX_STATE_NO;
 
 		if (Row.Social == 2)
 			DxArr[DX_SOCIAL_PHOBIA] = DX_STATE_YES;
@@ -1141,7 +975,7 @@ void TQuizN2::LoadPopulations()
 
 		All.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 
-		if (Row.Autism || Row.Aspie)
+		if (Row.Aspie)
 		{
 			if (Row.AsResult < Row.NtResult)
 				LowAs.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
@@ -1161,13 +995,10 @@ void TQuizN2::LoadPopulations()
 				AsFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 			}
 
-			if (Row.Autism == 2)
-				Autism.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
-
 			if (Row.Aspie == 2)
 				As.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 
-			if (Row.Autism == 1 || Row.Aspie == 1)
+			if (Row.Aspie == 1)
 				AspieControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 		}
 
@@ -1180,20 +1011,11 @@ void TQuizN2::LoadPopulations()
 				AddFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 		}
 
-		if (Row.Dyspraxia >= 1)
-			Dyspraxia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
-
 		if (Row.Dyslexia >= 1)
 			Dyslexia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 
-		if (Row.Dyscalculia >= 1)
-			Dyscalculia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
-
 		if (Row.Bipolar >= 1)
 			Bipolar.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
-
-		if (Row.Schizophrenia >= 1)
-			Schizophrenia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 
 		if (Row.Social >= 1)
 			SocialPhobia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
@@ -1447,8 +1269,18 @@ void TQuizN2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(Quiz9, 158, 120);
     DefineCross(QuizR2, 159, 73);
 
-  	 DefineGlobalId(160, 1167);
+    DefineGlobalId(160, 1167);
 
+    DefineGlobalId(161, 1168);
+    DefineGlobalId(162, 1169);
+    DefineGlobalId(163, 1170);
+    DefineGlobalId(164, 1171);
+    DefineGlobalId(165, 1172);
+    DefineGlobalId(166, 1173);
+    DefineGlobalId(167, 1174);
+    DefineGlobalId(168, 1175);
+    DefineGlobalId(169, 1176);
+    DefineGlobalId(170, 1177);
 }
 
 /*##########################################################################
@@ -1525,7 +1357,7 @@ static int IsPca(TQuizRow *row, int PcaType)
 				return FALSE;
 
 		case PCA_TYPE_AS:
-				if (row->Autism == 2 || row->Aspie == 2)
+				if (row->Aspie == 2)
 				return TRUE;
 			else
                 return FALSE;
@@ -1814,7 +1646,7 @@ void TQuizN2::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
@@ -1892,4 +1724,283 @@ void TQuizN2::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
+}
+
+/*##################  TQuizN2::WritePictureRating ##########################
+*   Purpose....: Write picture rating report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizN2::WritePictureRating(const char *filename)
+{
+	int NtRateCount[10];
+	long double NtRateSum[10];
+	long double NtRateMean[10];
+	long double NtRateSd[10];
+	int AsRateCount[10];
+	long double AsRateSum[10];
+	long double AsRateMean[10];
+	long double AsRateSd[10];
+	int UseMale[10];
+	int UseFemale[10];
+	int use;
+	int i;
+	int ival;
+	long double val;
+	long double dev;
+	char str[80];
+	int diff;
+	TQuizRow Row;
+	TFile file(filename, 0);
+
+	for (i = 0; i < 10; i++)
+	{
+		AsRateCount[i] = 0;
+		AsRateSum[i] = 0;
+
+		NtRateCount[i] = 0;
+		NtRateSum[i] = 0;
+
+		UseMale[i] = TRUE;
+		UseFemale[i] = TRUE;
+	}
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		for (i = 0; i < 10; i++)
+		{
+		    if (Row.Gender == 2)
+		        use = UseFemale[i];
+		    else
+		        use = UseMale[i];
+
+            if (use)
+            {		    
+    			diff = Row.AsResult - Row.NtResult;
+	    		if (Row.Rating[i])
+		    	{
+			    	if (diff > 0)
+				    {
+    					AsRateCount[i]++;
+	    				AsRateSum[i] += Row.Rating[i] - 1;
+		    		}
+			    	else
+				    {
+    					NtRateCount[i]++;
+	    				NtRateSum[i] += Row.Rating[i] - 1;
+		    		}
+    			}
+	        }
+		}
+	}
+
+	for (i = 0; i < 10; i++)
+	{
+		AsRateMean[i] = AsRateSum[i] / AsRateCount[i];
+		NtRateMean[i] = NtRateSum[i] / NtRateCount[i];
+	}
+
+	for (i = 0; i < 10; i++)
+	{
+		AsRateCount[i] = 0;
+		AsRateSum[i] = 0;
+
+		NtRateCount[i] = 0;
+		NtRateSum[i] = 0;
+	}
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		for (i = 0; i < 10; i++)
+		{
+		    if (Row.Gender == 2)
+		        use = UseFemale[i];
+		    else
+		        use = UseMale[i];
+
+            if (use)
+            {		    
+    			diff = Row.AsResult - Row.NtResult;
+	    		if (Row.Rating[i])
+		    	{
+			    	if (diff > 0)
+    				{
+	    				AsRateCount[i]++;
+		    			val = (long double)(Row.Rating[i] - 1) - AsRateMean[i];
+			    		AsRateSum[i] += val * val;
+    				}
+	    			else
+		    		{
+			    		NtRateCount[i]++;
+    					val = (long double)(Row.Rating[i] - 1) - NtRateMean[i];
+	    				NtRateSum[i] += val * val;
+		    		}
+			    }
+			}
+		}
+	}
+
+	for (i = 0; i < 10; i++)
+	{
+		AsRateSd[i] = sqrtl(AsRateSum[i] / ((long double)AsRateCount[i] - 1));
+		NtRateSd[i] = sqrtl(NtRateSum[i] / ((long double)NtRateCount[i] - 1));
+	}
+
+	file.Write("<h3>Video rating</h3>");
+
+	sprintf(str, "AS rate count: %d<br>", AsRateCount[0]);
+	file.Write(str);
+
+	sprintf(str, "NT rate count: %d<br>", NtRateCount[0]);
+	file.Write(str);
+
+	file.Write("<br>");
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Video");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("Rating (AS/NT)");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+    for (i = 0; i < 10; i++)
+    {
+    	file.Write("<tr style='height:24.75pt'>");
+
+	    WriteCenteredFieldHeader(file, 25);
+	    switch (i)
+	    {
+	        case 0:
+				file.Write("<a href=\"http://www.rdos.net/flv/fem3.swf\">Jay Feierman #3</a>");
+				break;
+
+			case 1:
+				file.Write("<a href=\"http://www.rdos.net/flv/hk2.swf\">Heather Kuzmich #2</a>");
+				break;
+
+			case 2:
+				file.Write("<a href=\"http://www.rdos.net/flv/fem9.swf\">Jay Feierman #9</a>");
+				break;
+
+			case 3:
+				file.Write("<a href=\"http://www.rdos.net/flv/flirt1.swf\">Flirt #1</a>");
+				break;
+
+			case 4:
+				file.Write("<a href=\"http://www.rdos.net/flv/fem12.swf\">Jay Feierman #12</a>");
+				break;
+
+			case 5:
+				file.Write("<a href=\"http://www.rdos.net/flv/fem24.swf\">Jay Feierman #24</a>");
+				break;
+
+			case 6:
+				file.Write("<a href=\"http://www.rdos.net/flv/hk1.swf\">Heather Kuzmich #1</a>");
+				break;
+
+			case 7:
+				file.Write("<a href=\"http://www.rdos.net/flv/fem28.swf\">Jay Feierman #28</a>");
+				break;
+
+			case 8:
+				file.Write("<a href=\"http://www.rdos.net/flv/fem31.swf\">Jay Feierman #31</a>");
+				break;
+
+			case 9:
+				file.Write("<a href=\"http://www.rdos.net/flv/fem41.swf\">Jay Feierman #41</a>");
+				break;
+		}
+
+		WriteFieldFooter(file);
+
+		WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+		dev = 1.96 * AsRateSd[i] / sqrtl(AsRateCount[i]);
+
+		val = AsRateMean[i] - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		val = AsRateMean[i] + dev;
+		if (val > 10.0)
+			val = 10.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "-%d.%01d / ", ival / 10, ival % 10);
+		file.Write(str);
+
+#else
+		val = AsRateMean[i];
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d / ", ival / 10, ival % 10);
+		file.Write(str);
+
+#endif
+
+
+#ifdef CI
+
+		dev = 1.96 * NtRateSd[i] / sqrtl(NtRateCount[i]);
+
+		val = NtRateMean[i] - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		val = NtRateMean[i] + dev;
+		if (val > 10.0)
+			val = 10.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "-%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+#else
+
+		val = NtRateMean[i];
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+#endif
+
+		WriteFieldFooter(file);
+
+
+    	file.Write("</tr>");
+    }
+	file.Write("</table>");
+   	
 }

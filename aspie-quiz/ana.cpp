@@ -727,11 +727,13 @@ int main(int argc, char **argv)
 	 Quiz[28]->WriteRetest("eval\\retestn1.htm");
 	 Quiz[28]->WriteVersionRetest("eval\\vervar.htm");
 
-#ifdef ALL
 	printf("imgrate\r\n");
+#ifdef ALL
 	 Quiz[16]->WritePictureRating("eval\\imgrate1.htm");
 	 Quiz[17]->WritePictureRating("eval\\imgrate2.htm");
 #endif
+
+	 Quiz[29]->WritePictureRating("eval\\vidrate1.htm");
 
 	printf("pca\r\n");
 

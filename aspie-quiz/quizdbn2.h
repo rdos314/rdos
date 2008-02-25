@@ -7,19 +7,14 @@ struct TQuizRow
     int  BirthMonth;
 	char Gender;
     char Lang;
-	char Autism;
 	char Aspie;
 	char ADHD;
-	char Dyspraxia;
 	char Dyslexia;
-	char Dyscalculia;
 	char OCD;
 	char Bipolar;
-	char Schizophrenia;
 	char Social;
 	int PredAs;
 	int PredAdd;
-	int PredDyspraxia;
 	int PredDyslexia;
 	int PredOcd;
 	int PredBipolar;
@@ -30,5 +25,5 @@ struct TQuizRow
 	char Quiz[250];
 	char Rating[10];
 	char GroupResult[ACTIVE_GROUP_COUNT];
-    char DxResult[DX_COUNT];
+	char DxResult[DX_COUNT];
 };
