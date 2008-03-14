@@ -239,7 +239,7 @@ void TQuizN1::SetupTexts()
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[4].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[5].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[7].MyGroup = GROUP_ASPIE_TALENT;
@@ -253,7 +253,7 @@ void TQuizN1::SetupTexts()
   Quiz[15].MyGroup = GROUP_NT_TALENT;
   Quiz[16].MyGroup = GROUP_NT_TALENT;
   Quiz[17].MyGroup = GROUP_NT_TALENT;
-  Quiz[18].MyGroup = GROUP_NT_TALENT;
+  Quiz[18].MyGroup = GROUP_ACTIVITY;
   Quiz[19].MyGroup = GROUP_NT_TALENT;
   Quiz[20].MyGroup = GROUP_NT_TALENT;
   Quiz[21].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -277,8 +277,8 @@ void TQuizN1::SetupTexts()
   Quiz[39].MyGroup = GROUP_ACTIVITY;
   Quiz[40].MyGroup = GROUP_ACTIVITY;
   Quiz[41].MyGroup = GROUP_ACTIVITY;
-  Quiz[42].MyGroup = GROUP_ACTIVITY;
-  Quiz[43].MyGroup = GROUP_ACTIVITY;
+  Quiz[42].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[43].MyGroup = GROUP_ENVIRONMENT;
   Quiz[44].MyGroup = GROUP_ACTIVITY;
   Quiz[45].MyGroup = GROUP_ACTIVITY;
   Quiz[46].MyGroup = GROUP_ACTIVITY;

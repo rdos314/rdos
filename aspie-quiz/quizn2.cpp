@@ -237,6 +237,7 @@ void TQuizN2::SetupTexts()
   Quiz[164].Reverse = TRUE;
   Quiz[165].Reverse = TRUE;
   Quiz[166].Reverse = TRUE;
+  Quiz[167].Reverse = TRUE;
   Quiz[168].Reverse = TRUE;
   Quiz[169].Reverse = TRUE;
   Quiz[170].Reverse = TRUE;
@@ -244,7 +245,7 @@ void TQuizN2::SetupTexts()
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[3].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[5].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
@@ -259,7 +260,7 @@ void TQuizN2::SetupTexts()
   Quiz[15].MyGroup = GROUP_NT_TALENT;
   Quiz[16].MyGroup = GROUP_NT_TALENT;
   Quiz[17].MyGroup = GROUP_NT_TALENT;
-  Quiz[18].MyGroup = GROUP_NT_TALENT;
+  Quiz[18].MyGroup = GROUP_ACTIVITY;
   Quiz[19].MyGroup = GROUP_NT_TALENT;
   Quiz[20].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[21].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -279,7 +280,7 @@ void TQuizN2::SetupTexts()
   Quiz[35].MyGroup = GROUP_ACTIVITY;
   Quiz[36].MyGroup = GROUP_ACTIVITY;
   Quiz[37].MyGroup = GROUP_ACTIVITY;
-  Quiz[38].MyGroup = GROUP_ACTIVITY;
+  Quiz[38].MyGroup = GROUP_ENVIRONMENT;
   Quiz[39].MyGroup = GROUP_ACTIVITY;
   Quiz[40].MyGroup = GROUP_ACTIVITY;
   Quiz[41].MyGroup = GROUP_SOCIAL;
@@ -1646,7 +1647,7 @@ void TQuizN2::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

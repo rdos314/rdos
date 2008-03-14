@@ -281,7 +281,7 @@ void TQuizR6::SetupTexts()
   Quiz[82].MyGroup = GROUP_ENVIRONMENT;
   Quiz[83].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[84].MyGroup = GROUP_ACTIVITY;
-  Quiz[85].MyGroup = GROUP_ACTIVITY;
+  Quiz[85].MyGroup = GROUP_ENVIRONMENT;
   Quiz[86].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[87].MyGroup = GROUP_ASPIE_NVC;
   Quiz[88].MyGroup = GROUP_ENVIRONMENT;
@@ -317,7 +317,7 @@ void TQuizR6::SetupTexts()
   Quiz[118].MyGroup = GROUP_NT_NVC;
   Quiz[119].MyGroup = GROUP_NT_NVC;
   Quiz[120].MyGroup = GROUP_NT_NVC;
-  Quiz[121].MyGroup = GROUP_SOCIAL;
+  Quiz[121].MyGroup = GROUP_NT_NVC;
   Quiz[122].MyGroup = GROUP_NT_NVC;
   Quiz[123].MyGroup = GROUP_ASPIE_NVC;
   Quiz[124].MyGroup = GROUP_NT_TALENT;

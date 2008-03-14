@@ -330,7 +330,7 @@ void TQuizR3::SetupTexts()
   Quiz[153].MyGroup = GROUP_NT_TALENT;
   Quiz[154].MyGroup = GROUP_NT_TALENT;
   Quiz[155].MyGroup = GROUP_NT_NVC;
-  Quiz[156].MyGroup = GROUP_ACTIVITY;
+  Quiz[156].MyGroup = GROUP_ENVIRONMENT;
   Quiz[157].MyGroup = GROUP_ACTIVITY;
   Quiz[158].MyGroup = GROUP_ACTIVITY;
   Quiz[159].MyGroup = GROUP_ASPIE_OBSESSION;

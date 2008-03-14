@@ -358,7 +358,7 @@ TQuiz::TQuiz(int Questions)
         Quiz[i].Corr = 0;
         Quiz[i].Used = FALSE;
         Quiz[i].MyGroup = 0;
-        Quiz[i].Reverse = FALSE;
+		Quiz[i].Reverse = FALSE;
         Quiz[i].CrossQuiz = 0;
         Quiz[i].CrossInd = 0;
 		  Quiz[i].GlobalId = -1;
@@ -2681,6 +2681,7 @@ void TQuiz::CalcGlobal()
 	long double dcount2;
 	long double val1;
 	long double val2;
+	long double NormCorr;
 
 	if (GlobalInited)
 		return;
@@ -2690,10 +2691,10 @@ void TQuiz::CalcGlobal()
 	DsmAdd.Correlate();
 	DsmTs.Correlate();
 	DsmHyperlexia.Correlate();
-    DsmDyspraxia.Correlate();
+	DsmDyspraxia.Correlate();
 	DsmDyslexia.Correlate();
-    DsmDyscalculia.Correlate();
-    DsmOCD.Correlate();
+	DsmDyscalculia.Correlate();
+	DsmOCD.Correlate();
 	DsmODD.Correlate();
 	DsmSynaesthesia.Correlate();
 	 DsmPA.Correlate();
@@ -2801,13 +2802,6 @@ void TQuiz::CalcGlobal()
 				GlobalAsNtCorrSum[GlobalId] += quiz->Quiz[q].Corr * quiz->Quiz[q].Count;
 				GlobalAsNtCorrCount[GlobalId] += quiz->Quiz[q].Count;
 
-				g = quiz->Quiz[q].MyGroup;
-				val = quiz->Quiz[q].Corr * quiz->Quiz[q].Count;
-				if (quiz->Quiz[q].Reverse)
-					val = -val;
-				GlobalGroupAsNtCorrSum[g] += val;
-				GlobalGroupAsNtCorrCount[g] += quiz->Quiz[q].Count;
-
 				for (j = 0; j < GROUP_COUNT - 1; j++)
 				{
 					val = quiz->Quiz[q].Group[j].Corr;
@@ -2856,6 +2850,37 @@ void TQuiz::CalcGlobal()
 					break;
 			}
 
+			NormCorr = 0.0;
+
+			for (g = 0; g < GROUP_COUNT - 1; g++)
+			{
+				if (GlobalGroupCorrCount[GlobalId][g])
+				{
+					val = GlobalGroupCorrSum[GlobalId][g] / GlobalGroupCorrCount[GlobalId][g];
+					if (val >= NormCorr)
+						NormCorr = val;
+				}
+			}
+			NormCorr = 0.9 * NormCorr;
+
+			for (g = 0; g < GROUP_COUNT - 1; g++)
+			{
+				if (GlobalGroupCorrCount[GlobalId][g])
+				{
+					val = GlobalGroupCorrSum[GlobalId][g] / GlobalGroupCorrCount[GlobalId][g];
+
+					if (val > NormCorr)
+					{
+						val = GlobalAsNtCorrSum[GlobalId];
+						if (val < 0)
+							val = -val;
+
+						GlobalGroupAsNtCorrSum[g] += val;
+						GlobalGroupAsNtCorrCount[g] += GlobalAsNtCorrCount[GlobalId];
+					}
+				}
+			}
+
 			rsum = 0;
 			dcount1 = (long double)ChiCount[0];
 			dcount2 = (long double)ChiCount[1];
@@ -2867,27 +2892,27 @@ void TQuiz::CalcGlobal()
 					val1 = (long double)ChiArr[0][j];
 					val2 = (long double)ChiArr[1][j];
 
-           			exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
+					exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
 					if (exp >= 5.0)
-		        	{
-			        	val = val1 - exp;
-    				    rsum += val * val / exp;
-    	    		}
-
-	    	    	exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
-		    	    if (exp >= 5.0)
-    		    	{
-	    		    	val = val2 - exp;
-		    		    rsum += val * val / exp;
+					{
+						val = val1 - exp;
+						rsum += val * val / exp;
 					}
-			    }
-    		}
-		
-	        GlobalChi2[GlobalId] = rsum;
-		    
-	    }
 
-        TopQuiz = GetTopQuizCorr(&TopQuestion);
+					exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
+					if (exp >= 5.0)
+					{
+						val = val2 - exp;
+						rsum += val * val / exp;
+					}
+				}
+			}
+
+			GlobalChi2[GlobalId] = rsum;
+
+		}
+
+		TopQuiz = GetTopQuizCorr(&TopQuestion);
 	}
 }
 
@@ -2928,7 +2953,7 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
 				  return 10.8;
 
             if (p >= 0.0005)
-                return 12;
+				return 12;
 
             if (p >= 0.0002)
                 return 14;
@@ -6586,7 +6611,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 				 q = GlobalTopQuestion[i];
 				 if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i])
 				 {
-                    corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
+					corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
                     corrval = corrval * corrval;
                     if (corrval > LowestCorr)
                     {
@@ -6928,6 +6953,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 	long double CorrArr[MAX_GROUP_COUNT];
 	int ival;
 	long double val;
+	long double corr;
 	long double corrval;
 	long double LowestCorr;
 	int ok;
@@ -7078,7 +7104,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 
                 if (GlobalPcaCount[GlobalId][0])
 					AsLoad = round(100 * GlobalPcaSum[GlobalId][0] / GlobalPcaCount[GlobalId][0]);
-			    else
+				else
 					AsLoad = 0;
 
 			    if (GlobalPcaCount[GlobalId][1])
@@ -7122,14 +7148,25 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 
 				for (j = 0; j < GROUP_COUNT - 1; j++)
 				{
+					corr = 0.0;
+
 					if (GlobalGroupCorrCount[GlobalId][j])
 					{
 						val = GlobalGroupCorrSum[GlobalId][j] / GlobalGroupCorrCount[GlobalId][j];
-						val = val * val;
-						if (val >= NormCorr)
-							NormCorr = val;
+						corr = val * val;
 					}
+
+					if (GlobalAxisCount[GlobalId][j])
+					{
+						val = GlobalAxisSum[GlobalId][j] / GlobalAxisCount[GlobalId][j];
+						if (val > 0.0)
+							corr += val;
+					}
+
+					if (corr >= NormCorr)
+						NormCorr = corr;
 				}
+
 				NormCorr = 0.81 * NormCorr;
 
 				for (j = 0; j < GROUP_COUNT - 1; j++)
@@ -7138,9 +7175,16 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 					{
 						val = GlobalGroupCorrSum[GlobalId][j] / GlobalGroupCorrCount[GlobalId][j];
 						CorrArr[j] = val * val;
-				    }
-				    else
-				        CorrArr[j] = 0.0;
+					}
+					else
+						CorrArr[j] = 0.0;
+
+					if (GlobalAxisCount[GlobalId][j])
+					{
+						val = GlobalAxisSum[GlobalId][j] / GlobalAxisCount[GlobalId][j];
+						if (val > 0.0)
+							CorrArr[j] += val;
+					}
 				}
 
 				WriteFieldHeader(file, 40);
@@ -7154,35 +7198,38 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 
 					for (j = 0; j < GROUP_COUNT - 1; j++)
 					{
-					    if (CorrArr[j] >= NormCorr)
-					    {
-					        if (CorrArr[j] > corrval)
+						if (CorrArr[j] >= NormCorr)
+						{
+							if (CorrArr[j] > corrval)
 							{
-					            grp = j;
-					            corrval = CorrArr[j];
-					            ok = TRUE;
-					        }
-					    }
+								grp = j;
+								corrval = CorrArr[j];
+								ok = TRUE;
+							}
+						}
 					}
-					
+
 					if (ok)
 					{
-                        CorrArr[grp] = 0.0;
-					
+						CorrArr[grp] = 0.0;
+
 						if (!first)
 							file.Write(", ");
 
-						val = GlobalGroupCorrSum[GlobalId][grp] / GlobalGroupCorrCount[GlobalId][grp];
+						if (GlobalGroupCorrCount[GlobalId][grp])
+							val = GlobalGroupCorrSum[GlobalId][grp] / GlobalGroupCorrCount[GlobalId][grp];
+						else
+							val = 0.0;
 
-        				neg = quiz->Quiz[q].Reverse;
+						neg = quiz->Quiz[q].Reverse;
 
-        				if (val < 0.0)
-        				    neg = !neg;
+						if (val < 0.0)
+							neg = !neg;
 
-                        if (neg)
-    						file.Write(Group[grp].NegName);
-    					else
-    						file.Write(Group[grp].PosName);
+						if (neg)
+							file.Write(Group[grp].NegName);
+						else
+							file.Write(Group[grp].PosName);
 
 						first = FALSE;
 					}
@@ -7191,7 +7238,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 				file.Write("</tr>");
 			}
 			else
-			    break;
+				break;
 		}
 		file.Write("</table>");
 		file.Write("<br><br>");
@@ -13338,10 +13385,10 @@ void TQuiz::ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT])
 		ScoreArr[dx] = -1.0;
 
 	ScoreArr[DX_ADD] = (long double)DxResult[DX_ADD]  / 10.0;
-	ScoreArr[DX_ADD] = ScoreArr[DX_ADD] / 5.3;
+	ScoreArr[DX_ADD] = ScoreArr[DX_ADD] / 5.5;
 
 	ScoreArr[DX_DYSLEXIA] = (long double)DxResult[DX_DYSLEXIA]  / 10.0;
-	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 5.1;
+	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 5.0;
 
 	ScoreArr[DX_DYSCALCULIA] = (long double)DxResult[DX_DYSCALCULIA]  / 10.0;
 	ScoreArr[DX_DYSCALCULIA] = ScoreArr[DX_DYSCALCULIA] / 4.9;
@@ -13350,7 +13397,7 @@ void TQuiz::ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT])
 	ScoreArr[DX_AUTISM] = ScoreArr[DX_AUTISM] / 4.5;
 
 	ScoreArr[DX_AS] = (long double)DxResult[DX_AS]  / 10.0;
-	ScoreArr[DX_AS] = ScoreArr[DX_AS] / 5.0;
+	ScoreArr[DX_AS] = ScoreArr[DX_AS] / 5.2;
 
 	ScoreArr[DX_DYSPRAXIA] = (long double)DxResult[DX_DYSPRAXIA]  / 10.0;
 	ScoreArr[DX_DYSPRAXIA] = ScoreArr[DX_DYSPRAXIA] / 5.6;
@@ -13359,7 +13406,7 @@ void TQuiz::ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT])
 	ScoreArr[DX_OCD] = ScoreArr[DX_OCD] / 5.2;
 
 	ScoreArr[DX_BIPOLAR] = (long double)DxResult[DX_BIPOLAR]  / 10.0;
-	ScoreArr[DX_BIPOLAR] = ScoreArr[DX_BIPOLAR] / 5.4;
+	ScoreArr[DX_BIPOLAR] = ScoreArr[DX_BIPOLAR] / 5.2;
 
 	ScoreArr[DX_SOCIAL_PHOBIA] = (long double)DxResult[DX_SOCIAL_PHOBIA]  / 10.0;
 	ScoreArr[DX_SOCIAL_PHOBIA] = ScoreArr[DX_SOCIAL_PHOBIA] / 5.8;
@@ -13845,9 +13892,10 @@ void TQuiz::ExportGroupIntercorr(const char *filename, int Group)
 
 	 for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
 	 {
+		  use = FALSE;
+
 		  if (GlobalAsNtCorrCount[GlobalId] > 1)
 		  {
-			use = FALSE;
 			quiz = GlobalTopQuiz[GlobalId];
 			if (quiz)
 			{

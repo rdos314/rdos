@@ -350,7 +350,7 @@ void TQuizR4::SetupTexts()
   Quiz[127].MyGroup = GROUP_ACTIVITY;
   Quiz[128].MyGroup = GROUP_NT_TALENT;
   Quiz[129].MyGroup = GROUP_ACTIVITY;
-  Quiz[130].MyGroup = GROUP_ACTIVITY;
+  Quiz[130].MyGroup = GROUP_ENVIRONMENT;
   Quiz[131].MyGroup = GROUP_NT_SENSORY;
   Quiz[132].MyGroup = GROUP_NT_SENSORY;
   Quiz[133].MyGroup = GROUP_NT_SENSORY;

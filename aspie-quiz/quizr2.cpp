@@ -218,7 +218,7 @@ void TQuizR2::SetupTexts()
   Quiz[36].MyGroup = GROUP_ACTIVITY;
   Quiz[37].MyGroup = GROUP_NT_TALENT;
   Quiz[38].MyGroup = GROUP_ACTIVITY;
-  Quiz[39].MyGroup = GROUP_NT_TALENT;
+  Quiz[39].MyGroup = GROUP_ACTIVITY;
   Quiz[40].MyGroup = GROUP_MIXED;
   Quiz[41].MyGroup = GROUP_NT_HUNTING;
   Quiz[42].MyGroup = GROUP_SOCIAL;
@@ -290,7 +290,7 @@ void TQuizR2::SetupTexts()
   Quiz[108].MyGroup = GROUP_MIXED;
   Quiz[109].MyGroup = GROUP_ENVIRONMENT;
   Quiz[110].MyGroup = GROUP_NT_TALENT;
-  Quiz[111].MyGroup = GROUP_ACTIVITY;
+  Quiz[111].MyGroup = GROUP_ENVIRONMENT;
   Quiz[112].MyGroup = GROUP_ENVIRONMENT;
   Quiz[113].MyGroup = GROUP_ENVIRONMENT;
   Quiz[114].MyGroup = GROUP_MIXED;

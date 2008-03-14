@@ -229,7 +229,7 @@ void TQuizS11::SetupTexts()
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[4].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[5].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[7].MyGroup = GROUP_ASPIE_TALENT;
@@ -261,7 +261,7 @@ void TQuizS11::SetupTexts()
   Quiz[33].MyGroup = GROUP_ACTIVITY;
   Quiz[34].MyGroup = GROUP_ACTIVITY;
   Quiz[35].MyGroup = GROUP_ACTIVITY;
-  Quiz[36].MyGroup = GROUP_ACTIVITY;
+  Quiz[36].MyGroup = GROUP_ENVIRONMENT;
   Quiz[37].MyGroup = GROUP_ACTIVITY;
   Quiz[38].MyGroup = GROUP_SOCIAL;
   Quiz[39].MyGroup = GROUP_SOCIAL;

@@ -279,7 +279,7 @@ void TQuizR1::SetupTexts()
   Quiz[101].MyGroup = GROUP_ACTIVITY;
   Quiz[102].MyGroup = GROUP_ACTIVITY;
   Quiz[103].MyGroup = GROUP_ACTIVITY;
-  Quiz[104].MyGroup = GROUP_ACTIVITY;
+  Quiz[104].MyGroup = GROUP_ENVIRONMENT;
   Quiz[105].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[106].MyGroup = GROUP_NT_HUNTING;
   Quiz[107].MyGroup = GROUP_NT_NVC;

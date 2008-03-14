@@ -235,7 +235,7 @@ void TQuizS10::SetupTexts()
   Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[5].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[5].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[7].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[8].MyGroup = GROUP_ASPIE_TALENT;
@@ -271,7 +271,7 @@ void TQuizS10::SetupTexts()
   Quiz[38].MyGroup = GROUP_ACTIVITY;
   Quiz[39].MyGroup = GROUP_MIXED;
   Quiz[40].MyGroup = GROUP_MIXED;
-  Quiz[41].MyGroup = GROUP_ACTIVITY;
+  Quiz[41].MyGroup = GROUP_ENVIRONMENT;
   Quiz[42].MyGroup = GROUP_SOCIAL;
   Quiz[43].MyGroup = GROUP_SOCIAL;
   Quiz[44].MyGroup = GROUP_SOCIAL;
@@ -377,7 +377,7 @@ void TQuizS10::SetupTexts()
   Quiz[144].MyGroup = GROUP_ASPIE_NVC;
   Quiz[145].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[146].MyGroup = GROUP_NT_TALENT;
-  Quiz[147].MyGroup = GROUP_SOCIAL;
+  Quiz[147].MyGroup = GROUP_NT_NVC;
   Quiz[148].MyGroup = GROUP_SOCIAL;
   Quiz[149].MyGroup = GROUP_NT_NVC;
   Quiz[150].MyGroup = GROUP_NT_SENSORY;
@@ -394,7 +394,7 @@ void TQuizS10::SetupTexts()
   Quiz[160].MyGroup = GROUP_ENVIRONMENT;
   Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_SOCIAL;
-  Quiz[163].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[163].MyGroup = GROUP_NT_NVC;
   Quiz[164].MyGroup = GROUP_MIXED;
   Quiz[165].MyGroup = GROUP_ACTIVITY;
   Quiz[166].MyGroup = GROUP_ACTIVITY;
@@ -1413,7 +1413,8 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
 	DefineCross(QuizS9, 151, 150);
 	DefineCross(QuizS9, 152, 151);
 
-	DefineGlobalId(153, 1040);
+	DefineCross(QuizII, 153, 90);
+
 	DefineGlobalId(154, 1041);
 	DefineGlobalId(155, 1042);
 	DefineGlobalId(156, 1043);
