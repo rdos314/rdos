@@ -275,7 +275,7 @@ void TQuizS6::SetupTexts()
   Quiz[25].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[26].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[27].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[28].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[28].MyGroup = GROUP_NT_NVC;
   Quiz[29].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[30].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[31].MyGroup = GROUP_ASPIE_TALENT;
@@ -311,11 +311,11 @@ void TQuizS6::SetupTexts()
   Quiz[61].MyGroup = GROUP_SOCIAL;
   Quiz[62].MyGroup = GROUP_NT_OBSESSION;
   Quiz[63].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[64].MyGroup = GROUP_SOCIAL;
+  Quiz[64].MyGroup = GROUP_NT_NVC;
   Quiz[65].MyGroup = GROUP_SOCIAL;
   Quiz[66].MyGroup = GROUP_SOCIAL;
   Quiz[67].MyGroup = GROUP_SOCIAL;
-  Quiz[68].MyGroup = GROUP_NT_NVC;
+  Quiz[68].MyGroup = GROUP_SEX;
   Quiz[69].MyGroup = GROUP_SOCIAL;
   Quiz[70].MyGroup = GROUP_SOCIAL;
   Quiz[71].MyGroup = GROUP_ASPIE_NVC;
@@ -375,7 +375,7 @@ void TQuizS6::SetupTexts()
   Quiz[125].MyGroup = GROUP_ENVIRONMENT;
   Quiz[126].MyGroup = GROUP_ENVIRONMENT;
   Quiz[127].MyGroup = GROUP_NT_NVC;
-  Quiz[128].MyGroup = GROUP_MIXED;
+  Quiz[128].MyGroup = GROUP_NT_NVC;
   Quiz[129].MyGroup = GROUP_MIXED;
   Quiz[130].MyGroup = GROUP_ACTIVITY;
   Quiz[131].MyGroup = GROUP_MIXED;
@@ -419,7 +419,7 @@ void TQuizS6::SetupTexts()
   Quiz[169].MyGroup = GROUP_NT_OBSESSION;
   Quiz[170].MyGroup = GROUP_SOCIAL;
   Quiz[171].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[172].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[172].MyGroup = GROUP_SEX;
   Quiz[173].MyGroup = GROUP_NT_SENSORY;
   Quiz[174].MyGroup = GROUP_NT_SENSORY;
   Quiz[175].MyGroup = GROUP_NT_SENSORY;
@@ -849,6 +849,7 @@ void TQuizS6::InitReferers()
 	AddReferer("smogon.com", "smogon.com/forums/showthread.php?t=29171");
 	AddReferer("mommyconnection.org", "mommyconnection.org/board/index.php/topic,2840.0.html");
 	AddReferer("calientemamas.com", "calientemamas.com/forum_posts.asp?TID=12136");
+	AddReferer("fohguild.org", "fohguild.org/forums/screenshots/31489-ass-burgers.html");
 
 	}
 
@@ -1216,6 +1217,7 @@ void TQuizS6::SetupControlGroups()
 	DefineNt("smogon.com");
 	DefineNt("mommyconnection.org");
 	DefineNt("calientemamas.com");
+    DefineNt("fohguild.org");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");

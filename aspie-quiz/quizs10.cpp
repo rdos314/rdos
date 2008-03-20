@@ -235,7 +235,7 @@ void TQuizS10::SetupTexts()
   Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[5].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[5].MyGroup = GROUP_NT_NVC;
   Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[7].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[8].MyGroup = GROUP_ASPIE_TALENT;
@@ -283,7 +283,7 @@ void TQuizS10::SetupTexts()
   Quiz[50].MyGroup = GROUP_SOCIAL;
   Quiz[51].MyGroup = GROUP_SOCIAL;
   Quiz[52].MyGroup = GROUP_NT_NVC;
-  Quiz[53].MyGroup = GROUP_SOCIAL;
+  Quiz[53].MyGroup = GROUP_NT_NVC;
   Quiz[54].MyGroup = GROUP_SOCIAL;
   Quiz[55].MyGroup = GROUP_SOCIAL;
   Quiz[56].MyGroup = GROUP_SOCIAL;
@@ -320,9 +320,9 @@ void TQuizS10::SetupTexts()
   Quiz[87].MyGroup = GROUP_NT_NVC;
   Quiz[88].MyGroup = GROUP_NT_NVC;
   Quiz[89].MyGroup = GROUP_NT_NVC;
-  Quiz[90].MyGroup = GROUP_NT_NVC;
+  Quiz[90].MyGroup = GROUP_SEX;
   Quiz[91].MyGroup = GROUP_NT_NVC;
-  Quiz[92].MyGroup = GROUP_NT_NVC;
+  Quiz[92].MyGroup = GROUP_SEX;
   Quiz[93].MyGroup = GROUP_NT_TALENT;
   Quiz[94].MyGroup = GROUP_ASPIE_NVC;
   Quiz[95].MyGroup = GROUP_ASPIE_HUNTING;
@@ -366,7 +366,7 @@ void TQuizS10::SetupTexts()
   Quiz[133].MyGroup = GROUP_ENVIRONMENT;
   Quiz[134].MyGroup = GROUP_ENVIRONMENT;
   Quiz[135].MyGroup = GROUP_NT_NVC;
-  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_NT_NVC;
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_MIXED;
@@ -385,16 +385,16 @@ void TQuizS10::SetupTexts()
   Quiz[152].MyGroup = GROUP_ENVIRONMENT;
 
   Quiz[153].MyGroup = GROUP_NT_TALENT;
-  Quiz[154].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[154].MyGroup = GROUP_NT_NVC;
   Quiz[155].MyGroup = GROUP_SOCIAL;
   Quiz[156].MyGroup = GROUP_SOCIAL;
   Quiz[157].MyGroup = GROUP_SOCIAL;
   Quiz[158].MyGroup = GROUP_MIXED;
-  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[160].MyGroup = GROUP_ENVIRONMENT;
   Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_SOCIAL;
-  Quiz[163].MyGroup = GROUP_NT_NVC;
+  Quiz[163].MyGroup = GROUP_NT_HUNTING;
   Quiz[164].MyGroup = GROUP_MIXED;
   Quiz[165].MyGroup = GROUP_ACTIVITY;
   Quiz[166].MyGroup = GROUP_ACTIVITY;
@@ -869,6 +869,7 @@ void TQuizS10::InitReferers()
 	AddReferer("calientemamas.com", "calientemamas.com/forum_posts.asp?TID=12136");
 	AddReferer("forums.britxbox.co.uk", "forums.britxbox.co.uk/viewtopic.php?t=54722");
 	AddReferer("goonfleet.com", "goonfleet.com/showthread.php?t=77152");
+	AddReferer("xanga.com", "xanga.com/freeformlife");
 }
 
 /*##################  TQuizS10::LoadReferers ##########################
@@ -1237,6 +1238,7 @@ void TQuizS10::SetupControlGroups()
 	DefineNt("calientemamas.com");
 	DefineNt("forums.britxbox.co.uk");
 	DefineNt("goonfleet.com");
+	DefineNt("xanga.com");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -1259,9 +1261,9 @@ void TQuizS10::SetupControlGroups()
 ##########################################################################*/
 void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9)
 {
-    DefineCross(QuizS9, 0, 0);
-    DefineCross(QuizS9, 1, 1);
-    DefineCross(QuizS9, 2, 2);
+	DefineCross(QuizS9, 0, 0);
+	DefineCross(QuizS9, 1, 1);
+	DefineCross(QuizS9, 2, 2);
 	 DefineCross(QuizS9, 3, 3);
     DefineCross(QuizS9, 4, 4);
     DefineCross(QuizS9, 5, 5);

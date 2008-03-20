@@ -241,7 +241,7 @@ void TQuizS8::SetupTexts()
   Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[5].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[6].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[6].MyGroup = GROUP_NT_NVC;
   Quiz[7].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[8].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[9].MyGroup = GROUP_ASPIE_TALENT;
@@ -291,11 +291,11 @@ void TQuizS8::SetupTexts()
   Quiz[53].MyGroup = GROUP_NT_NVC;
   Quiz[54].MyGroup = GROUP_NT_NVC;
   Quiz[55].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[56].MyGroup = GROUP_NT_NVC;
+  Quiz[56].MyGroup = GROUP_SEX;
   Quiz[57].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[58].MyGroup = GROUP_SOCIAL;
+  Quiz[58].MyGroup = GROUP_NT_NVC;
   Quiz[59].MyGroup = GROUP_SOCIAL;
-  Quiz[60].MyGroup = GROUP_NT_NVC;
+  Quiz[60].MyGroup = GROUP_SEX;
   Quiz[61].MyGroup = GROUP_SOCIAL;
   Quiz[62].MyGroup = GROUP_ASPIE_NVC;
   Quiz[63].MyGroup = GROUP_ASPIE_NVC;
@@ -370,7 +370,7 @@ void TQuizS8::SetupTexts()
   Quiz[132].MyGroup = GROUP_ENVIRONMENT;
   Quiz[133].MyGroup = GROUP_ENVIRONMENT;
   Quiz[134].MyGroup = GROUP_NT_NVC;
-  Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[135].MyGroup = GROUP_NT_NVC;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_MIXED;
@@ -821,7 +821,7 @@ void TQuizS8::InitReferers()
 	AddReferer("smogon.com", "smogon.com/forums/showthread.php?t=29171");
 	AddReferer("mommyconnection.org", "mommyconnection.org/board/index.php/topic,2840.0.html");
 	AddReferer("calientemamas.com", "calientemamas.com/forum_posts.asp?TID=12136");
-
+	AddReferer("evo.co.uk", "evo.co.uk/forum/viewtopic.php?t=18272");
 }
 
 /*##################  TQuizS8::LoadReferers ##########################
@@ -1188,6 +1188,7 @@ void TQuizS8::SetupControlGroups()
 	DefineNt("smogon.com");
 	DefineNt("mommyconnection.org");
 	DefineNt("calientemamas.com");
+	DefineNt("evo.co.uk");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -1210,12 +1211,12 @@ void TQuizS8::SetupControlGroups()
 ##########################################################################*/
 void TQuizS8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7)
 {
-    DefineCross(QuizS7, 0, 20);
-    DefineCross(QuizS7, 1, 21);
-    DefineCross(QuizS7, 2, 22);
-    DefineCross(QuizS7, 3, 23);
-    DefineCross(QuizS7, 4, 24);
-    DefineCross(QuizS7, 5, 25);
+	DefineCross(QuizS7, 0, 20);
+	DefineCross(QuizS7, 1, 21);
+	DefineCross(QuizS7, 2, 22);
+	DefineCross(QuizS7, 3, 23);
+	DefineCross(QuizS7, 4, 24);
+	DefineCross(QuizS7, 5, 25);
     DefineCross(QuizS7, 6, 26);
     DefineCross(QuizS7, 7, 27);
     DefineCross(QuizS7, 8, 28);

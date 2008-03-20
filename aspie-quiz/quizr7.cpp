@@ -251,7 +251,7 @@ void TQuizR7::SetupTexts()
   Quiz[48].MyGroup = GROUP_SOCIAL;
   Quiz[49].MyGroup = GROUP_SOCIAL;
   Quiz[50].MyGroup = GROUP_SOCIAL;
-  Quiz[51].MyGroup = GROUP_SOCIAL;
+  Quiz[51].MyGroup = GROUP_NT_NVC;
   Quiz[52].MyGroup = GROUP_SOCIAL;
   Quiz[53].MyGroup = GROUP_SOCIAL;
   Quiz[54].MyGroup = GROUP_NT_OBSESSION;
@@ -275,7 +275,7 @@ void TQuizR7::SetupTexts()
   Quiz[72].MyGroup = GROUP_NT_NVC;
   Quiz[73].MyGroup = GROUP_NT_HUNTING;
   Quiz[74].MyGroup = GROUP_MIXED;
-  Quiz[75].MyGroup = GROUP_MIXED;
+  Quiz[75].MyGroup = GROUP_ASPIE_NVC;
   Quiz[76].MyGroup = GROUP_ACTIVITY;
   Quiz[77].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[78].MyGroup = GROUP_ASPIE_NVC;
@@ -283,7 +283,7 @@ void TQuizR7::SetupTexts()
   Quiz[80].MyGroup = GROUP_MIXED;
   Quiz[81].MyGroup = GROUP_ENVIRONMENT;
   Quiz[82].MyGroup = GROUP_NT_TALENT;
-  Quiz[83].MyGroup = GROUP_NT_NVC;
+  Quiz[83].MyGroup = GROUP_SEX;
   Quiz[84].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[85].MyGroup = GROUP_ASPIE_NVC;
   Quiz[86].MyGroup = GROUP_ACTIVITY;
@@ -313,14 +313,14 @@ void TQuizR7::SetupTexts()
   Quiz[110].MyGroup = GROUP_NT_NVC;
   Quiz[111].MyGroup = GROUP_NT_NVC;
   Quiz[112].MyGroup = GROUP_NT_TALENT;
-  Quiz[113].MyGroup = GROUP_MIXED;
+  Quiz[113].MyGroup = GROUP_NT_NVC;
   Quiz[114].MyGroup = GROUP_NT_NVC;
   Quiz[115].MyGroup = GROUP_NT_TALENT;
   Quiz[116].MyGroup = GROUP_ASPIE_NVC;
   Quiz[117].MyGroup = GROUP_NT_NVC;
   Quiz[118].MyGroup = GROUP_NT_NVC;
   Quiz[119].MyGroup = GROUP_NT_NVC;
-  Quiz[120].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[120].MyGroup = GROUP_NT_NVC;
   Quiz[121].MyGroup = GROUP_NT_NVC;
   Quiz[122].MyGroup = GROUP_ASPIE_NVC;
   Quiz[123].MyGroup = GROUP_NT_NVC;
@@ -336,7 +336,7 @@ void TQuizR7::SetupTexts()
   Quiz[133].MyGroup = GROUP_NT_SENSORY;
   Quiz[134].MyGroup = GROUP_ENVIRONMENT;
   Quiz[135].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[136].MyGroup = GROUP_NT_NVC;
+  Quiz[136].MyGroup = GROUP_SEX;
   Quiz[137].MyGroup = GROUP_NT_SENSORY;
   Quiz[138].MyGroup = GROUP_NT_TALENT;
   Quiz[139].MyGroup = GROUP_NT_NVC;

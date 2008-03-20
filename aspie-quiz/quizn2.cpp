@@ -245,7 +245,7 @@ void TQuizN2::SetupTexts()
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[3].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[3].MyGroup = GROUP_NT_NVC;
   Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[5].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
@@ -294,7 +294,7 @@ void TQuizN2::SetupTexts()
   Quiz[49].MyGroup = GROUP_SOCIAL;
   Quiz[50].MyGroup = GROUP_SOCIAL;
   Quiz[51].MyGroup = GROUP_SOCIAL;
-  Quiz[52].MyGroup = GROUP_SOCIAL;
+  Quiz[52].MyGroup = GROUP_NT_NVC;
   Quiz[53].MyGroup = GROUP_SOCIAL;
   Quiz[54].MyGroup = GROUP_SOCIAL;
   Quiz[55].MyGroup = GROUP_SOCIAL;
@@ -337,11 +337,11 @@ void TQuizN2::SetupTexts()
   Quiz[92].MyGroup = GROUP_NT_NVC;
   Quiz[93].MyGroup = GROUP_NT_NVC;
   Quiz[94].MyGroup = GROUP_NT_NVC;
-  Quiz[95].MyGroup = GROUP_NT_NVC;
+  Quiz[95].MyGroup = GROUP_SEX;
   Quiz[96].MyGroup = GROUP_NT_NVC;
   Quiz[97].MyGroup = GROUP_NT_NVC;
   Quiz[98].MyGroup = GROUP_NT_NVC;
-  Quiz[99].MyGroup = GROUP_NT_NVC;
+  Quiz[99].MyGroup = GROUP_SEX;
   Quiz[100].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[101].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[102].MyGroup = GROUP_ASPIE_HUNTING;
@@ -381,7 +381,7 @@ void TQuizN2::SetupTexts()
   Quiz[136].MyGroup = GROUP_ENVIRONMENT;
   Quiz[137].MyGroup = GROUP_ENVIRONMENT;
   Quiz[138].MyGroup = GROUP_MIXED;
-  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_NT_NVC;
   Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_MIXED;
   Quiz[142].MyGroup = GROUP_MIXED;
@@ -402,7 +402,7 @@ void TQuizN2::SetupTexts()
   Quiz[157].MyGroup = GROUP_SEX;
   Quiz[158].MyGroup = GROUP_SEX;
   Quiz[159].MyGroup = GROUP_SOCIAL;
-  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_SEX;
 
   Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_MIXED;
@@ -1647,7 +1647,7 @@ void TQuizN2::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

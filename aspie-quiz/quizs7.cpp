@@ -271,7 +271,7 @@ void TQuizS7::SetupTexts()
   Quiz[23].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[24].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[25].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[26].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[26].MyGroup = GROUP_NT_NVC;
   Quiz[27].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[28].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[29].MyGroup = GROUP_ASPIE_TALENT;
@@ -309,10 +309,10 @@ void TQuizS7::SetupTexts()
   Quiz[61].MyGroup = GROUP_NT_NVC;
   Quiz[62].MyGroup = GROUP_NT_NVC;
   Quiz[63].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[64].MyGroup = GROUP_SOCIAL;
+  Quiz[64].MyGroup = GROUP_NT_NVC;
   Quiz[65].MyGroup = GROUP_SOCIAL;
   Quiz[66].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[67].MyGroup = GROUP_NT_NVC;
+  Quiz[67].MyGroup = GROUP_SEX;
   Quiz[68].MyGroup = GROUP_SOCIAL;
   Quiz[69].MyGroup = GROUP_ASPIE_NVC;
   Quiz[70].MyGroup = GROUP_ASPIE_NVC;
@@ -377,7 +377,7 @@ void TQuizS7::SetupTexts()
   Quiz[129].MyGroup = GROUP_ENVIRONMENT;
   Quiz[130].MyGroup = GROUP_ENVIRONMENT;
   Quiz[131].MyGroup = GROUP_NT_NVC;
-  Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[132].MyGroup = GROUP_NT_NVC;
   Quiz[133].MyGroup = GROUP_MIXED;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
@@ -393,7 +393,7 @@ void TQuizS7::SetupTexts()
   Quiz[145].MyGroup = GROUP_SOCIAL;
   Quiz[146].MyGroup = GROUP_MIXED;
   Quiz[147].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[148].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[148].MyGroup = GROUP_SEX;
   Quiz[149].MyGroup = GROUP_NT_SENSORY;
   Quiz[150].MyGroup = GROUP_NT_TALENT;
   Quiz[151].MyGroup = GROUP_ENVIRONMENT;
@@ -407,7 +407,7 @@ void TQuizS7::SetupTexts()
   Quiz[159].MyGroup = GROUP_NT_OBSESSION;
   Quiz[160].MyGroup = GROUP_SOCIAL;
   Quiz[161].MyGroup = GROUP_NT_NVC;
-  Quiz[162].MyGroup = GROUP_NT_NVC;
+  Quiz[162].MyGroup = GROUP_SEX;
   Quiz[163].MyGroup = GROUP_SOCIAL;
   Quiz[164].MyGroup = GROUP_SOCIAL;
   Quiz[165].MyGroup = GROUP_SOCIAL;
@@ -863,7 +863,8 @@ void TQuizS7::InitReferers()
 	AddReferer("smogon.com", "smogon.com/forums/showthread.php?t=29171");
 	AddReferer("mommyconnection.org", "mommyconnection.org/board/index.php/topic,2840.0.html");
 	AddReferer("calientemamas.com", "calientemamas.com/forum_posts.asp?TID=12136");
-
+	AddReferer("fohguild.org", "fohguild.org/forums/screenshots/31489-ass-burgers.html");
+	AddReferer("bitterbutbrilliant.rapidboards.com", "bitterbutbrilliant.rapidboards.com/index.php?showtopic=125");
 }
 
 /*##################  TQuizS7::LoadReferers ##########################
@@ -1230,6 +1231,8 @@ void TQuizS7::SetupControlGroups()
 	DefineNt("smogon.com");
 	DefineNt("mommyconnection.org");
 	DefineNt("calientemamas.com");
+	DefineNt("fohguild.org");
+	DefineNt("bitterbutbrilliant.rapidboards.com");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");

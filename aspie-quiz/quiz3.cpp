@@ -207,7 +207,7 @@ void TQuizIII::SetupTexts()
 	Quiz[57].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[58].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[59].MyGroup = GROUP_NT_OBSESSION;
-	Quiz[60].MyGroup = GROUP_ASPIE_HUNTING;
+	Quiz[60].MyGroup = GROUP_NT_NVC;
 	Quiz[61].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[62].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[63].MyGroup = GROUP_SEX;

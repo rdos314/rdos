@@ -236,7 +236,7 @@ void TQuizR2::SetupTexts()
   Quiz[54].MyGroup = GROUP_SOCIAL;
   Quiz[55].MyGroup = GROUP_SOCIAL;
   Quiz[56].MyGroup = GROUP_SOCIAL;
-  Quiz[57].MyGroup = GROUP_ACTIVITY;
+  Quiz[57].MyGroup = GROUP_SOCIAL;
   Quiz[58].MyGroup = GROUP_NT_OBSESSION;
   Quiz[59].MyGroup = GROUP_SOCIAL;
   Quiz[60].MyGroup = GROUP_NT_OBSESSION;
@@ -247,11 +247,11 @@ void TQuizR2::SetupTexts()
   Quiz[65].MyGroup = GROUP_NT_OBSESSION;
   Quiz[66].MyGroup = GROUP_NT_OBSESSION;
   Quiz[67].MyGroup = GROUP_SOCIAL;
-  Quiz[68].MyGroup = GROUP_NT_NVC;
+  Quiz[68].MyGroup = GROUP_SEX;
   Quiz[69].MyGroup = GROUP_SOCIAL;
   Quiz[70].MyGroup = GROUP_SOCIAL;
   Quiz[71].MyGroup = GROUP_SEX;
-  Quiz[72].MyGroup = GROUP_MIXED;
+  Quiz[72].MyGroup = GROUP_SOCIAL;
   Quiz[73].MyGroup = GROUP_SOCIAL;
   Quiz[74].MyGroup = GROUP_NT_OBSESSION;
   Quiz[75].MyGroup = GROUP_NT_OBSESSION;
@@ -279,7 +279,7 @@ void TQuizR2::SetupTexts()
   Quiz[97].MyGroup = GROUP_NT_NVC;
   Quiz[98].MyGroup = GROUP_ASPIE_NVC;
   Quiz[99].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[100].MyGroup = GROUP_SOCIAL;
+  Quiz[100].MyGroup = GROUP_NT_NVC;
   Quiz[101].MyGroup = GROUP_NT_NVC;
   Quiz[102].MyGroup = GROUP_NT_NVC;
   Quiz[103].MyGroup = GROUP_ASPIE_NVC;
@@ -294,7 +294,7 @@ void TQuizR2::SetupTexts()
   Quiz[112].MyGroup = GROUP_ENVIRONMENT;
   Quiz[113].MyGroup = GROUP_ENVIRONMENT;
   Quiz[114].MyGroup = GROUP_MIXED;
-  Quiz[115].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[115].MyGroup = GROUP_ENVIRONMENT;
   Quiz[116].MyGroup = GROUP_ENVIRONMENT;
   Quiz[117].MyGroup = GROUP_ENVIRONMENT;
   Quiz[118].MyGroup = GROUP_ACTIVITY;
@@ -315,7 +315,7 @@ void TQuizR2::SetupTexts()
   Quiz[133].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[134].MyGroup = GROUP_SEX;
   Quiz[135].MyGroup = GROUP_NT_NVC;
-  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_NT_NVC;
   Quiz[137].MyGroup = GROUP_NT_TALENT;
   Quiz[138].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[139].MyGroup = GROUP_NT_TALENT;
@@ -325,7 +325,7 @@ void TQuizR2::SetupTexts()
   Quiz[143].MyGroup = GROUP_SEX;
   Quiz[144].MyGroup = GROUP_ENVIRONMENT;
   Quiz[145].MyGroup = GROUP_NT_NVC;
-  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_ASPIE_NVC;
   Quiz[147].MyGroup = GROUP_NT_SENSORY;
   Quiz[148].MyGroup = GROUP_ACTIVITY;
   Quiz[149].MyGroup = GROUP_SOCIAL;

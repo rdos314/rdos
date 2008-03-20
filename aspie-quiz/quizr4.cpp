@@ -229,7 +229,7 @@ void TQuizR4::SetupTexts()
   Quiz[6].MyGroup = GROUP_MIXED;
   Quiz[7].MyGroup = GROUP_MIXED;
   Quiz[8].MyGroup = GROUP_SEX;
-  Quiz[9].MyGroup = GROUP_MIXED;
+  Quiz[9].MyGroup = GROUP_NT_NVC;
   Quiz[10].MyGroup = GROUP_SOCIAL;
   Quiz[11].MyGroup = GROUP_MIXED;
   Quiz[12].MyGroup = GROUP_SOCIAL;
@@ -371,7 +371,7 @@ void TQuizR4::SetupTexts()
   Quiz[148].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[149].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[150].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[151].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[151].MyGroup = GROUP_ACTIVITY;
   Quiz[152].MyGroup = GROUP_ASPIE_HUNTING;
 
   Quiz[153].MyGroup = GROUP_SOCIAL;
