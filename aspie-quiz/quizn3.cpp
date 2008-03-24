@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizN3::TQuizN3(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2)
-  : TQuiz(145),
+  : TQuiz(173),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -94,7 +94,7 @@ TQuizN3::TQuizN3(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2);
 	LoadPopulations();
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -133,7 +133,10 @@ int TQuizN3::GetPcaCount()
 *##########################################################################*/
 int TQuizN3::GetCatCount(int Question)
 {
-	return 3;
+	if (Question >= 147)
+		return 6;
+	else
+		return 3;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -145,7 +148,7 @@ int TQuizN3::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizN3::GetQuizN()
 {
-	return 145;
+	return 147;
 }
 
 /*##########################################################################
@@ -189,153 +192,6 @@ void TQuizN3::WriteLongName(TFile &File)
 *##########################################################################*/
 void TQuizN3::DefineQuiz()
 {
-  return;
-
-  DefineID(1, 26);
-  DefineID(2, 151);
-  DefineID(3, 20);
-  DefineID(4, 23);
-  DefineID(5, 100);
-  DefineID(6, 5);
-  DefineID(7, 695);
-  DefineID(8, 1153);
-  DefineID(9, 3);
-  DefineID(10, 6);
-  DefineID(11, 27);
-  DefineID(12, 129);
-  DefineID(13, 397);
-  DefineID(14, 743);
-  DefineID(15, 240);
-  DefineID(16, 319);
-  DefineID(17, 726);
-  DefineID(18, 25);
-  DefineID(19, 249);
-  DefineID(20, 37);
-  DefineID(21, 361);
-  DefineID(22, 39);
-  DefineID(23, 596);
-  DefineID(24, 36);
-  DefineID(25, 595);
-  DefineID(26, 613);
-  DefineID(27, 740);
-  DefineID(28, 282);
-  DefineID(29, 97);
-  DefineID(30, 272);
-  DefineID(31, 153);
-  DefineID(32, 516);
-  DefineID(33, 1053);
-  DefineID(34, 616);
-  DefineID(35, 1054);
-  DefineID(36, 614);
-  DefineID(37, 1044);
-  DefineID(38, 70);
-  DefineID(39, 767);
-  DefineID(40, 923);
-  DefineID(41, 66);
-  DefineID(42, 507);
-  DefineID(43, 858);
-  DefineID(44, 859);
-  DefineID(45, 73);
-  DefineID(46, 454);
-  DefineID(47, 378);
-  DefineID(48, 737);
-  DefineID(49, 1077);
-  DefineID(50, 857);
-  DefineID(51, 115);
-  DefineID(52, 765);
-  DefineID(53, 731);
-  DefineID(54, 547);
-  DefineID(55, 403);
-  DefineID(56, 712);
-  DefineID(57, 359);
-  DefineID(58, 575);
-  DefineID(59, 55);
-  DefineID(60, 590);
-  DefineID(61, 402);
-  DefineID(62, 15);
-  DefineID(63, 589);
-  DefineID(64, 570);
-  DefineID(65, 17);
-  DefineID(66, 572);
-  DefineID(67, 739);
-  DefineID(68, 574);
-  DefineID(69, 234);
-  DefineID(70, 401);
-  DefineID(71, 229);
-  DefineID(72, 16);
-  DefineID(73, 487);
-  DefineID(74, 130);
-  DefineID(75, 83);
-  DefineID(76, 745);
-  DefineID(77, 278);
-  DefineID(78, 1160);
-  DefineID(79, 86);
-  DefineID(80, 82);
-  DefineID(81, 551);
-  DefineID(82, 707);
-  DefineID(83, 856);
-  DefineID(84, 85);
-  DefineID(85, 128);
-  DefineID(86, 714);
-  DefineID(87, 255);
-  DefineID(88, 495);
-  DefineID(89, 92);
-  DefineID(90, 89);
-  DefineID(91, 582);
-  DefineID(92, 448);
-  DefineID(93, 439);
-  DefineID(94, 926);
-  DefineID(95, 581);
-  DefineID(96, 925);
-  DefineID(97, 1076);
-  DefineID(98, 433);
-  DefineID(99, 1079);
-  DefineID(100, 316);
-  DefineID(101, 1080);
-  DefineID(102, 310);
-  DefineID(103, 862);
-  DefineID(104, 53);
-  DefineID(105, 54);
-  DefineID(106, 61);
-  DefineID(107, 48);
-  DefineID(108, 565);
-  DefineID(109, 503);
-  DefineID(110, 385);
-  DefineID(111, 631);
-  DefineID(112, 871);
-  DefineID(113, 509);
-  DefineID(114, 510);
-  DefineID(115, 50);
-  DefineID(116, 113);
-  DefineID(117, 46);
-  DefineID(118, 513);
-  DefineID(119, 1078);
-  DefineID(120, 443);
-  DefineID(121, 31);
-  DefineID(122, 718);
-  DefineID(123, 167);
-  DefineID(124, 623);
-  DefineID(125, 93);
-  DefineID(126, 518);
-  DefineID(127, 1152);
-  DefineID(128, 78);
-  DefineID(129, 549);
-  DefineID(130, 126);
-  DefineID(131, 174);
-  DefineID(132, 227);
-  DefineID(133, 1046);
-  DefineID(134, 1161);
-  DefineID(135, 123);
-  DefineID(136, 1158);
-  DefineID(137, 715);
-  DefineID(138, 545);
-  DefineID(139, 262);
-  DefineID(140, 724);
-  DefineID(141, 250);
-  DefineID(142, 133);
-  DefineID(143, 265);
-  DefineID(144, 708);
-  DefineID(145, 381);
 }
 
 /*##########################################################################
@@ -518,7 +374,37 @@ void TQuizN3::SetupTexts()
   Quiz[143].MyGroup = GROUP_SEX;
   Quiz[144].MyGroup = GROUP_SEX;
 
-#ifdef ENGLISH
+  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_MIXED;
+
+  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[151].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_MIXED;
+  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_MIXED;
+
+  #ifdef ENGLISH
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Is your sense of humor different from mainstream or considered odd?";
@@ -661,11 +547,41 @@ void TQuizN3::SetupTexts()
   Quiz[138].Text = "Do you have a good sense for what is the right thing to do socially?";
   Quiz[139].Text = "Do you find it easy to estimate the age of people?";
   Quiz[140].Text = "Are you gracious about criticism, correction and direction?";
+
   Quiz[141].Text = "Do you have an alternative view of what is attractive in the opposite sex?";
   Quiz[142].Text = "Do you judge a potential mate as most anybody else would?";
   Quiz[143].Text = "Do you naturally fit into the expected gender stereotypes?";
   Quiz[144].Text = "Do you have unusual sexual preferences?";
-            	
+  Quiz[145].Text = "Do you become shy or passive when you see somebody of the opposite sex that you are interested in?";
+  Quiz[146].Text = "Do you prefer romantic relationships to develop fast?";
+
+  Quiz[147].Text = "EAT - Am terrified about being overweight";
+  Quiz[148].Text = "EAT - Avoid eating when I am hungry";
+  Quiz[149].Text = "EAT - Find myself preoccupied with food";
+  Quiz[150].Text = "EAT - Have gone on eating binges where I feel I may not be able to stop";
+  Quiz[151].Text = "EAT - Cut my food into small pieces";
+  Quiz[152].Text = "EAT - Aware of the calorie content of foods I eat";
+  Quiz[153].Text = "EAT - Particularly avoid food with a high carbohydrate content (bread, rice, potatoes, etc.)";
+  Quiz[154].Text = "EAT - Feel that others would prefer if I ate more";
+  Quiz[155].Text = "EAT - Vomit after I have eaten";
+  Quiz[156].Text = "EAT - Feel extremely guilty after eating";
+  Quiz[157].Text = "EAT - Am preoccupied with a desire to be thinner";
+  Quiz[158].Text = "EAT - Think about burning up calories when I exercise";
+  Quiz[159].Text = "EAT - Other people think I'm too thin";
+  Quiz[160].Text = "EAT - Am preoccupied with the thought of having fat on my body";
+  Quiz[161].Text = "EAT - Take longer than others to eat my meals";
+  Quiz[162].Text = "EAT - Avoid foods with sugar in them";
+  Quiz[163].Text = "EAT - Eat diet foods";
+  Quiz[164].Text = "EAT - Feel that food controls my life";
+  Quiz[165].Text = "EAT - Display self-control around food";
+  Quiz[166].Text = "EAT - Feel that others pressure me to eat";
+  Quiz[167].Text = "EAT - Give too much time and thought to food";
+  Quiz[168].Text = "EAT - Feel uncomfortable after eating sweets";
+  Quiz[169].Text = "EAT - Engage in dieting behavior";
+  Quiz[170].Text = "EAT - Like my stomach to be empty";
+  Quiz[171].Text = "EAT - Have the impulse to vomit after meals";
+  Quiz[172].Text = "EAT - Enjoy trying new rich foods";
+
 #endif
 
 #ifdef SWEDISH
@@ -815,6 +731,36 @@ void TQuizN3::SetupTexts()
   Quiz[142].Text = "Bedömmer du en potentiell partner på samma sätt som de flesta andra människor?";
   Quiz[143].Text = "Passar du naturligt in i de förväntade könsrollerna?";
   Quiz[144].Text = "Har du ovanliga sexuella preferenser?";
+
+  Quiz[145].Text = "Blir du blyg eller passiv när du ser någon av motsatt kön som du är intresserad av?";
+  Quiz[146].Text = "Föredrar du om romantiska relationer utvecklas snabbt?";
+
+  Quiz[147].Text = "EAT - Am terrified about being overweight";
+  Quiz[148].Text = "EAT - Avoid eating when I am hungry";
+  Quiz[149].Text = "EAT - Find myself preoccupied with food";
+  Quiz[150].Text = "EAT - Have gone on eating binges where I feel I may not be able to stop";
+  Quiz[151].Text = "EAT - Cut my food into small pieces";
+  Quiz[152].Text = "EAT - Aware of the calorie content of foods I eat";
+  Quiz[153].Text = "EAT - Particularly avoid food with a high carbohydrate content (bread, rice, potatoes, etc.)";
+  Quiz[154].Text = "EAT - Feel that others would prefer if I ate more";
+  Quiz[155].Text = "EAT - Vomit after I have eaten";
+  Quiz[156].Text = "EAT - Feel extremely guilty after eating";
+  Quiz[157].Text = "EAT - Am preoccupied with a desire to be thinner";
+  Quiz[158].Text = "EAT - Think about burning up calories when I exercise";
+  Quiz[159].Text = "EAT - Other people think I'm too thin";
+  Quiz[160].Text = "EAT - Am preoccupied with the thought of having fat on my body";
+  Quiz[161].Text = "EAT - Take longer than others to eat my meals";
+  Quiz[162].Text = "EAT - Avoid foods with sugar in them";
+  Quiz[163].Text = "EAT - Eat diet foods";
+  Quiz[164].Text = "EAT - Feel that food controls my life";
+  Quiz[165].Text = "EAT - Display self-control around food";
+  Quiz[166].Text = "EAT - Feel that others pressure me to eat";
+  Quiz[167].Text = "EAT - Give too much time and thought to food";
+  Quiz[168].Text = "EAT - Feel uncomfortable after eating sweets";
+  Quiz[169].Text = "EAT - Engage in dieting behavior";
+  Quiz[170].Text = "EAT - Like my stomach to be empty";
+  Quiz[171].Text = "EAT - Have the impulse to vomit after meals";
+  Quiz[172].Text = "EAT - Enjoy trying new rich foods";
 
 #endif
 
@@ -1181,9 +1127,9 @@ void TQuizN3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizN2, 20, 23);
     DefineCross(QuizN2, 21, 24);
     DefineCross(QuizN2, 22, 26);
-    DefineCross(QuizN2, 23, 25);
+	 DefineCross(QuizN2, 23, 25);
     DefineCross(QuizN2, 24, 27);
-    DefineCross(QuizN2, 25, 28);
+	 DefineCross(QuizN2, 25, 28);
     DefineCross(QuizN2, 26, 30);
     DefineCross(QuizN2, 27, 31);
     DefineCross(QuizN2, 28, 32);
@@ -1211,9 +1157,9 @@ void TQuizN3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizN2, 50, 60);
     DefineCross(QuizN2, 51, 61);
     DefineCross(QuizN2, 52, 62);
-    DefineCross(QuizN2, 53, 63);
+	 DefineCross(QuizN2, 53, 63);
     DefineCross(QuizN2, 54, 64);
-    DefineCross(QuizN2, 55, 65);
+	 DefineCross(QuizN2, 55, 65);
     DefineCross(QuizN2, 56, 66);
     DefineCross(QuizN2, 57, 67);
     DefineCross(QuizN2, 58, 68);
@@ -1241,9 +1187,9 @@ void TQuizN3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizN2, 80, 89);
     DefineCross(QuizN2, 81, 91);
     DefineCross(QuizN2, 82, 90);
-    DefineCross(QuizN2, 83, 3);
+	 DefineCross(QuizN2, 83, 3);
     DefineCross(QuizN2, 84, 92);
-    DefineCross(QuizN2, 85, 93);
+	 DefineCross(QuizN2, 85, 93);
     DefineCross(QuizN2, 86, 94);
     DefineCross(QuizN2, 87, 52);
     DefineCross(QuizN2, 88, 97);
@@ -1271,9 +1217,9 @@ void TQuizN3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizN2, 110, 122);
     DefineCross(QuizN2, 111, 123);
     DefineCross(QuizN2, 112, 125);
-    DefineCross(QuizN2, 113, 126);
+	 DefineCross(QuizN2, 113, 126);
     DefineCross(QuizN2, 114, 127);
-    DefineCross(QuizN2, 115, 128);
+	 DefineCross(QuizN2, 115, 128);
     DefineCross(QuizN2, 116, 129);
     DefineCross(QuizN2, 117, 130);
     DefineCross(QuizN2, 118, 131);
@@ -1301,8 +1247,38 @@ void TQuizN3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizN2, 140, 154);
     DefineCross(QuizN2, 141, 155);
     DefineCross(QuizN2, 142, 95);
-    DefineCross(QuizN2, 143, 99);
-    DefineCross(QuizN2, 144, 158);
+	 DefineCross(QuizN2, 143, 99);
+	 DefineCross(QuizN2, 144, 158);
+
+	 DefineGlobalId(145, 1178);
+	 DefineGlobalId(146, 1179);
+
+	 DefineGlobalId(147, 1180);
+	 DefineGlobalId(148, 1181);
+	 DefineGlobalId(149, 1182);
+	 DefineGlobalId(150, 1183);
+	 DefineGlobalId(151, 1184);
+	 DefineGlobalId(152, 1185);
+	 DefineGlobalId(153, 1186);
+	 DefineGlobalId(154, 1187);
+	 DefineGlobalId(155, 1188);
+	 DefineGlobalId(156, 1189);
+	 DefineGlobalId(157, 1190);
+	 DefineGlobalId(158, 1191);
+	 DefineGlobalId(159, 1192);
+	 DefineGlobalId(160, 1193);
+	 DefineGlobalId(161, 1194);
+	 DefineGlobalId(162, 1195);
+	 DefineGlobalId(163, 1196);
+	 DefineGlobalId(164, 1197);
+	 DefineGlobalId(165, 1198);
+	 DefineGlobalId(166, 1199);
+	 DefineGlobalId(167, 1200);
+	 DefineGlobalId(168, 1201);
+	 DefineGlobalId(169, 1202);
+	 DefineGlobalId(170, 1203);
+	 DefineGlobalId(171, 1204);
+	 DefineGlobalId(172, 1205);
 }
 
 /*##########################################################################
@@ -1491,34 +1467,37 @@ void TQuizN3::ExportExcelAspie(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		sprintf(str, "\"%d\", ", Row.AsResult);
-		file.Write(str);
-
-		sprintf(str, "\"%d\", ", Row.NtResult);
-		file.Write(str);
-
-		for (i = 0; i < N; i++)
+		if (Row.EatResult)
 		{
-			ival = Row.Quiz[i];
-
-			if (ival)
-			{
-				if (Quiz[i].Reverse)
-					ival = GetCatCount(i) - ival;
-				else
-					ival--;
-			}
-
-
-			if (ival >= GetCatCount(i))
-				ival = 0;
-
-			sprintf(str, "\"%d\"", ival);
+			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);
-			if (i != N - 1)
-				file.Write(", ");
+
+			sprintf(str, "\"%d\", ", Row.NtResult);
+			file.Write(str);
+
+			for (i = 0; i < N; i++)
+			{
+				ival = Row.Quiz[i];
+
+				if (ival)
+				{
+					if (Quiz[i].Reverse)
+						ival = GetCatCount(i) - ival;
+					else
+						ival--;
+				}
+
+
+				if (ival >= GetCatCount(i))
+					ival = 0;
+
+				sprintf(str, "\"%d\"", ival);
+				file.Write(str);
+				if (i != N - 1)
+					file.Write(", ");
+			}
+			file.Write("\n");
 		}
-		file.Write("\n");
 	}
 }
 
@@ -1668,7 +1647,7 @@ void TQuizN3::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
@@ -1746,4 +1725,126 @@ void TQuizN3::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
+}
+
+/*##################  TQuizN3::WriteEat ##########################
+*   Purpose....: Write eating disorder test report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizN3::WriteEat(const char *filename)
+{
+	int Count;
+	long double AsSum;
+	long double NtSum;
+	long double DiffSum;
+	long double EatSum;
+	long double AsMean;
+	long double NtMean;
+	long double DiffMean;
+	long double EatMean;
+	long double AsSd;
+	long double NtSd;
+	long double DiffSd;
+	long double EatSd;
+	long double AsCorr;
+	long double NtCorr;
+	long double DiffCorr;
+	long double val;
+	long double zx;
+	long double zy;
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+
+	Count = 0;
+	AsSum = 0;
+	NtSum = 0;
+	EatSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.EatResult)
+		{
+			Count++;
+			AsSum += Row.AsResult;
+			NtSum += Row.NtResult;
+			DiffSum += Row.AsResult - Row.NtResult;
+			EatSum += Row.EatResult;
+		}
+	}
+
+	AsMean = AsSum / Count;
+	NtMean = NtSum / Count;
+	DiffMean = DiffSum / Count;
+	EatMean = EatSum / Count;
+
+	AsSum = 0;
+	NtSum = 0;
+	EatSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.EatResult)
+		{
+			val = (long double)Row.AsResult - AsMean;
+			AsSum += val * val;
+
+			val = (long double)Row.NtResult - NtMean;
+			NtSum += val * val;
+
+			val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
+			DiffSum += val * val;
+
+			val = (long double)Row.EatResult - EatMean;
+			EatSum += val * val;
+		}
+	}
+
+	AsSd = sqrtl(AsSum / (Count - 1));
+	NtSd = sqrtl(NtSum / (Count - 1));
+	DiffSd = sqrtl(DiffSum / (Count - 1));
+	EatSd = sqrtl(EatSum / (Count - 1));
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.EatResult)
+		  {
+			zx = ((long double)Row.EatResult - EatMean) / EatSd;
+
+			zy = ((long double)Row.AsResult - AsMean) / AsSd;
+			AsSum += zx * zy;
+
+			zy = ((long double)Row.NtResult - NtMean) / NtSd;
+			NtSum += zx * zy;
+
+			zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+			DiffSum += zx * zy;
+		}
+	}
+
+	AsCorr = AsSum / (Count - 1);
+	NtCorr = NtSum / (Count - 1);
+	DiffCorr = DiffSum / (Count - 1);
+
+	printf("Mean Aspie score: %5.1Lf, SD: %5.1Lf\r\n", AsMean, AsSd);
+	printf("Mean NT score: %5.1Lf, SD: %5.1Lf\r\n", NtMean, NtSd);
+	printf("Mean score diff: %5.1Lf, SD: %5.1Lf\r\n", DiffMean, DiffSd);
+	printf("Mean EAT-26 score: %5.1Lf, SD: %5.1Lf\r\n", EatMean, EatSd);
+
+	printf("EAT - Aspie score correlation: %5.2Lf\r\n", AsCorr);
+	printf("EAT - NT score correlation: %5.2Lf\r\n", NtCorr);
+	printf("EAT - score diff correlation: %5.2Lf\r\n", DiffCorr);
 }

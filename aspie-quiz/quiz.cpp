@@ -4206,6 +4206,17 @@ void TQuiz::WriteGifted(const char *FileName)
 {
 }
 
+/*##################  TQuiz::WriteEat ##########################
+*   Purpose....: Write eating disorder test report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteEat(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WritePictureRating ##########################
 *   Purpose....: Write picture rating report (dummy)           			     	        #
 *   In params..: *                                                          #
@@ -7973,7 +7984,22 @@ void TQuiz::WriteLinkReport(const char *filename)
 	 file.Write("<br>");
 #endif
 
+	file.Write("<a name=\"QUIZ");
+	CrossQuiz[29]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	CrossQuiz[29]->WriteName(file);
+	file.Write("</a>");
 
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizn2.htm\">overview</a> <a href=\"reln2.htm\">related questions</a> <a href=\"refn2.htm\">referer sites</a> <a href=\"retestn1.htm\">score stability</a> <a href=\"vidrate1.htm\">flirt ratings</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizn2.htm\">översikt</a> <a href=\"reln2.htm\">relaterade frågor</a> <a href=\"refn2.htm\">referenssajter</a> <a href=\"retestn1.htm\">poäng stabilitet</a> <a href=\"vidrate1.htm\">flörtbedömning</a>");
+	 file.Write("<br>");
+#endif
 
 	file.Write("<a name=\"QUIZ");
 	WriteName(file);
@@ -7983,14 +8009,15 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizn2.htm\">overview</a> <a href=\"reln2.htm\">related questions</a> <a href=\"refn2.htm\">referer sites</a>");
+	file.Write(" <a href=\"quizn3.htm\">overview</a> <a href=\"reln3.htm\">related questions</a> <a href=\"refn3.htm\">referer sites</a>");
 	file.Write("<br>");
 #endif
 
 #ifdef SWEDISH
-	 file.Write(" <a href=\"quizn2.htm\">översikt</a> <a href=\"reln2.htm\">relaterade frågor</a> <a href=\"refn2.htm\">referenssajter</a>");
+	 file.Write(" <a href=\"quizn3.htm\">översikt</a> <a href=\"reln3.htm\">relaterade frågor</a> <a href=\"refn3.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
+
 
 	file.Write("<h3>Histograms</h3>\n");
 

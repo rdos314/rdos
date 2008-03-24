@@ -5,8 +5,10 @@ struct TQuizRow
     long userid;
     int  BirthYear;
     int  BirthMonth;
-	char Gender;
-    char Lang;
+	 char Gender;
+	 int Country;
+	 int Ancestry;
+	 char Lang;
 	char Aspie;
 	char ADHD;
 	char Dyslexia;
@@ -21,6 +23,7 @@ struct TQuizRow
 	char Referer[100];
 	long AsResult;
 	long NtResult;
+	long EatResult;
 	char Quiz[250];
 	char GroupResult[ACTIVE_GROUP_COUNT];
 	char DxResult[DX_COUNT];

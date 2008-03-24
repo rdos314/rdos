@@ -42,6 +42,8 @@ public:
     virtual void ExportExcelAspie(const char *filename);
     virtual void ImportMvsp(const char *filename, int PcaType);
 
+	virtual void WriteEat(const char *filename);
+
 private:
     virtual void GetReferer(const char *referer, TPopulation *pop);
     virtual void WriteName(TFile &File);
