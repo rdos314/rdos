@@ -236,15 +236,15 @@ void TQuizN3::SetupTexts()
   Quiz[5].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[7].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[8].MyGroup = GROUP_MIXED;
-  Quiz[9].MyGroup = GROUP_MIXED;
-  Quiz[10].MyGroup = GROUP_MIXED;
-  Quiz[11].MyGroup = GROUP_MIXED;
-  Quiz[12].MyGroup = GROUP_MIXED;
-  Quiz[13].MyGroup = GROUP_MIXED;
-  Quiz[14].MyGroup = GROUP_MIXED;
-  Quiz[15].MyGroup = GROUP_MIXED;
-  Quiz[16].MyGroup = GROUP_MIXED;
+  Quiz[8].MyGroup = GROUP_NT_TALENT;
+  Quiz[9].MyGroup = GROUP_NT_TALENT;
+  Quiz[10].MyGroup = GROUP_NT_TALENT;
+  Quiz[11].MyGroup = GROUP_NT_TALENT;
+  Quiz[12].MyGroup = GROUP_NT_TALENT;
+  Quiz[13].MyGroup = GROUP_NT_TALENT;
+  Quiz[14].MyGroup = GROUP_NT_TALENT;
+  Quiz[15].MyGroup = GROUP_NT_TALENT;
+  Quiz[16].MyGroup = GROUP_NT_TALENT;
   Quiz[17].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[18].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[19].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -364,7 +364,7 @@ void TQuizN3::SetupTexts()
   Quiz[133].MyGroup = GROUP_MIXED;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
-  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_NT_TALENT;
   Quiz[137].MyGroup = GROUP_SOCIAL;
   Quiz[138].MyGroup = GROUP_NT_NVC;
   Quiz[139].MyGroup = GROUP_NT_SENSORY;
@@ -374,8 +374,8 @@ void TQuizN3::SetupTexts()
   Quiz[143].MyGroup = GROUP_SEX;
   Quiz[144].MyGroup = GROUP_SEX;
 
-  Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_SOCIAL;
+  Quiz[146].MyGroup = GROUP_ENVIRONMENT;
 
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
@@ -1106,7 +1106,7 @@ void TQuizN3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 {
     DefineCross(QuizN2, 0, 0);
     DefineCross(QuizN2, 1, 1);
-    DefineCross(QuizN2, 2, 2);
+	 DefineCross(QuizN2, 2, 2);
     DefineCross(QuizN2, 3, 4);
     DefineCross(QuizN2, 4, 5);
     DefineCross(QuizN2, 5, 6);
@@ -1136,7 +1136,7 @@ void TQuizN3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizN2, 29, 33);
     DefineCross(QuizN2, 30, 34);
     DefineCross(QuizN2, 31, 35);
-    DefineCross(QuizN2, 32, 36);
+	 DefineCross(QuizN2, 32, 36);
     DefineCross(QuizN2, 33, 37);
     DefineCross(QuizN2, 34, 39);
     DefineCross(QuizN2, 35, 40);
@@ -1166,7 +1166,7 @@ void TQuizN3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizN2, 59, 69);
     DefineCross(QuizN2, 60, 70);
     DefineCross(QuizN2, 61, 71);
-    DefineCross(QuizN2, 62, 72);
+	 DefineCross(QuizN2, 62, 72);
     DefineCross(QuizN2, 63, 73);
     DefineCross(QuizN2, 64, 74);
     DefineCross(QuizN2, 65, 75);
@@ -1196,7 +1196,7 @@ void TQuizN3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizN2, 89, 98);
     DefineCross(QuizN2, 90, 100);
     DefineCross(QuizN2, 91, 101);
-    DefineCross(QuizN2, 92, 102);
+	 DefineCross(QuizN2, 92, 102);
     DefineCross(QuizN2, 93, 103);
     DefineCross(QuizN2, 94, 104);
     DefineCross(QuizN2, 95, 105);
@@ -1226,7 +1226,7 @@ void TQuizN3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizN2, 119, 132);
     DefineCross(QuizN2, 120, 133);
     DefineCross(QuizN2, 121, 134);
-    DefineCross(QuizN2, 122, 135);
+	 DefineCross(QuizN2, 122, 135);
     DefineCross(QuizN2, 123, 136);
     DefineCross(QuizN2, 124, 137);
     DefineCross(QuizN2, 125, 38);
@@ -1467,7 +1467,7 @@ void TQuizN3::ExportExcelAspie(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (Row.EatResult)
+		if (Row.Quiz[147])
 		{
 			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);

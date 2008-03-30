@@ -404,16 +404,16 @@ void TQuizN2::SetupTexts()
   Quiz[159].MyGroup = GROUP_SOCIAL;
   Quiz[160].MyGroup = GROUP_SEX;
 
-  Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_MIXED;
-  Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_MIXED;
-  Quiz[165].MyGroup = GROUP_MIXED;
-  Quiz[166].MyGroup = GROUP_MIXED;
-  Quiz[167].MyGroup = GROUP_MIXED;
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
-  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_NT_NVC;
+  Quiz[162].MyGroup = GROUP_NT_NVC;
+  Quiz[163].MyGroup = GROUP_NT_NVC;
+  Quiz[164].MyGroup = GROUP_NT_NVC;
+  Quiz[165].MyGroup = GROUP_NT_NVC;
+  Quiz[166].MyGroup = GROUP_NT_NVC;
+  Quiz[167].MyGroup = GROUP_NT_NVC;
+  Quiz[168].MyGroup = GROUP_NT_NVC;
+  Quiz[169].MyGroup = GROUP_NT_NVC;
+  Quiz[170].MyGroup = GROUP_NT_NVC;
 
 #ifdef ENGLISH
 
