@@ -163,141 +163,197 @@ int main(int argc, char **argv)
 	Quiz[1]->ExportExcelCase("pca\\all2.dat", PCA_TYPE_ALL);
 	Quiz[1]->ExportExcelCase("pca\\male2.dat", PCA_TYPE_MALE);
 	Quiz[1]->ExportExcelCase("pca\\female2.dat", PCA_TYPE_FEMALE);
+	Quiz[1]->ExportExcelCase("pca\\young2.dat", PCA_TYPE_YOUNG);
+	Quiz[1]->ExportExcelCase("pca\\old2.dat", PCA_TYPE_OLD);
 
 	printf("all3\r\n");
 	 Quiz[2]->ExportExcelCase("pca\\all3.dat", PCA_TYPE_ALL);
 	 Quiz[2]->ExportExcelCase("pca\\male3.dat", PCA_TYPE_MALE);
 	 Quiz[2]->ExportExcelCase("pca\\female3.dat", PCA_TYPE_FEMALE);
+	Quiz[2]->ExportExcelCase("pca\\young3.dat", PCA_TYPE_YOUNG);
+	Quiz[2]->ExportExcelCase("pca\\old3.dat", PCA_TYPE_OLD);
 
 	printf("all4\r\n");
 	 Quiz[3]->ExportExcelCase("pca\\all4.dat", PCA_TYPE_ALL);
 	 Quiz[3]->ExportExcelCase("pca\\male4.dat", PCA_TYPE_MALE);
 	 Quiz[3]->ExportExcelCase("pca\\female4.dat", PCA_TYPE_FEMALE);
+	Quiz[3]->ExportExcelCase("pca\\young4.dat", PCA_TYPE_YOUNG);
+	Quiz[3]->ExportExcelCase("pca\\old4.dat", PCA_TYPE_OLD);
 
 	printf("all5\r\n");
 	 Quiz[4]->ExportExcelCase("pca\\all5.dat", PCA_TYPE_ALL);
 	 Quiz[4]->ExportExcelCase("pca\\male5.dat", PCA_TYPE_MALE);
 	 Quiz[4]->ExportExcelCase("pca\\female5.dat", PCA_TYPE_FEMALE);
+	Quiz[4]->ExportExcelCase("pca\\young5.dat", PCA_TYPE_YOUNG);
+	Quiz[4]->ExportExcelCase("pca\\old5.dat", PCA_TYPE_OLD);
 
 	printf("all6\r\n");
 	 Quiz[5]->ExportExcelCase("pca\\all6.dat", PCA_TYPE_ALL);
 	 Quiz[5]->ExportExcelCase("pca\\male6.dat", PCA_TYPE_MALE);
 	 Quiz[5]->ExportExcelCase("pca\\female6.dat", PCA_TYPE_FEMALE);
+	Quiz[5]->ExportExcelCase("pca\\young6.dat", PCA_TYPE_YOUNG);
+	Quiz[5]->ExportExcelCase("pca\\old6.dat", PCA_TYPE_OLD);
 
 	printf("all7\r\n");
 	 Quiz[6]->ExportExcelCase("pca\\all7.dat", PCA_TYPE_ALL);
 	 Quiz[6]->ExportExcelCase("pca\\male7.dat", PCA_TYPE_MALE);
 	 Quiz[6]->ExportExcelCase("pca\\female7.dat", PCA_TYPE_FEMALE);
+	Quiz[6]->ExportExcelCase("pca\\young7.dat", PCA_TYPE_YOUNG);
+	Quiz[6]->ExportExcelCase("pca\\old7.dat", PCA_TYPE_OLD);
 
 	printf("all8\r\n");
 	 Quiz[7]->ExportExcelCase("pca\\all8.dat", PCA_TYPE_ALL);
 	 Quiz[7]->ExportExcelCase("pca\\male8.dat", PCA_TYPE_MALE);
 	 Quiz[7]->ExportExcelCase("pca\\female8.dat", PCA_TYPE_FEMALE);
+	Quiz[7]->ExportExcelCase("pca\\young8.dat", PCA_TYPE_YOUNG);
+	Quiz[7]->ExportExcelCase("pca\\old8.dat", PCA_TYPE_OLD);
 
 	printf("all9\r\n");
 	 Quiz[8]->ExportExcelCase("pca\\all9.dat", PCA_TYPE_ALL);
 	 Quiz[8]->ExportExcelCase("pca\\male9.dat", PCA_TYPE_MALE);
 	 Quiz[8]->ExportExcelCase("pca\\female9.dat", PCA_TYPE_FEMALE);
+	Quiz[8]->ExportExcelCase("pca\\young9.dat", PCA_TYPE_YOUNG);
+	Quiz[8]->ExportExcelCase("pca\\old9.dat", PCA_TYPE_OLD);
 
 	printf("allr1\r\n");
 	 Quiz[9]->ExportExcelCase("pca\\allr1.dat", PCA_TYPE_ALL);
 	 Quiz[9]->ExportExcelCase("pca\\maler1.dat", PCA_TYPE_MALE);
 	 Quiz[9]->ExportExcelCase("pca\\femaler1.dat", PCA_TYPE_FEMALE);
+	Quiz[9]->ExportExcelCase("pca\\youngr1.dat", PCA_TYPE_YOUNG);
+	Quiz[9]->ExportExcelCase("pca\\oldr1.dat", PCA_TYPE_OLD);
 
 	printf("allr2\r\n");
 	 Quiz[10]->ExportExcelCase("pca\\allr2.dat", PCA_TYPE_ALL);
 	 Quiz[10]->ExportExcelCase("pca\\maler2.dat", PCA_TYPE_MALE);
 	 Quiz[10]->ExportExcelCase("pca\\femaler2.dat", PCA_TYPE_FEMALE);
+	Quiz[10]->ExportExcelCase("pca\\youngr2.dat", PCA_TYPE_YOUNG);
+	Quiz[10]->ExportExcelCase("pca\\oldr2.dat", PCA_TYPE_OLD);
 
 	printf("allr3\r\n");
 	 Quiz[11]->ExportExcelCase("pca\\allr3.dat", PCA_TYPE_ALL);
 	 Quiz[11]->ExportExcelCase("pca\\maler3.dat", PCA_TYPE_MALE);
 	 Quiz[11]->ExportExcelCase("pca\\femaler3.dat", PCA_TYPE_FEMALE);
+	Quiz[11]->ExportExcelCase("pca\\youngr3.dat", PCA_TYPE_YOUNG);
+	Quiz[11]->ExportExcelCase("pca\\oldr3.dat", PCA_TYPE_OLD);
 
 	printf("allr4\r\n");
 	 Quiz[12]->ExportExcelCase("pca\\allr4.dat", PCA_TYPE_ALL);
 	 Quiz[12]->ExportExcelCase("pca\\maler4.dat", PCA_TYPE_MALE);
 	 Quiz[12]->ExportExcelCase("pca\\femaler4.dat", PCA_TYPE_FEMALE);
+	Quiz[12]->ExportExcelCase("pca\\youngr4.dat", PCA_TYPE_YOUNG);
+	Quiz[12]->ExportExcelCase("pca\\oldr4.dat", PCA_TYPE_OLD);
 
 	printf("allr5\r\n");
 	 Quiz[13]->ExportExcelCase("pca\\allr5.dat", PCA_TYPE_ALL);
 	 Quiz[13]->ExportExcelCase("pca\\maler5.dat", PCA_TYPE_MALE);
 	 Quiz[13]->ExportExcelCase("pca\\femaler5.dat", PCA_TYPE_FEMALE);
+	Quiz[13]->ExportExcelCase("pca\\youngr5.dat", PCA_TYPE_YOUNG);
+	Quiz[13]->ExportExcelCase("pca\\oldr5.dat", PCA_TYPE_OLD);
 
 	printf("allr6\r\n");
 	 Quiz[14]->ExportExcelCase("pca\\allr6.dat", PCA_TYPE_ALL);
 	 Quiz[14]->ExportExcelCase("pca\\maler6.dat", PCA_TYPE_MALE);
 	 Quiz[14]->ExportExcelCase("pca\\femaler6.dat", PCA_TYPE_FEMALE);
+	Quiz[14]->ExportExcelCase("pca\\youngr6.dat", PCA_TYPE_YOUNG);
+	Quiz[14]->ExportExcelCase("pca\\oldr6.dat", PCA_TYPE_OLD);
 
 	printf("allr7\r\n");
 	 Quiz[15]->ExportExcelCase("pca\\allr7.dat", PCA_TYPE_ALL);
 	 Quiz[15]->ExportExcelCase("pca\\maler7.dat", PCA_TYPE_MALE);
 	 Quiz[15]->ExportExcelCase("pca\\femaler7.dat", PCA_TYPE_FEMALE);
+	Quiz[15]->ExportExcelCase("pca\\youngr7.dat", PCA_TYPE_YOUNG);
+	Quiz[15]->ExportExcelCase("pca\\oldr7.dat", PCA_TYPE_OLD);
 
 	printf("alls1\r\n");
 	 Quiz[16]->ExportExcelCase("pca\\alls1.dat", PCA_TYPE_ALL);
 	 Quiz[16]->ExportExcelCase("pca\\males1.dat", PCA_TYPE_MALE);
 	 Quiz[16]->ExportExcelCase("pca\\females1.dat", PCA_TYPE_FEMALE);
+	Quiz[16]->ExportExcelCase("pca\\youngs1.dat", PCA_TYPE_YOUNG);
+	Quiz[16]->ExportExcelCase("pca\\olds1.dat", PCA_TYPE_OLD);
 
 	printf("alls2\r\n");
 	 Quiz[17]->ExportExcelCase("pca\\alls2.dat", PCA_TYPE_ALL);
 	 Quiz[17]->ExportExcelCase("pca\\males2.dat", PCA_TYPE_MALE);
 	 Quiz[17]->ExportExcelCase("pca\\females2.dat", PCA_TYPE_FEMALE);
+	Quiz[17]->ExportExcelCase("pca\\youngs2.dat", PCA_TYPE_YOUNG);
+	Quiz[17]->ExportExcelCase("pca\\olds2.dat", PCA_TYPE_OLD);
 
 	printf("alls3\r\n");
 	 Quiz[18]->ExportExcelCase("pca\\alls3.dat", PCA_TYPE_ALL);
 	 Quiz[18]->ExportExcelCase("pca\\males3.dat", PCA_TYPE_MALE);
 	 Quiz[18]->ExportExcelCase("pca\\females3.dat", PCA_TYPE_FEMALE);
+	Quiz[18]->ExportExcelCase("pca\\youngs3.dat", PCA_TYPE_YOUNG);
+	Quiz[18]->ExportExcelCase("pca\\olds3.dat", PCA_TYPE_OLD);
 
 	printf("alls4\r\n");
 	 Quiz[19]->ExportExcelCase("pca\\alls4.dat", PCA_TYPE_ALL);
 	 Quiz[19]->ExportExcelCase("pca\\males4.dat", PCA_TYPE_MALE);
 	 Quiz[19]->ExportExcelCase("pca\\females4.dat", PCA_TYPE_FEMALE);
+	Quiz[19]->ExportExcelCase("pca\\youngs4.dat", PCA_TYPE_YOUNG);
+	Quiz[19]->ExportExcelCase("pca\\olds4.dat", PCA_TYPE_OLD);
 
 	printf("alls5\r\n");
 	 Quiz[20]->ExportExcelCase("pca\\alls5.dat", PCA_TYPE_ALL);
 	 Quiz[20]->ExportExcelCase("pca\\males5.dat", PCA_TYPE_MALE);
 	 Quiz[20]->ExportExcelCase("pca\\females5.dat", PCA_TYPE_FEMALE);
+	Quiz[20]->ExportExcelCase("pca\\youngs5.dat", PCA_TYPE_YOUNG);
+	Quiz[20]->ExportExcelCase("pca\\olds5.dat", PCA_TYPE_OLD);
 
 	printf("alls6\r\n");
 	 Quiz[21]->ExportExcelCase("pca\\alls6.dat", PCA_TYPE_ALL);
 	 Quiz[21]->ExportExcelCase("pca\\males6.dat", PCA_TYPE_MALE);
 	 Quiz[21]->ExportExcelCase("pca\\females6.dat", PCA_TYPE_FEMALE);
+	Quiz[21]->ExportExcelCase("pca\\youngs6.dat", PCA_TYPE_YOUNG);
+	Quiz[21]->ExportExcelCase("pca\\olds6.dat", PCA_TYPE_OLD);
 
 	printf("alls7\r\n");
 	 Quiz[22]->ExportExcelCase("pca\\alls7.dat", PCA_TYPE_ALL);
 	 Quiz[22]->ExportExcelCase("pca\\males7.dat", PCA_TYPE_MALE);
 	 Quiz[22]->ExportExcelCase("pca\\females7.dat", PCA_TYPE_FEMALE);
+	Quiz[22]->ExportExcelCase("pca\\youngs7.dat", PCA_TYPE_YOUNG);
+	Quiz[22]->ExportExcelCase("pca\\olds7.dat", PCA_TYPE_OLD);
 
 	printf("alls8\r\n");
 	 Quiz[23]->ExportExcelCase("pca\\alls8.dat", PCA_TYPE_ALL);
 	 Quiz[23]->ExportExcelCase("pca\\males8.dat", PCA_TYPE_MALE);
 	 Quiz[23]->ExportExcelCase("pca\\females8.dat", PCA_TYPE_FEMALE);
+	Quiz[23]->ExportExcelCase("pca\\youngs8.dat", PCA_TYPE_YOUNG);
+	Quiz[23]->ExportExcelCase("pca\\olds8.dat", PCA_TYPE_OLD);
 
 	printf("alls9\r\n");
 	 Quiz[24]->ExportExcelCase("pca\\alls9.dat", PCA_TYPE_ALL);
 	 Quiz[24]->ExportExcelCase("pca\\males9.dat", PCA_TYPE_MALE);
 	 Quiz[24]->ExportExcelCase("pca\\females9.dat", PCA_TYPE_FEMALE);
+	Quiz[24]->ExportExcelCase("pca\\youngs9.dat", PCA_TYPE_YOUNG);
+	Quiz[24]->ExportExcelCase("pca\\olds9.dat", PCA_TYPE_OLD);
 
 	printf("alls10\r\n");
 	 Quiz[25]->ExportExcelCase("pca\\alls10.dat", PCA_TYPE_ALL);
 	 Quiz[25]->ExportExcelCase("pca\\males10.dat", PCA_TYPE_MALE);
 	 Quiz[25]->ExportExcelCase("pca\\fems10.dat", PCA_TYPE_FEMALE);
+	Quiz[25]->ExportExcelCase("pca\\youngs10.dat", PCA_TYPE_YOUNG);
+	Quiz[25]->ExportExcelCase("pca\\olds10.dat", PCA_TYPE_OLD);
 
 	printf("alls11\r\n");
 	 Quiz[26]->ExportExcelCase("pca\\alls11.dat", PCA_TYPE_ALL);
 	 Quiz[26]->ExportExcelCase("pca\\males11.dat", PCA_TYPE_MALE);
 	 Quiz[26]->ExportExcelCase("pca\\fems11.dat", PCA_TYPE_FEMALE);
+	Quiz[26]->ExportExcelCase("pca\\youngs11.dat", PCA_TYPE_YOUNG);
+	Quiz[26]->ExportExcelCase("pca\\olds11.dat", PCA_TYPE_OLD);
 
 	printf("alls12\r\n");
 	 Quiz[27]->ExportExcelCase("pca\\alls12.dat", PCA_TYPE_ALL);
 	 Quiz[27]->ExportExcelCase("pca\\males12.dat", PCA_TYPE_MALE);
 	 Quiz[27]->ExportExcelCase("pca\\fems12.dat", PCA_TYPE_FEMALE);
+	Quiz[27]->ExportExcelCase("pca\\youngs12.dat", PCA_TYPE_YOUNG);
+	Quiz[27]->ExportExcelCase("pca\\olds12.dat", PCA_TYPE_OLD);
 
 	printf("alln1\r\n");
 	 Quiz[28]->ExportExcelCase("pca\\alln1.dat", PCA_TYPE_ALL);
 	 Quiz[28]->ExportExcelCase("pca\\malen1.dat", PCA_TYPE_MALE);
 	 Quiz[28]->ExportExcelCase("pca\\femalen1.dat", PCA_TYPE_FEMALE);
+	Quiz[28]->ExportExcelCase("pca\\youngn1.dat", PCA_TYPE_YOUNG);
+	Quiz[28]->ExportExcelCase("pca\\oldn1.dat", PCA_TYPE_OLD);
 
 #endif
 
@@ -305,11 +361,15 @@ int main(int argc, char **argv)
 	 Quiz[29]->ExportExcelCase("pca\\alln2.dat", PCA_TYPE_ALL);
 	 Quiz[29]->ExportExcelCase("pca\\malen2.dat", PCA_TYPE_MALE);
 	 Quiz[29]->ExportExcelCase("pca\\femalen2.dat", PCA_TYPE_FEMALE);
+	Quiz[29]->ExportExcelCase("pca\\youngn2.dat", PCA_TYPE_YOUNG);
+	Quiz[29]->ExportExcelCase("pca\\oldn2.dat", PCA_TYPE_OLD);
 
 	printf("alln3\r\n");
 	 Quiz[30]->ExportExcelCase("pca\\alln3.dat", PCA_TYPE_ALL);
 	 Quiz[30]->ExportExcelCase("pca\\malen3.dat", PCA_TYPE_MALE);
 	 Quiz[30]->ExportExcelCase("pca\\femalen3.dat", PCA_TYPE_FEMALE);
+	Quiz[30]->ExportExcelCase("pca\\youngn3.dat", PCA_TYPE_YOUNG);
+	Quiz[30]->ExportExcelCase("pca\\oldn3.dat", PCA_TYPE_OLD);
 
 
 	printf("aspie\r\n");
@@ -355,122 +415,182 @@ int main(int argc, char **argv)
 	 Quiz[1]->ImportMvsp("pca\\all2.txt", PCA_TYPE_ALL);
 	 Quiz[1]->ImportMvsp("pca\\male2.txt", PCA_TYPE_MALE);
 	 Quiz[1]->ImportMvsp("pca\\female2.txt", PCA_TYPE_FEMALE);
+	 Quiz[1]->ImportMvsp("pca\\old2.txt", PCA_TYPE_OLD);
+	 Quiz[1]->ImportMvsp("pca\\young2.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[2]->ImportMvsp("pca\\all3.txt", PCA_TYPE_ALL);
 	 Quiz[2]->ImportMvsp("pca\\male3.txt", PCA_TYPE_MALE);
 	 Quiz[2]->ImportMvsp("pca\\female3.txt", PCA_TYPE_FEMALE);
+	 Quiz[2]->ImportMvsp("pca\\old3.txt", PCA_TYPE_OLD);
+	 Quiz[2]->ImportMvsp("pca\\young3.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[3]->ImportMvsp("pca\\all4.txt", PCA_TYPE_ALL);
 	 Quiz[3]->ImportMvsp("pca\\male4.txt", PCA_TYPE_MALE);
 	 Quiz[3]->ImportMvsp("pca\\female4.txt", PCA_TYPE_FEMALE);
+	 Quiz[3]->ImportMvsp("pca\\old4.txt", PCA_TYPE_OLD);
+	 Quiz[3]->ImportMvsp("pca\\young4.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[4]->ImportMvsp("pca\\all5.txt", PCA_TYPE_ALL);
 	 Quiz[4]->ImportMvsp("pca\\male5.txt", PCA_TYPE_MALE);
 	 Quiz[4]->ImportMvsp("pca\\female5.txt", PCA_TYPE_FEMALE);
+	 Quiz[4]->ImportMvsp("pca\\old5.txt", PCA_TYPE_OLD);
+	 Quiz[4]->ImportMvsp("pca\\young5.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[5]->ImportMvsp("pca\\all6.txt", PCA_TYPE_ALL);
 	 Quiz[5]->ImportMvsp("pca\\male6.txt", PCA_TYPE_MALE);
 	 Quiz[5]->ImportMvsp("pca\\female6.txt", PCA_TYPE_FEMALE);
+	 Quiz[5]->ImportMvsp("pca\\old6.txt", PCA_TYPE_OLD);
+	 Quiz[5]->ImportMvsp("pca\\young6.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[6]->ImportMvsp("pca\\all7.txt", PCA_TYPE_ALL);
 	 Quiz[6]->ImportMvsp("pca\\male7.txt", PCA_TYPE_MALE);
 	 Quiz[6]->ImportMvsp("pca\\female7.txt", PCA_TYPE_FEMALE);
+	 Quiz[6]->ImportMvsp("pca\\old7.txt", PCA_TYPE_OLD);
+	 Quiz[6]->ImportMvsp("pca\\young7.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[7]->ImportMvsp("pca\\all8.txt", PCA_TYPE_ALL);
 	 Quiz[7]->ImportMvsp("pca\\male8.txt", PCA_TYPE_MALE);
 	 Quiz[7]->ImportMvsp("pca\\female8.txt", PCA_TYPE_FEMALE);
+	 Quiz[7]->ImportMvsp("pca\\old8.txt", PCA_TYPE_OLD);
+	 Quiz[7]->ImportMvsp("pca\\young8.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[8]->ImportMvsp("pca\\all9.txt", PCA_TYPE_ALL);
 	 Quiz[8]->ImportMvsp("pca\\male9.txt", PCA_TYPE_MALE);
 	 Quiz[8]->ImportMvsp("pca\\female9.txt", PCA_TYPE_FEMALE);
+	 Quiz[8]->ImportMvsp("pca\\old9.txt", PCA_TYPE_OLD);
+	 Quiz[8]->ImportMvsp("pca\\young9.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[9]->ImportMvsp("pca\\allr1.txt", PCA_TYPE_ALL);
 	 Quiz[9]->ImportMvsp("pca\\maler1.txt", PCA_TYPE_MALE);
 	 Quiz[9]->ImportMvsp("pca\\femaler1.txt", PCA_TYPE_FEMALE);
+	 Quiz[9]->ImportMvsp("pca\\oldr1.txt", PCA_TYPE_OLD);
+	 Quiz[9]->ImportMvsp("pca\\youngr1.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[10]->ImportMvsp("pca\\allr2.txt", PCA_TYPE_ALL);
 	 Quiz[10]->ImportMvsp("pca\\maler2.txt", PCA_TYPE_MALE);
 	 Quiz[10]->ImportMvsp("pca\\femaler2.txt", PCA_TYPE_FEMALE);
+	 Quiz[10]->ImportMvsp("pca\\oldr2.txt", PCA_TYPE_OLD);
+	 Quiz[10]->ImportMvsp("pca\\youngr2.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[11]->ImportMvsp("pca\\allr3.txt", PCA_TYPE_ALL);
 	 Quiz[11]->ImportMvsp("pca\\maler3.txt", PCA_TYPE_MALE);
 	 Quiz[11]->ImportMvsp("pca\\femaler3.txt", PCA_TYPE_FEMALE);
+	 Quiz[11]->ImportMvsp("pca\\oldr3.txt", PCA_TYPE_OLD);
+	 Quiz[11]->ImportMvsp("pca\\youngr3.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[12]->ImportMvsp("pca\\allr4.txt", PCA_TYPE_ALL);
 	 Quiz[12]->ImportMvsp("pca\\maler4.txt", PCA_TYPE_MALE);
 	 Quiz[12]->ImportMvsp("pca\\femaler4.txt", PCA_TYPE_FEMALE);
+	 Quiz[12]->ImportMvsp("pca\\oldr4.txt", PCA_TYPE_OLD);
+	 Quiz[12]->ImportMvsp("pca\\youngr4.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[13]->ImportMvsp("pca\\allr5.txt", PCA_TYPE_ALL);
 	 Quiz[13]->ImportMvsp("pca\\maler5.txt", PCA_TYPE_MALE);
 	 Quiz[13]->ImportMvsp("pca\\femaler5.txt", PCA_TYPE_FEMALE);
+	 Quiz[13]->ImportMvsp("pca\\oldr5.txt", PCA_TYPE_OLD);
+	 Quiz[13]->ImportMvsp("pca\\youngr5.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[14]->ImportMvsp("pca\\allr6.txt", PCA_TYPE_ALL);
 	 Quiz[14]->ImportMvsp("pca\\maler6.txt", PCA_TYPE_MALE);
 	 Quiz[14]->ImportMvsp("pca\\femaler6.txt", PCA_TYPE_FEMALE);
+	 Quiz[14]->ImportMvsp("pca\\oldr6.txt", PCA_TYPE_OLD);
+	 Quiz[14]->ImportMvsp("pca\\youngr6.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[15]->ImportMvsp("pca\\allr7.txt", PCA_TYPE_ALL);
 	 Quiz[15]->ImportMvsp("pca\\maler7.txt", PCA_TYPE_MALE);
 	 Quiz[15]->ImportMvsp("pca\\femaler7.txt", PCA_TYPE_FEMALE);
+	 Quiz[15]->ImportMvsp("pca\\oldr7.txt", PCA_TYPE_OLD);
+	 Quiz[15]->ImportMvsp("pca\\youngr7.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[16]->ImportMvsp("pca\\alls1.txt", PCA_TYPE_ALL);
 	 Quiz[16]->ImportMvsp("pca\\males1.txt", PCA_TYPE_MALE);
 	 Quiz[16]->ImportMvsp("pca\\females1.txt", PCA_TYPE_FEMALE);
+	 Quiz[16]->ImportMvsp("pca\\olds1.txt", PCA_TYPE_OLD);
+	 Quiz[16]->ImportMvsp("pca\\youngs1.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[17]->ImportMvsp("pca\\alls2.txt", PCA_TYPE_ALL);
 	 Quiz[17]->ImportMvsp("pca\\males2.txt", PCA_TYPE_MALE);
 	 Quiz[17]->ImportMvsp("pca\\females2.txt", PCA_TYPE_FEMALE);
+	 Quiz[17]->ImportMvsp("pca\\olds2.txt", PCA_TYPE_OLD);
+	 Quiz[17]->ImportMvsp("pca\\youngs2.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[18]->ImportMvsp("pca\\alls3.txt", PCA_TYPE_ALL);
 	 Quiz[18]->ImportMvsp("pca\\males3.txt", PCA_TYPE_MALE);
 	 Quiz[18]->ImportMvsp("pca\\females3.txt", PCA_TYPE_FEMALE);
+	 Quiz[18]->ImportMvsp("pca\\olds3.txt", PCA_TYPE_OLD);
+	 Quiz[18]->ImportMvsp("pca\\youngs3.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[19]->ImportMvsp("pca\\alls4.txt", PCA_TYPE_ALL);
 	 Quiz[19]->ImportMvsp("pca\\males4.txt", PCA_TYPE_MALE);
 	 Quiz[19]->ImportMvsp("pca\\females4.txt", PCA_TYPE_FEMALE);
+	 Quiz[19]->ImportMvsp("pca\\olds4.txt", PCA_TYPE_OLD);
+	 Quiz[19]->ImportMvsp("pca\\youngs4.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[20]->ImportMvsp("pca\\alls5.txt", PCA_TYPE_ALL);
 	 Quiz[20]->ImportMvsp("pca\\males5.txt", PCA_TYPE_MALE);
 	 Quiz[20]->ImportMvsp("pca\\females5.txt", PCA_TYPE_FEMALE);
+	 Quiz[20]->ImportMvsp("pca\\olds5.txt", PCA_TYPE_OLD);
+	 Quiz[20]->ImportMvsp("pca\\youngs5.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[21]->ImportMvsp("pca\\alls6.txt", PCA_TYPE_ALL);
 	 Quiz[21]->ImportMvsp("pca\\males6.txt", PCA_TYPE_MALE);
 	 Quiz[21]->ImportMvsp("pca\\females6.txt", PCA_TYPE_FEMALE);
+	 Quiz[21]->ImportMvsp("pca\\olds6.txt", PCA_TYPE_OLD);
+	 Quiz[21]->ImportMvsp("pca\\youngs6.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[22]->ImportMvsp("pca\\alls7.txt", PCA_TYPE_ALL);
 	 Quiz[22]->ImportMvsp("pca\\males7.txt", PCA_TYPE_MALE);
 	 Quiz[22]->ImportMvsp("pca\\females7.txt", PCA_TYPE_FEMALE);
+	 Quiz[22]->ImportMvsp("pca\\olds7.txt", PCA_TYPE_OLD);
+	 Quiz[22]->ImportMvsp("pca\\youngs7.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[23]->ImportMvsp("pca\\alls8.txt", PCA_TYPE_ALL);
 	 Quiz[23]->ImportMvsp("pca\\males8.txt", PCA_TYPE_MALE);
 	 Quiz[23]->ImportMvsp("pca\\females8.txt", PCA_TYPE_FEMALE);
+	 Quiz[23]->ImportMvsp("pca\\olds8.txt", PCA_TYPE_OLD);
+	 Quiz[23]->ImportMvsp("pca\\youngs8.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[24]->ImportMvsp("pca\\alls9.txt", PCA_TYPE_ALL);
 	 Quiz[24]->ImportMvsp("pca\\males9.txt", PCA_TYPE_MALE);
 	 Quiz[24]->ImportMvsp("pca\\females9.txt", PCA_TYPE_FEMALE);
+	 Quiz[24]->ImportMvsp("pca\\olds9.txt", PCA_TYPE_OLD);
+	 Quiz[24]->ImportMvsp("pca\\youngs9.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[25]->ImportMvsp("pca\\alls10.txt", PCA_TYPE_ALL);
 	 Quiz[25]->ImportMvsp("pca\\males10.txt", PCA_TYPE_MALE);
 	 Quiz[25]->ImportMvsp("pca\\fems10.txt", PCA_TYPE_FEMALE);
+	 Quiz[25]->ImportMvsp("pca\\olds10.txt", PCA_TYPE_OLD);
+	 Quiz[25]->ImportMvsp("pca\\youngs10.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[26]->ImportMvsp("pca\\alls11.txt", PCA_TYPE_ALL);
 	 Quiz[26]->ImportMvsp("pca\\males11.txt", PCA_TYPE_MALE);
 	 Quiz[26]->ImportMvsp("pca\\fems11.txt", PCA_TYPE_FEMALE);
+	 Quiz[26]->ImportMvsp("pca\\olds11.txt", PCA_TYPE_OLD);
+	 Quiz[26]->ImportMvsp("pca\\youngs11.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[27]->ImportMvsp("pca\\alls12.txt", PCA_TYPE_ALL);
 	 Quiz[27]->ImportMvsp("pca\\males12.txt", PCA_TYPE_MALE);
 	 Quiz[27]->ImportMvsp("pca\\fems12.txt", PCA_TYPE_FEMALE);
+	 Quiz[27]->ImportMvsp("pca\\olds12.txt", PCA_TYPE_OLD);
+	 Quiz[27]->ImportMvsp("pca\\youngs12.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[28]->ImportMvsp("pca\\alln1.txt", PCA_TYPE_ALL);
 	 Quiz[28]->ImportMvsp("pca\\malen1.txt", PCA_TYPE_MALE);
 	 Quiz[28]->ImportMvsp("pca\\femalen1.txt", PCA_TYPE_FEMALE);
+	 Quiz[28]->ImportMvsp("pca\\oldn1.txt", PCA_TYPE_OLD);
+	 Quiz[28]->ImportMvsp("pca\\youngn1.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[29]->ImportMvsp("pca\\alln2.txt", PCA_TYPE_ALL);
 	 Quiz[29]->ImportMvsp("pca\\malen2.txt", PCA_TYPE_MALE);
 	 Quiz[29]->ImportMvsp("pca\\femalen2.txt", PCA_TYPE_FEMALE);
+	 Quiz[29]->ImportMvsp("pca\\oldn2.txt", PCA_TYPE_OLD);
+	 Quiz[29]->ImportMvsp("pca\\youngn2.txt", PCA_TYPE_YOUNG);
 
 	 Quiz[30]->ImportMvsp("pca\\alln3.txt", PCA_TYPE_ALL);
 	 Quiz[30]->ImportMvsp("pca\\malen3.txt", PCA_TYPE_MALE);
 	 Quiz[30]->ImportMvsp("pca\\femalen3.txt", PCA_TYPE_FEMALE);
+	 Quiz[30]->ImportMvsp("pca\\oldn3.txt", PCA_TYPE_OLD);
+	 Quiz[30]->ImportMvsp("pca\\youngn3.txt", PCA_TYPE_YOUNG);
 
 	printf("import aspie\r\n");
 
@@ -541,8 +661,12 @@ int main(int argc, char **argv)
 	  Quiz[29]->DsmCutoff("eval\\cutn2.htm", FALSE);
 	  Quiz[30]->DsmCutoff("eval\\cutn3.htm", FALSE);
 
-	printf("calc global\r\n");
+ 	printf("calc global\r\n");
 	 Quiz[30]->CalcGlobal();
+
+	 printf("axis corr\r\n");
+	 Quiz[30]->ExportGenderCorr("gender.txt");
+	 Quiz[30]->ExportAgeCorr("age.txt");
 
 	 printf("export intercorr\n");
 	 TQuiz::ExportHighestIntercorr("csv\\highcorr.csv");

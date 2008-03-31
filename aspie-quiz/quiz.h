@@ -301,6 +301,9 @@ public:
 	static void ExportAverageNegIntercorr(const char *filename);
 	static void ExportGroupIntercorr(const char *filename, int Group);
 
+    void ExportGenderCorr(const char *filename);
+    void ExportAgeCorr(const char *filename);
+
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 	void DsmCutoff(const char *filename, int All);
 
@@ -373,6 +376,9 @@ protected:
 	virtual int GetPcaCount();
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
+
+    void ExportCurrentGenderCorr(TFile &file);
+    void ExportCurrentAgeCorr(TFile &file);
 
 	void ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT]);
 	void GetDxData();

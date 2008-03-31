@@ -1484,13 +1484,13 @@ static int IsPca(TQuizRow *row, int PcaType)
                 return FALSE;
 
         case PCA_TYPE_YOUNG:
-			if (row->BirthYear >= 1980)
+			if (row->BirthYear >= 1975)
 				return TRUE;
 			else
 				return FALSE;
 
 		case PCA_TYPE_OLD:
-			if (row->BirthYear <= 1965)
+			if (row->BirthYear < 1975)
                 return TRUE;
 			else
 				return FALSE;

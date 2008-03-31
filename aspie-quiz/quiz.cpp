@@ -346,7 +346,7 @@ TQuiz::TQuiz(int Questions)
         UserInfo[i] = 0;
 
 	 for (i = 0; i < N; i++)
-    {
+	{
         Quiz[i].Text = "NO TEXT";
         Quiz[i].AsCount = 0;
         Quiz[i].AsMean = 0;
@@ -374,7 +374,7 @@ TQuiz::TQuiz(int Questions)
         {
             Quiz[i].Pca[g] = 0;
             Quiz[i].MalePca[g] = 0;
-            Quiz[i].FemalePca[g] = 0;
+			Quiz[i].FemalePca[g] = 0;
 				Quiz[i].YoungPca[g] = 0;
             Quiz[i].OldPca[g] = 0;
 			Quiz[i].AsPca[g] = 0;
@@ -682,7 +682,7 @@ int TQuiz::GetQuizN()
 *##########################################################################*/
 int TQuiz::GetQuizId(TQuiz *quiz)
 {
-    int cross;
+	int cross;
     int maxcross;
 
 	for (cross = 0; cross < MAX_CROSS; cross++)
@@ -766,7 +766,7 @@ void TQuiz::DefineGlobalId(int id, int GlobalId)
 {
     if (id >= 0 && id < N)
 		  if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
-            if (!GlobalArr[GlobalId])
+			if (!GlobalArr[GlobalId])
             {
         		GlobalArr[GlobalId] = TRUE;
         		Quiz[id].GlobalId = GlobalId;
@@ -990,7 +990,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                         }
                     }
                 }
-            }
+			}
 		  }
     }
 
@@ -1018,7 +1018,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
             }
         } 
 
-        if (!found)
+		if (!found)
             group = Quiz[i].MyGroup;
 
 		  sprintf(str, "  Quiz[%d].MyGroup = ", i);
@@ -1046,7 +1046,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
 				break;
 
             case GROUP_ASPIE_NVC:
-                file.Write("GROUP_ASPIE_NVC");
+				file.Write("GROUP_ASPIE_NVC");
                 break;
 
             case GROUP_NT_NVC:
@@ -1074,7 +1074,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 break;
 
             case GROUP_ENVIRONMENT:
-                file.Write("GROUP_ENVIRONMENT");
+				file.Write("GROUP_ENVIRONMENT");
 				break;
 
             case GROUP_NT_OBSESSION:
@@ -1102,7 +1102,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
         
         if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
         {            
-            quiz = GlobalTopQuiz[Quiz[i].GlobalId];
+			quiz = GlobalTopQuiz[Quiz[i].GlobalId];
 			q = GlobalTopQuestion[Quiz[i].GlobalId];
 			if (quiz)
 			{
@@ -1158,7 +1158,7 @@ void TQuiz::WriteSetupCross(const char *filename)
 
     for (i = 0; i < N; i++)
     {
-        found = FALSE;
+		found = FALSE;
         
         if (Quiz[i].GlobalId >= 0)
         {            
@@ -1326,7 +1326,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
     AswCnt = 0;
     NtwCnt = 0;
     
-    for (q = 0; q < N; q++)
+	for (q = 0; q < N; q++)
     {
         if (Asw[q])
             AswCnt++;
@@ -1354,7 +1354,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
 
 		if (Asw[q] && AswCnt > 15)
 		{
-	        Asw[q]--;
+			Asw[q]--;
 			err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
 			Asw[q]++;
 
@@ -1382,7 +1382,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
             }
         }
 
-        if (Ntw[q] && NtwCnt > 15)
+		if (Ntw[q] && NtwCnt > 15)
         {        
             Ntw[q]--;
             err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
@@ -1410,7 +1410,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
         else
         {
             if (BestIsInc)
-                Ntw[BestQ]++;
+				Ntw[BestQ]++;
 				else
                 Ntw[BestQ]--;
         }
@@ -1438,7 +1438,7 @@ void TQuiz::WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
 {
 	 int i;
 
-    printf("    static int Asw[200] = {\n");
+	printf("    static int Asw[200] = {\n");
 
     for (i = 0; i < 200; i++)
 	 {
@@ -1466,7 +1466,7 @@ void TQuiz::WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
         else
         {
             if (i % 10 == 9)
-                printf(",\n           ");
+				printf(",\n           ");
             else
                 printf(",");
         }
@@ -1662,7 +1662,7 @@ void TQuiz::DefineNt(char *Referer)
 		ref->NT = TRUE;
 		if (UseNtResult)
 		{
-    		NTRef.AsResult += ref->AsResult;
+			NTRef.AsResult += ref->AsResult;
     		NTRef.NtResult += ref->NtResult;
 	    	NTRef.Count += ref->Count;
 			NTRef.ResultNt += ref->ResultNt;
@@ -1858,7 +1858,7 @@ void TQuiz::ClearUsed(int Question)
     while (quiz)
     {
         quiz->Quiz[Question].Used = FALSE;
-        i = quiz->Quiz[Question].CrossInd;
+		i = quiz->Quiz[Question].CrossInd;
         quiz = quiz->Quiz[Question].CrossQuiz;
         Question = i;        
 	 }
@@ -1877,11 +1877,11 @@ void TQuiz::ClearUsed()
     int cross;
 
     for (i = 0; i < N; i++)
-		ClearUsed(i);
+		Quiz[i].Used = FALSE;
 
 	for (cross = 0; cross < MAX_CROSS; cross++)
-        if (CrossQuiz[cross])
-            CrossQuiz[cross]->ClearUsed();
+		if (CrossQuiz[cross])
+			CrossQuiz[cross]->Quiz[i].Used = FALSE;
 }
 
 /*##################  TQuiz::GetTopQuizCorr ##########################
@@ -1942,7 +1942,7 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
             for (q = 0; q < CrossQuiz[cross]->N; q++)
             {
                 CurrQuiz = CrossQuiz[cross];
-                CurrQuestion = q;
+				CurrQuestion = q;
 
                 while (CurrQuiz)
                 {
@@ -1970,7 +1970,7 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
 		}
     }
 
-    return TopQuiz;
+	return TopQuiz;
 }
 
 /*##################  TQuiz::GetTopGroupCorr ##########################
@@ -1998,7 +1998,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
 	 for (q = 0; q < N; q++)
     {
         if (Quiz[q].MyGroup == Group)
-        {
+		{
             CurrQuiz = this;
             CurrQuestion = q;
 
@@ -2054,7 +2054,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
                                 *Question = q;
                                 maxcorr = corr;
                             }
-                        }
+						}
 
                         i = CurrQuiz->Quiz[CurrQuestion].CrossInd;
                         CurrQuiz = CurrQuiz->Quiz[CurrQuestion].CrossQuiz;
@@ -2082,7 +2082,7 @@ TQuiz *TQuiz::GetHighestCorr(int MyQuestion, int *Question)
     int i;
     long double corr;
     long double maxcorr;
-    
+
     maxcorr = 0;
     MaxQuiz = 0;
 
@@ -2614,7 +2614,7 @@ void TQuiz::Calculate()
 							ival2--;
 
     		    		if (csd[q1] != 0.0 && csd[q2] != 0.0)
-    		    		{
+						{
     		    			count++;
     
             			    zx = ((long double)ival1 - mean[q1]) / csd[q1];
@@ -2646,7 +2646,7 @@ void TQuiz::Calculate()
 	}
 
 #endif
-	
+
 }
 
 /*##################  TQuiz::CalcGlobal ##########################
@@ -2687,7 +2687,7 @@ void TQuiz::CalcGlobal()
 		return;
 
 	DsmAutism.Correlate();
-	 DsmAs.Correlate();
+	DsmAs.Correlate();
 	DsmAdd.Correlate();
 	DsmTs.Correlate();
 	DsmHyperlexia.Correlate();
@@ -2697,7 +2697,7 @@ void TQuiz::CalcGlobal()
 	DsmOCD.Correlate();
 	DsmODD.Correlate();
 	DsmSynaesthesia.Correlate();
-	 DsmPA.Correlate();
+	DsmPA.Correlate();
 	DsmDysgraphia.Correlate();
 	DsmBipolar.Correlate();
 	DsmSchizophrenia.Correlate();
@@ -13980,3 +13980,211 @@ void TQuiz::ExportGroupIntercorr(const char *filename, int Group)
 	}
 }
 
+
+/*##################  TQuiz::ExportCurrentGenderCorr ##########################
+*   Purpose....: Export gender correlations for current quiz         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportCurrentGenderCorr(TFile &file)
+{
+    int count;
+	int axis;
+	int q;
+	long double rsum;
+	long double sum1;
+	long double sum2;
+	long double mean1;
+	long double mean2;
+	long double sd1;
+	long double sd2;
+	long double zx;
+    long double zy;
+    int val[3];
+	char str[80];
+
+	count = GetQuizN();
+
+    for (axis = 0; axis < 3; axis++)
+    {
+
+        sum1 = 0;
+        sum2 = 0;
+
+    	for (q = 0; q < count; q++)
+	    {
+    	    sum1 += Quiz[q].MalePca[axis];
+            sum2 += Quiz[q].FemalePca[axis];
+        }
+
+        mean1 = sum1 / count;
+        mean2 = sum2 / count;
+
+		sum1 = 0;
+		sum2 = 0;
+
+		for (q = 0; q < count; q++)
+		{
+            rsum = mean1 - Quiz[q].MalePca[axis];
+            sum1 += rsum * rsum;
+
+            rsum = mean2 - Quiz[q].FemalePca[axis];             
+			sum2 += rsum * rsum;
+		}
+
+		sd1 = sqrtl(sum1 / (count - 1));
+		sd2 = sqrtl(sum2 / (count - 1));
+
+		rsum = 0;
+
+		if (sd1 > 0 && sd2 > 0)
+		{
+			for (q = 0; q < count; q++)
+			{
+				zx = (Quiz[q].MalePca[axis] - mean1) / sd1;
+				zy = (Quiz[q].FemalePca[axis] - mean2) / sd2;
+				rsum += zx * zy;
+			}
+		}
+
+		rsum = rsum / (count - 1);
+		
+        if (rsum >= 0.0)
+			val[axis] = round(100 * rsum);
+		else
+			val[axis] = round(-100 * rsum);
+	}
+
+    sprintf(str, "0.%02d, 0.%02d, 0.%02d\r\n", val[0], val[1], val[2]);
+    file.Write(str);
+}
+
+/*##################  TQuiz::ExportGenderCorr ##########################
+*   Purpose....: Export gender correlations         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportGenderCorr(const char *filename)
+{
+    int cross;
+    TQuiz *quiz;
+	TFile file(filename, 0);
+
+    for (cross = 0; cross < MAX_CROSS; cross++)
+    {
+        quiz = CrossQuiz[cross];
+		if (quiz)
+		    quiz->ExportCurrentGenderCorr(file);
+	}
+
+    ExportCurrentGenderCorr(file);    
+}
+
+/*##################  TQuiz::ExportCurrentAgeCorr ##########################
+*   Purpose....: Export age correlations for current quiz         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportCurrentAgeCorr(TFile &file)
+{
+	int count;
+	int axis;
+	int q;
+	long double rsum;
+	long double sum1;
+	long double sum2;
+	long double mean1;
+	long double mean2;
+	long double sd1;
+	long double sd2;
+	long double zx;
+	long double zy;
+	int val[3];
+	char str[80];
+
+	count = GetQuizN();
+
+	for (axis = 0; axis < 3; axis++)
+	{
+
+		sum1 = 0;
+		sum2 = 0;
+
+		for (q = 0; q < count; q++)
+		{
+			sum1 += Quiz[q].OldPca[axis];
+			sum2 += Quiz[q].YoungPca[axis];
+		}
+
+		mean1 = sum1 / count;
+		mean2 = sum2 / count;
+
+		sum1 = 0;
+		sum2 = 0;
+
+		for (q = 0; q < count; q++)
+		{
+		    rsum = mean1 - Quiz[q].OldPca[axis];
+			sum1 += rsum * rsum;
+			
+            rsum = mean2 - Quiz[q].YoungPca[axis];
+			sum2 += rsum * rsum;
+		}
+
+		sd1 = sqrtl(sum1 / (count - 1));
+		sd2 = sqrtl(sum2 / (count - 1));
+
+		rsum = 0;
+
+		if (sd1 > 0 && sd2 > 0)
+		{
+			for (q = 0; q < count; q++)
+			{
+				zx = (Quiz[q].OldPca[axis] - mean1) / sd1;
+				zy = (Quiz[q].YoungPca[axis] - mean2) / sd2;
+				rsum += zx * zy;
+			}
+		}
+
+		rsum = rsum / (count - 1);
+		
+        if (rsum >= 0.0)
+			val[axis] = round(100 * rsum);
+		else
+			val[axis] = round(-100 * rsum);
+	}
+
+	sprintf(str, "0.%02d, 0.%02d, 0.%02d\r\n", val[0], val[1], val[2]);
+	file.Write(str);
+
+}
+
+
+/*##################  TQuiz::ExportAgeCorr ##########################
+*   Purpose....: Export age correlations         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportAgeCorr(const char *filename)
+{
+    int cross;
+    TQuiz *quiz;
+	TFile file(filename, 0);
+
+    for (cross = 0; cross < MAX_CROSS; cross++)
+    {
+        quiz = CrossQuiz[cross];
+		if (quiz)
+		    quiz->ExportCurrentAgeCorr(file);
+	}
+
+    ExportCurrentAgeCorr(file);    
+}
