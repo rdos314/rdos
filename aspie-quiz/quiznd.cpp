@@ -914,54 +914,51 @@ void TQuizNd::LoadReferers()
 		if (Row.Autism == 1 || Row.Aspie == 1)
 			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.TS == 1)
-			UpdateReferer(&SelfTsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+		if (Row.Autism == 2)
+			UpdateReferer(&AutismRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.ADHD == 1)
-			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
-
-		if (Row.Aspie == 2 || Row.Autism == 2)
-			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+		if (Row.Aspie == 2)
+			UpdateReferer(&AsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.TS == 2)
-			UpdateReferer(&DxTsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&TsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD == 2)
-			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&AddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 //
 // uncomment to exclude autism/AS from ND-diagnosis
 //
 //		if (Row.Aspie == 0 && Row.Autism == 0)
 		{
-			if (Row.Hyperlexia)
+			if (Row.Hyperlexia == 2)
 				UpdateReferer(&HyperlexiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-			if (Row.Dyspraxia)
+			if (Row.Dyspraxia == 2)
 				UpdateReferer(&DyspraxiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-			if (Row.Dyslexia)
+			if (Row.Dyslexia == 2)
 				UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-			if (Row.Dyscalculia)
+			if (Row.Dyscalculia == 2)
 				UpdateReferer(&DyscalculiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-			if (Row.OCD)
+			if (Row.OCD == 2)
 				UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-			if (Row.ODD)
+			if (Row.ODD == 2)
 				UpdateReferer(&ODDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-			if (Row.Synaesthesia)
+			if (Row.Synaesthesia == 2)
 				UpdateReferer(&SynaesthesiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-			if (Row.PA)
+			if (Row.PA == 2)
 				UpdateReferer(&PARef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-			if (Row.Dysgraphia)
+			if (Row.Dysgraphia == 2)
 				UpdateReferer(&DysgraphiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-			if (Row.Bipolar)
+			if (Row.Bipolar == 2)
 				UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 		}
 

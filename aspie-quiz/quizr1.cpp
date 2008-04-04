@@ -624,14 +624,14 @@ void TQuizR1::LoadReferers()
 		if (Row.Autism == 1 || Row.Aspie == 1)
 			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.ADHD == 1)
-			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+		if (Row.Autism == 2)
+			UpdateReferer(&AutismRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Aspie == 2 || Row.Autism == 2)
-			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+		if (Row.Aspie == 2)
+			UpdateReferer(&AsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD == 2)
-			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&AddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Autism || Row.Aspie)
 		{

@@ -522,27 +522,19 @@ void TQuizII::LoadReferers()
 		switch (Row.Diagnos)
 		{
 			case DDX_AS:
-				ref = &DxAsRef;
+				ref = &AsRef;
 				break;
 
 			case DDX_TS:
-				ref = &DxTsRef;
+				ref = &TsRef;
 				break;
 
 			case DDX_ADD:
-				ref = &DxAddRef;
+				ref = &AddRef;
 				break;
 
 			case SELF_AS:
 				ref = &SelfAsRef;
-				break;
-
-			case SELF_TS:
-				ref = &SelfTsRef;
-				break;
-
-			case SELF_ADD:
-				ref = &SelfAddRef;
 				break;
 
 			default:

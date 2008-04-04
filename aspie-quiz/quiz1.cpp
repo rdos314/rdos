@@ -523,11 +523,11 @@ void TQuizI::LoadReferers()
 		switch (Row.Diagnos)
 		{
 			case DDX_AS:
-				ref = &DxAsRef;
+				ref = &AsRef;
 				break;
 
 			case DDX_ADD:
-				ref = &DxAddRef;
+				ref = &AddRef;
 				break;
 
 			default:

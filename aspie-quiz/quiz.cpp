@@ -293,14 +293,13 @@ TQuiz::TQuiz(int Questions)
 	 NoRef("", "No referrer"),
      NTRef("", "NT control group"),
      AspieRef("", "Aspie control group"),
-     DxAsRef("", "Diagnosed AS/HFA/PDD"),
-     DxTsRef("", "Diagnosed Tourette"),
-     DxAddRef("", "Diagnosed ADD/ADHD"),
-     SelfAsRef("", "Self-diagnosed AS/HFA/PDD"),
-     SelfTsRef("", "Self-diagnosed Tourette"),
-     SelfAddRef("", "Self-diagnosed ADD/ADHD"),
-     MaleAsRef("", "Male AS/HFA/PDD"),
-     FemaleAsRef("", "Female AS/HFA/PDD"),
+	 AutismRef("", "Diagnosed Autism"),
+	 AsRef("", "Diagnosed AS/HFA/PDD"),
+	 TsRef("", "Diagnosed Tourette"),
+	 AddRef("", "Diagnosed ADD/ADHD"),
+	 SelfAsRef("", "Self-diagnosed AS/HFA/PDD"),
+	 MaleAsRef("", "Male AS/HFA/PDD"),
+	 FemaleAsRef("", "Female AS/HFA/PDD"),
 	  MaleNonAsRef("", "Male non-AS/HFA/PDD"),
 	 FemaleNonAsRef("", "Female non-AS/HFA/PDD"),
 	 HyperlexiaRef("", "Hyperlexia"),
@@ -4495,12 +4494,11 @@ void TQuiz::WriteReferers(const char *filename)
 
 	file.Write("</tr>");
 
-	WriteReferer(file, &DxAsRef);
-	WriteReferer(file, &DxTsRef);
-	WriteReferer(file, &DxAddRef);
+	WriteReferer(file, &AutismRef);
+	WriteReferer(file, &AsRef);
+	WriteReferer(file, &TsRef);
+	WriteReferer(file, &AddRef);
 	WriteReferer(file, &SelfAsRef);
-	WriteReferer(file, &SelfTsRef);
-	WriteReferer(file, &SelfAddRef);
 	WriteReferer(file, &MaleAsRef);
 	WriteReferer(file, &FemaleAsRef);
 	WriteReferer(file, &MaleNonAsRef);

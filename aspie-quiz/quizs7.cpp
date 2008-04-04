@@ -892,37 +892,37 @@ void TQuizS7::LoadReferers()
 		if (Row.Autism == 1 || Row.Aspie == 1)
 			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.ADHD == 1)
-			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+		if (Row.Autism == 2)
+			UpdateReferer(&AutismRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Aspie == 2 || Row.Autism == 2)
-			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+		if (Row.Aspie == 2)
+			UpdateReferer(&AsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.ADHD >= 1)
-			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+		if (Row.ADHD == 2)
+			UpdateReferer(&AddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.TS >= 1)
-			UpdateReferer(&DxTsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+		if (Row.TS == 2)
+			UpdateReferer(&TsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Dyslexia >= 1)
+		if (Row.Dyslexia == 2)
 			UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Dyscalculia >= 1)
+		if (Row.Dyscalculia == 2)
 			UpdateReferer(&DyscalculiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.OCD >= 1)
+		if (Row.OCD == 2)
 			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.ODD >= 1)
+		if (Row.ODD == 2)
 			UpdateReferer(&ODDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Bipolar >= 1)
+		if (Row.Bipolar == 2)
 			UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Schizophrenia >= 1)
+		if (Row.Schizophrenia == 2)
 			UpdateReferer(&SchizophreniaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Social >= 1)
+		if (Row.Social == 2)
 			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Autism || Row.Aspie)

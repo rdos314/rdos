@@ -833,22 +833,22 @@ void TQuizN2::LoadReferers()
 		if (Row.Aspie == 1)
 			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.ADHD == 1)
-			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
-
 		if (Row.Aspie == 2)
-			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&AsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.ADHD >= 1)
-			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+		if (Row.ADHD == 2)
+			UpdateReferer(&AddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Dyslexia >= 1)
+		if (Row.OCD == 2)
+			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+
+		if (Row.Dyslexia == 2)
 			UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Bipolar >= 1)
+		if (Row.Bipolar == 2)
 			UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Social >= 1)
+		if (Row.Social == 2)
 			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Aspie)

@@ -635,14 +635,14 @@ void TQuiz5::LoadReferers()
 		if (Row.Autism == 1 || Row.Aspie == 1)
 			ref = &SelfAsRef;
 
-		if (Row.ADHD == 1)
-			ref = &SelfAddRef;
-
-		if (Row.Aspie == 2 || Row.Autism == 2)
-			ref = &DxAsRef;
-
 		if (Row.ADHD == 2)
-			ref = &DxAddRef;
+			ref = &AddRef;
+
+		if (Row.Autism == 2)
+			ref = &AutismRef;
+
+		if (Row.Aspie == 2)
+			ref = &AsRef;
 
 		if (ref)
 			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
