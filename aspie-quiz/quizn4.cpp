@@ -112,7 +112,7 @@ TQuizN4::TQuizN4(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3);
 	LoadPopulations();
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -964,9 +964,6 @@ void TQuizN4::LoadReferers()
 		if (Row.OCD == 2)
 			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Dyslexia == 2)
-			UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
-
 		if (Row.Bipolar == 2)
 			UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
@@ -1032,7 +1029,6 @@ void TQuizN4::LoadPopulations()
 
 					DsmAs.Add(Row.Aspie, id, score);
 					DsmAdd.Add(Row.ADHD, id, score);
-					DsmDyslexia.Add(Row.Dyslexia, id, score);
 					DsmBipolar.Add(Row.Bipolar, id, score);
 					DsmSocialPhobia.Add(Row.Social, id, score);
 				}
@@ -1068,15 +1064,6 @@ void TQuizN4::LoadPopulations()
 
 		if (Row.OCD == 0)
 			DxArr[DX_OCD] = DX_STATE_NO;
-
-		if (Row.Dyslexia == 2)
-			DxArr[DX_DYSLEXIA] = DX_STATE_YES;
-
-		if (Row.Dyslexia == 1)
-			DxArr[DX_DYSLEXIA] = DX_STATE_SELF;
-
-		if (Row.Dyslexia == 0)
-			DxArr[DX_DYSLEXIA] = DX_STATE_NO;
 
 		if (Row.Bipolar == 2)
 			DxArr[DX_BIPOLAR] = DX_STATE_YES;
@@ -1133,9 +1120,6 @@ void TQuizN4::LoadPopulations()
 			else
 				AddFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 		}
-
-		if (Row.Dyslexia >= 1)
-			Dyslexia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 
 		if (Row.Bipolar >= 1)
 			Bipolar.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);

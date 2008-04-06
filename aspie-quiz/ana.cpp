@@ -373,6 +373,13 @@ int main(int argc, char **argv)
 	Quiz[30]->ExportExcelCase("pca\\youngn3.dat", PCA_TYPE_YOUNG);
 	Quiz[30]->ExportExcelCase("pca\\oldn3.dat", PCA_TYPE_OLD);
 
+	printf("alln4\r\n");
+	 Quiz[31]->ExportExcelCase("pca\\alln4.dat", PCA_TYPE_ALL);
+	 Quiz[31]->ExportExcelCase("pca\\malen4.dat", PCA_TYPE_MALE);
+	 Quiz[31]->ExportExcelCase("pca\\femalen4.dat", PCA_TYPE_FEMALE);
+	Quiz[31]->ExportExcelCase("pca\\youngn4.dat", PCA_TYPE_YOUNG);
+	Quiz[31]->ExportExcelCase("pca\\oldn4.dat", PCA_TYPE_OLD);
+
 
 	printf("aspie\r\n");
 
@@ -410,6 +417,7 @@ int main(int argc, char **argv)
 
 	 Quiz[29]->ExportExcelAspie("pca\\aspien2.dat");
 	 Quiz[30]->ExportExcelAspie("pca\\aspien3.dat");
+	 Quiz[31]->ExportExcelAspie("pca\\aspien4.dat");
 
 	printf("import\r\n");
 	 Quiz[0]->ImportMvsp("pca\\all1.txt", PCA_TYPE_ALL);
@@ -594,6 +602,12 @@ int main(int argc, char **argv)
 	 Quiz[30]->ImportMvsp("pca\\oldn3.txt", PCA_TYPE_OLD);
 	 Quiz[30]->ImportMvsp("pca\\youngn3.txt", PCA_TYPE_YOUNG);
 
+	 Quiz[31]->ImportMvsp("pca\\alln4.txt", PCA_TYPE_ALL);
+	 Quiz[31]->ImportMvsp("pca\\malen4.txt", PCA_TYPE_MALE);
+	 Quiz[31]->ImportMvsp("pca\\femalen4.txt", PCA_TYPE_FEMALE);
+	 Quiz[31]->ImportMvsp("pca\\oldn4.txt", PCA_TYPE_OLD);
+	 Quiz[31]->ImportMvsp("pca\\youngn4.txt", PCA_TYPE_YOUNG);
+
 	printf("import aspie\r\n");
 
 	 Quiz[0]->ImportMvspAspie("pca\\aspie1.txt");
@@ -627,9 +641,10 @@ int main(int argc, char **argv)
 	 Quiz[28]->ImportMvspAspie("pca\\aspien1.txt");
 	 Quiz[29]->ImportMvspAspie("pca\\aspien2.txt");
 	 Quiz[30]->ImportMvspAspie("pca\\aspien3.txt");
+	 Quiz[31]->ImportMvspAspie("pca\\aspien4.txt");
 
 	 printf("Cutoff\r\n");
-	  Quiz[30]->DsmCutoff("eval\\cutoff.htm", TRUE);
+	  Quiz[31]->DsmCutoff("eval\\cutoff.htm", TRUE);
 
 	  Quiz[0]->DsmCutoff("eval\\cut1.htm", FALSE);
 	  Quiz[1]->DsmCutoff("eval\\cut2.htm", FALSE);
@@ -662,13 +677,14 @@ int main(int argc, char **argv)
 	  Quiz[28]->DsmCutoff("eval\\cutn1.htm", FALSE);
 	  Quiz[29]->DsmCutoff("eval\\cutn2.htm", FALSE);
 	  Quiz[30]->DsmCutoff("eval\\cutn3.htm", FALSE);
+	  Quiz[31]->DsmCutoff("eval\\cutn4.htm", FALSE);
 
 	printf("calc global\r\n");
-	 Quiz[30]->CalcGlobal();
+	 Quiz[31]->CalcGlobal();
 
 	 printf("axis corr\r\n");
-	 Quiz[30]->ExportGenderCorr("gender.txt");
-	 Quiz[30]->ExportAgeCorr("age.txt");
+	 Quiz[31]->ExportGenderCorr("gender.txt");
+	 Quiz[31]->ExportAgeCorr("age.txt");
 
 	 printf("export intercorr\n");
 	 TQuiz::ExportHighestIntercorr("csv\\highcorr.csv");
@@ -722,6 +738,7 @@ int main(int argc, char **argv)
 
 	 Quiz[29]->WriteReferers("eval\\refn2.htm");
 	 Quiz[30]->WriteReferers("eval\\refn3.htm");
+	 Quiz[31]->WriteReferers("eval\\refn4.htm");
 
 	printf("details\r\n");
 
@@ -759,6 +776,7 @@ int main(int argc, char **argv)
 
 	 Quiz[29]->WriteSumaryTable("eval\\quizn2.htm", FALSE);
 	 Quiz[30]->WriteSumaryTable("eval\\quizn3.htm", FALSE);
+	 Quiz[31]->WriteSumaryTable("eval\\quizn4.htm", FALSE);
 
 	printf("rel\r\n");
 
@@ -796,38 +814,39 @@ int main(int argc, char **argv)
 
 	 Quiz[29]->WriteIntercorr("eval\\reln2.htm");
 	 Quiz[30]->WriteIntercorr("eval\\reln3.htm");
+	 Quiz[31]->WriteIntercorr("eval\\reln4.htm");
 
 	printf("group\r\n");
-	 Quiz[30]->WriteGroupTable("eval\\group.htm", TRUE);
+	 Quiz[31]->WriteGroupTable("eval\\group.htm", TRUE);
 	printf("groupcorr\r\n");
-	 Quiz[30]->WriteGroupCorrTable("eval\\groupcorr.htm");
+	 Quiz[31]->WriteGroupCorrTable("eval\\groupcorr.htm");
 	printf("pcaload\r\n");
-	 Quiz[30]->WritePcaLoadTable("eval\\pcaload.htm");
+	 Quiz[31]->WritePcaLoadTable("eval\\pcaload.htm");
 
 	printf("avgcorr\r\n");
-	 Quiz[30]->WriteAverageGroupCorrTable("eval\\avgcorr.htm");
+	 Quiz[31]->WriteAverageGroupCorrTable("eval\\avgcorr.htm");
 	printf("avgpca\r\n");
-	 Quiz[30]->WriteAveragePcaTable("eval\\avgpca.htm");
+	 Quiz[31]->WriteAveragePcaTable("eval\\avgpca.htm");
 	printf("avg\r\n");
-	 Quiz[30]->WriteAveragePcaCorrTable("eval\\avg.htm");
+	 Quiz[31]->WriteAveragePcaCorrTable("eval\\avg.htm");
 
 	printf("pcacorr\r\n");
-	 Quiz[30]->WritePcaCorrTable("eval\\pcacorr.htm");
+	 Quiz[31]->WritePcaCorrTable("eval\\pcacorr.htm");
 
 	printf("axisload\r\n");
-	 Quiz[30]->WriteAxisLoadTable("eval\\axisload.htm");
+	 Quiz[31]->WriteAxisLoadTable("eval\\axisload.htm");
 
 	printf("avgaxis\r\n");
-	 Quiz[30]->WriteAverageAxisTable("eval\\avgaxis.htm");
+	 Quiz[31]->WriteAverageAxisTable("eval\\avgaxis.htm");
 
 	printf("dxload\r\n");
-	 Quiz[30]->WriteDxLoadTable("eval\\dxload.htm");
+	 Quiz[31]->WriteDxLoadTable("eval\\dxload.htm");
 
 	printf("avgdx\r\n");
-	 Quiz[30]->WriteAverageDxTable("eval\\avgdx.htm");
+	 Quiz[31]->WriteAverageDxTable("eval\\avgdx.htm");
 
 	printf("main\r\n");
-	 Quiz[30]->WriteLinkReport("eval\\index.htm");
+	 Quiz[31]->WriteLinkReport("eval\\index.htm");
 
 //#ifdef ALL
 	printf("special reports\r\n");
@@ -836,6 +855,7 @@ int main(int argc, char **argv)
 	 Quiz[5]->WriteRace("eval\\race6.htm");
 	 Quiz[20]->WriteRace("eval\\races5.htm");
 	 Quiz[30]->WriteRace("eval\\racen3.htm");
+	 Quiz[31]->WriteRace("eval\\racen4.htm");
 
 	 Quiz[6]->WriteHair("eval\\hair7.htm");
 	 Quiz[6]->WriteEye("eval\\eye7.htm");
@@ -871,7 +891,8 @@ int main(int argc, char **argv)
 	 Quiz[28]->WriteRetest("eval\\retestn1.htm");
 	 Quiz[29]->WriteRetest("eval\\retestn2.htm");
 	 Quiz[30]->WriteRetest("eval\\retestn3.htm");
-	 Quiz[30]->WriteVersionRetest("eval\\vervar.htm");
+	 Quiz[31]->WriteRetest("eval\\retestn4.htm");
+	 Quiz[31]->WriteVersionRetest("eval\\vervar.htm");
 
 	printf("imgrate\r\n");
 #ifdef ALL
@@ -917,6 +938,7 @@ int main(int argc, char **argv)
 
 	 Quiz[29]->WritePcaGroupCorr("eval\\pcan2.htm");
 	 Quiz[30]->WritePcaGroupCorr("eval\\pcan3.htm");
+	 Quiz[31]->WritePcaGroupCorr("eval\\pcan4.htm");
 
 //	 Quiz[19]->WriteLSAS("");
 //	 Quiz[23]->WriteMDQ("");
@@ -963,6 +985,7 @@ int main(int argc, char **argv)
 
 	 Quiz[29]->ExportHistogram("csv\\alln2.csv", POP_TYPE_ALL, 2, FALSE);
 	 Quiz[30]->ExportHistogram("csv\\alln3.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[31]->ExportHistogram("csv\\alln4.csv", POP_TYPE_ALL, 2, FALSE);
 
 #ifdef CONV
 	printf("conv headers\r\n");
@@ -1002,42 +1025,42 @@ int main(int argc, char **argv)
 	 Quiz[31]->WriteGroupWeighting("convn4.h");
 
 	printf("type histograms\r\n");
-	 Quiz[30]->ExportDiffHistogram("csv\\all.csv", POP_TYPE_ALL);
+	 Quiz[31]->ExportDiffHistogram("csv\\all.csv", POP_TYPE_ALL);
 
-	 Quiz[30]->ExportDiffHistogram("csv\\autism.csv", POP_TYPE_AUTISM);
-	 Quiz[30]->ExportDiffHistogram("csv\\as.csv", POP_TYPE_AS);
-	 Quiz[30]->ExportDiffHistogram("csv\\nt.csv", POP_TYPE_NT_CONTROL);
-	 Quiz[30]->ExportDiffHistogram("csv\\soc.csv", POP_TYPE_SOCIAL_PHOBIA);
-	 Quiz[30]->ExportDiffHistogram("csv\\add.csv", POP_TYPE_ADD);
-	 Quiz[30]->ExportDiffHistogram("csv\\ts.csv", POP_TYPE_TS);
-	 Quiz[30]->ExportDiffHistogram("csv\\pa.csv", POP_TYPE_PA);
-	 Quiz[30]->ExportDiffHistogram("csv\\bip.csv", POP_TYPE_BIPOLAR);
-	 Quiz[30]->ExportDiffHistogram("csv\\schizo.csv", POP_TYPE_SCHIZOPHRENIA);
-	 Quiz[30]->ExportDiffHistogram("csv\\syn.csv", POP_TYPE_SYNAESTHESIA);
-	 Quiz[30]->ExportDiffHistogram("csv\\dysl.csv", POP_TYPE_DYSLEXIA);
-	 Quiz[30]->ExportDiffHistogram("csv\\dysc.csv", POP_TYPE_DYSCALCULIA);
-	 Quiz[30]->ExportDiffHistogram("csv\\dysg.csv", POP_TYPE_DYSGRAPHIA);
-	 Quiz[30]->ExportDiffHistogram("csv\\ocd.csv", POP_TYPE_OCD);
-	 Quiz[30]->ExportDiffHistogram("csv\\odd.csv", POP_TYPE_ODD);
-	 Quiz[30]->ExportDiffHistogram("csv\\dysp.csv", POP_TYPE_DYSPRAXIA);
+	 Quiz[31]->ExportDiffHistogram("csv\\autism.csv", POP_TYPE_AUTISM);
+	 Quiz[31]->ExportDiffHistogram("csv\\as.csv", POP_TYPE_AS);
+	 Quiz[31]->ExportDiffHistogram("csv\\nt.csv", POP_TYPE_NT_CONTROL);
+	 Quiz[31]->ExportDiffHistogram("csv\\soc.csv", POP_TYPE_SOCIAL_PHOBIA);
+	 Quiz[31]->ExportDiffHistogram("csv\\add.csv", POP_TYPE_ADD);
+	 Quiz[31]->ExportDiffHistogram("csv\\ts.csv", POP_TYPE_TS);
+	 Quiz[31]->ExportDiffHistogram("csv\\pa.csv", POP_TYPE_PA);
+	 Quiz[31]->ExportDiffHistogram("csv\\bip.csv", POP_TYPE_BIPOLAR);
+	 Quiz[31]->ExportDiffHistogram("csv\\schizo.csv", POP_TYPE_SCHIZOPHRENIA);
+	 Quiz[31]->ExportDiffHistogram("csv\\syn.csv", POP_TYPE_SYNAESTHESIA);
+	 Quiz[31]->ExportDiffHistogram("csv\\dysl.csv", POP_TYPE_DYSLEXIA);
+	 Quiz[31]->ExportDiffHistogram("csv\\dysc.csv", POP_TYPE_DYSCALCULIA);
+	 Quiz[31]->ExportDiffHistogram("csv\\dysg.csv", POP_TYPE_DYSGRAPHIA);
+	 Quiz[31]->ExportDiffHistogram("csv\\ocd.csv", POP_TYPE_OCD);
+	 Quiz[31]->ExportDiffHistogram("csv\\odd.csv", POP_TYPE_ODD);
+	 Quiz[31]->ExportDiffHistogram("csv\\dysp.csv", POP_TYPE_DYSPRAXIA);
 
 	 TQuiz::ExportBirthMonthHistogram("csv\\birth.csv");
 
 	printf("DSM\r\n");
-	 Quiz[30]->WriteDsmReport("eval\\autism.htm", POP_TYPE_AUTISM);
-	 Quiz[30]->WriteDsmReport("eval\\as.htm", POP_TYPE_AS);
-	 Quiz[30]->WriteDsmReport("eval\\add.htm", POP_TYPE_ADD);
-	 Quiz[30]->WriteDsmReport("eval\\ts.htm", POP_TYPE_TS);
-	 Quiz[30]->WriteDsmReport("eval\\dysp.htm", POP_TYPE_DYSPRAXIA);
-	 Quiz[30]->WriteDsmReport("eval\\dysl.htm", POP_TYPE_DYSLEXIA);
-	 Quiz[30]->WriteDsmReport("eval\\dysc.htm", POP_TYPE_DYSCALCULIA);
-	 Quiz[30]->WriteDsmReport("eval\\ocd.htm", POP_TYPE_OCD);
-	 Quiz[30]->WriteDsmReport("eval\\odd.htm", POP_TYPE_ODD);
-	 Quiz[30]->WriteDsmReport("eval\\pa.htm", POP_TYPE_PA);
-	 Quiz[30]->WriteDsmReport("eval\\dysg.htm", POP_TYPE_DYSGRAPHIA);
-	 Quiz[30]->WriteDsmReport("eval\\bip.htm", POP_TYPE_BIPOLAR);
-	 Quiz[30]->WriteDsmReport("eval\\schizo.htm", POP_TYPE_SCHIZOPHRENIA);
-	 Quiz[30]->WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
+	 Quiz[31]->WriteDsmReport("eval\\autism.htm", POP_TYPE_AUTISM);
+	 Quiz[31]->WriteDsmReport("eval\\as.htm", POP_TYPE_AS);
+	 Quiz[31]->WriteDsmReport("eval\\add.htm", POP_TYPE_ADD);
+	 Quiz[31]->WriteDsmReport("eval\\ts.htm", POP_TYPE_TS);
+	 Quiz[31]->WriteDsmReport("eval\\dysp.htm", POP_TYPE_DYSPRAXIA);
+	 Quiz[31]->WriteDsmReport("eval\\dysl.htm", POP_TYPE_DYSLEXIA);
+	 Quiz[31]->WriteDsmReport("eval\\dysc.htm", POP_TYPE_DYSCALCULIA);
+	 Quiz[31]->WriteDsmReport("eval\\ocd.htm", POP_TYPE_OCD);
+	 Quiz[31]->WriteDsmReport("eval\\odd.htm", POP_TYPE_ODD);
+	 Quiz[31]->WriteDsmReport("eval\\pa.htm", POP_TYPE_PA);
+	 Quiz[31]->WriteDsmReport("eval\\dysg.htm", POP_TYPE_DYSGRAPHIA);
+	 Quiz[31]->WriteDsmReport("eval\\bip.htm", POP_TYPE_BIPOLAR);
+	 Quiz[31]->WriteDsmReport("eval\\schizo.htm", POP_TYPE_SCHIZOPHRENIA);
+	 Quiz[31]->WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
@@ -1060,13 +1083,13 @@ int main(int argc, char **argv)
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 
 	printf("SQL\r\n");
-	Quiz[30]->ExportGlobalSql("db\\global.sql");
-	Quiz[30]->ExportQuizVerSql("db\\quizver.sql");
-	Quiz[30]->ExportGroupSql("db\\group.sql");
-	Quiz[30]->ExportPopTypeSql("db\\poptype.sql");
-	Quiz[30]->ExportGlobalCorrSql("db\\gcorr.sql");
-	Quiz[30]->ExportGlobalAxisSql("db\\gaxis.sql");
-	Quiz[30]->ExportQuizCatPopSql("db\\qcatpop.sql");
-	Quiz[30]->ExportQuizGlobalSql("db\\qglobal.sql");
+	Quiz[31]->ExportGlobalSql("db\\global.sql");
+	Quiz[31]->ExportQuizVerSql("db\\quizver.sql");
+	Quiz[31]->ExportGroupSql("db\\group.sql");
+	Quiz[31]->ExportPopTypeSql("db\\poptype.sql");
+	Quiz[31]->ExportGlobalCorrSql("db\\gcorr.sql");
+	Quiz[31]->ExportGlobalAxisSql("db\\gaxis.sql");
+	Quiz[31]->ExportQuizCatPopSql("db\\qcatpop.sql");
+	Quiz[31]->ExportQuizGlobalSql("db\\qglobal.sql");
 }
 

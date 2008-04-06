@@ -11,13 +11,11 @@ struct TQuizRow
 	 char Lang;
 	char Aspie;
 	char ADHD;
-	char Dyslexia;
 	char OCD;
 	char Bipolar;
 	char Social;
 	int PredAs;
 	int PredAdd;
-	int PredDyslexia;
 	int PredOcd;
 	int PredSocial;
 	char Referer[100];
