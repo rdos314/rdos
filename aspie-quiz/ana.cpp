@@ -999,6 +999,7 @@ int main(int argc, char **argv)
 
 	 Quiz[29]->WriteGroupWeighting("convn2.h");
 	 Quiz[30]->WriteGroupWeighting("convn3.h");
+	 Quiz[31]->WriteGroupWeighting("convn4.h");
 
 	printf("type histograms\r\n");
 	 Quiz[30]->ExportDiffHistogram("csv\\all.csv", POP_TYPE_ALL);
@@ -1040,8 +1041,8 @@ int main(int argc, char **argv)
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-	 Quiz[31]->WritePhpWeighting("weights.php");
-	 Quiz[31]->WritePhpGroupWeighting("group.php");
+//	 Quiz[31]->WritePhpWeighting("weights.php");
+//	 Quiz[31]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
