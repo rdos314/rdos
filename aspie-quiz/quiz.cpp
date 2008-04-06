@@ -1040,6 +1040,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 				file.Write("GROUP_ASPIE_TALENT");
 				break;
 
+				case GROUP_NT_TALENT:
+				file.Write("GROUP_NT_TALENT");
+				break;
+
 			case GROUP_SOCIAL:
 				file.Write("GROUP_SOCIAL");
 				break;
@@ -1069,7 +1073,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
 				break;
 
             case GROUP_ASPIE_HUNTING:
-                file.Write("GROUP_ASPIE_HUNTING");
+					 file.Write("GROUP_ASPIE_HUNTING");
                 break;
 
             case GROUP_ENVIRONMENT:
@@ -1099,7 +1103,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
     {
         found = FALSE;
         
-        if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
+		  if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
         {            
 			quiz = GlobalTopQuiz[Quiz[i].GlobalId];
 			q = GlobalTopQuestion[Quiz[i].GlobalId];
@@ -1159,7 +1163,7 @@ void TQuiz::WriteSetupCross(const char *filename)
     {
 		found = FALSE;
         
-        if (Quiz[i].GlobalId >= 0)
+		  if (Quiz[i].GlobalId >= 0)
         {            
             for (cross = 0; cross < MAX_CROSS && !found; cross++)
             {
@@ -1189,7 +1193,7 @@ void TQuiz::WriteSetupCross(const char *filename)
                                             }
                                         }
                                     }
-                                }
+										  }
                             }
                         
                             file.Write("    DefineCross(Quiz");
@@ -1309,7 +1313,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
     int BestQ;
     int BestIsAs;
     int BestIsInc;
-    int CurrDiff;
+	 int CurrDiff;
     int q;
     int diff;
     int err;
@@ -1339,7 +1343,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
 	    if (Asw[q] < 5 && Ntw[q] == 0)
 	    {
             Asw[q]++;
-	    	err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
+			err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
 		    Asw[q]--;
 
     		diff = AsDiff + ntc * NtDiff - 10 * err / ntc;
@@ -1369,7 +1373,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
         if (Ntw[q] < 5 && Asw[q] == 0)
         {
             Ntw[q]++;
-            err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
+				err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
             Ntw[q]--;
         
             diff = AsDiff + ntc * NtDiff - 10 * err / ntc;
@@ -1399,7 +1403,7 @@ int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
 
     if (BestQ >= 0)
     {
-        if (BestIsAs)
+		  if (BestIsAs)
         {
             if (BestIsInc)
 				Asw[BestQ]++;
@@ -1489,7 +1493,7 @@ void TQuiz::WriteWikiWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
 		printf(Quiz[i].Text);
 
         if (Asw[i] || Ntw[i])
-            printf(" (%d %d)", Asw[i], Ntw[i]);        
+				printf(" (%d %d)", Asw[i], Ntw[i]);
 
         printf("\n\n");
     }
@@ -1669,7 +1673,7 @@ void TQuiz::DefineNt(char *Referer)
 		    NTRef.ResultAs += ref->ResultAs;
         }
         else
-        {
+		  {
     		NTRef.Result += ref->Result;
 	    	NTRef.Count += ref->Count;
     		NTRef.Result0_59 += ref->Result0_59;
@@ -1699,7 +1703,7 @@ void TQuiz::DefineAspie(char *Referer)
 		 {
     		 AspieRef.AsResult += ref->AsResult;
     		 AspieRef.NtResult += ref->NtResult;
-	    	 AspieRef.Count += ref->Count;
+			 AspieRef.Count += ref->Count;
 		     AspieRef.ResultNt += ref->ResultNt;
     		 AspieRef.ResultMixed += ref->ResultMixed;
 	    	 AspieRef.ResultAs += ref->ResultAs;
@@ -1849,7 +1853,7 @@ TPopulation *TQuiz::GetPop(int PopType)
 *##########################################################################*/
 void TQuiz::ClearUsed(int Question)
 {
-    TQuiz *quiz;
+	 TQuiz *quiz;
 	int i;
 
     quiz = this;
@@ -1939,7 +1943,7 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
         if (CrossQuiz[cross] && !CrossQuiz[cross]->IsSubQuiz())
         {
             for (q = 0; q < CrossQuiz[cross]->N; q++)
-            {
+				{
                 CurrQuiz = CrossQuiz[cross];
 				CurrQuestion = q;
 
@@ -1999,7 +2003,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
         if (Quiz[q].MyGroup == Group)
 		{
             CurrQuiz = this;
-            CurrQuestion = q;
+				CurrQuestion = q;
 
             while (CurrQuiz)
             {
@@ -2029,7 +2033,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
     for (cross = MAX_CROSS - 1; cross >= 0; cross--)
     {
         if (CrossQuiz[cross] && !CrossQuiz[cross]->IsSubQuiz())
-        {
+		  {
             for (q = 0; q < CrossQuiz[cross]->N; q++)
             {
                 if (CrossQuiz[cross]->Quiz[q].MyGroup == Group)
@@ -2089,7 +2093,7 @@ TQuiz *TQuiz::GetHighestCorr(int MyQuestion, int *Question)
 
     while (CurrQuiz)
     {
-        if (!CurrQuiz->Quiz[MyQuestion].Used)
+		  if (!CurrQuiz->Quiz[MyQuestion].Used)
         {
 //			corr =  CurrQuiz->Quiz[MyQuestion].Pca[0] -
 //					CurrQuiz->Quiz[MyQuestion].Pca[1];
@@ -2599,7 +2603,7 @@ void TQuiz::Calculate()
     			ival1 = All.ValArr[e].Quiz[q1];
     			if (ival1)
 				{
-    				if (Quiz[q1].Reverse)
+					if (Quiz[q1].Reverse)
 	    				ival1 = Quiz[q1].Cats - ival1;
 	    			else
     					ival1--;
@@ -2629,7 +2633,7 @@ void TQuiz::Calculate()
                 if (Quiz[q1].Reverse)
                     rsum = -rsum;
 
-                if (Quiz[q2].Reverse)
+					 if (Quiz[q2].Reverse)
                     rsum = -rsum;
 			
 		        gid1 = Quiz[q1].GlobalId;
@@ -3067,6 +3071,42 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
 
             if (p >= 0.0001)
                 return 23.6;
+
+            return 1000;
+
+		case 6:
+            if (p >= 0.2)
+                return 7.29;
+
+            if (p >= 0.1)
+			    return 9.24;
+
+            if (p >= 0.05)
+                return 11.08;        
+
+            if (p >= 0.02)
+                return 13.40;
+
+            if (p >= 0.01)
+                return 15.10;
+
+            if (p >= 0.005)
+				return 16.78;
+
+			if (p >= 0.002)
+                return 19.0;
+
+            if (p >= 0.001)
+                return 20.7;
+
+            if (p >= 0.0005)
+                return 22.4;
+
+            if (p >= 0.0002)
+                return 24.9;
+
+            if (p >= 0.0001)
+                return 25.8;
 
             return 1000;
 
@@ -5035,6 +5075,64 @@ void TQuiz::WriteP(TFile &File, int cats, long double chi2)
 				}
 			}
 			break;
+
+		case 6:
+			if (chi2 >= 25.8)
+				strcpy(str, "0.0001");
+			else
+			{
+				if (chi2 >= 24.9)
+					strcpy(str, "0.0002");
+				else
+				{
+					if (chi2 >= 22.4)
+						strcpy(str, "0.0005");
+					else
+					{
+						if (chi2 >= 20.7)
+							strcpy(str, "0.001");
+						else
+						{
+							if (chi2 >= 19.0)
+								strcpy(str, "0.002");
+							else
+							{
+								if (chi2 >= 16.78)
+									strcpy(str, "0.005");
+								else
+								{
+									if (chi2 >= 15.10)
+										strcpy(str, "0.01");
+									else
+									{
+										if (chi2 >= 13.40)
+											strcpy(str, "0.02");
+										else
+										{
+											if (chi2 >= 11.08)
+												strcpy(str, "0.05");
+											else
+											{
+												if (chi2 >= 9.24)
+													strcpy(str, "0.1");
+												else
+												{
+													if (chi2 >= 7.29)
+														strcpy(str, "0.2");
+													else
+														strcpy(str, "---");
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			break;
+
 
 		case 11:
 			if (chi2 >= 35.6)

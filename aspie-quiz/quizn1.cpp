@@ -414,7 +414,7 @@ void TQuizN1::SetupTexts()
   Quiz[176].MyGroup = GROUP_NT_TALENT;
   Quiz[177].MyGroup = GROUP_ASPIE_SENSORY;
 
-  Quiz[178].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[179].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[180].MyGroup = GROUP_NT_TALENT;
   Quiz[181].MyGroup = GROUP_NT_TALENT;
@@ -423,7 +423,7 @@ void TQuizN1::SetupTexts()
   Quiz[184].MyGroup = GROUP_MIXED;
   Quiz[185].MyGroup = GROUP_ASPIE_NVC;
   Quiz[186].MyGroup = GROUP_NT_NVC;
-  Quiz[187].MyGroup = GROUP_MIXED;
+  Quiz[187].MyGroup = GROUP_ASPIE_NVC;
   Quiz[188].MyGroup = GROUP_NT_NVC;
   Quiz[189].MyGroup = GROUP_ENVIRONMENT;
   Quiz[190].MyGroup = GROUP_ACTIVITY;
@@ -1443,7 +1443,7 @@ void TQuizN1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 	DefineGlobalId(184, 1157);
 	DefineGlobalId(185, 1158);
 	DefineGlobalId(186, 1159);
-	DefineGlobalId(187, 1160);
+	DefineCross(QuizS10, 187, 154);
 	DefineGlobalId(188, 1161);
 	DefineGlobalId(189, 1162);
 	DefineGlobalId(190, 1163);

@@ -380,7 +380,7 @@ void TQuizN2::SetupTexts()
   Quiz[135].MyGroup = GROUP_ENVIRONMENT;
   Quiz[136].MyGroup = GROUP_ENVIRONMENT;
   Quiz[137].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[138].MyGroup = GROUP_MIXED;
+  Quiz[138].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[139].MyGroup = GROUP_NT_NVC;
   Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_MIXED;
@@ -388,7 +388,7 @@ void TQuizN2::SetupTexts()
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_ASPIE_NVC;
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
   Quiz[149].MyGroup = GROUP_MIXED;

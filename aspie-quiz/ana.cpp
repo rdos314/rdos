@@ -31,7 +31,7 @@
 #include <math.h>
 
 // #define EXPORT	1
-#define ALL		1
+// #define ALL		1
 // #define CONV		1
 
 #include "file.h"
@@ -67,6 +67,7 @@
 #include "quizn1.h"
 #include "quizn2.h"
 #include "quizn3.h"
+#include "quizn4.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -120,6 +121,7 @@ int main(int argc, char **argv)
 	Quiz[28] = new TQuizN1("quizn1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27]);
 	Quiz[29] = new TQuizN2("quizn2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28]);
 	Quiz[30] = new TQuizN3("quizn3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29]);
+	Quiz[31] = new TQuizN4("quizn4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30]);
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();
@@ -661,7 +663,7 @@ int main(int argc, char **argv)
 	  Quiz[29]->DsmCutoff("eval\\cutn2.htm", FALSE);
 	  Quiz[30]->DsmCutoff("eval\\cutn3.htm", FALSE);
 
- 	printf("calc global\r\n");
+	printf("calc global\r\n");
 	 Quiz[30]->CalcGlobal();
 
 	 printf("axis corr\r\n");
@@ -680,9 +682,9 @@ int main(int argc, char **argv)
 		TQuiz::ExportGroupIntercorr(str, g);
 	 }
 
-//	 Quiz[30]->WritePhpQuestions("q.php");
-//	 Quiz[30]->WriteSetupTexts("q.cpp");
-//	 Quiz[30]->WriteSetupCross("c.cpp");
+//	 Quiz[31]->WritePhpQuestions("q.php");
+//	 Quiz[31]->WriteSetupTexts("q.cpp");
+//	 Quiz[31]->WriteSetupCross("c.cpp");
 
 	printf("referers\r\n");
 
@@ -827,12 +829,13 @@ int main(int argc, char **argv)
 	printf("main\r\n");
 	 Quiz[30]->WriteLinkReport("eval\\index.htm");
 
-#ifdef ALL
+//#ifdef ALL
 	printf("special reports\r\n");
 	 Quiz[5]->WriteHair("eval\\hair6.htm");
 	 Quiz[5]->WriteEye("eval\\eye6.htm");
 	 Quiz[5]->WriteRace("eval\\race6.htm");
 	 Quiz[20]->WriteRace("eval\\races5.htm");
+	 Quiz[30]->WriteRace("eval\\racen3.htm");
 
 	 Quiz[6]->WriteHair("eval\\hair7.htm");
 	 Quiz[6]->WriteEye("eval\\eye7.htm");
@@ -850,7 +853,7 @@ int main(int argc, char **argv)
 	 Quiz[8]->WriteCFTR("eval\\cftr9.htm");
 	 Quiz[8]->WriteHFE("eval\\hfe9.htm");
 	 Quiz[8]->WriteLeiden("eval\\leiden9.htm");
-#endif
+//#endif
 
 	printf("retest\r\n");
 
@@ -867,7 +870,8 @@ int main(int argc, char **argv)
 	 Quiz[27]->WriteRetest("eval\\retests12.htm");
 	 Quiz[28]->WriteRetest("eval\\retestn1.htm");
 	 Quiz[29]->WriteRetest("eval\\retestn2.htm");
-	 Quiz[29]->WriteVersionRetest("eval\\vervar.htm");
+	 Quiz[30]->WriteRetest("eval\\retestn3.htm");
+	 Quiz[30]->WriteVersionRetest("eval\\vervar.htm");
 
 	printf("imgrate\r\n");
 #ifdef ALL
@@ -1036,8 +1040,8 @@ int main(int argc, char **argv)
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-	 Quiz[30]->WritePhpWeighting("weights.php");
-	 Quiz[30]->WritePhpGroupWeighting("group.php");
+	 Quiz[31]->WritePhpWeighting("weights.php");
+	 Quiz[31]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
@@ -1045,12 +1049,12 @@ int main(int argc, char **argv)
 //	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 //	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
-//	  Quiz[29]->WriteQuizWiki("n3.txt");
+//	  Quiz[30]->WriteQuizWiki("n4.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
-	 TQuiz::WikiToQuiz("wiki.txt", "n3.txt");
+	 TQuiz::WikiToQuiz("wiki.txt", "n4.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 

@@ -1983,7 +1983,7 @@ void TRace::Add(TQuizRow *Row)
 		{
 			UsCount[index]++;
 
-			if (diff > 0)
+			if (diff >= 35)
 				UsAsCount[index]++;
 		}
 	}
@@ -2014,7 +2014,7 @@ void TRace::Add(TQuizRow *Row)
 		{
 			NonUsCount[index]++;
 
-			if (diff > 0)
+			if (diff >= 35)
 				NonUsAsCount[index]++;
 		}
 	}
@@ -2036,7 +2036,11 @@ void TRace::WriteHeader(TFile &file)
 	WriteFieldFooter(file);
 
 	WriteCenteredFieldHeader(file, 12);
-	file.Write("Count");
+	file.Write("All");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("Aspie");
 	WriteFieldFooter(file);
 
 	WriteCenteredFieldHeader(file, 12);
@@ -2059,28 +2063,28 @@ void TRace::WriteHeader(TFile &file)
 *##########################################################################*/
 void TRace::WriteEntry(TFile &file, int val, int count)
 {
-    char str[80];
-    long double dev;
+	 char str[80];
+	 long double dev;
 	long double sd;
-    long double mean;
-    long double r;
-    long double rsum;
+	 long double mean;
+	 long double r;
+	 long double rsum;
 	int ival;
 
-    WriteCenteredFieldHeader(file, 12);
+	 WriteCenteredFieldHeader(file, 12);
 
 #ifdef CI
 
-    mean = (long double)val / (long double)count;
+	 mean = (long double)val / (long double)count;
 
-    r = 1.0 - mean;
-    rsum = (long double)val * r * r;
+	 r = 1.0 - mean;
+	 rsum = (long double)val * r * r;
 
-    r = -mean;
-    rsum += (long double)(count - val) * r * r;
+	 r = -mean;
+	 rsum += (long double)(count - val) * r * r;
 
-    if (count > 1 && val)
-    {
+	 if (count > 1 && val)
+	 {
 		sd = sqrtl(rsum / ((long double)count - 1));
 
 		dev = 1.96 * sd / sqrtl(count);
@@ -2101,15 +2105,15 @@ void TRace::WriteEntry(TFile &file, int val, int count)
 		ival = round(1000.0 * r);
 
 		sprintf(str, "-%d.%01d%", ival / 10, ival % 10);
-	    file.Write(str);
+		 file.Write(str);
 	}
 	else
 		file.Write("---");
-	
+
 #else
-    ival = val * 1000 / count;
-    sprintf(str, "%d.%01d%", ival / 10, ival % 10);
-    file.Write(str);
+	 ival = val * 1000 / count;
+	 sprintf(str, "%d.%01d%", ival / 10, ival % 10);
+	 file.Write(str);
 #endif
 
 	WriteFieldFooter(file);
@@ -2124,35 +2128,40 @@ void TRace::WriteEntry(TFile &file, int val, int count)
 *##########################################################################*/
 void TRace::WriteUsRow(TFile &file, int index, const char *text)
 {
-    char str[80];
-    int sum;
-    int i;
+	 char str[80];
+	 int sum;
+	 int i;
 
 	file.Write("<tr style='height:24.75pt'>");
 	WriteCenteredFieldHeader(file, 25);
-    file.Write(text);
+	 file.Write(text);
 	WriteFieldFooter(file);
 
 	WriteCenteredFieldHeader(file, 12);
 	sprintf(str, "%d", UsCount[index]);
-    file.Write(str);
+	 file.Write(str);
 	WriteFieldFooter(file);
 
-    sum = 0;
-	for (i = 0; i < 10; i++)
-        sum += UsCount[i];            
+	WriteCenteredFieldHeader(file, 12);
+	sprintf(str, "%d", UsAsCount[index]);
+	 file.Write(str);
+	WriteFieldFooter(file);
 
-    if (sum)
-    {
-        WriteEntry(file, UsCount[index], sum);
+	 sum = 0;
+	for (i = 0; i < 10; i++)
+		  sum += UsCount[i];
+
+	 if (sum)
+	 {
+		  WriteEntry(file, UsCount[index], sum);
 
 		if (UsCount[index])
-            WriteEntry(file, UsAsCount[index], UsCount[index]);
-    }
+				WriteEntry(file, UsAsCount[index], UsCount[index]);
+	 }
 	else
-	    file.Write("---");
+		 file.Write("---");
 
-    file.Write("</tr>");
+	 file.Write("</tr>");
 }
 
 /*##################  TRace::WriteNonUsRow ##########################
@@ -2164,17 +2173,22 @@ void TRace::WriteUsRow(TFile &file, int index, const char *text)
 *##########################################################################*/
 void TRace::WriteNonUsRow(TFile &file, int index, const char *text)
 {
-    char str[80];
-    int sum;
-    int i;
+	 char str[80];
+	 int sum;
+	 int i;
 
 	file.Write("<tr style='height:24.75pt'>");
 	WriteCenteredFieldHeader(file, 25);
-    file.Write(text);
+	 file.Write(text);
 	WriteFieldFooter(file);
 
 	WriteCenteredFieldHeader(file, 12);
 	sprintf(str, "%d", NonUsCount[index]);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	sprintf(str, "%d", NonUsAsCount[index]);
 	file.Write(str);
 	WriteFieldFooter(file);
 
