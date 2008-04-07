@@ -12,7 +12,6 @@ struct TQuizRow
 	char Aspie;
 	char ADHD;
 	char OCD;
-	char Bipolar;
 	char Social;
 	int PredAs;
 	int PredAdd;

@@ -563,6 +563,10 @@ void TQuizN4::SetupTexts()
   Quiz[154].MyGroup = GROUP_MIXED;
   Quiz[155].MyGroup = GROUP_MIXED;
 
+  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+
 #ifdef ENGLISH
 
   Quiz[0].Text = "Do you often feel out-of-sync with others?";
@@ -721,7 +725,7 @@ void TQuizN4::SetupTexts()
   Quiz[153].Text = "If asked to describe yourself, would you do so in a detached way, as if you were describing someone else?";
   Quiz[154].Text = "Do you have an intense dislike for the military?";
   Quiz[155].Text = "Do you primarily read fiction for entertainment?";
-  Quiz[156].Text = "Do you dislike when people walk behind you?";
+  Quiz[156].Text = "Do you dislike when people walk behind you?";
   Quiz[157].Text = "Do you sometimes lie awake at night because of too many thoughts?";
   Quiz[158].Text = "Do you think to much about food?";
 
@@ -885,7 +889,7 @@ void TQuizN4::SetupTexts()
   Quiz[153].Text = "Om du blev ombedd att beskriva dig själv, skulle du då göra det på objektivt sätt, som om du beskrev någon annan?";
   Quiz[154].Text = "Ogillar du intensivt militären?";
   Quiz[155].Text = "Läser du huvudsakligen för underhållningens skull?";
-  Quiz[156].Text = "Ogillar du när folk går bakom dig?";
+  Quiz[156].Text = "Ogillar du när folk går bakom dig?";
   Quiz[157].Text = "Ligger du ibland vaken på natten för att du har så många tankar?";
   Quiz[158].Text = "Tänker du för mycket på mat?";
 
@@ -964,9 +968,6 @@ void TQuizN4::LoadReferers()
 		if (Row.OCD == 2)
 			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
-		if (Row.Bipolar == 2)
-			UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult, Row.GroupResult);
-
 		if (Row.Social == 2)
 			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
@@ -1029,7 +1030,6 @@ void TQuizN4::LoadPopulations()
 
 					DsmAs.Add(Row.Aspie, id, score);
 					DsmAdd.Add(Row.ADHD, id, score);
-					DsmBipolar.Add(Row.Bipolar, id, score);
 					DsmSocialPhobia.Add(Row.Social, id, score);
 				}
 			}
@@ -1064,15 +1064,6 @@ void TQuizN4::LoadPopulations()
 
 		if (Row.OCD == 0)
 			DxArr[DX_OCD] = DX_STATE_NO;
-
-		if (Row.Bipolar == 2)
-			DxArr[DX_BIPOLAR] = DX_STATE_YES;
-
-		if (Row.Bipolar == 1)
-			DxArr[DX_BIPOLAR] = DX_STATE_SELF;
-
-		if (Row.Bipolar == 0)
-			DxArr[DX_BIPOLAR] = DX_STATE_NO;
 
 		if (Row.Social == 2)
 			DxArr[DX_SOCIAL_PHOBIA] = DX_STATE_YES;
@@ -1120,9 +1111,6 @@ void TQuizN4::LoadPopulations()
 			else
 				AddFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 		}
-
-		if (Row.Bipolar >= 1)
-			Bipolar.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
 
 		if (Row.Social >= 1)
 			SocialPhobia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
@@ -1215,162 +1203,166 @@ void TQuizN4::SetupControlGroups()
 ##########################################################################*/
 void TQuizN4::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3)
 {
-    DefineCross(QuizN2, 0, 138);
-    DefineCross(QuizN2, 1, 0);
-    DefineCross(QuizN2, 2, 1);
-    DefineCross(QuizN2, 3, 2);
-    DefineCross(QuizN2, 4, 4);
-    DefineCross(QuizN2, 5, 5);
-    DefineCross(QuizN2, 6, 6);
-    DefineCross(QuizN2, 7, 7);
-    DefineCross(QuizN2, 8, 8);
-    DefineCross(QuizN2, 9, 9);
-    DefineCross(QuizN2, 10, 10);
-    DefineCross(QuizN2, 11, 11);
-    DefineCross(QuizN2, 12, 13);
-    DefineCross(QuizN2, 13, 12);
-    DefineCross(QuizN2, 14, 14);
-    DefineCross(QuizN2, 15, 15);
-    DefineCross(QuizN2, 16, 16);
-    DefineCross(QuizN2, 17, 17);
-    DefineCross(QuizN2, 18, 20);
-    DefineCross(QuizN2, 19, 21);
-    DefineCross(QuizN2, 20, 22);
-    DefineCross(QuizN2, 21, 23);
-    DefineCross(QuizN2, 22, 26);
-    DefineCross(QuizN2, 23, 24);
-    DefineCross(QuizN2, 24, 25);
-    DefineCross(QuizN2, 25, 27);
-    DefineCross(QuizN2, 26, 28);
-    DefineCross(QuizN2, 27, 30);
-    DefineCross(QuizN2, 28, 31);
-    DefineCross(QuizN2, 29, 32);
-    DefineCross(QuizN2, 30, 33);
-    DefineCross(QuizN2, 31, 34);
-    DefineCross(QuizN2, 32, 35);
-    DefineCross(QuizN2, 33, 36);
-    DefineCross(QuizN2, 34, 37);
-    DefineCross(QuizN2, 35, 39);
-    DefineCross(QuizN2, 36, 40);
-    DefineCross(QuizN2, 37, 41);
-    DefineCross(QuizN2, 38, 42);
-    DefineCross(QuizN2, 39, 43);
-    DefineCross(QuizN2, 40, 45);
-    DefineCross(QuizN2, 41, 44);
-    DefineCross(QuizN2, 42, 46);
-    DefineCross(QuizN2, 43, 47);
-    DefineCross(QuizN2, 44, 48);
-    DefineCross(QuizN2, 45, 49);
-    DefineCross(QuizN2, 46, 51);
-    DefineCross(QuizN2, 47, 53);
-    DefineCross(QuizN2, 48, 54);
-    DefineCross(QuizN2, 49, 55);
-    DefineCross(QuizN2, 50, 59);
-    DefineCross(QuizN2, 51, 60);
-    DefineCross(QuizN2, 52, 61);
-    DefineCross(QuizN2, 53, 62);
-    DefineCross(QuizN2, 54, 63);
-    DefineCross(QuizN2, 55, 64);
-    DefineCross(QuizN2, 56, 65);
-    DefineCross(QuizN2, 57, 66);
-    DefineCross(QuizN2, 58, 67);
-    DefineCross(QuizN2, 59, 69);
-    DefineCross(QuizN2, 60, 68);
-    DefineCross(QuizN2, 61, 70);
-  DefineGlobalId( 62, 457);
-    DefineCross(QuizN2, 63, 71);
-    DefineCross(QuizN2, 64, 72);
-    DefineCross(QuizN2, 65, 73);
-    DefineCross(QuizN2, 66, 74);
-    DefineCross(QuizN2, 67, 75);
-    DefineCross(QuizN2, 68, 76);
-    DefineCross(QuizN2, 69, 77);
-    DefineCross(QuizN2, 70, 78);
-    DefineCross(QuizN2, 71, 79);
-    DefineCross(QuizN2, 72, 80);
-    DefineCross(QuizN2, 73, 81);
-    DefineCross(QuizN2, 74, 82);
-    DefineCross(QuizN2, 75, 84);
-    DefineCross(QuizN2, 76, 83);
-    DefineCross(QuizN2, 77, 85);
-    DefineCross(QuizN2, 78, 139);
-    DefineCross(QuizN2, 79, 86);
-    DefineCross(QuizN2, 80, 87);
-    DefineCross(QuizN2, 81, 88);
-    DefineCross(QuizN2, 82, 89);
-    DefineCross(QuizN2, 83, 91);
-    DefineCross(QuizN2, 84, 90);
-    DefineCross(QuizN2, 85, 3);
-    DefineCross(QuizN2, 86, 92);
-    DefineCross(QuizN2, 87, 93);
-    DefineCross(QuizN2, 88, 94);
-    DefineCross(QuizN2, 89, 52);
-    DefineCross(QuizN2, 90, 97);
-    DefineCross(QuizN2, 91, 98);
-    DefineCross(QuizN2, 92, 100);
-    DefineCross(QuizN2, 93, 101);
-    DefineCross(QuizN2, 94, 102);
-    DefineCross(QuizN2, 95, 103);
-    DefineCross(QuizN2, 96, 104);
-    DefineCross(QuizN2, 97, 105);
-    DefineCross(QuizN2, 98, 106);
-    DefineCross(QuizN2, 99, 107);
-    DefineCross(QuizN2, 100, 108);
-    DefineCross(QuizN2, 101, 109);
-    DefineCross(QuizN2, 102, 111);
-    DefineCross(QuizN2, 103, 112);
-    DefineCross(QuizN2, 104, 114);
-    DefineCross(QuizN2, 105, 115);
-    DefineCross(QuizN2, 106, 116);
-    DefineCross(QuizN2, 107, 117);
-    DefineCross(QuizN2, 108, 119);
-    DefineCross(QuizN2, 109, 120);
-    DefineCross(QuizN2, 110, 118);
-    DefineCross(QuizN2, 111, 121);
-    DefineCross(QuizN2, 112, 123);
-    DefineCross(QuizN2, 113, 122);
-    DefineCross(QuizN2, 114, 125);
-    DefineCross(QuizN2, 115, 126);
-    DefineCross(QuizN2, 116, 127);
-    DefineCross(QuizN2, 117, 128);
-    DefineCross(QuizN2, 118, 129);
-    DefineCross(QuizN2, 119, 130);
-    DefineCross(QuizN2, 120, 131);
-    DefineCross(QuizN2, 121, 132);
-    DefineCross(QuizN2, 122, 133);
-    DefineCross(QuizN2, 123, 134);
-    DefineCross(QuizN2, 124, 135);
-    DefineCross(QuizN2, 125, 136);
-    DefineCross(QuizN2, 126, 137);
-    DefineCross(QuizN2, 127, 38);
-    DefineCross(QuizN2, 128, 140);
-    DefineCross(QuizN2, 129, 141);
-    DefineCross(QuizN2, 130, 142);
-    DefineCross(QuizN2, 131, 143);
-    DefineCross(QuizN2, 132, 144);
-    DefineCross(QuizN2, 133, 145);
-    DefineCross(QuizN2, 134, 147);
-    DefineCross(QuizN2, 135, 150);
-    DefineCross(QuizN2, 136, 151);
-    DefineCross(QuizN2, 137, 152);
-    DefineCross(QuizN2, 138, 153);
-    DefineCross(QuizN2, 139, 154);
-    DefineCross(QuizN2, 140, 155);
-    DefineCross(QuizN2, 141, 95);
-    DefineCross(QuizN2, 142, 99);
-    DefineCross(QuizN2, 143, 158);
+    DefineCross(QuizN3, 0, 126);
+    DefineCross(QuizN3, 1, 0);
+    DefineCross(QuizN3, 2, 1);
+    DefineCross(QuizN3, 3, 2);
+    DefineCross(QuizN3, 4, 3);
+    DefineCross(QuizN3, 5, 4);
+    DefineCross(QuizN3, 6, 5);
+    DefineCross(QuizN3, 7, 6);
+    DefineCross(QuizN3, 8, 7);
+    DefineCross(QuizN3, 9, 8);
+    DefineCross(QuizN3, 10, 9);
+    DefineCross(QuizN3, 11, 10);
+    DefineCross(QuizN3, 12, 11);
+    DefineCross(QuizN3, 13, 12);
+    DefineCross(QuizN3, 14, 13);
+    DefineCross(QuizN3, 15, 14);
+    DefineCross(QuizN3, 16, 15);
+    DefineCross(QuizN3, 17, 16);
+    DefineCross(QuizN3, 18, 17);
+    DefineCross(QuizN3, 19, 18);
+    DefineCross(QuizN3, 20, 19);
+    DefineCross(QuizN3, 21, 20);
+    DefineCross(QuizN3, 22, 22);
+    DefineCross(QuizN3, 23, 21);
+    DefineCross(QuizN3, 24, 23);
+    DefineCross(QuizN3, 25, 24);
+    DefineCross(QuizN3, 26, 25);
+    DefineCross(QuizN3, 27, 26);
+    DefineCross(QuizN3, 28, 27);
+    DefineCross(QuizN3, 29, 28);
+    DefineCross(QuizN3, 30, 29);
+    DefineCross(QuizN3, 31, 30);
+    DefineCross(QuizN3, 32, 31);
+    DefineCross(QuizN3, 33, 32);
+    DefineCross(QuizN3, 34, 33);
+    DefineCross(QuizN3, 35, 34);
+    DefineCross(QuizN3, 36, 35);
+    DefineCross(QuizN3, 37, 36);
+    DefineCross(QuizN3, 38, 37);
+    DefineCross(QuizN3, 39, 38);
+    DefineCross(QuizN3, 40, 39);
+    DefineCross(QuizN3, 41, 40);
+    DefineCross(QuizN3, 42, 41);
+    DefineCross(QuizN3, 43, 42);
+    DefineCross(QuizN3, 44, 43);
+    DefineCross(QuizN3, 45, 44);
+    DefineCross(QuizN3, 46, 45);
+    DefineCross(QuizN3, 47, 46);
+    DefineCross(QuizN3, 48, 47);
+    DefineCross(QuizN3, 49, 48);
+    DefineCross(QuizN3, 50, 49);
+    DefineCross(QuizN3, 51, 50);
+    DefineCross(QuizN3, 52, 51);
+    DefineCross(QuizN3, 53, 52);
+    DefineCross(QuizN3, 54, 53);
+    DefineCross(QuizN3, 55, 54);
+    DefineCross(QuizN3, 56, 55);
+    DefineCross(QuizN3, 57, 56);
+    DefineCross(QuizN3, 58, 57);
+    DefineCross(QuizN3, 59, 59);
+    DefineCross(QuizN3, 60, 58);
+    DefineCross(QuizN3, 61, 60);
+    DefineCross(QuizN3, 62, 133);
+    DefineCross(QuizN3, 63, 61);
+    DefineCross(QuizN3, 64, 62);
+    DefineCross(QuizN3, 65, 63);
+    DefineCross(QuizN3, 66, 64);
+    DefineCross(QuizN3, 67, 65);
+    DefineCross(QuizN3, 68, 66);
+    DefineCross(QuizN3, 69, 67);
+    DefineCross(QuizN3, 70, 68);
+    DefineCross(QuizN3, 71, 69);
+    DefineCross(QuizN3, 72, 70);
+    DefineCross(QuizN3, 73, 71);
+    DefineCross(QuizN3, 74, 72);
+    DefineCross(QuizN3, 75, 74);
+    DefineCross(QuizN3, 76, 73);
+    DefineCross(QuizN3, 77, 75);
+    DefineCross(QuizN3, 78, 76);
+    DefineCross(QuizN3, 79, 77);
+    DefineCross(QuizN3, 80, 78);
+    DefineCross(QuizN3, 81, 79);
+    DefineCross(QuizN3, 82, 80);
+    DefineCross(QuizN3, 83, 81);
+    DefineCross(QuizN3, 84, 82);
+    DefineCross(QuizN3, 85, 83);
+    DefineCross(QuizN3, 86, 84);
+    DefineCross(QuizN3, 87, 85);
+    DefineCross(QuizN3, 88, 86);
+    DefineCross(QuizN3, 89, 87);
+    DefineCross(QuizN3, 90, 88);
+    DefineCross(QuizN3, 91, 89);
+    DefineCross(QuizN3, 92, 90);
+    DefineCross(QuizN3, 93, 91);
+    DefineCross(QuizN3, 94, 92);
+    DefineCross(QuizN3, 95, 93);
+    DefineCross(QuizN3, 96, 94);
+    DefineCross(QuizN3, 97, 95);
+    DefineCross(QuizN3, 98, 96);
+    DefineCross(QuizN3, 99, 97);
+    DefineCross(QuizN3, 100, 98);
+    DefineCross(QuizN3, 101, 99);
+    DefineCross(QuizN3, 102, 100);
+    DefineCross(QuizN3, 103, 101);
+    DefineCross(QuizN3, 104, 102);
+    DefineCross(QuizN3, 105, 103);
+    DefineCross(QuizN3, 106, 104);
+    DefineCross(QuizN3, 107, 105);
+    DefineCross(QuizN3, 108, 106);
+    DefineCross(QuizN3, 109, 108);
+    DefineCross(QuizN3, 110, 107);
+    DefineCross(QuizN3, 111, 109);
+    DefineCross(QuizN3, 112, 111);
+    DefineCross(QuizN3, 113, 110);
+    DefineCross(QuizN3, 114, 112);
+    DefineCross(QuizN3, 115, 113);
+    DefineCross(QuizN3, 116, 114);
+    DefineCross(QuizN3, 117, 115);
+    DefineCross(QuizN3, 118, 116);
+    DefineCross(QuizN3, 119, 117);
+    DefineCross(QuizN3, 120, 118);
+    DefineCross(QuizN3, 121, 119);
+    DefineCross(QuizN3, 122, 120);
+    DefineCross(QuizN3, 123, 121);
+    DefineCross(QuizN3, 124, 122);
+    DefineCross(QuizN3, 125, 123);
+    DefineCross(QuizN3, 126, 124);
+    DefineCross(QuizN3, 127, 125);
+    DefineCross(QuizN3, 128, 127);
+    DefineCross(QuizN3, 129, 128);
+    DefineCross(QuizN3, 130, 129);
+    DefineCross(QuizN3, 131, 130);
+    DefineCross(QuizN3, 132, 131);
+    DefineCross(QuizN3, 133, 132);
+    DefineCross(QuizN3, 134, 134);
+    DefineCross(QuizN3, 135, 136);
+    DefineCross(QuizN3, 136, 137);
+    DefineCross(QuizN3, 137, 138);
+    DefineCross(QuizN3, 138, 139);
+    DefineCross(QuizN3, 139, 140);
+    DefineCross(QuizN3, 140, 141);
+    DefineCross(QuizN3, 141, 142);
+    DefineCross(QuizN3, 142, 143);
+    DefineCross(QuizN3, 143, 144);
     DefineCross(QuizR6, 144, 45);
-	 DefineCross(QuizNd, 145, 107);
-	 DefineCross(QuizR7, 146, 149);
-	 DefineCross(QuizII, 147, 81);
-	 DefineCross(QuizR6, 148, 60);
-	 DefineCross(QuizR2, 149, 119);
-	 DefineCross(QuizS10, 150, 163);
-	 DefineCross(QuizS7, 151, 148);
-	 DefineCross(Quiz6, 152, 66);
-	 DefineCross(QuizR2, 153, 62);
-	 DefineCross(QuizR2, 154, 25);
-	 DefineCross(QuizNd, 155, 174);
+	DefineCross(QuizNd, 145, 107);
+	DefineCross(QuizR7, 146, 149);
+	DefineCross(QuizII, 147, 81);
+	DefineCross(QuizR6, 148, 60);
+	DefineCross(QuizR2, 149, 119);
+	DefineCross(QuizS10, 150, 163);
+	DefineCross(QuizS7, 151, 148);
+	DefineCross(Quiz6, 152, 66);
+	DefineCross(QuizR2, 153, 62);
+	DefineCross(QuizR2, 154, 25);
+    DefineCross(QuizNd, 155, 174);
+
+  DefineGlobalId( 156, 1206);
+  DefineGlobalId( 157, 1207);
+  DefineGlobalId( 158, 1208);
 }
 
 /*##########################################################################

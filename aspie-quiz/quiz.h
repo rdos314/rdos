@@ -43,7 +43,7 @@
 #define MAX_GROUP_COUNT      	18
 
 #define MAX_REFERERS            1024
-#define MAX_CROSS               30
+#define MAX_CROSS               50
 #define MAX_PCA_AXIS            8
 #define MAX_ASPIE_PCA_AXIS      32      // must change in Import method as well!
 #define MAX_SCORE               501
