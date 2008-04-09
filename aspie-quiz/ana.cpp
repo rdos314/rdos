@@ -1064,8 +1064,8 @@ int main(int argc, char **argv)
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-//	 Quiz[31]->WritePhpWeighting("weights.php");
-//	 Quiz[31]->WritePhpGroupWeighting("group.php");
+	 Quiz[31]->WritePhpWeighting("weights.php");
+	 Quiz[31]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
