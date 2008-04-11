@@ -563,7 +563,7 @@ void TQuizN4::SetupTexts()
   Quiz[154].MyGroup = GROUP_MIXED;
   Quiz[155].MyGroup = GROUP_MIXED;
 
-  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_SOCIAL;
   Quiz[157].MyGroup = GROUP_MIXED;
   Quiz[158].MyGroup = GROUP_MIXED;
 
@@ -1731,8 +1731,8 @@ void TQuizN4::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
-						d2 = -d2;
+//					if (PcaType == PCA_TYPE_MALE)
+//						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;

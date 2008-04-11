@@ -13526,34 +13526,34 @@ void TQuiz::ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT])
 		ScoreArr[dx] = -1.0;
 
 	ScoreArr[DX_ADD] = (long double)DxResult[DX_ADD]  / 10.0;
-	ScoreArr[DX_ADD] = ScoreArr[DX_ADD] / 5.5;
+	ScoreArr[DX_ADD] = ScoreArr[DX_ADD] / 5.0;
 
-	ScoreArr[DX_DYSLEXIA] = (long double)DxResult[DX_DYSLEXIA]  / 10.0;
-	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 5.0;
+//	ScoreArr[DX_DYSLEXIA] = (long double)DxResult[DX_DYSLEXIA]  / 10.0;
+//	ScoreArr[DX_DYSLEXIA] = ScoreArr[DX_DYSLEXIA] / 5.0;
 
-	ScoreArr[DX_DYSCALCULIA] = (long double)DxResult[DX_DYSCALCULIA]  / 10.0;
-	ScoreArr[DX_DYSCALCULIA] = ScoreArr[DX_DYSCALCULIA] / 4.9;
+//	ScoreArr[DX_DYSCALCULIA] = (long double)DxResult[DX_DYSCALCULIA]  / 10.0;
+//	ScoreArr[DX_DYSCALCULIA] = ScoreArr[DX_DYSCALCULIA] / 4.9;
 
-	ScoreArr[DX_AUTISM] = (long double)DxResult[DX_AUTISM]  / 10.0;
-	ScoreArr[DX_AUTISM] = ScoreArr[DX_AUTISM] / 4.5;
+//	ScoreArr[DX_AUTISM] = (long double)DxResult[DX_AUTISM]  / 10.0;
+//	ScoreArr[DX_AUTISM] = ScoreArr[DX_AUTISM] / 4.5;
 
 	ScoreArr[DX_AS] = (long double)DxResult[DX_AS]  / 10.0;
-	ScoreArr[DX_AS] = ScoreArr[DX_AS] / 5.2;
+	ScoreArr[DX_AS] = ScoreArr[DX_AS] / 4.5;
 
-	ScoreArr[DX_DYSPRAXIA] = (long double)DxResult[DX_DYSPRAXIA]  / 10.0;
-	ScoreArr[DX_DYSPRAXIA] = ScoreArr[DX_DYSPRAXIA] / 5.6;
+//	ScoreArr[DX_DYSPRAXIA] = (long double)DxResult[DX_DYSPRAXIA]  / 10.0;
+//	ScoreArr[DX_DYSPRAXIA] = ScoreArr[DX_DYSPRAXIA] / 5.6;
 
 	ScoreArr[DX_OCD] = (long double)DxResult[DX_OCD]  / 10.0;
-	ScoreArr[DX_OCD] = ScoreArr[DX_OCD] / 5.2;
+	ScoreArr[DX_OCD] = ScoreArr[DX_OCD] / 5.0;
 
-	ScoreArr[DX_BIPOLAR] = (long double)DxResult[DX_BIPOLAR]  / 10.0;
-	ScoreArr[DX_BIPOLAR] = ScoreArr[DX_BIPOLAR] / 5.2;
+//	ScoreArr[DX_BIPOLAR] = (long double)DxResult[DX_BIPOLAR]  / 10.0;
+//	ScoreArr[DX_BIPOLAR] = ScoreArr[DX_BIPOLAR] / 5.2;
 
 	ScoreArr[DX_SOCIAL_PHOBIA] = (long double)DxResult[DX_SOCIAL_PHOBIA]  / 10.0;
-	ScoreArr[DX_SOCIAL_PHOBIA] = ScoreArr[DX_SOCIAL_PHOBIA] / 5.8;
+	ScoreArr[DX_SOCIAL_PHOBIA] = ScoreArr[DX_SOCIAL_PHOBIA] / 5.0;
 
-	ScoreArr[DX_SCHIZOPHRENIA] = (long double)DxResult[DX_SCHIZOPHRENIA]  / 10.0;
-	ScoreArr[DX_SCHIZOPHRENIA] = ScoreArr[DX_SCHIZOPHRENIA] / 4.8;
+//	ScoreArr[DX_SCHIZOPHRENIA] = (long double)DxResult[DX_SCHIZOPHRENIA]  / 10.0;
+//	ScoreArr[DX_SCHIZOPHRENIA] = ScoreArr[DX_SCHIZOPHRENIA] / 4.8;
 
 	max = -1.0;
 
