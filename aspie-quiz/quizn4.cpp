@@ -550,7 +550,7 @@ void TQuizN4::SetupTexts()
   Quiz[141].MyGroup = GROUP_SEX;
   Quiz[142].MyGroup = GROUP_SEX;
   Quiz[143].MyGroup = GROUP_SEX;
-  Quiz[144].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[144].MyGroup = GROUP_SEX;
   Quiz[145].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[146].MyGroup = GROUP_NT_OBSESSION;
   Quiz[147].MyGroup = GROUP_ACTIVITY;

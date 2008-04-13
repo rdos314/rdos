@@ -224,7 +224,6 @@ void TQuizS2::SetupTexts()
   Quiz[139].Reverse = TRUE;
   Quiz[156].Reverse = TRUE;
   Quiz[157].Reverse = TRUE;
-  Quiz[160].Reverse = TRUE;
   Quiz[161].Reverse = TRUE;
   Quiz[162].Reverse = TRUE;
   Quiz[164].Reverse = TRUE;
@@ -398,7 +397,7 @@ void TQuizS2::SetupTexts()
   Quiz[160].MyGroup = GROUP_MIXED;
   Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_MIXED;
-  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_SEX;
   Quiz[164].MyGroup = GROUP_MIXED;
   Quiz[165].MyGroup = GROUP_MIXED;
   Quiz[166].MyGroup = GROUP_MIXED;

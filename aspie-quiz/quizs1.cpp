@@ -382,7 +382,7 @@ void TQuizS1::SetupTexts()
   Quiz[146].MyGroup = GROUP_SOCIAL;
 
   Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_SEX;
   Quiz[149].MyGroup = GROUP_NT_NVC;
   Quiz[150].MyGroup = GROUP_NT_NVC;
   Quiz[151].MyGroup = GROUP_MIXED;
@@ -391,8 +391,8 @@ void TQuizS1::SetupTexts()
   Quiz[154].MyGroup = GROUP_MIXED;
   Quiz[155].MyGroup = GROUP_MIXED;
   Quiz[156].MyGroup = GROUP_MIXED;
-  Quiz[157].MyGroup = GROUP_MIXED;
-  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_SEX;
+  Quiz[158].MyGroup = GROUP_SEX;
   Quiz[159].MyGroup = GROUP_MIXED;
   Quiz[160].MyGroup = GROUP_MIXED;
   Quiz[161].MyGroup = GROUP_MIXED;

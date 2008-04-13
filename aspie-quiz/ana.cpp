@@ -68,6 +68,9 @@
 #include "quizn2.h"
 #include "quizn3.h"
 #include "quizn4.h"
+
+#include "quizf.h"
+
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -122,6 +125,8 @@ int main(int argc, char **argv)
 	Quiz[29] = new TQuizN2("quizn2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28]);
 	Quiz[30] = new TQuizN3("quizn3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29]);
 	Quiz[31] = new TQuizN4("quizn4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30]);
+
+	Quiz[32] = new TQuizFinal(150, Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31]);
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();
@@ -698,9 +703,9 @@ int main(int argc, char **argv)
 		TQuiz::ExportGroupIntercorr(str, g);
 	 }
 
-//	 Quiz[31]->WritePhpQuestions("q.php");
-//	 Quiz[31]->WriteSetupTexts("q.cpp");
-//	 Quiz[31]->WriteSetupCross("c.cpp");
+//	 Quiz[32]->WritePhpQuestions("q.php");
+//	 Quiz[32]->WriteSetupTexts("q.cpp");
+//	 Quiz[32]->WriteSetupCross("c.cpp");
 
 	printf("referers\r\n");
 
@@ -1064,8 +1069,8 @@ int main(int argc, char **argv)
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-	 Quiz[31]->WritePhpWeighting("weights.php");
-	 Quiz[31]->WritePhpGroupWeighting("group.php");
+	 Quiz[32]->WritePhpWeighting("weights.php");
+	 Quiz[32]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
@@ -1073,12 +1078,12 @@ int main(int argc, char **argv)
 //	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 //	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
-//	  Quiz[30]->WriteQuizWiki("n4.txt");
+//	  Quiz[31]->WriteQuizWiki("n5.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
-	 TQuiz::WikiToQuiz("wiki.txt", "n4.txt");
+//	 TQuiz::WikiToQuiz("wiki.txt", "final.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 

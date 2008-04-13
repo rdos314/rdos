@@ -93,15 +93,15 @@ void cdecl main()
 	RdosWriteSerialVal(2, 1, 0);
 
 
-	NtpIp = RdosNameToIp("ntp.vlh.dk");
-//	RdosSyncTime(NtpIp);
+	NtpIp = RdosNameToIp("ntp.lth.se");
+	RdosSyncTime(NtpIp);
 
 	log = new TLog("e:\\log");
 
 	vbe = new TVideoGraphicDevice(24, 640, 480);
 	vbe->SetFont(&Font);
 
-//	graphic = new TGraphic(vbe, log);
+	graphic = new TGraphic(vbe, log);
 
 	vbe->SetDrawColor(255, 255, 255);
 
@@ -296,7 +296,7 @@ void cdecl main()
     	vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 2 * 16, 550 + WIDTH, 3 * 16 - 1);
 		
-    	vbe->SetDrawColor(255, 255, 255);
+		vbe->SetDrawColor(255, 255, 255);
 	    vbe->DrawString(550, 2 * 16, str);
 
 		val = Ws->GetIndoorHumidity();
@@ -326,7 +326,7 @@ void cdecl main()
     	vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 6 * 16, 550 + WIDTH, 7 * 16 - 1);
 		
-    	vbe->SetDrawColor(255, 255, 255);
+		vbe->SetDrawColor(255, 255, 255);
 	    vbe->DrawString(550, 6 * 16, str);
 
 		val = Ws->GetDewPoint();
@@ -468,7 +468,7 @@ void cdecl main()
 
 		if (SyncCount == 300)
 		{
-//			 RdosSyncTime(NtpIp);
+			 RdosSyncTime(NtpIp);
 			 SyncCount = 0;
 		}
 		else

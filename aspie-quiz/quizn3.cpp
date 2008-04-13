@@ -394,31 +394,31 @@ void TQuizN3::SetupTexts()
   Quiz[145].MyGroup = GROUP_SOCIAL;
   Quiz[146].MyGroup = GROUP_ENVIRONMENT;
 
-  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_ENVIRONMENT;
   Quiz[148].MyGroup = GROUP_MIXED;
   Quiz[149].MyGroup = GROUP_MIXED;
   Quiz[150].MyGroup = GROUP_MIXED;
   Quiz[151].MyGroup = GROUP_MIXED;
-  Quiz[152].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_ENVIRONMENT;
   Quiz[153].MyGroup = GROUP_MIXED;
-  Quiz[154].MyGroup = GROUP_MIXED;
-  Quiz[155].MyGroup = GROUP_MIXED;
-  Quiz[156].MyGroup = GROUP_MIXED;
-  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_SOCIAL;
+  Quiz[155].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[156].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[157].MyGroup = GROUP_ENVIRONMENT;
   Quiz[158].MyGroup = GROUP_MIXED;
   Quiz[159].MyGroup = GROUP_MIXED;
-  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_ENVIRONMENT;
   Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_MIXED;
   Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_ENVIRONMENT;
   Quiz[165].MyGroup = GROUP_MIXED;
   Quiz[166].MyGroup = GROUP_MIXED;
-  Quiz[167].MyGroup = GROUP_MIXED;
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
-  Quiz[170].MyGroup = GROUP_MIXED;
-  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[168].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[169].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[170].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[171].MyGroup = GROUP_ENVIRONMENT;
   Quiz[172].MyGroup = GROUP_MIXED;
 
   #ifdef ENGLISH
