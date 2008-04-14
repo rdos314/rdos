@@ -1023,11 +1023,12 @@ int main(int argc, char **argv)
 	 Quiz[26]->WriteGroupWeighting("convs11.h");
 	 Quiz[27]->WriteGroupWeighting("convs12.h");
 	 Quiz[28]->WriteGroupWeighting("convn1.h");
+	 Quiz[29]->WriteGroupWeighting("convn2.h");
 #endif
 
-	 Quiz[29]->WriteGroupWeighting("convn2.h");
 	 Quiz[30]->WriteGroupWeighting("convn3.h");
 	 Quiz[31]->WriteGroupWeighting("convn4.h");
+	 Quiz[32]->WriteGroupWeighting("convf1.h");
 
 	printf("type histograms\r\n");
 	 Quiz[31]->ExportDiffHistogram("csv\\all.csv", POP_TYPE_ALL);
