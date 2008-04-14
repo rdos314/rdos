@@ -143,38 +143,6 @@ int TQuizFinal::GetQuizN()
 	return N;
 }
 
-/*##########################################################################
-#
-#   Name       : TQuizFinal::WriteName
-#
-#   Purpose....: Write quiz name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizFinal::WriteName(TFile &File)
-{
-	 File.Write("F");
-}
-
-/*##########################################################################
-#
-#   Name       : TQuizFinal::WriteLongName
-#
-#   Purpose....: Write long quiz name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizFinal::WriteLongName(TFile &File)
-{
-	 File.Write("final");
-}
-
 /*##################  TQuizFinal::DefineQuiz ##########################
 *   Purpose....: Define global IDs in quiz                	       	        #
 *   In params..: *                                                          #
@@ -184,158 +152,6 @@ void TQuizFinal::WriteLongName(TFile &File)
 *##########################################################################*/
 void TQuizFinal::DefineQuiz()
 {
-  return;
-
-  DefineID(1, 1152);
-  DefineID(2, 26);
-  DefineID(3, 151);
-  DefineID(4, 20);
-  DefineID(5, 23);
-  DefineID(6, 100);
-  DefineID(7, 5);
-  DefineID(8, 695);
-  DefineID(9, 1153);
-  DefineID(10, 3);
-  DefineID(11, 6);
-  DefineID(12, 27);
-  DefineID(13, 129);
-  DefineID(14, 397);
-  DefineID(15, 743);
-  DefineID(16, 240);
-  DefineID(17, 319);
-  DefineID(18, 726);
-  DefineID(19, 25);
-  DefineID(20, 249);
-  DefineID(21, 37);
-  DefineID(22, 361);
-  DefineID(23, 596);
-  DefineID(24, 39);
-  DefineID(25, 36);
-  DefineID(26, 595);
-  DefineID(27, 613);
-  DefineID(28, 740);
-  DefineID(29, 282);
-  DefineID(30, 280);
-  DefineID(31, 180);
-  DefineID(32, 779);
-  DefineID(33, 153);
-  DefineID(34, 516);
-  DefineID(35, 1053);
-  DefineID(36, 616);
-  DefineID(37, 1054);
-  DefineID(38, 614);
-  DefineID(39, 612);
-  DefineID(40, 1044);
-  DefineID(41, 70);
-  DefineID(42, 767);
-  DefineID(43, 923);
-  DefineID(44, 66);
-  DefineID(45, 507);
-  DefineID(46, 858);
-  DefineID(47, 859);
-  DefineID(48, 73);
-  DefineID(49, 454);
-  DefineID(50, 1207);
-  DefineID(51, 378);
-  DefineID(52, 737);
-  DefineID(53, 1077);
-  DefineID(54, 857);
-  DefineID(55, 115);
-  DefineID(56, 765);
-  DefineID(57, 731);
-  DefineID(58, 547);
-  DefineID(59, 712);
-  DefineID(60, 403);
-  DefineID(61, 359);
-  DefineID(62, 575);
-  DefineID(63, 590);
-  DefineID(64, 55);
-  DefineID(65, 402);
-  DefineID(66, 15);
-  DefineID(67, 589);
-  DefineID(68, 570);
-  DefineID(69, 17);
-  DefineID(70, 572);
-  DefineID(71, 234);
-  DefineID(72, 739);
-  DefineID(73, 574);
-  DefineID(74, 401);
-  DefineID(75, 16);
-  DefineID(76, 229);
-  DefineID(77, 487);
-  DefineID(78, 83);
-  DefineID(79, 130);
-  DefineID(80, 745);
-  DefineID(81, 278);
-  DefineID(82, 82);
-  DefineID(83, 86);
-  DefineID(84, 1160);
-  DefineID(85, 551);
-  DefineID(86, 707);
-  DefineID(87, 856);
-  DefineID(88, 85);
-  DefineID(89, 128);
-  DefineID(90, 714);
-  DefineID(91, 255);
-  DefineID(92, 495);
-  DefineID(93, 546);
-  DefineID(94, 89);
-  DefineID(95, 92);
-  DefineID(96, 582);
-  DefineID(97, 448);
-  DefineID(98, 439);
-  DefineID(99, 926);
-  DefineID(100, 581);
-  DefineID(101, 925);
-  DefineID(102, 1076);
-  DefineID(103, 433);
-  DefineID(104, 1079);
-  DefineID(105, 316);
-  DefineID(106, 310);
-  DefineID(107, 1080);
-  DefineID(108, 862);
-  DefineID(109, 53);
-  DefineID(110, 54);
-  DefineID(111, 61);
-  DefineID(112, 48);
-  DefineID(113, 503);
-  DefineID(114, 565);
-  DefineID(115, 385);
-  DefineID(116, 871);
-  DefineID(117, 631);
-  DefineID(118, 509);
-  DefineID(119, 510);
-  DefineID(120, 50);
-  DefineID(121, 113);
-  DefineID(122, 46);
-  DefineID(123, 513);
-  DefineID(124, 1078);
-  DefineID(125, 443);
-  DefineID(126, 31);
-  DefineID(127, 718);
-  DefineID(128, 167);
-  DefineID(129, 623);
-  DefineID(130, 93);
-  DefineID(131, 518);
-  DefineID(132, 133);
-  DefineID(133, 708);
-  DefineID(134, 381);
-  DefineID(135, 135);
-  DefineID(136, 78);
-  DefineID(137, 549);
-  DefineID(138, 126);
-  DefineID(139, 364);
-  DefineID(140, 174);
-  DefineID(141, 227);
-  DefineID(142, 1042);
-  DefineID(143, 1046);
-  DefineID(144, 492);
-  DefineID(145, 123);
-  DefineID(146, 715);
-  DefineID(147, 545);
-  DefineID(148, 262);
-  DefineID(149, 724);
-  DefineID(150, 250);
 }
 
 /*##########################################################################
@@ -926,7 +742,7 @@ void TQuizFinal::SetupControlGroups()
 ##########################################################################*/
 void TQuizFinal::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4)
 {
-    DefineCross(QuizN4, 0, 0);
+	 DefineCross(QuizN4, 0, 0);
     DefineCross(QuizN4, 1, 1);
     DefineCross(QuizN4, 2, 2);
     DefineCross(QuizN4, 3, 3);
@@ -956,7 +772,7 @@ void TQuizFinal::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *
     DefineCross(QuizN4, 27, 27);
     DefineCross(QuizN4, 28, 28);
     DefineCross(QuizS6, 29, 153);
-    DefineCross(QuizS7, 30, 114);
+	 DefineCross(QuizS7, 30, 114);
     DefineCross(QuizS3, 31, 65);
     DefineCross(QuizN4, 32, 31);
     DefineCross(QuizN4, 33, 32);
@@ -986,7 +802,7 @@ void TQuizFinal::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *
     DefineCross(QuizN4, 57, 54);
     DefineCross(QuizN4, 58, 56);
     DefineCross(QuizN4, 59, 55);
-    DefineCross(QuizN4, 60, 57);
+	 DefineCross(QuizN4, 60, 57);
     DefineCross(QuizN4, 61, 58);
     DefineCross(QuizN4, 62, 59);
     DefineCross(QuizN4, 63, 60);
@@ -1016,7 +832,7 @@ void TQuizFinal::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *
     DefineCross(QuizN4, 87, 85);
     DefineCross(QuizN4, 88, 86);
     DefineCross(QuizN4, 89, 87);
-    DefineCross(QuizN4, 90, 88);
+	 DefineCross(QuizN4, 90, 88);
     DefineCross(QuizN4, 91, 89);
     DefineCross(QuizR4, 92, 21);
     DefineCross(QuizN4, 93, 91);
@@ -1046,7 +862,7 @@ void TQuizFinal::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *
     DefineCross(QuizN4, 117, 114);
     DefineCross(QuizN4, 118, 115);
     DefineCross(QuizN4, 119, 116);
-    DefineCross(QuizN4, 120, 117);
+	 DefineCross(QuizN4, 120, 117);
     DefineCross(QuizN4, 121, 118);
     DefineCross(QuizN4, 122, 119);
     DefineCross(QuizN4, 123, 120);
@@ -1075,66 +891,7 @@ void TQuizFinal::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *
     DefineCross(QuizN4, 146, 136);
     DefineCross(QuizN4, 147, 137);
     DefineCross(QuizN4, 148, 138);
-    DefineCross(QuizN4, 149, 139);
+	 DefineCross(QuizN4, 149, 139);
 }
 
-/*##########################################################################
-#
-#   Name       : TQuizFinal::ImportMvsp
-#
-#   Purpose....: Dummy import
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizFinal::ImportMvsp(const char *filename, int PcaType)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TQuizFinal::ExportExcelCase
-#
-#   Purpose....: Dummy export
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizFinal::ExportExcelCase(const char *filename, int PcaType)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TQuizFinal::ExportExcelAspie
-#
-#   Purpose....: Dummy export
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizFinal::ExportExcelAspie(const char *filename)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TQuizFinal::GetReferer
-#
-#   Purpose....: Get referer population
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizFinal::GetReferer(const char *referer, TPopulation *pop)
-{
-}
 

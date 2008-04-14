@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# convr4.cpp
-# Convert exported quiz-r4 to binary file
+# convf1.cpp
+# Convert exported quiz-f1 to binary file
 #
 ########################################################################*/
 #include <stdio.h>
@@ -31,8 +31,8 @@
 
 #include "pop.h"
 #include "file.h"
-#include "quizdbr4.h"
-#include "convr4.h"
+#include "quizdbf1.h"
+#include "convf1.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -40,9 +40,9 @@
 #define MAX_IN_ROW      0x8000
 #define MAX_REFERERS    1024
 
-const char InsertString[] = "INSERT INTO aspie-quiz-r4 VALUES(";
+const char InsertString[] = "INSERT INTO aspie-quiz-f1 VALUES(";
 
-TFile quizfile("quizr4.bin", 0);
+TFile quizfile("quizf1.bin", 0);
 
 
 /*##################  HandleRow ##########################
@@ -151,7 +151,7 @@ void UpdateScore(TQuizRow *row)
 		sum = 0;
 		totsum = 0;
 
-		for (i = 0; i < 203; i++)
+		for (i = 0; i < 145; i++)
 		{
 			val = row->Quiz[i];
 
@@ -184,7 +184,7 @@ void UpdateScore(TQuizRow *row)
 		sum = 0;
 		totsum = 0;
 
-		for (i = 0; i < 203; i++)
+		for (i = 0; i < 145; i++)
 		{
 			val = row->Quiz[i];
 
@@ -231,7 +231,7 @@ char *ProcessRow(char *str)
 	TQuizRow Row;
 	int quote;
 
-	for (fieldno = 0; fieldno < 222; fieldno++)
+	for (fieldno = 0; fieldno < 219; fieldno++)
 	{
 		valstr = str;
 
@@ -280,58 +280,51 @@ char *ProcessRow(char *str)
 					break;
 
 				case 1:
+					Row.userid = atol(valstr);
+					break;
+
 				case 2:
-					break;
-
 				case 3:
-					Row.BirthYear = atoi(valstr);
-					break;
-
 				case 4:
-					Row.Gender = atoi(valstr);
 					break;
 
 				case 5:
-					Row.Lang = atoi(valstr);
+					Row.BirthYear = atoi(valstr);
 					break;
 
 				case 6:
-					Row.Autism = atoi(valstr);
+					Row.BirthMonth = atoi(valstr);
 					break;
 
 				case 7:
-					Row.Aspie = atoi(valstr);
+					Row.Gender = atoi(valstr);
 					break;
 
 				case 8:
-					Row.PDD = atoi(valstr);
+					Row.Country = atoi(valstr);
 					break;
 
 				case 9:
-					Row.ADHD = atoi(valstr);
+					Row.Ancestry = atoi(valstr);
 					break;
 
 				case 10:
-					Row.Dyslexia = atoi(valstr);
+					Row.Aspie = atoi(valstr);
 					break;
 
 				case 11:
-					Row.Dyscalculia = atoi(valstr);
+					Row.ADHD = atoi(valstr);
 					break;
 
 				case 12:
-					Row.NLD = atoi(valstr);
-					break;
-
-				case 13:
 					Row.OCD = atoi(valstr);
 					break;
 
-				case 14:
-					Row.TS = atoi(valstr);
+				case 13:
+					Row.Social = atoi(valstr);
 					break;
 
-				case 15:
+				case 14:
 					valstr = GetQuoted(valstr);
 					if (valstr)
 					{
@@ -344,24 +337,21 @@ char *ProcessRow(char *str)
 						Row.Referer[0] = 0;
 					break;
 
-				case 16:
+				case 15:
 					Row.AsResult = atoi(valstr);
 					break;
 
-				case 17:
+				case 16:
 					Row.NtResult = atoi(valstr);
 					break;
 
-				case 18:
+				case 17:
 					Row.AqResult = atoi(valstr);
 					break;
 
 				default:
-					i = fieldno - 19;
+					i = fieldno - 18;
 					Row.Quiz[i] = atoi(valstr);
-
-					if (i >= 203)
-					    Row.Quiz[i]++;
 					break;
 			}
 		}
@@ -387,7 +377,7 @@ int main(int argc, char **argv)
 	char *rowstr;
 	char *ptr;
 	long pos = 0;
-	TFile infile("quizr4.sql");
+	TFile infile("quizf1.sql");
 	int i;
 	int grp;
 	int max;
