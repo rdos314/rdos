@@ -376,6 +376,7 @@ TQuiz::TQuiz(int Questions)
 			Quiz[i].FemalePca[g] = 0;
 				Quiz[i].YoungPca[g] = 0;
             Quiz[i].OldPca[g] = 0;
+            Quiz[i].AsiaPca[g] = 0;
 			Quiz[i].AsPca[g] = 0;
 			Quiz[i].MixedPca[g] = 0;
 		}
@@ -14317,4 +14318,342 @@ void TQuiz::ExportAgeCorr(const char *filename)
 	}
 
     ExportCurrentAgeCorr(file);    
+}
+
+/*##################  TQuiz::ExportCurrentGenderCongruence ##########################
+*   Purpose....: Export gender congruence for current quiz         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportCurrentGenderCongruence(TFile &file)
+{
+    int count;
+	int axis;
+	int q;
+	long double rsum[2];
+	long double x;
+	long double y;
+    long double xsum;
+    long double ysum;	
+    long double sqsum;
+    int val;
+	char str[80];
+
+	count = GetQuizN();
+
+	xsum = 0;
+	ysum = 0;
+
+	for (axis = 0; axis < 2; axis++)
+	{
+    	rsum[axis] = 0;
+
+    	for (q = 0; q < count; q++)
+	    {
+	        x = Quiz[q].MalePca[axis];
+			y = Quiz[q].FemalePca[axis];
+
+            rsum[axis] += x * y;
+            xsum += x * x;
+            ysum += y * y;
+        }
+
+        if (rsum[axis] < 0)
+            rsum[axis] = -rsum[axis];
+
+	}
+
+    sqsum = xsum * ysum;
+
+    if (sqsum > 0.0)
+    	sqsum = sqrtl(xsum * ysum);
+		
+    if (sqsum > 0.0)
+		val = round(1000 * ((rsum[0] + rsum[1]) / sqsum));
+	else
+		val = 0;
+
+    sprintf(str, "0.%03d\r\n", val);
+    file.Write(str);
+}
+
+/*##################  TQuiz::ExportGenderCongruence ##########################
+*   Purpose....: Export gender congruence         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportGenderCongruence(const char *filename)
+{
+    int cross;
+    TQuiz *quiz;
+	TFile file(filename, 0);
+
+    for (cross = 0; cross < MAX_CROSS; cross++)
+    {
+        quiz = CrossQuiz[cross];
+		if (quiz)
+		    quiz->ExportCurrentGenderCongruence(file);
+	}
+
+    ExportCurrentGenderCongruence(file);    
+}
+
+/*##################  TQuiz::ExportCurrentAgeCongruence ##########################
+*   Purpose....: Export age congruence for current quiz         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportCurrentAgeCongruence(TFile &file)
+{
+    int count;
+	int axis;
+	int q;
+	long double rsum[2];
+	long double x;
+	long double y;
+    long double xsum;
+    long double ysum;	
+    long double sqsum;
+    int val;
+	char str[80];
+
+	count = GetQuizN();
+
+	xsum = 0;
+	ysum = 0;
+
+	for (axis = 0; axis < 2; axis++)
+    {
+        rsum[axis] = 0;
+        
+    	for (q = 0; q < count; q++)
+	    {
+	        x = Quiz[q].OldPca[axis];
+            y = Quiz[q].YoungPca[axis];
+
+            rsum[axis] += x * y;
+            xsum += x * x;
+            ysum += y * y;
+        }
+
+        if (rsum[axis] < 0)
+            rsum[axis] = -rsum[axis];
+	}
+
+    sqsum = xsum * ysum;
+
+    if (sqsum > 0.0)
+    	sqsum = sqrtl(xsum * ysum);
+		
+    if (sqsum > 0.0)
+        val = round(1000 * ((rsum[0] + rsum[1]) / sqsum));
+    else
+		val = 0;
+
+    sprintf(str, "0.%03d\r\n", val);
+    file.Write(str);
+}
+
+
+/*##################  TQuiz::ExportAgeCongruence ##########################
+*   Purpose....: Export age congruence         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportAgeCongruence(const char *filename)
+{
+    int cross;
+    TQuiz *quiz;
+	TFile file(filename, 0);
+
+    for (cross = 0; cross < MAX_CROSS; cross++)
+    {
+        quiz = CrossQuiz[cross];
+		if (quiz)
+		    quiz->ExportCurrentAgeCongruence(file);
+	}
+
+    ExportCurrentAgeCongruence(file);    
+}
+
+/*##################  TQuiz::ExportCurrentAasiaCongruence ##########################
+*   Purpose....: Export asian congruence for current quiz         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportCurrentAsiaCongruence(TFile &file)
+{
+    int count;
+	int axis;
+	int q;
+	long double rsum[2];
+	long double x;
+	long double y;
+    long double xsum;
+    long double ysum;	
+    long double sqsum;
+    int val;
+	char str[80];
+
+	count = GetQuizN();
+
+	xsum = 0;
+	ysum = 0;
+
+	for (axis = 0; axis < 2; axis++)
+    {
+        rsum[axis] = 0;
+        
+    	for (q = 0; q < count; q++)
+	    {
+	        x = Quiz[q].Pca[axis];
+            y = Quiz[q].AsiaPca[axis];
+
+            rsum[axis] += x * y;
+            xsum += x * x;
+            ysum += y * y;
+        }
+
+        if (rsum[axis] < 0)
+            rsum[axis] = -rsum[axis];
+	}
+
+    sqsum = xsum * ysum;
+
+    if (sqsum > 0.0)
+    	sqsum = sqrtl(xsum * ysum);
+		
+    if (sqsum > 0.0)
+        val = round(1000 * ((rsum[0] + rsum[1]) / sqsum));
+    else
+		val = 0;
+
+    sprintf(str, "0.%03d\r\n", val);
+    file.Write(str);
+}
+
+
+/*##################  TQuiz::ExportAsiaCongruence ##########################
+*   Purpose....: Export asian congruence         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportAsiaCongruence(const char *filename)
+{
+    int cross;
+    TQuiz *quiz;
+	TFile file(filename, 0);
+
+    for (cross = 0; cross < MAX_CROSS; cross++)
+    {
+        quiz = CrossQuiz[cross];
+		if (quiz)
+			quiz->ExportCurrentAsiaCongruence(file);
+	}
+
+	ExportCurrentAsiaCongruence(file);
+}
+
+/*##################  TQuiz::ExportCurrentCongruence ##########################
+*   Purpose....: Export congruence for current quiz         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportCurrentCongruence(TFile &file, TQuiz *quiz)
+{
+	int count1;
+	int count2;
+	int axis;
+	int q1;
+	int q2;
+	int GlobalId;
+	long double rsum[2];
+	long double x;
+	long double y;
+	long double xsum;
+	long double ysum;
+	long double sqsum;
+	int val;
+	char str[80];
+
+	count1 = GetQuizN();
+	count2 = quiz->GetQuizN();
+
+	xsum = 0;
+	ysum = 0;
+
+	for (axis = 0; axis < 2; axis++)
+	{
+		rsum[axis] = 0;
+
+		for (q1 = 0; q1 < count1; q1++)
+		{
+			GlobalId = GetGlobalId(q1);
+
+			for (q2 = 0; q2 < count2; q2++)
+			{
+				if (GlobalId == quiz->GetGlobalId(q2))
+				{
+					x = Quiz[q1].Pca[axis];
+					y = quiz->Quiz[q2].Pca[axis];
+
+					rsum[axis] += x * y;
+					xsum += x * x;
+					ysum += y * y;
+					break;
+				}
+			}
+		}
+
+		if (rsum[axis] < 0)
+			rsum[axis] = -rsum[axis];
+	}
+
+	sqsum = xsum * ysum;
+
+	if (sqsum > 0.0)
+		sqsum = sqrtl(xsum * ysum);
+
+	if (sqsum > 0.0)
+		val = round(1000 * ((rsum[0] + rsum[1]) / sqsum));
+	else
+		val = 0;
+
+	sprintf(str, "0.%03d\r\n", val);
+	file.Write(str);
+}
+
+/*##################  TQuiz::ExportCongruence ##########################
+*   Purpose....: Export asian congruence         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportCongruence(const char *filename)
+{
+	int cross;
+	TQuiz *quiz;
+	TFile file(filename, 0);
+
+	for (cross = 0; cross < MAX_CROSS; cross++)
+	{
+		quiz = CrossQuiz[cross];
+		if (quiz)
+			quiz->ExportCurrentCongruence(file, this);
+	}
 }

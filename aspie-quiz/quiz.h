@@ -57,6 +57,7 @@
 #define PCA_TYPE_OLD            4
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
+#define PCA_TYPE_ASIA           7
 
 #define GROUP_COUNT             18
 
@@ -164,6 +165,7 @@ struct TQuizQuestion
 	long double FemalePca[MAX_PCA_AXIS];
 	long double YoungPca[MAX_PCA_AXIS];
     long double OldPca[MAX_PCA_AXIS];
+    long double AsiaPca[MAX_PCA_AXIS];
 	long double AsPca[MAX_PCA_AXIS];
     long double MixedPca[MAX_PCA_AXIS];
     long double AspiePca[MAX_ASPIE_PCA_AXIS];
@@ -304,6 +306,11 @@ public:
     void ExportGenderCorr(const char *filename);
     void ExportAgeCorr(const char *filename);
 
+    void ExportGenderCongruence(const char *filename);
+    void ExportAgeCongruence(const char *filename);
+    void ExportAsiaCongruence(const char *filename);
+    void ExportCongruence(const char *filename);
+
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 	void DsmCutoff(const char *filename, int All);
 
@@ -379,6 +386,11 @@ protected:
 
     void ExportCurrentGenderCorr(TFile &file);
     void ExportCurrentAgeCorr(TFile &file);
+
+    void ExportCurrentGenderCongruence(TFile &file);
+    void ExportCurrentAgeCongruence(TFile &file);
+    void ExportCurrentAsiaCongruence(TFile &file);
+    void ExportCurrentCongruence(TFile &file, TQuiz *quiz);
 
 	void ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT]);
 	void GetDxData();

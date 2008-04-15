@@ -464,12 +464,14 @@ int main(int argc, char **argv)
 	 Quiz[5]->ImportMvsp("pca\\female6.txt", PCA_TYPE_FEMALE);
 	 Quiz[5]->ImportMvsp("pca\\old6.txt", PCA_TYPE_OLD);
 	 Quiz[5]->ImportMvsp("pca\\young6.txt", PCA_TYPE_YOUNG);
+	 Quiz[5]->ImportMvsp("pca\\asia6.txt", PCA_TYPE_ASIA);
 
 	 Quiz[6]->ImportMvsp("pca\\all7.txt", PCA_TYPE_ALL);
 	 Quiz[6]->ImportMvsp("pca\\male7.txt", PCA_TYPE_MALE);
 	 Quiz[6]->ImportMvsp("pca\\female7.txt", PCA_TYPE_FEMALE);
 	 Quiz[6]->ImportMvsp("pca\\old7.txt", PCA_TYPE_OLD);
 	 Quiz[6]->ImportMvsp("pca\\young7.txt", PCA_TYPE_YOUNG);
+	 Quiz[6]->ImportMvsp("pca\\asia7.txt", PCA_TYPE_ASIA);
 
 	 Quiz[7]->ImportMvsp("pca\\all8.txt", PCA_TYPE_ALL);
 	 Quiz[7]->ImportMvsp("pca\\male8.txt", PCA_TYPE_MALE);
@@ -554,6 +556,7 @@ int main(int argc, char **argv)
 	 Quiz[20]->ImportMvsp("pca\\females5.txt", PCA_TYPE_FEMALE);
 	 Quiz[20]->ImportMvsp("pca\\olds5.txt", PCA_TYPE_OLD);
 	 Quiz[20]->ImportMvsp("pca\\youngs5.txt", PCA_TYPE_YOUNG);
+	 Quiz[20]->ImportMvsp("pca\\asias5.txt", PCA_TYPE_ASIA);
 
 	 Quiz[21]->ImportMvsp("pca\\alls6.txt", PCA_TYPE_ALL);
 	 Quiz[21]->ImportMvsp("pca\\males6.txt", PCA_TYPE_MALE);
@@ -614,12 +617,14 @@ int main(int argc, char **argv)
 	 Quiz[30]->ImportMvsp("pca\\femalen3.txt", PCA_TYPE_FEMALE);
 	 Quiz[30]->ImportMvsp("pca\\oldn3.txt", PCA_TYPE_OLD);
 	 Quiz[30]->ImportMvsp("pca\\youngn3.txt", PCA_TYPE_YOUNG);
+	 Quiz[30]->ImportMvsp("pca\\asian3.txt", PCA_TYPE_ASIA);
 
 	 Quiz[31]->ImportMvsp("pca\\alln4.txt", PCA_TYPE_ALL);
 	 Quiz[31]->ImportMvsp("pca\\malen4.txt", PCA_TYPE_MALE);
 	 Quiz[31]->ImportMvsp("pca\\femalen4.txt", PCA_TYPE_FEMALE);
 	 Quiz[31]->ImportMvsp("pca\\oldn4.txt", PCA_TYPE_OLD);
 	 Quiz[31]->ImportMvsp("pca\\youngn4.txt", PCA_TYPE_YOUNG);
+	 Quiz[31]->ImportMvsp("pca\\asian4.txt", PCA_TYPE_ASIA);
 
 	 Quiz[32]->ImportMvsp("pca\\allf1.txt", PCA_TYPE_ALL);
 	 Quiz[32]->ImportMvsp("pca\\malef1.txt", PCA_TYPE_MALE);
@@ -704,8 +709,41 @@ int main(int argc, char **argv)
 	 Quiz[32]->CalcGlobal();
 
 	 printf("axis corr\r\n");
-	 Quiz[32]->ExportGenderCorr("gender.txt");
-	 Quiz[32]->ExportAgeCorr("age.txt");
+	 Quiz[32]->ExportGenderCongruence("gender.txt");
+	 Quiz[32]->ExportAgeCongruence("age.txt");
+	 Quiz[32]->ExportAsiaCongruence("asia.txt");
+	 Quiz[1]->ExportCongruence("con2.txt");
+	 Quiz[2]->ExportCongruence("con3.txt");
+	 Quiz[3]->ExportCongruence("con4.txt");
+	 Quiz[4]->ExportCongruence("con5.txt");
+	 Quiz[5]->ExportCongruence("con6.txt");
+	 Quiz[6]->ExportCongruence("con7.txt");
+	 Quiz[7]->ExportCongruence("con8.txt");
+	 Quiz[8]->ExportCongruence("con9.txt");
+	 Quiz[9]->ExportCongruence("conr1.txt");
+	 Quiz[10]->ExportCongruence("conr2.txt");
+	 Quiz[11]->ExportCongruence("conr3.txt");
+	 Quiz[12]->ExportCongruence("conr4.txt");
+	 Quiz[13]->ExportCongruence("conr5.txt");
+	 Quiz[14]->ExportCongruence("conr6.txt");
+	 Quiz[15]->ExportCongruence("conr7.txt");
+	 Quiz[16]->ExportCongruence("cons1.txt");
+	 Quiz[17]->ExportCongruence("cons2.txt");
+	 Quiz[18]->ExportCongruence("cons3.txt");
+	 Quiz[19]->ExportCongruence("cons4.txt");
+	 Quiz[20]->ExportCongruence("cons5.txt");
+	 Quiz[21]->ExportCongruence("cons6.txt");
+	 Quiz[22]->ExportCongruence("cons7.txt");
+	 Quiz[23]->ExportCongruence("cons8.txt");
+	 Quiz[24]->ExportCongruence("cons9.txt");
+	 Quiz[25]->ExportCongruence("cons10.txt");
+	 Quiz[26]->ExportCongruence("cons11.txt");
+	 Quiz[27]->ExportCongruence("cons12.txt");
+	 Quiz[28]->ExportCongruence("conn1.txt");
+	 Quiz[29]->ExportCongruence("conn2.txt");
+	 Quiz[30]->ExportCongruence("conn3.txt");
+	 Quiz[31]->ExportCongruence("conn4.txt");
+	 Quiz[32]->ExportCongruence("conf1.txt");
 
 	 printf("export intercorr\n");
 	 TQuiz::ExportHighestIntercorr("csv\\highcorr.csv");
