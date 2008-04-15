@@ -33,10 +33,10 @@ void cdecl main()
 {
 	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 	TSerialDebug Debug;
-	TSerialDevice Port1(1, 9600, 'N', 8, 1);
-	TSerialDevice Port2(4, 9600, 'N', 8, 1);
+	TSerialDevice Port1(1, 9600, 'E', 8, 1);
+	TSerialDevice Port2(2, 9600, 'E', 8, 1);
 
-	TFile *File = new TFile("c:\\comlog\\raw.dat", 0);
+	TFile *File = new TFile("c:\\raw.dat", 0);
 	Port1.Open();
 	Port2.Open();
 
