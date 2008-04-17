@@ -31,7 +31,7 @@
 #include <math.h>
 
 // #define EXPORT	1
-// #define ALL		1
+#define ALL		1
 // #define CONV		1
 
 #include "file.h"
@@ -1020,40 +1020,40 @@ int main(int argc, char **argv)
 	printf("version histogram\r\n");
 
 #ifdef ALL
-	 Quiz[1]->ExportHistogram("csv\\all2.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[2]->ExportHistogram("csv\\all3.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[3]->ExportHistogram("csv\\all4.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[4]->ExportHistogram("csv\\all5.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[5]->ExportHistogram("csv\\all6.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[6]->ExportHistogram("csv\\all7.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[7]->ExportHistogram("csv\\all8.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[8]->ExportHistogram("csv\\all9.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[9]->ExportHistogram("csv\\allr1.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[10]->ExportHistogram("csv\\allr2.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[11]->ExportHistogram("csv\\allr3.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[12]->ExportHistogram("csv\\allr4.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[13]->ExportHistogram("csv\\allr5.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[14]->ExportHistogram("csv\\allr6.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[15]->ExportHistogram("csv\\allr7.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[16]->ExportHistogram("csv\\alls1.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[17]->ExportHistogram("csv\\alls2.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[18]->ExportHistogram("csv\\alls3.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[19]->ExportHistogram("csv\\alls4.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[20]->ExportHistogram("csv\\alls5.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[21]->ExportHistogram("csv\\alls6.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[22]->ExportHistogram("csv\\alls7.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[23]->ExportHistogram("csv\\alls8.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[24]->ExportHistogram("csv\\alls9.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[25]->ExportHistogram("csv\\alls10.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[26]->ExportHistogram("csv\\alls11.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[27]->ExportHistogram("csv\\alls12.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[28]->ExportHistogram("csv\\alln1.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[29]->ExportHistogram("csv\\alln2.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[1]->ExportDiffHistogram("csv\\all2.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[2]->ExportDiffHistogram("csv\\all3.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[3]->ExportDiffHistogram("csv\\all4.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[4]->ExportDiffHistogram("csv\\all5.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[5]->ExportDiffHistogram("csv\\all6.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[6]->ExportDiffHistogram("csv\\all7.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[7]->ExportDiffHistogram("csv\\all8.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[8]->ExportDiffHistogram("csv\\all9.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[9]->ExportDiffHistogram("csv\\allr1.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[10]->ExportDiffHistogram("csv\\allr2.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[11]->ExportDiffHistogram("csv\\allr3.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[12]->ExportDiffHistogram("csv\\allr4.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[13]->ExportDiffHistogram("csv\\allr5.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[14]->ExportDiffHistogram("csv\\allr6.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[15]->ExportDiffHistogram("csv\\allr7.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[16]->ExportDiffHistogram("csv\\alls1.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[17]->ExportDiffHistogram("csv\\alls2.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[18]->ExportDiffHistogram("csv\\alls3.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[19]->ExportDiffHistogram("csv\\alls4.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[20]->ExportDiffHistogram("csv\\alls5.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[21]->ExportDiffHistogram("csv\\alls6.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[22]->ExportDiffHistogram("csv\\alls7.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[23]->ExportDiffHistogram("csv\\alls8.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[24]->ExportDiffHistogram("csv\\alls9.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[25]->ExportDiffHistogram("csv\\alls10.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[26]->ExportDiffHistogram("csv\\alls11.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[27]->ExportDiffHistogram("csv\\alls12.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[28]->ExportDiffHistogram("csv\\alln1.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[29]->ExportDiffHistogram("csv\\alln2.csv", POP_TYPE_ALL, FALSE);
 #endif
 
-	 Quiz[30]->ExportHistogram("csv\\alln3.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[31]->ExportHistogram("csv\\alln4.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[32]->ExportHistogram("csv\\allf1.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[30]->ExportDiffHistogram("csv\\alln3.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[31]->ExportDiffHistogram("csv\\alln4.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[32]->ExportDiffHistogram("csv\\allf1.csv", POP_TYPE_ALL, FALSE);
 
 #ifdef CONV
 	printf("conv headers\r\n");
@@ -1094,24 +1094,24 @@ int main(int argc, char **argv)
 	 Quiz[32]->WriteGroupWeighting("convf1.h");
 
 	printf("type histograms\r\n");
-	 Quiz[32]->ExportDiffHistogram("csv\\all.csv", POP_TYPE_ALL);
+	 Quiz[32]->ExportDiffHistogram("csv\\all.csv", POP_TYPE_ALL, TRUE);
 
-	 Quiz[32]->ExportDiffHistogram("csv\\autism.csv", POP_TYPE_AUTISM);
-	 Quiz[32]->ExportDiffHistogram("csv\\as.csv", POP_TYPE_AS);
-	 Quiz[32]->ExportDiffHistogram("csv\\nt.csv", POP_TYPE_NT_CONTROL);
-	 Quiz[32]->ExportDiffHistogram("csv\\soc.csv", POP_TYPE_SOCIAL_PHOBIA);
-	 Quiz[32]->ExportDiffHistogram("csv\\add.csv", POP_TYPE_ADD);
-	 Quiz[32]->ExportDiffHistogram("csv\\ts.csv", POP_TYPE_TS);
-	 Quiz[32]->ExportDiffHistogram("csv\\pa.csv", POP_TYPE_PA);
-	 Quiz[32]->ExportDiffHistogram("csv\\bip.csv", POP_TYPE_BIPOLAR);
-	 Quiz[32]->ExportDiffHistogram("csv\\schizo.csv", POP_TYPE_SCHIZOPHRENIA);
-	 Quiz[32]->ExportDiffHistogram("csv\\syn.csv", POP_TYPE_SYNAESTHESIA);
-	 Quiz[32]->ExportDiffHistogram("csv\\dysl.csv", POP_TYPE_DYSLEXIA);
-	 Quiz[32]->ExportDiffHistogram("csv\\dysc.csv", POP_TYPE_DYSCALCULIA);
-	 Quiz[32]->ExportDiffHistogram("csv\\dysg.csv", POP_TYPE_DYSGRAPHIA);
-	 Quiz[32]->ExportDiffHistogram("csv\\ocd.csv", POP_TYPE_OCD);
-	 Quiz[32]->ExportDiffHistogram("csv\\odd.csv", POP_TYPE_ODD);
-	 Quiz[32]->ExportDiffHistogram("csv\\dysp.csv", POP_TYPE_DYSPRAXIA);
+	 Quiz[32]->ExportDiffHistogram("csv\\autism.csv", POP_TYPE_AUTISM, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\as.csv", POP_TYPE_AS, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\nt.csv", POP_TYPE_NT_CONTROL, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\soc.csv", POP_TYPE_SOCIAL_PHOBIA, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\add.csv", POP_TYPE_ADD, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\ts.csv", POP_TYPE_TS, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\pa.csv", POP_TYPE_PA, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\bip.csv", POP_TYPE_BIPOLAR, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\schizo.csv", POP_TYPE_SCHIZOPHRENIA, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\syn.csv", POP_TYPE_SYNAESTHESIA, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\dysl.csv", POP_TYPE_DYSLEXIA, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\dysc.csv", POP_TYPE_DYSCALCULIA, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\dysg.csv", POP_TYPE_DYSGRAPHIA, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\ocd.csv", POP_TYPE_OCD, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\odd.csv", POP_TYPE_ODD, TRUE);
+	 Quiz[32]->ExportDiffHistogram("csv\\dysp.csv", POP_TYPE_DYSPRAXIA, TRUE);
 
 	 TQuiz::ExportBirthMonthHistogram("csv\\birth.csv");
 

@@ -9920,7 +9920,7 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::ExportDiffHistogram(const char *filename, int PopType)
+void TQuiz::ExportDiffHistogram(const char *filename, int PopType, int All)
 {
     char str[80];
   	int i;
@@ -9955,27 +9955,30 @@ void TQuiz::ExportDiffHistogram(const char *filename, int PopType)
             HistDiffCount[i]++;        
 	}
 
-	for (cross = 0; cross < MAX_CROSS; cross++)
-	{
-	    quiz = CrossQuiz[cross];
-	    if (quiz && !quiz->IsSubQuiz())
+    if (All)
+    {
+    	for (cross = 0; cross < MAX_CROSS; cross++)
 	    {
-            pop = quiz->GetPop(PopType);
-            if (pop)
-            {
-                for (e = 0; e < pop->ValueCount; e++)
+    	    quiz = CrossQuiz[cross];
+	        if (quiz && !quiz->IsSubQuiz())
+	        {
+                pop = quiz->GetPop(PopType);
+                if (pop)
                 {
-                    i = pop->ValArr[e].AsScore - pop->ValArr[e].NtScore;
-					i += 200;
-                    i = i / 5;
+                    for (e = 0; e < pop->ValueCount; e++)
+                    {
+                        i = pop->ValArr[e].AsScore - pop->ValArr[e].NtScore;
+		    			i += 200;
+                        i = i / 5;
+    
+                        if (i <= 80)
+                            HistDiffCount[i]++;
 
-                    if (i <= 80)
-                        HistDiffCount[i]++;
-
-                }
+                    }
+    	        }
 	        }
-	    }
-	}
+    	}
+    }
 
 	for (i = 0; i <= 80; i++)
 	{

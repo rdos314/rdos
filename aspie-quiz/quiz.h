@@ -295,7 +295,7 @@ public:
 	static void ExportBirthMonthHistogram(const char *filename);
 
 	void ExportHistogram(const char *filename, int PopType, int Width, int All);
-	void ExportDiffHistogram(const char *filename, int PopType);
+	void ExportDiffHistogram(const char *filename, int PopType, int All);
 
 	static void ExportHighestIntercorr(const char *filename);
 	static void ExportAverageIntercorr(const char *filename);
