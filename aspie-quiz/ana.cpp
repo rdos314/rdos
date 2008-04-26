@@ -31,7 +31,7 @@
 #include <math.h>
 
 // #define EXPORT	1
-#define ALL		1
+// #define ALL		1
 // #define CONV		1
 
 #include "file.h"
