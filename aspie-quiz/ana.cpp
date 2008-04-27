@@ -955,8 +955,8 @@ int main(int argc, char **argv)
 	 Quiz[29]->WriteRetest("eval\\retestn2.htm");
 	 Quiz[30]->WriteRetest("eval\\retestn3.htm");
 	 Quiz[31]->WriteRetest("eval\\retestn4.htm");
-//	 Quiz[32]->WriteRetest("eval\\retestf1.htm");
-	 Quiz[31]->WriteVersionRetest("eval\\vervar.htm");
+	 Quiz[32]->WriteRetest("eval\\retestf1.htm");
+	 Quiz[32]->WriteVersionRetest("eval\\vervar.htm");
 
 	printf("imgrate\r\n");
 #ifdef ALL
