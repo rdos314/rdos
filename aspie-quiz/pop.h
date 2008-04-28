@@ -29,7 +29,7 @@
 #define _POP_H
 
 #define MAX_CATS        16
-#define MAX_QUESTIONS   250
+#define MAX_QUESTIONS   300
 
 #define ACTIVE_GROUP_COUNT      14
 

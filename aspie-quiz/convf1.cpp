@@ -32,7 +32,7 @@
 #include "pop.h"
 #include "file.h"
 #include "quizdbf1.h"
-#include "convf1.h"
+#include "convf.h"
 
 #define FALSE 0
 #define TRUE !FALSE
