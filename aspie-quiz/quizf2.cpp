@@ -1204,6 +1204,13 @@ void TQuizF2::ImportMvsp(const char *filename, int PcaType)
 						Quiz[q - 1].OldPca[3] = d4;
 						break;
 
+					case PCA_TYPE_ASIA:
+						Quiz[q - 1].AsiaPca[0] = d1;
+						Quiz[q - 1].AsiaPca[1] = d2;
+						Quiz[q - 1].AsiaPca[2] = d3;
+						Quiz[q - 1].AsiaPca[3] = d4;
+						break;
+
 					case PCA_TYPE_AS:
 						Quiz[q - 1].AsPca[0] = d1;
 						Quiz[q - 1].AsPca[1] = d2;

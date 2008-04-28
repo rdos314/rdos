@@ -31,7 +31,7 @@
 #include <math.h>
 
 // #define EXPORT	1
-#define ALL		1
+// #define ALL		1
 // #define CONV		1
 
 #include "file.h"
@@ -643,12 +643,14 @@ int main(int argc, char **argv)
 	 Quiz[32]->ImportMvsp("pca\\femalef1.txt", PCA_TYPE_FEMALE);
 	 Quiz[32]->ImportMvsp("pca\\oldf1.txt", PCA_TYPE_OLD);
 	 Quiz[32]->ImportMvsp("pca\\youngf1.txt", PCA_TYPE_YOUNG);
+	 Quiz[32]->ImportMvsp("pca\\asiaf1.txt", PCA_TYPE_ASIA);
 
 	 Quiz[33]->ImportMvsp("pca\\allf2.txt", PCA_TYPE_ALL);
 	 Quiz[33]->ImportMvsp("pca\\malef2.txt", PCA_TYPE_MALE);
 	 Quiz[33]->ImportMvsp("pca\\femalef2.txt", PCA_TYPE_FEMALE);
 	 Quiz[33]->ImportMvsp("pca\\oldf2.txt", PCA_TYPE_OLD);
 	 Quiz[33]->ImportMvsp("pca\\youngf2.txt", PCA_TYPE_YOUNG);
+	 Quiz[33]->ImportMvsp("pca\\asiaf2.txt", PCA_TYPE_ASIA);
 
 	printf("import aspie\r\n");
 
