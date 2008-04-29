@@ -176,25 +176,31 @@ void TQuizF2::SetupTexts()
  Quiz[161].Reverse = TRUE;
  Quiz[167].Reverse = TRUE;
  Quiz[171].Reverse = TRUE;
+ Quiz[176].Reverse = TRUE;
  Quiz[181].Reverse = TRUE;
  Quiz[186].Reverse = TRUE;
  Quiz[191].Reverse = TRUE;
  Quiz[192].Reverse = TRUE;
  Quiz[201].Reverse = TRUE;
+ Quiz[214].Reverse = TRUE;
+ Quiz[221].Reverse = TRUE;
  Quiz[233].Reverse = TRUE;
+ Quiz[236].Reverse = TRUE;
+ Quiz[250].Reverse = TRUE;
  Quiz[255].Reverse = TRUE;
+ Quiz[266].Reverse = TRUE;
 
  Quiz[150].MyGroup = GROUP_MIXED;
  Quiz[151].MyGroup = GROUP_SOCIAL;
  Quiz[152].MyGroup = GROUP_MIXED;
  Quiz[153].MyGroup = GROUP_ENVIRONMENT;
  Quiz[154].MyGroup = GROUP_MIXED;
- Quiz[155].MyGroup = GROUP_MIXED;
+ Quiz[155].MyGroup = GROUP_ENVIRONMENT;
  Quiz[156].MyGroup = GROUP_NT_OBSESSION;
  Quiz[157].MyGroup = GROUP_MIXED;
  Quiz[158].MyGroup = GROUP_MIXED;
  Quiz[159].MyGroup = GROUP_MIXED;
- Quiz[160].MyGroup = GROUP_MIXED;
+ Quiz[160].MyGroup = GROUP_ENVIRONMENT;
  Quiz[161].MyGroup = GROUP_SOCIAL;
  Quiz[162].MyGroup = GROUP_MIXED;
  Quiz[163].MyGroup = GROUP_MIXED;
@@ -209,22 +215,22 @@ void TQuizF2::SetupTexts()
  Quiz[172].MyGroup = GROUP_MIXED;
  Quiz[173].MyGroup = GROUP_MIXED;
  Quiz[174].MyGroup = GROUP_MIXED;
- Quiz[175].MyGroup = GROUP_MIXED;
- Quiz[176].MyGroup = GROUP_MIXED;
+ Quiz[175].MyGroup = GROUP_ENVIRONMENT;
+ Quiz[176].MyGroup = GROUP_NT_OBSESSION;
  Quiz[177].MyGroup = GROUP_MIXED;
  Quiz[178].MyGroup = GROUP_MIXED;
  Quiz[179].MyGroup = GROUP_MIXED;
- Quiz[180].MyGroup = GROUP_MIXED;
+ Quiz[180].MyGroup = GROUP_ENVIRONMENT;
  Quiz[181].MyGroup = GROUP_SOCIAL;
  Quiz[182].MyGroup = GROUP_MIXED;
  Quiz[183].MyGroup = GROUP_MIXED;
  Quiz[184].MyGroup = GROUP_MIXED;
- Quiz[185].MyGroup = GROUP_MIXED;
+ Quiz[185].MyGroup = GROUP_ENVIRONMENT;
  Quiz[186].MyGroup = GROUP_NT_OBSESSION;
- Quiz[187].MyGroup = GROUP_MIXED;
+ Quiz[187].MyGroup = GROUP_ASPIE_SENSORY;
  Quiz[188].MyGroup = GROUP_MIXED;
  Quiz[189].MyGroup = GROUP_MIXED;
- Quiz[190].MyGroup = GROUP_MIXED;
+ Quiz[190].MyGroup = GROUP_ENVIRONMENT;
  Quiz[191].MyGroup = GROUP_SOCIAL;
  Quiz[192].MyGroup = GROUP_NT_NVC;
  Quiz[193].MyGroup = GROUP_MIXED;
@@ -240,22 +246,22 @@ void TQuizF2::SetupTexts()
  Quiz[203].MyGroup = GROUP_MIXED;
  Quiz[204].MyGroup = GROUP_MIXED;
  Quiz[205].MyGroup = GROUP_ENVIRONMENT;
- Quiz[206].MyGroup = GROUP_MIXED;
+ Quiz[206].MyGroup = GROUP_NT_OBSESSION;
  Quiz[207].MyGroup = GROUP_MIXED;
  Quiz[208].MyGroup = GROUP_MIXED;
- Quiz[209].MyGroup = GROUP_MIXED;
+ Quiz[209].MyGroup = GROUP_NT_NVC;
  Quiz[210].MyGroup = GROUP_ENVIRONMENT;
  Quiz[211].MyGroup = GROUP_SOCIAL;
- Quiz[212].MyGroup = GROUP_MIXED;
+ Quiz[212].MyGroup = GROUP_ACTIVITY;
  Quiz[213].MyGroup = GROUP_MIXED;
- Quiz[214].MyGroup = GROUP_MIXED;
+ Quiz[214].MyGroup = GROUP_SOCIAL;
  Quiz[215].MyGroup = GROUP_MIXED;
- Quiz[216].MyGroup = GROUP_MIXED;
+ Quiz[216].MyGroup = GROUP_SOCIAL;
  Quiz[217].MyGroup = GROUP_MIXED;
  Quiz[218].MyGroup = GROUP_MIXED;
  Quiz[219].MyGroup = GROUP_MIXED;
- Quiz[220].MyGroup = GROUP_MIXED;
- Quiz[221].MyGroup = GROUP_MIXED;
+ Quiz[220].MyGroup = GROUP_ENVIRONMENT;
+ Quiz[221].MyGroup = GROUP_SOCIAL;
  Quiz[222].MyGroup = GROUP_NT_NVC;
  Quiz[223].MyGroup = GROUP_NT_NVC;
  Quiz[224].MyGroup = GROUP_MIXED;
@@ -266,15 +272,15 @@ void TQuizF2::SetupTexts()
  Quiz[229].MyGroup = GROUP_MIXED;
  Quiz[230].MyGroup = GROUP_MIXED;
  Quiz[231].MyGroup = GROUP_MIXED;
- Quiz[232].MyGroup = GROUP_MIXED;
+ Quiz[232].MyGroup = GROUP_NT_TALENT;
  Quiz[233].MyGroup = GROUP_ENVIRONMENT;
  Quiz[234].MyGroup = GROUP_MIXED;
- Quiz[235].MyGroup = GROUP_MIXED;
- Quiz[236].MyGroup = GROUP_MIXED;
+ Quiz[235].MyGroup = GROUP_ENVIRONMENT;
+ Quiz[236].MyGroup = GROUP_ENVIRONMENT;
  Quiz[237].MyGroup = GROUP_MIXED;
- Quiz[238].MyGroup = GROUP_MIXED;
+ Quiz[238].MyGroup = GROUP_NT_NVC;
  Quiz[239].MyGroup = GROUP_MIXED;
- Quiz[240].MyGroup = GROUP_MIXED;
+ Quiz[240].MyGroup = GROUP_ENVIRONMENT;
  Quiz[241].MyGroup = GROUP_SOCIAL;
  Quiz[242].MyGroup = GROUP_MIXED;
  Quiz[243].MyGroup = GROUP_ENVIRONMENT;
@@ -284,10 +290,10 @@ void TQuizF2::SetupTexts()
  Quiz[247].MyGroup = GROUP_MIXED;
  Quiz[248].MyGroup = GROUP_MIXED;
  Quiz[249].MyGroup = GROUP_MIXED;
- Quiz[250].MyGroup = GROUP_MIXED;
+ Quiz[250].MyGroup = GROUP_ENVIRONMENT;
  Quiz[251].MyGroup = GROUP_SOCIAL;
  Quiz[252].MyGroup = GROUP_NT_NVC;
- Quiz[253].MyGroup = GROUP_MIXED;
+ Quiz[253].MyGroup = GROUP_NT_NVC;
  Quiz[254].MyGroup = GROUP_MIXED;
  Quiz[255].MyGroup = GROUP_SOCIAL;
  Quiz[256].MyGroup = GROUP_MIXED;
@@ -300,10 +306,10 @@ void TQuizF2::SetupTexts()
  Quiz[263].MyGroup = GROUP_MIXED;
  Quiz[264].MyGroup = GROUP_MIXED;
  Quiz[265].MyGroup = GROUP_MIXED;
- Quiz[266].MyGroup = GROUP_MIXED;
+ Quiz[266].MyGroup = GROUP_ENVIRONMENT;
  Quiz[267].MyGroup = GROUP_MIXED;
  Quiz[268].MyGroup = GROUP_MIXED;
- Quiz[269].MyGroup = GROUP_MIXED;
+ Quiz[269].MyGroup = GROUP_NT_NVC;
 
  Quiz[150].Text = "NEO - Worry about things";
  Quiz[151].Text = "NEO - Make friends easily";
@@ -1923,3 +1929,637 @@ void TQuizF2::WriteRetest(const char *filename)
 		file.Write(str);
 	 }
 }
+
+/*##################  TQuizF2::WriteIPIP ##########################
+*   Purpose....: Write IPIP NEO personality test report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizF2::WriteIPIP(const char *filename)
+{
+	int Count;
+	long double AsSum;
+	long double NtSum;
+	long double DiffSum;
+	long double GrpSum[ACTIVE_GROUP_COUNT];
+	long double NSum;
+	long double ESum;
+	long double OSum;
+	long double ASum;
+	long double CSum;
+	long double AsMean;
+	long double NtMean;
+	long double DiffMean;
+	long double GrpMean[ACTIVE_GROUP_COUNT];
+	long double NMean;
+	long double EMean;
+	long double OMean;
+	long double AMean;
+	long double CMean;
+	long double AsSd;
+	long double NtSd;
+	long double DiffSd;
+	long double GrpSd[ACTIVE_GROUP_COUNT];
+	long double NSd;
+	long double ESd;
+	long double OSd;
+	long double ASd;
+	long double CSd;
+	long double AsCorr;
+	long double NtCorr;
+	long double DiffCorr;
+	long double val;
+	long double zx;
+	long double zy;
+	int grp;
+	long double NGrpCorr[ACTIVE_GROUP_COUNT];
+	long double EGrpCorr[ACTIVE_GROUP_COUNT];
+	long double OGrpCorr[ACTIVE_GROUP_COUNT];
+	long double AGrpCorr[ACTIVE_GROUP_COUNT];
+	long double CGrpCorr[ACTIVE_GROUP_COUNT];
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	Count = 0;
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+    for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+        GrpSum[grp] = 0;
+	
+	NSum = 0;
+	ESum = 0;
+	OSum = 0;
+	ASum = 0;
+	CSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+        {
+			Count++;
+			AsSum += Row.AsResult;
+			NtSum += Row.NtResult;
+			DiffSum += Row.AsResult - Row.NtResult;
+
+            for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+                GrpSum[grp] += Row.GroupResult[grp];
+			
+			NSum += Row.Un;
+			ESum += Row.Ue;
+			OSum += Row.Uo;
+			ASum += Row.Ua;
+			CSum += Row.Uc;
+	    }
+	}
+
+	AsMean = AsSum / Count;
+	NtMean = NtSum / Count;
+	DiffMean = DiffSum / Count;
+
+    for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+        GrpMean[grp] = GrpSum[grp] / Count;
+    
+	NMean = NSum / Count;
+	EMean = ESum / Count;
+	OMean = OSum / Count;
+	AMean = ASum / Count;
+	CMean = CSum / Count;
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+    for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+        GrpSum[grp] = 0;
+	
+	NSum = 0;
+	ESum = 0;
+	OSum = 0;
+	ASum = 0;
+	CSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+        {
+            val = (long double)Row.AsResult - AsMean;
+   			AsSum += val * val;
+   			
+            val = (long double)Row.NtResult - NtMean;
+			NtSum += val * val;
+			
+            val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
+			DiffSum += val * val;
+
+            for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+            {
+                val = (long double)Row.GroupResult[grp] - GrpMean[grp];
+                GrpSum[grp] += val * val;
+            }			
+
+            val = (long double)Row.Un - NMean;
+			NSum += val * val;
+
+            val = (long double)Row.Ue - EMean;
+			ESum += val * val;
+
+            val = (long double)Row.Uo - OMean;
+			OSum += val * val;
+
+            val = (long double)Row.Ua - AMean;
+			ASum += val * val;
+
+            val = (long double)Row.Uc - CMean;
+			CSum += val * val;
+	    }
+	}
+
+	AsSd = sqrtl(AsSum / (Count - 1));
+	NtSd = sqrtl(NtSum / (Count - 1));
+	DiffSd = sqrtl(DiffSum / (Count - 1));
+
+    for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+        GrpSd[grp] = sqrtl(GrpSum[grp] / (Count - 1));
+
+	NSd = sqrtl(NSum / (Count - 1));
+	ESd = sqrtl(ESum / (Count - 1));
+	OSd = sqrtl(OSum / (Count - 1));
+	ASd = sqrtl(ASum / (Count - 1));
+	CSd = sqrtl(CSum / (Count - 1));
+
+	file.Write("<h2>Big-five correlations with Aspie-quiz scores</h2>");
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Factor");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Aspie score");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("NT score");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Score difference");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+        {
+            zx = ((long double)Row.Un - NMean) / NSd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Neuroticisn");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", AsCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", NtCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", DiffCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+        {
+            zx = ((long double)Row.Ue - EMean) / ESd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Extroversion");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", AsCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", NtCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", DiffCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+        {
+            zx = ((long double)Row.Uo - OMean) / OSd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Openness");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", AsCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", NtCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", DiffCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+        {
+            zx = ((long double)Row.Ua - AMean) / ASd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Agreeableness");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", AsCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", NtCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", DiffCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+	
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+        {
+            zx = ((long double)Row.Uc - CMean) / CSd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Conscientousness");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", AsCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", NtCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 25);
+	sprintf(str, "%5.2Lf\r\n", DiffCorr);
+	file.Write(str);
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+	file.Write("</table>");
+
+
+	file.Write("<h2>Big-five correlations with Aspie-quiz groups</h2>");
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 20);
+	file.Write("Group");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 16);
+	file.Write("Neuroticism");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 16);
+	file.Write("Extroversion");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 16);
+	file.Write("Openness");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 16);
+	file.Write("Agreeableness");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 16);
+	file.Write("Conscientousness");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		GrpSum[grp] = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+		{
+			zx = ((long double)Row.Un - NMean) / NSd;
+
+			for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+			{
+				if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
+				{
+					zy = ((long double)Row.GroupResult[grp] - GrpMean[grp]) / GrpSd[grp];
+					GrpSum[grp] += zx * zy;
+				}
+			}
+		}
+	}
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		NGrpCorr[grp] = GrpSum[grp] / (Count - 1);
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		GrpSum[grp] = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+		{
+			zx = ((long double)Row.Ue - EMean) / ESd;
+
+			for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+			{
+				if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
+				{
+					zy = ((long double)Row.GroupResult[grp] - GrpMean[grp]) / GrpSd[grp];
+					GrpSum[grp] += zx * zy;
+				}
+			}
+		}
+	}
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		EGrpCorr[grp] = GrpSum[grp] / (Count - 1);
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		GrpSum[grp] = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+		{
+			zx = ((long double)Row.Uo - OMean) / OSd;
+
+			for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+			{
+				if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
+				{
+					zy = ((long double)Row.GroupResult[grp] - GrpMean[grp]) / GrpSd[grp];
+					GrpSum[grp] += zx * zy;
+				}
+			}
+		}
+	}
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		OGrpCorr[grp] = GrpSum[grp] / (Count - 1);
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		GrpSum[grp] = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+		{
+			zx = ((long double)Row.Ua - AMean) / ASd;
+
+			for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+			{
+				if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
+				{
+					zy = ((long double)Row.GroupResult[grp] - GrpMean[grp]) / GrpSd[grp];
+					GrpSum[grp] += zx * zy;
+				}
+			}
+		}
+	}
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		AGrpCorr[grp] = GrpSum[grp] / (Count - 1);
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		GrpSum[grp] = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ua)
+		{
+			zx = ((long double)Row.Uc - CMean) / CSd;
+
+			for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+			{
+				if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
+				{
+					zy = ((long double)Row.GroupResult[grp] - GrpMean[grp]) / GrpSd[grp];
+					GrpSum[grp] += zx * zy;
+				}
+            }
+	    }
+	}
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+        CGrpCorr[grp] = GrpSum[grp] / (Count - 1);
+
+    for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+    {
+        if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
+        {
+
+        	file.Write("<tr style='height:24.75pt'>");
+
+        	WriteCenteredFieldHeader(file, 20);
+	        file.Write(Group[grp].PosName);
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 16);
+        	sprintf(str, "%5.2Lf\r\n", NGrpCorr[grp]);
+        	file.Write(str);
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 16);
+        	sprintf(str, "%5.2Lf\r\n", EGrpCorr[grp]);
+        	file.Write(str);
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 16);
+        	sprintf(str, "%5.2Lf\r\n", OGrpCorr[grp]);
+        	file.Write(str);
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 16);
+        	sprintf(str, "%5.2Lf\r\n", AGrpCorr[grp]);
+        	file.Write(str);
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 16);
+        	sprintf(str, "%5.2Lf\r\n", CGrpCorr[grp]);
+        	file.Write(str);
+        	WriteFieldFooter(file);
+
+        	file.Write("</tr>");
+        }
+    }
+
+    file.Write("</table>");
+
+}
+

@@ -4257,6 +4257,17 @@ void TQuiz::WriteEat(const char *FileName)
 {
 }
 
+/*##################  TQuiz::WriteIPIP ##########################
+*   Purpose....: Write IPIP personality test report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteIPIP(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WritePictureRating ##########################
 *   Purpose....: Write picture rating report (dummy)           			     	        #
 *   In params..: *                                                          #

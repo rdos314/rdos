@@ -342,6 +342,7 @@ public:
     virtual void WriteTS(const char *filename);
 	virtual void WriteGifted(const char *filename);
 	virtual void WriteEat(const char *filename);
+    virtual void WriteIPIP(const char *filename);
 	virtual void WritePictureRating(const char *filename);
 
 	void WritePhpGlobalQuestions(const char *filename);

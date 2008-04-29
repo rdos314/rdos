@@ -1040,8 +1040,9 @@ int main(int argc, char **argv)
 //	 Quiz[26]->WriteTS("");
 //	 Quiz[27]->WriteGifted("");
 //	 Quiz[30]->WriteEat("");
-	 Quiz[12]->WriteAQ("");
-	 Quiz[32]->WriteAQ("");
+//	 Quiz[12]->WriteAQ("");
+//	 Quiz[32]->WriteAQ("");
+	 Quiz[33]->WriteIPIP("eval\\ipip.htm");
 
 	 Quiz[6]->WriteRefererNtCorrelation("eval\\exhnt.htm", "Exhibitionism", "dickflash.com");
 
