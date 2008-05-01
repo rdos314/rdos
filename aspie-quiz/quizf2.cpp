@@ -172,8 +172,10 @@ void TQuizF2::SetupTexts()
 {
  Quiz[151].Reverse = TRUE;
  Quiz[153].Reverse = TRUE;
+ Quiz[154].Reverse = TRUE;
  Quiz[156].Reverse = TRUE;
  Quiz[161].Reverse = TRUE;
+ Quiz[166].Reverse = TRUE;
  Quiz[167].Reverse = TRUE;
  Quiz[171].Reverse = TRUE;
  Quiz[176].Reverse = TRUE;
@@ -182,19 +184,22 @@ void TQuizF2::SetupTexts()
  Quiz[191].Reverse = TRUE;
  Quiz[192].Reverse = TRUE;
  Quiz[201].Reverse = TRUE;
+ Quiz[208].Reverse = TRUE;
  Quiz[214].Reverse = TRUE;
  Quiz[221].Reverse = TRUE;
  Quiz[233].Reverse = TRUE;
  Quiz[236].Reverse = TRUE;
  Quiz[250].Reverse = TRUE;
  Quiz[255].Reverse = TRUE;
+ Quiz[260].Reverse = TRUE;
+ Quiz[265].Reverse = TRUE;
  Quiz[266].Reverse = TRUE;
 
- Quiz[150].MyGroup = GROUP_MIXED;
+ Quiz[150].MyGroup = GROUP_ENVIRONMENT;
  Quiz[151].MyGroup = GROUP_SOCIAL;
  Quiz[152].MyGroup = GROUP_MIXED;
  Quiz[153].MyGroup = GROUP_ENVIRONMENT;
- Quiz[154].MyGroup = GROUP_MIXED;
+ Quiz[154].MyGroup = GROUP_ACTIVITY;
  Quiz[155].MyGroup = GROUP_ENVIRONMENT;
  Quiz[156].MyGroup = GROUP_NT_OBSESSION;
  Quiz[157].MyGroup = GROUP_MIXED;
@@ -206,7 +211,7 @@ void TQuizF2::SetupTexts()
  Quiz[163].MyGroup = GROUP_MIXED;
  Quiz[164].MyGroup = GROUP_MIXED;
  Quiz[165].MyGroup = GROUP_SOCIAL;
- Quiz[166].MyGroup = GROUP_MIXED;
+ Quiz[166].MyGroup = GROUP_ACTIVITY;
  Quiz[167].MyGroup = GROUP_ASPIE_OBSESSION;
  Quiz[168].MyGroup = GROUP_MIXED;
  Quiz[169].MyGroup = GROUP_MIXED;
@@ -222,12 +227,12 @@ void TQuizF2::SetupTexts()
  Quiz[179].MyGroup = GROUP_MIXED;
  Quiz[180].MyGroup = GROUP_ENVIRONMENT;
  Quiz[181].MyGroup = GROUP_SOCIAL;
- Quiz[182].MyGroup = GROUP_MIXED;
+ Quiz[182].MyGroup = GROUP_ACTIVITY;
  Quiz[183].MyGroup = GROUP_MIXED;
  Quiz[184].MyGroup = GROUP_MIXED;
  Quiz[185].MyGroup = GROUP_ENVIRONMENT;
  Quiz[186].MyGroup = GROUP_NT_OBSESSION;
- Quiz[187].MyGroup = GROUP_ASPIE_SENSORY;
+ Quiz[187].MyGroup = GROUP_MIXED;
  Quiz[188].MyGroup = GROUP_MIXED;
  Quiz[189].MyGroup = GROUP_MIXED;
  Quiz[190].MyGroup = GROUP_ENVIRONMENT;
@@ -241,20 +246,20 @@ void TQuizF2::SetupTexts()
  Quiz[198].MyGroup = GROUP_MIXED;
  Quiz[199].MyGroup = GROUP_MIXED;
  Quiz[200].MyGroup = GROUP_MIXED;
- Quiz[201].MyGroup = GROUP_ASPIE_OBSESSION;
+ Quiz[201].MyGroup = GROUP_NT_OBSESSION;
  Quiz[202].MyGroup = GROUP_MIXED;
  Quiz[203].MyGroup = GROUP_MIXED;
  Quiz[204].MyGroup = GROUP_MIXED;
  Quiz[205].MyGroup = GROUP_ENVIRONMENT;
  Quiz[206].MyGroup = GROUP_NT_OBSESSION;
  Quiz[207].MyGroup = GROUP_MIXED;
- Quiz[208].MyGroup = GROUP_MIXED;
+ Quiz[208].MyGroup = GROUP_NT_NVC;
  Quiz[209].MyGroup = GROUP_NT_NVC;
  Quiz[210].MyGroup = GROUP_ENVIRONMENT;
  Quiz[211].MyGroup = GROUP_SOCIAL;
  Quiz[212].MyGroup = GROUP_ACTIVITY;
  Quiz[213].MyGroup = GROUP_MIXED;
- Quiz[214].MyGroup = GROUP_SOCIAL;
+ Quiz[214].MyGroup = GROUP_ACTIVITY;
  Quiz[215].MyGroup = GROUP_MIXED;
  Quiz[216].MyGroup = GROUP_SOCIAL;
  Quiz[217].MyGroup = GROUP_MIXED;
@@ -265,10 +270,10 @@ void TQuizF2::SetupTexts()
  Quiz[222].MyGroup = GROUP_NT_NVC;
  Quiz[223].MyGroup = GROUP_NT_NVC;
  Quiz[224].MyGroup = GROUP_MIXED;
- Quiz[225].MyGroup = GROUP_SOCIAL;
+ Quiz[225].MyGroup = GROUP_NT_NVC;
  Quiz[226].MyGroup = GROUP_MIXED;
  Quiz[227].MyGroup = GROUP_ASPIE_OBSESSION;
- Quiz[228].MyGroup = GROUP_MIXED;
+ Quiz[228].MyGroup = GROUP_NT_NVC;
  Quiz[229].MyGroup = GROUP_MIXED;
  Quiz[230].MyGroup = GROUP_MIXED;
  Quiz[231].MyGroup = GROUP_MIXED;
@@ -282,13 +287,13 @@ void TQuizF2::SetupTexts()
  Quiz[239].MyGroup = GROUP_MIXED;
  Quiz[240].MyGroup = GROUP_ENVIRONMENT;
  Quiz[241].MyGroup = GROUP_SOCIAL;
- Quiz[242].MyGroup = GROUP_MIXED;
+ Quiz[242].MyGroup = GROUP_ACTIVITY;
  Quiz[243].MyGroup = GROUP_ENVIRONMENT;
  Quiz[244].MyGroup = GROUP_MIXED;
  Quiz[245].MyGroup = GROUP_MIXED;
  Quiz[246].MyGroup = GROUP_NT_OBSESSION;
  Quiz[247].MyGroup = GROUP_MIXED;
- Quiz[248].MyGroup = GROUP_MIXED;
+ Quiz[248].MyGroup = GROUP_NT_NVC;
  Quiz[249].MyGroup = GROUP_MIXED;
  Quiz[250].MyGroup = GROUP_ENVIRONMENT;
  Quiz[251].MyGroup = GROUP_SOCIAL;
@@ -300,12 +305,12 @@ void TQuizF2::SetupTexts()
  Quiz[257].MyGroup = GROUP_MIXED;
  Quiz[258].MyGroup = GROUP_MIXED;
  Quiz[259].MyGroup = GROUP_MIXED;
- Quiz[260].MyGroup = GROUP_MIXED;
+ Quiz[260].MyGroup = GROUP_ENVIRONMENT;
  Quiz[261].MyGroup = GROUP_MIXED;
  Quiz[262].MyGroup = GROUP_MIXED;
  Quiz[263].MyGroup = GROUP_MIXED;
- Quiz[264].MyGroup = GROUP_MIXED;
- Quiz[265].MyGroup = GROUP_MIXED;
+ Quiz[264].MyGroup = GROUP_ACTIVITY;
+ Quiz[265].MyGroup = GROUP_ENVIRONMENT;
  Quiz[266].MyGroup = GROUP_ENVIRONMENT;
  Quiz[267].MyGroup = GROUP_MIXED;
  Quiz[268].MyGroup = GROUP_MIXED;
@@ -1149,7 +1154,7 @@ void TQuizF2::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
