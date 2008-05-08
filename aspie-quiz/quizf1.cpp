@@ -75,7 +75,9 @@ TQuizF1::TQuizF1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SetupTexts();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4);
 
+	InitReferers();
 	LoadReferers();
+	SetupControlGroups();
 	SortReferers();
 	LoadPopulations();
 	Calculate();

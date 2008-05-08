@@ -87,8 +87,6 @@ TQuizFinal::TQuizFinal(int Questions, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizII
 
 	SetupTexts();
 	DefineQuiz();
-	InitReferers();
-	SetupControlGroups();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4);
 }
 
@@ -689,6 +687,8 @@ void TQuizFinal::InitReferers()
 	AddReferer("calientemamas.com", "calientemamas.com/forum_posts.asp?TID=12136");
 	AddReferer("forums.britxbox.co.uk", "forums.britxbox.co.uk/viewtopic.php?t=54722");
 	AddReferer("goonfleet.com", "goonfleet.com/showthread.php?t=77152");
+	AddReferer("weebls-stuff.com", "weebls-stuff.com");
+	AddReferer("keithandthegirl.com", "keithandthegirl.com/forums/showthread.php?t=9785");
 }
 
 /*##########################################################################
@@ -720,6 +720,8 @@ void TQuizFinal::SetupControlGroups()
 	DefineNt("calientemamas.com");
 	DefineNt("forums.britxbox.co.uk");
 	DefineNt("goonfleet.com");
+	DefineNt("weebls-stuff.com");
+	DefineNt("keithandthegirl.com");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
