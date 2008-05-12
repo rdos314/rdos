@@ -185,12 +185,14 @@ void TQuizF2::SetupTexts()
  Quiz[172].Reverse = TRUE;
  Quiz[174].Reverse = TRUE;
  Quiz[176].Reverse = TRUE;
+ Quiz[178].Reverse = TRUE;
  Quiz[181].Reverse = TRUE;
  Quiz[183].Reverse = TRUE;
  Quiz[186].Reverse = TRUE;
  Quiz[191].Reverse = TRUE;
  Quiz[192].Reverse = TRUE;
  Quiz[193].Reverse = TRUE;
+ Quiz[200].Reverse = TRUE;
  Quiz[201].Reverse = TRUE;
  Quiz[203].Reverse = TRUE;
  Quiz[204].Reverse = TRUE;
@@ -199,13 +201,16 @@ void TQuizF2::SetupTexts()
  Quiz[214].Reverse = TRUE;
  Quiz[221].Reverse = TRUE;
  Quiz[226].Reverse = TRUE;
+ Quiz[230].Reverse = TRUE;
  Quiz[231].Reverse = TRUE;
  Quiz[233].Reverse = TRUE;
  Quiz[236].Reverse = TRUE;
+ Quiz[237].Reverse = TRUE;
  Quiz[244].Reverse = TRUE;
  Quiz[245].Reverse = TRUE;
  Quiz[250].Reverse = TRUE;
  Quiz[255].Reverse = TRUE;
+ Quiz[256].Reverse = TRUE;
  Quiz[260].Reverse = TRUE;
  Quiz[265].Reverse = TRUE;
  Quiz[266].Reverse = TRUE;
@@ -230,26 +235,26 @@ void TQuizF2::SetupTexts()
  Quiz[167].MyGroup = GROUP_ASPIE_OBSESSION;
  Quiz[168].MyGroup = GROUP_NT_OBSESSION;
  Quiz[169].MyGroup = GROUP_MIXED;
- Quiz[170].MyGroup = GROUP_MIXED;
+ Quiz[170].MyGroup = GROUP_ACTIVITY;
  Quiz[171].MyGroup = GROUP_NT_OBSESSION;
  Quiz[172].MyGroup = GROUP_NT_TALENT;
- Quiz[173].MyGroup = GROUP_MIXED;
+ Quiz[173].MyGroup = GROUP_NT_NVC;
  Quiz[174].MyGroup = GROUP_ACTIVITY;
  Quiz[175].MyGroup = GROUP_ENVIRONMENT;
  Quiz[176].MyGroup = GROUP_NT_OBSESSION;
  Quiz[177].MyGroup = GROUP_MIXED;
- Quiz[178].MyGroup = GROUP_MIXED;
+ Quiz[178].MyGroup = GROUP_NT_NVC;
  Quiz[179].MyGroup = GROUP_ACTIVITY;
  Quiz[180].MyGroup = GROUP_ENVIRONMENT;
  Quiz[181].MyGroup = GROUP_SOCIAL;
- Quiz[182].MyGroup = GROUP_ACTIVITY;
+ Quiz[182].MyGroup = GROUP_MIXED;
  Quiz[183].MyGroup = GROUP_ENVIRONMENT;
  Quiz[184].MyGroup = GROUP_MIXED;
  Quiz[185].MyGroup = GROUP_ENVIRONMENT;
  Quiz[186].MyGroup = GROUP_NT_OBSESSION;
  Quiz[187].MyGroup = GROUP_ASPIE_TALENT;
  Quiz[188].MyGroup = GROUP_MIXED;
- Quiz[189].MyGroup = GROUP_MIXED;
+ Quiz[189].MyGroup = GROUP_ACTIVITY;
  Quiz[190].MyGroup = GROUP_ENVIRONMENT;
  Quiz[191].MyGroup = GROUP_SOCIAL;
  Quiz[192].MyGroup = GROUP_NT_NVC;
@@ -259,8 +264,8 @@ void TQuizF2::SetupTexts()
  Quiz[196].MyGroup = GROUP_MIXED;
  Quiz[197].MyGroup = GROUP_ASPIE_OBSESSION;
  Quiz[198].MyGroup = GROUP_ENVIRONMENT;
- Quiz[199].MyGroup = GROUP_ACTIVITY;
- Quiz[200].MyGroup = GROUP_MIXED;
+ Quiz[199].MyGroup = GROUP_ASPIE_TALENT;
+ Quiz[200].MyGroup = GROUP_ACTIVITY;
  Quiz[201].MyGroup = GROUP_NT_OBSESSION;
  Quiz[202].MyGroup = GROUP_MIXED;
  Quiz[203].MyGroup = GROUP_ENVIRONMENT;
@@ -279,7 +284,7 @@ void TQuizF2::SetupTexts()
  Quiz[216].MyGroup = GROUP_SOCIAL;
  Quiz[217].MyGroup = GROUP_MIXED;
  Quiz[218].MyGroup = GROUP_MIXED;
- Quiz[219].MyGroup = GROUP_MIXED;
+ Quiz[219].MyGroup = GROUP_ACTIVITY;
  Quiz[220].MyGroup = GROUP_ENVIRONMENT;
  Quiz[221].MyGroup = GROUP_SOCIAL;
  Quiz[222].MyGroup = GROUP_NT_NVC;
@@ -290,7 +295,7 @@ void TQuizF2::SetupTexts()
  Quiz[227].MyGroup = GROUP_ASPIE_OBSESSION;
  Quiz[228].MyGroup = GROUP_NT_NVC;
  Quiz[229].MyGroup = GROUP_MIXED;
- Quiz[230].MyGroup = GROUP_MIXED;
+ Quiz[230].MyGroup = GROUP_ACTIVITY;
  Quiz[231].MyGroup = GROUP_NT_OBSESSION;
  Quiz[232].MyGroup = GROUP_NT_TALENT;
  Quiz[233].MyGroup = GROUP_ENVIRONMENT;
@@ -316,9 +321,9 @@ void TQuizF2::SetupTexts()
  Quiz[253].MyGroup = GROUP_NT_NVC;
  Quiz[254].MyGroup = GROUP_ACTIVITY;
  Quiz[255].MyGroup = GROUP_SOCIAL;
- Quiz[256].MyGroup = GROUP_MIXED;
+ Quiz[256].MyGroup = GROUP_SOCIAL;
  Quiz[257].MyGroup = GROUP_ASPIE_OBSESSION;
- Quiz[258].MyGroup = GROUP_MIXED;
+ Quiz[258].MyGroup = GROUP_NT_NVC;
  Quiz[259].MyGroup = GROUP_MIXED;
  Quiz[260].MyGroup = GROUP_ACTIVITY;
  Quiz[261].MyGroup = GROUP_MIXED;
@@ -328,7 +333,7 @@ void TQuizF2::SetupTexts()
  Quiz[265].MyGroup = GROUP_ENVIRONMENT;
  Quiz[266].MyGroup = GROUP_ENVIRONMENT;
  Quiz[267].MyGroup = GROUP_MIXED;
- Quiz[268].MyGroup = GROUP_MIXED;
+ Quiz[268].MyGroup = GROUP_NT_NVC;
  Quiz[269].MyGroup = GROUP_ACTIVITY;
 
  Quiz[150].Text = "NEO - Worry about things";
@@ -1169,7 +1174,7 @@ void TQuizF2::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
