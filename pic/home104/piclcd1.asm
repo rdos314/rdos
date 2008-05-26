@@ -9,6 +9,7 @@
 
 FLAG_CMD_AVAIL_BIT:	    EQU 0
 FLAG_DATA_AVAIL_BIT:    EQU 1
+FLAG_ASYNC_DATA_BIT:    EQU 2
 
 
 ; Page 0
@@ -32,6 +33,11 @@ Flags:      EQU 0x2C
 
 AdcCount:   EQU 0x2E
 AdcControl: EQU 0x2F
+
+AsyncCount: EQU 0x30
+AsyncPtr    EQU 0x31
+
+AsyncList:  EQU 0x38
 
 
 ; common area
@@ -110,6 +116,31 @@ IntrPspInMore:
 IntrNoPspIn:
     PAGE0
 ;    
+    btfss Flags,FLAG_ASYNC_DATA_BIT
+    goto IntrNormPspOut
+;
+    bcf STATUS,IRP
+    PAGE1
+    btfsc TRISE,OBF
+    goto IntrNoPspOut
+;
+    PAGE0
+    movf AsyncPtr,W
+    movwf FSR
+;
+    movf INDF,W
+    movwf PORTD
+    incf AsyncPtr,F
+;
+    decfsz AsyncCount,F
+    goto IntrNoPspIn
+;
+    bcf Flags,FLAG_ASYNC_DATA_BIT
+    movlw AsyncList
+    movwf AsyncPtr
+    goto IntrNoPspOut
+
+IntrNormPspOut:
     btfss Flags,FLAG_DATA_AVAIL_BIT
 	goto IntrNoPspOut
 ;
@@ -273,7 +304,10 @@ Reset:
     movlw CmdList
     movwf InPtr
     movlw DataList
-    movwf OutPtr
+    movwf OutPtr    
+    movlw AsyncList
+    movwf AsyncPtr
+    clrf AsyncCount
 ;    
     bsf STATUS,IRP
 	bsf PORTA, 5
@@ -291,6 +325,7 @@ WaitCmdLoop:
     goto WaitCmdCom
 
 WaitCmdReset:
+    call StartAsync
     bcf PORTA, 5
 
 WaitCmdCom:
@@ -309,6 +344,31 @@ WaitCmdCom:
     movf Result,W
     call SendInt
     goto HandleLoop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; StartAsync
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartAsync:
+    btfsc Flags,FLAG_ASYNC_DATA_BIT
+    return
+;    
+    movlw 0x53
+    movwf AsyncList
+;
+    movlw AsyncList    
+    movwf AsyncPtr
+;    
+    movlw 1
+    movwf AsyncCount
+;    
+    bsf Flags,FLAG_ASYNC_DATA_BIT
+;
+    movlw 0x21
+    call SendInt
+    return    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

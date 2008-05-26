@@ -95,6 +95,8 @@ DioQueue1   DW ?
 DioCurr0    DW ?
 DioCurr1    DW ?
 
+AsyncList0  DB 256 DUP(?)
+
 NodeArr     DB NODE_CNT DUP(?)
 
 data_seg    ENDS
@@ -292,6 +294,33 @@ DioCheckReady1 Proc near
     jz dcrDone1
 ;
     and ds:IntFlag, NOT 1
+    mov al,ds:Data0
+    test al,20h
+    jz dcrQueue1
+;
+    movzx cx,al
+    and cx,7
+    or cx,cx
+    push cx
+    jz dcrAsyncOk1
+;
+    mov ax,ds
+    mov es,ax
+    mov di,OFFSET AsyncList0
+
+dcrAsyncLoop1:
+    Swap
+    mov dx,IO_BASE
+    in al,dx
+    stosb    
+    Swap
+    loop dcrAsyncLoop1
+
+dcrAsyncOk1:    
+    pop cx
+    jmp dcrDone1
+    
+dcrQueue1:
     mov ax,ds:DioCurr0
     or ax,ax
     jz dcrDone1
@@ -355,6 +384,13 @@ DioCheckReady2 Proc near
     jz dcrDone2
 ;
     and ds:IntFlag, NOT 2
+    mov al,ds:Data1
+    test al,20h
+    jz dcrQueue2
+;
+;    jmp dcrDone2
+    
+dcrQueue2:
     mov ax,ds:DioCurr1
     or ax,ax
     jz dcrDone2
