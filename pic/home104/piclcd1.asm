@@ -276,14 +276,24 @@ Reset:
     movwf OutPtr
 ;    
     bsf STATUS,IRP
+	bsf PORTA, 5
     
 HandleLoop:
 	bsf PORTA, 3
 	bsf PORTA, 4
-	bsf PORTA, 5
     bcf Flags,FLAG_CMD_AVAIL_BIT
 
 WaitCmdLoop:
+    btfss PORTB,5
+    goto WaitCmdReset
+;
+    bsf PORTA, 5
+    goto WaitCmdCom
+
+WaitCmdReset:
+    bcf PORTA, 5
+
+WaitCmdCom:
     btfss Flags,FLAG_CMD_AVAIL_BIT
     goto WaitCmdLoop
 ;
@@ -849,8 +859,6 @@ ExecSerialDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExecuteAdc:
-  	bcf PORTA, 5
-;  	
     movf INDF,W
     andlw 0xC0
     movwf Result

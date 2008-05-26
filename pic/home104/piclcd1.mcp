@@ -2,6 +2,7 @@
 magic_cookie={66E99B07-E706-4689-9E80-9B2582898A13}
 file_version=1.0
 [PATH_INFO]
+BuildDirPolicy=BuildDirIsSourceDir
 dir_src=
 dir_bin=
 dir_tmp=
@@ -15,6 +16,16 @@ filter_inc=*.h;*.inc
 filter_obj=*.o
 filter_lib=*.lib
 filter_lkr=*.lkr
+[CAT_SUBFOLDERS]
+subfolder_src=
+subfolder_inc=
+subfolder_obj=
+subfolder_lib=
+subfolder_lkr=
+[FILE_SUBFOLDERS]
+file_000=.
+[GENERATED_FILES]
+file_000=no
 [OTHER_FILES]
 file_000=no
 [FILE_INFO]
@@ -27,5 +38,12 @@ TS{DD2213A8-6310-47B1-8376-9430CDFC013F}=
 TS{BFD27FBA-4A02-4C0E-A5E5-B812F3E7707C}=/o"$(TARGETBASE).cof" /M"$(BINDIR_)$(TARGETBASE).map" -O"$(TARGETBASE).bin"
 TS{BFD27FBA-4A02-4C0E-A5E5-B812F3E7707C}_alt=yes
 TS{ADE93A55-C7C7-4D4D-A4BA-59305F7D0391}=
-[TOOL_LOC_STAMPS]
-tool_loc{49D3CA3F-D9A3-4518-9943-226A347E8CC7}=C:\Program\Microchip\MPASM Suite\MPAsmWin.exe
+[INSTRUMENTED_TRACE]
+enable=0
+transport=0
+format=0
+[CUSTOM_BUILD]
+Pre-Build=
+Pre-BuildEnabled=1
+Post-Build=
+Post-BuildEnabled=1
