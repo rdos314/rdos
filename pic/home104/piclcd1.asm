@@ -10,6 +10,7 @@
 FLAG_CMD_AVAIL_BIT:	    EQU 0
 FLAG_DATA_AVAIL_BIT:    EQU 1
 FLAG_ASYNC_DATA_BIT:    EQU 2
+FLAG_IR_BIT             EQU 3
 
 
 ; Page 0
@@ -119,7 +120,6 @@ IntrNoPspIn:
     btfss Flags,FLAG_ASYNC_DATA_BIT
     goto IntrNormPspOut
 ;
-    bcf STATUS,IRP
     PAGE1
     btfsc TRISE,OBF
     goto IntrNoPspOut
@@ -128,8 +128,10 @@ IntrNoPspIn:
     movf AsyncPtr,W
     movwf FSR
 ;
+    bcf STATUS,IRP
     movf INDF,W
     movwf PORTD
+    bsf STATUS,IRP
     incf AsyncPtr,F
 ;
     decfsz AsyncCount,F
@@ -301,6 +303,8 @@ Reset:
     movwf INTCON      
 ;
     clrf Flags
+    bsf Flags,FLAG_IR_BIT
+;    
     movlw CmdList
     movwf InPtr
     movlw DataList
@@ -321,12 +325,20 @@ WaitCmdLoop:
     btfss PORTB,5
     goto WaitCmdReset
 ;
+    btfsc Flags,FLAG_IR_BIT
+    goto WaitCmdCom
+;    
+    bsf Flags,FLAG_IR_BIT
     bsf PORTA, 5
     goto WaitCmdCom
 
 WaitCmdReset:
-    call StartAsync
+    btfss Flags,FLAG_IR_BIT
+    goto WaitCmdCom
+;
+    bcf Flags,FLAG_IR_BIT
     bcf PORTA, 5
+    call StartAsync
 
 WaitCmdCom:
     btfss Flags,FLAG_CMD_AVAIL_BIT
@@ -358,15 +370,18 @@ StartAsync:
     movlw 0x53
     movwf AsyncList
 ;
+    movlw 0x7A
+    movwf AsyncList+1   
+;
     movlw AsyncList    
     movwf AsyncPtr
 ;    
-    movlw 1
+    movlw 2
     movwf AsyncCount
 ;    
     bsf Flags,FLAG_ASYNC_DATA_BIT
 ;
-    movlw 0x21
+    movlw 0x22
     call SendInt
     return    
 

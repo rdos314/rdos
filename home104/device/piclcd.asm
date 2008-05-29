@@ -1005,6 +1005,9 @@ ptLoop1:
     test ds:ResetFlag,1
     jz ptNoReset1
 ;        
+    mov dx,IO_BASE + 10
+    in al,dx
+;    
     mov dx,IO_BASE + 8
     cli
     mov al,ds:PicOut
@@ -1097,6 +1100,9 @@ ptLoop2:
     test ds:ResetFlag,2
     jz ptNoReset2
 ;    
+    mov dx,IO_BASE + 10
+    in al,dx
+;        
     mov dx,IO_BASE + 8
     cli
     mov al,ds:PicOut
@@ -1145,6 +1151,58 @@ ptNoReset2:
 ;    
 	WaitForSignal
     jmp ptLoop2
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			PIC superviser thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+supervise_name	DB 'DIO Super',0
+
+supervise_thread:
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+
+svLoop:
+    cli
+    mov dx,IO_BASE + 10
+    in al,dx
+    test al,1
+    jz svNotReq1
+;
+    or ds:IntFlag,1
+    mov dx,IO_BASE
+    in al,dx
+    mov ds:Data0,al
+    mov bx,ds:PicThread0
+    Signal
+
+svNotReq1:
+    sti
+    mov ax,25
+    WaitMilliSec
+;
+    cli      
+    mov dx,IO_BASE + 10
+    in al,dx
+    test al,10h
+    jz svNotReq2
+;    
+    or ds:IntFlag,2
+    mov dx,IO_BASE + 2
+    in al,dx
+    mov ds:Data1,al
+    mov bx,ds:PicThread1
+    Signal
+    
+svNotReq2:
+    sti
+    mov ax,25
+    WaitMilliSec
+    jmp svLoop
+
 
 PAGE
 	
@@ -1835,6 +1893,15 @@ InitDriver  Proc far
 	mov es,ax
 	mov di,OFFSET pic2_name
 	mov si,OFFSET pic_thread2
+	mov ax,4
+	mov cx,100h
+	CreateThread
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET supervise_name
+	mov si,OFFSET supervise_thread
 	mov ax,4
 	mov cx,100h
 	CreateThread
