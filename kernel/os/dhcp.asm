@@ -63,11 +63,13 @@ dhcp_ident			DD ?
 dhcp_wanted_ip		DD ?
 dhcp_server			DD ?
 dhcp_option_list	DW ?
-dhcp_stat			DB ?
+dhcp_driver_sel     DW ?
 
 dhcp_data	ENDS
 
 	extrn define_ip:near
+	extrn get_gateway_driver:near
+	extrn ping_gateway:near
 
 code	SEGMENT byte public 'CODE'
 
@@ -814,8 +816,8 @@ IsDhcpDone	Proc near
 ;
 	mov ax,dhcp_data_sel
 	mov ds,ax
-	mov al,ds:dhcp_stat
-	or al,al
+	mov ax,ds:dhcp_driver_sel
+	or ax,ax
 	stc
 	jz is_dhcp_done
 ;
@@ -921,6 +923,7 @@ PAGE
 ;	Purpose:		Receive ACK
 ;
 ;	Parameters:		ES:EDI	UDP data
+;                   GS      Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -974,7 +977,7 @@ receive_ack_next:
 	ja receive_ack_loop
 
 receive_ack_leave:
-	mov ds:dhcp_stat,1
+	mov ds:dhcp_driver_sel,gs
 	FreeMem
 ;
 	pop bx
@@ -988,96 +991,123 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			ReceiveDhcp
+; 	Name:			ReceiveClientDhcp
 ;
 ;	Purpose:		Receive notify from UDP
 ;
-;	Parameters:		ES:EDI	UDP data
+;	Parameters:		GS      Net driver selector
+;                   ES:EDI	UDP data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ReceiveDhcp
+	public ReceiveClientDhcp
 
-receive_tab:
-r00	DW OFFSET ReceiveError
-r01	DW OFFSET ReceiveError
-r02	DW OFFSET ReceiveOffer
-r03	DW OFFSET ReceiveError
-r04	DW OFFSET ReceiveError
-r05	DW OFFSET ReceiveAck
-r06	DW OFFSET ReceiveError
-r07	DW OFFSET ReceiveError
-r08	DW OFFSET ReceiveError
+cl_receive_tab:
+cr00	DW OFFSET ReceiveError
+cr01	DW OFFSET ReceiveError
+cr02	DW OFFSET ReceiveOffer
+cr03	DW OFFSET ReceiveError
+cr04	DW OFFSET ReceiveError
+cr05	DW OFFSET ReceiveAck
+cr06	DW OFFSET ReceiveError
+cr07	DW OFFSET ReceiveError
+cr08	DW OFFSET ReceiveError
 
-ReceiveDhcp	Proc near
+ReceiveClientDhcp	Proc near
+	push ds
 	push ax
 	push bx
+;
+	mov ax,dhcp_data_sel
+	mov ds,ax
 ;
 	mov ax,es:[di].udp_source
 	xchg al,ah
 	cmp ax,67
-	jne receive_free
+	jne receive_cl_free
 ;
 	mov ax,es:[di].udp_dest
 	xchg al,ah
 	cmp ax,68
-	jne receive_free
+	jne receive_cl_free
 ;
 	add di,8
 	sub cx,8
 	sub cx,SIZE dhcp_header
-	jb receive_free
+	jb receive_cl_free
 ;
 	mov al,es:[di].dhcp_op
 	cmp al,2
-	jne receive_free
+	jne receive_cl_free
 ;
 	mov al,es:[di].dhcp_msg_code
 	cmp al,53
-	jne receive_free
+	jne receive_cl_free
 ;
 	movzx bx,es:[di].dhcp_msg_type
 	cmp bx,8
-	jae receive_free
+	jae receive_cl_free
 ;
-	push ds
-	mov ax,dhcp_data_sel
-	mov ds,ax
 	mov eax,ds:dhcp_ident
-	pop ds
 	cmp eax,es:[di].dhcp_id
-	jne receive_free
+	jne receive_cl_free
 ;
 	add bx,bx
-	call word ptr cs:[bx].receive_tab	
-	jmp receive_done
+	call word ptr cs:[bx].cl_receive_tab	
+	jmp receive_cl_done
 
-receive_free:
+receive_cl_free:
 	FreeMem
 
-receive_done:
+receive_cl_done:
 	pop bx
 	pop ax
+	pop ds
 	ret
-ReceiveDhcp	Endp
+ReceiveClientDhcp	Endp
 
 PAGE
-
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveiServerDhcp
+;
+;	Purpose:		Receive notify from UDP
+;
+;	Parameters:		GS      Net driver selector
+;                   ES:EDI	UDP data
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DhcpTimeout
-;
-;		description:	DHCP configuration timeout
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DhcpTimeout	Proc far
-	mov bx,dhcp_data_sel
-	mov ds,bx
-	mov ds:dhcp_stat,1
+	public ReceiveServerDhcp
+
+ReceiveServerDhcp	Proc near
+	push ds
+	push ax
+	push bx
+;
+	mov ax,dhcp_data_sel
+	mov ds,ax
+;
+    mov ax,ds:dhcp_driver_sel
+    mov bx,gs
+    or ax,ax
+    jz receive_serv_free    
+;
+    cmp ax,bx
+    je receive_serv_free
+;
+    int 3
+
+receive_serv_free:
+	FreeMem
+
+receive_serv_done:
+	pop bx
+	pop ax
+	pop ds
 	ret
-DhcpTimeout	Endp
+ReceiveServerDhcp	Endp
 
 PAGE
 
@@ -1113,14 +1143,28 @@ dhcp_thread_retry:
 ;    
 	mov bx,dhcp_data_sel
 	mov ds,bx
-    mov al,ds:dhcp_stat
-    or al,al
+    mov ax,ds:dhcp_driver_sel
+    or ax,ax
     jnz dhcp_thread_done
 ;
     loop dhcp_thread_retry    
+;    
+    mov ds:dhcp_driver_sel,1
+;    
+    call get_gateway_driver
+    jnc dhcp_gw_ok
+;
+    mov eax,250
+    call ping_gateway
+    jc dhcp_thread_done
+;    
+    call get_gateway_driver
+    jc dhcp_thread_done
+
+dhcp_gw_ok:
+    mov ds:dhcp_driver_sel,bx
 
 dhcp_thread_done:
-    mov ds:dhcp_stat,1    
 	retf
 
 PAGE
@@ -1177,7 +1221,7 @@ init_dhcp	PROC near
 	AllocateFixedSystemMem
 	mov ds,bx
 	mov es:dhcp_option_list,0
-	mov es:dhcp_stat,0
+	mov es:dhcp_driver_sel,0
 	mov es:dhcp_server,0
 	GetIpAddress
 	mov es:dhcp_wanted_ip,edx

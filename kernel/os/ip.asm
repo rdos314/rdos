@@ -884,19 +884,23 @@ PAGE
 ;					DX		packet type
 ;					DS:SI	source address
 ;					ES:EDI	data selector, IP datagram
-;					FS		driver
+;					FS		driver sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 receive	Proc far
 	push ds
 	push fs
+	push gs
 	push eax
 	push bx
 	push ecx
 	push esi
 	push bp
 ;
+    mov ax,fs
+    mov gs,ax
+;    
 	mov bp,di
 	mov ax,es:[di].ip_size
 	xchg al,ah
@@ -930,12 +934,16 @@ receive_check_ok:
     cmp al,127
     je receive_dhcp_done
 ;    
+    or eax,eax
+    jz receive_net_add_ok
+;    
 	mov bx,ds:ip_handle
 	push edi
 	lea edi,[di].ip_source
 	AddNetSourceAddress
 	pop edi
-;
+
+receive_net_add_ok:
 	call IsDhcpDone
 	jnc receive_dhcp_done
 ;
@@ -1037,10 +1045,74 @@ receive_done:
 	pop ecx
 	pop bx
 	pop eax
+	pop gs
 	pop fs
 	pop ds
 	ret
 receive	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			get_gateway_driver
+;
+;		description:	Get driver handle for gateway
+;
+;		RETURNS:		BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public get_gateway_driver
+
+get_gateway_driver	Proc near
+    push fs
+    push ax
+    push esi
+;    
+	mov ax,ip_data_sel
+	mov fs,ax
+	mov bx,fs:ip_handle
+	mov esi,OFFSET gateway
+	GetNetDriver
+;
+    pop esi
+    pop ax
+    pop fs
+    ret
+get_gateway_driver  Endp	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ping_gateway
+;
+;		description:	Ping gateway
+;
+;       Parameters:     EAX     Timeout
+;
+;		RETURNS:		NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public ping_gateway
+
+ping_gateway	Proc near
+    push ds
+    push edx
+;    
+    mov dx,ip_data_sel
+    mov ds,dx
+    mov edx,ds:gateway
+    Ping
+;
+    pop edx
+    pop ds
+    ret
+ping_gateway  Endp	
 
 PAGE
 

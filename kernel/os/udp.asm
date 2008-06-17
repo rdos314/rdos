@@ -50,7 +50,8 @@ Reverse	MACRO
 	xchg al,ah
 		ENDM
 
-	extrn ReceiveDhcp:near
+	extrn ReceiveClientDhcp:near
+	extrn ReceiveServerDhcp:near
 
 code	SEGMENT byte public 'CODE'
 
@@ -508,6 +509,7 @@ PAGE
 ;	Purpose:		Receive notify from IP
 ;
 ;	Parameters:		FS      Protocol handle
+;                   GS      Driver handle
 ;                   AX		Size of options
 ;					ECX		Size of data
 ;					EDX		Source IP address
@@ -555,9 +557,16 @@ Receive	Proc far
 	xchg al,ah
 ;
 	cmp ax,68
+	jne receive_not_cl_dhcp
+;
+	call ReceiveClientDhcp
+	jmp receive_done
+
+receive_not_cl_dhcp:
+	cmp ax,67
 	jne receive_not_dhcp
 ;
-	call ReceiveDhcp
+	call ReceiveServerDhcp
 	jmp receive_done
 
 receive_not_dhcp:

@@ -657,6 +657,40 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			GetNetDriver
+;
+;	Purpose:		Get bet driver for logical address
+;
+;	Parameters:		BX		Protocol
+;					FS:ESI	Logical address to find
+;
+;	Returns:		NC		Success
+;					BX		Driver selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_net_driver_name	DB 'Get Net Driver',0
+
+get_net_driver	Proc far
+    push ds
+    push ax
+    mov ds,bx
+    call FindAddress        
+    jc get_net_driver_done
+;
+    mov ds,ax    
+    mov bx,ds:prot_driver
+
+get_net_driver_done:    
+    pop ax
+    pop ds
+    ret
+get_net_driver  Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			RegisterNetClass
 ;
 ;	Purpose:		Register driver class
@@ -2315,6 +2349,12 @@ init	PROC far
 ;
 	mov di,OFFSET init_net
 	HookInitTasking
+;
+	mov si,OFFSET get_net_driver
+	mov di,OFFSET get_net_driver_name
+	xor cl,cl
+	mov ax,get_net_driver_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET register_net_class
 	mov di,OFFSET register_net_class_name

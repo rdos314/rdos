@@ -454,5 +454,7 @@ hook_usb_detach_nr          EQU 307
 set_mouse_nr                EQU 308
 set_mouse_limit_nr          EQU 309
 
-osgate_entries				EQU 310
+get_net_driver_nr           EQU 310
+
+osgate_entries				EQU 311
 
