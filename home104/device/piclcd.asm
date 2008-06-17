@@ -269,6 +269,73 @@ DioRemove	Proc near
 rem_done:
     ret
 DioRemove   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    HandleAsync1
+;
+;		description:	Handle async req from PIC 1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleAsync1 Proc near
+    push es
+    push ax
+    push bx
+    push cx
+    push dx
+    push di
+;
+    mov al,ds:Data0
+    movzx cx,al
+    and cx,7
+    or cx,cx
+    push cx
+    jz hAsyncOk1
+;
+    mov ax,ds
+    mov es,ax
+    mov di,OFFSET AsyncList0
+;
+    mov ah,0
+    mov bx,1000h
+        
+hAsyncLoop1:
+    mov dx,IO_BASE + 10
+    in al,dx
+    and al,4
+    cmp al,ah
+    je hAsyncRead1
+;
+    sub bx,1
+    jnz hAsyncLoop1
+;
+    jmp hAsyncFail1
+
+hAsyncRead1:
+    mov bx,1000h
+    xor ah,4
+    mov dx,IO_BASE
+    in al,dx
+    stosb    
+    loop hAsyncLoop1
+
+hAsyncOk1:    
+
+hAsyncFail1:
+    pop cx
+;
+    pop di
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    ret
+HandleAsync1    Endp    
 	
 PAGE
 
@@ -298,26 +365,7 @@ DioCheckReady1 Proc near
     test al,20h
     jz dcrQueue1
 ;
-    movzx cx,al
-    and cx,7
-    or cx,cx
-    push cx
-    jz dcrAsyncOk1
-;
-    mov ax,ds
-    mov es,ax
-    mov di,OFFSET AsyncList0
-
-dcrAsyncLoop1:
-    Swap
-    mov dx,IO_BASE
-    in al,dx
-    stosb    
-    Swap
-    loop dcrAsyncLoop1
-
-dcrAsyncOk1:    
-    pop cx
+    call HandleAsync1    
     jmp dcrDone1
     
 dcrQueue1:
@@ -336,13 +384,29 @@ dcrQueue1:
     jz dcrInputOk1
 ;
     mov di,OFFSET dqe_in_buf
+;
+    mov ah,0
+    mov bx,1000h
 
 dcrInputLoop1:
-    Swap
+    mov dx,IO_BASE + 10
+    in al,dx
+    and al,4
+    cmp al,ah
+    je dcrInputRead1
+;
+    sub bx,1
+    jnz dcrInputLoop1
+;    
+    mov es:dqe_result,-1
+    jmp dcrInputOk1
+
+dcrInputRead1:
+    mov bx,1000h
+    xor ah,4
     mov dx,IO_BASE
     in al,dx
     stosb    
-    Swap
     loop dcrInputLoop1
 
 dcrInputOk1:    
@@ -406,13 +470,29 @@ dcrQueue2:
     jz dcrInputOk2
 ;
     mov di,OFFSET dqe_in_buf
+;
+    mov ah,0
+    mov bx,1000h
 
 dcrInputLoop2:
-    Swap
+    mov dx,IO_BASE + 10
+    in al,dx
+    and al,40h
+    cmp al,ah
+    je dcrInputRead2
+;
+    sub bx,1
+    jnz dcrInputLoop2
+;    
+    mov es:dqe_result,-1
+    jmp dcrInputOk2
+
+dcrInputRead2:
+    mov bx,1000h
+    xor ah,40h
     mov dx,IO_BASE + 2
     in al,dx
     stosb    
-    Swap
     loop dcrInputLoop2
 
 dcrInputOk2:    
@@ -444,6 +524,7 @@ PAGE
 DioCheckIdle1   Proc near
     push es
     push ax
+    push bx
     push cx
     push dx
     push si
@@ -475,21 +556,52 @@ dciNoIcsp1:
     mov si,OFFSET dqe_out_buf
     movzx cx,es:dqe_out_size
     mov dx,IO_BASE
+    mov ah,0
 
 dciOutputLoop1:
+    mov dx,IO_BASE
     mov al,es:[si]
     out dx,al
     inc si
-    Swap
+    mov bx,1000h
+
+dciOutputPoll1:
+    mov al,ds:IntFlag
+    test al,1
+    jz dciNotAsync
+;
+    and ds:IntFlag, NOT 1
+    mov al,ds:Data0
+    test al,20h
+    jz dciNotAsync
+;
+    call HandleAsync1    
+
+dciNotAsync:
+    mov dx,IO_BASE + 10
+    in al,dx
+    and al,2
+    cmp al,ah
+    je dciOutputNext1
+;
+    sub bx,1
+    jnz dciOutputPoll1
+;
+    jmp dciDone1
+
+dciOutputNext1:
+    xor ah,2
     loop dciOutputLoop1
 ;    
     mov al,-1
+    mov dx,IO_BASE
     out dx,al
 
 dciDone1:
     pop si
     pop dx
     pop cx
+    pop bx
     pop ax
     pop es
     ret
@@ -509,6 +621,7 @@ PAGE
 DioCheckIdle2   Proc near
     push es
     push ax
+    push bx
     push cx
     push dx
     push si
@@ -540,21 +653,40 @@ dciNoIcsp2:
     mov si,OFFSET dqe_out_buf
     movzx cx,es:dqe_out_size
     mov dx,IO_BASE + 2
+    mov ah,0
 
 dciOutputLoop2:
+    mov dx,IO_BASE + 2
     mov al,es:[si]
     out dx,al
     inc si
-    Swap
+    mov bx,1000h
+
+dciOutputPoll2:
+    mov dx,IO_BASE + 10
+    in al,dx
+    and al,20h
+    cmp al,ah
+    je dciOutputNext2
+;
+    sub bx,1
+    jnz dciOutputPoll2
+;
+    jmp dciDone2
+
+dciOutputNext2:
+    xor ah,20h
     loop dciOutputLoop2
-;   
+;    
     mov al,-1
+    mov dx,IO_BASE + 2
     out dx,al
 
 dciDone2:
     pop si
     pop dx
     pop cx
+    pop bx
     pop ax
     pop es
     ret
@@ -1151,58 +1283,6 @@ ptNoReset2:
 ;    
 	WaitForSignal
     jmp ptLoop2
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;		NAME:			PIC superviser thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-supervise_name	DB 'DIO Super',0
-
-supervise_thread:
-    mov ax,piclcd_data_sel
-    mov ds,ax    
-
-svLoop:
-    cli
-    mov dx,IO_BASE + 10
-    in al,dx
-    test al,1
-    jz svNotReq1
-;
-    or ds:IntFlag,1
-    mov dx,IO_BASE
-    in al,dx
-    mov ds:Data0,al
-    mov bx,ds:PicThread0
-    Signal
-
-svNotReq1:
-    sti
-    mov ax,25
-    WaitMilliSec
-;
-    cli      
-    mov dx,IO_BASE + 10
-    in al,dx
-    test al,10h
-    jz svNotReq2
-;    
-    or ds:IntFlag,2
-    mov dx,IO_BASE + 2
-    in al,dx
-    mov ds:Data1,al
-    mov bx,ds:PicThread1
-    Signal
-    
-svNotReq2:
-    sti
-    mov ax,25
-    WaitMilliSec
-    jmp svLoop
-
 
 PAGE
 	
@@ -1893,15 +1973,6 @@ InitDriver  Proc far
 	mov es,ax
 	mov di,OFFSET pic2_name
 	mov si,OFFSET pic_thread2
-	mov ax,4
-	mov cx,100h
-	CreateThread
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET supervise_name
-	mov si,OFFSET supervise_thread
 	mov ax,4
 	mov cx,100h
 	CreateThread

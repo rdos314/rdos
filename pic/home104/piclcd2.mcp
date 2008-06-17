@@ -16,6 +16,16 @@ filter_inc=*.h;*.inc
 filter_obj=*.o
 filter_lib=*.lib
 filter_lkr=*.lkr
+[CAT_SUBFOLDERS]
+subfolder_src=
+subfolder_inc=
+subfolder_obj=
+subfolder_lib=
+subfolder_lkr=
+[FILE_SUBFOLDERS]
+file_000=.
+[GENERATED_FILES]
+file_000=no
 [OTHER_FILES]
 file_000=no
 [FILE_INFO]
@@ -32,3 +42,8 @@ TS{ADE93A55-C7C7-4D4D-A4BA-59305F7D0391}=
 enable=0
 transport=0
 format=0
+[CUSTOM_BUILD]
+Pre-Build=
+Pre-BuildEnabled=1
+Post-Build=
+Post-BuildEnabled=1

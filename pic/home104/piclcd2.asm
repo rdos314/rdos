@@ -8,7 +8,6 @@
 ; Flag bits
 
 FLAG_CMD_AVAIL_BIT:	    EQU 0
-FLAG_DATA_AVAIL_BIT:    EQU 1
 
 
 ; Page 0
@@ -66,74 +65,6 @@ Intr:
     movf FSR,W
     movwf IntFSR
 ;
-;    btfss PIR1,PSPIF
-;    goto IntrNotPSP
-
-IntrPspInLoop:
-    bsf STATUS,IRP
-    PAGE1
-    btfss TRISE,IBF
-    goto IntrNoPspIn
-
-    PAGE0
-;    
-    movf PORTD,W
-    movwf IntTemp
-;
-    btfsc Flags,FLAG_CMD_AVAIL_BIT    
-    goto IntrNoPspIn
-;
-    incf IntTemp,W
-    btfss STATUS,Z
-    goto IntrPspInMore
-;    
-    bsf Flags,FLAG_CMD_AVAIL_BIT
-    bcf Flags,FLAG_DATA_AVAIL_BIT
-;    
-    movlw CmdList
-    movwf InPtr    
-    goto IntrNoPspIn    
-
-IntrPspInMore:
-    movf InPtr,W
-    movwf FSR
-;
-    movf IntTemp,W    
-    movwf INDF
-;
-    incf InPtr,F    
-    goto IntrPspInLoop
-
-IntrNoPspIn:
-    PAGE0
-;    
-    btfss Flags,FLAG_DATA_AVAIL_BIT
-	goto IntrNoPspOut
-;
-    PAGE1
-    btfsc TRISE,OBF
-    goto IntrNoPspOut
-;
-    PAGE0
-    movf OutPtr,W
-    movwf FSR
-;
-    movf INDF,W
-    movwf PORTD
-    incf OutPtr,F
-;
-    decfsz OutCount,F
-    goto IntrNoPspIn
-;
-    bcf Flags,FLAG_DATA_AVAIL_BIT
-    movlw DataList
-    movwf OutPtr
-
-IntrNoPspOut:
-    PAGE0
-    bcf PIR1,PSPIF
-    
-IntrNotPSP:
     movf IntFSR,W
     movwf FSR
     swapf IntStatus,W
@@ -220,7 +151,7 @@ Reset:
 ;
 	PAGE0
 ;
-	movlw b'00111111'
+	movlw b'00111001'
 	movwf PORTA
 ;
 	movlw b'00000110'
@@ -233,13 +164,13 @@ Reset:
     movwf T1CON
 ;
     PAGE1
-    movlw 0x80
+    movlw 0
     movwf PIE1
     movlw 0
     movwf PIE2
     PAGE0
 ;    
-    movlw 0xC0
+    movlw b'10000000'
     movwf INTCON      
 ;
     clrf Flags
@@ -251,28 +182,98 @@ Reset:
     bsf STATUS,IRP
     
 HandleLoop:
+    bsf STATUS,IRP
+    bcf PORTA, 1
 	bsf PORTA, 3
 	bsf PORTA, 4
-    bcf Flags,FLAG_CMD_AVAIL_BIT
 
 WaitCmdLoop:
+    PAGE1
+    btfsc TRISE,IBF
+    goto HandleInput
+;
+    PAGE0
+;
     call CheckDcf
-    btfss Flags,FLAG_CMD_AVAIL_BIT
     goto WaitCmdLoop
+
+
+HandleInput:
+    PAGE0
+    bsf STATUS,IRP
+;    
+    movf PORTD,W
+    movwf Val
 ;
-  	bcf PORTA, 3
+    movlw 2
+    xorwf PORTA,F
 ;
+    incf Val,W
+    btfsc STATUS,Z
+    goto HandleExecute
+;
+    movf InPtr,W
+    movwf FSR
+;
+    movf Val,W    
+    movwf INDF
+;
+    incf InPtr,F    
+;
+    PAGE1
+
+HandleWaitInput:
+    btfss TRISE,IBF
+    goto HandleWaitInput
+;    
+    goto HandleInput
+
+HandleExecute:    
+    movlw CmdList
+    movwf InPtr    
+;    
+  	bcf PORTA,3
     call ExecuteCmd
 ;
     movf Result,W
     andlw 0xF
     movwf OutCount
 ;
-    btfss STATUS,Z
-    bsf Flags,FLAG_DATA_AVAIL_BIT
-;
+    bcf PORTA,2
     movf Result,W
-    call SendInt
+    movwf PORTD
+    bcf PORTA,0
+
+SendStatusLoop:
+	PAGE1
+	btfsc TRISE,OBF
+	goto SendStatusLoop
+;
+    PAGE0
+    bsf PORTA,0
+;    
+    movf OutCount,W
+    btfsc STATUS,Z
+    goto SendStatusDone    
+;    
+    movf OutPtr,W
+    movwf FSR
+;
+    movf INDF,W
+    movwf PORTD
+    incf OutPtr,F
+;    
+    movlw b'00000100'
+    xorwf PORTA,F
+;
+    decfsz OutCount,F
+    goto SendStatusLoop
+;
+    movlw DataList
+    movwf OutPtr
+
+SendStatusDone:
+    PAGE0        
     goto HandleLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
