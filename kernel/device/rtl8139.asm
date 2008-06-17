@@ -517,12 +517,21 @@ NetInt	Endp
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Preview	Proc far
+Preview1:
     push ds
     push fs
     push ebx
 ;
 	mov ax,ether_data_sel
+	mov ds,ax
+	jmp preview_loop
+	
+Preview2:
+    push ds
+    push fs
+    push ebx
+;
+	mov ax,ether_data2_sel
 	mov ds,ax
 
 preview_loop:
@@ -564,8 +573,7 @@ preview_done:
     pop ebx
     pop fs
     pop ds
-	ret
-Preview	Endp
+	retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -579,7 +587,7 @@ Preview	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Receive	Proc far
+Receive1:
     push ds
     push fs
     push bx
@@ -587,6 +595,18 @@ Receive	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
+	jmp receive_do
+
+Receive2:
+    push ds
+    push fs
+    push bx
+    push edx
+;
+	mov ax,ether_data2_sel
+	mov ds,ax
+    
+receive_do:
 	mov fs,ds:RxRingSel
 	xor edx,edx
     mov dx,ds:RxRingPtr
@@ -606,8 +626,7 @@ Receive	Proc far
     pop bx
 	pop fs
 	pop ds
-	ret
-Receive	Endp
+	retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -618,7 +637,7 @@ Receive	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Remove	Proc far
+Remove1:
     push ds
     push ebx
     push cx
@@ -626,7 +645,18 @@ Remove	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
+	jmp remove_do
+
+Remove2:
+    push ds
+    push ebx
+    push cx
+    push dx
 ;
+	mov ax,ether_data2_sel
+	mov ds,ax
+
+remove_do:
     mov dx,ds:IoBase
     xor ebx,ebx
     mov bx,ds:RxRingPtr
@@ -649,8 +679,7 @@ Remove	Proc far
     pop cx
     pop ebx
     pop ds
-	ret
-Remove	Endp
+	retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -696,7 +725,7 @@ GetBuffer	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Send	Proc far
+Send1:
 	push ds
 	push eax
 	push bx
@@ -714,6 +743,28 @@ Send	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
+	jmp send_do
+
+Send2:
+	push ds
+	push eax
+	push bx
+	push ecx
+	push dx
+	push edi
+;
+	xor di,di
+	mov ax,ds:[esi]
+	stosw
+	mov ax,[esi+2]
+	stosw
+	mov ax,[esi+4]
+	stosw
+;
+	mov ax,ether_data2_sel
+	mov ds,ax
+
+send_do:	
 	mov ax,word ptr ds:EthernetAddress
 	stosw
 	mov ax,word ptr ds:EthernetAddress+2
@@ -804,8 +855,7 @@ ssNoPrev:
 	pop bx
 	pop eax
 	pop ds
-	ret
-Send	Endp
+	retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -818,12 +868,19 @@ Send	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetAddress	Proc far
+GetAddress1  Proc far
 	mov si,ether_data_sel
 	mov ds,si
 	mov esi,OFFSET EthernetAddress	
 	ret
-GetAddress	Endp
+GetAddress1	Endp
+
+GetAddress2  Proc far
+	mov si,ether_data2_sel
+	mov ds,si
+	mov esi,OFFSET EthernetAddress	
+	ret
+GetAddress2	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -856,13 +913,22 @@ GetPktAddress	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DispTable:
-	DW OFFSET Preview,	 		ether_code_sel
-	DW OFFSET Receive,			ether_code_sel
-	DW OFFSET Remove,			ether_code_sel
+DispTable1:
+	DW OFFSET Preview1,	 		ether_code_sel
+	DW OFFSET Receive1,			ether_code_sel
+	DW OFFSET Remove1,			ether_code_sel
 	DW OFFSET GetBuffer,		ether_code_sel
-	DW OFFSET Send,				ether_code_sel
-	DW OFFSET GetAddress,		ether_code_sel
+	DW OFFSET Send1,			ether_code_sel
+	DW OFFSET GetAddress1,		ether_code_sel
+	DW OFFSET GetPktAddress,	ether_code_sel
+
+DispTable2:
+	DW OFFSET Preview2,	 		ether_code_sel
+	DW OFFSET Receive2,			ether_code_sel
+	DW OFFSET Remove2,			ether_code_sel
+	DW OFFSET GetBuffer,		ether_code_sel
+	DW OFFSET Send2,			ether_code_sel
+	DW OFFSET GetAddress2,		ether_code_sel
 	DW OFFSET GetPktAddress,	ether_code_sel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -872,13 +938,14 @@ DispTable:
 ;
 ;		DESCRIPTION:    Init PCI adapter if found
 ;
-;       PARAMETERS:     
+;       PARAMETERS:     AX      Device number
 ;
 ;		RETURNS:		NC		Adapter found
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName	DB 'RTL8139',0
+DriverName1	DB 'RTL8139-1',0
+DriverName2	DB 'RTL8139-2',0
 
 PciVendorTab:
 pci00	DW 10ECh, 8139h
@@ -895,23 +962,27 @@ pci10	DW 1432h, 9130h
 pci11	DW 1186h, 1340h
 pci12 	DW 0,	  0
 
-InitPciAdapter	Proc near
+InitPrimaryPciAdapter	Proc near
+    mov bp,ax
+	mov ax,ether_data_sel
+	mov ds,ax
 	mov si,OFFSET PciVendorTab
-init_pci_loop:
-	xor ax,ax
+init_pci1_loop:
+	mov ax,bp
 	mov dx,cs:[si]
 	mov cx,cs:[si+2]
 	or dx,dx
 	stc
-	jz init_pci_done
+	jz init_pci1_done
 ;
 	FindPciDevice
-	jnc init_pci_found
+	jnc init_pci1_found
 ;
 	add si,4
-	jmp init_pci_loop
+	jmp init_pci1_loop
 
-init_pci_found:
+init_pci1_found:
+    mov bp,bx
 	mov cx,PCI_card_ExCa_base
 	ReadPciDword
 	mov dx,ax
@@ -934,19 +1005,80 @@ init_pci_found:
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-	mov si,OFFSET DispTable
-	mov di,OFFSET DriverName
+	mov si,OFFSET DispTable1
+	mov di,OFFSET DriverName1
 	mov al,1
 	mov dx,0
 	mov ecx,1600
 	RegisterNetDriver
 	pop ds
 	mov ds:Handle,bx
+;
+    mov ax,bp	
 	clc
 
-init_pci_done:
+init_pci1_done:
 	ret
-InitPciAdapter	Endp
+InitPrimaryPciAdapter	Endp
+
+InitSecondaryPciAdapter	Proc near
+    mov bp,ax
+	mov ax,ether_data2_sel
+	mov ds,ax
+	mov si,OFFSET PciVendorTab
+init_pci2_loop:
+	mov ax,bp
+	mov dx,cs:[si]
+	mov cx,cs:[si+2]
+	or dx,dx
+	stc
+	jz init_pci2_done
+;
+	FindPciDevice
+	jnc init_pci2_found
+;
+	add si,4
+	jmp init_pci2_loop
+
+init_pci2_found:
+    mov bp,bx
+	mov cx,PCI_card_ExCa_base
+	ReadPciDword
+	mov dx,ax
+	and dx,0FFE0h
+	mov ds:IoBase,dx
+;
+	xor ch,ch
+	mov cl,PCI_interrupt_line
+	ReadPciByte
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET NetInt	
+	RequestSharedIrqHandler
+;
+	call ReadEthernetAddress
+	call AllocateRing
+	call InitHardware
+;
+	push ds
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET DispTable2
+	mov di,OFFSET DriverName2
+	mov al,1
+	mov dx,0
+	mov ecx,1600
+	RegisterNetDriver
+	pop ds
+	mov ds:Handle,bx
+;
+    mov ax,bp	
+	clc
+
+init_pci2_done:
+	ret
+InitSecondaryPciAdapter	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -964,9 +1096,11 @@ InitPciAdapter	Endp
 detect_name	DB 'RTL8139',0
 
 detect_thread	proc far
-	mov ax,ether_data_sel
-	mov ds,ax
-	call InitPciAdapter
+	xor ax,ax
+	call InitPrimaryPciAdapter
+;
+    inc ax
+	call InitSecondaryPciAdapter
 	ret
 detect_thread	endp
 	
@@ -1017,6 +1151,19 @@ Init	Proc far
 ;
 	mov eax,SIZE data
 	mov bx,ether_data_sel
+	AllocateFixedSystemMem
+	mov ds,bx
+	mov es,bx
+	mov cx,ax
+	xor di,di
+	xor al,al
+	rep stosb
+;
+	mov ds:EeAdrLen,8
+	InitSection ds:TxSection
+;
+	mov eax,SIZE data
+	mov bx,ether_data2_sel
 	AllocateFixedSystemMem
 	mov ds,bx
 	mov es,bx

@@ -507,7 +507,8 @@ PAGE
 ;
 ;	Purpose:		Receive notify from IP
 ;
-;	Parameters:		AX		Size of options
+;	Parameters:		FS      Protocol handle
+;                   AX		Size of options
 ;					ECX		Size of data
 ;					EDX		Source IP address
 ;					DS:ESI	Options

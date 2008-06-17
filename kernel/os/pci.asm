@@ -411,6 +411,7 @@ find_pci_device	Proc far
 	push dx
 	push si
 	push di
+;	
 	push ecx
 ;
     mov di,pci_data_sel
@@ -429,10 +430,10 @@ find_pci_device_loop:
     cmp eax,ebx
 	jne find_pci_device_next	
 ;
-	or di,di
-	jz find_pci_device_ok
-;
-	sub di,1
+    mov eax,ds:[si+1]
+	shr al,3
+	cmp ax,di
+	jae find_pci_device_ok
 
 find_pci_device_next:
     add esi,4
