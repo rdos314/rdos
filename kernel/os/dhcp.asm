@@ -153,9 +153,9 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			CreateDcpBroadcast
+; 	Name:			CreateDhcpReqBroadcast
 ;
-;	Purpose:		Create a DHCP broadcast header
+;	Purpose:		Create a req DHCP broadcast header
 ;
 ;	Parameters:		CX			Number of bytes to allocate
 ;					FS			Driver selector
@@ -167,7 +167,7 @@ PAGE
 
 ip_options	DB 0
 
-CreateDhcpBroadcast	Proc near
+CreateDhcpReqBroadcast	Proc near
 	push ds
 	push ax
 	push ecx
@@ -181,7 +181,7 @@ CreateDhcpBroadcast	Proc near
 	movzx ecx,cx
 	add ecx,8
 	CreateBroadcastIp
-	jc create_br_done
+	jc create_req_br_done
 ;	
 	mov ax,67
 	xchg al,ah
@@ -193,13 +193,66 @@ CreateDhcpBroadcast	Proc near
 	add edi,8
 	clc
 
-create_br_done:
+create_req_br_done:
 	pop esi
 	pop ecx
 	pop ax
 	pop ds
 	ret
-CreateDhcpBroadcast	Endp
+CreateDhcpReqBroadcast	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CreateDhcpReplyBroadcast
+;
+;	Purpose:		Create a reply DHCP broadcast header
+;
+;	Parameters:		CX			Number of bytes to allocate
+;					FS			Driver selector
+;
+;	Returns:		NC			Ok
+;					ES:DI		Allocate buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDhcpReplyBroadcast	Proc near
+	push ds
+	push ax
+	push ecx
+	push esi
+;
+	mov ax,cs
+	mov ds,ax
+	mov esi,OFFSET ip_options
+	mov al,17
+	mov ah,30
+	movzx ecx,cx
+	add ecx,8
+	CreateBroadcastIp
+	jc create_reply_br_done
+;	
+	mov ax,68
+	xchg al,ah
+	mov es:[edi].udp_dest,ax
+;
+	mov ax,67
+	xchg al,ah
+	mov es:[edi].udp_source,ax
+;
+    GetIpAddress
+    mov es:[di-8],edx	
+	add edi,8
+	clc
+
+create_reply_br_done:
+	pop esi
+	pop ecx
+	pop ax
+	pop ds
+	ret
+CreateDhcpReplyBroadcast	Endp
 
 PAGE
 	    
@@ -796,7 +849,7 @@ discover_req_size_loop:
 
 discover_req_size_ok:
     mov cx,dx
-	call CreateDhcpBroadcast
+	call CreateDhcpReqBroadcast
 ;    
     push cx
     push si
@@ -807,7 +860,7 @@ discover_req_size_ok:
 	mov es:[di].dhcp_hw_type,al
 	mov al,[si].dhcp_hw_len
 	mov es:[di].dhcp_hw_len,al
-	mov es:[di].dhcp_hops,0
+	mov es:[di].dhcp_hops,1
 	GetSystemTime
 	mov es:[di].dhcp_id,eax
 	mov es:[di].dhcp_elapsed,0
@@ -815,7 +868,8 @@ discover_req_size_ok:
 	mov es:[di].dhcp_client_ip,0
 	mov es:[di].dhcp_req_ip,0
 	mov es:[di].dhcp_server_ip,0
-	mov es:[di].dhcp_relay_ip,0
+	GetIpAddress
+	mov es:[di].dhcp_relay_ip,edx
 	mov es:[di].dhcp_magic,63538263h
 	mov es:[di].dhcp_msg_code,53
 	mov es:[di].dhcp_msg_len,1
@@ -907,8 +961,218 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;   	size-proc				data-proc
+
+ReqReqOptTab:
+rro00 DW OFFSET ServLeaseSize,		OFFSET ServLeaseData
+rro01 DW -1
+
+req_opt_tab:
+rot00   DW OFFSET CopyServerOption
+rot01   DW OFFSET CopyServerOption
+rot02   DW OFFSET CopyServerOption
+rot03   DW OFFSET CopyServerOption
+rot04   DW OFFSET CopyServerOption
+rot05   DW OFFSET CopyServerOption
+rot06   DW OFFSET CopyServerOption
+rot07   DW OFFSET CopyServerOption
+rot08   DW OFFSET CopyServerOption
+rot09   DW OFFSET CopyServerOption
+rot0A   DW OFFSET CopyServerOption
+rot0B   DW OFFSET CopyServerOption
+rot0C   DW OFFSET CopyServerOption
+rot0D   DW OFFSET CopyServerOption
+rot0E   DW OFFSET CopyServerOption
+rot0F   DW OFFSET CopyServerOption
+rot10   DW OFFSET CopyServerOption
+rot11   DW OFFSET CopyServerOption
+rot12   DW OFFSET CopyServerOption
+rot13   DW OFFSET CopyServerOption
+rot14   DW OFFSET CopyServerOption
+rot15   DW OFFSET CopyServerOption
+rot16   DW OFFSET CopyServerOption
+rot17   DW OFFSET CopyServerOption
+rot18   DW OFFSET CopyServerOption
+rot19   DW OFFSET CopyServerOption
+rot1A   DW OFFSET CopyServerOption
+rot1B   DW OFFSET CopyServerOption
+rot1C   DW OFFSET CopyServerOption
+rot1D   DW OFFSET CopyServerOption
+rot1E   DW OFFSET CopyServerOption
+rot1F   DW OFFSET CopyServerOption
+rot20   DW OFFSET CopyServerOption
+rot21   DW OFFSET CopyServerOption
+rot22   DW OFFSET CopyServerOption
+rot23   DW OFFSET CopyServerOption
+rot24   DW OFFSET CopyServerOption
+rot25   DW OFFSET CopyServerOption
+rot26   DW OFFSET CopyServerOption
+rot27   DW OFFSET CopyServerOption
+rot28   DW OFFSET CopyServerOption
+rot29   DW OFFSET CopyServerOption
+rot2A   DW OFFSET CopyServerOption
+rot2B   DW OFFSET CopyServerOption
+rot2C   DW OFFSET CopyServerOption
+rot2D   DW OFFSET CopyServerOption
+rot2E   DW OFFSET CopyServerOption
+rot2F   DW OFFSET CopyServerOption
+rot30   DW OFFSET CopyServerOption
+rot31   DW OFFSET CopyServerOption
+rot32   DW OFFSET CopyServerOption
+rot33   DW OFFSET IgnoreServerOption
+rot34   DW OFFSET CopyServerOption
+rot35   DW OFFSET CopyServerOption
+rot36   DW OFFSET CopyServerOption
+rot37   DW OFFSET CopyServerOption
+rot38   DW OFFSET CopyServerOption
+rot39   DW OFFSET CopyServerOption
+rot3A   DW OFFSET CopyServerOption
+rot3B   DW OFFSET CopyServerOption
+rot3C   DW OFFSET CopyServerOption
+rot3D   DW OFFSET CopyServerOption
+rot3E   DW OFFSET CopyServerOption
+rot3F   DW OFFSET CopyServerOption
+
 ReceiveRequest	Proc near
-    int 3
+    push ds
+    push es
+    push fs
+    push bx
+    push si
+    push di
+;    
+    mov ax,es
+    mov ds,ax
+    mov si,di
+    call FindServer
+    jc req_req_done
+;
+    mov fs,ax
+    mov eax,[si].dhcp_id
+    cmp eax,fs:dsd_orig_ident
+    jne req_req_done
+;
+	mov dx,cx
+	mov bx,OFFSET ReqReqOptTab
+
+req_req_size_loop:
+	mov ax,cs:[bx]
+	cmp ax,-1
+	jz req_req_size_ok
+;
+	call word ptr cs:[bx]
+	add dx,cx
+	add bx,4
+	jmp req_req_size_loop
+
+req_req_size_ok:
+    mov cx,dx
+    push fs
+    mov ax,dhcp_data_sel
+    mov fs,ax
+    mov fs,fs:dhcp_driver_sel
+	call CreateDhcpReqBroadcast
+	pop fs
+;    
+    push cx
+    push si
+    push di
+;
+	mov es:[di].dhcp_op,1
+	mov al,[si].dhcp_hw_type
+	mov es:[di].dhcp_hw_type,al
+	mov al,[si].dhcp_hw_len
+	mov es:[di].dhcp_hw_len,al
+	mov es:[di].dhcp_hops,1
+	mov eax,fs:dsd_my_ident
+	mov es:[di].dhcp_id,eax
+	mov es:[di].dhcp_elapsed,0
+	mov es:[di].dhcp_flags,80h
+	mov es:[di].dhcp_client_ip,0
+	mov es:[di].dhcp_req_ip,0
+	mov es:[di].dhcp_server_ip,0
+	GetIpAddress
+	mov es:[di].dhcp_relay_ip,edx
+	mov es:[di].dhcp_magic,63538263h
+	mov es:[di].dhcp_msg_code,53
+	mov es:[di].dhcp_msg_len,1
+	mov es:[di].dhcp_msg_type,3
+	call SetHwAddress
+;	
+	add si,SIZE dhcp_header
+	add di,SIZE dhcp_header
+	sub cx,SIZE dhcp_header
+
+req_opt_loop:
+    push cx
+    mov ax,[si]
+    mov dl,al
+    or al,al
+    jz req_opt_done
+;
+    cmp al,-1
+    je req_opt_done
+;        
+    movzx bx,al
+    movzx cx,ah
+    cmp bx,40h
+    jae req_opt_default
+;    
+    add bx,bx
+    call word ptr cs:[bx].req_opt_tab 
+    jmp req_opt_next
+
+req_opt_default:
+    call CopyServerOption
+
+req_opt_next:
+    mov ax,cx
+    pop cx
+    sub cx,2
+    sub cx,ax
+	ja req_opt_loop
+;
+    push cx	
+
+req_opt_done:
+    pop cx	
+	mov bx,OFFSET ReqReqOptTab
+
+req_req_data_loop:
+	mov ax,cs:[bx]
+	cmp ax,-1
+	jz req_req_data_ok
+;
+	call word ptr cs:[bx+2]
+	add bx,4
+	jmp req_req_data_loop
+
+req_req_data_ok:
+	mov al,-1
+	stosb
+    dec cx
+;
+    xor al,al
+    rep stosb
+;    
+    pop di
+    pop si
+    pop cx
+;    
+    push fs
+    mov ax,dhcp_data_sel
+    mov fs,ax
+    mov fs,fs:dhcp_driver_sel
+	call SendDhcpBroadcast
+	pop fs
+
+req_req_done:
+    pop di
+    pop si
+    pop bx
+    pop fs    
+    pop es
+    pop ds
     FreeMem
     ret
 ReceiveRequest Endp
@@ -1066,7 +1330,7 @@ soot32   DW OFFSET CopyServerOption
 soot33   DW OFFSET CopyServerOption
 soot34   DW OFFSET CopyServerOption
 soot35   DW OFFSET CopyServerOption
-soot36   DW OFFSET MyIpServerOption
+soot36   DW OFFSET CopyServerOption
 soot37   DW OFFSET CopyServerOption
 soot38   DW OFFSET CopyServerOption
 soot39   DW OFFSET CopyServerOption
@@ -1085,12 +1349,8 @@ ServerOffer Proc near
     add cx,8
     push fs
     mov fs,fs:dsd_driver_sel
-	call CreateDhcpBroadcast
+	call CreateDhcpReplyBroadcast
 	pop fs
-;
-    GetIpAddress
-    mov es:[di-16],edx
-    mov es:[di].dhcp_server_ip,edx
 ;
 	mov es:[di].dhcp_op,2
 	mov al,[si].dhcp_hw_type
@@ -1108,6 +1368,8 @@ ServerOffer Proc near
 	mov es:[di].dhcp_req_ip,eax
 	mov eax,[si].dhcp_relay_ip
 	mov es:[di].dhcp_relay_ip,eax
+    mov eax,[si].dhcp_server_ip
+    mov es:[di].dhcp_server_ip,eax
 	mov es:[di].dhcp_magic,63538263h
 	mov es:[di].dhcp_msg_code,53
 	mov es:[di].dhcp_msg_len,1
@@ -1167,7 +1429,6 @@ serv_offer_opt_done:
     pop si
     pop cx
 ;
-    int 3
     push fs
     mov fs,fs:dsd_driver_sel    
 	call SendDhcpBroadcast
@@ -1195,8 +1456,166 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+serv_ack_opt_tab:
+saot00   DW OFFSET CopyServerOption
+saot01   DW OFFSET MaskServerOption
+saot02   DW OFFSET CopyServerOption
+saot03   DW OFFSET MyIpServerOption
+saot04   DW OFFSET CopyServerOption
+saot05   DW OFFSET CopyServerOption
+saot06   DW OFFSET CopyServerOption
+saot07   DW OFFSET CopyServerOption
+saot08   DW OFFSET CopyServerOption
+saot09   DW OFFSET CopyServerOption
+saot0A   DW OFFSET CopyServerOption
+saot0B   DW OFFSET CopyServerOption
+saot0C   DW OFFSET CopyServerOption
+saot0D   DW OFFSET CopyServerOption
+saot0E   DW OFFSET CopyServerOption
+saot0F   DW OFFSET CopyServerOption
+saot10   DW OFFSET CopyServerOption
+saot11   DW OFFSET CopyServerOption
+saot12   DW OFFSET CopyServerOption
+saot13   DW OFFSET CopyServerOption
+saot14   DW OFFSET CopyServerOption
+saot15   DW OFFSET CopyServerOption
+saot16   DW OFFSET CopyServerOption
+saot17   DW OFFSET CopyServerOption
+saot18   DW OFFSET CopyServerOption
+saot19   DW OFFSET CopyServerOption
+saot1A   DW OFFSET CopyServerOption
+saot1B   DW OFFSET CopyServerOption
+saot1C   DW OFFSET CopyServerOption
+saot1D   DW OFFSET CopyServerOption
+saot1E   DW OFFSET CopyServerOption
+saot1F   DW OFFSET CopyServerOption
+saot20   DW OFFSET CopyServerOption
+saot21   DW OFFSET CopyServerOption
+saot22   DW OFFSET CopyServerOption
+saot23   DW OFFSET CopyServerOption
+saot24   DW OFFSET CopyServerOption
+saot25   DW OFFSET CopyServerOption
+saot26   DW OFFSET CopyServerOption
+saot27   DW OFFSET CopyServerOption
+saot28   DW OFFSET CopyServerOption
+saot29   DW OFFSET CopyServerOption
+saot2A   DW OFFSET CopyServerOption
+saot2B   DW OFFSET CopyServerOption
+saot2C   DW OFFSET CopyServerOption
+saot2D   DW OFFSET CopyServerOption
+saot2E   DW OFFSET CopyServerOption
+saot2F   DW OFFSET CopyServerOption
+saot30   DW OFFSET CopyServerOption
+saot31   DW OFFSET CopyServerOption
+saot32   DW OFFSET CopyServerOption
+saot33   DW OFFSET CopyServerOption
+saot34   DW OFFSET CopyServerOption
+saot35   DW OFFSET CopyServerOption
+saot36   DW OFFSET CopyServerOption
+saot37   DW OFFSET CopyServerOption
+saot38   DW OFFSET CopyServerOption
+saot39   DW OFFSET CopyServerOption
+saot3A   DW OFFSET CopyServerOption
+saot3B   DW OFFSET CopyServerOption
+saot3C   DW OFFSET CopyServerOption
+saot3D   DW OFFSET CopyServerOption
+saot3E   DW OFFSET CopyServerOption
+saot3F   DW OFFSET CopyServerOption
+
 ServerAck Proc near
-    int 3
+	mov eax,[si].dhcp_id
+	cmp eax,fs:dsd_my_ident
+	jne serv_ack_free
+;
+    add cx,8
+    push fs
+    mov fs,fs:dsd_driver_sel
+	call CreateDhcpReplyBroadcast
+	pop fs
+;
+	mov es:[di].dhcp_op,2
+	mov al,[si].dhcp_hw_type
+	mov es:[di].dhcp_hw_type,al
+	mov al,[si].dhcp_hw_len
+	mov es:[di].dhcp_hw_len,al
+	mov es:[di].dhcp_hops,0
+	mov eax,fs:dsd_orig_ident
+	mov es:[di].dhcp_id,eax
+	mov es:[di].dhcp_elapsed,0
+	mov es:[di].dhcp_flags,80h
+	mov eax,[si].dhcp_client_ip
+	mov es:[di].dhcp_client_ip,eax
+	mov eax,[si].dhcp_req_ip
+	mov es:[di].dhcp_req_ip,eax
+	mov eax,[si].dhcp_relay_ip
+	mov es:[di].dhcp_relay_ip,eax
+    mov eax,[si].dhcp_server_ip
+    mov es:[di].dhcp_server_ip,eax
+	mov es:[di].dhcp_magic,63538263h
+	mov es:[di].dhcp_msg_code,53
+	mov es:[di].dhcp_msg_len,1
+	mov es:[di].dhcp_msg_type,5
+	call SetHwAddress
+;	
+    push cx
+    push si
+    push di
+;    
+	add si,SIZE dhcp_header
+	add di,SIZE dhcp_header
+	sub cx,SIZE dhcp_header
+
+serv_ack_opt_loop:
+    push cx
+    mov ax,[si]
+    mov dl,al
+    or al,al
+    jz serv_ack_opt_done
+;
+    cmp al,-1
+    je serv_ack_opt_done
+;        
+    movzx bx,al
+    movzx cx,ah
+    cmp bx,40h
+    jae serv_ack_opt_default
+;    
+    add bx,bx
+    call word ptr cs:[bx].serv_ack_opt_tab 
+    jmp serv_ack_opt_next
+
+serv_ack_opt_default:
+    call CopyServerOption
+
+serv_ack_opt_next:
+    mov ax,cx
+    pop cx
+    sub cx,2
+    sub cx,ax
+	ja serv_ack_opt_loop
+;
+    push cx	
+
+serv_ack_opt_done:
+    pop cx	
+;
+	mov al,-1
+	stosb
+    dec cx
+;
+    xor al,al
+    rep stosb
+;    
+    pop di
+    pop si
+    pop cx
+;
+    push fs
+    mov fs,fs:dsd_driver_sel    
+	call SendDhcpBroadcast
+	pop fs
+
+serv_ack_free:
     xor ax,ax
     mov ds,ax
     FreeMem
@@ -1554,7 +1973,7 @@ dhcp_disc_size_loop:
 dhcp_disc_size_ok:
 	mov cx,dx
 	push cx
-	call CreateDhcpBroadcast
+	call CreateDhcpReqBroadcast
 	mov es:[di].dhcp_op,1
 	mov al,ds:class_id
 	mov es:[di].dhcp_hw_type,al
@@ -1667,7 +2086,7 @@ dhcp_req_size_loop:
 dhcp_req_size_ok:
 	mov cx,dx
 	push cx
-	call CreateDhcpBroadcast
+	call CreateDhcpReqBroadcast
 	mov es:[di].dhcp_op,1
 	mov al,ds:class_id
 	mov es:[di].dhcp_hw_type,al
@@ -2060,6 +2479,8 @@ receive_cl_serv:
 	jmp receive_cl_done
 
 receive_cl_free:
+    xor ax,ax
+    mov ds,ax
 	FreeMem
 
 receive_cl_done:
