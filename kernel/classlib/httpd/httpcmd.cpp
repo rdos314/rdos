@@ -853,8 +853,6 @@ void THttpCommand::GetFile(const char *Name)
 		WriteFile(path, "text/html");
 	else
 		WriteError(404);
-
-	FServer->Push();
 }
 
 /*##########################################################################
@@ -894,6 +892,7 @@ void THttpCommand::Get(const char *Name)
 		else
 			GetFile(Name);
 	}
+	FServer->Push();
 }
 
 /*##########################################################################
@@ -978,6 +977,7 @@ void THttpCommand::Post(const char *Name)
 	    else
     	   	GetFile(Name);
     }
+	FServer->Push();
 }
 
 /*##########################################################################
