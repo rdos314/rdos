@@ -983,7 +983,8 @@ int main(int argc, char **argv)
 	 Quiz[30]->WriteRetest("eval\\retestn3.htm");
 	 Quiz[31]->WriteRetest("eval\\retestn4.htm");
 	 Quiz[32]->WriteRetest("eval\\retestf1.htm");
-	 Quiz[32]->WriteVersionRetest("eval\\vervar.htm");
+	 Quiz[33]->WriteRetest("eval\\retestf2.htm");
+	 Quiz[33]->WriteVersionRetest("eval\\vervar.htm");
 
 	printf("imgrate\r\n");
 #ifdef ALL

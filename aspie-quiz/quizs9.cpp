@@ -2497,25 +2497,4 @@ void TQuizS9::WriteRetest(const char *filename)
 	file.Write(str);
 	file.Write("<br><br>");
 
-
-#ifdef ENGLISH
-	file.Write("<h3>Question standard deviations</h3>");
-#endif
-
-#ifdef SWEDISH
-	file.Write("<h3>Standardavvikelser per fråga</h3>");
-#endif
-
-	for (q = 0; q < 158; q++)
-	{
-	    sprintf(str, "%d. ", q + 1);
-	    file.Write(str);
-	    
-		file.Write(Quiz[q].Text);
-	    
-	    sd = QTot[q] / QCount[q];
-
-        sprintf(str, " <b>%3.2Lf</b><br>", sd);
-    	file.Write(str);
-    }
 }

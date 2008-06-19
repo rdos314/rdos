@@ -7514,8 +7514,8 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"avg.htm\">Grouped overview</a><br>\n");
 	file.Write("<a href=\"avgcorr.htm\">Averaged group correlations</a><br>\n");
 	file.Write("<a href=\"avgpca.htm\">Averaged PCA-loadings</a><br>\n");
-	file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-11</a><br>\n");
-	file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-11</a><br>\n");
+	file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz</a><br>\n");
+	file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
 	file.Write("<a href=\"avgaxis.htm\">Averaged axis loadings</a><br>\n");
 	file.Write("<a href=\"axisload.htm\">Detailed axis loadings</a><br>\n");
@@ -7546,8 +7546,8 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"avg.htm\">Översiktlig, grupperad rapport</a><br>\n");
 	file.Write("<a href=\"avgcorr.htm\">Sammanvägda gruppkorrelationer</a><br>\n");
 	file.Write("<a href=\"avgpca.htm\">Sammanvägda PCA-vikter</a><br>\n");
-	file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-11</a><br>\n");
-	file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-11</a><br>\n");
+	file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz</a><br>\n");
+	file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
 	file.Write("<a href=\"avgaxis.htm\">Sammanvägda axel faktorer</a><br>\n");
 	file.Write("<a href=\"axisload.htm\">Detaljerade axel faktorer</a><br>\n");
@@ -8180,6 +8180,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<h3>Histograms</h3>\n");
 
 	file.Write("<p><img src=\"all.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"nt.emf\" BORDER=0></p>");
 	file.Write("<p><img src=\"autism.emf\" BORDER=0></p>");
 	file.Write("<p><img src=\"as.emf\" BORDER=0></p>");
 	file.Write("<p><img src=\"add.emf\" BORDER=0></p>");
