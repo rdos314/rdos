@@ -1311,6 +1311,8 @@ define_dns	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public GetIPNumber
+    
 GetIPNumber	Proc near
 	push ds
 	push ebx
