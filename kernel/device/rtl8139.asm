@@ -1000,7 +1000,7 @@ init_pci1_found:
 	call ReadEthernetAddress
 	call AllocateRing
 	call InitHardware
-;
+;    
 	push ds
 	mov ax,cs
 	mov ds,ax

@@ -406,4 +406,6 @@ write_icsp_cmd_nr           = 341
 write_icsp_data_nr          = 342
 read_icsp_data_nr           = 343
 
+get_gateway_nr              = 344
+
 usergate_entries			= 370

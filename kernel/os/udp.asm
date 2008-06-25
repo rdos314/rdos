@@ -553,17 +553,17 @@ Receive	Proc far
 ;
 	mov ax,udp_data_sel
 	mov ds,ax
-	mov ax,es:[di].udp_dest
+	mov ax,es:[di].udp_source
 	xchg al,ah
 ;
-	cmp ax,68
+	cmp ax,67
 	jne receive_not_cl_dhcp
 ;
 	call ReceiveClientDhcp
 	jmp receive_done
 
 receive_not_cl_dhcp:
-	cmp ax,67
+	cmp ax,68
 	jne receive_not_dhcp
 ;
 	call ReceiveServerDhcp

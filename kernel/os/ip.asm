@@ -336,6 +336,31 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			get_gateway
+;
+;	Purpose:		Get IP address of gateway
+;
+;	Returns:		EDX		IP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_gateway_name	DB 'Get Gateway',0
+
+get_gateway	Proc far
+	push ds
+;
+	mov dx,ip_data_sel
+	mov ds,dx
+	mov edx,ds:gateway
+;
+	pop ds
+	retf32
+get_gateway	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			create_ip_header
 ;
 ;	Purpose:		create an IP header, and allocate space for data
@@ -1498,6 +1523,12 @@ init	PROC far
 	mov di,OFFSET get_ip_address_name
 	xor dx,dx
 	mov ax,get_ip_address_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_gateway
+	mov di,OFFSET get_gateway_name
+	xor dx,dx
+	mov ax,get_gateway_nr
 	RegisterBimodalUserGate
 ;
 	mov cx,4

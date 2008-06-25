@@ -64,20 +64,21 @@ dhcp_wanted_ip		DD ?
 dhcp_server			DD ?
 dhcp_option_list	DW ?
 dhcp_driver_sel     DW ?
-dhcp_serv_list      DW ?
-dhcp_mask2          DD ?
 dhcp_ip2            DD ?
-dhcp_list_section	section_typ <>
+dhcp_mask2          DD ?
+dhcp_gateway2       DD ?
+dhcp_serv_arr       DW 256 DUP(?)
 
 dhcp_data	ENDS
 
 dhcp_serv_data  STRUC
 
-dsd_next        DW ?
 dsd_orig_ident  DD ?
+dsd_gateway     DD ?
 dsd_my_ident    DD ?
 dsd_server      DD ?
-dsd_ip          DD ?
+dsd_local_ip    DD ?
+dsd_remote_ip   DD ?
 dsd_driver_sel  DW ?
 dsd_hw_type     DB ?
 dsd_hw_len      DB ?
@@ -241,8 +242,12 @@ CreateDhcpReplyBroadcast	Proc near
 	xchg al,ah
 	mov es:[edi].udp_source,ax
 ;
-    GetIpAddress
-    mov es:[di-8],edx	
+    push ds
+    mov ax,dhcp_data_sel
+    mov ds,ax
+    mov eax,ds:dhcp_gateway2
+    pop ds
+    mov es:[di-8],eax	
 	add edi,8
 	clc
 
@@ -314,39 +319,40 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindServer	Proc near
+    push es
     push fs
     push bx
     push cx
     push dx
+    push bp
 ;
-    push ds
     mov ax,dhcp_data_sel
-    mov ds,ax
-	EnterSection ds:dhcp_list_section
-    mov ax,ds:dhcp_serv_list
-    pop ds
+    mov fs,ax
+    mov bp,OFFSET dhcp_serv_arr+4
+    mov cx,256-2
 
 find_serv_loop:
+    mov ax,fs:[bp]
     or ax,ax
-    jz find_serv_fail
+    jz find_serv_next
 ;
-    mov fs,ax
+    mov es,ax
     mov dl,[si].dhcp_hw_type
-    cmp dl,fs:dsd_hw_type
+    cmp dl,es:dsd_hw_type
     jne find_serv_next
 ;
     movzx cx,[si].dhcp_hw_len
-    cmp cl,fs:dsd_hw_len
+    cmp cl,es:dsd_hw_len
     jne find_serv_next
 ;
     or cl,cl
-    je find_serv_fail
+    je find_serv_next
 ;    
     xor bx,bx
 
 find_serv_match:
-    mov dl,es:[bx+di].dhcp_hw_addr
-    cmp dl,fs:[bx].dsd_hw_data
+    mov dl,[bx+si].dhcp_hw_addr
+    cmp dl,es:[bx].dsd_hw_data
     jne find_serv_next
 ;
     inc bx
@@ -356,26 +362,20 @@ find_serv_match:
     jmp find_serv_done
 
 find_serv_next:
-    mov ax,fs:dsd_next
-    jmp find_serv_loop
+    add bp,2
+    loop find_serv_loop
 
 find_serv_fail:
     xor ax,ax        
     stc
 
 find_serv_done:
-    pushf
-    push ds;
-    mov dx,dhcp_data_sel
-    mov ds,dx
-	LeaveSection ds:dhcp_list_section
-    pop ds
-    popf
-;    
+    pop bp
     pop dx
     pop cx
     pop bx
     pop fs
+    pop es
     ret
 FindServer  Endp
 
@@ -383,110 +383,137 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			AddServerInit
+; 	Name:			InitServerSel
 ;
-;	Purpose:		Init server sel data
+;	Purpose:		Init server selector
 ;
 ;	Parameters:		DS:SI   Original UDP data
-;                   ES:DI	Sent UDP data
 ;                   FS      Server sel
 ;                   GS      Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddServerInit	Proc near
+InitServerSel	Proc near
     push eax
     push bx
     push cx
 ;    
-    mov fs:dsd_next,0
     mov fs:dsd_server,0
-    mov fs:dsd_ip,0
+    mov fs:dsd_remote_ip,0
 	mov eax,[si].dhcp_id
 	mov fs:dsd_orig_ident,eax
-	mov eax,es:[di].dhcp_id
-	mov fs:dsd_my_ident,eax
-    mov ax,gs
-    mov fs:dsd_driver_sel,ax
-    mov al,es:[di].dhcp_hw_type
+    mov fs:dsd_driver_sel,gs
+    mov al,[si].dhcp_hw_type
     mov fs:dsd_hw_type,al
-    movzx cx,es:[di].dhcp_hw_len
+    movzx cx,[si].dhcp_hw_len
     cmp cl,10h
-    jb add_serv_init_len_ok
+    jb init_serv_len_ok
 ;
     mov cl,10h
 
-add_serv_init_len_ok:    
+init_serv_len_ok:    
     mov fs:dsd_hw_len,cl
 ;    
     or cl,cl
-    jz add_serv_init_done
+    jz init_serv_done
 ;    
     xor bx,bx
 
-add_serv_init_loop:
-    mov al,es:[bx+di].dhcp_hw_addr
+init_serv_loop:
+    mov al,[bx+si].dhcp_hw_addr
     mov fs:[bx].dsd_hw_data,al
     inc bx
-    loop add_serv_init_loop
+    loop init_serv_loop
 
-add_serv_init_done:
+init_serv_done:
     pop cx
     pop bx
     pop eax
     ret
-AddServerInit   Endp
+InitServerSel   Endp
 
 PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			AddServerSel
+; 	Name:			CreateServerSel
 ;
 ;	Purpose:		Create, initializr & link server selector
 ;
 ;	Parameters:		DS:SI   Original UDP data
-;                   ES:DI	Sent UDP data
 ;                   GS      Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddServerSel	Proc near
+CreateServerSel	Proc near
+    push ds
+    push es
     push fs
     push eax
+    push bx
+    push cx
 ;   
     call FindServer
-    jc add_serv_new
+    jc create_serv_new
 
-add_serv_update:
+create_serv_update:
     mov fs,ax
-    call AddServerInit
-    jmp add_serv_done
+    call InitServerSel
+    jmp create_serv_done
     
-add_serv_new:
-    push es
+create_serv_new:
 	mov eax,SIZE dhcp_serv_data
 	AllocateSmallGlobalMem
 	mov ax,es
 	mov fs,ax
-    pop es    
-    call AddServerInit
-;    
-    push ds
+    call InitServerSel
+;
 	mov ax,dhcp_data_sel
 	mov ds,ax
-	EnterSection ds:dhcp_list_section
-	mov ax,ds:dhcp_serv_list
-	mov fs:dsd_next,ax
-	mov ds:dhcp_serv_list,fs
-	LeaveSection ds:dhcp_list_section
-	pop ds
-            
-add_serv_done:
+    mov ecx,ds:dhcp_mask2
+    rol ecx,8
+    xor ch,ch
+    not cl
+    inc cx
+    sub cx,2
+    jbe create_serv_done
+;
+    mov bx,OFFSET dhcp_serv_arr+4
+    mov edx,ds:dhcp_gateway2
+    and edx,ds:dhcp_mask2
+    add edx,2000000h
+
+create_serv_slot_loop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz create_serv_slot_ok
+;
+    add edx,1000000h
+    add bx,2
+    loop create_serv_slot_loop
+;   
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+    stc
+    jmp create_serv_done
+    
+create_serv_slot_ok:
+    mov fs:dsd_local_ip,edx
+    mov edx,ds:dhcp_gateway2
+    mov fs:dsd_gateway,edx
+    mov ds:[bx],fs
+    clc
+
+create_serv_done:   
+    pop cx
+    pop bx
     pop eax
     pop fs
+    pop es
+    pop ds
     ret
-AddServerSel Endp
+CreateServerSel Endp
 
 PAGE
 	    
@@ -723,8 +750,7 @@ MyIpServerOption	Proc near
  ;
     mov ax,dhcp_data_sel
     mov ds,ax
-    GetIpAddress
-    mov eax,edx
+    mov eax,ds:dhcp_gateway2
     stosd
     add si,4
 ;    
@@ -829,6 +855,9 @@ ReceiveDiscover	Proc near
     push di
 ;    
     mov ax,ds:dhcp_driver_sel
+    cmp ax,1
+    je discover_req_done
+;    
     mov fs,ax
     mov ax,es
     mov ds,ax
@@ -860,23 +889,47 @@ discover_req_size_ok:
 	mov es:[di].dhcp_hw_type,al
 	mov al,[si].dhcp_hw_len
 	mov es:[di].dhcp_hw_len,al
-	mov es:[di].dhcp_hops,1
-	GetSystemTime
-	mov es:[di].dhcp_id,eax
+	mov es:[di].dhcp_hops,0
 	mov es:[di].dhcp_elapsed,0
 	mov es:[di].dhcp_flags,80h
 	mov es:[di].dhcp_client_ip,0
 	mov es:[di].dhcp_req_ip,0
 	mov es:[di].dhcp_server_ip,0
-	GetIpAddress
-	mov es:[di].dhcp_relay_ip,edx
+	mov es:[di].dhcp_relay_ip,0
 	mov es:[di].dhcp_magic,63538263h
 	mov es:[di].dhcp_msg_code,53
 	mov es:[di].dhcp_msg_len,1
 	mov es:[di].dhcp_msg_type,1
 	call SetHwAddress
-    call AddServerSel
-;	
+;
+    call FindServer
+    jc discover_req_new
+;
+    push fs
+    mov fs,ax
+    mov eax,fs:dsd_orig_ident
+    cmp eax,[si].dhcp_id
+    je discover_same_ident
+;    
+    GetSystemTime
+	mov es:[di].dhcp_id,eax
+	jmp discover_ident_init
+
+discover_same_ident:	
+    mov eax,fs:dsd_my_ident
+	mov es:[di].dhcp_id,eax
+
+discover_ident_init:
+    call InitServerSel
+	pop fs
+    jmp discover_req_options
+
+discover_req_new:
+    GetSystemTime
+	mov es:[di].dhcp_id,eax
+    call CreateServerSel
+
+discover_req_options:
 	add si,SIZE dhcp_header
 	add di,SIZE dhcp_header
 	sub cx,SIZE dhcp_header
@@ -937,7 +990,8 @@ discover_req_data_ok:
     pop si
     pop cx
 	call SendDhcpBroadcast
-;
+
+discover_req_done:
     pop di
     pop si
     pop bx
@@ -1041,6 +1095,12 @@ ReceiveRequest	Proc near
     push si
     push di
 ;    
+    mov ax,dhcp_data_sel
+    mov ds,ax
+    mov ax,ds:dhcp_driver_sel
+    cmp ax,1
+    je req_req_done
+;
     mov ax,es
     mov ds,ax
     mov si,di
@@ -1083,7 +1143,7 @@ req_req_size_ok:
 	mov es:[di].dhcp_hw_type,al
 	mov al,[si].dhcp_hw_len
 	mov es:[di].dhcp_hw_len,al
-	mov es:[di].dhcp_hops,1
+	mov es:[di].dhcp_hops,0
 	mov eax,fs:dsd_my_ident
 	mov es:[di].dhcp_id,eax
 	mov es:[di].dhcp_elapsed,0
@@ -1091,8 +1151,7 @@ req_req_size_ok:
 	mov es:[di].dhcp_client_ip,0
 	mov es:[di].dhcp_req_ip,0
 	mov es:[di].dhcp_server_ip,0
-	GetIpAddress
-	mov es:[di].dhcp_relay_ip,edx
+	mov es:[di].dhcp_relay_ip,0
 	mov es:[di].dhcp_magic,63538263h
 	mov es:[di].dhcp_msg_code,53
 	mov es:[di].dhcp_msg_len,1
@@ -1234,6 +1293,7 @@ ReceiveServerDhcp	Proc near
 	sub cx,SIZE dhcp_header
 	jb receive_serv_free
 ;
+	add cx,SIZE dhcp_header
 	mov al,es:[di].dhcp_op
 	cmp al,1
 	jne receive_serv_free
@@ -1330,7 +1390,7 @@ soot32   DW OFFSET CopyServerOption
 soot33   DW OFFSET CopyServerOption
 soot34   DW OFFSET CopyServerOption
 soot35   DW OFFSET CopyServerOption
-soot36   DW OFFSET CopyServerOption
+soot36   DW OFFSET MyIpServerOption
 soot37   DW OFFSET CopyServerOption
 soot38   DW OFFSET CopyServerOption
 soot39   DW OFFSET CopyServerOption
@@ -1362,13 +1422,12 @@ ServerOffer Proc near
 	mov es:[di].dhcp_id,eax
 	mov es:[di].dhcp_elapsed,0
 	mov es:[di].dhcp_flags,80h
-	mov eax,[si].dhcp_client_ip
-	mov es:[di].dhcp_client_ip,eax
-	mov eax,[si].dhcp_req_ip
+	mov es:[di].dhcp_client_ip,0
+	mov eax,fs:dsd_local_ip
 	mov es:[di].dhcp_req_ip,eax
 	mov eax,[si].dhcp_relay_ip
 	mov es:[di].dhcp_relay_ip,eax
-    mov eax,[si].dhcp_server_ip
+	mov eax,fs:dsd_gateway
     mov es:[di].dhcp_server_ip,eax
 	mov es:[di].dhcp_magic,63538263h
 	mov es:[di].dhcp_msg_code,53
@@ -1458,9 +1517,11 @@ PAGE
 
 serv_ack_opt_tab:
 saot00   DW OFFSET CopyServerOption
-saot01   DW OFFSET MaskServerOption
+;saot01   DW OFFSET MaskServerOption
+saot01   DW OFFSET CopyServerOption
 saot02   DW OFFSET CopyServerOption
-saot03   DW OFFSET MyIpServerOption
+;saot03   DW OFFSET MyIpServerOption
+saot03   DW OFFSET CopyServerOption
 saot04   DW OFFSET CopyServerOption
 saot05   DW OFFSET CopyServerOption
 saot06   DW OFFSET CopyServerOption
@@ -2427,6 +2488,7 @@ ReceiveClientDhcp	Proc near
 	push ds
 	push ax
 	push bx
+	push dx
 ;
 	mov ax,dhcp_data_sel
 	mov ds,ax
@@ -2438,14 +2500,20 @@ ReceiveClientDhcp	Proc near
 ;
 	mov ax,es:[di].udp_dest
 	xchg al,ah
+	mov dx,ax
 	cmp ax,68
-	jne receive_cl_free
+	je receive_cl_dest_ok
 ;
+	cmp ax,67
+	jne receive_cl_free
+
+receive_cl_dest_ok:
 	add di,8
 	sub cx,8
 	sub cx,SIZE dhcp_header
 	jb receive_cl_free
 ;
+	add cx,SIZE dhcp_header
 	mov al,es:[di].dhcp_op
 	cmp al,2
 	jne receive_cl_free
@@ -2457,6 +2525,9 @@ ReceiveClientDhcp	Proc near
 	movzx bx,es:[di].dhcp_msg_type
 	cmp bx,8
 	jae receive_cl_free
+;
+    cmp dx,67
+    je receive_cl_serv    
 ;
 	mov eax,ds:dhcp_ident
 	cmp eax,es:[di].dhcp_id
@@ -2484,6 +2555,7 @@ receive_cl_free:
 	FreeMem
 
 receive_cl_done:
+    pop dx
 	pop bx
 	pop ax
 	pop ds
@@ -2594,7 +2666,8 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dhcp_ip_name			DB 'DHCP.IP',0
+dhcp_ip_name    		DB 'DHCP.IP',0
+dhcp_gateway_name		DB 'DHCP.GATEWAY',0
 dhcp_mask_name			DB 'DHCP.NETMASK',0
 
 	public init_dhcp
@@ -2606,12 +2679,16 @@ init_dhcp	PROC near
 	mov ds,bx
 	mov es:dhcp_option_list,0
 	mov es:dhcp_driver_sel,0
-	mov es:dhcp_serv_list,0
 	mov es:dhcp_server,0
 	GetIpAddress
 	mov es:dhcp_wanted_ip,edx
 	mov es:dhcp_ident,0
-	InitSection es:dhcp_list_section
+	mov di,OFFSET dhcp_serv_arr
+	mov cx,256
+	xor ax,ax
+	rep stosw
+	mov es:dhcp_serv_arr,-1
+	mov es:dhcp_serv_arr+2,-1
 ;
     mov ax,es
     mov ds,ax
@@ -2622,13 +2699,18 @@ init_dhcp	PROC near
 	call GetIPNumber
 	mov ds:dhcp_ip2,eax
 ;
+	mov di,OFFSET dhcp_gateway_name
+	call GetIPNumber
+	mov ds:dhcp_gateway2,eax
+;
 	mov di,OFFSET dhcp_mask_name
 	call GetIPNumber
 	jnc init_dhcp_mask2_ok
 ;
-    mov eax,-1
+    mov eax,0FFFFFFh
 
 init_dhcp_mask2_ok:    	
+    or eax,0FFFFFFh
 	mov ds:dhcp_mask2,eax
 ;
 	mov ax,cs

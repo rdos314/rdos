@@ -1070,6 +1070,11 @@ GetIpAddress	MACRO
 	UserGate get_ip_address_nr
 						ENDM
 
+; OUT EDX		My IP address
+GetGateway	MACRO
+	UserGate get_gateway_nr
+						ENDM
+
 ; IN  ES:(E)DI		Host name
 ; OUT EDX			IP address
 NameToIP		MACRO

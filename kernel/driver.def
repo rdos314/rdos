@@ -403,6 +403,9 @@ pccom_data_sel      EQU 9A8h
 usbcom_code_sel     EQU 9B0h
 usbcom_data_sel     EQU 9B8h
 
+ohci_code_sel       EQU 9C0h
+ohci_data_sel       EQU 9C8h
+
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h
 video_page2_sel		EQU 0F10h
