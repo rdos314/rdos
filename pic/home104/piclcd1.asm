@@ -328,8 +328,8 @@ WaitCmdLoop:
     goto HandleInput
 ;
 	PAGE0
-	btfsc Flags,FLAG_IR_DONE_BIT
-	call SendAsync
+;	btfsc Flags,FLAG_IR_DONE_BIT
+;	call SendAsync
 ;
     btfss Flags,FLAG_CMD_AVAIL_BIT
     goto WaitCmdLoop
