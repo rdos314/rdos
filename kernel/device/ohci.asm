@@ -105,6 +105,7 @@ otd_be          DD ?
 otd_my_va       DD ?
 otd_next_va     DD ?
 otd_buffer_va   DD ?
+otd_buffer_size DW ?
 otd_pipe_sel    DW ?
 
 ohc_td_struc    ENDS
@@ -115,6 +116,8 @@ osp_pipe_base   usb_pipe_struc <>
 osp_ed          DD ?
 osp_prev        DW ?
 osp_next        DW ?
+osp_data_list   DD ?
+osp_signal      DW ?
 
 ohci_pipe   ENDS
 
@@ -130,6 +133,8 @@ ohc_linear          DD ?
 ohc_phys            DD ?
 ohc_control_linear  DD ?
 ohc_bulk_linear     DD ?
+ohc_pipe_list       DW ?
+ohc_reclaim_list    DD ?
 
 ohci_func_sel    ENDS
 
@@ -309,6 +314,100 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			InsertPipe
+;
+;		DESCRIPTION:	Insert pipe into function pipe-list
+;
+;       PARAMETERS:     DS      Function
+;                       FS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertPipe  Proc near
+	push di
+	mov di,ds:ohc_pipe_list
+	or di,di
+	je ipEmpty
+;	
+	push ds
+	push si
+	mov ds,di
+	cli
+	mov si,ds:osp_prev
+	mov ds:osp_prev,fs
+	mov ds,si
+	mov ds:osp_next,fs
+	mov fs:osp_next,di
+	mov fs:osp_prev,si
+	sti
+	pop si
+	pop ds
+	pop di
+	jmp ipDone
+	
+ipEmpty:
+	mov fs:osp_next,fs
+	mov fs:osp_prev,fs
+	pop di
+	mov ds:ohc_pipe_list,fs
+
+ipDone:
+    mov fs:osp_data_list,0
+    mov fs:osp_signal,0
+	ret
+InsertPipe  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RemovePipe
+;
+;		DESCRIPTION:	Remove pipe from function pipe-list
+;
+;       PARAMETERS:     DS      Function
+;                       FS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemovePipe  Proc near
+	push si
+	push di
+;	
+    push ds
+	mov si,fs:osp_prev
+	mov di,fs:osp_next
+	mov ds,di
+	mov ds:osp_prev,si
+	mov ds,si
+	mov ds:osp_next,di
+	pop ds
+;
+    mov si,fs
+    cmp si,ds:ohc_pipe_list
+    jne rpDone
+;
+    cmp si,di
+    je rpEmpty
+;
+    mov ds:ohc_pipe_list,di
+    jmp rpDone    
+
+rpEmpty:
+    mov ds:ohc_pipe_list,0    
+
+rpDone:
+	pop di
+	pop si
+    ret
+RemovePipe  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    InitEd
 ;
 ;		DESCRIPTION:    Initialize an already allocated ED
@@ -441,7 +540,6 @@ AddControlEd	PROC near
     push gs
     push ebx
 ;
-    int 3
     call AllocateEd
     mov gs,ds:ohc_reg_sel
     mov ebx,gs:HcControlHeadEd
@@ -469,6 +567,172 @@ AddControlEd	PROC near
     pop gs
     ret
 AddControlEd  ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddBulkEd
+;
+;		DESCRIPTION:	Add bulk ED 
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       FS      Pipe sel
+;
+;       RETURNS:        EDX     Linear address of ED added
+;                       EAX     Physical address of ED added
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddBulkEd	PROC near
+    push gs
+    push ebx
+;
+    call AllocateEd
+    mov gs,ds:ohc_reg_sel
+    mov ebx,gs:HcBulkHeadEd
+    mov es:[edx].oes_nexted,ebx
+    mov ebx,ds:ohc_bulk_linear
+    mov es:[edx].oes_next_va,ebx
+;
+    mov ds:ohc_bulk_linear,edx
+    mov gs:HcBulkHeadEd,eax
+;
+    mov ebx,edx
+    push eax
+    push edx
+;    
+    call AllocateTd
+    mov es:[ebx].oes_headp,eax
+    mov es:[ebx].oes_tailp,eax
+    mov es:[ebx].oes_head_va,edx
+    mov es:[ebx].oes_tail_va,edx
+;    
+    pop edx
+    pop eax
+;    
+    pop ebx
+    pop gs
+    ret
+AddBulkEd  ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    InitPipeEd
+;
+;		DESCRIPTION:    Init endpoint descriptor from pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       ES      Flat sel
+;                       EDX     ED linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitPipeEd  Proc near
+    push eax
+;    
+    mov ax,fs:usbp_maxlen
+    cmp ax,800h
+    jb init_pipe_size_ok
+;    
+    mov ax,7FFh
+
+init_pipe_size_ok:
+    mov es:[edx].oes_mps,ax
+;
+    mov ah,fs:usbp_endpoint
+    xor al,al
+    shr ax,1
+    or al,fs:usbp_address
+    mov es:[edx].oes_fa_en,ax
+
+init_pipe_done:
+    pop eax
+    ret
+InitPipeEd  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddPipeTd
+;
+;		DESCRIPTION:	Add TD to pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       ES      Flat sel
+;                       FS      Pipe
+;                       EDI     Data buffer
+;                       CX      Size of data
+;                       AX      Flags field of TD
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddPipeTd	PROC near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;    
+    mov edx,fs:osp_ed
+    mov ebx,es:[edx].oes_tail_va
+    or ebx,ebx
+    jz add_pipe_done
+;    
+    or ax,0F000h
+    mov es:[ebx].otd_flags,ax
+    mov es:[ebx].otd_buffer_size,cx
+    mov es:[ebx].otd_buffer_va,edi
+;
+    or cx,cx
+    jnz add_pipe_has_buffer
+;
+    mov eax,1
+    jmp add_pipe_buf_ads_ok    
+
+add_pipe_has_buffer:    
+    push cx
+    push edx
+    mov al,es:[edi]
+    mov edx,edi    
+    GetPhysicalPage
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    pop edx
+    pop cx
+
+add_pipe_buf_ads_ok:
+    movzx ecx,cx
+;
+    mov es:[ebx].otd_cbp,eax
+    add eax,ecx
+    dec eax
+    mov es:[ebx].otd_be,eax
+;
+    call AllocateTd
+    mov es:[ebx].otd_next_td,eax
+    mov es:[ebx].otd_next_va,edx    
+;
+    mov ebx,fs:osp_ed
+    mov es:[ebx].oes_tail_va,edx
+    mov es:[ebx].oes_tailp,eax
+
+add_pipe_done:    
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax   
+    ret
+AddPipeTd   Endp
 
 PAGE
 
@@ -675,6 +939,7 @@ CreateControl   Proc far
     mov es,dx
     call AddControlEd
     mov fs:osp_ed,edx
+    call InsertPipe
 ;
     popad
     pop es
@@ -695,9 +960,205 @@ CreateControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBulk   Proc far
-    int 3
+    push es
+    pushad
+;    
+    mov eax,SIZE ohci_pipe
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,ax
+    xor al,al
+    rep stosb
+;    
+    mov ax,es
+    mov fs,ax
+    mov dx,flat_sel
+    mov es,dx
+    call AddBulkEd
+    mov fs:osp_ed,edx
+    call InsertPipe
+;
+    popad
+    pop es
     ret
 CreateBulk   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddInBuffer
+;
+;		DESCRIPTION:    Allocate input buffer
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       CX      Size
+;                       AX      Flags field of TD
+;                     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddInBuffer    Proc near
+    push gs
+    push es
+    pushad
+;    
+    mov si,ax
+    or cx,cx
+    jnz aibHasData
+;
+    mov ax,flat_sel
+    mov es,ax
+    xor edi,edi
+    mov ax,si
+    call AddPipeTd
+    jmp aibDone
+
+aibHasData:
+    movzx ebp,cx
+    dec cx
+    and cx,0F000h
+    add cx,1000h
+    movzx eax,cx
+    AllocateBigLinear
+    mov ecx,eax
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+    mov ecx,ebp    
+    shr ecx,2
+    xor eax,eax    
+    rep stos dword ptr es:[edi]
+    mov ecx,ebp
+    and ecx,3
+    rep stos byte ptr es:[edi]
+    mov edi,edx
+;    
+    mov ax,bp
+    xor dx,dx
+    mov cx,fs:usbp_maxlen
+    div cx
+    mov cx,ax
+    mov bx,dx
+    or cx,cx
+    jz aibLastPart
+
+aibLoop:
+    push cx
+    mov cx,fs:usbp_maxlen     
+    mov ax,si
+    call AddPipeTd
+;
+    movzx ecx,fs:usbp_maxlen 
+    add edi,ecx
+    pop cx
+    loop aibLoop
+
+aibLastPart:
+    mov cx,bx
+    or cx,cx
+    jz aibDone
+;
+    mov ax,si
+    call AddPipeTd
+
+aibDone:
+    popad
+    pop es
+    pop gs    
+    ret
+AddInBuffer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddOutBuffer
+;
+;		DESCRIPTION:    Allocate output buffer
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       CX      Size
+;                       AX      Flags field of TD
+;                       ES:EDI  Data buffer
+;                     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddOutBuffer    Proc near
+    push gs
+    push es
+    pushad
+;    
+    mov si,ax
+    or cx,cx
+    jnz aobHasData
+;
+    mov ax,flat_sel
+    mov es,ax
+    xor edi,edi
+    mov ax,si
+    call AddPipeTd
+    jmp aobDone
+
+aobHasData:
+    movzx ebp,cx
+;    
+    push es
+    push edi
+    dec cx
+    and cx,0F000h
+    add cx,1000h
+    movzx eax,cx
+    AllocateBigLinear
+    mov ecx,eax
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+    pop esi
+    pop gs
+;
+    mov ecx,ebp    
+    shr ecx,2
+    xor eax,eax    
+    rep movs dword ptr es:[edi],gs:[esi]
+    mov ecx,ebp
+    and ecx,3
+    rep movs byte ptr es:[edi],gs:[esi]
+    mov edi,edx
+;    
+    mov ax,bp
+    xor dx,dx
+    mov cx,fs:usbp_maxlen
+    div cx
+    mov cx,ax
+    mov bx,dx
+    or cx,cx
+    jz aobLastPart
+
+aobLoop:
+    push cx
+    mov cx,fs:usbp_maxlen     
+    mov ax,si
+    call AddPipeTd
+;
+    movzx ecx,fs:usbp_maxlen 
+    add edi,ecx
+    pop cx
+    loop aobLoop
+
+aobLastPart:
+    mov cx,bx
+    or cx,cx
+    jz aobDone
+;
+    mov ax,si
+    call AddPipeTd
+
+aobDone:
+    popad
+    pop es
+    pop gs    
+    ret
+AddOutBuffer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -714,7 +1175,44 @@ CreateBulk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddSetup    Proc far
-    int 3
+    push gs
+    push es
+    pushad
+;
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    jne asDone
+;    
+    mov ax,es
+    mov gs,ax
+    mov esi,edi
+;    
+    mov eax,1000h
+    push ecx
+    AllocateBigLinear
+    pop ecx
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax   
+;
+    movzx ecx,cx
+    push ecx
+    push ecx
+    shr ecx,2
+    rep movs dword ptr es:[edi],gs:[esi]
+    pop ecx
+    and ecx,3
+    rep movs byte ptr es:[edi],gs:[esi]
+    mov edi,edx
+    pop ecx
+;
+    mov ax,2E4h
+    call AddPipeTd
+
+asDone:
+    popad
+    pop es
+    pop gs
     ret
 AddSetup    Endp
 
@@ -733,7 +1231,16 @@ AddSetup    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddOut    Proc far
-    int 3
+    push eax
+    push ecx
+    push edx
+;
+    mov ax,2Ch
+    call AddOutBuffer
+;    
+    pop edx
+    pop ecx
+    pop eax    
     ret
 AddOut    Endp
 
@@ -751,7 +1258,16 @@ AddOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddIn    Proc far
-    int 3
+    push eax
+    push ecx
+    push edx
+;
+    mov ax,34h
+    call AddInBuffer
+;    
+    pop edx
+    pop ecx
+    pop eax    
     ret
 AddIn    Endp
 
@@ -768,7 +1284,22 @@ AddIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddStatusOut    Proc far
-    int 3
+    push eax
+    push ecx
+    push edx
+;
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    jne asoDone
+;
+    xor cx,cx
+    mov ax,32Ch
+    call AddOutBuffer
+
+asoDone:
+    pop edx
+    pop ecx
+    pop eax    
     ret
 AddStatusOut    Endp
 
@@ -785,7 +1316,22 @@ AddStatusOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddStatusIn    Proc far
-    int 3
+    push eax
+    push ecx
+    push edx
+;
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    jne asiDone
+;
+    xor cx,cx
+    mov ax,334h
+    call AddInBuffer
+
+asiDone:
+    pop edx
+    pop ecx
+    pop eax    
     ret
 AddStatusIn    Endp
 
@@ -803,7 +1349,52 @@ AddStatusIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IssueTransfer    Proc far
-    int 3
+    push es
+    push eax
+    push edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,fs:osp_ed
+;
+    ClearSignal
+    GetThread
+    mov fs:osp_signal,ax
+;    
+    test es:[edx].oes_fa_en,4000h
+    jz issue_transfer_enabled
+;
+    call InitPipeEd 
+
+issue_transfer_enabled:
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    jne issue_not_control
+;
+    push ds
+    mov ds,ds:ohc_reg_sel
+    mov eax,ds:HcCommandStatus
+    or al,2
+    mov ds:HcCommandStatus,eax
+    pop ds
+    jmp issue_done
+
+issue_not_control:
+    cmp al,MODE_BULK
+    jne issue_done
+;
+    push ds
+    mov ds,ds:ohc_reg_sel
+    mov eax,ds:HcCommandStatus
+    or al,4
+    mov ds:HcCommandStatus,eax
+    pop ds
+
+issue_done:
+    clc
+    pop edx
+    pop eax
+    pop es
     ret
 IssueTransfer    Endp
 
@@ -820,7 +1411,8 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion   Proc far
-    int 3
+    WaitForSignal
+    clc
     ret
 WaitForCompletion   Endp
 
@@ -839,7 +1431,16 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsPipeSignalled   Proc far
-    int 3
+    push edx
+    mov edx,fs:osp_data_list
+    or edx,edx
+    stc
+    jnz pipe_signalled_done
+;
+    clc
+
+pipe_signalled_done:
+    pop edx
     ret
 IsPipeSignalled   Endp
 
@@ -856,7 +1457,54 @@ IsPipeSignalled   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EmptyQueue   Proc far
-    int 3
+    push es
+    push eax
+    push cx
+    push edx
+    push esi
+    push edi
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,fs:osp_data_list
+    or edx,edx
+    jz empty_queue_done
+;
+    xor esi,esi    
+
+empty_queue_loop:
+    mov edi,es:[edx].otd_next_va
+    mov eax,es:[edx].otd_buffer_va
+    call FreeBlock32
+    or eax,eax
+    jz empty_queue_next
+;
+    and ax,0F000h
+    cmp esi,eax
+    je empty_queue_next
+;
+    mov edx,eax
+    mov esi,eax
+    mov ecx,1000h
+    FreeLinear
+
+empty_queue_next:
+    mov edx,edi
+    or edx,edx
+    jnz empty_queue_loop    
+        
+empty_queue_done:
+    mov fs:osp_data_list,0
+;
+    mov edx,fs:osp_ed
+    or es:[edx].oes_fa_en,4000h
+;
+    pop edi
+    pop esi
+    pop edx
+    pop cx
+    pop eax
+    pop es
     ret
 EmptyQueue   Endp
 
@@ -876,7 +1524,63 @@ EmptyQueue   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetData   Proc far
-    int 3
+    push ds
+    push eax
+    push edx
+    push esi
+    push edi
+    push bp
+;    
+    xor bp,bp
+    mov ax,flat_sel
+    mov ds,ax
+    mov edx,fs:osp_data_list
+    or edx,edx
+    jz get_data_done
+
+get_data_loop:
+    mov ax,ds:[edx].otd_flags
+    and ax,18h
+    cmp ax,10h
+    jne get_data_next
+;
+    mov esi,ds:[edx].otd_buffer_va
+    or esi,esi
+    jz get_data_next
+;    
+    mov ecx,ds:[edx].otd_cbp
+    or ecx,ecx
+    jz get_data_full
+;
+    sub ecx,ds:[edx].otd_buffer_va
+    and ecx,0FFFh
+    jmp get_data_size_ok    
+
+get_data_full:
+    movzx ecx,ds:[edx].otd_buffer_size
+
+get_data_size_ok:
+    add bp,cx
+    push ecx
+    shr ecx,2    
+    rep movs dword ptr es:[edi],[esi]
+    pop ecx
+    and ecx,3
+    rep movs byte ptr es:[edi],[esi]
+
+get_data_next:
+    mov edx,ds:[edx].otd_next_va
+    or edx,edx
+    jnz get_data_loop
+
+get_data_done:
+    mov cx,bp
+    pop bp
+    pop edi
+    pop esi
+    pop edx
+    pop eax
+    pop ds
     ret
 GetData   Endp
 
@@ -896,6 +1600,107 @@ ClosePipe   Proc far
     int 3
     ret
 ClosePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    ChangeAddress
+;
+;		DESCRIPTION:    Change address for pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ChangeAddress   Proc far
+    push es
+    push edx
+;
+    mov dx,flat_sel
+    mov es,dx    
+;
+    mov edx,fs:osp_ed
+    call InitPipeEd 
+;
+    pop edx
+    pop es
+    ret
+ChangeAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    UpdateQueue
+;
+;		DESCRIPTION:    Update done queue
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateQueue   Proc near
+    push es
+    push fs
+    push gs
+    push eax
+    push bx
+    push ecx
+    push edx
+;    
+    xor eax,eax
+    mov bx,ohc_hca_base + OFFSET hcca_done_head
+    xchg eax,ds:[bx]
+    or eax,eax
+    jz update_queue_done
+;   
+    mov dx,flat_sel
+    mov es,dx
+    mov fs,ds:ohc_map_sel
+
+update_reverse_loop:
+    mov bx,ax
+    and ax,0F000h
+    and bx,0FFFh
+	or ax,803h
+	mov edx,ds:ohc_map_linear
+	SetPhysicalPage
+    mov edx,fs:[bx].otd_my_va
+;
+    mov ax,es:[edx].otd_pipe_sel
+    or ax,ax
+    jz update_insert_reclaim
+
+update_insert_pipe:
+    mov gs,ax
+    mov ecx,gs:osp_data_list
+    mov es:[edx].otd_next_va,ecx
+    mov gs:osp_data_list,edx
+;
+    mov bx,gs:osp_signal
+    Signal    
+    jmp update_reverse_next
+
+update_insert_reclaim:
+    mov ecx,ds:ohc_reclaim_list
+    mov es:[edx].otd_next_va,ecx
+    mov ds:ohc_reclaim_list,ecx
+
+update_reverse_next:
+    mov eax,es:[edx].otd_next_td
+    or eax,eax
+    jnz update_reverse_loop
+
+update_queue_done:
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    ret
+UpdateQueue   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -931,13 +1736,29 @@ upAttach:
     or bx,bx
     jnz upDone
 ;
-    mov eax,2
-    mov es:[si].HcRhPortStatus,eax
-;
     mov ax,50
     WaitMilliSec
+;    
+    mov eax,10h
+    mov es:[si].HcRhPortStatus,eax
 
+upResetLoop:
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz upDone
+;        
+    test al,10h
+    jnz upResetLoop
+; 
+    mov eax,2
+    mov es:[si].HcRhPortStatus,eax
+    
 epNotify:
+    mov ax,100
+    WaitMilliSec
     mov al,cl
     NotifyUsbAttach
     jmp upDone
@@ -981,6 +1802,7 @@ UpdateUsb  Proc near
     jz update_done
 ;
     mov ds,ax
+;    
     xor cl,cl    
     call UpdatePort
 ;
@@ -1016,11 +1838,13 @@ ohci_timer  Proc far
     or ax,ax
     jz ohci_timer_done
 ;
-    mov es,ax
-    mov ds,es:ohc_reg_sel
-    mov eax,ds:HcInterruptStatus
-    mov ds:HcInterruptStatus,eax
-    or es:ohc_int_status,eax
+    mov ds,ax
+    call UpdateQueue
+;
+    mov es,ds:ohc_reg_sel
+    mov eax,es:HcInterruptStatus
+    mov es:HcInterruptStatus,eax
+    or ds:ohc_int_status,eax
 ;
     and eax,52h
     jz ohci_timer_done
@@ -1066,6 +1890,7 @@ ot09 DW OFFSET IsPipeSignalled,     ohci_code_sel
 ot10 DW OFFSET GetData,             ohci_code_sel
 ot11 DW OFFSET ClosePipe,           ohci_code_sel
 ot12 DW OFFSET WaitForCompletion,   ohci_code_sel
+ot13 DW OFFSET ChangeAddress,       ohci_code_sel
 
 InitFunction    Proc near
     push es
@@ -1077,7 +1902,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,13
+    mov cx,14
 
 ifTabLoop:
     lods dword ptr cs:[si]
@@ -1173,6 +1998,8 @@ AddFunction  Proc near
 	mov cx,400h
 	rep stosd
 ;
+    mov ds:ohc_pipe_list,0
+    mov ds:ohc_reclaim_list,0
     mov ds:ohc_reg_sel,bp
     mov ds:ohc_int_status,0
     mov ds:ohc_linear,edx

@@ -456,5 +456,18 @@ set_mouse_limit_nr          EQU 309
 
 get_net_driver_nr           EQU 310
 
-osgate_entries				EQU 311
+create_usb_req_nr           EQU 311
+add_write_usb_control_req_nr EQU 312
+add_write_usb_data_req_nr   EQU 313
+add_read_usb_data_req_nr    EQU 314
+add_usb_status_in_req_nr    EQU 315
+add_usb_status_out_req_nr   EQU 316
+start_usb_req_nr            EQU 317
+is_usb_req_started_nr       EQU 318
+is_usb_req_ready_nr         EQU 319
+get_usb_req_data_nr         EQU 320
+usb_req_done_nr             EQU 321
+close_usb_req_nr            EQU 322
+
+osgate_entries				EQU 323
 

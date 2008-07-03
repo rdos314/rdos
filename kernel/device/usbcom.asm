@@ -91,9 +91,8 @@ uds_in_handle       DW ?
 uds_out_handle      DW ?
 uds_in_buffer       DW ?
 uds_out_buffer      DW ?
-uds_control         DW ?
-uds_wait            DW ?
-uds_send_pending    DB ?
+uds_in_req          DW ?
+uds_out_req         DW ?
 
 usbcom_device_struc   ENDS
 
@@ -101,8 +100,6 @@ serial_data STRUC
 
 sd_section          section_typ <>
 sd_thread           DW ?
-
-sd_wait             DW ?
 
 sd_ports            DW ?
 sd_port_arr         DW MAX_PORTS DUP(?)
@@ -172,7 +169,7 @@ StartSendTimer Proc near
     jnz sstDone
 ;
 	GetSystemTime
-	add eax,1193
+	add eax,11930
 	adc edx,0
 ;	
 	mov bx,cs
@@ -819,20 +816,26 @@ close_com	Proc far
     mov ds:ups_timer_active,0
     
 ccTimerClosed:   
-    call reset_rts
-    call reset_dtr
+;    call reset_rts
+;    call reset_dtr
 ;    
     mov bx,ds:ups_control_wait
-    CloseWait
+;    CloseWait
 ;
     mov bx,ds:ups_control_pipe
-    CloseUsbPipe    
+;    CloseUsbPipe    
 ;    
     mov ax,ds
-    mov ds,ds:ups_device_sel
+    mov bx,ds:ups_device_sel
+    or bx,bx
+    jz ccNoDevice
+;
+    mov ds,bx    
     EnterSection ds:uds_section
     mov ds:uds_port_sel,0
     LeaveSection ds:uds_section       
+
+ccNoDevice:    
     mov ds,ax
     mov ds:ups_device_sel,0
 ;
@@ -1299,139 +1302,6 @@ create_port	Proc far
 	ret
 create_port	Endp
 
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:		    RecreateWait
-;
-;		DESCRIPTION:    Recreate wait selector and queue open pipes onto it
-;
-;       PARAMETERS:     FS      Usbcom_data_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RecreateWait    Proc near
-    push ds
-;
-    mov bx,fs:sd_wait
-    CloseWait
-;
-    CreateWait
-    mov fs:sd_wait,bx
-;    
-    mov cx,fs:sd_ports
-    or cx,cx
-    jz cwEnd
-;
-    xor si,si
-
-cwDevLoop:
-    mov ax,fs:[si].sd_port_arr
-    or ax,ax
-    jz cwDevNext
-;
-    mov ds,ax
-    mov ax,ds:uds_in_buffer
-    or ax,ax
-    jz cwDevNext
-;    
-    mov ax,ds:uds_in_handle
-    movzx ecx,ax
-    AddWaitForUsbPipe
-;    
-    mov ax,ds:uds_out_handle
-    movzx ecx,ax
-    AddWaitForUsbPipe
-
-cwDevNext:
-    add si,2
-    loop cwDevLoop
-
-cwEnd:
-    pop ds
-    ret
-RecreateWait  Endp    
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:		    QueueInput
-;
-;		DESCRIPTION:    Queue input on bulk-in pipe
-;
-;       PARAMETERS:     FS      Usbcom_data_sel
-;                       DS      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-QueueInput  Proc near
-    mov bx,ds:uds_in_handle
-    movzx dx,ds:uds_interface
-    inc dx
-;    
-    LockUsbPipe
-    mov cx,ds:uds_maxsize
-    ReqUsbData
-    StartUsbTransaction
-    ret
-QueueInput  Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:		    GetInput
-;
-;		DESCRIPTION:    Get input from bulk-in pipe
-;
-;       PARAMETERS:     FS      Usbcom_data_sel
-;                       DS      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetInput  Proc near
-    mov bx,ds:uds_in_handle
-    mov es,ds:uds_in_buffer
-    mov cx,ax
-    xor di,di
-    GetUsbData
-    UnlockUsbPipe    
-    ret
-GetInput  Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:		    SendOutput
-;
-;		DESCRIPTION:    Send output to bulk-out pipe
-;
-;       PARAMETERS:     FS      Usbcom_data_sel
-;                       DS      Function sel
-;                       CX      Number of bytes to send
-;                       DI      Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendOutput  Proc near
-    mov bx,ds:uds_out_handle
-    movzx dx,ds:uds_interface
-    inc dx
-;    
-    mov ds:uds_send_pending,1
-    LockUsbPipe
-    mov es,ds:uds_out_buffer
-    WriteUsbData
-    StartUsbTransaction
-    ret
-SendOutput  Endp
 
 PAGE
 
@@ -1448,31 +1318,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ProcessOpen    Proc near
-    CreateWait
-    mov ds:uds_wait,bx
-;
-    mov bx,ds:cd_controller
-    mov ax,ds:cd_device
-    xor dl,dl
-    OpenUsbPipe
-    mov ds:uds_control,bx
-;
-    mov ax,ds:uds_control
-    mov bx,ds:uds_wait
-    movzx ecx,ax
-    AddWaitForUsbPipe
-;
-    mov bx,ds:cd_controller
-    mov ax,ds:cd_device
-    mov dl,ds:uds_bulk_in
-    OpenUsbPipe
-    mov ds:uds_in_handle,bx
-;
-    mov bx,ds:cd_controller
-    mov ax,ds:cd_device
-    mov dl,ds:uds_bulk_out
-    OpenUsbPipe    
-    mov ds:uds_out_handle,bx
+    push ds
 ;
     movzx eax,ds:uds_maxsize
     AllocateSmallGlobalMem
@@ -1483,8 +1329,34 @@ ProcessOpen    Proc near
     AllocateSmallGlobalMem
     mov ds:uds_out_buffer,es
 ;
-    call QueueInput    
+    mov bx,ds:cd_controller
+    mov ax,ds:cd_device
+    mov dl,ds:uds_bulk_in
+    OpenUsbPipe
+    mov ds:uds_in_handle,bx
+;
+    CreateUsbReq
+    mov ds:uds_in_req,bx    
+    mov cx,ds:uds_maxsize
+    mov es,ds:uds_in_buffer
+    AddReadUsbDataReq
+;
+    mov bx,ds:uds_in_req   
+    StartUsbReq
+;
+    mov bx,ds:cd_controller
+    mov ax,ds:cd_device
+    mov dl,ds:uds_bulk_out
+    OpenUsbPipe    
+    mov ds:uds_out_handle,bx
+;
+    CreateUsbReq
+    mov ds:uds_out_req,bx
+    mov cx,ds:uds_maxsize
+    mov es,ds:uds_out_buffer
+    AddWriteUsbDataReq
 ;        
+    pop ds
     ret
 ProcessOpen Endp
 
@@ -1503,19 +1375,20 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ProcessClose    Proc near
-    call GetInput
+    push ds
 ;
-    mov bx,ds:uds_wait
-    CloseWait
-    mov ds:uds_wait,0
-;
-    mov bx,ds:uds_control
-    CloseUsbPipe    
-    mov ds:uds_control,0
+    int 3
+    mov bx,ds:uds_in_req
+    CloseUsbReq
+    mov ds:uds_in_req,0
 ;
     mov bx,ds:uds_in_handle
     CloseUsbPipe    
     mov ds:uds_in_handle,0
+;
+    mov bx,ds:uds_out_req
+    CloseUsbReq
+    mov ds:uds_out_req,0
 ;
     mov bx,ds:uds_out_handle
     CloseUsbPipe    
@@ -1528,6 +1401,8 @@ ProcessClose    Proc near
     mov es,ds:uds_out_buffer
     FreeMem    
     mov ds:uds_out_buffer,0
+;
+    pop ds    
     ret
 ProcessClose    Endp
 
@@ -1603,9 +1478,6 @@ PAGE
 ;       PARAMETERS:     FS      Usbcom_data_sel
 ;                       DS      Function sel
 ;
-;       RETURNS:        CX      Pending characters
-;                       DI      Buffer
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PollWrite    Proc near
@@ -1619,9 +1491,14 @@ PollWrite    Proc near
     or al,al
     jnz pwDone
 ;    
+    xor di,di
 	mov fs,ds:send_buf
-	mov di,1
+    cmp ds:uds_device_type,DEVICE_TYPE_SIO
+    jne pwStartOk
 ;
+    mov di,1
+
+pwStartOk:
     xor cx,cx
 	mov dx,ds:send_count
 	or dx,dx
@@ -1696,6 +1573,8 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleDevice    Proc near
+    push ds
+;
     mov ax,ds:uds_port_sel
     or ax,ax
     jz hdClosed
@@ -1706,43 +1585,38 @@ hdOpen:
     jnz hdOpenOk    
 ;
     call ProcessOpen
-    call RecreateWait    
 
 hdOpenOk:    
-    mov bx,ds:uds_in_handle
-    IsUsbPipeIdle
-    cmc
+    mov bx,ds:uds_in_req
+    IsUsbReqReady
     jc hdReadDone
 ;
-    call GetInput
-    mov cx,ax
+    int 3
+    GetUsbReqData
+    StartUsbReq
     sub cx,2
-    jbe hdDataDone
+    jbe hdReadDone
 ;
     call PollRead
 
-hdDataDone:
-    call QueueInput
-
 hdReadDone:
-    mov al,ds:uds_send_pending
-    or al,al
-    jz hdWrite
+    mov bx,ds:uds_out_req
+    IsUsbReqStarted
+    jc hdCheckWrite
 ;    
-    mov bx,ds:uds_out_handle
-    IsUsbPipeIdle
-    cmc
+    int 3
+    IsUsbReqReady
     jc hdDone
-;    
-    UnlockUsbPipe
-    mov ds:uds_send_pending,0
+;
+    UsbReqDone
 
-hdWrite:
+hdCheckWrite:
     call PollWrite
     or cx,cx
     jz hdDone
 ;
-    call SendOutput
+    mov bx,ds:uds_out_req
+    StartUsbReq
     jmp hdDone
 
 hdClosed:
@@ -1751,9 +1625,9 @@ hdClosed:
     jz hdDone
 ;
     call ProcessClose
-    call RecreateWait
     
 hdDone:
+    pop ds
     ret
 HandleDevice    Endp
 
@@ -1775,12 +1649,9 @@ usbcom_thread:
     mov fs,ax
     GetThread
     mov fs:sd_thread,ax
-    CreateWait
-    mov fs:sd_wait,bx
 
 utLoop:
-    mov bx,fs:sd_wait
-    WaitWithoutTimeout
+    WaitForSignal
 ;
     mov cx,fs:sd_ports
     or cx,cx
@@ -1923,7 +1794,8 @@ apDescrDone:
 	mov es:uds_out_buffer,0
 	mov es:uds_in_handle,0
 	mov es:uds_out_handle,0
-    mov es:uds_send_pending,0
+	mov es:uds_in_req,0
+	mov es:uds_out_req,0
 	InitSection es:uds_section
 ;
     mov si,ds:sd_ports

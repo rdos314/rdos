@@ -1726,6 +1726,22 @@ ClosePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    ChangeAddress
+;
+;		DESCRIPTION:    Change address for pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ChangeAddress   Proc far
+    ret
+ChangeAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    UpdatePort
 ;
 ;		DESCRIPTION:    Update root-hub port status
@@ -1833,6 +1849,7 @@ ut09 DW OFFSET IsPipeSignalled,     uhci_code_sel
 ut10 DW OFFSET GetData,             uhci_code_sel
 ut11 DW OFFSET ClosePipe,           uhci_code_sel
 ut12 DW OFFSET WaitForCompletion,   uhci_code_sel
+ut13 DW OFFSET ChangeAddress,       uhci_code_sel
 
 InitFunction    Proc near
     pushad
@@ -1849,7 +1866,7 @@ InitFunction    Proc near
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,13
+    mov cx,14
 
 ifTabLoop:
     lods dword ptr cs:[si]

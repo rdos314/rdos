@@ -73,6 +73,34 @@ pw_pipe_sel     DW ?
 
 pipe_wait_header	ENDS
 
+req_handle_struc	STRUC
+
+rh_base			handle_header <>
+rh_func_sel     DW ?
+rh_pipe_sel		DW ?
+rh_signal       DW ?
+rh_list         DW ?
+rh_flags        DB ?
+
+req_handle_struc	ENDS
+
+REQ_TYPE_WRITE_CONTROL   = 1
+REQ_TYPE_WRITE_DATA = 2
+REQ_TYPE_READ_DATA = 3
+REQ_TYPE_STATUS_IN = 4
+REQ_TYPE_STATUS_OUT = 5
+
+REQ_FLAG_STARTED = 1
+
+req_entry_struc STRUC
+
+re_next         DW ?
+re_size         DW ?
+re_buf_sel      DW ?
+re_type         DB ?
+
+req_entry_struc ENDS
+
 data    STRUC
 
 usb_dev_count       DW ?
@@ -200,6 +228,7 @@ CreateDefaultControl    Proc near
     pushf
     call ds:delete_queue_proc
     FreeMem
+    call ds:change_address_proc
     popf
 ;
     pop edi
@@ -709,6 +738,725 @@ nudDone:
     pop es
     ret
 notify_usb_detach   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AddReqBlock
+;
+;		description:	Add an request block
+;
+;       parameters:     DS:BX   Req handle struc
+;                       
+;       Returns:        ES      Req block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddReqBlock	Proc near
+    push eax
+;    
+    mov eax,SIZE req_entry_struc
+    AllocateSmallGlobalMem
+    mov es:re_type,0
+    mov es:re_next,0
+;
+	mov ax,ds:[bx].rh_list
+	or ax,ax
+	je arbEmpty
+;	
+    push ds
+
+arbLoop:
+    mov ds,ax
+    mov ax,ds:re_next
+    or ax,ax
+    jnz arbLoop
+;
+    mov ds:re_next,es
+    pop ds
+	jmp arbDone
+	
+arbEmpty:
+	mov ds:[bx].rh_list,es
+
+arbDone:
+    pop eax    
+    ret
+AddReqBlock Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateUsbReq
+;
+;		description:	Create an asynchronous USB req handle
+;
+;       parameters:     BX      Pipe handle
+;                       
+;       Returns:        BX      Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_usb_req_name DB 'Create USB req', 0
+
+create_usb_req	Proc far
+    push ds
+    push fs
+    push ax
+    push cx
+;
+	mov ax,USB_PIPE_HANDLE
+	DerefHandle
+	jc curDone
+;	
+	mov fs,ds:[bx].up_pipe_sel
+	mov ax,ds:[bx].up_func_sel
+;	
+	mov cx,SIZE req_handle_struc
+	AllocateHandle
+	mov [bx].rh_func_sel,ax
+	mov [bx].rh_pipe_sel,fs
+	mov [bx].rh_list,0
+	mov [bx].rh_signal,0
+	mov [bx].rh_flags,0
+	mov [bx].hh_sign,USB_REQ_HANDLE
+	mov bx,[bx].hh_handle
+	clc
+
+curDone:
+    pop cx
+    pop ax
+    pop fs
+    pop ds
+    ret
+create_usb_req   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AddWriteUsbControlReq
+;
+;		description:	Add write control req
+;
+;       parameters:     BX      Req handle
+;                       CX      Size of data
+;                       ES      Data selector (do not free)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_write_usb_control_req_name DB 'Add Write USB control req', 0
+
+add_write_usb_control_req	Proc far
+    push ds
+    push es
+    push ax
+    push bx
+;
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc awucDone
+;
+    mov ax,es
+    call AddReqBlock
+    mov es:re_type,REQ_TYPE_WRITE_CONTROL
+    mov es:re_size,cx
+    mov es:re_buf_sel,ax
+    clc
+    
+awucDone:    
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+add_write_usb_control_req   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AddWriteUsbDataReq
+;
+;		description:	Add write data req
+;
+;       parameters:     BX      Req handle
+;                       CX      Size of data
+;                       ES      Data selector (do not free)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_write_usb_data_req_name DB 'Add Write USB data req', 0
+
+add_write_usb_data_req	Proc far
+    push ds
+    push es
+    push ax
+    push bx
+;
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc awudDone
+;
+    mov ax,es
+    call AddReqBlock
+    mov es:re_type,REQ_TYPE_WRITE_DATA
+    mov es:re_size,cx
+    mov es:re_buf_sel,ax
+    clc
+    
+awudDone:    
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+add_write_usb_data_req   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AddReadUsbDataReq
+;
+;		description:	Add read data req
+;
+;       parameters:     BX      Req handle
+;                       CX      Size of data
+;                       ES      Data selector (do not free)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_read_usb_data_req_name DB 'Add Read USB data req', 0
+
+add_read_usb_data_req	Proc far
+    push ds
+    push es
+    push ax
+    push bx
+;
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc arudDone
+;
+    mov ax,es
+    call AddReqBlock
+    mov es:re_type,REQ_TYPE_READ_DATA
+    mov es:re_size,cx
+    mov es:re_buf_sel,ax
+    clc
+    
+arudDone:    
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+add_read_usb_data_req   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AddUsbStatusInReq
+;
+;		description:	Add status in req
+;
+;       parameters:     BX      Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_usb_status_in_req_name DB 'Add USB status in req', 0
+
+add_usb_status_in_req	Proc far
+    push ds
+    push es
+    push ax
+    push bx
+;
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc ausiDone
+;
+    call AddReqBlock
+    mov es:re_type,REQ_TYPE_STATUS_IN
+    mov es:re_size,0
+    mov es:re_buf_sel,0
+    clc
+    
+ausiDone:    
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+add_usb_status_in_req   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AddUsbStatusOutReq
+;
+;		description:	Add status out req
+;
+;       parameters:     BX      Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_usb_status_out_req_name DB 'Add USB status out req', 0
+
+add_usb_status_out_req	Proc far
+    push ds
+    push es
+    push ax
+    push bx
+;
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc ausoDone
+;
+    call AddReqBlock
+    mov es:re_type,REQ_TYPE_STATUS_OUT
+    mov es:re_size,0
+    mov es:re_buf_sel,0
+    clc
+    
+ausoDone:    
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+add_usb_status_out_req   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReqWriteControl
+;
+;		description:	Do Write control req
+;
+;       parameters:     DS      Function sel
+;                       ES      Req sel
+;                       FS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqWriteControl	Proc near
+	push es
+	push cx
+	push edi
+;	
+    mov cx,es:re_size
+    mov es,es:re_buf_sel
+    xor edi,edi
+	call ds:add_setup_proc
+;	
+    pop edi
+	pop cx
+    pop es	
+    ret
+ReqWriteControl Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReqWriteData
+;
+;		description:	Do Write data req
+;
+;       parameters:     DS      Function sel
+;                       ES      Req sel
+;                       FS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqWriteData	Proc near
+	push es
+	push cx
+	push edi
+;	
+    mov cx,es:re_size
+    mov es,es:re_buf_sel
+    xor edi,edi
+	call ds:add_out_proc
+;	
+    pop edi
+	pop cx
+    pop es	
+    ret
+ReqWriteData Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReqReadData
+;
+;		description:	Do read data req
+;
+;       parameters:     DS      Function sel
+;                       ES      Req sel
+;                       FS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqReadData	Proc near
+	push cx
+    mov cx,es:re_size
+	call ds:add_in_proc
+	pop cx
+    ret
+ReqReadData Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReqStatusIn
+;
+;		description:	Do status in
+;
+;       parameters:     DS      Function sel
+;                       ES      Req sel
+;                       FS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqStatusIn	Proc near
+	call ds:add_status_in_proc
+    ret
+ReqStatusIn Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReqStatusOut
+;
+;		description:	Do status out
+;
+;       parameters:     DS      Function sel
+;                       ES      Req sel
+;                       FS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqStatusOut	Proc near
+	call ds:add_status_out_proc
+    ret
+ReqStatusOut Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			StartUsbReq
+;
+;		description:	Start req
+;
+;       parameters:     AX      Thread to signal
+;                       BX      Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_usb_req_name DB 'Start USB req', 0
+
+req_tab:
+rt01 DW OFFSET ReqWriteControl
+rt02 DW OFFSET ReqWriteData
+rt03 DW OFFSET ReqReadData
+rt04 DW OFFSET ReqStatusIn
+rt05 DW OFFSET ReqStatusOut   
+
+start_usb_req	Proc far
+	push ds
+	push fs
+	push ax
+	push bx
+;
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc surDone
+;
+    push ds
+	mov ds,[bx].rh_pipe_sel
+    EnterSection ds:usbp_section
+    pop ds
+;    
+    or ds:[bx].rh_flags,REQ_FLAG_STARTED
+    mov ax,ds:[bx].rh_list
+	mov fs,ds:[bx].rh_pipe_sel
+	mov ds,ds:[bx].rh_func_sel
+	call ds:delete_queue_proc
+
+surReqLoop:
+    or ax,ax
+    jz surDone
+;
+    mov es,ax
+    movzx bx,es:re_type
+    or bx,bx    
+    jz surDone
+;
+    cmp bx,5
+    ja surDone
+;
+    dec bx
+    add bx,bx
+    call word ptr cs:[bx].req_tab
+    mov ax,es:re_next    
+    jmp surReqLoop
+
+surDone:
+    ClearSignal
+    call ds:issue_transfer_proc
+;    
+	pop bx
+	pop ax
+	pop fs
+	pop ds
+    ret
+start_usb_req   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IsUsbReqStarted
+;
+;		description:	Check if request is started
+;
+;       parameters:     BX      Req handle
+;
+;       Returns:        NC      Req is started
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_usb_req_started_name DB 'Is USB Req Started', 0
+
+is_usb_req_started	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc iursDone
+;
+    test ds:[bx].rh_flags,REQ_FLAG_STARTED
+    stc
+    jz iursDone
+;
+    clc
+
+iursDone:	
+    pop bx
+    pop ax
+    pop ds
+    ret
+is_usb_req_started   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IsUsbReqReady
+;
+;		description:	Check if request is ready
+;
+;       parameters:     BX      Req handle
+;
+;       Returns:        NC      Req is done
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_usb_req_ready_name DB 'Is USB Req Ready', 0
+
+is_usb_req_ready	Proc far
+	push ds
+	push fs
+	push ax
+	push bx
+;
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc iurrDone
+;
+    test ds:[bx].rh_flags,REQ_FLAG_STARTED
+    stc
+    jz iurrDone
+;
+	mov fs,ds:[bx].rh_pipe_sel
+	mov ds,ds:[bx].rh_func_sel
+	call ds:is_pipe_signalled_proc
+	cmc
+
+iurrDone:	
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    ret
+is_usb_req_ready   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetUsbReqData
+;
+;		description:	Get req data
+;
+;       parameters:     BX      Req handle
+;
+;       Returns:        NC      Req is done
+;                       CX      Bytes transfered to buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_req_data_name DB 'Get USB Req Data', 0
+
+get_usb_req_data	Proc far
+	push ds
+	push fs
+	push ax
+	push bx
+;
+    xor cx,cx
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc gurdDone
+;
+    test ds:[bx].rh_flags,REQ_FLAG_STARTED
+    stc
+    jz gurdDone
+;
+	mov fs,ds:[bx].rh_pipe_sel
+    mov ax,ds:[bx].rh_list
+	mov ds,ds:[bx].rh_func_sel
+	call ds:is_pipe_signalled_proc
+	cmc
+	jc gurdDone
+
+gurdReqLoop:
+    or ax,ax
+    clc
+    jz gurdDone
+;
+    mov es,ax
+    mov al,es:re_type
+    cmp al,REQ_TYPE_READ_DATA
+    jne gurdNext
+;
+    push es
+    push edi
+;
+    mov cx,es:re_size
+    mov es,es:re_buf_sel
+    xor edi,edi
+    call ds:get_data_proc
+;
+    pop edi
+    pop es
+    jmp gurdDone
+
+gurdNext:
+    mov ax,es:re_next    
+    jmp gurdReqLoop
+
+gurdDone:	
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    ret
+get_usb_req_data   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UsbReqDone
+;
+;		description:	Signal req is done
+;
+;       parameters:     BX      Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usb_req_done_name DB 'USB Req Done', 0
+
+usb_req_done	Proc far
+	push ds
+	push fs
+	push ax
+	push bx
+;
+    int 3
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc urdDone
+;
+    and ds:[bx].rh_flags,NOT REQ_FLAG_STARTED
+	mov fs,ds:[bx].rh_pipe_sel
+    push ds
+	mov ds,ds:[bx].rh_func_sel
+	call ds:delete_queue_proc
+    pop ds
+;
+	mov ds,[bx].rh_pipe_sel
+    LeaveSection ds:usbp_section
+
+urdDone:	
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    ret
+usb_req_done   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CloseUsbReq
+;
+;		description:	Close USB req
+;
+;       parameters:     BX      Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_usb_req_name DB 'Close USB req', 0
+
+close_usb_req	Proc far
+    int 3
+    ret
+close_usb_req   Endp
 
 PAGE
 
@@ -1980,6 +2728,78 @@ init	Proc far
 	mov di,OFFSET hook_usb_detach_name
 	xor cl,cl
 	mov ax,hook_usb_detach_nr
+	RegisterOsGate
+;
+	mov si,OFFSET create_usb_req
+	mov di,OFFSET create_usb_req_name
+	xor cl,cl
+	mov ax,create_usb_req_nr
+	RegisterOsGate
+;
+	mov si,OFFSET add_write_usb_control_req
+	mov di,OFFSET add_write_usb_control_req_name
+	xor cl,cl
+	mov ax,add_write_usb_control_req_nr
+	RegisterOsGate
+;
+	mov si,OFFSET add_write_usb_data_req
+	mov di,OFFSET add_write_usb_data_req_name
+	xor cl,cl
+	mov ax,add_write_usb_data_req_nr
+	RegisterOsGate
+;
+	mov si,OFFSET add_read_usb_data_req
+	mov di,OFFSET add_read_usb_data_req_name
+	xor cl,cl
+	mov ax,add_read_usb_data_req_nr
+	RegisterOsGate
+;
+	mov si,OFFSET add_usb_status_in_req
+	mov di,OFFSET add_usb_status_in_req_name
+	xor cl,cl
+	mov ax,add_usb_status_in_req_nr
+	RegisterOsGate
+;
+	mov si,OFFSET add_usb_status_out_req
+	mov di,OFFSET add_usb_status_out_req_name
+	xor cl,cl
+	mov ax,add_usb_status_out_req_nr
+	RegisterOsGate
+;
+	mov si,OFFSET start_usb_req
+	mov di,OFFSET start_usb_req_name
+	xor cl,cl
+	mov ax,start_usb_req_nr
+	RegisterOsGate
+;
+	mov si,OFFSET is_usb_req_started
+	mov di,OFFSET is_usb_req_started_name
+	xor cl,cl
+	mov ax,is_usb_req_started_nr
+	RegisterOsGate
+;
+	mov si,OFFSET is_usb_req_ready
+	mov di,OFFSET is_usb_req_ready_name
+	xor cl,cl
+	mov ax,is_usb_req_ready_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_usb_req_data
+	mov di,OFFSET get_usb_req_data_name
+	xor cl,cl
+	mov ax,get_usb_req_data_nr
+	RegisterOsGate
+;
+	mov si,OFFSET usb_req_done
+	mov di,OFFSET usb_req_done_name
+	xor cl,cl
+	mov ax,usb_req_done_nr
+	RegisterOsGate
+;
+	mov si,OFFSET close_usb_req
+	mov di,OFFSET close_usb_req_name
+	xor cl,cl
+	mov ax,close_usb_req_nr
 	RegisterOsGate
 ;
 	mov bx,OFFSET get_usb_device16

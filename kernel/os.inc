@@ -2142,3 +2142,75 @@ HookUsbDetach	MACRO
 AddComPort	MACRO
 	OsGate add_com_port_nr
 					ENDM
+
+
+; IN  BX        Pipe handle
+; OUT BX        Req handle
+CreateUsbReq      MACRO
+	OsGate create_usb_req_nr
+						ENDM
+						
+; IN  BX        Req handle
+; IN  CX        Size of data
+; IN  ES        Selector (do not free)
+AddWriteUsbContolReq      MACRO
+	OsGate add_write_usb_control_req_nr
+						ENDM
+						
+; IN  BX        Req handle
+; IN  CX        Size of data
+; IN  ES        Selector (do not free)
+AddWriteUsbDataReq      MACRO
+	OsGate add_write_usb_data_req_nr
+						ENDM
+
+; IN  BX        Req handle
+; IN  CX        Size of data
+; IN  ES        Selector (do not free)
+AddReadUsbDataReq      MACRO
+	OsGate add_read_usb_data_req_nr
+						ENDM
+
+; IN  BX        Req handle
+AddUsbStatusInReq      MACRO
+	OsGate add_usb_status_in_req_nr
+						ENDM
+
+; IN  BX        Req handle
+AddUsbStatusOutReq      MACRO
+	OsGate add_usb_status_out_req_nr
+						ENDM
+
+; IN  AX        Thread to signal on completion
+; IN  BX        Req handle
+StartUsbReq      MACRO
+	OsGate start_usb_req_nr
+						ENDM
+
+; IN  BX        Req handle
+; OUT NC        Req is started
+IsUsbReqStarted      MACRO
+	OsGate is_usb_req_started_nr
+						ENDM
+
+; IN  BX        Req handle
+; OUT NC        Req is done
+IsUsbReqReady      MACRO
+	OsGate is_usb_req_ready_nr
+						ENDM
+
+; IN  BX        Req handle
+; OUT CX        Bytes transfered
+GetUsbReqData      MACRO
+	OsGate get_usb_req_data_nr
+						ENDM
+
+; IN  BX        Req handle
+UsbReqDone      MACRO
+	OsGate usb_req_done_nr
+						ENDM
+
+; IN  BX        Req handle
+CloseUsbReq      MACRO
+	OsGate close_usb_req_nr
+						ENDM
