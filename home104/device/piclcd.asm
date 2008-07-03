@@ -291,7 +291,7 @@ HandleAsync1 Proc near
 ;
     mov al,ds:Data0
     movzx cx,al
-    and cx,7
+    and cx,1Fh
     or cx,cx
     push cx
     jz hAsyncOk1
@@ -549,7 +549,24 @@ dciNoIcsp1:
     mov ax,[si]
     or ax,ax
     jz dciDone1
+;    
+    cli
+    mov dx,IO_BASE + 10
+    in al,dx
+    test al,2
+    jz dciNoReq1
 ;
+    sti
+    jmp dciDone1
+
+dciNoReq1:
+    mov dx,IO_BASE + 8
+    mov al,ds:PicOut
+    or al,10h
+    out dx,al
+    mov ds:PicOut,al
+    sti
+;    
     call DioRemove
     mov ds:DioCurr0,es
 ;
@@ -576,6 +593,7 @@ dciOutputPoll1:
     jz dciNotAsync
 ;
     call HandleAsync1    
+    jmp dciIdle1
 
 dciNotAsync:
     mov dx,IO_BASE + 10
@@ -587,7 +605,7 @@ dciNotAsync:
     sub bx,1
     jnz dciOutputPoll1
 ;
-    jmp dciDone1
+    jmp dciIdle1
 
 dciOutputNext1:
     xor ah,2
@@ -597,7 +615,16 @@ dciOutputNext1:
     mov dx,IO_BASE
     out dx,al
 
-dciDone1:
+dciIdle1:    
+    cli
+    mov dx,IO_BASE + 8
+    mov al,ds:PicOut
+    and al,NOT 10h
+    out dx,al
+    mov ds:PicOut,al
+    sti
+
+dciDone1:    
     pop si
     pop dx
     pop cx

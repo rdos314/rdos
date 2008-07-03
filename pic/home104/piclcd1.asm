@@ -7,7 +7,6 @@
 
 ; Flag bits
 
-FLAG_CMD_AVAIL_BIT:	    EQU 0
 FLAG_IR_START_BIT:		EQU 1
 FLAG_IR_DONE_BIT:		EQU 2
 
@@ -318,21 +317,42 @@ Reset:
     
 HandleLoop:
     bsf STATUS,IRP
-    bcf PORTA, 1
+    bsf PORTA, 1
 	bsf PORTA, 3
 	bsf PORTA, 4
 
 WaitCmdLoop:
-    PAGE1
-    btfsc TRISE,IBF
-    goto HandleInput
-;
 	PAGE0
-;	btfsc Flags,FLAG_IR_DONE_BIT
-;	call SendAsync
+    btfsc PORTB,6
+    goto HandleWaitForInput
 ;
-    btfss Flags,FLAG_CMD_AVAIL_BIT
+	btfss Flags,FLAG_IR_DONE_BIT
     goto WaitCmdLoop
+;    
+    bcf PORTA, 1    
+    movlw 0x80
+    movwf Count
+
+WaitPollLoop:    
+    btfsc PORTB,6
+    goto HandleWaitForInput
+;
+    decfsz Count,F
+    goto WaitPollLoop
+;	
+	call SendAsync
+	goto WaitCmdLoop
+
+HandleWaitForInput:
+    PAGE0
+    bsf PORTA,1
+    bcf PORTA,2
+    btfss PORTB,6
+    goto WaitCmdLoop
+;    
+    PAGE1
+    btfss TRISE,IBF
+    goto HandleWaitForInput
 
 HandleInput:
     PAGE0
@@ -375,7 +395,6 @@ HandleExecute:
     andlw 0xF
     movwf OutCount
 ;
-    bcf PORTA,2
     movf Result,W
     movwf PORTD
     bcf PORTA,0
@@ -425,6 +444,7 @@ SendAsync:
 	movwf OutPtr
 ;
 	movf AsyncCount,W
+	andlw 0x1F
     movwf OutCount
 	addlw 0x20
     movwf PORTD
