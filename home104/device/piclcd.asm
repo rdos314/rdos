@@ -553,8 +553,8 @@ dciNoIcsp1:
     cli
     mov dx,IO_BASE + 10
     in al,dx
-    test al,2
-    jz dciNoReq1
+    test al,4
+    jnz dciNoReq1
 ;
     sti
     jmp dciDone1
@@ -583,19 +583,6 @@ dciOutputLoop1:
     mov bx,1000h
 
 dciOutputPoll1:
-    mov al,ds:IntFlag
-    test al,1
-    jz dciNotAsync
-;
-    and ds:IntFlag, NOT 1
-    mov al,ds:Data0
-    test al,20h
-    jz dciNotAsync
-;
-    call HandleAsync1    
-    jmp dciIdle1
-
-dciNotAsync:
     mov dx,IO_BASE + 10
     in al,dx
     and al,2

@@ -317,7 +317,8 @@ Reset:
     
 HandleLoop:
     bsf STATUS,IRP
-    bsf PORTA, 1
+    bcf PORTA, 1
+    bcf PORTA, 2
 	bsf PORTA, 3
 	bsf PORTA, 4
 
@@ -329,7 +330,7 @@ WaitCmdLoop:
 	btfss Flags,FLAG_IR_DONE_BIT
     goto WaitCmdLoop
 ;    
-    bcf PORTA, 1    
+    bsf PORTA, 2    
     movlw 0x80
     movwf Count
 
@@ -345,8 +346,7 @@ WaitPollLoop:
 
 HandleWaitForInput:
     PAGE0
-    bsf PORTA,1
-    bcf PORTA,2
+    bcf PORTA, 2
     btfss PORTB,6
     goto WaitCmdLoop
 ;    
@@ -439,7 +439,6 @@ SendStatusDone:
 
 SendAsync:
     bcf STATUS,IRP
-    bcf PORTA,2
 	movlw AsyncData
 	movwf OutPtr
 ;
