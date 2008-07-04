@@ -20,12 +20,12 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; USBCOM.ASM
-; USB based serial port device
+; FTDICOM.ASM
+; FTDI-based chips USB based serial port device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
-		NAME usbcom
+		NAME ftdicom
 
 GateSize = 16
 
@@ -2017,7 +2017,6 @@ usA8	DW 0403h,	0C991h	; ASK_RDR400
 usA9	DW 0C26h,	00004h	; ICOM_ID1
 usAA	DW 5050h,	00400h	; PAPOUCH
 usAB	DW 0403h,	0DD20h	; ACG_HFDUAL
-usAC	DW 0557h,	02008h	; Unknown
 
 usb_attach  Proc far
     push es
@@ -2037,7 +2036,7 @@ usb_attach  Proc far
     mov si,es:udd_vendor
     mov di,es:udd_prod
 
-    mov cx,0ADh
+    mov cx,0ACh
     mov bp,OFFSET usTab
 
 uaLoop:
@@ -2054,7 +2053,6 @@ uaNext:
     jmp uaDone    
 
 uaFound:
-    int 3
     mov si,es:udd_device
 ;    
     xor dl,dl
