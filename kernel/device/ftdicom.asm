@@ -93,6 +93,7 @@ uds_in_buffer       DW ?
 uds_out_buffer      DW ?
 uds_in_req          DW ?
 uds_out_req         DW ?
+uds_delete          DB ?
 
 usbcom_device_struc   ENDS
 
@@ -816,14 +817,14 @@ close_com	Proc far
     mov ds:ups_timer_active,0
     
 ccTimerClosed:   
-;    call reset_rts
-;    call reset_dtr
+    call reset_rts
+    call reset_dtr
 ;    
     mov bx,ds:ups_control_wait
-;    CloseWait
+    CloseWait
 ;
     mov bx,ds:ups_control_pipe
-;    CloseUsbPipe    
+    CloseUsbPipe    
 ;    
     mov ax,ds
     mov bx,ds:ups_device_sel
@@ -1308,18 +1309,16 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    ProcessOpen
+;		NAME:		    OpenPort
 ;
-;		DESCRIPTION:    Process open request
+;		DESCRIPTION:    Open port
 ;
 ;       PARAMETERS:     FS      Usbcom_data_sel
 ;                       DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ProcessOpen    Proc near
-    push ds
-;
+OpenPort    Proc near
     movzx eax,ds:uds_maxsize
     AllocateSmallGlobalMem
     mov ds:uds_in_buffer,es
@@ -1341,9 +1340,6 @@ ProcessOpen    Proc near
     mov es,ds:uds_in_buffer
     AddReadUsbDataReq
 ;
-    mov bx,ds:uds_in_req   
-    StartUsbReq
-;
     mov bx,ds:cd_controller
     mov ax,ds:cd_device
     mov dl,ds:uds_bulk_out
@@ -1355,29 +1351,27 @@ ProcessOpen    Proc near
     mov cx,ds:uds_maxsize
     mov es,ds:uds_out_buffer
     AddWriteUsbDataReq
-;        
-    pop ds
     ret
-ProcessOpen Endp
+OpenPort    Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    ProcessClose
+;		NAME:		    ClosePort
 ;
-;		DESCRIPTION:    Process close request
+;		DESCRIPTION:    Close port
 ;
 ;       PARAMETERS:     FS      Usbcom_data_sel
 ;                       DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ProcessClose    Proc near
-    push ds
-;
-    int 3
+ClosePort    Proc near
+    xor ax,ax
+    mov es,ax
+;    
     mov bx,ds:uds_in_req
     CloseUsbReq
     mov ds:uds_in_req,0
@@ -1401,10 +1395,8 @@ ProcessClose    Proc near
     mov es,ds:uds_out_buffer
     FreeMem    
     mov ds:uds_out_buffer,0
-;
-    pop ds    
     ret
-ProcessClose    Endp
+ClosePort   Endp
 
 PAGE
 
@@ -1539,13 +1531,8 @@ pwSend:
 
 pwTimerOk:
     cmp ds:uds_device_type,DEVICE_TYPE_SIO
-    je pwSio
+    jne pwDone
 ;
-    mov di,1
-    jmp pwDone
-
-pwSio:
-    xor di,di    
     mov al,cl
     shl al,2
     or al,1
@@ -1580,19 +1567,30 @@ HandleDevice    Proc near
     jz hdClosed
 
 hdOpen:
-    mov bx,ds:uds_in_buffer
+    mov bx,ds:uds_in_req
     or bx,bx
-    jnz hdOpenOk    
+    jnz hdIsOpen
 ;
-    call ProcessOpen
+    mov al,ds:uds_delete
+    or al,al
+    jnz hdDone
+;
+    call OpenPort        
+
+hdIsOpen:    
+    mov bx,ds:uds_in_req
+    IsUsbReqStarted
+    jnc hdOpenOk
+;
+    StartUsbReq
 
 hdOpenOk:    
     mov bx,ds:uds_in_req
     IsUsbReqReady
     jc hdReadDone
 ;
-    int 3
     GetUsbReqData
+    UsbReqDone
     StartUsbReq
     sub cx,2
     jbe hdReadDone
@@ -1604,11 +1602,18 @@ hdReadDone:
     IsUsbReqStarted
     jc hdCheckWrite
 ;    
-    int 3
     IsUsbReqReady
     jc hdDone
 ;
     UsbReqDone
+    push ds
+    mov ds,ds:uds_port_sel
+    mov bx,ds:send_wait
+    pop ds
+    or bx,bx
+    jz hdCheckWrite
+;    
+    Signal
 
 hdCheckWrite:
     call PollWrite
@@ -1620,11 +1625,21 @@ hdCheckWrite:
     jmp hdDone
 
 hdClosed:
-    mov bx,ds:uds_in_buffer
+    mov bx,ds:uds_in_req
     or bx,bx
     jz hdDone
+;    
+    IsUsbReqReady
+    jc hdIsClosed
 ;
-    call ProcessClose
+    UsbReqDone
+
+hdIsClosed:
+    mov al,ds:uds_delete
+    or al,al
+    jz hdDone
+;
+    call ClosePort
     
 hdDone:
     pop ds
@@ -1787,15 +1802,17 @@ apDescrDone:
     mov es:uds_interface,cl
 	mov es:uds_device_type,dx
 	pop dx
+	mov es:uds_port_sel,0
 	mov es:uds_bulk_in,dh
 	mov es:uds_bulk_out,dl
 	mov es:uds_maxsize,bp
-	mov es:uds_in_buffer,0
-	mov es:uds_out_buffer,0
 	mov es:uds_in_handle,0
-	mov es:uds_out_handle,0
 	mov es:uds_in_req,0
+	mov es:uds_in_buffer,0
+	mov es:uds_out_handle,0
 	mov es:uds_out_req,0
+	mov es:uds_out_buffer,0
+	mov es:uds_delete,0
 	InitSection es:uds_section
 ;
     mov si,ds:sd_ports
@@ -2000,6 +2017,7 @@ usA8	DW 0403h,	0C991h	; ASK_RDR400
 usA9	DW 0C26h,	00004h	; ICOM_ID1
 usAA	DW 5050h,	00400h	; PAPOUCH
 usAB	DW 0403h,	0DD20h	; ACG_HFDUAL
+usAC	DW 0557h,	02008h	; Unknown
 
 usb_attach  Proc far
     push es
@@ -2019,7 +2037,7 @@ usb_attach  Proc far
     mov si,es:udd_vendor
     mov di,es:udd_prod
 
-    mov cx,0ACh
+    mov cx,0ADh
     mov bp,OFFSET usTab
 
 uaLoop:
@@ -2036,6 +2054,7 @@ uaNext:
     jmp uaDone    
 
 uaFound:
+    int 3
     mov si,es:udd_device
 ;    
     xor dl,dl
@@ -2147,6 +2166,8 @@ init	Proc far
 	xor al,al
 	rep stosb
 	InitSection es:sd_section
+	mov es:sd_ports,0
+	mov es:sd_thread,0
 ;	
 	mov ax,cs
 	mov ds,ax

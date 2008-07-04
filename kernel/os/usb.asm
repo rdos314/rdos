@@ -639,11 +639,19 @@ notify_usb_attach	Proc far
 ;
     mov eax,8
     AllocateSmallGlobalMem
+
+nuaRetry:
+    mov ax,100
+    WaitMilliSec
+;        
     xor edi,edi
     mov cx,8
     mov ax,100h
     call GetDescr
     movzx ax,es:udd_maxlen
+    or ax,ax
+    jz nuaRetry
+;
     mov fs:usbp_maxlen,ax
     movzx eax,es:udd_len
     FreeMem
@@ -1051,21 +1059,19 @@ PAGE
 ;       parameters:     DS      Function sel
 ;                       ES      Req sel
 ;                       FS      Pipe sel
+;                       CX      Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqWriteControl	Proc near
 	push es
-	push cx
 	push edi
 ;	
-    mov cx,es:re_size
     mov es,es:re_buf_sel
     xor edi,edi
 	call ds:add_setup_proc
 ;	
     pop edi
-	pop cx
     pop es	
     ret
 ReqWriteControl Endp
@@ -1082,21 +1088,19 @@ PAGE
 ;       parameters:     DS      Function sel
 ;                       ES      Req sel
 ;                       FS      Pipe sel
+;                       CX      Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqWriteData	Proc near
 	push es
-	push cx
 	push edi
 ;	
-    mov cx,es:re_size
     mov es,es:re_buf_sel
     xor edi,edi
 	call ds:add_out_proc
 ;	
     pop edi
-	pop cx
     pop es	
     ret
 ReqWriteData Endp
@@ -1175,6 +1179,7 @@ PAGE
 ;
 ;       parameters:     AX      Thread to signal
 ;                       BX      Req handle
+;                       CX      Size of out buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1415,7 +1420,6 @@ usb_req_done	Proc far
 	push ax
 	push bx
 ;
-    int 3
 	mov ax,USB_REQ_HANDLE
 	DerefHandle
 	jc urdDone
@@ -1454,7 +1458,53 @@ PAGE
 close_usb_req_name DB 'Close USB req', 0
 
 close_usb_req	Proc far
-    int 3
+	push ds
+	push es
+	push fs
+	push ax
+;
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc crDone
+;
+    test ds:[bx].rh_flags,REQ_FLAG_STARTED
+    jz crFreeList
+;
+    push ds
+	mov fs,ds:[bx].rh_pipe_sel
+	mov ds,ds:[bx].rh_func_sel
+
+crCheckDone:	
+	call ds:is_pipe_signalled_proc
+    jc crDelete	
+;    
+    call ds:wait_for_completion_proc
+    jmp crCheckDone
+    
+crDelete:    
+    call ds:delete_queue_proc
+    pop ds
+
+crFreeList:
+    mov ax,ds:[bx].rh_list
+
+crFreeLoop:
+    or ax,ax
+    jz crFreeHandle
+;
+    mov es,ax
+    mov ax,es:re_next    
+    FreeMem
+    jmp crFreeLoop
+
+crFreeHandle:
+	FreeHandle
+
+crDone:	
+    pop ax
+    pop fs
+    pop es
+    pop ds
     ret
 close_usb_req   Endp
 

@@ -1100,6 +1100,7 @@ AddOutBuffer    Proc near
     jmp aobDone
 
 aobHasData:
+    push si
     movzx ebp,cx
 ;    
     push es
@@ -1125,6 +1126,7 @@ aobHasData:
     rep movs byte ptr es:[edi],gs:[esi]
     mov edi,edx
 ;    
+    pop si
     mov ax,bp
     xor dx,dx
     mov cx,fs:usbp_maxlen
@@ -1721,9 +1723,12 @@ UpdatePort   Proc near
     push cx
     push dx
     push si
+    push di
 ;    
     movzx si,cl
     shl si,2
+    movzx di,cl
+    add di,di
 ;    
     mov es,ds:ohc_reg_sel
     mov eax,es:[si].HcRhPortStatus
@@ -1732,7 +1737,7 @@ UpdatePort   Proc near
     jz upDetach
     
 upAttach:
-    mov bx,ds:[si].usb_port_sel_arr
+    mov bx,ds:[di].usb_port_sel_arr
     or bx,bx
     jnz upDone
 ;
@@ -1764,7 +1769,7 @@ epNotify:
     jmp upDone
 
 upDetach:
-    mov bx,ds:[si].usb_port_sel_arr
+    mov bx,ds:[di].usb_port_sel_arr
     or bx,bx
     jz upDone
 ;    
@@ -1772,6 +1777,7 @@ upDetach:
     NotifyUsbDetach
                     
 upDone:    
+    pop di
     pop si    
     pop dx
     pop cx
