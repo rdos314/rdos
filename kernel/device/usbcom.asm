@@ -359,14 +359,14 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fractab:
-ft00    DB 0
-ft01    DB 3
-ft02    DB 2
-ft03    DB 4
-ft04    DB 1
-ft05    DB 5
-ft06    DB 6
-ft07    DB 7
+bft00    DB 0
+bft01    DB 3
+bft02    DB 2
+bft03    DB 4
+bft04    DB 1
+bft05    DB 5
+bft06    DB 6
+bft07    DB 7
 
 Get232BmDivisor Proc near
     push eax
@@ -1841,184 +1841,184 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:	        usb_attach
+;		NAME:	        AttachFTDI
 ;
-;		description:	USB attach callback
+;		description:	Attach FTDI devices
 ;
 ;		Parameters:     BX      Controller #
 ;                       AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usTab:
-us00	DW 0403h,	0F2D0h	; ACTZWAVE
-us01	DW 0403h,	0FC60h	; IRTRANS
-us02	DW 0403h,	0D070h	; IPLUS
-us03	DW 0403h,	08372h	; SIO
-us04	DW 0403h,	06001h	; 8U232AM
-us05	DW 0403h,	06006h	; 8U232AM_ALT
-us06	DW 0403h,	06010h	; 8U2232C
-us07	DW 0403h,	0FA10h	; RELAIS
-us08	DW 1209h,	01002h	; IOBOARD
-us09	DW 1209h,	01006h	; MINI_IOBOARD
-us0A	DW 0403h,	0FC08h	; XF_632
-us0B	DW 0403h,	0FC09h	; XF_634
-us0C	DW 0403h,	0FC0Ah	; XF_547
-us0D	DW 0403h,	0FC0Bh	; XF_633
-us0E	DW 0403h,	0FC0Ch	; XF_631
-us0F	DW 0403h,	0FC0Dh	; XF_635
-us10	DW 0403h,	0FC0Eh	; XF_640
-us11	DW 0403h,	0FC0Fh	; XF_642
-us12	DW 0403h,	0FC82h	; DSS20
-us13	DW 0DCDh,	00001h	; NF_RIC
-us14	DW 0403h,	0FE38h	; VNHCOCUSB_D
-us15	DW 0403h,	0FA00h	; MTXORB_0
-us16	DW 0403h,	0FA01h	; MTXORB_1
-us17	DW 0403h,	0FA02h	; MTXORB_2
-us18	DW 0403h,	0FA03h	; MTXORB_3
-us19	DW 0403h,	0FA04h	; MTXORB_4
-us1A	DW 0403h,	0FA05h	; MTXORB_5
-us1B	DW 0403h,	0FA06h	; MTXORB_6
-us1C	DW 0403h,	0F0C0h	; PERLE_ULTRAPORT
-us1D	DW 0403h,	0F208h	; PIEGROUP
-us1E	DW 0C52h,	02101h	; Sealevel
-us1F	DW 0C52h,	02102h	; Sealevel
-us20	DW 0C52h,	02103h	; Sealevel
-us21	DW 0C52h,	02104h	; Sealevel
-us22	DW 0C52h,	02211h	; Sealevel
-us23	DW 0C52h,	02221h	; Sealevel
-us24	DW 0C52h,	02212h	; Sealevel
-us25	DW 0C52h,	02222h	; Sealevel
-us26	DW 0C52h,	02213h	; Sealevel
-us27	DW 0C52h,	02223h	; Sealevel
-us28	DW 0C52h,	02411h	; Sealevel
-us29	DW 0C52h,	02421h	; Sealevel
-us2A	DW 0C52h,	02431h	; Sealevel
-us2B	DW 0C52h,	02441h	; Sealevel
-us2C	DW 0C52h,	02412h	; Sealevel
-us2D	DW 0C52h,	02422h	; Sealevel
-us2E	DW 0C52h,	02432h	; Sealevel
-us2F	DW 0C52h,	02442h	; Sealevel
-us30	DW 0C52h,	02413h	; Sealevel
-us31	DW 0C52h,	02423h	; Sealevel
-us32	DW 0C52h,	02433h	; Sealevel
-us33	DW 0C52h,	02443h	; Sealevel
-us34	DW 0C52h,	02811h	; Sealevel
-us35	DW 0C52h,	02821h	; Sealevel
-us36	DW 0C52h,	02831h	; Sealevel
-us37	DW 0C52h,	02841h	; Sealevel
-us38	DW 0C52h,	02851h	; Sealevel
-us39	DW 0C52h,	02861h	; Sealevel
-us3A	DW 0C52h,	02871h	; Sealevel
-us3B	DW 0C52h,	02881h	; Sealevel
-us3C	DW 0C52h,	02812h	; Sealevel
-us3D	DW 0C52h,	02822h	; Sealevel
-us3E	DW 0C52h,	02832h	; Sealevel
-us3F	DW 0C52h,	02842h	; Sealevel
-us40	DW 0C52h,	02852h	; Sealevel
-us41	DW 0C52h,	02862h	; Sealevel
-us42	DW 0C52h,	02872h	; Sealevel
-us43	DW 0C52h,	02882h	; Sealevel
-us44	DW 0C52h,	02813h	; Sealevel
-us45	DW 0C52h,	02823h	; Sealevel
-us46	DW 0C52h,	02833h	; Sealevel
-us47	DW 0C52h,	02843h	; Sealevel
-us48	DW 0C52h,	02853h	; Sealevel
-us49	DW 0C52h,	02863h	; Sealevel
-us50	DW 0C52h,	02873h	; Sealevel
-us51	DW 0C52h,	02883h	; Sealevel
-us52	DW 0ACDh,	00300h	; IDTECH_IDT1221U
-us53	DW 0B39h,	00421h	; OCT_US101
-us54	DW 0403h,	0FA78h	; HE_TIRA1
-us55	DW 0403h,	0F850h	; USB_UIRT
-us56	DW 0403h,	0FC70h	; PROTEGO_SPECIAL_1
-us57	DW 0403h,	0FC71h	; PROTEGO_R2X0
-us58	DW 0403h,	0FC72h	; PROTEGO_SPECIAL_3
-us59	DW 0403h,	0FC73h	; PROTEGO_SPECIAL_4
-us5A	DW 0403h,	0E808h	; GUDEADS
-us5B	DW 0403h,	0E809h	; GUDEADS
-us5C	DW 0403h,	0E80Ah	; GUDEADS
-us5D	DW 0403h,	0E80Bh	; GUDEADS
-us5E	DW 0403h,	0E80Ch	; GUDEADS
-us5F	DW 0403h,	0E80Dh	; GUDEADS
-us60	DW 0403h,	0E80Eh	; GUDEADS
-us61	DW 0403h,	0E80Fh	; GUDEADS
-us62	DW 0403h,	0E888h	; GUDEADS
-us63	DW 0403h,	0E889h	; GUDEADS
-us64	DW 0403h,	0E88Ah	; GUDEADS
-us65	DW 0403h,	0E88Bh	; GUDEADS
-us66	DW 0403h,	0E88Ch	; GUDEADS
-us67	DW 0403h,	0E88Dh	; GUDEADS
-us68	DW 0403h,	0E88Eh	; GUDEADS
-us69	DW 0403h,	0E88Fh	; GUDEADS
-us6A	DW 0403h,	0FB58h	; ELV_UR100
-us6B	DW 0403h,	0FB5Ah	; ELV_UM100
-us6C	DW 0403h,	0FB5Bh	; ELV_UO100
-us6D	DW 0403h,	0F06Eh	; ELV_ALC8500
-us6E	DW 0403h,	0E6C8h	; PYRAMID
-us6F	DW 0403h,	0F06Fh	; FHZ1000PC
-us70	DW 0403h,	0F448h	; LINX_SDMUSBQSS
-us71	DW 0403h,	0F449h	; LINX_MASTERDEVEL2
-us72	DW 0403h,	0F44Ah	; LINX_FUTURE_0
-us73	DW 0403h,	0F44Bh	; LINX_FUTURE_1
-us74	DW 0403h,	0F44Ch	; LINX_FUTURE_2
-us75	DW 0403h,	0F9D0h	; CCSICDU20
-us76	DW 0403h,	0F9D1h	; CCSICDU40
-us77	DW 0403h,	0FAD0h	; INSIDE_ACCESSO
-us78	DW 093Ch,	00601h	; INTREPID_CALUECAN
-us79	DW 093Ch,	00701h	; INTREPID_NEOVI
-us7A	DW 0F94h,	00001h	; FALCOM_TWIST
-us7B	DW 0F94h,	00005h	; FALCOM_SAMBA
-us7C	DW 0403h,	0F680h	; SUUNTO_SPORTS
-us7D	DW 0403h,	0FD60h	; RM_CANVIEW
-us7E	DW 0856h,	0AC01h	; BANDB
-us7F	DW 0856h,	0AC02h	; BANDB
-us80	DW 0856h,	0AC03h	; BANDB
-us81	DW 0403h,	0E520h	; EVER_ECO_PRO
-us82	DW 0403h,	08372h	; 4N_GALXY_DE_0
-us83	DW 0403h,	0F3C0h	; 4N_GALXY_DE_1
-us84	DW 0403h,	0F3C1h	; 4N_GALXY_DE_2
-us85	DW 0403h,	0D388h	; XSENS_CONV_0
-us86	DW 0403h,	0D389h	; XSENS_CONV_1
-us87	DW 0403h,	0D38Ah	; XSENS_CONV_2
-us88	DW 0403h,	0D38Bh	; XSENS_CONV_3
-us89	DW 0403h,	0D38Ch	; XSENS_CONV_4
-us8A	DW 0403h,	0D38Dh	; XSENS_CONV_5
-us8B	DW 0403h,	0D38Eh	; XSENS_CONV_6
-us8C	DW 0403h,	0D38Fh	; XSENS_CONV_7
-us8D	DW 1342h,	00202h	; MOBILITY
-us8E	DW 0403h,	0E548h	; ACTIVE_ROBOTS
-us8F	DW 0403h,	0EEE8h	; MHAM_KW
-us90	DW 0403h,	0EEE9h	; MHAM_YS
-us91	DW 0403h,	0EEEAh	; MHAM_Y6
-us92	DW 0403h,	0EEEBh	; MHAM_Y8
-us93	DW 0403h,	0EEECh	; MHAM_IC
-us94	DW 0403h,	0EEEDh	; MHAM_DB9
-us95	DW 0403h,	0EEEEh	; MHAM_RS232
-us96	DW 0403h,	0EEEFh	; MHAM_Y9
-us97	DW 0403h,	0EC88h	; TERATRONIK_VCP
-us98	DW 0403h,	0EC89h	; TERATRONIK_D2XX
-us99	DW 0DEEEh,	00300h	; EVOLUTION
-us9A	DW 0403h,	0DF28h	; ARTEMIS
-us9B	DW 0403h,	0DF30h	; ATIK_ATK16
-us9C	DW 0403h,	0DF32h	; ATIK_ATK16C
-us9D	DW 0403h,	0DF31h	; ATIK_ATK16HR
-us9E	DW 0403h,	0DF33h	; ATIK_ATK16HRC
-us9F	DW 0D46h,	02020h	; KOBIL_CONV_B1
-usA0	DW 0D46h,	02021h	; KOBIL_CONV_KAAN
-usA1	DW 0D3Ah,	00300h	; POSIFLEX
-usA2	DW 0403h,	0FF20h	; TTUSB
-usA3	DW 0403h,	0EA90h	; ECLO_COM_1WIRE
-usA4	DW 0403h,	0DC00h	; WESTREX_777
-usA5	DW 0403h,	0DC01h	; WESTREX_8900F
-usA6	DW 0403h,	0FA88h	; PCDJ_DAC2
-usA7	DW 0403h,	0C7D0h	; RRCIRKITS
-usA8	DW 0403h,	0C991h	; ASK_RDR400
-usA9	DW 0C26h,	00004h	; ICOM_ID1
-usAA	DW 5050h,	00400h	; PAPOUCH
-usAB	DW 0403h,	0DD20h	; ACG_HFDUAL
+ftTab:
+ft00	DW 0403h,	0F2D0h	; ACTZWAVE
+ft01	DW 0403h,	0FC60h	; IRTRANS
+ft02	DW 0403h,	0D070h	; IPLft
+ft03	DW 0403h,	08372h	; SIO
+ft04	DW 0403h,	06001h	; 8U232AM
+ft05	DW 0403h,	06006h	; 8U232AM_ALT
+ft06	DW 0403h,	06010h	; 8U2232C
+ft07	DW 0403h,	0FA10h	; RELAIS
+ft08	DW 1209h,	01002h	; IOBOARD
+ft09	DW 1209h,	01006h	; MINI_IOBOARD
+ft0A	DW 0403h,	0FC08h	; XF_632
+ft0B	DW 0403h,	0FC09h	; XF_634
+ft0C	DW 0403h,	0FC0Ah	; XF_547
+ft0D	DW 0403h,	0FC0Bh	; XF_633
+ft0E	DW 0403h,	0FC0Ch	; XF_631
+ft0F	DW 0403h,	0FC0Dh	; XF_635
+ft10	DW 0403h,	0FC0Eh	; XF_640
+ft11	DW 0403h,	0FC0Fh	; XF_642
+ft12	DW 0403h,	0FC82h	; DSS20
+ft13	DW 0DCDh,	00001h	; NF_RIC
+ft14	DW 0403h,	0FE38h	; VNHCOCftB_D
+ft15	DW 0403h,	0FA00h	; MTXORB_0
+ft16	DW 0403h,	0FA01h	; MTXORB_1
+ft17	DW 0403h,	0FA02h	; MTXORB_2
+ft18	DW 0403h,	0FA03h	; MTXORB_3
+ft19	DW 0403h,	0FA04h	; MTXORB_4
+ft1A	DW 0403h,	0FA05h	; MTXORB_5
+ft1B	DW 0403h,	0FA06h	; MTXORB_6
+ft1C	DW 0403h,	0F0C0h	; PERLE_ULTRAPORT
+ft1D	DW 0403h,	0F208h	; PIEGROUP
+ft1E	DW 0C52h,	02101h	; Sealevel
+ft1F	DW 0C52h,	02102h	; Sealevel
+ft20	DW 0C52h,	02103h	; Sealevel
+ft21	DW 0C52h,	02104h	; Sealevel
+ft22	DW 0C52h,	02211h	; Sealevel
+ft23	DW 0C52h,	02221h	; Sealevel
+ft24	DW 0C52h,	02212h	; Sealevel
+ft25	DW 0C52h,	02222h	; Sealevel
+ft26	DW 0C52h,	02213h	; Sealevel
+ft27	DW 0C52h,	02223h	; Sealevel
+ft28	DW 0C52h,	02411h	; Sealevel
+ft29	DW 0C52h,	02421h	; Sealevel
+ft2A	DW 0C52h,	02431h	; Sealevel
+ft2B	DW 0C52h,	02441h	; Sealevel
+ft2C	DW 0C52h,	02412h	; Sealevel
+ft2D	DW 0C52h,	02422h	; Sealevel
+ft2E	DW 0C52h,	02432h	; Sealevel
+ft2F	DW 0C52h,	02442h	; Sealevel
+ft30	DW 0C52h,	02413h	; Sealevel
+ft31	DW 0C52h,	02423h	; Sealevel
+ft32	DW 0C52h,	02433h	; Sealevel
+ft33	DW 0C52h,	02443h	; Sealevel
+ft34	DW 0C52h,	02811h	; Sealevel
+ft35	DW 0C52h,	02821h	; Sealevel
+ft36	DW 0C52h,	02831h	; Sealevel
+ft37	DW 0C52h,	02841h	; Sealevel
+ft38	DW 0C52h,	02851h	; Sealevel
+ft39	DW 0C52h,	02861h	; Sealevel
+ft3A	DW 0C52h,	02871h	; Sealevel
+ft3B	DW 0C52h,	02881h	; Sealevel
+ft3C	DW 0C52h,	02812h	; Sealevel
+ft3D	DW 0C52h,	02822h	; Sealevel
+ft3E	DW 0C52h,	02832h	; Sealevel
+ft3F	DW 0C52h,	02842h	; Sealevel
+ft40	DW 0C52h,	02852h	; Sealevel
+ft41	DW 0C52h,	02862h	; Sealevel
+ft42	DW 0C52h,	02872h	; Sealevel
+ft43	DW 0C52h,	02882h	; Sealevel
+ft44	DW 0C52h,	02813h	; Sealevel
+ft45	DW 0C52h,	02823h	; Sealevel
+ft46	DW 0C52h,	02833h	; Sealevel
+ft47	DW 0C52h,	02843h	; Sealevel
+ft48	DW 0C52h,	02853h	; Sealevel
+ft49	DW 0C52h,	02863h	; Sealevel
+ft50	DW 0C52h,	02873h	; Sealevel
+ft51	DW 0C52h,	02883h	; Sealevel
+ft52	DW 0ACDh,	00300h	; IDTECH_IDT1221U
+ft53	DW 0B39h,	00421h	; OCT_ft101
+ft54	DW 0403h,	0FA78h	; HE_TIRA1
+ft55	DW 0403h,	0F850h	; ftB_UIRT
+ft56	DW 0403h,	0FC70h	; PROTEGO_SPECIAL_1
+ft57	DW 0403h,	0FC71h	; PROTEGO_R2X0
+ft58	DW 0403h,	0FC72h	; PROTEGO_SPECIAL_3
+ft59	DW 0403h,	0FC73h	; PROTEGO_SPECIAL_4
+ft5A	DW 0403h,	0E808h	; GUDEADS
+ft5B	DW 0403h,	0E809h	; GUDEADS
+ft5C	DW 0403h,	0E80Ah	; GUDEADS
+ft5D	DW 0403h,	0E80Bh	; GUDEADS
+ft5E	DW 0403h,	0E80Ch	; GUDEADS
+ft5F	DW 0403h,	0E80Dh	; GUDEADS
+ft60	DW 0403h,	0E80Eh	; GUDEADS
+ft61	DW 0403h,	0E80Fh	; GUDEADS
+ft62	DW 0403h,	0E888h	; GUDEADS
+ft63	DW 0403h,	0E889h	; GUDEADS
+ft64	DW 0403h,	0E88Ah	; GUDEADS
+ft65	DW 0403h,	0E88Bh	; GUDEADS
+ft66	DW 0403h,	0E88Ch	; GUDEADS
+ft67	DW 0403h,	0E88Dh	; GUDEADS
+ft68	DW 0403h,	0E88Eh	; GUDEADS
+ft69	DW 0403h,	0E88Fh	; GUDEADS
+ft6A	DW 0403h,	0FB58h	; ELV_UR100
+ft6B	DW 0403h,	0FB5Ah	; ELV_UM100
+ft6C	DW 0403h,	0FB5Bh	; ELV_UO100
+ft6D	DW 0403h,	0F06Eh	; ELV_ALC8500
+ft6E	DW 0403h,	0E6C8h	; PYRAMID
+ft6F	DW 0403h,	0F06Fh	; FHZ1000PC
+ft70	DW 0403h,	0F448h	; LINX_SDMftBQSS
+ft71	DW 0403h,	0F449h	; LINX_MASTERDEVEL2
+ft72	DW 0403h,	0F44Ah	; LINX_FUTURE_0
+ft73	DW 0403h,	0F44Bh	; LINX_FUTURE_1
+ft74	DW 0403h,	0F44Ch	; LINX_FUTURE_2
+ft75	DW 0403h,	0F9D0h	; CCSICDU20
+ft76	DW 0403h,	0F9D1h	; CCSICDU40
+ft77	DW 0403h,	0FAD0h	; INSIDE_ACCESSO
+ft78	DW 093Ch,	00601h	; INTREPID_CALUECAN
+ft79	DW 093Ch,	00701h	; INTREPID_NEOVI
+ft7A	DW 0F94h,	00001h	; FALCOM_TWIST
+ft7B	DW 0F94h,	00005h	; FALCOM_SAMBA
+ft7C	DW 0403h,	0F680h	; SUUNTO_SPORTS
+ft7D	DW 0403h,	0FD60h	; RM_CANVIEW
+ft7E	DW 0856h,	0AC01h	; BANDB
+ft7F	DW 0856h,	0AC02h	; BANDB
+ft80	DW 0856h,	0AC03h	; BANDB
+ft81	DW 0403h,	0E520h	; EVER_ECO_PRO
+ft82	DW 0403h,	08372h	; 4N_GALXY_DE_0
+ft83	DW 0403h,	0F3C0h	; 4N_GALXY_DE_1
+ft84	DW 0403h,	0F3C1h	; 4N_GALXY_DE_2
+ft85	DW 0403h,	0D388h	; XSENS_CONV_0
+ft86	DW 0403h,	0D389h	; XSENS_CONV_1
+ft87	DW 0403h,	0D38Ah	; XSENS_CONV_2
+ft88	DW 0403h,	0D38Bh	; XSENS_CONV_3
+ft89	DW 0403h,	0D38Ch	; XSENS_CONV_4
+ft8A	DW 0403h,	0D38Dh	; XSENS_CONV_5
+ft8B	DW 0403h,	0D38Eh	; XSENS_CONV_6
+ft8C	DW 0403h,	0D38Fh	; XSENS_CONV_7
+ft8D	DW 1342h,	00202h	; MOBILITY
+ft8E	DW 0403h,	0E548h	; ACTIVE_ROBOTS
+ft8F	DW 0403h,	0EEE8h	; MHAM_KW
+ft90	DW 0403h,	0EEE9h	; MHAM_YS
+ft91	DW 0403h,	0EEEAh	; MHAM_Y6
+ft92	DW 0403h,	0EEEBh	; MHAM_Y8
+ft93	DW 0403h,	0EEECh	; MHAM_IC
+ft94	DW 0403h,	0EEEDh	; MHAM_DB9
+ft95	DW 0403h,	0EEEEh	; MHAM_RS232
+ft96	DW 0403h,	0EEEFh	; MHAM_Y9
+ft97	DW 0403h,	0EC88h	; TERATRONIK_VCP
+ft98	DW 0403h,	0EC89h	; TERATRONIK_D2XX
+ft99	DW 0DEEEh,	00300h	; EVOLUTION
+ft9A	DW 0403h,	0DF28h	; ARTEMIS
+ft9B	DW 0403h,	0DF30h	; ATIK_ATK16
+ft9C	DW 0403h,	0DF32h	; ATIK_ATK16C
+ft9D	DW 0403h,	0DF31h	; ATIK_ATK16HR
+ft9E	DW 0403h,	0DF33h	; ATIK_ATK16HRC
+ft9F	DW 0D46h,	02020h	; KOBIL_CONV_B1
+ftA0	DW 0D46h,	02021h	; KOBIL_CONV_KAAN
+ftA1	DW 0D3Ah,	00300h	; POSIFLEX
+ftA2	DW 0403h,	0FF20h	; TTftB
+ftA3	DW 0403h,	0EA90h	; ECLO_COM_1WIRE
+ftA4	DW 0403h,	0DC00h	; WESTREX_777
+ftA5	DW 0403h,	0DC01h	; WESTREX_8900F
+ftA6	DW 0403h,	0FA88h	; PCDJ_DAC2
+ftA7	DW 0403h,	0C7D0h	; RRCIRKITS
+ftA8	DW 0403h,	0C991h	; ASK_RDR400
+ftA9	DW 0C26h,	00004h	; ICOM_ID1
+ftAA	DW 5050h,	00400h	; PAPOUCH
+ftAB	DW 0403h,	0DD20h	; ACG_HFDUAL
 
-usb_attach  Proc far
+AttachFTDI  Proc near
     push es
 ;    
     push ax
@@ -2031,28 +2031,28 @@ usb_attach  Proc far
     GetUsbDevice
     cmp ax,cx
     pop ax
-    jne uaDone
+    jne aftDone
 ;
     mov si,es:udd_vendor
     mov di,es:udd_prod
 
     mov cx,0ACh
-    mov bp,OFFSET usTab
+    mov bp,OFFSET ftTab
 
-uaLoop:
+aftLoop:
     cmp si,cs:[bp]
-    jne uaNext
+    jne aftNext
 ;
     cmp di,cs:[bp+2]
-    je uaFound
+    je aftFound
 
-uaNext:
+aftNext:
     add bp,4
-    loop uaLoop        
+    loop aftLoop        
 ;
-    jmp uaDone    
+    jmp aftDone    
 
-uaFound:
+aftFound:
     mov si,es:udd_device
 ;    
     xor dl,dl
@@ -2063,62 +2063,199 @@ uaFound:
     mov cx,ax
     pop ax
     or cx,cx
-    jz uaDone
+    jz aftDone
 ;
     mov dl,es:ucd_config_id
     ConfigUsbDevice
-    jc uaDone
+    jc aftDone
 ;
     xor di,di
     movzx cx,es:ucd_len
     add di,cx
 
-uaDescrLoop:
+aftDescrLoop:
     mov cl,es:[di].udd_type
     cmp cl,4
-    jne uaDescrNext
+    jne aftDescrNext
 ;
     cmp si,200h
-    jae uaNotSio
+    jae aftNotSio
 ; 
     mov dx,DEVICE_TYPE_SIO
     call AddPort
-    jmp uaDone
+    jmp aftDone
 
-uaNotSio:
+aftNotSio:
     cmp si,400h
-    jae uaNotAm
+    jae aftNotAm
 ;
     mov dx,DEVICE_TYPE_FT232AM
     call AddPort
-    jmp uaDone
+    jmp aftDone
 
-uaNotAm:
+aftNotAm:
     mov cl,es:ucd_interface_count
     cmp cl,1
-    ja uaMore
+    ja aftMore
 ;
     mov dx,DEVICE_TYPE_FT232BM
     call AddPort
-    jmp uaDone
+    jmp aftDone
 
-uaMore:
+aftMore:
     mov dx,DEVICE_TYPE_FT2232C 
     call AddPort
 
-uaDescrNext:
+aftDescrNext:
     movzx cx,es:[di].ucd_len
     add di,cx
     cmp di,es:ucd_size
-    jb uaDescrLoop    
+    jb aftDescrLoop    
     
-uaDone:
+aftDone:
     FreeMem
 ;
     pop es    
     ret
-usb_attach  Endp
+AttachFTDI  Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        AttachPL2303
+;
+;		description:	Attach PL2303 devices
+;
+;		Parameters:     BX      Controller #
+;                       AL      Device address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+plTab:
+pl00	DW 06FBh,	02303h	; PL2303
+pl01	DW 06FBh,	004BBh	; PL2303
+pl02	DW 06FBh,	0AAA0h	; PL2303
+pl03	DW 06FBh,	0AAA2h	; PL2303
+pl04	DW 0557h,	02008h	; ATEN
+pl05	DW 0547h,	02008h	; ATEN
+pl06	DW 04BBh,	00A03h	; ATEN
+pl07	DW 056Eh,	05003h	; ELCOM
+pl08	DW 056Eh,	05004h	; ELCOM
+pl09	DW 0EBAh,	01080h	; ITEGNO
+pl0A	DW 0EBAh,	02080h	; ITEGNO
+pl0B	DW 0DF7h,	00620h	; MA620
+pl0C	DW 0584h,	0B000h	; RATOC
+pl0D	DW 2478h,	02008h	; TRIPP
+pl0E	DW 1453h,	04026h	; RADIOSHACK
+pl0F	DW 0731h,	00528h	; DCU10
+pl10	DW 6189h,	02068h	; SITECOM
+pl11	DW 11F7h,	002DFh	; ALCATEL
+pl12	DW 04E8h,	08001h	; SAMSUNG
+pl13	DW 11F5h,	00001h	; SIEMENS
+pl14	DW 11F5h,	00003h	; SIEMENS
+pl15	DW 11F5h,	00004h	; SIEMENS
+pl16	DW 0745h,	00001h	; SYNTECH
+pl17	DW 078Bh,	01234h	; NOKIA
+pl18	DW 10B5h,	0AC70h	; CA-42
+pl19	DW 079Bh,	00027h	; SAGEM
+pl1A	DW 0413h,	02101h	; LEADTEK
+pl1B	DW 0E55h,	0110Bh	; SPEEDDRAGON
+pl1C	DW 0EA0h,	06858h	; OTI
+ 
+AttachPL2303  Proc near
+    push es
+;    
+    push ax
+    mov eax,1000h
+    AllocateSmallGlobalMem
+    mov cx,SIZE usb_device_descr
+    pop ax
+    xor di,di
+    push ax
+    GetUsbDevice
+    cmp ax,cx
+    pop ax
+    jne aplDone
+;
+    mov si,es:udd_vendor
+    mov di,es:udd_prod
+
+    mov cx,01Dh
+    mov bp,OFFSET plTab
+
+aplLoop:
+    cmp si,cs:[bp]
+    jne aplNext
+;
+    cmp di,cs:[bp+2]
+    je aplFound
+
+aplNext:
+    add bp,4
+    loop aplLoop        
+;
+    jmp aplDone    
+
+aplFound:
+    int 3
+    mov si,es:udd_device
+;    
+    xor dl,dl
+    mov cx,1000h
+    xor di,di
+    push ax
+    GetUsbConfig
+    mov cx,ax
+    pop ax
+    or cx,cx
+    jz aplDone
+;
+    mov dl,es:ucd_config_id
+    ConfigUsbDevice
+    jc aplDone
+;
+    xor di,di
+    movzx cx,es:ucd_len
+    add di,cx
+
+aplDescrLoop:
+    mov cl,es:[di].udd_type
+
+aplDescrNext:    
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb aplDescrLoop    
+    
+aplDone:
+    FreeMem
+;
+    pop es    
+    ret
+AttachPL2303  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        usb_attach
+;
+;		description:	USB attach callback
+;
+;		Parameters:     BX      Controller #
+;                       AL      Device address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usb_attach  Proc far
+    call AttachFTDI
+    call AttachPL2303
+    ret
+usb_attach  Endp
+    
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
