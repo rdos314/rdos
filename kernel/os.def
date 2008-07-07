@@ -469,5 +469,7 @@ get_usb_req_data_nr         EQU 320
 usb_req_done_nr             EQU 321
 close_usb_req_nr            EQU 322
 
-osgate_entries				EQU 323
+notify_ir_data_nr           EQU 323
+
+osgate_entries				EQU 324
 

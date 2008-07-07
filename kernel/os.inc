@@ -2215,3 +2215,8 @@ UsbReqDone      MACRO
 CloseUsbReq      MACRO
 	OsGate close_usb_req_nr
 						ENDM
+
+; IN  ES        IR data selector
+NotifyIrData      MACRO
+	OsGate notify_ir_data_nr
+						ENDM

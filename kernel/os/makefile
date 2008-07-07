@@ -114,6 +114,10 @@ mouse_srcs = MOUSE.ASM
 mouse_objs = $(mouse_srcs:.ASM=.OBJ)
 mouse_rdvs = MOUSE.RDV
 
+ir_srcs = IR.ASM 
+ir_objs = $(ir_srcs:.ASM=.OBJ)
+ir_rdvs = IR.RDV
+
 inifile_srcs = INIFILE.ASM
 inifile_objs = $(inifile_srcs:.ASM=.OBJ)
 inifile_rdvs = INIFILE.RDV
@@ -234,7 +238,7 @@ prot_exes = KERNEL.EXE
 srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
-			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs) \
+			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs) $(ir_srcs) \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(time_srcs) $(font_srcs) $(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) \
@@ -263,7 +267,7 @@ rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  
 		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
 			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) \
-			$(keyboard_rdvs) $(inifile_rdvs) \
+			$(keyboard_rdvs) $(inifile_rdvs) $(ir_rdvs) \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(font_rdvs) $(video_rdvs)
@@ -476,6 +480,14 @@ MOUSE.RDV : $(mouse_objs)
 	$(mouse_objs)
 	MOUSE.RDV
 	MOUSE;
+!
+
+IR.RDV : $(ir_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ir_objs)
+	IR.RDV
+	IR;
 !
 
 INIFILE.RDV : $(inifile_objs)

@@ -313,9 +313,9 @@ Reset:
     movlw AsyncData
     movwf AsyncPtr
 ;    
-	bsf PORTA, 5
     
 HandleLoop:
+	bsf PORTA, 5
     bsf STATUS,IRP
     bcf PORTA, 1
     bcf PORTA, 2
@@ -341,8 +341,9 @@ WaitPollLoop:
     decfsz Count,F
     goto WaitPollLoop
 ;	
+	bcf PORTA, 5
 	call SendAsync
-	goto WaitCmdLoop
+	goto HandleLoop
 
 HandleWaitForInput:
     PAGE0
@@ -475,6 +476,11 @@ SendAsyncLoop:
     goto SendAsyncLoop
 
 SendAsyncDone:
+	PAGE1
+	btfsc TRISE,OBF
+	goto SendAsyncDone
+;
+    PAGE0
     movlw AsyncData
     movwf AsyncPtr
 	clrf AsyncCount

@@ -294,13 +294,16 @@ HandleAsync1 Proc near
     and cx,1Fh
     or cx,cx
     push cx
-    jz hAsyncOk1
+    jz hAsyncDone1
 ;
-    mov ax,ds
-    mov es,ax
-    mov di,OFFSET AsyncList0
+    movzx eax,cx
+    inc ax
+    AllocateSmallGlobalMem
+    xor di,di
+    mov ax,cx
+    stosb
 ;
-    mov ah,0
+    mov ah,4
     mov bx,1000h
         
 hAsyncLoop1:
@@ -313,7 +316,7 @@ hAsyncLoop1:
     sub bx,1
     jnz hAsyncLoop1
 ;
-    jmp hAsyncFail1
+    jmp hAsyncDone1
 
 hAsyncRead1:
     mov bx,1000h
@@ -322,10 +325,10 @@ hAsyncRead1:
     in al,dx
     stosb    
     loop hAsyncLoop1
+;
+    NotifyIrData
 
-hAsyncOk1:    
-
-hAsyncFail1:
+hAsyncDone1:
     pop cx
 ;
     pop di
@@ -1190,6 +1193,11 @@ ptNoReset1:
     call DioCheckIdle1
     LeaveSection ds:ListSection
 ;
+    EnterSection ds:ListSection
+    call DioCheckReady1
+    call DioCheckIdle1
+    LeaveSection ds:ListSection
+;
 	GetSystemTime
 	add eax,5 * 1193000
 	adc edx,0
@@ -1280,6 +1288,11 @@ ptLoop2:
     Signal
     
 ptNoReset2:
+    EnterSection ds:ListSection
+    call DioCheckReady2
+    call DioCheckIdle2
+    LeaveSection ds:ListSection
+;
     EnterSection ds:ListSection
     call DioCheckReady2
     call DioCheckIdle2

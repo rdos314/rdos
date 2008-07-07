@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quizf2.cpp
-# Quiz final version 2 class
+# quizfi.cpp
+# Quiz final version, international, class
 #
 #######################################################################*/
 
@@ -29,9 +29,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizf2.h"
+#include "quizfi.h"
 #include "file.h"
-#include "quizdbf2.h"
+#include "quizdbfi.h"
 
 #define CI	1
 
@@ -59,24 +59,21 @@ public:
 
 /*##########################################################################
 #
-#   Name       : TQuizF2::TQuizF2
+#   Name       : TQuizFI::TQuizFI
 #
-#   Purpose....: Constructor for TQuizF2
+#   Purpose....: Constructor for TQuizFI
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizF2::TQuizF2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1)
-  : TQuizFinal(270, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
+TQuizFI::TQuizFI(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4)
+  : TQuizFinal(150, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
 	FDataFile(FileName)
 {
-	DefineCross(32, QuizFI);
-	DefineCross(33, QuizF1);
-
 	SetupTexts();
-	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1);
+	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4);
 
 	InitReferers();
 	LoadReferers();
@@ -88,32 +85,29 @@ TQuizF2::TQuizF2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 
 /*##########################################################################
 #
-#   Name       : TQuizF2::~TQuizF2
+#   Name       : TQuizFI::~TQuizFI
 #
-#   Purpose....: Destructor for TQuizF2
+#   Purpose....: Destructor for TQuizFI
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizF2::~TQuizF2()
+TQuizFI::~TQuizFI()
 {
 }
 
-/*##################  TQuizF2::GetCatCount ##########################
+/*##################  TQuizFI::GetCatCount ##########################
 *   Purpose....: Return number of categories for question  	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizF2::GetCatCount(int Question)
+int TQuizFI::GetCatCount(int Question)
 {
-    if (Question < 150)
-        return 3;
-    else
-    	return 5;
+    return 3;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -123,14 +117,14 @@ int TQuizF2::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizF2::GetQuizN()
+int TQuizFI::GetQuizN()
 {
 	return 150;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF2::WriteName
+#   Name       : TQuizFI::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -139,14 +133,14 @@ int TQuizF2::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF2::WriteName(TFile &File)
+void TQuizFI::WriteName(TFile &File)
 {
-	 File.Write("F2");
+	 File.Write("FI");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF2::WriteLongName
+#   Name       : TQuizFI::WriteLongName
 #
 #   Purpose....: Write long quiz name
 #
@@ -155,14 +149,14 @@ void TQuizF2::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF2::WriteLongName(TFile &File)
+void TQuizFI::WriteLongName(TFile &File)
 {
-	 File.Write("final version 2");
+	 File.Write("final international version");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF2::SetupTexts
+#   Name       : TQuizFI::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -171,313 +165,18 @@ void TQuizF2::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF2::SetupTexts()
+void TQuizFI::SetupTexts()
 {
- Quiz[151].Reverse = TRUE;
- Quiz[153].Reverse = TRUE;
- Quiz[154].Reverse = TRUE;
- Quiz[156].Reverse = TRUE;
- Quiz[161].Reverse = TRUE;
- Quiz[163].Reverse = TRUE;
- Quiz[164].Reverse = TRUE;
- Quiz[166].Reverse = TRUE;
- Quiz[167].Reverse = TRUE;
- Quiz[168].Reverse = TRUE;
- Quiz[169].Reverse = TRUE;
- Quiz[171].Reverse = TRUE;
- Quiz[172].Reverse = TRUE;
- Quiz[174].Reverse = TRUE;
- Quiz[176].Reverse = TRUE;
- Quiz[177].Reverse = TRUE;
- Quiz[178].Reverse = TRUE;
- Quiz[181].Reverse = TRUE;
- Quiz[183].Reverse = TRUE;
- Quiz[184].Reverse = TRUE;
- Quiz[186].Reverse = TRUE;
- Quiz[191].Reverse = TRUE;
- Quiz[192].Reverse = TRUE;
- Quiz[193].Reverse = TRUE;
- Quiz[194].Reverse = TRUE;
- Quiz[196].Reverse = TRUE;
- Quiz[199].Reverse = TRUE;
- Quiz[200].Reverse = TRUE;
- Quiz[201].Reverse = TRUE;
- Quiz[203].Reverse = TRUE;
- Quiz[204].Reverse = TRUE;
- Quiz[206].Reverse = TRUE;
- Quiz[207].Reverse = TRUE;
- Quiz[208].Reverse = TRUE;
- Quiz[213].Reverse = TRUE;
- Quiz[214].Reverse = TRUE;
- Quiz[221].Reverse = TRUE;
- Quiz[226].Reverse = TRUE;
- Quiz[230].Reverse = TRUE;
- Quiz[231].Reverse = TRUE;
- Quiz[233].Reverse = TRUE;
- Quiz[236].Reverse = TRUE;
- Quiz[237].Reverse = TRUE;
- Quiz[244].Reverse = TRUE;
- Quiz[245].Reverse = TRUE;
- Quiz[250].Reverse = TRUE;
- Quiz[255].Reverse = TRUE;
- Quiz[256].Reverse = TRUE;
- Quiz[260].Reverse = TRUE;
- Quiz[261].Reverse = TRUE;
- Quiz[265].Reverse = TRUE;
- Quiz[266].Reverse = TRUE;
-
- Quiz[150].MyGroup = GROUP_ENVIRONMENT;
- Quiz[151].MyGroup = GROUP_SOCIAL;
- Quiz[152].MyGroup = GROUP_ASPIE_TALENT;
- Quiz[153].MyGroup = GROUP_ENVIRONMENT;
- Quiz[154].MyGroup = GROUP_ACTIVITY;
- Quiz[155].MyGroup = GROUP_ENVIRONMENT;
- Quiz[156].MyGroup = GROUP_NT_OBSESSION;
- Quiz[157].MyGroup = GROUP_MIXED;
- Quiz[158].MyGroup = GROUP_NT_NVC;
- Quiz[159].MyGroup = GROUP_ASPIE_OBSESSION;
- Quiz[160].MyGroup = GROUP_ENVIRONMENT;
- Quiz[161].MyGroup = GROUP_SOCIAL;
- Quiz[162].MyGroup = GROUP_ENVIRONMENT;
- Quiz[163].MyGroup = GROUP_NT_NVC;
- Quiz[164].MyGroup = GROUP_MIXED;
- Quiz[165].MyGroup = GROUP_SOCIAL;
- Quiz[166].MyGroup = GROUP_NT_HUNTING;
- Quiz[167].MyGroup = GROUP_ASPIE_OBSESSION;
- Quiz[168].MyGroup = GROUP_NT_OBSESSION;
- Quiz[169].MyGroup = GROUP_MIXED;
- Quiz[170].MyGroup = GROUP_ACTIVITY;
- Quiz[171].MyGroup = GROUP_NT_OBSESSION;
- Quiz[172].MyGroup = GROUP_NT_TALENT;
- Quiz[173].MyGroup = GROUP_NT_NVC;
- Quiz[174].MyGroup = GROUP_ACTIVITY;
- Quiz[175].MyGroup = GROUP_ENVIRONMENT;
- Quiz[176].MyGroup = GROUP_NT_OBSESSION;
- Quiz[177].MyGroup = GROUP_MIXED;
- Quiz[178].MyGroup = GROUP_NT_NVC;
- Quiz[179].MyGroup = GROUP_ACTIVITY;
- Quiz[180].MyGroup = GROUP_ENVIRONMENT;
- Quiz[181].MyGroup = GROUP_SOCIAL;
- Quiz[182].MyGroup = GROUP_MIXED;
- Quiz[183].MyGroup = GROUP_ENVIRONMENT;
- Quiz[184].MyGroup = GROUP_MIXED;
- Quiz[185].MyGroup = GROUP_ENVIRONMENT;
- Quiz[186].MyGroup = GROUP_NT_OBSESSION;
- Quiz[187].MyGroup = GROUP_ASPIE_TALENT;
- Quiz[188].MyGroup = GROUP_MIXED;
- Quiz[189].MyGroup = GROUP_ACTIVITY;
- Quiz[190].MyGroup = GROUP_ENVIRONMENT;
- Quiz[191].MyGroup = GROUP_SOCIAL;
- Quiz[192].MyGroup = GROUP_NT_NVC;
- Quiz[193].MyGroup = GROUP_NT_NVC;
- Quiz[194].MyGroup = GROUP_MIXED;
- Quiz[195].MyGroup = GROUP_SOCIAL;
- Quiz[196].MyGroup = GROUP_MIXED;
- Quiz[197].MyGroup = GROUP_ASPIE_OBSESSION;
- Quiz[198].MyGroup = GROUP_ENVIRONMENT;
- Quiz[199].MyGroup = GROUP_ASPIE_TALENT;
- Quiz[200].MyGroup = GROUP_ACTIVITY;
- Quiz[201].MyGroup = GROUP_NT_OBSESSION;
- Quiz[202].MyGroup = GROUP_MIXED;
- Quiz[203].MyGroup = GROUP_ENVIRONMENT;
- Quiz[204].MyGroup = GROUP_ACTIVITY;
- Quiz[205].MyGroup = GROUP_MIXED;
- Quiz[206].MyGroup = GROUP_NT_OBSESSION;
- Quiz[207].MyGroup = GROUP_MIXED;
- Quiz[208].MyGroup = GROUP_NT_NVC;
- Quiz[209].MyGroup = GROUP_ACTIVITY;
- Quiz[210].MyGroup = GROUP_ENVIRONMENT;
- Quiz[211].MyGroup = GROUP_SOCIAL;
- Quiz[212].MyGroup = GROUP_ACTIVITY;
- Quiz[213].MyGroup = GROUP_ENVIRONMENT;
- Quiz[214].MyGroup = GROUP_ACTIVITY;
- Quiz[215].MyGroup = GROUP_ENVIRONMENT;
- Quiz[216].MyGroup = GROUP_SOCIAL;
- Quiz[217].MyGroup = GROUP_MIXED;
- Quiz[218].MyGroup = GROUP_MIXED;
- Quiz[219].MyGroup = GROUP_ACTIVITY;
- Quiz[220].MyGroup = GROUP_ENVIRONMENT;
- Quiz[221].MyGroup = GROUP_SOCIAL;
- Quiz[222].MyGroup = GROUP_NT_NVC;
- Quiz[223].MyGroup = GROUP_NT_NVC;
- Quiz[224].MyGroup = GROUP_MIXED;
- Quiz[225].MyGroup = GROUP_SOCIAL;
- Quiz[226].MyGroup = GROUP_NT_HUNTING;
- Quiz[227].MyGroup = GROUP_ASPIE_OBSESSION;
- Quiz[228].MyGroup = GROUP_NT_NVC;
- Quiz[229].MyGroup = GROUP_MIXED;
- Quiz[230].MyGroup = GROUP_ACTIVITY;
- Quiz[231].MyGroup = GROUP_NT_OBSESSION;
- Quiz[232].MyGroup = GROUP_NT_TALENT;
- Quiz[233].MyGroup = GROUP_ENVIRONMENT;
- Quiz[234].MyGroup = GROUP_MIXED;
- Quiz[235].MyGroup = GROUP_ENVIRONMENT;
- Quiz[236].MyGroup = GROUP_ENVIRONMENT;
- Quiz[237].MyGroup = GROUP_MIXED;
- Quiz[238].MyGroup = GROUP_NT_NVC;
- Quiz[239].MyGroup = GROUP_ACTIVITY;
- Quiz[240].MyGroup = GROUP_ENVIRONMENT;
- Quiz[241].MyGroup = GROUP_SOCIAL;
- Quiz[242].MyGroup = GROUP_ASPIE_TALENT;
- Quiz[243].MyGroup = GROUP_ENVIRONMENT;
- Quiz[244].MyGroup = GROUP_ACTIVITY;
- Quiz[245].MyGroup = GROUP_ENVIRONMENT;
- Quiz[246].MyGroup = GROUP_NT_OBSESSION;
- Quiz[247].MyGroup = GROUP_NT_NVC;
- Quiz[248].MyGroup = GROUP_NT_NVC;
- Quiz[249].MyGroup = GROUP_ACTIVITY;
- Quiz[250].MyGroup = GROUP_ENVIRONMENT;
- Quiz[251].MyGroup = GROUP_SOCIAL;
- Quiz[252].MyGroup = GROUP_NT_NVC;
- Quiz[253].MyGroup = GROUP_NT_NVC;
- Quiz[254].MyGroup = GROUP_ACTIVITY;
- Quiz[255].MyGroup = GROUP_SOCIAL;
- Quiz[256].MyGroup = GROUP_MIXED;
- Quiz[257].MyGroup = GROUP_ASPIE_OBSESSION;
- Quiz[258].MyGroup = GROUP_NT_NVC;
- Quiz[259].MyGroup = GROUP_MIXED;
- Quiz[260].MyGroup = GROUP_ACTIVITY;
- Quiz[261].MyGroup = GROUP_MIXED;
- Quiz[262].MyGroup = GROUP_MIXED;
- Quiz[263].MyGroup = GROUP_NT_NVC;
- Quiz[264].MyGroup = GROUP_ACTIVITY;
- Quiz[265].MyGroup = GROUP_ENVIRONMENT;
- Quiz[266].MyGroup = GROUP_ENVIRONMENT;
- Quiz[267].MyGroup = GROUP_MIXED;
- Quiz[268].MyGroup = GROUP_NT_NVC;
- Quiz[269].MyGroup = GROUP_ACTIVITY;
-
- Quiz[150].Text = "NEO - Worry about things";
- Quiz[151].Text = "NEO - Make friends easily";
- Quiz[152].Text = "NEO - Have a vivid imagination";
- Quiz[153].Text = "NEO - Trust others";
- Quiz[154].Text = "NEO - Complete tasks successfully";
- Quiz[155].Text = "NEO - Get angry easily";
- Quiz[156].Text = "NEO - Love large parties";
- Quiz[157].Text = "NEO - Believe in the importance of art";
- Quiz[158].Text = "NEO - Use others for my own ends";
- Quiz[159].Text = "NEO - Like to tidy up";
- Quiz[160].Text = "NEO - Often feel blue";
- Quiz[161].Text = "NEO - Take charge";
- Quiz[162].Text = "NEO - Experience my emotions intensely";
- Quiz[163].Text = "NEO - Love to help others";
- Quiz[164].Text = "NEO - Keep my promises";
- Quiz[165].Text = "NEO - Find it difficult to approach others";
- Quiz[166].Text = "NEO - Am always busy";
- Quiz[167].Text = "NEO - Prefer variety to routine";
- Quiz[168].Text = "NEO - Love a good fight";
- Quiz[169].Text = "NEO - Work hard";
- Quiz[170].Text = "NEO - Go on binges";
- Quiz[171].Text = "NEO - Love excitement";
- Quiz[172].Text = "NEO - Love to read challenging material";
- Quiz[173].Text = "NEO - Believe that I am better than others";
- Quiz[174].Text = "NEO - Am always prepared";
- Quiz[175].Text = "NEO - Panic easily";
- Quiz[176].Text = "NEO - Radiate joy";
- Quiz[177].Text = "NEO - Tend to vote for liberal political candidates";
- Quiz[178].Text = "NEO - Sympathize with the homeless";
- Quiz[179].Text = "NEO - Jump into things without thinking";
- Quiz[180].Text = "NEO - Fear for the worst";
- Quiz[181].Text = "NEO - Feel comfortable around people";
- Quiz[182].Text = "NEO - Enjoy wild flights of fantasy";
- Quiz[183].Text = "NEO - Believe that others have good intentions";
- Quiz[184].Text = "NEO - Excel in what I do";
- Quiz[185].Text = "NEO - Get irritated easily";
- Quiz[186].Text = "NEO - Talk to a lot of different people at parties";
- Quiz[187].Text = "NEO - See beauty in things that others might not notice";
- Quiz[188].Text = "NEO - Cheat to get ahead";
- Quiz[189].Text = "NEO - Often forget to put things back in their proper place";
- Quiz[190].Text = "NEO - Dislike myself";
- Quiz[191].Text = "NEO - Try to lead others";
- Quiz[192].Text = "NEO - Feel others' emotions";
- Quiz[193].Text = "NEO - Am concerned about others";
- Quiz[194].Text = "NEO - Tell the truth";
- Quiz[195].Text = "NEO - Am afraid to draw attention to myself";
- Quiz[196].Text = "NEO - Am always on the go";
- Quiz[197].Text = "NEO - Prefer to stick with things that I know";
- Quiz[198].Text = "NEO - Yell at people";
- Quiz[199].Text = "NEO - Do more than what's expected of me";
- Quiz[200].Text = "NEO - Rarely overindulge";
- Quiz[201].Text = "NEO - Seek adventure";
- Quiz[202].Text = "NEO - Avoid philosophical discussions";
- Quiz[203].Text = "NEO - Think highly of myself";
- Quiz[204].Text = "NEO - Carry out my plans";
- Quiz[205].Text = "NEO - Become overwhelmed by events";
- Quiz[206].Text = "NEO - Have a lot of fun";
- Quiz[207].Text = "NEO - Believe that there is no absolute right or wrong";
- Quiz[208].Text = "NEO - Feel sympathy for those who are worse off than myself";
- Quiz[209].Text = "NEO - Make rash decisions";
- Quiz[210].Text = "NEO - Am afraid of many things";
- Quiz[211].Text = "NEO - Avoid contacts with others";
- Quiz[212].Text = "NEO - Love to daydream";
- Quiz[213].Text = "NEO - Trust what people say";
- Quiz[214].Text = "NEO - Handle tasks smoothly";
- Quiz[215].Text = "NEO - Lose my temper";
- Quiz[216].Text = "NEO - Prefer to be alone";
- Quiz[217].Text = "NEO - Do not like poetry";
- Quiz[218].Text = "NEO - Take advantage of others";
- Quiz[219].Text = "NEO - Leave a mess in my room";
- Quiz[220].Text = "NEO - Am often down in the dumps";
- Quiz[221].Text = "NEO - Take control of things";
- Quiz[222].Text = "NEO - Rarely notice my emotional reactions";
- Quiz[223].Text = "NEO - Am indifferent to the feelings of others";
- Quiz[224].Text = "NEO - Break rules";
- Quiz[225].Text = "NEO - Only feel comfortable with friends";
- Quiz[226].Text = "NEO - Do a lot in my spare time";
- Quiz[227].Text = "NEO - Dislike changes";
- Quiz[228].Text = "NEO - Insult people";
- Quiz[229].Text = "NEO - Do just enough work to get by";
- Quiz[230].Text = "NEO - Easily resist temptations";
- Quiz[231].Text = "NEO - Enjoy being reckless";
- Quiz[232].Text = "NEO - Have difficulty understanding abstract ideas";
- Quiz[233].Text = "NEO - Have a high opinion of myself";
- Quiz[234].Text = "NEO - Waste my time";
- Quiz[235].Text = "NEO - Feel that I'm unable to deal with things";
- Quiz[236].Text = "NEO - Love life";
- Quiz[237].Text = "NEO - Tend to vote for conservative political candidates";
- Quiz[238].Text = "NEO - Am not interested in other people's problems";
- Quiz[239].Text = "NEO - Rush into things";
- Quiz[240].Text = "NEO - Get stressed out easily";
- Quiz[241].Text = "NEO - Keep others at a distance";
- Quiz[242].Text = "NEO - Like to get lost in thought";
- Quiz[243].Text = "NEO - Distrust people";
- Quiz[244].Text = "NEO - Know how to get things done";
- Quiz[245].Text = "NEO - Am not easily annoyed";
- Quiz[246].Text = "NEO - Avoid crowds";
- Quiz[247].Text = "NEO - Do not enjoy going to art museums";
- Quiz[248].Text = "NEO - Obstruct others' plans";
- Quiz[249].Text = "NEO - Leave my belongings around";
- Quiz[250].Text = "NEO - Feel comfortable with myself";
- Quiz[251].Text = "NEO - Wait for others to lead the way";
- Quiz[252].Text = "NEO - Don't understand people who get emotional";
- Quiz[253].Text = "NEO - Take no time for others";
- Quiz[254].Text = "NEO - Break my promises";
- Quiz[255].Text = "NEO - Am not bothered by difficult social situations";
- Quiz[256].Text = "NEO - Like to take it easy";
- Quiz[257].Text = "NEO - Am attached to conventional ways";
- Quiz[258].Text = "NEO - Get back at others";
- Quiz[259].Text = "NEO - Put little time and effort into my work";
- Quiz[260].Text = "NEO - Am able to control my cravings";
- Quiz[261].Text = "NEO - Act wild and crazy";
- Quiz[262].Text = "NEO - Am not interested in theoretical discussions";
- Quiz[263].Text = "NEO - Boast about my virtues";
- Quiz[264].Text = "NEO - Have difficulty starting tasks";
- Quiz[265].Text = "NEO - Remain calm under pressure";
- Quiz[266].Text = "NEO - Look at the bright side of life";
- Quiz[267].Text = "NEO - Believe that we should be tough on crime";
- Quiz[268].Text = "NEO - Try not to think about the needy";
- Quiz[269].Text = "NEO - Act without thinking";
-
 }
 
-/*##################  TQuizF2::LoadReferers ##########################
+/*##################  TQuizFI::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF2::LoadReferers()
+void TQuizFI::LoadReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
@@ -519,7 +218,7 @@ void TQuizF2::LoadReferers()
 
 /*##########################################################################
 #
-#   Name       : TQuizF2::LoadPopulations
+#   Name       : TQuizFI::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -528,7 +227,7 @@ void TQuizF2::LoadReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF2::LoadPopulations()
+void TQuizFI::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
@@ -686,7 +385,7 @@ void TQuizF2::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizF2::SetupCross
+#   Name       : TQuizFI::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -695,133 +394,13 @@ void TQuizF2::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1)
+void TQuizFI::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4)
 {
-  DefineGlobalId(150, 1209);
-  DefineGlobalId(151, 1210);
-  DefineGlobalId(152, 1211);
-  DefineGlobalId(153, 1212);
-  DefineGlobalId(154, 1213);
-  DefineGlobalId(155, 1214);
-  DefineGlobalId(156, 1215);
-  DefineGlobalId(157, 1216);
-  DefineGlobalId(158, 1217);
-  DefineGlobalId(159, 1218);
-  DefineGlobalId(160, 1219);
-  DefineGlobalId(161, 1220);
-  DefineGlobalId(162, 1221);
-  DefineGlobalId(163, 1222);
-  DefineGlobalId(164, 1223);
-  DefineGlobalId(165, 1224);
-  DefineGlobalId(166, 1225);
-  DefineGlobalId(167, 1226);
-  DefineGlobalId(168, 1227);
-  DefineGlobalId(169, 1228);
-  DefineGlobalId(170, 1229);
-  DefineGlobalId(171, 1230);
-  DefineGlobalId(172, 1231);
-  DefineGlobalId(173, 1232);
-  DefineGlobalId(174, 1233);
-  DefineGlobalId(175, 1234);
-  DefineGlobalId(176, 1235);
-  DefineGlobalId(177, 1236);
-  DefineGlobalId(178, 1237);
-  DefineGlobalId(179, 1238);
-  DefineGlobalId(180, 1239);
-  DefineGlobalId(181, 1240);
-  DefineGlobalId(182, 1241);
-  DefineGlobalId(183, 1242);
-  DefineGlobalId(184, 1243);
-  DefineGlobalId(185, 1244);
-  DefineGlobalId(186, 1245);
-  DefineGlobalId(187, 1246);
-  DefineGlobalId(188, 1247);
-  DefineGlobalId(189, 1248);
-  DefineGlobalId(190, 1249);
-  DefineGlobalId(191, 1250);
-  DefineGlobalId(192, 1251);
-  DefineGlobalId(193, 1252);
-  DefineGlobalId(194, 1253);
-  DefineGlobalId(195, 1254);
-  DefineGlobalId(196, 1255);
-  DefineGlobalId(197, 1256);
-  DefineGlobalId(198, 1257);
-  DefineGlobalId(199, 1258);
-  DefineGlobalId(200, 1259);
-  DefineGlobalId(201, 1260);
-  DefineGlobalId(202, 1261);
-  DefineGlobalId(203, 1262);
-  DefineGlobalId(204, 1263);
-  DefineGlobalId(205, 1264);
-  DefineGlobalId(206, 1265);
-  DefineGlobalId(207, 1266);
-  DefineGlobalId(208, 1267);
-  DefineGlobalId(209, 1268);
-  DefineGlobalId(210, 1269);
-  DefineGlobalId(211, 1270);
-  DefineGlobalId(212, 1271);
-  DefineGlobalId(213, 1272);
-  DefineGlobalId(214, 1273);
-  DefineGlobalId(215, 1274);
-  DefineGlobalId(216, 1275);
-  DefineGlobalId(217, 1276);
-  DefineGlobalId(218, 1277);
-  DefineGlobalId(219, 1278);
-  DefineGlobalId(220, 1279);
-  DefineGlobalId(221, 1280);
-  DefineGlobalId(222, 1281);
-  DefineGlobalId(223, 1282);
-  DefineGlobalId(224, 1283);
-  DefineGlobalId(225, 1284);
-  DefineGlobalId(226, 1285);
-  DefineGlobalId(227, 1286);
-  DefineGlobalId(228, 1287);
-  DefineGlobalId(229, 1288);
-  DefineGlobalId(230, 1289);
-  DefineGlobalId(231, 1290);
-  DefineGlobalId(232, 1291);
-  DefineGlobalId(233, 1292);
-  DefineGlobalId(234, 1293);
-  DefineGlobalId(235, 1294);
-  DefineGlobalId(236, 1295);
-  DefineGlobalId(237, 1296);
-  DefineGlobalId(238, 1297);
-  DefineGlobalId(239, 1298);
-  DefineGlobalId(240, 1299);
-  DefineGlobalId(241, 1300);
-  DefineGlobalId(242, 1301);
-  DefineGlobalId(243, 1302);
-  DefineGlobalId(244, 1303);
-  DefineGlobalId(245, 1304);
-  DefineGlobalId(246, 1305);
-  DefineGlobalId(247, 1306);
-  DefineGlobalId(248, 1307);
-  DefineGlobalId(249, 1308);
-  DefineGlobalId(250, 1309);
-  DefineGlobalId(251, 1310);
-  DefineGlobalId(252, 1311);
-  DefineGlobalId(253, 1312);
-  DefineGlobalId(254, 1313);
-  DefineGlobalId(255, 1314);
-  DefineGlobalId(256, 1315);
-  DefineGlobalId(257, 1316);
-  DefineGlobalId(258, 1317);
-  DefineGlobalId(259, 1318);
-  DefineGlobalId(260, 1319);
-  DefineGlobalId(261, 1320);
-  DefineGlobalId(262, 1321);
-  DefineGlobalId(263, 1322);
-  DefineGlobalId(264, 1323);
-  DefineGlobalId(265, 1324);
-  DefineGlobalId(266, 1325);
-  DefineGlobalId(267, 1326);
-  DefineGlobalId(268, 1327);
-  DefineGlobalId(269, 1328);
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF2::GetReferer
+#   Name       : TQuizFI::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -830,7 +409,7 @@ void TQuizF2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF2::GetReferer(const char *referer, TPopulation *pop)
+void TQuizFI::GetReferer(const char *referer, TPopulation *pop)
 {
 	int i;
 	TReferer *ref;
@@ -902,14 +481,14 @@ static int IsPca(TQuizRow *row, int PcaType)
 	return FALSE;
 }
 
-/*##################  TQuizF2::ExportExcelCases ##########################
+/*##################  TQuizFI::ExportExcelCases ##########################
 *   Purpose....: Export cases as excel-data. Make ? into 'NO' case 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF2::ExportExcelCase(const char *filename, int PcaType)
+void TQuizFI::ExportExcelCase(const char *filename, int PcaType)
 {
 	TQuizRow Row;
 	int i;
@@ -971,14 +550,14 @@ void TQuizF2::ExportExcelCase(const char *filename, int PcaType)
 	}
 }
 
-/*##################  TQuizF2::ExportExcelAspie ##########################
+/*##################  TQuizFI::ExportExcelAspie ##########################
 *   Purpose....: Export cases as excel-data. Invert NT questions 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF2::ExportExcelAspie(const char *filename)
+void TQuizFI::ExportExcelAspie(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1005,7 +584,7 @@ void TQuizF2::ExportExcelAspie(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (Row.Un)
+		if (TRUE)
 		{
 			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);
@@ -1039,14 +618,14 @@ void TQuizF2::ExportExcelAspie(const char *filename)
 	}
 }
 
-/*##################  TQuizF2::ExportExcelGroups ##########################
+/*##################  TQuizFI::ExportExcelGroups ##########################
 *   Purpose....: Export group cases in excel format             	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF2::ExportExcelGroups(const char *filename)
+void TQuizFI::ExportExcelGroups(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1127,14 +706,14 @@ void TQuizF2::ExportExcelGroups(const char *filename)
 	}
 }
 
-/*##################  TQuizF2::ImportMvsp ##########################
+/*##################  TQuizFI::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings   	      			      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF2::ImportMvsp(const char *filename, int PcaType)
+void TQuizFI::ImportMvsp(const char *filename, int PcaType)
 {
 	char buf[MAX_IN_ROW];
 	int size;
@@ -1185,7 +764,7 @@ void TQuizF2::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
@@ -1603,14 +1182,14 @@ void TRace::WriteNonUsRow(TFile &file, int index, const char *text)
 }
 
 
-/*##################  TQuizF2::WriteRace ##########################
+/*##################  TQuizFI::WriteRace ##########################
 *   Purpose....: Write race report                   			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF2::WriteRace(const char *filename)
+void TQuizFI::WriteRace(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1658,14 +1237,14 @@ void TQuizF2::WriteRace(const char *filename)
 	file.Write("</table>");
 }
 
-/*##################  TQuizF2::WriteRetest ##########################
+/*##################  TQuizFI::WriteRetest ##########################
 *   Purpose....: Write retest report             			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF2::WriteRetest(const char *filename)
+void TQuizFI::WriteRetest(const char *filename)
 {
 	TQuizRow Row;
 	int userid;
@@ -1939,638 +1518,5 @@ void TQuizF2::WriteRetest(const char *filename)
 
 	file.Write(str);
 	file.Write("<br><br>");
-}
-
-/*##################  TQuizF2::WriteIPIP ##########################
-*   Purpose....: Write IPIP NEO personality test report             			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuizF2::WriteIPIP(const char *filename)
-{
-	int Count;
-	long double AsSum;
-	long double NtSum;
-	long double DiffSum;
-	long double GrpSum[ACTIVE_GROUP_COUNT];
-	long double NSum;
-	long double ESum;
-	long double OSum;
-	long double ASum;
-	long double CSum;
-	long double AsMean;
-	long double NtMean;
-	long double DiffMean;
-	long double GrpMean[ACTIVE_GROUP_COUNT];
-	long double NMean;
-	long double EMean;
-	long double OMean;
-	long double AMean;
-	long double CMean;
-	long double AsSd;
-	long double NtSd;
-	long double DiffSd;
-	long double GrpSd[ACTIVE_GROUP_COUNT];
-	long double NSd;
-	long double ESd;
-	long double OSd;
-	long double ASd;
-	long double CSd;
-	long double AsCorr;
-	long double NtCorr;
-	long double DiffCorr;
-	long double val;
-	long double zx;
-	long double zy;
-	int grp;
-	long double NGrpCorr[ACTIVE_GROUP_COUNT];
-	long double EGrpCorr[ACTIVE_GROUP_COUNT];
-	long double OGrpCorr[ACTIVE_GROUP_COUNT];
-	long double AGrpCorr[ACTIVE_GROUP_COUNT];
-	long double CGrpCorr[ACTIVE_GROUP_COUNT];
-	TQuizRow Row;
-	int i;
-	int ival;
-	char str[80];
-	TFile file(filename, 0);
-
-	Count = 0;
-	AsSum = 0;
-	NtSum = 0;
-	DiffSum = 0;
-
-    for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-        GrpSum[grp] = 0;
-	
-	NSum = 0;
-	ESum = 0;
-	OSum = 0;
-	ASum = 0;
-	CSum = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-        {
-			Count++;
-			AsSum += Row.AsResult;
-			NtSum += Row.NtResult;
-			DiffSum += Row.AsResult - Row.NtResult;
-
-            for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-                GrpSum[grp] += Row.GroupResult[grp];
-			
-			NSum += Row.Un;
-			ESum += Row.Ue;
-			OSum += Row.Uo;
-			ASum += Row.Ua;
-			CSum += Row.Uc;
-	    }
-	}
-
-	AsMean = AsSum / Count;
-	NtMean = NtSum / Count;
-	DiffMean = DiffSum / Count;
-
-    for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-        GrpMean[grp] = GrpSum[grp] / Count;
-    
-	NMean = NSum / Count;
-	EMean = ESum / Count;
-	OMean = OSum / Count;
-	AMean = ASum / Count;
-	CMean = CSum / Count;
-
-	AsSum = 0;
-	NtSum = 0;
-	DiffSum = 0;
-
-    for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-        GrpSum[grp] = 0;
-	
-	NSum = 0;
-	ESum = 0;
-	OSum = 0;
-	ASum = 0;
-	CSum = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-        {
-            val = (long double)Row.AsResult - AsMean;
-   			AsSum += val * val;
-   			
-            val = (long double)Row.NtResult - NtMean;
-			NtSum += val * val;
-			
-            val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
-			DiffSum += val * val;
-
-            for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-            {
-                val = (long double)Row.GroupResult[grp] - GrpMean[grp];
-                GrpSum[grp] += val * val;
-            }			
-
-            val = (long double)Row.Un - NMean;
-			NSum += val * val;
-
-            val = (long double)Row.Ue - EMean;
-			ESum += val * val;
-
-            val = (long double)Row.Uo - OMean;
-			OSum += val * val;
-
-            val = (long double)Row.Ua - AMean;
-			ASum += val * val;
-
-            val = (long double)Row.Uc - CMean;
-			CSum += val * val;
-	    }
-	}
-
-	AsSd = sqrtl(AsSum / (Count - 1));
-	NtSd = sqrtl(NtSum / (Count - 1));
-	DiffSd = sqrtl(DiffSum / (Count - 1));
-
-    for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-        GrpSd[grp] = sqrtl(GrpSum[grp] / (Count - 1));
-
-	NSd = sqrtl(NSum / (Count - 1));
-	ESd = sqrtl(ESum / (Count - 1));
-	OSd = sqrtl(OSum / (Count - 1));
-	ASd = sqrtl(ASum / (Count - 1));
-	CSd = sqrtl(CSum / (Count - 1));
-
-	file.Write("<h2>Big-five correlations with Aspie-quiz scores</h2>");
-
-	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Factor");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Aspie score");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("NT score");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Score difference");
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-
-	AsSum = 0;
-	NtSum = 0;
-	DiffSum = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-        {
-            zx = ((long double)Row.Un - NMean) / NSd;
-
-            zy = ((long double)Row.AsResult - AsMean) / AsSd;
-            AsSum += zx * zy;
-        
-            zy = ((long double)Row.NtResult - NtMean) / NtSd;
-            NtSum += zx * zy;
-
-            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
-            DiffSum += zx * zy;
-	    }
-	}
-
-    AsCorr = AsSum / (Count - 1);
-    NtCorr = NtSum / (Count - 1);
-    DiffCorr = DiffSum / (Count - 1);
-
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Neuroticisn");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", AsCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", NtCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", DiffCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-
-	AsSum = 0;
-	NtSum = 0;
-	DiffSum = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-        {
-            zx = ((long double)Row.Ue - EMean) / ESd;
-
-            zy = ((long double)Row.AsResult - AsMean) / AsSd;
-            AsSum += zx * zy;
-        
-            zy = ((long double)Row.NtResult - NtMean) / NtSd;
-            NtSum += zx * zy;
-
-            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
-            DiffSum += zx * zy;
-	    }
-	}
-
-    AsCorr = AsSum / (Count - 1);
-    NtCorr = NtSum / (Count - 1);
-    DiffCorr = DiffSum / (Count - 1);
-	
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Extroversion");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", AsCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", NtCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", DiffCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-
-	AsSum = 0;
-	NtSum = 0;
-	DiffSum = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-        {
-            zx = ((long double)Row.Uo - OMean) / OSd;
-
-            zy = ((long double)Row.AsResult - AsMean) / AsSd;
-            AsSum += zx * zy;
-        
-            zy = ((long double)Row.NtResult - NtMean) / NtSd;
-            NtSum += zx * zy;
-
-            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
-            DiffSum += zx * zy;
-	    }
-	}
-
-    AsCorr = AsSum / (Count - 1);
-    NtCorr = NtSum / (Count - 1);
-    DiffCorr = DiffSum / (Count - 1);
-	
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Openness");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", AsCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", NtCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", DiffCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-
-	AsSum = 0;
-	NtSum = 0;
-	DiffSum = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-        {
-            zx = ((long double)Row.Ua - AMean) / ASd;
-
-            zy = ((long double)Row.AsResult - AsMean) / AsSd;
-            AsSum += zx * zy;
-        
-            zy = ((long double)Row.NtResult - NtMean) / NtSd;
-            NtSum += zx * zy;
-
-            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
-            DiffSum += zx * zy;
-	    }
-	}
-
-    AsCorr = AsSum / (Count - 1);
-    NtCorr = NtSum / (Count - 1);
-    DiffCorr = DiffSum / (Count - 1);
-	
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Agreeableness");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", AsCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", NtCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", DiffCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-	
-	AsSum = 0;
-	NtSum = 0;
-	DiffSum = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-        {
-            zx = ((long double)Row.Uc - CMean) / CSd;
-
-            zy = ((long double)Row.AsResult - AsMean) / AsSd;
-            AsSum += zx * zy;
-        
-            zy = ((long double)Row.NtResult - NtMean) / NtSd;
-            NtSum += zx * zy;
-
-            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
-            DiffSum += zx * zy;
-	    }
-	}
-
-    AsCorr = AsSum / (Count - 1);
-    NtCorr = NtSum / (Count - 1);
-    DiffCorr = DiffSum / (Count - 1);
-	
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Conscientousness");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", AsCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", NtCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 25);
-	sprintf(str, "%5.2Lf\r\n", DiffCorr);
-	file.Write(str);
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-	file.Write("</table>");
-
-
-	file.Write("<h2>Big-five correlations with Aspie-quiz groups</h2>");
-
-	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 20);
-	file.Write("Group");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 16);
-	file.Write("Neuroticism");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 16);
-	file.Write("Extroversion");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 16);
-	file.Write("Openness");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 16);
-	file.Write("Agreeableness");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 16);
-	file.Write("Conscientousness");
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-
-	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-		GrpSum[grp] = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-		{
-			zx = ((long double)Row.Un - NMean) / NSd;
-
-			for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-			{
-				if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
-				{
-					zy = ((long double)Row.GroupResult[grp] - GrpMean[grp]) / GrpSd[grp];
-					GrpSum[grp] += zx * zy;
-				}
-			}
-		}
-	}
-
-	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-		NGrpCorr[grp] = GrpSum[grp] / (Count - 1);
-
-	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-		GrpSum[grp] = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-		{
-			zx = ((long double)Row.Ue - EMean) / ESd;
-
-			for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-			{
-				if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
-				{
-					zy = ((long double)Row.GroupResult[grp] - GrpMean[grp]) / GrpSd[grp];
-					GrpSum[grp] += zx * zy;
-				}
-			}
-		}
-	}
-
-	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-		EGrpCorr[grp] = GrpSum[grp] / (Count - 1);
-
-	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-		GrpSum[grp] = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-		{
-			zx = ((long double)Row.Uo - OMean) / OSd;
-
-			for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-			{
-				if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
-				{
-					zy = ((long double)Row.GroupResult[grp] - GrpMean[grp]) / GrpSd[grp];
-					GrpSum[grp] += zx * zy;
-				}
-			}
-		}
-	}
-
-	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-		OGrpCorr[grp] = GrpSum[grp] / (Count - 1);
-
-	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-		GrpSum[grp] = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-		{
-			zx = ((long double)Row.Ua - AMean) / ASd;
-
-			for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-			{
-				if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
-				{
-					zy = ((long double)Row.GroupResult[grp] - GrpMean[grp]) / GrpSd[grp];
-					GrpSum[grp] += zx * zy;
-				}
-			}
-		}
-	}
-
-	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-		AGrpCorr[grp] = GrpSum[grp] / (Count - 1);
-
-	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-		GrpSum[grp] = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Ua)
-		{
-			zx = ((long double)Row.Uc - CMean) / CSd;
-
-			for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-			{
-				if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
-				{
-					zy = ((long double)Row.GroupResult[grp] - GrpMean[grp]) / GrpSd[grp];
-					GrpSum[grp] += zx * zy;
-				}
-            }
-	    }
-	}
-
-	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-        CGrpCorr[grp] = GrpSum[grp] / (Count - 1);
-
-    for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-    {
-        if (GrpMean[grp] > 0 && GrpSd[grp] > 0)
-        {
-
-        	file.Write("<tr style='height:24.75pt'>");
-
-        	WriteCenteredFieldHeader(file, 20);
-	        file.Write(Group[grp].PosName);
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 16);
-        	sprintf(str, "%5.2Lf\r\n", NGrpCorr[grp]);
-        	file.Write(str);
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 16);
-        	sprintf(str, "%5.2Lf\r\n", EGrpCorr[grp]);
-        	file.Write(str);
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 16);
-        	sprintf(str, "%5.2Lf\r\n", OGrpCorr[grp]);
-        	file.Write(str);
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 16);
-        	sprintf(str, "%5.2Lf\r\n", AGrpCorr[grp]);
-        	file.Write(str);
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 16);
-        	sprintf(str, "%5.2Lf\r\n", CGrpCorr[grp]);
-        	file.Write(str);
-        	WriteFieldFooter(file);
-
-        	file.Write("</tr>");
-        }
-    }
-
-    file.Write("</table>");
 
 }
-
