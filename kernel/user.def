@@ -409,5 +409,6 @@ read_icsp_data_nr           = 343
 get_gateway_nr              = 344
 
 get_free_physical_nr		= 345
+get_free_gdt_nr             = 346
 
 usergate_entries			= 370

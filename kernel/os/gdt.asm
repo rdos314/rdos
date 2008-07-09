@@ -152,11 +152,18 @@ init_gdt	PROC near
 	xor cl,cl
 	mov ax,allocate_gdt_nr
 	RegisterOsGate
+;	
 	mov si,OFFSET free_gdt
 	mov di,OFFSET free_name
 	xor cl,cl
 	mov ax,free_gdt_nr
 	RegisterOsGate
+;	
+	mov si,OFFSET get_free_gdt
+	mov di,OFFSET get_free_gdt_name
+	xor dx,dx
+	mov ax,get_free_gdt_nr
+	RegisterBimodalUserGate
 ;
 	xor edx,edx
 	mov bx,__0000
@@ -327,6 +334,57 @@ free_gdt	PROC far
 	pop ds
 	ret
 free_gdt	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetFreeGdtEntries
+;
+;		DESCRIPTION:	Get Free GDT entries
+;
+;		RETURNS:		AX      Number of free entries
+;												
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_free_gdt_name	DB 'Get Free Gdt Entries',0
+
+get_free_gdt	PROC far
+	push ds
+	push es
+	push si
+	push di
+;
+    xor ax,ax
+	mov si,system_data_sel
+	mov ds,si
+	mov si,gdt_sel
+	mov es,si
+	EnterSection ds:gdt_section
+	xor di,di
+	mov si,es:[di]
+
+gfgLoop:
+	or si,si
+	jz gfgDone
+;
+    inc ax
+    or ax,ax
+    jz gfgDone
+;
+	mov si,es:[si]
+    jmp gfgLoop
+
+gfgDone:
+	LeaveSection ds:gdt_section
+;
+    pop di
+    pop si
+    pop es
+    pop ds
+    retf32
+get_free_gdt    Endp
 
 code	ENDS
 

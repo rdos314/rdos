@@ -1676,3 +1676,7 @@ INFO
 :TEXT_INFO_PHYSICAL
 Free physical memory: %d kB
 .
+
+:TEXT_INFO_GDT
+Free GDT entries: %d
+.

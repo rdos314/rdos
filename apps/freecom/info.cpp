@@ -146,6 +146,7 @@ void TInfoCommand::InitOptions()
 int TInfoCommand::Execute(char *param)
 {
     long PhysMem;
+	 long Gdt;
 
 	InitOptions();
 
@@ -156,6 +157,9 @@ int TInfoCommand::Execute(char *param)
 	FMsg.printf(TEXT_INFO_PHYSICAL, PhysMem / 1024);
 	Write(FMsg.GetData());
 
+	Gdt = RdosGetFreeGdt();
+	FMsg.printf(TEXT_INFO_GDT, Gdt);
+	Write(FMsg.GetData());
+
 	return 0;
 }
-

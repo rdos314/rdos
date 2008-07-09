@@ -110,6 +110,11 @@ GetFreePhysical	MACRO
 	UserGate get_free_physical_nr
 				ENDM
 
+;	AX		Number of free GDT entries
+GetFreeGdt	MACRO
+	UserGate get_free_gdt_nr
+				ENDM
+
 ; IN  EAX     Number of bytes
 ; OUT ES      Selector
 AllocateDosMem  MACRO
