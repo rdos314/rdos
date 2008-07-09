@@ -1666,3 +1666,13 @@ Display list of attached USB devices
 
 USB
 .
+
+:TEXT_CMDHELP_INFO
+Shows system resources
+
+INFO
+.
+
+:TEXT_INFO_PHYSICAL
+Free physical memory: %d kB
+.

@@ -578,11 +578,6 @@ AllocateMultiplePhysical	MACRO
 	OsGate allocate_multiple_physical_nr
 					ENDM
 
-;	EAX		ANTAL BYTE LEDIGT MINNE
-GetFreePhysical	MACRO
-	OsGate get_free_physical_nr
-					ENDM
-
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 ;       AL              PRIORITET

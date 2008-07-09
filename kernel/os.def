@@ -145,7 +145,6 @@ allocate_fixed_vm_linear_nr	EQU 69
 allocate_physical_nr		EQU 70
 allocate_dma_physical_nr	EQU 71
 free_physical_nr			EQU 72
-get_free_physical_nr		EQU 73
 
 ; multitasking
 

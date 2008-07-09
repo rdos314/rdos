@@ -72,6 +72,7 @@
 #include "reboot.h"
 #include "capture.h"
 #include "usb.h"
+#include "info.h"
 
 #include "file.h"
 #include "path.h"
@@ -105,6 +106,7 @@ static TCommandFactory *erase;
 static TCommandFactory *exitcmd;
 static TCommandFactory *fd2file;
 static TCommandFactory *help;
+static TCommandFactory *info;
 static TCommandFactory *initfd;
 static TCommandFactory *inithd;
 static TCommandFactory *md;
@@ -148,69 +150,70 @@ int TSession::Count = 0;
 ##########################################################################*/
 TSession::TSession()
 {
-    FArgList = 0;
-    FEcho = TRUE;
-    FCmdFile = new TFile("CON");
-    FInputFile = new TFile("CON");
-    FOutputFile = new TFile("CON");
-    FErrorFile = new TFile("CON");
+	 FArgList = 0;
+	 FEcho = TRUE;
+	 FCmdFile = new TFile("CON");
+	 FInputFile = new TFile("CON");
+	 FOutputFile = new TFile("CON");
+	 FErrorFile = new TFile("CON");
 
-    if (Count == 0)
-    {
-    	rdfs = new TRdfsPartitionFactory;
-    	fat12 = new TFat12PartitionFactory;
-    	fat16 = new TFat16PartitionFactory;
-    	fat32 = new TFat32PartitionFactory;
-    	flashfs = new TFlashFsPartitionFactory;
+	 if (Count == 0)
+	 {
+		rdfs = new TRdfsPartitionFactory;
+		fat12 = new TFat12PartitionFactory;
+		fat16 = new TFat16PartitionFactory;
+		fat32 = new TFat32PartitionFactory;
+		flashfs = new TFlashFsPartitionFactory;
 
-    	wait = new TWaitFactory;
-    	usb = new TUsbFactory;
-    	timev = new TTimeFactory;
-    	type = new TTypeFactory;
-    	synctime = new TSyncTimeFactory;
-    	state = new TStateFactory;
-    	set = new TSetFactory;
-    	rmpart = new TRemovePartitionFactory;
-    	rmdir = new TRmdirFactory;
-    	rem = new TRemFactory;
-    	reboot = new TRebootFactory;
-    	rd = new TRdFactory;
-    	prompt = new TPromptFactory;
-    	ping = new TPingFactory;
-    	pause = new TPauseFactory;
-    	path = new TPathFactory;
-    	showpart = new TShowPartitionFactory;
-    	move = new TMoveFactory;
-    	mount = new TMountFactory;
-    	mkpart = new TMakePartitionFactory;
-    	mkdir = new TMkdirFactory;
-    	md = new TMdFactory;
-    	inithd = new TInitHdFactory;
-    	initfd = new TInitFdFactory;
-    	exitcmd = new TExitFactory;
-    	fd2file = new TFloppyToFileFactory;
-    	erase = new TEraseFactory;
-    	echo = new TEchoFactory;
-    	dir = new TDirFactory;
-    	del = new TDelFactory;
-    	date = new TDateFactory;
-    	cpy = new TCopyFactory;
-    	newsess = new TNewSessionFactory;
-    	cls = new TClsFactory;
-    	chdir = new TChdirFactory;
-    	cd = new TCdFactory;
-    	capture = new TCaptureFactory;
-    	call = new TCallFactory;
-    	help = new THelpFactory;
+		wait = new TWaitFactory;
+		usb = new TUsbFactory;
+		timev = new TTimeFactory;
+		type = new TTypeFactory;
+		synctime = new TSyncTimeFactory;
+		state = new TStateFactory;
+		set = new TSetFactory;
+		rmpart = new TRemovePartitionFactory;
+		rmdir = new TRmdirFactory;
+		rem = new TRemFactory;
+		reboot = new TRebootFactory;
+		rd = new TRdFactory;
+		prompt = new TPromptFactory;
+		ping = new TPingFactory;
+		pause = new TPauseFactory;
+		path = new TPathFactory;
+		showpart = new TShowPartitionFactory;
+		move = new TMoveFactory;
+		mount = new TMountFactory;
+		mkpart = new TMakePartitionFactory;
+		mkdir = new TMkdirFactory;
+		md = new TMdFactory;
+		inithd = new TInitHdFactory;
+		initfd = new TInitFdFactory;
+		info = new TInfoFactory;
+		exitcmd = new TExitFactory;
+		fd2file = new TFloppyToFileFactory;
+		erase = new TEraseFactory;
+		echo = new TEchoFactory;
+		dir = new TDirFactory;
+		del = new TDelFactory;
+		date = new TDateFactory;
+		cpy = new TCopyFactory;
+		newsess = new TNewSessionFactory;
+		cls = new TClsFactory;
+		chdir = new TChdirFactory;
+		cd = new TCdFactory;
+		capture = new TCaptureFactory;
+		call = new TCallFactory;
+		help = new THelpFactory;
 
-    	History = new TStringList;
+		History = new TStringList;
 		Keyboard = new TKeyboardDevice;
 
-    }
+	 }
 
-    Count++;
+	 Count++;
 
-    WriteWelcome();
+	 WriteWelcome();
 }
 
 /*##########################################################################
@@ -226,30 +229,30 @@ TSession::TSession()
 ##########################################################################*/
 TSession::TSession(const TSession &src)
 {
-    Count++;
+	 Count++;
 
-    FArgList = 0;
-    FEcho = TRUE;
-    
+	 FArgList = 0;
+	 FEcho = TRUE;
+
 	if (src.FCmdFile->IsDevice())
-        FCmdFile = new TFile("CON");
-    else
-        FCmdFile = new TFile(*src.FCmdFile);
+		  FCmdFile = new TFile("CON");
+	 else
+		  FCmdFile = new TFile(*src.FCmdFile);
 
 	if (src.FInputFile->IsDevice())
-        FInputFile = new TFile("CON");
-    else
-        FInputFile = new TFile(*src.FInputFile);
-        
+		  FInputFile = new TFile("CON");
+	 else
+		  FInputFile = new TFile(*src.FInputFile);
+
 	if (src.FOutputFile->IsDevice())
-        FOutputFile = new TFile("CON");
-    else
-        FOutputFile = new TFile(*src.FOutputFile);
+		  FOutputFile = new TFile("CON");
+	 else
+		  FOutputFile = new TFile(*src.FOutputFile);
 
 	if (src.FErrorFile->IsDevice())
-        FErrorFile = new TFile("CON");
-    else
-        FErrorFile = new TFile(*src.FErrorFile);
+		  FErrorFile = new TFile("CON");
+	 else
+		  FErrorFile = new TFile(*src.FErrorFile);
 }
 
 /*##########################################################################
@@ -281,7 +284,7 @@ TSession::~TSession()
     	delete fat32;
     	delete flashfs;
 
-        delete wait;
+		  delete wait;
         delete usb;
     	delete timev;
 	    delete type;
@@ -303,15 +306,16 @@ TSession::~TSession()
     	delete mkpart;
     	delete mkdir;
     	delete md;
-    	delete inithd;
-    	delete initfd;
-    	delete fd2file;
-    	delete exitcmd;
-    	delete erase;
-    	delete echo;
-    	delete dir;
-    	delete del;
-    	delete date;
+		delete inithd;
+		delete initfd;
+		delete info;
+		delete fd2file;
+		delete exitcmd;
+		delete erase;
+		delete echo;
+		delete dir;
+		delete del;
+		delete date;
     	delete cpy;
     	delete newsess;
     	delete cls;
@@ -575,7 +579,7 @@ int TSession::ReadCon(char *str, int maxsize)
 
 		if (ok)
 		{
-            switch (VirtKey)
+				switch (VirtKey)
             {
                 case VK_BACK:
                     if (Count && CurrPos)
@@ -605,7 +609,7 @@ int TSession::ReadCon(char *str, int maxsize)
                             else
                             {
                                 CurrX = MAX_X;
-                                CurrY--;
+										  CurrY--;
                             }
                             RdosSetCursorPosition(CurrY, CurrX);
                             RdosWriteString(&str[CurrPos - 1]);
@@ -695,7 +699,7 @@ int TSession::ReadCon(char *str, int maxsize)
                         str[CurrPos] = prevstr[CurrPos];
                         RdosWriteChar(str[CurrPos]);
                     	RdosGetCursorPosition(&CurrY, &CurrX);
-                        CurrPos++;
+								CurrPos++;
                         Count = CurrPos;
                         str[Count] = 0;
                     }
@@ -725,7 +729,7 @@ int TSession::ReadCon(char *str, int maxsize)
 
 						  if (ok)
                     {
-                    	memset(str, ' ', Count);
+							memset(str, ' ', Count);
                         RdosSetCursorPosition(OrgY, OrgX);
                         RdosWriteString(str);
                 	
@@ -755,7 +759,7 @@ int TSession::ReadCon(char *str, int maxsize)
                         RdosGetCursorPosition(&CurrY, &CurrX);
                         Count = strlen(str);
                         CurrPos = Count;
-                    }
+						  }
                     break;
 
                 case VK_LEFT:
@@ -785,7 +789,7 @@ int TSession::ReadCon(char *str, int maxsize)
 	                        str[CurrPos] = (char)ExtKey;
     	                    RdosWriteChar(str[CurrPos]);
     	                    RdosGetCursorPosition(&CurrY, &CurrX);
-	                        str[Count] = 0;
+									str[Count] = 0;
 	                        RdosWriteString(&str[CurrPos + 1]);
     	                    RdosSetCursorPosition(CurrY, CurrX);
                         }

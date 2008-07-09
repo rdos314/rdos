@@ -213,9 +213,10 @@ init_physical_gates	PROC near
 	mov es,ax
 	mov si,OFFSET get_free_physical_mem
 	mov di,OFFSET get_free_physical_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_free_physical_nr
-	RegisterOsGate
+	RegisterBimodalUserGate
+;	
 	mov si,OFFSET free_physical
 	mov di,OFFSET free_physical_name
 	xor cl,cl
@@ -670,7 +671,7 @@ get_free_physical_mem	PROC far
 	mov eax,ds:phys_free_pages
 	shl eax,12
 	pop ds
-	ret
+	retf32
 get_free_physical_mem	ENDP
 
 PAGE

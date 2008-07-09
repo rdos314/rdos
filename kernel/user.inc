@@ -105,6 +105,11 @@ ENDIF
 
 ;;;;;;;;;;;;;; MEMORY ;;;;;;;;;;;;;;;;;;;
 
+;	EAX		Number of free physical bytes
+GetFreePhysical	MACRO
+	UserGate get_free_physical_nr
+				ENDM
+
 ; IN  EAX     Number of bytes
 ; OUT ES      Selector
 AllocateDosMem  MACRO
