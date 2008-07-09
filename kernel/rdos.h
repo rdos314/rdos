@@ -100,6 +100,8 @@ int __stdcall RdosAppDebug();
 
 int __stdcall RdosGetFreePhysical();
 int __stdcall RdosGetFreeGdt();
+int __stdcall RdosGetFreeSmallKernelLinear();
+int __stdcall RdosGetFreeBigKernelLinear();
 
 int __stdcall RdosGetMaxComPort();
 int __stdcall RdosOpenCom(int ID, long BaudRate, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 

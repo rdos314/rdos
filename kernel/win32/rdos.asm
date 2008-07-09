@@ -630,6 +630,38 @@ RdosGetFreeGdt	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosGetFreeSmallKernelLinear
+;
+;		description:	Get free small memory pool in kernel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetFreeSmallKernelLinear
+
+RdosGetFreeSmallKernelLinear	Proc
+	UserGate available_small_linear_nr
+	ret
+RdosGetFreeSmallKernelLinear	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetFreeBigKernelLinear
+;
+;		description:	Get free big memory pool in kernel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetFreeBigKernelLinear
+
+RdosGetFreeBigKernelLinear	Proc
+	UserGate available_big_linear_nr
+	ret
+RdosGetFreeBigKernelLinear	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosAllocateMem
 ;
 ;		description:	Allocate memory

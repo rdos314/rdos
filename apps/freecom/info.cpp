@@ -147,6 +147,9 @@ int TInfoCommand::Execute(char *param)
 {
     long PhysMem;
 	 long Gdt;
+	 long Linear;
+	 long mb;
+	 long kb;
 
 	InitOptions();
 
@@ -154,11 +157,25 @@ int TInfoCommand::Execute(char *param)
 		return 1;
 
 	PhysMem = RdosGetFreePhysical();
-	FMsg.printf(TEXT_INFO_PHYSICAL, PhysMem / 1024);
+	mb = PhysMem / 1024 / 1024;
+	kb = (PhysMem - mb * 1024 * 1024) / 104858;
+	FMsg.printf(TEXT_INFO_PHYSICAL, mb, kb);
 	Write(FMsg.GetData());
 
 	Gdt = RdosGetFreeGdt();
 	FMsg.printf(TEXT_INFO_GDT, Gdt);
+	Write(FMsg.GetData());
+
+	Linear = RdosGetFreeSmallKernelLinear();
+	mb = Linear / 1024 / 1024;
+	kb = (Linear - mb * 1024 * 1024) / 104858;
+	FMsg.printf(TEXT_INFO_SMALL_KERNEL, mb, kb);
+	Write(FMsg.GetData());
+
+	Linear = RdosGetFreeBigKernelLinear();
+	mb = Linear / 1024 / 1024;
+	kb = (Linear - mb * 1024 * 1024) / 104858;
+	FMsg.printf(TEXT_INFO_BIG_KERNEL, mb, kb);
 	Write(FMsg.GetData());
 
 	return 0;

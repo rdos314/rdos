@@ -115,6 +115,16 @@ GetFreeGdt	MACRO
 	UserGate get_free_gdt_nr
 				ENDM
 
+;	EAX	    Number of free bytes
+AvailableBigLinear	MACRO
+	UserGate available_big_linear_nr
+					ENDM
+
+;	EAX		Number of free bytes
+AvailableSmallLinear	MACRO
+	UserGate available_small_linear_nr
+					ENDM
+
 ; IN  EAX     Number of bytes
 ; OUT ES      Selector
 AllocateDosMem  MACRO

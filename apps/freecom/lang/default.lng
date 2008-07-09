@@ -1674,9 +1674,17 @@ INFO
 .
 
 :TEXT_INFO_PHYSICAL
-Free physical memory: %d kB
+Free physical memory: %d.%05d MB
 .
 
 :TEXT_INFO_GDT
 Free GDT entries: %d
+.
+
+:TEXT_INFO_SMALL_KERNEL
+Free small kernel memory: %d.%05d MB
+.
+
+:TEXT_INFO_BIG_KERNEL
+Free big kernel memory: %d.%05d MB
 .

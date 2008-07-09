@@ -127,8 +127,6 @@ reserve_local_linear_nr		EQU 54
 allocate_vm_linear_nr		EQU 55
 free_linear_nr				EQU 56
 resize_linear_nr			EQU 57
-available_big_linear_nr		EQU 58
-available_small_linear_nr	EQU 59
 used_big_linear_nr			EQU 60
 used_small_linear_nr		EQU 61
 used_local_linear_thread_nr	EQU 62

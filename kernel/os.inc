@@ -486,16 +486,6 @@ ResizeLinear	MACRO
 					ENDM
 
 ;	EAX		ANTAL BYTES
-AvailableBigLinear	MACRO
-	OsGate available_big_linear_nr
-					ENDM
-
-;	EAX		ANTAL BYTES
-AvailableSmallLinear	MACRO
-	OsGate available_small_linear_nr
-					ENDM
-
-;	EAX		ANTAL BYTES
 UsedBigLinear	MACRO
 	OsGate used_big_linear_nr
 					ENDM

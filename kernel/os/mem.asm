@@ -260,15 +260,15 @@ init_mem	PROC near
 ;
 	mov si,OFFSET available_big_linear
 	mov di,OFFSET available_big_linear_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,available_big_linear_nr
-	RegisterOsGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET available_small_linear
 	mov di,OFFSET available_small_linear_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,available_small_linear_nr
-	RegisterOsGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET used_big_linear
 	mov di,OFFSET used_big_linear_name
@@ -1347,7 +1347,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			AVAILABLE_BIG_LINEAR
+;		NAME:			AvailableBigLinear
 ;
 ;		DESCRIPTION:	Available page-aligned kernel memory
 ;
@@ -1363,7 +1363,7 @@ available_big_linear	PROC far
 	mov ds,ax
 	mov eax,ds:big_avail_mem
 	pop ds
-	ret
+	retf32
 available_big_linear	ENDP
 
 PAGE
@@ -1371,7 +1371,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			AVAILABLE_SMALL_LINEAR
+;		NAME:			AvailableSmallLinear
 ;
 ;		DESCRIPTION:	Available byte-aligned kernel memory
 ;
@@ -1387,7 +1387,7 @@ available_small_linear	PROC far
 	mov ds,ax
 	mov eax,ds:small_avail_mem
 	pop ds
-	ret
+	retf32
 available_small_linear	ENDP
 
 PAGE
