@@ -47,6 +47,10 @@ create_control_proc	DD ?
 ; OUT FS        Pipe selector
 create_bulk_proc	DD ?
 
+; IN  AL        Interval
+; OUT FS        Pipe selector
+create_interrupt_proc	DD ?
+
 ; IN  FS        Pipe selector
 ; IN  CX        Size
 ; IN  ES:EDI    Data

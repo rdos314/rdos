@@ -1068,6 +1068,25 @@ CreateBulk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    CreateIntr
+;
+;		DESCRIPTION:    Create interrupt pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       AL      Interval
+;
+;       RETURNS:        FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntr   Proc far
+    int 3
+    ret
+CreateIntr  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    AddOutBuffer
 ;
 ;		DESCRIPTION:    Allocate output buffer
@@ -1838,18 +1857,19 @@ UpdatePort   Endp
 uhci_tab:
 ut00 DW OFFSET CreateControl,   	uhci_code_sel
 ut01 DW OFFSET CreateBulk,      	uhci_code_sel
-ut02 DW OFFSET AddSetup,    	    uhci_code_sel
-ut03 DW OFFSET AddOut,      	    uhci_code_sel
-ut04 DW OFFSET AddIn,        	    uhci_code_sel
-ut05 DW OFFSET AddStatusOut,        uhci_code_sel
-ut06 DW OFFSET AddStatusIn,        	uhci_code_sel
-ut07 DW OFFSET IssueTransfer,       uhci_code_sel
-ut08 DW OFFSET EmptyQueue,          uhci_code_sel
-ut09 DW OFFSET IsPipeSignalled,     uhci_code_sel
-ut10 DW OFFSET GetData,             uhci_code_sel
-ut11 DW OFFSET ClosePipe,           uhci_code_sel
-ut12 DW OFFSET WaitForCompletion,   uhci_code_sel
-ut13 DW OFFSET ChangeAddress,       uhci_code_sel
+ut02 DW OFFSET CreateIntr,      	uhci_code_sel
+ut03 DW OFFSET AddSetup,    	    uhci_code_sel
+ut04 DW OFFSET AddOut,      	    uhci_code_sel
+ut05 DW OFFSET AddIn,        	    uhci_code_sel
+ut06 DW OFFSET AddStatusOut,        uhci_code_sel
+ut07 DW OFFSET AddStatusIn,        	uhci_code_sel
+ut08 DW OFFSET IssueTransfer,       uhci_code_sel
+ut09 DW OFFSET EmptyQueue,          uhci_code_sel
+ut10 DW OFFSET IsPipeSignalled,     uhci_code_sel
+ut11 DW OFFSET GetData,             uhci_code_sel
+ut12 DW OFFSET ClosePipe,           uhci_code_sel
+ut13 DW OFFSET WaitForCompletion,   uhci_code_sel
+ut14 DW OFFSET ChangeAddress,       uhci_code_sel
 
 InitFunction    Proc near
     pushad
@@ -1866,7 +1886,7 @@ InitFunction    Proc near
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,14
+    mov cx,15
 
 ifTabLoop:
     lods dword ptr cs:[si]

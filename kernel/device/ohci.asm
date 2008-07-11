@@ -136,6 +136,15 @@ ohc_bulk_linear     DD ?
 ohc_pipe_list       DW ?
 ohc_reclaim_list    DD ?
 
+ohc_32_cnt          DB 32 DUP(?)
+ohc_16_cnt          DB 16 DUP(?)
+ohc_8_cnt           DB 8 DUP(?)
+ohc_4_cnt           DB 4 DUP(?)
+ohc_2_cnt           DB 2 DUP(?)
+ohc_1_cnt           DB ?
+
+ohc_curr_cnt        DB 32 DUP(?)
+
 ohci_func_sel    ENDS
 
 
@@ -623,6 +632,207 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    GetIntrEd
+;
+;		DESCRIPTION:	Get interrupt ED
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       FS      Pipe sel
+;                       CL      Interval
+;
+;       RETURNS:        DI      Offset to ED list entry to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetIntrEd	PROC near
+    push ax
+    push bx
+    push cx
+    push si
+    push bp
+;
+    cmp cl,1
+    jbe gie1
+;
+    cmp cl,3
+    jbe gie2
+;
+    cmp cl,7
+    jbe gie4
+;
+    cmp cl,15
+    jbe gie8
+;
+    cmp cl,31
+    jbe gie16
+
+gie32:
+    mov bx,OFFSET ohc_32_cnt
+    mov si,OFFSET ohc_32_es
+    mov cx,32
+    jmp gieLnkOk
+
+gie16:
+    mov bx,OFFSET ohc_16_cnt
+    mov si,OFFSET ohc_16_es
+    mov cx,16
+    jmp gieLnkOk
+
+gie8:
+    mov bx,OFFSET ohc_8_cnt
+    mov si,OFFSET ohc_8_es
+    mov cx,8
+    jmp gieLnkOk
+
+gie4:
+    mov bx,OFFSET ohc_4_cnt
+    mov si,OFFSET ohc_4_es
+    mov cx,4
+    jmp gieLnkOk
+
+gie2:
+    mov bx,OFFSET ohc_2_cnt
+    mov si,OFFSET ohc_2_es
+    mov cx,2
+    jmp gieLnkOk
+
+gie1:
+    mov bx,OFFSET ohc_1_cnt
+    mov si,OFFSET ohc_1_es
+    mov cx,1
+
+gieLnkOk:
+    push cx
+    mov di,OFFSET ohc_curr_cnt
+    xor al,al
+
+gieInitCnt:
+    mov [di],al
+    inc di
+    loop gieInitCnt
+;    
+    pop cx
+;
+    push bx
+    push cx
+    push si
+;   
+    mov si,1
+
+gieAddListLoop:    
+    push cx
+    mov di,OFFSET ohc_curr_cnt
+
+gieAddCount:
+    mov al,[bx]
+    mov bp,si    
+
+gieAddLoop:
+    add [di],al
+    inc di
+    sub bp,1
+    jnz gieAddLoop
+;    
+    inc bx
+    loop gieAddCount
+;
+    pop cx
+;
+    shl si,1
+    shr cx,1
+    or cx,cx
+    jnz gieAddListLoop    
+;
+    pop si
+    pop cx
+    pop bx
+;
+    mov ah,0FFh
+    mov di,OFFSET ohc_curr_cnt
+
+gieSmallestLoop:
+    mov al,[di]
+    cmp al,ah
+    jae gieSmallestNext
+;
+    mov ah,al
+    mov bp,di
+
+gieSmallestNext:
+    inc di
+    loop gieSmallestLoop
+;
+    mov di,bp
+    sub di,OFFSET ohc_curr_cnt
+;
+    inc byte ptr [bx+di]
+    shl di,5
+    add di,si
+;    
+    pop bp
+    pop si
+    pop cx
+    pop bx
+    pop ax
+    ret
+GetIntrEd  ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddIntrEd
+;
+;		DESCRIPTION:	Add interrupt ED 
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       FS      Pipe sel
+;                       CL      Interval
+;
+;       RETURNS:        EDX     Linear address of ED added
+;                       EAX     Physical address of ED added
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIntrEd	PROC near
+    push ebx
+;
+    call AllocateEd
+;
+    call GetIntrEd
+    mov ebx,ds:[di].oes_next_va
+    mov es:[edx].oes_next_va,ebx
+    mov ebx,ds:[di].oes_nexted
+    mov es:[edx].oes_nexted,ebx
+;
+    mov ds:[di].oes_next_va,edx
+    mov ds:[di].oes_nexted,eax
+;
+    mov ebx,edx
+    push eax
+    push edx
+;    
+    call AllocateTd
+    mov es:[ebx].oes_headp,eax
+    mov es:[ebx].oes_tailp,eax
+    mov es:[ebx].oes_head_va,edx
+    mov es:[ebx].oes_tail_va,edx
+;    
+    pop edx
+    pop eax
+;    
+    pop ebx
+    ret
+AddIntrEd  ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    InitPipeEd
 ;
 ;		DESCRIPTION:    Init endpoint descriptor from pipe
@@ -899,6 +1109,15 @@ ci_int4_done:
     call InitEd
     mov ds:[bx].oes_nexted,eax
     mov ds:[bx].oes_next_va,edx
+;   
+    mov cx,32+16+8+4+2+1
+    mov bx,OFFSET ohc_32_cnt
+    xor al,al
+
+ciInitCount:
+    mov ds:[bx],al
+    inc bx
+    loop ciInitCount
 ;    
     pop edx
     pop cx
@@ -982,6 +1201,47 @@ CreateBulk   Proc far
     pop es
     ret
 CreateBulk   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CreateIntr
+;
+;		DESCRIPTION:    Create interrupt pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       AL      Interval
+;
+;       RETURNS:        FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntr   Proc far
+    push es
+    pushad
+;    
+    mov cl,al
+    mov eax,SIZE ohci_pipe
+    AllocateSmallGlobalMem
+    push cx
+    xor di,di
+    mov cx,ax
+    xor al,al
+    rep stosb
+    pop cx
+;    
+    mov ax,es
+    mov fs,ax
+    mov dx,flat_sel
+    mov es,dx
+    call AddIntrEd
+    mov fs:osp_ed,edx
+    call InsertPipe
+;
+    popad
+    pop es
+    ret
+CreateIntr  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1885,18 +2145,19 @@ ohci_timer  Endp
 ohci_tab:
 ot00 DW OFFSET CreateControl,   	ohci_code_sel
 ot01 DW OFFSET CreateBulk,      	ohci_code_sel
-ot02 DW OFFSET AddSetup,    	    ohci_code_sel
-ot03 DW OFFSET AddOut,      	    ohci_code_sel
-ot04 DW OFFSET AddIn,        	    ohci_code_sel
-ot05 DW OFFSET AddStatusOut,        ohci_code_sel
-ot06 DW OFFSET AddStatusIn,        	ohci_code_sel
-ot07 DW OFFSET IssueTransfer,       ohci_code_sel
-ot08 DW OFFSET EmptyQueue,          ohci_code_sel
-ot09 DW OFFSET IsPipeSignalled,     ohci_code_sel
-ot10 DW OFFSET GetData,             ohci_code_sel
-ot11 DW OFFSET ClosePipe,           ohci_code_sel
-ot12 DW OFFSET WaitForCompletion,   ohci_code_sel
-ot13 DW OFFSET ChangeAddress,       ohci_code_sel
+ot02 DW OFFSET CreateIntr,      	ohci_code_sel
+ot03 DW OFFSET AddSetup,    	    ohci_code_sel
+ot04 DW OFFSET AddOut,      	    ohci_code_sel
+ot05 DW OFFSET AddIn,        	    ohci_code_sel
+ot06 DW OFFSET AddStatusOut,        ohci_code_sel
+ot07 DW OFFSET AddStatusIn,        	ohci_code_sel
+ot08 DW OFFSET IssueTransfer,       ohci_code_sel
+ot09 DW OFFSET EmptyQueue,          ohci_code_sel
+ot10 DW OFFSET IsPipeSignalled,     ohci_code_sel
+ot11 DW OFFSET GetData,             ohci_code_sel
+ot12 DW OFFSET ClosePipe,           ohci_code_sel
+ot13 DW OFFSET WaitForCompletion,   ohci_code_sel
+ot14 DW OFFSET ChangeAddress,       ohci_code_sel
 
 InitFunction    Proc near
     push es
@@ -1908,7 +2169,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,14
+    mov cx,15
 
 ifTabLoop:
     lods dword ptr cs:[si]

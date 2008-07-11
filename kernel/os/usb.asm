@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; PCI.ASM
-; PCI support
+; USB.ASM
+; USB support
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
@@ -280,6 +280,52 @@ CreateBulk    Proc near
     pop es
     ret
 CreateBulk    Endp    
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateInterrupt
+;
+;		description:	Create interrupt-pipe
+;
+;       parameters:     DS      USB device selector
+;                       CX      Max data size
+;                       DL      Pipe #
+;                       DH      Interval
+;
+;       RETURNS:        FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateInterrupt    Proc near    
+    push es
+    push ax
+    push bx
+;    
+    mov al,dh
+    call ds:create_interrupt_proc    
+    movzx bx,dl
+    add bx,bx    
+    mov es:[bx].usbf_endpoint_arr,fs
+;    
+    mov fs:usbp_function_sel,es
+    mov al,es:usbf_address
+    mov fs:usbp_address,al
+    mov fs:usbp_endpoint,dl
+    mov fs:usbp_seq,0
+    mov fs:usbp_mode,MODE_INTR
+    mov fs:usbp_maxlen,cx
+    mov fs:usbp_device_sel,0
+    mov fs:usbp_usage,1
+    InitSection fs:usbp_section
+;
+    pop bx
+    pop ax
+    pop es
+    ret
+CreateInterrupt    Endp    
 
 PAGE
 
@@ -1817,6 +1863,9 @@ cudDescrLoop:
     cmp al,2
     je cudCreateBulk
 ;
+    cmp al,3
+    je cudCreateInterrupt
+;
     jmp cudNextDescr
 
 cudCreateBulk:
@@ -1827,7 +1876,18 @@ cudCreateBulk:
     mov dl,gs:[di].ued_address
     and dl,80h
     mov fs:usbp_dir,dl
+    jmp cudNextDescr
 
+cudCreateInterrupt:
+    mov cx,gs:[di].ued_maxsize
+    mov dl,gs:[di].ued_address
+    and dl,0Fh
+    mov dh,gs:[di].ued_interval
+    call CreateInterrupt
+    mov dl,gs:[di].ued_address
+    and dl,80h
+    mov fs:usbp_dir,dl
+    
 cudNextDescr:
     movzx cx,gs:[di].ucd_len
     add di,cx

@@ -97,13 +97,17 @@ uds_interface       DB ?
 uds_intr_in         DB ?
 uds_bulk_in         DB ?
 uds_bulk_out        DB ?
+uds_intr_handle     DW ?
 uds_in_handle       DW ?
 uds_out_handle      DW ?
+uds_intr_buffer     DW ?
 uds_in_buffer       DW ?
 uds_out_buffer      DW ?
+uds_intr_req        DW ?
 uds_in_req          DW ?
 uds_out_req         DW ?
 uds_delete          DB ?
+uds_intr_interval   DB ?
 
 usbcom_device_struc   ENDS
 
@@ -2131,6 +2135,27 @@ OpenPort    Proc near
     mov cx,ds:uds_maxsize
     mov es,ds:uds_out_buffer
     AddWriteUsbDataReq
+;
+    mov dl,ds:uds_intr_in
+    or dl,dl
+    jz opDone
+;    
+    movzx eax,ds:uds_maxsize
+    AllocateSmallGlobalMem
+    mov ds:uds_intr_buffer,es
+;    
+    mov bx,ds:cd_controller
+    mov ax,ds:cd_device
+    OpenUsbPipe    
+    mov ds:uds_intr_handle,bx
+;    
+    CreateUsbReq
+    mov ds:uds_intr_req,bx
+    mov cx,ds:uds_maxsize
+    mov es,ds:uds_intr_buffer
+    AddReadUsbDataReq
+
+opDone:        
     ret
 OpenPort    Endp
 
@@ -2168,6 +2193,22 @@ ClosePort    Proc near
     CloseUsbPipe    
     mov ds:uds_out_handle,0
 ;
+    mov bx,ds:uds_intr_req
+    or bx,bx
+    jz cIntrReqDone
+;
+    CloseUsbReq
+    mov ds:uds_intr_req,0
+
+cIntrReqDone:
+    mov bx,ds:uds_intr_handle
+    or bx,bx
+    jz cIntrHandleDone
+;    
+    CloseUsbPipe
+    mov ds:uds_intr_handle,0
+
+cIntrHandleDone:    
     mov es,ds:uds_in_buffer
     FreeMem    
     mov ds:uds_in_buffer,0
@@ -2175,6 +2216,16 @@ ClosePort    Proc near
     mov es,ds:uds_out_buffer
     FreeMem    
     mov ds:uds_out_buffer,0
+;
+    mov bx,ds:uds_intr_buffer
+    or bx,bx
+    jz cIntrMemDone
+;
+    mov es,bx
+    FreeMem
+    mov ds:uds_intr_buffer,0
+
+cIntrMemDone:    
     ret
 ClosePort   Endp
 
@@ -2256,6 +2307,7 @@ PollWrite    Proc near
     push ds
     push fs
 ;   
+    xor cx,cx
     mov bp,ds:uds_maxsize
     mov es,ds:uds_out_buffer
     mov ds,ds:uds_port_sel
@@ -2271,7 +2323,6 @@ PollWrite    Proc near
     mov di,1
 
 pwStartOk:
-    xor cx,cx
 	mov dx,ds:send_count
 	or dx,dx
 	jz pwDone
@@ -2389,6 +2440,24 @@ hdPollReadDo:
     call PollRead
 
 hdReadDone:
+    mov bx,ds:uds_intr_req
+    or bx,bx
+    jz hdWrite
+;
+    IsUsbReqStarted
+    jc hdStartIntr
+;
+    IsUsbReqReady
+    jc hdWrite
+;
+    GetUsbReqData
+    UsbReqDone
+    mov es,ds:uds_intr_buffer
+
+hdStartIntr:
+    StartUsbReq
+    
+hdWrite:
     mov bx,ds:uds_out_req
     IsUsbReqStarted
     jc hdCheckWrite
@@ -2580,7 +2649,8 @@ apDescrBulkOut:
 apDescrIntr:
     mov cl,es:[di].ued_address
     and cl,0Fh
-    movzx si,cl
+    mov ch,es:[di].ued_interval
+    mov si,cx
     jmp apDescrNext
 
 apBulkIn:
@@ -2620,6 +2690,7 @@ apDescrDone:
 ;
     mov dx,si
     mov es:uds_intr_in,dl
+    mov es:uds_intr_interval,dh
 ;    	
 	mov es:uds_maxsize,bp
 	mov es:uds_in_handle,0
@@ -2628,6 +2699,9 @@ apDescrDone:
 	mov es:uds_out_handle,0
 	mov es:uds_out_req,0
 	mov es:uds_out_buffer,0
+	mov es:uds_intr_handle,0
+	mov es:uds_intr_buffer,0
+	mov es:uds_intr_req,0
 	mov es:uds_delete,0
 	InitSection es:uds_section
 ;
@@ -2983,6 +3057,7 @@ pl19	DW 079Bh,	00027h	; SAGEM
 pl1A	DW 0413h,	02101h	; LEADTEK
 pl1B	DW 0E55h,	0110Bh	; SPEEDDRAGON
 pl1C	DW 0EA0h,	06858h	; OTI
+pl1D	DW 067Bh,	02303h	; PL2303
  
 AttachPL2303  Proc near
     push es
@@ -3002,7 +3077,7 @@ AttachPL2303  Proc near
     mov si,es:udd_vendor
     mov di,es:udd_prod
 
-    mov cx,01Dh
+    mov cx,01Eh
     mov bp,OFFSET plTab
 
 aplLoop:
