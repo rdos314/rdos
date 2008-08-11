@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# convf1.cpp
-# Convert exported quiz-f1 to binary file
+# convf3.cpp
+# Convert exported quiz-f3 to binary file
 #
 ########################################################################*/
 #include <stdio.h>
@@ -31,7 +31,7 @@
 
 #include "pop.h"
 #include "file.h"
-#include "quizdbf1.h"
+#include "quizdbf3.h"
 #include "convf.h"
 
 #define FALSE 0
@@ -40,9 +40,9 @@
 #define MAX_IN_ROW      0x8000
 #define MAX_REFERERS    1024
 
-const char InsertString[] = "INSERT INTO aspie-quiz-f1 VALUES(";
+const char InsertString[] = "INSERT INTO aspie-quiz-f3 VALUES(";
 
-TFile quizfile("quizf1.bin", 0);
+TFile quizfile("quizf3.bin", 0);
 
 
 /*##################  HandleRow ##########################
@@ -231,7 +231,7 @@ char *ProcessRow(char *str)
 	TQuizRow Row;
 	int quote;
 
-	for (fieldno = 0; fieldno < 170; fieldno++)
+	for (fieldno = 0; fieldno < 171; fieldno++)
 	{
 		valstr = str;
 
@@ -309,22 +309,30 @@ char *ProcessRow(char *str)
 					break;
 
 				case 10:
-					Row.Aspie = atoi(valstr);
+					Row.Children = atoi(valstr);
 					break;
 
 				case 11:
-					Row.ADHD = atoi(valstr);
+					Row.Relationship = atoi(valstr);
 					break;
 
 				case 12:
-					Row.OCD = atoi(valstr);
+					Row.Aspie = atoi(valstr);
 					break;
 
 				case 13:
-					Row.Social = atoi(valstr);
+					Row.ADHD = atoi(valstr);
 					break;
 
 				case 14:
+					Row.OCD = atoi(valstr);
+					break;
+
+				case 15:
+					Row.Social = atoi(valstr);
+					break;
+
+				case 16:
 					valstr = GetQuoted(valstr);
 					if (valstr)
 					{
@@ -337,28 +345,24 @@ char *ProcessRow(char *str)
 						Row.Referer[0] = 0;
 					break;
 
-				case 15:
+				case 17:
 					Row.AsResult = atoi(valstr);
 					break;
 
-				case 16:
+				case 18:
 					Row.NtResult = atoi(valstr);
 					break;
 
-				case 17:
-					Row.AqResult = atoi(valstr);
-					break;
-
 				default:
-					i = fieldno - 18;
+					i = fieldno - 19;
 					Row.Quiz[i] = atoi(valstr);
 					break;
 			}
 		}
 	}
 
-  	UpdateScore(&Row);
-    HandleRow(&Row);
+	UpdateScore(&Row);
+	HandleRow(&Row);
 
 	return str;
 }
@@ -377,7 +381,7 @@ int main(int argc, char **argv)
 	char *rowstr;
 	char *ptr;
 	long pos = 0;
-	TFile infile("quizf1.sql");
+	TFile infile("quizf3.sql");
 	int i;
 	int grp;
 	int max;
@@ -400,3 +404,4 @@ int main(int argc, char **argv)
 		infile.SetPos(pos);
 	}
 }
+
