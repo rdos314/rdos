@@ -231,7 +231,7 @@ char *ProcessRow(char *str)
 	TQuizRow Row;
 	int quote;
 
-	for (fieldno = 0; fieldno < 172; fieldno++)
+	for (fieldno = 0; fieldno < 173; fieldno++)
 	{
 		valstr = str;
 
