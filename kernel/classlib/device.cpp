@@ -5207,7 +5207,25 @@ void TDevice::Init()
 	OnOffline = 0;
 	OnIdle = 0;
 	OnBusy = 0;
+	OnStateChange = 0;
 	InsertDevice();
+}
+
+/*##########################################################################
+#
+#   Name       : TDevice::NotifyStateChange
+#
+#   Purpose....: Notify of state change
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::NotifyStateChange()
+{
+	if (OnStateChange)
+	    (*OnStateChange)(this);
 }
 
 /*##########################################################################
@@ -5311,6 +5329,7 @@ void TDevice::Open()
     if (!FOpen)
     {
         NotifyOpen();
+        NotifyStateChange();
 
         AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);    
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
@@ -5356,6 +5375,7 @@ void TDevice::Close()
     if (FOpen)
     {
     	NotifyClose();
+        NotifyStateChange();
 
         AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);    
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
@@ -5417,6 +5437,7 @@ void TDevice::Enable()
     if (!FEnabled)
     {
         NotifyEnable();
+        NotifyStateChange();
 
         if (!FRemote)
             AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
@@ -5464,6 +5485,7 @@ void TDevice::Disable()
     if (FEnabled)
     {
     	NotifyDisable();
+        NotifyStateChange();
 
         if (!FRemote)
             AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
@@ -5513,6 +5535,7 @@ void TDevice::Online()
         FOnline = TRUE;
 	    if (OnOnline)
 		    OnOnline(this);
+        NotifyStateChange();
 
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
         AddBoolean(FRemoteUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
@@ -5542,6 +5565,7 @@ void TDevice::Offline()
 		FOnline = FALSE;
 		if (OnOffline)
 			OnOffline(this);
+        NotifyStateChange();
 
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
         AddBoolean(FRemoteUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
@@ -5622,6 +5646,7 @@ void TDevice::Idle()
 	if (FBusy)
     {
         NotifyIdle();
+        NotifyStateChange();
 
         if (!FRemote)
             AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
@@ -5671,6 +5696,7 @@ void TDevice::Busy()
 	if (!FBusy)
 	{
 	    NotifyBusy();
+        NotifyStateChange();
 
         if (!FRemote)
             AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);

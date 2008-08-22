@@ -391,7 +391,12 @@ public:
 	void (*OnIdle)(TDevice *Device);
 	void (*OnBusy)(TDevice *Device);
 
+    void *StateData;
+	void (*OnStateChange)(TDevice *Device);
+
 protected:
+    void NotifyStateChange();
+    
     virtual void NotifyOpen();
     virtual void NotifyClose();
     virtual void NotifyEnable();
