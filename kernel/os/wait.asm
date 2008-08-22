@@ -424,7 +424,9 @@ wait_timeout_start_loop:
     mov es,dx
     mov es:wo_thread,ax
     mov es:wo_signalled,0
+    push ax
     call es:wo_init_proc
+    pop ax
     mov dx,es:wo_next
     or dx,dx
     jnz wait_timeout_start_loop

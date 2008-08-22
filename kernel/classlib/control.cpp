@@ -1727,9 +1727,12 @@ void TControlThread::Execute()
     
     while (FInstalled)
     {
-        time = GetRedrawTime();
+//        time = GetRedrawTime();
         
-        FWait.WaitUntil(time);
+//        FWait.WaitUntil(time);
+
+        FWait.WaitTimeout(50);
+
         HandleRedraw();
     }
 }
