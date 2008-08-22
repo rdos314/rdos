@@ -796,7 +796,7 @@ void TControl::HandleRedraw()
 
     FListSection.Enter();
 
-    redrawn = FALSE;
+//    redrawn = FALSE;
     
     if (FDelay)
     {
@@ -807,7 +807,7 @@ void TControl::HandleRedraw()
         }
     }
 
-    if (!redrawn)
+//    if (!redrawn)
     {
         control = FControlList;
 
