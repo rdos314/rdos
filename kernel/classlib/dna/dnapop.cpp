@@ -27,7 +27,7 @@
 
 #include <string.h>
 
-#include "evpop.h"
+#include "dnapop.h"
 
 #define FALSE 0
 #define TRUE !FALSE
