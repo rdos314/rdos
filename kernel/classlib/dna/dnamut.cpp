@@ -20,46 +20,44 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# dnaseq.h
-# DNA sequence class
+# dnamut.cpp
+# DNA mutator base class
 #
 ########################################################################*/
 
-#ifndef _DNASEQ_H
-#define _DNASEQ_H
+#include <string.h>
 
-#include "file.h"
-#include "dnapop.h"
 #include "dnamut.h"
 
-#define DNA_A   0
-#define DNA_C   1
-#define DNA_G   2
-#define DNA_T   3
+#define FALSE 0
+#define TRUE !FALSE
 
-class TDnaPopulation;
-
-class TDnaSequence
+/*##########################################################################
+#
+#   Name       : TDnaMutator::TDnaMutator
+#
+#   Purpose....: Constructor for TDnaMutator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDnaMutator::TDnaMutator()
 {
-public:
-	TDnaSequence(TDnaPopulation *pop, int size);
-	~TDnaSequence();
+}
 
-	void SetMutator(TDnaMutator *mutator);
-
-	void Mutate();
-
-	void Write();
-	void Write(TFile &File);
-
-protected:
-    char *GetSeqText();
-    
-    char *FSeq;
-    int FSize;
-    
-	TDnaPopulation *FPop;
-	TDnaMutator *FMutator;
-};
-
-#endif
+/*##########################################################################
+#
+#   Name       : TDnaMutator::~TDnaMutator
+#
+#   Purpose....: Destructor for TDnaMutator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDnaMutator::~TDnaMutator()
+{
+}

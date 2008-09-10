@@ -20,46 +20,23 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# dnaseq.h
-# DNA sequence class
+# dnamut.h
+# DNA mutator base class
 #
 ########################################################################*/
 
-#ifndef _DNASEQ_H
-#define _DNASEQ_H
+#ifndef _DNAMUT_H
+#define _DNAMUT_H
 
-#include "file.h"
-#include "dnapop.h"
-#include "dnamut.h"
-
-#define DNA_A   0
-#define DNA_C   1
-#define DNA_G   2
-#define DNA_T   3
-
-class TDnaPopulation;
-
-class TDnaSequence
+class TDnaMutator
 {
 public:
-	TDnaSequence(TDnaPopulation *pop, int size);
-	~TDnaSequence();
+	TDnaMutator();
+	virtual ~TDnaMutator();
 
-	void SetMutator(TDnaMutator *mutator);
-
-	void Mutate();
-
-	void Write();
-	void Write(TFile &File);
+    virtual Mutate(char *seq, int size) = 0;
 
 protected:
-    char *GetSeqText();
-    
-    char *FSeq;
-    int FSize;
-    
-	TDnaPopulation *FPop;
-	TDnaMutator *FMutator;
 };
 
 #endif

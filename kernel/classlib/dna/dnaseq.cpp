@@ -53,6 +53,7 @@ TDnaSequence::TDnaSequence(TDnaPopulation *pop, int size)
 	 FPop = pop;
 	 FSeq = new char[size];
 	 FSize = size;
+	 FMutator = 0;
 
 	 for (i = 0; i < size; i++)
 		FSeq[i] = Random(4);
@@ -73,6 +74,39 @@ TDnaSequence::~TDnaSequence()
 {
     if (FSeq)
         delete FSeq;
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaSequence::SetMutator
+#
+#   Purpose....: Define a mutator for the sequence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDnaSequence::SetMutator(TDnaMutator *mutator)
+{
+    FMutator = mutator;
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaSequence::Mutate
+#
+#   Purpose....: Mutate sequence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDnaSequence::Mutate()
+{
+    if (FMutator)
+        FMutator->Mutate(FSeq, FSize);
 }
 
 /*##########################################################################
