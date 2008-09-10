@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "rdos.h"
+#include "rand.h"
 #include "dnaseq.h"
 
 #define FALSE 0
@@ -55,7 +55,7 @@ TDnaSequence::TDnaSequence(TDnaPopulation *pop, int size)
 	 FSize = size;
 
 	 for (i = 0; i < size; i++)
-		FSeq[i] = RdosGetRandom(4);
+		FSeq[i] = Random(4);
 }
 
 /*##########################################################################
