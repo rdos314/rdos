@@ -128,7 +128,7 @@ char *TDnaSequence::GetSeqText()
     } 
     *outptr = 0;
 
-    return outptr;                    
+	 return text;
 }
 
 /*##########################################################################
