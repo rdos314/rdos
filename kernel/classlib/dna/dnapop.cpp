@@ -20,7 +20,7 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# evpop.cpp
+# dnapop.cpp
 # DNA population
 #
 ########################################################################*/

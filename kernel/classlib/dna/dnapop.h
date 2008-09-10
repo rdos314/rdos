@@ -20,13 +20,13 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# evpop.h
+# dnapop.h
 # Population class
 #
 ########################################################################*/
 
-#ifndef _EVPOP_H
-#define _EVPOP_H
+#ifndef _DNAPOP_H
+#define _DNAPOP_H
 
 class TDnaPopulation
 {
