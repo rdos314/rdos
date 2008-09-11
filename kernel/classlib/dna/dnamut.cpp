@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "dnamut.h"
+#include "rand.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -43,8 +44,22 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TDnaMutator::TDnaMutator()
+TDnaMutator::TDnaMutator(int size, long double rate)
 {
+	int i;
+
+	if (rate > 1.0)
+		rate = 1.0;
+
+	if (rate < 0.0)
+		rate = 0.0;
+
+	FRate = (long)(1000000 * rate) + 1;
+
+	FRelRateArr = new unsigned char [size];
+
+	for (i = 0; i < size; i++)
+		FRelRateArr[i] = (unsigned char)Random(200) + 1;
 }
 
 /*##########################################################################
@@ -60,4 +75,61 @@ TDnaMutator::TDnaMutator()
 ##########################################################################*/
 TDnaMutator::~TDnaMutator()
 {
+	if (FRelRateArr)
+		delete FRelRateArr;
 }
+
+/*##########################################################################
+#
+#   Name       : TDnaMutator::Mutate
+#
+#   Purpose....: Mutate sequence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDnaMutator::Mutate(char *seq, int size)
+{
+	int len;
+	int i;
+	long odds;
+	char *baseptr;
+
+	baseptr = seq;
+
+	if (size > FSize)
+		len = FSize;
+	else
+		len = size;
+
+	for (i = 0; i < len; i++)
+	{
+		if (Random(100 * 1000000) < FRelRateArr[i] * FRate)
+			*baseptr = MutateBase(i, *baseptr);
+
+		baseptr++;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaMutator::MutateBase
+#
+#   Purpose....: Mutate a base
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char TDnaMutator::MutateBase(int index, char base)
+{
+	base += Random(3);
+	if (base >= 4)
+		base -= 4;
+
+	return base;
+}
+

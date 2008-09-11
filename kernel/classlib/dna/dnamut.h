@@ -31,12 +31,17 @@
 class TDnaMutator
 {
 public:
-	TDnaMutator();
+	TDnaMutator(int size, long double rate);
 	virtual ~TDnaMutator();
 
-    virtual Mutate(char *seq, int size) = 0;
+	 virtual void Mutate(char *seq, int size);
 
 protected:
+	virtual char MutateBase(int index, char base);
+
+	int FSize;
+	long FRate;
+	unsigned char *FRelRateArr;
 };
 
 #endif
