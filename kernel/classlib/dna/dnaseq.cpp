@@ -40,23 +40,70 @@
 #
 #   Purpose....: Constructor for TDnaSequence
 #
-#   In params..: Population
-#                Initial size
+#   In params..: Initial size
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TDnaSequence::TDnaSequence(TDnaPopulation *pop, int size)
+TDnaSequence::TDnaSequence(int size)
 {
 	 int i;
 
-	 FPop = pop;
 	 FSeq = new char[size];
 	 FSize = size;
-	 FMutator = 0;
 
 	 for (i = 0; i < size; i++)
 		FSeq[i] = Random(4);
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaSequence::TDnaSequence
+#
+#   Purpose....: Constructor for TDnaSequence using meosis
+#
+#   In params..: Mother 
+#                Father
+#                CrossOverRate
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDnaSequence::TDnaSequence(TDnaSequence &Mother, TDnaSequence &Father, TDnaMutator *Mutator, int CrossOverRate)
+{
+    int size;
+    TDnaSequence *seq;
+	int i;
+
+    if (Father.FSize > Mother.FSize)
+        size = Father.FSize;
+    else
+        size = Mother.FSize;
+        
+	FSeq = new char[size];
+
+	if (Random(2))
+	    seq = &Mother;
+	else
+	    seq = &Father;
+
+	for (i = 0; i < seq->FSize; i++)
+	{
+	    FSeq[i] = seq->FSeq[i];
+
+	    if (Random(CrossOverRate) == 0)
+	    {
+	        if (seq == &Mother)
+	            seq = &Father;
+	        else
+	            seq = &Mother;
+	    }
+	}
+
+	FSize = seq->FSize;
+
+    if (Mutator)
+        Mutator->Mutate(FSeq, FSize);	
 }
 
 /*##########################################################################
@@ -74,39 +121,6 @@ TDnaSequence::~TDnaSequence()
 {
     if (FSeq)
         delete FSeq;
-}
-
-/*##########################################################################
-#
-#   Name       : TDnaSequence::SetMutator
-#
-#   Purpose....: Define a mutator for the sequence
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDnaSequence::SetMutator(TDnaMutator *mutator)
-{
-    FMutator = mutator;
-}
-
-/*##########################################################################
-#
-#   Name       : TDnaSequence::Mutate
-#
-#   Purpose....: Mutate sequence
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDnaSequence::Mutate()
-{
-    if (FMutator)
-        FMutator->Mutate(FSeq, FSize);
 }
 
 /*##########################################################################
@@ -181,8 +195,9 @@ void TDnaSequence::Write()
     char *text;
 
     text = GetSeqText();
-    printf(text);
-    delete text;
+	 printf(text);
+	 printf("\r\n");
+	 delete text;
 }
 
 /*##########################################################################

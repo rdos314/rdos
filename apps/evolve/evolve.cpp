@@ -5,6 +5,7 @@
 #include "dnapop.h"
 #include "dnaseq.h"
 #include "dnamut.h"
+#include "dnaind.h"
 
 #define FALSE	0
 #define	TRUE	!FALSE
@@ -12,28 +13,27 @@
 int main(int argc, char **argv)
 {
 	TDnaPopulation *pop;
-	TDnaSequence *seq;
+	TDnaIndividual *mother;
+	TDnaIndividual *father;
+	TDnaIndividual *child1;
+	TDnaIndividual *child2;
 	TDnaMutator *mut;
 	int i;
 
 	randomize();
 	random(1000);
 
-	mut = new TDnaMutator(79, 0.01);
-	pop = new TDnaPopulation;
-	seq = new TDnaSequence(pop, 79);
-	seq->SetMutator(mut);
+	mut = new TDnaMutator(70, 0.01);
 
-	for (i = 0; i < 500; i++)
-	{
-		seq->Write();
-		printf("\r\n");
-		seq->Mutate();
-	}
+	mother = new TDnaIndividual(70);
+	father = new TDnaIndividual(70);
+	child1 = new TDnaIndividual(*mother, *father, mut, 40);
+	child2 = new TDnaIndividual(*mother, *father, mut, 40);
 
-	delete seq;
-	delete pop;
-	delete mut;
+	mother->Write();
+	father->Write();
+	child1->Write();
+	child2->Write();
 
 	return 0;
 }

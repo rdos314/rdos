@@ -20,37 +20,28 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# dnaseq.h
-# DNA sequence class
+# dnaind.h
+# DNA individual class
 #
 ########################################################################*/
 
-#ifndef _DNASEQ_H
-#define _DNASEQ_H
+#ifndef _DNAIND_H
+#define _DNAIND_H
 
 #include "file.h"
-#include "dnamut.h"
+#include "dnaseq.h"
 
-#define DNA_A   0
-#define DNA_C   1
-#define DNA_G   2
-#define DNA_T   3
-
-class TDnaSequence
+class TDnaIndividual
 {
 public:
-	TDnaSequence(int size);
-	TDnaSequence(TDnaSequence &Mother, TDnaSequence &Father, TDnaMutator *Mutator, int CrossOverRate);
-	~TDnaSequence();
+	TDnaIndividual(int size);
+	 TDnaIndividual(TDnaIndividual &Mother, TDnaIndividual &Father, TDnaMutator *Mutator, int CrossOverRate);
+	~TDnaIndividual();
 
 	void Write();
-	void Write(TFile &File);
 
-protected:
-    char *GetSeqText();
-    
-    char *FSeq;
-    int FSize;
+	TDnaSequence FMotherSeq;
+	TDnaSequence FFatherSeq;
 };
 
 #endif
