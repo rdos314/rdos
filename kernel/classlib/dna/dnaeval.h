@@ -20,39 +20,27 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# dnaseq.h
-# DNA sequence class
+# dnaeval.h
+# DNA evaluator base class
 #
 ########################################################################*/
 
-#ifndef _DNASEQ_H
-#define _DNASEQ_H
+#ifndef _DNAEVAL_H
+#define _DNAEVAL_H
 
-#include "file.h"
-#include "dnamut.h"
+#include "dnaind.h"
 
-#define DNA_A   0
-#define DNA_C   1
-#define DNA_G   2
-#define DNA_T   3
-
-class TDnaSequence
+class TDnaEvaluator
 {
 public:
-	TDnaSequence(int size);
-	TDnaSequence(TDnaSequence &Mother, TDnaSequence &Father, TDnaMutator *Mutator, int CrossOverRate);
-	~TDnaSequence();
+	TDnaEvaluator(int size);
+	virtual ~TDnaEvaluator();
 
-	int GetSimilarity(TDnaSequence &other);
-
-	void Write();
-	void Write(TFile &File);
+	virtual int Score(TDnaIndividual *ind);
 
 protected:
-    char *GetSeqText();
-    
-    char *FSeq;
-    int FSize;
+    TDnaSequence FRefSeq;
+
 };
 
 #endif

@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
 
 #include "dnapop.h"
 
@@ -43,8 +44,14 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TDnaPopulation::TDnaPopulation()
+TDnaPopulation::TDnaPopulation(TDnaMutator *Mutator, int CrossOverRate, int SeqSize)
 {
+    FMutator = Mutator;
+    FCrossOverRate = CrossOverRate;
+    FSeqSize = SeqSize;    
+
+    FSize = 0;
+    FIndArr = 0;
 }
 
 /*##########################################################################
@@ -60,4 +67,87 @@ TDnaPopulation::TDnaPopulation()
 ##########################################################################*/
 TDnaPopulation::~TDnaPopulation()
 {
+    if (FIndArr)
+    {
+        FreeIndArr(FIndArr, FSize);
+        delete FIndArr;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaPopulation::FreeIndArr
+#
+#   Purpose....: Free individual array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDnaPopulation::FreeIndArr(TDnaIndividual **IndArr, int Size)
+{
+    int i;
+
+    for (i = 0; i < Size; i++)
+    {
+        if (IndArr[i])
+            delete IndArr[i];
+
+        IndArr[i] = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaPopulation::Create
+#
+#   Purpose....: Create an initial population
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDnaPopulation::Create(int size)
+{
+    int i;
+    
+    if (FIndArr)
+    {
+        FreeIndArr(FIndArr, FSize);
+        delete FIndArr;
+    }
+
+    FSize = size;
+    FIndArr = new TDnaIndividual* [FSize];
+
+    for (i = 0; i < size; i++)
+        FIndArr[i] = new TDnaIndividual(FSeqSize);    
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaPopulation::WriteScores
+#
+#   Purpose....: Write scores for individuals in the population
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDnaPopulation::WriteScores(TDnaEvaluator *eval)
+{
+    int i;
+    int score;
+
+    for (i = 0; i < FSize; i++)
+    {
+        if (FIndArr[i])
+        {
+            score = eval->Score(FIndArr[i]);
+            printf("%d\r\n", score);
+        }
+    }
 }

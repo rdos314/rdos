@@ -125,6 +125,37 @@ TDnaSequence::~TDnaSequence()
 
 /*##########################################################################
 #
+#   Name       : TDnaSequence::GetSimilarity
+#
+#   Purpose....: Get similarity count between sequences
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDnaSequence::GetSimilarity(TDnaSequence &other)
+{
+    int i;
+    int size;
+    int count;
+
+    if (FSize < other.FSize)
+        size = FSize;
+    else
+        size = other.FSize;
+
+    count = 0;
+
+    for (i = 0; i < size; i++)
+        if (FSeq[i] == other.FSeq[i])
+            count++;
+
+    return count; 
+}
+
+/*##########################################################################
+#
 #   Name       : TDnaSequence::GetSeqText
 #
 #   Purpose....: Get text version of DNA sequence

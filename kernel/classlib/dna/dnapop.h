@@ -28,13 +28,30 @@
 #ifndef _DNAPOP_H
 #define _DNAPOP_H
 
+#include "dnamut.h"
+#include "dnaind.h"
+#include "dnaeval.h"
+
 class TDnaPopulation
 {
 public:
-	TDnaPopulation();
+	TDnaPopulation(TDnaMutator *Mutator, int CrossOverRate, int SeqSize);
 	~TDnaPopulation();
 
+    void Create(int Size);
+    
+    void WriteScores(TDnaEvaluator *eval);
+ 
 protected:
+    void FreeIndArr(TDnaIndividual **IndArr, int Size);
+
+    TDnaMutator *FMutator;
+    int FCrossOverRate;   
+    int FSeqSize;
+
+    int FSize;
+	TDnaIndividual **FIndArr;
+
 };
 
 #endif
