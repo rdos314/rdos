@@ -20,40 +20,26 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# dnaseq.h
-# DNA sequence class
+# dnapair.h
+# Pair class
 #
 ########################################################################*/
 
-#ifndef _DNASEQ_H
-#define _DNASEQ_H
+#ifndef _DNAPAIR_H
+#define _DNAPAIR_H
 
-#include "file.h"
-#include "dnamut.h"
+#include "dnaind.h"
 
-#define DNA_A   0
-#define DNA_C   1
-#define DNA_G   2
-#define DNA_T   3
-
-class TDnaSequence
+class TDnaPair
 {
 public:
-	TDnaSequence(int size);
-	TDnaSequence(TDnaSequence &Mother, TDnaSequence &Father, TDnaMutator *Mutator, int CrossOverRate);
-	~TDnaSequence();
+    TDnaPair(TDnaIndividual *mate1, TDnaIndividual *mate2);
+    ~TDnaPair();
 
-	int GetSimilarity(TDnaSequence &other);
-	int GetSimilarity(TDnaSequence &other, const int *ScoreArr);
-
-	void Write();
-	void Write(TFile &File);
-
-protected:
-    char *GetSeqText();
+    TDnaIndividual *CreateChild(TDnaMutator *Mutator, int CrossOverRate);
     
-    char *FSeq;
-    int FSize;
+    TDnaIndividual *Mate1;
+    TDnaIndividual *Mate2;
 };
 
 #endif

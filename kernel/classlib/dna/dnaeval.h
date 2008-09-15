@@ -39,6 +39,7 @@ public:
 	virtual int Score(TDnaIndividual *ind);
 
 protected:
+    int FSize;
     TDnaSequence FRefSeq;
 
 };

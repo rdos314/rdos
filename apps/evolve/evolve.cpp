@@ -28,6 +28,9 @@ int main(int argc, char **argv)
 	pop->Create(200);
 	pop->WriteScores(eval);
 
+	pop->Pairbond();
+	pop->WritePairs(eval);
+
 	return 0;
 }
 

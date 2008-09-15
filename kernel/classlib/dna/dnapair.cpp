@@ -20,15 +20,16 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# dnaeval.cpp
-# DNA evaluator base class
+# dnapair.cpp
+# DNA pair
 #
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
 #include <math.h>
 
-#include "dnaeval.h"
+#include "dnapair.h"
 #include "rand.h"
 
 #define FALSE 0
@@ -36,69 +37,48 @@
 
 /*##########################################################################
 #
-#   Name       : TDnaEvaluator::TDnaEvaluator
+#   Name       : TDnaPair::TDnaPair
 #
-#   Purpose....: Constructor for TDnaEvaluator
+#   Purpose....: Constructor for TDnaPair
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TDnaEvaluator::TDnaEvaluator(int size)
- : FRefSeq(size)
+TDnaPair::TDnaPair(TDnaIndividual *mate1, TDnaIndividual *mate2)
 {
-    FSize = size;
+    Mate1 = mate1;
+    Mate2 = mate2;
 }
 
 /*##########################################################################
 #
-#   Name       : TDnaEvaluator::~TDnaEvaluator
+#   Name       : TDnaPair::~TDnaPair
 #
-#   Purpose....: Destructor for TDnaEvaluator
+#   Purpose....: Destructor for TDnaPair
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TDnaEvaluator::~TDnaEvaluator()
+TDnaPair::~TDnaPair()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TDnaEvaluator::Score
+#   Name       : TDnaPair::CreateChild
 #
-#   Purpose....: Score individual
+#   Purpose....: Create a child
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TDnaEvaluator::Score(TDnaIndividual *ind)
+TDnaIndividual *TDnaPair::CreateChild(TDnaMutator *Mutator, int CrossOverRate)
 {
-    int score;
-    long double val;
-    long double fscore;
-
-	val = (long double)FRefSeq.GetSimilarity(ind->FMotherSeq);
-	val = 1000.0 * val / (long double)FSize;
-	fscore = val * val;
-	
-	val = (long double)FRefSeq.GetSimilarity(ind->FFatherSeq);
-	val = 1000.0 * val / (long double)FSize;
-	fscore += val * val;
-
-	fscore = sqrtl(fscore);
-	score = (int)fscore;
-
-	if (score < 0)
-	    score = 0;
-
-	if (score > 1000)
-	    score = 1000;
-
-    return score;
+    return new TDnaIndividual(*Mate1, *Mate2, Mutator, CrossOverRate);
 }

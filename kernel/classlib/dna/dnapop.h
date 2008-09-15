@@ -31,6 +31,7 @@
 #include "dnamut.h"
 #include "dnaind.h"
 #include "dnaeval.h"
+#include "dnapair.h"
 
 class TDnaPopulation
 {
@@ -39,18 +40,27 @@ public:
 	~TDnaPopulation();
 
     void Create(int Size);
-    
+	void Pairbond();
+	void CreateChildren();
+
     void WriteScores(TDnaEvaluator *eval);
+    void WritePairs(TDnaEvaluator *eval);
  
 protected:
     void FreeIndArr(TDnaIndividual **IndArr, int Size);
+    void FreePairArr(TDnaPair **PairArr, int Size);
+    int GetMatchScore(TDnaIndividual *ind1, TDnaIndividual *ind2);
 
     TDnaMutator *FMutator;
     int FCrossOverRate;   
     int FSeqSize;
+    int *FMateScoreArr;
 
     int FSize;
 	TDnaIndividual **FIndArr;
+
+	int FPairs;
+	TDnaPair **FPairArr;
 
 };
 
