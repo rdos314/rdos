@@ -289,22 +289,55 @@ void TDnaPopulation::Pairbond()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDnaPopulation::CreateChildren()
+void TDnaPopulation::CreateChildren(TDnaEvaluator *eval)
 {
     TDnaIndividual **ChildArr;
+    TDnaIndividual *child;
     int NewSize;
     int c;
     int p;
+	 int ok;
+	 int score;
 
     NewSize = FSize;
     ChildArr = new TDnaIndividual* [NewSize];
 
     for (c = 0; c < NewSize; c++)
     {
-        p = Random(FPairs);
-	}
-}
+        ok = FALSE;
 
+        while (!ok)
+        {
+            p = Random(FPairs);
+            child = FPairArr[p]->CreateChild(FMutator, FCrossOverRate);
+            score = eval->Score(child);
+
+            if (Random(1000) < score)
+            {
+                ok = TRUE;
+                ChildArr[c] = child;
+            }
+            else
+                delete child;
+        }
+	}
+
+    if (FIndArr)
+    {
+        FreeIndArr(FIndArr, FSize);
+        delete FIndArr;
+    }
+
+    if (FPairArr)
+    {
+        FreePairArr(FPairArr, FPairs);
+        delete FPairArr;
+    }
+
+    FSize = NewSize;
+    FIndArr = ChildArr;	
+    FPairArr = 0;
+}
 
 /*##########################################################################
 #

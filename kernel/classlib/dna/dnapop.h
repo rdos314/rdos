@@ -41,7 +41,7 @@ public:
 
     void Create(int Size);
 	void Pairbond();
-	void CreateChildren();
+	void CreateChildren(TDnaEvaluator *eval);
 
     void WriteScores(TDnaEvaluator *eval);
     void WritePairs(TDnaEvaluator *eval);
