@@ -275,6 +275,8 @@ CreateSegment	Proc near
 	mov edx,ds:tcp_remote_ip
 	mov esi,OFFSET tcp_options
 	CreateIpHeader
+	jc csDone
+;
 	mov ax,ds:tcp_port
 	xchg al,ah
 	mov es:[di].tcp_source,ax
@@ -289,7 +291,9 @@ CreateSegment	Proc near
 	xchg al,ah
 	mov es:[di].tcp_window,ax
 	mov es:[di].tcp_urgent,0
-;
+	clc
+
+csDone:
 	pop esi
 	pop edx
 	pop ecx
@@ -3540,6 +3544,8 @@ open_tcp_create:
 ;
 	xor ecx,ecx
 	call CreateSegment
+	jc open_tcp_arp_fail
+;	
 	mov es:[di].tcp_flags, SYN
 	mov eax,ds:tcp_iss
 	Reverse
@@ -3566,9 +3572,10 @@ open_tcp_handle:
 	jmp open_tcp_done
 
 open_tcp_fail:
-	or ds:tcp_pending,FLAG_DELETE_NET
 	LeaveSection ds:tcp_section
-;	
+
+open_tcp_arp_fail:
+	or ds:tcp_pending,FLAG_DELETE_NET
 	cli
 	or ds:tcp_pending,FLAG_DELETE_USER
 	xor ax,ax
