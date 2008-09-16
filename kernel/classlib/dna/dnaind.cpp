@@ -57,6 +57,23 @@ TDnaIndividual::TDnaIndividual(int size)
 #
 #   Purpose....: Constructor for TDnaIndividual
 #
+#   In params..: Initial size
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDnaIndividual::TDnaIndividual(TDnaSequence *seq)
+ :  FMotherSeq(*seq),
+    FFatherSeq(*seq)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaIndividual::TDnaIndividual
+#
+#   Purpose....: Constructor for TDnaIndividual
+#
 #   In params..: Mother
 #                Father
 #   Out params.: *

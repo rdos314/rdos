@@ -34,9 +34,12 @@ class TDnaEvaluator
 {
 public:
 	TDnaEvaluator(int size);
+	TDnaEvaluator(TDnaSequence *seq);
 	virtual ~TDnaEvaluator();
 
 	virtual int Score(TDnaIndividual *ind);
+
+	TDnaSequence *GetSeq();
 
 protected:
     int FSize;

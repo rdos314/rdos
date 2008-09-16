@@ -39,9 +39,10 @@ public:
 	TDnaPopulation(TDnaMutator *Mutator, int CrossOverRate, int SeqSize);
 	~TDnaPopulation();
 
-    void Create(int Size);
-	void Pairbond();
-	void CreateChildren(TDnaEvaluator *eval);
+    void CreateRandom(int Size);
+	 void CreateUniform(TDnaSequence *seq, int size);
+	void Pairbond(int Width);
+	void CreateChildren(TDnaEvaluator *eval, int Width);
 
     void WriteScores(TDnaEvaluator *eval);
     void WritePairDetails(TDnaEvaluator *eval);

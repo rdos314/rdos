@@ -138,7 +138,7 @@ void TDnaPopulation::FreePairArr(TDnaPair **PairArr, int Size)
 
 /*##########################################################################
 #
-#   Name       : TDnaPopulation::Create
+#   Name       : TDnaPopulation::CreateRandom
 #
 #   Purpose....: Create an initial population
 #
@@ -147,24 +147,61 @@ void TDnaPopulation::FreePairArr(TDnaPair **PairArr, int Size)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDnaPopulation::Create(int size)
+void TDnaPopulation::CreateRandom(int size)
 {
-    int i;
-    
-    if (FIndArr)
-    {
-        FreeIndArr(FIndArr, FSize);
-        delete FIndArr;
-    }
+	 int i;
 
-    FSize = size;
-    FIndArr = new TDnaIndividual* [FSize];
+	 if (FIndArr)
+	 {
+		  FreeIndArr(FIndArr, FSize);
+		  delete FIndArr;
+	 }
 
-    for (i = 0; i < size; i++)
-        FIndArr[i] = new TDnaIndividual(FSeqSize);    
+	 FSize = size;
+	 FIndArr = new TDnaIndividual* [FSize];
 
-    if (FMateScoreArr)
-        delete FMateScoreArr;
+	 for (i = 0; i < size; i++)
+		  FIndArr[i] = new TDnaIndividual(FSeqSize);
+
+	 if (FMateScoreArr)
+		  delete FMateScoreArr;
+
+	FMateScoreArr = new int[FSeqSize];
+
+	for (i = 0; i < FSeqSize; i++)
+		FMateScoreArr[i] = FSeqSize - i;
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaPopulation::CreateUniform
+#
+#   Purpose....: Create an initial population
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDnaPopulation::CreateUniform(TDnaSequence *seq, int size)
+{
+	 int i;
+
+	 if (FIndArr)
+	 {
+		  FreeIndArr(FIndArr, FSize);
+		  delete FIndArr;
+	 }
+
+	 FSize = size;
+	 FIndArr = new TDnaIndividual* [FSize];
+	 FSeqSize = seq->GetSize();
+
+	 for (i = 0; i < size; i++)
+		  FIndArr[i] = new TDnaIndividual(seq);
+
+	 if (FMateScoreArr)
+		  delete FMateScoreArr;
 
 	FMateScoreArr = new int[FSeqSize];
 
@@ -190,21 +227,25 @@ int TDnaPopulation::GetMatchScore(TDnaIndividual *ind1, TDnaIndividual *ind2)
 	long double size;
 	long double fscore;
 
+
 	val = (long double)ind1->FMotherSeq.GetSimilarity(ind2->FMotherSeq, FMateScoreArr);
+	val = val / (long double)FSize;
 	fscore = val * val;
 
 	val = (long double)ind1->FMotherSeq.GetSimilarity(ind2->FFatherSeq, FMateScoreArr);
+	val = val / (long double)FSize;
 	fscore += val * val;
 
 	val = (long double)ind1->FFatherSeq.GetSimilarity(ind2->FMotherSeq, FMateScoreArr);
+	val = val / (long double)FSize;
 	fscore += val * val;
 
 	val = (long double)ind1->FFatherSeq.GetSimilarity(ind2->FFatherSeq, FMateScoreArr);
+	val = val / (long double)FSize;
 	fscore += val * val;
 
-	fscore = sqrtl(fscore);
-	size = (long double)FSeqSize;
-	fscore = 1000.0 * (long double)fscore / size / size;
+	fscore = 1000.0 * sqrtl(fscore);
+	fscore = fscore / (long double)FSize;
 
 	score = (int)fscore;
 
@@ -228,50 +269,51 @@ int TDnaPopulation::GetMatchScore(TDnaIndividual *ind1, TDnaIndividual *ind2)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDnaPopulation::Pairbond()
+void TDnaPopulation::Pairbond(int Width)
 {
-    int *Paired;
-    int i;
-    int j;
-    int p;
-    int score;
-    int ok;
+	 int *Paired;
+	 int i;
+	 int j;
+	 int p;
+	 int score;
+	 int ok;
 
-    if (FPairArr)
-    {
-        FreePairArr(FPairArr, FPairs);
-        delete FPairArr;
-    }
+	 if (FPairArr)
+	 {
+		  FreePairArr(FPairArr, FPairs);
+		  delete FPairArr;
+	 }
 
 	Paired = new int[FSize];
-    
-    for (i = 0; i < FSize; i++)
-        Paired[i] = FALSE;
-    
-    FPairs = FSize * 80 / 100 / 2;
-    FPairArr = new TDnaPair* [FPairs];
 
-    for (p = 0; p < FPairs; p++)
-    {
-        ok = FALSE;
+	 for (i = 0; i < FSize; i++)
+		  Paired[i] = FALSE;
 
-        while (!ok)
-        {
-            i = Random(FSize);
-            j = Random(FSize);
+	 FPairs = FSize * 80 / 100 / 2;
+	 FPairArr = new TDnaPair* [FPairs];
 
-            if (i != j && !Paired[i] && !Paired[j])
-            {
-                score = GetMatchScore(FIndArr[i], FIndArr[j]);
-                if (Random(1000) < score)
-                {
-                    ok = TRUE;
-                    FPairArr[p] = new TDnaPair(FIndArr[i], FIndArr[j]);
+	 for (p = 0; p < FPairs; p++)
+	 {
+		  ok = FALSE;
 
-                    Paired[i] = TRUE;
-                    Paired[j] = TRUE;
+		  while (!ok)
+		  {
+				i = Random(FSize);
+				j = Random(FSize);
+
+				if (i != j && !Paired[i] && !Paired[j])
+				{
+					 score = GetMatchScore(FIndArr[i], FIndArr[j]);
+					 score = (1000 - score) / Width;
+					 if (Random(score) == 0)
+					 {
+						  ok = TRUE;
+						  FPairArr[p] = new TDnaPair(FIndArr[i], FIndArr[j]);
+
+						  Paired[i] = TRUE;
+						  Paired[j] = TRUE;
 				}
-            }
+				}
         }            
     }
 
@@ -289,30 +331,30 @@ void TDnaPopulation::Pairbond()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDnaPopulation::CreateChildren(TDnaEvaluator *eval)
+void TDnaPopulation::CreateChildren(TDnaEvaluator *eval, int Width)
 {
-    TDnaIndividual **ChildArr;
-    TDnaIndividual *child;
-    int NewSize;
-    int c;
-    int p;
+	 TDnaIndividual **ChildArr;
+	 TDnaIndividual *child;
+	 int NewSize;
+	 int c;
+	 int p;
 	 int ok;
 	 int score;
 
-    NewSize = FSize;
-    ChildArr = new TDnaIndividual* [NewSize];
+	 NewSize = FSize;
+	 ChildArr = new TDnaIndividual* [NewSize];
 
-    for (c = 0; c < NewSize; c++)
-    {
-        ok = FALSE;
+	 for (c = 0; c < NewSize; c++)
+	 {
+		  ok = FALSE;
 
-        while (!ok)
-        {
-            p = Random(FPairs);
-            child = FPairArr[p]->CreateChild(FMutator, FCrossOverRate);
-            score = eval->Score(child);
+		  while (!ok)
+		  {
+				p = Random(FPairs);
+				child = FPairArr[p]->CreateChild(FMutator, FCrossOverRate);
+				score = eval->Score(child);
 
-			score = 1000 - score;
+			score = (1000 - score) / Width;
 
 			if (Random(score) == 0)
 			{

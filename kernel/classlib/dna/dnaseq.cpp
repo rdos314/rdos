@@ -58,6 +58,30 @@ TDnaSequence::TDnaSequence(int size)
 
 /*##########################################################################
 #
+#   Name       : TDnaSequence::TDnaSequemce
+#
+#   Purpose....: Copy constructor for sequence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDnaSequence::TDnaSequence(const TDnaSequence &src)
+{
+    FSize = src.FSize;
+
+    if (src.FSeq)
+    {
+        FSeq = new char[FSize];
+        memcpy(FSeq, src.FSeq, FSize);
+    }
+    else
+        FSeq = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TDnaSequence::TDnaSequence
 #
 #   Purpose....: Constructor for TDnaSequence using meosis
@@ -121,6 +145,68 @@ TDnaSequence::~TDnaSequence()
 {
     if (FSeq)
         delete FSeq;
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaSequence::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TDnaSequence &TDnaSequence::operator=(const TDnaSequence &src)
+{
+    if (FSeq)
+        delete FSeq;
+
+    FSize = src.FSize;
+
+    if (src.FSeq)
+    {
+        FSeq = new char[FSize];
+        memcpy(FSeq, src.FSeq, FSize);
+    }
+    else
+        FSeq = 0;
+    
+	return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaSequence::GetSize
+#
+#   Purpose....: Get sequence size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDnaSequence::GetSize() const
+{
+    return FSize;
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaSequence::Mutate
+#
+#   Purpose....: Mutate sequence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDnaSequence::Mutate(TDnaMutator *Mutator)
+{
+    if (Mutator)
+        Mutator->Mutate(FSeq, FSize);	
 }
 
 /*##########################################################################

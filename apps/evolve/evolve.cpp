@@ -16,26 +16,30 @@
 
 int main(int argc, char **argv)
 {
+	TDnaSequence *ref;
 	TDnaPopulation *pop;
 	TDnaMutator *fastmut;
+	TDnaMutator *refmut;
 	TDnaEvaluator *eval;
 	int i;
 
 	randomize();
 	random(1000);
 
+	refmut = new TDnaMutator(SEQ_SIZE, 0.00001);
 	fastmut = new TDnaMutator(SEQ_SIZE, 0.01);
 	eval = new TDnaEvaluator(SEQ_SIZE);
+	ref = eval->GetSeq();
 
 	pop = new TDnaPopulation(fastmut, 100, SEQ_SIZE);
-	pop->Create(POP_SIZE);
-	pop->WriteScores(eval);
+	pop->CreateUniform(ref, POP_SIZE);
 
-	for (i = 0; i < 2000; i++)
+	for (i = 0; i < 200; i++)
 	{
-		pop->Pairbond();
+		pop->Pairbond(10);
 		pop->WritePairSumary(eval);
-		pop->CreateChildren(eval);
+		pop->CreateChildren(eval, 1);
+		ref->Mutate(refmut);
 	}
 
 	return 0;

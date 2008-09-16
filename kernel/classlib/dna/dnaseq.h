@@ -40,11 +40,17 @@ class TDnaSequence
 {
 public:
 	TDnaSequence(int size);
+	TDnaSequence(const TDnaSequence &source);
 	TDnaSequence(TDnaSequence &Mother, TDnaSequence &Father, TDnaMutator *Mutator, int CrossOverRate);
 	~TDnaSequence();
 
+	const TDnaSequence &operator=(const TDnaSequence &src);
+
+    void Mutate(TDnaMutator *Mutator);
 	int GetSimilarity(TDnaSequence &other);
 	int GetSimilarity(TDnaSequence &other, const int *ScoreArr);
+
+	int GetSize() const;
 
 	void Write();
 	void Write(TFile &File);

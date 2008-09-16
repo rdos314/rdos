@@ -35,6 +35,7 @@ class TDnaIndividual
 {
 public:
 	TDnaIndividual(int size);
+	TDnaIndividual(TDnaSequence *seq);
 	 TDnaIndividual(TDnaIndividual &Mother, TDnaIndividual &Father, TDnaMutator *Mutator, int CrossOverRate);
 	~TDnaIndividual();
 
