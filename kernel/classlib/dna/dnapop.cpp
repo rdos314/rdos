@@ -312,31 +312,33 @@ void TDnaPopulation::CreateChildren(TDnaEvaluator *eval)
             child = FPairArr[p]->CreateChild(FMutator, FCrossOverRate);
             score = eval->Score(child);
 
-            if (Random(1000) < score)
-            {
-                ok = TRUE;
-                ChildArr[c] = child;
-            }
-            else
-                delete child;
-        }
+			score = 1000 - score;
+
+			if (Random(score) == 0)
+			{
+				ok = TRUE;
+				ChildArr[c] = child;
+			}
+			else
+				delete child;
+		}
 	}
 
-    if (FIndArr)
-    {
-        FreeIndArr(FIndArr, FSize);
-        delete FIndArr;
-    }
+	if (FIndArr)
+	{
+		FreeIndArr(FIndArr, FSize);
+		delete FIndArr;
+	}
 
-    if (FPairArr)
-    {
-        FreePairArr(FPairArr, FPairs);
-        delete FPairArr;
-    }
+	if (FPairArr)
+	{
+		FreePairArr(FPairArr, FPairs);
+		delete FPairArr;
+	}
 
-    FSize = NewSize;
-    FIndArr = ChildArr;	
-    FPairArr = 0;
+	FSize = NewSize;
+	FIndArr = ChildArr;
+	FPairArr = 0;
 }
 
 /*##########################################################################
@@ -367,16 +369,16 @@ void TDnaPopulation::WriteScores(TDnaEvaluator *eval)
 
 /*##########################################################################
 #
-#   Name       : TDnaPopulation::WritePairs
+#   Name       : TDnaPopulation::WritePairDetails
 #
-#   Purpose....: Write pair info
+#   Purpose....: Write detailed pair info
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TDnaPopulation::WritePairs(TDnaEvaluator *eval)
+void TDnaPopulation::WritePairDetails(TDnaEvaluator *eval)
 {
     int i;
     int score1;
@@ -394,4 +396,45 @@ void TDnaPopulation::WritePairs(TDnaEvaluator *eval)
             printf("m1 = %d, m2 = %d; fit = %d\n", score1, score2, match);
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TDnaPopulation::WritePairSumary
+#
+#   Purpose....: Write short pair info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDnaPopulation::WritePairSumary(TDnaEvaluator *eval)
+{
+    int i;
+    int score1;
+    int score2;
+    int match;
+    int count;
+
+    count = 0;
+    score1 = 0;
+    score2 = 0;
+    match = 0;
+
+    for (i = 0; i < FPairs; i++)
+    {
+        if (FPairArr[i])
+        {
+            count++;
+            score1 += eval->Score(FPairArr[i]->Mate1);
+            score2 += eval->Score(FPairArr[i]->Mate2);
+            match += GetMatchScore(FPairArr[i]->Mate1, FPairArr[i]->Mate2);
+        }
+    }
+    score1 = score1 / count;
+    score2 = score2 / count;
+    match = match / count;
+
+    printf("m1 = %d, m2 = %d; fit = %d\n", score1, score2, match);
 }

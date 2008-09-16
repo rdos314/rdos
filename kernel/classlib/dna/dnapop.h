@@ -44,7 +44,8 @@ public:
 	void CreateChildren(TDnaEvaluator *eval);
 
     void WriteScores(TDnaEvaluator *eval);
-    void WritePairs(TDnaEvaluator *eval);
+    void WritePairDetails(TDnaEvaluator *eval);
+    void WritePairSumary(TDnaEvaluator *eval);
  
 protected:
     void FreeIndArr(TDnaIndividual **IndArr, int Size);
