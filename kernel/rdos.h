@@ -50,6 +50,8 @@ typedef struct ThreadState
 #endif
 #endif
 
+void __stdcall RdosDebug();
+
 short int __stdcall RdosSwapShort(short int val);
 long __stdcall RdosSwapLong(long val);
 
