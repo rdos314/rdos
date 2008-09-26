@@ -56,7 +56,7 @@ TSocket::TSocket(int Handle)
 #
 #   In params..: Wait       Wait device
 #                IP         Remote IP address
-#                Port       local port to listen on
+#                Port       remote port to connect to
 #				 Timeout	establish timeout in ms
 #				 BufferSize	socket buffer size
 #   Out params.: *
@@ -66,6 +66,27 @@ TSocket::TSocket(int Handle)
 TSocket::TSocket(long IP, int Port, int Timeout, int BufferSize)
 {
 	FHandle = RdosOpenTcpConnection(IP, 0, Port, Timeout, BufferSize);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::TSocket
+#
+#   Purpose....: Constructor
+#
+#   In params..: Wait       Wait device
+#                IP         Remote IP address
+#                LocalPort  local port to use
+#                RemotePort remote port to connect to
+#				 Timeout	establish timeout in ms
+#				 BufferSize	socket buffer size
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocket::TSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize)
+{
+	FHandle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
 }
 
 /*##########################################################################

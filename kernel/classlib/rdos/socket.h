@@ -37,6 +37,7 @@ class TSocket : public TWaitDevice
 public:
     TSocket(int Handle);
     TSocket(long IP, int Port, int Timeout, int BufferSize);
+    TSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize);
     ~TSocket();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
