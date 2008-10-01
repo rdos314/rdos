@@ -419,7 +419,6 @@ int TMadHeader::ReadAndDecode(TMadStream *stream)
 TMadFrame::TMadFrame()
 {
   options = 0;
-  overlap = 0;
   Mute();
 }
 
@@ -430,11 +429,6 @@ TMadFrame::TMadFrame()
 
 TMadFrame::~TMadFrame()
 {
-  if (overlap)
-  {
-	free(overlap);
-	overlap = 0;
-  }
 }
 
 /*
@@ -495,13 +489,8 @@ void TMadFrame::Mute()
 	}
   }
 
-  if (overlap)
-  {
-	for (s = 0; s < 18; ++s)
-	{
-	  for (sb = 0; sb < 32; ++sb)
-		(*overlap)[0][sb][s] = (*overlap)[1][sb][s] = 0;
-	}
-  }
+  for (s = 0; s < 18; ++s)
+	for (sb = 0; sb < 32; ++sb)
+	  overlap[0][sb][s] = overlap[1][sb][s] = 0;
 }
 

@@ -83,7 +83,7 @@ public:
   TMadBit anc_ptr;		/* ancillary bits pointer */
   unsigned int anc_bitlen;		/* number of ancillary bits */
 
-  unsigned char (*main_data)[MAD_BUFFER_MDLEN];
+  unsigned char *main_data;
 					/* Layer III main_data() */
   unsigned int md_len;			/* bytes in main_data */
 

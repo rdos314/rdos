@@ -63,8 +63,8 @@ TMadStream::~TMadStream()
 {
   if (main_data)
   {
-    free(main_data);
-    main_data = 0;
+	 delete main_data;
+	 main_data = 0;
   }
 }
 

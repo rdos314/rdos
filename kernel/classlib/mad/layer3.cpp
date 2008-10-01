@@ -59,31 +59,37 @@ enum {
   MS_STEREO = 0x2
 };
 
-struct sideinfo {
+struct channel
+{
+      /* from side info */
+		unsigned short part2_3_length;
+		unsigned short big_values;
+		unsigned short global_gain;
+		unsigned short scalefac_compress;
+
+		unsigned char flags;
+		unsigned char block_type;
+		unsigned char table_select[3];
+		unsigned char subblock_gain[3];
+		unsigned char region0_count;
+		unsigned char region1_count;
+
+		/* from main_data */
+		unsigned char scalefac[39];	/* scalefac_l and/or scalefac_s */
+};
+
+struct granule
+{
+  struct channel ch[2];
+};
+
+struct sideinfo
+{
   unsigned int main_data_begin;
   unsigned int private_bits;
 
   unsigned char scfsi[2];
-
-  struct granule {
-    struct channel {
-      /* from side info */
-      unsigned short part2_3_length;
-      unsigned short big_values;
-      unsigned short global_gain;
-      unsigned short scalefac_compress;
-
-      unsigned char flags;
-      unsigned char block_type;
-      unsigned char table_select[3];
-      unsigned char subblock_gain[3];
-      unsigned char region0_count;
-      unsigned char region1_count;
-
-      /* from main_data */
-      unsigned char scalefac[39];	/* scalefac_l and/or scalefac_s */
-    } ch[2];
-  } gr[2];
+  struct granule gr[2];
 };
 
 /*
@@ -137,66 +143,66 @@ unsigned char const nsfb_table[6][3][4] = {
  * derived from Table B.8 of ISO/IEC 11172-3
  */
 static
-unsigned char const sfb_48000_long[] = {
-   4,  4,  4,  4,  4,  4,  6,  6,  6,   8,  10,
+unsigned char sfb_48000_long[] = {
+	4,  4,  4,  4,  4,  4,  6,  6,  6,   8,  10,
   12, 16, 18, 22, 28, 34, 40, 46, 54,  54, 192
 };
 
 static
-unsigned char const sfb_44100_long[] = {
-   4,  4,  4,  4,  4,  4,  6,  6,  8,   8,  10,
+unsigned char sfb_44100_long[] = {
+	4,  4,  4,  4,  4,  4,  6,  6,  8,   8,  10,
   12, 16, 20, 24, 28, 34, 42, 50, 54,  76, 158
 };
 
 static
-unsigned char const sfb_32000_long[] = {
-   4,  4,  4,  4,  4,  4,  6,  6,  8,  10,  12,
+unsigned char sfb_32000_long[] = {
+	4,  4,  4,  4,  4,  4,  6,  6,  8,  10,  12,
   16, 20, 24, 30, 38, 46, 56, 68, 84, 102,  26
 };
 
 static
-unsigned char const sfb_48000_short[] = {
-   4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  6,
-   6,  6,  6,  6,  6, 10, 10, 10, 12, 12, 12, 14, 14,
+unsigned char sfb_48000_short[] = {
+	4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  6,
+	6,  6,  6,  6,  6, 10, 10, 10, 12, 12, 12, 14, 14,
   14, 16, 16, 16, 20, 20, 20, 26, 26, 26, 66, 66, 66
 };
 
 static
-unsigned char const sfb_44100_short[] = {
-   4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  6,
-   6,  6,  8,  8,  8, 10, 10, 10, 12, 12, 12, 14, 14,
+unsigned char sfb_44100_short[] = {
+	4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  6,
+	6,  6,  8,  8,  8, 10, 10, 10, 12, 12, 12, 14, 14,
   14, 18, 18, 18, 22, 22, 22, 30, 30, 30, 56, 56, 56
 };
 
 static
-unsigned char const sfb_32000_short[] = {
-   4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  6,
-   6,  6,  8,  8,  8, 12, 12, 12, 16, 16, 16, 20, 20,
+unsigned char sfb_32000_short[] = {
+	4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  6,
+	6,  6,  8,  8,  8, 12, 12, 12, 16, 16, 16, 20, 20,
   20, 26, 26, 26, 34, 34, 34, 42, 42, 42, 12, 12, 12
 };
 
 static
-unsigned char const sfb_48000_mixed[] = {
+unsigned char sfb_48000_mixed[] = {
   /* long */   4,  4,  4,  4,  4,  4,  6,  6,
   /* short */  4,  4,  4,  6,  6,  6,  6,  6,  6, 10,
-              10, 10, 12, 12, 12, 14, 14, 14, 16, 16,
-              16, 20, 20, 20, 26, 26, 26, 66, 66, 66
+				  10, 10, 12, 12, 12, 14, 14, 14, 16, 16,
+				  16, 20, 20, 20, 26, 26, 26, 66, 66, 66
 };
 
 static
-unsigned char const sfb_44100_mixed[] = {
+unsigned char sfb_44100_mixed[] = {
   /* long */   4,  4,  4,  4,  4,  4,  6,  6,
   /* short */  4,  4,  4,  6,  6,  6,  8,  8,  8, 10,
-              10, 10, 12, 12, 12, 14, 14, 14, 18, 18,
-              18, 22, 22, 22, 30, 30, 30, 56, 56, 56
+				  10, 10, 12, 12, 12, 14, 14, 14, 18, 18,
+				  18, 22, 22, 22, 30, 30, 30, 56, 56, 56
 };
 
 static
-unsigned char const sfb_32000_mixed[] = {
+unsigned char sfb_32000_mixed[] = {
   /* long */   4,  4,  4,  4,  4,  4,  6,  6,
   /* short */  4,  4,  4,  6,  6,  6,  8,  8,  8, 12,
-              12, 12, 16, 16, 16, 20, 20, 20, 26, 26,
-              26, 34, 34, 34, 42, 42, 42, 12, 12, 12
+				  12, 12, 16, 16, 16, 20, 20, 20, 26, 26,
+				  26, 34, 34, 34, 42, 42, 42, 12, 12, 12
 };
 
 /*
@@ -204,62 +210,62 @@ unsigned char const sfb_32000_mixed[] = {
  * derived from Table B.2 of ISO/IEC 13818-3
  */
 static
-unsigned char const sfb_24000_long[] = {
-   6,  6,  6,  6,  6,  6,  8, 10, 12,  14,  16,
+unsigned char sfb_24000_long[] = {
+	6,  6,  6,  6,  6,  6,  8, 10, 12,  14,  16,
   18, 22, 26, 32, 38, 46, 54, 62, 70,  76,  36
 };
 
 static
-unsigned char const sfb_22050_long[] = {
-   6,  6,  6,  6,  6,  6,  8, 10, 12,  14,  16,
+unsigned char sfb_22050_long[] = {
+	6,  6,  6,  6,  6,  6,  8, 10, 12,  14,  16,
   20, 24, 28, 32, 38, 46, 52, 60, 68,  58,  54
 };
 
 # define sfb_16000_long  sfb_22050_long
 
 static
-unsigned char const sfb_24000_short[] = {
-   4,  4,  4,  4,  4,  4,  4,  4,  4,  6,  6,  6,  8,
-   8,  8, 10, 10, 10, 12, 12, 12, 14, 14, 14, 18, 18,
+unsigned char sfb_24000_short[] = {
+	4,  4,  4,  4,  4,  4,  4,  4,  4,  6,  6,  6,  8,
+	8,  8, 10, 10, 10, 12, 12, 12, 14, 14, 14, 18, 18,
   18, 24, 24, 24, 32, 32, 32, 44, 44, 44, 12, 12, 12
 };
 
 static
-unsigned char const sfb_22050_short[] = {
-   4,  4,  4,  4,  4,  4,  4,  4,  4,  6,  6,  6,  6,
-   6,  6,  8,  8,  8, 10, 10, 10, 14, 14, 14, 18, 18,
+unsigned char sfb_22050_short[] = {
+	4,  4,  4,  4,  4,  4,  4,  4,  4,  6,  6,  6,  6,
+	6,  6,  8,  8,  8, 10, 10, 10, 14, 14, 14, 18, 18,
   18, 26, 26, 26, 32, 32, 32, 42, 42, 42, 18, 18, 18
 };
 
 static
-unsigned char const sfb_16000_short[] = {
-   4,  4,  4,  4,  4,  4,  4,  4,  4,  6,  6,  6,  8,
-   8,  8, 10, 10, 10, 12, 12, 12, 14, 14, 14, 18, 18,
+unsigned char sfb_16000_short[] = {
+	4,  4,  4,  4,  4,  4,  4,  4,  4,  6,  6,  6,  8,
+	8,  8, 10, 10, 10, 12, 12, 12, 14, 14, 14, 18, 18,
   18, 24, 24, 24, 30, 30, 30, 40, 40, 40, 18, 18, 18
 };
 
 static
-unsigned char const sfb_24000_mixed[] = {
+unsigned char sfb_24000_mixed[] = {
   /* long */   6,  6,  6,  6,  6,  6,
   /* short */  6,  6,  6,  8,  8,  8, 10, 10, 10, 12,
-              12, 12, 14, 14, 14, 18, 18, 18, 24, 24,
-              24, 32, 32, 32, 44, 44, 44, 12, 12, 12
+				  12, 12, 14, 14, 14, 18, 18, 18, 24, 24,
+				  24, 32, 32, 32, 44, 44, 44, 12, 12, 12
 };
 
 static
-unsigned char const sfb_22050_mixed[] = {
+unsigned char sfb_22050_mixed[] = {
   /* long */   6,  6,  6,  6,  6,  6,
   /* short */  6,  6,  6,  6,  6,  6,  8,  8,  8, 10,
-              10, 10, 14, 14, 14, 18, 18, 18, 26, 26,
-              26, 32, 32, 32, 42, 42, 42, 18, 18, 18
+				  10, 10, 14, 14, 14, 18, 18, 18, 26, 26,
+				  26, 32, 32, 32, 42, 42, 42, 18, 18, 18
 };
 
 static
-unsigned char const sfb_16000_mixed[] = {
+unsigned char sfb_16000_mixed[] = {
   /* long */   6,  6,  6,  6,  6,  6,
   /* short */  6,  6,  6,  8,  8,  8, 10, 10, 10, 12,
-              12, 12, 14, 14, 14, 18, 18, 18, 24, 24,
-              24, 30, 30, 30, 40, 40, 40, 18, 18, 18
+				  12, 12, 14, 14, 14, 18, 18, 18, 24, 24,
+				  24, 30, 30, 30, 40, 40, 40, 18, 18, 18
 };
 
 /*
@@ -270,7 +276,7 @@ unsigned char const sfb_16000_mixed[] = {
 # define sfb_11025_long  sfb_12000_long
 
 static
-unsigned char const sfb_8000_long[] = {
+unsigned char sfb_8000_long[] = {
   12, 12, 12, 12, 12, 12, 16, 20, 24,  28,  32,
   40, 48, 56, 64, 76, 90,  2,  2,  2,   2,   2
 };
@@ -279,8 +285,8 @@ unsigned char const sfb_8000_long[] = {
 # define sfb_11025_short  sfb_12000_short
 
 static
-unsigned char const sfb_8000_short[] = {
-   8,  8,  8,  8,  8,  8,  8,  8,  8, 12, 12, 12, 16,
+unsigned char sfb_8000_short[] = {
+	8,  8,  8,  8,  8,  8,  8,  8,  8, 12, 12, 12, 16,
   16, 16, 20, 20, 20, 24, 24, 24, 28, 28, 28, 36, 36,
   36,  2,  2,  2,  2,  2,  2,  2,  2,  2, 26, 26, 26
 };
@@ -289,21 +295,21 @@ unsigned char const sfb_8000_short[] = {
 # define sfb_11025_mixed  sfb_12000_mixed
 
 /* the 8000 Hz short block scalefactor bands do not break after
-   the first 36 frequency lines, so this is probably wrong */
+	the first 36 frequency lines, so this is probably wrong */
 static
-unsigned char const sfb_8000_mixed[] = {
+unsigned char sfb_8000_mixed[] = {
   /* long */  12, 12, 12,
   /* short */  4,  4,  4,  8,  8,  8, 12, 12, 12, 16, 16, 16,
-              20, 20, 20, 24, 24, 24, 28, 28, 28, 36, 36, 36,
-               2,  2,  2,  2,  2,  2,  2,  2,  2, 26, 26, 26
+				  20, 20, 20, 24, 24, 24, 28, 28, 28, 36, 36, 36,
+					2,  2,  2,  2,  2,  2,  2,  2,  2, 26, 26, 26
 };
 
 static
 struct {
-  unsigned char const *l;
-  unsigned char const *s;
-  unsigned char const *m;
-} const sfbwidth_table[9] = {
+  unsigned char *l;
+  unsigned char *s;
+  unsigned char *m;
+} sfbwidth_table[9] = {
   { sfb_48000_long, sfb_48000_short, sfb_48000_mixed },
   { sfb_44100_long, sfb_44100_short, sfb_44100_mixed },
   { sfb_32000_long, sfb_32000_short, sfb_32000_mixed },
@@ -505,10 +511,10 @@ mad_fixed_t const is_lsf_table[2][15] = {
  * DESCRIPTION:	decode frame side information from a bitstream
  */
 static
-enum mad_error III_sideinfo(struct mad_bitptr *ptr, unsigned int nch,
-			    int lsf, struct sideinfo *si,
-			    unsigned int *data_bitlen,
-			    unsigned int *priv_bitlen)
+enum mad_error III_sideinfo(TMadBit *bitptr, unsigned int nch,
+				 int lsf, struct sideinfo *si,
+				 unsigned int *data_bitlen,
+				 unsigned int *priv_bitlen)
 {
   unsigned int ngr, gr, ch, i;
   enum mad_error result = MAD_ERROR_NONE;
@@ -516,15 +522,15 @@ enum mad_error III_sideinfo(struct mad_bitptr *ptr, unsigned int nch,
   *data_bitlen = 0;
   *priv_bitlen = lsf ? ((nch == 1) ? 1 : 2) : ((nch == 1) ? 5 : 3);
 
-  si->main_data_begin = mad_bit_read(ptr, lsf ? 8 : 9);
-  si->private_bits    = mad_bit_read(ptr, *priv_bitlen);
+  si->main_data_begin = bitptr->Read(lsf ? 8 : 9);
+  si->private_bits    = bitptr->Read(*priv_bitlen);
 
   ngr = 1;
   if (!lsf) {
     ngr = 2;
 
     for (ch = 0; ch < nch; ++ch)
-      si->scfsi[ch] = mad_bit_read(ptr, 4);
+		si->scfsi[ch] = bitptr->Read(4);
   }
 
   for (gr = 0; gr < ngr; ++gr) {
@@ -533,10 +539,10 @@ enum mad_error III_sideinfo(struct mad_bitptr *ptr, unsigned int nch,
     for (ch = 0; ch < nch; ++ch) {
       struct channel *channel = &granule->ch[ch];
 
-      channel->part2_3_length    = mad_bit_read(ptr, 12);
-      channel->big_values        = mad_bit_read(ptr, 9);
-      channel->global_gain       = mad_bit_read(ptr, 8);
-      channel->scalefac_compress = mad_bit_read(ptr, lsf ? 9 : 4);
+		channel->part2_3_length    = bitptr->Read(12);
+		channel->big_values        = bitptr->Read(9);
+		channel->global_gain       = bitptr->Read(8);
+		channel->scalefac_compress = bitptr->Read(lsf ? 9 : 4);
 
       *data_bitlen += channel->part2_3_length;
 
@@ -546,8 +552,8 @@ enum mad_error III_sideinfo(struct mad_bitptr *ptr, unsigned int nch,
       channel->flags = 0;
 
       /* window_switching_flag */
-      if (mad_bit_read(ptr, 1)) {
-	channel->block_type = mad_bit_read(ptr, 2);
+		if (bitptr->Read(1)) {
+	channel->block_type = bitptr->Read(2);
 
 	if (channel->block_type == 0 && result == 0)
 	  result = MAD_ERROR_BADBLOCKTYPE;
@@ -558,33 +564,33 @@ enum mad_error III_sideinfo(struct mad_bitptr *ptr, unsigned int nch,
 	channel->region0_count = 7;
 	channel->region1_count = 36;
 
-	if (mad_bit_read(ptr, 1))
+	if (bitptr->Read(1))
 	  channel->flags |= mixed_block_flag;
 	else if (channel->block_type == 2)
 	  channel->region0_count = 8;
 
 	for (i = 0; i < 2; ++i)
-	  channel->table_select[i] = mad_bit_read(ptr, 5);
+	  channel->table_select[i] = bitptr->Read(5);
 
 # if defined(DEBUG)
 	channel->table_select[2] = 4;  /* not used */
 # endif
 
 	for (i = 0; i < 3; ++i)
-	  channel->subblock_gain[i] = mad_bit_read(ptr, 3);
+	  channel->subblock_gain[i] = bitptr->Read(3);
       }
       else {
 	channel->block_type = 0;
 
 	for (i = 0; i < 3; ++i)
-	  channel->table_select[i] = mad_bit_read(ptr, 5);
+	  channel->table_select[i] = bitptr->Read(5);
 
-	channel->region0_count = mad_bit_read(ptr, 4);
-	channel->region1_count = mad_bit_read(ptr, 3);
-      }
+	channel->region0_count = bitptr->Read(4);
+	channel->region1_count = bitptr->Read(3);
+		}
 
-      /* [preflag,] scalefac_scale, count1table_select */
-      channel->flags |= mad_bit_read(ptr, lsf ? 2 : 3);
+		/* [preflag,] scalefac_scale, count1table_select */
+      channel->flags |= bitptr->Read(lsf ? 2 : 3);
     }
   }
 
@@ -596,15 +602,15 @@ enum mad_error III_sideinfo(struct mad_bitptr *ptr, unsigned int nch,
  * DESCRIPTION:	decode channel scalefactors for LSF from a bitstream
  */
 static
-unsigned int III_scalefactors_lsf(struct mad_bitptr *ptr,
+unsigned int III_scalefactors_lsf(TMadBit *bitptr,
 				  struct channel *channel,
 				  struct channel *gr1ch, int mode_extension)
 {
-  struct mad_bitptr start;
+  TMadBit start;
   unsigned int scalefac_compress, index, slen[4], part, n, i;
   unsigned char const *nsfb;
 
-  start = *ptr;
+  start = *bitptr;
 
   scalefac_compress = channel->scalefac_compress;
   index = (channel->block_type == 2) ?
@@ -645,7 +651,7 @@ unsigned int III_scalefactors_lsf(struct mad_bitptr *ptr,
     n = 0;
     for (part = 0; part < 4; ++part) {
       for (i = 0; i < nsfb[part]; ++i)
-	channel->scalefac[n++] = mad_bit_read(ptr, slen[part]);
+	channel->scalefac[n++] = bitptr->Read(slen[part]);
     }
 
     while (n < 39)
@@ -690,7 +696,7 @@ unsigned int III_scalefactors_lsf(struct mad_bitptr *ptr,
       max = (1 << slen[part]) - 1;
 
       for (i = 0; i < nsfb[part]; ++i) {
-	is_pos = mad_bit_read(ptr, slen[part]);
+	is_pos = bitptr->Read(slen[part]);
 
 	channel->scalefac[n] = is_pos;
 	gr1ch->scalefac[n++] = (is_pos == max);
@@ -703,7 +709,7 @@ unsigned int III_scalefactors_lsf(struct mad_bitptr *ptr,
     }
   }
 
-  return mad_bit_length(&start, ptr);
+  return TMadBit::GetDistance(&start, bitptr);
 }
 
 /*
@@ -711,13 +717,13 @@ unsigned int III_scalefactors_lsf(struct mad_bitptr *ptr,
  * DESCRIPTION:	decode channel scalefactors of one granule from a bitstream
  */
 static
-unsigned int III_scalefactors(struct mad_bitptr *ptr, struct channel *channel,
-			      struct channel const *gr0ch, unsigned int scfsi)
+unsigned int III_scalefactors(TMadBit *bitptr, struct channel *channel,
+					struct channel const *gr0ch, unsigned int scfsi)
 {
-  struct mad_bitptr start;
+  TMadBit start;
   unsigned int slen1, slen2, sfbi;
 
-  start = *ptr;
+  start = *bitptr;
 
   slen1 = sflen_table[channel->scalefac_compress].slen1;
   slen2 = sflen_table[channel->scalefac_compress].slen2;
@@ -729,11 +735,11 @@ unsigned int III_scalefactors(struct mad_bitptr *ptr, struct channel *channel,
 
     nsfb = (channel->flags & mixed_block_flag) ? 8 + 3 * 3 : 6 * 3;
     while (nsfb--)
-      channel->scalefac[sfbi++] = mad_bit_read(ptr, slen1);
+		channel->scalefac[sfbi++] = bitptr->Read(slen1);
 
-    nsfb = 6 * 3;
-    while (nsfb--)
-      channel->scalefac[sfbi++] = mad_bit_read(ptr, slen2);
+	 nsfb = 6 * 3;
+	 while (nsfb--)
+		channel->scalefac[sfbi++] = bitptr->Read(slen2);
 
     nsfb = 1 * 3;
     while (nsfb--)
@@ -746,16 +752,16 @@ unsigned int III_scalefactors(struct mad_bitptr *ptr, struct channel *channel,
     }
     else {
       for (sfbi = 0; sfbi < 6; ++sfbi)
-	channel->scalefac[sfbi] = mad_bit_read(ptr, slen1);
-    }
+	channel->scalefac[sfbi] = bitptr->Read(slen1);
+	 }
 
-    if (scfsi & 0x4) {
-      for (sfbi = 6; sfbi < 11; ++sfbi)
+	 if (scfsi & 0x4) {
+		for (sfbi = 6; sfbi < 11; ++sfbi)
 	channel->scalefac[sfbi] = gr0ch->scalefac[sfbi];
-    }
-    else {
-      for (sfbi = 6; sfbi < 11; ++sfbi)
-	channel->scalefac[sfbi] = mad_bit_read(ptr, slen1);
+	 }
+	 else {
+		for (sfbi = 6; sfbi < 11; ++sfbi)
+	channel->scalefac[sfbi] = bitptr->Read(slen1);
     }
 
     if (scfsi & 0x2) {
@@ -764,22 +770,22 @@ unsigned int III_scalefactors(struct mad_bitptr *ptr, struct channel *channel,
     }
     else {
       for (sfbi = 11; sfbi < 16; ++sfbi)
-	channel->scalefac[sfbi] = mad_bit_read(ptr, slen2);
-    }
+	channel->scalefac[sfbi] = bitptr->Read(slen2);
+	 }
 
-    if (scfsi & 0x1) {
-      for (sfbi = 16; sfbi < 21; ++sfbi)
+	 if (scfsi & 0x1) {
+		for (sfbi = 16; sfbi < 21; ++sfbi)
 	channel->scalefac[sfbi] = gr0ch->scalefac[sfbi];
-    }
-    else {
-      for (sfbi = 16; sfbi < 21; ++sfbi)
-	channel->scalefac[sfbi] = mad_bit_read(ptr, slen2);
+	 }
+	 else {
+		for (sfbi = 16; sfbi < 21; ++sfbi)
+	channel->scalefac[sfbi] = bitptr->Read(slen2);
     }
 
     channel->scalefac[21] = 0;
   }
 
-  return mad_bit_length(&start, ptr);
+  return TMadBit::GetDistance(&start, bitptr);
 }
 
 /*
@@ -810,7 +816,7 @@ unsigned int III_scalefactors(struct mad_bitptr *ptr, struct channel *channel,
  */
 static
 void III_exponents(struct channel const *channel,
-		   unsigned char const *sfbwidth, signed int exponents[39])
+			unsigned char *sfbwidth, signed int exponents[39])
 {
   signed int gain;
   unsigned int scalefac_multiplier, sfbi;
@@ -854,7 +860,7 @@ void III_exponents(struct channel const *channel,
       exponents[sfbi + 2] = gain2 -
 	(signed int) (channel->scalefac[sfbi + 2] << scalefac_multiplier);
 
-      l    += 3 * sfbwidth[sfbi];
+		l    += 3 * sfbwidth[sfbi];
       sfbi += 3;
     }
   }
@@ -930,14 +936,14 @@ mad_fixed_t III_requantize(unsigned int value, signed int exp)
  * DESCRIPTION:	decode Huffman code words of one channel of one granule
  */
 static
-enum mad_error III_huffdecode(struct mad_bitptr *ptr, mad_fixed_t xr[576],
-			      struct channel *channel,
-			      unsigned char const *sfbwidth,
-			      unsigned int part2_length)
+enum mad_error III_huffdecode(TMadBit *bitptr, mad_fixed_t xr[576],
+					struct channel *channel,
+					unsigned char *sfbwidth,
+					unsigned int part2_length)
 {
   signed int exponents[39], exp;
   signed int const *expptr;
-  struct mad_bitptr peek;
+  TMadBit peek;
   signed int bits_left, cachesz;
   register mad_fixed_t *xrptr;
   mad_fixed_t const *sfbound;
@@ -949,14 +955,14 @@ enum mad_error III_huffdecode(struct mad_bitptr *ptr, mad_fixed_t xr[576],
 
   III_exponents(channel, sfbwidth, exponents);
 
-  peek = *ptr;
-  mad_bit_skip(ptr, bits_left);
+  peek = *bitptr;
+  bitptr->Skip(bits_left);
 
   /* align bit reads to byte boundaries */
   cachesz  = mad_bit_bitsleft(&peek);
   cachesz += ((32 - 1 - 24) + (24 - cachesz)) & ~7;
 
-  bitcache   = mad_bit_read(&peek, cachesz);
+  bitcache   = peek.Read(cachesz);
   bits_left -= cachesz;
 
   xrptr = &xr[0];
@@ -1023,10 +1029,10 @@ enum mad_error III_huffdecode(struct mad_bitptr *ptr, mad_fixed_t xr[576],
 	unsigned int bits;
 
 	bits       = ((32 - 1 - 21) + (21 - cachesz)) & ~7;
-	bitcache   = (bitcache << bits) | mad_bit_read(&peek, bits);
+	bitcache   = (bitcache << bits) | peek.Read(bits);
 	cachesz   += bits;
 	bits_left -= bits;
-      }
+		}
 
       /* hcod (0..19) */
 
@@ -1054,7 +1060,7 @@ enum mad_error III_huffdecode(struct mad_bitptr *ptr, mad_fixed_t xr[576],
 
 	case 15:
 	  if (cachesz < linbits + 2) {
-	    bitcache   = (bitcache << 16) | mad_bit_read(&peek, 16);
+	    bitcache   = (bitcache << 16) | peek.Read(16);
 	    cachesz   += 16;
 	    bits_left -= 16;
 	  }
@@ -1089,7 +1095,7 @@ enum mad_error III_huffdecode(struct mad_bitptr *ptr, mad_fixed_t xr[576],
 
 	case 15:
 	  if (cachesz < linbits + 1) {
-	    bitcache   = (bitcache << 16) | mad_bit_read(&peek, 16);
+	    bitcache   = (bitcache << 16) | peek.Read(16);
 	    cachesz   += 16;
 	    bits_left -= 16;
 	  }
@@ -1173,7 +1179,7 @@ enum mad_error III_huffdecode(struct mad_bitptr *ptr, mad_fixed_t xr[576],
       /* hcod (1..6) */
 
       if (cachesz < 10) {
-	bitcache   = (bitcache << 16) | mad_bit_read(&peek, 16);
+	bitcache   = (bitcache << 16) | peek.Read(16);
 	cachesz   += 16;
 	bits_left -= 16;
       }
@@ -1279,7 +1285,7 @@ enum mad_error III_huffdecode(struct mad_bitptr *ptr, mad_fixed_t xr[576],
  */
 static
 void III_reorder(mad_fixed_t xr[576], struct channel const *channel,
-		 unsigned char const sfbwidth[39])
+		 unsigned char sfbwidth[39])
 {
   mad_fixed_t tmp[32][3][6];
   unsigned int sb, l, f, w, sbw[3], sw[3];
@@ -1327,8 +1333,8 @@ void III_reorder(mad_fixed_t xr[576], struct channel const *channel,
 static
 enum mad_error III_stereo(mad_fixed_t xr[2][576],
 			  struct granule const *granule,
-			  struct mad_header *header,
-			  unsigned char const *sfbwidth)
+			  TMadHeader *header,
+			  unsigned char *sfbwidth)
 {
   short modes[39];
   unsigned int sfbi, l, n, i;
@@ -1644,8 +1650,7 @@ void fastsdct(mad_fixed_t const x[9], mad_fixed_t y[18])
   y[16] = a22 + m7;
 }
 
-static inline
-void sdctII(mad_fixed_t const x[18], mad_fixed_t X[18])
+static void sdctII(mad_fixed_t const x[18], mad_fixed_t X[18])
 {
   mad_fixed_t tmp[9];
   int i;
@@ -1689,8 +1694,7 @@ void sdctII(mad_fixed_t const x[18], mad_fixed_t X[18])
   }
 }
 
-static inline
-void dctIV(mad_fixed_t const y[18], mad_fixed_t X[18])
+static void dctIV(mad_fixed_t const y[18], mad_fixed_t X[18])
 {
   mad_fixed_t tmp[18];
   int i;
@@ -1733,8 +1737,7 @@ void dctIV(mad_fixed_t const y[18], mad_fixed_t X[18])
  * NAME:	imdct36
  * DESCRIPTION:	perform X[18]->x[36] IMDCT using Szu-Wei Lee's fast algorithm
  */
-static inline
-void imdct36(mad_fixed_t const x[18], mad_fixed_t y[36])
+static void imdct36(mad_fixed_t const x[18], mad_fixed_t y[36])
 {
   mad_fixed_t tmp[18];
   int i;
@@ -2146,7 +2149,7 @@ void III_imdct_l(mad_fixed_t const X[18], mad_fixed_t z[36],
  * DESCRIPTION:	perform IMDCT and windowing for short blocks
  */
 static
-void III_imdct_s(mad_fixed_t const X[18], mad_fixed_t z[36])
+void III_imdct_s(mad_fixed_t X[18], mad_fixed_t z[36])
 {
   mad_fixed_t y[36], *yptr;
   mad_fixed_t const *wptr;
@@ -2272,38 +2275,38 @@ void III_overlap(mad_fixed_t const output[36], mad_fixed_t overlap[18],
  * NAME:	III_overlap_z()
  * DESCRIPTION:	perform "overlap-add" of zero IMDCT outputs
  */
-static inline
+static
 void III_overlap_z(mad_fixed_t overlap[18],
-		   mad_fixed_t sample[18][32], unsigned int sb)
+			mad_fixed_t sample[18][32], unsigned int sb)
 {
   unsigned int i;
 
 # if defined(ASO_INTERLEAVE2)
   {
-    register mad_fixed_t tmp1, tmp2;
+	 register mad_fixed_t tmp1, tmp2;
 
-    tmp1 = overlap[0];
-    tmp2 = overlap[1];
+	 tmp1 = overlap[0];
+	 tmp2 = overlap[1];
 
-    for (i = 0; i < 16; i += 2) {
-      sample[i + 0][sb] = tmp1;
-      overlap[i + 0]    = 0;
-      tmp1 = overlap[i + 2];
+	 for (i = 0; i < 16; i += 2) {
+		sample[i + 0][sb] = tmp1;
+		overlap[i + 0]    = 0;
+		tmp1 = overlap[i + 2];
 
-      sample[i + 1][sb] = tmp2;
-      overlap[i + 1]    = 0;
-      tmp2 = overlap[i + 3];
-    }
+		sample[i + 1][sb] = tmp2;
+		overlap[i + 1]    = 0;
+		tmp2 = overlap[i + 3];
+	 }
 
-    sample[16][sb] = tmp1;
-    overlap[16]    = 0;
-    sample[17][sb] = tmp2;
-    overlap[17]    = 0;
+	 sample[16][sb] = tmp1;
+	 overlap[16]    = 0;
+	 sample[17][sb] = tmp2;
+	 overlap[17]    = 0;
   }
 # else
   for (i = 0; i < 18; ++i) {
-    sample[i][sb] = overlap[i];
-    overlap[i]    = 0;
+	 sample[i][sb] = overlap[i];
+	 overlap[i]    = 0;
   }
 # endif
 }
@@ -2347,10 +2350,10 @@ void III_freqinver(mad_fixed_t sample[18][32], unsigned int sb)
  * DESCRIPTION:	decode frame main_data
  */
 static
-enum mad_error III_decode(struct mad_bitptr *ptr, struct mad_frame *frame,
+enum mad_error III_decode(TMadBit *bitptr, TMadFrame *frame,
 			  struct sideinfo *si, unsigned int nch)
 {
-  struct mad_header *header = &frame->header;
+  TMadHeader *header = &frame->Header;
   unsigned int sfreqi, ngr, gr;
 
   {
@@ -2375,7 +2378,7 @@ enum mad_error III_decode(struct mad_bitptr *ptr, struct mad_frame *frame,
 
   for (gr = 0; gr < ngr; ++gr) {
     struct granule *granule = &si->gr[gr];
-    unsigned char const *sfbwidth[2];
+	 unsigned char *sfbwidth[2];
     mad_fixed_t xr[2][576];
     unsigned int ch;
     enum mad_error error;
@@ -2391,16 +2394,16 @@ enum mad_error III_decode(struct mad_bitptr *ptr, struct mad_frame *frame,
       }
 
       if (header->flags & MAD_FLAG_LSF_EXT) {
-	part2_length = III_scalefactors_lsf(ptr, channel,
-					    ch == 0 ? 0 : &si->gr[1].ch[1],
-					    header->mode_extension);
-      }
+	part2_length = III_scalefactors_lsf(bitptr, channel,
+						 ch == 0 ? 0 : &si->gr[1].ch[1],
+						 header->mode_extension);
+		}
       else {
-	part2_length = III_scalefactors(ptr, channel, &si->gr[0].ch[ch],
+	part2_length = III_scalefactors(bitptr, channel, &si->gr[0].ch[ch],
 					gr == 0 ? 0 : si->scfsi[ch]);
-      }
+		}
 
-      error = III_huffdecode(ptr, xr[ch], channel, sfbwidth[ch], part2_length);
+		error = III_huffdecode(bitptr, xr[ch], channel, sfbwidth[ch], part2_length);
       if (error)
 	return error;
     }
@@ -2453,14 +2456,14 @@ enum mad_error III_decode(struct mad_bitptr *ptr, struct mad_frame *frame,
 	/* long blocks */
 	for (sb = 0; sb < 2; ++sb, l += 18) {
 	  III_imdct_l(&xr[ch][l], output, block_type);
-	  III_overlap(output, (*frame->overlap)[ch][sb], sample, sb);
+	  III_overlap(output, frame->overlap[ch][sb], sample, sb);
 	}
       }
       else {
 	/* short blocks */
 	for (sb = 0; sb < 2; ++sb, l += 18) {
 	  III_imdct_s(&xr[ch][l], output);
-	  III_overlap(output, (*frame->overlap)[ch][sb], sample, sb);
+	  III_overlap(output, frame->overlap[ch][sb], sample, sb);
 	}
       }
 
@@ -2478,7 +2481,7 @@ enum mad_error III_decode(struct mad_bitptr *ptr, struct mad_frame *frame,
 	/* long blocks */
 	for (sb = 2; sb < sblimit; ++sb, l += 18) {
 	  III_imdct_l(&xr[ch][l], output, channel->block_type);
-	  III_overlap(output, (*frame->overlap)[ch][sb], sample, sb);
+	  III_overlap(output, frame->overlap[ch][sb], sample, sb);
 
 	  if (sb & 1)
 	    III_freqinver(sample, sb);
@@ -2488,7 +2491,7 @@ enum mad_error III_decode(struct mad_bitptr *ptr, struct mad_frame *frame,
 	/* short blocks */
 	for (sb = 2; sb < sblimit; ++sb, l += 18) {
 	  III_imdct_s(&xr[ch][l], output);
-	  III_overlap(output, (*frame->overlap)[ch][sb], sample, sb);
+	  III_overlap(output, frame->overlap[ch][sb], sample, sb);
 
 	  if (sb & 1)
 	    III_freqinver(sample, sb);
@@ -2498,7 +2501,7 @@ enum mad_error III_decode(struct mad_bitptr *ptr, struct mad_frame *frame,
       /* remaining (zero) subbands */
 
       for (sb = sblimit; sb < 32; ++sb) {
-	III_overlap_z((*frame->overlap)[ch][sb], sample, sb);
+	III_overlap_z(frame->overlap[ch][sb], sample, sb);
 
 	if (sb & 1)
 	  III_freqinver(sample, sb);
@@ -2513,13 +2516,13 @@ enum mad_error III_decode(struct mad_bitptr *ptr, struct mad_frame *frame,
  * NAME:	layer->III()
  * DESCRIPTION:	decode a single Layer III frame
  */
-int mad_layer_III(struct mad_stream *stream, struct mad_frame *frame)
+int mad_layer_III(TMadStream *stream, TMadFrame *frame)
 {
-  struct mad_header *header = &frame->header;
+  TMadHeader *header = &frame->Header;
   unsigned int nch, priv_bitlen, next_md_begin = 0;
   unsigned int si_len, data_bitlen, md_len;
   unsigned int frame_space, frame_used, frame_free;
-  struct mad_bitptr ptr;
+  TMadBit bitptr;
   struct sideinfo si;
   enum mad_error error;
   int result = 0;
@@ -2527,16 +2530,8 @@ int mad_layer_III(struct mad_stream *stream, struct mad_frame *frame)
   /* allocate Layer III dynamic structures */
 
   if (stream->main_data == 0) {
-    stream->main_data = malloc(MAD_BUFFER_MDLEN);
+	 stream->main_data = new unsigned char[MAD_BUFFER_MDLEN];
     if (stream->main_data == 0) {
-      stream->error = MAD_ERROR_NOMEM;
-      return -1;
-    }
-  }
-
-  if (frame->overlap == 0) {
-    frame->overlap = calloc(2 * 32 * 18, sizeof(mad_fixed_t));
-    if (frame->overlap == 0) {
       stream->error = MAD_ERROR_NOMEM;
       return -1;
     }
@@ -2548,7 +2543,7 @@ int mad_layer_III(struct mad_stream *stream, struct mad_frame *frame)
 
   /* check frame sanity */
 
-  if (stream->next_frame - mad_bit_nextbyte(&stream->ptr) <
+  if (stream->next_frame - stream->ptr.GetNextByte() <
       (signed int) si_len) {
     stream->error = MAD_ERROR_BADFRAMELEN;
     stream->md_len = 0;
@@ -2559,9 +2554,9 @@ int mad_layer_III(struct mad_stream *stream, struct mad_frame *frame)
 
   if (header->flags & MAD_FLAG_PROTECTION) {
     header->crc_check =
-      mad_bit_crc(stream->ptr, si_len * CHAR_BIT, header->crc_check);
+      stream->ptr.CalcCrc(si_len * CHAR_BIT, header->crc_check);
 
-    if (header->crc_check != header->crc_target &&
+	 if (header->crc_check != header->crc_target &&
 	!(frame->options & MAD_OPTION_IGNORECRC)) {
       stream->error = MAD_ERROR_BADCRC;
       result = -1;
@@ -2583,61 +2578,56 @@ int mad_layer_III(struct mad_stream *stream, struct mad_frame *frame)
   /* find main_data of next frame */
 
   {
-    struct mad_bitptr peek;
-    unsigned long header;
+	 TMadBit peek(stream->next_frame);
+	 unsigned long header;
 
-    mad_bit_init(&peek, stream->next_frame);
-
-    header = mad_bit_read(&peek, 32);
+	 header = peek.Read(32);
     if ((header & 0xffe60000L) /* syncword | layer */ == 0xffe20000L) {
       if (!(header & 0x00010000L))  /* protection_bit */
-	mad_bit_skip(&peek, 16);  /* crc_check */
+	peek.Skip(16);  /* crc_check */
 
-      next_md_begin =
-	mad_bit_read(&peek, (header & 0x00080000L) /* ID */ ? 9 : 8);
-    }
-
-    mad_bit_finish(&peek);
+		next_md_begin =
+	peek.Read((header & 0x00080000L) /* ID */ ? 9 : 8);
+	 }
   }
 
   /* find main_data of this frame */
 
-  frame_space = stream->next_frame - mad_bit_nextbyte(&stream->ptr);
+  frame_space = stream->next_frame - stream->ptr.GetNextByte();
 
   if (next_md_begin > si.main_data_begin + frame_space)
-    next_md_begin = 0;
+	 next_md_begin = 0;
 
   md_len = si.main_data_begin + frame_space - next_md_begin;
 
   frame_used = 0;
 
   if (si.main_data_begin == 0) {
-    ptr = stream->ptr;
-    stream->md_len = 0;
+	 bitptr = stream->ptr;
+	 stream->md_len = 0;
 
-    frame_used = md_len;
+	 frame_used = md_len;
   }
   else {
-    if (si.main_data_begin > stream->md_len) {
-      if (result == 0) {
+	 if (si.main_data_begin > stream->md_len) {
+		if (result == 0) {
 	stream->error = MAD_ERROR_BADDATAPTR;
 	result = -1;
-      }
-    }
-    else {
-      mad_bit_init(&ptr,
-		   *stream->main_data + stream->md_len - si.main_data_begin);
+		}
+	 }
+	 else {
+		bitptr.SetBuffer(stream->main_data + stream->md_len - si.main_data_begin);
 
-      if (md_len > si.main_data_begin) {
+		if (md_len > si.main_data_begin) {
 	assert(stream->md_len + md_len -
-	       si.main_data_begin <= MAD_BUFFER_MDLEN);
+			 si.main_data_begin <= MAD_BUFFER_MDLEN);
 
-	memcpy(*stream->main_data + stream->md_len,
-	       mad_bit_nextbyte(&stream->ptr),
-	       frame_used = md_len - si.main_data_begin);
+	memcpy(stream->main_data + stream->md_len,
+			 stream->ptr.GetNextByte(),
+			 frame_used = md_len - si.main_data_begin);
 	stream->md_len += frame_used;
-      }
-    }
+		}
+	 }
   }
 
   frame_free = frame_space - frame_used;
@@ -2645,16 +2635,16 @@ int mad_layer_III(struct mad_stream *stream, struct mad_frame *frame)
   /* decode main_data */
 
   if (result == 0) {
-    error = III_decode(&ptr, frame, &si, nch);
-    if (error) {
-      stream->error = error;
-      result = -1;
-    }
+	 error = III_decode(&bitptr, frame, &si, nch);
+	 if (error) {
+		stream->error = error;
+		result = -1;
+	 }
 
     /* designate ancillary bits */
 
-    stream->anc_ptr    = ptr;
-    stream->anc_bitlen = md_len * CHAR_BIT - data_bitlen;
+	 stream->anc_ptr    = bitptr;
+	 stream->anc_bitlen = md_len * CHAR_BIT - data_bitlen;
   }
 
 # if 0 && defined(DEBUG)
@@ -2668,7 +2658,7 @@ int mad_layer_III(struct mad_stream *stream, struct mad_frame *frame)
   /* preload main_data buffer with up to 511 bytes for next frame(s) */
 
   if (frame_free >= next_md_begin) {
-    memcpy(*stream->main_data,
+    memcpy(stream->main_data,
 	   stream->next_frame - next_md_begin, next_md_begin);
     stream->md_len = next_md_begin;
   }
@@ -2681,18 +2671,19 @@ int mad_layer_III(struct mad_stream *stream, struct mad_frame *frame)
 	extra = next_md_begin - frame_free;
 
       if (extra < stream->md_len) {
-	memmove(*stream->main_data,
-		*stream->main_data + stream->md_len - extra, extra);
+	memmove(stream->main_data,
+		stream->main_data + stream->md_len - extra, extra);
 	stream->md_len = extra;
-      }
-    }
-    else
-      stream->md_len = 0;
+		}
+	 }
+	 else
+		stream->md_len = 0;
 
-    memcpy(*stream->main_data + stream->md_len,
-	   stream->next_frame - frame_free, frame_free);
-    stream->md_len += frame_free;
+	 memcpy(stream->main_data + stream->md_len,
+		stream->next_frame - frame_free, frame_free);
+	 stream->md_len += frame_free;
   }
 
   return result;
 }
+
