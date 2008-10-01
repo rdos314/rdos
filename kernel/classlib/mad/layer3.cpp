@@ -334,7 +334,7 @@ struct fixedfloat {
   unsigned long mantissa  : 27;
   unsigned short exponent :  5;
 } const rq_table[8207] = {
-# include "rq_table.dat"
+# include "rqtab.h"
 };
 
 /*
@@ -387,7 +387,7 @@ mad_fixed_t const ca[8] = {
  */
 static
 mad_fixed_t const imdct_s[6][6] = {
-# include "imdct_s.dat"
+# include "imdcts.h"
 };
 
 # if !defined(ASO_IMDCT)
