@@ -72,16 +72,171 @@
 #include "quizf1.h"
 #include "quizf2.h"
 #include "quizf3.h"
+#include "quizdba.h"
 
 #include "pop.h"
 
 //#define SWEDISH     1
 #define ENGLISH       1
 
+#define ANCESTRY_CAUCASIAN      1
+#define ANCESTRY_ASIAN          2
+#define ANCESTRY_AMERIND        3
+#define ANCESTRY_AFRICAN        4
+#define ANCESTRY_ARAB           5
+#define ANCESTRY_AUSTRALIAN     6
+#define ANCESTRY_SWEDEN			  7
+#define ANCESTRY_PORTUGAL		  8
+#define ANCESTRY_NORWAY			  9
+#define ANCESTRY_GERMANY		  10
+
+
 #define FALSE 0
 #define TRUE !FALSE
 
 TQuiz *Quiz[40];
+
+
+/*##################  ExportAncestry ##########################
+*   Purpose....: Export ancestry to PCA 	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void ExportAncestry(const char *filename, int Ancestry)
+{
+	TQuizAncestryRow Row;
+	int i;
+	int v;
+	int ival;
+	char str[80];
+	int use;
+	TFile *infile;
+	TFile outfile(filename, 0);
+
+	outfile.Write("\"\", ");
+	outfile.Write("\"\", ");
+
+	for (i = 0; i < 145; i++)
+	{
+		outfile.Write("\"");
+
+		sprintf(str, "#%d", i + 1);
+		outfile.Write(str);
+
+		outfile.Write("\"");
+		if (i != 144)
+			outfile.Write(", ");
+	}
+	outfile.Write("\n");
+
+	 for (v = 0; v < 4; v++)
+    {
+        switch (v)
+        {
+            case 0:
+                infile = new TFile("ancf1.bin");
+                break;
+
+            case 1:
+                infile = new TFile("ancf2.bin");
+                break;
+
+            case 2:
+                infile = new TFile("ancf3.bin");
+                break;
+
+            case 3:
+                infile = new TFile("ancfi.bin");
+                break;
+		  }
+
+		while (infile->Read(&Row, sizeof(Row)))
+		{
+			 use = FALSE;
+			 switch (Ancestry)
+			 {
+				  case ANCESTRY_CAUCASIAN:
+					 if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
+						 use = TRUE;
+						 break;
+
+					case ANCESTRY_ASIAN:
+						if (Row.Ancestry >= 4000)
+								use = TRUE;
+						  break;
+
+					case ANCESTRY_AMERIND:
+						if (Row.Ancestry == 3 || Row.Ancestry == 4)
+								use = TRUE;
+						  break;
+
+					case ANCESTRY_AFRICAN:
+						if ((Row.Ancestry >= 1000 && Row.Ancestry < 2000) || Row.Ancestry == 5)
+								use = TRUE;
+						  break;
+
+					case ANCESTRY_ARAB:
+						if (Row.Ancestry >= 3000 && Row.Ancestry < 4000 && Row.Ancestry != 3205)
+							use = TRUE;
+							break;
+
+					case ANCESTRY_AUSTRALIAN:
+						if (Row.Ancestry == 1)
+							use = TRUE;
+							break;
+
+					case ANCESTRY_SWEDEN:
+						if (Row.Lang == 1)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_NORWAY:
+						if (Row.Lang == 2)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_PORTUGAL:
+						if (Row.Lang == 3)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_GERMANY:
+						if (Row.Lang == 4)
+							use = TRUE;
+						break;
+				}
+
+				if (use)
+				{
+					sprintf(str, "\"%d\", ", Row.AsResult);
+				outfile.Write(str);
+
+		    	sprintf(str, "\"%d\", ", Row.NtResult);
+			    outfile.Write(str);
+
+    			for (i = 0; i < 145; i++)
+	    		{
+    	    		ival = Row.Quiz[i];
+	    	    	if (ival)
+				    	ival--;
+    
+    				if (ival > 2)
+	    				ival = 0;
+                    
+		    		sprintf(str, "\"%d\"", ival);
+			    	outfile.Write(str);
+				    if (i != 144)
+					    outfile.Write(", ");
+    			}
+	    		outfile.Write("\n");
+	    	}
+		}
+		delete infile;
+	}
+}
+
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
@@ -131,6 +286,17 @@ int main(int argc, char **argv)
 	Quiz[33] = new TQuizF1("quizf1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32]);
 	Quiz[34] = new TQuizF2("quizf2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33]);
 	Quiz[35] = new TQuizF3("quizf3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34]);
+
+	 ExportAncestry("pca\\cauc.dat", ANCESTRY_CAUCASIAN);
+	 ExportAncestry("pca\\asian.dat", ANCESTRY_ASIAN);
+	 ExportAncestry("pca\\amerind.dat", ANCESTRY_AMERIND);
+	 ExportAncestry("pca\\african.dat", ANCESTRY_AFRICAN);
+	 ExportAncestry("pca\\arab.dat", ANCESTRY_ARAB);
+	 ExportAncestry("pca\\austral.dat", ANCESTRY_AUSTRALIAN);
+	 ExportAncestry("pca\\sw.dat", ANCESTRY_SWEDEN);
+	 ExportAncestry("pca\\no.dat", ANCESTRY_NORWAY);
+	 ExportAncestry("pca\\br.dat", ANCESTRY_PORTUGAL);
+	 ExportAncestry("pca\\de.dat", ANCESTRY_GERMANY);
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();

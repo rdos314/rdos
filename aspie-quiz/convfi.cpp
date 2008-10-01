@@ -32,6 +32,7 @@
 #include "pop.h"
 #include "file.h"
 #include "quizdbfi.h"
+#include "quizdba.h"
 #include "convf.h"
 
 #define FALSE 0
@@ -43,6 +44,7 @@
 const char InsertString[] = "INSERT INTO aspie-quiz-fi VALUES(";
 
 TFile quizfile("quizfi.bin", 0);
+TFile ancfile("ancfi.bin", 0);
 
 
 /*##################  HandleRow ##########################
@@ -229,6 +231,7 @@ char *ProcessRow(char *str)
 	int i;
 	int j;
 	TQuizRow Row;
+	TQuizAncestryRow AncestryRow;
 	int quote;
 
 	for (fieldno = 0; fieldno < 169; fieldno++)
@@ -290,18 +293,22 @@ char *ProcessRow(char *str)
 
 				case 5:
 					Row.BirthYear = atoi(valstr);
+					AncestryRow.BirthYear = atoi(valstr);
 					break;
 
 				case 6:
 					Row.BirthMonth = atoi(valstr);
+					AncestryRow.BirthMonth = atoi(valstr);
 					break;
 
 				case 7:
 					Row.Gender = atoi(valstr);
+					AncestryRow.Gender = atoi(valstr);
 					break;
 
 				case 8:
 					Row.Lang = atoi(valstr);
+					AncestryRow.Lang = atoi(valstr);
 					break;
 
 				case 9:
@@ -310,6 +317,7 @@ char *ProcessRow(char *str)
 
 				case 10:
 					Row.Ancestry = atoi(valstr);
+					AncestryRow.Ancestry = atoi(valstr);
 					break;
 
 				case 11:
@@ -343,15 +351,20 @@ char *ProcessRow(char *str)
 
 				case 16:
 					Row.AsResult = atoi(valstr);
+					AncestryRow.AsResult = atoi(valstr);
 					break;
 
 				case 17:
 					Row.NtResult = atoi(valstr);
+					AncestryRow.NtResult = atoi(valstr);
 					break;
 
 				default:
 					i = fieldno - 18;
 					Row.Quiz[i] = atoi(valstr);
+
+					if (i < 145)
+    					AncestryRow.Quiz[i] = atoi(valstr);					
 					break;
 			}
 		}
@@ -359,6 +372,8 @@ char *ProcessRow(char *str)
 
   	UpdateScore(&Row);
     HandleRow(&Row);
+
+	ancfile.Write(&AncestryRow, sizeof(TQuizAncestryRow));
 
 	return str;
 }
