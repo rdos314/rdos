@@ -1,0 +1,200 @@
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2002, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# mp3.cpp
+# MP3 player class
+#
+########################################################################*/
+
+#include <memory.h>
+
+#include "rdos.h"
+#include "mp3.h"
+
+#define FALSE	0
+#define TRUE	!FALSE
+
+#define MIN_FRAME_SIZE 24 // minimal mp3 frame size
+#define MAX_FRAME_SIZE 5761 // max frame size
+
+#define GetFourByteSyncSafe(value1, value2, value3, value4) (((value1 & 255) << 21) | ((value2 & 255) << 14) | ((value3 & 255) << 7) | (value4 & 255))
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::TMp3Player
+#
+#   Purpose....: Constructor for TMp3Player
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TMp3Player::TMp3Player()
+{
+    FFileHandle = 0;
+    FMapHandle = 0;
+    FFileBuf = 0;
+    FFileSize = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::~TMp3Player
+#
+#   Purpose....: Destructor for TMp3Player
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TMp3Player::~TMp3Player()
+{
+    Close();
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::FindStart
+#
+#   Purpose....: Find first frame
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMp3Player::FindStart()
+{
+    int tagsize;
+
+    if (FFileBuf)
+    {
+        FId3V1 = FALSE;
+        FId3V2 = FALSE;
+
+        FMp3Start = FFileBuf;
+        FMp3Size = FFileSize;
+
+        if (FMp3Size > 128 && memcmp(FMp3Start + FMp3Size - 128, "TAG", 3) == 0)
+        {
+            FMp3Size -= 128;
+            FId3V1 = TRUE;
+        }
+
+        if (    FMp3Size > 10 && 
+                memcmp(FMp3Start, "ID3", 3) == 0 &&
+                FMp3Start[6] & 0x80 == 0 &&
+                FMp3Start[7] & 0x80 == 0 &&
+                FMp3Start[8] & 0x80 == 0 &&
+                FMp3Start[9] & 0x80 == 0)
+        {
+            
+            tagsize = GetFourByteSyncSafe(FMp3Start[6], FMp3Start[7], FMp3Start[8], FMp3Start[9]); 
+            tagsize += 10;
+
+			if (FMp3Size > (tagsize + MIN_FRAME_SIZE))
+            {
+                FId3V2 = TRUE;
+
+                if (FMp3Start[tagsize] == 0xFF && (FMp3Start[tagsize + 1] & 0xE0) == 0xE0)
+                {
+                    FMp3Start += tagsize;
+                    FMp3Size -= tagsize;
+                }
+            }
+        }
+    }	
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::Load
+#
+#   Purpose....: Load an MP3 and create a file-mapping on it
+#
+#   In params..: FileName		File to load
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMp3Player::Load(const char *FileName)
+{
+    int size;
+
+    Close();
+
+    FFileHandle = RdosOpenFile(FileName, 0);
+
+    if (FFileHandle)
+    {
+        FFileSize = RdosGetFileSize(FFileHandle);
+        
+        FMapHandle = RdosCreateNamedFileMapping(FileName, FFileSize, FFileHandle);
+        if (FMapHandle)
+        {                 
+            size = FFileSize;
+            size--;
+            size = size & 0xFFFFF000;
+            size += 0x1000;
+            
+			FFileBuf = (char *)RdosAllocateMem(size);
+            RdosMapView(FMapHandle, 0, FFileBuf, FFileSize);
+
+            FindStart();
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::Close
+#
+#   Purpose....: Close MP3 file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMp3Player::Close()
+{
+    if (FFileHandle)
+    {
+        if (FMapHandle)
+        {
+            RdosUnmapView(FMapHandle);
+            RdosCloseMapping(FMapHandle);
+            FMapHandle = 0;
+        }
+
+        if (FFileBuf)
+        {
+            RdosFreeMem(FFileBuf);
+            FFileBuf = 0;
+        }
+             
+        RdosCloseFile(FFileHandle);
+        FFileHandle = 0;
+    }
+}

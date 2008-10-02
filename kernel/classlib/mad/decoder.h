@@ -36,6 +36,7 @@ enum mad_flow {
 class TMadDecoder
 {
 public:
+	TMadDecoder();
 	TMadDecoder(void *data);
 	~TMadDecoder();
 

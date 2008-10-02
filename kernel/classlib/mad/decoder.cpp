@@ -56,6 +56,15 @@
  * NAME:	decoder->init()
  * DESCRIPTION:	initialize a decoder object with callback routines
  */
+TMadDecoder::TMadDecoder()
+{
+  options      = 0;
+  cb_data      = 0;
+}
+/*
+ * NAME:	decoder->init()
+ * DESCRIPTION:	initialize a decoder object with callback routines
+ */
 TMadDecoder::TMadDecoder(void *data)
 {
   options      = 0;

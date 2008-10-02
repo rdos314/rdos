@@ -96,7 +96,17 @@ typedef mad_fixed_t mad_sample_t;
 # define mad_f_add(x, y)	((x) + (y))
 # define mad_f_sub(x, y)	((x) - (y))
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 mad_fixed_t __stdcall MadMul32(mad_fixed_t x, mad_fixed_t y);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #   define mad_f_mul		MadMul32
 #   define mad_f_scale64
