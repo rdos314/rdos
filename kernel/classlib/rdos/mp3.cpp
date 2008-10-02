@@ -55,6 +55,7 @@ TMp3Player::TMp3Player()
     FMapHandle = 0;
     FFileBuf = 0;
     FFileSize = 0;
+    FValid = FALSE;
 }
 
 /*##########################################################################
@@ -104,10 +105,10 @@ void TMp3Player::FindStart()
 
         if (    FMp3Size > 10 && 
                 memcmp(FMp3Start, "ID3", 3) == 0 &&
-                FMp3Start[6] & 0x80 == 0 &&
-                FMp3Start[7] & 0x80 == 0 &&
-                FMp3Start[8] & 0x80 == 0 &&
-                FMp3Start[9] & 0x80 == 0)
+                FMp3Start[6] < 0x80 &&
+                FMp3Start[7] < 0x80 &&
+                FMp3Start[8] < 0x80 &&
+                FMp3Start[9] < 0x80)
         {
             
             tagsize = GetFourByteSyncSafe(FMp3Start[6], FMp3Start[7], FMp3Start[8], FMp3Start[9]); 
@@ -129,6 +130,63 @@ void TMp3Player::FindStart()
 
 /*##########################################################################
 #
+#   Name       : TMp3Player::Check
+#
+#   Purpose....: Check for valid frames
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMp3Player::Check()
+{
+    unsigned char *FirstFrame;
+    TMadStream stream;
+    TMadFrame frame;
+
+	stream.SetBuffer(FMp3Start, FMp3Size);
+
+	FirstFrame = FMp3Start;
+
+	for (;;)
+	{
+		if (frame.Decode(&stream))
+			if (!MAD_RECOVERABLE(stream.error))
+				return;
+
+		FirstFrame =  (unsigned char*) stream.this_frame;
+
+		FSampleRate = frame.Header.samplerate;
+	    FLayer = frame.Header.layer;
+		FMode = frame.Header.mode;
+		FChannels = ( frame.Header.mode == MAD_MODE_SINGLE_CHANNEL) ? 1 : 2;
+		FEmphasis = frame.Header.emphasis;
+		FModeExtension = frame.Header.mode_extension;
+		FBitrate = frame.Header.bitrate;
+		FHeaderFlags = frame.Header.flags;
+		FAvgBitRate = 0;
+		FDuration = frame.Header.duration;
+		FSamplesPerFrame = (frame.Header.flags & MAD_FLAG_LSF_EXT) ? 576 : 1152;
+
+		if (frame.Decode(&stream))
+			if (!MAD_RECOVERABLE(stream.error))
+				return;
+
+		if (FSampleRate != frame.Header.samplerate || FLayer != frame.Header.layer)
+			continue;
+					
+		break;	
+	}
+	
+	FMp3Size -= (FirstFrame - FMp3Start);
+	FMp3Start = FirstFrame;
+
+    FValid = TRUE;
+}
+
+/*##########################################################################
+#
 #   Name       : TMp3Player::Load
 #
 #   Purpose....: Load an MP3 and create a file-mapping on it
@@ -143,6 +201,8 @@ void TMp3Player::Load(const char *FileName)
     int size;
 
     Close();
+
+    FValid = FALSE;
 
     FFileHandle = RdosOpenFile(FileName, 0);
 
@@ -162,6 +222,7 @@ void TMp3Player::Load(const char *FileName)
             RdosMapView(FMapHandle, 0, FFileBuf, FFileSize);
 
             FindStart();
+            Check();
         }
     }
 }
@@ -179,6 +240,8 @@ void TMp3Player::Load(const char *FileName)
 ##########################################################################*/
 void TMp3Player::Close()
 {
+    FValid = FALSE;
+
     if (FFileHandle)
     {
         if (FMapHandle)

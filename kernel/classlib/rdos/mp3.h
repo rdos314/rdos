@@ -40,8 +40,25 @@ public:
 	void Load(const char *FileName);
 //	void Play();
 
+    int FChannels;
+	unsigned int FSampleRate;		/* sampling frequency (Hz) */
+	int FSamplesPerFrame;
+	int FAvgBitRate;
+
+	enum mad_layer FLayer;			/* audio layer (1, 2, or 3) */
+	enum mad_mode FMode;			/* channel mode (see above) */
+	enum mad_emphasis FEmphasis;		/* de-emphasis to use (see above) */
+
+	int FModeExtension;			/* additional mode info */
+
+	unsigned long FBitrate;		/* stream bitrate (bps) */
+	mad_timer_t FDuration;			/* audio playing time of frame */
+
+	int FHeaderFlags;				/* flags (see below) */
+
 protected:
-    void FindStart();
+	void FindStart();
+	void Check();
 
 //	virtual enum mad_flow Input(void *);
 //	virtual enum mad_flow Header(TMadHeader *);
@@ -51,13 +68,14 @@ protected:
 
     int FFileHandle;
     int FMapHandle;
-    char *FFileBuf;
+	unsigned char *FFileBuf;
     int FFileSize;
+    int FValid;
 
     int FId3V1;
     int FId3V2;
 
-    char *FMp3Start;
+    unsigned char *FMp3Start;
     int FMp3Size;
 	
 };
