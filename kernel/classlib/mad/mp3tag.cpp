@@ -20,21 +20,36 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
+# Builds on code from Zoran Cindori 2003-2008  ( zcindori@inet.hr )
+#
 # mp3tag.cpp
 # Mp3 tag class
 #
 ########################################################################*/
 
-#include "rdos.h"
+#include <memory.h>
+#include <stdio.h>
+
 #include "mp3tag.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
 
+enum {
+	TAG_LAME_NSPSYTUNE    = 0x01,
+	TAG_LAME_NSSAFEJOINT  = 0x02,
+	TAG_LAME_NOGAP_NEXT   = 0x04,
+	TAG_LAME_NOGAP_PREV   = 0x08,
+
+	TAG_LAME_UNWISE       = 0x10
+};
+
+
 # define XING_MAGIC	(('X' << 24) | ('i' << 16) | ('n' << 8) | 'g')
 # define INFO_MAGIC	(('I' << 24) | ('n' << 16) | ('f' << 8) | 'o')
 # define LAME_MAGIC	(('L' << 24) | ('A' << 16) | ('M' << 8) | 'E')
 # define VBRI_MAGIC	(('V' << 24) | ('B' << 16) | ('R' << 8) | 'I')
+# define RGAIN_SET(rgain)	((rgain)->name != RGAIN_NAME_NOT_SET)
 
 static
 unsigned short const crc16_table[256] = {
@@ -159,6 +174,73 @@ TMp3TagXing::~TMp3TagXing()
 
 /*##########################################################################
 #
+#   Name       : TMp3TagXing::Parse
+#
+#   Purpose....: Parse
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TMp3TagXing::Parse(TMadBit *bitptr, unsigned int *bitlen)
+{
+    int lflags;
+
+    flags = 0;
+
+	if (*bitlen < 32)
+		return -1;
+
+    lflags = bitptr->Read(32);
+	*bitlen -= 32;
+
+	if (lflags & TAG_XING_FRAMES) 
+	{
+		if (*bitlen < 32)
+			return -1;
+
+		frames = bitptr->Read(32);
+		*bitlen -= 32;
+	}
+
+	if (lflags & TAG_XING_BYTES)
+	{
+		if (*bitlen < 32)
+			return -1;
+
+		bytes = bitptr->Read(32);
+		*bitlen -= 32;
+	}
+
+	if (lflags & TAG_XING_TOC)
+	{
+		int i;
+
+		if (*bitlen < 800)
+			return -1;
+
+		for (i = 0; i < 100; ++i)
+			toc[i] = (unsigned char) bitptr->Read(8);
+
+		*bitlen -= 800;
+	}
+
+	if (lflags & TAG_XING_SCALE)
+	{
+		if (*bitlen < 32)
+			return -1;
+
+		scale = bitptr->Read(32);
+		*bitlen -= 32;
+	}
+
+    flags = lflags;
+	return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TMp3RGain::TMp3RGain
 #
 #   Purpose....: Rgain constructor
@@ -188,6 +270,31 @@ TMp3RGain::TMp3RGain()
 ##########################################################################*/
 TMp3RGain::~TMp3RGain()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3RGain::Parse
+#
+#   Purpose....: Rgain parse
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TMp3RGain::Parse(TMadBit *bitptr)
+{
+  int negative;
+
+  name       = (enum rgain_name) bitptr->Read(3);
+  originator = (enum rgain_originator) bitptr->Read(3);
+
+  negative          = bitptr->Read(1);
+  adjustment = (short) bitptr->Read(9);
+
+  if (negative)
+	adjustment = (short) -adjustment;
 }
 
 /*##########################################################################
@@ -223,6 +330,134 @@ TMp3TagLame::TMp3TagLame()
 
     music_length = 0;
     music_crc = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3TagLame::Parse
+#
+#   Purpose....: Parse
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TMp3TagLame::Parse(TMadBit *bitptr, unsigned int *bitlen, unsigned short crc)
+{
+	TMadBit save = *bitptr;
+	unsigned long magic;
+	char const *version;
+
+	if (*bitlen < 36 * 8)
+		goto fail;
+
+	/* bytes $9A-$A4: Encoder short VersionString */
+
+	magic   = bitptr->Read(4 * 8);
+	version = (const char *) bitptr->GetNextByte();
+
+	bitptr->Skip(5 * 8);
+
+	/* byte $A5: Info Tag revision + VBR method */
+
+	revision = (unsigned char) bitptr->Read(4);
+	if (revision == 15)
+		goto fail;
+
+	vbr_method = (enum tag_lame_vbr) bitptr->Read(4);
+
+	/* byte $A6: Lowpass filter value (Hz) */
+
+	lowpass_filter = (unsigned short) ( bitptr->Read(8) * 100);
+
+	/* bytes $A7-$AA: 32 bit "Peak signal amplitude" */
+
+	peak = bitptr->Read(32) << 5;
+
+	/* bytes $AB-$AC: 16 bit "Radio Replay Gain" */
+
+	replay_gain[0].Parse(bitptr);
+
+	/* bytes $AD-$AE: 16 bit "Audiophile Replay Gain" */
+
+    replay_gain[1].Parse(bitptr);
+
+	//LAME 3.95.1 reference level changed from 83dB to 89dB and foobar seems to use 89dB
+	if (magic == LAME_MAGIC)
+	{
+		char str[6];
+		unsigned major = 0, minor = 0, patch = 0;
+		int i;
+
+		memcpy(str, version, 5);
+		str[5] = 0;
+
+		sscanf(str, "%u.%u.%u", &major, &minor, &patch);
+
+		if (major == 3 && minor < 95) {
+			for (i = 0; i < 2; ++i) {
+				if (RGAIN_SET(&replay_gain[i]))
+					replay_gain[i].adjustment += 6;  // 6.0 dB 
+			}
+		}
+	}
+
+	/* byte $AF: Encoding flags + ATH Type */
+
+	flags    = (unsigned char) bitptr->Read(4);
+	ath_type = (unsigned char) bitptr->Read(4);
+
+	/* byte $B0: if ABR {specified bitrate} else {minimal bitrate} */
+
+	bitrate = (unsigned char) bitptr->Read(8);
+
+	/* bytes $B1-$B3: Encoder delays */
+
+	start_delay = bitptr->Read(12);
+	end_padding = bitptr->Read(12);
+
+	/* byte $B4: Misc */
+
+	source_samplerate = (enum tag_lame_source) bitptr->Read(2);
+
+	if (bitptr->Read(1))
+		flags |= TAG_LAME_UNWISE;
+
+	stereo_mode   = (enum tag_lame_mode) bitptr->Read(3);
+	noise_shaping = (unsigned char) bitptr->Read(2);
+
+	/* byte $B5: MP3 Gain */
+
+	gain = (signed char) bitptr->Read(8);
+
+	/* bytes $B6-B7: Preset and surround info */
+
+	bitptr->Skip(2);
+
+	surround = (enum tag_lame_surround) bitptr->Read(3);
+	preset   = (enum tag_lame_preset) bitptr->Read(11);
+
+	/* bytes $B8-$BB: MusicLength */
+
+	music_length = bitptr->Read(32);
+
+	/* bytes $BC-$BD: MusicCRC */
+
+	music_crc = (unsigned short) bitptr->Read(16);
+
+	/* bytes $BE-$BF: CRC-16 of Info Tag */
+
+	if (bitptr->Read(16) != crc)
+		goto fail;
+
+	*bitlen -= 36 * 8;
+
+	return 0;
+
+fail:
+	*bitptr = save;
+	return -1;
 }
 
 /*##########################################################################
@@ -272,3 +507,172 @@ TMp3Tag::~TMp3Tag()
 {
 }
 
+/*##########################################################################
+#
+#   Name       : TMp3Tag::Parse
+#
+#   Purpose....: Parse tags
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TMp3Tag::Parse(TMadStream *stream, TMadFrame *frame)
+{
+	TMadBit bitptr = stream->anc_ptr;
+	TMadBit start = bitptr;
+	unsigned int bitlen = stream->anc_bitlen;
+	unsigned long magic;
+	unsigned long magic2;
+	int i;
+
+	if (bitlen < 32)
+		return -1;
+
+	magic = bitptr.Read(32);
+    
+	bitlen -= 32;
+
+	if (magic != XING_MAGIC &&
+		magic != INFO_MAGIC &&
+		magic != LAME_MAGIC) {
+			/*
+			* Due to an unfortunate historical accident, a Xing VBR tag may be
+			* misplaced in a stream with CRC protection. We check for this by
+			* assuming the tag began two octets prior and the high bits of the
+			* following flags field are always zero.
+			*/
+
+			if (magic != ((XING_MAGIC << 16) & 0xffffffffL) &&
+				magic != ((INFO_MAGIC << 16) & 0xffffffffL))
+			{
+				//check for VBRI tag
+				if (bitlen >= 400)
+				{
+					bitptr.Skip(256);
+					magic2 = bitptr.Read(32);
+					if (magic2 == VBRI_MAGIC)
+					{
+						bitptr.Read(16); //16 bits - version
+						lame.start_delay = bitptr.Read(16); //16 bits - delay
+						bitptr.Skip(16); //16 bits - quality
+						xing.bytes = bitptr.Read(32); //32 bits - bytes
+					    xing.frames = bitptr.Read(32); //32 bits - frames
+						unsigned int table_size = bitptr.Read(16);
+						unsigned int table_scale = bitptr.Read(16);
+						unsigned int entry_bytes = bitptr.Read(16);
+						unsigned int entry_frames = bitptr.Read(16);
+						{
+						    unsigned int Entry = 0, PrevEntry = 0, Percent, SeekPoint = 0, i = 0;
+						    float AccumulatedTime = 0;
+                            float TotalDuration = (float) (1000.0 * xing.frames * ((frame->Header.flags & MAD_FLAG_LSF_EXT) ? 576 : 1152) / frame->Header.samplerate);
+						    float DurationPerVbriFrames = TotalDuration / ((float)table_size + 1);
+						    for (Percent=0;Percent<100;Percent++)
+						    {
+                                float EntryTimeInMilliSeconds = ((float)Percent/100) * TotalDuration;
+                                while (AccumulatedTime <= EntryTimeInMilliSeconds)
+                                {
+                                    PrevEntry = Entry;
+                                    Entry = bitptr.Read(entry_bytes * 8) * table_scale;
+                                    i++;
+                                    SeekPoint += Entry;
+                                    AccumulatedTime += DurationPerVbriFrames;
+                                    if (i >= table_size) break;
+                                }
+                                unsigned int fraction = ( (int)(((( AccumulatedTime - EntryTimeInMilliSeconds ) / DurationPerVbriFrames ) 
+			                                             + (1.0f/(2.0f*(float)entry_frames))) * (float)entry_frames));
+			                    unsigned int SeekPoint2 = SeekPoint - (int)((float)PrevEntry * (float)(fraction) 
+				                                         / (float)entry_frames);
+				                unsigned int XingPoint = (256 * SeekPoint2) / xing.bytes;
+							
+
+				                if (XingPoint > 255) XingPoint = 255;
+				                xing.toc[Percent] = (unsigned char)(XingPoint & 0xFF);
+                            }
+                        }
+						flags |= (TAG_XING | TAG_VBRI);
+						xing.flags = (TAG_XING_FRAMES | TAG_XING_BYTES | TAG_XING_TOC);
+					
+						return 0;
+					}
+				}
+				return -1;
+			}
+
+			magic >>= 16;
+
+			/* backtrack the bit pointer */
+
+			bitptr = start;
+			bitptr.Read(16);
+			bitlen += 16;
+	}
+
+	if ((magic & 0x0000ffffL) == (XING_MAGIC & 0x0000ffffL))
+		flags |= TAG_VBR;
+
+	/* Xing tag */
+
+	if (magic == LAME_MAGIC)
+	{
+		bitptr = start;
+		bitlen += 32;
+	}
+	else if (xing.Parse(&bitptr, &bitlen) == 0)
+		flags |= TAG_XING;
+
+	/* encoder string */
+
+	if (bitlen >= 20 * 8)
+	{
+		start = bitptr;
+
+		for (i = 0; i < 20; ++i) {
+			encoder[i] = (char)  bitptr.Read(8);
+
+			if (encoder[i] == 0)
+				break;
+
+			/* keep only printable ASCII chars */
+
+			if (encoder[i] < 0x20 || encoder[i] >= 0x7f)
+			{
+				encoder[i] = 0;
+				break;
+			}
+		}
+
+		encoder[20] = 0;
+		bitptr = start;
+	}
+
+	/* LAME tag */
+
+	if (memcmp(encoder, "LAME", 4) == 0 && stream->next_frame - stream->this_frame >= 192)
+	{
+            unsigned short crc = crc_compute((const char *) stream->this_frame, (frame->Header.flags & MAD_FLAG_LSF_EXT) ? 175 : 190, 0x0000);
+			if (lame.Parse(&bitptr, &bitlen, crc) == 0)
+			{
+                flags |= TAG_LAME;
+			    encoder[9] = 0;
+            }
+	}
+	else 
+	{
+		for (i = 0; i < 20; ++i) {
+			if (encoder[i] == 0)
+				break;
+
+			/* stop at padding chars */
+
+			if (encoder[i] == 0x55)
+			{
+				encoder[i] = 0;
+				break;
+			}
+		}
+	}
+
+	return 0;
+}

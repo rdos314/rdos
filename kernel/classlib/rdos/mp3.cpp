@@ -187,6 +187,59 @@ void TMp3Player::Check()
 
 /*##########################################################################
 #
+#   Name       : TMp3Player::ParseTag
+#
+#   Purpose....: Parse tags
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMp3Player::Parse()
+{
+    TMadStream stream;
+    TMadFrame frame;
+
+    FValidTag = FALSE;
+
+	stream.SetBuffer(FMp3Start, FMp3Size - MAD_BUFFER_GUARD);
+
+	if (frame.Decode(&stream) == 0)
+	{
+		// check if first frame is XING frame
+		
+		if (FTag.Parse(&stream, &frame) == 0)
+		{
+			if (FTag.flags & TAG_XING)
+			{ // we have XING frame
+				// calculate song length
+				if ((FTag.xing.flags & TAG_XING_FRAMES) && FTag.xing.flags & TAG_XING_TOC)
+				{
+					FSongFrames = (unsigned int) FTag.xing.frames;
+					FSongSamples = FSongFrames * FSamplesPerFrame;
+					FSongMs = (unsigned int) ( 1000.0 * (double) FSongFrames * (double) FSamplesPerFrame / (double) FSampleRate);
+				
+			// skip XING frame 
+					
+					FMp3Size -= ( stream.next_frame - FMp3Start);
+					FMp3Start = (unsigned char*) stream.next_frame;
+
+					FSongBytes = FMp3Size;
+					FAvgFrameSize = (long double) FSongBytes / (long double) FSongFrames; 
+					FAvgBitRate = (long double) FSongBytes * 8 / (long double)FSongFrames *  (long double) FSampleRate / (long double) FSamplesPerFrame;
+								
+					FTagFrameSize = stream.next_frame - stream.this_frame;		
+					FValidTag = TRUE;
+					
+				}
+			}	
+		}
+	}
+}
+
+/*##########################################################################
+#
 #   Name       : TMp3Player::Load
 #
 #   Purpose....: Load an MP3 and create a file-mapping on it
@@ -223,6 +276,7 @@ void TMp3Player::Load(const char *FileName)
 
             FindStart();
             Check();
+            Parse();
         }
     }
 }

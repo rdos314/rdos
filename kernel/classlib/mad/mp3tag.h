@@ -29,12 +29,32 @@
 #define _MP3TAG_H
 
 #include "fixed.h"
+#include "bit.h"
+#include "stream.h"
+#include "frame.h"
+
+enum {
+	TAG_XING_FRAMES = 0x00000001L,
+	TAG_XING_BYTES  = 0x00000002L,
+	TAG_XING_TOC    = 0x00000004L,
+	TAG_XING_SCALE  = 0x00000008L
+};
+
+enum {
+	TAG_XING = 0x0001,
+	TAG_LAME = 0x0002,
+	TAG_VBRI = 0x0004,
+	TAG_VBR  = 0x0100
+};
+
 
 class TMp3TagXing
 {
 public:
     TMp3TagXing();
     ~TMp3TagXing();
+
+    int Parse(TMadBit *bitptr, unsigned int *bitlen);
 
 	long flags;		   /* valid fields (see above) */
 	unsigned long frames;	   /* total number of frames */
@@ -63,6 +83,8 @@ class TMp3RGain
 public:
     TMp3RGain();
     ~TMp3RGain();
+
+    int Parse(TMadBit *bitptr);
 
     enum rgain_name name;			/* profile (see above) */
     enum rgain_originator originator;	/* source (see above) */
@@ -136,7 +158,9 @@ class TMp3TagLame
 public:
     TMp3TagLame();
 	~TMp3TagLame();
-    
+
+	int Parse(TMadBit *bitptr, unsigned int *bitlen, unsigned short crc);
+
 	unsigned char revision;
 	unsigned char flags;
 
@@ -170,6 +194,8 @@ class TMp3Tag
 public:
     TMp3Tag();
     ~TMp3Tag();
+
+    int Parse(TMadStream *stream, TMadFrame *frame);
 
 	int flags;
 	TMp3TagXing xing;

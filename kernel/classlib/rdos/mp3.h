@@ -28,6 +28,7 @@
 #ifndef _MP3_H
 #define _MP3_H
 
+#include "mp3tag.h"
 #include "decoder.h"
 
 class TMp3Player : protected TMadDecoder
@@ -43,7 +44,8 @@ public:
     int FChannels;
 	unsigned int FSampleRate;		/* sampling frequency (Hz) */
 	int FSamplesPerFrame;
-	int FAvgBitRate;
+	long double FAvgBitRate;
+	long double FAvgFrameSize;
 
 	enum mad_layer FLayer;			/* audio layer (1, 2, or 3) */
 	enum mad_mode FMode;			/* channel mode (see above) */
@@ -56,9 +58,19 @@ public:
 
 	int FHeaderFlags;				/* flags (see below) */
 
+    int FValidTag;
+    int FTagFrameSize;
+	int FSongFrames;
+	int FSongSamples;
+	unsigned int FSongMs;
+	int FSongBytes;
+
+	TMp3Tag FTag;
+
 protected:
 	void FindStart();
 	void Check();
+	void Parse();
 
 //	virtual enum mad_flow Input(void *);
 //	virtual enum mad_flow Header(TMadHeader *);
