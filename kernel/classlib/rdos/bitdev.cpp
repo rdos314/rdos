@@ -69,6 +69,22 @@ TBitmapGraphicDevice::TBitmapGraphicDevice(const TBitmapGraphicDevice &dev)
 #
 #   Name       : TBitmapGraphicDevice::TBitmapGraphicDevice
 #
+#   Purpose....: Copy constructor for TBitmapGraphicDevice
+#
+#   In params..: dev		bitmap to copy
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBitmapGraphicDevice::TBitmapGraphicDevice(const TGraphicDevice &dev)
+  : TGraphicDevice(dev)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TBitmapGraphicDevice::TBitmapGraphicDevice
+#
 #   Purpose....: Constructor to create a 1-bit bitmap of a string
 #
 #   In params..: font           font to use for string

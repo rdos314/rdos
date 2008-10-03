@@ -35,6 +35,7 @@ class TBitmapGraphicDevice : public TGraphicDevice
 public:
 	TBitmapGraphicDevice(int bpp, int width, int height);
 	TBitmapGraphicDevice(const TBitmapGraphicDevice &dev);
+	TBitmapGraphicDevice(const TGraphicDevice &dev);
 	TBitmapGraphicDevice(TFont *font, const char *str);
 };
 

@@ -430,7 +430,7 @@ void cdecl main()
 
 	RdosWaitMilli(5000);
 
-	bitmap = new TBitmapGraphicDevice(vbe);
+	bitmap = new TBitmapGraphicDevice(*vbe);
 	TestAll(bitmap);
 
 	vbe->SetLgopNone();
