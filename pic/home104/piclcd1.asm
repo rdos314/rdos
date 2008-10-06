@@ -37,6 +37,7 @@ AdcControl: EQU 0x2F
 
 Tics:       EQU 0x30
 
+TempPtr     EQU 0x31
 
 AsyncPtr:   EQU 0x38
 AsyncCount: EQU 0x39
@@ -225,7 +226,7 @@ ExecuteCmd:
     goto ExecuteNormal
 ;
     btfss INDF,6
-    goto ExecuteAdc
+    goto ExecuteExtra
 
 ExecuteNormal:    
     movf INDF,W
@@ -242,6 +243,19 @@ ExecuteNormal:
 	addwf PCL,F
 	goto Dummy          ; 0
 	goto ReadData       ; 1
+ 	goto Dummy          ; 2
+	goto Dummy          ; 3
+	goto Dummy          ; 4
+	goto Dummy          ; 5
+	goto Dummy          ; 6
+	goto Dummy          ; 7
+
+ExecuteExtra:
+    movf INDF,W
+    andlw 7
+	addwf PCL,F
+    goto ExecuteAdc     ; 0
+	goto GetAsync       ; 1
  	goto Dummy          ; 2
 	goto Dummy          ; 3
 	goto Dummy          ; 4
@@ -532,6 +546,54 @@ AdcDelayLoop:
     goto AdcDelayLoop
 ;
     return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; GetAsync
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+GetAsync:
+    btfss Flags,FLAG_IR_DONE_BIT
+    goto GetAsyncEmpty
+;    
+    movlw DataList
+    movwf OutPtr
+;    
+	movf AsyncCount,W
+	andlw 0x1F
+    movwf OutCount
+    movwf Result
+;
+	movlw AsyncData
+	movwf TempPtr
+
+GetAsyncLoop:
+    movf TempPtr,W
+    movwf FSR
+    movf INDF,W
+    movwf Val
+    movf OutPtr,W
+    movwf FSR
+    movf Val,W
+    movwf INDF
+;
+    incf TempPtr,F
+    incf OutPtr,F
+;    
+    decfsz OutCount,F
+    goto GetAsyncLoop
+;
+    movlw AsyncData
+    movwf AsyncPtr
+	clrf AsyncCount
+	bcf Flags,FLAG_IR_START_BIT
+	bcf Flags,FLAG_IR_DONE_BIT
+    return
+
+GetAsyncEmpty:
+    clrf Result
+    return    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
