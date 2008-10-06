@@ -327,7 +327,7 @@ WaitCmdLoop:
     btfsc PORTB,6
     goto HandleWaitForInput
 ;
-	btfss Flags,FLAG_IR_DONE_BIT
+;	btfss Flags,FLAG_IR_DONE_BIT
     goto WaitCmdLoop
 ;    
     bsf PORTA, 2    
