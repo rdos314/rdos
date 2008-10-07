@@ -879,6 +879,29 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    CreateIrReq
+;
+;		description:	Create IR request
+;
+;       RETURNS:        ES      Cmd block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIrReq   Proc near
+    mov eax,SIZE digio_queue_entry
+    AllocateSmallGlobalMem
+    mov es:dqe_queue,0
+    mov es:dqe_result,-1
+    mov es:dqe_out_buf,1    
+    mov es:dqe_out_size,1
+    ret
+CreateIrReq    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    QueueReq
 ;
 ;		description:	Queue dio req
@@ -1114,6 +1137,45 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    IrReq
+;
+;		description:    Ir req
+;
+;       Returns:        ES      Cmd block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IrReq  Proc near
+    push ax
+;
+    call CreateIrReq
+    call QueueReq
+
+irWaitOne:
+    WaitForSignal
+;
+    mov al,es:dqe_result
+    cmp al,-1
+    je irWaitOne
+;    
+    test al,0C0h
+    clc
+    jnz irDone
+;
+    FreeMem
+    stc
+    jmp irDone
+         
+irDone:   
+    pop ax
+    ret
+IrReq  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			PicTimeout1
 ;
 ;		description:	Supervises PIC chip
@@ -1310,6 +1372,31 @@ ptNoReset2:
 ;    
 	WaitForSignal
     jmp ptLoop2
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			IR thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ir_name	DB 'IR',0
+
+ir_thread:
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+    int 3
+
+ir_loop:
+    mov ax,25
+    WaitMilliSec
+;
+    call IrReq
+    jc ir_loop
+;
+    FreeMem
+    jmp ir_loop    
 
 PAGE
 	
@@ -2000,6 +2087,15 @@ InitDriver  Proc far
 	mov es,ax
 	mov di,OFFSET pic2_name
 	mov si,OFFSET pic_thread2
+	mov ax,4
+	mov cx,100h
+	CreateThread
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET ir_name
+	mov si,OFFSET ir_thread
 	mov ax,4
 	mov cx,100h
 	CreateThread
