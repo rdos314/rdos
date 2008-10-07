@@ -20,7 +20,7 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# mp3.cpp
+# mp3.h
 # MP3 player class
 #
 ########################################################################*/
@@ -39,6 +39,9 @@ public:
 
     void Close();
 	void Load(const char *FileName);
+
+	void SetPosition(int ms);
+	
 //	void Play();
 
     int FChannels;
@@ -59,7 +62,9 @@ public:
 	int FHeaderFlags;				/* flags (see below) */
 
     int FValidTag;
-    int FTagFrameSize;
+    int FConstantBitRate;
+    
+	int FTagFrameSize;
 	int FSongFrames;
 	int FSongSamples;
 	unsigned int FSongMs;
@@ -70,7 +75,8 @@ public:
 protected:
 	void FindStart();
 	void Check();
-	void Parse();
+	int ParseTag();
+	void CalcSongParams();
 
 //	virtual enum mad_flow Input(void *);
 //	virtual enum mad_flow Header(TMadHeader *);
@@ -87,9 +93,11 @@ protected:
     int FId3V1;
     int FId3V2;
 
-    unsigned char *FMp3Start;
-    int FMp3Size;
-	
+	unsigned char *FMp3Start;
+	int FMp3Size;
+
+	unsigned char *FCurrentPos;
+
 };
 
 #endif

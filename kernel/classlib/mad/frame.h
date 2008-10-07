@@ -66,6 +66,7 @@ public:
 	unsigned short crc_check;		/* frame CRC accumulator */
 	unsigned short crc_target;		/* final target CRC checksum */
 
+	int size;				/* frame size */
 	int flags;				/* flags (see below) */
 	int private_bits;			/* private bits (see below) */
 

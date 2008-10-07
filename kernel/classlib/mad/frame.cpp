@@ -273,6 +273,8 @@ int TMadHeader::ReadAndDecode(TMadStream *stream)
   register unsigned char const *ptr, *end;
   unsigned int pad_slot, N;
 
+  size = 0;
+
   ptr = stream->next_frame;
   end = stream->bufend;
 
@@ -376,6 +378,8 @@ int TMadHeader::ReadAndDecode(TMadStream *stream)
 
 	N = (slots_per_frame * bitrate / samplerate) + pad_slot;
   }
+
+  size = N;
 
   /* verify there is enough data left in buffer to decode this frame */
   if (N + MAD_BUFFER_GUARD > end - stream->this_frame) {

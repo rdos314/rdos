@@ -25,6 +25,7 @@ int main(int argc, char **argv)
 	strlwr(FileName);
 
 	mp3.Load(FileName);
+	mp3.SetPosition(1000);
 
 	return 0;
 }
