@@ -926,6 +926,31 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			receive_forward
+;
+;	Purpose:		forward IP-data
+;
+;	Parameters:		GS:SI   IP header
+;                   BP      IP data driver sel
+;                   FS      current driver sel                   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+receive_forward Proc far
+    mov ax,fs
+    cmp ax,bp
+    je receive_forward_done
+;    
+    int 3
+
+receive_forward_done:
+    ret
+receive_forward Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			receive
 ;
 ;	Purpose:		received IP data
@@ -1027,13 +1052,22 @@ receive_dhcp_done:
 	je receive_this_node
 	cmp al,127
 	je receive_this_node
-	push edx
-	GetPppIp
-	jc receive_pop_fail
-	cmp eax,edx
-	pop edx
-	jne receive_forward
-
+;
+    int 3
+    push es
+    push di
+    mov ax,es
+    mov gs,ax
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET receive_forward
+    mov si,bp
+    mov bp,fs    
+    NetBroadcast
+    pop di
+    pop es
+    jmp receive_fail
+	
 receive_this_node:
 	mov es:[0],bp
 	mov cx,ds:protocol_count
@@ -1068,17 +1102,6 @@ receive_prot_loop:
 receive_prot_next:
 	add bx,2
 	loop receive_prot_loop
-	jmp receive_fail
-
-receive_forward:
-	mov bx,ds:ip_handle
-	mov ax,es
-	mov ds,ax
-	movzx ecx,es:[di].ip_size
-	xchg cl,ch
-	mov esi,OFFSET ip_dest
-	add esi,edi
-;	SendNet
 	jmp receive_fail
 
 receive_pop_fail:
