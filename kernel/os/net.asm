@@ -635,6 +635,153 @@ receive_arp_check_dest:
 	jmp receive_arp_done
 
 receive_arp_forward_req:
+	mov esi,SIZE arp_data + OFFSET ar_data
+	movzx ecx,es:ar_data.arp_hw_len
+	add esi,ecx
+	add esi,ecx
+	mov cl,es:ar_data.arp_prot_len
+	add si,cx
+	call FindAddress
+	jc receive_arp_forward_non_existant
+;
+    mov ds,ax
+    cmp bp,ds:prot_driver
+    je receive_arp_done
+;
+    int 3    
+;
+	push es
+	mov ax,es
+	mov gs,ax
+	mov fs,bp
+;
+	mov cx,SIZE arp_data
+	xor ah,ah
+	mov al,gs:ar_data.arp_hw_len
+	add cx,ax
+	add cx,ax
+	mov al,gs:ar_data.arp_prot_len
+	add cx,ax
+	add cx,ax
+	call fs:d_get_buffer
+;
+	mov bp,di
+	mov cx,SIZE arp_data
+	mov si,OFFSET ar_data
+	rep movs byte ptr es:[di],gs:[si]
+	mov es:[bp].arp_op,200h
+;
+	movzx ecx,gs:ar_data.arp_hw_len
+	push ds
+	call fs:d_address
+	rep movs byte ptr es:[edi],ds:[esi]
+	pop ds
+;
+	movzx ecx,gs:ar_data.arp_prot_len
+	mov si,OFFSET prot_logical_addr
+	rep movsb
+;
+	mov bp,di
+	movzx ecx,gs:ar_data.arp_hw_len
+	add cl,gs:ar_data.arp_prot_len
+	adc ch,0
+	mov si,SIZE arp_data + OFFSET ar_data
+	rep movs byte ptr es:[di],gs:[si]
+;
+	mov ax,es
+	mov ds,ax
+	movzx esi,bp
+	mov cx,SIZE arp_data
+	xor ah,ah
+	mov al,gs:ar_data.arp_hw_len
+	add cx,ax
+	add cx,ax
+	mov al,gs:ar_data.arp_prot_len
+	add cx,ax
+	add cx,ax
+	mov dx,806h
+	call fs:d_send
+	pop es
+	jmp receive_arp_done
+
+receive_arp_forward_non_existant:
+    int 3
+; ds protocol selector
+; es ARP req
+; bp driver sel
+
+    mov fs,bp    
+    mov gs,fs:d_class
+	mov cx,gs:driver_count
+	mov bx,OFFSET driver_arr
+
+receive_arp_forward_driver_loop:
+    push gs
+    push bx
+	push cx
+;
+    cmp bp,gs:[bx]
+    je receive_arp_forward_driver_next
+;
+	push es
+	mov fs,gs:[bx]
+	mov ax,es
+	mov gs,ax
+;
+	mov cx,SIZE arp_data
+	xor ah,ah
+	mov al,gs:ar_data.arp_hw_len
+	add cx,ax
+	add cx,ax
+	mov al,gs:ar_data.arp_prot_len
+	add cx,ax
+	add cx,ax
+	call fs:d_get_buffer
+;
+    mov si,OFFSET ar_data
+	mov cx,SIZE arp_data
+	rep movs byte ptr es:[di],gs:[si]
+;
+	movzx ecx,gs:ar_data.arp_hw_len
+	push ds
+	push esi
+	call fs:d_address
+	rep movs byte ptr es:[edi],ds:[esi]
+	pop esi
+	pop ds
+	add si,cx
+;
+	movzx ecx,gs:ar_data.arp_prot_len
+	rep movs byte ptr es:[di],gs:[si]
+;
+	movzx ecx,gs:ar_data.arp_hw_len
+	rep movs byte ptr es:[di],gs:[si]
+;
+	movzx ecx,gs:ar_data.arp_prot_len
+	rep movs byte ptr es:[di],gs:[si]
+;
+    mov ds,fs:d_class
+    mov esi,OFFSET broadcast_addr
+	mov cx,SIZE arp_data
+	xor ah,ah
+	mov al,gs:ar_data.arp_hw_len
+	add cx,ax
+	add cx,ax
+	mov al,gs:ar_data.arp_prot_len
+	add cx,ax
+	add cx,ax
+	mov dx,806h
+	call fs:d_send
+	pop es    
+
+receive_arp_forward_driver_next:
+	add bx,2
+	pop cx
+	pop bx
+	pop gs
+	sub cx,1
+	jnz receive_arp_forward_driver_loop
+;
 	jmp receive_arp_done
 
 receive_arp_not_req:
