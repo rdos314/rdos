@@ -1095,6 +1095,11 @@ GetGateway	MACRO
 	UserGate get_gateway_nr
 						ENDM
 
+; OUT EDX	    IP mask
+GetIpMask	MACRO
+	UserGate get_ip_mask_nr
+						ENDM
+
 ; IN  ES:(E)DI		Host name
 ; OUT EDX			IP address
 NameToIP		MACRO

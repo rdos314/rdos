@@ -74,11 +74,7 @@ dhcp_data	ENDS
 dhcp_serv_data  STRUC
 
 dsd_orig_ident  DD ?
-dsd_gateway     DD ?
-dsd_my_ident    DD ?
-dsd_server      DD ?
 dsd_local_ip    DD ?
-dsd_remote_ip   DD ?
 dsd_driver_sel  DW ?
 dsd_hw_type     DB ?
 dsd_hw_len      DB ?
@@ -222,6 +218,7 @@ CreateDhcpReplyBroadcast	Proc near
 	push ds
 	push ax
 	push ecx
+	push edx
 	push esi
 ;
 	mov ax,cs
@@ -242,17 +239,16 @@ CreateDhcpReplyBroadcast	Proc near
 	xchg al,ah
 	mov es:[edi].udp_source,ax
 ;
-    push ds
     mov ax,dhcp_data_sel
     mov ds,ax
     mov eax,ds:dhcp_gateway2
-    pop ds
     mov es:[di-8],eax	
 	add edi,8
 	clc
 
 create_reply_br_done:
 	pop esi
+	pop edx
 	pop ecx
 	pop ax
 	pop ds
@@ -332,6 +328,7 @@ FindServer	Proc near
     mov cx,256-2
 
 find_serv_loop:
+    push cx
     mov ax,fs:[bp]
     or ax,ax
     jz find_serv_next
@@ -359,9 +356,11 @@ find_serv_match:
     loop find_serv_match
 ;
     clc
+    pop cx
     jmp find_serv_done
 
 find_serv_next:
+    pop cx
     add bp,2
     loop find_serv_loop
 
@@ -398,8 +397,6 @@ InitServerSel	Proc near
     push bx
     push cx
 ;    
-    mov fs:dsd_server,0
-    mov fs:dsd_remote_ip,0
 	mov eax,[si].dhcp_id
 	mov fs:dsd_orig_ident,eax
     mov fs:dsd_driver_sel,gs
@@ -470,18 +467,9 @@ create_serv_new:
 ;
 	mov ax,dhcp_data_sel
 	mov ds,ax
-    mov ecx,ds:dhcp_mask2
-    rol ecx,8
-    xor ch,ch
-    not cl
-    inc cx
-    sub cx,2
-    jbe create_serv_done
 ;
     mov bx,OFFSET dhcp_serv_arr+4
-    mov edx,ds:dhcp_gateway2
-    and edx,ds:dhcp_mask2
-    add edx,2000000h
+    mov edx,ds:dhcp_ip2
 
 create_serv_slot_loop:
     mov ax,ds:[bx]
@@ -500,8 +488,6 @@ create_serv_slot_loop:
     
 create_serv_slot_ok:
     mov fs:dsd_local_ip,edx
-    mov edx,ds:dhcp_gateway2
-    mov fs:dsd_gateway,edx
     mov ds:[bx],fs
     clc
 
@@ -572,8 +558,9 @@ PAGE
 ;
 ;	Purpose:		Copy IP lease time
 ;
-;	Parameters:		ES:DI		Dest
-;                   CX          Remnining size
+;	Parameters:		FS          Dhcp server data selector
+;                   ES:DI		Position to copy at
+;                   CX          Byte remaining
 ;
 ;	Returns:		ES:DI		New dest
 ;                   CX          new size
@@ -594,6 +581,104 @@ ServLeaseData	Proc near
 	pop eax
 	ret
 ServLeaseData	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServRenewSize
+;
+;	Purpose:		Size of renewal msg
+;
+;	Returns:		CX			Size of client address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServRenewSize	Proc near
+	mov cx,6
+	ret
+ServRenewSize	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServRenewData
+;
+;	Purpose:		Add renew 
+;
+;	Parameters:		FS          Dhcp server data selector
+;                   ES:DI		Position to copy at
+;                   CX          Byte remaining
+;
+;	Returns:		ES:DI		New dest
+;                   CX          new size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServRenewData	Proc near
+	push eax
+;
+	mov al,58
+	stosb
+	mov al,4
+	stosb
+	mov eax,0FFFFFF7Fh
+	stosd
+	sub cx,6
+;
+	pop eax
+	ret
+ServRenewData	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServRebindSize
+;
+;	Purpose:		Size of rebind msg
+;
+;	Returns:		CX			Size of client address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServRebindSize	Proc near
+	mov cx,6
+	ret
+ServRebindSize	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServRebindData
+;
+;	Purpose:		Add rebind
+;
+;	Parameters:		FS          Dhcp server data selector
+;                   ES:DI		Position to copy at
+;                   CX          Byte remaining
+;
+;	Returns:		ES:DI		New dest
+;                   CX          new size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServRebindData	Proc near
+	push eax
+;
+	mov al,59
+	stosb
+	mov al,4
+	stosb
+	mov eax,0F9FFFFDFh
+	stosd
+	sub cx,6
+;
+	pop eax
+	ret
+ServRebindData	Endp
 	
 PAGE
 	    
@@ -622,7 +707,8 @@ PAGE
 ;
 ;	Purpose:		Copy client IP
 ;
-;	Parameters:		ES:DI		Position to copy at
+;	Parameters:		FS          Dhcp server data selector
+;                   ES:DI		Position to copy at
 ;                   CX          Byte remaining
 ;
 ;	Returns:		ES:DI		New position
@@ -639,9 +725,7 @@ ServReqIpData	Proc near
 	mov al,4
 	stosb
 ;
-	mov ax,dhcp_data_sel
-	mov ds,ax
-	mov eax,ds:dhcp_ip2
+	mov eax,fs:dsd_local_ip
 	stosd
     sub cx,6
 ;
@@ -649,6 +733,258 @@ ServReqIpData	Proc near
 	pop ds
 	ret
 ServReqIpData	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServReqMaskSize
+;
+;	Purpose:		Size of net mask
+;
+;	Parameters:		ES:DI       DHCP header
+;
+;	Returns:		CX			Size of client IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServReqMaskSize	Proc near
+	mov cx,6
+	ret
+ServReqMaskSize	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServReqMaskData
+;
+;	Purpose:		Add net mask
+;
+;	Parameters:		FS          Dhcp server data selector
+;                   ES:DI		Position to copy at
+;                   CX          Byte remaining
+;
+;	Returns:		ES:DI		New position
+;                   CX          Byte remaining
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServReqMaskData	Proc near
+	push eax
+	push edx
+;
+	mov al,1
+	stosb
+	mov al,4
+	stosb
+;
+    GetIpMask
+    mov eax,edx
+	stosd
+    sub cx,6
+;
+    pop edx
+	pop eax
+	ret
+ServReqMaskData	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServReqGwSize
+;
+;	Purpose:		Size of gateway
+;
+;	Parameters:		ES:DI       DHCP header
+;
+;	Returns:		CX			Size of client IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServReqGwSize	Proc near
+	mov cx,6
+	ret
+ServReqGwSize	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServReqGwData
+;
+;	Purpose:		Add gateway
+;
+;	Parameters:		FS          Dhcp server data selector
+;                   ES:DI		Position to copy at
+;                   CX          Byte remaining
+;
+;	Returns:		ES:DI		New position
+;                   CX          Byte remaining
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServReqGwData	Proc near
+	push ds
+	push eax
+;
+	mov al,3
+	stosb
+	mov al,4
+	stosb
+;
+    mov ax,dhcp_data_sel
+    mov ds,ax
+    mov eax,ds:dhcp_gateway2
+	stosd
+    sub cx,6
+;
+	pop eax
+	pop ds
+	ret
+ServReqGwData	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServReqDnsSize
+;
+;	Purpose:		Size DNS
+;
+;	Parameters:		ES:DI       DHCP header
+;
+;	Returns:		CX			Size of client IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServReqDnsSize	Proc near
+    push edx
+;
+	mov cx,2
+    GetDns
+    or eax,eax
+    jz ServReqDnsSizeDone
+;
+    add cx,4
+    or edx,edx
+    jz ServReqDnsSizeDone
+;
+    add cx,4
+
+ServReqDnsSizeDone:   
+    pop edx
+	ret
+ServReqDnsSize	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServReqDnsData
+;
+;	Purpose:		Add dns servers
+;
+;	Parameters:		FS          Dhcp server data selector
+;                   ES:DI		Position to copy at
+;                   CX          Byte remaining
+;
+;	Returns:		ES:DI		New position
+;                   CX          Byte remaining
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServReqDnsData	Proc near
+	push eax
+	push edx
+;
+	mov al,6
+	stosb
+;	
+    push cx
+    call ServReqDnsSize
+    mov al,cl
+    sub al,2
+	stosb
+	pop cx
+	sub cx,2
+;
+    GetDns
+    or eax,eax
+    jz ServReqDnsDataDone
+;
+	stosd
+	mov eax,edx
+	sub cx,4
+;	
+    or eax,eax
+    jz ServReqDnsDataDone
+;
+	stosd
+	sub cx,4
+	
+ServReqDnsDataDone:
+    pop edx
+	pop eax
+	ret
+ServReqDnsData	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServReqIdSize
+;
+;	Purpose:		Size server ID field
+;
+;	Parameters:		ES:DI       DHCP header
+;
+;	Returns:		CX			Size of server ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServReqIdSize	Proc near
+	mov cx,6
+	ret
+ServReqIdSize	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServReqIdData
+;
+;	Purpose:		Add server ID field
+;
+;	Parameters:		FS          Dhcp server data selector
+;                   ES:DI		Position to copy at
+;                   CX          Byte remaining
+;
+;	Returns:		ES:DI		New position
+;                   CX          Byte remaining
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServReqIdData	Proc near
+	push ds
+	push eax
+;
+	mov al,54
+	stosb
+	mov al,4
+	stosb
+;
+    mov ax,dhcp_data_sel
+    mov ds,ax
+    mov eax,ds:dhcp_gateway2
+	stosd
+    sub cx,6
+;
+	pop eax
+	pop ds
+	ret
+ServReqIdData	Endp
 	
 PAGE
 	    
@@ -714,7 +1050,7 @@ MaskServerOption	Proc near
 ;    
     push ds
     push eax
- ;
+;
     mov ax,dhcp_data_sel
     mov ds,ax
     mov eax,ds:dhcp_mask2
@@ -776,75 +1112,14 @@ PAGE
 ;   	size-proc				data-proc
 
 DiscReqOptTab:
-dro00 DW OFFSET ServLeaseSize,		OFFSET ServLeaseData
-dro01 DW OFFSET ServReqIpSize,		OFFSET ServReqIpData
-dro02 DW -1
-
-disc_opt_tab:
-dot00   DW OFFSET CopyServerOption
-dot01   DW OFFSET CopyServerOption
-dot02   DW OFFSET CopyServerOption
-dot03   DW OFFSET CopyServerOption
-dot04   DW OFFSET CopyServerOption
-dot05   DW OFFSET CopyServerOption
-dot06   DW OFFSET CopyServerOption
-dot07   DW OFFSET CopyServerOption
-dot08   DW OFFSET CopyServerOption
-dot09   DW OFFSET CopyServerOption
-dot0A   DW OFFSET CopyServerOption
-dot0B   DW OFFSET CopyServerOption
-dot0C   DW OFFSET CopyServerOption
-dot0D   DW OFFSET CopyServerOption
-dot0E   DW OFFSET CopyServerOption
-dot0F   DW OFFSET CopyServerOption
-dot10   DW OFFSET CopyServerOption
-dot11   DW OFFSET CopyServerOption
-dot12   DW OFFSET CopyServerOption
-dot13   DW OFFSET CopyServerOption
-dot14   DW OFFSET CopyServerOption
-dot15   DW OFFSET CopyServerOption
-dot16   DW OFFSET CopyServerOption
-dot17   DW OFFSET CopyServerOption
-dot18   DW OFFSET CopyServerOption
-dot19   DW OFFSET CopyServerOption
-dot1A   DW OFFSET CopyServerOption
-dot1B   DW OFFSET CopyServerOption
-dot1C   DW OFFSET CopyServerOption
-dot1D   DW OFFSET CopyServerOption
-dot1E   DW OFFSET CopyServerOption
-dot1F   DW OFFSET CopyServerOption
-dot20   DW OFFSET CopyServerOption
-dot21   DW OFFSET CopyServerOption
-dot22   DW OFFSET CopyServerOption
-dot23   DW OFFSET CopyServerOption
-dot24   DW OFFSET CopyServerOption
-dot25   DW OFFSET CopyServerOption
-dot26   DW OFFSET CopyServerOption
-dot27   DW OFFSET CopyServerOption
-dot28   DW OFFSET CopyServerOption
-dot29   DW OFFSET CopyServerOption
-dot2A   DW OFFSET CopyServerOption
-dot2B   DW OFFSET CopyServerOption
-dot2C   DW OFFSET CopyServerOption
-dot2D   DW OFFSET CopyServerOption
-dot2E   DW OFFSET CopyServerOption
-dot2F   DW OFFSET CopyServerOption
-dot30   DW OFFSET CopyServerOption
-dot31   DW OFFSET CopyServerOption
-dot32   DW OFFSET IgnoreServerOption
-dot33   DW OFFSET IgnoreServerOption
-dot34   DW OFFSET CopyServerOption
-dot35   DW OFFSET CopyServerOption
-dot36   DW OFFSET CopyServerOption
-dot37   DW OFFSET CopyServerOption
-dot38   DW OFFSET CopyServerOption
-dot39   DW OFFSET CopyServerOption
-dot3A   DW OFFSET CopyServerOption
-dot3B   DW OFFSET CopyServerOption
-dot3C   DW OFFSET CopyServerOption
-dot3D   DW OFFSET CopyServerOption
-dot3E   DW OFFSET CopyServerOption
-dot3F   DW OFFSET CopyServerOption
+dro00 DW OFFSET ServReqMaskSize,	OFFSET ServReqMaskData
+dro01 DW OFFSET ServReqGwSize,	    OFFSET ServReqGwData
+dro02 DW OFFSET ServReqDnsSize,	    OFFSET ServReqDnsData
+dro03 DW OFFSET ServLeaseSize,		OFFSET ServLeaseData
+dro04 DW OFFSET ServReqIdSize,		OFFSET ServReqIdData
+dro05 DW OFFSET ServRenewSize,		OFFSET ServRenewData
+dro06 DW OFFSET ServRebindSize,		OFFSET ServRebindData
+dro07 DW -1
 
 ReceiveDiscover	Proc near
     push ds
@@ -853,16 +1128,23 @@ ReceiveDiscover	Proc near
     push bx
     push si
     push di
-;    
+;
+    mov ax,dhcp_data_sel
+    mov ds,ax
     mov ax,ds:dhcp_driver_sel
-    cmp ax,1
-    je discover_req_done
+    or ax,ax
+    jz discover_req_done
 ;    
+    mov ax,gs
     mov fs,ax
     mov ax,es
     mov ds,ax
     mov si,di
 ;
+    mov ax,cx
+    sub ax,si
+    sub ax,SIZE dhcp_header
+    sub cx,ax
 	mov dx,cx
 	mov bx,OFFSET DiscReqOptTab
 
@@ -878,95 +1160,57 @@ discover_req_size_loop:
 
 discover_req_size_ok:
     mov cx,dx
-	call CreateDhcpReqBroadcast
+	call CreateDhcpReplyBroadcast
 ;    
+    push fs
     push cx
     push si
     push di
 ;
-	mov es:[di].dhcp_op,1
+	mov es:[di].dhcp_op,2
 	mov al,[si].dhcp_hw_type
 	mov es:[di].dhcp_hw_type,al
 	mov al,[si].dhcp_hw_len
 	mov es:[di].dhcp_hw_len,al
 	mov es:[di].dhcp_hops,0
+    mov eax,[si].dhcp_id
+    mov es:[di].dhcp_id,eax	
 	mov es:[di].dhcp_elapsed,0
 	mov es:[di].dhcp_flags,80h
-	mov es:[di].dhcp_client_ip,0
-	mov es:[di].dhcp_req_ip,0
-	mov es:[di].dhcp_server_ip,0
+    mov es:[di].dhcp_client_ip,0
 	mov es:[di].dhcp_relay_ip,0
 	mov es:[di].dhcp_magic,63538263h
 	mov es:[di].dhcp_msg_code,53
 	mov es:[di].dhcp_msg_len,1
-	mov es:[di].dhcp_msg_type,1
+	mov es:[di].dhcp_msg_type,2
 	call SetHwAddress
-;
+
+discover_server_loop:
     call FindServer
     jc discover_req_new
-;
-    push fs
-    mov fs,ax
-    mov eax,fs:dsd_orig_ident
-    cmp eax,[si].dhcp_id
-    je discover_same_ident
-;    
-    GetSystemTime
-	mov es:[di].dhcp_id,eax
-	jmp discover_ident_init
-
-discover_same_ident:	
-    mov eax,fs:dsd_my_ident
-	mov es:[di].dhcp_id,eax
 
 discover_ident_init:
+    mov fs,ax
     call InitServerSel
-	pop fs
+    mov eax,fs:dsd_local_ip
     jmp discover_req_options
 
 discover_req_new:
-    GetSystemTime
-	mov es:[di].dhcp_id,eax
     call CreateServerSel
+    jmp discover_server_loop
 
 discover_req_options:
+	mov es:[di].dhcp_req_ip,eax
+;	
+    mov ax,dhcp_data_sel
+    mov ds,ax
+    mov eax,ds:dhcp_gateway2
+	mov es:[di].dhcp_server_ip,eax
+;
 	add si,SIZE dhcp_header
 	add di,SIZE dhcp_header
 	sub cx,SIZE dhcp_header
 
-discover_opt_loop:
-    push cx
-    mov ax,[si]
-    mov dl,al
-    or al,al
-    jz discover_opt_done
-;
-    cmp al,-1
-    je discover_opt_done
-;        
-    movzx bx,al
-    movzx cx,ah
-    cmp bx,40h
-    jae discover_opt_default
-;    
-    add bx,bx
-    call word ptr cs:[bx].disc_opt_tab 
-    jmp discover_opt_next
-
-discover_opt_default:
-    call CopyServerOption
-
-discover_opt_next:
-    mov ax,cx
-    pop cx
-    sub cx,2
-    sub cx,ax
-	ja discover_opt_loop
-;
-    push cx	
-
-discover_opt_done:
-    pop cx	
 	mov bx,OFFSET DiscReqOptTab
 
 discover_req_data_loop:
@@ -989,6 +1233,7 @@ discover_req_data_ok:
     pop di
     pop si
     pop cx
+    pop fs
 	call SendDhcpBroadcast
 
 discover_req_done:
@@ -1018,74 +1263,14 @@ PAGE
 ;   	size-proc				data-proc
 
 ReqReqOptTab:
-rro00 DW OFFSET ServLeaseSize,		OFFSET ServLeaseData
-rro01 DW -1
-
-req_opt_tab:
-rot00   DW OFFSET CopyServerOption
-rot01   DW OFFSET CopyServerOption
-rot02   DW OFFSET CopyServerOption
-rot03   DW OFFSET CopyServerOption
-rot04   DW OFFSET CopyServerOption
-rot05   DW OFFSET CopyServerOption
-rot06   DW OFFSET CopyServerOption
-rot07   DW OFFSET CopyServerOption
-rot08   DW OFFSET CopyServerOption
-rot09   DW OFFSET CopyServerOption
-rot0A   DW OFFSET CopyServerOption
-rot0B   DW OFFSET CopyServerOption
-rot0C   DW OFFSET CopyServerOption
-rot0D   DW OFFSET CopyServerOption
-rot0E   DW OFFSET CopyServerOption
-rot0F   DW OFFSET CopyServerOption
-rot10   DW OFFSET CopyServerOption
-rot11   DW OFFSET CopyServerOption
-rot12   DW OFFSET CopyServerOption
-rot13   DW OFFSET CopyServerOption
-rot14   DW OFFSET CopyServerOption
-rot15   DW OFFSET CopyServerOption
-rot16   DW OFFSET CopyServerOption
-rot17   DW OFFSET CopyServerOption
-rot18   DW OFFSET CopyServerOption
-rot19   DW OFFSET CopyServerOption
-rot1A   DW OFFSET CopyServerOption
-rot1B   DW OFFSET CopyServerOption
-rot1C   DW OFFSET CopyServerOption
-rot1D   DW OFFSET CopyServerOption
-rot1E   DW OFFSET CopyServerOption
-rot1F   DW OFFSET CopyServerOption
-rot20   DW OFFSET CopyServerOption
-rot21   DW OFFSET CopyServerOption
-rot22   DW OFFSET CopyServerOption
-rot23   DW OFFSET CopyServerOption
-rot24   DW OFFSET CopyServerOption
-rot25   DW OFFSET CopyServerOption
-rot26   DW OFFSET CopyServerOption
-rot27   DW OFFSET CopyServerOption
-rot28   DW OFFSET CopyServerOption
-rot29   DW OFFSET CopyServerOption
-rot2A   DW OFFSET CopyServerOption
-rot2B   DW OFFSET CopyServerOption
-rot2C   DW OFFSET CopyServerOption
-rot2D   DW OFFSET CopyServerOption
-rot2E   DW OFFSET CopyServerOption
-rot2F   DW OFFSET CopyServerOption
-rot30   DW OFFSET CopyServerOption
-rot31   DW OFFSET CopyServerOption
-rot32   DW OFFSET CopyServerOption
-rot33   DW OFFSET IgnoreServerOption
-rot34   DW OFFSET CopyServerOption
-rot35   DW OFFSET CopyServerOption
-rot36   DW OFFSET CopyServerOption
-rot37   DW OFFSET CopyServerOption
-rot38   DW OFFSET CopyServerOption
-rot39   DW OFFSET CopyServerOption
-rot3A   DW OFFSET CopyServerOption
-rot3B   DW OFFSET CopyServerOption
-rot3C   DW OFFSET CopyServerOption
-rot3D   DW OFFSET CopyServerOption
-rot3E   DW OFFSET CopyServerOption
-rot3F   DW OFFSET CopyServerOption
+rro00 DW OFFSET ServReqMaskSize,	OFFSET ServReqMaskData
+rro01 DW OFFSET ServReqGwSize,	    OFFSET ServReqGwData
+rro02 DW OFFSET ServReqDnsSize,	    OFFSET ServReqDnsData
+rro03 DW OFFSET ServLeaseSize,		OFFSET ServLeaseData
+rro04 DW OFFSET ServReqIdSize,		OFFSET ServReqIdData
+rro05 DW OFFSET ServRenewSize,		OFFSET ServRenewData
+rro06 DW OFFSET ServRebindSize,		OFFSET ServRebindData
+rro07 DW -1
 
 ReceiveRequest	Proc near
     push ds
@@ -1094,12 +1279,12 @@ ReceiveRequest	Proc near
     push bx
     push si
     push di
-;    
+;
     mov ax,dhcp_data_sel
     mov ds,ax
     mov ax,ds:dhcp_driver_sel
-    cmp ax,1
-    je req_req_done
+    or ax,ax
+    jz req_req_done
 ;
     mov ax,es
     mov ds,ax
@@ -1111,7 +1296,17 @@ ReceiveRequest	Proc near
     mov eax,[si].dhcp_id
     cmp eax,fs:dsd_orig_ident
     jne req_req_done
+;    
+    mov ax,gs
+    mov fs,ax
+    mov ax,es
+    mov ds,ax
+    mov si,di
 ;
+    mov ax,cx
+    sub ax,si
+    sub ax,SIZE dhcp_header
+    sub cx,ax
 	mov dx,cx
 	mov bx,OFFSET ReqReqOptTab
 
@@ -1127,74 +1322,45 @@ req_req_size_loop:
 
 req_req_size_ok:
     mov cx,dx
-    push fs
-    mov ax,dhcp_data_sel
-    mov fs,ax
-    mov fs,fs:dhcp_driver_sel
-	call CreateDhcpReqBroadcast
-	pop fs
+	call CreateDhcpReplyBroadcast
 ;    
+    push fs
     push cx
     push si
     push di
 ;
-	mov es:[di].dhcp_op,1
+	mov es:[di].dhcp_op,2
 	mov al,[si].dhcp_hw_type
 	mov es:[di].dhcp_hw_type,al
 	mov al,[si].dhcp_hw_len
 	mov es:[di].dhcp_hw_len,al
 	mov es:[di].dhcp_hops,0
-	mov eax,fs:dsd_my_ident
-	mov es:[di].dhcp_id,eax
+    mov eax,[si].dhcp_id
+    mov es:[di].dhcp_id,eax	
 	mov es:[di].dhcp_elapsed,0
 	mov es:[di].dhcp_flags,80h
-	mov es:[di].dhcp_client_ip,0
-	mov es:[di].dhcp_req_ip,0
-	mov es:[di].dhcp_server_ip,0
+    mov es:[di].dhcp_client_ip,0
 	mov es:[di].dhcp_relay_ip,0
 	mov es:[di].dhcp_magic,63538263h
 	mov es:[di].dhcp_msg_code,53
 	mov es:[di].dhcp_msg_len,1
-	mov es:[di].dhcp_msg_type,3
+	mov es:[di].dhcp_msg_type,5
 	call SetHwAddress
+;
+    call FindServer
+    mov fs,ax
+    mov eax,fs:dsd_local_ip
+	mov es:[di].dhcp_req_ip,eax
 ;	
+    mov ax,dhcp_data_sel
+    mov ds,ax
+    mov eax,ds:dhcp_gateway2
+	mov es:[di].dhcp_server_ip,eax
+;
 	add si,SIZE dhcp_header
 	add di,SIZE dhcp_header
 	sub cx,SIZE dhcp_header
 
-req_opt_loop:
-    push cx
-    mov ax,[si]
-    mov dl,al
-    or al,al
-    jz req_opt_done
-;
-    cmp al,-1
-    je req_opt_done
-;        
-    movzx bx,al
-    movzx cx,ah
-    cmp bx,40h
-    jae req_opt_default
-;    
-    add bx,bx
-    call word ptr cs:[bx].req_opt_tab 
-    jmp req_opt_next
-
-req_opt_default:
-    call CopyServerOption
-
-req_opt_next:
-    mov ax,cx
-    pop cx
-    sub cx,2
-    sub cx,ax
-	ja req_opt_loop
-;
-    push cx	
-
-req_opt_done:
-    pop cx	
 	mov bx,OFFSET ReqReqOptTab
 
 req_req_data_loop:
@@ -1217,13 +1383,8 @@ req_req_data_ok:
     pop di
     pop si
     pop cx
-;    
-    push fs
-    mov ax,dhcp_data_sel
-    mov fs,ax
-    mov fs,fs:dhcp_driver_sel
+    pop fs
 	call SendDhcpBroadcast
-	pop fs
 
 req_req_done:
     pop di
@@ -1319,369 +1480,6 @@ receive_serv_done:
 	pop ds
 	ret
 ReceiveServerDhcp	Endp
-
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			ServerOffser
-;
-;	Purpose:		Received server offer for other node
-;
-;	Parameters:		DS:SI	UDP data
-;                   CX      Size
-;                   FS      Server sel
-;                   GS      Driver selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-serv_offer_opt_tab:
-soot00   DW OFFSET CopyServerOption
-soot01   DW OFFSET MaskServerOption
-soot02   DW OFFSET CopyServerOption
-soot03   DW OFFSET MyIpServerOption
-soot04   DW OFFSET CopyServerOption
-soot05   DW OFFSET CopyServerOption
-soot06   DW OFFSET CopyServerOption
-soot07   DW OFFSET CopyServerOption
-soot08   DW OFFSET CopyServerOption
-soot09   DW OFFSET CopyServerOption
-soot0A   DW OFFSET CopyServerOption
-soot0B   DW OFFSET CopyServerOption
-soot0C   DW OFFSET CopyServerOption
-soot0D   DW OFFSET CopyServerOption
-soot0E   DW OFFSET CopyServerOption
-soot0F   DW OFFSET CopyServerOption
-soot10   DW OFFSET CopyServerOption
-soot11   DW OFFSET CopyServerOption
-soot12   DW OFFSET CopyServerOption
-soot13   DW OFFSET CopyServerOption
-soot14   DW OFFSET CopyServerOption
-soot15   DW OFFSET CopyServerOption
-soot16   DW OFFSET CopyServerOption
-soot17   DW OFFSET CopyServerOption
-soot18   DW OFFSET CopyServerOption
-soot19   DW OFFSET CopyServerOption
-soot1A   DW OFFSET CopyServerOption
-soot1B   DW OFFSET CopyServerOption
-soot1C   DW OFFSET CopyServerOption
-soot1D   DW OFFSET CopyServerOption
-soot1E   DW OFFSET CopyServerOption
-soot1F   DW OFFSET CopyServerOption
-soot20   DW OFFSET CopyServerOption
-soot21   DW OFFSET CopyServerOption
-soot22   DW OFFSET CopyServerOption
-soot23   DW OFFSET CopyServerOption
-soot24   DW OFFSET CopyServerOption
-soot25   DW OFFSET CopyServerOption
-soot26   DW OFFSET CopyServerOption
-soot27   DW OFFSET CopyServerOption
-soot28   DW OFFSET CopyServerOption
-soot29   DW OFFSET CopyServerOption
-soot2A   DW OFFSET CopyServerOption
-soot2B   DW OFFSET CopyServerOption
-soot2C   DW OFFSET CopyServerOption
-soot2D   DW OFFSET CopyServerOption
-soot2E   DW OFFSET CopyServerOption
-soot2F   DW OFFSET CopyServerOption
-soot30   DW OFFSET CopyServerOption
-soot31   DW OFFSET CopyServerOption
-soot32   DW OFFSET CopyServerOption
-soot33   DW OFFSET CopyServerOption
-soot34   DW OFFSET CopyServerOption
-soot35   DW OFFSET CopyServerOption
-soot36   DW OFFSET MyIpServerOption
-soot37   DW OFFSET CopyServerOption
-soot38   DW OFFSET CopyServerOption
-soot39   DW OFFSET CopyServerOption
-soot3A   DW OFFSET CopyServerOption
-soot3B   DW OFFSET CopyServerOption
-soot3C   DW OFFSET CopyServerOption
-soot3D   DW OFFSET CopyServerOption
-soot3E   DW OFFSET CopyServerOption
-soot3F   DW OFFSET CopyServerOption
-
-ServerOffer Proc near
-	mov eax,[si].dhcp_id
-	cmp eax,fs:dsd_my_ident
-	jne serv_offer_free
-;
-    add cx,8
-    push fs
-    mov fs,fs:dsd_driver_sel
-	call CreateDhcpReplyBroadcast
-	pop fs
-;
-	mov es:[di].dhcp_op,2
-	mov al,[si].dhcp_hw_type
-	mov es:[di].dhcp_hw_type,al
-	mov al,[si].dhcp_hw_len
-	mov es:[di].dhcp_hw_len,al
-	mov es:[di].dhcp_hops,0
-	mov eax,fs:dsd_orig_ident
-	mov es:[di].dhcp_id,eax
-	mov es:[di].dhcp_elapsed,0
-	mov es:[di].dhcp_flags,80h
-	mov es:[di].dhcp_client_ip,0
-	mov eax,fs:dsd_local_ip
-	mov es:[di].dhcp_req_ip,eax
-	mov eax,[si].dhcp_relay_ip
-	mov es:[di].dhcp_relay_ip,eax
-	mov eax,fs:dsd_gateway
-    mov es:[di].dhcp_server_ip,eax
-	mov es:[di].dhcp_magic,63538263h
-	mov es:[di].dhcp_msg_code,53
-	mov es:[di].dhcp_msg_len,1
-	mov es:[di].dhcp_msg_type,2
-	call SetHwAddress
-;	
-    push cx
-    push si
-    push di
-;    
-	add si,SIZE dhcp_header
-	add di,SIZE dhcp_header
-	sub cx,SIZE dhcp_header
-
-serv_offer_opt_loop:
-    push cx
-    mov ax,[si]
-    mov dl,al
-    or al,al
-    jz serv_offer_opt_done
-;
-    cmp al,-1
-    je serv_offer_opt_done
-;        
-    movzx bx,al
-    movzx cx,ah
-    cmp bx,40h
-    jae serv_offer_opt_default
-;    
-    add bx,bx
-    call word ptr cs:[bx].serv_offer_opt_tab 
-    jmp serv_offer_opt_next
-
-serv_offer_opt_default:
-    call CopyServerOption
-
-serv_offer_opt_next:
-    mov ax,cx
-    pop cx
-    sub cx,2
-    sub cx,ax
-	ja serv_offer_opt_loop
-;
-    push cx	
-
-serv_offer_opt_done:
-    pop cx	
-;
-	mov al,-1
-	stosb
-    dec cx
-;
-    xor al,al
-    rep stosb
-;    
-    pop di
-    pop si
-    pop cx
-;
-    push fs
-    mov fs,fs:dsd_driver_sel    
-	call SendDhcpBroadcast
-	pop fs
-
-serv_offer_free:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-    ret
-ServerOffer Endp
-
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			ServerAck
-;
-;	Purpose:		Received server ACK for other node
-;
-;	Parameters:		DS:SI	UDP data
-;                   CX      Size
-;                   FS      Server sel
-;                   GS      Driver selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-serv_ack_opt_tab:
-saot00   DW OFFSET CopyServerOption
-;saot01   DW OFFSET MaskServerOption
-saot01   DW OFFSET CopyServerOption
-saot02   DW OFFSET CopyServerOption
-;saot03   DW OFFSET MyIpServerOption
-saot03   DW OFFSET CopyServerOption
-saot04   DW OFFSET CopyServerOption
-saot05   DW OFFSET CopyServerOption
-saot06   DW OFFSET CopyServerOption
-saot07   DW OFFSET CopyServerOption
-saot08   DW OFFSET CopyServerOption
-saot09   DW OFFSET CopyServerOption
-saot0A   DW OFFSET CopyServerOption
-saot0B   DW OFFSET CopyServerOption
-saot0C   DW OFFSET CopyServerOption
-saot0D   DW OFFSET CopyServerOption
-saot0E   DW OFFSET CopyServerOption
-saot0F   DW OFFSET CopyServerOption
-saot10   DW OFFSET CopyServerOption
-saot11   DW OFFSET CopyServerOption
-saot12   DW OFFSET CopyServerOption
-saot13   DW OFFSET CopyServerOption
-saot14   DW OFFSET CopyServerOption
-saot15   DW OFFSET CopyServerOption
-saot16   DW OFFSET CopyServerOption
-saot17   DW OFFSET CopyServerOption
-saot18   DW OFFSET CopyServerOption
-saot19   DW OFFSET CopyServerOption
-saot1A   DW OFFSET CopyServerOption
-saot1B   DW OFFSET CopyServerOption
-saot1C   DW OFFSET CopyServerOption
-saot1D   DW OFFSET CopyServerOption
-saot1E   DW OFFSET CopyServerOption
-saot1F   DW OFFSET CopyServerOption
-saot20   DW OFFSET CopyServerOption
-saot21   DW OFFSET CopyServerOption
-saot22   DW OFFSET CopyServerOption
-saot23   DW OFFSET CopyServerOption
-saot24   DW OFFSET CopyServerOption
-saot25   DW OFFSET CopyServerOption
-saot26   DW OFFSET CopyServerOption
-saot27   DW OFFSET CopyServerOption
-saot28   DW OFFSET CopyServerOption
-saot29   DW OFFSET CopyServerOption
-saot2A   DW OFFSET CopyServerOption
-saot2B   DW OFFSET CopyServerOption
-saot2C   DW OFFSET CopyServerOption
-saot2D   DW OFFSET CopyServerOption
-saot2E   DW OFFSET CopyServerOption
-saot2F   DW OFFSET CopyServerOption
-saot30   DW OFFSET CopyServerOption
-saot31   DW OFFSET CopyServerOption
-saot32   DW OFFSET CopyServerOption
-saot33   DW OFFSET CopyServerOption
-saot34   DW OFFSET CopyServerOption
-saot35   DW OFFSET CopyServerOption
-saot36   DW OFFSET CopyServerOption
-saot37   DW OFFSET CopyServerOption
-saot38   DW OFFSET CopyServerOption
-saot39   DW OFFSET CopyServerOption
-saot3A   DW OFFSET CopyServerOption
-saot3B   DW OFFSET CopyServerOption
-saot3C   DW OFFSET CopyServerOption
-saot3D   DW OFFSET CopyServerOption
-saot3E   DW OFFSET CopyServerOption
-saot3F   DW OFFSET CopyServerOption
-
-ServerAck Proc near
-	mov eax,[si].dhcp_id
-	cmp eax,fs:dsd_my_ident
-	jne serv_ack_free
-;
-    add cx,8
-    push fs
-    mov fs,fs:dsd_driver_sel
-	call CreateDhcpReplyBroadcast
-	pop fs
-;
-	mov es:[di].dhcp_op,2
-	mov al,[si].dhcp_hw_type
-	mov es:[di].dhcp_hw_type,al
-	mov al,[si].dhcp_hw_len
-	mov es:[di].dhcp_hw_len,al
-	mov es:[di].dhcp_hops,0
-	mov eax,fs:dsd_orig_ident
-	mov es:[di].dhcp_id,eax
-	mov es:[di].dhcp_elapsed,0
-	mov es:[di].dhcp_flags,80h
-	mov eax,[si].dhcp_client_ip
-	mov es:[di].dhcp_client_ip,eax
-	mov eax,[si].dhcp_req_ip
-	mov es:[di].dhcp_req_ip,eax
-	mov eax,[si].dhcp_relay_ip
-	mov es:[di].dhcp_relay_ip,eax
-    mov eax,[si].dhcp_server_ip
-    mov es:[di].dhcp_server_ip,eax
-	mov es:[di].dhcp_magic,63538263h
-	mov es:[di].dhcp_msg_code,53
-	mov es:[di].dhcp_msg_len,1
-	mov es:[di].dhcp_msg_type,5
-	call SetHwAddress
-;	
-    push cx
-    push si
-    push di
-;    
-	add si,SIZE dhcp_header
-	add di,SIZE dhcp_header
-	sub cx,SIZE dhcp_header
-
-serv_ack_opt_loop:
-    push cx
-    mov ax,[si]
-    mov dl,al
-    or al,al
-    jz serv_ack_opt_done
-;
-    cmp al,-1
-    je serv_ack_opt_done
-;        
-    movzx bx,al
-    movzx cx,ah
-    cmp bx,40h
-    jae serv_ack_opt_default
-;    
-    add bx,bx
-    call word ptr cs:[bx].serv_ack_opt_tab 
-    jmp serv_ack_opt_next
-
-serv_ack_opt_default:
-    call CopyServerOption
-
-serv_ack_opt_next:
-    mov ax,cx
-    pop cx
-    sub cx,2
-    sub cx,ax
-	ja serv_ack_opt_loop
-;
-    push cx	
-
-serv_ack_opt_done:
-    pop cx	
-;
-	mov al,-1
-	stosb
-    dec cx
-;
-    xor al,al
-    rep stosb
-;    
-    pop di
-    pop si
-    pop cx
-;
-    push fs
-    mov fs,fs:dsd_driver_sel    
-	call SendDhcpBroadcast
-	pop fs
-
-serv_ack_free:
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-    ret
-ServerAck Endp
 
 PAGE
 	    
@@ -2473,17 +2271,6 @@ cr06	DW OFFSET ReceiveError
 cr07	DW OFFSET ReceiveError
 cr08	DW OFFSET ReceiveError
 
-serv_resp_tab:
-srt00	DW OFFSET ReceiveError
-srt01	DW OFFSET ReceiveError
-srt02	DW OFFSET ServerOffer
-srt03	DW OFFSET ReceiveError
-srt04	DW OFFSET ReceiveError
-srt05	DW OFFSET ServerAck
-srt06	DW OFFSET ReceiveError
-srt07	DW OFFSET ReceiveError
-srt08	DW OFFSET ReceiveError
-
 ReceiveClientDhcp	Proc near
 	push ds
 	push ax
@@ -2527,26 +2314,14 @@ receive_cl_dest_ok:
 	jae receive_cl_free
 ;
     cmp dx,67
-    je receive_cl_serv    
+    je receive_cl_free    
 ;
 	mov eax,ds:dhcp_ident
 	cmp eax,es:[di].dhcp_id
-	jne receive_cl_serv
+	jne receive_cl_free
 ;
 	add bx,bx
 	call word ptr cs:[bx].cl_receive_tab	
-	jmp receive_cl_done
-
-receive_cl_serv:
-    mov ax,es
-    mov ds,ax
-    mov si,di
-    call FindServer
-    jc receive_cl_free
-;
-    mov fs,ax
-	add bx,bx
-	call word ptr cs:[bx].serv_resp_tab	
 	jmp receive_cl_done
 
 receive_cl_free:
@@ -2666,7 +2441,6 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dhcp_ip_name    		DB 'DHCP.IP',0
 dhcp_gateway_name		DB 'DHCP.GATEWAY',0
 dhcp_mask_name			DB 'DHCP.NETMASK',0
 
@@ -2695,13 +2469,11 @@ init_dhcp	PROC near
 	mov ax,cs
 	mov es,ax
 ;
-	mov di,OFFSET dhcp_ip_name
-	call GetIPNumber
-	mov ds:dhcp_ip2,eax
-;
 	mov di,OFFSET dhcp_gateway_name
 	call GetIPNumber
 	mov ds:dhcp_gateway2,eax
+	add eax,1000000h
+	mov ds:dhcp_ip2,eax
 ;
 	mov di,OFFSET dhcp_mask_name
 	call GetIPNumber

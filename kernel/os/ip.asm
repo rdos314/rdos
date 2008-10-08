@@ -361,6 +361,31 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			get_ip_mask
+;
+;	Purpose:		Get IP mask
+;
+;	Returns:		EDX		IP mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ip_mask_name	DB 'Get IP Mask',0
+
+get_ip_mask	Proc far
+	push ds
+;
+	mov dx,ip_data_sel
+	mov ds,dx
+	mov edx,ds:ip_mask
+;
+	pop ds
+	retf32
+get_ip_mask	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			create_ip_header
 ;
 ;	Purpose:		create an IP header, and allocate space for data
@@ -1529,6 +1554,12 @@ init	PROC far
 	mov di,OFFSET get_gateway_name
 	xor dx,dx
 	mov ax,get_gateway_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_ip_mask
+	mov di,OFFSET get_ip_mask_name
+	xor dx,dx
+	mov ax,get_ip_mask_nr
 	RegisterBimodalUserGate
 ;
 	mov cx,4
