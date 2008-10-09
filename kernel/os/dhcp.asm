@@ -65,8 +65,8 @@ dhcp_server			DD ?
 dhcp_option_list	DW ?
 dhcp_driver_sel     DW ?
 dhcp_ip2            DD ?
-dhcp_mask2          DD ?
-dhcp_gateway2       DD ?
+;dhcp_mask2          DD ?
+;dhcp_gateway2       DD ?
 dhcp_serv_arr       DW 256 DUP(?)
 
 dhcp_data	ENDS
@@ -239,10 +239,8 @@ CreateDhcpReplyBroadcast	Proc near
 	xchg al,ah
 	mov es:[edi].udp_source,ax
 ;
-    mov ax,dhcp_data_sel
-    mov ds,ax
-    mov eax,ds:dhcp_gateway2
-    mov es:[di-8],eax	
+    GetIpAddress
+    mov es:[di-8],edx	
 	add edi,8
 	clc
 
@@ -828,18 +826,19 @@ PAGE
 ServReqGwData	Proc near
 	push ds
 	push eax
+	push edx
 ;
 	mov al,3
 	stosb
 	mov al,4
 	stosb
 ;
-    mov ax,dhcp_data_sel
-    mov ds,ax
-    mov eax,ds:dhcp_gateway2
+    GetIpAddress
+    mov eax,edx
 	stosd
     sub cx,6
 ;
+    pop edx
 	pop eax
 	pop ds
 	ret
@@ -969,133 +968,24 @@ PAGE
 ServReqIdData	Proc near
 	push ds
 	push eax
+	push edx
 ;
 	mov al,54
 	stosb
 	mov al,4
 	stosb
 ;
-    mov ax,dhcp_data_sel
-    mov ds,ax
-    mov eax,ds:dhcp_gateway2
+    GetIpAddress
+    mov eax,edx
 	stosd
     sub cx,6
 ;
+    pop edx
 	pop eax
 	pop ds
 	ret
 ServReqIdData	Endp
 	
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			CopyServerOption
-;
-;	Purpose:		Copy server option
-;
-;	Parameters:		DS:SI	option data in
-;                   ES:DI   option data out
-;                   DL      option id
-;                   CX      option size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyServerOption	Proc near
-    push cx
-    movsw
-    rep movsb
-    pop cx
-    ret
-CopyServerOption    Endp
-
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			IgnoreServerOption
-;
-;	Purpose:		Ignore server option
-;
-;	Parameters:		DS:SI	option data in
-;                   ES:DI   option data out
-;                   DL      option id
-;                   CX      option size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IgnoreServerOption	Proc near
-    add si,2
-    add si,cx
-    ret
-IgnoreServerOption    Endp
-
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			MaskServerOption
-;
-;	Purpose:		Set server subnet mask option
-;
-;	Parameters:		DS:SI	option data in
-;                   ES:DI   option data out
-;                   DL      option id
-;                   CX      option size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MaskServerOption	Proc near
-    movsw
-;    
-    push ds
-    push eax
-;
-    mov ax,dhcp_data_sel
-    mov ds,ax
-    mov eax,ds:dhcp_mask2
-    stosd
-    add si,4
-;    
-    pop eax
-    pop ds
-    ret
-MaskServerOption    Endp
-
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			MyIpServerOption
-;
-;	Purpose:		Set server IP to my IP option
-;
-;	Parameters:		DS:SI	option data in
-;                   ES:DI   option data out
-;                   DL      option id
-;                   CX      option size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MyIpServerOption	Proc near
-    movsw
-;    
-    push ds
-    push eax
-    push edx
- ;
-    mov ax,dhcp_data_sel
-    mov ds,ax
-    mov eax,ds:dhcp_gateway2
-    stosd
-    add si,4
-;    
-    pop edx
-    pop eax
-    pop ds
-    ret
-MyIpServerOption    Endp
-
 PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1204,8 +1094,8 @@ discover_req_options:
 ;	
     mov ax,dhcp_data_sel
     mov ds,ax
-    mov eax,ds:dhcp_gateway2
-	mov es:[di].dhcp_server_ip,eax
+    GetIpAddress
+	mov es:[di].dhcp_server_ip,edx
 ;
 	add si,SIZE dhcp_header
 	add di,SIZE dhcp_header
@@ -1352,10 +1242,8 @@ req_req_size_ok:
     mov eax,fs:dsd_local_ip
 	mov es:[di].dhcp_req_ip,eax
 ;	
-    mov ax,dhcp_data_sel
-    mov ds,ax
-    mov eax,ds:dhcp_gateway2
-	mov es:[di].dhcp_server_ip,eax
+    GetIpAddress
+	mov es:[di].dhcp_server_ip,edx
 ;
 	add si,SIZE dhcp_header
 	add di,SIZE dhcp_header
@@ -2441,8 +2329,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dhcp_gateway_name		DB 'DHCP.GATEWAY',0
-dhcp_mask_name			DB 'DHCP.NETMASK',0
+dhcp_ip_name		DB 'DHCP.IP',0
 
 	public init_dhcp
 
@@ -2469,21 +2356,9 @@ init_dhcp	PROC near
 	mov ax,cs
 	mov es,ax
 ;
-	mov di,OFFSET dhcp_gateway_name
+	mov di,OFFSET dhcp_ip_name
 	call GetIPNumber
-	mov ds:dhcp_gateway2,eax
-	add eax,1000000h
 	mov ds:dhcp_ip2,eax
-;
-	mov di,OFFSET dhcp_mask_name
-	call GetIPNumber
-	jnc init_dhcp_mask2_ok
-;
-    mov eax,0FFFFFFh
-
-init_dhcp_mask2_ok:    	
-    or eax,0FFFFFFh
-	mov ds:dhcp_mask2,eax
 ;
 	mov ax,cs
 	mov ds,ax
