@@ -648,8 +648,6 @@ receive_arp_forward_req:
     cmp bp,ds:prot_driver
     je receive_arp_done
 ;
-    int 3    
-;
 	push es
 	mov ax,es
 	mov gs,ax
@@ -705,11 +703,9 @@ receive_arp_forward_req:
 	jmp receive_arp_done
 
 receive_arp_forward_non_existant:
-    int 3
 ; ds protocol selector
 ; es ARP req
 ; bp driver sel
-
     mov fs,bp    
     mov gs,fs:d_class
 	mov cx,gs:driver_count
@@ -744,10 +740,12 @@ receive_arp_forward_driver_loop:
 ;
 	movzx ecx,gs:ar_data.arp_hw_len
 	push ds
+	push cx
 	push esi
 	call fs:d_address
 	rep movs byte ptr es:[edi],ds:[esi]
 	pop esi
+	pop cx
 	pop ds
 	add si,cx
 ;
@@ -775,10 +773,10 @@ receive_arp_forward_driver_loop:
 	pop es    
 
 receive_arp_forward_driver_next:
-	add bx,2
 	pop cx
 	pop bx
 	pop gs
+	add bx,2
 	sub cx,1
 	jnz receive_arp_forward_driver_loop
 ;

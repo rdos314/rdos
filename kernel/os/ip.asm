@@ -926,31 +926,6 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			receive_forward
-;
-;	Purpose:		forward IP-data
-;
-;	Parameters:		GS:SI   IP header
-;                   BP      IP data driver sel
-;                   FS      current driver sel                   
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-receive_forward Proc far
-    mov ax,fs
-    cmp ax,bp
-    je receive_forward_done
-;    
-    int 3
-
-receive_forward_done:
-    ret
-receive_forward Endp
-
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
 ; 	Name:			receive
 ;
 ;	Purpose:		received IP data
@@ -962,6 +937,8 @@ PAGE
 ;					FS		driver sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+no_options	DB 0
 
 receive	Proc far
 	push ds
@@ -1053,18 +1030,40 @@ receive_dhcp_done:
 	cmp al,127
 	je receive_this_node
 ;
-    int 3
+    rol eax,8
+    cmp al,255
+    je receive_fail
+;
     push es
+    push gs    
     push di
+;    
     mov ax,es
     mov gs,ax
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET receive_forward
-    mov si,bp
-    mov bp,fs    
-    NetBroadcast
+    mov si,di
+   	mov cx,gs:[si].ip_size
+	xchg cl,ch
+	sub cx,SIZE ip_header
+	mov ah,gs:[si].ip_ttl
+	mov al,gs:[si].ip_proto
+	mov edx,gs:[si].ip_dest
+	push si
+	mov si,cs
+	mov ds,si	
+	mov esi,OFFSET no_options
+	CreateIpHeader
+	pop si
+	jc receive_forward_fail
+;
+    sub di,SIZE ip_header
+   	mov cx,gs:[si].ip_size
+	xchg cl,ch
+    rep movs byte ptr es:[di],gs:[si]
+    SendIp
+
+receive_forward_fail:
     pop di
+    pop gs
     pop es
     jmp receive_fail
 	
