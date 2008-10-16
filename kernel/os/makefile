@@ -202,6 +202,10 @@ time_srcs = TIME.ASM
 time_objs = $(time_srcs:.ASM=.OBJ)
 time_rdvs = TIME.RDV
 
+ac97_srcs = AC97.ASM
+ac97_objs = $(ac97_srcs:.ASM=.OBJ)
+ac97_rdvs = AC97.RDV
+
 kernel_srcs =   KERNEL.ASM
 
 p1_srcs =   PAGING.ASM				TASK.ASM                STATE.ASM	\
@@ -244,7 +248,8 @@ srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs
 			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) \
 			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
-			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs)
+			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs) \
+			$(ac97_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -270,7 +275,7 @@ rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  
 			$(keyboard_rdvs) $(inifile_rdvs) \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
-			$(rtc_rdvs) $(font_rdvs) $(video_rdvs)
+			$(rtc_rdvs) $(font_rdvs) $(video_rdvs) $(ac97_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -344,6 +349,14 @@ VIDEO.RDV : $(video_objs)
 	$(video_objs)
 	VIDEO.RDV
 	VIDEO;
+!
+
+AC97.RDV : $(ac97_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ac97_objs)
+	AC97.RDV
+	AC97;
 !
 
 EMS.RDV : $(ems_objs)

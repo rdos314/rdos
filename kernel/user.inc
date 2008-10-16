@@ -2241,3 +2241,29 @@ WriteICSPData      MACRO
 ReadICSPData      MACRO
 	UserGate read_icsp_data_nr
 						ENDM
+
+;;;;;;;;;;; Audio ;;;;;;;;;;
+
+;   OUT AL          Left
+;   OUT AH          Right
+GetMasterVolume      MACRO
+	UserGate get_master_volume_nr
+						ENDM
+
+;   IN  AL          Left
+;   IN  AH          Right
+SetMasterVolume      MACRO
+	UserGate set_master_volume_nr
+						ENDM
+
+;   OUT AL          Left
+;   OUT AH          Right
+GetLineOutVolume      MACRO
+	UserGate get_line_out_volume_nr
+						ENDM
+
+;   IN  AL          Left
+;   IN  AH          Right
+SetLineOutVolume      MACRO
+	UserGate set_line_out_volume_nr
+						ENDM

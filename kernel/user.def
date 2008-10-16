@@ -415,4 +415,10 @@ available_small_linear_nr   = 348
 
 get_ip_mask_nr              = 349
 
+get_master_volume_nr        = 350
+set_master_volume_nr        = 351
+
+get_line_out_volume_nr      = 352
+set_line_out_volume_nr      = 353
+
 usergate_entries			= 370

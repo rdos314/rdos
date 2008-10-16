@@ -468,5 +468,8 @@ close_usb_req_nr            EQU 322
 
 notify_ir_data_nr           EQU 323
 
-osgate_entries				EQU 324
+read_codec_nr               EQU 324
+write_codec_nr              EQU 325
+
+osgate_entries				EQU 326
 

@@ -2205,3 +2205,20 @@ CloseUsbReq      MACRO
 NotifyIrData      MACRO
 	OsGate notify_ir_data_nr
 						ENDM
+
+
+;
+; Audio CODEC related
+;
+
+; IN    BX Register
+; OUT   AX Value
+ReadCodec      MACRO
+	OsGate read_codec_nr
+						ENDM
+
+; IN    BX Register
+; IN    AX Value
+WriteCodec      MACRO
+	OsGate write_codec_nr
+						ENDM

@@ -93,6 +93,143 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			ReadCodec
+;
+;		DESCRIPTION:    Read CODEC register
+;
+;       PARAMETERS:     BX      Register
+;
+;		RETURNS:		AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_codec_name DB 'Read CODEC',0
+
+read_codec	Proc far
+    push ds
+    push cx
+    push dx
+;
+    mov dx,audio_dev_data_sel
+    mov ds,dx
+    mov cx,100
+
+rcCheckBusy:        
+    mov dx,ds:IoBase
+    add dx,ACC_CODEC_CONTROL
+    in eax,dx
+    test eax,10000h
+    jz rcNotBusy
+;
+    mov ax,10
+    WaitMilliSec
+    loop rcCheckBusy
+;
+    stc
+    jmp rcDone
+
+rcNotBusy:
+    movzx eax,bx
+    ror eax,8
+    or eax,80010000h
+    out dx,eax
+;
+    mov cx, 100    
+
+rcDataLoop:
+    mov dx,ds:IoBase
+    add dx,ACC_CODEC_STATUS
+    in eax,dx
+    test eax,20000h
+    jnz rcDataOk
+;
+    mov ax,10
+    WaitMilliSec    
+    loop rcDataLoop
+
+rcFail:
+    stc
+    jmp rcDone    
+
+rcDataOk:
+    mov edx,eax
+    rol edx,8
+    cmp dl,bl
+    jne rcFail
+;    
+    clc
+
+rcDone:    
+    pop dx
+    pop cx
+    pop ds
+    ret
+read_codec  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteCodec
+;
+;		DESCRIPTION:    Write CODEC register
+;
+;       PARAMETERS:     BX      Register
+;		        		AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_codec_name DB 'Write CODEC',0
+
+write_codec	Proc far
+    push ds
+    push eax
+    push cx
+    push dx
+    push si
+;
+    mov si,ax
+    mov dx,audio_dev_data_sel
+    mov ds,dx
+    mov cx,100
+
+wcCheckBusy:        
+    mov dx,ds:IoBase
+    add dx,ACC_CODEC_CONTROL
+    in eax,dx
+    test eax,10000h
+    jz wcNotBusy
+;
+    mov ax,10
+    WaitMilliSec
+    loop wcCheckBusy
+;
+    stc
+    jmp wcDone
+
+wcNotBusy:
+    movzx eax,bx
+    ror eax,8
+    or eax,10000h
+    mov ax,si
+    out dx,eax
+    clc
+
+wcDone:    
+    pop si
+    pop dx
+    pop cx
+    pop eax
+    pop ds
+    ret
+write_codec  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			Init_dev
 ;
 ;		DESCRIPTION:    inits adpater
@@ -110,7 +247,6 @@ pci01 	DW 0,	  0
 detect_name	DB 'CS5536-AC97',0
 
 detect_thread	proc far
-    int 3
 	mov ax,audio_dev_data_sel
 	mov ds,ax
 	mov si,OFFSET PciVendorTab
@@ -159,6 +295,24 @@ init_ch_loop:
     add bx,SIZE audio_channel_struc
     add ax,8
     loop init_ch_loop
+;
+    mov dx,ds:IoBase
+    add dx,ACC_CODEC_CONTROL
+    mov eax,20000h
+    out dx,eax
+;    
+    mov dx,ds:IoBase
+    add dx,ACC_CODEC_STATUS
+    in eax,dx
+;
+    int 3        
+    mov bx,2
+    ReadCodec
+;
+    mov ax,3F3Fh
+    WriteCodec
+;
+    ReadCodec        
 ;
     mov dx,ds:Ac0.AcStatusIo
     in al,dx
@@ -213,9 +367,22 @@ init	PROC far
 	AllocateFixedSystemMem
 ;
 	mov ax,cs
+	mov ds,ax
 	mov es,ax
 	mov di,OFFSET init_dev
 	HookInitTasking
+;
+	mov si,OFFSET read_codec
+	mov di,OFFSET read_codec_name
+	xor cl,cl
+	mov ax,read_codec_nr
+	RegisterOsGate
+;
+	mov si,OFFSET write_codec
+	mov di,OFFSET write_codec_name
+	xor cl,cl
+	mov ax,write_codec_nr
+	RegisterOsGate
 ;
 	pop ds
 	popa
