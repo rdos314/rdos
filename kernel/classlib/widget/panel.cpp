@@ -415,10 +415,13 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     	dev->SetLgopNone();
         dev->SetFilledStyle();
 
+        dev->SetClipRect(  xmin, ymin,
+            			   xmax, ymax);
+
         SetBackColor(dev);
-            
-    	dev->DrawRect(xmin + FBorderWidth, ymin + FBorderWidth, 
-    	              xmax - FBorderWidth, ymax - FBorderWidth);
+
+	    dev->DrawRect( xmin, ymin,
+		   			   xmax, ymax);
 
     	dev->SetDrawColor(FBorderR, FBorderG, FBorderB);
 
