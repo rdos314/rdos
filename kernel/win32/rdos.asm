@@ -8999,8 +8999,8 @@ RdosReadICSPData	ENDP
 ;
 ;		DESCRIPTION:    Get master volume
 ;
-;       PARAMETERS:     Left (80h = mute)
-;                       Right (80h = mute)
+;       PARAMETERS:     Left (0-100, negative = mute)
+;                       Right (0-100, negative = mute)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -9011,12 +9011,38 @@ RdosGetMasterVolume	PROC
 	mov ebp,esp
 	push edi
 ;
-    UserGate get_master_volume_nr    
+    int 3
     mov edi,[ebp+8]
-    mov [edi],al
+    mov dword ptr [edi],-1
+;    
     mov edi,[ebp+12]
-    mov [edi],ah
+    mov dword ptr [edi],-1
+;    
+    UserGate get_master_volume_nr
+    jc rgmvDone
+;    
+    test al,80h
+    jnz rgmvR
+;    
+    mov edi,[ebp+8]
+    push ax
+    mov ah,200
+    mul ah
+    movzx eax,ah    
+    mov [edi],eax
+    pop ax
+
+rgmvR:
+    test ah,80h
+    jnz rgmvDone
 ;
+    mov edi,[ebp+12]
+    mov al,200
+    mul ah
+    movzx eax,ah
+    mov [edi],eax
+
+rgmvDone:
     pop edi
 	pop ebp
 	ret 8
@@ -9028,8 +9054,8 @@ RdosGetMasterVolume	ENDP
 ;
 ;		DESCRIPTION:    Set master volume
 ;
-;       PARAMETERS:     Left (80h = mute)
-;                       Right (80h = mute)
+;       PARAMETERS:     Left (0-100, negative = mute)
+;                       Right (0-100, negative = mute)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -9038,11 +9064,45 @@ RdosGetMasterVolume	ENDP
 RdosSetMasterVolume	PROC
 	push ebp
 	mov ebp,esp
+	push ebx
 ;
-    mov al,[ebp+8]
-    mov ah,[ebp+12]
+    int 3
+    mov eax,[ebp+8]
+    mov bl,80h
+    test eax,80000000h
+    jnz rsmvR
+;    
+    mov bl,7Fh
+    cmp eax,100
+    jae rsmvR
+;
+    mov ah,al
+    xor al,al
+    mov bl,200
+    div bl
+    mov bl,al
+
+rsmvR:
+    mov eax,[ebp+12]
+    mov bh,80h
+    test eax,80000000h
+    jnz rsmvSet
+;    
+    mov bh,7Fh
+    cmp eax,100
+    jae rsmvSet
+;
+    mov ah,al
+    xor al,al
+    mov bh,200
+    div bh
+    mov bh,al
+
+rsmvSet:
+    mov ax,bx
     UserGate set_master_volume_nr    
 ;
+    pop ebx
 	pop ebp
 	ret 8
 RdosSetMasterVolume	ENDP
@@ -9053,8 +9113,8 @@ RdosSetMasterVolume	ENDP
 ;
 ;		DESCRIPTION:    Get line out volume
 ;
-;       PARAMETERS:     Left (80h = mute)
-;                       Right (80h = mute)
+;       PARAMETERS:     Left (0-100, negative = mute)
+;                       Right (0-100, negative = mute)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -9065,12 +9125,38 @@ RdosGetLineOutVolume	PROC
 	mov ebp,esp
 	push edi
 ;
-    UserGate get_line_out_volume_nr    
+    int 3
     mov edi,[ebp+8]
-    mov [edi],al
+    mov dword ptr [edi],-1
+;    
     mov edi,[ebp+12]
-    mov [edi],ah
+    mov dword ptr [edi],-1
+;    
+    UserGate get_line_out_volume_nr
+    jc rglovDone
+;    
+    test al,80h
+    jnz rglovR
+;    
+    mov edi,[ebp+8]
+    push ax
+    mov ah,200
+    imul ah
+    movzx eax,ah    
+    mov [edi],eax
+    pop ax
+
+rglovR:
+    test ah,80h
+    jnz rglovDone
 ;
+    mov edi,[ebp+12]
+    mov al,200
+    imul ah
+    movzx eax,ah
+    mov [edi],eax
+
+rglovDone:
     pop edi
 	pop ebp
 	ret 8
@@ -9082,8 +9168,8 @@ RdosGetLineOutVolume	ENDP
 ;
 ;		DESCRIPTION:    Set line out volume
 ;
-;       PARAMETERS:     Left (80h = mute)
-;                       Right (80h = mute)
+;       PARAMETERS:     Left (0-100, negative = mute)
+;                       Right (0-100, negative = mute)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -9092,11 +9178,45 @@ RdosGetLineOutVolume	ENDP
 RdosSetLineOutVolume	PROC
 	push ebp
 	mov ebp,esp
+	push ebx
 ;
-    mov al,[ebp+8]
-    mov ah,[ebp+12]
+    int 3
+    mov eax,[ebp+8]
+    mov bl,80h
+    test eax,80000000h
+    jnz rslovR
+;    
+    mov bl,7Fh
+    cmp eax,100
+    jae rslovR
+;
+    mov ah,al
+    xor al,al
+    mov bl,200
+    div bl
+    mov bl,al
+
+rslovR:
+    mov eax,[ebp+12]
+    mov bh,80h
+    test eax,80000000h
+    jnz rslovSet
+;    
+    mov bh,7Fh
+    cmp eax,100
+    jae rslovSet
+;
+    mov ah,al
+    xor al,al
+    mov bh,200
+    div bh
+    mov bh,al
+
+rslovSet:
+    mov ax,bx
     UserGate set_line_out_volume_nr    
 ;
+    pop ebx
 	pop ebp
 	ret 8
 RdosSetLineOutVolume	ENDP

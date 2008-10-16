@@ -1688,3 +1688,25 @@ Free small kernel memory: %d.%05d MB
 :TEXT_INFO_BIG_KERNEL
 Free big kernel memory: %d.%05d MB
 .
+
+:TEXT_CMDHELP_VOLUME
+Audio volume
+
+VOLUME [OFF | 0-100] [OFF | 0-100]
+.
+
+:TEXT_VOLUME_L_OFF
+Left channel turned off
+.
+
+:TEXT_VOLUME_R_OFF
+Right channel turned off
+.
+
+:TEXT_VOLUME_L_ON
+Left channel %d of 100
+.
+
+:TEXT_VOLUME_R_ON
+Right channel %d of 100
+.

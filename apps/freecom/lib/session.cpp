@@ -73,6 +73,7 @@
 #include "capture.h"
 #include "usb.h"
 #include "info.h"
+#include "volume.h"
 
 #include "file.h"
 #include "path.h"
@@ -130,6 +131,7 @@ static TCommandFactory *state;
 static TCommandFactory *type;
 static TCommandFactory *timev;
 static TCommandFactory *usb;
+static TCommandFactory *volume;
 static TCommandFactory *wait;
 
 static TStringList *History;
@@ -166,6 +168,7 @@ TSession::TSession()
 		flashfs = new TFlashFsPartitionFactory;
 
 		wait = new TWaitFactory;
+		volume = new TVolumeFactory;
 		usb = new TUsbFactory;
 		timev = new TTimeFactory;
 		type = new TTypeFactory;
@@ -285,6 +288,7 @@ TSession::~TSession()
     	delete flashfs;
 
 		  delete wait;
+		  delete volume;
         delete usb;
     	delete timev;
 	    delete type;
