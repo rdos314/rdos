@@ -8993,6 +8993,114 @@ ricspdDone:
 	ret 8
 RdosReadICSPData	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetMasterVolume
+;
+;		DESCRIPTION:    Get master volume
+;
+;       PARAMETERS:     Left (80h = mute)
+;                       Right (80h = mute)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetMasterVolume
+
+RdosGetMasterVolume	PROC
+	push ebp
+	mov ebp,esp
+	push edi
+;
+    UserGate get_master_volume_nr    
+    mov edi,[ebp+8]
+    mov [edi],al
+    mov edi,[ebp+12]
+    mov [edi],ah
+;
+    pop edi
+	pop ebp
+	ret 8
+RdosGetMasterVolume	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetMasterVolume
+;
+;		DESCRIPTION:    Set master volume
+;
+;       PARAMETERS:     Left (80h = mute)
+;                       Right (80h = mute)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetMasterVolume
+
+RdosSetMasterVolume	PROC
+	push ebp
+	mov ebp,esp
+;
+    mov al,[ebp+8]
+    mov ah,[ebp+12]
+    UserGate set_master_volume_nr    
+;
+	pop ebp
+	ret 8
+RdosSetMasterVolume	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetLineOutVolume
+;
+;		DESCRIPTION:    Get line out volume
+;
+;       PARAMETERS:     Left (80h = mute)
+;                       Right (80h = mute)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetLineOutVolume
+
+RdosGetLineOutVolume	PROC
+	push ebp
+	mov ebp,esp
+	push edi
+;
+    UserGate get_line_out_volume_nr    
+    mov edi,[ebp+8]
+    mov [edi],al
+    mov edi,[ebp+12]
+    mov [edi],ah
+;
+    pop edi
+	pop ebp
+	ret 8
+RdosGetLineOutVolume	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetLineOutVolume
+;
+;		DESCRIPTION:    Set line out volume
+;
+;       PARAMETERS:     Left (80h = mute)
+;                       Right (80h = mute)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetLineOutVolume
+
+RdosSetLineOutVolume	PROC
+	push ebp
+	mov ebp,esp
+;
+    mov al,[ebp+8]
+    mov ah,[ebp+12]
+    UserGate set_line_out_volume_nr    
+;
+	pop ebp
+	ret 8
+RdosSetLineOutVolume	ENDP
+
 ;	extrn Startup:near
 
 ;	public _main

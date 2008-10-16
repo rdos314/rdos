@@ -376,6 +376,12 @@ int __stdcall RdosWriteICSPCommand(int Handle, int Cmd);
 int __stdcall RdosWriteICSPData(int Handle, int Data);
 int __stdcall RdosReadICSPData(int Handle, int *Data);
 
+void __stdcall RdosGetMasterVolume(char *Left, char *Right);
+void __stdcall RdosSetMasterVolume(char Left, char Right);
+
+void __stdcall RdosGetLineOutVolume(char *Left, char *Right);
+void __stdcall RdosSetLineOutVolume(char Left, char Right);
+
 #ifdef __cplusplus
 }
 #endif
