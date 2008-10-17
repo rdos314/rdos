@@ -9011,7 +9011,6 @@ RdosGetMasterVolume	PROC
 	mov ebp,esp
 	push edi
 ;
-    int 3
     mov edi,[ebp+8]
     mov dword ptr [edi],-1
 ;    
@@ -9066,7 +9065,6 @@ RdosSetMasterVolume	PROC
 	mov ebp,esp
 	push ebx
 ;
-    int 3
     mov eax,[ebp+8]
     mov bl,80h
     test eax,80000000h
@@ -9125,7 +9123,6 @@ RdosGetLineOutVolume	PROC
 	mov ebp,esp
 	push edi
 ;
-    int 3
     mov edi,[ebp+8]
     mov dword ptr [edi],-1
 ;    
@@ -9180,7 +9177,6 @@ RdosSetLineOutVolume	PROC
 	mov ebp,esp
 	push ebx
 ;
-    int 3
     mov eax,[ebp+8]
     mov bl,80h
     test eax,80000000h

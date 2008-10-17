@@ -2267,3 +2267,14 @@ GetLineOutVolume      MACRO
 SetLineOutVolume      MACRO
 	UserGate set_line_out_volume_nr
 						ENDM
+
+;   IN  AX          Sample rate
+;   OUT BX          Handle
+CreateAudioOutChannel      MACRO
+	UserGate create_audio_out_channel_nr
+						ENDM
+
+;   IN  BX          Handle
+CloseAudioOutChannel      MACRO
+	UserGate close_audio_out_channel_nr
+						ENDM

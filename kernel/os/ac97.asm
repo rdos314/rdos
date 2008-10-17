@@ -61,6 +61,24 @@ PAGE
 get_master_volume_name			DB 'Get Master Volume',0
 
 get_master_volume	PROC far
+    push bx
+;    
+    mov bx,2
+    ReadCodec
+;
+    test ah,80h
+    jnz gmvMute
+;
+    xchg al,ah
+    and ax,3F3Fh
+    shl ax,1
+    jmp gmvDone        
+
+gmvMute:
+    mov ax,8080h
+
+gmvDone:
+    pop bx    
 	retf32
 get_master_volume	ENDP
 
@@ -81,6 +99,21 @@ PAGE
 set_master_volume_name			DB 'Set Master Volume',0
 
 set_master_volume	PROC far
+    push ax
+    push bx
+;
+    cmp ax,8080h
+    je smvSet
+;
+    and ax,7F7Fh
+    shr ax,1
+
+smvSet:        
+    mov bx,2
+    WriteCodec
+;
+    pop bx    
+    pop ax
 	retf32
 set_master_volume	ENDP
 
@@ -101,6 +134,24 @@ PAGE
 get_line_out_volume_name			DB 'Get Line Out Volume',0
 
 get_line_out_volume	PROC far
+    push bx
+;    
+    mov bx,4
+    ReadCodec
+;
+    test ah,80h
+    jnz glovMute
+;
+    xchg al,ah
+    and ax,3F3Fh
+    shl ax,1
+    jmp glovDone        
+
+glovMute:
+    mov ax,8080h
+
+glovDone:
+    pop bx    
 	retf32
 get_line_out_volume	ENDP
 
@@ -121,8 +172,123 @@ PAGE
 set_line_out_volume_name			DB 'Set Line Out Volume',0
 
 set_line_out_volume	PROC far
+    push ax
+    push bx
+;
+    cmp ax,8080h
+    je slovSet
+;
+    and ax,7F7Fh
+    shr ax,1
+
+slovSet:        
+    mov bx,4
+    WriteCodec
+;
+    pop bx    
+    pop ax
 	retf32
 set_line_out_volume	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetDacRate
+;
+;		DESCRIPTION:	Get audio DAC rate
+;
+;		RETURNS:		AX      Sampling rate in Hz
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_dac_rate_name			DB 'Get Audio DAC Rate',0
+
+get_dac_rate	PROC far
+    push bx
+;    
+    mov bx,2Ch
+    ReadCodec
+;    
+    pop bx    
+	ret
+get_dac_rate	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetDacRate
+;
+;		DESCRIPTION:	Set audio DAC rate
+;
+;		PARAMETERS:		AX      Sampling rate in Hz
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_dac_rate_name			DB 'Set Audio DAC Rate',0
+
+set_dac_rate	PROC far
+    push bx
+;    
+    mov bx,2Ch
+    WriteCodec
+;    
+    pop bx    
+	ret
+set_dac_rate	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetAdcRate
+;
+;		DESCRIPTION:	Get audio ADC rate
+;
+;		RETURNS:		AX      Sampling rate in Hz
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_adc_rate_name			DB 'Get Audio ADC Rate',0
+
+get_adc_rate	PROC far
+    push bx
+;    
+    mov bx,32h
+    ReadCodec
+;    
+    pop bx    
+	ret
+get_adc_rate	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetAdcRate
+;
+;		DESCRIPTION:	Set audio ADC rate
+;
+;		PARAMETERS:		AX      Sampling rate in Hz
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_adc_rate_name			DB 'Set Audio ADC Rate',0
+
+set_adc_rate	PROC far
+    push bx
+;    
+    mov bx,32h
+    WriteCodec
+;    
+    pop bx    
+	ret
+set_adc_rate	ENDP
 
 PAGE
 
@@ -141,6 +307,30 @@ init	PROC far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov si,OFFSET get_dac_rate
+	mov di,OFFSET get_dac_rate_name
+	xor cl,cl
+	mov ax,get_audio_dac_rate_nr
+	RegisterOsGate
+;
+	mov si,OFFSET set_dac_rate
+	mov di,OFFSET set_dac_rate_name
+	xor cl,cl
+	mov ax,set_audio_dac_rate_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_adc_rate
+	mov di,OFFSET get_adc_rate_name
+	xor cl,cl
+	mov ax,get_audio_adc_rate_nr
+	RegisterOsGate
+;
+	mov si,OFFSET set_adc_rate
+	mov di,OFFSET set_adc_rate_name
+	xor cl,cl
+	mov ax,set_audio_adc_rate_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET get_master_volume
 	mov di,OFFSET get_master_volume_name

@@ -471,5 +471,10 @@ notify_ir_data_nr           EQU 323
 read_codec_nr               EQU 324
 write_codec_nr              EQU 325
 
-osgate_entries				EQU 326
+get_audio_dac_rate_nr       EQU 326
+set_audio_dac_rate_nr       EQU 327
+get_audio_adc_rate_nr       EQU 328
+set_audio_adc_rate_nr       EQU 329
+
+osgate_entries				EQU 330
 

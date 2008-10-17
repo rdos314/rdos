@@ -1696,17 +1696,25 @@ VOLUME [OFF | 0-100] [OFF | 0-100]
 .
 
 :TEXT_VOLUME_L_OFF
-Left channel turned off
+Left channel is turned off
 .
 
 :TEXT_VOLUME_R_OFF
-Right channel turned off
+Right channel is turned off
 .
 
 :TEXT_VOLUME_L_ON
-Left channel %d of 100
+Left channel volume is %d of 100
 .
 
 :TEXT_VOLUME_R_ON
-Right channel %d of 100
+Right channel volume is %d of 100
+.
+
+:TEXT_VOLUME_OFF
+speaker is turned off, or sound-card is missing
+.
+
+:TEXT_VOLUME_ON
+Volume is %d of 100
 .

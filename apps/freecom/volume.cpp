@@ -103,27 +103,43 @@ void TVolumeCommand::ShowVolume()
 
     RdosGetMasterVolume(&L, &R);
 
-    if (L < 0)
-    {
-		FMsg.Load(TEXT_VOLUME_L_OFF);
-		Write(FMsg.GetData());
-    }
-    else
-    {
-		FMsg.printf(TEXT_VOLUME_L_ON, L);
-		Write(FMsg.GetData());
-    }
+	if (L == R)
+	{
+		if (L < 0)
+		{
+			FMsg.Load(TEXT_VOLUME_OFF);
+			Write(FMsg.GetData());
+		}
+		else
+		{
+			FMsg.printf(TEXT_VOLUME_ON, L);
+			Write(FMsg.GetData());
+		}
+	}
+	else
+	{
+		if (L < 0)
+		{
+			FMsg.Load(TEXT_VOLUME_L_OFF);
+			Write(FMsg.GetData());
+		}
+		else
+		{
+			FMsg.printf(TEXT_VOLUME_L_ON, L);
+			Write(FMsg.GetData());
+		}
 
-    if (R < 0)
-    {
-		FMsg.Load(TEXT_VOLUME_R_OFF);
-		Write(FMsg.GetData());
-    }
-    else
-    {
-		FMsg.printf(TEXT_VOLUME_R_ON, L);
-		Write(FMsg.GetData());
-    }    
+		if (R < 0)
+		{
+			FMsg.Load(TEXT_VOLUME_R_OFF);
+			Write(FMsg.GetData());
+		}
+		else
+		{
+			FMsg.printf(TEXT_VOLUME_R_ON, L);
+			Write(FMsg.GetData());
+		}
+	}
 }
 
 /*##########################################################################

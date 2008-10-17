@@ -413,6 +413,9 @@ ir_data_sel         EQU 9D8h
 audio_dev_code_sel  EQU 9E0h
 audio_dev_data_sel  EQU 9E8h
 
+audio_code_sel      EQU 9F0h
+audio_data_sel      EQU 9F8h
+
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h
 video_page2_sel		EQU 0F10h

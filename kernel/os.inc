@@ -2222,3 +2222,31 @@ ReadCodec      MACRO
 WriteCodec      MACRO
 	OsGate write_codec_nr
 						ENDM
+
+;
+; Audio 
+;
+
+; OUT   AX Sample rate
+GetAudioDacRate      MACRO
+	OsGate get_audio_dac_rate_nr
+						ENDM
+
+
+; IN    AX Sample rate
+SetAudioDacRate      MACRO
+	OsGate set_audio_dac_rate_nr
+						ENDM
+
+
+; OUT   AX Sample rate
+GetAudioAdcRate      MACRO
+	OsGate get_audio_adc_rate_nr
+						ENDM
+
+
+; IN    AX Sample rate
+SetAudioAdcRate      MACRO
+	OsGate set_audio_adc_rate_nr
+						ENDM
+
