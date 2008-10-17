@@ -40,11 +40,12 @@ public:
     void Close();
 	void Load(const char *FileName);
 
+	void SetVolume(int vol);
 	void SetPosition(int ms);
-	
-//	void Play();
 
-    int FChannels;
+	void Play();
+
+	int FChannels;
 	unsigned int FSampleRate;		/* sampling frequency (Hz) */
 	int FSamplesPerFrame;
 	long double FAvgBitRate;
@@ -61,9 +62,9 @@ public:
 
 	int FHeaderFlags;				/* flags (see below) */
 
-    int FValidTag;
-    int FConstantBitRate;
-    
+	int FValidTag;
+	int FConstantBitRate;
+
 	int FTagFrameSize;
 	int FSongFrames;
 	int FSongSamples;
@@ -84,14 +85,17 @@ protected:
 //	virtual enum mad_flow Output(TMadHeader *, struct mad_pcm *);
 //	virtual enum mad_flow Error(void *);
 
-    int FFileHandle;
-    int FMapHandle;
-	unsigned char *FFileBuf;
-    int FFileSize;
-    int FValid;
+	int FAudioHandle;
 
-    int FId3V1;
-    int FId3V2;
+	int FFileHandle;
+	int FMapHandle;
+	unsigned char *FFileBuf;
+	int FFileSize;
+	int FValid;
+	int FVolume;
+
+	int FId3V1;
+	int FId3V2;
 
 	unsigned char *FMp3Start;
 	int FMp3Size;

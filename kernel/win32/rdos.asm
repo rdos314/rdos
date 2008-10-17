@@ -9217,6 +9217,113 @@ rslovSet:
 	ret 8
 RdosSetLineOutVolume	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCreateAudioOutChannel
+;
+;		DESCRIPTION:    Create audio out channel
+;
+;       PARAMETERS:     Sample rate
+;                       Bits
+;                       Volume (0..100)
+;
+;       RETURNS:        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreateAudioOutChannel
+
+RdosCreateAudioOutChannel	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+    mov eax,[ebp+16]    
+    mov bx,0FFFFh
+    cmp eax,100
+    jae caocVolOk
+;
+    mov dx,ax
+    xor ax,ax
+    mov bx,100
+    div bx
+    mov bx,ax
+
+caocVolOk:
+    mov dx,bx
+;    
+    mov ax,[ebp+8]
+    mov cl,[ebp+12]
+    UserGate create_audio_out_channel_nr
+    movzx eax,bx
+;
+    pop ecx
+    pop ebx
+	pop ebp
+	ret 12
+RdosCreateAudioOutChannel	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseAudioOutChannel
+;
+;		DESCRIPTION:    Close audio out channel
+;
+;       PARAMETERS:     Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseAudioOutChannel
+
+RdosCloseAudioOutChannel	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+    mov bx,[ebp+8]
+    UserGate close_audio_out_channel_nr    
+;
+    pop ebx
+	pop ebp
+	ret 4
+RdosCloseAudioOutChannel	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteAudio
+;
+;		DESCRIPTION:    Write audio data
+;
+;       PARAMETERS:     Handle
+;                       Size
+;                       Left
+;                       Right
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteAudio
+
+RdosWriteAudio	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push esi
+	push edi
+;
+    mov bx,[ebp+8]
+    mov ecx,[ebp+12]
+    mov esi,[ebp+16]
+    mov edi,[ebp+20]
+    UserGate write_audio_nr    
+;
+    pop edi
+    pop esi
+    pop ebx
+	pop ebp
+	ret 16
+RdosWriteAudio	ENDP
+
 ;	extrn Startup:near
 
 ;	public _main

@@ -423,5 +423,6 @@ set_line_out_volume_nr      = 353
 
 create_audio_out_channel_nr = 354
 close_audio_out_channel_nr  = 355
+write_audio_nr              = 356
 
 usergate_entries			= 370

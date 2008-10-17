@@ -10,6 +10,8 @@
 
 int main(int argc, char **argv)
 {
+	int L, R;
+
 	char FileName[256];
 	TMp3Player mp3;
 
@@ -24,8 +26,16 @@ int main(int argc, char **argv)
 	strcpy(FileName, argv[1]);
 	strlwr(FileName);
 
+	RdosGetMasterVolume(&L, &R);
+	if (L < 0 && R < 0)
+		RdosSetMasterVolume(100, 100);
+
+	RdosGetLineOutVolume(&L, &R);
+	if (L < 0 && R < 0)
+		RdosSetLineOutVolume(100, 100);
+
 	mp3.Load(FileName);
-	mp3.SetPosition(1000);
+	mp3.Play();
 
 	return 0;
 }

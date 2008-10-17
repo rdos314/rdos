@@ -382,6 +382,10 @@ void __stdcall RdosSetMasterVolume(int Left, int Right);
 void __stdcall RdosGetLineOutVolume(int *Left, int *Right);
 void __stdcall RdosSetLineOutVolume(int Left, int Right);
 
+int __stdcall RdosCreateAudioOutChannel(int SampleRate, int Bits, int Volume);
+void __stdcall RdosCloseAudioOutChannel(int Handle);
+void __stdcall RdosWriteAudio(int Handle, int Size, const int *LSamples, const int*RSamples); 
+
 #ifdef __cplusplus
 }
 #endif

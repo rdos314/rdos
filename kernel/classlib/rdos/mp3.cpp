@@ -37,7 +37,7 @@
 #define MIN_FRAME_SIZE 24 // minimal mp3 frame size
 #define MAX_FRAME_SIZE 5761 // max frame size
 
-#define SEARCH_DEEP_VBR 200 // check next 200 mp3 frames to determine constant or variable bitrate if no XING header found 
+#define SEARCH_DEEP_VBR 200 // check next 200 mp3 frames to determine constant or variable bitrate if no XING header found
 
 #define GetFourByteSyncSafe(value1, value2, value3, value4) (((value1 & 255) << 21) | ((value2 & 255) << 14) | ((value3 & 255) << 7) | (value4 & 255))
 
@@ -54,11 +54,12 @@
 ##########################################################################*/
 TMp3Player::TMp3Player()
 {
-    FFileHandle = 0;
-    FMapHandle = 0;
-    FFileBuf = 0;
-    FFileSize = 0;
-    FValid = FALSE;
+	FFileHandle = 0;
+	FMapHandle = 0;
+	FFileBuf = 0;
+	FFileSize = 0;
+	FValid = FALSE;
+	FVolume = 100;
 }
 
 /*##########################################################################
@@ -74,7 +75,7 @@ TMp3Player::TMp3Player()
 ##########################################################################*/
 TMp3Player::~TMp3Player()
 {
-    Close();
+	Close();
 }
 
 /*##########################################################################
@@ -90,12 +91,12 @@ TMp3Player::~TMp3Player()
 ##########################################################################*/
 void TMp3Player::FindStart()
 {
-    int tagsize;
+	int tagsize;
 
-    if (FFileBuf)
+	if (FFileBuf)
     {
         FId3V1 = FALSE;
-        FId3V2 = FALSE;
+		FId3V2 = FALSE;
 
         FMp3Start = FFileBuf;
         FMp3Size = FFileSize;
@@ -121,11 +122,11 @@ void TMp3Player::FindStart()
             {
                 FId3V2 = TRUE;
 
-                if (FMp3Start[tagsize] == 0xFF && (FMp3Start[tagsize + 1] & 0xE0) == 0xE0)
+				if (FMp3Start[tagsize] == 0xFF && (FMp3Start[tagsize + 1] & 0xE0) == 0xE0)
                 {
                     FMp3Start += tagsize;
                     FMp3Size -= tagsize;
-                }
+				}
             }
         }
     }	
@@ -181,11 +182,11 @@ void TMp3Player::Check()
 					
 		break;	
 	}
-	
+
 	FMp3Size -= (FirstFrame - FMp3Start);
 	FMp3Start = FirstFrame;
 
-    FValid = TRUE;
+	FValid = TRUE;
 }
 
 /*##########################################################################
@@ -211,7 +212,7 @@ int TMp3Player::ParseTag()
 	if (frame.Decode(&stream) == 0)
 	{
 		// check if first frame is XING frame
-		
+
 		if (FTag.Parse(&stream, &frame) == 0)
 		{
 			if (FTag.flags & TAG_XING)
@@ -331,7 +332,7 @@ void TMp3Player::Load(const char *FileName)
         if (FMapHandle)
         {                 
             size = FFileSize;
-            size--;
+			size--;
             size = size & 0xFFFFF000;
             size += 0x1000;
             
@@ -342,6 +343,8 @@ void TMp3Player::Load(const char *FileName)
             Check();
             if (!ParseTag())
                 CalcSongParams();
+
+            SetPosition(0);
         }
     }
 }
@@ -359,11 +362,11 @@ void TMp3Player::Load(const char *FileName)
 ##########################################################################*/
 void TMp3Player::Close()
 {
-    FValid = FALSE;
+	FValid = FALSE;
 
     if (FFileHandle)
     {
-        if (FMapHandle)
+		if (FMapHandle)
         {
             RdosUnmapView(FMapHandle);
             RdosCloseMapping(FMapHandle);
@@ -375,10 +378,26 @@ void TMp3Player::Close()
             RdosFreeMem(FFileBuf);
             FFileBuf = 0;
         }
-             
-        RdosCloseFile(FFileHandle);
-        FFileHandle = 0;
-    }
+
+		RdosCloseFile(FFileHandle);
+		FFileHandle = 0;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::SetVolume
+#
+#   Purpose....: Set volume (0..100)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMp3Player::SetVolume(val)
+{
+	FVolume = val;
 }
 
 /*##########################################################################
@@ -423,7 +442,7 @@ void TMp3Player::SetPosition(int ms)
                 px = pa + (pb - pa) * (percentage - perc);
     
                 FCurrentPos = FMp3Start + (unsigned int)(( (long double)(FMp3Size + FTagFrameSize) / 256.0) * px);
-            }
+			}
             else
                 FCurrentPos = FMp3Start + (unsigned int)( (long double)ms / (long double)FSongMs * (long double)FMp3Size);
         }            
@@ -433,4 +452,47 @@ void TMp3Player::SetPosition(int ms)
     else
         FCurrentPos = 0;
 
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::Play
+#
+#   Purpose....: Play
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMp3Player::Play()
+{
+    TMadStream stream;
+    TMadFrame frame;
+    TMadSynth synth;
+    int size;
+
+	FAudioHandle = RdosCreateAudioOutChannel(FSampleRate, 24, FVolume);
+
+	stream.SetBuffer(FCurrentPos, FMp3Size - (FCurrentPos - FMp3Start));
+
+    for (;;)
+    {
+    	if (frame.Decode(&stream) == 0)
+			if (MAD_RECOVERABLE(stream.error)) // if recoverable error continue
+				continue;
+
+		if (stream.error == MAD_ERROR_BUFLEN)
+			break;
+
+        synth.Synth(&frame);			
+
+        size = synth.pcm.length;
+        if (synth.pcm.channels >= 2)
+			RdosWriteAudio(FAudioHandle, size, (int *)&synth.pcm.samples[0], (int *)&synth.pcm.samples[1]);
+		else
+			RdosWriteAudio(FAudioHandle, size, (int *)&synth.pcm.samples[0], (int *)&synth.pcm.samples[0]);
+	}
+					
+    RdosCloseAudioOutChannel(FAudioHandle);
 }

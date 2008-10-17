@@ -2269,6 +2269,8 @@ SetLineOutVolume      MACRO
 						ENDM
 
 ;   IN  AX          Sample rate
+;   IN  CL          Bits
+;   IN  DX          Volume
 ;   OUT BX          Handle
 CreateAudioOutChannel      MACRO
 	UserGate create_audio_out_channel_nr
@@ -2277,4 +2279,12 @@ CreateAudioOutChannel      MACRO
 ;   IN  BX          Handle
 CloseAudioOutChannel      MACRO
 	UserGate close_audio_out_channel_nr
+						ENDM
+
+;   IN  BX          Handle
+;   IN  ECX         Buffer size
+;   IN  DS:ESI      Left channel data
+;   IN  ES:EDI      Right channel data
+WriteAudio      MACRO
+	UserGate write_audio_nr
 						ENDM
