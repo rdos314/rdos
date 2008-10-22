@@ -41,26 +41,40 @@ INCLUDE ..\driver.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc
 
+AMS_MAX_CHANNELS  = 16
+
 AOS_FLAG_OUT_FILLED    = 1
+
+audio_mixer_sel STRUC
+
+ams_out_buf_pos     DW ?
+
+ams_outl_buf_sel    DW ?
+ams_outr_buf_sel    DW ?
+
+ams_sample_rate     DW ?
+
+ams_count           DW ?
+ams_sel_arr         DW AMS_MAX_CHANNELS DUP(?)
+
+audio_mixer_sel ENDS
 
 audio_out_sel   STRUC
 
+aos_volume          DD ?
+aos_mixer           DW ?
+aos_thread          DW ?
 aos_sample_rate     DW ?
-aos_volume          DW ?
 aos_bits            DB ?
 aos_flags           DB ?
+aos_min_val         DD ?
+aos_max_val         DD ?
+aos_shift           DB ?
 
 aos_in_buf_pos      DW ?
-aos_in_buf_size     DW ?
 
 aos_inl_buf_sel     DW ?
 aos_inr_buf_sel     DW ?
-
-aos_out_buf_pos     DW ?
-aos_out_buf_size    DW ?
-
-aos_outl_buf_sel    DW ?
-aos_outr_buf_sel    DW ?
 
 audio_out_sel   ENDS
 
@@ -71,11 +85,59 @@ ao_sel		DW ?
 
 audio_out_struc	ENDS
 
+audio_data_seg  STRUC
+
+ads_section     section_typ <>
+ads_thread      DW ?
+ads_out_mixer   DW ?
+
+audio_data_seg  ENDS
+
 code	SEGMENT byte public use16 'CODE'
 
 	.386
 
 	assume cs:code
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateMixer
+;
+;		DESCRIPTION:	Create mixer
+;
+;       PARAMETERS:     CX  Sample rate
+;
+;		RETURNS:	    AX  Mixer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateMixer Proc near
+    push ds
+    push es
+;    
+    mov eax,SIZE audio_mixer_sel
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+    mov ds:ams_count,0
+    mov ds:ams_sample_rate,cx
+;    
+    movzx eax,cx
+    shl eax,2
+    AllocateSmallGlobalMem
+    mov ds:ams_outl_buf_sel,es
+    AllocateSmallGlobalMem
+    mov ds:ams_outr_buf_sel,es
+    mov ds:ams_out_buf_pos,0
+    mov ax,ds
+;
+    pop es
+    pop ds
+    ret
+CreateMixer Endp
 
 PAGE
 
@@ -99,6 +161,8 @@ create_audio_out_channel_name	DB 'Create Audio Out Channel', 0
 create_audio_out_channel	Proc far
     push es
     push ds
+    push cx
+    push edx
 ;
     push cx
 	mov cx,SIZE audio_out_struc
@@ -112,38 +176,139 @@ create_audio_out_channel	Proc far
     pop eax
     mov es:aos_sample_rate,ax	
     mov es:aos_bits,cl
-    mov es:aos_volume,dx
+    rol edx,16
+    mov dx,-1
+    mov es:aos_volume,edx
     mov [bx].ao_sel,es
+;    
+    mov al,32
+    sub al,cl
+    mov es:aos_shift,al            
+;
+    dec cl
+    mov eax,1
+    shl eax,cl
+    dec eax
+    mov es:aos_max_val,eax
+    neg eax
+    mov es:aos_min_val,eax
 ;    
     push ds
     mov ax,es
     mov ds,ax
 ;    
     mov ds:aos_flags,0
+    mov ds:aos_thread,0
     movzx eax,ds:aos_sample_rate
+    shl eax,2
     AllocateSmallGlobalMem
     mov ds:aos_inl_buf_sel,es
     AllocateSmallGlobalMem
     mov ds:aos_inr_buf_sel,es
     mov ds:aos_in_buf_pos,0
-    mov ds:aos_in_buf_size,ax
+;    
+    mov dx,ds
+    mov cx,ds:aos_sample_rate
+;    
+    mov ax,audio_data_sel
+    mov ds,ax
+    EnterSection ds:ads_section
+    mov ax,ds:ads_out_mixer
+    or ax,ax
+    jnz caocHasMixer
 ;
-    movzx eax,ds:aos_sample_rate
-    AllocateSmallGlobalMem
-    mov ds:aos_outl_buf_sel,es
-    AllocateSmallGlobalMem
-    mov ds:aos_outr_buf_sel,es
-    mov ds:aos_out_buf_pos,0
-    mov ds:aos_out_buf_size,ax        
+    call CreateMixer
+    mov ds:ads_out_mixer,ax
+
+caocHasMixer:
+    push bx
+    mov es,ax
+    mov bx,OFFSET ams_sel_arr
+    mov ax,es:ams_count
+    shl ax,1
+    add bx,ax
+    mov es:[bx],dx
+    mov ds,dx
+    mov ds:aos_mixer,es
+    inc es:ams_count
+;    
+    mov ax,audio_data_sel
+    mov ds,ax
+    LeaveSection ds:ads_section
+    pop bx    
     pop ds
 ;	
 	mov bx,[bx].hh_handle
+	pop edx
 	pop cx
 	pop ds
 	pop es
 	clc
 	retf32
 create_audio_out_channel	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FreeMixerChannel
+;
+;		DESCRIPTION:	Free a mixer channel
+;
+;		PARAMETERS:	    DS      Channel sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeMixerChannel	Proc near
+    push ds
+    push es
+    push fs
+    push ax
+    push cx
+;    
+    mov fs,ds:aos_mixer
+    mov cx,fs:ams_count
+    sub cx,1
+    jz fmcDelete
+;
+    int 3
+    mov fs:ams_count,cx
+    jmp fmcDone
+
+fmcDelete:    
+    mov ax,audio_data_sel
+    mov ds,ax
+    EnterSection ds:ads_section
+;
+    mov es,fs:ams_outl_buf_sel
+    FreeMem
+    mov es,fs:ams_outr_buf_sel
+    FreeMem
+;
+    mov ax,fs
+    cmp ax,ds:ads_out_mixer
+    jne fmcNotOut
+;
+    mov ds:ads_out_mixer,0
+    jmp fmcFree
+
+fmcNotOut:
+fmcFree:   
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+    LeaveSection ds:ads_section    
+
+fmcDone:        
+    pop cx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    ret
+FreeMixerChannel    Endp
 
 PAGE
 
@@ -163,13 +328,10 @@ delete_out_channel	Proc near
 ;
     push ds
     mov ds,[bx].ao_sel
+    call FreeMixerChannel
     mov es,ds:aos_inl_buf_sel
     FreeMem
     mov es,ds:aos_inr_buf_sel
-    FreeMem
-    mov es,ds:aos_outl_buf_sel
-    FreeMem
-    mov es,ds:aos_outr_buf_sel
     FreeMem
     mov ax,ds
     mov es,ax
@@ -227,16 +389,125 @@ PAGE
 ;		PARAMETERS:		DS          Channel sel
 ;                       ECX         Size
 ;                       ES:ESI      Left
-;                       ES:EDI      Right
+;                       FS:EDI      Right
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 add_audio   Proc near
+    push fs
+    push gs
     pushad
-;
 
+aaMoreData:
+    or ecx,ecx
+    jz aaDone
 ;    
+    push ecx
+;    
+    mov ax,ds:aos_sample_rate
+    sub ax,ds:aos_in_buf_pos
+    movzx eax,ax
+;
+    cmp ecx,eax
+    jbe aaWhole
+;
+    mov ecx,eax
+
+aaWhole:    
+    or ecx,ecx
+    jnz aaDo
+;
+    pop ecx
+    GetThread
+    mov ds:aos_thread,ax
+;
+    push ds
+    mov ax,audio_data_sel
+    mov ds,ax
+	mov bx,ds:ads_thread
+	pop ds
+    Signal    
+;    
+    WaitForSignal
+    jmp aaMoreData
+        
+aaDo:
+    movzx ebx,ds:aos_in_buf_pos
+    shl ebx,2
+;    
+    mov gs,ds:aos_inl_buf_sel
+    mov ebp,ecx
+    push ecx
+
+aaLLoop:    
+    mov eax,es:[esi]
+    cmp eax,ds:aos_max_val
+    jl aaLMaxOk
+;
+    mov eax,ds:aos_max_val
+
+aaLMaxOk:
+    cmp eax,ds:aos_min_val
+    jg aaLMinOk
+;
+    mov eax,ds:aos_min_val
+
+aaLMinOk:
+    mov cl,ds:aos_shift
+    shl eax,cl
+    mul ds:aos_volume
+    add eax,80000000h
+    adc edx,0
+    mov gs:[ebx],edx
+    add bx,4
+    add esi,4
+    sub ebp,1
+    jnz aaLLoop
+;
+    pop ecx
+    movzx ebx,ds:aos_in_buf_pos
+    shl ebx,2
+;    
+    mov gs,ds:aos_inr_buf_sel
+    mov ebp,ecx
+    push ecx
+    
+aaRLoop:    
+    mov eax,fs:[edi]
+    cmp eax,ds:aos_max_val
+    jl aaRMaxOk
+;
+    mov eax,ds:aos_max_val
+
+aaRMaxOk:
+    cmp eax,ds:aos_min_val
+    jg aaRMinOk
+;
+    mov eax,ds:aos_min_val
+
+aaRMinOk:
+    mov cl,ds:aos_shift
+    shl eax,cl
+    mul ds:aos_volume
+    add eax,80000000h
+    adc edx,0
+    mov gs:[ebx],edx
+    add bx,4
+    add edi,4
+    sub ebp,1
+    jnz aaRLoop             
+;    
+    pop eax
+    add ds:aos_in_buf_pos,ax
+;    
+    pop ecx
+    sub ecx,eax
+    jnz aaMoreData
+    
+aaDone:
     popad
+    pop gs
+    pop fs
     ret
 add_audio   Endp
 
@@ -251,7 +522,7 @@ PAGE
 ;
 ;		PARAMETERS:		BX		    Handle
 ;                       (E)CX       Size
-;                       ES:(E)SI    Left
+;                       DS:(E)SI    Left
 ;                       ES:(E)DI    Right
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -260,9 +531,16 @@ write_audio_name	DB 'Write Audio', 0
 
 write_audio	Proc near
 	push ds
+	push es
+	push fs
 	push ax
 	push bx
 ;
+    mov ax,es
+    mov fs,ax
+    mov ax,ds
+    mov es,ax
+;    
 	mov ax,AUDIO_OUT_HANDLE
 	DerefHandle
 	jc waDone
@@ -273,6 +551,8 @@ write_audio	Proc near
 waDone:
     pop bx
     pop ax
+    pop fs
+    pop es
     pop ds
     ret
 write_audio Endp
@@ -327,6 +607,258 @@ delete_out_handle	Endp
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MixChannel
+;
+;		DESCRIPTION:    Mix channel
+;
+;       PARAMETERS:     SI  In sample rate / size of buffer
+;                       DI  Out sample rate / size of buffer
+;                       FS  In buffer
+;                       ES  Out buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MixChannel  Proc near
+    pushad
+;    
+    cmp si,di
+    je mcSameRate
+;
+    int 3
+    jmp mcDone
+
+mcSameRate:
+    mov cx,si
+    xor ebx,ebx
+
+mcSameLoop:
+    mov eax,fs:[ebx]
+    add es:[ebx],eax
+    jno mcSameNext
+;
+    test eax,80000000h
+    jz mcSameOvPos
+;
+    mov eax,7FFFFFFFh
+    jmp mcSameOvSave
+
+mcSameOvPos:
+    mov eax,80000000h
+
+mcSameOvSave:       
+    mov es:[ebx],eax
+
+mcSameNext:
+    add ebx,4
+    loop mcSameLoop
+;
+
+mcDone:
+    popad
+    ret
+MixChannel  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UpdateMixer
+;
+;		DESCRIPTION:    Update mixer
+;
+;       PARAMETERS:     AX      Mixer selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateMixer Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ds,ax
+    mov bx,OFFSET ams_sel_arr
+    mov cx,ds:ams_count
+
+umCheckChanLoop:
+    mov es,ds:[bx]
+    mov ax,es:aos_in_buf_pos
+    cmp ax,es:aos_sample_rate
+    jne umDone
+;
+    add bx,2
+    loop umCheckChanLoop
+;
+    mov es,ds:ams_outl_buf_sel
+    xor edi,edi
+    movzx ecx,ds:ams_sample_rate
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    mov bx,OFFSET ams_sel_arr
+    mov cx,ds:ams_count
+
+umMoveLChanLoop:
+    push ds
+    push fs
+    push bx
+    push si
+    push di
+;    
+    mov di,ds:ams_sample_rate
+    mov ds,ds:[bx]
+    mov si,ds:aos_sample_rate
+    mov fs,ds:aos_inl_buf_sel
+    call MixChannel
+;
+    pop di
+    pop si    
+    pop bx
+    pop fs
+    pop ds
+;    
+    add bx,2
+    loop umMoveLChanLoop
+;
+    mov es,ds:ams_outr_buf_sel
+    xor edi,edi
+    movzx ecx,ds:ams_sample_rate
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    mov bx,OFFSET ams_sel_arr
+    mov cx,ds:ams_count
+
+umMoveRChanLoop:
+    push ds
+    push fs
+    push bx
+    push si
+    push di
+;    
+    mov di,ds:ams_sample_rate
+    mov ds,ds:[bx]
+    mov si,ds:aos_sample_rate
+    mov fs,ds:aos_inr_buf_sel
+    call MixChannel
+;
+    pop di
+    pop si    
+    pop bx
+    pop fs
+    pop ds
+;    
+    add bx,2
+    loop umMoveLChanLoop
+;
+    mov bx,OFFSET ams_sel_arr
+    mov cx,ds:ams_count
+
+umSignalLoop:
+    mov es,ds:[bx]
+    mov es:aos_in_buf_pos,0
+    mov bx,es:aos_thread
+    Signal
+;
+    add bx,2
+    loop umSignalLoop
+            
+umDone:    
+    popad
+    pop es
+    pop ds
+    ret
+UpdateMixer Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			audio_thread
+;
+;		DESCRIPTION:    Audio thread
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+audio_name	DB 'Audio',0
+
+audio_thread:
+	mov ax,audio_data_sel
+	mov ds,ax
+	GetThread
+	mov ds:ads_thread,ax
+
+atWait:
+    mov ax,ds:ads_out_mixer
+    or ax,ax
+    jne atActive
+;    
+    WaitForSignal	
+    jmp atWait
+
+atActive:
+    EnterSection ds:ads_section
+    mov ax,ds:ads_out_mixer
+    or ax,ax
+    jz atActiveLeave
+;    
+    call UpdateMixer
+    LeaveSection ds:ads_section
+;
+    mov ax,100
+    WaitMilliSec    
+    jmp atActive
+;
+
+atActiveLeave:	
+    LeaveSection ds:ads_section
+    jmp atWait
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Init_audio
+;
+;		DESCRIPTION:    init audio module
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+init_audio	Proc far
+	push ds
+	push es
+	pusha
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET audio_name
+	mov si,OFFSET audio_thread
+	mov ax,4
+	mov cx,100h
+	CreateThread
+;	
+	popa
+	pop es
+	pop ds
+	ret
+init_audio	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
 ;		NAME:			Init
@@ -346,6 +878,9 @@ init	PROC far
 	mov di,OFFSET delete_out_handle
 	RegisterHandle
 ;
+	mov di,OFFSET init_audio
+	HookInitTasking
+;
 	mov si,OFFSET create_audio_out_channel
 	mov di,OFFSET create_audio_out_channel_name
 	xor dx,dx
@@ -364,6 +899,12 @@ init	PROC far
 	mov dx,virt_es_in OR virt_ds_in
 	mov ax,write_audio_nr
 	RegisterUserGate
+;
+	mov eax,SIZE audio_data_seg
+	mov bx,audio_data_sel
+	AllocateFixedSystemMem
+	mov es:ads_out_mixer,0
+	InitSection es:ads_section
 ;
 	ret
 init	ENDP

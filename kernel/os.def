@@ -476,5 +476,7 @@ set_audio_dac_rate_nr       EQU 327
 get_audio_adc_rate_nr       EQU 328
 set_audio_adc_rate_nr       EQU 329
 
-osgate_entries				EQU 330
+send_audio_out_nr           EQU 330
+
+osgate_entries				EQU 331
 

@@ -2250,3 +2250,15 @@ SetAudioAdcRate      MACRO
 	OsGate set_audio_adc_rate_nr
 						ENDM
 
+
+;
+; Audio device related
+;
+
+; IN    DS Left channel
+; IN    ES Right channel
+; IN    CX Samples
+SendAudioOut      MACRO
+	OsGate send_audio_out_nr
+						ENDM
+
