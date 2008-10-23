@@ -111,6 +111,12 @@ set_master_volume	PROC far
 smvSet:        
     mov bx,2
     WriteCodec
+;    
+    mov bx,4
+    WriteCodec
+;    
+    mov bx,6
+    WriteCodec
 ;
     pop bx    
     pop ax
@@ -136,7 +142,7 @@ get_line_out_volume_name			DB 'Get Line Out Volume',0
 get_line_out_volume	PROC far
     push bx
 ;    
-    mov bx,4
+    mov bx,18h
     ReadCodec
 ;
     test ah,80h
@@ -182,7 +188,7 @@ set_line_out_volume	PROC far
     shr ax,1
 
 slovSet:        
-    mov bx,4
+    mov bx,18h
     WriteCodec
 ;
     pop bx    
@@ -233,6 +239,13 @@ set_dac_rate_name			DB 'Set Audio DAC Rate',0
 set_dac_rate	PROC far
     push bx
 ;    
+    push ax
+    mov bx,2Ah
+    ReadCodec
+    or al,1
+    WriteCodec
+    pop ax 
+;       
     mov bx,2Ch
     WriteCodec
 ;    
@@ -282,6 +295,13 @@ set_adc_rate_name			DB 'Set Audio ADC Rate',0
 
 set_adc_rate	PROC far
     push bx
+;    
+    push ax
+    mov bx,2Ah
+    ReadCodec
+    or al,1
+    WriteCodec
+    pop ax 
 ;    
     mov bx,32h
     WriteCodec

@@ -2255,6 +2255,17 @@ SetAudioAdcRate      MACRO
 ; Audio device related
 ;
 
+; IN    AX Sample rate
+OpenAudioOut      MACRO
+	OsGate open_audio_out_nr
+						ENDM
+
+
+CloseAudioOut      MACRO
+	OsGate close_audio_out_nr
+						ENDM
+
+
 ; IN    DS Left channel
 ; IN    ES Right channel
 ; IN    CX Samples

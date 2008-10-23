@@ -217,8 +217,13 @@ create_audio_out_channel	Proc far
     or ax,ax
     jnz caocHasMixer
 ;
+    mov ax,cx
+    SetAudioDacRate
+    GetAudioDacRate
+    mov cx,ax
     call CreateMixer
-    mov ds:ads_out_mixer,ax
+    mov ds:ads_out_mixer,ax    
+    OpenAudioOut
 
 caocHasMixer:
     push bx
@@ -291,6 +296,7 @@ fmcDelete:
     jne fmcNotOut
 ;
     mov ds:ads_out_mixer,0
+    CloseAudioOut
     jmp fmcFree
 
 fmcNotOut:
@@ -671,6 +677,8 @@ PAGE
 ;
 ;       PARAMETERS:     AX      Mixer selector
 ;
+;       RETURNS:        NC      New data available
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateMixer Proc near
@@ -686,6 +694,7 @@ umCheckChanLoop:
     mov es,ds:[bx]
     mov ax,es:aos_in_buf_pos
     cmp ax,es:aos_sample_rate
+    stc
     jne umDone
 ;
     add bx,2
@@ -764,6 +773,8 @@ umSignalLoop:
 ;
     add bx,2
     loop umSignalLoop
+;
+    clc    
             
 umDone:    
     popad
@@ -810,8 +821,23 @@ atActive:
     jz atActiveLeave
 ;    
     call UpdateMixer
+    pushf
     LeaveSection ds:ads_section
+    popf
+    jc atActiveWait
 ;
+    push ds
+    push es
+    mov ds,ax
+    mov cx,ds:ams_sample_rate
+    mov es,ds:ams_outr_buf_sel
+    mov ds,ds:ams_outl_buf_sel
+    SendAudioOut
+    pop es
+    pop ds
+    jmp atActive
+
+atActiveWait:
     mov ax,100
     WaitMilliSec    
     jmp atActive
