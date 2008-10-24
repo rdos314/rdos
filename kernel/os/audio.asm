@@ -43,8 +43,6 @@ INCLUDE ..\handle.inc
 
 AMS_MAX_CHANNELS  = 16
 
-AOS_FLAG_OUT_FILLED    = 1
-
 audio_mixer_sel STRUC
 
 ams_out_buf_pos     DW ?
@@ -139,6 +137,55 @@ CreateMixer Proc near
     ret
 CreateMixer Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DeleteMixer
+;
+;		DESCRIPTION:	Delete mixer
+;
+;       PARAMETERS:     DS  Mixer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteMixer Proc near
+    push es
+    push fs
+    push ax
+;    
+    mov ax,audio_data_sel
+    mov fs,ax
+;
+    mov es,ds:ams_outl_buf_sel
+    FreeMem
+    mov es,ds:ams_outr_buf_sel
+    FreeMem
+;
+    mov ax,ds
+    cmp ax,fs:ads_out_mixer
+    jne dmNotOut
+;
+    mov fs:ads_out_mixer,0
+    CloseAudioOut
+    jmp dmFree
+
+dmNotOut:
+    int 3
+    
+dmFree:   
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem
+;
+    pop ax
+    pop fs
+    pop es
+    ret
+DeleteMixer Endp
+    
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -282,30 +329,7 @@ FreeMixerChannel	Proc near
     jmp fmcDone
 
 fmcDelete:    
-    mov ax,audio_data_sel
-    mov ds,ax
-    EnterSection ds:ads_section
-;
-    mov es,fs:ams_outl_buf_sel
-    FreeMem
-    mov es,fs:ams_outr_buf_sel
-    FreeMem
-;
-    mov ax,fs
-    cmp ax,ds:ads_out_mixer
-    jne fmcNotOut
-;
-    mov ds:ads_out_mixer,0
-    CloseAudioOut
-    jmp fmcFree
-
-fmcNotOut:
-fmcFree:   
-    mov es,ax
-    xor ax,ax
-    mov fs,ax
-    FreeMem
-    LeaveSection ds:ads_section    
+    mov fs:ams_count,cx
 
 fmcDone:        
     pop cx
@@ -315,6 +339,62 @@ fmcDone:
     pop ds
     ret
 FreeMixerChannel    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FlushChannel
+;
+;		DESCRIPTION:	Flush channel
+;
+;		PARAMETERS:	    DS      Channel sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushChannel    Proc near
+    push ds
+    push es
+    pushad
+
+    mov cx,ds:aos_sample_rate
+    sub cx,ds:aos_in_buf_pos
+    or cx,cx
+    jz fcWait
+;
+    movzx ecx,cx
+    movzx edi,ds:aos_in_buf_pos
+    shl edi,2
+    xor eax,eax
+    push ecx
+    push edi
+    mov es,ds:aos_inl_buf_sel
+    rep stos dword ptr es:[edi]
+    pop edi
+    pop ecx
+;
+    mov es,ds:aos_inr_buf_sel
+    rep stos dword ptr es:[edi]
+;
+    mov cx,ds:aos_sample_rate
+    mov ds:aos_in_buf_pos,cx
+
+fcWait:
+    GetThread
+    mov ds:aos_thread,ax
+;
+    mov ax,audio_data_sel
+    mov ds,ax
+	mov bx,ds:ads_thread
+    Signal        
+    WaitForSignal
+;
+    popad
+    pop es
+    pop ds
+    ret
+FlushChannel    Endp        
 
 PAGE
 
@@ -334,6 +414,7 @@ delete_out_channel	Proc near
 ;
     push ds
     mov ds,[bx].ao_sel
+    call FlushChannel
     call FreeMixerChannel
     mov es,ds:aos_inl_buf_sel
     FreeMem
@@ -689,6 +770,12 @@ UpdateMixer Proc near
     mov ds,ax
     mov bx,OFFSET ams_sel_arr
     mov cx,ds:ams_count
+    or cx,cx
+    jnz umCheckChanLoop
+;
+    call DeleteMixer
+    stc
+    jmp umDone    
 
 umCheckChanLoop:
     mov es,ds:[bx]

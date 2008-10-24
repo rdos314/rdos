@@ -541,12 +541,19 @@ close_audio_out	Proc far
     push ds
     push ax
     push bx
+    push dx
 ;
     mov ax,audio_dev_data_sel
     mov ds,ax
+;
+    mov dx,ds:Ac0.AcCmdIo
+    xor al,al
+    out dx,al
+;
     mov bx,OFFSET Ac0
     call FreePrdTable
 ;
+    pop dx
     pop bx
     pop ax
     pop ds
