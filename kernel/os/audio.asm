@@ -707,13 +707,74 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+quot = -4
+rest = -6
+
 MixChannel  Proc near
     pushad
 ;    
     cmp si,di
     je mcSameRate
 ;
-    int 3
+    push bp
+    mov bp,sp
+    sub sp,6
+;
+    mov cx,di
+    movzx eax,si
+    xor edx,edx
+    movzx edi,di
+    div edi
+    mov [bp].quot,eax
+;
+    mov esi,edx
+    mov edx,1
+    xor eax,eax
+    div edi
+    mul esi
+    shr eax,16
+    mov [bp].rest,ax
+;
+    xor esi,esi
+    xor edi,edi
+    xor ebx,ebx
+        
+mcInterpLoop:
+    xor eax,eax
+    cmp cx,1
+    je mcInterpAdd
+;    
+    movsx eax,word ptr fs:[4*esi+6]
+    movsx edx,word ptr fs:[4*esi+2]
+    sub eax,edx
+    imul edi
+    mov edx,fs:[4*esi]
+
+mcInterpAdd:
+    add eax,edx
+    add es:[ebx],eax
+    jno mcInterpNext
+;
+    test eax,80000000h
+    jz mcInterpOvPos
+;
+    mov eax,7FFFFFFFh
+    jmp mcInterpOvSave
+
+mcInterpOvPos:
+    mov eax,80000000h
+
+mcInterpOvSave:       
+    mov es:[ebx],eax
+
+mcInterpNext:
+    add ebx,4
+    add di,[bp].rest
+    adc esi,[bp].quot
+    loop mcInterpLoop
+;    
+    add sp,6
+    pop bp
     jmp mcDone
 
 mcSameRate:

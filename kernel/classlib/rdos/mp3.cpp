@@ -472,7 +472,7 @@ void TMp3Player::Play()
     TMadSynth synth;
     int size;
 
-	FAudioHandle = RdosCreateAudioOutChannel(FSampleRate, 25, FVolume);
+	FAudioHandle = RdosCreateAudioOutChannel(FSampleRate, 28, FVolume);
 
 	stream.SetBuffer(FCurrentPos, FMp3Size - (FCurrentPos - FMp3Start));
 

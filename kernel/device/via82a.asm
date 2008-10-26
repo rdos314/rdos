@@ -36,9 +36,31 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\pci.inc
 
+VIA_PCM_STATUS              = 0
+VIA_PCM_CONTROL             = 1
+VIA_PCM_TYPE                = 2
+VIA_PCM_TABLE_ADDR          = 4
+VIA_PCM_BLOCK_COUNT         = 0Ch
+
+VIA_BASE0_AC97_CTRL         = 80h
+VIA_BASE0_SGD_STATUS_SHADOW = 84h
+VIA_BASE0_GPI_INT_ENABLE    = 8Ch
+
 audio_channel_struc STRUC
 
-AcCmdIo         DW ?
+AcStatusIo      DW ?
+AcControlIo     DW ?
+AcTypeIo        DW ?
+AcSgdIo         DW ?
+AcSgdPhys       DD ?
+AcSgd1Phys      DD ?
+AcSgd2Phys      DD ?
+AcSgdLinear     DD ?
+AcSgd1Linear    DD ?
+AcSgd2Linear    DD ?
+AcCurrSgd       DD ?
+AcNotify        DW ?
+AcIrqStatus     DB ?
 
 audio_channel_struc ENDS
 
@@ -63,6 +85,78 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			AudioInt
+;
+;		DESCRIPTION:    Audio controller interrupt
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AudioInt	Proc far
+
+aiLoop:
+   	mov dx,ds:IoBase
+   	add dx,VIA_BASE0_SGD_STATUS_SHADOW
+   	in eax,dx
+   	and ax,777h
+   	jz aiDone
+;
+    test ax,111h
+    jz aiNot0
+;
+    mov dx,ds:Ac0.AcStatusIo
+    in al,dx
+    and al,7
+    jz aiNot0
+;
+    out dx,al
+    or ds:Ac0.AcIrqStatus,al
+    mov bx,ds:Ac0.AcNotify
+    Signal
+    jmp aiLoop
+
+aiNot0:
+    test ax,222h
+    jz aiNot1
+;    
+    mov dx,ds:Ac1.AcStatusIo
+    in al,dx
+    and al,7
+    jz aiNot1
+;
+    out dx,al
+    or ds:Ac1.AcIrqStatus,al
+    mov bx,ds:Ac1.AcNotify
+    Signal
+    jmp aiLoop
+
+aiNot1:
+    test ax,444h
+    jz aiDone
+;        
+    mov dx,ds:Ac2.AcStatusIo
+    in al,dx
+    and al,7
+    jz aiDone
+;
+    out dx,al
+    or ds:Ac2.AcIrqStatus,al
+    mov bx,ds:Ac2.AcNotify
+    Signal
+    jmp aiLoop
+
+aiDone:
+	ret
+AudioInt	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			ReadCodec
 ;
 ;		DESCRIPTION:    Read CODEC register
@@ -76,7 +170,69 @@ PAGE
 read_codec_name DB 'Read CODEC',0
 
 read_codec	Proc far
-    int 3
+    push ds
+    push cx
+    push dx
+;
+    mov dx,audio_dev_data_sel
+    mov ds,dx
+    mov cx,100
+
+rcCheckBusy:        
+    mov dx,ds:IoBase
+    add dx,VIA_BASE0_AC97_CTRL + 3
+    in al,dx
+    test al,1
+    jz rcNotBusy
+;
+    mov ax,10
+    WaitMilliSec
+    loop rcCheckBusy
+;
+    stc
+    jmp rcDone
+
+rcNotBusy:
+    movzx eax,bx
+    and ax,7Fh
+    rol eax,16
+    or eax,02800000h
+    mov dx,ds:IoBase
+    add dx,VIA_BASE0_AC97_CTRL
+    out dx,eax
+;
+    mov ax,20
+    WaitMicroSec
+    mov cx,100
+
+rcWaitValid:        
+    mov dx,ds:IoBase
+    add dx,VIA_BASE0_AC97_CTRL + 3
+    in al,dx
+    test al,1
+    jnz rcBusy
+;
+    test al,2
+    jnz rcValidOk
+
+rcBusy:
+    mov ax,1
+    WaitMicroSec 
+    loop rcWaitValid       
+
+rcValidOk:
+    mov ax,25
+    WaitMicroSec
+;
+    mov dx,ds:IoBase
+    add dx,VIA_BASE0_AC97_CTRL
+    in eax,dx
+    clc
+    
+rcDone:
+    pop dx
+    pop cx
+    pop ds        
     ret
 read_codec  Endp
 
@@ -97,9 +253,207 @@ PAGE
 write_codec_name DB 'Write CODEC',0
 
 write_codec	Proc far
-    int 3
+    push ds
+    push cx
+    push dx
+    push si
+;
+    mov si,ax
+    mov dx,audio_dev_data_sel
+    mov ds,dx
+    mov cx,100
+
+wcCheckBusy:        
+    mov dx,ds:IoBase
+    add dx,VIA_BASE0_AC97_CTRL + 3
+    in al,dx
+    test al,1
+    jz wcNotBusy
+;
+    mov ax,10
+    WaitMilliSec
+    loop wcCheckBusy
+;
+    stc
+    jmp wcDone
+
+wcNotBusy:
+    movzx eax,bx
+    and ax,7Fh
+    rol eax,16
+    or eax,02000000h
+    mov ax,si
+    mov dx,ds:IoBase
+    add dx,VIA_BASE0_AC97_CTRL
+    out dx,eax
+;
+    mov ax,10
+    WaitMicroSec
+    mov cx,100
+
+wcWaitValid:        
+    mov dx,ds:IoBase
+    add dx,VIA_BASE0_AC97_CTRL + 3
+    in al,dx
+    test al,1
+    jz wcWaitOk
+
+wcBusy:
+    mov ax,15
+    WaitMicroSec 
+    loop wcWaitValid       
+
+wcWaitOk:
+    mov ax,25
+    WaitMicroSec
+    clc
+    
+wcDone:
+    pop si
+    pop dx
+    pop cx
+    pop ds        
     ret
 write_codec  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CreateSgdTable
+;
+;		DESCRIPTION:    Create a Sgd table
+;
+;       PARAMETERS:     DS:BX       Ac entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSgdTable  Proc near    
+    push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;    
+	mov ecx,20h
+	AllocateMultiplePhysical
+	jc cstDone
+;
+    mov ds:[bx].AcSgd1Phys,eax
+    add eax,10000h
+    mov ds:[bx].AcSgd2Phys,eax
+;
+    mov eax,10000h
+    AllocateBigLinear
+    mov ds:[bx].AcSgd1Linear,edx
+    mov ds:[bx].AcCurrSgd,edx
+;    
+    mov eax,10000h
+    AllocateBigLinear
+    mov ds:[bx].AcSgd2Linear,edx
+;
+	mov eax,ds:[bx].AcSgd1Phys
+	mov edx,ds:[bx].AcSgd1Linear
+	or al,7
+    mov cx,10h
+
+cstSgd1Loop:
+	SetPhysicalPage
+	add eax,1000h
+	add edx,1000h
+	loop cstSgd1Loop
+;
+	mov eax,ds:[bx].AcSgd2Phys
+	mov edx,ds:[bx].AcSgd2Linear
+	or al,7
+    mov cx,10h
+
+cstSgd2Loop:
+	SetPhysicalPage
+	add eax,1000h
+	add edx,1000h
+	loop cstSgd2Loop
+;
+    AllocatePhysical
+    mov ds:[bx].AcSgdPhys,eax    
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    mov ds:[bx].AcSgdLinear,edx
+;	
+	mov eax,ds:[bx].AcSgdPhys
+	mov edx,ds:[bx].AcSgdLinear
+	or al,7
+	SetPhysicalPage
+;
+    mov	ax,flat_sel
+    mov es,ax
+    mov edi,ds:[bx].AcSgdLinear
+;
+    mov eax,ds:[bx].AcSgd1Phys
+    stos dword ptr es:[edi]
+    mov eax,40000000h
+    stos dword ptr es:[edi]
+;
+    mov eax,ds:[bx].AcSgd2Phys
+    stos dword ptr es:[edi]
+    mov eax,80000000h
+    stos dword ptr es:[edi]
+
+cstDone:    
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateSgdTable  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    FreeSgdTable
+;
+;		DESCRIPTION:    Free SGD table
+;
+;       PARAMETERS:     DS:BX       Ac entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeSgdTable  Proc near    
+    push ecx
+    push edx
+;
+    mov edx,ds:[bx].AcSgdLinear
+    or edx,edx
+    jz fstDone
+;    
+    mov ecx,10000h
+    mov edx,ds:[bx].AcSgd1Linear
+    FreeLinear
+    mov ds:[bx].AcSgd1Phys,0
+    mov ds:[bx].AcSgd1Linear,0
+;
+    mov ecx,10000h
+    mov edx,ds:[bx].AcSgd2Linear
+    FreeLinear
+    mov ds:[bx].AcSgd2Phys,0
+    mov ds:[bx].AcSgd2Linear,0
+;
+    mov ecx,1000h
+    mov edx,ds:[bx].AcSgdLinear
+    FreeLinear
+    mov ds:[bx].AcSgdPhys,0
+    mov ds:[bx].AcSgdLinear,0
+
+fstDone:
+    pop edx
+    pop ecx
+    ret
+FreeSgdTable  Endp
 
 PAGE
 
@@ -117,7 +471,30 @@ PAGE
 open_audio_out_name DB 'Open Audio Out',0
 
 open_audio_out	Proc far
-    int 3
+    push ds
+    push eax
+    push bx
+    push dx
+;
+    mov ax,audio_dev_data_sel
+    mov ds,ax
+    mov bx,OFFSET Ac0
+    call CreateSgdTable
+;
+    mov dx,ds:IoBase
+    add dx,VIA_PCM_TABLE_ADDR
+    mov eax,ds:Ac0.AcSgdPhys
+    out dx,eax
+;
+    mov dx,ds:IoBase
+    add dx,VIA_PCM_TYPE
+    mov al,0B7h
+    out dx,al
+;
+    pop dx
+    pop bx
+    pop eax
+    pop ds
     ret
 open_audio_out  Endp
 
@@ -135,7 +512,25 @@ PAGE
 close_audio_out_name DB 'Close Audio Out',0
 
 close_audio_out	Proc far
-    int 3
+    push ds
+    push ax
+    push bx
+    push dx
+;
+    mov ax,audio_dev_data_sel
+    mov ds,ax
+;
+    mov dx,ds:Ac0.AcControlIo
+    mov al,40h
+    out dx,al
+;
+    mov bx,OFFSET Ac0
+    call FreeSgdTable
+;
+    pop dx
+    pop bx
+    pop ax
+    pop ds
     ret
 close_audio_out  Endp
 
@@ -157,7 +552,99 @@ PAGE
 send_audio_out_name DB 'Send Audio Out',0
 
 send_audio_out	Proc far
-    int 3
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ax,ds
+    mov fs,ax
+    mov ax,es
+    mov gs,ax
+    mov ax,audio_dev_data_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov bp,cx
+    shr cx,2
+    mov bx,4
+    mov esi,2
+
+saoBufLoop:
+    cmp cx,bp
+    jbe saoBufSizeOk
+;
+    mov cx,bp
+
+saoBufSizeOk:
+    push cx
+    mov edi,ds:Ac0.AcCurrSgd
+
+saoDataLoop:    
+    mov ax,fs:[esi]
+    stos word ptr es:[edi]
+    mov ax,gs:[esi]
+    stos word ptr es:[edi]
+    add esi,4
+    loop saoDataLoop
+;
+    pop cx
+    sub bp,cx
+    mov ax,cx
+    shl ax,2
+    mov edx,ds:Ac0.AcSgdLinear
+    mov edi,ds:Ac0.AcCurrSgd
+    cmp edi,ds:Ac0.AcSgd1Linear
+    je saoPrd1
+
+saoPrd2:
+    add edx,8
+    mov es:[edx+4],ax
+    mov edi,ds:Ac0.AcSgd1Linear
+    mov ds:Ac0.AcCurrSgd,edi
+    jmp saoPrdOk
+
+saoPrd1:
+    mov es:[edx+4],ax
+    mov edi,ds:Ac0.AcSgd2Linear
+    mov ds:Ac0.AcCurrSgd,edi
+    add edx,8
+    mov ax,es:[edx+4]
+    or ax,ax
+    jz saoBufNext
+
+saoPrdOk:
+    GetThread
+    mov ds:Ac0.AcNotify,ax
+;    
+    mov dx,ds:Ac0.AcStatusIo
+    in al,dx
+    test al,80h
+    jnz saoRunning
+;
+    mov dx,ds:Ac0.AcControlIo
+    mov al,80h
+    out dx,al
+
+saoRunning:
+    WaitForSignal
+    mov al,ds:Ac0.AcIrqStatus
+    test al,3
+    jz saoRunning
+;
+    mov ds:Ac0.AcIrqStatus,0
+            
+saoBufNext:
+    sub bx,1
+    jnz saoBufLoop
+;            
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds    
     ret
 send_audio_out  Endp
 
@@ -177,7 +664,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PciVendorTab:
-pci00	DW 1022h, 2093h
+pci00	DW 1106h, 3058h
 pci01 	DW 0,	  0
 
 detect_name	DB 'VT82C-AC97',0
@@ -201,19 +688,59 @@ init_pci_loop:
 	jmp init_pci_loop
 
 init_pci_found:
-    int 3
 	mov cl,PCI_card_ExCa_base
 	ReadPciDword
 	mov dx,ax
 	and dx,0FFE0h
 	mov ds:IoBase,dx
 ;
+    mov cl,41h
+    ReadPciByte
+    mov al,0CCh
+    WritePciByte
+;    
 	mov cl,PCI_interrupt_line
 	ReadPciByte
 	mov bx,cs
 	mov es,bx
-;	mov di,OFFSET AudioInt
-;	RequestSharedIrqHandler
+	mov di,OFFSET AudioInt
+	RequestSharedIrqHandler
+;
+    mov dx,ds:IoBase
+    mov cx,3
+    mov bx,OFFSET Ac0
+    xor ax,ax
+
+init_ch_loop:
+    mov si,ax
+    add si,dx
+    mov ds:[bx].AcStatusIo,si
+    inc si
+    mov ds:[bx].AcControlIo,si
+    inc si
+    mov ds:[bx].AcTypeIo,si
+    add si,2
+    mov ds:[bx].AcSgdIo,si
+;
+    mov ds:[bx].AcSgdPhys,0
+    mov ds:[bx].AcSgd1Phys,0
+    mov ds:[bx].AcSgd2Phys,0
+    mov ds:[bx].AcSgdLinear,0
+    mov ds:[bx].AcSgd1Linear,0
+    mov ds:[bx].AcSgd2Linear,0
+    mov ds:[bx].AcNotify,0
+    mov ds:[bx].AcIrqStatus,0
+;
+    add bx,SIZE audio_channel_struc
+    add ax,10h
+    loop init_ch_loop
+;    
+    int 3
+    mov bx,2Ah
+    ReadCodec
+    or al,1
+    WriteCodec
+    
 
 init_pci_done:
 	ret

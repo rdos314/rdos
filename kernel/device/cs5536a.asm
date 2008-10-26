@@ -462,13 +462,13 @@ FreePrdTable  Proc near
     or edx,edx
     jz fptDone
 ;    
-    mov ecx,8000h
+    mov ecx,10000h
     mov edx,ds:[bx].AcPrd1Linear
     FreeLinear
     mov ds:[bx].AcPrd1Phys,0
     mov ds:[bx].AcPrd1Linear,0
 ;
-    mov ecx,8000h
+    mov ecx,10000h
     mov edx,ds:[bx].AcPrd2Linear
     FreeLinear
     mov ds:[bx].AcPrd2Phys,0

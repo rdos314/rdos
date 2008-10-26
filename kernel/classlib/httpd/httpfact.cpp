@@ -52,8 +52,7 @@
 #
 ##########################################################################*/
 THttpSocketServerFactory::THttpSocketServerFactory(int Port, int MaxConnections, int BufferSize)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize),
-    RootDir("c:\\")
+  : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
 	Init();
 }

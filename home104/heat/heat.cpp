@@ -306,7 +306,7 @@ void cdecl main()
 		vbe->DrawRect(550, 3 * 16, 550 + WIDTH, 4 * 16 - 1);
 		
     	vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 3 * 16, str);
+		 vbe->DrawString(550, 3 * 16, str);
 
     	vbe->SetDrawColor(255, 255, 255);
 	    vbe->DrawString(550, 4 * 16, "Utomhus");
