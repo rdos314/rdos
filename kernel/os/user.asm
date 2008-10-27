@@ -138,6 +138,12 @@ init_usergate_loop:
 	mov ax,register_usergate_v86_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET is_valid_usergate
+	mov di,OFFSET is_valid_usergate_name
+	xor dx,dx
+	mov ax,is_valid_usergate_nr
+	RegisterBimodalUserGate
+;
 	popa
 	pop es
 	pop ds
@@ -162,6 +168,44 @@ illegal_gate	PROC far
 	int 3
 	ret
 illegal_gate	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IsValidUsergate
+;
+;		DESCRIPTION:	Check if a gate number is registered
+;
+;		PARAMETERS:		AX		GATE NUMBER
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_valid_usergate_name	DB 'Is Valid User Gate',0
+
+is_valid_usergate	PROC far
+	push ds
+	push ax
+	push bx
+;
+	mov bx,ax
+	mov ax,usergate_sel
+	mov ds,ax
+	shl bx,5
+	mov ax,[bx].gate_entry_sel32
+	or ax,ax
+	clc
+	jnz is_valid_gate_done
+;
+	stc
+
+is_valid_gate_done:
+	pop bx
+	pop ax
+	pop ds
+	retf32
+is_valid_usergate	ENDP
 
 PAGE
 

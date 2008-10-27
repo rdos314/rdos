@@ -103,6 +103,11 @@ ELSE
 ENDIF
 			ENDM
 
+;   NC      Valid
+IsValidUserGate	MACRO
+	UserGate is_valid_usergate_nr
+				ENDM
+
 ;;;;;;;;;;;;;; MEMORY ;;;;;;;;;;;;;;;;;;;
 
 ;	EAX		Number of free physical bytes
@@ -2081,6 +2086,10 @@ StartWatchdog      MACRO
 
 KickWatchdog      MACRO
 	UserGate kick_watchdog_nr
+						ENDM
+
+StopWatchdog      MACRO
+	UserGate stop_watchdog_nr
 						ENDM
 						
 ;	IN  BX		File handle

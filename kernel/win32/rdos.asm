@@ -8263,9 +8263,14 @@ RdosStartWatchdog	Proc near
 	push ebp
 	mov ebp,esp
 ;
+    mov ax,start_watchdog_nr
+    UserGate is_valid_usergate_nr
+    jc rswDone
+;    
 	mov eax,[ebp+8]
 	UserGate start_watchdog_nr
-;
+
+rswDone:
 	pop ebp
 	ret 4
 RdosStartWatchdog	Endp
@@ -8284,9 +8289,39 @@ RdosStartWatchdog	Endp
 		public RdosKickWatchdog
 
 RdosKickWatchdog	Proc near
+    mov ax,kick_watchdog_nr
+    UserGate is_valid_usergate_nr
+    jc rkwDone
+;    
 	UserGate kick_watchdog_nr
+
+rkwDone:
 	ret
 RdosKickWatchdog	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosStopWatchdog
+;
+;       DESCRIPTION:    Stop watchdog
+;
+;		PARAMETERS:		
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosStopWatchdog
+
+RdosStopWatchdog	Proc near
+    mov ax,stop_watchdog_nr
+    UserGate is_valid_usergate_nr
+    jc rstwDone
+;    
+	UserGate stop_watchdog_nr
+
+rstwDone:	
+	ret
+RdosStopWatchdog	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -9016,6 +9051,10 @@ RdosGetMasterVolume	PROC
 ;    
     mov edi,[ebp+12]
     mov dword ptr [edi],-1
+;
+    mov ax,get_master_volume_nr
+    UserGate is_valid_usergate_nr
+    jc rgmvDone
 ;    
     UserGate get_master_volume_nr
     jc rgmvDone
@@ -9065,6 +9104,10 @@ RdosSetMasterVolume	PROC
 	mov ebp,esp
 	push ebx
 ;
+    mov ax,set_master_volume_nr
+    UserGate is_valid_usergate_nr
+    jc rsmvDone
+;    
     mov eax,[ebp+8]
     mov bl,80h
     test eax,80000000h
@@ -9099,7 +9142,8 @@ rsmvR:
 rsmvSet:
     mov ax,bx
     UserGate set_master_volume_nr    
-;
+
+rsmvDone:
     pop ebx
 	pop ebp
 	ret 8
@@ -9128,6 +9172,10 @@ RdosGetLineOutVolume	PROC
 ;    
     mov edi,[ebp+12]
     mov dword ptr [edi],-1
+;
+    mov ax,get_line_out_volume_nr
+    UserGate is_valid_usergate_nr
+    jc rglovDone
 ;    
     UserGate get_line_out_volume_nr
     jc rglovDone
@@ -9177,6 +9225,10 @@ RdosSetLineOutVolume	PROC
 	mov ebp,esp
 	push ebx
 ;
+    mov ax,set_line_out_volume_nr
+    UserGate is_valid_usergate_nr
+    jc rslovDone
+;
     mov eax,[ebp+8]
     mov bl,80h
     test eax,80000000h
@@ -9211,7 +9263,8 @@ rslovR:
 rslovSet:
     mov ax,bx
     UserGate set_line_out_volume_nr    
-;
+
+rslovDone:
     pop ebx
 	pop ebp
 	ret 8
@@ -9239,6 +9292,11 @@ RdosCreateAudioOutChannel	PROC
 	push ebx
 	push ecx
 ;
+    xor bx,bx
+    mov ax,create_audio_out_channel_nr
+    UserGate is_valid_usergate_nr
+    jc rcaocDone
+;
     mov eax,[ebp+16]    
     mov bx,0FFFFh
     cmp eax,100
@@ -9256,7 +9314,9 @@ caocVolOk:
     mov ax,[ebp+8]
     mov cl,[ebp+12]
     UserGate create_audio_out_channel_nr
-    movzx eax,bx
+
+rcaocDone:    
+    movzx eax,bx    
 ;
     pop ecx
     pop ebx
@@ -9282,8 +9342,12 @@ RdosCloseAudioOutChannel	PROC
 	push ebx
 ;
     mov bx,[ebp+8]
+    or bx,bx
+    jz caocDone
+;    
     UserGate close_audio_out_channel_nr    
-;
+
+caocDone:
     pop ebx
 	pop ebp
 	ret 4
@@ -9312,11 +9376,15 @@ RdosWriteAudio	PROC
 	push edi
 ;
     mov bx,[ebp+8]
+    or bx,bx
+    jz waDone
+;       
     mov ecx,[ebp+12]
     mov esi,[ebp+16]
     mov edi,[ebp+20]
     UserGate write_audio_nr    
-;
+
+waDone:
     pop edi
     pop esi
     pop ebx

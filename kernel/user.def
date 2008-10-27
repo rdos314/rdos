@@ -425,4 +425,8 @@ create_audio_out_channel_nr = 354
 close_audio_out_channel_nr  = 355
 write_audio_nr              = 356
 
+stop_watchdog_nr            = 357
+
+is_valid_usergate_nr        = 358
+
 usergate_entries			= 370

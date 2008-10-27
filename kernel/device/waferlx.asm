@@ -51,17 +51,38 @@ code	SEGMENT byte public use16 'CODE'
 ;
 ;		DESCRIPTION:	Start watchdog
 ;
-;       PARAMETERS:     AX      Timeout in seconds 
+;       PARAMETERS:     EAX      Timeout in milliseconds 
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_watchdog_name DB 'Start Watchdog', 0
 
 start_watchdog   Proc far
-    push dx
+    push eax
+    push ebx
+    push edx
+;
+    xor edx,edx
+    mov ebx,1000
+    div ebx
+    or eax,eax
+    jnz swNotZero
+;
+    mov al,1
+
+swNotZero:
+    test eax,0FFFFFF00h
+    jz swNoOv
+;
+    mov al,255
+
+swNoOv:       
     mov dx,443h
     out dx,al
-    pop dx
+;    
+    pop edx
+    pop ebx
+    pop eax
     retf32
 start_watchdog   Endp
 
@@ -92,6 +113,29 @@ kw_done:
     pop ax
     retf32
 kick_watchdog   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			StopWatchdog
+;
+;		DESCRIPTION:	Stop watchdog
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_watchdog_name DB 'Stop Watchdog', 0
+
+stop_watchdog   Proc far
+    push ax
+    push dx
+;    
+    mov dx,843h
+    in al,dx
+;
+    pop dx
+    pop ax
+    retf32
+stop_watchdog   Endp
 
 PAGE
 
@@ -128,6 +172,12 @@ init	Proc far
 	mov di,OFFSET kick_watchdog_name
 	xor dx,dx
 	mov ax,kick_watchdog_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET stop_watchdog
+	mov di,OFFSET stop_watchdog_name
+	xor dx,dx
+	mov ax,stop_watchdog_nr
 	RegisterBimodalUserGate
 ;
 	popa
