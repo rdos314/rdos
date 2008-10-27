@@ -210,6 +210,10 @@ audio_srcs = AUDIO.ASM
 audio_objs = $(audio_srcs:.ASM=.OBJ)
 audio_rdvs = AUDIO.RDV
 
+fm_srcs = FM.ASM
+fm_objs = $(fm_srcs:.ASM=.OBJ)
+fm_rdvs = FM.RDV
+
 kernel_srcs =   KERNEL.ASM
 
 p1_srcs =   PAGING.ASM				TASK.ASM                STATE.ASM	\
@@ -253,7 +257,7 @@ srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs
 			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs) \
-			$(ac97_srcs) $(audio_srcs) $(ir_srcs)
+			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -280,7 +284,7 @@ rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(font_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
-			$(ir_rdvs)
+			$(ir_rdvs) $(fm_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -370,6 +374,14 @@ AUDIO.RDV : $(audio_objs)
 	$(audio_objs)
 	AUDIO.RDV
 	AUDIO;
+!
+
+FM.RDV : $(fm_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(fm_objs)
+	FM.RDV
+	FM;
 !
 
 IR.RDV : $(ir_objs)
