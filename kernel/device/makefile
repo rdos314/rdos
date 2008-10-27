@@ -73,6 +73,10 @@ via82a_srcs = VIA82A.ASM
 via82a_objs = $(via82a_srcs:.ASM=.OBJ)
 via82a_rdvs = VIA82A.RDV
 
+waferlx_srcs = WAFERLX.ASM
+waferlx_objs = $(waferlx_srcs:.ASM=.OBJ)
+waferlx_rdvs = WAFERLX.RDV
+
 pccom_srcs = PCCOM.ASM
 pccom_objs = $(pccom_srcs:.ASM=.OBJ)
 pccom_rdvs = PCCOM.RDV
@@ -134,7 +138,7 @@ srcs =      $(ide_srcs) $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
 			$(ts2003_srcs) $(egalax_srcs) $(uhci_srcs) $(usbcom_srcs) \
-			$(ohci_srcs) $(cs5536a_srcs) $(via82a_srcs)
+			$(ohci_srcs) $(cs5536a_srcs) $(via82a_srcs) $(waferlx_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -143,7 +147,7 @@ rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
 			$(ts2003_rdvs) $(egalax_rdvs) $(uhci_rdvs) $(usbcom_rdvs) \
-			$(ohci_rdvs) $(cs5536a_rdvs) $(via82a_rdvs)
+			$(ohci_rdvs) $(cs5536a_rdvs) $(via82a_rdvs) $(waferlx_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -234,6 +238,14 @@ VIA82A.RDV : $(via82a_objs)
 	$(via82a_objs)
 	VIA82A.RDV
 	VIA82A;       
+!
+
+WAFERLX.RDV : $(waferlx_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(waferlx_objs)
+	WAFERLX.RDV
+	WAFERLX;       
 !
 
 PCCOM.RDV : $(pccom_objs)
