@@ -39,6 +39,13 @@ INCLUDE ..\..\kernel\os\system.def
 
 	.386p
 
+; ECX       MSR register
+; EDX:EAX   Result   
+rdmsr	MACRO
+	db 0Fh
+	db 32h
+        ENDM
+
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
@@ -59,12 +66,16 @@ start_watchdog_name DB 'Start Watchdog', 0
 
 start_watchdog   Proc far
     push eax
-    push ebx
+    push ecx
     push edx
 ;
+    int 3
+    mov ecx,5140000dh
+    rdmsr
+;    
     xor edx,edx
-    mov ebx,1000
-    div ebx
+    mov ecx,1000
+    div ecx
     or eax,eax
     jnz swNotZero
 ;
@@ -81,7 +92,7 @@ swNoOv:
     out dx,al
 ;    
     pop edx
-    pop ebx
+    pop ecx
     pop eax
     retf32
 start_watchdog   Endp

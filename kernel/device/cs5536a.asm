@@ -766,19 +766,6 @@ init_ch_loop:
 ;
     mov bx,0
     WriteCodec
-;
-    int 3        
-    mov bx,26h
-    ReadCodec
-;
-    mov bx,28h
-    ReadCodec
-;
-    mov bx,2Ah
-    ReadCodec
-;
-    mov bx,2Ch
-    ReadCodec
 
 init_pci_done:
 	ret
