@@ -20,12 +20,12 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; Waferlx.ASM
-; Wafer LX support
+; CS5536WD.ASM
+; CS5536 watchdog support
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
-        NAME waferlx
+        NAME cs5536wd
         
 GateSize = 16
 
@@ -40,11 +40,25 @@ INCLUDE ..\..\kernel\os\system.def
 	.386p
 
 ; ECX       MSR register
-; EDX:EAX   Result   
+; EDX:EAX   Value   
 rdmsr	MACRO
 	db 0Fh
 	db 32h
         ENDM
+
+; ECX       MSR register
+; EDX:EAX   Value
+wrmsr	MACRO
+	db 0Fh
+	db 30h
+        ENDM
+      
+wd_data_seg	SEGMENT AT 0
+
+IoBase      DW ?
+
+wd_data_seg ENDS
+
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -65,13 +79,47 @@ code	SEGMENT byte public use16 'CODE'
 start_watchdog_name DB 'Start Watchdog', 0
 
 start_watchdog   Proc far
+    push ds
     push eax
     push ecx
     push edx
 ;
     int 3
-    mov ecx,5140000dh
+;
+    mov ax,wd_data_sel
+    mov ds,ax
+;    
+    mov dx,ds:IoBase
+    add dx,2Eh
+    in ax,dx
+    or ax,2000h
+    out dx,ax
+;    
+    mov dx,ds:IoBase
+    add dx,28h
+    mov ax,1000
+    out dx,ax
+;    
+    mov dx,ds:IoBase
+    add dx,2Ch
+    xor ax,ax
+    out dx,ax
+;    
+    mov ecx,51400029h
     rdmsr
+    or eax,20000000h
+    wrmsr
+    rdmsr    
+;    
+    mov dx,ds:IoBase
+    add dx,2Eh
+    in ax,dx
+    or ax,8000h
+    out dx,ax
+;
+    in ax,dx
+    sub dx,2
+    in ax,dx    
 ;    
     xor edx,edx
     mov ecx,1000
@@ -166,8 +214,18 @@ init	Proc far
 	push es
 	pusha
 ;
-	mov bx,bsp_code_sel
+	mov bx,wd_code_sel
 	InitDevice
+;
+	mov eax,SIZE wd_data_seg
+	mov bx,wd_data_sel
+	AllocateFixedSystemMem
+    mov ecx,5140000dh
+    rdmsr
+    test dl,1
+    jz iDone
+;    
+	mov es:IoBase,ax
 ;
 	mov ax,cs
 	mov ds,ax
@@ -190,7 +248,8 @@ init	Proc far
 	xor dx,dx
 	mov ax,stop_watchdog_nr
 	RegisterBimodalUserGate
-;
+
+iDone:
 	popa
 	pop es
 	pop ds
