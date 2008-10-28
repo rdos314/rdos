@@ -90,19 +90,24 @@ start_watchdog   Proc far
     mov ds,ax
 ;    
     mov dx,ds:IoBase
-    add dx,2Eh
-    in ax,dx
-    or ax,2000h
+    add dx,28h
+    mov ax,0FFFFh
     out dx,ax
 ;    
     mov dx,ds:IoBase
-    add dx,28h
+    add dx,2Ah
     mov ax,1000
     out dx,ax
 ;    
     mov dx,ds:IoBase
     add dx,2Ch
     xor ax,ax
+    out dx,ax
+;    
+    mov dx,ds:IoBase
+    add dx,2Eh
+    in ax,dx
+    or ax,4000h
     out dx,ax
 ;    
     mov ecx,51400029h
