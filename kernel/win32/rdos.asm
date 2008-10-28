@@ -9392,6 +9392,65 @@ waDone:
 	ret 16
 RdosWriteAudio	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCreateFmInstrument
+;
+;		DESCRIPTION:    Create FM instrument
+;
+;       PARAMETERS:     C
+;                       M
+;                       Beta
+;                       SampleRate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreateFmInstrument
+
+RdosCreateFmInstrument	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;       
+    mov ax,[ebp+8]
+    mov dx,[ebp+12]
+    fld tbyte ptr [ebp+16]
+    mov cx,[ebp+28]        
+    UserGate create_fm_instrument_nr    
+    movzx eax,bx
+;
+    pop ecx
+    pop ebx
+	pop ebp
+	ret 24
+RdosCreateFmInstrument	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosFreeFmInstrument
+;
+;		DESCRIPTION:    Free FM instrument
+;
+;       PARAMETERS:     Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosFreeFmInstrument
+
+RdosFreeFmInstrument	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;       
+    mov bx,[ebp+8]
+    UserGate free_fm_instrument_nr    
+;
+    pop ebx
+	pop ebp
+	ret 4
+RdosFreeFmInstrument	ENDP
+
 ;	extrn Startup:near
 
 ;	public _main

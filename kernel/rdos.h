@@ -387,6 +387,9 @@ int __stdcall RdosCreateAudioOutChannel(int SampleRate, int Bits, int Volume);
 void __stdcall RdosCloseAudioOutChannel(int Handle);
 void __stdcall RdosWriteAudio(int Handle, int Size, const int *LSamples, const int*RSamples); 
 
+int __stdcall RdosCreateFmInstrument(int C, int M, long double Beta, int SampleRate);
+void __stdcall RdosFreeFmInstrument(int Handle);
+
 #ifdef __cplusplus
 }
 #endif

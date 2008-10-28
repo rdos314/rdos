@@ -26,6 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ADC_HANDLE =        015FCh 
+FM_HANDLE =         017DEh
 DLL_HANDLE16 =      026CFh
 DLL_HANDLE32 =      026DFh
 SPRITE_HANDLE =     02CF5h
@@ -47,6 +48,7 @@ AUDIO_OUT_HANDLE =  0CEDAh
 BITMAP_HANDLE =	    0DB57h
 INI_HANDLE =	    0EAF3h
 USB_PIPE_HANDLE =   0FA3Eh
+
 
 
 handle_header	STRUC
