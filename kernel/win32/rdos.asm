@@ -9451,6 +9451,91 @@ RdosFreeFmInstrument	PROC
 	ret 4
 RdosFreeFmInstrument	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetFmAttack
+;
+;		DESCRIPTION:    Set attack samples
+;
+;       PARAMETERS:     Handle
+;                       Samples
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetFmAttack
+
+RdosSetFmAttack	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;       
+    mov bx,[ebp+8]
+    mov eax,[ebp+12]
+    UserGate set_fm_attack_nr    
+;
+    pop ebx
+	pop ebp
+	ret 8
+RdosSetFmAttack	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetFmSustain
+;
+;		DESCRIPTION:    Set FM sustain parameters
+;
+;       PARAMETERS:     Handle
+;                       Volume half time (in samples)
+;                       Beta half time (in samples)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetFmSustain
+
+RdosSetFmSustain	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;       
+    mov bx,[ebp+8]
+    mov eax,[ebp+12]
+    mov edx,[ebp+16]
+    UserGate set_fm_sustain_nr    
+;
+    pop ebx
+	pop ebp
+	ret 12
+RdosSetFmSustain	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetFmRelease
+;
+;		DESCRIPTION:    Set FM release parameters
+;
+;       PARAMETERS:     Handle
+;                       Volume half time (in samples)
+;                       Beta half time (in samples)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetFmRelease
+
+RdosSetFmRelease	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;       
+    mov bx,[ebp+8]
+    mov eax,[ebp+12]
+    mov edx,[ebp+16]
+    UserGate set_fm_release_nr    
+;
+    pop ebx
+	pop ebp
+	ret 12
+RdosSetFmRelease	ENDP
+
 ;	extrn Startup:near
 
 ;	public _main

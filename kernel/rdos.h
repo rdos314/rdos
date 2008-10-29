@@ -389,6 +389,9 @@ void __stdcall RdosWriteAudio(int Handle, int Size, const int *LSamples, const i
 
 int __stdcall RdosCreateFmInstrument(int C, int M, long double Beta, int SampleRate);
 void __stdcall RdosFreeFmInstrument(int Handle);
+void __stdcall RdosSetFmAttack(int Handle, int Samples);
+void __stdcall RdosSetFmSustain(int Handle, int VolumeHalf, int BetaHalf);
+void __stdcall RdosSetFmRelease(int Handle, int VolumeHalf, int BetaHalf);
 
 #ifdef __cplusplus
 }

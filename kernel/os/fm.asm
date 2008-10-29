@@ -46,10 +46,14 @@ i_beta_int      DD ?
 i_beta_fract    DD ?
 i_sample_rate   DW ?
 i_att_samples   DD ?
-i_sus_samples   DD ?
-i_sus_mod       DD ?
-i_rel_samples   DD ?
-i_rel_mod       DD ?
+i_sus_vol_ind   DW ?
+i_sus_vol_fract DW ?
+i_sus_mod_ind   DW ?
+i_sus_mod_fract DW ?
+i_rel_vol_ind   DW ?
+i_rel_vol_fract DW ?
+i_rel_mod_ind   DW ?
+i_rel_mod_fract DW ?
 
 instrument_sel   ENDS
 
@@ -150,6 +154,16 @@ create_fm_instrument    Proc
 cfiAdjOk:
     shl es:i_beta_fract,2
 ;    
+    mov ds:i_att_samples,0
+    mov ds:i_sus_vol_ind,0
+    mov ds:i_sus_vol_fract,0
+    mov ds:i_sus_mod_ind,0
+    mov ds:i_sus_mod_fract,0
+    mov ds:i_rel_vol_ind,0FFFFh
+    mov ds:i_rel_vol_fract,0
+    mov ds:i_rel_mod_ind,0
+    mov ds:i_rel_mod_fract,0
+;
     mov [bx].i_sel,es
 	mov bx,[bx].hh_handle
 ;
@@ -209,6 +223,24 @@ PAGE
 set_fm_attack_name	DB 'Set FM Attack',0
 
 set_fm_attack    Proc	
+	push ds
+	push ax
+	push bx
+;
+    int 3
+    push eax
+	mov ax,FM_HANDLE
+	DerefHandle
+	pop eax
+	jc sfaDone
+;
+    mov ds,[bx].i_sel
+    mov ds:i_att_samples,eax        
+
+sfaDone:
+	pop bx
+	pop ax
+	pop ds
 	retf32
 set_fm_attack    Endp
 
@@ -230,6 +262,69 @@ PAGE
 set_fm_sustain_name	DB 'Set FM Sustain',0
 
 set_fm_sustain    Proc	
+	push ds
+	push eax
+	push ebx
+	push edx
+;
+    int 3
+    push eax
+	mov ax,FM_HANDLE
+	DerefHandle
+	pop eax
+	jc sfsDone
+;
+    push edx    
+    mov ds,[bx].i_sel
+;    
+    mov ds:i_sus_vol_ind,0FFFFh
+    mov ds:i_sus_vol_fract,0
+    or eax,eax
+    jz sfsVolDone
+;
+    mov ebx,eax
+    mov eax,1000h
+    xor edx,edx
+    div ebx
+;
+    mov ds:i_sus_vol_ind,ax
+    push edx
+    mov edx,1
+    xor eax,eax
+    div ebx
+    pop edx
+    mul edx
+    shr eax,16
+    mov ds:i_sus_vol_fract,ax
+
+sfsVolDone:    
+    pop eax       
+;    
+    mov ds:i_sus_mod_ind,0FFFFh
+    mov ds:i_sus_mod_fract,0
+    or eax,eax
+    jz sfsDone
+;
+    mov ebx,eax
+    mov eax,1000h
+    xor edx,edx
+    div ebx
+;
+    mov ds:i_sus_mod_ind,ax
+    push edx
+    mov edx,1
+    xor eax,eax
+    div ebx
+    pop edx
+    mul edx
+    shr eax,16
+    mov ds:i_sus_mod_fract,ax
+
+sfsDone:
+    pop edx
+	pop ebx
+	pop eax
+	pop ds
 	retf32
 set_fm_sustain    Endp
 
@@ -251,6 +346,69 @@ PAGE
 set_fm_release_name	DB 'Set FM Release',0
 
 set_fm_release    Proc	
+	push ds
+	push eax
+	push ebx
+	push edx
+;
+    int 3
+    push eax
+	mov ax,FM_HANDLE
+	DerefHandle
+	pop eax
+	jc sfrDone
+;
+    push edx    
+    mov ds,[bx].i_sel
+;    
+    mov ds:i_rel_vol_ind,0FFFFh
+    mov ds:i_rel_vol_fract,0
+    or eax,eax
+    jz sfrVolDone
+;
+    mov ebx,eax
+    mov eax,1000h
+    xor edx,edx
+    div ebx
+;
+    mov ds:i_rel_vol_ind,ax
+    push edx
+    mov edx,1
+    xor eax,eax
+    div ebx
+    pop edx
+    mul edx
+    shr eax,16
+    mov ds:i_rel_vol_fract,ax
+
+sfrVolDone:    
+    pop eax       
+;    
+    mov ds:i_rel_mod_ind,0FFFFh
+    mov ds:i_rel_mod_fract,0
+    or eax,eax
+    jz sfrDone
+;
+    mov ebx,eax
+    mov eax,1000h
+    xor edx,edx
+    div ebx
+;
+    mov ds:i_rel_mod_ind,ax
+    push edx
+    mov edx,1
+    xor eax,eax
+    div ebx
+    pop edx
+    mul edx
+    shr eax,16
+    mov ds:i_rel_mod_fract,ax
+
+sfrDone:
+    pop edx
+	pop ebx
+	pop eax
+	pop ds
 	retf32
 set_fm_release    Endp
 
