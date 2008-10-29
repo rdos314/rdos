@@ -1356,6 +1356,14 @@ beta    DT 5.45
 
 fm_thread	proc far
     int 3
+;
+    mov dx,443h
+    mov al,5
+    out dx,al
+;
+    mov dx,443h
+    in al,dx
+;           
     mov ax,2
     mov dx,5
     fld cs:beta
