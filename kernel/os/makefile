@@ -210,7 +210,7 @@ audio_srcs = AUDIO.ASM
 audio_objs = $(audio_srcs:.ASM=.OBJ)
 audio_rdvs = AUDIO.RDV
 
-fm_srcs = FM.ASM
+fm_srcs = FM.ASM FMSIN.ASM FMEXP.ASM
 fm_objs = $(fm_srcs:.ASM=.OBJ)
 fm_rdvs = FM.RDV
 

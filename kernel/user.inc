@@ -2335,6 +2335,7 @@ SetFmRelease      MACRO
 
 ;   IN  EAX         Duration of sustain in samples
 ;   IN  ST0         Frequency
+;   IN  EDX         Peak volume
 ;   IN  BX          Handle         
 PlayFmNote      MACRO
 	UserGate play_fm_note_nr
