@@ -15,11 +15,6 @@ int main(int argc, char **argv)
 	char FileName[256];
 	TMp3Player mp3;
 
-	int FmHandle;
-
-	FmHandle = RdosCreateFmInstrument(1, 2, 9.99, 44100);
-	RdosFreeFmInstrument(FmHandle);
-
 	if (argc == 1)
 	{
 		printf("usage: playmp3 filename\r\n");

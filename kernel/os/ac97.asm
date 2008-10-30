@@ -240,6 +240,22 @@ set_dac_rate_name			DB 'Set Audio DAC Rate',0
 set_dac_rate	PROC far
     push bx
 ;    
+; realtek patch
+;
+    int 3
+    push ax
+    mov bx,24h
+    ReadCodec
+    or ax,1
+    WriteCodec
+;
+    mov bx,68h
+    ReadCodec
+;
+    mov bx,6Ah
+    ReadCodec        
+    pop ax
+;
     push ax
     mov bx,2Ah
     ReadCodec
