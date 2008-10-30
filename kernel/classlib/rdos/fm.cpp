@@ -120,7 +120,7 @@ TFmInstrument::~TFmInstrument()
 #
 #   Name       : TFmInstrument::SetAttack
 #
-#   Purpose....: Set attack time in ms	                          
+#   Purpose....: Set attack time in ms
 #
 #   In params..: *
 #   Out params.: *
@@ -129,28 +129,28 @@ TFmInstrument::~TFmInstrument()
 ##########################################################################*/
 void TFmInstrument::SetAttack(long double DurationMs)
 {
-    int Duration;
-    long double Samples;
+	 int Duration;
+	 long double Samples;
 
-    Samples = (long double)FSampleRate * DurationMs / 1000.0; 
+	 Samples = (long double)FSampleRate * DurationMs / 1000.0;
 
-    if (Samples < 1.0)
-        Duration = 0;
-    else
-    {
-        if (Samples > 0x7FFFFFFF)
-            Duration = 0x7FFFFFF;
-        else
-            Duration = (int)Samples;
-    }
-    RdosSetFmAttack(FFmHandle, Duration);
+	 if (Samples < 1.0)
+		  Duration = 0;
+	 else
+	 {
+		  if (Samples > 0x7FFFFFFF)
+				Duration = 0x7FFFFFF;
+		  else
+				Duration = (int)Samples;
+	 }
+	 RdosSetFmAttack(FFmHandle, Duration);
 }
 
 /*##########################################################################
 #
 #   Name       : TFmInstrument::SetSustain
 #
-#   Purpose....: Set sustain params	                          
+#   Purpose....: Set sustain params
 #
 #   In params..: *
 #   Out params.: *
@@ -159,17 +159,17 @@ void TFmInstrument::SetAttack(long double DurationMs)
 ##########################################################################*/
 void TFmInstrument::SetSustain(long double VolHalfMs, long double BetaHalfMs)
 {
-    int VolSamples;
-    int ModSamples;
-    long double Samples;
+	 int VolSamples;
+	 int ModSamples;
+	 long double Samples;
 
-    Samples = (long double)FSampleRate * VolHalfMs / 1000.0; 
+	 Samples = (long double)FSampleRate * VolHalfMs / 1000.0;
 
-    if (Samples < 1.0)
-        VolSamples = 0;
-    else
-    {
-        if (Samples > 0x7FFFFFFF)
+	 if (Samples < 1.0)
+		  VolSamples = 0;
+	 else
+	 {
+		  if (Samples > 0x7FFFFFFF)
 				VolSamples = 0x7FFFFFF;
 		  else
 				VolSamples = (int)Samples;
@@ -220,14 +220,62 @@ void TFmInstrument::SetRelease(long double VolHalfMs, long double BetaHalfMs)
 
 	 Samples = (long double)FSampleRate * BetaHalfMs / 1000.0;
 
-    if (Samples < 1.0)
-        ModSamples = 0;
-    else
-    {
-        if (Samples > 0x7FFFFFFF)
-            ModSamples = 0x7FFFFFF;
-        else
-            ModSamples = (int)Samples;
-    }
-    RdosSetFmRelease(FFmHandle, VolSamples, ModSamples);
+	 if (Samples < 1.0)
+		  ModSamples = 0;
+	 else
+	 {
+		  if (Samples > 0x7FFFFFFF)
+				ModSamples = 0x7FFFFFF;
+		  else
+				ModSamples = (int)Samples;
+	 }
+	 RdosSetFmRelease(FFmHandle, VolSamples, ModSamples);
 }
+
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::SetRelease
+#
+#   Purpose....: Set release params
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::Play(long double Freq, long double Volume, long double SustainMs)
+{
+	 int Duration;
+	 long double Samples;
+	 long double Temp;
+	 int IntVol;
+
+	 if (Volume >= 100.0)
+		IntVol = 0x7FFFFFFF;
+	 else
+	 {
+		if (Volume <= 0.0)
+			IntVol = 0;
+		else
+		{
+			Temp = Volume / 100.0 * 0x7FFFFFFF;
+			IntVol = (int)Temp;
+		}
+	 }
+
+	 Samples = (long double)FSampleRate * SustainMs / 1000.0;
+
+	 if (Samples < 1.0)
+		  Duration = 0;
+	 else
+	 {
+		  if (Samples > 0x7FFFFFFF)
+				Duration = 0x7FFFFFF;
+		  else
+				Duration = (int)Samples;
+	 }
+
+	RdosPlayFmNote(FFmHandle, FAudioHandle, Freq, IntVol, Duration);
+}
+

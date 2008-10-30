@@ -392,6 +392,7 @@ void __stdcall RdosFreeFmInstrument(int Handle);
 void __stdcall RdosSetFmAttack(int Handle, int Samples);
 void __stdcall RdosSetFmSustain(int Handle, int VolumeHalf, int BetaHalf);
 void __stdcall RdosSetFmRelease(int Handle, int VolumeHalf, int BetaHalf);
+void __stdcall RdosPlayFmNote(int Handle, int AudioHandle, long double Freq, int PeakVolume, int SustainSamples);
 
 #ifdef __cplusplus
 }

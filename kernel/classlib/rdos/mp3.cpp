@@ -395,7 +395,7 @@ void TMp3Player::Close()
 #   Returns....: *
 #
 ##########################################################################*/
-void TMp3Player::SetVolume(val)
+void TMp3Player::SetVolume(int val)
 {
 	FVolume = val;
 }

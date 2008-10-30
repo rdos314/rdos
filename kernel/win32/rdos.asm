@@ -9536,6 +9536,41 @@ RdosSetFmRelease	PROC
 	ret 12
 RdosSetFmRelease	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosPlayFmNote
+;
+;		DESCRIPTION:    Play FM note
+;
+;       PARAMETERS:     Handle
+;                       Audio handle
+;                       Frequency
+;                       Peak volume
+;                       Sustain (samples)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosPlayFmNote
+
+RdosPlayFmNote	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push esi
+;       
+    mov bx,[ebp+8]
+    mov si,[ebp+12]
+    fld tbyte ptr [ebp+16]
+    mov edx,[ebp+28]
+    mov eax,[ebp+32]    
+    UserGate play_fm_note_nr    
+;
+    pop esi
+    pop ebx
+	pop ebp
+	ret 28
+RdosPlayFmNote	ENDP
+
 ;	extrn Startup:near
 
 ;	public _main

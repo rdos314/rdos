@@ -64,6 +64,26 @@ i_sel		DW ?
 
 instrument_struc	ENDS
 
+note_struc  STRUC
+
+n_callb         DW ?
+
+n_carrier_ind   DW ?
+n_carrier_fract DD ?
+n_carrier_curr  DD ?
+
+n_mod_ind       DW ?
+n_mod_fract     DD ?
+n_mod_curr      DD ?
+
+n_peak_volume   DD ?
+n_curr_volume   DD ?
+
+n_att_samples   DD ?
+n_sus_samples   DD ?
+
+note_struc  ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -227,7 +247,6 @@ set_fm_attack    Proc
 	push ax
 	push bx
 ;
-    int 3
     push eax
 	mov ax,FM_HANDLE
 	DerefHandle
@@ -267,7 +286,6 @@ set_fm_sustain    Proc
 	push ebx
 	push edx
 ;
-    int 3
     push eax
 	mov ax,FM_HANDLE
 	DerefHandle
@@ -351,7 +369,6 @@ set_fm_release    Proc
 	push ebx
 	push edx
 ;
-    int 3
     push eax
 	mov ax,FM_HANDLE
 	DerefHandle
@@ -422,14 +439,71 @@ PAGE
 ;		DESCRIPTION:	Schedule not for playing
 ;
 ;		PARAMETERS:		BX          FM handle         
+;                       SI          Audio out channel handle
 ;                       EAX         Duration of sustain in samples
+;                       EDX         Peak volume
 ;                       ST0         Frequency (Hz)
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 play_fm_note_name	DB 'Play FM Note',0
 
+SinSize DD 4096
+
 play_fm_note    Proc	
+	push ds
+	push ax
+	push bx
+	push bp
+;
+    push eax
+	mov ax,FM_HANDLE
+	DerefHandle
+	pop eax
+	jc pfnDone
+;
+    mov ds,[bx].i_sel
+    int 3
+    push eax
+    mov eax, SIZE note_struc
+    AllocateSmallGlobalMem
+    pop eax
+;    
+    mov es:n_sus_samples,eax
+    mov es:n_peak_volume,edx
+;
+    movzx eax,ds:i_sample_rate
+    push eax
+    mov bp,sp
+;    
+    fild ds:i_c
+    fmul st(0), st(1)
+    fidivr dword ptr [bp]
+    fidivr word ptr cs:SinSize
+;
+    fist es:n_carrier_ind
+    fisub es:n_carrier_ind 
+;
+    fld rmaxint
+    fmulp st(1),st(0)
+    fistp es:n_carrier_fract
+;
+    pop eax
+;
+    mov eax,ds:i_att_samples
+    mov es:n_att_samples,eax
+;
+    mov es:n_carrier_curr,0
+    mov es:n_mod_curr,0
+    mov es:n_curr_volume,0
+;
+    mov es:n_callb, OFFSET PlayAttack
+            
+pfnDone:
+    pop bp
+	pop bx
+	pop ax
+	pop ds
 	retf32
 play_fm_note    Endp
 
@@ -462,6 +536,23 @@ delete_fm_handle_done:
 	ret
 delete_fm_handle	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			PlayAttack
+;
+;		DESCRIPTION:	Play attack part
+;
+;		PARAMETERS:		ES          Note sel
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PlayAttack  Proc near
+    ret
+PlayAttack  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -479,20 +570,6 @@ beta    DT 5.45
 
 fm_thread	proc far
     int 3
-;
-    mov dx,443h
-    mov al,5
-    out dx,al
-;
-    mov dx,443h
-    in al,dx
-;           
-    mov ax,2
-    mov dx,5
-    fld cs:beta
-    mov cx,48000
-    CreateFmInstrument
-    FreeFmInstrument
     ret
 fm_thread   endp
 

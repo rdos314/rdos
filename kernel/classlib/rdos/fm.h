@@ -49,13 +49,16 @@ class TFmInstrument
 friend class TFmInstrumentFactory;
 
 public:
-    void SetAttack(long double DurationMs);
-    void SetSustain(long double VolHalfMs, long double BetaHalfMs);     
-    void SetRelease(long double VolHalfMs, long double BetaHalfMs);     
+	~TFmInstrument();
+
+	 void SetAttack(long double DurationMs);
+	 void SetSustain(long double VolHalfMs, long double BetaHalfMs);
+	 void SetRelease(long double VolHalfMs, long double BetaHalfMs);
+
+	 void Play(long double Freq, long double Volume, long double SustainMs);
 
 protected:
 	TFmInstrument(int FAudioHandle, int FSampleRate, int C, int M, long double Beta);
-	~TFmInstrument();
 
     int FAudioHandle;
     int FSampleRate;	

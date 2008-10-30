@@ -2334,9 +2334,10 @@ SetFmRelease      MACRO
 	                ENDM
 
 ;   IN  EAX         Duration of sustain in samples
-;   IN  ST0         Frequency
 ;   IN  EDX         Peak volume
-;   IN  BX          Handle         
+;   IN  ST0         Frequency
+;   IN  BX          Instrument handle         
+;   IN  SI          Audio out channel handle
 PlayFmNote      MACRO
 	UserGate play_fm_note_nr
 	                ENDM
