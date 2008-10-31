@@ -17,13 +17,13 @@ int main(int argc, char **argv)
 	char FileName[256];
 	TMp3Player mp3;
 
-	TFmInstrumentFactory fact(48000, 0x7FFFFFFFF);
-    TFmInstrument *inst = fact.Create(2, 5, 2.8);
-    inst->SetAttack(10.0);
-    inst->SetSustain(2000.0, 500.0);
-	 inst->SetRelease(100.0, 50.0);
-	 inst->Play(440.0, 99.0, 2500.0);
-    delete inst;
+//	TFmInstrumentFactory fact(48000, 0x7FFFFFFFF);
+//    TFmInstrument *inst = fact.Create(2, 5, 2.8);
+//    inst->SetAttack(10.0);
+//    inst->SetSustain(2000.0, 500.0);
+//	 inst->SetRelease(100.0, 50.0);
+//	 inst->Play(440.0, 99.0, 2500.0);
+//    delete inst;
 
 	if (argc == 1)
 	{
