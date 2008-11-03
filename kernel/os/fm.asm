@@ -38,13 +38,14 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\handle.inc
 
+SAMPLE_RATE = 48000
+
 instrument_sel   STRUC
 
 i_c             DW ?
 i_m             DW ?
 i_beta_int      DD ?
 i_beta_fract    DD ?
-i_sample_rate   DW ?
 i_att_samples   DD ?
 i_sus_vol_ind   DW ?
 i_sus_vol_fract DW ?
@@ -122,13 +123,32 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetFmSampleRate
+;
+;		DESCRIPTION:	Get FM sample rate
+;
+;       RETURNS:        AX      Sample rate
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_fm_sample_rate_name	DB 'Get FM Sample Rate',0
+
+get_fm_sample_rate    Proc	
+    mov ax,SAMPLE_RATE
+	retf32
+get_fm_sample_rate    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CreateFmInstrument
 ;
 ;		DESCRIPTION:	Create a new FM instrument
 ;
 ;		PARAMETERS:		AX:DX       C:M ratio
 ;                       ST0         Beta (modulation rate) 
-;                       CX          Sample rate
 ;
 ;       RETURNS:        BX          Handle         
 ;						
@@ -142,12 +162,11 @@ create_fm_instrument    Proc
     push es
     push ds
     push eax
-;
     push cx
+;
 	mov cx,SIZE instrument_struc
 	AllocateHandle
 	mov ds:[bx].hh_sign,FM_HANDLE
-	pop cx
 ;
     push eax
     mov eax,SIZE instrument_sel
@@ -155,7 +174,6 @@ create_fm_instrument    Proc
     pop eax
     mov es:i_c,ax	
     mov es:i_m,dx
-    mov es:i_sample_rate,cx
 ;
     fist es:i_beta_int
     fisub es:i_beta_int 
@@ -187,6 +205,7 @@ cfiAdjOk:
     mov [bx].i_sel,es
 	mov bx,[bx].hh_handle
 ;
+	pop cx
     pop eax
     pop ds
     pop es
@@ -439,7 +458,6 @@ PAGE
 ;		DESCRIPTION:	Schedule not for playing
 ;
 ;		PARAMETERS:		BX          FM handle         
-;                       SI          Audio out channel handle
 ;                       EAX         Duration of sustain in samples
 ;                       EDX         Peak volume
 ;                       ST0         Frequency (Hz)
@@ -472,7 +490,7 @@ play_fm_note    Proc
     mov es:n_sus_samples,eax
     mov es:n_peak_volume,edx
 ;
-    movzx eax,ds:i_sample_rate
+    mov eax,SAMPLE_RATE
     push eax
     mov bp,sp
 ;    
@@ -487,6 +505,17 @@ play_fm_note    Proc
     fld rmaxint
     fmulp st(1),st(0)
     fistp es:n_carrier_fract
+;    
+    fimul ds:i_m
+    fidivr dword ptr [bp]
+    fidivr word ptr cs:SinSize
+;
+    fist es:n_mod_ind
+    fisub es:n_mod_ind 
+;
+    fld rmaxint
+    fmulp st(1),st(0)
+    fistp es:n_mod_fract
 ;
     pop eax
 ;
@@ -624,6 +653,12 @@ init	Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov si,OFFSET get_fm_sample_rate
+	mov di,OFFSET get_fm_sample_rate_name
+	xor dx,dx
+	mov ax,get_fm_sample_rate_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET create_fm_instrument
 	mov di,OFFSET create_fm_instrument_name

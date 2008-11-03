@@ -2300,9 +2300,13 @@ WriteAudio      MACRO
 
 ;;;;;;;;;;; FM synthesis ;;;;;;;;;;
 
+;   OUT  AX         Sample rate
+GetFmSampleRate      MACRO
+	UserGate get_fm_sample_rate_nr
+	                ENDM
+
 ;   IN  AX:DX       C:M ratio
 ;   IN  ST0         Beta (modulation rate) 
-;   IN  CX          Sample rate
 ;   OUT BX          Handle         
 CreateFmInstrument      MACRO
 	UserGate create_fm_instrument_nr
@@ -2313,31 +2317,30 @@ FreeFmInstrument      MACRO
 	UserGate free_fm_instrument_nr
 	                ENDM
 
-;   IN  EAX         Time in samples until full volume (attack)
 ;   IN  BX          Handle         
+;   IN  EAX         Time in samples until full volume (attack)
 SetFmAttack      MACRO
 	UserGate set_fm_attack_nr
 	                ENDM
 
+;   IN  BX          Handle         
 ;   IN  EAX         Time in samples until volume is halved
 ;   IN  EDX         Time in samples until modulation index is halved
-;   IN  BX          Handle         
 SetFmSustain      MACRO
 	UserGate set_fm_sustain_nr
 	                ENDM
 
+;   IN  BX          Handle         
 ;   IN  EAX         Time in samples until volume is halved
 ;   IN  EDX         Time in samples until modulation index is halved
-;   IN  BX          Handle         
 SetFmRelease      MACRO
 	UserGate set_fm_release_nr
 	                ENDM
 
+;   IN  BX          Instrument handle         
 ;   IN  EAX         Duration of sustain in samples
 ;   IN  EDX         Peak volume
 ;   IN  ST0         Frequency
-;   IN  BX          Instrument handle         
-;   IN  SI          Audio out channel handle
 PlayFmNote      MACRO
 	UserGate play_fm_note_nr
 	                ENDM

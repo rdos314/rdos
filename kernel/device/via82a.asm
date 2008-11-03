@@ -567,18 +567,7 @@ send_audio_out	Proc far
     mov ax,flat_sel
     mov es,ax
 ;
-    mov bp,cx
-    shr cx,2
-    mov bx,4
     mov esi,2
-
-saoBufLoop:
-    cmp cx,bp
-    jbe saoBufSizeOk
-;
-    mov cx,bp
-
-saoBufSizeOk:
     push cx
     mov edi,ds:Ac0.AcCurrSgd
 
@@ -591,7 +580,6 @@ saoDataLoop:
     loop saoDataLoop
 ;
     pop cx
-    sub bp,cx
     mov ax,cx
     shl ax,2
     mov edx,ds:Ac0.AcSgdLinear
@@ -613,12 +601,12 @@ saoPrd1:
     add edx,8
     mov ax,es:[edx+4]
     or ax,ax
-    jz saoBufNext
+    jz saoDone
 
 saoPrdOk:
     GetThread
     mov ds:Ac0.AcNotify,ax
-;    
+;        
     mov dx,ds:Ac0.AcStatusIo
     in al,dx
     test al,80h
@@ -636,10 +624,7 @@ saoRunning:
 ;
     mov ds:Ac0.AcIrqStatus,0
             
-saoBufNext:
-    sub bx,1
-    jnz saoBufLoop
-;            
+saoDone:                      
     popad
     pop gs
     pop fs

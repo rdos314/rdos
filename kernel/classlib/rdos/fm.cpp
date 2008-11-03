@@ -33,78 +33,26 @@
 
 /*##########################################################################
 #
-#   Name       : TFmInstrumentFactory::TFmInstrumentFactory
-#
-#   Purpose....: Constructor for Instrument factory		                          
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFmInstrumentFactory::TFmInstrumentFactory(int SampleRate, int Volume)
-{
-    FAudioHandle = RdosCreateAudioOutChannel(SampleRate, 31, Volume);
-
-    FSampleRate = SampleRate;    
-}
-
-/*##########################################################################
-#
-#   Name       : TFmInstrumentFactory::~TFmInstrumentFactory
-#
-#   Purpose....: Destructor for Instrument factory		                          
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFmInstrumentFactory::~TFmInstrumentFactory()
-{
-    RdosCloseAudioOutChannel(FAudioHandle);
-}
-
-/*##########################################################################
-#
-#   Name       : TFmInstrumentFactory::Create
-#
-#   Purpose....: Create instrument
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFmInstrument *TFmInstrumentFactory::Create(int C, int M, long double Beta)
-{
-    return new TFmInstrument(FAudioHandle, FSampleRate, C, M, Beta);
-}
-
-/*##########################################################################
-#
 #   Name       : TFmInstrument::TFmInstrument
 #
-#   Purpose....: Constructor for Instrument	                          
+#   Purpose....: Constructor for Instrument
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFmInstrument::TFmInstrument(int AudioHandle, int SampleRate, int C, int M, long double Beta)
+TFmInstrument::TFmInstrument(int C, int M, long double Beta)
 {
-    FAudioHandle = AudioHandle;
-    FSampleRate = SampleRate;
-
-    FFmHandle = RdosCreateFmInstrument(C, M, Beta, SampleRate);
+	 FSampleRate = RdosGetFmSampleRate();
+	 FFmHandle = RdosCreateFmInstrument(C, M, Beta);
 }
 
 /*##########################################################################
 #
 #   Name       : TFmInstrument::~TFmInstrument
 #
-#   Purpose....: Destructor for Instrument	                          
+#   Purpose....: Destructor for Instrument
 #
 #   In params..: *
 #   Out params.: *
@@ -113,7 +61,7 @@ TFmInstrument::TFmInstrument(int AudioHandle, int SampleRate, int C, int M, long
 ##########################################################################*/
 TFmInstrument::~TFmInstrument()
 {
-    RdosFreeFmInstrument(FFmHandle);
+	 RdosFreeFmInstrument(FFmHandle);
 }
 
 /*##########################################################################
@@ -276,6 +224,6 @@ void TFmInstrument::Play(long double Freq, long double Volume, long double Susta
 				Duration = (int)Samples;
 	 }
 
-	RdosPlayFmNote(FFmHandle, FAudioHandle, Freq, IntVol, Duration);
+	RdosPlayFmNote(FFmHandle, Freq, IntVol, Duration);
 }
 
