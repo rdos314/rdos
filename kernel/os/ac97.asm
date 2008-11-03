@@ -70,8 +70,8 @@ get_master_volume	PROC far
     jnz gmvMute
 ;
     xchg al,ah
-    and ax,3F3Fh
-    shl ax,1
+    and ax,1F1Fh
+    shl ax,2
     jmp gmvDone        
 
 gmvMute:
@@ -106,7 +106,7 @@ set_master_volume	PROC far
     je smvSet
 ;
     and ax,7F7Fh
-    shr ax,1
+    shr ax,2
 
 smvSet:        
     mov bx,2
@@ -149,8 +149,8 @@ get_line_out_volume	PROC far
     jnz glovMute
 ;
     xchg al,ah
-    and ax,3F3Fh
-    shl ax,1
+    and ax,1F1Fh
+    shl ax,2
     jmp glovDone        
 
 glovMute:
@@ -185,7 +185,7 @@ set_line_out_volume	PROC far
     je slovSet
 ;
     and ax,7F7Fh
-    shr ax,1
+    shr ax,2
 
 slovSet:        
     mov ax,0808h

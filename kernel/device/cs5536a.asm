@@ -593,18 +593,7 @@ send_audio_out	Proc far
     mov ax,flat_sel
     mov es,ax
 ;
-    mov bp,cx
-    shr cx,2
-    mov bx,4
     mov esi,2
-
-saoBufLoop:
-    cmp cx,bp
-    jbe saoBufSizeOk
-;
-    mov cx,bp
-
-saoBufSizeOk:
     push cx
     mov edi,ds:Ac0.AcCurrPrd
 
@@ -617,7 +606,6 @@ saoDataLoop:
     loop saoDataLoop
 ;
     pop cx
-    sub bp,cx
     mov ax,cx
     shl ax,2
     mov edx,ds:Ac0.AcPrdLinear
@@ -639,7 +627,7 @@ saoPrd1:
     add edx,8
     mov ax,es:[edx+4]
     or ax,ax
-    jz saoBufNext
+    jz saoDone
 
 saoPrdOk:
     GetThread
@@ -651,7 +639,7 @@ saoPrdOk:
     cmp al,1
     je saoRunning
 ;
-    and al,NOT 4
+    and al,NOT 7
     or al,1
     out dx,al
 
@@ -663,10 +651,7 @@ saoRunning:
 ;
     mov ds:Ac0.AcIrqStatus,0
             
-saoBufNext:
-    sub bx,1
-    jnz saoBufLoop
-;            
+saoDone:            
     popad
     pop gs
     pop fs
@@ -755,17 +740,17 @@ init_ch_loop:
     add ax,8
     loop init_ch_loop
 ;
-    mov dx,ds:IoBase
-    add dx,ACC_CODEC_CONTROL
-    mov eax,20000h
-    out dx,eax
+;    mov dx,ds:IoBase
+;    add dx,ACC_CODEC_CONTROL
+;    mov eax,20000h
+;    out dx,eax
 ;    
-    mov dx,ds:IoBase
-    add dx,ACC_CODEC_STATUS
-    in eax,dx
+;    mov dx,ds:IoBase
+;    add dx,ACC_CODEC_STATUS
+;    in eax,dx
 ;
-    mov bx,0
-    WriteCodec
+;    mov bx,0
+;    WriteCodec
 
 init_pci_done:
 	ret

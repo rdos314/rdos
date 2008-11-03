@@ -50,6 +50,7 @@ ams_out_buf_pos     DW ?
 ams_outl_buf_sel    DW ?
 ams_outr_buf_sel    DW ?
 
+ams_buffer_size     DW ?
 ams_sample_rate     DW ?
 
 ams_count           DW ?
@@ -63,6 +64,7 @@ aos_volume          DD ?
 aos_mixer           DW ?
 aos_thread          DW ?
 aos_sample_rate     DW ?
+aos_buffer_size     DW ?
 aos_bits            DB ?
 aos_flags           DB ?
 aos_min_val         DD ?
@@ -123,6 +125,8 @@ CreateMixer Proc near
     mov ds:ams_count,0
     mov ds:ams_sample_rate,cx
 ;    
+    shr cx,4
+    mov ds:ams_buffer_size,cx
     movzx eax,cx
     shl eax,2
     AllocateSmallGlobalMem
@@ -222,6 +226,8 @@ create_audio_out_channel	Proc far
     AllocateSmallGlobalMem
     pop eax
     mov es:aos_sample_rate,ax	
+    shr ax,4
+    mov es:aos_buffer_size,ax
     mov es:aos_bits,cl
     rol edx,16
     mov dx,-1
@@ -246,7 +252,7 @@ create_audio_out_channel	Proc far
 ;    
     mov ds:aos_flags,0
     mov ds:aos_thread,0
-    movzx eax,ds:aos_sample_rate
+    movzx eax,ds:aos_buffer_size
     shl eax,2
     AllocateSmallGlobalMem
     mov ds:aos_inl_buf_sel,es
@@ -358,7 +364,7 @@ FlushChannel    Proc near
     push es
     pushad
 
-    mov cx,ds:aos_sample_rate
+    mov cx,ds:aos_buffer_size
     sub cx,ds:aos_in_buf_pos
     or cx,cx
     jz fcWait
@@ -377,7 +383,7 @@ FlushChannel    Proc near
     mov es,ds:aos_inr_buf_sel
     rep stos dword ptr es:[edi]
 ;
-    mov cx,ds:aos_sample_rate
+    mov cx,ds:aos_buffer_size
     mov ds:aos_in_buf_pos,cx
 
 fcWait:
@@ -491,7 +497,7 @@ aaMoreData:
 ;    
     push ecx
 ;    
-    mov ax,ds:aos_sample_rate
+    mov ax,ds:aos_buffer_size
     sub ax,ds:aos_in_buf_pos
     movzx eax,ax
 ;
@@ -700,8 +706,8 @@ PAGE
 ;
 ;		DESCRIPTION:    Mix channel
 ;
-;       PARAMETERS:     SI  In sample rate / size of buffer
-;                       DI  Out sample rate / size of buffer
+;       PARAMETERS:     SI  In sample rate / size of buffer * 16
+;                       DI  Out sample rate / size of buffer * 16
 ;                       FS  In buffer
 ;                       ES  Out buffer
 ;
@@ -721,6 +727,7 @@ MixChannel  Proc near
     sub sp,6
 ;
     mov cx,di
+    shr cx,4
     movzx eax,si
     xor edx,edx
     movzx edi,di
@@ -779,6 +786,7 @@ mcInterpNext:
 
 mcSameRate:
     mov cx,si
+    shr cx,4
     xor ebx,ebx
 
 mcSameLoop:
@@ -841,7 +849,7 @@ UpdateMixer Proc near
 umCheckChanLoop:
     mov es,ds:[bx]
     mov ax,es:aos_in_buf_pos
-    cmp ax,es:aos_sample_rate
+    cmp ax,es:aos_buffer_size
     stc
     jne umDone
 ;
@@ -850,7 +858,7 @@ umCheckChanLoop:
 ;
     mov es,ds:ams_outl_buf_sel
     xor edi,edi
-    movzx ecx,ds:ams_sample_rate
+    movzx ecx,ds:ams_buffer_size
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
@@ -881,7 +889,7 @@ umMoveLChanLoop:
 ;
     mov es,ds:ams_outr_buf_sel
     xor edi,edi
-    movzx ecx,ds:ams_sample_rate
+    movzx ecx,ds:ams_buffer_size
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
@@ -967,7 +975,7 @@ atActive:
     mov ax,ds:ads_out_mixer
     or ax,ax
     jz atActiveLeave
-;    
+;   
     call UpdateMixer
     pushf
     LeaveSection ds:ads_section
@@ -977,7 +985,7 @@ atActive:
     push ds
     push es
     mov ds,ax
-    mov cx,ds:ams_sample_rate
+    mov cx,ds:ams_buffer_size
     mov es,ds:ams_outr_buf_sel
     mov ds,ds:ams_outl_buf_sel
     SendAudioOut
@@ -986,7 +994,7 @@ atActive:
     jmp atActive
 
 atActiveWait:
-    mov ax,100
+    mov ax,10
     WaitMilliSec    
     jmp atActive
 ;

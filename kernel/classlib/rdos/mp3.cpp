@@ -43,6 +43,22 @@
 
 /*##########################################################################
 #
+#   Name       : ThreadStartup
+#
+#   Purpose....: Startup procedure for thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ThreadStartup(void *ptr)
+{
+	((TMp3Player *)ptr)->Thread();
+}
+
+/*##########################################################################
+#
 #   Name       : TMp3Player::TMp3Player
 #
 #   Purpose....: Constructor for TMp3Player
@@ -495,4 +511,83 @@ void TMp3Player::Play()
 	}
 					
     RdosCloseAudioOutChannel(FAudioHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::Thread
+#
+#   Purpose....: Playing thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMp3Player::Thread()
+{
+    TMadStream stream;
+    TMadFrame frame;
+    TMadSynth synth;
+    int size;
+
+	FAudioHandle = RdosCreateAudioOutChannel(FSampleRate, 28, FVolume);
+
+	stream.SetBuffer(FCurrentPos, FMp3Size - (FCurrentPos - FMp3Start));
+
+    while (FThreadRunning)
+    {
+    	if (frame.Decode(&stream) == 0)
+			if (MAD_RECOVERABLE(stream.error)) // if recoverable error continue
+				continue;
+
+		if (stream.error == MAD_ERROR_BUFLEN)
+			break;
+
+        synth.Synth(&frame);			
+
+        size = synth.pcm.length;
+        if (synth.pcm.channels >= 2)
+			RdosWriteAudio(FAudioHandle, size, (int *)&synth.pcm.samples[0], (int *)&synth.pcm.samples[1]);
+		else
+			RdosWriteAudio(FAudioHandle, size, (int *)&synth.pcm.samples[0], (int *)&synth.pcm.samples[0]);
+	}
+					
+    RdosCloseAudioOutChannel(FAudioHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::Start
+#
+#   Purpose....: Start playing thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMp3Player::Start()
+{
+    if (!FThreadRunning)
+    {
+        FThreadRunning = TRUE;
+    	RdosCreateThread(ThreadStartup, MP3, this, 0x1000);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::Stop
+#
+#   Purpose....: Stop playing thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMp3Player::Stop()
+{
+    FThreadRunning = FALSE;
 }

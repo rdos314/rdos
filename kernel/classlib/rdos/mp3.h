@@ -45,6 +45,11 @@ public:
 
 	void Play();
 
+	void Start();
+	void Stop();
+
+	void Thread();
+
 	int FChannels;
 	unsigned int FSampleRate;		/* sampling frequency (Hz) */
 	int FSamplesPerFrame;
@@ -78,6 +83,8 @@ protected:
 	void Check();
 	int ParseTag();
 	void CalcSongParams();
+
+	int FThreadRunning;
 
 //	virtual enum mad_flow Input(void *);
 //	virtual enum mad_flow Header(TMadHeader *);
