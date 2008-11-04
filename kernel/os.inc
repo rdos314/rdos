@@ -2273,3 +2273,23 @@ SendAudioOut      MACRO
 	OsGate send_audio_out_nr
 						ENDM
 
+
+; IN    BX  Handle
+; OUT   CX  Buffer size
+; OUT   SI  Left channel sel
+; OUT   DI  Right channel sel
+GetAudioOutBuffers      MACRO
+	OsGate get_audio_out_buf_nr
+						ENDM
+
+; IN    BX  Handle
+PostAudioOutBuffers      MACRO
+	OsGate post_audio_out_buf_nr
+						ENDM
+
+; IN    BX  Handle
+; OUT   NC  Completed
+IsAudioOutCompleted      MACRO
+	OsGate is_audio_out_completed_nr
+						ENDM
+

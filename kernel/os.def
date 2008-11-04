@@ -480,5 +480,9 @@ open_audio_out_nr           EQU 330
 close_audio_out_nr          EQU 331
 send_audio_out_nr           EQU 332
 
-osgate_entries				EQU 333
+get_audio_out_buf_nr        EQU 333
+post_audio_out_buf_nr       EQU 334
+is_audio_out_completed_nr   EQU 335
+
+osgate_entries				EQU 336
 

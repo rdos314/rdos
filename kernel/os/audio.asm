@@ -667,8 +667,133 @@ write_audio16	Proc far
 	pop esi
 	ret
 write_audio16	Endp	
-	
+
 PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetAudioOutBuffers
+;
+;		DESCRIPTION:	Get audio out buffer selectors
+;
+;		PARAMETERS:		BX          Handle
+;
+;       RETURNS:        CX          Buffer size
+;                       SI          Left channel sel
+;                       DI          Right channel sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_audio_out_buf_name	DB 'Get Audio Out Buffers', 0
+
+get_audio_out_buf   Proc far
+    push ds
+    push ax
+    push bx
+;    
+    xor si,si
+    xor di,di
+;    
+	mov ax,AUDIO_OUT_HANDLE
+	DerefHandle
+	jc gaobDone
+;
+    mov ds,[bx].ao_sel
+    mov si,ds:aos_inl_buf_sel
+    mov di,ds:aos_inr_buf_sel
+    mov cx,ds:aos_buffer_size
+;
+    GetThread
+    mov ds:aos_thread,ax
+
+gaobDone:
+    pop bx
+    pop ax
+    pop ds
+    ret
+get_audio_out_buf   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			PostAudioOutBuffers
+;
+;		DESCRIPTION:	Post audio out buffers
+;
+;		PARAMETERS:		BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+post_audio_out_buf_name	DB 'Post Audio Out Buffers', 0
+
+post_audio_out_buf   Proc far
+    push ds
+    push ax
+    push bx
+;    
+	mov ax,AUDIO_OUT_HANDLE
+	DerefHandle
+	jc paobDone
+;
+    mov ds,[bx].ao_sel
+    mov ax,ds:aos_buffer_size
+    mov ds:aos_in_buf_pos,ax
+;    
+    mov ax,audio_data_sel
+    mov ds,ax
+	mov bx,ds:ads_thread
+    Signal
+
+paobDone:
+    pop bx
+    pop ax
+    pop ds
+    ret
+post_audio_out_buf   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			IsAudioOutCompleted
+;
+;		DESCRIPTION:	Check if audio out buffers are free
+;
+;		PARAMETERS:		BX          Handle
+;
+;       RETURNS:        NC          Completed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_audio_out_completed_name	DB 'Is Audio Out Completed', 0
+
+is_audio_out_completed   Proc far
+    push ds
+    push ax
+    push bx
+;    
+	mov ax,AUDIO_OUT_HANDLE
+	DerefHandle
+	jc iaocDone
+;
+    mov ds,[bx].ao_sel
+    mov ax,ds:aos_in_buf_pos
+    or ax,ax
+    clc
+    jz iaocDone
+;
+    stc
+
+iaocDone:
+    pop bx
+    pop ax
+    pop ds
+    ret
+is_audio_out_completed   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1081,6 +1206,21 @@ init	PROC far
 	mov dx,virt_es_in OR virt_ds_in
 	mov ax,write_audio_nr
 	RegisterUserGate
+;
+	mov si,OFFSET get_audio_out_buf
+	mov di,OFFSET get_audio_out_buf_name
+	mov ax,get_audio_out_buf_nr
+	RegisterOsGate
+;
+	mov si,OFFSET post_audio_out_buf
+	mov di,OFFSET post_audio_out_buf_name
+	mov ax,post_audio_out_buf_nr
+	RegisterOsGate
+;
+	mov si,OFFSET is_audio_out_completed
+	mov di,OFFSET is_audio_out_completed_name
+	mov ax,is_audio_out_completed_nr
+	RegisterOsGate
 ;
 	mov eax,SIZE audio_data_seg
 	mov bx,audio_data_sel
