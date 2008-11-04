@@ -9394,26 +9394,83 @@ RdosWriteAudio	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			RdosGetFmSampleRate
+;		NAME:			RdosOpenFm
 ;
-;		DESCRIPTION:    Get FM sample rate
+;		DESCRIPTION:    Open FM handle
 ;
-;       RETURNS:        Sample rate
+;       PARAMETERS:     Sample rate
+;
+;       RETURNS:        FM handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RdosGetFmSampleRate
+	public RdosOpenFm
 
-RdosGetFmSampleRate	PROC
+RdosOpenFm	PROC
 	push ebp
 	mov ebp,esp
+	push ebx
 ;       
-    UserGate get_fm_sample_rate_nr    
-    movzx eax,ax
+    mov ax,[ebp+8]
+    UserGate open_fm_nr    
+    movzx eax,bx
 ;
+    pop ebx
 	pop ebp
-	ret
-RdosGetFmSampleRate	ENDP
+	ret 4
+RdosOpenFm	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseFm
+;
+;		DESCRIPTION:    Close FM handle
+;
+;       PARAMETERS:     FM handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseFm
+
+RdosCloseFm	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;       
+    mov bx,[ebp+8]
+    UserGate close_fm_nr    
+;
+    pop ebx
+	pop ebp
+	ret 4
+RdosCloseFm	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosFmWait
+;
+;		DESCRIPTION:    Wait for a number of samples to pass
+;
+;       PARAMETERS:     FM handle
+;                       Samples to wait
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosFmWait
+
+RdosFmWait	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;       
+    mov bx,[ebp+8]
+    mov eax,[ebp+12]
+    UserGate fm_wait_nr    
+;
+    pop ebx
+	pop ebp
+	ret 8
+RdosFmWait	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9421,7 +9478,8 @@ RdosGetFmSampleRate	ENDP
 ;
 ;		DESCRIPTION:    Create FM instrument
 ;
-;       PARAMETERS:     C
+;       PARAMETERS:     FM handle
+;                       C
 ;                       M
 ;                       Beta
 ;
@@ -9435,16 +9493,17 @@ RdosCreateFmInstrument	PROC
 	push ebx
 	push ecx
 ;       
-    mov ax,[ebp+8]
-    mov dx,[ebp+12]
-    fld tbyte ptr [ebp+16]
+    mov bx,[ebp+8]
+    mov ax,[ebp+12]
+    mov dx,[ebp+16]
+    fld tbyte ptr [ebp+20]
     UserGate create_fm_instrument_nr    
     movzx eax,bx
 ;
     pop ecx
     pop ebx
 	pop ebp
-	ret 20
+	ret 24
 RdosCreateFmInstrument	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9565,7 +9624,8 @@ RdosSetFmRelease	ENDP
 ;
 ;       PARAMETERS:     Handle
 ;                       Frequency
-;                       Peak volume
+;                       Peak left volume
+;                       Peak right volume
 ;                       Sustain (samples)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9580,14 +9640,15 @@ RdosPlayFmNote	PROC
 ;       
     mov bx,[ebp+8]
     fld tbyte ptr [ebp+12]
-    mov edx,[ebp+24]
-    mov eax,[ebp+28]    
+    mov eax,[ebp+24]
+    mov edx,[ebp+28]    
+    mov ecx,[ebp+32]    
     UserGate play_fm_note_nr    
 ;
     pop esi
     pop ebx
 	pop ebp
-	ret 24
+	ret 28
 RdosPlayFmNote	ENDP
 
 ;	extrn Startup:near

@@ -429,12 +429,14 @@ stop_watchdog_nr            = 357
 
 is_valid_usergate_nr        = 358
 
-get_fm_sample_rate_nr       = 359
-create_fm_instrument_nr     = 360
-free_fm_instrument_nr       = 361
-set_fm_attack_nr            = 362
-set_fm_sustain_nr           = 363
-set_fm_release_nr           = 364
-play_fm_note_nr             = 365
+open_fm_nr                  = 359
+close_fm_nr                 = 360
+fm_wait_nr                  = 361
+create_fm_instrument_nr     = 362
+free_fm_instrument_nr       = 363
+set_fm_attack_nr            = 364
+set_fm_sustain_nr           = 365
+set_fm_release_nr           = 366
+play_fm_note_nr             = 367
 
 usergate_entries			= 370

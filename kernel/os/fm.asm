@@ -38,23 +38,50 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\handle.inc
 
-SAMPLE_RATE = 48000
+MAX_FM_SELS = 8
+
+fm_data_seg STRUC
+
+fm_section      section_typ <>
+fm_thread       DW ?
+
+fm_sel_count    DW ?
+fm_sel_arr      DW MAX_FM_SELS DUP(?)
+
+fm_data_seg ENDS
+
+fm_sel   STRUC
+
+f_section       section_typ <>
+f_note_list     DW ?
+f_audio_handle  DW ?
+f_sample_rate   DW ?
+
+fm_sel   ENDS
+
+fm_struc	STRUC
+
+f_base		handle_header <>
+f_sel		DW ?
+
+fm_struc	ENDS
 
 instrument_sel   STRUC
 
+i_fm_sel        DW ?
 i_c             DW ?
 i_m             DW ?
 i_beta_int      DD ?
 i_beta_fract    DD ?
 i_att_samples   DD ?
-i_sus_vol_ind   DW ?
 i_sus_vol_fract DW ?
-i_sus_mod_ind   DW ?
+i_sus_vol_ind   DW ?
 i_sus_mod_fract DW ?
-i_rel_vol_ind   DW ?
+i_sus_mod_ind   DW ?
 i_rel_vol_fract DW ?
-i_rel_mod_ind   DW ?
+i_rel_vol_ind   DW ?
 i_rel_mod_fract DW ?
+i_rel_mod_ind   DW ?
 
 instrument_sel   ENDS
 
@@ -67,17 +94,19 @@ instrument_struc	ENDS
 
 note_struc  STRUC
 
+n_prev          DW ?
+n_next          DW ?
+
 n_callb         DW ?
 
-n_carrier_ind   DW ?
-n_carrier_fract DD ?
+n_carrier_diff  DD ?
 n_carrier_curr  DD ?
 
-n_mod_ind       DW ?
-n_mod_fract     DD ?
+n_mod_diff      DD ?
 n_mod_curr      DD ?
 
-n_peak_volume   DD ?
+n_l_peak_volume DD ?
+n_r_peak_volume DD ?
 n_curr_volume   DD ?
 
 n_att_samples   DD ?
@@ -99,6 +128,113 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			InsertNoteSel
+;
+;		DESCRIPTION:	Insert a note selector
+;
+;		PARAMETERS:     DS      FM sel
+;                       ES      Note sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertNoteSel	Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+	push di
+;
+    EnterSection ds:f_section
+;
+	mov di,ds:f_note_list
+	or di,di
+	je insEmpty
+;
+	push ds
+	push si
+	mov ds,di
+	mov si,ds:n_prev
+	mov ds:n_prev,es
+	mov ds,si
+	mov ds:n_next,es
+	mov es:n_next,di
+	mov es:n_prev,si
+	pop si
+	pop ds
+	jmp insLeave
+	
+insEmpty:
+	mov es:n_next,es
+	mov es:n_prev,es
+	mov ds:f_note_list,es
+
+insLeave:
+    LeaveSection ds:f_section
+;
+    pop di
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+InsertNoteSel Endp	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			RemoveNoteSel
+;
+;		DESCRIPTION:	Remove a note selector
+;
+;		PARAMETERS:	    DS      FM sel
+;                       ES      Note sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveNoteSel	Proc near
+    push ds
+    push eax
+    push ebx
+	push si
+;
+    EnterSection ds:f_section
+	mov di,es
+    cmp di,es:n_next
+	je rnsEmpty
+;
+	push di
+	push ds
+	mov di,es:n_next
+	mov ds:f_note_list,di
+	mov si,es:n_prev
+	mov ds,di
+	mov ds:n_prev,si
+	mov ds,si
+	mov ds:n_next,di
+	pop ds
+	pop di
+	jmp rnsLeave
+
+rnsEmpty:	
+	mov ds:f_note_list,0
+
+rnsLeave:
+    LeaveSection ds:f_section
+;    
+	pop si
+    pop ebx
+    pop eax
+    pop ds 
+    ret
+RemoveNoteSel Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			delete_fm
 ;
 ;		DESCRIPTION:	Delete FM selector
@@ -108,6 +244,92 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_fm	Proc near
+    push ds
+    push es
+    push bx
+    push cx
+;
+    push ds
+    mov ax,fm_data_sel
+    mov ds,ax
+    EnterSection ds:fm_section
+    pop ds
+;
+    mov ds,[bx].f_sel
+    mov bx,ds:f_audio_handle
+    or bx,bx
+    jz dfAudioOff
+;
+    CloseAudioOutChannel
+    
+dfAudioOff:    
+    mov ax,ds:f_note_list
+    or ax,ax
+    jz dfNoteClosed
+;
+    mov es,ax
+    call RemoveNoteSel
+    FreeMem
+    jmp dfAudioOff
+
+dfNoteClosed:
+    mov ax,ds
+    mov es,ax
+    mov ax,fm_data_sel
+    mov ds,ax
+    mov cx,ds:fm_sel_count
+    mov bx,OFFSET fm_sel_arr
+    or cx,cx
+    jz dfFree
+;
+    mov ax,es    
+
+dfFindSelLoop:
+    cmp ax,[bx]
+    je dfRemSelLoop
+;
+    add bx,2
+    loop dfFindSelLoop 
+;
+    jmp dfFree
+
+dfRemSelLoop:
+    mov ax,[bx+2]
+    mov [bx],ax
+    add bx,2
+    loop dfRemSelLoop
+;
+    dec ds:fm_sel_count
+
+dfFree:
+    FreeMem
+;
+    mov ax,fm_data_sel
+    mov ds,ax
+    LeaveSection ds:fm_section
+    clc
+;    
+    pop cx
+    pop bx
+    pop es
+    pop ds
+	ret
+delete_fm	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			delete_fm_instr
+;
+;		DESCRIPTION:	Delete FM instrument selector
+;
+;		PARAMETERS:		DS:BX		FM handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_fm_instr	Proc near
     push es
 ;
     mov es,[bx].i_sel
@@ -116,27 +338,123 @@ delete_fm	Proc near
 ;    
     pop es
 	ret
-delete_fm	Endp
+delete_fm_instr	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetFmSampleRate
+;		NAME:			OpenFm
 ;
-;		DESCRIPTION:	Get FM sample rate
+;		DESCRIPTION:	Open FM handle
 ;
-;       RETURNS:        AX      Sample rate
+;       PARAMETERS:     AX      Sample rate
+;
+;       RETURNS:        BX      FM handle
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_fm_sample_rate_name	DB 'Get FM Sample Rate',0
+open_fm_name	DB 'Open FM',0
 
-get_fm_sample_rate    Proc	
-    mov ax,SAMPLE_RATE
+open_fm    Proc	
+    push es
+    push ds
+    push eax
+    push cx
+;
+	mov cx,SIZE fm_struc
+	AllocateHandle
+	mov ds:[bx].hh_sign,FM_HANDLE
+;
+    push eax
+    mov eax,SIZE fm_sel
+    AllocateSmallGlobalMem
+    pop eax
+    mov es:f_sample_rate,ax
+    mov es:f_audio_handle,0
+    mov es:f_note_list,0
+    InitSection es:f_section
+;
+    push ds
+    push bx
+    mov ax,fm_data_sel
+    mov ds,ax
+    EnterSection ds:fm_section
+;
+    mov bx,OFFSET fm_sel_arr
+    mov ax,ds:fm_sel_count
+    add bx,ax
+    add bx,ax
+    mov ds:[bx],es
+    inc ds:fm_sel_count
+;
+    LeaveSection ds:fm_section
+    pop bx
+    pop ds    
+;
+    mov [bx].f_sel,es
+	mov bx,[bx].hh_handle
+;
+    pop cx
+    pop eax
+    pop ds
+    pop es    
 	retf32
-get_fm_sample_rate    Endp
+open_fm    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CloseFm
+;
+;		DESCRIPTION:	Close FM handle
+;
+;       PARAMETERS:     BX      FM handle
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_fm_name	DB 'Close FM',0
+
+close_fm    Proc	
+	push ds
+	push ax
+	push bx
+;
+	mov ax,FM_HANDLE
+	DerefHandle
+	jc cfDone
+;
+  	call delete_fm
+
+cfDone:
+	pop bx
+	pop ax
+	pop ds
+	retf32
+close_fm    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FmWait
+;
+;		DESCRIPTION:	Wait for FM samples to complete
+;
+;       PARAMETERS:     BX      FM handle
+;                       EAX     Samples
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fm_wait_name	DB 'FM Wait',0
+
+fm_wait    Proc	
+	retf32
+fm_wait    Endp
 
 PAGE
 
@@ -147,7 +465,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Create a new FM instrument
 ;
-;		PARAMETERS:		AX:DX       C:M ratio
+;		PARAMETERS:		BX          FM handle
+;                       AX:DX       C:M ratio
 ;                       ST0         Beta (modulation rate) 
 ;
 ;       RETURNS:        BX          Handle         
@@ -163,10 +482,18 @@ create_fm_instrument    Proc
     push ds
     push eax
     push cx
+    push si
 ;
+    push ax
+	mov ax,FM_HANDLE
+	DerefHandle
+	pop ax
+	jc cfiFail
+;
+    mov si,[bx].f_sel    
 	mov cx,SIZE instrument_struc
 	AllocateHandle
-	mov ds:[bx].hh_sign,FM_HANDLE
+	mov ds:[bx].hh_sign,FM_INSTR_HANDLE
 ;
     push eax
     mov eax,SIZE instrument_sel
@@ -174,6 +501,7 @@ create_fm_instrument    Proc
     pop eax
     mov es:i_c,ax	
     mov es:i_m,dx
+    mov es:i_fm_sel,si
 ;
     fist es:i_beta_int
     fisub es:i_beta_int 
@@ -204,7 +532,15 @@ cfiAdjOk:
 ;
     mov [bx].i_sel,es
 	mov bx,[bx].hh_handle
-;
+	clc
+	jmp cfiDone
+
+cfiFail:
+    xor bx,bx
+    stc
+
+cfiDone:
+    pop si
 	pop cx
     pop eax
     pop ds
@@ -232,11 +568,11 @@ free_fm_instrument    Proc
 	push ax
 	push bx
 ;
-	mov ax,FM_HANDLE
+	mov ax,FM_INSTR_HANDLE
 	DerefHandle
 	jc ffiDone
 ;
-  	call delete_fm
+  	call delete_fm_instr
 
 ffiDone:
 	pop bx
@@ -267,7 +603,7 @@ set_fm_attack    Proc
 	push bx
 ;
     push eax
-	mov ax,FM_HANDLE
+	mov ax,FM_INSTR_HANDLE
 	DerefHandle
 	pop eax
 	jc sfaDone
@@ -306,7 +642,7 @@ set_fm_sustain    Proc
 	push edx
 ;
     push eax
-	mov ax,FM_HANDLE
+	mov ax,FM_INSTR_HANDLE
 	DerefHandle
 	pop eax
 	jc sfsDone
@@ -389,7 +725,7 @@ set_fm_release    Proc
 	push edx
 ;
     push eax
-	mov ax,FM_HANDLE
+	mov ax,FM_INSTR_HANDLE
 	DerefHandle
 	pop eax
 	jc sfrDone
@@ -458,8 +794,9 @@ PAGE
 ;		DESCRIPTION:	Schedule not for playing
 ;
 ;		PARAMETERS:		BX          FM handle         
-;                       EAX         Duration of sustain in samples
-;                       EDX         Peak volume
+;                       ECX         Duration of sustain in samples
+;                       EAX         Left peak volume
+;                       EDX         Right peak volume
 ;                       ST0         Frequency (Hz)
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -470,68 +807,100 @@ SinSize DD 4096
 
 play_fm_note    Proc	
 	push ds
+	push es
+	push fs
 	push ax
 	push bx
 	push bp
 ;
     push eax
-	mov ax,FM_HANDLE
+	mov ax,FM_INSTR_HANDLE
 	DerefHandle
 	pop eax
 	jc pfnDone
 ;
-    mov ds,[bx].i_sel
-    int 3
+    mov fs,[bx].i_sel
+    mov ds,fs:i_fm_sel
     push eax
     mov eax, SIZE note_struc
     AllocateSmallGlobalMem
     pop eax
 ;    
-    mov es:n_sus_samples,eax
-    mov es:n_peak_volume,edx
+    mov es:n_sus_samples,ecx
+    mov es:n_l_peak_volume,eax
+    mov es:n_r_peak_volume,edx
 ;
-    mov eax,SAMPLE_RATE
+    movzx eax,ds:f_sample_rate    
     push eax
     mov bp,sp
 ;    
-    fild ds:i_c
+    fild fs:i_c
     fmul st(0), st(1)
     fidivr dword ptr [bp]
     fidivr word ptr cs:SinSize
 ;
-    fist es:n_carrier_ind
-    fisub es:n_carrier_ind 
+    fist word ptr es:n_carrier_diff+2
+    fisub word ptr es:n_carrier_diff+2
 ;
-    fld rmaxint
+    fld cs:rmaxint
     fmulp st(1),st(0)
-    fistp es:n_carrier_fract
+    fistp dword ptr [bp]
+    pop eax
+    test eax,80000000h
+    jz pfnCarrierOk
+;
+    dec word ptr es:n_carrier_diff+2
+    add eax,40000000h
+
+pfnCarrierOk:
+    shr eax,14
+    mov word ptr es:n_carrier_diff,ax
+    mov es:n_carrier_curr,0
+;
+    movzx eax,ds:f_sample_rate    
+    push eax
+    mov bp,sp
 ;    
-    fimul ds:i_m
+    fimul fs:i_m
     fidivr dword ptr [bp]
     fidivr word ptr cs:SinSize
 ;
-    fist es:n_mod_ind
-    fisub es:n_mod_ind 
+    fist word ptr es:n_mod_diff+2
+    fisub word ptr es:n_mod_diff+2
 ;
-    fld rmaxint
+    fld cs:rmaxint
     fmulp st(1),st(0)
-    fistp es:n_mod_fract
-;
+    fistp dword ptr [bp]
     pop eax
+    test eax,80000000h
+    jz pfnModOk
 ;
-    mov eax,ds:i_att_samples
+    dec word ptr es:n_mod_diff+2
+    add eax,40000000h
+
+pfnModOk:
+    shr eax,14
+    mov word ptr es:n_mod_diff,ax
+    mov es:n_mod_curr,0
+;
+    mov eax,fs:i_att_samples
     mov es:n_att_samples,eax
 ;
-    mov es:n_carrier_curr,0
-    mov es:n_mod_curr,0
     mov es:n_curr_volume,0
-;
     mov es:n_callb, OFFSET PlayAttack
+    call InsertNoteSel
+;
+    mov ax,fm_data_sel
+    mov ds,ax
+    mov bx,ds:fm_thread
+    Signal
             
 pfnDone:
     pop bp
 	pop bx
 	pop ax
+	pop fs
+	pop es
 	pop ds
 	retf32
 play_fm_note    Endp
@@ -551,12 +920,23 @@ delete_fm_handle	Proc far
 	push ds
 	push ax
 	push bx
+	push si
 ;
+    mov si,bx
+	mov ax,FM_INSTR_HANDLE
+	DerefHandle
+	jc delete_fm_not_instr
+;
+	call delete_fm_instr
+	jmp delete_fm_handle_done
+
+delete_fm_not_instr:
+    mov bx,si
 	mov ax,FM_HANDLE
 	DerefHandle
 	jc delete_fm_handle_done
 ;
-	call delete_fm
+    call delete_fm
 
 delete_fm_handle_done:
 	pop bx
@@ -574,13 +954,52 @@ PAGE
 ;
 ;		DESCRIPTION:	Play attack part
 ;
-;		PARAMETERS:		ES          Note sel
+;		PARAMETERS:		DS      FM sel
+;                       ES      Note sel
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PlayAttack  Proc near
     ret
 PlayAttack  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			UpdateFmSel
+;
+;		DESCRIPTION:	Update FM selector
+;
+;		PARAMETERS:		DS      FM sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateFmSel Proc near
+    mov ax,ds:f_note_list
+    or ax,ax
+    jz ufsDone
+;
+    EnterSection ds:f_section
+    mov si,ax
+
+ufsLoop:    
+    mov es,ax
+    push ds
+    push si
+;
+    call es:n_callb
+;
+    pop si
+    pop ds
+    mov ax,es:n_next
+    cmp ax,si
+    jne ufsLoop
+;
+    LeaveSection ds:f_section
+    
+ufsDone:    
+    ret
+UpdateFmSel Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -595,12 +1014,41 @@ PlayAttack  Endp
 
 fm_name	DB 'FM',0
 
-beta    DT 5.45
-
-fm_thread	proc far
+fm_thread_pr:
     int 3
-    ret
-fm_thread   endp
+    mov ax,fm_data_sel
+    mov ds,ax
+    GetThread
+    mov ds:fm_thread,ax
+
+fm_wait_loop:
+    WaitForSignal
+;
+    mov cx,ds:fm_sel_count
+    mov bx,OFFSET fm_sel_arr
+    or cx,cx
+    jz fm_wait_loop
+;    
+    EnterSection ds:fm_section
+    mov cx,ds:fm_sel_count
+
+fm_handle_loop:
+    push ds
+    push bx
+    push cx
+;    
+    mov ds,ds:[bx]
+    call UpdateFmSel
+;
+    pop cx
+    pop bx
+    pop ds
+    add bx,2
+    loop fm_handle_loop    
+;
+    LeaveSection ds:fm_section
+    jmp fm_wait_loop    
+
 
 init_fm	Proc far
 	push ds
@@ -611,7 +1059,7 @@ init_fm	Proc far
 	mov ds,ax
 	mov es,ax
 	mov di,OFFSET fm_name
-	mov si,OFFSET fm_thread
+	mov si,OFFSET fm_thread_pr
 	mov ax,4
 	mov cx,100h
 	CreateThread
@@ -640,6 +1088,10 @@ init	Proc far
 	mov bx,fm_code_sel
 	InitDevice
 ;
+	mov ax,FM_INSTR_HANDLE
+	mov di,OFFSET delete_fm_handle
+	RegisterHandle
+;
 	mov ax,FM_HANDLE
 	mov di,OFFSET delete_fm_handle
 	RegisterHandle
@@ -654,10 +1106,22 @@ init	Proc far
 	mov ds,ax
 	mov es,ax
 ;
-	mov si,OFFSET get_fm_sample_rate
-	mov di,OFFSET get_fm_sample_rate_name
+	mov si,OFFSET open_fm
+	mov di,OFFSET open_fm_name
 	xor dx,dx
-	mov ax,get_fm_sample_rate_nr
+	mov ax,open_fm_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET close_fm
+	mov di,OFFSET close_fm_name
+	xor dx,dx
+	mov ax,close_fm_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET fm_wait
+	mov di,OFFSET fm_wait_name
+	xor dx,dx
+	mov ax,fm_wait_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET create_fm_instrument
@@ -695,6 +1159,13 @@ init	Proc far
 	xor dx,dx
 	mov ax,play_fm_note_nr
 	RegisterBimodalUserGate
+;
+	mov eax,SIZE fm_data_seg
+	mov bx,fm_data_sel
+	AllocateFixedSystemMem
+	mov es:fm_thread,0
+	mov es:fm_sel_count,0
+	InitSection es:fm_section
 ;
 	popa
 	pop es

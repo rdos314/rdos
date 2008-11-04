@@ -28,23 +28,40 @@
 #ifndef _FM_H
 #define _FM_H
 
+class TFmInstrument;
+
+class TFm
+{
+public:
+	TFm(int SampleRate);
+	~TFm();
+
+	TFmInstrument *Create(int C, int M, long double Beta);
+	void Wait(long double Ms);
+
+private:
+	int FSampleRate;
+	int FmHandle;
+};
+
 class TFmInstrument
 {
-friend class TFmInstrumentFactory;
+friend class TFm;
 
 public:
-	TFmInstrument(int C, int M, long double Beta);
 	~TFmInstrument();
 
-	 void SetAttack(long double DurationMs);
-	 void SetSustain(long double VolHalfMs, long double BetaHalfMs);
-	 void SetRelease(long double VolHalfMs, long double BetaHalfMs);
+	void SetAttack(long double DurationMs);
+	void SetSustain(long double VolHalfMs, long double BetaHalfMs);
+	void SetRelease(long double VolHalfMs, long double BetaHalfMs);
 
-	 void Play(long double Freq, long double Volume, long double SustainMs);
+	void Play(long double Freq, long double LeftVolume, long double RightVolume, long double SustainMs);
 
 protected:
-	 int FSampleRate;
-	 int FFmHandle;
+	TFmInstrument(int FmHandle, int SampleRate, int C, int M, long double Beta);
+
+	int FSampleRate;
+	int FHandle;
 };
 
 #endif

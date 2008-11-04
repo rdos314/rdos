@@ -26,7 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ADC_HANDLE =        015FCh 
-FM_HANDLE =         017DEh
+FM_INSTR_HANDLE =   017DEh
 DLL_HANDLE16 =      026CFh
 DLL_HANDLE32 =      026DFh
 SPRITE_HANDLE =     02CF5h
@@ -44,6 +44,7 @@ DIR_HANDLE = 	    0A765h
 XMS_HANDLE =	    0A560h
 SIGNAL_HANDLE =     0ADEFh
 MEMMAP_HANDLE =	    0BA54h
+FM_HANDLE =         0BCAFh
 AUDIO_OUT_HANDLE =  0CEDAh
 BITMAP_HANDLE =	    0DB57h
 INI_HANDLE =	    0EAF3h

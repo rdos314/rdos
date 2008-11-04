@@ -33,6 +33,86 @@
 
 /*##########################################################################
 #
+#   Name       : TFm::TFm
+#
+#   Purpose....: Constructor for FM
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFm::TFm(int SampleRate)
+{
+	 FSampleRate = SampleRate;
+	 FmHandle = RdosOpenFm(SampleRate);
+}
+
+/*##########################################################################
+#
+#   Name       : TFm::~TFm
+#
+#   Purpose....: Destructor for FM
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFm::~TFm()
+{
+	RdosCloseFm(FmHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TFm::Wait
+#
+#   Purpose....: Wait a number of ms on the FM stream
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFm::Wait(long double ms)
+{
+	int Duration;
+	long double Samples;
+
+	Samples = (long double)FSampleRate * ms / 1000.0;
+
+	if (Samples < 1.0)
+		Duration = 0;
+	else
+	{
+		if (Samples > 0x7FFFFFFF)
+			Duration = 0x7FFFFFF;
+		else
+			Duration = (int)Samples;
+	}
+
+	RdosFmWait(FmHandle, Duration);
+}
+
+/*##########################################################################
+#
+#   Name       : TFm::Create
+#
+#   Purpose....: Create an instrument
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFmInstrument *TFm::Create(int C, int M, long double Beta)
+{
+	return new TFmInstrument(FmHandle, FSampleRate, C, M, Beta);
+}
+
+/*##########################################################################
+#
 #   Name       : TFmInstrument::TFmInstrument
 #
 #   Purpose....: Constructor for Instrument
@@ -42,10 +122,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFmInstrument::TFmInstrument(int C, int M, long double Beta)
+TFmInstrument::TFmInstrument(int FmHandle, int SampleRate, int C, int M, long double Beta)
 {
-	 FSampleRate = RdosGetFmSampleRate();
-	 FFmHandle = RdosCreateFmInstrument(C, M, Beta);
+	FSampleRate = SampleRate;
+	FHandle = RdosCreateFmInstrument(FmHandle, C, M, Beta);
 }
 
 /*##########################################################################
@@ -61,7 +141,7 @@ TFmInstrument::TFmInstrument(int C, int M, long double Beta)
 ##########################################################################*/
 TFmInstrument::~TFmInstrument()
 {
-	 RdosFreeFmInstrument(FFmHandle);
+	 RdosFreeFmInstrument(FHandle);
 }
 
 /*##########################################################################
@@ -91,7 +171,7 @@ void TFmInstrument::SetAttack(long double DurationMs)
 		  else
 				Duration = (int)Samples;
 	 }
-	 RdosSetFmAttack(FFmHandle, Duration);
+	 RdosSetFmAttack(FHandle, Duration);
 }
 
 /*##########################################################################
@@ -134,7 +214,7 @@ void TFmInstrument::SetSustain(long double VolHalfMs, long double BetaHalfMs)
 		  else
 				ModSamples = (int)Samples;
 	 }
-	 RdosSetFmSustain(FFmHandle, VolSamples, ModSamples);
+	 RdosSetFmSustain(FHandle, VolSamples, ModSamples);
 }
 
 /*##########################################################################
@@ -177,38 +257,52 @@ void TFmInstrument::SetRelease(long double VolHalfMs, long double BetaHalfMs)
 		  else
 				ModSamples = (int)Samples;
 	 }
-	 RdosSetFmRelease(FFmHandle, VolSamples, ModSamples);
+	 RdosSetFmRelease(FHandle, VolSamples, ModSamples);
 }
 
 
 /*##########################################################################
 #
-#   Name       : TFmInstrument::SetRelease
+#   Name       : TFmInstrument::Play
 #
-#   Purpose....: Set release params
+#   Purpose....: Play a note
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFmInstrument::Play(long double Freq, long double Volume, long double SustainMs)
+void TFmInstrument::Play(long double Freq, long double LeftVolume, long double RightVolume, long double SustainMs)
 {
 	 int Duration;
 	 long double Samples;
 	 long double Temp;
-	 int IntVol;
+	 int LeftVol;
+	 int RightVol;
 
-	 if (Volume >= 100.0)
-		IntVol = 0x7FFFFFFF;
+	 if (LeftVolume >= 100.0)
+		LeftVol = 0x7FFFFFFF;
 	 else
 	 {
-		if (Volume <= 0.0)
-			IntVol = 0;
+		if (LeftVolume <= 0.0)
+			LeftVol = 0;
 		else
 		{
-			Temp = Volume / 100.0 * 0x7FFFFFFF;
-			IntVol = (int)Temp;
+			Temp = LeftVolume / 100.0 * 0x7FFFFFFF;
+			LeftVol = (int)Temp;
+		}
+	 }
+
+	 if (RightVolume >= 100.0)
+		RightVol = 0x7FFFFFFF;
+	 else
+	 {
+		if (RightVolume <= 0.0)
+			RightVol = 0;
+		else
+		{
+			Temp = RightVolume / 100.0 * 0x7FFFFFFF;
+			RightVol = (int)Temp;
 		}
 	 }
 
@@ -224,6 +318,6 @@ void TFmInstrument::Play(long double Freq, long double Volume, long double Susta
 				Duration = (int)Samples;
 	 }
 
-	RdosPlayFmNote(FFmHandle, Freq, IntVol, Duration);
+	RdosPlayFmNote(FHandle, Freq, LeftVol, RightVol, Duration);
 }
 

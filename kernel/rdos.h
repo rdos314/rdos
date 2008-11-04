@@ -387,13 +387,16 @@ int __stdcall RdosCreateAudioOutChannel(int SampleRate, int Bits, int Volume);
 void __stdcall RdosCloseAudioOutChannel(int Handle);
 void __stdcall RdosWriteAudio(int Handle, int Size, const int *LSamples, const int*RSamples); 
 
-int __stdcall RdosGetFmSampleRate();
-int __stdcall RdosCreateFmInstrument(int C, int M, long double Beta);
+int __stdcall RdosOpenFm(int SampleRate);
+void __stdcall RdosCloseFm(int FmHandle);
+void __stdcall RdosFmWait(int FmHandle, int Samples);
+
+int __stdcall RdosCreateFmInstrument(int FmHandle, int C, int M, long double Beta);
 void __stdcall RdosFreeFmInstrument(int Handle);
 void __stdcall RdosSetFmAttack(int Handle, int Samples);
 void __stdcall RdosSetFmSustain(int Handle, int VolumeHalf, int BetaHalf);
 void __stdcall RdosSetFmRelease(int Handle, int VolumeHalf, int BetaHalf);
-void __stdcall RdosPlayFmNote(int Handle, long double Freq, int PeakVolume, int SustainSamples);
+void __stdcall RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, int PeakRightVolume, int SustainSamples);
 
 #ifdef __cplusplus
 }

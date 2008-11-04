@@ -160,6 +160,9 @@ RemoveFileSel	Proc near
     EnterSection ds:fs_file_section
 ;
     mov es,bx
+    cmp bx,es:file_next
+	je rem_file_sel_empty
+;	
 	push di
 	push ds
 	mov di,es:file_next
@@ -171,11 +174,9 @@ RemoveFileSel	Proc near
 	mov ds:file_next,di
 	pop ds
 	pop di
-	mov di,ds:fs_file_list
-    mov es,di	
-    cmp di,es:file_next
-	jne rem_file_sel_leave
-;	
+	jmp rem_file_sel_leave
+
+rem_file_sel_empty:	
 	mov ds:fs_file_list,0
 
 rem_file_sel_leave:

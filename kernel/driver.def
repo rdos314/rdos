@@ -420,6 +420,7 @@ wd_code_sel         EQU 0A00h
 wd_data_sel         EQU 0A08h
 
 fm_code_sel         EQU 0A10h
+fm_data_sel         EQU 0A18h
 
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h
