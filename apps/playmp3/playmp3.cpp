@@ -25,16 +25,18 @@ int main(int argc, char **argv)
 	if (L < 0 && R < 0)
 		RdosSetLineOutVolume(100, 100);
 
-	TFm fm(48000);
-	TFmInstrument *inst = fm.Create(2, 5, 2.8);
+	TFm *fm;
+	fm = new TFm(48000);
+	TFmInstrument *inst = fm->Create(2, 5, 2.8);
 	inst->SetAttack(10.0);
 	inst->SetSustain(2000.0, 500.0);
 	inst->SetRelease(100.0, 50.0);
 	inst->Play(440.0, 99.0, 89.0, 2400.0);
-	fm.Wait(2500.0);
+	fm->Wait(2500.0);
 	inst->Play(220.0, 89.0, 99.0, 2400.0);
-	fm.Wait(4500.0);
+	fm->Wait(4500.0);
 	delete inst;
+	delete fm;
 
 	if (argc == 1)
 	{

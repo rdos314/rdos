@@ -40,8 +40,9 @@ INCLUDE ..\handle.inc
 
 MAX_FM_SELS = 8
 
-FLAG_FM_INIT    = 1
-FLAG_FM_NEW     = 2
+FLAG_FM_NEW     = 1
+FLAG_FM_ZERO    = 2
+FLAG_FM_DELETE  = 4
 
 FLAG_NOTE_NEW   = 1
 FLAG_NOTE_DONE  = 2
@@ -374,75 +375,45 @@ PAGE
 
 delete_fm	Proc near
     push ds
-    push es
     push bx
     push cx
 ;
-    push ds
-    mov ax,fm_data_sel
-    mov ds,ax
-    EnterSection ds:fm_section
-    pop ds
-;
     mov ds,[bx].f_sel
-    mov bx,ds:f_audio_handle
-    or bx,bx
-    jz dfAudioOff
-;
-    CloseAudioOutChannel
-    
-dfAudioOff:    
-    mov ax,ds:f_note_list
-    or ax,ax
-    jz dfNoteClosed
-;
-    mov es,ax
-    EnterSection ds:f_section
-    call RemoveNoteSel
-    FreeMem
-    LeaveSection ds:f_section    
-    jmp dfAudioOff
 
-dfNoteClosed:
-    mov ax,ds
-    mov es,ax
-    mov ax,fm_data_sel
-    mov ds,ax
-    mov cx,ds:fm_sel_count
-    mov bx,OFFSET fm_sel_arr
+dfLoop:
+    mov cx,ds:f_note_list
     or cx,cx
     jz dfFree
+;    
+    mov cx,ds:f_buf_size
+    mov ds:f_buf_pos,cx
 ;
-    mov ax,es    
-
-dfFindSelLoop:
-    cmp ax,[bx]
-    je dfRemSelLoop
-;
-    add bx,2
-    loop dfFindSelLoop 
-;
-    jmp dfFree
-
-dfRemSelLoop:
-    mov ax,[bx+2]
-    mov [bx],ax
-    add bx,2
-    loop dfRemSelLoop
-;
-    dec ds:fm_sel_count
+    GetThread
+    mov ds:f_thread,ax
+;   
+    or ds:f_flags,FLAG_FM_NEW
+    push ds
+    mov cx,fm_data_sel
+    mov ds,cx
+    mov bx,ds:fm_thread
+    Signal
+    WaitForSignal      
+    pop ds
+    jmp dfLoop
 
 dfFree:
-    FreeMem
+    or ds:f_flags,FLAG_FM_DELETE
+    mov cx,fm_data_sel
+    mov ds,cx
+    mov bx,ds:fm_thread
+    Signal
 ;
-    mov ax,fm_data_sel
-    mov ds,ax
-    LeaveSection ds:fm_section
+    mov ax,150
+    WaitMilliSec
     clc
 ;    
     pop cx
     pop bx
-    pop es
     pop ds
 	ret
 delete_fm	Endp
@@ -1511,32 +1482,56 @@ UpdateFmSel Proc near
     mov ds:f_audio_handle,bx
         
 ufsHasHandle:
-    mov cx,ds:f_buf_size
-    or cx,cx
-    jnz ufsHasBuffers    
-;
     mov bx,ds:f_audio_handle
     IsAudioOutCompleted
     jc ufsDone
+;
+    mov cx,ds:f_buf_size
+    or cx,cx
+    jnz ufsCheckZero
 ;    
     GetAudioOutBuffers
     mov ds:f_buf_size,cx
     mov ds:f_lbuf_sel,si
     mov ds:f_rbuf_sel,di
-;
-    mov es,di
+    or ds:f_flags, FLAG_FM_ZERO
+
+ufsCheckZero:
+    test ds:f_flags,FLAG_FM_ZERO
+    jz ufsHasBuffers
+;    
+    and ds:f_flags, NOT FLAG_FM_ZERO
+    mov es,ds:f_rbuf_sel
     xor di,di
     xor eax,eax
     mov cx,ds:f_buf_size
     rep stosd
 ;
-    mov es,si
+    mov es,ds:f_lbuf_sel
     xor di,di
     xor eax,eax
     mov cx,ds:f_buf_size
     rep stosd            
 ;
-    or ds:f_flags,FLAG_FM_INIT
+    mov ax,ds:f_note_list
+    or ax,ax
+    jz ufsDone
+;
+    EnterSection ds:f_section
+    mov ax,ds:f_note_list
+    mov si,ax
+
+ufsSetLoop:    
+    mov es,ax
+    or es:n_flags, FLAG_NOTE_NEW
+;
+    mov ax,es:n_next
+    cmp ax,si
+    jne ufsSetLoop
+;
+    xor ax,ax
+    mov es,ax
+    LeaveSection ds:f_section
 
 ufsHasBuffers:
     EnterSection ds:f_section
@@ -1554,9 +1549,6 @@ ufsRestart:
 
 ufsLoop:    
     mov es,ax
-    test ds:f_flags, FLAG_FM_INIT
-    jnz ufsDoThis
-;
     test es:n_flags, FLAG_NOTE_NEW
     jz ufsNext    
 
@@ -1591,14 +1583,19 @@ ufsLeave:
     mov es,ax
     mov fs,ax
     mov gs,ax
-;
-    and ds:f_flags, NOT FLAG_FM_INIT
     LeaveSection ds:f_section
+;    
+    mov bx,ds:f_thread
+    Signal
 
 ufsSignal:
+    test ds:f_flags,FLAG_FM_DELETE
+    jnz ufsNewData
+;
     test ds:f_flags,FLAG_FM_NEW
     jz ufsDone
-;        
+
+ufsNewData:
     mov bx,ds:f_audio_handle
     or bx,bx
     jz ufsDone
@@ -1606,28 +1603,33 @@ ufsSignal:
     IsAudioOutCompleted
     jc ufsDone
 ;
-    PostAudioOutBuffers
-;
-    and ds:f_flags, NOT FLAG_FM_NEW    
-    mov bx,ds:f_thread
-    Signal
+    test ds:f_flags,FLAG_FM_NEW
+    jz ufsPostDone
 ;    
+    PostAudioOutBuffers
+    and ds:f_flags, NOT FLAG_FM_NEW    
+
+ufsPostDone:    
     mov ax,ds:f_note_list
     or ax,ax
     jz ufsFreeAudio
 ;
     EnterSection ds:f_section
+    or ds:f_flags,FLAG_FM_ZERO
     mov ds:f_buf_pos,0
-    mov ds:f_buf_size,0
 ;
     mov ax,ds:f_note_list
     mov si,ax
 
 ufsClearLoop:    
     mov es,ax
+    test es:n_flags, FLAG_NOTE_NEW
+    jnz ufsClearNext
+;    
     mov es:n_buf_pos,0
     or es:n_flags, FLAG_NOTE_NEW
-;
+
+ufsClearNext:
     mov ax,es:n_next
     cmp ax,si
     jne ufsClearLoop
@@ -1638,6 +1640,9 @@ ufsClearLoop:
     jmp ufsDone
 
 ufsFreeAudio:
+    IsAudioOutCompleted
+    jc ufsDone
+;    
     mov bx,ds:f_audio_handle
     CloseAudioOutChannel
     mov ds:f_audio_handle,0
@@ -1692,7 +1697,38 @@ fm_handle_loop:
     pop ds
     add bx,2
     loop fm_handle_loop    
+
+fm_free_restart:
+    mov bx,OFFSET fm_sel_arr
+    mov cx,ds:fm_sel_count
+    or cx,cx
+    jz fm_leave
+
+fm_free_loop:
+    mov es,ds:[bx]
+    test es:f_flags,FLAG_FM_DELETE
+    jz fm_free_next
 ;
+    mov ax,es:f_audio_handle
+    or ax,ax
+    jnz fm_free_next
+;    
+    FreeMem        
+
+fm_free_move_loop:    
+    mov ax,ds:[bx+2]
+    mov ds:[bx],ax
+    add bx,2
+    loop fm_free_move_loop
+;
+    dec ds:fm_sel_count
+    jmp fm_free_restart
+
+fm_free_next:
+    add bx,2
+    loop fm_free_loop    
+
+fm_leave:
     LeaveSection ds:fm_section
     jmp fm_wait_loop    
 
