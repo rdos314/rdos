@@ -17,6 +17,14 @@ int main(int argc, char **argv)
 	char FileName[256];
 	TMp3Player mp3;
 
+	RdosGetMasterVolume(&L, &R);
+	if (L < 0 && R < 0)
+		RdosSetMasterVolume(100, 100);
+
+	RdosGetLineOutVolume(&L, &R);
+	if (L < 0 && R < 0)
+		RdosSetLineOutVolume(100, 100);
+
 	TFm fm(48000);
 	TFmInstrument *inst = fm.Create(2, 5, 2.8);
 	inst->SetAttack(10.0);
@@ -25,6 +33,7 @@ int main(int argc, char **argv)
 	inst->Play(440.0, 99.0, 89.0, 2400.0);
 	fm.Wait(2500.0);
 	inst->Play(220.0, 89.0, 99.0, 2400.0);
+	fm.Wait(4500.0);
 	delete inst;
 
 	if (argc == 1)

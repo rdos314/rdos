@@ -41,8 +41,10 @@ INCLUDE ..\handle.inc
 MAX_FM_SELS = 8
 
 FLAG_FM_INIT    = 1
+FLAG_FM_NEW     = 2
 
 FLAG_NOTE_NEW   = 1
+FLAG_NOTE_DONE  = 2
 
 fm_data_seg STRUC
 
@@ -66,6 +68,7 @@ f_lbuf_sel      DW ?
 f_rbuf_sel      DW ?
 
 f_buf_pos       DW ?
+f_thread        DW ?
 
 f_flags         DB ?
 
@@ -123,6 +126,15 @@ n_curr_volume   DD ?
 
 n_att_diff      DD ?
 
+n_sus_vol_diff  DD ?
+n_sus_fm_diff   DD ?
+
+n_rel_vol_diff  DD ?
+n_rel_fm_diff   DD ?
+
+n_vol_curr      DD ?
+n_fm_curr       DD ?
+
 n_sus_samples   DD ?
 
 n_buf_pos       DW ?
@@ -146,9 +158,11 @@ PAGE
 ;
 ;		NAME:			InterpolateSin
 ;
-;		DESCRIPTION:	Interpolate value
+;		DESCRIPTION:	Interpolate sin-value
 ;
 ;		PARAMETERS:     EAX     Value (12-bit index + 16-bit fract)
+;
+;       RETURNS:        EAX     Sin value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -160,9 +174,9 @@ InterpolateSin	Proc near
 ;    
     mov esi,eax
     movzx edi,ax
-    shl edi,17
+    shl edi,15
     and edi,7FFFFFFFh
-    shr esi,12
+    shr esi,14
     mov bx,si
     and si,3FFCh
     test bh,40h
@@ -209,6 +223,47 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			InterpolateExp
+;
+;		DESCRIPTION:	Interpolate exp(-kt)
+;
+;		PARAMETERS:     EAX     Value (12-bit index + 16-bit fract)
+;
+;       RETURNS:        EAX     Exp value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InterpolateExp	Proc near
+    push edx
+    push esi
+    push edi
+;    
+    mov esi,eax
+    movzx edi,ax
+    shl edi,15
+    and edi,7FFFFFFFh
+    shr esi,14
+    and si,03FFCh
+;    
+    mov eax,dword ptr cs:[si+4].ExpTab
+    mov edx,dword ptr cs:[si].ExpTab
+    sub eax,edx
+    imul edi
+    mov eax,edx
+    shl eax,1           
+    add eax,dword ptr cs:[si].ExpTab
+;
+    pop edi
+    pop esi
+    pop edx
+    ret
+InterpolateExp Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			InsertNoteSel
 ;
 ;		DESCRIPTION:	Insert a note selector
@@ -224,8 +279,6 @@ InsertNoteSel	Proc near
     push eax
     push ebx
 	push di
-;
-    EnterSection ds:f_section
 ;
 	mov di,ds:f_note_list
 	or di,di
@@ -250,8 +303,6 @@ insEmpty:
 	mov ds:f_note_list,es
 
 insLeave:
-    LeaveSection ds:f_section
-;
     pop di
     pop ebx
     pop eax
@@ -280,7 +331,6 @@ RemoveNoteSel	Proc near
     push ebx
 	push si
 ;
-    EnterSection ds:f_section
 	mov di,es
     cmp di,es:n_next
 	je rnsEmpty
@@ -302,8 +352,6 @@ rnsEmpty:
 	mov ds:f_note_list,0
 
 rnsLeave:
-    LeaveSection ds:f_section
-;    
 	pop si
     pop ebx
     pop eax
@@ -349,8 +397,10 @@ dfAudioOff:
     jz dfNoteClosed
 ;
     mov es,ax
+    EnterSection ds:f_section
     call RemoveNoteSel
     FreeMem
+    LeaveSection ds:f_section    
     jmp dfAudioOff
 
 dfNoteClosed:
@@ -459,6 +509,7 @@ open_fm    Proc
     mov es:f_lbuf_sel,0
     mov es:f_rbuf_sel,0
     mov es:f_buf_pos,0
+    mov es:f_thread,0
     mov es:f_flags,0
     InitSection es:f_section
 ;
@@ -539,6 +590,67 @@ PAGE
 fm_wait_name	DB 'FM Wait',0
 
 fm_wait    Proc	
+	push ds
+	push eax
+	push bx
+	push ecx
+	push edx
+;
+    push ax
+	mov ax,FM_HANDLE
+	DerefHandle
+	pop ax
+	jc fwDone
+;
+    mov ds,[bx].f_sel
+
+fwLoop:
+    mov cx,ds:f_note_list
+    or cx,cx
+    jz fwDirectWait
+;    
+    mov cx,ds:f_buf_size
+    sub cx,ds:f_buf_pos
+    movzx ecx,cx
+    cmp eax,ecx
+    ja fwFillAll
+;
+    add ds:f_buf_pos,ax
+    jmp fwDone
+
+fwFillAll:
+    sub eax,ecx
+    mov cx,ds:f_buf_size
+    mov ds:f_buf_pos,cx
+;
+    push ax
+    GetThread
+    mov ds:f_thread,ax
+    pop ax
+;   
+    or ds:f_flags,FLAG_FM_NEW
+    push ds
+    mov cx,fm_data_sel
+    mov ds,cx
+    mov bx,ds:fm_thread
+    Signal
+    WaitForSignal      
+    pop ds
+    jmp fwLoop
+
+fwDirectWait:
+    mov ecx,1000
+    mul ecx
+    movzx ecx,ds:f_sample_rate
+    div ecx
+    WaitMilliSec
+
+fwDone:
+    pop edx
+    pop ecx
+	pop bx
+	pop eax
+	pop ds
 	retf32
 fm_wait    Endp
 
@@ -889,7 +1001,7 @@ PAGE
 
 play_fm_note_name	DB 'Play FM Note',0
 
-SinSize DD 4096
+SinSize DD 4000h
 
 play_fm_note    Proc	
 	push ds
@@ -918,6 +1030,16 @@ play_fm_note    Proc
     mov es:n_flags, FLAG_NOTE_NEW
     mov ax,ds:f_buf_pos
     mov es:n_buf_pos,ax
+;
+    mov eax,dword ptr fs:i_sus_vol_fract
+    mov es:n_sus_vol_diff,eax
+    mov eax,dword ptr fs:i_sus_mod_fract
+    mov es:n_sus_fm_diff,eax
+;
+    mov eax,dword ptr fs:i_rel_vol_fract
+    mov es:n_rel_vol_diff,eax
+    mov eax,dword ptr fs:i_rel_mod_fract
+    mov es:n_rel_fm_diff,eax
 ;
     movzx eax,ds:f_sample_rate    
     push eax
@@ -988,9 +1110,11 @@ pfnAttOk:
     pop edx
     pop ebx   
 ;
+    EnterSection ds:f_section
     mov es:n_curr_volume,0
     mov es:n_callb, OFFSET PlayAttack
     call InsertNoteSel
+    LeaveSection ds:f_section
 ;
     mov ax,fm_data_sel
     mov ds,ax
@@ -1052,6 +1176,171 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			CalcSin
+;
+;		DESCRIPTION:	Calc current sin value
+;
+;		PARAMETERS:		DS      FM sel
+;                       ES      Note sel
+;
+;       RETURNS:        EAX     Value
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcSin Proc near
+    mov eax,es:n_carrier_diff
+    add eax,es:n_carrier_curr
+    mov es:n_carrier_curr,eax
+    call InterpolateSin
+    ret
+CalcSin Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetChannels
+;
+;		DESCRIPTION:	Set data to Left and Right channel
+;
+;		PARAMETERS:		DS      FM sel
+;                       ES      Note sel
+;                       FS      Left channel
+;                       GS      Right channel
+;                       DI      Offset into buffer
+;                       EAX     Value
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetChannels Proc near
+    push eax
+    push edx
+    push esi
+;
+    mov esi,eax
+;    
+    mov eax,es:n_l_peak_volume
+    imul esi
+    shl edx,1
+    add fs:[di],edx
+    jno scR
+;
+    test edx,80000000h
+    jz scLOvPos
+;
+    mov edx,7FFFFFFFh
+    jmp scLOvSave
+
+scLOvPos:
+    mov edx,80000000h
+
+scLOvSave:       
+    mov fs:[di],edx
+
+scR:
+    mov eax,es:n_r_peak_volume
+    imul esi
+    shl edx,1
+    add gs:[di],edx
+    jno scDone
+;
+    test edx,80000000h
+    jz scROvPos
+;
+    mov edx,7FFFFFFFh
+    jmp scROvSave
+
+scROvPos:
+    mov edx,80000000h
+
+scROvSave:       
+    mov gs:[di],edx
+
+scDone:
+    inc es:n_buf_pos
+    add di,4
+;
+    pop esi
+    pop edx
+    pop eax    
+    ret
+SetChannels Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			PlayRelease
+;
+;		DESCRIPTION:	Play release part
+;
+;		PARAMETERS:		DS      FM sel
+;                       ES      Note sel
+;                       CX      Buffer size
+;                       FS      Left channel buf
+;                       GS      Right channel buf
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PlayRelease  Proc near
+    mov di,es:n_buf_pos
+    sub cx,di
+    jbe prDone
+;    
+    shl di,2
+
+prLoop:
+    call CalcSin
+    mov esi,eax
+;
+    mov eax,es:n_rel_vol_diff
+    add eax,es:n_vol_curr
+
+prCheckVolOverflow:
+    test eax,0F0000000h
+    jz prNoVolOverflow
+;
+    sub eax,10000000h
+    mov edx,es:n_curr_volume
+    shr edx,1
+    mov es:n_curr_volume,edx
+    or edx,edx
+    jz prRelDone
+;    
+    jmp prCheckVolOverflow
+
+prNoVolOverflow:
+    mov es:n_vol_curr,eax
+    call InterpolateExp
+;
+    imul esi
+    mov esi,edx
+    shl esi,1
+;
+    mov eax,es:n_curr_volume
+    imul esi
+    shl edx,1
+;    
+    mov eax,edx
+    call SetChannels
+;    
+    loop prLoop
+    jmp prDone
+
+prRelDone:
+    or es:n_flags,FLAG_NOTE_DONE
+    
+prDone:
+    ret
+PlayRelease Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			PlaySustain
 ;
 ;		DESCRIPTION:	Play sustain part
@@ -1071,6 +1360,63 @@ PlaySustain  Proc near
 ;    
     shl di,2
 
+psLoop:
+    mov eax,es:n_sus_samples
+    or eax,eax
+    jz psSusDone
+;
+    dec eax
+    mov es:n_sus_samples,eax    
+;
+    call CalcSin
+    mov esi,eax
+;
+    mov eax,es:n_sus_vol_diff
+    add eax,es:n_vol_curr
+
+psCheckVolOverflow:
+    test eax,0F0000000h
+    jz psNoVolOverflow
+;
+    sub eax,10000000h
+    mov edx,es:n_curr_volume
+    shr edx,1
+    mov es:n_curr_volume,edx
+    jmp psCheckVolOverflow
+
+psNoVolOverflow:
+    mov es:n_vol_curr,eax
+    call InterpolateExp
+;
+    imul esi
+    mov esi,edx
+    shl esi,1
+;
+    mov eax,es:n_curr_volume
+    imul esi
+    shl edx,1
+;    
+    mov eax,edx
+    call SetChannels
+;    
+    loop psLoop
+    jmp psDone
+
+psSusDone:
+    mov eax,es:n_vol_curr
+    call InterpolateExp
+;
+    mov esi,es:n_curr_volume
+    imul esi
+    shl edx,1
+    mov es:n_curr_volume,edx
+;
+    mov es:n_vol_curr,0
+    mov es:n_fm_curr,0
+    add cx,es:n_buf_pos
+    mov es:n_callb,OFFSET PlayRelease
+    jmp es:n_callb
+    
 psDone:
     ret
 PlaySustain Endp
@@ -1100,10 +1446,7 @@ PlayAttack  Proc near
     shl di,2
 
 paLoop:
-    mov eax,es:n_carrier_diff
-    add eax,es:n_carrier_curr
-    mov es:n_carrier_curr,eax
-    call InterpolateSin
+    call CalcSin
     mov esi,eax
 ;
     mov eax,es:n_att_diff
@@ -1113,52 +1456,27 @@ paLoop:
     jnz paAttDone
 ;
     imul esi
-    mov esi,edx
-    shl esi,1
+    mov eax,edx
+    shl eax,1
+    call SetChannels
 ;    
-    mov eax,es:n_l_peak_volume
-    imul esi
-    shl edx,1
-    mov fs:[di],edx
-;
-    mov eax,es:n_r_peak_volume
-    imul esi
-    shl edx,1
-    mov gs:[di],edx
-;    
-    inc es:n_buf_pos
-    add di,4
     loop paLoop
     jmp paDone
 
 paAttDone:
-    int 3
-    mov eax,es:n_carrier_diff
-    add eax,es:n_carrier_curr
-    mov es:n_carrier_curr,eax
-    call InterpolateSin
-    mov esi,eax
-;    
     mov eax,7FFFFFFFh
     mov es:n_curr_volume,eax
 ;    
-    mov eax,es:n_l_peak_volume
-    imul esi
-    shl edx,1
-    mov fs:[di],edx
-;
-    mov eax,es:n_r_peak_volume
-    imul esi
-    shl edx,1
-    mov gs:[di],edx
-;
-    add di,4
-    inc es:n_buf_pos
+    call CalcSin
+    call SetChannels
+;    
     loop paMore
     jmp paDone
 
 paMore:
-    int 3
+    mov es:n_vol_curr,0
+    mov es:n_fm_curr,0
+    add cx,es:n_buf_pos
     mov es:n_callb,OFFSET PlaySustain
     jmp es:n_callb
 
@@ -1180,7 +1498,7 @@ PlayAttack  Endp
 UpdateFmSel Proc near
     mov ax,ds:f_note_list
     or ax,ax
-    jz ufsDone
+    jz ufsSignal
 ;
     mov bx,ds:f_audio_handle
     or bx,bx
@@ -1197,6 +1515,10 @@ ufsHasHandle:
     or cx,cx
     jnz ufsHasBuffers    
 ;
+    mov bx,ds:f_audio_handle
+    IsAudioOutCompleted
+    jc ufsDone
+;    
     GetAudioOutBuffers
     mov ds:f_buf_size,cx
     mov ds:f_lbuf_sel,si
@@ -1217,10 +1539,14 @@ ufsHasHandle:
     or ds:f_flags,FLAG_FM_INIT
 
 ufsHasBuffers:
-
     EnterSection ds:f_section
+
+ufsRestart:
     mov ax,ds:f_note_list
     mov si,ax
+;
+    or ax,ax    
+    jz ufsLeave
 ;
     mov fs,ds:f_lbuf_sel
     mov gs,ds:f_rbuf_sel
@@ -1235,7 +1561,6 @@ ufsLoop:
     jz ufsNext    
 
 ufsDoThis:
-    int 3
     push ds
     push cx
     push si
@@ -1249,13 +1574,77 @@ ufsDoThis:
     and es:n_flags, NOT FLAG_NOTE_NEW    
 
 ufsNext:    
+    test es:n_flags, FLAG_NOTE_DONE
+    jz ufsKeep
+;
+    call RemoveNoteSel
+    FreeMem
+    jmp ufsRestart
+
+ufsKeep:    
     mov ax,es:n_next
     cmp ax,si
     jne ufsLoop
+
+ufsLeave:
+    xor ax,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
 ;
     and ds:f_flags, NOT FLAG_FM_INIT
     LeaveSection ds:f_section
-    
+
+ufsSignal:
+    test ds:f_flags,FLAG_FM_NEW
+    jz ufsDone
+;        
+    mov bx,ds:f_audio_handle
+    or bx,bx
+    jz ufsDone
+;    
+    IsAudioOutCompleted
+    jc ufsDone
+;
+    PostAudioOutBuffers
+;
+    and ds:f_flags, NOT FLAG_FM_NEW    
+    mov bx,ds:f_thread
+    Signal
+;    
+    mov ax,ds:f_note_list
+    or ax,ax
+    jz ufsFreeAudio
+;
+    EnterSection ds:f_section
+    mov ds:f_buf_pos,0
+    mov ds:f_buf_size,0
+;
+    mov ax,ds:f_note_list
+    mov si,ax
+
+ufsClearLoop:    
+    mov es,ax
+    mov es:n_buf_pos,0
+    or es:n_flags, FLAG_NOTE_NEW
+;
+    mov ax,es:n_next
+    cmp ax,si
+    jne ufsClearLoop
+;
+    xor ax,ax
+    mov es,ax
+    LeaveSection ds:f_section
+    jmp ufsDone
+
+ufsFreeAudio:
+    mov bx,ds:f_audio_handle
+    CloseAudioOutChannel
+    mov ds:f_audio_handle,0
+    mov ds:f_lbuf_sel,0
+    mov ds:f_rbuf_sel,0
+    mov ds:f_buf_size,0
+            
 ufsDone:    
     ret
 UpdateFmSel Endp
