@@ -54,7 +54,7 @@ ams_buffer_size     DW ?
 ams_sample_rate     DW ?
 
 ams_count           DW ?
-ams_sel_arr         DW AMS_MAX_CHANNELS DUP(?)
+ams_sel_arr         DW AMS_MAX_CHANNELS + 1 DUP(?)
 
 audio_mixer_sel ENDS
 
@@ -323,22 +323,46 @@ FreeMixerChannel	Proc near
     push es
     push fs
     push ax
+    push bx
     push cx
+    push dx
 ;    
     mov fs,ds:aos_mixer
+    mov dx,ds
+;    
+	mov ax,audio_data_sel
+	mov ds,ax
+	EnterSection ds:ads_section
+;    
     mov cx,fs:ams_count
-    sub cx,1
-    jz fmcDelete
+    mov bx,OFFSET ams_sel_arr
+
+fmcFind:
+    cmp dx,fs:[bx]
+    je fmcCopy
 ;
-    int 3
-    mov fs:ams_count,cx
+    add bx,2
+    loop fmcFind    
+;
     jmp fmcDone
 
-fmcDelete:    
-    mov fs:ams_count,cx
+fmcCopy:
+    mov ax,fs:[bx+2]
+    mov fs:[bx],ax
+;
+    add bx,2
+    loop fmcCopy    
+;    
+    dec fs:ams_count
 
 fmcDone:        
+    xor ax,ax
+    mov fs,ax
+	LeaveSection ds:ads_section
+;	
+    pop dx
     pop cx
+    pop bx
     pop ax
     pop fs
     pop es
@@ -432,6 +456,7 @@ delete_out_channel	Proc near
 ;    
     FreeMem
 	FreeHandle
+;
 	clc
     pop es
 	ret
@@ -1041,16 +1066,18 @@ umMoveRChanLoop:
     pop ds
 ;    
     add bx,2
-    loop umMoveLChanLoop
+    loop umMoveRChanLoop
 ;
     mov bx,OFFSET ams_sel_arr
     mov cx,ds:ams_count
 
 umSignalLoop:
+    push bx
     mov es,ds:[bx]
     mov es:aos_in_buf_pos,0
     mov bx,es:aos_thread
     Signal
+    pop bx
 ;
     add bx,2
     loop umSignalLoop

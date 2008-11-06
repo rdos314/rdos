@@ -407,9 +407,6 @@ dfFree:
     mov ds,cx
     mov bx,ds:fm_thread
     Signal
-;
-    mov ax,150
-    WaitMilliSec
     clc
 ;    
     pop cx
@@ -436,6 +433,7 @@ delete_fm_instr	Proc near
 ;
     mov es,[bx].i_sel
     FreeMem
+	FreeHandle
     clc
 ;    
     pop es
@@ -536,6 +534,7 @@ close_fm    Proc
 	jc cfDone
 ;
   	call delete_fm
+	FreeHandle
 
 cfDone:
 	pop bx

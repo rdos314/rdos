@@ -167,6 +167,7 @@ int __stdcall RdosSuspendAndSignalThread(int ThreadNr);
 void __stdcall RdosCpuReset();
 void __stdcall RdosGetVersion(int *Major, int *Minor, int *Release);
 void __stdcall RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
+void __stdcall RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const char *Name, void *Param, int StackSize);
 void __stdcall RdosTerminateThread();
 int __stdcall RdosGetThreadHandle();
 int __stdcall RdosExec(const char *prog, const char *param);

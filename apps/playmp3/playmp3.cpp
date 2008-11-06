@@ -31,9 +31,9 @@ int main(int argc, char **argv)
 	inst->SetAttack(10.0);
 	inst->SetSustain(2000.0, 500.0);
 	inst->SetRelease(100.0, 50.0);
-	inst->Play(440.0, 99.0, 89.0, 2400.0);
+	inst->Play(440.0, 50.0, 50.0, 2400.0);
 	fm->Wait(2500.0);
-	inst->Play(220.0, 89.0, 99.0, 2400.0);
+	inst->Play(220.0, 50.0, 50.0, 2400.0);
 	fm->Wait(4500.0);
 	delete inst;
 	delete fm;
@@ -58,7 +58,13 @@ int main(int argc, char **argv)
 		RdosSetLineOutVolume(100, 100);
 
 	mp3.Load(FileName);
-	mp3.Play();
+
+	mp3.SetPosition(0);
+	mp3.Start();
+	RdosReadKeyboard();
+	mp3.Stop();
+
+	RdosWaitMilli(500);
 
 	return 0;
 }

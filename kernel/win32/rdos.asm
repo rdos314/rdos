@@ -355,6 +355,50 @@ RdosCreateThread	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosCreatePrioThread
+;
+;		description:	Create a new thread, higher priority
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreatePrioThread
+
+tp_callb	EQU 8
+tp_prio     EQU 12
+tp_name	    EQU 16
+tp_data     EQU 20
+tp_stack	EQU 24
+
+RdosCreatePrioThread	PROC
+	push ebp
+	mov ebp,esp
+	push ds
+	pushad
+;
+	mov edx,[ebp].tp_callb
+	mov ax,cs
+	mov ds,ax
+	mov esi,OFFSET task_start
+	mov ecx,[ebp].tp_stack
+	mov edi,[ebp].tp_name
+	mov eax,[ebp].tp_data
+	mov fs:pvArbitrary,eax
+	mov bx,fs
+	mov ax,[ebp].tp_prio
+	UserGate create_thread_nr
+;
+	mov eax,10
+	UserGate wait_milli_nr
+;
+	popad
+	pop ds
+	pop ebp
+	ret 20
+RdosCreatePrioThread	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosGetThreadHandle
 ;
 ;		description:	Get current thread handle

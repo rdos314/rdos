@@ -76,6 +76,7 @@ TMp3Player::TMp3Player()
 	FFileSize = 0;
 	FValid = FALSE;
 	FVolume = 100;
+	FThreadRunning = FALSE;
 }
 
 /*##########################################################################
@@ -110,12 +111,12 @@ void TMp3Player::FindStart()
 	int tagsize;
 
 	if (FFileBuf)
-    {
-        FId3V1 = FALSE;
+	{
+		FId3V1 = FALSE;
 		FId3V2 = FALSE;
 
-        FMp3Start = FFileBuf;
-        FMp3Size = FFileSize;
+		FMp3Start = FFileBuf;
+		FMp3Size = FFileSize;
 
         if (FMp3Size > 128 && memcmp(FMp3Start + FMp3Size - 128, "TAG", 3) == 0)
         {
@@ -356,7 +357,7 @@ void TMp3Player::Load(const char *FileName)
             RdosMapView(FMapHandle, 0, FFileBuf, FFileSize);
 
             FindStart();
-            Check();
+			Check();
             if (!ParseTag())
                 CalcSongParams();
 
@@ -386,14 +387,14 @@ void TMp3Player::Close()
         {
             RdosUnmapView(FMapHandle);
             RdosCloseMapping(FMapHandle);
-            FMapHandle = 0;
-        }
+			FMapHandle = 0;
+		}
 
-        if (FFileBuf)
-        {
-            RdosFreeMem(FFileBuf);
-            FFileBuf = 0;
-        }
+		if (FFileBuf)
+		{
+			RdosFreeMem(FFileBuf);
+			FFileBuf = 0;
+		}
 
 		RdosCloseFile(FFileHandle);
 		FFileHandle = 0;
@@ -432,7 +433,7 @@ void TMp3Player::SetPosition(int ms)
 	long double pa, pb, px;
 	long double percentage;
 	int perc;
-	
+
     if (FValid)
     {
         if (ms > FSongMs)
@@ -462,7 +463,7 @@ void TMp3Player::SetPosition(int ms)
             else
                 FCurrentPos = FMp3Start + (unsigned int)( (long double)ms / (long double)FSongMs * (long double)FMp3Size);
         }            
-        else
+		else
             FCurrentPos = FMp3Start + (unsigned int)( (long double)ms / (long double)FSongMs * (long double)FMp3Size);
     }
     else
@@ -488,23 +489,23 @@ void TMp3Player::Play()
     TMadSynth synth;
     int size;
 
-	FAudioHandle = RdosCreateAudioOutChannel(FSampleRate, 28, FVolume);
+	FAudioHandle = RdosCreateAudioOutChannel(FSampleRate, 31, FVolume);
 
 	stream.SetBuffer(FCurrentPos, FMp3Size - (FCurrentPos - FMp3Start));
 
-    for (;;)
-    {
-    	if (frame.Decode(&stream) == 0)
+	for (;;)
+	{
+		if (frame.Decode(&stream) == 0)
 			if (MAD_RECOVERABLE(stream.error)) // if recoverable error continue
 				continue;
 
 		if (stream.error == MAD_ERROR_BUFLEN)
 			break;
 
-        synth.Synth(&frame);			
+		synth.Synth(&frame);
 
-        size = synth.pcm.length;
-        if (synth.pcm.channels >= 2)
+		size = synth.pcm.length;
+		if (synth.pcm.channels >= 2)
 			RdosWriteAudio(FAudioHandle, size, (int *)&synth.pcm.samples[0], (int *)&synth.pcm.samples[1]);
 		else
 			RdosWriteAudio(FAudioHandle, size, (int *)&synth.pcm.samples[0], (int *)&synth.pcm.samples[0]);
@@ -535,23 +536,23 @@ void TMp3Player::Thread()
     frame = new TMadFrame;
     synth = new TMadSynth;
 
-	FAudioHandle = RdosCreateAudioOutChannel(FSampleRate, 28, FVolume);
+	FAudioHandle = RdosCreateAudioOutChannel(FSampleRate, 31, FVolume);
 
 	stream->SetBuffer(FCurrentPos, FMp3Size - (FCurrentPos - FMp3Start));
 
-    while (FThreadRunning)
-    {
-    	if (frame->Decode(stream) == 0)
+	while (FThreadRunning)
+	{
+		if (frame->Decode(stream) == 0)
 			if (MAD_RECOVERABLE(stream->error)) // if recoverable error continue
 				continue;
 
 		if (stream->error == MAD_ERROR_BUFLEN)
 			break;
 
-        synth->Synth(frame);			
+		synth->Synth(frame);
 
-        size = synth->pcm.length;
-        if (synth->pcm.channels >= 2)
+		size = synth->pcm.length;
+		if (synth->pcm.channels >= 2)
 			RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[1]);
 		else
 			RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[0]);
@@ -580,7 +581,7 @@ void TMp3Player::Start()
     if (!FThreadRunning)
     {
         FThreadRunning = TRUE;
-		RdosCreateThread(ThreadStartup, "MP3", this, 0x1000);
+		RdosCreatePrioThread(ThreadStartup, 4, "MP3", this, 0x1000);
     }
 }
 
