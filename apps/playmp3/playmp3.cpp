@@ -28,13 +28,11 @@ int main(int argc, char **argv)
 	TFm *fm;
 	fm = new TFm(48000);
 	TFmInstrument *inst = fm->Create(2, 5, 2.8);
-	inst->SetAttack(10.0);
-	inst->SetSustain(2000.0, 500.0);
-	inst->SetRelease(100.0, 50.0);
-	inst->Play(440.0, 50.0, 50.0, 2400.0);
-	fm->Wait(2500.0);
-	inst->Play(220.0, 50.0, 50.0, 2400.0);
-	fm->Wait(4500.0);
+	inst->SetAttack(2.0);
+	inst->SetSustain(500.0, 50.0);
+	inst->SetRelease(2.0, 5.0);
+	inst->Play(440.0, 50.0, 50.0, 75.0);
+	fm->Wait(250.0);
 	delete inst;
 	delete fm;
 
