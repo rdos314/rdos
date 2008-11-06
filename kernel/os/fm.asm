@@ -87,8 +87,7 @@ instrument_sel   STRUC
 i_fm_sel        DW ?
 i_c             DW ?
 i_m             DW ?
-i_beta_int      DD ?
-i_beta_fract    DD ?
+i_beta          DT ?
 i_att_samples   DD ?
 i_sus_vol_fract DW ?
 i_sus_vol_ind   DW ?
@@ -136,6 +135,7 @@ n_rel_fm_diff   DD ?
 n_vol_curr      DD ?
 n_fm_curr       DD ?
 
+n_beta_fact     DD ?
 n_sus_samples   DD ?
 
 n_buf_pos       DW ?
@@ -670,23 +670,7 @@ create_fm_instrument    Proc
     mov es:i_c,ax	
     mov es:i_m,dx
     mov es:i_fm_sel,si
-;
-    fist es:i_beta_int
-    fisub es:i_beta_int 
-;
-    fld rmaxint
-    fmulp st(1),st(0)
-    fistp es:i_beta_fract
-;
-    mov eax,es:i_beta_fract
-    test eax,80000000h
-    jz cfiAdjOk
-;
-    dec es:i_beta_int
-    add es:i_beta_fract,40000000h
-        
-cfiAdjOk:
-    shl es:i_beta_fract,2
+    fstp es:i_beta
 ;    
     mov ds:i_att_samples,0
     mov ds:i_sus_vol_ind,0
@@ -1064,6 +1048,10 @@ pfnModOk:
     mov word ptr es:n_mod_diff,ax
     mov es:n_mod_curr,0
 ;
+    fld fs:i_beta
+    fimul es:n_carrier_diff
+    fistp es:n_beta_fact
+;    
     push ebx
     push edx
     xor edx,edx
@@ -1152,18 +1140,39 @@ PAGE
 ;
 ;		PARAMETERS:		DS      FM sel
 ;                       ES      Note sel
+;                       EAX     Beta factor
 ;
 ;       RETURNS:        EAX     Value
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CalcSin Proc near
+    push edx
+    push bp
+;    
+    push eax
+    mov bp,sp
+;    
+    mov eax,es:n_mod_diff
+    add eax,es:n_mod_curr
+    mov es:n_mod_curr,eax
+    call InterpolateSin
+;
+    imul dword ptr [bp]
+    shl edx,1        
+    pop eax
+;
     mov eax,es:n_carrier_diff
     add eax,es:n_carrier_curr
+    add eax,edx
     mov es:n_carrier_curr,eax
     call InterpolateSin
+;
+    pop bp
+    pop edx
     ret
 CalcSin Endp
+
 
 PAGE
 
@@ -1261,7 +1270,28 @@ PlayRelease  Proc near
 ;    
     shl di,2
 
-prLoop:
+prLoop:    
+    mov eax,es:n_rel_fm_diff
+    add eax,es:n_fm_curr
+
+prCheckFmOverflow:
+    test eax,0F0000000h
+    jz prNoFmOverflow
+;
+    sub eax,10000000h
+    mov edx,es:n_beta_fact
+    shr edx,1
+    mov es:n_beta_fact,edx
+    jmp prCheckFmOverflow
+
+prNoFmOverflow:
+    mov es:n_fm_curr,eax
+    call InterpolateExp
+;
+    imul es:n_beta_fact
+    mov eax,edx
+    shl eax,1
+;
     call CalcSin
     mov esi,eax
 ;
@@ -1296,7 +1326,8 @@ prNoVolOverflow:
     mov eax,edx
     call SetChannels
 ;    
-    loop prLoop
+    sub cx,1
+    jnz prLoop
     jmp prDone
 
 prRelDone:
@@ -1337,6 +1368,27 @@ psLoop:
 ;
     dec eax
     mov es:n_sus_samples,eax    
+;    
+    mov eax,es:n_sus_fm_diff
+    add eax,es:n_fm_curr
+
+psCheckFmOverflow:
+    test eax,0F0000000h
+    jz psNoFmOverflow
+;
+    sub eax,10000000h
+    mov edx,es:n_beta_fact
+    shr edx,1
+    mov es:n_beta_fact,edx
+    jmp psCheckFmOverflow
+
+psNoFmOverflow:
+    mov es:n_fm_curr,eax
+    call InterpolateExp
+;
+    imul es:n_beta_fact
+    mov eax,edx
+    shl eax,1
 ;
     call CalcSin
     mov esi,eax
@@ -1369,10 +1421,20 @@ psNoVolOverflow:
     mov eax,edx
     call SetChannels
 ;    
-    loop psLoop
+    sub cx,1
+    jnz psLoop
     jmp psDone
 
 psSusDone:
+    mov eax,es:n_fm_curr
+    call InterpolateExp
+;
+    mov esi,es:n_beta_fact
+    imul esi
+    shl edx,1
+    mov es:n_beta_fact,edx
+    mov es:n_fm_curr,0
+;
     mov eax,es:n_vol_curr
     call InterpolateExp
 ;
@@ -1380,9 +1442,8 @@ psSusDone:
     imul esi
     shl edx,1
     mov es:n_curr_volume,edx
-;
     mov es:n_vol_curr,0
-    mov es:n_fm_curr,0
+;
     add cx,es:n_buf_pos
     mov es:n_callb,OFFSET PlayRelease
     jmp es:n_callb
@@ -1416,6 +1477,7 @@ PlayAttack  Proc near
     shl di,2
 
 paLoop:
+    mov eax,es:n_beta_fact
     call CalcSin
     mov esi,eax
 ;

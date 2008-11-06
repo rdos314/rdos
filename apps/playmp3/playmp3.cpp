@@ -13,6 +13,7 @@
 int main(int argc, char **argv)
 {
 	int L, R;
+	int i;
 
 	char FileName[256];
 	TMp3Player mp3;
@@ -27,12 +28,20 @@ int main(int argc, char **argv)
 
 	TFm *fm;
 	fm = new TFm(48000);
-	TFmInstrument *inst = fm->Create(2, 5, 2.8);
+	TFmInstrument *inst = fm->Create(1, 2, 15.0);
 	inst->SetAttack(2.0);
-	inst->SetSustain(500.0, 50.0);
-	inst->SetRelease(2.0, 5.0);
-	inst->Play(440.0, 50.0, 50.0, 75.0);
-	fm->Wait(250.0);
+	inst->SetSustain(50.0, 50.0);
+	inst->SetRelease(4.0, 5.0);
+
+	long double freq = 55.0;
+	long double fact = 1.059463094359;
+
+	for (i = 1; i < 60; i++)
+	{
+		inst->Play(freq, 60.0, 60.0, 60.0);
+		fm->Wait(100.0);
+		freq = freq * fact;
+	}
 	delete inst;
 	delete fm;
 
@@ -56,13 +65,7 @@ int main(int argc, char **argv)
 		RdosSetLineOutVolume(100, 100);
 
 	mp3.Load(FileName);
-
-	mp3.SetPosition(0);
-	mp3.Start();
-	RdosReadKeyboard();
-	mp3.Stop();
-
-	RdosWaitMilli(500);
+	mp3.Play();
 
 	return 0;
 }
