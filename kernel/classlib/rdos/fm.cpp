@@ -321,3 +321,269 @@ void TFmInstrument::Play(long double Freq, long double LeftVolume, long double R
 	RdosPlayFmNote(FHandle, Freq, LeftVol, RightVol, Duration);
 }
 
+/*##########################################################################
+#
+#   Name       : TFmInstrument::GetBase
+#
+#   Purpose....: Get base of A
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TFmInstrument::GetBase(int Octave)
+{
+    switch (Octave)
+    {
+        case -4:
+            return 27.5;
+            
+        case -3:
+            return 55.0;
+                        
+        case -2:
+            return 110.0;
+            
+        case -1:
+            return 220.0;
+            
+        case 0:
+            return 440.0;
+
+        case 1:
+            return 880.0;
+
+        case 2:
+            return 1760.0;
+
+        case 3:
+            return 3520.0;
+
+        case 4:
+            return 7040.0;
+
+        case 5:
+            return 14080.0;
+
+        default:
+            return 0.0;        
+            
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayA
+#
+#   Purpose....: Play A
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayA(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayBFlat
+#
+#   Purpose....: Play B flat
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayBFlat(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.05946 * base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayB
+#
+#   Purpose....: Play B
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayB(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.12246 * base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayC
+#
+#   Purpose....: Play C
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayC(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.18921 * base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayCSharp
+#
+#   Purpose....: Play C sharp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayCSharp(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.25992 * base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayD
+#
+#   Purpose....: Play D
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayD(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.33484 * base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayDSharp
+#
+#   Purpose....: Play D sharp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayDSharp(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.41421 * base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayE
+#
+#   Purpose....: Play E
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayE(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.49831 * base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayF
+#
+#   Purpose....: Play F
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayF(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.58740 * base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayFSharp
+#
+#   Purpose....: Play F Sharp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayFSharp(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.68179 * base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayG
+#
+#   Purpose....: Play G
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayG(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.78180 * base, LeftVolume, RightVolume, SustainMs);
+}
+
+/*##########################################################################
+#
+#   Name       : TFmInstrument::PlayAFlat
+#
+#   Purpose....: Play A flat
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFmInstrument::PlayAFlat(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs)
+{
+    long double base = GetBase(Octave);
+
+    Play(1.88775 * base, LeftVolume, RightVolume, SustainMs);
+}

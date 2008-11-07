@@ -57,8 +57,22 @@ public:
 
 	void Play(long double Freq, long double LeftVolume, long double RightVolume, long double SustainMs);
 
+    void PlayA(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayBFlat(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayB(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayC(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayCSharp(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayD(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayDSharp(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayE(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayF(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayFSharp(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayG(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+    void PlayAFlat(int Octave, long double LeftVolume, long double RightVolume, long double SustainMs);
+
 protected:
 	TFmInstrument(int FmHandle, int SampleRate, int C, int M, long double Beta);
+    long double GetBase(int Octave);
 
 	int FSampleRate;
 	int FHandle;
