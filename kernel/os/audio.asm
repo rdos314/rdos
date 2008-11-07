@@ -391,7 +391,7 @@ FlushChannel    Proc near
     mov cx,ds:aos_buffer_size
     sub cx,ds:aos_in_buf_pos
     or cx,cx
-    jz fcWait
+    jz fcDone
 ;
     movzx ecx,cx
     movzx edi,ds:aos_in_buf_pos
@@ -418,8 +418,13 @@ fcWait:
     mov ds,ax
 	mov bx,ds:ads_thread
     Signal        
-    WaitForSignal
 ;
+    GetSystemTime
+    add eax,1193 * 100
+    adc edx,0
+    WaitForSignalWithTimeout
+
+fcDone:
     popad
     pop es
     pop ds
