@@ -1445,6 +1445,8 @@ RetransmitSynSent	Proc near
 ;
 	xor ecx,ecx
 	call CreateSegment
+	jc rssDone
+;	
 	mov es:[di].tcp_flags, SYN
 	mov eax,ds:tcp_iss
 	Reverse
