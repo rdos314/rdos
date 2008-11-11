@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# Foundation, Inc., 59 Temple Place,Suite 330, Boston, MA  02111-1307  USA
 #
 # The author of this program may be contacted at leif@rdos.net
 #
@@ -344,7 +344,7 @@ void TMp3Player::Load(const char *FileName)
     if (FFileHandle)
     {
         FFileSize = RdosGetFileSize(FFileHandle);
-        
+
         FMapHandle = RdosCreateNamedFileMapping(FileName, FFileSize, FFileHandle);
         if (FMapHandle)
         {                 
@@ -385,7 +385,7 @@ void TMp3Player::Close()
     {
 		if (FMapHandle)
         {
-            RdosUnmapView(FMapHandle);
+			RdosUnmapView(FMapHandle);
             RdosCloseMapping(FMapHandle);
 			FMapHandle = 0;
 		}
@@ -467,7 +467,7 @@ void TMp3Player::SetPosition(int ms)
             FCurrentPos = FMp3Start + (unsigned int)( (long double)ms / (long double)FSongMs * (long double)FMp3Size);
     }
     else
-        FCurrentPos = 0;
+		FCurrentPos = 0;
 
 }
 
@@ -557,12 +557,15 @@ void TMp3Player::Thread()
 		else
 			RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[0]);
 	}
-					
-    RdosCloseAudioOutChannel(FAudioHandle);
 
-    delete stream;
-    delete frame;
-    delete synth;
+	RdosCloseAudioOutChannel(FAudioHandle);
+
+	delete stream;
+	delete frame;
+	delete synth;
+
+	FThreadRunning = FALSE;
+
 }
 
 /*##########################################################################
@@ -579,10 +582,10 @@ void TMp3Player::Thread()
 void TMp3Player::Start()
 {
     if (!FThreadRunning)
-    {
-        FThreadRunning = TRUE;
+	{
+		FThreadRunning = TRUE;
 		RdosCreatePrioThread(ThreadStartup, 4, "MP3", this, 0x1000);
-    }
+	}
 }
 
 /*##########################################################################
@@ -598,5 +601,5 @@ void TMp3Player::Start()
 ##########################################################################*/
 void TMp3Player::Stop()
 {
-    FThreadRunning = FALSE;
+	FThreadRunning = FALSE;
 }
