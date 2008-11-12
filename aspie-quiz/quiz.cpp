@@ -688,12 +688,12 @@ int TQuiz::GetQuizId(TQuiz *quiz)
 	for (cross = 0; cross < MAX_CROSS; cross++)
 	{
 		if (CrossQuiz[cross])
-		    maxcross = cross;
+			 maxcross = cross;
 
 		if (CrossQuiz[cross] == quiz)
 			 return cross;
-    }
-    return maxcross + 1;
+	 }
+	 return maxcross + 1;
 }
 
 /*##################  TQuiz::DefineCross ##########################
@@ -860,16 +860,16 @@ const char *TQuiz::GetGlobalQuestionText(int GlobalId)
 
     for (cross = 0; cross < MAX_CROSS; cross++)
     {
-        quiz = CrossQuiz[cross];
+		  quiz = CrossQuiz[cross];
 		if (quiz)
-        {
+		  {
 				for (q = 0; q < quiz->N; q++)
-            {
-                if (quiz->Quiz[q].GlobalId == GlobalId)
-                    return quiz->Quiz[q].Text;
-            }
-        }
-    }
+				{
+					 if (quiz->Quiz[q].GlobalId == GlobalId)
+						  return quiz->Quiz[q].Text;
+				}
+		  }
+	 }
 
 	return "";
 }
@@ -974,7 +974,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
         {            
             for (cross = 0; cross < MAX_CROSS && !found; cross++)
             {
-                quiz = CrossQuiz[cross];
+					 quiz = CrossQuiz[cross];
 					 if (quiz)
                 {
                     for (q = 0; q < quiz->N && !found; q++)
@@ -1003,7 +1003,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
         {            
 			for (cross = 0; cross < MAX_CROSS && !found; cross++)
             {
-                quiz = CrossQuiz[cross];
+					 quiz = CrossQuiz[cross];
                 if (quiz)
 					 {
                     for (q = 0; q < quiz->N && !found; q++)
@@ -1122,10 +1122,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
         {
             sprintf(str, "  Quiz[%d].Text = \"", i);
             file.Write(str);
-            file.Write(Quiz[i].Text);
-            file.Write("\";\n");                            
-        }
-    }
+				file.Write(Quiz[i].Text);
+				file.Write("\";\n");
+		  }
+	 }
 }
 
 /*##################  TQuiz::WriteSetupCross ##########################
@@ -1154,46 +1154,46 @@ void TQuiz::WriteSetupCross(const char *filename)
 	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 	{
 		if (!GlobalArr[i])
-	    {
+		 {
 			GlobalId = i;
-	        break;
-	    }
-    }
+			  break;
+		 }
+	 }
 
-    for (i = 0; i < N; i++)
-    {
+	 for (i = 0; i < N; i++)
+	 {
 		found = FALSE;
-        
+
 		  if (Quiz[i].GlobalId >= 0)
-        {            
-            for (cross = 0; cross < MAX_CROSS && !found; cross++)
-            {
-                quiz = CrossQuiz[cross];
-                if (quiz)
-                {
-                    for (q = 0; q < quiz->N && !found; q++)
-                    {
-                        if (Quiz[i].GlobalId == quiz->Quiz[q].GlobalId)
-                        {
+		  {
+				for (cross = 0; cross < MAX_CROSS && !found; cross++)
+				{
+					 quiz = CrossQuiz[cross];
+					 if (quiz)
+					 {
+						  for (q = 0; q < quiz->N && !found; q++)
+						  {
+								if (Quiz[i].GlobalId == quiz->Quiz[q].GlobalId)
+								{
 									 topq = q;
-                            topquiz = quiz;
-                            
-                            for (clink = cross + 1; clink < MAX_CROSS; clink++)
-                            {
-                                cquiz = CrossQuiz[clink];
-                                if (cquiz)
-                                {
+									 topquiz = quiz;
+
+									 for (clink = cross + 1; clink < MAX_CROSS; clink++)
+									 {
+										  cquiz = CrossQuiz[clink];
+										  if (cquiz)
+										  {
 									for (cq = 0; cq < cquiz->N; cq++)
-                                    {
-                                        if (cquiz->Quiz[cq].CrossQuiz == topquiz)
-                                        {
-                                            if (cquiz->Quiz[cq].CrossInd == topq)
-                                            {
+												{
+													 if (cquiz->Quiz[cq].CrossQuiz == topquiz)
+													 {
+														  if (cquiz->Quiz[cq].CrossInd == topq)
+														  {
 																topquiz = cquiz;
 												topq = cq;
-                                            }
-                                        }
-                                    }
+														  }
+													 }
+												}
 										  }
                             }
                         
@@ -1517,6 +1517,54 @@ void TQuiz::OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
 
     WriteAsWeights(Asw, Ntw);
     WriteWikiWeights(Asw, Ntw);
+}
+
+/*##################  TQuiz::WriteOldQuestionCount ##########################
+*   Purpose....: Write number of current questions in older versions  		     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteOldQuestionCount(const char *filename, int Questions)
+{
+	TFile file(filename, 0);
+	int cross;
+	int q;
+	int i;
+	TQuiz *quiz;
+	char str[40];
+
+	 for (cross = 0; cross < MAX_CROSS; cross++)
+		  if (CrossQuiz[cross])
+				CrossQuiz[cross]->FCount = 0;
+
+
+	 for (i = 0; i < Questions; i++)
+	 {
+		  quiz = Quiz[i].CrossQuiz;
+		  cross = Quiz[i].CrossInd;
+
+		  while (quiz)
+		  {
+				quiz->FCount++;
+
+				q = quiz->Quiz[cross].CrossInd;
+				quiz = quiz->Quiz[cross].CrossQuiz;
+				cross = q;
+		  }
+	 }
+
+	 for (cross = 0; cross < MAX_CROSS; cross++)
+	 {
+		  if (CrossQuiz[cross])
+		  {
+				CrossQuiz[cross]->WriteName(file);
+
+				sprintf(str, ": %d\n", CrossQuiz[cross]->FCount);
+				file.Write(str);
+		  }
+	 }
 }
 
 /*##################  TQuiz::FindReferer ##########################

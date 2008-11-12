@@ -287,6 +287,8 @@ int main(int argc, char **argv)
 	Quiz[34] = new TQuizF2("quizf2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33]);
 	Quiz[35] = new TQuizF3("quizf3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34]);
 
+	Quiz[35]->WriteOldQuestionCount("vercnt.txt", 145);
+
 	 ExportAncestry("pca\\cauc.dat", ANCESTRY_CAUCASIAN);
 	 ExportAncestry("pca\\asian.dat", ANCESTRY_ASIAN);
 	 ExportAncestry("pca\\amerind.dat", ANCESTRY_AMERIND);

@@ -48,7 +48,7 @@
 #define MAX_ASPIE_PCA_AXIS      32      // must change in Import method as well!
 #define MAX_SCORE               501
 
-#define MAX_USERS               5000
+#define MAX_USERS               10000
 
 #define PCA_TYPE_ALL            0
 #define PCA_TYPE_MALE           1
@@ -353,6 +353,8 @@ public:
 	void WriteSetupTexts(const char *filename); 
 	void WriteSetupCross(const char *filename); 
 
+    void WriteOldQuestionCount(const char *filename, int Questions);
+
     void CalcGlobal();
 
     void ExportGlobalSql(const char *filename);
@@ -570,6 +572,8 @@ protected:
 	TReferer AsianRef;
 
 	int FFirst;
+
+    int FCount;
 
 	TQuiz *CrossQuiz[MAX_CROSS];
 
