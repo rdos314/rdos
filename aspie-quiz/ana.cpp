@@ -288,6 +288,7 @@ int main(int argc, char **argv)
 	Quiz[35] = new TQuizF3("quizf3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34]);
 
 	Quiz[35]->WriteOldQuestionCount("vercnt.txt", 145);
+	Quiz[35]->WriteReverseQuestionCount("revcnt.txt");
 
 	 ExportAncestry("pca\\cauc.dat", ANCESTRY_CAUCASIAN);
 	 ExportAncestry("pca\\asian.dat", ANCESTRY_ASIAN);
@@ -994,7 +995,7 @@ int main(int argc, char **argv)
 
 	printf("referers\r\n");
 
-#ifdef ALL
+//#ifdef ALL
 	 Quiz[0]->WriteReferers("eval\\ref1.htm");
 	 Quiz[1]->WriteReferers("eval\\ref2.htm");
 	 Quiz[2]->WriteReferers("eval\\ref3.htm");
@@ -1027,7 +1028,7 @@ int main(int argc, char **argv)
 	 Quiz[29]->WriteReferers("eval\\refn2.htm");
 	 Quiz[30]->WriteReferers("eval\\refn3.htm");
 	 Quiz[31]->WriteReferers("eval\\refn4.htm");
-#endif
+//#endif
 
 	 Quiz[32]->WriteReferers("eval\\reffi.htm");
 	 Quiz[33]->WriteReferers("eval\\reff1.htm");

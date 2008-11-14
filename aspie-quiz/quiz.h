@@ -354,6 +354,7 @@ public:
 	void WriteSetupCross(const char *filename); 
 
     void WriteOldQuestionCount(const char *filename, int Questions);
+    void WriteReverseQuestionCount(const char *filename);
 
     void CalcGlobal();
 
@@ -549,6 +550,8 @@ protected:
 	TReferer FemaleAsRef;
 	TReferer MaleNonAsRef;
 	TReferer FemaleNonAsRef;
+	TReferer FemaleRef;
+	TReferer MaleRef;
 	TReferer HyperlexiaRef;
 	TReferer DyspraxiaRef;
 	TReferer DyslexiaRef;

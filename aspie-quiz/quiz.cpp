@@ -302,6 +302,8 @@ TQuiz::TQuiz(int Questions)
 	 FemaleAsRef("", "Female AS/HFA/PDD"),
 	  MaleNonAsRef("", "Male non-AS/HFA/PDD"),
 	 FemaleNonAsRef("", "Female non-AS/HFA/PDD"),
+	 MaleRef("", "Male"),
+	 FemaleRef("", "Female"),
 	 HyperlexiaRef("", "Hyperlexia"),
 	 DyspraxiaRef("", "Dyspraxia"),
 	 DyslexiaRef("", "Dyslexia"),
@@ -1562,6 +1564,53 @@ void TQuiz::WriteOldQuestionCount(const char *filename, int Questions)
 				CrossQuiz[cross]->WriteName(file);
 
 				sprintf(str, ": %d\n", CrossQuiz[cross]->FCount);
+				file.Write(str);
+		  }
+	 }
+}
+
+/*##################  TQuiz::WriteReverseQuestionCount ##########################
+*   Purpose....: Write number of reversed questions in older versions  		     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteReverseQuestionCount(const char *filename)
+{
+	TFile file(filename, 0);
+	int cross;
+	int i;
+	TQuiz *quiz;
+	char str[40];
+
+    FCount = 0;
+    
+    for (i = 0; i < GetQuizN(); i++)
+        if (Quiz[i].Reverse)
+            FCount++;
+
+	for (cross = 0; cross < MAX_CROSS; cross++)
+	{
+	    if (CrossQuiz[cross])
+	    {
+	        quiz = CrossQuiz[cross];
+	        
+			quiz->FCount = 0;
+
+			for (i = 0; i < quiz->GetQuizN(); i++)
+			    if (quiz->Quiz[i].Reverse)
+			        quiz->FCount++;
+        }
+    }
+
+	 for (cross = 0; cross < MAX_CROSS; cross++)
+	 {
+		  if (CrossQuiz[cross])
+		  {
+				CrossQuiz[cross]->WriteName(file);
+
+				sprintf(str, ": %d\r\n", CrossQuiz[cross]->FCount);
 				file.Write(str);
 		  }
 	 }
@@ -4603,6 +4652,8 @@ void TQuiz::WriteReferers(const char *filename)
 	WriteReferer(file, &FemaleAsRef);
 	WriteReferer(file, &MaleNonAsRef);
 	WriteReferer(file, &FemaleNonAsRef);
+	WriteReferer(file, &MaleRef);
+	WriteReferer(file, &FemaleRef);
 	WriteReferer(file, &AspieRef);
 	WriteReferer(file, &HyperlexiaRef);
 	WriteReferer(file, &DyspraxiaRef);

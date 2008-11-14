@@ -903,6 +903,11 @@ void TQuizN1::LoadReferers()
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+		if (Row.Gender == 1)
+			UpdateReferer(&MaleRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+        else			
+			UpdateReferer(&FemaleRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+	
 		ref = FindReferer(Row.Referer);
 		if (!ref)
 			ref = AddReferer(Row.Referer, Row.Referer);
