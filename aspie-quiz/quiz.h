@@ -355,6 +355,7 @@ public:
 
     void WriteOldQuestionCount(const char *filename, int Questions);
     void WriteReverseQuestionCount(const char *filename);
+    void WriteNoAnswerStats(const char *filename);
 
     void CalcGlobal();
 

@@ -1616,6 +1616,28 @@ void TQuiz::WriteReverseQuestionCount(const char *filename)
 	 }
 }
 
+/*##################  TQuiz::WriteNoAnswerStats ##########################
+*   Purpose....: Write unanswered item stats  		     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteNoAnswerStats(const char *filename)
+{
+	TFile file(filename, 0);
+	int i;
+	long double val;
+	char str[40];
+
+    for (i = 0; i < GetQuizN(); i++)
+    {
+        val = 100.0 * (long double)Quiz[i].NoAnswer / (long double)All.ValueCount;
+    	sprintf(str, "%5.1Lf\r\n", val);
+	    file.Write(str);
+	}
+}
+
 /*##################  TQuiz::FindReferer ##########################
 *   Purpose....: Find referer in array    					      	        #
 *   In params..: *                                                          #

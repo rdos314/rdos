@@ -289,6 +289,7 @@ int main(int argc, char **argv)
 
 	Quiz[35]->WriteOldQuestionCount("vercnt.txt", 145);
 	Quiz[35]->WriteReverseQuestionCount("revcnt.txt");
+	Quiz[35]->WriteNoAnswerStats("noans.txt");
 
 	 ExportAncestry("pca\\cauc.dat", ANCESTRY_CAUCASIAN);
 	 ExportAncestry("pca\\asian.dat", ANCESTRY_ASIAN);
