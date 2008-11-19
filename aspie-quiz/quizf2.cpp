@@ -1946,6 +1946,355 @@ void TQuizF2::WriteRetest(const char *filename)
 	file.Write("<br><br>");
 }
 
+
+/*##################  TQuizF2::ExportIPIP ##########################
+*   Purpose....: Export IPIP cases as excel-data. Make ? into 'NO' case 	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizF2::ExportIPIP(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	file.Write("\"\", ");
+	file.Write("\"\", ");
+
+	for (i = 0; i < 270; i++)
+	{
+    	file.Write("\"");
+
+//  	strncpy(str, Quiz[i].Text, 35);
+//      str[35] = 0;
+		sprintf(str, "#%d", i + 1);
+		file.Write(str);
+
+		file.Write("\"");
+		if (i != 270 - 1)
+			file.Write(", ");
+	}
+	file.Write("\n");
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    if (Row.Quiz[269])
+		{
+			sprintf(str, "\"%d\", ", Row.AsResult);
+			file.Write(str);
+
+			sprintf(str, "\"%d\", ", Row.NtResult);
+			file.Write(str);
+
+			for (i = 0; i < 270; i++)
+			{
+    			ival = Row.Quiz[i];
+	    		if (ival)
+					ival--;
+                    
+				sprintf(str, "\"%d\"", ival);
+				file.Write(str);
+				if (i != 270 - 1)
+					file.Write(", ");
+			}
+			file.Write("\n");
+		}
+	}
+}
+
+/*##################  TQuizF2::ImportIPIP ##########################
+*   Purpose....: Import MVSP loadings for IPIP  	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizF2::ImportIPIP(const char *filename)
+{
+	char buf[MAX_IN_ROW];
+	int size;
+	char *rowstr;
+	char *ptr;
+	long pos = 0;
+	int i;
+	long double d1, d2, d3, d4, d5, d6, d7, d8, d9, d10;
+	int q;
+	int count;
+	TFile infile(filename);
+
+	while (size = infile.Read(buf, MAX_IN_ROW))
+	{
+		buf[size] = 0;
+		rowstr = strstr(buf, "#");
+		if (rowstr)
+		{
+			rowstr++;
+			ptr = strstr(rowstr, "\r");
+			if (ptr)
+				 *ptr = 0;
+			else
+				 rowstr = 0;
+		}
+
+		pos += strlen(buf) + 1;
+		infile.SetPos(pos);
+
+		if (rowstr)
+		{
+			for (i = 0; i < strlen(rowstr); i++)
+			{
+				switch (rowstr[i])
+				{
+					case ',':
+						rowstr[i] = '.';
+						break;
+
+					case 0x9:
+					case 0xd:
+						rowstr[i] = ' ';
+						break;
+				}
+			}
+
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf", &q, &d1, &d2, &d3, &d4, &d5, &d6, &d7, &d8, &d9, &d10) == 11)
+			{
+				q--;
+				IpipLoadArr[q][0] = d1;
+				IpipLoadArr[q][1] = d2;
+				IpipLoadArr[q][2] = d3;
+				IpipLoadArr[q][3] = d4;
+				IpipLoadArr[q][4] = d5;
+				IpipLoadArr[q][5] = d6;
+				IpipLoadArr[q][6] = d7;
+				IpipLoadArr[q][7] = d8;
+				IpipLoadArr[q][8] = d9;
+				IpipLoadArr[q][9] = d10;
+			}
+		}
+	}
+}
+
+/*##################  TQuizF2::CalcIpipCongruence ##########################
+*   Purpose....: Calculate congruence using IPIP loadings  	      	   	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizF2::CalcIpipCongruence()
+{
+	 long double IpipArr[120][5] =
+	 {
+		{-0.13,  0.58,  0.12,  0.08, -0.02},
+		{ 0.62, -0.10,  0.12,  0.21, -0.05},
+		 { 0.15,  0.04, -0.08,  0.02,  0.46},
+		{ 0.25, -0.18, -0.04,  0.41, -0.10},
+		{ 0.04, -0.16,  0.55,  0.02,  0.07},
+		{ 0.12,  0.56,  0.10, -0.32, -0.05},
+		{ 0.64,  0.00, -0.10,  0.02, -0.09},
+		{ 0.01,  0.04, -0.03,  0.19,  0.55},
+		{-0.23, -0.12,  0.13,  0.45,  0.01},
+		{-0.01,  0.10,  0.48,  0.12, -0.17},
+		{-0.27,  0.57, -0.14, -0.09,  0.14},
+		{ 0.43, -0.07,  0.41, -0.20,  0.15},
+		{ 0.13,  0.49,  0.07,  0.16,  0.27},
+		{ 0.23,  0.09,  0.13,  0.53,  0.12},
+		{-0.03, -0.13,  0.32,  0.19,  0.09},
+		{-0.54,  0.25, -0.18, -0.02, -0.03},
+		{ 0.21,  0.03,  0.40,  0.06,  0.01},
+		{ 0.27, -0.13, -0.19,  0.04,  0.27},
+		{-0.29, -0.07,  0.07,  0.41, -0.09},
+		{ 0.06, -0.03,  0.55,  0.12,  0.03},
+    	{ 0.13,  0.31, -0.20, -0.14,  0.10},
+    	{ 0.55,  0.02, -0.09, -0.01,  0.08},
+    	{-0.04, -0.07,  0.11, -0.01,  0.54},
+    	{-0.08,  0.08, -0.03,  0.49, -0.20},
+    	{-0.03, -0.12,  0.54,  0.02, -0.01},
+    	{-0.10,  0.64, -0.03,  0.08, -0.13},
+    	{ 0.51, -0.11,  0.08,  0.36, -0.04},
+   	    { 0.00,  0.03, -0.13,  0.11,  0.29},
+    	{ 0.03,  0.16, -0.06,  0.43,  0.19},
+    	{-0.33, -0.35,  0.40,  0.10,  0.05},
+    	{-0.22,  0.58, -0.02, -0.08, -0.05},
+    	{ 0.64, -0.24,  0.15,  0.21, -0.04},
+    	{ 0.27,  0.12, -0.28, -0.01,  0.35},
+    	{ 0.22, -0.14, -0.02,  0.49, -0.03},
+    	{ 0.18, -0.18,  0.43, -0.05,  0.23},
+    	{ 0.02,  0.57,  0.05, -0.34, -0.01},
+	    { 0.67, -0.04,  0.03,  0.06,  0.00},
+    	{ 0.11,  0.07, -0.01,  0.25,  0.46},
+    	{-0.16, -0.06,  0.29,  0.41,  0.10},
+    	{-0.08, -0.06,  0.48,  0.09, -0.11},
+    	{-0.30,  0.53, -0.22, -0.06, -0.03},
+    	{ 0.43, -0.07,  0.33, -0.21,  0.15},
+    	{ 0.16,  0.19,  0.04,  0.44,  0.24},
+    	{ 0.17,  0.14,  0.09,  0.57,  0.18},
+    	{-0.12, -0.14,  0.35,  0.28,  0.06},
+    	{-0.56,  0.21, -0.07,  0.15, -0.12},
+    	{ 0.39,  0.02,  0.30,  0.02,  0.00},
+    	{ 0.25, -0.31, -0.05,  0.00,  0.35},
+    	{-0.20, -0.42,  0.04,  0.40,  0.09},
+		{ 0.08, -0.04,  0.54,  0.08,  0.17},
+    	{ 0.13,  0.25, -0.21, -0.07,  0.10},
+    	{ 0.49, -0.05, -0.11, -0.07,  0.20},
+    	{ 0.02, -0.09, -0.02, -0.01,  0.57},
+    	{-0.27,  0.37, -0.22,  0.21, -0.18},
+    	{ 0.16, -0.20,  0.58, -0.01,  0.07},
+    	{-0.13,  0.55, -0.10,  0.11, -0.11},
+    	{ 0.59, -0.19,  0.01,  0.17,  0.00},
+    	{ 0.06, -0.06, -0.19, -0.01,  0.22},
+    	{ 0.05,  0.17,  0.01,  0.49,  0.17},
+    	{-0.27, -0.33,  0.35,  0.26,  0.04},
+    	{-0.20,  0.59, -0.12,  0.08, -0.12},
+    	{ 0.59, -0.19,  0.13,  0.25, -0.02},
+    	{ 0.13,  0.21, -0.30,  0.07,  0.35},
+    	{ 0.20, -0.13, -0.07,  0.45, -0.09},
+    	{ 0.14, -0.29,  0.49,  0.05,  0.12},
+    	{ 0.14,  0.60,  0.03, -0.33, -0.03},
+    	{ 0.52, -0.09,  0.02,  0.21, -0.19},
+    	{ 0.07,  0.10, -0.03,  0.25,  0.44},
+    	{-0.14, -0.08,  0.20,  0.54,  0.04},
+    	{-0.08, -0.06,  0.49,  0.07, -0.16},
+    	{-0.29,  0.63, -0.18, -0.12,  0.10},
+    	{ 0.39, -0.10,  0.47, -0.24,  0.17},
+    	{ 0.07,  0.23,  0.11,  0.25,  0.27},
+    	{ 0.06,  0.11,  0.08,  0.55,  0.23},
+    	{-0.26, -0.01,  0.39,  0.42, -0.17},
+    	{-0.46,  0.25, -0.11, -0.10,  0.00},
+    	{ 0.25, -0.14,  0.36,  0.07,  0.12},
+    	{ 0.30, -0.29, -0.05,  0.05,  0.28},
+    	{-0.16, -0.21,  0.17,  0.55,  0.03},
+		{ 0.00, -0.12,  0.58,  0.17,  0.10},
+    	{ 0.15,  0.27, -0.32, -0.08,  0.00},
+    	{ 0.41,  0.06, -0.36, -0.28,  0.14},
+    	{ 0.00, -0.21,  0.04, -0.02,  0.58},
+    	{-0.28,  0.37, -0.22,  0.22, -0.18},
+    	{ 0.09, -0.22,  0.57,  0.13, -0.03},
+    	{-0.22,  0.57, -0.27,  0.00, -0.09},
+    	{ 0.40, -0.33,  0.18,  0.27,  0.09},
+    	{ 0.00,  0.03, -0.20,  0.06,  0.25},
+    	{ 0.14,  0.11,  0.02,  0.48,  0.17},
+    	{-0.36, -0.32,  0.34,  0.18,  0.03},
+    	{-0.10,  0.73, -0.02, -0.02, -0.06},
+    	{ 0.52, -0.18,  0.06,  0.36, -0.16},
+    	{ 0.00,  0.18, -0.26,  0.04,  0.45},
+    	{ 0.23, -0.26, -0.03,  0.49, -0.07},
+    	{ 0.21, -0.24,  0.51, -0.06,  0.16},
+    	{ 0.00,  0.55,  0.05, -0.30, -0.01},
+    	{ 0.63, -0.13, -0.04,  0.10, -0.08},
+    	{ 0.00,  0.01,  0.03,  0.22,  0.49},
+    	{-0.12, -0.13,  0.20,  0.41,  0.14},
+    	{-0.10, -0.07,  0.46,  0.07, -0.14},
+    	{-0.31,  0.52, -0.23, -0.04, -0.09},
+    	{ 0.39, -0.26,  0.35, -0.15,  0.24},
+    	{ 0.14,  0.29,  0.03,  0.43,  0.17},
+    	{ 0.21,  0.01,  0.11,  0.47,  0.13},
+    	{-0.05, -0.18,  0.34,  0.23,  0.09},
+    	{-0.44,  0.32, -0.06,  0.06, -0.04},
+    	{ 0.01,  0.03,  0.35, -0.06,  0.01},
+    	{ 0.19, -0.17, -0.19, -0.04,  0.39},
+    	{-0.14, -0.16,  0.08,  0.41,  0.09},
+		{ 0.00, -0.11,  0.52,  0.15,  0.14},
+    	{ 0.04,  0.33, -0.23, -0.03, -0.02},
+    	{ 0.60,  0.09, -0.28, -0.12,  0.07},
+    	{-0.01, -0.10, -0.01,  0.01,  0.59},
+    	{-0.27, -0.05,  0.02,  0.30,  0.06},
+    	{ 0.10, -0.21,  0.59,  0.05,  0.00},
+    	{-0.11,  0.53, -0.13,  0.05, -0.21},
+    	{ 0.37, -0.45,  0.12,  0.32,  0.04},
+    	{-0.03, -0.05, -0.29,  0.05,  0.22},
+    	{ 0.07,  0.03,  0.08,  0.39,  0.18},
+    	{-0.34, -0.34,  0.41,  0.18,  0.09}
+    };
+
+    int factor;
+	int axis;
+	int q;
+	long double rsum;
+	long double asum[2];
+	long double x;
+	long double y;
+    long double xsum;
+    long double ysum;	
+    long double sqsum;
+    int val;
+    int count;
+
+	for (factor = 0; factor < 5; factor++)
+    {
+    	for (axis = 0; axis < 10; axis++)
+        {
+        	xsum = 0;
+        	ysum = 0;
+
+			rsum = 0;
+        
+			for (q = 0; q < 120; q++)
+			{
+				x = IpipLoadArr[150 + q][axis];
+				y = IpipArr[q][factor];
+
+				rsum += x * y;
+				xsum += x * x;
+				ysum += y * y;
+			}
+
+			if (rsum < 0)
+			    rsum = -rsum;
+
+			sqsum = xsum * ysum;
+
+			if (sqsum > 0.0)
+				  sqsum = sqrtl(xsum * ysum);
+
+		    if (sqsum > 0.0)
+				IpipCon[factor][axis] = rsum / sqsum;
+			else
+				 IpipCon[factor][axis] = 0.0;
+
+		}
+	 }
+
+
+	count = GetQuizN();
+
+	xsum = 0;
+	ysum = 0;
+
+	for (axis = 0; axis < 2; axis++)
+    {
+        asum[axis] = 0;
+        
+    	for (q = 0; q < count; q++)
+	    {
+	        x = Quiz[q].Pca[axis];
+	        y = IpipLoadArr[q][axis];
+
+            asum[axis] += x * y;
+            xsum += x * x;
+            ysum += y * y;
+        }
+
+        if (asum[axis] < 0)
+            asum[axis] = -asum[axis];
+	}
+
+    sqsum = xsum * ysum;
+
+    if (sqsum > 0.0)
+    	sqsum = sqrtl(xsum * ysum);
+		
+    if (sqsum > 0.0)
+        IpipPcaCon = (asum[0] + asum[1]) / sqsum;
+    else
+		IpipPcaCon = 0;
+}
+
 /*##################  TQuizF2::WriteIPIP ##########################
 *   Purpose....: Write IPIP NEO personality test report             			     	        #
 *   In params..: *                                                          #
@@ -1999,7 +2348,13 @@ void TQuizF2::WriteIPIP(const char *filename)
 	int i;
 	int ival;
 	char str[80];
+	int factor;
+	int axis;
 	TFile file(filename, 0);
+
+	ExportIPIP("pca\\ipip.dat");
+	ImportIPIP("pca\\ipip.txt");
+	CalcIpipCongruence();
 
 	Count = 0;
 	AsSum = 0;
@@ -2577,5 +2932,86 @@ void TQuizF2::WriteIPIP(const char *filename)
 
     file.Write("</table>");
 
+
+
+	file.Write("<h2>IPIP congruence</h2>");
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 15);
+	file.Write("Axis");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 15);
+	file.Write("Extrovert");
+	WriteFieldFooter(file);
+	
+	WriteCenteredFieldHeader(file, 15);
+	file.Write("Neuroticism");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 15);
+	file.Write("Conscientousness");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 15);
+	file.Write("Agreeableness");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 15);
+	file.Write("Openness");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+    for (axis = 0; axis < 10; axis++)
+    {
+
+	    file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 15);
+
+        switch (axis)
+        {
+            case 0:
+                file.Write("Neurodiversity");
+                break;
+
+            case 1:
+                file.Write("Neutotypical");
+                break;
+
+            case 2:
+                file.Write("G");
+                break;
+
+            default:
+                sprintf(str, "%d\r\n", axis + 1);
+                file.Write(str);
+        }
+
+        WriteFieldFooter(file);	        
+
+	    for (factor = 0; factor < 5; factor++)
+	    {
+	        val = IpipCon[factor][axis];
+        	WriteCenteredFieldHeader(file, 15);
+        	sprintf(str, "%5.2Lf\r\n", val);
+        	file.Write(str);
+        	WriteFieldFooter(file);	        
+	    }
+
+    	file.Write("</tr>");
+    }
+
+    file.Write("</table>");
+
+    file.Write("Aspie-quiz factor congruence: ");
+	val = IpipPcaCon;
+    sprintf(str, "%5.2Lf\r\n", val);
+    file.Write(str);
+    
 }
 
