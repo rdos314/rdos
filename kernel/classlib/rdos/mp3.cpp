@@ -484,34 +484,42 @@ void TMp3Player::SetPosition(int ms)
 ##########################################################################*/
 void TMp3Player::Play()
 {
-    TMadStream stream;
-    TMadFrame frame;
-    TMadSynth synth;
-    int size;
+	TMadStream *stream;
+	TMadFrame *frame;
+	TMadSynth *synth;
+	int size;
+
+	stream = new TMadStream;
+	frame = new TMadFrame;
+	synth = new TMadSynth;
 
 	FAudioHandle = RdosCreateAudioOutChannel(FSampleRate, 31, FVolume);
 
-	stream.SetBuffer(FCurrentPos, FMp3Size - (FCurrentPos - FMp3Start));
+	stream->SetBuffer(FCurrentPos, FMp3Size - (FCurrentPos - FMp3Start));
 
 	for (;;)
 	{
-		if (frame.Decode(&stream) == 0)
-			if (MAD_RECOVERABLE(stream.error)) // if recoverable error continue
+		if (frame->Decode(stream) == 0)
+			if (MAD_RECOVERABLE(stream->error)) // if recoverable error continue
 				continue;
 
-		if (stream.error == MAD_ERROR_BUFLEN)
+		if (stream->error == MAD_ERROR_BUFLEN)
 			break;
 
-		synth.Synth(&frame);
+		synth->Synth(frame);
 
-		size = synth.pcm.length;
-		if (synth.pcm.channels >= 2)
-			RdosWriteAudio(FAudioHandle, size, (int *)&synth.pcm.samples[0], (int *)&synth.pcm.samples[1]);
+		size = synth->pcm.length;
+		if (synth->pcm.channels >= 2)
+			RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[1]);
 		else
-			RdosWriteAudio(FAudioHandle, size, (int *)&synth.pcm.samples[0], (int *)&synth.pcm.samples[0]);
+			RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[0]);
 	}
-					
-    RdosCloseAudioOutChannel(FAudioHandle);
+
+	RdosCloseAudioOutChannel(FAudioHandle);
+
+	delete synth;
+	delete frame;
+	delete stream;
 }
 
 /*##########################################################################
