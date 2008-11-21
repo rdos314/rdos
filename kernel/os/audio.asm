@@ -870,6 +870,7 @@ PAGE
 
 quot = -4
 rest = -6
+insize = -8
 
 MixChannel  Proc near
     pushad
@@ -879,8 +880,13 @@ MixChannel  Proc near
 ;
     push bp
     mov bp,sp
-    sub sp,6
+    sub sp,8
 ;
+    mov ax,si
+    shr ax,4
+    sub ax,1
+    mov [bp].insize,ax
+;    
     mov cx,di
     shr cx,4
     movzx eax,si
@@ -903,8 +909,9 @@ MixChannel  Proc near
         
 mcInterpLoop:
     xor eax,eax
-    cmp cx,1
-    je mcInterpAdd
+    xor edx,edx
+    cmp si,[bp].insize
+    jae mcInterpAdd
 ;    
     movsx eax,word ptr fs:[4*esi+6]
     movsx edx,word ptr fs:[4*esi+2]
@@ -935,7 +942,7 @@ mcInterpNext:
     adc esi,[bp].quot
     loop mcInterpLoop
 ;    
-    add sp,6
+    add sp,8
     pop bp
     jmp mcDone
 
