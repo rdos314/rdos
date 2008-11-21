@@ -97,6 +97,7 @@ void TKeyboardDevice::Init()
 	OnKeyRelease = 0;
 	KeyPreview = 0;
 	Open();
+	Online();
 }
 
 /*##########################################################################
