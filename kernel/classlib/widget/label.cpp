@@ -31,6 +31,14 @@
 
 #define FALSE	0
 #define TRUE	!FALSE
+
+#define HOR_LEFT    0
+#define HOR_CENTER  1
+#define HOR_RIGHT   2
+
+#define VER_TOP     0
+#define VER_CENTER  1
+#define VER_BOTTOM  2
     
 /*##########################################################################
 #
@@ -79,6 +87,9 @@ TLabelControl::TLabelControl(TControl *control, int xstart, int ystart, int xsiz
 ##########################################################################*/
 TLabelControl::~TLabelControl()
 {
+    if (FOrgText)
+        delete FOrgText;
+
     if (FText)
         delete FText;
 
@@ -99,12 +110,21 @@ TLabelControl::~TLabelControl()
 ##########################################################################*/
 void TLabelControl::Init(int xstart, int ystart, int xsize, int ysize)
 {
+    FOrgText = 0;
     FText = 0;
     FFont = 0;
     FBackground = 0;
 
+    FHorAlign = HOR_CENTER;
+    FVerAlign = VER_CENTER;
+    
     FStartX = 0;
     FStartY = 0;
+
+    FUpperWidth = 0;
+    FLowerWidth = 0;
+    FLeftWidth = 0;
+    FRightWidth = 0;
 
     FBackR = 255;
     FBackG = 255;
@@ -113,6 +133,10 @@ void TLabelControl::Init(int xstart, int ystart, int xsize, int ysize)
     FDrawR = 0;
     FDrawG = 0;
     FDrawB = 0;
+
+    FBorderR = 0;
+    FBorderG = 0;
+    FBorderB = 0;
     
     Resize(xsize, ysize);
 	Move(xstart, ystart);
@@ -211,6 +235,241 @@ void TLabelControl::SetDrawColor(int r, int g, int b)
 
 /*##########################################################################
 #
+#   Name       : TLabelControl::SetUpperWidth
+#
+#   Purpose....: Set upper border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::SetUpperWidth(int width)
+{
+    FUpperWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::SetLowerWidth
+#
+#   Purpose....: Set lower border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::SetLowerWidth(int width)
+{
+    FLowerWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::SetLeftWidth
+#
+#   Purpose....: Set left border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::SetLeftWidth(int width)
+{
+    FLeftWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::SetRightWidth
+#
+#   Purpose....: Set right border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::SetRightWidth(int width)
+{
+    FRightWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::SetBorderColor
+#
+#   Purpose....: Set border color
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::SetBorderColor(int r, int g, int b)
+{
+    FBorderR = r;
+    FBorderG = g;
+    FBorderB = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AlignTopLeft
+#
+#   Purpose....: Align text top, left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AlignTopLeft()
+{
+    FHorAlign = HOR_LEFT;
+    FVerAlign = VER_TOP;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AlignTop
+#
+#   Purpose....: Align text top, center
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AlignTop()
+{
+    FHorAlign = HOR_CENTER;
+    FVerAlign = VER_TOP;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AlignTopRight
+#
+#   Purpose....: Align text top, right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AlignTopRight()
+{
+    FHorAlign = HOR_RIGHT;
+    FVerAlign = VER_TOP;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AlignLeft
+#
+#   Purpose....: Align text center, left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AlignLeft()
+{
+    FHorAlign = HOR_LEFT;
+    FVerAlign = VER_CENTER;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AlignCenter
+#
+#   Purpose....: Align text center, center
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AlignCenter()
+{
+    FHorAlign = HOR_CENTER;
+    FVerAlign = VER_CENTER;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AlignRight
+#
+#   Purpose....: Align text center, right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AlignRight()
+{
+    FHorAlign = HOR_RIGHT;
+    FVerAlign = VER_CENTER;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AlignBottomLeft
+#
+#   Purpose....: Align text bottom, left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AlignBottomLeft()
+{
+    FHorAlign = HOR_LEFT;
+    FVerAlign = VER_BOTTOM;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AlignBottom
+#
+#   Purpose....: Align text bottom, center
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AlignBottom()
+{
+    FHorAlign = HOR_CENTER;
+    FVerAlign = VER_BOTTOM;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AlignBottomRight
+#
+#   Purpose....: Align text bottom, right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AlignBottomRight()
+{
+    FHorAlign = HOR_RIGHT;
+    FVerAlign = VER_BOTTOM;
+}
+
+/*##########################################################################
+#
 #   Name       : TLabelControl::SetText
 #
 #   Purpose....: Set text
@@ -233,8 +492,8 @@ void TLabelControl::SetText(const char *Text)
     int xsize;
     int ysize;
 
-    if (FText)
-        if (!strcmp(Text, FText))
+    if (FOrgText && len > 0)
+        if (!strcmp(Text, FOrgText))
             return;
 
     for (row = 0; row < MAX_LABEL_ROWS; row++)
@@ -249,7 +508,17 @@ void TLabelControl::SetText(const char *Text)
     FText = new char[len + 1];
     strcpy(FText, Text);
 
+    if (FOrgText)
+        delete FOrgText;
+
+    FOrgText = new char[len + 1];
+    strcpy(FOrgText, Text);
+
     GetSize(&xsize, &ysize);
+
+    xsize -= 2 * FStartX;
+    xsize -= FLeftWidth;
+    xsize -= FRightWidth;
 
     row = 0;
     start = FText;
@@ -260,66 +529,108 @@ void TLabelControl::SetText(const char *Text)
 
     while (*ptr != 0)
     {
-        while (*ptr != 0 && *ptr != ' ' && *ptr != 0xd && *ptr != ' ')
+        while (*ptr != 0 && *ptr != ' ' && *ptr != 0xd && *ptr != 0xa && *ptr != ' ')
             ptr++;
 
-        if (*ptr == 0xd)
+        switch (*ptr)
         {
-            *ptr = 0;
-            ptr++;
-
-            if (*ptr == 0xa)
+            case 0xd:
+                *ptr = 0;
                 ptr++;
 
-            if (row < MAX_LABEL_ROWS)
-                row++;
-                
-            FTextRow[row] = start;
-            start = ptr;
-            prev = 0;
-        }
-        else
-        {
-            ch = *ptr;
-            *ptr = 0;
-
-            FFont->GetStringMetrics(start, &width, &height);
-
-            if (width > xsize)
-            {
-                if (prev)
-                {
-                    *ptr = ch;
-                    *prev = 0;
-
-                    if (row < MAX_LABEL_ROWS)
-                        row++;
-                
-                    FTextRow[row] = start;
-                    ptr = prev;
+                if (*ptr == 0xa)
                     ptr++;
-                    start = ptr;
+
+                if (row < MAX_LABEL_ROWS)
+                    row++;
+
+                while (*ptr == ' ' || *ptr == ' ')
+                    ptr++;
+                
+                FTextRow[row] = ptr;
+                start = ptr;
+                prev = 0;
+                break;
+
+            case 0xa:
+                *ptr = 0;
+                ptr++;
+
+                if (*ptr == 0xd)
+                    ptr++;
+
+                if (row < MAX_LABEL_ROWS)
+                    row++;
+
+                while (*ptr == ' ' || *ptr == ' ')
+                    ptr++;
+                
+                FTextRow[row] = ptr;
+                start = ptr;
+                prev = 0;
+                break;
+
+            default:            
+                ch = *ptr;
+                *ptr = 0;
+
+                FFont->GetStringMetrics(start, &width, &height);
+
+                if (width > xsize)
+                {
+                    if (prev)
+                    {
+                        *ptr = ch;
+                        *prev = 0;
+    
+                        if (row < MAX_LABEL_ROWS)
+                            row++;
+
+                        ptr = prev;
+    
+                        ptr++;
+    
+                        while (*ptr == ' ' || *ptr == ' ')
+                            ptr++;
+                                
+                        FTextRow[row] = ptr;
+                        start = ptr;
+                        prev = 0;
+                    }
+                    else
+                    {
+                        if (row < MAX_LABEL_ROWS)
+                            row++;
+    
+                        if (ch != 0)
+                        {
+                            ptr++;
+    
+                            while (*ptr == ' ' || *ptr == ' ')
+                                ptr++;
+                        }
+
+                        FTextRow[row] = ptr;
+                        start = ptr;
+                    }                     
                 }
                 else
                 {
-                    if (row < MAX_LABEL_ROWS)
-                        row++;
-
-                    FTextRow[row] = start;
-                    ptr++;
-                    start = ptr;
-                }                     
-            }
-            else
-            {
-                prev = ptr;
+                    prev = ptr;
                 
-                *ptr = ch;                
-                while (*ptr == ' ' || *ptr == ' ')
-                    ptr++;
-            }                        
+                    *ptr = ch;                
+                    while (*ptr == ' ' || *ptr == ' ')
+                        ptr++;
+                }                        
+                break;
         }
     }
+
+    if (FTextRow[row])
+		if (strlen(FTextRow[row]) == 0)
+            FTextRow[row] = 0;
+
+    Redraw();
 }
 
 /*##########################################################################
@@ -351,7 +662,12 @@ void TLabelControl::SetText(TString &Text)
 ##########################################################################*/
 void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
+	int xstart;
+    int ystart;
+    int xsize;
+    int ysize;
     int i;
+    int row;
     int xmax = xmin + width - 1;
     int ymax = ymin + height - 1;
 
@@ -369,6 +685,81 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
         {
             dev->SetDrawColor(FBackR, FBackG, FBackB);
             dev->DrawRect(xmin, ymin, xmax, ymax);
+        }
+
+        if (FUpperWidth || FLowerWidth || FLeftWidth || FRightWidth)
+        {
+            dev->SetDrawColor(FBorderR, FBorderG, FBorderB);
+            
+            for (i = 0; i < FUpperWidth; i++)
+                dev->DrawLine(xmin, ymin + i, xmin + width - 1, ymin + i);
+                
+            for (i = 0; i < FLowerWidth; i++)
+                dev->DrawLine(xmin, ymin + height - i - 1, xmin + width, ymin + height - i - 1);
+
+            for (i = 0; i < FLeftWidth; i++)
+                dev->DrawLine(xmin + i, ymin, xmin + i, ymin + height - 1);
+                
+            for (i = 0; i < FRightWidth; i++)
+                dev->DrawLine(xmin + width - i - 1, ymin, xmin + width - i - 1, ymin + height - 1);
+        } 
+
+		if (FOrgText)
+        {
+
+            FFont->GetStringMetrics("", &xsize, &ysize);
+
+            for (row = 0; row < MAX_LABEL_ROWS; row++)
+                if (FTextRow[row] == 0)
+                    break;
+
+            ysize = ysize * row;
+
+            switch (FVerAlign)
+            {
+                case VER_TOP:
+                    ystart = ymin + FStartY + FUpperWidth;
+                    break;
+
+                case VER_CENTER:
+                    ystart = ymin + (height - ysize) / 2;
+                    break;
+
+                case VER_BOTTOM:
+                    ystart = ymin + height - ysize - FStartY - FLowerWidth;
+                    break;        
+            }
+
+            for (row = 0; row < MAX_LABEL_ROWS; row++)
+            {
+                if (FTextRow[row])
+                {
+              		FFont->GetStringMetrics(FTextRow[row], &xsize, &ysize);
+    
+    				switch (FHorAlign)
+	    	        {
+		    	        case HOR_LEFT:
+    		    		    xstart = xmin + FStartX + FLeftWidth;
+	    		    	    break;
+
+        		       	case HOR_CENTER:
+	        			    xstart = xmin + (width - xsize) / 2;
+    	        			break;
+    
+	        	    	case HOR_RIGHT:
+		        	    	xstart = xmin + width - xsize - FStartX - FRightWidth;
+			        	    break;
+                    }
+        
+                    dev->SetFont(FFont);
+                    dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
+                    dev->DrawString(xstart, ystart, FTextRow[row]);
+                }
+                else
+                    break;
+
+                ystart += ysize;
+            }
         }
     }
 

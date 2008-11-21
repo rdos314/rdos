@@ -50,6 +50,22 @@ public:
 
     void SetText(TString &Text);
     void SetText(const char *Text);
+
+    void AlignTopLeft();
+    void AlignTop();
+    void AlignTopRight();
+    void AlignLeft();
+    void AlignCenter();
+    void AlignRight();
+    void AlignBottomLeft();
+    void AlignBottom();
+    void AlignBottomRight();
+
+    void SetUpperWidth(int width);
+    void SetLowerWidth(int width);
+    void SetLeftWidth(int width);
+    void SetRightWidth(int width);
+    void SetBorderColor(int r, int g, int b);
     
 protected:
   	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
@@ -57,8 +73,16 @@ protected:
 private:
     void Init(int xstart, int ystart, int xsize, int ysize);
 
+    int FHorAlign;
+    int FVerAlign;
+
     int FStartX;
     int FStartY;
+
+	int FUpperWidth;
+	int FLowerWidth;
+	int FLeftWidth;
+	int FRightWidth;
     
     int FBackR;
     int FBackG;
@@ -68,12 +92,17 @@ private:
     int FDrawG;
     int FDrawB;
 
+	int FBorderR;
+	int FBorderG;
+	int FBorderB;
+
     TFont *FFont;
     TBitmapGraphicDevice *FBackground;
 
     int FBitStartX;
     int FBitStartY;
 
+    char *FOrgText;
     char *FText;
     char *FTextRow[MAX_LABEL_ROWS];    
 
