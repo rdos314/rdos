@@ -66,6 +66,10 @@ wait_srcs = WAIT.ASM
 wait_objs = $(wait_srcs:.ASM=.OBJ)
 wait_rdvs = $(wait_srcs:.ASM=.RDV)
 
+wd_srcs = WD.ASM
+wd_objs = $(wd_srcs:.ASM=.OBJ)
+wd_rdvs = $(wd_srcs:.ASM=.RDV)
+
 timer_srcs = TIMER.ASM
 timer_objs = $(timer_srcs:.ASM=.OBJ)
 timer_rdvs = $(timer_srcs:.ASM=.RDV)
@@ -257,7 +261,7 @@ srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs
 			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs) \
-			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs)
+			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -284,7 +288,7 @@ rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(font_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
-			$(ir_rdvs) $(fm_rdvs)
+			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -574,6 +578,14 @@ WAIT.RDV : $(wait_objs)
 	$(wait_objs)
 	WAIT.RDV
 	WAIT;
+!
+
+WD.RDV : $(wd_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(wd_objs)
+	WD.RDV
+	WD;
 !
 
 TIMER.RDV : $(timer_objs)
