@@ -3642,6 +3642,14 @@ void TQuiz::OptimizeGroupLoadings()
 
 	AxisCount = AspiePcaCount;
 
+	for (g = 0; g < GROUP_COUNT; g++)
+		for (q = 0; q < N; q++)
+			Quiz[q].GroupPca[g] = 0.0;
+
+	for (g = 0; g < GROUP_COUNT; g++)
+		for (a = 0; a < AxisCount; a++)
+			Axis[a].GroupCorr[g] = 0.0;
+
 	for (a = 0; a < AxisCount; a++)
 		AllocedAxisArr[a] = FALSE;
 
@@ -3834,6 +3842,14 @@ void TQuiz::OptimizeDxLoadings()
 	long double MaxCorrArr[DX_COUNT];
 
 	AxisCount = AspiePcaCount;
+
+
+    for (dx = 0; dx < DX_COUNT; dx++)
+    	for (q = 0; q < N; q++)
+			Quiz[q].DxPca[dx] = 0.0;
+
+    for (a = 0; a < AxisCount; a++)
+		Axis[a].MaxCorr = 0.0;
 
 	for (a = 0; a < AxisCount; a++)
 		AllocedAxisArr[a] = FALSE;
