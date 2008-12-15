@@ -72,6 +72,7 @@
 #include "quizf1.h"
 #include "quizf2.h"
 #include "quizf3.h"
+#include "quizf4.h"
 #include "quizdba.h"
 
 #include "pop.h"
@@ -131,7 +132,7 @@ void ExportAncestry(const char *filename, int Ancestry)
 	}
 	outfile.Write("\n");
 
-	 for (v = 0; v < 4; v++)
+	 for (v = 0; v < 5; v++)
     {
         switch (v)
         {
@@ -148,6 +149,10 @@ void ExportAncestry(const char *filename, int Ancestry)
                 break;
 
             case 3:
+                infile = new TFile("ancf4.bin");
+                break;
+
+            case 4:
                 infile = new TFile("ancfi.bin");
                 break;
 		  }
@@ -286,10 +291,11 @@ int main(int argc, char **argv)
 	Quiz[33] = new TQuizF1("quizf1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32]);
 	Quiz[34] = new TQuizF2("quizf2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33]);
 	Quiz[35] = new TQuizF3("quizf3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34]);
+	Quiz[36] = new TQuizF4("quizf4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35]);
 
-	Quiz[35]->WriteOldQuestionCount("vercnt.txt", 145);
-	Quiz[35]->WriteReverseQuestionCount("revcnt.txt");
-	Quiz[35]->WriteNoAnswerStats("noans.txt");
+	Quiz[36]->WriteOldQuestionCount("vercnt.txt", 145);
+	Quiz[36]->WriteReverseQuestionCount("revcnt.txt");
+	Quiz[36]->WriteNoAnswerStats("noans.txt");
 
 	 ExportAncestry("pca\\cauc.dat", ANCESTRY_CAUCASIAN);
 	 ExportAncestry("pca\\asian.dat", ANCESTRY_ASIAN);
@@ -591,6 +597,13 @@ int main(int argc, char **argv)
 	Quiz[35]->ExportExcelCase("pca\\youngf3.dat", PCA_TYPE_YOUNG);
 	Quiz[35]->ExportExcelCase("pca\\oldf3.dat", PCA_TYPE_OLD);
 
+	printf("allf4\r\n");
+	 Quiz[36]->ExportExcelCase("pca\\allf4.dat", PCA_TYPE_ALL);
+	 Quiz[36]->ExportExcelCase("pca\\malef4.dat", PCA_TYPE_MALE);
+	 Quiz[36]->ExportExcelCase("pca\\femalef4.dat", PCA_TYPE_FEMALE);
+	Quiz[36]->ExportExcelCase("pca\\youngf4.dat", PCA_TYPE_YOUNG);
+	Quiz[36]->ExportExcelCase("pca\\oldf4.dat", PCA_TYPE_OLD);
+
 
 	printf("aspie\r\n");
 
@@ -633,6 +646,7 @@ int main(int argc, char **argv)
 	 Quiz[33]->ExportExcelAspie("pca\\aspief1.dat");
 	 Quiz[34]->ExportExcelAspie("pca\\aspief2.dat");
 	 Quiz[35]->ExportExcelAspie("pca\\aspief3.dat");
+	 Quiz[36]->ExportExcelAspie("pca\\aspief4.dat");
 
 	printf("import\r\n");
 	 Quiz[0]->ImportMvsp("pca\\all1.txt", PCA_TYPE_ALL);
