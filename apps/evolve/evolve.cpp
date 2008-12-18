@@ -12,7 +12,7 @@
 #define	TRUE	!FALSE
 
 #define POP_SIZE	500
-#define SEQ_SIZE	500
+#define SEQ_SIZE	400
 
 int main(int argc, char **argv)
 {
@@ -26,22 +26,22 @@ int main(int argc, char **argv)
 	randomize();
 	random(1000);
 
-	refmut = new TDnaMutator(SEQ_SIZE, 0.00001);
-	fastmut = new TDnaMutator(SEQ_SIZE, 0.01);
+	refmut = new TDnaMutator(SEQ_SIZE, 0.002);
+	fastmut = new TDnaMutator(SEQ_SIZE, 0.002);
 	eval = new TDnaEvaluator(SEQ_SIZE);
 	ref = eval->GetSeq();
 
 	pop = new TDnaPopulation(fastmut, 100, SEQ_SIZE);
-	pop->CreateUniform(ref, POP_SIZE);
+	pop->CreateRandom(POP_SIZE);
 
-	for (i = 0; i < 200; i++)
+	for (i = 0; i < 20000; i++)
 	{
-		pop->Pairbond(10);
+		pop->Pairbond();
 		pop->WritePairSumary(eval);
-		pop->CreateChildren(eval, 1);
+		pop->CreateChildren(eval);
 		ref->Mutate(refmut);
 	}
 
 	return 0;
-}                       
+}
 

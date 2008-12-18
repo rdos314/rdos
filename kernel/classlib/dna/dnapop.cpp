@@ -269,52 +269,60 @@ int TDnaPopulation::GetMatchScore(TDnaIndividual *ind1, TDnaIndividual *ind2)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDnaPopulation::Pairbond(int Width)
+void TDnaPopulation::Pairbond()
 {
-	 int *Paired;
-	 int i;
-	 int j;
-	 int p;
-	 int score;
-	 int ok;
+	int *Paired;
+	int i;
+	int j;
+	int k;
+	int max;
+	int p;
+	int score;
+	int ok;
 
-	 if (FPairArr)
-	 {
-		  FreePairArr(FPairArr, FPairs);
-		  delete FPairArr;
-	 }
+	if (FPairArr)
+	{
+	    FreePairArr(FPairArr, FPairs);
+	    delete FPairArr;
+	}
 
 	Paired = new int[FSize];
 
-	 for (i = 0; i < FSize; i++)
-		  Paired[i] = FALSE;
+	for (i = 0; i < FSize; i++)
+	    Paired[i] = FALSE;
 
-	 FPairs = FSize * 80 / 100 / 2;
-	 FPairArr = new TDnaPair* [FPairs];
+	FPairs = FSize * 80 / 100 / 2;
+	FPairArr = new TDnaPair* [FPairs];
 
-	 for (p = 0; p < FPairs; p++)
-	 {
-		  ok = FALSE;
+	for (p = 0; p < FPairs; p++)
+    {
+        for (i = p; i < FSize; i++)
+            if (!Paired[i])
+                break;
 
-		  while (!ok)
-		  {
-				i = Random(FSize);
-				j = Random(FSize);
+        Paired[i] = TRUE; 
 
-				if (i != j && !Paired[i] && !Paired[j])
-				{
-					 score = GetMatchScore(FIndArr[i], FIndArr[j]);
-					 score = (1000 - score) / Width;
-					 if (Random(score) == 0)
-					 {
-						  ok = TRUE;
-						  FPairArr[p] = new TDnaPair(FIndArr[i], FIndArr[j]);
+        max = 0;
+        j = p;
 
-						  Paired[i] = TRUE;
-						  Paired[j] = TRUE;
-				}
-				}
-        }            
+        for (k = i + 1; k < FSize; k++)
+        {
+            if (!Paired[k])
+            {
+			    score = GetMatchScore(FIndArr[i], FIndArr[k]);
+			    if (score > max)
+			    {
+			        score = max;
+			        j = k;
+
+			        if (Random(4) == 0)
+			            break;
+			    }
+			}
+	    }
+
+	    Paired[j] = TRUE;	
+		FPairArr[p] = new TDnaPair(FIndArr[i], FIndArr[j]);
     }
 
     delete Paired;            
@@ -331,40 +339,70 @@ void TDnaPopulation::Pairbond(int Width)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDnaPopulation::CreateChildren(TDnaEvaluator *eval, int Width)
+void TDnaPopulation::CreateChildren(TDnaEvaluator *eval)
 {
-	 TDnaIndividual **ChildArr;
-	 TDnaIndividual *child;
-	 int NewSize;
-	 int c;
-	 int p;
-	 int ok;
-	 int score;
+	TDnaIndividual **ChildArr;
+	TDnaIndividual *child;
+	int NewSize;
+	int c;
+	int p;
+	int ok;
+	int score1;
+	int score2;
+	int val;
+	int *IndArr;
+	int pc;
+	int ind;
 
-	 NewSize = FSize;
-	 ChildArr = new TDnaIndividual* [NewSize];
+	NewSize = FSize;
+	ChildArr = new TDnaIndividual* [NewSize];
 
-	 for (c = 0; c < NewSize; c++)
+    c = 0;
+    pc = FPairs;
+
+	 IndArr = new int[FPairs];
+
+	 for (p = 0; p < FPairs; p++)
+		  IndArr[p] = p;
+
+	 while (c < NewSize)
 	 {
-		  ok = FALSE;
+		ChildArr[c] = FPairArr[IndArr[0]]->CreateChild(FMutator, FCrossOverRate);
+		c++;
 
-		  while (!ok)
-		  {
-				p = Random(FPairs);
-				child = FPairArr[p]->CreateChild(FMutator, FCrossOverRate);
-				score = eval->Score(child);
+		  for (p = 0; p < pc / 2 && c < NewSize; p++)
+        {
+            ind = IndArr[2 * p];
+            score1 = 0;
+				val = eval->Score(FPairArr[ind]->Mate1);
+				score1 = val * val;
+				val = eval->Score(FPairArr[ind]->Mate2);
+				score1 += val * val;
 
-			score = (1000 - score) / Width;
+				ind = IndArr[2 * p + 1];
+				score2 = 0;
+				val = eval->Score(FPairArr[ind]->Mate1);
+				score2 = val * val;
+            val = eval->Score(FPairArr[ind]->Mate2);
+            score2 += val * val;
+            
+            if (score1 > score2)
+            {
+                IndArr[p] = IndArr[2 * p];
+        		ChildArr[c] = FPairArr[IndArr[p]]->CreateChild(FMutator, FCrossOverRate);
+            }
+            else        		
+            {
+                IndArr[p] = IndArr[2 * p + 1];
+        		ChildArr[c] = FPairArr[IndArr[p]]->CreateChild(FMutator, FCrossOverRate);
+            }
+    		c++;
+        }
 
-			if (Random(score) == 0)
-			{
-				ok = TRUE;
-				ChildArr[c] = child;
-			}
-			else
-				delete child;
-		}
-	}
+        pc = pc / 2;
+    }        
+
+    delete IndArr;
 
 	if (FIndArr)
 	{
