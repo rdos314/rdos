@@ -44,6 +44,7 @@ public:
 
 	 virtual void WriteRetest(const char *filename);
 	 virtual void WriteRace(const char *filename);
+	 virtual void WritePartner(const char *filename);
 
 private:
     virtual void GetReferer(const char *referer, TPopulation *pop);

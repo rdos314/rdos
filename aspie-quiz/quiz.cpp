@@ -4403,6 +4403,17 @@ void TQuiz::WriteIPIP(const char *FileName)
 {
 }
 
+/*##################  TQuiz::WritePartner ##########################
+*   Purpose....: Write partner correlation report      		     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePartner(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WritePictureRating ##########################
 *   Purpose....: Write picture rating report (dummy)           			     	        #
 *   In params..: *                                                          #

@@ -344,6 +344,7 @@ public:
 	virtual void WriteEat(const char *filename);
     virtual void WriteIPIP(const char *filename);
 	virtual void WritePictureRating(const char *filename);
+    virtual void WritePartner(const char *filename);
 
 	void WritePhpGlobalQuestions(const char *filename);
 

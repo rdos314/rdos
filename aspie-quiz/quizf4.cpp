@@ -57,6 +57,13 @@ public:
 	int NonUsAsCount[10];
 };
 
+struct TPartner
+{
+    long ID;
+    int AnswerArr[150];    
+    int GroupArr[ACTIVE_GROUP_COUNT];
+};
+
 /*##########################################################################
 #
 #   Name       : TQuizF4::TQuizF4
@@ -859,6 +866,297 @@ void TQuizF4::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
+}
+
+/*##################  TQuizF4::WritePartner ##########################
+*   Purpose....: Write partner correlations   	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizF4::WritePartner(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int j;
+	int PartnerCount;
+	char str[80];
+	TFile file(filename, 0);
+	TPartner *Partner1;
+	TPartner *Partner2;
+	int sum1;
+	int sum2;
+	long double rsum1;
+	long double rsum2;
+	long double mean1;
+	long double mean2;
+	long double sd1;
+	long double sd2;
+	long double rsum;
+	long double zx;
+	long double zy;
+	long double val;
+	long double corr;
+   int count;
+   int q;
+   int g;
+   int ival;
+
+    PartnerCount = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+        if (Row.PartnerID)
+            PartnerCount++;
+    }
+
+    Partner1 = new TPartner[PartnerCount];
+    Partner2 = new TPartner[PartnerCount];
+
+    i = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+        if (Row.PartnerID)
+        {
+            Partner1[i].ID = Row.ID;
+            Partner2[i].ID = Row.PartnerID;
+            i++;
+        }
+    }
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    for (i = 0; i < PartnerCount; i++)
+	    {
+	        if (Partner1[i].ID == Row.ID)
+            {				
+				for (q = 0; q < 150; q++)
+				    Partner1[i].AnswerArr[q] = Row.Quiz[q];
+
+				for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
+				    Partner1[i].GroupArr[g] = Row.GroupResult[g];
+            }
+
+            if (Partner2[i].ID == Row.ID)
+            {
+                for (q = 0; q < 150; q++)
+                    Partner2[i].AnswerArr[q] = Row.Quiz[q];
+
+				for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
+				    Partner2[i].GroupArr[g] = Row.GroupResult[g];
+		    }
+        }	
+    }
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+    WriteFieldHeader(file, 4);
+	file.Write("#");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 60);
+	file.Write(" ");
+    WriteFieldFooter(file);
+
+    WriteFieldHeader(file, 20);
+	file.Write("Corr");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+    for (g = 0; g < 12; g++)
+    {
+        count = 0;
+        sum1 = 0;
+        sum2 = 0;
+
+        for (i = 0; i < PartnerCount; i++)
+        {
+            sum1 += Partner1[i].GroupArr[g];
+            sum2 += Partner2[i].GroupArr[g];
+            count++;
+        }
+
+        if (count > 1)
+        {
+            mean1 = (long double)sum1 / (long double)count;
+            mean2 = (long double)sum2 / (long double)count;
+
+            rsum1 = 0;
+            rsum2 = 0;
+
+            for (i = 0; i < PartnerCount; i++)
+            {
+                val = (long double)Partner1[i].GroupArr[g] - mean1;
+                rsum1 += val * val;
+
+                val = (long double)Partner2[i].GroupArr[g] - mean2;
+                rsum2 += val * val;                    
+            }
+
+			sd1 = sqrtl(rsum1 / (long double)(count - 1));
+			sd2 = sqrtl(rsum2 / (long double)(count - 1));
+            
+            rsum = 0;
+
+            for (i = 0; i < PartnerCount; i++)
+            {
+                val = (long double)Partner1[i].GroupArr[g];
+                zx = (val - mean1) / sd1;
+                    
+                val = (long double)Partner2[i].GroupArr[g];
+				zy = (val - mean2) / sd2;
+
+                rsum += zx * zy;                    
+            }
+
+            corr = rsum / (long double)(count - 1);
+
+			file.Write("<tr style='height:24.75pt'>");
+
+            WriteFieldHeader(file, 4);
+			sprintf(str, "%d", q + 1);
+			file.Write(str);
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 60);
+			file.Write(Group[g].PosName);
+            WriteFieldFooter(file);
+
+            WriteRightFieldHeader(file, 20);
+            if (corr < 0.0)
+            {
+              file.Write("-");
+              corr = -corr;
+            }
+              
+            ival = round(100 * corr);
+	    	sprintf(str, ".%02d", ival);
+	    	file.Write(str);
+            WriteFieldFooter(file);
+        
+        }
+
+    }
+
+	file.Write("</table>");
+
+
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+    WriteFieldHeader(file, 4);
+	file.Write("#");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 60);
+	file.Write(" ");
+    WriteFieldFooter(file);
+
+    WriteFieldHeader(file, 20);
+	file.Write("Corr");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+    for (q = 0; q < 150; q++)
+    {
+        count = 0;
+        sum1 = 0;
+        sum2 = 0;
+
+        for (i = 0; i < PartnerCount; i++)
+        {
+            if (Partner1[i].AnswerArr[q] && Partner2[i].AnswerArr[q])
+            {
+                sum1 += Partner1[i].AnswerArr[q] - 1;
+                sum2 += Partner2[i].AnswerArr[q] - 1;
+                count++;
+            }
+        }
+
+        if (count > 1)
+        {
+            mean1 = (long double)sum1 / (long double)count;
+            mean2 = (long double)sum2 / (long double)count;
+
+            rsum1 = 0;
+            rsum2 = 0;
+
+            for (i = 0; i < PartnerCount; i++)
+            {
+                if (Partner1[i].AnswerArr[q] && Partner2[i].AnswerArr[q])
+                {
+                    val = (long double)(Partner1[i].AnswerArr[q] - 1) - mean1;
+                    rsum1 += val * val;
+
+                    val = (long double)(Partner2[i].AnswerArr[q] - 1) - mean2;
+                    rsum2 += val * val;                    
+                }
+            }
+
+				sd1 = sqrtl(rsum1 / (long double)(count - 1));
+				sd2 = sqrtl(rsum2 / (long double)(count - 1));
+            
+            rsum = 0;
+
+            for (i = 0; i < PartnerCount; i++)
+            {
+                if (Partner1[i].AnswerArr[q] && Partner2[i].AnswerArr[q])
+                {
+                    val = (long double)(Partner1[i].AnswerArr[q] - 1);
+                    zx = (val - mean1) / sd1;
+                    
+                    val = (long double)(Partner2[i].AnswerArr[q] - 1);
+						  zy = (val - mean2) / sd2;
+
+                    rsum += zx * zy;                    
+                }
+            }
+
+            corr = rsum / (long double)(count - 1);
+
+			file.Write("<tr style='height:24.75pt'>");
+
+            WriteFieldHeader(file, 4);
+			sprintf(str, "%d", q + 1);
+			file.Write(str);
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 60);
+			file.Write(Quiz[q].Text);
+            WriteFieldFooter(file);
+
+            WriteRightFieldHeader(file, 20);
+            if (corr < 0.0)
+            {
+              file.Write("-");
+              corr = -corr;
+            }
+              
+            ival = round(100 * corr);
+	    	sprintf(str, ".%02d", ival);
+	    	file.Write(str);
+            WriteFieldFooter(file);
+        
+        }
+
+    }
+
+	file.Write("</table>");
+
+
+    delete Partner1;
+    delete Partner2;
 }
 
 /*##################  round ##########################
