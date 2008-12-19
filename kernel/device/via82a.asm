@@ -719,13 +719,6 @@ init_ch_loop:
     add bx,SIZE audio_channel_struc
     add ax,10h
     loop init_ch_loop
-;    
-    int 3
-    mov bx,2Ah
-    ReadCodec
-    or al,1
-    WriteCodec
-    
 
 init_pci_done:
 	ret
