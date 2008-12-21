@@ -41,7 +41,6 @@ protected:
 
 	int FSize;
 	long FRate;
-	unsigned char *FRelRateArr;
 };
 
 #endif

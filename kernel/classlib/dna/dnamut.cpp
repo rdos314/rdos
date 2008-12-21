@@ -55,11 +55,6 @@ TDnaMutator::TDnaMutator(int size, long double rate)
 		rate = 0.0;
 
 	FRate = (long)(1000000 * rate) + 1;
-
-	FRelRateArr = new unsigned char [size];
-
-	for (i = 0; i < size; i++)
-		FRelRateArr[i] = (unsigned char)Random(200) + 1;
 }
 
 /*##########################################################################
@@ -75,8 +70,6 @@ TDnaMutator::TDnaMutator(int size, long double rate)
 ##########################################################################*/
 TDnaMutator::~TDnaMutator()
 {
-	if (FRelRateArr)
-		delete FRelRateArr;
 }
 
 /*##########################################################################
@@ -106,7 +99,7 @@ void TDnaMutator::Mutate(char *seq, int size)
 
 	for (i = 0; i < len; i++)
 	{
-		if (Random(100 * 1000000) < FRelRateArr[i] * FRate)
+		if (Random(1000000) < FRate)
 			*baseptr = MutateBase(i, *baseptr);
 
 		baseptr++;

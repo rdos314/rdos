@@ -39,10 +39,19 @@ public:
 	TDnaPopulation(TDnaMutator *Mutator, int CrossOverRate, int SeqSize);
 	~TDnaPopulation();
 
+	TDnaPopulation *Split(int size);
+	void Merge(TDnaPopulation *pop);
+
+	void Set(TDnaMutator *Mutator);
+
     void CreateRandom(int Size);
-	 void CreateUniform(TDnaSequence *seq, int size);
-	void Pairbond();
+	void CreateUniform(TDnaSequence *seq, int size);
+	void Pairbond(int tries);
+	void CreateChildren();
 	void CreateChildren(TDnaEvaluator *eval);
+
+    void ExportRaw(const char *filename);
+	void ExportQuiz(const char *filename, TDnaSequence *ref, TDnaSequence *ref1, TDnaSequence *ref2);
 
     void WriteScores(TDnaEvaluator *eval);
     void WritePairDetails(TDnaEvaluator *eval);
@@ -56,7 +65,6 @@ protected:
     TDnaMutator *FMutator;
     int FCrossOverRate;   
     int FSeqSize;
-    int *FMateScoreArr;
 
     int FSize;
 	TDnaIndividual **FIndArr;

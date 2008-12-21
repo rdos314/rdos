@@ -251,22 +251,25 @@ int TDnaSequence::GetSimilarity(TDnaSequence &other)
 #   Returns....: *
 #
 ##########################################################################*/
-int TDnaSequence::GetSimilarity(TDnaSequence &other, const int *ScoreArr)
+int TDnaSequence::GetSimilarity(TDnaSequence &other, int size)
 {
     int i;
-    int size;
+    int csize;
     int score;
 
     if (FSize < other.FSize)
-        size = FSize;
+        csize = FSize;
     else
-        size = other.FSize;
+        csize = other.FSize;
+
+    if (csize > size)
+        csize = size;
 
     score = 0;
 
-    for (i = 0; i < size; i++)
+    for (i = 0; i < csize; i++)
         if (FSeq[i] == other.FSeq[i])
-            score += ScoreArr[i];
+            score++;
 
     return score; 
 }

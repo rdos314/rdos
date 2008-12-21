@@ -38,6 +38,7 @@
 
 class TDnaSequence
 {
+friend class TDnaPopulation;
 public:
 	TDnaSequence(int size);
 	TDnaSequence(const TDnaSequence &source);
@@ -48,7 +49,7 @@ public:
 
     void Mutate(TDnaMutator *Mutator);
 	int GetSimilarity(TDnaSequence &other);
-	int GetSimilarity(TDnaSequence &other, const int *ScoreArr);
+	int GetSimilarity(TDnaSequence &other, int Count);
 
 	int GetSize() const;
 

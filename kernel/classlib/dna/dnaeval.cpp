@@ -53,6 +53,23 @@ TDnaEvaluator::TDnaEvaluator(int size)
 
 /*##########################################################################
 #
+#   Name       : TDnaEvaluator::TDnaEvaluator
+#
+#   Purpose....: Constructor for TDnaEvaluator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDnaEvaluator::TDnaEvaluator(TDnaSequence *seq)
+ : FRefSeq(*seq)
+{
+    FSize = seq->GetSize();
+}
+
+/*##########################################################################
+#
 #   Name       : TDnaEvaluator::~TDnaEvaluator
 #
 #   Purpose....: Destructor for TDnaEvaluator
