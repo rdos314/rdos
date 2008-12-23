@@ -1,73 +1,52 @@
-;RADLED.ASM
+#include p16f84a.inc
 
-#DEFINE PAGE0   BCF $03,5
-#DEFINE PAGE1   BSF $03,5
+	__config 0x3FFB
 
-INDF:	.EQU 0
-PCL:    .EQU 2
-STATUS: .EQU 3
-FSR:	.EQU 4
-PORTA:  .EQU 5
-PORTB:  .EQU 6
-TRISA:  .EQU 5
-TRISB:  .EQU 6
+;RADFUZZY.ASM
 
-W:      .EQU 0          ;Working
-F:      .EQU 1          ;File
-C:      .EQU 0          ;Carry
-Z:      .EQU 2          ;Zero
+#DEFINE PAGE0   BCF 3,5
+#DEFINE PAGE1   BSF 3,5
 
-EEDATA: .EQU $08        ;eeprom data value register
-EECON1: .EQU $08        ;eeprom write register 1
-EEADR:  .EQU $09        ;eeprom data address register
-EECON2: .EQU $09        ;eeprom write register 2
+RefVal	    EQU 0x0C
+TempVal		EQU 0x0D
+MotorVal	EQU 0x0E
+Da0			EQU 0x0F
+Da1			EQU 0x10
+Reg			EQU 0x11
+Val			EQU 0x12
+Bit			EQU 0x13
+Contr		EQU 0x14
 
-WR:     .EQU 1          ;eeprom write initiate flag
-WREN:   .EQU 2          ;eeprom write enable flag
-RD:     .EQU 0          ;eeprom read enable flag
+TempSumLow	EQU 0x15
+TempSumHigh	EQU 0x16
+TempRemain	EQU 0x17
 
-INTCON: .EQU $0B
+FuzzyIndex	EQU 0x18
+FuzzyCount	EQU 0x19
+FuzzyVal	EQU 0x1A
 
-RefVal	    .EQU $0C
-TempVal		.EQU $0D
-MotorVal	.EQU $0E
-Da0			.EQU $0F
-Da1			.EQU $10
-Reg			.EQU $11
-Val			.EQU $12
-Bit			.EQU $13
-Contr		.EQU $14
+TempError	EQU 0x1B
+TempDelta	EQU 0x1C
+Ambient		EQU 0x1D
 
-TempSumLow	.EQU $15
-TempSumHigh	.EQU $16
-TempRemain	.EQU $17
+ErrorIndex	EQU 0x1E
+DeltaIndex	EQU 0x1F
+AmbientIndex EQU 0x20
 
-FuzzyIndex	.EQU $18
-FuzzyCount	.EQU $19
-FuzzyVal	.EQU $1A
+FuzzyTemp	EQU 0x21
+Resultant	EQU 0x22
 
-TempError	.EQU $1B
-TempDelta	.EQU $1C
-Ambient		.EQU $1D
+NumLow		EQU 0x23
+NumHigh		EQU 0x24
+DenomLow	EQU 0x25
+DenomHigh	EQU 0x26
+NumDivLow	EQU 0x27
+NumDivHigh	EQU 0x28
 
-ErrorIndex	.EQU $1E
-DeltaIndex	.EQU $1F
-AmbientIndex .EQU $20
+PrevErrorIndex	EQU 0x29
 
-FuzzyTemp	.EQU $21
-Resultant	.EQU $22
-
-NumLow		.EQU $23
-NumHigh		.EQU $24
-DenomLow	.EQU $25
-DenomHigh	.EQU $26
-NumDivLow	.EQU $27
-NumDivHigh	.EQU $28
-
-PrevErrorIndex	.EQU $29
-
-	.ORG 4
- 	.ORG 5
+	org 4
+ 	org 5
 
 Reset:
 	goto Main
@@ -358,365 +337,365 @@ CalcHighLoop:
 
 TempErrorNXL:
 	movf ErrorIndex, W
-	sublw 88
+	sublw .88
 	btfss STATUS, C
-	retlw 0
-	sublw 50
+	retlw .0
+	sublw .50
 	btfss STATUS, C
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 5
+	movlw .5
 	goto CalcLowSlope
 
 TempErrorNL:
 	movf ErrorIndex, W
-	sublw 120
+	sublw .120
 	btfss STATUS, C
-	retlw 0
-	sublw 54
+	retlw .0
+	sublw .54
 	btfss STATUS, C
-	retlw 0
-	sublw 31
+	retlw .0
+	sublw .31
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 8
+	movlw .8
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 11
+	movlw .11
 	goto CalcMidHighSlope
 
 TempErrorNM:
 	movf ErrorIndex, W
-	sublw 126
+	sublw .126
 	btfss STATUS, C
-	retlw 0
-	sublw 17
+	retlw .0
+	sublw .17
 	btfss STATUS, C
-	retlw 0
-	sublw 6
+	retlw .0
+	sublw .6
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 42
+	movlw .42
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 23
+	movlw .23
 	goto CalcMidHighSlope
 
 TempErrorZ:
 	movf ErrorIndex, W
-	sublw 134
+	sublw .134
 	btfss STATUS, C
-	retlw 0
-	sublw 14
+	retlw .0
+	sublw .14
 	btfss STATUS, C
-	retlw 0
-	sublw 7
+	retlw .0
+	sublw .7
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 36
+	movlw .36
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 36
+	movlw .36
 	goto CalcMidHighSlope
 
 TempErrorPM:
 	movf ErrorIndex, W
-	sublw 141
+	sublw .141
 	btfss STATUS, C
-	retlw 0
-	sublw 12
+	retlw .0
+	sublw .12
 	btfss STATUS, C
-	retlw 0
-	sublw 7
+	retlw .0
+	sublw .7
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 32
+	movlw .32
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 51
+	movlw .51
 	goto CalcMidHighSlope
 
 TempErrorPL:
 	movf ErrorIndex, W
-	sublw 167
+	sublw .167
 	btfss STATUS, C
-	retlw 0
-	sublw 33
+	retlw .0
+	sublw .33
 	btfss STATUS, C
-	retlw 0
-	sublw 12
+	retlw .0
+	sublw .12
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 21
+	movlw .21
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 12
+	movlw .12
 	goto CalcMidHighSlope
 
 TempErrorPXL:
 	movf ErrorIndex, W
-	sublw 186
+	sublw .186
 	btfss STATUS, C
-	retlw 255
-	sublw 30
+	retlw .255
+	sublw .30
 	btfss STATUS, C
-	retlw 0
-	sublw 31
+	retlw .0
+	sublw .31
 	movwf FuzzyCount
-	movlw 8
+	movlw .8
 	goto CalcHighSlope
 
 TempDeltaErrorNL:
 	movf DeltaIndex, W
-	sublw 122
+	sublw .122
 	btfss STATUS, C
-	retlw 0
-	sublw 14
+	retlw .0
+	sublw .14
 	btfss STATUS, C
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 17
+	movlw .17
 	goto CalcLowSlope
 
 TempDeltaErrorNM:
 	movf DeltaIndex, W
-	sublw 127
+	sublw .127
 	btfss STATUS, C
-	retlw 0
-	sublw 13
+	retlw .0
+	sublw .13
 	btfss STATUS, C
-	retlw 0
-	sublw 6
+	retlw .0
+	sublw .6
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 42
+	movlw .42
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 36
+	movlw .36
 	goto CalcMidHighSlope
 
 TempDeltaErrorZ:
 	movf DeltaIndex, W
-	sublw 128
+	sublw .128
 	btfss STATUS, C
-	retlw 0
-	sublw 2
+	retlw .0
+	sublw .2
 	btfss STATUS, C
-	retlw 0
-	sublw 1
+	retlw .0
+	sublw .1
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 128
+	movlw .128
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 255
+	movlw .255
 	goto CalcMidHighSlope
 
 TempDeltaErrorPM:
 	movf DeltaIndex, W
-	sublw 134
+	sublw .134
 	btfss STATUS, C
-	retlw 0
-	sublw 6
+	retlw .0
+	sublw .6
 	btfss STATUS, C
-	retlw 0
-	sublw 3
+	retlw .0
+	sublw .3
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 64
+	movlw .64
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 64
+	movlw .64
 	goto CalcMidHighSlope
 
 TempDeltaErrorPL:
 	movf DeltaIndex, W
-	sublw 138
+	sublw .138
 	btfss STATUS, C
-	retlw 255
-	sublw 8
+	retlw .255
+	sublw .8
 	btfss STATUS, C
-	retlw 0
-	sublw 9
+	retlw .0
+	sublw .9
 	movwf FuzzyCount
-	movlw 28
+	movlw .28
 	goto CalcHighSlope
 
 TempAmbientC:
 	movf AmbientIndex, W
-	sublw 111
+	sublw .111
 	btfss STATUS, C
-	retlw 0
-	sublw 8
+	retlw .0
+	sublw .8
 	btfss STATUS, C
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 26
+	movlw .26
 	goto CalcLowSlope
 
 TempAmbientM:
 	movf AmbientIndex, W
-	sublw 121
+	sublw .121
 	btfss STATUS, C
-	retlw 0
-	sublw 14
+	retlw .0
+	sublw .14
 	btfss STATUS, C
-	retlw 0
-	sublw 5
+	retlw .0
+	sublw .5
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 51
+	movlw .51
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 26
+	movlw .26
 	goto CalcMidHighSlope
 
 TempAmbientH:
 	movf AmbientIndex, W
-	sublw 121
+	sublw .121
 	btfss STATUS, C
-	retlw 255
-	sublw 4
+	retlw .255
+	sublw .4
 	btfss STATUS, C
-	retlw 0
-	sublw 5
+	retlw .0
+	sublw .5
 	movwf FuzzyCount
-	movlw 51
+	movlw .51
 	goto CalcHighSlope
 
 TempOutputNXL:
 	movf FuzzyIndex, W
-	sublw 6
+	sublw .6
 	btfss STATUS, C
-	retlw 0
-	sublw 14
+	retlw .0
+	sublw .14
 	btfss STATUS, C
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 17
+	movlw .17
 	goto CalcLowSlope
 
 TempOutputNL:
 	movf FuzzyIndex, W
-	sublw 13
+	sublw .13
 	btfss STATUS, C
-	retlw 0
-	sublw 17
+	retlw .0
+	sublw .17
 	btfss STATUS, C
-	retlw 0
-	sublw 5
+	retlw .0
+	sublw .5
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 51
+	movlw .51
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 21
+	movlw .21
 	goto CalcMidHighSlope
 
 TempOutputNM:
 	movf FuzzyIndex, W
-	sublw 16
+	sublw .16
 	btfss STATUS, C
-	retlw 0
-	sublw 12
+	retlw .0
+	sublw .12
 	btfss STATUS, C
-	retlw 0
-	sublw 6
+	retlw .0
+	sublw .6
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 42
+	movlw .42
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 42
+	movlw .42
 	goto CalcMidHighSlope
 
 TempOutputZ:
 	movf FuzzyIndex, W
-	sublw 17
+	sublw .17
 	btfss STATUS, C
-	retlw 0
-	sublw 2
+	retlw .0
+	sublw .2
 	btfss STATUS, C
-	retlw 0
-	sublw 1
+	retlw .0
+	sublw .1
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 128
+	movlw .128
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 128
+	movlw .128
 	goto CalcMidHighSlope
 
 TempOutputPM:
 	movf FuzzyIndex, W
-	sublw 28
+	sublw .28
 	btfss STATUS, C
-	retlw 0
-	sublw 12
+	retlw .0
+	sublw .12
 	btfss STATUS, C
-	retlw 0
-	sublw 6
+	retlw .0
+	sublw .6
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 42
+	movlw .42
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 42
+	movlw .42
 	goto CalcMidHighSlope
 
 TempOutputPL:
 	movf FuzzyIndex, W
-	sublw 36
+	sublw .36
 	btfss STATUS, C
-	retlw 0
-	sublw 17
+	retlw .0
+	sublw .17
 	btfss STATUS, C
-	retlw 0
-	sublw 12
+	retlw .0
+	sublw .12
 	btfsc STATUS, Z
-	retlw 255
+	retlw .255
 	movwf FuzzyCount
-	movlw 21
+	movlw .21
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 51
+	movlw .51
 	goto CalcMidHighSlope
 
 TempOutputPXL:
 	movf FuzzyIndex, W
-	sublw 40
+	sublw .40
 	btfss STATUS, C
-	retlw 255
-	sublw 14
+	retlw .255
+	sublw .14
 	btfss STATUS, C
-	retlw 0
-	sublw 15
+	retlw .0
+	sublw .15
 	movwf FuzzyCount
-	movlw 17
+	movlw .17
 	goto CalcHighSlope
 
 UpdateFuzzy:
     movf RefVal,W
 	subwf TempVal, W
-	addlw 127
+	addlw .127
 	movwf ErrorIndex
 ;
 	movf PrevErrorIndex, W
 	subwf ErrorIndex, W
-	addlw 127
+	addlw .127
 	movwf DeltaIndex
 ;
 	movf ErrorIndex, W
@@ -826,7 +805,7 @@ NumDone:
 ;
 	incf FuzzyIndex, F
 	movf FuzzyIndex, W
-	sublw 33
+	sublw .33
 	btfss STATUS, Z
 	goto UpdateFuzzyIndex
 
@@ -890,7 +869,7 @@ DivNext:
 	btfss STATUS, Z
 	goto DivLoop
 ;
-	movlw 16
+	movlw .16
 	subwf NumHigh, W
 	btfsc STATUS, C
 	goto IncMotor
@@ -920,7 +899,7 @@ IncMotor:
 	goto MotorDone
 
 MotorMax:
-	movlw 255
+	movlw .255
 	movwf MotorVal
 
 MotorDone:
@@ -931,26 +910,26 @@ MotorDone:
 
 Main:
 	PAGE1
-	movlw %11110000
+	movlw b'11110000'
 	movwf TRISB
 	PAGE0
 
-	movlw %00001100
+	movlw b'00001100'
 	movwf PORTB
 ;
 	clrf RefVal
 	clrf TempVal
 	clrf Da1
 ;
-	movlw 127
+	movlw .127
 	movwf ErrorIndex
 	movwf PrevErrorIndex
 	movwf DeltaIndex
 ;
-	movlw 100
+	movlw .100
 	movwf AmbientIndex
 ;
-	movlw $80
+	movlw 0x80
 	movwf MotorVal
 
 LP:
@@ -1009,7 +988,7 @@ Wait:
 	goto Wait
 ;			
 	PAGE1
-	movlw %10110000
+	movlw b'10110000'
 	movwf TRISB
 	PAGE0
 ;
@@ -1124,7 +1103,7 @@ WaitRecLow:
 
 WaitEnd:
 	PAGE1
-	movlw %11110000
+	movlw b'11110000'
 	movwf TRISB
 	PAGE0
 
@@ -1137,14 +1116,14 @@ Delay:
 	return
 
 LoadMotor0:	
-	movlw %00001001
+	movlw b'00001001'
 	movwf Contr
 	movf Da0,W
 	movwf Val
 	goto LoadMotor
 
 LoadMotor1:	
-	movlw %00001010
+	movlw b'00001010'
 	movwf Contr
 	movf Da1,W
 	movwf Val
@@ -1203,4 +1182,4 @@ LoadDataNext:
 	bsf PORTB,2
 	return
 
-        .END
+    end

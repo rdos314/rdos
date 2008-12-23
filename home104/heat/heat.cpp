@@ -150,14 +150,9 @@ void cdecl main()
 
 		vbe->DrawString(5, 420 + 16 * (i + 1), str);
 
-        if (i == 4)
-            RadArr[i] = 0;
-        else
-        {
-    		RadArr[i] = new TRad(vbe, 0x20 + i, 170, 420 + 16 * (i + 1));
-    		AddHttpRad(RadArr[i]);
-	    	log->Add(RadArr[i]);
-	    }
+    	RadArr[i] = new TRad(vbe, 0x20 + i, 170, 420 + 16 * (i + 1));
+    	AddHttpRad(RadArr[i]);
+	    log->Add(RadArr[i]);
 	}
 
 	Ws = new TWs2300(1);

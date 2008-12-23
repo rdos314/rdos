@@ -1,92 +1,70 @@
-;SERDA.ASM
+#include p16f84a.inc
 
-#DEFINE PAGE0   BCF $03,5
-#DEFINE PAGE1   BSF $03,5
+	__config 0x3FFA
 
-INDF:	.EQU 0
-TMR0:	.EQU 1
-OPTION: .EQU 1
-PCL:    .EQU 2
-STATUS: .EQU 3
-FSR:	.EQU 4
-PORTA:  .EQU 5
-PORTB:  .EQU 6
-TRISA:  .EQU 5
-TRISB:  .EQU 6
+;RADCOM.ASM
 
-NODEID:	.EQU $28
-DELAY_TICS:	.EQU 200
+#DEFINE PAGE0   BCF 3,5
+#DEFINE PAGE1   BSF 3,5
 
-W:      .EQU 0          ;Working
-F:      .EQU 1          ;File
-C:      .EQU 0          ;Carry
-Z:      .EQU 2          ;Zero
+NODEID:	EQU 0x24
+DELAY_TICS:	EQU .200
 
-EEDATA: .EQU $08        ;eeprom data value register
-EECON1: .EQU $08        ;eeprom write register 1
-EEADR:  .EQU $09        ;eeprom data address register
-EECON2: .EQU $09        ;eeprom write register 2
-INTCON: .EQU $0B
+AL:			EQU 0x0C
+DL:			EQU 0x0D
+TEMP:		EQU 0x0E
+LCNT:		EQU 0x0F
+CHAN:		EQU 0x10
+VAL:		EQU 0x11
+COUNT:		EQU 0x12
+BITS:   	EQU 0x13
+CRC:		EQU 0x14
+CMD:		EQU 0x15
+T0:			EQU 0x16
+T1:			EQU 0x17
+T2:			EQU 0x18
+TMRCNT		EQU 0x19
+CLKCNT		EQU 0x1A
+STATE		EQU 0x1B
+BIT			EQU 0x1C
+FLREG		EQU 0x1D
+SEC			EQU 0x1E
+FLVAL  	 	EQU 0x1F
 
-WR:     .EQU 1          ;eeprom write initiate flag
-WREN:   .EQU 2          ;eeprom write enable flag
-RD:     .EQU 0          ;eeprom read enable flag
-
-AL:			.EQU $0C
-DL:			.EQU $0D
-TEMP:		.EQU $0E
-LCNT:		.EQU $0F
-CHAN:		.EQU $10
-VAL:		.EQU $11
-COUNT:		.EQU $12
-BITS:   	.EQU $13
-CRC:		.EQU $14
-CMD:		.EQU $15
-T0:			.EQU $16
-T1:			.EQU $17
-T2:			.EQU $18
-TMRCNT		.EQU $19
-CLKCNT		.EQU $1A
-STATE		.EQU $1B
-BIT			.EQU $1C
-FLREG		.EQU $1D
-SEC			.EQU $1E
-FLVAL  	 	.EQU $1F
-
-Temp		.EQU $20
-Ref			.EQU $21
-Motor		.EQU $22
-AuxTemp		.EQU $23
-LightLow	.EQU $24
-LightHigh	.EQU $25
-DummyVal	.EQU $26
-Ambient		.EQU $27
-RefType		.EQU $28
-LightTemp	.EQU $29
+Temp		EQU 0x20
+Ref			EQU 0x21
+Motor		EQU 0x22
+AuxTemp		EQU 0x23
+LightLow	EQU 0x24
+LightHigh	EQU 0x25
+DummyVal	EQU 0x26
+Ambient		EQU 0x27
+RefType		EQU 0x28
+LightTemp	EQU 0x29
 
 
-	        .ORG 4
-    	    .ORG 5
+	        org 4
+    	    org 5
 
 RESET:		PAGE1
-			movlw $03
+			movlw 0x03
 			movwf TRISA
 
-			movlw %11100100
+			movlw b'11100100'
 			movwf TRISB
 
-	        movlw %10000100 ;move ratio value into W
-    	    movwf OPTION    ;set timer ratio to 1:32 (TMR0 rate)
+	        movlw b'10000100' ;move ratio value into W
+    	    movwf OPTION_REG    ;set timer ratio to 1:32 (TMR0 rate)
 
 			PAGE0
 			clrf PORTA
 			clrf PORTB
 ;
-			movlw 152
+			movlw .152
 			movwf TMRCNT
 			bcf INTCON,2
 ;
-			movlw $FF
+			movlw 0xFF
 			movwf TEMP
 ;
 			movlw DELAY_TICS
@@ -95,11 +73,11 @@ RESET:		PAGE1
 			clrf STATE
 			clrf SEC
 ;
-			movlw 200
+			movlw .200
 			movwf Temp
 			movwf Ref
 ;
-			movlw $80
+			movlw 0x80
 			movwf Motor
 			movwf Ambient
 ;
@@ -435,12 +413,12 @@ IDCRCDONE:	call WAITCLK
 			rrf VAL,F
 			rrf VAL,F
 			movf CRC,W
-			andlw $3F
+			andlw 0x3F
 			xorwf VAL,W
 			btfss STATUS,Z
 			goto LOOPHI
 
-			movlw $0C
+			movlw 0x0C
 			movwf PORTA
 
 			movlw 6
@@ -495,7 +473,7 @@ DEVCRCDONE:	call WAITCLK
 			rrf VAL,F
 			rrf VAL,F
 			movf CRC,W
-			andlw $3F
+			andlw 0x3F
 			xorwf VAL,W
 			btfss STATUS,Z
 			goto LOOPHI
@@ -635,7 +613,7 @@ DoSec:
 			movlw DELAY_TICS
 			movwf CLKCNT
 			
-			movlw 153
+			movlw .153
 			movwf TMRCNT
 ;
 			bsf SEC,7
@@ -643,25 +621,25 @@ DoSec:
 
 Send0:		clrf STATE
 			bsf FLREG,3
-			movlw %00001010
+			movlw b'00001010'
 			movwf PORTB
 			return
 
 Send1:		clrf STATE
 			bsf FLREG,3
-			movlw %00010010
+			movlw b'00010010'
 			movwf PORTB
 			return
 
 Rec0:		clrf STATE
 			bcf FLREG,3
-			movlw %00001000
+			movlw b'00001000'
 			movwf PORTB
 			return
 
 Rec1:		clrf STATE
 			bcf FLREG,3
-			movlw %00010000
+			movlw b'00010000'
 			movwf PORTB
 			return
 
@@ -677,7 +655,7 @@ UPDATECRC:	andlw 1
 			btfsc STATUS,Z
 			return
 
-			movlw $26
+			movlw 0x26
 			xorwf CRC,F
 			return
 
@@ -704,7 +682,7 @@ UPDATEDO:	rrf VAL,F
 			rrf TEMP,W
 			return
 
-READCMD:	movlw 24
+READCMD:	movlw .24
 			movwf COUNT
 			call HandleRead
 			clrf CRC
@@ -733,7 +711,7 @@ RDVALCONT:	decfsz COUNT,F
 			movlw 8
 			movwf COUNT
 
-			movlw $A5
+			movlw 0xA5
 			xorwf CRC,F
 
 RDCRCLOOP:	movf CRC,W
@@ -854,7 +832,7 @@ WRCRCCONT:	bcf STATUS,C
 			rrf VAL,F
 			rrf VAL,F
 			movf CRC,W
-			andlw $3F
+			andlw 0x3F
 			xorwf VAL,W
 			btfss STATUS,Z
 			return
@@ -862,4 +840,4 @@ WRCRCCONT:	bcf STATUS,C
 WRCRCOK:	call HandleWrite
 			return
 
-        .END
+        end
