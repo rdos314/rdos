@@ -11,8 +11,8 @@
 #define FALSE	0
 #define	TRUE	!FALSE
 
-#define POP_SIZE	500
-#define SEQ_SIZE	10000
+#define POP_SIZE	600
+#define SEQ_SIZE	16000
 
 int main(int argc, char **argv)
 {
@@ -32,9 +32,9 @@ int main(int argc, char **argv)
 	randomize();
 	random(1000);
 
-	refmut = new TDnaMutator(SEQ_SIZE, 0.0000025);
-	fastmut = new TDnaMutator(SEQ_SIZE, 0.0000025);
-	slowmut = new TDnaMutator(SEQ_SIZE, 0.0000025);
+	refmut = new TDnaMutator(SEQ_SIZE, 0.000002);
+	fastmut = new TDnaMutator(SEQ_SIZE, 0.00001);
+	slowmut = new TDnaMutator(SEQ_SIZE, 0.000004);
 	eval = new TDnaEvaluator(SEQ_SIZE);
 	ref = eval->GetSeq();
 
