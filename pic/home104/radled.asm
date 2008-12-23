@@ -1,82 +1,61 @@
+#include p16f84a.inc
+
+	__config 0x3FF3
+
 ;RADLED.ASM
 
-#DEFINE PAGE0   BCF $03,5
-#DEFINE PAGE1   BSF $03,5
+#DEFINE PAGE0   BCF 3,5
+#DEFINE PAGE1   BSF 3,5
 
-INDF:	.EQU 0
-PCL:    .EQU 2
-STATUS: .EQU 3
-FSR:	.EQU 4
-PORTA:  .EQU 5
-PORTB:  .EQU 6
-TRISA:  .EQU 5
-TRISB:  .EQU 6
+TEMP		EQU 0x0C
+COUNT		EQU 0x0D
+V0			EQU 0x0E
+V1			EQU 0x0F
+D0			EQU 0x10
+D1			EQU 0x11
+D2			EQU 0x12
+REF			EQU 0x13
+Ch0Low		EQU 0x14
+Ch0High		EQU 0x15
+Ch1Low		EQU 0x16
+Ch1High		EQU 0x17
+Ch2Low		EQU 0x18
+Ch2High		EQU 0x19
+Ch3Low		EQU 0x1A
+Ch3High		EQU 0x1B
+MOT			EQU 0x1C
+REG			EQU 0x1D
+VAL			EQU 0x1E
+BIT			EQU 0x1F
+INTEN		EQU 0x20
+AdcLsb		EQU 0x21
+AdcMsb		EQU 0x22
+RefType		EQU 0x23
+DelayMs		EQU 0x24
+TState		EQU 0x25
+Stable		EQU 0x26
+AdcLow0		EQU 0x27
+AdcHigh0	EQU 0x28
+AdcLow1		EQU 0x29
+AdcHigh1	EQU 0x2A
+AdcLow2		EQU 0x2B
+AdcHigh2	EQU 0x2C
+AdcLow3		EQU 0x2D
+AdcHigh3	EQU 0x2E
 
-W:      .EQU 0          ;Working
-F:      .EQU 1          ;File
-C:      .EQU 0          ;Carry
-Z:      .EQU 2          ;Zero
-
-EEDATA: .EQU $08        ;eeprom data value register
-EECON1: .EQU $08        ;eeprom write register 1
-EEADR:  .EQU $09        ;eeprom data address register
-EECON2: .EQU $09        ;eeprom write register 2
-
-WR:     .EQU 1          ;eeprom write initiate flag
-WREN:   .EQU 2          ;eeprom write enable flag
-RD:     .EQU 0          ;eeprom read enable flag
-
-INTCON: .EQU $0B
-
-TEMP		.EQU $0C
-COUNT		.EQU $0D
-V0			.EQU $0E
-V1			.EQU $0F
-D0			.EQU $10
-D1			.EQU $11
-D2			.EQU $12
-REF			.EQU $13
-Ch0Low		.EQU $14
-Ch0High		.EQU $15
-Ch1Low		.EQU $16
-Ch1High		.EQU $17
-Ch2Low		.EQU $18
-Ch2High		.EQU $19
-Ch3Low		.EQU $1A
-Ch3High		.EQU $1B
-MOT			.EQU $1C
-REG			.EQU $1D
-VAL			.EQU $1E
-BIT			.EQU $1F
-INTEN		.EQU $20
-AdcLsb		.EQU $21
-AdcMsb		.EQU $22
-RefType		.EQU $23
-DelayMs		.EQU $24
-TState		.EQU $25
-Stable		.EQU $26
-AdcLow0		.EQU $27
-AdcHigh0	.EQU $28
-AdcLow1		.EQU $29
-AdcHigh1	.EQU $2A
-AdcLow2		.EQU $2B
-AdcHigh2	.EQU $2C
-AdcLow3		.EQU $2D
-AdcHigh3	.EQU $2E
-
-	        .ORG 4
-    	    .ORG 5
+	        org 4
+    	    org 5
 
 RESET:		PAGE1
-			movlw $18
+			movlw 0x18
 			movwf TRISA
 
-			movlw %11110010
+			movlw b'11110010'
 			movwf TRISB
 			PAGE0
 			clrf PORTA
 ;
-			movlw %00001000
+			movlw b'00001000'
 			movwf PORTB
 ;
 			clrf RefType
@@ -102,16 +81,16 @@ RESET:		PAGE1
 			clrf AdcLow3
 			clrf AdcHigh3
 ;
-			movlw $80
+			movlw 0x80
 			movwf MOT
 ;
 			movlw 12
 			movwf INTEN
 ;
-			movlw $FF
+			movlw 0xFF
 			movwf DelayMs
 			clrf TState
-			movlw 10
+			movlw .10
 			movwf Stable
 
 LP:			call INITLED
@@ -123,53 +102,53 @@ LP:			call INITLED
 
 STOP:		goto STOP
 			
-GETSEG:		andlw $F
+GETSEG:		andlw 0xF
 			addwf PCL,F
-			retlw %01111110	; 0
-			retlw %00110000 ; 1
-			retlw %01101101 ; 2
-			retlw %01111001 ; 3
-			retlw %00110011 ; 4
-			retlw %01011011 ; 5
-			retlw %01011111 ; 6
-			retlw %01110000 ; 7
-			retlw %01111111 ; 8
-			retlw %01111011 ; 9
-			retlw %01110111 ; A
-			retlw %00011111 ; B
-			retlw %01001110 ; C
-			retlw %00111101 ; D
-			retlw %01001111 ; E
-			retlw %01000111 ; F
+			retlw b'01111110'	; 0
+			retlw b'00110000' ; 1
+			retlw b'01101101' ; 2
+			retlw b'01111001' ; 3
+			retlw b'00110011' ; 4
+			retlw b'01011011' ; 5
+			retlw b'01011111' ; 6
+			retlw b'01110000' ; 7
+			retlw b'01111111' ; 8
+			retlw b'01111011' ; 9
+			retlw b'01110111' ; A
+			retlw b'00011111' ; B
+			retlw b'01001110' ; C
+			retlw b'00111101' ; D
+			retlw b'01001111' ; E
+			retlw b'01000111' ; F
 
-GETMOT10:	andlw $F
+GETMOT10:	andlw 0xF
 			addwf PCL,F
-			retlw 0	  ; 0.0
-			retlw 25  ; 1.0
-			retlw 50  ; 2.0
-			retlw 75  ; 3.0
-			retlw 100 ; 4.0
-			retlw 125 ; 5.0
-			retlw 150 ; 6.0
-			retlw 175 ; 7.0
-			retlw 200 ; 8.0
-			retlw 225 ; 9.0
-			retlw 250 ; 10.0
-			retlw 255 
+			retlw .0	  ; 0.0
+			retlw .25  ; 1.0
+			retlw .50  ; 2.0
+			retlw .75  ; 3.0
+			retlw .100 ; 4.0
+			retlw .125 ; 5.0
+			retlw .150 ; 6.0
+			retlw .175 ; 7.0
+			retlw .200 ; 8.0
+			retlw .225 ; 9.0
+			retlw .250 ; 10.0
+			retlw .255 
 
-GETMOT1:	andlw $F
+GETMOT1:	andlw 0xF
 			addwf PCL,F
-			retlw 0	  ; 0.0
-			retlw 3	  ; 0.1
-			retlw 5	  ; 0.2
-			retlw 8   ; 0.3
-			retlw 10  ; 0.4
-			retlw 13  ; 0.5
-			retlw 15  ; 0.6
-			retlw 18  ; 0.7
-			retlw 20  ; 0.8
-			retlw 23  ; 0.9			
-			retlw 255
+			retlw .0	  ; 0.0
+			retlw .3	  ; 0.1
+			retlw .5	  ; 0.2
+			retlw .8   ; 0.3
+			retlw .10  ; 0.4
+			retlw .13  ; 0.5
+			retlw .15  ; 0.6
+			retlw .18  ; 0.7
+			retlw .20  ; 0.8
+			retlw .23  ; 0.9			
+			retlw .255
 
 SetVal:		movf REG,W
 			addwf PCL,F
@@ -193,25 +172,25 @@ GetVal:		movf REG,W
 			return				; 6
 			return				; 7
 
-INITLED:	movlw $C
+INITLED:	movlw 0xC
 			call SENDBYTE
 			movlw 1
 			call SENDBYTE
 			call LOADLED
 ;
-			movlw $9
+			movlw 0x9
 			call SENDBYTE
 			movlw 0
 			call SENDBYTE
 			call LOADLED
 ;
-			movlw $A
+			movlw 0xA
 			call SENDBYTE
 			movf INTEN,W
 			call SENDBYTE
 			call LOADLED
 ;
-			movlw $B
+			movlw 0xB
 			call SENDBYTE
 			movlw 7
 			call SENDBYTE
@@ -223,7 +202,7 @@ WRITEREF:	movf REF,W
 			clrf V1
 			call DECODE
 ;
-			movlw $1
+			movlw 0x1
 			call SENDBYTE
 			movf D2,W
 			btfss STATUS,Z
@@ -236,15 +215,15 @@ WRREFSEG:	call GETSEG
 WRREFDO:	call SENDBYTE
 			call LOADLED
 ;
-			movlw $2
+			movlw 0x2
 			call SENDBYTE
 			movf D1,W
 			call GETSEG
-			addlw $80
+			addlw 0x80
 			call SENDBYTE
 			call LOADLED
 ;
-			movlw $3
+			movlw 0x3
 			call SENDBYTE
 			movf D0,W
 			call GETSEG
@@ -258,7 +237,7 @@ WRITETEM:	movf AdcLow0,W
 			movwf V1
 			call DECODE
 ;
-			movlw $4
+			movlw 0x4
 			call SENDBYTE
 			movf D2,W
 			btfss STATUS,Z
@@ -271,15 +250,15 @@ WRTEMSEG:	call GETSEG
 WRTEMDO:	call SENDBYTE
 			call LOADLED
 ;
-			movlw $5
+			movlw 0x5
 			call SENDBYTE
 			movf D1,W
 			call GETSEG
-			addlw $80
+			addlw 0x80
 			call SENDBYTE
 			call LOADLED
 ;
-			movlw $6
+			movlw 0x6
 			call SENDBYTE
 			movf D0,W
 			call GETSEG
@@ -289,15 +268,15 @@ WRTEMDO:	call SENDBYTE
 
 WRITEMOT:	call DECMOT
 ;
-			movlw $7
+			movlw 0x7
 			call SENDBYTE
 			movf D1,W
 			call GETSEG
-			addlw $80
+			addlw 0x80
 			call SENDBYTE
 			call LOADLED
 ;
-			movlw $8
+			movlw 0x8
 			call SENDBYTE
 			movf D0,W
 			call GETSEG
@@ -307,22 +286,22 @@ WRITEMOT:	call DECMOT
 
 AdcDelay:	return
 
-ReadAdc0:	movlw %10001000
+ReadAdc0:	movlw b'10001000'
 			goto ReadAdc
 
-ReadAdc1:	movlw %10011000
+ReadAdc1:	movlw b'10011000'
 			goto ReadAdc
 
-ReadAdc2:	movlw %10101000
+ReadAdc2:	movlw b'10101000'
 			goto ReadAdc
 
-ReadAdc3:	movlw %10111000
+ReadAdc3:	movlw b'10111000'
 
 ReadAdc:	movwf TEMP
 			movlw 7
 			movwf COUNT
 ;
-			movlw %00001100
+			movlw b'00001100'
 			movwf PORTB
 			call AdcDelay
 ;
@@ -576,14 +555,14 @@ SetInten:
 			rrf INTEN,F
 			rrf INTEN,F
 			rrf INTEN,W
-			andlw $F
+			andlw 0xF
 			addlw 2
 			movwf INTEN
 			btfss INTEN,4			
 			return
 
 SetMaxInten:	
-			movlw $F
+			movlw 0xF
 			movwf INTEN
 			return
 
@@ -622,7 +601,7 @@ Wait:		call Poll
 			goto Wait
 ;			
 			PAGE1
-			movlw %10110010
+			movlw b'10110010'
 			movwf TRISB
 			PAGE0
 ;
@@ -739,7 +718,7 @@ WaitRecLow:
 
 WaitEnd:
 			PAGE1
-			movlw %11110010
+			movlw b'11110010'
 			movwf TRISB
 			PAGE0
 
@@ -750,7 +729,7 @@ WaitHi:		call Poll
 		
 DECODE:		clrf D1
 			clrf D2
-			movlw 100
+			movlw .100
 			
 DEC100:		subwf V0,F
 			btfss STATUS,C
@@ -762,7 +741,7 @@ DEC100:		subwf V0,F
 ;
 			decf D2,F
 			addwf V0,F
-			movlw 10
+			movlw .10
 
 DEC10:		incf D1,F 
 			subwf V0,F
@@ -776,7 +755,7 @@ DEC10:		incf D1,F
 
 DECMOT:		movf MOT,W
 			movwf V0
-			movlw 249
+			movlw .249
 			subwf V0,W
 			btfss STATUS,C
 			goto DECMOTIT
@@ -842,21 +821,21 @@ LOADLED:	movlw 5
 			return
 
 CheckRef:	movf REF,W
-			sublw 150
+			sublw .150
 			btfss STATUS,C
 			goto CheckRefHi
 ;
-			movlw 150
+			movlw .150
 			movwf REF
 			return
 
 CheckRefHi:
 			movf REF,W
-			sublw 250
+			sublw .250
 			btfsc STATUS,C
 			return
 ;
-			movlw 250
+			movlw .250
 			movwf REF
 			return
 
@@ -879,9 +858,9 @@ WRITEEE:	movf RefType,W
 	        movwf EEDATA
 
 		 	PAGE1
-     		movlw $55
+     		movlw 0x55
 	        movwf EECON2
-	        movlw $AA
+	        movlw 0xAA
 	        movwf EECON2
        	   	bsf EECON1,WR
 
@@ -897,11 +876,11 @@ CHKWRT:		btfss EECON1,4
 Poll:		decfsz DelayMs,F
 			return
 ;
-			movlw $FF
+			movlw 0xFF
 			movwf DelayMs
 ;
 			movf PORTA,W
-			andlw $18
+			andlw 0x18
 			xorwf TState,W
 			btfss STATUS,Z
 			goto RedoDebounc
@@ -914,7 +893,7 @@ Poll:		decfsz DelayMs,F
 			btfss STATUS,Z
 			goto CheckRed
 
-CheckBoth:	movlw $10
+CheckBoth:	movlw 0x10
 			xorwf TState,W
 			btfsc STATUS,Z
 			return
@@ -925,7 +904,7 @@ CheckBoth:	movlw $10
 			call WRITEREF
 			return	
 
-CheckRed:	movlw $10
+CheckRed:	movlw 0x10
 			xorwf TState,W
 			btfss STATUS,Z
 			return
@@ -938,10 +917,11 @@ CheckRed:	movlw $10
 
 RedoDebounc:
 			movf PORTA,W
-			andlw $18
+			andlw 0x18
 			movwf TState
-			movlw 10
+			movlw .10
 			movwf Stable
 			return
 
-        .END
+       end
+
