@@ -38,9 +38,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-#define WIDTH 50
-#define HEIGHT 15
-
 /*##########################################################################
 #
 #   Name       : TRad::TRad
@@ -52,17 +49,13 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TRad::TRad(TGraphicDevice *dev, int Address, int x, int y)
- : Font(10)
+TRad::TRad(TRadControl *control, int rad, int Address)
 {
 	char str[40];
 
-    FDev = new TGraphicDevice(*dev);
-    FDev->SetFont(&Font);
-    
+    FControl = control;
+    FIndex = rad;
 	FAddress = Address;
-	FX = x;
-	FY = y;
 	Offline();
 	Ref = 200;
 	Temp = 200;
@@ -71,7 +64,7 @@ TRad::TRad(TGraphicDevice *dev, int Address, int x, int y)
 	AuxTemp = 200;
 	RefType = 0;
 
-    FUpdateRefType = FALSE;
+	 FUpdateRefType = FALSE;
 	FUpdateRef = FALSE;
 	FUpdateAmbient = FALSE;
 
@@ -81,10 +74,10 @@ TRad::TRad(TGraphicDevice *dev, int Address, int x, int y)
     FTempCount = 0;
     FMotorSum = 0;
     FMotorCount = 0;
-    FLightSum = 0;
+	 FLightSum = 0;
     FLightCount = 0;
-    FAuxTempSum = 0;
-    FAuxTempCount = 0;
+	 FAuxTempSum = 0;
+	 FAuxTempCount = 0;
 
 	sprintf(str, "RAD %d", Address);
 	Start(str, 0x2000);
@@ -103,7 +96,6 @@ TRad::TRad(TGraphicDevice *dev, int Address, int x, int y)
 ##########################################################################*/
 TRad::~TRad()
 {
-    delete FDev;
 }
 
 /*##########################################################################
@@ -231,7 +223,7 @@ int TRad::GetAddress()
 ##########################################################################*/
 int TRad::GetRef()
 {
-    return Ref;
+	 return Ref;
 }
 
 /*##########################################################################
@@ -263,7 +255,7 @@ int TRad::GetTemp()
 ##########################################################################*/
 int TRad::GetMotor()
 {
-    return Motor;
+	 return Motor;
 }
 
 /*##########################################################################
@@ -313,11 +305,10 @@ int TRad::GetAuxTemp()
 void TRad::Execute()
 {
 	int val;
-	char str[80];
 
 	while (FInstalled)
 	{
-	    FSection.Enter();
+		 FSection.Enter();
 
 		if (FUpdateRef)
 		{
@@ -341,98 +332,72 @@ void TRad::Execute()
 
 			if (FRefCount == 20)
 			{
-			    Ref = FRefSum / FRefCount;
-			    FRefSum = 0;
-			    FRefCount = 0;
-			}			
-			sprintf(str, "%4ld.%ld ", val / 10, val % 10);
+				 Ref = FRefSum / FRefCount;
+				 FRefSum = 0;
+				 FRefCount = 0;
+			}
+			FControl->SetRef(FIndex, val);
 		}
 		else
-			strcpy(str, "------ ");
-
-    	FDev->SetFilledStyle();
-
-        FDev->SetDrawColor(0, 0, 0);
-		FDev->DrawRect(FX, FY, FX + WIDTH, FY + HEIGHT - 1);
-
-    	FDev->SetDrawColor(255, 255, 255);
-		FDev->DrawString(FX, FY, str);
+		    FControl->SetRef(FIndex);
 
 		if (RdosReadSerialRaw(FAddress, 1, &val))
 		{
 			if (val < 50)
 				val += 256;
 
-		    FTempSum += val;
-		    FTempCount++;
+			 FTempSum += val;
+			 FTempCount++;
 
-		    if (FTempCount == 20)
-		    {
-		        Temp = FTempSum / FTempCount;
-		        FTempSum = 0;
-		        FTempCount = 0;
-		    }   
-			sprintf(str, "%4ld.%ld ", val / 10, val % 10);
-	    }
+			 if (FTempCount == 20)
+			 {
+				  Temp = FTempSum / FTempCount;
+				  FTempSum = 0;
+				  FTempCount = 0;
+			 }
+			 FControl->SetTemp(FIndex, val);
+		 }
 		else
-			strcpy(str, "------ ");
-
-        FDev->SetDrawColor(0, 0, 0);
-		FDev->DrawRect(FX + WIDTH, FY, FX + 2 * WIDTH, FY + HEIGHT - 1);
-
-		FDev->SetDrawColor(255, 255, 255);
-		FDev->DrawString(FX + WIDTH, FY, str);
+	        FControl->SetTemp(FIndex);
 
 		if (RdosReadSerialRaw(FAddress, 2, &val))
 		{
-		    Online();
+			 Online();
 
 			val = val * 10 / 25;
 
-		    FMotorSum += val;
-		    FMotorCount++;
+			 FMotorSum += val;
+			 FMotorCount++;
 
-		    if (FMotorCount == 20)
-		    {
-		        Motor = FMotorSum / FMotorCount;
-		        FMotorSum = 0;
-		        FMotorCount = 0;
-		    }		    
-			sprintf(str, "%4ld.%ld ", val / 10, val % 10);
+			 if (FMotorCount == 20)
+			 {
+				  Motor = FMotorSum / FMotorCount;
+				  FMotorSum = 0;
+				  FMotorCount = 0;
+			 }
+			 FControl->SetMotor(FIndex, val);
 		}
 		else
 		{
-		    Offline();
-			strcpy(str, "------ ");
+			 Offline();
+			 FControl->SetMotor(FIndex);
 		}
-
-        FDev->SetDrawColor(0, 0, 0);
-		FDev->DrawRect(FX + 2 * WIDTH, FY, FX + 3 * WIDTH, FY + HEIGHT - 1);
-
-		FDev->SetDrawColor(255, 255, 255);
-		FDev->DrawString(FX + 2 * WIDTH, FY, str);
 
 		if (RdosReadSerialRaw(FAddress, 3, &val))
 		{
-		    FLightSum += val;
-		    FLightCount++;
+			 FLightSum += val;
+			 FLightCount++;
 
-		    if (FLightCount == 20)
-		    {
-		        Light = FLightSum / FLightCount;
-		        FLightSum = 0;
-		        FLightCount = 0;
-		    }
-			sprintf(str, "%4ld.%ld ", val / 10, val % 10);
-	    }
+			 if (FLightCount == 20)
+			 {
+				  Light = FLightSum / FLightCount;
+				  FLightSum = 0;
+				  FLightCount = 0;
+			 }
+			 FControl->SetLight(FIndex, val);
+		 }
 		else
-			strcpy(str, "------ ");
-
-        FDev->SetDrawColor(0, 0, 0);
-		FDev->DrawRect(FX + 3 * WIDTH, FY, FX + 4 * WIDTH, FY + HEIGHT - 1);
-
-    	FDev->SetDrawColor(255, 255, 255);
-		FDev->DrawString(FX + 3 * WIDTH, FY, str);
+		    FControl->SetLight(FIndex);
 
 		if (RdosReadSerialRaw(FAddress, 4, &val))
 		{
@@ -448,16 +413,12 @@ void TRad::Execute()
 				FAuxTempSum = 0;
 				FAuxTempCount = 0;
 			}
-			sprintf(str, "%4ld.%ld ", val / 10, val % 10);
+			FControl->SetAuxTemp(FIndex, val);
 		}
 		else
-			strcpy(str, "------ ");
+		    FControl->SetAuxTemp(FIndex);
 
-        FDev->SetDrawColor(0, 0, 0);
-		FDev->DrawRect(FX + 4 * WIDTH, FY, FX + 5 * WIDTH, FY + HEIGHT - 1);
-
-		FDev->SetDrawColor(255, 255, 255);
-		FDev->DrawString(FX + 4 * WIDTH, FY, str);
+        FControl->Update();
 
 		FSection.Leave();
 

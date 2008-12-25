@@ -1472,13 +1472,13 @@ void THttpRadPage::WriteMain()
 				File.Write("<tr style='height:24.75pt'>");
 
 				WriteLeftFieldHeader(File, 15);
-				
-                sprintf(str, "<a href=\"/rad/%d.htm\">", r + 0x20);
-                File.Write(str);
+
+					 sprintf(str, "<a href=\"/rad/%d.htm\">", r + 0x20);
+					 File.Write(str);
 				switch (r)
 				{
 					case 0:
-						File.Write("Leif & Lenas sovrum");
+						File.Write("Datarum");
 						break;
 
 					case 1:
@@ -1498,7 +1498,7 @@ void THttpRadPage::WriteMain()
 						break;
 
 					case 5:
-						File.Write("Emil & Linneas sovrum");
+						File.Write("Sovrum, övre plan");
 						break;
 
 					case 6:
@@ -1509,7 +1509,7 @@ void THttpRadPage::WriteMain()
 						File.Write("Badrum");
 						break;
 				}
-                File.Write("</a>");
+					 File.Write("</a>");
 
 				WriteFieldFooter(File);
 

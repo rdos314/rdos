@@ -42,6 +42,8 @@
 #include "vp.h"
 #include "graph.h"
 #include "videodev.h"
+#include "jpeg.h"
+#include "radcntrl.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -49,9 +51,11 @@
 #define WIDTH 240
 #define HEIGHT 15
 
+#define RAD_Y  750
+
 void WsChanged(TWs2300 *ws)
 {
-    HttpUpdate();
+	 HttpUpdate();
 }
 
 void cdecl main()
@@ -84,8 +88,13 @@ void cdecl main()
 	int refsum;
 	TGraphic *graphic;
 	TGraphicDevice *vbe;
-	TFont Font(10);
+	TFont Font(25);
 	char str[80];
+	int width;
+	int height;
+	TBitmapGraphicDevice *bitmap;
+	TControlThread *control;
+	TRadControl *RadControl;
 
 	RdosWaitMilli(1000);
 
@@ -98,61 +107,22 @@ void cdecl main()
 
 	log = new TLog("e:\\log");
 
-	vbe = new TVideoGraphicDevice(24, 640, 480);
+	vbe = new TVideoGraphicDevice(32, 1400, 1050);
+	control = new TControlThread("Control", vbe);
 	vbe->SetFont(&Font);
+
+	bitmap = TJpegBitmapDevice::Create("d:\\heat\\back.jpg");
+	vbe->Blit(bitmap, 0, 0, 0, 0, 1400, 1050);
 
 	graphic = new TGraphic(vbe, log);
 
-	vbe->SetDrawColor(255, 255, 255);
-
-	vbe->DrawString(170, 420, "   Ref");
-	vbe->DrawString(220, 420, "  Temp");
-	vbe->DrawString(270, 420, "P†drag");
-	vbe->DrawString(320, 420, "  Ljus");
-	vbe->DrawString(370, 420, "Temp 2");
+	RadControl = new TRadControl(control, 300, RAD_Y, 500, 32 * 8);
 
 	for (i = 0; i < 8; i++)
 	{
-		switch (i)
-		{
-			case 0:
-				strcpy(str, "Leif & Lenas sovrum");
-				break;
-
-			case 1:
-				strcpy(str, "Vardagsrum");
-				break;
-
-			case 2:
-				strcpy(str, "Rosa sovrum, nedre plan");
-				break;
-
-			case 3:
-				strcpy(str, "Bl†tt sovrum, nedre plan");
-				break;
-
-			case 4:
-				strcpy(str, "K”k");
-				break;
-
-			case 5:
-				strcpy(str, "Emil & Linneas sovrum");
-				break;
-
-			case 6:
-				strcpy(str, "Trappa");
-				break;
-
-			case 7:
-				strcpy(str, "Badrum");
-				break;
-		}
-
-		vbe->DrawString(5, 420 + 16 * (i + 1), str);
-
-    	RadArr[i] = new TRad(vbe, 0x20 + i, 170, 420 + 16 * (i + 1));
-    	AddHttpRad(RadArr[i]);
-	    log->Add(RadArr[i]);
+		RadArr[i] = new TRad(RadControl, i, 0x20 + i);
+		AddHttpRad(RadArr[i]);
+		 log->Add(RadArr[i]);
 	}
 
 	Ws = new TWs2300(1);
@@ -272,57 +242,57 @@ void cdecl main()
 		{
 			Vp->SetTempError(temperrmax);
 			Vp->SetAmbient(refsum / count, (int)(10.0 * Ws->GetOutdoorTemp()));
-	    }
+		 }
 
 		if (diostat & 1)
 			HttpSetLightOn();
 		else
 			HttpSetLightOff();
 
-    	vbe->SetFilledStyle();
-    	vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 0, "V„derstation");
+		vbe->SetFilledStyle();
+		vbe->SetDrawColor(255, 255, 255);
+		 vbe->DrawString(550, 0, "V„derstation");
 
-	    vbe->DrawString(550, 16, "Inomhus");
+		 vbe->DrawString(550, 16, "Inomhus");
 
 		val = Ws->GetIndoorTemp();
 		sprintf(str, "Temperatur: %5.1Lf", val);
 
-    	vbe->SetDrawColor(0, 0, 0);
+		vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 2 * 16, 550 + WIDTH, 3 * 16 - 1);
-		
+
 		vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 2 * 16, str);
+		 vbe->DrawString(550, 2 * 16, str);
 
 		val = Ws->GetIndoorHumidity();
 		sprintf(str, "Fuktighet: %4.0Lf%", val);
 
-    	vbe->SetDrawColor(0, 0, 0);
+		vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 3 * 16, 550 + WIDTH, 4 * 16 - 1);
-		
-    	vbe->SetDrawColor(255, 255, 255);
+
+		vbe->SetDrawColor(255, 255, 255);
 		 vbe->DrawString(550, 3 * 16, str);
 
-    	vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 4 * 16, "Utomhus");
+		vbe->SetDrawColor(255, 255, 255);
+		 vbe->DrawString(550, 4 * 16, "Utomhus");
 
 		val = Ws->GetOutdoorTemp();
 		sprintf(str, "Temperatur: %5.1Lf", val);
 
-    	vbe->SetDrawColor(0, 0, 0);
+		vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 5 * 16, 550 + WIDTH, 6 * 16 - 1);
-		
-    	vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 5 * 16, str);
+
+		vbe->SetDrawColor(255, 255, 255);
+		 vbe->DrawString(550, 5 * 16, str);
 
 		val = Ws->GetOutdoorHumidity();
 		sprintf(str, "Fuktighet: %4.0Lf%", val);
 
-    	vbe->SetDrawColor(0, 0, 0);
+		vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 6 * 16, 550 + WIDTH, 7 * 16 - 1);
-		
+
 		vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 6 * 16, str);
+		 vbe->DrawString(550, 6 * 16, str);
 
 		val = Ws->GetDewPoint();
 		sprintf(str, "Daggpunkt: %5.1Lf", val);
@@ -336,20 +306,20 @@ void cdecl main()
 		val = Ws->GetWindChill();
 		sprintf(str, "Vindkompenserad: %5.1Lf", val);
 
-    	vbe->SetDrawColor(0, 0, 0);
+		vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 8 * 16, 550 + WIDTH, 9 * 16 - 1);
-		
-    	vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 8 * 16, str);
+
+		vbe->SetDrawColor(255, 255, 255);
+		 vbe->DrawString(550, 8 * 16, str);
 
 		val = Ws->GetWindSpeed();
 		sprintf(str, "Vind: %5.1Lf m/s", val);
 
-    	vbe->SetDrawColor(0, 0, 0);
+		vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 9 * 16, 550 + WIDTH, 10 * 16 - 1);
-		
-    	vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 9 * 16, str);
+
+		vbe->SetDrawColor(255, 255, 255);
+		 vbe->DrawString(550, 9 * 16, str);
 
 		val = Ws->GetWindDir();
 		ival = (int)(val / 22 + 0.5);
@@ -426,38 +396,38 @@ void cdecl main()
 					 break;
 		}
 
-    	vbe->SetDrawColor(0, 0, 0);
+		vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 10 * 16, 550 + WIDTH, 11 * 16 - 1);
-		
-    	vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 10 * 16, str);
+
+		vbe->SetDrawColor(255, 255, 255);
+		 vbe->DrawString(550, 10 * 16, str);
 
 		val = Ws->GetRain1h();
 		sprintf(str, "Regn: 1 timme: %5.1Lf mm", val);
 
-    	vbe->SetDrawColor(0, 0, 0);
+		vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 11 * 16, 550 + WIDTH, 12 * 16 - 1);
-		
-    	vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 11 * 16, str);
+
+		vbe->SetDrawColor(255, 255, 255);
+		 vbe->DrawString(550, 11 * 16, str);
 
 		val = Ws->GetRain24h();
 		sprintf(str, "Regn: 24 timmar: %5.1Lf mm", val);
 
-    	vbe->SetDrawColor(0, 0, 0);
+		vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 12 * 16, 550 + WIDTH, 13 * 16 - 1);
-		
-    	vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 12 * 16, str);
+
+		vbe->SetDrawColor(255, 255, 255);
+		 vbe->DrawString(550, 12 * 16, str);
 
 		val = Ws->GetAirPressure();
 		sprintf(str, "Lufttryck: %6.1Lf hPa", val);
 
-    	vbe->SetDrawColor(0, 0, 0);
+		vbe->SetDrawColor(0, 0, 0);
 		vbe->DrawRect(550, 13 * 16, 550 + WIDTH, 14 * 16 - 1);
-		
-    	vbe->SetDrawColor(255, 255, 255);
-	    vbe->DrawString(550, 13 * 16, str);
+
+		vbe->SetDrawColor(255, 255, 255);
+		 vbe->DrawString(550, 13 * 16, str);
 
 		RdosWaitMilli(1000);
 
