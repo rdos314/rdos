@@ -44,6 +44,7 @@
 #include "videodev.h"
 #include "jpeg.h"
 #include "radcntrl.h"
+#include "solar.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -96,6 +97,9 @@ void cdecl main()
 	TBitmapGraphicDevice *bitmap;
 	TControlThread *control;
 	TRadControl *RadControl;
+	TSolar solar(55, 49, 5, 13, 14, 43);
+	long double altitude;
+	long double azimuth;
 
 	RdosWaitMilli(1000);
 
@@ -121,12 +125,12 @@ void cdecl main()
 
 	for (i = 0; i < 8; i++)
 	{
-	    
+
 		switch (i)
-    	{
-	    	case 0:
-		    	strcpy(str, "Datarum");
-			    break;
+		{
+			case 0:
+				strcpy(str, "Datarum");
+				break;
 
     		case 1:
 	    		strcpy(str, "Vardagsrum, nedre plan");
@@ -197,7 +201,10 @@ void cdecl main()
 				mask = mask >> 1;
 			}
 
-			if (CurrTime->GetHour() >= 17 || CurrTime->GetHour() <= 7)
+			solar.SetTime(TDateTime(), 1);
+			solar.GetSunPosition(&altitude, &azimuth);
+
+			if (altitude < -5.0)
 			{
 				if ((diostat & 1) == 0)
 					RdosToggleSerialLine(1, 0);
