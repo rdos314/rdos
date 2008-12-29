@@ -58,7 +58,7 @@ dqe_out_size    DB ?
 dqe_out_buf     DB 8 DUP(?)
 
 dqe_in_size     DB ?
-dqe_in_buf      DB 8 DUP(?)
+dqe_in_buf      DB 32 DUP(?)
 
 dqe_queue       DB ?
 dqe_result      DB ?
@@ -275,76 +275,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    HandleAsync1
-;
-;		description:	Handle async req from PIC 1
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandleAsync1 Proc near
-    push es
-    push ax
-    push bx
-    push cx
-    push dx
-    push di
-;
-    mov al,ds:Data0
-    movzx cx,al
-    and cx,1Fh
-    or cx,cx
-    push cx
-    jz hAsyncDone1
-;
-    movzx eax,cx
-    inc ax
-    AllocateSmallGlobalMem
-    xor di,di
-    mov ax,cx
-    stosb
-;
-    mov ah,4
-    mov bx,1000h
-        
-hAsyncLoop1:
-    mov dx,IO_BASE + 10
-    in al,dx
-    and al,4
-    cmp al,ah
-    je hAsyncRead1
-;
-    sub bx,1
-    jnz hAsyncLoop1
-;
-    jmp hAsyncDone1
-
-hAsyncRead1:
-    mov bx,1000h
-    xor ah,4
-    mov dx,IO_BASE
-    in al,dx
-    stosb    
-    loop hAsyncLoop1
-;
-    NotifyIrData
-
-hAsyncDone1:
-    pop cx
-;
-    pop di
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    pop es
-    ret
-HandleAsync1    Endp    
-	
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:		    DioCheckReady1
 ;
 ;		description:	Check current reqs for ready state
@@ -364,14 +294,6 @@ DioCheckReady1 Proc near
     jz dcrDone1
 ;
     and ds:IntFlag, NOT 1
-    mov al,ds:Data0
-    test al,20h
-    jz dcrQueue1
-;
-    call HandleAsync1    
-    jmp dcrDone1
-    
-dcrQueue1:
     mov ax,ds:DioCurr0
     or ax,ax
     jz dcrDone1
@@ -382,7 +304,7 @@ dcrQueue1:
 ;
     movzx cx,al
     mov es:dqe_in_size,cl
-    and cx,7
+    and cx,1Fh
     or cx,cx
     jz dcrInputOk1
 ;
@@ -1150,21 +1072,18 @@ IrReq  Proc near
 ;
     call CreateIrReq
     call QueueReq
-
-irWaitOne:
     WaitForSignal
 ;
     mov al,es:dqe_result
-    cmp al,-1
-    je irWaitOne
-;    
-    test al,0C0h
-    clc
-    jnz irDone
+    or al,al
+    jz irFail
 ;
+    clc
+    jmp irDone
+
+irFail:
     FreeMem
     stc
-    jmp irDone
          
 irDone:   
     pop ax
@@ -1395,6 +1314,9 @@ ir_loop:
     call IrReq
     jc ir_loop
 ;
+    int 3
+    mov al,es:dqe_in_size
+    mov bx,OFFSET dqe_in_buf
     FreeMem
     jmp ir_loop    
 

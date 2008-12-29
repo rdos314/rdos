@@ -64,16 +64,23 @@ TRadControl::TRadControl(TControlThread *dev, int xmin, int ymin, int width, int
 
     for (i = 0; i < MAX_RAD_COUNT; i++)
     {
+        FChangedName[i] = FALSE;
+        FName[i] = 0;
+        FChangedRef[i] = FALSE;
         FHasRef[i] = FALSE;
+        FChangedTemp[i] = FALSE;
         FHasTemp[i] = FALSE;
+        FChangedMotor[i] = FALSE;
         FHasMotor[i] = FALSE;
+        FChangedLight[i] = FALSE;
         FHasLight[i] = FALSE;
+        FChangedAuxTemp[i] = FALSE;
         FHasAuxTemp[i] = FALSE;
     }
 
     Enable();
     Show();
-    Redraw();
+    Redraw(500);
 }
 
 /*##########################################################################
@@ -89,6 +96,43 @@ TRadControl::TRadControl(TControlThread *dev, int xmin, int ymin, int width, int
 ##########################################################################*/
 TRadControl::~TRadControl()
 {
+    int i;
+
+    for (i = 0; i < MAX_RAD_COUNT; i++)
+        if (FName[i])
+            delete FName[i];
+}
+
+/*##########################################################################
+#
+#   Name       : TRadControl::Define
+#
+#   Purpose....: Define ref & name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRadControl::Define(int rad, const char *name)
+{
+	int size;
+
+	FSection.Enter();
+
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FName[rad])
+	        delete FName[rad];
+
+	    size = strlen(name);
+	    FName[rad] = new char[size + 1];
+	    strcpy(FName[rad], name);    
+
+		 FChangedName[rad] = TRUE;
+	}
+
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -104,12 +148,18 @@ TRadControl::~TRadControl()
 ##########################################################################*/
 void TRadControl::SetRef(int rad)
 {
-	 FSection.Enter();
+	FSection.Enter();
 
-	 if (rad < MAX_RAD_COUNT)
-		  FHasRef[rad] = FALSE;
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FHasRef[rad])
+	    {
+    	    FHasRef[rad] = FALSE;
+    	    FChangedRef[rad] = TRUE;
+        }    	    
+    }
 
-	 FSection.Leave();
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -125,15 +175,27 @@ void TRadControl::SetRef(int rad)
 ##########################################################################*/
 void TRadControl::SetRef(int rad, int val)
 {
-	 FSection.Enter();
+	FSection.Enter();
 
-	 if (rad < MAX_RAD_COUNT)
-	 {
-		  FHasRef[rad] = TRUE;
-		  FRef[rad] = val;
-	 }
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FHasRef[rad])
+	    {
+	        if (FRef[rad] != val)
+	        {
+	            FRef[rad] = val;
+	            FChangedRef[rad] = TRUE;
+	        }
+	    }
+	    else
+	    {
+    		FHasRef[rad] = TRUE;
+	    	FRef[rad] = val;
+	        FChangedRef[rad] = TRUE;
+	    }
+	}
 
-	 FSection.Leave();
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -149,12 +211,18 @@ void TRadControl::SetRef(int rad, int val)
 ##########################################################################*/
 void TRadControl::SetTemp(int rad)
 {
-	 FSection.Enter();
+	FSection.Enter();
 
-	 if (rad < MAX_RAD_COUNT)
-		  FHasTemp[rad] = FALSE;
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FHasTemp[rad])
+	    {
+    		FHasTemp[rad] = FALSE;
+    	    FChangedTemp[rad] = TRUE;
+        }
+    }
 
-	 FSection.Leave();
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -170,15 +238,27 @@ void TRadControl::SetTemp(int rad)
 ##########################################################################*/
 void TRadControl::SetTemp(int rad, int val)
 {
-	 FSection.Enter();
+	FSection.Enter();
 
-	 if (rad < MAX_RAD_COUNT)
-	 {
-		  FHasTemp[rad] = TRUE;
-		  FTemp[rad] = val;
-	 }
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FHasTemp[rad])
+	    {
+	        if (FTemp[rad] != val)
+	        {
+	            FTemp[rad] = val;
+	            FChangedTemp[rad] = TRUE;
+	        }
+	    }
+	    else
+	    {
+    		FHasTemp[rad] = TRUE;
+	    	FTemp[rad] = val;
+	        FChangedTemp[rad] = TRUE;
+	    }
+	}
 
-	 FSection.Leave();
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -194,12 +274,18 @@ void TRadControl::SetTemp(int rad, int val)
 ##########################################################################*/
 void TRadControl::SetMotor(int rad)
 {
-	 FSection.Enter();
+	FSection.Enter();
 
-	 if (rad < MAX_RAD_COUNT)
-		  FHasMotor[rad] = FALSE;
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FHasMotor[rad])
+	    {
+    	    FHasMotor[rad] = FALSE;
+    	    FChangedMotor[rad] = TRUE;
+        }
+    }
 
-	 FSection.Leave();
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -215,15 +301,27 @@ void TRadControl::SetMotor(int rad)
 ##########################################################################*/
 void TRadControl::SetMotor(int rad, int val)
 {
-	 FSection.Enter();
+	FSection.Enter();
 
-	 if (rad < MAX_RAD_COUNT)
-	 {
-		  FHasMotor[rad] = TRUE;
-		  FMotor[rad] = val;
-	 }
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FHasMotor[rad])
+	    {
+	        if (FMotor[rad] != val)
+	        {
+	            FMotor[rad] = val;
+	            FChangedMotor[rad] = TRUE;
+	        }
+	    }
+	    else
+	    {
+    		FHasMotor[rad] = TRUE;
+	    	FMotor[rad] = val;
+	        FChangedMotor[rad] = TRUE;
+	    }
+	}
 
-	 FSection.Leave();
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -239,12 +337,18 @@ void TRadControl::SetMotor(int rad, int val)
 ##########################################################################*/
 void TRadControl::SetLight(int rad)
 {
-	 FSection.Enter();
+	FSection.Enter();
 
-	 if (rad < MAX_RAD_COUNT)
-		  FHasLight[rad] = FALSE;
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FHasLight[rad])
+	    {
+    		FHasLight[rad] = FALSE;
+	        FChangedLight[rad] = TRUE;
+	    }
+    }
 
-	 FSection.Leave();
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -260,15 +364,27 @@ void TRadControl::SetLight(int rad)
 ##########################################################################*/
 void TRadControl::SetLight(int rad, int val)
 {
-	 FSection.Enter();
+	FSection.Enter();
 
-	 if (rad < MAX_RAD_COUNT)
-	 {
-		  FHasLight[rad] = TRUE;
-		  FLight[rad] = val;
-	 }
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FHasLight[rad])
+	    {
+	        if (FLight[rad] != val)
+	        {
+	            FLight[rad] = val;
+	            FChangedLight[rad] = TRUE;
+	        }
+	    }
+	    else
+	    {
+    		FHasLight[rad] = TRUE;
+	    	FLight[rad] = val;
+	        FChangedLight[rad] = TRUE;
+	    }
+	}
 
-	 FSection.Leave();
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -284,12 +400,18 @@ void TRadControl::SetLight(int rad, int val)
 ##########################################################################*/
 void TRadControl::SetAuxTemp(int rad)
 {
-	 FSection.Enter();
+    FSection.Enter();
 
-	 if (rad < MAX_RAD_COUNT)
-		  FHasAuxTemp[rad] = FALSE;
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FHasAuxTemp[rad])
+	    {
+    	    FHasAuxTemp[rad] = FALSE;
+	        FChangedAuxTemp[rad] = TRUE;
+	    }
+    }
 
-	 FSection.Leave();
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -305,31 +427,27 @@ void TRadControl::SetAuxTemp(int rad)
 ##########################################################################*/
 void TRadControl::SetAuxTemp(int rad, int val)
 {
-	 FSection.Enter();
+	FSection.Enter();
 
-	 if (rad < MAX_RAD_COUNT)
-	 {
-		  FHasAuxTemp[rad] = TRUE;
-		  FAuxTemp[rad] = val;
-	 }
+	if (rad < MAX_RAD_COUNT)
+	{
+	    if (FHasAuxTemp[rad])
+	    {
+	        if (FAuxTemp[rad] != val)
+	        {
+	            FAuxTemp[rad] = val;
+	            FChangedAuxTemp[rad] = TRUE;
+	        }
+	    }
+	    else
+	    {
+    		FHasAuxTemp[rad] = TRUE;
+	    	FAuxTemp[rad] = val;
+	        FChangedAuxTemp[rad] = TRUE;
+	    }
+	}
 
-	 FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TRadControl::Update
-#
-#   Purpose....: Update control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TRadControl::Update()
-{
-	 Redraw(1);
+	FSection.Leave();
 }
 
 /*##########################################################################
@@ -345,9 +463,10 @@ void TRadControl::Update()
 ##########################################################################*/
 void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
-	 int i;
-	 int xmax = xmin + width - 1;
-	 int ymax = ymin + height - 1;
+	int i;
+	int xmax = xmin + width - 1;
+	int ymax = ymin + height - 1;
+	int x;
     int y;
 	char str[80];
 	TFont Font(25);
@@ -369,109 +488,109 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
 	    dev->DrawString(xmin + 600, ymin, "  Ljus");
 	    dev->DrawString(xmin + 700, ymin, "Temp 2");
 
-    	for (i = 0; i < 8; i++)
+    	for (i = 0; i < MAX_RAD_COUNT; i++)
 	    {
-		    switch (i)
-    		{
-	    		case 0:
-		    		strcpy(str, "Datarum");
-			    	break;
+            if (FName[i])
+            {
+                FSection.Enter();
 
-    			case 1:
-	    			strcpy(str, "Vardagsrum, nedre plan");
-		    		break;
+                x = xmin + 300;        
+                y = ymin + 32 * (i + 1);
 
-    			case 2:
-	    			strcpy(str, "Rosa sovrum, nedre plan");
-		    		break;
+                if (FChangedName[i])
+                {
+    	    	    dev->DrawString(xmin, y, FName[i]);
+    	    	    FChangedName[i] = FALSE;
+    	    	}
 
-    			case 3:
-	    			strcpy(str, "Bl†tt sovrum, nedre plan");
-		    		break;
+                if (FChangedRef[i])
+                {
+                    if (FHasRef[i])
+            			sprintf(str, "%4ld.%ld ", FRef[i] / 10, FRef[i] % 10);
+    	        	else
+	    	        	strcpy(str, "------ ");
 
-    			case 4:
-	    			strcpy(str, "K”k");
-		    		break;
+        		    dev->SetFilledStyle();
+    
+        		    dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
+	        	    dev->DrawRect(x, y, x + WIDTH - SPACE, y + HEIGHT - 1);
 
-    			case 5:
-	    			strcpy(str, "Sovrum, ”vre plan");
-		    		break;
+    	        	dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
+    		        dev->DrawString(x, y, str);
 
-    			case 6:
-	    			strcpy(str, "Trappa");
-		    		break;
+    		        FChangedRef[i] = FALSE;
+    		    }
 
-    			case 7:
-	    			strcpy(str, "Badrum");
-		    		break;
-    		}
+    		    if (FChangedTemp[i])
+    		    {
+                    if (FHasTemp[i])
+                        sprintf(str, "%4ld.%ld ", FTemp[i] / 10, FTemp[i] % 10);
+    	        	else
+	    	        	strcpy(str, "------ ");
 
-            FSection.Enter();
-            
-            y = ymin + 32 * (i + 1);
-	    	dev->DrawString(xmin, y, str);
+        		    dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
+            		dev->DrawRect(x + WIDTH, y, x + 2 * WIDTH - SPACE, y + HEIGHT - 1);
+        
+	        	    dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
+		            dev->DrawString(x + WIDTH, y, str);
 
-            if (FHasRef[i])
-    			sprintf(str, "%4ld.%ld ", FRef[i] / 10, FRef[i] % 10);
-    		else
-	    		strcpy(str, "------ ");
+		            FChangedTemp[i] = FALSE;
+		        }
 
-		    dev->SetFilledStyle();
+		        if (FChangedMotor[i])
+		        {
+                    if (FHasMotor[i])
+        		    	sprintf(str, "%4ld.%ld ", FMotor[i] / 10, FMotor[i] % 10);
+        	    	else    
+        		    	strcpy(str, "------ ");
 
-		    dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
-		    dev->DrawRect(xmin + 300, y, xmin + WIDTH - SPACE, y + HEIGHT - 1);
+    	    	    dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
+	    	        dev->DrawRect(x + 2 * WIDTH, y, x + 3 * WIDTH - SPACE, y + HEIGHT - 1);
+    
+            		dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
+	    	        dev->DrawString(x + 2 * WIDTH, y, str);
 
-    		dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
-    		dev->DrawString(xmin + 300, y, str);
+	    	        FChangedMotor[i] = FALSE;
+	    	    }
 
-            if (FHasTemp[i])
-                sprintf(str, "%4ld.%ld ", FTemp[i] / 10, FTemp[i] % 10);
-    		else
-	    		strcpy(str, "------ ");
+	    	    if (FChangedLight[i])
+	    	    {
+        		    if (FHasLight[i])
+            			sprintf(str, "%4ld.%ld ", FLight[i] / 10, FLight[i] % 10);
+    	        	else
+	    	        	strcpy(str, "------ ");
 
-    		dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
-    		dev->DrawRect(xmin + WIDTH, y, xmin + 2 * WIDTH - SPACE, y + HEIGHT - 1);
+        		    dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
+	        	    dev->DrawRect(x + 3 * WIDTH, y, x + 4 * WIDTH - SPACE, y + HEIGHT - 1);
+        
+            		dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
+		            dev->DrawString(x + 3 * WIDTH, y, str);
 
-		    dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
-		    dev->DrawString(xmin + WIDTH, y, str);
+		            FChangedLight[i] = FALSE;
+		        }
 
-            if (FHasMotor[i])
-    			sprintf(str, "%4ld.%ld ", FMotor[i] / 10, FMotor[i] % 10);
-    		else
-    			strcpy(str, "------ ");
+                if (FChangedAuxTemp[i])
+                {
+        		    if (FHasAuxTemp[i])
+            			sprintf(str, "%4ld.%ld ", FAuxTemp[i] / 10, FAuxTemp[i] % 10);
+    	        	else
+	    	        	strcpy(str, "------ ");
 
-		    dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
-		    dev->DrawRect(xmin + 2 * WIDTH, y, xmin + 3 * WIDTH - SPACE, y + HEIGHT - 1);
+            		dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
+	        	    dev->DrawRect(x + 4 * WIDTH, y, x + 5 * WIDTH - SPACE, y + HEIGHT - 1);
+        
+            		dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
+		            dev->DrawString(x + 4 * WIDTH, y, str);
 
-    		dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
-		    dev->DrawString(xmin + 2 * WIDTH, y, str);
+		            FChangedAuxTemp[i] = FALSE;
+		        }
 
-		    if (FHasLight[i])
-    			sprintf(str, "%4ld.%ld ", FLight[i] / 10, FLight[i] % 10);
-    		else
-	    		strcpy(str, "------ ");
-
-		    dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
-		    dev->DrawRect(xmin + 3 * WIDTH, y, xmin + 4 * WIDTH - SPACE, y + HEIGHT - 1);
-
-    		dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
-		    dev->DrawString(xmin + 3 * WIDTH, y, str);
-
-		    if (FHasAuxTemp[i])
-    			sprintf(str, "%4ld.%ld ", FAuxTemp[i] / 10, FAuxTemp[i] % 10);
-    		else
-	    		strcpy(str, "------ ");
-
-    		dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
-		    dev->DrawRect(xmin + 4 * WIDTH, y, xmin + 5 * WIDTH - SPACE, y + HEIGHT - 1);
-
-    		dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
-		    dev->DrawString(xmin + 4 * WIDTH, y, str);
-
-            FSection.Leave();
+                FSection.Leave();
+            }
 	    }
 
     }
 
     TControl::Paint(dev, xmin, ymin, width, height);
+    Redraw(500);
 }

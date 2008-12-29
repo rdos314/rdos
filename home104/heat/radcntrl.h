@@ -38,6 +38,8 @@ public:
 	TRadControl(TControlThread *dev, int xmin, int ymin, int width, int height);
 	~TRadControl();
 
+    void Define(int rad, const char *name);
+
 	void SetRef(int rad);
 	void SetRef(int rad, int val);
 
@@ -53,23 +55,29 @@ public:
 	void SetAuxTemp(int rad);
 	void SetAuxTemp(int rad, int val);
 
-	void Update();
-
 protected:
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
+    int FChangedName[MAX_RAD_COUNT];
+    char *FName[MAX_RAD_COUNT];
+
+    int FChangedRef[MAX_RAD_COUNT];
     int FHasRef[MAX_RAD_COUNT];
     int FRef[MAX_RAD_COUNT];
 
+    int FChangedTemp[MAX_RAD_COUNT];
     int FHasTemp[MAX_RAD_COUNT];
     int FTemp[MAX_RAD_COUNT];
 
+    int FChangedMotor[MAX_RAD_COUNT];
     int FHasMotor[MAX_RAD_COUNT];
     int FMotor[MAX_RAD_COUNT];    
 
+    int FChangedLight[MAX_RAD_COUNT];
     int FHasLight[MAX_RAD_COUNT];
     int FLight[MAX_RAD_COUNT];
 
+    int FChangedAuxTemp[MAX_RAD_COUNT];
     int FHasAuxTemp[MAX_RAD_COUNT];
     int FAuxTemp[MAX_RAD_COUNT];    
 

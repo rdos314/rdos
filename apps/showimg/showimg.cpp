@@ -88,8 +88,8 @@ int main(int argc, char **argv)
 		else
 			width = 4 * height / 3;
 
-		width = 640;
-		height = 480;
+		width = 1400;
+		height = 1050;
 
 		vbe = new TVideoGraphicDevice(24, width, height);
 		vbe->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());

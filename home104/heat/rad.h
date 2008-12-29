@@ -34,7 +34,7 @@
 class TRad : public TDevice
 {
 public:
-	TRad(TRadControl *control, int rad, int Address);
+	TRad(const char *name, TRadControl *control, int rad, int address);
 	~TRad();
 
 	void DeviceName(char *Name, int Size) const;

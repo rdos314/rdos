@@ -49,7 +49,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TRad::TRad(TRadControl *control, int rad, int Address)
+TRad::TRad(const char *name, TRadControl *control, int rad, int Address)
 {
 	char str[40];
 
@@ -63,6 +63,8 @@ TRad::TRad(TRadControl *control, int rad, int Address)
 	Light = 0;
 	AuxTemp = 200;
 	RefType = 0;
+
+    FControl->Define(FIndex, name);
 
 	 FUpdateRefType = FALSE;
 	FUpdateRef = FALSE;
@@ -417,8 +419,6 @@ void TRad::Execute()
 		}
 		else
 		    FControl->SetAuxTemp(FIndex);
-
-        FControl->Update();
 
 		FSection.Leave();
 

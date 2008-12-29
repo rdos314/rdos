@@ -51,6 +51,7 @@
 #define WIDTH 240
 #define HEIGHT 15
 
+#define RAD_X   5
 #define RAD_Y  750
 
 void WsChanged(TWs2300 *ws)
@@ -116,13 +117,48 @@ void cdecl main()
 
 	graphic = new TGraphic(vbe, log);
 
-	RadControl = new TRadControl(control, 300, RAD_Y, 500, 32 * 8);
+	RadControl = new TRadControl(control, RAD_X, RAD_Y, 800, 32 * 8);
 
 	for (i = 0; i < 8; i++)
 	{
-		RadArr[i] = new TRad(RadControl, i, 0x20 + i);
+	    
+		switch (i)
+    	{
+	    	case 0:
+		    	strcpy(str, "Datarum");
+			    break;
+
+    		case 1:
+	    		strcpy(str, "Vardagsrum, nedre plan");
+		    	break;
+
+    		case 2:
+	    		strcpy(str, "Rosa sovrum, nedre plan");
+		    	break;
+
+    		case 3:
+	    		strcpy(str, "Bl†tt sovrum, nedre plan");
+		    	break;
+
+    		case 4:
+	    		strcpy(str, "K”k");
+		    	break;
+
+    		case 5:
+	    		strcpy(str, "Sovrum, ”vre plan");
+		    	break;
+
+    		case 6:
+	    		strcpy(str, "Trappa");
+		    	break;
+
+    		case 7:
+	    		strcpy(str, "Badrum");
+		    	break;
+    	}
+		RadArr[i] = new TRad(str, RadControl, i, 0x20 + i);
 		AddHttpRad(RadArr[i]);
-		 log->Add(RadArr[i]);
+		log->Add(RadArr[i]);
 	}
 
 	Ws = new TWs2300(1);

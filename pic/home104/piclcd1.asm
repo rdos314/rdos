@@ -338,26 +338,8 @@ HandleLoop:
 
 WaitCmdLoop:
 	PAGE0
-    btfsc PORTB,6
-    goto HandleWaitForInput
-;
-;	btfss Flags,FLAG_IR_DONE_BIT
+    btfss PORTB,6
     goto WaitCmdLoop
-;    
-    bsf PORTA, 2    
-    movlw 0x80
-    movwf Count
-
-WaitPollLoop:    
-    btfsc PORTB,6
-    goto HandleWaitForInput
-;
-    decfsz Count,F
-    goto WaitPollLoop
-;	
-	bcf PORTA, 5
-	call SendAsync
-	goto HandleLoop
 
 HandleWaitForInput:
     PAGE0
@@ -445,62 +427,6 @@ SendStatusLoop:
 SendStatusDone:
     PAGE0        
     goto HandleLoop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; SendAsync
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendAsync:
-    bcf STATUS,IRP
-	movlw AsyncData
-	movwf OutPtr
-;
-	movf AsyncCount,W
-	andlw 0x1F
-    movwf OutCount
-	addlw 0x20
-    movwf PORTD
-    bcf PORTA,0
-
-SendAsyncLoop:
-	PAGE1
-	btfsc TRISE,OBF
-	goto SendAsyncLoop
-;
-    PAGE0
-    bsf PORTA,0
-;    
-    movf OutCount,W
-    btfsc STATUS,Z
-    goto SendAsyncDone    
-;    
-    movf OutPtr,W
-    movwf FSR
-;
-    movf INDF,W
-    movwf PORTD
-    incf OutPtr,F
-;    
-    movlw b'00000100'
-    xorwf PORTA,F
-;
-    decfsz OutCount,F
-    goto SendAsyncLoop
-
-SendAsyncDone:
-	PAGE1
-	btfsc TRISE,OBF
-	goto SendAsyncDone
-;
-    PAGE0
-    movlw AsyncData
-    movwf AsyncPtr
-	clrf AsyncCount
-	bcf Flags,FLAG_IR_START_BIT
-	bcf Flags,FLAG_IR_DONE_BIT
-    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
