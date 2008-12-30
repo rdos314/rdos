@@ -239,42 +239,42 @@ void ExportAncestry(const char *filename, int Ancestry)
 						break;
 
 				  case COUNTRY_SSA:
-					 if (Row.Lang == 0 && Row.Country >= 1000 && Row.Ancestry < 2000)
+					 if (Row.Lang == 0 && Row.Country >= 1000 && Row.Country < 2000)
 						 use = TRUE;
 						 break;
 
 				  case COUNTRY_ARAB:
-					 if (Row.Lang == 0 && Row.Country >= 3000 && Row.Ancestry < 4000)
+					 if (Row.Lang == 0 && Row.Country >= 3000 && Row.Country < 4000)
 						 use = TRUE;
 						 break;
 
 				  case COUNTRY_S_ASIA:
-					 if (Row.Lang == 0 && Row.Country >= 4400 && Row.Ancestry < 4600)
+					 if (Row.Lang == 0 && Row.Country >= 4400 && Row.Country < 4600)
 						 use = TRUE;
 						 break;
 
 				  case COUNTRY_E_ASIA:
-					 if (Row.Lang == 0 && Row.Country >= 4300 && Row.Ancestry < 4400)
+					 if (Row.Lang == 0 && Row.Country >= 4300 && Row.Country < 4400)
 						 use = TRUE;
 						 break;
 
 				  case COUNTRY_N_ASIA:
-					 if (Row.Lang == 0 && Row.Country >= 4100 && Row.Ancestry < 4300)
+					 if (Row.Lang == 0 && Row.Country >= 4100 && Row.Country < 4300)
 						 use = TRUE;
 						 break;
 
 				  case COUNTRY_N_EUROPE:
-					 if (Row.Lang == 0 && Row.Country >= 2100 && Row.Ancestry < 2400)
+					 if (Row.Lang == 0 && Row.Country >= 2100 && Row.Country < 2400)
 						 use = TRUE;
 						 break;
 
 				  case COUNTRY_S_EUROPE:
-					 if (Row.Lang == 0 && Row.Country >= 2400 && Row.Ancestry < 2600)
+					 if (Row.Lang == 0 && Row.Country >= 2400 && Row.Country < 2600)
 						 use = TRUE;
 						 break;
 
 				  case COUNTRY_E_EUROPE:
-					 if (Row.Lang == 0 && Row.Country >= 2600 && Row.Ancestry < 2800)
+					 if (Row.Lang == 0 && Row.Country >= 2600 && Row.Country < 2800)
 						 use = TRUE;
 						 break;
 				}
