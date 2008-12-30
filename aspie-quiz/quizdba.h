@@ -4,7 +4,8 @@ struct TQuizAncestryRow
     int  BirthYear;
     int  BirthMonth;
 	char Gender;
-    char Lang;
+	char Lang;
+    int Country;
 	int Ancestry;
 	long AsResult;
 	long NtResult;

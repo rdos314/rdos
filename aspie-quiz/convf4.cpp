@@ -310,6 +310,7 @@ char *ProcessRow(char *str)
 
 				case 8:
 					Row.Country = atoi(valstr);
+					AncestryRow.Country = atoi(valstr);
 					break;
 
 				case 9:

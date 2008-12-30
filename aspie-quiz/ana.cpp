@@ -94,6 +94,15 @@
 #define ANCESTRY_CZECH			  12
 #define ANCESTRY_HOLLAND		  13
 
+#define COUNTRY_SSA				14
+#define COUNTRY_ARAB			15
+#define COUNTRY_S_ASIA			16
+#define COUNTRY_E_ASIA			17
+#define COUNTRY_N_ASIA			18
+#define COUNTRY_N_EUROPE		19
+#define COUNTRY_S_EUROPE		20
+#define COUNTRY_E_EUROPE		21
+
 #define FALSE 0
 #define TRUE !FALSE
 
@@ -135,28 +144,28 @@ void ExportAncestry(const char *filename, int Ancestry)
 	outfile.Write("\n");
 
 	 for (v = 0; v < 5; v++)
-    {
+	{
 		  switch (v)
-        {
-            case 0:
-                infile = new TFile("ancf1.bin");
-                break;
+		{
+			case 0:
+				infile = new TFile("ancf1.bin");
+				break;
 
-            case 1:
-                infile = new TFile("ancf2.bin");
-                break;
+			case 1:
+				infile = new TFile("ancf2.bin");
+				break;
 
-            case 2:
-                infile = new TFile("ancf3.bin");
-                break;
+			case 2:
+				infile = new TFile("ancf3.bin");
+				break;
 
-            case 3:
-                infile = new TFile("ancf4.bin");
-                break;
+			case 3:
+				infile = new TFile("ancf4.bin");
+				break;
 
 				case 4:
-                infile = new TFile("ancfi.bin");
-                break;
+				infile = new TFile("ancfi.bin");
+				break;
 		  }
 
 		while (infile->Read(&Row, sizeof(Row)))
@@ -228,6 +237,46 @@ void ExportAncestry(const char *filename, int Ancestry)
 						if (Row.Lang == 6)
 							use = TRUE;
 						break;
+
+				  case COUNTRY_SSA:
+					 if (Row.Lang == 0 && Row.Country >= 1000 && Row.Ancestry < 2000)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_ARAB:
+					 if (Row.Lang == 0 && Row.Country >= 3000 && Row.Ancestry < 4000)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_S_ASIA:
+					 if (Row.Lang == 0 && Row.Country >= 4400 && Row.Ancestry < 4600)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_E_ASIA:
+					 if (Row.Lang == 0 && Row.Country >= 4300 && Row.Ancestry < 4400)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_N_ASIA:
+					 if (Row.Lang == 0 && Row.Country >= 4100 && Row.Ancestry < 4300)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_N_EUROPE:
+					 if (Row.Lang == 0 && Row.Country >= 2100 && Row.Ancestry < 2400)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_S_EUROPE:
+					 if (Row.Lang == 0 && Row.Country >= 2400 && Row.Ancestry < 2600)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_E_EUROPE:
+					 if (Row.Lang == 0 && Row.Country >= 2600 && Row.Ancestry < 2800)
+						 use = TRUE;
+						 break;
 				}
 
 				if (use)
@@ -235,11 +284,11 @@ void ExportAncestry(const char *filename, int Ancestry)
 					sprintf(str, "\"%d\", ", Row.AsResult);
 				outfile.Write(str);
 
-		    	sprintf(str, "\"%d\", ", Row.NtResult);
-			    outfile.Write(str);
+				sprintf(str, "\"%d\", ", Row.NtResult);
+				outfile.Write(str);
 
-    			for (i = 0; i < 145; i++)
-	    		{
+				for (i = 0; i < 145; i++)
+				{
     	    		ival = Row.Quiz[i];
 	    	    	if (ival)
 				    	ival--;
@@ -252,7 +301,7 @@ void ExportAncestry(const char *filename, int Ancestry)
 				    if (i != 144)
 					    outfile.Write(", ");
     			}
-	    		outfile.Write("\n");
+				outfile.Write("\n");
 	    	}
 		}
 		delete infile;
@@ -329,6 +378,14 @@ int main(int argc, char **argv)
 	 ExportAncestry("pca\\de.dat", ANCESTRY_GERMANY);
 	 ExportAncestry("pca\\cz.dat", ANCESTRY_CZECH);
 	 ExportAncestry("pca\\nl.dat", ANCESTRY_HOLLAND);
+	 ExportAncestry("pca\\cssa.dat", COUNTRY_SSA);
+	 ExportAncestry("pca\\carab.dat", COUNTRY_ARAB);
+	 ExportAncestry("pca\\csasia.dat", COUNTRY_S_ASIA);
+	 ExportAncestry("pca\\ceasia.dat", COUNTRY_E_ASIA);
+	 ExportAncestry("pca\\cnasia.dat", COUNTRY_N_ASIA);
+	 ExportAncestry("pca\\cneuro.dat", COUNTRY_N_EUROPE);
+	 ExportAncestry("pca\\cseuro.dat", COUNTRY_S_EUROPE);
+	 ExportAncestry("pca\\ceeuro.dat", COUNTRY_E_EUROPE);
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();
