@@ -111,6 +111,15 @@ TPopPca TQuiz::AfricanPca;
 TPopPca TQuiz::ArabPca;
 TPopPca TQuiz::AustralPca;
 
+TPopPca TQuiz::RegionSsaPca;
+TPopPca TQuiz::RegionArabPca;
+TPopPca TQuiz::RegionSouthAsiaPca;
+TPopPca TQuiz::RegionEastAsiaPca;
+TPopPca TQuiz::RegionNorthAsiaPca;
+TPopPca TQuiz::RegionNorthEuropePca;
+TPopPca TQuiz::RegionSouthEuropePca;
+TPopPca TQuiz::RegionEastEuropePca;
+
 // diagnostic cutoffs
 
 
@@ -1398,6 +1407,41 @@ void TQuiz::ExportPopPcaCongruence(const char *filename)
 	ExportPopPcaCongruence("African - Australian", file, &AfricanPca, &AustralPca);
 
 	ExportPopPcaCongruence("Arab - Australian", file, &ArabPca, &AustralPca);
+
+	ExportPopPcaCongruence("SSA - Arab", file, &RegionSsaPca, &RegionArabPca);
+	ExportPopPcaCongruence("SSA - S Asia", file, &RegionSsaPca, &RegionSouthAsiaPca);
+	ExportPopPcaCongruence("SSA - E Asia", file, &RegionSsaPca, &RegionEastAsiaPca);
+	ExportPopPcaCongruence("SSA - N Asia", file, &RegionSsaPca, &RegionNorthAsiaPca);
+	ExportPopPcaCongruence("SSA - N Europe", file, &RegionSsaPca, &RegionNorthEuropePca);
+	ExportPopPcaCongruence("SSA - S Europe", file, &RegionSsaPca, &RegionSouthEuropePca);
+	ExportPopPcaCongruence("SSA - E Europe", file, &RegionSsaPca, &RegionEastEuropePca);
+
+	ExportPopPcaCongruence("Arab - S Asia", file, &RegionArabPca, &RegionSouthAsiaPca);
+	ExportPopPcaCongruence("Arab - E Asia", file, &RegionArabPca, &RegionEastAsiaPca);
+	ExportPopPcaCongruence("Arab - N Asia", file, &RegionArabPca, &RegionNorthAsiaPca);
+	ExportPopPcaCongruence("Arab - N Europe", file, &RegionArabPca, &RegionNorthEuropePca);
+	ExportPopPcaCongruence("Arab - S Europe", file, &RegionArabPca, &RegionSouthEuropePca);
+	ExportPopPcaCongruence("Arab - E Europe", file, &RegionArabPca, &RegionEastEuropePca);
+
+	ExportPopPcaCongruence("S Asia - E Asia", file, &RegionSouthAsiaPca, &RegionEastAsiaPca);
+	ExportPopPcaCongruence("S Asia - N Asia", file, &RegionSouthAsiaPca, &RegionNorthAsiaPca);
+	ExportPopPcaCongruence("S Asia - N Europe", file, &RegionSouthAsiaPca, &RegionNorthEuropePca);
+	ExportPopPcaCongruence("S Asia - S Europe", file, &RegionSouthAsiaPca, &RegionSouthEuropePca);
+	ExportPopPcaCongruence("S Asia - E Europe", file, &RegionSouthAsiaPca, &RegionEastEuropePca);
+
+	ExportPopPcaCongruence("E Asia - N Asia", file, &RegionEastAsiaPca, &RegionNorthAsiaPca);
+	ExportPopPcaCongruence("E Asia - N Europe", file, &RegionEastAsiaPca, &RegionNorthEuropePca);
+	ExportPopPcaCongruence("E Asia - S Europe", file, &RegionEastAsiaPca, &RegionSouthEuropePca);
+	ExportPopPcaCongruence("E Asia - E Europe", file, &RegionEastAsiaPca, &RegionEastEuropePca);
+
+	ExportPopPcaCongruence("N Asia - N Europe", file, &RegionNorthAsiaPca, &RegionNorthEuropePca);
+	ExportPopPcaCongruence("N Asia - S Europe", file, &RegionNorthAsiaPca, &RegionSouthEuropePca);
+	ExportPopPcaCongruence("N Asia - E Europe", file, &RegionNorthAsiaPca, &RegionEastEuropePca);
+
+	ExportPopPcaCongruence("N Europe - S Europe", file, &RegionNorthEuropePca, &RegionSouthEuropePca);
+	ExportPopPcaCongruence("N Europe - E Europe", file, &RegionNorthEuropePca, &RegionEastEuropePca);
+
+	ExportPopPcaCongruence("S Europe - E Europe", file, &RegionSouthEuropePca, &RegionEastEuropePca);
 }
 
 /*##################  TQuiz::CalcAsNtDiff ##########################

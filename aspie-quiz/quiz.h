@@ -393,6 +393,15 @@ public:
 	 static TPopPca ArabPca;
 	 static TPopPca AustralPca;
 
+	 static TPopPca RegionSsaPca;
+	 static TPopPca RegionArabPca;
+	 static TPopPca RegionSouthAsiaPca;
+	 static TPopPca RegionEastAsiaPca;
+	 static TPopPca RegionNorthAsiaPca;
+	 static TPopPca RegionNorthEuropePca;
+	 static TPopPca RegionSouthEuropePca;
+	 static TPopPca RegionEastEuropePca;
+
 protected:
 	void Init();
 	static int round(long double val);

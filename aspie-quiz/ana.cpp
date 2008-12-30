@@ -1013,6 +1013,15 @@ int main(int argc, char **argv)
 	 TQuiz::ImportPopPca("pca\\arab.txt", &TQuiz::ArabPca);
 	 TQuiz::ImportPopPca("pca\\austral.txt", &TQuiz::AustralPca);
 
+	 TQuiz::ImportPopPca("pca\\cssa.txt", &TQuiz::RegionSsaPca);
+	 TQuiz::ImportPopPca("pca\\carab.txt", &TQuiz::RegionArabPca);
+	 TQuiz::ImportPopPca("pca\\csasia.txt", &TQuiz::RegionSouthAsiaPca);
+	 TQuiz::ImportPopPca("pca\\ceasia.txt", &TQuiz::RegionEastAsiaPca);
+	 TQuiz::ImportPopPca("pca\\cnasia.txt", &TQuiz::RegionNorthAsiaPca);
+	 TQuiz::ImportPopPca("pca\\cneuro.txt", &TQuiz::RegionNorthEuropePca);
+	 TQuiz::ImportPopPca("pca\\cseuro.txt", &TQuiz::RegionSouthEuropePca);
+	 TQuiz::ImportPopPca("pca\\ceeuro.txt", &TQuiz::RegionEastEuropePca);
+
 	 TQuiz::ExportPopPcaCongruence("lang.txt");
 
 	 printf("Cutoff\r\n");
