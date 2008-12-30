@@ -86,11 +86,13 @@
 #define ANCESTRY_AFRICAN        4
 #define ANCESTRY_ARAB           5
 #define ANCESTRY_AUSTRALIAN     6
-#define ANCESTRY_SWEDEN			  7
-#define ANCESTRY_PORTUGAL		  8
-#define ANCESTRY_NORWAY			  9
-#define ANCESTRY_GERMANY		  10
-
+#define ANCESTRY_ENGLAND		  7
+#define ANCESTRY_SWEDEN			  8
+#define ANCESTRY_PORTUGAL		  9
+#define ANCESTRY_NORWAY			  10
+#define ANCESTRY_GERMANY		  11
+#define ANCESTRY_CZECH			  12
+#define ANCESTRY_HOLLAND		  13
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -134,7 +136,7 @@ void ExportAncestry(const char *filename, int Ancestry)
 
 	 for (v = 0; v < 5; v++)
     {
-        switch (v)
+		  switch (v)
         {
             case 0:
                 infile = new TFile("ancf1.bin");
@@ -152,7 +154,7 @@ void ExportAncestry(const char *filename, int Ancestry)
                 infile = new TFile("ancf4.bin");
                 break;
 
-            case 4:
+				case 4:
                 infile = new TFile("ancfi.bin");
                 break;
 		  }
@@ -192,6 +194,11 @@ void ExportAncestry(const char *filename, int Ancestry)
 							use = TRUE;
 							break;
 
+					case ANCESTRY_ENGLAND:
+						if (Row.Lang == 0)
+							use = TRUE;
+						break;
+
 					case ANCESTRY_SWEDEN:
 						if (Row.Lang == 1)
 							use = TRUE;
@@ -209,6 +216,16 @@ void ExportAncestry(const char *filename, int Ancestry)
 
 					case ANCESTRY_GERMANY:
 						if (Row.Lang == 4)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_CZECH:
+						if (Row.Lang == 5)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_HOLLAND:
+						if (Row.Lang == 6)
 							use = TRUE;
 						break;
 				}
@@ -305,10 +322,13 @@ int main(int argc, char **argv)
 	 ExportAncestry("pca\\african.dat", ANCESTRY_AFRICAN);
 	 ExportAncestry("pca\\arab.dat", ANCESTRY_ARAB);
 	 ExportAncestry("pca\\austral.dat", ANCESTRY_AUSTRALIAN);
+	 ExportAncestry("pca\\uk.dat", ANCESTRY_ENGLAND);
 	 ExportAncestry("pca\\sw.dat", ANCESTRY_SWEDEN);
 	 ExportAncestry("pca\\no.dat", ANCESTRY_NORWAY);
 	 ExportAncestry("pca\\br.dat", ANCESTRY_PORTUGAL);
 	 ExportAncestry("pca\\de.dat", ANCESTRY_GERMANY);
+	 ExportAncestry("pca\\cz.dat", ANCESTRY_CZECH);
+	 ExportAncestry("pca\\nl.dat", ANCESTRY_HOLLAND);
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();
@@ -918,6 +938,25 @@ int main(int argc, char **argv)
 	 Quiz[34]->ImportMvspAspie("pca\\aspief2.txt");
 	 Quiz[35]->ImportMvspAspie("pca\\aspief3.txt");
 	 Quiz[36]->ImportMvspAspie("pca\\aspief4.txt");
+
+	printf("import pop pca\r\n");
+
+	 TQuiz::ImportPopPca("pca\\uk.txt", &TQuiz::UkPca);
+	 TQuiz::ImportPopPca("pca\\sw.txt", &TQuiz::SePca);
+	 TQuiz::ImportPopPca("pca\\no.txt", &TQuiz::NoPca);
+	 TQuiz::ImportPopPca("pca\\br.txt", &TQuiz::BrPca);
+	 TQuiz::ImportPopPca("pca\\de.txt", &TQuiz::DePca);
+	 TQuiz::ImportPopPca("pca\\cz.txt", &TQuiz::CzPca);
+	 TQuiz::ImportPopPca("pca\\nl.txt", &TQuiz::NlPca);
+
+	 TQuiz::ImportPopPca("pca\\cauc.txt", &TQuiz::CaucasianPca);
+	 TQuiz::ImportPopPca("pca\\asian.txt", &TQuiz::AsianPca);
+	 TQuiz::ImportPopPca("pca\\amerind.txt", &TQuiz::AmerindPca);
+	 TQuiz::ImportPopPca("pca\\african.txt", &TQuiz::AfricanPca);
+	 TQuiz::ImportPopPca("pca\\arab.txt", &TQuiz::ArabPca);
+	 TQuiz::ImportPopPca("pca\\austral.txt", &TQuiz::AustralPca);
+
+	 TQuiz::ExportPopPcaCongruence("lang.txt");
 
 	 printf("Cutoff\r\n");
 	  Quiz[36]->DsmCutoff("eval\\cutoff.htm", TRUE);

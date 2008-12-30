@@ -219,6 +219,11 @@ struct TAxis
 	long double GroupCorr[MAX_GROUP_COUNT];
 };
 
+struct TPopPca
+{
+    long double Pca[145][2];
+};
+
 struct TUserInfo
 {
 	int BirthYear;
@@ -314,6 +319,10 @@ public:
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 	void DsmCutoff(const char *filename, int All);
 
+	static void ImportPopPca(const char *filename, TPopPca *pca);
+    static void ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1, TPopPca *pca2);
+    static void ExportPopPcaCongruence(const char *filename);
+
     virtual int IsSubQuiz();
 
 	virtual void ImportMvsp(const char *filename, int PcaType) = 0;
@@ -368,6 +377,21 @@ public:
     void ExportGlobalAxisSql(const char *filename);
     void ExportQuizCatPopSql(const char *filename);
     void ExportQuizGlobalSql(const char *filename);
+
+    static TPopPca UkPca;
+    static TPopPca SePca;
+    static TPopPca NoPca;
+    static TPopPca BrPca;
+    static TPopPca DePca;
+	 static TPopPca CzPca;
+	 static TPopPca NlPca;
+
+	 static TPopPca CaucasianPca;
+	 static TPopPca AsianPca;
+	 static TPopPca AmerindPca;
+	 static TPopPca AfricanPca;
+	 static TPopPca ArabPca;
+	 static TPopPca AustralPca;
 
 protected:
 	void Init();
@@ -592,7 +616,6 @@ protected:
 	TAxis Axis[MAX_ASPIE_PCA_AXIS];
 	TQuizQuestion Quiz[MAX_QUESTIONS];
     TUserInfo *UserInfo[MAX_USERS];
-
 };
 
 #endif

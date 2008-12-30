@@ -40,24 +40,96 @@ public:
 
     void GetSunPosition(long double *altitude, long double *azimuth);
     void GetMoonPosition(long double *altitude, long double *azimuth);
+    void GetMercuryPosition(long double *altitude, long double *azimuth);
+    void GetVenusPosition(long double *altitude, long double *azimuth);
+    void GetMarsPosition(long double *altitude, long double *azimuth);
+    void GetJupiterPosition(long double *altitude, long double *azimuth);
+    void GetSaturnPosition(long double *altitude, long double *azimuth);
+    void GetUranusPosition(long double *altitude, long double *azimuth);
+    void GetNeptunePosition(long double *altitude, long double *azimuth);
+
+    long double GetMoonPhase();
+    long double GetMercuryPhase();
+    long double GetVenusPhase();
+    long double GetMarsPhase();
+    long double GetJupiterPhase();
+    long double GetSaturnPhase();
+    long double GetUranusPhase();
+    long double GetNeptunePhase();
 
 protected:    
-	 void GetMyPos(long double RA, long double decl, long double *altitude, long double *azimuth);
-	 void GetMyNearPos(long double r, long double RA, long double decl, long double *altitude, long double *azimuth);
+	void GetMyPos(long double RA, long double decl, long double *altitude, long double *azimuth);
+	void GetMyNearPos(long double r, long double RA, long double decl, long double *altitude, long double *azimuth);
+	long double GetFv(long double SolarR, long double GeoR);
+    long double FvToPhase(long double Fv);
     void CalcSun();
     void CalcMoon();
+    void CalcPlanets();
+    void CalcMercury();
+    void CalcVenus();
+    void CalcMars();
+    void CalcJupiter();
+    void CalcSaturn();
+    void CalcUranus();
+    void CalcNeptune();
 
     long double SIDTIME;
 
     long double SunL;
     long double SunM;
+    long double SunR;
+    long double SunLon;
     long double SunRA;
     long double SunDecl;
 
+    long double SunX;
+    long double SunY;
+
     long double MoonR;
     long double MoonL;
+    long double MoonLon;
+    long double MoonLat;
     long double MoonRA;
     long double MoonDecl;    
+
+    long double Mj;
+    long double Ms;
+    long double Mu;
+
+    long double MercurySolarR;
+    long double MercuryGeoR;
+    long double MercuryRA;
+    long double MercuryDecl;
+
+    long double VenusSolarR;
+    long double VenusGeoR;
+    long double VenusRA;
+    long double VenusDecl;
+
+    long double MarsSolarR;
+    long double MarsGeoR;
+    long double MarsRA;
+    long double MarsDecl;
+
+    long double JupiterSolarR;
+    long double JupiterGeoR;
+    long double JupiterRA;
+    long double JupiterDecl;
+
+    long double SaturnSolarR;
+    long double SaturnGeoR;
+    long double SaturnRA;
+    long double SaturnDecl;
+
+    long double UranusSolarR;
+    long double UranusGeoR;
+    long double UranusRA;
+    long double UranusDecl;
+
+    long double NeptuneSolarR;
+    long double NeptuneGeoR;
+    long double NeptuneRA;
+    long double NeptuneDecl;
 
 	long double FMyLat;
     long double FMyLong;

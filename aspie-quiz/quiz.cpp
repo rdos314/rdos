@@ -5,7 +5,7 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or                  
-# (at your option) any later version. The only exception to this rule                          
+# (at your option) any later version. The only exception to this rule
 # is for commercial usage in embedded systems. For information on            
 # usage in commercial embedded systems, contact embedded@rdos.net
 #
@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+
+#define MAX_IN_ROW 4096
 
 #include "quiz.h"
 #include "file.h"
@@ -93,6 +95,21 @@ int TQuiz::PredNoSelfFail[POP_TYPE_COUNT];
 int DiffSum;
 
 TBirthMonth TQuiz::BirthMonth;
+
+TPopPca TQuiz::UkPca;
+TPopPca TQuiz::SePca;
+TPopPca TQuiz::NoPca;
+TPopPca TQuiz::BrPca;
+TPopPca TQuiz::DePca;
+TPopPca TQuiz::CzPca;
+TPopPca TQuiz::NlPca;
+
+TPopPca TQuiz::CaucasianPca;
+TPopPca TQuiz::AsianPca;
+TPopPca TQuiz::AmerindPca;
+TPopPca TQuiz::AfricanPca;
+TPopPca TQuiz::ArabPca;
+TPopPca TQuiz::AustralPca;
 
 // diagnostic cutoffs
 
@@ -330,7 +347,7 @@ TQuiz::TQuiz(int Questions)
     int g;
     int g1, g2;
 
-    AspiePcaCount = 0;
+	 AspiePcaCount = 0;
 
 	 N = Questions;
 
@@ -360,7 +377,7 @@ TQuiz::TQuiz(int Questions)
         Quiz[i].Used = FALSE;
         Quiz[i].MyGroup = 0;
 		Quiz[i].Reverse = FALSE;
-        Quiz[i].CrossQuiz = 0;
+		  Quiz[i].CrossQuiz = 0;
         Quiz[i].CrossInd = 0;
 		  Quiz[i].GlobalId = -1;
         Quiz[i].Changed = FALSE;
@@ -720,7 +737,7 @@ void TQuiz::DefineCross(int id, TQuiz *quiz)
 *##########################################################################*/
 void TQuiz::DefineID(int Question, int GlobalId)
 {
-    if (Question > 0 && Question <= MAX_QUESTIONS)
+	 if (Question > 0 && Question <= MAX_QUESTIONS)
         Quiz[Question - 1].GlobalId = GlobalId - 1;
 }
 
@@ -750,7 +767,7 @@ void TQuiz::DefineText(int Question, const char *Text, int Group)
 void TQuiz::RedefineText(int Question, int GlobalId, const char *Text)
 {
     if (Question > 0 && Question <= MAX_QUESTIONS)
-    {
+	 {
         Quiz[Question - 1].GlobalId = GlobalId - 1;
 		Quiz[Question - 1].Text = Text;
 		  Quiz[Question - 1].Changed = TRUE;
@@ -990,7 +1007,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                             }
                             found = TRUE;
                         }
-                    }
+						  }
                 }
 			}
 		  }
@@ -1200,7 +1217,7 @@ void TQuiz::WriteSetupCross(const char *filename)
                             }
                         
                             file.Write("    DefineCross(Quiz");
-                            topquiz->WriteName(file);
+									 topquiz->WriteName(file);
                             sprintf(str, ", %d, %d);\n", i, topq);
                             file.Write(str);
                             found = TRUE;
@@ -1217,6 +1234,170 @@ void TQuiz::WriteSetupCross(const char *filename)
             GlobalId++;
         }
     }
+}
+
+/*##################  TQuiz::ImportPopPca ##########################
+*   Purpose....: Import pop pca                                  	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ImportPopPca(const char *filename, TPopPca *pca)
+{
+	char buf[MAX_IN_ROW];
+	int size;
+	char *rowstr;
+	char *ptr;
+	long pos = 0;
+	int i;
+	long double d1, d2;
+	int q;
+	int count;
+	TFile infile(filename);
+
+	while (size = infile.Read(buf, MAX_IN_ROW))
+	{
+		buf[size] = 0;
+		rowstr = strstr(buf, "#");
+		if (rowstr)
+		{
+			rowstr++;
+			ptr = strstr(rowstr, "\r");
+			if (ptr)
+				 *ptr = 0;
+			else
+				 rowstr = 0;
+		}
+
+		pos += strlen(buf) + 1;
+		infile.SetPos(pos);
+
+		if (rowstr)
+		{
+			for (i = 0; i < strlen(rowstr); i++)
+			{
+				switch (rowstr[i])
+				{
+					case ',':
+						rowstr[i] = '.';
+						break;
+
+					case 0x9:
+					case 0xd:
+						rowstr[i] = ' ';
+						break;
+				}
+			}
+
+			if (sscanf(rowstr, "%d %Lf %Lf", &q, &d1, &d2) == 3)
+			{
+			    q--;
+			    
+                pca->Pca[q][0] = d1;
+                pca->Pca[q][1] = d2;
+			}
+		}
+	}
+}
+
+/*##################  TQuiz::ExportPopPcaCongruence ##########################
+*   Purpose....: Export pop pca congruence                                 	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1, TPopPca *pca2)
+{
+    int count;
+	int axis;
+	int q;
+	long double rsum[2];
+	long double x;
+	long double y;
+    long double xsum;
+    long double ysum;	
+    long double sqsum;
+    int val;
+	char str[80];
+
+	count = 145;
+
+	xsum = 0;
+	ysum = 0;
+
+	for (axis = 0; axis < 2; axis++)
+	{
+    	rsum[axis] = 0;
+
+    	for (q = 0; q < count; q++)
+	    {
+	        x = pca1->Pca[q][axis];
+			y = pca2->Pca[q][axis];
+
+            rsum[axis] += x * y;
+				xsum += x * x;
+            ysum += y * y;
+        }
+
+        if (rsum[axis] < 0)
+            rsum[axis] = -rsum[axis];
+
+	}
+
+    sqsum = xsum * ysum;
+
+    if (sqsum > 0.0)
+    	sqsum = sqrtl(xsum * ysum);
+
+	 if (sqsum > 0.0)
+		val = round(1000 * ((rsum[0] + rsum[1]) / sqsum));
+	else
+		val = 0;
+
+	 file.Write(name);
+	 sprintf(str, ": 0.%03d\r\n", val);
+	 file.Write(str);
+}
+
+/*##################  TQuiz::ExportPopPcaCongruence ##########################
+*   Purpose....: Export pop pca congruence                                 	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportPopPcaCongruence(const char *filename)
+{
+	TFile file(filename, 0);
+
+	ExportPopPcaCongruence("Se", file, &UkPca, &SePca);
+	ExportPopPcaCongruence("No", file, &UkPca, &NoPca);
+	ExportPopPcaCongruence("Br", file, &UkPca, &BrPca);
+	ExportPopPcaCongruence("De", file, &UkPca, &DePca);
+	ExportPopPcaCongruence("Cz", file, &UkPca, &CzPca);
+	ExportPopPcaCongruence("Nl", file, &UkPca, &NlPca);
+
+	ExportPopPcaCongruence("Caucasian - Asian", file, &CaucasianPca, &AsianPca);
+	ExportPopPcaCongruence("Caucasian - Amerind", file, &CaucasianPca, &AmerindPca);
+	ExportPopPcaCongruence("Caucasian - African", file, &CaucasianPca, &AfricanPca);
+	ExportPopPcaCongruence("Caucasian - Arab", file, &CaucasianPca, &ArabPca);
+	ExportPopPcaCongruence("Caucasian - Australian", file, &CaucasianPca, &AustralPca);
+
+	ExportPopPcaCongruence("Asian - Amerind", file, &AsianPca, &AmerindPca);
+	ExportPopPcaCongruence("Asian - African", file, &AsianPca, &AfricanPca);
+	ExportPopPcaCongruence("Asian - Arab", file, &AsianPca, &ArabPca);
+	ExportPopPcaCongruence("Asian - Australian", file, &AsianPca, &AustralPca);
+
+	ExportPopPcaCongruence("Amerind - African", file, &AmerindPca, &AfricanPca);
+	ExportPopPcaCongruence("Amerind - Arab", file, &AmerindPca, &ArabPca);
+	ExportPopPcaCongruence("Amerind - Australian", file, &AmerindPca, &AustralPca);
+
+	ExportPopPcaCongruence("African - Arab", file, &AfricanPca, &ArabPca);
+	ExportPopPcaCongruence("African - Australian", file, &AfricanPca, &AustralPca);
+
+	ExportPopPcaCongruence("Arab - Australian", file, &ArabPca, &AustralPca);
 }
 
 /*##################  TQuiz::CalcAsNtDiff ##########################
