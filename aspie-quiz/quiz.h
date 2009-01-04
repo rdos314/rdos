@@ -402,6 +402,11 @@ public:
 	 static TPopPca RegionSouthEuropePca;
 	 static TPopPca RegionEastEuropePca;
 
+    static TPopPca RegionEuropePca;
+    static TPopPca RegionUsPca;
+    static TPopPca RegionAustraliaPca;
+    static TPopPca RegionAfroUsPca;
+
 protected:
 	void Init();
 	static int round(long double val);

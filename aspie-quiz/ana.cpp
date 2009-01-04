@@ -103,6 +103,11 @@
 #define COUNTRY_S_EUROPE		20
 #define COUNTRY_E_EUROPE		21
 
+#define REGION_EUROPE		    22
+#define REGION_US               23
+#define REGION_AUSTRALIA        24
+#define REGION_AFRO_US          25
+
 #define FALSE 0
 #define TRUE !FALSE
 
@@ -277,6 +282,28 @@ void ExportAncestry(const char *filename, int Ancestry)
 					 if (Row.Lang == 0 && Row.Country >= 2600 && Row.Country < 2800)
 						 use = TRUE;
 						 break;
+
+				  case REGION_EUROPE:
+					 if (Row.Lang == 0 && Row.Country >= 2000 && Row.Country < 3000)
+						 use = TRUE;
+						 break;
+
+				  case REGION_US:
+					 if (Row.Lang == 0 && Row.Country == 7302 && Row.Ancestry > 6)
+						 use = TRUE;
+						 break;
+
+				  case REGION_AUSTRALIA:
+					 if (Row.Lang == 0 && Row.Country == 8101 && Row.Ancestry > 6)
+						 use = TRUE;
+						 break;
+
+				  case REGION_AFRO_US:
+					 if (Row.Lang == 0 && Row.Ancestry == 5)
+						 use = TRUE;
+						 break;
+
+
 				}
 
 				if (use)
@@ -292,7 +319,7 @@ void ExportAncestry(const char *filename, int Ancestry)
     	    		ival = Row.Quiz[i];
 	    	    	if (ival)
 				    	ival--;
-    
+
     				if (ival > 2)
 	    				ival = 0;
                     
@@ -386,6 +413,10 @@ int main(int argc, char **argv)
 	 ExportAncestry("pca\\cneuro.dat", COUNTRY_N_EUROPE);
 	 ExportAncestry("pca\\cseuro.dat", COUNTRY_S_EUROPE);
 	 ExportAncestry("pca\\ceeuro.dat", COUNTRY_E_EUROPE);
+	 ExportAncestry("pca\\reuro.dat", REGION_EUROPE);
+	 ExportAncestry("pca\\rus.dat", REGION_US);
+	 ExportAncestry("pca\\raustral.dat", REGION_AUSTRALIA);
+	 ExportAncestry("pca\\rafrous.dat", REGION_AFRO_US);
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();
@@ -1021,6 +1052,11 @@ int main(int argc, char **argv)
 	 TQuiz::ImportPopPca("pca\\cneuro.txt", &TQuiz::RegionNorthEuropePca);
 	 TQuiz::ImportPopPca("pca\\cseuro.txt", &TQuiz::RegionSouthEuropePca);
 	 TQuiz::ImportPopPca("pca\\ceeuro.txt", &TQuiz::RegionEastEuropePca);
+
+	 TQuiz::ImportPopPca("pca\\reuro.txt", &TQuiz::RegionEuropePca);
+	 TQuiz::ImportPopPca("pca\\rus.txt", &TQuiz::RegionUsPca);
+	 TQuiz::ImportPopPca("pca\\raustral.txt", &TQuiz::RegionAustraliaPca);
+	 TQuiz::ImportPopPca("pca\\rafrous.txt", &TQuiz::RegionAfroUsPca);
 
 	 TQuiz::ExportPopPcaCongruence("lang.txt");
 

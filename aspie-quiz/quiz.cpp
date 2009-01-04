@@ -120,6 +120,11 @@ TPopPca TQuiz::RegionNorthEuropePca;
 TPopPca TQuiz::RegionSouthEuropePca;
 TPopPca TQuiz::RegionEastEuropePca;
 
+TPopPca TQuiz::RegionEuropePca;
+TPopPca TQuiz::RegionUsPca;
+TPopPca TQuiz::RegionAustraliaPca;
+TPopPca TQuiz::RegionAfroUsPca;
+
 // diagnostic cutoffs
 
 
@@ -1442,6 +1447,15 @@ void TQuiz::ExportPopPcaCongruence(const char *filename)
 	ExportPopPcaCongruence("N Europe - E Europe", file, &RegionNorthEuropePca, &RegionEastEuropePca);
 
 	ExportPopPcaCongruence("S Europe - E Europe", file, &RegionSouthEuropePca, &RegionEastEuropePca);
+
+	ExportPopPcaCongruence("Europe - US", file, &RegionEuropePca, &RegionUsPca);
+	ExportPopPcaCongruence("Europe - Australia", file, &RegionEuropePca, &RegionAustraliaPca);
+	ExportPopPcaCongruence("Europe - Afroamerican", file, &RegionEuropePca, &RegionAfroUsPca);
+
+	ExportPopPcaCongruence("US - Australia", file, &RegionUsPca, &RegionAustraliaPca);
+	ExportPopPcaCongruence("US - Afroamerican", file, &RegionUsPca, &RegionAfroUsPca);
+
+	ExportPopPcaCongruence("Australia - Afroamerican", file, &RegionAustraliaPca, &RegionAfroUsPca);
 }
 
 /*##################  TQuiz::CalcAsNtDiff ##########################
