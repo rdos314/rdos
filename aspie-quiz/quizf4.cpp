@@ -924,6 +924,13 @@ void TQuizF4::WritePartner(const char *filename)
         {
             Partner1[i].ID = Row.ID;
             Partner2[i].ID = Row.PartnerID;
+
+            for (q = 0; q < 150; q++)
+                Partner2[i].AnswerArr[q] = 0;
+
+            for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
+	    		Partner2[i].GroupArr[g] = 0;
+
             i++;
         }
     }
@@ -936,21 +943,41 @@ void TQuizF4::WritePartner(const char *filename)
 	        if (Partner1[i].ID == Row.ID)
             {				
 				for (q = 0; q < 150; q++)
-				    Partner1[i].AnswerArr[q] = Row.Quiz[q];
-
-				for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
-				    Partner1[i].GroupArr[g] = Row.GroupResult[g];
-            }
+				{
+				    if (Row.Quiz[q] > 0 && Row.Quiz[q] < 4)
+    				    Partner1[i].AnswerArr[q] = Row.Quiz[q];
+    				else
+    				    Partner1[i].AnswerArr[q] = 0;
+                }
+    				  
+    		    for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
+	    			Partner1[i].GroupArr[g] = Row.GroupResult[g];
+	        }
 
             if (Partner2[i].ID == Row.ID)
             {
                 for (q = 0; q < 150; q++)
-                    Partner2[i].AnswerArr[q] = Row.Quiz[q];
+                {
+    				if (Row.Quiz[q] > 0 && Row.Quiz[q] < 4)
+                        Partner2[i].AnswerArr[q] = Row.Quiz[q];
+                    else
+                        Partner2[i].AnswerArr[q] = 0;
+                }
 
 				for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
 				    Partner2[i].GroupArr[g] = Row.GroupResult[g];
 		    }
         }	
+    }
+
+
+    for (i = 0; i < PartnerCount; i++)
+    {
+        if (Partner1[i].AnswerArr[0] && Partner2[i].AnswerArr[0])
+        {
+			sprintf(str, "%d %d<br>\r\n", Partner1[i].AnswerArr[0], Partner2[i].AnswerArr[0]);
+            file.Write(str);
+        }
     }
 
 	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
