@@ -12596,6 +12596,99 @@ void TQuiz::WriteVersionRetest(const char *filename)
 
 }
 
+/*##################  TQuiz::WriteAncestryChildren ##########################
+*   Purpose....: Write ancestry children                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAncestryChildren(const char *filename, const char *ancestry)
+{
+	TFile file(filename, 0);
+	TFile ansfile(ancestry);
+	int size;
+	int pos;
+	int count;
+    char str[80];
+	char buf[100];
+	char *rowstr;
+	int cross;
+	TQuiz *quiz;
+	int id;
+	int year;
+	int myear;
+	int fyear;
+	int ayear;
+	int children;
+	int grandchildren;
+	int assum;
+	int ntsum;
+	int asscore;
+	int ntscore;
+
+    pos = 0;
+    
+	while (size = ansfile.Read(buf, 100))
+	{
+		buf[size] = 0;
+		rowstr = strchr(buf, 0xd);
+		if (rowstr)
+		{
+		    *rowstr = 0;
+		    size = strlen(buf);
+    		pos += size;
+    		pos += 2;
+
+    		count = sscanf(buf, "%d,%d,%d,%d,%d,%d", &id, &year, &myear, &fyear, &children, &grandchildren); 
+
+            if (count == 6)
+            {
+                assum = 0;
+                ntsum = 0;
+                count = 0;
+
+        	    if (UserInfo[id])
+	            {
+	                assum += UserInfo[id]->AsSum;
+	                ntsum += UserInfo[id]->NtSum;
+	                count += UserInfo[id]->Count;
+                }
+
+                for (cross = 1; cross < MAX_CROSS; cross++)
+                {
+                    quiz = CrossQuiz[cross];
+			        if (quiz)
+                    {
+                        if (quiz->UserInfo[id])
+                        {
+        	                assum += quiz->UserInfo[id]->AsSum;
+	                        ntsum += quiz->UserInfo[id]->NtSum;
+	                        count += quiz->UserInfo[id]->Count;
+                        }
+                    }
+                }
+
+                if (count)
+                {
+	                asscore = assum / count;
+	                ntscore = ntsum / count;
+
+	                ayear = (myear + fyear) / 2;
+
+	                sprintf(str, "%d,%d,%d,%d,%d,%d\r\n", id, year, ayear, children, asscore, ntscore); 
+                    file.Write(str);
+                }    		                
+            }
+
+		}
+		else
+		    break;
+
+		ansfile.SetPos(pos);
+	}
+}
+
 /*##################  TQuiz::WriteAxisLoadTable ##########################
 *   Purpose....: Write Axis loading table	      			      	        #
 *   In params..: *                                                          #

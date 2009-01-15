@@ -1378,6 +1378,8 @@ int main(int argc, char **argv)
 	 Quiz[36]->WriteRetest("eval\\retestf4.htm");
 	 Quiz[36]->WriteVersionRetest("eval\\vervar.htm");
 
+ 	Quiz[36]->WriteAncestryChildren("anc.txt", "ancestry.txt");
+
 	printf("imgrate\r\n");
 #ifdef ALL
 	 Quiz[16]->WritePictureRating("eval\\imgrate1.htm");

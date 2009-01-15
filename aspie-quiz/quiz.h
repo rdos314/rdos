@@ -278,6 +278,7 @@ public:
 	void WriteDxLoadTable(const char *filename);
 	void WriteAverageDxTable(const char *filename);
 	void WriteVersionRetest(const char *filename);
+	void WriteAncestryChildren(const char *filename, const char *ancestry);
     void WriteWiki(const char *filename, long double threshold, long double intercorr);
     void WriteQuizWiki(const char *filename);
     void MoveWiki(const char *fromwiki, const char *towiki, long double threshold);
