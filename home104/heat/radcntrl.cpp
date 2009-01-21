@@ -41,7 +41,7 @@
 
 #define WIDTH 100
 #define SPACE 15
-#define HEIGHT 25
+#define HEIGHT 22
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -80,7 +80,7 @@ TRadControl::TRadControl(TControlThread *dev, int xmin, int ymin, int width, int
 
     Enable();
     Show();
-    Redraw(500);
+	 Redraw(500);
 }
 
 /*##########################################################################
@@ -380,7 +380,7 @@ void TRadControl::SetLight(int rad, int val)
 	    {
     		FHasLight[rad] = TRUE;
 	    	FLight[rad] = val;
-	        FChangedLight[rad] = TRUE;
+			  FChangedLight[rad] = TRUE;
 	    }
 	}
 
@@ -438,9 +438,9 @@ void TRadControl::SetAuxTemp(int rad, int val)
 	            FAuxTemp[rad] = val;
 	            FChangedAuxTemp[rad] = TRUE;
 	        }
-	    }
+		 }
 	    else
-	    {
+		 {
     		FHasAuxTemp[rad] = TRUE;
 	    	FAuxTemp[rad] = val;
 	        FChangedAuxTemp[rad] = TRUE;
@@ -469,7 +469,7 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
 	int x;
     int y;
 	char str[80];
-	TFont Font(25);
+	TFont Font(20);
 
 	if (IsVisible())
 	{
@@ -495,7 +495,7 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
                 FSection.Enter();
 
                 x = xmin + 300;        
-                y = ymin + 32 * (i + 1);
+                y = ymin + (HEIGHT + 5) * (i + 1);
 
                 if (FChangedName[i])
                 {

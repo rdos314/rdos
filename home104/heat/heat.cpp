@@ -53,7 +53,7 @@
 #define HEIGHT 15
 
 #define RAD_X   5
-#define RAD_Y  750
+#define RAD_Y  500
 
 void WsChanged(TWs2300 *ws)
 {
@@ -112,16 +112,16 @@ void cdecl main()
 
 	log = new TLog("e:\\log");
 
-	vbe = new TVideoGraphicDevice(32, 1400, 1050);
+	vbe = new TVideoGraphicDevice(32, 1280, 768);
 	control = new TControlThread("Control", vbe);
 	vbe->SetFont(&Font);
 
 	bitmap = TJpegBitmapDevice::Create("d:\\heat\\back.jpg");
-	vbe->Blit(bitmap, 0, 0, 0, 0, 1400, 1050);
+	vbe->Blit(bitmap, 0, 0, 0, 0, 1280, 768);
 
 	graphic = new TGraphic(vbe, log);
 
-	RadControl = new TRadControl(control, RAD_X, RAD_Y, 800, 32 * 8);
+	RadControl = new TRadControl(control, RAD_X, RAD_Y, 800, 30 * 8);
 
 	for (i = 0; i < 8; i++)
 	{
