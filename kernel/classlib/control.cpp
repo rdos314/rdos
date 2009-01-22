@@ -178,8 +178,8 @@ TControl::TControl(TControlThread *dev)
 
     FVisible = FALSE;
     FEnabled = FALSE;
-    FControlList = 0;
-    FDelay = 0;
+
+    Init();
 
     FParent = 0;
     FDev = dev;
@@ -206,8 +206,8 @@ TControl::TControl(TControlThread *dev, int xmin, int ymin, int width, int heigh
 
     FVisible = TRUE;
     FEnabled = TRUE;
-    FControlList = 0;
-    FDelay = 0;
+
+    Init();
 
     FParent = 0;
     FDev = dev;
@@ -234,8 +234,8 @@ TControl::TControl(TControl *control)
 
     FVisible = FALSE;
     FEnabled = FALSE;
-    FControlList = 0;
-    FDelay = 0;
+
+    Init();
 
     FDev = 0;
     FParent = control;
@@ -262,8 +262,8 @@ TControl::TControl(TControl *control, int xmin, int ymin, int width, int height)
 
     FVisible = TRUE;
     FEnabled = TRUE;
-    FControlList = 0;
-    FDelay = 0;
+
+    Init();
 
     FDev = 0;
     FParent = control;
@@ -285,7 +285,7 @@ TControl::~TControl()
 {
     TControl *control;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -303,13 +303,69 @@ TControl::~TControl()
         FDelay = 0;
     }
 
-    FListSection.Leave();
+    Unprotect();
 
     if (FParent)
         FParent->Delete(this);
 
     if (FDev)
         FDev->Delete(this);
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Init
+#
+#   Purpose....: Init control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Init()
+{
+    FControlList = 0;
+    FDelay = 0;
+    FDirty = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Protect
+#
+#   Purpose....: Protect control during redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Protect()
+{
+    if (FDev)
+        FDev->Protect();
+    else
+        FParent->Protect();
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Unprotect
+#
+#   Purpose....: Unprotect control during redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Unprotect()
+{
+    if (FDev)
+        FDev->Unprotect();
+    else
+        FParent->Unprotect();
 }
 
 /*##########################################################################
@@ -332,7 +388,7 @@ void TControl::Add(TControl *control)
     
     control->FNext = 0;
 
-    FListSection.Enter();
+    Protect();
     
     prev = FControlList;
 
@@ -350,7 +406,7 @@ void TControl::Add(TControl *control)
     else
         FControlList = control;   
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -371,7 +427,7 @@ void TControl::Delete(TControl *control)
 
     control->FNext = 0;
 
-    FListSection.Enter();
+    Protect();
 
     if (FControlList)
     {
@@ -393,7 +449,7 @@ void TControl::Delete(TControl *control)
         }
     }
 
-    FListSection.Leave();
+    Unprotect();
 }    
 
 /*##########################################################################
@@ -410,6 +466,7 @@ void TControl::Delete(TControl *control)
 void TControl::Show()
 {
     FVisible = TRUE;
+    Redraw();
 }
 
 /*##########################################################################
@@ -426,6 +483,9 @@ void TControl::Show()
 void TControl::Hide()
 {
     FVisible = FALSE;
+
+    if (FParent)
+        FParent->Redraw();
 }
 
 /*##########################################################################
@@ -521,7 +581,12 @@ void TControl::Resize(int xsize, int ysize)
     FHeight = ysize;
 
     if (FVisible)
-        Redraw();
+    {
+        if (FParent)
+            FParent->Redraw();
+        else
+            Redraw();
+    }
 }
 
 /*##########################################################################
@@ -541,7 +606,12 @@ void TControl::Move(int xstart, int ystart)
     FYMin = ystart;
 
     if (FVisible)
-        Redraw();
+    {
+        if (FParent)
+            FParent->Redraw();
+        else
+            Redraw();
+    }
 }
 
 /*##########################################################################
@@ -591,7 +661,10 @@ void TControl::GetSize(int *x, int *y) const
 ##########################################################################*/
 void TControl::PutKey(char ch)
 {
-    FDev->PutKey(ch);
+    if (FDev)
+        FDev->PutKey(ch);
+    else
+        FParent->PutKey(ch);
 }
 
 /*##########################################################################
@@ -625,7 +698,7 @@ void TControl::Unload()
 {
     TControl *control;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -639,7 +712,7 @@ void TControl::Unload()
 
     FControlList = 0;
 
-    FListSection.Leave();
+    Unprotect();
 
     if (FParent)
         FParent->Delete(this);
@@ -654,18 +727,92 @@ void TControl::Unload()
 
 /*##########################################################################
 #
-#   Name       : TControl::Redraw
+#   Name       : TControl::IsDirty
 #
-#   Purpose....: Force redraw of control
+#   Purpose....: Check if control needs to be redrawn
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::Redraw()
+int TControl::IsDirty()
 {
-    FDev->Redraw(this);
+    return FDirty;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::SetDirty
+#
+#   Purpose....: Invalidate control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::SetDirty()
+{
+    FDirty = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::ResetDirty
+#
+#   Purpose....: Set control to painted
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::ResetDirty()
+{
+    FDirty = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::UpdateChild
+#
+#   Purpose....: Update child control if needed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::UpdateChild(TControl *control, int level)
+{
+    if (FParent)
+        FParent->UpdateChild(control, level + 1);
+    else
+        FDev->Update(control);
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Update
+#
+#   Purpose....: Redraw control if needed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Update()
+{
+    Protect();
+
+    if (FParent)
+        FParent->UpdateChild(this, 1);
+    else
+        FDev->Update(this);
+
+    Unprotect();
 }
 
 /*##########################################################################
@@ -683,7 +830,9 @@ void TControl::Redraw(int millisec)
 {
     TDateTime time;
 
-	FListSection.Enter();
+    Protect();
+
+    SetDirty();
 
 	if (millisec)
 	{
@@ -701,12 +850,55 @@ void TControl::Redraw(int millisec)
 			delete FDelay;
 			FDelay = 0;
 		}
-		Redraw();
+		Update();
     }
 
-	FListSection.Leave();
+    Unprotect();
 
-	FDev->Signal();
+    if (FDev)
+    	FDev->Signal();
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::RedrawChild
+#
+#   Purpose....: Redraw child control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::RedrawChild(TControl *control, int level)
+{
+    if (FParent)
+        FParent->RedrawChild(control, level + 1);
+    else
+    	FDev->DefaultRedraw(control);
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Redraw
+#
+#   Purpose....: Redraw control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Redraw()
+{
+    Protect();
+
+    if (FParent)
+        FParent->RedrawChild(this, 1);
+    else
+    	FDev->DefaultRedraw(this);
+
+    Unprotect();
 }
 
 /*##########################################################################
@@ -722,7 +914,7 @@ void TControl::Redraw(int millisec)
 ##########################################################################*/
 void TControl::ClearRedraw()
 {
-    FListSection.Enter();
+    Protect();
 
     if (FDelay)
     {
@@ -730,7 +922,7 @@ void TControl::ClearRedraw()
         FDelay = 0;
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -752,7 +944,7 @@ TDateTime TControl::GetRedrawTime()
 
     RedrawTime.AddYear(1);
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -772,29 +964,29 @@ TDateTime TControl::GetRedrawTime()
         if (*FDelay < RedrawTime)
             RedrawTime = *FDelay;
 
-    FListSection.Leave();
+    Unprotect();
 
     return RedrawTime;
 }
 
 /*##########################################################################
 #
-#   Name       : TControl::HandleRedraw
+#   Name       : TControl::HandleUpdate
 #
-#   Purpose....: Handle redraw
+#   Purpose....: Handle update
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::HandleRedraw()
+void TControl::HandleUpdate()
 {
     TDateTime currtime;
     TControl *control;
     int redrawn;
 
-    FListSection.Enter();
+    Protect();
 
     redrawn = FALSE;
     
@@ -802,7 +994,7 @@ void TControl::HandleRedraw()
     {
         if (currtime > *FDelay)
         {
-            Redraw();
+            Update();
             redrawn = TRUE;
         }
     }
@@ -815,13 +1007,13 @@ void TControl::HandleRedraw()
         {
             if (control->IsVisible())
                 if (currtime > control->GetRedrawTime())
-				    control->HandleRedraw();
+				    control->HandleUpdate();
 
             control = control->FNext;
         }
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -855,11 +1047,26 @@ void TControl::SetClipRect(TGraphicDevice *dev, int xstart, int ystart)
 ##########################################################################*/
 void TControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::RedrawChildren
+#
+#   Purpose....: Redraw children
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::RedrawChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
+{
     TControl *control;
     int xstart;
     int ystart;
 
-    FListSection.Enter();
+    Protect();
 
     if (IsVisible())
     {
@@ -877,14 +1084,66 @@ void TControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int hei
         	    				   ystart + control->FHeight - 1);
 
                 control->Paint(dev, xstart, ystart, control->FWidth, control->FHeight);
+                control->RedrawChildren(dev, xstart, ystart, control->FWidth, control->FHeight);
+                control->ResetDirty();
             }            
 
             control = control->FNext;
         }
     }
 
-    FListSection.Leave();
+    Unprotect();
+}
 
+/*##########################################################################
+#
+#   Name       : TControl::UpdateChildren
+#
+#   Purpose....: Update children
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
+{
+    TControl *control;
+    int xstart;
+    int ystart;
+
+    Protect();
+
+    if (IsVisible())
+    {
+        control = FControlList;
+
+        while (control)
+        {
+            if (control->IsVisible())
+            {
+                xstart = xmin + control->FXMin;
+                ystart = ymin + control->FYMin;
+            
+            	dev->SetClipRect(  xstart, ystart,
+            					   xstart + control->FWidth - 1,
+        	    				   ystart + control->FHeight - 1);
+
+                if (control->IsDirty())
+                {
+                    control->Paint(dev, xstart, ystart, control->FWidth, control->FHeight);
+                    control->RedrawChildren(dev, xstart, ystart, control->FWidth, control->FHeight);
+                    control->ResetDirty();
+                }                    
+                else
+                    control->UpdateChildren(dev, xstart, ystart, control->FWidth, control->FHeight);
+            }            
+
+            control = control->FNext;
+        }
+    }
+
+    Unprotect();
 }
 
 /*##########################################################################
@@ -903,7 +1162,7 @@ int TControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCod
     TControl *control;
     int handled = FALSE;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -916,7 +1175,7 @@ int TControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCod
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 
     return handled;
 }
@@ -937,7 +1196,7 @@ int TControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCo
     TControl *control;
     int handled = FALSE;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -950,7 +1209,7 @@ int TControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCo
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 
     return handled;
 }
@@ -971,7 +1230,7 @@ int TControl::OnMouseMove(int x, int y, int ButtonState, int KeyState)
     TControl *control;
     int handled = FALSE;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -984,7 +1243,7 @@ int TControl::OnMouseMove(int x, int y, int ButtonState, int KeyState)
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 
     return handled;
 }
@@ -1005,7 +1264,7 @@ int TControl::OnLeftUp(int x, int y, int ButtonState, int KeyState)
     TControl *control;
     int handled = FALSE;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1018,7 +1277,7 @@ int TControl::OnLeftUp(int x, int y, int ButtonState, int KeyState)
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 
     return handled;
 }
@@ -1039,7 +1298,7 @@ int TControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
     TControl *control;
     int handled = FALSE;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1052,7 +1311,7 @@ int TControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 
     return handled;
 }
@@ -1073,7 +1332,7 @@ int TControl::OnRightUp(int x, int y, int ButtonState, int KeyState)
     TControl *control;
     int handled = FALSE;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1086,7 +1345,7 @@ int TControl::OnRightUp(int x, int y, int ButtonState, int KeyState)
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 
     return handled;
 }
@@ -1107,7 +1366,7 @@ int TControl::OnRightDown(int x, int y, int ButtonState, int KeyState)
     TControl *control;
     int handled = FALSE;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1120,7 +1379,7 @@ int TControl::OnRightDown(int x, int y, int ButtonState, int KeyState)
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 
     return handled;
 }
@@ -1143,6 +1402,8 @@ TControlThread::TControlThread(const char *name, TGraphicDevice *dev)
     FMouse = 0;
 
     FControlList = 0;
+
+	DefaultRedrawTimeout = 25;
 
     OnKeyPressed = 0;
     OnKeyReleased = 0;
@@ -1170,7 +1431,7 @@ TControlThread::~TControlThread()
 {
     TControl *control;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1182,9 +1443,57 @@ TControlThread::~TControlThread()
         control = FControlList;
     }
 
-    FListSection.Leave();
+    Unprotect();
 
     delete FGraphic;
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::Protect
+#
+#   Purpose....: Protect control during redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::Protect()
+{
+    FListSection.Enter();
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::Unprotect
+#
+#   Purpose....: Unprotect control during redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::Unprotect()
+{
+    FListSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::SetDefaultRedrawTimeout
+#
+#   Purpose....: Set default redraw timeout
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::SetDefaultRedrawTimeout(int milli)
+{
+    DefaultRedrawTimeout = milli;
 }
 
 /*##########################################################################
@@ -1250,7 +1559,7 @@ void TControlThread::Add(TControl *control)
 
     control->FNext = 0;
 
-    FListSection.Enter();
+    Protect();
     
     prev = FControlList;
 
@@ -1268,7 +1577,7 @@ void TControlThread::Add(TControl *control)
     else
         FControlList = control;   
 
-    FListSection.Leave();
+    Unprotect();
 }    
 
 /*##########################################################################
@@ -1289,7 +1598,7 @@ void TControlThread::Delete(TControl *control)
 
     control->FNext = 0;
 
-    FListSection.Enter();
+    Protect();
 
     if (FControlList)
     {
@@ -1311,21 +1620,21 @@ void TControlThread::Delete(TControl *control)
         }
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
 #
-#   Name       : TControlThread::Redraw
+#   Name       : TControlThread::Update
 #
-#   Purpose....: Redraw control
+#   Purpose....: Update control
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::Redraw(TControl *control)
+void TControlThread::Update(TControl *control)
 {
     int xmin;
     int ymin;
@@ -1358,9 +1667,33 @@ void TControlThread::Redraw(TControl *control)
                 			    xmin + control->FWidth - 1,
             	    		    ymin + control->FHeight - 1);
 
-        control->Paint(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
+        if (control->IsDirty())
+        {
+            control->Paint(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
+			control->RedrawChildren(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
+            control->ResetDirty();
+        }            
+        else
+			control->UpdateChildren(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
+
         FPaintSection.Leave();
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::DefaultRedraw
+#
+#   Purpose....: Setup a default redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::DefaultRedraw(TControl *control)
+{
+    control->Redraw(DefaultRedrawTimeout);
 }
 
 /*##########################################################################
@@ -1381,7 +1714,7 @@ void TControlThread::NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, 
     if (OnKeyPressed)
         (*OnKeyPressed)(this, ExtKey, KeyState, VirtualKey, ScanCode);
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1394,7 +1727,7 @@ void TControlThread::NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, 
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -1415,7 +1748,7 @@ void TControlThread::NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey,
     if (OnKeyReleased)
         (*OnKeyReleased)(this, ExtKey, KeyState, VirtualKey, ScanCode);
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1428,7 +1761,7 @@ void TControlThread::NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey,
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -1449,7 +1782,7 @@ void TControlThread::NotifyMouseMove(int x, int y, int ButtonState, int KeyState
     if (OnMouseMove)
         (*OnMouseMove)(this, x, y, ButtonState, KeyState);
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1462,7 +1795,7 @@ void TControlThread::NotifyMouseMove(int x, int y, int ButtonState, int KeyState
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -1483,7 +1816,7 @@ void TControlThread::NotifyLeftDown(int x, int y, int ButtonState, int KeyState)
     if (OnLeftDown)
         (*OnLeftDown)(this, x, y, ButtonState, KeyState);
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1496,7 +1829,7 @@ void TControlThread::NotifyLeftDown(int x, int y, int ButtonState, int KeyState)
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -1517,7 +1850,7 @@ void TControlThread::NotifyLeftUp(int x, int y, int ButtonState, int KeyState)
     if (OnLeftUp)
         (*OnLeftUp)(this, x, y, ButtonState, KeyState);
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1530,7 +1863,7 @@ void TControlThread::NotifyLeftUp(int x, int y, int ButtonState, int KeyState)
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -1551,7 +1884,7 @@ void TControlThread::NotifyRightDown(int x, int y, int ButtonState, int KeyState
     if (OnRightDown)
         (*OnRightDown)(this, x, y, ButtonState, KeyState);
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1564,7 +1897,7 @@ void TControlThread::NotifyRightDown(int x, int y, int ButtonState, int KeyState
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -1585,7 +1918,7 @@ void TControlThread::NotifyRightUp(int x, int y, int ButtonState, int KeyState)
 	 if (OnRightUp)
         (*OnRightUp)(this, x, y, ButtonState, KeyState);
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1598,7 +1931,7 @@ void TControlThread::NotifyRightUp(int x, int y, int ButtonState, int KeyState)
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -1637,7 +1970,7 @@ TDateTime TControlThread::GetRedrawTime()
     TDateTime RedrawTime;
     TControl *control;
 
-    FListSection.Enter();
+    Protect();
 
     RedrawTime.AddYear(1);
 
@@ -1655,28 +1988,28 @@ TDateTime TControlThread::GetRedrawTime()
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 
     return RedrawTime;
 }
 
 /*##########################################################################
 #
-#   Name       : TControlThread::HandleRedraw
+#   Name       : TControlThread::HandleUpdate
 #
-#   Purpose....: Handle control redraw
+#   Purpose....: Handle control update
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::HandleRedraw()
+void TControlThread::HandleUpdate()
 {
     TControl *control;
     TDateTime currtime;
 
-    FListSection.Enter();
+    Protect();
 
     control = FControlList;
 
@@ -1684,12 +2017,12 @@ void TControlThread::HandleRedraw()
     {
         if (control->IsVisible())
             if (currtime > control->GetRedrawTime())
-                control->HandleRedraw();
+                control->HandleUpdate();
 
         control = control->FNext;
     }
 
-    FListSection.Leave();
+    Unprotect();
 }
 
 /*##########################################################################
@@ -1733,6 +2066,6 @@ void TControlThread::Execute()
 
         FWait.WaitTimeout(20);
 
-        HandleRedraw();
+        HandleUpdate();
     }
 }

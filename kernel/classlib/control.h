@@ -64,7 +64,8 @@ public:
     void GetSize(int *x, int *y) const;
 
     void PutKey(char ch);
-
+    
+    void Update();
     void Redraw();
     void Redraw(int millisec);
     void ClearRedraw();
@@ -79,11 +80,24 @@ protected:
 	virtual int OnRightUp(int x, int y, int ButtonState, int KeyState);
 	virtual int OnRightDown(int x, int y, int ButtonState, int KeyState);
 
+    virtual void UpdateChild(TControl *control, int level);
+    virtual void RedrawChild(TControl *control, int level);
+
+    int IsDirty();
+    void ResetDirty();
+    void SetDirty();
+    
     void Unload();
-    void HandleRedraw();
+    void HandleUpdate();
 	void SetClipRect(TGraphicDevice *dev, int xmin, int ymin);
+	void UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
+	void RedrawChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
+
+	void Protect();
+	void Unprotect();
 
 private:
+    void Init();
 	void Add(TControl *Control);
 	void Delete(TControl *Control);
     TDateTime GetRedrawTime();
@@ -98,8 +112,8 @@ private:
     int FEnabled;
     int FVisible;
 
-    TSection FListSection;
-    
+    int FDirty;
+
     TControlThread *FDev;    
     TControl *FNext;    
     TControl *FControlList;
@@ -115,6 +129,8 @@ public:
 
     void Add(TKeyboardDevice *Keyboard);
     void Add(TMouseDevice *Mouse);
+
+    void SetDefaultRedrawTimeout(int millisec);
 
 	void NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 	void NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
@@ -133,12 +149,16 @@ public:
 	void (*OnRightDown)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
 
 protected:
+	void Protect();
+	void Unprotect();
+
     void Signal();
     void Add(TControl *control);
     void Delete(TControl *control);
-    void Redraw(TControl *control);
+    void Update(TControl *control);
+	void DefaultRedraw(TControl *control);
     TDateTime GetRedrawTime();
-    void HandleRedraw();
+    void HandleUpdate();
 	virtual void Execute();
 
     void PutKey(char ch);
@@ -146,6 +166,8 @@ protected:
     TGraphicDevice *FGraphic;
     TKeyboardDevice *FKeyboard;
     TMouseDevice *FMouse; 
+
+    int DefaultRedrawTimeout;
 
     TWait FWait;
     TSignalDevice FSignal;
