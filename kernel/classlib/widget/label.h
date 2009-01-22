@@ -29,12 +29,12 @@
 #define _LABELCTL_H
 
 #include "bitdev.h"
-#include "control.h"
+#include "panel.h"
 #include "str.h"
 
 #define MAX_LABEL_ROWS    256
 
-class TLabelControl : public TControl
+class TLabelControl : public TPanelControl
 {
 public:
     TLabelControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
@@ -42,10 +42,8 @@ public:
     ~TLabelControl();
 
     void SetFont(int height);
-    void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
     void SetSpace(int xspace, int yspace);
     
-    void SetBackColor(int r, int g, int b);
     void SetDrawColor(int r, int g, int b);
 
     void SetText(TString &Text);
@@ -60,18 +58,15 @@ public:
     void AlignBottomLeft();
     void AlignBottom();
     void AlignBottomRight();
-
-    void SetUpperWidth(int width);
-    void SetLowerWidth(int width);
-    void SetLeftWidth(int width);
-    void SetRightWidth(int width);
-    void SetBorderColor(int r, int g, int b);
     
 protected:
+    TLabelControl(TControlThread *dev);
+    TLabelControl(TControl *control);
+
   	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
 
 private:
-    void Init(int xstart, int ystart, int xsize, int ysize);
+    void Init();
 
     int FHorAlign;
     int FVerAlign;
@@ -79,33 +74,16 @@ private:
     int FStartX;
     int FStartY;
 
-	int FUpperWidth;
-	int FLowerWidth;
-	int FLeftWidth;
-	int FRightWidth;
-    
-    int FBackR;
-    int FBackG;
-    int FBackB;
-
     int FDrawR;
     int FDrawG;
     int FDrawB;
 
-	int FBorderR;
-	int FBorderG;
-	int FBorderB;
-
     TFont *FFont;
-    TBitmapGraphicDevice *FBackground;
-
-    int FBitStartX;
-    int FBitStartY;
 
     char *FOrgText;
     char *FText;
     char *FTextRow[MAX_LABEL_ROWS];    
 
-};        
+};
 
 #endif

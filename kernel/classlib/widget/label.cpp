@@ -52,9 +52,13 @@
 #
 ##########################################################################*/
 TLabelControl::TLabelControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize)
- : TControl(dev)
+ : TPanelControl(dev)
 {
-	 Init(xstart, ystart, xsize, ysize);
+	Init();
+
+    Resize(xsize, ysize);
+	Move(xstart, ystart);
+	Show();
 }
 
 /*##########################################################################
@@ -69,9 +73,47 @@ TLabelControl::TLabelControl(TControlThread *dev, int xstart, int ystart, int xs
 #
 ##########################################################################*/
 TLabelControl::TLabelControl(TControl *control, int xstart, int ystart, int xsize, int ysize)
- : TControl(control)
+ : TPanelControl(control)
 {
-	 Init(xstart, ystart, xsize, ysize);
+	Init();
+
+    Resize(xsize, ysize);
+	Move(xstart, ystart);
+	Show();
+}
+    
+/*##########################################################################
+#
+#   Name       : TLabelControl::TLabelControl
+#
+#   Purpose....: Label control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelControl::TLabelControl(TControlThread *dev)
+ : TPanelControl(dev)
+{
+	Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::TLabelControl
+#
+#   Purpose....: Label control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelControl::TLabelControl(TControl *control)
+ : TPanelControl(control)
+{
+	Init();
 }
 
 /*##########################################################################
@@ -108,12 +150,11 @@ TLabelControl::~TLabelControl()
 #   Returns....: *
 #
 ##########################################################################*/
-void TLabelControl::Init(int xstart, int ystart, int xsize, int ysize)
+void TLabelControl::Init()
 {
     FOrgText = 0;
     FText = 0;
     FFont = 0;
-    FBackground = 0;
 
     FHorAlign = HOR_CENTER;
     FVerAlign = VER_CENTER;
@@ -121,26 +162,9 @@ void TLabelControl::Init(int xstart, int ystart, int xsize, int ysize)
     FStartX = 0;
     FStartY = 0;
 
-    FUpperWidth = 0;
-    FLowerWidth = 0;
-    FLeftWidth = 0;
-    FRightWidth = 0;
-
-    FBackR = 255;
-    FBackG = 255;
-    FBackG = 255;
-
     FDrawR = 0;
     FDrawG = 0;
     FDrawB = 0;
-
-    FBorderR = 0;
-    FBorderG = 0;
-    FBorderB = 0;
-    
-    Resize(xsize, ysize);
-	Move(xstart, ystart);
-	Show();
 }
 
 /*##########################################################################
@@ -164,24 +188,6 @@ void TLabelControl::SetFont(int height)
 
 /*##########################################################################
 #
-#   Name       : TLabelControl::SetBackground
-#
-#   Purpose....: Set background bitmap
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TLabelControl::SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart)
-{
-	FBackground = bitmap;
-    FBitStartX = xstart;
-    FBitStartY = ystart;
-}
-
-/*##########################################################################
-#
 #   Name       : TLabelControl::SetSpace
 #
 #   Purpose....: Set unused space
@@ -195,24 +201,6 @@ void TLabelControl::SetSpace(int xstart, int ystart)
 {
     FStartX = xstart;
     FStartY = ystart;
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelControl::SetBackColor
-#
-#   Purpose....: Set back color
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TLabelControl::SetBackColor(int r, int g, int b)
-{
-    FBackR = r;
-    FBackG = g;
-    FBackB = b;
 }
 
 /*##########################################################################
@@ -231,88 +219,6 @@ void TLabelControl::SetDrawColor(int r, int g, int b)
     FDrawR = r;
     FDrawG = g;
     FDrawB = b;
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelControl::SetUpperWidth
-#
-#   Purpose....: Set upper border width
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TLabelControl::SetUpperWidth(int width)
-{
-    FUpperWidth = width;
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelControl::SetLowerWidth
-#
-#   Purpose....: Set lower border width
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TLabelControl::SetLowerWidth(int width)
-{
-    FLowerWidth = width;
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelControl::SetLeftWidth
-#
-#   Purpose....: Set left border width
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TLabelControl::SetLeftWidth(int width)
-{
-    FLeftWidth = width;
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelControl::SetRightWidth
-#
-#   Purpose....: Set right border width
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TLabelControl::SetRightWidth(int width)
-{
-    FRightWidth = width;
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelControl::SetBorderColor
-#
-#   Purpose....: Set border color
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TLabelControl::SetBorderColor(int r, int g, int b)
-{
-    FBorderR = r;
-    FBorderG = g;
-    FBorderB = b;
 }
 
 /*##########################################################################
@@ -491,6 +397,8 @@ void TLabelControl::SetText(const char *Text)
     int height;
     int xsize;
     int ysize;
+    int xoffs, yoffs;
+    int xdiff, ydiff;
 
     if (FOrgText && len > 0)
         if (!strcmp(Text, FOrgText))
@@ -515,10 +423,10 @@ void TLabelControl::SetText(const char *Text)
     strcpy(FOrgText, Text);
 
     GetSize(&xsize, &ysize);
+    GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
 
     xsize -= 2 * FStartX;
-    xsize -= FLeftWidth;
-    xsize -= FRightWidth;
+    xsize -= xdiff;
 
     row = 0;
     start = FText;
@@ -666,43 +574,30 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     int ystart;
     int xsize;
     int ysize;
+    int xmax, ymax;
     int i;
     int row;
-    int xmax = xmin + width - 1;
-    int ymax = ymin + height - 1;
+    int xoffs, yoffs;
+    int xdiff, ydiff;
 
-	if (IsVisible())
+    TPanelControl::Paint(dev, xmin, ymin, width, height);
+    GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
+
+    xmin += xoffs;
+    ymin += yoffs;
+    width -= xdiff;
+    height -= ydiff;
+
+    xmax = xmin + width - 1;
+    ymax = ymin + height - 1;
+
+	if (IsVisible() && width > 0 && height > 0)
 	{
     	dev->SetLgopNone();
         dev->SetFilledStyle();
 
         dev->SetClipRect(  xmin, ymin,
             			   xmax, ymax);
-
-		if (FBackground)
-			dev->Blit(FBackground, FBitStartX, FBitStartY, xmin, ymin, FBackground->GetWidth(), FBackground->GetHeight());
-        else
-        {
-            dev->SetDrawColor(FBackR, FBackG, FBackB);
-            dev->DrawRect(xmin, ymin, xmax, ymax);
-        }
-
-        if (FUpperWidth || FLowerWidth || FLeftWidth || FRightWidth)
-        {
-            dev->SetDrawColor(FBorderR, FBorderG, FBorderB);
-            
-            for (i = 0; i < FUpperWidth; i++)
-                dev->DrawLine(xmin, ymin + i, xmin + width - 1, ymin + i);
-                
-            for (i = 0; i < FLowerWidth; i++)
-                dev->DrawLine(xmin, ymin + height - i - 1, xmin + width, ymin + height - i - 1);
-
-            for (i = 0; i < FLeftWidth; i++)
-                dev->DrawLine(xmin + i, ymin, xmin + i, ymin + height - 1);
-                
-            for (i = 0; i < FRightWidth; i++)
-                dev->DrawLine(xmin + width - i - 1, ymin, xmin + width - i - 1, ymin + height - 1);
-        } 
 
 		if (FOrgText)
         {
@@ -718,7 +613,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
             switch (FVerAlign)
             {
                 case VER_TOP:
-                    ystart = ymin + FStartY + FUpperWidth;
+                    ystart = ymin + FStartY;
                     break;
 
                 case VER_CENTER:
@@ -726,7 +621,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                     break;
 
                 case VER_BOTTOM:
-                    ystart = ymin + height - ysize - FStartY - FLowerWidth;
+                    ystart = ymin + height - ysize - FStartY;
                     break;        
             }
 
@@ -739,7 +634,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     				switch (FHorAlign)
 	    	        {
 		    	        case HOR_LEFT:
-    		    		    xstart = xmin + FStartX + FLeftWidth;
+    		    		    xstart = xmin + FStartX;
 	    		    	    break;
 
         		       	case HOR_CENTER:
@@ -747,7 +642,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     	        			break;
     
 	        	    	case HOR_RIGHT:
-		        	    	xstart = xmin + width - xsize - FStartX - FRightWidth;
+		        	    	xstart = xmin + width - xsize - FStartX;
 			        	    break;
                     }
         
@@ -763,5 +658,4 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
         }
     }
 
-    TControl::Paint(dev, xmin, ymin, width, height);
 }

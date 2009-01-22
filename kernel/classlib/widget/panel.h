@@ -40,30 +40,44 @@ public:
     TPanelFactory();
     ~TPanelFactory();
 
+    void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
+
     void SetBackColor(int r, int g, int b);
-    void SetBorderColor(int r, int g, int b);
-    void SetBorderWidth(int width);
     void SetDisabledColor(int r, int g, int b);
+
+    void SetUpperWidth(int width);
+    void SetLowerWidth(int width);
+    void SetLeftWidth(int width);
+    void SetRightWidth(int width);
+    void SetBorderColor(int r, int g, int b);
 
 	TPanelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
 	TPanelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
 	
 protected:
+	int FUpperWidth;
+	int FLowerWidth;
+	int FLeftWidth;
+	int FRightWidth;
+    
     int FBackR;
     int FBackG;
     int FBackB;
 
-    int FBorderR;
-    int FBorderG;
-    int FBorderB;
-    
+	int FBorderR;
+	int FBorderG;
+	int FBorderB;
+
+    TBitmapGraphicDevice *FBackground;
+
+    int FBitStartX;
+    int FBitStartY;
+
     int FDisabledColorUsed;
 
     int FDisabledR;
     int FDisabledG;
     int FDisabledB;
-
-    int FBorderWidth;
 };
 
 class TPanelControl : public TControl
@@ -73,37 +87,53 @@ public:
     TPanelControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
     ~TPanelControl();
 
+    void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
+
     void SetBackColor(int r, int g, int b);
-    void SetBorderColor(int r, int g, int b);
-    void SetBorderWidth(int width);
-    int GetBorderWidth();
     void SetDisabledColor(int r, int g, int b);
 
-    void SetBackColor(TGraphicDevice *dev);
+    void SetUpperWidth(int width);
+    void SetLowerWidth(int width);
+    void SetLeftWidth(int width);
+    void SetRightWidth(int width);
+    void SetBorderColor(int r, int g, int b);
 
 protected:
+    TPanelControl(TControlThread *dev);
+    TPanelControl(TControl *control);
+
+    void SetBackColor(TGraphicDevice *dev);
+    
   	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
 
-    int FInnerWidth;
+    void GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff);
 
 private:
-    void Init(int xstart, int ystart, int xsize, int ysize);
+    void Init(int border);
 
+	int FUpperWidth;
+	int FLowerWidth;
+	int FLeftWidth;
+	int FRightWidth;
+    
     int FBackR;
     int FBackG;
     int FBackB;
 
-    int FBorderR;
-    int FBorderG;
-    int FBorderB;
-    
+	int FBorderR;
+	int FBorderG;
+	int FBorderB;
+
+    TBitmapGraphicDevice *FBackground;
+
+    int FBitStartX;
+    int FBitStartY;
+
     int FDisabledColorUsed;
 
     int FDisabledR;
     int FDisabledG;
     int FDisabledB;
-
-    int FBorderWidth;
 };        
 
 #endif

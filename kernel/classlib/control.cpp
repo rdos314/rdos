@@ -1083,9 +1083,9 @@ void TControl::RedrawChildren(TGraphicDevice *dev, int xmin, int ymin, int width
             					   xstart + control->FWidth - 1,
         	    				   ystart + control->FHeight - 1);
 
+                control->ResetDirty();
                 control->Paint(dev, xstart, ystart, control->FWidth, control->FHeight);
                 control->RedrawChildren(dev, xstart, ystart, control->FWidth, control->FHeight);
-                control->ResetDirty();
             }            
 
             control = control->FNext;
@@ -1131,9 +1131,9 @@ void TControl::UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width
 
                 if (control->IsDirty())
                 {
+                    control->ResetDirty();
                     control->Paint(dev, xstart, ystart, control->FWidth, control->FHeight);
                     control->RedrawChildren(dev, xstart, ystart, control->FWidth, control->FHeight);
-                    control->ResetDirty();
                 }                    
                 else
                     control->UpdateChildren(dev, xstart, ystart, control->FWidth, control->FHeight);
@@ -1669,9 +1669,9 @@ void TControlThread::Update(TControl *control)
 
         if (control->IsDirty())
         {
+            control->ResetDirty();
             control->Paint(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
 			control->RedrawChildren(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
-            control->ResetDirty();
         }            
         else
 			control->UpdateChildren(FGraphic, xmin, ymin, control->FWidth, control->FHeight);

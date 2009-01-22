@@ -45,17 +45,22 @@
 ##########################################################################*/
 TPanelFactory::TPanelFactory()
 {
+    FBackground = 0;
+
     FBackR = 255;
     FBackG = 255;
     FBackG = 255;
 
-    FBorderR = 200;
-    FBorderG = 200;
-    FBorderB = 200;
+    FBorderR = 0;
+    FBorderG = 0;
+    FBorderB = 0;
 
     FDisabledColorUsed = FALSE;
 
-    FBorderWidth = 2;
+    FUpperWidth = 2;
+    FLowerWidth = 2;
+    FLeftWidth = 2;
+    FRightWidth = 2;
 }
 
 /*##########################################################################
@@ -75,6 +80,24 @@ TPanelFactory::~TPanelFactory()
 
 /*##########################################################################
 #
+#   Name       : TPanelFactory::SetBackground
+#
+#   Purpose....: Set background bitmap
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart)
+{
+	FBackground = bitmap;
+    FBitStartX = xstart;
+    FBitStartY = ystart;
+}
+
+/*##########################################################################
+#
 #   Name       : TPanelFactory::SetBackColor
 #
 #   Purpose....: Set back color
@@ -89,40 +112,6 @@ void TPanelFactory::SetBackColor(int r, int g, int b)
     FBackR = r;
     FBackG = g;
     FBackB = b;
-}
-
-/*##########################################################################
-#
-#   Name       : TPanelFactory::SetBorderColor
-#
-#   Purpose....: Set border color
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPanelFactory::SetBorderColor(int r, int g, int b)
-{
-    FBorderR = r;
-    FBorderG = g;
-    FBorderB = b;
-}
-
-/*##########################################################################
-#
-#   Name       : TPanelFactory::SetBorderWidth
-#
-#   Purpose....: Set border width
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPanelFactory::SetBorderWidth(int width)
-{
-    FBorderWidth = width;
 }
 
 /*##########################################################################
@@ -147,6 +136,88 @@ void TPanelFactory::SetDisabledColor(int r, int g, int b)
 
 /*##########################################################################
 #
+#   Name       : TPanelFactory::SetUpperWidth
+#
+#   Purpose....: Set upper border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetUpperWidth(int width)
+{
+    FUpperWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::SetLowerWidth
+#
+#   Purpose....: Set lower border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetLowerWidth(int width)
+{
+    FLowerWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::SetLeftWidth
+#
+#   Purpose....: Set left border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetLeftWidth(int width)
+{
+    FLeftWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::SetRightWidth
+#
+#   Purpose....: Set right border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetRightWidth(int width)
+{
+    FRightWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::SetBorderColor
+#
+#   Purpose....: Set border color
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetBorderColor(int r, int g, int b)
+{
+    FBorderR = r;
+    FBorderG = g;
+    FBorderB = b;
+}
+
+/*##########################################################################
+#
 #   Name       : TPanelFactory::Create
 #
 #   Purpose....: Create panel control
@@ -162,9 +233,16 @@ TPanelControl *TPanelFactory::Create(TControlThread *dev, int xstart, int ystart
 
     panel = new TPanelControl(dev, xstart, ystart, xsize, ysize);
 
+    if (FBackground)
+        panel->SetBackground(FBackground, FBitStartX + xstart, FBitStartY + ystart);
+
     panel->SetBackColor(FBackR, FBackG, FBackB);
+
+    panel->SetUpperWidth(FUpperWidth);
+    panel->SetLowerWidth(FLowerWidth);
+    panel->SetLeftWidth(FLeftWidth);
+    panel->SetRightWidth(FRightWidth);
     panel->SetBorderColor(FBorderR, FBorderG, FBorderB);
-    panel->SetBorderWidth(FBorderWidth);
 
     if (FDisabledColorUsed)
         panel->SetDisabledColor(FDisabledR, FDisabledG, FDisabledB);
@@ -189,9 +267,16 @@ TPanelControl *TPanelFactory::Create(TControl *control, int xstart, int ystart, 
 
     panel = new TPanelControl(control, xstart, ystart, xsize, ysize);
 
+    if (FBackground)
+        panel->SetBackground(FBackground, FBitStartX + xstart, FBitStartY + ystart);
+
     panel->SetBackColor(FBackR, FBackG, FBackB);
+
+    panel->SetUpperWidth(FUpperWidth);
+    panel->SetLowerWidth(FLowerWidth);
+    panel->SetLeftWidth(FLeftWidth);
+    panel->SetRightWidth(FRightWidth);
     panel->SetBorderColor(FBorderR, FBorderG, FBorderB);
-    panel->SetBorderWidth(FBorderWidth);
 
     if (FDisabledColorUsed)
         panel->SetDisabledColor(FDisabledR, FDisabledG, FDisabledB);
@@ -210,10 +295,49 @@ TPanelControl *TPanelFactory::Create(TControl *control, int xstart, int ystart, 
 #   Returns....: *
 #
 ##########################################################################*/
+TPanelControl::TPanelControl(TControlThread *dev)
+ : TControl(dev)
+{
+    Init(0);
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::TPanelControl
+#
+#   Purpose....: Panel control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPanelControl::TPanelControl(TControl *control)
+ : TControl(control)
+{
+    Init(0);
+}
+    
+/*##########################################################################
+#
+#   Name       : TPanelControl::TPanelControl
+#
+#   Purpose....: Panel control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 TPanelControl::TPanelControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize)
  : TControl(dev)
 {
-	 Init(xstart, ystart, xsize, ysize);
+    Init(2);
+
+    Resize(xsize, ysize);
+	Move(xstart, ystart);
+	Show();
+	Enable();
 }
 
 /*##########################################################################
@@ -230,7 +354,12 @@ TPanelControl::TPanelControl(TControlThread *dev, int xstart, int ystart, int xs
 TPanelControl::TPanelControl(TControl *control, int xstart, int ystart, int xsize, int ysize)
  : TControl(control)
 {
-	 Init(xstart, ystart, xsize, ysize);
+    Init(2);
+
+    Resize(xsize, ysize);
+	Move(xstart, ystart);
+	Show();
+	Enable();
 }
 
 /*##########################################################################
@@ -259,8 +388,10 @@ TPanelControl::~TPanelControl()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPanelControl::Init(int xstart, int ystart, int xsize, int ysize)
+void TPanelControl::Init(int border)
 {
+    FBackground = 0;
+
     FBackR = 255;
     FBackG = 255;
     FBackG = 255;
@@ -269,15 +400,30 @@ void TPanelControl::Init(int xstart, int ystart, int xsize, int ysize)
     FBorderG = 200;
     FBorderB = 200;
 
-    FBorderWidth = 2;
-    FInnerWidth = FBorderWidth;
-
     FDisabledColorUsed = FALSE;
-    
-    Resize(xsize, ysize);
-	Move(xstart, ystart);
-	Show();
-	Enable();
+
+    FUpperWidth = border;
+    FLowerWidth = border;
+    FLeftWidth = border;
+    FRightWidth = border;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetBackground
+#
+#   Purpose....: Set background bitmap
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart)
+{
+	FBackground = bitmap;
+    FBitStartX = xstart;
+    FBitStartY = ystart;
 }
 
 /*##########################################################################
@@ -300,57 +446,6 @@ void TPanelControl::SetBackColor(int r, int g, int b)
 
 /*##########################################################################
 #
-#   Name       : TPanelControl::SetBorderColor
-#
-#   Purpose....: Set border color
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPanelControl::SetBorderColor(int r, int g, int b)
-{
-    FBorderR = r;
-    FBorderG = g;
-    FBorderB = b;
-}
-
-/*##########################################################################
-#
-#   Name       : TPanelControl::SetBorderWidth
-#
-#   Purpose....: Set border width
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPanelControl::SetBorderWidth(int width)
-{
-    FBorderWidth = width;
-    FInnerWidth = width;
-}
-
-/*##########################################################################
-#
-#   Name       : TPanelControl::GetBorderWidth
-#
-#   Purpose....: Get border width
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TPanelControl::GetBorderWidth()
-{
-    return FInnerWidth;
-}
-
-/*##########################################################################
-#
 #   Name       : TPanelControl::SetDisabledColor
 #
 #   Purpose....: Set disabled color
@@ -367,6 +462,88 @@ void TPanelControl::SetDisabledColor(int r, int g, int b)
     FDisabledR = r;
     FDisabledG = g;
     FDisabledB = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetUpperWidth
+#
+#   Purpose....: Set upper border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetUpperWidth(int width)
+{
+    FUpperWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetLowerWidth
+#
+#   Purpose....: Set lower border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetLowerWidth(int width)
+{
+    FLowerWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetLeftWidth
+#
+#   Purpose....: Set left border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetLeftWidth(int width)
+{
+    FLeftWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetRightWidth
+#
+#   Purpose....: Set right border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetRightWidth(int width)
+{
+    FRightWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetBorderColor
+#
+#   Purpose....: Set border color
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetBorderColor(int r, int g, int b)
+{
+    FBorderR = r;
+    FBorderG = g;
+    FBorderB = b;
 }
 
 /*##########################################################################
@@ -395,6 +572,25 @@ void TPanelControl::SetBackColor(TGraphicDevice *dev)
 
 /*##########################################################################
 #
+#   Name       : TPanelControl::GetInner
+#
+#   Purpose....: Get inner offsets
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff)
+{
+    *xstart = FLeftWidth;
+    *ystart = FUpperWidth;
+    *xdiff = FLeftWidth + FRightWidth;
+    *ydiff = FUpperWidth + FLowerWidth;
+}
+
+/*##########################################################################
+#
 #   Name       : TPanelControl::Paint
 #
 #   Purpose....: Paint control
@@ -410,6 +606,8 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     int xmax = xmin + width - 1;
     int ymax = ymin + height - 1;
 
+    TControl::Paint(dev, xmin, ymin, width, height);
+
 	if (IsVisible())
 	{
     	dev->SetLgopNone();
@@ -419,20 +617,27 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
             			   xmax, ymax);
 
         SetBackColor(dev);
+        
+		if (FBackground)
+			dev->Blit(FBackground, FBitStartX, FBitStartY, xmin, ymin, FBackground->GetWidth(), FBackground->GetHeight());
+        else
+            dev->DrawRect(xmin, ymin, xmax, ymax);
 
-	    dev->DrawRect( xmin, ymin,
-		   			   xmax, ymax);
-
-    	dev->SetDrawColor(FBorderR, FBorderG, FBorderB);
-
-        for (i = 0; i < FBorderWidth; i++)
+        if (FUpperWidth || FLowerWidth || FLeftWidth || FRightWidth)
         {
-        	dev->DrawLine(xmin + i, ymin + i, xmax - i, ymin + i);
-        	dev->DrawLine(xmax - i, ymin + i, xmax - i, ymax - i);
-        	dev->DrawLine(xmax - i, ymax - i, xmin + i, ymax - i);
-			dev->DrawLine(xmin + i, ymax - i, xmin + i, ymin + i);
-        }
-    }
+            dev->SetDrawColor(FBorderR, FBorderG, FBorderB);
+            
+            for (i = 0; i < FUpperWidth; i++)
+                dev->DrawLine(xmin, ymin + i, xmin + width - 1, ymin + i);
+                
+            for (i = 0; i < FLowerWidth; i++)
+                dev->DrawLine(xmin, ymin + height - i - 1, xmin + width, ymin + height - i - 1);
 
-    TControl::Paint(dev, xmin, ymin, width, height);
+            for (i = 0; i < FLeftWidth; i++)
+                dev->DrawLine(xmin + i, ymin, xmin + i, ymin + height - 1);
+                
+            for (i = 0; i < FRightWidth; i++)
+                dev->DrawLine(xmin + width - i - 1, ymin, xmin + width - i - 1, ymin + height - 1);
+        } 
+    }
 }
