@@ -93,6 +93,9 @@ protected:
 	void UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 	void RedrawChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
+    int HasParent();
+    void RedrawParent();
+
 	void Protect();
 	void Unprotect();
 

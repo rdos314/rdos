@@ -34,6 +34,54 @@
 
 #define MAX_LABEL_ROWS    256
 
+class TLabelControl;
+
+class TLabelFactory : TPanelFactory
+{
+public:
+    TLabelFactory();
+    ~TLabelFactory();
+
+    void SetFont(int height);
+    void SetSpace(int xspace, int yspace);
+    
+    void SetDrawColor(int r, int g, int b);
+
+    void AlignTopLeft();
+    void AlignTop();
+    void AlignTopRight();
+    void AlignLeft();
+    void AlignCenter();
+    void AlignRight();
+    void AlignBottomLeft();
+    void AlignBottom();
+    void AlignBottomRight();
+
+	TLabelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+	TLabelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
+
+	virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+	virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
+
+	virtual TLabelControl *CreateLabel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+	virtual TLabelControl *CreateLabel(TControl *control, int xstart, int ystart, int xsize, int ysize);
+		
+protected:
+    void SetDefault(TLabelControl *label, int xstart, int ystart, int xsize, int ysize);
+
+    int FHorAlign;
+    int FVerAlign;
+
+    int FStartX;
+    int FStartY;
+
+    int FDrawR;
+    int FDrawG;
+    int FDrawB;
+
+    TFont *FFont;
+};
+
 class TLabelControl : public TPanelControl
 {
 public:
@@ -42,6 +90,7 @@ public:
     ~TLabelControl();
 
     void SetFont(int height);
+    void SetFont(TFont *font);
     void SetSpace(int xspace, int yspace);
     
     void SetDrawColor(int r, int g, int b);

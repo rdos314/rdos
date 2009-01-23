@@ -39,6 +39,440 @@
 #define VER_TOP     0
 #define VER_CENTER  1
 #define VER_BOTTOM  2
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::TLabelFactory
+#
+#   Purpose....: Button factory constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelFactory::TLabelFactory()
+{
+    FFont = 0;
+
+    FHorAlign = HOR_CENTER;
+    FVerAlign = VER_CENTER;
+    
+    FStartX = 0;
+    FStartY = 0;
+
+    FDrawR = 0;
+    FDrawG = 0;
+    FDrawB = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::~TLabelFactory
+#
+#   Purpose....: Button factory destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelFactory::~TLabelFactory()
+{
+    if (FFont)
+        delete FFont;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::SetFont
+#
+#   Purpose....: Set font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::SetFont(int height)
+{
+    if (FFont)
+        delete FFont;
+        
+    FFont = new TFont(height);
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::SetSpace
+#
+#   Purpose....: Set unused space
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::SetSpace(int xstart, int ystart)
+{
+    FStartX = xstart;
+    FStartY = ystart;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::SetDrawColor
+#
+#   Purpose....: Set draw color
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::SetDrawColor(int r, int g, int b)
+{
+    FDrawR = r;
+    FDrawG = g;
+    FDrawB = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::AlignTopLeft
+#
+#   Purpose....: Align text top, left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::AlignTopLeft()
+{
+    FHorAlign = HOR_LEFT;
+    FVerAlign = VER_TOP;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::AlignTop
+#
+#   Purpose....: Align text top, center
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::AlignTop()
+{
+    FHorAlign = HOR_CENTER;
+    FVerAlign = VER_TOP;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::AlignTopRight
+#
+#   Purpose....: Align text top, right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::AlignTopRight()
+{
+    FHorAlign = HOR_RIGHT;
+    FVerAlign = VER_TOP;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::AlignLeft
+#
+#   Purpose....: Align text center, left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::AlignLeft()
+{
+    FHorAlign = HOR_LEFT;
+    FVerAlign = VER_CENTER;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::AlignCenter
+#
+#   Purpose....: Align text center, center
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::AlignCenter()
+{
+    FHorAlign = HOR_CENTER;
+    FVerAlign = VER_CENTER;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::AlignRight
+#
+#   Purpose....: Align text center, right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::AlignRight()
+{
+    FHorAlign = HOR_RIGHT;
+    FVerAlign = VER_CENTER;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::AlignBottomLeft
+#
+#   Purpose....: Align text bottom, left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::AlignBottomLeft()
+{
+    FHorAlign = HOR_LEFT;
+    FVerAlign = VER_BOTTOM;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::AlignBottom
+#
+#   Purpose....: Align text bottom, center
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::AlignBottom()
+{
+    FHorAlign = HOR_CENTER;
+    FVerAlign = VER_BOTTOM;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::AlignBottomRight
+#
+#   Purpose....: Align text bottom, right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::AlignBottomRight()
+{
+    FHorAlign = HOR_RIGHT;
+    FVerAlign = VER_BOTTOM;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::SetDefault
+#
+#   Purpose....: Set default panel properties from factory settings
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::SetDefault(TLabelControl *label, int xstart, int ystart, int xsize, int ysize)
+{
+    switch (FVerAlign)
+    {
+        case VER_TOP:
+            switch (FHorAlign)
+            {
+                case HOR_LEFT:
+                    label->AlignTopLeft();
+                    break;
+
+                case HOR_CENTER:
+                    label->AlignTop();
+                    break;
+
+                case HOR_RIGHT:
+                    label->AlignTopRight();
+                    break;
+            }
+            break;
+
+        case VER_CENTER:
+            switch (FHorAlign)
+            {
+                case HOR_LEFT:
+                    label->AlignLeft();
+                    break;
+
+                case HOR_CENTER:
+                    label->AlignCenter();
+                    break;
+
+                case HOR_RIGHT:
+                    label->AlignRight();
+                    break;
+            }
+            break;
+
+        case VER_BOTTOM:
+            switch (FHorAlign)
+            {
+                case HOR_LEFT:
+                    label->AlignBottomLeft();
+                    break;
+
+                case HOR_CENTER:
+                    label->AlignBottom();
+                    break;
+
+                case HOR_RIGHT:
+                    label->AlignBottomRight();
+                    break;
+            }
+            break;
+    }
+
+    if (FFont)
+        label->SetFont(FFont);
+        
+    label->SetSpace(FStartX, FStartY);
+    label->SetDrawColor(FDrawR, FDrawG, FDrawB);            
+
+    TPanelFactory::SetDefault(label, xstart, ystart, xsize, ysize);
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::Create
+#
+#   Purpose....: Create label control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelControl *TLabelFactory::Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize)
+{
+    TLabelControl *label;
+
+    label = new TLabelControl(dev, xstart, ystart, xsize, ysize);
+
+    SetDefault(label, xstart, ystart, xsize, ysize);
+
+    return label;        
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::Create
+#
+#   Purpose....: Create label control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelControl *TLabelFactory::Create(TControl *control, int xstart, int ystart, int xsize, int ysize)
+{
+    TLabelControl *label;
+
+    label = new TLabelControl(control, xstart, ystart, xsize, ysize);
+
+    SetDefault(label, xstart, ystart, xsize, ysize);
+
+    return label;        
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::CreatePanel
+#
+#   Purpose....: Create panel control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPanelControl *TLabelFactory::CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize)
+{
+    return Create(dev, xstart, ystart, xsize, ysize);
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::CreatePanel
+#
+#   Purpose....: Create panel control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPanelControl *TLabelFactory::CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize)
+{
+    return Create(control, xstart, ystart, xsize, ysize);
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::CreateLabel
+#
+#   Purpose....: Create label control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelControl *TLabelFactory::CreateLabel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize)
+{
+    return Create(dev, xstart, ystart, xsize, ysize);
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::CreateLabel
+#
+#   Purpose....: Create label control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelControl *TLabelFactory::CreateLabel(TControl *control, int xstart, int ystart, int xsize, int ysize)
+{
+    return Create(control, xstart, ystart, xsize, ysize);
+}
     
 /*##########################################################################
 #
@@ -184,6 +618,25 @@ void TLabelControl::SetFont(int height)
         delete FFont;
         
     FFont = new TFont(height);
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::SetFont
+#
+#   Purpose....: Set font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::SetFont(TFont *font)
+{
+    if (FFont)
+        delete FFont;
+        
+    FFont = new TFont(*font);
 }
 
 /*##########################################################################

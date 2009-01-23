@@ -370,6 +370,42 @@ void TControl::Unprotect()
 
 /*##########################################################################
 #
+#   Name       : TControl::HasParent
+#
+#   Purpose....: Check if control has parent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TControl::HasParent()
+{
+    if (FParent)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::RedrawParent
+#
+#   Purpose....: Redraw parent control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::RedrawParent()
+{
+    if (FParent)
+        FParent->Redraw();
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::Add
 #
 #   Purpose....: Add child control
@@ -892,6 +928,8 @@ void TControl::RedrawChild(TControl *control, int level)
 void TControl::Redraw()
 {
     Protect();
+
+    SetDirty();
 
     if (FParent)
         FParent->RedrawChild(this, 1);

@@ -51,10 +51,14 @@ TPanelFactory::TPanelFactory()
     FBackG = 255;
     FBackG = 255;
 
+    FBackTrans = FALSE;
+    
     FBorderR = 0;
     FBorderG = 0;
     FBorderB = 0;
 
+    FBorderTrans = FALSE;
+    
     FDisabledColorUsed = FALSE;
 
     FUpperWidth = 2;
@@ -112,6 +116,24 @@ void TPanelFactory::SetBackColor(int r, int g, int b)
     FBackR = r;
     FBackG = g;
     FBackB = b;
+    
+    FBackTrans = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::SetBackTransparent
+#
+#   Purpose....: Set back color as transparent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetBackTransparent()
+{
+    FBackTrans = TRUE;
 }
 
 /*##########################################################################
@@ -233,6 +255,59 @@ void TPanelFactory::SetBorderColor(int r, int g, int b)
     FBorderR = r;
     FBorderG = g;
     FBorderB = b;
+
+    FBorderTrans = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::SetBorderTransparent
+#
+#   Purpose....: Set border color as transparent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetBorderTransparent()
+{
+	FBorderTrans = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::SetDefault
+#
+#   Purpose....: Set default panel properties from factory settings
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetDefault(TPanelControl *panel, int xstart, int ystart, int xsize, int ysize)
+{
+    if (FBackground)
+        panel->SetBackground(FBackground, FBitStartX + xstart, FBitStartY + ystart);
+
+	if (FBackTrans)
+		panel->SetBackTransparent();
+	else
+		panel->SetBackColor(FBackR, FBackG, FBackB);
+
+	panel->SetUpperWidth(FUpperWidth);
+	panel->SetLowerWidth(FLowerWidth);
+	panel->SetLeftWidth(FLeftWidth);
+	panel->SetRightWidth(FRightWidth);
+
+	if (FBorderTrans)
+        panel->SetBorderTransparent();
+    else
+        panel->SetBorderColor(FBorderR, FBorderG, FBorderB);
+
+    if (FDisabledColorUsed)
+        panel->SetDisabledColor(FDisabledR, FDisabledG, FDisabledB);
 }
 
 /*##########################################################################
@@ -252,19 +327,7 @@ TPanelControl *TPanelFactory::Create(TControlThread *dev, int xstart, int ystart
 
     panel = new TPanelControl(dev, xstart, ystart, xsize, ysize);
 
-    if (FBackground)
-        panel->SetBackground(FBackground, FBitStartX + xstart, FBitStartY + ystart);
-
-    panel->SetBackColor(FBackR, FBackG, FBackB);
-
-    panel->SetUpperWidth(FUpperWidth);
-    panel->SetLowerWidth(FLowerWidth);
-    panel->SetLeftWidth(FLeftWidth);
-    panel->SetRightWidth(FRightWidth);
-    panel->SetBorderColor(FBorderR, FBorderG, FBorderB);
-
-    if (FDisabledColorUsed)
-        panel->SetDisabledColor(FDisabledR, FDisabledG, FDisabledB);
+    SetDefault(panel, xstart, ystart, xsize, ysize);
 
     return panel;        
 }
@@ -286,21 +349,41 @@ TPanelControl *TPanelFactory::Create(TControl *control, int xstart, int ystart, 
 
     panel = new TPanelControl(control, xstart, ystart, xsize, ysize);
 
-    if (FBackground)
-        panel->SetBackground(FBackground, FBitStartX + xstart, FBitStartY + ystart);
-
-    panel->SetBackColor(FBackR, FBackG, FBackB);
-
-    panel->SetUpperWidth(FUpperWidth);
-    panel->SetLowerWidth(FLowerWidth);
-    panel->SetLeftWidth(FLeftWidth);
-    panel->SetRightWidth(FRightWidth);
-    panel->SetBorderColor(FBorderR, FBorderG, FBorderB);
-
-    if (FDisabledColorUsed)
-        panel->SetDisabledColor(FDisabledR, FDisabledG, FDisabledB);
+    SetDefault(panel, xstart, ystart, xsize, ysize);
 
     return panel;        
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::CreatePanel
+#
+#   Purpose....: Create panel control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPanelControl *TPanelFactory::CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize)
+{
+    return Create(dev, xstart, ystart, xsize, ysize);
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::CreatePanel
+#
+#   Purpose....: Create button control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPanelControl *TPanelFactory::CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize)
+{
+    return Create(control, xstart, ystart, xsize, ysize);
 }
     
 /*##########################################################################
@@ -415,9 +498,13 @@ void TPanelControl::Init(int border)
     FBackG = 255;
     FBackG = 255;
 
+    FBackTrans = FALSE;
+
     FBorderR = 200;
     FBorderG = 200;
     FBorderB = 200;
+
+    FBorderTrans = FALSE;
 
     FDisabledColorUsed = FALSE;
 
@@ -461,6 +548,24 @@ void TPanelControl::SetBackColor(int r, int g, int b)
     FBackR = r;
     FBackG = g;
     FBackB = b;
+
+    FBackTrans = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetBackTransparent
+#
+#   Purpose....: Set back color as transparent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetBackTransparent()
+{
+    FBackTrans = TRUE;
 }
 
 /*##########################################################################
@@ -582,6 +687,24 @@ void TPanelControl::SetBorderColor(int r, int g, int b)
     FBorderR = r;
     FBorderG = g;
     FBorderB = b;
+
+    FBorderTrans = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetBorderTransparent
+#
+#   Purpose....: Set border color as transparent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetBorderTransparent()
+{
+    FBorderTrans = TRUE;
 }
 
 /*##########################################################################
@@ -629,6 +752,44 @@ void TPanelControl::GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff)
 
 /*##########################################################################
 #
+#   Name       : TPanelControl::UpdateChild
+#
+#   Purpose....: Update child control if needed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::UpdateChild(TControl *control, int level)
+{
+	if (FBackTrans && !FBackground && HasParent() && level == 1)
+		RedrawParent();
+	else
+		TControl::UpdateChild(control, level);
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::RedrawChild
+#
+#   Purpose....: Redraw child control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::RedrawChild(TControl *control, int level)
+{
+	if (FBackTrans && !FBackground && HasParent() && level == 1)
+		RedrawParent();
+	else
+		TControl::RedrawChild(control, level);
+}
+
+/*##########################################################################
+#
 #   Name       : TPanelControl::Paint
 #
 #   Purpose....: Paint control
@@ -643,6 +804,10 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     int i;
     int xmax = xmin + width - 1;
     int ymax = ymin + height - 1;
+    int ximin = xmin + FLeftWidth;
+    int yimin = ymin + FUpperWidth;
+    int ximax = xmax - FRightWidth;
+    int yimax = ymax - FLowerWidth;
 
     TControl::Paint(dev, xmin, ymin, width, height);
 
@@ -651,31 +816,40 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     	dev->SetLgopNone();
         dev->SetFilledStyle();
 
-        dev->SetClipRect(  xmin, ymin,
-            			   xmax, ymax);
+        dev->SetClipRect(  ximin, yimin,
+            			   ximax, yimax);
 
         SetBackColor(dev);
         
 		if (FBackground)
-			dev->Blit(FBackground, FBitStartX, FBitStartY, xmin, ymin, FBackground->GetWidth(), FBackground->GetHeight());
+			dev->Blit(FBackground, FBitStartX, FBitStartY, ximin, yimin, FBackground->GetWidth(), FBackground->GetHeight());
         else
-            dev->DrawRect(xmin, ymin, xmax, ymax);
-
-        if (FUpperWidth || FLowerWidth || FLeftWidth || FRightWidth)
         {
-            dev->SetDrawColor(FBorderR, FBorderG, FBorderB);
-            
-            for (i = 0; i < FUpperWidth; i++)
-                dev->DrawLine(xmin, ymin + i, xmin + width - 1, ymin + i);
-                
-            for (i = 0; i < FLowerWidth; i++)
-                dev->DrawLine(xmin, ymin + height - i - 1, xmin + width, ymin + height - i - 1);
+            if (!FBackTrans)
+                dev->DrawRect(ximin, yimin, ximax, yimax);
+        }
 
-            for (i = 0; i < FLeftWidth; i++)
-                dev->DrawLine(xmin + i, ymin, xmin + i, ymin + height - 1);
+        dev->SetClipRect(  xmin, ymin,
+            			   xmax, ymax);
+
+        if (!FBorderTrans)
+        {
+            if (FUpperWidth || FLowerWidth || FLeftWidth || FRightWidth)
+            {
+                dev->SetDrawColor(FBorderR, FBorderG, FBorderB);
                 
-            for (i = 0; i < FRightWidth; i++)
-                dev->DrawLine(xmin + width - i - 1, ymin, xmin + width - i - 1, ymin + height - 1);
+                for (i = 0; i < FUpperWidth; i++)
+                    dev->DrawLine(xmin, ymin + i, xmin + width - 1, ymin + i);
+                
+                for (i = 0; i < FLowerWidth; i++)
+                    dev->DrawLine(xmin, ymin + height - i - 1, xmin + width, ymin + height - i - 1);
+
+                for (i = 0; i < FLeftWidth; i++)
+                    dev->DrawLine(xmin + i, ymin, xmin + i, ymin + height - 1);
+                
+                for (i = 0; i < FRightWidth; i++)
+                    dev->DrawLine(xmin + width - i - 1, ymin, xmin + width - i - 1, ymin + height - 1);
+            }
         } 
     }
 }

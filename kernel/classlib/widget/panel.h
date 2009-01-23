@@ -43,6 +43,7 @@ public:
     void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
 
     void SetBackColor(int r, int g, int b);
+    void SetBackTransparent();
     void SetDisabledColor(int r, int g, int b);
 
     void SetUpperWidth(int width);
@@ -51,11 +52,17 @@ public:
     void SetRightWidth(int width);
     void SetBorderWidth(int width);
     void SetBorderColor(int r, int g, int b);
+    void SetBorderTransparent();
 
 	TPanelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
 	TPanelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
+
+	virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+	virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
 	
 protected:
+    void SetDefault(TPanelControl *panel, int xstart, int ystart, int xsize, int ysize);
+
 	int FUpperWidth;
 	int FLowerWidth;
 	int FLeftWidth;
@@ -65,9 +72,13 @@ protected:
     int FBackG;
     int FBackB;
 
+    int FBackTrans;
+
 	int FBorderR;
 	int FBorderG;
 	int FBorderB;
+
+	int FBorderTrans;
 
     TBitmapGraphicDevice *FBackground;
 
@@ -91,6 +102,7 @@ public:
     void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
 
     void SetBackColor(int r, int g, int b);
+    void SetBackTransparent();
     void SetDisabledColor(int r, int g, int b);
 
     void SetUpperWidth(int width);
@@ -99,12 +111,16 @@ public:
     void SetRightWidth(int width);
     void SetBorderWidth(int width);
     void SetBorderColor(int r, int g, int b);
+    void SetBorderTransparent();
 
     void SetBackColor(TGraphicDevice *dev);
 
 protected:
 	TPanelControl(TControlThread *dev);
 	TPanelControl(TControl *control);
+
+    virtual void UpdateChild(TControl *control, int level);
+    virtual void RedrawChild(TControl *control, int level);
 
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
@@ -122,9 +138,13 @@ private:
     int FBackG;
     int FBackB;
 
+    int FBackTrans;
+
 	int FBorderR;
 	int FBorderG;
 	int FBorderB;
+
+    int FBorderTrans;
 
     TBitmapGraphicDevice *FBackground;
 
