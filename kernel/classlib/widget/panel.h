@@ -49,6 +49,7 @@ public:
     void SetLowerWidth(int width);
     void SetLeftWidth(int width);
     void SetRightWidth(int width);
+    void SetBorderWidth(int width);
     void SetBorderColor(int r, int g, int b);
 
 	TPanelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
@@ -96,15 +97,16 @@ public:
     void SetLowerWidth(int width);
     void SetLeftWidth(int width);
     void SetRightWidth(int width);
+    void SetBorderWidth(int width);
     void SetBorderColor(int r, int g, int b);
 
-protected:
-    TPanelControl(TControlThread *dev);
-    TPanelControl(TControl *control);
-
     void SetBackColor(TGraphicDevice *dev);
-    
-  	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
+
+protected:
+	TPanelControl(TControlThread *dev);
+	TPanelControl(TControl *control);
+
+	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
     void GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff);
 

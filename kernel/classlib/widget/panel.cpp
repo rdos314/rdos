@@ -200,6 +200,25 @@ void TPanelFactory::SetRightWidth(int width)
 
 /*##########################################################################
 #
+#   Name       : TPanelFactory::SetBorderWidth
+#
+#   Purpose....: Set border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetBorderWidth(int width)
+{
+    FUpperWidth = width;
+    FLowerWidth = width;
+    FLeftWidth = width;
+    FRightWidth = width;
+}
+
+/*##########################################################################
+#
 #   Name       : TPanelFactory::SetBorderColor
 #
 #   Purpose....: Set border color
@@ -525,6 +544,25 @@ void TPanelControl::SetLeftWidth(int width)
 ##########################################################################*/
 void TPanelControl::SetRightWidth(int width)
 {
+    FRightWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetBorderWidth
+#
+#   Purpose....: Set border width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetBorderWidth(int width)
+{
+    FUpperWidth = width;
+    FLowerWidth = width;
+    FLeftWidth = width;
     FRightWidth = width;
 }
 
