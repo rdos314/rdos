@@ -1012,6 +1012,37 @@ void TLabelControl::SetText(TString &Text)
 
 /*##########################################################################
 #
+#   Name       : TLabelControl::GetMinHeight
+#
+#   Purpose....: Get minimum height
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TLabelControl::GetMinHeight()
+{
+    int xsize, ysize;
+    int row;
+    int height = TPanelControl::GetMinHeight();
+
+    if (FFont)
+        FFont->GetStringMetrics("", &xsize, &ysize);
+    else
+        ysize = 0;
+
+    for (row = 0; row < MAX_LABEL_ROWS; row++)
+        if (FTextRow[row] != 0)
+            height += ysize;
+        else
+            break;
+
+    return height;
+}
+
+/*##########################################################################
+#
 #   Name       : TLabelControl::Paint
 #
 #   Purpose....: Paint control

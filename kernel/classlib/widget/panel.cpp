@@ -733,6 +733,22 @@ void TPanelControl::SetBackColor(TGraphicDevice *dev)
 
 /*##########################################################################
 #
+#   Name       : TPanelControl::GetMinHeight
+#
+#   Purpose....: Get minimum height
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPanelControl::GetMinHeight()
+{
+    return FUpperWidth + FLowerWidth;
+}
+
+/*##########################################################################
+#
 #   Name       : TPanelControl::GetInner
 #
 #   Purpose....: Get inner offsets

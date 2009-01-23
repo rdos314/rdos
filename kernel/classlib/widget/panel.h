@@ -113,6 +113,8 @@ public:
     void SetBorderColor(int r, int g, int b);
     void SetBorderTransparent();
 
+    virtual int GetMinHeight();
+
     void SetBackColor(TGraphicDevice *dev);
 
 protected:

@@ -107,6 +107,8 @@ public:
     void AlignBottomLeft();
     void AlignBottom();
     void AlignBottomRight();
+
+    virtual int GetMinHeight();
     
 protected:
     TLabelControl(TControlThread *dev);
