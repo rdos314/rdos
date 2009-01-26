@@ -49,7 +49,7 @@ TPanelFactory::TPanelFactory()
 
     FBackR = 255;
     FBackG = 255;
-    FBackG = 255;
+    FBackB = 255;
 
     FBackTrans = FALSE;
     

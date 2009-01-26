@@ -286,7 +286,7 @@ void TTableRow::CheckHeight()
     if (height > FMaxHeight)
         height = FMaxHeight;
 
-    if (height != FSizeY);
+    if (height != FSizeY)
 		FTable->NotifyHeightChange(FRow, height);
 }
     
@@ -437,7 +437,9 @@ void TTableControl::Grow()
     for (i = FRowCount; i < newsize; i++)
         newarr[i] = 0;
 
-    delete FRowArr;
+    if (FRowArr)
+        delete FRowArr;
+
     FRowArr = newarr;
 }
     

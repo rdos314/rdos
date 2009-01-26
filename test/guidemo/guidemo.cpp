@@ -11,6 +11,8 @@
 #include "keyboard.h"
 #include "mouse.h"
 
+#include "table.h"
+
 #define FALSE	0
 #define TRUE	!FALSE
 
@@ -20,6 +22,31 @@ TSprite *LeftSprite;
 TSprite *RightSprite;
 TSprite *MouseSprite;
 TGraphicDevice *KeyVideo;
+
+void TestTable(TGraphicDevice *dev)
+{
+	TControlThread cdev("Control", dev);
+	TTableControl table(&cdev, 0, 0, 200, 200);
+	TPanelFactory normcol;
+
+	table.SetBackColor(50, 50, 50);
+
+	normcol.SetBackColor(200, 255, 200);
+	normcol.SetBorderWidth(2);
+	normcol.SetBorderColor(255, 0, 0);
+
+	table.AddColumn(&normcol, 40);
+	table.AddColumn(&normcol, 20);
+	table.AddRow(10, 40);
+
+	for (;;)
+		RdosWaitMilli(1000);
+
+	table.AddRow(10, 40);
+
+	table.AddColumn(&normcol, 30);
+	table.AddRow(12, 40);
+}
 
 void RandomColor(TGraphicDevice *dev)
 {
@@ -366,6 +393,8 @@ void cdecl main()
 
 	vbe = new TVideoGraphicDevice(24, 800, 600);
 //	vbe = new TVideoGraphicDevice(1, 240, 128);
+
+	TestTable(vbe);
 
 	Mouse->SetWindow(20, 20, vbe->GetWidth() - 20, vbe->GetHeight() - 20);
 	Mouse->SetMickey(1, 1);
