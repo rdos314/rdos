@@ -97,7 +97,7 @@ Intr:
     btfss STATUS,Z
     goto IntrTimerDone
 ;
-    decf INDF,F    
+   decf INDF,F    
 	bsf Flags,FLAG_IR_DONE_BIT
 
 IntrTimerDone:
@@ -326,7 +326,6 @@ Reset:
     clrf AsyncCount
     movlw AsyncData
     movwf AsyncPtr
-;    
     
 HandleLoop:
 	bsf PORTA, 5
@@ -389,7 +388,7 @@ HandleExecute:
     call ExecuteCmd
 ;
     movf Result,W
-    andlw 0xF
+    andlw 0x1F
     movwf OutCount
 ;
     movf Result,W
@@ -487,6 +486,7 @@ GetAsync:
     movwf OutPtr
 ;    
 	movf AsyncCount,W
+	movlw 8  ; debug
 	andlw 0x1F
     movwf OutCount
     movwf Result
@@ -495,10 +495,13 @@ GetAsync:
 	movwf TempPtr
 
 GetAsyncLoop:
+    bcf STATUS,IRP
     movf TempPtr,W
     movwf FSR
-    movf INDF,W
+;    movf INDF,W  ; debug
     movwf Val
+;    
+    bsf STATUS,IRP
     movf OutPtr,W
     movwf FSR
     movf Val,W

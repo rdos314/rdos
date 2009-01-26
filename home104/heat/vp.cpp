@@ -620,7 +620,7 @@ void TVp::Execute()
 			for (i = 1; i < 40; i++)
 			{
 			    TankArr[i-1] = TankArr[i];
-			    ValidTankArr[i-1] = ValidTankArr[i];
+				 ValidTankArr[i-1] = ValidTankArr[i];
 			}
 
 			TankArr[39] = FTankTemp;
@@ -771,10 +771,13 @@ void TVp::Execute()
 			if (FLevel > 7.5 && !FVpOn)
 				FVpOn = TRUE;
 
+			if (FTankTemp > 450 && FVpOn)
+				FVpOn = FALSE;
+
 			if (FValidPHeat && FValidHeat)
 			{
-			    if (FMaxHeatTemp < 750)
-			        EpLimit = 750;
+				 if (FMaxHeatTemp < 750)
+					  EpLimit = 750;
 			    else
 			        EpLimit = 500;
 			    

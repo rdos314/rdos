@@ -2201,7 +2201,8 @@ CloseUsbReq      MACRO
 	OsGate close_usb_req_nr
 						ENDM
 
-; IN  ES        IR data selector
+; IN  ES:DI         Data buffer
+; IN  CX            Size
 NotifyIrData      MACRO
 	OsGate notify_ir_data_nr
 						ENDM

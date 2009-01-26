@@ -1300,12 +1300,11 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ir_name	DB 'IR',0
+ir_name	DB 'PIC IR',0
 
 ir_thread:
     mov ax,piclcd_data_sel
     mov ds,ax    
-    int 3
 
 ir_loop:
     mov ax,25
@@ -1314,9 +1313,10 @@ ir_loop:
     call IrReq
     jc ir_loop
 ;
-    int 3
-    mov al,es:dqe_in_size
-    mov bx,OFFSET dqe_in_buf
+    mov di,OFFSET dqe_in_buf
+    movzx cx,es:dqe_in_size
+    NotifyIrData
+;    
     FreeMem
     jmp ir_loop    
 
@@ -1356,10 +1356,16 @@ oicsp1:
     GetThread
     mov ds:IcspThread0,ax
     or ds:IcspFlag,1
+;
+; test only
+;
+    or ds:IcspFlag,2  
+;      
     mov bx,ds:PicThread0
     Signal
     WaitForSignal
 ;    
+    int 3
 	mov dx,IO_BASE + 8
 ;	
     cli
@@ -1371,6 +1377,15 @@ oicsp1:
 ;
     mov ax,25
     WaitMilliSec
+;
+; test only
+;
+    cli
+    mov al,ds:PicOut
+    and al,NOT OUT_MCLR_1
+    out dx,al
+    mov ds:PicOut,al
+    sti
 ;
     cli
     mov al,ds:PicOut
@@ -1500,7 +1515,21 @@ ci1:
     mov ds:PicOut,al
     sti
 ;
+; test only
+;
+    cli
+    mov al,ds:PicOut
+    or al,OUT_MCLR_1
+    out dx,al
+    mov ds:PicOut,al
+    sti    
+;
     and ds:IcspFlag,NOT 1
+;
+; test only
+;
+    and ds:IcspFlag,NOT 2
+;       
     mov ds:IcspThread0,0
     mov bx,ds:PicThread0
     Signal
@@ -1571,6 +1600,7 @@ write_icsp_cmd    Proc far
     push bx
     push dx
 ;
+    int 3
     and bx,NOT 1
     cmp bx,6DA0h
     jne wicFail

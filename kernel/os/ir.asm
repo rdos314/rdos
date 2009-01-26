@@ -39,16 +39,16 @@ INCLUDE ..\os.inc
 
 	.386p
 
-IR_BUF_SIZE = 16
+IR_BUF_SIZE = 512
 
 ir_seg    STRUC
 
 ir_section  section_typ <>
 
-ir_wr_ind   DW ?
-ir_rd_ind   DW ?
-
-ir_sel_arr  DW IR_BUF_SIZE DUP(?)
+ir_count	  	DW ?
+ir_head		    DW ?
+ir_tail		    DW ?
+ir_buf          DB IR_BUF_SIZE DUP(?)
 
 ir_seg    ENDS
 
@@ -59,11 +59,51 @@ code	SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			AddVal
+;
+;		DESCRIPTION:	Add value to in-buffer
+;
+;		PARAMETERS:		AL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddVal  Proc near
+    push bx
+    push cx
+;    
+	mov cx,ds:ir_count
+	cmp cx,IR_BUF_SIZE
+	je avDone
+;	
+	inc cx
+	mov ds:ir_count,cx
+;	
+	mov bx,ds:ir_tail		; get tail pointer
+	mov ds:[bx].ir_buf,al				; store char
+	inc bx
+	cmp bx,IR_BUF_SIZE
+	jnz avSavePtr
+;
+	xor bx,bx
+	
+avSavePtr:
+	mov ds:ir_tail,bx
+
+avDone:
+    pop cx
+    pop bx
+    ret
+AddVal  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			NotifyIrData
 ;
 ;		DESCRIPTION:	Notify new IR data
 ;
-;		PARAMETERS:		ES      IR data sel
+;		PARAMETERS:		ES:DI       Data buffer
+;                       CX          Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -71,46 +111,92 @@ notify_ir_data_name	DB 'Notify IR data',0
 
 notify_ir_data	Proc far
     push ds
-    push es
     push ax
-    push bx
-    push dx
+    push cx
+    push di
 ;    
     mov ax,ir_data_sel
     mov ds,ax
 ;
     EnterSection ds:ir_section
-;    
-    mov bx,ds:ir_wr_ind
-    add bx,bx
-    mov ax,es
-    mov dx,ds:[bx].ir_sel_arr
-    or dx,dx
-    jz nidSave
 ;
-    mov es,dx
-    FreeMem
+    or cx,cx
+    jz nidLeave
 
-nidSave:
-    mov ds:[bx].ir_sel_arr,ax
-    mov bx,ds:ir_wr_ind
-    inc bx
-    cmp bx,IR_BUF_SIZE
-    jne nidSaveInd
-;
-    xor bx,bx
+nidLoop:    
+    mov al,es:[di]
+    call AddVal
+    inc di        
+    loop nidLoop
 
-nidSaveInd:
-    mov ds:ir_wr_ind,bx
+nidLeave:
     LeaveSection ds:ir_section
 ;
-    pop dx
-    pop bx
+    pop di
+    pop cx
     pop ax
-    pop es
     pop ds            
 	ret
 notify_ir_data	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ir
+;
+;		DESCRIPTION:    IR handler thread
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ir_name DB 'IR', 0
+
+ir_thread:
+    int 3
+    mov ax,ir_data_sel
+    mov ds,ax
+    mov bx,OFFSET ir_buf
+    mov cx,ds:ir_count
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Init_ir
+;
+;		DESCRIPTION:    init IR module
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+init_ir	Proc far
+	push ds
+	push es
+	pusha
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET ir_name
+	mov si,OFFSET ir_thread
+	mov ax,4
+	mov cx,100h
+	CreateThread
+;	
+	popa
+	pop es
+	pop ds
+	ret
+init_ir	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -143,6 +229,9 @@ init	Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov di,OFFSET init_ir
+	HookInitTasking
 ;
 	mov si,OFFSET notify_ir_data
 	mov di,OFFSET notify_ir_data_name
