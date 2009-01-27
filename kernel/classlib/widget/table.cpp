@@ -31,42 +31,42 @@
 
 #define FALSE	0
 #define TRUE	!FALSE
-    
+
 /*##########################################################################
 #
-#   Name       : TTableColumnFactory::TTableColumnFactory
+#   Name       : TTablePanelColumnFactory::TTablePanelColumnFactory
 #
-#   Purpose....: Table column factory constructor
+#   Purpose....: Table panel column factory constructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TTableColumnFactory::TTableColumnFactory(TPanelFactory *factory, int width)
+TTablePanelColumnFactory::TTablePanelColumnFactory(TPanelFactory *factory, int width)
 {
-    FFactory = factory;
-    FWidth = width;
+	FFactory = factory;
+	FWidth = width;
 }
-    
+
 /*##########################################################################
 #
-#   Name       : TTableColumnFactory::~TTableColumnFactory
+#   Name       : TTablePanelColumnFactory::~TTablePanelColumnFactory
 #
-#   Purpose....: Table column factory desctructor
+#   Purpose....: Table panel column factory desctructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TTableColumnFactory::~TTableColumnFactory()
+TTablePanelColumnFactory::~TTablePanelColumnFactory()
 {
 }
-    
+
 /*##########################################################################
 #
-#   Name       : TTableColumnFactory::GetWidth
+#   Name       : TTablePanelColumnFactory::GetWidth
 #
 #   Purpose....: Get control width
 #
@@ -75,14 +75,14 @@ TTableColumnFactory::~TTableColumnFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-int TTableColumnFactory::GetWidth()
+int TTablePanelColumnFactory::GetWidth()
 {
-    return FWidth;
+	return FWidth;
 }
-    
+
 /*##########################################################################
 #
-#   Name       : TTableColumnFactory::Create
+#   Name       : TTablePanelColumnFactory::Create
 #
 #   Purpose....: Create element
 #
@@ -91,11 +91,74 @@ int TTableColumnFactory::GetWidth()
 #   Returns....: *
 #
 ##########################################################################*/
-TPanelControl *TTableColumnFactory::Create(TTableControl *control, int xstart, int ystart, int height)
+TPanelControl *TTablePanelColumnFactory::Create(TTableControl *control, int xstart, int ystart, int height)
 {
-    return FFactory->CreatePanel(control, xstart, ystart, FWidth, height);
+	return FFactory->CreatePanel(control, xstart, ystart, FWidth, height);
 }
-    
+/*##########################################################################
+#
+#   Name       : TTableLabelColumnFactory::TTableLabelColumnFactory
+#
+#   Purpose....: Table label column factory constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTableLabelColumnFactory::TTableLabelColumnFactory(TLabelFactory *factory, int width)
+{
+	FFactory = factory;
+	FWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TTableLabelColumnFactory::~TTableLabelColumnFactory
+#
+#   Purpose....: Table label column factory desctructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTableLabelColumnFactory::~TTableLabelColumnFactory()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TTableLabelColumnFactory::GetWidth
+#
+#   Purpose....: Get control width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TTableLabelColumnFactory::GetWidth()
+{
+	return FWidth;
+}
+
+/*##########################################################################
+#
+#   Name       : TTableLabelColumnFactory::Create
+#
+#   Purpose....: Create element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelControl *TTableLabelColumnFactory::Create(TTableControl *control, int xstart, int ystart, int height)
+{
+	return FFactory->CreateLabel(control, xstart, ystart, FWidth, height);
+}
+
 /*##########################################################################
 #
 #   Name       : TTableRow::TTableRow
@@ -124,8 +187,9 @@ TTableRow::TTableRow(TTableControl *Table, int Row, int StartX, int StartY, int 
     {
         FStartX[col] = StartX;
         FSizeX[col] = 0;
-        FArr[col] = 0;
-    }
+		FPanelArr[col] = 0;
+		FLabelArr[col] = 0;
+	}
 
     FCount = 0;    
 }
@@ -146,45 +210,88 @@ TTableRow::~TTableRow()
     int col;
 
     for (col = 0; col < FCount; col++)
-        if (FArr[col])
-            delete FArr[col];
+	{
+		if (FLabelArr[col])
+			delete FLabelArr[col];
+		else
+		{
+			if (FPanelArr[col])
+				delete FPanelArr[col];
+		}
+	}
 }
-    
+
 /*##########################################################################
 #
-#   Name       : TTableRow::AddColumn
+#   Name       : TTableRow::AddPanelColumn
 #
-#   Purpose....: Add column control
+#   Purpose....: Add panel column control
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TTableRow::AddColumn(TTableColumnFactory *fact)
+void TTableRow::AddPanelColumn(TTablePanelColumnFactory *fact)
 {
-    int col;
-    int xstart;
+	int col;
+	int xstart;
 	TPanelControl *control;
-    int width = fact->GetWidth();
+	int width = fact->GetWidth();
 
-    col = FCount;
+	col = FCount;
 
-    if (col)
-        xstart = FStartX[col - 1]  + FSizeX[col - 1];
-    else
-        xstart = FStartX[0];
+	if (col)
+		xstart = FStartX[col - 1]  + FSizeX[col - 1];
+	else
+		xstart = FStartX[0];
 
-    FStartX[col] = xstart;
-    FSizeX[col] = width;
+	FStartX[col] = xstart;
+	FSizeX[col] = width;
 
-    control = fact->Create(FTable, xstart, FStartY, FSizeY);        
-    FArr[col] = control;
-    FCount++;
+	control = fact->Create(FTable, xstart, FStartY, FSizeY);
+	FPanelArr[col] = control;
+	FCount++;
 
-    CheckHeight();
+	CheckHeight();
 }
-    
+
+/*##########################################################################
+#
+#   Name       : TTableRow::AddLabelColumn
+#
+#   Purpose....: Add label column control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTableRow::AddLabelColumn(TTableLabelColumnFactory *fact)
+{
+	int col;
+	int xstart;
+	TLabelControl *control;
+	int width = fact->GetWidth();
+
+	col = FCount;
+
+	if (col)
+		xstart = FStartX[col - 1]  + FSizeX[col - 1];
+	else
+		xstart = FStartX[0];
+
+	FStartX[col] = xstart;
+	FSizeX[col] = width;
+
+	control = fact->Create(FTable, xstart, FStartY, FSizeY);
+	FLabelArr[col] = control;
+	FPanelArr[col] = control;
+	FCount++;
+
+	CheckHeight();
+}
+
 /*##########################################################################
 #
 #   Name       : TTableRow::GetColumns
@@ -203,23 +310,78 @@ int TTableRow::GetColumns()
     
 /*##########################################################################
 #
-#   Name       : TTableRow::GetControl
+#   Name       : TTableRow::GetPanelControl
 #
-#   Purpose....: Get column control
+#   Purpose....: Get panel column control
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPanelControl *TTableRow::GetControl(int column)
-{   
-    if (column >= 0 && column < MAX_TABLE_COLUMNS)
-        return FArr[column];
-    else
-        return 0;
+TPanelControl *TTableRow::GetPanelControl(int column)
+{
+	if (column >= 0 && column < MAX_TABLE_COLUMNS)
+		return FPanelArr[column];
+	else
+		return 0;
 }
-    
+
+/*##########################################################################
+#
+#   Name       : TTableRow::GetLabelControl
+#
+#   Purpose....: Get label column control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelControl *TTableRow::GetLabelControl(int column)
+{
+	if (column >= 0 && column < MAX_TABLE_COLUMNS)
+		return FLabelArr[column];
+	else
+		return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TTableRow::SetText
+#
+#   Purpose....: Set text for label control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTableRow::SetText(int column, TString &Text)
+{
+	if (column >= 0 && column < MAX_TABLE_COLUMNS)
+	    if (FLabelArr[column])
+	        FLabelArr[column]->SetText(Text);
+}
+
+/*##########################################################################
+#
+#   Name       : TTableRow::SetText
+#
+#   Purpose....: Set text for label control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTableRow::SetText(int column, const char *Text)
+{
+	if (column >= 0 && column < MAX_TABLE_COLUMNS)
+	    if (FLabelArr[column])
+	        FLabelArr[column]->SetText(Text);
+}
+
 /*##########################################################################
 #
 #   Name       : TTableRow::GetPos
@@ -277,19 +439,19 @@ void TTableRow::CheckHeight()
     height = 0;
 
     for (col = 0; col < FCount; col++)
-        if (FArr[col]->GetMinHeight() > height)
-            height = FArr[col]->GetMinHeight();
-            
-    if (height < FMinHeight)
-        height = FMinHeight;
+		if (FPanelArr[col]->GetMinHeight() > height)
+			height = FPanelArr[col]->GetMinHeight();
 
-    if (height > FMaxHeight)
-        height = FMaxHeight;
+	if (height < FMinHeight)
+		height = FMinHeight;
 
-    if (height != FSizeY)
+	if (height > FMaxHeight)
+		height = FMaxHeight;
+
+	if (height != FSizeY)
 		FTable->NotifyHeightChange(FRow, height);
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TTableControl::TTableControl
@@ -348,17 +510,24 @@ TTableControl::~TTableControl()
     int i;
     
 	for (i = 0; i < FColFactCount; i++)
-        if (FColFactArr[i])
-            delete FColFactArr[i];
+	{
+		if (FLabelColFactArr[i])
+			delete FLabelColFactArr[i];
+		else
+		{
+			if (FPanelColFactArr[i])
+				delete FPanelColFactArr[i];
+		}
+	}
 
-    for (i = 0; i < FRowCount; i++)
-        if (FRowArr[i])
-            delete FRowArr[i];
+	for (i = 0; i < FRowCount; i++)
+		if (FRowArr[i])
+			delete FRowArr[i];
 
-    if (FRowArr)
-        delete FRowArr;            
+	if (FRowArr)
+		delete FRowArr;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TTableControl::Init
@@ -378,39 +547,71 @@ void TTableControl::Init()
     FRowSize = 0;
     FRowArr = 0;
 }
-    
+
 /*##########################################################################
 #
-#   Name       : TTableControl::AddColumn
+#   Name       : TTableControl::AddPanelColumn
 #
-#   Purpose....: Add column to table
+#   Purpose....: Add panel column to table
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TTableControl::AddColumn(TPanelFactory *factory, int width)
+int TTableControl::AddPanelColumn(TPanelFactory *factory, int width)
 {
-    int row;
-    int col = FColFactCount;
-    TTableColumnFactory *fact;
-    
-    if (FColFactCount < MAX_TABLE_COLUMNS)
-    {
-        fact = new TTableColumnFactory(factory, width); 
-        FColFactArr[FColFactCount] = fact;
-        FColFactCount++;
+	int row;
+	int col = FColFactCount;
+	TTablePanelColumnFactory *fact;
 
-        for (row = 0; row < FRowCount; row++)
-            FRowArr[row]->AddColumn(fact);
-        
-        return col;
-    }
-    else
-        return -1;
+	if (FColFactCount < MAX_TABLE_COLUMNS)
+	{
+		fact = new TTablePanelColumnFactory(factory, width);
+		FPanelColFactArr[FColFactCount] = fact;
+		FColFactCount++;
+
+		for (row = 0; row < FRowCount; row++)
+			FRowArr[row]->AddPanelColumn(fact);
+
+		return col;
+	}
+	else
+		return -1;
 }
-    
+
+/*##########################################################################
+#
+#   Name       : TTableControl::AddLabelColumn
+#
+#   Purpose....: Add label column to table
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TTableControl::AddLabelColumn(TLabelFactory *factory, int width)
+{
+	int row;
+	int col = FColFactCount;
+	TTableLabelColumnFactory *fact;
+
+	if (FColFactCount < MAX_TABLE_COLUMNS)
+	{
+		fact = new TTableLabelColumnFactory(factory, width);
+		FLabelColFactArr[FColFactCount] = fact;
+		FColFactCount++;
+
+		for (row = 0; row < FRowCount; row++)
+			FRowArr[row]->AddLabelColumn(fact);
+
+		return col;
+	}
+	else
+		return -1;
+}
+
 /*##########################################################################
 #
 #   Name       : TTableControl::Grow
@@ -487,7 +688,15 @@ int TTableControl::AddRow(int MinHeight, int MaxHeight)
     FRowCount++;
 
 	for (col = 0; col < FColFactCount; col++)
-		row->AddColumn(FColFactArr[col]);
+	{
+		if (FLabelColFactArr[col])
+			row->AddLabelColumn(FLabelColFactArr[col]);
+		else
+		{
+			if (FPanelColFactArr[col])
+				row->AddPanelColumn(FPanelColFactArr[col]);
+		}
+	}
 
 	return ind;
 }
@@ -505,4 +714,76 @@ int TTableControl::AddRow(int MinHeight, int MaxHeight)
 ##########################################################################*/
 void TTableControl::NotifyHeightChange(int Row, int NewHeight)
 {
+}
+    
+/*##########################################################################
+#
+#   Name       : TTableControl::SetText
+#
+#   Purpose....: Set element text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTableControl::SetText(int row, int col, TString &Text)
+{
+    if (row >= 0 && row < FRowCount)
+        FRowArr[row]->SetText(col, Text);
+}
+    
+/*##########################################################################
+#
+#   Name       : TTableControl::SetText
+#
+#   Purpose....: Set element text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTableControl::SetText(int row, int col, const char *Text)
+{
+    if (row >= 0 && row < FRowCount)
+        FRowArr[row]->SetText(col, Text);
+}
+    
+/*##########################################################################
+#
+#   Name       : TTableControl::GetPanelControl
+#
+#   Purpose....: Get panel control for element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPanelControl *TTableControl::GetPanelControl(int row, int col)
+{
+    if (row >= 0 && row < FRowCount)
+        return FRowArr[row]->GetPanelControl(col);
+    else
+        return 0;
+}
+    
+/*##########################################################################
+#
+#   Name       : TTableControl::GetLabelControl
+#
+#   Purpose....: Get label control for element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLabelControl *TTableControl::GetLabelControl(int row, int col)
+{
+    if (row >= 0 && row < FRowCount)
+        return FRowArr[row]->GetLabelControl(col);
+    else
+        return 0;
 }

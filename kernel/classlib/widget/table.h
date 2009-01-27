@@ -30,24 +30,40 @@
 
 #include "bitdev.h"
 #include "panel.h"
+#include "label.h"
 #include "str.h"
 
 #define MAX_TABLE_COLUMNS   256
 
 class TTableControl;
 
-class TTableColumnFactory
+class TTablePanelColumnFactory
 {
 public:
-	TTableColumnFactory(TPanelFactory *factory, int width);
-	~TTableColumnFactory();
+	TTablePanelColumnFactory(TPanelFactory *factory, int width);
+	~TTablePanelColumnFactory();
 
-    TPanelControl *Create(TTableControl *control, int xstart, int ystart, int height);
+	TPanelControl *Create(TTableControl *control, int xstart, int ystart, int height);
+
+	int GetWidth();
+
+protected:
+	TPanelFactory *FFactory;
+	int FWidth;
+};
+
+class TTableLabelColumnFactory
+{
+public:
+	TTableLabelColumnFactory(TLabelFactory *factory, int width);
+	~TTableLabelColumnFactory();
+
+    TLabelControl *Create(TTableControl *control, int xstart, int ystart, int height);
 
     int GetWidth();
     
 protected:
-    TPanelFactory *FFactory;    
+    TLabelFactory *FFactory;    
     int FWidth;
 };
 
@@ -57,10 +73,16 @@ public:
 	TTableRow(TTableControl *Table, int Row, int StartX, int StartY, int MinHeight, int MaxHeight);
 	~TTableRow();
 
-	void AddColumn(TTableColumnFactory *fact);
+	void AddPanelColumn(TTablePanelColumnFactory *fact);
+	void AddLabelColumn(TTableLabelColumnFactory *fact);
 
 	int GetColumns();
-	TPanelControl *GetControl(int Column);
+
+	TPanelControl *GetPanelControl(int Column);
+	TLabelControl *GetLabelControl(int Column);
+
+    void SetText(int col, TString &Text);
+    void SetText(int col, const char *Text);
 
 	void GetPos(int *x, int *y);
 	void GetSize(int *x, int *y);
@@ -80,7 +102,8 @@ protected:
     int FMaxHeight;
 
     int FCount;
-	TPanelControl *FArr[MAX_TABLE_COLUMNS];
+	TPanelControl *FPanelArr[MAX_TABLE_COLUMNS];
+	TLabelControl *FLabelArr[MAX_TABLE_COLUMNS];
 };
 
 class TTableControl : public TPanelControl
@@ -91,10 +114,16 @@ public:
     TTableControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
     ~TTableControl();
 
-    int AddColumn(TPanelFactory *factory, int width);
+    int AddPanelColumn(TPanelFactory *factory, int width);
+    int AddLabelColumn(TLabelFactory *factory, int width);
+    
     int AddRow(int MinHeight, int MaxHeight);
 
-    TPanelControl *GetControl(int row, int col);
+    void SetText(int row, int col, TString &Text);
+    void SetText(int row, int col, const char *Text);
+
+    TPanelControl *GetPanelControl(int row, int col);
+    TLabelControl *GetLabelControl(int row, int col);
 
 protected:
     void NotifyHeightChange(int row, int height);
@@ -104,7 +133,8 @@ private:
     void Grow();
 
     int FColFactCount;
-    TTableColumnFactory *FColFactArr[MAX_TABLE_COLUMNS];
+	TTablePanelColumnFactory *FPanelColFactArr[MAX_TABLE_COLUMNS];
+    TTableLabelColumnFactory *FLabelColFactArr[MAX_TABLE_COLUMNS];
 
     int FRowCount;
     int FRowSize;
