@@ -8,7 +8,8 @@
 #DEFINE PAGE1   BSF 3,5
 
 NODEID:	EQU 0x10
-DELAY_TICS:	EQU .200
+
+PwmPeriod   EQU .50
 
 AL:			EQU 0x0C
 DL:			EQU 0x0D
@@ -23,18 +24,27 @@ CMD:		EQU 0x15
 T0:			EQU 0x16
 T1:			EQU 0x17
 T2:			EQU 0x18
-TMRCNT		EQU 0x19
-CLKCNT		EQU 0x1A
-STATE		EQU 0x1B
-BIT			EQU 0x1C
-FLREG		EQU 0x1D
-SEC			EQU 0x1E
-FLVAL  	 	EQU 0x1F
+
+LedState    EQU 0x19
+LedCnt      EQU 0x1A
+
+PwmCnt      EQU 0x1B
+PwmVal0     EQU 0x1C
+PwmVal1     EQU 0x1D
+PwmVal2     EQU 0x1E
+PwmVal3     EQU 0x1F
 
 LightLow	EQU 0x20
 LightHigh	EQU 0x21
 DummyVal	EQU 0x22
+Period      EQU 0x23
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Startup
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	        org 4
     	    org 5
@@ -46,35 +56,62 @@ RESET:		PAGE1
 			movlw b'11110000'
 			movwf TRISB
 
-	        movlw b'10000100' ;move ratio value into W
-    	    movwf OPTION_REG    ;set timer ratio to 1:32 (TMR0 rate)
+	        movlw b'10001000' 
+    	    movwf OPTION_REG    ;set timer to fosc / 4
 
 			PAGE0
 			clrf PORTA
 			clrf PORTB
-;
-			movlw .152
-			movwf TMRCNT
 			bcf INTCON,2
 ;
 			movlw 0xFF
 			movwf TEMP
 ;
-			movlw DELAY_TICS
-			movwf CLKCNT
-
-			clrf STATE
-			clrf SEC
+            movlw .5
+            movwf Period
+;
+            clrf LedState
+            clrf PwmCnt
+            clrf PwmVal1
+            clrf PwmVal2
+            clrf PwmVal3
+;
+            movlw PwmPeriod
+            movwf PwmVal0
+;
+            movf Period,W            
+            movwf LedCnt
 ;
 			clrf LightLow
 			clrf LightHigh
 			clrf DummyVal
 ;
-            movlw 1
-            movwf PORTB			
-;
 			goto ILOOP
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; position dependent code starts here
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateLedState
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLedState:
+            movf LedState,W
+            addwf PCL,F
+            goto UpdateLed0
+            goto UpdateLed1
+            goto UpdateLed2
+            goto UpdateLed3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleRead
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleRead:
 			movf CHAN,W
@@ -88,10 +125,16 @@ HandleRead:
 			goto DummyRead      ; 6
 			goto DummyRead      ; 7
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; HandleWrite
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 HandleWrite:
 			movf CHAN,W
 			addwf PCL,F
-			goto DummyWrite       ; 0
+			goto WritePeriod    ; 0
 			goto DummyWrite     ; 1
 			goto DummyWrite     ; 2
 			goto WriteLight     ; 3
@@ -100,14 +143,32 @@ HandleWrite:
 			goto DummyWrite     ; 6
 			goto DummyWrite     ; 7
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; DummyRead
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 DummyRead:
 			clrf T0
 			clrf T1
 			clrf T2
 			return
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; DummyWrite
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 DummyWrite:
 			return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteLight
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteLight:
             movf T0,W
@@ -115,8 +176,85 @@ WriteLight:
             movf T1,W
             movwf LightHigh
 			return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WritePeriod
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePeriod:
+            movf T0,W
+            movwf Period
+			return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateLed0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLed0:
+            incf PwmVal1,F
+            decf PwmVal0,F
+            btfss STATUS,Z
+			return
+;
+            incf LedState,F			
+            return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateLed1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLed1:
+            incf PwmVal2,F
+            decf PwmVal1,F
+            btfss STATUS,Z
+			return
+;
+            incf LedState,F			
+            return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateLed2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLed2:
+            incf PwmVal3,F
+            decf PwmVal2,F
+            btfss STATUS,Z
+			return
+;
+            incf LedState,F			
+			return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateLed3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLed3:
+            incf PwmVal0,F
+            decf PwmVal3,F
+            btfss STATUS,Z
+			return
+;
+            clrf LedState			
+			return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; MainLoop
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			
-ILOOP:		call POLLTIMER
+ILOOP:		call PollTimer
 			btfss PORTA,0
 			goto ILOOP
 
@@ -128,7 +266,7 @@ REMOTE:		clrf PORTA
 PREAMP:		btfss PORTA,1
 			goto ILOOP
 
-			call WAITCLK
+			call WaitClk
 			
 			decfsz COUNT,F
 			goto PREAMP
@@ -136,7 +274,7 @@ PREAMP:		btfss PORTA,1
 WAITST:		btfss PORTA,1
 			goto STARTID
 
-			call WAITCLK
+			call WaitClk
 			goto WAITST
 
 STARTID:	clrf CRC
@@ -144,14 +282,14 @@ STARTID:	clrf CRC
 			movlw 6
 			movwf COUNT
 
-IDLOOP:		call WAITCLK
-			call UPDATEVAL
-			call UPDATECRC
+IDLOOP:		call WaitClk
+			call UpdateVal
+			call UpdateCrc
 
 			decfsz COUNT,F
 			goto IDLOOP
 
-IDDONE:		call WAITCLK
+IDDONE:		call WaitClk
 
 			btfsc PORTA,1
 			goto LOOPHI
@@ -168,13 +306,13 @@ IDDONE:		call WAITCLK
 			movwf COUNT
 			clrf VAL
 
-IDCRCLOOP:	call WAITCLK
-			call UPDATEVAL
+IDCRCLOOP:	call WaitClk
+			call UpdateVal
 
 			decfsz COUNT,F
 			goto IDCRCLOOP
 
-IDCRCDONE:	call WAITCLK
+IDCRCDONE:	call WaitClk
 
 			btfsc PORTA,1
 			goto LOOPHI
@@ -196,14 +334,14 @@ IDCRCDONE:	call WAITCLK
 			clrf VAL
 			clrf CRC
 
-DEVLOOP:	call WAITCLK
-			call UPDATEVAL
-			call UPDATECRC
+DEVLOOP:	call WaitClk
+			call UpdateVal
+			call UpdateCrc
 
 			decfsz COUNT,F
 			goto DEVLOOP
 
-			call WAITCLK
+			call WaitClk
 
 			btfsc PORTA,1
 			goto LOOPHI
@@ -228,13 +366,13 @@ DEVLOOP:	call WAITCLK
 			movwf COUNT
 			clrf VAL
 
-DEVCRCLOOP:	call WAITCLK
-			call UPDATEVAL
+DEVCRCLOOP:	call WaitClk
+			call UpdateVal
 
 			decfsz COUNT,F
 			goto DEVCRCLOOP
 
-DEVCRCDONE:	call WAITCLK
+DEVCRCDONE:	call WaitClk
 
 			btfsc PORTA,1
 			goto LOOPHI
@@ -251,51 +389,94 @@ DEVCRCDONE:	call WAITCLK
 DEVDONE:	movlw 2
 			xorwf CMD,W
 			btfsc STATUS,Z
-			call READCMD
+			call ReadCmd
 
 			movlw 3
 			xorwf CMD,W
 			btfsc STATUS,Z
-			call WRITECMD
+			call WriteCmd
 
 LOOPHI:		clrf PORTA
 
-LOOPH:		call POLLTIMER
+LOOPH:		call PollTimer
 			btfsc PORTA,0
 			goto LOOPH
 			goto ILOOP
-			
-POLLTIMER:	decfsz CLKCNT,F
-			return
-;
-			movlw DELAY_TICS
-			movwf CLKCNT
 
-POLLTIM:	btfss INTCON,2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; PollTimer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+PollTimer:	btfss INTCON,2
 			return
 
 			bcf INTCON,2
 ;
-			decfsz TMRCNT,F
-			goto DoIdle
-			goto DoSec
-
-DoIdle:
-			return
-
-DoSec:
-			movlw DELAY_TICS
-			movwf CLKCNT
-			
-			movlw .153
-			movwf TMRCNT
+            incf PwmCnt,F
+            movlw PwmPeriod
+            xorwf PwmCnt,W
+            btfss STATUS,Z
+            goto UpdatePwm
 ;
-			bsf SEC,7
-			return
+            decf LedCnt,F
+            btfss STATUS,Z
+            goto ResetPwm            
+;
+            movf Period,W
+            movwf LedCnt
+            call UpdateLedState            
 
-DELAY:		return
+ResetPwm:
+            clrf PwmCnt
+;            
+            movf PwmVal0,W
+            btfss STATUS,Z
+            bsf PORTB,0            
+;            
+            movf PwmVal1,W
+            btfss STATUS,Z
+            bsf PORTB,1           
+;                        
+            movf PwmVal2,W
+            btfss STATUS,Z
+            bsf PORTB,2           
+;            
+            movf PwmVal3,W
+            btfss STATUS,Z
+            bsf PORTB,3           
+            return
 
-UPDATECRC:	andlw 1
+UpdatePwm:
+            movf PwmVal0,W
+            subwf PwmCnt,W
+            btfsc STATUS,Z
+            bcf PORTB,0
+;            
+            movf PwmVal1,W
+            subwf PwmCnt,W
+            btfsc STATUS,Z
+            bcf PORTB,1
+;            
+            movf PwmVal2,W
+            subwf PwmCnt,W
+            btfsc STATUS,Z
+            bcf PORTB,2
+;            
+            movf PwmVal3,W
+            subwf PwmCnt,W
+            btfsc STATUS,Z
+            bcf PORTB,3
+            return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateCrc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCrc:	andlw 1
 			movwf BITS
 			clrf TEMP
 			bcf STATUS,C
@@ -309,16 +490,28 @@ UPDATECRC:	andlw 1
 			xorwf CRC,F
 			return
 
-WAITCLK:	call POLLTIMER
-			btfsc PORTA,0
-			goto WAITCLK
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WaitClk
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WCLKLOW:	call POLLTIMER
+WaitClk:	call PollTimer
+			btfsc PORTA,0
+			goto WaitClk
+
+WCLKLOW:	call PollTimer
 			btfss PORTA,0
 			goto WCLKLOW
 			return
 
-UPDATEVAL:  movf PORTA,W
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateVal
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateVal:  movf PORTA,W
 			movwf TEMP
 			btfsc TEMP,1
 			goto VALSET
@@ -332,13 +525,19 @@ UPDATEDO:	rrf VAL,F
 			rrf TEMP,W
 			return
 
-READCMD:	movlw .24
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ReadCmd
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadCmd:	movlw .24
 			movwf COUNT
 			call HandleRead
 			clrf CRC
 
 RDVALLOOP:	movf T0,W
-			call UPDATECRC
+			call UpdateCrc
 
 			rrf T2,F
 			rrf T1,F
@@ -351,7 +550,7 @@ RDVALSET:	bsf PORTA,2
 
 RDVALRESET:	bcf PORTA,2
 
-RDVALNEXT:	call WAITCLK
+RDVALNEXT:	call WaitClk
 			btfsc PORTA,1
 			return
 
@@ -374,7 +573,7 @@ RDCRCSET:	bsf PORTA,2
 
 RDCRCRESET:	bcf PORTA,2
 
-RDCRCNEXT:	call WAITCLK
+RDCRCNEXT:	call WaitClk
 			btfsc PORTA,1
 			return
 
@@ -382,7 +581,13 @@ RDCRCCONT:	decfsz COUNT,F
 			goto RDCRCLOOP
 			return
 
-UPDWRVAL:   movf PORTA,W
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdWrVal
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdWrVal:   movf PORTA,W
 			movwf TEMP
 			btfsc TEMP,1
 			goto UPDWRSET
@@ -398,7 +603,13 @@ UPDWRDO:	rrf T2,F
 			rrf TEMP,W
 			return
 
-WRITECMD:	clrf T0
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; WriteCmd
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCmd:	clrf T0
 			clrf T1
 			clrf T2
 			clrf CRC
@@ -406,14 +617,14 @@ WRITECMD:	clrf T0
 			movlw 6
 			movwf COUNT
 
-WRLOOP1:	call WAITCLK
-			call UPDWRVAL
-			call UPDATECRC
+WRLOOP1:	call WaitClk
+			call UpdWrVal
+			call UpdateCrc
 
 			decfsz COUNT,F
 			goto WRLOOP1
 
-			call WAITCLK
+			call WaitClk
 
 			btfsc PORTA,1
 			return
@@ -421,14 +632,14 @@ WRLOOP1:	call WAITCLK
 WRNEXT1:	movlw 6
 			movwf COUNT
 
-WRLOOP2:	call WAITCLK
-			call UPDWRVAL
-			call UPDATECRC
+WRLOOP2:	call WaitClk
+			call UpdWrVal
+			call UpdateCrc
 
 			decfsz COUNT,F
 			goto WRLOOP2
 
-			call WAITCLK
+			call WaitClk
 
 			btfsc PORTA,1
 			return
@@ -436,14 +647,14 @@ WRLOOP2:	call WAITCLK
 WRNEXT2:	movlw 6
 			movwf COUNT
 
-WRLOOP3:	call WAITCLK
-			call UPDWRVAL
-			call UPDATECRC
+WRLOOP3:	call WaitClk
+			call UpdWrVal
+			call UpdateCrc
 
 			decfsz COUNT,F
 			goto WRLOOP3
 
-			call WAITCLK
+			call WaitClk
 
 			btfsc PORTA,1
 			return
@@ -451,14 +662,14 @@ WRLOOP3:	call WAITCLK
 WRNEXT3:	movlw 6
 			movwf COUNT
 
-WRLOOP4:	call WAITCLK
-			call UPDWRVAL
-			call UPDATECRC
+WRLOOP4:	call WaitClk
+			call UpdWrVal
+			call UpdateCrc
 
 			decfsz COUNT,F
 			goto WRLOOP4
 
-			call WAITCLK
+			call WaitClk
 
 			btfsc PORTA,1
 			return
@@ -467,13 +678,13 @@ WRNEXT4:	movlw 6
 			movwf COUNT
 			clrf VAL
 
-WRCRCLOOP:	call WAITCLK
-			call UPDATEVAL
+WRCRCLOOP:	call WaitClk
+			call UpdateVal
 
 			decfsz COUNT,F
 			goto WRCRCLOOP
 
-WRCRCDONE:	call WAITCLK
+WRCRCDONE:	call WaitClk
 
 			btfsc PORTA,1
 			return
