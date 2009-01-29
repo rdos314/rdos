@@ -67,7 +67,7 @@ RESET:		PAGE1
 			movlw 0xFF
 			movwf TEMP
 ;
-            movlw .5
+            movlw .25
             movwf Period
 ;
             clrf LedState
@@ -102,10 +102,12 @@ RESET:		PAGE1
 UpdateLedState:
             movf LedState,W
             addwf PCL,F
-            goto UpdateLed0
-            goto UpdateLed1
-            goto UpdateLed2
-            goto UpdateLed3
+            goto UpdateLedFw0
+            goto UpdateLedFw1
+            goto UpdateLedFw2
+            goto UpdateLedRv2
+            goto UpdateLedRv1
+            goto UpdateLedRv0            
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -190,11 +192,11 @@ WritePeriod:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; UpdateLed0
+; UpdateLedFw0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateLed0:
+UpdateLedFw0:
             incf PwmVal1,F
             decf PwmVal0,F
             btfss STATUS,Z
@@ -205,11 +207,11 @@ UpdateLed0:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; UpdateLed1
+; UpdateLedFw1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateLed1:
+UpdateLedFw1:
             incf PwmVal2,F
             decf PwmVal1,F
             btfss STATUS,Z
@@ -220,11 +222,11 @@ UpdateLed1:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; UpdateLed2
+; UpdateLedFw2
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateLed2:
+UpdateLedFw2:
             incf PwmVal3,F
             decf PwmVal2,F
             btfss STATUS,Z
@@ -235,13 +237,43 @@ UpdateLed2:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; UpdateLed3
+; UpdateLedRv2
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateLed3:
-            incf PwmVal0,F
+UpdateLedRv2:
+            incf PwmVal2,F
             decf PwmVal3,F
+            btfss STATUS,Z
+			return
+;
+            incf LedState,F			
+			return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateLedRv1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLedRv1:
+            incf PwmVal1,F
+            decf PwmVal2,F
+            btfss STATUS,Z
+			return
+;
+            incf LedState,F			
+			return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UpdateLedRv0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLedRv0:
+            incf PwmVal0,F
+            decf PwmVal1,F
             btfss STATUS,Z
 			return
 ;
