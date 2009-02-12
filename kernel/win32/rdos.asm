@@ -5622,6 +5622,22 @@ RdosGetIp	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosGetGateway
+;
+;		DESCRIPTION:	Get gateway IP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetGateway
+
+RdosGetGateway	PROC
+	UserGate get_gateway_nr
+	mov eax,edx
+	ret
+RdosGetGateway	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosIpToName
 ;
 ;		DESCRIPTION:	Convert IP address to host name

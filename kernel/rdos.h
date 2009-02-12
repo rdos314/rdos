@@ -219,6 +219,7 @@ void __stdcall RdosFreeSignal(int Handle);
 void __stdcall RdosAddWaitForSignal(int Handle, int SignalHandle, void *ID);
 
 long __stdcall RdosGetIp();
+long __stdcall RdosGetGateway();
 int __stdcall RdosNameToIp(const char *HostName);
 int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);
 

@@ -46,6 +46,7 @@
 TSocket::TSocket(int Handle)
 {
 	FHandle = Handle;
+	Open();
 }
 
 /*##########################################################################
@@ -66,6 +67,7 @@ TSocket::TSocket(int Handle)
 TSocket::TSocket(long IP, int Port, int Timeout, int BufferSize)
 {
 	FHandle = RdosOpenTcpConnection(IP, 0, Port, Timeout, BufferSize);
+	Open();
 }
 
 /*##########################################################################
@@ -87,6 +89,7 @@ TSocket::TSocket(long IP, int Port, int Timeout, int BufferSize)
 TSocket::TSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize)
 {
 	FHandle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
+    Open();	
 }
 
 /*##########################################################################
@@ -152,10 +155,23 @@ void TSocket::Add(TWait *Wait)
 *##########################################################################*/
 int TSocket::IsOpen() const
 {
-	if (FHandle)
-		return !RdosIsTcpConnectionClosed(FHandle);
-	else
+    if (TDevice::IsOpen() && FHandle)
+	    return !RdosIsTcpConnectionClosed(FHandle);
+    else    
 	    return FALSE;
+}
+
+/*##################  TSocket::NotifyClose  ############################
+*   Purpose....: Notify socket closed		                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSocket::NotifyClose()
+{
+	if (FHandle)
+		RdosCloseTcpConnection(FHandle);
 }
 
 /*##################  TSocket::GetLocalIP  ############################
