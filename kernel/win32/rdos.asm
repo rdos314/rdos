@@ -789,6 +789,180 @@ RdosAppDebug	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosGetThreadLinear
+;
+;		description:	Get thread linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetThreadLinear
+
+RdosGetThreadLinear	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push esi
+;
+	mov bx,[ebp+8]
+	mov dx,[ebp+12]
+	mov esi,[ebp+16]
+	UserGate get_thread_linear_nr
+	jc gthlFail
+;
+    mov eax,edx
+    jmp gthlDone
+
+gthlFail:
+    xor eax,eax
+
+gthlDone:
+	pop esi
+	pop ebx
+	pop ebp
+	ret 12
+RdosGetThreadLinear	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosReadThreadMem
+;
+;		description:	Read thread memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReadThreadMem
+
+RdosReadThreadMem	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push esi
+	push edi
+;
+	mov bx,[ebp+8]
+	mov dx,[ebp+12]
+	mov esi,[ebp+16]
+	mov edi,[ebp+20]
+	mov ecx,[ebp+24]
+	UserGate read_thread_mem_nr
+;
+	pop edi
+	pop esi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 20
+RdosReadThreadMem	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosWriteThreadMem
+;
+;		description:	Write thread memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteThreadMem
+
+RdosWriteThreadMem	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push esi
+	push edi
+;
+	mov bx,[ebp+8]
+	mov dx,[ebp+12]
+	mov esi,[ebp+16]
+	mov edi,[ebp+20]
+	mov ecx,[ebp+24]
+	UserGate write_thread_mem_nr
+;
+	pop edi
+	pop esi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 20
+RdosWriteThreadMem	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetDebugThread
+;
+;		description:	Get debug thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetDebugThread
+
+RdosGetDebugThread	Proc
+	UserGate get_debug_thread_nr
+	ret
+RdosGetDebugThread	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetThreadTss
+;
+;		description:	Read thread TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetThreadTss
+
+RdosGetThreadTss	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov edi,[ebp+12]
+	UserGate get_thread_tss_nr
+;
+	pop edi
+	pop ebx
+	pop ebp
+	ret 8
+RdosGetThreadTss	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetThreadTss
+;
+;		description:	Write thread TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetThreadTss
+
+RdosSetThreadTss	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov edi,[ebp+12]
+	UserGate set_thread_tss_nr
+;
+	pop edi
+	pop ebx
+	pop ebp
+	ret 8
+RdosSetThreadTss	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosWaitMilli
 ;
 ;		description:	Wait a number of milliseconds

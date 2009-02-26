@@ -836,6 +836,13 @@ NotifyPeException MACRO
 	UserGate notify_pe_exception_nr
 						ENDM
 
+;  IN  DX:ESI	Selector:Offset
+;  IN  BX		Thread
+;  OUT EDX      Linear address
+GetThreadLinear	MACRO
+	UserGate get_thread_linear_nr
+					ENDM
+
 ;  IN  (E)CX	Number of bytes
 ;  IN  DX:ESI	Address to read at
 ;  IN  ES:(E)DI	Buffer

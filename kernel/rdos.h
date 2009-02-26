@@ -44,6 +44,50 @@ typedef struct ThreadState
 	 short int Sel;
 } ThreadState;
 
+typedef struct Tss
+{
+    long BackLink;
+    long esp0;
+    long ess0;
+    long esp1;
+    long ess1;
+    long esp2;
+    long ess2;
+    long cr3;
+    long eip;
+    long eflags;
+    long eax;
+    long ecx;
+    long edx;
+    long ebx;
+    long esp;
+    long ebp;
+    long esi;
+    long edi;
+    long es;
+    long cs;
+    long ss;
+    long ds;
+    long fs;
+    long gs;
+    long ldt;
+    short int t;
+    short int bitmap;
+    long dr[4];
+    long dr7;
+    long MathControl;
+    long MathStatus;
+    long MathTag;
+    long MathEip;
+    short int MathCs;
+    char MathOp[2];
+    long MathDataOffs;
+    long MathDataSel;
+    long double st[8];
+    short int MathPrevOp;
+    char guard[16];
+} Tss;
+
 #ifndef __GNUC__
 #if (sizeof(int) == 2)
 #define __stdcall
@@ -99,6 +143,13 @@ int __stdcall RdosGetMemSize(void *ptr);
 void *__stdcall RdosAllocateMem(int Size);
 void __stdcall RdosFreeMem(void *ptr);
 int __stdcall RdosAppDebug();
+
+long __stdcall RdosGetThreadLinear(int Thread, int Sel, long Offset);
+int __stdcall RdosReadThreadMem(int Thread, int Sel, long Offset, char *Buf, int Size);
+int __stdcall RdosWriteThreadMem(int Thread, int Sel, long Offset, char *Buf, int Size);
+int __stdcall RdosGetDebugThread();
+void __stdcall RdosGetThreadTss(int Thread, Tss *tss);
+void __stdcall RdosSetThreadTss(int Thread, Tss *tss);
 
 int __stdcall RdosGetFreePhysical();
 int __stdcall RdosGetFreeGdt();

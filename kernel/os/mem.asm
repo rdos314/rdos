@@ -378,6 +378,12 @@ init_mem	PROC near
 	mov ax,free_page_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET get_thread_linear
+	mov di,OFFSET get_thread_linear_name
+	xor dx,dx
+	mov ax,get_thread_linear_nr
+	RegisterBimodalUserGate
+;
 	mov bx,OFFSET read_thread_mem16
 	mov si,OFFSET read_thread_mem32
 	mov di,OFFSET read_thread_mem_name
@@ -3260,6 +3266,44 @@ validate_thread_done:
 	mov al,'!'
 	ret
 validate_thread_selector	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetThreadLinear
+;
+;		DESCRIPTION:	Get linear base for selector:offset from another thread
+;
+;		PARAMETERS:		DX:ESI		Selector:offset in thread
+;						BX			Thread
+;
+;		RETURNS:		NC			Valid
+;                           EDX     Base linear
+;						CY			Invalid
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_linear_name	DB 'Get Thread Linear',0
+
+get_thread_linear	PROC far
+	push ds
+	push es
+	push ax
+;
+	mov ax,process_page_sel
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+;
+	call validate_thread_selector
+;
+	pop ax
+	pop es
+	pop ds
+	ret
+get_thread_linear	ENDP
 
 PAGE
 
