@@ -53,17 +53,18 @@ void cdecl main()
 	TWait Wait;
 	TKeyboardDevice Keyboard;
 
-	TSerialDevice Port1(1, 4800, 'E', 7, 1);
-	TSerialDevice Port2(4, 4800, 'E', 7, 1);
+	TSerialDevice Port1(2, 19200, 'N', 8, 1);
+//	TSerialDevice Port2(4, 4800, 'E', 7, 1);
 
 	Port1.Open();
-	Port2.Open();
+//	Port2.Open();
 
 	Wait.Add(&Port1);
-	Wait.Add(&Port2);
+//	Wait.Add(&Port2);
 	Wait.Add(&Keyboard);
 
-	TFile *File = GetFile();
+//	TFile *File = GetFile();
+	TFile *File = new TFile("raw.dat", 0);
 
 	for (;;)
 	{
@@ -77,14 +78,14 @@ void cdecl main()
 			RdosSetForeColor(9);
 		}
 
-		if (WaitDevice == &Port2)
-		{
-			RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
-			Debug.Channel = 2;
-			Debug.ch = Port2.Read();
-			File->Write(&Debug, sizeof(Debug));
-			RdosSetForeColor(11);
-		}
+//		if (WaitDevice == &Port2)
+//		{
+//			RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
+//			Debug.Channel = 2;
+//			Debug.ch = Port2.Read();
+//			File->Write(&Debug, sizeof(Debug));
+//			RdosSetForeColor(11);
+//		}
 
 		if (WaitDevice == &Keyboard)
 		{

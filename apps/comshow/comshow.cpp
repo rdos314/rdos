@@ -34,15 +34,7 @@
 #include "file.h"
 #include "cbus.h"
 #include "sernet.h"
-#include "bar.h"
-#include "compac.h"
 #include "netana.h"
-#include "zap.h"
-#include "cotana.h"
-#include "tatsuno.h"
-#include "devana.h"
-#include "waynecl.h"
-#include "flintab.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -64,7 +56,7 @@ void cdecl main()
 
 //	TFile RawFile("cotex.dat");
 //	TFile RawBarFile("z:\\bar.dat");
-	TFile RawFile("z:\\raw.dat");
+	TFile RawFile("raw.dat");
 //	TFile RawFile("z:\\net.log");
 //	TFile RawFile("z:\\compacpu.dat");
 //	TFile RawFile("z:\\flintab.dat");
@@ -102,9 +94,10 @@ void cdecl main()
 //	analyzer.DefineLogFile("device.txt");
 //	analyzer.DefineLogFile("atcl.txt");
 //	analyzer.DefineLogFile("wayne.txt");
-	analyzer.DefineLogFile("spp.txt");
+//	analyzer.DefineLogFile("spp.txt");
 //	analyzer.DefineLogFile("ws2000.txt");
 //	analyzer.DefineLogFile("flintab.txt");
+	analyzer.DefineLogFile("rfid.txt");
 
 	for (;;)
 	{
