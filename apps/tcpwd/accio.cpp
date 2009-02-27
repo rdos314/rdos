@@ -40,7 +40,7 @@ unsigned ReqFile_get_config( void )
 {
     file_get_config_ret *ret;
 
-    ret = GetOutPtr( 0 );
+    ret = (file_get_config_ret *)GetOutPtr( 0 );
 
     ret->file.ext_separator = '.';
     ret->file.path_separator[0] = '\\';
@@ -54,10 +54,10 @@ unsigned ReqFile_get_config( void )
 unsigned ReqRead_user_keyboard( void )
 {
     read_user_keyboard_req  *acc;
-    read_user_keyboard_ret  *ret;
+	read_user_keyboard_ret  *ret;
 
-    acc = GetInPtr( 0 );
-    ret = GetOutPtr( 0 );
+	acc = (read_user_keyboard_req *)GetInPtr( 0 );
+    ret = (read_user_keyboard_ret *)GetOutPtr( 0 );
 
 	if (RdosPollKeyboard())
 		ret->key = (char)RdosReadKeyboard();
