@@ -157,7 +157,7 @@ ExceptionEvent Proc near
 	push di
 ;
 	push eax
-	mov eax,SIZE exc_event_struc
+	mov eax,SIZE exception_event_struc
 	mov di,SIZE event_struc
 	add ax,di
 	AllocateSmallGlobalMem
@@ -596,6 +596,8 @@ InsertApp	Proc near
 	mov word ptr ds:app_spawn_proc+2,cs
 	mov word ptr ds:app_close_proc,OFFSET close_proc
 	mov word ptr ds:app_close_proc+2,cs
+	mov word ptr ds:app_create_handle_proc,OFFSET create_handle_proc
+	mov word ptr ds:app_create_handle_proc+2,cs
 	mov word ptr ds:app_loader_name,OFFSET pe_loader_name
 	mov word ptr ds:app_loader_name+2,cs
 ;
@@ -2276,6 +2278,12 @@ InitStack	Proc near
 	push edx
 	push esi
 ;
+    int 3
+    push bx
+    mov bx,es
+    CreateModuleHandle
+    pop bx
+;
 	push ds
 	push bx
 	mov eax,1000h
@@ -2920,6 +2928,23 @@ spawn_param_ok:
 spawn_no_debug:
 	ret
 spawn_proc	Endp
+
+PAGE
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			create_handle_proc
+;
+;		DESCRIPTION:    Create handle for application
+;
+;		PARAMETERS:
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_handle_proc	Proc far
+    ret
+create_handle_proc  Endp
 
 PAGE
                                            

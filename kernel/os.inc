@@ -657,14 +657,6 @@ SignalWait	MACRO
 	OsGate signal_wait_nr
 					ENDM
 
-EnterIrq	MACRO
-	OsGate enter_irq_nr
-					ENDM
-
-LeaveIrq	MACRO
-	OsGate leave_irq_nr
-					ENDM
-
 ;       ES:(E)DI        NAME OF SECTION
 InitSection     MACRO section
 	mov section.cs_value,0
@@ -1545,6 +1537,12 @@ ChainApp	MACRO
 
 CloseApp	MACRO
 	OsGate close_app_nr
+					ENDM
+
+; IN  BX Lib sel
+; OUT BX Handle
+CreateModuleHandle	MACRO
+	OsGate create_module_handle_nr
 					ENDM
 
 ;;;;;;;;;;;; FOCUS ;;;;;;;;;;;;;

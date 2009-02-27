@@ -38,6 +38,7 @@ INCLUDE ..\driver.def
 INCLUDE int.def
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE ..\handle.inc
 
 app_data_seg	STRUC
 
@@ -50,6 +51,16 @@ open_app_arr		DW 2*8 DUP(?)
 close_app_arr		DW 2*8 DUP(?)
 
 app_data_seg	ENDS
+
+
+module_handle_seg		STRUC
+
+mh_base	handle_header <>
+
+mh_lib_sel      DW ?
+
+module_handle_seg		ENDS
+
 
 	.386p
 
@@ -107,6 +118,12 @@ init_app	PROC near
 	mov di,OFFSET close_app_name
 	xor cl,cl
 	mov ax,close_app_nr
+	RegisterOsGate
+;
+	mov si,OFFSET create_module_handle
+	mov di,OFFSET create_module_handle_name
+	xor cl,cl
+	mov ax,create_module_handle_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET hook_open_app
@@ -171,11 +188,54 @@ init_app	PROC near
 	mov ds:close_app_hooks,al
 	mov ds:app_alloc_base,app_linear + SIZE app_seg
 ;
+	mov di,OFFSET delete_handle
+	mov ax,MODULE_HANDLE
+	RegisterHandle
+;
 	popa
 	pop es
 	pop ds
 	ret
 init_app	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Delete_handle
+;
+;		DESCRIPTION:	Delete module handle (called from handle module)
+;
+;		PARAMETERS:		BX			FILE HANDLE
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle	Proc far
+	push ds
+	push bx
+	push si
+;
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+    mov ax,ds:[bx].mh_lib_sel
+    or ax,ax
+    jz delete_handle_handle
+;
+    int 3    
+
+delete_handle_handle:
+	FreeHandle
+	clc
+
+delete_handle_done:
+	pop si
+	pop bx
+	pop ds
+	ret
+delete_handle	Endp
 
 PAGE
 
@@ -335,6 +395,7 @@ run_open_hooks	Proc near
 	mov ds:app_free_thread_proc,0
 	mov ds:app_spawn_proc,0
 	mov ds:app_close_proc,0
+	mov ds:app_create_handle_proc,0
 ;
 	mov ax,app_data_sel
 	mov ds,ax
@@ -539,6 +600,52 @@ close_app_ldt:
 	sti
 	ret
 close_app	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateModuleHandle
+;
+;		DESCRIPTION:	Create handle for a module
+;
+;       PARAMETERS:     BX      Lib sel
+;
+;       RETURNS:        BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_module_handle_name	DB 'Create Module Handle',0
+
+create_module_handle	PROC far
+	push ds
+	push eax
+	push cx
+;
+    mov ax,bx
+	mov cx,SIZE module_handle_seg
+	AllocateHandle
+	mov [bx].mh_lib_sel,ax
+	mov [bx].hh_sign,MODULE_HANDLE
+	mov bx,[bx].hh_handle
+;
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov eax,ds:app_create_handle_proc
+	or eax,eax
+	pop eax
+	stc
+	jz create_module_handle_done
+;
+	call ds:app_create_handle_proc
+
+create_module_handle_done:
+	pop cx
+	pop eax
+	pop ds
+	ret
+create_module_handle	ENDP
 
 PAGE
 	

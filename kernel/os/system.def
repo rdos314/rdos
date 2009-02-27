@@ -120,6 +120,7 @@ app_init_thread_proc	DD ?
 app_free_thread_proc	DD ?
 app_spawn_proc			DD ?
 app_close_proc			DD ?
+app_create_handle_proc  DD ?
 app_loader_name			DD ?
 
 app_exit_code			DW ?
