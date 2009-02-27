@@ -188,54 +188,11 @@ init_app	PROC near
 	mov ds:close_app_hooks,al
 	mov ds:app_alloc_base,app_linear + SIZE app_seg
 ;
-	mov di,OFFSET delete_handle
-	mov ax,MODULE_HANDLE
-	RegisterHandle
-;
 	popa
 	pop es
 	pop ds
 	ret
 init_app	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			Delete_handle
-;
-;		DESCRIPTION:	Delete module handle (called from handle module)
-;
-;		PARAMETERS:		BX			FILE HANDLE
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-delete_handle	Proc far
-	push ds
-	push bx
-	push si
-;
-	mov ax,MODULE_HANDLE
-	DerefHandle
-	jc delete_handle_done
-;
-    mov ax,ds:[bx].mh_lib_sel
-    or ax,ax
-    jz delete_handle_handle
-;
-    int 3    
-
-delete_handle_handle:
-	FreeHandle
-	clc
-
-delete_handle_done:
-	pop si
-	pop bx
-	pop ds
-	ret
-delete_handle	Endp
 
 PAGE
 
@@ -634,8 +591,6 @@ create_module_handle	PROC far
 	mov ds,ax
 	mov eax,ds:app_create_handle_proc
 	or eax,eax
-	pop eax
-	stc
 	jz create_module_handle_done
 ;
 	call ds:app_create_handle_proc

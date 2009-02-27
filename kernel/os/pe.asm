@@ -2278,7 +2278,6 @@ InitStack	Proc near
 	push edx
 	push esi
 ;
-    int 3
     push bx
     mov bx,es
     CreateModuleHandle
