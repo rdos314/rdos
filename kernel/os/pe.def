@@ -146,6 +146,7 @@ lib_process			DW ?
 lib_debug_lib		DW ?
 lib_debug_thread	DW ?
 lib_events			DW ?
+lib_curr_event      DW ?
 lib_section			section_typ <>
 lib_run_now			DW ?
 lib_init_param		DW ?
@@ -215,10 +216,10 @@ event_struc	STRUC
 
 event_prev		DW ?
 event_next		DW ?
-event_size		DD ?
-event_code		DD ?
 event_proc_id	DD ?
 event_thread_id	DD ?
+event_size		DW ?
+event_code		DB ?
 
 event_struc ENDS
 

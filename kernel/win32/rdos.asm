@@ -554,6 +554,7 @@ RdosExec	ENDP
 ;       parameters:     exe name
 ;                       cmd line
 ;                       start directory
+;                       &thread handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -577,6 +578,10 @@ RdosSpawn	PROC
 	UserGate spawn_exe_nr
 	jc rsFail
 ;	
+    movzx eax,ax
+    mov ebx,[ebp+20]
+    mov [ebx],eax
+;
     movzx eax,dx
     jmp rsDone
     
@@ -590,8 +595,64 @@ rsDone:
 	pop ebx
 	pop fs
 	pop ebp
-	ret 12
+	ret 16
 RdosSpawn	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSpawnDebug
+;
+;		description:    Detach new process and put it into debug state
+;
+;       parameters:     exe name
+;                       cmd line
+;                       start directory
+;                       &thread handle
+;
+;       returns:        Process handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSpawnDebug
+
+RdosSpawnDebug	PROC
+	push ebp
+	mov ebp,esp
+	push fs
+	push ebx
+	push edx
+	push esi
+	push edi
+;
+    mov edx,fs:pvModuleHandle
+    mov bx,ds
+    mov fs,bx
+	mov esi,[ebp+8]
+	mov edi,[ebp+12]
+    mov ebx,[ebp+16]
+	UserGate spawn_exe_nr
+	jc rsdFail
+;	
+    movzx eax,ax
+    mov ebx,[ebp+20]
+    mov [ebx],eax
+;
+    movzx eax,dx
+    jmp rsdDone
+    
+rsdFail:
+    xor eax,eax
+
+rsdDone:
+	pop edi
+	pop esi
+	pop edx
+	pop ebx
+	pop fs
+	pop ebp
+	ret 16
+RdosSpawnDebug	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3026,6 +3087,105 @@ RdosRecordToTics	Proc
 	pop ebp
 	ret 36
 RdosRecordToTics	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDosTimeDateToTics
+;
+;		description:	Convert DOS time & date to tics
+;
+;		PARAMETERS:		short date, time
+;						long *msb, lsb
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDosTimeDateToTics
+
+RdosDosTimeDateToTics	Proc
+	push ebp
+	mov ebp,esp
+	pushad
+;	
+	mov dx,[ebp+8]
+	mov ax,dx
+	shr dx,9
+	add dx,1980
+	mov cx,ax
+	shr cx,5
+	mov ch,cl
+	and ch,0Fh
+	mov cl,al
+	and cl,1Fh
+	mov bx,[ebp+12]
+	mov ax,bx
+	shr bx,11
+	mov bh,bl
+	shr ax,5
+	and al,3Fh
+	mov bl,al
+	mov ax,[ebp+12]
+	mov ah,al
+	add ah,ah
+	and ah,3Fh
+	UserGate time_to_binary_nr
+;	
+	mov ebx,[ebp+16]
+	mov [ebx],edx
+;
+    mov ebx,[ebp+20]
+    mov [ebx],eax
+;
+	popad
+	pop ebp
+	ret 16
+RdosDosTimeDateToTics	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosTicsToDosTimeDate
+;
+;		description:	Convert tics to DOS time & date
+;
+;		PARAMETERS:		long msb, lsb
+;                       short* date, time
+;						;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosTicsToDosTimeDate
+
+RdosTicsToDosTimeDate	Proc
+	push ebp
+	mov ebp,esp
+	pushad
+;
+    mov edx,[ebp+8]
+    mov eax,[ebp+12]	
+	UserGate binary_to_time_nr
+	shl cl,3
+	shr cx,3
+	sub dx,1980
+	mov dh,dl
+	shl dh,1
+	xor dl,dl
+	or dx,cx
+	mov al,ah
+	shr al,1
+	shl bl,2
+	shl bx,3
+	or bl,al
+;	
+	mov ebx,[ebp+16]
+	mov [ebx],dx
+;
+    mov ebx,[ebp+20]
+    mov [ebx],bx
+;
+	popad
+	pop ebp
+	ret 16
+RdosTicsToDosTimeDate	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -7334,6 +7494,42 @@ RdosGetModuleHandle	Proc near
 	mov eax,fs:pvModuleHandle
 	ret
 RdosGetModuleHandle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosGetModuleName
+;
+;       DESCRIPTION:    Get name of module or DLL
+;
+;		PARAMETERS:		Handle, Buf, Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosGetModuleName
+
+RdosGetModuleName	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov ebx,[ebp+8]
+	mov edi,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate get_dll_name_nr
+	jnc dmnDone
+;
+    xor eax,eax	
+
+dmnDone:
+    pop edi
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosGetModuleName	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

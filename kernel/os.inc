@@ -657,6 +657,14 @@ SignalWait	MACRO
 	OsGate signal_wait_nr
 					ENDM
 
+EnterIrq	MACRO
+	OsGate enter_irq_nr
+					ENDM
+
+LeaveIrq	MACRO
+	OsGate leave_irq_nr
+					ENDM
+
 ;       ES:(E)DI        NAME OF SECTION
 InitSection     MACRO section
 	mov section.cs_value,0

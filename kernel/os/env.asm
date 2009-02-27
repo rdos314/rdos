@@ -1113,7 +1113,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			INIT_ENV
+;		NAME:			INIT
 ;
 ;		DESCRIPTION:	Init module
 ;
@@ -1121,11 +1121,13 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public init_env
 
-init_env	PROC near
+init	PROC far
 	push ds
 	pusha
+;	
+	mov bx,env_code_sel
+	InitDevice
 ;
 	mov eax,4000h
 	AllocateGlobalMem
@@ -1248,9 +1250,9 @@ init_device_loop:
 	popa
 	pop ds
 	ret
-init_env	ENDP
+init	ENDP
 
 code	ENDS
 
-	END
+	END init
 

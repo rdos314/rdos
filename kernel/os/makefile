@@ -51,6 +51,10 @@ font_srcs = FONT.ASM
 font_objs = $(font_srcs:.ASM=.OBJ)
 font_rdvs = FONT.RDV
 
+env_srcs = ENV.ASM        
+env_objs = $(env_srcs:.ASM=.OBJ)
+env_rdvs = ENV.RDV
+
 video_srcs = VIDEO.ASM BITMAP.ASM BIT1.ASM BIT16.ASM BIT24.ASM BIT32.ASM \
              SPRITE.ASM
 video_objs = $(video_srcs:.ASM=.OBJ)
@@ -222,7 +226,7 @@ kernel_srcs =   KERNEL.ASM
 
 p1_srcs =   PAGING.ASM				TASK.ASM                STATE.ASM	\
 			DEVICE.ASM				IO.ASM      			HANDLE.ASM	\
-			PROC.ASM 				ENV.ASM					APP.ASM
+			PROC.ASM 				APP.ASM
 
 p2_srcs =   PHYSICAL.ASM    		IRQ.ASM				    SWAP.ASM    \
 			MEM.ASM                 GDT.ASM                 \
@@ -254,7 +258,7 @@ prot_exes = KERNEL.EXE
 srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
-			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs) \
+			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs) $(env_srcs) \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(time_srcs) $(font_srcs) $(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) \
@@ -284,7 +288,7 @@ rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  
 		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
 			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) \
-			$(keyboard_rdvs) $(inifile_rdvs) \
+			$(keyboard_rdvs) $(inifile_rdvs) $(env_rdvs) \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(font_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
@@ -354,6 +358,14 @@ FONT.RDV : $(font_objs)
 	$(font_objs)
 	FONT.RDV
 	FONT;
+!
+
+ENV.RDV : $(env_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(env_objs)
+	ENV.RDV
+	ENV;
 !
 
 VIDEO.RDV : $(video_objs)

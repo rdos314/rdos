@@ -33,6 +33,7 @@
 .model flat
 
 include ..\user.def
+include ..\debevent.inc
 
 UserGate	MACRO gate_nr
 	db 9Ah
@@ -154,7 +155,269 @@ cSs			DD ?
 
 context_all_struc	ENDS
 
+event_struc STRUC
+
+event_code		DD ?
+event_proc_id	DD ?
+event_thread_id	DD ?
+
+event_struc ENDS
+
+cp_event_struc	STRUC
+
+cpe_basic		    event_struc <>
+cpe_file			DD ?
+cpe_process		    DD ?
+cpe_thread		    DD ?
+cpe_image_base	    DD ?
+cpe_debug_offset	DD ?
+cpe_debug_size	    DD ?
+cpe_locale		    DD ?
+cpe_start		    DD ?
+cpe_name			DD ?
+cpe_unicode		    DW ?
+
+cp_event_struc ENDS
+
+tp_event_struc	STRUC
+
+tpe_basic	    	event_struc <>
+tpe_exit_code		DD ?
+
+tp_event_struc ENDS
+
+ct_event_struc	STRUC
+
+cte_basic		event_struc <>
+cte_thread		DD ?
+cte_locale		DD ?
+cte_start		DD ?
+
+ct_event_struc ENDS
+
+tt_event_struc	STRUC
+
+tte_basic		event_struc <>
+tte_exit_code	DD ?
+
+tt_event_struc ENDS
+
+ld_event_struc	STRUC
+
+lde_basic		    event_struc <>
+lde_file		    DD ?
+lde_image_base	    DD ?
+lde_debug_offset	DD ?
+lde_debug_size	    DD ?
+lde_name			DD ?
+lde_unicode		    DW ?
+
+ld_event_struc	ENDS
+
+exc_event_struc	STRUC
+
+exc_basic		    event_struc <>
+exc_code			DD ?
+exc_flags		    DD ?
+exc_ptr			    DD ?
+exc_ads			    DD ?
+exc_params		    DD ?
+exc_info			DD 15 DUP(?)
+exc_first_chance	DD ?
+
+exc_event_struc ENDS
+
+
 .code
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CopyCreateProcessEvent
+;
+;       DESCRIPTION:    Copy data for create process event
+;
+;       PARAMETERS:     ESI     Source
+;                       EDI     Dest
+;                       EAX     Thread ID
+;                       EDX     Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyCreateProcessEvent  Proc
+	mov [edi].event_code,3
+	mov [edi].event_proc_id,edx
+	mov [edi].event_thread_id,eax
+;
+    mov ebx,[esi].cpeFile
+    mov [edi].cpe_file,ebx
+;    
+    mov ebx,[esi].cpeProcess
+    mov [edi].cpe_process,ebx
+;
+    mov ebx,[esi].cpeThread
+    mov [edi].cpe_thread,ebx
+;
+    mov ebx,[esi].cpeImageBase
+    mov [edi].cpe_image_base,ebx
+;
+    mov [edi].cpe_debug_offset,0
+    mov [edi].cpe_debug_size,0
+;        
+    mov ebx,[esi].cpeFsLinear
+    mov [edi].cpe_locale,ebx
+;    
+    mov ebx,[esi].cpeStartEip
+    mov [edi].cpe_start,ebx
+;
+    mov [edi].cpe_name,0
+    mov [edi].cpe_unicode,0   
+    ret
+CopyCreateProcessEvent  Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CopyTerminateProcessEvent
+;
+;       DESCRIPTION:    Copy data for terminate process event
+;
+;       PARAMETERS:     ESI     Source
+;                       EDI     Dest
+;                       EAX     Thread ID
+;                       EDX     Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyTerminateProcessEvent  Proc
+	mov [edi].event_code,5
+	mov [edi].event_proc_id,edx
+	mov [edi].event_thread_id,eax
+;
+    mov ebx,[esi].tpeExitCode
+    mov [edi].tpe_exit_code,ebx	
+    ret
+CopyTerminateProcessEvent   Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CopyCreateThreadEvent
+;
+;       DESCRIPTION:    Copy data for create thread event
+;
+;       PARAMETERS:     ESI     Source
+;                       EDI     Dest
+;                       EAX     Thread ID
+;                       EDX     Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyCreateThreadEvent  Proc
+	mov [edi].event_code,2
+	mov [edi].event_proc_id,edx
+	mov [edi].event_thread_id,eax
+;
+    mov ebx,[esi].cteThread
+    mov [edi].cte_thread,ebx
+;
+    mov ebx,[esi].cteFsLinear
+    mov [edi].cte_locale,ebx    
+;
+    mov ebx,[esi].cteStartEip
+    mov [edi].cte_start,ebx
+    ret
+CopyCreateThreadEvent   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CopyTerminateThreadEvent
+;
+;       DESCRIPTION:    Copy data for terminate thread event
+;
+;       PARAMETERS:     ESI     Source
+;                       EDI     Dest
+;                       EAX     Thread ID
+;                       EDX     Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyTerminateThreadEvent  Proc
+	mov [edi].event_code,4
+	mov [edi].event_proc_id,edx
+	mov [edi].event_thread_id,eax
+;
+    mov [edi].tte_exit_code,0
+	ret
+CopyTerminateThreadEvent    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CopyLoadDllEvent
+;
+;       DESCRIPTION:    Copy data for load DLL event
+;
+;       PARAMETERS:     ESI     Source
+;                       EDI     Dest
+;                       EAX     Thread ID
+;                       EDX     Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyLoadDllEvent  Proc
+	mov [edi].event_code,6
+	mov [edi].event_proc_id,edx
+	mov [edi].event_thread_id,eax
+;
+    mov ebx,[esi].ldeFile
+    mov [edi].lde_file,ebx
+;
+    mov ebx,[esi].ldeImageBase
+    mov [edi].lde_image_base,ebx
+;
+    mov [edi].lde_debug_offset,0
+    mov [edi].lde_debug_size,0
+    mov [edi].lde_name,0
+    mov [edi].lde_unicode,0            
+	ret
+CopyLoadDllEvent    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CopyExceptionEvent
+;
+;       DESCRIPTION:    Copy data for exception event
+;
+;       PARAMETERS:     ESI     Source
+;                       EDI     Dest
+;                       EAX     Thread ID
+;                       EDX     Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyExceptionEvent  Proc
+	mov [edi].event_code,1
+	mov [edi].event_proc_id,edx
+	mov [edi].event_thread_id,eax
+;
+    mov ebx,[esi].excCode
+    mov [edi].exc_code,ebx	
+;
+    mov [edi].exc_flags,0
+;   
+    mov ebx,[esi].excPtr
+    mov [edi].exc_ptr,ebx
+;
+    mov ebx,[esi].excEip
+    mov [edi].exc_ads,ebx
+;
+    mov [edi].exc_params,0
+    mov [edi].exc_first_chance,1    
+    ret
+CopyExceptionEvent  Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -170,17 +433,60 @@ context_all_struc	ENDS
 wfdeEvent	EQU 8
 wfdeTimeout	EQU 12
 
+EventTable:
+et01 DD OFFSET CopyExceptionEvent
+et02 DD OFFSET CopyCreateThreadEvent
+et03 DD OFFSET CopyCreateProcessEvent
+et04 DD OFFSET CopyTerminateThreadEvent
+et05 DD OFFSET CopyTerminateProcessEvent
+et06 DD OFFSET CopyLoadDllEvent
+
 WaitForDebugEvent Proc near
 	push ebp
 	mov ebp,esp
+	push ebx
+	push esi
 	push edi
 ;
-	mov edi,[ebp].wfdeEvent
+
+wfdeRetry:
 	mov eax,[ebp].wfdeTimeout
-	UserGate wait_for_pe_debug_nr
+	UserGate wait_for_debug_event_nr
+;
+    movzx ebx,bl
+    or ebx,ebx
+    jz wfdeRemove
+;    
+    cmp ebx,6
+    jbe wfdeHandle
+
+wfdeRemove:
+	UserGate continue_debug_event_nr
+    jmp wfdeRetry
+
+wfdeHandle:
+    dec ebx
+;
+    push eax
+    push edx
+    mov eax,1000h
+    UserGate allocate_app_mem_nr
+    mov edi,edx
+    pop edx
+    pop eax
+;        
+	UserGate get_debug_event_data_nr
+	mov esi,edi
+   	mov edi,[ebp].wfdeEvent	
+	call cs:dword ptr [4 * ebx].EventTable
+;
+    mov edx,esi
+    UserGate free_app_mem_nr
 	mov eax,1
 ;
 	pop edi
+	pop esi
+	pop ebx
 	pop ebp
 	ret 8
 WaitForDebugEvent Endp
@@ -206,9 +512,9 @@ ContinueDebugEvent Proc near
 	push ebx
 ;
 	mov eax,[ebp].cdeThreadId
-	mov ebx,[ebp].cdeProcessId
-	mov edx,[ebp].cdeStatus
-	UserGate continue_pe_debug_nr
+;	mov ebx,[ebp].cdeProcessId
+;	mov edx,[ebp].cdeStatus
+	UserGate continue_debug_event_nr
 	mov eax,1
 ;
 	pop ebx

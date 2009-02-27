@@ -73,8 +73,9 @@ debug_pace_nr				= 63
 debug_go_nr					= 64
 debug_next_nr				= 65
 
-wait_for_pe_debug_nr		= 68
-continue_pe_debug_nr		= 69
+wait_for_debug_event_nr		= 66
+get_debug_event_data_nr     = 67
+continue_debug_event_nr		= 68
 notify_pe_exception_nr		= 70
 read_thread_mem_nr			= 71
 write_thread_mem_nr			= 72

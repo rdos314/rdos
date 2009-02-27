@@ -484,5 +484,8 @@ get_audio_out_buf_nr        EQU 333
 post_audio_out_buf_nr       EQU 334
 is_audio_out_completed_nr   EQU 335
 
-osgate_entries				EQU 336
+enter_irq_nr                EQU 336
+leave_irq_nr                EQU 337
+
+osgate_entries				EQU 338
 

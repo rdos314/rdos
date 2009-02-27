@@ -214,6 +214,8 @@ sernet_data_sel		EQU 558h
 ip_code_sel			EQU 560h
 ip_data_sel			EQU 568h
 
+env_code_sel        EQU 570h
+
 tcp_data_sel		EQU 578h
 
 socket_code_sel		EQU 580h

@@ -82,7 +82,6 @@ RELEASE = 8
 	extrn init_trap_vectors:near
 	extrn move_adapters:near
 	extrn init_device:near
-	extrn init_env:near
 	extrn init_swap:near
 	extrn init_random:near
 	extrn init_crc:near
@@ -566,7 +565,6 @@ prot_init:
 	call init_irq
 	call init_trap_vectors
 	call init_swap
-	call init_env
 	call init_exec
 	call init_random
 	call init_crc

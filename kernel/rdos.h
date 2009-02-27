@@ -222,13 +222,19 @@ void __stdcall RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const 
 void __stdcall RdosTerminateThread();
 int __stdcall RdosGetThreadHandle();
 int __stdcall RdosExec(const char *prog, const char *param);
-int __stdcall RdosSpawn(const char *prog, const char *param, const char *startdir);
+int __stdcall RdosSpawn(const char *prog, const char *param, const char *startdir, int *thread);
+int __stdcall RdosSpawnDebug(const char *prog, const char *param, const char *startdir, int *thread);
 void __stdcall RdosWaitMilli(int ms);
 void __stdcall RdosWaitMicro(int us);
 void __stdcall RdosWaitUntil(unsigned long msb, unsigned long lsb);
+
 void __stdcall RdosGetTics(unsigned long *msb, unsigned long *lsb);
 void __stdcall RdosTicsToRecord(unsigned long msb, unsigned long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 void __stdcall RdosRecordToTics(unsigned long *msb, unsigned long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
+
+void __stdcall RdosDosTimeDateToTics(unsigned short date, unsigned short time, unsigned long *msb, unsigned long *lsb);
+void __stdcall RdosTicsToDosTimeDate(unsigned long msb, unsigned long lsb, unsigned short *date, unsigned short *time);
+
 int __stdcall RdosDayOfWeek(int year, int month, int day);
 void __stdcall RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 void __stdcall RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
@@ -366,6 +372,7 @@ int __stdcall RdosGetModuleHandle();
 const char * __stdcall RdosGetExeName();
 int __stdcall RdosLoadDll(const char *Name);
 void __stdcall RdosFreeDll(int handle);
+int __stdcall RdosGetModuleName(int handle, char *Buf, int Size);
 int __stdcall RdosReadResource(int handle, int ID, char *Buf, int Size);
 int __stdcall RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
 

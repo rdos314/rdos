@@ -42,75 +42,12 @@ INCLUDE exec.def
 INCLUDE pe.def
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE ..\debevent.inc
 
 FILE_HANDLE		EQU 3AB60000h
 LIB_HANDLE		EQU 2A7B0000h
 THREAD_HANDLE	EQU 7ABC0000h
 PROCESS_HANDLE	EQU 0BCE50000h
-
-cp_event_struc	STRUC
-
-cpeBasic		event_struc <>
-cpeFile			DD ?
-cpeProcess		DD ?
-cpeThread		DD ?
-cpeImageBase	DD ?
-cpeDebugOffset	DD ?
-cpeDebugSize	DD ?
-cpeLocale		DD ?
-cpeStart		DD ?
-cpeName			DD ?
-cpeUnicode		DW ?
-
-cp_event_struc ENDS
-
-tp_event_struc	STRUC
-
-tpeBasic		event_struc <>
-tpeExitCode		DD ?
-
-tp_event_struc ENDS
-
-ct_event_struc	STRUC
-
-cteBasic		event_struc <>
-cteThread		DD ?
-cteLocale		DD ?
-cteStart		DD ?
-
-ct_event_struc ENDS
-
-tt_event_struc	STRUC
-
-tteBasic		event_struc <>
-tteExitCode		DD ?
-
-tt_event_struc ENDS
-
-ld_event_struc	STRUC
-
-ldeBasic		event_struc <>
-ldeFile			DD ?
-ldeImageBase	DD ?
-ldeDebugOffset	DD ?
-ldeDebugSize	DD ?
-ldeName			DD ?
-ldeUnicode		DW ?
-
-ld_event_struc	ENDS
-
-exc_event_struc	STRUC
-
-ExcBasic		event_struc <>
-ExcCode			DD ?
-ExcFlags		DD ?
-ExcPtr			DD ?
-ExcAds			DD ?
-ExcParams		DD ?
-ExcInfo			DD 15 DUP(?)
-ExcFirstChance	DD ?
-
-exc_event_struc ENDS
 
 SYS_BASE EQU 0DE000000h
 
@@ -217,30 +154,31 @@ ExceptionEvent Proc near
 	push bp
 	mov bp,[bp]
 	push eax
+	push di
 ;
 	push eax
 	mov eax,SIZE exc_event_struc
+	mov di,SIZE event_struc
+	add ax,di
 	AllocateSmallGlobalMem
-	sub eax,OFFSET event_code
-	mov es:event_size,eax
-	mov es:event_code,1
+	sub ax,di
+	mov es:event_size,ax
+	mov es:event_code,EVENT_EXCEPTION
 	pop eax
-	mov es:ExcCode,eax
-	mov es:ExcFlags,0
+	mov es:[di].excCode,eax
 ;
 	lea eax,[ebp+8]
-	mov es:ExcPtr,eax
+	mov es:[di].excPtr,eax
 ;
 	push ds
 	mov ax,flat_data_sel
 	mov ds,ax
 	mov eax,ds:[ebp+20]
 	pop ds
-	mov es:ExcAds,eax
+	mov es:[di].excEip,eax
+	mov es:[di].excCs,flat_code_sel
 ;
-	mov es:ExcParams,0
-	mov es:ExcFirstChance,1
-;
+    pop di
 	pop eax
 	pop bp
 	ret
@@ -264,32 +202,40 @@ ExceptionEvent Endp
 CreateProcessEvent Proc near
 	push eax
 	push ebx
+	push di
 ;
-	mov eax,SIZE cp_event_struc
+	mov eax,SIZE create_process_event_struc
+	mov di,SIZE event_struc
+	add ax,di
 	AllocateSmallGlobalMem
-	sub eax,OFFSET event_code
-	mov es:event_size,eax
-	mov es:event_code,3
+	sub ax,di
+	mov es:event_size,ax
+	mov es:event_code,EVENT_CREATE_PROCESS
 ;
 	mov bx,ds:lib_file_handle
 	GetFileInfo
-	mov word ptr es:cpeFile,ax
-	mov word ptr es:cpeFile+2,cx
+	mov word ptr es:[di].cpeFile,ax
+	mov word ptr es:[di].cpeFile+2,cx
+;	
+    mov eax,LIB_HANDLE
+    mov ax,ds
+    mov es:[di].cpeHandle,eax    
 ;
 	mov eax,fs:pvProcessHandle
-	mov es:cpeProcess,eax
+	mov es:[di].cpeProcess,eax
 	mov eax,fs:pvThreadHandle
-	mov es:cpeThread,eax	
+	mov es:[di].cpeThread,eax	
 	mov eax,ds:lib_base
-	mov es:cpeImageBase,eax
-	mov es:cpeDebugOffset,0
-	mov es:cpeDebugSize,0
+	mov es:[di].cpeImageBase,eax
+	mov eax,ds:lib_size
+	mov es:[di].cpeImageSize,eax
 	mov eax,fs:pvBase
-	mov es:cpeLocale,eax
+	mov es:[di].cpeFsLinear,eax
+	mov es:[di].cpeStartCs,flat_code_sel
 	mov eax,[bp].load_eip
-	mov es:cpeStart,eax
-	mov es:cpeName,0
+	mov es:[di].cpeStartEip,eax
 ;
+    pop di
 	pop ebx
 	pop eax
 	ret
@@ -310,17 +256,21 @@ CreateProcessEvent Endp
 
 TerminateProcessEvent Proc near
 	push ebx
+	push di
 ;
 	push eax
-	mov eax,SIZE tp_event_struc
+	mov eax,SIZE terminate_process_event_struc
+	mov di,SIZE event_struc
+	add ax,di
 	AllocateSmallGlobalMem
-	sub eax,OFFSET event_code
-	mov es:event_size,eax
-	mov es:event_code,5
+	sub ax,di
+	mov es:event_size,ax
+	mov es:event_code,EVENT_TERMINATE_PROCESS
 	pop eax
 ;
-	mov es:tpeExitCode,eax
+	mov es:[di].tpeExitCode,eax
 ;
+    pop di
 	pop ebx
 	ret
 TerminateProcessEvent Endp
@@ -343,19 +293,24 @@ TerminateProcessEvent Endp
 CreateThreadEvent Proc near
 	push eax
 	push ebx
+	push di
 ;
-	mov eax,SIZE ct_event_struc
+	mov eax,SIZE create_thread_event_struc
+	mov di,SIZE event_struc
+	add ax,di
 	AllocateSmallGlobalMem
-	sub eax,OFFSET event_code
-	mov es:event_size,eax
-	mov es:event_code,2
+	sub ax,di
+	mov es:event_size,ax
+	mov es:event_code,EVENT_CREATE_THREAD
 ;
 	mov eax,fs:pvThreadHandle
-	mov es:cteThread,eax
+	mov es:[di].cteThread,eax
 	mov eax,fs:pvBase
-	mov es:cteLocale,eax
-	mov es:cteStart,edx
+	mov es:[di].cteFsLinear,eax
+	mov es:[di].cteStartEip,edx
+	mov es:[di].cteStartCs,flat_code_sel
 ;
+    pop di
 	pop ebx
 	pop eax
 	ret
@@ -379,13 +334,10 @@ TerminateThreadEvent Proc near
 	push eax
 	push ebx
 ;
-	mov eax,SIZE tt_event_struc
+	mov eax,SIZE event_struc
 	AllocateSmallGlobalMem
-	sub eax,OFFSET event_code
-	mov es:event_size,eax
-	mov es:event_code,4
-;
-	mov es:tteExitCode,0
+	mov es:event_size,0
+	mov es:event_code,EVENT_TERMINATE_THREAD
 ;
 	pop ebx
 	pop eax
@@ -407,23 +359,32 @@ TerminateThreadEvent Endp
 
 LoadDllEvent Proc near
 	push eax
+	push di
 ;
-	mov eax,SIZE ld_event_struc
+	mov eax,SIZE load_dll_event_struc
+	mov di,SIZE event_struc
+	add ax,di
 	AllocateSmallGlobalMem
-	sub eax,OFFSET event_code
-	mov es:event_size,eax
-	mov es:event_code,6
+	sub ax,di
+	mov es:event_size,ax
+	mov es:event_code,EVENT_LOAD_DLL
 ;
 	mov bx,ds:lib_file_handle
 	GetFileInfo
-	mov word ptr es:ldeFile,ax
-	mov word ptr es:ldeFile+2,cx
-	mov eax,ds:lib_base
-	mov es:ldeImageBase,eax
-	mov es:ldeDebugOffset,0
-	mov es:ldeDebugSize,0
-	mov es:ldeName,0
+	mov word ptr es:[di].ldeFile,ax
+	mov word ptr es:[di].ldeFile+2,cx
+;	
+    mov eax,LIB_HANDLE
+    mov ax,ds
+    mov es:[di].ldeHandle,eax    
 ;
+	mov eax,ds:lib_base
+	mov es:[di].ldeImageBase,eax
+;	
+	mov eax,ds:lib_size
+	mov es:[di].ldeImageSize,eax
+;
+    pop di
 	pop eax
 	ret
 LoadDllEvent	Endp
@@ -3056,22 +3017,23 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WaitForPeDebug
+;		NAME:			WaitForDebugEvent
 ;
 ;		DESCRIPTION:    Wait for an debug event from process
 ;
-;		PARAMETERS:		EAX		Timeout in ms
-;						EDI		Event record
+;		PARAMETERS:		EAX     Timeout in milliseconds
+;
+;       RETURNS:        EAX     Thread ID
+;                       BL      Event type  
+;                       EDX     Process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-wait_for_pe_debug_name DB 'Wait For PE Debug Event',0
+wait_for_debug_event_name DB 'Wait For Debug Event',0
 
-wait_for_pe_debug Proc far
+wait_for_debug_event Proc far
 	push ds
 	push es
-	push eax
-	push ebx
 	push ecx
 	push esi
 ;
@@ -3110,6 +3072,7 @@ wfdFound:
 wfdRemoved:
 	mov ds:lib_debug_thread,0
 	LeaveSection ds:lib_section
+;
 	GetThread
 	mov bx,ax
 	GetThreadFocusKey
@@ -3118,66 +3081,99 @@ wfdRemoved:
 	SetFocus
 
 wfdFocusDone:
-	mov ax,es
-	mov ds,ax
-	mov ax,flat_data_sel
-	mov es,ax
-	mov esi,OFFSET event_code
-	mov ecx,ds:event_size
-	push edi
-	rep movs byte ptr es:[edi],[esi]
-	pop edi
-	mov ax,ds
-	mov es,ax
-	mov ax,flat_data_sel
-	mov ds,ax
-	FreeMem
-;
-	mov al,[edi]
-	cmp al,3
-	je wfdDuplFile
-	cmp al,6
-	jne wfdDone
-
-wfdDuplFile:
-	mov ax,[edi+12]
-	mov cx,[edi+14]
-	DuplFileInfo
-	mov eax,FILE_HANDLE
-	mov ax,bx
-	mov [edi+12],eax
+    mov ds:lib_curr_event,es
+    mov eax,es:event_thread_id
+    mov edx,es:event_proc_id
+    mov bl,es:event_code
 
 wfdDone:
 	pop esi
 	pop ecx
-	pop ebx
-	pop eax
 	pop es
 	pop ds	
 	retf32
-wait_for_pe_debug Endp
+wait_for_debug_event Endp
 
 PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ContinuePeDebug
+;		NAME:			GetDebugEventData
+;
+;		DESCRIPTION:    Get event data
+;
+;		PARAMETERS:		ES:EDI     Event buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_debug_event_data_name DB 'Get Debug Event Data',0
+
+get_debug_event_data Proc far
+	push ds
+	push eax
+	push ebx
+	push ecx
+	push esi
+;	
+	mov ds,word ptr fs:pvModuleHandle
+	mov ds,ds:lib_curr_event
+;	
+	mov esi,SIZE event_struc
+	movzx ecx,ds:event_size
+	push edi
+	rep movs byte ptr es:[edi],[esi]
+	pop edi
+;
+    mov al,ds:event_code
+	cmp al,EVENT_CREATE_PROCESS
+	je gdedDuplFile
+	cmp al,EVENT_LOAD_DLL
+	jne gdedDone
+
+gdedDuplFile:
+	mov ax,es:[edi]
+	mov cx,es:[edi+2]
+	DuplFileInfo
+	mov eax,FILE_HANDLE
+	mov ax,bx
+	mov es:[edi],eax
+
+gdedDone:
+	pop esi
+	pop ecx
+	pop ebx
+	pop eax
+	pop ds	
+	retf32
+get_debug_event_data Endp
+
+PAGE
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ContinueDebugEvent
 ;
 ;		DESCRIPTION:    Continue debugged thread
 ;
 ;		PARAMETERS:		EAX		Thread
-; 						EDX		Status
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-continue_pe_debug_name DB 'Continue PE Debug',0
+continue_debug_event_name DB 'Continue Debug Event',0
 
-continue_pe_debug Proc far
+continue_debug_event Proc far
 	push ds
+	push es
 	push bx
 	push dx
 	push si
+;
+	mov ds,word ptr fs:pvModuleHandle
+	mov es,ds:lib_curr_event
+	FreeMem
+	mov ds:lib_curr_event,0
 ;
 	mov bx,ax
 	mov ax,system_data_sel
@@ -3220,9 +3216,10 @@ continue_debug_done:
 	pop si
 	pop dx
 	pop bx
+	pop es
 	pop ds
 	retf32
-continue_pe_debug Endp
+continue_debug_event Endp
 
 PAGE
                                            
@@ -4257,16 +4254,22 @@ init	PROC far
 	mov di,OFFSET close_app
 	HookCloseApp
 ;
-	mov si,OFFSET wait_for_pe_debug
-	mov di,OFFSET wait_for_pe_debug_name
+	mov si,OFFSET wait_for_debug_event
+	mov di,OFFSET wait_for_debug_event_name
 	xor dx,dx
-	mov ax,wait_for_pe_debug_nr
+	mov ax,wait_for_debug_event_nr
 	RegisterUserGate32
 ;
-	mov si,OFFSET continue_pe_debug
-	mov di,OFFSET continue_pe_debug_name
+	mov si,OFFSET get_debug_event_data
+	mov di,OFFSET get_debug_event_data_name
 	xor dx,dx
-	mov ax,continue_pe_debug_nr
+	mov ax,get_debug_event_data_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET continue_debug_event
+	mov di,OFFSET continue_debug_event_name
+	xor dx,dx
+	mov ax,continue_debug_event_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET notify_pe_exception

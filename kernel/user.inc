@@ -818,16 +818,21 @@ SuspendAndSignalThread     MACRO
 						ENDM
 
 ;  IN  EAX	Timeout in milliseconds
-;  IN  EDI	Event record
-WaitForPeDebug MACRO
-	UserGate wait_for_pe_debug_nr
+;  OUT EAX  Thread ID
+;  OUT BL   Event type  
+;  OUT EDX  Process ID
+WaitForDebugEvent MACRO
+	UserGate wait_for_debug_event_nr
+						ENDM
+
+;  IN  ES:EDI	Event buffer
+GetDebugEventData MACRO
+	UserGate get_debug_event_data_nr
 						ENDM
 
 ;  IN  EAX	Thread ID
-;  IN  EBX	Process ID
-;  IN  EDX	Status
-ContinuePeDebug MACRO
-	UserGate continue_pe_debug_nr
+ContinueDebugEvent MACRO
+	UserGate continue_debug_event_nr
 						ENDM
 
 ;  IN  EBP	Exception frame

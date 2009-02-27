@@ -68,10 +68,11 @@ TExecCommand::TExecCommand(TSession *session, const char *name, const char *para
 int TExecCommand::Execute(char *param)
 {
 	TPathName StartupDir;
+	int ThreadId;
 
 	if (FDetach)
-	{   
-		if (RdosSpawn(FProgName.GetData(), param, StartupDir.Get().GetData()))
+	{
+		if (RdosSpawn(FProgName.GetData(), param, StartupDir.Get().GetData(), &ThreadId))
 			return 0;
 		else
 			 return -1;
