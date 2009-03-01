@@ -771,7 +771,7 @@ void TVp::Execute()
 			if (FLevel > 7.5 && !FVpOn)
 				FVpOn = TRUE;
 
-			if (FTankTemp > 450 && FVpOn)
+			if (FTankTemp > 400 && FVpOn)
 				FVpOn = FALSE;
 
 			if (FValidPHeat && FValidHeat)
