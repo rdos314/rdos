@@ -25,6 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+include module.def
+
 app_fs_data	STRUC
 
 afs_reent	DD ?
@@ -87,6 +89,8 @@ mem_size	DD ?
 elf_mem_struc ENDS
 
 lib_struc STRUC
+
+lib_mod             module_struc <>
 
 lib_prev			DW ?
 lib_next			DW ?

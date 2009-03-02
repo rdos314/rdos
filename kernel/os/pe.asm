@@ -1824,6 +1824,9 @@ load_dll_do:
 ;
 	FreeMem
 	call CreateLib
+	mov ax,es
+	CreateModule
+;	
 	call CreateImage
 	mov edi,es:lib_base
 	cmp edi,SYS_BASE
@@ -1901,6 +1904,9 @@ FreePeDll	Proc near
 	push si
 	push edi
 ;
+    mov ax,es
+    FreeModule
+;    
 	mov ax,pe_app_sel
 	mov ds,ax
 	EnterSection ds:pe_section
@@ -2278,11 +2284,6 @@ InitStack	Proc near
 	push edx
 	push esi
 ;
-    push bx
-    mov bx,es
-    CreateModuleHandle
-    pop bx
-;
 	push ds
 	push bx
 	mov eax,1000h
@@ -2486,6 +2487,9 @@ load_pe	Proc far
 ;
 	FreeMem
 	call CreateLib
+	mov ax,es
+	SetModule
+;	
 	xor ax,ax
 	mov fs,ax
 ;

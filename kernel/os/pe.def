@@ -25,6 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+include module.def
+
 tib_data	STRUC
 
 pvFirstExcept		DD ?
@@ -133,6 +135,8 @@ o_flags				DD ?
 object_struc	ENDS
 
 lib_struc STRUC
+
+lib_mod	    		module_struc <>
 
 lib_prev			DW ?
 lib_next			DW ?

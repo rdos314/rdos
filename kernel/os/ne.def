@@ -24,6 +24,8 @@
 ; Common NE loader types
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+include module.def
     
 NOAUTODATA		EQU 0
 SINGLEDATA		EQU 1
@@ -122,6 +124,8 @@ rn_usage                DW ?
 resource_name_struc ENDS
 
 library_header	STRUC
+
+lib_mod	    		module_struc <>
 
 lib_prev				DW ?
 lib_next				DW ?

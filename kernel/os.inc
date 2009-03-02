@@ -1539,10 +1539,19 @@ CloseApp	MACRO
 	OsGate close_app_nr
 					ENDM
 
-; IN  BX Lib sel
-; OUT BX Handle
-CreateModuleHandle	MACRO
-	OsGate create_module_handle_nr
+; IN  AX        Module selector
+SetModule	MACRO
+	OsGate set_module_nr
+					ENDM
+
+; IN  AX        Module selector
+CreateModule	MACRO
+	OsGate create_module_nr
+					ENDM
+
+; IN  AX        Module selector
+FreeModule	MACRO
+	OsGate free_module_nr
 					ENDM
 
 ;;;;;;;;;;;; FOCUS ;;;;;;;;;;;;;

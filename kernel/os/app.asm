@@ -39,6 +39,7 @@ INCLUDE int.def
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc
+INCLUDE module.def
 
 app_data_seg	STRUC
 
@@ -57,7 +58,7 @@ module_handle_seg		STRUC
 
 mh_base	handle_header <>
 
-mh_lib_sel      DW ?
+mh_sel            DW ?
 
 module_handle_seg		ENDS
 
@@ -120,12 +121,6 @@ init_app	PROC near
 	mov ax,close_app_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET create_module_handle
-	mov di,OFFSET create_module_handle_name
-	xor cl,cl
-	mov ax,create_module_handle_nr
-	RegisterOsGate
-;
 	mov si,OFFSET hook_open_app
 	mov di,OFFSET hook_open_app_name
 	xor cl,cl
@@ -136,6 +131,24 @@ init_app	PROC near
 	mov di,OFFSET hook_close_app_name
 	xor cl,cl
 	mov ax,hook_close_app_nr
+	RegisterOsGate
+;
+	mov si,OFFSET set_module
+	mov di,OFFSET set_module_name
+	xor cl,cl
+	mov ax,set_module_nr
+	RegisterOsGate
+;
+	mov si,OFFSET create_module
+	mov di,OFFSET create_module_name
+	xor cl,cl
+	mov ax,create_module_nr
+	RegisterOsGate
+;
+	mov si,OFFSET free_module
+	mov di,OFFSET free_module_name
+	xor cl,cl
+	mov ax,free_module_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_exe_name
@@ -343,6 +356,8 @@ run_open_hooks	Proc near
 ;
 	mov ax,thread_app_sel
 	mov ds,ax
+;	
+    mov ds:app_handle,0
 	mov ds:app_get_exe_proc,0
 	mov ds:app_get_cmd_line_proc,0
 	mov ds:app_get_env_proc,0
@@ -510,6 +525,32 @@ trap_close_app_done:
 	mov gs,ax
 	call destroy_ldt
 ;
+    int 3
+    mov ax,thread_app_sel
+    mov ds,ax
+    mov bx,ds:app_handle
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc close_app_handle_ok
+;
+    mov ax,[bx].mh_sel
+    or ax,ax
+    jz close_app_free_mod
+;
+    mov es,ax    
+
+close_app_mod_loop:    
+    mov ax,es:mod_list
+    or ax,ax
+    jz close_app_free_mod
+;
+    FreeModule
+    jmp close_app_mod_loop
+
+close_app_free_mod:
+	FreeHandle
+
+close_app_handle_ok:
 	mov ax,thread_sel
 	mov ds,ax
 	mov es,ds:p_app_sel
@@ -563,44 +604,183 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			CreateModuleHandle
+;		NAME:			SetModule
 ;
-;		DESCRIPTION:	Create handle for a module
+;		DESCRIPTION:	Set module for active process
 ;
-;       PARAMETERS:     BX      Lib sel
-;
-;       RETURNS:        BX      Handle
+;       PARAMETERS:     AX  Module sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_module_handle_name	DB 'Create Module Handle',0
+set_module_name	DB 'Set Module',0
 
-create_module_handle	PROC far
-	push ds
-	push eax
-	push cx
+set_module	PROC far
+    push ds
+    push ax
+    push bx
+    push dx
 ;
-    mov ax,bx
+    mov dx,ax
 	mov cx,SIZE module_handle_seg
 	AllocateHandle
-	mov [bx].mh_lib_sel,ax
+	mov [bx].mh_sel,dx
 	mov [bx].hh_sign,MODULE_HANDLE
 	mov bx,[bx].hh_handle
 ;
+    mov ds,dx
+    mov ds:mod_handle,bx
+    mov ds:mod_list,0
+;    
 	mov ax,thread_app_sel
 	mov ds,ax
-	mov eax,ds:app_create_handle_proc
-	or eax,eax
-	jz create_module_handle_done
-;
-	call ds:app_create_handle_proc
-
-create_module_handle_done:
-	pop cx
-	pop eax
-	pop ds
+    mov ds:app_handle,bx
+;    
+    pop dx
+    pop bx
+    pop ax
+    pop ds
 	ret
-create_module_handle	ENDP
+set_module	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateModule
+;
+;		DESCRIPTION:	Create new module for active process
+;
+;       PARAMETERS:     AX  Module sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_module_name	DB 'Create Module',0
+
+create_module	PROC far
+    push ds
+    push es
+    push ax
+    push bx
+    push dx
+;
+    mov dx,ax
+	mov cx,SIZE module_handle_seg
+	AllocateHandle
+	mov [bx].mh_sel,dx
+	mov [bx].hh_sign,MODULE_HANDLE
+	mov bx,[bx].hh_handle
+;
+    mov es,dx
+    mov es:mod_handle,bx
+    mov es:mod_list,0
+;    
+    mov dx,bx
+	mov ax,thread_app_sel
+	mov ds,ax
+    mov bx,ds:app_handle
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc create_module_done
+;
+    mov ax,[bx].mh_sel
+    or ax,ax
+    jz create_module_done
+;
+    mov ds,ax    
+    mov ax,ds:mod_list
+    mov ds:mod_list,es
+    mov es:mod_next,ax
+        
+create_module_done:    
+    pop dx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+	ret
+create_module	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FreeModule
+;
+;		DESCRIPTION:	Free module for active process
+;
+;       PARAMETERS:     AX      Module sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_module_name	DB 'Free Module',0
+
+free_module	PROC far
+    push ds
+    push es
+    push ax
+    push bx
+    push dx
+;
+    mov dx,ax
+	mov ax,thread_app_sel
+	mov ds,ax
+    mov bx,ds:app_handle
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc free_module_done
+;
+    mov ax,[bx].mh_sel
+    or ax,ax
+    jz free_module_done
+;
+    mov ds,ax    
+    mov ax,ds:mod_list
+    or ax,ax
+    jz free_module_done
+;
+    cmp ax,dx
+    jne free_mod_not_head
+;
+    mov es,ax
+    mov ax,es:mod_next
+    mov ds:mod_list,ax
+    mov bx,es:mod_handle
+    jmp free_mod_handle
+    
+free_mod_not_head:    
+    mov es,ax
+    cmp dx,es:mod_next
+    je free_mod_in_list
+;
+    mov ax,es:mod_next
+    or ax,ax
+    jnz free_mod_not_head
+;
+    jmp free_module_done
+
+free_mod_in_list:
+    mov ds,dx
+    mov ax,ds:mod_next
+    mov es:mod_next,ax
+    mov bx,ds:mod_handle
+
+free_mod_handle:
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc free_module_done
+;
+	FreeHandle
+            
+free_module_done:
+    pop dx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+	ret
+free_module	ENDP
 
 PAGE
 	

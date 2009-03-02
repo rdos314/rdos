@@ -111,6 +111,8 @@ app_next			DW ?
 app_sel				DW ?
 app_page			DD ?
 
+app_handle          DW ?
+
 app_get_cmd_line_proc	DD ?
 app_get_exe_proc		DD ?
 app_get_env_proc		DD ?

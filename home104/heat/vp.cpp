@@ -798,12 +798,18 @@ void TVp::Execute()
 				if (diostat & 0x20)
 				{
 					if (!FVpOn)
+					{
+					    FLevel = 0.0;
 						RdosToggleSerialLine(1, 5);
+                    }						
 				}
 				else
 				{
 					if (FVpOn)
+					{
+					    FLevel = 9.9;
 						RdosToggleSerialLine(1, 5);
+					}
 				}
 
 				if (diostat & 0x40)

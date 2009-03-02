@@ -748,6 +748,9 @@ load_elf	Proc far
 	mov cx,es:elf_phnum
 	FreeMem
 	call CreateLib
+	mov ax,es
+	SetModule	
+;
 	call CreateImage
 	pop edx
 	jc load_elf_fail

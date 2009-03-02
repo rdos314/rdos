@@ -1600,6 +1600,9 @@ load_ne	Proc far
 	call create_lib
 	jc load_ne_import_fail
 ;
+	mov ax,es
+	SetModule
+;
 	call run_ne
 	mov ax,thread_sel
 	mov ds,ax
