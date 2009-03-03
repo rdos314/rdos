@@ -985,7 +985,7 @@ DeleteListen	Proc near
 	cmp ax,bx
 	jne delete_listen_loop
 ;
-	mov ds:ConnectionList,dx
+	mov ds:ListenList,dx
 	jmp delete_listen_unlinked
 
 delete_listen_loop:
