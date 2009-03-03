@@ -139,6 +139,12 @@ init_app	PROC near
 	mov ax,set_module_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET reset_module
+	mov di,OFFSET reset_module_name
+	xor cl,cl
+	mov ax,reset_module_nr
+	RegisterOsGate
+;
 	mov si,OFFSET create_module
 	mov di,OFFSET create_module_name
 	xor cl,cl
@@ -525,32 +531,6 @@ trap_close_app_done:
 	mov gs,ax
 	call destroy_ldt
 ;
-    int 3
-    mov ax,thread_app_sel
-    mov ds,ax
-    mov bx,ds:app_handle
-	mov ax,MODULE_HANDLE
-	DerefHandle
-	jc close_app_handle_ok
-;
-    mov ax,[bx].mh_sel
-    or ax,ax
-    jz close_app_free_mod
-;
-    mov es,ax    
-
-close_app_mod_loop:    
-    mov ax,es:mod_list
-    or ax,ax
-    jz close_app_free_mod
-;
-    FreeModule
-    jmp close_app_mod_loop
-
-close_app_free_mod:
-	FreeHandle
-
-close_app_handle_ok:
 	mov ax,thread_sel
 	mov ds,ax
 	mov es,ds:p_app_sel
@@ -608,7 +588,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Set module for active process
 ;
-;       PARAMETERS:     AX  Module sel
+;       PARAMETERS:     ES  Module sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -620,7 +600,7 @@ set_module	PROC far
     push bx
     push dx
 ;
-    mov dx,ax
+    mov dx,es
 	mov cx,SIZE module_handle_seg
 	AllocateHandle
 	mov [bx].mh_sel,dx
@@ -647,11 +627,67 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			ResetModule
+;
+;		DESCRIPTION:	Reset module for active process
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_module_name	DB 'Reset Module',0
+
+reset_module	PROC far
+    push ds
+    push es
+    push ax
+    push bx
+    push dx
+;
+    mov ax,thread_app_sel
+    mov ds,ax
+    mov bx,ds:app_handle
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc reset_mod_handle_ok
+;
+    mov ax,[bx].mh_sel
+    or ax,ax
+    jz reset_mod_free_mod
+;
+    mov es,ax    
+
+reset_mod_loop:    
+    mov ax,es:mod_list
+    or ax,ax
+    jz reset_mod_free_mod
+;
+    push es
+    mov es,ax
+    FreeModule
+    pop es
+    jmp reset_mod_loop
+
+reset_mod_free_mod:
+	FreeHandle
+
+reset_mod_handle_ok:    
+    pop dx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+	ret
+reset_module	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			CreateModule
 ;
 ;		DESCRIPTION:	Create new module for active process
 ;
-;       PARAMETERS:     AX  Module sel
+;       PARAMETERS:     ES  Module sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -662,20 +698,17 @@ create_module	PROC far
     push es
     push ax
     push bx
-    push dx
 ;
-    mov dx,ax
 	mov cx,SIZE module_handle_seg
 	AllocateHandle
-	mov [bx].mh_sel,dx
+	mov [bx].mh_sel,es
 	mov [bx].hh_sign,MODULE_HANDLE
 	mov bx,[bx].hh_handle
 ;
-    mov es,dx
     mov es:mod_handle,bx
     mov es:mod_list,0
 ;    
-    mov dx,bx
+    mov dx,es
 	mov ax,thread_app_sel
 	mov ds,ax
     mov bx,ds:app_handle
@@ -693,7 +726,6 @@ create_module	PROC far
     mov es:mod_next,ax
         
 create_module_done:    
-    pop dx
     pop bx
     pop ax
     pop es
@@ -710,7 +742,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Free module for active process
 ;
-;       PARAMETERS:     AX      Module sel
+;       PARAMETERS:     ES      Module sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -723,7 +755,7 @@ free_module	PROC far
     push bx
     push dx
 ;
-    mov dx,ax
+    mov dx,es
 	mov ax,thread_app_sel
 	mov ds,ax
     mov bx,ds:app_handle

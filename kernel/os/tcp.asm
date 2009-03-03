@@ -744,8 +744,10 @@ delete_connect_loop:
 	cmp ax,bx
 	jne delete_connect_loop
 ;
+    mov ds,ax
+    mov ax,ds:tcp_next
 	mov ds,cx
-	mov ds:tcp_next,bx	
+	mov ds:tcp_next,ax
 
 delete_connect_unlinked:
 	FreeMem

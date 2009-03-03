@@ -487,6 +487,7 @@ is_audio_out_completed_nr   EQU 335
 set_module_nr               EQU 336
 create_module_nr            EQU 337
 free_module_nr              EQU 338
+reset_module_nr             EQU 339
 
 osgate_entries				EQU 340
 

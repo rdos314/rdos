@@ -1539,17 +1539,21 @@ CloseApp	MACRO
 	OsGate close_app_nr
 					ENDM
 
-; IN  AX        Module selector
+; IN  ES        Module selector
 SetModule	MACRO
 	OsGate set_module_nr
 					ENDM
 
-; IN  AX        Module selector
+ResetModule	MACRO
+	OsGate reset_module_nr
+					ENDM
+
+; IN  ES        Module selector
 CreateModule	MACRO
 	OsGate create_module_nr
 					ENDM
 
-; IN  AX        Module selector
+; IN  ES        Module selector
 FreeModule	MACRO
 	OsGate free_module_nr
 					ENDM

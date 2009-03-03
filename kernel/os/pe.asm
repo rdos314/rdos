@@ -1824,7 +1824,6 @@ load_dll_do:
 ;
 	FreeMem
 	call CreateLib
-	mov ax,es
 	CreateModule
 ;	
 	call CreateImage
@@ -1904,7 +1903,6 @@ FreePeDll	Proc near
 	push si
 	push edi
 ;
-    mov ax,es
     FreeModule
 ;    
 	mov ax,pe_app_sel
@@ -2487,7 +2485,6 @@ load_pe	Proc far
 ;
 	FreeMem
 	call CreateLib
-	mov ax,es
 	SetModule
 ;	
 	xor ax,ax
@@ -4052,8 +4049,10 @@ close_app	Proc far
 	mov ax,ds:pe_app
 	or ax,ax
 	jz close_app_done
+;	
+    mov es,ax
+    ResetModule
 ;
-	mov es,ax
 	mov ax,flat_data_sel
 	mov ds,ax
 	xor edx,edx

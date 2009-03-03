@@ -1384,6 +1384,7 @@ load_dll	Proc near
 	call create_lib
 	jc load_dll_import_fail
 ;
+    CreateModule
 	push ds
 	mov ax,thread_sel
 	mov ds,ax
@@ -1441,6 +1442,7 @@ free_dll	Proc near
 	mov ds,ax
 	EnterSection ds:lib_module_section
 	mov si,OFFSET lib_modules
+	FreeModule
 	RemoveLib
 	LeaveSection ds:lib_module_section
 	call destroy_lib
@@ -1600,7 +1602,6 @@ load_ne	Proc far
 	call create_lib
 	jc load_ne_import_fail
 ;
-	mov ax,es
 	SetModule
 ;
 	call run_ne
@@ -1872,6 +1873,8 @@ open_app	Endp
 close_app	Proc far
 	mov ax,ne_app_sel
 	mov ds,ax
+;
+    ResetModule
 ;
 	xor ax,ax
 	mov es,ax
