@@ -58,10 +58,10 @@ get_cmd_line_nr				= 49
 get_env_nr					= 50
 load_dll_nr					= 51
 free_dll_nr					= 52
-get_dll_proc_nr				= 53
-get_dll_resource_nr			= 54
-get_dll_name_nr				= 55
-get_dll_nr					= 56
+get_module_proc_nr			= 53
+get_module_resource_nr		= 54
+get_module_name_nr			= 55
+get_module_nr				= 56
 allocate_app_mem_nr			= 57
 free_app_mem_nr				= 58
 get_psp_sel_nr				= 59
@@ -441,5 +441,6 @@ set_fm_release_nr           = 366
 play_fm_note_nr             = 367
 
 get_thread_linear_nr        = 368
+get_current_module_nr       = 369
 
 usergate_entries			= 370

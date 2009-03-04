@@ -1384,7 +1384,10 @@ load_dll	Proc near
 	call create_lib
 	jc load_dll_import_fail
 ;
+    mov word ptr es:mod_free_dll_proc,OFFSET free_dll	
+    mov word ptr es:mod_free_dll_proc+2,cs
     CreateModule
+;
 	push ds
 	mov ax,thread_sel
 	mov ds,ax
@@ -1615,6 +1618,8 @@ load_ne	Proc far
 	mov ds,ax
 	mov word ptr ds:app_loader_name,OFFSET ne_loader_name
 	mov word ptr ds:app_loader_name+2,cs
+	mov word ptr ds:app_load_dll_proc,OFFSET load_dll_pr
+	mov word ptr ds:app_load_dll_proc+2,cs
 	clc
 	jmp load_ne_done
 
@@ -1639,7 +1644,7 @@ load_ne	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			load_dll
+;		NAME:			load_dll_pr
 ;
 ;		DESCRIPTION:    Load DLL
 ;
@@ -1649,9 +1654,7 @@ load_ne	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_dll_name	DB 'Load Dll',0
-
-load_dll16	Proc far
+load_dll_pr	Proc far
 	push ds
 	push es
 	push ax
@@ -1661,18 +1664,7 @@ load_dll16	Proc far
 	push di
 ;
 	call load_dll
-	jc load_dll16_done
 ;
-    mov ax,bx
-	mov cx,SIZE lib_handle_seg
-	AllocateHandle
-	jc load_dll16_done
-;
-	mov ds:[bx].lh_sel,ax
-	mov ds:[bx].hh_sign,DLL_HANDLE16
-	mov bx,ds:[bx].hh_handle
-
-load_dll16_done:
 	pop di
 	pop si
 	pop dx
@@ -1681,7 +1673,7 @@ load_dll16_done:
 	pop es
 	pop ds
 	ret
-load_dll16	Endp
+load_dll_pr	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1690,35 +1682,22 @@ load_dll16	Endp
 ;
 ;		DESCRIPTION:    Free DLL
 ;
-;       PARAMETERS:		BX		HANDLE
+;       PARAMETERS:		BX		Lib sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_dll_name	DB 'Free Dll',0
-
-free_dll16	Proc far
+free_dll_pr	Proc far
 	push ds
 	push es
 	pusha
 ;
-    mov ax,DLL_HANDLE16
-    DerefHandle
-    jc free_dll16_done
-;
-    push ds
-    push bx
-    mov bx,ds:[bx].lh_sel
 	call free_dll
-	pop bx
-	pop ds
-	FreeHandle
-
-free_dll16_done:
+;
 	popa
 	pop es
 	pop ds
 	ret
-free_dll16	Endp
+free_dll_pr	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1993,22 +1972,10 @@ init	PROC far
 	mov ax,segment_not_present_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET load_dll16
-	mov di,OFFSET load_dll_name
-	xor dx,dx
-	mov ax,load_dll_nr
-	RegisterUserGate16
-;
-	mov si,OFFSET free_dll16
-	mov di,OFFSET free_dll_name
-	xor dx,dx
-	mov ax,free_dll_nr
-	RegisterUserGate16
-;
 	mov si,OFFSET get_dll_resource
 	mov di,OFFSET get_dll_resource_name
 	xor dx,dx
-	mov ax,get_dll_resource_nr
+	mov ax,get_module_resource_nr
 	RegisterUserGate16
 ;
 	popa

@@ -1159,7 +1159,7 @@ FindResourceA	Proc near
 	mov ebx,[ebp].frModule
 	mov eax,[ebp].frName
 	mov edx,[ebp].frType
-	UserGate get_dll_resource_nr	
+	UserGate get_module_resource_nr	
 ;
 	pop ebx
 	pop ebp

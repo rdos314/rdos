@@ -193,6 +193,26 @@ init_app	PROC near
 	mov ax,app_debug_nr
 	RegisterBimodalUserGate
 ;
+	mov bx,OFFSET load_dll16
+	mov si,OFFSET load_dll32
+	mov di,OFFSET load_dll_name
+	mov dx,virt_es_in
+	mov ax,load_dll_nr
+	RegisterUserGate
+;
+	mov si,OFFSET free_dll
+	mov di,OFFSET free_dll_name
+	xor dx,dx
+	mov ax,free_dll_nr
+	RegisterBimodalUserGate
+;
+	mov bx,OFFSET get_module_proc16
+	mov si,OFFSET get_module_proc32
+	mov di,OFFSET get_module_proc_name
+	mov dx,virt_ds_out OR virt_es_in
+	mov ax,get_module_proc_nr
+	RegisterUserGate
+;
 	mov bx,thread_app_sel
 	mov edx,app_linear
 	mov ecx,SIZE app_seg
@@ -373,7 +393,7 @@ run_open_hooks	Proc near
 	mov ds:app_free_thread_proc,0
 	mov ds:app_spawn_proc,0
 	mov ds:app_close_proc,0
-	mov ds:app_create_handle_proc,0
+	mov ds:app_load_dll_proc,0
 ;
 	mov ax,app_data_sel
 	mov ds,ax
@@ -1019,6 +1039,179 @@ app_debug	PROC far
 	pop ds
 	retf32
 app_debug	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			load_dll
+;
+;		DESCRIPTION:    Load DLL
+;
+;       PARAMETERS:		ES:(E)DI	Name of dll to load
+;
+;		RETURNS:		BX		    Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_dll_name	DB 'Load Dll',0
+
+load_dll32  Proc far
+    push ds
+    push eax
+;    
+    int 3
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov eax,ds:app_load_dll_proc
+	or eax,eax
+	stc
+	jz load_dll32_done
+;
+	call ds:app_load_dll_proc
+	jc load_dll32_done
+;
+    push es
+    mov es,bx
+    mov bx,es:mod_handle
+    pop es	
+
+load_dll32_done:
+    pop eax
+    pop ds
+    ret
+load_dll32  Endp
+
+load_dll16  Proc far
+    push ds
+    push eax
+    push edi
+;    
+    int 3
+    movzx edi,di
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov eax,ds:app_load_dll_proc
+	or eax,eax
+	stc
+	jz load_dll16_done
+;
+	call ds:app_load_dll_proc
+	jc load_dll16_done
+;
+    push es
+    mov es,bx
+    mov bx,es:mod_handle
+    pop es	
+
+load_dll16_done:
+    pop edi
+    pop eax
+    pop ds
+    ret
+load_dll16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			free_dll
+;
+;		DESCRIPTION:    Free DLL
+;
+;       PARAMETERS:		BX		Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_dll_name	DB 'Free Dll',0
+
+free_dll  Proc far
+    push ds
+    push es
+    push ax
+    push bx
+;    
+    int 3
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc free_dll_done
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    jz free_dll_done
+;
+    mov es,bx
+    call es:mod_free_dll_proc    
+
+free_dll_done:
+    pop bx
+    pop ax
+    pop es
+    pop ds    
+    retf32
+free_dll  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetModuleProc
+;
+;		DESCRIPTION:    Get module procedure
+;
+;       PARAMETERS:		BX		Module handle
+;                       ES:(E)DI	Proc name
+;
+;       RETURNS:        DS:(E)SI	Proc address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_proc_name	DB 'Get Module Proc',0
+
+get_module_proc32  Proc far
+    push ax
+    push bx
+;    
+    int 3
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc get_module_proc_done32
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz get_module_proc_done32
+;
+    mov ds,bx
+    call ds:mod_get_proc_proc
+
+get_module_proc_done32:
+    pop bx
+    pop ax
+    retf32
+get_module_proc32  Endp
+
+get_module_proc16  Proc far
+    push ax
+    push bx
+    push edi
+;    
+    int 3
+    movzx edi,di
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc get_module_proc_done16
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz get_module_proc_done16
+;
+    mov ds,bx
+    call ds:mod_get_proc_proc
+
+get_module_proc_done16:
+    pop bx
+    pop ax
+    ret
+get_module_proc16  Endp
 
 code	ENDS
 

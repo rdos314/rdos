@@ -186,7 +186,7 @@ GetModuleHandleA Proc near
 	jmp gmhDone
 
 gmhNotDefault:
-	UserGate get_dll_nr
+	UserGate get_module_nr
 	jc gmhFailed
 ;
 	mov eax,ebx
@@ -234,7 +234,7 @@ GetModuleFileNameA Proc near
 gmfaGet:
 	mov ecx,[ebp].gmfSize
 	mov edi,[ebp].gmfBuf
-	UserGate get_dll_name_nr
+	UserGate get_module_name_nr
 	jnc gmfaDone
 ;
 	xor eax,eax
@@ -258,7 +258,7 @@ GetModuleFileNameW Proc near
 	int 3
 	mov ebx,[ebp].gmfHandle
 	mov edi,esp
-	UserGate get_dll_name_nr
+	UserGate get_module_name_nr
 	jnc gmfwCopy
 ;
 	xor eax,eax
@@ -315,7 +315,7 @@ GetProcAddress Proc near
 ;
 	mov ebx,[ebp].gpaHandle
 	mov edi,[ebp].gpaProc
-	UserGate get_dll_proc_nr
+	UserGate get_module_proc_nr
 	jc gpaFail
 ;
 	mov eax,esi

@@ -7518,7 +7518,7 @@ RdosGetModuleName	Proc near
 	mov ebx,[ebp+8]
 	mov edi,[ebp+12]
 	mov ecx,[ebp+16]
-	UserGate get_dll_name_nr
+	UserGate get_module_name_nr
 	jnc dmnDone
 ;
     xor eax,eax	
@@ -7566,7 +7566,7 @@ RdosReadResource	Proc near
 read_resource_handle_ok:
 	mov eax,[ebp+12]
 	mov edx,6
-	UserGate get_dll_resource_nr
+	UserGate get_module_resource_nr
 	jc read_resource_fail
 ;
 	cmp ecx,[ebp+20]
@@ -7632,7 +7632,7 @@ RdosReadBinaryResource	Proc near
 read_bin_resource_handle_ok:
 	mov eax,[ebp+12]
 	mov edx,10
-	UserGate get_dll_resource_nr
+	UserGate get_module_resource_nr
 	jc read_bin_resource_fail
 ;
 	cmp ecx,[ebp+20]

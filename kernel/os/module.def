@@ -27,18 +27,24 @@
 
 module_struc    STRUC
 
-; IN  ES:(E)DI	Proc name
-; OUT DS:(E)SI	Proc address
+; IN  BX        Module sel
+mod_free_dll_proc       DD ?
+
+; IN  BX        Module sel
+; IN  ES:EDI	Proc name
+; OUT DS:ESI	Proc address
 mod_get_proc_proc       DD ?
 
-; IN  (E)AX		Resource handle
-; IN  (E)DX		Resource type
-; OUT DS:(E)SI	Resource address
+; IN  BX        Module sel
+; IN  EAX		Resource handle
+; IN  EDX		Resource type
+; OUT DS:ESI	Resource address
 mod_get_resource_proc   DD ?
 
-; IN  (E)CX		Max name size
-; IN  ES:(E)DI	Name buffer
-; OUT (E)AX		Bytes copied
+; IN  BX        Module sel
+; IN  ECX		Max name size
+; IN  ES:EDI	Name buffer
+; OUT EAX		Bytes copied
 mod_get_name_proc       DD ?
 
 mod_handle              DW ?

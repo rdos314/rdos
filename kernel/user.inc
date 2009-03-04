@@ -584,7 +584,7 @@ DosExtExec	MACRO
 ; IN  FS:(E)BX	Startup directory & drive
 ; IN  EDX		Debug thread handle
 ; OUT AX		Thread handle
-; OUT DX		Application handle
+; OUT DX		Module handle
 SpawnExe	MACRO
 	UserGate spawn_exe_nr
 					ENDM
@@ -615,43 +615,48 @@ GetEnvironment	MACRO
 					ENDM
 
 ; IN  ES:(E)DI	DLL name
-; OUT (E)BX		DLL handle
+; OUT BX		Module handle
 LoadDll	MACRO
 	UserGate load_dll_nr
 					ENDM
 
-; IN  (E)BX		DLL handle
+; IN  BX		Module handle
 FreeDll	MACRO
 	UserGate free_dll_nr
 					ENDM
 
-; IN  (E)BX		DLL handle
-; IN  ES:(E)DI	Proc name
-; OUT DS:(E)SI	Proc address
-GetDllProc	MACRO
-	UserGate get_dll_proc_nr
+; OUT BX		Module handle
+GetCurrentModule	MACRO
+	UserGate get_current_module_nr
 					ENDM
 
-; IN  (E)BX		DLL handle
+; IN  ES:(E)DI	Module name
+; OUT BX		Module handle
+GetModule	MACRO
+	UserGate get_module_nr
+					ENDM
+
+; IN  BX		Module handle
+; IN  ES:(E)DI	Proc name
+; OUT DS:(E)SI	Proc address
+GetModuleProc	MACRO
+	UserGate get_module_proc_nr
+					ENDM
+
+; IN  BX		Module handle
 ; IN  (E)AX		Resource handle
 ; IN  (E)DX		Resource type
 ; OUT DS:(E)SI	Resource address
-GetDllResource	MACRO
-	UserGate get_dll_resource_nr
+GetModuleResource	MACRO
+	UserGate get_module_resource_nr
 					ENDM
 
-; IN  (E)BX		DLL handle
+; IN  BX		Module handle
 ; IN  (E)CX		Max name size
-; IN  ES:(E)DI	DLL name buffer
+; IN  ES:(E)DI	Name buffer
 ; OUT (E)AX		Bytes copied
-GetDllName	MACRO
-	UserGate get_dll_name_nr
-					ENDM
-
-; IN  ES:(E)DI	DLL name
-; OUT (E)BX		DLL handle
-GetDll	MACRO
-	UserGate get_dll_nr
+GetModuleName	MACRO
+	UserGate get_module_name_nr
 					ENDM
 
 ; IN  EAX     		Number of bytes

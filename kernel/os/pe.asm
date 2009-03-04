@@ -218,7 +218,7 @@ CreateProcessEvent Proc near
 	mov word ptr es:[di].cpeFile+2,cx
 ;	
     mov eax,LIB_HANDLE
-    mov ax,ds
+    mov ax,ds:mod_handle
     mov es:[di].cpeHandle,eax    
 ;
 	mov eax,fs:pvProcessHandle
@@ -375,7 +375,7 @@ LoadDllEvent Proc near
 	mov word ptr es:[di].ldeFile+2,cx
 ;	
     mov eax,LIB_HANDLE
-    mov ax,ds
+    mov ax,ds:mod_handle
     mov es:[di].ldeHandle,eax    
 ;
 	mov eax,ds:lib_base
@@ -443,6 +443,9 @@ create_lib_size_ok:
 	mov es:lib_file_handle,bx
 	mov es:lib_run_now,0
 	mov es:lib_init_param,0
+;
+    mov word ptr es:mod_get_proc_proc,OFFSET get_module_proc
+    mov word ptr es:mod_get_proc_proc+2,cs
 ;
 	pop edi
 	pop esi
@@ -596,8 +599,8 @@ InsertApp	Proc near
 	mov word ptr ds:app_spawn_proc+2,cs
 	mov word ptr ds:app_close_proc,OFFSET close_proc
 	mov word ptr ds:app_close_proc+2,cs
-	mov word ptr ds:app_create_handle_proc,OFFSET create_handle_proc
-	mov word ptr ds:app_create_handle_proc+2,cs
+	mov word ptr ds:app_load_dll_proc,OFFSET load_dll
+	mov word ptr ds:app_load_dll_proc+2,cs
 	mov word ptr ds:app_loader_name,OFFSET pe_loader_name
 	mov word ptr ds:app_loader_name+2,cs
 ;
@@ -1827,6 +1830,8 @@ load_dll_do:
 ;
 	FreeMem
 	call CreateLib
+    mov word ptr es:mod_free_dll_proc,OFFSET free_dll	
+    mov word ptr es:mod_free_dll_proc+2,cs
 	CreateModule
 ;	
 	call CreateImage
@@ -2376,7 +2381,7 @@ init_stack_no_tls:
 	mov [edx],eax						; reason
 	sub edx,4
 	mov eax,LIB_HANDLE
-	mov ax,es
+	mov ax,es:mod_handle
 	mov dword ptr [edx],eax				; module handle
 	mov fs:pvModuleHandle,eax
 	sub edx,4
@@ -2915,11 +2920,11 @@ spawn_param_ok:
 	mov ax,cs
 	mov es,ax
 	mov edi,OFFSET kernel_dll
-	UserGateForce32 get_dll_nr
+	UserGateForce32 get_module_nr
 	jc spawn_no_debug
 ;
 	mov edi,OFFSET debug_startup
-	UserGateForce32 get_dll_proc_nr
+	UserGateForce32 get_module_proc_nr
 	jc spawn_no_debug
 ;
 	xchg esi,[bp].load_eip
@@ -2932,23 +2937,6 @@ spawn_param_ok:
 spawn_no_debug:
 	ret
 spawn_proc	Endp
-
-PAGE
-                                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			create_handle_proc
-;
-;		DESCRIPTION:    Create handle for application
-;
-;		PARAMETERS:
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_handle_proc	Proc far
-    ret
-create_handle_proc  Endp
 
 PAGE
                                            
@@ -3585,13 +3573,11 @@ reserve_pe_mem	ENDP
 ;
 ;       PARAMETERS:		ES:EDI	name of dll to load
 ;
-;		RETURNS:		EBX		HANDLE
+;		RETURNS:		BX      Lib sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_dll_name	DB 'Load Dll',0
-
-load_dll32	Proc far
+load_dll	Proc far
 	push ds
 	push es
 	push fs
@@ -3610,12 +3596,8 @@ load_dll32	Proc far
 	mov es,word ptr fs:pvModuleHandle
 	mov fs,ax
 	call LoadPeDll
-	jc load_dll32_done
-;
-	mov ebx,LIB_HANDLE
 	mov bx,es
-
-load_dll32_done:
+;	
 	pop edi
 	pop edi
 	pop edx
@@ -3625,8 +3607,8 @@ load_dll32_done:
 	pop fs
 	pop es
 	pop ds
-	retf32
-load_dll32	Endp
+	ret
+load_dll	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3635,57 +3617,37 @@ load_dll32	Endp
 ;
 ;		DESCRIPTION:    Free DLL
 ;
-;       PARAMETERS:		EBX		HANDLE
+;       PARAMETERS:		BX		Lib sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_dll_name	DB 'Free Dll',0
-
-free_dll32	Proc far
+free_dll	Proc far
 	push es
-	push eax
-;
-	mov eax,ebx
-	xor ax,ax
-	cmp eax,LIB_HANDLE
-	stc
-	jne free_dll32_done
-;
 	mov es,bx
 	call FreePeDll
-
-free_dll32_done:
-	pop eax
 	pop es
-	retf32
-free_dll32	Endp
+	ret
+free_dll	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDllProc
+;		NAME:			GetModuleProc
 ;
-;		DESCRIPTION:    Get DLL procedure
+;		DESCRIPTION:    Get module procedure
 ;
-;       PARAMETERS:		EBX		Handle
+;       PARAMETERS:		BX		Lib sel
 ;						ES:EDI	Proc name
 ;						
 ;		RETURNS:		DS:ESI	Proc address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_dll_proc_name	DB 'Get DLL Proc',0
-
-get_dll_proc	Proc far
+get_module_proc	Proc far
 	push eax
 	push ebx
 	push ecx
 	push edx
-;
-	mov eax,ebx
-	xor ax,ax
-	cmp eax,LIB_HANDLE
-	jne get_dll_proc_fail
 ;
 	push es
 	mov es,bx
@@ -3695,6 +3657,7 @@ get_dll_proc	Proc far
 	mov esi,es:lib_header
 	mov esi,[esi].peh_export_va
 	pop es
+;	
 	or esi,esi
 	jz get_dll_proc_fail
 ;
@@ -3751,8 +3714,8 @@ get_dll_proc_done:
 	pop ecx
 	pop ebx
 	pop eax
-	retf32
-get_dll_proc	Endp
+	ret
+get_module_proc	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3847,7 +3810,7 @@ get_dll_handle	Proc far
 
 get_dll_handle_ok:
 	mov ebx,LIB_HANDLE
-	mov bx,es
+	mov bx,es:mod_handle
 
 get_dll_handle_done:
 	pop esi
@@ -4309,40 +4272,22 @@ init	PROC far
 	mov ax,notify_pe_exception_nr
 	RegisterUserGate32
 ;
-	mov si,OFFSET load_dll32
-	mov di,OFFSET load_dll_name
-	xor dx,dx
-	mov ax,load_dll_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET free_dll32
-	mov di,OFFSET free_dll_name
-	xor dx,dx
-	mov ax,free_dll_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET get_dll_proc
-	mov di,OFFSET get_dll_proc_name
-	xor dx,dx
-	mov ax,get_dll_proc_nr
-	RegisterUserGate32
-;
 	mov si,OFFSET get_dll_resource
 	mov di,OFFSET get_dll_resource_name
 	xor dx,dx
-	mov ax,get_dll_resource_nr
+	mov ax,get_module_resource_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET get_dll_handle
 	mov di,OFFSET get_dll_handle_name
 	xor dx,dx
-	mov ax,get_dll_nr
+	mov ax,get_module_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET get_dll_name
 	mov di,OFFSET get_dll_name_name
 	xor dx,dx
-	mov ax,get_dll_name_nr
+	mov ax,get_module_name_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET reserve_pe_mem
