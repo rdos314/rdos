@@ -1769,6 +1769,7 @@ StartImportedDlls	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadPeDll	PROC near
+    push gs
 	push eax
 	push ebx
 	push ecx
@@ -1776,6 +1777,8 @@ LoadPeDll	PROC near
 	push esi
 	push bp
 ;
+    mov ax,es
+    mov gs,ax
 	call FindSysDll
 	jnc load_dll_usage
 ;
@@ -1788,8 +1791,8 @@ load_dll_usage:
 	jmp load_dll_done
 
 load_dll_do:
-	mov dx,es:lib_debug_lib
-	mov bp,es:lib_run_now
+	mov dx,gs:lib_debug_lib
+	mov bp,gs:lib_run_now
 	call OpenDll
 	jc load_dll_fail_nofree
 ;
@@ -1877,6 +1880,7 @@ load_dll_done:
 	pop ecx
 	pop ebx
 	pop eax
+	pop gs
 	ret
 LoadPeDll	ENDP
 

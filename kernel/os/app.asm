@@ -698,6 +698,7 @@ create_module	PROC far
     push es
     push ax
     push bx
+    push dx
 ;
 	mov cx,SIZE module_handle_seg
 	AllocateHandle
@@ -726,6 +727,7 @@ create_module	PROC far
     mov es:mod_next,ax
         
 create_module_done:    
+    pop dx
     pop bx
     pop ax
     pop es

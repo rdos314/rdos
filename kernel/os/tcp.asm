@@ -77,6 +77,50 @@ code	SEGMENT byte public 'CODE'
 	
 	assume cs:code
 
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CheckConnectionList
+;
+;	Purpose:		Check connection list integrity
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckConnectionList	Proc near
+    push ds
+    pushad
+;    
+    xor cx,cx
+	mov ax,tcp_data_sel
+	mov ds,ax
+	mov ax,ds:ConnectionList
+	or ax,ax
+    jz cclCheck
+
+cclLoop:
+    inc cx
+    mov ds,ax
+    mov ax, ds:tcp_next
+    or ax,ax
+    jnz cclLoop
+
+cclCheck:
+	mov ax,tcp_data_sel
+	mov ds,ax
+;
+    cmp cx,ds:ConnectionCount
+    je cclDone
+;
+    int 3
+
+cclDone:    
+    popad
+    pop ds
+    ret
+CheckConnectionList Endp	
+
 PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -663,6 +707,8 @@ CreateConnection	Proc near
 	mov dx,ds:ConnectionList
 	mov es:tcp_next,dx
 	mov ds:ConnectionList,es
+	inc ds:ConnectionCount
+	call CheckConnectionList
 	LeaveSection ds:ListSection
 	mov ax,es
 	mov ds,ax
@@ -728,16 +774,19 @@ DeleteConnection	Proc near
 ;
 	mov ax,tcp_data_sel
 	mov ds,ax
+;
 	mov ax,ds:ConnectionList
 	cmp ax,bx
 	jne delete_connect_loop
 ;
 	mov ds:ConnectionList,dx
+	dec ds:ConnectionCount
 	jmp delete_connect_unlinked
 
 delete_connect_loop:
 	or ax,ax
 	jz delete_connect_unlinked
+;	
 	mov ds,ax
 	mov cx,ax
 	mov ax,ds:tcp_next
@@ -748,8 +797,13 @@ delete_connect_loop:
     mov ax,ds:tcp_next
 	mov ds,cx
 	mov ds:tcp_next,ax
+;	
+	mov ax,tcp_data_sel
+	mov ds,ax
+	dec ds:ConnectionCount
 
 delete_connect_unlinked:
+    call CheckConnectionList
 	FreeMem
 ;
 	pop edx
@@ -5193,6 +5247,11 @@ tcp_unlink_head:
 	mov ds:ConnectionList,si
 
 tcp_delete_do:
+	mov ax,tcp_data_sel
+	mov ds,ax
+	dec ds:ConnectionCount
+    call CheckConnectionList	
+;   
 	push si
 	mov ds,bx
 ;	
@@ -5302,6 +5361,7 @@ init_tcp	PROC near
 	AllocateFixedSystemMem
 	mov es,bx
 	mov es:ConnectionList,0
+	mov es:ConnectionCount,0
 	mov es:ListenList,0
 	mov es:Handle,0
 	mov es:LastPort,545

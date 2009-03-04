@@ -156,6 +156,7 @@ tcp_data	STRUC
 ListSection			section_typ <>
 Handle				DW ?
 ConnectionList		DW ?
+ConnectionCount     DW ?
 ListenList			DW ?
 TcpThread			DW ?
 LastPort			DW ?
