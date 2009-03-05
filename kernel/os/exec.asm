@@ -731,10 +731,10 @@ load_process_fail:
 ;		PARAMETERS:     DS:(E)SI	Filename
 ;						ES:(E)DI	Command line
 ;						FS:(E)BX	Startup dir
-;						EDX			Loader parameter
+;						DX			Debug module handle
 ;
-;       RETURN VALUE:   AX		Thread handle
-;						DX		Application handle
+;       RETURN VALUE:   AX		    Thread handle
+;						DX		    Aliased module handle (or 0 if no debugging)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -926,7 +926,15 @@ spawn_program	Proc near
 	mov gs:s_name,ds
 	mov gs:s_cmd,es
 	mov gs:s_curr_dir,fs
-	mov gs:s_param,edx
+;
+	mov gs:s_param,0
+    mov bx,dx
+    DerefModuleHandle	
+    jc spawn_debug_ok
+;    
+	mov gs:s_param,bx
+
+spawn_debug_ok:
 	mov gs:s_switch,0
 ;
 	GetThread
@@ -967,6 +975,23 @@ spawn_focus_done:
 	mov bx,ds:s_ret_code
 	LeaveSection ds:s_sect2
 ;
+    push ax
+    push bx
+;    
+	mov ax,gs:s_param
+	or ax,ax
+	jz spawn_no_debug_alias
+;	
+    mov ds,dx
+    mov bx,ds:app_lib_sel
+    AliasModuleHandle
+    mov ax,bx
+
+spawn_no_debug_alias:
+    mov dx,ax
+    pop bx
+    pop ax
+;    
 	xor cx,cx
 	mov ds,cx
 	mov fs,cx

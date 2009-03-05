@@ -88,7 +88,10 @@ SendEvent Proc near
 	or ax,ax
 	jz seDone
 ;
+	mov ax,pe_app_sel
 	mov ds,ax
+	mov ds,ds:pe_app
+;	
 	EnterSection ds:lib_section
 ;
 	mov ax,ds:lib_events
@@ -444,8 +447,25 @@ create_lib_size_ok:
 	mov es:lib_run_now,0
 	mov es:lib_init_param,0
 ;
+    mov es:mod_free_dll_proc,0
+;
     mov word ptr es:mod_get_proc_proc,OFFSET get_module_proc
     mov word ptr es:mod_get_proc_proc+2,cs
+;
+    mov word ptr es:mod_get_resource_proc,OFFSET get_resource
+    mov word ptr es:mod_get_resource_proc+2,cs
+;
+    mov word ptr es:mod_get_name_proc,OFFSET get_module_name
+    mov word ptr es:mod_get_name_proc+2,cs
+;
+    mov word ptr es:mod_wait_for_debug_event_proc,OFFSET wait_for_debug_event
+    mov word ptr es:mod_wait_for_debug_event_proc+2,cs
+;
+    mov word ptr es:mod_get_debug_event_data_proc,OFFSET get_debug_event_data
+    mov word ptr es:mod_get_debug_event_data_proc+2,cs
+;
+    mov word ptr es:mod_continue_debug_event_proc,OFFSET continue_debug_event
+    mov word ptr es:mod_continue_debug_event_proc+2,cs
 ;
 	pop edi
 	pop esi
@@ -2617,9 +2637,12 @@ init_thread	PROC far
 	mov ebx,es:pvModuleHandle
 	mov edx,es:pvProcessHandle
 	push es
+	push bx
+	DerefModuleHandle
 	mov es,bx
 	mov esi,es:lib_header
 	mov edi,es:lib_base
+	pop bx
 	pop es
 ;	
 	mov ecx,es:pvArbitrary
@@ -2827,6 +2850,7 @@ free_thread	Proc far
 	
 free_thread_no_debug:
 	mov ebx,fs:pvModuleHandle
+	DerefModuleHandle
 	mov es,bx
 	mov ax,flat_data_sel
 	mov ds,ax
@@ -2893,8 +2917,8 @@ spawn_proc	Proc far
 	cmp ax,word ptr gs:s_loader_name+2
 	jne spawn_param_ok
 ;	
-	mov edx,gs:s_param
-
+	mov dx,gs:s_param
+    	
 spawn_param_ok:
 	mov es:lib_debug_lib,dx
 	mov es:lib_init_param,dx
@@ -3039,14 +3063,12 @@ PAGE
 ;		DESCRIPTION:    Wait for an debug event from process
 ;
 ;		PARAMETERS:		EAX     Timeout in milliseconds
+;                       BX      Debugged lib_sel
 ;
 ;       RETURNS:        EAX     Thread ID
 ;                       BL      Event type  
-;                       EDX     Process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-wait_for_debug_event_name DB 'Wait For Debug Event',0
 
 wait_for_debug_event Proc far
 	push ds
@@ -3054,7 +3076,7 @@ wait_for_debug_event Proc far
 	push ecx
 	push esi
 ;
-	mov ds,word ptr fs:pvModuleHandle
+    mov ds,bx
 	EnterSection ds:lib_section
 	ClearSignal
 	GetThread
@@ -3108,7 +3130,7 @@ wfdDone:
 	pop ecx
 	pop es
 	pop ds	
-	retf32
+	ret
 wait_for_debug_event Endp
 
 PAGE
@@ -3120,11 +3142,10 @@ PAGE
 ;
 ;		DESCRIPTION:    Get event data
 ;
-;		PARAMETERS:		ES:EDI     Event buffer
-;
+;		PARAMETERS:		BX        Debugged lib_sel
+;                       ES:EDI     Event buffer
+;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_debug_event_data_name DB 'Get Debug Event Data',0
 
 get_debug_event_data Proc far
 	push ds
@@ -3133,7 +3154,7 @@ get_debug_event_data Proc far
 	push ecx
 	push esi
 ;	
-	mov ds,word ptr fs:pvModuleHandle
+	mov ds,bx
 	mov ds,ds:lib_curr_event
 ;	
 	mov esi,SIZE event_struc
@@ -3162,7 +3183,7 @@ gdedDone:
 	pop ebx
 	pop eax
 	pop ds	
-	retf32
+	ret
 get_debug_event_data Endp
 
 PAGE
@@ -3175,10 +3196,9 @@ PAGE
 ;		DESCRIPTION:    Continue debugged thread
 ;
 ;		PARAMETERS:		EAX		Thread
+;                       BX      Debugged lib_sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-continue_debug_event_name DB 'Continue Debug Event',0
 
 continue_debug_event Proc far
 	push ds
@@ -3187,7 +3207,7 @@ continue_debug_event Proc far
 	push dx
 	push si
 ;
-	mov ds,word ptr fs:pvModuleHandle
+	mov ds,bx
 	mov es,ds:lib_curr_event
 	FreeMem
 	mov ds:lib_curr_event,0
@@ -3235,7 +3255,7 @@ continue_debug_done:
 	pop bx
 	pop es
 	pop ds
-	retf32
+	ret
 continue_debug_event Endp
 
 PAGE
@@ -3258,7 +3278,12 @@ notify_pe_exception	Proc far
 	push ds
 	push dx
 ;
-	mov ds,word ptr fs:pvModuleHandle
+    push ebx
+	mov ebx,fs:pvModuleHandle
+	DerefModuleHandle
+	mov ds,bx
+	pop ebx
+;	
 	mov dx,ds:lib_debug_lib
 	or dx,dx
 	jz neDone
@@ -3274,7 +3299,9 @@ notify_pe_exception	Proc far
 	push ds
 	push es
 ;
-	mov ds,word ptr fs:pvModuleHandle
+	mov ebx,fs:pvModuleHandle
+	DerefModuleHandle
+	mov ds,bx
 	call ExceptionEvent
 ;
 	mov ds,[bp].vm_ss
@@ -3317,15 +3344,19 @@ notify_pe_exception	Proc far
 	mov [bp].vm_esp,ebx
 ;
 	mov eax,PROCESS_HANDLE
-	mov ax,word ptr fs:pvModuleHandle
-	mov ds,ax
+	mov bx,word ptr fs:pvModuleHandle
+	DerefModuleHandle
+	mov ds,bx
+	mov ax,bx
 	mov es:event_proc_id,eax
 ;
 	mov eax,THREAD_HANDLE
 	GetThread
 	mov es:event_thread_id,eax
 ;
-	mov ds,ds:lib_debug_lib
+	mov ax,pe_app_sel
+	mov ds,ax
+	mov ds,ds:pe_app
 	EnterSection ds:lib_section
 ;
 	mov ax,ds:lib_events
@@ -3588,16 +3619,21 @@ load_dll	Proc far
 	push esi
 	push edi
 ;
-	mov ax,flat_data_sel
-	mov ds,ax
 	mov al,es:[edi]
 	mov esi,edi
+	mov bx,word ptr fs:pvModuleHandle
+    DerefModuleHandle
+	jc load_dll_pr_done
+;
 	mov ax,es
-	mov es,word ptr fs:pvModuleHandle
 	mov fs,ax
+    mov es,bx
+	mov ax,flat_data_sel
+	mov ds,ax
 	call LoadPeDll
 	mov bx,es
-;	
+
+load_dll_pr_done:	
 	pop edi
 	pop edi
 	pop edx
@@ -3659,48 +3695,48 @@ get_module_proc	Proc far
 	pop es
 ;	
 	or esi,esi
-	jz get_dll_proc_fail
+	jz get_proc_fail
 ;
 	add esi,edx
 	mov ecx,[esi].exp_name_count
 	mov ebx,[esi].exp_name_va
 	add ebx,edx
 	or ecx,ecx
-	jz get_dll_proc_fail
+	jz get_proc_fail
 
-get_dll_proc_loop:
+get_proc_loop:
 	push esi
 	push edi
 	mov esi,[ebx]
 	add esi,edx
 
-get_dll_proc_search:
+get_proc_search:
 	mov al,[esi]
 	mov ah,es:[edi]
 	cmp al,ah
-	jne get_dll_proc_next
+	jne get_proc_next
 ;
 	or al,ah
-	jz get_dll_proc_ok
+	jz get_proc_ok
 ;
 	inc esi
 	inc edi
-	jmp get_dll_proc_search
+	jmp get_proc_search
 
-get_dll_proc_next:
+get_proc_next:
 	pop edi
 	pop esi
-	jz get_dll_proc_ok
+	jz get_proc_ok
 ;
 	add ebx,4
-	loop get_dll_proc_loop
+	loop get_proc_loop
 
-get_dll_proc_fail:
+get_proc_fail:
 	xor esi,esi
 	stc
-	jmp get_dll_proc_done
+	jmp get_proc_done
 
-get_dll_proc_ok:
+get_proc_ok:
 	pop edi
 	pop esi
 	sub ebx,[esi].exp_name_va
@@ -3709,7 +3745,7 @@ get_dll_proc_ok:
 	add esi,edx
 	clc
 
-get_dll_proc_done:
+get_proc_done:
 	pop edx
 	pop ecx
 	pop ebx
@@ -3720,11 +3756,11 @@ get_module_proc	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDllName
+;		NAME:			GetModuleName
 ;
-;		DESCRIPTION:    Get DLL name
+;		DESCRIPTION:    Get module name
 ;
-;       PARAMETERS:		EBX		Handle
+;       PARAMETERS:		BX		Handle
 ;						ECX		Max name size
 ;						ES:EDI	Name buffer
 ;						
@@ -3732,18 +3768,10 @@ get_module_proc	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_dll_name_name	DB 'Get DLL Name',0
-
-get_dll_name	Proc far
-	mov eax,ebx
-	xor ax,ax
-	cmp eax,LIB_HANDLE
-	stc
-	jne get_dll_name_done
-;
+get_module_name	Proc far
 	or ecx,ecx
 	clc
-	jz get_dll_name_done
+	jz get_name_done
 ;
 	push ds
 	push ecx
@@ -3753,27 +3781,27 @@ get_dll_name	Proc far
 	xor eax,eax
 	mov ds,bx
 	mov si,OFFSET lib_name
-get_dll_name_loop:
+get_name_loop:
 	lodsb
 	stos byte ptr es:[edi]
 	or al,al
-	jz get_dll_name_ok
+	jz get_name_ok
 	inc eax
 	sub ecx,1
-	jnz get_dll_name_loop
+	jnz get_name_loop
 ;
 	mov byte ptr es:[edi-1],0
 
-get_dll_name_ok:
+get_name_ok:
 	pop edi
 	pop si
 	pop ecx
 	pop ds
 	clc
 
-get_dll_name_done:
-	retf32
-get_dll_name	Endp
+get_name_done:
+	ret
+get_module_name	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3826,7 +3854,7 @@ get_dll_handle	Endp
 ;
 ;		DESCRIPTION:    Get DLL resource
 ;
-;       PARAMETERS:		EBX		Handle
+;       PARAMETERS:		BX      Lib sel
 ;						EAX		Resource id
 ;						EDX		Resource type
 ;						
@@ -3835,9 +3863,7 @@ get_dll_handle	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_dll_resource_name	DB 'Get DLL Resource',0
-
-get_dll_resource	Proc far
+get_resource	Proc far
 	push eax
 	push ebx
 	push edx
@@ -3846,10 +3872,6 @@ get_dll_resource	Proc far
 ;
 	mov edi,eax
 	mov ebp,edx
-	mov ecx,ebx
-	xor cx,cx
-	cmp ecx,LIB_HANDLE
-	jne get_dll_resource_fail
 ;
 	push es
 	mov es,bx
@@ -3864,20 +3886,20 @@ get_dll_resource	Proc far
 	movzx ecx,[esi].res_ids
 	add esi,OFFSET res_data
 	or ecx,ecx
-	jz get_dll_resource_fail_pop
+	jz get_resource_fail_pop
 
-get_dll_resource_type_loop:
+get_resource_type_loop:
 	cmp ebp,[esi]
-	je get_dll_resource_type_found
+	je get_resource_type_found
 ;
 	add esi,8
-	loop get_dll_resource_type_loop
-	jmp get_dll_resource_fail_pop
+	loop get_resource_type_loop
+	jmp get_resource_fail_pop
 
-get_dll_resource_type_found:
+get_resource_type_found:
 	mov eax,[esi+4]
 	test eax,80000000h
-	jz get_dll_resource_fail_pop
+	jz get_resource_fail_pop
 ;
 	and eax,7FFFFFFFh
 	mov esi,eax
@@ -3885,28 +3907,28 @@ get_dll_resource_type_found:
 	movzx ecx,[esi].res_ids
 	add esi,OFFSET res_data
 	or ecx,ecx
-	jz get_dll_resource_fail_pop
+	jz get_resource_fail_pop
 ;
     mov eax,edi
     cmp ebp,6
-    jne get_dll_resource_id_loop
+    jne get_resource_id_loop
 ;
     shr eax,4
     inc eax
 
-get_dll_resource_id_loop:
+get_resource_id_loop:
 	cmp eax,[esi]
-	je get_dll_resource_id_found
+	je get_resource_id_found
 ;
 	add esi,8
-	loop get_dll_resource_id_loop
-	jmp get_dll_resource_fail_pop
+	loop get_resource_id_loop
+	jmp get_resource_fail_pop
 
-get_dll_resource_id_found:
+get_resource_id_found:
     and edi,0Fh
 	mov eax,[esi+4]
 	test eax,80000000h
-	jz get_dll_resource_found
+	jz get_resource_found
 ;
 	and eax,7FFFFFFFh
 	mov esi,eax
@@ -3914,52 +3936,52 @@ get_dll_resource_id_found:
 	movzx ecx,[esi].res_ids
 	add esi,OFFSET res_data
 	or ecx,ecx
-	jnz get_dll_resource_id_found
-	jmp get_dll_resource_fail_pop
+	jnz get_resource_id_found
+	jmp get_resource_fail_pop
 
-get_dll_resource_found:
+get_resource_found:
 	add eax,edx
 	mov ecx,[eax+4]
 	mov esi,[eax]
 	add esi,es:lib_base
 	cmp ebp,6
-	jne get_dll_resource_ok_pop
+	jne get_resource_ok_pop
 
-get_dll_resource_entry_loop:
+get_resource_entry_loop:
     movzx ecx,word ptr [esi]
     or edi,edi
-    jz get_dll_resource_ok
+    jz get_resource_ok
 ;
     add esi,ecx
     add esi,ecx
     add esi,2
     dec edi
-    jmp get_dll_resource_entry_loop
+    jmp get_resource_entry_loop
 
-get_dll_resource_ok:    
+get_resource_ok:    
     add esi,2
 
-get_dll_resource_ok_pop:
+get_resource_ok_pop:
 	pop es
 	clc
-	jmp get_dll_resource_done
+	jmp get_resource_done
 
-get_dll_resource_fail_pop:
+get_resource_fail_pop:
 	pop es
 
-get_dll_resource_fail:
+get_resource_fail:
 	xor esi,esi
 	stc
-	jmp get_dll_resource_done
+	jmp get_resource_done
 
-get_dll_resource_done:
+get_resource_done:
     pop ebp
 	pop edi
 	pop edx
 	pop ebx
 	pop eax
-	retf32
-get_dll_resource	Endp
+	ret
+get_resource	Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4248,46 +4270,16 @@ init	PROC far
 	mov di,OFFSET close_app
 	HookCloseApp
 ;
-	mov si,OFFSET wait_for_debug_event
-	mov di,OFFSET wait_for_debug_event_name
-	xor dx,dx
-	mov ax,wait_for_debug_event_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET get_debug_event_data
-	mov di,OFFSET get_debug_event_data_name
-	xor dx,dx
-	mov ax,get_debug_event_data_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET continue_debug_event
-	mov di,OFFSET continue_debug_event_name
-	xor dx,dx
-	mov ax,continue_debug_event_nr
-	RegisterUserGate32
-;
 	mov si,OFFSET notify_pe_exception
 	mov di,OFFSET notify_pe_exception_name
 	xor dx,dx
 	mov ax,notify_pe_exception_nr
 	RegisterUserGate32
 ;
-	mov si,OFFSET get_dll_resource
-	mov di,OFFSET get_dll_resource_name
-	xor dx,dx
-	mov ax,get_module_resource_nr
-	RegisterUserGate32
-;
 	mov si,OFFSET get_dll_handle
 	mov di,OFFSET get_dll_handle_name
 	xor dx,dx
 	mov ax,get_module_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET get_dll_name
-	mov di,OFFSET get_dll_name_name
-	xor dx,dx
-	mov ax,get_module_name_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET reserve_pe_mem

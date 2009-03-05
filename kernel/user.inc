@@ -582,7 +582,7 @@ DosExtExec	MACRO
 ; IN  DS:(E)SI	Program name
 ; IN  ES:(E)DI	Command line
 ; IN  FS:(E)BX	Startup directory & drive
-; IN  EDX		Debug thread handle
+; IN  DX		Debug module handle
 ; OUT AX		Thread handle
 ; OUT DX		Module handle
 SpawnExe	MACRO
@@ -647,6 +647,7 @@ GetModuleProc	MACRO
 ; IN  (E)AX		Resource handle
 ; IN  (E)DX		Resource type
 ; OUT DS:(E)SI	Resource address
+; OUT ECX       Resource size
 GetModuleResource	MACRO
 	UserGate get_module_resource_nr
 					ENDM
@@ -822,20 +823,23 @@ SuspendAndSignalThread     MACRO
 	UserGate suspend_and_signal_thread_nr
 						ENDM
 
+;  IN  BX   Module handle
 ;  IN  EAX	Timeout in milliseconds
 ;  OUT EAX  Thread ID
 ;  OUT BL   Event type  
-;  OUT EDX  Process ID
+;  OUT DX   Debug module handle
 WaitForDebugEvent MACRO
 	UserGate wait_for_debug_event_nr
 						ENDM
 
+;  IN  BX       Module handle
 ;  IN  ES:EDI	Event buffer
 GetDebugEventData MACRO
 	UserGate get_debug_event_data_nr
 						ENDM
 
-;  IN  EAX	Thread ID
+;  IN  BX       Module handle
+;  IN  EAX	    Thread ID
 ContinueDebugEvent MACRO
 	UserGate continue_debug_event_nr
 						ENDM

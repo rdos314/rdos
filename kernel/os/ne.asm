@@ -1011,6 +1011,16 @@ create_lib	Proc near
 	InsertLib
 	LeaveSection ds:lib_module_section
 	pop ds
+;
+    mov es:mod_free_dll_proc,0
+    mov es:mod_get_proc_proc,0
+    mov es:mod_get_name_proc,0
+    mov es:mod_wait_for_debug_event_proc,0
+    mov es:mod_get_debug_event_data_proc,0
+    mov es:mod_continue_debug_event_proc,0
+;
+    mov word ptr es:mod_get_resource_proc,OFFSET get_resource
+    mov word ptr es:mod_get_resource_proc+2,cs
 	clc
 
 create_lib_done:
@@ -1702,11 +1712,11 @@ free_dll_pr	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDllResource
+;		NAME:			GetResource
 ;
-;		DESCRIPTION:    Get DLL resource
+;		DESCRIPTION:    Get resource
 ;
-;       PARAMETERS:		BX		Handle
+;       PARAMETERS:		BX		Lib sel
 ;						AX		Resource id
 ;						DX		Resource type
 ;						
@@ -1715,9 +1725,7 @@ free_dll_pr	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_dll_resource_name	DB 'Get DLL Resource',0
-
-get_dll_resource	Proc far
+get_resource	Proc far
     push es
 	push eax
 	push ebx
@@ -1725,99 +1733,94 @@ get_dll_resource	Proc far
 	push di
 ;
 	mov si,ax
-;
-    mov ax,DLL_HANDLE16
-    DerefHandle
-    jc get_dll_resource_fail
-;
-	mov es,ds:[bx].lh_sel
+	mov es,bx
     mov di,es:lib_resource_offset
     mov cx,es:[di].rsc_align_shift
     add di,SIZE resource_struc
 
-get_dll_resource_type_loop:
+get_resource_type_loop:
     mov ax,es:[di].rt_type_id
     or ax,ax
-    jz get_dll_resource_fail
+    jz get_resource_fail
 ;
     test ax,8000h
-    jz get_dll_resource_next
+    jz get_resource_next
 ;
     and ax,7FFFh
     cmp ax,dx
-    jne get_dll_resource_next
+    jne get_resource_next
 ;
     mov dx,es:[di].rt_resource_count
     add di,SIZE resource_type_struc
 
-get_dll_resource_entry_loop:
+get_resource_entry_loop:
 	mov ax,es:[di].rn_id
 	test ax,8000h
-	jz get_dll_resource_entry_next
+	jz get_resource_entry_next
 ;
 	and ax,7FFFh
 	shl ax,4
 	cmp si,ax
-	jb get_dll_resource_name_search
+	jb get_resource_name_search
 
-get_dll_resource_entry_next:
+get_resource_entry_next:
 	add di,SIZE resource_name_struc
 	sub dx,1
-	jnz get_dll_resource_entry_loop
-	jmp get_dll_resource_fail
+	jnz get_resource_entry_loop
+	jmp get_resource_fail
 
-get_dll_resource_name_search:
+get_resource_name_search:
 	sub ax,10h
 	sub si,ax
-	jc get_dll_resource_fail
+	jc get_resource_fail
 
-get_dll_resource_name_loop:
+get_resource_name_loop:
     mov ds,es:[di].rn_sel
     movzx edx,es:[di].rn_len
     shl edx,cl
     xor ebx,ebx
 
-get_dll_resource_arr_loop:
+get_resource_arr_loop:
     cmp ebx,edx
-    jae get_dll_resource_fail
+    jae get_resource_fail
 ;
     or si,si
-    je get_dll_resource_ok
+    je get_resource_ok
 ;
     movzx eax,byte ptr [ebx]
     add ebx,eax
     inc ebx
     dec si
-    jmp get_dll_resource_arr_loop
+    jmp get_resource_arr_loop
 
-get_dll_resource_next:
+get_resource_next:
     mov dx,es:[di].rt_resource_count
     add di,SIZE resource_type_struc
 
-get_dll_resource_next_name:
+get_resource_next_name:
     add di,SIZE resource_name_struc
     sub dx,1
-    jnz get_dll_resource_next_name
-    jmp get_dll_resource_type_loop
+    jnz get_resource_next_name
+    jmp get_resource_type_loop
 
-get_dll_resource_fail:
+get_resource_fail:
     stc
-    jmp get_dll_resource_done
+    jmp get_resource_done
 
-get_dll_resource_ok:
+get_resource_ok:
     movzx ecx,byte ptr [ebx]
     mov esi,ebx
     inc esi
     clc
     
-get_dll_resource_done:
+get_resource_done:
 	pop di
 	pop edx
 	pop ebx
 	pop eax
 	pop es
 	ret
-get_dll_resource	Endp
+get_resource	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1971,12 +1974,6 @@ init	PROC far
 	xor cl,cl
 	mov ax,segment_not_present_nr
 	RegisterOsGate
-;
-	mov si,OFFSET get_dll_resource
-	mov di,OFFSET get_dll_resource_name
-	xor dx,dx
-	mov ax,get_module_resource_nr
-	RegisterUserGate16
 ;
 	popa
 	pop es

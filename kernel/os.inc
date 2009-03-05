@@ -1557,6 +1557,17 @@ CreateModule	MACRO
 FreeModule	MACRO
 	OsGate free_module_nr
 					ENDM
+; IN  BX        Module handle
+; OUT BX        Lib sel
+DerefModuleHandle	MACRO
+	OsGate deref_module_handle_nr
+					ENDM
+
+; IN  BX        Lib sel
+; OUT BX        Module handle
+AliasModuleHandle	MACRO
+	OsGate alias_module_handle_nr
+					ENDM
 
 ;;;;;;;;;;;; FOCUS ;;;;;;;;;;;;;
 

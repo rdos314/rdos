@@ -86,7 +86,7 @@ s_name				DW ?
 s_cmd				DW ?
 s_curr_dir			DW ?
 s_loader_name		DD ?
-s_param				DD ?
+s_param				DW ?
 s_thread			DW ?
 s_app				DW ?
 s_ret_code			DW ?

@@ -157,6 +157,18 @@ init_app	PROC near
 	mov ax,free_module_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET deref_module_handle
+	mov di,OFFSET deref_module_handle_name
+	xor cl,cl
+	mov ax,deref_module_handle_nr
+	RegisterOsGate
+;
+	mov si,OFFSET alias_module_handle
+	mov di,OFFSET alias_module_handle_name
+	xor cl,cl
+	mov ax,alias_module_handle_nr
+	RegisterOsGate
+;
 	mov si,OFFSET get_exe_name
 	mov di,OFFSET get_exe_name_name
 	mov dx,virt_es_in
@@ -212,6 +224,38 @@ init_app	PROC near
 	mov dx,virt_ds_out OR virt_es_in
 	mov ax,get_module_proc_nr
 	RegisterUserGate
+;
+	mov si,OFFSET get_module_resource
+	mov di,OFFSET get_module_resource_name
+	xor dx,dx
+	mov ax,get_module_resource_nr
+	RegisterBimodalUserGate
+;
+	mov bx,OFFSET get_module_name16
+	mov si,OFFSET get_module_name32
+	mov di,OFFSET get_module_name_name
+	mov dx,virt_es_in
+	mov ax,get_module_name_nr
+	RegisterUserGate
+;
+	mov si,OFFSET wait_for_debug_event
+	mov di,OFFSET wait_for_debug_event_name
+	xor dx,dx
+	mov ax,wait_for_debug_event_nr
+	RegisterBimodalUserGate
+;
+	mov bx,OFFSET get_debug_event_data16
+	mov si,OFFSET get_debug_event_data32
+	mov di,OFFSET get_debug_event_data_name
+	mov dx,virt_es_in
+	mov ax,get_debug_event_data_nr
+	RegisterUserGate
+;
+	mov si,OFFSET continue_debug_event
+	mov di,OFFSET continue_debug_event_name
+	xor dx,dx
+	mov ax,continue_debug_event_nr
+	RegisterBimodalUserGate
 ;
 	mov bx,thread_app_sel
 	mov edx,app_linear
@@ -634,6 +678,7 @@ set_module	PROC far
 	mov ax,thread_app_sel
 	mov ds,ax
     mov ds:app_handle,bx
+    mov ds:app_lib_sel,dx
 ;    
     pop dx
     pop bx
@@ -1043,6 +1088,77 @@ app_debug	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DerefModuleHandle
+;
+;		DESCRIPTION:    Dereference module handle
+;
+;       PARAMETERS:		BX      Module handle
+;
+;		RETURNS:		BX		Lib sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+deref_module_handle_name	DB 'Deref Module Handle',0
+
+deref_module_handle  Proc far
+    push ds
+    push ax
+;
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc deref_module_done
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz deref_module_done
+;
+    clc
+
+deref_module_done:    
+    pop ax
+    pop ds    
+    ret
+deref_module_handle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AliasModuleHandle
+;
+;		DESCRIPTION:    Create an alias handle for module
+;
+;       PARAMETERS:		BX      Lib sel
+;
+;		RETURNS:		BX	    Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+alias_module_handle_name	DB 'Alias Module Handle',0
+
+alias_module_handle  Proc far
+    push ds
+    push ax
+    push cx
+    push dx
+;
+    mov dx,bx
+	mov cx,SIZE module_handle_seg
+	AllocateHandle
+	mov [bx].mh_sel,dx
+	mov [bx].hh_sign,MODULE_HANDLE
+	mov bx,[bx].hh_handle
+;        
+    pop dx
+    pop cx
+    pop ax
+    pop ds
+    ret
+alias_module_handle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			load_dll
 ;
 ;		DESCRIPTION:    Load DLL
@@ -1059,7 +1175,6 @@ load_dll32  Proc far
     push ds
     push eax
 ;    
-    int 3
 	mov ax,thread_app_sel
 	mov ds,ax
 	mov eax,ds:app_load_dll_proc
@@ -1078,7 +1193,7 @@ load_dll32  Proc far
 load_dll32_done:
     pop eax
     pop ds
-    ret
+    retf32
 load_dll32  Endp
 
 load_dll16  Proc far
@@ -1086,7 +1201,6 @@ load_dll16  Proc far
     push eax
     push edi
 ;    
-    int 3
     movzx edi,di
 	mov ax,thread_app_sel
 	mov ds,ax
@@ -1125,26 +1239,29 @@ free_dll_name	DB 'Free Dll',0
 
 free_dll  Proc far
     push ds
-    push es
-    push ax
+    push eax
     push bx
 ;    
-    int 3
 	mov ax,MODULE_HANDLE
 	DerefHandle
 	jc free_dll_done
 ;
     mov bx,[bx].mh_sel
     or bx,bx
+    stc
     jz free_dll_done
 ;
-    mov es,bx
-    call es:mod_free_dll_proc    
+    mov ds,bx
+    mov eax,ds:mod_free_dll_proc
+    or eax,eax
+    stc
+    jz free_dll_done
+;    
+    call ds:mod_free_dll_proc    
 
 free_dll_done:
     pop bx
-    pop ax
-    pop es
+    pop eax
     pop ds    
     retf32
 free_dll  Endp
@@ -1166,10 +1283,9 @@ free_dll  Endp
 get_module_proc_name	DB 'Get Module Proc',0
 
 get_module_proc32  Proc far
-    push ax
+    push eax
     push bx
 ;    
-    int 3
 	mov ax,MODULE_HANDLE
 	DerefHandle
 	jc get_module_proc_done32
@@ -1180,20 +1296,24 @@ get_module_proc32  Proc far
     jz get_module_proc_done32
 ;
     mov ds,bx
+    mov eax,ds:mod_get_proc_proc
+    or eax,eax
+    stc
+    jz get_module_proc_done32
+;    
     call ds:mod_get_proc_proc
 
 get_module_proc_done32:
     pop bx
-    pop ax
+    pop eax
     retf32
 get_module_proc32  Endp
 
 get_module_proc16  Proc far
-    push ax
+    push eax
     push bx
     push edi
 ;    
-    int 3
     movzx edi,di
 	mov ax,MODULE_HANDLE
 	DerefHandle
@@ -1205,13 +1325,302 @@ get_module_proc16  Proc far
     jz get_module_proc_done16
 ;
     mov ds,bx
+    mov eax,ds:mod_get_proc_proc
+    or eax,eax
+    stc
+    jz get_module_proc_done16
+;
     call ds:mod_get_proc_proc
 
 get_module_proc_done16:
+    pop edi
     pop bx
-    pop ax
+    pop eax
     ret
 get_module_proc16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    GetModuleResource
+;
+;		DESCRIPTION:    Get module resource
+;
+;       PARAMETERS:		BX		    Module handle
+;                       (E)AX		Resource handle
+;                       (E)DX		Resource type
+;
+;       RETURNS:        DS:(E)SI	Resource address
+;                       (E)CX       Resource size   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_resource_name	DB 'Get Module Resource',0
+
+get_module_resource  Proc far
+    push bx
+;    
+    push ax
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	pop ax
+	jc get_resource_done
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz get_resource_done
+;
+    mov ds,bx
+    mov ecx,ds:mod_get_resource_proc
+    or ecx,ecx
+    stc
+    jz get_resource_done
+;    
+    call ds:mod_get_resource_proc
+
+get_resource_done:
+    pop bx
+    retf32
+get_module_resource  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetModuleName
+;
+;		DESCRIPTION:    Get module name
+;
+;       PARAMETERS:		BX		    Handle
+;						(E)CX	    Max name size
+;						ES:(E)DI	Name buffer
+;						
+;		RETURNS:		(E)AX	    Bytes copied
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_name_name	DB 'Get Module Name',0
+
+get_module_name32  Proc far
+    push ds
+    push bx
+;    
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc get_module_name_done32
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz get_module_name_done32
+;
+    mov ds,bx
+    mov eax,ds:mod_get_name_proc
+    stc
+    jz get_module_name_done32
+;    
+    call ds:mod_get_name_proc
+
+get_module_name_done32:
+    pop bx
+    pop ds
+    retf32
+get_module_name32  Endp
+
+get_module_name16  Proc far
+    push ds
+    push bx
+    push edi
+;    
+    movzx edi,di
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc get_module_name_done16
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz get_module_name_done16
+;
+    mov ds,bx
+    mov eax,ds:mod_get_name_proc
+    or eax,eax
+    stc
+    jz get_module_name_done16
+;    
+    call ds:mod_get_name_proc
+
+get_module_name_done16:
+    pop edi
+    pop bx
+    pop ds
+    ret
+get_module_name16  Endp
+
+PAGE
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WaitForDebugEvent
+;
+;		DESCRIPTION:    Wait for an debug event from process
+;
+;		PARAMETERS:		EAX     Timeout in milliseconds
+;                       BX      Module handle
+;
+;       RETURNS:        EAX     Thread ID
+;                       BL      Event type  
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_debug_event_name	DB 'Wait For Debug Event',0
+
+wait_for_debug_event  Proc far
+    push ds
+    push ecx
+;    
+    push ax
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	pop ax
+	jc wait_for_debug_event_done
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz wait_for_debug_event_done
+;
+    mov ds,bx
+    mov ecx,ds:mod_wait_for_debug_event_proc
+    or ecx,ecx
+    stc
+    jz wait_for_debug_event_done
+;    
+    call ds:mod_wait_for_debug_event_proc
+
+wait_for_debug_event_done:
+    pop ecx
+    pop ds
+    retf32
+wait_for_debug_event  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDebugEventData
+;
+;		DESCRIPTION:    Get debug event data
+;
+;       PARAMETERS:		BX		    Handle
+;                       ES:(E)DI	Event buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_debug_event_data_name	DB 'Get Debug Event Data',0
+
+get_debug_event_data32  Proc far
+    push ds
+    push ax
+    push bx
+;    
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc get_debug_event_data_done32
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz get_debug_event_data_done32
+;
+    mov ds,bx
+    mov eax,ds:mod_get_debug_event_data_proc
+    stc
+    jz get_debug_event_data_done32
+;    
+    call ds:mod_get_debug_event_data_proc
+
+get_debug_event_data_done32:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+get_debug_event_data32  Endp
+
+get_debug_event_data16  Proc far
+    push ds
+    push ax
+    push bx
+    push edi
+;    
+    movzx edi,di
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc get_debug_event_data_done16
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz get_debug_event_data_done16
+;
+    mov ds,bx
+    mov eax,ds:mod_get_debug_event_data_proc
+    or eax,eax
+    stc
+    jz get_debug_event_data_done16
+;    
+    call ds:mod_get_debug_event_data_proc
+
+get_debug_event_data_done16:
+    pop edi
+    pop bx
+    pop ax
+    pop ds
+    ret
+get_debug_event_data16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    ContinueDebugEvent
+;
+;		DESCRIPTION:    Continue debug event
+;
+;       PARAMETERS:		BX		Module handle
+;                       EAX	    Thread ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+continue_debug_event_name	DB 'Continue Debug Event',0
+
+continue_debug_event  Proc far
+    push ds
+    push bx
+;    
+    push ax
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	pop ax
+	jc continue_debug_event_done
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz continue_debug_event_done
+;
+    mov ds,bx
+    mov ecx,ds:mod_continue_debug_event_proc
+    or ecx,ecx
+    stc
+    jz continue_debug_event_done
+;    
+    call ds:mod_continue_debug_event_proc
+
+continue_debug_event_done:
+    pop bx
+    pop ds
+    retf32
+continue_debug_event  Endp
 
 code	ENDS
 

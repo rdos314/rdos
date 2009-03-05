@@ -228,7 +228,29 @@ exc_first_chance	DD ?
 exc_event_struc ENDS
 
 
+.data
+
+DebugHandle DW ?
+
 .code
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetDebugHandle
+;
+;       DESCRIPTION:    Set debug handle
+;
+;       PARAMETERS:     BX      Debug handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetDebugHandle
+
+SetDebugHandle  Proc
+    mov DebugHandle,bx
+    ret
+SetDebugHandle  Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -451,6 +473,7 @@ WaitForDebugEvent Proc near
 
 wfdeRetry:
 	mov eax,[ebp].wfdeTimeout
+    mov bx,DebugHandle
 	UserGate wait_for_debug_event_nr
 ;
     movzx ebx,bl
@@ -461,6 +484,7 @@ wfdeRetry:
     jbe wfdeHandle
 
 wfdeRemove:
+    mov bx,DebugHandle
 	UserGate continue_debug_event_nr
     jmp wfdeRetry
 
@@ -474,8 +498,12 @@ wfdeHandle:
     mov edi,edx
     pop edx
     pop eax
-;        
+;   
+    push ebx     
+    mov bx,DebugHandle
 	UserGate get_debug_event_data_nr
+	pop ebx
+;
 	mov esi,edi
    	mov edi,[ebp].wfdeEvent	
 	call cs:dword ptr [4 * ebx].EventTable
@@ -512,8 +540,7 @@ ContinueDebugEvent Proc near
 	push ebx
 ;
 	mov eax,[ebp].cdeThreadId
-;	mov ebx,[ebp].cdeProcessId
-;	mov edx,[ebp].cdeStatus
+    mov bx,DebugHandle
 	UserGate continue_debug_event_nr
 	mov eax,1
 ;

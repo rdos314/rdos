@@ -62,6 +62,8 @@ PROCESS_HANDLE	EQU 0BCE50000h
 
 .code
 
+    extrn SetDebugHandle:near
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -589,6 +591,14 @@ cpSpawnIt:
 	UserGate spawn_exe_nr
 	jc cpFail
 ;
+	mov ecx,[ebp].cpFlags
+	test cl,1
+    jz cpSpawnNoDebugHandle
+;
+    mov bx,dx
+    call SetDebugHandle
+    
+cpSpawnNoDebugHandle:
 	mov ecx,[ebp].cpInfo
 	or ecx,ecx
 	jz cpOk
