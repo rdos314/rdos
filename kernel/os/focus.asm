@@ -764,6 +764,8 @@ PAGE
 ;
 ;		PARAMETERS:		AL	KEY NUMBER
 ;
+;       RETURNS:        Actual key
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enable_focus_name	DB 'Enable Focus',0

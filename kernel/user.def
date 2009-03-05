@@ -443,4 +443,6 @@ play_fm_note_nr             = 367
 get_thread_linear_nr        = 368
 get_current_module_nr       = 369
 
-usergate_entries			= 370
+get_module_focus_key_nr     = 370
+
+usergate_entries			= 371

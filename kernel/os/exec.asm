@@ -646,9 +646,6 @@ load_process:
 	SimSti
 	mov ax,exec_sys_sel
 	mov ds,ax
-	mov ax,3Bh
-	EnableFocus
-	SetFocus
 	mov es,bx
 	xor di,di
 	mov al,es:[di+1]
@@ -674,9 +671,15 @@ load_process_default_drive:
 	mov ax,es
 	mov ds,ax
 	mov si,di
+;	
 	mov ax,thread_app_sel
-	mov es,ax
+	mov es,ax	
+	mov ax,3Bh
+	EnableFocus
+	SetFocus
+    mov es:app_key,al
 	mov es:app_context,bx
+;	
 	push si
 	mov di,OFFSET app_exe_name
 	mov cx,100h
@@ -744,9 +747,6 @@ spawn_startup	Proc far
 	mov gs,bx
 	mov ax,exec_sys_sel
 	mov ds,ax
-	mov ax,3Bh
-	EnableFocus
-	SetFocus
 	SaveContext
 	xor eax,eax
 	push eax
@@ -761,6 +761,12 @@ spawn_startup	Proc far
 	mov ax,thread_app_sel
 	mov es,ax
 	mov es:app_context,bx
+;
+	mov ax,3Bh
+	EnableFocus
+	SetFocus
+	mov es:app_key,al
+;
 	xor si,si
 	mov ds,gs:s_name	
 	mov di,OFFSET app_exe_name

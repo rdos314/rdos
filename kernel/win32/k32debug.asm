@@ -470,6 +470,10 @@ WaitForDebugEvent Proc near
 	push esi
 	push edi
 ;
+    mov bx,DebugHandle
+    UserGate get_module_focus_key_nr
+;
+    UserGate set_focus_nr    
 
 wfdeRetry:
 	mov eax,[ebp].wfdeTimeout
@@ -510,6 +514,10 @@ wfdeHandle:
 ;
     mov edx,esi
     UserGate free_app_mem_nr
+;
+    UserGate get_focus_nr
+    UserGate set_focus_nr
+;        
 	mov eax,1
 ;
 	pop edi

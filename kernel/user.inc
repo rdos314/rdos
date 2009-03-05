@@ -625,6 +625,12 @@ FreeDll	MACRO
 	UserGate free_dll_nr
 					ENDM
 
+; IN  BX		Module handle
+; OUT AL        Focus key
+GetModuleFocusKey	MACRO
+	UserGate get_module_focus_key_nr
+					ENDM
+
 ; OUT BX		Module handle
 GetCurrentModule	MACRO
 	UserGate get_current_module_nr

@@ -136,6 +136,7 @@ app_parent_ldt		DW ?
 
 app_context			DW ?
 app_bitness			DB ?
+app_key             DB ?
 
 app_pm_int			DD 100h DUP(?,?)
 app_pm_exc			DD 20h DUP(?,?)

@@ -122,12 +122,6 @@ seInsDone:
 	LeaveSection ds:lib_section
 ;
 	mov bx,ds:lib_debug_thread
-	GetThreadFocusKey
-	jc seSignal
-;
-	SetFocus
-
-seSignal:
 	Signal
 	
 seDone:
@@ -3038,12 +3032,6 @@ free_process_inserted:
 	LeaveSection ds:lib_section
 ;
 	mov bx,ds:lib_debug_thread
-	GetThreadFocusKey
-	jc fpSignal
-;
-	SetFocus
-
-fpSignal:
 	Signal
 
 	mov ax,1000
@@ -3112,14 +3100,6 @@ wfdRemoved:
 	mov ds:lib_debug_thread,0
 	LeaveSection ds:lib_section
 ;
-	GetThread
-	mov bx,ax
-	GetThreadFocusKey
-	jc wfdFocusDone
-;
-	SetFocus
-
-wfdFocusDone:
     mov ds:lib_curr_event,es
     mov eax,es:event_thread_id
     mov edx,es:event_proc_id
@@ -3237,12 +3217,6 @@ continue_debug_found:
 	mov ds,ax
 	mov si,OFFSET debug_list
 	mov [si],bx
-	GetThreadFocusKey
-	jc continue_wake
-;
-	SetFocus
-
-continue_wake:
 	Wake
 	jmp continue_debug_done
 	
@@ -3388,12 +3362,6 @@ neInsDone:
 	LeaveSection ds:lib_section
 ;
 	mov bx,ds:lib_debug_thread
-	GetThreadFocusKey
-	jc neSignal
-;
-	SetFocus
-
-neSignal:
 	Signal
 ;
 	pop ax

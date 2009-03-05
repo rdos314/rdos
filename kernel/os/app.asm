@@ -218,6 +218,12 @@ init_app	PROC near
 	mov ax,free_dll_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET get_module_focus_key
+	mov di,OFFSET get_module_focus_key_name
+	xor dx,dx
+	mov ax,get_module_focus_key_nr
+	RegisterBimodalUserGate
+;
 	mov bx,OFFSET get_module_proc16
 	mov si,OFFSET get_module_proc32
 	mov di,OFFSET get_module_proc_name
@@ -679,6 +685,8 @@ set_module	PROC far
 	mov ds,ax
     mov ds:app_handle,bx
     mov ds:app_lib_sel,dx
+    mov al,ds:app_key
+    mov es:mod_key,al
 ;    
     pop dx
     pop bx
@@ -1265,6 +1273,44 @@ free_dll_done:
     pop ds    
     retf32
 free_dll  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetModuleFocusKey
+;
+;		DESCRIPTION:    Get module focus key
+;
+;       PARAMETERS:		BX		Module handle
+;
+;       RETURNS:        AL      Key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_focus_key_name	DB 'Get Module Focus Key',0
+
+get_module_focus_key  Proc far
+    push ds
+    push bx
+;    
+	mov ax,MODULE_HANDLE
+	DerefHandle
+	jc get_module_focus_done
+;
+    mov bx,[bx].mh_sel
+    or bx,bx
+    stc
+    jz get_module_focus_done
+;
+    mov ds,bx
+    mov al,ds:mod_key
+    clc
+
+get_module_focus_done:
+    pop bx
+    pop ds    
+    retf32
+get_module_focus_key  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

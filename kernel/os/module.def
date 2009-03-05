@@ -62,6 +62,7 @@ mod_continue_debug_event_proc   DD ?
 mod_handle              DW ?
 mod_next                DW ?
 mod_list                DW ?
+mod_key                 DB ?
 
 module_struc    ENDS
 
