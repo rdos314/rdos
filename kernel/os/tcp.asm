@@ -758,7 +758,7 @@ DeleteConnection	Proc near
 	push bx
 	push ecx
 	push edx
-;
+;	
 	mov si,ds:tcp_port
 	call FreePort
 ;
@@ -1653,13 +1653,13 @@ Retransmit	Proc near
 ;
     mov ax,ds:tcp_retries
     cmp ax,10
-    jb retrans_close
+    ja retrans_close
 ;
     inc ax
     mov ds:tcp_retries,ax
     jmp retrans_do    
 
-retrans_close:
+retrans_close:    
     or ds:tcp_pending,FLAG_DELETE_NET
 	mov bx,ds:tcp_owner
 	Signal
@@ -3949,6 +3949,10 @@ is_tcp_connection_closed	Proc far
 	mov al,ds:tcp_state
 	cmp al,STATE_ESTAB
 	ja is_tcp_closed_fail
+;
+    mov ax,ds:tcp_pending
+    test ax,FLAG_DELETE_NET
+    jnz is_tcp_closed_fail
 ;
 	clc
 	jmp is_tcp_closed_done
