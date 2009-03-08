@@ -7661,6 +7661,186 @@ RdosReadBinaryResource	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           RdosGetModuleProc
+;
+;       DESCRIPTION:    Get module process address
+;
+;		PARAMETERS:		Handle
+;						Name
+;
+;		RETURNS:		Procedure address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosGetModuleProc
+
+RdosGetModuleProc	Proc near
+	push ebp
+	mov ebp,esp
+	push ds
+	push ebx
+	push esi
+	push edi
+;
+    mov ebx,[ebp+8]
+    mov edi,[ebp+12]
+	UserGate get_module_proc_nr
+	jc rgmpFail
+;
+    mov eax,esi
+    jmp rgmpDone
+
+rgmpFail:
+    xor eax,eax
+
+rgmpDone:
+    pop edi
+    pop esi
+    pop ebx
+    pop ds
+    pop ebp
+    ret 8
+RdosGetModuleProc   Endp    
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosGetModuleFocusKey
+;
+;       DESCRIPTION:    Get module focus key
+;
+;		PARAMETERS:		Handle
+;
+;		RETURNS:		Key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosGetModuleFocusKey
+
+RdosGetModuleFocusKey	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+    mov ebx,[ebp+8]
+	UserGate get_module_focus_key_nr
+	jnc rgmfkDone
+;
+    xor al,al
+
+rgmfkDone:
+    pop ebx
+    pop ebp
+    ret 4
+RdosGetModuleFocusKey   Endp        
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosWaitForDebugEvent
+;
+;       DESCRIPTION:    Wait for debug event
+;
+;		PARAMETERS:		Handle
+;                       Timeout in ms
+;                       Thread
+;
+;		RETURNS:		Event type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosWaitForDebugEvent
+
+RdosWaitForDebugEvent	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+    mov ebx,[ebp+8]
+    mov eax,[ebp+12]
+	UserGate wait_for_debug_event_nr
+	jc wfdeFail
+;
+    mov edx,[ebp+16]
+    mov [edx],eax
+    mov al,bl
+    jmp wfdeDone
+
+wfdeFail:
+    xor al,al
+    
+wfdeDone:
+    pop ebx
+    pop ebp
+    ret 12
+RdosWaitForDebugEvent   Endp    
+    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosGetDebugEventData
+;
+;       DESCRIPTION:    Get debug event data
+;
+;		PARAMETERS:		Handle
+;                       Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosGetDebugEventData
+
+RdosGetDebugEventData	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+    mov ebx,[ebp+8]
+    mov edi,[ebp+12]
+	UserGate get_debug_event_data_nr
+;	
+    pop edi
+    pop ebx
+    pop ebp
+    ret 8
+RdosGetDebugEventData   Endp    
+    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosContinueDebugEvent
+;
+;       DESCRIPTION:    Continue debug event
+;
+;		PARAMETERS:		Handle
+;                       Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosContinueDebugEvent
+
+RdosContinueDebugEvent	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+    mov ebx,[ebp+8]
+    mov eax,[ebp+12]
+	UserGate continue_debug_event_nr
+;	
+    pop ebx
+    pop ebp
+    ret 8
+RdosContinueDebugEvent   Endp    
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           RdosOpenAdc
 ;
 ;       DESCRIPTION:    Open handle to ADC channel

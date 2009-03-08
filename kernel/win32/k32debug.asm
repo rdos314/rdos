@@ -691,7 +691,7 @@ gtcControlDone:
 	jmp gtcDone
 
 gtcFail:
-;	int 3
+	int 3
 	xor eax,eax
 
 gtcDone:

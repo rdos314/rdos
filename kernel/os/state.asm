@@ -124,6 +124,65 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			ThreadToSel
+;
+;		DESCRIPTION:	Convert thread # (p_id) to selector
+;
+;		PARAMETERS:     BX      Thread #
+;
+;       RETURNS:        BX      Thread sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+thread_to_sel_name DB 'Thread To Sel',0
+
+thread_to_sel	Proc far
+    push ds
+    push es
+    push ax
+    push cx
+    push si
+;    
+    mov cx,256
+	mov ax,system_data_sel
+	mov ds,ax
+	xor si,si
+
+thread_to_sel_loop:
+	mov ax,ds:[si].thread_arr
+	or ax,ax
+	jz thread_to_sel_next
+;
+    mov es,ax	
+    cmp bx,es:p_id
+    je thread_to_sel_found
+
+thread_to_sel_next:
+    add si,2
+    loop thread_to_sel_loop
+;
+    xor bx,bx
+    stc    
+    jmp thread_to_sel_done        
+
+thread_to_sel_found:
+    mov bx,es
+    clc
+
+thread_to_sel_done:
+    pop si
+    pop cx
+    pop ax
+    pop es
+    pop ds    
+	ret
+thread_to_sel	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			GetThreadState
 ;
 ;		DESCRIPTION:	Get state of a thread
@@ -358,10 +417,10 @@ get_thread_tss	Proc near
 	mov dx,ax
 
 get_thread_tss_loop:
-	cmp ax,bx
+	mov ds,ax
+	cmp bx,ds:p_id
 	je get_thread_tss_found
 ;
-	mov ds,ax
 	mov ax,ds:p_next
 	cmp ax,dx
 	jne get_thread_tss_loop
@@ -477,10 +536,10 @@ set_thread_tss	Proc near
 	mov dx,ax
 
 set_thread_tss_loop:
-	cmp ax,bx
+	mov ds,ax
+	cmp bx,ds:p_id
 	je set_thread_tss_found
 ;
-	mov ds,ax
 	mov ax,ds:p_next
 	cmp ax,dx
 	jne set_thread_tss_loop
@@ -493,9 +552,9 @@ set_thread_tss_found:
 	push ecx
 	push esi
 	push edi
-	mov ax,es
-	mov ds,ax
-	mov es,bx
+	mov cx,es
+	mov ds,cx
+	mov es,ax
 	mov es,es:p_tss_data_sel
 	mov esi,edi
 	xor edi,edi
@@ -594,6 +653,12 @@ init_state	PROC near
 	mov di,OFFSET hook_state_name
 	xor cl,cl
 	mov ax,hook_state_nr
+	RegisterOsGate
+;
+	mov si,OFFSET thread_to_sel
+	mov di,OFFSET thread_to_sel_name
+	xor cl,cl
+	mov ax,thread_to_sel_nr
 	RegisterOsGate
 ;
 	mov bx,OFFSET get_thread_state16

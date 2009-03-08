@@ -3291,14 +3291,20 @@ get_thread_linear	PROC far
 	push ds
 	push es
 	push ax
+	push bx
 ;
+    ThreadToSel
+    jc get_thread_linear_done
+;    
 	mov ax,process_page_sel
 	mov ds,ax
 	mov ax,flat_sel
 	mov es,ax
 ;
 	call validate_thread_selector
-;
+
+get_thread_linear_done:
+    pop bx
 	pop ax
 	pop es
 	pop ds
@@ -3482,10 +3488,14 @@ PAGE
 read_thread_mem_name	DB 'Read Thread Mem',0
 
 read_thread_mem	PROC near
+    push bx
 	push ecx
 	push esi
 	push edi
 ;
+    ThreadToSel
+    jc read_thread_mem_done
+;    
 	mov al,dl
 	and al,3
 	cmp al,3
@@ -3509,6 +3519,7 @@ read_thread_mem_done:
 	pop edi
 	pop esi
 	pop ecx
+	pop bx
 	sub eax,ecx
 	neg eax
 	ret
@@ -3553,10 +3564,14 @@ PAGE
 write_thread_mem_name	DB 'Write Thread Mem',0
 
 write_thread_mem	PROC near
+    push bx
 	push ecx
 	push esi
 	push edi
 ;
+    ThreadToSel
+    jc write_thread_mem_done
+;    
 	mov al,dl
 	and al,3
 	cmp al,3
@@ -3580,6 +3595,7 @@ write_thread_mem_done:
 	pop edi
 	pop esi
 	pop ecx
+	pop bx
 	sub eax,ecx
 	neg eax
 	ret

@@ -491,5 +491,7 @@ reset_module_nr             EQU 339
 deref_module_handle_nr      EQU 340
 alias_module_handle_nr      EQU 341
 
+thread_to_sel_nr            EQU 342
+
 osgate_entries				EQU 350
 

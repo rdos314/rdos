@@ -76,12 +76,12 @@ SendEvent Proc near
 	ClearSignal
 ;
 	GetThread
-	movzx eax,ax
-	or eax,PROCESS_HANDLE
+	push es
+	mov es,ax
+	movzx eax,es:p_id
+	pop es
+;	
 	mov es:event_proc_id,eax
-;
-	movzx eax,ax
-	or eax,THREAD_HANDLE
 	mov es:event_thread_id,eax
 ;
 	mov ax,ds:lib_debug_lib
@@ -2333,8 +2333,10 @@ InitStack	Proc near
 	sub edx,88h
 	mov fs:pvTEB,edx
 	GetThread
-	movzx eax,ax
-	or eax,THREAD_HANDLE
+	push es
+	mov es,ax
+	movzx eax,es:p_id
+	pop es
 	mov fs:pvThreadHandle,eax
 	mov fs:pvProcessHandle,eax
 	mov [edx+24h],eax
@@ -2680,7 +2682,11 @@ init_thread	PROC far
 	add edx,eax
 	sub edx,88h
 	mov es:pvTEB,edx
-	movzx eax,ds:tss_thread
+	mov ax,ds:tss_thread
+	push es
+	mov es,ax
+	movzx eax,es:p_id
+	pop es
 	or eax,THREAD_HANDLE
 	mov es:pvThreadHandle,eax
 	mov fs:[edx+24h],eax
@@ -2989,12 +2995,11 @@ close_proc	Proc far
 ;
 	call TerminateProcessEvent
 	GetThread
-	movzx eax,ax
-	or eax,PROCESS_HANDLE
+	push es
+	mov es,ax
+	movzx eax,es:p_id
+	pop es
 	mov es:event_proc_id,eax
-;
-	movzx eax,ax
-	or eax,THREAD_HANDLE
 	mov es:event_thread_id,eax
 ;
 	mov ax,ds:lib_debug_lib
@@ -3101,9 +3106,9 @@ wfdRemoved:
 	LeaveSection ds:lib_section
 ;
     mov ds:lib_curr_event,es
-    mov eax,es:event_thread_id
     mov edx,es:event_proc_id
     mov bl,es:event_code
+    mov eax,es:event_thread_id
 
 wfdDone:
 	pop esi
@@ -3184,12 +3189,19 @@ continue_debug_event Proc far
 	push ds
 	push es
 	push bx
+	push cx
 	push dx
 	push si
 ;
 	mov ds,bx
-	mov es,ds:lib_curr_event
+	mov bx,ds:lib_curr_event
+	or bx,bx
+	jz continue_debug_free_ok
+;
+    mov es,bx	
 	FreeMem
+
+continue_debug_free_ok:
 	mov ds:lib_curr_event,0
 ;
 	mov bx,ax
@@ -3203,16 +3215,17 @@ continue_debug_event Proc far
 	mov dx,ax
 
 continue_debug_loop:
-	cmp ax,bx
+	mov ds,ax
+	cmp bx,ds:p_id
 	je continue_debug_found
 ;
-	mov ds,ax
 	mov ax,ds:p_next
 	cmp ax,dx
 	jne continue_debug_loop
 	jmp continue_debug_signal
 
 continue_debug_found:
+    mov bx,ds
 	mov ax,system_data_sel
 	mov ds,ax
 	mov si,OFFSET debug_list
@@ -3221,11 +3234,15 @@ continue_debug_found:
 	jmp continue_debug_done
 	
 continue_debug_signal:
+    ThreadToSel
+    jc continue_debug_done
+;    
 	Signal
 
 continue_debug_done:
 	pop si
 	pop dx
+	pop cx
 	pop bx
 	pop es
 	pop ds
@@ -3324,8 +3341,11 @@ notify_pe_exception	Proc far
 	mov ax,bx
 	mov es:event_proc_id,eax
 ;
-	mov eax,THREAD_HANDLE
 	GetThread
+	push es
+	mov es,ax
+	movzx eax,es:p_id
+	pop es
 	mov es:event_thread_id,eax
 ;
 	mov ax,pe_app_sel

@@ -583,7 +583,7 @@ DosExtExec	MACRO
 ; IN  ES:(E)DI	Command line
 ; IN  FS:(E)BX	Startup directory & drive
 ; IN  DX		Debug module handle
-; OUT AX		Thread handle
+; OUT AX		Thread #
 ; OUT DX		Module handle
 SpawnExe	MACRO
 	UserGate spawn_exe_nr
@@ -831,9 +831,8 @@ SuspendAndSignalThread     MACRO
 
 ;  IN  BX   Module handle
 ;  IN  EAX	Timeout in milliseconds
-;  OUT EAX  Thread ID
+;  OUT EAX  Thread #
 ;  OUT BL   Event type  
-;  OUT DX   Debug module handle
 WaitForDebugEvent MACRO
 	UserGate wait_for_debug_event_nr
 						ENDM
@@ -845,7 +844,7 @@ GetDebugEventData MACRO
 						ENDM
 
 ;  IN  BX       Module handle
-;  IN  EAX	    Thread ID
+;  IN  EAX	    Thread #
 ContinueDebugEvent MACRO
 	UserGate continue_debug_event_nr
 						ENDM
@@ -857,7 +856,7 @@ NotifyPeException MACRO
 						ENDM
 
 ;  IN  DX:ESI	Selector:Offset
-;  IN  BX		Thread
+;  IN  BX		Thread #
 ;  OUT EDX      Linear address
 GetThreadLinear	MACRO
 	UserGate get_thread_linear_nr
@@ -866,7 +865,7 @@ GetThreadLinear	MACRO
 ;  IN  (E)CX	Number of bytes
 ;  IN  DX:ESI	Address to read at
 ;  IN  ES:(E)DI	Buffer
-;  IN  BX		Thread
+;  IN  BX		Thread #
 ;  OUT (E)AX	Bytes read
 ReadThreadMem	MACRO
 	UserGate read_thread_mem_nr
@@ -875,20 +874,20 @@ ReadThreadMem	MACRO
 ;  IN  (E)CX	Number of bytes
 ;  IN  DX:ESI	Address to write at
 ;  IN  ES:(E)DI	Buffer
-;  IN  BX		Thread
+;  IN  BX		Thread #
 ;  OUT (E)AX	Bytes written
 WriteThreadMem	MACRO
 	UserGate write_thread_mem_nr
 					ENDM
 
 ;  IN  ES:(E)DI	Buffer
-;  IN  BX		Thread
+;  IN  BX		Thread #
 GetThreadTss	MACRO
 	UserGate get_thread_tss_nr
 					ENDM
 
 ;  IN  ES:(E)DI	Buffer
-;  IN  BX		Thread
+;  IN  BX		Thread #
 SetThreadTss	MACRO
 	UserGate set_thread_tss_nr
 					ENDM

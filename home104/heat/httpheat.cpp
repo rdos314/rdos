@@ -339,7 +339,7 @@ void THttpWs2300Page::Get(const char *Name)
 		File.Write("<html><body>\r\n");
 		File.Write("<form action=\"/\" method=\"post\">\r\n");
 
-		File.Write("<body background=\"http://www.rdos.net/home104/water040.jpg\">");
+		File.Write("<body background=\"/water040.jpg\">");
 
 		File.Write("<CENTER>\n");
 
@@ -490,15 +490,15 @@ void THttpWs2300Page::Get(const char *Name)
 		switch (Ws2300->GetForecast())
 		{
 			case FORECAST_RAINY:
-				File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/rain.gif\" width=\"36\" height=\"26\">");
+				File.Write("<img border=\"0\" src=\"/rain.gif\" width=\"36\" height=\"26\">");
 				break;
 
 			case FORECAST_CLOUDY:
-				File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/cloudy.gif\" width=\"36\" height=\"20\">");
+				File.Write("<img border=\"0\" src=\"/cloudy.gif\" width=\"36\" height=\"20\">");
 				break;
 
 			case FORECAST_SUNNY:
-				File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sun.gif\" width=\"28\" height=\"26\">");
+				File.Write("<img border=\"0\" src=\"/sun.gif\" width=\"28\" height=\"26\">");
 				break;
 		}
 
@@ -507,11 +507,11 @@ void THttpWs2300Page::Get(const char *Name)
 		switch (Ws2300->GetTendency())
 		{
 			case TENDENCY_RISING:
-				File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/up.gif\" width=\"12\" height=\"25\">");
+				File.Write("<img border=\"0\" src=\"/up.gif\" width=\"12\" height=\"25\">");
 				break;
 
 			case TENDENCY_FALLING:
-				File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/down.gif\" width=\"12\" height=\"26\">");
+				File.Write("<img border=\"0\" src=\"/down.gif\" width=\"12\" height=\"26\">");
 				break;
 		}
 
@@ -1428,7 +1428,7 @@ void THttpRadPage::WriteMain()
 		File.Write("<html><body>\r\n");
 		File.Write("<form action=\"/\" method=\"post\">\r\n");
 
-		File.Write("<body background=\"http://www.rdos.net/home104/lgren005.jpg\">");
+		File.Write("<body background=\"/lgren005.jpg\">");
 
 		File.Write("<h1 align=\"center\">");
 		File.Write("Styrsystem");
@@ -1633,9 +1633,9 @@ void THttpRadPage::WriteMain()
 
 		WriteCenteredFieldHeader(File, 6);
 		if (Vp->IsVpOn())
-			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_rd.gif\" width=\"26\" height=\"26\">");
+			File.Write("<img border=\"0\" src=\"/sol_rd.gif\" width=\"26\" height=\"26\">");
 		else
-			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_bl.gif\" width=\"26\" height=\"26\">");
+			File.Write("<img border=\"0\" src=\"/sol_bl.gif\" width=\"26\" height=\"26\">");
 		File.Write("</tr>");
 
 		File.Write("<tr style='height:24.75pt'>");
@@ -1646,9 +1646,9 @@ void THttpRadPage::WriteMain()
 
 		WriteCenteredFieldHeader(File, 6);
 		if (Vp->IsEpOn())
-			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_rd.gif\" width=\"26\" height=\"26\">");
+			File.Write("<img border=\"0\" src=\"/sol_rd.gif\" width=\"26\" height=\"26\">");
 		else
-			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_bl.gif\" width=\"26\" height=\"26\">");
+			File.Write("<img border=\"0\" src=\"/sol_bl.gif\" width=\"26\" height=\"26\">");
 		File.Write("</tr>");
 
 		File.Write("<tr style='height:24.75pt'>");
@@ -1659,9 +1659,9 @@ void THttpRadPage::WriteMain()
 
 		WriteCenteredFieldHeader(File, 6);
 		if (LightOn)
-			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_rd.gif\" width=\"26\" height=\"26\">");
+			File.Write("<img border=\"0\" src=\"/sol_rd.gif\" width=\"26\" height=\"26\">");
 		else
-			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_bl.gif\" width=\"26\" height=\"26\">");
+			File.Write("<img border=\"0\" src=\"/sol_bl.gif\" width=\"26\" height=\"26\">");
 
 		File.Write("</tr>");
 

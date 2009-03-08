@@ -1481,6 +1481,12 @@ CheckDevice	MACRO
 
 ;;;;;;;;;;;;;; APP ;;;;;;;;;;;;;;;;;;
 
+; IN  BX        Thread #
+; OUT BX        Thread sel
+ThreadToSel	    MACRO
+	OsGate thread_to_sel_nr
+			ENDM
+
 ; OUT BX        Env sys sel
 LockSysEnv	    MACRO
 	OsGate lock_sys_env_nr

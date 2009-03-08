@@ -376,6 +376,13 @@ int __stdcall RdosGetModuleName(int handle, char *Buf, int Size);
 int __stdcall RdosReadResource(int handle, int ID, char *Buf, int Size);
 int __stdcall RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
 
+void * __stdcall RdosGetModuleProc(int handle, const char *ProcName);
+char __stdcall RdosGetModuleFocusKey(int handle);
+
+char __stdcall RdosWaitForDebugEvent(int handle, int timeout, int *thread);
+void __stdcall RdosGetDebugEventData(int handle, void *buf);
+void __stdcall RdosContinueDebugEvent(int handle, int thread);
+
 int __stdcall RdosOpenAdc(int channel);
 void __stdcall RdosCloseAdc(int handle);
 void __stdcall RdosDefineAdcTime(int handle, unsigned long msg, unsigned long lsb);

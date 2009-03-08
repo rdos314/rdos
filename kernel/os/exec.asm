@@ -736,7 +736,7 @@ load_process_fail:
 ;						FS:(E)BX	Startup dir
 ;						DX			Debug module handle
 ;
-;       RETURN VALUE:   AX		    Thread handle
+;       RETURN VALUE:   AX		    Thread ID
 ;						DX		    Aliased module handle (or 0 if no debugging)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -980,6 +980,11 @@ spawn_focus_done:
 	mov dx,ds:s_app
 	mov bx,ds:s_ret_code
 	LeaveSection ds:s_sect2
+;
+    push es
+    mov es,ax
+    mov ax,es:p_id
+    pop es
 ;
     push ax
     push bx
