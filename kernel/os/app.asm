@@ -1567,7 +1567,7 @@ get_debug_event_data_name	DB 'Get Debug Event Data',0
 
 get_debug_event_data32  Proc far
     push ds
-    push ax
+    push eax
     push bx
 ;    
 	mov ax,MODULE_HANDLE
@@ -1588,14 +1588,14 @@ get_debug_event_data32  Proc far
 
 get_debug_event_data_done32:
     pop bx
-    pop ax
+    pop eax
     pop ds
     retf32
 get_debug_event_data32  Endp
 
 get_debug_event_data16  Proc far
     push ds
-    push ax
+    push eax
     push bx
     push edi
 ;    
@@ -1620,7 +1620,7 @@ get_debug_event_data16  Proc far
 get_debug_event_data_done16:
     pop edi
     pop bx
-    pop ax
+    pop eax
     pop ds
     ret
 get_debug_event_data16  Endp
@@ -1642,6 +1642,7 @@ continue_debug_event_name	DB 'Continue Debug Event',0
 continue_debug_event  Proc far
     push ds
     push bx
+    push ecx
 ;    
     push ax
 	mov ax,MODULE_HANDLE
@@ -1663,6 +1664,7 @@ continue_debug_event  Proc far
     call ds:mod_continue_debug_event_proc
 
 continue_debug_event_done:
+    pop ecx
     pop bx
     pop ds
     retf32

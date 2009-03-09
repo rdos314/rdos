@@ -44,7 +44,6 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\debevent.inc
 
-THREAD_HANDLE	EQU 7ABC0000h
 PROCESS_HANDLE	EQU 0BCE50000h
 
 SYS_BASE EQU 0DE000000h
@@ -2682,7 +2681,6 @@ init_thread	PROC far
 	mov es,ax
 	movzx eax,es:p_id
 	pop es
-	or eax,THREAD_HANDLE
 	mov es:pvThreadHandle,eax
 	mov fs:[edx+24h],eax
 	mov dword ptr ds:tss_ebp,edx

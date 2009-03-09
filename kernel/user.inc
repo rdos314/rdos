@@ -831,7 +831,7 @@ SuspendAndSignalThread     MACRO
 
 ;  IN  BX   Module handle
 ;  IN  EAX	Timeout in milliseconds
-;  OUT EAX  Thread #
+;  OUT AX   Thread #
 ;  OUT BL   Event type  
 WaitForDebugEvent MACRO
 	UserGate wait_for_debug_event_nr

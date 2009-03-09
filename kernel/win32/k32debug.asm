@@ -484,6 +484,9 @@ wfdeRetry:
     mov bx,DebugHandle
 	UserGate wait_for_debug_event_nr
 ;
+    movzx eax,ax
+    movzx edx,DebugHandle
+;
     movzx ebx,bl
     or ebx,ebx
     jz wfdeRemove

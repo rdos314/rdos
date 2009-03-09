@@ -57,7 +57,6 @@ pvTLSArray			DD ?
 
 tib_data	ENDS
 
-THREAD_HANDLE	EQU 7ABC0000h
 PROCESS_HANDLE	EQU 0BCE50000h
 
 .code
@@ -604,7 +603,6 @@ cpSpawnNoDebugHandle:
 	jz cpOk
 ;
 	movzx eax,ax
-	or eax,THREAD_HANDLE
 	mov [ecx+4],eax
 	mov [ecx+12],eax
 ;
