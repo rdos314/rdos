@@ -274,6 +274,16 @@ PAGE
 trap_create_thread	PROC near
 	sti
 	push cx
+	mov ax,system_data_sel
+	mov es,ax
+	mov di,OFFSET thread_arr
+	xor ax,ax
+	mov cx,256
+	repne scasw
+	GetThread
+	sub di,2
+	stosw
+;
 	mov ax,proc_data_sel
 	mov ds,ax
 	mov cl,ds:create_thread_hooks
@@ -292,15 +302,6 @@ trap_create_thread_loop:
 	dec cl
 	jnz trap_create_thread_loop
 trap_create_thread_done:
-	mov ax,system_data_sel
-	mov es,ax
-	mov di,OFFSET thread_arr
-	xor ax,ax
-	mov cx,256
-	repne scasw
-	GetThread
-	sub di,2
-	stosw
 	pop cx
 	retf
 trap_create_thread	ENDP

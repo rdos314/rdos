@@ -163,6 +163,7 @@ thread_to_sel_next:
 ;
     xor bx,bx
     stc    
+    int 3
     jmp thread_to_sel_done        
 
 thread_to_sel_found:

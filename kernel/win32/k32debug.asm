@@ -483,7 +483,7 @@ wfdeRetry:
     movzx ebx,bl
     or ebx,ebx
     jz wfdeRemove
-;    
+;
     cmp ebx,6
     jbe wfdeHandle
 
@@ -691,7 +691,6 @@ gtcControlDone:
 	jmp gtcDone
 
 gtcFail:
-	int 3
 	xor eax,eax
 
 gtcDone:
@@ -834,7 +833,6 @@ stcControlDone:
 	jmp stcDone
 
 stcFail:
-	int 3
 	xor eax,eax
 
 stcDone:
