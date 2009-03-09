@@ -35,6 +35,8 @@
 include ..\user.def
 include ..\debevent.inc
 
+FILE_HANDLE = 3AB60000h
+
 UserGate	MACRO gate_nr
 	db 9Ah
 	dd gate_nr
@@ -272,6 +274,7 @@ CopyCreateProcessEvent  Proc
 	mov [edi].event_thread_id,eax
 ;
     mov ebx,[esi].cpeFile
+    or ebx,FILE_HANDLE
     mov [edi].cpe_file,ebx
 ;    
     mov ebx,[esi].cpeProcess
@@ -394,6 +397,7 @@ CopyLoadDllEvent  Proc
 	mov [edi].event_thread_id,eax
 ;
     mov ebx,[esi].ldeFile
+    or ebx,FILE_HANDLE
     mov [edi].lde_file,ebx
 ;
     mov ebx,[esi].ldeImageBase

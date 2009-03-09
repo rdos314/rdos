@@ -3158,8 +3158,7 @@ gdedDuplFile:
 	mov ax,es:[edi]
 	mov cx,es:[edi+2]
 	DuplFileInfo
-	mov eax,FILE_HANDLE
-	mov ax,bx
+	movzx eax,bx
 	mov es:[edi],eax
 
 gdedDone:
