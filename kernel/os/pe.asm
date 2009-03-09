@@ -44,8 +44,6 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\debevent.inc
 
-FILE_HANDLE		EQU 3AB60000h
-LIB_HANDLE		EQU 2A7B0000h
 THREAD_HANDLE	EQU 7ABC0000h
 PROCESS_HANDLE	EQU 0BCE50000h
 
@@ -214,8 +212,7 @@ CreateProcessEvent Proc near
 	mov word ptr es:[di].cpeFile,ax
 	mov word ptr es:[di].cpeFile+2,cx
 ;	
-    mov eax,LIB_HANDLE
-    mov ax,ds:mod_handle
+    movzx eax,ds:mod_handle
     mov es:[di].cpeHandle,eax    
 ;
 	mov eax,fs:pvProcessHandle
@@ -371,8 +368,7 @@ LoadDllEvent Proc near
 	mov word ptr es:[di].ldeFile,ax
 	mov word ptr es:[di].ldeFile+2,cx
 ;	
-    mov eax,LIB_HANDLE
-    mov ax,ds:mod_handle
+    movzx eax,ds:mod_handle
     mov es:[di].ldeHandle,eax    
 ;
 	mov eax,ds:lib_base
@@ -2396,8 +2392,7 @@ init_stack_no_tls:
 	sub edx,4
 	mov [edx],eax						; reason
 	sub edx,4
-	mov eax,LIB_HANDLE
-	mov ax,es:mod_handle
+	movzx eax,es:mod_handle
 	mov dword ptr [edx],eax				; module handle
 	mov fs:pvModuleHandle,eax
 	sub edx,4
@@ -2746,7 +2741,6 @@ init_thread_no_tls:
 	sub edx,4
 	mov fs:[edx],eax						; reason
 	sub edx,4
-	mov eax,LIB_HANDLE
 	mov eax,es:pvModuleHandle
 	mov dword ptr fs:[edx],eax				; module handle
 	sub edx,4
@@ -3824,8 +3818,7 @@ get_dll_handle	Proc far
 	jc get_dll_handle_done
 
 get_dll_handle_ok:
-	mov ebx,LIB_HANDLE
-	mov bx,es:mod_handle
+	movzx ebx,es:mod_handle
 
 get_dll_handle_done:
 	pop esi
