@@ -73,7 +73,7 @@ debug_pace_nr				= 63
 debug_go_nr					= 64
 debug_next_nr				= 65
 
-wait_for_debug_event_nr		= 66
+add_wait_for_debug_event_nr	= 66
 get_debug_event_data_nr     = 67
 continue_debug_event_nr		= 68
 notify_pe_exception_nr		= 70
@@ -445,4 +445,7 @@ get_current_module_nr       = 369
 
 get_module_focus_key_nr     = 370
 
-usergate_entries			= 371
+get_debug_event_nr          = 371
+clear_debug_event_nr        = 372
+
+usergate_entries			= 373

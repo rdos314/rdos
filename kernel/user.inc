@@ -829,18 +829,29 @@ SuspendAndSignalThread     MACRO
 	UserGate suspend_and_signal_thread_nr
 						ENDM
 
+;  IN  AX   Module handle
+;  IN  BX	Wait handle
+;  IN  ECX  Signalled ID
+AddWaitForDebugEvent MACRO
+	UserGate add_wait_for_debug_event_nr
+						ENDM
+
 ;  IN  BX   Module handle
-;  IN  EAX	Timeout in milliseconds
 ;  OUT AX   Thread #
 ;  OUT BL   Event type  
-WaitForDebugEvent MACRO
-	UserGate wait_for_debug_event_nr
+GetDebugEvent MACRO
+	UserGate get_debug_event_nr
 						ENDM
 
 ;  IN  BX       Module handle
 ;  IN  ES:EDI	Event buffer
 GetDebugEventData MACRO
 	UserGate get_debug_event_data_nr
+						ENDM
+
+;  IN  BX       Module handle
+ClearDebugEvent MACRO
+	UserGate clear_debug_event_nr
 						ENDM
 
 ;  IN  BX       Module handle

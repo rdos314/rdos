@@ -47,16 +47,32 @@ mod_get_resource_proc   DD ?
 ; OUT EAX		Bytes copied
 mod_get_name_proc       DD ?
 
-; IN  EAX       Timeout in milliseconds
-; OUT EAX       Thread ID
-; OUT BL        Event type  
-; OUT DX        Debug module handle
-mod_wait_for_debug_event_proc   DD ?
+; IN  ES        Wait object
+; IN  BX        Module sel
+mod_start_wait_for_debug_event_proc   DD ?
 
+; IN  ES        Wait object
+; IN  BX        Module sel
+mod_stop_wait_for_debug_event_proc   DD ?
+
+; IN  ES        Wait object
+; IN  BX        Module sel
+mod_is_debug_event_idle_proc   DD ?
+
+; IN  BX        Module sel
+; OUT AX        Thread ID
+; OUT BL        Event type  
+mod_get_debug_event_proc   DD ?
+
+; IN  BX        Module sel
 ; IN  ES:()EDI	Event buffer
 mod_get_debug_event_data_proc   DD ?
 
-; IN  EAX       Thread ID
+; IN  BX        Module sel
+mod_clear_debug_event_proc   DD ?
+
+; IN  BX        Module sel
+; IN  AX        Thread ID
 mod_continue_debug_event_proc   DD ?
 
 mod_handle              DW ?

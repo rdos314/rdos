@@ -115,8 +115,10 @@ seInsDone:
 	mov es,ax
 	LeaveSection ds:lib_section
 ;
-	mov bx,ds:lib_debug_thread
-	Signal
+    push es
+	mov es,ds:lib_debug_obj
+	SignalWait
+	pop es
 	
 seDone:
 	WaitForSignal
@@ -427,7 +429,7 @@ create_lib_size_ok:
 	mov es:lib_process,0
 	mov es:lib_size,0
 	mov es:lib_debug_lib,0
-	mov es:lib_debug_thread,0
+	mov es:lib_debug_obj,0
 	mov es:lib_events,0
 	mov es:lib_file_handle,bx
 	mov es:lib_run_now,0
@@ -444,11 +446,23 @@ create_lib_size_ok:
     mov word ptr es:mod_get_name_proc,OFFSET get_module_name
     mov word ptr es:mod_get_name_proc+2,cs
 ;
-    mov word ptr es:mod_wait_for_debug_event_proc,OFFSET wait_for_debug_event
-    mov word ptr es:mod_wait_for_debug_event_proc+2,cs
+    mov word ptr es:mod_start_wait_for_debug_event_proc,OFFSET start_wait_for_debug_event
+    mov word ptr es:mod_start_wait_for_debug_event_proc+2,cs
+;
+    mov word ptr es:mod_stop_wait_for_debug_event_proc,OFFSET stop_wait_for_debug_event
+    mov word ptr es:mod_stop_wait_for_debug_event_proc+2,cs
+;
+    mov word ptr es:mod_is_debug_event_idle_proc,OFFSET is_debug_event_idle
+    mov word ptr es:mod_is_debug_event_idle_proc+2,cs
+;
+    mov word ptr es:mod_get_debug_event_proc,OFFSET get_debug_event
+    mov word ptr es:mod_get_debug_event_proc+2,cs
 ;
     mov word ptr es:mod_get_debug_event_data_proc,OFFSET get_debug_event_data
     mov word ptr es:mod_get_debug_event_data_proc+2,cs
+;
+    mov word ptr es:mod_clear_debug_event_proc,OFFSET clear_debug_event
+    mov word ptr es:mod_clear_debug_event_proc+2,cs
 ;
     mov word ptr es:mod_continue_debug_event_proc,OFFSET continue_debug_event
     mov word ptr es:mod_continue_debug_event_proc+2,cs
@@ -3024,8 +3038,10 @@ free_process_inserted:
 	mov es,ax
 	LeaveSection ds:lib_section
 ;
-	mov bx,ds:lib_debug_thread
-	Signal
+    push es
+	mov es,ds:lib_debug_obj
+	SignalWait
+	pop es
 
 	mov ax,1000
 	WaitMilliSec
@@ -3039,41 +3055,116 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WaitForDebugEvent
+;		NAME:			StartWaitForDebugEvent
 ;
-;		DESCRIPTION:    Wait for an debug event from process
+;		DESCRIPTION:    Start wait for an debug event from process
 ;
-;		PARAMETERS:		EAX     Timeout in milliseconds
-;                       BX      Debugged lib_sel
-;
-;       RETURNS:        AX     Thread ID
-;                       BL      Event type  
+;		PARAMETERS:		BX        Debugged lib_sel
+;                       ES        Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-wait_for_debug_event Proc far
+start_wait_for_debug_event Proc far
+	push ds
+	push ax
+;
+    mov ds,bx
+	ClearSignal
+	GetThread
+	mov ds:lib_debug_obj,es
+
+	mov ax,ds:lib_events
+	or ax,ax
+    jz start_wait_done
+;
+	mov ds:lib_debug_obj,0
+    SignalWait
+
+start_wait_done:    
+    pop ax
+	pop ds	
+	ret
+start_wait_for_debug_event Endp
+
+PAGE
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			StopWaitForDebugEvent
+;
+;		DESCRIPTION:    Stop wait for an debug event from process
+;
+;		PARAMETERS:		BX      Debugged lib_sel
+;                       ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_debug_event Proc far
+	push ds
+;
+    mov ds,bx
+	mov ds:lib_debug_obj,0
+;	
+	pop ds	
+	ret
+stop_wait_for_debug_event Endp
+
+PAGE
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IsDebugEventIdle
+;
+;		DESCRIPTION:    Check if debug event is idle
+;
+;		PARAMETERS:		BX      Debugged lib_sel
+;                       ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_debug_event_idle Proc far
+	push ds
+	push ax
+;
+    mov ds,bx
+	mov ax,ds:lib_events
+	or ax,ax
+	clc
+	je is_idle_done
+;
+	stc
+
+is_idle_done:
+	pop ax
+	pop ds	
+	ret
+is_debug_event_idle Endp
+
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDebugEvent
+;
+;		DESCRIPTION:    Get debug event from process
+;
+;		PARAMETERS:		BX        Debugged lib_sel
+;
+;       RETURNS:        AX        Thread ID
+;                       BL        Event type  
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_debug_event Proc far
 	push ds
 	push es
-	push ecx
-	push esi
+	push si
 ;
     mov ds,bx
 	EnterSection ds:lib_section
-	ClearSignal
-	GetThread
-	mov ds:lib_debug_thread,ax
-
-wfdLoop:
 	mov ax,ds:lib_events
-	or ax,ax
-	jnz wfdFound
-;
-	LeaveSection ds:lib_section
-	WaitForSignal
-	EnterSection ds:lib_section
-	jmp wfdLoop
-
-wfdFound:
 	mov es,ax
 	mov ax,es:event_prev
 	cmp ax,ds:lib_events
@@ -3085,25 +3176,23 @@ wfdFound:
 	mov ds,si
 	mov ds:event_prev,ax
 	pop ds
-	jne wfdRemoved
+	jne gdeRemoved
 ;
 	mov ds:lib_events,0
 
-wfdRemoved:
-	mov ds:lib_debug_thread,0
+gdeRemoved:
 	LeaveSection ds:lib_section
 ;
     mov ds:lib_curr_event,es
     mov bl,es:event_code
     mov ax,es:event_thread_id
 
-wfdDone:
-	pop esi
-	pop ecx
+gdeDone:
+	pop si
 	pop es
 	pop ds	
 	ret
-wait_for_debug_event Endp
+get_debug_event Endp
 
 PAGE
                                            
@@ -3162,6 +3251,41 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			ClearDebugEvent
+;
+;		DESCRIPTION:    Clear debug event
+;
+;		PARAMETERS:		BX      Debugged lib_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_debug_event Proc far
+	push ds
+	push es
+	push bx
+;
+	mov ds,bx
+	mov bx,ds:lib_curr_event
+	or bx,bx
+	jz clear_debug_done
+;
+    mov es,bx	
+	FreeMem
+
+clear_debug_done:
+	mov ds:lib_curr_event,0
+;	
+	pop bx
+	pop es
+	pop ds
+	ret
+clear_debug_event Endp
+
+PAGE
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			ContinueDebugEvent
 ;
 ;		DESCRIPTION:    Continue debugged thread
@@ -3178,17 +3302,6 @@ continue_debug_event Proc far
 	push cx
 	push dx
 	push si
-;
-	mov ds,bx
-	mov bx,ds:lib_curr_event
-	or bx,bx
-	jz continue_debug_free_ok
-;
-    mov es,bx	
-	FreeMem
-
-continue_debug_free_ok:
-	mov ds:lib_curr_event,0
 ;
 	mov bx,ax
 	mov ax,system_data_sel
@@ -3360,8 +3473,8 @@ neInsDone:
 	cli
 	LeaveSection ds:lib_section
 ;
-	mov bx,ds:lib_debug_thread
-	Signal
+	mov es,ds:lib_debug_obj
+	SignalWait
 ;
 	pop ax
 	pop es

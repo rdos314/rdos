@@ -222,8 +222,8 @@ void __stdcall RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const 
 void __stdcall RdosTerminateThread();
 int __stdcall RdosGetThreadHandle();
 int __stdcall RdosExec(const char *prog, const char *param);
-int __stdcall RdosSpawn(const char *prog, const char *param, const char *startdir, int *thread);
-int __stdcall RdosSpawnDebug(const char *prog, const char *param, const char *startdir, int *thread);
+int __stdcall RdosSpawn(const char *prog, const char *param, const char *startdir, short int *thread);
+int __stdcall RdosSpawnDebug(const char *prog, const char *param, const char *startdir, short int *thread);
 void __stdcall RdosWaitMilli(int ms);
 void __stdcall RdosWaitMicro(int us);
 void __stdcall RdosWaitUntil(unsigned long msb, unsigned long lsb);
@@ -379,9 +379,11 @@ int __stdcall RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
 void * __stdcall RdosGetModuleProc(int handle, const char *ProcName);
 char __stdcall RdosGetModuleFocusKey(int handle);
 
-char __stdcall RdosWaitForDebugEvent(int handle, int timeout, int *thread);
+void __stdcall RdosAddWaitForDebugEvent(int Handle, int ModuleHandle, void *ID);
+char __stdcall RdosGetDebugEvent(int handle, short int *thread);
 void __stdcall RdosGetDebugEventData(int handle, void *buf);
-void __stdcall RdosContinueDebugEvent(int handle, int thread);
+void __stdcall RdosClearDebugEvent(int handle);
+void __stdcall RdosContinueDebugEvent(int handle, short int thread);
 
 int __stdcall RdosOpenAdc(int channel);
 void __stdcall RdosCloseAdc(int handle);

@@ -233,6 +233,7 @@ exc_event_struc ENDS
 .data
 
 DebugHandle DW ?
+WaitHandle  DW ?
 
 .code
 	
@@ -250,7 +251,14 @@ DebugHandle DW ?
     public SetDebugHandle
 
 SetDebugHandle  Proc
+    int 3    
     mov DebugHandle,bx
+    mov ax,bx
+    UserGate create_wait_nr
+    int 3    
+    mov WaitHandle,bx    
+    xor ecx,ecx
+    UserGate add_wait_for_debug_event_nr
     ret
 SetDebugHandle  Endp
 	
@@ -480,9 +488,13 @@ WaitForDebugEvent Proc near
     UserGate set_focus_nr    
 
 wfdeRetry:
-	mov eax,[ebp].wfdeTimeout
+    int 3
+    mov bx,WaitHandle
+    UserGate wait_no_timeout_nr
+;
+    int 3
     mov bx,DebugHandle
-	UserGate wait_for_debug_event_nr
+	UserGate get_debug_event_nr
 ;
     movzx eax,ax
     movzx edx,DebugHandle
@@ -495,6 +507,9 @@ wfdeRetry:
     jbe wfdeHandle
 
 wfdeRemove:
+    mov bx,DebugHandle
+	UserGate clear_debug_event_nr
+;
     mov bx,DebugHandle
 	UserGate continue_debug_event_nr
     jmp wfdeRetry
@@ -513,6 +528,9 @@ wfdeHandle:
     push ebx     
     mov bx,DebugHandle
 	UserGate get_debug_event_data_nr
+;	
+    mov bx,DebugHandle
+	UserGate clear_debug_event_nr
 	pop ebx
 ;
 	mov esi,edi

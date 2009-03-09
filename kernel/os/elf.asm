@@ -113,8 +113,12 @@ create_lib_size_ok:
     mov es:mod_get_proc_proc,0
     mov es:mod_get_resource_proc,0
     mov es:mod_get_name_proc,0
-    mov es:mod_wait_for_debug_event_proc,0
+    mov es:mod_start_wait_for_debug_event_proc,0
+    mov es:mod_stop_wait_for_debug_event_proc,0
+    mov es:mod_is_debug_event_idle_proc,0
+    mov es:mod_get_debug_event_proc,0
     mov es:mod_get_debug_event_data_proc,0
+    mov es:mod_clear_debug_event_proc,0
     mov es:mod_continue_debug_event_proc,0
 ;
 	pop edi

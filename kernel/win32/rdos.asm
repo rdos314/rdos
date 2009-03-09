@@ -578,9 +578,8 @@ RdosSpawn	PROC
 	UserGate spawn_exe_nr
 	jc rsFail
 ;	
-    movzx eax,ax
     mov ebx,[ebp+20]
-    mov [ebx],eax
+    mov [ebx],ax
 ;
     movzx eax,dx
     jmp rsDone
@@ -634,9 +633,8 @@ RdosSpawnDebug	PROC
 	UserGate spawn_exe_nr
 	jc rsdFail
 ;	
-    movzx eax,ax
     mov ebx,[ebp+20]
-    mov [ebx],eax
+    mov [ebx],ax
 ;
     movzx eax,dx
     jmp rsdDone
@@ -7734,49 +7732,78 @@ rgmfkDone:
     pop ebp
     ret 4
 RdosGetModuleFocusKey   Endp        
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           RdosWaitForDebugEvent
+;       NAME:           RdosAddWaitForDebugEvent
 ;
-;       DESCRIPTION:    Wait for debug event
+;       DESCRIPTION:    add wait for debug event
 ;
 ;		PARAMETERS:		Handle
-;                       Timeout in ms
+;                       Module handle
+;                       ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosAddWaitForDebugEvent
+
+RdosAddWaitForDebugEvent	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+    mov ebx,[ebp+8]
+    mov eax,[ebp+12]
+    mov ecx,[ebp+16]
+	UserGate add_wait_for_debug_event_nr
+;    
+    pop ecx
+    pop ebx
+    pop ebp
+    ret 12
+RdosAddWaitForDebugEvent   Endp    
+    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosGetDebugEvent
+;
+;       DESCRIPTION:    Get debug event
+;
+;		PARAMETERS:		Handle
 ;                       Thread
 ;
 ;		RETURNS:		Event type
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-		public RdosWaitForDebugEvent
+		public RdosGetDebugEvent
 
-RdosWaitForDebugEvent	Proc near
+RdosGetDebugEvent	Proc near
 	push ebp
 	mov ebp,esp
 	push ebx
 ;
     mov ebx,[ebp+8]
-    mov eax,[ebp+12]
-	UserGate wait_for_debug_event_nr
-	jc wfdeFail
+	UserGate get_debug_event_nr
+	jc gdeFail
 ;
-    mov edx,[ebp+16]
-    mov [edx],eax
+    mov edx,[ebp+12]
+    mov [edx],ax
     mov al,bl
-    jmp wfdeDone
+    jmp gdeDone
 
-wfdeFail:
+gdeFail:
     xor al,al
     
-wfdeDone:
+gdeDone:
     pop ebx
     pop ebp
-    ret 12
-RdosWaitForDebugEvent   Endp    
-    
+    ret 8
+RdosGetDebugEvent   Endp    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -7809,6 +7836,32 @@ RdosGetDebugEventData	Proc near
 RdosGetDebugEventData   Endp    
     
     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosClearDebugEvent
+;
+;       DESCRIPTION:    Clear debug event
+;
+;		PARAMETERS:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosClearDebugEvent
+
+RdosClearDebugEvent	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+    mov ebx,[ebp+8]
+	UserGate clear_debug_event_nr
+;	
+    pop ebx
+    pop ebp
+    ret 4
+RdosClearDebugEvent   Endp    
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;

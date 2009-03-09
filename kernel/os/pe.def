@@ -148,7 +148,7 @@ lib_file_handle		DW ?
 lib_usage_count		DW ?
 lib_process			DW ?
 lib_debug_lib		DW ?
-lib_debug_thread	DW ?
+lib_debug_obj   	DW ?
 lib_events			DW ?
 lib_curr_event      DW ?
 lib_section			section_typ <>
