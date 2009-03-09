@@ -44,7 +44,6 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\debevent.inc
 
-PROCESS_HANDLE	EQU 0BCE50000h
 
 SYS_BASE EQU 0DE000000h
 
@@ -75,11 +74,9 @@ SendEvent Proc near
 	GetThread
 	push es
 	mov es,ax
-	movzx eax,es:p_id
-	pop es
-;	
-	mov es:event_proc_id,eax
-	mov es:event_thread_id,eax
+	mov ax,es:p_id
+	pop es	
+	mov es:event_thread_id,ax
 ;
 	mov ax,ds:lib_debug_lib
 	or ax,ax
@@ -2989,10 +2986,9 @@ close_proc	Proc far
 	GetThread
 	push es
 	mov es,ax
-	movzx eax,es:p_id
+	mov ax,es:p_id
 	pop es
-	mov es:event_proc_id,eax
-	mov es:event_thread_id,eax
+	mov es:event_thread_id,ax
 ;
 	mov ax,ds:lib_debug_lib
 	or ax,ax
@@ -3050,7 +3046,7 @@ PAGE
 ;		PARAMETERS:		EAX     Timeout in milliseconds
 ;                       BX      Debugged lib_sel
 ;
-;       RETURNS:        EAX     Thread ID
+;       RETURNS:        AX     Thread ID
 ;                       BL      Event type  
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3098,9 +3094,8 @@ wfdRemoved:
 	LeaveSection ds:lib_section
 ;
     mov ds:lib_curr_event,es
-    mov edx,es:event_proc_id
     mov bl,es:event_code
-    mov eax,es:event_thread_id
+    mov ax,es:event_thread_id
 
 wfdDone:
 	pop esi
@@ -3325,19 +3320,12 @@ notify_pe_exception	Proc far
 	add ebx,8
 	mov [bp].vm_esp,ebx
 ;
-	mov eax,PROCESS_HANDLE
-	mov bx,word ptr fs:pvModuleHandle
-	DerefModuleHandle
-	mov ds,bx
-	mov ax,bx
-	mov es:event_proc_id,eax
-;
 	GetThread
 	push es
 	mov es,ax
-	movzx eax,es:p_id
+	mov ax,es:p_id
 	pop es
-	mov es:event_thread_id,eax
+	mov es:event_thread_id,ax
 ;
 	mov ax,pe_app_sel
 	mov ds,ax

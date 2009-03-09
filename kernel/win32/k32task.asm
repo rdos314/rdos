@@ -57,7 +57,6 @@ pvTLSArray			DD ?
 
 tib_data	ENDS
 
-PROCESS_HANDLE	EQU 0BCE50000h
 
 .code
 
@@ -607,7 +606,6 @@ cpSpawnNoDebugHandle:
 	mov [ecx+12],eax
 ;
 	movzx eax,ax
-	or eax,PROCESS_HANDLE
 	mov [ecx],eax
 	mov [ecx+8],eax
 	jmp cpOk

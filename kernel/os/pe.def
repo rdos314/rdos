@@ -220,8 +220,7 @@ event_struc	STRUC
 
 event_prev		DW ?
 event_next		DW ?
-event_proc_id	DD ?
-event_thread_id	DD ?
+event_thread_id	DW ?
 event_size		DW ?
 event_code		DB ?
 
