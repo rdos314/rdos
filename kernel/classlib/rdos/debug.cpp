@@ -41,6 +41,285 @@
 
 /*##########################################################################
 #
+#   Name       : TDebugThread::TDebugThread
+#
+#   Purpose....: Debug thread constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugThread::TDebugThread(TCreateProcessEvent *event)
+{
+    ThreadID = event->Thread;
+    FsLinear = event->FsLinear;
+    Eip = event->StartEip;
+    Cs = event->StartCs;
+
+    FDebug = FALSE;
+
+    ReadState();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::TDebugThread
+#
+#   Purpose....: Debug thread constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugThread::TDebugThread(TCreateThreadEvent *event)
+{
+    ThreadID = event->Thread;
+    FsLinear = event->FsLinear;
+    Eip = event->StartEip;
+    Cs = event->StartCs;
+
+    FDebug = FALSE;
+
+    ReadState();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::~TDebugThread
+#
+#   Purpose....: Debug thread destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugThread::~TDebugThread()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::IsDebug
+#
+#   Purpose....: Check if thread is in debug state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebugThread::IsDebug()
+{
+    return FDebug;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::SetException
+#
+#   Purpose....: Set exception state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebugThread::SetException(TExceptionEvent *event)
+{
+	 Tss tss;
+	 int i;
+
+	 Cs = event->Cs;
+	 Eip = event->Eip;
+
+	 ReadState();
+
+	 RdosGetThreadTss(ThreadID, &tss);
+
+    Esp0 = tss.esp0;
+    Ess0 = tss.ess0;
+    Esp1 = tss.esp1;    
+    Ess1 = tss.ess1;
+    Esp2 = tss.esp2;
+    Ess2 = tss.ess2;    
+    Cr3 = tss.cr3;
+    Eflags = tss.eflags;
+    Eax = tss.eax;
+    Ecx = tss.ecx;
+    Edx = tss.edx;
+    Ebx = tss.ebx;
+    Esp = tss.esp;
+    Ebp = tss.ebp;
+    Esi = tss.esi;
+    Edi = tss.edi;
+    Es = tss.es;
+    Ss = tss.ss;
+    Ds = tss.ds;
+    Fs = tss.fs;
+    Gs = tss.gs;
+	 Ldt = tss.ldt;
+
+	 for (i = 0; i < 4; i++)
+		  Dr[i] = tss.dr[i];
+
+	 Dr7 = tss.dr7;
+	 MathControl = tss.MathControl;
+	 MathStatus = tss.MathStatus;
+	 MathTag = tss.MathTag;
+	 MathEip = tss.MathEip;
+	 MathCs = tss.MathCs;
+	 MathOp[0] = tss.MathOp[0];
+	 MathOp[1] = tss.MathOp[1];
+	 MathDataOffs = tss.MathDataOffs;
+	 MathDataSel = tss.MathDataSel;
+
+	 for (i = 0; i < 8; i++)
+		  St[i] = tss.st[i];
+
+	 FDebug = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::ReadState
+#
+#   Purpose....: Read thread state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebugThread::ReadState()
+{
+    ThreadState state;
+    int i;
+    int ok;
+    char str[21];
+
+    ok = FALSE;
+    
+    for (i = 0; i < 256 && !ok; i++)
+    {
+        RdosGetThreadState(i, &state);
+        if (state.ID == ThreadID)
+            ok = TRUE;
+    }
+
+    if (ok)
+    {
+        strncpy(str, state.Name, 20);
+        str[20] = 0;
+        
+        for (i = 19; i >= 0; i--)
+            if (str[i] == ' ')
+                str[i] = 0;
+            else
+                break;
+    
+        ThreadName = str;
+
+        strncpy(str, state.List, 20);
+        str[20] = 0;
+        
+        for (i = 19; i >= 0; i--)
+            if (str[i] == ' ')
+                str[i] = 0;
+            else
+                break;
+
+        ThreadList = str;
+        
+        ListOffset = state.Offset;
+        ListSel = state.Sel;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugModule::TDebugModule
+#
+#   Purpose....: Debug module constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugModule::TDebugModule(TCreateProcessEvent *event)
+{
+    FileHandle = event->FileHandle;
+    Handle = event->Handle;
+    ImageBase = event->ImageBase;
+    ImageSize = event->ImageSize;
+
+    ReadName();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugModule::TDebugModule
+#
+#   Purpose....: Debug module constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugModule::TDebugModule(TLoadDllEvent *event)
+{
+    FileHandle = event->FileHandle;
+    Handle = event->Handle;
+    ImageBase = event->ImageBase;
+    ImageSize = event->ImageSize;
+
+    ReadName();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugModule::~TDebugModule
+#
+#   Purpose....: Debug module destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugModule::~TDebugModule()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugModule::ReadName
+#
+#   Purpose....: Read module name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebugModule::ReadName()
+{
+    char str[256];
+    int size;
+
+    str[0];
+    size = RdosGetModuleName(Handle, str, 255);
+    str[size] = 0;
+
+    ModuleName = str;    
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::TDebug
 #
 #   Purpose....: Debugger constructor
@@ -55,6 +334,9 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
 	FParam(Param),
 	FStartDir(StartDir)
 {
+    ThreadList = 0;
+    ModuleList = 0;
+
     Start("Debug device", 0x4000);
 }
 
@@ -91,6 +373,38 @@ void TDebug::DeviceName(char *Name, int MaxLen) const
 
 /*##########################################################################
 #
+#   Name       : TDebug::Block
+#
+#   Purpose....: Block lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::Block()
+{
+    FSection.Enter();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::Unblock
+#
+#   Purpose....: Unblock lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::Unblock()
+{
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::Add
 #
 #   Purpose....: Add object to wait
@@ -108,6 +422,48 @@ void TDebug::Add(TWait *Wait)
 
 /*##########################################################################
 #
+#   Name       : TDebug::InsertThread
+#
+#   Purpose....: Add new thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::InsertThread(TDebugThread *thread)
+{
+    FSection.Enter();
+    
+    thread->Next = ThreadList;
+    ThreadList = thread;
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::InsertModule
+#
+#   Purpose....: Add new module
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::InsertModule(TDebugModule *mod)
+{
+    FSection.Enter();
+    
+    mod->Next = ModuleList;
+    ModuleList = mod;
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::HandleCreateProcess
 #
 #   Purpose....: Handle create process event
@@ -119,6 +475,8 @@ void TDebug::Add(TWait *Wait)
 ##########################################################################*/
 void TDebug::HandleCreateProcess(TCreateProcessEvent *event)
 {
+	InsertThread(new TDebugThread(event));
+    InsertModule(new TDebugModule(event));	 
 }
 
 /*##########################################################################
@@ -149,6 +507,7 @@ void TDebug::HandleTerminateProcess(int exitcode)
 ##########################################################################*/
 void TDebug::HandleCreateThread(TCreateThreadEvent *event)
 {
+	 InsertThread(new TDebugThread(event));
 }
 
 /*##########################################################################
@@ -179,6 +538,19 @@ void TDebug::HandleTerminateThread(int thread)
 ##########################################################################*/
 void TDebug::HandleException(TExceptionEvent *event, int thread)
 {
+    TDebugThread *Thread;
+
+    FSection.Enter();
+
+    Thread = ThreadList;
+
+    while (Thread && Thread->ThreadID != thread)
+        Thread = Thread->Next;
+
+    if (Thread)
+        Thread->SetException(event);
+
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -194,6 +566,7 @@ void TDebug::HandleException(TExceptionEvent *event, int thread)
 ##########################################################################*/
 void TDebug::HandleLoadDll(TLoadDllEvent *event)
 {
+	 InsertModule(new TDebugModule(event));
 }
 
 /*##########################################################################
@@ -281,5 +654,5 @@ void TDebug::Execute()
         FInstalled = FALSE;
         
     while (FInstalled)
-        FWait->WaitForever();
+        WaitForever();
 }

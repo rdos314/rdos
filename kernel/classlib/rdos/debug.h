@@ -69,7 +69,6 @@ struct TExceptionEvent
     unsigned short Cs;
 };    
 
-
 class TDebugThread
 {
 public:
@@ -77,15 +76,81 @@ public:
     TDebugThread(TCreateThreadEvent *event);
     ~TDebugThread();
 
+    void SetException(TExceptionEvent *event);
+    int IsDebug();
+
     TString ThreadName;
+    TString ThreadList;
+    int ListOffset;
+    short int ListSel;
+
     int ThreadID;
     unsigned int FsLinear;
-    unsigned int Eip;
-    unsigned short Cs;
+    long Eip;
+    short int Cs;
+
+    long Esp0;
+    long Ess0;
+    long Esp1;
+    long Ess1;
+    long Esp2;
+    long Ess2;
+    long Cr3;
+    long Eflags;
+    long Eax;
+    long Ecx;
+    long Edx;
+    long Ebx;
+    long Esp;
+    long Ebp;
+    long Esi;
+    long Edi;
+    long Es;
+    long Ss;
+    long Ds;
+    long Fs;
+    long Gs;
+    long Ldt;
+
+    long Dr[4];
+    long Dr7;
+    long MathControl;
+    long MathStatus;
+    long MathTag;
+    long MathEip;
+    short int MathCs;
+    char MathOp[2];
+    long MathDataOffs;
+    long MathDataSel;
+    long double St[8];
 
     TDebugThread *Next;
+
+protected:
+    void ReadState();
+
+    int FDebug;
         
 };
+
+class TDebugModule
+{
+public:
+    TDebugModule(TCreateProcessEvent *event);
+    TDebugModule(TLoadDllEvent *event);
+    ~TDebugModule();
+
+    void ReadName();
+    
+    TString ModuleName;
+    int FileHandle;
+    int Handle;
+    unsigned int ImageBase;
+    unsigned int ImageSize;
+
+    TDebugModule *Next;
+};
+
 
 class TDebug : public TWaitDevice
 {
@@ -95,12 +160,19 @@ public:
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
+	void Block();
+	void Unblock();
+
 	TDebugThread *ThreadList;
+	TDebugModule *ModuleList;
 
 protected:
 	virtual void SignalNewData();
 	virtual void Add(TWait *Wait);
 	virtual void Execute();
+
+	void InsertThread(TDebugThread *thread);
+	void InsertModule(TDebugModule *module);
 
     void HandleCreateProcess(TCreateProcessEvent *event);
     void HandleTerminateProcess(int exitcode);
@@ -113,6 +185,8 @@ protected:
     TString FParam;
 	TString FStartDir;
 	int FHandle;
+
+	TSection FSection;
 
 };
 
