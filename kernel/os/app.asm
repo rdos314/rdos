@@ -1267,6 +1267,7 @@ free_dll_name	DB 'Free Dll',0
 
 free_dll  Proc far
     push ds
+    push es
     push eax
     push bx
 ;    
@@ -1279,17 +1280,18 @@ free_dll  Proc far
     stc
     jz free_dll_done
 ;
-    mov ds,bx
-    mov eax,ds:mod_free_dll_proc
+    mov es,bx
+    mov eax,es:mod_free_dll_proc
     or eax,eax
     stc
     jz free_dll_done
 ;    
-    call ds:mod_free_dll_proc    
+    call es:mod_free_dll_proc    
 
 free_dll_done:
     pop bx
     pop eax
+    pop es
     pop ds    
     retf32
 free_dll  Endp

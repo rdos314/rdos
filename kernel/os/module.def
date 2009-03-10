@@ -28,6 +28,7 @@
 module_struc    STRUC
 
 ; IN  BX        Module sel
+; IN  ES        Module sel
 mod_free_dll_proc       DD ?
 
 ; IN  BX        Module sel

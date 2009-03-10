@@ -457,7 +457,7 @@ RdosGetThreadState	ENDP
 ;
 ;		description:	Suspend thread
 ;
-;       parameters:     Thread #
+;       parameters:     Thread ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -490,7 +490,7 @@ RdosSuspendThread	ENDP
 ;
 ;		description:	Suspend and signal thread
 ;
-;       parameters:     Thread #
+;       parameters:     Thread ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

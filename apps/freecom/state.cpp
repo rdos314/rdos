@@ -300,14 +300,14 @@ int TStateCommand::Execute(char *param)
 	                    {
 	                        if (FOptF)
 	                        {
-	                            RdosSuspendAndSignalThread(i);
-	                            RdosWaitMilli(50);
-	                        }
-	                        else
-	                        {
-                    		    if (FOptS)
-                    		    {
-                    		        RdosSuspendThread(i);
+								RdosSuspendAndSignalThread(ID);
+								RdosWaitMilli(50);
+							}
+							else
+							{
+								if (FOptS)
+								{
+									RdosSuspendThread(ID);
                     		        RdosWaitMilli(50);
                     		    }
                     		}

@@ -302,7 +302,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Suspend thread (put it in debugger)
 ;
-;		PARAMETER:		AX		Thread #
+;		PARAMETER:		AX		Thread ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -310,29 +310,47 @@ suspend_thread_name	DB 'Suspend Thread',0
 
 suspend_thread	PROC far
 	push ds
+	push es
 	push ax
 	push bx
+	push si
 ;
-	mov bx,ax
-	shl bx,1
+    mov bx,ax
+    mov cx,256
 	mov ax,system_data_sel
 	mov ds,ax
-	cli
-	mov ax,ds:[bx].thread_arr
+	xor si,si
+
+suspend_thread_loop:
+	mov ax,ds:[si].thread_arr
 	or ax,ax
-	stc
-	jz suspend_done
-	mov ds,ax
-	mov ds:p_trap_ads,OFFSET trap_single_step
-	mov ds:p_trap_ads+2,cs
-	mov ds,ds:p_tss_data_sel
-	mov ds:tss_t,1
-	clc
-suspend_done:
-	sti
+	jz suspend_thread_next
 ;
+    mov es,ax	
+    cmp bx,es:p_id
+    je suspend_thread_found
+
+suspend_thread_next:
+    add si,2
+    loop suspend_thread_loop
+;
+    stc    
+    jmp suspend_thread_done        
+
+suspend_thread_found:
+    cli
+	mov es:p_trap_ads,OFFSET trap_single_step
+	mov es:p_trap_ads+2,cs
+	mov es,es:p_tss_data_sel
+	mov es:tss_t,1
+	sti
+	clc
+
+suspend_thread_done:
+    pop si
 	pop bx
 	pop ax
+	pop es
 	pop ds
 	retf32
 suspend_thread	ENDP
@@ -354,32 +372,49 @@ suspend_and_signal_thread_name	DB 'Suspend and Signal Thread',0
 
 suspend_and_signal_thread	PROC far
 	push ds
+	push es
 	push ax
 	push bx
+	push si
 ;
-	mov bx,ax
-	shl bx,1
+    mov bx,ax
+    mov cx,256
 	mov ax,system_data_sel
 	mov ds,ax
-	cli
-	mov ax,ds:[bx].thread_arr
+	xor si,si
+
+suspend_signal_loop:
+	mov ax,ds:[si].thread_arr
 	or ax,ax
-	stc
-	jz suspend_sig_done
-;	
-	mov ds,ax
-	mov ds:p_trap_ads,OFFSET trap_single_step
-	mov ds:p_trap_ads+2,cs
-	mov ds,ds:p_tss_data_sel
-	mov ds:tss_t,1
-    mov bx,ax
-    Signal
-	clc
-suspend_sig_done:
-	sti
+	jz suspend_signal_next
 ;
+    mov es,ax	
+    cmp bx,es:p_id
+    je suspend_signal_found
+
+suspend_signal_next:
+    add si,2
+    loop suspend_signal_loop
+;
+    stc    
+    jmp suspend_signal_done        
+
+suspend_signal_found:
+    mov bx,es
+    cli
+	mov es:p_trap_ads,OFFSET trap_single_step
+	mov es:p_trap_ads+2,cs
+	mov es,es:p_tss_data_sel
+	mov es:tss_t,1
+    Signal
+	sti
+	clc
+
+suspend_signal_done:
+    pop si
 	pop bx
 	pop ax
+	pop es
 	pop ds
 	retf32
 suspend_and_signal_thread	ENDP

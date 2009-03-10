@@ -86,8 +86,6 @@ RELEASE = 8
 	extrn init_random:near
 	extrn init_crc:near
 
-	extrn init_exec:near
-
 	extrn init_first_process:near
 	extrn init_first_thread:near
 	
@@ -565,7 +563,6 @@ prot_init:
 	call init_irq
 	call init_trap_vectors
 	call init_swap
-	call init_exec
 	call init_random
 	call init_crc
 	call init_device    

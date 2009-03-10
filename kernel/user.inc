@@ -819,12 +819,12 @@ GetThreadState     MACRO
 	UserGate get_thread_state_nr
 						ENDM
 
-; IN  AX            Thread #
+; IN  AX            Thread ID
 SuspendThread     MACRO
 	UserGate suspend_thread_nr
 						ENDM
 
-; IN  AX            Thread #
+; IN  AX            Thread ID
 SuspendAndSignalThread     MACRO
 	UserGate suspend_and_signal_thread_nr
 						ENDM

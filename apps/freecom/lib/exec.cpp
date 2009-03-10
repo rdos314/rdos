@@ -68,7 +68,7 @@ TExecCommand::TExecCommand(TSession *session, const char *name, const char *para
 int TExecCommand::Execute(char *param)
 {
 	TPathName StartupDir;
-	int ThreadId;
+	short int ThreadId;
 
 	if (FDetach)
 	{

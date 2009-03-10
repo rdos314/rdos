@@ -116,7 +116,18 @@ seInsDone:
 	LeaveSection ds:lib_section
 ;
     push es
-	mov es,ds:lib_debug_obj
+
+seSignalLoop:
+    mov ax,ds:lib_debug_obj
+    or ax,ax
+    jnz seSignalDo
+;
+    mov ax,10
+    WaitMilliSec
+    jmp seSignalLoop
+
+seSignalDo:
+	mov es,ax
 	SignalWait
 	pop es
 	
@@ -3039,8 +3050,14 @@ free_process_inserted:
 	LeaveSection ds:lib_section
 ;
     push es
-	mov es,ds:lib_debug_obj
+    mov ax,ds:lib_debug_obj
+    or ax,ax
+    jz cpSignalDone
+;
+    mov es,ax    
 	SignalWait
+
+cpSignalDone:
 	pop es
 
 	mov ax,1000
@@ -3070,7 +3087,6 @@ start_wait_for_debug_event Proc far
 ;
     mov ds,bx
 	ClearSignal
-	GetThread
 	mov ds:lib_debug_obj,es
 
 	mov ax,ds:lib_events
@@ -3165,6 +3181,9 @@ get_debug_event Proc far
     mov ds,bx
 	EnterSection ds:lib_section
 	mov ax,ds:lib_events
+	or ax,ax
+	jz gdeLeaveFail
+;	
 	mov es,ax
 	mov ax,es:event_prev
 	cmp ax,ds:lib_events
@@ -3186,6 +3205,14 @@ gdeRemoved:
     mov ds:lib_curr_event,es
     mov bl,es:event_code
     mov ax,es:event_thread_id
+    clc
+    jmp gdeDone
+
+gdeLeaveFail:
+	LeaveSection ds:lib_section
+	xor bl,bl
+	xor ax,ax
+    stc
 
 gdeDone:
 	pop si
@@ -3473,9 +3500,14 @@ neInsDone:
 	cli
 	LeaveSection ds:lib_section
 ;
-	mov es,ds:lib_debug_obj
+	mov ax,ds:lib_debug_obj
+	or ax,ax
+	jz neSignalDone
+;	
+    mov es,ax
 	SignalWait
-;
+
+neSignalDone:
 	pop ax
 	pop es
 	int 45h
@@ -3733,15 +3765,13 @@ load_dll	Endp
 ;
 ;		DESCRIPTION:    Free DLL
 ;
-;       PARAMETERS:		BX		Lib sel
+;       PARAMETERS:		ES		Lib sel
+;                       BX      Lib sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_dll	Proc far
-	push es
-	mov es,bx
 	call FreePeDll
-	pop es
 	ret
 free_dll	Endp
 

@@ -212,8 +212,8 @@ void __stdcall RdosCloseDir(int Handle);
 int __stdcall RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
 
 int __stdcall RdosGetThreadState(int ThreadNr, ThreadState *State);
-int __stdcall RdosSuspendThread(int ThreadNr);
-int __stdcall RdosSuspendAndSignalThread(int ThreadNr);
+int __stdcall RdosSuspendThread(int Thread);
+int __stdcall RdosSuspendAndSignalThread(int Thread);
 
 void __stdcall RdosCpuReset();
 void __stdcall RdosGetVersion(int *Major, int *Minor, int *Release);

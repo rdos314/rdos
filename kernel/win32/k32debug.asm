@@ -251,14 +251,21 @@ WaitHandle  DW ?
     public SetDebugHandle
 
 SetDebugHandle  Proc
-    int 3    
+    push eax
+    push ebx
+    push ecx
+;    
     mov DebugHandle,bx
     mov ax,bx
     UserGate create_wait_nr
-    int 3    
+;    
     mov WaitHandle,bx    
     xor ecx,ecx
     UserGate add_wait_for_debug_event_nr
+;
+    pop ecx
+    pop ebx
+    pop eax    
     ret
 SetDebugHandle  Endp
 	
@@ -488,13 +495,12 @@ WaitForDebugEvent Proc near
     UserGate set_focus_nr    
 
 wfdeRetry:
-    int 3
     mov bx,WaitHandle
     UserGate wait_no_timeout_nr
 ;
-    int 3
     mov bx,DebugHandle
 	UserGate get_debug_event_nr
+	jc wfdeRetry
 ;
     movzx eax,ax
     movzx edx,DebugHandle

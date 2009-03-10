@@ -1231,7 +1231,7 @@ init_sys	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			init_exec
+;		NAME:			init
 ;
 ;		DESCRIPTION:    init module
 ;
@@ -1239,11 +1239,12 @@ init_sys	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public init_exec
-
-init_exec	PROC near
-	pusha
+init	PROC far
 	push ds
+	push es
+	pusha
+	mov bx,exec_code_sel
+	InitDevice
 ;
 	mov eax,SIZE exec_sys_seg
 	mov bx,exec_sys_sel
@@ -1295,12 +1296,12 @@ init_exec	PROC near
 	mov ax,get_exit_code_nr
 	RegisterBimodalUserGate
 ;
-	pop ds
 	popa
+	pop es
+	pop ds
 	ret
-init_exec	ENDP
+init	ENDP
 
+code	ENDS
 
-code    ENDS
-
-        END
+	END init
