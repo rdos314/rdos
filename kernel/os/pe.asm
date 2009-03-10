@@ -3884,28 +3884,33 @@ get_module_name	Proc far
 	jz get_name_done
 ;
 	push ds
+	push ebx
 	push ecx
 	push si
 	push edi
 ;
 	xor eax,eax
 	mov ds,bx
+	xor ebx,ebx
 	mov si,OFFSET lib_name
 get_name_loop:
 	lodsb
 	stos byte ptr es:[edi]
 	or al,al
 	jz get_name_ok
-	inc eax
+	inc ebx
 	sub ecx,1
 	jnz get_name_loop
 ;
 	mov byte ptr es:[edi-1],0
 
 get_name_ok:
+	mov eax,ebx
+;	
 	pop edi
 	pop si
 	pop ecx
+	pop ebx
 	pop ds
 	clc
 
