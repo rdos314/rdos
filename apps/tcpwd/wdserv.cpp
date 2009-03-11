@@ -68,6 +68,21 @@ TWdSocketServer::~TWdSocketServer()
 
 /*##########################################################################
 #
+#   Name       : TWdSocketServer::NotifyMsg
+#
+#   Purpose....: Notify message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::NotifyMsg(char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TWdSocketServer::HandleSocket
 #
 #   Purpose....: Handle socket
@@ -92,7 +107,7 @@ void TWdSocketServer::HandleSocket()
             count = FSocket->Read(msg, size);
 
             if (count == size)
-                ;
+                NotifyMsg(msg, size);
 
 			delete msg;
 		}

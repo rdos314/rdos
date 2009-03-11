@@ -81,7 +81,7 @@ TWdSocketServerFactory::~TWdSocketServerFactory()
 TSocketServer *TWdSocketServerFactory::Create(TSocket *Socket)
 {
 	TWdSocketServer *server;
-	server = new TWdSocketServer("WD", 0x10000, Socket);
+	server = new TWdSocketServer("WD", 0x7000, Socket);
 
 	return server;
 }

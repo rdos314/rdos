@@ -26,16 +26,12 @@
 ########################################################################*/
 
 #include "rdos.h"
-#include "debug.h"
 #include "wdfact.h"
 
 int main(int argc, char **argv)
 {
-    TWdSocketServerFactory fact(0xDEB, 16, 0x10000);
-    
-	TDebug Debug("d:\\showpos\\showpos.exe", "", "d:\\");
+	 TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
 
 	for (;;)
-		RdosWaitMilli(1000);
+		fact.WaitForever();
 }
-

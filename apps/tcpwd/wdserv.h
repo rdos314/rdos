@@ -37,7 +37,11 @@ public:
     TWdSocketServer(const char *Name, int StackSize, TSocket *Socket);
 	~TWdSocketServer();
 
+protected:
+    void NotifyMsg(char *msg, int size);
+
 	virtual void HandleSocket();
+	
 };
 
 #endif
