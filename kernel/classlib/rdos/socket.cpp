@@ -344,7 +344,7 @@ int TSocket::WaitForChar(long Timeout)
 
 	if (FWait)
 		if (FWait->WaitTimeout(Timeout) == this)
-			return TRUE;
+		    return IsOpen();
 
     return FALSE;
 }
