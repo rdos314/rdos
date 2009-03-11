@@ -25,6 +25,8 @@
 #
 ########################################################################*/
 
+#include "rdos.h"
+
 #include "control.h"
 
 #define     STACK_SIZE  0x1000
@@ -1442,6 +1444,8 @@ TControlThread::TControlThread(const char *name, TGraphicDevice *dev)
     FControlList = 0;
 
 	DefaultRedrawTimeout = 25;
+	Enabled = TRUE;
+    EnableDelay = 0;
 
     OnKeyPressed = 0;
     OnKeyReleased = 0;
@@ -1484,6 +1488,39 @@ TControlThread::~TControlThread()
     Unprotect();
 
     delete FGraphic;
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::EnableRedraw
+#
+#   Purpose....: Enable redraws
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::EnableRedraw(int Delay)
+{
+    EnableDelay = Delay;
+    Enabled = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::DisableRedraw
+#
+#   Purpose....: Disable redraws
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::DisableRedraw()
+{
+    Enabled = FALSE;
 }
 
 /*##########################################################################
@@ -2104,6 +2141,15 @@ void TControlThread::Execute()
 
         FWait.WaitTimeout(20);
 
-        HandleUpdate();
+        if (Enabled)
+        {
+            if (EnableDelay)
+            {
+                RdosWaitMilli(EnableDelay);
+                EnableDelay = 0;
+            }
+                
+            HandleUpdate();
+        }
     }
 }

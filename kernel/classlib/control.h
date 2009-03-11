@@ -134,6 +134,8 @@ public:
     void Add(TMouseDevice *Mouse);
 
     void SetDefaultRedrawTimeout(int millisec);
+    void DisableRedraw();
+    void EnableRedraw(int Delay);
 
 	void NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 	void NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
@@ -171,6 +173,8 @@ protected:
     TMouseDevice *FMouse; 
 
     int DefaultRedrawTimeout;
+    int Enabled;
+    int EnableDelay;
 
     TWait FWait;
     TSignalDevice FSignal;

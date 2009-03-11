@@ -991,7 +991,7 @@ void TLabelControl::SetText(const char *Text)
 		if (strlen(FTextRow[row]) == 0)
             FTextRow[row] = 0;
 
-    Redraw();
+    Redraw(1);
 }
 
 /*##########################################################################
