@@ -1663,6 +1663,16 @@ retrans_close:
     or ds:tcp_pending,FLAG_DELETE_NET
 	mov bx,ds:tcp_owner
 	Signal
+;
+    mov bx,ds:tcp_wait	
+    or bx,bx
+    jz retrans_done
+;
+    push es
+    mov es,bx
+    SignalWait
+	mov ds:tcp_wait,0
+	pop es
     jmp retrans_done
 
 retrans_first:
@@ -1797,6 +1807,18 @@ CheckRst	Proc near
 	or ds:tcp_pending,FLAG_DELETE_NET
 	mov bx,ds:tcp_owner
 	Signal
+;
+    mov bx,ds:tcp_wait	
+    or bx,bx
+    jz check_rst_ok
+;
+    push es
+    mov es,bx
+    SignalWait
+	mov ds:tcp_wait,0
+	pop es
+
+check_rst_ok:
 	stc
 
 check_rst_done:
@@ -2374,9 +2396,13 @@ process_data_new_tail_ok:
 	sub ds:tcp_rcv_wnd,ax
 ;
 	call UpdateReceiveWnd
+	test ds:tcp_pending,FLAG_DELAY_ACK
+	jnz process_data_delay_ack_ok
+	
 	or ds:tcp_pending,FLAG_DELAY_ACK
 	mov ds:tcp_ack_timeout,4
-;
+
+process_data_delay_ack_ok:
 	mov cx,ds:tcp_reorder_count
 	sub cx,1
 	mov ds:tcp_reorder_count,cx
@@ -3205,8 +3231,14 @@ receive_connection:
 	jz receive_no_ack
 ;
 	and ax,NOT FLAG_ACK
+	test ax,FLAG_DELAY_ACK
+	jnz receive_delay_ack_ok
+;	
+	mov ds:tcp_ack_timeout,4
+	or ax,FLAG_DELAY_ACK
+
+receive_delay_ack_ok:
 	mov ds:tcp_pending,ax
-	call SendAck
 	jmp receive_leave
 
 receive_no_ack:
@@ -3502,13 +3534,20 @@ wait_for_tcp_connection	Proc far
 	GetThread
 	mov ds:tcp_owner,ax
 	or ds:tcp_pending,FLAG_WAIT
+
+wait_tcp_retry:	
 	LeaveSection ds:tcp_section
 ;
 	WaitForSignal
 	mov ds:tcp_owner,0
 	EnterSection ds:tcp_section
 	cmp ds:tcp_state,STATE_ESTAB
-	jb wait_tcp_fail
+    jae wait_tcp_ok
+;
+    mov ax,ds:tcp_user_timeout
+    or ax,ax
+    jnz wait_tcp_retry
+    jmp wait_tcp_fail
 
 wait_tcp_ok:
 	LeaveSection ds:tcp_section
@@ -3518,6 +3557,7 @@ wait_tcp_ok:
 
 wait_tcp_fail:
 	mov ds:tcp_delete_timeout,240 * 10
+	mov ds:tcp_owner,0
 	LeaveSection ds:tcp_section
 	pop bx
     FreeHandle
@@ -3946,6 +3986,11 @@ is_tcp_connection_closed	Proc far
 	jz is_tcp_closed_fail
 ;
 	mov ds,ax
+;
+    mov ax,ds:tcp_receive_count
+    or ax,ax
+    jnz is_tcp_closed_ok
+;    	
 	mov al,ds:tcp_state
 	cmp al,STATE_ESTAB
 	ja is_tcp_closed_fail
@@ -3953,7 +3998,8 @@ is_tcp_connection_closed	Proc far
     mov ax,ds:tcp_pending
     test ax,FLAG_DELETE_NET
     jnz is_tcp_closed_fail
-;
+
+is_tcp_closed_ok:
 	clc
 	jmp is_tcp_closed_done
 
@@ -4236,6 +4282,10 @@ start_wait_for_connection	PROC far
 	or ax,ax
 	jnz start_wait_signal
 ;
+    mov ax,ds:tcp_pending
+    test ax,FLAG_DELETE_NET
+    jnz start_wait_signal
+;    
 	mov al,ds:tcp_state
 	cmp al,STATE_ESTAB
     jbe start_wait_for_done
@@ -4332,6 +4382,11 @@ is_connection_idle	PROC far
 	jz is_idle_done
 ;
 	mov ds,ax
+    mov ax,ds:tcp_pending
+    test ax,FLAG_DELETE_NET
+    stc
+    jnz is_idle_done
+;
 	mov ax,ds:tcp_receive_count
 	or ax,ax
 	clc
@@ -5298,6 +5353,16 @@ tcp_delete_timeout_do:
     or ds:tcp_pending,FLAG_DELETE_NET
 	mov bx,ds:tcp_owner
 	Signal
+;
+    mov bx,ds:tcp_wait	
+    or bx,bx
+    jz tcp_delete_timeout_done
+;
+    push es
+    mov es,bx
+    SignalWait
+	mov ds:tcp_wait,0
+	pop es
 
 tcp_delete_timeout_done:
 	mov ax,ds:tcp_next

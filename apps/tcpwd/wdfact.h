@@ -20,22 +20,26 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# tcpwd.cpp
-# TCP-base remote server for WD
+# wdfact.h
+# WD factory base class
 #
 ########################################################################*/
 
-#include "rdos.h"
-#include "debug.h"
-#include "wdfact.h"
+#ifndef _WDFACT_H
+#define _WDFACT_H
 
-int main(int argc, char **argv)
+#include "socket.h"
+
+class TWdSocketServerFactory : public TSocketServerFactory
 {
-    TWdSocketServerFactory fact(0xDEB, 16, 0x10000);
-    
-	TDebug Debug("d:\\showpos\\showpos.exe", "", "d:\\");
+public:
+	TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+	~TWdSocketServerFactory();
 
-	for (;;)
-		RdosWaitMilli(1000);
-}
+	virtual TSocketServer *Create(TSocket *Socket);
 
+protected:
+	void Init();
+};
+
+#endif
