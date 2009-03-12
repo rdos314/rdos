@@ -31,6 +31,8 @@
 #include "str.h"
 #include "socket.h"
 
+#define MAX_MSG_SIZE    1024
+
 class TWdSocketServer : public TSocketServer
 {
 public:
@@ -38,10 +40,66 @@ public:
 	~TWdSocketServer();
 
 protected:
-    void NotifyMsg(char *msg, int size);
+    char GetByte();
+    short int GetWord();
+    long GetDword();
+    void GetString(char *str, int maxsize);
+
+    void PutByte(char val);
+    void PutWord(short int val);
+    void PutDword(long val);
+    void PutString(const char *str);
+
+    void ReqError();
+
+    void ReqConnect();
+    void ReqDisconnect();    
+    void ReqSuspend();
+    void ReqResume();
+    void ReqGetSupplService();
+    void ReqPerformSupplService();
+    void ReqGetSysConfig();
+    void ReqMapAddr();
+    void ReqAddrInfo();
+    void ReqChecksumMem();
+    void ReqReadMem();
+    void ReqWriteMem();
+    void ReqReadIo();
+    void ReqWriteIo();
+    void ReqReadCpu();
+    void ReqReadFpu();
+    void ReqWriteCpu();
+    void ReqWriteFpu();
+    void ReqProgGo();
+    void ReqProgStep();
+    void ReqProgLoad();
+    void ReqProgKill();
+	 void ReqSetWatch();
+    void ReqClearWatch();
+    void ReqSetBreak();
+    void ReqClearBreak();
+    void ReqGetNextAlias();
+    void ReqSetUserScreen();
+    void ReqSetDebugScreen();
+    void ReqReadUserKeyboard();
+    void ReqGetLibName();
+    void ReqGetErrText();
+    void ReqGetMsgText();
+    void ReqRedirStdin();
+    void ReqRedirStdout();
+    void ReqSplitCmd();
+    
+    void NotifyMsg();
 
 	virtual void HandleSocket();
-	
+
+    int FInSize;
+	char FInBuf[MAX_MSG_SIZE];
+	char *FInPtr;
+
+    int FOutSize;
+    char FOutBuf[MAX_MSG_SIZE];	
+    char *FOutPtr;
 };
 
 #endif
