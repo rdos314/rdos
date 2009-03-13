@@ -49,6 +49,7 @@
 TWdSocketServer::TWdSocketServer(const char *Name, int StackSize, TSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
+    FSupplList = 0;
 }
 
 /*##########################################################################
@@ -1011,4 +1012,170 @@ void TWdSocketServer::HandleSocket()
             }
 		}
 	}
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::TWdSupplService
+#
+#   Purpose....: Supplementary service class constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWdSupplService::TWdSupplService(const char *Name, TWdSocketServer *Server)
+{
+    int len = strlen(Name);
+    
+    FServer = Server;
+    
+    FName = new char[len + 1];
+    strcpy(FName, Name);
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::~TWdSupplService
+#
+#   Purpose....: Supplementary service class destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWdSupplService::~TWdSupplService()
+{
+    if (FName)
+        delete FName;
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::GetByte
+#
+#   Purpose....: Get byte
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char TWdSupplService::GetByte()
+{
+    return FServer->GetByte();
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::GetWord
+#
+#   Purpose....: Get word
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+short int TWdSupplService::GetWord()
+{
+    return FServer->GetWord();
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::GetDword
+#
+#   Purpose....: Get dword
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long TWdSupplService::GetDword()
+{
+    return FServer->GetDword();
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::GetString
+#
+#   Purpose....: Get string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSupplService::GetString(char *str, int maxsize)
+{
+    FServer->GetString(str, maxsize);
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::PutByte
+#
+#   Purpose....: Put byte
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSupplService::PutByte(char val)
+{
+    FServer->PutByte(val);
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::PutWord
+#
+#   Purpose....: Put word
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSupplService::PutWord(short int val)
+{
+    FServer->PutWord(val);
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::PutDword
+#
+#   Purpose....: Put dword
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSupplService::PutDword(long val)
+{
+    FServer->PutDword(val);
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::PutString
+#
+#   Purpose....: Put string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSupplService::PutString(const char *str)
+{
+    FServer->PutString(str);
 }
