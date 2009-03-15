@@ -20,33 +20,35 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# wdfact.h
-# WD factory base class
+# wdenv.h
+# WD supplementary environment support class
 #
 ########################################################################*/
 
-#ifndef _WDFACT_H
-#define _WDFACT_H
+#ifndef _WDENV_H
+#define _WDENV_H
 
-#include "socket.h"
+#include "wdsuppl.h"
 
-class TWdSupplFactory;
-
-class TWdSocketServerFactory : public TSocketServerFactory
+class TWdEnvFactory : public TWdSupplFactory
 {
 public:
-	TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-	~TWdSocketServerFactory();
+    TWdEnvFactory(TWdSocketServerFactory *factory);
+	virtual ~TWdEnvFactory();
+	
+	virtual TWdSupplService *Create(TWdSocketServer *server);
+};
 
-	void AddSuppl(TWdSupplFactory *SupplFactory);
-    TWdSupplFactory *GetSuppl(const char *name);
-    
-	virtual TSocketServer *Create(TSocket *Socket);
+class TWdEnvService : public TWdSupplService
+{
+public:
+    TWdEnvService(TWdSocketServer *server);
+	virtual ~TWdEnvService();
+
+    virtual void NotifyMsg();
 
 protected:
-	void Init();
 
-	TWdSupplFactory *FSupplList;
 };
 
 #endif

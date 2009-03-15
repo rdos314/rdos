@@ -28,15 +28,32 @@
 #ifndef _WDFILE_H
 #define _WDFILE_H
 
-#include "wdserv.h"
+#include "wdsuppl.h"
 
-class TWdFileService
+class TWdFileFactory : public TWdSupplFactory
+{
+public:
+    TWdFileFactory(TWdSocketServerFactory *factory);
+	virtual ~TWdFileFactory();
+	
+	virtual TWdSupplService *Create(TWdSocketServer *server);
+};
+
+class TWdFileService : public TWdSupplService
 {
 public:
     TWdFileService(TWdSocketServer *server);
 	virtual ~TWdFileService();
 
+    virtual void NotifyMsg();
+
 protected:
+    int CheckFileExt(const char *path, const char *ext);
+    int CheckFileExt(const char *path, const char *name, const char *ext);
+    int CheckPathFileExt(char *path, const char *name, const char *ext);
+    int CheckFile(char *name, const char *ext);
+
+
     void ReqGetConfig();
     void ReqOpen();
     void ReqSeek();
@@ -49,7 +66,6 @@ protected:
     void ReqRun();
     void ReqError();
 
-    virtual void NotifyMsg();
 };
 
 #endif

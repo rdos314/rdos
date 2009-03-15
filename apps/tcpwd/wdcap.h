@@ -20,33 +20,39 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# wdfact.h
-# WD factory base class
+# wdcap.h
+# WD supplementary capabilities support class
 #
 ########################################################################*/
 
-#ifndef _WDFACT_H
-#define _WDFACT_H
+#ifndef _WDCAP_H
+#define _WDCAP_H
 
-#include "socket.h"
+#include "wdsuppl.h"
 
-class TWdSupplFactory;
-
-class TWdSocketServerFactory : public TSocketServerFactory
+class TWdCapFactory : public TWdSupplFactory
 {
 public:
-	TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-	~TWdSocketServerFactory();
+    TWdCapFactory(TWdSocketServerFactory *factory);
+	virtual ~TWdCapFactory();
+	
+	virtual TWdSupplService *Create(TWdSocketServer *server);
+};
 
-	void AddSuppl(TWdSupplFactory *SupplFactory);
-    TWdSupplFactory *GetSuppl(const char *name);
-    
-	virtual TSocketServer *Create(TSocket *Socket);
+class TWdCapService : public TWdSupplService
+{
+public:
+    TWdCapService(TWdSocketServer *server);
+	virtual ~TWdCapService();
+
+    virtual void NotifyMsg();
 
 protected:
-	void Init();
+    void ReqGetBp();
+    void ReqSetBp();
+    void ReqExactBp();
+    void ReqSetExactBp();
 
-	TWdSupplFactory *FSupplList;
 };
 
 #endif

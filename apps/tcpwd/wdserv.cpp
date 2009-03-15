@@ -31,6 +31,7 @@
 
 #include "rdos.h"
 #include "wdserv.h"
+#include "wdsuppl.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -46,9 +47,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TWdSocketServer::TWdSocketServer(const char *Name, int StackSize, TSocket *Socket)
+TWdSocketServer::TWdSocketServer(TWdSocketServerFactory *fact, const char *Name, int StackSize, TSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
+    FFactory = fact;
     FSupplList = 0;
 }
 
@@ -65,6 +67,14 @@ TWdSocketServer::TWdSocketServer(const char *Name, int StackSize, TSocket *Socke
 ##########################################################################*/
 TWdSocketServer::~TWdSocketServer()
 {
+    TWdSupplService *service;
+
+    while (FSupplList)
+    {
+        service = FSupplList->FNext;
+        delete FSupplList;
+        FSupplList = service;
+    }
 }
 
 /*##########################################################################
@@ -227,6 +237,23 @@ void TWdSocketServer::PutString(const char *str)
 
 /*##########################################################################
 #
+#   Name       : TWdSocketServer::AddSuppl
+#
+#   Purpose....: Add supplementary service
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::AddSuppl(TWdSupplService *service)
+{
+    service->FNext = FSupplList;
+    FSupplList = service;
+}
+
+/*##########################################################################
+#
 #   Name       : TWdSocketServer::ReqError
 #
 #   Purpose....: Req error
@@ -328,8 +355,22 @@ void TWdSocketServer::ReqResume()
 void TWdSocketServer::ReqGetSupplService()
 {
     char name[256];
+    TWdSupplFactory *factory;
+    TWdSupplService *service;
 
     GetString(name, 255);
+
+    factory = FFactory->GetSuppl(name);
+
+    PutDword(0);
+
+    if (factory)
+    {
+        service = factory->Create(this);
+        PutDword((long)service);
+    }
+    else
+        PutDword(0);
 }
 
 /*##########################################################################
@@ -345,6 +386,24 @@ void TWdSocketServer::ReqGetSupplService()
 ##########################################################################*/
 void TWdSocketServer::ReqPerformSupplService()
 {
+    int done = FALSE;
+    TWdSupplService *service;
+    TWdSupplService *ID;
+
+    ID = (TWdSupplService *)GetDword();
+
+    service = FSupplList;
+
+    while (service && !done)
+    {
+        if (service == ID)
+            done = TRUE;
+        else
+            service = service->FNext;
+    }
+
+    if (done)
+        service->NotifyMsg();
 }
 
 /*##########################################################################
@@ -364,12 +423,13 @@ void TWdSocketServer::ReqGetSysConfig()
 
     RdosGetVersion(&major, &minor, &release);
     
-    PutByte(3);
-    PutByte(3);
-    PutByte((char)major);
-    PutByte((char)minor);
-    PutByte(0); 
-    PutByte(0); 
+	 PutByte(0x3F);
+	 PutByte(0xF);
+	 PutByte((char)major);
+	 PutByte((char)minor);
+	 PutByte(10);
+	 PutByte(3);
+	 PutWord(1);
 }
 
 /*##########################################################################
@@ -805,6 +865,51 @@ void TWdSocketServer::ReqRedirStdout()
 ##########################################################################*/
 void TWdSocketServer::ReqSplitCmd()
 {
+    char Cmd[256];
+    int CmdSize;
+    int ParamStart;
+    int Size;
+    int i;
+    int done = FALSE; 
+    int HasParam = FALSE;
+
+    GetString(Cmd, 255);
+    Size = strlen(Cmd);
+
+    for (i = 0; i < Size && !done; i++)
+    {
+        switch (Cmd[i])
+        {
+            case '/':
+            case '=':
+            case '(':
+            case ';':
+            case ',':
+                CmdSize = i;
+                ParamStart =  i;
+                done = TRUE;
+                break;
+
+            case ' ':
+            case '\t':
+                CmdSize = i;
+                while (Cmd[i] == ' ' || Cmd[i] == '\t')
+                    i++;
+
+                ParamStart = i;
+                done = TRUE;
+                break;
+        }
+    }                                    
+
+    if (!done)
+    {
+        CmdSize = Size;
+        ParamStart = Size;
+    }
+
+    PutWord(CmdSize);
+    PutWord(ParamStart);
 }
 
 /*##########################################################################
@@ -1012,170 +1117,4 @@ void TWdSocketServer::HandleSocket()
             }
 		}
 	}
-}
-
-/*##########################################################################
-#
-#   Name       : TWdSupplService::TWdSupplService
-#
-#   Purpose....: Supplementary service class constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TWdSupplService::TWdSupplService(const char *Name, TWdSocketServer *Server)
-{
-    int len = strlen(Name);
-    
-    FServer = Server;
-    
-    FName = new char[len + 1];
-    strcpy(FName, Name);
-}
-
-/*##########################################################################
-#
-#   Name       : TWdSupplService::~TWdSupplService
-#
-#   Purpose....: Supplementary service class destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TWdSupplService::~TWdSupplService()
-{
-    if (FName)
-        delete FName;
-}
-
-/*##########################################################################
-#
-#   Name       : TWdSupplService::GetByte
-#
-#   Purpose....: Get byte
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char TWdSupplService::GetByte()
-{
-    return FServer->GetByte();
-}
-
-/*##########################################################################
-#
-#   Name       : TWdSupplService::GetWord
-#
-#   Purpose....: Get word
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-short int TWdSupplService::GetWord()
-{
-    return FServer->GetWord();
-}
-
-/*##########################################################################
-#
-#   Name       : TWdSupplService::GetDword
-#
-#   Purpose....: Get dword
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long TWdSupplService::GetDword()
-{
-    return FServer->GetDword();
-}
-
-/*##########################################################################
-#
-#   Name       : TWdSupplService::GetString
-#
-#   Purpose....: Get string
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWdSupplService::GetString(char *str, int maxsize)
-{
-    FServer->GetString(str, maxsize);
-}
-
-/*##########################################################################
-#
-#   Name       : TWdSupplService::PutByte
-#
-#   Purpose....: Put byte
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWdSupplService::PutByte(char val)
-{
-    FServer->PutByte(val);
-}
-
-/*##########################################################################
-#
-#   Name       : TWdSupplService::PutWord
-#
-#   Purpose....: Put word
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWdSupplService::PutWord(short int val)
-{
-    FServer->PutWord(val);
-}
-
-/*##########################################################################
-#
-#   Name       : TWdSupplService::PutDword
-#
-#   Purpose....: Put dword
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWdSupplService::PutDword(long val)
-{
-    FServer->PutDword(val);
-}
-
-/*##########################################################################
-#
-#   Name       : TWdSupplService::PutString
-#
-#   Purpose....: Put string
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TWdSupplService::PutString(const char *str)
-{
-    FServer->PutString(str);
 }

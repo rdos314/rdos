@@ -20,125 +20,114 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# wdfact.cpp
-# WD factory class
+# wdenv.cpp
+# WD environment supplementary class
 #
 ########################################################################*/
 
 #include <ctype.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "rdos.h"
-#include "wdserv.h"
-#include "wdfact.h"
-#include "wdsuppl.h"
+#include "wdenv.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
 /*##########################################################################
 #
-#   Name       : TWdSocketServerFactory::TWdSocketServerFactory
+#   Name       : TWdEnvFactory::TWdEnvFactory
 #
-#   Purpose....: Socket server factory constructor
+#   Purpose....: Supplementary env factory class constructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TWdSocketServerFactory::TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize)
+TWdEnvFactory::TWdEnvFactory(TWdSocketServerFactory *factory)
+ : TWdSupplFactory(factory, "Environment")
 {
-    FSupplList = 0;
 }
 
 /*##########################################################################
 #
-#   Name       : TWdSocketServerFactory::~TWdSocketServerFactory
+#   Name       : TWdEnvFactory::~TWdEnvFactory
 #
-#   Purpose....: Socket server factory destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TWdSocketServerFactory::~TWdSocketServerFactory()
-{
-    TWdSupplFactory *fact;
-
-    while (FSupplList)
-    {
-        fact = FSupplList->FNext;
-        delete FSupplList;
-        FSupplList = fact;
-    }
-}        
-
-/*##########################################################################
-#
-#   Name       : TWdSocketServerFactory::AddSuppl
-#
-#   Purpose....: Add supplementary service factory
+#   Purpose....: Supplementary env factory class destructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TWdSocketServerFactory::AddSuppl(TWdSupplFactory *SupplService)
+TWdEnvFactory::~TWdEnvFactory()
 {
-    SupplService->FNext = FSupplList;
-    FSupplList = SupplService;
 }
 
 /*##########################################################################
 #
-#   Name       : TWdSocketServerFactory::GetSuppl
+#   Name       : TWdEnvFactory::Create
 #
-#   Purpose....: Get supplementary service factory
+#   Purpose....: Create service
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TWdSupplFactory *TWdSocketServerFactory::GetSuppl(const char *name)
+TWdSupplService *TWdEnvFactory::Create(TWdSocketServer *server)
 {
-    int done;
-    TWdSupplFactory *fact;
-
-    fact = FSupplList;
-    done = FALSE;
-
-    while (fact && !done)
-    {
-        if (strcmpi(fact->FName, name) == 0)
-            done = TRUE;
-        else
-            fact = fact->FNext;
-    }
-
-    return fact;
+    return new TWdEnvService(server);
 }
 
 /*##########################################################################
 #
-#   Name       : TWdSocketServerFactory::Create
+#   Name       : TWdEnvService::TWdEnvService
 #
-#   Purpose....: Create a socket server instance
+#   Purpose....: Supplementary env service class constructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *TWdSocketServerFactory::Create(TSocket *Socket)
+TWdEnvService::TWdEnvService(TWdSocketServer *Server)
+ : TWdSupplService(Server)
 {
-	TWdSocketServer *server;
-	server = new TWdSocketServer(this, "WD", 0x7000, Socket);
+}
 
-	return server;
+/*##########################################################################
+#
+#   Name       : TWdEnvService::~TWdEnvService
+#
+#   Purpose....: Supplementary env service class destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWdEnvService::~TWdEnvService()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TWdEnvService::NotifyMsg
+#
+#   Purpose....: Notify msg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdEnvService::NotifyMsg()
+{
+    char ch;
+
+    ch = GetByte();
+
 }

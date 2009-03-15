@@ -31,17 +31,20 @@
 #include "str.h"
 #include "socket.h"
 
-#define MAX_MSG_SIZE    1024
+#define MAX_MSG_SIZE    256
 
 class TWdSupplService;
+class TWdSocketServerFactory;
 
 class TWdSocketServer : public TSocketServer
 {
 friend class TWdSupplService;
 
 public:
-    TWdSocketServer(const char *Name, int StackSize, TSocket *Socket);
+    TWdSocketServer(TWdSocketServerFactory *fact, const char *Name, int StackSize, TSocket *Socket);
 	~TWdSocketServer();
+
+    void AddSuppl(TWdSupplService *service);
 
 protected:
     char GetByte();
@@ -105,32 +108,8 @@ protected:
     char FOutBuf[MAX_MSG_SIZE];	
     char *FOutPtr;
 
+    TWdSocketServerFactory *FFactory;
     TWdSupplService *FSupplList;
-};
-
-class TWdSupplService
-{
-friend class TWdSocketServer;
-
-public:
-    TWdSupplService(const char *Name, TWdSocketServer *server);
-	~TWdSupplService();
-
-protected:
-    virtual void NotifyMsg() = 0;
-
-    char GetByte();
-    short int GetWord();
-    long GetDword();
-    void GetString(char *str, int maxsize);
-
-    void PutByte(char val);
-    void PutWord(short int val);
-    void PutDword(long val);
-    void PutString(const char *str);
-
-    TWdSocketServer *FServer;
-    char *FName;
 };
 
 #endif

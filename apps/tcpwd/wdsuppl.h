@@ -20,33 +20,55 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# wdfact.h
-# WD factory base class
+# wdsuppl.h
+# WD supplementary service base class
 #
 ########################################################################*/
 
-#ifndef _WDFACT_H
-#define _WDFACT_H
+#ifndef _WDSUPPL_H
+#define _WDSUPPL_H
 
-#include "socket.h"
+#include "str.h"
+#include "wdfact.h"
+#include "wdserv.h"
 
-class TWdSupplFactory;
+class TWdSupplService;
 
-class TWdSocketServerFactory : public TSocketServerFactory
+class TWdSupplFactory
 {
 public:
-	TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-	~TWdSocketServerFactory();
+	 TWdSupplFactory(TWdSocketServerFactory *factory, const char *Name);
+	virtual ~TWdSupplFactory();
 
-	void AddSuppl(TWdSupplFactory *SupplFactory);
-    TWdSupplFactory *GetSuppl(const char *name);
-    
-	virtual TSocketServer *Create(TSocket *Socket);
+	virtual TWdSupplService *Create(TWdSocketServer *server) = 0;
+
+    char *FName;
+	TWdSupplFactory *FNext;
+};
+
+class TWdSupplService
+{
+public:
+    TWdSupplService(TWdSocketServer *server);
+	virtual ~TWdSupplService();
+
+    virtual void NotifyMsg() = 0;
+
+    TWdSupplService *FNext;
 
 protected:
-	void Init();
 
-	TWdSupplFactory *FSupplList;
+    char GetByte();
+    short int GetWord();
+    long GetDword();
+    void GetString(char *str, int maxsize);
+
+    void PutByte(char val);
+    void PutWord(short int val);
+    void PutDword(long val);
+    void PutString(const char *str);
+
+    TWdSocketServer *FServer;
 };
 
 #endif

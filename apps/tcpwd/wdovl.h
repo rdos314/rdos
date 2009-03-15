@@ -20,33 +20,35 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# wdfact.h
-# WD factory base class
+# wdovl.h
+# WD supplementary overlay support class
 #
 ########################################################################*/
 
-#ifndef _WDFACT_H
-#define _WDFACT_H
+#ifndef _WDOVL_H
+#define _WDOVL_H
 
-#include "socket.h"
+#include "wdsuppl.h"
 
-class TWdSupplFactory;
-
-class TWdSocketServerFactory : public TSocketServerFactory
+class TWdOverlayFactory : public TWdSupplFactory
 {
 public:
-	TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-	~TWdSocketServerFactory();
+    TWdOverlayFactory(TWdSocketServerFactory *factory);
+	virtual ~TWdOverlayFactory();
+	
+	virtual TWdSupplService *Create(TWdSocketServer *server);
+};
 
-	void AddSuppl(TWdSupplFactory *SupplFactory);
-    TWdSupplFactory *GetSuppl(const char *name);
-    
-	virtual TSocketServer *Create(TSocket *Socket);
+class TWdOverlayService : public TWdSupplService
+{
+public:
+    TWdOverlayService(TWdSocketServer *server);
+	virtual ~TWdOverlayService();
+
+    virtual void NotifyMsg();
 
 protected:
-	void Init();
 
-	TWdSupplFactory *FSupplList;
 };
 
 #endif

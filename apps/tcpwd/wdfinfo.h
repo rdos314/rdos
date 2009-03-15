@@ -20,33 +20,35 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# wdfact.h
-# WD factory base class
+# wdfinfo.h
+# WD supplementary file info support class
 #
 ########################################################################*/
 
-#ifndef _WDFACT_H
-#define _WDFACT_H
+#ifndef _WDFINFO_H
+#define _WDFINFO_H
 
-#include "socket.h"
+#include "wdsuppl.h"
 
-class TWdSupplFactory;
-
-class TWdSocketServerFactory : public TSocketServerFactory
+class TWdFileInfoFactory : public TWdSupplFactory
 {
 public:
-	TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-	~TWdSocketServerFactory();
+    TWdFileInfoFactory(TWdSocketServerFactory *factory);
+	virtual ~TWdFileInfoFactory();
+	
+	virtual TWdSupplService *Create(TWdSocketServer *server);
+};
 
-	void AddSuppl(TWdSupplFactory *SupplFactory);
-    TWdSupplFactory *GetSuppl(const char *name);
-    
-	virtual TSocketServer *Create(TSocket *Socket);
+class TWdFileInfoService : public TWdSupplService
+{
+public:
+    TWdFileInfoService(TWdSocketServer *server);
+	virtual ~TWdFileInfoService();
+
+    virtual void NotifyMsg();
 
 protected:
-	void Init();
 
-	TWdSupplFactory *FSupplList;
 };
 
 #endif

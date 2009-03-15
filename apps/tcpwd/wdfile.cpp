@@ -31,9 +31,58 @@
 
 #include "rdos.h"
 #include "wdfile.h"
+#include "path.h"
+#include "env.h"
 
 #define FALSE 0
 #define TRUE !FALSE
+
+/*##########################################################################
+#
+#   Name       : TWdFileFactory::TWdFileFactory
+#
+#   Purpose....: Supplementary file factory class constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWdFileFactory::TWdFileFactory(TWdSocketServerFactory *factory)
+ : TWdSupplFactory(factory, "Files")
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TWdFileFactory::~TWdFileFactory
+#
+#   Purpose....: Supplementary file factory class destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWdFileFactory::~TWdFileFactory()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TWdFileFactory::Create
+#
+#   Purpose....: Create service
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWdSupplService *TWdFileFactory::Create(TWdSocketServer *server)
+{
+    return new TWdFileService(server);
+}
 
 /*##########################################################################
 #
@@ -47,7 +96,7 @@
 #
 ##########################################################################*/
 TWdFileService::TWdFileService(TWdSocketServer *Server)
- : TWdSupplService("Files")
+ : TWdSupplService(Server)
 {
 }
 
@@ -212,6 +261,135 @@ void TWdFileService::ReqErase()
 
 /*##########################################################################
 #
+#   Name       : TWdFileService::CheckFileExt
+#
+#   Purpose....: Check if path is valid file (with given extension)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TWdFileService::CheckFileExt(const char *path, const char *ext)
+{
+	TPathName FFullPath = TString(path);
+	FFullPath += ext;
+
+	if (FFullPath.IsFile())
+	{
+		PutDword(0);
+		PutString(FFullPath.Get().GetData());
+		return TRUE;
+	}
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TWdFileService::CheckFileExt
+#
+#   Purpose....: Check if path + name is a valid file (with given extension)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TWdFileService::CheckFileExt(const char *path, const char *name, const char *ext)
+{
+	TPathName pn(path);
+	pn += name;
+
+	return CheckFileExt(pn.Get().GetData(), ext);
+}
+
+/*##########################################################################
+#
+#   Name       : TWdFileService::CheckPathFileExt
+#
+#   Purpose....: Find file through with path env var
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TWdFileService::CheckPathFileExt(char *path, const char *name, const char *ext)
+{
+	char *ptr;
+
+	if (CheckFileExt(name, ext))
+	    return TRUE;
+
+	while (*path)
+	{
+		ptr = strchr(path, ';');
+		if (ptr)
+		{
+			*ptr = 0;
+			if (CheckFileExt(path, name, ext))
+			    return TRUE;
+
+			path = ptr + 1;
+		}
+		else
+			return CheckFileExt(path, name, ext);
+	}
+
+	return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TWdFileService::CheckFile
+#
+#   Purpose....: Check if file is executable
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TWdFileService::CheckFile(char *name, const char *ext)
+{
+	char *path;
+	TEnv *env;
+	int ok;
+	
+	if (strchr(name, '\\'))
+		if (CheckFileExt(name, ext))
+		    return TRUE;
+
+	if (strchr(name, '/'))
+		if (CheckFileExt(name, ext))
+			 return TRUE;
+
+	if (strchr(name, ':'))
+		if (CheckFileExt(name, ext))
+			 return TRUE;
+
+	path = new char[512];
+	env = TEnv::OpenSysEnv();
+	if (env->Find("PATH", path))
+	{
+	    ok = CheckPathFileExt(path, name, ext);
+	    delete env;
+		delete path;
+		if (ok)
+			return TRUE;
+	 }
+	 else
+	 {
+		  delete env;
+		  delete path;
+	 }
+
+	 return CheckFileExt(name, ext);
+}
+
+/*##########################################################################
+#
 #   Name       : TWdFileService::ReqStrToFullPath
 #
 #   Purpose....: Convert name to full path
@@ -223,6 +401,37 @@ void TWdFileService::ReqErase()
 ##########################################################################*/
 void TWdFileService::ReqStrToFullPath()
 {
+    int ok;
+    int handle;
+    char FileType;
+    char FileName[256];
+
+    FileType = GetByte();
+    GetString(FileName, 255);
+
+    handle = RdosOpenFile(FileName, 0);
+    if (handle)
+    {
+        PutDword(0);
+        PutString(FileName);
+
+        RdosCloseFile(handle);
+    }
+    else
+    {
+        if (FileType == 0)
+        {
+			ok = CheckFile(FileName, ".com");
+				if (!ok)
+					 ok = CheckFile(FileName, ".exe");
+
+            if (!ok)                
+                PutDword(1);
+
+        }
+        else
+            PutDword(1);
+    }                    
 }
 
 /*##########################################################################

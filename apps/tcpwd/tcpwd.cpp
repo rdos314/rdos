@@ -27,11 +27,26 @@
 
 #include "rdos.h"
 #include "wdfact.h"
+#include "wdfile.h"
+#include "wdfinfo.h"
+#include "wdenv.h"
+#include "wdthread.h"
+#include "wdovl.h"
+#include "wdcap.h"
 
 int main(int argc, char **argv)
 {
-	 TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
+	TWdSupplFactory *suppl;
+	TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
+
+	suppl = new TWdFileFactory(&fact);
+	suppl = new TWdFileInfoFactory(&fact);
+	suppl = new TWdEnvFactory(&fact);
+	suppl = new TWdThreadFactory(&fact);
+	suppl = new TWdOverlayFactory(&fact);
+	suppl = new TWdCapFactory(&fact);
 
 	for (;;)
 		fact.WaitForever();
 }
+
