@@ -36,6 +36,58 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+struct x86_cpu
+{
+	 long eax;
+	 long ebx;
+	 long ecx;
+	 long edx;
+	 long esi;
+	 long edi;
+	 long ebp;
+	 long esp;
+	 long eip;
+	 long efl;
+	 long cr0;
+	 long cr2;
+	 long cr3;
+	 short int ds;
+	 short int es;
+	 short int ss;
+	 short int cs;
+	 short int fs;
+	 short int gs;
+};
+
+struct fpu_ptr
+{
+	long     offset;
+	long     segment;
+};
+
+struct x86_fpu
+{
+	 long           cw;
+	 long           sw;
+	 long           tag;
+	 fpu_ptr        ip_err;
+	 fpu_ptr        op_err;
+	 long double    reg[8];
+};
+
+struct x86_xmm
+{
+	 char    xmm[8][16];
+	 long 	mxcsr;
+};
+
+struct x86_mad_registers
+{
+	 struct x86_cpu  cpu;
+	 struct x86_fpu  fpu;
+	 struct x86_xmm  xmm;
+};
+
 /*##########################################################################
 #
 #   Name       : TWdSocketServer::TWdSocketServer
@@ -50,8 +102,9 @@
 TWdSocketServer::TWdSocketServer(TWdSocketServerFactory *fact, const char *Name, int StackSize, TSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
-    FFactory = fact;
-    FSupplList = 0;
+	 FFactory = fact;
+	 FSupplList = 0;
+	 FDebug = 0;
 }
 
 /*##########################################################################
@@ -71,7 +124,7 @@ TWdSocketServer::~TWdSocketServer()
 
     while (FSupplList)
     {
-        service = FSupplList->FNext;
+		  service = FSupplList->FNext;
         delete FSupplList;
         FSupplList = service;
     }
@@ -158,7 +211,7 @@ void TWdSocketServer::GetString(char *str, int maxsize)
         str[len] = 0;
     }
     else
-        str[0] = 0;        
+		  str[0] = 0;
 }
 
 /*##########################################################################
@@ -176,7 +229,7 @@ void TWdSocketServer::PutByte(char val)
 {
     *FOutPtr = val;
     FOutPtr++;
-    FOutSize++;
+	 FOutSize++;
 }
 
 /*##########################################################################
@@ -193,7 +246,7 @@ void TWdSocketServer::PutByte(char val)
 void TWdSocketServer::PutWord(short int val)
 {
     *(short int *)FOutPtr = val;
-    FOutPtr += 2;
+	 FOutPtr += 2;
     FOutSize += 2;
 }
 
@@ -211,7 +264,7 @@ void TWdSocketServer::PutWord(short int val)
 void TWdSocketServer::PutDword(long val)
 {
     *(long *)FOutPtr = val;
-    FOutPtr += 4;
+	 FOutPtr += 4;
     FOutSize += 4;
 }
 
@@ -228,7 +281,7 @@ void TWdSocketServer::PutDword(long val)
 ##########################################################################*/
 void TWdSocketServer::PutString(const char *str)
 {
-    int len = strlen(str);
+	 int len = strlen(str);
 
     memcpy(FOutPtr, str, len + 1);
     FOutPtr += len + 1;
@@ -368,7 +421,7 @@ void TWdSocketServer::ReqGetSupplService()
     {
         service = factory->Create(this);
         PutDword((long)service);
-    }
+	 }
     else
         PutDword(0);
 }
@@ -386,7 +439,7 @@ void TWdSocketServer::ReqGetSupplService()
 ##########################################################################*/
 void TWdSocketServer::ReqPerformSupplService()
 {
-    int done = FALSE;
+	 int done = FALSE;
     TWdSupplService *service;
     TWdSupplService *ID;
 
@@ -403,7 +456,7 @@ void TWdSocketServer::ReqPerformSupplService()
     }
 
     if (done)
-        service->NotifyMsg();
+		  service->NotifyMsg();
 }
 
 /*##########################################################################
@@ -421,7 +474,7 @@ void TWdSocketServer::ReqGetSysConfig()
 {
     int major, minor, release;
 
-    RdosGetVersion(&major, &minor, &release);
+	 RdosGetVersion(&major, &minor, &release);
     
 	 PutByte(0x3F);
 	 PutByte(0xF);
@@ -640,6 +693,33 @@ void TWdSocketServer::ReqProgStep()
 ##########################################################################*/
 void TWdSocketServer::ReqProgLoad()
 {
+    char truearg;
+    char name[256];
+    
+    if (FDebug)
+        delete FDebug;
+
+    FDebug = 0;
+
+	 truearg = GetByte();
+	 GetString(name, 255);
+
+    FDebug = new TDebug(name, "", "");
+
+    if (FDebug->ThreadList && FDebug->ModuleList)
+    {
+        PutDword(0);
+        PutDword(FDebug->ThreadList->ThreadID);
+        PutDword(FDebug->ModuleList->Handle);
+        PutByte(0x10);
+    }
+    else
+    {
+        PutDword(1);
+        PutDword(0);
+        PutDword(0);
+        PutByte(0);
+	 }
 }
 
 /*##########################################################################
@@ -865,16 +945,16 @@ void TWdSocketServer::ReqRedirStdout()
 ##########################################################################*/
 void TWdSocketServer::ReqSplitCmd()
 {
-    char Cmd[256];
-    int CmdSize;
-    int ParamStart;
-    int Size;
-    int i;
-    int done = FALSE; 
-    int HasParam = FALSE;
+	 char Cmd[256];
+	 int CmdSize;
+	 int ParamStart;
+	 int Size;
+	 int i;
+	 int done = FALSE;
+	 int HasParam = FALSE;
 
-    GetString(Cmd, 255);
-    Size = strlen(Cmd);
+	 GetString(Cmd, 255);
+	 Size = strlen(Cmd);
 
     for (i = 0; i < Size && !done; i++)
     {
@@ -884,10 +964,10 @@ void TWdSocketServer::ReqSplitCmd()
             case '=':
             case '(':
             case ';':
-            case ',':
+				case ',':
                 CmdSize = i;
                 ParamStart =  i;
-                done = TRUE;
+					 done = TRUE;
                 break;
 
             case ' ':
@@ -914,6 +994,51 @@ void TWdSocketServer::ReqSplitCmd()
 
 /*##########################################################################
 #
+#   Name       : TWdSocketServer::ReqReadReg
+#
+#   Purpose....: Req read registers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::ReqReadReg()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::ReqWriteReg
+#
+#   Purpose....: Req write registers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::ReqWriteReg()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::ReqMachineData
+#
+#   Purpose....: Req machine data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::ReqMachineData()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TWdSocketServer::NotifyMsg
 #
 #   Purpose....: Notify message
@@ -936,7 +1061,7 @@ void TWdSocketServer::NotifyMsg()
             break;
 
         case 1:
-            ReqDisconnect();
+				ReqDisconnect();
             break;
 
         case 2:
@@ -945,7 +1070,7 @@ void TWdSocketServer::NotifyMsg()
 
         case 3:
             ReqResume();
-            break;
+				break;
 
         case 4:
             ReqGetSupplService();
@@ -971,7 +1096,7 @@ void TWdSocketServer::NotifyMsg()
             ReqChecksumMem();
             break;
 
-        case 10:
+		  case 10:
             ReqReadMem();
             break;
 
@@ -980,7 +1105,7 @@ void TWdSocketServer::NotifyMsg()
             break;
 
         case 12:
-            ReqReadIo();
+				ReqReadIo();
             break;
 
         case 13:
@@ -1015,7 +1140,7 @@ void TWdSocketServer::NotifyMsg()
             ReqProgLoad();
             break;
 
-        case 21:
+		  case 21:
             ReqProgKill();
             break;
 
@@ -1041,42 +1166,54 @@ void TWdSocketServer::NotifyMsg()
 
         case 27:
             ReqSetUserScreen();
-            break;
+				break;
 
         case 28:
             ReqSetDebugScreen();
             break;
 
-        case 29:
-            ReqReadUserKeyboard();
-            break;
+		  case 29:
+				ReqReadUserKeyboard();
+				break;
 
-        case 30:
-            ReqGetLibName();
-            break;
+		  case 30:
+				ReqGetLibName();
+				break;
 
-        case 31:
-            ReqGetErrText();
-            break;
+		  case 31:
+				ReqGetErrText();
+				break;
 
-        case 32:
-            ReqGetMsgText();
-            break;
+		  case 32:
+				ReqGetMsgText();
+				break;
 
-        case 33:
-            ReqRedirStdin();
-            break;
+		  case 33:
+				ReqRedirStdin();
+				break;
 
-        case 34:
-            ReqRedirStdout();
-            break;
+		  case 34:
+				ReqRedirStdout();
+				break;
 
-        case 35:
-            ReqSplitCmd();
-            break;
+		  case 35:
+				ReqSplitCmd();
+				break;
 
-        default:
-            ReqError();
+		  case 36:
+				ReqReadReg();
+				break;
+
+		  case 37:
+				ReqWriteReg();
+				break;
+
+		  case 38:
+				ReqMachineData();
+				break;
+
+		  default:
+				ReqError();
             break;
     }    
 }
@@ -1111,7 +1248,7 @@ void TWdSocketServer::HandleSocket()
 
                 NotifyMsg();
 
-                FSocket->Write((char *)&FOutSize, 2);
+					 FSocket->Write((char *)&FOutSize, 2);
                 FSocket->Write(FOutBuf, FOutSize);
                 FSocket->Push();
             }

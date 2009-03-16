@@ -30,6 +30,7 @@
 
 #include "str.h"
 #include "socket.h"
+#include "debug.h"
 
 #define MAX_MSG_SIZE    0x6000
 
@@ -94,7 +95,10 @@ protected:
     void ReqGetMsgText();
     void ReqRedirStdin();
     void ReqRedirStdout();
-    void ReqSplitCmd();
+	 void ReqSplitCmd();
+	 void ReqReadReg();
+	 void ReqWriteReg();
+    void ReqMachineData();
     
     void NotifyMsg();
 
@@ -110,6 +114,7 @@ protected:
 
     TWdSocketServerFactory *FFactory;
     TWdSupplService *FSupplList;
+    TDebug *FDebug;
 };
 
 #endif
