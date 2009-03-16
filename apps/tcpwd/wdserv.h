@@ -31,7 +31,7 @@
 #include "str.h"
 #include "socket.h"
 
-#define MAX_MSG_SIZE    256
+#define MAX_MSG_SIZE    0x6000
 
 class TWdSupplService;
 class TWdSocketServerFactory;
