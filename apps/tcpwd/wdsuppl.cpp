@@ -235,6 +235,22 @@ void TWdSupplService::PutString(const char *str)
 
 /*##########################################################################
 #
+#   Name       : TWdSupplService::PutData
+#
+#   Purpose....: Put data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSupplService::PutData(void *ptr, int size)
+{
+    FServer->PutData(ptr, size);
+}
+
+/*##########################################################################
+#
 #   Name       : TWdSupplService::GetDebug
 #
 #   Purpose....: Get debug object
@@ -247,4 +263,20 @@ void TWdSupplService::PutString(const char *str)
 TDebug *TWdSupplService::GetDebug()
 {
     return FServer->GetDebug();
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::GetFullPathName
+#
+#   Purpose....: Get full pathname for file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TWdSupplService::GetFullPathName(char *name, const char *ext)
+{
+    return FServer->GetFullPathName(name, ext);
 }

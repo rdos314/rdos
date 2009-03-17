@@ -34,6 +34,7 @@
 #include "wdsuppl.h"
 #include "wdmsg.h"
 #include "path.h"
+#include "env.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -428,9 +429,9 @@ void TWdSocketServer::PutString(const char *str)
 ##########################################################################*/
 void TWdSocketServer::PutData(void *ptr, int size)
 {
-    memcpy(FOutPtr, ptr, size);
-    FOutPtr += size;
-    FOutSize += size;
+	 memcpy(FOutPtr, ptr, size);
+	 FOutPtr += size;
+	 FOutSize += size;
 }
 
 /*##########################################################################
@@ -446,7 +447,150 @@ void TWdSocketServer::PutData(void *ptr, int size)
 ##########################################################################*/
 TDebug *TWdSocketServer::GetDebug()
 {
-    return FDebug;
+	 return FDebug;
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::CheckFileExt
+#
+#   Purpose....: Check if path is valid file (with given extension)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TWdSocketServer::CheckFileExt(const char *path, const char *ext)
+{
+	TPathName FFullPath = TString(path);
+	FFullPath += ext;
+
+	if (FFullPath.IsFile())
+	{
+		 return FFullPath.Get();
+	}
+	else
+		return TString();
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::CheckFileExt
+#
+#   Purpose....: Check if path + name is a valid file (with given extension)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TWdSocketServer::CheckFileExt(const char *path, const char *name, const char *ext)
+{
+	TPathName pn(path);
+	pn += name;
+
+	return CheckFileExt(pn.Get().GetData(), ext);
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::CheckPathFileExt
+#
+#   Purpose....: Find file through with path env var
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TWdSocketServer::CheckPathFileExt(char *path, const char *name, const char *ext)
+{
+	TString str;
+	char *ptr;
+
+	str = CheckFileExt(name, ext);
+
+	if (str.GetSize())
+		 return str;
+
+	while (*path)
+	{
+		ptr = strchr(path, ';');
+		if (ptr)
+		{
+			*ptr = 0;
+			str = CheckFileExt(path, name, ext);
+
+			if (str.GetSize())
+				 return str;
+
+			path = ptr + 1;
+		}
+		else
+			return CheckFileExt(path, name, ext);
+	}
+
+	return TString();
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::GetFullPathName
+#
+#   Purpose....: Get full pathname of executable file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TWdSocketServer::GetFullPathName(char *name, const char *ext)
+{
+	char *path;
+	TEnv *env;
+	TString str;
+
+	if (strchr(name, '\\'))
+	{
+		str = CheckFileExt(name, ext);
+
+		if (str.GetSize())
+			 return str;
+	 }
+
+	if (strchr(name, '/'))
+	{
+		str = CheckFileExt(name, ext);
+
+		if (str.GetSize())
+		    return str;
+    }
+
+	if (strchr(name, ':'))
+	{
+	    str = CheckFileExt(name, ext);
+		if (str.GetSize())
+		    return str;
+    }
+
+	path = new char[512];
+	env = TEnv::OpenSysEnv();
+	if (env->Find("PATH", path))
+	{
+		 str = CheckPathFileExt(path, name, ext);
+	    delete env;
+		delete path;
+		if (str.GetSize())
+			return str;
+	 }
+	 else
+	 {
+		  delete env;
+		  delete path;
+	 }
+
+	 return CheckFileExt(name, ext);
 }
 
 /*##########################################################################
@@ -891,12 +1035,11 @@ void TWdSocketServer::ReqProgLoad()
 	char truearg;
 	char name[256];
 	TPathName curdir;
+	TString str;
+	int i;
 
 	if (FDebug)
-	{
-	    RdosWaitMilli(250);
 		delete FDebug;
-    }
 
 	FDebug = 0;
 	FMainThread = 0;
@@ -906,9 +1049,27 @@ void TWdSocketServer::ReqProgLoad()
 	truearg = GetByte();
 	GetString(name, 255);
 
-	if (strlen(name))
+    if (strlen(name))
+    {
+	    str = GetFullPathName(name, ".com");
+
+	    if (str.GetSize() == 0)
+	        str =  GetFullPathName(name, ".exe");
+	}
+    
+	if (str.GetSize())
 	{
-    	FDebug = new TDebug(name, "", curdir.Get().GetData());
+    	FDebug = new TDebug(str.GetData(), "", curdir.Get().GetData());
+
+        i = 0;
+    	while (FDebug->GetMainThread() == 0 || FDebug->GetMainModule() == 0)
+        {    	
+    	    RdosWaitMilli(100);
+
+            i++;            
+    	    if (i == 100)
+    	        break;
+    	}
 
         FMainThread = FDebug->GetMainThread();
         FCurrentThread = FDebug->GetCurrentThread();
@@ -952,10 +1113,7 @@ void TWdSocketServer::ReqProgLoad()
 void TWdSocketServer::ReqProgKill()
 {
     if (FDebug)
-    {
-        RdosWaitMilli(250);
         delete FDebug;
-    }
 
     FDebug = 0;
 	FMainThread = 0;
@@ -1011,6 +1169,14 @@ void TWdSocketServer::ReqClearWatch()
 void TWdSocketServer::ReqSetBreak()
 {
     _asm int 3
+
+    long Offset = GetDword();
+    int Sel = GetWord();
+
+    if (FDebug)
+        FDebug->AddBreak(Sel, Offset);
+
+    PutDword(0);
 }
 
 /*##########################################################################
@@ -1027,6 +1193,12 @@ void TWdSocketServer::ReqSetBreak()
 void TWdSocketServer::ReqClearBreak()
 {
     _asm int 3
+
+    long Offset = GetDword();
+    int Sel = GetWord();
+
+    if (FDebug)
+        FDebug->ClearBreak(Sel, Offset);
 }
 
 /*##########################################################################
@@ -1162,6 +1334,10 @@ void TWdSocketServer::ReqGetErrText()
 
         case MSG_NO_THREAD:
             PutString("Thread not found");
+            break;
+
+        case MSG_FILE_MODE_ERROR:
+            PutString("Invalid seek mode");
             break;
 
         default:

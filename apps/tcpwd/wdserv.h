@@ -61,6 +61,11 @@ protected:
 
     TDebug *GetDebug();
 
+    TString CheckFileExt(const char *path, const char *ext);
+    TString CheckFileExt(const char *path, const char *name, const char *ext);
+    TString CheckPathFileExt(char *path, const char *name, const char *ext);
+    TString GetFullPathName(char *name, const char *ext);
+
     void ReqError();
 
     void ReqConnect();

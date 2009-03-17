@@ -69,6 +69,18 @@ struct TExceptionEvent
     unsigned short Cs;
 };    
 
+class TDebugBreak
+{
+public:
+	 TDebugBreak(int Sel, long Offset);
+
+	 int Sel;
+	 long Offset;
+    char Instr;
+
+    TDebugBreak *Next;
+};
+
 class TDebugThread
 {
 public:
@@ -81,6 +93,9 @@ public:
 
     int ReadMem(int Sel, long Offset, char *Buf, int Size);
     int WriteMem(int Sel, long Offset, char *Buf, int Size);
+
+    void ActivateBreaks(TDebugBreak *BreakList);
+    void DeactivateBreaks(TDebugBreak *BreakList);
 
     TString ThreadName;
     TString ThreadList;
@@ -178,6 +193,9 @@ public:
     TDebugModule *LockModule(int Handle);
     void UnlockModule();
 
+	 void AddBreak(int Sel, long Offset);
+	 void ClearBreak(int Sel, long Offset);
+
 protected:
 	virtual void SignalNewData();
 	virtual void Add(TWait *Wait);
@@ -203,6 +221,8 @@ protected:
     TDebugThread *CurrentThread;
 	TDebugThread *ThreadList;
 	TDebugModule *ModuleList;
+
+    TDebugBreak *BreakList;
 
 };
 

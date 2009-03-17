@@ -223,7 +223,24 @@ void TWdThreadService::ReqThaw()
 ##########################################################################*/
 void TWdThreadService::ReqGetExtra()
 {
-    _asm int 3
+    int ThreadID;
+    TDebugThread *t;
+    TDebug *Debug = GetDebug();
+
+    ThreadID = GetDword();
+
+    if (ThreadID)
+    {
+        if (Debug)
+        {
+            t = Debug->LockThread(ThreadID);
+
+            if (t)
+                PutString(t->ThreadName.GetData());
+        }
+    }
+    else
+        PutString("Thread header");
 }
 
 /*##########################################################################

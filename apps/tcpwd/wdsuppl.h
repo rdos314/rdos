@@ -67,8 +67,10 @@ protected:
     void PutWord(short int val);
     void PutDword(long val);
     void PutString(const char *str);
+    void PutData(void *ptr, int size);
 
     TDebug *GetDebug();
+    TString GetFullPathName(char *name, const char *ext);
 
     TWdSocketServer *FServer;
 };

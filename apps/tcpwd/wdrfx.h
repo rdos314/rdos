@@ -20,17 +20,35 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# wdmsg.h
-# WD message numbers
+# wdrfx.h
+# WD RFX support class
 #
 ########################################################################*/
 
-#ifndef _WDMSG_H
-#define _WDMSG_H
+#ifndef _WDRFX_H
+#define _WDRFX_H
 
-#define MSG_LOAD_FAIL           1
-#define MSG_FILE_NOT_FOUND      2
-#define MSG_NO_THREAD           3
-#define MSG_FILE_MODE_ERROR     4
+#include "wdsuppl.h"
+
+class TWdRfxFactory : public TWdSupplFactory
+{
+public:
+    TWdRfxFactory(TWdSocketServerFactory *factory);
+	virtual ~TWdRfxFactory();
+	
+	virtual TWdSupplService *Create(TWdSocketServer *server);
+};
+
+class TWdRfxService : public TWdSupplService
+{
+public:
+    TWdRfxService(TWdSocketServer *server);
+	virtual ~TWdRfxService();
+
+    virtual void NotifyMsg();
+
+protected:
+
+};
 
 #endif

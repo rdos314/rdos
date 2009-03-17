@@ -150,6 +150,53 @@ int TDebugThread::WriteMem(int Sel, long Offset, char *Buf, int Size)
 
 /*##########################################################################
 #
+#   Name       : TDebugThread::ActivateBreaks
+#
+#   Purpose....: Activate breakpoints
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebugThread::ActivateBreaks(TDebugBreak *BreakList)
+{
+    TDebugBreak *b = BreakList;
+    char brinstr = 0xCC;
+
+    while (b)
+    {
+        RdosReadThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
+		  RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
+
+        b = b->Next;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::DeactivateBreaks
+#
+#   Purpose....: Deactivate breakpoints
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList)
+{
+    TDebugBreak *b = BreakList;
+
+    while (b)
+    {
+        RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
+        b = b->Next;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDebugThread::SetException
 #
 #   Purpose....: Set exception state
@@ -352,6 +399,25 @@ void TDebugModule::ReadName()
 
 /*##########################################################################
 #
+#   Name       : TDebugBreak::TDebugBreak
+#
+#   Purpose....: Debug breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugBreak::TDebugBreak(int sel, long offset)
+{
+	 Sel = sel;
+	 Offset = offset;
+	 Instr = 0xCC;
+	 Next = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::TDebug
 #
 #   Purpose....: Debugger constructor
@@ -369,6 +435,7 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
     ThreadList = 0;
     ModuleList = 0;
     CurrentThread = 0;
+    BreakList = 0;
 
     Start("Debug device", 0x4000);
 }
@@ -712,6 +779,87 @@ TDebugModule *TDebug::LockModule(int Handle)
 ##########################################################################*/
 void TDebug::UnlockModule()
 {
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::AddBreak
+#
+#   Purpose....: Add breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::AddBreak(int Sel, long Offset)
+{
+    TDebugBreak *newbr = new TDebugBreak(Sel, Offset);
+    TDebugBreak *b;
+    
+    FSection.Enter();
+
+    newbr->Next = 0;
+
+    b = BreakList;
+    if (b)
+    {
+        while (b->Next)
+            b = b->Next;
+
+        b->Next = newbr;            
+    }
+    else
+        BreakList = newbr;
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::ClearBreak
+#
+#   Purpose....: Clear breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::ClearBreak(int Sel, long Offset)
+{
+    TDebugBreak *b;
+    TDebugBreak *delbr;
+    
+    FSection.Enter();
+
+    b = BreakList;
+
+    if (b)
+    {
+        if (b->Offset == Offset && b->Sel == Sel)
+        {
+            BreakList = b->Next;
+            delete b;
+        }
+        else
+        {
+            while (b->Next)
+            {
+                delbr = b->Next;
+                
+                if (delbr->Offset == Offset && delbr->Sel == Sel)
+                {
+                    b->Next = delbr->Next;
+                    delete delbr;
+                }
+                else
+                    b = b->Next;                    
+            }
+        }
+    }
+
     FSection.Leave();
 }
 

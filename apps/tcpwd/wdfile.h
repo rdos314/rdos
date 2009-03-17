@@ -48,10 +48,6 @@ public:
     virtual void NotifyMsg();
 
 protected:
-    int CheckFileExt(const char *path, const char *ext);
-    int CheckFileExt(const char *path, const char *name, const char *ext);
-    int CheckPathFileExt(char *path, const char *name, const char *ext);
-    int CheckFile(char *name, const char *ext);
 
 
     void ReqGetConfig();
