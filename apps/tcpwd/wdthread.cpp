@@ -31,6 +31,7 @@
 
 #include "rdos.h"
 #include "wdthread.h"
+#include "wdmsg.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -115,6 +116,130 @@ TWdThreadService::~TWdThreadService()
 
 /*##########################################################################
 #
+#   Name       : TWdThreadService::ReqGetNext
+#
+#   Purpose....: Req get next thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdThreadService::ReqGetNext()
+{
+    int id;
+    TDebug *Debug = GetDebug();
+    
+    id = GetDword();
+    id = Debug->GetNextThread(id);
+
+    PutDword(id);
+    PutByte(0);    
+}
+
+/*##########################################################################
+#
+#   Name       : TWdThreadService::ReqSet
+#
+#   Purpose....: Req set current thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdThreadService::ReqSet()
+{
+    TDebugThread *t;
+    int oldid = 0;
+    int newid = 0;
+    int status = MSG_NO_THREAD;
+    TDebug *Debug = GetDebug();
+
+    if (Debug)
+    {
+        t = Debug->GetCurrentThread();
+        if (t)
+        {
+            oldid = t->ThreadID;
+            newid = GetDword();
+            status = 0;
+
+            if (newid)
+                Debug->SetCurrentThread(newid);
+        }
+    }
+
+    PutDword(status);
+    PutDword(oldid);
+}
+
+/*##########################################################################
+#
+#   Name       : TWdThreadService::ReqFreeze
+#
+#   Purpose....: Req freeze 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdThreadService::ReqFreeze()
+{
+    _asm int 3
+}
+
+/*##########################################################################
+#
+#   Name       : TWdThreadService::ReqThaw
+#
+#   Purpose....: Req thaw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdThreadService::ReqThaw()
+{
+    _asm int 3
+}
+
+/*##########################################################################
+#
+#   Name       : TWdThreadService::ReqGetExtra
+#
+#   Purpose....: Req get extra
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdThreadService::ReqGetExtra()
+{
+    _asm int 3
+}
+
+/*##########################################################################
+#
+#   Name       : TWdThreadService::ReqError
+#
+#   Purpose....: Req error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdThreadService::ReqError()
+{
+    _asm int 3
+}
+
+/*##########################################################################
+#
 #   Name       : TWdThreadService::NotifyMsg
 #
 #   Purpose....: Notify msg
@@ -130,4 +255,30 @@ void TWdThreadService::NotifyMsg()
 
     ch = GetByte();
 
+    switch (ch)
+    {
+        case 0:
+            ReqGetNext();
+            break;
+
+        case 1:
+            ReqSet();
+            break;
+
+        case 2:
+			ReqFreeze();
+            break;
+
+        case 3:
+            ReqThaw();
+            break;
+
+        case 4:
+            ReqGetExtra();
+            break;
+
+        default:
+            ReqError();
+            break;
+    }
 }

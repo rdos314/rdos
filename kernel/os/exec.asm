@@ -743,7 +743,7 @@ load_process_fail:
 
 spawn_exe_name	DB 'Spawn Exe',0
 
-spawn_startup	Proc far
+spawn_startup:
 	mov gs,bx
 	mov ax,exec_sys_sel
 	mov ds,ax
@@ -899,19 +899,7 @@ spawn_fail:
 	mov es,ax
 	xor ax,ax
 	mov gs,ax
-	FreeMem
-;
-	mov ax,thread_app_sel
-	mov ds,ax
-	mov bx,ds:app_context
-	RestoreContext
-	push ds
-	mov ax,thread_app_sel
-	mov ds,ax
-	mov ax,ds:app_exit_code
-	pop ds
-	ret
-spawn_startup	Endp
+    UnloadExe
 
 spawn_program	Proc near
 	push ds
@@ -981,6 +969,9 @@ spawn_focus_done:
 	mov bx,ds:s_ret_code
 	LeaveSection ds:s_sect2
 ;
+    or bx,bx
+    jnz spawn_no_pid
+;    
     push es
     mov es,ax
     mov ax,es:p_id
@@ -1002,8 +993,9 @@ spawn_no_debug_alias:
     mov dx,ax
     pop bx
     pop ax
-;    
-	xor cx,cx
+
+spawn_no_pid:
+   	xor cx,cx
 	mov ds,cx
 	mov fs,cx
 ;

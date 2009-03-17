@@ -32,6 +32,8 @@
 #include "rdos.h"
 #include "wdserv.h"
 #include "wdsuppl.h"
+#include "wdmsg.h"
+#include "path.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -81,12 +83,137 @@ struct x86_xmm
 	 long 	mxcsr;
 };
 
-struct x86_mad_registers
+class x86_mad_registers
 {
-	 struct x86_cpu  cpu;
-	 struct x86_fpu  fpu;
-	 struct x86_xmm  xmm;
+public:
+    x86_mad_registers();
+    void Init();
+    void Set(TDebugThread *t);
+
+	struct x86_cpu  cpu;
+	struct x86_fpu  fpu;
+	struct x86_xmm  xmm;
 };
+
+/*##########################################################################
+#
+#   Name       : x86_mad_registers::Init
+#
+#   Purpose....: init data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void x86_mad_registers::Init()
+{
+	int i, j;
+    
+    cpu.eax = 0;
+    cpu.ebx = 0;
+    cpu.ecx = 0;
+    cpu.edx = 0;
+    cpu.esi = 0;
+    cpu.edi = 0;
+    cpu.ebp = 0;
+    cpu.esp = 0;
+    cpu.eip = 0;
+    cpu.efl = 0;
+    cpu.cr0 = 0;
+    cpu.cr2 = 0;
+    cpu.cr3 = 0;
+    cpu.ds = 0;
+    cpu.es = 0;
+    cpu.ss = 0;
+    cpu.cs = 0;
+    cpu.fs = 0;
+    cpu.gs = 0;
+
+    fpu.cw = 0;
+    fpu.sw = 0;
+    fpu.tag = 0;
+    fpu.ip_err.offset = 0;
+    fpu.ip_err.segment = 0;
+    fpu.op_err.offset = 0;
+    fpu.op_err.segment = 0;
+
+    for (i = 0; i < 8; i++)
+        fpu.reg[i] = 0.0;    
+
+    for (i = 0; i < 8; i++)
+        for (j = 0; j < 16; j++)
+            xmm.xmm[i][j] = 0;
+
+    xmm.mxcsr = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : x86_mad_registers::x86_mad_registers
+#
+#   Purpose....: x86_mad_registers constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+x86_mad_registers::x86_mad_registers()
+{
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : x86_mad_registers::Set
+#
+#   Purpose....: Set data from thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void x86_mad_registers::Set(TDebugThread *t)
+{
+    int i;
+
+    Init();
+
+    cpu.eax = t->Eax;
+    cpu.ebx = t->Ebx;
+    cpu.ecx = t->Ecx;
+    cpu.edx = t->Edx;
+    cpu.esi = t->Esi;
+    cpu.edi = t->Edi;
+    cpu.ebp = t->Ebp;
+    cpu.esp = t->Esp;
+    cpu.eip = t->Eip;
+    cpu.efl = t->Eflags;
+
+    cpu.cr0 = 0;
+    cpu.cr2 = 0;
+    cpu.cr3 = t->Cr3;
+    cpu.ds = t->Ds;
+    cpu.es = t->Es;
+    cpu.ss = t->Ss;
+    cpu.cs = t->Cs;
+    cpu.fs = t->Fs;
+    cpu.gs = t->Gs;
+
+    fpu.cw = t->MathControl;
+    fpu.sw = t->MathStatus;
+    fpu.tag = t->MathTag;
+
+    fpu.ip_err.offset = t->MathDataOffs;
+    fpu.ip_err.segment = t->MathDataSel;
+    fpu.op_err.offset = t->MathEip;
+    fpu.op_err.segment = t->MathCs;
+
+    for (i = 0; i < 8; i++)
+        fpu.reg[i] = t->St[i];    
+}
 
 /*##########################################################################
 #
@@ -290,6 +417,40 @@ void TWdSocketServer::PutString(const char *str)
 
 /*##########################################################################
 #
+#   Name       : TWdSocketServer::PutData
+#
+#   Purpose....: Write data to output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::PutData(void *ptr, int size)
+{
+    memcpy(FOutPtr, ptr, size);
+    FOutPtr += size;
+    FOutSize += size;
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::GetDebug
+#
+#   Purpose....: Get debug object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebug *TWdSocketServer::GetDebug()
+{
+    return FDebug;
+}
+
+/*##########################################################################
+#
 #   Name       : TWdSocketServer::AddSuppl
 #
 #   Purpose....: Add supplementary service
@@ -362,6 +523,7 @@ void TWdSocketServer::ReqConnect()
 ##########################################################################*/
 void TWdSocketServer::ReqDisconnect()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -377,6 +539,7 @@ void TWdSocketServer::ReqDisconnect()
 ##########################################################################*/
 void TWdSocketServer::ReqSuspend()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -392,6 +555,7 @@ void TWdSocketServer::ReqSuspend()
 ##########################################################################*/
 void TWdSocketServer::ReqResume()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -498,6 +662,7 @@ void TWdSocketServer::ReqGetSysConfig()
 ##########################################################################*/
 void TWdSocketServer::ReqMapAddr()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -513,6 +678,7 @@ void TWdSocketServer::ReqMapAddr()
 ##########################################################################*/
 void TWdSocketServer::ReqAddrInfo()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -528,6 +694,7 @@ void TWdSocketServer::ReqAddrInfo()
 ##########################################################################*/
 void TWdSocketServer::ReqChecksumMem()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -543,6 +710,7 @@ void TWdSocketServer::ReqChecksumMem()
 ##########################################################################*/
 void TWdSocketServer::ReqReadMem()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -558,6 +726,7 @@ void TWdSocketServer::ReqReadMem()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteMem()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -573,6 +742,7 @@ void TWdSocketServer::ReqWriteMem()
 ##########################################################################*/
 void TWdSocketServer::ReqReadIo()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -588,6 +758,7 @@ void TWdSocketServer::ReqReadIo()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteIo()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -603,6 +774,7 @@ void TWdSocketServer::ReqWriteIo()
 ##########################################################################*/
 void TWdSocketServer::ReqReadCpu()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -618,6 +790,7 @@ void TWdSocketServer::ReqReadCpu()
 ##########################################################################*/
 void TWdSocketServer::ReqReadFpu()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -633,6 +806,7 @@ void TWdSocketServer::ReqReadFpu()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteCpu()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -648,6 +822,7 @@ void TWdSocketServer::ReqWriteCpu()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteFpu()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -663,6 +838,7 @@ void TWdSocketServer::ReqWriteFpu()
 ##########################################################################*/
 void TWdSocketServer::ReqProgGo()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -678,6 +854,7 @@ void TWdSocketServer::ReqProgGo()
 ##########################################################################*/
 void TWdSocketServer::ReqProgStep()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -693,29 +870,34 @@ void TWdSocketServer::ReqProgStep()
 ##########################################################################*/
 void TWdSocketServer::ReqProgLoad()
 {
-    char truearg;
-    char name[256];
-    
-    if (FDebug)
-        delete FDebug;
+	char truearg;
+	char name[256];
+	TPathName curdir;
 
-    FDebug = 0;
+	if (FDebug)
+		delete FDebug;
 
-	 truearg = GetByte();
-	 GetString(name, 255);
+	FDebug = 0;
 
-    FDebug = new TDebug(name, "", "");
+	truearg = GetByte();
+	GetString(name, 255);
 
-    if (FDebug->ThreadList && FDebug->ModuleList)
+	FDebug = new TDebug(name, "", curdir.Get().GetData());
+
+    FMainThread = FDebug->GetMainThread();
+    FCurrentThread = FDebug->GetCurrentThread();
+    FMainModule = FDebug->GetMainModule();
+
+    if (FMainThread && FMainModule)
     {
         PutDword(0);
-        PutDword(FDebug->ThreadList->ThreadID);
-        PutDword(FDebug->ModuleList->Handle);
+        PutDword(FMainThread->ThreadID);
+        PutDword(FMainModule->Handle);
         PutByte(0x10);
     }
     else
     {
-        PutDword(1);
+        PutDword(MSG_LOAD_FAIL);
         PutDword(0);
         PutDword(0);
         PutByte(0);
@@ -735,6 +917,7 @@ void TWdSocketServer::ReqProgLoad()
 ##########################################################################*/
 void TWdSocketServer::ReqProgKill()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -750,6 +933,7 @@ void TWdSocketServer::ReqProgKill()
 ##########################################################################*/
 void TWdSocketServer::ReqSetWatch()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -765,6 +949,7 @@ void TWdSocketServer::ReqSetWatch()
 ##########################################################################*/
 void TWdSocketServer::ReqClearWatch()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -780,6 +965,7 @@ void TWdSocketServer::ReqClearWatch()
 ##########################################################################*/
 void TWdSocketServer::ReqSetBreak()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -795,6 +981,7 @@ void TWdSocketServer::ReqSetBreak()
 ##########################################################################*/
 void TWdSocketServer::ReqClearBreak()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -810,6 +997,8 @@ void TWdSocketServer::ReqClearBreak()
 ##########################################################################*/
 void TWdSocketServer::ReqGetNextAlias()
 {
+    PutWord(0);
+    PutWord(0);
 }
 
 /*##########################################################################
@@ -825,6 +1014,7 @@ void TWdSocketServer::ReqGetNextAlias()
 ##########################################################################*/
 void TWdSocketServer::ReqSetUserScreen()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -840,6 +1030,7 @@ void TWdSocketServer::ReqSetUserScreen()
 ##########################################################################*/
 void TWdSocketServer::ReqSetDebugScreen()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -855,6 +1046,7 @@ void TWdSocketServer::ReqSetDebugScreen()
 ##########################################################################*/
 void TWdSocketServer::ReqReadUserKeyboard()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -870,6 +1062,32 @@ void TWdSocketServer::ReqReadUserKeyboard()
 ##########################################################################*/
 void TWdSocketServer::ReqGetLibName()
 {
+    int Handle = GetDword();
+    TDebugModule *Module;
+
+    if (FDebug)
+    {
+		Handle = FDebug->GetNextModule(Handle);
+
+        if (Handle)
+        {
+            Module = FDebug->LockModule(Handle);
+            if (Module)
+            {
+                PutDword(Handle);
+                PutString(Module->ModuleName.GetData());
+            }
+            else
+                Handle = 0;
+
+            FDebug->UnlockModule();
+		}
+	}
+    else
+        Handle = 0;
+
+    if (!Handle)
+        PutDword(Handle);
 }
 
 /*##########################################################################
@@ -885,6 +1103,7 @@ void TWdSocketServer::ReqGetLibName()
 ##########################################################################*/
 void TWdSocketServer::ReqGetErrText()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -900,6 +1119,7 @@ void TWdSocketServer::ReqGetErrText()
 ##########################################################################*/
 void TWdSocketServer::ReqGetMsgText()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -915,6 +1135,7 @@ void TWdSocketServer::ReqGetMsgText()
 ##########################################################################*/
 void TWdSocketServer::ReqRedirStdin()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -930,6 +1151,7 @@ void TWdSocketServer::ReqRedirStdin()
 ##########################################################################*/
 void TWdSocketServer::ReqRedirStdout()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -1005,6 +1227,12 @@ void TWdSocketServer::ReqSplitCmd()
 ##########################################################################*/
 void TWdSocketServer::ReqReadReg()
 {
+    x86_mad_registers reg;
+
+    if (FCurrentThread)
+        reg.Set(FCurrentThread);
+    
+    PutData(&reg, sizeof(reg));
 }
 
 /*##########################################################################
@@ -1020,6 +1248,7 @@ void TWdSocketServer::ReqReadReg()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteReg()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -1035,6 +1264,9 @@ void TWdSocketServer::ReqWriteReg()
 ##########################################################################*/
 void TWdSocketServer::ReqMachineData()
 {
+    PutDword(0);
+    PutDword(0xFFFFFFFF);
+    PutByte(1);
 }
 
 /*##########################################################################

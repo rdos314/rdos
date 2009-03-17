@@ -57,6 +57,9 @@ protected:
     void PutWord(short int val);
     void PutDword(long val);
     void PutString(const char *str);
+    void PutData(void *ptr, int size);
+
+    TDebug *GetDebug();
 
     void ReqError();
 
@@ -115,6 +118,9 @@ protected:
     TWdSocketServerFactory *FFactory;
     TWdSupplService *FSupplList;
     TDebug *FDebug;
+    TDebugThread *FMainThread;
+    TDebugThread *FCurrentThread;
+    TDebugModule *FMainModule;
 };
 
 #endif

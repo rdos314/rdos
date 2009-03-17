@@ -68,6 +68,8 @@ protected:
     void PutDword(long val);
     void PutString(const char *str);
 
+    TDebug *GetDebug();
+
     TWdSocketServer *FServer;
 };
 

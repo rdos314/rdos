@@ -160,11 +160,20 @@ public:
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
-	void Block();
-	void Unblock();
+    TDebugThread *GetMainThread();
+    TDebugModule *GetMainModule();
 
-	TDebugThread *ThreadList;
-	TDebugModule *ModuleList;
+    int GetNextThread(int ThreadID);
+    int GetNextModule(int Module);
+    
+    TDebugThread *GetCurrentThread();
+    void SetCurrentThread(int ThreadID);
+
+    TDebugThread *LockThread(int ThreadID);
+    void UnlockThread();
+
+    TDebugModule *LockModule(int Handle);
+    void UnlockModule();
 
 protected:
 	virtual void SignalNewData();
@@ -187,6 +196,10 @@ protected:
 	int FHandle;
 
 	TSection FSection;
+
+    TDebugThread *CurrentThread;
+	TDebugThread *ThreadList;
+	TDebugModule *ModuleList;
 
 };
 

@@ -48,6 +48,12 @@ public:
     virtual void NotifyMsg();
 
 protected:
+    void ReqGetNext();
+    void ReqSet();
+    void ReqFreeze();
+    void ReqThaw();
+    void ReqGetExtra();
+    void ReqError();
 
 };
 

@@ -20,35 +20,16 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# wdovl.h
-# WD supplementary overlay support class
+# wdmsg.h
+# WD message numbers
 #
 ########################################################################*/
 
-#ifndef _WDOVL_H
-#define _WDOVL_H
+#ifndef _WDMSG_H
+#define _WDMSG_H
 
-#include "wdsuppl.h"
-
-class TWdOverlayFactory : public TWdSupplFactory
-{
-public:
-    TWdOverlayFactory(TWdSocketServerFactory *factory);
-	virtual ~TWdOverlayFactory();
-	
-	virtual TWdSupplService *Create(TWdSocketServer *server);
-};
-
-class TWdOverlayService : public TWdSupplService
-{
-public:
-    TWdOverlayService(TWdSocketServer *server);
-	virtual ~TWdOverlayService();
-
-    virtual void NotifyMsg();
-
-protected:
-
-};
+#define MSG_LOAD_FAIL           1
+#define MSG_FILE_NOT_FOUND      2
+#define MSG_NO_THREAD           3
 
 #endif

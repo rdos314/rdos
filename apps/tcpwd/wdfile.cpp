@@ -33,6 +33,7 @@
 #include "wdfile.h"
 #include "path.h"
 #include "env.h"
+#include "wdmsg.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -149,6 +150,8 @@ void TWdFileService::ReqGetConfig()
 ##########################################################################*/
 void TWdFileService::ReqOpen()
 {
+    _asm int 3
+
     int handle;
     char fname[256];
     char mode = GetByte();
@@ -164,7 +167,7 @@ void TWdFileService::ReqOpen()
     }
     else
     {
-        PutDword(1);
+        PutDword(MSG_FILE_NOT_FOUND);
         PutDword(0);
     }        
 }
@@ -182,6 +185,8 @@ void TWdFileService::ReqOpen()
 ##########################################################################*/
 void TWdFileService::ReqSeek()
 {
+    _asm int 3
+
 }
 
 /*##########################################################################
@@ -197,6 +202,7 @@ void TWdFileService::ReqSeek()
 ##########################################################################*/
 void TWdFileService::ReqRead()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -212,6 +218,7 @@ void TWdFileService::ReqRead()
 ##########################################################################*/
 void TWdFileService::ReqWrite()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -227,6 +234,7 @@ void TWdFileService::ReqWrite()
 ##########################################################################*/
 void TWdFileService::ReqWriteConsole()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -242,6 +250,7 @@ void TWdFileService::ReqWriteConsole()
 ##########################################################################*/
 void TWdFileService::ReqClose()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -257,6 +266,7 @@ void TWdFileService::ReqClose()
 ##########################################################################*/
 void TWdFileService::ReqErase()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -426,11 +436,11 @@ void TWdFileService::ReqStrToFullPath()
 					 ok = CheckFile(FileName, ".exe");
 
             if (!ok)                
-                PutDword(1);
+                PutDword(MSG_FILE_NOT_FOUND);
 
         }
         else
-            PutDword(1);
+            PutDword(MSG_FILE_NOT_FOUND);
     }                    
 }
 
@@ -447,6 +457,7 @@ void TWdFileService::ReqStrToFullPath()
 ##########################################################################*/
 void TWdFileService::ReqRun()
 {
+    _asm int 3
 }
 
 /*##########################################################################
@@ -462,6 +473,7 @@ void TWdFileService::ReqRun()
 ##########################################################################*/
 void TWdFileService::ReqError()
 {
+    _asm int 3
 }
 
 /*##########################################################################

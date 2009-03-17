@@ -130,4 +130,5 @@ void TWdFileInfoService::NotifyMsg()
 
     ch = GetByte();
 
+    _asm int 3
 }

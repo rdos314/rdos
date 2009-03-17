@@ -336,6 +336,7 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
 {
     ThreadList = 0;
     ModuleList = 0;
+    CurrentThread = 0;
 
     Start("Debug device", 0x4000);
 }
@@ -373,38 +374,6 @@ void TDebug::DeviceName(char *Name, int MaxLen) const
 
 /*##########################################################################
 #
-#   Name       : TDebug::Block
-#
-#   Purpose....: Block lists
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDebug::Block()
-{
-    FSection.Enter();
-}
-
-/*##########################################################################
-#
-#   Name       : TDebug::Unblock
-#
-#   Purpose....: Unblock lists
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDebug::Unblock()
-{
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
 #   Name       : TDebug::Add
 #
 #   Purpose....: Add object to wait
@@ -433,10 +402,25 @@ void TDebug::Add(TWait *Wait)
 ##########################################################################*/
 void TDebug::InsertThread(TDebugThread *thread)
 {
+    TDebugThread *t;
+
     FSection.Enter();
-    
-    thread->Next = ThreadList;
-    ThreadList = thread;
+
+    thread->Next = 0;
+
+    t = ThreadList;
+    if (t)
+    {
+        while (t->Next)
+            t = t->Next;
+
+        t->Next = thread;            
+    }
+    else
+        ThreadList = thread;
+
+    if (!CurrentThread)
+        CurrentThread = thread;
 
     FSection.Leave();
 }
@@ -454,11 +438,248 @@ void TDebug::InsertThread(TDebugThread *thread)
 ##########################################################################*/
 void TDebug::InsertModule(TDebugModule *mod)
 {
-    FSection.Enter();
-    
-    mod->Next = ModuleList;
-    ModuleList = mod;
+    TDebugModule *m;
 
+    FSection.Enter();
+
+    mod->Next = 0;
+
+    m = ModuleList;
+    if (m)
+    {
+        while (m->Next)
+            m = m->Next;
+
+        m->Next = mod;            
+    }
+    else
+        ModuleList = mod;
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::GetMainThread
+#
+#   Purpose....: Get main thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugThread *TDebug::GetMainThread()
+{
+    return ThreadList;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::GetMainModule
+#
+#   Purpose....: Get main module
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugModule *TDebug::GetMainModule()
+{
+    return ModuleList;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::GetCurrentThread
+#
+#   Purpose....: Get current thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugThread *TDebug::GetCurrentThread()
+{
+    return CurrentThread;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::SetCurrentThread
+#
+#   Purpose....: Set current thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::SetCurrentThread(int ThreadID)
+{
+    TDebugThread *t;
+
+    FSection.Enter();
+
+    t = ThreadList;
+    while (t && t->ThreadID != ThreadID)
+        t = t->Next;
+
+    if (t)
+        CurrentThread = t;
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::GetNextThread
+#
+#   Purpose....: Get next thread ID
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::GetNextThread(int ThreadID)
+{
+    int ID = 0xFFFF;
+    TDebugThread *t;
+
+    FSection.Enter();
+
+    t = ThreadList;
+    while (t)
+    {
+        if (t->ThreadID > ThreadID && t->ThreadID < ID)
+            ID = t->ThreadID;
+
+        t = t->Next;            
+    }
+
+    FSection.Leave();
+
+    if (ID != 0xFFFF)
+        return ID;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::GetNextModule
+#
+#   Purpose....: Get next module handle
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::GetNextModule(int ModuleHandle)
+{
+    int Handle = 0xFFFF;
+    TDebugModule *m;
+
+    FSection.Enter();
+
+    m = ModuleList;
+    while (m)
+    {
+        if (m->Handle > ModuleHandle && m->Handle < Handle)
+            Handle = m->Handle;
+
+        m = m->Next;            
+    }
+
+    FSection.Leave();
+
+    if (Handle != 0xFFFF)
+        return Handle;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::LockThread
+#
+#   Purpose....: Lock thread list and return thread object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugThread *TDebug::LockThread(int ThreadID)
+{
+    TDebugThread *t;
+
+    FSection.Enter();
+
+    t = ThreadList;
+    while (t && t->ThreadID != ThreadID)
+        t = t->Next;            
+
+    return t;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::UnlockThread
+#
+#   Purpose....: Unlock thread list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::UnlockThread()
+{
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::LockModule
+#
+#   Purpose....: Lock module list and return module object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugModule *TDebug::LockModule(int Handle)
+{
+    TDebugModule *m;
+
+    FSection.Enter();
+
+    m = ModuleList;
+    while (m && m->Handle != Handle)
+        m = m->Next;            
+
+    return m;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::UnlockModule
+#
+#   Purpose....: Unlock module list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::UnlockModule()
+{
     FSection.Leave();
 }
 

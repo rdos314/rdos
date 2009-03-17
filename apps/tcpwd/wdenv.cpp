@@ -130,4 +130,6 @@ void TWdEnvService::NotifyMsg()
 
     ch = GetByte();
 
+    _asm int 3
+
 }

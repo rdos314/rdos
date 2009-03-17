@@ -232,3 +232,19 @@ void TWdSupplService::PutString(const char *str)
 {
     FServer->PutString(str);
 }
+
+/*##########################################################################
+#
+#   Name       : TWdSupplService::GetDebug
+#
+#   Purpose....: Get debug object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebug *TWdSupplService::GetDebug()
+{
+    return FServer->GetDebug();
+}
