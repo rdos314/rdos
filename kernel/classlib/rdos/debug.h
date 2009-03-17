@@ -79,6 +79,9 @@ public:
     void SetException(TExceptionEvent *event);
     int IsDebug();
 
+    int ReadMem(int Sel, long Offset, char *Buf, int Size);
+    int WriteMem(int Sel, long Offset, char *Buf, int Size);
+
     TString ThreadName;
     TString ThreadList;
     int ListOffset;

@@ -31,7 +31,6 @@
 #include "wdfinfo.h"
 #include "wdenv.h"
 #include "wdthread.h"
-#include "wdovl.h"
 #include "wdcap.h"
 
 int main(int argc, char **argv)
@@ -43,7 +42,6 @@ int main(int argc, char **argv)
 	suppl = new TWdFileInfoFactory(&fact);
 	suppl = new TWdEnvFactory(&fact);
 	suppl = new TWdThreadFactory(&fact);
-	suppl = new TWdOverlayFactory(&fact);
 	suppl = new TWdCapFactory(&fact);
 
 	for (;;)

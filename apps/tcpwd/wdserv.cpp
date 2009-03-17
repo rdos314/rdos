@@ -710,7 +710,25 @@ void TWdSocketServer::ReqChecksumMem()
 ##########################################################################*/
 void TWdSocketServer::ReqReadMem()
 {
-    _asm int 3
+	int Size;
+	long Offset;
+	short int Sel;
+	int Count = 0;
+	char *Data;
+
+    Offset = GetDword();
+    Sel = GetWord();
+    Size = GetWord();
+
+    Data = new char[Size];
+    
+	if (FCurrentThread)
+		Count = FCurrentThread->ReadMem(Sel, Offset, Data, Size);
+
+    if (Count)
+        PutData(Data, Count);
+
+    delete Data;
 }
 
 /*##########################################################################
@@ -742,7 +760,7 @@ void TWdSocketServer::ReqWriteMem()
 ##########################################################################*/
 void TWdSocketServer::ReqReadIo()
 {
-    _asm int 3
+	_asm int 3
 }
 
 /*##########################################################################
@@ -875,25 +893,41 @@ void TWdSocketServer::ReqProgLoad()
 	TPathName curdir;
 
 	if (FDebug)
+	{
+	    RdosWaitMilli(250);
 		delete FDebug;
+    }
 
 	FDebug = 0;
+	FMainThread = 0;
+	FCurrentThread = 0;
+	FMainModule = 0;
 
 	truearg = GetByte();
 	GetString(name, 255);
 
-	FDebug = new TDebug(name, "", curdir.Get().GetData());
+	if (strlen(name))
+	{
+    	FDebug = new TDebug(name, "", curdir.Get().GetData());
 
-    FMainThread = FDebug->GetMainThread();
-    FCurrentThread = FDebug->GetCurrentThread();
-    FMainModule = FDebug->GetMainModule();
+        FMainThread = FDebug->GetMainThread();
+        FCurrentThread = FDebug->GetCurrentThread();
+        FMainModule = FDebug->GetMainModule();
 
-    if (FMainThread && FMainModule)
-    {
-        PutDword(0);
-        PutDword(FMainThread->ThreadID);
-        PutDword(FMainModule->Handle);
-        PutByte(0x10);
+        if (FMainThread && FMainModule)
+        {
+            PutDword(0);
+            PutDword(FMainThread->ThreadID);
+		    PutDword(FMainModule->Handle);
+            PutByte(0x10);
+        }
+        else
+        {
+            PutDword(MSG_LOAD_FAIL);
+            PutDword(0);
+            PutDword(0);
+            PutByte(0);
+    	}
     }
     else
     {
@@ -901,7 +935,7 @@ void TWdSocketServer::ReqProgLoad()
         PutDword(0);
         PutDword(0);
         PutByte(0);
-	 }
+    }
 }
 
 /*##########################################################################
@@ -917,7 +951,18 @@ void TWdSocketServer::ReqProgLoad()
 ##########################################################################*/
 void TWdSocketServer::ReqProgKill()
 {
-    _asm int 3
+    if (FDebug)
+    {
+        RdosWaitMilli(250);
+        delete FDebug;
+    }
+
+    FDebug = 0;
+	FMainThread = 0;
+	FCurrentThread = 0;
+	FMainModule = 0;
+
+    PutDword(0);
 }
 
 /*##########################################################################
@@ -1072,7 +1117,7 @@ void TWdSocketServer::ReqGetLibName()
         if (Handle)
         {
             Module = FDebug->LockModule(Handle);
-            if (Module)
+			if (Module)
             {
                 PutDword(Handle);
                 PutString(Module->ModuleName.GetData());
@@ -1103,7 +1148,26 @@ void TWdSocketServer::ReqGetLibName()
 ##########################################################################*/
 void TWdSocketServer::ReqGetErrText()
 {
-    _asm int 3
+	int id = GetDword();
+
+    switch (id)
+    {
+        case MSG_LOAD_FAIL:
+            PutString("Cannot load program");
+            break;
+
+        case MSG_FILE_NOT_FOUND:
+            PutString("File not found");
+            break;
+
+        case MSG_NO_THREAD:
+            PutString("Thread not found");
+            break;
+
+        default:
+            PutString("Unknown error");
+            break;
+    }
 }
 
 /*##########################################################################

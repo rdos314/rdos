@@ -118,6 +118,38 @@ int TDebugThread::IsDebug()
 
 /*##########################################################################
 #
+#   Name       : TDebugThread::ReadMem
+#
+#   Purpose....: Read memory in thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebugThread::ReadMem(int Sel, long Offset, char *Buf, int Size)
+{
+    return RdosReadThreadMem(ThreadID, Sel, Offset, Buf, Size);
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::WriteMem
+#
+#   Purpose....: Write memory in thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebugThread::WriteMem(int Sel, long Offset, char *Buf, int Size)
+{
+    return RdosWriteThreadMem(ThreadID, Sel, Offset, Buf, Size);
+}
+
+/*##########################################################################
+#
 #   Name       : TDebugThread::SetException
 #
 #   Purpose....: Set exception state

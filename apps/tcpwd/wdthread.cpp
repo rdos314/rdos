@@ -131,7 +131,11 @@ void TWdThreadService::ReqGetNext()
     TDebug *Debug = GetDebug();
     
     id = GetDword();
-    id = Debug->GetNextThread(id);
+
+    if (Debug)
+        id = Debug->GetNextThread(id);
+    else
+        id = 0;
 
     PutDword(id);
     PutByte(0);    
