@@ -184,12 +184,11 @@ void TWdFileService::ReqSeek()
     int handle = GetDword();
     char mode = GetByte();
     int pos = GetDword();
-    int rc;
 
 	switch (mode)
 	{
 		case 0:
-			RdosSetFilePos(handle, rc);
+			RdosSetFilePos(handle, pos);
 			PutDword(0);
 			PutDword(pos);
 			break;
@@ -236,9 +235,12 @@ void TWdFileService::ReqRead()
     {
         buf = new char[size];
         count = RdosReadFile(handle, buf, size);
+        PutDword(0);
         PutData(buf, count);
         delete buf;
     }
+    else
+        PutDword(0);
 }
 
 /*##########################################################################

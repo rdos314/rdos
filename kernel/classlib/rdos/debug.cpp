@@ -605,8 +605,11 @@ TDebugModule::TDebugModule(TCreateProcessEvent *event)
     Handle = event->Handle;
     ImageBase = event->ImageBase;
     ImageSize = event->ImageSize;
+	 ObjectRva = event->ObjectRva;
 
-    ReadName();
+	 FNew = FALSE;
+
+	 ReadName();
 }
 
 /*##########################################################################
@@ -622,10 +625,13 @@ TDebugModule::TDebugModule(TCreateProcessEvent *event)
 ##########################################################################*/
 TDebugModule::TDebugModule(TLoadDllEvent *event)
 {
-    FileHandle = event->FileHandle;
-    Handle = event->Handle;
-    ImageBase = event->ImageBase;
-    ImageSize = event->ImageSize;
+	 FileHandle = event->FileHandle;
+	 Handle = event->Handle;
+	 ImageBase = event->ImageBase;
+	 ImageSize = event->ImageSize;
+	 ObjectRva = event->ObjectRva;
+
+    FNew = TRUE;
 
     ReadName();
 }
@@ -1052,22 +1058,29 @@ int TDebug::GetNextModule(int ModuleHandle)
 {
     int Handle = 0xFFFF;
     TDebugModule *m;
+    TDebugModule *rm = 0;
 
     FSection.Enter();
 
     m = ModuleList;
     while (m)
     {
-        if (m->Handle > ModuleHandle && m->Handle < Handle)
+        if (m->FNew && m->Handle > ModuleHandle && m->Handle < Handle)
+        {
+            rm = m;
             Handle = m->Handle;
+        }
 
         m = m->Next;            
     }
 
     FSection.Leave();
 
-    if (Handle != 0xFFFF)
+    if (rm)
+    {
+        rm->FNew = FALSE;
         return Handle;
+    }
     else
         return 0;
 }

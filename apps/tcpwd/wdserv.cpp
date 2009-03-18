@@ -901,6 +901,38 @@ void TWdSocketServer::ReqGetSysConfig()
 void TWdSocketServer::ReqMapAddr()
 {
     _asm int 3
+
+    long Offset = GetDword();
+    int Sel = GetWord();
+    int Handle = GetDword();
+	 TDebugModule *mod;
+
+    if (FDebug)
+    {
+        mod = FDebug->LockModule(Handle);
+        if (mod)
+        {
+            if (Sel == -1 || Sel == -2)
+            {
+                if (Sel == -1)
+                {
+                    PutDword(mod->ImageBase + mod->ObjectRva + Offset);
+                    PutDword(0x1B3);
+                }
+            
+                if (Sel == -2)
+                {
+                    PutDword(mod->ImageBase + mod->ObjectRva + Offset);
+                    PutDword(0x1BB);
+                }
+
+
+                PutDword(mod->ImageBase);
+                PutDword(mod->ImageBase + mod->ImageSize - 1);
+            }
+        }
+        FDebug->UnlockModule();
+    }        
 }
 
 /*##########################################################################

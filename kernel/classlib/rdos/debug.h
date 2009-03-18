@@ -38,27 +38,29 @@ struct TCreateProcessEvent
     int Handle;
     int Process;
     int Thread;
-    unsigned int ImageBase;
-    unsigned int ImageSize;
-    unsigned int FsLinear;
-    unsigned int StartEip;
-    unsigned short StartCs;
-};    
+	 unsigned int ImageBase;
+	 unsigned int ImageSize;
+	 unsigned int ObjectRva;
+	 unsigned int FsLinear;
+	 unsigned int StartEip;
+	 unsigned short StartCs;
+};
 
 struct TCreateThreadEvent
 {
-    int Thread;
-    unsigned int FsLinear;
-    unsigned int StartEip;
-    unsigned short StartCs;
+	 int Thread;
+	 unsigned int FsLinear;
+	 unsigned int StartEip;
+	 unsigned short StartCs;
 };
 
 struct TLoadDllEvent
 {
-    int FileHandle;
-    int Handle;
-    unsigned int ImageBase;
-    unsigned int ImageSize;
+	 int FileHandle;
+	 int Handle;
+	 unsigned int ImageBase;
+	 unsigned int ImageSize;
+	 unsigned int ObjectRva;
 };
 
 struct TExceptionEvent
@@ -177,7 +179,10 @@ public:
     int FileHandle;
     int Handle;
     unsigned int ImageBase;
-    unsigned int ImageSize;
+	 unsigned int ImageSize;
+	 unsigned int ObjectRva;
+
+    int FNew;
 
     TDebugModule *Next;
 };

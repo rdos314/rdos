@@ -221,8 +221,9 @@ CreateProcessEvent Proc near
 	mov word ptr es:[di].cpeFile,ax
 	mov word ptr es:[di].cpeFile+2,cx
 ;	
-    movzx eax,ds:mod_handle
-    mov es:[di].cpeHandle,eax    
+    movzx ebx,ds:mod_handle
+    DerefModuleHandle
+    mov es:[di].cpeHandle,ebx
 ;
 	mov eax,fs:pvProcessHandle
 	mov es:[di].cpeProcess,eax
@@ -232,6 +233,15 @@ CreateProcessEvent Proc near
 	mov es:[di].cpeImageBase,eax
 	mov eax,ds:lib_size
 	mov es:[di].cpeImageSize,eax
+;
+	push es
+	mov ax,flat_data_sel
+	mov es,ax
+	mov eax,ds:lib_objects
+	mov eax,es:[eax].o_va
+	pop es
+	mov es:[di].cpeObjectRva,eax
+;	
 	mov eax,fs:pvBase
 	mov es:[di].cpeFsLinear,eax
 	mov es:[di].cpeStartCs,flat_code_sel
@@ -377,11 +387,20 @@ LoadDllEvent Proc near
 	mov word ptr es:[di].ldeFile,ax
 	mov word ptr es:[di].ldeFile+2,cx
 ;	
-    movzx eax,ds:mod_handle
-    mov es:[di].ldeHandle,eax    
+    movzx ebx,ds:mod_handle
+    DerefModuleHandle
+    mov es:[di].ldeHandle,ebx    
 ;
 	mov eax,ds:lib_base
 	mov es:[di].ldeImageBase,eax
+;
+	push es
+	mov ax,flat_data_sel
+	mov es,ax
+	mov eax,ds:lib_objects
+	mov eax,es:[eax].o_va
+	pop es
+	mov es:[di].ldeObjectRva,eax
 ;	
 	mov eax,ds:lib_size
 	mov es:[di].ldeImageSize,eax
@@ -1061,7 +1080,7 @@ find_path_failed:
 	jmp open_dll_unlock
 
 find_path_file_ok:
-    pop bx
+    add sp,2
 	FreeMem
 	clc
 	
@@ -3263,6 +3282,10 @@ gdedDuplFile:
 	DuplFileInfo
 	movzx eax,bx
 	mov es:[edi],eax
+;
+    mov bx,es:[edi+4]
+    AliasModuleHandle
+    mov es:[edi+4],bx	
 
 gdedDone:
 	pop esi

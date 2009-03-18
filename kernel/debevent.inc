@@ -39,8 +39,9 @@ cpeFile			DD ?
 cpeHandle		DD ?
 cpeProcess		DD ?
 cpeThread		DD ?
-cpeImageBase		DD ?
-cpeImageSize		DD ?
+cpeImageBase    DD ?
+cpeImageSize	DD ?
+cpeObjectRva    DD ?
 cpeFsLinear		DD ?
 cpeStartEip		DD ?
 cpeStartCs		DW ?
@@ -69,8 +70,9 @@ load_dll_event_struc	STRUC
 
 ldeFile			DD ?
 ldeHandle		DD ?
-ldeImageBase		DD ?
-ldeImageSize		DD ?
+ldeImageBase	DD ?
+ldeImageSize	DD ?
+ldeObjectRva    DD ?
 
 load_dll_event_struc	ENDS
 
