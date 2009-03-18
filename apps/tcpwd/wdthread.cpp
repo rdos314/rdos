@@ -191,7 +191,7 @@ void TWdThreadService::ReqSet()
 ##########################################################################*/
 void TWdThreadService::ReqFreeze()
 {
-    _asm int 3
+//    _asm int 3
 }
 
 /*##########################################################################
@@ -207,7 +207,7 @@ void TWdThreadService::ReqFreeze()
 ##########################################################################*/
 void TWdThreadService::ReqThaw()
 {
-    _asm int 3
+//    _asm int 3
 }
 
 /*##########################################################################
@@ -237,6 +237,8 @@ void TWdThreadService::ReqGetExtra()
 
             if (t)
                 PutString(t->ThreadName.GetData());
+
+            Debug->UnlockThread();
         }
     }
     else

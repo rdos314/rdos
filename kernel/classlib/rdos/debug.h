@@ -30,7 +30,7 @@
 
 #include "thread.h"
 #include "str.h"
-#include "waitdev.h"
+#include "sigdev.h"
 
 struct TCreateProcessEvent
 {
@@ -93,10 +93,20 @@ public:
 
     int ReadMem(int Sel, long Offset, char *Buf, int Size);
     int WriteMem(int Sel, long Offset, char *Buf, int Size);
+    void WriteRegs();
 
     void ActivateBreaks(TDebugBreak *BreakList);
     void DeactivateBreaks(TDebugBreak *BreakList);
 
+    void SetupGo();
+    void SetupTrace();
+    int WasTrace();
+
+    int HasBreakOccurred();
+    int HasTraceOccurred();
+    int HasFaultOccurred();
+
+    TString FaultText;
     TString ThreadName;
     TString ThreadList;
     int ListOffset;
@@ -148,7 +158,10 @@ protected:
     void ReadState();
 
     int FDebug;
-        
+	int FHasBreak;
+	int FHasTrace;
+	int FHasException;
+    int FWasTrace;        
 };
 
 class TDebugModule
@@ -193,8 +206,20 @@ public:
     TDebugModule *LockModule(int Handle);
     void UnlockModule();
 
-	 void AddBreak(int Sel, long Offset);
-	 void ClearBreak(int Sel, long Offset);
+	void AddBreak(int Sel, long Offset);
+	void ClearBreak(int Sel, long Offset);
+
+    void WaitForLoad(int timeout);
+	void Go();
+	void Trace();
+
+	int HasThreadChange();
+    void ClearThreadChange();
+
+	int HasModuleChange();
+	void ClearModuleChange();
+
+	int IsTerminated();
 
 protected:
 	virtual void SignalNewData();
@@ -223,6 +248,11 @@ protected:
 	TDebugModule *ModuleList;
 
     TDebugBreak *BreakList;
+
+    TSignalDevice UserSignal;
+
+    int FThreadChanged;
+    int FModuleChanged;
 
 };
 

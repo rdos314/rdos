@@ -32,7 +32,7 @@
 #include "socket.h"
 #include "debug.h"
 
-#define MAX_MSG_SIZE    0x6000
+#define MAX_MSG_SIZE    1024
 
 class TWdSupplService;
 class TWdSocketServerFactory;
@@ -52,6 +52,7 @@ protected:
     short int GetWord();
     long GetDword();
     void GetString(char *str, int maxsize);
+    void GetData(void *ptr, int size);
 
     void PutByte(char val);
     void PutWord(short int val);
@@ -59,7 +60,7 @@ protected:
     void PutString(const char *str);
     void PutData(void *ptr, int size);
 
-    TDebug *GetDebug();
+	TDebug *GetDebug();
 
     TString CheckFileExt(const char *path, const char *ext);
     TString CheckFileExt(const char *path, const char *name, const char *ext);
@@ -119,6 +120,8 @@ protected:
     int FOutSize;
     char FOutBuf[MAX_MSG_SIZE];	
     char *FOutPtr;
+
+    int FSuppressAnswer;
 
     TWdSocketServerFactory *FFactory;
     TWdSupplService *FSupplList;

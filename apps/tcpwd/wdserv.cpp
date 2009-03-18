@@ -39,6 +39,21 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#define COND_CONFIG         0x1
+#define COND_SECTIONS       0x2
+#define COND_LIBRARIES      0x4
+#define COND_ALIAS          0x8
+#define COND_THREAD         0x10
+#define COND_THREAD_INFO    0x20
+#define COND_TRACE          0x40
+#define COND_BREAK          0x80
+#define COND_WATCH          0x100
+#define COND_USER           0x200
+#define COND_TERMINATE      0x400
+#define COND_EXCEPTION      0x800
+#define COND_MSG            0x1000
+#define COND_STOP           0x2000
+
 struct x86_cpu
 {
 	 long eax;
@@ -89,7 +104,8 @@ class x86_mad_registers
 public:
     x86_mad_registers();
     void Init();
-    void Set(TDebugThread *t);
+    void Read(TDebugThread *t);
+    void Write(TDebugThread *t);
 
 	struct x86_cpu  cpu;
 	struct x86_fpu  fpu;
@@ -167,16 +183,16 @@ x86_mad_registers::x86_mad_registers()
 
 /*##########################################################################
 #
-#   Name       : x86_mad_registers::Set
+#   Name       : x86_mad_registers::Read
 #
-#   Purpose....: Set data from thread
+#   Purpose....: Read data from thread
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void x86_mad_registers::Set(TDebugThread *t)
+void x86_mad_registers::Read(TDebugThread *t)
 {
     int i;
 
@@ -214,6 +230,54 @@ void x86_mad_registers::Set(TDebugThread *t)
 
     for (i = 0; i < 8; i++)
         fpu.reg[i] = t->St[i];    
+}
+
+/*##########################################################################
+#
+#   Name       : x86_mad_registers::Write
+#
+#   Purpose....: Write data to thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void x86_mad_registers::Write(TDebugThread *t)
+{
+    int i;
+
+    t->Eax = cpu.eax;
+    t->Ebx = cpu.ebx;
+    t->Ecx = cpu.ecx;
+    t->Edx = cpu.edx;
+    t->Esi = cpu.esi;
+    t->Edi = cpu.edi;
+    t->Ebp = cpu.ebp;
+    t->Esp = cpu.esp;
+    t->Eip = cpu.eip;
+    t->Eflags = cpu.efl;
+
+    t->Ds = cpu.ds;
+    t->Es = cpu.es;
+    t->Ss = cpu.ss;
+    t->Cs = cpu.cs;
+    t->Fs = cpu.fs;
+    t->Gs = cpu.gs;
+
+    t->MathControl = fpu.cw;
+    t->MathStatus = fpu.sw;
+    t->MathTag = fpu.tag;
+
+    t->MathDataOffs = fpu.ip_err.offset;
+    t->MathDataSel = fpu.ip_err.segment;
+    t->MathEip = fpu.op_err.offset;
+    t->MathCs = fpu.op_err.segment;
+
+    for (i = 0; i < 8; i++)
+        t->St[i] = fpu.reg[i];    
+
+    t->WriteRegs();
 }
 
 /*##########################################################################
@@ -340,6 +404,33 @@ void TWdSocketServer::GetString(char *str, int maxsize)
     }
     else
 		  str[0] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::GetData
+#
+#   Purpose....: Read data from input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::GetData(void *data, int size)
+{
+    int len = FInPtr - FInBuf;
+
+    len = FInSize - len;
+
+    if (len > size)
+        len = size;
+    
+    if (len > 0)
+    {
+        memcpy(data, FInPtr, len);
+        FInPtr += len;
+    }
 }
 
 /*##########################################################################
@@ -667,7 +758,6 @@ void TWdSocketServer::ReqConnect()
 ##########################################################################*/
 void TWdSocketServer::ReqDisconnect()
 {
-    _asm int 3
 }
 
 /*##########################################################################
@@ -731,7 +821,11 @@ void TWdSocketServer::ReqGetSupplService()
         PutDword((long)service);
 	 }
     else
+    {
+        RdosWriteString(name);
+        RdosWriteString("\r\n");
         PutDword(0);
+     }
 }
 
 /*##########################################################################
@@ -1000,7 +1094,61 @@ void TWdSocketServer::ReqWriteFpu()
 ##########################################################################*/
 void TWdSocketServer::ReqProgGo()
 {
-    _asm int 3
+	short int CondFlags = COND_THREAD_INFO;
+
+	if (FDebug)
+	{
+		FDebug->Go();
+
+		if (FDebug->IsTerminated())
+		    CondFlags |= COND_TERMINATE;
+
+        if (FDebug->HasThreadChange())
+        {
+			FDebug->ClearThreadChange();
+			CondFlags |= COND_THREAD;
+			FCurrentThread = FDebug->GetCurrentThread();
+		}
+
+		if (FDebug->HasModuleChange())
+		{
+			FDebug->ClearModuleChange();
+			CondFlags |= COND_LIBRARIES;
+		}
+
+        if (FCurrentThread)
+        {
+            if (FCurrentThread->HasBreakOccurred())
+                CondFlags |= COND_BREAK;
+
+            if (FCurrentThread->HasTraceOccurred())
+                CondFlags |= COND_WATCH;
+
+            if (FCurrentThread->HasFaultOccurred())
+                CondFlags |= COND_EXCEPTION;                
+        }
+    }        		
+
+    if (FCurrentThread)
+    {
+        PutDword(FCurrentThread->Esp);
+        PutWord((short int)FCurrentThread->Ss);
+
+        PutDword(FCurrentThread->Eip);
+        PutWord((short int)FCurrentThread->Cs);
+
+        PutWord(CondFlags);
+    }
+    else
+    {
+        PutDword(0);
+        PutWord(0);    
+
+        PutDword(0);
+        PutWord(0);   
+
+        PutWord(CondFlags);
+    }
 }
 
 /*##########################################################################
@@ -1016,7 +1164,61 @@ void TWdSocketServer::ReqProgGo()
 ##########################################################################*/
 void TWdSocketServer::ReqProgStep()
 {
-    _asm int 3
+	short int CondFlags = COND_THREAD_INFO;
+
+	if (FDebug)
+	{
+		FDebug->Trace();
+
+		if (FDebug->IsTerminated())
+		    CondFlags |= COND_TERMINATE;
+
+        if (FDebug->HasThreadChange())
+        {
+			FDebug->ClearThreadChange();
+			CondFlags |= COND_THREAD;
+			FCurrentThread = FDebug->GetCurrentThread();
+		}
+
+		if (FDebug->HasModuleChange())
+		{
+			FDebug->ClearModuleChange();
+			CondFlags |= COND_LIBRARIES;
+		}
+
+        if (FCurrentThread)
+        {
+            if (FCurrentThread->HasBreakOccurred())
+                CondFlags |= COND_BREAK;
+
+            if (FCurrentThread->HasTraceOccurred())
+                CondFlags |= COND_TRACE;
+
+            if (FCurrentThread->HasFaultOccurred())
+                CondFlags |= COND_EXCEPTION;                
+        }
+    }        		
+
+    if (FCurrentThread)
+    {
+        PutDword(FCurrentThread->Esp);
+        PutWord((short int)FCurrentThread->Ss);
+
+        PutDword(FCurrentThread->Eip);
+        PutWord((short int)FCurrentThread->Cs);
+
+        PutWord(CondFlags);
+    }
+    else
+    {
+        PutDword(0);
+        PutWord(0);    
+
+        PutDword(0);
+        PutWord(0);   
+
+        PutWord(CondFlags);
+    }
 }
 
 /*##########################################################################
@@ -1036,7 +1238,6 @@ void TWdSocketServer::ReqProgLoad()
 	char name[256];
 	TPathName curdir;
 	TString str;
-	int i;
 
 	if (FDebug)
 		delete FDebug;
@@ -1061,15 +1262,7 @@ void TWdSocketServer::ReqProgLoad()
 	{
     	FDebug = new TDebug(str.GetData(), "", curdir.Get().GetData());
 
-        i = 0;
-    	while (FDebug->GetMainThread() == 0 || FDebug->GetMainModule() == 0)
-        {    	
-    	    RdosWaitMilli(100);
-
-            i++;            
-    	    if (i == 100)
-    	        break;
-    	}
+		FDebug->WaitForLoad(5000);
 
         FMainThread = FDebug->GetMainThread();
         FCurrentThread = FDebug->GetCurrentThread();
@@ -1168,9 +1361,7 @@ void TWdSocketServer::ReqClearWatch()
 ##########################################################################*/
 void TWdSocketServer::ReqSetBreak()
 {
-    _asm int 3
-
-    long Offset = GetDword();
+	long Offset = GetDword();
     int Sel = GetWord();
 
     if (FDebug)
@@ -1192,8 +1383,6 @@ void TWdSocketServer::ReqSetBreak()
 ##########################################################################*/
 void TWdSocketServer::ReqClearBreak()
 {
-    _asm int 3
-
     long Offset = GetDword();
     int Sel = GetWord();
 
@@ -1359,7 +1548,12 @@ void TWdSocketServer::ReqGetErrText()
 ##########################################################################*/
 void TWdSocketServer::ReqGetMsgText()
 {
-    _asm int 3
+    PutByte(8);
+
+    if (FCurrentThread)
+        PutString(FCurrentThread->FaultText.GetData());    
+    else
+        PutString("Exception fault");
 }
 
 /*##########################################################################
@@ -1470,7 +1664,7 @@ void TWdSocketServer::ReqReadReg()
     x86_mad_registers reg;
 
     if (FCurrentThread)
-        reg.Set(FCurrentThread);
+        reg.Read(FCurrentThread);
     
     PutData(&reg, sizeof(reg));
 }
@@ -1488,7 +1682,14 @@ void TWdSocketServer::ReqReadReg()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteReg()
 {
-    _asm int 3
+    x86_mad_registers reg;
+
+    if (FCurrentThread)
+    {
+        reg.Read(FCurrentThread);
+        GetData(&reg, sizeof(reg));        
+        reg.Write(FCurrentThread);
+    }
 }
 
 /*##########################################################################
@@ -1522,11 +1723,11 @@ void TWdSocketServer::ReqMachineData()
 ##########################################################################*/
 void TWdSocketServer::NotifyMsg()
 {
-    char ch;
+    unsigned char ch;
 
-    ch = GetByte();
+    ch = (unsigned char)GetByte();
 
-    switch (ch)
+    switch (ch & 0x7F)
     {
         case 0:
             ReqConnect();
@@ -1688,6 +1889,9 @@ void TWdSocketServer::NotifyMsg()
 				ReqError();
             break;
     }    
+
+    if (ch & 0x80)
+        FSuppressAnswer = TRUE;
 }
 
 /*##########################################################################
@@ -1717,12 +1921,16 @@ void TWdSocketServer::HandleSocket()
                 FInPtr = FInBuf;
                 FOutPtr = FOutBuf;
                 FOutSize = 0;
+                FSuppressAnswer = FALSE;
 
                 NotifyMsg();
 
-					 FSocket->Write((char *)&FOutSize, 2);
-                FSocket->Write(FOutBuf, FOutSize);
-                FSocket->Push();
+                if (!FSuppressAnswer)
+                {
+    			    FSocket->Write((char *)&FOutSize, 2);
+                    FSocket->Write(FOutBuf, FOutSize);
+                    FSocket->Push();
+                }
             }
 		}
 	}

@@ -81,6 +81,11 @@ TDebugThread::TDebugThread(TCreateThreadEvent *event)
     Cs = event->StartCs;
 
     FDebug = FALSE;
+    FWasTrace = FALSE;
+
+	FHasBreak = FALSE;
+	FHasTrace = FALSE;
+	FHasException = FALSE;
 
     ReadState();
 }
@@ -118,6 +123,54 @@ int TDebugThread::IsDebug()
 
 /*##########################################################################
 #
+#   Name       : TDebugThread::HasBreakOccurred
+#
+#   Purpose....: Check if thread is stopped on breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebugThread::HasBreakOccurred()
+{
+    return FHasBreak;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::HasTraceOccurred
+#
+#   Purpose....: Check if thread is stopped on trace / watchpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebugThread::HasTraceOccurred()
+{
+    return FHasTrace;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::HasFaultOccurred
+#
+#   Purpose....: Check if thread is stopped on fault
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebugThread::HasFaultOccurred()
+{
+    return FHasException;
+}
+
+/*##########################################################################
+#
 #   Name       : TDebugThread::ReadMem
 #
 #   Purpose....: Read memory in thread
@@ -146,6 +199,73 @@ int TDebugThread::ReadMem(int Sel, long Offset, char *Buf, int Size)
 int TDebugThread::WriteMem(int Sel, long Offset, char *Buf, int Size)
 {
     return RdosWriteThreadMem(ThreadID, Sel, Offset, Buf, Size);
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::SetupGo
+#
+#   Purpose....: Setup before run
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebugThread::SetupGo()
+{
+    int update = FALSE;
+   	Tss tss;
+	unsigned char ch = 0;
+
+	FWasTrace = FALSE;
+
+	RdosGetThreadTss(ThreadID, &tss);
+	RdosReadThreadMem(ThreadID, tss.cs, tss.eip, &ch, 1);
+
+	if (ch == 0xCC)
+	{
+		tss.eip++;
+		update = TRUE;
+	}
+
+	if ((tss.eflags & 0x100) != 0)
+	{
+	    tss.eflags &= ~0x100;
+	    Eflags &= ~0x100;
+	    update = TRUE;
+    }
+
+    if (update)
+    	RdosSetThreadTss(ThreadID, &tss);
+
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::SetupTrace
+#
+#   Purpose....: Setup for execution of single instruction
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebugThread::SetupTrace()
+{
+	Tss tss;
+
+	FWasTrace = TRUE;
+
+    RdosGetThreadTss(ThreadID, &tss);
+
+	if ((tss.eflags & 0x100) == 0)
+	{
+		tss.eflags |= 0x100;
+		Eflags |= 0x100;
+		RdosSetThreadTss(ThreadID, &tss);
+	}
 }
 
 /*##########################################################################
@@ -188,10 +308,13 @@ void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList)
 {
     TDebugBreak *b = BreakList;
 
-    while (b)
+	if (!FWasTrace)
     {
-        RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
-        b = b->Next;
+        while (b)
+        {
+            RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
+            b = b->Next;
+        }
     }
 }
 
@@ -208,15 +331,120 @@ void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList)
 ##########################################################################*/
 void TDebugThread::SetException(TExceptionEvent *event)
 {
-	 Tss tss;
-	 int i;
+	Tss tss;
+	int i;
 
-	 Cs = event->Cs;
-	 Eip = event->Eip;
+	FHasBreak = FALSE;
+	FHasTrace = FALSE;
+	FHasException = FALSE;
 
-	 ReadState();
+	switch (event->Code)
+	{
+	    case 0x80000003:
+	        FHasBreak = TRUE;
+	        break;
 
-	 RdosGetThreadTss(ThreadID, &tss);
+	    case 0x80000004:
+	        FHasTrace = TRUE;
+	        break;
+
+	    case 0xC0000005:
+	        FaultText = "Access violation";
+	        FHasException = TRUE;
+	        break;
+
+	    case 0xC0000017:
+	        FaultText = "No memory";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC000001D:
+	        FaultText = "Illegal instruction";
+	        FHasException = TRUE;
+	        break;
+            
+        case 0xC0000025:
+	        FaultText = "Noncontinuable exception";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC000008C:
+	        FaultText = "Array bounds exceeded";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC0000094:
+	        FaultText = "Integer divide by zero";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC0000095:
+	        FaultText = "Integer overflow";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC0000096:
+	        FaultText = "Priviliged instruction";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC00000FD:
+	        FaultText = "Stack overflow";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC000013A:
+	        FaultText = "Control-C exit";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC000008D:
+	        FaultText = "Float denormal operand";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC000008E:
+	        FaultText = "Float divide by zero";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC000008F:
+	        FaultText = "Float inexact result";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC0000090:
+	        FaultText = "Float invalid operation";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC0000091:
+	        FaultText = "Float overflow";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC0000092:
+	        FaultText = "Float stack check";
+	        FHasException = TRUE;
+	        break;
+
+        case 0xC0000093:
+	        FaultText = "Float underflow";
+	        FHasException = TRUE;
+	        break;
+
+	    default:
+	        FaultText = "Protection fault";
+	        FHasException = TRUE;
+	        break;
+	}
+
+	Cs = event->Cs;
+	Eip = event->Eip;
+
+	ReadState();
+
+	RdosGetThreadTss(ThreadID, &tss);
 
     Esp0 = tss.esp0;
     Ess0 = tss.ess0;
@@ -259,6 +487,49 @@ void TDebugThread::SetException(TExceptionEvent *event)
 		  St[i] = tss.st[i];
 
 	 FDebug = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::WriteRegs
+#
+#   Purpose....: Write regs back to TSS
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebugThread::WriteRegs()
+{
+	Tss tss;
+	int i;
+
+	RdosGetThreadTss(ThreadID, &tss);
+
+    tss.eflags = Eflags;
+    tss.eax = Eax;
+    tss.ecx = Ecx;
+    tss.edx = Edx;
+    tss.ebx = Ebx;
+    tss.esp = Esp;
+    tss.ebp = Ebp;
+    tss.esi = Esi;
+    tss.edi = Edi;
+    tss.es = Es;
+    tss.ss = Ss;
+    tss.ds = Ds;
+    tss.fs = Fs;
+    tss.gs = Gs;
+
+	tss.MathControl = MathControl;
+	tss.MathStatus = MathStatus;
+	tss.MathTag = MathTag;
+
+	for (i = 0; i < 8; i++)
+        tss.st[i] = St[i];
+
+	RdosSetThreadTss(ThreadID, &tss);
 }
 
 /*##########################################################################
@@ -437,6 +708,9 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
     CurrentThread = 0;
     BreakList = 0;
 
+    FThreadChanged = FALSE;
+    FModuleChanged = FALSE;
+
     Start("Debug device", 0x4000);
 }
 
@@ -555,6 +829,102 @@ void TDebug::InsertModule(TDebugModule *mod)
         ModuleList = mod;
 
     FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::WaitForLoad
+#
+#   Purpose....: Wait for app to load
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::WaitForLoad(int timeout)
+{
+    UserSignal.WaitTimeout(timeout);
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::HasThreadChange
+#
+#   Purpose....: Check for thread change event
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::HasThreadChange()
+{
+    return FThreadChanged;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::ClearThreadChange
+#
+#   Purpose....: Clear thread change event
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::ClearThreadChange()
+{
+    FThreadChanged = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::HasModuleChange
+#
+#   Purpose....: Check for module change event
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::HasModuleChange()
+{
+    return FModuleChanged;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::ClearModuleChange
+#
+#   Purpose....: Clear module change event
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::ClearModuleChange()
+{
+    FModuleChanged = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::IsTerminated
+#
+#   Purpose....: Check for termination
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::IsTerminated()
+{
+    return !FInstalled;
 }
 
 /*##########################################################################
@@ -865,6 +1235,55 @@ void TDebug::ClearBreak(int Sel, long Offset)
 
 /*##########################################################################
 #
+#   Name       : TDebug::Go
+#
+#   Purpose....: Continue active thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::Go()
+{
+	if (CurrentThread)
+	{
+		UserSignal.Clear();
+
+		CurrentThread->SetupGo();
+		CurrentThread->ActivateBreaks(BreakList);
+		RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+
+		UserSignal.WaitForever();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::Trace
+#
+#   Purpose....: Trace active thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::Trace()
+{
+	if (CurrentThread)
+	{
+		UserSignal.Clear();
+
+        CurrentThread->SetupTrace();
+		RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+
+		UserSignal.WaitForever();
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::HandleCreateProcess
 #
 #   Purpose....: Handle create process event
@@ -983,18 +1402,19 @@ void TDebug::HandleLoadDll(TLoadDllEvent *event)
 ##########################################################################*/
 void TDebug::SignalNewData()
 {
-	 short int thread;
+	short int thread;
     char debtype;
     TCreateProcessEvent cpe;
     TCreateThreadEvent cte;
     TLoadDllEvent lde;
     TExceptionEvent ee;
     int ExitCode;
+    TDebugThread *newt;
 
-	 debtype = RdosGetDebugEvent(FHandle, &thread);
+	debtype = RdosGetDebugEvent(FHandle, &thread);
 
-	 switch (debtype)
-	 {
+	switch (debtype)
+	{
 		case EVENT_EXCEPTION:
 			RdosGetDebugEventData(FHandle, &ee);
 			HandleException(&ee, thread);
@@ -1003,6 +1423,7 @@ void TDebug::SignalNewData()
 		case EVENT_CREATE_THREAD:
 			RdosGetDebugEventData(FHandle, &cte);
 			HandleCreateThread(&cte);
+			FThreadChanged = TRUE;
 			break;
 
 		case EVENT_CREATE_PROCESS:
@@ -1012,24 +1433,47 @@ void TDebug::SignalNewData()
 
 		case EVENT_TERMINATE_THREAD:
 			HandleTerminateThread(thread);
+			FThreadChanged = TRUE;
 			break;
 
 		case EVENT_TERMINATE_PROCESS:
 			RdosGetDebugEventData(FHandle, &ExitCode);
 			HandleTerminateProcess(ExitCode);
 			FInstalled = FALSE;
+			UserSignal.Signal();
 			break;
 
 		case EVENT_LOAD_DLL:
 			RdosGetDebugEventData(FHandle, &lde);
 			HandleLoadDll(&lde);
+			FModuleChanged = TRUE;
 			break;
-	 }
+	}
 
-	 RdosClearDebugEvent(FHandle);
+	RdosClearDebugEvent(FHandle);
 
-	 if (debtype != EVENT_EXCEPTION)
-		  RdosContinueDebugEvent(FHandle, thread);
+	if (debtype == EVENT_EXCEPTION)
+	{
+		if (CurrentThread)
+		{
+			CurrentThread->DeactivateBreaks(BreakList);
+
+			if (thread != CurrentThread->ThreadID)
+			{
+				newt = LockThread(thread);
+				if (newt)
+				{
+					CurrentThread = newt;
+					FThreadChanged = TRUE;
+				}
+				UnlockThread();
+			}
+		}
+
+		UserSignal.Signal();
+	}
+	else
+		RdosContinueDebugEvent(FHandle, thread);
 }
 
 /*##########################################################################
