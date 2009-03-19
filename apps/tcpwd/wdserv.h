@@ -53,6 +53,7 @@ protected:
     long GetDword();
     void GetString(char *str, int maxsize);
     void GetData(void *ptr, int size);
+    void *GetData(int *size);
 
     void PutByte(char val);
     void PutWord(short int val);

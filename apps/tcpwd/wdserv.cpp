@@ -435,6 +435,28 @@ void TWdSocketServer::GetData(void *data, int size)
 
 /*##########################################################################
 #
+#   Name       : TWdSocketServer::GetData
+#
+#   Purpose....: Read data from input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void *TWdSocketServer::GetData(int *size)
+{
+    int len = FInPtr - FInBuf;
+    void *ptr;
+
+    *size = FInSize - len;
+    ptr = FInPtr;
+    FInPtr += *size;
+    return ptr;    
+}
+
+/*##########################################################################
+#
 #   Name       : TWdSocketServer::PutByte
 #
 #   Purpose....: Write byte to output
@@ -900,8 +922,6 @@ void TWdSocketServer::ReqGetSysConfig()
 ##########################################################################*/
 void TWdSocketServer::ReqMapAddr()
 {
-    _asm int 3
-
     long Offset = GetDword();
     int Sel = GetWord();
     int Handle = GetDword();
@@ -927,8 +947,8 @@ void TWdSocketServer::ReqMapAddr()
                 }
 
 
-                PutDword(mod->ImageBase);
-                PutDword(mod->ImageBase + mod->ImageSize - 1);
+                PutDword(0);
+                PutDword(mod->ImageSize - 1);
             }
         }
         FDebug->UnlockModule();
@@ -1014,7 +1034,26 @@ void TWdSocketServer::ReqReadMem()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteMem()
 {
-    _asm int 3
+    int Size;
+	char *Data;
+	long Offset;
+	short int Sel;
+
+	Offset = GetDword();
+	Sel = GetWord();
+	Data = (char *)GetData(&Size);
+
+    if (Size > 0)
+    {
+    	if (FCurrentThread)
+	    	Size = FCurrentThread->WriteMem(Sel, Offset, Data, Size);
+	    else
+	        Size = 0;
+    }
+    else
+        Size = 0;
+
+    PutWord((short int)Size);
 }
 
 /*##########################################################################
