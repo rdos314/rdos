@@ -963,13 +963,24 @@ NetInt  Endp
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Preview	Proc far
+Preview1:
     push ds
     push fs
     push ebx
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
+	jmp preview_common
+	
+Preview2:
+    push ds
+    push fs
+    push ebx
+;
+	mov ax,ether_data2_sel
+	mov ds,ax
+
+preview_common:
     mov fs,ds:RxRingSel
 
 preview_loop:
@@ -1016,8 +1027,7 @@ preview_done:
     pop ebx
     pop fs
     pop ds
-	ret
-Preview	Endp
+	retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1031,7 +1041,7 @@ Preview	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Receive	Proc far
+Receive1:
     push ds
     push fs
     push bx
@@ -1039,6 +1049,18 @@ Receive	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
+	jmp receive_do
+
+Receive2:
+    push ds
+    push fs
+    push bx
+    push edx
+;
+	mov ax,ether_data2_sel
+	mov ds,ax
+    
+receive_do:
 	mov fs,ds:RxRingSel
     mov edx,ds:RxRingCurrPtr
     mov cx,fs:[edx].rfd_actual_size
@@ -1055,8 +1077,7 @@ Receive	Proc far
     pop bx
 	pop fs
 	pop ds
-	ret
-Receive	Endp
+	retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1067,20 +1088,29 @@ Receive	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Remove	Proc far
+Remove1:
     push ds
     push ebx
 ;
 	mov bx,ether_data_sel
 	mov ds,bx
+	jmp remove_do
+
+Remove2:
+    push ds
+    push ebx
+;
+	mov bx,ether_data2_sel
+	mov ds,bx
+
+remove_do:
     mov ebx,ds:RxRingCurrPtr
     mov ds,ds:RxRingSel
     and ds:[ebx].rfd_status, NOT ST_OK
 ;
     pop ebx
     pop ds
-	ret
-Remove	Endp
+	retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1126,7 +1156,8 @@ GetBuffer	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Send	Proc far
+Send1:
+	push ds
 	push eax
 	push bx
 	push ecx
@@ -1144,6 +1175,29 @@ Send	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
+	jmp send_do
+
+Send2:
+	push ds
+	push eax
+	push bx
+	push ecx
+	push dx
+	push esi
+	push edi
+;
+	xor di,di
+	mov ax,ds:[esi]
+	stosw
+	mov ax,[esi+2]
+	stosw
+	mov ax,[esi+4]
+	stosw
+;
+	mov ax,ether_data2_sel
+	mov ds,ax
+
+send_do:	
     call PurgeTx
 ;    
 	mov ax,word ptr ds:EthernetAddress
@@ -1249,8 +1303,8 @@ send_leave:
 	pop ecx
 	pop bx
 	pop eax
-    ret
-Send    Endp
+	pop ds
+    retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1263,12 +1317,19 @@ Send    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetAddress	Proc far
+GetAddress1  Proc far
 	mov si,ether_data_sel
 	mov ds,si
 	mov esi,OFFSET EthernetAddress	
 	ret
-GetAddress	Endp
+GetAddress1	Endp
+
+GetAddress2  Proc far
+	mov si,ether_data2_sel
+	mov ds,si
+	mov esi,OFFSET EthernetAddress	
+	ret
+GetAddress2	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1301,13 +1362,22 @@ GetPktAddress	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DispTable:
-	DW OFFSET Preview,	 		ether_code_sel
-	DW OFFSET Receive,			ether_code_sel
-	DW OFFSET Remove,			ether_code_sel
+DispTable1:
+	DW OFFSET Preview1,	 		ether_code_sel
+	DW OFFSET Receive1,			ether_code_sel
+	DW OFFSET Remove1,			ether_code_sel
 	DW OFFSET GetBuffer,		ether_code_sel
-	DW OFFSET Send,				ether_code_sel
-	DW OFFSET GetAddress,		ether_code_sel
+	DW OFFSET Send1,			ether_code_sel
+	DW OFFSET GetAddress1,		ether_code_sel
+	DW OFFSET GetPktAddress,	ether_code_sel
+
+DispTable2:
+	DW OFFSET Preview2,	 		ether_code_sel
+	DW OFFSET Receive2,			ether_code_sel
+	DW OFFSET Remove2,			ether_code_sel
+	DW OFFSET GetBuffer,		ether_code_sel
+	DW OFFSET Send2,			ether_code_sel
+	DW OFFSET GetAddress2,		ether_code_sel
 	DW OFFSET GetPktAddress,	ether_code_sel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1323,34 +1393,38 @@ DispTable:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName	DB '8255x',0
+DriverName1	DB '8255x-1',0
+DriverName2	DB '8255x-2',0
 
 PciVendorTab:
 pci00	DW 8086h, 1029h
 pci01	DW 8086h, 1030h
-; pci02	DW 8086h, 103Ah
+pci02	DW 8086h, 103Ah
 pci03	DW 8086h, 1059h
 pci04	DW 8086h, 1209h
 pci05	DW 8086h, 1229h
 pci06 	DW 0,	  0
 
-InitPciAdapter	Proc near
+InitPrimaryPciAdapter	Proc near
+	mov ax,ether_data_sel
+	mov ds,ax
 	mov si,OFFSET PciVendorTab
-init_pci_loop:
+init_pci1_loop:
 	xor ax,ax
 	mov dx,cs:[si]
 	mov cx,cs:[si+2]
 	or dx,dx
 	stc
-	jz init_pci_done
+	jz init_pci1_done
 ;
 	FindPciDevice
-	jnc init_pci_found
+	jnc init_pci1_found
 ;
 	add si,4
-	jmp init_pci_loop
+	jmp init_pci1_loop
 
-init_pci_found:
+init_pci1_found:
+    mov bp,bx
 	mov cx,PCI_revisionID
 	ReadPciByte
 	mov ds:RevID,al
@@ -1376,7 +1450,7 @@ init_pci_found:
     call Reset
 ;    
     call GetEeSize
-    jc init_pci_done
+    jc init_pci1_done
 ;        
     GetThread
     mov ds:WaitThread,ax
@@ -1402,8 +1476,8 @@ init_pci_found:
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-	mov si,OFFSET DispTable
-	mov di,OFFSET DriverName
+	mov si,OFFSET DispTable1
+	mov di,OFFSET DriverName1
 	mov al,1
 	mov dx,0
 	mov ecx,1600
@@ -1414,15 +1488,122 @@ init_pci_found:
     mov al,ds:IntStat
     test al,ACK_FRAME_RX
     clc
-    jz init_pci_done
+    jz init_pci1_done
 ;
 	mov bx,ds:Handle
 	NetReceived
+;	
+    mov bx,bp	
     clc
 
-init_pci_done:
+init_pci1_done:
 	ret
-InitPciAdapter	Endp
+InitPrimaryPciAdapter	Endp
+
+InitSecondaryPciAdapter	Proc near
+    mov bp,bx
+	mov ax,ether_data2_sel
+	mov ds,ax
+	mov si,OFFSET PciVendorTab
+init_pci2_loop:
+    xor ax,ax
+
+init_pci2_retry:
+	mov dx,cs:[si]
+	mov cx,cs:[si+2]
+	or dx,dx
+	stc
+	jz init_pci2_done
+;
+	FindPciDevice
+	jc init_pci2_next
+;
+    cmp bx,bp
+    jne init_pci2_found	
+;
+    inc ax
+    jmp init_pci2_retry
+
+init_pci2_next:
+	add si,4
+	jmp init_pci2_loop
+
+init_pci2_found:
+    mov bp,bx
+	mov cx,PCI_revisionID
+	ReadPciByte
+	mov ds:RevID,al
+;	
+	mov cx,10h
+	ReadPciDword
+	mov edx,eax
+	and dx,0FFE0h
+	mov ds:MemBase,edx
+;	
+	mov cx,14h
+	ReadPciDword
+	mov dx,ax
+	and dx,0FFE0h
+	mov ds:IoBase,dx
+;	
+	mov cx,18h
+	ReadPciDword
+	mov edx,eax
+	and dx,0FFE0h
+	mov ds:FlashBase,edx
+;
+    call Reset
+;    
+    call GetEeSize
+    jc init_pci2_done
+;        
+    GetThread
+    mov ds:WaitThread,ax
+    mov ds:IntStat,0
+;    
+	xor ch,ch
+	mov cl,PCI_interrupt_line
+	ReadPciByte
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET NetInt	
+	RequestPrivateIrqHandler
+;
+    call ReadEthernetAddress
+    call InitCmd
+    call Config
+    call SetupEthernetAddress
+    call InitRx
+    mov ds:WaitThread,0
+    call InitTx
+;
+	push ds
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET DispTable2
+	mov di,OFFSET DriverName2
+	mov al,1
+	mov dx,0
+	mov ecx,1600
+	RegisterNetDriver
+	pop ds
+	mov ds:Handle,bx
+;	
+    mov al,ds:IntStat
+    test al,ACK_FRAME_RX
+    clc
+    jz init_pci2_done
+;
+	mov bx,ds:Handle
+	NetReceived
+;	
+    mov bx,bp	
+    clc
+
+init_pci2_done:
+	ret
+InitSecondaryPciAdapter	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1440,9 +1621,13 @@ InitPciAdapter	Endp
 detect_name	DB '8255x',0
 
 detect_thread	proc far
-    mov ax,ether_data_sel
-	mov ds,ax
-	call InitPciAdapter
+    int 3
+	call InitPrimaryPciAdapter
+	jc dt_done
+;	
+	call InitSecondaryPciAdapter
+
+dt_done:
 	ret
 detect_thread	endp
 	
@@ -1493,6 +1678,17 @@ Init	Proc far
 ;
 	mov eax,SIZE data
 	mov bx,ether_data_sel
+	AllocateFixedSystemMem
+	mov ds,bx
+	mov es,bx
+	mov cx,ax
+	xor di,di
+	xor al,al
+	rep stosb
+	InitSection ds:TxSection
+;
+	mov eax,SIZE data
+	mov bx,ether_data2_sel
 	AllocateFixedSystemMem
 	mov ds,bx
 	mov es,bx
