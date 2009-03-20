@@ -1157,7 +1157,6 @@ GetBuffer	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Send1:
-	push ds
 	push eax
 	push bx
 	push ecx
@@ -1178,7 +1177,6 @@ Send1:
 	jmp send_do
 
 Send2:
-	push ds
 	push eax
 	push bx
 	push ecx
@@ -1303,7 +1301,6 @@ send_leave:
 	pop ecx
 	pop bx
 	pop eax
-	pop ds
     retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
