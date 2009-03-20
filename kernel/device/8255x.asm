@@ -1351,7 +1351,6 @@ init_pci_loop:
 	jmp init_pci_loop
 
 init_pci_found:
-    int 3
 	mov cx,PCI_revisionID
 	ReadPciByte
 	mov ds:RevID,al
