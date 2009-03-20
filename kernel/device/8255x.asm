@@ -404,7 +404,7 @@ ReadEe	Proc near
 	mov dx,ds:IoBase
 	add dx,EeControl
 ;
-	mov al,EECS
+	mov al,EECS OR EESK
 	out dx,al
     call EeDelay
 ;
@@ -414,18 +414,17 @@ ReadEe	Proc near
 	mov si,4
 
 reCodeLoop:
-    and al,NOT EEDI
+    mov al,EECS
     test si,bx
     jz reCodeWrite
 ;
     or al,EEDI
 
 reCodeWrite:
-    or al,EESK
     out dx,al
     call EeDelay
 ;
-    and al,NOT EESK
+    or al,EESK
     out dx,al
     call EeDelay    
 ;
@@ -439,18 +438,17 @@ reCodeWrite:
     shr si,1
     
 reAddressLoop:
-    and al,NOT EEDI
+    mov al,EECS
     test si,bx
     jz reAddressWrite
 ;
     or al,EEDI
 
 reAddressWrite:
-    or al,EESK
     out dx,al
     call EeDelay
 ;         
-    and al,NOT EESK
+    or al,EESK
     out dx,al
     call EeDelay
 ;
@@ -462,7 +460,11 @@ reAddressWrite:
 
 reDataLoop:
     shl si,1
-    mov al,EECS OR EESK
+    mov al,EECS
+    out dx,al
+    call EeDelay
+;
+    or al,EESK
     out dx,al
     call EeDelay
 ;    
@@ -473,9 +475,6 @@ reDataLoop:
     or si,1
 
 reDataNext:
-    mov al,EECS
-    out dx,al
-    call EeDelay
 ;
     loop reDataLoop
 ;
