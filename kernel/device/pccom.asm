@@ -1173,7 +1173,9 @@ DriverName	DB 'SerialPCI',0
 
 PciVendorTab:
 pci00	DW 1409h, 7168h
-pci01 	DW 0,	  0
+pci01	DW 13FEh, 1600h
+pci02	DW 13FEh, 16FFh
+pci03 	DW 0,	  0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab

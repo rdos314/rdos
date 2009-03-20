@@ -1299,10 +1299,11 @@ DriverName	DB '8255x',0
 PciVendorTab:
 pci00	DW 8086h, 1029h
 pci01	DW 8086h, 1030h
-pci02	DW 8086h, 1059h
-pci03	DW 8086h, 1209h
-pci04	DW 8086h, 1229h
-pci05 	DW 0,	  0
+pci02	DW 8086h, 103Ah
+pci03	DW 8086h, 1059h
+pci04	DW 8086h, 1209h
+pci05	DW 8086h, 1229h
+pci06 	DW 0,	  0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab
