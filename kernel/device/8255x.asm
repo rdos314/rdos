@@ -309,7 +309,7 @@ GetEeSize	Proc near
 	mov dx,ds:IoBase
 	add dx,EeControl
 ;
-	mov al,EECS
+	mov al,EECS OR EESK
 	out dx,al
     call EeDelay
 ;
@@ -318,18 +318,17 @@ GetEeSize	Proc near
 	mov si,4
 
 gesCodeLoop:
-    and al,NOT EEDI
+    mov al,EECS
     test si,bx
     jz gesCodeWrite
 ;
     or al,EEDI
 
 gesCodeWrite:
-    or al,EESK
     out dx,al
     call EeDelay
 ;
-    and al,NOT EESK
+    or al,EESK
     out dx,al
     call EeDelay    
 ;
@@ -340,11 +339,11 @@ gesCodeWrite:
     mov ds:EeAdrLen,0
     
 gesAddressLoop:
-    mov al,EECS OR EESK
+    mov al,EECS
     out dx,al
     call EeDelay
 ;         
-    mov al,EECS
+    or al,EESK
     out dx,al
     call EeDelay
 ;
@@ -361,15 +360,15 @@ gesAddressDone:
     mov cx,16
 
 gesDataLoop:
-    mov al,EECS OR EESK
+    mov al,EECS
+    out dx,al
+    call EeDelay
+;
+    or al,EESK
     out dx,al
     call EeDelay
 ;    
     in al,dx
-;
-    mov al,EECS
-    out dx,al
-    call EeDelay
 ;
     loop gesDataLoop
 ;
