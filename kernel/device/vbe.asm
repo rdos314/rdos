@@ -1670,6 +1670,7 @@ ChksumPmLoop:
 	mov sp,1024
 	push ebp
 ;
+    pushf
 	push cs
 	push OFFSET SetupPmInitRet
 	push es

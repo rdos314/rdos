@@ -249,6 +249,37 @@ code	SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			Reset
+;
+;		DESCRIPTION:    Reset controller
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Reset	Proc near
+	pusha
+;
+	mov dx,ds:IoBase
+	add dx,Port
+;	
+	mov eax,2
+	out dx,eax
+;
+    mov ax,20
+    WaitMicroSec
+;	
+	mov eax,0
+	out dx,eax
+;
+    mov ax,20
+    WaitMicroSec
+;
+    popa	
+    ret
+Reset   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			EeDelay
 ;
 ;		DESCRIPTION:    Delay for EE
@@ -1299,7 +1330,7 @@ DriverName	DB '8255x',0
 PciVendorTab:
 pci00	DW 8086h, 1029h
 pci01	DW 8086h, 1030h
-pci02	DW 8086h, 103Ah
+; pci02	DW 8086h, 103Ah
 pci03	DW 8086h, 1059h
 pci04	DW 8086h, 1209h
 pci05	DW 8086h, 1229h
@@ -1322,13 +1353,14 @@ init_pci_loop:
 	jmp init_pci_loop
 
 init_pci_found:
+    int 3
 	mov cx,PCI_revisionID
 	ReadPciByte
 	mov ds:RevID,al
 ;	
 	mov cx,10h
 	ReadPciDword
-	mov dx,ax
+	mov edx,eax
 	and dx,0FFE0h
 	mov ds:MemBase,edx
 ;	
@@ -1340,10 +1372,12 @@ init_pci_found:
 ;	
 	mov cx,18h
 	ReadPciDword
-	mov dx,ax
+	mov edx,eax
 	and dx,0FFE0h
 	mov ds:FlashBase,edx
 ;
+    call Reset
+;    
     call GetEeSize
     jc init_pci_done
 ;        
