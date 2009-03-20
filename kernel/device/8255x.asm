@@ -1070,6 +1070,7 @@ receive_do:
     add edx,ds:RxRingLinear
     CreateAliasSelector16
     mov es,bx
+    NotifyEthernetPacket
 	mov edi,14
 	sub ecx,14
 ;
@@ -1210,6 +1211,8 @@ send_do:
 	stosw
 	add ecx,14
 ;
+    xor edi,edi
+    NotifyEthernetPacket
     mov bx,es
 	push ecx
 	GetSelectorBaseSize

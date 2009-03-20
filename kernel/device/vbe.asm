@@ -1670,7 +1670,7 @@ ChksumPmLoop:
 	mov sp,1024
 	push ebp
 ;
-    pushf
+    stc
 	push cs
 	push OFFSET SetupPmInitRet
 	push es
@@ -1680,16 +1680,20 @@ ChksumPmLoop:
 SetupPmInitRet:
 	pop ebp
 	mov ax,bp
+	pushf
 	shr ebp,16
-	mov ss,ax
-	mov sp,bp
-	jmp SetupPmDone
-
+	popf
+	mov ss,bp
+	mov sp,ax
+	jnc SetupPmDone
+	jmp SetupVm
+    	
 ScanPmNext:
 	inc si
 	sub cx,1
 	jnz ScanPmLoop
-;
+
+SetupVm:
 	FreeMem
 	mov ax,pc_video_data_sel
 	mov ds,ax
