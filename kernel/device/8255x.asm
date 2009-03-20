@@ -1521,6 +1521,9 @@ init_pci2_retry:
     cmp bx,bp
     jne init_pci2_found	
 ;
+    or ax,ax
+    jnz init_pci2_next
+; 
     inc ax
     jmp init_pci2_retry
 
@@ -1621,7 +1624,6 @@ InitSecondaryPciAdapter	Endp
 detect_name	DB '8255x',0
 
 detect_thread	proc far
-    int 3
 	call InitPrimaryPciAdapter
 	jc dt_done
 ;	
