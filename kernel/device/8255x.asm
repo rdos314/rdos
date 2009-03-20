@@ -1487,12 +1487,12 @@ init_pci1_found:
 ;	
     mov al,ds:IntStat
     test al,ACK_FRAME_RX
-    clc
-    jz init_pci1_done
+    jz init_pci1_ok
 ;
 	mov bx,ds:Handle
 	NetReceived
-;	
+
+init_pci1_ok:
     mov bx,bp	
     clc
 
@@ -1592,12 +1592,12 @@ init_pci2_found:
 ;	
     mov al,ds:IntStat
     test al,ACK_FRAME_RX
-    clc
-    jz init_pci2_done
+    jz init_pci2_ok
 ;
 	mov bx,ds:Handle
 	NetReceived
-;	
+
+init_pci2_ok:
     mov bx,bp	
     clc
 
