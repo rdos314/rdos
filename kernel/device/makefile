@@ -65,6 +65,10 @@ egalax_srcs = EGALAX.ASM
 egalax_objs = $(egalax_srcs:.ASM=.OBJ)
 egalax_rdvs = EGALAX.RDV
 
+penmount_srcs = PENMOUNT.ASM
+penmount_objs = $(penmount_srcs:.ASM=.OBJ)
+penmount_rdvs = PENMOUNT.RDV
+
 cs5536a_srcs = CS5536A.ASM
 cs5536a_objs = $(cs5536a_srcs:.ASM=.OBJ)
 cs5536a_rdvs = CS5536A.RDV
@@ -137,8 +141,9 @@ srcs =      $(ide_srcs) $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
-			$(ts2003_srcs) $(egalax_srcs) $(uhci_srcs) $(usbcom_srcs) \
-			$(ohci_srcs) $(cs5536a_srcs) $(via82a_srcs) $(cs5536wd_srcs)
+			$(ts2003_srcs) $(egalax_srcs) $(penmount_srcs) \ 
+			$(uhci_srcs) $(usbcom_srcs) $(ohci_srcs) \
+			$(cs5536a_srcs) $(via82a_srcs) $(cs5536wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -146,8 +151,9 @@ rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
-			$(ts2003_rdvs) $(egalax_rdvs) $(uhci_rdvs) $(usbcom_rdvs) \
-			$(ohci_rdvs) $(cs5536a_rdvs) $(via82a_rdvs) $(cs5536wd_rdvs)
+			$(ts2003_rdvs) $(egalax_rdvs) $(penmount_rdvs) \
+			$(uhci_rdvs) $(usbcom_rdvs) $(ohci_rdvs) \
+			$(cs5536a_rdvs) $(via82a_rdvs) $(cs5536wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -222,6 +228,14 @@ EGALAX.RDV : $(egalax_objs)
 	$(egalax_objs)
 	EGALAX.RDV
 	EGALAX;       
+!
+
+PENMOUNT.RDV : $(penmount_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(penmount_objs)
+	PENMOUNT.RDV
+	PENMOUNT;       
 !
 
 CS5536A.RDV : $(cs5536a_objs)
