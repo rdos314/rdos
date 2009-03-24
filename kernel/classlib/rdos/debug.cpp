@@ -232,7 +232,6 @@ void TDebugThread::SetupGo()
 	if ((tss.eflags & 0x100) != 0)
 	{
 	    tss.eflags &= ~0x100;
-	    Eflags &= ~0x100;
 	    update = TRUE;
     }
 
@@ -254,18 +253,30 @@ void TDebugThread::SetupGo()
 ##########################################################################*/
 void TDebugThread::SetupTrace()
 {
+    int update = FALSE;
 	Tss tss;
+	unsigned char ch = 0;
 
 	FWasTrace = TRUE;
 
     RdosGetThreadTss(ThreadID, &tss);
 
+	RdosReadThreadMem(ThreadID, tss.cs, tss.eip, &ch, 1);
+
+	if (ch == 0xCC)
+	{
+		tss.eip++;
+		update = TRUE;
+	}
+
 	if ((tss.eflags & 0x100) == 0)
 	{
 		tss.eflags |= 0x100;
-		Eflags |= 0x100;
-		RdosSetThreadTss(ThreadID, &tss);
+		update = TRUE;
 	}
+
+    if (update)
+		RdosSetThreadTss(ThreadID, &tss);
 }
 
 /*##########################################################################
@@ -1180,6 +1191,7 @@ void TDebug::AddBreak(int Sel, long Offset)
 {
     TDebugBreak *newbr = new TDebugBreak(Sel, Offset);
     TDebugBreak *b;
+    int found = FALSE;
     
     FSection.Enter();
 
@@ -1189,9 +1201,14 @@ void TDebug::AddBreak(int Sel, long Offset)
     if (b)
     {
         while (b->Next)
+        {
+            if (b->Sel == Sel && b->Offset == Offset)
+                found = TRUE;
             b = b->Next;
+        }
 
-        b->Next = newbr;            
+        if (!found)
+            b->Next = newbr;            
     }
     else
         BreakList = newbr;

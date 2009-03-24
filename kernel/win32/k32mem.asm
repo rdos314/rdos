@@ -76,6 +76,19 @@ MEM_PRIVATE = 20000h
 MEM_MAPPED = 40000h
 MEM_TOP_DOWN = 100000h
 
+
+mib_struc   STRUC
+
+mib_base        DD ?
+mib_alloc_base  DD ?
+mib_alloc_prot  DD ?
+mib_reg_size    DD ?
+mib_state       DD ?
+mib_prot        DD ?
+mib_type        DD ?
+
+mib_struc   ENDS
+
 .code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -221,8 +234,36 @@ VirtualQuery	Proc
 	push ebp
 	mov ebp,esp
 ;
-	xor eax,eax
+	mov eax,[ebp].VirtualQuery_lpAddress
+    cmp eax,fs:pvStackUserBottom
+    jb vqFail
 ;
+    cmp eax,fs:pvStackUserTop
+    ja vqFail
+;
+    mov eax,[ebp].VirtualQuery_lpBuffer
+;
+    mov edx,fs:pvStackUserBottom
+    mov [eax].mib_base,edx
+    sub edx,12000h      ; dirty Watcom fix
+    mov [eax].mib_alloc_base,edx
+;
+    mov edx,fs:pvStackUserTop
+    sub edx,fs:pvStackUserBottom
+    mov [eax].mib_reg_size,edx    
+;
+    mov [eax].mib_alloc_prot,0
+    mov [eax].mib_state,1000h
+    mov [eax].mib_prot,0
+    mov [eax].mib_type,1000000h
+;
+    mov eax,1
+    jmp vqDone
+
+vqFail:       
+	xor eax,eax
+
+vqDone:
 	pop ebp
 	ret 12
 VirtualQuery	Endp

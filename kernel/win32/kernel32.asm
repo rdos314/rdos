@@ -351,7 +351,6 @@ GetCommandLineA Proc near
 GetCommandLineA Endp
 
 GetCommandLineW Proc near
-	int 3
 	push edi
 	UserGate get_cmd_line_nr
 	mov eax,edi

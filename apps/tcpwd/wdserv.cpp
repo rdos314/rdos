@@ -904,7 +904,7 @@ void TWdSocketServer::ReqGetSysConfig()
 	 PutByte(0xF);
 	 PutByte((char)major);
 	 PutByte((char)minor);
-	 PutByte(10);
+	 PutByte(0);
 	 PutByte(3);
 	 PutWord(1);
 }

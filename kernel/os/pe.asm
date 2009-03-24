@@ -2425,7 +2425,18 @@ InitStack	Proc near
 	pop es
 
 init_stack_no_tls:
-	sub edx,14h
+    mov eax,-1
+    sub edx,4
+    mov [edx],eax
+    sub edx,4
+    mov [edx],eax
+    sub edx,4
+    mov [edx],eax
+    sub edx,4
+    mov [edx],eax
+    sub edx,4
+    mov [edx],eax
+;
 	xor eax,eax
 	mov fs:pvStackUserTop,edx
 	mov [edx],eax						; reserved
@@ -2439,6 +2450,7 @@ init_stack_no_tls:
 	xor eax,eax
 	mov [edx],eax						; return address
 	sub edx,4
+	mov [edx],edx
 	mov [bp].load_esp,edx
 ;
 	pop esi
