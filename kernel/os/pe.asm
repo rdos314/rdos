@@ -3039,60 +3039,7 @@ close_proc	Proc far
 	jz free_process_no_debug
 ;
 	call TerminateProcessEvent
-	GetThread
-	push es
-	mov es,ax
-	mov ax,es:p_id
-	pop es
-	mov es:event_thread_id,ax
-;
-	mov ax,ds:lib_debug_lib
-	or ax,ax
-	jz free_process_no_debug
-;
-	mov ds,ax
-	EnterSection ds:lib_section
-;
-	mov ax,ds:lib_events
-	or ax,ax
-	je free_process_empty
-;
-	push ds
-	push si
-	mov ds,ax
-	mov si,ds:event_prev
-	mov ds:event_prev,es
-	mov ds,si
-	mov ds:event_next,es
-	mov es:event_next,ax
-	mov es:event_prev,si
-	pop si
-	pop ds
-	jmp free_process_inserted
-
-free_process_empty:
-	mov es:event_next,es
-	mov es:event_prev,es
-
-free_process_inserted:
-	mov ds:lib_events,es
-	xor ax,ax
-	mov es,ax
-	LeaveSection ds:lib_section
-;
-    push es
-    mov ax,ds:lib_debug_obj
-    or ax,ax
-    jz cpSignalDone
-;
-    mov es,ax    
-	SignalWait
-
-cpSignalDone:
-	pop es
-
-	mov ax,1000
-	WaitMilliSec
+	call SendEvent
 
 free_process_no_debug:
 	ret
@@ -3358,7 +3305,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 continue_debug_event Proc far
-	push ds
 	push es
 	push bx
 	push cx
@@ -3401,12 +3347,14 @@ continue_debug_signal:
 	Signal
 
 continue_debug_done:
+    xor ax,ax
+    mov ds,ax
+;    
 	pop si
 	pop dx
 	pop cx
 	pop bx
 	pop es
-	pop ds
 	ret
 continue_debug_event Endp
 

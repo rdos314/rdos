@@ -1301,14 +1301,33 @@ void TDebug::Go()
 ##########################################################################*/
 void TDebug::Trace()
 {
+    char Instr[2] = {0, 0};
+    int Sel;
+    long Offset;
+
 	if (CurrentThread)
 	{
-		UserSignal.Clear();
+	    Sel = CurrentThread->Cs;
+	    Offset = CurrentThread->Eip;
+	    
+        CurrentThread->ReadMem(Sel, Offset, Instr, 2);
 
-        CurrentThread->SetupTrace();
-		RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+        if (Instr[0] == 0xF && Instr[1] == 0xB)
+        {
+            Offset += 7;
+            AddBreak(Sel, Offset);
+            Go();
+            ClearBreak(Sel, Offset);
+        }
+        else
+        {
+    		UserSignal.Clear();
+    
+            CurrentThread->SetupTrace();
+		    RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
 
-		UserSignal.WaitForever();
+    		UserSignal.WaitForever();
+        }
     }
 }
 
@@ -1342,6 +1361,30 @@ void TDebug::HandleCreateProcess(TCreateProcessEvent *event)
 ##########################################################################*/
 void TDebug::HandleTerminateProcess(int exitcode)
 {
+    TDebugThread *t;
+    TDebugModule *m;
+
+    FSection.Enter();
+
+    while (ThreadList)
+    {
+        t = ThreadList->Next;
+        delete ThreadList;
+        ThreadList = t;
+    }
+
+    while (ModuleList)    
+    {
+        m = ModuleList->Next;
+        delete ModuleList;
+        ModuleList = m;
+    }
+
+    CurrentThread = 0;
+    FThreadChanged = TRUE;
+    FModuleChanged = TRUE;
+
+    FSection.Leave();
 }
 
 /*##########################################################################

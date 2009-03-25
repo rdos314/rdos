@@ -508,7 +508,7 @@ wfdeRetry:
     movzx ebx,bl
     or ebx,ebx
     jz wfdeRemove
-;
+;    
     cmp ebx,6
     jbe wfdeHandle
 
@@ -543,11 +543,18 @@ wfdeHandle:
    	mov edi,[ebp].wfdeEvent	
 	call cs:dword ptr [4 * ebx].EventTable
 ;
+    cmp ebx,3
+    jne wfdeNotTermProcess
+;
+    mov bx,DebugHandle
+	UserGate continue_debug_event_nr
+ 
+wfdeNotTermProcess:
     mov edx,esi
     UserGate free_app_mem_nr
 ;
     UserGate get_focus_nr
-    UserGate set_focus_nr
+    UserGate set_focus_nr    
 ;        
 	mov eax,1
 ;

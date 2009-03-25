@@ -6,7 +6,16 @@
 extern "C" {
 #endif
 
-//#undef WIN32
+#ifdef __WATCOMC__
+
+#include "user.h"
+#define RDOSAPI
+
+#else
+
+#define RDOSAPI __stdcall
+
+#endif
 
 #define FILE_ATTRIBUTE_READONLY         0x1
 #define FILE_ATTRIBUTE_HIDDEN           0x2
@@ -35,13 +44,13 @@ extern "C" {
 
 typedef struct ThreadState
 {
-	 short int ID;
-	 char Name[32];
-	 unsigned long MsbTime;
-	 unsigned long LsbTime;
-	 char List[32];
-	 long Offset;
-	 short int Sel;
+         short int ID;
+         char Name[32];
+         unsigned long MsbTime;
+         unsigned long LsbTime;
+         char List[32];
+         long Offset;
+         short int Sel;
 } ThreadState;
 
 typedef struct Tss
@@ -88,387 +97,389 @@ typedef struct Tss
     char guard[16];
 } Tss;
 
-#ifndef __GNUC__
-#if (sizeof(int) == 2)
-#define __stdcall
-#endif
-#endif
+void RDOSAPI RdosDebug();
 
-void __stdcall RdosDebug();
+short int RDOSAPI RdosSwapShort(short int val);
+long RDOSAPI RdosSwapLong(long val);
 
-short int __stdcall RdosSwapShort(short int val);
-long __stdcall RdosSwapLong(long val);
+long RDOSAPI RdosGetLongRandom();
+long RDOSAPI RdosGetRandom(long range);
 
-long __stdcall RdosGetLongRandom();
-long __stdcall RdosGetRandom(long range);
+void RDOSAPI RdosSetTextMode();
+int RDOSAPI RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
+void RDOSAPI RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);
+void RDOSAPI RdosClearClipRect(int handle);
+void RDOSAPI RdosSetDrawColor(int handle, int color);
+void RDOSAPI RdosSetLGOP(int handle, int lgop);
+void RDOSAPI RdosSetHollowStyle(int handle);
+void RDOSAPI RdosSetFilledStyle(int handle);
+int RDOSAPI RdosOpenFont(int height);
+void RDOSAPI RdosCloseFont(int font);
+void RDOSAPI RdosGetStringMetrics(int font, const char *str, int *width, int *height);
+void RDOSAPI RdosSetFont(int handle, int font);
+int RDOSAPI RdosGetPixel(int handle, int x, int y);
+void RDOSAPI RdosSetPixel(int handle, int x, int y);
+void RDOSAPI RdosBlit(int SrcHandle, int DestHandle, int width, int height,
+                                int SrcX, int SrcY, int DestX, int DestY);
+void RDOSAPI RdosDrawMask(int handle, void *mask, int RowSize, int width, int height,
+                                int SrcX, int SrcY, int DestX, int DestY); 
+void RDOSAPI RdosDrawLine(int handle, int x1, int y1, int x2, int y2);
+void RDOSAPI RdosDrawString(int handle, int x, int y, const char *str);
+void RDOSAPI RdosDrawRect(int handle, int x, int y, int width, int height);
+void RDOSAPI RdosDrawEllipse(int handle, int x, int y, int width, int height);
+int RDOSAPI RdosCreateBitmap(int BitsPerPixel, int width, int height);
+int RDOSAPI RdosDuplicateBitmapHandle(int handle);
+void RDOSAPI RdosCloseBitmap(int handle);
+int RDOSAPI RdosCreateStringBitmap(int font, const char *str);
+void RDOSAPI RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height,
+                                           int *linesize, void **buffer);
 
-void __stdcall RdosSetTextMode();
-int __stdcall RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
-void __stdcall RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);
-void __stdcall RdosClearClipRect(int handle);
-void __stdcall RdosSetDrawColor(int handle, int color);
-void __stdcall RdosSetLGOP(int handle, int lgop);
-void __stdcall RdosSetHollowStyle(int handle);
-void __stdcall RdosSetFilledStyle(int handle);
-int __stdcall RdosOpenFont(int height);
-void __stdcall RdosCloseFont(int font);
-void __stdcall RdosGetStringMetrics(int font, const char *str, int *width, int *height);
-void __stdcall RdosSetFont(int handle, int font);
-int __stdcall RdosGetPixel(int handle, int x, int y);
-void __stdcall RdosSetPixel(int handle, int x, int y);
-void __stdcall RdosBlit(int SrcHandle, int DestHandle, int width, int height,
-				int SrcX, int SrcY, int DestX, int DestY);
-void __stdcall RdosDrawMask(int handle, void *mask, int RowSize, int width, int height,
-				int SrcX, int SrcY, int DestX, int DestY); 
-void __stdcall RdosDrawLine(int handle, int x1, int y1, int x2, int y2);
-void __stdcall RdosDrawString(int handle, int x, int y, const char *str);
-void __stdcall RdosDrawRect(int handle, int x, int y, int width, int height);
-void __stdcall RdosDrawEllipse(int handle, int x, int y, int width, int height);
-int __stdcall RdosCreateBitmap(int BitsPerPixel, int width, int height);
-int __stdcall RdosDuplicateBitmapHandle(int handle);
-void __stdcall RdosCloseBitmap(int handle);
-int __stdcall RdosCreateStringBitmap(int font, const char *str);
-void __stdcall RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height,
-					   int *linesize, void **buffer);
+int RDOSAPI RdosCreateSprite(int DestHandle, int BitmapHandle, int MaskHandle, int lgop); 
+void RDOSAPI RdosCloseSprite(int handle);
+void RDOSAPI RdosShowSprite(int handle);
+void RDOSAPI RdosHideSprite(int handle);
+void RDOSAPI RdosMoveSprite(int handle, int x, int y);
 
-int __stdcall RdosCreateSprite(int DestHandle, int BitmapHandle, int MaskHandle, int lgop); 
-void __stdcall RdosCloseSprite(int handle);
-void __stdcall RdosShowSprite(int handle);
-void __stdcall RdosHideSprite(int handle);
-void __stdcall RdosMoveSprite(int handle, int x, int y);
+void RDOSAPI RdosSetForeColor(int color);
+void RDOSAPI RdosSetBackColor(int color);
+int RDOSAPI RdosGetMemSize(void *ptr);
+void *RDOSAPI RdosAllocateMem(int Size);
+void RDOSAPI RdosFreeMem(void *ptr);
+int RDOSAPI RdosAppDebug();
 
-void __stdcall RdosSetForeColor(int color);
-void __stdcall RdosSetBackColor(int color);
-int __stdcall RdosGetMemSize(void *ptr);
-void *__stdcall RdosAllocateMem(int Size);
-void __stdcall RdosFreeMem(void *ptr);
-int __stdcall RdosAppDebug();
+long RDOSAPI RdosGetThreadLinear(int Thread, int Sel, long Offset);
+int RDOSAPI RdosReadThreadMem(int Thread, int Sel, long Offset, char *Buf, int Size);
+int RDOSAPI RdosWriteThreadMem(int Thread, int Sel, long Offset, char *Buf, int Size);
+int RDOSAPI RdosGetDebugThread();
+void RDOSAPI RdosGetThreadTss(int Thread, Tss *tss);
+void RDOSAPI RdosSetThreadTss(int Thread, Tss *tss);
 
-long __stdcall RdosGetThreadLinear(int Thread, int Sel, long Offset);
-int __stdcall RdosReadThreadMem(int Thread, int Sel, long Offset, char *Buf, int Size);
-int __stdcall RdosWriteThreadMem(int Thread, int Sel, long Offset, char *Buf, int Size);
-int __stdcall RdosGetDebugThread();
-void __stdcall RdosGetThreadTss(int Thread, Tss *tss);
-void __stdcall RdosSetThreadTss(int Thread, Tss *tss);
+int RDOSAPI RdosGetFreePhysical();
+int RDOSAPI RdosGetFreeGdt();
+int RDOSAPI RdosGetFreeSmallKernelLinear();
+int RDOSAPI RdosGetFreeBigKernelLinear();
 
-int __stdcall RdosGetFreePhysical();
-int __stdcall RdosGetFreeGdt();
-int __stdcall RdosGetFreeSmallKernelLinear();
-int __stdcall RdosGetFreeBigKernelLinear();
+int RDOSAPI RdosGetMaxComPort();
+int RDOSAPI RdosOpenCom(int ID, long BaudRate, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
+void RDOSAPI RdosCloseCom(int Handle);
+void RDOSAPI RdosFlushCom(int Handle);
+char RDOSAPI RdosReadCom(int Handle);
+int RDOSAPI RdosWriteCom(int Handle, char Val);
+void RDOSAPI RdosEnableCts(int Handle);
+void RDOSAPI RdosDisableCts(int Handle);
+void RDOSAPI RdosEnableAutoRts(int Handle);
+void RDOSAPI RdosDisableAutoRts(int Handle);
+void RDOSAPI RdosSetDtr(int Handle);
+void RDOSAPI RdosResetDtr(int Handle);
+void RDOSAPI RdosSetRts(int Handle);
+void RDOSAPI RdosResetRts(int Handle);
+int RDOSAPI RdosGetReceiveBufferSpace(int Handle);
+int RDOSAPI RdosGetSendBufferSpace(int Handle);
+void RDOSAPI RdosWaitForSendCompletedCom(int Handle);
 
-int __stdcall RdosGetMaxComPort();
-int __stdcall RdosOpenCom(int ID, long BaudRate, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
-void __stdcall RdosCloseCom(int Handle);
-void __stdcall RdosFlushCom(int Handle);
-char __stdcall RdosReadCom(int Handle);
-int __stdcall RdosWriteCom(int Handle, char Val);
-void __stdcall RdosEnableCts(int Handle);
-void __stdcall RdosDisableCts(int Handle);
-void __stdcall RdosEnableAutoRts(int Handle);
-void __stdcall RdosDisableAutoRts(int Handle);
-void __stdcall RdosSetDtr(int Handle);
-void __stdcall RdosResetDtr(int Handle);
-void __stdcall RdosSetRts(int Handle);
-void __stdcall RdosResetRts(int Handle);
-int __stdcall RdosGetReceiveBufferSpace(int Handle);
-int __stdcall RdosGetSendBufferSpace(int Handle);
-void __stdcall RdosWaitForSendCompletedCom(int Handle);
+int RDOSAPI RdosOpenFile(const char *FileName, char Access);
+int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
+void RDOSAPI RdosCloseFile(int Handle);
+int RDOSAPI RdosIsDevice(int Handle);
+int RDOSAPI RdosDuplFile(int Handle);
+long RDOSAPI RdosGetFileSize(int Handle);
+void RDOSAPI RdosSetFileSize(int Handle, long Size);
+long RDOSAPI RdosGetFilePos(int Handle);
+void RDOSAPI RdosSetFilePos(int Handle, long Pos);
+int RDOSAPI RdosReadFile(int Handle, void *Buf, int Size);
+int RDOSAPI RdosWriteFile(int Handle, const void *Buf, int Size);
+void RDOSAPI RdosGetFileTime(int Handle, unsigned long *MsbTime, unsigned long *LsbTime);
+void RDOSAPI RdosSetFileTime(int Handle, unsigned long MsbTime, unsigned long LsbTime);
 
-int __stdcall RdosOpenFile(const char *FileName, char Access);
-int __stdcall RdosCreateFile(const char *FileName, int Attrib);
-void __stdcall RdosCloseFile(int Handle);
-int __stdcall RdosIsDevice(int Handle);
-int __stdcall RdosDuplFile(int Handle);
-long __stdcall RdosGetFileSize(int Handle);
-void __stdcall RdosSetFileSize(int Handle, long Size);
-long __stdcall RdosGetFilePos(int Handle);
-void __stdcall RdosSetFilePos(int Handle, long Pos);
-int __stdcall RdosReadFile(int Handle, void *Buf, int Size);
-int __stdcall RdosWriteFile(int Handle, const void *Buf, int Size);
-void __stdcall RdosGetFileTime(int Handle, unsigned long *MsbTime, unsigned long *LsbTime);
-void __stdcall RdosSetFileTime(int Handle, unsigned long MsbTime, unsigned long LsbTime);
+int RDOSAPI RdosCreateMapping(int Size);
+int RDOSAPI RdosCreateNamedMapping(const char *Name, int Size); 
+int RDOSAPI RdosCreateNamedFileMapping(const char *Name, int Size, int FileHandle);
+int RDOSAPI RdosOpenNamedMapping(const char *Name);
+void RDOSAPI RdosSyncMapping(int Handle);
+void RDOSAPI RdosCloseMapping(int Handle);
+void RDOSAPI RdosMapView(int Handle, int Offset, void *Base, int Size);
+void RDOSAPI RdosUnmapView(int Handle);
 
-int __stdcall RdosCreateMapping(int Size);
-int __stdcall RdosCreateNamedMapping(const char *Name, int Size); 
-int __stdcall RdosCreateNamedFileMapping(const char *Name, int Size, int FileHandle);
-int __stdcall RdosOpenNamedMapping(const char *Name);
-void __stdcall RdosSyncMapping(int Handle);
-void __stdcall RdosCloseMapping(int Handle);
-void __stdcall RdosMapView(int Handle, int Offset, void *Base, int Size);
-void __stdcall RdosUnmapView(int Handle);
+int RDOSAPI RdosSetCurDrive(int Drive);
+int RDOSAPI RdosGetCurDrive();
+int RDOSAPI RdosSetCurDir(const char *PathName);
+int RDOSAPI RdosGetCurDir(int Drive, char *PathName);
+int RDOSAPI RdosMakeDir(const char *PathName);
+int RDOSAPI RdosRemoveDir(const char *PathName);
+int RDOSAPI RdosRenameFile(const char *ToName, const char *FromName);
+int RDOSAPI RdosDeleteFile(const char *PathName);
+int RDOSAPI RdosGetFileAttribute(const char *PathName, int *Attribute);
+int RDOSAPI RdosSetFileAttribute(const char *PathName, int Attribute);
+int RDOSAPI RdosOpenDir(const char *PathName);
+void RDOSAPI RdosCloseDir(int Handle);
+int RDOSAPI RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
 
-int __stdcall RdosSetCurDrive(int Drive);
-int __stdcall RdosGetCurDrive();
-int __stdcall RdosSetCurDir(const char *PathName);
-int __stdcall RdosGetCurDir(int Drive, char *PathName);
-int __stdcall RdosMakeDir(const char *PathName);
-int __stdcall RdosRemoveDir(const char *PathName);
-int __stdcall RdosRenameFile(const char *ToName, const char *FromName);
-int __stdcall RdosDeleteFile(const char *PathName);
-int __stdcall RdosGetFileAttribute(const char *PathName, int *Attribute);
-int __stdcall RdosSetFileAttribute(const char *PathName, int Attribute);
-int __stdcall RdosOpenDir(const char *PathName);
-void __stdcall RdosCloseDir(int Handle);
-int __stdcall RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
+int RDOSAPI RdosGetThreadState(int ThreadNr, ThreadState *State);
+int RDOSAPI RdosSuspendThread(int Thread);
+int RDOSAPI RdosSuspendAndSignalThread(int Thread);
 
-int __stdcall RdosGetThreadState(int ThreadNr, ThreadState *State);
-int __stdcall RdosSuspendThread(int Thread);
-int __stdcall RdosSuspendAndSignalThread(int Thread);
+void RDOSAPI RdosCpuReset();
+void RDOSAPI RdosGetVersion(int *Major, int *Minor, int *Release);
+void RDOSAPI RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
+void RDOSAPI RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const char *Name, void *Param, int StackSize);
+void RDOSAPI RdosTerminateThread();
+int RDOSAPI RdosGetThreadHandle();
+int RDOSAPI RdosExec(const char *prog, const char *param);
+int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, short int *thread);
+int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, short int *thread);
+void RDOSAPI RdosWaitMilli(int ms);
+void RDOSAPI RdosWaitMicro(int us);
+void RDOSAPI RdosWaitUntil(unsigned long msb, unsigned long lsb);
 
-void __stdcall RdosCpuReset();
-void __stdcall RdosGetVersion(int *Major, int *Minor, int *Release);
-void __stdcall RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
-void __stdcall RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const char *Name, void *Param, int StackSize);
-void __stdcall RdosTerminateThread();
-int __stdcall RdosGetThreadHandle();
-int __stdcall RdosExec(const char *prog, const char *param);
-int __stdcall RdosSpawn(const char *prog, const char *param, const char *startdir, short int *thread);
-int __stdcall RdosSpawnDebug(const char *prog, const char *param, const char *startdir, short int *thread);
-void __stdcall RdosWaitMilli(int ms);
-void __stdcall RdosWaitMicro(int us);
-void __stdcall RdosWaitUntil(unsigned long msb, unsigned long lsb);
+void RDOSAPI RdosGetTics(unsigned long *msb, unsigned long *lsb);
+void RDOSAPI RdosTicsToRecord(unsigned long msb, unsigned long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void RDOSAPI RdosRecordToTics(unsigned long *msb, unsigned long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
 
-void __stdcall RdosGetTics(unsigned long *msb, unsigned long *lsb);
-void __stdcall RdosTicsToRecord(unsigned long msb, unsigned long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-void __stdcall RdosRecordToTics(unsigned long *msb, unsigned long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
+void RDOSAPI RdosDosTimeDateToTics(unsigned short date, unsigned short time, unsigned long *msb, unsigned long *lsb);
+void RDOSAPI RdosTicsToDosTimeDate(unsigned long msb, unsigned long lsb, unsigned short *date, unsigned short *time);
 
-void __stdcall RdosDosTimeDateToTics(unsigned short date, unsigned short time, unsigned long *msb, unsigned long *lsb);
-void __stdcall RdosTicsToDosTimeDate(unsigned long msb, unsigned long lsb, unsigned short *date, unsigned short *time);
+int RDOSAPI RdosDayOfWeek(int year, int month, int day);
+void RDOSAPI RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void RDOSAPI RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void RDOSAPI RdosSetTime(int year, int month, int day, int hour, int min, int sec, int milli);
+void RDOSAPI RdosAddTics(unsigned long *msb, unsigned long *lsb, long tics);
+void RDOSAPI RdosAddMilli(unsigned long *msb, unsigned long *lsb, long ms);
+void RDOSAPI RdosAddSec(unsigned long *msb, unsigned long *lsb, long sec);
+void RDOSAPI RdosAddMin(unsigned long *msb, unsigned long *lsb, long min);
+void RDOSAPI RdosAddHour(unsigned long *msb, unsigned long *lsb, long hour);
+void RDOSAPI RdosAddDay(unsigned long *msb, unsigned long *lsb, long day);
+int RDOSAPI RdosSyncTime(long IP);
 
-int __stdcall RdosDayOfWeek(int year, int month, int day);
-void __stdcall RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-void __stdcall RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-void __stdcall RdosSetTime(int year, int month, int day, int hour, int min, int sec, int milli);
-void __stdcall RdosAddTics(unsigned long *msb, unsigned long *lsb, long tics);
-void __stdcall RdosAddMilli(unsigned long *msb, unsigned long *lsb, long ms);
-void __stdcall RdosAddSec(unsigned long *msb, unsigned long *lsb, long sec);
-void __stdcall RdosAddMin(unsigned long *msb, unsigned long *lsb, long min);
-void __stdcall RdosAddHour(unsigned long *msb, unsigned long *lsb, long hour);
-void __stdcall RdosAddDay(unsigned long *msb, unsigned long *lsb, long day);
-int __stdcall RdosSyncTime(long IP);
+void RDOSAPI RdosDecodeMsbTics(unsigned long msb, int *days, int *hours);
+void RDOSAPI RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro); 
 
-void __stdcall RdosDecodeMsbTics(unsigned long msb, int *days, int *hours);
-void __stdcall RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro); 
+int RDOSAPI RdosCreateSection();
+void RDOSAPI RdosDeleteSection(int Handle);
+void RDOSAPI RdosEnterSection(int Handle);
+void RDOSAPI RdosLeaveSection(int Handle);
 
-int __stdcall RdosCreateSection();
-void __stdcall RdosDeleteSection(int Handle);
-void __stdcall RdosEnterSection(int Handle);
-void __stdcall RdosLeaveSection(int Handle);
+int RDOSAPI RdosCreateWait();
+void RDOSAPI RdosCloseWait(int Handle);
+void * RDOSAPI RdosCheckWait(int Handle);
+void * RDOSAPI RdosWaitForever(int Handle);
+void * RDOSAPI RdosWaitTimeout(int Handle, int MillSec);
+void * RDOSAPI RdosWaitUntilTimeout(int Handle, unsigned long msb, unsigned long lsb);
+void RDOSAPI RdosStopWait(int Handle);
+void RDOSAPI RdosRemoveWait(int Handle, void *ID);
+void RDOSAPI RdosAddWaitForKeyboard(int Handle, void *ID);
+void RDOSAPI RdosAddWaitForMouse(int Handle, void *ID);
+void RDOSAPI RdosAddWaitForCom(int Handle, int ComHandle, void *ID);
+void RDOSAPI RdosAddWaitForAdc(int Handle, int AdcHandle, void *ID);
 
-int __stdcall RdosCreateWait();
-void __stdcall RdosCloseWait(int Handle);
-void * __stdcall RdosCheckWait(int Handle);
-void * __stdcall RdosWaitForever(int Handle);
-void * __stdcall RdosWaitTimeout(int Handle, int MillSec);
-void * __stdcall RdosWaitUntilTimeout(int Handle, unsigned long msb, unsigned long lsb);
-void __stdcall RdosStopWait(int Handle);
-void __stdcall RdosRemoveWait(int Handle, void *ID);
-void __stdcall RdosAddWaitForKeyboard(int Handle, void *ID);
-void __stdcall RdosAddWaitForMouse(int Handle, void *ID);
-void __stdcall RdosAddWaitForCom(int Handle, int ComHandle, void *ID);
-void __stdcall RdosAddWaitForAdc(int Handle, int AdcHandle, void *ID);
+int RDOSAPI RdosCreateSignal();
+void RDOSAPI RdosResetSignal(int Handle);
+int RDOSAPI RdosIsSignalled(int Handle);
+void RDOSAPI RdosSetSignal(int Handle);
+void RDOSAPI RdosFreeSignal(int Handle);
+void RDOSAPI RdosAddWaitForSignal(int Handle, int SignalHandle, void *ID);
 
-int __stdcall RdosCreateSignal();
-void __stdcall RdosResetSignal(int Handle);
-int __stdcall RdosIsSignalled(int Handle);
-void __stdcall RdosSetSignal(int Handle);
-void __stdcall RdosFreeSignal(int Handle);
-void __stdcall RdosAddWaitForSignal(int Handle, int SignalHandle, void *ID);
+long RDOSAPI RdosGetIp();
+long RDOSAPI RdosGetGateway();
+int RDOSAPI RdosNameToIp(const char *HostName);
+int RDOSAPI RdosIpToName(int Ip, char *HostName, int MaxSize);
 
-long __stdcall RdosGetIp();
-long __stdcall RdosGetGateway();
-int __stdcall RdosNameToIp(const char *HostName);
-int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);
+int RDOSAPI RdosCreateTcpListen(int Port, int MaxConnections, int BufferSize);
+int RDOSAPI RdosGetTcpListen(int Handle);
+void RDOSAPI RdosCloseTcpListen(int Handle);
+void RDOSAPI RdosAddWaitForTcpListen(int Handle, int ConHandle, void *ID);
 
-int __stdcall RdosCreateTcpListen(int Port, int MaxConnections, int BufferSize);
-int __stdcall RdosGetTcpListen(int Handle);
-void __stdcall RdosCloseTcpListen(int Handle);
-void __stdcall RdosAddWaitForTcpListen(int Handle, int ConHandle, void *ID);
+int RDOSAPI RdosOpenTcpConnection(int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
+int RDOSAPI RdosWaitForTcpConnection(int Handle, long Timeout);
+void RDOSAPI RdosAddWaitForTcpConnection(int Handle, int ConHandle, void *ID);
+void RDOSAPI RdosCloseTcpConnection(int Handle);
+void RDOSAPI RdosDeleteTcpConnection(int Handle);
+void RDOSAPI RdosAbortTcpConnection(int Handle);
+void RDOSAPI RdosPushTcpConnection(int Handle);
+int RDOSAPI RdosIsTcpConnectionClosed(int Handle);
+long RDOSAPI RdosGetRemoteTcpConnectionIP(int Handle);
+int RDOSAPI RdosGetRemoteTcpConnectionPort(int Handle);
+int RDOSAPI RdosGetLocalTcpConnectionPort(int Handle);
+int RDOSAPI RdosReadTcpConnection(int Handle, void *Buf, int Size);
+int RDOSAPI RdosWriteTcpConnection(int Handle, const void *Buf, int Size);
+int RDOSAPI RdosPollTcpConnection(int Handle);
 
-int __stdcall RdosOpenTcpConnection(int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
-int __stdcall RdosWaitForTcpConnection(int Handle, long Timeout);
-void __stdcall RdosAddWaitForTcpConnection(int Handle, int ConHandle, void *ID);
-void __stdcall RdosCloseTcpConnection(int Handle);
-void __stdcall RdosDeleteTcpConnection(int Handle);
-void __stdcall RdosAbortTcpConnection(int Handle);
-void __stdcall RdosPushTcpConnection(int Handle);
-int __stdcall RdosIsTcpConnectionClosed(int Handle);
-long __stdcall RdosGetRemoteTcpConnectionIP(int Handle);
-int __stdcall RdosGetRemoteTcpConnectionPort(int Handle);
-int __stdcall RdosGetLocalTcpConnectionPort(int Handle);
-int __stdcall RdosReadTcpConnection(int Handle, void *Buf, int Size);
-int __stdcall RdosWriteTcpConnection(int Handle, const void *Buf, int Size);
-int __stdcall RdosPollTcpConnection(int Handle);
+int RDOSAPI RdosGetLocalMailslot(const char *Name);
+int RDOSAPI RdosGetRemoteMailslot(long Ip, const char *Name);
+void RDOSAPI RdosFreeMailslot(int Handle);
+int RDOSAPI RdosSendMailslot(int Handle, const void *Msg, int Size, void *ReplyBuf, int MaxReplySize);
 
-int __stdcall RdosGetLocalMailslot(const char *Name);
-int __stdcall RdosGetRemoteMailslot(long Ip, const char *Name);
-void __stdcall RdosFreeMailslot(int Handle);
-int __stdcall RdosSendMailslot(int Handle, const void *Msg, int Size, void *ReplyBuf, int MaxReplySize);
+void RDOSAPI RdosDefineMailslot(const char *Name, int MaxSize);
+int RDOSAPI RdosReceiveMailslot(void *Msg);
+void RDOSAPI RdosReplyMailslot(const void *Msg, int Size);
 
-void __stdcall RdosDefineMailslot(const char *Name, int MaxSize);
-int __stdcall RdosReceiveMailslot(void *Msg);
-void __stdcall RdosReplyMailslot(const void *Msg, int Size);
+void RDOSAPI RdosSetFocus(char FocusKey);
+char RDOSAPI RdosGetFocus();
 
-void __stdcall RdosSetFocus(char FocusKey);
-char __stdcall RdosGetFocus();
+void RDOSAPI RdosClearKeyboard();
+int RDOSAPI RdosPollKeyboard();
+int RDOSAPI RdosReadKeyboard();
+int RDOSAPI RdosGetKeyboardState();
+int RDOSAPI RdosPutKeyboard(int KeyCode, int VirtualKey, int ScanCode);
+int RDOSAPI RdosPeekKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
+int RDOSAPI RdosReadKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
 
-void __stdcall RdosClearKeyboard();
-int __stdcall RdosPollKeyboard();
-int __stdcall RdosReadKeyboard();
-int __stdcall RdosGetKeyboardState();
-int __stdcall RdosPutKeyboard(int KeyCode, int VirtualKey, int ScanCode);
-int __stdcall RdosPeekKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
-int __stdcall RdosReadKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
+void RDOSAPI RdosHideMouse();
+void RDOSAPI RdosShowMouse();
+void RDOSAPI RdosGetMousePosition(int *x, int *y);
+void RDOSAPI RdosSetMousePosition(int x, int y);
+void RDOSAPI RdosSetMouseWindow(int StartX, int StartY, int EndX, int EndY);
+void RDOSAPI RdosSetMouseMickey(int x, int y);
+int RDOSAPI RdosGetLeftButton();
+int RDOSAPI RdosGetRightButton();
+void RDOSAPI RdosGetLeftButtonPressPosition(int *x, int *y);
+void RDOSAPI RdosGetRightButtonPressPosition(int *x, int *y);
+void RDOSAPI RdosGetLeftButtonReleasePosition(int *x, int *y);
+void RDOSAPI RdosGetRightButtonReleasePosition(int *x, int *y);
 
-void __stdcall RdosHideMouse();
-void __stdcall RdosShowMouse();
-void __stdcall RdosGetMousePosition(int *x, int *y);
-void __stdcall RdosSetMousePosition(int x, int y);
-void __stdcall RdosSetMouseWindow(int StartX, int StartY, int EndX, int EndY);
-void __stdcall RdosSetMouseMickey(int x, int y);
-int __stdcall RdosGetLeftButton();
-int __stdcall RdosGetRightButton();
-void __stdcall RdosGetLeftButtonPressPosition(int *x, int *y);
-void __stdcall RdosGetRightButtonPressPosition(int *x, int *y);
-void __stdcall RdosGetLeftButtonReleasePosition(int *x, int *y);
-void __stdcall RdosGetRightButtonReleasePosition(int *x, int *y);
+void RDOSAPI RdosGetCursorPosition(int *Row, int *Col);
+void RDOSAPI RdosSetCursorPosition(int Row, int Col);
+void RDOSAPI RdosWriteChar(char ch);
+void RDOSAPI RdosWriteSizeString(const char *Buf, int Size);
+void RDOSAPI RdosWriteString(const char *Buf);
+int RDOSAPI RdosReadLine(char *Buf, int MaxSize);
 
-void __stdcall RdosGetCursorPosition(int *Row, int *Col);
-void __stdcall RdosSetCursorPosition(int Row, int Col);
-void __stdcall RdosWriteChar(char ch);
-void __stdcall RdosWriteSizeString(const char *Buf, int Size);
-void __stdcall RdosWriteString(const char *Buf);
-int __stdcall RdosReadLine(char *Buf, int MaxSize);
+int RDOSAPI RdosPing(long Node, long Timeout);
 
-int __stdcall RdosPing(long Node, long Timeout);
+int RDOSAPI RdosGetIdeDisc(int UnitNr);
+int RDOSAPI RdosGetFloppyDisc(int UnitNr);
 
-int __stdcall RdosGetIdeDisc(int UnitNr);
-int __stdcall RdosGetFloppyDisc(int UnitNr);
+int RDOSAPI RdosSetDiscInfo(int DiscNr, int SectorSize, long Sectors, int BiosSectorsPerCyl, int BiosHeads);
+int RDOSAPI RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
+int RDOSAPI RdosReadDisc(int DiscNr, long Sector, char *Buf, int Size);
+int RDOSAPI RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
 
-int __stdcall RdosSetDiscInfo(int DiscNr, int SectorSize, long Sectors, int BiosSectorsPerCyl, int BiosHeads);
-int __stdcall RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
-int __stdcall RdosReadDisc(int DiscNr, long Sector, char *Buf, int Size);
-int __stdcall RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
+void RDOSAPI RdosGetRdfsInfo(void *CryptTab, void *KeyTab, void *ExtentSizeTab);
+void RDOSAPI RdosDemandLoadDrive(int DriveNr);
+int RDOSAPI RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
 
-void __stdcall RdosGetRdfsInfo(void *CryptTab, void *KeyTab, void *ExtentSizeTab);
-void __stdcall RdosDemandLoadDrive(int DriveNr);
-int __stdcall RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
+int RDOSAPI RdosAllocateFixedDrive(int DriveNr);
+int RDOSAPI RdosAllocateStaticDrive();
+int RDOSAPI RdosAllocateDynamicDrive();
 
-int __stdcall RdosAllocateFixedDrive(int DriveNr);
-int __stdcall RdosAllocateStaticDrive();
-int __stdcall RdosAllocateDynamicDrive();
+int RDOSAPI RdosGetDriveInfo(int DriveNr, long *FreeUnits, int *BytesPerUnit, long *TotalUnits);
+int RDOSAPI RdosGetDriveDiscParam(int DriveNr, int *DiscNr, long *StartSector, long *TotalSectors);
 
-int __stdcall RdosGetDriveInfo(int DriveNr, long *FreeUnits, int *BytesPerUnit, long *TotalUnits);
-int __stdcall RdosGetDriveDiscParam(int DriveNr, int *DiscNr, long *StartSector, long *TotalSectors);
+int RDOSAPI RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
+int RDOSAPI RdosOpenFileDrive(int Drive, const char *FileName);
 
-int __stdcall RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
-int __stdcall RdosOpenFileDrive(int Drive, const char *FileName);
+int RDOSAPI RdosCreateCrc(unsigned short int CrcPoly);
+void RDOSAPI RdosCloseCrc(int Handle);
+unsigned short int RDOSAPI RdosCalcCrc(int Handle, unsigned short int CrcVal, const char *Buf, int Size);
 
-int __stdcall RdosCreateCrc(unsigned short int CrcPoly);
-void __stdcall RdosCloseCrc(int Handle);
-unsigned short int __stdcall RdosCalcCrc(int Handle, unsigned short int CrcVal, const char *Buf, int Size);
+int RDOSAPI RdosGetModuleHandle();
+const char * RDOSAPI RdosGetExeName();
+int RDOSAPI RdosLoadDll(const char *Name);
+void RDOSAPI RdosFreeDll(int handle);
+int RDOSAPI RdosGetModuleName(int handle, char *Buf, int Size);
+int RDOSAPI RdosReadResource(int handle, int ID, char *Buf, int Size);
+int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
 
-int __stdcall RdosGetModuleHandle();
-const char * __stdcall RdosGetExeName();
-int __stdcall RdosLoadDll(const char *Name);
-void __stdcall RdosFreeDll(int handle);
-int __stdcall RdosGetModuleName(int handle, char *Buf, int Size);
-int __stdcall RdosReadResource(int handle, int ID, char *Buf, int Size);
-int __stdcall RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
+void * RDOSAPI RdosGetModuleProc(int handle, const char *ProcName);
+char RDOSAPI RdosGetModuleFocusKey(int handle);
 
-void * __stdcall RdosGetModuleProc(int handle, const char *ProcName);
-char __stdcall RdosGetModuleFocusKey(int handle);
+void RDOSAPI RdosAddWaitForDebugEvent(int Handle, int ModuleHandle, void *ID);
+char RDOSAPI RdosGetDebugEvent(int handle, short int *thread);
+void RDOSAPI RdosGetDebugEventData(int handle, void *buf);
+void RDOSAPI RdosClearDebugEvent(int handle);
+void RDOSAPI RdosContinueDebugEvent(int handle, short int thread);
 
-void __stdcall RdosAddWaitForDebugEvent(int Handle, int ModuleHandle, void *ID);
-char __stdcall RdosGetDebugEvent(int handle, short int *thread);
-void __stdcall RdosGetDebugEventData(int handle, void *buf);
-void __stdcall RdosClearDebugEvent(int handle);
-void __stdcall RdosContinueDebugEvent(int handle, short int thread);
+int RDOSAPI RdosOpenAdc(int channel);
+void RDOSAPI RdosCloseAdc(int handle);
+void RDOSAPI RdosDefineAdcTime(int handle, unsigned long msg, unsigned long lsb);
+long RDOSAPI RdosReadAdc(int handle);
 
-int __stdcall RdosOpenAdc(int channel);
-void __stdcall RdosCloseAdc(int handle);
-void __stdcall RdosDefineAdcTime(int handle, unsigned long msg, unsigned long lsb);
-long __stdcall RdosReadAdc(int handle);
+int RDOSAPI RdosReadSerialLines(int device, int *val);
+int RDOSAPI RdosToggleSerialLine(int device, int line);
+int RDOSAPI RdosReadSerialVal(int device, int line, int *val);
+int RDOSAPI RdosWriteSerialVal(int device, int line, int val);
+int RDOSAPI RdosReadSerialRaw(int device, int line, int *val);
+int RDOSAPI RdosWriteSerialRaw(int device, int line, int val);
 
-int __stdcall RdosReadSerialLines(int device, int *val);
-int __stdcall RdosToggleSerialLine(int device, int line);
-int __stdcall RdosReadSerialVal(int device, int line, int *val);
-int __stdcall RdosWriteSerialVal(int device, int line, int val);
-int __stdcall RdosReadSerialRaw(int device, int line, int *val);
-int __stdcall RdosWriteSerialRaw(int device, int line, int val);
+int RDOSAPI RdosOpenSysEnv();
+int RDOSAPI RdosOpenProcessEnv();
+void RDOSAPI RdosCloseEnv(int handle);
+void RDOSAPI RdosAddEnvVar(int handle, const char *var, const char *value);
+void RDOSAPI RdosDeleteEnvVar(int handle, const char *var);
+int RDOSAPI RdosFindEnvVar(int handle, const char *var, char *value);
+void RDOSAPI RdosGetEnvData(int handle, char *buf);
+void RDOSAPI RdosSetEnvData(int handle, const char *buf);
 
-int __stdcall RdosOpenSysEnv();
-int __stdcall RdosOpenProcessEnv();
-void __stdcall RdosCloseEnv(int handle);
-void __stdcall RdosAddEnvVar(int handle, const char *var, const char *value);
-void __stdcall RdosDeleteEnvVar(int handle, const char *var);
-int __stdcall RdosFindEnvVar(int handle, const char *var, char *value);
-void __stdcall RdosGetEnvData(int handle, char *buf);
-void __stdcall RdosSetEnvData(int handle, const char *buf);
+int RDOSAPI RdosOpenSysIni();
+int RDOSAPI RdosOpenIni(const char *filename);
+void RDOSAPI RdosCloseIni(int handle);
+int RDOSAPI RdosGotoIniSection(int handle, const char *name);
+int RDOSAPI RdosRemoveIniSection(int handle);
+int RDOSAPI RdosReadIni(int handle, const char *var, char *str, int maxsize);
+int RDOSAPI RdosWriteIni(int handle, const char *var, const char *str);
+int RDOSAPI RdosDeleteIni(int handle, const char *var);
 
-int __stdcall RdosOpenSysIni();
-int __stdcall RdosOpenIni(const char *filename);
-void __stdcall RdosCloseIni(int handle);
-int __stdcall RdosGotoIniSection(int handle, const char *name);
-int __stdcall RdosRemoveIniSection(int handle);
-int __stdcall RdosReadIni(int handle, const char *var, char *str, int maxsize);
-int __stdcall RdosWriteIni(int handle, const char *var, const char *str);
-int __stdcall RdosDeleteIni(int handle, const char *var);
+void RDOSAPI RdosEnableStatusLED();
+void RDOSAPI RdosDisableStatusLED();
 
-void __stdcall RdosEnableStatusLED();
-void __stdcall RdosDisableStatusLED();
+void RDOSAPI RdosStartWatchdog(int timeout);
+void RDOSAPI RdosKickWatchdog();
+void RDOSAPI RdosStopWatchdog();
 
-void __stdcall RdosStartWatchdog(int timeout);
-void __stdcall RdosKickWatchdog();
-void __stdcall RdosStopWatchdog();
+void RDOSAPI RdosStartNetCapture(int FileHandle);
+void RDOSAPI RdosStopNetCapture();
 
-void __stdcall RdosStartNetCapture(int FileHandle);
-void __stdcall RdosStopNetCapture();
+int RDOSAPI RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsize);
+int RDOSAPI RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
+int RDOSAPI RdosOpenUsbPipe(int Controller, int Device, int Pipe);
+void RDOSAPI RdosCloseUsbPipe(int handle);
+void RDOSAPI RdosLockUsbPipe(int handle);
+void RDOSAPI RdosUnlockUsbPipe(int handle);
+void RDOSAPI RdosAddWaitForUsbPipe(int Handle, int PipeHandle, void *ID);
+void RDOSAPI RdosWriteUsbControl(int Handle, const char *buf, int size);
+void RDOSAPI RdosReqUsbData(int Handle, int Maxsize);
+int RDOSAPI RdosGetUsbData(int Handle, char *buf, int maxsize);
+void RDOSAPI RdosWriteUsbData(int Handle, const char *buf, int size);
+void RDOSAPI RdosReqUsbStatus(int Handle);
+void RDOSAPI RdosWriteUsbStatus(int Handle);
+int RDOSAPI RdosIsUsbPipeIdle(int Handle);
 
-int __stdcall RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsize);
-int __stdcall RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
-int __stdcall RdosOpenUsbPipe(int Controller, int Device, int Pipe);
-void __stdcall RdosCloseUsbPipe(int handle);
-void __stdcall RdosLockUsbPipe(int handle);
-void __stdcall RdosUnlockUsbPipe(int handle);
-void __stdcall RdosAddWaitForUsbPipe(int Handle, int PipeHandle, void *ID);
-void __stdcall RdosWriteUsbControl(int Handle, const char *buf, int size);
-void __stdcall RdosReqUsbData(int Handle, int Maxsize);
-int __stdcall RdosGetUsbData(int Handle, char *buf, int maxsize);
-void __stdcall RdosWriteUsbData(int Handle, const char *buf, int size);
-void __stdcall RdosReqUsbStatus(int Handle);
-void __stdcall RdosWriteUsbStatus(int Handle);
-int __stdcall RdosIsUsbPipeIdle(int Handle);
+int RDOSAPI RdosOpenICSP(int DeviceID);
+void RDOSAPI RdosCloseICSP(int Handle);
+int RDOSAPI RdosWriteICSPCommand(int Handle, int Cmd);
+int RDOSAPI RdosWriteICSPData(int Handle, int Data);
+int RDOSAPI RdosReadICSPData(int Handle, int *Data);
 
-int __stdcall RdosOpenICSP(int DeviceID);
-void __stdcall RdosCloseICSP(int Handle);
-int __stdcall RdosWriteICSPCommand(int Handle, int Cmd);
-int __stdcall RdosWriteICSPData(int Handle, int Data);
-int __stdcall RdosReadICSPData(int Handle, int *Data);
+void RDOSAPI RdosGetMasterVolume(int *Left, int *Right);
+void RDOSAPI RdosSetMasterVolume(int Left, int Right);
 
-void __stdcall RdosGetMasterVolume(int *Left, int *Right);
-void __stdcall RdosSetMasterVolume(int Left, int Right);
+void RDOSAPI RdosGetLineOutVolume(int *Left, int *Right);
+void RDOSAPI RdosSetLineOutVolume(int Left, int Right);
 
-void __stdcall RdosGetLineOutVolume(int *Left, int *Right);
-void __stdcall RdosSetLineOutVolume(int Left, int Right);
+int RDOSAPI RdosCreateAudioOutChannel(int SampleRate, int Bits, int Volume);
+void RDOSAPI RdosCloseAudioOutChannel(int Handle);
+void RDOSAPI RdosWriteAudio(int Handle, int Size, const int *LSamples, const int*RSamples); 
 
-int __stdcall RdosCreateAudioOutChannel(int SampleRate, int Bits, int Volume);
-void __stdcall RdosCloseAudioOutChannel(int Handle);
-void __stdcall RdosWriteAudio(int Handle, int Size, const int *LSamples, const int*RSamples); 
+int RDOSAPI RdosOpenFm(int SampleRate);
+void RDOSAPI RdosCloseFm(int FmHandle);
+void RDOSAPI RdosFmWait(int FmHandle, int Samples);
 
-int __stdcall RdosOpenFm(int SampleRate);
-void __stdcall RdosCloseFm(int FmHandle);
-void __stdcall RdosFmWait(int FmHandle, int Samples);
-
-int __stdcall RdosCreateFmInstrument(int FmHandle, int C, int M, long double Beta);
-void __stdcall RdosFreeFmInstrument(int Handle);
-void __stdcall RdosSetFmAttack(int Handle, int Samples);
-void __stdcall RdosSetFmSustain(int Handle, int VolumeHalf, int BetaHalf);
-void __stdcall RdosSetFmRelease(int Handle, int VolumeHalf, int BetaHalf);
-void __stdcall RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, int PeakRightVolume, int SustainSamples);
+int RDOSAPI RdosCreateFmInstrument(int FmHandle, int C, int M, long double Beta);
+void RDOSAPI RdosFreeFmInstrument(int Handle);
+void RDOSAPI RdosSetFmAttack(int Handle, int Samples);
+void RDOSAPI RdosSetFmSustain(int Handle, int VolumeHalf, int BetaHalf);
+void RDOSAPI RdosSetFmRelease(int Handle, int VolumeHalf, int BetaHalf);
+void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, int PeakRightVolume, int SustainSamples);
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef __WATCOMC__
+
+#pragma aux RdosWriteString = \
+    CallGate_write_asciiz  \
+    parm [edi];
+
 #endif
 
 #endif

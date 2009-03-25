@@ -1133,7 +1133,7 @@ void TWdSocketServer::ReqReadFpu()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteCpu()
 {
-    _asm int 3
+	_asm int 3
 }
 
 /*##########################################################################
@@ -1149,7 +1149,7 @@ void TWdSocketServer::ReqWriteCpu()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteFpu()
 {
-    _asm int 3
+	_asm int 3
 }
 
 /*##########################################################################
@@ -1172,10 +1172,10 @@ void TWdSocketServer::ReqProgGo()
 		FDebug->Go();
 
 		if (FDebug->IsTerminated())
-		    CondFlags |= COND_TERMINATE;
+			CondFlags |= COND_TERMINATE;
 
-        if (FDebug->HasThreadChange())
-        {
+		if (FDebug->HasThreadChange())
+		{
 			FDebug->ClearThreadChange();
 			CondFlags |= COND_THREAD;
 			FCurrentThread = FDebug->GetCurrentThread();
@@ -1188,7 +1188,7 @@ void TWdSocketServer::ReqProgGo()
 		}
 
         if (FCurrentThread)
-        {
+		{
             if (FCurrentThread->HasBreakOccurred())
                 CondFlags |= COND_BREAK;
 
@@ -1211,15 +1211,15 @@ void TWdSocketServer::ReqProgGo()
         PutWord(CondFlags);
     }
     else
-    {
+	{
         PutDword(0);
         PutWord(0);    
 
         PutDword(0);
         PutWord(0);   
 
-        PutWord(CondFlags);
-    }
+		PutWord(CondFlags);
+	}
 }
 
 /*##########################################################################
@@ -1242,10 +1242,10 @@ void TWdSocketServer::ReqProgStep()
 		FDebug->Trace();
 
 		if (FDebug->IsTerminated())
-		    CondFlags |= COND_TERMINATE;
+			CondFlags |= COND_TERMINATE;
 
-        if (FDebug->HasThreadChange())
-        {
+		if (FDebug->HasThreadChange())
+		{
 			FDebug->ClearThreadChange();
 			CondFlags |= COND_THREAD;
 			FCurrentThread = FDebug->GetCurrentThread();
@@ -1257,13 +1257,13 @@ void TWdSocketServer::ReqProgStep()
 			CondFlags |= COND_LIBRARIES;
 		}
 
-        if (FCurrentThread)
-        {
-            if (FCurrentThread->HasBreakOccurred())
-                CondFlags |= COND_BREAK;
+		if (FCurrentThread)
+		{
+			if (FCurrentThread->HasBreakOccurred())
+				CondFlags |= COND_BREAK;
 
-            if (FCurrentThread->HasTraceOccurred())
-                CondFlags |= COND_TRACE;
+			if (FCurrentThread->HasTraceOccurred())
+				CondFlags |= COND_TRACE;
 
             if (FCurrentThread->HasFaultOccurred())
                 CondFlags |= COND_EXCEPTION;                
