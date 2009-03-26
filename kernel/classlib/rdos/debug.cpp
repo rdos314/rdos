@@ -1475,7 +1475,7 @@ void TDebug::HandleLoadDll(TLoadDllEvent *event)
 ##########################################################################*/
 void TDebug::SignalNewData()
 {
-	short int thread;
+	 int thread;
     char debtype;
     TCreateProcessEvent cpe;
     TCreateThreadEvent cte;
@@ -1562,7 +1562,7 @@ void TDebug::SignalNewData()
 ##########################################################################*/
 void TDebug::Execute()
 {
-	short int thread;
+	int thread;
 
 	RdosWaitMilli(250);
 

@@ -225,8 +225,8 @@ void RDOSAPI RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const ch
 void RDOSAPI RdosTerminateThread();
 int RDOSAPI RdosGetThreadHandle();
 int RDOSAPI RdosExec(const char *prog, const char *param);
-int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, short int *thread);
-int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, short int *thread);
+int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, int *thread);
+int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, int *thread);
 void RDOSAPI RdosWaitMilli(int ms);
 void RDOSAPI RdosWaitMicro(int us);
 void RDOSAPI RdosWaitUntil(unsigned long msb, unsigned long lsb);
@@ -383,10 +383,10 @@ void * RDOSAPI RdosGetModuleProc(int handle, const char *ProcName);
 char RDOSAPI RdosGetModuleFocusKey(int handle);
 
 void RDOSAPI RdosAddWaitForDebugEvent(int Handle, int ModuleHandle, void *ID);
-char RDOSAPI RdosGetDebugEvent(int handle, short int *thread);
+char RDOSAPI RdosGetDebugEvent(int handle, int *thread);
 void RDOSAPI RdosGetDebugEventData(int handle, void *buf);
 void RDOSAPI RdosClearDebugEvent(int handle);
-void RDOSAPI RdosContinueDebugEvent(int handle, short int thread);
+void RDOSAPI RdosContinueDebugEvent(int handle, int thread);
 
 int RDOSAPI RdosOpenAdc(int channel);
 void RDOSAPI RdosCloseAdc(int handle);
@@ -507,6 +507,10 @@ int RDOSAPI RdosPeekKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *S
 
 int RDOSAPI RdosReadKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
 
+int RDOSAPI RdosReadResource(int handle, int ID, char *Buf, int Size);
+
+int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
+
 #ifdef __WATCOMC__
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -523,6 +527,15 @@ int RDOSAPI RdosReadKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *S
 
 // check carry flag, and set edx=0 if set
 #define ValidateEdx 0x73 2 0x33 0xD2
+
+// check carry flag, and set esi=0 if set
+#define ValidateEsi 0x73 2 0x33 0xF6
+
+// check carry flag, and set edi=0 if set
+#define ValidateEdi 0x73 2 0x33 0xFF
+
+// check disc id, set to -1 on carry, extend to eax
+#define ValidateDisc 0x73 2 0xB0 0xFF 0xF 0xBE 0xC0
 
 #pragma aux RdosDebug = \
     "int 3";
@@ -1034,7 +1047,7 @@ int RDOSAPI RdosReadKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *S
     "movzx ecx,cx"  \
     "mov [edi],ecx" \
     parm [ebx] [esi] [edi]  \
-    modify [ax cx dx];
+    modify [eax ecx edx];
 
 #pragma aux RdosCreateThread = \
     "mov fs:[0x14],edx" \
@@ -1516,91 +1529,427 @@ int RDOSAPI RdosReadKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *S
 // PeekKeyEvent here
 // ReadKeyEvent here
 
-void RDOSAPI RdosHideMouse();
-void RDOSAPI RdosShowMouse();
-void RDOSAPI RdosGetMousePosition(int *x, int *y);
-void RDOSAPI RdosSetMousePosition(int x, int y);
-void RDOSAPI RdosSetMouseWindow(int StartX, int StartY, int EndX, int EndY);
-void RDOSAPI RdosSetMouseMickey(int x, int y);
-int RDOSAPI RdosGetLeftButton();
-int RDOSAPI RdosGetRightButton();
-void RDOSAPI RdosGetLeftButtonPressPosition(int *x, int *y);
-void RDOSAPI RdosGetRightButtonPressPosition(int *x, int *y);
-void RDOSAPI RdosGetLeftButtonReleasePosition(int *x, int *y);
-void RDOSAPI RdosGetRightButtonReleasePosition(int *x, int *y);
+#pragma aux RdosHideMouse = \
+    CallGate_hide_mouse;
 
-void RDOSAPI RdosGetCursorPosition(int *Row, int *Col);
-void RDOSAPI RdosSetCursorPosition(int Row, int Col);
-void RDOSAPI RdosWriteChar(char ch);
-void RDOSAPI RdosWriteSizeString(const char *Buf, int Size);
-void RDOSAPI RdosWriteString(const char *Buf);
-int RDOSAPI RdosReadLine(char *Buf, int MaxSize);
+#pragma aux RdosShowMouse = \
+    CallGate_show_mouse;
 
-int RDOSAPI RdosPing(long Node, long Timeout);
+#pragma aux RdosGetMousePosition = \
+    CallGate_get_mouse_position \
+    "movzx ecx,cx" \
+    "mov [esi],ecx" \
+    "movzx edx,dx" \
+    "mov [edi],edx" \
+    parm [esi] [edi] \
+    modify [ecx edx];
 
-int RDOSAPI RdosGetIdeDisc(int UnitNr);
-int RDOSAPI RdosGetFloppyDisc(int UnitNr);
+#pragma aux RdosSetMousePosition = \
+    CallGate_set_mouse_position \
+    parm [ecx] [edx];
 
-int RDOSAPI RdosSetDiscInfo(int DiscNr, int SectorSize, long Sectors, int BiosSectorsPerCyl, int BiosHeads);
-int RDOSAPI RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
-int RDOSAPI RdosReadDisc(int DiscNr, long Sector, char *Buf, int Size);
-int RDOSAPI RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
+#pragma aux RdosSetMouseWindow = \
+    CallGate_set_mouse_window \
+    parm [eax] [ebx] [ecx] [edx];
 
-void RDOSAPI RdosGetRdfsInfo(void *CryptTab, void *KeyTab, void *ExtentSizeTab);
-void RDOSAPI RdosDemandLoadDrive(int DriveNr);
-int RDOSAPI RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
+#pragma aux RdosSetMouseMickey = \
+    CallGate_set_mouse_mickey \
+    parm [ecx] [edx];
 
-int RDOSAPI RdosAllocateFixedDrive(int DriveNr);
-int RDOSAPI RdosAllocateStaticDrive();
-int RDOSAPI RdosAllocateDynamicDrive();
+#pragma aux RdosGetLeftButton = \
+    CallGate_get_left_button \
+    CarryToBool \
+    value [eax];
 
-int RDOSAPI RdosGetDriveInfo(int DriveNr, long *FreeUnits, int *BytesPerUnit, long *TotalUnits);
-int RDOSAPI RdosGetDriveDiscParam(int DriveNr, int *DiscNr, long *StartSector, long *TotalSectors);
+#pragma aux RdosGetRightButton = \
+    CallGate_get_right_button \
+    CarryToBool \
+    value [eax];
 
-int RDOSAPI RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
-int RDOSAPI RdosOpenFileDrive(int Drive, const char *FileName);
+#pragma aux RdosGetLeftButtonPressPosition = \
+    CallGate_get_left_button_press_position \
+    "movzx ecx,cx" \
+    "mov [esi],ecx" \
+    "movzx edx,dx" \
+    "mov [edi],edx" \
+    parm [esi] [edi] \
+    modify [ecx edx];
 
-int RDOSAPI RdosCreateCrc(unsigned short int CrcPoly);
-void RDOSAPI RdosCloseCrc(int Handle);
-unsigned short int RDOSAPI RdosCalcCrc(int Handle, unsigned short int CrcVal, const char *Buf, int Size);
+#pragma aux RdosGetRightButtonPressPosition = \
+    CallGate_get_right_button_press_position \
+    "movzx ecx,cx" \
+    "mov [esi],ecx" \
+    "movzx edx,dx" \
+    "mov [edi],edx" \
+    parm [esi] [edi] \
+    modify [ecx edx];
 
-int RDOSAPI RdosGetModuleHandle();
-const char * RDOSAPI RdosGetExeName();
-int RDOSAPI RdosLoadDll(const char *Name);
-void RDOSAPI RdosFreeDll(int handle);
-int RDOSAPI RdosGetModuleName(int handle, char *Buf, int Size);
-int RDOSAPI RdosReadResource(int handle, int ID, char *Buf, int Size);
-int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
+#pragma aux RdosGetLeftButtonReleasePosition = \
+    CallGate_get_left_button_release_position \
+    "movzx ecx,cx" \
+    "mov [esi],ecx" \
+    "movzx edx,dx" \
+    "mov [edi],edx" \
+    parm [esi] [edi] \
+    modify [ecx edx];
 
-void * RDOSAPI RdosGetModuleProc(int handle, const char *ProcName);
-char RDOSAPI RdosGetModuleFocusKey(int handle);
+#pragma aux RdosGetRightButtonReleasePosition = \
+    CallGate_get_right_button_release_position \
+    "movzx ecx,cx" \
+    "mov [esi],ecx" \
+    "movzx edx,dx" \
+    "mov [edi],edx" \
+    parm [esi] [edi] \
+    modify [ecx edx];
 
-void RDOSAPI RdosAddWaitForDebugEvent(int Handle, int ModuleHandle, void *ID);
-char RDOSAPI RdosGetDebugEvent(int handle, short int *thread);
-void RDOSAPI RdosGetDebugEventData(int handle, void *buf);
-void RDOSAPI RdosClearDebugEvent(int handle);
-void RDOSAPI RdosContinueDebugEvent(int handle, short int thread);
+#pragma aux RdosGetCursorPosition = \
+    CallGate_get_cursor_position \
+    "movzx ecx,cx" \
+    "mov [esi],ecx" \
+    "movzx edx,dx" \
+    "mov [edi],edx" \
+    parm [esi] [edi] \
+    modify [ecx edx];
 
-int RDOSAPI RdosOpenAdc(int channel);
-void RDOSAPI RdosCloseAdc(int handle);
-void RDOSAPI RdosDefineAdcTime(int handle, unsigned long msg, unsigned long lsb);
-long RDOSAPI RdosReadAdc(int handle);
+#pragma aux RdosSetCursorPosition = \
+    CallGate_set_cursor_position \
+    parm [ecx] [edx];
 
-int RDOSAPI RdosReadSerialLines(int device, int *val);
-int RDOSAPI RdosToggleSerialLine(int device, int line);
-int RDOSAPI RdosReadSerialVal(int device, int line, int *val);
-int RDOSAPI RdosWriteSerialVal(int device, int line, int val);
-int RDOSAPI RdosReadSerialRaw(int device, int line, int *val);
-int RDOSAPI RdosWriteSerialRaw(int device, int line, int val);
+#pragma aux RdosWriteChar = \
+    CallGate_write_char \
+    parm [al];
 
-int RDOSAPI RdosOpenSysEnv();
-int RDOSAPI RdosOpenProcessEnv();
-void RDOSAPI RdosCloseEnv(int handle);
-void RDOSAPI RdosAddEnvVar(int handle, const char *var, const char *value);
-void RDOSAPI RdosDeleteEnvVar(int handle, const char *var);
-int RDOSAPI RdosFindEnvVar(int handle, const char *var, char *value);
-void RDOSAPI RdosGetEnvData(int handle, char *buf);
-void RDOSAPI RdosSetEnvData(int handle, const char *buf);
+#pragma aux RdosWriteSizeString = \
+    CallGate_write_size_string \
+    parm [edi] [ecx];
+
+#pragma aux RdosWriteString = \
+    CallGate_write_asciiz  \
+    parm [edi];
+
+#pragma aux RdosReadLine = \
+    CallGate_read_con  \
+    parm [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosPing = \
+    CallGate_ping  \
+    CarryToBool \
+    parm [edx] [eax] \
+    value [eax];
+
+#pragma aux RdosGetIdeDisc = \
+    CallGate_get_ide_disc  \
+    ValidateDisc \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetFloppyDisc = \
+    CallGate_get_floppy_disc  \
+    ValidateDisc \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosSetDiscInfo = \
+    CallGate_set_disc_info  \
+    CarryToBool \
+    parm [eax] [ecx] [edx] [esi] [edi] \
+    value [eax];
+
+#pragma aux RdosGetDiscInfo = \
+    "push edi" \
+    "push esi" \
+    "push edx" \
+    "push ecx" \
+    CallGate_get_disc_info  \
+    "pop ebx" \
+    "movzx ecx,cx" \
+    "mov [ebx],ecx" \
+    "pop ebx" \
+    "mov [ebx],edx" \
+    "pop ebx" \
+    "movzx esi,si" \
+    "mov [ebx],esi" \
+    "pop ebx" \
+    "movzx edi,di" \
+    "mov [ebx],edi" \
+    CarryToBool \
+    parm [eax] [ecx] [edx] [esi] [edi] \
+    value [eax] \
+    modify [ebx ecx edx esi edi];
+
+#pragma aux RdosReadDisc = \
+    CallGate_read_disc  \
+    CarryToBool \
+    parm [eax] [edx] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosWriteDisc = \
+    CallGate_write_disc  \
+    CarryToBool \
+    parm [eax] [edx] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosGetRdfsInfo = \
+    "push gs" \
+    "mov ax,ds" \
+    "mov gs,ax" \
+    CallGate_get_rdfs_info  \
+    "pop gs" \
+    parm [esi] [edi] [ebx] \
+    modify [ax];
+
+#pragma aux RdosDemandLoadDrive = \
+    CallGate_demand_load_drive  \
+    parm [eax];
+
+#pragma aux RdosFormatDrive = \
+    CallGate_format_drive  \
+    ValidateDisc \
+    parm [eax] [edx] [ecx] [edi] \
+    value [eax];
+
+#pragma aux RdosAllocateFixedDrive = \
+    CallGate_allocate_fixed_drive  \
+    CarryToBool \
+    parm [eax] \
+    value [eax];
+
+#pragma aux RdosAllocateStaticDrive = \
+    CallGate_allocate_static_drive  \
+    ValidateDisc \
+    value [eax];
+
+#pragma aux RdosAllocateDynamicDrive = \
+    CallGate_allocate_dynamic_drive  \
+    ValidateDisc \
+    value [eax];
+
+#pragma aux RdosGetDriveInfo = \
+    CallGate_get_drive_info  \
+    "mov [ebx],eax" \
+    "movzx ecx,cx" \
+    "mov [esi],ecx" \
+    "mov [edi],edx" \
+    CarryToBool \
+    parm [eax] [ebx] [esi] [edi] \
+    value [eax] \
+    modify [ecx edx];
+
+#pragma aux RdosGetDriveDiscParam = \
+    CallGate_get_drive_disc_param  \
+    "movzx eax,al" \
+    "mov [ebx],eax" \
+    "mov [esi],edx" \
+    "mov [edi],ecx" \
+    CarryToBool \
+    parm [eax] [ebx] [esi] [edi] \
+    value [eax] \
+    modify [ecx edx];
+
+#pragma aux RdosCreateFileDrive = \
+    CallGate_create_file_drive  \
+    CarryToBool \
+    parm [eax] [ecx] [esi] [edi] \
+    value [eax];
+
+#pragma aux RdosOpenFileDrive = \
+    CallGate_open_file_drive  \
+    CarryToBool \
+    parm [eax] [edi] \
+    value [eax];
+
+#pragma aux RdosCreateCrc = \
+    CallGate_create_crc  \
+    ValidateHandle \
+    parm [ax] \
+    value [ebx];
+
+#pragma aux RdosCloseCrc = \
+    CallGate_close_crc  \
+    parm [ebx];
+
+#pragma aux RdosCalcCrc = \
+    CallGate_calc_crc  \
+    parm [ebx] [ax] [edi] [ecx] \
+    value [ax];
+
+#pragma aux RdosGetModuleHandle = \
+    "mov eax,fs:[0x24]" \
+    value [eax];
+
+#pragma aux RdosGetExeName = \
+    CallGate_get_exe_name  \
+    ValidateEdi \
+    value [edi];
+
+#pragma aux RdosLoadDll = \
+    CallGate_load_dll  \
+    ValidateHandle \
+    parm [edi] \
+    value [ebx];
+
+#pragma aux RdosFreeDll = \
+    CallGate_free_dll  \
+    parm [ebx];
+
+#pragma aux RdosGetModuleName = \
+    CallGate_get_module_name  \
+    ValidateEax \
+    parm [ebx] [edi] [ecx] \
+    value [eax];
+
+// ReadResource here
+// ReadBinaryResource here
+
+#pragma aux RdosGetModuleProc = \
+    CallGate_get_module_proc  \
+    ValidateEsi \
+    parm [ebx] [edi] \
+    value [esi];
+
+#pragma aux RdosGetModuleFocusKey = \
+    CallGate_get_module_focus_key  \
+    parm [ebx] \
+    value [al];
+
+#pragma aux RdosAddWaitForDebugEvent = \
+    CallGate_add_wait_for_debug_event  \
+    parm [ebx] [eax] [ecx];
+
+#pragma aux RdosGetDebugEvent = \
+    CallGate_get_debug_event  \
+    "movzx eax,ax" \
+    "mov [esi],eax" \
+    parm [ebx] [esi] \
+    value [bl] \
+    modify [eax];
+
+#pragma aux RdosGetDebugEventData = \
+    CallGate_get_debug_event_data  \
+    parm [ebx] [edi];
+
+#pragma aux RdosClearDebugEvent = \
+    CallGate_clear_debug_event  \
+    parm [ebx];
+
+#pragma aux RdosContinueDebugEvent = \
+    CallGate_continue_debug_event  \
+    parm [ebx] [eax];
+
+#pragma aux RdosOpenAdc = \
+    CallGate_open_adc  \
+    ValidateHandle \
+    parm [eax] \
+    value [ebx];
+
+#pragma aux RdosCloseAdc = \
+    CallGate_close_adc  \
+    parm [ebx];
+
+#pragma aux RdosDefineAdcTime = \
+    CallGate_define_adc_time  \
+    parm [ebx] [edx] [eax];
+
+#pragma aux RdosReadAdc = \
+    CallGate_read_adc  \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosReadSerialLines = \
+    "mov dh,cl" \
+    CallGate_read_serial_lines  \
+    "movzx eax,al" \
+    "mov [esi],eax" \
+    CarryToBool \
+    parm [ecx] [esi] \
+    value [eax] \
+    modify [dh];
+
+#pragma aux RdosToggleSerialLine = \
+    "mov dh,cl" \
+    CallGate_toggle_serial_line  \
+    CarryToBool \
+    parm [ecx] [edx] \
+    value [eax] \
+    modify [dh];
+
+#pragma aux RdosReadSerialVal = \
+    "mov dh,cl" \
+    CallGate_read_serial_val  \
+    "pushf" \
+    "shl eax,8" \
+    "mov [esi],eax" \
+    "popf" \
+    CarryToBool \
+    parm [ecx] [edx] [esi] \
+    value [eax] \
+    modify [dh];
+
+#pragma aux RdosWriteSerialVal = \
+    "mov dh,cl" \
+    "sar eax,8" \
+    CallGate_write_serial_val  \
+    CarryToBool \
+    parm [ecx] [edx] [eax] \
+    value [eax] \
+    modify [dh];
+
+#pragma aux RdosReadSerialRaw = \
+    "mov dh,cl" \
+    CallGate_read_serial_val  \
+    "mov [esi],eax" \
+    CarryToBool \
+    parm [ecx] [edx] [esi] \
+    value [eax] \
+    modify [dh];
+
+#pragma aux RdosWriteSerialRaw = \
+    "mov dh,cl" \
+    CallGate_write_serial_val  \
+    CarryToBool \
+    parm [ecx] [edx] [eax] \
+    value [eax] \
+    modify [dh];
+
+#pragma aux RdosOpenSysEnv = \
+    CallGate_open_sys_env \
+    ValidateHandle \
+    value [ebx];
+
+#pragma aux RdosOpenProcessEnv = \
+    CallGate_open_proc_env \
+    ValidateHandle \
+    value [ebx];
+
+#pragma aux RdosCloseEnv = \
+    CallGate_close_env \
+    parm [ebx];
+
+#pragma aux RdosAddEnvVar = \
+    CallGate_add_env_var \
+    parm [ebx] [esi] [edi];
+
+#pragma aux RdosDeleteEnvVar = \
+    CallGate_delete_env_var \
+    parm [ebx] [esi];
+
+#pragma aux RdosFindEnvVar = \
+    CallGate_find_env_var \
+    CarryToBool \
+    parm [ebx] [esi] [edi] \
+    value [eax];
+
+#pragma aux RdosGetEnvData = \
+    "xor ax,ax" \
+    "mov es:[edi],ax" \
+    CallGate_get_env_data \
+    parm [ebx] [edi] \
+    modify [ax];
+
+#pragma aux RdosSetEnvData = \
+    CallGate_set_env_data \
+    parm [ebx] [edi];
 
 int RDOSAPI RdosOpenSysIni();
 int RDOSAPI RdosOpenIni(const char *filename);
@@ -1664,10 +2013,6 @@ void RDOSAPI RdosSetFmRelease(int Handle, int VolumeHalf, int BetaHalf);
 void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, int PeakRightVolume, int SustainSamples);
 
 
-
-#pragma aux RdosWriteString = \
-    CallGate_write_asciiz  \
-    parm [edi];
 
 #endif
 

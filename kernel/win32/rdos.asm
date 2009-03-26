@@ -64,11 +64,12 @@ UserGate	MACRO gate_nr
 
 PAGE
 
-    jnc short tdone
-;    
-    xor ecx,ecx
+    jnc short tok
+;
+    xor esi,esi
 
-tdone:
+tok:    
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -585,7 +586,8 @@ RdosSpawn	PROC
 	jc rsFail
 ;	
     mov ebx,[ebp+20]
-    mov [ebx],ax
+    movzx eax,ax
+    mov [ebx],eax
 ;
     movzx eax,dx
     jmp rsDone
@@ -640,7 +642,8 @@ RdosSpawnDebug	PROC
 	jc rsdFail
 ;	
     mov ebx,[ebp+20]
-    mov [ebx],ax
+    movzx eax,ax
+    mov [ebx],eax
 ;
     movzx eax,dx
     jmp rsdDone
@@ -7798,7 +7801,8 @@ RdosGetDebugEvent	Proc near
 	jc gdeFail
 ;
     mov edx,[ebp+12]
-    mov [edx],ax
+    movzx eax,ax
+    mov [edx],eax
     mov al,bl
     jmp gdeDone
 
