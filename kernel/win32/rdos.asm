@@ -64,6 +64,12 @@ UserGate	MACRO gate_nr
 
 PAGE
 
+    jnc short tdone
+;    
+    xor ecx,ecx
+
+tdone:
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;

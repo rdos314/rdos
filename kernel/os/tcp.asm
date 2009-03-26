@@ -3531,11 +3531,11 @@ wait_for_tcp_connection	Proc far
 	div ecx
 	mov ds:tcp_user_timeout,ax
 	ClearSignal
-	GetThread
-	mov ds:tcp_owner,ax
 	or ds:tcp_pending,FLAG_WAIT
 
 wait_tcp_retry:	
+	GetThread
+	mov ds:tcp_owner,ax
 	LeaveSection ds:tcp_section
 ;
 	WaitForSignal
