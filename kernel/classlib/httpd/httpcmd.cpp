@@ -228,7 +228,7 @@ TDateTime THttpCommand::DecodeTime(THttpOption *opt)
         ok = FALSE;
 
     if (ok)
-        return TDateTime(year, month, day, hour, min, sec, 0);
+        return TDateTime(year, month, day, hour, min, sec, 0, 0);
     else
         return TDateTime();
 }
