@@ -99,7 +99,7 @@ TDateCommand::TDateCommand(TSession *session, const char *param)
 int TDateCommand::SetDate(const char *str)
 {
 	int year, month, day;
-	int hour, min, sec, msec;
+	int hour, min, sec, msec, usec;
 	TDateTime time;
 	int i;
 
@@ -143,9 +143,10 @@ int TDateCommand::SetDate(const char *str)
 	min = FTime.GetMin();
 	sec = FTime.GetSec();
 	msec = FTime.GetMilliSec();
+	usec = FTime.GetMicroSec();
 
-	FTime = TDateTime(year, month, day, hour, min, sec, msec);
-    FTime.Set();
+	FTime = TDateTime(year, month, day, hour, min, sec, msec, usec);
+	FTime.Set();
 
 	return TRUE;
 }
@@ -171,7 +172,7 @@ int TDateCommand::Execute(char *param)
 
 	if (*param == 0)
 	{
-		sprintf(date, "%04d-%02d-%02d", 
+		sprintf(date, "%04d-%02d-%02d",
 				FTime.GetYear(), FTime.GetMonth(),
 				FTime.GetDay());
 

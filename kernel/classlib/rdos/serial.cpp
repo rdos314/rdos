@@ -922,8 +922,8 @@ void TSerialDevice::Write(char ch)
 
     	if (FDebugFile && FOutChannel)
 	    {
-    	    RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
-	        Debug.Channel = FOutChannel;
+			RdosGetSysTime(&Debug.TimeMSB, &Debug.TimeLSB);
+			Debug.Channel = FOutChannel;
 	        Debug.ch = ch;
     	    FDebugFile->Write(&Debug, sizeof(Debug));
 	    }
@@ -1050,7 +1050,7 @@ char TSerialDevice::Read()
 
     	if (FDebugFile && FInChannel)
 	    {
-    	    RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
+			RdosGetSysTime(&Debug.TimeMSB, &Debug.TimeLSB);
 	        Debug.Channel = FInChannel;
 	        Debug.ch = ch;
     	    FDebugFile->Write(&Debug, sizeof(Debug));

@@ -513,48 +513,51 @@ void TTimeXAxis::NextSubScale(TDateTime &time)
 ##########################################################################*/
 void TTimeXAxis::SetupMilliScale(int width)
 {
-    TDateTime MinTime(FValMin);
-    TDateTime MaxTime(FValMax);
-    TDateTime time;
-    int year;
-    int month;
-    int day;
-    int hour;
-    int min;
-    int sec;
-    int milli;
-    int scales;
-    int i;
-    long double Start;
-    int val;
-    int height;
+	TDateTime MinTime(FValMin);
+	TDateTime MaxTime(FValMax);
+	TDateTime time;
+	int year;
+	int month;
+	int day;
+	int hour;
+	int min;
+	int sec;
+	int milli;
+	int micro;
+	int scales;
+	int i;
+	long double Start;
+	int val;
+	int height;
 
 	FScaleType = TIME_XAXIS_SCALE_MILLI;
 
 	FFont->GetStringMetrics("-", &FScaleHeight, &height);
 
 	if (FScaleHeight > 4)
-	    FScaleHeight = FScaleHeight / 2;
+		FScaleHeight = FScaleHeight / 2;
 
-    year = MinTime.GetYear();
-    month = MinTime.GetMonth();
-    day = MinTime.GetDay();
-    hour = MinTime.GetHour();
-    min = MinTime.GetMin();
-    sec = MinTime.GetSec();
-	 milli = MinTime.GetMilliSec();
-	 MinTime = TDateTime(year, month, day, hour, min, sec, milli);
-    MinTime.AddTics(1000);
+	year = MinTime.GetYear();
+	month = MinTime.GetMonth();
+	day = MinTime.GetDay();
+	hour = MinTime.GetHour();
+	min = MinTime.GetMin();
+	sec = MinTime.GetSec();
+	milli = MinTime.GetMilliSec();
+	micro = MinTime.GetMicroSec();
+	MinTime = TDateTime(year, month, day, hour, min, sec, milli, micro);
+	MinTime.AddTics(1000);
 
-    year = MaxTime.GetYear();
-    month = MaxTime.GetMonth();
-    day = MaxTime.GetDay();
-    hour = MaxTime.GetHour();
-    min = MaxTime.GetMin();
-    sec = MaxTime.GetSec();
-    milli = MaxTime.GetMilliSec();
-    MaxTime = TDateTime(year, month, day, hour, min, sec, milli);
-    MaxTime.AddTics(1000);
+	year = MaxTime.GetYear();
+	month = MaxTime.GetMonth();
+	day = MaxTime.GetDay();
+	hour = MaxTime.GetHour();
+	min = MaxTime.GetMin();
+	sec = MaxTime.GetSec();
+	milli = MaxTime.GetMilliSec();
+	micro = MaxTime.GetMicroSec();
+	MaxTime = TDateTime(year, month, day, hour, min, sec, milli, micro);
+	MaxTime.AddTics(1000);
 
     FIncr = 0;
     
@@ -681,58 +684,61 @@ void TTimeXAxis::SetupMilliScale(int width)
                 case 10:
                 case 20:
                 case 50:
-                case 100:
-                case 200:
-                case 500:
-                    year = MaxTime.GetYear();
-                    month = MaxTime.GetMonth();
-                    day = MaxTime.GetDay();
-                    hour = MaxTime.GetHour();
-                    min = MaxTime.GetMin();
-                    sec = MaxTime.GetSec();
-				    milli = MaxTime.GetMilliSec();
+				case 100:
+				case 200:
+				case 500:
+					year = MaxTime.GetYear();
+					month = MaxTime.GetMonth();
+					day = MaxTime.GetDay();
+					hour = MaxTime.GetHour();
+					min = MaxTime.GetMin();
+					sec = MaxTime.GetSec();
+					milli = MaxTime.GetMilliSec();
+					micro = MaxTime.GetMicroSec();
 					milli = milli / FIncr;
-				    milli = FIncr * milli;
-                    MaxTime = TDateTime(year, month, day, hour, min, sec, milli);
-                    MaxTime.AddTics(1000);
-                    FFirstVal = MaxTime;
-                    break;
+					milli = FIncr * milli;
+					micro = FIncr * micro;
+					MaxTime = TDateTime(year, month, day, hour, min, sec, milli, micro);
+					MaxTime.AddTics(1000);
+					FFirstVal = MaxTime;
+					break;
 
-            }
-        }
-        else
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MinTime;
-                    break;
+			}
+		}
+		else
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MinTime;
+					break;
 
-                case 2:
-                case 5:
-                case 10:
-                case 20:
-                case 50:
-                case 100:
-                case 200:
-                case 500:
-                    year = MinTime.GetYear();
-                    month = MinTime.GetMonth();
-                    day = MinTime.GetDay();
-                    hour = MinTime.GetHour();
-                    min = MinTime.GetMin();
-                    sec = MinTime.GetSec();
+				case 2:
+				case 5:
+				case 10:
+				case 20:
+				case 50:
+				case 100:
+				case 200:
+				case 500:
+					year = MinTime.GetYear();
+					month = MinTime.GetMonth();
+					day = MinTime.GetDay();
+					hour = MinTime.GetHour();
+					min = MinTime.GetMin();
+					sec = MinTime.GetSec();
 					milli = MinTime.GetMilliSec();
-                    milli = milli / FIncr;
-                    milli = FIncr * milli;
-                    MinTime = TDateTime(year, month, day, hour, min, sec, milli);
-                    MinTime.AddTics(1000);
-                    FFirstVal = MinTime;
-                    break;
-            }
-        }                  
-        FDigits = 3;
-    }
+					micro = MinTime.GetMicroSec();
+					milli = milli / FIncr;
+					milli = FIncr * milli;
+					MinTime = TDateTime(year, month, day, hour, min, sec, milli, micro);
+					MinTime.AddTics(1000);
+					FFirstVal = MinTime;
+					break;
+			}
+		}
+		FDigits = 3;
+	}
 }
 
 /*##########################################################################
@@ -776,139 +782,139 @@ void TTimeXAxis::SetupSecScale(int width)
     hour = MinTime.GetHour();
     min = MinTime.GetMin();
     sec = MinTime.GetSec();
-    MinTime = TDateTime(year, month, day, hour, min, sec, 50);
+	MinTime = TDateTime(year, month, day, hour, min, sec, 50, 0);
 
-    year = MaxTime.GetYear();
-    month = MaxTime.GetMonth();
-    day = MaxTime.GetDay();
-    hour = MaxTime.GetHour();
-    min = MaxTime.GetMin();
-    sec = MaxTime.GetSec();
-    MaxTime = TDateTime(year, month, day, hour, min, sec, 50);
+	year = MaxTime.GetYear();
+	month = MaxTime.GetMonth();
+	day = MaxTime.GetDay();
+	hour = MaxTime.GetHour();
+	min = MaxTime.GetMin();
+	sec = MaxTime.GetSec();
+	MaxTime = TDateTime(year, month, day, hour, min, sec, 50, 0);
 
-    FIncr = 0;
-    
+	FIncr = 0;
+
 	if (MaxTime > MinTime)
 	{
-        FNegativeScale = FALSE;
-        MaxTime.AddSec(1);
+		FNegativeScale = FALSE;
+		MaxTime.AddSec(1);
 
-        time = MinTime;
-        while (time < MaxTime)
-        {
-            time.AddSec(1);
-            FIncr++;
-        }
-    }
-    else
-    {
-        FNegativeScale = TRUE;
-	    MinTime.AddSec(1);
+		time = MinTime;
+		while (time < MaxTime)
+		{
+			time.AddSec(1);
+			FIncr++;
+		}
+	}
+	else
+	{
+		FNegativeScale = TRUE;
+		MinTime.AddSec(1);
 
-        time = MaxTime;
-        while (time < MinTime)
-        {
-            time.AddSec(1);
-            FIncr++;
-        }
-    }
+		time = MaxTime;
+		while (time < MinTime)
+		{
+			time.AddSec(1);
+			FIncr++;
+		}
+	}
 
-    if (FIncr != 0)
-    {
-        scales = (FXMax - FXMin) / width;
-        if (scales == 0)
-            FIncr = 0;
-    }
+	if (FIncr != 0)
+	{
+		scales = (FXMax - FXMin) / width;
+		if (scales == 0)
+			FIncr = 0;
+	}
 
-    if (FIncr != 0)
-    {
-        if (FIncr <= scales)
-        {
-            FSubScale = 10;
-            FIncr = 1;
-        }
-        else
-        {
-            if (FIncr <= 2 * scales)
-            {
-                FSubScale = 2;
-                FIncr = 2;
-            }
-            else
-            {              
-                if (FIncr <= 5 * scales)
-                {
-                    FSubScale = 5;
-                    FIncr = 5;
-                }
-                else
-                {
-                    if (FIncr <= 15 * scales)
-                    {
-                        FSubScale = 3;
-                        FIncr = 15;
-                    }
-                    else
-                        FIncr = 0;
-                }
-            }
-        }
-    }
+	if (FIncr != 0)
+	{
+		if (FIncr <= scales)
+		{
+			FSubScale = 10;
+			FIncr = 1;
+		}
+		else
+		{
+			if (FIncr <= 2 * scales)
+			{
+				FSubScale = 2;
+				FIncr = 2;
+			}
+			else
+			{
+				if (FIncr <= 5 * scales)
+				{
+					FSubScale = 5;
+					FIncr = 5;
+				}
+				else
+				{
+					if (FIncr <= 15 * scales)
+					{
+						FSubScale = 3;
+						FIncr = 15;
+					}
+					else
+						FIncr = 0;
+				}
+			}
+		}
+	}
 
-    if (FIncr != 0)
-    {
-        
-        if (FNegativeScale)
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MaxTime;
-                    break;
+	if (FIncr != 0)
+	{
 
-                case 2:
-                case 5:
-                case 15:
-                    year = MaxTime.GetYear();
-                    month = MaxTime.GetMonth();
-                    day = MaxTime.GetDay();
-                    hour = MaxTime.GetHour();
-                    min = MaxTime.GetMin();
-                    sec = MaxTime.GetSec();
-                    sec = sec / FIncr;
-                    sec = FIncr * sec;
-                    MaxTime = TDateTime(year, month, day, hour, min, sec, 50);
-                    FFirstVal = MaxTime;
-                    break;
+		if (FNegativeScale)
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MaxTime;
+					break;
 
-            }
-        }
-        else
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MinTime;
-                    break;
+				case 2:
+				case 5:
+				case 15:
+					year = MaxTime.GetYear();
+					month = MaxTime.GetMonth();
+					day = MaxTime.GetDay();
+					hour = MaxTime.GetHour();
+					min = MaxTime.GetMin();
+					sec = MaxTime.GetSec();
+					sec = sec / FIncr;
+					sec = FIncr * sec;
+					MaxTime = TDateTime(year, month, day, hour, min, sec, 50, 0);
+					FFirstVal = MaxTime;
+					break;
 
-                case 2:
-                case 5:
-                case 15:
-                    year = MinTime.GetYear();
-                    month = MinTime.GetMonth();
-                    day = MinTime.GetDay();
-                    hour = MinTime.GetHour();
-                    min = MinTime.GetMin();
-                    sec = MinTime.GetSec();
-                    sec = sec / FIncr;
-                    sec = FIncr * sec;
-                    MinTime = TDateTime(year, month, day, hour, min, sec, 50);
-                    FFirstVal = MinTime;
-                    break;
-            }
-        }                  
-        FDigits = 3;
-    }
+			}
+		}
+		else
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MinTime;
+					break;
+
+				case 2:
+				case 5:
+				case 15:
+					year = MinTime.GetYear();
+					month = MinTime.GetMonth();
+					day = MinTime.GetDay();
+					hour = MinTime.GetHour();
+					min = MinTime.GetMin();
+					sec = MinTime.GetSec();
+					sec = sec / FIncr;
+					sec = FIncr * sec;
+					MinTime = TDateTime(year, month, day, hour, min, sec, 50, 0);
+					FFirstVal = MinTime;
+					break;
+			}
+		}
+		FDigits = 3;
+	}
 }
 
 /*##########################################################################
@@ -924,162 +930,162 @@ void TTimeXAxis::SetupSecScale(int width)
 ##########################################################################*/
 void TTimeXAxis::SetupMinScale(int width)
 {
-    TDateTime MinTime(FValMin);
-    TDateTime MaxTime(FValMax);
-    TDateTime time;
-    int year;
-    int month;
-    int day;
-    int hour;
-    int min;
-    int scales;
-    int i;
-    long double Start;
-    int val;
-    int height;
+	TDateTime MinTime(FValMin);
+	TDateTime MaxTime(FValMax);
+	TDateTime time;
+	int year;
+	int month;
+	int day;
+	int hour;
+	int min;
+	int scales;
+	int i;
+	long double Start;
+	int val;
+	int height;
 
 	FScaleType = TIME_XAXIS_SCALE_MIN;
 
 	FFont->GetStringMetrics("-", &FScaleHeight, &height);
 
 	if (FScaleHeight > 4)
-	    FScaleHeight = FScaleHeight / 2;
+		FScaleHeight = FScaleHeight / 2;
 
-    year = MinTime.GetYear();
-    month = MinTime.GetMonth();
-    day = MinTime.GetDay();
-    hour = MinTime.GetHour();
-    min = MinTime.GetMin();
-    MinTime = TDateTime(year, month, day, hour, min, 0, 50);
+	year = MinTime.GetYear();
+	month = MinTime.GetMonth();
+	day = MinTime.GetDay();
+	hour = MinTime.GetHour();
+	min = MinTime.GetMin();
+	MinTime = TDateTime(year, month, day, hour, min, 0, 50, 0);
 
-    year = MaxTime.GetYear();
-    month = MaxTime.GetMonth();
-    day = MaxTime.GetDay();
-    hour = MaxTime.GetHour();
-    min = MaxTime.GetMin();
-    MaxTime = TDateTime(year, month, day, hour, min, 0, 50);
+	year = MaxTime.GetYear();
+	month = MaxTime.GetMonth();
+	day = MaxTime.GetDay();
+	hour = MaxTime.GetHour();
+	min = MaxTime.GetMin();
+	MaxTime = TDateTime(year, month, day, hour, min, 0, 50, 0);
 
-    FIncr = 0;
-    
+	FIncr = 0;
+
 	if (MaxTime > MinTime)
 	{
-        FNegativeScale = FALSE;
-        MaxTime.AddMin(1);
+		FNegativeScale = FALSE;
+		MaxTime.AddMin(1);
 
-        time = MinTime;
-        while (time < MaxTime)
-        {
-            time.AddMin(1);
-            FIncr++;
-        }
-    }
-    else
-    {
-        FNegativeScale = TRUE;
-	    MinTime.AddMin(1);
+		time = MinTime;
+		while (time < MaxTime)
+		{
+			time.AddMin(1);
+			FIncr++;
+		}
+	}
+	else
+	{
+		FNegativeScale = TRUE;
+		MinTime.AddMin(1);
 
-        time = MaxTime;
-        while (time < MinTime)
-        {
-            time.AddMin(1);
-            FIncr++;
-        }
-    }
+		time = MaxTime;
+		while (time < MinTime)
+		{
+			time.AddMin(1);
+			FIncr++;
+		}
+	}
 
-    if (FIncr != 0)
-    {
-        scales = (FXMax - FXMin) / width;
-        if (scales == 0)
-            FIncr = 0;
-    }
+	if (FIncr != 0)
+	{
+		scales = (FXMax - FXMin) / width;
+		if (scales == 0)
+			FIncr = 0;
+	}
 
-    if (FIncr != 0)
-    {
-        if (FIncr <= scales)
-        {
-            FSubScale = 4;
-            FIncr = 1;
-        }
-        else
-        {
-            if (FIncr <= 2 * scales)
-            {
-                FSubScale = 2;
-                FIncr = 2;
-            }
-            else
-            {              
-                if (FIncr <= 5 * scales)
-                {
-                    FSubScale = 5;
-                    FIncr = 5;
-                }
-                else
-                {
-                    if (FIncr <= 15 * scales)
-                    {
-                        FSubScale = 3;
-                        FIncr = 15;
-                    }
-                    else
-                        FIncr = 0;
-                }
-            }
-        }
-    }
+	if (FIncr != 0)
+	{
+		if (FIncr <= scales)
+		{
+			FSubScale = 4;
+			FIncr = 1;
+		}
+		else
+		{
+			if (FIncr <= 2 * scales)
+			{
+				FSubScale = 2;
+				FIncr = 2;
+			}
+			else
+			{
+				if (FIncr <= 5 * scales)
+				{
+					FSubScale = 5;
+					FIncr = 5;
+				}
+				else
+				{
+					if (FIncr <= 15 * scales)
+					{
+						FSubScale = 3;
+						FIncr = 15;
+					}
+					else
+						FIncr = 0;
+				}
+			}
+		}
+	}
 
-    if (FIncr != 0)
-    {
-        
-        if (FNegativeScale)
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MaxTime;
-                    break;
+	if (FIncr != 0)
+	{
 
-                case 2:
-                case 5:
-                case 15:
-                    year = MaxTime.GetYear();
-                    month = MaxTime.GetMonth();
-                    day = MaxTime.GetDay();
-                    hour = MaxTime.GetHour();
-                    min = MaxTime.GetMin();
-                    min = min / FIncr;
-                    min = FIncr * min;
-                    MaxTime = TDateTime(year, month, day, hour, min, 0, 50);
-                    FFirstVal = MaxTime;
-                    break;
+		if (FNegativeScale)
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MaxTime;
+					break;
 
-            }
-        }
-        else
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MinTime;
-                    break;
+				case 2:
+				case 5:
+				case 15:
+					year = MaxTime.GetYear();
+					month = MaxTime.GetMonth();
+					day = MaxTime.GetDay();
+					hour = MaxTime.GetHour();
+					min = MaxTime.GetMin();
+					min = min / FIncr;
+					min = FIncr * min;
+					MaxTime = TDateTime(year, month, day, hour, min, 0, 50, 0);
+					FFirstVal = MaxTime;
+					break;
 
-                case 2:
-                case 5:
-                case 15:
-                    year = MinTime.GetYear();
-                    month = MinTime.GetMonth();
-                    day = MinTime.GetDay();
-                    hour = MinTime.GetHour();
-                    min = MinTime.GetMin();
-                    min = min / FIncr;
-                    min = FIncr * min;
-                    MinTime = TDateTime(year, month, day, hour, min, 0, 50);
-                    FFirstVal = MinTime;
-                    break;
-            }
-        }                  
-        FDigits = 3;
-    }
+			}
+		}
+		else
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MinTime;
+					break;
+
+				case 2:
+				case 5:
+				case 15:
+					year = MinTime.GetYear();
+					month = MinTime.GetMonth();
+					day = MinTime.GetDay();
+					hour = MinTime.GetHour();
+					min = MinTime.GetMin();
+					min = min / FIncr;
+					min = FIncr * min;
+					MinTime = TDateTime(year, month, day, hour, min, 0, 50, 0);
+					FFirstVal = MinTime;
+					break;
+			}
+		}
+		FDigits = 3;
+	}
 }
 
 /*##########################################################################
@@ -1095,157 +1101,157 @@ void TTimeXAxis::SetupMinScale(int width)
 ##########################################################################*/
 void TTimeXAxis::SetupHourScale(int width)
 {
-    TDateTime MinTime(FValMin);
-    TDateTime MaxTime(FValMax);
-    TDateTime time;
-    int year;
-    int month;
-    int day;
-    int hour;
-    int scales;
-    int i;
-    long double Start;
-    int val;
-    int height;
+	TDateTime MinTime(FValMin);
+	TDateTime MaxTime(FValMax);
+	TDateTime time;
+	int year;
+	int month;
+	int day;
+	int hour;
+	int scales;
+	int i;
+	long double Start;
+	int val;
+	int height;
 
 	FScaleType = TIME_XAXIS_SCALE_HOUR;
 
 	FFont->GetStringMetrics("-", &FScaleHeight, &height);
 
 	if (FScaleHeight > 4)
-	    FScaleHeight = FScaleHeight / 2;
+		FScaleHeight = FScaleHeight / 2;
 
-    year = MinTime.GetYear();
-    month = MinTime.GetMonth();
-    day = MinTime.GetDay();
-    hour = MinTime.GetHour();
-    MinTime = TDateTime(year, month, day, hour, 0, 0, 50);
+	year = MinTime.GetYear();
+	month = MinTime.GetMonth();
+	day = MinTime.GetDay();
+	hour = MinTime.GetHour();
+	MinTime = TDateTime(year, month, day, hour, 0, 0, 50, 0);
 
-    year = MaxTime.GetYear();
-    month = MaxTime.GetMonth();
-    day = MaxTime.GetDay();
-    hour = MaxTime.GetHour();
-    MaxTime = TDateTime(year, month, day, hour, 0, 0, 50);
+	year = MaxTime.GetYear();
+	month = MaxTime.GetMonth();
+	day = MaxTime.GetDay();
+	hour = MaxTime.GetHour();
+	MaxTime = TDateTime(year, month, day, hour, 0, 0, 50, 0);
 
-    FIncr = 0;
-    
+	FIncr = 0;
+
 	if (MaxTime > MinTime)
 	{
-        FNegativeScale = FALSE;
-        MaxTime.AddHour(1);
+		FNegativeScale = FALSE;
+		MaxTime.AddHour(1);
 
-        time = MinTime;
-        while (time < MaxTime)
-        {
-            time.AddHour(1);
-            FIncr++;
-        }
-    }
-    else
-    {
-        FNegativeScale = TRUE;
-	    MinTime.AddHour(1);
+		time = MinTime;
+		while (time < MaxTime)
+		{
+			time.AddHour(1);
+			FIncr++;
+		}
+	}
+	else
+	{
+		FNegativeScale = TRUE;
+		MinTime.AddHour(1);
 
-        time = MaxTime;
-        while (time < MinTime)
-        {
-            time.AddHour(1);
-            FIncr++;
-        }
-    }
+		time = MaxTime;
+		while (time < MinTime)
+		{
+			time.AddHour(1);
+			FIncr++;
+		}
+	}
 
-    if (FIncr != 0)
-    {
-        scales = (FXMax - FXMin) / width;
-        if (scales == 0)
-            FIncr = 0;
-    }
+	if (FIncr != 0)
+	{
+		scales = (FXMax - FXMin) / width;
+		if (scales == 0)
+			FIncr = 0;
+	}
 
-    if (FIncr != 0)
-    {
-        if (FIncr <= scales)
-        {
-            FSubScale = 4;
-            FIncr = 1;
-        }
-        else
-        {
-            if (FIncr <= 2 * scales)
-            {
-                FSubScale = 2;
-                FIncr = 2;
-            }
-            else
-            {              
-                if (FIncr <= 3 * scales)
-                {
-                    FSubScale = 3;
-                    FIncr = 3;
-                }
-                else
-                {
-                    if (FIncr <= 6 * scales)
-                    {
-                        FSubScale = 6;
-                        FIncr = 6;
-                    }
-                    else
-                        FIncr = 0;
-                }
-            }
-        }
-    }
+	if (FIncr != 0)
+	{
+		if (FIncr <= scales)
+		{
+			FSubScale = 4;
+			FIncr = 1;
+		}
+		else
+		{
+			if (FIncr <= 2 * scales)
+			{
+				FSubScale = 2;
+				FIncr = 2;
+			}
+			else
+			{
+				if (FIncr <= 3 * scales)
+				{
+					FSubScale = 3;
+					FIncr = 3;
+				}
+				else
+				{
+					if (FIncr <= 6 * scales)
+					{
+						FSubScale = 6;
+						FIncr = 6;
+					}
+					else
+						FIncr = 0;
+				}
+			}
+		}
+	}
 
-    if (FIncr != 0)
-    {
-        
-        if (FNegativeScale)
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MaxTime;
-                    break;
+	if (FIncr != 0)
+	{
 
-                case 2:
-                case 3:
-                case 6:
-                    year = MaxTime.GetYear();
-                    month = MaxTime.GetMonth();
-                    day = MaxTime.GetDay();
-                    hour = MaxTime.GetHour();
-                    hour = hour / FIncr;
-                    hour = FIncr * hour;
-                    MaxTime = TDateTime(year, month, day, hour, 0, 0, 50);
-                    FFirstVal = MaxTime;
-                    break;
+		if (FNegativeScale)
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MaxTime;
+					break;
 
-            }
-        }
-        else
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MinTime;
-                    break;
+				case 2:
+				case 3:
+				case 6:
+					year = MaxTime.GetYear();
+					month = MaxTime.GetMonth();
+					day = MaxTime.GetDay();
+					hour = MaxTime.GetHour();
+					hour = hour / FIncr;
+					hour = FIncr * hour;
+					MaxTime = TDateTime(year, month, day, hour, 0, 0, 50, 0);
+					FFirstVal = MaxTime;
+					break;
 
-                case 2:
-                case 3:
-                case 6:
-                    year = MinTime.GetYear();
-                    month = MinTime.GetMonth();
-                    day = MinTime.GetDay();
-                    hour = MinTime.GetHour();
-                    hour = hour / FIncr;
-                    hour = FIncr * hour;
-                    MinTime = TDateTime(year, month, day, hour, 0, 0, 50);
-                    FFirstVal = MinTime;
-                    break;
-            }
-        }                  
-        FDigits = 3;
-    }
+			}
+		}
+		else
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MinTime;
+					break;
+
+				case 2:
+				case 3:
+				case 6:
+					year = MinTime.GetYear();
+					month = MinTime.GetMonth();
+					day = MinTime.GetDay();
+					hour = MinTime.GetHour();
+					hour = hour / FIncr;
+					hour = FIncr * hour;
+					MinTime = TDateTime(year, month, day, hour, 0, 0, 50, 0);
+					FFirstVal = MinTime;
+					break;
+			}
+		}
+		FDigits = 3;
+	}
 }
 
 /*##########################################################################
@@ -1261,160 +1267,160 @@ void TTimeXAxis::SetupHourScale(int width)
 ##########################################################################*/
 void TTimeXAxis::SetupDateScale(int width)
 {
-    TDateTime MinTime(FValMin);
-    TDateTime MaxTime(FValMax);
-    TDateTime time;
-    int year;
-    int month;
-    int day;
-    int scales;
-    int i;
-    long double Start;
-    int val;
-    int height;
-    int dow;
+	TDateTime MinTime(FValMin);
+	TDateTime MaxTime(FValMax);
+	TDateTime time;
+	int year;
+	int month;
+	int day;
+	int scales;
+	int i;
+	long double Start;
+	int val;
+	int height;
+	int dow;
 
 	FScaleType = TIME_XAXIS_SCALE_DATE;
 
 	FFont->GetStringMetrics("-", &FScaleHeight, &height);
 
 	if (FScaleHeight > 4)
-	    FScaleHeight = FScaleHeight / 2;
+		FScaleHeight = FScaleHeight / 2;
 
-    year = MinTime.GetYear();
-    month = MinTime.GetMonth();
-    day = MinTime.GetDay();
-    MinTime = TDateTime(year, month, day, 0, 0, 0, 50);
+	year = MinTime.GetYear();
+	month = MinTime.GetMonth();
+	day = MinTime.GetDay();
+	MinTime = TDateTime(year, month, day, 0, 0, 0, 50, 0);
 
-    year = MaxTime.GetYear();
-    month = MaxTime.GetMonth();
-    day = MaxTime.GetDay();
-    MaxTime = TDateTime(year, month, day, 0, 0, 0, 50);
+	year = MaxTime.GetYear();
+	month = MaxTime.GetMonth();
+	day = MaxTime.GetDay();
+	MaxTime = TDateTime(year, month, day, 0, 0, 0, 50, 0);
 
-    FIncr = 0;
-    
+	FIncr = 0;
+
 	if (MaxTime > MinTime)
 	{
-        FNegativeScale = FALSE;
-        MaxTime.AddDay(1);
+		FNegativeScale = FALSE;
+		MaxTime.AddDay(1);
 
-        time = MinTime;
-        while (time < MaxTime)
-        {
-            time.AddDay(1);
-            FIncr++;
-        }
-    }
-    else
-    {
-        FNegativeScale = TRUE;
-	    MinTime.AddDay(1);
+		time = MinTime;
+		while (time < MaxTime)
+		{
+			time.AddDay(1);
+			FIncr++;
+		}
+	}
+	else
+	{
+		FNegativeScale = TRUE;
+		MinTime.AddDay(1);
 
-        time = MaxTime;
-        while (time < MinTime)
-        {
-            time.AddDay(1);
-            FIncr++;
-        }
-    }
+		time = MaxTime;
+		while (time < MinTime)
+		{
+			time.AddDay(1);
+			FIncr++;
+		}
+	}
 
-    if (FIncr != 0)
-    {
-        scales = (FXMax - FXMin) / width;
-        if (scales == 0)
-            FIncr = 0;
-    }
+	if (FIncr != 0)
+	{
+		scales = (FXMax - FXMin) / width;
+		if (scales == 0)
+			FIncr = 0;
+	}
 
-    if (FIncr != 0)
-    {
-        if (FIncr <= scales)
-        {
-            FSubScale = 4;
-            FIncr = 1;
-        }
-        else
-        {
-            if (FIncr <= 2 * scales)
-            {
-                FSubScale = 2;
-                FIncr = 2;
-            }
-            else
-            {              
-                if (FIncr <= 7 *scales)
-                {
-                    FSubScale = 7;
-                    FIncr = 7;
-                }
-                else
-                    FIncr = 0;
-            }
-        }
-    }
+	if (FIncr != 0)
+	{
+		if (FIncr <= scales)
+		{
+			FSubScale = 4;
+			FIncr = 1;
+		}
+		else
+		{
+			if (FIncr <= 2 * scales)
+			{
+				FSubScale = 2;
+				FIncr = 2;
+			}
+			else
+			{
+				if (FIncr <= 7 *scales)
+				{
+					FSubScale = 7;
+					FIncr = 7;
+				}
+				else
+					FIncr = 0;
+			}
+		}
+	}
 
-    if (FIncr != 0)
-    {
-        
-        if (FNegativeScale)
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MaxTime;
-                    break;
+	if (FIncr != 0)
+	{
 
-                case 2:
-                    year = MaxTime.GetYear();
-                    month = MaxTime.GetMonth();
-                    day = MaxTime.GetDay();
-                    day = (day - 1) / 2;
-                    day = 2 * day + 1;
-                    MaxTime = TDateTime(year, month, day, 0, 0, 0, 50);
-                    FFirstVal = MaxTime;
-                    break;
+		if (FNegativeScale)
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MaxTime;
+					break;
 
-                case 7:
-                    year = MaxTime.GetYear();
-                    month = MaxTime.GetMonth();
-                    day = MaxTime.GetDay();
-                    MaxTime = TDateTime(year, month, day, 0, 0, 0, 50);
-                    dow = MaxTime.GetDayOfWeek();
-                    MaxTime.AddDay(-dow);
-                    FFirstVal = MaxTime;
-                    break;
-            }
-        }
-        else
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MinTime;
-                    break;
+				case 2:
+					year = MaxTime.GetYear();
+					month = MaxTime.GetMonth();
+					day = MaxTime.GetDay();
+					day = (day - 1) / 2;
+					day = 2 * day + 1;
+					MaxTime = TDateTime(year, month, day, 0, 0, 0, 50, 0);
+					FFirstVal = MaxTime;
+					break;
 
-                case 2:
-                    year = MinTime.GetYear();
-                    month = MinTime.GetMonth();
-                    day = MinTime.GetDay();
-                    day = (day - 1) / 2;
-                    day = 2 * day + 1;
-                    MinTime = TDateTime(year, month, day, 0, 0, 0, 50);
-                    FFirstVal = MinTime;
-                    break;
+				case 7:
+					year = MaxTime.GetYear();
+					month = MaxTime.GetMonth();
+					day = MaxTime.GetDay();
+					MaxTime = TDateTime(year, month, day, 0, 0, 0, 50, 0);
+					dow = MaxTime.GetDayOfWeek();
+					MaxTime.AddDay(-dow);
+					FFirstVal = MaxTime;
+					break;
+			}
+		}
+		else
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MinTime;
+					break;
 
-                case 7:
-                    year = MinTime.GetYear();
-                    month = MinTime.GetMonth();
-                    day = MinTime.GetDay();
-                    MinTime = TDateTime(year, month, day, 0, 0, 0, 50);
-                    dow = MinTime.GetDayOfWeek();
-                    MinTime.AddDay(-dow);
-                    FFirstVal = MinTime;
-                    break;
-            }
-        }                  
-        FDigits = 3;
-    }
+				case 2:
+					year = MinTime.GetYear();
+					month = MinTime.GetMonth();
+					day = MinTime.GetDay();
+					day = (day - 1) / 2;
+					day = 2 * day + 1;
+					MinTime = TDateTime(year, month, day, 0, 0, 0, 50, 0);
+					FFirstVal = MinTime;
+					break;
+
+				case 7:
+					year = MinTime.GetYear();
+					month = MinTime.GetMonth();
+					day = MinTime.GetDay();
+					MinTime = TDateTime(year, month, day, 0, 0, 0, 50, 0);
+					dow = MinTime.GetDayOfWeek();
+					MinTime.AddDay(-dow);
+					FFirstVal = MinTime;
+					break;
+			}
+		}
+		FDigits = 3;
+	}
 }
 
 /*##########################################################################
@@ -1430,125 +1436,125 @@ void TTimeXAxis::SetupDateScale(int width)
 ##########################################################################*/
 void TTimeXAxis::SetupMonthScale(int width)
 {
-    TDateTime MinTime(FValMin);
-    TDateTime MaxTime(FValMax);
-    TDateTime time;
-    int year;
-    int month;
-    int scales;
-    int i;
-    long double Start;
-    int val;
-    int height;
+	TDateTime MinTime(FValMin);
+	TDateTime MaxTime(FValMax);
+	TDateTime time;
+	int year;
+	int month;
+	int scales;
+	int i;
+	long double Start;
+	int val;
+	int height;
 
 	FScaleType = TIME_XAXIS_SCALE_MONTH;
 
 	FFont->GetStringMetrics("-", &FScaleHeight, &height);
 
 	if (FScaleHeight > 4)
-	    FScaleHeight = FScaleHeight / 2;
+		FScaleHeight = FScaleHeight / 2;
 
-    year = MinTime.GetYear();
-    month = MinTime.GetMonth();
-    MinTime = TDateTime(year, month, 1, 0, 0, 0, 50);
+	year = MinTime.GetYear();
+	month = MinTime.GetMonth();
+	MinTime = TDateTime(year, month, 1, 0, 0, 0, 50, 0);
 
-    year = MaxTime.GetYear();
-    month = MaxTime.GetMonth();
-    MaxTime = TDateTime(year, month, 1, 0, 0, 0, 50);
+	year = MaxTime.GetYear();
+	month = MaxTime.GetMonth();
+	MaxTime = TDateTime(year, month, 1, 0, 0, 0, 50, 0);
 
-    FIncr = 0;
-    
+	FIncr = 0;
+
 	if (MaxTime > MinTime)
 	{
-        FNegativeScale = FALSE;
-        MaxTime.AddMonth(1);
+		FNegativeScale = FALSE;
+		MaxTime.AddMonth(1);
 
-        time = MinTime;
-        while (time < MaxTime)
-        {
-            time.AddMonth(1);
-            FIncr++;
-        }
-    }
-    else
-    {
-        FNegativeScale = TRUE;
-	    MinTime.AddMonth(1);
+		time = MinTime;
+		while (time < MaxTime)
+		{
+			time.AddMonth(1);
+			FIncr++;
+		}
+	}
+	else
+	{
+		FNegativeScale = TRUE;
+		MinTime.AddMonth(1);
 
-        time = MaxTime;
-        while (time < MinTime)
-        {
-            time.AddMonth(1);
-            FIncr++;
-        }
-    }
+		time = MaxTime;
+		while (time < MinTime)
+		{
+			time.AddMonth(1);
+			FIncr++;
+		}
+	}
 
-    if (FIncr != 0)
-    {
-        scales = (FXMax - FXMin) / width;
-        if (scales == 0)
-            FIncr = 0;
-    }
+	if (FIncr != 0)
+	{
+		scales = (FXMax - FXMin) / width;
+		if (scales == 0)
+			FIncr = 0;
+	}
 
-    if (FIncr != 0)
-    {
-        if (FIncr <= scales)
-        {
-            FSubScale = 1;
-            FIncr = 1;
-        }
-        else
-        {
-            if (FIncr <= 3 * scales)
-            {
-                FSubScale = 3;
-                FIncr = 3;
-            }
-            else
-                FIncr = 0;
-        }
-    }
+	if (FIncr != 0)
+	{
+		if (FIncr <= scales)
+		{
+			FSubScale = 1;
+			FIncr = 1;
+		}
+		else
+		{
+			if (FIncr <= 3 * scales)
+			{
+				FSubScale = 3;
+				FIncr = 3;
+			}
+			else
+				FIncr = 0;
+		}
+	}
 
-    if (FIncr != 0)
-    {
-        if (FNegativeScale)
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MaxTime;
-                    break;
+	if (FIncr != 0)
+	{
+		if (FNegativeScale)
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MaxTime;
+					break;
 
-                case 3:
-                    year = MaxTime.GetYear();
-                    month = MaxTime.GetMonth();
-                    month = (month - 1) / 3;
-                    month = 3 * month + 1;
-                    MaxTime = TDateTime(year, month, 1, 0, 0, 0, 50);
-                    FFirstVal = MaxTime;
-                    break;
-            }
-        }
-        else
-        {
-            switch (FIncr)
-            {
-                case 1:
-                    FFirstVal = MinTime;
-                    break;
+				case 3:
+					year = MaxTime.GetYear();
+					month = MaxTime.GetMonth();
+					month = (month - 1) / 3;
+					month = 3 * month + 1;
+					MaxTime = TDateTime(year, month, 1, 0, 0, 0, 50, 0);
+					FFirstVal = MaxTime;
+					break;
+			}
+		}
+		else
+		{
+			switch (FIncr)
+			{
+				case 1:
+					FFirstVal = MinTime;
+					break;
 
-                case 3:
-                    year = MinTime.GetYear();
-                    month = MinTime.GetMonth();
-                    month = (month - 1) / 3;
-                    month = 3 * month + 1;
-                    MinTime = TDateTime(year, month, 1, 0, 0, 0, 50);
-                    FFirstVal = MinTime;
-                    break;
-            }
-        }                  
-        FDigits = 3;
-    }
+				case 3:
+					year = MinTime.GetYear();
+					month = MinTime.GetMonth();
+					month = (month - 1) / 3;
+					month = 3 * month + 1;
+					MinTime = TDateTime(year, month, 1, 0, 0, 0, 50, 0);
+					FFirstVal = MinTime;
+					break;
+			}
+		}
+		FDigits = 3;
+	}
 }
 
 /*##########################################################################
@@ -1564,133 +1570,133 @@ void TTimeXAxis::SetupMonthScale(int width)
 ##########################################################################*/
 void TTimeXAxis::SetupYearScale(int width)
 {
-    TDateTime MinTime(FValMin);
-    TDateTime MaxTime(FValMax);
-    int exp;
-    int scales;
-    int i;
-    long double Start;
-    int val;
-    int height;
-    int MinYear;
-    int MaxYear;
+	TDateTime MinTime(FValMin);
+	TDateTime MaxTime(FValMax);
+	int exp;
+	int scales;
+	int i;
+	long double Start;
+	int val;
+	int height;
+	int MinYear;
+	int MaxYear;
 
-    FScaleType = TIME_XAXIS_SCALE_YEAR;
-    
-    FFont->GetStringMetrics("-", &FScaleHeight, &height);
+	FScaleType = TIME_XAXIS_SCALE_YEAR;
 
-    if (FScaleHeight > 4)
-        FScaleHeight = FScaleHeight / 2;
-    
-    MinYear = MinTime.GetYear();
-    MaxYear = MaxTime.GetYear();
+	FFont->GetStringMetrics("-", &FScaleHeight, &height);
 
-    if (MaxYear > MinYear)
-        MaxYear++;
-    else
-        MinYear++;
-    
-    FIncr = MaxYear - MinYear;
+	if (FScaleHeight > 4)
+		FScaleHeight = FScaleHeight / 2;
 
-    if (FIncr < 0)
-    {
-        FNegativeScale = TRUE;
-        FIncr = -FIncr;
-    }
-    else
-        FNegativeScale = FALSE;
+	MinYear = MinTime.GetYear();
+	MaxYear = MaxTime.GetYear();
 
-    if (FIncr != 0)
-    {
-        scales = (FXMax - FXMin) / width;
-        if (scales == 0)
-            FIncr = 0;
-    }
+	if (MaxYear > MinYear)
+		MaxYear++;
+	else
+		MinYear++;
 
-    if (FIncr != 0)
-    {
-        FIncr = (FIncr - 1) / scales + 1;
+	FIncr = MaxYear - MinYear;
 
-        exp = 0;
+	if (FIncr < 0)
+	{
+		FNegativeScale = TRUE;
+		FIncr = -FIncr;
+	}
+	else
+		FNegativeScale = FALSE;
 
-        while (FIncr > 10)
-        {
-            exp++;
-            FIncr = FIncr / 10;
-        }
+	if (FIncr != 0)
+	{
+		scales = (FXMax - FXMin) / width;
+		if (scales == 0)
+			FIncr = 0;
+	}
+
+	if (FIncr != 0)
+	{
+		FIncr = (FIncr - 1) / scales + 1;
+
+		exp = 0;
+
+		while (FIncr > 10)
+		{
+			exp++;
+			FIncr = FIncr / 10;
+		}
 
 		if (FIncr == 1)
 		{
-            exp--;
-            FIncr = 10;
-        }
+			exp--;
+			FIncr = 10;
+		}
 
-        if (FIncr == 0)
-        {
-            FIncr = 1;
-            FSubScale = 4;
-        }
-        else
-        {
-            if (FIncr <= 2)
-            {
-                FIncr = 2;
-                FSubScale = 2;
-            }
-            else
-            {
-                if (FIncr <= 5)
-                {
-                    FIncr = 5;
-                    FSubScale = 5;
-                }
-                else
-                {   
-                    exp++;
-                    FIncr = 1;
-                    if (exp)
-                        FSubScale = 2;
-                    else
-                        FSubScale = 4;
-                }
-            }
-        }
-        
-        if (exp > 0)
-            for (i = 0; i < exp; i++)
-                FIncr = FIncr * 10;
+		if (FIncr == 0)
+		{
+			FIncr = 1;
+			FSubScale = 4;
+		}
+		else
+		{
+			if (FIncr <= 2)
+			{
+				FIncr = 2;
+				FSubScale = 2;
+			}
+			else
+			{
+				if (FIncr <= 5)
+				{
+					FIncr = 5;
+					FSubScale = 5;
+				}
+				else
+				{
+					exp++;
+					FIncr = 1;
+					if (exp)
+						FSubScale = 2;
+					else
+						FSubScale = 4;
+				}
+			}
+		}
 
-        if (FNegativeScale)
-            Start = MaxYear / FIncr;
-        else
-            Start = MinYear / FIncr;        
+		if (exp > 0)
+			for (i = 0; i < exp; i++)
+				FIncr = FIncr * 10;
 
-        val = Start;
-        FFirstVal = TDateTime(val * FIncr, 1, 1, 0, 0, 0, 0);
+		if (FNegativeScale)
+			Start = MaxYear / FIncr;
+		else
+			Start = MinYear / FIncr;
 
-        exp = 1;
-        val = MinYear;
+		val = Start;
+		FFirstVal = TDateTime(val * FIncr, 1, 1, 0, 0, 0, 0, 0);
 
-        while (val >= 10)         
-        {
-            exp++;
-            val = val / 10;
-        }
+		exp = 1;
+		val = MinYear;
 
-        FDigits = exp;
+		while (val >= 10)
+		{
+			exp++;
+			val = val / 10;
+		}
 
-        exp = 1;
-        val = MaxYear;
+		FDigits = exp;
 
-        while (val >= 10)         
-        {
-            exp++;
-            val = val / 10;
-        }
+		exp = 1;
+		val = MaxYear;
 
-        if (exp > FDigits)
-            FDigits = exp;
-    }
+		while (val >= 10)
+		{
+			exp++;
+			val = val / 10;
+		}
+
+		if (exp > FDigits)
+			FDigits = exp;
+	}
 }
 
 /*##########################################################################
@@ -1706,15 +1712,15 @@ void TTimeXAxis::SetupYearScale(int width)
 ##########################################################################*/
 void TTimeXAxis::CalcSecScale(int width)
 {
-    SetupSecScale(width);
+	SetupSecScale(width);
 
-    if (FIncr && FIncr <= 4)
-    {
-        SetupMilliScale(width);
+	if (FIncr && FIncr <= 4)
+	{
+		SetupMilliScale(width);
 
-        if (FIncr == 0)
-            SetupSecScale(width);
-    }
+		if (FIncr == 0)
+			SetupSecScale(width);
+	}
 }
 
 /*##########################################################################
@@ -1730,15 +1736,15 @@ void TTimeXAxis::CalcSecScale(int width)
 ##########################################################################*/
 void TTimeXAxis::CalcMinScale(int width)
 {
-    SetupMinScale(width);
+	SetupMinScale(width);
 
-    if (FIncr && FIncr <= 4)
-    {
-        CalcSecScale(width);
+	if (FIncr && FIncr <= 4)
+	{
+		CalcSecScale(width);
 
-        if (FIncr == 0)
-            SetupMinScale(width);
-    }
+		if (FIncr == 0)
+			SetupMinScale(width);
+	}
 }
 
 /*##########################################################################
@@ -1754,10 +1760,10 @@ void TTimeXAxis::CalcMinScale(int width)
 ##########################################################################*/
 void TTimeXAxis::CalcHourScale(int width)
 {
-    SetupHourScale(width);
+	SetupHourScale(width);
 
-    if (FIncr && FIncr <= 4)
-    {
+	if (FIncr && FIncr <= 4)
+	{
         CalcMinScale(width);
 
         if (FIncr == 0)

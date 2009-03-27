@@ -231,27 +231,28 @@ void RDOSAPI RdosWaitMilli(int ms);
 void RDOSAPI RdosWaitMicro(int us);
 void RDOSAPI RdosWaitUntil(unsigned long msb, unsigned long lsb);
 
-void RDOSAPI RdosGetTics(unsigned long *msb, unsigned long *lsb);
-void RDOSAPI RdosTicsToRecord(unsigned long msb, unsigned long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-void RDOSAPI RdosRecordToTics(unsigned long *msb, unsigned long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
+void RDOSAPI RdosGetSysTime(unsigned long *msb, unsigned long *lsb);
+void RDOSAPI RdosGetTime(unsigned long *msb, unsigned long *lsb);
+void RDOSAPI RdosSetTime(unsigned long msb, unsigned long lsb);
+int RDOSAPI RdosDayOfWeek(int year, int month, int day);
 
 void RDOSAPI RdosDosTimeDateToTics(unsigned short date, unsigned short time, unsigned long *msb, unsigned long *lsb);
 void RDOSAPI RdosTicsToDosTimeDate(unsigned long msb, unsigned long lsb, unsigned short *date, unsigned short *time);
 
-int RDOSAPI RdosDayOfWeek(int year, int month, int day);
-void RDOSAPI RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-void RDOSAPI RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-void RDOSAPI RdosSetTime(int year, int month, int day, int hour, int min, int sec, int milli);
+void RDOSAPI RdosDecodeMsbTics(unsigned long msb, int *year, int *month, int *day, int *hour);
+void RDOSAPI RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro); 
+
+unsigned long RDOSAPI RdosCodeMsbTics(int year, int month, int day, int hour);
+unsigned long RDOSAPI RdosCodeLsbTics(int min, int sec, int milli, int micro); 
+
 void RDOSAPI RdosAddTics(unsigned long *msb, unsigned long *lsb, long tics);
+void RDOSAPI RdosAddMicro(unsigned long *msb, unsigned long *lsb, long us);
 void RDOSAPI RdosAddMilli(unsigned long *msb, unsigned long *lsb, long ms);
 void RDOSAPI RdosAddSec(unsigned long *msb, unsigned long *lsb, long sec);
 void RDOSAPI RdosAddMin(unsigned long *msb, unsigned long *lsb, long min);
 void RDOSAPI RdosAddHour(unsigned long *msb, unsigned long *lsb, long hour);
 void RDOSAPI RdosAddDay(unsigned long *msb, unsigned long *lsb, long day);
 int RDOSAPI RdosSyncTime(long IP);
-
-void RDOSAPI RdosDecodeMsbTics(unsigned long msb, int *days, int *hours);
-void RDOSAPI RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro); 
 
 int RDOSAPI RdosCreateSection();
 void RDOSAPI RdosDeleteSection(int Handle);
@@ -474,8 +475,6 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 }
 #endif
 
-int RDOSAPI RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
-
 void RDOSAPI RdosBlit(int SrcHandle, int DestHandle, int width, int height,
                                 int SrcX, int SrcY, int DestX, int DestY);
 
@@ -487,21 +486,6 @@ void RDOSAPI RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *he
 
 int RDOSAPI RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, 
                                 long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
-
-
-void RDOSAPI RdosTicsToRecord(unsigned long msb, unsigned long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-
-void RDOSAPI RdosRecordToTics(unsigned long *msb, unsigned long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
-
-void RDOSAPI RdosDosTimeDateToTics(unsigned short date, unsigned short time, unsigned long *msb, unsigned long *lsb);
-
-void RDOSAPI RdosTicsToDosTimeDate(unsigned long msb, unsigned long lsb, unsigned short *date, unsigned short *time);
-
-void RDOSAPI RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-
-void RDOSAPI RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-
-void RDOSAPI RdosSetTime(int year, int month, int day, int hour, int min, int sec, int milli);
 
 int RDOSAPI RdosPeekKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
 
@@ -567,7 +551,36 @@ int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
     CallGate_set_video_mode  \
     modify [ax];
 
-// SetVideoMode here
+#pragma aux RdosSetVideoMode = \
+    "push esi" \
+    "push edi" \
+    "push eax" \
+    "mov ax,[eax]" \
+    "push ecx" \
+    "mov cx,[ecx]" \
+    "push edx" \
+    "mov dx,[edx]" \
+    CallGate_get_video_mode \
+    ValidateEax \
+    CallGate_set_video_mode  \
+    "pop ebp" \
+    "movzx edx,dx" \
+    "mov [ebp],edx" \
+    "pop ebp" \
+    "movzx ecx,cx" \
+    "mov [ebp],ecx" \
+    "pop ebp" \
+    "movzx eax,ax" \
+    "mov [ebp],eax" \
+    "pop ebp" \
+    "mov [ebp],edi" \
+    "pop ebp" \
+    "movzx esi,si" \
+    "mov [ebp],esi" \
+    ValidateHandle \
+    parm [eax] [ecx] [edx] [esi] [edi] \
+    value [ebx] \
+    modify [eax ecx edx esi edi ebp];
 
 #pragma aux RdosSetClipRect = \
     CallGate_set_clip_rect  \
@@ -1121,17 +1134,29 @@ int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
     CallGate_wait_until  \
     parm [edx] [eax];
 
-#pragma aux RdosGetTics = \
+#pragma aux RdosGetSysTime = \
+    CallGate_get_system_time  \
+    "mov [esi],edx" \
+    "mov [edi],eax" \
+    parm [esi] [edi] \
+    modify [eax edx];
+
+#pragma aux RdosGetTime = \
     CallGate_get_time  \
     "mov [esi],edx" \
     "mov [edi],eax" \
     parm [esi] [edi] \
     modify [eax edx];
 
-// RecordToTics here
-// TicsToRecord here
-// DosTimeDateToTics here
-// TicsToDosTimeDate here
+#pragma aux RdosSetTime = \
+    CallGate_get_system_time  \
+    "sub esi,eax" \
+    "sbb edi,edx" \
+    "mov eax,esi" \
+    "mov edx,edi" \
+    CallGate_update_time  \
+    parm [edi] [esi] \
+    modify [eax edx esi edi];
 
 #pragma aux RdosDayOfWeek = \
     "mov ch,al" \
@@ -1160,14 +1185,61 @@ int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
     value [eax] \
     modify [ebx ecx edx];
 
-// GetSysTime here
-// GetTime here
-// SetTime here
+#pragma aux RdosDosTimeDateToTics = \
+    "push ebx" \
+    "push ecx" \
+        "mov dx,si" \
+        "mov ax,dx" \
+        "shr dx,9" \
+        "add dx,1980" \
+        "mov cx,ax" \
+        "shr cx,5" \
+        "mov ch,cl" \
+        "and ch,0Fh" \
+        "mov cl,al" \
+        "and cl,1Fh" \
+        "mov bx,di" \
+        "mov ax,bx" \
+        "shr bx,11" \
+        "mov bh,bl" \
+        "shr ax,5" \
+        "and al,3Fh" \
+        "mov bl,al" \
+        "mov ax,di" \
+        "mov ah,al" \
+        "add ah,ah" \
+        "and ah,3Fh" \
+    CallGate_time_to_binary  \
+    "pop ecx" \
+    "pop ebx" \
+    "mov [ebx],edx" \
+    "mov [ecx],eax" \
+    parm [si] [di] [ebx] [ecx] \
+    modify [eax edx];
+
+void RDOSAPI RdosTicsToDosTimeDate(unsigned long msb, unsigned long lsb, unsigned short *date, unsigned short *time);
+
+void RDOSAPI RdosDecodeMsbTics(unsigned long msb, int *year, int *month, int *day, int *hour);
+void RDOSAPI RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro); 
+
+unsigned long RDOSAPI RdosCodeMsbTics(int year, int month, int day, int hour);
+unsigned long RDOSAPI RdosCodeLsbTics(int min, int sec, int milli, int micro); 
 
 #pragma aux RdosAddTics = \
     "add [esi],eax" \
     "adc [edi],0"  \
         parm [edi] [esi] [eax];
+
+#pragma aux RdosAddMicro = \
+    "mov edx,1193"  \
+    "imul edx"  \
+    "xor edx,edx" \
+    "mov ebx,1000" \
+    "idiv ebx" \
+    "add [esi],eax" \
+    "adc dword ptr [edi],0"  \
+        parm [edi] [esi] [eax] \
+        modify [eax ebx edx];
 
 #pragma aux RdosAddMilli = \
     "mov edx,1193"  \
@@ -1951,72 +2023,252 @@ int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
     CallGate_set_env_data \
     parm [ebx] [edi];
 
-int RDOSAPI RdosOpenSysIni();
-int RDOSAPI RdosOpenIni(const char *filename);
-void RDOSAPI RdosCloseIni(int handle);
-int RDOSAPI RdosGotoIniSection(int handle, const char *name);
-int RDOSAPI RdosRemoveIniSection(int handle);
-int RDOSAPI RdosReadIni(int handle, const char *var, char *str, int maxsize);
-int RDOSAPI RdosWriteIni(int handle, const char *var, const char *str);
-int RDOSAPI RdosDeleteIni(int handle, const char *var);
+#pragma aux RdosOpenSysIni = \
+    CallGate_open_sys_ini \
+    ValidateHandle \
+    value [ebx];
 
-void RDOSAPI RdosEnableStatusLED();
-void RDOSAPI RdosDisableStatusLED();
+#pragma aux RdosOpenIni = \
+    CallGate_open_ini \
+    ValidateHandle \
+    parm [edi] \
+    value [ebx];
 
-void RDOSAPI RdosStartWatchdog(int timeout);
-void RDOSAPI RdosKickWatchdog();
-void RDOSAPI RdosStopWatchdog();
+#pragma aux RdosCloseIni = \
+    CallGate_close_ini \
+    parm [ebx];
 
-void RDOSAPI RdosStartNetCapture(int FileHandle);
-void RDOSAPI RdosStopNetCapture();
+#pragma aux RdosGotoIniSection = \
+    CallGate_goto_ini_section \
+    CarryToBool \
+    parm [ebx] [edi] \
+    value [eax];
 
-int RDOSAPI RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsize);
-int RDOSAPI RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
-int RDOSAPI RdosOpenUsbPipe(int Controller, int Device, int Pipe);
-void RDOSAPI RdosCloseUsbPipe(int handle);
-void RDOSAPI RdosLockUsbPipe(int handle);
-void RDOSAPI RdosUnlockUsbPipe(int handle);
-void RDOSAPI RdosAddWaitForUsbPipe(int Handle, int PipeHandle, void *ID);
-void RDOSAPI RdosWriteUsbControl(int Handle, const char *buf, int size);
-void RDOSAPI RdosReqUsbData(int Handle, int Maxsize);
-int RDOSAPI RdosGetUsbData(int Handle, char *buf, int maxsize);
-void RDOSAPI RdosWriteUsbData(int Handle, const char *buf, int size);
-void RDOSAPI RdosReqUsbStatus(int Handle);
-void RDOSAPI RdosWriteUsbStatus(int Handle);
-int RDOSAPI RdosIsUsbPipeIdle(int Handle);
+#pragma aux RdosRemoveIniSection = \
+    CallGate_remove_ini_section \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
 
-int RDOSAPI RdosOpenICSP(int DeviceID);
-void RDOSAPI RdosCloseICSP(int Handle);
-int RDOSAPI RdosWriteICSPCommand(int Handle, int Cmd);
-int RDOSAPI RdosWriteICSPData(int Handle, int Data);
-int RDOSAPI RdosReadICSPData(int Handle, int *Data);
+#pragma aux RdosReadIni = \
+    CallGate_read_ini \
+    CarryToBool \
+    parm [ebx] [esi] [edi] [ecx] \
+    value [eax];
 
-void RDOSAPI RdosGetMasterVolume(int *Left, int *Right);
-void RDOSAPI RdosSetMasterVolume(int Left, int Right);
+#pragma aux RdosWriteIni = \
+    CallGate_write_ini \
+    CarryToBool \
+    parm [ebx] [esi] [edi] \
+    value [eax];
 
-void RDOSAPI RdosGetLineOutVolume(int *Left, int *Right);
-void RDOSAPI RdosSetLineOutVolume(int Left, int Right);
+#pragma aux RdosDeleteIni = \
+    CallGate_delete_ini \
+    CarryToBool \
+    parm [ebx] [esi] \
+    value [eax];
 
-int RDOSAPI RdosCreateAudioOutChannel(int SampleRate, int Bits, int Volume);
-void RDOSAPI RdosCloseAudioOutChannel(int Handle);
-void RDOSAPI RdosWriteAudio(int Handle, int Size, const int *LSamples, const int*RSamples); 
+#pragma aux RdosEnableStatusLED = \
+    CallGate_enable_status_led;
 
-int RDOSAPI RdosOpenFm(int SampleRate);
-void RDOSAPI RdosCloseFm(int FmHandle);
-void RDOSAPI RdosFmWait(int FmHandle, int Samples);
+#pragma aux RdosDisableStatusLED = \
+    CallGate_disable_status_led;
 
-int RDOSAPI RdosCreateFmInstrument(int FmHandle, int C, int M, long double Beta);
-void RDOSAPI RdosFreeFmInstrument(int Handle);
-void RDOSAPI RdosSetFmAttack(int Handle, int Samples);
-void RDOSAPI RdosSetFmSustain(int Handle, int VolumeHalf, int BetaHalf);
-void RDOSAPI RdosSetFmRelease(int Handle, int VolumeHalf, int BetaHalf);
-void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, int PeakRightVolume, int SustainSamples);
+#pragma aux RdosStartWatchdog = \
+    CallGate_start_watchdog \
+    parm [eax];
 
+#pragma aux RdosKickWatchdog = \
+    CallGate_kick_watchdog;
 
+#pragma aux RdosStopWatchdog = \
+    CallGate_stop_watchdog;
+
+#pragma aux RdosStartNetCapture = \
+    CallGate_start_net_capture \
+    parm [ebx];
+
+#pragma aux RdosStopNetCapture = \
+    CallGate_stop_net_capture;
+
+#pragma aux RdosGetUsbDevice = \
+    CallGate_get_usb_device \
+    parm [ebx] [eax] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosGetUsbConfig = \
+    CallGate_get_usb_config \
+    parm [ebx] [eax] [edx] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosOpenUsbPipe = \
+    CallGate_open_usb_pipe \
+    ValidateHandle \
+    parm [ebx] [eax] [edx] \
+    value [ebx];
+
+#pragma aux RdosCloseUsbPipe = \
+    CallGate_close_usb_pipe \
+    parm [ebx];
+
+#pragma aux RdosLockUsbPipe = \
+    CallGate_lock_usb_pipe \
+    parm [ebx];
+
+#pragma aux RdosUnlockUsbPipe = \
+    CallGate_unlock_usb_pipe \
+    parm [ebx];
+
+#pragma aux RdosAddWaitForUsbPipe = \
+    CallGate_add_wait_for_usb_pipe \
+    parm [ebx] [eax] [ecx];
+
+#pragma aux RdosWriteUsbControl = \
+    CallGate_write_usb_control \
+    parm [ebx] [edi] [ecx];
+
+#pragma aux RdosReqUsbData = \
+    CallGate_req_usb_data \
+    parm [ebx] [ecx];
+
+#pragma aux RdosGetUsbData = \
+    CallGate_get_usb_data \
+    "movzx eax,ax" \
+    parm [ebx] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosWriteUsbData = \
+    CallGate_write_usb_data \
+    parm [ebx] [edi] [ecx];
+
+#pragma aux RdosReqUsbStatus = \
+    CallGate_req_usb_status \
+    parm [ebx];
+
+#pragma aux RdosWriteUsbStatus = \
+    CallGate_write_usb_status \
+    parm [ebx];
+
+#pragma aux RdosIsUsbPipeIdle = \
+    CallGate_is_usb_pipe_idle \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosOpenICSP = \
+    CallGate_open_icsp \
+    ValidateHandle \
+    parm [eax] \
+    value [ebx];
+
+#pragma aux RdosCloseICSP = \
+    CallGate_close_icsp \
+    parm [ebx];
+
+#pragma aux RdosWriteICSPCommand = \
+    CallGate_write_icsp_cmd \
+    CarryToBool \
+    parm [ebx] [eax] \
+    value [eax];
+
+#pragma aux RdosWriteICSPData = \
+    CallGate_write_icsp_data \
+    CarryToBool \
+    parm [ebx] [eax] \
+    value [eax];
+
+#pragma aux RdosReadICSPData = \
+    CallGate_read_icsp_data \
+    "mov [edi],eax" \
+    CarryToBool \
+    parm [ebx] [edi] \
+    value [eax];
+
+#pragma aux RdosGetMasterVolume = \
+    CallGate_get_master_volume \
+    "movzx ebx,al" \
+    "mov [esi],ebx" \
+    "movzx ebx,ah" \
+    "mov [edi],ebx" \    
+    parm [esi] [edi] \
+    modify [eax ebx];
+
+#pragma aux RdosSetMasterVolume = \
+    "mov ah,dl" \
+    CallGate_set_master_volume \
+    parm [eax] [edx] \
+    modify [eax];
+
+#pragma aux RdosGetLineOutVolume = \
+    CallGate_get_line_out_volume \
+    "movzx ebx,al" \
+    "mov [esi],ebx" \
+    "movzx ebx,ah" \
+    "mov [edi],ebx" \    
+    parm [esi] [edi] \
+    modify [eax ebx];
+
+#pragma aux RdosSetLineOutVolume = \
+    "mov ah,dl" \
+    CallGate_set_line_out_volume \
+    parm [eax] [edx] \
+    modify [eax];
+
+#pragma aux RdosCreateAudioOutChannel = \
+    CallGate_create_audio_out_channel \
+    ValidateHandle \
+    parm [eax] [ecx] [edx] \
+    value [ebx];
+
+#pragma aux RdosCloseAudioOutChannel = \
+    CallGate_close_audio_out_channel \
+    parm [ebx];
+
+#pragma aux RdosWriteAudio = \
+    CallGate_write_audio \
+    parm [ebx] [ecx] [esi] [edi];
+
+#pragma aux RdosOpenFm = \
+    CallGate_open_fm \
+    ValidateHandle \
+    parm [eax] \
+    value [ebx];
+
+#pragma aux RdosCloseFm = \
+    CallGate_close_fm \
+    parm [ebx];
+
+#pragma aux RdosFmWait = \
+    CallGate_fm_wait \
+    parm [ebx] [eax];
+
+#pragma aux RdosCreateFmInstrument = \
+    CallGate_create_fm_instrument \
+    ValidateHandle \
+    parm [ebx] [eax] [edx] [8087] \
+    value [ebx];
+
+#pragma aux RdosFreeFmInstrument = \
+    CallGate_free_fm_instrument \
+    parm [ebx];
+
+#pragma aux RdosSetFmAttack = \
+    CallGate_set_fm_attack \
+    parm [ebx] [eax];
+
+#pragma aux RdosSetFmSustain = \
+    CallGate_set_fm_sustain \
+    parm [ebx] [eax] [edx];
+
+#pragma aux RdosSetFmRelease = \
+    CallGate_set_fm_release \
+    parm [ebx] [eax] [edx];
+
+#pragma aux RdosPlayFmNote = \
+    CallGate_play_fm_note \
+    parm [ebx] [8087] [eax] [edx] [ecx];
 
 #endif
 
 #endif
-
-
-

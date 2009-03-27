@@ -46,7 +46,7 @@
 ##########################################################################*/
 TDateTime::TDateTime()
 {
-	RdosGetTics(&FMsb, &FLsb);
+	RdosGetTime(&FMsb, &FLsb);
 	RawToRecord();
 }
 
@@ -102,7 +102,7 @@ TDateTime::TDateTime(long double real)
 #ifdef __GNUC__
 	FMsb = (unsigned long)floor(real);
 #else
-    FMsb = (unsigned long)floorl(real);
+	FMsb = (unsigned long)floorl(real);
 #endif
 	FLsb = (unsigned long)((real - (long double)FMsb) * 65536.0 * 65536.0);
 	RawToRecord();
@@ -128,6 +128,7 @@ TDateTime::TDateTime(int Year, int Month, int Day)
 	FMin = 0;
 	FSec = 0;
 	FMilli = 0;
+	FMicro = 0;
 	RecordToRaw();
 }
 
@@ -151,6 +152,7 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec)
 	FMin = Min;
 	FSec = Sec;
 	FMilli = 0;
+	FMicro = 0;
 	RecordToRaw();
 }
 
@@ -165,7 +167,7 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec)
 #   Returns....: *
 #
 ##########################################################################*/
-TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int Milli)
+TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int Milli, int Micro)
 {
 	FYear = Year;
 	FMonth = Month;
@@ -174,6 +176,7 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, i
 	FMin = Min;
 	FSec = Sec;
 	FMilli = Milli;
+	FMicro = Micro;
 	RecordToRaw();
 }
 
@@ -261,7 +264,7 @@ int TDateTime::HasExpired() const
 {
 	unsigned long msb, lsb;
 
-	RdosGetTics(&msb, &lsb);
+	RdosGetTime(&msb, &lsb);
 
 	if (msb > FMsb)
 		return TRUE;
@@ -405,6 +408,22 @@ int TDateTime::GetMilliSec() const
 
 /*##########################################################################
 #
+#   Name       : TDateTime::GetMicroSec
+#
+#   Purpose....: Get microsecond
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: millisecond
+#
+##########################################################################*/
+int TDateTime::GetMicroSec() const
+{
+	return FMicro;
+}
+
+/*##########################################################################
+#
 #   Name       : TDateTime::Set
 #
 #   Purpose....: Set time
@@ -416,7 +435,7 @@ int TDateTime::GetMilliSec() const
 ##########################################################################*/
 void TDateTime::Set()
 {
-	RdosSetTime(FYear, FMonth, FDay, FHour, FMin, FSec, FMilli);
+	RdosSetTime(FMsb, FLsb);
 }
 
 /*##########################################################################
@@ -432,9 +451,8 @@ void TDateTime::Set()
 ##########################################################################*/
 void TDateTime::RawToRecord()
 {
-	RdosTicsToRecord(FMsb, FLsb, &FYear, &FMonth, &FDay, &FHour, &FMin, &FSec, &FMilli);
-	if (FMilli >= 1000 || FMilli < 0)
-	    FMilli = 0;
+	RdosDecodeMsbTics(FMsb, &FYear, &FMonth, &FDay, &FHour);
+	RdosDecodeLsbTics(FLsb, &FMin, &FSec, &FMilli, &FMicro);
 }
 
 /*##########################################################################
@@ -450,7 +468,8 @@ void TDateTime::RawToRecord()
 ##########################################################################*/
 void TDateTime::RecordToRaw()
 {
-	RdosRecordToTics(&FMsb, &FLsb, FYear, FMonth, FDay, FHour, FMin, FSec, FMilli);
+	FMsb = RdosCodeMsbTics(FYear, FMonth, FDay, FHour);
+	FLsb = RdosCodeLsbTics(FMin, FSec, FMilli, FMicro);
 }
 
 /*##########################################################################
@@ -484,6 +503,23 @@ void TDateTime::AddTics(long tics)
 void TDateTime::AddMilli(long ms)
 {
 	RdosAddMilli(&FMsb, &FLsb, ms);
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::AddMicro
+#
+#   Purpose....: Add microseconds
+#
+#   In params..: us		microseconds
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::AddMicro(long us)
+{
+	RdosAddMicro(&FMsb, &FLsb, us);
 	RawToRecord();
 }
 

@@ -37,15 +37,16 @@ public:
     TDateTime(long double real);
 	TDateTime(int Year, int Month, int Day);
 	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);
-	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int ms);
+	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int ms, int us);
 
 	operator long double () const;
- 
+
 	long GetMsb() const;
 	long GetLsb() const;
-    void SetRaw(unsigned long Msb, unsigned long Lsb);
+	void SetRaw(unsigned long Msb, unsigned long Lsb);
 	int HasExpired() const;
 	void AddTics(long tics);
+	void AddMicro(long us);
 	void AddMilli(long ms);
 	void AddSec(long sec);
 	void AddMin(long min);
@@ -54,7 +55,7 @@ public:
 	void AddMonth(long month);
 	void AddYear(long year);
 
-    int GetDayOfWeek() const;
+	int GetDayOfWeek() const;
 	int GetYear() const;
 	int GetMonth() const;
 	int GetDay() const;
@@ -62,6 +63,7 @@ public:
 	int GetMin() const;
 	int GetSec() const;
 	int GetMilliSec() const;
+	int GetMicroSec() const;
 
 	void Set();
 
@@ -79,6 +81,7 @@ private:
 	int FMin;
 	int FSec;
 	int FMilli;
+    int FMicro;
 };
 
 #endif

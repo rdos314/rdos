@@ -164,7 +164,8 @@ void TStateCommand::WriteOne(ThreadState *State)
 
 	Write(str);
 
-	RdosDecodeMsbTics(State->MsbTime, &day, &hour);
+	day = State->MsbTime / 24;
+	hour = State->MsbTime % 24;
 	RdosDecodeLsbTics(State->LsbTime, &min, &sec, &milli, &micro);
 
 	started = FALSE;

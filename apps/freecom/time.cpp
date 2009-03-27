@@ -169,7 +169,7 @@ int TTimeCommand::SetTime(const char *str)
 	month = FTime.GetMonth();
 	day = FTime.GetDay();
 
-	FTime = TDateTime(year, month, day, hour, min, sec, 10 * hsec);
+	FTime = TDateTime(year, month, day, hour, min, sec, 10 * hsec, 0);
 	FTime.Set();
 
 	return TRUE;
