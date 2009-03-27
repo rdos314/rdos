@@ -2960,7 +2960,6 @@ RdosDecodeMsbTics	Proc
 	mov edx,[ebp].ctMSB
 	xor eax,eax
 	UserGate binary_to_time_nr
-	push edx
 ;
 	mov esi,[ebp].ctYear
 	movzx edx,dx
