@@ -101,6 +101,10 @@ init_usergate	PROC near
 init_usergate_loop:
 	mov es:[di].gate_name_offset,OFFSET illegal_gate_name
 	mov es:[di].gate_name_sel,cs
+	mov es:[di].gate_entry_offset16,OFFSET illegal_gate16
+	mov es:[di].gate_entry_sel16,cs
+    mov es:[di].gate_entry_offset32,OFFSET illegal_gate32
+    mov es:[di].gate_entry_sel32,cs	
 	add di,32
 	loop init_usergate_loop
 ;
@@ -164,10 +168,14 @@ PAGE
 
 illegal_gate_name	DB 'Undefined Gate',0
 
-illegal_gate	PROC far
-	int 3
+illegal_gate16  Proc far
+    stc
 	ret
-illegal_gate	ENDP
+illegal_gate16  Endp
+
+illegal_gate32:	
+    stc
+	retf32
 
 PAGE
 
