@@ -28,8 +28,12 @@
 #include <math.h>
 #include "fuzzy.h"
 
-#define FALSE	0
-#define TRUE	!FALSE
+#define FALSE   0
+#define TRUE    !FALSE
+
+#ifdef __WATCOMC__
+#define sqrtl sqrt
+#endif
 
 /*##########################################################################
 #
@@ -47,8 +51,8 @@ TFuzzy::TFuzzy()
     int i;
 
     for (i = 0; i < MAX_FUZZY_VARS; i++)
-		FVarArr[i] = 0;
-		
+                FVarArr[i] = 0;
+                
     FOutputVar = 0;
     FSize = 1;
     FArr = 0;
@@ -172,17 +176,17 @@ void TFuzzy::InitRule()
         Arr[i] = 0;
 
     for (i = 0; i < FSize; i++)
-	{
-		FRuleArr[i].OutputSet = 0;
+        {
+                FRuleArr[i].OutputSet = 0;
 
-		for (j = 0; j < MAX_FUZZY_SETS; j++)
-			FRuleArr[i].InputSetArr[j] = Arr[j];
+                for (j = 0; j < MAX_FUZZY_SETS; j++)
+                        FRuleArr[i].InputSetArr[j] = Arr[j];
 
-		for (j = 0; j < MAX_FUZZY_SETS; j++)
-		{
-			if (FVarArr[j])
-			{
-				Arr[j]++;
+                for (j = 0; j < MAX_FUZZY_SETS; j++)
+                {
+                        if (FVarArr[j])
+                        {
+                                Arr[j]++;
 
                 if (Arr[j] >= FVarArr[j]->GetSets())
                     Arr[j] = 0;
@@ -216,16 +220,16 @@ void TFuzzy::DefineRule(int SetArr[MAX_FUZZY_VARS], int OutputSet)
     ok = FALSE;
 
     for (i = 0; i < FSize && !ok; i++)
-	{
-		ok = TRUE;
+        {
+                ok = TRUE;
 
-		for (j = 0; j < MAX_FUZZY_VARS && ok; j++)
-			if (FVarArr[j])
-				if (FRuleArr[i].InputSetArr[j] != SetArr[j])
-					ok = FALSE;
+                for (j = 0; j < MAX_FUZZY_VARS && ok; j++)
+                        if (FVarArr[j])
+                                if (FRuleArr[i].InputSetArr[j] != SetArr[j])
+                                        ok = FALSE;
 
-		if (ok)
-			FRuleArr[i].OutputSet = OutputSet;
+                if (ok)
+                        FRuleArr[i].OutputSet = OutputSet;
     }
 }
     
@@ -253,7 +257,7 @@ long double TFuzzy::Calc(long double ValArr[MAX_FUZZY_VARS])
 
     for (i = 0; i < MAX_FUZZY_VARS; i++)
         if (FVarArr[i])
-			FVarArr[i]->SetInputValue(ValArr[i]);
+                        FVarArr[i]->SetInputValue(ValArr[i]);
 
     for (i = 0; i < MAX_FUZZY_VARS * MAX_FUZZY_SETS; i++)
         OutputSum[i] = 0.0;

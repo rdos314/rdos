@@ -33,6 +33,20 @@
 #define FALSE   0
 #define TRUE    !FALSE
 
+#ifdef __WATCOMC__
+
+#define M_PI    3.14159265358979323846264
+#define cosl cos
+#define sinl sin
+#define atan2l atan2
+#define asinl asin
+#define acosl acos
+#define tanl tan
+#define atanl tanl
+#define sqrtl sqrt
+
+#endif
+
 /*##########################################################################
 #
 #   Name       : rev
@@ -121,32 +135,32 @@ void TSolar::SetTime(TDateTime &time, int timezone)
 ##########################################################################*/
 void TSolar::GetMyPos(long double RA, long double decl, long double *altitude, long double *azimuth)
 {
-	 long double HA;
-	 long double x, y, z;
-	 long double xh, yh, zh;
-	 long double lat;
-	 long double a;
+         long double HA;
+         long double x, y, z;
+         long double xh, yh, zh;
+         long double lat;
+         long double a;
 
-	 HA = SIDTIME - RA / 15.0;
+         HA = SIDTIME - RA / 15.0;
 
-	HA = HA * M_PI / 12.0;
-	 decl = decl * M_PI / 180.0;
+        HA = HA * M_PI / 12.0;
+         decl = decl * M_PI / 180.0;
 
-	 x = cosl(HA) * cosl(decl);
-	 y = sinl(HA) * cosl(decl);
-	 z = sinl(decl);
+         x = cosl(HA) * cosl(decl);
+         y = sinl(HA) * cosl(decl);
+         z = sinl(decl);
 
-	 lat = FMyLat * M_PI / 180.0;
+         lat = FMyLat * M_PI / 180.0;
 
-	 xh = x * sinl(lat) - z * cosl(lat);
-	 yh = y;
-	 zh = x * cosl(lat) + z * sinl(lat);
+         xh = x * sinl(lat) - z * cosl(lat);
+         yh = y;
+         zh = x * cosl(lat) + z * sinl(lat);
 
-	 a = atan2l(yh, xh);
-	 *azimuth = a * 180.0 / M_PI + 180;
+         a = atan2l(yh, xh);
+         *azimuth = a * 180.0 / M_PI + 180;
 
-	 a = asinl(zh);
-	 *altitude = a * 180.0 / M_PI;
+         a = asinl(zh);
+         *altitude = a * 180.0 / M_PI;
 }
 
 /*##########################################################################
@@ -162,60 +176,60 @@ void TSolar::GetMyPos(long double RA, long double decl, long double *altitude, l
 ##########################################################################*/
 void TSolar::GetMyNearPos(long double r, long double RA, long double decl, long double *altitude, long double *azimuth)
 {
-	 long double gclat;
-	 long double rho;
-	 long double HA;
-	 long double g;
-	 long double topRA;
-	 long double topDecl;
-	 long double mpar;
-	 long double DeclRad;
-	 long double x, y, z;
-	 long double xh, yh, zh;
-	 long double lat;
-	 long double a;
+         long double gclat;
+         long double rho;
+         long double HA;
+         long double g;
+         long double topRA;
+         long double topDecl;
+         long double mpar;
+         long double DeclRad;
+         long double x, y, z;
+         long double xh, yh, zh;
+         long double lat;
+         long double a;
 
-	 mpar = asinl(1 / r);
-	 mpar = mpar * 180.0 / M_PI;
+         mpar = asinl(1 / r);
+         mpar = mpar * 180.0 / M_PI;
 
-	 lat = FMyLat * M_PI / 180.0;
+         lat = FMyLat * M_PI / 180.0;
 
-	 gclat = FMyLat - 0.1924 * sinl(2 * lat);
-	 rho = 0.99833 + 0.00167 * cosl(2 * lat);
+         gclat = FMyLat - 0.1924 * sinl(2 * lat);
+         rho = 0.99833 + 0.00167 * cosl(2 * lat);
 
-	 HA = SIDTIME - RA / 15.0;
+         HA = SIDTIME - RA / 15.0;
 
-	HA = HA * M_PI / 12.0;
+        HA = HA * M_PI / 12.0;
 
-	gclat = gclat * M_PI / 180.0;
+        gclat = gclat * M_PI / 180.0;
 
-	 g = atanl(tanl(gclat) / cosl(HA));
+         g = atanl(tanl(gclat) / cosl(HA));
 
-	 DeclRad = decl * M_PI / 180.0;
+         DeclRad = decl * M_PI / 180.0;
 
-	 topRA = RA - mpar * rho * cosl(gclat) * sinl(HA) / cosl(DeclRad);
-	 topDecl = decl - mpar * rho * sinl(gclat) * sinl(g - DeclRad) / sinl(g);
+         topRA = RA - mpar * rho * cosl(gclat) * sinl(HA) / cosl(DeclRad);
+         topDecl = decl - mpar * rho * sinl(gclat) * sinl(g - DeclRad) / sinl(g);
 
-	 HA = SIDTIME - topRA / 15.0;
+         HA = SIDTIME - topRA / 15.0;
 
-	 HA = HA * M_PI / 12.0;
-	 topDecl = topDecl * M_PI / 180.0;
+         HA = HA * M_PI / 12.0;
+         topDecl = topDecl * M_PI / 180.0;
 
-	 x = cosl(HA) * cosl(topDecl);
-	 y = sinl(HA) * cosl(topDecl);
-	 z = sinl(topDecl);
+         x = cosl(HA) * cosl(topDecl);
+         y = sinl(HA) * cosl(topDecl);
+         z = sinl(topDecl);
 
-	 lat = FMyLat * M_PI / 180.0;
+         lat = FMyLat * M_PI / 180.0;
 
-	 xh = x * sinl(lat) - z * cosl(lat);
-	 yh = y;
-	 zh = x * cosl(lat) + z * sinl(lat);
+         xh = x * sinl(lat) - z * cosl(lat);
+         yh = y;
+         zh = x * cosl(lat) + z * sinl(lat);
 
-	 a = atan2l(yh, xh);
-	 *azimuth = a * 180.0 / M_PI + 180;
+         a = atan2l(yh, xh);
+         *azimuth = a * 180.0 / M_PI + 180;
 
-	 a = asinl(zh);
-	 *altitude = a * 180.0 / M_PI;
+         a = asinl(zh);
+         *altitude = a * 180.0 / M_PI;
 }
 
 /*##########################################################################
@@ -265,18 +279,18 @@ long double TSolar::FvToPhase(long double Fv)
 void TSolar::CalcSun()
 {
     long double w = 282.9404 + 4.70935e-5 * FDiffTime;
-	 long double e = 0.016709 - 1.151e-9 * FDiffTime;
+         long double e = 0.016709 - 1.151e-9 * FDiffTime;
     long double M = 356.0470 + 0.9856002585 * FDiffTime;
     long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
     long double E;
     long double x;
-	 long double y;
+         long double y;
     long double z;
     long double r;
     long double v;
     long double lon;
     long double GMST0;
-	 long double UT;
+         long double UT;
     int days;
 
     SunM = rev(M);
@@ -296,7 +310,7 @@ void TSolar::CalcSun()
     r = sqrtl(x * x + y * y);
     v = atan2l(y, x);
 
-	 v = v * 180.0 / M_PI;
+         v = v * 180.0 / M_PI;
     
     lon = v + w;
     lon = rev(lon);
@@ -310,7 +324,7 @@ void TSolar::CalcSun()
 
     x = SunX;
     y = SunY * cosl(oblecl);
-	z = SunY * sinl(oblecl);
+        z = SunY * sinl(oblecl);
     
     SunRA =  atan2l(y, x);
     SunDecl = asinl(z / r);
@@ -320,12 +334,12 @@ void TSolar::CalcSun()
 
     GMST0 = SunL / 15.0 + 12.0;
 
-	 days = (int)FDiffTime;
+         days = (int)FDiffTime;
     days++;
     
-	 UT = (FDiffTime - (long double)days) * 360.0 / 15.0;
+         UT = (FDiffTime - (long double)days) * 360.0 / 15.0;
 
-	SIDTIME = GMST0 + UT + FMyLong / 15.0;
+        SIDTIME = GMST0 + UT + FMyLong / 15.0;
 
 }
 
@@ -342,7 +356,7 @@ void TSolar::CalcSun()
 ##########################################################################*/
 void TSolar::GetSunPosition(long double *altitude, long double *azimuth)
 {
-	 GetMyPos(SunRA, SunDecl, altitude, azimuth);
+         GetMyPos(SunRA, SunDecl, altitude, azimuth);
 }    
 
 /*##########################################################################
@@ -358,100 +372,100 @@ void TSolar::GetSunPosition(long double *altitude, long double *azimuth)
 ##########################################################################*/
 void TSolar::CalcMoon()
 {
-	 long double N = rev(125.1228 - 0.0529538083 * FDiffTime);
+         long double N = rev(125.1228 - 0.0529538083 * FDiffTime);
     long double i = 5.1454;
     long double w = rev(318.0634 + 0.1643573223 * FDiffTime);
-	long double a = 60.2666;
+        long double a = 60.2666;
     long double e = 0.054900;
-	 long double M = rev(115.3654 + 13.0649929509 * FDiffTime);
-	 long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
-	 long double E;
-	long double x, y, z;
-	long double rx, ry, rz;
-	 long double v;
-	 long double Ms;
-	 long double D;
-	 long double F;
-	 long double lat;
-	 long double lon;
+         long double M = rev(115.3654 + 13.0649929509 * FDiffTime);
+         long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
+         long double E;
+        long double x, y, z;
+        long double rx, ry, rz;
+         long double v;
+         long double Ms;
+         long double D;
+         long double F;
+         long double lat;
+         long double lon;
 
-	 MoonL = N + w + M;
-	 D = MoonL - SunL;
-	 F = MoonL - N;
+         MoonL = N + w + M;
+         D = MoonL - SunL;
+         F = MoonL - N;
 
-	 M = M * M_PI / 180.0;
-	 E = M + e * sinl(M) * (1 + e * cosl(M));
-	E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
+         M = M * M_PI / 180.0;
+         E = M + e * sinl(M) * (1 + e * cosl(M));
+        E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
 
-	x = a * (cosl(E) - e);
-	y = a * sqrtl(1 - e * e) * sinl(E);
+        x = a * (cosl(E) - e);
+        y = a * sqrtl(1 - e * e) * sinl(E);
 
-	MoonR = sqrtl(x * x + y * y);
-	v = atan2l(y, x);
+        MoonR = sqrtl(x * x + y * y);
+        v = atan2l(y, x);
 
-	N = N * M_PI / 180.0;
-	w = w * M_PI / 180.0;
-	i = i * M_PI / 180.0;
+        N = N * M_PI / 180.0;
+        w = w * M_PI / 180.0;
+        i = i * M_PI / 180.0;
 
-	x = MoonR * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
-	y = MoonR * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
-	z = MoonR * sinl(v + w) * sin(i);
+        x = MoonR * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
+        y = MoonR * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
+        z = MoonR * sinl(v + w) * sin(i);
 
-	lon =  atan2l(y, x);
-	lat = asinl(z / MoonR);
+        lon =  atan2l(y, x);
+        lat = asinl(z / MoonR);
 
-	 lon = lon * 180.0 / M_PI;
-	 lat = lat * 180.0 / M_PI;
+         lon = lon * 180.0 / M_PI;
+         lat = lat * 180.0 / M_PI;
 
-	 D = D * M_PI / 180.0;
-	 F = F * M_PI / 180.0;
-	 Ms = SunM * M_PI / 180.0;
+         D = D * M_PI / 180.0;
+         F = F * M_PI / 180.0;
+         Ms = SunM * M_PI / 180.0;
 
-	 lon -= 1.274 * sinl(M - 2.0 * D);
-	 lon += 0.658 * sinl(2.0 * D);
-	 lon -= 0.186 * sinl(Ms);
-	 lon -= 0.059 * sinl(2 * M - 2.0 * D);
-	 lon -= 0.057 * sinl(M - 2.0 * D + Ms);
-	 lon += 0.053 * sinl(M + 2.0 * D);
-	 lon += 0.046 * sinl(2.0 * D - Ms);
-	 lon += 0.041 * sinl(M - Ms);
-	 lon -= 0.035 * sinl(D);
-	 lon -= 0.031 * sinl(M + Ms);
-	 lon -= 0.015 * sinl(2.0 * F - 2.0 * D);
-	 lon += 0.011 * sinl(M - 4.0 * D);
+         lon -= 1.274 * sinl(M - 2.0 * D);
+         lon += 0.658 * sinl(2.0 * D);
+         lon -= 0.186 * sinl(Ms);
+         lon -= 0.059 * sinl(2 * M - 2.0 * D);
+         lon -= 0.057 * sinl(M - 2.0 * D + Ms);
+         lon += 0.053 * sinl(M + 2.0 * D);
+         lon += 0.046 * sinl(2.0 * D - Ms);
+         lon += 0.041 * sinl(M - Ms);
+         lon -= 0.035 * sinl(D);
+         lon -= 0.031 * sinl(M + Ms);
+         lon -= 0.015 * sinl(2.0 * F - 2.0 * D);
+         lon += 0.011 * sinl(M - 4.0 * D);
 
-	 lat -= 0.173 * sinl(F - 2.0 * D);
-	 lat -= 0.055 * sinl(M - F - 2.0 * D);
-	 lat -= 0.046 * sinl(M + F - 2.0 * D);
-	 lat += 0.033 * sinl(F + 2.0 * D);
-	 lat += 0.017 * sinl(2.0 * M + F);
+         lat -= 0.173 * sinl(F - 2.0 * D);
+         lat -= 0.055 * sinl(M - F - 2.0 * D);
+         lat -= 0.046 * sinl(M + F - 2.0 * D);
+         lat += 0.033 * sinl(F + 2.0 * D);
+         lat += 0.017 * sinl(2.0 * M + F);
 
-	 MoonR -= 0.58 * cosl(M - 2.0 * D);
-	 MoonR -= 0.46 * cosl(2.0 * D);
+         MoonR -= 0.58 * cosl(M - 2.0 * D);
+         MoonR -= 0.46 * cosl(2.0 * D);
 
-	 lon = rev(lon);
+         lon = rev(lon);
 
      MoonLon = lon;
-	 MoonLat = lat;
+         MoonLat = lat;
 
-	 lon = lon * M_PI / 180.0;
-	 lat = lat * M_PI / 180.0;
+         lon = lon * M_PI / 180.0;
+         lat = lat * M_PI / 180.0;
 
-	 x = cosl(lon) * cosl(lat);
-	 y = sinl(lon) * cosl(lat);
+         x = cosl(lon) * cosl(lat);
+         y = sinl(lon) * cosl(lat);
     z = sinl(lat);
 
     oblecl = oblecl * M_PI / 180.0;
 
-	 rx = x;
-	ry = y * cosl(oblecl) - z * sinl(oblecl);
-	rz = y * sinl(oblecl) + z * cosl(oblecl);
+         rx = x;
+        ry = y * cosl(oblecl) - z * sinl(oblecl);
+        rz = y * sinl(oblecl) + z * cosl(oblecl);
     
     MoonRA =  atan2l(ry, rx);
     MoonDecl = asinl(rz);
 
     MoonRA = MoonRA * 180.0 / M_PI;
-	 MoonDecl = MoonDecl * 180 / M_PI;
+         MoonDecl = MoonDecl * 180 / M_PI;
 }
 
 /*##########################################################################
@@ -467,7 +481,7 @@ void TSolar::CalcMoon()
 ##########################################################################*/
 void TSolar::GetMoonPosition(long double *altitude, long double *azimuth)
 {
-	 GetMyNearPos(MoonR, MoonRA, MoonDecl, altitude, azimuth);
+         GetMyNearPos(MoonR, MoonRA, MoonDecl, altitude, azimuth);
 }
 
 /*##########################################################################
@@ -489,37 +503,37 @@ void TSolar::CalcMercury()
     long double a = 0.387098;
     long double e = 0.205635 + 5.59e-10 * FDiffTime;
     long double M = rev(168.6562 + 4.0923344368 * FDiffTime);
-	long double E;
-	long double x, y, z;
-	long double v;
-	long double r;
-	long double lon, lat;
+        long double E;
+        long double x, y, z;
+        long double v;
+        long double r;
+        long double lon, lat;
     long double rx, ry, rz;
-	long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
+        long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
 
-	M = M * M_PI / 180.0;
-	E = M + e * sinl(M) * (1 + e * cosl(M));
-	E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
+        M = M * M_PI / 180.0;
+        E = M + e * sinl(M) * (1 + e * cosl(M));
+        E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
 
-	x = a * (cosl(E) - e);
-	y = a * sqrtl(1 - e * e) * sinl(E);
+        x = a * (cosl(E) - e);
+        y = a * sqrtl(1 - e * e) * sinl(E);
 
-	r = sqrtl(x * x + y * y);
-	v = atan2l(y, x);
+        r = sqrtl(x * x + y * y);
+        v = atan2l(y, x);
 
-	N = N * M_PI / 180.0;
-	w = w * M_PI / 180.0;
-	i = i * M_PI / 180.0;
+        N = N * M_PI / 180.0;
+        w = w * M_PI / 180.0;
+        i = i * M_PI / 180.0;
 
-	x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
-	y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
-	z = r * sinl(v + w) * sin(i);
+        x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
+        y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
+        z = r * sinl(v + w) * sin(i);
 
-	lon =  atan2l(y, x);
-	lat = asinl(z / r);
+        lon =  atan2l(y, x);
+        lat = asinl(z / r);
 
-	x = r * cosl(lon) * cosl(lat);
-	y = r * sinl(lon) * cosl(lat);
+        x = r * cosl(lon) * cosl(lat);
+        y = r * sinl(lon) * cosl(lat);
     z = r * sinl(lat);
 
     x += SunX;
@@ -530,15 +544,15 @@ void TSolar::CalcMercury()
     
     oblecl = oblecl * M_PI / 180.0;
 
-	rx = x;
-	ry = y * cosl(oblecl) - z * sinl(oblecl);
-	rz = y * sinl(oblecl) + z * cosl(oblecl);
+        rx = x;
+        ry = y * cosl(oblecl) - z * sinl(oblecl);
+        rz = y * sinl(oblecl) + z * cosl(oblecl);
     
     MercuryRA =  atan2l(ry, rx);
     MercuryDecl = asinl(rz / MercuryGeoR);
 
     MercuryRA = MercuryRA * 180.0 / M_PI;
-	MercuryDecl = MercuryDecl * 180 / M_PI;
+        MercuryDecl = MercuryDecl * 180 / M_PI;
 }
 
 /*##########################################################################
@@ -560,37 +574,37 @@ void TSolar::CalcVenus()
     long double a = 0.723330;
     long double e = 0.006773 - 1.302e-9 * FDiffTime;
     long double M = rev(48.0052 + 1.6021302244 * FDiffTime);
-	long double E;
-	long double x, y, z;
-	long double v;
-	long double r;
-	long double lon, lat;
+        long double E;
+        long double x, y, z;
+        long double v;
+        long double r;
+        long double lon, lat;
     long double rx, ry, rz;
-	long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
+        long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
 
-	M = M * M_PI / 180.0;
-	E = M + e * sinl(M) * (1 + e * cosl(M));
-	E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
+        M = M * M_PI / 180.0;
+        E = M + e * sinl(M) * (1 + e * cosl(M));
+        E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
 
-	x = a * (cosl(E) - e);
-	y = a * sqrtl(1 - e * e) * sinl(E);
+        x = a * (cosl(E) - e);
+        y = a * sqrtl(1 - e * e) * sinl(E);
 
-	r = sqrtl(x * x + y * y);
-	v = atan2l(y, x);
+        r = sqrtl(x * x + y * y);
+        v = atan2l(y, x);
 
-	N = N * M_PI / 180.0;
-	w = w * M_PI / 180.0;
-	i = i * M_PI / 180.0;
+        N = N * M_PI / 180.0;
+        w = w * M_PI / 180.0;
+        i = i * M_PI / 180.0;
 
-	x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
-	y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
-	z = r * sinl(v + w) * sin(i);
+        x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
+        y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
+        z = r * sinl(v + w) * sin(i);
 
-	lon =  atan2l(y, x);
-	lat = asinl(z / r);
+        lon =  atan2l(y, x);
+        lat = asinl(z / r);
 
-	x = r * cosl(lon) * cosl(lat);
-	y = r * sinl(lon) * cosl(lat);
+        x = r * cosl(lon) * cosl(lat);
+        y = r * sinl(lon) * cosl(lat);
     z = r * sinl(lat);
 
     x += SunX;
@@ -601,15 +615,15 @@ void TSolar::CalcVenus()
     
     oblecl = oblecl * M_PI / 180.0;
 
-	rx = x;
-	ry = y * cosl(oblecl) - z * sinl(oblecl);
-	rz = y * sinl(oblecl) + z * cosl(oblecl);
+        rx = x;
+        ry = y * cosl(oblecl) - z * sinl(oblecl);
+        rz = y * sinl(oblecl) + z * cosl(oblecl);
     
     VenusRA =  atan2l(ry, rx);
     VenusDecl = asinl(rz / VenusGeoR);
 
     VenusRA = VenusRA * 180.0 / M_PI;
-	VenusDecl = VenusDecl * 180 / M_PI;
+        VenusDecl = VenusDecl * 180 / M_PI;
 }
 
 /*##########################################################################
@@ -625,43 +639,43 @@ void TSolar::CalcVenus()
 ##########################################################################*/
 void TSolar::CalcMars()
 {
-	long double N = rev(49.5574 + 2.11081e-5 * FDiffTime);
-	long double i = rev(1.8497 - 1.78e-8 * FDiffTime);
-	long double w = rev(286.5016 + 2.92961e-5 * FDiffTime);
-	long double a = 1.523688;
-	long double e = 0.093405 + 2.516e-9 * FDiffTime;
-	long double M = rev(18.6021 + 0.5240207766 * FDiffTime);
-	long double E;
-	long double x, y, z;
-	long double v;
-	long double r;
-	long double lon, lat;
+        long double N = rev(49.5574 + 2.11081e-5 * FDiffTime);
+        long double i = rev(1.8497 - 1.78e-8 * FDiffTime);
+        long double w = rev(286.5016 + 2.92961e-5 * FDiffTime);
+        long double a = 1.523688;
+        long double e = 0.093405 + 2.516e-9 * FDiffTime;
+        long double M = rev(18.6021 + 0.5240207766 * FDiffTime);
+        long double E;
+        long double x, y, z;
+        long double v;
+        long double r;
+        long double lon, lat;
     long double rx, ry, rz;
-	long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
+        long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
 
-	M = M * M_PI / 180.0;
-	E = M + e * sinl(M) * (1 + e * cosl(M));
-	E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
+        M = M * M_PI / 180.0;
+        E = M + e * sinl(M) * (1 + e * cosl(M));
+        E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
 
-	x = a * (cosl(E) - e);
-	y = a * sqrtl(1 - e * e) * sinl(E);
+        x = a * (cosl(E) - e);
+        y = a * sqrtl(1 - e * e) * sinl(E);
 
-	r = sqrtl(x * x + y * y);
-	v = atan2l(y, x);
+        r = sqrtl(x * x + y * y);
+        v = atan2l(y, x);
 
-	N = N * M_PI / 180.0;
-	w = w * M_PI / 180.0;
-	i = i * M_PI / 180.0;
+        N = N * M_PI / 180.0;
+        w = w * M_PI / 180.0;
+        i = i * M_PI / 180.0;
 
-	x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
-	y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
-	z = r * sinl(v + w) * sin(i);
+        x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
+        y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
+        z = r * sinl(v + w) * sin(i);
 
-	lon =  atan2l(y, x);
-	lat = asinl(z / r);
+        lon =  atan2l(y, x);
+        lat = asinl(z / r);
 
-	x = r * cosl(lon) * cosl(lat);
-	y = r * sinl(lon) * cosl(lat);
+        x = r * cosl(lon) * cosl(lat);
+        y = r * sinl(lon) * cosl(lat);
     z = r * sinl(lat);
 
     x += SunX;
@@ -672,15 +686,15 @@ void TSolar::CalcMars()
     
     oblecl = oblecl * M_PI / 180.0;
 
-	rx = x;
-	ry = y * cosl(oblecl) - z * sinl(oblecl);
-	rz = y * sinl(oblecl) + z * cosl(oblecl);
+        rx = x;
+        ry = y * cosl(oblecl) - z * sinl(oblecl);
+        rz = y * sinl(oblecl) + z * cosl(oblecl);
     
     MarsRA =  atan2l(ry, rx);
-	 MarsDecl = asinl(rz / MarsGeoR);
+         MarsDecl = asinl(rz / MarsGeoR);
 
     MarsRA = MarsRA * 180.0 / M_PI;
-	MarsDecl = MarsDecl * 180 / M_PI;
+        MarsDecl = MarsDecl * 180 / M_PI;
 }
 
 /*##########################################################################
@@ -702,49 +716,49 @@ void TSolar::CalcJupiter()
     long double a = 5.20256;
     long double e = 0.048498 + 4.469e-9 * FDiffTime;
     long double M = rev(19.8950 + 0.0830853001 * FDiffTime);
-	long double E;
-	long double x, y, z;
-	long double v;
-	long double r;
-	long double lon, lat;
+        long double E;
+        long double x, y, z;
+        long double v;
+        long double r;
+        long double lon, lat;
     long double rx, ry, rz;
-	long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
+        long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
 
-	M = M * M_PI / 180.0;
-	E = M + e * sinl(M) * (1 + e * cosl(M));
-	E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
+        M = M * M_PI / 180.0;
+        E = M + e * sinl(M) * (1 + e * cosl(M));
+        E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
 
-	x = a * (cosl(E) - e);
-	y = a * sqrtl(1 - e * e) * sinl(E);
+        x = a * (cosl(E) - e);
+        y = a * sqrtl(1 - e * e) * sinl(E);
 
-	r = sqrtl(x * x + y * y);
-	v = atan2l(y, x);
+        r = sqrtl(x * x + y * y);
+        v = atan2l(y, x);
 
-	N = N * M_PI / 180.0;
-	w = w * M_PI / 180.0;
-	i = i * M_PI / 180.0;
+        N = N * M_PI / 180.0;
+        w = w * M_PI / 180.0;
+        i = i * M_PI / 180.0;
 
-	x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
-	y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
-	z = r * sinl(v + w) * sin(i);
+        x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
+        y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
+        z = r * sinl(v + w) * sin(i);
 
-	lon =  atan2l(y, x);
-	lat = asinl(z / r);
+        lon =  atan2l(y, x);
+        lat = asinl(z / r);
 
-	lon = lon * 180.0 / M_PI;
+        lon = lon * 180.0 / M_PI;
 
-	lon -= 0.332 * sinl(2.0 * Mj - 5.0 * Ms - 67.6 * M_PI / 180.0);
-	lon -= 0.056 * sinl(2.0 * Mj - 2.0 * Ms + 21.0 * M_PI / 180.0);
-	lon += 0.042 * sinl(3.0 * Mj - 5.0 * Ms + 21.0 * M_PI / 180.0);
-	lon -= 0.036 * sinl(Mj - 2.0 * Ms);
-	lon += 0.022 * cosl(Mj - Ms);
-	lon += 0.023 * sinl(2.0 * Mj - 3.0 * Ms + 52.0 * M_PI / 180.0);
-	lon -= 0.016 * sinl(Mj - 5.0 * Ms - 69.0 * M_PI / 180.0);
+        lon -= 0.332 * sinl(2.0 * Mj - 5.0 * Ms - 67.6 * M_PI / 180.0);
+        lon -= 0.056 * sinl(2.0 * Mj - 2.0 * Ms + 21.0 * M_PI / 180.0);
+        lon += 0.042 * sinl(3.0 * Mj - 5.0 * Ms + 21.0 * M_PI / 180.0);
+        lon -= 0.036 * sinl(Mj - 2.0 * Ms);
+        lon += 0.022 * cosl(Mj - Ms);
+        lon += 0.023 * sinl(2.0 * Mj - 3.0 * Ms + 52.0 * M_PI / 180.0);
+        lon -= 0.016 * sinl(Mj - 5.0 * Ms - 69.0 * M_PI / 180.0);
 
     lon = lon * M_PI / 180.0;
     
-	x = r * cosl(lon) * cosl(lat);
-	y = r * sinl(lon) * cosl(lat);
+        x = r * cosl(lon) * cosl(lat);
+        y = r * sinl(lon) * cosl(lat);
     z = r * sinl(lat);
 
     x += SunX;
@@ -755,15 +769,15 @@ void TSolar::CalcJupiter()
     
     oblecl = oblecl * M_PI / 180.0;
 
-	rx = x;
-	ry = y * cosl(oblecl) - z * sinl(oblecl);
-	rz = y * sinl(oblecl) + z * cosl(oblecl);
+        rx = x;
+        ry = y * cosl(oblecl) - z * sinl(oblecl);
+        rz = y * sinl(oblecl) + z * cosl(oblecl);
     
     JupiterRA =  atan2l(ry, rx);
-	 JupiterDecl = asinl(rz / JupiterGeoR);
+         JupiterDecl = asinl(rz / JupiterGeoR);
 
     JupiterRA = JupiterRA * 180.0 / M_PI;
-	JupiterDecl = JupiterDecl * 180 / M_PI;
+        JupiterDecl = JupiterDecl * 180 / M_PI;
 }
 
 /*##########################################################################
@@ -785,52 +799,52 @@ void TSolar::CalcSaturn()
     long double a = 9.55475;
     long double e = 0.055546 - 9.499e-9 * FDiffTime;
     long double M = rev(316.9670 + 0.0334442282 * FDiffTime);   
-	long double E;
-	long double x, y, z;
-	long double v;
-	long double r;
-	long double lon, lat;
+        long double E;
+        long double x, y, z;
+        long double v;
+        long double r;
+        long double lon, lat;
     long double rx, ry, rz;
-	long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
+        long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
 
-	M = M * M_PI / 180.0;
-	E = M + e * sinl(M) * (1 + e * cosl(M));
-	E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
+        M = M * M_PI / 180.0;
+        E = M + e * sinl(M) * (1 + e * cosl(M));
+        E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
 
-	x = a * (cosl(E) - e);
-	y = a * sqrtl(1 - e * e) * sinl(E);
+        x = a * (cosl(E) - e);
+        y = a * sqrtl(1 - e * e) * sinl(E);
 
-	r = sqrtl(x * x + y * y);
-	v = atan2l(y, x);
+        r = sqrtl(x * x + y * y);
+        v = atan2l(y, x);
 
-	N = N * M_PI / 180.0;
-	w = w * M_PI / 180.0;
-	i = i * M_PI / 180.0;
+        N = N * M_PI / 180.0;
+        w = w * M_PI / 180.0;
+        i = i * M_PI / 180.0;
 
-	x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
-	y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
-	z = r * sinl(v + w) * sin(i);
+        x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
+        y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
+        z = r * sinl(v + w) * sin(i);
 
-	lon =  atan2l(y, x);
-	lat = asinl(z / r);
+        lon =  atan2l(y, x);
+        lat = asinl(z / r);
 
-	lon = lon * 180.0 / M_PI;
-	lat = lat * 180.0 / M_PI;
+        lon = lon * 180.0 / M_PI;
+        lat = lat * 180.0 / M_PI;
 
-	lon += 0.812 * sinl(2.0 * Mj - 5.0 * Ms - 67.6 * M_PI / 180.0);
-	lon -= 0.229 * cosl(2.0 * Mj - 4.0 * Ms - 2.0 * M_PI / 180.0);
-	lon += 0.119 * sinl(Mj - 2.0 * Ms - 3.0 * M_PI / 180.0);
-	lon += 0.046 * sinl(2.0 * Mj - 6.0 * Ms - 69.0 * M_PI / 180.0);
-	lon += 0.014 * sinl(Mj - 3.0 * Ms + 32.0 * M_PI / 180.0);
+        lon += 0.812 * sinl(2.0 * Mj - 5.0 * Ms - 67.6 * M_PI / 180.0);
+        lon -= 0.229 * cosl(2.0 * Mj - 4.0 * Ms - 2.0 * M_PI / 180.0);
+        lon += 0.119 * sinl(Mj - 2.0 * Ms - 3.0 * M_PI / 180.0);
+        lon += 0.046 * sinl(2.0 * Mj - 6.0 * Ms - 69.0 * M_PI / 180.0);
+        lon += 0.014 * sinl(Mj - 3.0 * Ms + 32.0 * M_PI / 180.0);
 
-	lat -= 0.020 * cosl(2.0 * Mj - 4.0 * Ms - 2.0 * M_PI / 180.0);
-	lat += 0.018 * sinl(2.0 * Mj - 6.0 * Ms - 49.0 * M_PI / 180.0);
+        lat -= 0.020 * cosl(2.0 * Mj - 4.0 * Ms - 2.0 * M_PI / 180.0);
+        lat += 0.018 * sinl(2.0 * Mj - 6.0 * Ms - 49.0 * M_PI / 180.0);
 
     lon = lon * M_PI / 180.0;
     lat = lat * M_PI / 180.0;
     
-	x = r * cosl(lon) * cosl(lat);
-	y = r * sinl(lon) * cosl(lat);
+        x = r * cosl(lon) * cosl(lat);
+        y = r * sinl(lon) * cosl(lat);
     z = r * sinl(lat);
 
     x += SunX;
@@ -841,15 +855,15 @@ void TSolar::CalcSaturn()
     
     oblecl = oblecl * M_PI / 180.0;
 
-	rx = x;
-	ry = y * cosl(oblecl) - z * sinl(oblecl);
-	rz = y * sinl(oblecl) + z * cosl(oblecl);
+        rx = x;
+        ry = y * cosl(oblecl) - z * sinl(oblecl);
+        rz = y * sinl(oblecl) + z * cosl(oblecl);
     
     SaturnRA =  atan2l(ry, rx);
-	 SaturnDecl = asinl(rz / SaturnGeoR);
+         SaturnDecl = asinl(rz / SaturnGeoR);
 
     SaturnRA = SaturnRA * 180.0 / M_PI;
-	SaturnDecl = SaturnDecl * 180 / M_PI;
+        SaturnDecl = SaturnDecl * 180 / M_PI;
 }
 
 /*##########################################################################
@@ -868,48 +882,48 @@ void TSolar::CalcUranus()
     long double N = rev(74.0005 + 1.3978e-5 * FDiffTime);
     long double i = rev(0.7733 + 1.9e-8 * FDiffTime);
     long double w = rev(96.6612 + 3.0565e-5 * FDiffTime);
-	long double a = 19.18171 - 1.55e-8 * FDiffTime;
+        long double a = 19.18171 - 1.55e-8 * FDiffTime;
     long double e = 0.047318 + 7.45e-9 * FDiffTime;
     long double M = rev(142.5905 + 0.011725806 * FDiffTime);    
-	long double E;
-	long double x, y, z;
-	long double v;
-	long double r;
-	long double lon, lat;
+        long double E;
+        long double x, y, z;
+        long double v;
+        long double r;
+        long double lon, lat;
     long double rx, ry, rz;
-	long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
+        long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
 
-	M = M * M_PI / 180.0;
-	E = M + e * sinl(M) * (1 + e * cosl(M));
-	E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
+        M = M * M_PI / 180.0;
+        E = M + e * sinl(M) * (1 + e * cosl(M));
+        E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
 
-	x = a * (cosl(E) - e);
-	y = a * sqrtl(1 - e * e) * sinl(E);
+        x = a * (cosl(E) - e);
+        y = a * sqrtl(1 - e * e) * sinl(E);
 
-	r = sqrtl(x * x + y * y);
-	v = atan2l(y, x);
+        r = sqrtl(x * x + y * y);
+        v = atan2l(y, x);
 
-	N = N * M_PI / 180.0;
-	w = w * M_PI / 180.0;
-	i = i * M_PI / 180.0;
+        N = N * M_PI / 180.0;
+        w = w * M_PI / 180.0;
+        i = i * M_PI / 180.0;
 
-	x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
-	y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
-	z = r * sinl(v + w) * sin(i);
+        x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
+        y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
+        z = r * sinl(v + w) * sin(i);
 
-	lon =  atan2l(y, x);
-	lat = asinl(z / r);
+        lon =  atan2l(y, x);
+        lat = asinl(z / r);
 
-	lon = lon * 180.0 / M_PI;
+        lon = lon * 180.0 / M_PI;
 
-	lon += 0.040 * sinl(Ms - 2.0 * Mu + 6.0 * M_PI / 180.0);
-	lon += 0.035 * sinl(Ms - 3.0 * Mu + 33.0 * M_PI / 180.0);
-	lon -= 0.015 * sinl(Mj - Mu + 20.0 * M_PI / 180.0);
+        lon += 0.040 * sinl(Ms - 2.0 * Mu + 6.0 * M_PI / 180.0);
+        lon += 0.035 * sinl(Ms - 3.0 * Mu + 33.0 * M_PI / 180.0);
+        lon -= 0.015 * sinl(Mj - Mu + 20.0 * M_PI / 180.0);
 
-	lon = lon * M_PI / 180.0;
+        lon = lon * M_PI / 180.0;
 
-	x = r * cosl(lon) * cosl(lat);
-	y = r * sinl(lon) * cosl(lat);
+        x = r * cosl(lon) * cosl(lat);
+        y = r * sinl(lon) * cosl(lat);
     z = r * sinl(lat);
 
     x += SunX;
@@ -920,15 +934,15 @@ void TSolar::CalcUranus()
     
     oblecl = oblecl * M_PI / 180.0;
 
-	rx = x;
-	ry = y * cosl(oblecl) - z * sinl(oblecl);
-	rz = y * sinl(oblecl) + z * cosl(oblecl);
+        rx = x;
+        ry = y * cosl(oblecl) - z * sinl(oblecl);
+        rz = y * sinl(oblecl) + z * cosl(oblecl);
     
     UranusRA =  atan2l(ry, rx);
-	 UranusDecl = asinl(rz / UranusGeoR);
+         UranusDecl = asinl(rz / UranusGeoR);
 
     UranusRA = UranusRA * 180.0 / M_PI;
-	UranusDecl = UranusDecl * 180 / M_PI;
+        UranusDecl = UranusDecl * 180 / M_PI;
 }
 
 /*##########################################################################
@@ -944,43 +958,43 @@ void TSolar::CalcUranus()
 ##########################################################################*/
 void TSolar::CalcNeptune()
 {
-	long double N = rev(131.7806 + 3.0173e-5 * FDiffTime);
-	long double i = rev(1.7700 - 2.55e-7 * FDiffTime);
-	long double w = rev(272.8461 - 6.027e-6 * FDiffTime);
-	long double a = 30.05826 + 3.313e-8 * FDiffTime;
-	long double e = 0.008606 + 2.15e-9 * FDiffTime;
-	long double M = rev(260.2471 + 0.005995147 * FDiffTime);
-	long double E;
-	long double x, y, z;
-	long double v;
-	long double r;
-	long double lon, lat;
+        long double N = rev(131.7806 + 3.0173e-5 * FDiffTime);
+        long double i = rev(1.7700 - 2.55e-7 * FDiffTime);
+        long double w = rev(272.8461 - 6.027e-6 * FDiffTime);
+        long double a = 30.05826 + 3.313e-8 * FDiffTime;
+        long double e = 0.008606 + 2.15e-9 * FDiffTime;
+        long double M = rev(260.2471 + 0.005995147 * FDiffTime);
+        long double E;
+        long double x, y, z;
+        long double v;
+        long double r;
+        long double lon, lat;
     long double rx, ry, rz;
-	long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
+        long double oblecl = 23.4393 - 3.563e-7 * FDiffTime;
 
-	M = M * M_PI / 180.0;
-	E = M + e * sinl(M) * (1 + e * cosl(M));
-	E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
+        M = M * M_PI / 180.0;
+        E = M + e * sinl(M) * (1 + e * cosl(M));
+        E = E - (E - e * sinl(E) - M) / (1 - e * cosl(E));
 
-	x = a * (cosl(E) - e);
-	y = a * sqrtl(1 - e * e) * sinl(E);
+        x = a * (cosl(E) - e);
+        y = a * sqrtl(1 - e * e) * sinl(E);
 
-	r = sqrtl(x * x + y * y);
-	v = atan2l(y, x);
+        r = sqrtl(x * x + y * y);
+        v = atan2l(y, x);
 
-	N = N * M_PI / 180.0;
-	w = w * M_PI / 180.0;
-	i = i * M_PI / 180.0;
+        N = N * M_PI / 180.0;
+        w = w * M_PI / 180.0;
+        i = i * M_PI / 180.0;
 
-	x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
-	y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
-	z = r * sinl(v + w) * sin(i);
+        x = r * (cosl(N) * cosl(v + w) - sinl(N) * sinl(v + w) * cosl(i));
+        y = r * (sinl(N) * cosl(v + w) + cosl(N) * sinl(v + w) * cosl(i));
+        z = r * sinl(v + w) * sin(i);
 
-	lon =  atan2l(y, x);
-	lat = asinl(z / r);
+        lon =  atan2l(y, x);
+        lat = asinl(z / r);
 
-	x = r * cosl(lon) * cosl(lat);
-	y = r * sinl(lon) * cosl(lat);
+        x = r * cosl(lon) * cosl(lat);
+        y = r * sinl(lon) * cosl(lat);
     z = r * sinl(lat);
 
     x += SunX;
@@ -991,15 +1005,15 @@ void TSolar::CalcNeptune()
     
     oblecl = oblecl * M_PI / 180.0;
 
-	rx = x;
-	ry = y * cosl(oblecl) - z * sinl(oblecl);
-	rz = y * sinl(oblecl) + z * cosl(oblecl);
+        rx = x;
+        ry = y * cosl(oblecl) - z * sinl(oblecl);
+        rz = y * sinl(oblecl) + z * cosl(oblecl);
     
     NeptuneRA =  atan2l(ry, rx);
     NeptuneDecl = asinl(rz / NeptuneGeoR);
 
     NeptuneRA = NeptuneRA * 180.0 / M_PI;
-	NeptuneDecl = NeptuneDecl * 180 / M_PI;
+        NeptuneDecl = NeptuneDecl * 180 / M_PI;
 }
 
 /*##########################################################################
@@ -1045,7 +1059,7 @@ void TSolar::CalcPlanets()
 ##########################################################################*/
 void TSolar::GetMercuryPosition(long double *altitude, long double *azimuth)
 {
-	 GetMyPos(MercuryRA, MercuryDecl, altitude, azimuth);
+         GetMyPos(MercuryRA, MercuryDecl, altitude, azimuth);
 }    
 
 /*##########################################################################
@@ -1061,7 +1075,7 @@ void TSolar::GetMercuryPosition(long double *altitude, long double *azimuth)
 ##########################################################################*/
 void TSolar::GetVenusPosition(long double *altitude, long double *azimuth)
 {
-	 GetMyPos(VenusRA, VenusDecl, altitude, azimuth);
+         GetMyPos(VenusRA, VenusDecl, altitude, azimuth);
 }    
 
 /*##########################################################################
@@ -1077,7 +1091,7 @@ void TSolar::GetVenusPosition(long double *altitude, long double *azimuth)
 ##########################################################################*/
 void TSolar::GetMarsPosition(long double *altitude, long double *azimuth)
 {
-	 GetMyPos(MarsRA, MarsDecl, altitude, azimuth);
+         GetMyPos(MarsRA, MarsDecl, altitude, azimuth);
 }    
 
 /*##########################################################################
@@ -1093,7 +1107,7 @@ void TSolar::GetMarsPosition(long double *altitude, long double *azimuth)
 ##########################################################################*/
 void TSolar::GetJupiterPosition(long double *altitude, long double *azimuth)
 {
-	 GetMyPos(JupiterRA, JupiterDecl, altitude, azimuth);
+         GetMyPos(JupiterRA, JupiterDecl, altitude, azimuth);
 }    
 
 /*##########################################################################
@@ -1109,7 +1123,7 @@ void TSolar::GetJupiterPosition(long double *altitude, long double *azimuth)
 ##########################################################################*/
 void TSolar::GetSaturnPosition(long double *altitude, long double *azimuth)
 {
-	 GetMyPos(SaturnRA, SaturnDecl, altitude, azimuth);
+         GetMyPos(SaturnRA, SaturnDecl, altitude, azimuth);
 }    
 
 /*##########################################################################
@@ -1125,7 +1139,7 @@ void TSolar::GetSaturnPosition(long double *altitude, long double *azimuth)
 ##########################################################################*/
 void TSolar::GetUranusPosition(long double *altitude, long double *azimuth)
 {
-	 GetMyPos(UranusRA, UranusDecl, altitude, azimuth);
+         GetMyPos(UranusRA, UranusDecl, altitude, azimuth);
 }    
 
 /*##########################################################################
@@ -1141,7 +1155,7 @@ void TSolar::GetUranusPosition(long double *altitude, long double *azimuth)
 ##########################################################################*/
 void TSolar::GetNeptunePosition(long double *altitude, long double *azimuth)
 {
-	 GetMyPos(NeptuneRA, NeptuneDecl, altitude, azimuth);
+         GetMyPos(NeptuneRA, NeptuneDecl, altitude, azimuth);
 }    
 
 /*##########################################################################
@@ -1166,7 +1180,7 @@ long double TSolar::GetMoonPhase()
     elong = acosl(cosl(slon - mlon) * cosl(mlat));
     fv = 180.0 - elong * 180.0 / M_PI;
 
-	return FvToPhase(fv);
+        return FvToPhase(fv);
 }    
 
 /*##########################################################################
@@ -1182,7 +1196,7 @@ long double TSolar::GetMoonPhase()
 ##########################################################################*/
 long double TSolar::GetMercuryPhase()
 {
-	return FvToPhase(GetFv(MercurySolarR, MercuryGeoR));
+        return FvToPhase(GetFv(MercurySolarR, MercuryGeoR));
 }    
 
 /*##########################################################################
@@ -1198,7 +1212,7 @@ long double TSolar::GetMercuryPhase()
 ##########################################################################*/
 long double TSolar::GetVenusPhase()
 {
-	return FvToPhase(GetFv(VenusSolarR, VenusGeoR));
+        return FvToPhase(GetFv(VenusSolarR, VenusGeoR));
 }    
 
 /*##########################################################################
@@ -1214,7 +1228,7 @@ long double TSolar::GetVenusPhase()
 ##########################################################################*/
 long double TSolar::GetMarsPhase()
 {
-	return FvToPhase(GetFv(MarsSolarR, MarsGeoR));
+        return FvToPhase(GetFv(MarsSolarR, MarsGeoR));
 }    
 
 /*##########################################################################
@@ -1230,7 +1244,7 @@ long double TSolar::GetMarsPhase()
 ##########################################################################*/
 long double TSolar::GetJupiterPhase()
 {
-	return FvToPhase(GetFv(JupiterSolarR, JupiterGeoR));
+        return FvToPhase(GetFv(JupiterSolarR, JupiterGeoR));
 }    
 
 /*##########################################################################
@@ -1246,7 +1260,7 @@ long double TSolar::GetJupiterPhase()
 ##########################################################################*/
 long double TSolar::GetSaturnPhase()
 {
-	return FvToPhase(GetFv(SaturnSolarR, SaturnGeoR));
+        return FvToPhase(GetFv(SaturnSolarR, SaturnGeoR));
 }    
 
 /*##########################################################################
@@ -1262,7 +1276,7 @@ long double TSolar::GetSaturnPhase()
 ##########################################################################*/
 long double TSolar::GetUranusPhase()
 {
-	return FvToPhase(GetFv(UranusSolarR, UranusGeoR));
+        return FvToPhase(GetFv(UranusSolarR, UranusGeoR));
 }    
 
 /*##########################################################################
@@ -1278,5 +1292,5 @@ long double TSolar::GetUranusPhase()
 ##########################################################################*/
 long double TSolar::GetNeptunePhase()
 {
-	return FvToPhase(GetFv(NeptuneSolarR, NeptuneGeoR));
+        return FvToPhase(GetFv(NeptuneSolarR, NeptuneGeoR));
 }    

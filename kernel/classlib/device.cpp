@@ -44,11 +44,11 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-#define DEVICE_TAGRANGE_LOW	        1
-#define DEVICE_TAGRANGE_HIGH	    10000
-#define DEVICE_VARIABLERANGE_LOW	30001
-#define DEVICE_VARIABLERANGE_HIGH	40000
-#define DEVICE_TAGEND	            65535
+#define DEVICE_TAGRANGE_LOW             1
+#define DEVICE_TAGRANGE_HIGH        10000
+#define DEVICE_VARIABLERANGE_LOW        30001
+#define DEVICE_VARIABLERANGE_HIGH       40000
+#define DEVICE_TAGEND               65535
 
 #define DEVICE_DATA_UNKNOWN         0
 #define DEVICE_DATA_NONE            1
@@ -104,7 +104,7 @@ TDeviceAlloc::TDeviceAlloc(int MaxSize)
 TDeviceAlloc::~TDeviceAlloc()
 {
     if (FArr)
-		delete FArr;
+                delete FArr;
 }
 
 /*##################  TDeviceAlloc::Allocate  ###############
@@ -122,7 +122,7 @@ void *TDeviceAlloc::Allocate(int size)
     {
         p = FArr + FPos;
         FPos += size;
-		return p;
+                return p;
     }
     else
         return 0;
@@ -172,11 +172,11 @@ int TDeviceData::IsTag()
 *##########################################################################*/
 int TDeviceData::IsVar()
 {
-	return FALSE;
+        return FALSE;
 }
 
 /*##################  TDeviceVar::TDeviceVar  ###############
-*   Purpose....: Constructor for var	                        #
+*   Purpose....: Constructor for var                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -193,7 +193,7 @@ TDeviceVar::TDeviceVar(unsigned short int ID)
 }
 
 /*##################  TDeviceVar::TDeviceVar  ###############
-*   Purpose....: Constructor for var	                        #
+*   Purpose....: Constructor for var                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -231,8 +231,8 @@ TDeviceVar::TDeviceVar(const char *data, int size, int *count)
 *##########################################################################*/
 TDeviceVar::TDeviceVar(TDeviceAlloc *alloc, const char *data, int size, int *count)
 {
-	FAlloc = alloc;
-	Init(data, size, count);
+        FAlloc = alloc;
+        Init(data, size, count);
 }
 
 /*##################  TDeviceVar::TDeviceVar  ###############
@@ -246,7 +246,7 @@ void TDeviceVar::Init(const char *data, int size, int *count)
 {
     unsigned short int Id;
     int overhead;
-	int terminate;
+        int terminate;
 
     FSize = 0;
     FData = 0;
@@ -271,7 +271,7 @@ void TDeviceVar::Init(const char *data, int size, int *count)
     data++;
     size--;
 
-	if (FType < 0)
+        if (FType < 0)
     {
         FSize = FType & 0x7F;
         terminate = TRUE;
@@ -296,7 +296,7 @@ void TDeviceVar::Init(const char *data, int size, int *count)
                 FSize = 2;
                 break;
 
-			case DEVICE_DATA_UNSIGNED32:
+                        case DEVICE_DATA_UNSIGNED32:
             case DEVICE_DATA_SIGNED32:
             case DEVICE_DATA_FLOAT1:
             case DEVICE_DATA_FLOAT2:
@@ -316,37 +316,37 @@ void TDeviceVar::Init(const char *data, int size, int *count)
                 memcpy(&FSize, data, 1);
                 data++;
                 overhead++;
-				break;
+                                break;
 
-			case DEVICE_DATA_STRING16:
-				terminate = TRUE;
+                        case DEVICE_DATA_STRING16:
+                                terminate = TRUE;
 
-			case DEVICE_DATA_BINARY16:
-				FSize = 0;
-				memcpy(&FSize, data, 2);
-				data += 2;
-				overhead += 2;
-				break;
+                        case DEVICE_DATA_BINARY16:
+                                FSize = 0;
+                                memcpy(&FSize, data, 2);
+                                data += 2;
+                                overhead += 2;
+                                break;
 
-			default:
-				return;
-		}
-	}
+                        default:
+                                return;
+                }
+        }
 
-	if (FSize <= size)
-	{
-		if (terminate)
-		{
-			FData = Allocate(FSize + 1);
-			memcpy(FData, data, FSize);
-			*(FData + FSize) = 0;
+        if (FSize <= size)
+        {
+                if (terminate)
+                {
+                        FData = Allocate(FSize + 1);
+                        memcpy(FData, data, FSize);
+                        *(FData + FSize) = 0;
         }
         else
         {
             if (FSize)
             {
-    			FData = Allocate(FSize);
-				memcpy(FData, data, FSize);
+                        FData = Allocate(FSize);
+                                memcpy(FData, data, FSize);
             }
             else
                 FData = 0;
@@ -356,7 +356,7 @@ void TDeviceVar::Init(const char *data, int size, int *count)
 }
 
 /*##################  TDeviceVar::~TDeviceVar  ###############
-*   Purpose....: Destructor for var	                        #
+*   Purpose....: Destructor for var                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -368,7 +368,7 @@ TDeviceVar::~TDeviceVar()
 }
 
 /*##################  TDeviceVar::IsVar  ###############
-*   Purpose....: Confirm this is a variable                   	                        #
+*   Purpose....: Confirm this is a variable                                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -380,7 +380,7 @@ int TDeviceVar::IsVar()
 }
 
 /*##################  TDeviceVar::IsEmptyVar  ###############
-*   Purpose....: Is this an empty var?                     	                        #
+*   Purpose....: Is this an empty var?                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -395,7 +395,7 @@ int TDeviceVar::IsEmptyVar()
 }
 
 /*##################  TDeviceVar::GetType  ###############
-*   Purpose....: Return type                     	                        #
+*   Purpose....: Return type                                                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -407,7 +407,7 @@ char TDeviceVar::GetType()
 }
 
 /*##################  TDeviceVar::Reinit  ###############
-*   Purpose....: Reinit var                     	                        #
+*   Purpose....: Reinit var                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -421,14 +421,14 @@ void TDeviceVar::Reinit()
 
     if (FStr && FAlloc == 0)
         delete FStr;
-	FStr = 0;
+        FStr = 0;
     
     FType = DEVICE_DATA_NONE;
     FSize = 0;
 }
 
 /*##################  TDeviceVar::Allocate  ###############
-*   Purpose....: Allocate memory                              	                        #
+*   Purpose....: Allocate memory                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -443,7 +443,7 @@ char *TDeviceVar::Allocate(int size)
 }
 
 /*##################  TDeviceVar::operator new  ###############
-*   Purpose....: operator new                      	                        #
+*   Purpose....: operator new                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -455,7 +455,7 @@ void *TDeviceVar::operator new(size_t size)
 }
 
 /*##################  TDeviceVar::operator new  ###############
-*   Purpose....: operator new                      	                        #
+*   Purpose....: operator new                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -470,7 +470,7 @@ void *TDeviceVar::operator new(size_t size, TDeviceAlloc *alloc)
 }
 
 /*##################  TDeviceVar::SetUnsigned8  ###############
-*   Purpose....: Set variable a unsigned8          	                        #
+*   Purpose....: Set variable a unsigned8                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -489,7 +489,7 @@ void TDeviceVar::SetUnsigned8(unsigned char data)
 }
 
 /*##################  TDeviceVar::SetUnsigned16  ###############
-*   Purpose....: Set variable a unsigned16          	                        #
+*   Purpose....: Set variable a unsigned16                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -504,11 +504,11 @@ void TDeviceVar::SetUnsigned16(unsigned short int data)
         FSize = 2;
         FData = Allocate(2);
     }
-	memcpy(FData, &data, 2);
+        memcpy(FData, &data, 2);
 }
 
 /*##################  TDeviceVar::SetUnsigned32  ###############
-*   Purpose....: Set variable a unsigned32          	                        #
+*   Purpose....: Set variable a unsigned32                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -518,12 +518,12 @@ void TDeviceVar::SetUnsigned32(unsigned long data)
 {
     if (FType != DEVICE_DATA_UNSIGNED32)
     {
-    	Reinit();
-	    FType = DEVICE_DATA_UNSIGNED32;
-    	FSize = 4;
-	    FData = Allocate(4);
-	}
-	memcpy(FData, &data, 4);
+        Reinit();
+            FType = DEVICE_DATA_UNSIGNED32;
+        FSize = 4;
+            FData = Allocate(4);
+        }
+        memcpy(FData, &data, 4);
 }
 
 /*##################  TDeviceVar::SetUnsignedShort  ###############
@@ -570,7 +570,7 @@ void TDeviceVar::SetUnsignedLong(unsigned long data)
 *##########################################################################*/
 void TDeviceVar::SetUnsignedInt(unsigned int data)
 {
-#if defined __GNUC__ || defined MSVC
+#if defined __GNUC__ || defined MSVC || defined __WATCOMC__
     SetUnsignedLong(data);
 #else
 #if sizeof(int) == 2
@@ -582,7 +582,7 @@ void TDeviceVar::SetUnsignedInt(unsigned int data)
 }
 
 /*##################  TDeviceVar::SetSigned8  ###############
-*   Purpose....: Set variable a signed8          	                        #
+*   Purpose....: Set variable a signed8                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -592,16 +592,16 @@ void TDeviceVar::SetSigned8(char data)
 {
     if (FType != DEVICE_DATA_SIGNED8)
     {
-    	Reinit();
-	    FType = DEVICE_DATA_SIGNED8;
-    	FSize = 1;
-	    FData = Allocate(1);
-	}
-	memcpy(FData, &data, 1);
+        Reinit();
+            FType = DEVICE_DATA_SIGNED8;
+        FSize = 1;
+            FData = Allocate(1);
+        }
+        memcpy(FData, &data, 1);
 }
 
 /*##################  TDeviceVar::SetSigned16  ###############
-*   Purpose....: Set variable a signed16          	                        #
+*   Purpose....: Set variable a signed16                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -611,16 +611,16 @@ void TDeviceVar::SetSigned16(short int data)
 {
     if (FType != DEVICE_DATA_SIGNED16)
     {
-    	Reinit();
-	    FType = DEVICE_DATA_SIGNED16;
-    	FSize = 2;
-	    FData = Allocate(2);
-	}
-	memcpy(FData, &data, 2);
+        Reinit();
+            FType = DEVICE_DATA_SIGNED16;
+        FSize = 2;
+            FData = Allocate(2);
+        }
+        memcpy(FData, &data, 2);
 }
 
 /*##################  TDeviceVar::SetSigned32  ###############
-*   Purpose....: Set variable a signed32          	                        #
+*   Purpose....: Set variable a signed32                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -630,12 +630,12 @@ void TDeviceVar::SetSigned32(long data)
 {
     if (FType != DEVICE_DATA_SIGNED32)
     {
-    	Reinit();
-	    FType = DEVICE_DATA_SIGNED32;
-    	FSize = 4;
-    	FData = Allocate(4);
+        Reinit();
+            FType = DEVICE_DATA_SIGNED32;
+        FSize = 4;
+        FData = Allocate(4);
     }
-	memcpy(FData, &data, 4);
+        memcpy(FData, &data, 4);
 }
 
 /*##################  TDeviceVar::SetSignedShort  ###############
@@ -722,7 +722,7 @@ void TDeviceVar::SetSignedLong(long data)
 *##########################################################################*/
 void TDeviceVar::SetSignedInt(int data)
 {
-#if defined __GNUC__ || defined MSVC
+#if defined __GNUC__ || defined MSVC || defined __WATCOMC__
     SetSignedLong(data);
 #else
 #if sizeof(int) == 2
@@ -734,7 +734,7 @@ void TDeviceVar::SetSignedInt(int data)
 }
 
 /*##################  TDeviceVar::SetChar  ###############
-*   Purpose....: Set variable as char          	                        #
+*   Purpose....: Set variable as char                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -744,16 +744,16 @@ void TDeviceVar::SetChar(char ch)
 {
     if (FType != DEVICE_DATA_CHAR)
     {
-    	Reinit();
-	    FType = DEVICE_DATA_CHAR;
-    	FSize = 1;
-	    FData = Allocate(1);
-	}
-	memcpy(FData, &ch, 1);
+        Reinit();
+            FType = DEVICE_DATA_CHAR;
+        FSize = 1;
+            FData = Allocate(1);
+        }
+        memcpy(FData, &ch, 1);
 }
 
 /*##################  TDeviceVar::SetFloat1  ###############
-*   Purpose....: Set variable as float1          	                        #
+*   Purpose....: Set variable as float1                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -763,16 +763,16 @@ void TDeviceVar::SetFloat1(long data)
 {
     if (FType != DEVICE_DATA_FLOAT1)
     {
-    	Reinit();
-	    FType = DEVICE_DATA_FLOAT1;
-    	FSize = 4;
-	    FData = Allocate(4);
-	}
-	memcpy(FData, &data, 4);
+        Reinit();
+            FType = DEVICE_DATA_FLOAT1;
+        FSize = 4;
+            FData = Allocate(4);
+        }
+        memcpy(FData, &data, 4);
 }
 
 /*##################  TDeviceVar::SetFloat2  ###############
-*   Purpose....: Set variable as float2          	                        #
+*   Purpose....: Set variable as float2                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -782,16 +782,16 @@ void TDeviceVar::SetFloat2(long data)
 {
     if (FType != DEVICE_DATA_FLOAT2)
     {
-    	Reinit();
-	    FType = DEVICE_DATA_FLOAT2;
-    	FSize = 4;
-	    FData = Allocate(4);
-	}
-	memcpy(FData, &data, 4);
+        Reinit();
+            FType = DEVICE_DATA_FLOAT2;
+        FSize = 4;
+            FData = Allocate(4);
+        }
+        memcpy(FData, &data, 4);
 }
 
 /*##################  TDeviceVar::SetFloat3  ###############
-*   Purpose....: Set variable as float3          	                        #
+*   Purpose....: Set variable as float3                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -801,16 +801,16 @@ void TDeviceVar::SetFloat3(long data)
 {
     if (FType != DEVICE_DATA_FLOAT3)
     {
-    	Reinit();
-	    FType = DEVICE_DATA_FLOAT3;
-    	FSize = 4;
-	    FData = Allocate(4);
-	}
-	memcpy(FData, &data, 4);
+        Reinit();
+            FType = DEVICE_DATA_FLOAT3;
+        FSize = 4;
+            FData = Allocate(4);
+        }
+        memcpy(FData, &data, 4);
 }
 
 /*##################  TDeviceVar::SetFloat4  ###############
-*   Purpose....: Set variable as float4          	                        #
+*   Purpose....: Set variable as float4                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -820,16 +820,16 @@ void TDeviceVar::SetFloat4(long data)
 {
     if (FType != DEVICE_DATA_FLOAT4)
     {
-    	Reinit();
-    	FType = DEVICE_DATA_FLOAT4;
-    	FSize = 4;
-    	FData = Allocate(4);
+        Reinit();
+        FType = DEVICE_DATA_FLOAT4;
+        FSize = 4;
+        FData = Allocate(4);
     }
-	memcpy(FData, &data, 4);
+        memcpy(FData, &data, 4);
 }
 
 /*##################  TDeviceVar::SetJulian  ###############
-*   Purpose....: Set variable as julian          	                        #
+*   Purpose....: Set variable as julian                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -839,16 +839,16 @@ void TDeviceVar::SetJulian(long data)
 {
     if (FType != DEVICE_DATA_JULIANDATE)
     {
-    	Reinit();
-	    FType = DEVICE_DATA_JULIANDATE;
-    	FSize = 4;
-	    FData = Allocate(4);
-	}
-	memcpy(FData, &data, 4);
+        Reinit();
+            FType = DEVICE_DATA_JULIANDATE;
+        FSize = 4;
+            FData = Allocate(4);
+        }
+        memcpy(FData, &data, 4);
 }
 
 /*##################  TDeviceVar::SetBinary  ###############
-*   Purpose....: Set variable as binary          	                        #
+*   Purpose....: Set variable as binary                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -856,28 +856,28 @@ void TDeviceVar::SetJulian(long data)
 *##########################################################################*/
 void TDeviceVar::SetBinary(int size, const void *data)
 {
-	Reinit();
-	if (size < 0)
-		return;
+        Reinit();
+        if (size < 0)
+                return;
 
-	if (size < 256)
-	{
-		FType = DEVICE_DATA_BINARY8;
-		FSize = size;
-		FData = Allocate(FSize);
-		memcpy(FData, data, size);
-	}
-	else
-	{
+        if (size < 256)
+        {
+                FType = DEVICE_DATA_BINARY8;
+                FSize = size;
+                FData = Allocate(FSize);
+                memcpy(FData, data, size);
+        }
+        else
+        {
         FType = DEVICE_DATA_BINARY16;
         FSize = size;
         FData = Allocate(FSize);
         memcpy(FData, data, size);
-	}
+        }
 }
 
 /*##################  TDeviceVar::SetString  ###############
-*   Purpose....: Set variable as string          	                        #
+*   Purpose....: Set variable as string                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -939,7 +939,7 @@ void TDeviceVar::SetString(const char *str)
 }
 
 /*##################  TDeviceVar::SetBoolean  ###############
-*   Purpose....: Set variable as boolean          	                        #
+*   Purpose....: Set variable as boolean                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -962,7 +962,7 @@ void TDeviceVar::SetBoolean(int data)
 }    
 
 /*##################  TDeviceVar::SetBoolArray  ###############
-*   Purpose....: Set variable as boolean array         	                        #
+*   Purpose....: Set variable as boolean array                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -974,7 +974,7 @@ void TDeviceVar::SetBoolArray(int size, const char *data)
     int i;
     char *ptr;
     int bitnr;
-	const char *cbool;
+        const char *cbool;
 
     Reinit();
 
@@ -992,7 +992,7 @@ void TDeviceVar::SetBoolArray(int size, const char *data)
     FData = Allocate(FSize);
 
     for (i = 0; i < len; i++)       
-		*(FData + i) = 0;
+                *(FData + i) = 0;
 
     bitnr = 0;
     ptr = FData;
@@ -1013,7 +1013,7 @@ void TDeviceVar::SetBoolArray(int size, const char *data)
 }
 
 /*##################  TDeviceVar::SetByteArray  ###############
-*   Purpose....: Set variable as byte array         	                        #
+*   Purpose....: Set variable as byte array                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1033,7 +1033,7 @@ void TDeviceVar::SetByteArray(int size, const void *data)
 }    
 
 /*##################  TDeviceVar::GetUnsigned8  ###############
-*   Purpose....: Get variable a unsigned8          	                        #
+*   Purpose....: Get variable a unsigned8                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1041,7 +1041,7 @@ void TDeviceVar::SetByteArray(int size, const void *data)
 *##########################################################################*/
 unsigned char TDeviceVar::GetUnsigned8()
 {
-	unsigned char val = 0;
+        unsigned char val = 0;
     long val_long;
     unsigned long val_ulong;
     
@@ -1066,7 +1066,7 @@ unsigned char TDeviceVar::GetUnsigned8()
         case DEVICE_DATA_FLOAT4:
             val_long = GetSigned32();
             if (val_long < 0)
-				val = 0;
+                                val = 0;
             else
             {
                 if (val_long > 0x100)
@@ -1089,7 +1089,7 @@ unsigned char TDeviceVar::GetUnsigned8()
 }
 
 /*##################  TDeviceVar::GetUnsigned16  ###############
-*   Purpose....: Get variable a unsigned16          	                        #
+*   Purpose....: Get variable a unsigned16                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1141,7 +1141,7 @@ unsigned short int TDeviceVar::GetUnsigned16()
             if (val_ulong > 0xFFFF)
                 val = 0xFFFF;
             else
-				val = (unsigned short int)val_ulong;
+                                val = (unsigned short int)val_ulong;
             break;
     }
     
@@ -1149,7 +1149,7 @@ unsigned short int TDeviceVar::GetUnsigned16()
 }
 
 /*##################  TDeviceVar::GetUnsigned32  ###############
-*   Purpose....: Get variable a unsigned32          	                        #
+*   Purpose....: Get variable a unsigned32                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1166,7 +1166,7 @@ unsigned long TDeviceVar::GetUnsigned32()
         case DEVICE_DATA_CHAR:
         case DEVICE_DATA_UNSIGNED8:
         case DEVICE_DATA_BINARY8:
-		case DEVICE_DATA_BINARY16:
+                case DEVICE_DATA_BINARY16:
         case DEVICE_DATA_BOOLEAN:
         case DEVICE_DATA_BOOLARRAY:
         case DEVICE_DATA_BYTEARRAY:
@@ -1191,7 +1191,7 @@ unsigned long TDeviceVar::GetUnsigned32()
                 if (val_long < 0)
                     val = 0;
                 else
-					val = (unsigned long)val_long;
+                                        val = (unsigned long)val_long;
                 break;
             }
     }
@@ -1199,7 +1199,7 @@ unsigned long TDeviceVar::GetUnsigned32()
 }
 
 /*##################  TDeviceVar::GetUnsignedInt  ###############
-*   Purpose....: Get variable a unsigned short int          	                        #
+*   Purpose....: Get variable a unsigned short int                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1207,19 +1207,19 @@ unsigned long TDeviceVar::GetUnsigned32()
 *##########################################################################*/
 unsigned int TDeviceVar::GetUnsignedInt()
 {
-#if defined __GNUC__ || defined MSVC
-	return GetUnsigned32();
+#if defined __GNUC__ || defined MSVC || defined __WATCOMC__
+        return GetUnsigned32();
 #else
 #if sizeof(int) == 2
-	return GetUnsigned16();
+        return GetUnsigned16();
 #else
-	return GetUnsigned32();
+        return GetUnsigned32();
 #endif
 #endif
 }
 
 /*##################  TDeviceVar::GetUnsignedShort  ###############
-*   Purpose....: Get variable a unsigned short int          	                        #
+*   Purpose....: Get variable a unsigned short int                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1227,11 +1227,11 @@ unsigned int TDeviceVar::GetUnsignedInt()
 *##########################################################################*/
 unsigned short int TDeviceVar::GetUnsignedShort()
 {
-	return GetUnsigned16();
+        return GetUnsigned16();
 }
 
 /*##################  TDeviceVar::GetUnsignedLong  ###############
-*   Purpose....: Get variable a unsigned long int          	                        #
+*   Purpose....: Get variable a unsigned long int                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1239,11 +1239,11 @@ unsigned short int TDeviceVar::GetUnsignedShort()
 *##########################################################################*/
 unsigned long TDeviceVar::GetUnsignedLong()
 {
-	return GetUnsigned32();
+        return GetUnsigned32();
 }
 
 /*##################  TDeviceVar::GetSigned8  ###############
-*   Purpose....: Get variable a signed8          	                        #
+*   Purpose....: Get variable a signed8                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1260,7 +1260,7 @@ char TDeviceVar::GetSigned8()
         case DEVICE_DATA_CHAR:
         case DEVICE_DATA_BINARY8:
         case DEVICE_DATA_BINARY16:
-		case DEVICE_DATA_BOOLEAN:
+                case DEVICE_DATA_BOOLEAN:
         case DEVICE_DATA_BOOLARRAY:
         case DEVICE_DATA_BYTEARRAY:
         case DEVICE_DATA_SIGNED8:
@@ -1285,7 +1285,7 @@ char TDeviceVar::GetSigned8()
             {
                 if (val_long > 0x7F)
                     val = 0x7F;
-				else
+                                else
                     val = (char)val_long;
             }
             break;
@@ -1295,7 +1295,7 @@ char TDeviceVar::GetSigned8()
 }
 
 /*##################  TDeviceVar::GetSigned16  ###############
-*   Purpose....: Get variable a signed16          	                        #
+*   Purpose....: Get variable a signed16                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1310,7 +1310,7 @@ short int TDeviceVar::GetSigned16()
     switch (FType)
     {
         case DEVICE_DATA_CHAR:
-		case DEVICE_DATA_BINARY8:
+                case DEVICE_DATA_BINARY8:
         case DEVICE_DATA_BINARY16:
         case DEVICE_DATA_BOOLEAN:
         case DEVICE_DATA_BOOLARRAY:
@@ -1335,7 +1335,7 @@ short int TDeviceVar::GetSigned16()
 
         default:
             val_long = GetSigned32();
-			if (val_long < -32768)
+                        if (val_long < -32768)
                 val = -32768;
             else
             {
@@ -1351,7 +1351,7 @@ short int TDeviceVar::GetSigned16()
 }
 
 /*##################  TDeviceVar::GetSigned32  ###############
-*   Purpose....: Get variable a signed32          	                        #
+*   Purpose....: Get variable a signed32                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1359,9 +1359,9 @@ short int TDeviceVar::GetSigned16()
 *##########################################################################*/
 long TDeviceVar::GetSigned32()
 {
-	long val = 0;
-	unsigned long val_ulong;
-	const char *str;
+        long val = 0;
+        unsigned long val_ulong;
+        const char *str;
     
     switch (FType)
     {
@@ -1385,7 +1385,7 @@ long TDeviceVar::GetSigned32()
 
         case DEVICE_DATA_UNSIGNED8:
         case DEVICE_DATA_UNSIGNED16:
-		case DEVICE_DATA_UNSIGNED32:
+                case DEVICE_DATA_UNSIGNED32:
             val_ulong = GetUnsigned32();
             if (val_ulong > 0x7FFFFFFF)
                 val = 0x7FFFFFFF;
@@ -1410,7 +1410,7 @@ long TDeviceVar::GetSigned32()
 
         case DEVICE_DATA_FLOAT4:
             memcpy(&val, FData, 4);
-			val = val / 10000;
+                        val = val / 10000;
             break;
             
         default:
@@ -1423,7 +1423,7 @@ long TDeviceVar::GetSigned32()
 }
 
 /*##################  TDeviceVar::GetSignedInt  ###############
-*   Purpose....: Get variable a short int          	                        #
+*   Purpose....: Get variable a short int                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1431,19 +1431,19 @@ long TDeviceVar::GetSigned32()
 *##########################################################################*/
 int TDeviceVar::GetSignedInt()
 {
-#if defined __GNUC__ || defined MSVC
-	return GetSigned32();
+#if defined __GNUC__ || defined MSVC || defined __WATCOMC__
+        return GetSigned32();
 #else
 #if sizeof(int) == 2
-	return GetSigned16();
+        return GetSigned16();
 #else
-	return GetSigned32();
+        return GetSigned32();
 #endif
 #endif
 }
 
 /*##################  TDeviceVar::GetSignedShort  ###############
-*   Purpose....: Get variable a short int          	                        #
+*   Purpose....: Get variable a short int                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1451,11 +1451,11 @@ int TDeviceVar::GetSignedInt()
 *##########################################################################*/
 short int TDeviceVar::GetSignedShort()
 {
-	return GetSigned16();
+        return GetSigned16();
 }
 
 /*##################  TDeviceVar::GetSignedLong  ###############
-*   Purpose....: Get variable a long int          	                        #
+*   Purpose....: Get variable a long int                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1463,11 +1463,11 @@ short int TDeviceVar::GetSignedShort()
 *##########################################################################*/
 long TDeviceVar::GetSignedLong()
 {
-	return GetSigned32();
+        return GetSigned32();
 }
 
 /*##################  TDeviceVar::GetChar  ###############
-*   Purpose....: Get variable as char          	                        #
+*   Purpose....: Get variable as char                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1475,10 +1475,10 @@ long TDeviceVar::GetSignedLong()
 *##########################################################################*/
 char TDeviceVar::GetChar()
 {
-	char val = 0;
-	unsigned long val_ulong;
-	long val_long;
-	const char *str;
+        char val = 0;
+        unsigned long val_ulong;
+        long val_long;
+        const char *str;
 
     switch (FType)
     {
@@ -1504,7 +1504,7 @@ char TDeviceVar::GetChar()
             val_ulong = GetUnsigned32();
             if (val_ulong > 0xFF)
                 val = 0xFF;
-			else
+                        else
                 val = (char)val_ulong;
             break;
 
@@ -1531,7 +1531,7 @@ char TDeviceVar::GetChar()
 }
 
 /*##################  TDeviceVar::GetFloat1  ###############
-*   Purpose....: Get variable as float1          	                        #
+*   Purpose....: Get variable as float1                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1539,7 +1539,7 @@ char TDeviceVar::GetChar()
 *##########################################################################*/
 long TDeviceVar::GetFloat1()
 {
-	long val;
+        long val;
     
     switch (FType)
     {
@@ -1554,7 +1554,7 @@ long TDeviceVar::GetFloat1()
 
         case DEVICE_DATA_FLOAT3:
             memcpy(&val, FData, 4);
-			val = val / 100;
+                        val = val / 100;
             break;
 
         case DEVICE_DATA_FLOAT4:
@@ -1574,7 +1574,7 @@ long TDeviceVar::GetFloat1()
 }
 
 /*##################  TDeviceVar::GetFloat2  ###############
-*   Purpose....: Get variable as float2          	                        #
+*   Purpose....: Get variable as float2                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1582,7 +1582,7 @@ long TDeviceVar::GetFloat1()
 *##########################################################################*/
 long TDeviceVar::GetFloat2()
 {
-	long val;
+        long val;
     
     switch (FType)
     {
@@ -1604,7 +1604,7 @@ long TDeviceVar::GetFloat2()
             val = GetFloat1();
             if (val >= 0x7FFFFFFF / 10)
                 val = 0x7FFFFFFF;
-			else
+                        else
                 val = 10 * val;
             break;
     }
@@ -1612,7 +1612,7 @@ long TDeviceVar::GetFloat2()
 }
 
 /*##################  TDeviceVar::GetFloat3  ###############
-*   Purpose....: Get variable as float3          	                        #
+*   Purpose....: Get variable as float3                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1620,7 +1620,7 @@ long TDeviceVar::GetFloat2()
 *##########################################################################*/
 long TDeviceVar::GetFloat3()
 {
-	long val;
+        long val;
     
     switch (FType)
     {
@@ -1629,7 +1629,7 @@ long TDeviceVar::GetFloat3()
             break;
 
         case DEVICE_DATA_FLOAT4:
-			memcpy(&val, FData, 4);
+                        memcpy(&val, FData, 4);
             val = val / 10;
             break;
             
@@ -1646,7 +1646,7 @@ long TDeviceVar::GetFloat3()
 }
 
 /*##################  TDeviceVar::GetFloat4  ###############
-*   Purpose....: Get variable as float4          	                        #
+*   Purpose....: Get variable as float4                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1654,7 +1654,7 @@ long TDeviceVar::GetFloat3()
 *##########################################################################*/
 long TDeviceVar::GetFloat4()
 {
-	long val;
+        long val;
     
     switch (FType)
     {
@@ -1675,7 +1675,7 @@ long TDeviceVar::GetFloat4()
 }
 
 /*##################  TDeviceVar::GetJulian  ###############
-*   Purpose....: Get variable as julian          	                        #
+*   Purpose....: Get variable as julian                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1687,7 +1687,7 @@ long TDeviceVar::GetJulian()
     
     switch (FType)
     {
-		case DEVICE_DATA_JULIANDATE:
+                case DEVICE_DATA_JULIANDATE:
             memcpy(&val, FData, 4);
             break;
 
@@ -1699,7 +1699,7 @@ long TDeviceVar::GetJulian()
 }
 
 /*##################  TDeviceVar::GetBinary  ###############
-*   Purpose....: Get variable as binary          	                        #
+*   Purpose....: Get variable as binary                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1712,7 +1712,7 @@ const void *TDeviceVar::GetBinary(int *size)
 }
 
 /*##################  TDeviceVar::GetString  ###############
-*   Purpose....: Get variable as string          	                        #
+*   Purpose....: Get variable as string                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1725,11 +1725,11 @@ const char *TDeviceVar::GetString()
     long rval;
     unsigned long uval;
     
-	if (FStr && FAlloc == 0)
+        if (FStr && FAlloc == 0)
         delete FStr;
     FStr = 0;
 
-	if (FType < 0)
+        if (FType < 0)
     {
         FStr = Allocate(FSize + 1);
         memcpy(FStr, FData, FSize);
@@ -1741,10 +1741,10 @@ const char *TDeviceVar::GetString()
         switch (FType)
         {
             case DEVICE_DATA_STRING8:
-			case DEVICE_DATA_STRING16:
-			    FStr = Allocate(FSize + 1);
-			    memcpy(FStr, FData, FSize);
-			    *(FStr + FSize) = 0;
+                        case DEVICE_DATA_STRING16:
+                            FStr = Allocate(FSize + 1);
+                            memcpy(FStr, FData, FSize);
+                            *(FStr + FSize) = 0;
                 return FStr;
 
             case DEVICE_DATA_CHAR:
@@ -1754,11 +1754,11 @@ const char *TDeviceVar::GetString()
             case DEVICE_DATA_BOOLARRAY:
             case DEVICE_DATA_BYTEARRAY:
             case DEVICE_DATA_SIGNED8:
-			case DEVICE_DATA_SIGNED32:
+                        case DEVICE_DATA_SIGNED32:
                 sval = GetSigned32();
                 sprintf(tempstr, "%ld", sval);
                 FStr = Allocate(strlen(tempstr) + 1);
-			    strcpy(FStr, tempstr);
+                            strcpy(FStr, tempstr);
                 return FStr;
 
             case DEVICE_DATA_UNSIGNED8:
@@ -1767,7 +1767,7 @@ const char *TDeviceVar::GetString()
                 uval = GetUnsigned32();
                 sprintf(tempstr, "%lu", uval);
                 FStr = Allocate(strlen(tempstr) + 1);
-			    strcpy(FStr, tempstr);
+                            strcpy(FStr, tempstr);
                 return FStr;
 
             case DEVICE_DATA_FLOAT1:
@@ -1777,7 +1777,7 @@ const char *TDeviceVar::GetString()
                 
                 sprintf(tempstr, "%ld.%01ld", sval, rval);
                 FStr = Allocate(strlen(tempstr) + 1);
-			    strcpy(FStr, tempstr);
+                            strcpy(FStr, tempstr);
                 return FStr;
 
             case DEVICE_DATA_FLOAT2:
@@ -1787,7 +1787,7 @@ const char *TDeviceVar::GetString()
                 
                 sprintf(tempstr, "%ld.%02ld", sval, rval);
                 FStr = Allocate(strlen(tempstr) + 1);
-			    strcpy(FStr, tempstr);
+                            strcpy(FStr, tempstr);
                 return FStr;
 
             case DEVICE_DATA_FLOAT3:
@@ -1797,7 +1797,7 @@ const char *TDeviceVar::GetString()
                 
                 sprintf(tempstr, "%ld.%03ld", sval, rval);
                 FStr = Allocate(strlen(tempstr) + 1);
-			    strcpy(FStr, tempstr);
+                            strcpy(FStr, tempstr);
                 return FStr;
 
             case DEVICE_DATA_FLOAT4:
@@ -1807,7 +1807,7 @@ const char *TDeviceVar::GetString()
 
                 sprintf(tempstr, "%ld.%04ld", sval, rval);
                 FStr = Allocate(strlen(tempstr) + 1);
-			    strcpy(FStr, tempstr);
+                            strcpy(FStr, tempstr);
                 return FStr;
 
         }
@@ -1816,7 +1816,7 @@ const char *TDeviceVar::GetString()
 }
 
 /*##################  TDeviceVar::GetBoolean  ###############
-*   Purpose....: Get variable as boolean          	                        #
+*   Purpose....: Get variable as boolean                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1824,12 +1824,12 @@ const char *TDeviceVar::GetString()
 *##########################################################################*/
 int TDeviceVar::GetBoolean()
 {
-	int val = 0;
-	unsigned long val_ulong;
-	long val_long;
-	const char *str;
+        int val = 0;
+        unsigned long val_ulong;
+        long val_long;
+        const char *str;
     
-	switch (FType)
+        switch (FType)
     {
         case DEVICE_DATA_BOOLEAN:
         case DEVICE_DATA_BOOLARRAY:
@@ -1854,7 +1854,7 @@ int TDeviceVar::GetBoolean()
                 switch (*str)
                 {
                     case 'T':
-					case 'J':
+                                        case 'J':
                     case 'Y':
                         val = TRUE;
                         break;
@@ -1877,7 +1877,7 @@ int TDeviceVar::GetBoolean()
 }    
 
 /*##################  TDeviceVar::GetBoolArray  ###############
-*   Purpose....: Get variable as boolean array         	                        #
+*   Purpose....: Get variable as boolean array                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1898,7 +1898,7 @@ const char *TDeviceVar::GetBoolArray(int *size)
 }
 
 /*##################  TDeviceVar::GetByteArray  ###############
-*   Purpose....: Get variable as byte array         	                        #
+*   Purpose....: Get variable as byte array                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1919,7 +1919,7 @@ const void *TDeviceVar::GetByteArray(int *size)
 }    
 
 /*##################  TDeviceVar::GetID  ###############
-*   Purpose....: Get ID                         	                        #
+*   Purpose....: Get ID                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1931,7 +1931,7 @@ int TDeviceVar::GetID()
 }
 
 /*##################  TDeviceVar::GetSize  ###############
-*   Purpose....: Get size of data                	                        #
+*   Purpose....: Get size of data                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1957,7 +1957,7 @@ int TDeviceVar::GetSize()
 }
 
 /*##################  TDeviceVar::GetData  ###############
-*   Purpose....: Get data                	                        #
+*   Purpose....: Get data                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -1979,7 +1979,7 @@ int TDeviceVar::GetData(char *data)
         case DEVICE_DATA_BINARY8:
         case DEVICE_DATA_BOOLARRAY:
         case DEVICE_DATA_BYTEARRAY:
-			memcpy(data, &FSize, 1);
+                        memcpy(data, &FSize, 1);
             data++;
             overhead++;
             break;
@@ -2009,11 +2009,11 @@ int TDeviceVar::GetData(char *data)
 *##########################################################################*/
 TDeviceTag::TDeviceTag(unsigned short int ID)
 {
-	FAlloc = 0;
-	FID = ID;
-	FHead = 0;
-	FCurrVar = 0;
-	FCurrTag = 0;
+        FAlloc = 0;
+        FID = ID;
+        FHead = 0;
+        FCurrVar = 0;
+        FCurrTag = 0;
 }
 
 /*##################  TDeviceTag::TDeviceTag  ###############
@@ -2025,11 +2025,11 @@ TDeviceTag::TDeviceTag(unsigned short int ID)
 *##########################################################################*/
 TDeviceTag::TDeviceTag(TDeviceAlloc *alloc, unsigned short int ID)
 {
-	FAlloc = alloc;
-	FID = ID;
-	FHead = 0;
-	FCurrVar = 0;
-	FCurrTag = 0;
+        FAlloc = alloc;
+        FID = ID;
+        FHead = 0;
+        FCurrVar = 0;
+        FCurrTag = 0;
 }
 
 /*##################  TDeviceTag::TDeviceTag  ###############
@@ -2041,8 +2041,8 @@ TDeviceTag::TDeviceTag(TDeviceAlloc *alloc, unsigned short int ID)
 *##########################################################################*/
 TDeviceTag::TDeviceTag(const char *data, int size, int *count)
 {
-	FAlloc = 0;
-	Init(data, size, count);
+        FAlloc = 0;
+        Init(data, size, count);
 }
 
 /*##################  TDeviceTag::TDeviceTag  ###############
@@ -2054,8 +2054,8 @@ TDeviceTag::TDeviceTag(const char *data, int size, int *count)
 *##########################################################################*/
 TDeviceTag::TDeviceTag(TDeviceAlloc *alloc, const char *data, int size, int *count)
 {
-	FAlloc = alloc;
-	Init(data, size, count);
+        FAlloc = alloc;
+        Init(data, size, count);
 }
 
 /*##################  TDeviceTag::Init  ###############
@@ -2067,75 +2067,75 @@ TDeviceTag::TDeviceTag(TDeviceAlloc *alloc, const char *data, int size, int *cou
 *##########################################################################*/
 void TDeviceTag::Init(const char *data, int size, int *count)
 {
-	unsigned short int Id;
-	int used;
-	TDeviceData *elem;
-	int ElemSize = 1;
+        unsigned short int Id;
+        int used;
+        TDeviceData *elem;
+        int ElemSize = 1;
 
-	FHead = 0;
-	FCurrVar = 0;
-	FCurrTag = 0;
-	*count = 0;
+        FHead = 0;
+        FCurrVar = 0;
+        FCurrTag = 0;
+        *count = 0;
 
-	memcpy(&Id, data, 2);
-	if (Id < DEVICE_TAGRANGE_LOW || Id > DEVICE_TAGRANGE_HIGH)
-		return;
+        memcpy(&Id, data, 2);
+        if (Id < DEVICE_TAGRANGE_LOW || Id > DEVICE_TAGRANGE_HIGH)
+                return;
 
-	FID = Id - DEVICE_TAGRANGE_LOW;
+        FID = Id - DEVICE_TAGRANGE_LOW;
 
-	size -= 2;
-	data += 2;
-	used = 2;
+        size -= 2;
+        data += 2;
+        used = 2;
 
-	while (size)
-	{
-		memcpy(&Id, data, 2);
-		if (Id >= DEVICE_TAGRANGE_LOW && Id <= DEVICE_TAGRANGE_HIGH)
-		{
-			if (ElemSize == 0)
-				return;
-			else
-			{
-			    if (FAlloc)
-    				elem = new(FAlloc) TDeviceTag(FAlloc, data, size, &ElemSize);
-    			else
-    				elem = new TDeviceTag(data, size, &ElemSize);
-    				
-				Add(elem);
-				size -= ElemSize;
-				data += ElemSize;
-				used += ElemSize;
-			}
-		}
-		else
-		{
-			if (Id >= DEVICE_VARIABLERANGE_LOW && Id <= DEVICE_VARIABLERANGE_HIGH)
-			{
-				if (ElemSize == 0)
-					return;
-				else
-				{
-				    if (FAlloc)
-    					elem = new(FAlloc) TDeviceVar(FAlloc, data, size, &ElemSize);
-    				else
-    					elem = new TDeviceVar(data, size, &ElemSize);
-    					
-					Add(elem);
-					size -= ElemSize;
-					data += ElemSize;
-					used += ElemSize;
-				}
-			}
-			else
-				if (Id  == DEVICE_TAGEND)
-				{
-					used += 2;
-					break;
-				}
-		}
-	}
+        while (size)
+        {
+                memcpy(&Id, data, 2);
+                if (Id >= DEVICE_TAGRANGE_LOW && Id <= DEVICE_TAGRANGE_HIGH)
+                {
+                        if (ElemSize == 0)
+                                return;
+                        else
+                        {
+                            if (FAlloc)
+                                elem = new(FAlloc) TDeviceTag(FAlloc, data, size, &ElemSize);
+                        else
+                                elem = new TDeviceTag(data, size, &ElemSize);
+                                
+                                Add(elem);
+                                size -= ElemSize;
+                                data += ElemSize;
+                                used += ElemSize;
+                        }
+                }
+                else
+                {
+                        if (Id >= DEVICE_VARIABLERANGE_LOW && Id <= DEVICE_VARIABLERANGE_HIGH)
+                        {
+                                if (ElemSize == 0)
+                                        return;
+                                else
+                                {
+                                    if (FAlloc)
+                                        elem = new(FAlloc) TDeviceVar(FAlloc, data, size, &ElemSize);
+                                else
+                                        elem = new TDeviceVar(data, size, &ElemSize);
+                                        
+                                        Add(elem);
+                                        size -= ElemSize;
+                                        data += ElemSize;
+                                        used += ElemSize;
+                                }
+                        }
+                        else
+                                if (Id  == DEVICE_TAGEND)
+                                {
+                                        used += 2;
+                                        break;
+                                }
+                }
+        }
 
-	*count = used;
+        *count = used;
 }
 
 /*##################  TDeviceTag::~TDeviceTag  ###############
@@ -2155,7 +2155,7 @@ TDeviceTag::~TDeviceTag()
         elem = FHead;
         while (elem)
         {
-	    	next = elem->FNext;
+                next = elem->FNext;
             delete elem;
             elem = next;
         }
@@ -2163,7 +2163,7 @@ TDeviceTag::~TDeviceTag()
 }
 
 /*##################  TDeviceTag::Allocate  ###############
-*   Purpose....: Allocate memory                  	                        #
+*   Purpose....: Allocate memory                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -2178,7 +2178,7 @@ char *TDeviceTag::Allocate(int size)
 }
 
 /*##################  TDeviceTag::operator new  ###############
-*   Purpose....: operator new                      	                        #
+*   Purpose....: operator new                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -2190,7 +2190,7 @@ void *TDeviceTag::operator new(size_t size)
 }
 
 /*##################  TDeviceTag::operator new  ###############
-*   Purpose....: operator new                      	                        #
+*   Purpose....: operator new                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -2249,13 +2249,13 @@ void TDeviceTag::Add(TDeviceData *data)
             elem = FHead;
             while (elem->FNext)
                 elem = elem->FNext;
-			elem->FNext = data;
+                        elem->FNext = data;
         
         }
         else
-		    FHead = data;
+                    FHead = data;
 
-    	data->FNext = 0;
+        data->FNext = 0;
     }
 }
 
@@ -2274,12 +2274,12 @@ TDeviceTag *TDeviceTag::Copy()
     int count;
 
     size = GetSize();
-	if (size)
+        if (size)
     {
         data = new char[size];
         GetData(data);
 
-		newtag = new TDeviceTag(data, size, &count);
+                newtag = new TDeviceTag(data, size, &count);
         delete data;
         return newtag;
     }
@@ -2302,16 +2302,16 @@ TDeviceTag *TDeviceTag::Copy(TDeviceAlloc *alloc)
     int count;
 
     size = GetSize();
-	if (size)
+        if (size)
     {
         data = new char[size];
         GetData(data);
 
         if (alloc)
-    		newtag = new(alloc) TDeviceTag(alloc, data, size, &count);
-		else
-		    newtag = new TDeviceTag(data, size, &count);
-		    
+                newtag = new(alloc) TDeviceTag(alloc, data, size, &count);
+                else
+                    newtag = new TDeviceTag(data, size, &count);
+                    
         delete data;
         return newtag;
     }
@@ -2331,7 +2331,7 @@ TDeviceTag *TDeviceTag::CopyTag(TDeviceTag *tag)
     int size;
     char *data;
     TDeviceTag *newtag;
-	int count;
+        int count;
 
     if (tag)
     {
@@ -2342,9 +2342,9 @@ TDeviceTag *TDeviceTag::CopyTag(TDeviceTag *tag)
             tag->GetData(data);
 
             if (FAlloc)
-    			newtag = new(FAlloc) TDeviceTag(FAlloc, data, size, &count);
-    		else
-    			newtag = new TDeviceTag(data, size, &count);
+                        newtag = new(FAlloc) TDeviceTag(FAlloc, data, size, &count);
+                else
+                        newtag = new TDeviceTag(data, size, &count);
 
             delete data;
             Add(newtag);
@@ -2366,12 +2366,12 @@ TDeviceTag *TDeviceTag::CopyTag(TDeviceTag *tag)
 *##########################################################################*/
 TDeviceTag *TDeviceTag::AddTag(unsigned short int ID)
 {
-	TDeviceTag *Tag;
+        TDeviceTag *Tag;
 
-	if (FAlloc)
-    	Tag = new(FAlloc) TDeviceTag(FAlloc, ID);
+        if (FAlloc)
+        Tag = new(FAlloc) TDeviceTag(FAlloc, ID);
     else
-    	Tag = new TDeviceTag(ID);
+        Tag = new TDeviceTag(ID);
 
     Add(Tag);
     return Tag;
@@ -2386,14 +2386,14 @@ TDeviceTag *TDeviceTag::AddTag(unsigned short int ID)
 *##########################################################################*/
 TDeviceVar *TDeviceTag::AddNone(unsigned short int ID)
 {
-	TDeviceVar *Var;
+        TDeviceVar *Var;
 
     if (FAlloc)
-    	Var = new(FAlloc) TDeviceVar(FAlloc, ID);
+        Var = new(FAlloc) TDeviceVar(FAlloc, ID);
     else
-    	Var = new TDeviceVar(ID);
+        Var = new TDeviceVar(ID);
 
-	Add(Var);
+        Add(Var);
     return Var;
 }
 
@@ -2413,7 +2413,7 @@ TDeviceVar *TDeviceTag::AddUnsigned8(unsigned short int ID, unsigned char data)
     else
         Var = new TDeviceVar(ID);
 
-	Var->SetUnsigned8(data);
+        Var->SetUnsigned8(data);
     Add(Var);
     return Var;
 }
@@ -2434,7 +2434,7 @@ TDeviceVar *TDeviceTag::AddUnsigned16(unsigned short int ID, unsigned short int 
     else
         Var = new TDeviceVar(ID);
         
-	Var->SetUnsigned16(data);
+        Var->SetUnsigned16(data);
     Add(Var);
     return Var;
 }
@@ -2455,7 +2455,7 @@ TDeviceVar *TDeviceTag::AddUnsigned32(unsigned short int ID, unsigned long data)
     else
         Var = new TDeviceVar(ID);
         
-	Var->SetUnsigned32(data);
+        Var->SetUnsigned32(data);
     Add(Var);
     return Var;
 }
@@ -2476,7 +2476,7 @@ TDeviceVar *TDeviceTag::AddUnsignedShort(unsigned short int ID, unsigned short i
     else
         Var = new TDeviceVar(ID);
         
-	Var->SetUnsignedShort(data);
+        Var->SetUnsignedShort(data);
     Add(Var);
     return Var;
 }
@@ -2518,7 +2518,7 @@ TDeviceVar *TDeviceTag::AddUnsignedInt(unsigned short int ID, unsigned int data)
     else
         Var = new TDeviceVar(ID);
         
-	Var->SetUnsignedInt(data);
+        Var->SetUnsignedInt(data);
     Add(Var);
     return Var;
 }
@@ -2665,7 +2665,7 @@ TDeviceVar *TDeviceTag::AddChar(unsigned short int ID, char ch)
     else
         Var = new TDeviceVar(ID);
         
-	Var->SetChar(ch);
+        Var->SetChar(ch);
     Add(Var);
     return Var;
 }
@@ -2770,7 +2770,7 @@ TDeviceVar *TDeviceTag::AddJulian(unsigned short int ID, long data)
     else
         Var = new TDeviceVar(ID);
         
-	Var->SetJulian(data);
+        Var->SetJulian(data);
     Add(Var);
     return Var;
 }
@@ -2875,7 +2875,7 @@ TDeviceVar *TDeviceTag::AddByteArray(unsigned short int ID, int size, const void
     else
         Var = new TDeviceVar(ID);
 
-	Var->SetByteArray(size, data);
+        Var->SetByteArray(size, data);
     Add(Var);
     return Var;
 }
@@ -2954,7 +2954,7 @@ TDeviceVar *TDeviceTag::ModifyUnsignedInt(unsigned short int ID, unsigned int da
         Add(Var);
     }
 
-#if defined __GNUC__ || defined MSVC
+#if defined __GNUC__ || defined MSVC || __WATCOMC__
     Var->SetUnsigned32(data);
 #else
 #if sizeof(int) == 2    
@@ -3041,7 +3041,7 @@ TDeviceVar *TDeviceTag::ModifySignedInt(unsigned short int ID, int data)
         Add(Var);
     }
 
-#if defined __GNUC__ || defined MSVC
+#if defined __GNUC__ || defined MSVC || defined __WATCOMC__
     Var->SetSigned32(data);
 #else
 #if sizeof(int) == 2    
@@ -3076,7 +3076,7 @@ TDeviceVar *TDeviceTag::ModifyChar(unsigned short int ID, char ch)
         Add(Var);
     }
     
-	Var->SetChar(ch);
+        Var->SetChar(ch);
     return Var;
 }
 
@@ -3206,7 +3206,7 @@ TDeviceVar *TDeviceTag::ModifyJulian(unsigned short int ID, long data)
         Add(Var);
     }
     
-	Var->SetJulian(data);
+        Var->SetJulian(data);
     return Var;
 }
 
@@ -3336,12 +3336,12 @@ TDeviceVar *TDeviceTag::ModifyByteArray(unsigned short int ID, int size, const v
         Add(Var);
     }
     
-	Var->SetByteArray(size, data);
+        Var->SetByteArray(size, data);
     return Var;
 }
 
 /*##################  TDeviceTag::GotoFirstTag  ###############
-*   Purpose....: Goto first tag                       	                        #
+*   Purpose....: Goto first tag                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3366,7 +3366,7 @@ TDeviceTag *TDeviceTag::GotoFirstTag()
 }
 
 /*##################  TDeviceTag::GotoNextTag  ###############
-*   Purpose....: Goto next tag                       	                        #
+*   Purpose....: Goto next tag                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3385,7 +3385,7 @@ TDeviceTag *TDeviceTag::GotoNextTag()
     {
         if (curr->IsTag())
             break;
-		else
+                else
             curr = curr->FNext;
     }
     
@@ -3394,7 +3394,7 @@ TDeviceTag *TDeviceTag::GotoNextTag()
 }
 
 /*##################  TDeviceTag::GotoFirstVar  ###############
-*   Purpose....: Goto first var                       	                        #
+*   Purpose....: Goto first var                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3410,7 +3410,7 @@ TDeviceVar *TDeviceTag::GotoFirstVar()
     {
         if (curr->IsVar())
             break;
-		else
+                else
             curr = curr->FNext;
     }
 
@@ -3419,7 +3419,7 @@ TDeviceVar *TDeviceTag::GotoFirstVar()
 }
 
 /*##################  TDeviceTag::GotoNextVar  ###############
-*   Purpose....: Goto next var                       	                        #
+*   Purpose....: Goto next var                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3435,7 +3435,7 @@ TDeviceVar *TDeviceTag::GotoNextVar()
         curr = curr->FNext;
 
     while (curr)
-	{
+        {
         if (curr->IsVar())
             break;
         else
@@ -3447,7 +3447,7 @@ TDeviceVar *TDeviceTag::GotoNextVar()
 }
 
 /*##################  TDeviceTag::GetTag  ###############
-*   Purpose....: Get tag by number                       	                        #
+*   Purpose....: Get tag by number                                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3460,7 +3460,7 @@ TDeviceTag *TDeviceTag::GetTag(unsigned short int ID)
     Tag = GotoFirstTag();
     while (Tag)
     {
-		if (Tag->FID == ID)
+                if (Tag->FID == ID)
             return Tag;
         Tag = GotoNextTag();
     }
@@ -3468,7 +3468,7 @@ TDeviceTag *TDeviceTag::GetTag(unsigned short int ID)
 }
 
 /*##################  TDeviceTag::HasEmptyTag  ###############
-*   Purpose....: Check if empty tag exists         	                        #
+*   Purpose....: Check if empty tag exists                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3483,9 +3483,9 @@ int TDeviceTag::HasEmptyTag(unsigned short int ID)
     {
         if (Tag->FID == ID)
         {
-			if (Tag->IsEmptyTag())
+                        if (Tag->IsEmptyTag())
                 return TRUE;
-			else
+                        else
                 return FALSE;
         }
         Tag = GotoNextTag();
@@ -3494,7 +3494,7 @@ int TDeviceTag::HasEmptyTag(unsigned short int ID)
 }
 
 /*##################  TDeviceTag::GetVar  ###############
-*   Purpose....: Get var by number                     	                        #
+*   Purpose....: Get var by number                                              #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3510,12 +3510,12 @@ TDeviceVar *TDeviceTag::GetVar(unsigned short int ID)
         if (Var->FID == ID)
             return Var;
         Var = GotoNextVar();
-	}
+        }
     return 0;
 }
 
 /*##################  TDeviceTag::HasEmptyVar  ###############
-*   Purpose....: Check if empty var exists        	                        #
+*   Purpose....: Check if empty var exists                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3535,13 +3535,13 @@ int TDeviceTag::HasEmptyVar(unsigned short int ID)
             else
                 return FALSE;
         }
-		Var = GotoNextVar();
+                Var = GotoNextVar();
     }
     return FALSE;
 }
 
 /*##################  TDeviceTag::GetID  ###############
-*   Purpose....: Get ID                            	                        #
+*   Purpose....: Get ID                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3553,7 +3553,7 @@ int TDeviceTag::GetID()
 }
 
 /*##################  TDeviceTag::GetUnsignedShort  ###############
-*   Purpose....: Get var as unsigned short int                       	                        #
+*   Purpose....: Get var as unsigned short int                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3564,7 +3564,7 @@ unsigned short int TDeviceTag::GetUnsignedShort(unsigned short int ID, unsigned 
     TDeviceVar *Var;
 
     Var = GotoFirstVar();
-	while (Var)
+        while (Var)
     {
         if (Var->FID == ID)
             return Var->GetUnsignedShort();
@@ -3574,7 +3574,7 @@ unsigned short int TDeviceTag::GetUnsignedShort(unsigned short int ID, unsigned 
 }
 
 /*##################  TDeviceTag::GetUnsignedLong  ###############
-*   Purpose....: Get var as unsigned long                       	                        #
+*   Purpose....: Get var as unsigned long                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3589,13 +3589,13 @@ unsigned long TDeviceTag::GetUnsignedLong(unsigned short int ID, unsigned long D
     {
         if (Var->FID == ID)
             return Var->GetUnsignedLong();
-		Var = GotoNextVar();
+                Var = GotoNextVar();
     }
     return Default;
 }
 
 /*##################  TDeviceTag::GetUnsignedInt  ###############
-*   Purpose....: Get var as unsigned int                       	                        #
+*   Purpose....: Get var as unsigned int                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3606,7 +3606,7 @@ unsigned int TDeviceTag::GetUnsignedInt(unsigned short int ID, unsigned int Defa
     TDeviceVar *Var;
 
     Var = GotoFirstVar();
-	while (Var)
+        while (Var)
     {
         if (Var->FID == ID)
             return Var->GetUnsignedInt();
@@ -3616,7 +3616,7 @@ unsigned int TDeviceTag::GetUnsignedInt(unsigned short int ID, unsigned int Defa
 }
 
 /*##################  TDeviceTag::GetSignedShort  ###############
-*   Purpose....: Get var as signed short int                       	                        #
+*   Purpose....: Get var as signed short int                                                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3637,7 +3637,7 @@ short int TDeviceTag::GetSignedShort(unsigned short int ID, short int Default)
 }
 
 /*##################  TDeviceTag::GetSignedLong  ###############
-*   Purpose....: Get var as signed long                       	                        #
+*   Purpose....: Get var as signed long                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3658,7 +3658,7 @@ long TDeviceTag::GetSignedLong(unsigned short int ID, long Default)
 }
 
 /*##################  TDeviceTag::GetSignedInt  ###############
-*   Purpose....: Get var as signed int                       	                        #
+*   Purpose....: Get var as signed int                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3679,7 +3679,7 @@ int TDeviceTag::GetSignedInt(unsigned short int ID, int Default)
 }
 
 /*##################  TDeviceTag::GetChar  ###############
-*   Purpose....: Get var as single char                       	                        #
+*   Purpose....: Get var as single char                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3700,7 +3700,7 @@ char TDeviceTag::GetChar(unsigned short int ID, char Default)
 }
 
 /*##################  TDeviceTag::GetFloat1  ###############
-*   Purpose....: Get var as 1-decimal long                       	                        #
+*   Purpose....: Get var as 1-decimal long                                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3710,7 +3710,7 @@ long TDeviceTag::GetFloat1(unsigned short int ID, long Default)
 {
     TDeviceVar *Var;
 
-	Var = GotoFirstVar();
+        Var = GotoFirstVar();
     while (Var)
     {
         if (Var->FID == ID)
@@ -3721,7 +3721,7 @@ long TDeviceTag::GetFloat1(unsigned short int ID, long Default)
 }
 
 /*##################  TDeviceTag::GetFloat2  ###############
-*   Purpose....: Get var as 2-decimal long                       	                        #
+*   Purpose....: Get var as 2-decimal long                                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3735,14 +3735,14 @@ long TDeviceTag::GetFloat2(unsigned short int ID, long Default)
     while (Var)
     {
         if (Var->FID == ID)
-			return Var->GetFloat2();
+                        return Var->GetFloat2();
         Var = GotoNextVar();
     }
     return Default;
 }
 
 /*##################  TDeviceTag::GetFloat3  ###############
-*   Purpose....: Get var as 3-decimal long                       	                        #
+*   Purpose....: Get var as 3-decimal long                                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3763,7 +3763,7 @@ long TDeviceTag::GetFloat3(unsigned short int ID, long Default)
 }
 
 /*##################  TDeviceTag::GetFloat4  ###############
-*   Purpose....: Get var as 4-decimal long                       	                        #
+*   Purpose....: Get var as 4-decimal long                                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3784,7 +3784,7 @@ long TDeviceTag::GetFloat4(unsigned short int ID, long Default)
 }
 
 /*##################  TDeviceTag::GetJulian  ###############
-*   Purpose....: Get var as julian date & time                       	                        #
+*   Purpose....: Get var as julian date & time                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3805,7 +3805,7 @@ long TDeviceTag::GetJulian(unsigned short int ID, long Default)
 }
 
 /*##################  TDeviceTag::GetBinary  ###############
-*   Purpose....: Get var as binary                       	                        #
+*   Purpose....: Get var as binary                                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3827,7 +3827,7 @@ const void *TDeviceTag::GetBinary(unsigned short int ID, int *size)
 }
 
 /*##################  TDeviceTag::GetString  ###############
-*   Purpose....: Get var as string                       	                        #
+*   Purpose....: Get var as string                                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3835,7 +3835,7 @@ const void *TDeviceTag::GetBinary(unsigned short int ID, int *size)
 *##########################################################################*/
 const char *TDeviceTag::GetString(unsigned short int ID, const char *Default)
 {
-	TDeviceVar *Var;
+        TDeviceVar *Var;
     const char *str = 0;
 
     Var = GotoFirstVar();
@@ -3856,7 +3856,7 @@ const char *TDeviceTag::GetString(unsigned short int ID, const char *Default)
 }
 
 /*##################  TDeviceTag::GetBoolean  ###############
-*   Purpose....: Get var as boolean                       	                        #
+*   Purpose....: Get var as boolean                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3877,7 +3877,7 @@ int TDeviceTag::GetBoolean(unsigned short int ID, int Default)
 }
 
 /*##################  TDeviceTag::GetBoolArray  ###############
-*   Purpose....: Get var as boolean array                       	                        #
+*   Purpose....: Get var as boolean array                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3885,7 +3885,7 @@ int TDeviceTag::GetBoolean(unsigned short int ID, int Default)
 *##########################################################################*/
 const char *TDeviceTag::GetBoolArray(unsigned short int ID, int *size)
 {
-	TDeviceVar *Var;
+        TDeviceVar *Var;
 
     Var = GotoFirstVar();
     while (Var)
@@ -3899,7 +3899,7 @@ const char *TDeviceTag::GetBoolArray(unsigned short int ID, int *size)
 }
 
 /*##################  TDeviceTag::GetByteArray  ###############
-*   Purpose....: Get var as byte array                       	                        #
+*   Purpose....: Get var as byte array                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3910,7 +3910,7 @@ const void *TDeviceTag::GetByteArray(unsigned short int ID, int *size)
     TDeviceVar *Var;
 
     Var = GotoFirstVar();
-	while (Var)
+        while (Var)
     {
         if (Var->FID == ID)
             return Var->GetByteArray(size);
@@ -3921,7 +3921,7 @@ const void *TDeviceTag::GetByteArray(unsigned short int ID, int *size)
 }
 
 /*##################  TDeviceTag::UpdateUnsignedShort  ###############
-*   Purpose....: Update unsigned short int value                	                        #
+*   Purpose....: Update unsigned short int value                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3929,11 +3929,11 @@ const void *TDeviceTag::GetByteArray(unsigned short int ID, int *size)
 *##########################################################################*/
 void TDeviceTag::UpdateUnsignedShort(TDeviceTag *DestTag, unsigned short int ID, unsigned short int *Val)
 {
-	TDeviceVar *Var;
+        TDeviceVar *Var;
 
-	Var = GetVar(ID);
+        Var = GetVar(ID);
     if (Var)
-	{
+        {
         if (Var->IsEmptyVar())
         {
             if (DestTag)
@@ -3948,7 +3948,7 @@ void TDeviceTag::UpdateUnsignedShort(TDeviceTag *DestTag, unsigned short int ID,
 }
 
 /*##################  TDeviceTag::UpdateUnsignedLong  ###############
-*   Purpose....: Update unsigned long value                	                        #
+*   Purpose....: Update unsigned long value                                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3956,13 +3956,13 @@ void TDeviceTag::UpdateUnsignedShort(TDeviceTag *DestTag, unsigned short int ID,
 *##########################################################################*/
 void TDeviceTag::UpdateUnsignedLong(TDeviceTag *DestTag, unsigned short int ID, unsigned long *Val)
 {
-	TDeviceVar *Var;
+        TDeviceVar *Var;
 
-	Var = GetVar(ID);
-	if (Var)
-	{
-		if (Var->IsEmptyVar())
-		{
+        Var = GetVar(ID);
+        if (Var)
+        {
+                if (Var->IsEmptyVar())
+                {
             if (DestTag)
                 DestTag->AddUnsignedLong(ID, *Val);
         }
@@ -3975,7 +3975,7 @@ void TDeviceTag::UpdateUnsignedLong(TDeviceTag *DestTag, unsigned short int ID, 
 }
 
 /*##################  TDeviceTag::UpdateUnsignedInt  ###############
-*   Purpose....: Update unsigned int value                	                        #
+*   Purpose....: Update unsigned int value                                              #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -3983,11 +3983,11 @@ void TDeviceTag::UpdateUnsignedLong(TDeviceTag *DestTag, unsigned short int ID, 
 *##########################################################################*/
 void TDeviceTag::UpdateUnsignedInt(TDeviceTag *DestTag, unsigned short int ID, unsigned int *Val)
 {
-	TDeviceVar *Var;
+        TDeviceVar *Var;
 
-	Var = GetVar(ID);
+        Var = GetVar(ID);
     if (Var)
-	{
+        {
         if (Var->IsEmptyVar())
         {
             if (DestTag)
@@ -4002,7 +4002,7 @@ void TDeviceTag::UpdateUnsignedInt(TDeviceTag *DestTag, unsigned short int ID, u
 }
 
 /*##################  TDeviceTag::UpdateSignedShort  ###############
-*   Purpose....: Update signed short int value                	                        #
+*   Purpose....: Update signed short int value                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4029,7 +4029,7 @@ void TDeviceTag::UpdateSignedShort(TDeviceTag *DestTag, unsigned short int ID, s
 }
 
 /*##################  TDeviceTag::UpdateSignedLong  ###############
-*   Purpose....: Update signed long value                	                        #
+*   Purpose....: Update signed long value                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4056,7 +4056,7 @@ void TDeviceTag::UpdateSignedLong(TDeviceTag *DestTag, unsigned short int ID, lo
 }
 
 /*##################  TDeviceTag::UpdateSignedInt  ###############
-*   Purpose....: Update signed int value                	                        #
+*   Purpose....: Update signed int value                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4083,7 +4083,7 @@ void TDeviceTag::UpdateSignedInt(TDeviceTag *DestTag, unsigned short int ID, int
 }
 
 /*##################  TDeviceTag::UpdateChar  ###############
-*   Purpose....: Update char value                	                        #
+*   Purpose....: Update char value                                              #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4110,7 +4110,7 @@ void TDeviceTag::UpdateChar(TDeviceTag *DestTag, unsigned short int ID, char *Va
 }
 
 /*##################  TDeviceTag::UpdateFloat1  ###############
-*   Purpose....: Update float1 value                	                        #
+*   Purpose....: Update float1 value                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4133,11 +4133,11 @@ void TDeviceTag::UpdateFloat1(TDeviceTag *DestTag, unsigned short int ID, long *
     }
     else
         if (DestTag && IsEmptyTag())          
-			DestTag->AddFloat1(ID, *Val);
+                        DestTag->AddFloat1(ID, *Val);
 }
 
 /*##################  TDeviceTag::UpdateFloat2  ###############
-*   Purpose....: Update float2 value                	                        #
+*   Purpose....: Update float2 value                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4158,13 +4158,13 @@ void TDeviceTag::UpdateFloat2(TDeviceTag *DestTag, unsigned short int ID, long *
         else
             *Val = Var->GetFloat2();
     }
-	else
+        else
         if (DestTag && IsEmptyTag())          
             DestTag->AddFloat2(ID, *Val);
 }
 
 /*##################  TDeviceTag::UpdateFloat3  ###############
-*   Purpose....: Update float3 value                	                        #
+*   Purpose....: Update float3 value                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4183,7 +4183,7 @@ void TDeviceTag::UpdateFloat3(TDeviceTag *DestTag, unsigned short int ID, long *
                 DestTag->AddFloat3(ID, *Val);
         }
         else
-			*Val = Var->GetFloat3();
+                        *Val = Var->GetFloat3();
     }
     else
         if (DestTag && IsEmptyTag())          
@@ -4191,7 +4191,7 @@ void TDeviceTag::UpdateFloat3(TDeviceTag *DestTag, unsigned short int ID, long *
 }
 
 /*##################  TDeviceTag::UpdateFloat4  ###############
-*   Purpose....: Update float4 value                	                        #
+*   Purpose....: Update float4 value                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4208,7 +4208,7 @@ void TDeviceTag::UpdateFloat4(TDeviceTag *DestTag, unsigned short int ID, long *
         {
             if (DestTag)
                 DestTag->AddFloat4(ID, *Val);
-		}
+                }
         else
             *Val = Var->GetFloat4();
     }
@@ -4218,7 +4218,7 @@ void TDeviceTag::UpdateFloat4(TDeviceTag *DestTag, unsigned short int ID, long *
 }
 
 /*##################  TDeviceTag::UpdateJulian  ###############
-*   Purpose....: Update julian value                	                        #
+*   Purpose....: Update julian value                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4233,7 +4233,7 @@ void TDeviceTag::UpdateJulian(TDeviceTag *DestTag, unsigned short int ID, long *
     {
         if (Var->IsEmptyVar())
         {
-			if (DestTag)
+                        if (DestTag)
                 DestTag->AddJulian(ID, *Val);
         }
         else
@@ -4245,7 +4245,7 @@ void TDeviceTag::UpdateJulian(TDeviceTag *DestTag, unsigned short int ID, long *
 }
 
 /*##################  TDeviceTag::UpdateBoolean  ###############
-*   Purpose....: Update boolean value                	                        #
+*   Purpose....: Update boolean value                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4258,7 +4258,7 @@ void TDeviceTag::UpdateBoolean(TDeviceTag *DestTag, unsigned short int ID, int *
     Var = GetVar(ID);
     if (Var)
     {
-		if (Var->IsEmptyVar())
+                if (Var->IsEmptyVar())
         {
             if (DestTag)
                 DestTag->AddBoolean(ID, *Val);
@@ -4272,7 +4272,7 @@ void TDeviceTag::UpdateBoolean(TDeviceTag *DestTag, unsigned short int ID, int *
 }
 
 /*##################  TDeviceTag::UpdateString  ###############
-*   Purpose....: Update string                  	                        #
+*   Purpose....: Update string                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4281,9 +4281,9 @@ void TDeviceTag::UpdateBoolean(TDeviceTag *DestTag, unsigned short int ID, int *
 void TDeviceTag::UpdateString(TDeviceTag *DestTag, unsigned short int ID, char **Val)
 {
     TDeviceVar *Var;
-	const char *str;
+        const char *str;
     
-	Var = GetVar(ID);
+        Var = GetVar(ID);
     if (Var)
     {
         if (Var->IsEmptyVar())
@@ -4300,7 +4300,7 @@ void TDeviceTag::UpdateString(TDeviceTag *DestTag, unsigned short int ID, char *
                     delete *Val;
 
                 *Val = new char[strlen(str) + 1];
-            	strcpy(*Val, str);
+                strcpy(*Val, str);
             }         
         }
     }
@@ -4310,7 +4310,7 @@ void TDeviceTag::UpdateString(TDeviceTag *DestTag, unsigned short int ID, char *
 }
 
 /*##################  TDeviceTag::UpdateUnsignedShort  ###############
-*   Purpose....: Update unsigned short int value                	                        #
+*   Purpose....: Update unsigned short int value                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4318,9 +4318,9 @@ void TDeviceTag::UpdateString(TDeviceTag *DestTag, unsigned short int ID, char *
 *##########################################################################*/
 void TDeviceTag::UpdateUnsignedShort(TDeviceTag *DestTag, unsigned short int ID, unsigned short int Val)
 {
-	TDeviceVar *Var;
+        TDeviceVar *Var;
 
-	Var = GetVar(ID);
+        Var = GetVar(ID);
     if (Var)
     {
         if (Var->IsEmptyVar())
@@ -4333,7 +4333,7 @@ void TDeviceTag::UpdateUnsignedShort(TDeviceTag *DestTag, unsigned short int ID,
 }
 
 /*##################  TDeviceTag::UpdateUnsignedLong  ###############
-*   Purpose....: Update unsigned long value                	                        #
+*   Purpose....: Update unsigned long value                                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4341,12 +4341,12 @@ void TDeviceTag::UpdateUnsignedShort(TDeviceTag *DestTag, unsigned short int ID,
 *##########################################################################*/
 void TDeviceTag::UpdateUnsignedLong(TDeviceTag *DestTag, unsigned short int ID, unsigned long Val)
 {
-	TDeviceVar *Var;
+        TDeviceVar *Var;
 
-	Var = GetVar(ID);
-	if (Var)
-	{
-		if (Var->IsEmptyVar())
+        Var = GetVar(ID);
+        if (Var)
+        {
+                if (Var->IsEmptyVar())
             if (DestTag)
                 DestTag->AddUnsignedLong(ID, Val);
     }
@@ -4356,7 +4356,7 @@ void TDeviceTag::UpdateUnsignedLong(TDeviceTag *DestTag, unsigned short int ID, 
 }
 
 /*##################  TDeviceTag::UpdateUnsignedInt  ###############
-*   Purpose....: Update unsigned int value                	                        #
+*   Purpose....: Update unsigned int value                                              #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4364,9 +4364,9 @@ void TDeviceTag::UpdateUnsignedLong(TDeviceTag *DestTag, unsigned short int ID, 
 *##########################################################################*/
 void TDeviceTag::UpdateUnsignedInt(TDeviceTag *DestTag, unsigned short int ID, unsigned int Val)
 {
-	TDeviceVar *Var;
+        TDeviceVar *Var;
 
-	Var = GetVar(ID);
+        Var = GetVar(ID);
     if (Var)
     {
         if (Var->IsEmptyVar())
@@ -4379,7 +4379,7 @@ void TDeviceTag::UpdateUnsignedInt(TDeviceTag *DestTag, unsigned short int ID, u
 }
 
 /*##################  TDeviceTag::UpdateSignedShort  ###############
-*   Purpose....: Update signed short int value                	                        #
+*   Purpose....: Update signed short int value                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4402,7 +4402,7 @@ void TDeviceTag::UpdateSignedShort(TDeviceTag *DestTag, unsigned short int ID, s
 }
 
 /*##################  TDeviceTag::UpdateSignedLong  ###############
-*   Purpose....: Update signed long value                	                        #
+*   Purpose....: Update signed long value                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4410,7 +4410,7 @@ void TDeviceTag::UpdateSignedShort(TDeviceTag *DestTag, unsigned short int ID, s
 *##########################################################################*/
 void TDeviceTag::UpdateSignedLong(TDeviceTag *DestTag, unsigned short int ID, long Val)
 {
-	TDeviceVar *Var;
+        TDeviceVar *Var;
     
     Var = GetVar(ID);
     if (Var)
@@ -4425,7 +4425,7 @@ void TDeviceTag::UpdateSignedLong(TDeviceTag *DestTag, unsigned short int ID, lo
 }
 
 /*##################  TDeviceTag::UpdateSignedInt  ###############
-*   Purpose....: Update signed int value                	                        #
+*   Purpose....: Update signed int value                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4448,7 +4448,7 @@ void TDeviceTag::UpdateSignedInt(TDeviceTag *DestTag, unsigned short int ID, int
 }
 
 /*##################  TDeviceTag::UpdateChar  ###############
-*   Purpose....: Update char value                	                        #
+*   Purpose....: Update char value                                              #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4458,7 +4458,7 @@ void TDeviceTag::UpdateChar(TDeviceTag *DestTag, unsigned short int ID, char Val
 {
     TDeviceVar *Var;
     
-	Var = GetVar(ID);
+        Var = GetVar(ID);
     if (Var)
     {
         if (Var->IsEmptyVar())
@@ -4471,7 +4471,7 @@ void TDeviceTag::UpdateChar(TDeviceTag *DestTag, unsigned short int ID, char Val
 }
 
 /*##################  TDeviceTag::UpdateFloat1  ###############
-*   Purpose....: Update float1 value                	                        #
+*   Purpose....: Update float1 value                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4483,7 +4483,7 @@ void TDeviceTag::UpdateFloat1(TDeviceTag *DestTag, unsigned short int ID, long V
     
     Var = GetVar(ID);
     if (Var)
-	{
+        {
         if (Var->IsEmptyVar())
             if (DestTag)
                 DestTag->AddFloat1(ID, Val);
@@ -4494,7 +4494,7 @@ void TDeviceTag::UpdateFloat1(TDeviceTag *DestTag, unsigned short int ID, long V
 }
 
 /*##################  TDeviceTag::UpdateFloat2  ###############
-*   Purpose....: Update float2 value                	                        #
+*   Purpose....: Update float2 value                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4508,7 +4508,7 @@ void TDeviceTag::UpdateFloat2(TDeviceTag *DestTag, unsigned short int ID, long V
     if (Var)
     {
         if (Var->IsEmptyVar())
-			if (DestTag)
+                        if (DestTag)
                 DestTag->AddFloat2(ID, Val);
     }
     else
@@ -4517,7 +4517,7 @@ void TDeviceTag::UpdateFloat2(TDeviceTag *DestTag, unsigned short int ID, long V
 }
 
 /*##################  TDeviceTag::UpdateFloat3  ###############
-*   Purpose....: Update float3 value                	                        #
+*   Purpose....: Update float3 value                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4533,14 +4533,14 @@ void TDeviceTag::UpdateFloat3(TDeviceTag *DestTag, unsigned short int ID, long V
         if (Var->IsEmptyVar())
             if (DestTag)
                 DestTag->AddFloat3(ID, Val);
-	}
+        }
     else
         if (DestTag && IsEmptyTag())          
             DestTag->AddFloat3(ID, Val);
 }
 
 /*##################  TDeviceTag::UpdateFloat4  ###############
-*   Purpose....: Update float4 value                	                        #
+*   Purpose....: Update float4 value                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4558,12 +4558,12 @@ void TDeviceTag::UpdateFloat4(TDeviceTag *DestTag, unsigned short int ID, long V
                 DestTag->AddFloat4(ID, Val);
     }
     else
-		if (DestTag && IsEmptyTag())
+                if (DestTag && IsEmptyTag())
             DestTag->AddFloat4(ID, Val);
 }
 
 /*##################  TDeviceTag::UpdateJulian  ###############
-*   Purpose....: Update julian value                	                        #
+*   Purpose....: Update julian value                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4586,7 +4586,7 @@ void TDeviceTag::UpdateJulian(TDeviceTag *DestTag, unsigned short int ID, long V
 }
 
 /*##################  TDeviceTag::UpdateBoolean  ###############
-*   Purpose....: Update boolean value                	                        #
+*   Purpose....: Update boolean value                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4609,7 +4609,7 @@ void TDeviceTag::UpdateBoolean(TDeviceTag *DestTag, unsigned short int ID, int V
 }
 
 /*##################  TDeviceTag::UpdateString  ###############
-*   Purpose....: Update string                  	                        #
+*   Purpose....: Update string                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4618,7 +4618,7 @@ void TDeviceTag::UpdateBoolean(TDeviceTag *DestTag, unsigned short int ID, int V
 void TDeviceTag::UpdateString(TDeviceTag *DestTag, unsigned short int ID, char *Val)
 {
     TDeviceVar *Var;
-	const char *str;
+        const char *str;
     
     Var = GetVar(ID);
     if (Var)
@@ -4633,7 +4633,7 @@ void TDeviceTag::UpdateString(TDeviceTag *DestTag, unsigned short int ID, char *
 }
 
 /*##################  TDeviceTag::GetSize  ###############
-*   Purpose....: Get size of data                	                        #
+*   Purpose....: Get size of data                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4641,7 +4641,7 @@ void TDeviceTag::UpdateString(TDeviceTag *DestTag, unsigned short int ID, char *
 *##########################################################################*/
 int TDeviceTag::GetSize()
 {
-	TDeviceData *elem;
+        TDeviceData *elem;
     int size;
 
     size = 4;
@@ -4656,7 +4656,7 @@ int TDeviceTag::GetSize()
 }
 
 /*##################  TDeviceTag::GetData  ###############
-*   Purpose....: Get data                          	                        #
+*   Purpose....: Get data                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4669,7 +4669,7 @@ int TDeviceTag::GetData(char *data)
     short int Id;
 
     Id = FID + DEVICE_TAGRANGE_LOW;
-	memcpy(data, &Id, 2);
+        memcpy(data, &Id, 2);
     size = 2;
    
     elem = FHead;
@@ -4680,14 +4680,14 @@ int TDeviceTag::GetData(char *data)
     }        
 
     Id = DEVICE_TAGEND;
-	memcpy(data + size, &Id, 2);
+        memcpy(data + size, &Id, 2);
     size += 2;
         
-	return size;
+        return size;
 }
 
 /*##################  TDeviceMsg::TDeviceMsg  ###############
-*   Purpose....: Constructor for msg        		                        #
+*   Purpose....: Constructor for msg                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4702,7 +4702,7 @@ TDeviceMsg::TDeviceMsg()
 }
 
 /*##################  TDeviceMsg::TDeviceMsg  ###############
-*   Purpose....: Constructor for msg        		                        #
+*   Purpose....: Constructor for msg                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4717,7 +4717,7 @@ TDeviceMsg::TDeviceMsg(int MaxSize)
 }
 
 /*##################  TDeviceMsg::~TDeviceMsg  ###############
-*   Purpose....: Destructor for msg           	                        #
+*   Purpose....: Destructor for msg                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4732,7 +4732,7 @@ TDeviceMsg::~TDeviceMsg()
 }
 
 /*##################  TDeviceMsg::GetAlloc  ###############
-*   Purpose....: Get allocation object           	                        #
+*   Purpose....: Get allocation object                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4744,7 +4744,7 @@ TDeviceAlloc *TDeviceMsg::GetAlloc()
 }
 
 /*##################  TDeviceMsg::Free  ###############
-*   Purpose....: Delete all entries           	                        #
+*   Purpose....: Delete all entries                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4760,7 +4760,7 @@ void TDeviceMsg::Free()
         elem = FHead;
         while (elem)
         {
-	    	next = elem->FNext;
+                next = elem->FNext;
             delete elem;
             elem = next;
         }
@@ -4780,7 +4780,7 @@ void TDeviceMsg::Free()
 *##########################################################################*/
 void TDeviceMsg::Add(TDeviceTag *data)
 {
-	TDeviceData *elem;
+        TDeviceData *elem;
 
     if (data)
     {
@@ -4793,9 +4793,9 @@ void TDeviceMsg::Add(TDeviceTag *data)
         
         }
         else
-		    FHead = data;
+                    FHead = data;
 
-    	data->FNext = 0;
+        data->FNext = 0;
     }
 }
 
@@ -4836,7 +4836,7 @@ TDeviceTag *TDeviceMsg::CopyTag(TDeviceTag *tag)
     if (tag)
     {
         size = tag->GetSize();
-		if (size)
+                if (size)
         {
             data = new char[size];
             tag->GetData(data);
@@ -4855,7 +4855,7 @@ TDeviceTag *TDeviceMsg::CopyTag(TDeviceTag *tag)
 }
 
 /*##################  TDeviceMsg::GetSize  ###############
-*   Purpose....: Get size of data                	                        #
+*   Purpose....: Get size of data                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4863,22 +4863,22 @@ TDeviceTag *TDeviceMsg::CopyTag(TDeviceTag *tag)
 *##########################################################################*/
 int TDeviceMsg::GetSize()
 {
-	TDeviceData *elem;
+        TDeviceData *elem;
     int size;
 
     size = 8;
     elem = FHead;
-	while (elem)
-	{
-		size += elem->GetSize();
-		elem = elem->FNext;
-	}
+        while (elem)
+        {
+                size += elem->GetSize();
+                elem = elem->FNext;
+        }
 
-	return size;
+        return size;
 }
 
 /*##################  TDeviceMsg::Crc ############
-*   Purpose....: Calculate CRC	                    #
+*   Purpose....: Calculate CRC                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4887,35 +4887,35 @@ int TDeviceMsg::GetSize()
 unsigned short int TDeviceMsg::Crc(const char *Data, int Size) const
 {
 #ifndef MSVC
-	return RdosCalcCrc(CrcHandle, 0, Data, Size);
+        return RdosCalcCrc(CrcHandle, 0, Data, Size);
 #else
 
-	unsigned short int Crc = 0;
-	int i;
-	unsigned short int Temp1, Temp2;
-	char ch;
+        unsigned short int Crc = 0;
+        int i;
+        unsigned short int Temp1, Temp2;
+        char ch;
 
-	while (Size)
-	{
-		ch = *Data;
-		for (i = 0; i != 8; i++)
-		{
-			Temp1 = (ch & 0x80) << 8;
-			Temp2 = Crc & 0x8000;
-			Crc = Crc << 1;
-			if ((Temp1 ^ Temp2) != 0)
-				Crc = Crc ^ 0x8005;
-			ch = ch << 1;
-		}
-		Size--;
-		Data++;
-	}
-	return Crc;
+        while (Size)
+        {
+                ch = *Data;
+                for (i = 0; i != 8; i++)
+                {
+                        Temp1 = (ch & 0x80) << 8;
+                        Temp2 = Crc & 0x8000;
+                        Crc = Crc << 1;
+                        if ((Temp1 ^ Temp2) != 0)
+                                Crc = Crc ^ 0x8005;
+                        ch = ch << 1;
+                }
+                Size--;
+                Data++;
+        }
+        return Crc;
 #endif
 }
 
 /*##################  TDeviceMsg::GetData  ###############
-*   Purpose....: Get data                          	                        #
+*   Purpose....: Get data                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4925,26 +4925,26 @@ void TDeviceMsg::GetData(long signature, char *data)
 {
     unsigned short int CrcVal;
     int size;
-	TDeviceData *elem;
+        TDeviceData *elem;
 
-	memcpy(data, &signature, 4);
-	size = 6;
+        memcpy(data, &signature, 4);
+        size = 6;
 
-	elem = FHead;
-	while (elem)
-	{
-		size += elem->GetData(data + size);
-		elem = elem->FNext;
-	}
-	size -= 6;
-	memcpy(data + 4, &size, 2);
-	CrcVal = Crc(data + 6, size);
-	memcpy(data + size + 6, &CrcVal, 2);
+        elem = FHead;
+        while (elem)
+        {
+                size += elem->GetData(data + size);
+                elem = elem->FNext;
+        }
+        size -= 6;
+        memcpy(data + 4, &size, 2);
+        CrcVal = Crc(data + 6, size);
+        memcpy(data + size + 6, &CrcVal, 2);
 
 }
 
 /*##################  TDeviceMsg::Parse  ###############
-*   Purpose....: Parse data                          	                        #
+*   Purpose....: Parse data                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -4954,53 +4954,53 @@ int TDeviceMsg::Parse(long signature, const char *data, int size)
 {
     unsigned short int CrcVal;
     int MsgSize = 0;
-	int count;
-	long sign;
-	TDeviceTag *tag;
+        int count;
+        long sign;
+        TDeviceTag *tag;
 
-	Free();
+        Free();
 
-	memcpy(&sign, data, 4);
-	if (sign != signature)
-		return FALSE;
+        memcpy(&sign, data, 4);
+        if (sign != signature)
+                return FALSE;
 
-	memcpy(&MsgSize, data + 4, 2);
+        memcpy(&MsgSize, data + 4, 2);
 
-	if (MsgSize < size - 8)
-		size = MsgSize + 8;
-	else
-		if (MsgSize != size - 8)
-			return FALSE;
+        if (MsgSize < size - 8)
+                size = MsgSize + 8;
+        else
+                if (MsgSize != size - 8)
+                        return FALSE;
 
-	memcpy(&CrcVal, data + MsgSize + 6, 2);
-	if (CrcVal != Crc(data + 6, MsgSize))
-		return FALSE;
+        memcpy(&CrcVal, data + MsgSize + 6, 2);
+        if (CrcVal != Crc(data + 6, MsgSize))
+                return FALSE;
 
-	data += 6;
-	size -= 8;
+        data += 6;
+        size -= 8;
 
-	while (size)
-	{
-	    if (FAlloc)
-    		tag = new(FAlloc) TDeviceTag(FAlloc, data, size, &count);
-    	else
-    		tag = new TDeviceTag(data, size, &count);
+        while (size)
+        {
+            if (FAlloc)
+                tag = new(FAlloc) TDeviceTag(FAlloc, data, size, &count);
+        else
+                tag = new TDeviceTag(data, size, &count);
 
-		Add(tag);
-		if (count)
-		{
-			data += count;
-			size -= count;
-		}
-		else
-			return FALSE;
-	}
+                Add(tag);
+                if (count)
+                {
+                        data += count;
+                        size -= count;
+                }
+                else
+                        return FALSE;
+        }
 
-	return TRUE;
+        return TRUE;
 }
 
 /*##################  TDeviceMsg::GotoFirstTag  ###############
-*   Purpose....: Goto first tag                       	                        #
+*   Purpose....: Goto first tag                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -5008,12 +5008,12 @@ int TDeviceMsg::Parse(long signature, const char *data, int size)
 *##########################################################################*/
 TDeviceTag *TDeviceMsg::GotoFirstTag()
 {
-	FCurrTag = FHead;
-	return FHead;
+        FCurrTag = FHead;
+        return FHead;
 }
 
 /*##################  TDeviceMsg::GotoNextTag  ###############
-*   Purpose....: Goto next tag                       	                        #
+*   Purpose....: Goto next tag                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -5028,7 +5028,7 @@ TDeviceTag *TDeviceMsg::GotoNextTag()
 }
 
 /*##################  TDeviceMsg::GetTag  ###############
-*   Purpose....: Get a tag                       	                        #
+*   Purpose....: Get a tag                                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -5039,13 +5039,13 @@ TDeviceTag *TDeviceMsg::GetTag(unsigned short int ID)
     TDeviceTag *Tag;
 
     Tag = GotoFirstTag();
-	while (Tag)
+        while (Tag)
     {
         if (Tag->FID == ID)
-			return Tag;
-		Tag = GotoNextTag();
-	}
-	return 0;
+                        return Tag;
+                Tag = GotoNextTag();
+        }
+        return 0;
 }
 
 
@@ -5054,7 +5054,7 @@ TDeviceTag *TDeviceMsg::GetTag(unsigned short int ID)
 #   Name       : TDevice::InsertDevice
 #
 #   Purpose....: Insert device into m_DeviceList
-#				 Should only done in constructor
+#                                Should only done in constructor
 #
 #   In params..: *
 #   Out params.: *
@@ -5063,10 +5063,10 @@ TDeviceTag *TDeviceMsg::GetTag(unsigned short int ID)
 ##########################################################################*/
 void TDevice::InsertDevice()
 {
-	FListSection.Enter();
-	FList = FDeviceList;
-	FDeviceList = this;
-	FListSection.Leave();
+        FListSection.Enter();
+        FList = FDeviceList;
+        FDeviceList = this;
+        FListSection.Leave();
 }
 
 /*##########################################################################
@@ -5074,7 +5074,7 @@ void TDevice::InsertDevice()
 #   Name       : TDevice::RemoveDevice
 #
 #   Purpose....: Remove device from m_DeviceList                   
-#				 Should only done in destructor
+#                                Should only done in destructor
 #
 #   In params..: *
 #   Out params.: *
@@ -5083,28 +5083,28 @@ void TDevice::InsertDevice()
 ##########################################################################*/
 void TDevice::RemoveDevice()
 {
-	TDevice *ptr;
-	TDevice *prev;
-	prev = 0;
-	FListSection.Enter();
-	ptr = FDeviceList;
-	while ((ptr != 0) && (ptr != this))
-	{
-		prev = ptr;
-		ptr = ptr->FList;
+        TDevice *ptr;
+        TDevice *prev;
+        prev = 0;
+        FListSection.Enter();
+        ptr = FDeviceList;
+        while ((ptr != 0) && (ptr != this))
+        {
+                prev = ptr;
+                ptr = ptr->FList;
     }
-	if (prev == 0)
-		FDeviceList = FDeviceList->FList;
-	else
-		prev->FList = ptr->FList;
-	FListSection.Leave();
+        if (prev == 0)
+                FDeviceList = FDeviceList->FList;
+        else
+                prev->FList = ptr->FList;
+        FListSection.Leave();
 }
 
 /*##########################################################################
 #
 #   Name       : TDevice::GetDevice
 #
-#   Purpose....: Get first device in list		                            
+#   Purpose....: Get first device in list                                           
 #
 #   In params..: DeviceCallb
 #   Out params.: *
@@ -5113,22 +5113,22 @@ void TDevice::RemoveDevice()
 ##########################################################################*/
 void TDevice::GetDevices(void (*DeviceCallb)(TDevice *Device))
 {
-	TDevice *ptr;
-	FListSection.Enter();
-	ptr = FDeviceList;
-	while (ptr != 0)
-	{
-		(*DeviceCallb)(ptr);
-		ptr = ptr->FList;
-	}
-	FListSection.Leave();
+        TDevice *ptr;
+        FListSection.Enter();
+        ptr = FDeviceList;
+        while (ptr != 0)
+        {
+                (*DeviceCallb)(ptr);
+                ptr = ptr->FList;
+        }
+        FListSection.Leave();
 }
 
 /*##########################################################################
 #
 #   Name       : TDevice::TDevice
 #
-#   Purpose....: Constructor for TDevice		                          
+#   Purpose....: Constructor for TDevice                                          
 #
 #   In params..: *
 #   Out params.: *
@@ -5137,15 +5137,15 @@ void TDevice::GetDevices(void (*DeviceCallb)(TDevice *Device))
 ##########################################################################*/
 TDevice::TDevice()
 {
-	FIniSection = 0;
-	Init();
+        FIniSection = 0;
+        Init();
 }
 
 /*##########################################################################
 #
 #   Name       : TDevice::TDevice
 #
-#   Purpose....: Constructor for TDevice		                          
+#   Purpose....: Constructor for TDevice                                          
 #
 #   In params..: IniSection to read parameters from
 #   Out params.: *
@@ -5154,15 +5154,15 @@ TDevice::TDevice()
 ##########################################################################*/
 TDevice::TDevice(const char *IniSection)
 {
-	FIniSection = IniSection;
-	Init();
+        FIniSection = IniSection;
+        Init();
 }
 
 /*##########################################################################
 #
 #   Name       : TDevice::~TDevice
 #
-#   Purpose....: Destructor for TDevice		                          
+#   Purpose....: Destructor for TDevice                                   
 #
 #   In params..: *
 #   Out params.: *
@@ -5174,15 +5174,15 @@ TDevice::~TDevice()
     if (FName)
         delete FName;
         
-	RemoveDevice();
+        RemoveDevice();
 }
 
 /*##########################################################################
 #
 #   Name       : TDevice::Init
 #
-#   Purpose....: Init method for class. register persistent should		
-#				 done here.					                               
+#   Purpose....: Init method for class. register persistent should              
+#                                done here.                                                                    
 #
 #   In params..: *
 #   Out params.: *
@@ -5198,17 +5198,17 @@ void TDevice::Init()
     FRemote = FALSE;
 
     FName = 0;
-   	FReset = FALSE;
-	FOpen = FALSE;
-	FEnabled = FALSE;
-	FOnline = FALSE;
-	FBusy = FALSE;
-	OnOnline = 0;
-	OnOffline = 0;
-	OnIdle = 0;
-	OnBusy = 0;
-	OnStateChange = 0;
-	InsertDevice();
+        FReset = FALSE;
+        FOpen = FALSE;
+        FEnabled = FALSE;
+        FOnline = FALSE;
+        FBusy = FALSE;
+        OnOnline = 0;
+        OnOffline = 0;
+        OnIdle = 0;
+        OnBusy = 0;
+        OnStateChange = 0;
+        InsertDevice();
 }
 
 /*##########################################################################
@@ -5224,15 +5224,15 @@ void TDevice::Init()
 ##########################################################################*/
 void TDevice::NotifyStateChange()
 {
-	if (OnStateChange)
-	    (*OnStateChange)(this);
+        if (OnStateChange)
+            (*OnStateChange)(this);
 }
 
 /*##########################################################################
 #
 #   Name       : TDevice::NotifyReset
 #
-#   Purpose....: Notify of system reset			                            
+#   Purpose....: Notify of system reset                                             
 #
 #   In params..: *
 #   Out params.: *
@@ -5241,14 +5241,14 @@ void TDevice::NotifyStateChange()
 ##########################################################################*/
 void TDevice::NotifyReset()
 {
-	FReset = TRUE;
+        FReset = TRUE;
 }
 
 /*##########################################################################
 #
 #   Name       : TDevice::IsReseted
 #
-#   Purpose....: Check if device is reseted					                            #
+#   Purpose....: Check if device is reseted                                                                 #
 #
 #   In params..: *
 #   Out params.: *
@@ -5257,7 +5257,7 @@ void TDevice::NotifyReset()
 ##########################################################################*/
 int TDevice::IsReseted() const
 {
-	return FReset;
+        return FReset;
 }
 
 /*##########################################################################
@@ -5273,7 +5273,7 @@ int TDevice::IsReseted() const
 ##########################################################################*/
 void TDevice::ClearReset()
 {
-	FReset = FALSE;
+        FReset = FALSE;
 }
 
 /*##########################################################################
@@ -5290,17 +5290,17 @@ void TDevice::ClearReset()
 void TDevice::DeviceName(char *Name, int MaxLen) const
 {
     if (FName)
-    	strncpy(Name, FName, MaxLen);
+        strncpy(Name, FName, MaxLen);
     else
-		strncpy(Name, "NO NAME", MaxLen);
-	Name[MaxLen-1] = 0;
+                strncpy(Name, "NO NAME", MaxLen);
+        Name[MaxLen-1] = 0;
 }
 
 /*##########################################################################
 #
 #   Name       : TDevice::NotifyOpen
 #
-#   Purpose....: Notify open				                           
+#   Purpose....: Notify open                                                       
 #
 #   In params..: *
 #   Out params.: *
@@ -5316,7 +5316,7 @@ void TDevice::NotifyOpen()
 #
 #   Name       : TDevice::Open
 #
-#   Purpose....: Opens device					                           
+#   Purpose....: Opens device                                                              
 #
 #   In params..: *
 #   Out params.: *
@@ -5346,7 +5346,7 @@ void TDevice::Open()
 #
 #   Name       : TDevice::NotifyClose
 #
-#   Purpose....: Notify close				                           
+#   Purpose....: Notify close                                                      
 #
 #   In params..: *
 #   Out params.: *
@@ -5362,7 +5362,7 @@ void TDevice::NotifyClose()
 #
 #   Name       : TDevice::Close
 #
-#   Purpose....: Closes device					                           
+#   Purpose....: Closes device                                                             
 #
 #   In params..: *
 #   Out params.: *
@@ -5374,7 +5374,7 @@ void TDevice::Close()
     FPropertySection.Enter();
     if (FOpen)
     {
-    	NotifyClose();
+        NotifyClose();
         NotifyStateChange();
 
         AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);    
@@ -5384,8 +5384,8 @@ void TDevice::Close()
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
         SignalMsg(FRemoteUnitList);
-	}
-	FPropertySection.Leave();
+        }
+        FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5401,7 +5401,7 @@ void TDevice::Close()
 ##########################################################################*/
 int TDevice::IsOpen() const
 {
-	return FOpen;
+        return FOpen;
 }
 
 /*##########################################################################
@@ -5484,7 +5484,7 @@ void TDevice::Disable()
     FPropertySection.Enter();
     if (FEnabled)
     {
-    	NotifyDisable();
+        NotifyDisable();
         NotifyStateChange();
 
         if (!FRemote)
@@ -5513,7 +5513,7 @@ void TDevice::Disable()
 ##########################################################################*/
 int TDevice::IsEnabled() const
 {
-	return FEnabled;
+        return FEnabled;
 }
 
 /*##########################################################################
@@ -5530,11 +5530,11 @@ int TDevice::IsEnabled() const
 void TDevice::Online()
 {
     FPropertySection.Enter();
-	if (!FOnline)
-	{
+        if (!FOnline)
+        {
         FOnline = TRUE;
-	    if (OnOnline)
-		    OnOnline(this);
+            if (OnOnline)
+                    OnOnline(this);
         NotifyStateChange();
 
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
@@ -5542,8 +5542,8 @@ void TDevice::Online()
 
         SignalMsg(FVirtUnitList);
         SignalMsg(FRemoteUnitList);
-	}
-	FPropertySection.Leave();
+        }
+        FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5560,11 +5560,11 @@ void TDevice::Online()
 void TDevice::Offline()
 {
     FPropertySection.Enter();
-	if (FOnline)
-	{
-		FOnline = FALSE;
-		if (OnOffline)
-			OnOffline(this);
+        if (FOnline)
+        {
+                FOnline = FALSE;
+                if (OnOffline)
+                        OnOffline(this);
         NotifyStateChange();
 
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
@@ -5572,8 +5572,8 @@ void TDevice::Offline()
 
         SignalMsg(FVirtUnitList);
         SignalMsg(FRemoteUnitList);
-	}
-	FPropertySection.Leave();
+        }
+        FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5589,10 +5589,10 @@ void TDevice::Offline()
 ##########################################################################*/
 int TDevice::IsOnline() const
 {
-	if (FPhysUnit)
-		return FPhysUnit->IsOnline() && FOnline;
+        if (FPhysUnit)
+                return FPhysUnit->IsOnline() && FOnline;
     else
-    	return FOnline;
+        return FOnline;
 }
 
 /*##########################################################################
@@ -5608,7 +5608,7 @@ int TDevice::IsOnline() const
 ##########################################################################*/
 int TDevice::IsActive() const
 {
-	return FEnabled && FOpen;
+        return FEnabled && FOpen;
 }
 
 /*##########################################################################
@@ -5624,9 +5624,9 @@ int TDevice::IsActive() const
 ##########################################################################*/
 void TDevice::NotifyIdle()
 {
-	FBusy = FALSE;
-	if (OnIdle)
-		OnIdle(this);
+        FBusy = FALSE;
+        if (OnIdle)
+                OnIdle(this);
 }
 
 /*##########################################################################
@@ -5643,7 +5643,7 @@ void TDevice::NotifyIdle()
 void TDevice::Idle()
 {
     FPropertySection.Enter();
-	if (FBusy)
+        if (FBusy)
     {
         NotifyIdle();
         NotifyStateChange();
@@ -5657,8 +5657,8 @@ void TDevice::Idle()
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
         SignalMsg(FRemoteUnitList);
-	}
-	FPropertySection.Leave();
+        }
+        FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5674,9 +5674,9 @@ void TDevice::Idle()
 ##########################################################################*/
 void TDevice::NotifyBusy()
 {
-	FBusy = TRUE;
-	if (OnBusy)
-		OnBusy(this);
+        FBusy = TRUE;
+        if (OnBusy)
+                OnBusy(this);
 }
 
 /*##########################################################################
@@ -5693,9 +5693,9 @@ void TDevice::NotifyBusy()
 void TDevice::Busy()
 {
     FPropertySection.Enter();
-	if (!FBusy)
-	{
-	    NotifyBusy();
+        if (!FBusy)
+        {
+            NotifyBusy();
         NotifyStateChange();
 
         if (!FRemote)
@@ -5707,8 +5707,8 @@ void TDevice::Busy()
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
         SignalMsg(FRemoteUnitList);
-	}
-	FPropertySection.Leave();
+        }
+        FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5724,7 +5724,7 @@ void TDevice::Busy()
 ##########################################################################*/
 int TDevice::IsBusy() const
 {
-	return FBusy;
+        return FBusy;
 }
 
 /*##########################################################################
@@ -5740,7 +5740,7 @@ int TDevice::IsBusy() const
 ##########################################################################*/
 short int TDevice::GetUnitType()
 {
-	return 0;
+        return 0;
 }
 
 /*##########################################################################
@@ -5756,7 +5756,7 @@ short int TDevice::GetUnitType()
 ##########################################################################*/
 short int TDevice::GetUnitNumber()
 {
-	return 0;
+        return 0;
 }
 
 /*##########################################################################
@@ -5772,7 +5772,7 @@ short int TDevice::GetUnitNumber()
 ##########################################################################*/
 int TDevice::GetMaxMsgSize()
 {
-	return 0x40000;
+        return 0x40000;
 }
 
 /*##########################################################################
@@ -5805,10 +5805,10 @@ void TDevice::AddNone(TDistUnit *unit, unsigned short int TAG, unsigned short in
     TDeviceTag *tag;
     
     while (unit)
-	{
-	    tag = unit->LockTag(TAG);
-	    if (tag)
-	    {
+        {
+            tag = unit->LockTag(TAG);
+            if (tag)
+            {
             tag->AddNone(ID);
             unit->UnlockTag();
         }
@@ -5825,21 +5825,21 @@ void TDevice::AddNone(TDistUnit *unit, unsigned short int TAG, unsigned short in
 *##########################################################################*/
 void TDevice::AddUnsignedShort(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, unsigned short int data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyUnsignedShort(ID, data);
-			else
-				tag->AddUnsignedShort(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyUnsignedShort(ID, data);
+                        else
+                                tag->AddUnsignedShort(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddUnsignedLong  ###############
@@ -5851,21 +5851,21 @@ void TDevice::AddUnsignedShort(TDistUnit *unit, unsigned short int TAG, unsigned
 *##########################################################################*/
 void TDevice::AddUnsignedLong(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, unsigned long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyUnsignedLong(ID, data);
-			else
-				tag->AddUnsignedLong(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyUnsignedLong(ID, data);
+                        else
+                                tag->AddUnsignedLong(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddUnsignedInt  ###############
@@ -5877,21 +5877,21 @@ void TDevice::AddUnsignedLong(TDistUnit *unit, unsigned short int TAG, unsigned 
 *##########################################################################*/
 void TDevice::AddUnsignedInt(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, unsigned int data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyUnsignedInt(ID, data);
-			else
-				tag->AddUnsignedInt(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyUnsignedInt(ID, data);
+                        else
+                                tag->AddUnsignedInt(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddSignedShort  ###############
@@ -5903,21 +5903,21 @@ void TDevice::AddUnsignedInt(TDistUnit *unit, unsigned short int TAG, unsigned s
 *##########################################################################*/
 void TDevice::AddSignedShort(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, short int data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifySignedShort(ID, data);
-			else
-				tag->AddSignedShort(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifySignedShort(ID, data);
+                        else
+                                tag->AddSignedShort(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddSignedLong  ###############
@@ -5929,21 +5929,21 @@ void TDevice::AddSignedShort(TDistUnit *unit, unsigned short int TAG, unsigned s
 *##########################################################################*/
 void TDevice::AddSignedLong(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifySignedLong(ID, data);
-			else
-				tag->AddSignedLong(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifySignedLong(ID, data);
+                        else
+                                tag->AddSignedLong(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddSignedInt  ###############
@@ -5955,21 +5955,21 @@ void TDevice::AddSignedLong(TDistUnit *unit, unsigned short int TAG, unsigned sh
 *##########################################################################*/
 void TDevice::AddSignedInt(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, int data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifySignedInt(ID, data);
-			else
-				tag->AddSignedInt(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifySignedInt(ID, data);
+                        else
+                                tag->AddSignedInt(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddChar  ###############
@@ -5981,21 +5981,21 @@ void TDevice::AddSignedInt(TDistUnit *unit, unsigned short int TAG, unsigned sho
 *##########################################################################*/
 void TDevice::AddChar(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, char ch)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyChar(ID, ch);
-			else
-				tag->AddChar(ID, ch);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyChar(ID, ch);
+                        else
+                                tag->AddChar(ID, ch);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddFloat1  ###############
@@ -6007,21 +6007,21 @@ void TDevice::AddChar(TDistUnit *unit, unsigned short int TAG, unsigned short in
 *##########################################################################*/
 void TDevice::AddFloat1(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyFloat1(ID, data);
-			else
-				tag->AddFloat1(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyFloat1(ID, data);
+                        else
+                                tag->AddFloat1(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddFloat2  ###############
@@ -6033,21 +6033,21 @@ void TDevice::AddFloat1(TDistUnit *unit, unsigned short int TAG, unsigned short 
 *##########################################################################*/
 void TDevice::AddFloat2(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyFloat2(ID, data);
-			else
-				tag->AddFloat2(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyFloat2(ID, data);
+                        else
+                                tag->AddFloat2(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddFloat3  ###############
@@ -6059,21 +6059,21 @@ void TDevice::AddFloat2(TDistUnit *unit, unsigned short int TAG, unsigned short 
 *##########################################################################*/
 void TDevice::AddFloat3(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyFloat3(ID, data);
-			else
-				tag->AddFloat3(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyFloat3(ID, data);
+                        else
+                                tag->AddFloat3(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddFloat4  ###############
@@ -6085,21 +6085,21 @@ void TDevice::AddFloat3(TDistUnit *unit, unsigned short int TAG, unsigned short 
 *##########################################################################*/
 void TDevice::AddFloat4(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyFloat4(ID, data);
-			else
-				tag->AddFloat4(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyFloat4(ID, data);
+                        else
+                                tag->AddFloat4(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddJulian  ###############
@@ -6111,21 +6111,21 @@ void TDevice::AddFloat4(TDistUnit *unit, unsigned short int TAG, unsigned short 
 *##########################################################################*/
 void TDevice::AddJulian(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyJulian(ID, data);
-			else
-				tag->AddJulian(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyJulian(ID, data);
+                        else
+                                tag->AddJulian(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddBinary  ###############
@@ -6137,18 +6137,18 @@ void TDevice::AddJulian(TDistUnit *unit, unsigned short int TAG, unsigned short 
 *##########################################################################*/
 void TDevice::AddBinary(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, int size, const void *data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			tag->AddBinary(ID, size, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        tag->AddBinary(ID, size, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddString  ###############
@@ -6160,21 +6160,21 @@ void TDevice::AddBinary(TDistUnit *unit, unsigned short int TAG, unsigned short 
 *##########################################################################*/
 void TDevice::AddString(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, const char *str)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyString(ID, str);
-			else
-				tag->AddString(ID, str);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyString(ID, str);
+                        else
+                                tag->AddString(ID, str);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddBoolean  ###############
@@ -6186,21 +6186,21 @@ void TDevice::AddString(TDistUnit *unit, unsigned short int TAG, unsigned short 
 *##########################################################################*/
 void TDevice::AddBoolean(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, int data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			if (IsModifyTag(TAG))
-				tag->ModifyBoolean(ID, data);
-			else
-				tag->AddBoolean(ID, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyBoolean(ID, data);
+                        else
+                                tag->AddBoolean(ID, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddBoolArray  ###############
@@ -6212,18 +6212,18 @@ void TDevice::AddBoolean(TDistUnit *unit, unsigned short int TAG, unsigned short
 *##########################################################################*/
 void TDevice::AddBoolArray(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, int size, const char *data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			tag->AddBoolArray(ID, size, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        tag->AddBoolArray(ID, size, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddByteArray  ###############
@@ -6235,18 +6235,18 @@ void TDevice::AddBoolArray(TDistUnit *unit, unsigned short int TAG, unsigned sho
 *##########################################################################*/
 void TDevice::AddByteArray(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, int size, const void *data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-		tag = unit->LockTag(TAG);
-		if (tag)
-		{
-			tag->AddByteArray(ID, size, data);
-			unit->UnlockTag();
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                {
+                        tag->AddByteArray(ID, size, data);
+                        unit->UnlockTag();
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddNone  ###############
@@ -6261,12 +6261,12 @@ void TDevice::AddNone(TDistUnit *unit, TDistUnit *exclude, unsigned short int TA
     TDeviceTag *tag;
     
     while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    	    tag = unit->LockTag(TAG);
-	        if (tag)
-	        {
+        {
+            if (unit != exclude)
+            {
+            tag = unit->LockTag(TAG);
+                if (tag)
+                {
                 tag->AddNone(ID);
                 unit->UnlockTag();
             }
@@ -6284,24 +6284,24 @@ void TDevice::AddNone(TDistUnit *unit, TDistUnit *exclude, unsigned short int TA
 *##########################################################################*/
 void TDevice::AddUnsignedShort(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, unsigned short int data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    if (IsModifyTag(TAG))
-    				tag->ModifyUnsignedShort(ID, data);
-	    		else
-		    		tag->AddUnsignedShort(ID, data);
-    			unit->UnlockTag();
-	    	}
-	    }
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            if (IsModifyTag(TAG))
+                                tag->ModifyUnsignedShort(ID, data);
+                        else
+                                tag->AddUnsignedShort(ID, data);
+                        unit->UnlockTag();
+                }
+            }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddUnsignedLong  ###############
@@ -6313,24 +6313,24 @@ void TDevice::AddUnsignedShort(TDistUnit *unit, TDistUnit *exclude, unsigned sho
 *##########################################################################*/
 void TDevice::AddUnsignedLong(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, unsigned long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-    			if (IsModifyTag(TAG))
-	    			tag->ModifyUnsignedLong(ID, data);
-		    	else
-			    	tag->AddUnsignedLong(ID, data);
-    			unit->UnlockTag();
-    		}
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyUnsignedLong(ID, data);
+                        else
+                                tag->AddUnsignedLong(ID, data);
+                        unit->UnlockTag();
+                }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddUnsignedInt  ###############
@@ -6342,24 +6342,24 @@ void TDevice::AddUnsignedLong(TDistUnit *unit, TDistUnit *exclude, unsigned shor
 *##########################################################################*/
 void TDevice::AddUnsignedInt(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, unsigned int data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-    			if (IsModifyTag(TAG))
-	    			tag->ModifyUnsignedInt(ID, data);
-		    	else
-    				tag->AddUnsignedInt(ID, data);
-	    		unit->UnlockTag();
-		    }
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyUnsignedInt(ID, data);
+                        else
+                                tag->AddUnsignedInt(ID, data);
+                        unit->UnlockTag();
+                    }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddSignedShort  ###############
@@ -6371,24 +6371,24 @@ void TDevice::AddUnsignedInt(TDistUnit *unit, TDistUnit *exclude, unsigned short
 *##########################################################################*/
 void TDevice::AddSignedShort(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, short int data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-    			if (IsModifyTag(TAG))
-	    			tag->ModifySignedShort(ID, data);
-		    	else
-    				tag->AddSignedShort(ID, data);
-	    		unit->UnlockTag();
-	    	}
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                        if (IsModifyTag(TAG))
+                                tag->ModifySignedShort(ID, data);
+                        else
+                                tag->AddSignedShort(ID, data);
+                        unit->UnlockTag();
+                }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddSignedLong  ###############
@@ -6400,24 +6400,24 @@ void TDevice::AddSignedShort(TDistUnit *unit, TDistUnit *exclude, unsigned short
 *##########################################################################*/
 void TDevice::AddSignedLong(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    if (IsModifyTag(TAG))
-    				tag->ModifySignedLong(ID, data);
-	    		else
-		    		tag->AddSignedLong(ID, data);
-			    unit->UnlockTag();
-			}
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            if (IsModifyTag(TAG))
+                                tag->ModifySignedLong(ID, data);
+                        else
+                                tag->AddSignedLong(ID, data);
+                            unit->UnlockTag();
+                        }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddSignedInt  ###############
@@ -6429,24 +6429,24 @@ void TDevice::AddSignedLong(TDistUnit *unit, TDistUnit *exclude, unsigned short 
 *##########################################################################*/
 void TDevice::AddSignedInt(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, int data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    if (IsModifyTag(TAG))
-				    tag->ModifySignedInt(ID, data);
-    			else
-	    			tag->AddSignedInt(ID, data);
-		    	unit->UnlockTag();
-		    }
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            if (IsModifyTag(TAG))
+                                    tag->ModifySignedInt(ID, data);
+                        else
+                                tag->AddSignedInt(ID, data);
+                        unit->UnlockTag();
+                    }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddChar  ###############
@@ -6458,24 +6458,24 @@ void TDevice::AddSignedInt(TDistUnit *unit, TDistUnit *exclude, unsigned short i
 *##########################################################################*/
 void TDevice::AddChar(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, char ch)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-    			if (IsModifyTag(TAG))
-	    			tag->ModifyChar(ID, ch);
-		    	else
-			    	tag->AddChar(ID, ch);
-    			unit->UnlockTag();
-    		}
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                        if (IsModifyTag(TAG))
+                                tag->ModifyChar(ID, ch);
+                        else
+                                tag->AddChar(ID, ch);
+                        unit->UnlockTag();
+                }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddFloat1  ###############
@@ -6487,24 +6487,24 @@ void TDevice::AddChar(TDistUnit *unit, TDistUnit *exclude, unsigned short int TA
 *##########################################################################*/
 void TDevice::AddFloat1(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    if (IsModifyTag(TAG))
-				    tag->ModifyFloat1(ID, data);
-    			else
-	    			tag->AddFloat1(ID, data);
-		    	unit->UnlockTag();
-		    }
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            if (IsModifyTag(TAG))
+                                    tag->ModifyFloat1(ID, data);
+                        else
+                                tag->AddFloat1(ID, data);
+                        unit->UnlockTag();
+                    }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddFloat2  ###############
@@ -6516,24 +6516,24 @@ void TDevice::AddFloat1(TDistUnit *unit, TDistUnit *exclude, unsigned short int 
 *##########################################################################*/
 void TDevice::AddFloat2(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    if (IsModifyTag(TAG))
-				    tag->ModifyFloat2(ID, data);
-    			else
-	    			tag->AddFloat2(ID, data);
-		    	unit->UnlockTag();
-		    }
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            if (IsModifyTag(TAG))
+                                    tag->ModifyFloat2(ID, data);
+                        else
+                                tag->AddFloat2(ID, data);
+                        unit->UnlockTag();
+                    }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddFloat3  ###############
@@ -6545,24 +6545,24 @@ void TDevice::AddFloat2(TDistUnit *unit, TDistUnit *exclude, unsigned short int 
 *##########################################################################*/
 void TDevice::AddFloat3(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    if (IsModifyTag(TAG))
-    				tag->ModifyFloat3(ID, data);
-	    		else
-		    		tag->AddFloat3(ID, data);
-			    unit->UnlockTag();
-			}
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            if (IsModifyTag(TAG))
+                                tag->ModifyFloat3(ID, data);
+                        else
+                                tag->AddFloat3(ID, data);
+                            unit->UnlockTag();
+                        }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddFloat4  ###############
@@ -6574,24 +6574,24 @@ void TDevice::AddFloat3(TDistUnit *unit, TDistUnit *exclude, unsigned short int 
 *##########################################################################*/
 void TDevice::AddFloat4(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    if (IsModifyTag(TAG))
-				    tag->ModifyFloat4(ID, data);
-    			else
-	    			tag->AddFloat4(ID, data);
-		    	unit->UnlockTag();
-		    }
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            if (IsModifyTag(TAG))
+                                    tag->ModifyFloat4(ID, data);
+                        else
+                                tag->AddFloat4(ID, data);
+                        unit->UnlockTag();
+                    }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddJulian  ###############
@@ -6603,24 +6603,24 @@ void TDevice::AddFloat4(TDistUnit *unit, TDistUnit *exclude, unsigned short int 
 *##########################################################################*/
 void TDevice::AddJulian(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, long data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    if (IsModifyTag(TAG))
-				    tag->ModifyJulian(ID, data);
-    			else
-	    			tag->AddJulian(ID, data);
-		    	unit->UnlockTag();
-		    }
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            if (IsModifyTag(TAG))
+                                    tag->ModifyJulian(ID, data);
+                        else
+                                tag->AddJulian(ID, data);
+                        unit->UnlockTag();
+                    }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddBinary  ###############
@@ -6632,21 +6632,21 @@ void TDevice::AddJulian(TDistUnit *unit, TDistUnit *exclude, unsigned short int 
 *##########################################################################*/
 void TDevice::AddBinary(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, int size, const void *data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    tag->AddBinary(ID, size, data);
-    			unit->UnlockTag();
-	    	}
-	    }
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            tag->AddBinary(ID, size, data);
+                        unit->UnlockTag();
+                }
+            }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddString  ###############
@@ -6658,24 +6658,24 @@ void TDevice::AddBinary(TDistUnit *unit, TDistUnit *exclude, unsigned short int 
 *##########################################################################*/
 void TDevice::AddString(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, const char *str)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    if (IsModifyTag(TAG))
-				    tag->ModifyString(ID, str);
-    			else
-	    			tag->AddString(ID, str);
-		    	unit->UnlockTag();
-		    }
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            if (IsModifyTag(TAG))
+                                    tag->ModifyString(ID, str);
+                        else
+                                tag->AddString(ID, str);
+                        unit->UnlockTag();
+                    }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddBoolean  ###############
@@ -6687,24 +6687,24 @@ void TDevice::AddString(TDistUnit *unit, TDistUnit *exclude, unsigned short int 
 *##########################################################################*/
 void TDevice::AddBoolean(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, int data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    if (IsModifyTag(TAG))
-				    tag->ModifyBoolean(ID, data);
-    			else
-	    			tag->AddBoolean(ID, data);
-		    	unit->UnlockTag();
-		    }
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            if (IsModifyTag(TAG))
+                                    tag->ModifyBoolean(ID, data);
+                        else
+                                tag->AddBoolean(ID, data);
+                        unit->UnlockTag();
+                    }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddBoolArray  ###############
@@ -6716,21 +6716,21 @@ void TDevice::AddBoolean(TDistUnit *unit, TDistUnit *exclude, unsigned short int
 *##########################################################################*/
 void TDevice::AddBoolArray(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, int size, const char *data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-			    tag->AddBoolArray(ID, size, data);
-    			unit->UnlockTag();
-	    	}
-	    }
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                            tag->AddBoolArray(ID, size, data);
+                        unit->UnlockTag();
+                }
+            }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::AddByteArray  ###############
@@ -6742,21 +6742,21 @@ void TDevice::AddBoolArray(TDistUnit *unit, TDistUnit *exclude, unsigned short i
 *##########################################################################*/
 void TDevice::AddByteArray(TDistUnit *unit, TDistUnit *exclude, unsigned short int TAG, unsigned short int ID, int size, const void *data)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	while (unit)
-	{
-	    if (unit != exclude)
-	    {
-    		tag = unit->LockTag(TAG);
-	    	if (tag)
-		    {
-    			tag->AddByteArray(ID, size, data);
-	    		unit->UnlockTag();
-		    }
-		}
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+            if (unit != exclude)
+            {
+                tag = unit->LockTag(TAG);
+                if (tag)
+                    {
+                        tag->AddByteArray(ID, size, data);
+                        unit->UnlockTag();
+                    }
+                }
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##################  TDevice::SignalMsg  ###############
@@ -6768,11 +6768,11 @@ void TDevice::AddByteArray(TDistUnit *unit, TDistUnit *exclude, unsigned short i
 *##########################################################################*/
 void TDevice::SignalMsg(TDistUnit *unit)
 {
-	while (unit)
-	{
-		unit->SignalMsg();
-		unit = unit->GetNextUnit();
-	}
+        while (unit)
+        {
+                unit->SignalMsg();
+                unit = unit->GetNextUnit();
+        }
 }
 
 /*##########################################################################
@@ -6787,18 +6787,18 @@ void TDevice::SignalMsg(TDistUnit *unit)
 ##########################################################################*/
 void TDevice::CreateResetTag(TDistUnit *unit)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	if (!FRemote)
-	{
-    	tag = unit->LockInfoTag();
+        if (!FRemote)
+        {
+        tag = unit->LockInfoTag();
 
-    	tag->ModifyBoolean(DEVICE_VAR_Open, FOpen);
-	    tag->ModifyBoolean(DEVICE_VAR_Enabled, FEnabled);
+        tag->ModifyBoolean(DEVICE_VAR_Open, FOpen);
+            tag->ModifyBoolean(DEVICE_VAR_Enabled, FEnabled);
 
-    	unit->UnlockTag();
-	    unit->SignalMsg();
-	}
+        unit->UnlockTag();
+            unit->SignalMsg();
+        }
 }
 
 /*##########################################################################
@@ -6813,15 +6813,15 @@ void TDevice::CreateResetTag(TDistUnit *unit)
 ##########################################################################*/
 void TDevice::CreateInstallTag(TDeviceTag *tag)
 {
-	char str[101];
+        char str[101];
 
-	DeviceName(str, 100);
+        DeviceName(str, 100);
 
-	tag->AddBoolean(DEVICE_VAR_Open, FOpen);
-	tag->AddBoolean(DEVICE_VAR_Enabled, FEnabled);
-	tag->AddBoolean(DEVICE_VAR_Online, FOnline);
-	tag->AddBoolean(DEVICE_VAR_Busy, FBusy);
-	tag->AddString(DEVICE_VAR_Name, str);
+        tag->AddBoolean(DEVICE_VAR_Open, FOpen);
+        tag->AddBoolean(DEVICE_VAR_Enabled, FEnabled);
+        tag->AddBoolean(DEVICE_VAR_Online, FOnline);
+        tag->AddBoolean(DEVICE_VAR_Busy, FBusy);
+        tag->AddString(DEVICE_VAR_Name, str);
 }
 
 /*##########################################################################
@@ -6836,7 +6836,7 @@ void TDevice::CreateInstallTag(TDeviceTag *tag)
 ##########################################################################*/
 void TDevice::CreateInstallTag(TDistUnit *unit)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
     tag = unit->LockInstallTag();
     CreateInstallTag(tag);
@@ -6982,8 +6982,8 @@ void TDevice::NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag)
     {
         if (Val != FOpen)
         {
-        	resptag = unit->LockInfoTag();
-	        resptag->ModifyBoolean(DEVICE_VAR_Open, FOpen);
+                resptag = unit->LockInfoTag();
+                resptag->ModifyBoolean(DEVICE_VAR_Open, FOpen);
         }
     }
 
@@ -6996,8 +6996,8 @@ void TDevice::NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag)
         if (Val != FEnabled)
         {
             if (!resptag)
-            	resptag = unit->LockInfoTag();
-	        resptag->ModifyBoolean(DEVICE_VAR_Enabled, FEnabled);
+                resptag = unit->LockInfoTag();
+                resptag->ModifyBoolean(DEVICE_VAR_Enabled, FEnabled);
         }
     }
 
@@ -7043,7 +7043,7 @@ void TDevice::NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag)
 #
 #   Name       : TDistUnit::TDistUnit
 #
-#   Purpose....: Constructor for class		                               
+#   Purpose....: Constructor for class                                         
 #
 #   In params..: *
 #   Out params.: *
@@ -7052,11 +7052,11 @@ void TDevice::NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag)
 ##########################################################################*/
 TDistUnit::TDistUnit(TDistSystem *DistSystem)
 {
-	FDistSystem = DistSystem;
-	FDistSystem->InsertUnit(this);
-	FPhysical = TRUE;
+        FDistSystem = DistSystem;
+        FDistSystem->InsertUnit(this);
+        FPhysical = TRUE;
 
-	Init();
+        Init();
 }
 
 
@@ -7073,14 +7073,14 @@ TDistUnit::TDistUnit(TDistSystem *DistSystem)
 ##########################################################################*/
 TDistUnit::TDistUnit(TDistSystem *DistSystem, short int UnitType, short int UnitNumber)
 {
-	FUnitType = UnitType;
-	FUnitNumber = UnitNumber;
+        FUnitType = UnitType;
+        FUnitNumber = UnitNumber;
 
-	FDistSystem = DistSystem;
-	FDistSystem->InsertNoBlockUnit(this);
-	FPhysical = FALSE;
+        FDistSystem = DistSystem;
+        FDistSystem->InsertNoBlockUnit(this);
+        FPhysical = FALSE;
 
-	Init();
+        Init();
 }
 
 /*##########################################################################
@@ -7105,11 +7105,11 @@ TDistUnit::~TDistUnit()
     if (FAckMsg)
         delete FAckMsg;
 
-	if (FMsg)
+        if (FMsg)
         delete FMsg;
 
-	if (FDistSystem)
-		FDistSystem->RemoveUnit(this);
+        if (FDistSystem)
+                FDistSystem->RemoveUnit(this);
 
     if (FInstallAlloc)
         delete FInstallAlloc;
@@ -7125,7 +7125,7 @@ TDistUnit::~TDistUnit()
 #
 #   Name       : TDistUnit::Init
 #
-#   Purpose....: Init object		                         
+#   Purpose....: Init object                                     
 #
 #   In params..: *
 #   Out params.: *
@@ -7150,11 +7150,11 @@ void TDistUnit::Init()
     FInfoID = 0;
     FInstallID = 0;
     FAcceptID = 0;
-	FMsg = 0;
-	FDevice = 0;
-	FNext = 0;
-	FInstalled = FALSE;
-	FOnline = FALSE;
+        FMsg = 0;
+        FDevice = 0;
+        FNext = 0;
+        FInstalled = FALSE;
+        FOnline = FALSE;
 
     FInstallAlloc = 0;
     FPendingInstallTag = 0;
@@ -7224,7 +7224,7 @@ void TDistUnit::Online()
             if (FDevice->FPhysUnit != this)
             {
                 FInstalled = TRUE;
-	    		FDevice->CreateInstallTag(this);
+                        FDevice->CreateInstallTag(this);
             }
         }
     }
@@ -7252,8 +7252,8 @@ void TDistUnit::Offline()
 
         FAllowMsg = !(FDistSystem->FIsRemote && FPhysical);
             
-	    if (FDevice)
-		    FDevice->NotifyResetTag(this);
+            if (FDevice)
+                    FDevice->NotifyResetTag(this);
     }
 }
 
@@ -7302,10 +7302,10 @@ int TDistUnit::IsInstalled()
 ##########################################################################*/
 short int TDistUnit::GetUnitType()
 {
-	if (FDevice)
-		return FDevice->GetUnitType();
-	else
-		return FUnitType;
+        if (FDevice)
+                return FDevice->GetUnitType();
+        else
+                return FUnitType;
 }
 
 /*##########################################################################
@@ -7378,23 +7378,23 @@ void TDistUnit::ResetCurrMsg()
 ##########################################################################*/
 void TDistUnit::ClearQueues()
 {
-	FMsgSection.Enter();
+        FMsgSection.Enter();
 
-	if (FMsg)
-		delete FMsg;
-	FMsg = 0;
+        if (FMsg)
+                delete FMsg;
+        FMsg = 0;
 
-	if (FCurrMsg)
-		delete FCurrMsg;
-	FCurrMsg = 0;
+        if (FCurrMsg)
+                delete FCurrMsg;
+        FCurrMsg = 0;
 
-	if (FAckMsg)
-	    delete FAckMsg;
-	FAckMsg = 0;
+        if (FAckMsg)
+            delete FAckMsg;
+        FAckMsg = 0;
 
-	if (FAcceptMsg)
-	    delete FAcceptMsg;
-	FAcceptMsg = 0;
+        if (FAcceptMsg)
+            delete FAcceptMsg;
+        FAcceptMsg = 0;
 
     if (FReplyAlloc)
         delete FReplyAlloc;
@@ -7402,15 +7402,15 @@ void TDistUnit::ClearQueues()
 
     FLastReplyTag = 0;
 
-	ResetCurrMsg();
+        ResetCurrMsg();
 
-	FReqID = 0;
-	FInfoID = 0;
-	FInstallID = 0;
-	FAcceptID = 0;
+        FReqID = 0;
+        FInfoID = 0;
+        FInstallID = 0;
+        FAcceptID = 0;
     FLastReplyID = 0;
 
-	FMsgSection.Leave();
+        FMsgSection.Leave();
 }
 
 /*##########################################################################
@@ -7427,34 +7427,34 @@ void TDistUnit::CreateMsg()
 {
     TDeviceTag *tag;
 
-	if (FDistSystem)
-	{
-		if (FCurrMsg)
-			delete FCurrMsg;
+        if (FDistSystem)
+        {
+                if (FCurrMsg)
+                        delete FCurrMsg;
 
         if (FDevice)
-    		FCurrMsg = new TDeviceMsg(FDevice->GetMaxMsgSize());
-    	else
-    		FCurrMsg = new TDeviceMsg(1024);
+                FCurrMsg = new TDeviceMsg(FDevice->GetMaxMsgSize());
+        else
+                FCurrMsg = new TDeviceMsg(1024);
 
-		tag = FCurrMsg->AddTag(DEVICE_TAG_HEADER);
-		tag->AddSignedShort(DEVICE_VAR_UnitType, GetUnitType());
-		tag->AddSignedShort(DEVICE_VAR_UnitID, GetUnitNumber());
+                tag = FCurrMsg->AddTag(DEVICE_TAG_HEADER);
+                tag->AddSignedShort(DEVICE_VAR_UnitType, GetUnitType());
+                tag->AddSignedShort(DEVICE_VAR_UnitID, GetUnitNumber());
 
-		if (FDevice)
-		{
-			if (FDevice->FPhysUnit)
-				tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
-			else
-    		    tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
+                if (FDevice)
+                {
+                        if (FDevice->FPhysUnit)
+                                tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+                        else
+                    tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
         }
         else
-    		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+                tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
 
-		FReqTag = 0;
-		FInfoTag = 0;
-		FInstallTag = 0;
-	}
+                FReqTag = 0;
+                FInfoTag = 0;
+                FInstallTag = 0;
+        }
 }
 
 /*##########################################################################
@@ -7471,22 +7471,22 @@ void TDistUnit::CreateAcceptMsg()
 {
     TDeviceTag *tag;
 
-	if (FDistSystem && FDevice)
-	{
-		if (FAcceptMsg)
-			delete FAcceptMsg;
+        if (FDistSystem && FDevice)
+        {
+                if (FAcceptMsg)
+                        delete FAcceptMsg;
 
         FAcceptMsg = new TDeviceMsg(FDevice->GetMaxMsgSize());
 
-		tag = FAcceptMsg->AddTag(DEVICE_TAG_HEADER);
-		tag->AddSignedShort(DEVICE_VAR_UnitType, GetUnitType());
-		tag->AddSignedShort(DEVICE_VAR_UnitID, GetUnitNumber());
+                tag = FAcceptMsg->AddTag(DEVICE_TAG_HEADER);
+                tag->AddSignedShort(DEVICE_VAR_UnitType, GetUnitType());
+                tag->AddSignedShort(DEVICE_VAR_UnitID, GetUnitNumber());
 
-    	if (FDevice->FPhysUnit)
-        	tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+        if (FDevice->FPhysUnit)
+                tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
         else
-    		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
-	}
+                tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
+        }
 }
 
 /*##########################################################################
@@ -7503,32 +7503,32 @@ void TDistUnit::CreateAckMsg()
 {
     TDeviceTag *tag;
 
-	if (FDistSystem)
-	{
-		if (FAckMsg)
-			delete FAckMsg;
+        if (FDistSystem)
+        {
+                if (FAckMsg)
+                        delete FAckMsg;
 
-		if (FDevice)
-			FAckMsg = new TDeviceMsg(FDevice->GetMaxMsgSize());
-		else
-			FAckMsg = new TDeviceMsg(1024);
+                if (FDevice)
+                        FAckMsg = new TDeviceMsg(FDevice->GetMaxMsgSize());
+                else
+                        FAckMsg = new TDeviceMsg(1024);
 
-		tag = FAckMsg->AddTag(DEVICE_TAG_HEADER);
-		tag->AddSignedShort(DEVICE_VAR_UnitType, GetUnitType());
-		tag->AddSignedShort(DEVICE_VAR_UnitID, GetUnitNumber());
+                tag = FAckMsg->AddTag(DEVICE_TAG_HEADER);
+                tag->AddSignedShort(DEVICE_VAR_UnitType, GetUnitType());
+                tag->AddSignedShort(DEVICE_VAR_UnitID, GetUnitNumber());
 
         if (FDevice)
         {
-    		if (FDevice->FPhysUnit)
-        		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+                if (FDevice->FPhysUnit)
+                        tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
             else
-    		    tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
+                    tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
         }
         else
-      		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+                tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
         
-		FReplyTag = 0;
-	}
+                FReplyTag = 0;
+        }
 }
 
 /*##########################################################################
@@ -7562,25 +7562,25 @@ void TDistUnit::IncMsgID()
 void TDistUnit::CreateAckTag(TDeviceTag *SrcTag)
 {
     short int ID;
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	ID = SrcTag->GetSignedShort(DEVICE_VAR_MsgID, 0);
+        ID = SrcTag->GetSignedShort(DEVICE_VAR_MsgID, 0);
 
-	if (FDistSystem && ID)
-	{
-		FMsgSection.Enter();
+        if (FDistSystem && ID)
+        {
+                FMsgSection.Enter();
 
-		if (!FAckMsg)
-			CreateAckMsg();
+                if (!FAckMsg)
+                        CreateAckMsg();
 
-		if (FAckMsg)
-		{
-			tag = FAckMsg->AddTag(DEVICE_TAG_ACK);
-			tag->AddSignedShort(DEVICE_VAR_MsgID, ID);
-		}
+                if (FAckMsg)
+                {
+                        tag = FAckMsg->AddTag(DEVICE_TAG_ACK);
+                        tag->AddSignedShort(DEVICE_VAR_MsgID, ID);
+                }
 
-		FMsgSection.Leave();
-	}
+                FMsgSection.Leave();
+        }
 }
 
 /*##########################################################################
@@ -7595,25 +7595,25 @@ void TDistUnit::CreateAckTag(TDeviceTag *SrcTag)
 ##########################################################################*/
 void TDistUnit::CreateAcceptTag()
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	if (FDistSystem)
-	{
-		FMsgSection.Enter();
+        if (FDistSystem)
+        {
+                FMsgSection.Enter();
 
         if (!FAcceptMsg)
             CreateAcceptMsg();
 
-		if (FAcceptMsg)
-		{
-			tag = FAcceptMsg->AddTag(DEVICE_TAG_INSTALL_ACCEPT);
-			tag->AddSignedShort(DEVICE_VAR_MsgID, FCurrID);
+                if (FAcceptMsg)
+                {
+                        tag = FAcceptMsg->AddTag(DEVICE_TAG_INSTALL_ACCEPT);
+                        tag->AddSignedShort(DEVICE_VAR_MsgID, FCurrID);
             FCurrAcceptID = FCurrID;
             IncMsgID();
-		}
+                }
 
-		FMsgSection.Leave();
-	}
+                FMsgSection.Leave();
+        }
 }
 
 /*##########################################################################
@@ -7628,7 +7628,7 @@ void TDistUnit::CreateAcceptTag()
 ##########################################################################*/
 TDeviceTag *TDistUnit::LockReqTag()
 {
-	if (FDistSystem && FAllowMsg)
+        if (FDistSystem && FAllowMsg)
     {
         FMsgSection.Enter();
 
@@ -7640,18 +7640,18 @@ TDeviceTag *TDistUnit::LockReqTag()
             if (!FReqTag)
             {
                 FReqTag = FCurrMsg->AddTag(DEVICE_TAG_REQ);
-				FReqTag->AddSignedShort(DEVICE_VAR_MsgID, FCurrID);
+                                FReqTag->AddSignedShort(DEVICE_VAR_MsgID, FCurrID);
                 FCurrReqID = FCurrID;
                 IncMsgID();
             }
 
-		    return FReqTag;
-		}
-		else
-		    FMsgSection.Leave();
-	}
-	
-	return 0;
+                    return FReqTag;
+                }
+                else
+                    FMsgSection.Leave();
+        }
+        
+        return 0;
 }
 
 /*##########################################################################
@@ -7666,28 +7666,28 @@ TDeviceTag *TDistUnit::LockReqTag()
 ##########################################################################*/
 TDeviceTag *TDistUnit::LockReplyTag(unsigned short int ID)
 {
-	if (FDistSystem && FAllowMsg)
-	{
-		FMsgSection.Enter();
+        if (FDistSystem && FAllowMsg)
+        {
+                FMsgSection.Enter();
 
-		if (!FAckMsg)
-		    CreateAckMsg();
+                if (!FAckMsg)
+                    CreateAckMsg();
 
-		if (FAckMsg)
-		{
-			if (!FReplyTag)
-			{
-				FReplyTag = FAckMsg->AddTag(DEVICE_TAG_REPLY);
-				FReplyTag->AddSignedShort(DEVICE_VAR_MsgID, ID);
-			}
+                if (FAckMsg)
+                {
+                        if (!FReplyTag)
+                        {
+                                FReplyTag = FAckMsg->AddTag(DEVICE_TAG_REPLY);
+                                FReplyTag->AddSignedShort(DEVICE_VAR_MsgID, ID);
+                        }
 
-			return FReplyTag;
-		}
-		else
-		    FMsgSection.Leave();
-	}
-	
-	return 0;
+                        return FReplyTag;
+                }
+                else
+                    FMsgSection.Leave();
+        }
+        
+        return 0;
 }
 
 /*##########################################################################
@@ -7702,8 +7702,8 @@ TDeviceTag *TDistUnit::LockReplyTag(unsigned short int ID)
 ##########################################################################*/
 TDeviceTag *TDistUnit::LockInfoTag()
 {
-	if (FDistSystem && FAllowMsg)
-	{
+        if (FDistSystem && FAllowMsg)
+        {
         FMsgSection.Enter();
 
         if (!FCurrMsg)
@@ -7714,18 +7714,18 @@ TDeviceTag *TDistUnit::LockInfoTag()
             if (!FInfoTag)
             {
                 FInfoTag = FCurrMsg->AddTag(DEVICE_TAG_INFO);
-				FInfoTag->AddSignedShort(DEVICE_VAR_MsgID, FCurrID);
+                                FInfoTag->AddSignedShort(DEVICE_VAR_MsgID, FCurrID);
                 FCurrInfoID = FCurrID;
                 IncMsgID();
             }
 
-		    return FInfoTag;
-		}
-		else
-		    FMsgSection.Leave();
-	}
-	
-	return 0;
+                    return FInfoTag;
+                }
+                else
+                    FMsgSection.Leave();
+        }
+        
+        return 0;
 }
 
 /*##########################################################################
@@ -7740,7 +7740,7 @@ TDeviceTag *TDistUnit::LockInfoTag()
 ##########################################################################*/
 TDeviceTag *TDistUnit::LockInstallTag()
 {
-	if (FDistSystem)
+        if (FDistSystem)
     {
         FMsgSection.Enter();
 
@@ -7752,18 +7752,18 @@ TDeviceTag *TDistUnit::LockInstallTag()
             if (!FInstallTag)
             {
                 FInstallTag = FCurrMsg->AddTag(DEVICE_TAG_INSTALL_REQ);
-				FInstallTag->AddSignedShort(DEVICE_VAR_MsgID, FCurrID);
-				FCurrInstallID = FCurrID;
+                                FInstallTag->AddSignedShort(DEVICE_VAR_MsgID, FCurrID);
+                                FCurrInstallID = FCurrID;
                 IncMsgID();
             }
 
-		    return FInstallTag;
-		}
-		else
-		    FMsgSection.Leave();
-	}
-	
-	return 0;
+                    return FInstallTag;
+                }
+                else
+                    FMsgSection.Leave();
+        }
+        
+        return 0;
 }
 
 /*##########################################################################
@@ -7784,7 +7784,7 @@ TDeviceTag *TDistUnit::LockTag(unsigned short int TAG)
             return LockReqTag();
 
 //      case DEVICE_TAG_REPLY:
-//	    	return LockReplyTag();
+//              return LockReplyTag();
 
         case DEVICE_TAG_INFO:
             return LockInfoTag();
@@ -7824,8 +7824,8 @@ void TDistUnit::UnlockTag()
 ##########################################################################*/
 void TDistUnit::SignalMsg()
 {
-	if (FDistSystem)
-		FDistSystem->SignalMsg();
+        if (FDistSystem)
+                FDistSystem->SignalMsg();
 }
 
 /*##########################################################################
@@ -7840,7 +7840,7 @@ void TDistUnit::SignalMsg()
 ##########################################################################*/
 void TDistUnit::HandleAckTag(TDeviceTag *Tag)
 {
-	short int ID = Tag->GetSignedShort(DEVICE_VAR_MsgID, 0);
+        short int ID = Tag->GetSignedShort(DEVICE_VAR_MsgID, 0);
 
     if (FInfoID == ID)
         FInfoID = 0;
@@ -7850,11 +7850,11 @@ void TDistUnit::HandleAckTag(TDeviceTag *Tag)
 
     if (FAcceptID == ID)
     {
-		FInstalled = TRUE;
+                FInstalled = TRUE;
         FAcceptID = 0;
 
-		if (FDevice)
-    		FDevice->CreateResetTag(this);
+                if (FDevice)
+                FDevice->CreateResetTag(this);
     }
 }
 
@@ -7870,45 +7870,45 @@ void TDistUnit::HandleAckTag(TDeviceTag *Tag)
 ##########################################################################*/
 void TDistUnit::HandleReqTag(TDeviceTag *Tag)
 {
-	short int ID = Tag->GetSignedShort(DEVICE_VAR_MsgID, 0);
-	TDeviceTag *replytag;
+        short int ID = Tag->GetSignedShort(DEVICE_VAR_MsgID, 0);
+        TDeviceTag *replytag;
 
-	if (FDevice)
-	{
+        if (FDevice)
+        {
         if (FLastReplyID == ID)
         {
             FMsgSection.Enter();
             
-    		if (!FAckMsg)
-	    	    CreateAckMsg();
+                if (!FAckMsg)
+                    CreateAckMsg();
 
-    		if (FAckMsg)
-	    	    FReplyTag = FAckMsg->CopyTag(FLastReplyTag);
+                if (FAckMsg)
+                    FReplyTag = FAckMsg->CopyTag(FLastReplyTag);
 
             FMsgSection.Leave();
             
-    		SignalMsg();	
+                SignalMsg();    
         }
         else
         {
-    		replytag = LockReplyTag(ID);
-	    	UnlockTag();
-		    FDevice->NotifyReqTag(this, Tag, replytag);
+                replytag = LockReplyTag(ID);
+                UnlockTag();
+                    FDevice->NotifyReqTag(this, Tag, replytag);
 
             if (FReplyAlloc)
                 delete FReplyAlloc;
 
             if (FDevice)
-				FReplyAlloc = new TDeviceAlloc(FDevice->GetMaxMsgSize());
-        	else
+                                FReplyAlloc = new TDeviceAlloc(FDevice->GetMaxMsgSize());
+                else
                 FReplyAlloc = new TDeviceAlloc(4096);
                 
             FLastReplyTag = replytag->Copy(FReplyAlloc);
             FLastReplyID = ID;
             
-    		SignalMsg();	
-    	}
-	}
+                SignalMsg();    
+        }
+        }
 }
 
 /*##########################################################################
@@ -7923,13 +7923,13 @@ void TDistUnit::HandleReqTag(TDeviceTag *Tag)
 ##########################################################################*/
 void TDistUnit::HandleReplyTag(TDeviceTag *Tag)
 {
-	short int ID = Tag->GetSignedShort(DEVICE_VAR_MsgID, 0);
+        short int ID = Tag->GetSignedShort(DEVICE_VAR_MsgID, 0);
 
-	if (FReqID == ID && FDevice)
-	{
-	    FReqID = 0;
-	    FDevice->NotifyReplyTag(this, Tag);
-	}  
+        if (FReqID == ID && FDevice)
+        {
+            FReqID = 0;
+            FDevice->NotifyReplyTag(this, Tag);
+        }  
 }
 
 /*##########################################################################
@@ -7944,8 +7944,8 @@ void TDistUnit::HandleReplyTag(TDeviceTag *Tag)
 ##########################################################################*/
 void TDistUnit::HandleInfoTag(TDeviceTag *Tag)
 {
-	if (FDevice)
-		FDevice->NotifyInfoTag(this, Tag);
+        if (FDevice)
+                FDevice->NotifyInfoTag(this, Tag);
 }
 
 /*##########################################################################
@@ -7962,19 +7962,19 @@ void TDistUnit::HandleInstallTag()
 {
     ClearQueues();
 
-	if (FDevice && FPendingInstallTag)
-	{
-		FDevice->NotifyInstallTag(this, FPendingInstallTag);
+        if (FDevice && FPendingInstallTag)
+        {
+                FDevice->NotifyInstallTag(this, FPendingInstallTag);
 
-		FPendingInstallTag = 0;
+                FPendingInstallTag = 0;
 
-		if (FInstallAlloc)
-    		delete FInstallAlloc;
+                if (FInstallAlloc)
+                delete FInstallAlloc;
         FInstallAlloc = 0;
 
         CreateAcceptTag();
-    	SignalMsg();
-	}
+        SignalMsg();
+        }
 }
 
 /*##########################################################################
@@ -7991,9 +7991,9 @@ void TDistUnit::HandleInstallTag(TDeviceTag *Tag)
 {
     ClearQueues();
 
-	if (FDevice)
-	{
-		FDevice->NotifyInstallTag(this, Tag);
+        if (FDevice)
+        {
+                FDevice->NotifyInstallTag(this, Tag);
         CreateAcceptTag();
     }
     else
@@ -8002,12 +8002,12 @@ void TDistUnit::HandleInstallTag(TDeviceTag *Tag)
             delete FInstallAlloc;
 
         if (FDevice)
-        	FInstallAlloc = new TDeviceAlloc(FDevice->GetMaxMsgSize());
+                FInstallAlloc = new TDeviceAlloc(FDevice->GetMaxMsgSize());
         else
             FInstallAlloc = new TDeviceAlloc(4096);
             
-		FPendingInstallTag = Tag->Copy(FInstallAlloc);
-	}
+                FPendingInstallTag = Tag->Copy(FInstallAlloc);
+        }
 }
 
 /*##########################################################################
@@ -8037,66 +8037,66 @@ void TDistUnit::HandleAcceptTag(TDeviceTag *Tag)
 ##########################################################################*/
 void TDistUnit::HandleMsg(TDeviceMsg *Msg)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	tag = Msg->GotoFirstTag();
+        tag = Msg->GotoFirstTag();
 
-	while (tag)
-	{
-		switch (tag->GetID())
-		{
-			case DEVICE_TAG_ACK:
-				HandleAckTag(tag);
-				break;
+        while (tag)
+        {
+                switch (tag->GetID())
+                {
+                        case DEVICE_TAG_ACK:
+                                HandleAckTag(tag);
+                                break;
 
-			case DEVICE_TAG_REQ:
-			    if (FInstalled)
-    				HandleReqTag(tag);
-				break;
+                        case DEVICE_TAG_REQ:
+                            if (FInstalled)
+                                HandleReqTag(tag);
+                                break;
 
-			case DEVICE_TAG_REPLY:
-			    if (FInstalled)
-    				HandleReplyTag(tag);
-				break;
+                        case DEVICE_TAG_REPLY:
+                            if (FInstalled)
+                                HandleReplyTag(tag);
+                                break;
 
-			case DEVICE_TAG_INFO:
-			    if (FInstalled)
-			    {
-    				HandleInfoTag(tag);
-	    			CreateAckTag(tag);
-	    		}
-				break;
+                        case DEVICE_TAG_INFO:
+                            if (FInstalled)
+                            {
+                                HandleInfoTag(tag);
+                                CreateAckTag(tag);
+                        }
+                                break;
 
-			case DEVICE_TAG_INSTALL_REQ:
-				HandleInstallTag(tag);
-				CreateAckTag(tag);
-				break;
+                        case DEVICE_TAG_INSTALL_REQ:
+                                HandleInstallTag(tag);
+                                CreateAckTag(tag);
+                                break;
 
-			case DEVICE_TAG_INSTALL_ACCEPT:
-			    FInstalled = TRUE;
-				HandleAcceptTag(tag);
-				CreateAckTag(tag);
-				break;
+                        case DEVICE_TAG_INSTALL_ACCEPT:
+                            FInstalled = TRUE;
+                                HandleAcceptTag(tag);
+                                CreateAckTag(tag);
+                                break;
 
-			default:
-				break;
-		}
-		tag = Msg->GotoNextTag();
-	}
+                        default:
+                                break;
+                }
+                tag = Msg->GotoNextTag();
+        }
 
-	if (FReqID == 0 && FInfoID == 0 && FInstallID == 0 && FAcceptID == 0)
-	{
-	    FMsgSection.Enter();
-	    
-		if (FMsg)
-			delete FMsg;
+        if (FReqID == 0 && FInfoID == 0 && FInstallID == 0 && FAcceptID == 0)
+        {
+            FMsgSection.Enter();
+            
+                if (FMsg)
+                        delete FMsg;
 
-		FMsg = 0;
+                FMsg = 0;
 
-		FMsgSection.Leave();
-	}
+                FMsgSection.Leave();
+        }
 
-	SignalMsg();
+        SignalMsg();
 }
 
 /*##########################################################################
@@ -8113,11 +8113,11 @@ TDeviceMsg *TDistUnit::GetMsg()
 {
     TDeviceMsg *msg = 0;
     
-	if (FDistSystem)
+        if (FDistSystem)
     {
-		if (FAckMsg)
+                if (FAckMsg)
         {
-          	FMsgSection.Enter();
+                FMsgSection.Enter();
 
             msg = FAckMsg;
             FAckMsg = 0;
@@ -8134,20 +8134,20 @@ TDeviceMsg *TDistUnit::GetMsg()
         {
             if (FMsg->FResend.HasExpired())
             {
-        		FMsg->FResend = TDateTime();
-				FMsg->FResend.AddMilli(FDistSystem->GetTimeout());
+                        FMsg->FResend = TDateTime();
+                                FMsg->FResend.AddMilli(FDistSystem->GetTimeout());
 
-            	return FMsg;
+                return FMsg;
             }
         }
 
         if (FAcceptMsg)
         {
-          	msg = 0;
-          	FMsgSection.Enter();
+                msg = 0;
+                FMsgSection.Enter();
 
-          	if (FMsg == 0)
-          	{
+                if (FMsg == 0)
+                {
                 FMsg = FAcceptMsg;
                 msg = FMsg;
                 FAcceptMsg = 0;
@@ -8177,10 +8177,10 @@ TDeviceMsg *TDistUnit::GetMsg()
                 msg = FMsg;
 
                 FReqID = FCurrReqID;
-		        FInfoID = FCurrInfoID;
+                        FInfoID = FCurrInfoID;
                 FInstallID = FCurrInstallID;
 
-    		    FCurrMsg = 0;
+                    FCurrMsg = 0;
 
                 ResetCurrMsg();
             }
@@ -8190,13 +8190,13 @@ TDeviceMsg *TDistUnit::GetMsg()
             if (msg)
             {
                 msg->FResend = TDateTime();
-				msg->FResend.AddMilli(FDistSystem->GetTimeout());
+                                msg->FResend.AddMilli(FDistSystem->GetTimeout());
                 return msg;
             }
-	    }
-	}
+            }
+        }
 
-	return 0;
+        return 0;
 }
 
 /*##########################################################################
@@ -8212,19 +8212,19 @@ TDeviceMsg *TDistUnit::GetMsg()
 ##########################################################################*/
 TDeviceConfig::TDeviceConfig(unsigned short int UnitType, unsigned short int UnitNumber, int MaxSize)
 {
-	TDeviceTag *tag;
+        TDeviceTag *tag;
 
-	FConfigMsg = new TDeviceMsg(MaxSize);
+        FConfigMsg = new TDeviceMsg(MaxSize);
 
-	tag = FConfigMsg->AddTag(DEVICE_TAG_HEADER);
-	tag->AddSignedShort(DEVICE_VAR_UnitType, UnitType);
-	tag->AddSignedShort(DEVICE_VAR_UnitID, UnitNumber);
+        tag = FConfigMsg->AddTag(DEVICE_TAG_HEADER);
+        tag->AddSignedShort(DEVICE_VAR_UnitType, UnitType);
+        tag->AddSignedShort(DEVICE_VAR_UnitID, UnitNumber);
 
-	FConfigTag = FConfigMsg->AddTag(DEVICE_TAG_CONFIG_REQ);
+        FConfigTag = FConfigMsg->AddTag(DEVICE_TAG_CONFIG_REQ);
 
-	FUnitType = UnitType;
-	FUnitNumber = UnitNumber;
-	FActive = FALSE;
+        FUnitType = UnitType;
+        FUnitNumber = UnitNumber;
+        FActive = FALSE;
 }
 
 /*##########################################################################
@@ -8274,10 +8274,10 @@ void TDistSystem::InsertUnit(TDistUnit *unit)
 {
     FHasUnits = TRUE;
 
-	FUnitSection.Enter();
-	unit->FList = FUnitList;
-	FUnitList = unit;
-	FUnitSection.Leave();
+        FUnitSection.Enter();
+        unit->FList = FUnitList;
+        FUnitList = unit;
+        FUnitSection.Leave();
 }
 
 /*##########################################################################
@@ -8295,8 +8295,8 @@ void TDistSystem::InsertNoBlockUnit(TDistUnit *unit)
 {
     FHasUnits = TRUE;
 
-	unit->FList = FUnitList;
-	FUnitList = unit;
+        unit->FList = FUnitList;
+        FUnitList = unit;
 }
 
 /*##########################################################################
@@ -8312,32 +8312,32 @@ void TDistSystem::InsertNoBlockUnit(TDistUnit *unit)
 ##########################################################################*/
 void TDistSystem::RemoveUnit(TDistUnit *unit)
 {
-	TDistUnit *ptr;
-	TDistUnit *prev;
-	prev = 0;
-	
-	FUnitSection.Enter();
+        TDistUnit *ptr;
+        TDistUnit *prev;
+        prev = 0;
+        
+        FUnitSection.Enter();
 
-	ptr = FUnitList;
-	while ((ptr != 0) && (ptr != unit))
-	{
-		prev = ptr;
-		ptr = ptr->FList;
+        ptr = FUnitList;
+        while ((ptr != 0) && (ptr != unit))
+        {
+                prev = ptr;
+                ptr = ptr->FList;
     }
     
-	if (prev == 0)
-		FUnitList = FUnitList->FList;
-	else
-		prev->FList = ptr->FList;
-		
-	FUnitSection.Leave();
+        if (prev == 0)
+                FUnitList = FUnitList->FList;
+        else
+                prev->FList = ptr->FList;
+                
+        FUnitSection.Leave();
 }
 
 /*##########################################################################
 #
 #   Name       : TDistSystem::TDistSystem
 #
-#   Purpose....: Constructor for TDistSystem		                          
+#   Purpose....: Constructor for TDistSystem                                      
 #
 #   In params..: *
 #   Out params.: *
@@ -8346,17 +8346,17 @@ void TDistSystem::RemoveUnit(TDistUnit *unit)
 ##########################################################################*/
 TDistSystem::TDistSystem(TDistDevice *DistDevice, long Signature)
 {
-	FSignature = Signature;
-	FDistDevice = DistDevice;
+        FSignature = Signature;
+        FDistDevice = DistDevice;
 
-	Init();
+        Init();
 }
 
 /*##########################################################################
 #
 #   Name       : TDistSystem::TDistSystem
 #
-#   Purpose....: Constructor for TDistSystem		                          
+#   Purpose....: Constructor for TDistSystem                                      
 #
 #   In params..: *
 #   Out params.: *
@@ -8369,17 +8369,17 @@ TDistSystem::TDistSystem(TDistDevice *DistDevice, long s1, long s2, long s3, lon
 
     sign = s1 | (s2 << 8) | (s3 << 16) | (s4 << 24);
 
-	FSignature = sign;
-	FDistDevice = DistDevice;
+        FSignature = sign;
+        FDistDevice = DistDevice;
 
-	Init();
+        Init();
 }
 
 /*##########################################################################
 #
 #   Name       : TDistSystem::Init
 #
-#   Purpose....: Init TDistSystem		                          
+#   Purpose....: Init TDistSystem                                         
 #
 #   In params..: *
 #   Out params.: *
@@ -8388,19 +8388,19 @@ TDistSystem::TDistSystem(TDistDevice *DistDevice, long s1, long s2, long s3, lon
 ##########################################################################*/
 void TDistSystem::Init()
 {
-	OnConfig = 0;
-	OnMsg = 0;
-	FOnline = FALSE;
-	FHasUnits = FALSE;
-	FMsgQueue = 0;
-	FUnitList = 0;
-	FConfigList = 0;
-	FPendingPoll = FALSE;
-	FPendingResetReq = TRUE;
-	FPendingResetAck = FALSE;
-	FIsRemote = FALSE;
+        OnConfig = 0;
+        OnMsg = 0;
+        FOnline = FALSE;
+        FHasUnits = FALSE;
+        FMsgQueue = 0;
+        FUnitList = 0;
+        FConfigList = 0;
+        FPendingPoll = FALSE;
+        FPendingResetReq = TRUE;
+        FPendingResetAck = FALSE;
+        FIsRemote = FALSE;
 
-	FDistDevice->AddSystem(this);
+        FDistDevice->AddSystem(this);
 }
 
 /*##########################################################################
@@ -8479,10 +8479,10 @@ long TDistSystem::GetSignature()
 ##########################################################################*/
 void TDistSystem::InsertConfig(TDeviceConfig *config)
 {
-	FConfigSection.Enter();
-	config->FNext = FConfigList;
-	FConfigList = config;
-	FConfigSection.Leave();
+        FConfigSection.Enter();
+        config->FNext = FConfigList;
+        FConfigList = config;
+        FConfigSection.Leave();
 }
 
 /*##########################################################################
@@ -8498,25 +8498,25 @@ void TDistSystem::InsertConfig(TDeviceConfig *config)
 ##########################################################################*/
 void TDistSystem::RemoveConfig(TDeviceConfig *config)
 {
-	TDeviceConfig *ptr;
-	TDeviceConfig *prev;
-	prev = 0;
-	
-	FConfigSection.Enter();
+        TDeviceConfig *ptr;
+        TDeviceConfig *prev;
+        prev = 0;
+        
+        FConfigSection.Enter();
 
-	ptr = FConfigList;
-	while ((ptr != 0) && (ptr != config))
-	{
-		prev = ptr;
-		ptr = ptr->FNext;
+        ptr = FConfigList;
+        while ((ptr != 0) && (ptr != config))
+        {
+                prev = ptr;
+                ptr = ptr->FNext;
     }
     
-	if (prev == 0)
-		FConfigList = FConfigList->FNext;
-	else
-		prev->FNext = ptr->FNext;
-		
-	FConfigSection.Leave();
+        if (prev == 0)
+                FConfigList = FConfigList->FNext;
+        else
+                prev->FNext = ptr->FNext;
+                
+        FConfigSection.Leave();
 }
 
 /*##########################################################################
@@ -8532,23 +8532,23 @@ void TDistSystem::RemoveConfig(TDeviceConfig *config)
 ##########################################################################*/
 int TDistSystem::HasConfig(unsigned short int UnitType, unsigned short int UnitNumber)
 {
-	TDeviceConfig *ptr;
-	int ok;
+        TDeviceConfig *ptr;
+        int ok;
 
-	FConfigSection.Enter();
+        FConfigSection.Enter();
 
-	ok = FALSE;
-	ptr = FConfigList;
-	while (!ok && ptr)
-	{
-		if (ptr->FUnitType == UnitType && ptr->FUnitNumber == UnitNumber)
-			ok = TRUE;
-		ptr = ptr->FNext;
-	}
+        ok = FALSE;
+        ptr = FConfigList;
+        while (!ok && ptr)
+        {
+                if (ptr->FUnitType == UnitType && ptr->FUnitNumber == UnitNumber)
+                        ok = TRUE;
+                ptr = ptr->FNext;
+        }
 
-	FConfigSection.Leave();
+        FConfigSection.Leave();
 
-	return ok;
+        return ok;
 }
 
 /*##########################################################################
@@ -8564,23 +8564,23 @@ int TDistSystem::HasConfig(unsigned short int UnitType, unsigned short int UnitN
 ##########################################################################*/
 void TDistSystem::Config(TDeviceConfig *config)
 {
-	TDeviceConfig *ptr;
+        TDeviceConfig *ptr;
 
-	FConfigSection.Enter();
+        FConfigSection.Enter();
 
-	ptr = FConfigList;
-	while (ptr)
-	{
-		if (ptr->FUnitType == config->FUnitType && ptr->FUnitNumber == config->FUnitNumber)
-		{
-			RemoveConfig(ptr);
-		    delete ptr;
-		    break;
-		}
-		ptr = ptr->FNext;
-	}
+        ptr = FConfigList;
+        while (ptr)
+        {
+                if (ptr->FUnitType == config->FUnitType && ptr->FUnitNumber == config->FUnitNumber)
+                {
+                        RemoveConfig(ptr);
+                    delete ptr;
+                    break;
+                }
+                ptr = ptr->FNext;
+        }
 
-	FConfigSection.Leave();
+        FConfigSection.Leave();
 
     InsertConfig(config);
     config->FActive = TRUE;
@@ -8615,23 +8615,23 @@ int TDistSystem::IsOnline()
 ##########################################################################*/
 void TDistSystem::Online()
 {
-	TDistUnit *ptr;
+        TDistUnit *ptr;
 
-	if (!FOnline)
-	{
-	    FOnline = TRUE;
+        if (!FOnline)
+        {
+            FOnline = TRUE;
 
         FUnitSection.Enter();
 
         ptr = FUnitList;
-	    while (ptr)
+            while (ptr)
         {
             ptr->Online();
-    	    ptr = ptr->FList;
-	    }
+            ptr = ptr->FList;
+            }
 
         FUnitSection.Leave();
-	}
+        }
 }
 
 /*##########################################################################
@@ -8647,11 +8647,11 @@ void TDistSystem::Online()
 ##########################################################################*/
 void TDistSystem::Offline()
 {
-	TDistUnit *ptr;
-	TDeviceConfig *config;
+        TDistUnit *ptr;
+        TDeviceConfig *config;
 
-	if (FOnline)
-	{
+        if (FOnline)
+        {
         FPendingResetReq = TRUE;
 
         FOnline = FALSE;
@@ -8659,26 +8659,26 @@ void TDistSystem::Offline()
         FUnitSection.Enter();
 
         ptr = FUnitList;
-	    while (ptr)
+            while (ptr)
         {
             ptr->Offline();
-			ptr = ptr->FList;
-		}
+                        ptr = ptr->FList;
+                }
 
         FUnitSection.Leave();
 
-    	FConfigSection.Enter();
+        FConfigSection.Enter();
 
-    	config = FConfigList;
-    	while (config)
-	    {
-	        config->FActive = TRUE;
-    		config = config->FNext;
-    	}
+        config = FConfigList;
+        while (config)
+            {
+                config->FActive = TRUE;
+                config = config->FNext;
+        }
 
-	    FConfigSection.Leave();
+            FConfigSection.Leave();
 
-	}
+        }
 }
 
 /*##########################################################################
@@ -8694,23 +8694,23 @@ void TDistSystem::Offline()
 ##########################################################################*/
 int TDistSystem::HasUnit(unsigned short int UnitType)
 {
-	TDistUnit *ptr;
-	int ok;
+        TDistUnit *ptr;
+        int ok;
 
-	FUnitSection.Enter();
+        FUnitSection.Enter();
 
-	ok = FALSE;
-	ptr = FUnitList;
-	while (!ok && ptr)
-	{
-		if (!ptr->FInstalled && ptr->GetUnitType() == UnitType)
-			ok = TRUE;
-		ptr = ptr->FList;
-	}
+        ok = FALSE;
+        ptr = FUnitList;
+        while (!ok && ptr)
+        {
+                if (!ptr->FInstalled && ptr->GetUnitType() == UnitType)
+                        ok = TRUE;
+                ptr = ptr->FList;
+        }
 
-	FUnitSection.Leave();
+        FUnitSection.Leave();
 
-	return ok;
+        return ok;
 }
 
 /*##########################################################################
@@ -8726,19 +8726,19 @@ int TDistSystem::HasUnit(unsigned short int UnitType)
 ##########################################################################*/
 int TDistSystem::HasUnit(unsigned short int UnitType, unsigned short int UnitNumber)
 {
-	TDistUnit *ptr;
-	int ok;
+        TDistUnit *ptr;
+        int ok;
 
-	FUnitSection.Enter();
+        FUnitSection.Enter();
 
-	ok = FALSE;
-	ptr = FUnitList;
-	while (!ok && ptr)
+        ok = FALSE;
+        ptr = FUnitList;
+        while (!ok && ptr)
     {
-	    if (!ptr->FInstalled && ptr->GetUnitType() == UnitType && ptr->GetUnitNumber() == UnitNumber)
-	        ok = TRUE;
-		ptr = ptr->FList;
-	}
+            if (!ptr->FInstalled && ptr->GetUnitType() == UnitType && ptr->GetUnitNumber() == UnitNumber)
+                ok = TRUE;
+                ptr = ptr->FList;
+        }
 
     FUnitSection.Leave();
 
@@ -8758,39 +8758,39 @@ int TDistSystem::HasUnit(unsigned short int UnitType, unsigned short int UnitNum
 ##########################################################################*/
 void TDistSystem::InstallRemote(TDevice *Device)
 {
-	TDistUnit *ptr;
-	int found;
+        TDistUnit *ptr;
+        int found;
 
-	FUnitSection.Enter();
+        FUnitSection.Enter();
 
-	Device->FRemote = TRUE;
+        Device->FRemote = TRUE;
 
-	found = FALSE;
-	ptr = FUnitList;
-	while (!found && ptr)
-	{
-		if (ptr->GetUnitType() == Device->GetUnitType() && ptr->GetUnitNumber() == Device->GetUnitNumber())
-		{
-			Device->FPhysUnit = ptr;
-			ptr->DefineDevice(Device);
-			if (IsOnline())
-				ptr->Online();
-			ptr->HandleInstallTag();
-			found = TRUE;
-		}
-		ptr = ptr->FList;
-	}
+        found = FALSE;
+        ptr = FUnitList;
+        while (!found && ptr)
+        {
+                if (ptr->GetUnitType() == Device->GetUnitType() && ptr->GetUnitNumber() == Device->GetUnitNumber())
+                {
+                        Device->FPhysUnit = ptr;
+                        ptr->DefineDevice(Device);
+                        if (IsOnline())
+                                ptr->Online();
+                        ptr->HandleInstallTag();
+                        found = TRUE;
+                }
+                ptr = ptr->FList;
+        }
 
-	if (!found)
-	{
-		ptr = new TDistUnit(this, Device->GetUnitType(), Device->GetUnitNumber());
-		Device->FPhysUnit = ptr;
-		ptr->DefineDevice(Device);
-		if (IsOnline())
-			ptr->Online();
-	}
+        if (!found)
+        {
+                ptr = new TDistUnit(this, Device->GetUnitType(), Device->GetUnitNumber());
+                Device->FPhysUnit = ptr;
+                ptr->DefineDevice(Device);
+                if (IsOnline())
+                        ptr->Online();
+        }
 
-	FUnitSection.Leave();
+        FUnitSection.Leave();
 }
 
 /*##########################################################################
@@ -8806,37 +8806,37 @@ void TDistSystem::InstallRemote(TDevice *Device)
 ##########################################################################*/
 void TDistSystem::InstallVirtual(TDevice *Device)
 {
-	TDistUnit *ptr;
-	int found;
+        TDistUnit *ptr;
+        int found;
 
     FUnitSection.Enter();
 
-	found = FALSE;
-	ptr = FUnitList;
-	while (!found && ptr)
+        found = FALSE;
+        ptr = FUnitList;
+        while (!found && ptr)
     {
-	    if (ptr->GetUnitType() == Device->GetUnitType() && ptr->GetUnitNumber() == Device->GetUnitNumber())
-	    {
-			Device->FPhysUnit = ptr;
+            if (ptr->GetUnitType() == Device->GetUnitType() && ptr->GetUnitNumber() == Device->GetUnitNumber())
+            {
+                        Device->FPhysUnit = ptr;
             ptr->DefineDevice(Device);
             if (IsOnline())
                 ptr->Online();
             ptr->HandleInstallTag();
-	        found = TRUE;
-	    }
-	    ptr = ptr->FList;
-	}
+                found = TRUE;
+            }
+            ptr = ptr->FList;
+        }
 
-	if (!found)
-	{
-		ptr = new TDistUnit(this, Device->GetUnitType(), Device->GetUnitNumber());
+        if (!found)
+        {
+                ptr = new TDistUnit(this, Device->GetUnitType(), Device->GetUnitNumber());
         Device->FPhysUnit = ptr;
         ptr->DefineDevice(Device);
         if (IsOnline())
             ptr->Online();
-	}
+        }
 
-	FUnitSection.Leave();
+        FUnitSection.Leave();
 }
 
 /*##########################################################################
@@ -8857,10 +8857,10 @@ void TDistSystem::InstallPhysical(TDevice *Device)
     ptr = new TDistUnit(this);
 
     ptr->FNext = Device->FVirtUnitList;
-	Device->FVirtUnitList = ptr;
+        Device->FVirtUnitList = ptr;
     ptr->DefineDevice(Device);
-	if (IsOnline())
-		ptr->Online();
+        if (IsOnline())
+                ptr->Online();
 }
 
 /*##########################################################################
@@ -8884,7 +8884,7 @@ void TDistSystem::AddRemote(TDevice *Device)
     Device->FRemoteUnitList = ptr;
     ptr->DefineDevice(Device);
     if (IsOnline())
-	   	ptr->Online();
+                ptr->Online();
 }
 
 /*##########################################################################
@@ -8900,7 +8900,7 @@ void TDistSystem::AddRemote(TDevice *Device)
 ##########################################################################*/
 void TDistSystem::SignalMsg()
 {
-	FDistDevice->SignalMsg();
+        FDistDevice->SignalMsg();
 }
 
 /*##########################################################################
@@ -8916,10 +8916,10 @@ void TDistSystem::SignalMsg()
 ##########################################################################*/
 int TDistSystem::GetTimeout()
 {
-	if (FDistDevice)
-	    return FDistDevice->GetTimeout();
-	else
-	    return 1000;
+        if (FDistDevice)
+            return FDistDevice->GetTimeout();
+        else
+            return 1000;
 }
 
 /*##########################################################################
@@ -8935,8 +8935,8 @@ int TDistSystem::GetTimeout()
 ##########################################################################*/
 void TDistSystem::SendMsg(const char *data, int size)
 {
-	if (FDistDevice)
-		FDistDevice->SendMsg(data, size);
+        if (FDistDevice)
+                FDistDevice->SendMsg(data, size);
 }
 
 /*##########################################################################
@@ -8957,10 +8957,10 @@ void TDistSystem::SendMsg(TDeviceMsg *msg)
 
     size = msg->GetSize();
     data = new char[size];
-	msg->GetData(FSignature, data);
-	delete msg;
-	SendMsg(data, size);
-	delete data;
+        msg->GetData(FSignature, data);
+        delete msg;
+        SendMsg(data, size);
+        delete data;
 }
 
 /*##########################################################################
@@ -8983,15 +8983,15 @@ void TDistSystem::SendResetReq()
 
     FDistDevice->Reset();
 
-	msg = new TDeviceMsg(128);
+        msg = new TDeviceMsg(128);
     tag = msg->AddTag(DEVICE_TAG_RESET_REQ);
 
-	size = msg->GetSize();
-	data = new char[size];
-	msg->GetData(FSignature, data);
-	delete msg;
-	SendMsg(data, size);
-	delete data;
+        size = msg->GetSize();
+        data = new char[size];
+        msg->GetData(FSignature, data);
+        delete msg;
+        SendMsg(data, size);
+        delete data;
 }
 
 /*##########################################################################
@@ -9014,15 +9014,15 @@ void TDistSystem::SendResetAck()
 
     FDistDevice->Reset();
 
-	msg = new TDeviceMsg(128);
-	tag = msg->AddTag(DEVICE_TAG_RESET_ACK);
+        msg = new TDeviceMsg(128);
+        tag = msg->AddTag(DEVICE_TAG_RESET_ACK);
 
     size = msg->GetSize();
     data = new char[size];
-	msg->GetData(FSignature, data);
-	delete msg;
-	SendMsg(data, size);
-	delete data;
+        msg->GetData(FSignature, data);
+        delete msg;
+        SendMsg(data, size);
+        delete data;
 }
 
 /*##########################################################################
@@ -9038,23 +9038,23 @@ void TDistSystem::SendResetAck()
 ##########################################################################*/
 void TDistSystem::SendPollReq()
 {
-	TDeviceMsg *msg;
-	TDeviceTag *tag;
-	char *data;
+        TDeviceMsg *msg;
+        TDeviceTag *tag;
+        char *data;
     int size;
 
     if (FHasUnits && !FPendingResetReq && !FPendingResetAck)
     {
-    	msg = new TDeviceMsg(128);
+        msg = new TDeviceMsg(128);
         tag = msg->AddTag(DEVICE_TAG_POLL_REQ);
 
         size = msg->GetSize();
         data = new char[size];
-		msg->GetData(FSignature, data);
-	    delete msg;
-    	SendMsg(data, size);
-	    delete data;
-	}
+                msg->GetData(FSignature, data);
+            delete msg;
+        SendMsg(data, size);
+            delete data;
+        }
 }
 
 /*##########################################################################
@@ -9077,15 +9077,15 @@ void TDistSystem::SendPollAck()
 
     if (!FPendingResetReq && !FPendingResetAck)
     {
-    	msg = new TDeviceMsg(128);
+        msg = new TDeviceMsg(128);
         tag = msg->AddTag(DEVICE_TAG_POLL_ACK);
 
         size = msg->GetSize();
         data = new char[size];
-		msg->GetData(FSignature, data);
-    	delete msg;
-	    SendMsg(data, size);
-    	delete data;
+                msg->GetData(FSignature, data);
+        delete msg;
+            SendMsg(data, size);
+        delete data;
     }
 }
 
@@ -9109,20 +9109,20 @@ void TDistSystem::SendConfigAck(unsigned short int UnitType, unsigned short int 
 
     if (!FPendingResetReq && !FPendingResetAck)
     {
-    	msg = new TDeviceMsg(256);
+        msg = new TDeviceMsg(256);
 
-		tag = msg->AddTag(DEVICE_TAG_HEADER);
-		tag->AddSignedShort(DEVICE_VAR_UnitType, UnitType);
-		tag->AddSignedShort(DEVICE_VAR_UnitID, UnitNumber);
+                tag = msg->AddTag(DEVICE_TAG_HEADER);
+                tag->AddSignedShort(DEVICE_VAR_UnitType, UnitType);
+                tag->AddSignedShort(DEVICE_VAR_UnitID, UnitNumber);
 
-		tag = msg->AddTag(DEVICE_TAG_CONFIG_ACK);
+                tag = msg->AddTag(DEVICE_TAG_CONFIG_ACK);
 
         size = msg->GetSize();
         data = new char[size];
         msg->GetData(FSignature, data);
-    	delete msg;
-	    SendMsg(data, size);
-    	delete data;
+        delete msg;
+            SendMsg(data, size);
+        delete data;
     }
 }
 
@@ -9139,8 +9139,8 @@ void TDistSystem::SendConfigAck(unsigned short int UnitType, unsigned short int 
 ##########################################################################*/
 void TDistSystem::UpdateMsg()
 {
-	TDistUnit *ptr;
-	TDeviceConfig *config;
+        TDistUnit *ptr;
+        TDeviceConfig *config;
     TDeviceMsg *msg;
     char *data;
     int size;
@@ -9166,59 +9166,59 @@ void TDistSystem::UpdateMsg()
         sent = TRUE;
         SendResetAck();
         FPendingResetAck = FALSE;
-	}
+        }
 
-	if (more)
+        if (more)
     {
         FConfigSection.Enter();
 
-    	config = FConfigList;
-	    while (config)
-    	{
-    	    if (config->FActive)
-    	    {
-        	    msg = config->FConfigMsg;
+        config = FConfigList;
+            while (config)
+        {
+            if (config->FActive)
+            {
+                    msg = config->FConfigMsg;
                 size = msg->GetSize();
                 data = new char[size];
-				msg->GetData(FSignature, data);
-	            SendMsg(data, size);
-	            delete data;
-	            sent = TRUE;
+                                msg->GetData(FSignature, data);
+                    SendMsg(data, size);
+                    delete data;
+                    sent = TRUE;
             }
-    	    config = config->FNext;
-    	}
+            config = config->FNext;
+        }
 
         FConfigSection.Leave();
     }
 
-	while (more)
-	{
-		more = FALSE;
+        while (more)
+        {
+                more = FALSE;
 
         FUnitSection.Enter();
 
-    	ptr = FUnitList;
-	    while (ptr)
-    	{
-	        msg = ptr->GetMsg();
-	        if (msg)
-    	    {
+        ptr = FUnitList;
+            while (ptr)
+        {
+                msg = ptr->GetMsg();
+                if (msg)
+            {
                 size = msg->GetSize();
                 data = new char[size];
                 msg->GetData(FSignature, data);
-    	        if (msg->FDeleteOnSend)
-	                delete msg;
-	            SendMsg(data, size);
-	            delete data;
+                if (msg->FDeleteOnSend)
+                        delete msg;
+                    SendMsg(data, size);
+                    delete data;
 
-	            more = TRUE;
-	            sent = TRUE;
-    	    }
-	        ptr = ptr->FList;
-	    }
+                    more = TRUE;
+                    sent = TRUE;
+            }
+                ptr = ptr->FList;
+            }
 
-		FUnitSection.Leave();
-	}
+                FUnitSection.Leave();
+        }
 
     if (!sent && FPendingPoll)
     {
@@ -9241,9 +9241,9 @@ void TDistSystem::UpdateMsg()
 void TDistSystem::HandleMsg(TDeviceMsg *Msg)
 {
     TDistUnit *ptr;
-	TDeviceConfig *cfg;
-	TDeviceMsg *msg;
-	TDeviceTag *header;
+        TDeviceConfig *cfg;
+        TDeviceMsg *msg;
+        TDeviceTag *header;
     TDeviceTag *poll;
     TDeviceTag *reset;
     TDeviceTag *config;
@@ -9268,9 +9268,9 @@ void TDistSystem::HandleMsg(TDeviceMsg *Msg)
     if (reset)
         FPendingResetReq = FALSE;
 
-	if (!FPendingResetReq && !FPendingResetAck)
-	{
-		poll = Msg->GetTag(DEVICE_TAG_POLL_REQ);
+        if (!FPendingResetReq && !FPendingResetAck)
+        {
+                poll = Msg->GetTag(DEVICE_TAG_POLL_REQ);
         if (poll)
         {
             FHasUnits = TRUE;
@@ -9282,7 +9282,7 @@ void TDistSystem::HandleMsg(TDeviceMsg *Msg)
         if (header)
         {
             FHasUnits = TRUE;
-			UnitType = header->GetSignedShort(DEVICE_VAR_UnitType, 0);
+                        UnitType = header->GetSignedShort(DEVICE_VAR_UnitType, 0);
             UnitID = header->GetSignedShort(DEVICE_VAR_UnitID, 0);
         }
         else
@@ -9294,13 +9294,13 @@ void TDistSystem::HandleMsg(TDeviceMsg *Msg)
         if (UnitType)
         {
 
-			found = FALSE;
-			FPendingPoll = FALSE;
+                        found = FALSE;
+                        FPendingPoll = FALSE;
 
-			config = Msg->GetTag(DEVICE_TAG_CONFIG_REQ);
+                        config = Msg->GetTag(DEVICE_TAG_CONFIG_REQ);
             if (config)
             {
-    			SendConfigAck(UnitType, UnitID);
+                        SendConfigAck(UnitType, UnitID);
 
                 if (!HasUnit(UnitType, UnitID))
                 {                    
@@ -9316,45 +9316,45 @@ void TDistSystem::HandleMsg(TDeviceMsg *Msg)
                 {
                     FConfigSection.Enter();
 
-        	        cfg = FConfigList;
-        	        
-            	    while (cfg)
-					{
-						if (cfg->FUnitType == UnitType && cfg->FUnitNumber == UnitID)
-							cfg->FActive = FALSE;
+                        cfg = FConfigList;
+                        
+                    while (cfg)
+                                        {
+                                                if (cfg->FUnitType == UnitType && cfg->FUnitNumber == UnitID)
+                                                        cfg->FActive = FALSE;
 
-            			cfg = cfg->FNext;
-            		}
+                                cfg = cfg->FNext;
+                        }
 
-            		FConfigSection.Leave();
-            	}
+                        FConfigSection.Leave();
+                }
             }
                      
             if (!config)
             {
                 FUnitSection.Enter();
 
-    	        ptr = FUnitList;
-        	    while (!found && ptr)
-    	        {
-	    	    	if (ptr->GetUnitType() == UnitType && ptr->GetUnitNumber() == UnitID)
+                ptr = FUnitList;
+                    while (!found && ptr)
+                {
+                        if (ptr->GetUnitType() == UnitType && ptr->GetUnitNumber() == UnitID)
                     {
                         ptr->HandleMsg(Msg);
                         found = TRUE;
                     }
                 
-        			ptr = ptr->FList;
-				}
+                                ptr = ptr->FList;
+                                }
 
-				if (!found)
-				{
+                                if (!found)
+                                {
                     ptr = new TDistUnit(this, UnitType, UnitID);
                     ptr->HandleMsg(Msg);                
                 }
-                	
+                        
                 FUnitSection.Leave();
             }
-    	}
+        }
     }
 }
 
@@ -9371,13 +9371,13 @@ void TDistSystem::HandleMsg(TDeviceMsg *Msg)
 ##########################################################################*/
 void TDistSystem::NotifyMsg(const char *Data, int Size)
 {
-	TDeviceMsg *msg;
+        TDeviceMsg *msg;
 
-	msg = new TDeviceMsg(8 * Size);
-	if (msg->Parse(FSignature, Data, Size + 8))
-	    HandleMsg(msg);
+        msg = new TDeviceMsg(8 * Size);
+        if (msg->Parse(FSignature, Data, Size + 8))
+            HandleMsg(msg);
 
-	delete msg;
+        delete msg;
 }
 
 /*##########################################################################
@@ -9394,7 +9394,7 @@ void TDistSystem::NotifyMsg(const char *Data, int Size)
 TDistDevice::TDistDevice()
 {
     FSystemList = 0;
-	FSignal = new TSignalDevice;
+        FSignal = new TSignalDevice;
 }
 
 /*##########################################################################
@@ -9410,7 +9410,7 @@ TDistDevice::TDistDevice()
 ##########################################################################*/
 TDistDevice::~TDistDevice()
 {
-	delete FSignal;
+        delete FSignal;
 }
 
 /*##########################################################################
@@ -9426,8 +9426,8 @@ TDistDevice::~TDistDevice()
 ##########################################################################*/
 void TDistDevice::AddSystem(TDistSystem *system)
 {
-	system->FNext = FSystemList;
-	FSystemList = system;
+        system->FNext = FSystemList;
+        FSystemList = system;
 }
 
 /*##########################################################################
@@ -9443,7 +9443,7 @@ void TDistDevice::AddSystem(TDistSystem *system)
 ##########################################################################*/
 void TDistDevice::SignalMsg()
 {
-	FSignal->Signal();
+        FSignal->Signal();
 }
 
 /*##########################################################################
@@ -9459,19 +9459,19 @@ void TDistDevice::SignalMsg()
 ##########################################################################*/
 int TDistDevice::CheckSignature(long signature)
 {
-	TDistSystem *ptr;
+        TDistSystem *ptr;
 
-	ptr = FSystemList;
+        ptr = FSystemList;
 
-	while (ptr)
-	{
-		if (ptr->GetSignature() == signature)
-			return TRUE;
-			
-		ptr = ptr->FNext;
-	}
-	
-	return FALSE;
+        while (ptr)
+        {
+                if (ptr->GetSignature() == signature)
+                        return TRUE;
+                        
+                ptr = ptr->FNext;
+        }
+        
+        return FALSE;
 }
 
 /*##########################################################################
@@ -9487,20 +9487,20 @@ int TDistDevice::CheckSignature(long signature)
 ##########################################################################*/
 void TDistDevice::NotifyMsg(long signature, const char *Data, int Size)
 {
-	TDistSystem *ptr;
+        TDistSystem *ptr;
 
-	ptr = FSystemList;
+        ptr = FSystemList;
 
-	while (ptr)
-	{
-		if (ptr->GetSignature() == signature)
-		{
-		    ptr->NotifyMsg(Data, Size);
-		    break;
-		}
-			
-		ptr = ptr->FNext;
-	}
+        while (ptr)
+        {
+                if (ptr->GetSignature() == signature)
+                {
+                    ptr->NotifyMsg(Data, Size);
+                    break;
+                }
+                        
+                ptr = ptr->FNext;
+        }
 }
 
 /*##########################################################################
@@ -9516,20 +9516,20 @@ void TDistDevice::NotifyMsg(long signature, const char *Data, int Size)
 ##########################################################################*/
 void TDistDevice::Online()
 {
-	TDistSystem *ptr;
+        TDistSystem *ptr;
 
-	if (!FOnline)
-	{
-	    TDevice::Online();
+        if (!FOnline)
+        {
+            TDevice::Online();
 
-    	ptr = FSystemList;
+        ptr = FSystemList;
 
-    	while (ptr)
-	    {
-		    ptr->Online();
-			ptr = ptr->FNext;
-	    }
-	}
+        while (ptr)
+            {
+                    ptr->Online();
+                        ptr = ptr->FNext;
+            }
+        }
 }
 
 /*##########################################################################
@@ -9545,20 +9545,20 @@ void TDistDevice::Online()
 ##########################################################################*/
 void TDistDevice::Offline()
 {
-	TDistSystem *ptr;
+        TDistSystem *ptr;
 
-	if (FOnline)
-	{
-	    TDevice::Offline();
+        if (FOnline)
+        {
+            TDevice::Offline();
 
-    	ptr = FSystemList;
+        ptr = FSystemList;
 
-    	while (ptr)
-	    {
-		    ptr->Offline();
-			ptr = ptr->FNext;
-		}
-	}
+        while (ptr)
+            {
+                    ptr->Offline();
+                        ptr = ptr->FNext;
+                }
+        }
 }
 
 /*##########################################################################
@@ -9574,15 +9574,15 @@ void TDistDevice::Offline()
 ##########################################################################*/
 void TDistDevice::UpdateMsg()
 {
-	TDistSystem *ptr;
+        TDistSystem *ptr;
 
-	ptr = FSystemList;
+        ptr = FSystemList;
 
-	while (ptr)
-	{
-		ptr->UpdateMsg();
-		ptr = ptr->FNext;
-	}
+        while (ptr)
+        {
+                ptr->UpdateMsg();
+                ptr = ptr->FNext;
+        }
 }
 
 /*##########################################################################
@@ -9598,13 +9598,13 @@ void TDistDevice::UpdateMsg()
 ##########################################################################*/
 void TDistDevice::SendPollReq()
 {
-	TDistSystem *ptr;
+        TDistSystem *ptr;
 
-	ptr = FSystemList;
+        ptr = FSystemList;
 
-	while (ptr)
-	{
-		ptr->SendPollReq();
-		ptr = ptr->FNext;
-	}
+        while (ptr)
+        {
+                ptr->SendPollReq();
+                ptr = ptr->FNext;
+        }
 }

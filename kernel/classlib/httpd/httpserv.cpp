@@ -40,7 +40,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-#define BUF_SIZE	513
+#define BUF_SIZE        513
 
 /*##########################################################################
 #
@@ -55,16 +55,16 @@
 ##########################################################################*/
 int THttpSocketServer::IsEmpty(const char *s)
 {
-	if (s)
-	{
-		while(*s)
-		{
-			s++;
-			if (!isspace(*s))
-				return FALSE;
-		}
-	}
-	return TRUE;
+        if (s)
+        {
+                while(*s)
+                {
+                        s++;
+                        if (!isspace(*s))
+                                return FALSE;
+                }
+        }
+        return TRUE;
 }
 
 /*##########################################################################
@@ -80,7 +80,7 @@ int THttpSocketServer::IsEmpty(const char *s)
 ##########################################################################*/
 int THttpSocketServer::IsArgDelim(char ch)
 {
-	return isspace(ch) || iscntrl(ch) || strchr(",;=", ch);
+        return isspace(ch) || iscntrl(ch) || strchr(",;=", ch);
 }
 
 /*##########################################################################
@@ -96,7 +96,7 @@ int THttpSocketServer::IsArgDelim(char ch)
 ##########################################################################*/
 int THttpSocketServer::IsFileNameChar(char c)
 {
-	return !(c <= ' ' || c == 0x7f || strchr(".\"/\\[]:|<>+=;,", c));
+        return !(c <= ' ' || c == 0x7f || strchr(".\"/\\[]:|<>+=;,", c));
 }
 
 /*##########################################################################
@@ -112,9 +112,9 @@ int THttpSocketServer::IsFileNameChar(char c)
 ##########################################################################*/
 const char *THttpSocketServer::LTrimsp(const char *str)
 {
-	while (*str && isspace(*str))
-		str++;
-	return str;
+        while (*str && isspace(*str))
+                str++;
+        return str;
 }
 
 /*##########################################################################
@@ -130,14 +130,14 @@ const char *THttpSocketServer::LTrimsp(const char *str)
 ##########################################################################*/
 const char *THttpSocketServer::LTrim(const char *str)
 {
-	while (*str)
-	{
-		if (IsArgDelim(*str))
-			str++;
-		else
-			break;
-	}
-	return str;
+        while (*str)
+        {
+                if (IsArgDelim(*str))
+                        str++;
+                else
+                        break;
+        }
+        return str;
 }
 
 /*##########################################################################
@@ -153,15 +153,15 @@ const char *THttpSocketServer::LTrim(const char *str)
 ##########################################################################*/
 void THttpSocketServer::RTrim(char *str)
 {
-	char *p;
+        char *p;
 
-	p = strchr(str, 0);
-	p--;
+        p = strchr(str, 0);
+        p--;
 
-	while (p >= str && IsArgDelim(*p))
-		p--;
+        while (p >= str && IsArgDelim(*p))
+                p--;
 
-	p[1] = 0;
+        p[1] = 0;
 }
 
 /*##########################################################################
@@ -177,30 +177,30 @@ void THttpSocketServer::RTrim(char *str)
 ##########################################################################*/
 char *THttpSocketServer::Unquote(const char *str, const char *end)
 {
-	char *h, *newStr;
-	const char *q;
-	int len;
+        char *h, *newStr;
+        const char *q;
+        int len;
 
-	newStr = new char[end - str + 1];
-	h = newStr;
+        newStr = new char[end - str + 1];
+        h = newStr;
 
-	while ((q = strpbrk(str, "\"")) != 0 && q < end)
-	{
-		memcpy(h, str, len = q++ - str);
-		h += len;
-		if ((str = strchr(q, q[-1])) == 0 || str >= end)
-		{
-			str = q;
-			break;
-		}
+        while ((q = strpbrk(str, "\"")) != 0 && q < end)
+        {
+                memcpy(h, str, len = q++ - str);
+                h += len;
+                if ((str = strchr(q, q[-1])) == 0 || str >= end)
+                {
+                        str = q;
+                        break;
+                }
 
-		memcpy(h, q, len = str++ - q);
-		h += len;
-	}
+                memcpy(h, q, len = str++ - q);
+                h += len;
+        }
 
-	memcpy(h, str, len = end - str);
-	h[len] = 0;
-	return newStr;
+        memcpy(h, str, len = end - str);
+        h[len] = 0;
+        return newStr;
 }
 
 /*##########################################################################
@@ -216,25 +216,25 @@ char *THttpSocketServer::Unquote(const char *str, const char *end)
 ##########################################################################*/
 int THttpSocketServer::MatchToken(char **Xp, const char *word, int len)
 {
-	char *p;
-	char *q;
+        char *p;
+        char *q;
 
-	p = *Xp;
-	if (strncmpi(p, word, len) == 0)
-	{
-		p += len;
-		if (*p)
-		{
-			q = (char *)LTrim(p);
-			if (q == p)
-				return FALSE;
-			p = q;
-		}
-		*Xp = p;
-		return TRUE;
-	}
+        p = *Xp;
+        if (strnicmp(p, word, len) == 0)
+        {
+                p += len;
+                if (*p)
+                {
+                        q = (char *)LTrim(p);
+                        if (q == p)
+                                return FALSE;
+                        p = q;
+                }
+                *Xp = p;
+                return TRUE;
+        }
 
-	return FALSE;
+        return FALSE;
 }
 
 /*##########################################################################
@@ -251,10 +251,10 @@ int THttpSocketServer::MatchToken(char **Xp, const char *word, int len)
 THttpSocketServer::THttpSocketServer(const char *Name, int StackSize, TSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
-	OnCommand = 0;
-	FSocketBuf = 0;
-	FPageList = 0;
-	FDirList = 0;
+        OnCommand = 0;
+        FSocketBuf = 0;
+        FPageList = 0;
+        FDirList = 0;
 }
 
 /*##########################################################################
@@ -270,8 +270,8 @@ THttpSocketServer::THttpSocketServer(const char *Name, int StackSize, TSocket *S
 ##########################################################################*/
 THttpSocketServer::~THttpSocketServer()
 {
-	if (FSocketBuf)
-		delete FSocketBuf;
+        if (FSocketBuf)
+                delete FSocketBuf;
 }
 
 /*##########################################################################
@@ -288,11 +288,11 @@ THttpSocketServer::~THttpSocketServer()
 THttpCustomPageFactory *THttpSocketServer::FindPage(const char *FileName)
 {
     TString Name(FileName);
-	THttpCustomPageFactory *page = FPageList;
+        THttpCustomPageFactory *page = FPageList;
 
     while (page)
     {
-		if (page->FReqName == Name)
+                if (page->FReqName == Name)
             return page;
         else
             page = page->FList;
@@ -316,7 +316,7 @@ THttpCustomDirFactory *THttpSocketServer::FindDir(const char *FileName)
 {
     const char *str;
     const char *ptr;
-	THttpCustomDirFactory *dir = FDirList;
+        THttpCustomDirFactory *dir = FDirList;
 
     while (dir)
     {
@@ -364,13 +364,13 @@ TString THttpSocketServer::CreateUniqueFile()
 ##########################################################################*/
 void THttpSocketServer::Write(char ch)
 {
-	char str[2];
+        char str[2];
 
-	str[0] = ch;
-	str[1] = 0;
+        str[0] = ch;
+        str[1] = 0;
 
-	if (FSocket->IsOpen())
-		FSocket->Write(str, 1);
+        if (FSocket->IsOpen())
+                FSocket->Write(str, 1);
 }
 
 /*##########################################################################
@@ -386,10 +386,10 @@ void THttpSocketServer::Write(char ch)
 ##########################################################################*/
 void THttpSocketServer::Write(const char *str)
 {
-	int size = strlen(str);
+        int size = strlen(str);
 
-	if (FSocket->IsOpen())
-		FSocket->Write(str, size);
+        if (FSocket->IsOpen())
+                FSocket->Write(str, size);
 }
 
 /*##########################################################################
@@ -405,8 +405,8 @@ void THttpSocketServer::Write(const char *str)
 ##########################################################################*/
 void THttpSocketServer::Write(const char *buf, int size)
 {
-	if (FSocket->IsOpen())
-		FSocket->Write(buf, size);
+        if (FSocket->IsOpen())
+                FSocket->Write(buf, size);
 }
 
 /*##########################################################################
@@ -438,7 +438,7 @@ void THttpSocketServer::Push()
 ##########################################################################*/
 int THttpSocketServer::IsOpen()
 {
-	return FSocket->IsOpen();
+        return FSocket->IsOpen();
 }
 
 /*##########################################################################
@@ -454,15 +454,15 @@ int THttpSocketServer::IsOpen()
 ##########################################################################*/
 int THttpSocketServer::IsEmpty()
 {
-	if (FBufCount == FBufPos)
-	{
-		if (FSocket->Poll() == 0)
-			return TRUE;
-		else
-			return FALSE;
-	}
-	else
-		return FALSE;
+        if (FBufCount == FBufPos)
+        {
+                if (FSocket->Poll() == 0)
+                        return TRUE;
+                else
+                        return FALSE;
+        }
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -478,63 +478,63 @@ int THttpSocketServer::IsEmpty()
 ##########################################################################*/
 int THttpSocketServer::Read(char *buf, int size)
 {
-	int pos;
-	int count;
+        int pos;
+        int count;
 
-	if (FSocketBuf == 0)
-	{
-		FSocketBuf = new char[BUF_SIZE + 1];
-		FBufCount = 0;
-		FBufPos = 0;
-	}
+        if (FSocketBuf == 0)
+        {
+                FSocketBuf = new char[BUF_SIZE + 1];
+                FBufCount = 0;
+                FBufPos = 0;
+        }
 
-	if (FBufCount <= FBufPos)
-	{
-		FBufPos -= FBufCount;
+        if (FBufCount <= FBufPos)
+        {
+                FBufPos -= FBufCount;
 
-		if (FSocket->WaitForChar(5000))
-		{
-			FBufCount = FSocket->Read(FSocketBuf, BUF_SIZE);
-			FSocketBuf[FBufCount] = 0;
+                if (FSocket->WaitForChar(5000))
+                {
+                        FBufCount = FSocket->Read(FSocketBuf, BUF_SIZE);
+                        FSocketBuf[FBufCount] = 0;
 
-			if (OnCommand)
-				(*OnCommand)(this, FSocketBuf);
-		}
-		else
-			return 0;
-	}
+                        if (OnCommand)
+                                (*OnCommand)(this, FSocketBuf);
+                }
+                else
+                        return 0;
+        }
 
-	while (FBufCount - FBufPos < size)
-	{
-		if (FBufPos == 0)
-		{
-		    FBufCount = 0;
-			return 0;
-	    }
+        while (FBufCount - FBufPos < size)
+        {
+                if (FBufPos == 0)
+                {
+                    FBufCount = 0;
+                        return 0;
+            }
 
-		if (!FSocket->WaitForChar(5000))
-		{
-		    count = FBufCount - FBufPos;
-		    memcpy(buf, &FSocketBuf[FBufPos], count);
-			FBufPos = 0;
-			FBufCount = 0;
-			return count;
-		}
+                if (!FSocket->WaitForChar(5000))
+                {
+                    count = FBufCount - FBufPos;
+                    memcpy(buf, &FSocketBuf[FBufPos], count);
+                        FBufPos = 0;
+                        FBufCount = 0;
+                        return count;
+                }
 
-		memcpy(FSocketBuf, &FSocketBuf[FBufPos], FBufCount - FBufPos);
-		FBufCount -= FBufPos;
-		FBufPos = 0;
-		pos = FBufCount;
-		FBufCount += FSocket->Read(&FSocketBuf[pos], BUF_SIZE - FBufCount);
-		FSocketBuf[FBufCount] = 0;
+                memcpy(FSocketBuf, &FSocketBuf[FBufPos], FBufCount - FBufPos);
+                FBufCount -= FBufPos;
+                FBufPos = 0;
+                pos = FBufCount;
+                FBufCount += FSocket->Read(&FSocketBuf[pos], BUF_SIZE - FBufCount);
+                FSocketBuf[FBufCount] = 0;
 
-		if (OnCommand)
-			(*OnCommand)(this, &FSocketBuf[pos]);
-	}
+                if (OnCommand)
+                        (*OnCommand)(this, &FSocketBuf[pos]);
+        }
 
     memcpy(buf, &FSocketBuf[FBufPos], size);
     FBufPos += size;
-	return size;
+        return size;
 }
 
 /*##########################################################################
@@ -550,74 +550,74 @@ int THttpSocketServer::Read(char *buf, int size)
 ##########################################################################*/
 char *THttpSocketServer::ReadLine()
 {
-#define BUF_SIZE	513
-	char *ptr;
-	char *result;
-	int pos;
+#define BUF_SIZE        513
+        char *ptr;
+        char *result;
+        int pos;
 
-	if (FSocketBuf == 0)
-	{
-		FSocketBuf = new char[BUF_SIZE + 1];
-		FBufCount = 0;
-		FBufPos = 0;
-	}
+        if (FSocketBuf == 0)
+        {
+                FSocketBuf = new char[BUF_SIZE + 1];
+                FBufCount = 0;
+                FBufPos = 0;
+        }
 
-	if (FBufCount <= FBufPos)
-	{
-		FBufPos -= FBufCount;
+        if (FBufCount <= FBufPos)
+        {
+                FBufPos -= FBufCount;
 
-		if (FSocket->WaitForChar(5000))
-		{
-			FBufCount = FSocket->Read(FSocketBuf, BUF_SIZE);
-			FSocketBuf[FBufCount] = 0;
+                if (FSocket->WaitForChar(5000))
+                {
+                        FBufCount = FSocket->Read(FSocketBuf, BUF_SIZE);
+                        FSocketBuf[FBufCount] = 0;
 
-			if (OnCommand)
-				(*OnCommand)(this, FSocketBuf);
-		}
-		else
-			return 0;
-	}
+                        if (OnCommand)
+                                (*OnCommand)(this, FSocketBuf);
+                }
+                else
+                        return 0;
+        }
 
-	ptr = strchr(&FSocketBuf[FBufPos], 0xd);
+        ptr = strchr(&FSocketBuf[FBufPos], 0xd);
 
-	while (!ptr)
-	{
-		if (FBufPos == 0)
-		{
-		    FBufCount = 0;
-			return 0;
-	    }
+        while (!ptr)
+        {
+                if (FBufPos == 0)
+                {
+                    FBufCount = 0;
+                        return 0;
+            }
 
-		if (!FSocket->WaitForChar(5000))
-		{
-			result = &FSocketBuf[FBufPos];
-			FBufPos = 0;
-			FBufCount = 0;
-			return result;
-		}
+                if (!FSocket->WaitForChar(5000))
+                {
+                        result = &FSocketBuf[FBufPos];
+                        FBufPos = 0;
+                        FBufCount = 0;
+                        return result;
+                }
 
-		memcpy(FSocketBuf, &FSocketBuf[FBufPos], FBufCount - FBufPos);
-		FBufCount -= FBufPos;
-		FBufPos = 0;
-		pos = FBufCount;
-		FBufCount += FSocket->Read(&FSocketBuf[pos], BUF_SIZE - FBufCount);
-		FSocketBuf[FBufCount] = 0;
+                memcpy(FSocketBuf, &FSocketBuf[FBufPos], FBufCount - FBufPos);
+                FBufCount -= FBufPos;
+                FBufPos = 0;
+                pos = FBufCount;
+                FBufCount += FSocket->Read(&FSocketBuf[pos], BUF_SIZE - FBufCount);
+                FSocketBuf[FBufCount] = 0;
 
-		if (OnCommand)
-			(*OnCommand)(this, &FSocketBuf[pos]);
+                if (OnCommand)
+                        (*OnCommand)(this, &FSocketBuf[pos]);
 
-		ptr = strchr(&FSocketBuf[pos], 0xd);
-	}
+                ptr = strchr(&FSocketBuf[pos], 0xd);
+        }
 
-	*ptr = 0;
-	result = &FSocketBuf[FBufPos];
-	FBufPos = ptr - FSocketBuf + 2;
+        *ptr = 0;
+        result = &FSocketBuf[FBufPos];
+        FBufPos = ptr - FSocketBuf + 2;
 
-	return result;
+        return result;
 }
 
 /*##################  THttpSocketServer::Parse  ##########################
-*   Purpose....: Parse a command line and return a command class	    	#
+*   Purpose....: Parse a command line and return a command class                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -625,64 +625,64 @@ char *THttpSocketServer::ReadLine()
 *##########################################################################*/
 THttpCommand *THttpSocketServer::Parse(const char *line)
 {
-	const char *rest;
-	int size;
-	int i;
-	char *com;
-	char *ptr;
-	int done;
-	TString Line;
-	TString Method;
+        const char *rest;
+        int size;
+        int i;
+        char *com;
+        char *ptr;
+        int done;
+        TString Line;
+        TString Method;
 
-	Line = TString(LTrim(line));
+        Line = TString(LTrim(line));
 
-	rest = Line.GetData();
+        rest = Line.GetData();
 
-	Method = TString("");
+        Method = TString("");
 
-	if (*rest)
-	{
-		size = 0;
-		while (*rest && IsFileNameChar(*rest) && !strchr("\"", *rest))
-		{
-			size++;
-			rest++;
-		}
+        if (*rest)
+        {
+                size = 0;
+                while (*rest && IsFileNameChar(*rest) && !strchr("\"", *rest))
+                {
+                        size++;
+                        rest++;
+                }
 
-		if (*rest && strchr("\"", *rest))
-			size = 0;
+                if (*rest && strchr("\"", *rest))
+                        size = 0;
 
-		if (size)
-		{
-			com = new char[size + 1];
+                if (size)
+                {
+                        com = new char[size + 1];
 
-			rest = Line.GetData();
-			ptr = com;
+                        rest = Line.GetData();
+                        ptr = com;
 
-			for (i = 0; i < size; i++)
-			{
-				*ptr = toupper(*rest);
-				ptr++;
-				rest++;
-			}
-			*ptr = 0;
+                        for (i = 0; i < size; i++)
+                        {
+                                *ptr = toupper(*rest);
+                                ptr++;
+                                rest++;
+                        }
+                        *ptr = 0;
 
-			Method = TString(com);
-			delete com;
-		}
-	}
+                        Method = TString(com);
+                        delete com;
+                }
+        }
 
-	if (Method.GetSize())
-	{
-		done = *rest == 0 || *rest == '/' || *rest == '.' || *rest == ':';
-		if (!done)
-			if (IsArgDelim(*rest))
-				rest = LTrim(rest);
+        if (Method.GetSize())
+        {
+                done = *rest == 0 || *rest == '/' || *rest == '.' || *rest == ':';
+                if (!done)
+                        if (IsArgDelim(*rest))
+                                rest = LTrim(rest);
 
-    	return new THttpCommand(this, Method, TString(rest));
-	}
-	else
-		return 0;
+        return new THttpCommand(this, Method, TString(rest));
+        }
+        else
+                return 0;
 }
 
 /*##########################################################################
@@ -698,29 +698,29 @@ THttpCommand *THttpSocketServer::Parse(const char *line)
 ##########################################################################*/
 void THttpSocketServer::HandleSocket()
 {
-	THttpCommand *cmd;
-	char *ptr;
+        THttpCommand *cmd;
+        char *ptr;
 
-	if (FSocket->WaitForConnection(6000))
-	{
-		while (FSocket->IsOpen() || !IsEmpty())
-		{
-		    ptr = ReadLine();
-		    if (ptr)
-		    {
-				cmd = Parse(ptr);
-				if (cmd)
-				{
-					cmd->Run();
-					delete cmd;
-				}
-	    	}
-	    	else
-	    	{
-	    	    if (KeepAlive == 0 || !FSocket->WaitForChar(KeepAlive * 1000))
-    	    	    break;
-    	    }
-		}
-	}
+        if (FSocket->WaitForConnection(6000))
+        {
+                while (FSocket->IsOpen() || !IsEmpty())
+                {
+                    ptr = ReadLine();
+                    if (ptr)
+                    {
+                                cmd = Parse(ptr);
+                                if (cmd)
+                                {
+                                        cmd->Run();
+                                        delete cmd;
+                                }
+                }
+                else
+                {
+                    if (KeepAlive == 0 || !FSocket->WaitForChar(KeepAlive * 1000))
+                    break;
+            }
+                }
+        }
 }
 

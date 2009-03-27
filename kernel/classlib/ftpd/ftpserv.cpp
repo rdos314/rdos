@@ -54,16 +54,16 @@
 ##########################################################################*/
 int TFtpSocketServer::IsEmpty(const char *s)
 {
-	if (s)
-	{
-		while(*s)
-		{
-			s++;
-			if (!isspace(*s))
-				return FALSE;
-		}
-	}
-	return TRUE;
+        if (s)
+        {
+                while(*s)
+                {
+                        s++;
+                        if (!isspace(*s))
+                                return FALSE;
+                }
+        }
+        return TRUE;
 }
 
 /*##########################################################################
@@ -79,7 +79,7 @@ int TFtpSocketServer::IsEmpty(const char *s)
 ##########################################################################*/
 int TFtpSocketServer::IsArgDelim(char ch)
 {
-	return isspace(ch) || iscntrl(ch) || strchr(",;=", ch);
+        return isspace(ch) || iscntrl(ch) || strchr(",;=", ch);
 }
 
 /*##########################################################################
@@ -95,7 +95,7 @@ int TFtpSocketServer::IsArgDelim(char ch)
 ##########################################################################*/
 int TFtpSocketServer::IsFileNameChar(char c)
 {
-	return !(c <= ' ' || c == 0x7f || strchr(".\"/\\[]:|<>+=;,", c));
+        return !(c <= ' ' || c == 0x7f || strchr(".\"/\\[]:|<>+=;,", c));
 }
 
 /*##########################################################################
@@ -111,9 +111,9 @@ int TFtpSocketServer::IsFileNameChar(char c)
 ##########################################################################*/
 const char *TFtpSocketServer::LTrimsp(const char *str)
 {
-	while (*str && isspace(*str))
-		str++;
-	return str;
+        while (*str && isspace(*str))
+                str++;
+        return str;
 }
 
 /*##########################################################################
@@ -129,14 +129,14 @@ const char *TFtpSocketServer::LTrimsp(const char *str)
 ##########################################################################*/
 const char *TFtpSocketServer::LTrim(const char *str)
 {
-	while (*str)
-	{
-		if (IsArgDelim(*str))
-			str++;
-		else
-			break;
-	}
-	return str;
+        while (*str)
+        {
+                if (IsArgDelim(*str))
+                        str++;
+                else
+                        break;
+        }
+        return str;
 }
 
 /*##########################################################################
@@ -152,15 +152,15 @@ const char *TFtpSocketServer::LTrim(const char *str)
 ##########################################################################*/
 void TFtpSocketServer::RTrim(char *str)
 {
-	char *p;
+        char *p;
 
-	p = strchr(str, 0);
-	p--;
+        p = strchr(str, 0);
+        p--;
 
-	while (p >= str && IsArgDelim(*p))
-		p--;
+        while (p >= str && IsArgDelim(*p))
+                p--;
 
-	p[1] = 0;
+        p[1] = 0;
 }
 
 /*##########################################################################
@@ -176,30 +176,30 @@ void TFtpSocketServer::RTrim(char *str)
 ##########################################################################*/
 char *TFtpSocketServer::Unquote(const char *str, const char *end)
 {
-	char *h, *newStr;
-	const char *q;
-	int len;
+        char *h, *newStr;
+        const char *q;
+        int len;
 
-	newStr = new char[end - str + 1];
-	h = newStr;
+        newStr = new char[end - str + 1];
+        h = newStr;
 
-	while ((q = strpbrk(str, "\"")) != 0 && q < end)
-	{
-		memcpy(h, str, len = q++ - str);
-		h += len;
-		if ((str = strchr(q, q[-1])) == 0 || str >= end)
-		{
-			str = q;
-			break;
-		}
+        while ((q = strpbrk(str, "\"")) != 0 && q < end)
+        {
+                memcpy(h, str, len = q++ - str);
+                h += len;
+                if ((str = strchr(q, q[-1])) == 0 || str >= end)
+                {
+                        str = q;
+                        break;
+                }
 
-		memcpy(h, q, len = str++ - q);
-		h += len;
-	}
+                memcpy(h, q, len = str++ - q);
+                h += len;
+        }
 
-	memcpy(h, str, len = end - str);
-	h[len] = 0;
-	return newStr;
+        memcpy(h, str, len = end - str);
+        h[len] = 0;
+        return newStr;
 }
 
 /*##########################################################################
@@ -215,25 +215,25 @@ char *TFtpSocketServer::Unquote(const char *str, const char *end)
 ##########################################################################*/
 int TFtpSocketServer::MatchToken(char **Xp, const char *word, int len)
 {
-	char *p;
-	char *q;
+        char *p;
+        char *q;
 
-	p = *Xp;
-	if (strncmpi(p, word, len) == 0)
-	{
-		p += len;
-		if (*p)
-		{
-			q = (char *)LTrim(p);
-			if (q == p)
-				return FALSE;
-			p = q;
-		}
-		*Xp = p;
-		return TRUE;
-	}
+        p = *Xp;
+        if (strnicmp(p, word, len) == 0)
+        {
+                p += len;
+                if (*p)
+                {
+                        q = (char *)LTrim(p);
+                        if (q == p)
+                                return FALSE;
+                        p = q;
+                }
+                *Xp = p;
+                return TRUE;
+        }
 
-	return FALSE;
+        return FALSE;
 }
 
 /*##########################################################################
@@ -250,10 +250,10 @@ int TFtpSocketServer::MatchToken(char **Xp, const char *word, int len)
 TFtpSocketServer::TFtpSocketServer(TFtpUser *UserList, const char *Name, int StackSize, TSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
-	FUserList = UserList;
-	CurrDir = "/";
-	FDataSocket = 0;
-	OnCommand = 0;
+        FUserList = UserList;
+        CurrDir = "/";
+        FDataSocket = 0;
+        OnCommand = 0;
 }
 
 /*##########################################################################
@@ -286,7 +286,7 @@ TFtpSocketServer::~TFtpSocketServer()
 ##########################################################################*/
 void TFtpSocketServer::Reply(TFtpLangString *msg)
 {
-	 msg->Write(FSocket);
+         msg->Write(FSocket);
 }
 
 /*##########################################################################
@@ -302,20 +302,20 @@ void TFtpSocketServer::Reply(TFtpLangString *msg)
 ##########################################################################*/
 int TFtpSocketServer::VerifyUser()
 {
-	TFtpUser *user;
+        TFtpUser *user;
 
-	user = FUserList;
+        user = FUserList;
 
-	while (user)
-	{
-		if (user->UserName == User && user->Password == Pass)
-		{
-			RootDir = user->RootDir;
-			return TRUE;
-		}
-		user = user->FNext;
-	}
-	return FALSE;
+        while (user)
+        {
+                if (user->UserName == User && user->Password == Pass)
+                {
+                        RootDir = user->RootDir;
+                        return TRUE;
+                }
+                user = user->FNext;
+        }
+        return FALSE;
 }
 
 /*##########################################################################
@@ -331,22 +331,22 @@ int TFtpSocketServer::VerifyUser()
 ##########################################################################*/
 int TFtpSocketServer::OpenDataConnection(long IP, int port)
 {
-	if (IP == FSocket->GetRemoteIP())
-	{
-		if (FDataSocket)
-			delete FDataSocket;
+        if (IP == FSocket->GetRemoteIP())
+        {
+                if (FDataSocket)
+                        delete FDataSocket;
 
-		FDataSocket = new TSocket(IP, port, 6000, 0x2000);
+                FDataSocket = new TSocket(IP, port, 6000, 0x2000);
 
-		if (FDataSocket->WaitForConnection(6000))
-			return TRUE;
-		else
-		{
-			delete FDataSocket;
-			FDataSocket = 0;
-		}
-	}
-	return FALSE;
+                if (FDataSocket->WaitForConnection(6000))
+                        return TRUE;
+                else
+                {
+                        delete FDataSocket;
+                        FDataSocket = 0;
+                }
+        }
+        return FALSE;
 }
 
 /*##########################################################################
@@ -362,13 +362,13 @@ int TFtpSocketServer::OpenDataConnection(long IP, int port)
 ##########################################################################*/
 void TFtpSocketServer::ListenForDataConnection(long *IP, int *port)
 {
-	*IP = FSocket->GetLocalIP();
+        *IP = FSocket->GetLocalIP();
 
-	if (FDataSocket)
-		delete FDataSocket;
+        if (FDataSocket)
+                delete FDataSocket;
 
-	FDataSocket = new TSocket(FSocket->GetRemoteIP(), 0, 6000, 0x2000);
-	*port = FDataSocket->GetLocalPort();
+        FDataSocket = new TSocket(FSocket->GetRemoteIP(), 0, 6000, 0x2000);
+        *port = FDataSocket->GetLocalPort();
 }
 
 /*##########################################################################
@@ -384,13 +384,13 @@ void TFtpSocketServer::ListenForDataConnection(long *IP, int *port)
 ##########################################################################*/
 void TFtpSocketServer::Write(char ch)
 {
-	char str[2];
+        char str[2];
 
-	str[0] = ch;
-	str[1] = 0;
+        str[0] = ch;
+        str[1] = 0;
 
-	if (FDataSocket && FDataSocket->IsOpen())
-		FDataSocket->Write(str, 1);
+        if (FDataSocket && FDataSocket->IsOpen())
+                FDataSocket->Write(str, 1);
 }
 
 /*##########################################################################
@@ -406,10 +406,10 @@ void TFtpSocketServer::Write(char ch)
 ##########################################################################*/
 void TFtpSocketServer::Write(const char *str)
 {
-	int size = strlen(str);
+        int size = strlen(str);
 
-	if (FDataSocket && FDataSocket->IsOpen())
-		FDataSocket->Write(str, size);
+        if (FDataSocket && FDataSocket->IsOpen())
+                FDataSocket->Write(str, size);
 }
 
 /*##########################################################################
@@ -425,8 +425,8 @@ void TFtpSocketServer::Write(const char *str)
 ##########################################################################*/
 void TFtpSocketServer::Write(const char *buf, int size)
 {
-	if (FDataSocket && FDataSocket->IsOpen())
-		FDataSocket->Write(buf, size);
+        if (FDataSocket && FDataSocket->IsOpen())
+                FDataSocket->Write(buf, size);
 }
 
 /*##########################################################################
@@ -442,62 +442,62 @@ void TFtpSocketServer::Write(const char *buf, int size)
 ##########################################################################*/
 void TFtpSocketServer::WriteLong(long value)
 {
-	char str[4];
-	int tmp;
-	int use = FALSE;
+        char str[4];
+        int tmp;
+        int use = FALSE;
 
-	tmp = value / 1000000000;
-	if (tmp)
-	{
-		use = TRUE;
-		sprintf(str, "%2d", tmp);
-	}
-	else
-		strcpy(str, "  ");
-	Write(str);
-	Write(" ");
-	value = value % 1000000000;
+        tmp = value / 1000000000;
+        if (tmp)
+        {
+                use = TRUE;
+                sprintf(str, "%2d", tmp);
+        }
+        else
+                strcpy(str, "  ");
+        Write(str);
+        Write(" ");
+        value = value % 1000000000;
 
-	tmp = value / 1000000;
-	if (use)
-		sprintf(str, "%03d", tmp);
-	else
-	{
-		if (tmp)
-		{
-			use = TRUE;
-			sprintf(str, "%3d", tmp);
-		}
-		else
-			strcpy(str, "   ");
-	}
-	Write(str);
-	Write(" ");
-	value = value % 1000000;
+        tmp = value / 1000000;
+        if (use)
+                sprintf(str, "%03d", tmp);
+        else
+        {
+                if (tmp)
+                {
+                        use = TRUE;
+                        sprintf(str, "%3d", tmp);
+                }
+                else
+                        strcpy(str, "   ");
+        }
+        Write(str);
+        Write(" ");
+        value = value % 1000000;
 
-	tmp = value / 1000;
-	if (use)
-		sprintf(str, "%03d", tmp);
-	else
-	{
-		if (tmp)
-		{
-			use = TRUE;
-			sprintf(str, "%3d", tmp);
-		}
-		else
-			strcpy(str, "   ");
-	}
-	Write(str);
-	Write(" ");
-	value = value % 1000;
+        tmp = value / 1000;
+        if (use)
+                sprintf(str, "%03d", tmp);
+        else
+        {
+                if (tmp)
+                {
+                        use = TRUE;
+                        sprintf(str, "%3d", tmp);
+                }
+                else
+                        strcpy(str, "   ");
+        }
+        Write(str);
+        Write(" ");
+        value = value % 1000;
 
-	tmp = value;
-	if (use)
-		sprintf(str, "%03d", tmp);
-	else
-		sprintf(str, "%3d", tmp);
-	Write(str);
+        tmp = value;
+        if (use)
+                sprintf(str, "%03d", tmp);
+        else
+                sprintf(str, "%3d", tmp);
+        Write(str);
 }
 
 /*##########################################################################
@@ -513,11 +513,11 @@ void TFtpSocketServer::WriteLong(long value)
 ##########################################################################*/
 void TFtpSocketServer::Push()
 {
-	if (FDataSocket)
-	{
-		delete FDataSocket;
-		FDataSocket = 0;
-	}
+        if (FDataSocket)
+        {
+                delete FDataSocket;
+                FDataSocket = 0;
+        }
 }
 
 /*##########################################################################
@@ -533,7 +533,7 @@ void TFtpSocketServer::Push()
 ##########################################################################*/
 int TFtpSocketServer::IsOpen()
 {
-	return FDataSocket && FDataSocket->IsOpen();
+        return FDataSocket && FDataSocket->IsOpen();
 }
 
 /*##########################################################################
@@ -549,10 +549,10 @@ int TFtpSocketServer::IsOpen()
 ##########################################################################*/
 int TFtpSocketServer::Read(char *buf, int size)
 {
-	if (FDataSocket)
-		return FDataSocket->Read(buf, size);
-	else
-		return 0;
+        if (FDataSocket)
+                return FDataSocket->Read(buf, size);
+        else
+                return 0;
 }
 
 /*##########################################################################
@@ -584,41 +584,41 @@ void TFtpSocketServer::Quit()
 ##########################################################################*/
 void TFtpSocketServer::HandleSocket()
 {
-	int Major;
-	int Minor;
-	int Release;
-	TFtpLangString msg;
-	TFtpCommand *cmd;
+        int Major;
+        int Minor;
+        int Release;
+        TFtpLangString msg;
+        TFtpCommand *cmd;
 
-	int count;
-	char Buf[513];
+        int count;
+        char Buf[513];
 
-	RdosGetVersion(&Major, &Minor, &Release);
-	msg.printf(220, Major, Minor, Release);
-	msg.Write(FSocket);
+        RdosGetVersion(&Major, &Minor, &Release);
+        msg.printf(220, Major, Minor, Release);
+        msg.Write(FSocket);
 
-	while (FSocket->IsOpen())
-	{
-		count = FSocket->Read(Buf, 512);
-		Buf[count] = 0;
+        while (FSocket->IsOpen())
+        {
+                count = FSocket->Read(Buf, 512);
+                Buf[count] = 0;
 
-		if (count == 0)
-			break;
+                if (count == 0)
+                        break;
 
         if (OnCommand)
             (*OnCommand)(this, Buf);
 
-	    cmd = TFtpCommandFactory::Parse(this, Buf);
+            cmd = TFtpCommandFactory::Parse(this, Buf);
 
-		if (cmd)
-		{
-			cmd->Run();
-			delete cmd;
-		}
-		else
-		{
-			msg.Load(502);
-			msg.Write(FSocket);
-		}
-	}
+                if (cmd)
+                {
+                        cmd->Run();
+                        delete cmd;
+                }
+                else
+                {
+                        msg.Load(502);
+                        msg.Write(FSocket);
+                }
+        }
 }

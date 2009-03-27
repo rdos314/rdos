@@ -35,7 +35,7 @@ class TThread
 public:
     TThread();
 	TThread(const char *ThreadName, int StackSize);
-	~TThread();
+	virtual ~TThread();
 
 	virtual void Run();
 	void Stop();

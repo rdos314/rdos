@@ -47,6 +47,12 @@ TDirEntry EmptyDir;
 char FOrderby[5];
 TSection FDirSortSection;
 
+#ifdef __WATCOMC__
+#define QSORTAPI
+#else
+#define QSORTAPI __cdecl
+#endif
+
 /*##########################################################################
 #
 #   Name       : SortCompare
@@ -58,7 +64,7 @@ TSection FDirSortSection;
 #   Returns....: *
 #
 ##########################################################################*/
-static int __cdecl SortCompare(const void *e1, const void *e2)
+static int QSORTAPI SortCompare(const void *e1, const void *e2)
 {
 	TDirListNode **tmp;
 	TDirEntryData dir1;

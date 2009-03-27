@@ -487,10 +487,6 @@ void RDOSAPI RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *he
 int RDOSAPI RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, 
                                 long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
 
-int RDOSAPI RdosPeekKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
-
-int RDOSAPI RdosReadKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
-
 int RDOSAPI RdosReadResource(int handle, int ID, char *Buf, int Size);
 
 int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
@@ -542,7 +538,8 @@ int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
 
 #pragma aux RdosGetRandom = \
     CallGate_get_random  \
-    "mul ecx"   \
+    "mul edx" \
+    parm [edx] \
     value [edx] \
     modify [eax];
 
@@ -1188,27 +1185,27 @@ int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
 #pragma aux RdosDosTimeDateToTics = \
     "push ebx" \
     "push ecx" \
-        "mov dx,si" \
-        "mov ax,dx" \
-        "shr dx,9" \
-        "add dx,1980" \
-        "mov cx,ax" \
-        "shr cx,5" \
-        "mov ch,cl" \
-        "and ch,0Fh" \
-        "mov cl,al" \
-        "and cl,1Fh" \
-        "mov bx,di" \
-        "mov ax,bx" \
-        "shr bx,11" \
-        "mov bh,bl" \
-        "shr ax,5" \
-        "and al,3Fh" \
-        "mov bl,al" \
-        "mov ax,di" \
-        "mov ah,al" \
-        "add ah,ah" \
-        "and ah,3Fh" \
+    "mov dx,si" \
+    "mov ax,dx" \
+    "shr dx,9" \
+    "add dx,1980" \
+    "mov cx,ax" \
+    "shr cx,5" \
+    "mov ch,cl" \
+    "and ch,0Fh" \
+    "mov cl,al" \
+    "and cl,1Fh" \
+    "mov bx,di" \
+    "mov ax,bx" \
+    "shr bx,11" \
+    "mov bh,bl" \
+    "shr ax,5" \
+    "and al,3Fh" \
+    "mov bl,al" \
+    "mov ax,di" \
+    "mov ah,al" \
+    "add ah,ah" \
+    "and ah,3Fh" \
     CallGate_time_to_binary  \
     "pop ecx" \
     "pop ebx" \
@@ -1217,18 +1214,94 @@ int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
     parm [si] [di] [ebx] [ecx] \
     modify [eax edx];
 
-void RDOSAPI RdosTicsToDosTimeDate(unsigned long msb, unsigned long lsb, unsigned short *date, unsigned short *time);
+#pragma aux RdosTicsToDosTimeDate = \
+    CallGate_binary_to_time  \
+    "shl cl,3" \
+    "shr cx,3" \
+    "sub dx,1980" \
+    "mov dh,dl" \
+    "shl dh,1" \
+    "xor dl,dl" \
+    "or dx,cx" \
+    "mov al,ah" \
+    "shr al,1" \
+    "shl bl,2" \
+    "shl bx,3" \
+    "or bl,al" \
+    "mov [esi],dx" \
+    "mov [edi],bx" \
+    parm [edx] [eax] [esi] [edi] \
+    modify [eax ebx ecx edx];
 
-void RDOSAPI RdosDecodeMsbTics(unsigned long msb, int *year, int *month, int *day, int *hour);
-void RDOSAPI RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro); 
+#pragma aux RdosDecodeMsbTics = \
+    "push ebx" \
+    "push ecx" \
+    "xor eax,eax" \
+    CallGate_binary_to_time  \
+    "movzx eax,bh" \
+    "mov [edi],eax" \
+    "movzx eax,cl" \
+    "mov [esi],eax" \
+    "movzx eax,ch" \
+    "pop ecx" \
+    "pop ebx" \
+    "mov [ecx],eax" \
+    "movzx eax,dx" \
+    "mov [ebx],eax" \
+    parm [edx] [ebx] [ecx] [esi] [edi] \
+    modify [eax edx];
 
-unsigned long RDOSAPI RdosCodeMsbTics(int year, int month, int day, int hour);
-unsigned long RDOSAPI RdosCodeLsbTics(int min, int sec, int milli, int micro); 
+#pragma aux RdosDecodeLsbTics = \
+    "mov edx,60" \
+    "mul edx" \
+    "mov [ebx],edx" \
+    "mov edx,60" \
+    "mul edx" \
+    "mov [ecx],edx" \
+    "mov edx,1000" \
+    "mul edx" \
+    "mov [esi],edx" \
+    "mov edx,1000" \
+    "mul edx" \
+    "mov [edi],edx" \
+    parm [eax] [ebx] [ecx] [esi] [edi] \
+    modify [eax edx];
+
+#pragma aux RdosCodeMsbTics = \
+    "mov ch,al" \
+    "mov bh,bl" \
+    "xor bl,bl" \
+    "xor ah,ah" \
+    CallGate_time_to_binary  \
+    parm [edx] [eax] [ecx] [ebx] \
+    value [edx] \
+    modify [eax bx cx];
+
+#pragma aux RdosCodeLsbTics = \
+    "xor dx,dx" \
+    "xor cx,cx" \
+    "xor bh,bh" \
+    "mov ah,al" \
+    CallGate_time_to_binary  \
+    "mov ebx,eax" \
+    "mov eax,1193046" \
+    "mul esi" \
+    "mov ecx,eax" \
+    "mov eax,1193" \
+    "mul edi" \
+    "add eax,ecx" \
+    "xor edx,edx" \
+    "mov ecx,1000" \
+    "div ecx" \
+    "add eax,ebx" \
+    parm [ebx] [eax] [esi] [edi] \
+    value [eax] \
+    modify [ebx ecx edx];
 
 #pragma aux RdosAddTics = \
     "add [esi],eax" \
     "adc [edi],0"  \
-        parm [edi] [esi] [eax];
+    parm [edi] [esi] [eax];
 
 #pragma aux RdosAddMicro = \
     "mov edx,1193"  \
@@ -1238,32 +1311,32 @@ unsigned long RDOSAPI RdosCodeLsbTics(int min, int sec, int milli, int micro);
     "idiv ebx" \
     "add [esi],eax" \
     "adc dword ptr [edi],0"  \
-        parm [edi] [esi] [eax] \
-        modify [eax ebx edx];
+    parm [edi] [esi] [eax] \
+    modify [eax ebx edx];
 
 #pragma aux RdosAddMilli = \
     "mov edx,1193"  \
     "imul edx"  \
     "add [esi],eax" \
     "adc [edi],edx"  \
-        parm [edi] [esi] [eax] \
-        modify [eax edx];
+    parm [edi] [esi] [eax] \
+    modify [eax edx];
 
 #pragma aux RdosAddSec = \
     "mov edx,1193046"  \
     "imul edx"  \
     "add [esi],eax" \
     "adc [edi],edx"  \
-        parm [edi] [esi] [eax] \
-        modify [eax edx];
+    parm [edi] [esi] [eax] \
+    modify [eax edx];
 
 #pragma aux RdosAddMin = \
     "mov edx,1193046*60"  \
     "imul edx"  \
     "add [esi],eax" \
     "adc [edi],edx"  \
-        parm [edi] [esi] [eax] \
-        modify [eax edx];
+    parm [edi] [esi] [eax] \
+    modify [eax edx];
 
 #pragma aux RdosAddHour = \
     "add [edi],eax"  \
@@ -1273,39 +1346,14 @@ unsigned long RDOSAPI RdosCodeLsbTics(int min, int sec, int milli, int micro);
     "mov edx,24"  \
     "imul edx"  \
     "add [edi],eax"  \
-        parm [edi] [esi] [eax] \
-        modify [eax edx];
+    parm [edi] [esi] [eax] \
+    modify [eax edx];
 
 #pragma aux RdosSyncTime = \
     CallGate_sync_time  \
     CarryToBool \
     parm [edx] \
     value [eax];
-
-#pragma aux RdosDecodeMsbTics = \
-    "xor edx,edx"   \
-    "mov cx,24" \
-    "div ecx"   \
-    "mov [esi],eax" \
-    "mov [edi],edx" \
-        parm [eax] [esi] [edi] \
-        modify [eax ecx edx];
-
-#pragma aux RdosDecodeLsbTics = \
-    "mov edx,60"    \
-    "mul edx"   \
-    "mov [ebx],edx" \
-    "mov edx,60"    \
-    "mul edx"   \
-    "mov [ecx],edx" \
-    "mov edx,1000"  \
-    "mul edx"   \
-    "mov [esi],edx" \
-    "mov edx,1000"  \
-    "mul edx"   \
-    "mov [edi],edx" \
-    parm [eax] [ebx] [ecx] [esi] [edi] \
-    modify [eax edx];
 
 #pragma aux RdosCreateSection = \
     CallGate_create_user_section  \
@@ -1598,8 +1646,39 @@ unsigned long RDOSAPI RdosCodeLsbTics(int min, int sec, int milli, int micro);
     parm [eax] [edx] [ecx] \
     modify [dh];
 
-// PeekKeyEvent here
-// ReadKeyEvent here
+#pragma aux RdosPeekKeyEvent = \
+    "push ecx" \
+    CallGate_peek_key_event  \
+    "movzx eax,ax" \
+    "mov [ebx],eax" \
+    "movzx eax,cx" \
+    "pop ecx" \
+    "mov [ecx],eax" \
+    "movzx eax,dl" \
+    "mov [esi],eax" \
+    "movzx eax,dh" \
+    "mov [edi],eax" \
+    CarryToBool \
+    parm [ebx] [ecx] [esi] [edi] \
+    value [eax] \
+    modify [dx];
+
+#pragma aux RdosReadKeyEvent = \
+    "push ecx" \
+    CallGate_read_key_event  \
+    "movzx eax,ax" \
+    "mov [ebx],eax" \
+    "movzx eax,cx" \
+    "pop ecx" \
+    "mov [ecx],eax" \
+    "movzx eax,dl" \
+    "mov [esi],eax" \
+    "movzx eax,dh" \
+    "mov [edi],eax" \
+    CarryToBool \
+    parm [ebx] [ecx] [esi] [edi] \
+    value [eax] \
+    modify [dx];
 
 #pragma aux RdosHideMouse = \
     CallGate_hide_mouse;

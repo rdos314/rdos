@@ -38,7 +38,7 @@ public:
     TFuzzyVar();
     ~TFuzzyVar();
 
-    void Add(indexindex, TFuzzyBaseSet *set);
+    void Add(int index, TFuzzyBaseSet *set);
     int HasSet(int index);
     int GetSets();
 

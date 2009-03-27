@@ -29,8 +29,8 @@
 #include "rdos.h"
 #include "debug.h"
 
-#define FALSE	0
-#define TRUE	!FALSE
+#define FALSE   0
+#define TRUE    !FALSE
 
 #define EVENT_EXCEPTION         1
 #define EVENT_CREATE_THREAD     2
@@ -83,9 +83,9 @@ TDebugThread::TDebugThread(TCreateThreadEvent *event)
     FDebug = FALSE;
     FWasTrace = FALSE;
 
-	FHasBreak = FALSE;
-	FHasTrace = FALSE;
-	FHasException = FALSE;
+        FHasBreak = FALSE;
+        FHasTrace = FALSE;
+        FHasException = FALSE;
 
     ReadState();
 }
@@ -215,28 +215,28 @@ int TDebugThread::WriteMem(int Sel, long Offset, char *Buf, int Size)
 void TDebugThread::SetupGo()
 {
     int update = FALSE;
-   	Tss tss;
-	unsigned char ch = 0;
+        Tss tss;
+        unsigned char ch = 0;
 
-	FWasTrace = FALSE;
+        FWasTrace = FALSE;
 
-	RdosGetThreadTss(ThreadID, &tss);
-	RdosReadThreadMem(ThreadID, tss.cs, tss.eip, &ch, 1);
+        RdosGetThreadTss(ThreadID, &tss);
+        RdosReadThreadMem(ThreadID, tss.cs, tss.eip, (char *)&ch, 1);
 
-	if (ch == 0xCC)
-	{
-		tss.eip++;
-		update = TRUE;
-	}
+        if (ch == 0xCC)
+        {
+                tss.eip++;
+                update = TRUE;
+        }
 
-	if ((tss.eflags & 0x100) != 0)
-	{
-	    tss.eflags &= ~0x100;
-	    update = TRUE;
+        if ((tss.eflags & 0x100) != 0)
+        {
+            tss.eflags &= ~0x100;
+            update = TRUE;
     }
 
     if (update)
-    	RdosSetThreadTss(ThreadID, &tss);
+        RdosSetThreadTss(ThreadID, &tss);
 
 }
 
@@ -254,29 +254,29 @@ void TDebugThread::SetupGo()
 void TDebugThread::SetupTrace()
 {
     int update = FALSE;
-	Tss tss;
-	unsigned char ch = 0;
+        Tss tss;
+        unsigned char ch = 0;
 
-	FWasTrace = TRUE;
+        FWasTrace = TRUE;
 
     RdosGetThreadTss(ThreadID, &tss);
 
-	RdosReadThreadMem(ThreadID, tss.cs, tss.eip, &ch, 1);
+        RdosReadThreadMem(ThreadID, tss.cs, tss.eip, (char *)&ch, 1);
 
-	if (ch == 0xCC)
-	{
-		tss.eip++;
-		update = TRUE;
-	}
+        if (ch == 0xCC)
+        {
+                tss.eip++;
+                update = TRUE;
+        }
 
-	if ((tss.eflags & 0x100) == 0)
-	{
-		tss.eflags |= 0x100;
-		update = TRUE;
-	}
+        if ((tss.eflags & 0x100) == 0)
+        {
+                tss.eflags |= 0x100;
+                update = TRUE;
+        }
 
     if (update)
-		RdosSetThreadTss(ThreadID, &tss);
+                RdosSetThreadTss(ThreadID, &tss);
 }
 
 /*##########################################################################
@@ -298,7 +298,7 @@ void TDebugThread::ActivateBreaks(TDebugBreak *BreakList)
     while (b)
     {
         RdosReadThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
-		  RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
+                  RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
 
         b = b->Next;
     }
@@ -319,7 +319,7 @@ void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList)
 {
     TDebugBreak *b = BreakList;
 
-	if (!FWasTrace)
+        if (!FWasTrace)
     {
         while (b)
         {
@@ -342,120 +342,120 @@ void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList)
 ##########################################################################*/
 void TDebugThread::SetException(TExceptionEvent *event)
 {
-	Tss tss;
-	int i;
+        Tss tss;
+        int i;
 
-	FHasBreak = FALSE;
-	FHasTrace = FALSE;
-	FHasException = FALSE;
+        FHasBreak = FALSE;
+        FHasTrace = FALSE;
+        FHasException = FALSE;
 
-	switch (event->Code)
-	{
-	    case 0x80000003:
-	        FHasBreak = TRUE;
-	        break;
+        switch (event->Code)
+        {
+            case 0x80000003:
+                FHasBreak = TRUE;
+                break;
 
-	    case 0x80000004:
-	        FHasTrace = TRUE;
-	        break;
+            case 0x80000004:
+                FHasTrace = TRUE;
+                break;
 
-	    case 0xC0000005:
-	        FaultText = "Access violation";
-	        FHasException = TRUE;
-	        break;
+            case 0xC0000005:
+                FaultText = "Access violation";
+                FHasException = TRUE;
+                break;
 
-	    case 0xC0000017:
-	        FaultText = "No memory";
-	        FHasException = TRUE;
-	        break;
+            case 0xC0000017:
+                FaultText = "No memory";
+                FHasException = TRUE;
+                break;
 
         case 0xC000001D:
-	        FaultText = "Illegal instruction";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Illegal instruction";
+                FHasException = TRUE;
+                break;
             
         case 0xC0000025:
-	        FaultText = "Noncontinuable exception";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Noncontinuable exception";
+                FHasException = TRUE;
+                break;
 
         case 0xC000008C:
-	        FaultText = "Array bounds exceeded";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Array bounds exceeded";
+                FHasException = TRUE;
+                break;
 
         case 0xC0000094:
-	        FaultText = "Integer divide by zero";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Integer divide by zero";
+                FHasException = TRUE;
+                break;
 
         case 0xC0000095:
-	        FaultText = "Integer overflow";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Integer overflow";
+                FHasException = TRUE;
+                break;
 
         case 0xC0000096:
-	        FaultText = "Priviliged instruction";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Priviliged instruction";
+                FHasException = TRUE;
+                break;
 
         case 0xC00000FD:
-	        FaultText = "Stack overflow";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Stack overflow";
+                FHasException = TRUE;
+                break;
 
         case 0xC000013A:
-	        FaultText = "Control-C exit";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Control-C exit";
+                FHasException = TRUE;
+                break;
 
         case 0xC000008D:
-	        FaultText = "Float denormal operand";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Float denormal operand";
+                FHasException = TRUE;
+                break;
 
         case 0xC000008E:
-	        FaultText = "Float divide by zero";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Float divide by zero";
+                FHasException = TRUE;
+                break;
 
         case 0xC000008F:
-	        FaultText = "Float inexact result";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Float inexact result";
+                FHasException = TRUE;
+                break;
 
         case 0xC0000090:
-	        FaultText = "Float invalid operation";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Float invalid operation";
+                FHasException = TRUE;
+                break;
 
         case 0xC0000091:
-	        FaultText = "Float overflow";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Float overflow";
+                FHasException = TRUE;
+                break;
 
         case 0xC0000092:
-	        FaultText = "Float stack check";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Float stack check";
+                FHasException = TRUE;
+                break;
 
         case 0xC0000093:
-	        FaultText = "Float underflow";
-	        FHasException = TRUE;
-	        break;
+                FaultText = "Float underflow";
+                FHasException = TRUE;
+                break;
 
-	    default:
-	        FaultText = "Protection fault";
-	        FHasException = TRUE;
-	        break;
-	}
+            default:
+                FaultText = "Protection fault";
+                FHasException = TRUE;
+                break;
+        }
 
-	Cs = event->Cs;
-	Eip = event->Eip;
+        Cs = event->Cs;
+        Eip = event->Eip;
 
-	ReadState();
+        ReadState();
 
-	RdosGetThreadTss(ThreadID, &tss);
+        RdosGetThreadTss(ThreadID, &tss);
 
     Esp0 = tss.esp0;
     Ess0 = tss.ess0;
@@ -478,26 +478,26 @@ void TDebugThread::SetException(TExceptionEvent *event)
     Ds = tss.ds;
     Fs = tss.fs;
     Gs = tss.gs;
-	 Ldt = tss.ldt;
+         Ldt = tss.ldt;
 
-	 for (i = 0; i < 4; i++)
-		  Dr[i] = tss.dr[i];
+         for (i = 0; i < 4; i++)
+                  Dr[i] = tss.dr[i];
 
-	 Dr7 = tss.dr7;
-	 MathControl = tss.MathControl;
-	 MathStatus = tss.MathStatus;
-	 MathTag = tss.MathTag;
-	 MathEip = tss.MathEip;
-	 MathCs = tss.MathCs;
-	 MathOp[0] = tss.MathOp[0];
-	 MathOp[1] = tss.MathOp[1];
-	 MathDataOffs = tss.MathDataOffs;
-	 MathDataSel = tss.MathDataSel;
+         Dr7 = tss.dr7;
+         MathControl = tss.MathControl;
+         MathStatus = tss.MathStatus;
+         MathTag = tss.MathTag;
+         MathEip = tss.MathEip;
+         MathCs = tss.MathCs;
+         MathOp[0] = tss.MathOp[0];
+         MathOp[1] = tss.MathOp[1];
+         MathDataOffs = tss.MathDataOffs;
+         MathDataSel = tss.MathDataSel;
 
-	 for (i = 0; i < 8; i++)
-		  St[i] = tss.st[i];
+         for (i = 0; i < 8; i++)
+                  St[i] = tss.st[i];
 
-	 FDebug = TRUE;
+         FDebug = TRUE;
 }
 
 /*##########################################################################
@@ -513,10 +513,10 @@ void TDebugThread::SetException(TExceptionEvent *event)
 ##########################################################################*/
 void TDebugThread::WriteRegs()
 {
-	Tss tss;
-	int i;
+        Tss tss;
+        int i;
 
-	RdosGetThreadTss(ThreadID, &tss);
+        RdosGetThreadTss(ThreadID, &tss);
 
     tss.eflags = Eflags;
     tss.eax = Eax;
@@ -533,14 +533,14 @@ void TDebugThread::WriteRegs()
     tss.fs = Fs;
     tss.gs = Gs;
 
-	tss.MathControl = MathControl;
-	tss.MathStatus = MathStatus;
-	tss.MathTag = MathTag;
+        tss.MathControl = MathControl;
+        tss.MathStatus = MathStatus;
+        tss.MathTag = MathTag;
 
-	for (i = 0; i < 8; i++)
+        for (i = 0; i < 8; i++)
         tss.st[i] = St[i];
 
-	RdosSetThreadTss(ThreadID, &tss);
+        RdosSetThreadTss(ThreadID, &tss);
 }
 
 /*##########################################################################
@@ -616,11 +616,11 @@ TDebugModule::TDebugModule(TCreateProcessEvent *event)
     Handle = event->Handle;
     ImageBase = event->ImageBase;
     ImageSize = event->ImageSize;
-	 ObjectRva = event->ObjectRva;
+         ObjectRva = event->ObjectRva;
 
-	 FNew = FALSE;
+         FNew = FALSE;
 
-	 ReadName();
+         ReadName();
 }
 
 /*##########################################################################
@@ -636,11 +636,11 @@ TDebugModule::TDebugModule(TCreateProcessEvent *event)
 ##########################################################################*/
 TDebugModule::TDebugModule(TLoadDllEvent *event)
 {
-	 FileHandle = event->FileHandle;
-	 Handle = event->Handle;
-	 ImageBase = event->ImageBase;
-	 ImageSize = event->ImageSize;
-	 ObjectRva = event->ObjectRva;
+         FileHandle = event->FileHandle;
+         Handle = event->Handle;
+         ImageBase = event->ImageBase;
+         ImageSize = event->ImageSize;
+         ObjectRva = event->ObjectRva;
 
     FNew = TRUE;
 
@@ -698,10 +698,10 @@ void TDebugModule::ReadName()
 ##########################################################################*/
 TDebugBreak::TDebugBreak(int sel, long offset)
 {
-	 Sel = sel;
-	 Offset = offset;
-	 Instr = 0xCC;
-	 Next = 0;
+         Sel = sel;
+         Offset = offset;
+         Instr = 0xCC;
+         Next = 0;
 }
 
 /*##########################################################################
@@ -717,8 +717,8 @@ TDebugBreak::TDebugBreak(int sel, long offset)
 ##########################################################################*/
 TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
  : FProgram(Program),
-	FParam(Param),
-	FStartDir(StartDir)
+        FParam(Param),
+        FStartDir(StartDir)
 {
     ThreadList = 0;
     ModuleList = 0;
@@ -759,7 +759,7 @@ TDebug::~TDebug()
 ##########################################################################*/
 void TDebug::DeviceName(char *Name, int MaxLen) const
 {
-	strncpy(Name,"Debug device",MaxLen);
+        strncpy(Name,"Debug device",MaxLen);
 }
 
 /*##########################################################################
@@ -1276,15 +1276,15 @@ void TDebug::ClearBreak(int Sel, long Offset)
 ##########################################################################*/
 void TDebug::Go()
 {
-	if (CurrentThread)
-	{
-		UserSignal.Clear();
+        if (CurrentThread)
+        {
+                UserSignal.Clear();
 
-		CurrentThread->SetupGo();
-		CurrentThread->ActivateBreaks(BreakList);
-		RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+                CurrentThread->SetupGo();
+                CurrentThread->ActivateBreaks(BreakList);
+                RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
 
-		UserSignal.WaitForever();
+                UserSignal.WaitForever();
     }
 }
 
@@ -1305,11 +1305,11 @@ void TDebug::Trace()
     int Sel;
     long Offset;
 
-	if (CurrentThread)
-	{
-	    Sel = CurrentThread->Cs;
-	    Offset = CurrentThread->Eip;
-	    
+        if (CurrentThread)
+        {
+            Sel = CurrentThread->Cs;
+            Offset = CurrentThread->Eip;
+            
         CurrentThread->ReadMem(Sel, Offset, Instr, 2);
 
         if (Instr[0] == 0xF && Instr[1] == 0xB)
@@ -1321,12 +1321,12 @@ void TDebug::Trace()
         }
         else
         {
-    		UserSignal.Clear();
+                UserSignal.Clear();
     
             CurrentThread->SetupTrace();
-		    RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+                    RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
 
-    		UserSignal.WaitForever();
+                UserSignal.WaitForever();
         }
     }
 }
@@ -1344,8 +1344,8 @@ void TDebug::Trace()
 ##########################################################################*/
 void TDebug::HandleCreateProcess(TCreateProcessEvent *event)
 {
-	InsertThread(new TDebugThread(event));
-    InsertModule(new TDebugModule(event));	 
+        InsertThread(new TDebugThread(event));
+    InsertModule(new TDebugModule(event));       
 }
 
 /*##########################################################################
@@ -1400,7 +1400,7 @@ void TDebug::HandleTerminateProcess(int exitcode)
 ##########################################################################*/
 void TDebug::HandleCreateThread(TCreateThreadEvent *event)
 {
-	 InsertThread(new TDebugThread(event));
+         InsertThread(new TDebugThread(event));
 }
 
 /*##########################################################################
@@ -1459,7 +1459,7 @@ void TDebug::HandleException(TExceptionEvent *event, int thread)
 ##########################################################################*/
 void TDebug::HandleLoadDll(TLoadDllEvent *event)
 {
-	 InsertModule(new TDebugModule(event));
+         InsertModule(new TDebugModule(event));
 }
 
 /*##########################################################################
@@ -1475,7 +1475,7 @@ void TDebug::HandleLoadDll(TLoadDllEvent *event)
 ##########################################################################*/
 void TDebug::SignalNewData()
 {
-	 int thread;
+         int thread;
     char debtype;
     TCreateProcessEvent cpe;
     TCreateThreadEvent cte;
@@ -1484,69 +1484,69 @@ void TDebug::SignalNewData()
     int ExitCode;
     TDebugThread *newt;
 
-	debtype = RdosGetDebugEvent(FHandle, &thread);
+        debtype = RdosGetDebugEvent(FHandle, &thread);
 
-	switch (debtype)
-	{
-		case EVENT_EXCEPTION:
-			RdosGetDebugEventData(FHandle, &ee);
-			HandleException(&ee, thread);
-			break;
+        switch (debtype)
+        {
+                case EVENT_EXCEPTION:
+                        RdosGetDebugEventData(FHandle, &ee);
+                        HandleException(&ee, thread);
+                        break;
 
-		case EVENT_CREATE_THREAD:
-			RdosGetDebugEventData(FHandle, &cte);
-			HandleCreateThread(&cte);
-			FThreadChanged = TRUE;
-			break;
+                case EVENT_CREATE_THREAD:
+                        RdosGetDebugEventData(FHandle, &cte);
+                        HandleCreateThread(&cte);
+                        FThreadChanged = TRUE;
+                        break;
 
-		case EVENT_CREATE_PROCESS:
-			RdosGetDebugEventData(FHandle, &cpe);
-			HandleCreateProcess(&cpe);
-			break;
+                case EVENT_CREATE_PROCESS:
+                        RdosGetDebugEventData(FHandle, &cpe);
+                        HandleCreateProcess(&cpe);
+                        break;
 
-		case EVENT_TERMINATE_THREAD:
-			HandleTerminateThread(thread);
-			FThreadChanged = TRUE;
-			break;
+                case EVENT_TERMINATE_THREAD:
+                        HandleTerminateThread(thread);
+                        FThreadChanged = TRUE;
+                        break;
 
-		case EVENT_TERMINATE_PROCESS:
-			RdosGetDebugEventData(FHandle, &ExitCode);
-			HandleTerminateProcess(ExitCode);
-			FInstalled = FALSE;
-			UserSignal.Signal();
-			break;
+                case EVENT_TERMINATE_PROCESS:
+                        RdosGetDebugEventData(FHandle, &ExitCode);
+                        HandleTerminateProcess(ExitCode);
+                        FInstalled = FALSE;
+                        UserSignal.Signal();
+                        break;
 
-		case EVENT_LOAD_DLL:
-			RdosGetDebugEventData(FHandle, &lde);
-			HandleLoadDll(&lde);
-			FModuleChanged = TRUE;
-			break;
-	}
+                case EVENT_LOAD_DLL:
+                        RdosGetDebugEventData(FHandle, &lde);
+                        HandleLoadDll(&lde);
+                        FModuleChanged = TRUE;
+                        break;
+        }
 
-	RdosClearDebugEvent(FHandle);
+        RdosClearDebugEvent(FHandle);
 
-	if (debtype == EVENT_EXCEPTION)
-	{
-		if (CurrentThread)
-		{
-			CurrentThread->DeactivateBreaks(BreakList);
+        if (debtype == EVENT_EXCEPTION)
+        {
+                if (CurrentThread)
+                {
+                        CurrentThread->DeactivateBreaks(BreakList);
 
-			if (thread != CurrentThread->ThreadID)
-			{
-				newt = LockThread(thread);
-				if (newt)
-				{
-					CurrentThread = newt;
-					FThreadChanged = TRUE;
-				}
-				UnlockThread();
-			}
-		}
+                        if (thread != CurrentThread->ThreadID)
+                        {
+                                newt = LockThread(thread);
+                                if (newt)
+                                {
+                                        CurrentThread = newt;
+                                        FThreadChanged = TRUE;
+                                }
+                                UnlockThread();
+                        }
+                }
 
-		UserSignal.Signal();
-	}
-	else
-		RdosContinueDebugEvent(FHandle, thread);
+                UserSignal.Signal();
+        }
+        else
+                RdosContinueDebugEvent(FHandle, thread);
 }
 
 /*##########################################################################
@@ -1562,11 +1562,11 @@ void TDebug::SignalNewData()
 ##########################################################################*/
 void TDebug::Execute()
 {
-	int thread;
+        int thread;
 
-	RdosWaitMilli(250);
+        RdosWaitMilli(250);
 
-	FHandle = RdosSpawnDebug(FProgram.GetData(), FParam.GetData(), FStartDir.GetData(), &thread);
+        FHandle = RdosSpawnDebug(FProgram.GetData(), FParam.GetData(), FStartDir.GetData(), &thread);
 
     if (!FHandle)
         FInstalled = FALSE;
