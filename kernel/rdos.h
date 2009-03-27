@@ -475,22 +475,6 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 }
 #endif
 
-void RDOSAPI RdosBlit(int SrcHandle, int DestHandle, int width, int height,
-                                int SrcX, int SrcY, int DestX, int DestY);
-
-void RDOSAPI RdosDrawMask(int handle, void *mask, int RowSize, int width, int height,
-                                int SrcX, int SrcY, int DestX, int DestY); 
-
-void RDOSAPI RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height,
-                                int *linesize, void **buffer);
-
-int RDOSAPI RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, 
-                                long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
-
-int RDOSAPI RdosReadResource(int handle, int ID, char *Buf, int Size);
-
-int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
-
 #ifdef __WATCOMC__
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -648,6 +632,10 @@ int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
 
 #pragma aux RdosDrawRect = \
     CallGate_draw_rect  \
+    parm [ebx] [ecx] [edx] [esi] [edi];
+
+#pragma aux RdosDrawEllipse = \
+    CallGate_draw_ellipse  \
     parm [ebx] [ecx] [edx] [esi] [edi];
 
 #pragma aux RdosCreateBitmap = \
