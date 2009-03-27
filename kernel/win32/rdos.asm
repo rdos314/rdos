@@ -3057,7 +3057,9 @@ RdosDecodeLsbTics	Endp
 RdosCodeMsbTics	Proc
 	push ebp
 	mov ebp,esp
-	pushad
+	push ebx
+	push ecx
+	push edx
 ;
 	mov dx,[ebp+8]
 	mov ch,[ebp+12]
@@ -3068,7 +3070,9 @@ RdosCodeMsbTics	Proc
 	UserGate time_to_binary_nr
 	mov eax,edx
 ;
-	popad
+	pop edx
+	pop ecx
+	pop ebx
 	pop ebp
 	ret 16
 RdosCodeMsbTics	Endp
