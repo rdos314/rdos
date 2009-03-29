@@ -277,95 +277,100 @@ void TLog::Add(TVp *vp)
 ##########################################################################*/
 void TLog::Execute()
 {
-    int year, month, day;
-    int hour, min, sec;
-    int ms;
-    TDeviceMsg *doc;
-    TDeviceTag *tag;
-    int i;
-    TRad *rad;
-    int ival;
-    unsigned long msb;
-    unsigned long lsb;
-    int size;
+	 int year, month, day;
+	 int hour, min, sec;
+	 int ms, us;
+	 TDeviceMsg *doc;
+	 TDeviceTag *tag;
+	 int i;
+	 TRad *rad;
+	 int ival;
+	 unsigned long msb;
+	 unsigned long lsb;
+	 int size;
 	char *msg;
 
 	RdosWaitMilli(1000);
 
-    RdosGetTime(&FYear, &FMonth, &FDay, &FHour, &FMin, &sec, &ms);
-    CreateDayFile();
-    
-    while (FInstalled)
-    {
-        RdosGetTime(&year, &month, &day, &hour, &min, &sec, &ms);
+	RdosGetTime(&msb, &lsb);
+	RdosDecodeMsbTics(msb, &FYear, &FMonth, &FDay, &FHour);
+	RdosDecodeLsbTics(lsb, &FMin, &sec, &ms, &us);
+	CreateDayFile();
 
-        if (year != FYear || month != FMonth || day != FDay)
-        {
-            FYear = year;
-            FMonth = month;
-            FDay = day;
-            CreateDayFile();
-        }
+	while (FInstalled)
+	{
+		RdosGetTime(&msb, &lsb);
+		RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
 
-        if (hour != FHour || min != FMin)
-        {
-            FHour = hour;
-            FMin = min;
+		if (year != FYear || month != FMonth || day != FDay)
+		{
+			FYear = year;
+			FMonth = month;
+			FDay = day;
+			CreateDayFile();
+		}
 
-            RdosRecordToTics(&msb, &lsb, FYear, FMonth, FDay, FHour, FMin, 0, 0);
+		if (hour != FHour || min != FMin)
+		{
+			FHour = hour;
+			FMin = min;
 
-            doc = new TDeviceMsg(MAX_MSG_SIZE);
+			msb = RdosCodeMsbTics(FYear, FMonth, FDay, FHour);
+			lsb = RdosCodeLsbTics(FMin, 0, 0, 0);
+
+			doc = new TDeviceMsg(MAX_MSG_SIZE);
 
 			tag = doc->AddTag(LOG_TAG_HEADER);
 			tag->AddUnsignedLong(LOG_VAR_MsbTime, msb);
 			tag->AddUnsignedLong(LOG_VAR_LsbTime, lsb);
 
-            if (FWs)
-            {
-                tag = doc->AddTag(LOG_TAG_INDOOR);
-                ival = 10.0 * FWs->GetIndoorTemp();
-                tag->AddFloat1(LOG_VAR_Temp, ival);
+				if (FWs)
+				{
+					 tag = doc->AddTag(LOG_TAG_INDOOR);
+					 ival = 10.0 * FWs->GetIndoorTemp();
+					 tag->AddFloat1(LOG_VAR_Temp, ival);
 
-                ival = FWs->GetIndoorHumidity();
-                tag->AddSignedInt(LOG_VAR_Humidity, ival);
+					 ival = FWs->GetIndoorHumidity();
+					 tag->AddSignedInt(LOG_VAR_Humidity, ival);
 
-                tag = doc->AddTag(LOG_TAG_OUTDOOR);
-                ival = 10.0 * FWs->GetOutdoorTemp();
-                tag->AddFloat1(LOG_VAR_Temp, ival);
+					 tag = doc->AddTag(LOG_TAG_OUTDOOR);
+					 ival = 10.0 * FWs->GetOutdoorTemp();
+					 tag->AddFloat1(LOG_VAR_Temp, ival);
 
-                ival = FWs->GetOutdoorHumidity();
-                tag->AddSignedInt(LOG_VAR_Humidity, ival);
+					 ival = FWs->GetOutdoorHumidity();
+					 tag->AddSignedInt(LOG_VAR_Humidity, ival);
 
-                ival = 10.0 * FWs->GetDewPoint();
-                tag->AddFloat1(LOG_VAR_Dewpoint, ival);
+					 ival = 10.0 * FWs->GetDewPoint();
+					 tag->AddFloat1(LOG_VAR_Dewpoint, ival);
 
-                ival = 10.0 * FWs->GetWindChill();
-                tag->AddFloat1(LOG_VAR_Windchill, ival);
+					 ival = 10.0 * FWs->GetWindChill();
+					 tag->AddFloat1(LOG_VAR_Windchill, ival);
 
-                ival = 10.0 * FWs->GetWindSpeed();
-                tag->AddFloat1(LOG_VAR_Windspeed, ival);
+					 ival = 10.0 * FWs->GetWindSpeed();
+					 tag->AddFloat1(LOG_VAR_Windspeed, ival);
 
-                ival = FWs->GetWindDir();
-                tag->AddSignedInt(LOG_VAR_Winddir, ival);
+					 ival = FWs->GetWindDir();
+					 tag->AddSignedInt(LOG_VAR_Winddir, ival);
 
-                ival = 10.0 * FWs->GetAirPressure();
-                tag->AddFloat1(LOG_VAR_Pressure, ival);
+					 ival = 10.0 * FWs->GetAirPressure();
+					 tag->AddFloat1(LOG_VAR_Pressure, ival);
 
-                if (FHour == 0)
-                {
-                    tag = doc->AddTag(LOG_TAG_RAIN);
+					 if (FHour == 0)
+					 {
+						  tag = doc->AddTag(LOG_TAG_RAIN);
 
-                    ival = 10.0 * FWs->GetRain1h();
-                    tag->AddFloat1(LOG_VAR_Rain, ival);
-                }
-            }
+						  ival = 10.0 * FWs->GetRain1h();
+						  tag->AddFloat1(LOG_VAR_Rain, ival);
+					 }
+				}
 
-            if (FCirc)
-            {
-                tag = doc->AddTag(LOG_TAG_CIRC);
-                ival = 10.0 * FCirc->GetSpeed();
-                tag->AddFloat1(LOG_VAR_Motor, ival);
-            }
+				if (FCirc)
+				{
+					 tag = doc->AddTag(LOG_TAG_CIRC);
+					 ival = 10.0 * FCirc->GetSpeed();
+					 tag->AddFloat1(LOG_VAR_Motor, ival);
+				}
 
 			if (FVp)
 			{

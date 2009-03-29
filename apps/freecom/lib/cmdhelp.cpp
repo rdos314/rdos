@@ -47,16 +47,16 @@
 ##########################################################################*/
 int IsEmpty(const char *s)
 {
-	if (s)
-	{
-		while(*s)
-		{
-			s++;
-			if (!isspace(*s))
-				return FALSE;
-		}
-	}
-	return TRUE;
+        if (s)
+        {
+                while(*s)
+                {
+                        s++;
+                        if (!isspace(*s))
+                                return FALSE;
+                }
+        }
+        return TRUE;
 }
 
 /*##########################################################################
@@ -72,7 +72,7 @@ int IsEmpty(const char *s)
 ##########################################################################*/
 int IsArgDelim(char ch)
 {
-	return isspace(ch) || iscntrl(ch) || strchr(",;=", ch);
+        return isspace(ch) || iscntrl(ch) || strchr(",;=", ch);
 }
 
 /*##########################################################################
@@ -88,7 +88,7 @@ int IsArgDelim(char ch)
 ##########################################################################*/
 int IsOptDelim(char ch)
 {
-	return isspace(ch) || iscntrl(ch);
+        return isspace(ch) || iscntrl(ch);
 }
 
 /*##########################################################################
@@ -104,7 +104,7 @@ int IsOptDelim(char ch)
 ##########################################################################*/
 int IsOptChar(char ch)
 {
-	return ch == '/';
+        return ch == '/';
 }
 
 
@@ -137,9 +137,9 @@ int IsFileNameChar(char c)
 ##########################################################################*/
 const char *LTrimsp(const char *str)
 {
-	while (*str && isspace(*str))
-	    str++;
-	return str;
+        while (*str && isspace(*str))
+            str++;
+        return str;
 }
 
 /*##########################################################################
@@ -155,14 +155,14 @@ const char *LTrimsp(const char *str)
 ##########################################################################*/
 const char *LTrim(const char *str)
 {
-	while (*str)
-	{
-		if (IsArgDelim(*str))
-			str++;
-		else
-			break;
-	}
-	return str;
+        while (*str)
+        {
+                if (IsArgDelim(*str))
+                        str++;
+                else
+                        break;
+        }
+        return str;
 }
 
 /*##########################################################################
@@ -178,15 +178,15 @@ const char *LTrim(const char *str)
 ##########################################################################*/
 void RTrim(char *str)
 { 
-	char *p;
+        char *p;
 
-	p = strchr(str, 0);
-	p--;
+        p = strchr(str, 0);
+        p--;
 
-	while (p >= str && IsArgDelim(*p))
-		p--;
+        while (p >= str && IsArgDelim(*p))
+                p--;
 
-	p[1] = 0;
+        p[1] = 0;
 }
 
 /*##########################################################################
@@ -202,30 +202,30 @@ void RTrim(char *str)
 ##########################################################################*/
 char *Unquote(const char *str, const char *end)
 {
-	char *h, *newStr;
-	const char *q;
-	int len;
+        char *h, *newStr;
+        const char *q;
+        int len;
 
-	newStr = new char[end - str + 1];
-	h = newStr;
+        newStr = new char[end - str + 1];
+        h = newStr;
 
-	while ((q = strpbrk(str, "\"")) != 0 && q < end)
-	{
-		memcpy(h, str, len = q++ - str);
-		h += len;
-		if ((str = strchr(q, q[-1])) == 0 || str >= end)
-		{
-			str = q;
-			break;
-		}
+        while ((q = strpbrk(str, "\"")) != 0 && q < end)
+        {
+                memcpy(h, str, len = q++ - str);
+                h += len;
+                if ((str = strchr(q, q[-1])) == 0 || str >= end)
+                {
+                        str = q;
+                        break;
+                }
 
-		memcpy(h, q, len = str++ - q);
-		h += len;
-	}
+                memcpy(h, q, len = str++ - q);
+                h += len;
+        }
 
-	memcpy(h, str, len = end - str);
-	h[len] = 0;
-	return newStr;
+        memcpy(h, str, len = end - str);
+        h[len] = 0;
+        return newStr;
 }
 
 /*##########################################################################
@@ -240,24 +240,24 @@ char *Unquote(const char *str, const char *end)
 #
 ##########################################################################*/
 int MatchToken(char **Xp, const char *word, int len)
-{	
+{       
     char *p;
     char *q;
 
     p = *Xp;
-	if (strncmpi(p, word, len) == 0)
-	{
-		p += len;
-		if (*p)
-		{
-			q = (char *)LTrim(p);
-			if (q == p)
-				return FALSE;
-			p = q;
-		}
-		*Xp = p;
-		return TRUE;
-	}
+        if (strnicmp(p, word, len) == 0)
+        {
+                p += len;
+                if (*p)
+                {
+                        q = (char *)LTrim(p);
+                        if (q == p)
+                                return FALSE;
+                        p = q;
+                }
+                *Xp = p;
+                return TRUE;
+        }
 
-	return FALSE;
+        return FALSE;
 }

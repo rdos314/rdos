@@ -240,14 +240,14 @@ void TCirc::WriteCircValve(long double value)
 ##########################################################################*/
 void TCirc::Execute()
 {
-	int year, month, day;
-	int hour, min, sec;
-	int ms;
+	int min, sec;
+	int ms, us;
+	unsigned long msb, lsb;
 	int LastMin;
 	int i;
 	long double ValArr[MAX_FUZZY_VARS];
 	long double val;
-    char str[50];
+	 char str[50];
 	TFont font(10);
 
 	vbe->SetFont(&font);
@@ -261,11 +261,13 @@ void TCirc::Execute()
 		ValArr[i] = 0.0;
 
 	FSpeed = ReadCircValve();
-	RdosGetTime(&year, &month, &day, &hour, &LastMin, &sec, &ms);
+	RdosGetTime(&msb, &lsb);
+	RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
 
 	while (FInstalled)
 	{
-		RdosGetTime(&year, &month, &day, &hour, &min, &sec, &ms);
+		RdosGetTime(&msb, &lsb);
+		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
 
 		if (min != LastMin)
 		{

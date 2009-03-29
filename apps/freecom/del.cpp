@@ -65,7 +65,7 @@ TDelFactory::TDelFactory()
 ##########################################################################*/
 TCommand *TDelFactory::Create(TSession *session, const char *param)
 {
-	return new TDelCommand(session, param);
+        return new TDelCommand(session, param);
 }
 
 /*##########################################################################
@@ -97,7 +97,7 @@ TEraseFactory::TEraseFactory()
 ##########################################################################*/
 TCommand *TEraseFactory::Create(TSession *session, const char *param)
 {
-	return new TDelCommand(session, param);
+        return new TDelCommand(session, param);
 }
 
 /*##########################################################################
@@ -114,7 +114,7 @@ TCommand *TEraseFactory::Create(TSession *session, const char *param)
 TDelCommand::TDelCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_DEL);
+        FHelpScreen.Load(TEXT_CMDHELP_DEL);
 }
 
 /*##########################################################################
@@ -130,16 +130,16 @@ TDelCommand::TDelCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TDelCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
-	switch(ch)
-	{
-		case 'V':
-			return OptScanBool(optstr, bool, strarg, &FOptV);
+        switch(ch)
+        {
+                case 'V':
+                        return OptScanBool(optstr, bool, strarg, &FOptV);
 
-		case 'P':
-			return OptScanBool(optstr, bool, strarg, &FOptP);
-	}
-	OptError(optstr);
-	return E_Useage;
+                case 'P':
+                        return OptScanBool(optstr, bool, strarg, &FOptP);
+        }
+        OptError(optstr);
+        return E_Useage;
 }
 
 /*##########################################################################
@@ -155,8 +155,8 @@ int TDelCommand::OptScan(const char *optstr, int ch, int bool, const char *strar
 ##########################################################################*/
 void TDelCommand::InitOptions()
 {
-	FOptV = FALSE;
-	FOptP = FALSE;
+        FOptV = FALSE;
+        FOptP = FALSE;
 }
 
 /*##########################################################################
@@ -172,46 +172,46 @@ void TDelCommand::InitOptions()
 ##########################################################################*/
 int TDelCommand::Del(TDirEntryData &entry)
 {
-	if (FOptP)
-	{
-		switch (FMsg.UserPrompt(PROMPT_DELETE_FILE, entry.PathName.Get().GetData()))
-		{
-			case 4:
-				FBreak = TRUE;
-				return FALSE;
+        if (FOptP)
+        {
+                switch (FMsg.UserPrompt(PROMPT_DELETE_FILE, entry.PathName.Get().GetData()))
+                {
+                        case 4:
+                                FBreak = TRUE;
+                                return FALSE;
 
-			case 3:
-				FOptP = FALSE;
-				break;
+                        case 3:
+                                FOptP = FALSE;
+                                break;
 
-			case 2:
-				return TRUE;
+                        case 2:
+                                return TRUE;
 
-			case 1:
-				break;
+                        case 1:
+                                break;
 
-			default:
-				return FALSE;
-		}
-	}
+                        default:
+                                return FALSE;
+                }
+        }
 
-	if (!FOptP && FOptV)
-	{
-		FMsg.printf(TEXT_DELETE_FILE, entry.PathName.Get().GetData());
-		Write(FMsg.GetData());
-	}
+        if (!FOptP && FOptV)
+        {
+                FMsg.printf(TEXT_DELETE_FILE, entry.PathName.Get().GetData());
+                Write(FMsg.GetData());
+        }
 
-	if (FBreak)
-		return FALSE;
+        if (FBreak)
+                return FALSE;
 
-	if (entry.PathName.DeleteFile())
-		return TRUE;
-	else
-	{
-		FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "DEL", entry.PathName.Get().GetData());
-		Write(FMsg.GetData());
-		return FALSE;
-	}
+        if (entry.PathName.DeleteFile())
+                return TRUE;
+        else
+        {
+                FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "DEL", entry.PathName.Get().GetData());
+                Write(FMsg.GetData());
+                return FALSE;
+        }
 }
 
 /*##########################################################################
@@ -227,17 +227,17 @@ int TDelCommand::Del(TDirEntryData &entry)
 ##########################################################################*/
 int TDelCommand::Add(TArg *arg)
 {
-	TPathName path(arg->FName);
+        TPathName path(arg->FName);
 
-	if (path.IsDir() && !FOptP)
-	{
-		if (FMsg.UserPrompt(PROMPT_DELETE_ALL, arg->FName.GetData()) != 1)
-			return FALSE;
-	}
+        if (path.IsDir() && !FOptP)
+        {
+                if (FMsg.UserPrompt(PROMPT_DELETE_ALL, arg->FName.GetData()) != 1)
+                        return FALSE;
+        }
 
-	FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN);
-	FFileList.Add(path);
-	return TRUE;
+        FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN);
+        FFileList.Add(path);
+        return TRUE;
 }
 
 /*##########################################################################
@@ -253,56 +253,59 @@ int TDelCommand::Add(TArg *arg)
 ##########################################################################*/
 int TDelCommand::Execute(char *param)
 {
-	TArg *arg;
-	const char *ptr;
-	int total;
-	int ok;
+    TArg *arg;
+    const char *ptr;
+    int total;
+    int ok;
+    TDirEntryData src;
 
-	InitOptions();
+    InitOptions();
 
-	if (!ScanCmdLine(param, 0))
-		return 1;
+    if (!ScanCmdLine(param, 0))
+        return 1;
 
-	arg = FArgList;
-	FBreak = FALSE;
+    arg = FArgList;
+    FBreak = FALSE;
 
-	while (arg && !FBreak)
-	{
-		if (LeadOptions(&arg->ptr, 0) != E_None)
-			return 1;
-		else
-		{
-			if (!Add(arg))
-				return 1;
+    while (arg && !FBreak)
+    {
+        if (LeadOptions(&arg->ptr, 0) != E_None)
+            return 1;
+        else
+        {
+            if (!Add(arg))
+                return 1;
 
-			arg = arg->FList;
-		}
-	}
+            arg = arg->FList;
+        }
+    }
 
 
     FFileList.RemoveDuplicates();
     
-	total = 0;
-	ok = FFileList.GotoFirst();
-	while (ok)
-	{
-		if (Del(FFileList.Get().Get()))
-			total++;
-		else
-			return 1;
+    total = 0;
+    ok = FFileList.GotoFirst();
+    while (ok)
+    {
+        src = FFileList.Get().Get();
+        if (Del(src))
+            total++;
+        else
+            return 1;
 
-		ok = FFileList.GotoNext();
-	}
+        ok = FFileList.GotoNext();
+    }
 
-	if (total)
-	{
-		ShowCount(TEXT_MSG_DEL_CNT_FILES, total);
-		return 0;
-	}
-	else
-	{
-		FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-		Write(FMsg.GetData());
-		return E_Useage;
-	}
+    if (total)
+    {
+        ShowCount(TEXT_MSG_DEL_CNT_FILES, total);
+        return 0;
+    }
+    else
+    {
+        FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+        Write(FMsg.GetData());
+        return E_Useage;
+    }
 }
+

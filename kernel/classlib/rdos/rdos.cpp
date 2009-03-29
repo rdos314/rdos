@@ -25,9 +25,16 @@
 #
 ########################################################################*/
 
+#include <memory.h>
 #include "rdos.h"
 
 #define FALSE 0
+
+int RdosCarryToBool();
+
+#pragma aux RdosCarryToBool = \
+    CarryToBool \
+    value [eax];
 
 void RdosBlitBase();
 
@@ -49,10 +56,129 @@ void RdosReadDirBase();
 #pragma aux RdosReadDirBase = \
     CallGate_read_dir;
 
-void RdosGetResourceBase();
+void RdosGetModuleResourceBase();
 
-#pragma aux RdosGetResourceBase = \
+#pragma aux RdosGetModuleResourceBase = \
     CallGate_get_module_resource;
+
+void RdosCreateThreadBase();
+
+#pragma aux RdosCreateThreadBase = \
+    CallGate_create_thread;
+
+
+/*##########################################################################
+#
+#   Name       : task_end
+#
+#   Purpose....: Task end
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void task_end()
+{
+    RdosTerminateThread();
+}
+
+/*##########################################################################
+#
+#   Name       : task_start
+#
+#   Purpose....: Task startup
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void task_start()
+{
+    _asm
+    {
+        mov ax,ds
+        mov es,ax
+        mov eax,fs:[0x14]
+        push eax
+        push OFFSET task_end
+        push edx
+        ret
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : RdosCreateThread
+#
+#   Purpose....: Create a new thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void RdosCreateThread(void (*Startup)(void *Param), const char *Name, void *Param, int StackSize)
+{
+    _asm
+    {
+        push ds
+        lea edx,Startup
+        mov edx,[edx]
+        mov ax,cs
+        mov ds,ax
+        mov esi,OFFSET task_start
+        mov ecx,StackSize
+        mov edi,Name
+        mov eax,Param
+        mov fs:[0x14],eax
+        mov bx,fs
+        mov ax,2
+    }
+    RdosCreateThreadBase();
+    _asm
+    { 
+        pop ds
+    }
+    RdosWaitMilli(10);
+}
+
+/*##########################################################################
+#
+#   Name       : RdosCreatePrioThread
+#
+#   Purpose....: Create a new thread, with priority
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const char *Name, void *Param, int StackSize)
+{
+    _asm
+    {
+        push ds
+        lea edx,Start
+        mov edx,[edx]
+        mov ax,cs
+        mov ds,ax
+        mov esi,OFFSET task_start
+        mov ecx,StackSize
+        mov edi,Name
+        mov eax,Param
+        mov fs:[0x14],eax
+        mov bx,fs
+        mov eax,Prio
+        }
+    RdosCreateThreadBase();
+    _asm
+    { 
+        pop ds
+    }
+    RdosWaitMilli(10);
+}
 
 /*##########################################################################
 #
@@ -139,15 +265,20 @@ void RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height, in
     RdosGetBitmapInfoBase();
     _asm
     {
+        mov ebx,BitPerPixel
         movzx eax,al
-        mov BitPerPixel,eax
+        mov [ebx],eax
+        mov ebx,width
         movzx ecx,cx
-        mov width,ecx
+        mov [ebx],ecx
+        mov ebx,height
         movzx edx,dx
-        mov height,edx
+        mov [ebx],edx
+        mov ebx,linesize
         movzx esi,si
-        mov linesize,esi
-        mov buffer,edi
+        mov [ebx],esi
+        mov ebx,buffer
+        mov [ebx],edi
     }
 }
 
@@ -164,7 +295,30 @@ void RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height, in
 ##########################################################################*/
 int RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime)
 {
-    return FALSE;
+    int val;
+    
+    _asm
+    {
+        mov ebx,Handle
+        mov edx,EntryNr
+        mov ecx,MaxNameSize
+        mov edi,PathName
+    }
+    RdosReadDirBase();
+    _asm
+    {
+        mov esi,FileSize
+        mov [esi],ecx
+        movzx ebx,bx
+        mov esi,Attribute
+        mov [esi],ebx
+        mov esi,MsbTime
+        mov [esi],edx
+        mov esi,LsbTime
+        mov [esi],eax
+    }
+    val = RdosCarryToBool();
+    return val;
 }
 
 /*##########################################################################
@@ -180,7 +334,43 @@ int RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *
 ##########################################################################*/
 int RdosReadResource(int handle, int ID, char *Buf, int Size)
 {
-    return FALSE;
+    char *RcPtr;
+    int RcSize;
+    int ok;
+    
+    if (handle == 0)
+    {
+        _asm
+        {
+            mov eax,fs:[0x24]
+            mov handle,eax
+        }
+    }
+
+    _asm
+    {
+        mov eax,ID
+        mov edx,6
+    }
+    RdosGetModuleResourceBase();
+    _asm
+    {
+        mov RcSize,ecx
+        mov RcPtr,edi
+    }
+    ok = RdosCarryToBool();
+
+    if (!ok)
+        RcSize = 0;
+
+    if (RcSize)
+    {
+        if (RcSize > Size)
+            RcSize = Size;
+        memcpy(Buf, RcPtr, RcSize);            
+    }    
+
+    return RcSize;
 }
 
 /*##########################################################################
@@ -196,5 +386,40 @@ int RdosReadResource(int handle, int ID, char *Buf, int Size)
 ##########################################################################*/
 int RdosReadBinaryResource(int handle, int ID, char *Buf, int Size)
 {
-    return FALSE;
+    char *RcPtr;
+    int RcSize;
+    int ok;
+    
+    if (handle == 0)
+    {
+        _asm
+        {
+            mov eax,fs:[0x24]
+            mov handle,eax
+        }
+    }
+
+    _asm
+    {
+        mov eax,ID
+        mov edx,10
+    }
+    RdosGetModuleResourceBase();
+    _asm
+    {
+        mov RcSize,ecx
+        mov RcPtr,edi
+    }
+    ok = RdosCarryToBool();
+    if (!ok)
+        RcSize = 0;
+
+    if (RcSize)
+    {
+        if (RcSize > Size)
+            RcSize = Size;
+        memcpy(Buf, RcPtr, RcSize);            
+    }    
+
+    return RcSize;
 }

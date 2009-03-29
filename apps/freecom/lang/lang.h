@@ -287,7 +287,6 @@
 #define TEXT_VOLUME_R_ON  283
 #define TEXT_VOLUME_OFF  284
 #define TEXT_VOLUME_ON  285
-#define TEXT_ERROR_OPT_ARG   286
 #define TEXT_CMDHELP_COPY  287
 
 #endif

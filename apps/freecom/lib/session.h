@@ -41,7 +41,7 @@ class TSession
 {
 public:
     TSession();
-	TSession(const TSession &source);
+        TSession(const TSession &source);
     ~TSession();
 
     void Run();
@@ -72,29 +72,29 @@ public:
     void SetOutputFile(TFile *File);
     void SetErrorFile(TFile *File);
 
-	TFile *GetCmdFile();
-	TFile *GetInputFile();
-	TFile *GetOutputFile();
-	TFile *GetErrorFile();
+        TFile *GetCmdFile();
+        TFile *GetInputFile();
+        TFile *GetOutputFile();
+        TFile *GetErrorFile();
 
 protected:
-	void WriteWelcome();
-	TString FormatTime(TDateTime &time);
-	TString FormatLongDate(TDateTime &date);
+        void WriteWelcome();
+        TString FormatTime(TDateTime &time);
+        TString FormatLongDate(TDateTime &date);
 
-	const char *GetArg(int ArgNr);
-	TString ExpandParam(const char *param);
+        const char *GetArg(int ArgNr);
+        TString ExpandParam(const char *param);
 
-	TFile *FCmdFile;
-	TFile *FInputFile;
-	TFile *FOutputFile;
-	TFile *FErrorFile;
+        TFile *FCmdFile;
+        TFile *FInputFile;
+        TFile *FOutputFile;
+        TFile *FErrorFile;
 
     TString FName;
     TArg *FArgList;
     int FEcho;
     
-	static Count;
+        static int Count;
 
 };
 

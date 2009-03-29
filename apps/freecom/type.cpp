@@ -65,7 +65,7 @@ TTypeFactory::TTypeFactory()
 ##########################################################################*/
 TCommand *TTypeFactory::Create(TSession *session, const char *param)
 {
-	return new TTypeCommand(session, param);
+    return new TTypeCommand(session, param);
 }
 
 /*##########################################################################
@@ -82,7 +82,7 @@ TCommand *TTypeFactory::Create(TSession *session, const char *param)
 TTypeCommand::TTypeCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_TYPE);
+    FHelpScreen.Load(TEXT_CMDHELP_TYPE);
 }
 
 /*##########################################################################
@@ -98,7 +98,7 @@ TTypeCommand::TTypeCommand(TSession *session, const char *param)
 ##########################################################################*/
 void TTypeCommand::Show(TPathName &PathName)
 {
-	TFile file = PathName.OpenFile();
+    TFile file = PathName.OpenFile();
     char buf[0x1001];
     int size;
 
@@ -132,11 +132,11 @@ void TTypeCommand::Show(TPathName &PathName)
 ##########################################################################*/
 void TTypeCommand::Add(TArg *arg)
 {
-	TDirEntry entry;
-	TPathName path(arg->FName);
+    TDirEntry entry;
+    TPathName path(arg->FName);
 
-	FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN);
-	FFileList.Add(path);
+    FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN);
+    FFileList.Add(path);
 }
 
 /*##########################################################################
@@ -152,35 +152,37 @@ void TTypeCommand::Add(TArg *arg)
 ##########################################################################*/
 int TTypeCommand::Execute(char *param)
 {
-	TArg *arg;
-	int HasSrc = FALSE;
-	const char *ptr;
+    TArg *arg;
+    int HasSrc = FALSE;
+    const char *ptr;
     int ok;
+    TPathName path;
 
-	if (!ScanCmdLine(param, 0))
-		return 1;
+    if (!ScanCmdLine(param, 0))
+        return 1;
 
-	arg = FArgList;
+    arg = FArgList;
 
-	while (arg)
-	{
-		if (LeadOptions(&arg->ptr, 0) != E_None)
-			return 1;
-		else
-		{
-		    Add(arg);		        
-			arg = arg->FList;
-		}
-	}
+    while (arg)
+    {
+        if (LeadOptions(&arg->ptr, 0) != E_None)
+            return 1;
+        else
+        {
+            Add(arg);               
+            arg = arg->FList;
+        }
+    }
 
     FFileList.RemoveDuplicates();
     
-	ok = FFileList.GotoFirst();
-	while (ok)
-	{
-		Show(FFileList.Get().GetPathName());
-		ok = FFileList.GotoNext();
-	}
+    ok = FFileList.GotoFirst();
+    while (ok)
+    {
+        path = FFileList.Get().GetPathName();
+        Show(path);
+        ok = FFileList.GotoNext();
+    }
 
-	return 0;
+    return 0;
 }

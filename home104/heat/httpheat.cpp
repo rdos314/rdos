@@ -784,39 +784,39 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     {    
         if (firstpass)
         {
-            firsttime = TDateTime(year, month, day, from.GetHour(), from.GetMin(), 0, 0);
-            currtime = TDateTime(year, month, day, 0, 0, 0, 0);
-            firstpass = FALSE;
-        }
-        else
-        {
-            currtime.AddDay(1);
-            firsttime = currtime;
-        }
+				firsttime = TDateTime(year, month, day, from.GetHour(), from.GetMin(), 0, 0, 0);
+				currtime = TDateTime(year, month, day, 0, 0, 0, 0, 0);
+				firstpass = FALSE;
+		  }
+		  else
+		  {
+				currtime.AddDay(1);
+				firsttime = currtime;
+		  }
 
-    	sameday = TRUE;
+		sameday = TRUE;
 
-        year = firsttime.GetYear();
-        month = firsttime.GetMonth();
+		  year = firsttime.GetYear();
+		  month = firsttime.GetMonth();
 		day = firsttime.GetDay();
 
-    	if (year != to.GetYear())
-	        sameday = FALSE;
-
-    	if (month != to.GetMonth())
+		if (year != to.GetYear())
 			  sameday = FALSE;
 
-    	if (day != to.GetDay())
-	        sameday = FALSE;
-        
-	    if (sameday)
-            lasttime = TDateTime(year, month, day, to.GetHour(), to.GetMin(), 59, 999);
-        else
-            lasttime = TDateTime(year, month, day, 23, 59, 59, 999);
-                
-	    log = Log->GetLog(year, month, day);
+		if (month != to.GetMonth())
+			  sameday = FALSE;
 
-    	if (log->GotoFirst())
+		if (day != to.GetDay())
+			  sameday = FALSE;
+
+		 if (sameday)
+				lasttime = TDateTime(year, month, day, to.GetHour(), to.GetMin(), 59, 999, 999);
+		  else
+				lasttime = TDateTime(year, month, day, 23, 59, 59, 999, 999);
+
+		 log = Log->GetLog(year, month, day);
+
+		if (log->GotoFirst())
             msg = log->Get();
 		else
 	        msg = 0;
@@ -1035,11 +1035,11 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     	delete log;
 	}
 
-	currtime = TDateTime(from.GetYear(), from.GetMonth(), from.GetDay(), from.GetHour(), 0, 0, 0);
+	currtime = TDateTime(from.GetYear(), from.GetMonth(), from.GetDay(), from.GetHour(), 0, 0, 0, 0);
 
-    i = 30;    
-    while (currtime < to) 
-    {
+	 i = 30;
+	 while (currtime < to)
+	 {
         TempChart->SetLineColor(i, 210, 210, 210);
     	
 	    TempChart->Add(i, currtime, 0.0);
@@ -1069,7 +1069,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	    WindChart->Add(i, currtime, ymax);
 
         VpChart->SetLineColor(i, 210, 210, 210);
-    	
+
 	    VpChart->Add(i, currtime, 0.0);
 	    VpChart->Add(i, currtime, 1.0);
 
@@ -1099,7 +1099,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     	width = TempAxis.RequiredWidth();
     	TempAxis.SetMinWidth(width);
     }
-	
+
 	WindChart->Draw();
     if (width < TempAxis.RequiredWidth())
     {
@@ -1129,7 +1129,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     delete WindChart;
     delete LightChart;
     delete PowerChart;
-    delete TempChart;
+	 delete TempChart;
     
     return Jpeg;
 }
@@ -1151,15 +1151,15 @@ int THttpRadPage::CreateHistoryTempJpeg(int address, int year, int month, int da
     char filename[256];
 	TJpegBitmapDevice *Jpeg;
 	TLogReader *log;
-	TDateTime from = TDateTime(year, month, day, 0, 0, 0, 0);
-	TDateTime to = TDateTime(year, month, day, 23, 59, 59, 999);
+	TDateTime from = TDateTime(year, month, day, 0, 0, 0, 0, 0);
+	TDateTime to = TDateTime(year, month, day, 23, 59, 59, 999, 999);
 	TDateTime today;
 
 	if (today.GetYear() == year && today.GetMonth() == month &&  today.GetDay() == day)
-	    return FALSE;
+		 return FALSE;
 
 	if (!Log)
-	    return FALSE;
+		 return FALSE;
 
 	log = Log->GetLog(year, month, day);
 	if (!log)

@@ -279,8 +279,8 @@ void TGraphic::Show()
     {    
         if (firstpass)
         {
-            firsttime = TDateTime(year, month, day, from.GetHour(), from.GetMin(), 0, 0);
-            currtime = TDateTime(year, month, day, 0, 0, 0, 0);
+				firsttime = TDateTime(year, month, day, from.GetHour(), from.GetMin(), 0, 0, 0);
+				currtime = TDateTime(year, month, day, 0, 0, 0, 0, 0);
 				firstpass = FALSE;
         }
         else
@@ -305,9 +305,9 @@ void TGraphic::Show()
 	        sameday = FALSE;
         
 	    if (sameday)
-            lasttime = TDateTime(year, month, day, to.GetHour(), to.GetMin(), 59, 999);
-        else
-            lasttime = TDateTime(year, month, day, 23, 59, 59, 999);
+				lasttime = TDateTime(year, month, day, to.GetHour(), to.GetMin(), 59, 999, 999);
+		  else
+            lasttime = TDateTime(year, month, day, 23, 59, 59, 999, 999);
                 
 	    log = Log->GetLog(year, month, day);
 
@@ -522,7 +522,7 @@ void TGraphic::Show()
     	delete log;
 	}
 
-	currtime = TDateTime(from.GetYear(), from.GetMonth(), from.GetDay(), from.GetHour(), 0, 0, 0);
+	currtime = TDateTime(from.GetYear(), from.GetMonth(), from.GetDay(), from.GetHour(), 0, 0, 0, 0);
 
     i = 30;    
     while (currtime < to) 

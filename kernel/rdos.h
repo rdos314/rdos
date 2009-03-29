@@ -533,6 +533,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     modify [ax];
 
 #pragma aux RdosSetVideoMode = \
+    "push ebp" \
     "push esi" \
     "push edi" \
     "push eax" \
@@ -558,10 +559,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "pop ebp" \
     "movzx esi,si" \
     "mov [ebp],esi" \
+    "pop ebp" \
     ValidateHandle \
     parm [eax] [ecx] [edx] [esi] [edi] \
     value [ebx] \
-    modify [eax ecx edx esi edi ebp];
+    modify [eax ecx edx esi edi];
 
 #pragma aux RdosSetClipRect = \
     CallGate_set_clip_rect  \
@@ -1047,23 +1049,6 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [ebx] [esi] [edi]  \
     modify [eax ecx edx];
 
-#pragma aux RdosCreateThread = \
-    "mov fs:[0x14],edx" \
-    "mov ax,2"  \
-    CallGate_create_thread  \
-    "mov eax,10"    \
-    CallGate_wait_milli  \
-    parm [esi] [edi] [edx] [ecx]    \
-    modify [eax];
-
-#pragma aux RdosCreatePrioThread = \
-    "mov fs:[0x14],edx" \
-    CallGate_create_thread  \
-    "mov eax,10"    \
-    CallGate_wait_milli  \
-    parm [esi] [eax] [edi] [edx] [ecx]    \
-    modify [eax];
-
 #pragma aux RdosTerminateThread = \
     CallGate_terminate_thread;
 
@@ -1532,7 +1517,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [ebx] \
     value [eax];
 
-#pragma aux RdosGetRemoteTcpConnection = \
+#pragma aux RdosGetRemoteTcpConnectionIP = \
     CallGate_get_remote_tcp_connection_ip  \
     ValidateEax \
     parm [ebx] \
@@ -1697,11 +1682,13 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetLeftButton = \
     CallGate_get_left_button \
+    "cmc" \
     CarryToBool \
     value [eax];
 
 #pragma aux RdosGetRightButton = \
     CallGate_get_right_button \
+    "cmc" \
     CarryToBool \
     value [eax];
 

@@ -495,12 +495,13 @@ void TVp::Execute()
 {
 	int year, month, day;
 	int hour, min, sec;
-	int ms;
+	int ms, us;
+	unsigned long msb, lsb;
 	int LastMin;
 	int i;
 	long double ValArr[MAX_FUZZY_VARS];
 	long double val;
-    int ival;
+	 int ival;
 	int diostat;
 	long double dT;
 	int Sum;
@@ -546,13 +547,15 @@ void TVp::Execute()
 	FHeatSum = 0;
 	FHeatCount = 0;
 
-	RdosGetTime(&year, &month, &day, &hour, &LastMin, &sec, &ms);
+	RdosGetTime(&msb, &lsb);
+	RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+	RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
 
 	while (FInstalled)
 	{
 		if (RdosReadSerialRaw(0x40, 0, &ival))
 		{
-		    FTankSum += ival;
+			 FTankSum += ival;
             FTankCount++;
 
             if (FTankCount >= 50)
@@ -605,7 +608,9 @@ void TVp::Execute()
 			}
 		}
 
-		RdosGetTime(&year, &month, &day, &hour, &min, &sec, &ms);
+		RdosGetTime(&msb, &lsb);
+		RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+		RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
 
 		if (LastMin != min && TempCount)
 		{
