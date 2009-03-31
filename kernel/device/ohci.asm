@@ -421,7 +421,8 @@ PAGE
 ;
 ;		DESCRIPTION:    Initialize an already allocated ED
 ;
-;       PARAMETERS:     ES      Flat sel
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
 ;                       EDX     ED
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -475,7 +476,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Allocate & initialize an endpoint descriptor
 ;
-;       PARAMETERS:     ES      Flat sel
+;       PARAMETERS:     DS      Function selector
+;                       ES      Flat sel
 ;
 ;		RETURNS:		EDX		Linear address of ED
 ;                       EAX     Physical address of ED
@@ -860,6 +862,13 @@ init_pipe_size_ok:
     xor al,al
     shr ax,1
     or al,fs:usbp_address
+;    
+    test fs:usbp_speed,USB_LOW_SPEED
+    jz ipSpeedOk
+;
+    or ah,20h
+
+ipSpeedOk:    
     mov es:[edx].oes_fa_en,ax
 
 init_pipe_done:
@@ -2024,6 +2033,10 @@ upResetLoop:
 epNotify:
     mov ax,100
     WaitMilliSec
+;    
+    mov eax,es:[si].HcRhPortStatus
+    shr ah,1
+    and ah,1
     mov al,cl
     NotifyUsbAttach
     jmp upDone

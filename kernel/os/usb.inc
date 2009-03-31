@@ -39,6 +39,8 @@ MODE_BULK = 4
 DIR_IN = 80h
 DIR_OUT = 0
 
+USB_LOW_SPEED = 1
+
 usb_dev_struc   STRUC
 
 ; OUT FS        Pipe selector
@@ -105,6 +107,7 @@ usb_dev_struc   ENDS
 usb_function_struc  STRUC
 
 usbf_address            DB ?
+usbf_speed              DB ?
 usbf_port_sel_arr       DW MAX_USB_HUB_PORTS DUP(?)
 usbf_endpoint_arr       DW 16 DUP(?)
 
@@ -118,6 +121,7 @@ usbp_endpoint       DB ?
 usbp_seq            DB ?
 usbp_mode           DB ?
 usbp_dir            DB ?
+usbp_speed          DB ?
 usbp_maxlen         DW ?
 usbp_wait_obj       DW ?
 usbp_usage          DW ?

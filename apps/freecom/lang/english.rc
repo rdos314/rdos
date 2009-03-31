@@ -1,9 +1,5 @@
 #include "lang.h"
 
-100 RCDATA LOADONCALL MOVEABLE DISCARDABLE c:\rdos\kernel\tools\bootsec.bin
-101 RCDATA LOADONCALL MOVEABLE DISCARDABLE c:\rdos\kernel\tools\hdboot.bin
-102 RCDATA LOADONCALL MOVEABLE DISCARDABLE c:\rdos\kernel\tools\fdboot.bin
-
 STRINGTABLE
 {
  1024, "Invalid switch. - /%c\r\n";

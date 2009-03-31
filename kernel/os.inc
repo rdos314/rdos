@@ -2131,6 +2131,7 @@ InitUsbDevice	MACRO
 					ENDM
 
 ;   AL      Port #
+;   AH      Low speed = 1, high speed / full speed = 0
 ;   DS      Usb device selector
 NotifyUsbAttach	MACRO
 	OsGate notify_usb_attach_nr

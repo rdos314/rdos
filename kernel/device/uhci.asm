@@ -450,7 +450,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Allocate & initialize a TD block
 ;
-;       PARAMETERS:     ES      Flat sel
+;       PARAMETERS:     DS      Function selector
+;                       ES      Flat sel
 ;                       FS      Pipe
 ;                       EDI     Data buffer
 ;                       CX      Size of data
@@ -467,7 +468,12 @@ AllocateTd	PROC near
     mov es:[edx].utd_link,1
     mov es:[edx].utd_va_link,0
     mov es:[edx].utd_control, 18000000h
+    test fs:usbp_speed,USB_LOW_SPEED
+    jz atSpeedOk
 ;
+    or es:[edx].utd_control, 4000000h
+    
+atSpeedOk:
     dec cx
     and ecx,7FFh    
     shl ecx,21
@@ -1822,6 +1828,7 @@ upAttach:
 
 epNotify:
     pop cx
+    and ah,1
     mov al,cl
     NotifyUsbAttach
     jmp upDone

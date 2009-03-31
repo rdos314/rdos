@@ -196,6 +196,8 @@ CreateDefaultControl    Proc near
     call ds:create_control_proc
 ;    
     mov es:usbf_endpoint_arr,fs    
+    mov al,es:usbf_speed
+    mov fs:usbp_speed,al
     mov fs:usbp_function_sel,es
     mov fs:usbp_address,0
     mov fs:usbp_endpoint,0
@@ -267,6 +269,8 @@ CreateBulk    Proc near
     mov fs:usbp_function_sel,es
     mov al,es:usbf_address
     mov fs:usbp_address,al
+    mov al,es:usbf_speed
+    mov fs:usbp_speed,al
     mov fs:usbp_endpoint,dl
     mov fs:usbp_seq,0
     mov fs:usbp_mode,MODE_BULK
@@ -313,6 +317,8 @@ CreateInterrupt    Proc near
     mov fs:usbp_function_sel,es
     mov al,es:usbf_address
     mov fs:usbp_address,al
+    mov al,es:usbf_speed
+    mov fs:usbp_speed,al
     mov fs:usbp_endpoint,dl
     mov fs:usbp_seq,0
     mov fs:usbp_mode,MODE_INTR
@@ -635,6 +641,7 @@ PAGE
 ;		description:	Notify USB attach event
 ;
 ;       parameters:     AL      Usb port
+;                       AH      Speed, 0 = low speed
 ;                       DS      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -648,6 +655,7 @@ notify_usb_attach	Proc far
     pushad
 ;    
     movzx bx,al
+    mov dl,ah
     add bx,bx
     mov ax,ds
     mov es,ax
@@ -667,6 +675,7 @@ notify_usb_attach	Proc far
     shr di,1
     mov ax,di
     mov es:usbf_address,al
+    mov es:usbf_speed,dl
 ;
     push ax
     mov cx,MAX_USB_HUB_PORTS
@@ -679,6 +688,13 @@ notify_usb_attach	Proc far
     xor ax,ax
     rep stosw
 ;    
+    or dl,dl
+    jz nuaTest
+;
+    mov ax,750
+    WaitMilliSec
+
+nuaTest:    
     pop ax
     call CreateDefaultControl
     jc nuaDone
