@@ -438,7 +438,7 @@ TPanelControl::TPanelControl(TControlThread *dev, int xstart, int ystart, int xs
 
     Resize(xsize, ysize);
 	Move(xstart, ystart);
-	Show();
+//	Show();
 	Enable();
 }
 
@@ -460,7 +460,7 @@ TPanelControl::TPanelControl(TControl *control, int xstart, int ystart, int xsiz
 
     Resize(xsize, ysize);
 	Move(xstart, ystart);
-	Show();
+//	Show();
 	Enable();
 }
 
