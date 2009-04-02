@@ -1281,6 +1281,8 @@ AddInBuffer    Proc near
     mov es,ax
     xor edi,edi
     mov ax,si
+    and ax,NOT 0E0h
+    or ax,20h
     call AddPipeTd
     jmp aibDone
 
@@ -1582,7 +1584,7 @@ AddStatusOut    Proc far
     jne asoDone
 ;
     xor cx,cx
-    mov ax,0ECh
+    mov ax,3ECh
     call AddOutBuffer
 
 asoDone:
