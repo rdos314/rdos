@@ -706,6 +706,7 @@ nuaRetry:
     mov ax,100
     WaitMilliSec
 ;        
+    int 3
     xor edi,edi
     mov cx,8
     mov ax,100h

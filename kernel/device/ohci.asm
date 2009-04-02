@@ -849,7 +849,7 @@ PAGE
 InitPipeEd  Proc near
     push eax
     push edx
-
+;
     mov ax,fs:usbp_maxlen
     cmp ax,800h
     jb init_pipe_size_ok
@@ -1310,6 +1310,14 @@ aibHasData:
     div cx
     mov cx,ax
     mov bx,dx
+;
+    or bx,bx
+    jnz aibNoJust
+;
+    add bx,fs:usbp_maxlen
+    dec cx        
+
+aibNoJust:    
     or cx,cx
     jz aibLastPart
 
@@ -1326,10 +1334,9 @@ aibLoop:
 
 aibLastPart:
     mov cx,bx
-    or cx,cx
-    jz aibDone
-;
     mov ax,si
+    and ax,NOT 0E0h
+    or ax,20h
     call AddPipeTd
 
 aibDone:
@@ -1367,6 +1374,8 @@ AddOutBuffer    Proc near
     mov es,ax
     xor edi,edi
     mov ax,si
+    and ax,NOT 0E0h
+    or ax,20h
     call AddPipeTd
     jmp aobDone
 
@@ -1404,6 +1413,14 @@ aobHasData:
     div cx
     mov cx,ax
     mov bx,dx
+;
+    or bx,bx
+    jnz aobNoJust
+;
+    add bx,fs:usbp_maxlen
+    dec cx        
+
+aobNoJust:    
     or cx,cx
     jz aobLastPart
 
@@ -1420,10 +1437,9 @@ aobLoop:
 
 aobLastPart:
     mov cx,bx
-    or cx,cx
-    jz aobDone
-;
     mov ax,si
+    and ax,NOT 0E0h
+    or ax,20h
     call AddPipeTd
 
 aobDone:
@@ -1508,7 +1524,7 @@ AddOut    Proc far
     push ecx
     push edx
 ;
-    mov ax,2Ch
+    mov ax,0ECh
     call AddOutBuffer
 ;    
     pop edx
@@ -1535,7 +1551,7 @@ AddIn    Proc far
     push ecx
     push edx
 ;
-    mov ax,34h
+    mov ax,0F4h
     call AddInBuffer
 ;    
     pop edx
@@ -1566,7 +1582,7 @@ AddStatusOut    Proc far
     jne asoDone
 ;
     xor cx,cx
-    mov ax,32Ch
+    mov ax,0ECh
     call AddOutBuffer
 
 asoDone:
@@ -1598,7 +1614,7 @@ AddStatusIn    Proc far
     jne asiDone
 ;
     xor cx,cx
-    mov ax,334h
+    mov ax,3F4h
     call AddInBuffer
 
 asiDone:
@@ -1637,10 +1653,9 @@ IssueTransfer    Proc far
     test es:[edx].oes_fa_en,4000h
     jz issue_transfer_enabled
 ;
-    int 3
     call InitPipeEd 
 
-issue_transfer_enabled:
+issue_transfer_enabled:    
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
     jne issue_not_control
