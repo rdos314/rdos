@@ -848,7 +848,8 @@ PAGE
 
 InitPipeEd  Proc near
     push eax
-;    
+    push edx
+
     mov ax,fs:usbp_maxlen
     cmp ax,800h
     jb init_pipe_size_ok
@@ -864,14 +865,15 @@ init_pipe_size_ok:
     or al,fs:usbp_address
 ;    
     test fs:usbp_speed,USB_LOW_SPEED
-    jz ipSpeedOk
+    jz init_pipe_speed_ok
 ;
     or ah,20h
 
-ipSpeedOk:    
+init_pipe_speed_ok:    
     mov es:[edx].oes_fa_en,ax
 
 init_pipe_done:
+    pop edx
     pop eax
     ret
 InitPipeEd  Endp
@@ -1635,6 +1637,7 @@ IssueTransfer    Proc far
     test es:[edx].oes_fa_en,4000h
     jz issue_transfer_enabled
 ;
+    int 3
     call InitPipeEd 
 
 issue_transfer_enabled:
