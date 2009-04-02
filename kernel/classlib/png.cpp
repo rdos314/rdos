@@ -63,7 +63,7 @@ TPngBitmapDevice::TPngBitmapDevice(int bpp, int width, int height)
 #   Returns....: bitmap handle
 #
 ##########################################################################*/
-TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName)
+TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName, int r, int g, int b)
 {
 	int FileHandle;
 	png_structp png_ptr = 0;
@@ -110,7 +110,7 @@ TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName)
 
 		if (ok)
 		{
-		    end_info = png_create_info_struct(png_ptr);
+			end_info = png_create_info_struct(png_ptr);
 			if (end_info == 0)
 				ok = FALSE;
 		}
@@ -145,6 +145,10 @@ TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName)
 				png_read_update_info(png_ptr, info_ptr);
 
 				dev = new TPngBitmapDevice(24, width, height);
+				dev->SetFilledStyle();
+                dev->SetDrawColor(r, g, b);
+				dev->DrawRect(0, 0, width - 1, height - 1);
+
 				bits = (unsigned char *)dev->GetLinear();
 				LineSize = dev->GetLineSize();
 
