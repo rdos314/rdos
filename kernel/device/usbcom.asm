@@ -106,6 +106,10 @@ uds_out_buffer      DW ?
 uds_intr_req        DW ?
 uds_in_req          DW ?
 uds_out_req         DW ?
+uds_link            DW ?
+uds_port_offset     DW ?
+uds_controller_id   DW ?
+uds_device_ads      DB ?
 uds_delete          DB ?
 uds_intr_interval   DB ?
 
@@ -118,6 +122,8 @@ sd_thread           DW ?
 
 sd_ports            DW ?
 sd_port_arr         DW MAX_PORTS DUP(?)
+
+sd_dead_list        DW ?
 
 serial_data ENDS
 
@@ -2675,6 +2681,22 @@ apDescrDone:
     or ch,ch
     jz apDone
 ;        
+    mov dx,ds:sd_dead_list
+    or dx,dx
+    jz apNoRecover
+;
+    int 3
+    pop dx
+    cli
+    mov es,ds:sd_dead_list
+    mov dx,es:uds_link
+    mov ds:sd_dead_list,dx
+    sti
+    mov si,es:uds_port_offset
+    mov ds:[si].sd_port_arr,es
+    jmp apDone
+    
+apNoRecover:
     push cx
     mov cl,es:[di].uid_id
     push ax
@@ -2687,6 +2709,9 @@ apDescrDone:
 	mov es:uds_port_sel,0
 	mov es:uds_bulk_in,dh
 	mov es:uds_bulk_out,dl
+;
+    mov es:uds_device_ads,al
+    mov es:uds_controller_id,bx	
 ;
     mov dx,si
     mov es:uds_intr_in,dl
@@ -2709,6 +2734,7 @@ apDescrDone:
     add si,si
     mov ds:[si].sd_port_arr,es
     inc ds:sd_ports
+    mov es:uds_port_offset,si
 ;
 	mov cx,es:uds_device_type
 	movzx di,ch
@@ -3195,6 +3221,46 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 usb_detach  Proc far
+    push ds
+    push es
+    pushad
+;    
+    int 3
+    mov dx,usbcom_data_sel
+    mov ds,dx
+    mov si,OFFSET sd_port_arr
+    mov cx,ds:sd_ports
+    or cx,cx
+    jz udDone
+
+udCheckLoop:
+    mov dx,[si]
+    or dx,dx
+    jz udCheckNext
+;
+    mov es,dx
+    cmp bx,es:uds_controller_id
+    jne udCheckNext
+;
+    cmp al,es:uds_device_ads
+    jne udCheckNext
+;
+    cli
+    mov word ptr [si],0
+    mov ax,ds:sd_dead_list
+    mov es:uds_link,ax
+    mov ds:sd_dead_list,es
+    sti
+    jmp udDone
+
+udCheckNext:
+    add si,2    
+    loop udCheckLoop
+
+udDone:
+    popad
+    pop es
+    pop ds
     ret
 usb_detach  Endp
 
@@ -3226,6 +3292,7 @@ init	Proc far
 	InitSection es:sd_section
 	mov es:sd_ports,0
 	mov es:sd_thread,0
+	mov es:sd_dead_list,0
 ;	
 	mov ax,cs
 	mov ds,ax

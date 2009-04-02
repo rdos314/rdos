@@ -136,6 +136,8 @@ ohc_bulk_linear     DD ?
 ohc_pipe_list       DW ?
 ohc_reclaim_list    DD ?
 
+ohc_section         section_typ <>
+
 ohc_32_cnt          DB 32 DUP(?)
 ohc_16_cnt          DB 16 DUP(?)
 ohc_8_cnt           DB 8 DUP(?)
@@ -551,6 +553,7 @@ AddControlEd	PROC near
     push gs
     push ebx
 ;
+    EnterSection ds:ohc_section
     call AllocateEd
     mov gs,ds:ohc_reg_sel
     mov ebx,gs:HcControlHeadEd
@@ -573,6 +576,7 @@ AddControlEd	PROC near
 ;    
     pop edx
     pop eax
+    LeaveSection ds:ohc_section
 ;    
     pop ebx
     pop gs
@@ -601,6 +605,7 @@ AddBulkEd	PROC near
     push gs
     push ebx
 ;
+    EnterSection ds:ohc_section
     call AllocateEd
     mov gs,ds:ohc_reg_sel
     mov ebx,gs:HcBulkHeadEd
@@ -623,6 +628,7 @@ AddBulkEd	PROC near
 ;    
     pop edx
     pop eax
+    LeaveSection ds:ohc_section
 ;    
     pop ebx
     pop gs
@@ -802,6 +808,7 @@ PAGE
 AddIntrEd	PROC near
     push ebx
 ;
+    EnterSection ds:ohc_section
     call AllocateEd
 ;
     call GetIntrEd
@@ -825,6 +832,7 @@ AddIntrEd	PROC near
 ;    
     pop edx
     pop eax
+    LeaveSection ds:ohc_section
 ;    
     pop ebx
     ret
@@ -1703,6 +1711,13 @@ IssueTransfer    Endp
 
 WaitForCompletion   Proc far
     WaitForSignal
+    test fs:usbp_speed,USB_LOW_SPEED
+    jz wfcDone
+;
+    mov ax,25
+    WaitMilliSec
+    
+wfcDone:
     clc
     ret
 WaitForCompletion   Endp
@@ -1888,7 +1903,91 @@ GetData   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePipe   Proc far
+    push es
+    pushad
+;        
+    call RemovePipe
+;
+    EnterSection ds:ohc_section
+    mov edx,fs:osp_ed
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    je cpControl
+;
     int 3
+    jmp cpFreeEdList
+
+cpControl:
+    mov ax,flat_sel
+    mov es,ax
+;
+    xor ecx,ecx
+    mov ebx,ds:ohc_control_linear
+
+cpControlLoop:
+    cmp ebx,edx
+    je cpControlUnlink
+;
+    mov ecx,ebx
+    mov ebx,es:[ebx].oes_next_va
+    or ebx,ebx
+    jnz cpControlLoop
+    jmp cpFreeEdList
+
+cpControlUnlink:
+    or ecx,ecx
+    jz cpControlHead
+;
+    mov esi,es:[edx].oes_next_va
+    mov edi,es:[edx].oes_nexted
+    mov es:[ecx].oes_next_va,esi
+    mov es:[ecx].oes_nexted,edi
+    jmp cpFreeEdList
+
+cpControlHead:
+    push gs
+    mov gs,ds:ohc_reg_sel
+    mov esi,es:[edx].oes_next_va
+    mov edi,es:[edx].oes_nexted
+    mov ds:ohc_control_linear,esi
+    mov gs:HcControlHeadEd,edi
+    pop gs
+    jmp cpFreeEdList        
+
+cpFreeEdList:
+    mov ax,10
+    WaitMilliSec
+;
+    mov esi,es:[edx].oes_head_va
+    mov edi,es:[edx].oes_tail_va
+
+cpFreeTdLoop:    
+    mov ecx,es:[esi].otd_next_va
+    push edx
+    mov edx,esi
+    call FreeBlock32
+    pop edx
+;
+    or esi,edi
+    je cpFreeEd
+;    
+    mov esi,ecx
+    or esi,esi
+    jnz cpFreeTdLoop
+
+cpFreeEd:
+    call FreeBlock32
+        
+dpDone:
+    LeaveSection ds:ohc_section
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+;
+    popad
+    pop es
     ret
 ClosePipe   Endp
 
@@ -2212,6 +2311,7 @@ ifTabLoop:
 ;
     InitUsbDevice
 ;    
+    InitSection ds:ohc_section
     mov fs,ds:ohc_reg_sel
 ;    
     mov eax,0C000007Fh    
