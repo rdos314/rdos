@@ -39,6 +39,9 @@ include ..\os\com.inc
 
 MAX_PORTS       = 16
 
+FLAG_UDS_DELETE = 1
+FLAG_UDS_DISCONNECT = 2
+
 FLAG_CTS	= 10h
 FLAG_DSR	= 20h
 FLAG_RI		= 40h
@@ -108,7 +111,7 @@ uds_in_req          DW ?
 uds_out_req         DW ?
 uds_link            DW ?
 uds_port_offset     DW ?
-uds_delete          DB ?
+uds_flag            DB ?
 uds_intr_interval   DB ?
 
 usbcom_device_struc   ENDS
@@ -2395,6 +2398,10 @@ PAGE
 HandleDevice    Proc near
     push ds
 ;
+    test ds:uds_flag,FLAG_UDS_DISCONNECT
+    jnz hdDone
+
+hdConn:
     mov ax,ds:uds_port_sel
     or ax,ax
     jz hdClosed
@@ -2404,8 +2411,7 @@ hdOpen:
     or bx,bx
     jnz hdIsOpen
 ;
-    mov al,ds:uds_delete
-    or al,al
+    test ds:uds_flag,FLAG_UDS_DELETE
     jnz hdDone
 ;
     call OpenPort        
@@ -2497,8 +2503,7 @@ hdClosed:
     UsbReqDone
 
 hdIsClosed:
-    mov al,ds:uds_delete
-    or al,al
+    test ds:uds_flag,FLAG_UDS_DELETE
     jz hdDone
 ;
     call ClosePort
@@ -2689,8 +2694,20 @@ apDescrDone:
     mov dx,es:uds_link
     mov ds:sd_dead_list,dx
     sti
+    mov dx,es
+    mov ds,dx
+    EnterSection ds:uds_section
+    and ds:uds_flag,NOT FLAG_UDS_DISCONNECT
+;    
+    mov ax,usbcom_data_sel
+    mov ds,ax
+    mov es,dx
     mov si,es:uds_port_offset
     mov ds:[si].sd_port_arr,es
+;
+    mov dx,es
+    mov ds,dx    
+    LeaveSection ds:uds_section
     jmp apDone
     
 apNoRecover:
@@ -2721,7 +2738,7 @@ apNoRecover:
 	mov es:uds_intr_handle,0
 	mov es:uds_intr_buffer,0
 	mov es:uds_intr_req,0
-	mov es:uds_delete,0
+	mov es:uds_flag,0
 	InitSection es:uds_section
 ;
     mov si,ds:sd_ports
@@ -3219,7 +3236,6 @@ usb_detach  Proc far
     push es
     pushad
 ;    
-    int 3
     movzx ax,al
     mov dx,usbcom_data_sel
     mov ds,dx
@@ -3240,13 +3256,23 @@ udCheckLoop:
     cmp ax,es:cd_device
     jne udCheckNext
 ;
-    cli
+    mov ds,dx
+    EnterSection ds:uds_section
+    or ds:uds_flag,FLAG_UDS_DISCONNECT
+;    
+    mov dx,usbcom_data_sel
+    mov ds,dx
     mov word ptr [si],0
+    cli
     mov ax,ds:sd_dead_list
     mov es:uds_link,ax
     mov ds:sd_dead_list,es
     sti
     call ClosePort
+;
+    mov dx,es
+    mov ds,dx
+    LeaveSection ds:uds_section    
     jmp udDone
 
 udCheckNext:

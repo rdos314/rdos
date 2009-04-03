@@ -509,9 +509,6 @@ open_audio_out	Proc far
 ;
     mov ax,audio_dev_data_sel
     mov ds,ax
-    mov bx,OFFSET Ac0
-    call CreatePrdTable
-;
     mov dx,ds:IoBase
     add dx,ACC_BM0 + ACC_BM_PRD
     mov eax,ds:Ac0.AcPrdPhys
@@ -549,9 +546,6 @@ close_audio_out	Proc far
     mov dx,ds:Ac0.AcCmdIo
     xor al,al
     out dx,al
-;
-    mov bx,OFFSET Ac0
-    call FreePrdTable
 ;
     pop dx
     pop bx
@@ -751,6 +745,11 @@ init_ch_loop:
 ;
 ;    mov bx,0
 ;    WriteCodec
+;
+    mov ax,audio_dev_data_sel
+    mov ds,ax
+    mov bx,OFFSET Ac0
+    call CreatePrdTable
 
 init_pci_done:
 	ret

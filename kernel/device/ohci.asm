@@ -1914,10 +1914,10 @@ ClosePipe   Proc far
     cmp al,MODE_CONTROL
     je cpControl
 ;
-    int 3
     cmp al,MODE_BULK
     je cpBulk
 ;    
+    int 3
     jmp cpFreeEdList
 
 cpControl:
