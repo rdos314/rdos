@@ -108,8 +108,6 @@ uds_in_req          DW ?
 uds_out_req         DW ?
 uds_link            DW ?
 uds_port_offset     DW ?
-uds_controller_id   DW ?
-uds_device_ads      DB ?
 uds_delete          DB ?
 uds_intr_interval   DB ?
 
@@ -119,11 +117,10 @@ serial_data STRUC
 
 sd_section          section_typ <>
 sd_thread           DW ?
+sd_dead_list        DW ?
 
 sd_ports            DW ?
 sd_port_arr         DW MAX_PORTS DUP(?)
-
-sd_dead_list        DW ?
 
 serial_data ENDS
 
@@ -2174,8 +2171,7 @@ PAGE
 ;
 ;		DESCRIPTION:    Close port
 ;
-;       PARAMETERS:     FS      Usbcom_data_sel
-;                       DS      Function sel
+;       PARAMETERS:     DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2681,12 +2677,13 @@ apDescrDone:
     or ch,ch
     jz apDone
 ;        
-    mov dx,ds:sd_dead_list
-    or dx,dx
+    push ax
+    mov ax,ds:sd_dead_list
+    or ax,ax
+    pop ax
     jz apNoRecover
 ;
     int 3
-    pop dx
     cli
     mov es,ds:sd_dead_list
     mov dx,es:uds_link
@@ -2709,9 +2706,6 @@ apNoRecover:
 	mov es:uds_port_sel,0
 	mov es:uds_bulk_in,dh
 	mov es:uds_bulk_out,dl
-;
-    mov es:uds_device_ads,al
-    mov es:uds_controller_id,bx	
 ;
     mov dx,si
     mov es:uds_intr_in,dl
@@ -3226,6 +3220,7 @@ usb_detach  Proc far
     pushad
 ;    
     int 3
+    movzx ax,al
     mov dx,usbcom_data_sel
     mov ds,dx
     mov si,OFFSET sd_port_arr
@@ -3239,10 +3234,10 @@ udCheckLoop:
     jz udCheckNext
 ;
     mov es,dx
-    cmp bx,es:uds_controller_id
+    cmp bx,es:cd_controller
     jne udCheckNext
 ;
-    cmp al,es:uds_device_ads
+    cmp ax,es:cd_device
     jne udCheckNext
 ;
     cli
@@ -3251,6 +3246,7 @@ udCheckLoop:
     mov es:uds_link,ax
     mov ds:sd_dead_list,es
     sti
+    call ClosePort
     jmp udDone
 
 udCheckNext:

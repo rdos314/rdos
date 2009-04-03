@@ -1915,6 +1915,9 @@ ClosePipe   Proc far
     je cpControl
 ;
     int 3
+    cmp al,MODE_BULK
+    je cpBulk
+;    
     jmp cpFreeEdList
 
 cpControl:
@@ -1953,6 +1956,43 @@ cpControlHead:
     mov gs:HcControlHeadEd,edi
     pop gs
     jmp cpFreeEdList        
+
+cpBulk:
+    mov ax,flat_sel
+    mov es,ax
+;
+    xor ecx,ecx
+    mov ebx,ds:ohc_bulk_linear
+
+cpBulkLoop:
+    cmp ebx,edx
+    je cpBulkUnlink
+;
+    mov ecx,ebx
+    mov ebx,es:[ebx].oes_next_va
+    or ebx,ebx
+    jnz cpBulkLoop
+    jmp cpFreeEdList
+
+cpBulkUnlink:
+    or ecx,ecx
+    jz cpBulkHead
+;
+    mov esi,es:[edx].oes_next_va
+    mov edi,es:[edx].oes_nexted
+    mov es:[ecx].oes_next_va,esi
+    mov es:[ecx].oes_nexted,edi
+    jmp cpFreeEdList
+
+cpBulkHead:
+    push gs
+    mov gs,ds:ohc_reg_sel
+    mov esi,es:[edx].oes_next_va
+    mov edi,es:[edx].oes_nexted
+    mov ds:ohc_bulk_linear,esi
+    mov gs:HcBulkHeadEd,edi
+    pop gs
+    jmp cpFreeEdList
 
 cpFreeEdList:
     mov ax,10
