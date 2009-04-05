@@ -29,14 +29,14 @@
 #define VP_H
 
 #include "fuzzy.h"
-#include "graphdev.h"
+#include "control.h"
 
 class TLog;
 
 class TVp : public TFuzzy
 {
 public:
-	TVp(TGraphicDevice *dev, TLog *log);
+	TVp(TControlThread *control, TLog *log);
 	~TVp();
 
 	void DeviceName(char *Name, int Size) const;
@@ -109,8 +109,7 @@ protected:
     int FAmbient;
     int FRef;
 
-    TGraphicDevice *vbe;
-	TFont Font;
+    TControlThread *FControl;
     TLog *Log;
 
     TSection FSection;

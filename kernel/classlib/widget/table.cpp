@@ -91,9 +91,9 @@ int TTablePanelColumnFactory::GetWidth()
 #   Returns....: *
 #
 ##########################################################################*/
-TPanelControl *TTablePanelColumnFactory::Create(TTableControl *control, int xstart, int ystart, int height)
+TPanelControl *TTablePanelColumnFactory::Create(TTableControl *control, int xstart, int ystart, int height, int space)
 {
-	return FFactory->CreatePanel(control, xstart, ystart, FWidth, height);
+	return FFactory->CreatePanel(control, xstart, ystart, FWidth + space, height);
 }
 /*##########################################################################
 #
@@ -154,9 +154,9 @@ int TTableLabelColumnFactory::GetWidth()
 #   Returns....: *
 #
 ##########################################################################*/
-TLabelControl *TTableLabelColumnFactory::Create(TTableControl *control, int xstart, int ystart, int height)
+TLabelControl *TTableLabelColumnFactory::Create(TTableControl *control, int xstart, int ystart, int height, int space)
 {
-	return FFactory->CreateLabel(control, xstart, ystart, FWidth, height);
+	return FFactory->CreateLabel(control, xstart, ystart, FWidth + space, height);
 }
 
 /*##########################################################################
@@ -173,16 +173,22 @@ TLabelControl *TTableLabelColumnFactory::Create(TTableControl *control, int xsta
 TTableRow::TTableRow(TTableControl *Table, int Row, int StartX, int StartY, int MinHeight, int MaxHeight)
 {
 	int col;
+	int space;
 
 	FTable = Table;
 	FRow = Row;
 
-	FStartY = StartY;
+    if (Row == 0)
+        space = 2 * FTable->FRowSpace;
+    else
+        space = FTable->FRowSpace;
     
-    FMinHeight = MinHeight;
-    FMaxHeight = MaxHeight;
-    FSizeY = MinHeight;
+    FMinHeight = MinHeight + space;
+    FMaxHeight = MaxHeight + space;
+    FSizeY = MinHeight + space;
 
+    FStartY = StartY;
+    
     for (col = 0; col < MAX_TABLE_COLUMNS; col++)
     {
         FStartX[col] = StartX;
@@ -238,18 +244,46 @@ void TTableRow::AddPanelColumn(TTablePanelColumnFactory *fact)
 	int xstart;
 	TPanelControl *control;
 	int width = fact->GetWidth();
+	int space;
 
 	col = FCount;
 
-	if (col)
+    if (col)
+    {
 		xstart = FStartX[col - 1]  + FSizeX[col - 1];
+        space = FTable->FColSpace;
+	}
 	else
+	{
 		xstart = FStartX[0];
+	    space = 2 * FTable->FColSpace;
+    }
+
+    width += space;
 
 	FStartX[col] = xstart;
 	FSizeX[col] = width;
 
-	control = fact->Create(FTable, xstart, FStartY, FSizeY);
+	control = fact->Create(FTable, xstart, FStartY, FSizeY, space);
+
+    if (col == 0)
+        control->SetLeftWidth(FTable->FColSpace);
+    else
+        control->SetLeftWidth(0);
+
+    if (FRow == 0)
+        control->SetUpperWidth(FTable->FRowSpace);
+    else
+        control->SetUpperWidth(0);
+
+    control->SetLowerWidth(FTable->FRowSpace);
+    control->SetRightWidth(FTable->FColSpace);
+        	    
+    if (FTable->FSpaceTransparent)
+        control->SetBorderTransparent();
+    else
+        control->SetBorderColor(FTable->FSpaceR, FTable->FSpaceG, FTable->FSpaceB);
+
 	FPanelArr[col] = control;
 	FCount++;
 
@@ -273,18 +307,46 @@ void TTableRow::AddLabelColumn(TTableLabelColumnFactory *fact)
 	int xstart;
 	TLabelControl *control;
 	int width = fact->GetWidth();
+	int space;
 
 	col = FCount;
 
-	if (col)
+    if (col)
+    {
 		xstart = FStartX[col - 1]  + FSizeX[col - 1];
+        space = FTable->FColSpace;
+	}
 	else
+	{
 		xstart = FStartX[0];
+	    space = 2 * FTable->FColSpace;
+    }
+
+    width += space;
 
 	FStartX[col] = xstart;
 	FSizeX[col] = width;
 
-	control = fact->Create(FTable, xstart, FStartY, FSizeY);
+	control = fact->Create(FTable, xstart, FStartY, FSizeY, space);
+
+    if (col == 0)
+        control->SetLeftWidth(FTable->FColSpace);
+    else
+        control->SetLeftWidth(0);
+
+    if (FRow == 0)
+        control->SetUpperWidth(FTable->FRowSpace);
+    else
+        control->SetUpperWidth(0);
+
+    control->SetLowerWidth(FTable->FRowSpace);
+    control->SetRightWidth(FTable->FColSpace);
+        	    
+    if (FTable->FSpaceTransparent)
+        control->SetBorderTransparent();
+    else
+        control->SetBorderColor(FTable->FSpaceR, FTable->FSpaceG, FTable->FSpaceB);
+	
 	FLabelArr[col] = control;
 	FPanelArr[col] = control;
 	FCount++;
@@ -546,6 +608,14 @@ void TTableControl::Init()
     FRowCount = 0;
     FRowSize = 0;
     FRowArr = 0;
+
+    FRowSpace = 2;
+    FColSpace = 2;
+
+    FSpaceR = 0;
+    FSpaceG = 0;
+    FSpaceB = 0;
+    FSpaceTransparent = FALSE;
 }
 
 /*##########################################################################
@@ -601,6 +671,7 @@ int TTableControl::AddLabelColumn(TLabelFactory *factory, int width)
 	{
 		fact = new TTableLabelColumnFactory(factory, width);
 		FLabelColFactArr[FColFactCount] = fact;
+		
 		FColFactCount++;
 
 		for (row = 0; row < FRowCount; row++)
@@ -748,6 +819,73 @@ void TTableControl::SetText(int row, int col, const char *Text)
 {
     if (row >= 0 && row < FRowCount)
         FRowArr[row]->SetText(col, Text);
+}
+    
+/*##########################################################################
+#
+#   Name       : TTableControl::SetRowSpacing
+#
+#   Purpose....: Set spacing between rows
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTableControl::SetRowSpacing(int space)
+{
+    FRowSpace = space;
+}
+    
+/*##########################################################################
+#
+#   Name       : TTableControl::SetColSpacing
+#
+#   Purpose....: Set spacing between columns
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTableControl::SetColSpacing(int space)
+{
+    FColSpace = space;
+}
+    
+/*##########################################################################
+#
+#   Name       : TTableControl::SetSpacingColor
+#
+#   Purpose....: Set color of spacing
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTableControl::SetSpacingColor(int r, int g, int b)
+{
+    FSpaceR = r;
+    FSpaceG = g;
+    FSpaceB = b;
+    FSpaceTransparent = FALSE;
+}
+    
+/*##########################################################################
+#
+#   Name       : TTableControl::SetSpacingTransparent
+#
+#   Purpose....: Set transparent spacing
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTableControl::SetSpacingTransparent()
+{
+    FSpaceTransparent = TRUE;
 }
     
 /*##########################################################################

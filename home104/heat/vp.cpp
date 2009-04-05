@@ -38,6 +38,7 @@
 #include "lowset.h"
 #include "midset.h"
 #include "highset.h"
+#include "table.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -56,8 +57,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TVp::TVp(TGraphicDevice *dev, TLog *log)
- : Font(10)
+TVp::TVp(TControlThread *control, TLog *log)
 {
     Log = log;
 	int i, j;
@@ -103,9 +103,7 @@ TVp::TVp(TGraphicDevice *dev, TLog *log)
 	FTempDiffVar.SetInputValue(0.0);
 	FAmbientVar.SetInputValue(0.5);
 
-	vbe = new TGraphicDevice(*dev);
-
-	vbe->SetFont(&Font);
+    FControl = control;
 
 	FTankTemp = 200;
 	FHeatTemp = 200;
@@ -132,7 +130,6 @@ TVp::TVp(TGraphicDevice *dev, TLog *log)
 ##########################################################################*/
 TVp::~TVp()
 {
-	delete vbe;
 }
 
 /*##########################################################################
@@ -511,6 +508,69 @@ void TVp::Execute()
 	int EpLimit;
 	char str[50];
 
+    TLabelFactory CommentLabelFactory;
+    TLabelFactory ValueLabelFactory;
+    TLabelFactory UnitLabelFactory;
+
+    CommentLabelFactory.SetSpace(4, 4);
+    CommentLabelFactory.SetFont(20);
+    CommentLabelFactory.SetBackTransparent();
+    CommentLabelFactory.SetDrawColor(0, 0, 0);
+    CommentLabelFactory.AlignLeft();
+    
+    ValueLabelFactory.SetSpace(4, 4);
+    ValueLabelFactory.SetFont(20);
+    ValueLabelFactory.SetBackColor(100, 100, 100);
+    ValueLabelFactory.SetDrawColor(0, 0, 0);
+    ValueLabelFactory.AlignRight();
+
+    UnitLabelFactory.SetSpace(4, 4);
+    UnitLabelFactory.SetFont(20);
+    UnitLabelFactory.SetBackTransparent();
+    UnitLabelFactory.SetDrawColor(0, 0, 0);
+    UnitLabelFactory.AlignLeft();
+
+	TLabelControl *Label;
+    TTableControl *Table;
+
+	Label = new TLabelControl(FControl, 900, 500, 200, 30);
+    Label->SetFont(20);
+    Label->SetBackTransparent();
+    Label->SetDrawColor(0, 0, 0);
+    Label->SetText("V„rme");
+    Label->Show();
+
+	Table = new TTableControl(FControl, 900, 530, 300, 300);
+	Table->SetRowSpacing(5);
+	Table->SetColSpacing(8);
+	Table->SetSpacingTransparent();
+	Table->SetBackTransparent();
+	Table->AddLabelColumn(&CommentLabelFactory, 150);
+	Table->AddLabelColumn(&ValueLabelFactory, 80);
+	Table->AddLabelColumn(&UnitLabelFactory, 70);
+
+	Table->AddRow(24, 45);
+	Table->AddRow(24, 45);
+	Table->AddRow(24, 45);
+	Table->AddRow(24, 45);
+	Table->AddRow(24, 45);
+
+	Table->SetText(0, 0, "Tank temp");
+	Table->SetText(0, 2, "C");
+
+	Table->SetText(1, 0, "Tank effekt");
+	Table->SetText(1, 2, "kW");
+
+	Table->SetText(2, 0, "Panna temp");
+	Table->SetText(2, 2, "C");
+
+	Table->SetText(3, 0, "Panna effekt");
+	Table->SetText(3, 2, "kW");
+
+	Table->SetText(4, 0, "VP");
+	Table->SetText(4, 2, "V");
+
+
 	TempSum = 0;
 	TempCount = 0;
 	AmbientSum = 0;
@@ -563,14 +623,8 @@ void TVp::Execute()
 				FTankTemp = FTankSum / FTankCount;
 
 				val = (long double)FTankTemp / 10;
-				sprintf(str, "Tank: %5.1Lf", val);
-
-				vbe->SetFilledStyle();
-				vbe->SetDrawColor(0, 0, 0);
-				vbe->DrawRect(550, 340, 550 + 100, 340 + 12);
-
-				vbe->SetDrawColor(255, 255, 255);
-				vbe->DrawString(550, 340, str);
+				sprintf(str, "%5.1Lf", val);
+        		Table->SetText(0, 1, str);
 
 				FValidTank = TRUE;
 
@@ -592,14 +646,8 @@ void TVp::Execute()
 				    FMaxHeatTemp = FHeatTemp;
 
 				val = (long double)FHeatTemp / 10;
-				sprintf(str, "Panna: %5.1Lf", val);
-
-				vbe->SetFilledStyle();
-				vbe->SetDrawColor(0, 0, 0);
-				vbe->DrawRect(550, 355, 550 + 100, 355 + 12);
-
-				vbe->SetDrawColor(255, 255, 255);
-				vbe->DrawString(550, 355, str);
+				sprintf(str, "%5.1Lf", val);
+        		Table->SetText(2, 1, str);
 
 				FValidHeat = TRUE;
 
@@ -610,7 +658,7 @@ void TVp::Execute()
 
 		RdosGetTime(&msb, &lsb);
 		RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-		RdosDecodeLsbTics(lsb, &LastMin, &sec, &ms, &us);
+		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
 
 		if (LastMin != min && TempCount)
 		{
@@ -673,14 +721,8 @@ void TVp::Execute()
 					PTank = 0.07 * VOLUME_TANK * dT / 30;
 					FValidPTank = TRUE;
 
-					sprintf(str, "P Tank: %5.2Lf kW", PTank);
-
-					vbe->SetFilledStyle();
-					vbe->SetDrawColor(0, 0, 0);
-					vbe->DrawRect(550, 370, 550 + 100, 370 + 12);
-
-					vbe->SetDrawColor(255, 255, 255);
-					vbe->DrawString(550, 370, str);
+					sprintf(str, "%5.2Lf", PTank);
+            		Table->SetText(1, 1, str);
 				}
 			}
 
@@ -735,14 +777,8 @@ void TVp::Execute()
 					PHeat = 0.07 * VOLUME_HEAT * dT / 15;
 					FValidPHeat = TRUE;
 
-					sprintf(str, "P Panna: %5.2Lf kW", PHeat);
-
-					vbe->SetFilledStyle();
-					vbe->SetDrawColor(0, 0, 0);
-					vbe->DrawRect(550, 385, 550 + 100, 385 + 12);
-
-					vbe->SetDrawColor(255, 255, 255);
-					vbe->DrawString(550, 385, str);
+					sprintf(str, "%5.2Lf", PHeat);
+            		Table->SetText(3, 1, str);
 				}
 			}
 
@@ -830,15 +866,8 @@ void TVp::Execute()
 
 			}
 
-			sprintf(str, "VP: %4.1Lf", FLevel);
-
-			vbe->SetFilledStyle();
-			vbe->SetDrawColor(0, 0, 0);
-			vbe->DrawRect(550, 300, 550 + 100, 300 + 12);
-
-			vbe->SetDrawColor(255, 255, 255);
-			vbe->DrawString(550, 300, str);
-
+			sprintf(str, "%4.1Lf", FLevel);
+            Table->SetText(4, 1, str);
 		}
 
 		RdosWaitMilli(1000);

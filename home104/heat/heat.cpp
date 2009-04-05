@@ -45,6 +45,7 @@
 #include "jpeg.h"
 #include "radcntrl.h"
 #include "solar.h"
+#include "table.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -101,6 +102,34 @@ void cdecl main()
 	long double altitude;
 	long double azimuth;
 
+    TLabelFactory CommentLabelFactory;
+    TLabelFactory ValueLabelFactory;
+    TLabelFactory UnitLabelFactory;
+
+    CommentLabelFactory.SetSpace(4, 4);
+    CommentLabelFactory.SetFont(20);
+    CommentLabelFactory.SetBackTransparent();
+    CommentLabelFactory.SetDrawColor(0, 0, 0);
+    CommentLabelFactory.AlignLeft();
+    
+    ValueLabelFactory.SetSpace(4, 4);
+    ValueLabelFactory.SetFont(20);
+    ValueLabelFactory.SetBackColor(100, 100, 100);
+    ValueLabelFactory.SetDrawColor(0, 0, 0);
+    ValueLabelFactory.AlignRight();
+
+    UnitLabelFactory.SetSpace(4, 4);
+    UnitLabelFactory.SetFont(20);
+    UnitLabelFactory.SetBackTransparent();
+    UnitLabelFactory.SetDrawColor(0, 0, 0);
+    UnitLabelFactory.AlignLeft();
+
+	TLabelControl *IndoorLabel;
+    TTableControl *IndoorTable;
+
+	TLabelControl *OutdoorLabel;
+    TTableControl *OutdoorTable;
+    
 	RdosWaitMilli(1000);
 
 	RdosWriteSerialVal(2, 0, 0);
@@ -170,7 +199,7 @@ void cdecl main()
 
 	Circ = new TCirc(vbe);
 
-	Vp = new TVp(vbe, log);
+	Vp = new TVp(control, log);
 
 	log->Add(Ws);
 	log->Add(Circ);
@@ -182,6 +211,89 @@ void cdecl main()
 	AddHttpCirc(Circ);
 	AddHttpVp(Vp);
 	AddHttpLog(log);
+
+	IndoorLabel = new TLabelControl(control, 900, 10, 300, 30);
+    IndoorLabel->SetFont(20);
+    IndoorLabel->SetBackTransparent();
+    IndoorLabel->SetDrawColor(0, 0, 0);
+    IndoorLabel->SetText("Inomhus");
+    IndoorLabel->Show();
+
+	IndoorTable = new TTableControl(control, 900, 40, 300, 60);
+	IndoorTable->SetRowSpacing(5);
+	IndoorTable->SetColSpacing(8);
+	IndoorTable->SetSpacingTransparent();
+	IndoorTable->SetBackTransparent();
+	IndoorTable->AddLabelColumn(&CommentLabelFactory, 150);
+	IndoorTable->AddLabelColumn(&ValueLabelFactory, 80);
+	IndoorTable->AddLabelColumn(&UnitLabelFactory, 70);
+
+    IndoorTable->AddRow(24, 45);
+    IndoorTable->AddRow(24, 45);
+
+    IndoorTable->SetText(0, 0, "Temperatur");
+    IndoorTable->SetText(0, 2, "C");
+
+    IndoorTable->SetText(1, 0, "Fuktighet");
+    IndoorTable->SetText(1, 2, "%");
+
+    IndoorTable->Show();
+
+	OutdoorLabel = new TLabelControl(control, 900, 100, 300, 30);
+    OutdoorLabel->SetFont(20);
+    OutdoorLabel->SetBackTransparent();
+    OutdoorLabel->SetDrawColor(0, 0, 0);
+    OutdoorLabel->SetText("Utomhus");
+    OutdoorLabel->Show();
+
+	OutdoorTable = new TTableControl(control, 900, 130, 300, 300);
+	OutdoorTable->SetRowSpacing(5);
+	OutdoorTable->SetColSpacing(8);
+	OutdoorTable->SetSpacingTransparent();
+	OutdoorTable->SetBackTransparent();
+	OutdoorTable->AddLabelColumn(&CommentLabelFactory, 150);
+	OutdoorTable->AddLabelColumn(&ValueLabelFactory, 80);
+	OutdoorTable->AddLabelColumn(&UnitLabelFactory, 70);
+
+	 OutdoorTable->AddRow(24, 45);
+	 OutdoorTable->AddRow(24, 45);
+	 OutdoorTable->AddRow(24, 45);
+	 OutdoorTable->AddRow(24, 45);
+	 OutdoorTable->AddRow(24, 45);
+	 OutdoorTable->AddRow(24, 45);
+	 OutdoorTable->AddRow(24, 45);
+	 OutdoorTable->AddRow(24, 45);
+	 OutdoorTable->AddRow(24, 45);
+
+	 OutdoorTable->SetText(0, 0, "Temperatur");
+	 OutdoorTable->SetText(0, 2, "C");
+
+	 OutdoorTable->SetText(1, 0, "Fuktighet");
+	 OutdoorTable->SetText(1, 2, "%");
+
+	 OutdoorTable->SetText(2, 0, "Daggpunkt");
+	 OutdoorTable->SetText(2, 2, "C");
+
+	 OutdoorTable->SetText(3, 0, "Vindkomp");
+	 OutdoorTable->SetText(3, 2, "C");
+
+	 OutdoorTable->SetText(4, 0, "Vind");
+	 OutdoorTable->SetText(4, 2, "m/s");
+
+	 OutdoorTable->SetText(5, 0, "Vindrikt");
+	 OutdoorTable->SetText(5, 2, "");
+
+	 OutdoorTable->SetText(6, 0, "Regn, timme");
+	 OutdoorTable->SetText(6, 2, "mm");
+
+	 OutdoorTable->SetText(7, 0, "Regn, dygn");
+	 OutdoorTable->SetText(7, 2, "mm");
+
+	 OutdoorTable->SetText(8, 0, "Lufttryck");
+	 OutdoorTable->SetText(8, 2, "hPa");
+
+	 OutdoorTable->Show();
+
 	for (;;)
 	{
 		RdosSetCursorPosition(0,0);
@@ -292,185 +404,120 @@ void cdecl main()
 		else
 			HttpSetLightOff();
 
-		vbe->SetFilledStyle();
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 0, "V„derstation");
-
-		 vbe->DrawString(550, 16, "Inomhus");
-
 		val = Ws->GetIndoorTemp();
-		sprintf(str, "Temperatur: %5.1Lf", val);
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 2 * 16, 550 + WIDTH, 3 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 2 * 16, str);
+		sprintf(str, "%5.1Lf", val);
+		  IndoorTable->SetText(0, 1, str);
 
 		val = Ws->GetIndoorHumidity();
-		sprintf(str, "Fuktighet: %4.0Lf%", val);
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 3 * 16, 550 + WIDTH, 4 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 3 * 16, str);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 4 * 16, "Utomhus");
+		sprintf(str, "%4.0Lf", val);
+		  IndoorTable->SetText(1, 1, str);
 
 		val = Ws->GetOutdoorTemp();
-		sprintf(str, "Temperatur: %5.1Lf", val);
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 5 * 16, 550 + WIDTH, 6 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 5 * 16, str);
+		sprintf(str, "%5.1Lf", val);
+		  OutdoorTable->SetText(0, 1, str);
 
 		val = Ws->GetOutdoorHumidity();
-		sprintf(str, "Fuktighet: %4.0Lf%", val);
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 6 * 16, 550 + WIDTH, 7 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 6 * 16, str);
+		sprintf(str, "%4.0Lf", val);
+		  OutdoorTable->SetText(1, 1, str);
 
 		val = Ws->GetDewPoint();
-		sprintf(str, "Daggpunkt: %5.1Lf", val);
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 7 * 16, 550 + WIDTH, 8 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		vbe->DrawString(550, 7 * 16, str);
+		sprintf(str, "%5.1Lf", val);
+		  OutdoorTable->SetText(2, 1, str);
 
 		val = Ws->GetWindChill();
-		sprintf(str, "Vindkompenserad: %5.1Lf", val);
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 8 * 16, 550 + WIDTH, 9 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 8 * 16, str);
+		sprintf(str, "%5.1Lf", val);
+		  OutdoorTable->SetText(3, 1, str);
 
 		val = Ws->GetWindSpeed();
-		sprintf(str, "Vind: %5.1Lf m/s", val);
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 9 * 16, 550 + WIDTH, 10 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 9 * 16, str);
+		sprintf(str, "%5.1Lf", val);
+        OutdoorTable->SetText(4, 1, str);
 
 		val = Ws->GetWindDir();
 		ival = (int)(val / 22 + 0.5);
 
-		strcpy(str, "Vindriktning: ");
 		switch (ival)
 		{
 				case 0:
-					 strcat(str, "N");
+					 strcpy(str, "N");
 					 break;
 
 				case 1:
-					 strcat(str, "NNO");
+					 strcpy(str, "NNO");
 					 break;
 
 				case 2:
-					 strcat(str, "NO");
+					 strcpy(str, "NO");
 					 break;
 
 				case 3:
-					 strcat(str, "ONO");
+					 strcpy(str, "ONO");
 					 break;
 
 				case 4:
-					 strcat(str, "O");
+					 strcpy(str, "O");
 					 break;
 
 				case 5:
-					 strcat(str, "OSO");
+					 strcpy(str, "OSO");
 					 break;
 
 				case 6:
-					 strcat(str, "SO");
+					 strcpy(str, "SO");
 					 break;
 
 				case 7:
-					 strcat(str, "SSO");
+					 strcpy(str, "SSO");
 					 break;
 
 				case 8:
-					 strcat(str, "S");
+					 strcpy(str, "S");
 					 break;
 
 				case 9:
-					 strcat(str, "SSV");
+					 strcpy(str, "SSV");
 					 break;
 
 				case 10:
-					 strcat(str, "SV");
+					 strcpy(str, "SV");
 					 break;
 
 				case 11:
-					 strcat(str, "VSV");
+					 strcpy(str, "VSV");
 					 break;
 
 				case 12:
-					 strcat(str, "V");
+					 strcpy(str, "V");
 					 break;
 
 				case 13:
-					 strcat(str, "VNV");
+					 strcpy(str, "VNV");
 					 break;
 
 				case 14:
-					 strcat(str, "NV");
+					 strcpy(str, "NV");
 					 break;
 
 				case 15:
-					 strcat(str, "NNV");
+					 strcpy(str, "NNV");
 					 break;
 
 				case 16:
-					 strcat(str, "N");
+					 strcpy(str, "N");
 					 break;
 		}
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 10 * 16, 550 + WIDTH, 11 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 10 * 16, str);
+        OutdoorTable->SetText(5, 1, str);
 
 		val = Ws->GetRain1h();
-		sprintf(str, "Regn: 1 timme: %5.1Lf mm", val);
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 11 * 16, 550 + WIDTH, 12 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 11 * 16, str);
+		sprintf(str, "%5.1Lf", val);
+        OutdoorTable->SetText(6, 1, str);
 
 		val = Ws->GetRain24h();
-		sprintf(str, "Regn: 24 timmar: %5.1Lf mm", val);
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 12 * 16, 550 + WIDTH, 13 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 12 * 16, str);
+		sprintf(str, "%5.1Lf", val);
+        OutdoorTable->SetText(7, 1, str);
 
 		val = Ws->GetAirPressure();
-		sprintf(str, "Lufttryck: %6.1Lf hPa", val);
-
-		vbe->SetDrawColor(0, 0, 0);
-		vbe->DrawRect(550, 13 * 16, 550 + WIDTH, 14 * 16 - 1);
-
-		vbe->SetDrawColor(255, 255, 255);
-		 vbe->DrawString(550, 13 * 16, str);
+		sprintf(str, "%6.1Lf", val);
+        OutdoorTable->SetText(8, 1, str);
 
 		RdosWaitMilli(1000);
 

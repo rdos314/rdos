@@ -43,7 +43,7 @@ public:
 	TTablePanelColumnFactory(TPanelFactory *factory, int width);
 	~TTablePanelColumnFactory();
 
-	TPanelControl *Create(TTableControl *control, int xstart, int ystart, int height);
+	TPanelControl *Create(TTableControl *control, int xstart, int ystart, int height, int space);
 
 	int GetWidth();
 
@@ -58,7 +58,7 @@ public:
 	TTableLabelColumnFactory(TLabelFactory *factory, int width);
 	~TTableLabelColumnFactory();
 
-    TLabelControl *Create(TTableControl *control, int xstart, int ystart, int height);
+    TLabelControl *Create(TTableControl *control, int xstart, int ystart, int height, int space);
 
     int GetWidth();
     
@@ -69,6 +69,8 @@ protected:
 
 class TTableRow
 {
+friend class TTableControl;
+
 public:
 	TTableRow(TTableControl *Table, int Row, int StartX, int StartY, int MinHeight, int MaxHeight);
 	~TTableRow();
@@ -89,6 +91,7 @@ public:
 
 protected:
     void CheckHeight();
+    void UpdateBorder(TPanelFactory *fact);
 
     TTableControl *FTable;
     int FRow;
@@ -122,6 +125,12 @@ public:
     void SetText(int row, int col, TString &Text);
     void SetText(int row, int col, const char *Text);
 
+    void SetRowSpacing(int space);
+    void SetColSpacing(int space);
+
+    void SetSpacingColor(int r, int g, int b);
+    void SetSpacingTransparent();    
+
     TPanelControl *GetPanelControl(int row, int col);
     TLabelControl *GetLabelControl(int row, int col);
 
@@ -138,6 +147,15 @@ private:
 
     int FRowCount;
     int FRowSize;
+
+    int FRowSpace;
+    int FColSpace;
+
+    int FSpaceR;
+    int FSpaceG;
+    int FSpaceB;
+    int FSpaceTransparent;
+    
     TTableRow **FRowArr;
 };
 

@@ -36,7 +36,7 @@
 
 class TLabelControl;
 
-class TLabelFactory : TPanelFactory
+class TLabelFactory : public TPanelFactory
 {
 public:
     TLabelFactory();
