@@ -1998,24 +1998,31 @@ cpFreeEdList:
     mov ax,10
     WaitMilliSec
 ;
-    mov esi,es:[edx].oes_head_va
-    mov edi,es:[edx].oes_tail_va
-
-cpFreeTdLoop:    
-    mov ecx,es:[esi].otd_next_va
+    int 3
     push edx
-    mov edx,esi
-    call FreeBlock32
+    mov ecx,es:[edx].oes_headp
+    mov eax,1000h
+    AllocateBigLinear
+    mov eax,ecx
+    and ax,0F000h
+    and cx,0FFFh
+	or ax,803h
+    SetPhysicalPage
+    mov esi,es:[edx+ecx].otd_my_va
+    xor eax,eax
+    SetPhysicalPage
+    mov ecx,1000h
+    FreeLinear
     pop edx
-;
-    or esi,edi
-    je cpFreeEd
 ;    
-    mov esi,ecx
-    or esi,esi
-    jnz cpFreeTdLoop
+    mov edx,es:[edx].oes_tail_va
+    or edx,edx
+    jz cpTdListOk
+;
+    call FreeBlock32
 
-cpFreeEd:
+cpTdListOk:    
+    pop edx
     call FreeBlock32
         
 dpDone:

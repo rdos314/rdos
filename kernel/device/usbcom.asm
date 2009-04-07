@@ -41,6 +41,11 @@ MAX_PORTS       = 16
 
 FLAG_UDS_DELETE = 1
 FLAG_UDS_DISCONNECT = 2
+FLAG_UDS_REINIT = 4
+
+CONTROL_DTR = 1
+CONTROL_RTS = 2
+CONTROL_CTS = 4
 
 FLAG_CTS	= 10h
 FLAG_DSR	= 20h
@@ -82,6 +87,7 @@ ups_timer_active    DB ?
 ups_data_bits       DB ?
 ups_stop_bits       DB ?
 ups_parity          DB ?
+ups_control         DB ?
 
 ups_pl_control      DB ?
 ups_pl_buf          DB 7 DUP(?)
@@ -733,6 +739,73 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			InitComFtdi
+;
+;		description:	Init serial port, FTDI version
+;
+;		PARAMETERS:		DS      Port selector
+;		        		ES		Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitComFtdi	Proc near
+    push ds
+    pushad
+;    
+    call reset_sio
+    jc init_ftdi_done
+;
+    call set_latency_timer
+    jc init_ftdi_done   
+;    
+    call set_data
+    jc init_ftdi_done
+;
+    call set_baud
+    jc init_ftdi_done
+;    
+    test ds:ups_control,CONTROL_DTR
+    jz init_ftdi_reset_dtr
+;
+    call set_dtr_ftdi    
+    jmp init_ftdi_dtr_ok
+
+init_ftdi_reset_dtr:
+    call reset_dtr_ftdi
+
+init_ftdi_dtr_ok:    
+    test ds:ups_control,CONTROL_RTS
+    jz init_ftdi_reset_rts
+;
+    call set_rts_ftdi    
+    jmp init_ftdi_rts_ok
+
+init_ftdi_reset_rts:
+    call reset_rts_ftdi
+
+init_ftdi_rts_ok:
+    test ds:ups_control,CONTROL_CTS
+    jz init_ftdi_disable_cts
+;
+    call enable_cts_ftdi    
+    jmp init_ftdi_cts_ok
+
+init_ftdi_disable_cts:
+    call disable_cts_ftdi
+
+init_ftdi_cts_ok:
+
+init_ftdi_done:
+    popad
+    pop ds
+	ret
+InitComFtdi	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			open_com_ftdi
 ;
 ;		description:	Open a serial port, FTDI version
@@ -761,6 +834,7 @@ open_com_ftdi	Proc far
     jc open_ftdi_done
 ;
     mov ds:ups_divisor,ecx
+    mov ds:ups_control,CONTROL_DTR OR CONTROL_RTS
 ;
     CreateWait
     mov ds:ups_control_wait,bx
@@ -776,21 +850,8 @@ open_com_ftdi	Proc far
     movzx ecx,bx
     AddWaitForUsbPipe
 ;    
-    call reset_sio
+    call InitComFtdi
     jc open_ftdi_done
-;
-    call set_latency_timer
-    jc open_ftdi_done   
-;    
-    call set_data
-    jc open_ftdi_done
-;
-    call set_baud
-    jc open_ftdi_done
-;    
-    call set_dtr_ftdi    
-    call set_rts_ftdi
-    call disable_cts_ftdi
 ;    
     mov ds:ups_device_sel,es
     mov dx,ds
@@ -888,6 +949,7 @@ enable_cts_ftdi	PROC far
     push es
     pushad
 ;
+    or ds:ups_control,CONTROL_CTS
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
     inc dx
@@ -944,6 +1006,7 @@ disable_cts_ftdi	PROC far
     push es
     pushad
 ;
+    and ds:ups_control,NOT CONTROL_CTS
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
     inc dx
@@ -999,6 +1062,7 @@ set_dtr_ftdi	Proc far
     push es
     pushad
 ;
+    or ds:ups_control,CONTROL_DTR
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
     inc dx
@@ -1054,6 +1118,7 @@ reset_dtr_ftdi	Proc far
     push es
     pushad
 ;
+    and ds:ups_control,NOT CONTROL_DTR
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
     inc dx
@@ -1109,6 +1174,7 @@ set_rts_ftdi	Proc far
     push es
     pushad
 ;
+    or ds:ups_control,CONTROL_RTS
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
     inc dx
@@ -1164,6 +1230,7 @@ reset_rts_ftdi	Proc far
     push es
     pushad
 ;
+    and ds:ups_control,NOT CONTROL_RTS
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
     inc dx
@@ -1566,45 +1633,18 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			open_com_pl
+;		NAME:			InitComPl
 ;
-;		description:	Open a serial port, PL2303 version
+;		description:	Init a serial port, PL2303 version
 ;
 ;		PARAMETERS:		DS      Port selector
 ;		        		ES		Device selector
-;						AH		# of data bits
-;						BL		# of stop bits
-;						BH		parity
-;						ECX		baudrate
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_com_pl	Proc far
+InitComPl	Proc near
     push ds
     pushad
-;
-    mov ds:ups_timer_active,0
-    mov ds:ups_data_bits,ah
-    mov ds:ups_stop_bits,bl
-    mov ds:ups_parity,bh
-    mov ds:ups_divisor,ecx
-;
-    mov ax,es:uds_device_type
-    mov ds:ups_device_type,ax
-;
-    CreateWait
-    mov ds:ups_control_wait,bx
-;
-    mov bx,ds:ups_controller
-    mov ax,ds:ups_device
-    xor dl,dl
-    OpenUsbPipe
-    mov ds:ups_control_pipe,bx
-;
-    mov ax,ds:ups_control_pipe
-    mov bx,ds:ups_control_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
 ;    
     xor dx,dx
     mov ax,8484h
@@ -1679,9 +1719,88 @@ ocpInitDone:
 ;    
     call ReadLineState    
 ;    
+    test ds:ups_control,CONTROL_DTR
+    jz init_pl_reset_dtr
+;
     call set_dtr_pl    
-    call set_rts_pl
+    jmp init_pl_dtr_ok
+
+init_pl_reset_dtr:
+    call reset_dtr_pl
+
+init_pl_dtr_ok:    
+    test ds:ups_control,CONTROL_RTS
+    jz init_pl_reset_rts
+;
+    call set_rts_pl    
+    jmp init_pl_rts_ok
+
+init_pl_reset_rts:
+    call reset_rts_pl
+
+init_pl_rts_ok:
+    test ds:ups_control,CONTROL_CTS
+    jz init_pl_disable_cts
+;
+    call enable_cts_pl    
+    jmp init_pl_cts_ok
+
+init_pl_disable_cts:
     call disable_cts_pl
+
+init_pl_cts_ok:
+    popad
+    pop ds
+    ret
+InitComPl Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			open_com_pl
+;
+;		description:	Open a serial port, PL2303 version
+;
+;		PARAMETERS:		DS      Port selector
+;		        		ES		Device selector
+;						AH		# of data bits
+;						BL		# of stop bits
+;						BH		parity
+;						ECX		baudrate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_com_pl	Proc far
+    push ds
+    pushad
+;
+    mov ds:ups_timer_active,0
+    mov ds:ups_data_bits,ah
+    mov ds:ups_stop_bits,bl
+    mov ds:ups_parity,bh
+    mov ds:ups_divisor,ecx
+    mov ds:ups_control,CONTROL_DTR OR CONTROL_RTS
+;
+    mov ax,es:uds_device_type
+    mov ds:ups_device_type,ax
+;
+    CreateWait
+    mov ds:ups_control_wait,bx
+;
+    mov bx,ds:ups_controller
+    mov ax,ds:ups_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:ups_control_pipe,bx
+;
+    mov ax,ds:ups_control_pipe
+    mov bx,ds:ups_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;    
+    call InitComPl
 ;    
     mov ds:ups_device_sel,es
     mov dx,ds
@@ -1779,6 +1898,7 @@ enable_cts_pl	PROC far
     push es
     pushad
 ;
+    or ds:ups_control,CONTROL_CTS
     mov bx,ds:ups_control_pipe
 ;    
     push ax
@@ -1840,6 +1960,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disable_cts_pl	PROC far
+    and ds:ups_control,NOT CONTROL_CTS
     ret
 disable_cts_pl Endp
 
@@ -1857,6 +1978,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_dtr_pl	Proc far
+    or ds:ups_control,CONTROL_DTR
     or ds:ups_pl_control,1
     call WriteControl
 	ret
@@ -1876,6 +1998,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_dtr_pl	Proc far
+    and ds:ups_control,NOT CONTROL_DTR
     and ds:ups_pl_control,NOT 1
     call WriteControl
 	ret
@@ -1895,6 +2018,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_rts_pl	Proc far
+    or ds:ups_control,CONTROL_RTS
     or ds:ups_pl_control,2
     call WriteControl
 	ret
@@ -1914,6 +2038,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_rts_pl	Proc far
+    and ds:ups_control,NOT CONTROL_RTS
     and ds:ups_pl_control,NOT 2
     call WriteControl
 	ret
@@ -2239,6 +2364,43 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    ReInit
+;
+;		DESCRIPTION:    Reinit port
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitError   Proc near
+    ret
+InitError   Endp
+
+reinit_port_tab:
+rpt00 DW OFFSET InitError
+rpt01 DW OFFSET InitComFtdi
+rpt02 DW OFFSET InitComPl
+
+ReInit    Proc near
+    push cx
+    push di
+;    
+	mov cx,es:uds_device_type
+	movzx di,ch
+	add di,di
+    call word ptr cs:[di].reinit_port_tab    
+;
+    pop di
+    pop cx
+    ret
+ReInit  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    PollRead
 ;
 ;		DESCRIPTION:    Poll input-buffer
@@ -2415,6 +2577,14 @@ hdOpen:
     jnz hdDone
 ;
     call OpenPort        
+;
+    test ds:uds_flag,FLAG_UDS_REINIT
+    jz hdIsOpen    
+;
+    int 3
+    mov es,ds:uds_port_sel
+    call ReInit
+    and ds:uds_flag,NOT FLAG_UDS_REINIT
 
 hdIsOpen:    
     mov bx,ds:uds_in_req
@@ -2493,6 +2663,8 @@ hdCheckWrite:
     jmp hdDone
 
 hdClosed:
+    and ds:uds_flag,NOT FLAG_UDS_REINIT
+;
     mov bx,ds:uds_in_req
     or bx,bx
     jz hdDone
@@ -2509,6 +2681,8 @@ hdIsClosed:
     call ClosePort
     
 hdDone:
+    xor ax,ax
+    mov es,ax
     pop ds
     ret
 HandleDevice    Endp
@@ -2697,7 +2871,10 @@ apDescrDone:
     mov dx,es
     mov ds,dx
     EnterSection ds:uds_section
-    and ds:uds_flag,NOT FLAG_UDS_DISCONNECT
+    mov al,ds:uds_flag
+    or al,FLAG_UDS_REINIT
+    and al,NOT FLAG_UDS_DISCONNECT
+    mov ds:uds_flag,al
 ;    
     mov ax,usbcom_data_sel
     mov ds,ax
@@ -3268,10 +3445,9 @@ udCheckLoop:
     mov es:uds_link,ax
     mov ds:sd_dead_list,es
     sti
+    mov ax,es
+    mov ds,ax
     call ClosePort
-;
-    mov dx,es
-    mov ds,dx
     LeaveSection ds:uds_section    
     jmp udDone
 

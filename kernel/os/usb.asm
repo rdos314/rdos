@@ -465,7 +465,12 @@ ceClose:
     push fs
     mov es:[bx].usbf_endpoint_arr,0
     mov fs,ax
+	sub fs:usbp_usage,1
+    jnz ceCloseDone
+;    
     call ClosePipe    
+
+ceCloseDone:
     pop fs
     
 ceDone:
@@ -758,6 +763,8 @@ nuaLoop:
     jb nuaLoop
 
 nuaNotify:
+    xor ax,ax
+    mov gs,ax
     mov bx,ds:usb_controller_id
     mov al,fs:usbp_address
     call trap_usb_attach
@@ -2035,6 +2042,7 @@ close_usb_pipe_name	DB 'Close USB Pipe',0
 
 close_usb_pipe	Proc far
 	push ds
+	push es
 	push fs
 	push ax
 	push bx
@@ -2050,6 +2058,14 @@ close_usb_pipe	Proc far
     jnz cupCloseDone
 ;	
 	mov ds,ds:[bx].up_func_sel
+    mov ax,fs:usbp_device_sel
+    or ax,ax
+    jz cupCloseDone
+;
+    mov es,ax
+    movzx bx,fs:usbp_endpoint
+    add bx,bx    
+    mov es:[bx].usbf_endpoint_arr,0
 	call ClosePipe
 
 cupCloseDone:
@@ -2062,6 +2078,7 @@ cupDone:
 	pop bx
 	pop ax
 	pop fs
+	pop es
 	pop ds
 	retf32
 close_usb_pipe	Endp
@@ -2091,7 +2108,12 @@ delete_handle	Proc far
     push bx
 	mov fs,ds:[bx].up_pipe_sel
 	mov ds,ds:[bx].up_func_sel
+	sub fs:usbp_usage,1
+    jnz delete_handle_pipe_ok
+;	
 	call ClosePipe
+
+delete_handle_pipe_ok:
 	pop bx
 	pop ds
 	FreeHandle
