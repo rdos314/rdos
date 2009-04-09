@@ -79,6 +79,7 @@ usp_pipe_base   usb_pipe_struc <>
 usp_qh          DD ?
 usp_prev        DW ?
 usp_next        DW ?
+usp_signal      DW ?
 
 uhci_pipe   ENDS
 
@@ -155,10 +156,6 @@ UpdatePipeList  Proc near
     mov es,ax
 
 uplLoop:
-    mov ax,fs:usbp_wait_obj
-    or ax,ax
-    jz uplNext
-;    
     mov edx,fs:usp_qh
     or edx,edx
     jz uplNext
@@ -170,6 +167,17 @@ uplLoop:
     test byte ptr es:[edx].uqh_elem,1
     jz uplNext
 ;    
+    mov bx,fs:usp_signal
+    or bx,bx
+    jz uplSignalOk
+;    
+    Signal    
+
+uplSignalOk:    
+    mov ax,fs:usbp_wait_obj
+    or ax,ax
+    jz uplNext    
+;
     push es
     mov es,ax
     SignalWait
@@ -356,6 +364,7 @@ ipEmpty:
 	mov ds:uhc_pipe_list,fs
 
 ipDone:
+    mov fs:usp_signal,0
 	ret
 InsertPipe  Endp
 
@@ -609,7 +618,7 @@ InsertTdFirst	PROC near
     jz itdEmpty
 ;
     mov es:[eax].uqh_va_link,ecx
-    mov ecx,es:[ecx].uqh_phys
+    mov ecx,es:[edx].utd_link
     mov es:[eax].uqh_link,ecx
 ;
     mov es:[edx].utd_va_link,eax
@@ -664,10 +673,10 @@ itlLoop:
     jmp itlLoop
 
 itlDo:
-    mov es:[edx].uqh_va_link,eax
     mov ecx,es:[eax].uqh_phys
     or cl,2
     mov es:[edx].uqh_link,ecx
+    mov es:[edx].uqh_va_link,eax
 ;    
     pop edx
     pop ecx
@@ -679,7 +688,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    RemoveTd
+;		NAME:		    Remove
 ;
 ;		DESCRIPTION:	Remove QH from TD list
 ;
@@ -690,6 +699,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemoveTd	PROC near
+    push ebx
     push ecx
     push edx
 ;
@@ -702,8 +712,7 @@ RemoveTd	PROC near
     jz rtdEmptyList
 ;
     mov es:[edx].utd_va_link,ecx
-    mov ecx,es:[ecx].uqh_phys
-    or cl,2
+    mov ecx,es:[eax].uqh_link
     mov es:[edx].utd_link,ecx
     jmp rtdDone
 
@@ -727,10 +736,9 @@ rtdRemove:
     mov ecx,es:[eax].uqh_va_link
     or ecx,ecx
     jz rtdEmpty
-;    
+;   
     mov es:[edx].uqh_va_link,ecx
-    mov ecx,es:[ecx].uqh_phys
-    or cl,2
+    mov ecx,es:[eax].uqh_link
     mov es:[edx].uqh_link,ecx
     jmp rtdDone
 
@@ -741,6 +749,7 @@ rtdEmpty:
 rtdDone:
     pop edx
     pop ecx
+    pop ebx
     ret
 RemoveTd  ENDP
 
@@ -1018,12 +1027,6 @@ CreateControl   Proc far
 ccLinkPeriod:
     mov eax,fs:usp_qh
     call InsertTdFirst
-    jmp ccDone
-
-ccInsert:
-    int 3
-
-ccDone:
     call InsertPipe
 ;
     popad
@@ -1536,6 +1539,10 @@ IssueTransfer    Proc far
     mov es,ax    
     mov edx,fs:usp_qh
 ;    
+    ClearSignal
+    GetThread
+    mov fs:usp_signal,ax
+;    
     mov eax,es:[edx].uqh_va_elem    
     or eax,eax
     jz itDone
@@ -1573,13 +1580,15 @@ WaitForCompletion   Proc far
 ;    
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
-    je wfcControl
+    je wfcControlBulk
 ;
-    int 3
+    cmp al,MODE_BULK
+    je wfcControlBulk
+;    
     stc
     jmp wfcDone    
 
-wfcControl:
+wfcControlBulk:
     mov edx,fs:usp_qh
     test es:[edx].uqh_elem,1
     clc
@@ -1591,7 +1600,7 @@ wfcControl:
 ;
     mov ax,1
     WaitMilliSec
-    jmp wfcControl    
+    jmp wfcControlBulk
 
 wfccRecoverError:
     mov es:[edx].uqh_elem,1
@@ -1620,6 +1629,7 @@ WaitForCompletion   Endp
 
 IsPipeSignalled   Proc far
     push es
+    push ax
     push edx
 ;    
     mov ax,flat_sel
@@ -1630,7 +1640,16 @@ IsPipeSignalled   Proc far
     jz ipsSig
 ;
     test byte ptr es:[edx].uqh_elem,1
-    jz ipsNoSig
+    jnz ipsSig
+;
+;    mov dx,ds:uhc_io_base
+;    add dx,UsbStatusReg
+;    in ax,dx
+;    test al,20h
+;    jz ipsNoSig
+;
+;    int 3
+    jmp ipsNoSig    
 
 ipsSig:
     stc
@@ -1641,6 +1660,7 @@ ipsNoSig:
 
 ipsDone:
     pop edx
+    pop ax
     pop es
     ret
 IsPipeSignalled   Endp
@@ -1721,12 +1741,15 @@ ClosePipe   Proc far
 ;
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
-    je dpControl
+    je dpControlBulk
+;
+    cmp al,MODE_BULK
+    je dpControlBulk
 ;
     int 3
     jmp dpDone    
 
-dpControl:
+dpControlBulk:
     mov ax,flat_sel
     mov es,ax
     mov edx,ds:uhc_period_td
@@ -1734,6 +1757,7 @@ dpControl:
     call RemoveTd
     mov edx,eax
     call FreeBlock32
+    jmp dpDone
     
 dpDone:
     mov ax,fs
@@ -1961,6 +1985,12 @@ ifTabLoop:
     in ax,dx
     or al,4
     out dx,ax
+;
+    mov cl,0
+    call UpdatePort    
+;
+    mov cl,1
+    call UpdatePort    
 ;
     popad
     ret
@@ -2192,6 +2222,16 @@ timer_func_loop:
     push ds
     mov ds,[bx]
 ;
+    mov dx,ds:uhc_io_base
+    add dx,UsbStatusReg
+;
+    in ax,dx    
+    test al,20h
+    jz tNonFatal
+;
+    CpuReset
+
+tNonFatal:
     call UpdatePipeList
 ;    
     mov dx,ds:uhc_io_base
@@ -2258,6 +2298,9 @@ uhci_thread	proc far
 ;    
 	call InitPciAdapter
 ;
+    mov ax,750
+    WaitMilliSec
+;    
     mov cx,ds:UhciCount	
     or cx,cx
     jz uhci_thread_exit

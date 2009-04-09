@@ -118,6 +118,7 @@ osp_prev        DW ?
 osp_next        DW ?
 osp_data_list   DD ?
 osp_signal      DW ?
+osp_sync_linear DD ?
 
 ohci_pipe   ENDS
 
@@ -530,6 +531,72 @@ AllocateTd	PROC near
     pop cx
     ret
 AllocateTd  ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CreateSyncBlock
+;
+;		DESCRIPTION:	Allocate sync block
+;
+;       PARAMETERS:     FS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSyncBlock    Proc near
+    push eax
+    push ecx
+    push edx
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    mov fs:osp_sync_linear,edx
+;    
+    pop edx
+    pop ecx
+    pop eax    
+    ret
+CreateSyncBlock Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    SyncHead
+;
+;		DESCRIPTION:	Sync head ptr in pipe
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       FS      Pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SyncHead    Proc near
+    push eax
+    push ebx
+    push edx
+;    
+    mov ebx,fs:osp_ed
+    mov eax,es:[ebx].oes_headp
+    mov edx,fs:osp_sync_linear
+    movzx ebx,ax
+    and bx,0FF0h
+    and ax,0F000h
+	or ax,803h
+    SetPhysicalPage
+    mov edx,es:[ebx+edx].otd_my_va
+    mov ebx,fs:osp_ed
+    mov es:[ebx].oes_head_va,edx
+;    
+    pop edx
+    pop ebx
+    pop eax
+    ret
+SyncHead    Endp
 
 PAGE
 
@@ -1177,6 +1244,7 @@ CreateControl   Proc far
     mov es,dx
     call AddControlEd
     mov fs:osp_ed,edx
+    call CreateSyncBlock
     call InsertPipe
 ;
     popad
@@ -1214,6 +1282,7 @@ CreateBulk   Proc far
     mov es,dx
     call AddBulkEd
     mov fs:osp_ed,edx
+    call CreateSyncBlock
     call InsertPipe
 ;
     popad
@@ -1255,6 +1324,7 @@ CreateIntr   Proc far
     mov es,dx
     call AddIntrEd
     mov fs:osp_ed,edx
+    call CreateSyncBlock
     call InsertPipe
 ;
     popad
@@ -1710,15 +1780,30 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion   Proc far
+    push es
+    push eax
+    push edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+
+wfcLoop:    
     WaitForSignal
-    test fs:usbp_speed,USB_LOW_SPEED
-    jz wfcDone
 ;
-    mov ax,25
-    WaitMilliSec
-    
+    mov edx,fs:osp_ed
+    mov eax,es:[edx].oes_headp
+    test al,1
+    jnz wfcDone
+;
+    and ax,0FFF0h    
+    cmp eax,es:[edx].oes_tailp
+    jne wfcLoop
+
 wfcDone:
     clc
+    pop edx
+    pop eax
+    pop es
     ret
 WaitForCompletion   Endp
 
@@ -1995,37 +2080,44 @@ cpBulkHead:
     jmp cpFreeEdList
 
 cpFreeEdList:
-    mov ax,10
-    WaitMilliSec
+    mov eax,es:[edx].oes_headp
+    test al,1
+    jnz cpFreeTd
 ;
-    int 3
-    push edx
-    mov ecx,es:[edx].oes_headp
-    mov eax,1000h
-    AllocateBigLinear
-    mov eax,ecx
-    and ax,0F000h
-    and cx,0FFFh
-	or ax,803h
-    SetPhysicalPage
-    mov esi,es:[edx+ecx].otd_my_va
-    xor eax,eax
-    SetPhysicalPage
-    mov ecx,1000h
-    FreeLinear
-    pop edx
+    and ax,0FFF0h    
+    cmp eax,es:[edx].oes_tailp
+    je cpFreeTd
 ;    
-    mov edx,es:[edx].oes_tail_va
+    mov ax,1
+    WaitMilliSec
+    jmp cpFreeEdList
+
+cpFreeTd:
+    call ds:delete_queue_proc
+    call SyncHead    
+    mov edx,es:[edx].oes_head_va
+
+cpTdListLoop:
     or edx,edx
     jz cpTdListOk
 ;
+    mov eax,es:[edx].otd_next_va
     call FreeBlock32
+    mov edx,eax
+    jmp cpTdListLoop
 
 cpTdListOk:    
-    pop edx
+    mov edx,fs:osp_ed
     call FreeBlock32
         
 dpDone:
+    mov edx,fs:osp_sync_linear
+    xor eax,eax
+    SetPhysicalPage
+;    
+    mov ecx,1000h
+    FreeLinear
+;
     LeaveSection ds:ohc_section
     mov ax,fs
     mov es,ax

@@ -85,6 +85,9 @@ code	SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_wait Proc near
+    push es
+    push dx
+;    
     mov dx,ds:[bx].wh_obj_list
     or dx,dx
     jz delete_wait_done
@@ -97,6 +100,8 @@ delete_wait_loop:
     jnz delete_wait_loop
 
 delete_wait_done:
+    pop dx
+    pop es
     ret
 delete_wait Endp
 

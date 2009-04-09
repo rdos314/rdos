@@ -658,7 +658,7 @@ notify_usb_attach	Proc far
     push fs
     push es
     pushad
-;    
+;
     movzx bx,al
     mov dl,ah
     add bx,bx
@@ -692,15 +692,8 @@ notify_usb_attach	Proc far
     mov di,OFFSET usbf_endpoint_arr
     xor ax,ax
     rep stosw
-;    
-    or dl,dl
-    jz nuaTest
-;
-    mov ax,750
-    WaitMilliSec
-
-nuaTest:    
     pop ax
+;
     call CreateDefaultControl
     jc nuaDone
 ;
@@ -708,9 +701,6 @@ nuaTest:
     AllocateSmallGlobalMem
 
 nuaRetry:
-    mov ax,100
-    WaitMilliSec
-;        
     xor edi,edi
     mov cx,8
     mov ax,100h

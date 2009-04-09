@@ -2109,7 +2109,19 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_send	PROC far
+    push es
+    mov es,ds:ups_device_sel
+    test es:uds_flag,FLAG_UDS_DISCONNECT
+    jz ssOk
+;
+	mov ds:send_count,0
+	jmp ssDone
+
+ssOk:    
     call StartSendTimer
+
+ssDone:
+    pop es    
 	ret
 start_send	ENDP
 
@@ -2286,7 +2298,7 @@ OpenPort    Proc near
     mov es,ds:uds_intr_buffer
     AddReadUsbDataReq
 
-opDone:        
+opDone:            
     ret
 OpenPort    Endp
 
@@ -2369,7 +2381,6 @@ PAGE
 ;		DESCRIPTION:    Reinit port
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2383,9 +2394,29 @@ rpt01 DW OFFSET InitComFtdi
 rpt02 DW OFFSET InitComPl
 
 ReInit    Proc near
+    push ds
+    push es
     push cx
     push di
 ;    
+    mov ax,ds
+    mov es,ax
+    mov ds,es:uds_port_sel
+;
+    mov bx,es:cd_controller
+    mov ax,es:cd_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:ups_control_pipe,bx
+;
+    CreateWait
+    mov ds:ups_control_wait,bx
+;
+    mov ax,ds:ups_control_pipe
+    mov bx,ds:ups_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
 	mov cx,es:uds_device_type
 	movzx di,ch
 	add di,di
@@ -2393,6 +2424,8 @@ ReInit    Proc near
 ;
     pop di
     pop cx
+    pop es
+    pop ds
     ret
 ReInit  Endp
 
@@ -2581,8 +2614,6 @@ hdOpen:
     test ds:uds_flag,FLAG_UDS_REINIT
     jz hdIsOpen    
 ;
-    int 3
-    mov es,ds:uds_port_sel
     call ReInit
     and ds:uds_flag,NOT FLAG_UDS_REINIT
 
@@ -2862,7 +2893,6 @@ apDescrDone:
     pop ax
     jz apNoRecover
 ;
-    int 3
     cli
     mov es,ds:sd_dead_list
     mov dx,es:uds_link
@@ -2885,6 +2915,11 @@ apDescrDone:
     mov dx,es
     mov ds,dx    
     LeaveSection ds:uds_section
+;    
+    mov ax,usbcom_data_sel
+    mov ds,ax
+    mov bx,ds:sd_thread
+    Signal    
     jmp apDone
     
 apNoRecover:
@@ -3433,6 +3468,8 @@ udCheckLoop:
     cmp ax,es:cd_device
     jne udCheckNext
 ;
+    push ds
+    pushad
     mov ds,dx
     EnterSection ds:uds_section
     or ds:uds_flag,FLAG_UDS_DISCONNECT
@@ -3448,12 +3485,41 @@ udCheckLoop:
     mov ax,es
     mov ds,ax
     call ClosePort
+;
+    mov ax,ds:uds_port_sel
+    or ax,ax
+    jz udPortHandleOk
+;
+    push es
+    mov es,ax
+    mov bx,es:ups_control_wait
+    CloseWait
+    mov es:ups_control_wait,0
+;    
+    mov bx,es:ups_control_pipe
+    CloseUsbPipe    
+    mov es:ups_control_pipe,0
+;
+    mov es:send_count,0
+    mov bx,es:send_wait
+    or bx,bx
+    jz udPortSendOk
+;
+    Signal    
+
+udPortSendOk:
+    pop es
+
+udPortHandleOk:    
     LeaveSection ds:uds_section    
-    jmp udDone
+;    
+    popad
+    pop ds
 
 udCheckNext:
     add si,2    
-    loop udCheckLoop
+    sub cx,1
+    jnz udCheckLoop
 
 udDone:
     popad
