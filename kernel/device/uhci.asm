@@ -1597,10 +1597,12 @@ wfcControlBulk:
     mov eax,es:[edx].uqh_va_elem
     test es:[eax].utd_control,400000h    
     jnz wfccRecoverError
-;
+;    
     mov ax,1
     WaitMilliSec
-    jmp wfcControlBulk
+;    
+    call ds:is_connected_proc
+    jnc wfcControlBulk
 
 wfccRecoverError:
     mov es:[edx].uqh_elem,1
@@ -1631,6 +1633,9 @@ IsPipeSignalled   Proc far
     push es
     push ax
     push edx
+;    
+    call ds:is_connected_proc
+    jc ipsDone
 ;    
     mov ax,flat_sel
     mov es,ax
@@ -1791,6 +1796,47 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    IsConnected
+;
+;		DESCRIPTION:    Check if pipe is connected
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsConnected   Proc far
+    push es
+    push ax
+    push dx
+    push si
+;    
+    mov es,fs:usbp_function_sel
+    movzx si,es:usbf_port
+;    
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,si
+    add dx,si
+;
+    in ax,dx
+    test al,1
+    clc
+    jnz icDone
+;    
+    stc
+
+icDone:
+    pop si
+    pop dx
+    pop ax
+    pop es
+    ret
+IsConnected   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    UpdatePort
 ;
 ;		DESCRIPTION:    Update root-hub port status
@@ -1901,6 +1947,7 @@ ut11 DW OFFSET GetData,             uhci_code_sel
 ut12 DW OFFSET ClosePipe,           uhci_code_sel
 ut13 DW OFFSET WaitForCompletion,   uhci_code_sel
 ut14 DW OFFSET ChangeAddress,       uhci_code_sel
+ut15 DW OFFSET IsConnected,         uhci_code_sel
 
 InitFunction    Proc near
     pushad
@@ -1917,7 +1964,7 @@ InitFunction    Proc near
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,15
+    mov cx,16
 
 ifTabLoop:
     lods dword ptr cs:[si]

@@ -661,7 +661,6 @@ notify_usb_attach	Proc far
 ;
     movzx bx,al
     mov dl,ah
-    add bx,bx
     mov ax,ds
     mov es,ax
 ;
@@ -674,7 +673,9 @@ notify_usb_attach	Proc far
 ;
     mov eax,SIZE usb_function_struc
     AllocateSmallGlobalMem
+    mov es:usbf_port,bl
     mov ds:[di],es
+    add bx,bx
     mov ds:[bx].usb_port_sel_arr,es
     sub di,OFFSET usb_addr_arr
     shr di,1
@@ -701,6 +702,9 @@ notify_usb_attach	Proc far
     AllocateSmallGlobalMem
 
 nuaRetry:
+    call ds:is_connected_proc
+    jc nuaDone
+;
     xor edi,edi
     mov cx,8
     mov ax,100h
@@ -713,6 +717,9 @@ nuaRetry:
     movzx eax,es:udd_len
     FreeMem
 ;
+    call ds:is_connected_proc
+    jc nuaDone
+;    
     AllocateSmallGlobalMem
     xor edi,edi
     mov cx,ax
@@ -725,6 +732,9 @@ nuaRetry:
     xor bx,bx
 
 nuaLoop:
+    call ds:is_connected_proc
+    jc nuaDone
+;    
     mov eax,8
     AllocateSmallGlobalMem
     xor edi,edi
@@ -734,6 +744,9 @@ nuaLoop:
     call GetDescr
     mov ax,es:ucd_size
     FreeMem
+;
+    call ds:is_connected_proc
+    jc nuaDone
 ;
     AllocateSmallGlobalMem
     xor edi,edi
@@ -753,6 +766,9 @@ nuaLoop:
     jb nuaLoop
 
 nuaNotify:
+    call ds:is_connected_proc
+    jc nuaDone
+;
     xor ax,ax
     mov gs,ax
     mov bx,ds:usb_controller_id

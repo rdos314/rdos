@@ -1793,14 +1793,21 @@ wfcLoop:
     mov edx,fs:osp_ed
     mov eax,es:[edx].oes_headp
     test al,1
-    jnz wfcDone
+    jnz wfcOk
 ;
     and ax,0FFF0h    
     cmp eax,es:[edx].oes_tailp
-    jne wfcLoop
+    je wfcOk
+;
+    call ds:is_connected_proc
+    jnc wfcLoop    
+;
+    jmp wfcDone    
+
+wfcOk:
+    clc
 
 wfcDone:
-    clc
     pop edx
     pop eax
     pop es
@@ -1823,6 +1830,9 @@ WaitForCompletion   Endp
 
 IsPipeSignalled   Proc far
     push edx
+    call ds:is_connected_proc
+    jc pipe_signalled_done
+;    
     mov edx,fs:osp_data_list
     or edx,edx
     stc
@@ -2160,6 +2170,45 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    IsConnected
+;
+;		DESCRIPTION:    Check if pipe is connected
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsConnected   Proc far
+    push es
+    push ax
+    push dx
+    push si
+;    
+    mov es,fs:usbp_function_sel
+    movzx si,es:usbf_port
+;    
+    shl si,2
+    mov es,ds:ohc_reg_sel
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    clc
+    jnz icDone
+;    
+    stc
+
+icDone:
+    pop si
+    pop dx
+    pop ax
+    pop es
+    clc
+    ret
+IsConnected Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    UpdateQueue
 ;
 ;		DESCRIPTION:    Update done queue
@@ -2429,6 +2478,7 @@ ot11 DW OFFSET GetData,             ohci_code_sel
 ot12 DW OFFSET ClosePipe,           ohci_code_sel
 ot13 DW OFFSET WaitForCompletion,   ohci_code_sel
 ot14 DW OFFSET ChangeAddress,       ohci_code_sel
+ot15 DW OFFSET IsConnected,         ohci_code_sel
 
 InitFunction    Proc near
     push es
@@ -2440,7 +2490,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,15
+    mov cx,16
 
 ifTabLoop:
     lods dword ptr cs:[si]
