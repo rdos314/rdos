@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quizf4.cpp
-# Quiz final version 4 class
+# quizf5.cpp
+# Quiz final version 5 class
 #
 #######################################################################*/
 
@@ -29,9 +29,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizf4.h"
+#include "quizf5.h"
 #include "file.h"
-#include "quizdbf4.h"
+#include "quizdbf5.h"
 
 #define CI	1
 
@@ -66,26 +66,27 @@ struct TPartner
 
 /*##########################################################################
 #
-#   Name       : TQuizF4::TQuizF4
+#   Name       : TQuizF5::TQuizF5
 #
-#   Purpose....: Constructor for TQuizF4
+#   Purpose....: Constructor for TQuizF5
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizF4::TQuizF4(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3)
-  : TQuizFinal(150, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
+TQuizF5::TQuizF5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4)
+  : TQuizFinal(177, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
 	FDataFile(FileName)
 {
 	DefineCross(32, QuizFI);
 	DefineCross(33, QuizF1);
 	DefineCross(34, QuizF2);
 	DefineCross(35, QuizF3);
+	DefineCross(36, QuizF4);
 
 	SetupTexts();
-	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3);
+	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4);
 
 	InitReferers();
 	LoadReferers();
@@ -97,27 +98,27 @@ TQuizF4::TQuizF4(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 
 /*##########################################################################
 #
-#   Name       : TQuizF4::~TQuizF4
+#   Name       : TQuizF5::~TQuizF5
 #
-#   Purpose....: Destructor for TQuizF4
+#   Purpose....: Destructor for TQuizF5
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizF4::~TQuizF4()
+TQuizF5::~TQuizF5()
 {
 }
 
-/*##################  TQuizF4::GetCatCount ##########################
+/*##################  TQuizF5::GetCatCount ##########################
 *   Purpose....: Return number of categories for question  	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizF4::GetCatCount(int Question)
+int TQuizF5::GetCatCount(int Question)
 {
 	return 3;
 }
@@ -129,14 +130,14 @@ int TQuizF4::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizF4::GetQuizN()
+int TQuizF5::GetQuizN()
 {
-	return 150;
+	return 177;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF4::WriteName
+#   Name       : TQuizF5::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -145,14 +146,14 @@ int TQuizF4::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF4::WriteName(TFile &File)
+void TQuizF5::WriteName(TFile &File)
 {
-	 File.Write("F4");
+	 File.Write("F5");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF4::WriteLongName
+#   Name       : TQuizF5::WriteLongName
 #
 #   Purpose....: Write long quiz name
 #
@@ -161,14 +162,14 @@ void TQuizF4::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF4::WriteLongName(TFile &File)
+void TQuizF5::WriteLongName(TFile &File)
 {
-	 File.Write("final version 4");
+	 File.Write("final version 5");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF4::SetupTexts
+#   Name       : TQuizF5::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -177,18 +178,74 @@ void TQuizF4::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF4::SetupTexts()
+void TQuizF5::SetupTexts()
 {
+
+ Quiz[150].MyGroup = GROUP_MIXED;
+ Quiz[151].MyGroup = GROUP_MIXED;
+ Quiz[152].MyGroup = GROUP_MIXED;
+ Quiz[153].MyGroup = GROUP_MIXED;
+ Quiz[154].MyGroup = GROUP_MIXED;
+ Quiz[155].MyGroup = GROUP_MIXED;
+ Quiz[156].MyGroup = GROUP_MIXED;
+ Quiz[157].MyGroup = GROUP_MIXED;
+ Quiz[158].MyGroup = GROUP_MIXED;
+ Quiz[159].MyGroup = GROUP_MIXED;
+ Quiz[160].MyGroup = GROUP_MIXED;
+ Quiz[161].MyGroup = GROUP_MIXED;
+ Quiz[162].MyGroup = GROUP_MIXED;
+ Quiz[163].MyGroup = GROUP_MIXED;
+ Quiz[164].MyGroup = GROUP_MIXED;
+ Quiz[165].MyGroup = GROUP_MIXED;
+ Quiz[166].MyGroup = GROUP_MIXED;
+ Quiz[167].MyGroup = GROUP_MIXED;
+ Quiz[168].MyGroup = GROUP_MIXED;
+ Quiz[169].MyGroup = GROUP_MIXED;
+ Quiz[170].MyGroup = GROUP_MIXED;
+ Quiz[171].MyGroup = GROUP_MIXED;
+ Quiz[172].MyGroup = GROUP_MIXED;
+ Quiz[173].MyGroup = GROUP_MIXED;
+ Quiz[174].MyGroup = GROUP_MIXED;
+ Quiz[175].MyGroup = GROUP_MIXED;
+ Quiz[176].MyGroup = GROUP_MIXED;
+
+ Quiz[150].Text = "Attwood - Do you show absolute loyalty and impeccable dependability in peer relationships?";
+ Quiz[151].Text = "Attwood - Are you free of sexist, \"age-ist\" or culturalist biases and regard others at \"face value\"?";
+ Quiz[152].Text = "Attwood - Do you speak your mind irrespective of social context or adherence to personal beliefs?";
+ Quiz[153].Text = "Attwood - Do you have the ability to pursue personal theory or perspective despite conflicting evidence?";
+ Quiz[154].Text = "Attwood - Do you seek an audience or friends capable of enthusiasm for unique interests and topics?";
+ Quiz[155].Text = "Attwood - Do you dislike discussing a topic that may not be of primary interest?";
+ Quiz[156].Text = "Attwood - Do you listen without continual judgement or assumption?";
+ Quiz[157].Text = "Attwood - Are you primarily interested in significant contributions to conversation over ritualistic small talk or socially trivial statements and superficial conversation?";
+ Quiz[158].Text = "Attwood - Do you seek sincere, positive, genuine friends with an unassuming sense of humor?";
+ Quiz[159].Text = "Attwood - Are you determined to seek the truth?";
+ Quiz[160].Text = "Attwood - Do you prefer conversation free of hidden meaning or agenda?";
+ Quiz[161].Text = "Attwood - Do you have an advanced vocabulary and interest in words?";
+ Quiz[162].Text = "Attwood - Are you fascinated with word-based humor (e.g. puns)?";
+ Quiz[163].Text = "Attwood - Do you have an advanced use of pictorial metaphors?";
+ Quiz[164].Text = "Attwood - Do you have an strong preferece for detail over gestalt?";
+ Quiz[165].Text = "Attwood - Do you have an original, often unique perspective in problem solving?";
+ Quiz[166].Text = "Attwood - Do you have exceptional memory and/or recall of details often forgotten or disregarded by others, for example: names, dates, schedules, routines?";
+ Quiz[167].Text = "Attwood - Do you have an avid perseverance in gathering and cataloguing information on a topic of interest?";
+ Quiz[168].Text = "Attwood - Are your thoughts persistent?";
+ Quiz[169].Text = "Attwood - Do you have encyclopaedic or \"CD ROM\" knowledge of one or more topics?";
+ Quiz[170].Text = "Attwood - Do you have knowledge of routines and a focused desire to maintain order and accuracy?";
+ Quiz[171].Text = "Attwood - Are you values/decision making unaltered by political or financial factors?";
+ Quiz[172].Text = "Attwood - Do you have acute sensitivity to specific sensory experiences and stimuli (e.g. hearing, touch, vision, and/or smell)?";
+ Quiz[173].Text = "Attwood - Are you good at individual sports and games, particularly those involving endurance or visual accuracy, including rowing, swimming, bowling, chess?";
+ Quiz[174].Text = "Attwood - Are you a  \"social unsung hero\" with trusting optimism: frequent victim of social weaknesses of others, while steadfast in the belief of the possibility of genuine friendship?";
+ Quiz[175].Text = "Attwood - Have you attended university after high school?";
+ Quiz[176].Text = "Attwood - Do you often take care of others outside the range of typical development?";
 }
 
-/*##################  TQuizF4::LoadReferers ##########################
+/*##################  TQuizF5::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF4::LoadReferers()
+void TQuizF5::LoadReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
@@ -235,7 +292,7 @@ void TQuizF4::LoadReferers()
 
 /*##########################################################################
 #
-#   Name       : TQuizF4::LoadPopulations
+#   Name       : TQuizF5::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -244,7 +301,7 @@ void TQuizF4::LoadReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF4::LoadPopulations()
+void TQuizF5::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
@@ -402,7 +459,7 @@ void TQuizF4::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizF4::SetupCross
+#   Name       : TQuizF5::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -411,13 +468,40 @@ void TQuizF4::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF4::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3)
+void TQuizF5::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4)
 {
+  DefineGlobalId(150, 1332);
+  DefineGlobalId(151, 1333);
+  DefineGlobalId(152, 1334);
+  DefineGlobalId(153, 1335);
+  DefineGlobalId(154, 1336);
+  DefineGlobalId(155, 1337);
+  DefineGlobalId(156, 1338);
+  DefineGlobalId(157, 1339);
+  DefineGlobalId(158, 1340);
+  DefineGlobalId(159, 1341);
+  DefineGlobalId(160, 1342);
+  DefineGlobalId(161, 1343);
+  DefineGlobalId(162, 1344);
+  DefineGlobalId(163, 1345);
+  DefineGlobalId(164, 1346);
+  DefineGlobalId(165, 1347);
+  DefineGlobalId(166, 1348);
+  DefineGlobalId(167, 1349);
+  DefineGlobalId(168, 1350);
+  DefineGlobalId(169, 1351);
+  DefineGlobalId(170, 1352);
+  DefineGlobalId(171, 1353);
+  DefineGlobalId(172, 1354);
+  DefineGlobalId(173, 1355);
+  DefineGlobalId(174, 1356);
+  DefineGlobalId(175, 1357);
+  DefineGlobalId(176, 1358);
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF4::GetReferer
+#   Name       : TQuizF5::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -426,7 +510,7 @@ void TQuizF4::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF4::GetReferer(const char *referer, TPopulation *pop)
+void TQuizF5::GetReferer(const char *referer, TPopulation *pop)
 {
 	int i;
 	TReferer *ref;
@@ -498,14 +582,14 @@ static int IsPca(TQuizRow *row, int PcaType)
 	return FALSE;
 }
 
-/*##################  TQuizF4::ExportExcelCases ##########################
+/*##################  TQuizF5::ExportExcelCases ##########################
 *   Purpose....: Export cases as excel-data. Make ? into 'NO' case 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF4::ExportExcelCase(const char *filename, int PcaType)
+void TQuizF5::ExportExcelCase(const char *filename, int PcaType)
 {
 	TQuizRow Row;
 	int i;
@@ -567,14 +651,14 @@ void TQuizF4::ExportExcelCase(const char *filename, int PcaType)
 	}
 }
 
-/*##################  TQuizF4::ExportExcelAspie ##########################
+/*##################  TQuizF5::ExportExcelAspie ##########################
 *   Purpose....: Export cases as excel-data. Invert NT questions 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF4::ExportExcelAspie(const char *filename)
+void TQuizF5::ExportExcelAspie(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -635,14 +719,14 @@ void TQuizF4::ExportExcelAspie(const char *filename)
 	}
 }
 
-/*##################  TQuizF4::ExportExcelGroups ##########################
+/*##################  TQuizF5::ExportExcelGroups ##########################
 *   Purpose....: Export group cases in excel format             	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF4::ExportExcelGroups(const char *filename)
+void TQuizF5::ExportExcelGroups(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -723,14 +807,14 @@ void TQuizF4::ExportExcelGroups(const char *filename)
 	}
 }
 
-/*##################  TQuizF4::ImportMvsp ##########################
+/*##################  TQuizF5::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings   	      			      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF4::ImportMvsp(const char *filename, int PcaType)
+void TQuizF5::ImportMvsp(const char *filename, int PcaType)
 {
 	char buf[MAX_IN_ROW];
 	int size;
@@ -866,308 +950,6 @@ void TQuizF4::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
-}
-
-/*##################  TQuizF4::WritePartner ##########################
-*   Purpose....: Write partner correlations   	      			      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuizF4::WritePartner(const char *filename)
-{
-	TQuizRow Row;
-	int i;
-	int j;
-	int PartnerCount;
-	char str[80];
-	TFile file(filename, 0);
-	TPartner *Partner1;
-	TPartner *Partner2;
-	int sum1;
-	int sum2;
-	long double rsum1;
-	long double rsum2;
-	long double mean1;
-	long double mean2;
-	long double sd1;
-	long double sd2;
-	long double rsum;
-	long double zx;
-	long double zy;
-	long double val;
-	long double corr;
-   int count;
-   int q;
-   int g;
-   int ival;
-
-    PartnerCount = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-        if (Row.PartnerID)
-            PartnerCount++;
-    }
-
-    Partner1 = new TPartner[PartnerCount];
-    Partner2 = new TPartner[PartnerCount];
-
-    i = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-        if (Row.PartnerID)
-        {
-            Partner1[i].ID = Row.ID;
-            Partner2[i].ID = Row.PartnerID;
-
-            for (q = 0; q < 150; q++)
-                Partner2[i].AnswerArr[q] = 0;
-
-            for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
-	    		Partner2[i].GroupArr[g] = 0;
-
-            i++;
-        }
-    }
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-	    for (i = 0; i < PartnerCount; i++)
-	    {
-	        if (Partner1[i].ID == Row.ID)
-            {				
-				for (q = 0; q < 150; q++)
-				{
-				    if (Row.Quiz[q] > 0 && Row.Quiz[q] < 4)
-    				    Partner1[i].AnswerArr[q] = Row.Quiz[q];
-    				else
-    				    Partner1[i].AnswerArr[q] = 0;
-                }
-    				  
-    		    for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
-	    			Partner1[i].GroupArr[g] = Row.GroupResult[g];
-	        }
-
-            if (Partner2[i].ID == Row.ID)
-            {
-                for (q = 0; q < 150; q++)
-                {
-    				if (Row.Quiz[q] > 0 && Row.Quiz[q] < 4)
-                        Partner2[i].AnswerArr[q] = Row.Quiz[q];
-                    else
-                        Partner2[i].AnswerArr[q] = 0;
-                }
-
-				for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
-				    Partner2[i].GroupArr[g] = Row.GroupResult[g];
-		    }
-        }	
-    }
-
-    sprintf(str, "Partner count: %d <br>", PartnerCount);
-    file.Write(str);
-
-	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
-	file.Write("<tr style='height:24.75pt'>");
-
-    WriteCenteredFieldHeader(file, 60);
-	file.Write(" ");
-    WriteFieldFooter(file);
-
-    WriteFieldHeader(file, 20);
-	file.Write("Corr");
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-
-    for (g = 0; g < 12; g++)
-    {
-        count = 0;
-        sum1 = 0;
-        sum2 = 0;
-
-        for (i = 0; i < PartnerCount; i++)
-        {
-            sum1 += Partner1[i].GroupArr[g];
-            sum2 += Partner2[i].GroupArr[g];
-            count++;
-        }
-
-        if (count > 1)
-        {
-            mean1 = (long double)sum1 / (long double)count;
-            mean2 = (long double)sum2 / (long double)count;
-
-            rsum1 = 0;
-            rsum2 = 0;
-
-            for (i = 0; i < PartnerCount; i++)
-            {
-                val = (long double)Partner1[i].GroupArr[g] - mean1;
-                rsum1 += val * val;
-
-                val = (long double)Partner2[i].GroupArr[g] - mean2;
-                rsum2 += val * val;                    
-            }
-
-			sd1 = sqrtl(rsum1 / (long double)(count - 1));
-			sd2 = sqrtl(rsum2 / (long double)(count - 1));
-            
-            rsum = 0;
-
-            for (i = 0; i < PartnerCount; i++)
-            {
-                val = (long double)Partner1[i].GroupArr[g];
-                zx = (val - mean1) / sd1;
-                    
-                val = (long double)Partner2[i].GroupArr[g];
-				zy = (val - mean2) / sd2;
-
-                rsum += zx * zy;                    
-            }
-
-            corr = rsum / (long double)(count - 1);
-
-			file.Write("<tr style='height:24.75pt'>");
-
-            WriteCenteredFieldHeader(file, 60);
-			file.Write(Group[g].PosName);
-            WriteFieldFooter(file);
-
-            WriteRightFieldHeader(file, 20);
-            if (corr < 0.0)
-            {
-              file.Write("-");
-              corr = -corr;
-            }
-              
-            ival = round(100 * corr);
-	    	sprintf(str, ".%02d", ival);
-	    	file.Write(str);
-            WriteFieldFooter(file);
-        
-        }
-
-    }
-
-	file.Write("</table>");
-
-
-
-	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
-	file.Write("<tr style='height:24.75pt'>");
-
-    WriteFieldHeader(file, 4);
-	file.Write("#");
-    WriteFieldFooter(file);
-
-    WriteCenteredFieldHeader(file, 60);
-	file.Write(" ");
-    WriteFieldFooter(file);
-
-    WriteFieldHeader(file, 20);
-	file.Write("Corr");
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-
-    for (q = 0; q < 150; q++)
-    {
-        count = 0;
-        sum1 = 0;
-        sum2 = 0;
-
-        for (i = 0; i < PartnerCount; i++)
-        {
-            if (Partner1[i].AnswerArr[q] && Partner2[i].AnswerArr[q])
-            {
-                sum1 += Partner1[i].AnswerArr[q] - 1;
-                sum2 += Partner2[i].AnswerArr[q] - 1;
-                count++;
-            }
-        }
-
-        if (count > 1)
-        {
-            mean1 = (long double)sum1 / (long double)count;
-            mean2 = (long double)sum2 / (long double)count;
-
-            rsum1 = 0;
-            rsum2 = 0;
-
-            for (i = 0; i < PartnerCount; i++)
-            {
-                if (Partner1[i].AnswerArr[q] && Partner2[i].AnswerArr[q])
-                {
-                    val = (long double)(Partner1[i].AnswerArr[q] - 1) - mean1;
-                    rsum1 += val * val;
-
-                    val = (long double)(Partner2[i].AnswerArr[q] - 1) - mean2;
-                    rsum2 += val * val;                    
-                }
-            }
-
-				sd1 = sqrtl(rsum1 / (long double)(count - 1));
-				sd2 = sqrtl(rsum2 / (long double)(count - 1));
-            
-            rsum = 0;
-
-            for (i = 0; i < PartnerCount; i++)
-            {
-                if (Partner1[i].AnswerArr[q] && Partner2[i].AnswerArr[q])
-                {
-                    val = (long double)(Partner1[i].AnswerArr[q] - 1);
-                    zx = (val - mean1) / sd1;
-                    
-                    val = (long double)(Partner2[i].AnswerArr[q] - 1);
-						  zy = (val - mean2) / sd2;
-
-                    rsum += zx * zy;                    
-                }
-            }
-
-            corr = rsum / (long double)(count - 1);
-
-			file.Write("<tr style='height:24.75pt'>");
-
-            WriteFieldHeader(file, 4);
-			sprintf(str, "%d", q + 1);
-			file.Write(str);
-            WriteFieldFooter(file);
-
-            WriteCenteredFieldHeader(file, 60);
-			file.Write(Quiz[q].Text);
-            WriteFieldFooter(file);
-
-            WriteRightFieldHeader(file, 20);
-            if (corr < 0.0)
-            {
-              file.Write("-");
-              corr = -corr;
-            }
-              
-            ival = round(100 * corr);
-	    	sprintf(str, ".%02d", ival);
-	    	file.Write(str);
-            WriteFieldFooter(file);
-        
-        }
-
-    }
-
-	file.Write("</table>");
-
-
-    delete Partner1;
-    delete Partner2;
 }
 
 /*##################  round ##########################
@@ -1501,14 +1283,14 @@ void TRace::WriteNonUsRow(TFile &file, int index, const char *text)
 }
 
 
-/*##################  TQuizF4::WriteRace ##########################
+/*##################  TQuizF5::WriteRace ##########################
 *   Purpose....: Write race report                   			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF4::WriteRace(const char *filename)
+void TQuizF5::WriteRace(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1556,14 +1338,14 @@ void TQuizF4::WriteRace(const char *filename)
 	file.Write("</table>");
 }
 
-/*##################  TQuizF4::WriteRetest ##########################
+/*##################  TQuizF5::WriteRetest ##########################
 *   Purpose....: Write retest report             			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF4::WriteRetest(const char *filename)
+void TQuizF5::WriteRetest(const char *filename)
 {
 	TQuizRow Row;
 	int userid;
