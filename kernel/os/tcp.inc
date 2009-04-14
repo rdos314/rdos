@@ -144,6 +144,7 @@ tcp_ack_timeout		DB ?
 tcp_push_timeout	DB ?
 tcp_user_timeout	DW ?
 tcp_resend_timeout	DW ?
+tcp_syn_timeout     DW ?
 tcp_zero_timeout	DW ?
 tcp_send_timeout    DW ?
 tcp_delete_timeout  DW ?

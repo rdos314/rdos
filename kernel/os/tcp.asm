@@ -3479,7 +3479,7 @@ close_tcp_listen	Proc far
 	jz close_tcp_listen_done
 ;
 	mov ds,ax
-	EnterSection ds:tcp_section
+;	EnterSection ds:tcp_section
 	call DeleteListen
 	clc
 
@@ -3625,6 +3625,7 @@ open_tcp_create:
 	inc eax
 	mov ds:tcp_send_next,eax
 	mov ds:tcp_state,STATE_SYN_SENT
+    mov ds:tcp_syn_timeout,50
 ;	
 	ClearSignal
 	GetThread
@@ -5178,7 +5179,7 @@ update_con_push_do:
 update_con_push_done:
 	test dx,FLAG_WAIT
 	jz update_user_done
-;
+;	
 	mov ax,ds:tcp_user_timeout
 	sub ax,1
 	mov ds:tcp_user_timeout,ax
@@ -5189,7 +5190,35 @@ update_con_push_done:
 	mov bx,ds:tcp_owner
 	Signal
 
-update_user_done:
+update_user_done:	
+    cmp ds:tcp_state,STATE_SYN_SENT
+    jne update_con_syn_ok
+;    
+    mov ax,ds:tcp_syn_timeout
+    sub ax,1
+    mov ds:tcp_syn_timeout,ax
+    or ax,ax
+    jnz update_con_syn_ok
+;    
+    mov ds:tcp_syn_timeout,50
+	push es
+	push di
+;
+	xor ecx,ecx
+	call CreateSegment
+	jc update_con_syn_pop
+;	
+	mov es:[di].tcp_flags, SYN
+	mov eax,ds:tcp_iss
+	Reverse
+	mov es:[di].tcp_seq,eax
+	call SendSegment
+
+update_con_syn_pop:
+    pop di
+    pop es
+
+update_con_syn_ok:
 	test dx,FLAG_DELAY_ACK
 	jz update_delay_ack_done
 ;
@@ -5266,7 +5295,7 @@ tcp_active_next:
 ;
 	mov ds,ax
 	EnterSection ds:tcp_section
-	test ds:tcp_pending,FLAG_DELETE_NET
+	test ds:tcp_pending,FLAG_DELETE_NET OR FLAG_DELETE_USER
 	jz tcp_update
 ;
 	test ds:tcp_pending,FLAG_WAIT
