@@ -198,12 +198,12 @@ void TQuizF5::SetupTexts()
  Quiz[164].MyGroup = GROUP_MIXED;
  Quiz[165].MyGroup = GROUP_MIXED;
  Quiz[166].MyGroup = GROUP_MIXED;
- Quiz[167].MyGroup = GROUP_MIXED;
+ Quiz[167].MyGroup = GROUP_ASPIE_TALENT;
  Quiz[168].MyGroup = GROUP_MIXED;
  Quiz[169].MyGroup = GROUP_MIXED;
  Quiz[170].MyGroup = GROUP_MIXED;
  Quiz[171].MyGroup = GROUP_MIXED;
- Quiz[172].MyGroup = GROUP_MIXED;
+ Quiz[172].MyGroup = GROUP_ASPIE_SENSORY;
  Quiz[173].MyGroup = GROUP_MIXED;
  Quiz[174].MyGroup = GROUP_MIXED;
  Quiz[175].MyGroup = GROUP_MIXED;
