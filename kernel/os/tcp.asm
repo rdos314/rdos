@@ -4654,7 +4654,7 @@ PAGE
 
 update_receive	Proc near
 	call UpdateReceiveWnd
-	test ds:tcp_pending,FLAG_ACK
+	test ds:tcp_pending,FLAG_ACK OR FLAG_DELAY_ACK
 	jz update_rec_done
 ;
 	and ds:tcp_pending,NOT FLAG_ACK
