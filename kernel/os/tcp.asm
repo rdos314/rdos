@@ -4654,12 +4654,10 @@ PAGE
 
 update_receive	Proc near
 	call UpdateReceiveWnd
-	mov ax,ds:tcp_pending
-	test ax,FLAG_ACK
+	test ds:tcp_pending,FLAG_ACK
 	jz update_rec_done
 ;
-	and ax,NOT FLAG_ACK
-	mov ds:tcp_pending,ax
+	and ds:tcp_pending,NOT FLAG_ACK
 	call SendAck
 
 update_rec_done:
@@ -5151,16 +5149,14 @@ UpdateConnection	Proc near
     or ds:tcp_pending,FLAG_SEND_PUSH
     
 update_send_timeout_done:
-	mov dx,ds:tcp_pending
-	test dx,FLAG_SEND_PUSH
+	test ds:tcp_pending,FLAG_SEND_PUSH
 	jz update_con_push_done
 ;
 	mov cx,ds:tcp_send_count
 	or cx,cx
 	jnz update_con_check_push
 ;
-	and dx,NOT FLAG_SEND_PUSH
-	mov ds:tcp_pending,dx 
+	and ds:tcp_pending,NOT FLAG_SEND_PUSH
 	jmp update_con_push_done
 
 update_con_check_push:
@@ -5172,12 +5168,10 @@ update_con_check_push:
 	jmp update_con_push_done
 
 update_con_push_do:
-	mov ds:tcp_pending,dx
 	call SendData
-	mov dx,ds:tcp_pending
 
 update_con_push_done:
-	test dx,FLAG_WAIT
+	test ds:tcp_pending,FLAG_WAIT
 	jz update_user_done
 ;	
 	mov ax,ds:tcp_user_timeout
@@ -5185,8 +5179,7 @@ update_con_push_done:
 	mov ds:tcp_user_timeout,ax
 	jnz update_user_done
 ;
-	and dx,NOT FLAG_WAIT
-	mov ds:tcp_pending,dx
+	and ds:tcp_pending,NOT FLAG_WAIT
 	mov bx,ds:tcp_owner
 	Signal
 

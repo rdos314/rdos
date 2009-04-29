@@ -515,11 +515,12 @@ init_process	PROC far
 ;
 	mov cx,MAX_HANDLES
 	mov di,2 * MAX_HANDLES + OFFSET handle_arr
+	mov ax,0FFFEh
 
 init_handle_loop:
-	mov ax,di
 	sub di,2
 	mov [di],ax
+	mov ax,di
 	loop init_handle_loop
 ;
 	mov ds:handle_list,di
@@ -567,6 +568,48 @@ verify_mem_done:
 	pop ax
 	ret
 verify_mem_list	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetFreeHandles
+;
+;		DESCRIPTION:	Get number of free handles
+;
+;		RETURNS:        AX      Free handles
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_free_handles_name	DB 'Get Free Handles', 0
+
+get_free_handles	Proc far
+    push ds
+	push si
+;
+	mov si,handle_sel
+	mov ds,si
+	EnterSection ds:handle_section
+;
+	xor ax,ax	
+	mov si,ds:handle_list
+
+get_free_loop:
+    cmp si,0FFFEh
+    je get_free_done
+;
+    mov si,[si]
+    inc ax
+    jmp get_free_loop 
+
+get_free_done:   
+	LeaveSection ds:handle_section
+;
+    pop si
+    pop ds
+	retf32
+get_free_handles	Endp
 
 PAGE
 
@@ -736,6 +779,12 @@ init_handle	PROC near
 	xor cl,cl
 	mov ax,deref_handle_nr
 	RegisterOsGate
+;
+	mov si,OFFSET get_free_handles
+	mov di,OFFSET get_free_handles_name
+	xor dx,dx
+	mov ax,get_free_handles_nr
+	RegisterBimodalUserGate
 ;
 	popa
 	pop es

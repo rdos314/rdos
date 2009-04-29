@@ -1236,8 +1236,14 @@ send_retry_buf:
     push ax
     mov ax,100
     WaitMilliSec
+;
+    mov dx,ds:IoBase
+    add dx,SCBStatus
+    in al,dx
+    test al,80h
     pop ax
-    jmp send_retry_buf
+    jnz send_retry_buf
+    jmp send_stopped
 
 send_take_buf:
     or es:[edx].txd_command, CMD_S
@@ -1267,12 +1273,19 @@ send_next_buf:
     add dx,SCBStatus
     in al,dx
     test al,80h
-    jnz send_leave
-;
+    jz send_running
+
+send_stopped:
+    int 3
+    call InitTx
+    jmp send_start
+
+send_running:
     mov al,ds:TxRingStarted
     or al,al
     jnz send_resume
-;
+
+send_start:
     inc ds:TxRingStarted
     xor eax,eax
     mov dx,ds:IoBase

@@ -159,6 +159,8 @@ int RDOSAPI RdosGetFreeGdt();
 int RDOSAPI RdosGetFreeSmallKernelLinear();
 int RDOSAPI RdosGetFreeBigKernelLinear();
 
+int RDOSAPI RdosGetFreeHandles();
+
 int RDOSAPI RdosGetMaxComPort();
 int RDOSAPI RdosOpenCom(char ID, long BaudRate, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
 void RDOSAPI RdosCloseCom(int Handle);
@@ -1344,6 +1346,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosLeaveSection = \
     CallGate_leave_user_section  \
     parm [ebx];
+
+#pragma aux RdosGetFreeHandles = \
+    CallGate_get_free_handles  \
+    "movzx eax,ax"  \
+    value [eax];
 
 #pragma aux RdosCreateWait = \
     CallGate_create_wait  \

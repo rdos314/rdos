@@ -448,3 +448,5 @@
 #define CallGate_get_debug_event 0x9a 115 1 0 0 2 0
 #define CallGate_clear_debug_event 0x9a 116 1 0 0 2 0
 
+#define CallGate_get_free_handles 0x9a 117 1 0 0 2 0
+

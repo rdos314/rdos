@@ -727,6 +727,23 @@ RdosGetVersion  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosGetFreeHandles
+;
+;		description:	Get free handles
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetFreeHandles
+
+RdosGetFreeHandles	Proc
+	UserGate get_free_handles_nr
+	movzx eax,ax
+	ret
+RdosGetFreeHandles	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosGetFreePhysical
 ;
 ;		description:	Get free physical memory

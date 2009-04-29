@@ -448,4 +448,6 @@ get_module_focus_key_nr     = 370
 get_debug_event_nr          = 371
 clear_debug_event_nr        = 372
 
-usergate_entries			= 373
+get_free_handles_nr         = 373
+
+usergate_entries			= 374

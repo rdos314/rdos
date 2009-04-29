@@ -167,6 +167,11 @@ UsedVMLinear    MACRO
 	UserGate used_vm_linear_nr
 						ENDM
 
+; OUT AX      Number of free handles
+UsedLocalLinear MACRO
+	UserGate get_free_handles_nr
+						ENDM
+
 ;;;;;;;;;;; PAGING ;;;;;;;;;;;;;;
 
 FreeV86	MACRO

@@ -956,11 +956,13 @@ close_ini	Proc far
 	push ds
 	push es
 	push bx
+	push si
 ;
 	mov ax,INI_HANDLE
 	DerefHandle
 	jc ciDone
 ;
+    mov si,bx
     mov ax,ds:[bx].ih_name_sel
     or ax,ax
     jz ciCloseFile
@@ -974,8 +976,12 @@ ciCloseFile:
 	call FreeIniSel
 	pop bx
 	CloseFile
+;
+    mov bx,si
+    FreeHandle
 
 ciDone:
+    pop si
 	pop bx
 	pop es
 	pop ds
