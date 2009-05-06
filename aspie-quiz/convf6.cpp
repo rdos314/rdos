@@ -361,7 +361,10 @@ char *ProcessRow(char *str)
 					i = fieldno - 17 - 19;
 					if (i >= 0)
 					{
-    					Row.Quiz[i] = atoi(valstr);
+					    if (i < 150)
+        					Row.Quiz[i] = atoi(valstr);
+        				else
+        				    Row.Quiz[i] = 1 + atoi(valstr);
     
                         if (i < 145)
     	    				AncestryRow.Quiz[i] = atoi(valstr);
