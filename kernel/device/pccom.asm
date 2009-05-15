@@ -159,6 +159,18 @@ rec_pr	PROC near
 	mov dx,ds:base
 	cli
 	in al,dx
+;    test ds:flgs, FLG_ENABLE_AUTO_RTS
+;    jz rec_pr_save
+;
+;    push ax
+;	mov dx,ds:base
+;	add dx,4
+;	in al,dx
+;	test al,2
+;	pop ax
+;	jnz rec_exit
+
+rec_pr_save:
 	mov cx,ds:rec_count
 	cmp cx,ds:rec_size
 	je rec_exit

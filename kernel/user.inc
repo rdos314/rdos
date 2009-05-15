@@ -727,6 +727,12 @@ FindEnvVar	MACRO
 	        ENDM
 
 ; IN  BX            Env handle
+; OUT (E)AX         Required size of data buffer
+GetEnvSize	MACRO
+	UserGate get_env_size_nr
+	        ENDM
+
+; IN  BX            Env handle
 ; IN  ES:(E)DI      Env data buffer
 GetEnvData	MACRO
 	UserGate get_env_data_nr

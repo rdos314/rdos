@@ -450,3 +450,5 @@
 
 #define CallGate_get_free_handles 0x9a 117 1 0 0 2 0
 
+#define CallGate_get_env_size 0x9a 118 1 0 0 2 0
+

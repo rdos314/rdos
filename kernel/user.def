@@ -450,4 +450,6 @@ clear_debug_event_nr        = 372
 
 get_free_handles_nr         = 373
 
-usergate_entries			= 374
+get_env_size_nr     	    = 374
+
+usergate_entries			= 375

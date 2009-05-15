@@ -868,6 +868,78 @@ find_env_var32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    GetEnvSize
+;
+;		DESCRIPTION:	Get size raw env data 
+;
+;		PARAMETERS:		BX			Handle
+;
+;       RETURNS:        (E)AX       Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_env_size_name	DB 'Get Env Size',0
+
+get_env_size_base	Proc near	
+	xor esi,esi
+    xor ecx,ecx
+
+get_env_var_size_loop:
+	lods byte ptr [esi]
+	inc ecx
+	or al,al
+	jnz get_env_var_size_loop
+;
+	mov al,[esi]
+	or al,al
+	jnz get_env_var_size_loop
+;
+    inc ecx
+	ret
+get_env_size_base	Endp
+
+get_env_size:
+    push ds
+    push es
+    push bx
+    push ecx
+    push esi
+;
+	mov ax,ENV_HANDLE
+	DerefHandle
+	jc get_env_size_done
+;
+	mov al,ds:[bx].env_handle_mode
+	cmp al,ENV_MODE_GLOBAL
+	je get_sys_env_size
+;
+    LockProcEnv
+	mov ds,bx
+	call get_env_size_base
+    UnlockProcEnv
+	clc
+	jmp get_env_size_done
+
+get_sys_env_size:
+    LockSysEnv
+	mov ds,bx
+	call get_env_size_base
+    UnlockSysEnv
+	clc
+
+get_env_size_done:
+    mov eax,ecx
+;    
+    pop esi
+    pop ecx
+    pop bx
+    pop es
+    pop ds
+    retf32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    GetEnvData
 ;
 ;		DESCRIPTION:	Get raw env data
@@ -1232,6 +1304,12 @@ init_device_loop:
 	mov dx,virt_ds_in OR virt_es_in
 	mov ax,find_env_var_nr
 	RegisterUserGate
+;
+	mov si,OFFSET get_env_size
+	mov di,OFFSET get_env_size_name
+	xor dx,dx
+	mov ax,get_env_size_nr
+	RegisterBimodalUserGate
 ;    
 	mov bx,OFFSET get_env_data16
 	mov si,OFFSET get_env_data32
