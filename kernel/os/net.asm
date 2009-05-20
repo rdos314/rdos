@@ -471,12 +471,14 @@ send_arp_driver_loop:
 	rep movs byte ptr es:[edi],fs:[esi]
 ;
 	push fs
+	push ds
 	mov fs,ds:[bx]
 	mov esi,OFFSET broadcast_addr
 	mov ecx,ebp
 	xor di,di
 	mov dx,806h
 	call fs:d_send
+	pop ds
 	pop fs
 	pop esi
 ;	
