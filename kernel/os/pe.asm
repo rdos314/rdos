@@ -2990,11 +2990,11 @@ spawn_param_ok:
 	mov es,ax
 	mov edi,OFFSET kernel_dll
 	UserGateForce32 get_module_nr
-	jc spawn_no_debug
+	jc spawn_wd_debug
 ;
 	mov edi,OFFSET debug_startup
 	UserGateForce32 get_module_proc_nr
-	jc spawn_no_debug
+	jc spawn_wd_debug
 ;
 	xchg esi,[bp].load_eip
 	mov eax,[bp].load_esp
@@ -3002,6 +3002,10 @@ spawn_param_ok:
 	sub eax,4
 	mov [eax],esi
 	mov [bp].load_esp,eax
+	ret
+
+spawn_wd_debug:	
+    sub dword ptr [bp].load_eip,2
 
 spawn_no_debug:
 	ret

@@ -843,11 +843,7 @@ void TWdSocketServer::ReqGetSupplService()
         PutDword((long)service);
 	 }
     else
-    {
-        RdosWriteString(name);
-        RdosWriteString("\r\n");
         PutDword(0);
-     }
 }
 
 /*##########################################################################

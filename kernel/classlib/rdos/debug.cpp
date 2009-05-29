@@ -861,7 +861,8 @@ void TDebug::InsertModule(TDebugModule *mod)
 ##########################################################################*/
 void TDebug::WaitForLoad(int timeout)
 {
-    UserSignal.WaitTimeout(timeout);
+//    UserSignal.WaitTimeout(timeout);
+    UserSignal.WaitForever();
 }
 
 /*##########################################################################
@@ -1484,32 +1485,39 @@ void TDebug::SignalNewData()
     int ExitCode;
     TDebugThread *newt;
 
+        RdosWaitMilli(5);
+
         debtype = RdosGetDebugEvent(FHandle, &thread);
 
         switch (debtype)
         {
                 case EVENT_EXCEPTION:
+                        RdosWriteString("Exception\r\n");
                         RdosGetDebugEventData(FHandle, &ee);
                         HandleException(&ee, thread);
                         break;
 
                 case EVENT_CREATE_THREAD:
+                        RdosWriteString("Create thread\r\n");
                         RdosGetDebugEventData(FHandle, &cte);
                         HandleCreateThread(&cte);
                         FThreadChanged = TRUE;
                         break;
 
                 case EVENT_CREATE_PROCESS:
+                        RdosWriteString("Create process\r\n");
                         RdosGetDebugEventData(FHandle, &cpe);
                         HandleCreateProcess(&cpe);
                         break;
 
                 case EVENT_TERMINATE_THREAD:
+                        RdosWriteString("Terminate thread\r\n");
                         HandleTerminateThread(thread);
                         FThreadChanged = TRUE;
                         break;
 
                 case EVENT_TERMINATE_PROCESS:
+                        RdosWriteString("Terminate process\r\n");
                         RdosGetDebugEventData(FHandle, &ExitCode);
                         HandleTerminateProcess(ExitCode);
                         FInstalled = FALSE;
@@ -1517,9 +1525,18 @@ void TDebug::SignalNewData()
                         break;
 
                 case EVENT_LOAD_DLL:
+                        RdosWriteString("Load DLL\r\n");
                         RdosGetDebugEventData(FHandle, &lde);
                         HandleLoadDll(&lde);
                         FModuleChanged = TRUE;
+                        break;
+
+                case 0:
+                        RdosWriteString("Null event\r\n");
+                        break;
+
+                default:
+                        RdosWriteString("Unknown event\r\n");
                         break;
         }
 

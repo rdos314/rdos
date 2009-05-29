@@ -97,6 +97,84 @@ typedef struct Tss
     char guard[16];
 } Tss;
 
+// Exception handling prototypes 
+
+#define STATUS_BREAKPOINT               0x80000003L
+#define STATUS_SINGLE_STEP              0x80000004L
+#define STATUS_ACCESS_VIOLATION         0xC0000005L
+#define STATUS_IN_PAGE_ERROR            0xC0000006L
+#define STATUS_INVALID_HANDLE           0xC0000008L
+#define STATUS_NO_MEMORY                0xC0000017L
+#define STATUS_ILLEGAL_INSTRUCTION      0xC000001DL
+#define STATUS_ARRAY_BOUNDS_EXCEEDED    0xC000008CL
+#define STATUS_FLOAT_DENORMAL_OPERAND   0xC000008DL
+#define STATUS_FLOAT_DIVIDE_BY_ZERO     0xC000008EL
+#define STATUS_FLOAT_INEXACT_RESULT     0xC000008FL
+#define STATUS_FLOAT_INVALID_OPERATION  0xC0000090L
+#define STATUS_FLOAT_OVERFLOW           0xC0000091L
+#define STATUS_FLOAT_STACK_CHECK        0xC0000092L
+#define STATUS_FLOAT_UNDERFLOW          0xC0000093L
+#define STATUS_INTEGER_DIVIDE_BY_ZERO   0xC0000094L
+#define STATUS_INTEGER_OVERFLOW         0xC0000095L
+#define STATUS_PRIVILEGED_INSTRUCTION   0xC0000096L
+#define STATUS_STACK_OVERFLOW           0xC00000FDL
+#define STATUS_CONTROL_C_EXIT           0xC000013AL
+
+typedef struct _FLOATING_SAVE_AREA {
+    int ControlWord;
+    int StatusWord;
+    int TagWord;
+    int ErrorOffset;
+    int ErrorSelector;
+    int DataOffset;
+    int DataSelector;
+    char RegisterArea[80];
+    int   Cr0NpxState;
+} FLOATING_SAVE_AREA;
+
+typedef struct _CONTEXT 
+{
+    long ContextFlags;
+    long Dr0;
+    long Dr1;
+    long Dr2;
+    long Dr3;
+    long Dr6;
+    long Dr7;
+    FLOATING_SAVE_AREA FloatSave;
+    long SegGs;
+    long SegFs;
+    long SegEs;
+    long SegDs;
+    long Edi;
+    long Esi;
+    long Ebx;
+    long Edx;
+    long Ecx;
+    long Eax;
+    long Ebp;
+    long Eip;
+    long SegCs;
+    long EFlags;
+    long Esp;
+    long SegSs;
+} CONTEXT;
+
+typedef struct _EXCEPTION_RECORD
+{
+    long ExceptionCode;
+    long ExceptionFlags;
+    struct _EXCEPTION_RECORD *ExceptionRecord;
+    void *ExceptionAddress;
+} EXCEPTION_RECORD;
+
+typedef struct _EXCEPTION_POINTERS {
+    EXCEPTION_RECORD *ExceptionRecord;
+    CONTEXT *ContextRecord;
+} EXCEPTION_POINTERS;
+
+// API functions
+
 void RDOSAPI RdosDebug();
 
 short int RDOSAPI RdosSwapShort(short int val);
@@ -229,6 +307,7 @@ int RDOSAPI RdosGetThreadHandle();
 int RDOSAPI RdosExec(const char *prog, const char *param);
 int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, int *thread);
 int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, int *thread);
+void RDOSAPI RdosUnloadExe(int ExitCode);
 void RDOSAPI RdosWaitMilli(int ms);
 void RDOSAPI RdosWaitMicro(int us);
 void RDOSAPI RdosWaitUntil(unsigned long msb, unsigned long lsb);
@@ -1095,6 +1174,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [esi] [edi] [ebx] [ecx] \
     value [eax] \
     modify [edx];
+
+#pragma aux RdosUnloadExe = \
+    CallGate_unload_exe  \
+    parm [eax];
 
 #pragma aux RdosWaitMilli = \
     CallGate_wait_milli  \
