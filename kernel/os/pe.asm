@@ -3005,7 +3005,13 @@ spawn_param_ok:
 	ret
 
 spawn_wd_debug:	
-    sub dword ptr [bp].load_eip,2
+    push es
+    mov ax,flat_data_sel
+    mov es,ax
+    mov esi,[bp].load_eip
+    mov esi,es:[esi-4]
+    mov [bp].load_eip,esi
+    pop es
 
 spawn_no_debug:
 	ret
