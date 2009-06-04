@@ -599,6 +599,11 @@ UnloadExe	MACRO
 	UserGate unload_exe_nr
 					ENDM
 
+; IN  EAX		0 = don't show text
+ShowExceptionText	MACRO
+	UserGate show_exception_text_nr
+					ENDM
+
 ; OUT AX		Exit code
 GetExitCode	MACRO
 	UserGate get_exit_code_nr
@@ -2138,6 +2143,11 @@ KickWatchdog      MACRO
 
 StopWatchdog      MACRO
 	UserGate stop_watchdog_nr
+						ENDM
+
+;   OUT EAX     Maximum tics between kicks. If 0, watchdog not running.
+GetWatchdogTics      MACRO
+	UserGate start_watchdog_nr
 						ENDM
 						
 ;	IN  BX		File handle

@@ -149,12 +149,46 @@ kick_watchdog   Endp
 stop_watchdog_name DB 'Stop Watchdog', 0
 
 stop_watchdog   Proc far
+    push es
     push bx    
+;    
 	mov bx,wd_data_sel
+	mov es,bx
 	StopTimer
+    mov es:wd_tics,0	
+;
     pop bx
+    pop es
     retf32
 stop_watchdog   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetWatchdogTics
+;
+;		DESCRIPTION:	Get watchdog tics
+;
+;       RETURNS:        EAX == 0 not running
+;                       EAX != 0, EAX tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_watchdog_tics_name DB 'Get Watchdog Tics', 0
+
+get_watchdog_tics   Proc far
+    push es
+    push bx    
+;    
+	mov bx,wd_data_sel
+	mov es,bx
+    mov eax,es:wd_tics
+;
+    pop bx
+    pop es
+    retf32
+get_watchdog_tics   Endp
 
 PAGE
 
@@ -180,6 +214,8 @@ init	Proc far
 	mov eax,SIZE wd_data_seg
 	mov bx,wd_data_sel
 	AllocateFixedSystemMem
+	mov es,bx
+	mov es:wd_tics,0
 ;
 	mov ax,cs
 	mov ds,ax
@@ -201,6 +237,12 @@ init	Proc far
 	mov di,OFFSET stop_watchdog_name
 	xor dx,dx
 	mov ax,stop_watchdog_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_watchdog_tics
+	mov di,OFFSET get_watchdog_tics_name
+	xor dx,dx
+	mov ax,get_watchdog_tics_nr
 	RegisterBimodalUserGate
 ;
 	popa

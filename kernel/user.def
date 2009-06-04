@@ -452,4 +452,8 @@ get_free_handles_nr         = 373
 
 get_env_size_nr     	    = 374
 
-usergate_entries			= 375
+show_exception_text_nr      = 375
+
+get_watchdog_tics_nr        = 376
+
+usergate_entries			= 377

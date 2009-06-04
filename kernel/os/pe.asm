@@ -3701,6 +3701,48 @@ reserve_pe_mem_done:
 reserve_pe_mem	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ShowExceptionText
+;
+;		DESCRIPTION:	Decide whether app should show exception text and
+;                       exit or stop execution on exception.
+;
+;		RETURNS:		EAX  0 stop execution
+;                            1 show exception text and exit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+show_exception_text_name	DB 'Show Exception Text',0
+
+show_exception_text	PROC far
+    push es
+    push ebx
+;    
+    mov ebx,fs:pvModuleHandle
+	DerefModuleHandle
+	mov es,bx
+	mov ax,es:lib_debug_lib
+	or ax,ax
+	jnz setStop
+;
+    GetWatchdogTics
+    or eax,eax
+    jnz setStop
+;
+    mov eax,1
+    jmp setDone
+
+setStop:
+    xor eax,eax	
+
+setDone:
+    pop ebx
+    pop es    
+	retf32
+show_exception_text	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			load_dll
@@ -4393,6 +4435,12 @@ init	PROC far
 	mov di,OFFSET reserve_pe_mem_name
 	xor dx,dx
 	mov ax,reserve_pe_mem_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET show_exception_text
+	mov di,OFFSET show_exception_text_name
+	xor dx,dx
+	mov ax,show_exception_text_nr
 	RegisterUserGate32
 ;
 	popa

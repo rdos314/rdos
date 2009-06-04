@@ -308,6 +308,7 @@ int RDOSAPI RdosExec(const char *prog, const char *param);
 int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, int *thread);
 int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, int *thread);
 void RDOSAPI RdosUnloadExe(int ExitCode);
+int RDOSAPI RdosShowExceptionText();
 void RDOSAPI RdosWaitMilli(int ms);
 void RDOSAPI RdosWaitMicro(int us);
 void RDOSAPI RdosWaitUntil(unsigned long msb, unsigned long lsb);
@@ -1178,6 +1179,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosUnloadExe = \
     CallGate_unload_exe  \
     parm [eax];
+
+#pragma aux RdosShowExceptionText = \
+    CallGate_show_exception_text  \
+    value [eax];
 
 #pragma aux RdosWaitMilli = \
     CallGate_wait_milli  \

@@ -452,3 +452,5 @@
 
 #define CallGate_get_env_size 0x9a 118 1 0 0 2 0
 
+#define CallGate_show_exception_text 0x9a 119 1 0 0 2 0
+
