@@ -25,8 +25,8 @@
 #
 ########################################################################*/
 
-#ifndef _ENV_H
-#define _ENV_H
+#ifndef _ENVC_H
+#define _ENVC_H
 
 class TEnvVar
 {
