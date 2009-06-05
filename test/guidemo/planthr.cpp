@@ -376,6 +376,14 @@ void TPlanetThread::UpdatePlanets()
 
 }
 
+void StackOverflow()
+{
+    char AlloMem[0x8000];
+
+    AlloMem[0] = 1;
+    StackOverflow();
+}
+
 /*##################  TPlanetThread::Execute ##########################
 *   Purpose....: Recreate planet after merge                                #
 *   In params..: *                                                          #
@@ -386,6 +394,8 @@ void TPlanetThread::UpdatePlanets()
 void TPlanetThread::Execute()
 {
     int i;
+
+    StackOverflow();
     
 	for (i = 0; i < FMaxPlanets; i++)
 		PlanetArr[i] = RandomPlanet();
