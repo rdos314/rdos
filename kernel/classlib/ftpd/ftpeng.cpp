@@ -1,8 +1,9 @@
-// #include "windows.h"
+int __stdcall LibMain( int handle, int reason, void *resv )
+{
+       return 1;
+}
 
-//int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine,
-//						  int nCmdShow )
-//{
-//	 return 0;
-//}
+void __stdcall __export WEP()
+{
+}
 

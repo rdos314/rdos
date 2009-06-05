@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <memory.h>
+#include <process.h>
 #include "rdos.h"
 
 #define FALSE 0
@@ -61,53 +62,6 @@ void RdosGetModuleResourceBase();
 #pragma aux RdosGetModuleResourceBase = \
     CallGate_get_module_resource;
 
-void RdosCreateThreadBase();
-
-#pragma aux RdosCreateThreadBase = \
-    CallGate_create_thread;
-
-
-/*##########################################################################
-#
-#   Name       : task_end
-#
-#   Purpose....: Task end
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void task_end()
-{
-    RdosTerminateThread();
-}
-
-/*##########################################################################
-#
-#   Name       : task_start
-#
-#   Purpose....: Task startup
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void task_start()
-{
-    _asm
-    {
-        mov ax,ds
-        mov es,ax
-        mov eax,fs:[0x14]
-        push eax
-        push OFFSET task_end
-        push edx
-        ret
-    }
-}
-
 /*##########################################################################
 #
 #   Name       : RdosCreateThread
@@ -121,27 +75,7 @@ void task_start()
 ##########################################################################*/
 void RdosCreateThread(void (*Startup)(void *Param), const char *Name, void *Param, int StackSize)
 {
-    _asm
-    {
-        push ds
-        lea edx,Startup
-        mov edx,[edx]
-        mov ax,cs
-        mov ds,ax
-        mov esi,OFFSET task_start
-        mov ecx,StackSize
-        mov edi,Name
-        mov eax,Param
-        mov fs:[0x14],eax
-        mov bx,fs
-        mov ax,2
-    }
-    RdosCreateThreadBase();
-    _asm
-    { 
-        pop ds
-    }
-    RdosWaitMilli(10);
+    _beginthread(Startup, Name, StackSize, Param);
 }
 
 /*##########################################################################
@@ -157,27 +91,7 @@ void RdosCreateThread(void (*Startup)(void *Param), const char *Name, void *Para
 ##########################################################################*/
 void RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const char *Name, void *Param, int StackSize)
 {
-    _asm
-    {
-        push ds
-        lea edx,Start
-        mov edx,[edx]
-        mov ax,cs
-        mov ds,ax
-        mov esi,OFFSET task_start
-        mov ecx,StackSize
-        mov edi,Name
-        mov eax,Param
-        mov fs:[0x14],eax
-        mov bx,fs
-        mov eax,Prio
-        }
-    RdosCreateThreadBase();
-    _asm
-    { 
-        pop ds
-    }
-    RdosWaitMilli(10);
+    _beginthread(Start, Name, StackSize, Param);
 }
 
 /*##########################################################################
