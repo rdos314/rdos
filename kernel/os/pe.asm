@@ -2058,7 +2058,8 @@ load_object	Proc far
 ;
 	test [esi].o_flags,80h
 	jz load_object_from_file
-;
+
+load_object_init:
 	push es
 	push edi
 	mov ax,ds
@@ -2078,6 +2079,8 @@ load_object_from_file:
 	sub eax,[esi].o_va
 	mov ecx,[esi].o_phys_size
 	sub ecx,eax
+;	jc load_object_init
+;	
 	cmp ecx,1000h
 	jc load_object_size_ok
 	mov ecx,1000h
@@ -2413,13 +2416,16 @@ InitStack	Proc near
 	rep movs byte ptr es:[edi],[esi]
 	pop edi
 	pop eax
+	int 3
 	mov eax,[eax].tls_index_va
 	mov eax,[eax]
+;	
 	mov esi,fs:pvTLSArray
 	mov [esi+4*eax],edx
 	mov esi,fs:pvTLSBitmap
 	btr [esi],eax
-;
+
+init_tls_skipped:
 	pop edx
 	pop ecx
 	pop es
