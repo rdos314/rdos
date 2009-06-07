@@ -2079,11 +2079,16 @@ load_object_from_file:
 	sub eax,[esi].o_va
 	mov ecx,[esi].o_phys_size
 	sub ecx,eax
-;	jc load_object_init
-;	
+	jnc load_object_file
+;
+    xor ecx,ecx	
+    jmp load_object_size_ok
+	
+load_object_file:
 	cmp ecx,1000h
 	jc load_object_size_ok
 	mov ecx,1000h
+
 load_object_size_ok:
 	add eax,[esi].o_phys_offset
 	SetFilePos	
