@@ -98,7 +98,6 @@ TMoveCommand::TMoveCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TMoveCommand::MoveFile(TString &Src, TString &Dest)
 {
-        char ch;
         TPathName src(Src);
         TPathName dest(Dest);
         TString fullsrc(src.GetFullPathName());

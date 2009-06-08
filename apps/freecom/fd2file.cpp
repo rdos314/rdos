@@ -67,7 +67,7 @@ TFloppyToFileFactory::TFloppyToFileFactory()
 ##########################################################################*/
 TCommand *TFloppyToFileFactory::Create(TSession *session, const char *param)
 {
-	return new TFloppyToFileCommand(session, param);
+        return new TFloppyToFileCommand(session, param);
 }
 
 /*##########################################################################
@@ -84,7 +84,7 @@ TCommand *TFloppyToFileFactory::Create(TSession *session, const char *param)
 TFloppyToFileCommand::TFloppyToFileCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_FD2FILE);
+        FHelpScreen.Load(TEXT_CMDHELP_FD2FILE);
 }
 
 /*##########################################################################
@@ -102,26 +102,25 @@ int TFloppyToFileCommand::CopyToFile(TDisc *Disc, TString &Dest)
 {
     char *buf;
     int sector;
-	char ch;
-	TPathName dest(Dest);
-	TString fulldest(dest.GetFullPathName());
-	TFile file(Dest.GetData(), 0);
+        TPathName dest(Dest);
+        TString fulldest(dest.GetFullPathName());
+        TFile file(Dest.GetData(), 0);
 
-	Write("Floppy => ");
-	Write(Dest.GetData());
-	Write("\r\n");
+        Write("Floppy => ");
+        Write(Dest.GetData());
+        Write("\r\n");
 
-	buf = new char[0x200];
+        buf = new char[0x200];
 
     for (sector = 0; sector < 2880; sector++)
     {
-		Disc->Read(sector, buf, 512);
-		file.Write(buf, 512);
-	}
+                Disc->Read(sector, buf, 512);
+                file.Write(buf, 512);
+        }
 
-	delete buf;
+        delete buf;
 
-	return 0;
+        return 0;
 }
 
 /*##########################################################################
@@ -137,40 +136,39 @@ int TFloppyToFileCommand::CopyToFile(TDisc *Disc, TString &Dest)
 ##########################################################################*/
 int TFloppyToFileCommand::Execute(char *param)
 {
-	TArg *arg;
-	int HasSrc = FALSE;
-	const char *ptr;
-	TDisc *Disc;
-	int DiscNr;
-	int ok;
+        TArg *arg;
+        int HasSrc = FALSE;
+        TDisc *Disc;
+        int DiscNr;
+        int ok;
 
-	if (!ScanCmdLine(param, 0))
-		return 1;
+        if (!ScanCmdLine(param, 0))
+                return 1;
 
     if (FArgCount != 2)
     {
-		FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-		Write(FMsg.GetData());
-		return E_Useage;
-	}
+                FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+                Write(FMsg.GetData());
+                return E_Useage;
+        }
 
-	arg = FArgList;
+        arg = FArgList;
 
     ok = FALSE;
     
-	if (sscanf(arg->FName.GetData(), "%d", &DiscNr) == 1)
-	{
-		Disc = new TFloppyDisc(DiscNr, 512, 2880, 18, 2);
-		ok = Disc->IsValid();
+        if (sscanf(arg->FName.GetData(), "%d", &DiscNr) == 1)
+        {
+                Disc = new TFloppyDisc(DiscNr, 512, 2880, 18, 2);
+                ok = Disc->IsValid();
     }
 
     if (!ok)
     {
-		FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
-		Write(FMsg.GetData());
-		return 1;
+                FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
+                Write(FMsg.GetData());
+                return 1;
     }
 
     arg = arg->FList;
-	return CopyToFile(Disc, arg->FName);
+        return CopyToFile(Disc, arg->FName);
 }

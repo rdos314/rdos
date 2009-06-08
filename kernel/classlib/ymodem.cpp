@@ -56,9 +56,9 @@ TYModem::TYModem(TSerialDevice *Serial)
 {
     int i, j;
     int val;
-	int acc;
+        int acc;
 
-	OnHeader = 0;
+        OnHeader = 0;
     FSerial = Serial;
 
     for (i = 0; i < 256; i++)
@@ -67,12 +67,12 @@ TYModem::TYModem(TSerialDevice *Serial)
         val = i << 8;
         for (j = 8; j; j--)
         {
-			if (((val ^ acc) & 0x8000) == 0)
-				acc = acc << 1;
-			else
-				acc = (acc << 1) ^ 0x1021;
-			val = val << 1;
-		}
+                        if (((val ^ acc) & 0x8000) == 0)
+                                acc = acc << 1;
+                        else
+                                acc = (acc << 1) ^ 0x1021;
+                        val = val << 1;
+                }
         FCrcTable[i] = acc;
     }
 }
@@ -89,8 +89,8 @@ TYModem::TYModem(TSerialDevice *Serial)
 ##########################################################################*/
 void TYModem::NotifyHeader(char header)
 {
-	if (OnHeader)
-		(*OnHeader)(this, header);
+        if (OnHeader)
+                (*OnHeader)(this, header);
 }
 
 /*##########################################################################
@@ -106,26 +106,26 @@ void TYModem::NotifyHeader(char header)
 ##########################################################################*/
 int TYModem::SendStartup()
 {
-	int i;
+        int i;
 
-	FSerial->Clear();
-	for (i = 0; i < 20; i++)
-	{
-		if (FSerial->WaitForChar(1000))
-		{
-			FNCG = FSerial->Read();
-			NotifyHeader(FNCG);
-			switch (FNCG)
-			{
-				case NAK:
-				case 'C':
-				case 'G':
-					return TRUE;
+        FSerial->Clear();
+        for (i = 0; i < 20; i++)
+        {
+                if (FSerial->WaitForChar(1000))
+                {
+                        FNCG = FSerial->Read();
+                        NotifyHeader(FNCG);
+                        switch (FNCG)
+                        {
+                                case NAK:
+                                case 'C':
+                                case 'G':
+                                        return TRUE;
 
-			}
-		}
-	}
-	return FALSE;
+                        }
+                }
+        }
+        return FALSE;
 }
 
 /*##########################################################################
@@ -142,74 +142,74 @@ int TYModem::SendStartup()
 ##########################################################################*/
 int TYModem::SendPacket(char *Buffer, int Size)
 {
-	char ch;
-	int i;
-	int j;
-	int crc;
-	int ind;
+        char ch;
+        int i;
+        int j;
+        int crc;
+        int ind;
 
-	for (i = 0; i < 3; i++)
-	{
-		if (Size == 1024)
-			FSerial->Write(STX);
-		else
-			FSerial->Write(SOH);
+        for (i = 0; i < 3; i++)
+        {
+                if (Size == 1024)
+                        FSerial->Write(STX);
+                else
+                        FSerial->Write(SOH);
 
-		ch = (char)FPacketNr;
-		FSerial->Write(ch);
+                ch = (char)FPacketNr;
+                FSerial->Write(ch);
 
-		ch = 0xFF - ch;
-		FSerial->Write(ch);
+                ch = 0xFF - ch;
+                FSerial->Write(ch);
 
-		FSerial->Write((char *)Buffer, Size);
+                FSerial->Write((char *)Buffer, Size);
 
-		if (FNCG == NAK)
-		{
-			ch = 0;
-			for (j = 0; j < Size; j++)
-				ch += Buffer[j];
-			FSerial->Write(ch);
-		}
-		else
-		{
-			crc = 0;
-			for (j = 0; j < Size; j++)
-			{
-				ind = crc >> 8;
-				ind = ind ^ Buffer[j];
-				ind = ind & 0xFF;
-				ind = FCrcTable[ind];
-				crc = ind ^ (crc << 8);
-			}
-			ch = (char)((crc >> 8) & 0xFF);
-			FSerial->Write(ch);
+                if (FNCG == NAK)
+                {
+                        ch = 0;
+                        for (j = 0; j < Size; j++)
+                                ch += Buffer[j];
+                        FSerial->Write(ch);
+                }
+                else
+                {
+                        crc = 0;
+                        for (j = 0; j < Size; j++)
+                        {
+                                ind = crc >> 8;
+                                ind = ind ^ Buffer[j];
+                                ind = ind & 0xFF;
+                                ind = FCrcTable[ind];
+                                crc = ind ^ (crc << 8);
+                        }
+                        ch = (char)((crc >> 8) & 0xFF);
+                        FSerial->Write(ch);
 
-			ch = (char)(crc & 0xFF);
-			FSerial->Write(ch);
-		}
+                        ch = (char)(crc & 0xFF);
+                        FSerial->Write(ch);
+                }
 
-		if (FSerial->WaitForChar(2000))
-		{
-			ch = FSerial->Read();
-			NotifyHeader(ch);
-			switch (ch)
-			{
-				case CAN:
-					return FALSE;
+                if (FSerial->WaitForChar(2000))
+                {
+                        ch = FSerial->Read();
+                        NotifyHeader(ch);
+                        switch (ch)
+                        {
+                                case CAN:
+                                        return FALSE;
 
-				case ACK:
-					return TRUE;
+                                case ACK:
+                                        return TRUE;
 
-				case NAK:
-					break;
+                                case NAK:
+                                        break;
 
-				default:
-					return FALSE;
-			}
-		}
-	}
+                                default:
+                                        return FALSE;
+                        }
+                }
+        }
 
-	return FALSE;
+        return FALSE;
 }
 
 /*##########################################################################
@@ -225,66 +225,66 @@ int TYModem::SendPacket(char *Buffer, int Size)
 ##########################################################################*/
 int TYModem::SendFile(TFile *File)
 {
-	char Buf[1024];
-	int BlockSize;
-	int Remaining;
-	int Size;
-	int i;
+        char Buf[1024];
+        int BlockSize;
+        int Remaining;
+        int Size;
+        int i;
 
-	Remaining = File->GetSize();
+        Remaining = File->GetSize();
 
-	if (Remaining == 0)
-		return FALSE;
+        if (Remaining == 0)
+                return FALSE;
 
-	if (!SendStartup())
-		return FALSE;
+        if (!SendStartup())
+                return FALSE;
 
-	FPacketNr = 0;
-	Size = strlen(File->GetFileName());
-	strcpy(Buf, File->GetFileName());
-	sprintf(&Buf[Size + 1], "%d", Remaining);
-	Size += strlen(&Buf[Size + 1]) + 1;
-	for (i = Size; i < 128; i++)
-		Buf[i] = 0;
+        FPacketNr = 0;
+        Size = strlen(File->GetFileName());
+        strcpy(Buf, File->GetFileName());
+        sprintf(&Buf[Size + 1], "%d", Remaining);
+        Size += strlen(&Buf[Size + 1]) + 1;
+        for (i = Size; i < 128; i++)
+                Buf[i] = 0;
 
-	if (!SendPacket(Buf, 128))
-		return FALSE;
+        if (!SendPacket(Buf, 128))
+                return FALSE;
 
-	if (!SendStartup())
-		return FALSE;
+        if (!SendStartup())
+                return FALSE;
 
-	while (Remaining)
-	{
-		FPacketNr++;
+        while (Remaining)
+        {
+                FPacketNr++;
 
-		if (Remaining >= 1024)
-			BlockSize = 128;
-		else
-			BlockSize = 128;
+                if (Remaining >= 1024)
+                        BlockSize = 128;
+                else
+                        BlockSize = 128;
 
-		if (Remaining < BlockSize)
-			Size = Remaining;
-		else
-			Size = BlockSize;
+                if (Remaining < BlockSize)
+                        Size = Remaining;
+                else
+                        Size = BlockSize;
 
-		Size = File->Read(Buf, Size);
-		Remaining -= Size;
+                Size = File->Read(Buf, Size);
+                Remaining -= Size;
 
-		if (Size < BlockSize)
-			for (i = Size; i < BlockSize; i++)
-				Buf[i] = 0x1A;
+                if (Size < BlockSize)
+                        for (i = Size; i < BlockSize; i++)
+                                Buf[i] = 0x1A;
 
-		if (!SendPacket(Buf, BlockSize))
-			return FALSE;
+                if (!SendPacket(Buf, BlockSize))
+                        return FALSE;
 
-		if (Size == 0 && Remaining)
-			return FALSE;
-	}
+                if (Size == 0 && Remaining)
+                        return FALSE;
+        }
 
-	FSerial->Write(EOT);
-	FSerial->Write(0x1b);
+        FSerial->Write(EOT);
+        FSerial->Write(0x1b);
 
-	return TRUE;
+        return TRUE;
 }
 
 /*##########################################################################
@@ -300,9 +300,9 @@ int TYModem::SendFile(TFile *File)
 ##########################################################################*/
 int TYModem::SendFile(const char *FileName)
 {
-	TFile File(FileName);
+        TFile File(FileName);
 
-	return SendFile(&File);
+        return SendFile(&File);
 }
 
 
@@ -319,19 +319,19 @@ int TYModem::SendFile(const char *FileName)
 ##########################################################################*/
 int TYModem::RecType()
 {
-	while (FSerial->WaitForChar(1000))
-	{
-		FPacketType = FSerial->Read();
-		NotifyHeader(FPacketType);
-		switch (FPacketType)
-		{
-			case STX:
-			case SOH:
-			case EOT:
-				return TRUE;
-		}
-	}
-	return FALSE;
+        while (FSerial->WaitForChar(1000))
+        {
+                FPacketType = FSerial->Read();
+                NotifyHeader(FPacketType);
+                switch (FPacketType)
+                {
+                        case STX:
+                        case SOH:
+                        case EOT:
+                                return TRUE;
+                }
+        }
+        return FALSE;
 }
 
 /*##########################################################################
@@ -347,30 +347,30 @@ int TYModem::RecType()
 ##########################################################################*/
 int TYModem::RecStartup()
 {
-	int i;
+        int i;
 
-	for (i = 0; i < 20; i++)
-	{
-		FSerial->Clear();
-		FSerial->Write('C');
-		NotifyHeader('C');
-		if (FSerial->WaitForChar(1000))
-		{
-			FPacketType = FSerial->Read();
-			NotifyHeader(FPacketType);
-			switch (FPacketType)
-			{
-				case STX:
-				case SOH:
-					return TRUE;
+        for (i = 0; i < 20; i++)
+        {
+                FSerial->Clear();
+                FSerial->Write('C');
+                NotifyHeader('C');
+                if (FSerial->WaitForChar(1000))
+                {
+                        FPacketType = FSerial->Read();
+                        NotifyHeader(FPacketType);
+                        switch (FPacketType)
+                        {
+                                case STX:
+                                case SOH:
+                                        return TRUE;
 
-				default:
-					RdosWaitMilli(500);
-					break;
-			}
-		}
-	}
-	return FALSE;
+                                default:
+                                        RdosWaitMilli(500);
+                                        break;
+                        }
+                }
+        }
+        return FALSE;
 }
 
 /*##########################################################################
@@ -386,131 +386,130 @@ int TYModem::RecStartup()
 ##########################################################################*/
 int TYModem::RecPacket(char *Buffer, int *Size)
 {
-	char ch;
-	int i;
-	int j;
-	int crc;
-	int ind;
-	int ok;
-	char cpacket;
-	int NewPacket;
+        char ch;
+        int i;
+        int crc;
+        int ind;
+        int ok;
+        char cpacket;
+        int NewPacket;
 
-	switch (FPacketType)
-	{
-		case STX:
-			*Size = 1024;
-			ok = TRUE;
-			break;
+        switch (FPacketType)
+        {
+                case STX:
+                        *Size = 1024;
+                        ok = TRUE;
+                        break;
 
-		case SOH:
-			*Size = 128;
-			ok = TRUE;
-			break;
+                case SOH:
+                        *Size = 128;
+                        ok = TRUE;
+                        break;
 
-		case EOT:
-			*Size = 0;
-			FSerial->Write(ACK);
-			return TRUE;
+                case EOT:
+                        *Size = 0;
+                        FSerial->Write(ACK);
+                        return TRUE;
 
-		default:
-			ok = FALSE;
-			break;
-	}
+                default:
+                        ok = FALSE;
+                        break;
+        }
 
-	if (ok)
-		ok = FSerial->WaitForChar(1000);
+        if (ok)
+                ok = FSerial->WaitForChar(1000);
 
-	if (ok)
-	{
-		cpacket = FSerial->Read();
-		ok = FSerial->WaitForChar(1000);
-	}
+        if (ok)
+        {
+                cpacket = FSerial->Read();
+                ok = FSerial->WaitForChar(1000);
+        }
 
-	if (ok)
-	{
-		ok = FALSE;
-		NewPacket = FALSE;
-		ch = FSerial->Read();
-		ch = 0xFF - ch;
-		if (ch == cpacket)
-			ok = TRUE;
-	}
+        if (ok)
+        {
+                ok = FALSE;
+                NewPacket = FALSE;
+                ch = FSerial->Read();
+                ch = 0xFF - ch;
+                if (ch == cpacket)
+                        ok = TRUE;
+        }
 
-	if (ok)
-	{
-		ok = FALSE;
+        if (ok)
+        {
+                ok = FALSE;
 
-		if (cpacket == (char)FPacketNr)
-		{
-			ok = TRUE;
-			NewPacket = TRUE;
-		}
+                if (cpacket == (char)FPacketNr)
+                {
+                        ok = TRUE;
+                        NewPacket = TRUE;
+                }
 
-		cpacket++;
+                cpacket++;
 
-		if (cpacket == (char)FPacketNr)
-			ok = TRUE;
-	}
+                if (cpacket == (char)FPacketNr)
+                        ok = TRUE;
+        }
 
-	crc = 0;
+        crc = 0;
 
-	for (i = 0; i < *Size && ok; i++)
-	{
-		ok = FSerial->WaitForChar(1000);
-		if (ok)
-		{
-			ch = FSerial->Read();
-			Buffer[i] = ch;
+        for (i = 0; i < *Size && ok; i++)
+        {
+                ok = FSerial->WaitForChar(1000);
+                if (ok)
+                {
+                        ch = FSerial->Read();
+                        Buffer[i] = ch;
 
-			ind = crc >> 8;
-			ind = ind ^ Buffer[i];
-			ind = ind & 0xFF;
-			ind = FCrcTable[ind];
-			crc = ind ^ (crc << 8);
-		}
-	}
+                        ind = crc >> 8;
+                        ind = ind ^ Buffer[i];
+                        ind = ind & 0xFF;
+                        ind = FCrcTable[ind];
+                        crc = ind ^ (crc << 8);
+                }
+        }
 
-	if (ok)
-	{
-		{
-			ok = FSerial->WaitForChar(1000);
-			if (ok)
-			{
-				ch = FSerial->Read();
-				if ((char)((crc >> 8) & 0xFF) == ch)
-					ok = TRUE;
-				else
-					ok = FALSE;
-			}
+        if (ok)
+        {
+                {
+                        ok = FSerial->WaitForChar(1000);
+                        if (ok)
+                        {
+                                ch = FSerial->Read();
+                                if ((char)((crc >> 8) & 0xFF) == ch)
+                                        ok = TRUE;
+                                else
+                                        ok = FALSE;
+                        }
 
-			if (ok)
-				ok = FSerial->WaitForChar(1000);
+                        if (ok)
+                                ok = FSerial->WaitForChar(1000);
 
-			if (ok)
-			{
-				ch = FSerial->Read();
-				if ((char)(crc & 0xFF) == ch)
-					ok = TRUE;
-				else
-					ok = FALSE;
-			}
+                        if (ok)
+                        {
+                                ch = FSerial->Read();
+                                if ((char)(crc & 0xFF) == ch)
+                                        ok = TRUE;
+                                else
+                                        ok = FALSE;
+                        }
 
-			if (ok)
-			{
-				FSerial->Write(ACK);
-				if (NewPacket)
-					return TRUE;
-				else
-					return FALSE;
-			}
-			else
-			{
-				FSerial->Write(NAK);
-				return FALSE;
-			}
-		}
-	}
-	return FALSE;
+                        if (ok)
+                        {
+                                FSerial->Write(ACK);
+                                if (NewPacket)
+                                        return TRUE;
+                                else
+                                        return FALSE;
+                        }
+                        else
+                        {
+                                FSerial->Write(NAK);
+                                return FALSE;
+                        }
+                }
+        }
+        return FALSE;
 }
 
 /*##########################################################################
@@ -526,63 +525,63 @@ int TYModem::RecPacket(char *Buffer, int *Size)
 ##########################################################################*/
 int TYModem::RecFile(TFile *File)
 {
-	char Buf[1024];
-	int Size;
-	int i;
-	long FileSize;
-	int ok;
+        char Buf[1024];
+        int Size;
+        int i;
+        long FileSize;
+        int ok;
 
-	File->SetSize(0);
-	File->SetPos(0);
+        File->SetSize(0);
+        File->SetPos(0);
 
-	FPacketNr = 0;
+        FPacketNr = 0;
 
-	if (!RecStartup())
-		return FALSE;
+        if (!RecStartup())
+                return FALSE;
 
-	if (!RecPacket(Buf, &Size))
-		return FALSE;
+        if (!RecPacket(Buf, &Size))
+                return FALSE;
 
-	if (Size)
-	{
-		Size = strlen(Buf);
-		if (sscanf(&Buf[Size + 1], "%ld", &FileSize) != 1)
-			return FALSE;
-	}
-	else
-		return FALSE;
+        if (Size)
+        {
+                Size = strlen(Buf);
+                if (sscanf(&Buf[Size + 1], "%ld", &FileSize) != 1)
+                        return FALSE;
+        }
+        else
+                return FALSE;
 
-	FPacketNr++;
+        FPacketNr++;
 
-	if (!RecStartup())
-		return FALSE;
+        if (!RecStartup())
+                return FALSE;
 
-	for (;;)
-	{
-		ok = FALSE;
-		for (i = 0; i < 3 && !ok; i++)
-		{
-			ok = RecPacket(Buf, &Size);
-			RecType();
-		}
+        for (;;)
+        {
+                ok = FALSE;
+                for (i = 0; i < 3 && !ok; i++)
+                {
+                        ok = RecPacket(Buf, &Size);
+                        RecType();
+                }
 
-		if (Size)
-		{
-			if (ok)
-			{
-				File->Write(Buf, Size);
-				FPacketNr++;
-			}
-			else
-				return FALSE;
-		}
-		else
-		{
-			File->SetSize(FileSize);
-			FSerial->Write(ACK);
-			return TRUE;
-		}
-	}
+                if (Size)
+                {
+                        if (ok)
+                        {
+                                File->Write(Buf, Size);
+                                FPacketNr++;
+                        }
+                        else
+                                return FALSE;
+                }
+                else
+                {
+                        File->SetSize(FileSize);
+                        FSerial->Write(ACK);
+                        return TRUE;
+                }
+        }
 }
 
 /*##########################################################################
@@ -598,7 +597,7 @@ int TYModem::RecFile(TFile *File)
 ##########################################################################*/
 int TYModem::RecFile(const char *FileName)
 {
-	TFile File(FileName, 0);
+        TFile File(FileName, 0);
 
-	return RecFile(&File);
+        return RecFile(&File);
 }

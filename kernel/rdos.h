@@ -562,7 +562,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #ifdef __WATCOMC__
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
-#define CarryToBool 0x72 4 0x33 0xC0 0xEB 5 0xB8 1 0 0 0
+#define CarryToBool 0x73 4 0x33 0xC0 0xEB 5 0xB8 1 0 0 0
 
 // check carry flag, and set ebx=0 if set and ebx=bx if clear
 #define ValidateHandle 0x73 2 0x33 0xDB 0xF 0xB7 0xDB
@@ -1156,7 +1156,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_spawn_exe  \
     "pop fs"    \
     "movzx eax,ax"  \
-    "mov [edx],eax" \
+    "mov [ecx],eax" \
     "movzx eax,dx"  \
     parm [esi] [edi] [ebx] [ecx] \
     value [eax] \
@@ -1170,7 +1170,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_spawn_exe  \
     "pop fs"    \
     "movzx eax,ax"  \
-    "mov [edx],eax" \
+    "mov [ecx],eax" \
     "movzx eax,dx"  \
     parm [esi] [edi] [ebx] [ecx] \
     value [eax] \
@@ -1831,12 +1831,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov [esi],ecx" \
     "movzx edx,dx" \
     "mov [edi],edx" \
-    parm [esi] [edi] \
+    parm [edi] [esi] \
     modify [ecx edx];
 
 #pragma aux RdosSetCursorPosition = \
     CallGate_set_cursor_position \
-    parm [ecx] [edx];
+    parm [edx] [ecx];
 
 #pragma aux RdosWriteChar = \
     CallGate_write_char \

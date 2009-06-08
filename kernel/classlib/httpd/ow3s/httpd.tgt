@@ -53,7 +53,7 @@ WString
 CPPOBJ
 13
 WVList
-9
+13
 14
 MVState
 15
@@ -78,10 +78,10 @@ WString
 WPP
 20
 WString
-33
-?????Do not generate stack frames
+20
+?????Warning level 3
 1
-0
+1
 21
 MRState
 22
@@ -90,10 +90,10 @@ WString
 WPP
 23
 WString
-23
-?????Generate as needed
+20
+?????Warning level 4
 1
-1
+0
 24
 MRState
 25
@@ -102,8 +102,8 @@ WString
 WPP
 26
 WString
-21
-?????Compiler default
+27
+?????Default byte alignment
 1
 0
 27
@@ -115,9 +115,9 @@ WPP
 29
 WString
 21
-?????Compiler default
+?????1 byte alignment
 1
-0
+1
 30
 MRState
 31
@@ -126,8 +126,8 @@ WString
 WPP
 32
 WString
-21
-?????Compiler default
+33
+?????Do not generate stack frames
 1
 0
 33
@@ -138,10 +138,10 @@ WString
 WPP
 35
 WString
-33
-r????80386 Register based calling
+23
+?????Generate as needed
 1
-0
+1
 36
 MRState
 37
@@ -150,10 +150,10 @@ WString
 WPP
 38
 WString
-30
-??2??80386 Stack based calling
+21
+?????Compiler default
 1
-1
+0
 39
 MRState
 40
@@ -162,75 +162,69 @@ WString
 WPP
 41
 WString
+21
+?????Compiler default
+1
+0
+42
+MRState
+43
+WString
+3
+WPP
+44
+WString
+21
+?????Compiler default
+1
+0
+45
+MRState
+46
+WString
+3
+WPP
+47
+WString
+33
+r????80386 Register based calling
+1
+0
+48
+MRState
+49
+WString
+3
+WPP
+50
+WString
+30
+??2??80386 Stack based calling
+1
+1
+51
+MRState
+52
+WString
+3
+WPP
+53
+WString
 39
 ??2??Pentium Pro Register based calling
 1
 0
-42
+54
 WVList
 0
 -1
 1
 1
 0
-43
+55
 MItem
 14
 ..\httpcmd.cpp
-44
-WString
-6
-CPPOBJ
-45
-WVList
-0
-46
-WVList
-0
-11
-1
-1
-0
-47
-MItem
-15
-..\httpcust.cpp
-48
-WString
-6
-CPPOBJ
-49
-WVList
-0
-50
-WVList
-0
-11
-1
-1
-0
-51
-MItem
-15
-..\httpdata.cpp
-52
-WString
-6
-CPPOBJ
-53
-WVList
-0
-54
-WVList
-0
-11
-1
-1
-0
-55
-MItem
-15
-..\httpfact.cpp
 56
 WString
 6
@@ -247,8 +241,8 @@ WVList
 0
 59
 MItem
-14
-..\httpopt.cpp
+15
+..\httpcust.cpp
 60
 WString
 6
@@ -266,7 +260,7 @@ WVList
 63
 MItem
 15
-..\httppars.cpp
+..\httpdata.cpp
 64
 WString
 6
@@ -284,7 +278,7 @@ WVList
 67
 MItem
 15
-..\httpserv.cpp
+..\httpfact.cpp
 68
 WString
 6
@@ -293,6 +287,60 @@ CPPOBJ
 WVList
 0
 70
+WVList
+0
+11
+1
+1
+0
+71
+MItem
+14
+..\httpopt.cpp
+72
+WString
+6
+CPPOBJ
+73
+WVList
+0
+74
+WVList
+0
+11
+1
+1
+0
+75
+MItem
+15
+..\httppars.cpp
+76
+WString
+6
+CPPOBJ
+77
+WVList
+0
+78
+WVList
+0
+11
+1
+1
+0
+79
+MItem
+15
+..\httpserv.cpp
+80
+WString
+6
+CPPOBJ
+81
+WVList
+0
+82
 WVList
 0
 11

@@ -154,7 +154,6 @@ int TTypeCommand::Execute(char *param)
 {
     TArg *arg;
     int HasSrc = FALSE;
-    const char *ptr;
     int ok;
     TPathName path;
 

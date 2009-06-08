@@ -1353,7 +1353,6 @@ void TSession::Run()
 ##########################################################################*/
 void TSession::Run(const char *param)
 {
-        int ok;
         TCommandLine *cmd;
 
         cmd = new TCommandLine(this, param);

@@ -65,7 +65,7 @@ TMountFactory::TMountFactory()
 ##########################################################################*/
 TCommand *TMountFactory::Create(TSession *session, const char *param)
 {
-	return new TMountCommand(session, param);
+        return new TMountCommand(session, param);
 }
 
 /*##########################################################################
@@ -82,8 +82,8 @@ TCommand *TMountFactory::Create(TSession *session, const char *param)
 TMountCommand::TMountCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_MOUNT);
-	FDrive = 0;
+        FHelpScreen.Load(TEXT_CMDHELP_MOUNT);
+        FDrive = 0;
 }
 
 /*##########################################################################
@@ -116,7 +116,7 @@ TMountCommand::~TMountCommand()
 ##########################################################################*/
 void TMountCommand::InitOptions()
 {
-	FOptD = FALSE;
+        FOptD = FALSE;
 }
 
 /*##########################################################################
@@ -132,13 +132,13 @@ void TMountCommand::InitOptions()
 ##########################################################################*/
 int TMountCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
-	switch (ch)
-	{
-		case 'D': 
-			return OptScanBool(optstr, bool, strarg, &FOptD);
-	}  
-	OptError(optstr);
-  	return E_Useage;
+        switch (ch)
+        {
+                case 'D': 
+                        return OptScanBool(optstr, bool, strarg, &FOptD);
+        }  
+        OptError(optstr);
+        return E_Useage;
 }
 
 /*##########################################################################
@@ -156,9 +156,9 @@ int TMountCommand::Mount(TString filename)
 {
     if (!FDrive->OpenFileDrive(filename.GetData()))
     {
-    	FMsg.printf(TEXT_ERROR_BADCOMMAND, filename.GetData());
-	    Write(FMsg.GetData());
-		return E_Useage;
+        FMsg.printf(TEXT_ERROR_BADCOMMAND, filename.GetData());
+            Write(FMsg.GetData());
+                return E_Useage;
     }
     return 0;
 }
@@ -176,14 +176,13 @@ int TMountCommand::Mount(TString filename)
 ##########################################################################*/
 int TMountCommand::Execute(char *param)
 {
-	int DriveNr;
-	const char *DriveStr;
-	char str[3];
+        const char *DriveStr;
+        char str[3];
 
-	InitOptions();
+        InitOptions();
 
-	if (!ScanCmdLine(param, 0))
-		return 1;
+        if (!ScanCmdLine(param, 0))
+                return 1;
 
     if (FOptD)
     {
@@ -198,37 +197,37 @@ int TMountCommand::Execute(char *param)
                 str[1] = ':';
                 str[2] = 0;
                 strupr(str);
-				FDrive = TDrive::AllocateFixed(str[0] - 'A');
-              	return Mount(FArgList->FList->FName);
+                                FDrive = TDrive::AllocateFixed(str[0] - 'A');
+                return Mount(FArgList->FList->FName);
             }
             else
-        	{
-        		ErrorSyntax(0);
-        		return 1;
-        	}
+                {
+                        ErrorSyntax(0);
+                        return 1;
+                }
             
         
         }
         else
         {
-    		FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-	    	Write(FMsg.GetData());
-		    return E_Useage;
-		}
+                FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+                Write(FMsg.GetData());
+                    return E_Useage;
+                }
     }
     else
     {
         if (FArgCount == 1)
         {
             FDrive = TDrive::AllocateDynamic(); 
-        	return Mount(FArgList->FName);
+                return Mount(FArgList->FName);
         }
         else
         {
-    		FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-	    	Write(FMsg.GetData());
-		    return E_Useage;
-		}
+                FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+                Write(FMsg.GetData());
+                    return E_Useage;
+                }
     }
 
     return 0;

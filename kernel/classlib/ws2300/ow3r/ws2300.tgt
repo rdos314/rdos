@@ -53,7 +53,7 @@ WString
 CPPOBJ
 13
 WVList
-8
+11
 14
 MVState
 15
@@ -78,10 +78,10 @@ WString
 WPP
 20
 WString
-27
-?????Default byte alignment
+20
+?????Warning level 3
 1
-0
+1
 21
 MRState
 22
@@ -90,10 +90,10 @@ WString
 WPP
 23
 WString
-21
-?????1 byte alignment
+20
+?????Warning level 4
 1
-1
+0
 24
 MRState
 25
@@ -102,8 +102,8 @@ WString
 WPP
 26
 WString
-33
-?????Do not generate stack frames
+27
+?????Default byte alignment
 1
 0
 27
@@ -114,8 +114,8 @@ WString
 WPP
 29
 WString
-23
-?????Generate as needed
+21
+?????1 byte alignment
 1
 1
 30
@@ -126,8 +126,8 @@ WString
 WPP
 32
 WString
-21
-?????Compiler default
+33
+?????Do not generate stack frames
 1
 0
 33
@@ -138,10 +138,10 @@ WString
 WPP
 35
 WString
-21
-?????Compiler default
+23
+?????Generate as needed
 1
-0
+1
 36
 MRState
 37
@@ -150,29 +150,65 @@ WString
 WPP
 38
 WString
+21
+?????Compiler default
+1
+0
+39
+MRState
+40
+WString
+3
+WPP
+41
+WString
+21
+?????Compiler default
+1
+0
+42
+MRState
+43
+WString
+3
+WPP
+44
+WString
+21
+?????Compiler default
+1
+0
+45
+MRState
+46
+WString
+3
+WPP
+47
+WString
 39
 ??2??Pentium Pro Register based calling
 1
 0
-39
+48
 WVList
 0
 -1
 1
 1
 0
-40
+49
 MItem
 13
 ..\ws2300.cpp
-41
+50
 WString
 6
 CPPOBJ
-42
+51
 WVList
 0
-43
+52
 WVList
 0
 11

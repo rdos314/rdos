@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define BOOT_LOADER_SECTORS	16
+#define BOOT_LOADER_SECTORS     16
 
 #include "rdos.h"
 #include "cmdhelp.h"
@@ -69,7 +69,7 @@ TInitHdFactory::TInitHdFactory()
 ##########################################################################*/
 TCommand *TInitHdFactory::Create(TSession *session, const char *param)
 {
-	return new TInitHdCommand(session, param);
+        return new TInitHdCommand(session, param);
 }
 
 /*##########################################################################
@@ -86,7 +86,7 @@ TCommand *TInitHdFactory::Create(TSession *session, const char *param)
 TInitHdCommand::TInitHdCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_INITHD);
+        FHelpScreen.Load(TEXT_CMDHELP_INITHD);
 }
 
 /*##########################################################################
@@ -102,7 +102,7 @@ TInitHdCommand::TInitHdCommand(TSession *session, const char *param)
 ##########################################################################*/
 TInitHdCommand::~TInitHdCommand()
 {
-	if (FBootLoader)
+        if (FBootLoader)
         delete FBootLoader;
 }
 
@@ -119,16 +119,16 @@ TInitHdCommand::~TInitHdCommand()
 ##########################################################################*/
 int TInitHdCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
-	switch(ch)
-	{
-		case 'R':
-			return OptScanBool(optstr, bool, strarg, &FOptR);
+        switch(ch)
+        {
+                case 'R':
+                        return OptScanBool(optstr, bool, strarg, &FOptR);
 
-		case 'I':
-			return OptScanBool(optstr, bool, strarg, &FOptI);
-	}
-	OptError(optstr);
-	return E_Useage;
+                case 'I':
+                        return OptScanBool(optstr, bool, strarg, &FOptI);
+        }
+        OptError(optstr);
+        return E_Useage;
 }
 
 /*##########################################################################
@@ -144,8 +144,8 @@ int TInitHdCommand::OptScan(const char *optstr, int ch, int bool, const char *st
 ##########################################################################*/
 void TInitHdCommand::InitOptions()
 {
-	FOptR = 0;
-	FOptI = 0;
+        FOptR = 0;
+        FOptI = 0;
 }
 
 /*##########################################################################
@@ -161,12 +161,12 @@ void TInitHdCommand::InitOptions()
 ##########################################################################*/
 void TInitHdCommand::LoadBootLoader(TDisc *Disc)
 {
-	FBootLoader = new char[512 * BOOT_LOADER_SECTORS];
+        FBootLoader = new char[512 * BOOT_LOADER_SECTORS];
 
-	memset(FBootLoader, 0, 512 * BOOT_LOADER_SECTORS);
-	FLoaderSize = RdosReadBinaryResource(0, 101, FBootLoader, 512 * BOOT_LOADER_SECTORS);
+        memset(FBootLoader, 0, 512 * BOOT_LOADER_SECTORS);
+        FLoaderSize = RdosReadBinaryResource(0, 101, FBootLoader, 512 * BOOT_LOADER_SECTORS);
 
-	FLoaderSectors = 1 + (FLoaderSize - 1) / 512;
+        FLoaderSectors = 1 + (FLoaderSize - 1) / 512;
 }
 
 /*##########################################################################
@@ -182,58 +182,58 @@ void TInitHdCommand::LoadBootLoader(TDisc *Disc)
 ##########################################################################*/
 void TInitHdCommand::WriteBootSector(TDisc *Disc, int IdeDisc)
 {
-	char *BootSector;
-	TBootParam bootp;
+        char *BootSector;
+        TBootParam bootp;
 
-	bootp.BytesPerSector = Disc->GetBytesPerSector();
+        bootp.BytesPerSector = Disc->GetBytesPerSector();
 
-	if (FOptR)
-		bootp.Resv1 = 1;
-	else
-		bootp.Resv1 = 0;
+        if (FOptR)
+                bootp.Resv1 = 1;
+        else
+                bootp.Resv1 = 0;
 
-	bootp.MappingSectors = FLoaderSectors;
-	bootp.Resv3 = 0;
-	bootp.Resv4 = 0;
-	bootp.SmallSectors = 0;
+        bootp.MappingSectors = FLoaderSectors;
+        bootp.Resv3 = 0;
+        bootp.Resv4 = 0;
+        bootp.SmallSectors = 0;
 
-	if (FOptI)
-		bootp.Media = 0xF1;
-	else
-		bootp.Media = 0xF0;
+        if (FOptI)
+                bootp.Media = 0xF1;
+        else
+                bootp.Media = 0xF0;
 
-	bootp.Resv6 = 0;
-	bootp.SectorsPerCyl = Disc->GetSectorsPerCyl();
-	bootp.Heads = Disc->GetHeads();
-	bootp.HiddenSectors = FLoaderSectors;
-	bootp.Sectors = Disc->GetTotalSectors();
-	bootp.Drive = 0x80 + IdeDisc;
-	bootp.Resv7 = 0;
-	bootp.Signature = 0;
-	bootp.Serial = 0;
-	memset(bootp.Volume, 0, 11);
-	memcpy(bootp.Fs, "RDOS    ", 8);
+        bootp.Resv6 = 0;
+        bootp.SectorsPerCyl = Disc->GetSectorsPerCyl();
+        bootp.Heads = Disc->GetHeads();
+        bootp.HiddenSectors = FLoaderSectors;
+        bootp.Sectors = Disc->GetTotalSectors();
+        bootp.Drive = 0x80 + IdeDisc;
+        bootp.Resv7 = 0;
+        bootp.Signature = 0;
+        bootp.Serial = 0;
+        memset(bootp.Volume, 0, 11);
+        memcpy(bootp.Fs, "RDOS    ", 8);
 
-	BootSector = new char[512];
+        BootSector = new char[512];
 
-	Disc->Read(0, BootSector, 512);
+        Disc->Read(0, BootSector, 512);
 
-	if (FOptI)
-	{
-		memset(BootSector, 0, 0x1FE);
-		*(BootSector + 0x1FE) = 0x55;
-		*(BootSector + 0x1FF) = 0xAA;
-	}
-	else
-		memset(BootSector, 0, 0x1BE);
+        if (FOptI)
+        {
+                memset(BootSector, 0, 0x1FE);
+                *(BootSector + 0x1FE) = 0x55;
+                *(BootSector + 0x1FF) = 0xAA;
+        }
+        else
+                memset(BootSector, 0, 0x1BE);
 
-	RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
+        RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
 
-	memcpy(BootSector + 11, &bootp, sizeof(bootp));
+        memcpy(BootSector + 11, &bootp, sizeof(bootp));
 
-	Disc->Write(0, BootSector, 512);
+        Disc->Write(0, BootSector, 512);
 
-	delete BootSector;
+        delete BootSector;
 }
 
 /*##########################################################################
@@ -249,19 +249,19 @@ void TInitHdCommand::WriteBootSector(TDisc *Disc, int IdeDisc)
 ##########################################################################*/
 void TInitHdCommand::WriteBootLoader(TDisc *Disc)
 {
-	int Sector;
-	char *ptr;
-	int size;
+        int Sector;
+        char *ptr;
+        int size;
 
-	size = FLoaderSize;
-	ptr = FBootLoader;
+        size = FLoaderSize;
+        ptr = FBootLoader;
 
-	for (Sector = 1; Sector <= BOOT_LOADER_SECTORS && size >= 0; Sector++)
-	{
-		Disc->Write(Sector, ptr, 512);
-		ptr += 512;
-		size -= 512;
-	}
+        for (Sector = 1; Sector <= BOOT_LOADER_SECTORS && size >= 0; Sector++)
+        {
+                Disc->Write(Sector, ptr, 512);
+                ptr += 512;
+                size -= 512;
+        }
 }
 
 /*##########################################################################
@@ -277,65 +277,61 @@ void TInitHdCommand::WriteBootLoader(TDisc *Disc)
 ##########################################################################*/
 int TInitHdCommand::Execute(char *param)
 {
-	int DiscNr;
-	int BytesPerSector;
-	long Sectors;
-	int SectorsPerCyl;
-	int Heads;
-	TDisc *Disc;
-	TDiscPartition *DiscPart;
-	TPartition *Part;
-	int ok;
+        int DiscNr;
+        TDisc *Disc;
+        TDiscPartition *DiscPart;
+        TPartition *Part;
+        int ok;
 
-	InitOptions();
+        InitOptions();
 
-	if (LeadOptions(&param, 0) != E_None)
-		return 1;
+        if (LeadOptions(&param, 0) != E_None)
+                return 1;
 
-	if (FOptI)
-		FOptR = 0;
+        if (FOptI)
+                FOptR = 0;
 
-	if (sscanf(param, "%d", &DiscNr) == 1)
-	{
-		Disc = new TIdeDisc(DiscNr);
-		ok = Disc->IsValid();
+        if (sscanf(param, "%d", &DiscNr) == 1)
+        {
+                Disc = new TIdeDisc(DiscNr);
+                ok = Disc->IsValid();
 
-		if (ok)
-		{
-			LoadBootLoader(Disc);
+                if (ok)
+                {
+                        LoadBootLoader(Disc);
 
-			DiscPart = new TDiscPartition(Disc);
-			Part = DiscPart->PartArr[0];
-			if (Part)
-				if (Part->Start <= FLoaderSectors + 1)
-					ok = Part->IsFree();
-			delete DiscPart;
+                        DiscPart = new TDiscPartition(Disc);
+                        Part = DiscPart->PartArr[0];
+                        if (Part)
+                                if (Part->Start <= FLoaderSectors + 1)
+                                        ok = Part->IsFree();
+                        delete DiscPart;
 
-			if (!ok)
-			{
-				FMsg.printf(TEXT_INITHD_AVAIL_ERROR, DiscNr);
-				Write(FMsg.GetData());
-				return 0;
-			}
+                        if (!ok)
+                        {
+                                FMsg.printf(TEXT_INITHD_AVAIL_ERROR, DiscNr);
+                                Write(FMsg.GetData());
+                                return 0;
+                        }
 
-		}
-		else
-		{
-			FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
-			Write(FMsg.GetData());
-			return 0;
-		}
+                }
+                else
+                {
+                        FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
+                        Write(FMsg.GetData());
+                        return 0;
+                }
 
 
-		if (ok)
-		{
-			WriteBootLoader(Disc);
-			WriteBootSector(Disc, DiscNr);
-			return 0;
-		}
-	}
+                if (ok)
+                {
+                        WriteBootLoader(Disc);
+                        WriteBootSector(Disc, DiscNr);
+                        return 0;
+                }
+        }
 
-	ErrorSyntax(0);
-	return 1;
+        ErrorSyntax(0);
+        return 1;
 }
 

@@ -4618,7 +4618,6 @@ void TDeviceTag::UpdateBoolean(TDeviceTag *DestTag, unsigned short int ID, int V
 void TDeviceTag::UpdateString(TDeviceTag *DestTag, unsigned short int ID, char *Val)
 {
     TDeviceVar *Var;
-        const char *str;
     
     Var = GetVar(ID);
     if (Var)
@@ -9242,7 +9241,6 @@ void TDistSystem::HandleMsg(TDeviceMsg *Msg)
 {
     TDistUnit *ptr;
         TDeviceConfig *cfg;
-        TDeviceMsg *msg;
         TDeviceTag *header;
     TDeviceTag *poll;
     TDeviceTag *reset;

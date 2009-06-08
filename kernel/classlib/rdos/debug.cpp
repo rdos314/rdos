@@ -678,7 +678,6 @@ void TDebugModule::ReadName()
     char str[256];
     int size;
 
-    str[0];
     size = RdosGetModuleName(Handle, str, 255);
     str[size] = 0;
 

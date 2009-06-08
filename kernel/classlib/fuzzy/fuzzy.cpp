@@ -101,8 +101,6 @@ TFuzzy::~TFuzzy()
 ##########################################################################*/
 void TFuzzy::AddInput(int index, TFuzzyVar *var)
 {
-    int i;
-
     if (index < 0 || index >= MAX_FUZZY_VARS)
         delete var;
     else
@@ -148,7 +146,6 @@ void TFuzzy::InitRule()
 {
     int i;
     int j;
-    int index;
     int Arr[MAX_FUZZY_SETS];
 
     FDimCount = 0;

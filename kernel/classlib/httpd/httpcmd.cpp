@@ -89,14 +89,14 @@ THttpArg::~THttpArg()
 ##########################################################################*/
 THttpCommand::THttpCommand(THttpSocketServer *Server, TString Method, TString Param)
   : FMethod(Method),
-	FCmdLine(Param)
+        FCmdLine(Param)
 {
-	FServer = Server;
-	FArgList = 0;
-	FOptCount = 0;
-	FOptList = 0;
-	FContentData = 0;
-	FContentSize = 0;
+        FServer = Server;
+        FArgList = 0;
+        FOptCount = 0;
+        FOptList = 0;
+        FContentData = 0;
+        FContentSize = 0;
 }
 
 /*##########################################################################
@@ -121,7 +121,7 @@ THttpCommand::~THttpCommand()
         FArgList = arg->FList;
         delete arg;
         arg = FArgList;
-	}
+        }
 
     opt = FOptList;
     while (opt)
@@ -129,10 +129,10 @@ THttpCommand::~THttpCommand()
         FOptList = opt->FList;
         delete opt;
         opt = FOptList;
-	}
+        }
 
-	if (FContentData)
-	    delete FContentData;
+        if (FContentData)
+            delete FContentData;
 }
 
 /*##########################################################################
@@ -148,30 +148,30 @@ THttpCommand::~THttpCommand()
 ##########################################################################*/
 char *THttpCommand::SkipOptDelim(char *p)
 {
-	int ch, quote;
-	int more;
+        int ch, quote;
+        int more;
 
-	quote = 0;
-	for (;;)
-	{
-		ch = *p;
+        quote = 0;
+        for (;;)
+        {
+                ch = *p;
 
-		if (!ch)
-			break;
+                if (!ch)
+                        break;
 
-		more = !(iscntrl(ch) || ch == ':');
+                more = !(iscntrl(ch) || ch == ':');
 
-		if (!quote && !more)
-			break;
+                if (!quote && !more)
+                        break;
 
-		if (quote == ch)
-			quote = 0;
-		else
-			if (strchr("\"", ch))
-				quote = ch;
-		p++;
-	}
-	return p;
+                if (quote == ch)
+                        quote = 0;
+                else
+                        if (strchr("\"", ch))
+                                quote = ch;
+                p++;
+        }
+        return p;
 }
 
 /*##########################################################################
@@ -187,11 +187,11 @@ char *THttpCommand::SkipOptDelim(char *p)
 ##########################################################################*/
 TDateTime THttpCommand::DecodeTime(THttpOption *opt)
 {
-	char str[40];
-	const char *ptr;
+        char str[40];
+        const char *ptr;
     int year, month, day;
-	int hour, min, sec;
-	int ok;
+        int hour, min, sec;
+        int ok;
 
     if (opt->FArgList && opt->FArgList->FList)
         ptr = opt->FArgList->FList->FName.GetData();
@@ -203,7 +203,7 @@ TDateTime THttpCommand::DecodeTime(THttpOption *opt)
         ok = (sscanf(ptr, "%d", &day) == 1);
         if (ok)
         {
-		    while (*ptr && (isdigit(*ptr) || *ptr == ' '))
+                    while (*ptr && (isdigit(*ptr) || *ptr == ' '))
                 ptr++;
 
             memcpy(str, ptr, 3);
@@ -222,7 +222,7 @@ TDateTime THttpCommand::DecodeTime(THttpOption *opt)
             ptr += 3;
             ok = (sscanf(ptr, "%04d %02d:%02d:%02d", 
                                 &year, &hour, &min, &sec) == 4);
-		}
+                }
     }    
     else
         ok = FALSE;
@@ -247,7 +247,7 @@ TDateTime THttpCommand::DecodeTime(THttpOption *opt)
 THttpOption *THttpCommand::FindOption(const char *name)
 {
     THttpOption *curr;
-	TString Name(name);
+        TString Name(name);
 
     curr = FOptList;
 
@@ -275,8 +275,6 @@ THttpOption *THttpCommand::FindOption(const char *name)
 ##########################################################################*/
 TDateTime THttpCommand::GetModifiedSince()
 {
-    int ok;
-    const char *timestr;
     THttpOption *opt = FindOption("If-Modified-Since");
 
     if (opt)
@@ -302,17 +300,17 @@ void THttpCommand::AddArg(const char *name)
     THttpArg *curr;
 
     arg->FList = 0;
-	curr = FArgList;
+        curr = FArgList;
    
-	if (curr)
-	{
-		while (curr->FList)
-			curr = curr->FList;
+        if (curr)
+        {
+                while (curr->FList)
+                        curr = curr->FList;
 
-		curr->FList = arg;
-	}
-	else
-		FArgList = arg;    
+                curr->FList = arg;
+        }
+        else
+                FArgList = arg;    
 }
 
 /*##########################################################################
@@ -349,27 +347,27 @@ void THttpCommand::AddArg(char *sBeg, char **sEnd)
 ##########################################################################*/
 void THttpCommand::AddOpt(char *name, char *param)
 {
-	THttpOption *opt = new THttpOption(name, param);
-	THttpOption *curr;
+        THttpOption *opt = new THttpOption(name, param);
+        THttpOption *curr;
 
-	if (!strcmp(name, "User-Agent"))
-	    FUserAgent = param;
+        if (!strcmp(name, "User-Agent"))
+            FUserAgent = param;
 
-	if (!strcmp(name, "Content-Length"))
-	    sscanf(param, "%d", &FContentSize);
-	    
+        if (!strcmp(name, "Content-Length"))
+            sscanf(param, "%d", &FContentSize);
+            
     opt->FList = 0;
-	curr = FOptList;
+        curr = FOptList;
    
-	if (curr)
-	{
-		while (curr->FList)
-			curr = curr->FList;
+        if (curr)
+        {
+                while (curr->FList)
+                        curr = curr->FList;
 
-		curr->FList = opt;
-	}
-	else
-		FOptList = opt;    
+                curr->FList = opt;
+        }
+        else
+                FOptList = opt;    
 }
 
 /*##########################################################################
@@ -385,17 +383,17 @@ void THttpCommand::AddOpt(char *name, char *param)
 ##########################################################################*/
 void THttpCommand::Split(char *s)
 {
-	char *start;
+        char *start;
 
     if (s)
     {
         start = SkipDelim(s);
         while (*start)
         {
-			AddArg(start, &s);
-			start = SkipDelim(s);
-		}
-	}
+                        AddArg(start, &s);
+                        start = SkipDelim(s);
+                }
+        }
 }
 
 /*##########################################################################
@@ -413,16 +411,16 @@ int THttpCommand::Parse(void *arg)
 {
     THttpArg *argv;
 
-	FArgCount = 0;
+        FArgCount = 0;
 
-    argv = FArgList;	
-	while (argv)
-	{
-    	FArgCount++;	
-		argv = argv->FList;
-	}
+    argv = FArgList;    
+        while (argv)
+        {
+        FArgCount++;    
+                argv = argv->FList;
+        }
 
-	return E_None;
+        return E_None;
 }
 
 /*##########################################################################
@@ -438,12 +436,12 @@ int THttpCommand::Parse(void *arg)
 ##########################################################################*/
 int THttpCommand::ScanCmdLine(char *line, void *arg)
 {
-	Split(line);
+        Split(line);
 
-	if (Parse(arg) != E_None)
-		return FALSE;
-	else
-	    return TRUE;
+        if (Parse(arg) != E_None)
+                return FALSE;
+        else
+            return TRUE;
 }
 
 /*##########################################################################
@@ -535,13 +533,13 @@ void THttpCommand::WriteOption(const char *option, const char *val)
 ##########################################################################*/
 void THttpCommand::WriteLongOption(const char *option, long value)
 {
-	char str[40];
+        char str[40];
 
     FServer->Write(option);
     FServer->Write(": ");
 
     sprintf(str, "%ld", value);
-	FServer->Write(str);
+        FServer->Write(str);
     FServer->Write("\r\n");
 }
 
@@ -558,55 +556,55 @@ void THttpCommand::WriteLongOption(const char *option, long value)
 ##########################################################################*/
 void THttpCommand::WriteTimeOption(const char *option, TDateTime &time)
 {
-	char str[40];
+        char str[40];
 
-	FServer->Write(option);
-	FServer->Write(": ");
+        FServer->Write(option);
+        FServer->Write(": ");
 
-	switch (time.GetDayOfWeek())
-	{
-		case 0:
-			FServer->Write("Sun");
-			break;
+        switch (time.GetDayOfWeek())
+        {
+                case 0:
+                        FServer->Write("Sun");
+                        break;
 
-		case 1:
-			FServer->Write("Mon");
-			break;
+                case 1:
+                        FServer->Write("Mon");
+                        break;
 
-		case 2:
-			FServer->Write("Tue");
-			break;
+                case 2:
+                        FServer->Write("Tue");
+                        break;
 
-		case 3:
-			FServer->Write("Wed");
-			break;
+                case 3:
+                        FServer->Write("Wed");
+                        break;
 
-		case 4:
-			FServer->Write("Thu");
-			break;
+                case 4:
+                        FServer->Write("Thu");
+                        break;
 
-		case 5:
-			FServer->Write("Fri");
-			break;
+                case 5:
+                        FServer->Write("Fri");
+                        break;
 
-		case 6:
-			FServer->Write("Sat");
-			break;
-	}
+                case 6:
+                        FServer->Write("Sat");
+                        break;
+        }
 
-	sprintf(str, ", %d ", time.GetDay());
-	FServer->Write(str);
+        sprintf(str, ", %d ", time.GetDay());
+        FServer->Write(str);
 
     FServer->Write(MonthNames[time.GetMonth() - 1]);
 
-	sprintf(str, " %04d %02d:%02d:%02d GMT",
-				time.GetYear(),
-			    time.GetHour(),
-				time.GetMin(),
-				time.GetSec());
+        sprintf(str, " %04d %02d:%02d:%02d GMT",
+                                time.GetYear(),
+                            time.GetHour(),
+                                time.GetMin(),
+                                time.GetSec());
 
-	FServer->Write(str);
-	FServer->Write("\r\n");
+        FServer->Write(str);
+        FServer->Write("\r\n");
 }
 
 /*##########################################################################
@@ -622,7 +620,7 @@ void THttpCommand::WriteTimeOption(const char *option, TDateTime &time)
 ##########################################################################*/
 const char *THttpCommand::GetErrorText(int ErrorCode)
 {
-	 switch (ErrorCode)
+         switch (ErrorCode)
     {
         case 200:
             return "OK";
@@ -631,11 +629,11 @@ const char *THttpCommand::GetErrorText(int ErrorCode)
             return "NOT MODIFIED";
             
         case 404:
-				return "NOT FOUND";
+                                return "NOT FOUND";
 
         default:
             return "UNKNOWN ERROR";
-	}
+        }
 }
 
 /*##########################################################################
@@ -654,7 +652,7 @@ void THttpCommand::WriteStartHeader(int ErrorCode)
     char str[80];
     TDateTime CurrTime;
 
-	 if (FMajor)
+         if (FMajor)
     {
         sprintf(str, "HTTP/%d.%d %d ", FMajor, FMinor, ErrorCode);
         FServer->Write(str);
@@ -723,36 +721,36 @@ void THttpCommand::WriteFile(TPathName &path, const char *ContentType)
 {
     int count;
 
-	TFile file = path.OpenFile();
-	TDateTime time(file.GetTime());
+        TFile file = path.OpenFile();
+        TDateTime time(file.GetTime());
 
-	if (time == GetModifiedSince())
-	{
+        if (time == GetModifiedSince())
+        {
         WriteStartHeader(304);
-		WriteEndHeader();
-	}
-	else
-	{
-	    char *Buf = new char[512];
+                WriteEndHeader();
+        }
+        else
+        {
+            char *Buf = new char[512];
 
-		WriteStartHeader(200);
-		WriteTimeOption("Last-Modified", time);
-		WriteOption("Accept-Ranges", "bytes");
-		WriteOption("Content-Type", ContentType);
-		WriteLongOption("Content-Length", file.GetSize());
-		WriteEndHeader();
+                WriteStartHeader(200);
+                WriteTimeOption("Last-Modified", time);
+                WriteOption("Accept-Ranges", "bytes");
+                WriteOption("Content-Type", ContentType);
+                WriteLongOption("Content-Length", file.GetSize());
+                WriteEndHeader();
 
-		count = file.Read(Buf, 512);
-		while (count)
-		{
-			FServer->Write(Buf, count);
-			count = file.Read(Buf, 512);
-		}
-		delete Buf;
+                count = file.Read(Buf, 512);
+                while (count)
+                {
+                        FServer->Write(Buf, count);
+                        count = file.Read(Buf, 512);
+                }
+                delete Buf;
 
-		FServer->Push();
+                FServer->Push();
 
-	}
+        }
 }
 
 /*##########################################################################
@@ -768,15 +766,15 @@ void THttpCommand::WriteFile(TPathName &path, const char *ContentType)
 ##########################################################################*/
 void THttpCommand::StartPush()
 {
-	int MSIE = IsMSIE();
+        int MSIE = IsMSIE();
 
-	WriteStartHeader(200);
+        WriteStartHeader(200);
 
-	if (!MSIE)
-	{
-    	WriteOption("Content-type", "multipart/x-mixed-replace;boundary=ThisRandomString");
-    	WriteEndHeader();
-    	FServer->Write("--ThisRandomString\r\n");
+        if (!MSIE)
+        {
+        WriteOption("Content-type", "multipart/x-mixed-replace;boundary=ThisRandomString");
+        WriteEndHeader();
+        FServer->Write("--ThisRandomString\r\n");
     }
 }
 
@@ -793,37 +791,37 @@ void THttpCommand::StartPush()
 ##########################################################################*/
 int THttpCommand::PushFile(TPathName &path, const char *ContentType, int ReloadTime)
 {
-	int count;
-	char *Buf = new char[512];
-	int MSIE = IsMSIE();
+        int count;
+        char *Buf = new char[512];
+        int MSIE = IsMSIE();
 
-	TFile file = path.OpenFile();
-	TDateTime time(file.GetTime());
+        TFile file = path.OpenFile();
+        TDateTime time(file.GetTime());
 
-	WriteOption("Content-Type", ContentType);
-	WriteLongOption("Content-Length", file.GetSize());
-	WriteEndHeader();
+        WriteOption("Content-Type", ContentType);
+        WriteLongOption("Content-Length", file.GetSize());
+        WriteEndHeader();
 
-	 count = file.Read(Buf, 512);
-	 while (count)
-	 {
-		  FServer->Write(Buf, count);
-		  count = file.Read(Buf, 512);
-	 }
+         count = file.Read(Buf, 512);
+         while (count)
+         {
+                  FServer->Write(Buf, count);
+                  count = file.Read(Buf, 512);
+         }
 
-	 if (MSIE)
-	 {
-		  sprintf(Buf, "<META HTTP-EQUIV=\"Refresh\" CONTENT=%d>\r\n", ReloadTime);
-		  FServer->Write(Buf);
-	 }
-	 else
-		  FServer->Write("--ThisRandomString\r\n");
+         if (MSIE)
+         {
+                  sprintf(Buf, "<META HTTP-EQUIV=\"Refresh\" CONTENT=%d>\r\n", ReloadTime);
+                  FServer->Write(Buf);
+         }
+         else
+                  FServer->Write("--ThisRandomString\r\n");
 
-	 delete Buf;
+         delete Buf;
 
-	 FServer->Push();
+         FServer->Push();
 
-	 return !MSIE;
+         return !MSIE;
 }
 
 /*##########################################################################
@@ -839,20 +837,20 @@ int THttpCommand::PushFile(TPathName &path, const char *ContentType, int ReloadT
 ##########################################################################*/
 void THttpCommand::GetFile(const char *Name)
 {
-	TPathName path;
+        TPathName path;
 
-	path = TPathName(FServer->RootDir);
+        path = TPathName(FServer->RootDir);
 
-	if (*Name)
-		path += TString(Name);
+        if (*Name)
+                path += TString(Name);
 
-	if (path.IsDir())
-		path += TString("index.htm");
+        if (path.IsDir())
+                path += TString("index.htm");
 
-	if (path.IsFile())
-		WriteFile(path, "text/html");
-	else
-		WriteError(404);
+        if (path.IsFile())
+                WriteFile(path, "text/html");
+        else
+                WriteError(404);
 }
 
 /*##########################################################################
@@ -868,31 +866,31 @@ void THttpCommand::GetFile(const char *Name)
 ##########################################################################*/
 void THttpCommand::Get(const char *Name)
 {
-	THttpCustomPageFactory *pagefact; 
-	THttpCustomDirFactory *dirfact; 
+        THttpCustomPageFactory *pagefact; 
+        THttpCustomDirFactory *dirfact; 
 
-	pagefact = FServer->FindPage(Name);
+        pagefact = FServer->FindPage(Name);
 
-	if (pagefact)
-	{
-		THttpCustomPage *page = pagefact->Create(this, Name);
-		page->Get(Name);
-		delete page;
-	}
-	else
-	{
-		dirfact = FServer->FindDir(Name);
+        if (pagefact)
+        {
+                THttpCustomPage *page = pagefact->Create(this, Name);
+                page->Get(Name);
+                delete page;
+        }
+        else
+        {
+                dirfact = FServer->FindDir(Name);
 
-		if (dirfact)
-		{
-			THttpCustomPage *page = dirfact->Create(this, Name);
-			page->Get(Name);
-			delete page;
-		}
-		else
-			GetFile(Name);
-	}
-	FServer->Push();
+                if (dirfact)
+                {
+                        THttpCustomPage *page = dirfact->Create(this, Name);
+                        page->Get(Name);
+                        delete page;
+                }
+                else
+                        GetFile(Name);
+        }
+        FServer->Push();
 }
 
 /*##########################################################################
@@ -908,7 +906,7 @@ void THttpCommand::Get(const char *Name)
 ##########################################################################*/
 void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
 {
-	char *ptr;
+        char *ptr;
     char *nextptr;
     char *valptr;
     
@@ -933,11 +931,11 @@ void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
                 page->Post(ptr, valptr);
             }
 
-			ptr = nextptr;
+                        ptr = nextptr;
         }
     }
 
-	page->Post(name);
+        page->Post(name);
 }
 
 /*##########################################################################
@@ -953,31 +951,31 @@ void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
 ##########################################################################*/
 void THttpCommand::Post(const char *Name)
 {
-	THttpCustomPageFactory *pagefact; 
-	THttpCustomDirFactory *dirfact; 
+        THttpCustomPageFactory *pagefact; 
+        THttpCustomDirFactory *dirfact; 
 
-	pagefact = FServer->FindPage(Name);
+        pagefact = FServer->FindPage(Name);
 
-	if (pagefact)
-	{
-		THttpCustomPage *page = pagefact->Create(this, Name);
-    	HandlePost(page, Name);
-		delete page;
-	}
-	else
-	{
-	    dirfact = FServer->FindDir(Name);
+        if (pagefact)
+        {
+                THttpCustomPage *page = pagefact->Create(this, Name);
+        HandlePost(page, Name);
+                delete page;
+        }
+        else
+        {
+            dirfact = FServer->FindDir(Name);
 
-	    if (dirfact)
-	    {
-	        THttpCustomPage *page = dirfact->Create(this, Name);
-    		HandlePost(page, Name);
-	        delete page;
-	    }
-	    else
-    	   	GetFile(Name);
+            if (dirfact)
+            {
+                THttpCustomPage *page = dirfact->Create(this, Name);
+                HandlePost(page, Name);
+                delete page;
+            }
+            else
+                GetFile(Name);
     }
-	FServer->Push();
+        FServer->Push();
 }
 
 /*##########################################################################
@@ -993,10 +991,10 @@ void THttpCommand::Post(const char *Name)
 ##########################################################################*/
 void THttpCommand::Execute(const char *Name)
 {
-	if (FMethod == "POST")
-		Post(Name);
-	else
-		Get(Name);
+        if (FMethod == "POST")
+                Post(Name);
+        else
+                Get(Name);
 }
 
 /*##########################################################################
@@ -1012,82 +1010,81 @@ void THttpCommand::Execute(const char *Name)
 ##########################################################################*/
 void THttpCommand::Run()
 {
-	char *param;
-	char *ptr;
-	int size;
-	THttpArg *arg;
-	int ArgCount;
-	char *start;
-	THttpOption *opt;
+        char *param;
+        char *ptr;
+        int size;
+        THttpArg *arg;
+        int ArgCount;
+        char *start;
 
-	ptr = FServer->ReadLine();
-	while (ptr && *ptr != 0)
-	{
-		start = SkipOptDelim(ptr);
-		if (*start == ':')
-		{
-			*start = 0;
-			start++;
-			start = (char *)THttpSocketServer::LTrim(start);
-			THttpSocketServer::RTrim(start);
+        ptr = FServer->ReadLine();
+        while (ptr && *ptr != 0)
+        {
+                start = SkipOptDelim(ptr);
+                if (*start == ':')
+                {
+                        *start = 0;
+                        start++;
+                        start = (char *)THttpSocketServer::LTrim(start);
+                        THttpSocketServer::RTrim(start);
 
-			ptr = (char *)THttpSocketServer::LTrim(ptr);
-			THttpSocketServer::RTrim(ptr);
+                        ptr = (char *)THttpSocketServer::LTrim(ptr);
+                        THttpSocketServer::RTrim(ptr);
 
-			AddOpt(ptr, start);
-		}
+                        AddOpt(ptr, start);
+                }
 
-		ptr = FServer->ReadLine();
-	}
+                ptr = FServer->ReadLine();
+        }
 
-	if (FContentSize)
-	{
-	    FContentData = new char[FContentSize + 1];
-	    size = FServer->Read(FContentData, FContentSize);
-	    *(FContentData + FContentSize) = 0;
-	}
+        if (FContentSize)
+        {
+            FContentData = new char[FContentSize + 1];
+            size = FServer->Read(FContentData, FContentSize);
+            *(FContentData + FContentSize) = 0;
+        }
 
-	size = FCmdLine.GetSize();
-	param = new char[size + 1];
-	memcpy(param, FCmdLine.GetData(), size + 1);
+        size = FCmdLine.GetSize();
+        param = new char[size + 1];
+        memcpy(param, FCmdLine.GetData(), size + 1);
 
-	if (ScanCmdLine(param, 0))
-	{
-		ArgCount = 0;
-		arg = FArgList;
-		while (arg)
-		{
-			ArgCount++;
-			arg = arg->FList;
-		}
+        if (ScanCmdLine(param, 0))
+        {
+                ArgCount = 0;
+                arg = FArgList;
+                while (arg)
+                {
+                        ArgCount++;
+                        arg = arg->FList;
+                }
 
-		if (ArgCount == 2)
-		{
-			ptr = (char *)FArgList->FList->FName.GetData();
+                if (ArgCount == 2)
+                {
+                        ptr = (char *)FArgList->FList->FName.GetData();
 
-			FMajor = 0;
-			FMinor = 0;
+                        FMajor = 0;
+                        FMinor = 0;
 
-			if (!strcmp(ptr, "HTTP/1.0"))
-			{
-				FMajor = 1;
-				FMinor = 0;
-			}
+                        if (!strcmp(ptr, "HTTP/1.0"))
+                        {
+                                FMajor = 1;
+                                FMinor = 0;
+                        }
 
-			if (!strcmp(ptr, "HTTP/1.1"))
-			{
-				FMajor = 1;
-				FMinor = 1;
-			}
+                        if (!strcmp(ptr, "HTTP/1.1"))
+                        {
+                                FMajor = 1;
+                                FMinor = 1;
+                        }
 
-			ptr = (char *)FArgList->FName.GetData();
-			while (*ptr == '/')
-				ptr++;
+                        ptr = (char *)FArgList->FName.GetData();
+                        while (*ptr == '/')
+                                ptr++;
 
-			Execute(ptr);
-		}
-	}
+                        Execute(ptr);
+                }
+        }
 
-	delete param;
+        delete param;
 }
 

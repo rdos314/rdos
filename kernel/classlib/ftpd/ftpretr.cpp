@@ -66,7 +66,7 @@ TFtpRetrFactory::TFtpRetrFactory()
 ##########################################################################*/
 TFtpCommand *TFtpRetrFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TFtpRetrCommand(Server, param);
+        return new TFtpRetrCommand(Server, param);
 }
 
 /*##########################################################################
@@ -113,59 +113,58 @@ TFtpRetrCommand::~TFtpRetrCommand()
 ##########################################################################*/
 void TFtpRetrCommand::Execute(char *param)
 {
-	TFtpArg *arg;
-	int ArgCount;
-	TFtpLangString msg;
-	int ok;
+        TFtpArg *arg;
+        int ArgCount;
+        TFtpLangString msg;
+        int ok;
 
-	if (FServer->VerifyUser())
-	{
-		ok = ScanCmdLine(param, 0);
-		if (ok)
-		{
-			ArgCount = 0;
-			arg = FArgList;
-			while (arg)
-			{
-				ArgCount++;
-				arg = arg->FList;
-			}
+        if (FServer->VerifyUser())
+        {
+                ok = ScanCmdLine(param, 0);
+                if (ok)
+                {
+                        ArgCount = 0;
+                        arg = FArgList;
+                        while (arg)
+                        {
+                                ArgCount++;
+                                arg = arg->FList;
+                        }
 
-			ok = (FArgCount == 1);
-		}
+                        ok = (FArgCount == 1);
+                }
 
-		if (ok)
-		{
-			TPathName relpath = TPathName(FServer->CurrDir) + TString(FArgList->FName);
-			TPathName abspath = TPathName(FServer->RootDir) + relpath.Get();
-			if (abspath.IsFile())
-			{
-				msg.Load(150);
-				FServer->Reply(&msg);
+                if (ok)
+                {
+                        TPathName relpath = TPathName(FServer->CurrDir) + TString(FArgList->FName);
+                        TPathName abspath = TPathName(FServer->RootDir) + relpath.Get();
+                        if (abspath.IsFile())
+                        {
+                                msg.Load(150);
+                                FServer->Reply(&msg);
 
-				TFile file = abspath.OpenFile();
-				char *buf = new char[0x1000];
-				int len = file.Read(buf, 0x1000);
-				long val;
+                                TFile file = abspath.OpenFile();
+                                char *buf = new char[0x1000];
+                                int len = file.Read(buf, 0x1000);
 
-				while (len)
-				{
-					FServer->Write(buf, len);
-					len = file.Read(buf, 0x1000);
-				}
+                                while (len)
+                                {
+                                        FServer->Write(buf, len);
+                                        len = file.Read(buf, 0x1000);
+                                }
 
-				delete buf;
-				FServer->Push();
-			}
+                                delete buf;
+                                FServer->Push();
+                        }
 
-			msg.Load(226);
-		}
-		else
-			msg.Load(501);
-	}
-	else
-		msg.Load(530);
+                        msg.Load(226);
+                }
+                else
+                        msg.Load(501);
+        }
+        else
+                msg.Load(530);
 
-	FServer->Reply(&msg);
+        FServer->Reply(&msg);
 
 }

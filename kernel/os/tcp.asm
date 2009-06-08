@@ -4771,6 +4771,7 @@ read_tcp_connection16	Proc far
 	push edx
 	push esi
 	push edi
+	push ebp
 ;
     mov ax,TCP_SOCKET_HANDLE
     DerefHandle
@@ -4793,6 +4794,7 @@ read_tcp_connection16	Proc far
 	popf
 
 read_tcp_done16:
+    pop ebp
 	pop edi
 	pop esi
 	pop edx
@@ -4813,6 +4815,7 @@ read_tcp_connection32	Proc far
 	push edx
 	push esi
 	push edi
+	push ebp
 ;
     mov ax,TCP_SOCKET_HANDLE
     DerefHandle
@@ -4833,6 +4836,7 @@ read_tcp_connection32	Proc far
 	popf
 
 read_tcp_done32:
+    pop ebp
 	pop edi
 	pop esi
 	pop edx

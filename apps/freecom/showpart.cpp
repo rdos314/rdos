@@ -66,7 +66,7 @@ TShowPartitionFactory::TShowPartitionFactory()
 ##########################################################################*/
 TCommand *TShowPartitionFactory::Create(TSession *session, const char *param)
 {
-	return new TShowPartitionCommand(session, param);
+        return new TShowPartitionCommand(session, param);
 }
 
 /*##########################################################################
@@ -83,7 +83,7 @@ TCommand *TShowPartitionFactory::Create(TSession *session, const char *param)
 TShowPartitionCommand::TShowPartitionCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_SHOWPART);
+        FHelpScreen.Load(TEXT_CMDHELP_SHOWPART);
 }
 
 /*##########################################################################
@@ -99,13 +99,13 @@ TShowPartitionCommand::TShowPartitionCommand(TSession *session, const char *para
 ##########################################################################*/
 int TShowPartitionCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
-	switch(ch)
-	{
-		case 'D':
-			return OptScanBool(optstr, bool, strarg, &FOptD);
-	}
-	OptError(optstr);
-	return E_Useage;
+        switch(ch)
+        {
+                case 'D':
+                        return OptScanBool(optstr, bool, strarg, &FOptD);
+        }
+        OptError(optstr);
+        return E_Useage;
 }
 
 /*##########################################################################
@@ -121,7 +121,7 @@ int TShowPartitionCommand::OptScan(const char *optstr, int ch, int bool, const c
 ##########################################################################*/
 void TShowPartitionCommand::InitOptions()
 {
-	FOptD = 0;
+        FOptD = 0;
 }
 
 /*##########################################################################
@@ -137,63 +137,63 @@ void TShowPartitionCommand::InitOptions()
 ##########################################################################*/
 void TShowPartitionCommand::ShowEntry(int Nr, TPartition *Entry)
 {
-	const char *Name;
-	int Typ;
-	double TotalSpace;
-	double FreeSpace;
-	int Drive;
-	char DriveStr[4];
-	char str[100];
+        const char *Name;
+        int Typ;
+        double TotalSpace;
+        double FreeSpace;
+        int Drive;
+        char DriveStr[4];
+        char str[100];
 
-	if (Entry)
-	{
-		Name = Entry->GetPartName();
-		Typ = Entry->GetType();
-		TotalSpace = Entry->GetTotalSpace();
+        if (Entry)
+        {
+                Name = Entry->GetPartName();
+                Typ = Entry->GetType();
+                TotalSpace = Entry->GetTotalSpace();
 
-		if (Entry->Size)
-		{
-			if (Entry->IsFs() && Entry->GetDrive())
-				Drive = Entry->GetDrive()->GetDriveNr();
-			else
-				Drive = 0;
+                if (Entry->Size)
+                {
+                        if (Entry->IsFs() && Entry->GetDrive())
+                                Drive = Entry->GetDrive()->GetDriveNr();
+                        else
+                                Drive = 0;
 
-			if (Drive)
-			{
-			    DriveStr[0] = 'A' + (char)Drive;
-			    DriveStr[1] = ':';
-			    DriveStr[2] = 0;
-			      
-			    FreeSpace = Entry->GetFreeSpace();
+                        if (Drive)
+                        {
+                            DriveStr[0] = 'A' + (char)Drive;
+                            DriveStr[1] = ':';
+                            DriveStr[2] = 0;
+                              
+                            FreeSpace = Entry->GetFreeSpace();
 
                 sprintf(str,
-						"%d: %s %02hX %08lX-%08lX %8s %15.3f MB %15.3f MB\r\n",
-						Nr,
-						DriveStr,
-						Typ,
-						Entry->Start,
-						Entry->Start + Entry->Size - 1,
-						Name,
-						TotalSpace,
-						FreeSpace);
-			}
-			else
-				sprintf(str,
-						"%d: -- %02hX %08lX-%08lX %8s %15.3f MB\r\n",
-						Nr,
-						Typ,
-						Entry->Start,
-						Entry->Start + Entry->Size - 1,
-						Name,
-						TotalSpace);
-			Write(str);
-		}
-		else
-		{
-			FMsg.printf(TEXT_SHOWPART_FREE_ENTRY, Nr);
-			Write(FMsg.GetData());
-		}
-	}
+                                                "%d: %s %02hX %08lX-%08lX %8s %15.3f MB %15.3f MB\r\n",
+                                                Nr,
+                                                DriveStr,
+                                                Typ,
+                                                Entry->Start,
+                                                Entry->Start + Entry->Size - 1,
+                                                Name,
+                                                TotalSpace,
+                                                FreeSpace);
+                        }
+                        else
+                                sprintf(str,
+                                                "%d: -- %02hX %08lX-%08lX %8s %15.3f MB\r\n",
+                                                Nr,
+                                                Typ,
+                                                Entry->Start,
+                                                Entry->Start + Entry->Size - 1,
+                                                Name,
+                                                TotalSpace);
+                        Write(str);
+                }
+                else
+                {
+                        FMsg.printf(TEXT_SHOWPART_FREE_ENTRY, Nr);
+                        Write(FMsg.GetData());
+                }
+        }
 }
 
 /*##########################################################################
@@ -209,33 +209,33 @@ void TShowPartitionCommand::ShowEntry(int Nr, TPartition *Entry)
 ##########################################################################*/
 void TShowPartitionCommand::ShowTreeTable(TPartitionTable *Part)
 {
-	int i;
-	TPartition *Entry;
-	double TotalSpace;
-	char str[100];
+        int i;
+        TPartition *Entry;
+        double TotalSpace;
+        char str[100];
 
-	TotalSpace = Part->GetTotalSpace();
+        TotalSpace = Part->GetTotalSpace();
 
-	sprintf(str, "\r\n%08lX-%08lX %15.3f MB\r\n",
-				Part->Start,
-				Part->Start + Part->Size - 1,
-				TotalSpace);
+        sprintf(str, "\r\n%08lX-%08lX %15.3f MB\r\n",
+                                Part->Start,
+                                Part->Start + Part->Size - 1,
+                                TotalSpace);
 
-	Write(str);
+        Write(str);
 
-	FMsg.Load(TEXT_SHOWPART_HEADER);
-	Write(FMsg.GetData());
+        FMsg.Load(TEXT_SHOWPART_HEADER);
+        Write(FMsg.GetData());
 
-	for (i = 0; i < 4; i++)
-		ShowEntry(i, Part->PartArr[i]);
+        for (i = 0; i < 4; i++)
+                ShowEntry(i, Part->PartArr[i]);
 
-	for (i = 0; i < 4; i++)
-	{
-		Entry = Part->PartArr[i];
-		if (Entry)
-			if (Entry->IsTable())
-				ShowTreeTable((TPartitionTable *)Entry);
-	}
+        for (i = 0; i < 4; i++)
+        {
+                Entry = Part->PartArr[i];
+                if (Entry)
+                        if (Entry->IsTable())
+                                ShowTreeTable((TPartitionTable *)Entry);
+        }
 }
 
 /*##########################################################################
@@ -251,11 +251,11 @@ void TShowPartitionCommand::ShowTreeTable(TPartitionTable *Part)
 ##########################################################################*/
 void TShowPartitionCommand::ShowTree(TDiscPartition *Part)
 {
-	FMsg.printf(TEXT_SHOWPART_DISC_SHORT, Part->GetDisc()->GetDiscNr());
-	Write(FMsg.GetData());
+        FMsg.printf(TEXT_SHOWPART_DISC_SHORT, Part->GetDisc()->GetDiscNr());
+        Write(FMsg.GetData());
 
-	if (Part->PartRoot)
-		ShowTreeTable(Part->PartRoot);
+        if (Part->PartRoot)
+                ShowTreeTable(Part->PartRoot);
 }
 
 /*##########################################################################
@@ -271,20 +271,19 @@ void TShowPartitionCommand::ShowTree(TDiscPartition *Part)
 ##########################################################################*/
 void TShowPartitionCommand::ShowTable(TDiscPartition *Part)
 {
-	int i;
-	TPartition *Entry;
-	TDisc *Disc;
+        int i;
+        TDisc *Disc;
 
-	Disc = Part->GetDisc();
+        Disc = Part->GetDisc();
 
-	FMsg.printf(TEXT_SHOWPART_DISC_LONG, Disc->GetDiscNr(), Disc->GetTotalSectors(), Disc->GetSectorsPerCyl(), Disc->GetHeads());
-	Write(FMsg.GetData());
+        FMsg.printf(TEXT_SHOWPART_DISC_LONG, Disc->GetDiscNr(), Disc->GetTotalSectors(), Disc->GetSectorsPerCyl(), Disc->GetHeads());
+        Write(FMsg.GetData());
 
-	FMsg.Load(TEXT_SHOWPART_HEADER);
-	Write(FMsg.GetData());
+        FMsg.Load(TEXT_SHOWPART_HEADER);
+        Write(FMsg.GetData());
 
-	for (i = 0; i < Part->PartCount; i++)
-		ShowEntry(i, Part->PartArr[i]);
+        for (i = 0; i < Part->PartCount; i++)
+                ShowEntry(i, Part->PartArr[i]);
 }
 
 /*##########################################################################
@@ -300,19 +299,19 @@ void TShowPartitionCommand::ShowTable(TDiscPartition *Part)
 ##########################################################################*/
 int TShowPartitionCommand::Show(TDisc *Disc)
 {
-	TDiscPartition *DiscPart;
+        TDiscPartition *DiscPart;
 
-	if (Disc->IsValid())
-	{
-		DiscPart = new TDiscPartition(Disc);
-		if (FOptD)
-			ShowTree(DiscPart);
-		else
-			ShowTable(DiscPart);
-		delete DiscPart;
-		return TRUE;
-	}
-	return FALSE;
+        if (Disc->IsValid())
+        {
+                DiscPart = new TDiscPartition(Disc);
+                if (FOptD)
+                        ShowTree(DiscPart);
+                else
+                        ShowTable(DiscPart);
+                delete DiscPart;
+                return TRUE;
+        }
+        return FALSE;
 }
 
 /*##########################################################################
@@ -328,42 +327,42 @@ int TShowPartitionCommand::Show(TDisc *Disc)
 ##########################################################################*/
 int TShowPartitionCommand::Execute(char *param)
 {
-	int DiscNr;
-	TDisc *Disc;
+        int DiscNr;
+        TDisc *Disc;
 
-	InitOptions();
+        InitOptions();
 
-	if (LeadOptions(&param, 0) != E_None)
-		return 1;
+        if (LeadOptions(&param, 0) != E_None)
+                return 1;
 
-	/* if no parameters, show all */
-	if (*param == 0)
-	{
-		for (DiscNr = 0; DiscNr < 4; DiscNr++)
-		{
-			Disc = new TIdeDisc(DiscNr);
-			if (Disc->IsValid())
-				Show(Disc);
-			delete Disc;
-		}
-		return 0;
-	}
+        /* if no parameters, show all */
+        if (*param == 0)
+        {
+                for (DiscNr = 0; DiscNr < 4; DiscNr++)
+                {
+                        Disc = new TIdeDisc(DiscNr);
+                        if (Disc->IsValid())
+                                Show(Disc);
+                        delete Disc;
+                }
+                return 0;
+        }
 
-	if (sscanf(param, "%d", &DiscNr) == 1)
-	{
-		Disc = new TIdeDisc(DiscNr);
-		if (!Show(Disc))
-		{
-			FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
-			Write(FMsg.GetData());
-		}
-	}
-	else
-	{
-		ErrorSyntax(0);
-		return 1;
-	}
+        if (sscanf(param, "%d", &DiscNr) == 1)
+        {
+                Disc = new TIdeDisc(DiscNr);
+                if (!Show(Disc))
+                {
+                        FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
+                        Write(FMsg.GetData());
+                }
+        }
+        else
+        {
+                ErrorSyntax(0);
+                return 1;
+        }
 
-	return 0;
+        return 0;
 }
 

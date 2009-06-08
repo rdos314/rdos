@@ -37,14 +37,14 @@
 #include "sigdev.h"
 #include "datetime.h"
 
-#define	STACK_SIZE          0x1800
+#define STACK_SIZE          0x1800
 #define POLL_INTERVAL       15
 
 #define FALSE
 #define TRUE    !FALSE
 
 /*##################  SendStartup  ##############################################
-*   Purpose....: Startup procedure for send thread				            #
+*   Purpose....: Startup procedure for send thread                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -52,7 +52,7 @@
 *##########################################################################*/
 static void SendStartup(void *ptr)
 {
-	((TSerialDistDevice *)ptr)->SendThread();
+        ((TSerialDistDevice *)ptr)->SendThread();
 }
 
 /*##########################################################################
@@ -68,11 +68,11 @@ static void SendStartup(void *ptr)
 ##########################################################################*/
 TSerialDistDevice::TSerialDistDevice(TSerialDevice *Serial)
 {
-	FSerial = Serial;
+        FSerial = Serial;
     FSerial->Open();
-	FPollCount = 0;
+        FPollCount = 0;
     
-	Start("Serial Dist Rec", STACK_SIZE);
+        Start("Serial Dist Rec", STACK_SIZE);
 }
 
 /*##########################################################################
@@ -91,7 +91,7 @@ TSerialDistDevice::~TSerialDistDevice()
 }
 
 /*##################  TSerialDistDevice::DeviceName  ################
-*   Purpose....: Get device name            	                        #
+*   Purpose....: Get device name                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -99,7 +99,7 @@ TSerialDistDevice::~TSerialDistDevice()
 *##########################################################################*/
 void TSerialDistDevice::DeviceName(char *Name, int MaxLen) const
 {
-	strncpy(Name,"Serial Dist",MaxLen);
+        strncpy(Name,"Serial Dist",MaxLen);
 }
 
 /*##########################################################################
@@ -165,14 +165,14 @@ void TSerialDistDevice::Reset()
 ##########################################################################*/
 void TSerialDistDevice::SendMsg(const char *Data, int Size)
 {
-	const char *ptr;
-	int i;
+        const char *ptr;
+        int i;
 
     ptr = Data;
     for (i = 0; i < Size; i++)
     {
         while (FSerial->GetSendBufferSpace() < 16)
-			RdosWaitMilli(100);
+                        RdosWaitMilli(100);
 
         FSerial->Write(*ptr);
         ptr++;
@@ -192,7 +192,7 @@ void TSerialDistDevice::SendMsg(const char *Data, int Size)
 ##########################################################################*/
 int TSerialDistDevice::GetTimeout()
 {
-	return 1000;
+        return 1000;
 }
 
 /*##########################################################################
@@ -208,11 +208,11 @@ int TSerialDistDevice::GetTimeout()
 ##########################################################################*/
 int TSerialDistDevice::GetPort()
 {
-	return FSerial->GetPort();
+        return FSerial->GetPort();
 }
 
 /*##################  TSerialDistDevice::CheckForMsg ############
-*   Purpose....: Check for messages                		                    #
+*   Purpose....: Check for messages                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -220,46 +220,44 @@ int TSerialDistDevice::GetPort()
 *##########################################################################*/
 void TSerialDistDevice::CheckForMsg()
 {
-	unsigned char uch;
-	char ch;
-	char Buf[6];
-	short int size;
-	int i;
-	char *data;
-	long sign;
+        char Buf[6];
+        short int size;
+        int i;
+        char *data;
+        long sign;
 
-	FSerial->WaitForChar(10000);
+        FSerial->WaitForChar(10000);
 
-	for (i = 0; i < 4; i++)
-	{
+        for (i = 0; i < 4; i++)
+        {
         if (!FSerial->WaitForChar(200))
             return;
 
-		Buf[i] = FSerial->Read();
+                Buf[i] = FSerial->Read();
     }
 
-	memcpy(&sign, Buf, 4);
+        memcpy(&sign, Buf, 4);
 
-	while (!CheckSignature(sign))
-	{
-		if (!FSerial->WaitForChar(200))
-			return;
+        while (!CheckSignature(sign))
+        {
+                if (!FSerial->WaitForChar(200))
+                        return;
 
-		Buf[0] = Buf[1];
-		Buf[1] = Buf[2];
-		Buf[2] = Buf[3];
-		Buf[3] = FSerial->Read();
+                Buf[0] = Buf[1];
+                Buf[1] = Buf[2];
+                Buf[2] = Buf[3];
+                Buf[3] = FSerial->Read();
 
-		memcpy(&sign, Buf, 4);
-	}
+                memcpy(&sign, Buf, 4);
+        }
 
     for (i = 4; i < 6; i++)
     {
         if (!FSerial->WaitForChar(200))
             return;
 
-		Buf[i] = FSerial->Read();
-	}
+                Buf[i] = FSerial->Read();
+        }
 
     memcpy(&size, &Buf[4], 2);
 
@@ -267,25 +265,25 @@ void TSerialDistDevice::CheckForMsg()
         return;
 
     data = new char[8 + size];
-	memcpy(data, Buf, 6);
+        memcpy(data, Buf, 6);
 
-	for (i = 0; i < size + 2; i++)
-	{
-		if (!FSerial->WaitForChar(200))
-		{
-			delete data;
-			return;
-		}
-		*(data + i + 6) = FSerial->Read();
-	}
+        for (i = 0; i < size + 2; i++)
+        {
+                if (!FSerial->WaitForChar(200))
+                {
+                        delete data;
+                        return;
+                }
+                *(data + i + 6) = FSerial->Read();
+        }
 
     FPollTime = TDateTime();
     FPollTime.AddSec(POLL_INTERVAL);
     
     FPollCount = 0;
     Online();
-	NotifyMsg(sign, data, size);
-	delete data;
+        NotifyMsg(sign, data, size);
+        delete data;
 }
 
 /*##########################################################################
@@ -356,6 +354,6 @@ void TSerialDistDevice::SendThread()
 ##########################################################################*/
 void TSerialDistDevice::Execute()
 {
-	RdosCreateThread(SendStartup, "Serial Dist Send", this, STACK_SIZE);
+        RdosCreateThread(SendStartup, "Serial Dist Send", this, STACK_SIZE);
     ReceiveThread();
 }

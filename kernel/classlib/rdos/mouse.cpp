@@ -37,7 +37,7 @@
 #
 #   Name       : TMouseDevice::TMouseDevice
 #
-#   Purpose....: Constructor for TMouseDevice		                          
+#   Purpose....: Constructor for TMouseDevice                                     
 #
 #   In params..: *
 #   Out params.: *
@@ -46,7 +46,7 @@
 ##########################################################################*/
 TMouseDevice::TMouseDevice()
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
@@ -63,14 +63,14 @@ TMouseDevice::TMouseDevice()
 TMouseDevice::TMouseDevice(const char *IniSection)
   : TWaitDevice(IniSection)
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
 #
 #   Name       : TMouseDevice::~TMouseDevice
 #
-#   Purpose....: Destructor for TMouseDevice		                          
+#   Purpose....: Destructor for TMouseDevice                                      
 #
 #   In params..: *
 #   Out params.: *
@@ -93,12 +93,12 @@ TMouseDevice::~TMouseDevice()
 ##########################################################################*/
 void TMouseDevice::Init()
 {
-	OnMove = 0;
-	OnLeftUp = 0;
-	OnLeftDown = 0;
-	OnRightUp = 0;
-	OnRightDown = 0;
-	FState = 0;
+        OnMove = 0;
+        OnLeftUp = 0;
+        OnLeftDown = 0;
+        OnRightUp = 0;
+        OnRightDown = 0;
+        FState = 0;
 }
 
 /*##########################################################################
@@ -113,14 +113,14 @@ void TMouseDevice::Init()
 ##########################################################################*/
 void TMouseDevice::Add(TWait *Wait)
 {
-	RdosAddWaitForMouse(Wait->GetHandle(), this);
+        RdosAddWaitForMouse(Wait->GetHandle(), this);
 }
 
 /*##########################################################################
 #
 #   Name       : TMouseDevice::DeviceName
 #
-#   Purpose....: Device name		                          
+#   Purpose....: Device name                                      
 #
 #   In params..: *
 #   Out params.: *
@@ -129,7 +129,7 @@ void TMouseDevice::Add(TWait *Wait)
 ##########################################################################*/
 void TMouseDevice::DeviceName(char *Name, int MaxLen) const
 {
-	strncpy(Name, "MOUSE", MaxLen);
+        strncpy(Name, "MOUSE", MaxLen);
 }
 
 /*##########################################################################
@@ -145,7 +145,7 @@ void TMouseDevice::DeviceName(char *Name, int MaxLen) const
 ##########################################################################*/
 void TMouseDevice::SetWindow(int StartX, int StartY, int EndX, int EndY)
 {
-	RdosSetMouseWindow(StartX, StartY, EndX, EndY);
+        RdosSetMouseWindow(StartX, StartY, EndX, EndY);
 }
 
 /*##########################################################################
@@ -161,7 +161,7 @@ void TMouseDevice::SetWindow(int StartX, int StartY, int EndX, int EndY)
 ##########################################################################*/
 void TMouseDevice::SetMickey(int xdir, int ydir)
 {
-	RdosSetMouseMickey(xdir, ydir);
+        RdosSetMouseMickey(xdir, ydir);
 }
 
 /*##########################################################################
@@ -177,7 +177,7 @@ void TMouseDevice::SetMickey(int xdir, int ydir)
 ##########################################################################*/
 void TMouseDevice::SetPosition(int x, int y)
 {
-	RdosSetMousePosition(x, y);
+        RdosSetMousePosition(x, y);
 }
 
 /*##########################################################################
@@ -193,7 +193,7 @@ void TMouseDevice::SetPosition(int x, int y)
 ##########################################################################*/
 void TMouseDevice::GetPosition(int *x, int *y)
 {
-	RdosGetMousePosition(x, y);
+        RdosGetMousePosition(x, y);
 }
 
 /*##########################################################################
@@ -209,7 +209,7 @@ void TMouseDevice::GetPosition(int *x, int *y)
 ##########################################################################*/
 int TMouseDevice::IsLeftButtonPressed()
 {
-	return RdosGetLeftButton();
+        return RdosGetLeftButton();
 }
 
 /*##########################################################################
@@ -225,7 +225,7 @@ int TMouseDevice::IsLeftButtonPressed()
 ##########################################################################*/
 int TMouseDevice::IsRightButtonPressed()
 {
-	return RdosGetRightButton();
+        return RdosGetRightButton();
 }
 
 /*##########################################################################
@@ -241,7 +241,7 @@ int TMouseDevice::IsRightButtonPressed()
 ##########################################################################*/
 void TMouseDevice::GetLeftButtonPressPosition(int *x, int *y)
 {
-	RdosGetLeftButtonPressPosition(x, y);
+        RdosGetLeftButtonPressPosition(x, y);
 }
 
 /*##########################################################################
@@ -257,7 +257,7 @@ void TMouseDevice::GetLeftButtonPressPosition(int *x, int *y)
 ##########################################################################*/
 void TMouseDevice::GetLeftButtonReleasePosition(int *x, int *y)
 {
-	RdosGetLeftButtonReleasePosition(x, y);
+        RdosGetLeftButtonReleasePosition(x, y);
 }
 
 /*##########################################################################
@@ -273,7 +273,7 @@ void TMouseDevice::GetLeftButtonReleasePosition(int *x, int *y)
 ##########################################################################*/
 void TMouseDevice::GetRightButtonPressPosition(int *x, int *y)
 {
-	RdosGetRightButtonPressPosition(x, y);
+        RdosGetRightButtonPressPosition(x, y);
 }
 
 /*##########################################################################
@@ -289,7 +289,7 @@ void TMouseDevice::GetRightButtonPressPosition(int *x, int *y)
 ##########################################################################*/
 void TMouseDevice::GetRightButtonReleasePosition(int *x, int *y)
 {
-	RdosGetRightButtonReleasePosition(x, y);
+        RdosGetRightButtonReleasePosition(x, y);
 }
 
 /*##########################################################################
@@ -298,17 +298,17 @@ void TMouseDevice::GetRightButtonReleasePosition(int *x, int *y)
 #
 #   Purpose....: Called when mouse has moved
 #
-#   In params..: x, y			Position
-#				 ButtonState	State of mouse buttons
-#				 KeyState		State of keyboard
+#   In params..: x, y                   Position
+#                                ButtonState    State of mouse buttons
+#                                KeyState               State of keyboard
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TMouseDevice::Move(int x, int y, int ButtonState, int KeyState)
 {
-	if (OnMove)
-		(*OnMove)(this, x, y, ButtonState, KeyState);
+        if (OnMove)
+                (*OnMove)(this, x, y, ButtonState, KeyState);
 }
 
 /*##########################################################################
@@ -317,17 +317,17 @@ void TMouseDevice::Move(int x, int y, int ButtonState, int KeyState)
 #
 #   Purpose....: Called when left button is released
 #
-#   In params..: x, y			Position
-#				 ButtonState	State of mouse buttons
-#				 KeyState		State of keyboard
+#   In params..: x, y                   Position
+#                                ButtonState    State of mouse buttons
+#                                KeyState               State of keyboard
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TMouseDevice::LeftUp(int x, int y, int ButtonState, int KeyState)
 {
-	if (OnLeftUp)
-		(*OnLeftUp)(this, x, y, ButtonState, KeyState);
+        if (OnLeftUp)
+                (*OnLeftUp)(this, x, y, ButtonState, KeyState);
 }
 
 /*##########################################################################
@@ -336,17 +336,17 @@ void TMouseDevice::LeftUp(int x, int y, int ButtonState, int KeyState)
 #
 #   Purpose....: Called when left button is pressed
 #
-#   In params..: x, y			Position
-#				 ButtonState	State of mouse buttons
-#				 KeyState		State of keyboard
+#   In params..: x, y                   Position
+#                                ButtonState    State of mouse buttons
+#                                KeyState               State of keyboard
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TMouseDevice::LeftDown(int x, int y, int ButtonState, int KeyState)
 {
-	if (OnLeftDown)
-		(*OnLeftDown)(this, x, y, ButtonState, KeyState);
+        if (OnLeftDown)
+                (*OnLeftDown)(this, x, y, ButtonState, KeyState);
 }
 
 /*##########################################################################
@@ -355,17 +355,17 @@ void TMouseDevice::LeftDown(int x, int y, int ButtonState, int KeyState)
 #
 #   Purpose....: Called when right button is released
 #
-#   In params..: x, y			Position
-#				 ButtonState	State of mouse buttons
-#				 KeyState		State of keyboard
+#   In params..: x, y                   Position
+#                                ButtonState    State of mouse buttons
+#                                KeyState               State of keyboard
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TMouseDevice::RightUp(int x, int y, int ButtonState, int KeyState)
 {
-	if (OnRightUp)
-		(*OnRightUp)(this, x, y, ButtonState, KeyState);
+        if (OnRightUp)
+                (*OnRightUp)(this, x, y, ButtonState, KeyState);
 }
 
 /*##########################################################################
@@ -374,17 +374,17 @@ void TMouseDevice::RightUp(int x, int y, int ButtonState, int KeyState)
 #
 #   Purpose....: Called when right button is pressed
 #
-#   In params..: x, y			Position
-#				 ButtonState	State of mouse buttons
-#				 KeyState		State of keyboard
+#   In params..: x, y                   Position
+#                                ButtonState    State of mouse buttons
+#                                KeyState               State of keyboard
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TMouseDevice::RightDown(int x, int y, int ButtonState, int KeyState)
 {
-	if (OnRightDown)
-		(*OnRightDown)(this, x, y, ButtonState, KeyState);
+        if (OnRightDown)
+                (*OnRightDown)(this, x, y, ButtonState, KeyState);
 }
 
 /*##########################################################################
@@ -400,56 +400,55 @@ void TMouseDevice::RightDown(int x, int y, int ButtonState, int KeyState)
 ##########################################################################*/
 void TMouseDevice::SignalNewData()
 {
-	int MouseState;
-	int Diff;
-	int KeyState;
-	int x, y;
-	long msb, lsb;
+        int MouseState;
+        int Diff;
+        int KeyState;
+        int x, y;
 
-	KeyState = RdosGetKeyboardState();
-	
-	MouseState = 0;
-	if (RdosGetLeftButton())
-		MouseState |= MOUSE_LEFT_BUTTON;
+        KeyState = RdosGetKeyboardState();
+        
+        MouseState = 0;
+        if (RdosGetLeftButton())
+                MouseState |= MOUSE_LEFT_BUTTON;
 
-	if (RdosGetRightButton())
-		MouseState |= MOUSE_RIGHT_BUTTON;
+        if (RdosGetRightButton())
+                MouseState |= MOUSE_RIGHT_BUTTON;
 
-	Diff = MouseState ^ FState;
-	if (Diff)
-	{
-		if (Diff & MOUSE_LEFT_BUTTON)
-		{
-			if (MouseState & MOUSE_LEFT_BUTTON)
-			{		
-				RdosGetLeftButtonPressPosition(&x, &y);
-				LeftDown(x, y, MouseState, KeyState);
-			}
-			else
-			{
-				RdosGetLeftButtonReleasePosition(&x, &y);
-				LeftUp(x, y, MouseState, KeyState);
-			}
-		}
+        Diff = MouseState ^ FState;
+        if (Diff)
+        {
+                if (Diff & MOUSE_LEFT_BUTTON)
+                {
+                        if (MouseState & MOUSE_LEFT_BUTTON)
+                        {               
+                                RdosGetLeftButtonPressPosition(&x, &y);
+                                LeftDown(x, y, MouseState, KeyState);
+                        }
+                        else
+                        {
+                                RdosGetLeftButtonReleasePosition(&x, &y);
+                                LeftUp(x, y, MouseState, KeyState);
+                        }
+                }
 
-		if (Diff & MOUSE_RIGHT_BUTTON)
-		{
-			if (MouseState & MOUSE_RIGHT_BUTTON)
-			{
-				RdosGetRightButtonPressPosition(&x, &y);
-				RightDown(x, y, MouseState, KeyState);
-			}
-			else
-			{
-				RdosGetRightButtonReleasePosition(&x, &y);
-				RightUp(x, y, MouseState, KeyState);
-			}
-		}
-	}
-	else
-	{
-		RdosGetMousePosition(&x, &y);
-		Move(x, y, MouseState, KeyState);
-	}
-	FState = MouseState;
+                if (Diff & MOUSE_RIGHT_BUTTON)
+                {
+                        if (MouseState & MOUSE_RIGHT_BUTTON)
+                        {
+                                RdosGetRightButtonPressPosition(&x, &y);
+                                RightDown(x, y, MouseState, KeyState);
+                        }
+                        else
+                        {
+                                RdosGetRightButtonReleasePosition(&x, &y);
+                                RightUp(x, y, MouseState, KeyState);
+                        }
+                }
+        }
+        else
+        {
+                RdosGetMousePosition(&x, &y);
+                Move(x, y, MouseState, KeyState);
+        }
+        FState = MouseState;
 }

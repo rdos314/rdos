@@ -29,8 +29,8 @@
 
 #include "label.h"
 
-#define FALSE	0
-#define TRUE	!FALSE
+#define FALSE   0
+#define TRUE    !FALSE
 
 #define HOR_LEFT    0
 #define HOR_CENTER  1
@@ -488,11 +488,11 @@ TLabelControl *TLabelFactory::CreateLabel(TControl *control, int xstart, int yst
 TLabelControl::TLabelControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize)
  : TPanelControl(dev)
 {
-	Init();
+        Init();
 
     Resize(xsize, ysize);
-	Move(xstart, ystart);
-	Show();
+        Move(xstart, ystart);
+        Show();
 }
 
 /*##########################################################################
@@ -509,11 +509,11 @@ TLabelControl::TLabelControl(TControlThread *dev, int xstart, int ystart, int xs
 TLabelControl::TLabelControl(TControl *control, int xstart, int ystart, int xsize, int ysize)
  : TPanelControl(control)
 {
-	Init();
+        Init();
 
     Resize(xsize, ysize);
-	Move(xstart, ystart);
-	Show();
+        Move(xstart, ystart);
+        Show();
 }
     
 /*##########################################################################
@@ -530,7 +530,7 @@ TLabelControl::TLabelControl(TControl *control, int xstart, int ystart, int xsiz
 TLabelControl::TLabelControl(TControlThread *dev)
  : TPanelControl(dev)
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
@@ -547,7 +547,7 @@ TLabelControl::TLabelControl(TControlThread *dev)
 TLabelControl::TLabelControl(TControl *control)
  : TPanelControl(control)
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
@@ -988,7 +988,7 @@ void TLabelControl::SetText(const char *Text)
     }
 
     if (FTextRow[row])
-		if (strlen(FTextRow[row]) == 0)
+                if (strlen(FTextRow[row]) == 0)
             FTextRow[row] = 0;
 
     Redraw(1);
@@ -1054,12 +1054,11 @@ int TLabelControl::GetMinHeight()
 ##########################################################################*/
 void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
-	int xstart;
+        int xstart;
     int ystart;
     int xsize;
     int ysize;
     int xmax, ymax;
-    int i;
     int row;
     int xoffs, yoffs;
     int xdiff, ydiff;
@@ -1075,15 +1074,15 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     xmax = xmin + width - 1;
     ymax = ymin + height - 1;
 
-	if (IsVisible() && width > 0 && height > 0)
-	{
-    	dev->SetLgopNone();
+        if (IsVisible() && width > 0 && height > 0)
+        {
+        dev->SetLgopNone();
         dev->SetFilledStyle();
 
         dev->SetClipRect(  xmin, ymin,
-            			   xmax, ymax);
+                                   xmax, ymax);
 
-		if (FOrgText)
+                if (FOrgText)
         {
 
             FFont->GetStringMetrics("", &xsize, &ysize);
@@ -1113,21 +1112,21 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
             {
                 if (FTextRow[row])
                 {
-              		FFont->GetStringMetrics(FTextRow[row], &xsize, &ysize);
+                        FFont->GetStringMetrics(FTextRow[row], &xsize, &ysize);
     
-    				switch (FHorAlign)
-	    	        {
-		    	        case HOR_LEFT:
-    		    		    xstart = xmin + FStartX;
-	    		    	    break;
+                                switch (FHorAlign)
+                        {
+                                case HOR_LEFT:
+                                    xstart = xmin + FStartX;
+                                    break;
 
-        		       	case HOR_CENTER:
-	        			    xstart = xmin + (width - xsize) / 2;
-    	        			break;
+                                case HOR_CENTER:
+                                            xstart = xmin + (width - xsize) / 2;
+                                        break;
     
-	        	    	case HOR_RIGHT:
-		        	    	xstart = xmin + width - xsize - FStartX;
-			        	    break;
+                                case HOR_RIGHT:
+                                        xstart = xmin + width - xsize - FStartX;
+                                            break;
                     }
         
                     dev->SetFont(FFont);

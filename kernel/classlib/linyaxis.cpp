@@ -30,8 +30,8 @@
 
 #include "linyaxis.h"
 
-#define     FALSE	0
-#define     TRUE	!FALSE
+#define     FALSE       0
+#define     TRUE        !FALSE
 
 /*##########################################################################
 #
@@ -46,8 +46,8 @@
 ##########################################################################*/
 TLinYAxis::TLinYAxis()
 {
-	FFont = 0;
-	FScale = 0.0;
+        FFont = 0;
+        FScale = 0.0;
 }
 
 /*##########################################################################
@@ -63,8 +63,8 @@ TLinYAxis::TLinYAxis()
 ##########################################################################*/
 TLinYAxis::TLinYAxis(TFont *Font)
 {
-	FFont = Font;
-	FScale = 0.0;
+        FFont = Font;
+        FScale = 0.0;
 }
 
 /*##########################################################################
@@ -95,13 +95,13 @@ TLinYAxis::~TLinYAxis()
 ##########################################################################*/
 long double TLinYAxis::PhysToLog(long double val)
 {
-	long double range;
+        long double range;
 
-	range = FValMax - FValMin;
-	if (range)
-		return (val - FValMin) / range;
-	else
-		return 0.0;
+        range = FValMax - FValMin;
+        if (range)
+                return (val - FValMin) / range;
+        else
+                return 0.0;
 }
 
 /*##########################################################################
@@ -117,10 +117,10 @@ long double TLinYAxis::PhysToLog(long double val)
 ##########################################################################*/
 long double TLinYAxis::LogToPhys(long double rel)
 {
-	long double range;
+        long double range;
 
-	range = FValMax - FValMin;
-	return FValMin + range * rel;
+        range = FValMax - FValMin;
+        return FValMin + range * rel;
 }
 
 /*##########################################################################
@@ -179,8 +179,8 @@ void TLinYAxis::CalcScale()
             FScale = FScale / 10.0;
         }
 
-		while (FScale <= 1.0)
-		{
+                while (FScale <= 1.0)
+                {
             exp--;
             FScale = FScale * 10.0;
         }
@@ -278,7 +278,6 @@ void TLinYAxis::CalcScale()
 ##########################################################################*/
 int TLinYAxis::RequiredWidth()
 {
-    char formstr[32];
     char str[256];
     int width1;
     int width2;
@@ -329,7 +328,7 @@ void TLinYAxis::DrawLabels()
 {
     char str[256];
     long double val;
-	int x, y;
+        int x, y;
     int width;
     int height;
     
@@ -339,30 +338,30 @@ void TLinYAxis::DrawLabels()
         {
             val = FFirstVal;
 
-			while (val >= FValMin)
-			{
+                        while (val >= FValMin)
+                        {
                 Format(str, val);
-			    FFont->GetStringMetrics(str, &width, &height);
+                            FFont->GetStringMetrics(str, &width, &height);
 
-				y = PhysToPixel(val) - FHeight / 2;
-				x = FXMax - FXMin - width - FScaleWidth - 2;
-				if (x > 0)
-				    x = FXMin + x;
-			    else
-					x = FXMin;
+                                y = PhysToPixel(val) - FHeight / 2;
+                                x = FXMax - FXMin - width - FScaleWidth - 2;
+                                if (x > 0)
+                                    x = FXMin + x;
+                            else
+                                        x = FXMin;
 
-			    if (y >= FYMin && y + FHeight <= FYMax)
-    			    FDev->DrawString(x, y, str);
+                            if (y >= FYMin && y + FHeight <= FYMax)
+                            FDev->DrawString(x, y, str);
 
-				val -= FScale;
-	        }
+                                val -= FScale;
+                }
         }
-		else
-		{
-			val = FFirstVal;
+                else
+                {
+                        val = FFirstVal;
 
-			while (val <= FValMax)
-			{
+                        while (val <= FValMax)
+                        {
                 Format(str, val);
                 FFont->GetStringMetrics(str, &width, &height);
 
@@ -373,8 +372,8 @@ void TLinYAxis::DrawLabels()
                 else
                     x = FXMin;
 
-			    if (y >= FYMin && y + FHeight <= FYMax)
-    				FDev->DrawString(x, y, str);
+                            if (y >= FYMin && y + FHeight <= FYMax)
+                                FDev->DrawString(x, y, str);
 
                 val += FScale;
             }
@@ -398,7 +397,7 @@ void TLinYAxis::DrawScale()
     long double val;
     long double subval;
     int i;
-	int y;
+        int y;
     
     if (FScale != 0.0)
     {
@@ -406,40 +405,40 @@ void TLinYAxis::DrawScale()
         {
             val = FFirstVal + FScale;
 
-			while (val >= FValMin)
-			{
-				y = PhysToPixel(val);
-				FDev->DrawLine(FXMax - FScaleWidth, y, FXMax + FScaleWidth, y);
+                        while (val >= FValMin)
+                        {
+                                y = PhysToPixel(val);
+                                FDev->DrawLine(FXMax - FScaleWidth, y, FXMax + FScaleWidth, y);
 
                 subval = val - FScale / FSubScale;
                 
-				for (i = 1; i < FSubScale; i++)
+                                for (i = 1; i < FSubScale; i++)
                 {
-    				y = PhysToPixel(subval);
-	    			FDev->DrawLine(FXMax - FScaleWidth / 2, y, FXMax + FScaleWidth / 2, y);
-	    			subval -= FScale / FSubScale;
-	    	    }
-				
-				val -= FScale;
-	        }
+                                y = PhysToPixel(subval);
+                                FDev->DrawLine(FXMax - FScaleWidth / 2, y, FXMax + FScaleWidth / 2, y);
+                                subval -= FScale / FSubScale;
+                    }
+                                
+                                val -= FScale;
+                }
         }
-		else
-		{
-			val = FFirstVal - FScale;
+                else
+                {
+                        val = FFirstVal - FScale;
 
-			while (val <= FValMax)
-			{
-				y = PhysToPixel(val);
-				FDev->DrawLine(FXMax - FScaleWidth, y, FXMax + FScaleWidth, y);
+                        while (val <= FValMax)
+                        {
+                                y = PhysToPixel(val);
+                                FDev->DrawLine(FXMax - FScaleWidth, y, FXMax + FScaleWidth, y);
 
                 subval = val + FScale / FSubScale;
                 
-				for (i = 1; i < FSubScale; i++)
+                                for (i = 1; i < FSubScale; i++)
                 {
-    				y = PhysToPixel(subval);
-	    			FDev->DrawLine(FXMax - FScaleWidth / 2, y, FXMax + FScaleWidth / 2, y);
-	    			subval += FScale / FSubScale;
-	    	    }
+                                y = PhysToPixel(subval);
+                                FDev->DrawLine(FXMax - FScaleWidth / 2, y, FXMax + FScaleWidth / 2, y);
+                                subval += FScale / FSubScale;
+                    }
                 val += FScale;
             }
         }
@@ -463,7 +462,7 @@ void TLinYAxis::Draw()
     {
         FDev->SetClipRect(FXMin, FYMin, FXMax + 2 * FScaleWidth, FYMax);
         FDev->SetLgopNone();
-    	FDev->SetDrawColor(FRBack, FGBack, FBBack);
+        FDev->SetDrawColor(FRBack, FGBack, FBBack);
         FDev->SetFilledStyle();
         FDev->DrawRect(FXMin, FYMin, FXMax, FYMax - 1);
         FDev->SetDrawColor(FRFore, FGFore, FBFore);

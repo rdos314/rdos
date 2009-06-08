@@ -215,8 +215,6 @@ int TDirCommand::ScanAttr(const char *p)
 ##########################################################################*/
 int TDirCommand::ScanOrder(const char *p)
 {
-        int option;
-        int i;
         int inverse;
         int changed;
 
@@ -647,7 +645,6 @@ void TDirCommand::WriteDetailed()
 ##########################################################################*/
 void TDirCommand::WriteWide()
 {
-        int i;
         int size;
         int ok;
 

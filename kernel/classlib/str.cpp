@@ -34,13 +34,13 @@
 
 TSection Section;
 
-#define ZEROPAD	1		/* pad with zero */
-#define SIGN	2		/* unsigned/signed long */
-#define PLUS	4		/* show plus */
-#define SPACE	8		/* space if plus */
-#define LEFT	16		/* left justified */
-#define SPECIAL	32		/* 0x */
-#define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
+#define ZEROPAD 1               /* pad with zero */
+#define SIGN    2               /* unsigned/signed long */
+#define PLUS    4               /* show plus */
+#define SPACE   8               /* space if plus */
+#define LEFT    16              /* left justified */
+#define SPECIAL 32              /* 0x */
+#define LARGE   64              /* use 'ABCDEF' instead of 'abcdef' */
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -114,20 +114,20 @@ TString::~TString()
 #   Purpose....: Allocate a copy
 #
 #   In params..: dest
-#				 CopyLen
-#				 CopyIndex
-#				 ExtraLen
+#                                CopyLen
+#                                CopyIndex
+#                                ExtraLen
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TString::AllocCopy(TString& dest, int CopyLen, int CopyIndex, int ExtraLen) const
 {
-	int NewLen = CopyLen + ExtraLen;
+        int NewLen = CopyLen + ExtraLen;
 
-	dest.AllocBuffer(NewLen + 1);
-	memcpy(dest.FBuf, FBuf+CopyIndex, CopyLen);
-	*(dest.FBuf+CopyLen) = 0;
+        dest.AllocBuffer(NewLen + 1);
+        memcpy(dest.FBuf, FBuf+CopyIndex, CopyLen);
+        *(dest.FBuf+CopyLen) = 0;
 }
 
 /*##########################################################################
@@ -137,21 +137,21 @@ void TString::AllocCopy(TString& dest, int CopyLen, int CopyIndex, int ExtraLen)
 #   Purpose....: Concat strings
 #
 #   In params..: len1
-#				 str1
-#				 len2
-#				 str2
+#                                str1
+#                                len2
+#                                str2
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TString::ConcatCopy(const char *str1, int len1, const char *str2, int len2)
 {
-	int NewLen = len1 + len2;
+        int NewLen = len1 + len2;
 
-	AllocBuffer(NewLen + 1);
-	memcpy(FBuf, str1, len1);
-	memcpy(FBuf+len1, str2, len2);
-	*(FBuf+len1+len2) = 0;
+        AllocBuffer(NewLen + 1);
+        memcpy(FBuf, str1, len1);
+        memcpy(FBuf+len1, str2, len2);
+        *(FBuf+len1+len2) = 0;
 }
 
 /*##########################################################################
@@ -161,7 +161,7 @@ void TString::ConcatCopy(const char *str1, int len1, const char *str2, int len2)
 #   Purpose....: Concatenation in place
 #
 #   In params..: x
-#				 size
+#                                size
 #   Out params.: *
 #   Returns....: *
 #
@@ -169,23 +169,23 @@ void TString::ConcatCopy(const char *str1, int len1, const char *str2, int len2)
 void TString::ConcatInPlace(const char *str, int size)
 {
     if (FData == 0)
-    	AllocBuffer(size);
+        AllocBuffer(size);
             
-	if (size)
-	{
-		if (FData->FRefs > 1 || FData->FDataSize + size > FData->FAllocSize)
-		{
-			TShareObjectData* OldData = FData;
-			ConcatCopy(GetData(), GetSize(), str, size);
-			Release(OldData);
-		}
-		else
-		{
-			memcpy(FBuf + FData->FDataSize - 1, str, size);
-			FData->FDataSize += size;
-			*(FBuf+FData->FDataSize - 1) = 0;
-		}
-	}
+        if (size)
+        {
+                if (FData->FRefs > 1 || FData->FDataSize + size > FData->FAllocSize)
+                {
+                        TShareObjectData* OldData = FData;
+                        ConcatCopy(GetData(), GetSize(), str, size);
+                        Release(OldData);
+                }
+                else
+                {
+                        memcpy(FBuf + FData->FDataSize - 1, str, size);
+                        FData->FDataSize += size;
+                        *(FBuf+FData->FDataSize - 1) = 0;
+                }
+        }
 }
 
 /*##########################################################################
@@ -202,7 +202,7 @@ void TString::ConcatInPlace(const char *str, int size)
 const TString &TString::operator=(const TString &src)
 {
     Load(src);
-	return *this;
+        return *this;
 }
 
 /*##########################################################################
@@ -234,8 +234,8 @@ int TString::Compare(const TString &str) const
 ##########################################################################*/
 const TString &TString::operator=(const char *str)
 {
-	AssignCopy(str, strlen(str) + 1);
-	return *this;
+        AssignCopy(str, strlen(str) + 1);
+        return *this;
 }
 
 /*##########################################################################
@@ -251,10 +251,10 @@ const TString &TString::operator=(const char *str)
 ##########################################################################*/
 int TString::operator==(const TString &str) const
 {
-	if (Compare(str) == 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(str) == 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -270,10 +270,10 @@ int TString::operator==(const TString &str) const
 ##########################################################################*/
 int TString::operator!=(const TString &str) const
 {
-	if (Compare(str) == 0)
-		return FALSE;
-	else
-		return TRUE;
+        if (Compare(str) == 0)
+                return FALSE;
+        else
+                return TRUE;
 }
 
 /*##########################################################################
@@ -289,10 +289,10 @@ int TString::operator!=(const TString &str) const
 ##########################################################################*/
 int TString::operator>(const TString &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) > 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -308,10 +308,10 @@ int TString::operator>(const TString &dest) const
 ##########################################################################*/
 int TString::operator<(const TString &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) < 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -327,10 +327,10 @@ int TString::operator<(const TString &dest) const
 ##########################################################################*/
 int TString::operator>=(const TString &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) >= 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -346,10 +346,10 @@ int TString::operator>=(const TString &dest) const
 ##########################################################################*/
 int TString::operator<=(const TString &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) <= 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -378,16 +378,16 @@ char TString::operator[](int n) const
 #   Purpose....: Concatenation operator
 #
 #   In params..: str1
-#				 str2
+#                                str2
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 TString operator+(const TString& str1, const TString& str2)
 {
-	TString s;
-	s.ConcatCopy(str1.GetData(), str1.GetSize(), str2.GetData(), str2.GetSize());
-	return s;
+        TString s;
+        s.ConcatCopy(str1.GetData(), str1.GetSize(), str2.GetData(), str2.GetSize());
+        return s;
 }
 
 /*##########################################################################
@@ -397,16 +397,16 @@ TString operator+(const TString& str1, const TString& str2)
 #   Purpose....: Concatenation operator
 #
 #   In params..: str
-#				 cstr
+#                                cstr
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 TString operator+(const TString& str, const char *cstr)
 {
-	TString s;
-	s.ConcatCopy(str.GetData(), str.GetSize(), cstr, strlen(cstr));
-	return s;
+        TString s;
+        s.ConcatCopy(str.GetData(), str.GetSize(), cstr, strlen(cstr));
+        return s;
 }
 
 /*##########################################################################
@@ -416,16 +416,16 @@ TString operator+(const TString& str, const char *cstr)
 #   Purpose....: Concatenation operator
 #
 #   In params..: cstr
-#				 str
+#                                str
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 TString operator+(const char *cstr, const TString& str)
 {
-	TString s;
-	s.ConcatCopy(cstr, strlen(cstr), str.GetData(), str.GetSize());
-	return s;
+        TString s;
+        s.ConcatCopy(cstr, strlen(cstr), str.GetData(), str.GetSize());
+        return s;
 }
 
 /*##########################################################################
@@ -441,8 +441,8 @@ TString operator+(const char *cstr, const TString& str)
 ##########################################################################*/
 const TString &TString::operator+=(const char *str)
 {
-	ConcatInPlace(str, strlen(str));
-	return *this;
+        ConcatInPlace(str, strlen(str));
+        return *this;
 }
 
 /*##########################################################################
@@ -458,8 +458,8 @@ const TString &TString::operator+=(const char *str)
 ##########################################################################*/
 const TString &TString::operator+=(char ch)
 {
-	ConcatInPlace(&ch, 1);
-	return *this;
+        ConcatInPlace(&ch, 1);
+        return *this;
 }
 
 /*##########################################################################
@@ -475,8 +475,8 @@ const TString &TString::operator+=(char ch)
 ##########################################################################*/
 const TString &TString::operator+=(const TString& str)
 {
-	ConcatInPlace(str.GetData(), str.GetSize());
-	return *this;
+        ConcatInPlace(str.GetData(), str.GetSize());
+        return *this;
 }
 
 /*##########################################################################
@@ -492,10 +492,10 @@ const TString &TString::operator+=(const TString& str)
 ##########################################################################*/
 const char *TString::GetData() const
 {
-	if (FBuf)
-		return FBuf;
-	else
-		return "";
+        if (FBuf)
+                return FBuf;
+        else
+                return "";
 }
 
 /*##########################################################################
@@ -511,10 +511,10 @@ const char *TString::GetData() const
 ##########################################################################*/
 int TString::GetSize() const
 {
-	if (FData)
-		return FData->FDataSize - 1;
-	else
-		return 0;
+        if (FData)
+                return FData->FDataSize - 1;
+        else
+                return 0;
 }
 
 /*##########################################################################
@@ -530,10 +530,10 @@ int TString::GetSize() const
 ##########################################################################*/
 const char *TString::Find(char ch) const
 {
-	if (FBuf)
-		return strchr(FBuf, ch);
-	else
-		return 0;
+        if (FBuf)
+                return strchr(FBuf, ch);
+        else
+                return 0;
 }
 
 /*##########################################################################
@@ -549,10 +549,10 @@ const char *TString::Find(char ch) const
 ##########################################################################*/
 const char *TString::Find(const char *str) const
 {
-	if (FBuf)
-		return strstr(FBuf, str);
-	else
-		return 0;
+        if (FBuf)
+                return strstr(FBuf, str);
+        else
+                return 0;
 }
 
 /*##########################################################################
@@ -568,7 +568,7 @@ const char *TString::Find(const char *str) const
 ##########################################################################*/
 char TString::Upper(char ch)
 {
-	return toupper(ch);
+        return toupper(ch);
 }
 
 /*##########################################################################
@@ -584,20 +584,20 @@ char TString::Upper(char ch)
 ##########################################################################*/
 void TString::Upper()
 {
-	int i;
-	char *ptr;
+        int i;
+        char *ptr;
 
-	CopyBeforeWrite();
+        CopyBeforeWrite();
 
-	if (FData)
-	{
-		ptr = FBuf;
-		for (i = 0; i < FData->FDataSize - 1; i++)
-		{
-			*ptr = Upper(*ptr);
-			ptr++;
-		}
-	}
+        if (FData)
+        {
+                ptr = FBuf;
+                for (i = 0; i < FData->FDataSize - 1; i++)
+                {
+                        *ptr = Upper(*ptr);
+                        ptr++;
+                }
+        }
 }
 
 /*##########################################################################
@@ -613,7 +613,7 @@ void TString::Upper()
 ##########################################################################*/
 char TString::Lower(char ch)
 {
-	return tolower(ch);
+        return tolower(ch);
 }
 
 /*##########################################################################
@@ -629,20 +629,20 @@ char TString::Lower(char ch)
 ##########################################################################*/
 void TString::Lower()
 {
-	int i;
-	char *ptr;
+        int i;
+        char *ptr;
 
-	CopyBeforeWrite();
+        CopyBeforeWrite();
 
-	if (FData)
-	{
-		ptr = FBuf;
-		for (i = 0; i < FData->FDataSize - 1; i++)
-		{
-			*ptr = Lower(*ptr);
-			ptr++;
-		}
-	}
+        if (FData)
+        {
+                ptr = FBuf;
+                for (i = 0; i < FData->FDataSize - 1; i++)
+                {
+                        *ptr = Lower(*ptr);
+                        ptr++;
+                }
+        }
 }
 
 /*##########################################################################
@@ -658,32 +658,30 @@ void TString::Lower()
 ##########################################################################*/
 void TString::RemoveCrLf()
 {
-	int i;
-	char *ptr;
-	char ch;
+        char *ptr;
 
-	if (FData)
-	{
-		ptr = FBuf + FData->FDataSize - 2;
-		if (*ptr == 0xd || *ptr == 0xa)
-		{
-			CopyBeforeWrite();
+        if (FData)
+        {
+                ptr = FBuf + FData->FDataSize - 2;
+                if (*ptr == 0xd || *ptr == 0xa)
+                {
+                        CopyBeforeWrite();
 
-			while (*ptr == 0xd || *ptr == 0xa)
-			{
-				*ptr = 0;
-				FData->FDataSize--;
+                        while (*ptr == 0xd || *ptr == 0xa)
+                        {
+                                *ptr = 0;
+                                FData->FDataSize--;
 
-				if (ptr == FBuf)
-				{
-					Release();
-					break;
-				}
-				else
-					ptr--;
-			}
-		}
-	}
+                                if (ptr == FBuf)
+                                {
+                                        Release();
+                                        break;
+                                }
+                                else
+                                        ptr--;
+                        }
+                }
+        }
 }
 
 /*##########################################################################
@@ -699,11 +697,11 @@ void TString::RemoveCrLf()
 ##########################################################################*/
 static int skip_atoi(const char **s)
 {
-	int i = 0;
+        int i = 0;
 
-	while (isdigit(**s))
-		i = i*10 + *((*s)++) - '0';
-	return i;
+        while (isdigit(**s))
+                i = i*10 + *((*s)++) - '0';
+        return i;
 }
 
 /*##########################################################################
@@ -719,27 +717,27 @@ static int skip_atoi(const char **s)
 ##########################################################################*/
 void TString::Append(char ch)
 {
-	if (FData == 0)
-	{
-		AllocBuffer(0x10);
-		*FBuf = 0;
-		FData->FDataSize = 1;
-	}
+        if (FData == 0)
+        {
+                AllocBuffer(0x10);
+                *FBuf = 0;
+                FData->FDataSize = 1;
+        }
 
-	if (FData->FDataSize + 1 > FData->FAllocSize)
-	{
-		TShareObjectData* OldData = FData;
-		char *ptr = FBuf;
+        if (FData->FDataSize + 1 > FData->FAllocSize)
+        {
+                TShareObjectData* OldData = FData;
+                char *ptr = FBuf;
 
-		AllocBuffer(OldData->FDataSize + 0x10);
-		memcpy(FBuf, ptr, OldData->FDataSize);
-		FData->FDataSize = OldData->FDataSize;
+                AllocBuffer(OldData->FDataSize + 0x10);
+                memcpy(FBuf, ptr, OldData->FDataSize);
+                FData->FDataSize = OldData->FDataSize;
 
-		Release(OldData);
-	}
-	*(FBuf+FData->FDataSize-1) = ch;
-	*(FBuf+FData->FDataSize) = 0;
-	FData->FDataSize++;
+                Release(OldData);
+        }
+        *(FBuf+FData->FDataSize-1) = ch;
+        *(FBuf+FData->FDataSize) = 0;
+        FData->FDataSize++;
 }
 
 /*##########################################################################
@@ -755,11 +753,11 @@ void TString::Append(char ch)
 ##########################################################################*/
 void TString::Append(const char *str)
 {
-	while (*str)
-	{
-		Append(*str);
-		str++;
-	}
+        while (*str)
+        {
+                Append(*str);
+                str++;
+        }
 }
 
 /*##########################################################################
@@ -775,123 +773,123 @@ void TString::Append(const char *str)
 ##########################################################################*/
 int TString::Number(long num, int base, int size, int precision, int type)
 {
-	char c,sign,tmp[16];
-	const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
-	int i, n = 0;
-	int ind;
+        char c,sign,tmp[16];
+        const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
+        int i, n = 0;
+        int ind;
 
-	if (type & LARGE)
-		digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        if (type & LARGE)
+                digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-	if (type & LEFT)
-		type &= ~ZEROPAD;
+        if (type & LEFT)
+                type &= ~ZEROPAD;
 
-	if (base < 2 || base > 36)
-		return 0;
+        if (base < 2 || base > 36)
+                return 0;
 
-	c = (type & ZEROPAD) ? '0' : ' ';
-	sign = 0;
-	if (type & SIGN)
-	{
-		if (num < 0)
-		{
-			sign = '-';
-			num = -num;
-			size--;
-		}
-		else 
-			if (type & PLUS)
-			{
-				sign = '+';
-				size--;
-			}
-			else
-				if (type & SPACE)
-				{
-					sign = ' ';
-					size--;
-				}
-	}
+        c = (type & ZEROPAD) ? '0' : ' ';
+        sign = 0;
+        if (type & SIGN)
+        {
+                if (num < 0)
+                {
+                        sign = '-';
+                        num = -num;
+                        size--;
+                }
+                else 
+                        if (type & PLUS)
+                        {
+                                sign = '+';
+                                size--;
+                        }
+                        else
+                                if (type & SPACE)
+                                {
+                                        sign = ' ';
+                                        size--;
+                                }
+        }
 
-	if (type & SPECIAL)
-	{
-		if (base == 16)
-			size -= 2;
+        if (type & SPECIAL)
+        {
+                if (base == 16)
+                        size -= 2;
 
-		else if (base == 8)
-			size--;
-	}
+                else if (base == 8)
+                        size--;
+        }
 
-	i = 0;
-	if (num == 0)
-		tmp[i++]='0';
-	else 
-		while (num != 0)
-		{
-			ind = ((unsigned long)num) % (unsigned)base;
-			num = ((unsigned long)num) / (unsigned)base;
-			tmp[i++] = digits[ind];
-		}
+        i = 0;
+        if (num == 0)
+                tmp[i++]='0';
+        else 
+                while (num != 0)
+                {
+                        ind = ((unsigned long)num) % (unsigned)base;
+                        num = ((unsigned long)num) / (unsigned)base;
+                        tmp[i++] = digits[ind];
+                }
 
-	if (i > precision)
-		precision = i;
+        if (i > precision)
+                precision = i;
 
-	size -= precision;
-	if (!(type&(ZEROPAD+LEFT)))
-		while(size-->0)
-		{
-			Append(' ');
-			n++;
-		}
+        size -= precision;
+        if (!(type&(ZEROPAD+LEFT)))
+                while(size-->0)
+                {
+                        Append(' ');
+                        n++;
+                }
 
-	if (sign)
-	{
-		Append(sign);
-		n++;
-	}
+        if (sign)
+        {
+                Append(sign);
+                n++;
+        }
 
-	if (type & SPECIAL)
-	{
-		if (base==8)
-		{
-			Append('0');
-			n++;
-		}
-		else
-			if (base==16)
-			{
-				Append('0');
-				Append(digits[33]);
-				n += 2;
-			}
-		}
-	
-	if (!(type & LEFT))
-		while (size-- > 0)
-		{
-			Append(c);
-			n++;
-		}
+        if (type & SPECIAL)
+        {
+                if (base==8)
+                {
+                        Append('0');
+                        n++;
+                }
+                else
+                        if (base==16)
+                        {
+                                Append('0');
+                                Append(digits[33]);
+                                n += 2;
+                        }
+                }
+        
+        if (!(type & LEFT))
+                while (size-- > 0)
+                {
+                        Append(c);
+                        n++;
+                }
 
-	while (i < precision--)
-	{
-		Append('0');
-		n++;
-	}
+        while (i < precision--)
+        {
+                Append('0');
+                n++;
+        }
 
-	while (i-- > 0)
-	{
-		Append(tmp[i]);
-		n++;
-	}
+        while (i-- > 0)
+        {
+                Append(tmp[i]);
+                n++;
+        }
 
-	while (size-- > 0)
-	{
-		Append(' ');
-		n++;
-	}
+        while (size-- > 0)
+        {
+                Append(' ');
+                n++;
+        }
 
-	return n;
+        return n;
 }
 
 /*##########################################################################
@@ -907,249 +905,249 @@ int TString::Number(long num, int base, int size, int precision, int type)
 ##########################################################################*/
 int TString::printf(const char *fmt, va_list args)
 {
-	int len, n;
-	unsigned long num;
-	int i, base;
-	const char *s;
+        int len, n;
+        unsigned long num;
+        int i, base;
+        const char *s;
 
-	Release();
+        Release();
 
-	int flags;		/* flags to number() */
+        int flags;              /* flags to number() */
 
-	int field_width;	/* width of output field */
-	int precision;		/* min. # of digits for integers; max
-				   number of chars for from string */
-	int qualifier;		/* 'h', 'l', or 'L' for integer fields */
-	                        /* 'z' support added 23/7/1999 S.H.    */
-				/* 'z' changed to 'Z' --davidm 1/25/99 */
+        int field_width;        /* width of output field */
+        int precision;          /* min. # of digits for integers; max
+                                   number of chars for from string */
+        int qualifier;          /* 'h', 'l', or 'L' for integer fields */
+                                /* 'z' support added 23/7/1999 S.H.    */
+                                /* 'z' changed to 'Z' --davidm 1/25/99 */
 
-	
-	for (n = 0 ; *fmt ; ++fmt) {
-		if (*fmt != '%')
-		{
-			Append(*fmt);
-			n++;
-			continue;
-		}
-			
-		/* process flags */
-		flags = 0;
-		repeat:
-			++fmt;		/* this also skips first '%' */
-			switch (*fmt)
-			{
-				case '-': flags |= LEFT; goto repeat;
-				case '+': flags |= PLUS; goto repeat;
-				case ' ': flags |= SPACE; goto repeat;
-				case '#': flags |= SPECIAL; goto repeat;
-				case '0': flags |= ZEROPAD; goto repeat;
-			}
-		
-		/* get field width */
-		field_width = -1;
-		if (isdigit(*fmt))
-			field_width = skip_atoi(&fmt);
+        
+        for (n = 0 ; *fmt ; ++fmt) {
+                if (*fmt != '%')
+                {
+                        Append(*fmt);
+                        n++;
+                        continue;
+                }
+                        
+                /* process flags */
+                flags = 0;
+                repeat:
+                        ++fmt;          /* this also skips first '%' */
+                        switch (*fmt)
+                        {
+                                case '-': flags |= LEFT; goto repeat;
+                                case '+': flags |= PLUS; goto repeat;
+                                case ' ': flags |= SPACE; goto repeat;
+                                case '#': flags |= SPECIAL; goto repeat;
+                                case '0': flags |= ZEROPAD; goto repeat;
+                        }
+                
+                /* get field width */
+                field_width = -1;
+                if (isdigit(*fmt))
+                        field_width = skip_atoi(&fmt);
 
-		else
-			if (*fmt == '*')
-			{
-				++fmt;
-				/* it's the next argument */
-				field_width = va_arg(args, int);
-				if (field_width < 0)
-				{
-					field_width = -field_width;
-					flags |= LEFT;
-				}
-			}
+                else
+                        if (*fmt == '*')
+                        {
+                                ++fmt;
+                                /* it's the next argument */
+                                field_width = va_arg(args, int);
+                                if (field_width < 0)
+                                {
+                                        field_width = -field_width;
+                                        flags |= LEFT;
+                                }
+                        }
 
-		/* get the precision */
-		precision = -1;
-		if (*fmt == '.')
-		{
-			++fmt;	
-			if (isdigit(*fmt))
-				precision = skip_atoi(&fmt);
-			else if (*fmt == '*')
-			{
-				++fmt;
-				/* it's the next argument */
-				precision = va_arg(args, int);
-			}
+                /* get the precision */
+                precision = -1;
+                if (*fmt == '.')
+                {
+                        ++fmt;  
+                        if (isdigit(*fmt))
+                                precision = skip_atoi(&fmt);
+                        else if (*fmt == '*')
+                        {
+                                ++fmt;
+                                /* it's the next argument */
+                                precision = va_arg(args, int);
+                        }
 
-			if (precision < 0)
-				precision = 0;
-		}
+                        if (precision < 0)
+                                precision = 0;
+                }
 
-		/* get the conversion qualifier */
-		qualifier = -1;
-		if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt =='Z')
-		{
-			qualifier = *fmt;
-			++fmt;
-		}
+                /* get the conversion qualifier */
+                qualifier = -1;
+                if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt =='Z')
+                {
+                        qualifier = *fmt;
+                        ++fmt;
+                }
 
-		/* default base */
-		base = 10;
+                /* default base */
+                base = 10;
 
-		switch (*fmt)
-		{
-			case 'c':
-				if (!(flags & LEFT))
-					while (--field_width > 0)
-					{
-						Append(' ');
-						n++;
-					}
-		
-				Append((unsigned char) va_arg(args, int));
-				n++;
-				while (--field_width > 0)
-				{
-					Append(' ');
-					n++;
-				}
-				continue;
+                switch (*fmt)
+                {
+                        case 'c':
+                                if (!(flags & LEFT))
+                                        while (--field_width > 0)
+                                        {
+                                                Append(' ');
+                                                n++;
+                                        }
+                
+                                Append((unsigned char) va_arg(args, int));
+                                n++;
+                                while (--field_width > 0)
+                                {
+                                        Append(' ');
+                                        n++;
+                                }
+                                continue;
 
-			case 's':
-				s = va_arg(args, char *);
-				if (!s)
-					s = "<NULL>";
+                        case 's':
+                                s = va_arg(args, char *);
+                                if (!s)
+                                        s = "<NULL>";
 
-				len = strlen(s);
-				if (precision != -1 && len > precision)
-					len = precision;
+                                len = strlen(s);
+                                if (precision != -1 && len > precision)
+                                        len = precision;
 
-				if (!(flags & LEFT))
-					while (len < field_width--)
-					{
-						Append(' ');
-						n++;
-					}
-		
-				for (i = 0; i < len; ++i)
-				{
-					Append(*s++);
-					n++;
-				}
+                                if (!(flags & LEFT))
+                                        while (len < field_width--)
+                                        {
+                                                Append(' ');
+                                                n++;
+                                        }
+                
+                                for (i = 0; i < len; ++i)
+                                {
+                                        Append(*s++);
+                                        n++;
+                                }
 
-				while (len < field_width--)
-				{
-					Append(' ');
-					n++;
-				}
-				continue;
+                                while (len < field_width--)
+                                {
+                                        Append(' ');
+                                        n++;
+                                }
+                                continue;
 
-			case 'p':
-				if (field_width == -1)
-				{
-					field_width = 2*sizeof(void *);
-					flags |= ZEROPAD;
-				}
-				n += Number((unsigned long) va_arg(args, void *), 16,
-						field_width, precision, flags);
-				continue;
+                        case 'p':
+                                if (field_width == -1)
+                                {
+                                        field_width = 2*sizeof(void *);
+                                        flags |= ZEROPAD;
+                                }
+                                n += Number((unsigned long) va_arg(args, void *), 16,
+                                                field_width, precision, flags);
+                                continue;
 
-			case 'n':
-				if (qualifier == 'l')
-				{
-					long * ip = va_arg(args, long *);
-					*ip = n;
-				}
-				else
-					if (qualifier == 'Z')
-					{
-						size_t * ip = va_arg(args, size_t *);
-						*ip = n;
-					}
-					else 
-					{
-						int * ip = va_arg(args, int *);
-						*ip = n;
-					}
-				continue;
+                        case 'n':
+                                if (qualifier == 'l')
+                                {
+                                        long * ip = va_arg(args, long *);
+                                        *ip = n;
+                                }
+                                else
+                                        if (qualifier == 'Z')
+                                        {
+                                                size_t * ip = va_arg(args, size_t *);
+                                                *ip = n;
+                                        }
+                                        else 
+                                        {
+                                                int * ip = va_arg(args, int *);
+                                                *ip = n;
+                                        }
+                                continue;
 
-			case '%':
-				Append('%');
-				n++;
-				continue;
+                        case '%':
+                                Append('%');
+                                n++;
+                                continue;
 
-			case 'I':
-				{
-					union
-					{
-						long		l;
-						unsigned char	c[4];
-					} u;
+                        case 'I':
+                                {
+                                        union
+                                        {
+                                                long            l;
+                                                unsigned char   c[4];
+                                        } u;
 
-					u.l = va_arg(args, long);
-					printf("%d.%d.%d.%d", u.c[0], u.c[1], u.c[2], u.c[3]);
-				}
-				continue;
+                                        u.l = va_arg(args, long);
+                                        printf("%d.%d.%d.%d", u.c[0], u.c[1], u.c[2], u.c[3]);
+                                }
+                                continue;
 
-			/* integer number formats - set up the flags and "break" */
-			case 'o':
-				base = 8;
-				break;
+                        /* integer number formats - set up the flags and "break" */
+                        case 'o':
+                                base = 8;
+                                break;
 
-			case 'X':
-				flags |= LARGE;
+                        case 'X':
+                                flags |= LARGE;
 
-			case 'x':
-				base = 16;
-				break;
+                        case 'x':
+                                base = 16;
+                                break;
 
-			case 'd':
-			case 'i':
-				flags |= SIGN;
+                        case 'd':
+                        case 'i':
+                                flags |= SIGN;
 
-			case 'u':
-				break;
+                        case 'u':
+                                break;
 
-			default:
-				Append('%');
-				n++;
-				if (*fmt)
-				{
-					Append(*fmt);
-					n++;
-				}
-				else
-					--fmt;
-				continue;
-		}
+                        default:
+                                Append('%');
+                                n++;
+                                if (*fmt)
+                                {
+                                        Append(*fmt);
+                                        n++;
+                                }
+                                else
+                                        --fmt;
+                                continue;
+                }
 
-		if (qualifier == 'L')
-			num = va_arg(args, long);
-		else
-			if (qualifier == 'l')
-			{
-				num = va_arg(args, unsigned long);
-				if (flags & SIGN)
-					num = (signed long) num;
-			}
-			else
-				if (qualifier == 'Z')
-				{
-					num = va_arg(args, size_t);
-				}
-				else
-					if (qualifier == 'h')
-					{
-						num = (unsigned short) va_arg(args, int);
-						if (flags & SIGN)
-							num = (signed short) num;
-					}
-					else
-					{
-						num = va_arg(args, unsigned int);
-						if (flags & SIGN)
-							num = (signed int) num;
-					}
+                if (qualifier == 'L')
+                        num = va_arg(args, long);
+                else
+                        if (qualifier == 'l')
+                        {
+                                num = va_arg(args, unsigned long);
+                                if (flags & SIGN)
+                                        num = (signed long) num;
+                        }
+                        else
+                                if (qualifier == 'Z')
+                                {
+                                        num = va_arg(args, size_t);
+                                }
+                                else
+                                        if (qualifier == 'h')
+                                        {
+                                                num = (unsigned short) va_arg(args, int);
+                                                if (flags & SIGN)
+                                                        num = (signed short) num;
+                                        }
+                                        else
+                                        {
+                                                num = va_arg(args, unsigned int);
+                                                if (flags & SIGN)
+                                                        num = (signed int) num;
+                                        }
 
-		n += Number(num, base, field_width, precision, flags);
-	}
-	return n;
+                n += Number(num, base, field_width, precision, flags);
+        }
+        return n;
 }
 
 /*##########################################################################
@@ -1165,12 +1163,12 @@ int TString::printf(const char *fmt, va_list args)
 ##########################################################################*/
 int TString::printf(const char *fmt, ...)
 {
-	va_list args;
-	int result;
+        va_list args;
+        int result;
 
-	va_start(args, fmt);
-	result = printf(fmt, args);
-	va_end(args);
+        va_start(args, fmt);
+        result = printf(fmt, args);
+        va_end(args);
 
-	return result;
+        return result;
 }

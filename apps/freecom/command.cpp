@@ -28,9 +28,10 @@
 #include "cmd.h"
 #include "session.h"
 
-void main()
+int main()
 {
-	 TSession session;
-	 session.Run();
+    TSession session;
+    session.Run();
+    return 0;
 }
 

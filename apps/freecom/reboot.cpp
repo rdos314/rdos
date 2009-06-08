@@ -64,7 +64,7 @@ TRebootFactory::TRebootFactory()
 ##########################################################################*/
 TCommand *TRebootFactory::Create(TSession *session, const char *param)
 {
-	return new TRebootCommand(session, param);
+        return new TRebootCommand(session, param);
 }
 
 /*##########################################################################
@@ -81,7 +81,7 @@ TCommand *TRebootFactory::Create(TSession *session, const char *param)
 TRebootCommand::TRebootCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_REBOOT);
+        FHelpScreen.Load(TEXT_CMDHELP_REBOOT);
 }
 
 /*##########################################################################
@@ -97,12 +97,10 @@ TRebootCommand::TRebootCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TRebootCommand::Execute(char *param)
 {
-    int i;
-
-	if (LeadOptions(&param, 0) != E_None)
-		return 1;
+        if (LeadOptions(&param, 0) != E_None)
+                return 1;
 
     RdosCpuReset();
     
-	return 0;
+        return 0;
 }

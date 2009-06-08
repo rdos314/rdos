@@ -254,7 +254,6 @@ int TDelCommand::Add(TArg *arg)
 int TDelCommand::Execute(char *param)
 {
     TArg *arg;
-    const char *ptr;
     int total;
     int ok;
     TDirEntryData src;
