@@ -50,9 +50,9 @@ public:
     void Resize(int xsize, int ysize);
     void Move(int xstart, int ystart);
     
-    void Show();
-    void Hide();
-    int IsVisible() const;
+    virtual void Show();
+    virtual void Hide();
+    virtual int IsVisible() const;
 
     void Enable();
     void Disable();

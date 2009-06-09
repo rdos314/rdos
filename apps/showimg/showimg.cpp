@@ -22,8 +22,27 @@ int main(int argc, char **argv)
 
 	if (argc == 1)
 	{
-		printf("usage: showimg filename\r\n");
-		return 1;
+        int i;
+
+		vbe = new TVideoGraphicDevice(24, 640, 480);
+
+        for (;;)
+        {	
+        	for (i = 0; i <= 256; i++)
+        	{
+    	    	sprintf(FileName, "%d.jpg", i);
+	            bitmap = TJpegBitmapDevice::Create(FileName);
+
+            	if (bitmap)
+            	{
+            		vbe->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+            		delete bitmap;
+                }
+            }            				
+		}
+
+//		printf("usage: showimg filename\r\n");
+//		return 1;
 	}
 
 	RdosWaitMilli(250);
@@ -34,7 +53,7 @@ int main(int argc, char **argv)
 	bitmap = 0;
 
 	if (strstr(FileName, ".png"))
-		bitmap = TPngBitmapDevice::Create(FileName);
+		bitmap = TPngBitmapDevice::Create(FileName, 255, 255, 255);
 
 	if (!bitmap && strstr(FileName, ".gif"))
 		bitmap = TGifBitmapDevice::Create(FileName);
@@ -63,7 +82,7 @@ int main(int argc, char **argv)
 	{
 		strcpy(FileName, argv[1]);
 		strcat(FileName, ".png");
-		bitmap = TPngBitmapDevice::Create(FileName);
+		bitmap = TPngBitmapDevice::Create(FileName, 255 ,255, 255);
 	}
 
 	if (!bitmap)
