@@ -28,8 +28,8 @@
 #ifndef _PANELCTL_H
 #define _PANELCTL_H
 
-#include "bitdev.h"
 #include "control.h"
+#include "bitdev.h"
 #include "str.h"
 
 class TPanelControl;
@@ -54,19 +54,19 @@ public:
     void SetBorderColor(int r, int g, int b);
     void SetBorderTransparent();
 
-	TPanelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	TPanelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
+        TPanelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        TPanelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
 
-	virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
-	
+        virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
+        
 protected:
     void SetDefault(TPanelControl *panel, int xstart, int ystart, int xsize, int ysize);
 
-	int FUpperWidth;
-	int FLowerWidth;
-	int FLeftWidth;
-	int FRightWidth;
+        int FUpperWidth;
+        int FLowerWidth;
+        int FLeftWidth;
+        int FRightWidth;
     
     int FBackR;
     int FBackG;
@@ -74,11 +74,11 @@ protected:
 
     int FBackTrans;
 
-	int FBorderR;
-	int FBorderG;
-	int FBorderB;
+        int FBorderR;
+        int FBorderG;
+        int FBorderB;
 
-	int FBorderTrans;
+        int FBorderTrans;
 
     TBitmapGraphicDevice *FBackground;
 
@@ -118,23 +118,23 @@ public:
     void SetBackColor(TGraphicDevice *dev);
 
 protected:
-	TPanelControl(TControlThread *dev);
-	TPanelControl(TControl *control);
+        TPanelControl(TControlThread *dev);
+        TPanelControl(TControl *control);
 
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
 
-	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
+        virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
     void GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff);
 
 private:
     void Init(int border);
 
-	int FUpperWidth;
-	int FLowerWidth;
-	int FLeftWidth;
-	int FRightWidth;
+        int FUpperWidth;
+        int FLowerWidth;
+        int FLeftWidth;
+        int FRightWidth;
     
     int FBackR;
     int FBackG;
@@ -142,9 +142,9 @@ private:
 
     int FBackTrans;
 
-	int FBorderR;
-	int FBorderG;
-	int FBorderB;
+        int FBorderR;
+        int FBorderG;
+        int FBorderB;
 
     int FBorderTrans;
 

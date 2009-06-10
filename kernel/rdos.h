@@ -844,7 +844,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "movzx eax,al"  \
     value [eax];
 
-#pragma aux RdosOpenComPort = \
+#pragma aux RdosOpenCom = \
     CallGate_open_com  \
     ValidateHandle  \
     parm [al] [ecx] [bh] [ah] [bl] [esi] [edi]  \

@@ -28,7 +28,6 @@
 #ifndef _CONTROL_H
 #define _CONTROL_H
 
-#include "control.h"
 #include "graphdev.h"
 #include "keyboard.h"
 #include "mouse.h"
