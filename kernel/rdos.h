@@ -1779,13 +1779,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetLeftButton = \
     CallGate_get_left_button \
-    "cmc" \
     CarryToBool \
     value [eax];
 
 #pragma aux RdosGetRightButton = \
     CallGate_get_right_button \
-    "cmc" \
     CarryToBool \
     value [eax];
 
