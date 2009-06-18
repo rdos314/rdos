@@ -12,7 +12,7 @@ RDLL
 3
 WString
 5
-r_2dn
+rp2dn
 1
 0
 1
@@ -229,8 +229,8 @@ MItem
 *.rc
 56
 WString
-3
-NIL
+5
+WRESC
 57
 WVList
 0
@@ -247,8 +247,8 @@ MItem
 ..\ftpeng.rc
 60
 WString
-3
-NIL
+5
+WRESC
 61
 WVList
 0
