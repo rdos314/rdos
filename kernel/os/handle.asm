@@ -361,10 +361,15 @@ allocate_handle	PROC far
 ;
 	mov ax,handle_sel
 	mov ds,ax
+
+alloc_retry:
 	mov si,ds:handle_list
 	mov ax,[si]
 	mov ds:handle_list,ax
 	mov [si],bx
+	cmp si,OFFSET handle_arr
+	jbe alloc_retry
+;	
 	LeaveSection ds:handle_section
 ;	
 	mov ax,handle_mem_sel
