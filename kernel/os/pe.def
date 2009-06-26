@@ -154,6 +154,7 @@ lib_curr_event      DW ?
 lib_section			section_typ <>
 lib_run_now			DW ?
 lib_init_param		DW ?
+lib_fs              DW ?
 lib_name			DB ?
 
 lib_struc ENDS

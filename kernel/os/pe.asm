@@ -1294,15 +1294,18 @@ RunDll	Proc near
 	push gs
 	pushad
 ;
+    mov fs,es:lib_fs
 	mov eax,es:lib_header
 	mov eax,[eax].peh_entry_point
+	or eax,eax
+	jz rdDone
+;	
 	add eax,edi
 	push eax
-	xor ax,ax
-	mov fs,ax
 	movzx eax,es:lib_init_param
 	CallPM32
-;
+
+rdDone:
 	popad
 	pop gs
 	pop fs
@@ -1406,6 +1409,7 @@ import_by_name_ok:
 	pop ebx
 	sub edx,[esi].exp_name_va
 	add edx,[esi].exp_entry_point_va
+	mov eax,[esi].exp_ordinal_va
 	mov eax,[edx]
 	add eax,edi
 
@@ -1897,13 +1901,11 @@ load_pe_ins_sys:
 
 load_pe_ins_done:
 	mov es:lib_debug_lib,dx
+	mov ax,gs:lib_fs
+	mov es:lib_fs,ax
 	mov es:lib_run_now,bp
 	mov ecx,es:lib_size
 	call LoadImportedDlls
-	or bp,bp
-	jz load_dll_nodeb
-;
-	call RunDll
 ;
 	or dx,dx
 	jz load_dll_nodeb
@@ -1919,6 +1921,7 @@ load_pe_ins_done:
 	pop ds
 
 load_dll_nodeb:
+	call RunDll
 	clc
 	jmp load_dll_done
 
@@ -2358,6 +2361,7 @@ InitStack	Proc near
 	mov ecx,eax	
 	CreateDataSelector32
 	mov [bp].load_fs,bx
+	mov es:lib_fs,bx
 	mov fs,bx
 	sub edx,local_page_linear
 	mov fs:pvBase,edx
@@ -3740,7 +3744,8 @@ show_exception_text	PROC far
     GetWatchdogTics
     or eax,eax
     jnz setStop
-;
+
+setCont:
     mov eax,1
     jmp setDone
 
@@ -3783,9 +3788,11 @@ load_dll	Proc far
     DerefModuleHandle
 	jc load_dll_pr_done
 ;
+    mov di,fs
 	mov ax,es
 	mov fs,ax
     mov es,bx
+    mov es:lib_fs,di
 	mov ax,flat_data_sel
 	mov ds,ax
 	call LoadPeDll
@@ -3896,7 +3903,14 @@ get_proc_ok:
 	pop edi
 	pop esi
 	sub ebx,[esi].exp_name_va
-	add ebx,[esi].exp_entry_point_va
+	sub ebx,edx
+	shr ebx,1
+	mov eax,[esi].exp_ordinal_va
+	add eax,edx
+	movzx ebx,word ptr [eax+ebx]
+    shl ebx,2	
+    add ebx,[esi].exp_entry_point_va
+    add ebx,edx
 	mov esi,[ebx]
 	add esi,edx
 	clc
