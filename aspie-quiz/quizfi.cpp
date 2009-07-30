@@ -98,6 +98,18 @@ TQuizFI::~TQuizFI()
 {
 }
 
+/*##################  TQuizFI::IsFinal ##########################
+*   Purpose....: Check if final version (and if language is english)   	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizFI::IsFinal()
+{
+    return FALSE; // language might not be english!
+}
+
 /*##################  TQuizFI::GetCatCount ##########################
 *   Purpose....: Return number of categories for question  	       	        #
 *   In params..: *                                                          #

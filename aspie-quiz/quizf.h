@@ -41,6 +41,7 @@ protected:
 	virtual int GetPcaCount();
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
+	virtual int IsFinal();
 
 	 void InitReferers();
 	 void SetupControlGroups();

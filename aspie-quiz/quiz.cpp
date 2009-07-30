@@ -53,6 +53,8 @@ static TQuiz *GlobalTopQuiz[MAX_GLOBAL_QUESTIONS];
 static int GlobalTopQuestion[MAX_GLOBAL_QUESTIONS];
 static int GlobalAsNtCorrCount[MAX_GLOBAL_QUESTIONS];
 static long double GlobalAsNtCorrSum[MAX_GLOBAL_QUESTIONS];
+static int FinalAsNtCorrCount[MAX_GLOBAL_QUESTIONS];
+static long double FinalAsNtCorrSum[MAX_GLOBAL_QUESTIONS];
 static long double GlobalChi2[MAX_GLOBAL_QUESTIONS];
 static int GlobalCatCount[MAX_GLOBAL_QUESTIONS];
 
@@ -666,6 +668,18 @@ int TQuiz::round(long double val)
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
 int TQuiz::IsSubQuiz()
+{
+	return FALSE;
+}
+
+/*##################  TQuiz::IsFinal ##########################
+*   Purpose....: Check if this is the final version      	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz::IsFinal()
 {
 	return FALSE;
 }
@@ -3077,6 +3091,8 @@ void TQuiz::CalcGlobal()
 	{
 		GlobalAsNtCorrSum[i] = 0.0;
 		GlobalAsNtCorrCount[i] = 0;
+		FinalAsNtCorrSum[i] = 0.0;
+		FinalAsNtCorrCount[i] = 0;
 		GlobalChi2[i] = 0.0;
 
 		for (j = 0; j < MAX_GROUP_COUNT; j++)
@@ -3163,6 +3179,12 @@ void TQuiz::CalcGlobal()
 
 				GlobalAsNtCorrSum[GlobalId] += quiz->Quiz[q].Corr * quiz->Quiz[q].Count;
 				GlobalAsNtCorrCount[GlobalId] += quiz->Quiz[q].Count;
+
+                if (quiz->IsFinal())
+                {
+    				FinalAsNtCorrSum[GlobalId] += quiz->Quiz[q].Corr * quiz->Quiz[q].Count;
+	    			FinalAsNtCorrCount[GlobalId] += quiz->Quiz[q].Count;
+	    		}
 
 				for (j = 0; j < GROUP_COUNT - 1; j++)
 				{
@@ -8633,10 +8655,10 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 	file.Write("<a name=\"QUIZ");
-	WriteName(file);
+	CrossQuiz[38]->WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[38]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -8646,6 +8668,74 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef SWEDISH
 	 file.Write(" <a href=\"quizf6.htm\">översikt</a> <a href=\"relf6.htm\">relaterade frågor</a> <a href=\"reff6.htm\">referenssajter</a> <a href=\"retestf6.htm\">poäng stabilitet</a> <a href=\"racef6.htm\">ursprung</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	CrossQuiz[39]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	CrossQuiz[39]->WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizf7.htm\">overview</a> <a href=\"relf7.htm\">related questions</a> <a href=\"reff7.htm\">referer sites</a> <a href=\"retestf7.htm\">score stability</a> <a href=\"racef7.htm\">ancestry</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizf7.htm\">översikt</a> <a href=\"relf7.htm\">relaterade frågor</a> <a href=\"reff7.htm\">referenssajter</a> <a href=\"retestf7.htm\">poäng stabilitet</a> <a href=\"racef7.htm\">ursprung</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	CrossQuiz[40]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	CrossQuiz[40]->WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizf8.htm\">overview</a> <a href=\"relf8.htm\">related questions</a> <a href=\"reff8.htm\">referer sites</a> <a href=\"retestf8.htm\">score stability</a> <a href=\"racef8.htm\">ancestry</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizf8.htm\">översikt</a> <a href=\"relf8.htm\">relaterade frågor</a> <a href=\"reff8.htm\">referenssajter</a> <a href=\"retestf8.htm\">poäng stabilitet</a> <a href=\"racef8.htm\">ursprung</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	CrossQuiz[41]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	CrossQuiz[41]->WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizf9.htm\">overview</a> <a href=\"relf9.htm\">related questions</a> <a href=\"reff9.htm\">referer sites</a> <a href=\"retestf9.htm\">score stability</a> <a href=\"racef9.htm\">ancestry</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizf9.htm\">översikt</a> <a href=\"relf9.htm\">relaterade frågor</a> <a href=\"reff9.htm\">referenssajter</a> <a href=\"retestf9.htm\">poäng stabilitet</a> <a href=\"racef9.htm\">ursprung</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizf10.htm\">overview</a> <a href=\"relf10.htm\">related questions</a> <a href=\"reff10.htm\">referer sites</a> <a href=\"retestf10.htm\">score stability</a> <a href=\"racef10.htm\">ancestry</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizf10.htm\">översikt</a> <a href=\"relf10.htm\">relaterade frågor</a> <a href=\"reff10.htm\">referenssajter</a> <a href=\"retestf10.htm\">poäng stabilitet</a> <a href=\"racef10.htm\">ursprung</a>");
 	 file.Write("<br>");
 #endif
 
@@ -8852,11 +8942,19 @@ void TQuiz::WriteLinkReport(const char *filename)
                 file.Write("<ul>");
                 
 #ifdef ENGLISH
-				file.Write("Pearson's r: ");
+				file.Write("Pearson's r<br>");
 #endif
 
 #ifdef SWEDISH
-				file.Write("Pearson r: ");
+				file.Write("Pearson r<br>");
+#endif
+                
+#ifdef ENGLISH
+				file.Write("All: ");
+#endif
+
+#ifdef SWEDISH
+				file.Write("Alla: ");
 #endif
 
 
@@ -8876,6 +8974,38 @@ void TQuiz::WriteLinkReport(const char *filename)
 				file.Write(str);
 #endif
 				file.Write("<br>");
+
+                if (FinalAsNtCorrCount[GlobalId])
+                {
+
+    				val = FinalAsNtCorrSum[GlobalId] / FinalAsNtCorrCount[GlobalId];
+                
+#ifdef ENGLISH
+	    			file.Write("Final: ");
+#endif
+
+#ifdef SWEDISH
+		    		file.Write("Final: ");
+#endif
+
+
+#ifdef USE_PERCENT
+    				ival = round(100.0 * val * val);
+	    			sprintf(str, "%d%", ival);
+		    		file.Write(str);
+#else
+    				ival = round(100.0 * val);
+	    			if (ival < 0)
+		    		{
+			    		file.Write("-");
+				    	ival = -ival;
+    				}
+
+	    			sprintf(str, ".%02d", ival);
+		    		file.Write(str);
+#endif
+    				file.Write("<br>");
+    		    }
 
 
 #ifdef ENGLISH
@@ -9179,7 +9309,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
                     MaxCorr = CurrCorr;
 
-                	if (q >= 0)
+                	if (q >= 0 && GlobalTopQuiz[q])
                 	{
                 	    if (j < 15)
                 	    {

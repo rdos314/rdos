@@ -124,7 +124,7 @@ int TQuizF1::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizF1::GetQuizN()
 {
-	return 150;
+	return 200;
 }
 
 /*##########################################################################
@@ -536,7 +536,7 @@ void TQuizF1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     int i;
 
     for (i = 0; i < 50; i++)
-        DefineCross(QuizFI, 150 + i, 153 + i);
+        DefineCross(QuizR4, 150 + i, 153 + i);
 }
 
 /*##########################################################################

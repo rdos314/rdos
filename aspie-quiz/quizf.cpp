@@ -105,6 +105,18 @@ TQuizFinal::~TQuizFinal()
 {
 }
 
+/*##################  TQuizFinal::IsFinal ##########################
+*   Purpose....: Check if this is the final version      	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizFinal::IsFinal()
+{
+	return TRUE;
+}
+
 /*##################  TQuizFinal::GetPcaCount ##########################
 *   Purpose....: Return number of available PCA axises  	       	        #
 *   In params..: *                                                          #

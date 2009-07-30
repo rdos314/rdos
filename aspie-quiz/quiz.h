@@ -428,6 +428,7 @@ protected:
 	virtual int GetPcaCount();
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
+	virtual int IsFinal();
 
     void ExportCurrentGenderCorr(TFile &file);
     void ExportCurrentAgeCorr(TFile &file);
