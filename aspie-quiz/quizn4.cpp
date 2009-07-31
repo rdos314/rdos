@@ -565,7 +565,7 @@ void TQuizN4::SetupTexts()
 
   Quiz[156].MyGroup = GROUP_SOCIAL;
   Quiz[157].MyGroup = GROUP_MIXED;
-  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_ASPIE_OBSESSION;
 
 #ifdef ENGLISH
 

@@ -191,7 +191,7 @@ void TQuizF5::SetupTexts()
  Quiz[157].MyGroup = GROUP_ASPIE_TALENT;
  Quiz[158].MyGroup = GROUP_SEX;
  Quiz[159].MyGroup = GROUP_ASPIE_TALENT;
- Quiz[160].MyGroup = GROUP_MIXED;
+ Quiz[160].MyGroup = GROUP_NT_NVC;
  Quiz[161].MyGroup = GROUP_ASPIE_TALENT;
  Quiz[162].MyGroup = GROUP_ASPIE_HUNTING;
  Quiz[163].MyGroup = GROUP_ASPIE_TALENT;
@@ -205,7 +205,7 @@ void TQuizF5::SetupTexts()
  Quiz[171].MyGroup = GROUP_MIXED;
  Quiz[172].MyGroup = GROUP_ASPIE_SENSORY;
  Quiz[173].MyGroup = GROUP_ASPIE_HUNTING;
- Quiz[174].MyGroup = GROUP_MIXED;
+ Quiz[174].MyGroup = GROUP_NT_NVC;
  Quiz[175].MyGroup = GROUP_MIXED;
  Quiz[176].MyGroup = GROUP_MIXED;
 
@@ -470,6 +470,11 @@ void TQuizF5::LoadPopulations()
 ##########################################################################*/
 void TQuizF5::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4)
 {
+  int i;
+    
+  for (i = 0; i < 150; i++)
+	DefineCross(QuizF4, i, i);
+
   DefineGlobalId(150, 1332);
   DefineGlobalId(151, 1333);
   DefineGlobalId(152, 1334);

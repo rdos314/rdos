@@ -510,6 +510,9 @@ void TQuizF8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 {
     int i;
 
+    for (i = 0; i < 150; i++)
+  	    DefineCross(QuizF7, i, i);
+
     for (i = 0; i < 48; i++)
         DefineCross(QuizS4, 150 + i, 149 + i);
 }
