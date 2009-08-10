@@ -569,7 +569,7 @@ void TQuizN3::SetupTexts()
   Quiz[142].Text = "Do you judge a potential mate as most anybody else would?";
   Quiz[143].Text = "Do you naturally fit into the expected gender stereotypes?";
   Quiz[144].Text = "Do you have unusual sexual preferences?";
-  Quiz[145].Text = "Do you become shy or passive when you see somebody of the opposite sex that you are interested in?";
+  Quiz[145].Text = "Do you become shy or passive when you see somebody of the opposite sex that you are interested in?";
   Quiz[146].Text = "Do you prefer romantic relationships to develop fast?";
 
   Quiz[147].Text = "EAT - Am terrified about being overweight";
