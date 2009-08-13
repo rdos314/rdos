@@ -1897,6 +1897,11 @@ upAttach:
     jmp upDone
 
 epNotify:
+    push ax
+    mov ax,100
+    WaitMilliSec
+    pop ax
+;    
     pop cx
     and ah,1
     mov al,cl

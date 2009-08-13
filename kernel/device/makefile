@@ -89,6 +89,10 @@ usbcom_srcs = USBCOM.ASM
 usbcom_objs = $(usbcom_srcs:.ASM=.OBJ)
 usbcom_rdvs = USBCOM.RDV
 
+hid_srcs = HID.ASM
+hid_objs = $(hid_srcs:.ASM=.OBJ)
+hid_rdvs = HID.RDV
+
 printer_srcs = PRINTER.ASM
 printer_objs = $(printer_srcs:.ASM=.OBJ)
 printer_rdvs = PRINTER.RDV
@@ -142,7 +146,7 @@ srcs =      $(ide_srcs) $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
 			$(ts2003_srcs) $(egalax_srcs) $(penmount_srcs) \ 
-			$(uhci_srcs) $(usbcom_srcs) $(ohci_srcs) \
+			$(uhci_srcs) $(usbcom_srcs) $(ohci_srcs) $(hid_srcs) \
 			$(cs5536a_srcs) $(via82a_srcs) $(cs5536wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
@@ -152,7 +156,7 @@ rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
 			$(ts2003_rdvs) $(egalax_rdvs) $(penmount_rdvs) \
-			$(uhci_rdvs) $(usbcom_rdvs) $(ohci_rdvs) \
+			$(uhci_rdvs) $(usbcom_rdvs) $(ohci_rdvs) $(hid_rdvs) \
 			$(cs5536a_rdvs) $(via82a_rdvs) $(cs5536wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -276,6 +280,14 @@ USBCOM.RDV : $(usbcom_objs)
 	$(usbcom_objs)
 	USBCOM.RDV
 	USBCOM;       
+!
+
+HID.RDV : $(hid_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(hid_objs)
+	HID.RDV
+	HID;       
 !
 
 
