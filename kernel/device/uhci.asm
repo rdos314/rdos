@@ -48,6 +48,20 @@ SofReg = 12
 PortscReg1 = 16
 PortscReg2 = 18
 
+; this structure should be smaller than or equal to one page (4k)
+
+int_struc   STRUC
+
+int_64_qh           DB 64 * 32 DUP(?)
+int_32_qh           DB 32 * 32 DUP(?)
+int_16_qh           DB 16 * 32 DUP(?)
+int_8_qh            DB 8 * 32 DUP(?)
+int_4_qh            DB 4 * 32 DUP(?)
+int_2_qh            DB 2 * 32 DUP(?)
+int_1_qh            DB 1 * 32 DUP(?)
+
+int_struc   ENDS
+
 uhci_func_sel    STRUC
 
 usb_dev_base     usb_dev_struc <>
@@ -56,13 +70,13 @@ uhc_hw_phys      DD ?
 uhc_hw_linear    DD ?
 uhc_hw_sel       DW ?
 
-uhc_ring_sel     DW ?
+uhc_int_phys     DD ?
+uhc_int_linear   DD ?
+uhc_int_sel      DW ?
 
 uhc_status       DW ?
 
 uhc_period_td    DD ?
-uhc_intr_qh      DD 8 DUP(?)
-uhc_intr_arr     DD 8 DUP(?)
 
 uhc_io_base      DW ?
 
@@ -71,17 +85,31 @@ uhc_pipe_list    DW ?
 uhc_pci_bus_dev  DW ?
 uhc_pci_func     DB ?
 
+uhc_64_cnt       DB 64 DUP(?)
+uhc_32_cnt       DB 32 DUP(?)
+uhc_16_cnt       DB 16 DUP(?)
+uhc_8_cnt        DB 8 DUP(?)
+uhc_4_cnt        DB 4 DUP(?)
+uhc_2_cnt        DB 2 DUP(?)
+uhc_1_cnt        DB ?
+
+uhc_curr_cnt     DB 128 DUP(?)
+
 uhci_func_sel    ENDS
 
 uhci_pipe   STRUC
 
 usp_pipe_base   usb_pipe_struc <>
 usp_qh          DD ?
+usp_intr_ptr    DW ?
+usp_intr_cnt    DW ?
 usp_prev        DW ?
 usp_next        DW ?
 usp_signal      DW ?
 
 uhci_pipe   ENDS
+
+; this structure is always allocated as 32 bytes!
 
 uhci_td STRUC
 
@@ -96,6 +124,8 @@ utd_phys    DD ?
 utd_size    DD ?
 
 uhci_td ENDS
+
+; this structure is always allocated as 32 bytes!
 
 uhci_qh STRUC
 
@@ -413,6 +443,40 @@ rpDone:
 	pop si
     ret
 RemovePipe  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    InitQh
+;
+;		DESCRIPTION:	Initialize a queue header
+;
+;       PARAMETERS:     ES      Flat sel
+;                       EDX		QH
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitQh	PROC near
+    push eax
+    push cx
+;    
+    mov es:[edx].uqh_link,1
+    mov es:[edx].uqh_va_link,0
+    mov es:[edx].uqh_elem,1
+    mov es:[edx].uqh_va_elem,0
+    GetPhysicalPage
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    mov es:[edx].uqh_phys,eax
+;
+    pop cx   
+    pop eax
+    ret
+InitQh  ENDP
 
 PAGE
 
@@ -753,6 +817,127 @@ rtdDone:
     ret
 RemoveTd  ENDP
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    InsertIntr
+;
+;		DESCRIPTION:	Insert QH into interrupt list
+;
+;       PARAMETERS:     ES      Flat sel
+;                       GS:DI   Intr list
+;                       EAX     QH to link
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertIntr	PROC near
+    push ecx
+    push edx
+;    
+    mov es:[eax].uqh_va_link,0
+    mov es:[eax].uqh_link,1
+;
+    mov edx,gs:[di].uqh_va_elem
+    or edx,edx
+    jz iiEmpty
+
+iiLastLoop:
+    mov ecx,es:[edx].uqh_va_link
+    or ecx,ecx
+    jz iiDoLast
+;
+    mov edx,ecx
+    jmp iiLastLoop
+
+iiDoLast:
+    mov ecx,es:[eax].uqh_phys
+    or cl,2
+    mov es:[edx].uqh_link,ecx
+    mov es:[edx].uqh_va_link,eax
+    jmp iiDone
+
+iiEmpty:
+    mov ecx,es:[eax].uqh_phys
+    or cl,2
+    mov gs:[di].uqh_elem,ecx
+    mov gs:[di].uqh_va_elem,eax
+
+iiDone:    
+    pop edx
+    pop ecx
+    ret
+InsertIntr  Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    RemoveIntr
+;
+;		DESCRIPTION:	Remove QH from interrupt list
+;
+;       PARAMETERS:     ES      Flat sel
+;                       GS:DI   Intr list
+;                       EAX     QH to delink
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveIntr	PROC near
+    push ebx
+    push ecx
+;    
+    mov ecx,gs:[di].uqh_va_elem
+    cmp ecx,eax
+    jne riSearch
+;
+    mov ecx,es:[eax].uqh_va_link
+    or ecx,ecx
+    jz riEmptyList
+;
+    mov gs:[di].uqh_va_elem,ecx
+    mov ecx,es:[eax].uqh_link
+    mov gs:[di].uqh_elem,ecx
+    jmp riDone
+
+riEmptyList:
+    mov gs:[di].uqh_va_elem,0
+    mov gs:[di].uqh_elem,1
+    jmp riDone
+
+riSearch:
+    or ecx,ecx
+    jz riDone
+;
+    cmp eax,ecx
+    je riRemove
+;
+    mov edx,ecx
+    mov ecx,es:[edx].uqh_va_link
+    jmp riSearch
+
+riRemove:
+    mov ecx,es:[eax].uqh_va_link
+    or ecx,ecx
+    jz riEmpty
+;   
+    mov es:[edx].uqh_va_link,ecx
+    mov ecx,es:[eax].uqh_link
+    mov es:[edx].uqh_link,ecx
+    jmp riDone
+
+riEmpty:
+    mov es:[edx].uqh_va_link,0
+    mov es:[edx].uqh_link,1
+
+riDone:
+    pop ecx
+    pop ebx
+    ret
+RemoveIntr  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -880,40 +1065,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    CreateFrameVa
-;
-;		DESCRIPTION:	Create frame pointer VA
-;
-;       PARAMETERS:     DS      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateFrameVa	PROC near
-    push es
-    push eax
-    push cx
-    push di
-;    
-    mov eax,1000h
-    AllocateGlobalMem
-    mov ds:uhc_ring_sel,es
-    xor di,di
-    xor eax,eax
-    mov cx,1024
-    rep stosd
-;
-    pop di
-    pop cx
-    pop eax
-    pop es    
-    ret
-CreateFrameVa ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:		    CreateIntrQueue
 ;
 ;		DESCRIPTION:	Create interrupt queue
@@ -925,39 +1076,222 @@ PAGE
 
 CreateIntrQueue	PROC near
     push es
+    push fs
     push eax
+    push bx
     push cx
     push edx
-    push di
-;
-    mov ax,ds
-    mov es,ax
-    mov cx,8
-    mov eax,ds:uhc_period_td
-    mov di,OFFSET uhc_intr_qh
-    rep stosd    
-;
-    mov dx,flat_sel
-    mov es,dx
-    mov edx,es:[eax].utd_phys
-    mov es,ds:uhc_ring_sel
-    xor di,di
-    mov cx,1024
-    rep stosd
-;
-    mov eax,edx
-    mov es,ds:uhc_hw_sel
-    xor di,di
-    mov cx,1024
-    rep stosd
 ;        
-    pop di
+    mov eax,1000h
+	AllocateBigLinear
+	mov ds:uhc_int_linear,edx
+	mov ecx,eax
+	AllocateGdt
+	CreateDataSelector16
+    mov ds:uhc_int_sel,bx
+;
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov cx,64
+    mov edx,OFFSET int_64_qh
+    add edx,ds:uhc_int_linear
+
+ciQhLoop:
+    call InitQh
+    add edx,32
+    add bx,4
+    loop ciQhLoop
+;
+    mov edx,ds:uhc_int_linear
+    GetPhysicalPage
+    and ax,0F000h
+    mov ds:uhc_int_phys,eax    
+;
+    mov fs,ds:uhc_hw_sel
+    mov cx,16
+    xor bx,bx
+
+ciHwyLoop:
+    push cx
+    mov cx,64
+    mov eax,OFFSET int_64_qh
+    add eax,ds:uhc_int_phys
+    or al,2
+
+ciHwiLoop:
+    mov fs:[bx],eax
+    add eax,32
+    add bx,4
+    loop ciHwiLoop
+;
+    pop cx
+    loop ciHwyLoop
+;
+    mov fs,ds:uhc_int_sel
+    mov cx,64
+    mov bx,OFFSET int_64_qh
+    mov eax,OFFSET int_32_qh
+    mov edx,eax
+    add edx,ds:uhc_int_linear
+    add eax,ds:uhc_int_phys
+    or al,2
+
+ci32Loop:
+    call InitQh
+    
+ci32Link:
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
+    add bx,32
+;
+    test cx,1
+    jnz ci32Next
+    loop ci32Link
+
+ci32Next:    
+    add eax,32
+    add edx,32
+    loop ci32Loop
+;
+    mov cx,32
+    mov bx,OFFSET int_32_qh
+    mov eax,OFFSET int_16_qh
+    mov edx,eax
+    add edx,ds:uhc_int_linear
+    add eax,ds:uhc_int_phys
+    or al,2
+
+ci16Loop:
+    call InitQh
+    
+ci16Link:
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
+    add bx,32
+;
+    test cx,1
+    jnz ci16Next
+    loop ci16Link
+
+ci16Next:    
+    add eax,32
+    add edx,32
+    loop ci16Loop
+;
+    mov cx,16
+    mov bx,OFFSET int_16_qh
+    mov eax,OFFSET int_8_qh
+    mov edx,eax
+    add edx,ds:uhc_int_linear
+    add eax,ds:uhc_int_phys
+    or al,2
+
+ci8Loop:
+    call InitQh
+    
+ci8Link:
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
+    add bx,32
+;
+    test cx,1
+    jnz ci8Next
+    loop ci8Link
+
+ci8Next:    
+    add eax,32
+    add edx,32
+    loop ci8Loop
+;
+    mov cx,8
+    mov bx,OFFSET int_8_qh
+    mov eax,OFFSET int_4_qh
+    mov edx,eax
+    add edx,ds:uhc_int_linear
+    add eax,ds:uhc_int_phys
+    or al,2
+
+ci4Loop:
+    call InitQh
+    
+ci4Link:
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
+    add bx,32
+;
+    test cx,1
+    jnz ci4Next
+    loop ci4Link
+
+ci4Next:    
+    add eax,32
+    add edx,32
+    loop ci4Loop
+;
+    mov cx,4
+    mov bx,OFFSET int_4_qh
+    mov eax,OFFSET int_2_qh
+    mov edx,eax
+    add edx,ds:uhc_int_linear
+    add eax,ds:uhc_int_phys
+    or al,2
+
+ci2Loop:
+    call InitQh
+    
+ci2Link:
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
+    add bx,32
+;
+    test cx,1
+    jnz ci2Next
+    loop ci2Link
+
+ci2Next:    
+    add eax,32
+    add edx,32
+    loop ci2Loop
+;
+    mov cx,2
+    mov bx,OFFSET int_2_qh
+    mov eax,OFFSET int_1_qh
+    mov edx,eax
+    add edx,ds:uhc_int_linear
+    add eax,ds:uhc_int_phys
+    or al,2
+
+ci1Loop:
+    call InitQh
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
+    add bx,32
+    loop ci1Loop
+;
+    mov bx,OFFSET int_1_qh
+    mov edx,ds:uhc_period_td
+    mov eax,es:[edx].utd_phys
+    mov fs:[bx].uqh_link,eax
+    mov fs:[bx].uqh_va_link,edx
+;   
+    mov cx,64+32+16+8+4+2+1
+    mov bx,OFFSET uhc_64_cnt
+    xor al,al
+
+ciInitCount:
+    mov ds:[bx],al
+    inc bx
+    loop ciInitCount
+;    
     pop edx
     pop cx
-    pop eax    
+    pop bx
+    pop eax
+    pop fs
     pop es
     ret
-CreateIntrQueue  Endp
+CreateIntrQueue Endp
 
 PAGE
 
@@ -979,12 +1313,170 @@ CreatePeriodTd	PROC near
     call AllocateTd
     mov ds:uhc_period_td,edx
 ;    
-    call CreateFrameVa
     call CreateIntrQueue
 ;
     pop edx
     ret
 CreatePeriodTd  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    GetIntrQh
+;
+;		DESCRIPTION:	Get interrupt QH
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;                       FS      Pipe sel
+;                       CL      Interval
+;
+;       RETURNS:        BX      Offset to count entry
+;                       DI      Offset to QH list entry to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetIntrQh	PROC near
+    push ax
+    push cx
+    push si
+    push bp
+;
+    cmp cl,1
+    jbe gie1
+;
+    cmp cl,3
+    jbe gie2
+;
+    cmp cl,7
+    jbe gie4
+;
+    cmp cl,15
+    jbe gie8
+;
+    cmp cl,31
+    jbe gie16
+;
+    cmp cl,63
+    jbe gie32
+
+gie64:
+    mov bx,OFFSET uhc_64_cnt
+    mov si,OFFSET int_64_qh
+    mov cx,64
+    jmp gieLnkOk
+
+gie32:
+    mov bx,OFFSET uhc_32_cnt
+    mov si,OFFSET int_32_qh
+    mov cx,32
+    jmp gieLnkOk
+
+gie16:
+    mov bx,OFFSET uhc_16_cnt
+    mov si,OFFSET int_16_qh
+    mov cx,16
+    jmp gieLnkOk
+
+gie8:
+    mov bx,OFFSET uhc_8_cnt
+    mov si,OFFSET int_8_qh
+    mov cx,8
+    jmp gieLnkOk
+
+gie4:
+    mov bx,OFFSET uhc_4_cnt
+    mov si,OFFSET int_4_qh
+    mov cx,4
+    jmp gieLnkOk
+
+gie2:
+    mov bx,OFFSET uhc_2_cnt
+    mov si,OFFSET int_2_qh
+    mov cx,2
+    jmp gieLnkOk
+
+gie1:
+    mov bx,OFFSET uhc_1_cnt
+    mov si,OFFSET int_1_qh
+    mov cx,1
+
+gieLnkOk:
+    push cx
+    mov di,OFFSET uhc_curr_cnt
+    xor al,al
+
+gieInitCnt:
+    mov [di],al
+    inc di
+    loop gieInitCnt
+;    
+    pop cx
+;
+    push bx
+    push cx
+    push si
+;   
+    mov si,1
+
+gieAddListLoop:    
+    push cx
+    mov di,OFFSET uhc_curr_cnt
+
+gieAddCount:
+    mov al,[bx]
+    mov bp,si    
+
+gieAddLoop:
+    add [di],al
+    inc di
+    sub bp,1
+    jnz gieAddLoop
+;    
+    inc bx
+    loop gieAddCount
+;
+    pop cx
+;
+    shl si,1
+    shr cx,1
+    or cx,cx
+    jnz gieAddListLoop    
+;
+    pop si
+    pop cx
+    pop bx
+;
+    mov ah,0FFh
+    mov di,OFFSET uhc_curr_cnt
+
+gieSmallestLoop:
+    mov al,[di]
+    cmp al,ah
+    jae gieSmallestNext
+;
+    mov ah,al
+    mov bp,di
+
+gieSmallestNext:
+    inc di
+    loop gieSmallestLoop
+;
+    mov di,bp
+    sub di,OFFSET uhc_curr_cnt
+;
+    add bx,di
+    shl di,5
+    add di,si
+;    
+    pop bp
+    pop si
+    pop cx
+    pop ax
+    ret
+GetIntrQh  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1089,7 +1581,42 @@ CreateBulk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIntr   Proc far
-    int 3
+    push es
+    push gs
+    pushad
+;    
+    mov cl,al
+;
+    mov eax,SIZE uhci_pipe
+    AllocateSmallGlobalMem
+    push cx
+    xor di,di
+    mov cx,ax
+    xor al,al
+    rep stosb
+    pop cx
+;    
+    mov ax,es
+    mov fs,ax
+    mov ax,flat_sel
+    mov es,ax
+;    
+    call AllocateQh
+    mov fs:usp_qh,edx
+;    
+    call GetIntrQh
+    mov fs:usp_intr_ptr,di
+    mov fs:usp_intr_cnt,bx
+    inc byte ptr ds:[bx]
+;    
+    mov gs,ds:uhc_int_sel
+    mov eax,fs:usp_qh
+    call InsertIntr
+    call InsertPipe
+;
+    popad
+    pop gs
+    pop es
     ret
 CreateIntr  Endp
 
@@ -1751,7 +2278,10 @@ ClosePipe   Proc far
     cmp al,MODE_BULK
     je dpControlBulk
 ;
-    int 3
+    cmp al,MODE_INTR
+    je dpFreeIntr
+;
+    int 3    
     jmp dpDone    
 
 dpControlBulk:
@@ -1762,6 +2292,27 @@ dpControlBulk:
     call RemoveTd
     mov edx,eax
     call FreeBlock32
+    jmp dpDone
+
+dpFreeIntr:
+    push gs
+    push di
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov gs,ds:uhc_int_sel
+    mov di,fs:usp_intr_ptr
+    mov eax,fs:usp_qh
+    call RemoveIntr
+;    
+    mov edx,eax
+    call FreeBlock32
+;    
+    mov di,fs:usp_intr_cnt
+    dec byte ptr ds:[di]
+;
+    pop di
+    pop gs
     jmp dpDone
     
 dpDone:
@@ -2068,12 +2619,16 @@ AddFunction  Proc near
 ;    
     mov eax,SIZE uhci_func_sel
     AllocateSmallGlobalMem
+    mov cx,ax
+    xor al,al
+    xor di,di
+    rep stosb
+;    
     mov ax,es
     mov ds,ax
     mov ds:uhc_io_base,dx
     mov ds:uhc_pci_bus_dev,bx
     mov ds:uhc_pci_func,ch
-    mov ds:uhc_pipe_list,0
 ;        
     mov eax,1000h
 	AllocateBigLinear
@@ -2090,22 +2645,12 @@ AddFunction  Proc near
 ;
     mov ax,ds
     mov es,ax
-    mov di,OFFSET uhc_intr_qh
-    mov cx,8
-    xor eax,eax
-    rep stosd
-;
-    mov di,OFFSET uhc_intr_arr
-    mov cx,8
-    xor eax,eax
-    rep stosd        
 ;
     GetPhysicalPage
     and ax,0F000h
     mov ds:uhc_hw_phys,eax    
 ;    
     mov ds:uhc_status,0
-    mov ds:uhc_ring_sel,0
     mov ds:uhc_period_td,0
 ;
     mov ax,uhci_data_sel

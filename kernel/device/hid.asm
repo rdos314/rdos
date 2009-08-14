@@ -174,6 +174,8 @@ ghsOk:
     clc
 
 ghsDone:   
+    LeaveSection ds:hid_section
+;    
     pop di
     pop si
     pop es
@@ -252,6 +254,7 @@ PAGE
 
 RemoveHidSel	Proc near
     push ds
+    push es
     push ax
 	push si
 ;
@@ -283,6 +286,7 @@ rem_hid_sel_leave:
     LeaveSection ds:hid_section
 	pop si
     pop ax
+    pop es
     pop ds 
     ret
 RemoveHidSel Endp
@@ -381,7 +385,6 @@ uaCheckNext:
     jmp uaDone
 
 uaFound:
-    int 3    
     ConfigUsbDevice
     call CreateHidSel
     call InsertHidSel
@@ -436,7 +439,6 @@ usb_detach  Proc far
     push es
     pushad
 ;    
-    int 3
     call GetHidSel
     jc udDone
 ;
