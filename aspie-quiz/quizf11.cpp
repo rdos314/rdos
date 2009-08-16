@@ -69,7 +69,7 @@ public:
 #
 ##########################################################################*/
 TQuizF11::TQuizF11(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10)
-  : TQuizFinal(165, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
+  : TQuizFinal(174, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
 	FDataFile(FileName)
 {
 	DefineCross(32, QuizFI);
@@ -131,7 +131,7 @@ int TQuizF11::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizF11::GetQuizN()
 {
-	return 165;
+	return 174;
 }
 
 /*##########################################################################
@@ -201,6 +201,16 @@ void TQuizF11::SetupTexts()
   Quiz[163].MyGroup = GROUP_SEX;
   Quiz[164].MyGroup = GROUP_SOCIAL;
 
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[167].MyGroup = GROUP_SOCIAL;
+  Quiz[168].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[169].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[170].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[171].MyGroup = GROUP_SEX;
+  Quiz[172].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[173].MyGroup = GROUP_MIXED;
+
   Quiz[150].Text = "Do you believe in fate when it comes to love?";
   Quiz[151].Text = "Do you believe in love at first sight?";
   Quiz[152].Text = "Do you hope to meet the \"right one\"?";
@@ -216,6 +226,17 @@ void TQuizF11::SetupTexts()
   Quiz[162].Text = "Do you easily blush?";
   Quiz[163].Text = "If you were single, would you find casual sex (one-night stands) rewarding?";
   Quiz[164].Text = "Do you become shy or passive when you see somebody of the opposite sex that you are interested in?";
+
+  Quiz[165].Text = "Do like it when people you are fond of looks a lot at you and continue to do so for several hours without anything else happening?";
+  Quiz[166].Text = "Have you have had long-lasting urges to take revenge?";
+  Quiz[167].Text = "Have you been in love with more than one person at the same time?";
+  Quiz[168].Text = "Do you refuse to give up on a relationship or potential relationship that others would not bother with?";
+  Quiz[169].Text = "Is it harder for you than for others to get over a failed relationship?";
+  Quiz[170].Text = "Do you examine the hair of people you like a lot?";
+  Quiz[171].Text = "Do you have compulsive sexual behavior, e.g. spend too much time on sex or switch sexual partner frequently?";
+  Quiz[172].Text = "Have you experienced stronger than normal attachments to certain people?";
+  Quiz[173].Text = "Do you think others should have the same friends and enemies as yourself?";
+
 }
 
 /*##################  TQuizF11::LoadReferers ##########################
@@ -469,8 +490,18 @@ void TQuizF11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineGlobalId(161, 1370);
 
   	DefineCross(QuizS2, 162, 111);
-  	DefineCross(QuizN2, 163, 160);
-  	DefineCross(QuizN3, 164, 145);
+	DefineCross(QuizN2, 163, 160);
+	DefineCross(QuizN3, 164, 145);
+
+	DefineCross(QuizS11, 165, 148);
+	DefineCross(QuizS11, 166, 117);
+	DefineCross(QuizS3, 167, 134);
+	DefineCross(Quiz9, 168, 143);
+	DefineCross(QuizS10, 169, 133);
+	DefineCross(QuizN1, 170, 92);
+	DefineCross(Quiz8, 171, 115);
+	DefineCross(QuizS11, 172, 125);
+	DefineCross(QuizII, 173, 83);
 
 }
 
@@ -521,7 +552,7 @@ static int IsPca(TQuizRow *row, int PcaType)
 	{
 		case PCA_TYPE_ALL:
 		case PCA_TYPE_MIXED:
-            return TRUE;
+				return TRUE;
 
 		case PCA_TYPE_MALE:
 			if (row->Gender == 1)
@@ -840,7 +871,7 @@ void TQuizF11::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
