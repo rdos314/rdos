@@ -69,7 +69,7 @@ public:
 #
 ##########################################################################*/
 TQuizF11::TQuizF11(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10)
-  : TQuizFinal(174, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
+  : TQuizFinal(178, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
 	FDataFile(FileName)
 {
 	DefineCross(32, QuizFI);
@@ -131,7 +131,7 @@ int TQuizF11::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizF11::GetQuizN()
 {
-	return 174;
+	return 178;
 }
 
 /*##########################################################################
@@ -235,7 +235,11 @@ void TQuizF11::SetupTexts()
   Quiz[170].Text = "Do you examine the hair of people you like a lot?";
   Quiz[171].Text = "Do you have compulsive sexual behavior, e.g. spend too much time on sex or switch sexual partner frequently?";
   Quiz[172].Text = "Have you experienced stronger than normal attachments to certain people?";
-  Quiz[173].Text = "Do you think others should have the same friends and enemies as yourself?";
+  Quiz[173].Text = "Do you think others should have the same friends and enemies as yourself?";  
+  Quiz[174].Text = "Do you prefer to only meet people you know, one-on-one, or in small, familiar groups?";
+  Quiz[175].Text = "Is buying presents important in a relationship?";
+  Quiz[176].Text = "Are friends of the same gender important to you?";
+  Quiz[177].Text = "Do you prefer to have friends of the opposite gender?";
 
 }
 
@@ -502,6 +506,11 @@ void TQuizF11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
 	DefineCross(Quiz8, 171, 115);
 	DefineCross(QuizS11, 172, 125);
 	DefineCross(QuizII, 173, 83);
+	DefineCross(QuizR5, 174, 53);
+
+    DefineGlobalId(175, 1371);
+    DefineGlobalId(176, 1372);
+    DefineGlobalId(177, 1373);
 
 }
 

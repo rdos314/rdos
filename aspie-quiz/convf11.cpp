@@ -236,7 +236,7 @@ char *ProcessRow(char *str)
 
     AncestryRow.Lang = 0;
     
-	for (fieldno = 0; fieldno < 191; fieldno++)
+	for (fieldno = 0; fieldno < 195; fieldno++)
 	{
 		valstr = str;
 
