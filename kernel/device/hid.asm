@@ -36,6 +36,23 @@ include ..\user.inc
 include ..\driver.def
 include ..\os\usb.inc
 
+MOD_LEFT_CTRL   = 1
+MOD_LEFT_SHIFT  = 2
+MOD_LEFT_ALT    = 4
+MOD_LEFT_GUI    = 8
+MOD_RIGHT_CTRL  = 10h
+MOD_RIGHT_SHIFT = 20h
+MOD_RIGHT_ALT   = 40h
+MOD_RIGHT_GUI   = 80h
+
+hid_key_struc   STRUC
+
+hk_modifiers    DB ?
+hk_resv         DB ?
+hk_key_arr      DB 6 DUP(?)
+
+hid_key_struc   ENDS
+
 usb_hid_descr  STRUC
 
 uhd_len             DB ?
@@ -68,6 +85,8 @@ hid_intr_in         DB ?
 hid_control_handle  DW ?
 hid_control_wait    DW ?
 hid_intr_handle     DW ?
+hid_intr_buf        DW ?
+hid_intr_req        DW ?
 
 hid_country_code    DB ?
 hid_descr_count     DB ?
@@ -77,11 +96,13 @@ hid_device_struc   ENDS
 hid_data STRUC
 
 hid_section         section_typ <>
-hid_thread          DW ?
 hid_key_sel         DW ?
 hid_mouse_sel       DW ?
 hid_dev_list        DW ?
-hid_has_key_hook    DB ?
+hid_key_thread      DW ?
+
+hid_key_mod         DB ?
+hid_key_arr         DB 6 DUP(?)
 
 hid_data ENDS
 
@@ -143,24 +164,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeHidSel Proc near
-    push ds
     push es
     push ax
 ;
-    mov ax,hid_data_sel
-    mov ds,ax
-    cmp bx,ds:hid_key_sel
-    jne fhsKeyOk
-;
-    mov ds:hid_key_sel,0
-
-fhsKeyOk:
-    cmp bx,ds:hid_mouse_sel
-    jne fhsMouseOk
-;
-    mov ds:hid_mouse_sel,0        
-
-fhsMouseOk:
     mov es,bx
     mov bx,es:hid_control_handle
     CloseUsbPipe    
@@ -175,7 +181,6 @@ fhsMouseOk:
 ;
     pop ax
     pop es        
-    pop ds
     ret
 FreeHidSel Endp
 
@@ -766,38 +771,472 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:	        HandleShiftChange
+;		NAME:			TranslateKey
 ;
-;		description:	Handle shift key change from keyboard(s)
+;		DESCRIPTION:    Translate key to RDOS internal key mappings
+;
+;       PARAMETERS:     AL      USB key
+;
+;       RETURNS:        AX      Key code
+;                       DL      Virtual key code
+;                       DH      Scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HandleShiftChange   Proc far
-    push ds
+TranslateTab:
+;           Ext     VK      Scan     modifier Key descr
+tk00    DB  0,      0,      0,       0      ; No key
+tk01    DB  0,      0,      0,       0      ; Roll-over error
+tk02    DB  0,      0,      0,       0      ; Post fail
+tk03    DB  0,      0,      0,       0      ; Undefined error
+tk04    DB  1Eh,    'A',    1Eh,     0      ; VK_A
+tk05    DB  30h,    'B',    30h,     0      ; VK_B
+tk06    DB  2Eh,    'C',    2Eh,     0   	; VK_C
+tk07    DB  20h,    'D',    20h,     0	    ; VK_D
+tk08    DB  12h,    'E',    12h,     0		; VK_E
+tk09    DB  21h,    'F',    21h,     0		; VK_F
+tk0A    DB  22h,    'G',    22h,     0		; VK_G
+tk0B    DB  23h,    'H',    23h,     0		; VK_H
+tk0C    DB  17h,    'I',    17h,     0		; VK_I
+tk0D    DB  24h,    'J',    24h,     0		; VK_J
+tk0E    DB  25h,    'K',    25h,     0		; VK_K
+tk0F    DB  26h,    'L',    26h,     0		; VK_L
+tk10    DB  32h,    'M',    32h,     0		; VK_M
+tk11    DB  31h,    'N',    31h,     0		; VK_N
+tk12    DB  18h,    'O',    18h,     0		; VK_O
+tk13    DB  19h,    'P',    19h,     0		; VK_P
+tk14    DB  10h,    'Q',    10h,     0		; VK_Q
+tk15    DB  13h,    'R',    13h,     0		; VK_R
+tk16    DB  1Fh,    'S',    1Fh,     0		; VK_S
+tk17    DB  14h,    'T',    14h,     0		; VK_T
+tk18    DB  16h,    'U',    16h,     0		; VK_U
+tk19    DB  2Fh,    'V',    2Fh,     0		; VK_V
+tk1A    DB  11h,    'W',    11h,     0		; VK_W
+tk1B    DB  2Dh,    'X',    2Dh,     0		; VK_X
+tk1C    DB  15h,    'Y',    15h,     0		; VK_Y
+tk1D    DB  2Ch,    'Z',    2Ch,     0		; VK_Z
+tk1E    DB  78h,    '1',    02h,     0		; VK_1
+tk1F    DB  79h,    '2',    03h,     0		; VK_2
+tk20    DB  7Ah,    '3',    04h,     0		; VK_3
+tk21    DB  7Bh,    '4',    05h,     0		; VK_4
+tk22    DB  7Ch,    '5',    06h,     0		; VK_5
+tk23    DB  7Dh,    '6',    07h,     0		; VK_6
+tk24    DB  7Eh,    '7',    08h,     0		; VK_7
+tk25    DB  7Fh,    '8',    09h,     0		; VK_8
+tk26    DB  80h,    '9',    0Ah,     0		; VK_9
+tk27    DB  81h,    '0',    0Bh,     0		; VK_0
+tk28    DB  -1,     0Dh,    1Ch,     0		; VK_RETURN
+tk29    DB  -1 ,    1Bh,    01h,     0		; VK_ESCAPE
+tk2A    DB  -1,     08h,    0Eh,     0		; VK_BACK
+tk2B    DB  0Fh,    09h,    0Fh,     0		; VK_TAB
+tk2C    DB  -1,     ' ',    39h,     0		; VK_SPACE
+tk2D    DB  -1,     '-',    0Ch,     0		; -, _
+tk2E    DB  -1,     '=',    0Dh,     0		; =, + 
+tk2F    DB  -1,     '[',    1Ah,     0		; [, {
+tk30    DB  -1,     ']',    1Bh,     0		; ], }
+tk31    DB  -1,     '\\',   2Bh,     0		; \, |
+tk32    DB  -1,     '#',    28h,     0		; #, ~
+tk33    DB  -1,     ';',    27h,     0		; ;, :
+tk34    DB  -1,     60h,    28h,     0		;
+tk35    DB  -1,     27h,    29h      0		;
+tk36    DB  -1,     ',',    33h,     0		; ;, <
+tk37    DB  -1,     '.',    34h,     0		; . >
+tk38    DB  -1,     '/',    35h,     0		; /, ?
+tk39    DB  -1,     14h,    3Ah,     CAPS_LOCK	; VK_CAPITAL
+tk3A    DB  70h,    70h,    3Bh,     0		; VK_F1
+tk3B    DB  71h,    71h,    3Ch,     0		; VK_F2
+tk3C    DB  72h,    72h,    3Dh,     0		; VK_F3
+tk3D    DB  73h,    73h,    3Eh,     0		; VK_F4
+tk3E    DB  74h,    74h,    3Fh,     0		; VK_F5
+tk3F    DB  75h,    75h,    40h,     0		; VK_F6
+tk40    DB  76h,    76h,    41h,     0		; VK_F7
+tk41    DB  77h,    77h,    42h,     0		; VK_F8
+tk42    DB  78h,    78h,    43h,     0		; VK_F9
+tk43    DB  79h,    79h,    44h,     0		; VK_F10
+tk44    DB  7Ah,    7Ah,    57h,     0		; VK_F11
+tk45    DB  7Bh,    7Bh,    58h,     0		; VK_F12
+tk46    DB  -1,     2Ah,    0,       0		; VK_PRINT
+tk47    DB  -1,     91h,    46h,     SCROLL_LOCK ; VK_SCROLL
+tk48    DB  -1,     13h,    0,       0		; VK_PAUSE
+tk49    DB  -1,     2Dh,    0,       0		; VK_INSERT
+tk4A    DB  -1,     24h,    47h,     0		; VK_HOME
+tk4B    DB  -1,     26h,    49h,     0		; VK_UP (page up)
+tk4C    DB  -1,     2Eh,    0,       0		; VK_DELETE
+tk4D    DB  -1,     23h,    4Fh,     0		; VK_END
+tk4E    DB  -1,     28h,    51h,     0		; VK_DOWN (page down)
+tk4F    DB  -1,     27h,    4Dh,     0		; VK_RIGHT
+tk50    DB  -1,     25h,    4Bh,     0		; VK_LEFT
+tk51    DB  -1,     28h,    50h,     0		; VK_DOWN
+tk52    DB  -1,     26h,    48h,     0		; VK_UP
+tk53    DB  -1,     90h,    45h,     NUM_LOCK   ; VK_NUMLOCK
+tk54    DB  -1,     61h,    4Ch,     0		; VK_NUMPAD1
+tk55    DB  -1,     6Ah,    37h,     0		; VK_MULTIPLY  
+tk56    DB  -1,     6Dh,    4Ah,     0		; VK_SUBTRACT
+tk57    DB  -1,     6Bh,    4Eh,     0		; VK_ADD
+tk58    DB  0Dh,    0Dh,    0Dh,     0		; ENTER
+tk59    DB  -1,     61h,    4Fh,     0		; VK_NUMPAD1
+tk5A    DB  -1,     62h,    50h,     0		; VK_NUMPAD2
+tk5B    DB  -1,     63h,    51h,     0		; VK_NUMPAD3
+tk5C    DB  -1,     64h,    4Bh,     0		; VK_NUMPAD4
+tk5D    DB  -1,     65h,    4Ch,     0		; VK_NUMPAD5
+tk5E    DB  -1,     66h,    4Dh,     0		; VK_NUMPAD6
+tk5F    DB  -1,     67h,    47h,     0		; VK_NUMPAD7
+tk60    DB  -1,     68h,    48h,     0		; VK_NUMPAD8
+tk61    DB  -1,     69h,    49h,     0		; VK_NUMPAD9
+tk62    DB  -1,     60h,    52h,     0		; VK_NUMPAD0
+tk63    DB  -1,     6Eh,    53h,     0		; VK_DECIMAL
+tk64    DB  0,      0,      0,       0		;
+tk65    DB  0,      0,      0,       0		;
+tk66    DB  0,      0,      0,       0		;
+tk67    DB  0,      0,      0,       0		;
+tk68    DB  0,      0,      0,       0		;
+tk69    DB  0,      0,      0,       0		;
+tk6A    DB  0,      0,      0,       0		;
+tk6B    DB  0,      0,      0,       0		;
+tk6C    DB  0,      0,      0,       0		;
+tk6D    DB  0,      0,      0,       0		;
+tk6E    DB  0,      0,      0,       0		;
+tk6F    DB  0,      0,      0,       0		;
+tk70    DB  0,      0,      0,       0		;
+tk71    DB  0,      0,      0,       0		;
+tk72    DB  0,      0,      0,       0		;
+tk73    DB  0,      0,      0,       0		;
+tk74    DB  0,      0,      0,       0		;
+tk75    DB  0,      0,      0,       0		;
+tk76    DB  0,      0,      0,       0		;
+tk77    DB  0,      0,      0,       0		;
+tk78    DB  0,      0,      0,       0		;
+tk79    DB  0,      0,      0,       0		;
+tk7A    DB  0,      0,      0,       0		;
+tk7B    DB  0,      0,      0,       0		;
+tk7C    DB  0,      0,      0,       0		;
+tk7D    DB  0,      0,      0,       0		;
+tk7E    DB  0,      0,      0,       0		;
+tk7F    DB  0,      0,      0,       0		;
+tk80    DB  0,      0,      0,       0		;
+tk81    DB  0,      0,      0,       0		;
+tk82    DB  0,      0,      0,       0		;
+tk83    DB  0,      0,      0,       0		;
+tk84    DB  0,      0,      0,       0		;
+tk85    DB  0,      0,      0,       0		;
+tk86    DB  0,      0,      0,       0		;
+tk87    DB  0,      0,      0,       0		;
+tk88    DB  0,      0,      0,       0		;
+tk89    DB  0,      0,      0,       0		;
+tk8A    DB  0,      0,      0,       0		;
+tk8B    DB  0,      0,      0,       0		;
+tk8C    DB  0,      0,      0,       0		;
+tk8D    DB  0,      0,      0,       0		;
+tk8E    DB  0,      0,      0,       0		;
+tk8F    DB  0,      0,      0,       0		;
+tk90    DB  0,      0,      0,       0		;
+tk91    DB  0,      0,      0,       0		;
+tk92    DB  0,      0,      0,       0		;
+tk93    DB  0,      0,      0,       0		;
+tk94    DB  0,      0,      0,       0		;
+tk95    DB  0,      0,      0,       0		;
+tk96    DB  0,      0,      0,       0		;
+tk97    DB  0,      0,      0,       0		;
+tk98    DB  0,      0,      0,       0		;
+tk99    DB  0,      0,      0,       0		;
+tk9A    DB  0,      0,      0,       0		;
+tk9B    DB  0,      0,      0,       0		;
+tk9C    DB  0,      0,      0,       0		;
+tk9D    DB  0,      0,      0,       0		;
+tk9E    DB  0,      0,      0,       0		;
+tk9F    DB  0,      0,      0,       0		;
+tkA0    DB  0,      0,      0,       0		;
+tkA1    DB  0,      0,      0,       0		;
+tkA2    DB  0,      0,      0,       0		;
+tkA3    DB  0,      0,      0,       0		;
+tkA4    DB  0,      0,      0,       0		;
+tkA5    DB  0,      0,      0,       0		;
+tkA6    DB  0,      0,      0,       0		;
+tkA7    DB  0,      0,      0,       0		;
+tkA8    DB  0,      0,      0,       0		;
+tkA9    DB  0,      0,      0,       0		;
+tkAA    DB  0,      0,      0,       0		;
+tkAB    DB  0,      0,      0,       0		;
+tkAC    DB  0,      0,      0,       0		;
+tkAD    DB  0,      0,      0,       0		;
+tkAE    DB  0,      0,      0,       0		;
+tkAF    DB  0,      0,      0,       0		;
+tkB0    DB  0,      0,      0,       0		;
+tkB1    DB  0,      0,      0,       0		;
+tkB2    DB  0,      0,      0,       0		;
+tkB3    DB  0,      0,      0,       0		;
+tkB4    DB  0,      0,      0,       0		;
+tkB5    DB  0,      0,      0,       0		;
+tkB6    DB  0,      0,      0,       0		;
+tkB7    DB  0,      0,      0,       0		;
+tkB8    DB  0,      0,      0,       0		;
+tkB9    DB  0,      0,      0,       0		;
+tkBA    DB  0,      0,      0,       0		;
+tkBB    DB  0,      0,      0,       0		;
+tkBC    DB  0,      0,      0,       0		;
+tkBD    DB  0,      0,      0,       0		;
+tkBE    DB  0,      0,      0,       0		;
+tkBF    DB  0,      0,      0,       0		;
+tkC0    DB  0,      0,      0,       0		;
+tkC1    DB  0,      0,      0,       0		;
+tkC2    DB  0,      0,      0,       0		;
+tkC3    DB  0,      0,      0,       0		;
+tkC4    DB  0,      0,      0,       0		;
+tkC5    DB  0,      0,      0,       0		;
+tkC6    DB  0,      0,      0,       0		;
+tkC7    DB  0,      0,      0,       0		;
+tkC8    DB  0,      0,      0,       0		;
+tkC9    DB  0,      0,      0,       0		;
+tkCA    DB  0,      0,      0,       0		;
+tkCB    DB  0,      0,      0,       0		;
+tkCC    DB  0,      0,      0,       0		;
+tkCD    DB  0,      0,      0,       0		;
+tkCE    DB  0,      0,      0,       0		;
+tkCF    DB  0,      0,      0,       0		;
+tkD0    DB  0,      0,      0,       0		;
+tkD1    DB  0,      0,      0,       0		;
+tkD2    DB  0,      0,      0,       0		;
+tkD3    DB  0,      0,      0,       0		;
+tkD4    DB  0,      0,      0,       0		;
+tkD5    DB  0,      0,      0,       0		;
+tkD6    DB  0,      0,      0,       0		;
+tkD7    DB  0,      0,      0,       0		;
+tkD8    DB  0,      0,      0,       0		;
+tkD9    DB  0,      0,      0,       0		;
+tkDA    DB  0,      0,      0,       0		;
+tkDB    DB  0,      0,      0,       0		;
+tkDC    DB  0,      0,      0,       0		;
+tkDD    DB  0,      0,      0,       0		;
+tkDE    DB  0,      0,      0,       0		;
+tkDF    DB  0,      0,      0,       0		;
+tkE0    DB  0,      0,      0,       0		;
+tkE1    DB  0,      0,      0,       0		;
+tkE2    DB  0,      0,      0,       0		;
+tkE3    DB  0,      0,      0,       0		;
+tkE4    DB  0,      0,      0,       0		;
+tkE5    DB  0,      0,      0,       0		;
+tkE6    DB  0,      0,      0,       0		;
+tkE7    DB  0,      0,      0,       0		;
+tkE8    DB  0,      0,      0,       0		;
+tkE9    DB  0,      0,      0,       0		;
+tkEA    DB  0,      0,      0,       0		;
+tkEB    DB  0,      0,      0,       0		;
+tkEC    DB  0,      0,      0,       0		;
+tkED    DB  0,      0,      0,       0		;
+tkEE    DB  0,      0,      0,       0		;
+tkEF    DB  0,      0,      0,       0		;
+tkF0    DB  0,      0,      0,       0		;
+tkF1    DB  0,      0,      0,       0		;
+tkF2    DB  0,      0,      0,       0		;
+tkF3    DB  0,      0,      0,       0		;
+tkF4    DB  0,      0,      0,       0		;
+tkF5    DB  0,      0,      0,       0		;
+tkF6    DB  0,      0,      0,       0		;
+tkF7    DB  0,      0,      0,       0		;
+tkF8    DB  0,      0,      0,       0		;
+tkF9    DB  0,      0,      0,       0		;
+tkFA    DB  0,      0,      0,       0		;
+tkFB    DB  0,      0,      0,       0		;
+tkFC    DB  0,      0,      0,       0		;
+tkFD    DB  0,      0,      0,       0		;
+tkFE    DB  0,      0,      0,       0		;
+tkFF    DB  0,      0,      0,       0		;
+
+ReportKeyPress  Proc near
+
+;
+;		PARAMETERS:		AX      Key code
+;                       DL      Virtual key code
+;                       DH      Scan code
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReportKeyPress
+;
+;		DESCRIPTION:    Report a key is pressed
+;
+;       PARAMETERS:     AL      USB key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReportKeyPress  Proc near
+    ret
+ReportKeyPress  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReportKeyRelease
+;
+;		DESCRIPTION:    Report a key is release
+;
+;       PARAMETERS:     AL      USB key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReportKeyRelease  Proc near
+    ret
+ReportKeyRelease  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UpdateShiftState
+;
+;		DESCRIPTION:    Update shift-key state
+;
+;       PARAMETERS:     AL      Modifier keys
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateShiftState  Proc near
     push ax
     push bx
 ;    
-    mov ax,hid_data_sel
-    mov ds,ax
-    mov bx,ds:hid_key_sel
-    or bx,bx
-    jz hscDone
-;
-    mov ds,bx
+    mov bl,al
     GetKeyboardState
+    and ax,NOT (shift_pressed OR alt_pressed OR ctrl_pressed)
+;     
+    test bl,MOD_LEFT_CTRL OR MOD_RIGHT_CTRL
+    jz ussCtrlOK
 ;
+    or ax,ctrl_pressed
 
-;0 = NUM
-;1 = CAPS
-    mov al,3
-    call UpdateLeds    
-    
-hscDone:
+ussCtrlOk:
+    test bl,MOD_LEFT_SHIFT OR MOD_RIGHT_SHIFT
+    jz ussShiftOk
+;
+    or ax,shift_pressed
+
+ussShiftOk:
+    test bl,MOD_LEFT_ALT OR MOD_RIGHT_ALT
+    jz ussAltOk
+;
+    or ax,alt_pressed
+
+ussAltOk:            
+    SetKeyboardState
+;
     pop bx
-    pop ax
-    pop ds    
+    pop ax    
     ret
-HandleShiftChange   Endp
+UpdateShiftState    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			HidKeyThread
+;
+;		DESCRIPTION:    USB keyboard handler thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hid_key_thread_name  DB 'USB Keyboard', 0
+
+hid_key_thread_pr  Proc far
+    mov ax,hid_data_sel
+    mov fs,ax
+    GetThread
+    mov fs:hid_key_thread,ax
+;    
+    mov ax,fs:hid_key_sel
+    or ax,ax
+    jz hktDone
+;
+    mov ds,ax    
+    mov bx,ds:hid_controller
+    mov al,ds:hid_device
+    mov dl,ds:hid_intr_in
+    OpenUsbPipe
+    mov ds:hid_intr_handle,bx
+;
+    mov eax,8
+    AllocateSmallGlobalMem
+    mov ds:hid_intr_buf,es
+    mov cx,ax
+    CreateUsbReq
+    mov ds:hid_intr_req,bx
+    AddReadUsbDataReq
+    xor ax,ax
+    mov es,ax
+
+hktDataLoop:
+    mov ax,fs:hid_key_sel
+    or ax,ax
+    jz hktExit
+;        
+    GetThread
+    StartUsbReq
+    WaitForSignal
+;       
+    IsUsbReqReady
+    jc hktDataLoop
+;    
+    GetUsbReqData
+    cmp cx,8
+    jne hktDataOk
+;
+    push es
+    mov es,ds:hid_intr_buf
+    mov al,es:hk_modifiers
+    cmp al,fs:hid_key_mod
+    je hktModHandled
+;
+    mov fs:hid_key_mod,al
+    call UpdateShiftState
+
+hktModHandled:
+    mov cx,6
+    xor si,si
+    xor di,di
+
+hktKeyLoop:
+    mov al,es:[si].hk_key_arr
+    cmp al,fs:[di].hid_key_arr
+    je hktKeyNext
+;
+    int 3
+
+hktKeyNext:
+    or al,al
+    jz hktKeyDone
+;
+    inc si
+    inc di
+    loop hktKeyLoop
+
+hktKeyDone:        
+    pop es
+
+hktDataOk:
+    UsbReqDone
+    jmp hktDataLoop
+
+hktExit:
+    mov bx,ds:hid_intr_req
+    CloseUsbReq
+    mov ds:hid_intr_req,0
+    mov ds:hid_intr_buf,0
+;
+    mov bx,ds:hid_intr_handle
+    CloseUsbPipe    
+    mov ds:hid_intr_handle,0
+    
+hktDone:
+    mov fs:hid_key_mod,0
+    mov fs:hid_key_arr,0
+    mov fs:hid_key_thread,0
+    ret
+hid_key_thread_pr  Endp
 
 PAGE
 
@@ -821,34 +1260,45 @@ SetupBootKeyboard    Proc near
     mov ds:hid_key_sel,bx
     call SetBootProtocol
 ;
-    push es
-    call GetReport
-    FreeMem
-    pop es
+    GetKeyboardState
+;
+; 0 = NUM
+; 1 = CAPS
+;
+    mov al,3
+    call UpdateLeds    
 ;    
-    mov al,ds:hid_has_key_hook
-    or al,al
-    jnz sbkNotify
-    jmp sbkNotify       ; test only
-;    
-    inc ds:hid_has_key_hook
+    mov ax,ds:hid_key_thread
+    or ax,ax
+    jnz sbkDone
+;
+	mov ds:hid_key_thread,-1
+    push ds
     push es
-    push di    
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET HandleShiftChange
-    HookShiftKeys
+    push cx
+    push si
+    push di
+;    
+	mov dx,cs
+	mov ds,dx
+	mov es,dx
+	mov di,OFFSET hid_key_thread_name
+	mov si,OFFSET hid_key_thread_pr
+	mov ax,2
+	mov cx,100h
+	CreateThread
+;
     pop di
-    pop es    
+    pop si
+    pop cx
+    pop es
+    pop ds
 
-sbkNotify:    
-    call HandleShiftChange
-    clc
+sbkDone:    
     ret
 SetupBootKeyboard    Endp
 
 SetupBootMouse    Proc near
-    stc
     ret
 SetupBootMouse    Endp
 
@@ -876,25 +1326,6 @@ SetupBoot	Proc near
     movzx di,es:hid_protocol
     add di,di
     call word ptr cs:[di].SetupBootTab
-    jc sbDone
-;    
-    push bx
-    mov bx,es:hid_controller
-    mov al,es:hid_device
-    mov dl,es:hid_intr_in
-    OpenUsbPipe
-    mov es:hid_intr_handle,bx
-;
-    mov eax,8
-    AllocateSmallGlobalMem
-    mov cx,ax
-    CreateUsbReq
-    AddReadUsbDataReq
-    StartUsbReq
-    IsUsbReqReady
-    GetUsbReqData
-    UsbReqDone
-    pop bx
 
 sbDone:
     pop dx
@@ -903,29 +1334,6 @@ sbDone:
     pop ds
     ret
 SetupBoot   Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			HidThread
-;
-;		DESCRIPTION:    HID handler thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hid_thread_name  DB 'USB HID', 0
-
-hid_thread_pr  Proc far
-    mov ax,hid_data_sel
-    mov fs,ax
-    GetThread
-    mov fs:hid_thread,ax
-;
-    WaitForSignal
-    ret
-hid_thread_pr  Endp
 
 PAGE
 
@@ -1001,31 +1409,8 @@ uaFound:
     ConfigUsbDevice
     call CreateHidSel
     call InitHidSel
-    int 3
     call SetupBoot
     call InsertHidSel
-;    
-    mov dx,hid_data_sel
-    mov ds,dx
-    mov dx,ds:hid_thread
-    or dx,dx
-    jnz uaDone
-;
-	mov ds:hid_thread,-1
-    push ds
-    push es
-;    
-	mov dx,cs
-	mov ds,dx
-	mov es,dx
-	mov di,OFFSET hid_thread_name
-	mov si,OFFSET hid_thread_pr
-	mov ax,2
-	mov cx,100h
-	CreateThread
-;
-    pop es
-    pop ds
 
 uaDone:    
     FreeMem
@@ -1055,20 +1440,34 @@ usb_detach  Proc far
     push es
     pushad
 ;    
+    mov dx,hid_data_sel
+    mov ds,dx
+;    
     call GetHidSel
     jc udDone
 ;
+    cmp bx,ds:hid_key_sel
+    jne udKeyOk
+;
+    mov ds:hid_key_sel,0
+    mov ax,ds:hid_key_thread
+	or ax,ax
+	jz udKeyOk
+
+udStopKey:
+    push bx
+	Signal
+    or bx,bx
+    pop bx
+    jz udKeyOk
+;    
+    mov ax,10
+    WaitMilliSec
+    jmp udStopKey	
+        
+udKeyOk:
     call RemoveHidSel
     call FreeHidSel
-;    
-    mov dx,hid_data_sel
-    mov ds,dx
-    mov bx,ds:hid_thread
-    or bx,bx
-    jz udDone
-;
-	mov ds:hid_thread,0
-	Signal
             
 udDone:    
     popad

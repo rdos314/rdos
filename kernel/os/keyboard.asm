@@ -858,7 +858,7 @@ get_keyboard_state	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_keyboard_state_name	DB 'Get Seyboard State',0
+set_keyboard_state_name	DB 'Set keyboard State',0
 
 set_keyboard_state	PROC far
 	push ds
