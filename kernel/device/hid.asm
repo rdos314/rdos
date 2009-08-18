@@ -36,6 +36,24 @@ include ..\user.inc
 include ..\driver.def
 include ..\os\usb.inc
 
+usb_hid_descr  STRUC
+
+uhd_len             DB ?
+uhd_type            DB ?
+uhd_hid_ver         DW ?
+uhd_country_code    DB ?
+uhd_descr_count     DB ?
+uhd_descr_arr       DB ?
+
+usb_hid_descr  ENDS
+
+usb_hid_arr_descr   STRUC
+
+uhad_descr_type      DB ?
+uhad_descr_len       DW ?
+
+usb_hid_arr_descr   ENDS
+
 hid_device_struc   STRUC
 
 hid_prev            DW ?
@@ -44,13 +62,26 @@ hid_next            DW ?
 hid_controller      DW ?
 hid_device          DB ?
 
+hid_interface       DB ?
+hid_protocol        DB ?
+hid_intr_in         DB ?
+hid_control_handle  DW ?
+hid_control_wait    DW ?
+hid_intr_handle     DW ?
+
+hid_country_code    DB ?
+hid_descr_count     DB ?
+
 hid_device_struc   ENDS
 
 hid_data STRUC
 
 hid_section         section_typ <>
 hid_thread          DW ?
+hid_key_sel         DW ?
+hid_mouse_sel       DW ?
 hid_dev_list        DW ?
+hid_has_key_hook    DB ?
 
 hid_data ENDS
 
@@ -112,14 +143,158 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeHidSel Proc near
+    push ds
     push es
+    push ax
 ;
+    mov ax,hid_data_sel
+    mov ds,ax
+    cmp bx,ds:hid_key_sel
+    jne fhsKeyOk
+;
+    mov ds:hid_key_sel,0
+
+fhsKeyOk:
+    cmp bx,ds:hid_mouse_sel
+    jne fhsMouseOk
+;
+    mov ds:hid_mouse_sel,0        
+
+fhsMouseOk:
     mov es,bx
+    mov bx,es:hid_control_handle
+    CloseUsbPipe    
+;
+    mov bx,es:hid_intr_handle
+    CloseUsbPipe    
+;    
+    mov bx,es:hid_control_wait
+    CloseWait
+;   
     FreeMem
 ;
+    pop ax
     pop es        
+    pop ds
     ret
 FreeHidSel Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        InitHidSel
+;
+;		description:	Init hid descriptor
+;
+;		Parameters:     ES:DI   First interface descriptor for device
+;                       BX      Hid sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitHidSel Proc near
+    push ds
+    push ax
+    push bx
+    push dx
+    push si
+    push di
+    mov ds,bx
+;
+    xor si,si
+    mov ds:hid_intr_in,0
+    mov ds:hid_interface,0
+    mov ds:hid_protocol,0
+    mov ds:hid_country_code,0
+    mov ds:hid_descr_count,0
+
+ihsCheckClass:
+    mov si,di
+    mov al,es:[di].uid_sub_class
+    cmp al,1
+    jne ihsCheckNext
+    jmp ihsFound
+
+ihsCheckLoop: 
+    mov al,es:[di].ucd_type
+    cmp al,4
+    jne ihsCheckNext
+;    
+    mov al,es:[di].uid_class
+    cmp al,3
+    je ihsCheckClass
+
+ihsCheckNext:
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb ihsCheckLoop
+;
+    or si,si
+    jne ihsFound    
+    jmp ihsDone
+
+ihsFound:
+    mov al,es:[di].uid_id
+    mov ds:hid_interface,al
+    mov al,es:[di].uid_proto
+    mov ds:hid_protocol,al
+
+ihsDescrLoop:    
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jnb ihsDone
+;    
+    mov al,es:[di].ucd_type
+    cmp al,21h
+    je ihsHidDescr
+;      
+    cmp al,5
+    je ihsEndDescr
+;
+    jmp ihsDone
+
+ihsHidDescr:
+    mov al,es:[di].uhd_country_code
+    mov ds:hid_country_code,al
+    mov al,es:[di].uhd_descr_count
+    mov ds:hid_descr_count,al    
+    jmp ihsDescrLoop
+
+ihsEndDescr:    
+    mov al,es:[di].ued_attrib
+    and al,3
+    cmp al,3
+    jne ihsDescrLoop
+;
+    mov al,es:[di].ued_address
+    test al,80h
+    jz ihsDescrLoop
+;
+    and al,7Fh    
+    mov ds:hid_intr_in,al    
+    jmp ihsDescrLoop
+
+ihsDone:    
+    mov bx,ds:hid_controller
+    mov al,ds:hid_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:hid_control_handle,bx
+;
+    CreateWait
+    mov ds:hid_control_wait,bx
+;
+    pop di
+    pop si
+    pop dx
+    pop bx
+    pop ax
+    pop ds
+    ret
+InitHidSel  Endp        
 
 PAGE
 
@@ -296,6 +471,444 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:	        GetReport
+;
+;		Description:	Get current input report
+;
+;       Parameters:     BX      HID selector
+;
+;       Returns:        ES      8-byte report data
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetReport   Proc near
+    push ds
+    push bx
+    push cx
+    push edx
+    push di
+;    
+    mov ds,bx
+    mov eax,8
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,0A1h
+    mov es:usd_req,1
+    mov es:usd_value,100h
+    movzx ax,ds:hid_interface
+    mov es:usd_index,ax
+    mov es:usd_len,8
+    xor di,di
+    mov bx,ds:hid_control_handle
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+;
+    mov cx,8
+    ReqUsbData
+;        
+    WriteUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hid_control_handle
+    IsUsbPipeIdle
+    cmc
+    jc grDone
+;
+    mov cx,8
+    xor edi,edi
+    GetUsbData
+    clc
+    
+grDone:    
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop di
+    pop edx
+    pop cx
+    pop bx
+    pop ds    
+    ret
+GetReport Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        GetProtocol
+;
+;		Description:	Get active protocol
+;
+;       Paramters:      BX      HID selector
+;
+;       RETURNS:        AL      Protocol
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetProtocol   Proc near
+    push ds
+    push es
+    push bx
+    push cx
+    push edx
+    push di
+;    
+    mov ds,bx
+    mov eax,SIZE usb_setup_data + 1
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,0A1h
+    mov es:usd_req,3
+    mov es:usd_value,0
+    movzx ax,ds:hid_interface
+    mov es:usd_index,ax
+    mov es:usd_len,1
+    xor di,di
+    mov bx,ds:hid_control_handle
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+;
+    mov cx,1
+    ReqUsbData
+;        
+    WriteUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hid_control_handle
+    IsUsbPipeIdle
+    cmc
+    mov al,-1
+    jc gpDone
+;
+    mov cx,1
+    mov edi,SIZE usb_setup_data
+    GetUsbData
+    mov al,es:[di]
+    clc
+    
+gpDone:    
+    pushf
+    FreeMem
+    UnlockUsbPipe
+    popf
+;
+    pop di
+    pop edx
+    pop cx
+    pop bx
+    pop es
+    pop ds    
+    ret
+GetProtocol Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        SetBootProtocol
+;
+;		Description:	Set boot protocol
+;
+;       Paramters:      BX      HID selector
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetBootProtocol   Proc near
+    push ds
+    push es
+    push eax
+    push bx
+    push cx
+    push edx
+    push di
+;    
+    mov ds,bx
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,21h
+    mov es:usd_req,0Bh
+    mov es:usd_value,0
+    movzx ax,ds:hid_interface
+    mov es:usd_index,ax
+    mov es:usd_len,0
+    xor di,di
+    mov bx,ds:hid_control_handle
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hid_control_handle
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop di
+    pop edx
+    pop cx
+    pop bx
+    pop eax
+    pop es
+    pop ds    
+    ret
+SetBootProtocol Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        UpdateLeds
+;
+;		Description:	Update keyboard LEDs
+;
+;       Paramters:      BX      HID selector
+;                       AL      LED status
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLeds   Proc near
+    push ds
+    push es
+    push eax
+    push bx
+    push cx
+    push edx
+    push di
+;    
+    mov ds,bx
+    push ax
+    mov eax,SIZE usb_setup_data + 1
+    AllocateSmallGlobalMem
+    mov cx,ax
+    pop ax
+    mov di,SIZE usb_setup_data
+    stosb
+;    
+    mov es:usd_type,21h
+    mov es:usd_req,9
+    mov es:usd_value,200h
+    movzx ax,ds:hid_interface
+    mov es:usd_index,ax
+    mov es:usd_len,1
+;   
+    xor di,di
+    mov bx,ds:hid_control_handle
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+;
+    mov di,SIZE usb_setup_data
+    mov cx,1
+    WriteUsbData
+;        
+    ReqUsbStatus
+    StartUsbTransaction
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hid_control_handle
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop di
+    pop edx
+    pop cx
+    pop bx
+    pop eax
+    pop es
+    pop ds    
+    ret
+UpdateLeds Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        HandleShiftChange
+;
+;		description:	Handle shift key change from keyboard(s)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleShiftChange   Proc far
+    push ds
+    push ax
+    push bx
+;    
+    mov ax,hid_data_sel
+    mov ds,ax
+    mov bx,ds:hid_key_sel
+    or bx,bx
+    jz hscDone
+;
+    mov ds,bx
+    GetKeyboardState
+;
+
+;0 = NUM
+;1 = CAPS
+    mov al,3
+    call UpdateLeds    
+    
+hscDone:
+    pop bx
+    pop ax
+    pop ds    
+    ret
+HandleShiftChange   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        SetupBoot
+;
+;		description:	Setups boot device for keyboard or mouse
+;
+;		Parameters:     BX      HID selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupBootInvalid    Proc near
+    stc
+    ret
+SetupBootInvalid    Endp
+
+SetupBootKeyboard    Proc near
+    mov ds:hid_key_sel,bx
+    call SetBootProtocol
+;
+    push es
+    call GetReport
+    FreeMem
+    pop es
+;    
+    mov al,ds:hid_has_key_hook
+    or al,al
+    jnz sbkNotify
+    jmp sbkNotify       ; test only
+;    
+    inc ds:hid_has_key_hook
+    push es
+    push di    
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET HandleShiftChange
+    HookShiftKeys
+    pop di
+    pop es    
+
+sbkNotify:    
+    call HandleShiftChange
+    clc
+    ret
+SetupBootKeyboard    Endp
+
+SetupBootMouse    Proc near
+    stc
+    ret
+SetupBootMouse    Endp
+
+SetupBootTab:
+sbt00   DW OFFSET SetupBootInvalid
+sbt01   DW OFFSET SetupBootKeyboard
+sbt02   DW OFFSET SetupBootMouse
+
+SetupBoot	Proc near
+    push ds
+    push es
+    push ax
+    push dx
+;
+    mov ax,hid_data_sel
+    mov ds,ax
+    mov es,bx
+    mov al,es:hid_protocol
+    or al,al
+    jz sbDone
+;
+    cmp al,3
+    jae sbDone
+;    
+    movzx di,es:hid_protocol
+    add di,di
+    call word ptr cs:[di].SetupBootTab
+    jc sbDone
+;    
+    push bx
+    mov bx,es:hid_controller
+    mov al,es:hid_device
+    mov dl,es:hid_intr_in
+    OpenUsbPipe
+    mov es:hid_intr_handle,bx
+;
+    mov eax,8
+    AllocateSmallGlobalMem
+    mov cx,ax
+    CreateUsbReq
+    AddReadUsbDataReq
+    StartUsbReq
+    IsUsbReqReady
+    GetUsbReqData
+    UsbReqDone
+    pop bx
+
+sbDone:
+    pop dx
+    pop ax
+    pop es
+    pop ds
+    ret
+SetupBoot   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			HidThread
 ;
 ;		DESCRIPTION:    HID handler thread
@@ -387,6 +1000,9 @@ uaCheckNext:
 uaFound:
     ConfigUsbDevice
     call CreateHidSel
+    call InitHidSel
+    int 3
+    call SetupBoot
     call InsertHidSel
 ;    
     mov dx,hid_data_sel

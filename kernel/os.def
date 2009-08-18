@@ -493,5 +493,7 @@ alias_module_handle_nr      EQU 341
 
 thread_to_sel_nr            EQU 342
 
+hook_shift_keys_nr          EQU 343
+
 osgate_entries				EQU 350
 

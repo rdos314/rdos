@@ -82,6 +82,9 @@ key_code        DW ?
 vk_code         DB ?
 scan_code       DB ?
 
+shift_hooks		DB ?
+shift_hook_arr	DW 2*16 DUP(?)
+
 key_data_seg	ENDS
 
 	.386p
@@ -89,6 +92,41 @@ key_data_seg	ENDS
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			HookShiftKeys
+;
+;	Purpose:		Hook change in shift-key state
+;
+;	Parameters:		ES:DI	Change callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_shift_keys_name	DB 'Hook Shift Keys', 0
+
+hook_shift_keys	Proc far
+	push ds
+	push ax
+	push bx
+	mov ax,key_data_sel
+	mov ds,ax
+	mov al,ds:shift_hooks
+	mov bl,al
+	xor bh,bh
+	shl bx,2
+	add bx,OFFSET shift_hook_arr
+	mov [bx],di
+	mov [bx+2],es
+	inc al
+	mov ds:shift_hooks,al
+	pop bx
+	pop ax
+	pop ds
+	ret
+hook_shift_keys	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -825,9 +863,32 @@ set_keyboard_state_name	DB 'Get Seyboard State',0
 set_keyboard_state	PROC far
 	push ds
 	push bx
+	push cx
+;	
 	mov bx,key_data_sel
 	mov ds,bx
 	mov ds:shift_states,ax
+;
+	mov cl,ds:shift_hooks
+	or cl,cl
+	je shift_hook_done
+;
+	mov bx,OFFSET shift_hook_arr
+
+shift_hook_loop:
+	push ds
+	push es
+	pushad
+	call dword ptr [bx]
+	popad
+	pop es
+	pop ds
+	add bx,4
+	dec cl
+	jnz shift_hook_loop
+
+shift_hook_done:
+    pop cx
 	pop bx
 	pop ds
 	ret
@@ -1292,6 +1353,12 @@ init	PROC far
 	xor cl,cl
 	mov ax,put_keyboard_code_nr
 	RegisterBimodalUserGate
+;
+	mov si,OFFSET hook_shift_keys
+	mov di,OFFSET hook_shift_keys_name
+	xor cl,cl
+	mov ax,hook_shift_keys_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET read_keyboard_serial
 	mov di,OFFSET read_keyboard_serial_name

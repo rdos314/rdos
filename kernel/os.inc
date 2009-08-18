@@ -1421,6 +1421,11 @@ HookLoadDosExe	MACRO
 	OsGate hook_load_dos_exe_nr
 					ENDM
 
+;	ES:DI       Handle address
+HookShiftKeys	MACRO
+	OsGate hook_shift_keys_nr
+					ENDM
+
 ;	AX          Keyboard state
 SetKeyboardState	MACRO
 	OsGate set_keyboard_state_nr
