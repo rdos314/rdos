@@ -844,6 +844,7 @@ gieSmallestNext:
     inc byte ptr [bx+di]
     shl di,5
     add di,si
+    add di,ohc_int_base
 ;    
     pop bp
     pop si
@@ -2512,6 +2513,7 @@ ifTabLoop:
     mov ax,25
     WaitMicroSec
     mov fs:HcFmInterval,edx
+    mov fs:HcPeriodicStart,0
 ;
     or fs:HcControl,100h    
 ;    
