@@ -718,16 +718,6 @@ int main(int argc, char **argv)
 	Quiz[31]->ExportExcelCase("pca\\youngn4.dat", PCA_TYPE_YOUNG);
 	Quiz[31]->ExportExcelCase("pca\\oldn4.dat", PCA_TYPE_OLD);
 
-
-#endif
-
-	printf("allfi\r\n");
-	 Quiz[32]->ExportExcelCase("pca\\allfi.dat", PCA_TYPE_ALL);
-	 Quiz[32]->ExportExcelCase("pca\\malefi.dat", PCA_TYPE_MALE);
-	 Quiz[32]->ExportExcelCase("pca\\femalefi.dat", PCA_TYPE_FEMALE);
-	Quiz[32]->ExportExcelCase("pca\\youngfi.dat", PCA_TYPE_YOUNG);
-	Quiz[32]->ExportExcelCase("pca\\oldfi.dat", PCA_TYPE_OLD);
-
 	printf("allf1\r\n");
 	 Quiz[33]->ExportExcelCase("pca\\allf1.dat", PCA_TYPE_ALL);
 	 Quiz[33]->ExportExcelCase("pca\\malef1.dat", PCA_TYPE_MALE);
@@ -784,6 +774,8 @@ int main(int argc, char **argv)
 	Quiz[40]->ExportExcelCase("pca\\youngf8.dat", PCA_TYPE_YOUNG);
 	Quiz[40]->ExportExcelCase("pca\\oldf8.dat", PCA_TYPE_OLD);
 
+#endif
+
 	printf("allf9\r\n");
 	 Quiz[41]->ExportExcelCase("pca\\allf9.dat", PCA_TYPE_ALL);
 	 Quiz[41]->ExportExcelCase("pca\\malef9.dat", PCA_TYPE_MALE);
@@ -805,6 +797,12 @@ int main(int argc, char **argv)
 	Quiz[43]->ExportExcelCase("pca\\youngf11.dat", PCA_TYPE_YOUNG);
 	Quiz[43]->ExportExcelCase("pca\\oldf11.dat", PCA_TYPE_OLD);
 
+	printf("allfi\r\n");
+	 Quiz[32]->ExportExcelCase("pca\\allfi.dat", PCA_TYPE_ALL);
+	 Quiz[32]->ExportExcelCase("pca\\malefi.dat", PCA_TYPE_MALE);
+	 Quiz[32]->ExportExcelCase("pca\\femalefi.dat", PCA_TYPE_FEMALE);
+	Quiz[32]->ExportExcelCase("pca\\youngfi.dat", PCA_TYPE_YOUNG);
+	Quiz[32]->ExportExcelCase("pca\\oldfi.dat", PCA_TYPE_OLD);
 
 	printf("aspie\r\n");
 
@@ -841,9 +839,6 @@ int main(int argc, char **argv)
 	 Quiz[29]->ExportExcelAspie("pca\\aspien2.dat");
 	 Quiz[30]->ExportExcelAspie("pca\\aspien3.dat");
 	 Quiz[31]->ExportExcelAspie("pca\\aspien4.dat");
-#endif
-
-	 Quiz[32]->ExportExcelAspie("pca\\aspiefi.dat");
 	 Quiz[33]->ExportExcelAspie("pca\\aspief1.dat");
 	 Quiz[34]->ExportExcelAspie("pca\\aspief2.dat");
 	 Quiz[35]->ExportExcelAspie("pca\\aspief3.dat");
@@ -852,9 +847,13 @@ int main(int argc, char **argv)
 	 Quiz[38]->ExportExcelAspie("pca\\aspief6.dat");
 	 Quiz[39]->ExportExcelAspie("pca\\aspief7.dat");
 	 Quiz[40]->ExportExcelAspie("pca\\aspief8.dat");
+#endif
+
 	 Quiz[41]->ExportExcelAspie("pca\\aspief9.dat");
 	 Quiz[42]->ExportExcelAspie("pca\\aspief10.dat");
 	 Quiz[43]->ExportExcelAspie("pca\\aspief11.dat");
+
+	 Quiz[32]->ExportExcelAspie("pca\\aspiefi.dat");
 
 	printf("import\r\n");
 	 Quiz[0]->ImportMvsp("pca\\all1.txt", PCA_TYPE_ALL);

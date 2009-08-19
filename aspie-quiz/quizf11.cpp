@@ -210,6 +210,10 @@ void TQuizF11::SetupTexts()
   Quiz[171].MyGroup = GROUP_SEX;
   Quiz[172].MyGroup = GROUP_ENVIRONMENT;
   Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[174].MyGroup = GROUP_SOCIAL;
+  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_MIXED;
 
   Quiz[150].Text = "Do you believe in fate when it comes to love?";
   Quiz[151].Text = "Do you believe in love at first sight?";
@@ -490,7 +494,7 @@ void TQuizF11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineGlobalId(157, 1366);
     DefineGlobalId(158, 1367);
     DefineGlobalId(159, 1368);
-    DefineGlobalId(160, 1369);
+	 DefineGlobalId(160, 1369);
     DefineGlobalId(161, 1370);
 
   	DefineCross(QuizS2, 162, 111);
@@ -508,9 +512,9 @@ void TQuizF11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
 	DefineCross(QuizII, 173, 83);
 	DefineCross(QuizR5, 174, 53);
 
-    DefineGlobalId(175, 1371);
-    DefineGlobalId(176, 1372);
-    DefineGlobalId(177, 1373);
+	 DefineGlobalId(175, 1371);
+	 DefineGlobalId(176, 1372);
+	 DefineGlobalId(177, 1373);
 
 }
 
