@@ -119,6 +119,8 @@ osp_next        DW ?
 osp_data_list   DD ?
 osp_signal      DW ?
 osp_sync_linear DD ?
+osp_intr_list   DW ?
+osp_intr_count  DW ?
 
 ohci_pipe   ENDS
 
@@ -717,6 +719,7 @@ PAGE
 ;                       CL      Interval
 ;
 ;       RETURNS:        DI      Offset to ED list entry to use
+;                       SI      Offset to count array
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -724,7 +727,6 @@ GetIntrEd	PROC near
     push ax
     push bx
     push cx
-    push si
     push bp
 ;
     cmp cl,1
@@ -841,13 +843,14 @@ gieSmallestNext:
     mov di,bp
     sub di,OFFSET ohc_curr_cnt
 ;
-    inc byte ptr [bx+di]
+    add bx,di
+    inc byte ptr [bx]
     shl di,5
     add di,si
     add di,ohc_int_base
+    mov si,bx
 ;    
     pop bp
-    pop si
     pop cx
     pop bx
     pop ax
@@ -870,6 +873,8 @@ PAGE
 ;
 ;       RETURNS:        EDX     Linear address of ED added
 ;                       EAX     Physical address of ED added
+;                       SI      Interrupt count array entry
+;                       DI      Interrupt ED used
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1325,6 +1330,9 @@ CreateIntr   Proc far
     mov es,dx
     call AddIntrEd
     mov fs:osp_ed,edx
+    mov fs:osp_intr_count,si
+    mov fs:osp_intr_list,di
+;
     call CreateSyncBlock
     call InsertPipe
 ;
@@ -2013,6 +2021,9 @@ ClosePipe   Proc far
     cmp al,MODE_BULK
     je cpBulk
 ;    
+    cmp al,MODE_INTR
+    je cpIntr
+;    
     int 3
     jmp cpFreeEdList
 
@@ -2088,6 +2099,43 @@ cpBulkHead:
     mov ds:ohc_bulk_linear,esi
     mov gs:HcBulkHeadEd,edi
     pop gs
+    jmp cpFreeEdList
+
+cpIntr:
+    mov ax,flat_sel
+    mov es,ax
+    mov di,fs:osp_intr_count
+    dec byte ptr ds:[di]
+;
+    mov di,fs:osp_intr_list
+    mov ebx,ds:[di].oes_my_va
+    xor ecx,ecx
+
+cpIntrLoop:
+    cmp ebx,edx
+    je cpIntrUnlink
+;
+    mov ecx,ebx
+    mov ebx,es:[ebx].oes_next_va
+    or ebx,ebx
+    jnz cpIntrLoop
+    jmp cpFreeEdList
+
+cpIntrUnlink:
+    or ecx,ecx
+    jz cpIntrHead
+;
+    mov esi,es:[edx].oes_next_va
+    mov edi,es:[edx].oes_nexted
+    mov es:[ecx].oes_next_va,esi
+    mov es:[ecx].oes_nexted,edi
+    jmp cpFreeEdList
+
+cpIntrHead:
+    mov esi,es:[edx].oes_next_va
+    mov ecx,es:[edx].oes_nexted
+    mov ds:[di].oes_next_va,esi
+    mov ds:[di].oes_nexted,ecx
     jmp cpFreeEdList
 
 cpFreeEdList:

@@ -126,6 +126,9 @@ hid_key_leds        DB ?
 hid_key_mod         DB ?
 hid_key_arr         DB 6 DUP(?)
 
+hid_last_key        DB ?
+hid_last_time       DD ?
+
 hid_data ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
@@ -716,6 +719,71 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:	        SetIdle
+;
+;		Description:	Set idle to suitable range for auto-repeat of keys
+;
+;       Paramters:      BX      HID selector
+;      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetIdle   Proc near
+    push ds
+    push es
+    push eax
+    push bx
+    push cx
+    push edx
+    push di
+;    
+    mov ds,bx
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,21h
+    mov es:usd_req,0Ah
+    mov es:usd_value,0C00h  ; 12 * 4ms = 48ms (20 chars per second)
+    movzx ax,ds:hid_interface
+    mov es:usd_index,ax
+    mov es:usd_len,0
+    xor di,di
+    mov bx,ds:hid_control_handle
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    StartUsbTransaction
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:hid_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:hid_control_handle
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop di
+    pop edx
+    pop cx
+    pop bx
+    pop eax
+    pop es
+    pop ds    
+    ret
+SetIdle Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:	        UpdateLeds
 ;
 ;		Description:	Update keyboard LEDs
@@ -1085,21 +1153,6 @@ CapsLock   Proc near
     GetKeyboardState
     xor ax,caps_active
     SetKeyboardState
-    mov cx,ax
-    xor al,al
-    test cx,num_active
-    jz clNumOk
-;
-    or al,1
-
-clNumOk:
-    test cx,caps_active
-    jz clCapsOk
-;
-    or al,2
-
-clCapsOk:
-    mov fs:hid_key_leds,al    
     xor ax,ax
 ;
     pop cx    
@@ -1132,21 +1185,6 @@ NumLock   Proc near
     GetKeyboardState
     xor ax,num_active
     SetKeyboardState
-    mov cx,ax
-    xor al,al
-    test cx,num_active
-    jz nlNumOk
-;
-    or al,1
-
-nlNumOk:
-    test cx,caps_active
-    jz nlCapsOk
-;
-    or al,2
-
-nlCapsOk:
-    mov fs:hid_key_leds,al    
     xor ax,ax
 ;
     pop cx    
@@ -1695,6 +1733,203 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    HandlePressed
+;
+;		DESCRIPTION:    Handle newly pressed keys
+;
+;       PARAMETERS:     ES      USB report
+;                       FS      HID data sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePressed  Proc near
+    push cx
+    push si
+    push di
+;
+    mov si,OFFSET hk_key_arr
+    mov cx,6
+
+hpLoop:
+    mov al,es:[si]
+    or al,al
+    jz hpDone
+;
+    push cx
+    mov di,OFFSET hid_key_arr
+    mov cx,6
+
+hpFindLoop:
+    mov ah,fs:[di]
+    or ah,ah
+    je hpNew
+;
+    cmp al,ah
+    je hpNext
+;
+    inc di
+    loop hpFindLoop
+
+hpNew:
+    push eax
+    push edx
+    GetSystemTime
+    mov fs:hid_last_time,eax
+    pop edx
+    pop eax
+;
+    mov fs:hid_last_key,al
+    call ReportKeyPress
+
+hpNext:
+    pop cx
+    inc si
+    loop hpLoop
+
+hpDone:
+    pop di
+    pop si
+    pop cx
+    ret
+HandlePressed  Endp    
+        
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			HandleReleased
+;
+;		DESCRIPTION:    Handle newly released keys
+;
+;       PARAMETERS:     ES      USB report
+;                       FS      HID data sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleReleased  Proc near
+    push cx
+    push si
+    push di
+;
+    mov si,OFFSET hid_key_arr
+    mov cx,6
+
+hrLoop:
+    mov al,fs:[si]
+    or al,al
+    jz hrDone
+;
+    push cx
+    mov di,OFFSET hk_key_arr
+    mov cx,6
+
+hrFindLoop:
+    mov ah,es:[di]
+    or ah,ah
+    je hrNew
+;
+    cmp al,ah
+    je hrNext
+;
+    inc di
+    loop hrFindLoop
+
+hrNew:
+    cmp al,fs:hid_last_key
+    jne hrReport
+;
+    mov fs:hid_last_key,0
+
+hrReport:    
+    call ReportKeyRelease
+
+hrNext:
+    pop cx
+    inc si
+    loop hrLoop
+
+hrDone:
+    pop di
+    pop si
+    pop cx
+    ret
+HandleReleased  Endp    
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			HandleKeyReport
+;
+;		DESCRIPTION:    Handles keyboard report
+;
+;       PARAMETERS:     ES      USB report
+;                       FS      HID data sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleKeyReport Proc near
+    mov cx,6
+    xor si,si
+    xor di,di
+
+hkpCompLoop:
+    mov al,es:[si].hk_key_arr
+    cmp al,fs:[di].hid_key_arr
+    jne hkpChanged
+;
+    or al,al
+    jz hkpRepeat
+;
+    inc si
+    inc di
+    loop hkpCompLoop
+;
+    jmp hkpDone    
+
+hkpChanged:
+    call HandleReleased
+    call HandlePressed
+;    
+    mov cx,6
+    xor si,si
+    xor di,di
+
+hkpCopyLoop:
+    mov al,es:[si].hk_key_arr
+    mov fs:[di].hid_key_arr,al
+    inc si
+    inc di
+    loop hkpCopyLoop
+
+hkpRepeat:
+    mov al,fs:hid_last_key
+    or al,al
+    jz hkpDone
+;
+    mov al,fs:hid_key_arr
+    or al,al
+    jz hkpDone
+;
+    GetSystemTime
+    sub eax,fs:hid_last_time
+    cmp eax,1193 * 500
+    jc hkpDone
+;
+    mov al,fs:hid_last_key
+    call ReportKeyPress
+
+hkpDone:
+    ret
+HandleKeyReport Endp   
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			HidKeyThread
 ;
 ;		DESCRIPTION:    USB keyboard handler thread
@@ -1762,8 +1997,6 @@ hktCapsOk:
     je hktLedsOK
 ;    
     mov fs:hid_key_leds,al
-    mov ax,50
-    WaitMilliSec
     mov al,fs:hid_key_leds
     call UpdateLeds
 
@@ -1789,58 +2022,16 @@ hktLedsOk:
     call UpdateShiftState
 
 hktModHandled:
-    mov cx,6
-    xor si,si
-    xor di,di
-
-hktKeyLoop:
-    mov al,es:[si].hk_key_arr
-    cmp al,fs:[di].hid_key_arr
-    je hktKeyNext
-;
-    or al,al
-    jz hktRel
-;
-    mov ah,fs:[di].hid_key_arr
-    or ah,ah
-    jz hktPress
-;
-    int 3
-
-hktPress:
-    mov fs:[di].hid_key_arr,al
-    call ReportKeyPress
-    inc si
-    inc di
-    mov fs:[di].hid_key_arr,0
-    loop hktKeyLoop
-    jmp hktKeyDone
-
-hktRel:
-    mov al,fs:[di].hid_key_arr
-    call ReportKeyRelease
-    mov fs:[di].hid_key_arr,0
-    inc si
-    inc di
-    loop hktKeyLoop
-    jmp hktKeyDone
-
-hktKeyNext:
-    or al,al
-    jz hktKeyDone
-;
-    inc si
-    inc di
-    loop hktKeyLoop
-
-hktKeyDone:        
+    call HandleKeyReport
     pop es
 
-hktDataOk:
+hktDataOk:    
     UsbReqDone
     jmp hktDataLoop
 
 hktExit:
+    xor ax,ax
+    mov es,ax
     mov bx,ds:hid_intr_req
     CloseUsbReq
     mov ds:hid_intr_req,0
@@ -1878,6 +2069,7 @@ SetupBootInvalid    Endp
 SetupBootKeyboard    Proc near
     mov ds:hid_key_sel,bx
     call SetBootProtocol
+    call SetIdle
 ;    
     mov ax,ds:hid_key_thread
     or ax,ax
@@ -2067,6 +2259,7 @@ usb_detach  Proc far
 
 udStopKey:
     push bx
+    mov bx,ds:hid_key_thread
 	Signal
     or bx,bx
     pop bx
