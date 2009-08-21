@@ -423,7 +423,7 @@ find_pci_device	Proc far
 	shl ebx,16
 	mov bx,dx
 
-    mov cx,MAX_PCI_DEVICES
+    mov cx,MAX_PCI_DEVICES - 1
     
 find_pci_device_loop:
     lodsd
