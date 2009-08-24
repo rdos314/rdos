@@ -129,6 +129,10 @@ ohci_srcs = OHCI.ASM
 ohci_objs = $(ohci_srcs:.ASM=.OBJ)
 ohci_rdvs = OHCI.RDV
 
+ehci_srcs = EHCI.ASM
+ehci_objs = $(ehci_srcs:.ASM=.OBJ)
+ehci_rdvs = EHCI.RDV
+
 ppp_srcs = PPP.ASM
 ppp_objs = $(ppp_srcs:.ASM=.OBJ)
 ppp_rdvs = PPP.RDV
@@ -145,7 +149,7 @@ srcs =      $(ide_srcs) $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
-			$(ts2003_srcs) $(egalax_srcs) $(penmount_srcs) \ 
+			$(ts2003_srcs) $(egalax_srcs) $(penmount_srcs) $(ehci_srcs) \ 
 			$(uhci_srcs) $(usbcom_srcs) $(ohci_srcs) $(hid_srcs) \
 			$(cs5536a_srcs) $(via82a_srcs) $(cs5536wd_srcs)
 
@@ -155,7 +159,7 @@ rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
-			$(ts2003_rdvs) $(egalax_rdvs) $(penmount_rdvs) \
+			$(ts2003_rdvs) $(egalax_rdvs) $(penmount_rdvs) $(ehci_rdvs) \
 			$(uhci_rdvs) $(usbcom_rdvs) $(ohci_rdvs) $(hid_rdvs) \
 			$(cs5536a_rdvs) $(via82a_rdvs) $(cs5536wd_rdvs)
 
@@ -377,6 +381,14 @@ OHCI.RDV : $(ohci_objs)
 	$(ohci_objs)
 	OHCI.RDV
 	OHCI;
+!
+
+EHCI.RDV : $(ehci_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ehci_objs)
+	EHCI.RDV
+	EHCI;
 !
 
 FAT.RDV : $(fat_objs)

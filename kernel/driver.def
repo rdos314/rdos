@@ -428,6 +428,9 @@ fm_data_sel         EQU 0A18h
 hid_code_sel        EQU 0A20h
 hid_data_sel        EQU 0A28h
 
+ehci_code_sel       EQU 0A30h
+ehci_data_sel       EQU 0A38h
+
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h
 video_page2_sel		EQU 0F10h

@@ -2682,60 +2682,40 @@ AddFunction Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PciVendorTab:
-pci00	DW 1002h, 4347h
-pci01	DW 1002h, 4348h
-pci02	DW 1002h, 4387h
-pci03	DW 1002h, 4388h
-pci04	DW 1002h, 4389h
-pci05	DW 1002h, 438Ah
-pci06	DW 1002h, 438Bh
-pci07	DW 1002h, 4397h
-pci08	DW 1002h, 4398h
-pci09	DW 1002h, 4399h
-pci0A	DW 1022h, 2094h
-pci0B	DW 1033h, 0072h
-pci0C	DW 1033h, 00F2h
-pci0D	DW 104Ch, 802Bh
-pci0E	DW 104Ch, 802Eh
-pci0F	DW 104Ch, 8032h
-pci10	DW 104Ch, 803Ah
-pci11	DW 104Ch, 0AC8Fh
-pci12	DW 10B9h, 5237h
-pci13	DW 10B9h, 5251h
-pci14	DW 10B9h, 5253h
-pci15	DW 10DEh, 055Eh
-pci16	DW 1166h, 0220h
-pci17	DW 1166h, 0221h
-pci18	DW 1414h, 5804h
-pci19	DW 1414h, 5806h
-pci1A 	DW 0,	  0
-
 InitPciAdapter	Proc near
-	mov si,OFFSET PciVendorTab
-
-init_pci_loop:
-	xor ax,ax
-	mov dx,cs:[si]
-	mov cx,cs:[si+2]
-	or dx,dx
-	stc
-	jz init_pci_done
+    xor ax,ax
+    mov bh,0Ch
+    mov bl,3
+    mov ch,10h
+    FindPciClass
+    jc init_pci_done
 ;
-	FindPciDevice
-	jnc init_pci_found
-
-init_pci_next:
-	add si,4
-	jmp init_pci_loop
-
-init_pci_found:
     mov cl,10h
     ReadPciDword
     and ax,0F000h
+    mov ebp,eax
     call AddFunction
-	clc
+;	
+	mov dx,1
 
+init_pci_next_device:
+    mov ax,dx
+    mov bh,0Ch
+    mov bl,3
+    mov ch,10h
+    FindPciClass
+	jc init_pci_done
+;	
+	mov cl,10h
+	ReadPciDword
+    and ax,0F000h
+	cmp eax,ebp
+	je init_pci_done
+;	
+	call AddFunction
+	inc dx
+    jmp init_pci_next_device
+    
 init_pci_done:
 	ret
 InitPciAdapter	Endp

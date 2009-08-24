@@ -466,7 +466,7 @@ find_pci_device	Endp
 ;
 ;		NAME:			FindPciClass
 ;
-;		DESCRIPTION:	Write a 32-bit register
+;		DESCRIPTION:	Find PCI class
 ;
 ;		PARAMETERS:		BH		Class
 ;						BL 		Sub class
@@ -476,28 +476,34 @@ find_pci_device	Endp
 ;		RETURNS:		NC		Success
 ;						BH		Bus
 ;						BL 		Device
+;                       CH      Function
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 find_pci_class_name	DB 'Find PCI Class',0
 
 find_pci_class	Proc far
+    push ds
 	push eax
-	push ecx
 	push dx
 	push si
+	push di
 ;
-	mov si,ax
+	mov di,ax
 	movzx eax,bx
 	shl eax,16
 	mov ah,ch
 	mov ebx,eax
-	mov ecx,80000008h
+;
+    mov si,pci_data_sel
+    mov ds,si
+    xor si,si
+    mov cx,MAX_PCI_DEVICES - 1
 
 find_pci_class_loop:
-	mov eax,ecx
+    mov eax,ds:[si+4]
 	mov dx,0CF8h
-	and al,0FCh
+	mov al,8
 	cli
 	out dx,eax
 	mov dx,0CFCh
@@ -507,29 +513,32 @@ find_pci_class_loop:
 	cmp eax,ebx
 	jne find_pci_class_next	
 ;
-	or si,si
+	or di,di
 	jz find_pci_class_ok
 ;
-	sub si,1
+	sub di,1
 
 find_pci_class_next:
-	add ecx,800h
-	cmp ecx,81000000h
-	jne find_pci_class_loop
+    add si,8
+    loop find_pci_class_loop
+;
 	stc
 	jmp find_pci_class_done
 
 find_pci_class_ok:
-	mov ebx,ecx
-	shr ebx,8
+    mov ebx,ds:[si+5]
 	shr bl,3
+;
+	mov cx,ds:[si+4]
+	and cx,700h
 	clc
 
 find_pci_class_done:
+    pop di
 	pop si
 	pop dx
-	pop ecx
 	pop eax
+	pop ds
 	ret
 find_pci_class	Endp
 
