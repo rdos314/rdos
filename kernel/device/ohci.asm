@@ -121,6 +121,7 @@ osp_signal      DW ?
 osp_sync_linear DD ?
 osp_intr_list   DW ?
 osp_intr_count  DW ?
+osp_want_data   DB ?
 
 ohci_pipe   ENDS
 
@@ -185,7 +186,8 @@ data    STRUC
 OhciList32      DD ?
 OhciSection     section_typ <>
 OhciThread      DW ?
-OhciFuncSel     DW ?
+OhciFuncCount   DW ?
+OhciFuncArr     DW MAX_USB_DEVICES(?)
 
 data    ENDS
 
@@ -216,22 +218,27 @@ OhciInt	Proc far
     mov es,ax
 	mov bx,es:OhciThread
 ;
-    mov ax,es:OhciFuncSel
-    or ax,ax
-    jz ohci_int_done
-;
-    mov es,ax
+    mov cx,es:OhciFuncCount
+    mov si,OFFSET OhciFuncArr
+
+oiSignalLoop:
+    push es
+    mov es,es:[si]
     mov ds,es:ohc_reg_sel
     mov eax,ds:HcInterruptStatus
     mov ds:HcInterruptStatus,eax
     or es:ohc_int_status,eax
 ;
     and eax,52h
-    jz ohci_int_done
+    jz oiNext
 ;    
 	Signal
 
-ohci_int_done:    
+oiNext:
+    pop es
+    add si,2
+    loop oiSignalLoop
+;
     ret
 OhciInt  Endp
 
@@ -368,6 +375,7 @@ ipEmpty:
 ipDone:
     mov fs:osp_data_list,0
     mov fs:osp_signal,0
+    mov fs:osp_want_data,0
 	ret
 InsertPipe  Endp
 
@@ -1738,6 +1746,7 @@ IssueTransfer    Proc far
     ClearSignal
     GetThread
     mov fs:osp_signal,ax
+    mov fs:osp_want_data,1
 ;    
     test es:[edx].oes_fa_en,4000h
     jz issue_transfer_enabled
@@ -1798,6 +1807,9 @@ WaitForCompletion   Proc far
 
 wfcLoop:    
     WaitForSignal
+    mov bx,fs:osp_signal
+    or bx,bx
+    jnz wfcLoop
 ;
     mov edx,fs:osp_ed
     mov eax,es:[edx].oes_headp
@@ -1814,6 +1826,7 @@ wfcLoop:
     jmp wfcDone    
 
 wfcOk:
+    mov fs:osp_want_data,0
     clc
 
 wfcDone:
@@ -2300,11 +2313,16 @@ update_reverse_loop:
 
 update_insert_pipe:
     mov gs,ax
+    mov al,gs:osp_want_data
+    or al,al
+    jz update_insert_reclaim
+;    
     mov ecx,gs:osp_data_list
     mov es:[edx].otd_next_va,ecx
     mov gs:osp_data_list,edx
 ;
-    mov bx,gs:osp_signal
+    xor bx,bx
+    xchg bx,gs:osp_signal
     Signal    
     jmp update_reverse_next
 
@@ -2432,19 +2450,33 @@ UpdatePort   Endp
 UpdateUsb  Proc near
     mov ax,ohci_data_sel
     mov ds,ax
-    mov ax,ds:OhciFuncSel
-    or ax,ax
-    jz update_done
+    mov cx,ds:OhciFuncCount
+    or cx,cx
+    jz uuDone
 ;
-    mov ds,ax
+    mov si,OFFSET OhciFuncArr
+
+uuLoop:    
+    push ds
+    push cx
+    push si
+;    
+    mov ds,ds:[si]
 ;    
     xor cl,cl    
     call UpdatePort
 ;
     mov cl,1
     call UpdatePort
+;
+    pop si
+    pop cx
+    pop ds
+;
+    add si,2
+    loop uuLoop    
     
-update_done:    
+uuDone:    
     ret
 UpdateUsb   Endp
 
@@ -2466,14 +2498,21 @@ ohci_timer  Proc far
     push eax
 ;    
     mov ax,ohci_data_sel
-    mov es,ax
-	mov bx,es:OhciThread
-;
-    mov ax,es:OhciFuncSel
-    or ax,ax
-    jz ohci_timer_done
-;
     mov ds,ax
+	mov bx,ds:OhciThread
+;
+    mov cx,ds:OhciFuncCount
+    or cx,cx
+    jz otDone
+;
+    mov si,OFFSET OhciFuncArr
+
+otLoop:
+    push ds
+    push cx
+    push si
+;    
+    mov ds,ds:[si]
     call UpdateQueue
 ;
     mov es,ds:ohc_reg_sel
@@ -2482,11 +2521,18 @@ ohci_timer  Proc far
     or ds:ohc_int_status,eax
 ;
     and eax,52h
-    jz ohci_timer_done
+    jz otNext
 ;    
 	Signal
+otNext:
+    pop si
+    pop cx
+    pop ds
+;
+    add si,2
+    loop otLoop
 
-ohci_timer_done:    
+otDone:    
     pop eax   
     pop edx
 ;    
@@ -2657,7 +2703,10 @@ AddFunction  Proc near
 ;
     mov ax,ohci_data_sel
     mov ds,ax
-    mov ds:OhciFuncSel,bp
+    mov si,ds:OhciFuncCount
+    add si,si
+    mov ds:[si].OhciFuncArr,bp
+    inc ds:OhciFuncCount
 ;    
     pop bp
     pop di
@@ -2740,18 +2789,30 @@ ohci_thread	proc far
     mov ds,ax
     GetThread
     mov ds:OhciThread,ax
-    mov ds:OhciFuncSel,0
+    mov ds:OhciFuncCount,0
 ;    
 	call InitPciAdapter
-    mov ax,ds:OhciFuncSel
-    or ax,ax    
+    mov cx,ds:OhciFuncCount
+    or cx,cx    
 	jz ohci_thread_exit
-;    
+;
+    mov si,OFFSET OhciFuncArr
+
+otInitLoop:
     ClearSignal
     push ds
-    mov ds,ds:OhciFuncSel
+    push cx
+    push si
+;    
+    mov ds,ds:[si]
     call InitFunction
+;
+    pop si
+    pop cx    
     pop ds
+;
+    add si,2
+    loop otInitLoop
 ;    
 	GetSystemTime
 	add eax,11930

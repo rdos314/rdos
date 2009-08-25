@@ -59,7 +59,16 @@ hccap   ENDS
 
 hc_reg  STRUC
 
-hc_d    DB ?
+HcCommand           DD ?
+HcStatus            DD ?
+HcInterruptEnable   DD ?
+HcFrameIndex        DD ?
+HcSegmentSelector   DD ?
+HcPeriodicListBase  DD ?
+HcAsyncList         DD ?
+HcResv              DD 9 DUP(?)
+HcConfig            DD ?
+HcPortSc            DD ?
 
 hc_reg  ENDS
 
@@ -86,7 +95,8 @@ data    STRUC
 EhciList32      DD ?
 EhciSection     section_typ <>
 EhciThread      DW ?
-EhciFuncSel     DW ?
+EhciFuncCount   DW ?
+EhciFuncArr     DW MAX_USB_DEVICES (?)
 
 data    ENDS
 
@@ -438,9 +448,34 @@ ifTabLoop:
 ;
     InitUsbDevice
 ;
+    int 3
+    mov fs,ds:ehc_reg_sel
+    mov fs:HcSegmentSelector,0
+;
+    mov eax,fs:HcCommand
+    or al,80h
+    mov fs:HcCommand,eax
+
+ifWaitReset:
+    mov eax,fs:HcCommand
+    test al,80h
+    jz ifResetDone
+;
+    mov ax,10
+    WaitMilliSec
+    jmp ifWaitReset    
+
+ifResetDone:
+    mov eax,fs:HcCommand
+    and al,NOT 0Ch
+    mov fs:HcCommand,eax
+;
+    or al,1
+    mov fs:HcCommand,eax
+;
     popad
+    pop fs
     pop es
-    pop ds
     ret
 InitFunction    Endp
 
@@ -458,7 +493,6 @@ InitFunction    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddFunction  Proc near
-    int 3
     push es
     push ds
     push eax
@@ -499,7 +533,6 @@ AddFunction  Proc near
     GetPhysicalPage
     and ax,0F000h
     mov ds:ehc_phys,eax
-    mov bp,bx
 ;         
     mov eax,1000h
 	AllocateBigLinear
@@ -543,9 +576,21 @@ afPowerOk:
     and al,0Fh
     mov ds:ehc_ports,al
 ;
+    mov bx,es
+    GetSelectorBaseSize
+    movzx eax,ds:ehc_op_offs
+    add edx,eax
+    sub ecx,eax
+    CreateDataSelector16
+    mov es,bx
+;
+    mov bx,ds
     mov ax,ehci_data_sel
     mov ds,ax
-    mov ds:EhciFuncSel,bp
+    mov di,ds:EhciFuncCount
+    shl di,1
+    mov ds:[di].EhciFuncArr,bx
+    inc ds:EhciFuncCount
 ;    
     pop bp
     pop di
@@ -628,18 +673,29 @@ ehci_thread	proc far
     mov ds,ax
     GetThread
     mov ds:EhciThread,ax
-    mov ds:EhciFuncSel,0
+    mov ds:EhciFuncCount,0
 ;    
 	call InitPciAdapter
-    mov ax,ds:EhciFuncSel
-    or ax,ax    
+    mov cx,ds:EhciFuncCount
+    or cx,cx    
 	jz ehci_thread_exit
 ;    
+    mov si,OFFSET EhciFuncArr    
+
+etInitLoop:
     ClearSignal
     push ds
-    mov ds,ds:EhciFuncSel
+    push si
+    mov ds,ds:[si]
     call InitFunction
+    pop si
     pop ds
+    add si,2
+    loop etInitLoop
+
+etWaitLoop:
+    WaitForSignal
+    jmp etWaitLoop    
 
 ehci_thread_exit:
 	ret
