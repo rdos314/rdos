@@ -1567,6 +1567,9 @@ crFreeLoop:
     or ax,ax
     jz crFreeHandle
 ;
+    cmp ax,-1
+    jz crFreeHandle
+;
     mov es,ax
     mov ax,es:re_next    
     FreeMem
