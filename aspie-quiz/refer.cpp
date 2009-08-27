@@ -50,9 +50,11 @@ TReferer::TReferer(const char *Search, const char *Ref)
 	strcpy(RefererSearch, Search);
 	strcpy(RefererRef, Ref);
 	Count = 0;
+	AqCount = 0;
 	Result = 0;
 	AsResult = 0;
 	NtResult = 0;
+	AqResult = 0;
 	Result0_59 = 0;
 	Result60_99 = 0;
 	Result100_139 = 0;
@@ -60,6 +62,7 @@ TReferer::TReferer(const char *Search, const char *Ref)
 	ResultNt = 0;
 	ResultMixed = 0;
 	ResultAs = 0;
+	ResultAq = 0;
 
 	for (grp = 0; grp < 12; grp++)
 	    GroupResult[grp] = 0;

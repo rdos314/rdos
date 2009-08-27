@@ -317,38 +317,38 @@ void TQuizF1::LoadReferers()
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
 		if (Row.Gender == 1)
-			UpdateReferer(&MaleRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&MaleRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
         else			
-			UpdateReferer(&FemaleRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&FemaleRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
 	
 		ref = FindReferer(Row.Referer);
 		if (!ref)
 			ref = AddReferer(Row.Referer, Row.Referer);
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
 
 		if (Row.Aspie == 1)
-			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
 
 		if (Row.Aspie == 2)
-			UpdateReferer(&AsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&AsRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
 
 		if (Row.ADHD == 2)
-			UpdateReferer(&AddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&AddRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
 
 		if (Row.OCD == 2)
-			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
 
 		if (Row.Social == 2)
-			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
 
 		if (Row.Aspie)
 		{
 			if (Row.Gender == 1)
-				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
 			else
-				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
+				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
 		}
 	}
 }

@@ -41,7 +41,9 @@ public:
 	int Result;
 	int AsResult;
 	int NtResult;
+	int AqResult;
 	int Count;
+	int AqCount;
 	int Result0_59;
 	int Result60_99;
 	int Result100_139;
@@ -49,6 +51,7 @@ public:
 	int ResultNt;
 	int ResultMixed;
 	int ResultAs;
+	int ResultAq;
 
 	char GroupResult[ACTIVE_GROUP_COUNT];
     

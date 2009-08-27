@@ -1979,6 +1979,54 @@ void TQuiz::SortReferers()
 #   Returns....: *
 #
 ##########################################################################*/
+void TQuiz::UpdateReferer(TReferer *ref, int AsResult, int NtResult, int AqResult, char GroupResult[ACTIVE_GROUP_COUNT])
+{
+	int diff;
+	int grp;
+
+    if (AqResult)
+    {
+    	ref->Count++;
+	    ref->AsResult += AsResult;
+    	ref->NtResult += NtResult;
+
+	    diff = AsResult - NtResult;
+
+    	if (diff >= 35)
+	    	ref->ResultAs++;
+    	else
+	    {
+		    if (diff <= -35)
+    			ref->ResultNt++;
+	    	else
+		    	ref->ResultMixed++;
+    	}
+    }
+
+    if (AqResult)
+    {
+        ref->AqCount++;	
+    	ref->AqResult += AqResult;
+
+    	if (AqResult > 32)
+	        ref->ResultAq++;
+	}
+
+	for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
+		ref->GroupResult[grp] += GroupResult[grp];
+}
+
+/*##########################################################################
+#
+#   Name       : TQuiz::UpdateReferer
+#
+#   Purpose....: Update a referer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 void TQuiz::UpdateReferer(TReferer *ref, int AsResult, int NtResult, char GroupResult[ACTIVE_GROUP_COUNT])
 {
 	int diff;
@@ -2044,6 +2092,10 @@ void TQuiz::DefineNt(char *Referer)
 			NTRef.ResultNt += ref->ResultNt;
 	    	NTRef.ResultMixed += ref->ResultMixed;
 		    NTRef.ResultAs += ref->ResultAs;
+
+    		NTRef.AqResult += ref->AqResult;
+	    	NTRef.AqCount += ref->AqCount;
+		    NTRef.ResultAq += ref->ResultAq;
         }
         else
 		  {
@@ -2080,6 +2132,10 @@ void TQuiz::DefineAspie(char *Referer)
 		     AspieRef.ResultNt += ref->ResultNt;
     		 AspieRef.ResultMixed += ref->ResultMixed;
 	    	 AspieRef.ResultAs += ref->ResultAs;
+
+    		 AspieRef.AqResult += ref->AqResult;
+			 AspieRef.AqCount += ref->AqCount;
+	    	 AspieRef.ResultAq += ref->ResultAq;
 		 }
 		 else
 		 {
@@ -4788,6 +4844,23 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 			file.Write(str);
 			WriteFieldFooter(file);
 
+			if (MaleRef.AqResult)
+			{
+			    if (ref->AqCount)
+			    {
+        			WriteRightFieldHeader(file, 4);
+	        		sprintf(str, "%d", ref->AqResult / ref->AqCount);
+		        	file.Write(str);
+			        WriteFieldFooter(file);
+			    }
+			    else
+			    {
+        			WriteRightFieldHeader(file, 4);
+		        	file.Write("--");
+			        WriteFieldFooter(file);
+			    }
+			}
+
 			WriteRightFieldHeader(file, 4);
 			sprintf(str, "%d%", round(100.0 * ref->ResultNt / ref->Count));
     	    file.Write(str);
@@ -4802,6 +4875,23 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 	        sprintf(str, "%d%", round(100.0 * ref->ResultAs / ref->Count));
 	        file.Write(str);
 	        WriteFieldFooter(file);
+
+			if (MaleRef.AqResult)
+			{
+			    if (ref->AqCount)
+			    {
+            	    WriteRightFieldHeader(file, 4);
+	                sprintf(str, "%d%", round(100.0 * ref->ResultAq / ref->AqCount));
+	                file.Write(str);
+	                WriteFieldFooter(file);
+	            }
+	            else
+			    {
+            	    WriteRightFieldHeader(file, 4);
+	                file.Write("--");
+	                WriteFieldFooter(file);
+	            }
+			}
 	    }
 	    else
 	    {
@@ -4908,6 +4998,13 @@ void TQuiz::WriteReferers(const char *filename)
         file.Write("NT Score");
     	WriteFieldFooter(file);
 
+	    if (MaleRef.AqResult)
+	    {
+        	WriteCenteredFieldHeader(file, 4);
+            file.Write("AQ Score");
+    	    WriteFieldFooter(file);
+    	}
+
     	WriteCenteredFieldHeader(file, 4);
         file.Write("NT");
 	    WriteFieldFooter(file);
@@ -4919,6 +5016,13 @@ void TQuiz::WriteReferers(const char *filename)
     	WriteCenteredFieldHeader(file, 4);
         file.Write("AS");
 	    WriteFieldFooter(file);
+
+	    if (MaleRef.AqResult)
+	    {
+        	WriteCenteredFieldHeader(file, 4);
+            file.Write("AQ");
+	        WriteFieldFooter(file);
+	    }
 	}
 	else
 	{

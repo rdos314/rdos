@@ -480,6 +480,7 @@ protected:
 
 	void DsmCutoff(TFile &file, const char *Text, int PopType);
 
+    void UpdateReferer(TReferer *ref, int AsResult, int NtResult, int AqResult, char GroupResult[ACTIVE_GROUP_COUNT]);
     void UpdateReferer(TReferer *ref, int AsResult, int NtResult, char GroupResult[ACTIVE_GROUP_COUNT]);
     void UpdateReferer(TReferer *ref, int Result);
 
