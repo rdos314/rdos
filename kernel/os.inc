@@ -2234,11 +2234,6 @@ GetUsbReqData      MACRO
 						ENDM
 
 ; IN  BX        Req handle
-UsbReqDone      MACRO
-	OsGate usb_req_done_nr
-						ENDM
-
-; IN  BX        Req handle
 CloseUsbReq      MACRO
 	OsGate close_usb_req_nr
 						ENDM

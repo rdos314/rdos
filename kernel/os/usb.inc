@@ -64,7 +64,8 @@ add_setup_proc      DD ?
 add_out_proc      DD ?
 
 ; IN  FS        Pipe selector
-; IN  CX        Size
+; IN  CX        Buffer size
+; IN  ES:EDI    Buffer
 add_in_proc      DD ?
 
 ; IN  FS        Pipe selector
@@ -77,17 +78,15 @@ add_status_in_proc      DD ?
 issue_transfer_proc      DD ?
 
 ; IN  FS        Pipe selector
-delete_queue_proc      DD ?
+end_transfer_proc      DD ?
 
 ; IN  FS        Pipe selector
-; OUT CY        Pipe has data
-is_pipe_signalled_proc      DD ?
+; OUT NC        Transaction ok
+was_transfer_ok_proc      DD ?
 
 ; IN  FS        Pipe selector
-; IN  CX        Buffer size
-; IN  ES:EDI    Buffer
 ; OUT CX        Returned size
-get_data_proc      DD ?
+get_data_size_proc      DD ?
 
 ; IN  FS        Pipe selector
 close_pipe_proc     DD ?

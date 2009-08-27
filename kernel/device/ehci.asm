@@ -102,6 +102,8 @@ esp_qh          DD ?
 esp_prev        DW ?
 esp_next        DW ?
 
+esp_pending     DD ?
+
 ehci_pipe   ENDS
 
 ; this structure should be kept less than 64 bytes long!
@@ -123,6 +125,7 @@ qtd_page4       DD ?
 
 ; driver part
 
+qtd_my_phys     DD ?
 qtd_my_va       DD ?
 qtd_next_va     DD ?
 qtd_alt_va      DD ?
@@ -414,7 +417,8 @@ PAGE
 ;
 ;       PARAMETERS:     ES      Flat sel
 ;                       FS      Pipe sel
-;                       EDX     TD
+;                       EAX     qTD physical
+;                       EDX     qTD linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -430,6 +434,7 @@ InitQtd	PROC near
     mov es:[edx].qtd_page3,0
     mov es:[edx].qtd_page4,0
     mov es:[edx].qtd_my_va,edx
+    mov es:[edx].qtd_my_phys,eax
     mov es:[edx].qtd_next_va,0
     mov es:[edx].qtd_alt_va,0
     mov es:[edx].qtd_buffer_va,0
@@ -488,7 +493,6 @@ PAGE
 AllocateQtd	PROC near
     push cx
     call AllocateBlock64
-    call InitQtd
 ;
     GetPhysicalPage
     and ax,0F000h
@@ -496,6 +500,8 @@ AllocateQtd	PROC near
     and cx,0FFFh
     or ax,cx
     pop cx
+;    
+    call InitQtd
     ret
 AllocateQtd  ENDP
 
@@ -678,6 +684,55 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    InsertQtd
+;
+;		DESCRIPTION:    Insert qTD into pipe schedule
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       AL      PID code
+;                       EDX     qTD linear 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertQtd	PROC near
+    push es
+    push ax
+    push ebx
+;
+    mov bx,flat_sel
+    mov es,bx
+;        
+    and al,3
+    or al,0Ch
+    mov es:[edx].qtd_flags,cl
+;
+    mov ebx,fs:esp_pending
+    mov fs:esp_pending,edx
+    or ebx,ebx
+    jz iqEmpty
+;    
+    mov es:[edx].qtd_next_va,ebx
+    mov ebx,es:[ebx].qtd_my_phys
+    mov es:[edx].qtd_next,ebx
+    jmp iqLinked
+
+iqEmpty:
+    mov es:[edx].qtd_next_va,0
+    mov es:[edx].qtd_next,1
+
+iqLinked:
+    pop ebx
+    pop ax
+    pop es
+    ret
+InsertQtd   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    CreateControl
 ;
 ;		DESCRIPTION:    Create control pipe
@@ -765,11 +820,16 @@ CreateIntr  Endp
 
 AddSetup    Proc far
     int 3
-    mov eax,2000h
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov cx,ax
+    push eax
+    push edx
+;    
     call AllocateFillQtd
+;
+    mov al,2    
+    call InsertQtd
+;
+    pop edx
+    pop eax
     ret
 AddSetup    Endp
 
@@ -802,6 +862,7 @@ AddOut    Endp
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
 ;                       CX      Buffer size
+;                       ES:EDI  Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -903,39 +964,38 @@ IsPipeSignalled   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    EmptyQueue
+;		NAME:		    EndTransfer
 ;
-;		DESCRIPTION:    Empty queue
+;		DESCRIPTION:    End transfer
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmptyQueue   Proc far
+EndTransfer   Proc far
     int 3
     ret
-EmptyQueue   Endp
+EndTransfer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    GetData
+;		NAME:		    GetDataSize
 ;
-;		DESCRIPTION:    Get data
+;		DESCRIPTION:    Get data size
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
-;                       ES:EDI  Buffer
 ;
 ;       RETURNS:        CX      Bytes read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetData   Proc far
+GetDataSize   Proc far
     int 3
     ret
-GetData   Endp
+GetDataSize   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1301,9 +1361,9 @@ et05 DW OFFSET AddIn,        	    ehci_code_sel
 et06 DW OFFSET AddStatusOut,        ehci_code_sel
 et07 DW OFFSET AddStatusIn,        	ehci_code_sel
 et08 DW OFFSET IssueTransfer,       ehci_code_sel
-et09 DW OFFSET EmptyQueue,          ehci_code_sel
+et09 DW OFFSET EndTransfer,         ehci_code_sel
 et10 DW OFFSET IsPipeSignalled,     ehci_code_sel
-et11 DW OFFSET GetData,             ehci_code_sel
+et11 DW OFFSET GetDataSize,         ehci_code_sel
 et12 DW OFFSET ClosePipe,           ehci_code_sel
 et13 DW OFFSET WaitForCompletion,   ehci_code_sel
 et14 DW OFFSET ChangeAddress,       ehci_code_sel

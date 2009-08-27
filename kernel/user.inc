@@ -2237,16 +2237,15 @@ WriteUsbControl      MACRO
 
 ;   IN  BX          Handle
 ;   IN  CX          Size of data
+;   IN  ES:(E)DI    Buffer
 ReqUsbData      MACRO
 	UserGate req_usb_data_nr
 						ENDM
 
 ;   IN  BX          Handle
-;   IN  CX          Size of data
-;   IN  ES:(E)DI    Buffer
-;   OUT AX          Read size
-GetUsbData      MACRO
-	UserGate get_usb_data_nr
+;   OUT (E)AX       Read size
+GetUsbDataSize      MACRO
+	UserGate get_usb_data_size_nr
 						ENDM
 
 ;   IN  BX          Handle
@@ -2272,10 +2271,10 @@ StartUsbTransaction      MACRO
 						ENDM
 
 ;   IN  BX          Handle
-;   IN  CY          Pipe is idle
-;   IN  NC          Pipe is busy
-IsUsbPipeIdle      MACRO
-	UserGate is_usb_pipe_idle_nr
+;   IN  CY          Transaction failed
+;   IN  NC          Transaction ok
+WasUsbTransactionOk      MACRO
+	UserGate is_usb_transaction_ok_nr
 						ENDM
 
 ;;;;;;;;;;; ICSP (In-circuit serial programming) ;;;;;;;;;;

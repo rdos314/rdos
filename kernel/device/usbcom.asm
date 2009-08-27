@@ -139,7 +139,7 @@ code	SEGMENT byte public 'CODE'
 
 	assume cs:code
 
-	.386c
+	.386p
 
 PAGE
 
@@ -159,6 +159,9 @@ SendSignal  Proc far
     push ax
     push bx
 ;    
+    verw cx
+    jnz ssiDone
+;    
     mov ds,cx
     mov ds:ups_timer_active,0
 ;    
@@ -166,7 +169,8 @@ SendSignal  Proc far
     mov ds,ax    
     mov bx,ds:sd_thread
     Signal    
-;
+
+ssiDone:
     pop bx
     pop ax
     pop ds
@@ -509,13 +513,13 @@ reset_sio	PROC near
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -564,13 +568,13 @@ set_latency_timer	PROC near
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -630,13 +634,13 @@ set_baud_index_ok:
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -714,13 +718,13 @@ set_data_stop_ok:
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -850,6 +854,7 @@ open_com_ftdi	Proc far
     movzx ecx,bx
     AddWaitForUsbPipe
 ;    
+    int 3
     call InitComFtdi
     jc open_ftdi_done
 ;    
@@ -969,13 +974,13 @@ enable_cts_ftdi	PROC far
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -1025,13 +1030,13 @@ disable_cts_ftdi	PROC far
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -1081,13 +1086,13 @@ set_dtr_ftdi	Proc far
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -1137,13 +1142,13 @@ reset_dtr_ftdi	Proc far
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -1193,13 +1198,13 @@ set_rts_ftdi	Proc far
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -1249,13 +1254,13 @@ reset_rts_ftdi	Proc far
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -1310,13 +1315,13 @@ Fish	Proc near
     ReqUsbData
 ;        
     WriteUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -1365,28 +1370,28 @@ ReadLineState	Proc near
     mov cx,8
     WriteUsbControl
 ;
+    push es
+    mov ax,ds
+    mov es,ax
     mov cx,7
+    mov edi,OFFSET ups_pl_buf
     ReqUsbData
+    pop es
 ;        
     WriteUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
     cmc
     jc rlsDone
 ;
-    mov ax,ds
-    mov es,ax
-    mov cx,7
-    mov edi,OFFSET ups_pl_buf
-    GetUsbData
     clc
     
 rlsDone:    
@@ -1483,13 +1488,14 @@ WriteLineState	Proc near
     LockUsbPipe
     mov cx,8
     WriteUsbControl
-    FreeMem
 ;
+    push es
     mov ax,ds
     mov es,ax
     mov di,OFFSET ups_pl_buf
     mov cx,7
     WriteUsbData
+    pop es
 ;        
     ReqUsbStatus
 ;    
@@ -1498,6 +1504,7 @@ WriteLineState	Proc near
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -1548,7 +1555,6 @@ WriteControl	Proc near
     LockUsbPipe
     mov cx,8
     WriteUsbControl
-    FreeMem
 ;        
     ReqUsbStatus
 ;    
@@ -1557,6 +1563,7 @@ WriteControl	Proc near
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -1608,13 +1615,13 @@ Soup	Proc near
     WriteUsbControl
 ;        
     ReqUsbStatus
-    FreeMem
 ;    
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -1800,6 +1807,7 @@ open_com_pl	Proc far
     movzx ecx,bx
     AddWaitForUsbPipe
 ;    
+    int 3
     call InitComPl
 ;    
     mov ds:ups_device_sel,es
@@ -1924,7 +1932,6 @@ ecpIndexOk:
     LockUsbPipe
     mov cx,8
     WriteUsbControl
-    FreeMem
 ;        
     ReqUsbStatus
 ;    
@@ -1933,6 +1940,7 @@ ecpIndexOk:
     adc edx,0
     mov bx,ds:ups_control_wait
     WaitWithTimeout
+    FreeMem
 ;    
     mov bx,ds:ups_control_pipe
     IsUsbPipeIdle
@@ -2630,7 +2638,6 @@ hdOpenOk:
     jc hdReadDone
 ;
     GetUsbReqData
-    UsbReqDone
     StartUsbReq
     mov ax,ds:uds_device_type
     xor al,al
@@ -2660,7 +2667,6 @@ hdReadDone:
     jc hdWrite
 ;
     GetUsbReqData
-    UsbReqDone
     mov es,ds:uds_intr_buffer
 
 hdStartIntr:
@@ -2674,7 +2680,6 @@ hdWrite:
     IsUsbReqReady
     jc hdDone
 ;
-    UsbReqDone
     push ds
     mov ds,ds:uds_port_sel
     mov bx,ds:send_wait
@@ -2699,11 +2704,6 @@ hdClosed:
     mov bx,ds:uds_in_req
     or bx,bx
     jz hdDone
-;    
-    IsUsbReqReady
-    jc hdIsClosed
-;
-    UsbReqDone
 
 hdIsClosed:
     test ds:uds_flag,FLAG_UDS_DELETE

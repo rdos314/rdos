@@ -99,13 +99,16 @@ uhci_func_sel    ENDS
 
 uhci_pipe   STRUC
 
-usp_pipe_base   usb_pipe_struc <>
-usp_qh          DD ?
-usp_intr_ptr    DW ?
-usp_intr_cnt    DW ?
-usp_prev        DW ?
-usp_next        DW ?
-usp_signal      DW ?
+usp_pipe_base       usb_pipe_struc <>
+usp_qh              DD ?
+usp_intr_ptr        DW ?
+usp_intr_cnt        DW ?
+usp_prev            DW ?
+usp_next            DW ?
+usp_signal          DW ?
+usp_buffer_offset   DD ?
+usp_buffer_sel      DW ?
+usp_data_size       DW ?
 
 uhci_pipe   ENDS
 
@@ -1760,6 +1763,7 @@ AddOutBuffer    Endp
 ;                       FS      Pipe selector
 ;                       EDX     QH
 ;                       CX      Size
+;                       ES:EDI  Buffer
 ;                     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1771,6 +1775,9 @@ AddInBuffer    Proc near
     or cx,cx
     jnz aibHasData
 ;
+    mov fs:usp_buffer_offset,edi
+    mov fs:usp_buffer_sel,es
+;    
     mov ax,flat_sel
     mov es,ax
     push edx
@@ -1964,6 +1971,7 @@ AddOut    Endp
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
 ;                       CX      Buffer size
+;                       ES:EDI  Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2136,6 +2144,10 @@ wfccRecoverError:
     stc
 
 wfcDone:
+    pushf
+    call EndTransfer
+    popf
+;    
     pop edx
     pop eax
     pop es
@@ -2200,57 +2212,66 @@ IsPipeSignalled   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    EmptyQueue
+;		NAME:		    EndTransfer
 ;
-;		DESCRIPTION:    Empty queue
+;		DESCRIPTION:    End transfer and get input data
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmptyQueue   Proc far
+EndTransfer   Proc far
     push es
     push ax
     push edx
-;        
+    push edi
+;   
+    mov fs:usp_data_size,0 
+    mov ax,fs:usp_buffer_sel
+    or ax,ax
+    jz etDataDone
+;    
+    mov edi,fs:usp_buffer_offset
+    mov es,ax
+    mov edx,fs:usp_qh
+    call GetQhData
+    mov fs:usp_data_size,cx
+        
+etDataDone:
+    mov fs:usp_buffer_sel,0
+;    
     mov ax,flat_sel
     mov es,ax
 ;    
     mov edx,fs:usp_qh
     call FreeVaElem
-
-eqDone:
+;   
+    pop edi
     pop edx
     pop ax
     pop es
     ret
-EmptyQueue   Endp
+EndTransfer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    GetData
+;		NAME:		    GetDataSize
 ;
-;		DESCRIPTION:    Get data
+;		DESCRIPTION:    Get input data size for last transfer
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
-;                       ES:EDI  Buffer
 ;
 ;       RETURNS:        CX      Bytes read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetData   Proc far
-    push edx
-;    
-    mov edx,fs:usp_qh
-    call GetQhData
-;
-    pop edx
+GetDataSize   Proc far
+    mov cx,fs:usp_data_size
     ret
-GetData   Endp
+GetDataSize   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2497,9 +2518,9 @@ ut05 DW OFFSET AddIn,        	    uhci_code_sel
 ut06 DW OFFSET AddStatusOut,        uhci_code_sel
 ut07 DW OFFSET AddStatusIn,        	uhci_code_sel
 ut08 DW OFFSET IssueTransfer,       uhci_code_sel
-ut09 DW OFFSET EmptyQueue,          uhci_code_sel
+ut09 DW OFFSET EndTransfer,         uhci_code_sel
 ut10 DW OFFSET IsPipeSignalled,     uhci_code_sel
-ut11 DW OFFSET GetData,             uhci_code_sel
+ut11 DW OFFSET GetDataSize,         uhci_code_sel
 ut12 DW OFFSET ClosePipe,           uhci_code_sel
 ut13 DW OFFSET WaitForCompletion,   uhci_code_sel
 ut14 DW OFFSET ChangeAddress,       uhci_code_sel

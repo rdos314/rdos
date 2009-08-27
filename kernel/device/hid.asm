@@ -550,14 +550,7 @@ GetReport   Proc near
     mov bx,ds:hid_control_handle
     IsUsbPipeIdle
     cmc
-    jc grDone
-;
-    mov cx,8
-    xor edi,edi
-    GetUsbData
-    clc
-    
-grDone:    
+;    
     pushf
     UnlockUsbPipe
     popf
@@ -611,6 +604,7 @@ GetProtocol   Proc near
     WriteUsbControl
 ;
     mov cx,1
+    xor di,di
     ReqUsbData
 ;        
     WriteUsbStatus
@@ -628,9 +622,7 @@ GetProtocol   Proc near
     mov al,-1
     jc gpDone
 ;
-    mov cx,1
-    mov edi,SIZE usb_setup_data
-    GetUsbData
+    xor di,di
     mov al,es:[di]
     clc
     
@@ -2010,7 +2002,7 @@ hktLedsOk:
 ;    
     GetUsbReqData
     cmp cx,8
-    jne hktDataOk
+    jne hktDataLoop
 ;
     push es
     mov es,ds:hid_intr_buf
@@ -2024,9 +2016,6 @@ hktLedsOk:
 hktModHandled:
     call HandleKeyReport
     pop es
-
-hktDataOk:    
-    UsbReqDone
     jmp hktDataLoop
 
 hktExit:

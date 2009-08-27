@@ -163,14 +163,14 @@ int TUsbControlPipe::Read(TUsbControlMsg *msg, char *buf, int size, int MilliSec
     
     Lock();    
     WriteControl((char *)msg, sizeof(TUsbControlMsg));
-    ReqData(size);
-    ReqStatus();
+	ReqData(buf, size);
+	ReqStatus();
 
-    WaitTimeout(MilliSec);
-    ok = IsIdle();
+	WaitTimeout(MilliSec);
+	ok = IsIdle();
 
-    if (ok)
-        len = GetData(buf, size);
+	if (ok)
+		len = GetDataSize();
     
     Unlock();
 

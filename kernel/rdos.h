@@ -521,8 +521,8 @@ void RDOSAPI RdosLockUsbPipe(int handle);
 void RDOSAPI RdosUnlockUsbPipe(int handle);
 void RDOSAPI RdosAddWaitForUsbPipe(int Handle, int PipeHandle, void *ID);
 void RDOSAPI RdosWriteUsbControl(int Handle, const char *buf, int size);
-void RDOSAPI RdosReqUsbData(int Handle, int Maxsize);
-int RDOSAPI RdosGetUsbData(int Handle, char *buf, int maxsize);
+void RDOSAPI RdosReqUsbData(int Handle, char *buf, int maxsize);
+int RDOSAPI RdosGetUsbDataSize(int Handle);
 void RDOSAPI RdosWriteUsbData(int Handle, const char *buf, int size);
 void RDOSAPI RdosReqUsbStatus(int Handle);
 void RDOSAPI RdosWriteUsbStatus(int Handle);
@@ -2292,12 +2292,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosReqUsbData = \
     CallGate_req_usb_data \
-    parm [ebx] [ecx];
+    parm [ebx] [edi] [ecx];
 
-#pragma aux RdosGetUsbData = \
+#pragma aux RdosGetUsbDataSize = \
     CallGate_get_usb_data \
     "movzx eax,ax" \
-    parm [ebx] [edi] [ecx] \
+    parm [ebx] \
     value [eax];
 
 #pragma aux RdosWriteUsbData = \

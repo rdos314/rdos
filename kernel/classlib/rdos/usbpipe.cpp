@@ -191,9 +191,9 @@ void TUsbPipe::WriteControl(const char *buf, int size)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUsbPipe::ReqData(int maxsize)
+void TUsbPipe::ReqData(char *buf, int maxsize)
 {
-    RdosReqUsbData(FHandle, maxsize);
+	RdosReqUsbData(FHandle, buf, maxsize);
 }
 
 /*##########################################################################
@@ -214,18 +214,18 @@ void TUsbPipe::WriteData(const char *buf, int size)
 
 /*##########################################################################
 #
-#   Name       : TUsbPipe::GetData
+#   Name       : TUsbPipe::GetDataSize
 #
-#   Purpose....: Get received data
+#   Purpose....: Get received data size
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TUsbPipe::GetData(char *buf, int maxsize)
+int TUsbPipe::GetDataSize()
 {
-    return RdosGetUsbData(FHandle, buf, maxsize);
+	return RdosGetUsbDataSize(FHandle);
 }
 
 /*##########################################################################

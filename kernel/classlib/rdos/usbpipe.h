@@ -47,9 +47,9 @@ protected:
     void Unlock();
     
     void WriteControl(const char *buf, int size);
-	void ReqData(int size);
+	void ReqData(char *buf, int size);
 	void WriteData(const char *buf, int size);
-	int GetData(char *buf, int maxsize);
+	int GetDataSize();
 	void ReqStatus();
 	void WriteStatus();
 	int IsIdle();

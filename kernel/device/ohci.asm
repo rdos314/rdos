@@ -112,16 +112,19 @@ ohc_td_struc    ENDS
 
 ohci_pipe   STRUC
 
-osp_pipe_base   usb_pipe_struc <>
-osp_ed          DD ?
-osp_prev        DW ?
-osp_next        DW ?
-osp_data_list   DD ?
-osp_signal      DW ?
-osp_sync_linear DD ?
-osp_intr_list   DW ?
-osp_intr_count  DW ?
-osp_want_data   DB ?
+osp_pipe_base       usb_pipe_struc <>
+osp_ed              DD ?
+osp_prev            DW ?
+osp_next            DW ?
+osp_data_list       DD ?
+osp_signal          DW ?
+osp_sync_linear     DD ?
+osp_intr_list       DW ?
+osp_intr_count      DW ?
+osp_want_data       DB ?
+osp_buffer_offset   DD ?
+osp_buffer_sel      DW ?
+osp_data_size       DW ?
 
 ohci_pipe   ENDS
 
@@ -1359,7 +1362,9 @@ CreateIntr  Endp
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
 ;                       CX      Size
+;                       ES:EDI  Buffer
 ;                       AX      Flags field of TD
+
 ;                     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1382,6 +1387,9 @@ AddInBuffer    Proc near
     jmp aibDone
 
 aibHasData:
+    mov fs:osp_buffer_offset,edi
+    mov fs:osp_buffer_sel,es
+;    
     movzx ebp,cx
     dec cx
     and cx,0F000h
@@ -1640,6 +1648,7 @@ AddOut    Endp
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
 ;                       CX      Buffer size
+;                       ES:EDI  Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1830,6 +1839,10 @@ wfcOk:
     clc
 
 wfcDone:
+    pushf
+    call EndTransfer
+    popf
+;
     pop edx
     pop eax
     pop es
@@ -1870,119 +1883,62 @@ IsPipeSignalled   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    EmptyQueue
+;		NAME:		    EndTransfer
 ;
-;		DESCRIPTION:    Empty queue
+;		DESCRIPTION:    End transfer
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmptyQueue   Proc far
+EndTransfer   Proc far
     push es
     push eax
     push cx
     push edx
     push esi
     push edi
-;    
-    mov ax,flat_sel
-    mov es,ax
-    mov edx,fs:osp_data_list
-    or edx,edx
-    jz empty_queue_done
-;
-    xor esi,esi    
-
-empty_queue_loop:
-    mov edi,es:[edx].otd_next_va
-    mov eax,es:[edx].otd_buffer_va
-    call FreeBlock32
-    or eax,eax
-    jz empty_queue_next
-;
-    and ax,0F000h
-    cmp esi,eax
-    je empty_queue_next
-;
-    mov edx,eax
-    mov esi,eax
-    mov ecx,1000h
-    FreeLinear
-
-empty_queue_next:
-    mov edx,edi
-    or edx,edx
-    jnz empty_queue_loop    
-        
-empty_queue_done:
-    mov fs:osp_data_list,0
-;
-    mov edx,fs:osp_ed
-    or es:[edx].oes_fa_en,4000h
-;
-    pop edi
-    pop esi
-    pop edx
-    pop cx
-    pop eax
-    pop es
-    ret
-EmptyQueue   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:		    GetData
-;
-;		DESCRIPTION:    Get data
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       ES:EDI  Buffer
-;
-;       RETURNS:        CX      Bytes read
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetData   Proc far
-    push ds
-    push eax
-    push edx
-    push esi
-    push edi
     push bp
-;    
+;
+    mov fs:osp_data_size,0 
+    mov ax,fs:osp_buffer_sel
+    or ax,ax
+    jz etDataDone
+;            
+    push ds
+    mov edi,fs:osp_buffer_offset
+    mov es,ax
+;
     xor bp,bp
     mov ax,flat_sel
     mov ds,ax
     mov edx,fs:osp_data_list
     or edx,edx
-    jz get_data_done
+    jz etDataPop
 
-get_data_loop:
+etDataLoop:
     mov ax,ds:[edx].otd_flags
     and ax,18h
     cmp ax,10h
-    jne get_data_next
+    jne etDataNext
 ;
     mov esi,ds:[edx].otd_buffer_va
     or esi,esi
-    jz get_data_next
+    jz etDataNext
 ;    
     mov ecx,ds:[edx].otd_cbp
     or ecx,ecx
-    jz get_data_full
+    jz etDataFull
 ;
     sub ecx,ds:[edx].otd_buffer_va
     and ecx,0FFFh
-    jmp get_data_size_ok    
+    jmp etDataSizeOk   
 
-get_data_full:
+etDataFull:
     movzx ecx,ds:[edx].otd_buffer_size
 
-get_data_size_ok:
+etDataSizeOk:
     add bp,cx
     push ecx
     shr ecx,2    
@@ -1991,21 +1947,81 @@ get_data_size_ok:
     and ecx,3
     rep movs byte ptr es:[edi],[esi]
 
-get_data_next:
+etDataNext:
     mov edx,ds:[edx].otd_next_va
     or edx,edx
-    jnz get_data_loop
+    jnz etDataLoop
 
-get_data_done:
-    mov cx,bp
+etDataPop:
+    pop ds
+    mov fs:osp_data_size,bp
+
+etDataDone:
+    mov fs:osp_buffer_sel,0
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,fs:osp_data_list
+    or edx,edx
+    jz etQueueDone
+;
+    xor esi,esi    
+
+etQueueLoop:
+    mov edi,es:[edx].otd_next_va
+    mov eax,es:[edx].otd_buffer_va
+    call FreeBlock32
+    or eax,eax
+    jz etQueueNext
+;
+    and ax,0F000h
+    cmp esi,eax
+    je etQueueNext
+;
+    mov edx,eax
+    mov esi,eax
+    mov ecx,1000h
+    FreeLinear
+
+etQueueNext:
+    mov edx,edi
+    or edx,edx
+    jnz etQueueLoop 
+        
+etQueueDone:
+    mov fs:osp_data_list,0
+;
+    mov edx,fs:osp_ed
+    or es:[edx].oes_fa_en,4000h
+;
     pop bp
     pop edi
     pop esi
     pop edx
+    pop cx
     pop eax
-    pop ds
+    pop es
     ret
-GetData   Endp
+EndTransfer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    GetDataSize
+;
+;		DESCRIPTION:    Get data size
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;       RETURNS:        CX      Bytes read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDataSize   Proc far
+    mov cx,fs:osp_data_size
+    ret
+GetDataSize   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2165,7 +2181,7 @@ cpFreeEdList:
     jmp cpFreeEdList
 
 cpFreeTd:
-    call ds:delete_queue_proc
+    call ds:end_transfer_proc
     call SyncHead    
     mov edx,es:[edx].oes_head_va
 
@@ -2567,9 +2583,9 @@ ot05 DW OFFSET AddIn,        	    ohci_code_sel
 ot06 DW OFFSET AddStatusOut,        ohci_code_sel
 ot07 DW OFFSET AddStatusIn,        	ohci_code_sel
 ot08 DW OFFSET IssueTransfer,       ohci_code_sel
-ot09 DW OFFSET EmptyQueue,          ohci_code_sel
+ot09 DW OFFSET EndTransfer,         ohci_code_sel
 ot10 DW OFFSET IsPipeSignalled,     ohci_code_sel
-ot11 DW OFFSET GetData,             ohci_code_sel
+ot11 DW OFFSET GetDataSize,         ohci_code_sel
 ot12 DW OFFSET ClosePipe,           ohci_code_sel
 ot13 DW OFFSET WaitForCompletion,   ohci_code_sel
 ot14 DW OFFSET ChangeAddress,       ohci_code_sel

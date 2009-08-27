@@ -228,7 +228,6 @@ CreateDefaultControl    Proc near
     mov fs:usbp_address,al
     call ds:wait_for_completion_proc
     pushf
-    call ds:delete_queue_proc
     FreeMem
     call ds:change_address_proc
     popf
@@ -369,18 +368,17 @@ GetDescr    Proc near
     mov cx,8
     call ds:add_setup_proc
     pop cx
-    call ds:add_in_proc
-    call ds:add_status_out_proc
-    call ds:issue_transfer_proc
-    call ds:wait_for_completion_proc
 ;
     pop edi
     pop cx
     pop es
 ;    
+    call ds:add_in_proc
+    call ds:add_status_out_proc
+    call ds:issue_transfer_proc
+    call ds:wait_for_completion_proc
     pushf
-    call ds:get_data_proc
-    call ds:delete_queue_proc
+    call ds:get_data_size_proc
     popf
     ret
 GetDescr    Endp    
@@ -1196,10 +1194,18 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqReadData	Proc near
+	push es
 	push cx
+	push edi
+;	
+    xor edi,edi
     mov cx,es:re_size
+    mov es,es:re_buf_sel
 	call ds:add_in_proc
+;	
+    pop edi
 	pop cx
+	pop es
     ret
 ReqReadData Endp
 
@@ -1286,7 +1292,6 @@ start_usb_req	Proc far
     mov ax,ds:[bx].rh_list
 	mov fs,ds:[bx].rh_pipe_sel
 	mov ds,ds:[bx].rh_func_sel
-	call ds:delete_queue_proc
 
 surReqLoop:
     or ax,ax
@@ -1449,17 +1454,8 @@ gurdReqLoop:
     mov al,es:re_type
     cmp al,REQ_TYPE_READ_DATA
     jne gurdNext
-;
-    push es
-    push edi
-;
-    mov cx,es:re_size
-    mov es,es:re_buf_sel
-    xor edi,edi
-    call ds:get_data_proc
-;
-    pop edi
-    pop es
+;    
+    call ds:get_data_size_proc
     jmp gurdDone
 
 gurdNext:
@@ -1473,49 +1469,6 @@ gurdDone:
     pop ds
     ret
 get_usb_req_data   Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			UsbReqDone
-;
-;		description:	Signal req is done
-;
-;       parameters:     BX      Req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-usb_req_done_name DB 'USB Req Done', 0
-
-usb_req_done	Proc far
-	push ds
-	push fs
-	push ax
-	push bx
-;
-	mov ax,USB_REQ_HANDLE
-	DerefHandle
-	jc urdDone
-;
-    and ds:[bx].rh_flags,NOT REQ_FLAG_STARTED
-	mov fs,ds:[bx].rh_pipe_sel
-    push ds
-	mov ds,ds:[bx].rh_func_sel
-	call ds:delete_queue_proc
-    pop ds
-;
-	mov ds,[bx].rh_pipe_sel
-    LeaveSection ds:usbp_section
-
-urdDone:	
-    pop bx
-    pop ax
-    pop fs
-    pop ds
-    ret
-usb_req_done   Endp
 
 PAGE
 
@@ -1557,7 +1510,6 @@ crCheckDone:
     jmp crCheckDone
     
 crDelete:    
-    call ds:delete_queue_proc
     pop ds
 
 crFreeList:
@@ -2176,8 +2128,15 @@ start_wait_for_pipe Endp
 
 stop_wait_for_pipe	PROC far
     push ds
-    mov ds,es:pw_pipe_sel
-    mov ds:usbp_wait_obj,0
+    push fs
+;    
+    mov fs,es:pw_pipe_sel
+    mov fs:usbp_wait_obj,0
+;    
+    mov ds,es:pw_func_sel   
+    call ds:end_transfer_proc
+;	
+    pop fs
     pop ds        
     ret
 stop_wait_for_pipe Endp
@@ -2307,7 +2266,6 @@ lock_usb_pipe_name	DB 'Lock USB Pipe',0
 
 lock_usb_pipe   Proc far
 	push ds
-	push fs
 	push ax
 	push bx
 ;
@@ -2319,15 +2277,10 @@ lock_usb_pipe   Proc far
     mov ds,ds:[bx].up_pipe_sel
     EnterSection ds:usbp_section
     pop ds
-;    
-	mov fs,ds:[bx].up_pipe_sel
-	mov ds,ds:[bx].up_func_sel
-	call ds:delete_queue_proc
 
 lupDone:
 	pop bx
 	pop ax
-	pop fs
 	pop ds
     retf32
 lock_usb_pipe   Endp
@@ -2349,25 +2302,21 @@ unlock_usb_pipe_name	DB 'Unlock USB Pipe',0
 
 unlock_usb_pipe   Proc far
 	push ds
-	push fs
 	push ax
 	push bx
 ;
 	mov ax,USB_PIPE_HANDLE
 	DerefHandle
 	jc uupDone
-;
-	mov fs,ds:[bx].up_pipe_sel
-	mov ds,ds:[bx].up_func_sel
-	call ds:delete_queue_proc
-	mov ax,fs
-	mov ds,ax
+;	
+    push ds
+    mov ds,ds:[bx].up_pipe_sel
     LeaveSection ds:usbp_section
+    pop ds
 
 uupDone:
 	pop bx
 	pop ax
-	pop fs
 	pop ds
     retf32
 unlock_usb_pipe   Endp
@@ -2447,8 +2396,9 @@ PAGE
 ;
 ;		DESCRIPTION:	Setup request for input data on pipe
 ;
-;		PARAMETERS:		BX		Pipe handle
-;                       CX      Size of data to request
+;		PARAMETERS:		BX		    Pipe handle
+;                       CX          Size of buffer
+;                       ES:(E)DI    Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2481,21 +2431,19 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			GetUsbData
+;		NAME:			GetUsbDataSize
 ;
-;		DESCRIPTION:	Get data from previous input req
+;		DESCRIPTION:	Get data size from previous input req
 ;
 ;		PARAMETERS:		BX		    Pipe handle
-;                       CX          Size of data to request
-;                       ES:(E)DI    Buffer
 ;
-;       RETURNS:        AX          Actual size
+;       RETURNS:        (E)AX       Actual size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_usb_data_name	DB 'Get USB Data',0
+get_usb_data_size_name	DB 'Get USB Data Size',0
 
-get_usb_data16	Proc far
+get_usb_data_size16	Proc far
 	push ds
 	push fs
 	push bx
@@ -2505,10 +2453,9 @@ get_usb_data16	Proc far
 	DerefHandle
 	jc gudDone16
 ;
-    movzx edi,di
 	mov fs,ds:[bx].up_pipe_sel
 	mov ds,ds:[bx].up_func_sel
-	call ds:get_data_proc
+	call ds:get_data_size_proc
 	mov ax,cx
 
 gudDone16:
@@ -2517,9 +2464,9 @@ gudDone16:
 	pop fs
 	pop ds
 	ret
-get_usb_data16	Endp
+get_usb_data_size16	Endp
 
-get_usb_data32	Proc far
+get_usb_data_size32	Proc far
 	push ds
 	push fs
 	push bx
@@ -2531,7 +2478,7 @@ get_usb_data32	Proc far
 ;
 	mov fs,ds:[bx].up_pipe_sel
 	mov ds,ds:[bx].up_func_sel
-	call ds:get_data_proc
+	call ds:get_data_size_proc
 	movzx eax,cx
 
 gudDone32:
@@ -2540,7 +2487,7 @@ gudDone32:
 	pop fs
 	pop ds
 	retf32
-get_usb_data32	Endp
+get_usb_data_size32	Endp
 
 PAGE
 
@@ -2947,12 +2894,6 @@ init	Proc far
 	mov ax,get_usb_req_data_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET usb_req_done
-	mov di,OFFSET usb_req_done_name
-	xor cl,cl
-	mov ax,usb_req_done_nr
-	RegisterOsGate
-;
 	mov si,OFFSET close_usb_req
 	mov di,OFFSET close_usb_req_name
 	xor cl,cl
@@ -3022,11 +2963,11 @@ init	Proc far
 	mov ax,req_usb_data_nr
 	RegisterBimodalUserGate
 ;
-	mov bx,OFFSET get_usb_data16
-	mov si,OFFSET get_usb_data32
-	mov di,OFFSET get_usb_data_name
+	mov bx,OFFSET get_usb_data_size16
+	mov si,OFFSET get_usb_data_size32
+	mov di,OFFSET get_usb_data_size_name
 	mov dx,virt_es_in
-	mov ax,get_usb_data_nr
+	mov ax,get_usb_data_size_nr
 	RegisterUserGate
 ;
 	mov bx,OFFSET write_usb_data16

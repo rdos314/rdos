@@ -9220,7 +9220,7 @@ RdosWriteUsbControl	ENDP
 ;
 ;		DESCRIPTION:	Queue request for USB-data input
 ;
-;       PARAMETERS:     Handle, maxsize
+;       PARAMETERS:     Handle, buffer, maxsize
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -9233,46 +9233,41 @@ RdosReqUsbData	PROC
 	push ecx
 ;
 	mov bx,[ebp+8]
-	mov cx,[ebp+12]
+	mov edi,[ebp+12]
+	mov cx,[ebp+16]
 	UserGate req_usb_data_nr
 ;
     pop ecx
 	pop ebx
 	pop ebp
-	ret 8
+	ret 12
 RdosReqUsbData	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			RdosGetUsbData
+;		NAME:			RdosGetUsbDataSize
 ;
-;		DESCRIPTION:	Get data for previous USB input requests
+;		DESCRIPTION:	Get data size for previous USB input requests
 ;
-;       PARAMETERS:     Handle, buffer, maxsize
+;       PARAMETERS:     Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RdosGetUsbData
+	public RdosGetUsbDataSize
 
-RdosGetUsbData	PROC
+RdosGetUsbDataSize	PROC
 	push ebp
 	mov ebp,esp
 	push ebx
-	push ecx
-	push edi
 ;
 	mov bx,[ebp+8]
-	mov edi,[ebp+12]
-	mov cx,[ebp+16]
-	UserGate get_usb_data_nr
+	UserGate get_usb_data_size_nr
 	movzx eax,ax
 ;
-    pop edi
-    pop ecx
 	pop ebx
 	pop ebp
-	ret 12
-RdosGetUsbData	ENDP
+	ret 4
+RdosGetUsbDataSize	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
