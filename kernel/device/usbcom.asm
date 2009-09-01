@@ -1791,7 +1791,6 @@ open_com_pl	Proc far
     movzx ecx,bx
     AddWaitForUsbPipe
 ;    
-    int 3
     call InitComPl
 ;    
     mov ds:ups_device_sel,es
@@ -2621,7 +2620,6 @@ hdOpenOk:
     jc hdReadDone
 ;
     GetUsbReqData
-    StartUsbReq
     mov ax,ds:uds_device_type
     xor al,al
 	xor si,si
@@ -2630,13 +2628,17 @@ hdOpenOk:
 ;
 	mov si,2
     sub cx,2
-    jbe hdReadDone
+    jbe hdReadRestart
 
 hdPollReadDo:
     or cx,cx
-    jz hdReadDone
+    jz hdReadRestart
 ;    
     call PollRead
+
+hdReadRestart:
+    mov bx,ds:uds_in_req
+    StartUsbReq
 
 hdReadDone:
     mov bx,ds:uds_intr_req

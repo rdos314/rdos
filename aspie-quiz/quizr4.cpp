@@ -813,6 +813,7 @@ void TQuizR4::InitReferers()
 	AddReferer("circvsmaximvs.com", "circvsmaximvs.com/showthread.php?t=14129");
 	AddReferer("panterachat.com", "panterachat.com/phpBB/viewtopic.php?t=24332");
 	AddReferer("kaytastrophe.com", "kaytastrophe.com/index.php?topic=708.0");
+	AddReferer("bpal.org", "bpal.org/index.php?showtopic=32494");
 }
 
 /*##################  TQuizR4::LoadReferers ##########################
@@ -1073,6 +1074,7 @@ void TQuizR4::SetupControlGroups()
 	DefineNt("circvsmaximvs.com");
 	DefineNt("panterachat.com");
 	DefineNt("kaytastrophe.com");
+	DefineNt("bpal.org");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");

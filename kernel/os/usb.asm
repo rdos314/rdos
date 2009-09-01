@@ -91,6 +91,7 @@ REQ_TYPE_STATUS_IN = 4
 REQ_TYPE_STATUS_OUT = 5
 
 REQ_FLAG_STARTED = 1
+REQ_FLAG_LOCKED  = 2
 
 req_entry_struc STRUC
 
@@ -1283,11 +1284,16 @@ start_usb_req	Proc far
 	DerefHandle
 	jc surDone
 ;
+    test ds:[bx].rh_flags,REQ_FLAG_LOCKED
+    jnz surStart
+;
     push ds
 	mov ds,[bx].rh_pipe_sel
     EnterSection ds:usbp_section
     pop ds
-;    
+    or ds:[bx].rh_flags,REQ_FLAG_LOCKED
+
+surStart:    
     or ds:[bx].rh_flags,REQ_FLAG_STARTED
     mov ax,ds:[bx].rh_list
 	mov fs,ds:[bx].rh_pipe_sel
@@ -1295,15 +1301,15 @@ start_usb_req	Proc far
 
 surReqLoop:
     or ax,ax
-    jz surDone
+    jz surIssue
 ;
     mov es,ax
     movzx bx,es:re_type
     or bx,bx    
-    jz surDone
+    jz surIssue
 ;
     cmp bx,5
-    ja surDone
+    ja surIssue
 ;
     dec bx
     add bx,bx
@@ -1311,16 +1317,65 @@ surReqLoop:
     mov ax,es:re_next    
     jmp surReqLoop
 
-surDone:
+surIssue:
     ClearSignal
     call ds:issue_transfer_proc
-;    
+
+surDone:    
 	pop bx
 	pop ax
 	pop fs
 	pop ds
     ret
 start_usb_req   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			StopUsbReq
+;
+;		description:	Stop req
+;
+;       parameters:     BX      Req handle
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_usb_req_name DB 'Stop USB req', 0
+
+stop_usb_req	Proc far
+	push ds
+	push fs
+	push ax
+	push bx
+;
+	mov ax,USB_REQ_HANDLE
+	DerefHandle
+	jc sturDone
+;
+    push ds
+	mov fs,ds:[bx].rh_pipe_sel
+	mov ds,ds:[bx].rh_func_sel
+    call ds:end_transfer_proc
+    pop ds
+;    
+    test ds:[bx].rh_flags,REQ_FLAG_LOCKED
+    jz sturDone
+;
+    push ds
+	mov ds,[bx].rh_pipe_sel
+    LeaveSection ds:usbp_section
+    pop ds
+    and ds:[bx].rh_flags,NOT REQ_FLAG_LOCKED
+
+sturDone:
+	pop bx
+	pop ax
+	pop fs
+	pop ds
+    ret
+stop_usb_req   Endp
 
 PAGE
 
@@ -1518,6 +1573,15 @@ crFreeLoop:
     jmp crFreeLoop
 
 crFreeHandle:
+    test ds:[bx].rh_flags,REQ_FLAG_LOCKED
+    jz crLockOk
+;
+    push ds
+	mov ds,[bx].rh_pipe_sel
+    LeaveSection ds:usbp_section
+    pop ds
+
+crLockOk:
 	FreeHandle
 
 crDone:	
@@ -2900,6 +2964,12 @@ init	Proc far
 	mov di,OFFSET start_usb_req_name
 	xor cl,cl
 	mov ax,start_usb_req_nr
+	RegisterOsGate
+;
+	mov si,OFFSET stop_usb_req
+	mov di,OFFSET stop_usb_req_name
+	xor cl,cl
+	mov ax,stop_usb_req_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET is_usb_req_started

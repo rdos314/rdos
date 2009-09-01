@@ -1818,7 +1818,7 @@ IsTransferDone   Proc far
     test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
     jz itdOk
 ;
-    call ds:is_connected_proc
+    call IsConnected
     jc itdOk
 ;    
     mov ax,flat_sel
@@ -2229,6 +2229,9 @@ cpFreeEdList:
     cmp eax,es:[edx].oes_tailp
     je cpFreeTd
 ;    
+    call IsConnected
+    jc cpFreeTd
+;    
     mov ax,1
     WaitMilliSec
     jmp cpFreeEdList
@@ -2333,7 +2336,6 @@ icDone:
     pop dx
     pop ax
     pop es
-    clc
     ret
 IsConnected Endp
 

@@ -495,5 +495,7 @@ thread_to_sel_nr            EQU 342
 
 hook_shift_keys_nr          EQU 343
 
+stop_usb_req_nr             EQU 344
+
 osgate_entries				EQU 350
 
