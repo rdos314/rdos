@@ -110,6 +110,9 @@ otd_pipe_sel    DW ?
 
 ohc_td_struc    ENDS
 
+OSP_FLAG_TRANSFER_PENDING   = 1
+OSP_FLAG_TRANSFER_OK        = 2
+
 ohci_pipe   STRUC
 
 osp_pipe_base       usb_pipe_struc <>
@@ -121,10 +124,10 @@ osp_signal          DW ?
 osp_sync_linear     DD ?
 osp_intr_list       DW ?
 osp_intr_count      DW ?
-osp_want_data       DB ?
 osp_buffer_offset   DD ?
 osp_buffer_sel      DW ?
 osp_data_size       DW ?
+osp_flags           DB ?
 
 ohci_pipe   ENDS
 
@@ -378,7 +381,7 @@ ipEmpty:
 ipDone:
     mov fs:osp_data_list,0
     mov fs:osp_signal,0
-    mov fs:osp_want_data,0
+    mov fs:osp_flags,0
 	ret
 InsertPipe  Endp
 
@@ -1755,7 +1758,8 @@ IssueTransfer    Proc far
     ClearSignal
     GetThread
     mov fs:osp_signal,ax
-    mov fs:osp_want_data,1
+    and fs:osp_flags, NOT OSP_FLAG_TRANSFER_OK
+    or fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
 ;    
     test es:[edx].oes_fa_en,4000h
     jz issue_transfer_enabled
@@ -1797,6 +1801,59 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    IsTransferDone
+;
+;		DESCRIPTION:    Check if transfer is done
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsTransferDone   Proc far
+    push es
+    push eax
+    push edx
+;
+    test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
+    jz itdOk
+;
+    call ds:is_connected_proc
+    jc itdOk
+;    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov bx,fs:osp_signal
+    or bx,bx
+    jnz itdFail
+;
+    mov edx,fs:osp_ed
+    mov eax,es:[edx].oes_headp
+    test al,1
+    jnz itdOk
+;
+    and ax,0FFF0h    
+    cmp eax,es:[edx].oes_tailp
+    je itdOk
+
+itdFail:
+    stc
+    jmp itdDone    
+
+itdOk:
+    clc
+
+itdDone:
+    pop edx
+    pop eax
+    pop es
+    ret
+IsTransferDone   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    WaitForCompletion
 ;
 ;		DESCRIPTION:    Wait for transfer to complete
@@ -1807,78 +1864,58 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion   Proc far
-    push es
     push eax
-    push edx
-;    
-    mov ax,flat_sel
-    mov es,ax
+;
+    test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
+    jz wfcDone
 
 wfcLoop:    
+    call IsTransferDone
+    jnc wfcDone
+;    
     WaitForSignal
-    mov bx,fs:osp_signal
-    or bx,bx
-    jnz wfcLoop
-;
-    mov edx,fs:osp_ed
-    mov eax,es:[edx].oes_headp
-    test al,1
-    jnz wfcOk
-;
-    and ax,0FFF0h    
-    cmp eax,es:[edx].oes_tailp
-    je wfcOk
-;
-    call ds:is_connected_proc
-    jnc wfcLoop    
-;
-    jmp wfcDone    
-
-wfcOk:
-    mov fs:osp_want_data,0
-    clc
+    jmp wfcLoop
 
 wfcDone:
-    pushf
     call EndTransfer
-    popf
 ;
-    pop edx
     pop eax
-    pop es
     ret
 WaitForCompletion   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    IsPipeSignalled
+;		NAME:		    WasTransferOk
 ;
-;		DESCRIPTION:    IsPipeSignalled
+;		DESCRIPTION:    Check if transfer was ok
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
 ;
-;       RETURNS:        CY      Pipe has data
+;       RETURNS:        NC      Transfer ok
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IsPipeSignalled   Proc far
-    push edx
-    call ds:is_connected_proc
-    jc pipe_signalled_done
-;    
-    mov edx,fs:osp_data_list
-    or edx,edx
-    stc
-    jnz pipe_signalled_done
+WasTransferOk   Proc far
+    test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
+    jz wtoNotPending
 ;
+    call EndTransfer
+
+wtoNotPending:
+    test fs:osp_flags, OSP_FLAG_TRANSFER_OK
+    jnz wtoOk
+;    
+    stc
+    jmp wtoDone
+
+wtoOk:
     clc
 
-pipe_signalled_done:
-    pop edx
+wtoDone:
     ret
-IsPipeSignalled   Endp
+WasTransferOk   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1900,8 +1937,20 @@ EndTransfer   Proc far
     push esi
     push edi
     push bp
+;    
+    test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
+    jz etDone
 ;
-    mov fs:osp_data_size,0 
+    mov fs:osp_data_size,0     
+    and fs:osp_flags, NOT OSP_FLAG_TRANSFER_PENDING
+    and fs:osp_flags, NOT OSP_FLAG_TRANSFER_OK
+;    
+    mov edx,fs:osp_data_list
+    or edx,edx
+    jz etDone
+;
+    or fs:osp_flags, OSP_FLAG_TRANSFER_OK
+;
     mov ax,fs:osp_buffer_sel
     or ax,ax
     jz etDataDone
@@ -1914,8 +1963,6 @@ EndTransfer   Proc far
     mov ax,flat_sel
     mov ds,ax
     mov edx,fs:osp_data_list
-    or edx,edx
-    jz etDataPop
 
 etDataLoop:
     mov ax,ds:[edx].otd_flags
@@ -1993,7 +2040,8 @@ etQueueDone:
 ;
     mov edx,fs:osp_ed
     or es:[edx].oes_fa_en,4000h
-;
+
+etDone:
     pop bp
     pop edi
     pop esi
@@ -2019,7 +2067,12 @@ EndTransfer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDataSize   Proc far
+    test fs:osp_flags, OSP_FLAG_TRANSFER_OK
+    jz gdsDone
+;    
     mov cx,fs:osp_data_size
+
+gdsDone:
     ret
 GetDataSize   Endp
 
@@ -2329,8 +2382,7 @@ update_reverse_loop:
 
 update_insert_pipe:
     mov gs,ax
-    mov al,gs:osp_want_data
-    or al,al
+    test gs:osp_flags, OSP_FLAG_TRANSFER_PENDING
     jz update_insert_reclaim
 ;    
     mov ecx,gs:osp_data_list
@@ -2583,13 +2635,14 @@ ot05 DW OFFSET AddIn,        	    ohci_code_sel
 ot06 DW OFFSET AddStatusOut,        ohci_code_sel
 ot07 DW OFFSET AddStatusIn,        	ohci_code_sel
 ot08 DW OFFSET IssueTransfer,       ohci_code_sel
-ot09 DW OFFSET EndTransfer,         ohci_code_sel
-ot10 DW OFFSET IsPipeSignalled,     ohci_code_sel
-ot11 DW OFFSET GetDataSize,         ohci_code_sel
-ot12 DW OFFSET ClosePipe,           ohci_code_sel
-ot13 DW OFFSET WaitForCompletion,   ohci_code_sel
-ot14 DW OFFSET ChangeAddress,       ohci_code_sel
-ot15 DW OFFSET IsConnected,         ohci_code_sel
+ot09 DW OFFSET IsTransferDone,      ohci_code_sel
+ot10 DW OFFSET EndTransfer,         ohci_code_sel
+ot11 DW OFFSET WasTransferOk,       ohci_code_sel
+ot12 DW OFFSET GetDataSize,         ohci_code_sel
+ot13 DW OFFSET ClosePipe,           ohci_code_sel
+ot14 DW OFFSET WaitForCompletion,   ohci_code_sel
+ot15 DW OFFSET ChangeAddress,       ohci_code_sel
+ot16 DW OFFSET IsConnected,         ohci_code_sel
 
 InitFunction    Proc near
     push es
@@ -2601,7 +2654,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,16
+    mov cx,17
 
 ifTabLoop:
     lods dword ptr cs:[si]

@@ -45,7 +45,7 @@
 ##########################################################################*/
 TUsbPipe::TUsbPipe(int Handle)
 {
-	FHandle = Handle;
+        FHandle = Handle;
 }
 
 /*##########################################################################
@@ -55,7 +55,7 @@ TUsbPipe::TUsbPipe(int Handle)
 #   Purpose....: Constructor
 #
 #   In params..: Controller Controller ID
-#				 Device     Device ID
+#                                Device     Device ID
 #                Pipe       Pipe #
 #   Out params.: *
 #   Returns....: *
@@ -63,7 +63,7 @@ TUsbPipe::TUsbPipe(int Handle)
 ##########################################################################*/
 TUsbPipe::TUsbPipe(int Controller, int Device, int Pipe)
 {
-	FHandle = RdosOpenUsbPipe(Controller, Device, Pipe);
+        FHandle = RdosOpenUsbPipe(Controller, Device, Pipe);
 }
 
 /*##########################################################################
@@ -96,7 +96,7 @@ TUsbPipe::~TUsbPipe()
 ##########################################################################*/
 void TUsbPipe::DeviceName(char *Name, int MaxLen) const
 {
-	strncpy(Name,"Usb pipe",MaxLen);
+        strncpy(Name,"Usb pipe",MaxLen);
 }
 
 /*##########################################################################
@@ -113,8 +113,8 @@ void TUsbPipe::DeviceName(char *Name, int MaxLen) const
 ##########################################################################*/
 void TUsbPipe::Add(TWait *Wait)
 {
-	if (FHandle)
-		RdosAddWaitForUsbPipe(Wait->GetHandle(), FHandle, this);
+        if (FHandle)
+                RdosAddWaitForUsbPipe(Wait->GetHandle(), FHandle, this);
 }
 
 /*##########################################################################
@@ -145,7 +145,7 @@ void TUsbPipe::SignalNewData()
 ##########################################################################*/
 void TUsbPipe::Lock()
 {
-	RdosLockUsbPipe(FHandle);
+        RdosLockUsbPipe(FHandle);
 }
 
 /*##########################################################################
@@ -161,7 +161,7 @@ void TUsbPipe::Lock()
 ##########################################################################*/
 void TUsbPipe::Unlock()
 {
-	RdosUnlockUsbPipe(FHandle);
+        RdosUnlockUsbPipe(FHandle);
 }
 
 /*##########################################################################
@@ -193,7 +193,7 @@ void TUsbPipe::WriteControl(const char *buf, int size)
 ##########################################################################*/
 void TUsbPipe::ReqData(char *buf, int maxsize)
 {
-	RdosReqUsbData(FHandle, buf, maxsize);
+        RdosReqUsbData(FHandle, buf, maxsize);
 }
 
 /*##########################################################################
@@ -225,7 +225,7 @@ void TUsbPipe::WriteData(const char *buf, int size)
 ##########################################################################*/
 int TUsbPipe::GetDataSize()
 {
-	return RdosGetUsbDataSize(FHandle);
+        return RdosGetUsbDataSize(FHandle);
 }
 
 /*##########################################################################
@@ -262,16 +262,33 @@ void TUsbPipe::WriteStatus()
 
 /*##########################################################################
 #
-#   Name       : TUsbPipe::IsIdle
+#   Name       : TUsbPipe::IsTransDone
 #
-#   Purpose....: Check if pipe is idle (command executed)
+#   Purpose....: Check if transaction is done
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TUsbPipe::IsIdle()
+int TUsbPipe::IsTransDone()
 {
-    return RdosIsUsbPipeIdle(FHandle);
+    return RdosIsUsbTransactionDone(FHandle);
 }
+
+/*##########################################################################
+#
+#   Name       : TUsbPipe::WasTransOk
+#
+#   Purpose....: Check if transaction was ok
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUsbPipe::WasTransOk()
+{
+    return RdosWasUsbTransactionOk(FHandle);
+}
+

@@ -55,7 +55,7 @@ TUsbControlPipe::TUsbControlPipe(int Handle)
 #   Purpose....: Constructor
 #
 #   In params..: Controller Controller ID
-#				 Device     Device ID
+#                                Device     Device ID
 #                Pipe       Pipe #
 #   Out params.: *
 #   Returns....: *
@@ -103,7 +103,7 @@ int TUsbControlPipe::Send(TUsbControlMsg *msg, int MilliSec)
     ReqStatus();
 
     WaitTimeout(MilliSec);
-    ok = IsIdle();
+    ok = WasTransOk();
 
     Unlock();
     return ok;
@@ -133,7 +133,7 @@ int TUsbControlPipe::Write(TUsbControlMsg *msg, const char *buf, int size, int M
     ReqStatus();
 
     WaitTimeout(MilliSec);
-    ok = IsIdle();
+    ok = WasTransOk();
     Unlock();
 
     if (ok)
@@ -163,14 +163,14 @@ int TUsbControlPipe::Read(TUsbControlMsg *msg, char *buf, int size, int MilliSec
     
     Lock();    
     WriteControl((char *)msg, sizeof(TUsbControlMsg));
-	ReqData(buf, size);
-	ReqStatus();
+        ReqData(buf, size);
+        ReqStatus();
 
-	WaitTimeout(MilliSec);
-	ok = IsIdle();
+        WaitTimeout(MilliSec);
+        ok = WasTransOk();
 
-	if (ok)
-		len = GetDataSize();
+        if (ok)
+                len = GetDataSize();
     
     Unlock();
 
@@ -179,3 +179,4 @@ int TUsbControlPipe::Read(TUsbControlMsg *msg, char *buf, int size, int MilliSec
     else
         return 0;
 }
+

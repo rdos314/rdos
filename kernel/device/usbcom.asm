@@ -522,8 +522,7 @@ reset_sio	PROC near
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -577,8 +576,7 @@ set_latency_timer	PROC near
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -643,8 +641,7 @@ set_baud_index_ok:
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -727,8 +724,7 @@ set_data_stop_ok:
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -854,7 +850,6 @@ open_com_ftdi	Proc far
     movzx ecx,bx
     AddWaitForUsbPipe
 ;    
-    int 3
     call InitComFtdi
     jc open_ftdi_done
 ;    
@@ -983,8 +978,7 @@ enable_cts_ftdi	PROC far
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -1039,8 +1033,7 @@ disable_cts_ftdi	PROC far
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -1095,8 +1088,7 @@ set_dtr_ftdi	Proc far
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -1151,8 +1143,7 @@ reset_dtr_ftdi	Proc far
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -1207,8 +1198,7 @@ set_rts_ftdi	Proc far
     FreeMem
 ;
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -1263,8 +1253,7 @@ reset_rts_ftdi	Proc far
     FreeMem
 ;
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -1324,8 +1313,7 @@ Fish	Proc near
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -1388,8 +1376,7 @@ ReadLineState	Proc near
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     jc rlsDone
 ;
     clc
@@ -1507,8 +1494,7 @@ WriteLineState	Proc near
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -1566,8 +1552,7 @@ WriteControl	Proc near
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -1624,8 +1609,7 @@ Soup	Proc near
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -1943,8 +1927,7 @@ ecpIndexOk:
     FreeMem
 ;    
     mov bx,ds:ups_control_pipe
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf

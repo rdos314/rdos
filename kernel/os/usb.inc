@@ -77,6 +77,9 @@ add_status_in_proc      DD ?
 ; IN  FS        Pipe selector
 issue_transfer_proc      DD ?
 
+;  IN FS        Is request ready?
+is_transfer_done_proc      DD ?
+
 ; IN  FS        Pipe selector
 end_transfer_proc      DD ?
 

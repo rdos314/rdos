@@ -548,8 +548,7 @@ GetReport   Proc near
     WaitWithTimeout
 ;    
     mov bx,ds:hid_control_handle
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
 ;    
     pushf
     UnlockUsbPipe
@@ -617,8 +616,7 @@ GetProtocol   Proc near
     WaitWithTimeout
 ;    
     mov bx,ds:hid_control_handle
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     mov al,-1
     jc gpDone
 ;
@@ -690,8 +688,7 @@ SetBootProtocol   Proc near
     WaitWithTimeout
 ;    
     mov bx,ds:hid_control_handle
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -755,8 +752,7 @@ SetIdle   Proc near
     WaitWithTimeout
 ;    
     mov bx,ds:hid_control_handle
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf
@@ -837,8 +833,7 @@ UpdateLeds   Proc near
     WaitWithTimeout
 ;    
     mov bx,ds:hid_control_handle
-    IsUsbPipeIdle
-    cmc
+    WasUsbTransactionOk
     pushf
     UnlockUsbPipe
     popf

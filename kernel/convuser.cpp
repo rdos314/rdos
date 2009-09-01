@@ -13,7 +13,7 @@ int main()
 	char *ptr;
    char *next;
 	TFile InFile("user.def");
-	TFile OutFile("user.h", 0);
+	TFile OutFile("rdu.h", 0);
 
 	Size = InFile.Read(Buffer, MAX_USER_SIZE);
 	Buffer[Size] = 0;

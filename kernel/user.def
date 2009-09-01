@@ -389,7 +389,6 @@ write_usb_data_nr           = 328
 req_usb_status_nr           = 329
 write_usb_status_nr         = 330
 write_usb_control_nr        = 331
-was_usb_transaction_ok_nr   = 332
 lock_usb_pipe_nr            = 333
 unlock_usb_pipe_nr          = 334
 
@@ -456,4 +455,7 @@ show_exception_text_nr      = 375
 
 get_watchdog_tics_nr        = 376
 
-usergate_entries			= 377
+is_usb_trans_done_nr        = 377
+was_usb_trans_ok_nr         = 378
+
+usergate_entries			= 379

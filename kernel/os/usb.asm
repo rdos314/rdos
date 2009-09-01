@@ -1394,8 +1394,7 @@ is_usb_req_ready	Proc far
 ;
 	mov fs,ds:[bx].rh_pipe_sel
 	mov ds,ds:[bx].rh_func_sel
-	call ds:is_pipe_signalled_proc
-	cmc
+	call ds:is_transfer_done_proc
 
 iurrDone:	
     pop bx
@@ -1441,8 +1440,7 @@ get_usb_req_data	Proc far
 	mov fs,ds:[bx].rh_pipe_sel
     mov ax,ds:[bx].rh_list
 	mov ds,ds:[bx].rh_func_sel
-	call ds:is_pipe_signalled_proc
-	cmc
+	call ds:was_transfer_ok_proc
 	jc gurdDone
 
 gurdReqLoop:
@@ -1501,15 +1499,7 @@ close_usb_req	Proc far
     push ds
 	mov fs,ds:[bx].rh_pipe_sel
 	mov ds,ds:[bx].rh_func_sel
-
-crCheckDone:	
-	call ds:is_pipe_signalled_proc
-    jc crDelete	
-;    
-    call ds:wait_for_completion_proc
-    jmp crCheckDone
-    
-crDelete:    
+    call ds:end_transfer_proc
     pop ds
 
 crFreeList:
@@ -2172,13 +2162,13 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_pipe_idle	PROC far
-    int 3
     push ds
     push fs
 ;
     mov ds,es:pw_func_sel
     mov fs,es:pw_pipe_sel
-    call ds:is_pipe_signalled_proc
+    call ds:is_transfer_done_proc
+    cmc
 ;
     pop fs
     pop ds        
@@ -2669,38 +2659,74 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			IsUsbPipeIdle
+;		NAME:			IsUsbTransactionDone
 ;
-;		DESCRIPTION:	Check if pipe is idle
+;		DESCRIPTION:	Check if transaction is done
 ;
 ;		PARAMETERS:		BX		    Pipe handle
 ;
-;       RETURNS:        NC          Busy
-;                       CY          Idle
+;       RETURNS:        NC          Done
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-is_usb_pipe_idle_name	DB 'Is USB Pipe Idle',0
+is_usb_trans_done_name	DB 'Is USB Transaction Done',0
 
-is_usb_pipe_idle	Proc far
+is_usb_trans_done	Proc far
 	push ds
 	push fs
 	push bx
 ;
 	mov ax,USB_PIPE_HANDLE
 	DerefHandle
-	jc iupiDone
+	jc iutdDone
 ;
 	mov fs,ds:[bx].up_pipe_sel
 	mov ds,ds:[bx].up_func_sel
-	call ds:is_pipe_signalled_proc
+	call ds:is_transfer_done_proc
 
-iupiDone:
+iutdDone:
 	pop bx
 	pop fs
 	pop ds
 	retf32
-is_usb_pipe_idle	Endp
+is_usb_trans_done	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WasUsbTransactionOk
+;
+;		DESCRIPTION:	Check if transaction was performed ok
+;
+;		PARAMETERS:		BX		    Pipe handle
+;
+;       RETURNS:        NC          Done
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+was_usb_trans_ok_name	DB 'Was USB Transaction Ok',0
+
+was_usb_trans_ok	Proc far
+	push ds
+	push fs
+	push bx
+;
+	mov ax,USB_PIPE_HANDLE
+	DerefHandle
+	jc wutoDone
+;
+	mov fs,ds:[bx].up_pipe_sel
+	mov ds,ds:[bx].up_func_sel
+	call ds:was_transfer_ok_proc
+
+wutoDone:
+	pop bx
+	pop fs
+	pop ds
+	retf32
+was_usb_trans_ok	Endp
 
 PAGE
 
@@ -2995,10 +3021,16 @@ init	Proc far
 	mov ax,start_usb_transaction_nr
 	RegisterBimodalUserGate
 ;
-	mov si,OFFSET is_usb_pipe_idle
-	mov di,OFFSET is_usb_pipe_idle_name
+	mov si,OFFSET is_usb_trans_done
+	mov di,OFFSET is_usb_trans_done_name
 	xor dx,dx
-	mov ax,is_usb_pipe_idle_nr
+	mov ax,is_usb_trans_done_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET was_usb_trans_ok
+	mov di,OFFSET was_usb_trans_ok_name
+	xor dx,dx
+	mov ax,was_usb_trans_ok_nr
 	RegisterBimodalUserGate
 ;
 	popa

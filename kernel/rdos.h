@@ -526,7 +526,8 @@ int RDOSAPI RdosGetUsbDataSize(int Handle);
 void RDOSAPI RdosWriteUsbData(int Handle, const char *buf, int size);
 void RDOSAPI RdosReqUsbStatus(int Handle);
 void RDOSAPI RdosWriteUsbStatus(int Handle);
-int RDOSAPI RdosIsUsbPipeIdle(int Handle);
+int RDOSAPI RdosIsUsbTransactionDone(int Handle);
+int RDOSAPI RdosWasUsbTransactionOk(int Handle);
 
 int RDOSAPI RdosOpenICSP(int DeviceID);
 void RDOSAPI RdosCloseICSP(int Handle);
@@ -2295,7 +2296,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [ebx] [edi] [ecx];
 
 #pragma aux RdosGetUsbDataSize = \
-    CallGate_get_usb_data \
+    CallGate_get_usb_data_size \
     "movzx eax,ax" \
     parm [ebx] \
     value [eax];
@@ -2312,9 +2313,14 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_write_usb_status \
     parm [ebx];
 
-#pragma aux RdosIsUsbPipeIdle = \
-    CallGate_is_usb_pipe_idle \
-    "cmc" \
+#pragma aux RdosIsUsbTransactionDone = \
+    CallGate_is_usb_trans_done \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosWasUsbTransactionOk = \
+    CallGate_was_usb_trans_ok \
     CarryToBool \
     parm [ebx] \
     value [eax];

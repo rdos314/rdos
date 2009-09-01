@@ -9352,37 +9352,69 @@ RdosWriteUsbStatus	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			RdosIsUsbPipeIdle
+;		NAME:			RdosIsUsbTransactionDone
 ;
-;		DESCRIPTION:    Check if pipe is idle/done
+;		DESCRIPTION:    Check if transaction is done
 ;
 ;       PARAMETERS:     Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RdosIsUsbPipeIdle
+	public RdosIsUsbTransactionDone
 
-RdosIsUsbPipeIdle	PROC
+RdosIsUsbTransactionDone	PROC
 	push ebp
 	mov ebp,esp
 	push ebx
 ;
 	mov bx,[ebp+8]
-	UserGate is_usb_pipe_idle_nr
-	jc iupiIdle
+	UserGate is_usb_trans_done_nr
+	jnc iutdOk
 ;
     xor eax,eax
-    jmp iupiDone
+    jmp iutdDone
 
-iupiIdle:
+iutdOk:
     mov eax,1
 
-iupiDone:
+iutdDone:
 	pop ebx
 	pop ebp
 	ret 4
-RdosIsUsbPipeIdle	ENDP
+RdosIsUsbTransactionDone	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWasUsbTransactionOk
+;
+;		DESCRIPTION:    Check if transaction was ok
+;
+;       PARAMETERS:     Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWasUsbTransactionOk
+
+RdosWasUsbTransactionOk	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate was_usb_trans_ok_nr
+	jnc wutoOk
+;
+    xor eax,eax
+    jmp wutoDone
+
+wutoOk:
+    mov eax,1
+
+wutoDone:
+	pop ebx
+	pop ebp
+	ret 4
+RdosWasUsbTransactionOk	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

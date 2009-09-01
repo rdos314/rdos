@@ -384,12 +384,11 @@
 #define CallGate_close_usb_pipe 0x9a 68 1 0 0 2 0
 #define CallGate_add_wait_for_usb_pipe 0x9a 69 1 0 0 2 0
 #define CallGate_req_usb_data 0x9a 70 1 0 0 2 0
-#define CallGate_get_usb_data 0x9a 71 1 0 0 2 0
+#define CallGate_get_usb_data_size 0x9a 71 1 0 0 2 0
 #define CallGate_write_usb_data 0x9a 72 1 0 0 2 0
 #define CallGate_req_usb_status 0x9a 73 1 0 0 2 0
 #define CallGate_write_usb_status 0x9a 74 1 0 0 2 0
 #define CallGate_write_usb_control 0x9a 75 1 0 0 2 0
-#define CallGate_is_usb_pipe_idle 0x9a 76 1 0 0 2 0
 #define CallGate_lock_usb_pipe 0x9a 77 1 0 0 2 0
 #define CallGate_unlock_usb_pipe 0x9a 78 1 0 0 2 0
 
@@ -453,4 +452,9 @@
 #define CallGate_get_env_size 0x9a 118 1 0 0 2 0
 
 #define CallGate_show_exception_text 0x9a 119 1 0 0 2 0
+
+#define CallGate_get_watchdog_tics 0x9a 120 1 0 0 2 0
+
+#define CallGate_is_usb_trans_done 0x9a 121 1 0 0 2 0
+#define CallGate_was_usb_trans_ok 0x9a 122 1 0 0 2 0
 

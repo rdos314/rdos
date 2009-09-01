@@ -926,6 +926,26 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    IsTransferDone
+;
+;		DESCRIPTION:    Check if transfer is done
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;       RETURNS:        NC      Transfer is done
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsTransferDone   Proc far
+    int 3
+    stc
+    ret
+IsTransferDone   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    WaitForCompletion
 ;
 ;		DESCRIPTION:    Wait for transfer to complete
@@ -944,26 +964,6 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    IsPipeSignalled
-;
-;		DESCRIPTION:    IsPipeSignalled
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;       RETURNS:        CY      Pipe has data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsPipeSignalled   Proc far
-    int 3
-    stc
-    ret
-IsPipeSignalled   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:		    EndTransfer
 ;
 ;		DESCRIPTION:    End transfer
@@ -977,6 +977,26 @@ EndTransfer   Proc far
     int 3
     ret
 EndTransfer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    WasTransferOk
+;
+;		DESCRIPTION:    Was transfer ok
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;       RETURNS:        NC      Transfer ok
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WasTransferOk   Proc far
+    int 3
+    stc
+    ret
+WasTransferOk   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1361,13 +1381,14 @@ et05 DW OFFSET AddIn,        	    ehci_code_sel
 et06 DW OFFSET AddStatusOut,        ehci_code_sel
 et07 DW OFFSET AddStatusIn,        	ehci_code_sel
 et08 DW OFFSET IssueTransfer,       ehci_code_sel
-et09 DW OFFSET EndTransfer,         ehci_code_sel
-et10 DW OFFSET IsPipeSignalled,     ehci_code_sel
-et11 DW OFFSET GetDataSize,         ehci_code_sel
-et12 DW OFFSET ClosePipe,           ehci_code_sel
-et13 DW OFFSET WaitForCompletion,   ehci_code_sel
-et14 DW OFFSET ChangeAddress,       ehci_code_sel
-et15 DW OFFSET IsConnected,         ehci_code_sel
+et09 DW OFFSET IsTransferDone,      ehci_code_sel
+et10 DW OFFSET EndTransfer,         ehci_code_sel
+et11 DW OFFSET WasTransferOk,       ehci_code_sel
+et12 DW OFFSET GetDataSize,         ehci_code_sel
+et13 DW OFFSET ClosePipe,           ehci_code_sel
+et14 DW OFFSET WaitForCompletion,   ehci_code_sel
+et15 DW OFFSET ChangeAddress,       ehci_code_sel
+et16 DW OFFSET IsConnected,         ehci_code_sel
 
 InitFunction    Proc near
     push es
@@ -1379,7 +1400,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,16
+    mov cx,17
 
 ifTabLoop:
     lods dword ptr cs:[si]

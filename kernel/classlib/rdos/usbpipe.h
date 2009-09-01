@@ -52,7 +52,8 @@ protected:
 	int GetDataSize();
 	void ReqStatus();
 	void WriteStatus();
-	int IsIdle();
+	int IsTransDone();
+	int WasTransOk();
 
 	int FHandle;
 };

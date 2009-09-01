@@ -97,6 +97,9 @@ uhc_curr_cnt     DB 128 DUP(?)
 
 uhci_func_sel    ENDS
 
+USP_FLAG_TRANSFER_PENDING   = 1
+USP_FLAG_TRANSFER_OK        = 2
+
 uhci_pipe   STRUC
 
 usp_pipe_base       usb_pipe_struc <>
@@ -109,6 +112,7 @@ usp_signal          DW ?
 usp_buffer_offset   DD ?
 usp_buffer_sel      DW ?
 usp_data_size       DW ?
+usp_flags           DB ?
 
 uhci_pipe   ENDS
 
@@ -2077,6 +2081,8 @@ IssueTransfer    Proc far
     ClearSignal
     GetThread
     mov fs:usp_signal,ax
+    and fs:usp_flags, NOT USP_FLAG_TRANSFER_OK
+    or fs:usp_flags, USP_FLAG_TRANSFER_PENDING
 ;    
     mov eax,es:[edx].uqh_va_elem    
     or eax,eax
@@ -2096,6 +2102,64 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    IsTransferDone
+;
+;		DESCRIPTION:    Check if transfer is done
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsTransferDone   Proc far
+    push es
+    push eax
+    push edx
+;
+    test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
+    jz itdOk
+;    
+    call ds:is_connected_proc
+    jc itdOk
+;    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    je itdControlBulk
+;
+    cmp al,MODE_BULK
+    jne itdOk
+
+itdControlBulk:
+    mov edx,fs:usp_qh
+    test es:[edx].uqh_elem,1
+    jnz itdOk
+;
+    mov eax,es:[edx].uqh_va_elem
+    test es:[eax].utd_control,400000h    
+    jnz itdRecover
+;
+    stc
+    jmp itdEnd   
+
+itdRecover:
+    mov es:[edx].uqh_elem,1
+
+itdOk:
+    clc
+
+itdEnd:    
+    pop edx
+    pop eax
+    pop es
+    ret
+IsTransferDone   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    WaitForCompletion
 ;
 ;		DESCRIPTION:    Wait for transfer to complete
@@ -2106,108 +2170,59 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion   Proc far
-    push es
     push eax
-    push edx
 ;
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov al,fs:usbp_mode
-    cmp al,MODE_CONTROL
-    je wfcControlBulk
-;
-    cmp al,MODE_BULK
-    je wfcControlBulk
-;    
-    stc
-    jmp wfcDone    
+    test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
+    jz wfcDone
 
-wfcControlBulk:
-    mov edx,fs:usp_qh
-    test es:[edx].uqh_elem,1
-    clc
-    jnz wfcDone
+wfcWait:
+    call IsTransferDone
+    jnc wfcDone
 ;
-    mov eax,es:[edx].uqh_va_elem
-    test es:[eax].utd_control,400000h    
-    jnz wfccRecoverError
-;    
     mov ax,1
     WaitMilliSec
-;    
-    call ds:is_connected_proc
-    jnc wfcControlBulk
-
-wfccRecoverError:
-    mov es:[edx].uqh_elem,1
-    stc
+    jmp wfcWait
 
 wfcDone:
-    pushf
     call EndTransfer
-    popf
 ;    
-    pop edx
     pop eax
-    pop es
     ret
 WaitForCompletion   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    IsPipeSignalled
+;		NAME:		    WasTransferOk
 ;
-;		DESCRIPTION:    IsPipeSignalled
+;		DESCRIPTION:    Check if last transfer was ok
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
 ;
-;       RETURNS:        CY      Pipe has data
+;       RETURNS:        NC      Transfer was ok
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IsPipeSignalled   Proc far
-    push es
-    push ax
-    push edx
-;    
-    call ds:is_connected_proc
-    jc ipsDone
-;    
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov edx,fs:usp_qh
-    or edx,edx
-    jz ipsSig
+WasTransferOk   Proc far
+    test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
+    jz wtoNotPending
 ;
-    test byte ptr es:[edx].uqh_elem,1
-    jnz ipsSig
-;
-;    mov dx,ds:uhc_io_base
-;    add dx,UsbStatusReg
-;    in ax,dx
-;    test al,20h
-;    jz ipsNoSig
-;
-;    int 3
-    jmp ipsNoSig    
+    call EndTransfer
 
-ipsSig:
+wtoNotPending:
+    test fs:usp_flags, USP_FLAG_TRANSFER_OK
+    jnz wtoOk
+;    
     stc
-    jmp ipsDone
+    jmp wtoDone
 
-ipsNoSig:
+wtoOk:
     clc
 
-ipsDone:
-    pop edx
-    pop ax
-    pop es
+wtoDone:
     ret
-IsPipeSignalled   Endp
+WasTransferOk   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2226,8 +2241,27 @@ EndTransfer   Proc far
     push ax
     push edx
     push edi
-;   
-    mov fs:usp_data_size,0 
+;    
+    test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
+    jz etDone
+;    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov fs:usp_data_size,0     
+    and fs:usp_flags, NOT USP_FLAG_TRANSFER_PENDING
+    and fs:usp_flags, NOT USP_FLAG_TRANSFER_OK
+;    
+    mov edx,fs:usp_qh
+    or edx,edx
+    jz etDataDone
+;
+    test byte ptr es:[edx].uqh_elem,1
+    jz etDataDone
+;
+    or fs:usp_flags, USP_FLAG_TRANSFER_OK
+
+etStatusOk:
     mov ax,fs:usp_buffer_sel
     or ax,ax
     jz etDataDone
@@ -2246,7 +2280,8 @@ etDataDone:
 ;    
     mov edx,fs:usp_qh
     call FreeVaElem
-;   
+
+etDone:   
     pop edi
     pop edx
     pop ax
@@ -2269,7 +2304,13 @@ EndTransfer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDataSize   Proc far
+    xor cx,cx
+    test fs:usp_flags, USP_FLAG_TRANSFER_OK
+    jz gdsDone
+;    
     mov cx,fs:usp_data_size
+
+gdsDone:
     ret
 GetDataSize   Endp
 
@@ -2518,13 +2559,14 @@ ut05 DW OFFSET AddIn,        	    uhci_code_sel
 ut06 DW OFFSET AddStatusOut,        uhci_code_sel
 ut07 DW OFFSET AddStatusIn,        	uhci_code_sel
 ut08 DW OFFSET IssueTransfer,       uhci_code_sel
-ut09 DW OFFSET EndTransfer,         uhci_code_sel
-ut10 DW OFFSET IsPipeSignalled,     uhci_code_sel
-ut11 DW OFFSET GetDataSize,         uhci_code_sel
-ut12 DW OFFSET ClosePipe,           uhci_code_sel
-ut13 DW OFFSET WaitForCompletion,   uhci_code_sel
-ut14 DW OFFSET ChangeAddress,       uhci_code_sel
-ut15 DW OFFSET IsConnected,         uhci_code_sel
+ut09 DW OFFSET IsTransferDone,      uhci_code_sel
+ut10 DW OFFSET EndTransfer,         uhci_code_sel
+ut11 DW OFFSET WasTransferOk,       uhci_code_sel
+ut12 DW OFFSET GetDataSize,         uhci_code_sel
+ut13 DW OFFSET ClosePipe,           uhci_code_sel
+ut14 DW OFFSET WaitForCompletion,   uhci_code_sel
+ut15 DW OFFSET ChangeAddress,       uhci_code_sel
+ut16 DW OFFSET IsConnected,         uhci_code_sel
 
 InitFunction    Proc near
     pushad
@@ -2541,7 +2583,7 @@ InitFunction    Proc near
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,16
+    mov cx,17
 
 ifTabLoop:
     lods dword ptr cs:[si]

@@ -2271,10 +2271,17 @@ StartUsbTransaction      MACRO
 						ENDM
 
 ;   IN  BX          Handle
+;   IN  CY          Transaction pending
+;   IN  NC          Transaction done
+IsUsbTransactionDone      MACRO
+	UserGate is_usb_trans_done_nr
+						ENDM
+
+;   IN  BX          Handle
 ;   IN  CY          Transaction failed
 ;   IN  NC          Transaction ok
 WasUsbTransactionOk      MACRO
-	UserGate is_usb_transaction_ok_nr
+	UserGate was_usb_trans_ok_nr
 						ENDM
 
 ;;;;;;;;;;; ICSP (In-circuit serial programming) ;;;;;;;;;;
