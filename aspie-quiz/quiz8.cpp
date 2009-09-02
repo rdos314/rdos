@@ -360,7 +360,7 @@ void TQuiz8::SetupTexts()
   Quiz[112].MyGroup = GROUP_SEX;
   Quiz[113].MyGroup = GROUP_SEX;
   Quiz[114].MyGroup = GROUP_SEX;
-  Quiz[115].MyGroup = GROUP_SEX;
+  Quiz[115].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[116].MyGroup = GROUP_SOCIAL;
   Quiz[117].MyGroup = GROUP_NT_TALENT;
   Quiz[118].MyGroup = GROUP_NT_NVC;
@@ -391,8 +391,8 @@ void TQuiz8::SetupTexts()
   Quiz[143].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[146].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[147].MyGroup = GROUP_SEX;
+  Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[148].MyGroup = GROUP_SOCIAL;
   Quiz[149].MyGroup = GROUP_RELIGION;
 

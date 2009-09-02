@@ -354,8 +354,8 @@ void TQuizS5::SetupTexts()
   Quiz[111].MyGroup = GROUP_ENVIRONMENT;
   Quiz[112].MyGroup = GROUP_ENVIRONMENT;
   Quiz[113].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[114].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[115].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[114].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[115].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[116].MyGroup = GROUP_NT_NVC;
   Quiz[117].MyGroup = GROUP_NT_NVC;
   Quiz[118].MyGroup = GROUP_MIXED;
@@ -377,7 +377,7 @@ void TQuizS5::SetupTexts()
   Quiz[134].MyGroup = GROUP_ASPIE_NVC;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[137].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[137].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[138].MyGroup = GROUP_NT_TALENT;
   Quiz[139].MyGroup = GROUP_ENVIRONMENT;
   Quiz[140].MyGroup = GROUP_NT_SENSORY;

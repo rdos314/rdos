@@ -184,36 +184,36 @@ void TQuizF11::SetupTexts()
   Quiz[158].Reverse = TRUE;
   Quiz[163].Reverse = TRUE;
 
-  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[151].MyGroup = GROUP_MIXED;
-  Quiz[152].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[153].MyGroup = GROUP_MIXED;
   Quiz[154].MyGroup = GROUP_MIXED;
   Quiz[155].MyGroup = GROUP_MIXED;
-  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[157].MyGroup = GROUP_MIXED;
   Quiz[158].MyGroup = GROUP_MIXED;
-  Quiz[159].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[159].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[160].MyGroup = GROUP_MIXED;
-  Quiz[161].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
 
   Quiz[162].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[163].MyGroup = GROUP_SEX;
+  Quiz[163].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[164].MyGroup = GROUP_SOCIAL;
 
-  Quiz[165].MyGroup = GROUP_MIXED;
-  Quiz[166].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[167].MyGroup = GROUP_SOCIAL;
-  Quiz[168].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[169].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[170].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[171].MyGroup = GROUP_SEX;
-  Quiz[172].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[166].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[167].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[168].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[169].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[170].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[171].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[172].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[174].MyGroup = GROUP_SOCIAL;
   Quiz[175].MyGroup = GROUP_MIXED;
   Quiz[176].MyGroup = GROUP_MIXED;
-  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_ASPIE_SOCIAL;
 
   Quiz[150].Text = "Do you believe in fate when it comes to love?";
   Quiz[151].Text = "Do you believe in love at first sight?";

@@ -236,9 +236,9 @@ void TQuizII::SetupTexts()
 	Quiz[80].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[81].MyGroup = GROUP_ACTIVITY;
 	Quiz[82].MyGroup = GROUP_MIXED;
-	Quiz[83].MyGroup = GROUP_MIXED;
+	Quiz[83].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[84].MyGroup = GROUP_RELIGION;
-	Quiz[85].MyGroup = GROUP_MIXED;
+	Quiz[85].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[86].MyGroup = GROUP_MIXED;
 	Quiz[87].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[88].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -326,7 +326,7 @@ void TQuizII::SetupTexts()
 	Quiz[67].Text = "Do you prefer to wear the same clothes and/or eat the same food every day?";
  	Quiz[68].Text = "Does it cause chaos in your body or mind if your plans, environment or daily routines suddenly get changed, or if an activity that is important to you gets interrupted?";
 	Quiz[69].Text = "Are you punctual, conscientious and perfectionist?";
- 	Quiz[70].Text = "Are you so honest and sincere yourself that you assume everyone is, and therefore easily miss dishonesty and hidden agendas?";
+	Quiz[70].Text = "Are you so honest and sincere yourself that you assume everyone is, and therefore easily miss dishonesty and hidden agendas?";
 	Quiz[71].Text = "Do you dislike shaking hands?";
 	Quiz[72].Text = "Do you have values & views that are either very old-fashioned or way ahead of their time?";
  	Quiz[73].Text = "Do you have an interest for fashions?";

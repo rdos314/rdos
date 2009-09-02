@@ -292,7 +292,7 @@ void TQuizR2::SetupTexts()
   Quiz[110].MyGroup = GROUP_NT_TALENT;
   Quiz[111].MyGroup = GROUP_ENVIRONMENT;
   Quiz[112].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[113].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[113].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[114].MyGroup = GROUP_MIXED;
   Quiz[115].MyGroup = GROUP_ENVIRONMENT;
   Quiz[116].MyGroup = GROUP_ENVIRONMENT;

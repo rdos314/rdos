@@ -300,11 +300,11 @@ void TQuizS3::SetupTexts()
   Quiz[76].MyGroup = GROUP_ENVIRONMENT;
   Quiz[77].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[78].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[79].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[79].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[80].MyGroup = GROUP_MIXED;
   Quiz[81].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[82].MyGroup = GROUP_MIXED;
-  Quiz[83].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[83].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[84].MyGroup = GROUP_ASPIE_NVC;
   Quiz[85].MyGroup = GROUP_NT_NVC;
   Quiz[86].MyGroup = GROUP_ASPIE_NVC;
@@ -356,8 +356,8 @@ void TQuizS3::SetupTexts()
   Quiz[132].MyGroup = GROUP_NT_NVC;
   Quiz[133].MyGroup = GROUP_NT_TALENT;
 
-  Quiz[134].MyGroup = GROUP_SOCIAL;
-  Quiz[135].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[134].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[135].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[136].MyGroup = GROUP_RELIGION;
   Quiz[137].MyGroup = GROUP_SOCIAL;
   Quiz[138].MyGroup = GROUP_RELIGION;

@@ -342,7 +342,7 @@ void TQuizS11::SetupTexts()
   Quiz[114].MyGroup = GROUP_PARANOID;
   Quiz[115].MyGroup = GROUP_PARANOID;
   Quiz[116].MyGroup = GROUP_PARANOID;
-  Quiz[117].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[117].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[118].MyGroup = GROUP_ENVIRONMENT;
   Quiz[119].MyGroup = GROUP_ENVIRONMENT;
   Quiz[120].MyGroup = GROUP_ENVIRONMENT;
@@ -350,7 +350,7 @@ void TQuizS11::SetupTexts()
   Quiz[122].MyGroup = GROUP_ENVIRONMENT;
   Quiz[123].MyGroup = GROUP_ENVIRONMENT;
   Quiz[124].MyGroup = GROUP_MIXED;
-  Quiz[125].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[125].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[126].MyGroup = GROUP_NT_NVC;
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
@@ -374,7 +374,7 @@ void TQuizS11::SetupTexts()
   Quiz[145].MyGroup = GROUP_ASPIE_NVC;
   Quiz[146].MyGroup = GROUP_NT_HUNTING;
   Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
 
   Quiz[149].MyGroup = GROUP_MIXED;
   Quiz[150].MyGroup = GROUP_ASPIE_NVC;

@@ -323,8 +323,8 @@ void TQuizS1::SetupTexts()
   Quiz[89].MyGroup = GROUP_ASPIE_NVC;
   Quiz[90].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[91].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[92].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[93].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[92].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[93].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[94].MyGroup = GROUP_MIXED;
   Quiz[95].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[96].MyGroup = GROUP_ASPIE_NVC;

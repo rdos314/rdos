@@ -402,7 +402,7 @@ void TQuizN2::SetupTexts()
   Quiz[157].MyGroup = GROUP_SEX;
   Quiz[158].MyGroup = GROUP_SEX;
   Quiz[159].MyGroup = GROUP_SOCIAL;
-  Quiz[160].MyGroup = GROUP_SEX;
+  Quiz[160].MyGroup = GROUP_ASPIE_SOCIAL;
 
   Quiz[161].MyGroup = GROUP_NT_NVC;
   Quiz[162].MyGroup = GROUP_NT_NVC;

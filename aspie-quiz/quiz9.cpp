@@ -404,7 +404,7 @@ void TQuiz9::SetupTexts()
   Quiz[92].MyGroup = GROUP_ASPIE_NVC;
   Quiz[93].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[94].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[95].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[95].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[96].MyGroup = GROUP_ASPIE_NVC;
   Quiz[97].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[98].MyGroup = GROUP_NT_NVC;
@@ -442,7 +442,7 @@ void TQuiz9::SetupTexts()
   Quiz[130].MyGroup = GROUP_NT_TALENT;
   Quiz[131].MyGroup = GROUP_ASPIE_NVC;
   Quiz[132].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[133].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[133].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[134].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[135].MyGroup = GROUP_ASPIE_NVC;
   Quiz[136].MyGroup = GROUP_MIXED;
@@ -451,8 +451,8 @@ void TQuiz9::SetupTexts()
   Quiz[139].MyGroup = GROUP_MIXED;
   Quiz[140].MyGroup = GROUP_SOCIAL;
   Quiz[141].MyGroup = GROUP_NT_NVC;
-  Quiz[142].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[143].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[142].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[143].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[144].MyGroup = GROUP_RELIGION;
   Quiz[145].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[146].MyGroup = GROUP_RELIGION;

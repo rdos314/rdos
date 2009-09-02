@@ -514,7 +514,10 @@ void TQuiz::Init()
 	Group[GROUP_NT_TALENT].PosName = "NT ability problem";
 	Group[GROUP_NT_TALENT].NegName = "NT ability";
 
-	Group[GROUP_SOCIAL].PosName = "Aspie social";
+	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
+	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
+
+	Group[GROUP_SOCIAL].PosName = "NT social problem";
 	Group[GROUP_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie communication";
@@ -589,7 +592,10 @@ void TQuiz::Init()
 	Group[GROUP_NT_TALENT].PosName = "NT talang problem";
 	Group[GROUP_NT_TALENT].NegName = "NT talang";
 
-	Group[GROUP_SOCIAL].PosName = "Aspie social";
+	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
+	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
+
+	Group[GROUP_SOCIAL].PosName = "NT social problem";
 	Group[GROUP_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie kommunikation";
@@ -1090,6 +1096,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
 				case GROUP_NT_TALENT:
 				file.Write("GROUP_NT_TALENT");
+				break;
+
+			case GROUP_ASPIE_SOCIAL:
+				file.Write("GROUP_ASPIE_SOCIAL");
 				break;
 
 			case GROUP_SOCIAL:
@@ -7919,6 +7929,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("ASPIE_DISABILITY");
 	        break;
 	            
+		case GROUP_ASPIE_SOCIAL:
+			file->Write("ASPIE_SOCIAL");
+			break;
+
 		case GROUP_SOCIAL:
 			file->Write("SOCIAL");
 			break;
