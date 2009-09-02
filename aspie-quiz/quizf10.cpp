@@ -180,13 +180,13 @@ void TQuizF10::SetupTexts()
 {
   Quiz[150].MyGroup = GROUP_NT_HUNTING;
   Quiz[151].MyGroup = GROUP_NT_HUNTING;
-  Quiz[152].MyGroup = GROUP_SOCIAL;
+  Quiz[152].MyGroup = GROUP_NT_SOCIAL;
   Quiz[153].MyGroup = GROUP_NT_HUNTING;
   Quiz[154].MyGroup = GROUP_MIXED;
   Quiz[155].MyGroup = GROUP_NT_HUNTING;
   Quiz[156].MyGroup = GROUP_NT_HUNTING;
   Quiz[157].MyGroup = GROUP_MIXED;
-  Quiz[158].MyGroup = GROUP_SOCIAL;
+  Quiz[158].MyGroup = GROUP_NT_SOCIAL;
   Quiz[159].MyGroup = GROUP_NT_HUNTING;
   Quiz[160].MyGroup = GROUP_NT_HUNTING;
   Quiz[161].MyGroup = GROUP_NT_HUNTING;

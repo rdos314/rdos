@@ -199,7 +199,7 @@ void TQuizF11::SetupTexts()
 
   Quiz[162].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[163].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[164].MyGroup = GROUP_SOCIAL;
+  Quiz[164].MyGroup = GROUP_NT_SOCIAL;
 
   Quiz[165].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[166].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -210,7 +210,7 @@ void TQuizF11::SetupTexts()
   Quiz[171].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[172].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[174].MyGroup = GROUP_SOCIAL;
+  Quiz[174].MyGroup = GROUP_NT_SOCIAL;
   Quiz[175].MyGroup = GROUP_MIXED;
   Quiz[176].MyGroup = GROUP_MIXED;
   Quiz[177].MyGroup = GROUP_ASPIE_SOCIAL;

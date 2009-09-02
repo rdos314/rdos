@@ -517,17 +517,14 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
 	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
 
-	Group[GROUP_SOCIAL].PosName = "NT social problem";
-	Group[GROUP_SOCIAL].NegName = "NT social";
+	Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
+	Group[GROUP_NT_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie communication";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie communication problem";
 
 	Group[GROUP_NT_NVC].PosName = "NT communication problem";
 	Group[GROUP_NT_NVC].NegName = "NT communication";
-
-	Group[GROUP_SEX].PosName = "Sexual deviation";
-	Group[GROUP_SEX].NegName = "Sexual normality";
 
 	Group[GROUP_PARANOID].PosName = "Paranoia";
 	Group[GROUP_PARANOID].NegName = "Paranoia problem";
@@ -595,17 +592,14 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
 	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
 
-	Group[GROUP_SOCIAL].PosName = "NT social problem";
-	Group[GROUP_SOCIAL].NegName = "NT social";
+	Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
+	Group[GROUP_NT_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie kommunikation";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie kommunikation problem";
 
 	Group[GROUP_NT_NVC].PosName = "NT kommunikation problem";
 	Group[GROUP_NT_NVC].NegName = "NT kommunikation";
-
-	Group[GROUP_SEX].PosName = "Avvikande sexualitet";
-	Group[GROUP_SEX].NegName = "Normal sexualitet";
 
 	Group[GROUP_PARANOID].PosName = "Paranoia";
 	Group[GROUP_PARANOID].NegName = "Paranoia problem";
@@ -1102,8 +1096,8 @@ void TQuiz::WriteSetupTexts(const char *filename)
 				file.Write("GROUP_ASPIE_SOCIAL");
 				break;
 
-			case GROUP_SOCIAL:
-				file.Write("GROUP_SOCIAL");
+			case GROUP_NT_SOCIAL:
+				file.Write("GROUP_NT_SOCIAL");
 				break;
 
             case GROUP_ASPIE_NVC:
@@ -1113,10 +1107,6 @@ void TQuiz::WriteSetupTexts(const char *filename)
             case GROUP_NT_NVC:
                 file.Write("GROUP_NT_NVC");
 					 break;
-
-            case GROUP_SEX:
-                file.Write("GROUP_SEX");
-                break;
 
             case GROUP_PARANOID:
                 file.Write("GROUP_PARANOID");
@@ -7933,7 +7923,7 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 			file->Write("ASPIE_SOCIAL");
 			break;
 
-		case GROUP_SOCIAL:
+		case GROUP_NT_SOCIAL:
 			file->Write("SOCIAL");
 			break;
 
@@ -7943,10 +7933,6 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 		case GROUP_NT_NVC:
 	        file->Write("NT_NVC");
-	        break;
-	            
-	    case GROUP_SEX:
-	        file->Write("SEX");
 	        break;
 	            
 	    case GROUP_PARANOID:

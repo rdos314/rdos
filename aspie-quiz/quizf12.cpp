@@ -205,7 +205,7 @@ void TQuizF12::SetupTexts()
 
   Quiz[150].MyGroup = GROUP_MIXED;
   Quiz[151].MyGroup = GROUP_MIXED;
-  Quiz[152].MyGroup = GROUP_SOCIAL;
+  Quiz[152].MyGroup = GROUP_NT_SOCIAL;
   Quiz[153].MyGroup = GROUP_MIXED;
   Quiz[154].MyGroup = GROUP_NT_NVC;
   Quiz[155].MyGroup = GROUP_MIXED;
@@ -237,12 +237,12 @@ void TQuizF12::SetupTexts()
   Quiz[181].MyGroup = GROUP_MIXED;
   Quiz[182].MyGroup = GROUP_MIXED;
   Quiz[183].MyGroup = GROUP_NT_NVC;
-  Quiz[184].MyGroup = GROUP_SOCIAL;
+  Quiz[184].MyGroup = GROUP_NT_SOCIAL;
   Quiz[185].MyGroup = GROUP_MIXED;
   Quiz[186].MyGroup = GROUP_MIXED;
   Quiz[187].MyGroup = GROUP_MIXED;
   Quiz[188].MyGroup = GROUP_MIXED;
-  Quiz[189].MyGroup = GROUP_SOCIAL;
+  Quiz[189].MyGroup = GROUP_NT_SOCIAL;
 
   Quiz[150].Text = "EQ - I can easily tell if someone else wants to enter a conversation.";
   Quiz[151].Text = "EQ - I find it difficult to explain to others things that I understand easily, when they don’t understand it first time.";

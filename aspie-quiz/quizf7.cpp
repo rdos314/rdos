@@ -225,10 +225,10 @@ void TQuizF7::SetupTexts()
   Quiz[197].MyGroup = GROUP_ENVIRONMENT;
   Quiz[198].MyGroup = GROUP_ENVIRONMENT;
   Quiz[199].MyGroup = GROUP_NT_NVC;
-  Quiz[200].MyGroup = GROUP_SOCIAL;
+  Quiz[200].MyGroup = GROUP_NT_SOCIAL;
   Quiz[201].MyGroup = GROUP_ENVIRONMENT;
   Quiz[202].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[203].MyGroup = GROUP_SOCIAL;
+  Quiz[203].MyGroup = GROUP_NT_SOCIAL;
   Quiz[204].MyGroup = GROUP_MIXED;
   Quiz[205].MyGroup = GROUP_ENVIRONMENT;
   Quiz[206].MyGroup = GROUP_ENVIRONMENT;
@@ -245,7 +245,7 @@ void TQuizF7::SetupTexts()
   Quiz[217].MyGroup = GROUP_ENVIRONMENT;
   Quiz[218].MyGroup = GROUP_ENVIRONMENT;
   Quiz[219].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[220].MyGroup = GROUP_SOCIAL;
+  Quiz[220].MyGroup = GROUP_NT_SOCIAL;
   Quiz[221].MyGroup = GROUP_ACTIVITY;
   Quiz[222].MyGroup = GROUP_ENVIRONMENT;
   Quiz[223].MyGroup = GROUP_ACTIVITY;

@@ -185,11 +185,11 @@ void TQuizF5::SetupTexts()
  Quiz[151].MyGroup = GROUP_MIXED;
  Quiz[152].MyGroup = GROUP_NT_NVC;
  Quiz[153].MyGroup = GROUP_ASPIE_TALENT;
- Quiz[154].MyGroup = GROUP_SEX;
+ Quiz[154].MyGroup = GROUP_ASPIE_SOCIAL;
  Quiz[155].MyGroup = GROUP_MIXED;
  Quiz[156].MyGroup = GROUP_MIXED;
  Quiz[157].MyGroup = GROUP_ASPIE_TALENT;
- Quiz[158].MyGroup = GROUP_SEX;
+ Quiz[158].MyGroup = GROUP_MIXED;
  Quiz[159].MyGroup = GROUP_ASPIE_TALENT;
  Quiz[160].MyGroup = GROUP_NT_NVC;
  Quiz[161].MyGroup = GROUP_ASPIE_TALENT;
