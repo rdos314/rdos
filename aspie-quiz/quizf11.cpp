@@ -185,9 +185,9 @@ void TQuizF11::SetupTexts()
   Quiz[163].Reverse = TRUE;
 
   Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[151].MyGroup = GROUP_MIXED;
+  Quiz[151].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[152].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[154].MyGroup = GROUP_MIXED;
   Quiz[155].MyGroup = GROUP_MIXED;
   Quiz[156].MyGroup = GROUP_ASPIE_SOCIAL;

@@ -396,7 +396,7 @@ void TQuizS2::SetupTexts()
 
   Quiz[160].MyGroup = GROUP_MIXED;
   Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[163].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[164].MyGroup = GROUP_MIXED;
   Quiz[165].MyGroup = GROUP_MIXED;
