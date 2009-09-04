@@ -2243,6 +2243,11 @@ CloseUsbReq      MACRO
 	OsGate close_usb_req_nr
 						ENDM
 
+; IN  BX        Handle
+GetUsbInfo      MACRO
+	OsGate get_usb_info_nr
+						ENDM
+
 ; IN  ES:DI         Data buffer
 ; IN  CX            Size
 NotifyIrData      MACRO

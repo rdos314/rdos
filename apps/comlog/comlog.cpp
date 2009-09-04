@@ -53,15 +53,15 @@ void cdecl main()
 	TWait Wait;
 	TKeyboardDevice Keyboard;
 
-	TSerialDevice Port1(4, 9600, 'O', 8, 1);
-//	TSerialDevice Port2(4, 4800, 'E', 7, 1);
+	TSerialDevice Port1(1, 9600, 'O', 8, 1);
+	TSerialDevice Port2(4, 9600, 'O', 8, 1);
 
 	Port1.Open();
-//	Port2.Open();
+	Port2.Open();
 	Port1.EnableAutoRts();
 
 	Wait.Add(&Port1);
-//	Wait.Add(&Port2);
+	Wait.Add(&Port2);
 	Wait.Add(&Keyboard);
 
 //	TFile *File = GetFile();
@@ -79,14 +79,14 @@ void cdecl main()
 			RdosSetForeColor(9);
 		}
 
-//		if (WaitDevice == &Port2)
-//		{
-//			RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
-//			Debug.Channel = 2;
-//			Debug.ch = Port2.Read();
-//			File->Write(&Debug, sizeof(Debug));
-//			RdosSetForeColor(11);
-//		}
+		if (WaitDevice == &Port2)
+		{
+			RdosGetTime(&Debug.TimeMSB, &Debug.TimeLSB);
+			Debug.Channel = 2;
+			Debug.ch = Port2.Read();
+			File->Write(&Debug, sizeof(Debug));
+			RdosSetForeColor(11);
+		}
 
 		if (WaitDevice == &Keyboard)
 		{

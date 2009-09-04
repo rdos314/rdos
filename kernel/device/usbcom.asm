@@ -2620,6 +2620,8 @@ hdOpenOk:
     jc hdReadDone
 ;
     GetUsbReqData
+    jc hdReadRestart
+;    
     mov ax,ds:uds_device_type
     xor al,al
 	xor si,si

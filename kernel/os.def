@@ -497,5 +497,7 @@ hook_shift_keys_nr          EQU 343
 
 stop_usb_req_nr             EQU 344
 
+get_usb_info_nr             EQU 345
+
 osgate_entries				EQU 350
 

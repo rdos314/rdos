@@ -92,6 +92,7 @@ REQ_TYPE_STATUS_OUT = 5
 
 REQ_FLAG_STARTED = 1
 REQ_FLAG_LOCKED  = 2
+REQ_FLAG_ACTIVE  = 4
 
 req_entry_struc STRUC
 
@@ -1294,7 +1295,7 @@ start_usb_req	Proc far
     or ds:[bx].rh_flags,REQ_FLAG_LOCKED
 
 surStart:    
-    or ds:[bx].rh_flags,REQ_FLAG_STARTED
+    or ds:[bx].rh_flags,REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE
     mov ax,ds:[bx].rh_list
 	mov fs,ds:[bx].rh_pipe_sel
 	mov ds,ds:[bx].rh_func_sel
@@ -1352,7 +1353,7 @@ stop_usb_req	Proc far
 ;
 	mov ax,USB_REQ_HANDLE
 	DerefHandle
-	jc sturDone
+	jc sturEnd
 ;
     push ds
 	mov fs,ds:[bx].rh_pipe_sel
@@ -1370,6 +1371,9 @@ stop_usb_req	Proc far
     and ds:[bx].rh_flags,NOT REQ_FLAG_LOCKED
 
 sturDone:
+    and ds:[bx].rh_flags,NOT (REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE)
+
+sturEnd:
 	pop bx
 	pop ax
 	pop fs
@@ -1443,14 +1447,20 @@ is_usb_req_ready	Proc far
 	DerefHandle
 	jc iurrDone
 ;
-    test ds:[bx].rh_flags,REQ_FLAG_STARTED
+    test ds:[bx].rh_flags,REQ_FLAG_ACTIVE
     stc
     jz iurrDone
 ;
+    push ds
 	mov fs,ds:[bx].rh_pipe_sel
 	mov ds,ds:[bx].rh_func_sel
 	call ds:is_transfer_done_proc
-
+	pop ds
+	jc iurrDone
+;
+    and ds:[bx].rh_flags,NOT REQ_FLAG_STARTED
+    clc
+	
 iurrDone:	
     pop bx
     pop ax
@@ -1488,7 +1498,7 @@ get_usb_req_data	Proc far
 	DerefHandle
 	jc gurdDone
 ;
-    test ds:[bx].rh_flags,REQ_FLAG_STARTED
+    test ds:[bx].rh_flags,REQ_FLAG_ACTIVE
     stc
     jz gurdDone
 ;
@@ -2795,6 +2805,41 @@ was_usb_trans_ok	Endp
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetUsbInfo
+;
+;		DESCRIPTION:	Get pipe info
+;
+;		PARAMETERS:		BX		    Pipe handle
+;
+;       RETURNS:        FS          Pipe sel
+;                       DS          Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_info_name	DB 'Get USB Info',0
+
+get_usb_info	Proc far
+	push bx
+	push cx
+;
+	mov ax,USB_PIPE_HANDLE
+	DerefHandle
+	jc guiDone
+;
+	mov fs,ds:[bx].up_pipe_sel
+	mov ds,ds:[bx].up_func_sel
+
+guiDone:
+    pop cx
+	pop bx
+	ret
+get_usb_info	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			HookUsbAttach
@@ -2994,6 +3039,12 @@ init	Proc far
 	mov di,OFFSET close_usb_req_name
 	xor cl,cl
 	mov ax,close_usb_req_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_usb_info
+	mov di,OFFSET get_usb_info_name
+	xor cl,cl
+	mov ax,get_usb_info_nr
 	RegisterOsGate
 ;
 	mov bx,OFFSET get_usb_device16

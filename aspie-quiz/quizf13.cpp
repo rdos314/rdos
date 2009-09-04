@@ -211,8 +211,8 @@ void TQuizF13::SetupTexts()
   Quiz[176].MyGroup = GROUP_MIXED;
   Quiz[177].MyGroup = GROUP_MIXED;
   Quiz[178].MyGroup = GROUP_MIXED;
-  Quiz[179].MyGroup = GROUP_MIXED;
-  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[180].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[181].MyGroup = GROUP_MIXED;
 
   Quiz[150].Text = "Do you tend to become obsessed with a potential partner and cannot let go of him/her?";

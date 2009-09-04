@@ -1813,6 +1813,7 @@ IssueTransfer    Endp
 IsTransferDone   Proc far
     push es
     push eax
+    push bx
     push edx
 ;
     test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
@@ -1846,6 +1847,7 @@ itdOk:
 
 itdDone:
     pop edx
+    pop bx
     pop eax
     pop es
     ret
@@ -2237,7 +2239,7 @@ cpFreeEdList:
     jmp cpFreeEdList
 
 cpFreeTd:
-    call ds:end_transfer_proc
+    call EndTransfer
     call SyncHead    
     mov edx,es:[edx].oes_head_va
 
