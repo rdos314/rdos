@@ -194,7 +194,7 @@ void TQuizF13::SetupTexts()
   Quiz[159].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[160].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[162].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[162].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[163].MyGroup = GROUP_MIXED;
   Quiz[164].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[165].MyGroup = GROUP_NT_SOCIAL;
@@ -205,11 +205,11 @@ void TQuizF13::SetupTexts()
   Quiz[170].MyGroup = GROUP_NT_SOCIAL;
   Quiz[171].MyGroup = GROUP_NT_SOCIAL;
   Quiz[172].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[173].MyGroup = GROUP_ACTIVITY;
-  Quiz[174].MyGroup = GROUP_ACTIVITY;
+  Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[174].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[175].MyGroup = GROUP_MIXED;
   Quiz[176].MyGroup = GROUP_MIXED;
-  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[178].MyGroup = GROUP_MIXED;
   Quiz[179].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[180].MyGroup = GROUP_ASPIE_SOCIAL;

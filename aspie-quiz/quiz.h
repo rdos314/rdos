@@ -59,13 +59,13 @@
 #define PCA_TYPE_MIXED          6
 #define PCA_TYPE_ASIA           7
 
-#define GROUP_COUNT             18
+#define GROUP_COUNT             17
 
 #define GROUP_ASPIE_TALENT      0
 #define GROUP_NT_TALENT         1
 #define GROUP_ASPIE_OBSESSION   2
 #define GROUP_NT_OBSESSION      3
-#define GROUP_ACTIVITY          4
+#define GROUP_ASPIE_SOCIAL      4
 #define GROUP_NT_SOCIAL         5
 #define GROUP_ASPIE_NVC         6
 #define GROUP_NT_NVC            7
@@ -78,8 +78,7 @@
 
 #define GROUP_ASPIE_BIOLOGY     14
 #define GROUP_RELIGION          15
-#define GROUP_ASPIE_SOCIAL      16
-#define GROUP_MIXED             17
+#define GROUP_MIXED             16
 
 #define POP_TYPE_COUNT			25
 

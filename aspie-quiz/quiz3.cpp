@@ -165,7 +165,7 @@ void TQuizIII::SetupTexts()
 	Quiz[15].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[16].MyGroup = GROUP_NT_HUNTING;
 	Quiz[17].MyGroup = GROUP_ASPIE_SENSORY;
-	Quiz[18].MyGroup = GROUP_ACTIVITY;
+	Quiz[18].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[19].MyGroup = GROUP_MIXED;
 	Quiz[20].MyGroup = GROUP_MIXED;
 	Quiz[21].MyGroup = GROUP_ASPIE_BIOLOGY;

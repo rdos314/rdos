@@ -547,9 +547,6 @@ void TQuiz::Init()
 	Group[GROUP_NT_OBSESSION].PosName = "NT compulsion problem";
 	Group[GROUP_NT_OBSESSION].NegName = "NT compulsion";
 
-	Group[GROUP_ACTIVITY].PosName = "Aspie activity";
-	Group[GROUP_ACTIVITY].NegName = "NT activity";
-
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
 
@@ -621,9 +618,6 @@ void TQuiz::Init()
 
 	Group[GROUP_NT_OBSESSION].PosName = "NT tvång problem";
 	Group[GROUP_NT_OBSESSION].NegName = "NT tvång";
-
-	Group[GROUP_ACTIVITY].PosName = "Aspie aktivitet";
-	Group[GROUP_ACTIVITY].NegName = "NT aktivity";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -1130,10 +1124,6 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_NT_OBSESSION:
                 file.Write("GROUP_NT_OBSESSION");
-                break;
-
-				case GROUP_ACTIVITY:
-                file.Write("GROUP_ACTIVITY");
                 break;
 
 			case GROUP_NT_HUNTING:
@@ -7957,10 +7947,6 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 	    case GROUP_ENVIRONMENT:
 			file->Write("ENVIRONMENT");
-	        break;
-	            
-		case GROUP_ACTIVITY:
-	        file->Write("ACTIVITY");
 	        break;
 	            
 		case GROUP_NT_HUNTING:

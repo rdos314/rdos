@@ -377,9 +377,9 @@ void TQuiz6::SetupTexts()
 	Quiz[137].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[138].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[139].MyGroup = GROUP_MIXED;
-	Quiz[140].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[140].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[141].MyGroup = GROUP_NT_SOCIAL;
-	Quiz[142].MyGroup = GROUP_ACTIVITY;
+	Quiz[142].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[143].MyGroup = GROUP_MIXED;
 	Quiz[144].MyGroup = GROUP_MIXED;
 	Quiz[145].MyGroup = GROUP_ASPIE_HUNTING;

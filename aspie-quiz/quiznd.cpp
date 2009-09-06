@@ -254,7 +254,7 @@ void TQuizNd::SetupTexts()
 	Quiz[32].MyGroup = GROUP_NT_NVC;
 	Quiz[33].MyGroup = GROUP_NT_NVC;
 	Quiz[34].MyGroup = GROUP_MIXED;
-	Quiz[35].MyGroup = GROUP_ACTIVITY;
+	Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[36].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[37].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[38].MyGroup = GROUP_NT_TALENT;
@@ -328,7 +328,7 @@ void TQuizNd::SetupTexts()
 	Quiz[106].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[107].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[108].MyGroup = GROUP_MIXED;
-	Quiz[109].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[109].MyGroup = GROUP_NT_NVC;
 	Quiz[110].MyGroup = GROUP_NT_NVC;
 	Quiz[111].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[112].MyGroup = GROUP_NT_SOCIAL;
@@ -369,12 +369,12 @@ void TQuizNd::SetupTexts()
 	Quiz[147].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[148].MyGroup = GROUP_NT_HUNTING;
 	Quiz[149].MyGroup = GROUP_NT_TALENT;
-	Quiz[150].MyGroup = GROUP_ACTIVITY;
+	Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[151].MyGroup = GROUP_NT_SOCIAL;
-	Quiz[152].MyGroup = GROUP_ACTIVITY;
-	Quiz[153].MyGroup = GROUP_ACTIVITY;
-	Quiz[154].MyGroup = GROUP_ACTIVITY;
-	Quiz[155].MyGroup = GROUP_ACTIVITY;
+	Quiz[152].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[153].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[154].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[155].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[156].MyGroup = GROUP_NT_HUNTING;
 	Quiz[157].MyGroup = GROUP_NT_HUNTING;
 	Quiz[158].MyGroup = GROUP_NT_HUNTING;
@@ -428,7 +428,7 @@ void TQuizNd::SetupTexts()
 	Quiz[206].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[207].MyGroup = GROUP_MIXED;
 	Quiz[208].MyGroup = GROUP_NT_SENSORY;
-	Quiz[209].MyGroup = GROUP_ACTIVITY;
+	Quiz[209].MyGroup = GROUP_ASPIE_SOCIAL;
 
 #ifdef ENGLISH
 	Quiz[0].Text = "Can you easily hear small sounds?";

@@ -286,7 +286,7 @@ void TQuizS7::SetupTexts()
   Quiz[38].MyGroup = GROUP_NT_TALENT;
   Quiz[39].MyGroup = GROUP_NT_SENSORY;
   Quiz[40].MyGroup = GROUP_NT_TALENT;
-  Quiz[41].MyGroup = GROUP_ACTIVITY;
+  Quiz[41].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[42].MyGroup = GROUP_NT_TALENT;
   Quiz[43].MyGroup = GROUP_NT_HUNTING;
   Quiz[44].MyGroup = GROUP_ENVIRONMENT;
@@ -312,7 +312,7 @@ void TQuizS7::SetupTexts()
   Quiz[64].MyGroup = GROUP_NT_NVC;
   Quiz[65].MyGroup = GROUP_NT_SOCIAL;
   Quiz[66].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[67].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[67].MyGroup = GROUP_NT_OBSESSION;
   Quiz[68].MyGroup = GROUP_NT_SOCIAL;
   Quiz[69].MyGroup = GROUP_ASPIE_NVC;
   Quiz[70].MyGroup = GROUP_ASPIE_NVC;
@@ -381,7 +381,7 @@ void TQuizS7::SetupTexts()
   Quiz[133].MyGroup = GROUP_MIXED;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
-  Quiz[136].MyGroup = GROUP_ACTIVITY;
+  Quiz[136].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_ASPIE_NVC;
   Quiz[139].MyGroup = GROUP_ASPIE_SENSORY;
@@ -393,7 +393,7 @@ void TQuizS7::SetupTexts()
   Quiz[145].MyGroup = GROUP_NT_SOCIAL;
   Quiz[146].MyGroup = GROUP_MIXED;
   Quiz[147].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[148].MyGroup = GROUP_NT_OBSESSION;
   Quiz[149].MyGroup = GROUP_NT_SENSORY;
   Quiz[150].MyGroup = GROUP_NT_TALENT;
   Quiz[151].MyGroup = GROUP_ENVIRONMENT;
@@ -407,7 +407,7 @@ void TQuizS7::SetupTexts()
   Quiz[159].MyGroup = GROUP_NT_OBSESSION;
   Quiz[160].MyGroup = GROUP_NT_SOCIAL;
   Quiz[161].MyGroup = GROUP_NT_NVC;
-  Quiz[162].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[162].MyGroup = GROUP_NT_NVC;
   Quiz[163].MyGroup = GROUP_NT_SOCIAL;
   Quiz[164].MyGroup = GROUP_NT_SOCIAL;
   Quiz[165].MyGroup = GROUP_NT_SOCIAL;
@@ -433,7 +433,7 @@ void TQuizS7::SetupTexts()
   Quiz[184].MyGroup = GROUP_NT_HUNTING;
   Quiz[185].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[186].MyGroup = GROUP_MIXED;
-  Quiz[187].MyGroup = GROUP_ACTIVITY;
+  Quiz[187].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[188].MyGroup = GROUP_NT_SOCIAL;
 
 #ifdef ENGLISH

@@ -47,8 +47,7 @@
 #   Purpose....: Constructor for TQuizS8
 #
 #   In params..: Filename to load quiz from
-#   Out params.: *
-#   Returns....: *
+#   Out params.: *            #   Returns....: *
 #
 ##########################################################################*/
 TQuizS8::TQuizS8(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7)
@@ -255,7 +254,7 @@ void TQuizS8::SetupTexts()
   Quiz[17].MyGroup = GROUP_NT_TALENT;
   Quiz[18].MyGroup = GROUP_NT_TALENT;
   Quiz[19].MyGroup = GROUP_NT_TALENT;
-  Quiz[20].MyGroup = GROUP_ACTIVITY;
+  Quiz[20].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[21].MyGroup = GROUP_NT_TALENT;
   Quiz[22].MyGroup = GROUP_NT_HUNTING;
   Quiz[23].MyGroup = GROUP_ENVIRONMENT;
@@ -291,11 +290,11 @@ void TQuizS8::SetupTexts()
   Quiz[53].MyGroup = GROUP_NT_NVC;
   Quiz[54].MyGroup = GROUP_NT_NVC;
   Quiz[55].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[56].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[56].MyGroup = GROUP_NT_NVC;
   Quiz[57].MyGroup = GROUP_NT_OBSESSION;
   Quiz[58].MyGroup = GROUP_NT_NVC;
   Quiz[59].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[60].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[60].MyGroup = GROUP_NT_OBSESSION;
   Quiz[61].MyGroup = GROUP_NT_SOCIAL;
   Quiz[62].MyGroup = GROUP_ASPIE_NVC;
   Quiz[63].MyGroup = GROUP_ASPIE_NVC;
@@ -374,7 +373,7 @@ void TQuizS8::SetupTexts()
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_MIXED;
-  Quiz[139].MyGroup = GROUP_ACTIVITY;
+  Quiz[139].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[142].MyGroup = GROUP_MIXED;
@@ -393,27 +392,27 @@ void TQuizS8::SetupTexts()
   Quiz[155].MyGroup = GROUP_NT_SENSORY;
   Quiz[156].MyGroup = GROUP_ENVIRONMENT;
 
-  Quiz[157].MyGroup = GROUP_ACTIVITY;
-  Quiz[158].MyGroup = GROUP_ACTIVITY;
+  Quiz[157].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[158].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[159].MyGroup = GROUP_MIXED;
   Quiz[160].MyGroup = GROUP_MIXED;
-  Quiz[161].MyGroup = GROUP_ACTIVITY;
-  Quiz[162].MyGroup = GROUP_ACTIVITY;
-  Quiz[163].MyGroup = GROUP_ACTIVITY;
-  Quiz[164].MyGroup = GROUP_ACTIVITY;
-  Quiz[165].MyGroup = GROUP_ACTIVITY;
-  Quiz[166].MyGroup = GROUP_ACTIVITY;
+  Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[162].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[163].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[164].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[165].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[166].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[167].MyGroup = GROUP_MIXED;
-  Quiz[168].MyGroup = GROUP_ACTIVITY;
-  Quiz[169].MyGroup = GROUP_ACTIVITY;
-  Quiz[170].MyGroup = GROUP_ACTIVITY;
-  Quiz[171].MyGroup = GROUP_ACTIVITY;
+  Quiz[168].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[169].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[170].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[171].MyGroup = GROUP_ASPIE_SOCIAL;
 
   Quiz[172].MyGroup = GROUP_NT_HUNTING;
   Quiz[173].MyGroup = GROUP_NT_HUNTING;
   Quiz[174].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[175].MyGroup = GROUP_MIXED;
-  Quiz[176].MyGroup = GROUP_ACTIVITY;
+  Quiz[176].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[177].MyGroup = GROUP_NT_SOCIAL;
 
 #ifdef ENGLISH
