@@ -271,7 +271,7 @@ void TQuizR4::SetupTexts()
   Quiz[48].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[49].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[50].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[51].MyGroup = GROUP_MIXED;
+  Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[52].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[53].MyGroup = GROUP_NT_SOCIAL;
   Quiz[54].MyGroup = GROUP_ASPIE_SENSORY;
@@ -334,7 +334,7 @@ void TQuizR4::SetupTexts()
   Quiz[111].MyGroup = GROUP_MIXED;
   Quiz[112].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[113].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[114].MyGroup = GROUP_MIXED;
+  Quiz[114].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[115].MyGroup = GROUP_NT_OBSESSION;
   Quiz[116].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[117].MyGroup = GROUP_ENVIRONMENT;

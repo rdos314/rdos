@@ -192,7 +192,7 @@ void TQuizR2::SetupTexts()
   Quiz[10].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[11].MyGroup = GROUP_ASPIE_NVC;
   Quiz[12].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[13].MyGroup = GROUP_MIXED;
+  Quiz[13].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[14].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[15].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[16].MyGroup = GROUP_ASPIE_SENSORY;

@@ -222,7 +222,7 @@ void TQuizF7::SetupTexts()
   Quiz[194].MyGroup = GROUP_ENVIRONMENT;
   Quiz[195].MyGroup = GROUP_ENVIRONMENT;
   Quiz[196].MyGroup = GROUP_NT_NVC;
-  Quiz[197].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[197].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[198].MyGroup = GROUP_ENVIRONMENT;
   Quiz[199].MyGroup = GROUP_NT_NVC;
   Quiz[200].MyGroup = GROUP_NT_SOCIAL;

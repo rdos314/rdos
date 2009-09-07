@@ -315,7 +315,7 @@ void TQuizS1::SetupTexts()
   Quiz[81].MyGroup = GROUP_ASPIE_NVC;
   Quiz[82].MyGroup = GROUP_MIXED;
   Quiz[83].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[84].MyGroup = GROUP_MIXED;
+  Quiz[84].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[85].MyGroup = GROUP_ASPIE_NVC;
   Quiz[86].MyGroup = GROUP_ENVIRONMENT;
   Quiz[87].MyGroup = GROUP_ENVIRONMENT;

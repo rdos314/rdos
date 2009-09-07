@@ -338,10 +338,10 @@ void TQuizFinal::SetupTexts()
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_MIXED;
-  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_NT_NVC;
-  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[142].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
 

@@ -537,9 +537,9 @@ void TQuizN4::SetupTexts()
   Quiz[128].MyGroup = GROUP_MIXED;
   Quiz[129].MyGroup = GROUP_MIXED;
   Quiz[130].MyGroup = GROUP_MIXED;
-  Quiz[131].MyGroup = GROUP_MIXED;
+  Quiz[131].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[132].MyGroup = GROUP_MIXED;
-  Quiz[133].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_NT_TALENT;
   Quiz[136].MyGroup = GROUP_NT_SOCIAL;
@@ -565,7 +565,7 @@ void TQuizN4::SetupTexts()
 
   Quiz[156].MyGroup = GROUP_NT_SOCIAL;
   Quiz[157].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[158].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[158].MyGroup = GROUP_ASPIE_SOCIAL;
 
 #ifdef ENGLISH
 

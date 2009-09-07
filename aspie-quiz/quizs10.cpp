@@ -370,7 +370,7 @@ void TQuizS10::SetupTexts()
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_MIXED;
-  Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[140].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[141].MyGroup = GROUP_MIXED;
   Quiz[142].MyGroup = GROUP_ASPIE_NVC;
   Quiz[143].MyGroup = GROUP_MIXED;
@@ -389,7 +389,7 @@ void TQuizS10::SetupTexts()
   Quiz[155].MyGroup = GROUP_NT_SOCIAL;
   Quiz[156].MyGroup = GROUP_NT_SOCIAL;
   Quiz[157].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[159].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[160].MyGroup = GROUP_ENVIRONMENT;
   Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;

@@ -365,7 +365,7 @@ void TQuizS9::SetupTexts()
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[138].MyGroup = GROUP_MIXED;
+  Quiz[138].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[139].MyGroup = GROUP_MIXED;
   Quiz[140].MyGroup = GROUP_ASPIE_NVC;
   Quiz[141].MyGroup = GROUP_MIXED;
@@ -434,7 +434,7 @@ void TQuizS9::SetupTexts()
   Quiz[202].MyGroup = GROUP_ENVIRONMENT;
   Quiz[203].MyGroup = GROUP_ENVIRONMENT;
   Quiz[204].MyGroup = GROUP_NT_NVC;
-  Quiz[205].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[205].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[206].MyGroup = GROUP_ENVIRONMENT;
   Quiz[207].MyGroup = GROUP_NT_NVC;
   Quiz[208].MyGroup = GROUP_NT_SOCIAL;
