@@ -1943,6 +1943,9 @@ hid_key_thread_pr  Proc far
     WaitMilliSec
 ;
     mov ax,fs:hid_key_sel
+    or ax,ax
+    jz hktDone
+;    
     mov ds,ax    
     mov bx,ds:hid_controller
     mov al,ds:hid_device

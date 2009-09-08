@@ -2100,7 +2100,13 @@ PAGE
 
 start_send	PROC far
     push es
-    mov es,ds:ups_device_sel
+    push ax
+;    
+    mov ax,ds:ups_device_sel
+    or ax,ax
+    jz ssDone
+;    
+    mov es,ax
     test es:uds_flag,FLAG_UDS_DISCONNECT
     jz ssOk
 ;
@@ -2111,6 +2117,7 @@ ssOk:
     call StartSendTimer
 
 ssDone:
+    pop ax
     pop es    
 	ret
 start_send	ENDP

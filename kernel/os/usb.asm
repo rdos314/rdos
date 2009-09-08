@@ -742,7 +742,7 @@ nuaLoop:
     mov al,bl
     mov ah,2
     call GetDescr
-    mov ax,es:ucd_size
+    movzx eax,es:ucd_size
     FreeMem
 ;
     call ds:is_connected_proc

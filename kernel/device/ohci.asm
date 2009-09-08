@@ -127,6 +127,7 @@ osp_intr_count      DW ?
 osp_buffer_offset   DD ?
 osp_buffer_sel      DW ?
 osp_data_size       DW ?
+osp_setup_linear    DD ?
 osp_flags           DB ?
 
 ohci_pipe   ENDS
@@ -1257,6 +1258,10 @@ CreateControl   Proc far
     mov cx,ax
     xor al,al
     rep stosb
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov es:osp_setup_linear,edx
 ;    
     mov ax,es
     mov fs,ax
@@ -1372,10 +1377,10 @@ CreateIntr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddInBuffer    Proc near
-    push gs
     push es
     pushad
 ;    
+    movzx ecx,cx    
     mov si,ax
     or cx,cx
     jnz aibHasData
@@ -1393,64 +1398,57 @@ aibHasData:
     mov fs:osp_buffer_offset,edi
     mov fs:osp_buffer_sel,es
 ;    
-    movzx ebp,cx
-    dec cx
-    and cx,0F000h
-    add cx,1000h
-    movzx eax,cx
-    AllocateBigLinear
-    mov ecx,eax
-    mov edi,edx
+    push ecx
+    mov bx,es
+    GetSelectorBaseSize
+    add edx,edi
+    sub ecx,edi
+    mov eax,ecx
+    pop ecx
+    jc aibDone  
+;
+    cmp eax,ecx
+    jb aibDone
+;
     mov ax,flat_sel
     mov es,ax
-    mov ecx,ebp    
-    shr ecx,2
-    xor eax,eax    
-    rep stos dword ptr es:[edi]
-    mov ecx,ebp
-    and ecx,3
-    rep stos byte ptr es:[edi]
-    mov edi,edx
-;    
-    mov ax,bp
-    xor dx,dx
-    mov cx,fs:usbp_maxlen
-    div cx
-    mov cx,ax
-    mov bx,dx
-;
-    or bx,bx
-    jnz aibNoJust
-;
-    add bx,fs:usbp_maxlen
-    dec cx        
-
-aibNoJust:    
-    or cx,cx
-    jz aibLastPart
+    mov edi,edx    
 
 aibLoop:
+    mov ax,1000h
+    mov dx,di
+    and dx,0FFFh
+    sub ax,dx
+    cmp ax,fs:usbp_maxlen
+    jb aibMinOk
+;
+    mov ax,fs:usbp_maxlen
+
+aibMinOk:
+    cmp ax,cx
+    jae aibLast
+;    
+    movzx eax,ax
+    push ax
     push cx
-    mov cx,fs:usbp_maxlen     
+    mov cx,ax
     mov ax,si
     call AddPipeTd
-;
-    movzx ecx,fs:usbp_maxlen 
-    add edi,ecx
     pop cx
-    loop aibLoop
+    pop ax
+    add edi,eax
+    sub cx,ax
+    jmp aibLoop
 
-aibLastPart:
-    mov cx,bx
+aibLast:    
     mov ax,si
     and ax,NOT 0E0h
     or ax,20h
     call AddPipeTd
-
+    
 aibDone:
     popad
     pop es
-    pop gs    
     ret
 AddInBuffer    Endp
 
@@ -1470,7 +1468,6 @@ AddInBuffer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddOutBuffer    Proc near
-    push gs
     push es
     pushad
 ;    
@@ -1488,63 +1485,49 @@ AddOutBuffer    Proc near
     jmp aobDone
 
 aobHasData:
-    push si
-    movzx ebp,cx
-;    
-    push es
-    push edi
-    dec cx
-    and cx,0F000h
-    add cx,1000h
-    movzx eax,cx
-    AllocateBigLinear
-    mov ecx,eax
-    mov edi,edx
+    push ecx
+    mov bx,es
+    GetSelectorBaseSize
+    add edx,edi
+    sub ecx,edi
+    mov eax,ecx
+    pop ecx
+    jc aobDone  
+;
+    cmp eax,ecx
+    jb aobDone
+;
     mov ax,flat_sel
     mov es,ax
-    pop esi
-    pop gs
-;
-    mov ecx,ebp    
-    shr ecx,2
-    xor eax,eax    
-    rep movs dword ptr es:[edi],gs:[esi]
-    mov ecx,ebp
-    and ecx,3
-    rep movs byte ptr es:[edi],gs:[esi]
-    mov edi,edx
-;    
-    pop si
-    mov ax,bp
-    xor dx,dx
-    mov cx,fs:usbp_maxlen
-    div cx
-    mov cx,ax
-    mov bx,dx
-;
-    or bx,bx
-    jnz aobNoJust
-;
-    add bx,fs:usbp_maxlen
-    dec cx        
-
-aobNoJust:    
-    or cx,cx
-    jz aobLastPart
+    mov edi,edx    
 
 aobLoop:
+    mov ax,1000h
+    mov dx,di
+    and dx,0FFFh
+    sub ax,dx
+    cmp ax,fs:usbp_maxlen
+    jb aobMinOk
+;
+    mov ax,fs:usbp_maxlen
+
+aobMinOk:
+    cmp ax,cx
+    jae aobLast
+;    
+    movzx eax,ax
+    push ax
     push cx
-    mov cx,fs:usbp_maxlen     
+    mov cx,ax
     mov ax,si
     call AddPipeTd
-;
-    movzx ecx,fs:usbp_maxlen 
-    add edi,ecx
     pop cx
-    loop aobLoop
+    pop ax
+    add edi,eax
+    sub cx,ax
+    jmp aobLoop
 
-aobLastPart:
-    mov cx,bx
+aobLast:    
     mov ax,si
     and ax,NOT 0E0h
     or ax,20h
@@ -1553,7 +1536,6 @@ aobLastPart:
 aobDone:
     popad
     pop es
-    pop gs    
     ret
 AddOutBuffer    Endp
 
@@ -1584,13 +1566,9 @@ AddSetup    Proc far
     mov gs,ax
     mov esi,edi
 ;    
-    mov eax,1000h
-    push ecx
-    AllocateBigLinear
-    pop ecx
-    mov edi,edx
     mov ax,flat_sel
     mov es,ax   
+    mov edi,fs:osp_setup_linear
 ;
     movzx ecx,cx
     push ecx
@@ -1600,16 +1578,16 @@ AddSetup    Proc far
     pop ecx
     and ecx,3
     rep movs byte ptr es:[edi],gs:[esi]
-    mov edi,edx
     pop ecx
 ;
+    mov edi,fs:osp_setup_linear
     mov ax,2E4h
     call AddPipeTd
 
 asDone:
     popad
     pop es
-    pop gs
+    pop gs 
     ret
 AddSetup    Endp
 
@@ -1951,94 +1929,46 @@ EndTransfer   Proc far
     or edx,edx
     jz etDone
 ;
-    or fs:osp_flags, OSP_FLAG_TRANSFER_OK
-;
-    mov ax,fs:osp_buffer_sel
-    or ax,ax
-    jz etDataDone
-;            
-    push ds
-    mov edi,fs:osp_buffer_offset
-    mov es,ax
-;
-    xor bp,bp
     mov ax,flat_sel
-    mov ds,ax
+    mov es,ax
+;    
+    xor bp,bp
     mov edx,fs:osp_data_list
 
-etDataLoop:
-    mov ax,ds:[edx].otd_flags
+etLoop:
+    mov ax,es:[edx].otd_flags
     and ax,18h
     cmp ax,10h
-    jne etDataNext
+    jne etNext
 ;
-    mov esi,ds:[edx].otd_buffer_va
+    mov esi,es:[edx].otd_buffer_va
     or esi,esi
-    jz etDataNext
+    jz etNext
 ;    
-    mov ecx,ds:[edx].otd_cbp
+    mov ecx,es:[edx].otd_cbp
     or ecx,ecx
-    jz etDataFull
+    jz etFull
 ;
-    sub ecx,ds:[edx].otd_buffer_va
+    sub ecx,es:[edx].otd_buffer_va
     and ecx,0FFFh
-    jmp etDataSizeOk   
+    jmp etSizeOk   
 
-etDataFull:
-    movzx ecx,ds:[edx].otd_buffer_size
+etFull:
+    movzx ecx,es:[edx].otd_buffer_size
 
-etDataSizeOk:
+etSizeOk:
     add bp,cx
-    push ecx
-    shr ecx,2    
-    rep movs dword ptr es:[edi],[esi]
-    pop ecx
-    and ecx,3
-    rep movs byte ptr es:[edi],[esi]
 
-etDataNext:
-    mov edx,ds:[edx].otd_next_va
-    or edx,edx
-    jnz etDataLoop
-
-etDataPop:
-    pop ds
-    mov fs:osp_data_size,bp
-
-etDataDone:
-    mov fs:osp_buffer_sel,0
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov edx,fs:osp_data_list
-    or edx,edx
-    jz etQueueDone
-;
-    xor esi,esi    
-
-etQueueLoop:
+etNext:
     mov edi,es:[edx].otd_next_va
-    mov eax,es:[edx].otd_buffer_va
     call FreeBlock32
-    or eax,eax
-    jz etQueueNext
-;
-    and ax,0F000h
-    cmp esi,eax
-    je etQueueNext
-;
-    mov edx,eax
-    mov esi,eax
-    mov ecx,1000h
-    FreeLinear
-
-etQueueNext:
     mov edx,edi
     or edx,edx
-    jnz etQueueLoop 
-        
-etQueueDone:
+    jnz etLoop
+;
+    mov fs:osp_data_size,bp
     mov fs:osp_data_list,0
+    or fs:osp_flags, OSP_FLAG_TRANSFER_OK
 ;
     mov edx,fs:osp_ed
     or es:[edx].oes_fa_en,4000h
@@ -2257,12 +2187,23 @@ cpTdListOk:
     call FreeBlock32
         
 dpDone:
+    mov edx,fs:osp_setup_linear
+    or edx,edx
+    jz rpSetupDone
+;
+    mov ecx,1000h
+    FreeLinear
+
+rpSetupDone:   
     mov edx,fs:osp_sync_linear
     xor eax,eax
     SetPhysicalPage
 ;    
     mov ecx,1000h
     FreeLinear
+;
+    mov ax,2
+    WaitMilliSec
 ;
     LeaveSection ds:ohc_section
     mov ax,fs
