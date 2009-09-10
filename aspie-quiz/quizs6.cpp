@@ -289,7 +289,7 @@ void TQuizS6::SetupTexts()
   Quiz[39].MyGroup = GROUP_NT_TALENT;
   Quiz[40].MyGroup = GROUP_NT_SENSORY;
   Quiz[41].MyGroup = GROUP_NT_TALENT;
-  Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[42].MyGroup = GROUP_NT_TALENT;
   Quiz[43].MyGroup = GROUP_NT_TALENT;
   Quiz[44].MyGroup = GROUP_NT_HUNTING;
   Quiz[45].MyGroup = GROUP_ENVIRONMENT;

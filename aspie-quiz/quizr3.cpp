@@ -331,12 +331,12 @@ void TQuizR3::SetupTexts()
   Quiz[154].MyGroup = GROUP_NT_TALENT;
   Quiz[155].MyGroup = GROUP_NT_NVC;
   Quiz[156].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[157].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[157].MyGroup = GROUP_NT_TALENT;
   Quiz[158].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[159].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[160].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[160].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[162].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[162].MyGroup = GROUP_NT_TALENT;
   Quiz[163].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[164].MyGroup = GROUP_MIXED;
   Quiz[165].MyGroup = GROUP_NT_TALENT;

@@ -259,10 +259,10 @@ void TQuizS11::SetupTexts()
   Quiz[31].MyGroup = GROUP_NT_OBSESSION;
   Quiz[32].MyGroup = GROUP_NT_OBSESSION;
   Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[34].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[34].MyGroup = GROUP_NT_TALENT;
   Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[36].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[37].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[37].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[38].MyGroup = GROUP_NT_SOCIAL;
   Quiz[39].MyGroup = GROUP_NT_SOCIAL;
   Quiz[40].MyGroup = GROUP_NT_SOCIAL;

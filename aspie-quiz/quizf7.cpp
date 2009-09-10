@@ -232,7 +232,7 @@ void TQuizF7::SetupTexts()
   Quiz[204].MyGroup = GROUP_MIXED;
   Quiz[205].MyGroup = GROUP_ENVIRONMENT;
   Quiz[206].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[207].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[207].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[208].MyGroup = GROUP_ENVIRONMENT;
   Quiz[209].MyGroup = GROUP_ENVIRONMENT;
   Quiz[210].MyGroup = GROUP_ASPIE_SOCIAL;

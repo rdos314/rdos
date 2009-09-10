@@ -247,7 +247,7 @@ void TQuizS9::SetupTexts()
   Quiz[17].MyGroup = GROUP_NT_TALENT;
   Quiz[18].MyGroup = GROUP_NT_TALENT;
   Quiz[19].MyGroup = GROUP_NT_TALENT;
-  Quiz[20].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[20].MyGroup = GROUP_NT_TALENT;
   Quiz[21].MyGroup = GROUP_NT_TALENT;
   Quiz[22].MyGroup = GROUP_NT_HUNTING;
   Quiz[23].MyGroup = GROUP_ENVIRONMENT;
@@ -444,7 +444,7 @@ void TQuizS9::SetupTexts()
   Quiz[212].MyGroup = GROUP_MIXED;
   Quiz[213].MyGroup = GROUP_ENVIRONMENT;
   Quiz[214].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[215].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[215].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[216].MyGroup = GROUP_ENVIRONMENT;
   Quiz[217].MyGroup = GROUP_ENVIRONMENT;
   Quiz[218].MyGroup = GROUP_ASPIE_SOCIAL;
