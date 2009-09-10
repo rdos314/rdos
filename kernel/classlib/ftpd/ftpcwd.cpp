@@ -136,8 +136,23 @@ void TFtpCwdCommand::Execute(char *param)
 
 		if (ok)
 		{
-			TPathName relpath = TPathName(FServer->CurrDir) + TString(FArgList->FName);
-			TPathName abspath = TPathName(FServer->RootDir) + relpath.Get();
+            TPathName abspath;
+            TPathName relpath;
+
+            switch (FArgList->FName[0])
+		    {
+		        case '/':
+		        case '\\':
+    			    relpath = TString(FArgList->FName);
+    			    break;
+
+    			default:
+		   			relpath = TPathName(FServer->CurrDir) + TString(FArgList->FName);
+			        break;
+			}
+
+			abspath = TPathName(FServer->RootDir) + relpath.Get();
+			
 			if (abspath.IsDir())
 			{
 				FServer->CurrDir = relpath.Get();

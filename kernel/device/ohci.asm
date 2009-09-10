@@ -124,8 +124,6 @@ osp_signal          DW ?
 osp_sync_linear     DD ?
 osp_intr_list       DW ?
 osp_intr_count      DW ?
-osp_buffer_offset   DD ?
-osp_buffer_sel      DW ?
 osp_data_size       DW ?
 osp_setup_linear    DD ?
 osp_flags           DB ?
@@ -1363,9 +1361,9 @@ CreateIntr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    AddInBuffer
+;		NAME:		    AddBuffer
 ;
-;		DESCRIPTION:    Allocate input buffer
+;		DESCRIPTION:    Allocate input/output buffer
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
@@ -1376,14 +1374,14 @@ CreateIntr  Endp
 ;                     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddInBuffer    Proc near
+AddBuffer    Proc near
     push es
     pushad
 ;    
     movzx ecx,cx    
     mov si,ax
     or cx,cx
-    jnz aibHasData
+    jnz abHasData
 ;
     mov ax,flat_sel
     mov es,ax
@@ -1392,12 +1390,9 @@ AddInBuffer    Proc near
     and ax,NOT 0E0h
     or ax,20h
     call AddPipeTd
-    jmp aibDone
+    jmp abDone
 
-aibHasData:
-    mov fs:osp_buffer_offset,edi
-    mov fs:osp_buffer_sel,es
-;    
+abHasData:
     push ecx
     mov bx,es
     GetSelectorBaseSize
@@ -1405,28 +1400,28 @@ aibHasData:
     sub ecx,edi
     mov eax,ecx
     pop ecx
-    jc aibDone  
+    jc abDone  
 ;
     cmp eax,ecx
-    jb aibDone
+    jb abDone
 ;
     mov ax,flat_sel
     mov es,ax
     mov edi,edx    
 
-aibLoop:
+abLoop:
     mov ax,1000h
     mov dx,di
     and dx,0FFFh
     sub ax,dx
     cmp ax,fs:usbp_maxlen
-    jb aibMinOk
+    jb abMinOk
 ;
     mov ax,fs:usbp_maxlen
 
-aibMinOk:
+abMinOk:
     cmp ax,cx
-    jae aibLast
+    jae abLast
 ;    
     movzx eax,ax
     push ax
@@ -1438,106 +1433,19 @@ aibMinOk:
     pop ax
     add edi,eax
     sub cx,ax
-    jmp aibLoop
+    jmp abLoop
 
-aibLast:    
+abLast:    
     mov ax,si
     and ax,NOT 0E0h
     or ax,20h
     call AddPipeTd
     
-aibDone:
+abDone:
     popad
     pop es
     ret
-AddInBuffer    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:		    AddOutBuffer
-;
-;		DESCRIPTION:    Allocate output buffer
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       CX      Size
-;                       AX      Flags field of TD
-;                       ES:EDI  Data buffer
-;                     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddOutBuffer    Proc near
-    push es
-    pushad
-;    
-    mov si,ax
-    or cx,cx
-    jnz aobHasData
-;
-    mov ax,flat_sel
-    mov es,ax
-    xor edi,edi
-    mov ax,si
-    and ax,NOT 0E0h
-    or ax,20h
-    call AddPipeTd
-    jmp aobDone
-
-aobHasData:
-    push ecx
-    mov bx,es
-    GetSelectorBaseSize
-    add edx,edi
-    sub ecx,edi
-    mov eax,ecx
-    pop ecx
-    jc aobDone  
-;
-    cmp eax,ecx
-    jb aobDone
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,edx    
-
-aobLoop:
-    mov ax,1000h
-    mov dx,di
-    and dx,0FFFh
-    sub ax,dx
-    cmp ax,fs:usbp_maxlen
-    jb aobMinOk
-;
-    mov ax,fs:usbp_maxlen
-
-aobMinOk:
-    cmp ax,cx
-    jae aobLast
-;    
-    movzx eax,ax
-    push ax
-    push cx
-    mov cx,ax
-    mov ax,si
-    call AddPipeTd
-    pop cx
-    pop ax
-    add edi,eax
-    sub cx,ax
-    jmp aobLoop
-
-aobLast:    
-    mov ax,si
-    and ax,NOT 0E0h
-    or ax,20h
-    call AddPipeTd
-
-aobDone:
-    popad
-    pop es
-    ret
-AddOutBuffer    Endp
+AddBuffer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1611,7 +1519,7 @@ AddOut    Proc far
     push edx
 ;
     mov ax,0ECh
-    call AddOutBuffer
+    call AddBuffer
 ;    
     pop edx
     pop ecx
@@ -1639,7 +1547,7 @@ AddIn    Proc far
     push edx
 ;
     mov ax,0F4h
-    call AddInBuffer
+    call AddBuffer
 ;    
     pop edx
     pop ecx
@@ -1670,7 +1578,7 @@ AddStatusOut    Proc far
 ;
     xor cx,cx
     mov ax,3ECh
-    call AddOutBuffer
+    call AddBuffer
 
 asoDone:
     pop edx
@@ -1702,7 +1610,7 @@ AddStatusIn    Proc far
 ;
     xor cx,cx
     mov ax,3F4h
-    call AddInBuffer
+    call AddBuffer
 
 asiDone:
     pop edx

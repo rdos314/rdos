@@ -6308,6 +6308,41 @@ RdosIsTcpConnectionClosed	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosIsTcpConnectionIdle
+;
+;		DESCRIPTION:	Check if connection is idle (all data sent / no receive data)
+;
+;		PARAMETER:		Handle
+;
+;		RETURNS:		TRUE		Connection still idle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosIsTcpConnectionIdle
+
+RdosIsTcpConnectionIdle	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate is_tcp_connection_idle_nr
+	jnc rptiIdle
+;
+	xor eax,eax
+	jmp rptiDone
+
+rptiIdle:
+	mov eax,1
+	
+rptiDone:
+	pop ebx
+	pop ebp
+	ret 4
+RdosIsTcpConnectionIdle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosGetRemoteTcpConnectionIP
 ;
 ;		DESCRIPTION:	Get remote IP of connection

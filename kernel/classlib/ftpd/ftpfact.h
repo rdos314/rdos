@@ -64,6 +64,7 @@ public:
 	~TFtpSocketServerFactory();
 
 	void AddUser(const char *User, const char *Passw, const char *RootDir);
+	void SetDataPort(int DataPort);
 
 	virtual TSocketServer *Create(TSocket *Socket);
 
@@ -91,6 +92,8 @@ protected:
 	TFtpCommandFactory *quit;
 
 	TFtpUser *FList;
+
+	int FLocalPort;
 };
 
 #endif

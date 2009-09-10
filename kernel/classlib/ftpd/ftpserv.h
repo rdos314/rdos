@@ -92,6 +92,8 @@ public:
 	TString CurrDir;
 	TString RootDir;
 
+	int FLocalPort;
+
 	TSocket *FDataSocket;
 	TFtpUser *FUserList;
 };

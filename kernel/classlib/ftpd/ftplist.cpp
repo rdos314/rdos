@@ -121,7 +121,7 @@ void TFtpListCommand::WriteEntry(const TDirEntryData &entry)
         {
         FServer->Write("drw-rw-rw- ");
                 FDirCount++;
-        }
+		}
         else
         {
         FServer->Write("-rw-rw-rw- ");
@@ -151,7 +151,7 @@ void TFtpListCommand::WriteEntry(const TDirEntryData &entry)
                         break;
 
                 case 3:
-                        FServer->Write(" Mar ");
+						FServer->Write(" Mar ");
                         break;
 
                 case 4:
@@ -233,12 +233,12 @@ void TFtpListCommand::WriteEntry()
         ok = FDirList.GotoNext();
     }
 
-    ok = FFileList.GotoFirst();
-    while (ok)       
-    {
-        WriteEntry(FFileList.Get().Get());
-        ok = FFileList.GotoNext();
-    }
+	ok = FFileList.GotoFirst();
+	while (ok)
+	{
+		WriteEntry(FFileList.Get().Get());
+		ok = FFileList.GotoNext();
+	}
 }
 
 /*##########################################################################
@@ -254,73 +254,73 @@ void TFtpListCommand::WriteEntry()
 ##########################################################################*/
 void TFtpListCommand::Execute(char *param)
 {
-        TFtpArg *arg;
-        int ArgCount;
-        TFtpLangString msg;
-        int ok;
-        TPathName path(FServer->RootDir);
+	TFtpArg *arg;
+	int ArgCount;
+	TFtpLangString msg;
+	int ok;
+	TPathName path(FServer->RootDir);
 
-        path += FServer->CurrDir;
+	path += FServer->CurrDir;
 
-        if (FServer->VerifyUser())
-        {
-                ok = ScanCmdLine(param, 0);
-                if (ok)
-                {
-                        ArgCount = 0;
-                        arg = FArgList;
-                        while (arg)
-                        {
-                                ArgCount++;
-                                arg = arg->FList;
-                        }
-        
-                FFileCount = 0;
-                FDirCount = 0;
-                FTotalSize = 0;
+	if (FServer->VerifyUser())
+	{
+		ok = ScanCmdLine(param, 0);
+		if (ok)
+		{
+			ArgCount = 0;
+			arg = FArgList;
+			while (arg)
+			{
+				ArgCount++;
+				arg = arg->FList;
+			}
 
-            arg = FArgList;
-        
-                FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY);
-                FDirList.SetRequiredAttributes(FILE_ATTRIBUTE_DIRECTORY);
-                FDirList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
-    
-                if (arg)
-                    {
-                        while (arg)
-                        {
-                                    FFileList.Add(path + arg->FName);
-                                    FDirList.Add(path + arg->FName);
-                                arg = arg->FList;
-                        }
-                }
-                    else
-                        {
-                                FFileList.Add(path + "*");
-                                FDirList.Add(path + "*");
-                        }
-        
-                FFileList.RemoveDuplicates();
-            FDirList.RemoveDuplicates();
-        
-                FFileList.Sort();
-            FDirList.Sort();
-        
-                        msg.Load(150);
-            FServer->Reply(&msg);    
+			FFileCount = 0;
+			FDirCount = 0;
+			FTotalSize = 0;
 
-                WriteEntry();
-        
-                FServer->Push();
+			arg = FArgList;
 
-                msg.Load(226);
-                }
-                else
-                        msg.Load(501);
-        }
-        else
-            msg.Load(530);
+			FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY);
+			FDirList.SetRequiredAttributes(FILE_ATTRIBUTE_DIRECTORY);
+			FDirList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
 
-    FServer->Reply(&msg);    
+			if (arg)
+			{
+				while (arg)
+				{
+					FFileList.Add(path + arg->FName);
+					FDirList.Add(path + arg->FName);
+					arg = arg->FList;
+				}
+			}
+			else
+			{
+				FFileList.Add(path + "*");
+				FDirList.Add(path + "*");
+			}
+
+			FFileList.RemoveDuplicates();
+			FDirList.RemoveDuplicates();
+
+			FFileList.Sort();
+			FDirList.Sort();
+
+			msg.Load(150);
+			FServer->Reply(&msg);
+
+			WriteEntry();
+
+			FServer->Push();
+
+			msg.Load(226);
+		}
+		else
+			msg.Load(501);
+	}
+	else
+		msg.Load(530);
+
+	FServer->Reply(&msg);
 
 }

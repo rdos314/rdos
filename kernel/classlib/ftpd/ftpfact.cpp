@@ -338,6 +338,7 @@ void TFtpSocketServerFactory::Init()
 	quit = new TFtpQuitFactory;
 
 	FList = 0;
+	FLocalPort = 0;
 }
 
 /*##########################################################################
@@ -355,6 +356,7 @@ TSocketServer *TFtpSocketServerFactory::Create(TSocket *Socket)
 {
 	TFtpSocketServer *server;
 	server = new TFtpSocketServer(FList, "FTP", 0x2000, Socket);
+	server->FLocalPort = FLocalPort;
 	server->OnCommand = OnCommand;
 
 	return server;
@@ -377,4 +379,20 @@ void TFtpSocketServerFactory::AddUser(const char *User, const char *Passw, const
 
     user->FNext = FList;
     FList = user;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::SetDataPort
+#
+#   Purpose....: Set default data port
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServerFactory::SetDataPort(int Port)
+{
+    FLocalPort = Port;
 }

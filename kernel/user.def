@@ -458,4 +458,6 @@ get_watchdog_tics_nr        = 376
 is_usb_trans_done_nr        = 377
 was_usb_trans_ok_nr         = 378
 
-usergate_entries			= 379
+is_tcp_connection_idle_nr	= 379
+
+usergate_entries			= 380

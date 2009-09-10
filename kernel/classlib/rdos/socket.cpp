@@ -244,6 +244,21 @@ void TSocket::Push()
 	    RdosPushTcpConnection(FHandle);
 }
 
+/*##################  TSocket::IsIdle  ############################
+*   Purpose....: Check if connection is idle (no unsent data & no received data)        		                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSocket::IsIdle()
+{
+	if (FHandle)
+	    return RdosIsTcpConnectionIdle(FHandle);
+	else
+	    return TRUE;
+}
+
 /*##################  TSocket::WaitForConnection  ############################
 *   Purpose....: Wait for a connection		                            #
 *   In params..: *                                                          #

@@ -73,6 +73,7 @@ void cdecl main()
 	Factory.AddUser("n-drive", "rdos", "n:\\");
 	Factory.AddUser("z-drive", "rdos", "z:\\");
 	Factory.OnCommand = WriteCommand;
+	Factory.SetDataPort(2100);
 
 	for (;;)
 		Factory.WaitForever();

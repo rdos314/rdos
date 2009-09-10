@@ -379,6 +379,7 @@ void RDOSAPI RdosDeleteTcpConnection(int Handle);
 void RDOSAPI RdosAbortTcpConnection(int Handle);
 void RDOSAPI RdosPushTcpConnection(int Handle);
 int RDOSAPI RdosIsTcpConnectionClosed(int Handle);
+int RDOSAPI RdosIsTcpConnectionIdle(int Handle);
 long RDOSAPI RdosGetRemoteTcpConnectionIP(int Handle);
 int RDOSAPI RdosGetRemoteTcpConnectionPort(int Handle);
 int RDOSAPI RdosGetLocalTcpConnectionPort(int Handle);
@@ -1615,6 +1616,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosIsTcpConnectionClosed = \
     CallGate_is_tcp_connection_closed  \
     "cmc"   \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosIsTcpConnectionIdle = \
+    CallGate_is_tcp_connection_idle  \
     CarryToBool \
     parm [ebx] \
     value [eax];

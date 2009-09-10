@@ -51,6 +51,7 @@ public:
 	int GetLocalPort() const;
 
     void Push();
+	int IsIdle();
     int WaitForConnection(int Timeout);
 
 	void Write(char ch);

@@ -1094,6 +1094,12 @@ IsTcpConnectionClosed	MACRO
 			ENDM
 
 ; IN  BX		connection handle
+; OUT NC        Idle
+IsTcpConnectionIdle	MACRO
+	UserGate is_tcp_connection_idle_nr
+			ENDM
+
+; IN  BX		connection handle
 ; OUT EAX       IP
 GetRemoteTcpConnectionIP	MACRO
 	UserGate get_remote_tcp_connection_ip_nr

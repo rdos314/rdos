@@ -104,13 +104,13 @@ void TFtpPasvCommand::Execute(char *param)
 	FServer->ListenForDataConnection(&IP, &port);
 
 	for (i = 0; i < 4; i++)
-	    arr[i] = (IP >> (8 * i)) & 0xff;
+		arr[i] = (IP >> (8 * i)) & 0xff;
 
 	arr[4] = (port >> 8) & 0xff;
 	arr[5] = port & 0xff;
 
 	msg.printf(227, arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]);
-	
-    FServer->Reply(&msg);    
+
+	FServer->Reply(&msg);
 }
 

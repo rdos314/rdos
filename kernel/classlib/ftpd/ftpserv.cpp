@@ -254,6 +254,7 @@ TFtpSocketServer::TFtpSocketServer(TFtpUser *UserList, const char *Name, int Sta
         CurrDir = "/";
         FDataSocket = 0;
         OnCommand = 0;
+        FLocalPort = 0;
 }
 
 /*##########################################################################
@@ -351,9 +352,9 @@ int TFtpSocketServer::OpenDataConnection(long IP, int port)
 
 /*##########################################################################
 #
-#   Name       : TFtpSocketServer::ListenForDataConnection
+#   Name       : TFtpSocketServer::GetListenPort
 #
-#   Purpose....: Listen for data connection from client
+#   Purpose....: Get port to listen for
 #
 #   In params..: *
 #   Out params.: *
@@ -362,13 +363,19 @@ int TFtpSocketServer::OpenDataConnection(long IP, int port)
 ##########################################################################*/
 void TFtpSocketServer::ListenForDataConnection(long *IP, int *port)
 {
-        *IP = FSocket->GetLocalIP();
+    *IP = FSocket->GetLocalIP();
 
-        if (FDataSocket)
-                delete FDataSocket;
+    if (FDataSocket)
+        delete FDataSocket;
 
+    if (FLocalPort)
+        FDataSocket = new TSocket(FSocket->GetRemoteIP(), FLocalPort, 0, 6000, 0x2000);
+    else
+    {
         FDataSocket = new TSocket(FSocket->GetRemoteIP(), 0, 6000, 0x2000);
-        *port = FDataSocket->GetLocalPort();
+        FLocalPort = FDataSocket->GetLocalPort();
+    }
+    *port = FLocalPort;
 }
 
 /*##########################################################################
@@ -513,11 +520,17 @@ void TFtpSocketServer::WriteLong(long value)
 ##########################################################################*/
 void TFtpSocketServer::Push()
 {
-        if (FDataSocket)
+    if (FDataSocket)
+    {
+        while (FSocket->IsOpen() && FDataSocket->IsOpen() && !FDataSocket->IsIdle())
         {
-                delete FDataSocket;
-                FDataSocket = 0;
+            FDataSocket->Push();
+            RdosWaitMilli(5);
         }
+        
+        delete FDataSocket;
+        FDataSocket = 0;
+    }
 }
 
 /*##########################################################################

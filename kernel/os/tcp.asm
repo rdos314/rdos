@@ -3604,8 +3604,6 @@ open_tcp_connection	Proc far
 	mov ebp,eax
 	or si,si
 	jz open_tcp_dyn
-	cmp si,2048
-	jnc open_tcp_dyn
 ;
 	call FindConnection
 	jc open_tcp_create
@@ -3958,6 +3956,63 @@ delete_tcp_done:
 	pop ds
 	retf32
 delete_tcp_connection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			IsTcpConnectionIdle
+;
+;	Purpose:		Check if connection is idle
+;
+;	Parameters:		BX		Connection handle
+;
+;   Returns:        NC      Connection is idle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_tcp_connection_idle_name DB 'Is TCP Connection Idle?',0
+
+is_tcp_connection_idle	Proc far
+	push ds
+	push ax
+	push bx
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc is_tcp_idle_ok
+;    
+	mov ax,[bx].tcp_handle_sel
+	or ax,ax
+	jz is_tcp_idle_ok
+;
+	mov ds,ax
+;
+    mov ax,ds:tcp_receive_count
+    or ax,ax
+    jnz is_tcp_idle_fail
+;	
+	mov ax,ds:tcp_send_count
+    or ax,ax
+    jnz is_tcp_idle_fail
+;
+	mov eax,ds:tcp_send_next
+	cmp eax,ds:tcp_send_una
+	jnz is_tcp_idle_fail
+
+is_tcp_idle_ok:
+    clc
+    jmp is_tcp_idle_done
+
+is_tcp_idle_fail:
+    stc
+
+is_tcp_idle_done:	
+	pop bx
+	pop ax
+	pop ds
+	retf32
+is_tcp_connection_idle	Endp
 
 PAGE
 	    
@@ -4906,6 +4961,7 @@ write_tcp_size_ok:
     jmp write_tcp_retry
 
 write_tcp_full:
+	or ds:tcp_pending,FLAG_SEND_PUSH
     push eax
     push edi
 	call SendData
@@ -5191,6 +5247,10 @@ update_user_done:
     cmp ds:tcp_state,STATE_SYN_SENT
     jne update_con_syn_ok
 ;    
+    cmp ds:tcp_remote_port,0
+    je update_con_syn_ok
+;
+
     mov ax,ds:tcp_syn_timeout
     sub ax,1
     mov ds:tcp_syn_timeout,ax
@@ -5527,6 +5587,12 @@ init_tcp	PROC near
 	mov di,OFFSET is_tcp_connection_closed_name
 	xor dx,dx
 	mov ax,is_tcp_connection_closed_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET is_tcp_connection_idle
+	mov di,OFFSET is_tcp_connection_idle_name
+	xor dx,dx
+	mov ax,is_tcp_connection_idle_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_remote_tcp_connection_ip

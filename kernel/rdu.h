@@ -458,3 +458,5 @@
 #define CallGate_is_usb_trans_done 0x9a 121 1 0 0 2 0
 #define CallGate_was_usb_trans_ok 0x9a 122 1 0 0 2 0
 
+#define CallGate_is_tcp_connection_idle 0x9a 123 1 0 0 2 0
+
