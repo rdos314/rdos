@@ -352,12 +352,16 @@ PAGE
 
 GetDescr    Proc near    
     push es
+    push bx
+;    
+    push es
     push cx
     push edi
 ;    
     push ax
     mov eax,8
     AllocateSmallGlobalMem
+    mov bx,es
     pop ax
     xor edi,edi
     mov es:usd_type,80h
@@ -379,9 +383,15 @@ GetDescr    Proc near
     call ds:add_status_out_proc
     call ds:issue_transfer_proc
     call ds:wait_for_completion_proc
+;    
     pushf
+    mov es,bx
+    FreeMem    
     call ds:get_data_size_proc
     popf
+;
+    pop bx
+    pop es   
     ret
 GetDescr    Endp    
 
@@ -2170,7 +2180,6 @@ start_wait_for_pipe	PROC far
     push fs
 ;    
     mov fs,es:pw_pipe_sel
-    mov fs:usbp_wait_obj,es
     mov ds,es:pw_func_sel
 	call ds:issue_transfer_proc
 ;	
@@ -2195,7 +2204,6 @@ stop_wait_for_pipe	PROC far
     push fs
 ;    
     mov fs,es:pw_pipe_sel
-    mov fs:usbp_wait_obj,0
 ;    
     mov ds,es:pw_func_sel   
     call ds:end_transfer_proc

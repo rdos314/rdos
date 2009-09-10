@@ -129,7 +129,6 @@ usbp_mode           DB ?
 usbp_dir            DB ?
 usbp_speed          DB ?
 usbp_maxlen         DW ?
-usbp_wait_obj       DW ?
 usbp_usage          DW ?
 usbp_section        section_typ <>
 usbp_device_sel     DW ?

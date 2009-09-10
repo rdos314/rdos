@@ -1907,6 +1907,7 @@ EndTransfer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDataSize   Proc far
+    xor cx,cx
     test fs:osp_flags, OSP_FLAG_TRANSFER_OK
     jz gdsDone
 ;    

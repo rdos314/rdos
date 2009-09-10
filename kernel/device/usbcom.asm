@@ -39,7 +39,6 @@ include ..\os\com.inc
 
 MAX_PORTS       = 16
 
-FLAG_UDS_DELETE = 1
 FLAG_UDS_DISCONNECT = 2
 FLAG_UDS_REINIT = 4
 
@@ -2603,9 +2602,6 @@ hdOpen:
     or bx,bx
     jnz hdIsOpen
 ;
-    test ds:uds_flag,FLAG_UDS_DELETE
-    jnz hdDone
-;
     call OpenPort        
 ;
     test ds:uds_flag,FLAG_UDS_REINIT
@@ -2700,9 +2696,6 @@ hdClosed:
     jz hdDone
 
 hdIsClosed:
-    test ds:uds_flag,FLAG_UDS_DELETE
-    jz hdDone
-;
     call ClosePort
     
 hdDone:
