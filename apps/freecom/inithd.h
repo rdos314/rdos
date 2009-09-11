@@ -55,11 +55,13 @@ protected:
 
     void LoadBootLoader(TDisc *Disc);
 	void WriteBootSector(TDisc *Disc, int IdeDisc);
+    void UpdateBootSector(TDisc *Disc, int IdeDisc);
 	void WriteBootLoader(TDisc *Disc);
 
     int FLoaderSectors;
 	int FOptR;
     int FOptI;
+    int FOptD;
 	char *FBootLoader;
 	int FLoaderSize;
 };

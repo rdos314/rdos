@@ -1542,10 +1542,11 @@ Unable to create partition. Invalid size of filesystem name
 :TEXT_CMDHELP_INITHD
 Init harddrive partition table and write RDOS bootloader
 
-INITHD [/R] [/I] disc
+INITHD [/R] [/I] /D disc [new disc]
   disc            Disc number (0 is first drive)
   /R              Make RDOS normal boot as default
   /I              Clear partition table and write MBR signature
+  /D              Change boot disc number
 .
 
 :TEXT_INITHD_AVAIL_ERROR

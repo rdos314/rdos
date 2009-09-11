@@ -126,6 +126,9 @@ int TInitHdCommand::OptScan(const char *optstr, int ch, int bool, const char *st
 
                 case 'I':
                         return OptScanBool(optstr, bool, strarg, &FOptI);
+
+                case 'D':
+                        return OptScanBool(optstr, bool, strarg, &FOptD);
         }
         OptError(optstr);
         return E_Useage;
@@ -146,6 +149,7 @@ void TInitHdCommand::InitOptions()
 {
         FOptR = 0;
         FOptI = 0;
+        FOptD = 0;
 }
 
 /*##########################################################################
@@ -266,6 +270,35 @@ void TInitHdCommand::WriteBootLoader(TDisc *Disc)
 
 /*##########################################################################
 #
+#   Name       : TInitHdCommand::UpdateBootSector
+#
+#   Purpose....: Update boot sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInitHdCommand::UpdateBootSector(TDisc *Disc, int IdeDisc)
+{
+    char *BootSector;
+    TBootParam bootp;
+
+    BootSector = new char[512];
+
+    Disc->Read(0, BootSector, 512);
+
+    memcpy(&bootp, BootSector + 11, sizeof(bootp));
+    bootp.Drive = 0x80 + IdeDisc;
+    memcpy(BootSector + 11, &bootp, sizeof(bootp));
+
+    Disc->Write(0, BootSector, 512);
+
+    delete BootSector;
+}
+
+/*##########################################################################
+#
 #   Name       : TInitHdCommand::Execute
 #
 #   Purpose....: Execute command
@@ -277,61 +310,81 @@ void TInitHdCommand::WriteBootLoader(TDisc *Disc)
 ##########################################################################*/
 int TInitHdCommand::Execute(char *param)
 {
-        int DiscNr;
-        TDisc *Disc;
-        TDiscPartition *DiscPart;
-        TPartition *Part;
-        int ok;
+    int CurrDisc;
+    int NewDisc;
+    int DiscNr;
+    TDisc *Disc;
+    TDiscPartition *DiscPart;
+    TPartition *Part;
+    int ok;
 
-        InitOptions();
+    InitOptions();
 
-        if (LeadOptions(&param, 0) != E_None)
-                return 1;
+    if (LeadOptions(&param, 0) != E_None)
+        return 1;
 
-        if (FOptI)
-                FOptR = 0;
+    if (FOptI)
+        FOptR = 0;
 
-        if (sscanf(param, "%d", &DiscNr) == 1)
+    if (FOptD)
+    {
+        if (sscanf(param, "%d %d", &CurrDisc, &NewDisc) == 2)
         {
-                Disc = new TIdeDisc(DiscNr);
-                ok = Disc->IsValid();
+            Disc = new TIdeDisc(CurrDisc);
+            ok = Disc->IsValid();
 
-                if (ok)
-                {
-                        LoadBootLoader(Disc);
+            if (ok)
+            {
+                UpdateBootSector(Disc, NewDisc);
+                return 0;
+            }
+            ErrorSyntax(0);
+            return 1;
+        }
+    }
 
-                        DiscPart = new TDiscPartition(Disc);
-                        Part = DiscPart->PartArr[0];
-                        if (Part)
-                                if (Part->Start <= FLoaderSectors + 1)
-                                        ok = Part->IsFree();
-                        delete DiscPart;
+    if (sscanf(param, "%d", &DiscNr) == 1)
+    {
+        Disc = new TIdeDisc(DiscNr);
+        ok = Disc->IsValid();
 
-                        if (!ok)
-                        {
-                                FMsg.printf(TEXT_INITHD_AVAIL_ERROR, DiscNr);
-                                Write(FMsg.GetData());
-                                return 0;
-                        }
+        if (ok)
+        {
+            LoadBootLoader(Disc);
 
-                }
-                else
-                {
-                        FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
-                        Write(FMsg.GetData());
-                        return 0;
-                }
+            DiscPart = new TDiscPartition(Disc);
+            Part = DiscPart->PartArr[0];
+            if (Part)
+                if (Part->Start <= FLoaderSectors + 1)
+                    ok = Part->IsFree();
 
+            delete DiscPart;
 
-                if (ok)
-                {
-                        WriteBootLoader(Disc);
-                        WriteBootSector(Disc, DiscNr);
-                        return 0;
-                }
+            if (!ok)
+            {
+                FMsg.printf(TEXT_INITHD_AVAIL_ERROR, DiscNr);
+                Write(FMsg.GetData());
+                return 0;
+            }
+
+        }
+        else
+        {
+            FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
+            Write(FMsg.GetData());
+            return 0;
         }
 
-        ErrorSyntax(0);
-        return 1;
+
+        if (ok)
+        {
+            WriteBootLoader(Disc);
+            WriteBootSector(Disc, DiscNr);
+            return 0;
+        }
+    }
+
+    ErrorSyntax(0);
+    return 1;
 }
 
