@@ -31,12 +31,10 @@
 #include "fuzzy.h"
 #include "control.h"
 
-class TLog;
-
 class TVp : public TFuzzy
 {
 public:
-	TVp(TControlThread *control, TLog *log);
+	TVp(TControlThread *control);
 	~TVp();
 
 	void DeviceName(char *Name, int Size) const;
@@ -55,29 +53,27 @@ public:
 
 	int HasValidHeatP();
 	long double GetHeatP();
-    
+
 	void SetTempError(int temp);
 	void SetAmbient(int ref, int ambient);
-    
+
 protected:
-    void ReadTankData();
-    
 	virtual void Execute();
 
-    TFuzzyVar FTempDiffVar;
-    TFuzzyVar FAmbientVar;
-    TFuzzyVar FOutputVar;
+	 TFuzzyVar FTempDiffVar;
+	 TFuzzyVar FAmbientVar;
+	 TFuzzyVar FOutputVar;
 
-    int TempSum;
-    int TempCount;
-    long double AmbientSum;
-    int AmbientCount;
+	 int TempSum;
+	 int TempCount;
+	 long double AmbientSum;
+	 int AmbientCount;
 
-    int FVpOn;
-    int FEpOn;
-    
-    long double FLevel;
-    
+	 int FVpOn;
+	 int FEpOn;
+
+	 long double FLevel;
+
 	int FValidTank;
 	int FValidHeat;
 
@@ -102,17 +98,16 @@ protected:
 	int ValidHeatArr[20];
 	long double HeatArr[20];
 
-    int FMaxHeatTemp;
-    int FMaxHeatDay;
+	 int FMaxHeatTemp;
+	 int FMaxHeatDay;
 
-    int FValidAmbient;
-    int FAmbient;
-    int FRef;
+	 int FValidAmbient;
+	 int FAmbient;
+	 int FRef;
 
-    TControlThread *FControl;
-    TLog *Log;
+	 TControlThread *FControl;
 
-    TSection FSection;
+	 TSection FSection;
 };
 
 #endif

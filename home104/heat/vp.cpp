@@ -34,7 +34,6 @@
 #include <math.h>
 
 #include "vp.h"
-#include "log.h"
 #include "lowset.h"
 #include "midset.h"
 #include "highset.h"
@@ -57,9 +56,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TVp::TVp(TControlThread *control, TLog *log)
+TVp::TVp(TControlThread *control)
 {
-    Log = log;
 	int i, j;
 	int SetArr[MAX_FUZZY_VARS];
 	int RuleArr[3][5] =
@@ -366,120 +364,6 @@ void TVp::SetAmbient(int ref, int ambient)
 
 /*##########################################################################
 #
-#   Name       : TVp::ReadTankData
-#
-#   Purpose....: Read old tank-data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TVp::ReadTankData()
-{
-    TDateTime StartTime;
-	TDateTime time;
-	TLogReader *log;
-	TDeviceMsg *msg;
-    TDeviceTag *header;
-	TDeviceTag *tag;
-	TDeviceVar *var;
-    int diff;
-	int i;
-	unsigned long msb;
-	unsigned long lsb;
-	int ival;
-
-	for (i = 0; i < 40; i++)
-	    ValidTankArr[i] = FALSE;
-
-	for (i = 0; i < 20; i++)
-	    ValidHeatArr[i] = FALSE;
-	
-    StartTime.AddMin(-40);
-    
-	log = Log->GetLog(StartTime.GetYear(), StartTime.GetMonth(), StartTime.GetDay());
-
-    FMaxHeatDay = StartTime.GetDay();
-    FMaxHeatTemp = 0;
-
-    msg = 0;
-    
-    if (log)
-    	if (log->GotoFirst())
-            msg = log->Get();
-    
-    while (msg)
-    {
-        header = msg->GetTag(LOG_TAG_HEADER);
-    	if (header)
-	    {
-		    msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
-			lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
-    		time = TDateTime(msb, lsb);
-
-    		if (time >= StartTime)
-    		{
-    		    diff = time.GetMin() - StartTime.GetMin();
-    		    if (diff < 0)
-    		        diff += 60;
-
-    		    if (diff >= 0 && diff < 40)
-    		    {
-                    tag = msg->GetTag(LOG_TAG_TANK);
-                    if (tag)
-                    {        			        
-                        var = tag->GetVar(LOG_VAR_Temp);
-    	        		if (var)
-	    		    	{
-                            TankArr[diff] = var->GetFloat1();
-                            ValidTankArr[diff] = TRUE;
-                        }
-                    }
-                }
-
-                diff -= 20;
-
-    		    if (diff >= 0 && diff < 20)
-    		    {
-                    tag = msg->GetTag(LOG_TAG_HEAT);
-                    if (tag)
-                    {        			        
-                        var = tag->GetVar(LOG_VAR_Temp);
-    	        		if (var)
-	    		    	{
-                            HeatArr[diff] = var->GetFloat1();
-                            ValidHeatArr[diff] = TRUE;
-                        }
-                    }
-                }
-
-                tag = msg->GetTag(LOG_TAG_HEAT);
-                if (tag)
-                {        			        
-                    var = tag->GetVar(LOG_VAR_Temp);
-    	        	if (var)
-	    		    {
-                        ival = var->GetFloat1();
-
-                        if (ival > FMaxHeatTemp)
-                            FMaxHeatTemp = ival;
-                    }
-                }
-
-            }
-        }
-
-        if (log->GotoNext())
-		    msg = log->Get();
-		else
-		    msg = 0;
-    }
-    delete log;
-}
-
-/*##########################################################################
-#
 #   Name       : TVp::Execute
 #
 #   Purpose....: Handler thread
@@ -598,8 +482,6 @@ void TVp::Execute()
 		FLevel = 9.9;
 	else
 		FLevel = 0.0;
-
-	ReadTankData();
 
 	FTankSum = 0;
 	FTankCount = 0;

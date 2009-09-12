@@ -33,19 +33,16 @@
 #include <time.h>
 #include <math.h>
 
-#include "httpheat.h"
 #include "rad.h"
 #include "datetime.h"
 #include "ws2300.h"
-#include "log.h"
 #include "circ.h"
 #include "vp.h"
-#include "graph.h"
 #include "videodev.h"
-#include "jpeg.h"
 #include "radcntrl.h"
 #include "solar.h"
 #include "table.h"
+#include "jpeg.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -58,7 +55,6 @@
 
 void WsChanged(TWs2300 *ws)
 {
-	 HttpUpdate();
 }
 
 void cdecl main()
@@ -83,13 +79,11 @@ void cdecl main()
 	long double winddir;
 	long NtpIp;
 	int SyncCount = 0;
-	TLog *log;
 	TFile *file;
 	int init = 0x8000;
 	int ambient;
 	int night;
 	int refsum;
-	TGraphic *graphic;
 	TGraphicDevice *vbe;
 	TFont Font(25);
 	char str[80];
@@ -139,16 +133,12 @@ void cdecl main()
 	NtpIp = RdosNameToIp("ntp.lth.se");
 	RdosSyncTime(NtpIp);
 
-	log = new TLog("e:\\log");
-
 	vbe = new TVideoGraphicDevice(32, 1280, 768);
 	control = new TControlThread("Control", vbe);
 	vbe->SetFont(&Font);
 
 	bitmap = TJpegBitmapDevice::Create("d:\\heat\\back.jpg");
 	vbe->Blit(bitmap, 0, 0, 0, 0, 1280, 768);
-
-	graphic = new TGraphic(vbe, log);
 
 	RadControl = new TRadControl(control, RAD_X, RAD_Y, 800, 30 * 8);
 
@@ -190,8 +180,6 @@ void cdecl main()
 		    	break;
     	}
 		RadArr[i] = new TRad(str, RadControl, i, 0x20 + i);
-		AddHttpRad(RadArr[i]);
-		log->Add(RadArr[i]);
 	}
 
 	Ws = new TWs2300(1);
@@ -199,18 +187,7 @@ void cdecl main()
 
 	Circ = new TCirc(vbe);
 
-	Vp = new TVp(control, log);
-
-	log->Add(Ws);
-	log->Add(Circ);
-	log->Add(Vp);
-
-	InitHeatHttp();
-
-	AddHttpWs2300(Ws);
-	AddHttpCirc(Circ);
-	AddHttpVp(Vp);
-	AddHttpLog(log);
+	Vp = new TVp(control);
 
 	IndoorLabel = new TLabelControl(control, 900, 10, 300, 30);
     IndoorLabel->SetFont(20);
@@ -398,11 +375,6 @@ void cdecl main()
 			Vp->SetTempError(temperrmax);
 			Vp->SetAmbient(refsum / count, (int)(10.0 * Ws->GetOutdoorTemp()));
 		 }
-
-		if (diostat & 1)
-			HttpSetLightOn();
-		else
-			HttpSetLightOff();
 
 		val = Ws->GetIndoorTemp();
 		sprintf(str, "%5.1Lf", val);
