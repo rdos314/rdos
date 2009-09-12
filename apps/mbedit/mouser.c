@@ -351,13 +351,13 @@ int mouse_event_handler_c (int repeat)
    {
       if (phase == 0)
       {
-         RdosGetTics(&msb, &msec10_start);
+         RdosGetSysTime(&msb, &msec10_start);
          phase = 1;     /* begin of time delay */
       }
 
       if (phase == 1)
       {
-         RdosGetTics(&msb, &msec10_act);
+         RdosGetSysTime(&msb, &msec10_act);
 
       /* before completion of time delay: abort repetition */
          if (msec10_act - msec10_start >= TIME_DELAY)
