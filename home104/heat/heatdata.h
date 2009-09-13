@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2003, Leif Ekblad
+# Copyright (C) 1988-2006, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,44 +20,62 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# storserv.h
-# Storage socket server class
+# heatdata.h
+# Common data-type for data store
 #
 ########################################################################*/
 
-#ifndef _STORSERV_H
-#define _STORSERV_H
+#ifndef HEATDATA_H
+#define HEATDATA_H
 
-#include "str.h"
-#include "socket.h"
-#include "storlist.h"
-#include "heatdata.h"
+#define RAD_COUNT   16
 
-class TStorageSocketServer : public TSocketServer
+struct TRadData
 {
-public:
-    TStorageSocketServer(TStorageList *StorList, const char *Name, int StackSize, TSocket *Socket);
-	~TStorageSocketServer();
-
-protected:
-    void AddRadData(TRadData *data, TDeviceMsg *doc);
-    TDeviceMsg *ConvToCotex(THeatData *data);
-    void SendCotex(THeatData *Data);
-	virtual void HandleSocket();
-
-	TStorageList *FStorList;
+    char HasData;
+	 int Address;
+	 long double Ref;
+	 long double Temp;
+	 long double Motor;
+	 long double Light;
+	 long double AuxTemp;
 };
 
-class TStorageSocketServerFactory : public TSocketServerFactory
+struct THeatData
 {
-public:
-    TStorageSocketServerFactory(TStorageList *StorList, int Port, int MaxConnections, int BufferSize);
-	~TStorageSocketServerFactory();
+	 unsigned long Msb;
+	 unsigned long Lsb;
 
-	virtual TSocketServer *Create(TSocket *Socket);
+	 char HasWs;
+	 long double IndoorTemp;
+	 long double IndoorHumidity;
+	 long double OutdoorTemp;
+	 long double OutdoorHumidity;
+	 long double DewPoint;
+	 long double WindChill;
+	 long double WindSpeed;
+	 long double WindDir;
+	 long double AirPressure;
 
-protected:
-	TStorageList *FStorList;
+	 char HasRain;
+	 long Rain1h;
+
+	 char HasCirc;
+	 long double CircSpeed;
+
+	 char HasVp;
+	 char VpOn;
+	 char EpOn;
+	 char HasTankTemp;
+	 long TankTemp;
+	 char HasTankP;
+	 long TankP;
+	 char HasHeatTemp;
+	 long HeatTemp;
+	 char HasHeatP;
+	 long HeatP;
+
+	 TRadData Rad[RAD_COUNT];
 };
 
 #endif

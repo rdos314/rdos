@@ -33,6 +33,7 @@
 #include "redustor.h"
 #include "datastor.h"
 #include "section.h"
+#include "storserv.h"
 
 #define STACK_SIZE      0x2000
 
@@ -298,6 +299,7 @@ void TDataStore::Execute()
 	long StartSector;
 	TDiscStorage *DiscStore[4];
 	TRedundanceStorageList *redu;
+	TStorageSocketServerFactory *storfact;
 
 	RdosGetTime(&msb, &lsb);
 	RdosDecodeMsbTics(msb, &FYear, &FMonth, &FDay, &FHour);
@@ -317,6 +319,8 @@ void TDataStore::Execute()
 	redu->Recover();
 	FStorList = redu;
 
+    storfact = new TStorageSocketServerFactory(redu, 4000, 10, 2048);
+     
 	while (FInstalled)
 	{
 		RdosGetTime(&msb, &lsb);

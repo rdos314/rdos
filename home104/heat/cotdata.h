@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2003, Leif Ekblad
+# Copyright (C) 1988-2006, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,44 +20,43 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# storserv.h
-# Storage socket server class
+# cotdata.h
+# Common data-type for cot data exchange
 #
 ########################################################################*/
 
-#ifndef _STORSERV_H
-#define _STORSERV_H
+#ifndef COTDATA_H
+#define COTDATA_H
 
-#include "str.h"
-#include "socket.h"
-#include "storlist.h"
-#include "heatdata.h"
+#define COT_SIGN        0xABEF1456
+#define MAX_MSG_SIZE    0x10000
 
-class TStorageSocketServer : public TSocketServer
-{
-public:
-    TStorageSocketServer(TStorageList *StorList, const char *Name, int StackSize, TSocket *Socket);
-	~TStorageSocketServer();
+#define LOG_TAG_HEADER      50
+#define LOG_TAG_RAD         51
+#define LOG_TAG_INDOOR      52
+#define LOG_TAG_OUTDOOR     53
+#define LOG_TAG_RAIN        54
+#define LOG_TAG_CIRC        55
+#define LOG_TAG_VP          56
+#define LOG_TAG_TANK        57
+#define LOG_TAG_HEAT        58
 
-protected:
-    void AddRadData(TRadData *data, TDeviceMsg *doc);
-    TDeviceMsg *ConvToCotex(THeatData *data);
-    void SendCotex(THeatData *Data);
-	virtual void HandleSocket();
-
-	TStorageList *FStorList;
-};
-
-class TStorageSocketServerFactory : public TSocketServerFactory
-{
-public:
-    TStorageSocketServerFactory(TStorageList *StorList, int Port, int MaxConnections, int BufferSize);
-	~TStorageSocketServerFactory();
-
-	virtual TSocketServer *Create(TSocket *Socket);
-
-protected:
-	TStorageList *FStorList;
-};
+#define LOG_VAR_Address     100
+#define LOG_VAR_MsbTime     101
+#define LOG_VAR_LsbTime     102
+#define LOG_VAR_Ref         103
+#define LOG_VAR_Temp        104
+#define LOG_VAR_Motor       105
+#define LOG_VAR_Light       106
+#define LOG_VAR_AuxTemp     107
+#define LOG_VAR_Humidity    108
+#define LOG_VAR_Dewpoint    109
+#define LOG_VAR_Windchill   110
+#define LOG_VAR_Windspeed   111
+#define LOG_VAR_Winddir     112
+#define LOG_VAR_Pressure    113
+#define LOG_VAR_Rain        114
+#define LOG_VAR_On          115
+#define LOG_VAR_P           116
 
 #endif

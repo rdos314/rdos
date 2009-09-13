@@ -34,56 +34,7 @@
 #include "ws2300.h"
 #include "circ.h"
 #include "vp.h"
-
-#define RAD_COUNT   16
-
-struct TRadData
-{
-    char HasData;
-	 int Address;
-	 long double Ref;
-	 long double Temp;
-	 long double Motor;
-	 long double Light;
-	 long double AuxTemp;
-};
-
-struct THeatData
-{
-	 unsigned long Msb;
-	 unsigned long Lsb;
-
-	 char HasWs;
-	 long double IndoorTemp;
-	 long double IndoorHumidity;
-	 long double OutdoorTemp;
-	 long double OutdoorHumidity;
-	 long double DewPoint;
-	 long double WindChill;
-	 long double WindSpeed;
-	 long double WindDir;
-	 long double AirPressure;
-
-	 char HasRain;
-	 long Rain1h;
-
-	 char HasCirc;
-	 long double CircSpeed;
-
-	 char HasVp;
-	 char VpOn;
-	 char EpOn;
-	 char HasTankTemp;
-	 long TankTemp;
-	 char HasTankP;
-	 long TankP;
-	 char HasHeatTemp;
-	 long HeatTemp;
-	 char HasHeatP;
-	 long HeatP;
-
-	 TRadData Rad[RAD_COUNT];
-};
+#include "heatdata.h"
 
 class TDataStore : public TThread
 {
