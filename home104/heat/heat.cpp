@@ -43,6 +43,7 @@
 #include "solar.h"
 #include "table.h"
 #include "jpeg.h"
+#include "datastor.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -53,9 +54,6 @@
 #define RAD_X   5
 #define RAD_Y  500
 
-void WsChanged(TWs2300 *ws)
-{
-}
 
 void cdecl main()
 {
@@ -92,6 +90,7 @@ void cdecl main()
 	TBitmapGraphicDevice *bitmap;
 	TControlThread *control;
 	TRadControl *RadControl;
+	TDataStore *Store;
 	TSolar solar(55, 49, 5, 13, 14, 43);
 	long double altitude;
 	long double azimuth;
@@ -125,6 +124,8 @@ void cdecl main()
     TTableControl *OutdoorTable;
     
 	RdosWaitMilli(1000);
+
+	Store = new TDataStore;
 
 	RdosWriteSerialVal(2, 0, 0);
 	RdosWriteSerialVal(2, 1, 0);
@@ -180,14 +181,17 @@ void cdecl main()
 		    	break;
     	}
 		RadArr[i] = new TRad(str, RadControl, i, 0x20 + i);
+    	Store->Add(RadArr[i]);
 	}
 
 	Ws = new TWs2300(1);
-	Ws->OnChanged = WsChanged;
+	Store->Add(Ws);
 
 	Circ = new TCirc(vbe);
+	Store->Add(Circ);
 
 	Vp = new TVp(control);
+	Store->Add(Vp);
 
 	IndoorLabel = new TLabelControl(control, 900, 10, 300, 30);
     IndoorLabel->SetFont(20);
