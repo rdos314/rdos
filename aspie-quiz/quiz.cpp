@@ -11094,6 +11094,11 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 		CorrSum[i] = 0.0;
 		NoAnswerSum[i] = 0.0;
 		CorrCount[i] = 0;
+		CorrGroup[i] = 0;
+		CorrQuiz[i] = 0;
+		CorrQuestion[i] = 0;
+		Mark[i] = FALSE;
+		Used[i] = FALSE;
 	}    
 
 	for (g = 0; g < GROUP_COUNT; g++)
