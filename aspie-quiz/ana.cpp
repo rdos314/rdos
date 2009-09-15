@@ -1661,6 +1661,27 @@ int main(int argc, char **argv)
 	 Quiz[8]->WriteLeiden("eval\\leiden9.htm");
 //#endif
 
+	printf("Wiki\r\n");
+
+//	 Quiz[18]->WriteWeighting("weights.cpp");
+//	 Quiz[32]->WritePhpWeighting("weights.php");
+//	 Quiz[32]->WritePhpGroupWeighting("group.php");
+
+//	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
+
+	  Quiz[47]->WriteWiki("wiki.txt", 0.2, 0.2);
+//	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
+//	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
+
+	  Quiz[47]->WriteQuizWiki("g1.txt");
+
+//	  TQuiz::PrintGlobalCorrelation(258, 81);
+//	  TQuiz::PrintGlobalCorrelation(556, 493);
+
+//	 TQuiz::WikiToQuiz("wiki.txt", "final.txt");
+
+//	 Quiz[7]->WritePhpGlobalQuestions("global.php");
+
 	printf("retest\r\n");
 
 	 Quiz[17]->WriteRetest("eval\\retests2.htm");
@@ -1902,24 +1923,6 @@ int main(int argc, char **argv)
 	 Quiz[47]->WriteDsmReport("eval\\schizo.htm", POP_TYPE_SCHIZOPHRENIA);
 	 Quiz[47]->WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
-//	 Quiz[18]->WriteWeighting("weights.cpp");
-//	 Quiz[32]->WritePhpWeighting("weights.php");
-//	 Quiz[32]->WritePhpGroupWeighting("group.php");
-
-//	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
-
-//	  Quiz[16]->WriteWiki("wiki.txt", 0.2, 0.2);
-//	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
-//	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
-
-//	  Quiz[31]->WriteQuizWiki("n5.txt");
-
-//	  TQuiz::PrintGlobalCorrelation(258, 81);
-//	  TQuiz::PrintGlobalCorrelation(556, 493);
-
-//	 TQuiz::WikiToQuiz("wiki.txt", "final.txt");
-
-//	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 
 	printf("SQL\r\n");
 	Quiz[47]->ExportGlobalSql("db\\global.sql");
