@@ -182,6 +182,7 @@ void TQuizF14::WriteLongName(TFile &File)
 ##########################################################################*/
 void TQuizF14::SetupTexts()
 {
+  Quiz[166].Reverse = TRUE;
 
   Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[151].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -195,20 +196,20 @@ void TQuizF14::SetupTexts()
   Quiz[159].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[160].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[161].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[162].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[162].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[163].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[164].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[165].MyGroup = GROUP_NT_TALENT;
-  Quiz[166].MyGroup = GROUP_NT_HUNTING;
+  Quiz[166].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[167].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[169].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[170].MyGroup = GROUP_MIXED;
   Quiz[171].MyGroup = GROUP_MIXED;
   Quiz[172].MyGroup = GROUP_MIXED;
-  Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[174].MyGroup = GROUP_MIXED;
-  Quiz[175].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[175].MyGroup = GROUP_ASPIE_SOCIAL;
 
   Quiz[150].Text = "Do you tend to become obsessed with a potential partner and cannot let go of him/her?";
   Quiz[151].Text = "Have you have had long-lasting urges to take revenge?";

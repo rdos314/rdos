@@ -276,7 +276,7 @@ void TQuizS3::SetupTexts()
   Quiz[52].MyGroup = GROUP_NT_SOCIAL;
   Quiz[53].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[54].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[55].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[56].MyGroup = GROUP_NT_TALENT;
   Quiz[57].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[58].MyGroup = GROUP_MIXED;

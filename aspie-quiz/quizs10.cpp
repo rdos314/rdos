@@ -228,10 +228,11 @@ void TQuizS10::SetupTexts()
   Quiz[151].Reverse = TRUE;
   Quiz[152].Reverse = TRUE;
   Quiz[160].Reverse = TRUE;
+  Quiz[162].Reverse = TRUE;
   Quiz[163].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[1].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
@@ -390,12 +391,12 @@ void TQuizS10::SetupTexts()
   Quiz[156].MyGroup = GROUP_NT_SOCIAL;
   Quiz[157].MyGroup = GROUP_NT_SOCIAL;
   Quiz[158].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[159].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[159].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[160].MyGroup = GROUP_ENVIRONMENT;
   Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[162].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[163].MyGroup = GROUP_NT_HUNTING;
-  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[163].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[164].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[165].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[166].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[167].MyGroup = GROUP_ASPIE_OBSESSION;

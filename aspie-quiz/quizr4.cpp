@@ -222,7 +222,7 @@ void TQuizR4::SetupTexts()
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[2].MyGroup = GROUP_NT_NVC;
+  Quiz[2].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[3].MyGroup = GROUP_NT_SOCIAL;
   Quiz[4].MyGroup = GROUP_NT_SOCIAL;
   Quiz[5].MyGroup = GROUP_NT_NVC;
@@ -330,7 +330,7 @@ void TQuizR4::SetupTexts()
   Quiz[107].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[108].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[109].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[110].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[110].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[111].MyGroup = GROUP_MIXED;
   Quiz[112].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[113].MyGroup = GROUP_ASPIE_SOCIAL;

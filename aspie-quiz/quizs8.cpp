@@ -236,7 +236,7 @@ void TQuizS8::SetupTexts()
 
   Quiz[0].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[2].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[5].MyGroup = GROUP_ASPIE_TALENT;

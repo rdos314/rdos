@@ -256,7 +256,7 @@ void TQuizS5::SetupTexts()
   Quiz[13].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[14].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[15].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[16].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[16].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[17].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[18].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[19].MyGroup = GROUP_ASPIE_TALENT;

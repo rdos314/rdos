@@ -267,7 +267,7 @@ void TQuizS7::SetupTexts()
   Quiz[19].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[20].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[21].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[22].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[22].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[23].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[24].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[25].MyGroup = GROUP_ASPIE_TALENT;
@@ -406,7 +406,7 @@ void TQuizS7::SetupTexts()
   Quiz[158].MyGroup = GROUP_NT_NVC;
   Quiz[159].MyGroup = GROUP_NT_OBSESSION;
   Quiz[160].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[161].MyGroup = GROUP_NT_NVC;
+  Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[162].MyGroup = GROUP_NT_NVC;
   Quiz[163].MyGroup = GROUP_NT_SOCIAL;
   Quiz[164].MyGroup = GROUP_NT_SOCIAL;

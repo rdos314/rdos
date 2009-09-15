@@ -194,7 +194,7 @@ void TQuizF11::SetupTexts()
   Quiz[157].MyGroup = GROUP_MIXED;
   Quiz[158].MyGroup = GROUP_MIXED;
   Quiz[159].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_NT_SOCIAL;
   Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
 
   Quiz[162].MyGroup = GROUP_ASPIE_SENSORY;

@@ -240,7 +240,7 @@ void TQuizS12::SetupTexts()
   Quiz[174].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[1].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[4].MyGroup = GROUP_NT_NVC;
@@ -400,14 +400,14 @@ void TQuizS12::SetupTexts()
   Quiz[156].MyGroup = GROUP_NT_TALENT;
   Quiz[157].MyGroup = GROUP_NT_SOCIAL;
   Quiz[158].MyGroup = GROUP_MIXED;
-  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[160].MyGroup = GROUP_NT_TALENT;
   Quiz[161].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[162].MyGroup = GROUP_NT_TALENT;
   Quiz[163].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[164].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[165].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[167].MyGroup = GROUP_NT_TALENT;
   Quiz[168].MyGroup = GROUP_MIXED;
   Quiz[169].MyGroup = GROUP_NT_TALENT;
