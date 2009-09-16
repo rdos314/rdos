@@ -398,13 +398,13 @@ void TQuizN1::SetupTexts()
   Quiz[160].MyGroup = GROUP_RELIGION;
   Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[162].MyGroup = GROUP_NT_NVC;
-  Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_NT_NVC;
+  Quiz[164].MyGroup = GROUP_NT_NVC;
   Quiz[165].MyGroup = GROUP_MIXED;
-  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_NT_NVC;
   Quiz[167].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[168].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_ASPIE_NVC;
   Quiz[170].MyGroup = GROUP_MIXED;
   Quiz[171].MyGroup = GROUP_MIXED;
   Quiz[172].MyGroup = GROUP_NT_SOCIAL;

@@ -226,7 +226,7 @@ void TQuizR4::SetupTexts()
   Quiz[3].MyGroup = GROUP_NT_SOCIAL;
   Quiz[4].MyGroup = GROUP_NT_SOCIAL;
   Quiz[5].MyGroup = GROUP_NT_NVC;
-  Quiz[6].MyGroup = GROUP_MIXED;
+  Quiz[6].MyGroup = GROUP_NT_NVC;
   Quiz[7].MyGroup = GROUP_MIXED;
   Quiz[8].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[9].MyGroup = GROUP_NT_NVC;
@@ -244,14 +244,14 @@ void TQuizR4::SetupTexts()
   Quiz[21].MyGroup = GROUP_NT_NVC;
   Quiz[22].MyGroup = GROUP_ASPIE_NVC;
   Quiz[23].MyGroup = GROUP_NT_NVC;
-  Quiz[24].MyGroup = GROUP_MIXED;
+  Quiz[24].MyGroup = GROUP_NT_NVC;
   Quiz[25].MyGroup = GROUP_ASPIE_NVC;
   Quiz[26].MyGroup = GROUP_NT_SOCIAL;
   Quiz[27].MyGroup = GROUP_NT_SOCIAL;
   Quiz[28].MyGroup = GROUP_NT_NVC;
   Quiz[29].MyGroup = GROUP_NT_NVC;
   Quiz[30].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[31].MyGroup = GROUP_MIXED;
+  Quiz[31].MyGroup = GROUP_ASPIE_NVC;
   Quiz[32].MyGroup = GROUP_NT_NVC;
   Quiz[33].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[34].MyGroup = GROUP_NT_NVC;

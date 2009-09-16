@@ -534,13 +534,13 @@ void TQuizN4::SetupTexts()
   Quiz[125].MyGroup = GROUP_ENVIRONMENT;
   Quiz[126].MyGroup = GROUP_ENVIRONMENT;
   Quiz[127].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[128].MyGroup = GROUP_MIXED;
-  Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[128].MyGroup = GROUP_NT_NVC;
+  Quiz[129].MyGroup = GROUP_NT_NVC;
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[132].MyGroup = GROUP_NT_NVC;
   Quiz[133].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_ASPIE_NVC;
   Quiz[135].MyGroup = GROUP_NT_TALENT;
   Quiz[136].MyGroup = GROUP_NT_SOCIAL;
   Quiz[137].MyGroup = GROUP_NT_NVC;
@@ -560,7 +560,7 @@ void TQuizN4::SetupTexts()
   Quiz[151].MyGroup = GROUP_NT_OBSESSION;
   Quiz[152].MyGroup = GROUP_MIXED;
   Quiz[153].MyGroup = GROUP_MIXED;
-  Quiz[154].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[155].MyGroup = GROUP_MIXED;
 
   Quiz[156].MyGroup = GROUP_NT_SOCIAL;

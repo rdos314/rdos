@@ -213,7 +213,7 @@ void TQuizI::SetupTexts()
 	Quiz[74].MyGroup = GROUP_MIXED;
 	Quiz[75].MyGroup = GROUP_NT_NVC;
 	Quiz[76].MyGroup = GROUP_ASPIE_OBSESSION;
-	Quiz[77].MyGroup = GROUP_MIXED;
+	Quiz[77].MyGroup = GROUP_NT_NVC;
 	Quiz[78].MyGroup = GROUP_MIXED;
 	Quiz[79].MyGroup = GROUP_MIXED;
 	Quiz[80].MyGroup = GROUP_NT_SOCIAL;

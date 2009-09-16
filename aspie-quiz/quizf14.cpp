@@ -204,9 +204,9 @@ void TQuizF14::SetupTexts()
   Quiz[167].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[168].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[169].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[171].MyGroup = GROUP_MIXED;
-  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_ASPIE_NVC;
   Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[174].MyGroup = GROUP_MIXED;
   Quiz[175].MyGroup = GROUP_ASPIE_SOCIAL;

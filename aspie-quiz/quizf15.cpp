@@ -187,6 +187,10 @@ void TQuizF15::SetupTexts()
   Quiz[167].Reverse = TRUE;
   Quiz[172].Reverse = TRUE;
   Quiz[174].Reverse = TRUE;
+  Quiz[181].Reverse = TRUE;
+  Quiz[182].Reverse = TRUE;
+  Quiz[183].Reverse = TRUE;
+  Quiz[184].Reverse = TRUE;
 
   Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[151].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -199,8 +203,8 @@ void TQuizF15::SetupTexts()
   Quiz[158].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[159].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[160].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[162].MyGroup = GROUP_ASPIE_NVC;
   Quiz[163].MyGroup = GROUP_MIXED;
   Quiz[164].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[165].MyGroup = GROUP_NT_TALENT;
@@ -214,16 +218,16 @@ void TQuizF15::SetupTexts()
   Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[174].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[175].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[177].MyGroup = GROUP_MIXED;
-  Quiz[178].MyGroup = GROUP_MIXED;
-  Quiz[179].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[179].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[180].MyGroup = GROUP_MIXED;
-  Quiz[181].MyGroup = GROUP_MIXED;
-  Quiz[182].MyGroup = GROUP_MIXED;
-  Quiz[183].MyGroup = GROUP_MIXED;
-  Quiz[184].MyGroup = GROUP_MIXED;
-  Quiz[185].MyGroup = GROUP_MIXED;
+  Quiz[181].MyGroup = GROUP_NT_NVC;
+  Quiz[182].MyGroup = GROUP_NT_NVC;
+  Quiz[183].MyGroup = GROUP_NT_NVC;
+  Quiz[184].MyGroup = GROUP_NT_NVC;
+  Quiz[185].MyGroup = GROUP_NT_NVC;
 
   Quiz[150].Text = "Do you tend to become obsessed with a potential partner and cannot let go of him/her?";
   Quiz[151].Text = "Have you have had long-lasting urges to take revenge?";
