@@ -20,12 +20,12 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; DMC9000.ASM
-; Support for PenMount DMC9000 touch-screen
+; DMC6000.ASM
+; Support for PenMount DMC6000 touch-screen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
-		NAME dmc9000
+		NAME dmc6000
 
 GateSize = 16
 
@@ -39,7 +39,7 @@ INCLUDE ..\os.inc
 
 ; Auto-detect doesn't seem to work so give COM port here:
 
-COM_PORT = 1
+COM_PORT = 3
 	
 
 X_START = 0
