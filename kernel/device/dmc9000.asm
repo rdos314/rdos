@@ -39,7 +39,7 @@ INCLUDE ..\os.inc
 
 ; Auto-detect doesn't seem to work so give COM port here:
 
-COM_PORT = 3
+COM_PORT = 1
 	
 
 X_START = 0
