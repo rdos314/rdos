@@ -164,13 +164,14 @@ int TVolumeCommand::SetVolume1()
 	str = Str.GetData();
 
 	if (!strcmp(str, "off"))
-	    Volume = -1;
-    else
-        Volume = atoi(str);
+		Volume = -1;
+	else
+		Volume = atoi(str);
 
-    RdosSetMasterVolume(Volume, Volume);
+	RdosSetMasterVolume(Volume, Volume);
+	RdosSetLineOutVolume(100 - Volume, 100 - Volume);
 
-    return 0;
+	return 0;
 }
 
 /*##########################################################################
@@ -187,35 +188,36 @@ int TVolumeCommand::SetVolume1()
 int TVolumeCommand::SetVolume2()
 {
 	const char *str;
-    int L, R;
+	int L, R;
 	TArg *arg;
-    TString Str;
+	TString Str;
 
-    arg = FArgList;
-    
+	arg = FArgList;
+
 	Str = arg->FName;
 	Str.Lower();
 	str = Str.GetData();
 
 	if (!strcmp(str, "off"))
-	    L = -1;
-    else
-        L = atoi(str);
+		L = -1;
+	else
+		L = atoi(str);
 
-    arg = arg->FList;
-    
+	arg = arg->FList;
+
 	Str = arg->FName;
 	Str.Lower();
 	str = Str.GetData();
 
 	if (!strcmp(str, "off"))
-	    R = -1;
-    else
-        R = atoi(str);
+		R = -1;
+	else
+		R = atoi(str);
 
-    RdosSetMasterVolume(L, R);
+	RdosSetMasterVolume(L, R);
+	RdosSetLineOutVolume(100 - L, 100 - R);
 
-    return 0;
+	return 0;
 }
 
 /*##########################################################################
@@ -234,21 +236,21 @@ int TVolumeCommand::Execute(char *param)
 	if (!ScanCmdLine(param, 0))
 		return 1;
 
-    switch (FArgCount)
-    {
-        case 0:
-            ShowVolume();
-            return 0;
+	switch (FArgCount)
+	{
+		case 0:
+			ShowVolume();
+			return 0;
 
-        case 1:
-            return SetVolume1();
+		case 1:
+			return SetVolume1();
 
-        case 2:
-            return SetVolume2();
+		case 2:
+			return SetVolume2();
 
-        default:
-		    FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-		    Write(FMsg.GetData());
-		    return E_Useage;
+		default:
+			FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+			Write(FMsg.GetData());
+			return E_Useage;
 	}
 }

@@ -1537,8 +1537,8 @@ UpdateFmSel Proc near
     jnz ufsHasHandle
 ;
     mov ax,ds:f_sample_rate
-    mov cl,31
-    mov dx,7FFFh
+    mov cl,32
+    mov dx,0FFFFh
     CreateAudioOutChannel
     mov ds:f_audio_handle,bx
         

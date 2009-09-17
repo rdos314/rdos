@@ -1437,7 +1437,13 @@ PAGE
 mouse_thread_name	DB 'Mouse' ,0
 
 mouse_thread	Proc far
+	mov ax,init_mouse_nr
+	IsValidOsGate
+	jc mouse_init_ok
+;
 	InitMouse
+
+mouse_init_ok:
 	mov ax,mouse_data_sel
 	mov es,ax
 	GetThread
@@ -1504,10 +1510,6 @@ init_mouse	PROC far
 	mov ds:md_x,0FFFFh
 	mov ds:md_y,0FFFFh
 	mov ds:md_mouse_thread,0
-;
-	mov ax,init_mouse_nr
-	IsValidOsGate
-	jc init_mouse_done
 ;
 	mov ax,cs
 	mov ds,ax

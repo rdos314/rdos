@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 
 	RdosGetMasterVolume(&L, &R);
 	if (L < 0 && R < 0)
-		RdosSetMasterVolume(30, 100);
+		RdosSetMasterVolume(0, 100);
 
 	RdosGetLineOutVolume(&L, &R);
 	if (L < 0 && R < 0)
@@ -30,10 +30,10 @@ int main(int argc, char **argv)
 	fm = new TFm(48000);
 	TFmInstrument *inst = fm->Create(1, 1, 1.0);
 	inst->SetAttack(2.0);
-	inst->SetSustain(150.0, 35.0);
+	inst->SetSustain(500.0, 35.0);
 	inst->SetRelease(2.0, 25.0);
 
-	inst->PlayB(0, 60.0, 60.0, 75.0);
+	inst->PlayB(0, 100.0, 100.0, 750.0);
 
 	delete inst;
 	delete fm;
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
 	RdosGetMasterVolume(&L, &R);
 	if (L < 0 && R < 0)
-		RdosSetMasterVolume(100, 100);
+		RdosSetMasterVolume(0, 100);
 
 	RdosGetLineOutVolume(&L, &R);
 	if (L < 0 && R < 0)

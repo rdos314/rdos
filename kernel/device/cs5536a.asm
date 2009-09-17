@@ -600,6 +600,12 @@ saoDataLoop:
     loop saoDataLoop
 ;
     pop cx
+;    
+    mov dx,ds:IoBase
+    add dx,ACC_BM0 + ACC_BM_PRD
+    in eax,dx
+    mov bp,ax
+;    
     mov ax,cx
     shl ax,2
     mov edx,ds:Ac0.AcPrdLinear
@@ -608,6 +614,24 @@ saoDataLoop:
     je saoPrd1
 
 saoPrd2:
+    test bp,8
+    jz saoPrd2Ok
+;
+    pushad
+
+saoWaitPrd2:    
+    mov ax,10
+    WaitMilliSec
+;
+    mov dx,ds:IoBase
+    add dx,ACC_BM0 + ACC_BM_PRD
+    in eax,dx
+    test ax,8
+    jnz saoWaitPrd2
+;
+    popad
+
+saoPrd2Ok:    
     add edx,8
     mov es:[edx+4],ax
     mov edi,ds:Ac0.AcPrd1Linear
@@ -615,6 +639,27 @@ saoPrd2:
     jmp saoPrdOk
 
 saoPrd1:
+    test bp,10h
+    jz saoPrd1Ok
+;    
+    test bp,8
+    jnz saoPrd1Ok
+;
+    pushad
+
+saoWaitPrd1:    
+    mov ax,10
+    WaitMilliSec
+;
+    mov dx,ds:IoBase
+    add dx,ACC_BM0 + ACC_BM_PRD
+    in eax,dx
+    test ax,8
+    jz saoWaitPrd1
+;
+    popad
+
+saoPrd1Ok:
     mov es:[edx+4],ax
     mov edi,ds:Ac0.AcPrd2Linear
     mov ds:Ac0.AcCurrPrd,edi
