@@ -191,13 +191,13 @@ void TQuizF11::SetupTexts()
   Quiz[154].MyGroup = GROUP_MIXED;
   Quiz[155].MyGroup = GROUP_MIXED;
   Quiz[156].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[157].MyGroup = GROUP_MIXED;
-  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[158].MyGroup = GROUP_NT_OBSESSION;
   Quiz[159].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[160].MyGroup = GROUP_NT_SOCIAL;
   Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
 
-  Quiz[162].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[162].MyGroup = GROUP_ASPIE_NVC;
   Quiz[163].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[164].MyGroup = GROUP_NT_SOCIAL;
 
@@ -212,7 +212,7 @@ void TQuizF11::SetupTexts()
   Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[174].MyGroup = GROUP_NT_SOCIAL;
   Quiz[175].MyGroup = GROUP_MIXED;
-  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_NT_OBSESSION;
   Quiz[177].MyGroup = GROUP_ASPIE_SOCIAL;
 
   Quiz[150].Text = "Do you believe in fate when it comes to love?";

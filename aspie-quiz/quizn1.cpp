@@ -385,9 +385,9 @@ void TQuizN1::SetupTexts()
   Quiz[147].MyGroup = GROUP_NT_SENSORY;
   Quiz[148].MyGroup = GROUP_NT_SENSORY;
   Quiz[149].MyGroup = GROUP_NT_SENSORY;
-  Quiz[150].MyGroup = GROUP_PARANOID;
-  Quiz[151].MyGroup = GROUP_PARANOID;
-  Quiz[152].MyGroup = GROUP_PARANOID;
+  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[151].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_ASPIE_NVC;
   Quiz[153].MyGroup = GROUP_ENVIRONMENT;
   Quiz[154].MyGroup = GROUP_ENVIRONMENT;
   Quiz[155].MyGroup = GROUP_ENVIRONMENT;
@@ -395,7 +395,7 @@ void TQuizN1::SetupTexts()
   Quiz[157].MyGroup = GROUP_ENVIRONMENT;
   Quiz[158].MyGroup = GROUP_ENVIRONMENT;
   Quiz[159].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[160].MyGroup = GROUP_RELIGION;
+  Quiz[160].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[162].MyGroup = GROUP_NT_NVC;
   Quiz[163].MyGroup = GROUP_NT_NVC;

@@ -526,14 +526,8 @@ void TQuiz::Init()
 	Group[GROUP_NT_NVC].PosName = "NT communication problem";
 	Group[GROUP_NT_NVC].NegName = "NT communication";
 
-	Group[GROUP_PARANOID].PosName = "Paranoia";
-	Group[GROUP_PARANOID].NegName = "Paranoia problem";
-
 	Group[GROUP_ASPIE_OBSESSION].PosName = "Aspie compulsion";
 	Group[GROUP_ASPIE_OBSESSION].NegName = "Aspie compulsion problem";
-
-	Group[GROUP_RELIGION].PosName = "Religion / superstition";
-	Group[GROUP_RELIGION].NegName = "Religion problem";
 
 	Group[GROUP_ASPIE_HUNTING].PosName = "Aspie hunting";
 	Group[GROUP_ASPIE_HUNTING].NegName = "Aspie hunting problem";
@@ -598,14 +592,8 @@ void TQuiz::Init()
 	Group[GROUP_NT_NVC].PosName = "NT kommunikation problem";
 	Group[GROUP_NT_NVC].NegName = "NT kommunikation";
 
-	Group[GROUP_PARANOID].PosName = "Paranoia";
-	Group[GROUP_PARANOID].NegName = "Paranoia problem";
-
 	Group[GROUP_ASPIE_OBSESSION].PosName = "Aspie tvång";
 	Group[GROUP_ASPIE_OBSESSION].NegName = "Aspie tvång problem";
-
-	Group[GROUP_RELIGION].PosName = "Religion / vidskeplighet";
-	Group[GROUP_RELIGION].NegName = "Religion problem";
 
 	Group[GROUP_ASPIE_HUNTING].PosName = "Aspie jakt";
 	Group[GROUP_ASPIE_HUNTING].NegName = "Aspie jakt problem";
@@ -1102,17 +1090,9 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_NT_NVC");
 					 break;
 
-            case GROUP_PARANOID:
-                file.Write("GROUP_PARANOID");
-                break;
-
             case GROUP_ASPIE_OBSESSION:
                 file.Write("GROUP_ASPIE_OBSESSION");
                 break;
-
-				case GROUP_RELIGION:
-                file.Write("GROUP_RELIGION");
-				break;
 
             case GROUP_ASPIE_HUNTING:
 					 file.Write("GROUP_ASPIE_HUNTING");
@@ -7925,20 +7905,12 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("NT_NVC");
 	        break;
 	            
-	    case GROUP_PARANOID:
-	        file->Write("PARANOID");
-	        break;
-	            
 		case GROUP_ASPIE_OBSESSION:
 	        file->Write("ASPIE_OBSESSION");
 	        break;
 	            
 		case GROUP_NT_OBSESSION:
 	        file->Write("NT_OBSESSION");
-	        break;
-	            
-		case GROUP_RELIGION:
-	        file->Write("RELIGION");
 	        break;
 	            
 		case GROUP_ASPIE_HUNTING:

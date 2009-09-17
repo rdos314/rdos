@@ -364,9 +364,9 @@ void TQuizS7::SetupTexts()
   Quiz[116].MyGroup = GROUP_NT_OBSESSION;
   Quiz[117].MyGroup = GROUP_NT_OBSESSION;
   Quiz[118].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[119].MyGroup = GROUP_PARANOID;
-  Quiz[120].MyGroup = GROUP_PARANOID;
-  Quiz[121].MyGroup = GROUP_PARANOID;
+  Quiz[119].MyGroup = GROUP_MIXED;
+  Quiz[120].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[121].MyGroup = GROUP_MIXED;
   Quiz[122].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[123].MyGroup = GROUP_ENVIRONMENT;
   Quiz[124].MyGroup = GROUP_ENVIRONMENT;

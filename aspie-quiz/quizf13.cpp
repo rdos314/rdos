@@ -181,6 +181,7 @@ void TQuizF13::WriteLongName(TFile &File)
 ##########################################################################*/
 void TQuizF13::SetupTexts()
 {
+  Quiz[181].Reverse = TRUE;
 
   Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[151].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -213,7 +214,7 @@ void TQuizF13::SetupTexts()
   Quiz[178].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[179].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[180].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[181].MyGroup = GROUP_MIXED;
+  Quiz[181].MyGroup = GROUP_NT_NVC;
 
   Quiz[150].Text = "Do you tend to become obsessed with a potential partner and cannot let go of him/her?";
   Quiz[151].Text = "Have you experienced stronger than normal attachments to certain people?";

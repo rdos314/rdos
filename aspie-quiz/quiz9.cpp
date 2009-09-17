@@ -1,4 +1,4 @@
-/*#######################################################################
+ /*#######################################################################
 # RDOS operating system
 # Copyright (C) 1988-2002, Leif Ekblad
 #
@@ -329,7 +329,7 @@ void TQuiz9::SetupTexts()
   Quiz[17].MyGroup = GROUP_NT_SENSORY;
   Quiz[18].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[19].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[20].MyGroup = GROUP_MIXED;
+  Quiz[20].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[21].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[22].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[23].MyGroup = GROUP_ASPIE_SENSORY;
@@ -453,9 +453,9 @@ void TQuiz9::SetupTexts()
   Quiz[141].MyGroup = GROUP_NT_NVC;
   Quiz[142].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[143].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[144].MyGroup = GROUP_RELIGION;
+  Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[146].MyGroup = GROUP_RELIGION;
+  Quiz[146].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[147].MyGroup = GROUP_NT_SOCIAL;
   Quiz[148].MyGroup = GROUP_NT_SOCIAL;
   Quiz[149].MyGroup = GROUP_ASPIE_BIOLOGY;

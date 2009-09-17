@@ -339,9 +339,9 @@ void TQuizS11::SetupTexts()
   Quiz[111].MyGroup = GROUP_NT_SENSORY;
   Quiz[112].MyGroup = GROUP_NT_SENSORY;
   Quiz[113].MyGroup = GROUP_NT_NVC;
-  Quiz[114].MyGroup = GROUP_PARANOID;
-  Quiz[115].MyGroup = GROUP_PARANOID;
-  Quiz[116].MyGroup = GROUP_PARANOID;
+  Quiz[114].MyGroup = GROUP_MIXED;
+  Quiz[115].MyGroup = GROUP_MIXED;
+  Quiz[116].MyGroup = GROUP_ASPIE_NVC;
   Quiz[117].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[118].MyGroup = GROUP_ENVIRONMENT;
   Quiz[119].MyGroup = GROUP_ENVIRONMENT;

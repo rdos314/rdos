@@ -240,7 +240,7 @@ void TQuiz7::SetupTexts()
 	Quiz[146].Reverse = TRUE;
 
 	Quiz[0].MyGroup = GROUP_ASPIE_SENSORY;
-	Quiz[1].MyGroup = GROUP_MIXED;
+	Quiz[1].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[2].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[3].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[4].MyGroup = GROUP_ASPIE_SENSORY;
