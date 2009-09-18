@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quizf12.cpp
-# Quiz final version 12 class
+# quizge.cpp
+# Quiz final version 2, experimental release class
 #
 #######################################################################*/
 
@@ -29,9 +29,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizf12.h"
+#include "quizge.h"
 #include "file.h"
-#include "quizdf12.h"
+#include "quizdbge.h"
 
 #define CI	1
 
@@ -59,17 +59,17 @@ public:
 
 /*##########################################################################
 #
-#   Name       : TQuizF12::TQuizF12
+#   Name       : TQuizExp2::TQuizExp2
 #
-#   Purpose....: Constructor for TQuizF12
+#   Purpose....: Constructor for TQuizExp2
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizF12::TQuizF12(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11)
-  : TQuizFinal(190, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
+TQuizExp2::TQuizExp2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15)
+  : TQuizFinal(160, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
 	FDataFile(FileName)
 {
 	DefineCross(32, QuizFI);
@@ -84,46 +84,48 @@ TQuizF12::TQuizF12(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *Qui
 	DefineCross(41, QuizF9);
 	DefineCross(42, QuizF10);
 	DefineCross(43, QuizF11);
+	DefineCross(44, QuizF12);
+	DefineCross(45, QuizF13);
+	DefineCross(46, QuizF14);
+	DefineCross(47, QuizF15);
 
 	SetupTexts();
-	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4, QuizF5, QuizF6, QuizF7, QuizF8, QuizF9, QuizF10, QuizF11);
+//	DefineQuiz();
+	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4, QuizF5, QuizF6, QuizF7, QuizF8, QuizF9, QuizF10, QuizF11, QuizF12, QuizF13, QuizF14, QuizF15);
 
-	InitReferers();
-	LoadReferers();
-	SetupControlGroups();
-	SortReferers();
-	LoadPopulations();
-	Calculate();
+//	InitReferers();
+//	LoadReferers();
+//	SetupControlGroups();
+//	SortReferers();
+//	LoadPopulations();
+//	Calculate();
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF12::~TQuizF12
+#   Name       : TQuizExp2::~TQuizExp2
 #
-#   Purpose....: Destructor for TQuizF12
+#   Purpose....: Destructor for TQuizExp2
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizF12::~TQuizF12()
+TQuizExp2::~TQuizExp2()
 {
 }
 
-/*##################  TQuizF12::GetCatCount ##########################
+/*##################  TQuizExp2::GetCatCount ##########################
 *   Purpose....: Return number of categories for question  	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizF12::GetCatCount(int Question)
+int TQuizExp2::GetCatCount(int Question)
 {
-    if (Question < 150)
-        return 3;
-    else
-    	return 4;
+    return 3;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -133,14 +135,14 @@ int TQuizF12::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizF12::GetQuizN()
+int TQuizExp2::GetQuizN()
 {
-	return 190;
+	return 160;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF12::WriteName
+#   Name       : TQuizExp2::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -149,14 +151,14 @@ int TQuizF12::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF12::WriteName(TFile &File)
+void TQuizExp2::WriteName(TFile &File)
 {
-	 File.Write("F12");
+	 File.Write("GE");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF12::WriteLongName
+#   Name       : TQuizExp2::WriteLongName
 #
 #   Purpose....: Write long quiz name
 #
@@ -165,14 +167,182 @@ void TQuizF12::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF12::WriteLongName(TFile &File)
+void TQuizExp2::WriteLongName(TFile &File)
 {
-	 File.Write("final version 12");
+	 File.Write("final version 2:experimental");
+}
+
+/*##################  TQuizExp2::DefineQuiz ##########################
+*   Purpose....: Define global IDs in quiz                	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizExp2::DefineQuiz()
+{
+  return;
+  
+  DefineID(1, 26);
+  DefineID(2, 20);
+  DefineID(3, 23);
+  DefineID(4, 100);
+  DefineID(5, 1153);
+  DefineID(6, 5);
+  DefineID(7, 695);
+  DefineID(8, 238);
+  DefineID(9, 3);
+  DefineID(10, 6);
+  DefineID(11, 27);
+  DefineID(12, 129);
+  DefineID(13, 397);
+  DefineID(14, 743);
+  DefineID(15, 240);
+  DefineID(16, 319);
+  DefineID(17, 616);
+  DefineID(18, 726);
+  DefineID(19, 25);
+  DefineID(20, 249);
+  DefineID(21, 37);
+  DefineID(22, 361);
+  DefineID(23, 596);
+  DefineID(24, 39);
+  DefineID(25, 36);
+  DefineID(26, 595);
+  DefineID(27, 613);
+  DefineID(28, 740);
+  DefineID(29, 282);
+  DefineID(30, 708);
+  DefineID(31, 280);
+  DefineID(32, 180);
+  DefineID(33, 153);
+  DefineID(34, 1373);
+  DefineID(35, 779);
+  DefineID(36, 364);
+  DefineID(37, 151);
+  DefineID(38, 174);
+  DefineID(39, 516);
+  DefineID(40, 133);
+  DefineID(41, 1423);
+  DefineID(42, 1371);
+  DefineID(43, 309);
+  DefineID(44, 1047);
+  DefineID(45, 610);
+  DefineID(46, 1053);
+  DefineID(47, 155);
+  DefineID(48, 1208);
+  DefineID(49, 781);
+  DefineID(50, 381);
+  DefineID(51, 1052);
+  DefineID(52, 1044);
+  DefineID(53, 1152);
+  DefineID(54, 767);
+  DefineID(55, 70);
+  DefineID(56, 923);
+  DefineID(57, 66);
+  DefineID(58, 858);
+  DefineID(59, 507);
+  DefineID(60, 859);
+  DefineID(61, 73);
+  DefineID(62, 363);
+  DefineID(63, 34);
+  DefineID(64, 454);
+  DefineID(65, 378);
+  DefineID(66, 737);
+  DefineID(67, 1077);
+  DefineID(68, 857);
+  DefineID(69, 115);
+  DefineID(70, 765);
+  DefineID(71, 731);
+  DefineID(72, 712);
+  DefineID(73, 547);
+  DefineID(74, 403);
+  DefineID(75, 359);
+  DefineID(76, 864);
+  DefineID(77, 575);
+  DefineID(78, 590);
+  DefineID(79, 402);
+  DefineID(80, 55);
+  DefineID(81, 15);
+  DefineID(82, 589);
+  DefineID(83, 570);
+  DefineID(84, 17);
+  DefineID(85, 123);
+  DefineID(86, 572);
+  DefineID(87, 234);
+  DefineID(88, 739);
+  DefineID(89, 574);
+  DefineID(90, 401);
+  DefineID(91, 16);
+  DefineID(92, 229);
+  DefineID(93, 487);
+  DefineID(94, 83);
+  DefineID(95, 745);
+  DefineID(96, 130);
+  DefineID(97, 278);
+  DefineID(98, 82);
+  DefineID(99, 1160);
+  DefineID(100, 86);
+  DefineID(101, 549);
+  DefineID(102, 551);
+  DefineID(103, 78);
+  DefineID(104, 707);
+  DefineID(105, 1436);
+  DefineID(106, 856);
+  DefineID(107, 85);
+  DefineID(108, 128);
+  DefineID(109, 1434);
+  DefineID(110, 714);
+  DefineID(111, 227);
+  DefineID(112, 255);
+  DefineID(113, 495);
+  DefineID(114, 546);
+  DefineID(115, 89);
+  DefineID(116, 92);
+  DefineID(117, 582);
+  DefineID(118, 448);
+  DefineID(119, 439);
+  DefineID(120, 926);
+  DefineID(121, 614);
+  DefineID(122, 581);
+  DefineID(123, 925);
+  DefineID(124, 1076);
+  DefineID(125, 433);
+  DefineID(126, 1079);
+  DefineID(127, 316);
+  DefineID(128, 1080);
+  DefineID(129, 310);
+  DefineID(130, 862);
+  DefineID(131, 53);
+  DefineID(132, 54);
+  DefineID(133, 1207);
+  DefineID(134, 61);
+  DefineID(135, 48);
+  DefineID(136, 503);
+  DefineID(137, 565);
+  DefineID(138, 385);
+  DefineID(139, 871);
+  DefineID(140, 631);
+  DefineID(141, 509);
+  DefineID(142, 510);
+  DefineID(143, 50);
+  DefineID(144, 113);
+  DefineID(145, 46);
+  DefineID(146, 513);
+  DefineID(147, 1078);
+  DefineID(148, 690);
+  DefineID(149, 443);
+  DefineID(150, 31);
+  DefineID(151, 718);
+  DefineID(152, 167);
+  DefineID(153, 623);
+  DefineID(154, 93);
+  DefineID(155, 144);
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF12::SetupTexts
+#   Name       : TQuizExp2::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -181,120 +351,365 @@ void TQuizF12::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF12::SetupTexts()
+void TQuizExp2::SetupTexts()
 {
-  Quiz[150].Reverse = TRUE;
-  Quiz[152].Reverse = TRUE;
+  Quiz[13].Reverse = TRUE;
+  Quiz[17].Reverse = TRUE;
+  Quiz[27].Reverse = TRUE;
+  Quiz[28].Reverse = TRUE;
+  Quiz[29].Reverse = TRUE;
+  Quiz[30].Reverse = TRUE;
+  Quiz[31].Reverse = TRUE;
+  Quiz[32].Reverse = TRUE;
+  Quiz[34].Reverse = TRUE;
+  Quiz[65].Reverse = TRUE;
+  Quiz[103].Reverse = TRUE;
+  Quiz[105].Reverse = TRUE;
+  Quiz[107].Reverse = TRUE;
+  Quiz[108].Reverse = TRUE;
+  Quiz[109].Reverse = TRUE;
+  Quiz[111].Reverse = TRUE;
+  Quiz[112].Reverse = TRUE;
+  Quiz[147].Reverse = TRUE;
   Quiz[155].Reverse = TRUE;
-  Quiz[160].Reverse = TRUE;
-  Quiz[162].Reverse = TRUE;
-  Quiz[163].Reverse = TRUE;
-  Quiz[164].Reverse = TRUE;
-  Quiz[170].Reverse = TRUE;
-  Quiz[171].Reverse = TRUE;
-  Quiz[172].Reverse = TRUE;
-  Quiz[175].Reverse = TRUE;
-  Quiz[177].Reverse = TRUE;
-  Quiz[178].Reverse = TRUE;
-  Quiz[183].Reverse = TRUE;
-  Quiz[184].Reverse = TRUE;
-  Quiz[185].Reverse = TRUE;
-  Quiz[187].Reverse = TRUE;
-  Quiz[188].Reverse = TRUE;
-  Quiz[189].Reverse = TRUE;
+  Quiz[156].Reverse = TRUE;
+  Quiz[157].Reverse = TRUE;
+  Quiz[158].Reverse = TRUE;
+  Quiz[159].Reverse = TRUE;
 
-  Quiz[150].MyGroup = GROUP_MIXED;
-  Quiz[151].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[152].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[153].MyGroup = GROUP_MIXED;
-  Quiz[154].MyGroup = GROUP_NT_NVC;
-  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[5].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[7].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[8].MyGroup = GROUP_NT_TALENT;
+  Quiz[9].MyGroup = GROUP_NT_TALENT;
+  Quiz[10].MyGroup = GROUP_NT_TALENT;
+  Quiz[11].MyGroup = GROUP_NT_TALENT;
+  Quiz[12].MyGroup = GROUP_NT_TALENT;
+  Quiz[13].MyGroup = GROUP_NT_TALENT;
+  Quiz[14].MyGroup = GROUP_NT_TALENT;
+  Quiz[15].MyGroup = GROUP_NT_TALENT;
+  Quiz[16].MyGroup = GROUP_NT_TALENT;
+  Quiz[17].MyGroup = GROUP_NT_TALENT;
+  Quiz[18].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[19].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[20].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[21].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[22].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[23].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[24].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[25].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[26].MyGroup = GROUP_ASPIE_OBSESSION;
+  Quiz[27].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[28].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[29].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[30].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[31].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[32].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[33].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[34].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[37].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[39].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[40].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[41].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[43].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[44].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[45].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[46].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[47].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[51].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[52].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[53].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[54].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[55].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[56].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[57].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[58].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[59].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[60].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[61].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[62].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[63].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[64].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[65].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[66].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[67].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[68].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[69].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[70].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[71].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[72].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[73].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[74].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[75].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[76].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[77].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[78].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[79].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[80].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[81].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[82].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[83].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[84].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[85].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[86].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[87].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[88].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[89].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[90].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[91].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[92].MyGroup = GROUP_NT_NVC;
+  Quiz[93].MyGroup = GROUP_NT_NVC;
+  Quiz[94].MyGroup = GROUP_NT_NVC;
+  Quiz[95].MyGroup = GROUP_NT_NVC;
+  Quiz[96].MyGroup = GROUP_NT_NVC;
+  Quiz[97].MyGroup = GROUP_NT_NVC;
+  Quiz[98].MyGroup = GROUP_NT_NVC;
+  Quiz[99].MyGroup = GROUP_NT_NVC;
+  Quiz[100].MyGroup = GROUP_NT_NVC;
+  Quiz[101].MyGroup = GROUP_NT_NVC;
+  Quiz[102].MyGroup = GROUP_NT_NVC;
+  Quiz[103].MyGroup = GROUP_NT_NVC;
+  Quiz[104].MyGroup = GROUP_NT_NVC;
+  Quiz[105].MyGroup = GROUP_NT_NVC;
+  Quiz[106].MyGroup = GROUP_NT_NVC;
+  Quiz[107].MyGroup = GROUP_NT_NVC;
+  Quiz[108].MyGroup = GROUP_NT_NVC;
+  Quiz[109].MyGroup = GROUP_NT_NVC;
+  Quiz[110].MyGroup = GROUP_NT_NVC;
+  Quiz[111].MyGroup = GROUP_NT_NVC;
+  Quiz[112].MyGroup = GROUP_NT_NVC;
+  Quiz[113].MyGroup = GROUP_NT_NVC;
+  Quiz[114].MyGroup = GROUP_NT_NVC;
+  Quiz[115].MyGroup = GROUP_NT_NVC;
+  Quiz[116].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[117].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[118].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[119].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[120].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[121].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[122].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[123].MyGroup = GROUP_NT_HUNTING;
+  Quiz[124].MyGroup = GROUP_NT_HUNTING;
+  Quiz[125].MyGroup = GROUP_NT_HUNTING;
+  Quiz[126].MyGroup = GROUP_NT_HUNTING;
+  Quiz[127].MyGroup = GROUP_NT_HUNTING;
+  Quiz[128].MyGroup = GROUP_NT_HUNTING;
+  Quiz[129].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[130].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[131].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[132].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[133].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[134].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[135].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[136].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[137].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[138].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[139].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[140].MyGroup = GROUP_NT_SENSORY;
+  Quiz[141].MyGroup = GROUP_NT_SENSORY;
+  Quiz[142].MyGroup = GROUP_NT_SENSORY;
+  Quiz[143].MyGroup = GROUP_NT_SENSORY;
+  Quiz[144].MyGroup = GROUP_NT_SENSORY;
+  Quiz[145].MyGroup = GROUP_NT_SENSORY;
+  Quiz[146].MyGroup = GROUP_NT_SENSORY;
+  Quiz[147].MyGroup = GROUP_NT_SENSORY;
+  Quiz[148].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[149].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[150].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[151].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[152].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[153].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[154].MyGroup = GROUP_ENVIRONMENT;
+
+  Quiz[155].MyGroup = GROUP_NT_TALENT;
   Quiz[156].MyGroup = GROUP_NT_SOCIAL;
   Quiz[157].MyGroup = GROUP_NT_NVC;
-  Quiz[158].MyGroup = GROUP_NT_NVC;
-  Quiz[159].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[160].MyGroup = GROUP_NT_NVC;
-  Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_NT_NVC;
-  Quiz[163].MyGroup = GROUP_NT_NVC;
-  Quiz[164].MyGroup = GROUP_NT_NVC;
-  Quiz[165].MyGroup = GROUP_NT_NVC;
-  Quiz[166].MyGroup = GROUP_NT_NVC;
-  Quiz[167].MyGroup = GROUP_NT_NVC;
-  Quiz[168].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[169].MyGroup = GROUP_NT_NVC;
-  Quiz[170].MyGroup = GROUP_MIXED;
-  Quiz[171].MyGroup = GROUP_NT_NVC;
-  Quiz[172].MyGroup = GROUP_NT_NVC;
-  Quiz[173].MyGroup = GROUP_MIXED;
-  Quiz[174].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[175].MyGroup = GROUP_NT_NVC;
-  Quiz[176].MyGroup = GROUP_MIXED;
-  Quiz[177].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[178].MyGroup = GROUP_NT_NVC;
-  Quiz[179].MyGroup = GROUP_NT_NVC;
-  Quiz[180].MyGroup = GROUP_NT_NVC;
-  Quiz[181].MyGroup = GROUP_NT_NVC;
-  Quiz[182].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[183].MyGroup = GROUP_NT_NVC;
-  Quiz[184].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[185].MyGroup = GROUP_NT_NVC;
-  Quiz[186].MyGroup = GROUP_MIXED;
-  Quiz[187].MyGroup = GROUP_NT_NVC;
-  Quiz[188].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[189].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[158].MyGroup = GROUP_NT_SENSORY;
+  Quiz[159].MyGroup = GROUP_ENVIRONMENT;
 
-  Quiz[150].Text = "EQ - I can easily tell if someone else wants to enter a conversation.";
-  Quiz[151].Text = "EQ - I find it difficult to explain to others things that I understand easily, when they don’t understand it first time.";
-  Quiz[152].Text = "EQ - I really enjoy caring for other people.";
-  Quiz[153].Text = "EQ - I find it hard to know what to do in a social situation.";
-  Quiz[154].Text = "EQ - People often tell me that I went too far in driving my point home in a discussion.";
-  Quiz[155].Text = "EQ - It doesn’t bother me too much if I am late meeting a friend.";
-  Quiz[156].Text = "EQ - Friendships and relationships are just too difficult, so I tend not to bother with them.";
-  Quiz[157].Text = "EQ - I often find it difficult to judge if something is rude or polite.";
-  Quiz[158].Text = "EQ - In a conversation, I tend to focus on my own thoughts rather than on what my listener might be thinking.";
-  Quiz[159].Text = "EQ - When I was a child, I enjoyed cutting up worms to see what would happen.";
-  Quiz[160].Text = "EQ - I can pick up quickly if someone says one thing but means another.";
-  Quiz[161].Text = "EQ - It is hard for me to see why some things upset people so much.";
-  Quiz[162].Text = "EQ - I find it easy to put myself in somebody else’s shoes.";
-  Quiz[163].Text = "EQ - I am good at predicting how someone will feel.";
-  Quiz[164].Text = "EQ - I am quick to spot when someone in a group is feeling awkward or uncomfortable.";
-  Quiz[165].Text = "EQ - If I say something that someone else is offended by, I think that that’s their problem, not mine.";
-  Quiz[166].Text = "EQ - If anyone asked me if I like their haricut, I would reply truthfully, even if I didn’t like it.";
-  Quiz[167].Text = "EQ - I can’t always see why someone should have felt offended by a remark.";
-  Quiz[168].Text = "EQ - Seeing people cry doesn’t really upset me.";
-  Quiz[169].Text = "EQ - I am very blunt, which some people take to be rudeness, even though this is unintentional.";
-  Quiz[170].Text = "EQ - I don’t tend to find social situations confusing";
-  Quiz[171].Text = "EQ - Other people tell me I am good at understanding how they are feeling and what they are thinking.";
-  Quiz[172].Text = "EQ - When I talk to people, I tend to talk about their experiences rather than my own.";
-  Quiz[173].Text = "EQ - It upsets me to see animals in pain.";
-  Quiz[174].Text = "EQ - I am able to make decisions without being influenced by people’s feelings.";
-  Quiz[175].Text = "EQ - I can easily tell if someone else is interested or bored with what I am saying.";
-  Quiz[176].Text = "EQ - I get upset if I see people suffering on news programmes.";
-  Quiz[177].Text = "EQ - Friends usually talk to me about their problems as they say I am very understanding.";
-  Quiz[178].Text = "EQ - I can sense if I am intruding, even if the other person doesn’t tell me.";
-  Quiz[179].Text = "EQ - People sometimes tell me that I have gone too far with teasing.";
-  Quiz[180].Text = "EQ - Other people often say that I am insensitive, though I don’t always see why.";
-  Quiz[181].Text = "EQ - If I see a stranger in a group, I think that it is up to them to make an effort to join in.";
-  Quiz[182].Text = "EQ - I usually stay emotionally detached when watching a film.";
-  Quiz[183].Text = "EQ - I can tune into how someone else feels rapidly and intuitively.";
-  Quiz[184].Text = "EQ - I can easily work out what another person might want to talk about.";
-  Quiz[185].Text = "EQ - I can tell if someone is masking their true emotion.";
-  Quiz[186].Text = "EQ - I don’t consciously work out the rules of social situations.";
-  Quiz[187].Text = "EQ - I am good at predicting what someone will do.";
-  Quiz[188].Text = "EQ - I tend to get emotionally involved with a friend’s problems.";
-  Quiz[189].Text = "EQ - I can usually appreciate the other person’s viewpoint, even if I don’t agree with it.";
+  Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
+  Quiz[1].Text = "Do you focus on one interest at a time and become an expert on that subject?";
+  Quiz[2].Text = "Do you or others think that you have unconventional ways of solving problems?";
+  Quiz[3].Text = "Do you have values & views that are either very old-fashioned or way ahead of their time?";
+  Quiz[4].Text = "Do you need periods of contemplation?";
+  Quiz[5].Text = "Do you take an interest in, and remember, details that others do not seem to notice?";
+  Quiz[6].Text = "Do you notice patterns in things all the time?";
+  Quiz[7].Text = "Do you have one special talent which you have emphasised and worked on?";
+  Quiz[8].Text = "Do you get confused by verbal instructions - especially several at the same time?";
+  Quiz[9].Text = "Do you tend to get so stuck on details that you miss the overall picture?";
+  Quiz[10].Text = "Do you find it hard to multi-task or shift your attention rapidly from one thing to another and therefore need to finish one task before turning to the next?";
+  Quiz[11].Text = "Do you have difficulty describing & summarising things for example events, conversations or something you've read?";
+  Quiz[12].Text = "Do you need to do things yourself in order to remember them?";
+  Quiz[13].Text = "If there is an interruption, can you quickly return to what you were doing before?";
+  Quiz[14].Text = "Do you find it very hard to learn things that you are not interested in?";
+  Quiz[15].Text = "Do you find it difficult to take notes in lectures?";
+  Quiz[16].Text = "Are you easily distracted?";
+  Quiz[17].Text = "Can you easily keep track of several different people's conversations?";
+  Quiz[18].Text = "Does it feel vitally important to be left undisturbed when focusing on your special interests?";
+  Quiz[19].Text = "Before doing something or going somewhere, do you need to have a picture in your mind of what's going to happen so as to be able to prepare yourself mentally first?";
+  Quiz[20].Text = "Do you prefer to wear the same clothes and/or eat the same food every day?";
+  Quiz[21].Text = "Do you become frustrated if an activity that is important to you gets interrupted?";
+  Quiz[22].Text = "Do you get frustrated if you can't sit on your favorite seat?";
+  Quiz[23].Text = "Do you have strong attachments to certain favorite objects?";
+  Quiz[24].Text = "Do you have certain routines which you need to follow?";
+  Quiz[25].Text = "Do you find it disturbing or upsetting when others show up either later or sooner than agreed?";
+  Quiz[26].Text = "Do you need lists and schedules in order to get things done?";
+  Quiz[27].Text = "Do you enjoy meeting new people?";
+  Quiz[28].Text = "Are your views typical of your peer group?";
+  Quiz[29].Text = "Do you naturally fit into the expected gender stereotypes?";
+  Quiz[30].Text = "Do you enjoy hosting or arranging events?";
+  Quiz[31].Text = "Do you have an interest for the current fashions?";
+  Quiz[32].Text = "Do you enjoy gossip?";
+  Quiz[33].Text = "Are friends of the same gender important to you?";
+  Quiz[34].Text = "Do you prefer the company of those of the same generation as yourself?";
+  Quiz[35].Text = "Do you find it easier to understand and communicate with odd & unusual people than with ordinary people?";
+  Quiz[36].Text = "Is your sense of humor different from mainstream or considered odd?";
+  Quiz[37].Text = "Do you or others think that you have unusual eating habits?";
+  Quiz[38].Text = "Are you somewhat of a daydreamer, often lost in your own thoughts?";
+  Quiz[39].Text = "Do you have an alternative view of what is attractive in the opposite sex?";
+  Quiz[40].Text = "Do you see your own activities as more important than other people's?";
+  Quiz[41].Text = "Do you tend to become obsessed with a potential partner and cannot let go of him/her?";
+  Quiz[42].Text = "Do your feelings cycle regulary between hopelessness and extremely high confidence?";
+  Quiz[43].Text = "Do you have trouble with authority?";
+  Quiz[44].Text = "Do you have atypical or irregular sleeping patterns that deviate from the 24-h cycle?";
+  Quiz[45].Text = "Do you have problems starting and / or finishing projects?";
+  Quiz[46].Text = "Do you find the norms of hygiene too strict?";
+  Quiz[47].Text = "Do you sometimes lie awake at night because of too many thoughts?";
+  Quiz[48].Text = "Have you have had long-lasting urges to take revenge?";
+  Quiz[49].Text = "Do you have unusual sexual preferences?";
+  Quiz[50].Text = "Do you prefer to read directions only when all else have failed?";
+  Quiz[51].Text = "Do you have a tendency to become stuck when asked questions in social situation?";
+  Quiz[52].Text = "Do you often feel out-of-sync with others?";
+  Quiz[53].Text = "Has it been harder for you than for others to keep friends?";
+  Quiz[54].Text = "Do you dislike or have difficulty with team sports and other group endeavours?";
+  Quiz[55].Text = "Do you avoid talking face to face with someone you don't know very well?";
+  Quiz[56].Text = "Do you get very tired after socializing, and need to regenerate alone?";
+  Quiz[57].Text = "Do people think you are aloof and distant?";
+  Quiz[58].Text = "Do you dislike being touched or hugged unless you're prepared or have asked for it?";
+  Quiz[59].Text = "Do you find it hard to be emotionally close to other people?";
+  Quiz[60].Text = "Do you dislike shaking hands?";
+  Quiz[61].Text = "Do you prefer animals to people?";
+  Quiz[62].Text = "Do you prefer to only meet people you know, one-on-one, or in small, familiar groups?";
+  Quiz[63].Text = "Do you prefer to do things on your own even if you could use others' help or expertise?";
+  Quiz[64].Text = "Do you dislike it when people drop by to visit you uninvited?";
+  Quiz[65].Text = "Do you find it natural to wave or say 'hi' when you meet people?";
+  Quiz[66].Text = "Do you dislike reading aloud?";
+  Quiz[67].Text = "Do people comment on your unusual mannerisms and habits?";
+  Quiz[68].Text = "Do people sometimes think you are smiling at the wrong occasion?";
+  Quiz[69].Text = "Do you often have lots of thoughts that you find hard to verbalize?";
+  Quiz[70].Text = "Do you often don't know where to put your arms?";
+  Quiz[71].Text = "Have others commented or have you observed yourself that you make unusual facial expressions?";
+  Quiz[72].Text = "Do you tend to talk either too softly or too loudly?";
+  Quiz[73].Text = "Have you been accused of staring?";
+  Quiz[74].Text = "Have others told you that you have an odd posture or gait?";
+  Quiz[75].Text = "Do you mistake noises for voices?";
+  Quiz[76].Text = "Do you wring your hands, rub your hands together or twirl your fingers?";
+  Quiz[77].Text = "Do you rock back-&-forth or side-to-side (e.g. for comfort, to calm yourself, when excited or overstimulated)?";
+  Quiz[78].Text = "In conversations, do you use small sounds that others don't seem to use?";
+  Quiz[79].Text = "Do recently heard phrases, tunes or rhythms tend to stick and repeat themselves in your head?";
+  Quiz[80].Text = "Do you have a habit of repeating your own or others' last words, internally or out loud (echolalia)?";
+  Quiz[81].Text = "Do you tap your ears or press your eyes (e.g. when thinking, when stressed or distressed)?";
+  Quiz[82].Text = "Do you fiddle with things?";
+  Quiz[83].Text = "Do you use stock phrases or phrases borrowed from other situations or people?";
+  Quiz[84].Text = "Do you expect other people to know your thoughts, experiences and opinions without you having to tell them?";
+  Quiz[85].Text = "Do you pace (e.g. when thinking or anxious)?";
+  Quiz[86].Text = "Do you stutter when stressed?";
+  Quiz[87].Text = "Do you tend to look a lot at people you like and little or not at all at people you dislike?";
+  Quiz[88].Text = "Do you bite your lip, cheek or tongue (e.g. when thinking, when anxious or nervous)?";
+  Quiz[89].Text = "Do you talk to yourself?";
+  Quiz[90].Text = "Do you sometimes mix up pronouns and, for example, say \"you\" or \"we\" when you mean \"me\" or vice versa?";
+  Quiz[91].Text = "Do you have difficulties with pronunciation?";
+  Quiz[92].Text = "Do you find it difficult to figure out how to behave in various situations?";
+  Quiz[93].Text = "In conversations, do you have trouble with things like timing and reciprocity?";
+  Quiz[94].Text = "Do you tend to express your feelings in ways that may baffle others?";
+  Quiz[95].Text = "Do others often misunderstand you?";
+  Quiz[96].Text = "Do you forget you are in a social situation when something gets your attention?";
+  Quiz[97].Text = "Are you usually unaware of social rules & boundaries unless they are clearly spelled out?";
+  Quiz[98].Text = "Do you find it difficult to work out people's intentions?";
+  Quiz[99].Text = "Do you tend to interpret things literally and/or reply to rhetorical questions?";
+  Quiz[100].Text = "In conversations, do you need extra time to carefully think out your reply, so that there may be a pause before you answer?";
+  Quiz[101].Text = "Do you tend to say things that are considered socially inappropriate?";
+  Quiz[102].Text = "Do you sometimes not feel anything at all, even though other people expect you to?";
+  Quiz[103].Text = "Do you instinctively know when it is your turn to speak when talking on the phone?";
+  Quiz[104].Text = "In a conversation, do you tend to focus on your own thoughts rather than on what your listener might be thinking?";
+  Quiz[105].Text = "Are you good at returning social courtesies and gestures?";
+  Quiz[106].Text = "Do you often talk about your special interests whether others seem to be interested or not?";
+  Quiz[107].Text = "Do you know when you are expected to offer an apology?";
+  Quiz[108].Text = "Can you pick up quickly if someone says one thing but means another?";
+  Quiz[109].Text = "Are you good at interpreting facial expressions?";
+  Quiz[110].Text = "Have you taken initiative only to find out it was not wanted?";
+  Quiz[111].Text = "Do you find yourself at ease in romantic situations?";
+  Quiz[112].Text = "Do you find it easy to describe your feelings?";
+  Quiz[113].Text = "Do you have a monotonous voice?";
+  Quiz[114].Text = "Do you have problems recognizing faces (prosopagnosia)?";
+  Quiz[115].Text = "Are you so honest and sincere yourself that you assume everyone is?";
+  Quiz[116].Text = "Do you enjoy watching a spinning or blinking object?";
+  Quiz[117].Text = "Do you have a fascination for slowly flowing water?";
+  Quiz[118].Text = "Do you sometimes have an urge to jump over things?";
+  Quiz[119].Text = "Do you enjoy mimicking animal sounds?";
+  Quiz[120].Text = "Are you or have you been hyperactive?";
+  Quiz[121].Text = "Do you enjoy walking on your toes?";
+  Quiz[122].Text = "Have you been fascinated about making traps?";
+  Quiz[123].Text = "Do you find it difficult to take messages on the telephone and pass them on correctly?";
+  Quiz[124].Text = "Do you drop things when your attention is on other things?";
+  Quiz[125].Text = "Do you have problems filling out forms?";
+  Quiz[126].Text = "Do you find it hard to recognise phone numbers when said in a different way?";
+  Quiz[127].Text = "Do you mix up digits in numbers like 95 and 59?";
+  Quiz[128].Text = "Do you have trouble reading clocks?";
+  Quiz[129].Text = "Do you suddenly feel distracted by distant sounds?";
+  Quiz[130].Text = "Do you notice small sounds that others don't, or feel pained by loud or irritating noise?";
+  Quiz[131].Text = "Do you have difficulties filtering out background noise when talking to someone?";
+  Quiz[132].Text = "Do you dislike when people walk behind you?";
+  Quiz[133].Text = "Do you feel tortured by clothes tags, clothes that are too tight or are made in the 'wrong' material?";
+  Quiz[134].Text = "Are you hypo- or hypersensitive to physical pain, or even enjoy some types of pain?";
+  Quiz[135].Text = "Are your eyes extra sensitive to stong light and glare?";
+  Quiz[136].Text = "Are you sensitive to changes in humidity and air pressure?";
+  Quiz[137].Text = "Do you instinctively become frightened by the sound of a motor-bike?";
+  Quiz[138].Text = "Do you dislike it when people stamp their foot in the floor?";
+  Quiz[139].Text = "Does it come more natural to you to think in pictures than in words?";
+  Quiz[140].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
+  Quiz[141].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
+  Quiz[142].Text = "Do you have poor concept of time?";
+  Quiz[143].Text = "Do you find it hard to tell the age of people?";
+  Quiz[144].Text = "Do you have difficulties judging distances, height, depth or speed?";
+  Quiz[145].Text = "Do you have difficulties with activities requiring manual precision, e.g sewing, tying shoe-laces, fastening buttons or handling small objects?";
+  Quiz[146].Text = "Do you have problems finding your way to new places?";
+  Quiz[147].Text = "Do you have a good sense of how much pressure to apply when doing things with your hands?";
+  Quiz[148].Text = "Do you tend to shut down or have a meltdown when stressed or overwhelmed?";
+  Quiz[149].Text = "Has it been harder for you to make it on your own, than it seems to be for most others of the same age?";
+  Quiz[150].Text = "Are you sometimes afraid in safe situations?";
+  Quiz[151].Text = "Do you have difficulty accepting criticism, correction, and direction?";
+  Quiz[152].Text = "Are you prone to getting depressions?";
+  Quiz[153].Text = "Have you been bullied, abused or taken advantage of?";
+  Quiz[154].Text = "Are you impatient and have low frustration tolerance?";
 
+  Quiz[155].Text = "Can you easily remember verbal instructions?";
+  Quiz[156].Text = "Are you good at teamwork?";
+  Quiz[157].Text = "Do you have a good sense for what is the right thing to do socially?";
+  Quiz[158].Text = "Do you find it easy to estimate the age of people?";
+  Quiz[159].Text = "Are you gracious about criticism, correction and direction?";
 }
 
-/*##################  TQuizF12::LoadReferers ##########################
+/*##################  TQuizExp2::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF12::LoadReferers()
+void TQuizExp2::LoadReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
@@ -341,7 +756,7 @@ void TQuizF12::LoadReferers()
 
 /*##########################################################################
 #
-#   Name       : TQuizF12::LoadPopulations
+#   Name       : TQuizExp2::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -350,7 +765,7 @@ void TQuizF12::LoadReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF12::LoadPopulations()
+void TQuizExp2::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
@@ -508,7 +923,7 @@ void TQuizF12::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizF12::SetupCross
+#   Name       : TQuizExp2::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -517,59 +932,174 @@ void TQuizF12::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF12::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11)
+void TQuizExp2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15)
 {
-    int i;
+    DefineCross(QuizF15, 0, 1);
+    DefineCross(QuizF15, 1, 3);
+    DefineCross(QuizF15, 2, 4);
+    DefineCross(QuizF15, 3, 5);
+    DefineCross(QuizF15, 4, 8);
+    DefineCross(QuizF15, 5, 6);
+    DefineCross(QuizF15, 6, 7);
+    DefineCross(Quiz9, 7, 33);
+    DefineCross(QuizF15, 8, 9);
+    DefineCross(QuizF15, 9, 10);
+    DefineCross(QuizF15, 10, 11);
+    DefineCross(QuizF15, 11, 12);
+    DefineCross(QuizF15, 12, 13);
+    DefineCross(QuizF15, 13, 14);
+    DefineCross(QuizF15, 14, 15);
+    DefineCross(QuizF15, 15, 16);
+    DefineCross(QuizF15, 16, 35);
+    DefineCross(QuizF15, 17, 17);
+    DefineCross(QuizF15, 18, 18);
+    DefineCross(QuizF15, 19, 19);
+    DefineCross(QuizF15, 20, 20);
+    DefineCross(QuizF15, 21, 21);
+    DefineCross(QuizF15, 22, 22);
+    DefineCross(QuizF15, 23, 23);
+    DefineCross(QuizF15, 24, 24);
+    DefineCross(QuizF15, 25, 25);
+    DefineCross(QuizF15, 26, 26);
+    DefineCross(QuizF15, 27, 27);
+    DefineCross(QuizF15, 28, 28);
+    DefineCross(QuizF15, 29, 132);
+    DefineCross(QuizF15, 30, 29);
+    DefineCross(QuizF15, 31, 30);
+    DefineCross(QuizF15, 32, 32);
+    DefineCross(QuizF11, 33, 176);
+    DefineCross(QuizF15, 34, 31);
+    DefineCross(QuizF15, 35, 138);
+    DefineCross(QuizF15, 36, 2);
+    DefineCross(QuizF15, 37, 139);
+    DefineCross(QuizF15, 38, 33);
+    DefineCross(QuizF15, 39, 131);
+    DefineCross(QuizF15, 40, 161);
+    DefineCross(QuizF15, 41, 150);
+    DefineCross(QuizF15, 42, 154);
+    DefineCross(QuizF15, 43, 157);
+    DefineCross(QuizR4, 44, 113);
+    DefineCross(QuizF15, 45, 34);
+    DefineCross(QuizF15, 46, 155);
+    DefineCross(QuizF15, 47, 158);
+    DefineCross(QuizF15, 48, 151);
+    DefineCross(QuizF15, 49, 133);
+    DefineCross(QuizF15, 50, 175);
+    DefineCross(QuizF15, 51, 39);
+    DefineCross(QuizF15, 52, 0);
+    DefineCross(QuizF15, 53, 41);
+    DefineCross(QuizF15, 54, 40);
+    DefineCross(QuizF15, 55, 42);
+    DefineCross(QuizF15, 56, 43);
+    DefineCross(QuizF15, 57, 45);
+    DefineCross(QuizF15, 58, 44);
+    DefineCross(QuizF15, 59, 46);
+    DefineCross(QuizF15, 60, 47);
+    DefineCross(QuizF15, 61, 153);
+    DefineCross(QuizF13, 62, 168);
+    DefineCross(QuizF15, 63, 48);
+    DefineCross(QuizF15, 64, 50);
+    DefineCross(QuizF15, 65, 51);
+    DefineCross(QuizF15, 66, 52);
+    DefineCross(QuizF15, 67, 53);
+    DefineCross(QuizF15, 68, 54);
+    DefineCross(QuizF15, 69, 55);
+    DefineCross(QuizF15, 70, 56);
+    DefineCross(QuizF15, 71, 58);
+    DefineCross(QuizF15, 72, 57);
+    DefineCross(QuizF15, 73, 59);
+    DefineCross(QuizF15, 74, 60);
+    DefineCross(QuizN1, 75, 152);
+    DefineCross(QuizF15, 76, 61);
+    DefineCross(QuizF15, 77, 62);
+    DefineCross(QuizF15, 78, 64);
+    DefineCross(QuizF15, 79, 63);
+    DefineCross(QuizF15, 80, 65);
+    DefineCross(QuizF15, 81, 66);
+    DefineCross(QuizF15, 82, 67);
+    DefineCross(QuizF15, 83, 68);
+    DefineCross(QuizF15, 84, 144);
+    DefineCross(QuizF15, 85, 69);
+    DefineCross(QuizF15, 86, 70);
+    DefineCross(QuizF15, 87, 71);
+    DefineCross(QuizF15, 88, 72);
+    DefineCross(QuizF15, 89, 73);
+    DefineCross(QuizF15, 90, 74);
+    DefineCross(QuizF15, 91, 75);
+    DefineCross(QuizF15, 92, 76);
+    DefineCross(QuizF15, 93, 77);
+    DefineCross(QuizF15, 94, 79);
+    DefineCross(QuizF15, 95, 78);
+    DefineCross(QuizF15, 96, 80);
+    DefineCross(QuizF15, 97, 81);
+    DefineCross(QuizF15, 98, 83);
+    DefineCross(QuizF15, 99, 82);
+    DefineCross(QuizF15, 100, 136);
+    DefineCross(QuizF15, 101, 84);
+    DefineCross(QuizF15, 102, 135);
+    DefineCross(QuizF15, 103, 85);
+    DefineCross(QuizF15, 104, 185);
+    DefineCross(QuizF15, 105, 86);
+    DefineCross(QuizF15, 106, 87);
+    DefineCross(QuizF15, 107, 88);
+    DefineCross(QuizF15, 108, 183);
+    DefineCross(QuizF15, 109, 89);
+    DefineCross(QuizF15, 110, 140);
+    DefineCross(QuizF15, 111, 90);
+    DefineCross(QuizF15, 112, 91);
+    DefineCross(QuizF15, 113, 92);
+    DefineCross(QuizF15, 114, 93);
+    DefineCross(QuizF15, 115, 94);
+    DefineCross(QuizF15, 116, 95);
+    DefineCross(QuizF15, 117, 96);
+    DefineCross(QuizF15, 118, 97);
+    DefineCross(QuizF15, 119, 98);
+    DefineCross(QuizF15, 120, 37);
+    DefineCross(QuizF15, 121, 99);
+    DefineCross(QuizF15, 122, 100);
+    DefineCross(QuizF15, 123, 101);
+    DefineCross(QuizF15, 124, 102);
+    DefineCross(QuizF15, 125, 103);
+    DefineCross(QuizF15, 126, 104);
+    DefineCross(QuizF15, 127, 106);
+    DefineCross(QuizF15, 128, 105);
+    DefineCross(QuizF15, 129, 107);
+    DefineCross(QuizF15, 130, 108);
+    DefineCross(QuizF15, 131, 109);
+    DefineCross(QuizF15, 132, 49);
+    DefineCross(QuizF15, 133, 110);
+    DefineCross(QuizF15, 134, 111);
+    DefineCross(QuizF15, 135, 112);
+    DefineCross(QuizF15, 136, 113);
+    DefineCross(QuizF15, 137, 114);
+    DefineCross(QuizF15, 138, 115);
+    DefineCross(QuizF15, 139, 116);
+    DefineCross(QuizF15, 140, 117);
+    DefineCross(QuizF15, 141, 118);
+    DefineCross(QuizF15, 142, 119);
+    DefineCross(QuizF15, 143, 120);
+    DefineCross(QuizF15, 144, 121);
+    DefineCross(QuizF15, 145, 122);
+    DefineCross(QuizF15, 146, 123);
+    DefineCross(QuizR5, 147, 1);
+    DefineCross(QuizF15, 148, 124);
+    DefineCross(QuizF15, 149, 125);
+    DefineCross(QuizF15, 150, 126);
+    DefineCross(QuizF15, 151, 127);
+    DefineCross(QuizF15, 152, 128);
+    DefineCross(QuizF15, 153, 129);
+    DefineCross(QuizN1, 154, 42);
 
-    for (i = 0; i < 150; i++)
-  	    DefineCross(QuizF11, i, i);
-
-	 DefineGlobalId(150, 1374);
-	 DefineGlobalId(151, 1375);
-	 DefineGlobalId(152, 1376);
-	 DefineGlobalId(153, 1377);
-	 DefineGlobalId(154, 1378);
-	 DefineGlobalId(155, 1379);
-	 DefineGlobalId(156, 1380);
-	 DefineGlobalId(157, 1381);
-	 DefineGlobalId(158, 1382);
-	 DefineGlobalId(159, 1383);
-	 DefineGlobalId(160, 1384);
-	 DefineGlobalId(161, 1385);
-	 DefineGlobalId(162, 1386);
-	 DefineGlobalId(163, 1387);
-	 DefineGlobalId(164, 1388);
-	 DefineGlobalId(165, 1389);
-	 DefineGlobalId(166, 1390);
-	 DefineGlobalId(167, 1391);
-	 DefineGlobalId(168, 1392);
-	 DefineGlobalId(169, 1393);
-	 DefineGlobalId(170, 1394);
-	 DefineGlobalId(171, 1395);
-	 DefineGlobalId(172, 1396);
-	 DefineGlobalId(173, 1397);
-	 DefineGlobalId(174, 1398);
-	 DefineGlobalId(175, 1399);
-	 DefineGlobalId(176, 1400);
-	 DefineGlobalId(177, 1401);
-	 DefineGlobalId(178, 1402);
-	 DefineGlobalId(179, 1403);
-	 DefineGlobalId(180, 1404);
-	 DefineGlobalId(181, 1405);
-	 DefineGlobalId(182, 1406);
-	 DefineGlobalId(183, 1407);
-	 DefineGlobalId(184, 1408);
-	 DefineGlobalId(185, 1409);
-	 DefineGlobalId(186, 1410);
-	 DefineGlobalId(187, 1411);
-	 DefineGlobalId(188, 1412);
-	 DefineGlobalId(189, 1413);
-
+    DefineCross(QuizF15, 155, 145);
+    DefineCross(QuizF15, 156, 146);
+    DefineCross(QuizF15, 157, 147);
+    DefineCross(QuizF15, 158, 148);
+    DefineCross(QuizF15, 159, 149);
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizF12::GetReferer
+#   Name       : TQuizExp2::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -578,7 +1108,7 @@ void TQuizF12::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizF12::GetReferer(const char *referer, TPopulation *pop)
+void TQuizExp2::GetReferer(const char *referer, TPopulation *pop)
 {
 	int i;
 	TReferer *ref;
@@ -650,14 +1180,14 @@ static int IsPca(TQuizRow *row, int PcaType)
 	return FALSE;
 }
 
-/*##################  TQuizF12::ExportExcelCases ##########################
+/*##################  TQuizExp2::ExportExcelCases ##########################
 *   Purpose....: Export cases as excel-data. Make ? into 'NO' case 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF12::ExportExcelCase(const char *filename, int PcaType)
+void TQuizExp2::ExportExcelCase(const char *filename, int PcaType)
 {
 	TQuizRow Row;
 	int i;
@@ -719,14 +1249,14 @@ void TQuizF12::ExportExcelCase(const char *filename, int PcaType)
 	}
 }
 
-/*##################  TQuizF12::ExportExcelAspie ##########################
+/*##################  TQuizExp2::ExportExcelAspie ##########################
 *   Purpose....: Export cases as excel-data. Invert NT questions 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF12::ExportExcelAspie(const char *filename)
+void TQuizExp2::ExportExcelAspie(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -787,14 +1317,14 @@ void TQuizF12::ExportExcelAspie(const char *filename)
 	}
 }
 
-/*##################  TQuizF12::ExportExcelGroups ##########################
+/*##################  TQuizExp2::ExportExcelGroups ##########################
 *   Purpose....: Export group cases in excel format             	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF12::ExportExcelGroups(const char *filename)
+void TQuizExp2::ExportExcelGroups(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -875,14 +1405,14 @@ void TQuizF12::ExportExcelGroups(const char *filename)
 	}
 }
 
-/*##################  TQuizF12::ImportMvsp ##########################
+/*##################  TQuizExp2::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings   	      			      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF12::ImportMvsp(const char *filename, int PcaType)
+void TQuizExp2::ImportMvsp(const char *filename, int PcaType)
 {
 	char buf[MAX_IN_ROW];
 	int size;
@@ -1351,14 +1881,14 @@ void TRace::WriteNonUsRow(TFile &file, int index, const char *text)
 }
 
 
-/*##################  TQuizF12::WriteRace ##########################
+/*##################  TQuizExp2::WriteRace ##########################
 *   Purpose....: Write race report                   			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF12::WriteRace(const char *filename)
+void TQuizExp2::WriteRace(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1406,14 +1936,14 @@ void TQuizF12::WriteRace(const char *filename)
 	file.Write("</table>");
 }
 
-/*##################  TQuizF12::WriteRetest ##########################
+/*##################  TQuizExp2::WriteRetest ##########################
 *   Purpose....: Write retest report             			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizF12::WriteRetest(const char *filename)
+void TQuizExp2::WriteRetest(const char *filename)
 {
 	TQuizRow Row;
 	int userid;

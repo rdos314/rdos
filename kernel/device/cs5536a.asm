@@ -117,89 +117,97 @@ aiLoop:
     test ax,4
     jz aiNot0
 ;    
+    push ax
     mov dx,ds:Ac0.AcStatusIo
     in al,dx
     or ds:Ac0.AcIrqStatus,al
     mov bx,ds:Ac0.AcNotify
     Signal
-    jmp aiLoop
+    pop ax
 
 aiNot0:
     test ax,8
     jz aiNot1
 ;    
+    push ax
     mov dx,ds:Ac1.AcStatusIo
     in al,dx
     or ds:Ac1.AcIrqStatus,al
     mov bx,ds:Ac1.AcNotify
     Signal
-    jmp aiLoop
+    pop ax
 
 aiNot1:
     test ax,10h
     jz aiNot2
 ;    
+    push ax
     mov dx,ds:Ac2.AcStatusIo
     in al,dx
     or ds:Ac2.AcIrqStatus,al
     mov bx,ds:Ac2.AcNotify
     Signal
-    jmp aiLoop
+    pop ax
 
 aiNot2:
     test ax,20h
     jz aiNot3
 ;    
+    push ax
     mov dx,ds:Ac3.AcStatusIo
     in al,dx
     or ds:Ac3.AcIrqStatus,al
     mov bx,ds:Ac3.AcNotify
     Signal
-    jmp aiLoop
+    pop ax
 
 aiNot3:
     test ax,40h
     jz aiNot4
 ;    
+    push ax
     mov dx,ds:Ac4.AcStatusIo
     in al,dx
     or ds:Ac4.AcIrqStatus,al
     mov bx,ds:Ac4.AcNotify
     Signal
-    jmp aiLoop
+    pop ax
 
 aiNot4:
     test ax,80h
     jz aiNot5
 ;    
+    push ax
     mov dx,ds:Ac5.AcStatusIo
     in al,dx
     or ds:Ac5.AcIrqStatus,al
     mov bx,ds:Ac5.AcNotify
     Signal
-    jmp aiLoop
+    pop ax
 
 aiNot5:
     test ax,100h
     jz aiNot6
 ;    
+    push ax
     mov dx,ds:Ac6.AcStatusIo
     in al,dx
     or ds:Ac6.AcIrqStatus,al
     mov bx,ds:Ac6.AcNotify
     Signal
-    jmp aiLoop
+    pop ax
 
 aiNot6:
     test ax,200h
     jz aiNot7
 ;    
+    push ax
     mov dx,ds:Ac7.AcStatusIo
     in al,dx
     or ds:Ac7.AcIrqStatus,al
     mov bx,ds:Ac7.AcNotify
     Signal
-    jmp aiLoop
+    pop ax
 
 aiNot7:
 	ret
@@ -617,21 +625,10 @@ saoPrd2:
     test bp,8
     jz saoPrd2Ok
 ;
-    pushad
+    int 3
+    jmp saoPrd1Ok    
 
-saoWaitPrd2:    
-    mov ax,10
-    WaitMilliSec
-;
-    mov dx,ds:IoBase
-    add dx,ACC_BM0 + ACC_BM_PRD
-    in eax,dx
-    test ax,8
-    jnz saoWaitPrd2
-;
-    popad
-
-saoPrd2Ok:    
+saoPrd2Ok:
     add edx,8
     mov es:[edx+4],ax
     mov edi,ds:Ac0.AcPrd1Linear
@@ -645,19 +642,8 @@ saoPrd1:
     test bp,8
     jnz saoPrd1Ok
 ;
-    pushad
-
-saoWaitPrd1:    
-    mov ax,10
-    WaitMilliSec
-;
-    mov dx,ds:IoBase
-    add dx,ACC_BM0 + ACC_BM_PRD
-    in eax,dx
-    test ax,8
-    jz saoWaitPrd1
-;
-    popad
+    int 3
+    jmp saoPrd2Ok
 
 saoPrd1Ok:
     mov es:[edx+4],ax
