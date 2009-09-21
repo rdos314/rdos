@@ -625,8 +625,8 @@ saoPrd2:
     test bp,8
     jz saoPrd2Ok
 ;
-    int 3
-    jmp saoPrd1Ok    
+;    int 3
+;    jmp saoPrd1Ok    
 
 saoPrd2Ok:
     add edx,8
@@ -642,8 +642,8 @@ saoPrd1:
     test bp,8
     jnz saoPrd1Ok
 ;
-    int 3
-    jmp saoPrd2Ok
+;    int 3
+;    jmp saoPrd2Ok
 
 saoPrd1Ok:
     mov es:[edx+4],ax
