@@ -9658,7 +9658,11 @@ RdosGetMasterVolume	PROC
 ;    
     mov edi,[ebp+8]
     push ax
-    mov ah,200
+;    
+    mov ah,7Fh
+    sub ah,al
+;    
+    mov al,200
     mul ah
     movzx eax,ah    
     mov [edi],eax
@@ -9668,8 +9672,11 @@ rgmvR:
     test ah,80h
     jnz rgmvDone
 ;
-    mov edi,[ebp+12]
-    mov al,200
+    mov edi,[ebp+12]    
+    mov al,7Fh
+    sub al,ah
+;    
+    mov ah,200
     mul ah
     movzx eax,ah
     mov [edi],eax
@@ -9707,7 +9714,7 @@ RdosSetMasterVolume	PROC
     test eax,80000000h
     jnz rsmvR
 ;    
-    mov bl,7Fh
+    xor bl,bl
     cmp eax,100
     jae rsmvR
 ;
@@ -9715,7 +9722,9 @@ RdosSetMasterVolume	PROC
     xor al,al
     mov bl,200
     div bl
-    mov bl,al
+;
+    mov bl,7Fh
+    sub bl,al    
 
 rsmvR:
     mov eax,[ebp+12]
@@ -9723,7 +9732,7 @@ rsmvR:
     test eax,80000000h
     jnz rsmvSet
 ;    
-    mov bh,7Fh
+    xor bh,bh
     cmp eax,100
     jae rsmvSet
 ;
@@ -9731,7 +9740,9 @@ rsmvR:
     xor al,al
     mov bh,200
     div bh
-    mov bh,al
+;
+    mov bh,7Fh    
+    sub bh,al
 
 rsmvSet:
     mov ax,bx
@@ -9779,8 +9790,12 @@ RdosGetLineOutVolume	PROC
 ;    
     mov edi,[ebp+8]
     push ax
-    mov ah,200
-    imul ah
+;    
+    mov ah,7Fh
+    sub ah,al
+;    
+    mov al,200
+    mul ah
     movzx eax,ah    
     mov [edi],eax
     pop ax
@@ -9790,8 +9805,12 @@ rglovR:
     jnz rglovDone
 ;
     mov edi,[ebp+12]
-    mov al,200
-    imul ah
+;    
+    mov al,7Fh
+    sub al,ah
+;    
+    mov ah,200
+    mul ah
     movzx eax,ah
     mov [edi],eax
 
@@ -9828,7 +9847,7 @@ RdosSetLineOutVolume	PROC
     test eax,80000000h
     jnz rslovR
 ;    
-    mov bl,7Fh
+    xor bl,bl
     cmp eax,100
     jae rslovR
 ;
@@ -9836,11 +9855,13 @@ RdosSetLineOutVolume	PROC
     xor al,al
     mov bl,200
     div bl
-    mov bl,al
+;
+    mov bl,7Fh
+    sub bl,al    
 
 rslovR:
     mov eax,[ebp+12]
-    mov bh,80h
+    xor bh,bh
     test eax,80000000h
     jnz rslovSet
 ;    
@@ -9852,7 +9873,9 @@ rslovR:
     xor al,al
     mov bh,200
     div bh
-    mov bh,al
+;
+    mov bh,7Fh
+    sub bh,al    
 
 rslovSet:
     mov ax,bx

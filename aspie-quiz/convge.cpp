@@ -159,7 +159,7 @@ char *ProcessRow(char *str)
 
 //    AncestryRow.Lang = 0;
     
-	for (fieldno = 0; fieldno < 177; fieldno++)
+	for (fieldno = 0; fieldno < 189; fieldno++)
 	{
 		valstr = str;
 

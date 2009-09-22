@@ -169,7 +169,7 @@ int TVolumeCommand::SetVolume1()
 		Volume = atoi(str);
 
 	RdosSetMasterVolume(Volume, Volume);
-	RdosSetLineOutVolume(100 - Volume, 100 - Volume);
+	RdosSetLineOutVolume(Volume, Volume);
 
 	return 0;
 }
@@ -215,7 +215,7 @@ int TVolumeCommand::SetVolume2()
 		R = atoi(str);
 
 	RdosSetMasterVolume(L, R);
-	RdosSetLineOutVolume(100 - L, 100 - R);
+	RdosSetLineOutVolume(L, R);
 
 	return 0;
 }
