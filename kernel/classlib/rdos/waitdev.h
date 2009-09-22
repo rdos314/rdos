@@ -46,6 +46,8 @@ public:
 	TWaitDevice *WaitTimeout(int MilliSec);
 	TWaitDevice *WaitUntil(TDateTime &time);
 
+	void StartHandler(const char *Name, int StackSize);
+
 	int ID;
 
 protected:
@@ -54,6 +56,9 @@ protected:
 
 	virtual void SignalNewData() = 0;
 	virtual void Add(TWait *Wait) = 0;
+
+    virtual void Execute();
+
 
 	TWait *FWait;
 

@@ -246,6 +246,7 @@ void TStorageSocketServer::SendCotex(THeatData *data)
 	 {
 		  FSocket->Write((char *)&size, 4);
 		  FSocket->Write(msg, size);
+		  FSocket->Push();
 
         if (FSocket->WaitForChar(30000))
         {

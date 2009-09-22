@@ -33,38 +33,19 @@
 #include <time.h>
 #include <math.h>
 
-#include "socket.h"
+#include "datastor.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
 
-#define WIDTH 240
-#define HEIGHT 15
-
-#define RAD_X   5
-#define RAD_Y  500
-
 
 void cdecl main()
 {
-    TSocket *socket;
-    int size;
-    int count;
-    char *msg;
+    TDataStore *DataStore;
 
-	 socket = new TSocket(0x2800A8C0, 4000, 6000, 0x4000);
-	 socket->WaitForConnection(6000);
+    DataStore = new TDataStore("e:\\data", "Data store", 0x2800A8C0, 600);
 
-	 if (socket->IsOpen())
-	 {
-		  count = socket->Read((char *)&size, 4);
-		  if (count == 4)
-		  {
-		  		msg = new char[size];
-            count = socket->Read(msg, size);
-        }
-    }
+    for (;;)
+        RdosWaitMilli(1000);
 
-    delete socket;
 }
-

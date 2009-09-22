@@ -212,6 +212,39 @@ TWaitDevice *TWaitDevice::WaitUntil(TDateTime &time)
 
 /*##########################################################################
 #
+#   Name       : TWaitDevice::StartHandler
+#
+#   Purpose....: Start thread handler
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWaitDevice::StartHandler(const char *Name, int StackSize)
+{
+	Start(Name, StackSize);
+}
+
+/*##########################################################################
+#
+#   Name       : TWaitDevice::Execute
+#
+#   Purpose....: Execute handler as thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWaitDevice::Execute()
+{
+	for (;;)
+		WaitForever();
+}
+
+/*##########################################################################
+#
 #   Name       : TWait::TWait
 #
 #   Purpose....: Constructor for TWait		                          

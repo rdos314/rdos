@@ -319,7 +319,8 @@ void TDataStore::Execute()
 	redu->Recover();
 	FStorList = redu;
 
-    storfact = new TStorageSocketServerFactory(redu, 4000, 10, 2048);
+    storfact = new TStorageSocketServerFactory(redu, 600, 10, 2048);
+    storfact->StartHandler("Storage Server", 0x4000);
      
 	while (FInstalled)
 	{
