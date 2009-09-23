@@ -55,6 +55,8 @@ ACC_BM_CMD = 0
 ACC_BM_STATUS = 1
 ACC_BM_PRD = 4
 
+AC_FLAG_RUNNING = 1
+
 audio_channel_struc STRUC
 
 AcCmdIo         DW ?
@@ -69,6 +71,7 @@ AcPrd2Linear    DD ?
 AcCurrPrd       DD ?
 AcNotify        DW ?
 AcIrqStatus     DB ?
+AcFlags         DB ?
 
 audio_channel_struc ENDS
 
@@ -439,6 +442,8 @@ cptPrd2Loop:
     stos dword ptr es:[edi]
     mov eax,20000000h
     stos dword ptr es:[edi]                    
+;
+    mov ds:[bx].AcFlags,0    
 
 cptDone:    
     pop edi
@@ -552,8 +557,17 @@ close_audio_out	Proc far
     mov ds,ax
 ;
     mov dx,ds:Ac0.AcCmdIo
-    xor al,al
+    in al,dx
+    and al,NOT 3
     out dx,al
+;    
+    mov dx,ds:IoBase
+    add dx,ACC_BM0 + ACC_BM_PRD
+    xor eax,eax
+    out dx,eax
+;    
+    and ds:Ac0.AcFlags,NOT AC_FLAG_RUNNING
+    mov ds:Ac0.AcNotify,0
 ;
     pop dx
     pop bx
@@ -561,6 +575,7 @@ close_audio_out	Proc far
     pop ds
     ret
 close_audio_out  Endp
+
 
 PAGE
 
@@ -595,6 +610,59 @@ send_audio_out	Proc far
     mov ax,flat_sel
     mov es,ax
 ;
+    test ds:Ac0.AcFlags, AC_FLAG_RUNNING
+    jnz saoWait
+;
+    or ds:Ac0.AcFlags, AC_FLAG_RUNNING
+    mov ds:Ac0.AcIrqStatus,0
+    jmp saoBuffer
+
+saoWait:    
+    mov dx,ds:Ac0.AcCmdIo
+    in al,dx
+    and al,3
+    cmp al,1
+    je saoWaitLoop
+;
+    and al,NOT 7
+    or al,1
+    out dx,al
+;
+    mov ax,1
+    WaitMilliSec    
+
+saoWaitLoop:
+    GetThread
+    mov ds:Ac0.AcNotify,ax
+;    
+    mov dx,ds:IoBase
+    add dx,ACC_BM0 + ACC_BM_PRD
+    in eax,dx
+;
+    mov edi,ds:Ac0.AcCurrPrd
+    cmp edi,ds:Ac0.AcPrd1Linear
+    je saoWait1
+
+saoWait2:
+    test ax,8
+    jnz saoBuffer
+;
+    jmp saoWaitAgain    
+
+saoWait1:
+    test ax,8
+    jz saoBuffer
+
+saoWaitAgain:    
+    WaitForSignal
+    mov ds:Ac0.AcIrqStatus,0
+    mov ds:Ac0.AcNotify,0
+    jmp saoWaitLoop
+
+saoBuffer:
+    or cx,cx
+    jz saoStop
+;    
     mov esi,2
     push cx
     mov edi,ds:Ac0.AcCurrPrd
@@ -609,11 +677,6 @@ saoDataLoop:
 ;
     pop cx
 ;    
-    mov dx,ds:IoBase
-    add dx,ACC_BM0 + ACC_BM_PRD
-    in eax,dx
-    mov bp,ax
-;    
     mov ax,cx
     shl ax,2
     mov edx,ds:Ac0.AcPrdLinear
@@ -622,59 +685,25 @@ saoDataLoop:
     je saoPrd1
 
 saoPrd2:
-    test bp,8
-    jz saoPrd2Ok
-;
-;    int 3
-;    jmp saoPrd1Ok    
-
-saoPrd2Ok:
     add edx,8
     mov es:[edx+4],ax
     mov edi,ds:Ac0.AcPrd1Linear
     mov ds:Ac0.AcCurrPrd,edi
-    jmp saoPrdOk
+    jmp saoDone
 
 saoPrd1:
-    test bp,10h
-    jz saoPrd1Ok
-;    
-    test bp,8
-    jnz saoPrd1Ok
-;
-;    int 3
-;    jmp saoPrd2Ok
-
-saoPrd1Ok:
     mov es:[edx+4],ax
     mov edi,ds:Ac0.AcPrd2Linear
     mov ds:Ac0.AcCurrPrd,edi
-    add edx,8
-    mov ax,es:[edx+4]
-    or ax,ax
-    jz saoDone
+    jmp saoDone
 
-saoPrdOk:
-    GetThread
-    mov ds:Ac0.AcNotify,ax
-;    
+saoStop:
+    int 3
     mov dx,ds:Ac0.AcCmdIo
     in al,dx
     and al,3
-    cmp al,1
-    je saoRunning
-;
-    and al,NOT 7
-    or al,1
     out dx,al
-
-saoRunning:
-    WaitForSignal
-    mov al,ds:Ac0.AcIrqStatus
-    test al,1
-    jz saoRunning
-;
-    mov ds:Ac0.AcIrqStatus,0
+    and ds:Ac0.AcFlags,NOT AC_FLAG_RUNNING
             
 saoDone:            
     popad

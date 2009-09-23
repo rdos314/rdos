@@ -69,7 +69,7 @@ public:
 #
 ##########################################################################*/
 TQuizExp2::TQuizExp2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15)
-  : TQuizFinal(160, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
+  : TQuizFinal(172, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
 	FDataFile(FileName)
 {
 	DefineCross(32, QuizFI);
@@ -137,7 +137,7 @@ int TQuizExp2::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizExp2::GetQuizN()
 {
-	return 160;
+	return 172;
 }
 
 /*##########################################################################
@@ -383,6 +383,19 @@ void TQuizExp2::SetupTexts()
   Quiz[158].MyGroup = GROUP_NT_SENSORY;
   Quiz[159].MyGroup = GROUP_ENVIRONMENT;
 
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_MIXED;
+
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you focus on one interest at a time and become an expert on that subject?";
   Quiz[2].Text = "Do you or others think that you have unconventional ways of solving problems?";
@@ -544,6 +557,21 @@ void TQuizExp2::SetupTexts()
   Quiz[157].Text = "Do you have a good sense for what is the right thing to do socially?";
   Quiz[158].Text = "Do you find it easy to estimate the age of people?";
   Quiz[159].Text = "Are you gracious about criticism, correction and direction?";
+
+  Quiz[160].Text = "As a teenager, did you find it difficult to figure out how to behave in various situations?";
+  Quiz[161].Text = "Do others often misunderstand you when you act naturally?";
+  Quiz[162].Text = "As a teenager, were you usually unaware of social rules & boundaries unless they were clearly spelled out?";
+  Quiz[163].Text = "Can you quickly and naturally work out people's intentions in conversations?";
+  Quiz[164].Text = "Do you tend to say things that are considered socially inappropriate when you are tired, frustrated or when you act naturally?";
+  Quiz[165].Text = "Are you naturally good at returning social courtesies and gestures?";
+  Quiz[166].Text = "As a teenager, did you often talk about your special interests whether others seemed to be interested or not?";
+  Quiz[167].Text = "Do you instinctively know when you are expected to offer an apology?";
+  Quiz[168].Text = "In a conversation, can you quickly pick up if someone says one thing but means another?";
+  Quiz[169].Text = "Are you naturally good at interpreting facial expressions?";
+  Quiz[170].Text = "Are you naturally so honest and sincere yourself that you assume everyone should be?";
+  Quiz[171].Text = "Do you think a long-term relationship should start with sex?";
+
+
 }
 
 /*##################  TQuizExp2::LoadReferers ##########################
@@ -939,6 +967,20 @@ void TQuizExp2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Q
     DefineCross(QuizF15, 157, 147);
     DefineCross(QuizF15, 158, 148);
     DefineCross(QuizF15, 159, 149);
+
+	DefineGlobalId(160, 1436);
+	DefineGlobalId(161, 1437);
+	DefineGlobalId(162, 1438);
+	DefineGlobalId(163, 1439);
+	DefineGlobalId(164, 1440);
+	DefineGlobalId(165, 1441);
+	DefineGlobalId(166, 1442);
+	DefineGlobalId(167, 1443);
+	DefineGlobalId(168, 1444);
+	DefineGlobalId(169, 1445);
+	DefineGlobalId(170, 1446);
+	DefineGlobalId(171, 1447);
+
 }
 
 /*##########################################################################

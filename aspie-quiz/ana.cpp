@@ -92,6 +92,8 @@
 //#define SWEDISH     1
 #define ENGLISH       1
 
+#define ANCESTRY_ALL            0
+
 #define ANCESTRY_CAUCASIAN      1
 #define ANCESTRY_ASIAN          2
 #define ANCESTRY_AMERIND        3
@@ -234,9 +236,13 @@ void ExportAncestry(const char *filename, int Ancestry)
 			 use = FALSE;
 			 switch (Ancestry)
 			 {
-				  case ANCESTRY_CAUCASIAN:
-					 if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
-						 use = TRUE;
+			        case ANCESTRY_ALL:
+			            use = TRUE;
+			            break;
+			    
+				    case ANCESTRY_CAUCASIAN:
+					    if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
+					   	    use = TRUE;
 						 break;
 
 					case ANCESTRY_ASIAN:
@@ -460,6 +466,7 @@ int main(int argc, char **argv)
 
 	Quiz[36]->WritePartner("eval\\partner.htm");
 
+	 ExportAncestry("pca\\allf.dat", ANCESTRY_ALL);
 	 ExportAncestry("pca\\cauc.dat", ANCESTRY_CAUCASIAN);
 	 ExportAncestry("pca\\asian.dat", ANCESTRY_ASIAN);
 	 ExportAncestry("pca\\amerind.dat", ANCESTRY_AMERIND);
@@ -1736,7 +1743,6 @@ int main(int argc, char **argv)
 	 Quiz[44]->WriteRetest("eval\\retestf12.htm");
 	 Quiz[45]->WriteRetest("eval\\retestf13.htm");
 	 Quiz[46]->WriteRetest("eval\\retestf14.htm");
-	 Quiz[47]->WriteRetest("eval\\retestf15.htm");
 	 Quiz[48]->WriteRetest("eval\\retestge.htm");
 	 Quiz[48]->WriteVersionRetest("eval\\vervar.htm");
 
