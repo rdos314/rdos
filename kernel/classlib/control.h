@@ -46,6 +46,8 @@ public:
 	TControl(TControl *Control, int xmin, int ymin, int width, int height);
     virtual ~TControl();
 
+    virtual void Set(const char *IniName, const char *IniSection);
+
     void Resize(int xsize, int ysize);
     void Move(int xstart, int ystart);
     

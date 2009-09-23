@@ -28,6 +28,7 @@
 #include "rdos.h"
 
 #include "control.h"
+#include "ini.h"
 
 #define     STACK_SIZE  0x1000
 
@@ -488,7 +489,87 @@ void TControl::Delete(TControl *control)
     }
 
     Unprotect();
-}    
+}        
+
+/*##########################################################################
+#
+#   Name       : TControl::Set
+#
+#   Purpose....: Set control parameters from ini-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    char str[256];
+    int StartX, StartY;
+    int SizeX, SizeY;
+    int SizeChanged;
+    int PosChanged;
+
+    StartX = FXMin;
+    StartY = FYMin;
+    SizeX = FWidth;
+    SizeY = FHeight;
+
+    SizeChanged = FALSE;
+    PosChanged = FALSE;
+
+    Ini.GotoSection(IniSection);
+
+    if (Ini.ReadVar("Start.X", str, 255))
+    {
+        StartX = atoi(str);
+        PosChanged = TRUE;
+    }
+
+    if (Ini.ReadVar("Start.Y", str, 255))
+    {
+        StartY = atoi(str);
+        PosChanged = TRUE;
+    }
+
+    if (Ini.ReadVar("Size.X", str, 255))
+    {
+        SizeX = atoi(str);
+        SizeChanged = TRUE;
+    }
+
+    if (Ini.ReadVar("Size.Y", str, 255))
+    {
+        SizeY = atoi(str);
+        SizeChanged = TRUE;
+    }
+
+
+    if (SizeChanged)
+        Resize(SizeX, SizeY);
+
+    if (PosChanged)
+    	Move(StartX, StartY);
+
+
+    if (Ini.ReadVar("Visible", str, 255))
+    {
+        if (atoi(str))
+            Show();
+        else
+            Hide();
+    }
+
+    if (Ini.ReadVar("Enabled", str, 255))
+    {
+        if (atoi(str))
+            Enable();
+        else
+            Disable();
+    }
+}
+    
 
 /*##########################################################################
 #

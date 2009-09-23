@@ -59,24 +59,6 @@ TLabelFactory::TLabelFactory()
 
 /*##########################################################################
 #
-#   Name       : TLabelFactory::TLabelFactory
-#
-#   Purpose....: Button factory constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TLabelFactory::TLabelFactory(const char *IniFile, const char *IniSection)
-  : TPanelFactory(IniFile, IniSection)
-{
-    Init();
-    LoadSettings(IniFile, IniSection);
-}
-
-/*##########################################################################
-#
 #   Name       : TLabelFactory::~TLabelFactory
 #
 #   Purpose....: Button factory destructor
@@ -120,7 +102,7 @@ void TLabelFactory::Init()
     
 /*##########################################################################
 #
-#   Name       : TLabelFactory::LoadSettings
+#   Name       : TLabelFactory::Set
 #
 #   Purpose....: Load settings from ini-file
 #
@@ -129,7 +111,7 @@ void TLabelFactory::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TLabelFactory::LoadSettings(const char *IniName, const char *IniSection)
+void TLabelFactory::Set(const char *IniName, const char *IniSection)
 {
     TIniFile Ini(IniName);
     char str[256];
@@ -193,6 +175,8 @@ void TLabelFactory::LoadSettings(const char *IniName, const char *IniSection)
     
     if (Ini.ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
+
+    TPanelFactory::Set(IniName, IniSection);
 }
 
 /*##########################################################################
@@ -524,50 +508,6 @@ TLabelControl *TLabelFactory::Create(TControl *control, int xstart, int ystart, 
 
 /*##########################################################################
 #
-#   Name       : TLabelFactory::Create
-#
-#   Purpose....: Create label control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TLabelControl *TLabelFactory::Create(TControlThread *dev)
-{
-    TLabelControl *label;
-
-    label = new TLabelControl(dev, FCrStartX, FCrStartY, FCrSizeX, FCrSizeY);
-
-    SetDefault(label, FCrStartX, FCrStartY, FCrSizeX, FCrSizeY);
-
-    return label;        
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelFactory::Create
-#
-#   Purpose....: Create label control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TLabelControl *TLabelFactory::Create(TControl *control)
-{
-	TLabelControl *label;
-
-	label = new TLabelControl(control, FCrStartX, FCrStartY, FCrSizeX, FCrSizeY);
-
-	SetDefault(label, FCrStartX, FCrStartY, FCrSizeX, FCrSizeY);
-
-	return label;
-}
-
-/*##########################################################################
-#
 #   Name       : TLabelFactory::CreatePanel
 #
 #   Purpose....: Create panel control
@@ -600,38 +540,6 @@ TPanelControl *TLabelFactory::CreatePanel(TControl *control, int xstart, int yst
 
 /*##########################################################################
 #
-#   Name       : TLabelFactory::CreatePanel
-#
-#   Purpose....: Create panel control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPanelControl *TLabelFactory::CreatePanel(TControlThread *dev)
-{
-    return Create(dev);
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelFactory::CreatePanel
-#
-#   Purpose....: Create panel control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPanelControl *TLabelFactory::CreatePanel(TControl *control)
-{
-    return Create(control);
-}
-
-/*##########################################################################
-#
 #   Name       : TLabelFactory::CreateLabel
 #
 #   Purpose....: Create label control
@@ -660,38 +568,6 @@ TLabelControl *TLabelFactory::CreateLabel(TControlThread *dev, int xstart, int y
 TLabelControl *TLabelFactory::CreateLabel(TControl *control, int xstart, int ystart, int xsize, int ysize)
 {
     return Create(control, xstart, ystart, xsize, ysize);
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelFactory::CreateLabel
-#
-#   Purpose....: Create label control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TLabelControl *TLabelFactory::CreateLabel(TControlThread *dev)
-{
-    return Create(dev);
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelFactory::CreateLabel
-#
-#   Purpose....: Create label control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TLabelControl *TLabelFactory::CreateLabel(TControl *control)
-{
-    return Create(control);
 }
     
 /*##########################################################################
@@ -733,44 +609,6 @@ TLabelControl::TLabelControl(TControl *control, int xstart, int ystart, int xsiz
 
     Resize(xsize, ysize);
     Move(xstart, ystart);
-    Show();
-}
-    
-/*##########################################################################
-#
-#   Name       : TLabelControl::TLabelControl
-#
-#   Purpose....: Label control constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TLabelControl::TLabelControl(TControlThread *dev, const char *IniName, const char *IniSection)
- : TPanelControl(dev, IniName, IniSection)
-{
-    Init();
-    LoadSettings(IniName, IniSection);
-    Show();
-}
-
-/*##########################################################################
-#
-#   Name       : TLabelControl::TLabelControl
-#
-#   Purpose....: Label control constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TLabelControl::TLabelControl(TControl *control, const char *IniName, const char *IniSection)
- : TPanelControl(control, IniName, IniSection)
-{
-    Init();
-    LoadSettings(IniName, IniSection);
     Show();
 }
     
@@ -861,7 +699,7 @@ void TLabelControl::Init()
     
 /*##########################################################################
 #
-#   Name       : TLabelControl::LoadSettings
+#   Name       : TLabelControl::Set
 #
 #   Purpose....: Load settings from ini-file
 #
@@ -870,7 +708,7 @@ void TLabelControl::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TLabelControl::LoadSettings(const char *IniName, const char *IniSection)
+void TLabelControl::Set(const char *IniName, const char *IniSection)
 {
     TIniFile Ini(IniName);
     char str[256];
@@ -934,6 +772,8 @@ void TLabelControl::LoadSettings(const char *IniName, const char *IniSection)
     
     if (Ini.ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
+
+    TPanelControl::Set(IniName, IniSection);
 }
 
 /*##########################################################################

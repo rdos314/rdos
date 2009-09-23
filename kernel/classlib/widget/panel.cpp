@@ -51,23 +51,6 @@ TPanelFactory::TPanelFactory()
 
 /*##########################################################################
 #
-#   Name       : TPanelFactory::TPanelFactory
-#
-#   Purpose....: Button factory constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPanelFactory::TPanelFactory(const char *IniName, const char *IniSection)
-{
-    Init();
-    LoadSettings(IniName, IniSection);
-}
-
-/*##########################################################################
-#
 #   Name       : TPanelFactory::~TPanelFactory
 #
 #   Purpose....: Button factory destructor
@@ -114,44 +97,26 @@ void TPanelFactory::Init()
     FLowerWidth = 2;
     FLeftWidth = 2;
     FRightWidth = 2;
-
-    FCrStartX = 0;
-    FCrStartY = 0;
-    FCrSizeX = 0;
-    FCrSizeY = 0;
-
 }
 
 /*##########################################################################
 #
-#   Name       : TPanelFactory::LoadSettings
+#   Name       : TPanelFactory::Set
 #
-#   Purpose....: Load control settings from Ini-file section
+#   Purpose....: Set control settings from Ini-file section
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TPanelFactory::LoadSettings(const char *IniName, const char *IniSection)
+void TPanelFactory::Set(const char *IniName, const char *IniSection)
 {
     TIniFile Ini(IniName);
     char str[256];
+    int HasWidth;
 
     Ini.GotoSection(IniSection);
-
-    if (Ini.ReadVar("Start.X", str, 255))
-        FCrStartX = atoi(str);
-
-    if (Ini.ReadVar("Start.Y", str, 255))
-        FCrStartY = atoi(str);
-
-    if (Ini.ReadVar("Size.X", str, 255))
-        FCrSizeX = atoi(str);
-
-    if (Ini.ReadVar("Size.Y", str, 255))
-        FCrSizeY = atoi(str);
-
 
     if (Ini.ReadVar("BackColor.R", str, 255))
         FBackR = atoi(str);
@@ -190,31 +155,40 @@ void TPanelFactory::LoadSettings(const char *IniName, const char *IniSection)
         FDisabledB = atoi(str);
         FDisabledColorUsed = TRUE;
     }
-    
-    if (Ini.ReadVar("Width", str, 255))
-        FLowerWidth = FUpperWidth = FLeftWidth = FRightWidth = atoi(str);
-        
-    
-    if (Ini.ReadVar("UpperWidth", str, 255))
+
+    HasWidth = Ini.ReadVar("Width", str, 0);
+
+    if (!HasWidth)
+        HasWidth = Ini.ReadVar("UpperWidth", str, 0);
+
+    if (!HasWidth)
+        HasWidth = Ini.ReadVar("LowerWidth", str, 0);
+
+    if (!HasWidth)
+        HasWidth = Ini.ReadVar("LeftWidth", str, 0);
+
+    if (!HasWidth)
+        HasWidth = Ini.ReadVar("RightWidth", str, 0);
+
+    if (HasWidth)
     {
-        FUpperWidth = atoi(str);
+        FUpperWidth = 0;
         FLowerWidth = 0;
         FLeftWidth = 0;
         FRightWidth = 0;
     }
     
-    if (Ini.ReadVar("LowerWidth", str, 255))
-    {
+    if (Ini.ReadVar("Width", str, 255))
+        FLowerWidth = FUpperWidth = FLeftWidth = FRightWidth = atoi(str);
+            
+    if (Ini.ReadVar("UpperWidth", str, 255))
         FUpperWidth = atoi(str);
-        FLeftWidth = 0;
-        FRightWidth = 0;
-    }
+    
+    if (Ini.ReadVar("LowerWidth", str, 255))
+        FUpperWidth = atoi(str);
     
     if (Ini.ReadVar("LeftWidth", str, 255))
-    {
         FLeftWidth = atoi(str);
-        FRightWidth = 0;
-    }
         
     if (Ini.ReadVar("RightWidth", str, 255))
         FRightWidth = atoi(str);
@@ -494,50 +468,6 @@ TPanelControl *TPanelFactory::Create(TControl *control, int xstart, int ystart, 
 
 /*##########################################################################
 #
-#   Name       : TPanelFactory::Create
-#
-#   Purpose....: Create panel control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPanelControl *TPanelFactory::Create(TControlThread *dev)
-{
-    TPanelControl *panel;
-
-    panel = new TPanelControl(dev, FCrStartX, FCrStartY, FCrSizeX, FCrSizeY);
-
-    SetDefault(panel, FCrStartX, FCrStartY, FCrSizeX, FCrSizeY);
-
-    return panel;        
-}
-
-/*##########################################################################
-#
-#   Name       : TPanelFactory::Create
-#
-#   Purpose....: Create button control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPanelControl *TPanelFactory::Create(TControl *control)
-{
-    TPanelControl *panel;
-
-    panel = new TPanelControl(control, FCrStartX, FCrStartY, FCrSizeX, FCrSizeY);
-
-    SetDefault(panel, FCrStartX, FCrStartY, FCrSizeX, FCrSizeY);
-
-    return panel;        
-}
-
-/*##########################################################################
-#
 #   Name       : TPanelFactory::CreatePanel
 #
 #   Purpose....: Create panel control
@@ -566,38 +496,6 @@ TPanelControl *TPanelFactory::CreatePanel(TControlThread *dev, int xstart, int y
 TPanelControl *TPanelFactory::CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize)
 {
     return Create(control, xstart, ystart, xsize, ysize);
-}
-
-/*##########################################################################
-#
-#   Name       : TPanelFactory::CreatePanel
-#
-#   Purpose....: Create panel control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPanelControl *TPanelFactory::CreatePanel(TControlThread *dev)
-{
-    return Create(dev);
-}
-
-/*##########################################################################
-#
-#   Name       : TPanelFactory::CreatePanel
-#
-#   Purpose....: Create button control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPanelControl *TPanelFactory::CreatePanel(TControl *control)
-{
-    return Create(control);
 }
     
 /*##########################################################################
@@ -677,46 +575,6 @@ TPanelControl::TPanelControl(TControl *control, int xstart, int ystart, int xsiz
 //	Show();
 	Enable();
 }
-    
-/*##########################################################################
-#
-#   Name       : TPanelControl::TPanelControl
-#
-#   Purpose....: Panel control constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPanelControl::TPanelControl(TControlThread *dev, const char *IniName, const char *IniSection)
- : TControl(dev)
-{
-    Init(2);
-
-    LoadSettings(IniName, IniSection);
-	Enable();
-}
-
-/*##########################################################################
-#
-#   Name       : TPanelControl::TPanelControl
-#
-#   Purpose....: Panel control constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPanelControl::TPanelControl(TControl *control, const char *IniName, const char *IniSection)
- : TControl(control)
-{
-    Init(2);
-
-    LoadSettings(IniName, IniSection);
-	Enable();
-}
 
 /*##########################################################################
 #
@@ -770,40 +628,23 @@ void TPanelControl::Init(int border)
 
 /*##########################################################################
 #
-#   Name       : TPanelControl::LoadSettings
+#   Name       : TPanelControl::Set
 #
-#   Purpose....: Load control settings from Ini-file section
+#   Purpose....: Set control settings from Ini-file section
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TPanelControl::LoadSettings(const char *IniName, const char *IniSection)
+void TPanelControl::Set(const char *IniName, const char *IniSection)
 {
     TIniFile Ini(IniName);
     char str[256];
-    int x, y;
-    int StartX, StartY;
-    int SizeX, SizeY;
-
-    GetPos(&StartX, &StartY);
-    GetSize(&SizeX, &SizeY);
+    int val;
+    int HasWidth;
 
     Ini.GotoSection(IniSection);
-
-    if (Ini.ReadVar("Start.X", str, 255))
-        StartX = atoi(str);
-
-    if (Ini.ReadVar("Start.Y", str, 255))
-        StartY = atoi(str);
-
-    if (Ini.ReadVar("Size.X", str, 255))
-        SizeX = atoi(str);
-
-    if (Ini.ReadVar("Size.Y", str, 255))
-        SizeY = atoi(str);
-
 
     if (Ini.ReadVar("BackColor.R", str, 255))
         FBackR = atoi(str);
@@ -842,61 +683,44 @@ void TPanelControl::LoadSettings(const char *IniName, const char *IniSection)
         FDisabledColorUsed = TRUE;
 	}
 
-    
-    if (Ini.ReadVar("Width", str, 255))
-        FLowerWidth = FUpperWidth = FLeftWidth = FRightWidth = atoi(str);
-        
-    
-    if (Ini.ReadVar("UpperWidth", str, 255))
+    HasWidth = Ini.ReadVar("Width", str, 0);
+
+    if (!HasWidth)
+        HasWidth = Ini.ReadVar("UpperWidth", str, 0);
+
+    if (!HasWidth)
+        HasWidth = Ini.ReadVar("LowerWidth", str, 0);
+
+    if (!HasWidth)
+        HasWidth = Ini.ReadVar("LeftWidth", str, 0);
+
+    if (!HasWidth)
+        HasWidth = Ini.ReadVar("RightWidth", str, 0);
+
+    if (HasWidth)
     {
-        FUpperWidth = atoi(str);
+        FUpperWidth = 0;
         FLowerWidth = 0;
         FLeftWidth = 0;
         FRightWidth = 0;
     }
     
-    if (Ini.ReadVar("LowerWidth", str, 255))
-    {
+    if (Ini.ReadVar("Width", str, 255))
+        FLowerWidth = FUpperWidth = FLeftWidth = FRightWidth = atoi(str);
+            
+    if (Ini.ReadVar("UpperWidth", str, 255))
         FUpperWidth = atoi(str);
-        FLeftWidth = 0;
-        FRightWidth = 0;
-    }
+    
+    if (Ini.ReadVar("LowerWidth", str, 255))
+        FUpperWidth = atoi(str);
     
     if (Ini.ReadVar("LeftWidth", str, 255))
-    {
         FLeftWidth = atoi(str);
-        FRightWidth = 0;
-    }
         
     if (Ini.ReadVar("RightWidth", str, 255))
         FRightWidth = atoi(str);
 
-	GetSize(&x, &y);
-
-    if (SizeX != x || SizeY != y)
-        Resize(SizeX, SizeY);
-
-    GetPos(&x, &y);
-
-    if (StartX != x || StartY != y)
-    	Move(StartX, StartY);
-    
-}
-
-/*##########################################################################
-#
-#   Name       : TPanelControl::Set
-#
-#   Purpose....: Set attributes from ini-file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPanelControl::Set(const char *IniName, const char *IniSection)
-{
-    LoadSettings(IniName, IniSection);
+    TControl::Set(IniName, IniSection);
 }
 
 /*##########################################################################

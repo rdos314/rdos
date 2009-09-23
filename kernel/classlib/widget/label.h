@@ -40,8 +40,9 @@ class TLabelFactory : public TPanelFactory
 {
 public:
     TLabelFactory();
-    TLabelFactory(const char *IniName, const char *IniSection);
     ~TLabelFactory();
+
+    virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);
     void SetSpace(int xspace, int yspace);
@@ -61,24 +62,14 @@ public:
 	TLabelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
 	TLabelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
 
-	TLabelControl *Create(TControlThread *dev);
-	TLabelControl *Create(TControl *control);
-
 	virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
 	virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
 
-	virtual TPanelControl *CreatePanel(TControlThread *dev);
-	virtual TPanelControl *CreatePanel(TControl *control);
-
 	virtual TLabelControl *CreateLabel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
 	virtual TLabelControl *CreateLabel(TControl *control, int xstart, int ystart, int xsize, int ysize);
-
-	virtual TLabelControl *CreateLabel(TControlThread *dev);
-	virtual TLabelControl *CreateLabel(TControl *control);
 		
 protected:
     void Init();
-    virtual void LoadSettings(const char *IniName, const char *IniSection);
     void SetDefault(TLabelControl *label, int xstart, int ystart, int xsize, int ysize);
 
     int FHorAlign;
@@ -99,9 +90,9 @@ class TLabelControl : public TPanelControl
 public:
     TLabelControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
     TLabelControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
-    TLabelControl(TControlThread *dev, const char *IniName, const char *IniSection);
-    TLabelControl(TControl *control, const char *IniName, const char *IniSection);
     ~TLabelControl();
+
+    virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);
     void SetFont(TFont *font);
@@ -132,7 +123,6 @@ protected:
 
 private:
     void Init();
-    void LoadSettings(const char *IniName, const char *IniSection);
 
     int FHorAlign;
     int FVerAlign;
