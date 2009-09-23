@@ -100,6 +100,8 @@ class TPanelControl : public TControl
 public:
     TPanelControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
     TPanelControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
+    TPanelControl(TControlThread *dev);
+    TPanelControl(TControl *control);
     ~TPanelControl();
 
     virtual void Set(const char *IniName, const char *IniSection);
@@ -123,9 +125,6 @@ public:
     void SetBackColor(TGraphicDevice *dev);
 
 protected:
-    TPanelControl(TControlThread *dev);
-    TPanelControl(TControl *control);
-
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
 

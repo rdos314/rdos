@@ -156,19 +156,19 @@ void TPanelFactory::Set(const char *IniName, const char *IniSection)
         FDisabledColorUsed = TRUE;
     }
 
-    HasWidth = Ini.ReadVar("Width", str, 0);
+    HasWidth = Ini.ReadVar("Width", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("UpperWidth", str, 0);
+        HasWidth = Ini.ReadVar("UpperWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("LowerWidth", str, 0);
+        HasWidth = Ini.ReadVar("LowerWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("LeftWidth", str, 0);
+        HasWidth = Ini.ReadVar("LeftWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("RightWidth", str, 0);
+        HasWidth = Ini.ReadVar("RightWidth", str, 255);
 
     if (HasWidth)
     {
@@ -185,7 +185,7 @@ void TPanelFactory::Set(const char *IniName, const char *IniSection)
         FUpperWidth = atoi(str);
     
     if (Ini.ReadVar("LowerWidth", str, 255))
-        FUpperWidth = atoi(str);
+        FLowerWidth = atoi(str);
     
     if (Ini.ReadVar("LeftWidth", str, 255))
         FLeftWidth = atoi(str);
@@ -683,19 +683,19 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
         FDisabledColorUsed = TRUE;
 	}
 
-    HasWidth = Ini.ReadVar("Width", str, 0);
+    HasWidth = Ini.ReadVar("Width", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("UpperWidth", str, 0);
+        HasWidth = Ini.ReadVar("UpperWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("LowerWidth", str, 0);
+        HasWidth = Ini.ReadVar("LowerWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("LeftWidth", str, 0);
+        HasWidth = Ini.ReadVar("LeftWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("RightWidth", str, 0);
+        HasWidth = Ini.ReadVar("RightWidth", str, 255);
 
     if (HasWidth)
     {
@@ -712,7 +712,7 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
         FUpperWidth = atoi(str);
     
     if (Ini.ReadVar("LowerWidth", str, 255))
-        FUpperWidth = atoi(str);
+        FLowerWidth = atoi(str);
     
     if (Ini.ReadVar("LeftWidth", str, 255))
         FLeftWidth = atoi(str);
