@@ -220,6 +220,11 @@ void TQuizExp2::SetupTexts()
   Quiz[157].Reverse = TRUE;
   Quiz[158].Reverse = TRUE;
   Quiz[159].Reverse = TRUE;
+  Quiz[163].Reverse = TRUE;
+  Quiz[165].Reverse = TRUE;
+  Quiz[167].Reverse = TRUE;
+  Quiz[168].Reverse = TRUE;
+  Quiz[169].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -383,17 +388,17 @@ void TQuizExp2::SetupTexts()
   Quiz[158].MyGroup = GROUP_NT_SENSORY;
   Quiz[159].MyGroup = GROUP_ENVIRONMENT;
 
-  Quiz[160].MyGroup = GROUP_MIXED;
-  Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_MIXED;
-  Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_MIXED;
-  Quiz[165].MyGroup = GROUP_MIXED;
-  Quiz[166].MyGroup = GROUP_MIXED;
-  Quiz[167].MyGroup = GROUP_MIXED;
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
-  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_NT_NVC;
+  Quiz[161].MyGroup = GROUP_NT_NVC;
+  Quiz[162].MyGroup = GROUP_NT_NVC;
+  Quiz[163].MyGroup = GROUP_NT_NVC;
+  Quiz[164].MyGroup = GROUP_NT_NVC;
+  Quiz[165].MyGroup = GROUP_NT_NVC;
+  Quiz[166].MyGroup = GROUP_NT_NVC;
+  Quiz[167].MyGroup = GROUP_NT_NVC;
+  Quiz[168].MyGroup = GROUP_NT_NVC;
+  Quiz[169].MyGroup = GROUP_NT_NVC;
+  Quiz[170].MyGroup = GROUP_NT_NVC;
   Quiz[171].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";

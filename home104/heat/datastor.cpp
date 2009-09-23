@@ -330,6 +330,9 @@ void TDataStore::Execute()
 
 		if (hour != FHour || min != FMin)
 		{
+		    FYear = year;
+		    FMonth = month;
+		    FDay = day;
 			FHour = hour;
 			FMin = min;
 
