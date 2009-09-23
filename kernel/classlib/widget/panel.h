@@ -38,6 +38,7 @@ class TPanelFactory
 {
 public:
     TPanelFactory();
+    TPanelFactory(const char *IniName, const char *IniSection);
     ~TPanelFactory();
 
     void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
@@ -54,19 +55,27 @@ public:
     void SetBorderColor(int r, int g, int b);
     void SetBorderTransparent();
 
-        TPanelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-        TPanelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
+    TPanelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+    TPanelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
 
-        virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-        virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
+    TPanelControl *Create(TControlThread *dev);
+    TPanelControl *Create(TControl *control);
+
+    virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+    virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
+
+    virtual TPanelControl *CreatePanel(TControlThread *dev);
+    virtual TPanelControl *CreatePanel(TControl *control);
         
 protected:
+    void Init();
+    void LoadSettings(const char *IniName, const char *IniSection);
     void SetDefault(TPanelControl *panel, int xstart, int ystart, int xsize, int ysize);
 
-        int FUpperWidth;
-        int FLowerWidth;
-        int FLeftWidth;
-        int FRightWidth;
+    int FUpperWidth;
+    int FLowerWidth;
+    int FLeftWidth;
+    int FRightWidth;
     
     int FBackR;
     int FBackG;
@@ -74,11 +83,11 @@ protected:
 
     int FBackTrans;
 
-        int FBorderR;
-        int FBorderG;
-        int FBorderB;
+    int FBorderR;
+    int FBorderG;
+    int FBorderB;
 
-        int FBorderTrans;
+    int FBorderTrans;
 
     TBitmapGraphicDevice *FBackground;
 
@@ -90,6 +99,11 @@ protected:
     int FDisabledR;
     int FDisabledG;
     int FDisabledB;
+
+    int FCrStartX;
+    int FCrStartY;
+    int FCrSizeX;
+    int FCrSizeY;
 };
 
 class TPanelControl : public TControl
@@ -97,6 +111,8 @@ class TPanelControl : public TControl
 public:
     TPanelControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
     TPanelControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
+    TPanelControl(TControlThread *dev, const char *IniName, const char *IniSection);
+    TPanelControl(TControl *control, const char *IniName, const char *IniSection);
     ~TPanelControl();
 
     void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
@@ -112,6 +128,8 @@ public:
     void SetBorderWidth(int width);
     void SetBorderColor(int r, int g, int b);
     void SetBorderTransparent();
+
+    void Set(const char *IniName, const char *IniSection);
 
     virtual int GetMinHeight();
 
@@ -130,11 +148,12 @@ protected:
 
 private:
     void Init(int border);
+    virtual void LoadSettings(const char *IniName, const char *IniSection);
 
-        int FUpperWidth;
-        int FLowerWidth;
-        int FLeftWidth;
-        int FRightWidth;
+    int FUpperWidth;
+    int FLowerWidth;
+    int FLeftWidth;
+    int FRightWidth;
     
     int FBackR;
     int FBackG;
