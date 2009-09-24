@@ -800,6 +800,132 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
 
     return button;        
 }
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::Create
+#
+#   Purpose....: Create button control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, char ch, const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    char str[256];
+    int size;
+    TBitmapGraphicDevice *Up;
+    TBitmapGraphicDevice *Down;
+    TBitmapGraphicDevice *Disabled;
+    TButtonControl *button;
+    int x = 0;
+    int y = 0;
+
+    Ini.GotoSection(IniSection);
+
+    if (Ini.ReadVar("Width", str, 255))
+        FWidth = atoi(str);
+
+
+    if (Ini.ReadVar("Font.Size", str, 255))
+    {    
+        size = atoi(str);
+
+        if (size)
+		{
+			 if (FFont)
+				delete FFont;
+
+			FFont = new TFont(size);
+		}
+	}
+
+    if (Ini.ReadVar("Start.X", str, 255))
+        x = atoi(str);
+
+    if (Ini.ReadVar("Start.Y", str, 255))
+        y = atoi(str);
+
+    CreateFont();
+
+    Up = CreateButton(FUp, text);
+    Down = CreateButton(FDown, text);
+    Disabled = CreateButton(FDisabled, text);
+
+    button = new TButtonControl(dev, Up, Down, Disabled, ch, x, y);
+
+    delete Up;
+    delete Down;
+    delete Disabled;
+
+    return button;        
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::Create
+#
+#   Purpose....: Create button control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char ch, const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    char str[256];
+    int size;
+    TBitmapGraphicDevice *Up;
+    TBitmapGraphicDevice *Down;
+    TBitmapGraphicDevice *Disabled;
+    TButtonControl *button;
+    int x = 0;
+    int y = 0;
+
+    Ini.GotoSection(IniSection);
+
+    if (Ini.ReadVar("Width", str, 255))
+        FWidth = atoi(str);
+
+
+    if (Ini.ReadVar("Font.Size", str, 255))
+    {    
+        size = atoi(str);
+
+        if (size)
+		{
+			 if (FFont)
+				delete FFont;
+
+			FFont = new TFont(size);
+		}
+	}
+
+    if (Ini.ReadVar("Start.X", str, 255))
+        x = atoi(str);
+
+    if (Ini.ReadVar("Start.Y", str, 255))
+        y = atoi(str);
+
+    CreateFont();
+
+    Up = CreateButton(FUp, text);
+    Down = CreateButton(FDown, text);
+    Disabled = CreateButton(FDisabled, text);
+
+    button = new TButtonControl(control, Up, Down, Disabled, ch, x, y);
+
+    delete Up;
+    delete Down;
+    delete Disabled;
+
+    return button;        
+}
     
 /*##########################################################################
 #
