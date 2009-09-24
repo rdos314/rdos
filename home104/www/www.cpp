@@ -33,19 +33,93 @@
 #include <time.h>
 #include <math.h>
 
+#include "socket.h"
 #include "datastor.h"
+#include "cotdata.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
 
 
+/*##########################################################################
+#
+#   Name       : HandleRealData
+#
+#   Purpose....: Handle realtime data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void HandleRealData(TDeviceMsg *doc)
+{
+    unsigned long msb, lsb;
+	TDeviceTag *header;
+	int year, month, day, hour;
+	int min, sec, ms, us;
+	TFile *file;
+	int size;
+	char *msg;
+
+	header = doc->GetTag(LOG_TAG_HEADER);
+	if (header)
+	{
+        msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
+		lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
+		RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+
+		printf("%04d-%02d-%02d %02d.%02d\r\n", year, month, day, hour, min);
+    }
+}
+
 void cdecl main()
 {
-    TDataStore *DataStore;
+	 TSocket *socket;
+	 int size;
+	 int count;
+	 char *msg;
+	 TDeviceMsg *doc;
 
-    DataStore = new TDataStore("e:\\data", "Data store", 0x2800A8C0, 600);
+	 TDataStore *DataStore;
 
-    for (;;)
-        RdosWaitMilli(1000);
+	 DataStore = new TDataStore("e:\\data", "Data store", 0x2800A8C0, 600);
 
+	 for (;;)
+	 {
+		  socket = new TSocket(0x2800A8C0, 601, 6000, 0x4000);
+		  socket->WaitForConnection(6000);
+
+		  while (socket->IsOpen())
+		  {
+				count = socket->Read((char *)&size, 4);
+				if (count == 4)
+				{
+					 msg = new char[size];
+					 count = socket->Read(msg, size);
+
+					 if (count == size)
+					 {
+						  doc = new TDeviceMsg(MAX_MSG_SIZE);
+
+						  if (doc->Parse(COT_SIGN, msg, size))
+						  {
+								delete msg;
+								HandleRealData(doc);
+						  }
+						  else
+						  {
+								delete msg;
+								socket->Close();
+						  }
+
+						  delete doc;
+					 }
+					 else
+						  socket->Close();
+				 }
+		  }
+		  delete socket;
+	 }
 }
