@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2006, Leif Ekblad
+# Copyright (C) 1988-2003, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,53 +20,27 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# datastor.h
-# Permanent data store class
+# cotserv.h
+# Cotex socket server class
 #
 ########################################################################*/
 
-#ifndef DATASTOR_H
-#define DATASTOR_H
+#ifndef _COTSERV_H
+#define _COTSERV_H
 
-#include "thread.h"
-#include "storlist.h"
-#include "rad.h"
-#include "ws2300.h"
-#include "circ.h"
-#include "vp.h"
+#include "str.h"
+#include "socket.h"
 #include "heatdata.h"
-#include "realserv.h"
 
-class TDataStore : public TThread
+class TCotexSocketServer : public TSocketServer
 {
 public:
-	TDataStore();
-	~TDataStore();
+    TCotexSocketServer(const char *Name, int StackSize, TSocket *Socket);
+	~TCotexSocketServer();
 
-	void Add(TRad *rad);
-    void Add(TWs2300 *ws);	
-    void Add(TCirc *circ);
-    void Add(TVp *vp);
-    
 protected:
-    void GetCurrRad(TRad *rad, TRadData *data);
-    void GetCurrData(THeatData *data);
-    void SendRealtime(TRealtimeSocketServerFactory *fact, TRadData *data);
-
-    virtual void Execute();
-
-    int FYear;
-    int FMonth;
-    int FDay;
-    int FHour;
-    int FMin;
-
-	TStorageList *FStorList;
-    TRad *FRadArr[RAD_COUNT];
-    TWs2300 *FWs;
-    TCirc *FCirc;
-	TVp *FVp;
+    void AddRadData(TRadData *data, TDeviceMsg *doc);
+    TDeviceMsg *ConvToCotex(THeatData *data);
 };
-
 
 #endif

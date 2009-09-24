@@ -276,6 +276,21 @@ void TDataStore::GetCurrData(THeatData *data)
 
 /*##########################################################################
 #
+#   Name       : TDataStore::SendRealtime
+#
+#   Purpose....: Send realtime data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDataStore::SendRealtime(TRealtimeSocketServerFactory *fact, TRadData *data)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TDataStore::Execute
 #
 #   Purpose....: Execute thread loop
@@ -300,6 +315,7 @@ void TDataStore::Execute()
 	TDiscStorage *DiscStore[4];
 	TRedundanceStorageList *redu;
 	TStorageSocketServerFactory *storfact;
+	TRealtimeSocketServerFactory *realfact;
 
 	RdosGetTime(&msb, &lsb);
 	RdosDecodeMsbTics(msb, &FYear, &FMonth, &FDay, &FHour);
@@ -321,6 +337,9 @@ void TDataStore::Execute()
 
     storfact = new TStorageSocketServerFactory(redu, 600, 10, 2048);
     storfact->StartHandler("Storage Server", 0x4000);
+
+    realfact = new TRealtimeSocketServerFactory(601, 10, 2048);
+    realfact->StartHandler("Realtime Server", 0x4000);
      
 	while (FInstalled)
 	{
@@ -338,6 +357,7 @@ void TDataStore::Execute()
 
 			GetCurrData(&CurrData);
 			FStorList->AddLast(&CurrData);
+            realfact->SendData(&CurrData);
 
         }
 

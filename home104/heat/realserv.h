@@ -20,42 +20,59 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# storserv.h
-# Storage socket server class
+# realserv.h
+# Real-time data socket server class
 #
 ########################################################################*/
 
-#ifndef _STORSERV_H
-#define _STORSERV_H
+#ifndef _REALSERV_H
+#define _REALSERV_H
 
 #include "str.h"
 #include "cotserv.h"
-#include "storlist.h"
+#include "sigdev.h"
 #include "heatdata.h"
 
-class TStorageSocketServer : public TCotexSocketServer
+class TReadtimeSocketServerFactory;
+
+class TRealtimeSocketServer : public TCotexSocketServer
 {
+friend class TRealtimeSocketServerFactory;
 public:
-    TStorageSocketServer(TStorageList *StorList, const char *Name, int StackSize, TSocket *Socket);
-	~TStorageSocketServer();
+	 TRealtimeSocketServer(TRealtimeSocketServerFactory *fact, const char *Name, int StackSize, TSocket *Socket);
+	~TRealtimeSocketServer();
 
 protected:
-    void SendCotex(THeatData *Data);
+	void SendData(THeatData *data);
+
 	virtual void HandleSocket();
 
-	TStorageList *FStorList;
+    TSignalDevice FSignal;
+    THeatData FHeatData;
+    int FNewData;
+
+    TRealtimeSocketServerFactory *FFactory;
+	TRealtimeSocketServer *FNext;	
 };
 
-class TStorageSocketServerFactory : public TSocketServerFactory
+class TRealtimeSocketServerFactory : public TSocketServerFactory
 {
+friend class TRealtimeSocketServer;
 public:
-    TStorageSocketServerFactory(TStorageList *StorList, int Port, int MaxConnections, int BufferSize);
-	~TStorageSocketServerFactory();
+    TRealtimeSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+	~TRealtimeSocketServerFactory();
 
 	virtual TSocketServer *Create(TSocket *Socket);
 
+	void SendData(THeatData *data);
+
 protected:
-	TStorageList *FStorList;
+    void InsertServer(TRealtimeSocketServer *server);
+    void RemoveServer(TRealtimeSocketServer *server);
+
+    TSection FServerSection;
+    TRealtimeSocketServer *FServerList;
+
 };
 
 #endif
