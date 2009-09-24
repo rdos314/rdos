@@ -89,36 +89,44 @@ void cdecl main()
 	 for (;;)
 	 {
 		  socket = new TSocket(0x2800A8C0, 601, 6000, 0x4000);
-		  socket->WaitForConnection(6000);
+		  socket->WaitForConnection(10000);
 
 		  while (socket->IsOpen())
 		  {
-				count = socket->Read((char *)&size, 4);
-				if (count == 4)
-				{
-					 msg = new char[size];
-					 count = socket->Read(msg, size);
+		        if (socket->WaitForChar(30000))
+		        {
+    				count = socket->Read((char *)&size, 4);
+	    			if (count == 4)
+		    		{
+			    	    msg = new char[size];
+				    	count = socket->Read(msg, size);
 
-					 if (count == size)
-					 {
-						  doc = new TDeviceMsg(MAX_MSG_SIZE);
-
-						  if (doc->Parse(COT_SIGN, msg, size))
-						  {
-								delete msg;
-								HandleRealData(doc);
-						  }
-						  else
-						  {
-								delete msg;
+    					if (count == size)
+	    				{
+		    		        doc = new TDeviceMsg(MAX_MSG_SIZE);
+    
+	    					if (doc->Parse(COT_SIGN, msg, size))
+		    				{
+			    			    delete msg;
+				    			HandleRealData(doc);
+					    	}
+						    else
+						    { 
+							    delete msg;
 								socket->Close();
-						  }
+						    }
 
-						  delete doc;
-					 }
-					 else
-						  socket->Close();
-				 }
+						    delete doc;
+       					 }
+					     else
+						    socket->Close();
+				    }
+				}
+				else
+				{
+    				socket->Push();
+					 RdosWaitMilli(250);
+    		    }
 		  }
 		  delete socket;
 	 }

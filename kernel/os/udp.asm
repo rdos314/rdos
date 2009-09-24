@@ -570,6 +570,8 @@ receive_not_cl_dhcp:
 	jmp receive_done
 
 receive_not_dhcp:
+	mov ax,es:[di].udp_dest
+	xchg al,ah
 	test ax,8000h
 	jz receive_not_query
 ;

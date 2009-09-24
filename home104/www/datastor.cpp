@@ -209,44 +209,57 @@ void TDataStore::Execute()
 	int year, month, day;
 	TDeviceMsg *doc;
 	char ch;
+	long NtpIp;
+
+	NtpIp = RdosNameToIp("ntp.lth.se");
 
     while (FInstalled)
     {
+    	RdosSyncTime(NtpIp);
+
     	socket = new TSocket(0x2800A8C0, 600, 6000, 0x4000);
 	    socket->WaitForConnection(6000);
 
     	while (socket->IsOpen())
 	    {
-            count = socket->Read((char *)&size, 4);
-    		if (count == 4)
-	    	{
-		        msg = new char[size];
-                count = socket->Read(msg, size);
+	        if (socket->WaitForChar(30000))
+	        {
+                count = socket->Read((char *)&size, 4);
+        		if (count == 4)
+	        	{
+		            msg = new char[size];
+                    count = socket->Read(msg, size);
 
-                if (count == size)
-                {
-                    doc = new TDeviceMsg(MAX_MSG_SIZE);
+                    if (count == size)
+                    {
+                        doc = new TDeviceMsg(MAX_MSG_SIZE);
 
-					if (doc->Parse(COT_SIGN, msg, size))
-					{
-						delete msg;
-						HandleMsg(doc);
+			    		if (doc->Parse(COT_SIGN, msg, size))
+				    	{
+					    	delete msg;
+						    HandleMsg(doc);
 
-						ch = 0x6;
-						socket->Write(&ch, 1);
-						socket->Push();
-					}
-					else
-					{
-						delete msg;
-						socket->Close();
-				    }
+    						ch = 0x6;
+	    					socket->Write(&ch, 1);
+		    				socket->Push();
+			    		}
+				    	else
+					    {
+						    delete msg;
+    						socket->Close();
+	    			    }
 
-					delete doc;
+		    			delete doc;
+			    	}
+				    else
+				        socket->Close();
 				}
-				else
-				    socket->Close();
 			}
+			else
+			{
+    	        socket->Push();
+    	        RdosWaitMilli(250);
+    	    }
         }
         delete socket;
 
