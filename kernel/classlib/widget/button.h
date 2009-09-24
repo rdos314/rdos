@@ -61,6 +61,8 @@ public:
     TButtonFactory();
     ~TButtonFactory();
 
+    virtual void Set(const char *IniName, const char *IniSection);
+
     void DefineUp(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
     void DefineDown(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
     void DefineDisabled(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);

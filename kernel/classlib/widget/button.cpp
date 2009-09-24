@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "button.h"
+#include "ini.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -159,6 +160,128 @@ void TButtonFactory::Delete(TButtonFactoryParam &Param)
         Param.Right = 0;
     }
 }
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::Set
+#
+#   Purpose....: Set control settings from Ini-file section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    char str[256];
+    int size;
+
+    Ini.GotoSection(IniSection);
+
+
+    if (Ini.ReadVar("Width", str, 255))
+        FWidth = atoi(str);
+
+
+    if (Ini.ReadVar("Font.Size", str, 255))
+    {    
+        size = atoi(str);
+
+        if (size)
+		{
+			 if (FFont)
+				delete FFont;
+
+			FFont = new TFont(size);
+		}
+	}
+
+
+    if (Ini.ReadVar("Up.Shift.X", str, 255))
+        FUp.ShiftX = atoi(str);
+
+    if (Ini.ReadVar("Up.Shift.Y", str, 255))
+        FUp.ShiftY = atoi(str);
+
+
+    if (Ini.ReadVar("Down.Shift.X", str, 255))
+        FDown.ShiftX = atoi(str);
+
+    if (Ini.ReadVar("Down.Shift.Y", str, 255))
+        FDown.ShiftY = atoi(str);
+
+
+    if (Ini.ReadVar("Disabled.Shift.X", str, 255))
+        FDisabled.ShiftX = atoi(str);
+
+    if (Ini.ReadVar("Disabled.Shift.Y", str, 255))
+        FDisabled.ShiftY = atoi(str);
+
+
+    if (Ini.ReadVar("Up.TextColor.R", str, 255))
+        FUp.TextR = atoi(str);
+    
+    if (Ini.ReadVar("Up.TextColor.G", str, 255))
+        FUp.TextG = atoi(str);
+
+    if (Ini.ReadVar("Up.TextColor.B", str, 255))
+        FUp.TextB = atoi(str);
+
+
+    if (Ini.ReadVar("Down.TextColor.R", str, 255))
+        FDown.TextR = atoi(str);
+    
+    if (Ini.ReadVar("Down.TextColor.G", str, 255))
+        FDown.TextG = atoi(str);
+
+    if (Ini.ReadVar("Down.TextColor.B", str, 255))
+        FDown.TextB = atoi(str);
+
+
+    if (Ini.ReadVar("Disabled.TextColor.R", str, 255))
+        FDisabled.TextR = atoi(str);
+    
+    if (Ini.ReadVar("Disabled.TextColor.G", str, 255))
+        FDisabled.TextG = atoi(str);
+
+    if (Ini.ReadVar("Disabled.TextColor.B", str, 255))
+        FDisabled.TextB = atoi(str);
+
+
+    if (Ini.ReadVar("Up.ShadowColor.R", str, 255))
+        FUp.ShadowR = atoi(str);
+    
+    if (Ini.ReadVar("Up.ShadowColor.G", str, 255))
+        FUp.ShadowG = atoi(str);
+
+    if (Ini.ReadVar("Up.ShadowColor.B", str, 255))
+        FUp.ShadowB = atoi(str);
+
+
+    if (Ini.ReadVar("Down.ShadowColor.R", str, 255))
+        FDown.ShadowR = atoi(str);
+    
+    if (Ini.ReadVar("Down.ShadowColor.G", str, 255))
+        FDown.ShadowG = atoi(str);
+
+    if (Ini.ReadVar("Down.ShadowColor.B", str, 255))
+        FDown.ShadowB = atoi(str);
+
+
+    if (Ini.ReadVar("Disabled.ShadowColor.R", str, 255))
+        FDisabled.ShadowR = atoi(str);
+    
+    if (Ini.ReadVar("Disabled.ShadowColor.G", str, 255))
+        FDisabled.ShadowG = atoi(str);
+
+    if (Ini.ReadVar("Disabled.ShadowColor.B", str, 255))
+        FDisabled.ShadowB = atoi(str);
+
+
+}
+
 
 /*##########################################################################
 #
