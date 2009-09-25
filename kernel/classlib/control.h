@@ -84,6 +84,7 @@ protected:
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
 
+    int IsRedrawEnabled();
     int IsDirty();
     void ResetDirty();
     void SetDirty();
@@ -155,6 +156,7 @@ public:
 	void (*OnRightDown)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
 
 protected:
+    int IsRedrawEnabled();
 	void Protect();
 	void Unprotect();
 

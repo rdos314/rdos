@@ -1237,6 +1237,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     int row;
     int xoffs, yoffs;
     int xdiff, ydiff;
+    int redraw;
 
     TPanelControl::Paint(dev, xmin, ymin, width, height);
     GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
@@ -1249,15 +1250,20 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     xmax = xmin + width - 1;
     ymax = ymin + height - 1;
 
-        if (IsVisible() && width > 0 && height > 0)
-        {
+    redraw = IsVisible();
+
+    if (width == 0 || height == 0)
+        redraw = FALSE;    
+    
+    if (redraw)
+    {
         dev->SetLgopNone();
         dev->SetFilledStyle();
 
         dev->SetClipRect(  xmin, ymin,
-                                   xmax, ymax);
+                           xmax, ymax);
 
-                if (FOrgText)
+        if (FOrgText)
         {
 
             FFont->GetStringMetrics("", &xsize, &ysize);
@@ -1289,7 +1295,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                 {
                         FFont->GetStringMetrics(FTextRow[row], &xsize, &ysize);
     
-                                switch (FHorAlign)
+                        switch (FHorAlign)
                         {
                                 case HOR_LEFT:
                                     xstart = xmin + FStartX;

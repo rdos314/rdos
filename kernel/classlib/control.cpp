@@ -335,6 +335,25 @@ void TControl::Init()
 
 /*##########################################################################
 #
+#   Name       : TControl::IsRedrawEnabled
+#
+#   Purpose....: Check if redraw is enabled
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TControl::IsRedrawEnabled()
+{
+    if (FDev)
+        return FDev->IsRedrawEnabled();
+    else
+        return FParent->IsRedrawEnabled();
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::Protect
 #
 #   Purpose....: Protect control during redraw
@@ -1573,6 +1592,30 @@ TControlThread::~TControlThread()
 
 /*##########################################################################
 #
+#   Name       : TControlThread::IsRedrawEnabled
+#
+#   Purpose....: Check if redraw is enabled
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TControlThread::IsRedrawEnabled()
+{
+   if (Enabled)
+   {
+        if (EnableDelay)
+            return FALSE;
+        else
+            return TRUE;
+    }
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TControlThread::EnableRedraw
 #
 #   Purpose....: Enable redraws
@@ -2229,7 +2272,6 @@ void TControlThread::Execute()
                 RdosWaitMilli(EnableDelay);
                 EnableDelay = 0;
             }
-                
             HandleUpdate();
         }
     }
