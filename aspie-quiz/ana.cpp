@@ -1698,11 +1698,11 @@ int main(int argc, char **argv)
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
-//	  Quiz[47]->WriteWiki("wiki.txt", 0.2, 0.2);
-//	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
-//	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
+//	  Quiz[48]->WriteWiki("wiki.txt", 0.2, 0.2); // doesn't work!
+	  Quiz[48]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 160);
+	  Quiz[48]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 160);
 
-//	  Quiz[47]->WriteQuizWiki("g1.txt");
+//	  Quiz[48]->WriteQuizWiki("g2.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
@@ -1936,7 +1936,7 @@ int main(int argc, char **argv)
 	 Quiz[48]->ExportDiffHistogram("csv\\ocd.csv", POP_TYPE_OCD, TRUE);
 	 Quiz[48]->ExportDiffHistogram("csv\\odd.csv", POP_TYPE_ODD, TRUE);
 	 Quiz[48]->ExportDiffHistogram("csv\\dysp.csv", POP_TYPE_DYSPRAXIA, TRUE);
-	 
+
 	 TQuiz::ExportBirthMonthHistogram("csv\\birth.csv");
 
 	printf("DSM\r\n");
