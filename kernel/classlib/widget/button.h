@@ -112,6 +112,7 @@ public:
 
     void EnableKeepDown();
     void ChangeImage(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable);
+    void ForceUp();    
 
 protected:
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);

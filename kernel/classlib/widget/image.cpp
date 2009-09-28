@@ -268,12 +268,25 @@ void TImageControl::Set(const char *IniName, const char *IniSection)
 ##########################################################################*/
 void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
 {
+    int i;
     int fh;
 
     if (FLoadIni)
         delete FLoadIni;
 
     FLoadIni = 0;
+
+    for (i = 0; i < MAX_IMAGE_COUNT; i++)
+    {
+		if (FImgArr[i])
+		{
+            delete FImgArr[i];
+            FImgArr[i] = 0;
+        }
+		FDelayArr[i] = 1000;
+    }
+
+	FIndex = MAX_IMAGE_COUNT;
 
     fh = RdosOpenFile(IniName, 0);
     if (fh)
@@ -463,17 +476,20 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
 
         bitmap = 0;
 
-        if (CheckJpg(path))
-            bitmap = TJpegBitmapDevice::Create(path);
+        strcpy(str, path);
+        strupr(str);
 
-        if (CheckBmp(path) && !bitmap)
-            bitmap = TBmpBitmapDevice::Create(path);
+        if (CheckJpg(str))
+            bitmap = TJpegBitmapDevice::Create(str);
 
-        if (CheckPng(path) && !bitmap)
-            bitmap = TPngBitmapDevice::Create(path, FBackR, FBackG, FBackB);
+        if (CheckBmp(str) && !bitmap)
+            bitmap = TBmpBitmapDevice::Create(str);
 
-        if (CheckGif(path) && !bitmap)
-            bitmap = TGifBitmapDevice::Create(path);
+        if (CheckPng(str) && !bitmap)
+            bitmap = TPngBitmapDevice::Create(str, FBackR, FBackG, FBackB);
+
+        if (CheckGif(str) && !bitmap)
+            bitmap = TGifBitmapDevice::Create(str);
 
         if (bitmap)
         {

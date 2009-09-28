@@ -119,14 +119,25 @@ void TPanelFactory::Set(const char *IniName, const char *IniSection)
     Ini.GotoSection(IniSection);
 
     if (Ini.ReadVar("BackColor.R", str, 255))
+    {
         FBackR = atoi(str);
+        FBackTrans = FALSE;
+    }
     
     if (Ini.ReadVar("BackColor.G", str, 255))
+    {
         FBackG = atoi(str);
+        FBackTrans = FALSE;
+    }
 
     if (Ini.ReadVar("BackColor.B", str, 255))
+    {
         FBackB = atoi(str);
+        FBackTrans = FALSE;
+    }
     
+    if (Ini.ReadVar("Transparent", str, 255))
+        FBackTrans = TRUE;
 
     if (Ini.ReadVar("BorderColor.R", str, 255))
         FBorderR = atoi(str);
@@ -176,22 +187,22 @@ void TPanelFactory::Set(const char *IniName, const char *IniSection)
         FLowerWidth = 0;
         FLeftWidth = 0;
         FRightWidth = 0;
-    }
     
-    if (Ini.ReadVar("Width", str, 255))
-        FLowerWidth = FUpperWidth = FLeftWidth = FRightWidth = atoi(str);
+        if (Ini.ReadVar("Width", str, 255))
+            FLowerWidth = FUpperWidth = FLeftWidth = FRightWidth = atoi(str);
             
-    if (Ini.ReadVar("UpperWidth", str, 255))
-        FUpperWidth = atoi(str);
+        if (Ini.ReadVar("UpperWidth", str, 255))
+            FUpperWidth = atoi(str);
     
-    if (Ini.ReadVar("LowerWidth", str, 255))
-        FLowerWidth = atoi(str);
+        if (Ini.ReadVar("LowerWidth", str, 255))
+            FLowerWidth = atoi(str);
     
-    if (Ini.ReadVar("LeftWidth", str, 255))
-        FLeftWidth = atoi(str);
+        if (Ini.ReadVar("LeftWidth", str, 255))
+            FLeftWidth = atoi(str);
         
-    if (Ini.ReadVar("RightWidth", str, 255))
-        FRightWidth = atoi(str);
+        if (Ini.ReadVar("RightWidth", str, 255))
+            FRightWidth = atoi(str);
+    }
 }
 
 /*##########################################################################
@@ -647,14 +658,27 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
     Ini.GotoSection(IniSection);
 
     if (Ini.ReadVar("BackColor.R", str, 255))
+    {
         FBackR = atoi(str);
+        FBackTrans = FALSE;
+    }
     
     if (Ini.ReadVar("BackColor.G", str, 255))
+    {
 		FBackG = atoi(str);
+        FBackTrans = FALSE;
+    }
 
     if (Ini.ReadVar("BackColor.B", str, 255))
+    {
         FBackB = atoi(str);
+        FBackTrans = FALSE;
+    }
     
+    
+    if (Ini.ReadVar("Transparent", str, 255))
+        FBackTrans = TRUE;
+
 
     if (Ini.ReadVar("BorderColor.R", str, 255))
         FBorderR = atoi(str);

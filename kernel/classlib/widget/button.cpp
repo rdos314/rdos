@@ -1007,6 +1007,26 @@ void TButtonControl::Init(const TBitmapGraphicDevice *Up, const TBitmapGraphicDe
 
 /*##########################################################################
 #
+#   Name       : TButtonControl::ForceUp
+#
+#   Purpose....: Force control to be up
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::ForceUp()
+{
+    if (FPressed)
+    {
+        FPressed = FALSE;
+        Redraw();
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonControl::DeleteKeys
 #
 #   Purpose....: Delete key bitmaps

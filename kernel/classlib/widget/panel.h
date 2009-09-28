@@ -132,6 +132,8 @@ protected:
 
     void GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff);
 
+    int FBackTrans;
+
 private:
     void Init(int border);
 
@@ -143,8 +145,6 @@ private:
     int FBackR;
     int FBackG;
     int FBackB;
-
-    int FBackTrans;
 
         int FBorderR;
         int FBorderG;
