@@ -412,7 +412,7 @@ void TQuizR4::SetupTexts()
   Quiz[188].MyGroup = GROUP_NT_NVC;
   Quiz[189].MyGroup = GROUP_NT_TALENT;
   Quiz[190].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[191].MyGroup = GROUP_MIXED;
+  Quiz[191].MyGroup = GROUP_NT_NVC;
   Quiz[192].MyGroup = GROUP_NT_NVC;
   Quiz[193].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[194].MyGroup = GROUP_NT_NVC;

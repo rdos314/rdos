@@ -214,7 +214,7 @@ void TQuizF12::SetupTexts()
   Quiz[158].MyGroup = GROUP_NT_NVC;
   Quiz[159].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[160].MyGroup = GROUP_NT_NVC;
-  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_NT_NVC;
   Quiz[162].MyGroup = GROUP_NT_NVC;
   Quiz[163].MyGroup = GROUP_NT_NVC;
   Quiz[164].MyGroup = GROUP_NT_NVC;

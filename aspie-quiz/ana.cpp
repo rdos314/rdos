@@ -85,6 +85,7 @@
 #include "quizf14.h"
 #include "quizf15.h"
 #include "quizge.h"
+#include "quizge2.h"
 #include "quizdba.h"
 
 #include "pop.h"
@@ -459,6 +460,7 @@ int main(int argc, char **argv)
 	Quiz[46] = new TQuizF14("quizf14.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45]);
 	Quiz[47] = new TQuizF15("quizf15.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46]);
 	Quiz[48] = new TQuizExp2("quizge.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47]);
+	Quiz[49] = new TQuizExp2b("quizge2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48]);
 
 	Quiz[37]->WriteOldQuestionCount("vercnt.txt", 145);
 	Quiz[37]->WriteReverseQuestionCount("revcnt.txt");
@@ -1447,9 +1449,9 @@ int main(int argc, char **argv)
 		TQuiz::ExportGroupIntercorr(str, g);
 	 }
 
-//	 Quiz[48]->WritePhpQuestions("q.php");
-//	 Quiz[48]->WriteSetupTexts("q.cpp");
-//	 Quiz[48]->WriteSetupCross("c.cpp");
+	 Quiz[49]->WritePhpQuestions("q.php");
+	 Quiz[49]->WriteSetupTexts("q.cpp");
+	 Quiz[49]->WriteSetupCross("c.cpp");
 
 	printf("referers\r\n");
 
@@ -1693,21 +1695,21 @@ int main(int argc, char **argv)
 //#endif
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-	 Quiz[48]->WritePhpWeighting("weights.php");
-	 Quiz[48]->WritePhpGroupWeighting("group.php");
+	 Quiz[49]->WritePhpWeighting("weights.php");
+	 Quiz[49]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
 //	  Quiz[48]->WriteWiki("wiki.txt", 0.2, 0.2); // doesn't work!
-	  Quiz[48]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 160);
-	  Quiz[48]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 160);
+//	  Quiz[48]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 160);
+//	  Quiz[48]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 160);
 
 //	  Quiz[48]->WriteQuizWiki("g2.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
-//	 TQuiz::WikiToQuiz("wiki.txt", "final2.txt");
+//	 TQuiz::WikiToQuiz("wiki.txt", "final2b.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 

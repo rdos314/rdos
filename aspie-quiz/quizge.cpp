@@ -69,9 +69,41 @@ public:
 #
 ##########################################################################*/
 TQuizExp2::TQuizExp2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15)
-  : TQuizFinal(172, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4),
+  : TQuiz(172),
 	FDataFile(FileName)
 {
+	DefineCross(0, QuizI);
+	DefineCross(1, QuizII);
+	DefineCross(2, QuizIII);
+	DefineCross(3, QuizNd);
+	DefineCross(4, Quiz5);
+	DefineCross(5, Quiz6);
+	DefineCross(6, Quiz7);
+	DefineCross(7, Quiz8);
+	DefineCross(8, Quiz9);
+	DefineCross(9, QuizR1);
+	DefineCross(10, QuizR2);
+	DefineCross(11, QuizR3);
+	DefineCross(12, QuizR4);
+	DefineCross(13, QuizR5);
+	DefineCross(14, QuizR6);
+	DefineCross(15, QuizR7);
+	DefineCross(16, QuizS1);
+	DefineCross(17, QuizS2);
+	DefineCross(18, QuizS3);
+	DefineCross(19, QuizS4);
+	DefineCross(20, QuizS5);
+	DefineCross(21, QuizS6);
+	DefineCross(22, QuizS7);
+	DefineCross(23, QuizS8);
+	DefineCross(24, QuizS9);
+	DefineCross(25, QuizS10);
+	DefineCross(26, QuizS11);
+	DefineCross(27, QuizS12);
+	DefineCross(28, QuizN1);
+	DefineCross(29, QuizN2);
+	DefineCross(30, QuizN3);
+	DefineCross(31, QuizN4);
 	DefineCross(32, QuizFI);
 	DefineCross(33, QuizF1);
 	DefineCross(34, QuizF2);
@@ -182,6 +214,85 @@ void TQuizExp2::WriteLongName(TFile &File)
 void TQuizExp2::DefineQuiz()
 {
   return;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizExp2::InitReferers
+#
+#   Purpose....: Init referers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizExp2::InitReferers()
+{
+	AddReferer("livejournal.com/community/asperger", "livejournal.com/community/asperger");
+	AddReferer("flashback.info", "flashback.info");
+	AddReferer("aspiesforfreedom.", "aspiesforfreedom.com");
+	AddReferer("aspergianisland.com", "aspergianisland.com");
+	AddReferer("wrongplanet.net", "wrongplanet.net");
+	AddReferer("rdos.net/sv", "rdos.net/sv");
+	AddReferer("aspalsta.net", "aspalsta.net/viewtopic.php?t=1951");
+	AddReferer("circvsmaximvs.com", "circvsmaximvs.com/showthread.php?t=14129");
+	AddReferer("panterachat.com", "panterachat.com/phpBB/viewtopic.php?t=24332");
+	AddReferer("kaytastrophe.com", "kaytastrophe.com/index.php?topic=708.0");
+	AddReferer("tbg.nu", "tbg.nu/news_show/109118/40");
+	AddReferer("vof.se", "vof.se/forum/viewtopic.php?t=3080");
+	AddReferer("autismspeaks.org", "autismspeaks.org/community/forums");
+	AddReferer("nordisk.nu", "nordisk.nu/showthread.php?t=3117");
+	AddReferer("swedvdr.org", "swedvdr.org/forums.php?action=viewtopic");
+	AddReferer("filmtipset.se", "filmtipset.se/forum.cgi?id=1339244");
+	AddReferer("tvsushi.com", "forum.tvsushi.com/index.php?showtopic=52752");
+	AddReferer("smogon.com", "smogon.com/forums/showthread.php?t=29171");
+	AddReferer("mommyconnection.org", "mommyconnection.org/board/index.php/topic,2840.0.html");
+	AddReferer("calientemamas.com", "calientemamas.com/forum_posts.asp?TID=12136");
+	AddReferer("forums.britxbox.co.uk", "forums.britxbox.co.uk/viewtopic.php?t=54722");
+	AddReferer("goonfleet.com", "goonfleet.com/showthread.php?t=77152");
+	AddReferer("weebls-stuff.com", "weebls-stuff.com");
+	AddReferer("keithandthegirl.com", "keithandthegirl.com/forums/showthread.php?t=9785");
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizExp2::SetupControlGroups
+#
+#   Purpose....: Setup control-groups
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizExp2::SetupControlGroups()
+{
+	DefineNt("flashback.info");
+	DefineNt("rdos.net/sv");
+	DefineNt("circvsmaximvs.com");
+	DefineNt("panterachat.com");
+	DefineNt("kaytastrophe.com");
+	DefineNt("tbg.nu");
+	DefineNt("vof.se");
+	DefineNt("nordisk.nu");
+	DefineNt("swedvdr.org");
+	DefineNt("filmtipset.se");
+	DefineNt("tvsushi.com");
+	DefineNt("smogon.com");
+	DefineNt("mommyconnection.org");
+	DefineNt("calientemamas.com");
+	DefineNt("forums.britxbox.co.uk");
+	DefineNt("goonfleet.com");
+	DefineNt("weebls-stuff.com");
+	DefineNt("keithandthegirl.com");
+
+	DefineAspie("wrongplanet.net");
+	DefineAspie("livejournal.com/community/asperger");
+	DefineAspie("aspiesforfreedom.");
+	DefineAspie("aspergianisland.com");
+	DefineAspie("assupportgrouponline.co.uk");
+	DefineAspie("neurodiversity.com/diagnostic_instruments.html");
 }
 
 /*##########################################################################

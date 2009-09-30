@@ -235,7 +235,7 @@ void TQuizF1::SetupTexts()
   Quiz[185].MyGroup = GROUP_NT_NVC;
   Quiz[186].MyGroup = GROUP_NT_TALENT;
   Quiz[187].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[188].MyGroup = GROUP_MIXED;
+  Quiz[188].MyGroup = GROUP_NT_NVC;
   Quiz[189].MyGroup = GROUP_NT_NVC;
   Quiz[190].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[191].MyGroup = GROUP_NT_NVC;
