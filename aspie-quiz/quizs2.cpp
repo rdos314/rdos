@@ -360,7 +360,7 @@ void TQuizS2::SetupTexts()
   Quiz[128].MyGroup = GROUP_NT_NVC;
   Quiz[129].MyGroup = GROUP_NT_NVC;
   Quiz[130].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[131].MyGroup = GROUP_NT_NVC;
+  Quiz[131].MyGroup = GROUP_NT_SENSORY;
   Quiz[132].MyGroup = GROUP_NT_NVC;
   Quiz[133].MyGroup = GROUP_NT_TALENT;
   Quiz[134].MyGroup = GROUP_NT_SOCIAL;

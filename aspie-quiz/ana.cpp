@@ -531,6 +531,8 @@ int main(int argc, char **argv)
 //	 Quiz[32]->CheckCross();
 //	 Quiz[33]->CheckCross();
 
+	Quiz[49]->CheckCross();
+
 	printf("all1\r\n");
 	Quiz[0]->ExportExcelCase("pca\\all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("pca\\male1.dat", PCA_TYPE_MALE);

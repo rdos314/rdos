@@ -219,7 +219,7 @@ void TQuizF12::SetupTexts()
   Quiz[163].MyGroup = GROUP_NT_NVC;
   Quiz[164].MyGroup = GROUP_NT_NVC;
   Quiz[165].MyGroup = GROUP_NT_NVC;
-  Quiz[166].MyGroup = GROUP_NT_NVC;
+  Quiz[166].MyGroup = GROUP_NT_OBSESSION;
   Quiz[167].MyGroup = GROUP_NT_NVC;
   Quiz[168].MyGroup = GROUP_NT_SOCIAL;
   Quiz[169].MyGroup = GROUP_NT_NVC;

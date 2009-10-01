@@ -280,7 +280,7 @@ void TQuizR2::SetupTexts()
   Quiz[98].MyGroup = GROUP_ASPIE_NVC;
   Quiz[99].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[100].MyGroup = GROUP_NT_NVC;
-  Quiz[101].MyGroup = GROUP_NT_NVC;
+  Quiz[101].MyGroup = GROUP_NT_SENSORY;
   Quiz[102].MyGroup = GROUP_NT_NVC;
   Quiz[103].MyGroup = GROUP_ASPIE_NVC;
   Quiz[104].MyGroup = GROUP_ASPIE_NVC;

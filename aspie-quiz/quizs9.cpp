@@ -344,7 +344,7 @@ void TQuizS9::SetupTexts()
   Quiz[114].MyGroup = GROUP_NT_SENSORY;
   Quiz[115].MyGroup = GROUP_NT_SENSORY;
   Quiz[116].MyGroup = GROUP_NT_SENSORY;
-  Quiz[117].MyGroup = GROUP_NT_NVC;
+  Quiz[117].MyGroup = GROUP_NT_SENSORY;
   Quiz[118].MyGroup = GROUP_NT_SENSORY;
   Quiz[119].MyGroup = GROUP_NT_HUNTING;
   Quiz[120].MyGroup = GROUP_MIXED;

@@ -337,7 +337,7 @@ void TQuizR5::SetupTexts()
   Quiz[131].MyGroup = GROUP_NT_SENSORY;
   Quiz[132].MyGroup = GROUP_ENVIRONMENT;
   Quiz[133].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[134].MyGroup = GROUP_NT_NVC;
+  Quiz[134].MyGroup = GROUP_NT_SENSORY;
   Quiz[135].MyGroup = GROUP_ASPIE_NVC;
   Quiz[136].MyGroup = GROUP_NT_TALENT;
   Quiz[137].MyGroup = GROUP_MIXED;

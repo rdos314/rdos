@@ -342,7 +342,7 @@ void TQuizR4::SetupTexts()
   Quiz[119].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[120].MyGroup = GROUP_ENVIRONMENT;
   Quiz[121].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[122].MyGroup = GROUP_NT_NVC;
+  Quiz[122].MyGroup = GROUP_NT_SENSORY;
   Quiz[123].MyGroup = GROUP_NT_TALENT;
   Quiz[124].MyGroup = GROUP_NT_SENSORY;
   Quiz[125].MyGroup = GROUP_NT_HUNTING;

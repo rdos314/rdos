@@ -347,7 +347,7 @@ void TQuizS7::SetupTexts()
   Quiz[99].MyGroup = GROUP_NT_NVC;
   Quiz[100].MyGroup = GROUP_NT_NVC;
   Quiz[101].MyGroup = GROUP_NT_NVC;
-  Quiz[102].MyGroup = GROUP_NT_NVC;
+  Quiz[102].MyGroup = GROUP_NT_SENSORY;
   Quiz[103].MyGroup = GROUP_NT_TALENT;
   Quiz[104].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[105].MyGroup = GROUP_ASPIE_OBSESSION;
