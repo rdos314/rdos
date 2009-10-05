@@ -324,18 +324,22 @@ char *ProcessRow(char *str)
 
 				case 11:
 					Row.Aspie = atoi(valstr);
+					AncestryRow.Aspie = atoi(valstr);
 					break;
 
 				case 12:
 					Row.ADHD = atoi(valstr);
+					AncestryRow.ADHD = atoi(valstr);
 					break;
 
 				case 13:
 					Row.OCD = atoi(valstr);
+					AncestryRow.OCD = atoi(valstr);
 					break;
 
 				case 14:
 					Row.Social = atoi(valstr);
+					AncestryRow.Social = atoi(valstr);
 					break;
 
 				case 15:
@@ -346,9 +350,13 @@ char *ProcessRow(char *str)
 						if (strlen(valstr) >= 100)
 							valstr[99] = 0;
 						strcpy(Row.Referer, valstr);
+						strcpy(AncestryRow.Referer, valstr);
 					}
 					else
+					{
 						Row.Referer[0] = 0;
+						AncestryRow.Referer[0] = 0;
+				    }
 					break;
 
 				case 16:
@@ -365,7 +373,7 @@ char *ProcessRow(char *str)
 					i = fieldno - 18;
 					Row.Quiz[i] = atoi(valstr);
 
-                    if (i < 145)
+                    if (i < 150)
     					AncestryRow.Quiz[i] = atoi(valstr);
 					break;
 			}

@@ -45,6 +45,10 @@ public:
 	 virtual void WriteRetest(const char *filename);
 	 virtual void WriteRace(const char *filename);
 
+protected:
+	 void InitReferers();
+	 void SetupControlGroups();
+
 private:
     virtual void GetReferer(const char *referer, TPopulation *pop);
     virtual void WriteName(TFile &File);

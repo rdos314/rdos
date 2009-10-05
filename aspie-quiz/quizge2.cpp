@@ -126,12 +126,12 @@ TQuizExp2b::TQuizExp2b(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz 
 //	DefineQuiz();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4, QuizF5, QuizF6, QuizF7, QuizF8, QuizF9, QuizF10, QuizF11, QuizF12, QuizF13, QuizF14, QuizF15, QuizGe);
 
-//	InitReferers();
-//	LoadReferers();
-//	SetupControlGroups();
-//	SortReferers();
-//	LoadPopulations();
-//	Calculate();
+	InitReferers();
+	LoadReferers();
+	SetupControlGroups();
+	SortReferers();
+	LoadPopulations();
+	Calculate();
 }
 
 /*##########################################################################
@@ -218,6 +218,85 @@ void TQuizExp2b::DefineQuiz()
 
 /*##########################################################################
 #
+#   Name       : TQuizExp2b::InitReferers
+#
+#   Purpose....: Init referers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizExp2b::InitReferers()
+{
+	AddReferer("livejournal.com/community/asperger", "livejournal.com/community/asperger");
+	AddReferer("flashback.info", "flashback.info");
+	AddReferer("aspiesforfreedom.", "aspiesforfreedom.com");
+	AddReferer("aspergianisland.com", "aspergianisland.com");
+	AddReferer("wrongplanet.net", "wrongplanet.net");
+	AddReferer("rdos.net/sv", "rdos.net/sv");
+	AddReferer("aspalsta.net", "aspalsta.net/viewtopic.php?t=1951");
+	AddReferer("circvsmaximvs.com", "circvsmaximvs.com/showthread.php?t=14129");
+	AddReferer("panterachat.com", "panterachat.com/phpBB/viewtopic.php?t=24332");
+	AddReferer("kaytastrophe.com", "kaytastrophe.com/index.php?topic=708.0");
+	AddReferer("tbg.nu", "tbg.nu/news_show/109118/40");
+	AddReferer("vof.se", "vof.se/forum/viewtopic.php?t=3080");
+	AddReferer("autismspeaks.org", "autismspeaks.org/community/forums");
+	AddReferer("nordisk.nu", "nordisk.nu/showthread.php?t=3117");
+	AddReferer("swedvdr.org", "swedvdr.org/forums.php?action=viewtopic");
+	AddReferer("filmtipset.se", "filmtipset.se/forum.cgi?id=1339244");
+	AddReferer("tvsushi.com", "forum.tvsushi.com/index.php?showtopic=52752");
+	AddReferer("smogon.com", "smogon.com/forums/showthread.php?t=29171");
+	AddReferer("mommyconnection.org", "mommyconnection.org/board/index.php/topic,2840.0.html");
+	AddReferer("calientemamas.com", "calientemamas.com/forum_posts.asp?TID=12136");
+	AddReferer("forums.britxbox.co.uk", "forums.britxbox.co.uk/viewtopic.php?t=54722");
+	AddReferer("goonfleet.com", "goonfleet.com/showthread.php?t=77152");
+	AddReferer("weebls-stuff.com", "weebls-stuff.com");
+	AddReferer("keithandthegirl.com", "keithandthegirl.com/forums/showthread.php?t=9785");
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizExp2b::SetupControlGroups
+#
+#   Purpose....: Setup control-groups
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizExp2b::SetupControlGroups()
+{
+	DefineNt("flashback.info");
+	DefineNt("rdos.net/sv");
+	DefineNt("circvsmaximvs.com");
+	DefineNt("panterachat.com");
+	DefineNt("kaytastrophe.com");
+	DefineNt("tbg.nu");
+	DefineNt("vof.se");
+	DefineNt("nordisk.nu");
+	DefineNt("swedvdr.org");
+	DefineNt("filmtipset.se");
+	DefineNt("tvsushi.com");
+	DefineNt("smogon.com");
+	DefineNt("mommyconnection.org");
+	DefineNt("calientemamas.com");
+	DefineNt("forums.britxbox.co.uk");
+	DefineNt("goonfleet.com");
+	DefineNt("weebls-stuff.com");
+	DefineNt("keithandthegirl.com");
+
+	DefineAspie("wrongplanet.net");
+	DefineAspie("livejournal.com/community/asperger");
+	DefineAspie("aspiesforfreedom.");
+	DefineAspie("aspergianisland.com");
+	DefineAspie("assupportgrouponline.co.uk");
+	DefineAspie("neurodiversity.com/diagnostic_instruments.html");
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizExp2b::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
@@ -251,6 +330,11 @@ void TQuizExp2b::SetupTexts()
   Quiz[111].Reverse = TRUE;
   Quiz[143].Reverse = TRUE;
   Quiz[146].Reverse = TRUE;
+  Quiz[154].Reverse = TRUE;
+  Quiz[155].Reverse = TRUE;
+  Quiz[156].Reverse = TRUE;
+  Quiz[157].Reverse = TRUE;
+  Quiz[158].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
