@@ -30,6 +30,7 @@
 #include <math.h>
 
 #include "quizfin.h"
+#include "quizdbf.h"
 
 #define CI	1
 
@@ -37,6 +38,23 @@
 
 #define FALSE 0
 #define TRUE !FALSE
+
+class TRace
+{
+public:
+	TRace();
+	void Add(TQuizRow *Row);
+	void WriteUsRow(TFile &file, int index, const char *text);
+	void WriteNonUsRow(TFile &file, int index, const char *text);
+	void WriteEntry(TFile &file, int val, int count);
+
+	static void WriteHeader(TFile &file);
+
+	int UsCount[10];
+	int UsAsCount[10];
+	int NonUsCount[10];
+	int NonUsAsCount[10];
+};
 
 /*##########################################################################
 #
@@ -50,7 +68,8 @@
 #
 ##########################################################################*/
 TQuizFinal::TQuizFinal(const char *FileName)
-  : TQuiz(150)
+  : TQuiz(150),
+	FDataFile(FileName)
 {
 	SetupTexts();
 	SetupCross();
@@ -736,43 +755,48 @@ void TQuizFinal::LoadReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
+	int g;
+	char GroupResult[ACTIVE_GROUP_COUNT];
+
+    for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
+        GroupResult[g] = 0;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
 		if (Row.Gender == 1)
-			UpdateReferer(&MaleRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
+			UpdateReferer(&MaleRef, Row.AsResult, Row.NtResult, GroupResult);
         else			
-			UpdateReferer(&FemaleRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
+			UpdateReferer(&FemaleRef, Row.AsResult, Row.NtResult, GroupResult);
 	
 		ref = FindReferer(Row.Referer);
 		if (!ref)
 			ref = AddReferer(Row.Referer, Row.Referer);
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, GroupResult);
 
 		if (Row.Aspie == 1)
-			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
+			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, GroupResult);
 
 		if (Row.Aspie == 2)
-			UpdateReferer(&AsRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
+			UpdateReferer(&AsRef, Row.AsResult, Row.NtResult, GroupResult);
 
 		if (Row.ADHD == 2)
-			UpdateReferer(&AddRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
+			UpdateReferer(&AddRef, Row.AsResult, Row.NtResult, GroupResult);
 
 		if (Row.OCD == 2)
-			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
+			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, GroupResult);
 
 		if (Row.Social == 2)
-			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
+			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, GroupResult);
 
 		if (Row.Aspie)
 		{
 			if (Row.Gender == 1)
-				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
+				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult, GroupResult);
 			else
-				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult, Row.AqResult, Row.GroupResult);
+				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult, GroupResult);
 		}
 	}
 }
@@ -797,6 +821,15 @@ void TQuizFinal::LoadPopulations()
 	char DxArr[DX_COUNT];
 	char score;
 	int IdArr[MAX_QUESTIONS];
+	int g;
+	char GroupResult[ACTIVE_GROUP_COUNT];
+	char DxResult[DX_COUNT];
+
+	for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
+		GroupResult[g] = 0;
+
+	for (g = 0; g < DX_COUNT; g++)
+		DxResult[g] = 0;
 
 	for (i = 0; i < N; i++)
 	{
@@ -866,79 +899,79 @@ void TQuizFinal::LoadPopulations()
 		if (Row.Social == 0)
 			DxArr[DX_SOCIAL_PHOBIA] = DX_STATE_NO;
 
-		All.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+		All.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 
 		if (Row.Aspie)
 		{
 			if (Row.AsResult < Row.NtResult)
-				LowAs.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				LowAs.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 
 			if (Row.Gender == 1)
 			{
 				if (Row.BirthYear > 1986)
-					YoungMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+					YoungMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 
-				AsMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				AsMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 			}
 			else
 			{
 				if (Row.BirthYear > 1986)
-					YoungFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+					YoungFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 
-				AsFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				AsFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 			}
 
 			if (Row.Aspie == 2)
-				As.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				As.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 
 			if (Row.Aspie == 1)
-				AspieControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				AspieControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 		}
 
 		if (Row.ADHD >= 1)
 		{
-			Add.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+			Add.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 			if (Row.Gender == 1)
-				AddMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				AddMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 			else
-				AddFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				AddFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 		}
 
 		if (Row.Social >= 1)
-			SocialPhobia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+			SocialPhobia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 
 		if (strlen(Row.Referer) == 0)
 		{
-			Mix.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+			Mix.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 			if (Row.Gender == 1)
-				MixMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				MixMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 			else
-				MixFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				MixFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 		}
 		else
 		{
 			ref = FindReferer(Row.Referer);
 			if (ref && ref->NT)
-				NtControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				NtControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 		}
 
 		if (Row.NtResult - Row.AsResult >= 35)
 		{
-			Nt.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+			Nt.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 			if (Row.Gender == 1)
-				NtMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				NtMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 			else
-				NtFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				NtFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 		}
 
 		if (Row.AsResult - Row.NtResult >= 35)
 		{
 
-			Aspie.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+			Aspie.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 			if (Row.Gender == 1)
-				AspieMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				AspieMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 			else
-				AspieFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+				AspieFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 		}
 
 	}
@@ -955,7 +988,7 @@ void TQuizFinal::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizFinal::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI)
+void TQuizFinal::SetupCross()
 {
     int i;
 
@@ -980,6 +1013,15 @@ void TQuizFinal::GetReferer(const char *referer, TPopulation *pop)
 	TReferer *ref;
 	TQuizRow Row;
 	char DxArr[DX_COUNT];
+	int g;
+	char GroupResult[ACTIVE_GROUP_COUNT];
+	char DxResult[DX_COUNT];
+
+	for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
+		GroupResult[g] = 0;
+
+	for (g = 0; g < DX_COUNT; g++)
+		DxResult[g] = 0;
 
 	for (i = 0; i < DX_COUNT; i++)
 		DxArr[DX_COUNT] = DX_STATE_UNKNOWN;
@@ -994,7 +1036,7 @@ void TQuizFinal::GetReferer(const char *referer, TPopulation *pop)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 		if (ref->IsMatch(Row.Referer))
-			pop->Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, Row.GroupResult, Row.DxResult);
+			pop->Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
 }
 
 /*##################  IsPca ##########################
@@ -1149,8 +1191,6 @@ void TQuizFinal::ExportExcelAspie(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (Row.AqResult)
-		{
 			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);
 
@@ -1179,7 +1219,6 @@ void TQuizFinal::ExportExcelAspie(const char *filename)
 					file.Write(", ");
 			}
 			file.Write("\n");
-		}
 	}
 }
 
@@ -1329,7 +1368,7 @@ void TQuizFinal::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

@@ -63,8 +63,9 @@ int main(int argc, char **argv)
 
 	Quiz[0] = new TQuizFinal("final.bin");
 
-	Quiz[0]->WriteNoAnswerStats("noans.txt");
+	Quiz[0]->WriteNoAnswerStats("final\\noans.txt");
 
+#ifdef EXPORT
 	printf("all\r\n");
 	Quiz[0]->ExportExcelCase("pca\\allfin.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("pca\\malefin.dat", PCA_TYPE_MALE);
@@ -75,6 +76,7 @@ int main(int argc, char **argv)
 	printf("aspie\r\n");
 
 	 Quiz[0]->ExportExcelAspie("pca\\aspiefin.dat");
+#endif
 
 	printf("import\r\n");
 	 Quiz[0]->ImportMvsp("pca\\allfin.txt", PCA_TYPE_ALL);
@@ -87,6 +89,11 @@ int main(int argc, char **argv)
 	printf("import aspie\r\n");
 
 	 Quiz[0]->ImportMvspAspie("pca\\aspiefin.txt");
+
+	printf("congruence\r\n");
+
+	 Quiz[0]->ExportGenderCongruence("final\\gender.txt");
+	 Quiz[0]->ExportAgeCongruence("final\\age.txt");
 
 	printf("referers\r\n");
 
@@ -102,17 +109,17 @@ int main(int argc, char **argv)
 
 	 printf("race\r\n");
 
-	 Quiz[0]->WriteRace("eval\\racefin.htm");
+	 Quiz[0]->WriteRace("final\\race.htm");
 
 	printf("type histograms\r\n");
-	 Quiz[0]->ExportDiffHistogram("csv\\allfin.csv", POP_TYPE_ALL, TRUE);
-	 Quiz[0]->ExportDiffHistogram("csv\\asfin.csv", POP_TYPE_AS, TRUE);
-	 Quiz[0]->ExportDiffHistogram("csv\\ntfin.csv", POP_TYPE_NT_CONTROL, TRUE);
-	 Quiz[0]->ExportDiffHistogram("csv\\socfin.csv", POP_TYPE_SOCIAL_PHOBIA, TRUE);
-	 Quiz[0]->ExportDiffHistogram("csv\\addfin.csv", POP_TYPE_ADD, TRUE);
-	 Quiz[0]->ExportDiffHistogram("csv\\ocdfin.csv", POP_TYPE_OCD, TRUE);
+	 Quiz[0]->ExportDiffHistogram("final\\all.csv", POP_TYPE_ALL, TRUE);
+	 Quiz[0]->ExportDiffHistogram("final\\as.csv", POP_TYPE_AS, TRUE);
+	 Quiz[0]->ExportDiffHistogram("final\\nt.csv", POP_TYPE_NT_CONTROL, TRUE);
+	 Quiz[0]->ExportDiffHistogram("final\\soc.csv", POP_TYPE_SOCIAL_PHOBIA, TRUE);
+	 Quiz[0]->ExportDiffHistogram("final\\add.csv", POP_TYPE_ADD, TRUE);
+	 Quiz[0]->ExportDiffHistogram("final\\ocd.csv", POP_TYPE_OCD, TRUE);
 
-	 TQuiz::ExportBirthMonthHistogram("csv\\birthfin.csv");
+	 TQuiz::ExportBirthMonthHistogram("final\\birth.csv");
 
 }
 

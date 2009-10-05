@@ -498,10 +498,16 @@ void ExportFinal(const char *filename)
 				QRow.Gender = ARow.Gender;
 				QRow.Country = ARow.Country;
 				QRow.Ancestry = ARow.Ancestry;
+				QRow.Aspie = ARow.Aspie;
+				QRow.ADHD = ARow.ADHD;
+				QRow.OCD = ARow.OCD;
+				QRow.Social = ARow.Social;
 				QRow.AsResult = ARow.AsResult;
 				QRow.NtResult = ARow.NtResult;
 
-				for (i = 0; i < 145; i++)
+				strcpy(QRow.Referer, ARow.Referer);
+
+				for (i = 0; i < 150; i++)
 					QRow.Quiz[i] = ARow.Quiz[i];
 
 				outfile.Write(&QRow, sizeof(QRow));
