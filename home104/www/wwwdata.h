@@ -20,35 +20,68 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# datastor.h
-# Datastore class
+# wwwdata.h
+# Data-type for binary data store
 #
 ########################################################################*/
 
-#ifndef DATASTOR_H
-#define DATASTOR_H
+#ifndef WWWDATA_H
+#define WWWDATA_H
 
-#include "device.h"
-#include "file.h"
+#define RAD_COUNT   10
 
-class TDataStore : public TThread
+struct TBoolData
 {
-public:
-	TDataStore(const char *RootDir, const char *ServerName, long ServerIp, int ServerPort);
-	~TDataStore();
-
-    void (*NotifyData)(TDeviceMsg *doc);
-    
-protected:
-    virtual void Execute();
-
-    void CreateRootDir();
-	 TFile *CreateDayFile(int year, int month, int day);
-	 void HandleMsg(TDeviceMsg *doc);
-
-    char FRootDir[256];
-    long FServerIp;
-    int FServerPort;
+    char val;
+    char valid;
 };
+
+struct TFloatData
+{
+    long double val;
+    char valid;
+};
+
+struct TWwwRadData
+{
+    TFloatData Ref;
+    TFloatData Temp;
+    TFloatData Motor;
+    TFloatData Light;
+    TFloatData AuxTemp;
+};
+
+struct TWwwDataEntry
+{
+    TFloatData Temp;
+    TFloatData Humidity;
+    TFloatData WindSpeed;
+    TFloatData WindDir;
+    TFloatData AirPressure;
+
+    TFloatData CircSpeed;
+    TFloatData TankTemp;
+    TFloatData TankP;
+    TFloatData HeatTemp;
+    TFloatData HeatP;
+
+    TBoolData Vp;
+    TBoolData Ep;
+
+	TWwwRadData Rad[RAD_COUNT];
+};
+
+struct TWwwHeader
+{
+	 char Version;
+	 long FirstEntry;
+	 long LastEntry;
+};
+
+struct TWwwData
+{
+	 TWwwHeader header;
+    TWwwDataEntry data[24 * 60];
+};    
 
 #endif

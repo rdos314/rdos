@@ -3265,6 +3265,9 @@ receive_no_connection:
 	test al,RST
 	jnz receive_free
 ;
+    test al,SYN
+    jnz receive_free
+;
 	push ds
 	push cx
 	push si

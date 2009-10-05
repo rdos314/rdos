@@ -180,9 +180,6 @@ TDeviceMsg *TCotexSocketServer::ConvToCotex(THeatData *data)
 		tag = doc->AddTag(LOG_TAG_VP);
 		ival = data->VpOn;
 		tag->AddBoolean(LOG_VAR_On, ival);
-
-		ival = data->EpOn;
-		tag->AddBoolean(LOG_VAR_On, ival);
 		
 		if (data->HasTankTemp)
 		{
@@ -208,6 +205,10 @@ TDeviceMsg *TCotexSocketServer::ConvToCotex(THeatData *data)
 			    ival = 100.0 * data->HeatP;
 				tag->AddFloat2(LOG_VAR_P, ival);
 		    }
+
+    		ival = data->EpOn;
+	    	tag->AddBoolean(LOG_VAR_On, ival);
+
 		}
     }
 

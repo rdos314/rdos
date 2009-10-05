@@ -58,6 +58,8 @@ TDataStore::TDataStore(const char *RootDir, const char *ServerName, long ServerI
     strlwr(FRootDir);
 
     CreateRootDir();
+
+    NotifyData = 0;
     
     Start(ServerName, STACK_SIZE);
 }
@@ -217,20 +219,20 @@ void TDataStore::Execute()
     {
     	RdosSyncTime(NtpIp);
 
-    	socket = new TSocket(0x2800A8C0, 600, 6000, 0x4000);
-	    socket->WaitForConnection(6000);
+        socket = new TSocket(0x2800A8C0, 600, 600000, 0x4000);
+		socket->WaitForConnection(600000);
 
-    	while (socket->IsOpen())
-	    {
+		while (socket->IsOpen())
+		{
 	        if (socket->WaitForChar(30000))
-	        {
-                count = socket->Read((char *)&size, 4);
-        		if (count == 4)
-	        	{
-		            msg = new char[size];
-                    count = socket->Read(msg, size);
+			{
+		        count = socket->Read((char *)&size, 4);
+				if (count == 4)
+				{
+					msg = new char[size];
+				    count = socket->Read(msg, size);
 
-                    if (count == size)
+				    if (count == size)
                     {
                         doc = new TDeviceMsg(MAX_MSG_SIZE);
 
@@ -238,6 +240,9 @@ void TDataStore::Execute()
 				    	{
 					    	delete msg;
 						    HandleMsg(doc);
+
+						    if (NotifyData)
+						        (*NotifyData)(doc);
 
     						ch = 0x6;
 	    					socket->Write(&ch, 1);
