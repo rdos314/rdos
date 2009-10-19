@@ -951,7 +951,7 @@ void TQuizF2::ExportExcelCase(const char *filename, int PcaType)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (IsPca(&Row, PcaType))
+		if (IsPca(&Row, PcaType) && (Row.Un || Row.Ue || Row.Uo || Row.Ua || Row.Uc || Row.Sn))
 		{
 			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);
@@ -963,13 +963,13 @@ void TQuizF2::ExportExcelCase(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 				{
-    				ival = Row.Quiz[i];
-	    			if (ival)
+					ival = Row.Quiz[i];
+					if (ival)
 						ival--;
-    
+
 					if (ival > 2)
 						ival = 0;
-                    
+
 					sprintf(str, "\"%d\"", ival);
 					file.Write(str);
 					if (i != GetQuizN() - 1)

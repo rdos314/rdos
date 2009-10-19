@@ -43,7 +43,7 @@
 #define MAX_GROUP_COUNT      	15
 
 #define MAX_REFERERS            1024
-#define MAX_CROSS               50
+#define MAX_CROSS               70
 #define MAX_PCA_AXIS            8
 #define MAX_ASPIE_PCA_AXIS      32      // must change in Import method as well!
 #define MAX_SCORE               501
@@ -58,6 +58,7 @@
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
 #define PCA_TYPE_ASIA           7
+#define PCA_TYPE_FINAL          8
 
 #define GROUP_COUNT             15
 
@@ -117,6 +118,17 @@ public:
 	int NtCount[15];
 };
 
+class TBirthYear
+{
+public:
+	TBirthYear();
+	void Add(int AsResult, int NtResult, int BirthYear, int Gender);
+	void ExportHistogram(const char *filename);
+
+	int MaleCount[110];
+	int FemaleCount[110];
+};
+
 class TQuiz;
 
 struct TQuizGroup
@@ -162,6 +174,7 @@ struct TQuizQuestion
 	long double YoungPca[MAX_PCA_AXIS];
     long double OldPca[MAX_PCA_AXIS];
     long double AsiaPca[MAX_PCA_AXIS];
+    long double FinalPca[MAX_PCA_AXIS];
 	long double AsPca[MAX_PCA_AXIS];
     long double MixedPca[MAX_PCA_AXIS];
     long double AspiePca[MAX_ASPIE_PCA_AXIS];
@@ -217,7 +230,7 @@ struct TAxis
 
 struct TPopPca
 {
-    long double Pca[145][2];
+    long double Pca[150][2];
 };
 
 struct TUserInfo
@@ -295,6 +308,9 @@ public:
 	void WriteDsmReport(const char *filename, int PopType);
 
 	static void ExportBirthMonthHistogram(const char *filename);
+	static void ExportBirthYearHistogram(const char *filename);
+
+    void ImportFinalMvsp(const char *filename);
 
 	void ExportHistogram(const char *filename, int PopType, int Width, int All);
 	void ExportDiffHistogram(const char *filename, int PopType, int All);
@@ -311,6 +327,7 @@ public:
     void ExportGenderCongruence(const char *filename);
     void ExportAgeCongruence(const char *filename);
     void ExportAsiaCongruence(const char *filename);
+    void ExportFinalCongruence(const char *filename, TQuiz *QuizFinal);
     void ExportCongruence(const char *filename);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
@@ -319,6 +336,9 @@ public:
 	static void ImportPopPca(const char *filename, TPopPca *pca);
     static void ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1, TPopPca *pca2);
     static void ExportPopPcaCongruence(const char *filename);
+
+    static void ExportFinalPopCongruence(const char *name, TFile &file, TQuiz *FinalQuiz, TPopPca *pca);
+    static void ExportFinalPopCongruence(const char *filename, TQuiz *FinalQuiz);
 
     virtual int IsSubQuiz();
 
@@ -404,6 +424,17 @@ public:
     static TPopPca RegionAustraliaPca;
     static TPopPca RegionAfroUsPca;
 
+    static TPopPca UsIndianPca;
+    static TPopPca UsAfricanPca;
+    static TPopPca UsHispanicPca;
+    static TPopPca UsCaucasianPca;
+    static TPopPca UsAsianPca;
+
+    static TPopPca AllIndianPca;
+    static TPopPca AllAfricanPca;
+    static TPopPca AllCaucasianPca;
+    static TPopPca AllAsianPca;
+
 protected:
 	void Init();
 	static int round(long double val);
@@ -432,6 +463,7 @@ protected:
     void ExportCurrentGenderCongruence(TFile &file);
     void ExportCurrentAgeCongruence(TFile &file);
     void ExportCurrentAsiaCongruence(TFile &file);
+    void ExportCurrentFinalCongruence(TFile &file, TQuiz *FinalQuiz);
     void ExportCurrentCongruence(TFile &file, TQuiz *quiz);
 
 	void ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT]);
@@ -556,6 +588,7 @@ protected:
 	static int PredNoSelfFail[POP_TYPE_COUNT];
 
 	static TBirthMonth BirthMonth;
+	static TBirthYear BirthYear;
 
     static TDsmPopulation DsmAutism;
 	static TDsmPopulation DsmAs;

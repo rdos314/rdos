@@ -97,6 +97,7 @@ int TQuiz::PredNoSelfFail[POP_TYPE_COUNT];
 int DiffSum;
 
 TBirthMonth TQuiz::BirthMonth;
+TBirthYear TQuiz::BirthYear;
 
 TPopPca TQuiz::UkPca;
 TPopPca TQuiz::SePca;
@@ -126,6 +127,17 @@ TPopPca TQuiz::RegionEuropePca;
 TPopPca TQuiz::RegionUsPca;
 TPopPca TQuiz::RegionAustraliaPca;
 TPopPca TQuiz::RegionAfroUsPca;
+
+TPopPca TQuiz::UsIndianPca;
+TPopPca TQuiz::UsAfricanPca;
+TPopPca TQuiz::UsHispanicPca;
+TPopPca TQuiz::UsCaucasianPca;
+TPopPca TQuiz::UsAsianPca;
+
+TPopPca TQuiz::AllIndianPca;
+TPopPca TQuiz::AllAfricanPca;
+TPopPca TQuiz::AllCaucasianPca;
+TPopPca TQuiz::AllAsianPca;
 
 // diagnostic cutoffs
 
@@ -273,6 +285,80 @@ void TBirthMonth::ExportHistogram(const char *filename)
 	}
 }
 
+/*##################  TBirthYear::TBirthYear ##########################
+*   Purpose....: Initialize TBirthYear                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TBirthYear::TBirthYear()
+{
+    int i;
+
+    for (i = 0; i < 110; i++)
+    {
+		MaleCount[i] = 0;
+		FemaleCount[i] = 0;
+    }
+}
+
+/*##################  TBirthYear::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TBirthYear::Add(int AsResult, int NtResult, int BirthYear, int Gender)
+{
+	int index;
+	int diff = AsResult - NtResult;
+
+    index = BirthYear - 1900;
+
+    if (index > 0 && index < 110)
+    {
+        if (Gender == 1)
+            MaleCount[index]++;
+
+        if (Gender == 2)
+            FemaleCount[index]++;
+    }
+}
+
+/*##################  TBirthYear::ExportHistogram ##########################
+*   Purpose....: Export histogram                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TBirthYear::ExportHistogram(const char *filename)
+{
+	char str[80];
+	int val;
+	int i;
+	int assum;
+	int ntsum;
+	TFile file(filename, 0);
+
+	for (i = 1; i < 110; i++)
+	{
+		sprintf(str, "%d\t", i + 1900);
+		file.Write(str);
+
+		val = MaleCount[i];
+		sprintf(str, "%d\t", val);
+		file.Write(str);
+
+		val = FemaleCount[i];
+		sprintf(str, "%d\n", val);
+		file.Write(str);
+
+	}
+}
+
 /*##########################################################################
 #
 #   Name       : TQuiz::TQuiz
@@ -412,6 +498,7 @@ TQuiz::TQuiz(int Questions)
 				Quiz[i].YoungPca[g] = 0;
             Quiz[i].OldPca[g] = 0;
             Quiz[i].AsiaPca[g] = 0;
+            Quiz[i].FinalPca[g] = 0;
 			Quiz[i].AsPca[g] = 0;
 			Quiz[i].MixedPca[g] = 0;
 		}
@@ -1234,6 +1321,71 @@ void TQuiz::WriteSetupCross(const char *filename)
     }
 }
 
+/*##################  TQuiz::ImportFinalMvsp ##########################
+*   Purpose....: Import final version MVSP loadings   	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ImportFinalMvsp(const char *filename)
+{
+	char buf[MAX_IN_ROW];
+	int size;
+	char *rowstr;
+	char *ptr;
+	long pos = 0;
+	int i;
+	long double d1, d2, d3, d4;
+	int q;
+	int count;
+	TFile infile(filename);
+
+	while (size = infile.Read(buf, MAX_IN_ROW))
+	{
+		buf[size] = 0;
+		rowstr = strstr(buf, "#");
+		if (rowstr)
+		{
+			rowstr++;
+			ptr = strstr(rowstr, "\r");
+			if (ptr)
+				 *ptr = 0;
+			else
+				 rowstr = 0;
+		}
+
+		pos += strlen(buf) + 1;
+		infile.SetPos(pos);
+
+		if (rowstr)
+		{
+			for (i = 0; i < strlen(rowstr); i++)
+			{
+				switch (rowstr[i])
+				{
+					case ',':
+						rowstr[i] = '.';
+						break;
+
+					case 0x9:
+					case 0xd:
+						rowstr[i] = ' ';
+						break;
+				}
+			}
+
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf %Lf", &q, &d1, &d2, &d3, &d4) == 5)
+			{
+			    Quiz[q - 1].FinalPca[0] = d1;
+				Quiz[q - 1].FinalPca[1] = d2;
+				Quiz[q - 1].FinalPca[2] = d3;
+				Quiz[q - 1].FinalPca[3] = d4;
+			}
+		}
+	}
+}
+
 /*##################  TQuiz::ImportPopPca ##########################
 *   Purpose....: Import pop pca                                  	        #
 *   In params..: *                                                          #
@@ -1320,7 +1472,7 @@ void TQuiz::ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1,
     int val;
 	char str[80];
 
-	count = 145;
+	count = 150;
 
 	xsum = 0;
 	ysum = 0;
@@ -1440,6 +1592,90 @@ void TQuiz::ExportPopPcaCongruence(const char *filename)
 	ExportPopPcaCongruence("US - Afroamerican", file, &RegionUsPca, &RegionAfroUsPca);
 
 	ExportPopPcaCongruence("Australia - Afroamerican", file, &RegionAustraliaPca, &RegionAfroUsPca);
+
+}
+
+/*##################  TQuiz::ExportFinalPopCongruence ##########################
+*   Purpose....: Export final pop pca congruence                                 	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportFinalPopCongruence(const char *name, TFile &file, TQuiz *FinalQuiz, TPopPca *pca)
+{
+	int count;
+	int axis;
+	int q;
+	long double rsum[2];
+	long double x;
+	long double y;
+	long double xsum;
+	long double ysum;
+	long double sqsum;
+	int val;
+	char str[80];
+
+	count = 150;
+
+	xsum = 0;
+	ysum = 0;
+
+	for (axis = 0; axis < 2; axis++)
+	{
+		rsum[axis] = 0;
+
+		for (q = 0; q < count; q++)
+		{
+			x = pca->Pca[q][axis];
+			y = FinalQuiz->Quiz[q].FinalPca[axis];
+
+			rsum[axis] += x * y;
+				xsum += x * x;
+			ysum += y * y;
+		}
+
+		if (rsum[axis] < 0)
+			rsum[axis] = -rsum[axis];
+
+	}
+
+    sqsum = xsum * ysum;
+
+    if (sqsum > 0.0)
+    	sqsum = sqrtl(xsum * ysum);
+
+	 if (sqsum > 0.0)
+		val = round(1000 * ((rsum[0] + rsum[1]) / sqsum));
+	else
+		val = 0;
+
+	 file.Write(name);
+	 sprintf(str, ": 0.%03d\r\n", val);
+	 file.Write(str);
+}
+
+/*##################  TQuiz::ExportFinalPopCongruence ##########################
+*   Purpose....: Export final pop pca congruence                                 	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportFinalPopCongruence(const char *filename, TQuiz *FinalQuiz)
+{
+	TFile file(filename, 0);
+
+	ExportFinalPopCongruence("US - Indian", file, FinalQuiz, &UsIndianPca);
+	ExportFinalPopCongruence("US - African", file, FinalQuiz, &UsAfricanPca);
+	ExportFinalPopCongruence("US - Hispanic", file, FinalQuiz, &UsHispanicPca);
+	ExportFinalPopCongruence("US - Caucasian", file, FinalQuiz, &UsCaucasianPca);
+	ExportFinalPopCongruence("US - Asian", file, FinalQuiz, &UsAsianPca);
+
+	ExportFinalPopCongruence("All - Indian", file, FinalQuiz, &AllIndianPca);
+	ExportFinalPopCongruence("All - African", file, FinalQuiz, &AllAfricanPca);
+	ExportFinalPopCongruence("All - Caucasian", file, FinalQuiz, &AllCaucasianPca);
+	ExportFinalPopCongruence("All - Asian", file, FinalQuiz, &AllAsianPca);
 }
 
 /*##################  TQuiz::CalcAsNtDiff ##########################
@@ -10621,6 +10857,18 @@ void TQuiz::ExportBirthMonthHistogram(const char *filename)
     BirthMonth.ExportHistogram(filename);
 }
 
+/*##################  TQuiz::ExportBirthYearHistogram ##########################
+*   Purpose....: Export histogram for score distribution for population       	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportBirthYearHistogram(const char *filename)
+{
+    BirthYear.ExportHistogram(filename);
+}
+
 /*##################  TQuiz::ExportHistogram ##########################
 *   Purpose....: Export histogram for score distribution for population       	      			      	        #
 *   In params..: *                                                          #
@@ -15476,6 +15724,99 @@ void TQuiz::ExportAsiaCongruence(const char *filename)
 	}
 
 	ExportCurrentAsiaCongruence(file);
+}
+
+/*##################  TQuiz::ExportCurrentFinalCongruence ##########################
+*   Purpose....: Export final version congruence for current quiz         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportCurrentFinalCongruence(TFile &file, TQuiz *FinalQuiz)
+{
+	int count1;
+	int count2;
+	int axis;
+	int q1;
+	int q2;
+	int GlobalId;
+	long double rsum[2];
+	long double x;
+	long double y;
+	long double xsum;
+	long double ysum;
+	long double sqsum;
+	int val;
+	char str[80];
+
+	count1 = GetQuizN();
+	count2 = FinalQuiz->GetQuizN();
+
+	xsum = 0;
+	ysum = 0;
+
+	for (axis = 0; axis < 2; axis++)
+	{
+		rsum[axis] = 0;
+
+		for (q1 = 0; q1 < count1; q1++)
+		{
+			GlobalId = GetGlobalId(q1);
+
+			for (q2 = 0; q2 < count2; q2++)
+			{
+				if (GlobalId == FinalQuiz->GetGlobalId(q2))
+				{
+					x = Quiz[q1].Pca[axis];
+					y = FinalQuiz->Quiz[q2].FinalPca[axis];
+
+					rsum[axis] += x * y;
+					xsum += x * x;
+					ysum += y * y;
+					break;
+				}
+			}
+		}
+
+		if (rsum[axis] < 0)
+			rsum[axis] = -rsum[axis];
+	}
+
+	sqsum = xsum * ysum;
+
+	if (sqsum > 0.0)
+		sqsum = sqrtl(xsum * ysum);
+
+	if (sqsum > 0.0)
+		val = round(1000 * ((rsum[0] + rsum[1]) / sqsum));
+	else
+		val = 0;
+
+	sprintf(str, "0.%03d\r\n", val);
+	file.Write(str);
+}
+
+/*##################  TQuiz::ExportFinalCongruence ##########################
+*   Purpose....: Export final congruence         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportFinalCongruence(const char *filename, TQuiz *FinalQuiz)
+{
+	int cross;
+	TQuiz *quiz;
+	TFile file(filename, 0);
+
+	for (cross = 0; cross < MAX_CROSS; cross++)
+	{
+		quiz = CrossQuiz[cross];
+		if (quiz)
+			quiz->ExportCurrentFinalCongruence(file, FinalQuiz);
+	}
+	ExportCurrentFinalCongruence(file, FinalQuiz);
 }
 
 /*##################  TQuiz::ExportCurrentCongruence ##########################

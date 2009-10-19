@@ -87,6 +87,7 @@
 #include "quizge.h"
 #include "quizge2.h"
 #include "quizdba.h"
+#include "quizg1.h"
 
 #include "quizdbf.h"
 
@@ -125,10 +126,21 @@
 #define REGION_AUSTRALIA        24
 #define REGION_AFRO_US          25
 
+#define US_INDIAN           26
+#define US_AFRO             27
+#define US_HISPANIC         28
+#define US_CAUC             29
+#define US_ASIA             30
+
+#define ALL_INDIAN           31
+#define ALL_AFRO             32
+#define ALL_CAUC             33
+#define ALL_ASIA             34
+
 #define FALSE 0
 #define TRUE !FALSE
 
-TQuiz *Quiz[50];
+TQuiz *Quiz[70];
 
 
 /*##################  ExportAncestry ##########################
@@ -152,7 +164,7 @@ void ExportAncestry(const char *filename, int Ancestry)
 	outfile.Write("\"\", ");
 	outfile.Write("\"\", ");
 
-	for (i = 0; i < 145; i++)
+	for (i = 0; i < 150; i++)
 	{
 		outfile.Write("\"");
 
@@ -160,7 +172,7 @@ void ExportAncestry(const char *filename, int Ancestry)
 		outfile.Write(str);
 
 		outfile.Write("\"");
-		if (i != 144)
+		if (i != 149)
 			outfile.Write(", ");
 	}
 	outfile.Write("\n");
@@ -243,7 +255,7 @@ void ExportAncestry(const char *filename, int Ancestry)
 			            use = TRUE;
 			            break;
 			    
-				    case ANCESTRY_CAUCASIAN:
+					case ANCESTRY_CAUCASIAN:
 					    if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
 					   	    use = TRUE;
 						 break;
@@ -368,7 +380,50 @@ void ExportAncestry(const char *filename, int Ancestry)
 						 use = TRUE;
 						 break;
 
+                  case US_INDIAN:
+                  	 if (Row.Ancestry == 3 && Row.Country == 7302)
+                  	    use = TRUE;
+                  	 break;
 
+                  case US_AFRO:
+					 if ((Row.Ancestry == 5 || (Row.Ancestry >= 1000 && Row.Ancestry < 2000)) && Row.Country == 7302)
+						use = TRUE;
+					 break;
+
+				  case US_HISPANIC:
+					 if (Row.Ancestry == 6 && Row.Country == 7302)
+						use = TRUE;
+					 break;
+
+				  case US_CAUC:
+					 if (((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205) && Row.Country == 7302)
+						use = TRUE;
+					 break;
+
+				  case US_ASIA:
+					 if (Row.Ancestry >= 4000 && Row.Country == 7302)
+						use = TRUE;
+					 break;
+
+				  case ALL_INDIAN:
+					 if (Row.Ancestry == 3)
+						use = TRUE;
+					 break;
+
+				  case ALL_AFRO:
+					 if (Row.Ancestry == 5 || (Row.Ancestry >= 1000 && Row.Ancestry < 2000))
+						use = TRUE;
+					 break;
+
+				  case ALL_CAUC:
+					 if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
+						use = TRUE;
+					 break;
+
+				  case ALL_ASIA:
+					 if (Row.Ancestry >= 4000)
+						use = TRUE;
+					 break;
 				}
 
 				if (use)
@@ -379,7 +434,7 @@ void ExportAncestry(const char *filename, int Ancestry)
 				sprintf(str, "\"%d\", ", Row.NtResult);
 				outfile.Write(str);
 
-				for (i = 0; i < 145; i++)
+				for (i = 0; i < 150; i++)
 				{
 					ival = Row.Quiz[i];
 	    	    	if (ival)
@@ -390,7 +445,7 @@ void ExportAncestry(const char *filename, int Ancestry)
 
 					sprintf(str, "\"%d\"", ival);
 					outfile.Write(str);
-					 if (i != 144)
+					 if (i != 149)
 						 outfile.Write(", ");
 				}
 				outfile.Write("\n");
@@ -579,6 +634,7 @@ int main(int argc, char **argv)
 	Quiz[47] = new TQuizF15("quizf15.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46]);
 	Quiz[48] = new TQuizExp2("quizge.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47]);
 	Quiz[49] = new TQuizExp2b("quizge2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48]);
+	Quiz[50] = new TQuizFinal2("quizg1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49]);
 
 	Quiz[37]->WriteOldQuestionCount("vercnt.txt", 145);
 	Quiz[37]->WriteReverseQuestionCount("revcnt.txt");
@@ -586,7 +642,7 @@ int main(int argc, char **argv)
 
 	Quiz[36]->WritePartner("eval\\partner.htm");
 
-    ExportFinal("final.bin");
+	ExportFinal("final.bin");
 
 	 ExportAncestry("pca\\allf.dat", ANCESTRY_ALL);
 	 ExportAncestry("pca\\cauc.dat", ANCESTRY_CAUCASIAN);
@@ -614,6 +670,18 @@ int main(int argc, char **argv)
 	 ExportAncestry("pca\\rus.dat", REGION_US);
 	 ExportAncestry("pca\\raustral.dat", REGION_AUSTRALIA);
 	 ExportAncestry("pca\\rafrous.dat", REGION_AFRO_US);
+
+	 ExportAncestry("pca\\usind.dat", US_INDIAN);
+	 ExportAncestry("pca\\usafro.dat", US_AFRO);
+	 ExportAncestry("pca\\ushisp.dat", US_HISPANIC);
+	 ExportAncestry("pca\\uscauc.dat", US_CAUC);
+	 ExportAncestry("pca\\usasia.dat", US_ASIA);
+
+	 ExportAncestry("pca\\allind.dat", ALL_INDIAN);
+	 ExportAncestry("pca\\allafro.dat", ALL_AFRO);
+	 ExportAncestry("pca\\allcauc.dat", ALL_CAUC);
+	 ExportAncestry("pca\\allasia.dat", ALL_ASIA);
+
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();
@@ -980,8 +1048,6 @@ int main(int argc, char **argv)
 	Quiz[47]->ExportExcelCase("pca\\youngf15.dat", PCA_TYPE_YOUNG);
 	Quiz[47]->ExportExcelCase("pca\\oldf15.dat", PCA_TYPE_OLD);
 
-#endif
-
 	printf("allfi\r\n");
 	 Quiz[32]->ExportExcelCase("pca\\allfi.dat", PCA_TYPE_ALL);
 	 Quiz[32]->ExportExcelCase("pca\\malefi.dat", PCA_TYPE_MALE);
@@ -995,6 +1061,8 @@ int main(int argc, char **argv)
 	 Quiz[48]->ExportExcelCase("pca\\femalege.dat", PCA_TYPE_FEMALE);
 	Quiz[48]->ExportExcelCase("pca\\youngge.dat", PCA_TYPE_YOUNG);
 	Quiz[48]->ExportExcelCase("pca\\oldge.dat", PCA_TYPE_OLD);
+
+#endif
 
 	printf("allge2\r\n");
 	 Quiz[49]->ExportExcelCase("pca\\allge2.dat", PCA_TYPE_ALL);
@@ -1054,9 +1122,9 @@ int main(int argc, char **argv)
 	 Quiz[46]->ExportExcelAspie("pca\\aspief14.dat");
 	 Quiz[47]->ExportExcelAspie("pca\\aspief15.dat");
 	 Quiz[32]->ExportExcelAspie("pca\\aspiefi.dat");
+	 Quiz[48]->ExportExcelAspie("pca\\aspiege.dat");
 #endif
 
-	 Quiz[48]->ExportExcelAspie("pca\\aspiege.dat");
 	 Quiz[49]->ExportExcelAspie("pca\\aspiege2.dat");
 
 	printf("import\r\n");
@@ -1432,6 +1500,10 @@ int main(int argc, char **argv)
 	 Quiz[48]->ImportMvspAspie("pca\\aspiege.txt");
 	 Quiz[49]->ImportMvspAspie("pca\\aspiege2.txt");
 
+	printf("import final pca\r\n");
+
+	Quiz[32]->ImportFinalMvsp("pca\\allfin.txt");
+
 	printf("import pop pca\r\n");
 
 	 TQuiz::ImportPopPca("pca\\uk.txt", &TQuiz::UkPca);
@@ -1463,7 +1535,19 @@ int main(int argc, char **argv)
 	 TQuiz::ImportPopPca("pca\\raustral.txt", &TQuiz::RegionAustraliaPca);
 	 TQuiz::ImportPopPca("pca\\rafrous.txt", &TQuiz::RegionAfroUsPca);
 
+	 TQuiz::ImportPopPca("pca\\usind.txt", &TQuiz::UsIndianPca);
+	 TQuiz::ImportPopPca("pca\\usafro.txt", &TQuiz::UsAfricanPca);
+	 TQuiz::ImportPopPca("pca\\ushisp.txt", &TQuiz::UsHispanicPca);
+	 TQuiz::ImportPopPca("pca\\uscauc.txt", &TQuiz::UsCaucasianPca);
+	 TQuiz::ImportPopPca("pca\\usasia.txt", &TQuiz::UsAsianPca);
+
+	 TQuiz::ImportPopPca("pca\\allind.txt", &TQuiz::AllIndianPca);
+	 TQuiz::ImportPopPca("pca\\allafro.txt", &TQuiz::AllAfricanPca);
+	 TQuiz::ImportPopPca("pca\\allcauc.txt", &TQuiz::AllCaucasianPca);
+	 TQuiz::ImportPopPca("pca\\allasia.txt", &TQuiz::AllAsianPca);
+
 	 TQuiz::ExportPopPcaCongruence("lang.txt");
+	 TQuiz::ExportFinalPopCongruence("financ.txt", Quiz[32]);
 
 	 printf("Cutoff\r\n");
 	  Quiz[49]->DsmCutoff("eval\\cutoff.htm", TRUE);
@@ -1526,6 +1610,7 @@ int main(int argc, char **argv)
 	 Quiz[49]->ExportGenderCongruence("gender.txt");
 	 Quiz[49]->ExportAgeCongruence("age.txt");
 	 Quiz[49]->ExportAsiaCongruence("asia.txt");
+	 Quiz[49]->ExportFinalCongruence("final.txt", Quiz[32]);
 	 Quiz[1]->ExportCongruence("con2.txt");
 	 Quiz[2]->ExportCongruence("con3.txt");
 	 Quiz[3]->ExportCongruence("con4.txt");
@@ -1588,9 +1673,9 @@ int main(int argc, char **argv)
 		TQuiz::ExportGroupIntercorr(str, g);
 	 }
 
-//	 Quiz[49]->WritePhpQuestions("q.php");
-//	 Quiz[49]->WriteSetupTexts("q.cpp");
-//	 Quiz[49]->WriteSetupCross("c.cpp");
+	 Quiz[50]->WritePhpQuestions("q.php");
+	 Quiz[50]->WriteSetupTexts("q.cpp");
+	 Quiz[50]->WriteSetupCross("c.cpp");
 
 	printf("referers\r\n");
 
@@ -1844,15 +1929,15 @@ int main(int argc, char **argv)
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
 //	  Quiz[48]->WriteWiki("wiki.txt", 0.2, 0.2); // doesn't work!
-//	  Quiz[48]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 160);
-//	  Quiz[48]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 160);
+//	  Quiz[49]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 155);
+//	  Quiz[49]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 155);
 
-	  Quiz[49]->WriteQuizWiki("g3.txt");
+//	  Quiz[49]->WriteQuizWiki("g3.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
-//	 TQuiz::WikiToQuiz("wiki.txt", "final2b.txt");
+//	 TQuiz::WikiToQuiz("wiki.txt", "final2.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 

@@ -43,6 +43,7 @@
 //#define SWEDISH     1
 #define ENGLISH       1
 
+//#define EXPORT
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -114,12 +115,11 @@ int main(int argc, char **argv)
 	printf("type histograms\r\n");
 	 Quiz[0]->ExportDiffHistogram("final\\all.csv", POP_TYPE_ALL, TRUE);
 	 Quiz[0]->ExportDiffHistogram("final\\as.csv", POP_TYPE_AS, TRUE);
-	 Quiz[0]->ExportDiffHistogram("final\\nt.csv", POP_TYPE_NT_CONTROL, TRUE);
 	 Quiz[0]->ExportDiffHistogram("final\\soc.csv", POP_TYPE_SOCIAL_PHOBIA, TRUE);
 	 Quiz[0]->ExportDiffHistogram("final\\add.csv", POP_TYPE_ADD, TRUE);
 	 Quiz[0]->ExportDiffHistogram("final\\ocd.csv", POP_TYPE_OCD, TRUE);
 
-	 TQuiz::ExportBirthMonthHistogram("final\\birth.csv");
+	 TQuiz::ExportBirthYearHistogram("final\\birth.csv");
 
 }
 
