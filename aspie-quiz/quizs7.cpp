@@ -290,7 +290,7 @@ void TQuizS7::SetupTexts()
   Quiz[42].MyGroup = GROUP_NT_TALENT;
   Quiz[43].MyGroup = GROUP_NT_HUNTING;
   Quiz[44].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[45].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[45].MyGroup = GROUP_NT_OBSESSION;
   Quiz[46].MyGroup = GROUP_NT_SOCIAL;
   Quiz[47].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[48].MyGroup = GROUP_NT_SOCIAL;
@@ -303,7 +303,7 @@ void TQuizS7::SetupTexts()
   Quiz[55].MyGroup = GROUP_NT_SOCIAL;
   Quiz[56].MyGroup = GROUP_NT_SOCIAL;
   Quiz[57].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[58].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[58].MyGroup = GROUP_ENVIRONMENT;
   Quiz[59].MyGroup = GROUP_NT_NVC;
   Quiz[60].MyGroup = GROUP_NT_SOCIAL;
   Quiz[61].MyGroup = GROUP_NT_NVC;
@@ -365,7 +365,7 @@ void TQuizS7::SetupTexts()
   Quiz[117].MyGroup = GROUP_NT_OBSESSION;
   Quiz[118].MyGroup = GROUP_NT_OBSESSION;
   Quiz[119].MyGroup = GROUP_MIXED;
-  Quiz[120].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[120].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[121].MyGroup = GROUP_MIXED;
   Quiz[122].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[123].MyGroup = GROUP_ENVIRONMENT;
@@ -378,7 +378,7 @@ void TQuizS7::SetupTexts()
   Quiz[130].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[131].MyGroup = GROUP_NT_NVC;
   Quiz[132].MyGroup = GROUP_NT_NVC;
-  Quiz[133].MyGroup = GROUP_NT_NVC;
+  Quiz[133].MyGroup = GROUP_ASPIE_NVC;
   Quiz[134].MyGroup = GROUP_NT_NVC;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -404,14 +404,14 @@ void TQuizS7::SetupTexts()
   Quiz[156].MyGroup = GROUP_NT_NVC;
   Quiz[157].MyGroup = GROUP_NT_SOCIAL;
   Quiz[158].MyGroup = GROUP_NT_NVC;
-  Quiz[159].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[159].MyGroup = GROUP_NT_SOCIAL;
   Quiz[160].MyGroup = GROUP_NT_SOCIAL;
   Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[162].MyGroup = GROUP_NT_NVC;
   Quiz[163].MyGroup = GROUP_NT_SOCIAL;
   Quiz[164].MyGroup = GROUP_NT_SOCIAL;
   Quiz[165].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[166].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[166].MyGroup = GROUP_NT_SOCIAL;
   Quiz[167].MyGroup = GROUP_NT_SOCIAL;
   Quiz[168].MyGroup = GROUP_NT_OBSESSION;
   Quiz[169].MyGroup = GROUP_NT_SOCIAL;

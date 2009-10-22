@@ -121,8 +121,8 @@ TQuizExp2::TQuizExp2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *Q
 	DefineCross(46, QuizF14);
 	DefineCross(47, QuizF15);
 
-	SetupTexts();
 //	DefineQuiz();
+	SetupTexts();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4, QuizF5, QuizF6, QuizF7, QuizF8, QuizF9, QuizF10, QuizF11, QuizF12, QuizF13, QuizF14, QuizF15);
 
 	InitReferers();
@@ -213,7 +213,6 @@ void TQuizExp2::WriteLongName(TFile &File)
 *##########################################################################*/
 void TQuizExp2::DefineQuiz()
 {
-  return;
 }
 
 /*##########################################################################
@@ -365,13 +364,13 @@ void TQuizExp2::SetupTexts()
   Quiz[24].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[25].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[26].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[27].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[27].MyGroup = GROUP_NT_SOCIAL;
   Quiz[28].MyGroup = GROUP_NT_OBSESSION;
   Quiz[29].MyGroup = GROUP_NT_OBSESSION;
   Quiz[30].MyGroup = GROUP_NT_OBSESSION;
   Quiz[31].MyGroup = GROUP_NT_OBSESSION;
   Quiz[32].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[33].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[33].MyGroup = GROUP_NT_HUNTING;
   Quiz[34].MyGroup = GROUP_NT_OBSESSION;
   Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -388,11 +387,11 @@ void TQuizExp2::SetupTexts()
   Quiz[47].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[50].MyGroup = GROUP_NT_TALENT;
   Quiz[51].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[52].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[53].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[54].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[52].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[53].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[54].MyGroup = GROUP_NT_OBSESSION;
   Quiz[55].MyGroup = GROUP_NT_SOCIAL;
   Quiz[56].MyGroup = GROUP_NT_SOCIAL;
   Quiz[57].MyGroup = GROUP_NT_SOCIAL;
@@ -413,7 +412,7 @@ void TQuizExp2::SetupTexts()
   Quiz[72].MyGroup = GROUP_ASPIE_NVC;
   Quiz[73].MyGroup = GROUP_ASPIE_NVC;
   Quiz[74].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[75].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[75].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[76].MyGroup = GROUP_ASPIE_NVC;
   Quiz[77].MyGroup = GROUP_ASPIE_NVC;
   Quiz[78].MyGroup = GROUP_ASPIE_NVC;
@@ -438,7 +437,7 @@ void TQuizExp2::SetupTexts()
   Quiz[97].MyGroup = GROUP_NT_NVC;
   Quiz[98].MyGroup = GROUP_NT_NVC;
   Quiz[99].MyGroup = GROUP_NT_NVC;
-  Quiz[100].MyGroup = GROUP_NT_NVC;
+  Quiz[100].MyGroup = GROUP_ASPIE_NVC;
   Quiz[101].MyGroup = GROUP_NT_NVC;
   Quiz[102].MyGroup = GROUP_NT_NVC;
   Quiz[103].MyGroup = GROUP_NT_NVC;
@@ -504,7 +503,7 @@ void TQuizExp2::SetupTexts()
   Quiz[161].MyGroup = GROUP_NT_NVC;
   Quiz[162].MyGroup = GROUP_NT_NVC;
   Quiz[163].MyGroup = GROUP_NT_NVC;
-  Quiz[164].MyGroup = GROUP_NT_NVC;
+  Quiz[164].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[165].MyGroup = GROUP_NT_NVC;
   Quiz[166].MyGroup = GROUP_NT_NVC;
   Quiz[167].MyGroup = GROUP_NT_NVC;
@@ -512,6 +511,8 @@ void TQuizExp2::SetupTexts()
   Quiz[169].MyGroup = GROUP_NT_NVC;
   Quiz[170].MyGroup = GROUP_NT_NVC;
   Quiz[171].MyGroup = GROUP_ASPIE_SOCIAL;
+
+#ifdef ENGLISH
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you focus on one interest at a time and become an expert on that subject?";
@@ -674,6 +675,7 @@ void TQuizExp2::SetupTexts()
   Quiz[157].Text = "Do you have a good sense for what is the right thing to do socially?";
   Quiz[158].Text = "Do you find it easy to estimate the age of people?";
   Quiz[159].Text = "Are you gracious about criticism, correction and direction?";
+#endif  
 
   Quiz[160].Text = "As a teenager, did you find it difficult to figure out how to behave in various situations?";
   Quiz[161].Text = "Do others often misunderstand you when you act naturally?";

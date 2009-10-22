@@ -40,6 +40,10 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#if !defined(SWEDISH) && !defined(ENGLISH)
+#define ENGLISH
+#endif
+
 /*##########################################################################
 #
 #   Name       : TQuizR2::TQuizR2

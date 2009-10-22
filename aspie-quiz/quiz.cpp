@@ -37,6 +37,10 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#if !defined(SWEDISH) && !defined(ENGLISH)
+#define ENGLISH
+#endif
+
 #define CALC_QUESTION_CORR       // turn on to calculate question correlations
 
 static int GlobalArr[MAX_GLOBAL_QUESTIONS];
@@ -1039,10 +1043,10 @@ void TQuiz::WritePhpQuestions(const char *filename)
     for (i = 0; i < N; i++)
     {
         found = FALSE;
-        
+
 		if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
 		{
-            quiz = GlobalTopQuiz[Quiz[i].GlobalId];
+			quiz = GlobalTopQuiz[Quiz[i].GlobalId];
 			q = GlobalTopQuestion[Quiz[i].GlobalId];
 			if (quiz)
 			{
@@ -1051,6 +1055,28 @@ void TQuiz::WritePhpQuestions(const char *filename)
 				file.Write(quiz->Quiz[q].Text);
 				file.Write("\";\n");
 				found = TRUE;
+			}
+		}
+
+		if (!found)
+		{
+			quiz = Quiz[i].CrossQuiz;
+			q = Quiz[i].CrossInd;
+
+			while (quiz && !found)
+			{
+				if (strcmp(quiz->Quiz[q].Text, "NO TEXT"))
+				{
+					sprintf(str, " $m[%d] = \"", i);
+					file.Write(str);
+					file.Write(quiz->Quiz[q].Text);
+					file.Write("\";\n");
+					found = TRUE;
+				}
+
+				cross = quiz->Quiz[q].CrossInd;
+				quiz = quiz->Quiz[q].CrossQuiz;
+				q = cross;
 			}
 		}
 
@@ -1093,7 +1119,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
 					 quiz = CrossQuiz[cross];
 					 if (quiz)
                 {
-                    for (q = 0; q < quiz->N && !found; q++)
+					for (q = 0; q < quiz->N && !found; q++)
                     {
                         if (Quiz[i].GlobalId == quiz->Quiz[q].GlobalId)
                         {
@@ -1102,8 +1128,8 @@ void TQuiz::WriteSetupTexts(const char *filename)
 								sprintf(str, "  Quiz[%d].Reverse = TRUE;\n", i);
                                 file.Write(str);
                             }
-                            found = TRUE;
-                        }
+							found = TRUE;
+						}
 						  }
                 }
 			}
@@ -1123,7 +1149,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 if (quiz)
 					 {
                     for (q = 0; q < quiz->N && !found; q++)
-                    {
+					{
                         if (Quiz[i].GlobalId == quiz->Quiz[q].GlobalId)
                         {    
                             group = quiz->Quiz[q].MyGroup;
@@ -1132,7 +1158,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                     }
                 }
             }
-        } 
+		}
 
 		if (!found)
             group = Quiz[i].MyGroup;
@@ -1153,7 +1179,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_NT_SENSORY");
 					 break;
 
-            case GROUP_ASPIE_TALENT:
+			case GROUP_ASPIE_TALENT:
 				file.Write("GROUP_ASPIE_TALENT");
 				break;
 
@@ -1183,33 +1209,33 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_ASPIE_HUNTING:
 					 file.Write("GROUP_ASPIE_HUNTING");
-                break;
+				break;
 
             case GROUP_ENVIRONMENT:
 				file.Write("GROUP_ENVIRONMENT");
 				break;
 
-            case GROUP_NT_OBSESSION:
-                file.Write("GROUP_NT_OBSESSION");
-                break;
+			case GROUP_NT_OBSESSION:
+				file.Write("GROUP_NT_OBSESSION");
+				break;
 
 			case GROUP_NT_HUNTING:
 				file.Write("GROUP_NT_HUNTING");
-                break;
+				break;
 
-            default:
-                file.Write("GROUP_MIXED");
-                break;
-        }
-        file.Write(";\n");                            
-    }
+			default:
+				file.Write("GROUP_MIXED");
+				break;
+		}
+		file.Write(";\n");
+	}
 
-    for (i = 0; i < N; i++)
-    {
-        found = FALSE;
-        
-		  if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
-        {            
+	for (i = 0; i < N; i++)
+	{
+		found = FALSE;
+
+		if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
+		{
 			quiz = GlobalTopQuiz[Quiz[i].GlobalId];
 			q = GlobalTopQuestion[Quiz[i].GlobalId];
 			if (quiz)
@@ -1222,14 +1248,36 @@ void TQuiz::WriteSetupTexts(const char *filename)
 			}
 		}
 
-        if (!found)
-        {
-            sprintf(str, "  Quiz[%d].Text = \"", i);
-            file.Write(str);
-				file.Write(Quiz[i].Text);
-				file.Write("\";\n");
-		  }
-	 }
+		if (!found)
+		{
+			quiz = Quiz[i].CrossQuiz;
+			q = Quiz[i].CrossInd;
+
+			while (quiz && !found)
+			{
+				if (strcmp(quiz->Quiz[q].Text, "NO TEXT"))
+				{
+					sprintf(str, "  Quiz[%d].Text = \"", i);
+					file.Write(str);
+					file.Write(quiz->Quiz[q].Text);
+					file.Write("\";\n");
+					found = TRUE;
+				}
+
+				cross = quiz->Quiz[q].CrossInd;
+				quiz = quiz->Quiz[q].CrossQuiz;
+				q = cross;
+			}
+		}
+
+		if (!found)
+		{
+			sprintf(str, "  Quiz[%d].Text = \"", i);
+			file.Write(str);
+			file.Write(Quiz[i].Text);
+			file.Write("\";\n");
+		}
+	}
 }
 
 /*##################  TQuiz::WriteSetupCross ##########################

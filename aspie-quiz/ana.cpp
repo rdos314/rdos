@@ -1675,7 +1675,7 @@ int main(int argc, char **argv)
 
 	 Quiz[50]->WritePhpQuestions("q.php");
 	 Quiz[50]->WriteSetupTexts("q.cpp");
-	 Quiz[50]->WriteSetupCross("c.cpp");
+//	 Quiz[50]->WriteSetupCross("c.cpp");
 
 	printf("referers\r\n");
 
@@ -1923,8 +1923,8 @@ int main(int argc, char **argv)
 //#endif
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-//	 Quiz[49]->WritePhpWeighting("weights.php");
-//	 Quiz[49]->WritePhpGroupWeighting("group.php");
+	 Quiz[50]->WritePhpWeighting("weights.php");
+	 Quiz[50]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 

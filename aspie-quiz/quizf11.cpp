@@ -213,7 +213,7 @@ void TQuizF11::SetupTexts()
   Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[174].MyGroup = GROUP_NT_SOCIAL;
   Quiz[175].MyGroup = GROUP_MIXED;
-  Quiz[176].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[176].MyGroup = GROUP_NT_HUNTING;
   Quiz[177].MyGroup = GROUP_ASPIE_SOCIAL;
 
   Quiz[150].Text = "Do you believe in fate when it comes to love?";

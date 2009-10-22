@@ -40,6 +40,10 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#if !defined(SWEDISH) && !defined(ENGLISH)
+#define ENGLISH
+#endif
+
 class THair
 {
 public:
@@ -374,7 +378,7 @@ void TQuiz9::SetupTexts()
   Quiz[62].MyGroup = GROUP_NT_NVC;
   Quiz[63].MyGroup = GROUP_NT_SOCIAL;
   Quiz[64].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[65].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[65].MyGroup = GROUP_NT_OBSESSION;
   Quiz[66].MyGroup = GROUP_NT_OBSESSION;
   Quiz[67].MyGroup = GROUP_NT_OBSESSION;
   Quiz[68].MyGroup = GROUP_NT_SOCIAL;

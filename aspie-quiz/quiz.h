@@ -34,10 +34,6 @@
 #include "refer.h"
 #include "file.h"
 
-#if !defined(SWEDISH) && !defined(ENGLISH)
-#define ENGLISH
-#endif
-
 //#define USE_PERCENT     1     // write correlations in % variance explained
 
 #define MAX_GROUP_COUNT      	15

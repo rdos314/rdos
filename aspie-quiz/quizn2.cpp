@@ -40,6 +40,10 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#if !defined(SWEDISH) && !defined(ENGLISH)
+#define ENGLISH
+#endif
+
 /*##########################################################################
 #
 #   Name       : TQuizN2::TQuizN2
@@ -272,7 +276,7 @@ void TQuizN2::SetupTexts()
   Quiz[27].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[28].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[29].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[30].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[30].MyGroup = GROUP_NT_SOCIAL;
   Quiz[31].MyGroup = GROUP_NT_OBSESSION;
   Quiz[32].MyGroup = GROUP_NT_OBSESSION;
   Quiz[33].MyGroup = GROUP_NT_OBSESSION;
@@ -284,8 +288,8 @@ void TQuizN2::SetupTexts()
   Quiz[39].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[40].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[41].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[42].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[43].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[42].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[43].MyGroup = GROUP_ENVIRONMENT;
   Quiz[44].MyGroup = GROUP_NT_SOCIAL;
   Quiz[45].MyGroup = GROUP_NT_SOCIAL;
   Quiz[46].MyGroup = GROUP_NT_SOCIAL;
@@ -380,10 +384,10 @@ void TQuizN2::SetupTexts()
   Quiz[135].MyGroup = GROUP_ENVIRONMENT;
   Quiz[136].MyGroup = GROUP_ENVIRONMENT;
   Quiz[137].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[138].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[138].MyGroup = GROUP_NT_OBSESSION;
   Quiz[139].MyGroup = GROUP_NT_NVC;
   Quiz[140].MyGroup = GROUP_NT_NVC;
-  Quiz[141].MyGroup = GROUP_NT_NVC;
+  Quiz[141].MyGroup = GROUP_ASPIE_NVC;
   Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[144].MyGroup = GROUP_NT_NVC;

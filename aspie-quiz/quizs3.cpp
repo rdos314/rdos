@@ -40,6 +40,10 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#if !defined(SWEDISH) && !defined(ENGLISH)
+#define ENGLISH
+#endif
+
 /*##########################################################################
 #
 #   Name       : TQuizS3::TQuizS3
@@ -251,12 +255,12 @@ void TQuizS3::SetupTexts()
   Quiz[27].MyGroup = GROUP_ENVIRONMENT;
   Quiz[28].MyGroup = GROUP_NT_HUNTING;
   Quiz[29].MyGroup = GROUP_NT_NVC;
-  Quiz[30].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[31].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[30].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[31].MyGroup = GROUP_NT_OBSESSION;
   Quiz[32].MyGroup = GROUP_NT_SOCIAL;
   Quiz[33].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[34].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[35].MyGroup = GROUP_NT_NVC;
+  Quiz[35].MyGroup = GROUP_ASPIE_NVC;
   Quiz[36].MyGroup = GROUP_NT_SOCIAL;
   Quiz[37].MyGroup = GROUP_NT_SOCIAL;
   Quiz[38].MyGroup = GROUP_NT_SOCIAL;
@@ -350,7 +354,7 @@ void TQuizS3::SetupTexts()
   Quiz[126].MyGroup = GROUP_NT_SENSORY;
   Quiz[127].MyGroup = GROUP_NT_TALENT;
   Quiz[128].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[129].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[129].MyGroup = GROUP_NT_OBSESSION;
   Quiz[130].MyGroup = GROUP_ENVIRONMENT;
   Quiz[131].MyGroup = GROUP_NT_SENSORY;
   Quiz[132].MyGroup = GROUP_NT_NVC;

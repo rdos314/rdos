@@ -192,7 +192,7 @@ void TQuizR1::SetupTexts()
   Quiz[14].MyGroup = GROUP_NT_OBSESSION;
   Quiz[15].MyGroup = GROUP_NT_SOCIAL;
   Quiz[16].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[17].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[17].MyGroup = GROUP_NT_OBSESSION;
   Quiz[18].MyGroup = GROUP_NT_OBSESSION;
   Quiz[19].MyGroup = GROUP_NT_NVC;
   Quiz[20].MyGroup = GROUP_NT_NVC;

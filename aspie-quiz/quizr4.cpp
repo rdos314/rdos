@@ -40,6 +40,10 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#if !defined(SWEDISH) && !defined(ENGLISH)
+#define ENGLISH
+#endif
+
 /*##########################################################################
 #
 #   Name       : TQuiz4::TQuizR4
@@ -244,7 +248,7 @@ void TQuizR4::SetupTexts()
   Quiz[21].MyGroup = GROUP_NT_NVC;
   Quiz[22].MyGroup = GROUP_ASPIE_NVC;
   Quiz[23].MyGroup = GROUP_NT_NVC;
-  Quiz[24].MyGroup = GROUP_NT_NVC;
+  Quiz[24].MyGroup = GROUP_ASPIE_NVC;
   Quiz[25].MyGroup = GROUP_ASPIE_NVC;
   Quiz[26].MyGroup = GROUP_NT_SOCIAL;
   Quiz[27].MyGroup = GROUP_NT_SOCIAL;

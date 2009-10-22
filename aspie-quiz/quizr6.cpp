@@ -225,11 +225,11 @@ void TQuizR6::SetupTexts()
   Quiz[26].MyGroup = GROUP_NT_TALENT;
   Quiz[27].MyGroup = GROUP_NT_HUNTING;
   Quiz[28].MyGroup = GROUP_NT_NVC;
-  Quiz[29].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[29].MyGroup = GROUP_NT_OBSESSION;
   Quiz[30].MyGroup = GROUP_NT_SOCIAL;
   Quiz[31].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[32].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[33].MyGroup = GROUP_NT_NVC;
+  Quiz[33].MyGroup = GROUP_ASPIE_NVC;
   Quiz[34].MyGroup = GROUP_NT_NVC;
   Quiz[35].MyGroup = GROUP_ENVIRONMENT;
   Quiz[36].MyGroup = GROUP_ASPIE_OBSESSION;

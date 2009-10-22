@@ -364,12 +364,12 @@ void TQuizExp2b::SetupTexts()
   Quiz[25].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[26].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[27].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[28].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[28].MyGroup = GROUP_NT_SOCIAL;
   Quiz[29].MyGroup = GROUP_NT_OBSESSION;
   Quiz[30].MyGroup = GROUP_NT_OBSESSION;
   Quiz[31].MyGroup = GROUP_NT_OBSESSION;
   Quiz[32].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[33].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[33].MyGroup = GROUP_NT_HUNTING;
   Quiz[34].MyGroup = GROUP_NT_OBSESSION;
   Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -386,11 +386,11 @@ void TQuizExp2b::SetupTexts()
   Quiz[47].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[50].MyGroup = GROUP_NT_TALENT;
   Quiz[51].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[52].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[53].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[54].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[52].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[53].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[54].MyGroup = GROUP_NT_OBSESSION;
   Quiz[55].MyGroup = GROUP_NT_SOCIAL;
   Quiz[56].MyGroup = GROUP_NT_SOCIAL;
   Quiz[57].MyGroup = GROUP_NT_SOCIAL;
@@ -412,7 +412,7 @@ void TQuizExp2b::SetupTexts()
   Quiz[73].MyGroup = GROUP_ASPIE_NVC;
   Quiz[74].MyGroup = GROUP_ASPIE_NVC;
   Quiz[75].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[76].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[76].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[77].MyGroup = GROUP_ASPIE_NVC;
   Quiz[78].MyGroup = GROUP_ASPIE_NVC;
   Quiz[79].MyGroup = GROUP_ASPIE_NVC;
@@ -432,10 +432,10 @@ void TQuizExp2b::SetupTexts()
   Quiz[93].MyGroup = GROUP_NT_NVC;
   Quiz[94].MyGroup = GROUP_NT_NVC;
   Quiz[95].MyGroup = GROUP_NT_NVC;
-  Quiz[96].MyGroup = GROUP_NT_NVC;
+  Quiz[96].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[97].MyGroup = GROUP_NT_NVC;
   Quiz[98].MyGroup = GROUP_NT_NVC;
-  Quiz[99].MyGroup = GROUP_NT_NVC;
+  Quiz[99].MyGroup = GROUP_ASPIE_NVC;
   Quiz[100].MyGroup = GROUP_NT_NVC;
   Quiz[101].MyGroup = GROUP_NT_NVC;
   Quiz[102].MyGroup = GROUP_NT_NVC;
@@ -497,6 +497,7 @@ void TQuizExp2b::SetupTexts()
   Quiz[157].MyGroup = GROUP_NT_SENSORY;
   Quiz[158].MyGroup = GROUP_ENVIRONMENT;
 
+#ifdef ENGLISH
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you have an avid perseverance in gathering and cataloguing information on a topic of interest?";
   Quiz[2].Text = "Do you or others think that you have unconventional ways of solving problems?";
@@ -657,7 +658,8 @@ void TQuizExp2b::SetupTexts()
   Quiz[156].Text = "Do you have a good sense for what is the right thing to do socially?";
   Quiz[157].Text = "Do you find it easy to estimate the age of people?";
   Quiz[158].Text = "Are you gracious about criticism, correction and direction?";
-}
+#endif  
+}
 
 /*##################  TQuizExp2b::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
@@ -1051,7 +1053,6 @@ void TQuizExp2b::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *
 	DefineCross(QuizGE, 156, 157);
 	DefineCross(QuizGE, 157, 158);
 	DefineCross(QuizGE, 158, 159);
-
 }
 
 /*##########################################################################
