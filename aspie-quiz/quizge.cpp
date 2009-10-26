@@ -367,7 +367,7 @@ void TQuizExp2::SetupTexts()
   Quiz[27].MyGroup = GROUP_NT_SOCIAL;
   Quiz[28].MyGroup = GROUP_NT_OBSESSION;
   Quiz[29].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[30].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[30].MyGroup = GROUP_NT_SOCIAL;
   Quiz[31].MyGroup = GROUP_NT_OBSESSION;
   Quiz[32].MyGroup = GROUP_NT_OBSESSION;
   Quiz[33].MyGroup = GROUP_NT_HUNTING;
@@ -405,7 +405,7 @@ void TQuizExp2::SetupTexts()
   Quiz[65].MyGroup = GROUP_NT_SOCIAL;
   Quiz[66].MyGroup = GROUP_NT_SOCIAL;
   Quiz[67].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[68].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[68].MyGroup = GROUP_NT_NVC;
   Quiz[69].MyGroup = GROUP_ASPIE_NVC;
   Quiz[70].MyGroup = GROUP_ASPIE_NVC;
   Quiz[71].MyGroup = GROUP_ASPIE_NVC;
@@ -421,7 +421,7 @@ void TQuizExp2::SetupTexts()
   Quiz[81].MyGroup = GROUP_ASPIE_NVC;
   Quiz[82].MyGroup = GROUP_ASPIE_NVC;
   Quiz[83].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[84].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[84].MyGroup = GROUP_NT_NVC;
   Quiz[85].MyGroup = GROUP_ASPIE_NVC;
   Quiz[86].MyGroup = GROUP_ASPIE_NVC;
   Quiz[87].MyGroup = GROUP_ASPIE_NVC;
@@ -442,13 +442,13 @@ void TQuizExp2::SetupTexts()
   Quiz[102].MyGroup = GROUP_NT_NVC;
   Quiz[103].MyGroup = GROUP_NT_NVC;
   Quiz[104].MyGroup = GROUP_NT_NVC;
-  Quiz[105].MyGroup = GROUP_NT_NVC;
+  Quiz[105].MyGroup = GROUP_NT_SOCIAL;
   Quiz[106].MyGroup = GROUP_NT_NVC;
   Quiz[107].MyGroup = GROUP_NT_NVC;
   Quiz[108].MyGroup = GROUP_NT_NVC;
   Quiz[109].MyGroup = GROUP_NT_NVC;
   Quiz[110].MyGroup = GROUP_NT_NVC;
-  Quiz[111].MyGroup = GROUP_NT_NVC;
+  Quiz[111].MyGroup = GROUP_NT_SOCIAL;
   Quiz[112].MyGroup = GROUP_NT_NVC;
   Quiz[113].MyGroup = GROUP_NT_NVC;
   Quiz[114].MyGroup = GROUP_NT_SENSORY;
@@ -504,7 +504,7 @@ void TQuizExp2::SetupTexts()
   Quiz[162].MyGroup = GROUP_NT_NVC;
   Quiz[163].MyGroup = GROUP_NT_NVC;
   Quiz[164].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[165].MyGroup = GROUP_NT_NVC;
+  Quiz[165].MyGroup = GROUP_NT_SOCIAL;
   Quiz[166].MyGroup = GROUP_NT_NVC;
   Quiz[167].MyGroup = GROUP_NT_NVC;
   Quiz[168].MyGroup = GROUP_NT_NVC;

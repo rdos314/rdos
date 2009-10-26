@@ -227,7 +227,7 @@ void TQuizF12::SetupTexts()
   Quiz[171].MyGroup = GROUP_NT_NVC;
   Quiz[172].MyGroup = GROUP_NT_NVC;
   Quiz[173].MyGroup = GROUP_MIXED;
-  Quiz[174].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[174].MyGroup = GROUP_NT_SOCIAL;
   Quiz[175].MyGroup = GROUP_NT_NVC;
   Quiz[176].MyGroup = GROUP_MIXED;
   Quiz[177].MyGroup = GROUP_NT_SOCIAL;

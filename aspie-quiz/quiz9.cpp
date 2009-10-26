@@ -362,7 +362,7 @@ void TQuiz9::SetupTexts()
   Quiz[46].MyGroup = GROUP_NT_HUNTING;
   Quiz[47].MyGroup = GROUP_NT_HUNTING;
   Quiz[48].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[49].MyGroup = GROUP_NT_NVC;
+  Quiz[49].MyGroup = GROUP_NT_SOCIAL;
   Quiz[50].MyGroup = GROUP_NT_SOCIAL;
   Quiz[51].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[52].MyGroup = GROUP_NT_OBSESSION;

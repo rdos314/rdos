@@ -295,7 +295,7 @@ void TQuizN3::SetupTexts()
   Quiz[47].MyGroup = GROUP_NT_SOCIAL;
   Quiz[48].MyGroup = GROUP_NT_SOCIAL;
   Quiz[49].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[50].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[50].MyGroup = GROUP_NT_NVC;
   Quiz[51].MyGroup = GROUP_ASPIE_NVC;
   Quiz[52].MyGroup = GROUP_ASPIE_NVC;
   Quiz[53].MyGroup = GROUP_ASPIE_NVC;
@@ -327,11 +327,11 @@ void TQuizN3::SetupTexts()
   Quiz[79].MyGroup = GROUP_NT_NVC;
   Quiz[80].MyGroup = GROUP_NT_NVC;
   Quiz[81].MyGroup = GROUP_NT_NVC;
-  Quiz[82].MyGroup = GROUP_NT_NVC;
+  Quiz[82].MyGroup = GROUP_NT_SOCIAL;
   Quiz[83].MyGroup = GROUP_NT_NVC;
   Quiz[84].MyGroup = GROUP_NT_NVC;
   Quiz[85].MyGroup = GROUP_NT_NVC;
-  Quiz[86].MyGroup = GROUP_NT_NVC;
+  Quiz[86].MyGroup = GROUP_NT_SOCIAL;
   Quiz[87].MyGroup = GROUP_NT_NVC;
   Quiz[88].MyGroup = GROUP_NT_NVC;
   Quiz[89].MyGroup = GROUP_NT_SENSORY;
@@ -379,7 +379,7 @@ void TQuizN3::SetupTexts()
   Quiz[131].MyGroup = GROUP_NT_NVC;
   Quiz[132].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[133].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[134].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[134].MyGroup = GROUP_NT_NVC;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_NT_TALENT;
   Quiz[137].MyGroup = GROUP_NT_SOCIAL;

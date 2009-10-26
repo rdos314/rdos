@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# convge2.cpp
-# Convert exported quiz-ge2 to binary file
+# convge3.cpp
+# Convert exported quiz-ge3 to binary file
 #
 ########################################################################*/
 #include <stdio.h>
@@ -31,8 +31,8 @@
 
 #include "pop.h"
 #include "file.h"
-#include "quizdge2.h"
-#include "convge2.h"
+#include "quizdge3.h"
+#include "convge.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -40,9 +40,9 @@
 #define MAX_IN_ROW      0x8000
 #define MAX_REFERERS    1024
 
-const char InsertString[] = "INSERT INTO aspie-quiz-ge2 VALUES(";
+const char InsertString[] = "INSERT INTO aspie-quiz-ge3 VALUES(";
 
-TFile quizfile("quizge2.bin", 0);
+TFile quizfile("quizge3.bin", 0);
 
 
 /*##################  HandleRow ##########################
@@ -233,7 +233,7 @@ char *ProcessRow(char *str)
 
 //    AncestryRow.Lang = 0;
     
-	for (fieldno = 0; fieldno < 176; fieldno++)
+	for (fieldno = 0; fieldno < 172; fieldno++)
 	{
 		valstr = str;
 
@@ -387,7 +387,7 @@ int main(int argc, char **argv)
 	char *rowstr;
 	char *ptr;
 	long pos = 0;
-	TFile infile("quizge2.sql");
+	TFile infile("quizge3.sql");
 	int i;
 	int grp;
 	int max;

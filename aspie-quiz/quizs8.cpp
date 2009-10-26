@@ -285,9 +285,9 @@ void TQuizS8::SetupTexts()
   Quiz[48].MyGroup = GROUP_NT_SOCIAL;
   Quiz[49].MyGroup = GROUP_ENVIRONMENT;
   Quiz[50].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[51].MyGroup = GROUP_NT_NVC;
+  Quiz[51].MyGroup = GROUP_NT_SOCIAL;
   Quiz[52].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[53].MyGroup = GROUP_NT_NVC;
+  Quiz[53].MyGroup = GROUP_NT_SOCIAL;
   Quiz[54].MyGroup = GROUP_NT_NVC;
   Quiz[55].MyGroup = GROUP_NT_SOCIAL;
   Quiz[56].MyGroup = GROUP_NT_NVC;
@@ -296,7 +296,7 @@ void TQuizS8::SetupTexts()
   Quiz[59].MyGroup = GROUP_NT_SOCIAL;
   Quiz[60].MyGroup = GROUP_NT_OBSESSION;
   Quiz[61].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[62].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[62].MyGroup = GROUP_NT_NVC;
   Quiz[63].MyGroup = GROUP_ASPIE_NVC;
   Quiz[64].MyGroup = GROUP_ASPIE_NVC;
   Quiz[65].MyGroup = GROUP_ASPIE_NVC;
@@ -378,7 +378,7 @@ void TQuizS8::SetupTexts()
   Quiz[141].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[142].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[143].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[144].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[144].MyGroup = GROUP_NT_NVC;
   Quiz[145].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[146].MyGroup = GROUP_ASPIE_NVC;
   Quiz[147].MyGroup = GROUP_NT_SOCIAL;

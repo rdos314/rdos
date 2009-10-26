@@ -213,8 +213,8 @@ void TQuizR3::SetupTexts()
   Quiz[36].MyGroup = GROUP_NT_SOCIAL;
   Quiz[37].MyGroup = GROUP_NT_NVC;
   Quiz[38].MyGroup = GROUP_NT_NVC;
-  Quiz[39].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[40].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[39].MyGroup = GROUP_NT_NVC;
+  Quiz[40].MyGroup = GROUP_NT_NVC;
   Quiz[41].MyGroup = GROUP_NT_NVC;
   Quiz[42].MyGroup = GROUP_NT_SOCIAL;
   Quiz[43].MyGroup = GROUP_NT_SOCIAL;

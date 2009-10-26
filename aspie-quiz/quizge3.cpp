@@ -29,9 +29,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizg1.h"
+#include "quizge3.h"
 #include "file.h"
-#include "quizdbg1.h"
+#include "quizdge3.h"
 
 #define CI	1
 
@@ -59,16 +59,16 @@ public:
 
 /*##########################################################################
 #
-#   Name       : TQuizFinal2::TQuizFinal2
+#   Name       : TQuizExp2c::TQuizExp2c
 #
-#   Purpose....: Constructor for TQuizFinal2
+#   Purpose....: Constructor for TQuizExp2c
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizFinal2::TQuizFinal2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15, TQuiz *QuizGe, TQuiz *QuizGe2)
+TQuizExp2c::TQuizExp2c(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15, TQuiz *QuizGe, TQuiz *QuizGe2)
   : TQuiz(155),
 	FDataFile(FileName)
 {
@@ -127,37 +127,37 @@ TQuizFinal2::TQuizFinal2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQui
 //	DefineQuiz();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4, QuizF5, QuizF6, QuizF7, QuizF8, QuizF9, QuizF10, QuizF11, QuizF12, QuizF13, QuizF14, QuizF15, QuizGe, QuizGe2);
 
-//	InitReferers();
-//	LoadReferers();
-//	SetupControlGroups();
-//	SortReferers();
-//	LoadPopulations();
-//	Calculate();
+	InitReferers();
+	LoadReferers();
+	SetupControlGroups();
+	SortReferers();
+	LoadPopulations();
+	Calculate();
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizFinal2::~TQuizFinal2
+#   Name       : TQuizExp2c::~TQuizExp2c
 #
-#   Purpose....: Destructor for TQuizFinal2
+#   Purpose....: Destructor for TQuizExp2c
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizFinal2::~TQuizFinal2()
+TQuizExp2c::~TQuizExp2c()
 {
 }
 
-/*##################  TQuizFinal2::GetCatCount ##########################
+/*##################  TQuizExp2c::GetCatCount ##########################
 *   Purpose....: Return number of categories for question  	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizFinal2::GetCatCount(int Question)
+int TQuizExp2c::GetCatCount(int Question)
 {
     return 3;
 }
@@ -169,14 +169,14 @@ int TQuizFinal2::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizFinal2::GetQuizN()
+int TQuizExp2c::GetQuizN()
 {
 	return 155;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizFinal2::WriteName
+#   Name       : TQuizExp2c::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -185,14 +185,14 @@ int TQuizFinal2::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizFinal2::WriteName(TFile &File)
+void TQuizExp2c::WriteName(TFile &File)
 {
-	 File.Write("G1");
+	 File.Write("GE3");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizFinal2::WriteLongName
+#   Name       : TQuizExp2c::WriteLongName
 #
 #   Purpose....: Write long quiz name
 #
@@ -201,25 +201,25 @@ void TQuizFinal2::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizFinal2::WriteLongName(TFile &File)
+void TQuizExp2c::WriteLongName(TFile &File)
 {
-	 File.Write("final version 2:1");
+	 File.Write("final version 2c:experimental");
 }
 
-/*##################  TQuizFinal2::DefineQuiz ##########################
+/*##################  TQuizExp2c::DefineQuiz ##########################
 *   Purpose....: Define global IDs in quiz                	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizFinal2::DefineQuiz()
+void TQuizExp2c::DefineQuiz()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizFinal2::InitReferers
+#   Name       : TQuizExp2c::InitReferers
 #
 #   Purpose....: Init referers
 #
@@ -228,7 +228,7 @@ void TQuizFinal2::DefineQuiz()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizFinal2::InitReferers()
+void TQuizExp2c::InitReferers()
 {
 	AddReferer("livejournal.com/community/asperger", "livejournal.com/community/asperger");
 	AddReferer("flashback.info", "flashback.info");
@@ -258,7 +258,7 @@ void TQuizFinal2::InitReferers()
 
 /*##########################################################################
 #
-#   Name       : TQuizFinal2::SetupControlGroups
+#   Name       : TQuizExp2c::SetupControlGroups
 #
 #   Purpose....: Setup control-groups
 #
@@ -267,7 +267,7 @@ void TQuizFinal2::InitReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizFinal2::SetupControlGroups()
+void TQuizExp2c::SetupControlGroups()
 {
 	DefineNt("flashback.info");
 	DefineNt("rdos.net/sv");
@@ -298,7 +298,7 @@ void TQuizFinal2::SetupControlGroups()
 
 /*##########################################################################
 #
-#   Name       : TQuizFinal2::SetupTexts
+#   Name       : TQuizExp2c::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -307,7 +307,7 @@ void TQuizFinal2::SetupControlGroups()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizFinal2::SetupTexts()
+void TQuizExp2c::SetupTexts()
 {
   Quiz[11].Reverse = TRUE;
   Quiz[15].Reverse = TRUE;
@@ -398,7 +398,7 @@ void TQuizFinal2::SetupTexts()
   Quiz[62].MyGroup = GROUP_NT_SOCIAL;
   Quiz[63].MyGroup = GROUP_NT_SOCIAL;
   Quiz[64].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[65].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[65].MyGroup = GROUP_NT_NVC;
   Quiz[66].MyGroup = GROUP_ASPIE_NVC;
   Quiz[67].MyGroup = GROUP_ASPIE_NVC;
   Quiz[68].MyGroup = GROUP_ASPIE_NVC;
@@ -413,7 +413,7 @@ void TQuizFinal2::SetupTexts()
   Quiz[77].MyGroup = GROUP_ASPIE_NVC;
   Quiz[78].MyGroup = GROUP_ASPIE_NVC;
   Quiz[79].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[80].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[80].MyGroup = GROUP_NT_NVC;
   Quiz[81].MyGroup = GROUP_ASPIE_NVC;
   Quiz[82].MyGroup = GROUP_ASPIE_NVC;
   Quiz[83].MyGroup = GROUP_ASPIE_NVC;
@@ -435,11 +435,11 @@ void TQuizFinal2::SetupTexts()
   Quiz[99].MyGroup = GROUP_NT_NVC;
   Quiz[100].MyGroup = GROUP_NT_NVC;
   Quiz[101].MyGroup = GROUP_NT_NVC;
-  Quiz[102].MyGroup = GROUP_NT_NVC;
+  Quiz[102].MyGroup = GROUP_NT_SOCIAL;
   Quiz[103].MyGroup = GROUP_NT_NVC;
   Quiz[104].MyGroup = GROUP_NT_NVC;
   Quiz[105].MyGroup = GROUP_NT_NVC;
-  Quiz[106].MyGroup = GROUP_NT_NVC;
+  Quiz[106].MyGroup = GROUP_NT_SOCIAL;
   Quiz[107].MyGroup = GROUP_NT_NVC;
   Quiz[108].MyGroup = GROUP_NT_NVC;
   Quiz[109].MyGroup = GROUP_NT_NVC;
@@ -806,14 +806,14 @@ void TQuizFinal2::SetupTexts()
 #endif
 }
 
-/*##################  TQuizFinal2::LoadReferers ##########################
+/*##################  TQuizExp2c::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizFinal2::LoadReferers()
+void TQuizExp2c::LoadReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
@@ -860,7 +860,7 @@ void TQuizFinal2::LoadReferers()
 
 /*##########################################################################
 #
-#   Name       : TQuizFinal2::LoadPopulations
+#   Name       : TQuizExp2c::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -869,7 +869,7 @@ void TQuizFinal2::LoadReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizFinal2::LoadPopulations()
+void TQuizExp2c::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
@@ -1027,7 +1027,7 @@ void TQuizFinal2::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizFinal2::SetupCross
+#   Name       : TQuizExp2c::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -1036,7 +1036,7 @@ void TQuizFinal2::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizFinal2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15, TQuiz *QuizGE, TQuiz *QuizGE2)
+void TQuizExp2c::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15, TQuiz *QuizGE, TQuiz *QuizGE2)
 {
     DefineCross(QuizGE2, 0, 0);
     DefineCross(QuizGE2, 1, 2);
@@ -1197,7 +1197,7 @@ void TQuizFinal2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz 
 
 /*##########################################################################
 #
-#   Name       : TQuizFinal2::GetReferer
+#   Name       : TQuizExp2c::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -1206,7 +1206,7 @@ void TQuizFinal2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz 
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizFinal2::GetReferer(const char *referer, TPopulation *pop)
+void TQuizExp2c::GetReferer(const char *referer, TPopulation *pop)
 {
 	int i;
 	TReferer *ref;
@@ -1278,14 +1278,14 @@ static int IsPca(TQuizRow *row, int PcaType)
 	return FALSE;
 }
 
-/*##################  TQuizFinal2::ExportExcelCases ##########################
+/*##################  TQuizExp2c::ExportExcelCases ##########################
 *   Purpose....: Export cases as excel-data. Make ? into 'NO' case 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizFinal2::ExportExcelCase(const char *filename, int PcaType)
+void TQuizExp2c::ExportExcelCase(const char *filename, int PcaType)
 {
 	TQuizRow Row;
 	int i;
@@ -1347,14 +1347,14 @@ void TQuizFinal2::ExportExcelCase(const char *filename, int PcaType)
 	}
 }
 
-/*##################  TQuizFinal2::ExportExcelAspie ##########################
+/*##################  TQuizExp2c::ExportExcelAspie ##########################
 *   Purpose....: Export cases as excel-data. Invert NT questions 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizFinal2::ExportExcelAspie(const char *filename)
+void TQuizExp2c::ExportExcelAspie(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1415,14 +1415,14 @@ void TQuizFinal2::ExportExcelAspie(const char *filename)
 	}
 }
 
-/*##################  TQuizFinal2::ExportExcelGroups ##########################
+/*##################  TQuizExp2c::ExportExcelGroups ##########################
 *   Purpose....: Export group cases in excel format             	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizFinal2::ExportExcelGroups(const char *filename)
+void TQuizExp2c::ExportExcelGroups(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1503,14 +1503,14 @@ void TQuizFinal2::ExportExcelGroups(const char *filename)
 	}
 }
 
-/*##################  TQuizFinal2::ImportMvsp ##########################
+/*##################  TQuizExp2c::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings   	      			      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizFinal2::ImportMvsp(const char *filename, int PcaType)
+void TQuizExp2c::ImportMvsp(const char *filename, int PcaType)
 {
 	char buf[MAX_IN_ROW];
 	int size;
@@ -1979,14 +1979,14 @@ void TRace::WriteNonUsRow(TFile &file, int index, const char *text)
 }
 
 
-/*##################  TQuizFinal2::WriteRace ##########################
+/*##################  TQuizExp2c::WriteRace ##########################
 *   Purpose....: Write race report                   			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizFinal2::WriteRace(const char *filename)
+void TQuizExp2c::WriteRace(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -2034,14 +2034,14 @@ void TQuizFinal2::WriteRace(const char *filename)
 	file.Write("</table>");
 }
 
-/*##################  TQuizFinal2::WriteRetest ##########################
+/*##################  TQuizExp2c::WriteRetest ##########################
 *   Purpose....: Write retest report             			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizFinal2::WriteRetest(const char *filename)
+void TQuizExp2c::WriteRetest(const char *filename)
 {
 	TQuizRow Row;
 	int userid;
