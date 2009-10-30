@@ -460,3 +460,5 @@
 
 #define CallGate_is_tcp_connection_idle 0x9a 123 1 0 0 2 0
 
+#define CallGate_set_codec_gpio0 0x9a 124 1 0 0 2 0
+

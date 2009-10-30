@@ -38,6 +38,7 @@ public:
     TString();
 	TString(const TString &source);
 	TString(const char *str);
+	TString(const char *str, int size);
 	virtual ~TString();
 
 	const TString &operator=(const TString &src);

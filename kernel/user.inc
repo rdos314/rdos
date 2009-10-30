@@ -2323,6 +2323,11 @@ ReadICSPData      MACRO
 
 ;;;;;;;;;;; Audio ;;;;;;;;;;
 
+;   IN  AL          GPIO 0 value
+SetCodecGpio0      MACRO
+	UserGate set_codec_gpio0_nr
+						ENDM
+
 ;   OUT AL          Left
 ;   OUT AH          Right
 GetMasterVolume      MACRO

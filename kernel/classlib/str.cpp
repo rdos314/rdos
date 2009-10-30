@@ -94,6 +94,23 @@ TString::TString(const char *str)
 
 /*##########################################################################
 #
+#   Name       : TString::TString
+#
+#   Purpose....: Construct from C-string and length
+#
+#   In params..: str
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString::TString(const char *str, int size)
+ : TShareObject(str, size + 1)
+{
+    FBuf[size] = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TString::~TString
 #
 #   Purpose....: Destructor

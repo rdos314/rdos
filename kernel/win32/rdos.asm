@@ -9624,6 +9624,35 @@ RdosReadICSPData	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosSetCodecGpio0
+;
+;		DESCRIPTION:    Set CODEC GPIO 0 PIN
+;
+;       PARAMETERS:     Value (0 or 1)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetCodecGpio0
+
+RdosSetCodecGpio0	PROC
+	push ebp
+	mov ebp,esp
+;
+    mov ax,set_codec_gpio0_nr
+    UserGate is_valid_usergate_nr
+    jc rscg0Done
+;    
+    mov al,[ebp+8]
+    and al,1
+    UserGate set_codec_gpio0_nr    
+
+rscg0Done:
+	pop ebp
+	ret 4
+RdosSetCodecGpio0	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosGetMasterVolume
 ;
 ;		DESCRIPTION:    Get master volume

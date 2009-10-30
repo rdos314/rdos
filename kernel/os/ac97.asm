@@ -316,6 +316,44 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetCodecGpio0
+;
+;		DESCRIPTION:	Set Codec GPIO 0 pin
+;
+;		PARAMETERS:		AL      Pin value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_codec_gpio0_name			DB 'Set Codec GPIO 0',0
+
+set_codec_gpio0	PROC far
+    push ax
+    push bx
+    push dx
+;
+    mov dh,al
+    mov bx,78h
+    ReadCodec
+    and ah,NOT 1
+    or ah,dh
+    WriteCodec
+;
+    mov bx,76h
+    ReadCodec
+    or al,1
+    WriteCodec    
+;    
+    pop dx
+    pop bx    
+    pop ax 
+	retf32
+set_codec_gpio0	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:		    Init
 ;
 ;		DESCRIPTION:	Module initialization
@@ -375,6 +413,12 @@ init	PROC far
 	mov di,OFFSET set_line_out_volume_name
 	xor dx,dx
 	mov ax,set_line_out_volume_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET set_codec_gpio0
+	mov di,OFFSET set_codec_gpio0_name
+	xor dx,dx
+	mov ax,set_codec_gpio0_nr
 	RegisterBimodalUserGate
 ;
 	ret

@@ -536,6 +536,8 @@ int RDOSAPI RdosWriteICSPCommand(int Handle, int Cmd);
 int RDOSAPI RdosWriteICSPData(int Handle, int Data);
 int RDOSAPI RdosReadICSPData(int Handle, int *Data);
 
+void RDOSAPI RdosSetCodecGpio0(int Value);
+
 void RDOSAPI RdosGetMasterVolume(int *Left, int *Right);
 void RDOSAPI RdosSetMasterVolume(int Left, int Right);
 
@@ -2360,6 +2362,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CarryToBool \
     parm [ebx] [edi] \
     value [eax];
+
+#pragma aux RdosSetCodecGpio0 = \
+    CallGate_set_codec_gpio0 \
+    parm [eax] \
+    modify [eax];
 
 #pragma aux RdosGetMasterVolume = \
     CallGate_get_master_volume \

@@ -18,6 +18,8 @@ int main(int argc, char **argv)
 	char FileName[256];
 	TMp3Player mp3;
 
+	RdosSetCodecGpio0(1);
+
 	RdosGetMasterVolume(&L, &R);
 	if (L < 0 && R < 0)
 		RdosSetMasterVolume(0, 100);
@@ -30,10 +32,10 @@ int main(int argc, char **argv)
 	fm = new TFm(48000);
 	TFmInstrument *inst = fm->Create(1, 1, 1.0);
 	inst->SetAttack(2.0);
-	inst->SetSustain(500.0, 35.0);
+	inst->SetSustain(10000.0, 35.0);
 	inst->SetRelease(2.0, 25.0);
 
-	inst->PlayB(0, 100.0, 100.0, 750.0);
+	inst->PlayB(0, 100.0, 100.0, 2500.0);
 
 	delete inst;
 	delete fm;

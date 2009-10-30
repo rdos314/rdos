@@ -460,4 +460,6 @@ was_usb_trans_ok_nr         = 378
 
 is_tcp_connection_idle_nr	= 379
 
-usergate_entries			= 380
+set_codec_gpio0_nr	        = 380
+
+usergate_entries			= 381
