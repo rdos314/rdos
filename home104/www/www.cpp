@@ -41,6 +41,12 @@
 #define FALSE	0
 #define TRUE	!FALSE
 
+int CurrYear = 0;
+int CurrMonth = 0;
+int CurrDay = 0;
+
+TWwwDataEntry CurrData[24][60];
+
 
 /*##########################################################################
 #
@@ -64,7 +70,7 @@ void InitRadData(TWwwRadData *data)
 
 /*##########################################################################
 #
-#   Name       : InitWwwDataEntry
+#   Name       : InitWwwData
 #
 #   Purpose....: Init www data entry structure
 #
@@ -177,7 +183,6 @@ void DecodeOutdoor(TDeviceTag *tag, TWwwDataEntry *data)
 	    }
 	}
 }
-
 
 /*##########################################################################
 #

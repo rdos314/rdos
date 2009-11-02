@@ -28,7 +28,8 @@
 #ifndef WWWDATA_H
 #define WWWDATA_H
 
-#define RAD_COUNT   10
+#define RAD_COUNT       10
+#define WWW_DATA_VER    1
 
 struct TBoolData
 {
@@ -73,14 +74,14 @@ struct TWwwDataEntry
 
 struct TWwwHeader
 {
-	 char Version;
-	 long FirstEntry;
-	 long LastEntry;
+	char Version;
+	long FirstEntry;
+	long LastEntry;
 };
 
 struct TWwwData
 {
-	 TWwwHeader header;
+	TWwwHeader header;
     TWwwDataEntry data[24 * 60];
 };    
 
