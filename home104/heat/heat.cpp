@@ -377,8 +377,8 @@ void cdecl main()
 		if (count)
 		{
 			Vp->SetTempError(temperrmax);
-//			Vp->SetAmbient(refsum / count, (int)(10.0 * Ws->GetOutdoorTemp()));
-			Vp->SetAmbient(refsum / count, 100); // 10C outside temperature
+			Vp->SetAmbient(refsum / count, (int)(10.0 * Ws->GetOutdoorTemp()));
+//			Vp->SetAmbient(refsum / count, 100); // 10C outside temperature
 		 }
 
 		val = Ws->GetIndoorTemp();
