@@ -49,6 +49,56 @@ void WriteCommand(TFtpSocketServer *server, const char *str)
 	printf(str);
 }
 
+/*##################  GetIwsIp ##########################
+*   Purpose....: Get IWS local IP	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long GetIwsIp()
+{
+    TSocket IwsSocket(RdosGetGateway(), 5000, 2500, 0x4000);
+    char Buf[64];
+    int count;
+    char ch;
+    int startok;
+    long ipdig[4];
+
+    IwsSocket.WaitForConnection(2500);
+
+    if (IwsSocket.IsOpen())
+    {
+        IwsSocket.Write("AT%GETIP\r\n");
+        IwsSocket.Push();
+
+        startok = FALSE;
+            
+        while (IwsSocket.WaitForChar(2500) && !startok)
+        {
+		    ch = IwsSocket.Read();
+			if (ch == '=')
+				startok = TRUE;
+		}
+
+        count = 0;
+
+        while (IwsSocket.WaitForChar(100))
+        {
+			Buf[count] = IwsSocket.Read();
+			count++;
+		}
+
+		Buf[count] = 0;
+
+		count = sscanf(Buf, "%d.%d.%d.%d", &ipdig[0], &ipdig[1], &ipdig[2], &ipdig[3]);
+        if (count == 4)
+            return (ipdig[3] << 24) | (ipdig[2] << 16) | (ipdig[1] << 8) | ipdig[0];
+
+    }
+    return 0;
+}
+
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
 *   In params..: *                                                          #
@@ -58,7 +108,13 @@ void WriteCommand(TFtpSocketServer *server, const char *str)
 *##########################################################################*/
 void cdecl main()
 {
+    long IwsIp = GetIwsIp();    
+
 	TFtpSocketServerFactory Factory(21, 50, 0x4000);
+
+	if (IwsIp)
+	    Factory.SetMyIp(IwsIp);
+
 	Factory.AddUser("c-drive", "rdos", "c:\\");
 	Factory.AddUser("d-drive", "rdos", "d:\\");
 	Factory.AddUser("e-drive", "rdos", "e:\\");
