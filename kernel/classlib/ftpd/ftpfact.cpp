@@ -338,6 +338,7 @@ void TFtpSocketServerFactory::Init()
 	quit = new TFtpQuitFactory;
 
 	FList = 0;
+	FMyIp = 0;
 	FLocalPort = 0;
 }
 
@@ -358,6 +359,7 @@ TSocketServer *TFtpSocketServerFactory::Create(TSocket *Socket)
 	server = new TFtpSocketServer(FList, "FTP", 0x2000, Socket);
 	server->FLocalPort = FLocalPort;
 	server->OnCommand = OnCommand;
+	server->FMyIp = FMyIp;
 
 	return server;
 }
@@ -379,6 +381,22 @@ void TFtpSocketServerFactory::AddUser(const char *User, const char *Passw, const
 
     user->FNext = FList;
     FList = user;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::SetMyIp
+#
+#   Purpose....: Set IP-address
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServerFactory::SetMyIp(long Ip)
+{
+    FMyIp = Ip;
 }
 
 /*##########################################################################

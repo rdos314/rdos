@@ -254,6 +254,7 @@ TFtpSocketServer::TFtpSocketServer(TFtpUser *UserList, const char *Name, int Sta
         CurrDir = "/";
         FDataSocket = 0;
         OnCommand = 0;
+        FMyIp = 0;
         FLocalPort = 0;
 }
 
@@ -363,7 +364,7 @@ int TFtpSocketServer::OpenDataConnection(long IP, int port)
 ##########################################################################*/
 void TFtpSocketServer::ListenForDataConnection(long *IP, int *port)
 {
-    *IP = FSocket->GetLocalIP();
+    *IP = FMyIp;
 
     if (FDataSocket)
         delete FDataSocket;
@@ -597,41 +598,43 @@ void TFtpSocketServer::Quit()
 ##########################################################################*/
 void TFtpSocketServer::HandleSocket()
 {
-        int Major;
-        int Minor;
-        int Release;
-        TFtpLangString msg;
-        TFtpCommand *cmd;
+    int Major;
+    int Minor;
+    int Release;
+    TFtpLangString msg;
+    TFtpCommand *cmd;
+    char Buf[512];
+    int count;
 
-        int count;
-        char Buf[513];
+    RdosGetVersion(&Major, &Minor, &Release);
+    msg.printf(220, Major, Minor, Release);
+    msg.Write(FSocket);
 
-        RdosGetVersion(&Major, &Minor, &Release);
-        msg.printf(220, Major, Minor, Release);
-        msg.Write(FSocket);
+    if (!FMyIp)
+        FMyIp = FSocket->GetLocalIP();
 
-        while (FSocket->IsOpen())
-        {
-                count = FSocket->Read(Buf, 512);
-                Buf[count] = 0;
+    while (FSocket->IsOpen())
+    {
+        count = FSocket->Read(Buf, 32);
+        Buf[count] = 0;
 
-                if (count == 0)
-                        break;
+        if (count == 0)
+            break;
 
         if (OnCommand)
             (*OnCommand)(this, Buf);
 
-            cmd = TFtpCommandFactory::Parse(this, Buf);
+        cmd = TFtpCommandFactory::Parse(this, Buf);
 
-                if (cmd)
-                {
-                        cmd->Run();
-                        delete cmd;
-                }
-                else
-                {
-                        msg.Load(502);
-                        msg.Write(FSocket);
-                }
+        if (cmd)
+        {
+            cmd->Run();
+            delete cmd;
         }
+        else
+        {
+            msg.Load(502);
+            msg.Write(FSocket);
+        }
+    }
 }

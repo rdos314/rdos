@@ -92,6 +92,7 @@ public:
 	TString CurrDir;
 	TString RootDir;
 
+    long FMyIp;
 	int FLocalPort;
 
 	TSocket *FDataSocket;

@@ -66,6 +66,8 @@ public:
 	void AddUser(const char *User, const char *Passw, const char *RootDir);
 	void SetDataPort(int DataPort);
 
+	void SetMyIp(long Ip);
+
 	virtual TSocketServer *Create(TSocket *Socket);
 
 	void (*OnCommand)(TFtpSocketServer *server, const char *str);
@@ -93,6 +95,7 @@ protected:
 
 	TFtpUser *FList;
 
+    long FMyIp;
 	int FLocalPort;
 };
 
