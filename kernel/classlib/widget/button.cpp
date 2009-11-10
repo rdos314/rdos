@@ -1,37 +1,37 @@
 /*#######################################################################
-# RDOS operating system
-# Copyright (C) 1988-2002, Leif Ekblad
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version. The only exception to this rule
-# is for commercial usage in embedded systems. For information on
-# usage in commercial embedded systems, contact embedded@rdos.net
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-# The author of this program may be contacted at leif@rdos.net
-#
-# keyctl.cpp
-# Graphics keyboard control class
-#
-########################################################################*/
+ # RDOS operating system
+ # Copyright (C) 1988-2002, Leif Ekblad
+ #
+ # This program is free software; you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+ # the Free Software Foundation; either version 2 of the License, or
+ # (at your option) any later version. The only exception to this rule
+ # is for commercial usage in embedded systems. For information on
+ # usage in commercial embedded systems, contact embedded@rdos.net
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ #
+ # You should have received a copy of the GNU General Public License
+ # along with this program; if not, write to the Free Software
+ # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ #
+ # The author of this program may be contacted at leif@rdos.net
+ #
+ # keyctl.cpp
+ # Graphics keyboard control class
+ #
+ ########################################################################*/
 
 #include <string.h>
 
 #include "button.h"
 #include "ini.h"
 
-#define FALSE	0
-#define TRUE	!FALSE
+#define FALSE   0
+#define TRUE    !FALSE
 
 /*##########################################################################
 #
@@ -99,7 +99,7 @@ TButtonFactory::~TButtonFactory()
     Delete(FDown);
     Delete(FDisabled);
 
-    if (FFont)    
+    if (FFont)
         delete FFont;
 }
 
@@ -117,7 +117,7 @@ TButtonFactory::~TButtonFactory()
 int TButtonFactory::GetHeight(TButtonFactoryParam &Param)
 {
     int height;
-    
+
     height = Param.Left->GetHeight();
 
     if (height < Param.Mid->GetHeight())
@@ -150,7 +150,7 @@ void TButtonFactory::Delete(TButtonFactoryParam &Param)
 
     if (Param.Mid)
     {
-        delete Param.Mid;    
+        delete Param.Mid;
         Param.Mid = 0;
     }
 
@@ -186,17 +186,17 @@ void TButtonFactory::Set(const char *IniName, const char *IniSection)
 
 
     if (Ini.ReadVar("Font.Size", str, 255))
-    {    
+    {
         size = atoi(str);
 
         if (size)
-		{
-			 if (FFont)
-				delete FFont;
+        {
+            if (FFont)
+                delete FFont;
 
-			FFont = new TFont(size);
-		}
-	}
+            FFont = new TFont(size);
+        }
+    }
 
 
     if (Ini.ReadVar("Up.Shift.X", str, 255))
@@ -222,7 +222,7 @@ void TButtonFactory::Set(const char *IniName, const char *IniSection)
 
     if (Ini.ReadVar("Up.TextColor.R", str, 255))
         FUp.TextR = atoi(str);
-    
+
     if (Ini.ReadVar("Up.TextColor.G", str, 255))
         FUp.TextG = atoi(str);
 
@@ -232,7 +232,7 @@ void TButtonFactory::Set(const char *IniName, const char *IniSection)
 
     if (Ini.ReadVar("Down.TextColor.R", str, 255))
         FDown.TextR = atoi(str);
-    
+
     if (Ini.ReadVar("Down.TextColor.G", str, 255))
         FDown.TextG = atoi(str);
 
@@ -242,7 +242,7 @@ void TButtonFactory::Set(const char *IniName, const char *IniSection)
 
     if (Ini.ReadVar("Disabled.TextColor.R", str, 255))
         FDisabled.TextR = atoi(str);
-    
+
     if (Ini.ReadVar("Disabled.TextColor.G", str, 255))
         FDisabled.TextG = atoi(str);
 
@@ -252,7 +252,7 @@ void TButtonFactory::Set(const char *IniName, const char *IniSection)
 
     if (Ini.ReadVar("Up.ShadowColor.R", str, 255))
         FUp.ShadowR = atoi(str);
-    
+
     if (Ini.ReadVar("Up.ShadowColor.G", str, 255))
         FUp.ShadowG = atoi(str);
 
@@ -262,7 +262,7 @@ void TButtonFactory::Set(const char *IniName, const char *IniSection)
 
     if (Ini.ReadVar("Down.ShadowColor.R", str, 255))
         FDown.ShadowR = atoi(str);
-    
+
     if (Ini.ReadVar("Down.ShadowColor.G", str, 255))
         FDown.ShadowG = atoi(str);
 
@@ -272,14 +272,12 @@ void TButtonFactory::Set(const char *IniName, const char *IniSection)
 
     if (Ini.ReadVar("Disabled.ShadowColor.R", str, 255))
         FDisabled.ShadowR = atoi(str);
-    
+
     if (Ini.ReadVar("Disabled.ShadowColor.G", str, 255))
         FDisabled.ShadowG = atoi(str);
 
     if (Ini.ReadVar("Disabled.ShadowColor.B", str, 255))
         FDisabled.ShadowB = atoi(str);
-
-
 }
 
 
@@ -390,7 +388,7 @@ void TButtonFactory::SetUpShift(int x, int y)
 void TButtonFactory::SetDownShift(int x, int y)
 {
     FDown.ShiftX = x;
-	FDown.ShiftY = y;
+    FDown.ShiftY = y;
 }
 
 /*##########################################################################
@@ -407,7 +405,7 @@ void TButtonFactory::SetDownShift(int x, int y)
 void TButtonFactory::SetDisabledShift(int x, int y)
 {
     FDisabled.ShiftX = x;
-	FDisabled.ShiftY = y;
+    FDisabled.ShiftY = y;
 }
 
 /*##########################################################################
@@ -555,12 +553,14 @@ int TButtonFactory::GetWidth(TButtonFactoryParam &Param, const char *text)
     int ysize;
 
     if (FWidth)
+    {
         width = FWidth;
+    }
     else
     {
         width = Param.Left->GetWidth() + Param.Right->GetWidth();
-    	FFont->GetStringMetrics(text, &xsize, &ysize);
-    	width += xsize;
+        FFont->GetStringMetrics(text, &xsize, &ysize);
+        width += xsize;
     }
 
     return width;
@@ -647,35 +647,37 @@ void TButtonFactory::GetTextStart(TButtonFactoryParam &Param, const char *text, 
 ##########################################################################*/
 TBitmapGraphicDevice *TButtonFactory::CreateBitmap(TButtonFactoryParam &Param, int width)
 {
-	TBitmapGraphicDevice *bitmap;
-	int midsize;
-	int i;
-	int left;
-	int right;
-	int height;
+    TBitmapGraphicDevice *bitmap;
+    int midsize;
+    int i;
+    int left;
+    int right;
+    int height;
 
-	if (Param.Left && Param.Mid && Param.Right)
-	{
-	    height = GetHeight(Param);
-		left = Param.Left->GetWidth();
-		right = Param.Right->GetWidth();
-		midsize = width - left - right;
+    if (Param.Left && Param.Mid && Param.Right)
+    {
+        height = GetHeight(Param);
+        left = Param.Left->GetWidth();
+        right = Param.Right->GetWidth();
+        midsize = width - left - right;
 
-		bitmap = new TBitmapGraphicDevice(24, width, height);
-	    bitmap->SetLgopNone();
+        bitmap = new TBitmapGraphicDevice(24, width, height);
+        bitmap->SetLgopNone();
 
-		bitmap->Blit(Param.Left, 0, 0, 0, 0, left, height);
-		bitmap->Blit(Param.Right, 0, 0, width - right, 0, right, height);
+        bitmap->Blit(Param.Left, 0, 0, 0, 0, left, height);
+        bitmap->Blit(Param.Right, 0, 0, width - right, 0, right, height);
 
-		for (i = 0; i < midsize; i++)
-		    bitmap->Blit(Param.Mid, 0, 0, i + left, 0, 1, height);
+        for (i = 0; i < midsize; i++)
+            bitmap->Blit(Param.Mid, 0, 0, i + left, 0, 1, height);
 
         return bitmap;
     }
     else
+    {
         return 0;
+    }
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TButtonFactory::DrawText
@@ -689,20 +691,20 @@ TBitmapGraphicDevice *TButtonFactory::CreateBitmap(TButtonFactoryParam &Param, i
 ##########################################################################*/
 void TButtonFactory::DrawText(TButtonFactoryParam &Param, TBitmapGraphicDevice *bitmap, const char *text, int x, int y)
 {
-	bitmap->SetFont(FFont);
+    bitmap->SetFont(FFont);
     bitmap->SetDrawColor(Param.ShadowR, Param.ShadowG, Param.ShadowB);
     bitmap->DrawString(x, y, text);
     bitmap->DrawString(x + 1, y, text);
-	bitmap->DrawString(x - 1, y, text);
-	bitmap->DrawString(x, y + 1, text);
-	bitmap->DrawString(x, y - 1, text);
-	bitmap->DrawString(x + 1, y + 1, text);
-	bitmap->DrawString(x - 1, y - 1, text);
-	bitmap->DrawString(x - 1, y + 1, text);
-	bitmap->DrawString(x + 1, y - 1, text);
+    bitmap->DrawString(x - 1, y, text);
+    bitmap->DrawString(x, y + 1, text);
+    bitmap->DrawString(x, y - 1, text);
+    bitmap->DrawString(x + 1, y + 1, text);
+    bitmap->DrawString(x - 1, y - 1, text);
+    bitmap->DrawString(x - 1, y + 1, text);
+    bitmap->DrawString(x + 1, y - 1, text);
 
-	bitmap->SetDrawColor(Param.TextR, Param.TextG, Param.TextB);
-	bitmap->DrawString(x, y, text);
+    bitmap->SetDrawColor(Param.TextR, Param.TextG, Param.TextB);
+    bitmap->DrawString(x, y, text);
 }
 
 /*##########################################################################
@@ -718,19 +720,19 @@ void TButtonFactory::DrawText(TButtonFactoryParam &Param, TBitmapGraphicDevice *
 ##########################################################################*/
 TBitmapGraphicDevice *TButtonFactory::CreateButton(TButtonFactoryParam &Param, const char *text)
 {
-	TBitmapGraphicDevice *bitmap;
-	int xstart;
-	int ystart;
-	int width;
+    TBitmapGraphicDevice *bitmap;
+    int xstart;
+    int ystart;
+    int width;
 
-	width = GetWidth(Param, text);
-	bitmap = CreateBitmap(Param, width);
-	GetTextStart(Param, text, &xstart, &ystart);
+    width = GetWidth(Param, text);
+    bitmap = CreateBitmap(Param, width);
+    GetTextStart(Param, text, &xstart, &ystart);
 
     xstart += Param.ShiftX;
     ystart += Param.ShiftY;
 
-	DrawText(Param, bitmap, text, xstart, ystart);
+    DrawText(Param, bitmap, text, xstart, ystart);
 
     return bitmap;
 }
@@ -765,7 +767,7 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
     delete Down;
     delete Disabled;
 
-    return button;        
+    return button;
 }
 
 /*##########################################################################
@@ -798,7 +800,7 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
     delete Down;
     delete Disabled;
 
-    return button;        
+    return button;
 }
 
 /*##########################################################################
@@ -831,17 +833,17 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
 
 
     if (Ini.ReadVar("Font.Size", str, 255))
-    {    
+    {
         size = atoi(str);
 
         if (size)
-		{
-			 if (FFont)
-				delete FFont;
+        {
+            if (FFont)
+                delete FFont;
 
-			FFont = new TFont(size);
-		}
-	}
+            FFont = new TFont(size);
+        }
+    }
 
     if (Ini.ReadVar("Start.X", str, 255))
         x = atoi(str);
@@ -861,7 +863,7 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
     delete Down;
     delete Disabled;
 
-    return button;        
+    return button;
 }
 
 /*##########################################################################
@@ -894,17 +896,17 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
 
 
     if (Ini.ReadVar("Font.Size", str, 255))
-    {    
+    {
         size = atoi(str);
 
         if (size)
-		{
-			 if (FFont)
-				delete FFont;
+        {
+            if (FFont)
+                delete FFont;
 
-			FFont = new TFont(size);
-		}
-	}
+            FFont = new TFont(size);
+        }
+    }
 
     if (Ini.ReadVar("Start.X", str, 255))
         x = atoi(str);
@@ -924,9 +926,9 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
     delete Down;
     delete Disabled;
 
-    return button;        
+    return button;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TButtonControl::TButtonControl
@@ -939,9 +941,9 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
 #
 ##########################################################################*/
 TButtonControl::TButtonControl(TControlThread *dev, const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, char ch, int xstart, int ystart)
- : TControl(dev)
+    : TControl(dev)
 {
-	 Init(Up, Down, Disable, ch, xstart, ystart);
+    Init(Up, Down, Disable, ch, xstart, ystart);
 }
 
 /*##########################################################################
@@ -956,9 +958,9 @@ TButtonControl::TButtonControl(TControlThread *dev, const TBitmapGraphicDevice *
 #
 ##########################################################################*/
 TButtonControl::TButtonControl(TControl *control, const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, char ch, int xstart, int ystart)
- : TControl(control)
+    : TControl(control)
 {
-	 Init(Up, Down, Disable, ch, xstart, ystart);
+    Init(Up, Down, Disable, ch, xstart, ystart);
 }
 
 /*##########################################################################
@@ -990,9 +992,9 @@ TButtonControl::~TButtonControl()
 ##########################################################################*/
 void TButtonControl::Init(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, char ch, int xstart, int ystart)
 {
-	FUp = 0;
-	FDown = 0;
-	FDisabled = 0;
+    FUp = 0;
+    FDown = 0;
+    FDisabled = 0;
 
     FPressed = FALSE;
     FKey = ch;
@@ -1049,7 +1051,7 @@ void TButtonControl::DeleteKeys()
         delete FDown;
         FDown = 0;
     }
-    
+
     if (FDisabled)
     {
         delete FDisabled;
@@ -1070,23 +1072,23 @@ void TButtonControl::DeleteKeys()
 ##########################################################################*/
 void TButtonControl::UpdateKeys(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable)
 {
-	int xsize;
-   int ysize;
+    int xsize;
+    int ysize;
 
     DeleteKeys();
 
-    if (Up)    
-		FUp = new TBitmapGraphicDevice(*Up);
+    if (Up)
+        FUp = new TBitmapGraphicDevice(*Up);
     else
         FUp = 0;
 
-    if (Down)          
-		FDown = new TBitmapGraphicDevice(*Down);
-	else
-		FDown = 0;
+    if (Down)
+        FDown = new TBitmapGraphicDevice(*Down);
+    else
+        FDown = 0;
 
-	if (Disable)
-    	FDisabled = new TBitmapGraphicDevice(*Disable);
+    if (Disable)
+        FDisabled = new TBitmapGraphicDevice(*Disable);
     else
         FDisabled = 0;
 
@@ -1131,9 +1133,9 @@ void TButtonControl::UpdateKeys(const TBitmapGraphicDevice *Up, const TBitmapGra
 
     if (FUp || FDown || FDisabled)
     {
-    	Resize(FSizeX, FSizeY);
-	    Move(FStartX, FStartY);
-	}
+        Resize(FSizeX, FSizeY);
+        Move(FStartX, FStartY);
+    }
 }
 
 /*##########################################################################
@@ -1186,7 +1188,7 @@ int TButtonControl::OnLeftUp(int x, int y, int ButtonState, int KeyState)
         FPressed = FALSE;
         Redraw();
     }
-    
+
     return FALSE;
 }
 
@@ -1244,7 +1246,7 @@ int TButtonControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int S
             FPressed = TRUE;
             if (FKeepDown)
                 FActive = TRUE;
-                
+
             Redraw();
         }
     }
@@ -1254,7 +1256,7 @@ int TButtonControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int S
         {
             FActive = FALSE;
             Redraw();
-        }        
+        }
     }
     return FALSE;
 }
@@ -1298,9 +1300,9 @@ void TButtonControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, i
 {
     TBitmapGraphicDevice *bitmap;
 
-	if (IsVisible())
-	{
-    	dev->SetLgopNone();
+    if (IsVisible())
+    {
+        dev->SetLgopNone();
 
         if (IsEnabled())
         {
@@ -1317,7 +1319,9 @@ void TButtonControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, i
         }
 
         if (bitmap)
+        {
             dev->Blit(bitmap, 0, 0, xmin, ymin, width, height);
+        }
         else
         {
             dev->SetFilledStyle();
