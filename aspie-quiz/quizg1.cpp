@@ -128,12 +128,12 @@ TQuizFinal2::TQuizFinal2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQui
 //	DefineQuiz();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4, QuizF5, QuizF6, QuizF7, QuizF8, QuizF9, QuizF10, QuizF11, QuizF12, QuizF13, QuizF14, QuizF15, QuizGe, QuizGe2, QuizGe3);
 
-//	InitReferers();
-//	LoadReferers();
-//	SetupControlGroups();
-//	SortReferers();
-//	LoadPopulations();
-//	Calculate();
+	InitReferers();
+	LoadReferers();
+	SetupControlGroups();
+	SortReferers();
+	LoadPopulations();
+	Calculate();
 }
 
 /*##########################################################################
