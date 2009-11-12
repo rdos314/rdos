@@ -89,6 +89,7 @@
 #include "quizge3.h"
 #include "quizdba.h"
 #include "quizg1.h"
+#include "quizg2.h"
 
 #include "quizdbf.h"
 
@@ -384,7 +385,7 @@ void ExportAncestry(const char *filename, int Ancestry)
                   case US_INDIAN:
                   	 if (Row.Ancestry == 3 && Row.Country == 7302)
                   	    use = TRUE;
-                  	 break;
+					 break;
 
                   case US_AFRO:
 					 if ((Row.Ancestry == 5 || (Row.Ancestry >= 1000 && Row.Ancestry < 2000)) && Row.Country == 7302)
@@ -585,58 +586,166 @@ int main(int argc, char **argv)
 	char str[80];
 	int g;
 
+	printf("I\r\n");
 	Quiz[0] = new TQuizI("quiz1.bin");
+
+	printf("II\r\n");
 	Quiz[1] = new TQuizII("quiz2.bin", Quiz[0]);
+
+	printf("III\r\n");
 	Quiz[2] = new TQuizIII("quiz3.bin", Quiz[0], Quiz[1]);
+
+	printf("ND\r\n");
 	Quiz[3] = new TQuizNd("quiznd.bin", Quiz[0], Quiz[1], Quiz[2]);
+
+	printf("5\r\n");
 	Quiz[4] = new TQuiz5("quiz5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3]);
+
+	printf("6\r\n");
 	Quiz[5] = new TQuiz6("quiz6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4]);
+
+	printf("7\r\n");
 	Quiz[6] = new TQuiz7("quiz7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5]);
+
+	printf("8\r\n");
 	Quiz[7] = new TQuiz8("quiz8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6]);
+
+	printf("9\r\n");
 	Quiz[8] = new TQuiz9("quiz9.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7]);
+
+	printf("R1\r\n");
 	Quiz[9] = new TQuizR1("quizr1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8]);
+
+	printf("R2\r\n");
 	Quiz[10] = new TQuizR2("quizr2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9]);
+
+	printf("R3\r\n");
 	Quiz[11] = new TQuizR3("quizr3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10]);
+
+	printf("R4\r\n");
 	Quiz[12] = new TQuizR4("quizr4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11]);
+
+	printf("R5\r\n");
 	Quiz[13] = new TQuizR5("quizr5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12]);
+
+	printf("R6\r\n");
 	Quiz[14] = new TQuizR6("quizr6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13]);
+
+	printf("R7\r\n");
 	Quiz[15] = new TQuizR7("quizr7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14]);
+
+	printf("S1\r\n");
 	Quiz[16] = new TQuizS1("quizs1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15]);
+
+	printf("S2\r\n");
 	Quiz[17] = new TQuizS2("quizs2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16]);
+
+	printf("S3\r\n");
 	Quiz[18] = new TQuizS3("quizs3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17]);
+
+	printf("S4\r\n");
 	Quiz[19] = new TQuizS4("quizs4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18]);
+
+	printf("S5\r\n");
 	Quiz[20] = new TQuizS5("quizs5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19]);
+
+	printf("S6\r\n");
 	Quiz[21] = new TQuizS6("quizs6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20]);
+
+	printf("S7\r\n");
 	Quiz[22] = new TQuizS7("quizs7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21]);
+
+	printf("S8\r\n");
 	Quiz[23] = new TQuizS8("quizs8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22]);
+
+	printf("S9\r\n");
 	Quiz[24] = new TQuizS9("quizs9.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23]);
+
+	printf("S10\r\n");
 	Quiz[25] = new TQuizS10("quizs10.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24]);
+
+	printf("S11\r\n");
 	Quiz[26] = new TQuizS11("quizs11.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25]);
+
+	printf("S12\r\n");
 	Quiz[27] = new TQuizS12("quizs12.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26]);
+
+	printf("N1\r\n");
 	Quiz[28] = new TQuizN1("quizn1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27]);
+
+	printf("N2\r\n");
 	Quiz[29] = new TQuizN2("quizn2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28]);
+
+	printf("N3\r\n");
 	Quiz[30] = new TQuizN3("quizn3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29]);
+
+	printf("N4\r\n");
 	Quiz[31] = new TQuizN4("quizn4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30]);
+
+	printf("FI\r\n");
 	Quiz[32] = new TQuizFI("quizfi.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31]);
+
+	printf("F1\r\n");
 	Quiz[33] = new TQuizF1("quizf1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32]);
+
+	printf("F2\r\n");
 	Quiz[34] = new TQuizF2("quizf2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33]);
+
+	printf("F3\r\n");
 	Quiz[35] = new TQuizF3("quizf3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34]);
+
+	printf("F4\r\n");
 	Quiz[36] = new TQuizF4("quizf4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35]);
+
+	printf("F5\r\n");
 	Quiz[37] = new TQuizF5("quizf5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36]);
+
+	printf("F6\r\n");
 	Quiz[38] = new TQuizF6("quizf6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37]);
+
+	printf("F7\r\n");
 	Quiz[39] = new TQuizF7("quizf7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38]);
+
+	printf("F8\r\n");
 	Quiz[40] = new TQuizF8("quizf8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39]);
+
+	printf("F9\r\n");
 	Quiz[41] = new TQuizF9("quizf9.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40]);
+
+	printf("F10\r\n");
 	Quiz[42] = new TQuizF10("quizf10.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41]);
+
+	printf("F11\r\n");
 	Quiz[43] = new TQuizF11("quizf11.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42]);
+
+	printf("F12\r\n");
 	Quiz[44] = new TQuizF12("quizf12.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43]);
+
+	printf("F13\r\n");
 	Quiz[45] = new TQuizF13("quizf13.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44]);
+
+	printf("F14\r\n");
 	Quiz[46] = new TQuizF14("quizf14.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45]);
+
+	printf("F15\r\n");
 	Quiz[47] = new TQuizF15("quizf15.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46]);
+
+	printf("GE\r\n");
 	Quiz[48] = new TQuizExp2("quizge.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47]);
+
+	printf("GE2\r\n");
 	Quiz[49] = new TQuizExp2b("quizge2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48]);
+
+	printf("GE3\r\n");
 	Quiz[50] = new TQuizExp2c("quizge3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49]);
-	Quiz[51] = new TQuizFinal2("quizg1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49], Quiz[50]);
+
+	printf("G1\r\n");
+	Quiz[51] = new TQuizG1("quizg1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49], Quiz[50]);
+
+	printf("G2\r\n");
+	Quiz[52] = new TQuizG2("quizg2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47], Quiz[48], Quiz[49], Quiz[50], Quiz[51]);
+
+	printf("Start analysis\r\n");
 
 	Quiz[37]->WriteOldQuestionCount("vercnt.txt", 145);
 	Quiz[37]->WriteReverseQuestionCount("revcnt.txt");
@@ -644,7 +753,9 @@ int main(int argc, char **argv)
 
 	Quiz[36]->WritePartner("eval\\partner.htm");
 
-	ExportFinal("final.bin");
+//	ExportFinal("final.bin");
+
+#ifdef ANCESTRY
 
 	 ExportAncestry("pca\\allf.dat", ANCESTRY_ALL);
 	 ExportAncestry("pca\\cauc.dat", ANCESTRY_CAUCASIAN);
@@ -684,6 +795,7 @@ int main(int argc, char **argv)
 	 ExportAncestry("pca\\allcauc.dat", ALL_CAUC);
 	 ExportAncestry("pca\\allasia.dat", ALL_ASIA);
 
+#endif
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();
@@ -1087,6 +1199,13 @@ int main(int argc, char **argv)
 	Quiz[51]->ExportExcelCase("pca\\youngg1.dat", PCA_TYPE_YOUNG);
 	Quiz[51]->ExportExcelCase("pca\\oldg1.dat", PCA_TYPE_OLD);
 
+	printf("allg2\r\n");
+	 Quiz[52]->ExportExcelCase("pca\\allg2.dat", PCA_TYPE_ALL);
+	 Quiz[52]->ExportExcelCase("pca\\maleg2.dat", PCA_TYPE_MALE);
+	 Quiz[52]->ExportExcelCase("pca\\femaleg2.dat", PCA_TYPE_FEMALE);
+	Quiz[52]->ExportExcelCase("pca\\youngg2.dat", PCA_TYPE_YOUNG);
+	Quiz[52]->ExportExcelCase("pca\\oldg2.dat", PCA_TYPE_OLD);
+
 	printf("aspie\r\n");
 
 #ifdef EXPORT
@@ -1144,6 +1263,7 @@ int main(int argc, char **argv)
 	 Quiz[49]->ExportExcelAspie("pca\\aspiege2.dat");
 	 Quiz[50]->ExportExcelAspie("pca\\aspiege3.dat");
 	 Quiz[51]->ExportExcelAspie("pca\\aspieg1.dat");
+	 Quiz[52]->ExportExcelAspie("pca\\aspieg2.dat");
 
 	printf("import\r\n");
 	 Quiz[0]->ImportMvsp("pca\\all1.txt", PCA_TYPE_ALL);
@@ -1479,6 +1599,13 @@ int main(int argc, char **argv)
 	 Quiz[51]->ImportMvsp("pca\\youngg1.txt", PCA_TYPE_YOUNG);
 	 Quiz[51]->ImportMvsp("pca\\asiag1.txt", PCA_TYPE_ASIA);
 
+	 Quiz[52]->ImportMvsp("pca\\allg2.txt", PCA_TYPE_ALL);
+	 Quiz[52]->ImportMvsp("pca\\maleg2.txt", PCA_TYPE_MALE);
+	 Quiz[52]->ImportMvsp("pca\\femaleg2.txt", PCA_TYPE_FEMALE);
+	 Quiz[52]->ImportMvsp("pca\\oldg2.txt", PCA_TYPE_OLD);
+	 Quiz[52]->ImportMvsp("pca\\youngg2.txt", PCA_TYPE_YOUNG);
+	 Quiz[52]->ImportMvsp("pca\\asiag2.txt", PCA_TYPE_ASIA);
+
 	printf("import aspie\r\n");
 
 	 Quiz[0]->ImportMvspAspie("pca\\aspie1.txt");
@@ -1533,6 +1660,7 @@ int main(int argc, char **argv)
 	 Quiz[49]->ImportMvspAspie("pca\\aspiege2.txt");
 	 Quiz[50]->ImportMvspAspie("pca\\aspiege3.txt");
 	 Quiz[51]->ImportMvspAspie("pca\\aspieg1.txt");
+	 Quiz[52]->ImportMvspAspie("pca\\aspieg2.txt");
 
 	printf("import final pca\r\n");
 
@@ -1584,7 +1712,7 @@ int main(int argc, char **argv)
 	 TQuiz::ExportFinalPopCongruence("financ.txt", Quiz[32]);
 
 	 printf("Cutoff\r\n");
-	  Quiz[50]->DsmCutoff("eval\\cutoff.htm", TRUE);
+	  Quiz[52]->DsmCutoff("eval\\cutoff.htm", TRUE);
 
 	  Quiz[0]->DsmCutoff("eval\\cut1.htm", FALSE);
 	  Quiz[1]->DsmCutoff("eval\\cut2.htm", FALSE);
@@ -1638,15 +1766,16 @@ int main(int argc, char **argv)
 	  Quiz[49]->DsmCutoff("eval\\cutge2.htm", FALSE);
 	  Quiz[50]->DsmCutoff("eval\\cutge3.htm", FALSE);
 	  Quiz[51]->DsmCutoff("eval\\cutg1.htm", FALSE);
+	  Quiz[52]->DsmCutoff("eval\\cutg2.htm", FALSE);
 
 	printf("calc global\r\n");
-	 Quiz[51]->CalcGlobal();
+	 Quiz[52]->CalcGlobal();
 
 	 printf("axis corr\r\n");
-	 Quiz[51]->ExportGenderCongruence("gender.txt");
-	 Quiz[51]->ExportAgeCongruence("age.txt");
-	 Quiz[51]->ExportAsiaCongruence("asia.txt");
-	 Quiz[51]->ExportFinalCongruence("final.txt", Quiz[32]);
+	 Quiz[52]->ExportGenderCongruence("gender.txt");
+	 Quiz[52]->ExportAgeCongruence("age.txt");
+	 Quiz[52]->ExportAsiaCongruence("asia.txt");
+	 Quiz[52]->ExportFinalCongruence("final.txt", Quiz[32]);
 	 Quiz[1]->ExportCongruence("con2.txt");
 	 Quiz[2]->ExportCongruence("con3.txt");
 	 Quiz[3]->ExportCongruence("con4.txt");
@@ -1698,6 +1827,7 @@ int main(int argc, char **argv)
 	 Quiz[49]->ExportCongruence("conge2.txt");
 	 Quiz[50]->ExportCongruence("conge3.txt");
 	 Quiz[51]->ExportCongruence("cong1.txt");
+	 Quiz[52]->ExportCongruence("cong2.txt");
 
 	 printf("export intercorr\n");
 	 TQuiz::ExportHighestIntercorr("csv\\highcorr.csv");
@@ -1772,6 +1902,7 @@ int main(int argc, char **argv)
 	 Quiz[49]->WriteReferers("eval\\refge2.htm");
 	 Quiz[50]->WriteReferers("eval\\refge3.htm");
 	 Quiz[51]->WriteReferers("eval\\refg1.htm");
+	 Quiz[52]->WriteReferers("eval\\refg2.htm");
 
 	printf("details\r\n");
 
@@ -1830,6 +1961,7 @@ int main(int argc, char **argv)
 	 Quiz[49]->WriteSumaryTable("eval\\quizge2.htm", FALSE);
 	 Quiz[50]->WriteSumaryTable("eval\\quizge3.htm", FALSE);
 	 Quiz[51]->WriteSumaryTable("eval\\quizg1.htm", FALSE);
+	 Quiz[52]->WriteSumaryTable("eval\\quizg2.htm", FALSE);
 
 	printf("rel\r\n");
 
@@ -1888,38 +2020,39 @@ int main(int argc, char **argv)
 	 Quiz[49]->WriteIntercorr("eval\\relge2.htm");
 	 Quiz[50]->WriteIntercorr("eval\\relge3.htm");
 	 Quiz[51]->WriteIntercorr("eval\\relg1.htm");
+	 Quiz[52]->WriteIntercorr("eval\\relg2.htm");
 
 	printf("group\r\n");
-	 Quiz[51]->WriteGroupTable("eval\\group.htm", TRUE);
+	 Quiz[52]->WriteGroupTable("eval\\group.htm", TRUE);
 	printf("groupcorr\r\n");
-	 Quiz[51]->WriteGroupCorrTable("eval\\groupcorr.htm");
+	 Quiz[52]->WriteGroupCorrTable("eval\\groupcorr.htm");
 	printf("pcaload\r\n");
-	 Quiz[51]->WritePcaLoadTable("eval\\pcaload.htm");
+	 Quiz[52]->WritePcaLoadTable("eval\\pcaload.htm");
 
 	printf("avgcorr\r\n");
-	 Quiz[51]->WriteAverageGroupCorrTable("eval\\avgcorr.htm");
+	 Quiz[52]->WriteAverageGroupCorrTable("eval\\avgcorr.htm");
 	printf("avgpca\r\n");
-	 Quiz[51]->WriteAveragePcaTable("eval\\avgpca.htm");
+	 Quiz[52]->WriteAveragePcaTable("eval\\avgpca.htm");
 	printf("avg\r\n");
-	 Quiz[51]->WriteAveragePcaCorrTable("eval\\avg.htm");
+	 Quiz[52]->WriteAveragePcaCorrTable("eval\\avg.htm");
 
 	printf("pcacorr\r\n");
-	 Quiz[51]->WritePcaCorrTable("eval\\pcacorr.htm");
+	 Quiz[52]->WritePcaCorrTable("eval\\pcacorr.htm");
 
 	printf("axisload\r\n");
-	 Quiz[51]->WriteAxisLoadTable("eval\\axisload.htm");
+	 Quiz[52]->WriteAxisLoadTable("eval\\axisload.htm");
 
 	printf("avgaxis\r\n");
-	 Quiz[51]->WriteAverageAxisTable("eval\\avgaxis.htm");
+	 Quiz[52]->WriteAverageAxisTable("eval\\avgaxis.htm");
 
 	printf("dxload\r\n");
-	 Quiz[51]->WriteDxLoadTable("eval\\dxload.htm");
+	 Quiz[52]->WriteDxLoadTable("eval\\dxload.htm");
 
 	printf("avgdx\r\n");
-	 Quiz[51]->WriteAverageDxTable("eval\\avgdx.htm");
+	 Quiz[52]->WriteAverageDxTable("eval\\avgdx.htm");
 
 	printf("main\r\n");
-	 Quiz[51]->WriteLinkReport("eval\\index.htm");
+	 Quiz[52]->WriteLinkReport("eval\\index.htm");
 
 //#ifdef ALL
 	printf("special reports\r\n");
@@ -1949,6 +2082,7 @@ int main(int argc, char **argv)
 	 Quiz[49]->WriteRace("eval\\racege2.htm");
 	 Quiz[50]->WriteRace("eval\\racege3.htm");
 	 Quiz[51]->WriteRace("eval\\raceg1.htm");
+	 Quiz[52]->WriteRace("eval\\raceg2.htm");
 
 	 Quiz[6]->WriteHair("eval\\hair7.htm");
 	 Quiz[6]->WriteEye("eval\\eye7.htm");
@@ -2092,6 +2226,7 @@ int main(int argc, char **argv)
 	 Quiz[49]->WritePcaGroupCorr("eval\\pcage2.htm");
 	 Quiz[50]->WritePcaGroupCorr("eval\\pcage3.htm");
 	 Quiz[51]->WritePcaGroupCorr("eval\\pcag1.htm");
+	 Quiz[52]->WritePcaGroupCorr("eval\\pcag2.htm");
 
 //	 Quiz[19]->WriteLSAS("");
 //	 Quiz[23]->WriteMDQ("");
@@ -2162,6 +2297,7 @@ int main(int argc, char **argv)
 	 Quiz[49]->ExportDiffHistogram("csv\\allge2.csv", POP_TYPE_ALL, FALSE);
 	 Quiz[50]->ExportDiffHistogram("csv\\allge3.csv", POP_TYPE_ALL, FALSE);
 	 Quiz[51]->ExportDiffHistogram("csv\\allg1.csv", POP_TYPE_ALL, FALSE);
+	 Quiz[52]->ExportDiffHistogram("csv\\allg2.csv", POP_TYPE_ALL, FALSE);
 
 #ifdef CONV
 	printf("conv headers\r\n");
@@ -2206,52 +2342,52 @@ int main(int argc, char **argv)
 	 Quiz[51]->WriteGroupWeighting("convg.h");
 
 	printf("type histograms\r\n");
-	 Quiz[51]->ExportDiffHistogram("csv\\all.csv", POP_TYPE_ALL, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\all.csv", POP_TYPE_ALL, TRUE);
 
-	 Quiz[51]->ExportDiffHistogram("csv\\autism.csv", POP_TYPE_AUTISM, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\as.csv", POP_TYPE_AS, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\nt.csv", POP_TYPE_NT_CONTROL, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\soc.csv", POP_TYPE_SOCIAL_PHOBIA, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\add.csv", POP_TYPE_ADD, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\ts.csv", POP_TYPE_TS, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\pa.csv", POP_TYPE_PA, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\bip.csv", POP_TYPE_BIPOLAR, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\schizo.csv", POP_TYPE_SCHIZOPHRENIA, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\syn.csv", POP_TYPE_SYNAESTHESIA, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\dysl.csv", POP_TYPE_DYSLEXIA, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\dysc.csv", POP_TYPE_DYSCALCULIA, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\dysg.csv", POP_TYPE_DYSGRAPHIA, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\ocd.csv", POP_TYPE_OCD, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\odd.csv", POP_TYPE_ODD, TRUE);
-	 Quiz[51]->ExportDiffHistogram("csv\\dysp.csv", POP_TYPE_DYSPRAXIA, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\autism.csv", POP_TYPE_AUTISM, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\as.csv", POP_TYPE_AS, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\nt.csv", POP_TYPE_NT_CONTROL, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\soc.csv", POP_TYPE_SOCIAL_PHOBIA, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\add.csv", POP_TYPE_ADD, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\ts.csv", POP_TYPE_TS, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\pa.csv", POP_TYPE_PA, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\bip.csv", POP_TYPE_BIPOLAR, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\schizo.csv", POP_TYPE_SCHIZOPHRENIA, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\syn.csv", POP_TYPE_SYNAESTHESIA, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\dysl.csv", POP_TYPE_DYSLEXIA, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\dysc.csv", POP_TYPE_DYSCALCULIA, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\dysg.csv", POP_TYPE_DYSGRAPHIA, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\ocd.csv", POP_TYPE_OCD, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\odd.csv", POP_TYPE_ODD, TRUE);
+	 Quiz[52]->ExportDiffHistogram("csv\\dysp.csv", POP_TYPE_DYSPRAXIA, TRUE);
 
 	 TQuiz::ExportBirthMonthHistogram("csv\\birth.csv");
 
 	printf("DSM\r\n");
-	 Quiz[51]->WriteDsmReport("eval\\autism.htm", POP_TYPE_AUTISM);
-	 Quiz[51]->WriteDsmReport("eval\\as.htm", POP_TYPE_AS);
-	 Quiz[51]->WriteDsmReport("eval\\add.htm", POP_TYPE_ADD);
-	 Quiz[51]->WriteDsmReport("eval\\ts.htm", POP_TYPE_TS);
-	 Quiz[51]->WriteDsmReport("eval\\dysp.htm", POP_TYPE_DYSPRAXIA);
-	 Quiz[51]->WriteDsmReport("eval\\dysl.htm", POP_TYPE_DYSLEXIA);
-	 Quiz[51]->WriteDsmReport("eval\\dysc.htm", POP_TYPE_DYSCALCULIA);
-	 Quiz[51]->WriteDsmReport("eval\\ocd.htm", POP_TYPE_OCD);
-	 Quiz[51]->WriteDsmReport("eval\\odd.htm", POP_TYPE_ODD);
-	 Quiz[51]->WriteDsmReport("eval\\pa.htm", POP_TYPE_PA);
-	 Quiz[51]->WriteDsmReport("eval\\dysg.htm", POP_TYPE_DYSGRAPHIA);
-	 Quiz[51]->WriteDsmReport("eval\\bip.htm", POP_TYPE_BIPOLAR);
-	 Quiz[51]->WriteDsmReport("eval\\schizo.htm", POP_TYPE_SCHIZOPHRENIA);
-	 Quiz[51]->WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
+	 Quiz[52]->WriteDsmReport("eval\\autism.htm", POP_TYPE_AUTISM);
+	 Quiz[52]->WriteDsmReport("eval\\as.htm", POP_TYPE_AS);
+	 Quiz[52]->WriteDsmReport("eval\\add.htm", POP_TYPE_ADD);
+	 Quiz[52]->WriteDsmReport("eval\\ts.htm", POP_TYPE_TS);
+	 Quiz[52]->WriteDsmReport("eval\\dysp.htm", POP_TYPE_DYSPRAXIA);
+	 Quiz[52]->WriteDsmReport("eval\\dysl.htm", POP_TYPE_DYSLEXIA);
+	 Quiz[52]->WriteDsmReport("eval\\dysc.htm", POP_TYPE_DYSCALCULIA);
+	 Quiz[52]->WriteDsmReport("eval\\ocd.htm", POP_TYPE_OCD);
+	 Quiz[52]->WriteDsmReport("eval\\odd.htm", POP_TYPE_ODD);
+	 Quiz[52]->WriteDsmReport("eval\\pa.htm", POP_TYPE_PA);
+	 Quiz[52]->WriteDsmReport("eval\\dysg.htm", POP_TYPE_DYSGRAPHIA);
+	 Quiz[52]->WriteDsmReport("eval\\bip.htm", POP_TYPE_BIPOLAR);
+	 Quiz[52]->WriteDsmReport("eval\\schizo.htm", POP_TYPE_SCHIZOPHRENIA);
+	 Quiz[52]->WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
 	printf("SQL\r\n");
-	Quiz[51]->ExportGlobalSql("db\\global.sql");
-	Quiz[51]->ExportQuizVerSql("db\\quizver.sql");
-	Quiz[51]->ExportGroupSql("db\\group.sql");
-	Quiz[51]->ExportPopTypeSql("db\\poptype.sql");
-	Quiz[51]->ExportGlobalCorrSql("db\\gcorr.sql");
-	Quiz[51]->ExportGlobalAxisSql("db\\gaxis.sql");
-	Quiz[51]->ExportQuizCatPopSql("db\\qcatpop.sql");
-	Quiz[51]->ExportQuizGlobalSql("db\\qglobal.sql");
+	Quiz[52]->ExportGlobalSql("db\\global.sql");
+	Quiz[52]->ExportQuizVerSql("db\\quizver.sql");
+	Quiz[52]->ExportGroupSql("db\\group.sql");
+	Quiz[52]->ExportPopTypeSql("db\\poptype.sql");
+	Quiz[52]->ExportGlobalCorrSql("db\\gcorr.sql");
+	Quiz[52]->ExportGlobalAxisSql("db\\gaxis.sql");
+	Quiz[52]->ExportQuizCatPopSql("db\\qcatpop.sql");
+	Quiz[52]->ExportQuizGlobalSql("db\\qglobal.sql");
 }
 
 

@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# convg1.cpp
-# Convert exported quiz-g1 to binary file
+# convg2.cpp
+# Convert exported quiz-g2 to binary file
 #
 ########################################################################*/
 #include <stdio.h>
@@ -31,7 +31,7 @@
 
 #include "pop.h"
 #include "file.h"
-#include "quizdbg1.h"
+#include "quizdbg2.h"
 #include "convg.h"
 
 #define FALSE 0
@@ -40,9 +40,9 @@
 #define MAX_IN_ROW      0x8000
 #define MAX_REFERERS    1024
 
-const char InsertString[] = "INSERT INTO aspie-quiz-g1 VALUES(";
+const char InsertString[] = "INSERT INTO aspie-quiz-g2 VALUES(";
 
-TFile quizfile("quizg1.bin", 0);
+TFile quizfile("quizg2.bin", 0);
 
 
 /*##################  HandleRow ##########################
@@ -229,10 +229,14 @@ char *ProcessRow(char *str)
 	int j;
 	TQuizRow Row;
 	int quote;
+	int Smiley;
 
 //    AncestryRow.Lang = 0;
+
+    for (i = 150; i < 390; i++)
+        Row.Quiz[i] = 0;
     
-	for (fieldno = 0; fieldno < 167; fieldno++)
+	for (fieldno = 0; fieldno < 180; fieldno++)
 	{
 		valstr = str;
 
@@ -353,10 +357,17 @@ char *ProcessRow(char *str)
 //					AncestryRow.NtResult = atoi(valstr);
 					break;
 
+				case 17:
+					Smiley = 12 * (atoi(valstr) - 1);
+					break;
+
 				default:
-					i = fieldno - 17;
-					if (i >= 0)
+					i = fieldno - 18;
+					if (i < 12)
+					    Row.Quiz[150 + Smiley + i] = atoi(valstr);
+					else
 					{
+					    i -= 12;
         				Row.Quiz[i] = atoi(valstr);
     	    		}
 					break;
@@ -386,7 +397,7 @@ int main(int argc, char **argv)
 	char *rowstr;
 	char *ptr;
 	long pos = 0;
-	TFile infile("quizg1.sql");
+	TFile infile("quizg2.sql");
 	int i;
 	int grp;
 	int max;
