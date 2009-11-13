@@ -230,6 +230,9 @@ char *ProcessRow(char *str)
 	TQuizRow Row;
 	int quote;
 	int Smiley;
+	int SmileyArr[12];
+	int count;
+	int val;
 
 //    AncestryRow.Lang = 0;
 
@@ -364,7 +367,7 @@ char *ProcessRow(char *str)
 				default:
 					i = fieldno - 18;
 					if (i < 12)
-					    Row.Quiz[150 + Smiley + i] = atoi(valstr);
+                        SmileyArr[i] = atoi(valstr);
 					else
 					{
 					    i -= 12;
@@ -372,6 +375,35 @@ char *ProcessRow(char *str)
     	    		}
 					break;
 			}
+		}
+	}
+
+	count = 0;
+
+	for (i = 0; i < 12; i++)
+		if (SmileyArr[i])
+			count ++;
+
+	if (count)
+	{
+		for (i = 0; i < 12; i++)
+		{
+			val = SmileyArr[i];
+
+			switch val:
+			{
+				case 0:
+				case 1:
+				case 2:
+					val = 1;
+					break;
+
+				case 3:
+				case 4:
+					val = 2;
+					break;
+			}
+			Row.Quiz[150 + Smiley + i] = val;
 		}
 	}
 
