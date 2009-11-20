@@ -390,7 +390,7 @@ char *ProcessRow(char *str)
 		{
 			val = SmileyArr[i];
 
-			switch val:
+/*			switch (val)
 			{
 				case 0:
 				case 1:
@@ -402,7 +402,7 @@ char *ProcessRow(char *str)
 				case 4:
 					val = 2;
 					break;
-			}
+			} */
 			Row.Quiz[150 + Smiley + i] = val;
 		}
 	}
