@@ -442,7 +442,7 @@ void TQuizFinal2::SetupTexts()
   Quiz[70].Text = "Do you wring your hands, rub your hands together or twirl your fingers?";
   Quiz[71].Text = "Do you rock back-&-forth or side-to-side (e.g. for comfort, to calm yourself, when excited or overstimulated)?";
   Quiz[72].Text = "In conversations, do you use small sounds that others don't seem to use?";
-  Quiz[73].Text = "Do recently heard tunes or rhytms tend to stick and replay themselves repeatedly in your head?";
+  Quiz[73].Text = "Do recently heard tunes or rhythms tend to stick and replay themselves repeatedly in your head?";
   Quiz[74].Text = "Do you tap your ears or press your eyes (e.g. when thinking, when stressed or distressed)?";
   Quiz[75].Text = "Do you repeat vocalizations made by others?";
   Quiz[76].Text = "Do you fiddle with things?";
