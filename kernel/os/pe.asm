@@ -3800,7 +3800,7 @@ load_dll	Proc far
 
 load_dll_pr_done:	
 	pop edi
-	pop edi
+	pop esi
 	pop edx
 	pop ecx
 	pop eax
