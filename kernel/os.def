@@ -499,5 +499,13 @@ stop_usb_req_nr             EQU 344
 
 get_usb_info_nr             EQU 345
 
-osgate_entries				EQU 350
+reserve_com_line_nr         EQU 346
+
+device_set_dtr_nr           EQU 347
+device_reset_dtr_nr         EQU 348
+
+wait_for_line_state_nr      EQU 349
+get_line_state_nr           EQU 350
+
+osgate_entries				EQU 360
 

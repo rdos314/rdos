@@ -67,6 +67,8 @@ pds_base_struc    com_device_struc <>
 pds_base          DW ?
 pds_handle        DW ?
 pds_baud_base     DD ?
+pds_line_thread   DW ?
+pds_line          DB ?
 pds_irq           DB ?
 
 pccom_device_struc   ENDS
@@ -103,6 +105,7 @@ modem	Proc near
 	mov dx,ds:base
 	add dx,6
 	in al,dx
+	mov ah,al
 ;	
 	test al,10h
 	jz modem_no_cts
@@ -120,6 +123,17 @@ modem	Proc near
 	out dx,al
 
 modem_no_cts:	
+    push ds
+    mov ds,ds:dev_handle
+	mov ds:pds_line,ah
+    mov bx,ds:pds_line_thread
+    pop ds
+    or bx,bx
+    jz modem_no_signal
+;
+    Signal
+
+modem_no_signal:    
 	ret
 modem	Endp
 
@@ -371,6 +385,7 @@ com_int_inactive:
     mov dx,ds:pds_base
 	add dx,6
 	in al,dx
+	mov ds:pds_line,al
 ;	
     mov dx,ds:pds_base
 	add dx,5
@@ -382,6 +397,12 @@ com_int_inactive:
 	mov al,IER_BITS + 1
 	inc dx
 	out dx,al
+;	
+    mov bx,ds:pds_line_thread
+    or bx,bx
+    jz com_int_done
+;
+    Signal
 
 com_int_done:	
 	ret
@@ -411,9 +432,11 @@ open_com	Proc far
     push si
 ;
     push ax
+    cli
 	mov es:pds_handle,ds
 	mov ds:dev_handle,es
 	mov ds:flgs,0
+	sti
 ;
     mov ax,start_com_port_nr
     IsValidOsGate
@@ -504,7 +527,15 @@ open_parity_done:
 	out dx,al				; enable rx ints and delta ints, disable tx, line ints
 ;
 	add dx,3
-	mov al,0Bh
+	in al,dx
+	or al,0Ah
+	mov ah,ds:line_reserved
+	or ah,ah
+	jnz open_set_dtr
+;
+    or al,1
+
+open_set_dtr:
 	out dx,al				; modem control, DTR = high, RTS = high
 ;
 	mov dx,ds:base
@@ -547,8 +578,15 @@ close_com	Proc far
 
 close_com_stopped:
 	mov dx,ds:base
-	inc bx
+	inc dx
 	xor al,al
+	mov ah,ds:line_reserved
+	or ah,ah
+	jz close_com_not_reserved
+;	
+	or al,IER_BITS
+
+close_com_not_reserved:
 	out dx,al				; disable rx, tx, line and modem ints
 ;	
 	mov es,ds:dev_handle
@@ -574,7 +612,12 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enable_cts	PROC far
+    cmp ds:line_reserved,0
+    jne enable_cts_done
+;    
     or ds:flgs,FLG_ENABLE_CTS
+
+enable_cts_done:
     ret
 enable_cts Endp
 
@@ -905,6 +948,152 @@ create_port	Proc far
 	ret
 create_port	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			reserve_line_state
+;
+;		description:	Reserve line-state signals
+;
+;		PARAMETERS:		DS      Com device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reserve_line_state	Proc far
+    push ax
+    push dx
+;    
+    mov ds:cd_line_reserved,1
+;    
+    mov dx,ds:pds_base
+	add dx,6
+	in al,dx
+	mov ds:pds_line,al
+;	
+    mov dx,ds:pds_base
+	add dx,5
+	in al,dx
+;
+    mov dx,ds:pds_base
+	in al,dx
+;	
+	mov al,IER_BITS + 1
+	inc dx
+	out dx,al
+;
+    pop dx
+    pop ax
+    ret
+reserve_line_state  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			device_set_dtr
+;
+;		description:	Device set DTR signal
+;
+;		PARAMETERS:		DS      Com device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+device_set_dtr	Proc far
+	push ax
+	push dx
+;
+	mov dx,ds:pds_base
+	add dx,4
+	in al,dx
+	or al,1
+	out dx,al
+;
+	pop dx
+	pop ax
+	ret
+device_set_dtr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			device_reset_dtr
+;
+;		description:	Device reset DTR signal
+;
+;		PARAMETERS:		DS      Com device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+device_reset_dtr	Proc far
+	push ax
+	push dx
+;
+	mov dx,ds:pds_base
+	add dx,4
+	in al,dx
+	and al,NOT 1
+	out dx,al	
+;	
+	pop dx
+	pop ax
+	ret
+device_reset_dtr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			get_line_state
+;
+;		description:	Get current line-state change
+;
+;		PARAMETERS:		DS      Com device selector
+;
+;       RETURNS:        AL      Line-state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_line_state	Proc far
+	mov al,ds:pds_line
+	shr al,4
+	and al,0Fh
+	ret
+get_line_state	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			wait_for_line_state
+;
+;		description:	Wait for line-state change
+;
+;		PARAMETERS:		DS      Com device selector
+;
+;       RETURNS:        AL      Line-state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_line_state	Proc far
+    ClearSignal
+    GetThread
+    mov ds:pds_line_thread,ax
+    WaitForSignal
+    mov ds:pds_line_thread,0
+;
+	mov al,ds:pds_line
+	shr al,4
+	and al,0Fh
+	ret
+wait_for_line_state	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1099,6 +1288,8 @@ AddPort Proc near
 	AllocateSmallGlobalMem
 	mov es:pds_base,dx
 	mov es:pds_handle,0
+	mov es:pds_line_thread,0
+	mov es:pds_line,0
 	mov es:pds_baud_base,ecx
 	pop ax
 	mov es:pds_irq,al
@@ -1110,12 +1301,28 @@ AddPort Proc near
 ;
     mov ax,es
     mov ds,ax
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET create_port
+;    
     xor ax,ax
     xor dx,dx
     AddComPort
+;    
+    mov word ptr ds:cd_create_proc,OFFSET create_port
+    mov word ptr ds:cd_create_proc+2,cs
+;    
+    mov word ptr ds:cd_reserve_line_proc,OFFSET reserve_line_state
+    mov word ptr ds:cd_reserve_line_proc+2,cs
+;    
+    mov word ptr ds:cd_set_dtr_proc,OFFSET device_set_dtr
+    mov word ptr ds:cd_set_dtr_proc+2,cs
+;    
+    mov word ptr ds:cd_reset_dtr_proc,OFFSET device_reset_dtr
+    mov word ptr ds:cd_reset_dtr_proc+2,cs
+;    
+    mov word ptr ds:cd_get_line_state_proc,OFFSET get_line_state
+    mov word ptr ds:cd_get_line_state_proc+2,cs
+;    
+    mov word ptr ds:cd_wait_for_line_state_proc,OFFSET wait_for_line_state
+    mov word ptr ds:cd_wait_for_line_state_proc+2,cs
 ;
     popad
     pop es

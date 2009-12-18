@@ -25,14 +25,31 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+CTS_LINE    = 1
+DSR_LINE    = 2
+RI_LINE     = 4
+DCD_LINE    = 8
+
 com_device_struc   STRUC
 
-;   OUT ES      Com port selector
-cd_create_proc   DD ?
+; OUT ES      Com port selector
+cd_create_proc              DD ?
 
-cd_controller    DW ?
-cd_device        DW ?
-cd_open          DB ?
+cd_reserve_line_proc        DD ?
+
+cd_set_dtr_proc             DD ?
+
+cd_reset_dtr_proc           DD ?
+
+cd_wait_for_line_state_proc DD ?
+
+; OUT AL Line status
+cd_get_line_state_proc      DD ?
+
+cd_controller               DW ?
+cd_device                   DW ?
+cd_open                     DB ?
+cd_line_reserved            DB ?
 
 com_device_struc   ENDS
 
@@ -98,6 +115,8 @@ avail_obj   	DW ?
 send_wait       DW ?
 
 com_device      DW ?
+
+line_reserved   DB ?
 
 com_port_struc	ENDS
 

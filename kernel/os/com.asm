@@ -226,6 +226,9 @@ open_com	Proc far
 	mov ds:send_wait,0	
 ;
     pop es
+    mov al,es:cd_line_reserved
+    mov ds:line_reserved,al
+;
     pop ecx
     pop bx
     pop ax
@@ -768,6 +771,9 @@ set_dtr	Proc far
     jc set_dtr_done
 ;
 	mov ds,[bx].port_sel
+	cmp ds:line_reserved,0
+	jne set_dtr_done
+;
 	call ds:set_dtr_proc
 
 set_dtr_done:
@@ -804,6 +810,9 @@ reset_dtr	Proc far
     jc reset_dtr_done
 ;
 	mov ds,[bx].port_sel
+	cmp ds:line_reserved,0
+	jne reset_dtr_done
+;
 	call ds:reset_dtr_proc
 
 reset_dtr_done:
@@ -885,6 +894,235 @@ reset_rts_done:
 	pop ds
 	retf32
 reset_rts	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			reserve_com_line
+;
+;		description:	Reserve com line-state signals
+;
+;		PARAMETERS:     AL      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reserve_com_line_name DB 'Reserve Com Line',0
+
+reserve_com_line	Proc far
+    push ds
+    push bx
+    push dx
+;
+    mov dx,com_data_sel
+    mov ds,dx
+    movzx dx,al
+    cmp dx,ds:s_port_count
+    jae reserve_line_fail
+;    
+    mov bx,dx
+    add bx,bx
+    mov ds,ds:[bx].s_port_arr
+;    
+    mov edx,ds:cd_reserve_line_proc
+    or edx,edx
+    jz reserve_line_fail
+;
+	call ds:cd_reserve_line_proc
+
+reserve_line_fail:
+    pop dx
+    pop bx
+    pop ds    
+	ret
+reserve_com_line	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			device_set_dtr
+;
+;		description:	Set DTR signal from device selector
+;
+;		PARAMETERS:     AL      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+device_set_dtr_name DB 'Device Set Dtr',0
+
+device_set_dtr	Proc far
+    push ds
+    push bx
+    push edx
+;
+    mov dx,com_data_sel
+    mov ds,dx
+    movzx dx,al
+    cmp dx,ds:s_port_count
+    jae device_set_dtr_fail
+;    
+    mov bx,dx
+    add bx,bx
+    mov ds,ds:[bx].s_port_arr
+;
+    mov edx,ds:cd_set_dtr_proc
+    or edx,edx
+    jz device_set_dtr_fail
+;    
+	call ds:cd_set_dtr_proc
+
+device_set_dtr_fail:
+    pop edx
+    pop bx
+    pop ds    
+	ret
+device_set_dtr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			device_reset_dtr
+;
+;		description:	Reset DTR signal from device selector
+;
+;		PARAMETERS:     AL      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+device_reset_dtr_name DB 'Device Reset Dtr',0
+
+device_reset_dtr	Proc far
+    push ds
+    push bx
+    push edx
+;
+    mov dx,com_data_sel
+    mov ds,dx
+    movzx dx,al
+    cmp dx,ds:s_port_count
+    jae device_reset_dtr_fail
+;    
+    mov bx,dx
+    add bx,bx
+    mov ds,ds:[bx].s_port_arr
+;
+    mov edx,ds:cd_reset_dtr_proc
+    or edx,edx
+    jz device_reset_dtr_fail
+;    
+	call ds:cd_reset_dtr_proc
+
+device_reset_dtr_fail:
+    pop edx
+    pop bx
+    pop ds    
+	ret
+device_reset_dtr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			wait_for_line_state_change
+;
+;		description:	Wait for any line-state signal to change
+;
+;		PARAMETERS:     AL      Port #
+;
+;       RETURNS:        NC  AL  Current line-state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_line_state_change_name DB 'Wait For Line State Change',0
+
+wait_for_line_state_change	Proc far
+    push ds
+    push bx
+    push edx
+;
+    mov dx,com_data_sel
+    mov ds,dx
+    movzx dx,al
+    cmp dx,ds:s_port_count
+    jae wait_for_line_state_fail
+;    
+    mov bx,dx
+    add bx,bx
+    mov ds,ds:[bx].s_port_arr
+;
+    mov edx,ds:cd_wait_for_line_state_proc
+    or edx,edx
+    jz wait_for_line_state_fail
+;    
+	call ds:cd_wait_for_line_state_proc
+	clc
+	jmp wait_for_line_state_done
+
+wait_for_line_state_fail:
+    stc
+
+wait_for_line_state_done:
+    pop edx
+    pop bx
+    pop ds    
+	ret
+wait_for_line_state_change	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			get_line_state
+;
+;		description:	Get current line-state
+;
+;		PARAMETERS:     AL      Port #
+;
+;       RETURNS:        NC  AL  Current line-state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_line_state_name DB 'Get Line State',0
+
+get_line_state	Proc far
+    push ds
+    push bx
+    push edx
+;
+    mov dx,com_data_sel
+    mov ds,dx
+    movzx dx,al
+    cmp dx,ds:s_port_count
+    jae get_line_state_fail
+;    
+    mov bx,dx
+    add bx,bx
+    mov ds,ds:[bx].s_port_arr
+;
+    mov edx,ds:cd_get_line_state_proc
+    or edx,edx
+    jz get_line_state_fail
+;    
+	call ds:cd_get_line_state_proc
+	clc
+	jmp get_line_state_done
+
+get_line_state_fail:
+    stc
+
+get_line_state_done:
+    pop edx
+    pop bx
+    pop ds    
+	ret
+get_line_state	Endp
 
 PAGE
 	
@@ -1068,7 +1306,6 @@ add_wait_for_com	ENDP
 ;		PARAMETERS:		AX      Controller #
 ;                       DX      Device #
 ;                       DS      Com device selector
-;                       ES:DI   Create procedure
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1079,8 +1316,11 @@ add_com_port    Proc far
     push bx
     push dx
 ;
-    mov word ptr ds:cd_create_proc,di
-    mov word ptr ds:cd_create_proc+2,es
+    mov ds:cd_set_dtr_proc,0
+    mov ds:cd_reset_dtr_proc,0
+    mov ds:cd_wait_for_line_state_proc,0
+    mov ds:cd_get_line_state_proc,0
+    mov ds:cd_line_reserved,0
     mov ds:cd_controller,ax
     mov ds:cd_device,dx
     mov ds:cd_open,0
@@ -1130,6 +1370,36 @@ init	Proc far
 	mov di,OFFSET add_com_port_name
 	xor cl,cl
 	mov ax,add_com_port_nr
+	RegisterOsGate
+;
+	mov si,OFFSET reserve_com_line
+	mov di,OFFSET reserve_com_line_name
+	xor cl,cl
+	mov ax,reserve_com_line_nr
+	RegisterOsGate
+;
+	mov si,OFFSET device_set_dtr
+	mov di,OFFSET device_set_dtr_name
+	xor cl,cl
+	mov ax,device_set_dtr_nr
+	RegisterOsGate
+;
+	mov si,OFFSET device_reset_dtr
+	mov di,OFFSET device_reset_dtr_name
+	xor cl,cl
+	mov ax,device_reset_dtr_nr
+	RegisterOsGate
+;
+	mov si,OFFSET wait_for_line_state_change
+	mov di,OFFSET wait_for_line_state_change_name
+	xor cl,cl
+	mov ax,wait_for_line_state_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_line_state
+	mov di,OFFSET get_line_state_name
+	xor cl,cl
+	mov ax,get_line_state_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET add_wait_for_com

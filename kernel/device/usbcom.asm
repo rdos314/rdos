@@ -2950,11 +2950,11 @@ apNoRecover:
 	movzx di,ch
 	add di,di
     mov di,word ptr cs:[di].create_port_tab    
-;    
     mov dx,es
     mov ds,dx
-    mov dx,cs
-    mov es,dx
+    mov word ptr ds:cd_create_proc,di
+    mov word ptr ds:cd_create_proc+2,cs
+;    
     movzx dx,al
     mov ax,bx
     AddComPort

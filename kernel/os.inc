@@ -2165,11 +2165,36 @@ HookUsbDetach	MACRO
 ;   AX      Controller #
 ;   DX      Device #
 ;   DS      Com device selector
-;   ES:DI   Create procedure
 AddComPort	MACRO
 	OsGate add_com_port_nr
 					ENDM
 
+;   AL      Port #
+ReserveComLine	MACRO
+	OsGate reserve_com_line_nr
+					ENDM
+
+;   AL      Port #
+DeviceSetDtr	MACRO
+	OsGate device_set_dtr_nr
+					ENDM
+
+;   AL      Port #
+DeviceResetDtr	MACRO
+	OsGate device_reset_dtr_nr
+					ENDM
+
+;   AL      Port #
+;   NC AL   Line state
+WaitForLineStateChange	MACRO
+	OsGate wait_for_line_state_nr
+					ENDM
+
+;   AL      Port #
+;   NC AL   Line state
+GetLineState	MACRO
+	OsGate get_line_state_nr
+					ENDM
 
 ; IN  BX        Pipe handle
 ; OUT BX        Req handle
