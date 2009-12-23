@@ -81,6 +81,8 @@ protected:
 	virtual int OnRightUp(int x, int y, int ButtonState, int KeyState);
 	virtual int OnRightDown(int x, int y, int ButtonState, int KeyState);
 
+    virtual void NotifyResize();
+
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
 

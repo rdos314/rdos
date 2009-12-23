@@ -335,6 +335,21 @@ void TControl::Init()
 
 /*##########################################################################
 #
+#   Name       : TControl::NotifyResize
+#
+#   Purpose....: Notify size-change
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::NotifyResize()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::IsRedrawEnabled
 #
 #   Purpose....: Check if redraw is enabled
@@ -717,6 +732,8 @@ void TControl::Resize(int xsize, int ysize)
 {
     FWidth = xsize;
     FHeight = ysize;
+
+    NotifyResize();
 
     if (FVisible)
     {
