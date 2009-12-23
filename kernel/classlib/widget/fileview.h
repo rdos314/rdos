@@ -90,13 +90,20 @@ public:
 
     void Load(const char *FileName);
     void Load(TString &FileName);
+
+    void GotoStart();
     
 protected:
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
     virtual void NotifyResize(); 	
 
     void FreeTextRows();
-    void UpdateTextRows();
+    void CreateTextRows(int rows);
+
+    void FreeFilePos();
+    void CreateFilePos(int rows);
+
+    void LoadFromPos(long pos);
 
 private:
     void Init();
@@ -109,10 +116,13 @@ private:
     int FDrawB;
 
     TFont *FFont;
+    TFile *FFile;
 
     int FRows;
     char **FTextData;
-
+    long *FFilePos;
+    long FNextPos;
+    
 };
 
 #endif
