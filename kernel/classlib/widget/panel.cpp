@@ -35,6 +35,315 @@
 
 /*##########################################################################
 #
+#   Name       : TPanelScrollFactory::TPanelScrollFactory
+#
+#   Purpose....: Panel scroll factory constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPanelScrollFactory::TPanelScrollFactory(int width)
+{
+    FScrollWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelScrollFactory::~TPanelScrollFactory
+#
+#   Purpose....: Panel scroll factory destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPanelScrollFactory::~TPanelScrollFactory()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelScrollFactory::CreateVer
+#
+#   Purpose....: Create vertical scroll control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TVerPanelScrollControl *TPanelScrollFactory::CreateVer(TPanelControl *panel)
+{
+	TVerPanelScrollControl *scroll;
+
+	scroll = new TVerPanelScrollControl(panel, FScrollWidth);
+
+	SetParam(scroll);
+
+	return scroll;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelScrollFactory::CreateHor
+#
+#   Purpose....: Create horisontal scroll control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THorPanelScrollControl *TPanelScrollFactory::CreateHor(TPanelControl *panel)
+{
+	THorPanelScrollControl *scroll;
+
+	scroll = new THorPanelScrollControl(panel, FScrollWidth);
+
+    SetParam(scroll);
+
+	return scroll;
+}
+
+/*##########################################################################
+#
+#   Name       : TVerPanelScrollControl::TVerPanelScrollControl
+#
+#   Purpose....: Vertical panel scroll control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TVerPanelScrollControl::TVerPanelScrollControl(TPanelControl *panel, int width)
+ : TVerScrollControl(panel)
+{
+    FPanel = panel;
+    FCreateWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : TVerPanelScrollControl::~TVerPanelScrollControl
+#
+#   Purpose....: Vertical panel scroll control destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TVerPanelScrollControl::~TVerPanelScrollControl()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TVerPanelScrollControl::OnScrollUp
+#
+#   Purpose....: Scroll up
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVerPanelScrollControl::OnScrollUp()
+{
+    FPanel->ScrollUp();
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TVerPanelScrollControl::OnScrollDown
+#
+#   Purpose....: Scroll down
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVerPanelScrollControl::OnScrollDown()
+{
+    FPanel->ScrollDown();
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TVerPanelScrollControl::OnScrollPageUp
+#
+#   Purpose....: Page up
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVerPanelScrollControl::OnScrollPageUp()
+{
+    FPanel->PageUp();
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TVerPanelScrollControl::OnScrollPageDown
+#
+#   Purpose....: Page down
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVerPanelScrollControl::OnScrollPageDown()
+{
+    FPanel->PageDown();
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TVerPanelScrollControl::OnMove
+#
+#   Purpose....: Move ruler
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVerPanelScrollControl::OnMove(long double relpos)
+{
+    FPanel->VerMove(relpos);
+}
+
+/*##########################################################################
+#
+#   Name       : THorPanelScrollControl::THorPanelScrollControl
+#
+#   Purpose....: Horisontal panel scroll control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THorPanelScrollControl::THorPanelScrollControl(TPanelControl *panel, int width)
+ : THorScrollControl(panel)
+{
+    FPanel = panel;
+    FCreateWidth = width;
+}
+
+/*##########################################################################
+#
+#   Name       : THorPanelScrollControl::~THorPanelScrollControl
+#
+#   Purpose....: Horisontal panel scroll control destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THorPanelScrollControl::~THorPanelScrollControl()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THorPanelScrollControl::OnScrollLeft
+#
+#   Purpose....: Scroll left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THorPanelScrollControl::OnScrollLeft()
+{
+    FPanel->ScrollLeft();
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : THorPanelScrollControl::OnScrollRight
+#
+#   Purpose....: Scroll right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THorPanelScrollControl::OnScrollRight()
+{
+    FPanel->ScrollRight();
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : THorPanelScrollControl::OnScrollPageLeft
+#
+#   Purpose....: Page left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THorPanelScrollControl::OnScrollPageLeft()
+{
+    FPanel->PageLeft();
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : THorPanelScrollControl::OnScrollPageRight
+#
+#   Purpose....: Page right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THorPanelScrollControl::OnScrollPageRight()
+{
+    FPanel->PageRight();
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : THorPanelScrollControl::OnMove
+#
+#   Purpose....: Move ruler
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THorPanelScrollControl::OnMove(long double relpos)
+{
+    FPanel->HorMove(relpos);
+}
+
+/*##########################################################################
+#
 #   Name       : TPanelFactory::TPanelFactory
 #
 #   Purpose....: Button factory constructor
@@ -97,6 +406,24 @@ void TPanelFactory::Init()
     FLowerWidth = 2;
     FLeftWidth = 2;
     FRightWidth = 2;
+
+    FScrollFact = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::DefineScroll
+#
+#   Purpose....: Define scroll factory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::DefineScroll(TPanelScrollFactory *fact)
+{
+    FScrollFact = fact;
 }
 
 /*##########################################################################
@@ -452,6 +779,9 @@ TPanelControl *TPanelFactory::Create(TControlThread *dev, int xstart, int ystart
 
     SetDefault(panel, xstart, ystart, xsize, ysize);
 
+    if (FScrollFact)
+        panel->DefineScroll(FScrollFact);
+
     return panel;        
 }
 
@@ -473,6 +803,9 @@ TPanelControl *TPanelFactory::Create(TControl *control, int xstart, int ystart, 
     panel = new TPanelControl(control, xstart, ystart, xsize, ysize);
 
     SetDefault(panel, xstart, ystart, xsize, ysize);
+
+    if (FScrollFact)
+        panel->DefineScroll(FScrollFact);
 
     return panel;        
 }
@@ -635,6 +968,175 @@ void TPanelControl::Init(int border)
     FLowerWidth = border;
     FLeftWidth = border;
     FRightWidth = border;
+
+    FVerScroll = 0;
+    FHorScroll = 0;
+    FScrollChanged = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::DefineScroll
+#
+#   Purpose....: Define scroll controls
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::DefineScroll(TPanelScrollFactory *fact)
+{
+    FVerScroll = fact->CreateVer(this);
+    FHorScroll = fact->CreateHor(this);
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::DefineScroll
+#
+#   Purpose....: Define scroll controls
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::DefineScroll(int width)
+{
+    FVerScroll = new TVerPanelScrollControl(this, width);
+    FHorScroll = new THorPanelScrollControl(this, width);
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::DefineScroll
+#
+#   Purpose....: Define scroll controls
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::DefineScroll(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    char str[256];
+    int width = 16;
+
+    Ini.GotoSection(IniSection);
+
+    if (Ini.ReadVar("Width", str, 255))
+        width = atoi(str);
+
+    FVerScroll = new TVerPanelScrollControl(this, width);
+    FVerScroll->Set(IniName, IniSection);
+    
+    FHorScroll = new THorPanelScrollControl(this, width);
+    FHorScroll->Set(IniName, IniSection);
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::EnableVerScroll
+#
+#   Purpose....: Enable vertical scrollbar
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::EnableVerScroll()
+{
+    if (!FVerScroll)
+    {
+        FVerScroll = new TVerPanelScrollControl(this, 16);
+        FVerScroll->Disable();
+    }
+
+    if (!FVerScroll->IsEnabled())
+    {
+        FVerScroll->Hide();
+        FVerScroll->Enable();
+
+        FScrollChanged = TRUE;
+        Redraw();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::EnableHorScroll
+#
+#   Purpose....: Enable horisontal scrollbar
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::EnableHorScroll()
+{
+    if (!FHorScroll)
+    {
+        FHorScroll = new THorPanelScrollControl(this, 16);
+        FHorScroll->Disable();
+    }
+
+    if (!FHorScroll->IsEnabled())
+    {
+        FHorScroll->Hide();
+        FHorScroll->Enable();
+
+        FScrollChanged = TRUE;
+        Redraw();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::DisableVerScroll
+#
+#   Purpose....: Disable vertical scrollbar
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::DisableVerScroll()
+{
+    if (FVerScroll)
+    {
+        FVerScroll->Disable();
+        FVerScroll->Hide();
+        FScrollChanged = TRUE;
+        Redraw();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::DisableHorScroll
+#
+#   Purpose....: Disable horisontal scrollbar
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::DisableHorScroll()
+{
+    if (FHorScroll)
+    {
+        FHorScroll->Disable();
+        FHorScroll->Hide();
+        FScrollChanged = TRUE;
+        Redraw();
+    }
 }
 
 /*##########################################################################
@@ -997,6 +1499,12 @@ void TPanelControl::GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff)
     *ystart = FUpperWidth;
     *xdiff = FLeftWidth + FRightWidth;
     *ydiff = FUpperWidth + FLowerWidth;
+
+    if (FHorScroll && FHorScroll->IsEnabled())
+		  *ydiff += FHorScroll->FCreateWidth;
+
+	 if (FVerScroll && FVerScroll->IsEnabled())
+		  *xdiff += FVerScroll->FCreateWidth;
 }
 
 /*##########################################################################
@@ -1039,6 +1547,156 @@ void TPanelControl::RedrawChild(TControl *control, int level)
 
 /*##########################################################################
 #
+#   Name       : TPanelControl::ScrollLeft
+#
+#   Purpose....: Scroll left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::ScrollLeft()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::ScrollRight
+#
+#   Purpose....: Scroll right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::ScrollRight()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::PageLeft
+#
+#   Purpose....: Page left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::PageLeft()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::PageRight
+#
+#   Purpose....: Page right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::PageRight()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::HorMove
+#
+#   Purpose....: Move horisontally
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::HorMove(long double pos)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::ScrollUp
+#
+#   Purpose....: Scroll up
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::ScrollUp()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::ScrollDown
+#
+#   Purpose....: Scroll down
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::ScrollDown()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::PageUp
+#
+#   Purpose....: Page up
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::PageUp()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::PageDown
+#
+#   Purpose....: Page down
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::PageDown()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::VerMove
+#
+#   Purpose....: Move vertically
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::VerMove(long double pos)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TPanelControl::Paint
 #
 #   Purpose....: Paint control
@@ -1057,6 +1715,47 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     int yimin = ymin + FUpperWidth;
     int ximax = xmax - FRightWidth;
     int yimax = ymax - FLowerWidth;
+    int xscroll;
+    int yscroll;
+    int scrolls = 0;
+
+    if (FHorScroll && FHorScroll->IsEnabled())
+    {
+		  yimax -= FHorScroll->FCreateWidth;
+		  scrolls++;
+	 }
+
+	 if (FVerScroll && FVerScroll->IsEnabled())
+	 {
+        ximax -= FVerScroll->FCreateWidth;
+        scrolls++;
+    }
+
+    if (FScrollChanged)
+    {
+        FScrollChanged = FALSE;
+
+        xscroll = ximax - ximin + 1;
+        yscroll = yimax - yimin + 1;
+
+        if (FVerScroll && FVerScroll->IsEnabled())
+        {
+            FVerScroll->Move(ximax + 1, ymin);
+			FVerScroll->Resize(FVerScroll->FCreateWidth, yscroll);
+			FVerScroll->Show();
+			FVerScroll->Redraw();
+		}
+
+		if (FHorScroll && FHorScroll->IsEnabled())
+		{
+			FHorScroll->Move(xmin, yimax + 1);
+			FHorScroll->Resize(xscroll, FHorScroll->FCreateWidth);
+            FHorScroll->Show();
+            FHorScroll->Redraw();
+        }
+
+        NotifyResize();
+    }
 
     TControl::Paint(dev, xmin, ymin, width, height);
 
@@ -1064,6 +1763,18 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 	{
     	dev->SetLgopNone();
         dev->SetFilledStyle();
+
+        if (scrolls == 2 && !FBackTrans)
+        {
+            dev->SetClipRect(  ximax + 1, yimax + 1,
+									ximax + FVerScroll->FCreateWidth,
+									yimax + FHorScroll->FCreateWidth);
+
+				SetBackColor(dev);
+				dev->DrawRect(     ximax + 1, yimax + 1,
+									ximax + FVerScroll->FCreateWidth,
+									yimax + FHorScroll->FCreateWidth);
+        }
 
         dev->SetClipRect(  ximin, yimin,
             			   ximax, yimax);

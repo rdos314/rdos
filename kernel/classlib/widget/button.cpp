@@ -20,8 +20,8 @@
  #
  # The author of this program may be contacted at leif@rdos.net
  #
- # keyctl.cpp
- # Graphics keyboard control class
+ # button.cpp
+ # Button control class
  #
  ########################################################################*/
 

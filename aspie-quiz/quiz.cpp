@@ -9239,10 +9239,10 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 	file.Write("<a name=\"QUIZ");
-	WriteName(file);
+	CrossQuiz[52]->WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[52]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -9255,6 +9255,22 @@ void TQuiz::WriteLinkReport(const char *filename)
 	 file.Write("<br>");
 #endif
 
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizg3.htm\">overview</a> <a href=\"relg3.htm\">related questions</a> <a href=\"refg3.htm\">referer sites</a> <a href=\"retestg3.htm\">score stability</a> <a href=\"raceg3.htm\">ancestry</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizg3.htm\">översikt</a> <a href=\"relg3.htm\">relaterade frågor</a> <a href=\"refg3.htm\">referenssajter</a> <a href=\"retestg3.htm\">poäng stabilitet</a> <a href=\"raceg3.htm\">ursprung</a>");
+	 file.Write("<br>");
+#endif
 
 	file.Write("<h3>Histograms</h3>\n");
 

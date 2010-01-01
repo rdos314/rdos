@@ -29,16 +29,70 @@
 #define _PANELCTL_H
 
 #include "control.h"
+#include "scroll.h"
 #include "bitdev.h"
 #include "str.h"
 
 class TPanelControl;
+
+class TVerPanelScrollControl;
+class THorPanelScrollControl;
+
+class TPanelScrollFactory : public TScrollFactory
+{
+public:
+    TPanelScrollFactory(int width);
+    virtual ~TPanelScrollFactory();
+
+	TVerPanelScrollControl *CreateVer(TPanelControl *panel);
+	THorPanelScrollControl *CreateHor(TPanelControl *panel);
+
+	int FScrollWidth;
+};	
+
+class TVerPanelScrollControl : public TVerScrollControl
+{
+    friend class TPanelControl;
+public:
+    TVerPanelScrollControl(TPanelControl *panel, int width);
+    ~TVerPanelScrollControl();
+
+protected:
+	virtual void OnScrollUp();
+	virtual void OnScrollDown();
+	virtual void OnScrollPageUp();
+	virtual void OnScrollPageDown();
+	virtual void OnMove(long double relpos);
+
+    TPanelControl *FPanel;	
+    int FCreateWidth;
+};
+
+class THorPanelScrollControl : public THorScrollControl
+{
+    friend class TPanelControl;
+public:
+    THorPanelScrollControl(TPanelControl *panel, int width);
+    ~THorPanelScrollControl();
+
+protected:
+	virtual void OnScrollLeft();
+	virtual void OnScrollRight();
+	virtual void OnScrollPageLeft();
+	virtual void OnScrollPageRight();
+	virtual void OnMove(long double relpos);
+
+    TPanelControl *FPanel;	
+    int FCreateWidth;
+};
 
 class TPanelFactory
 {
 public:
     TPanelFactory();
     ~TPanelFactory();
+
+    void DefineScroll(TPanelScrollFactory *fact);
 
     virtual void Set(const char *IniName, const char *IniSection);
 
@@ -93,10 +147,14 @@ protected:
     int FDisabledR;
     int FDisabledG;
     int FDisabledB;
+
+    TPanelScrollFactory *FScrollFact;
 };
 
 class TPanelControl : public TControl
 {
+    friend class TVerPanelScrollControl;
+    friend class THorPanelScrollControl;
 public:
     TPanelControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
     TPanelControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
@@ -105,6 +163,16 @@ public:
     ~TPanelControl();
 
     virtual void Set(const char *IniName, const char *IniSection);
+
+    void DefineScroll(TPanelScrollFactory *fact);
+    void DefineScroll(int width);
+    void DefineScroll(const char *IniName, const char *IniSection);
+
+    void EnableVerScroll();
+    void EnableHorScroll();
+
+    void DisableVerScroll();
+    void DisableHorScroll();
 
     void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
 
@@ -125,14 +193,30 @@ public:
     void SetBackColor(TGraphicDevice *dev);
 
 protected:
+    virtual void ScrollLeft();
+    virtual void ScrollRight();
+    virtual void PageLeft();
+    virtual void PageRight();
+    virtual void HorMove(long double pos);
+
+    virtual void ScrollUp();
+    virtual void ScrollDown();
+    virtual void PageUp();
+    virtual void PageDown();
+    virtual void VerMove(long double pos);
+
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
 
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
+    void UpdateScroll();
     void GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff);
 
     int FBackTrans;
+
+    THorPanelScrollControl *FHorScroll;
+    TVerPanelScrollControl *FVerScroll;
 
 private:
     void Init(int border);
@@ -146,9 +230,9 @@ private:
     int FBackG;
     int FBackB;
 
-        int FBorderR;
-        int FBorderG;
-        int FBorderB;
+    int FBorderR;
+    int FBorderG;
+    int FBorderB;
 
     int FBorderTrans;
 
@@ -162,6 +246,8 @@ private:
     int FDisabledR;
     int FDisabledG;
     int FDisabledB;
+
+    int FScrollChanged;
 };        
 
 #endif

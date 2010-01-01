@@ -92,21 +92,31 @@ public:
     void Load(TString &FileName);
 
     void GotoStart();
+    void GotoEnd();
+    void Goto(int row);
+    
+    virtual void ScrollDown();
+    virtual void ScrollUp();
+    virtual void PageDown();
+    virtual void PageUp();
     
 protected:
+	virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+	virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
     virtual void NotifyResize(); 	
 
     void FreeTextRows();
+    void ClearTextRows();
     void CreateTextRows(int rows);
 
-    void FreeFilePos();
-    void CreateFilePos(int rows);
-
-    void LoadFromPos(long pos);
+    void CacheRows(int rows);
+    void BufferTexts(int StartRow);
 
 private:
     void Init();
+    void RedrawTrans();
 
     int FStartX;
     int FStartY;
@@ -118,10 +128,15 @@ private:
     TFont *FFont;
     TFile *FFile;
 
-    int FRows;
+    int FStartRow;
+    int FViewRows;
     char **FTextData;
+
+    int FFileRows;
     long *FFilePos;
-    long FNextPos;
+    int *FFileSize;
+    int FLastRow;
+    long FLastPos;
     
 };
 

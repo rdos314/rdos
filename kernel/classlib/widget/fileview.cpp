@@ -407,7 +407,12 @@ TFileViewControl::TFileViewControl(TControl *control)
 TFileViewControl::~TFileViewControl()
 {
     FreeTextRows();
-    FreeFilePos();
+
+    if (FFilePos)
+        delete FFilePos;
+
+    if (FFileSize)
+        delete FFileSize;
 
     if (FFont)
         delete FFont;
@@ -429,9 +434,14 @@ TFileViewControl::~TFileViewControl()
 ##########################################################################*/
 void TFileViewControl::Init()
 {
-    FRows = 0;
+    FStartRow = 0;
+    FLastRow = 0;
+    FLastPos = 0;
+    FViewRows = 0;
+    FFileRows = 0;
     FTextData = 0;
     FFilePos = 0;
+    FFileSize = 0;
     FFont = 0;
     FFile = 0;
     
@@ -459,13 +469,8 @@ void TFileViewControl::NotifyResize()
     int xsize, ysize;
     int xcontr, ycontr;
     int rows;
-    long pos = 0;
-
-    if (FFilePos)
-        pos = FFilePos[0];
 
     FreeTextRows();
-    FreeFilePos();
 
     if (FFont)
         FFont->GetStringMetrics("", &xsize, &ysize);
@@ -479,11 +484,7 @@ void TFileViewControl::NotifyResize()
         rows = ycontr / ysize;
 
         CreateTextRows(rows);
-        CreateFilePos(rows);
-
-        FRows = rows;
-
-        LoadFromPos(pos);
+        BufferTexts(FStartRow);
     }
 }
     
@@ -627,13 +628,39 @@ void TFileViewControl::FreeTextRows()
 
     if (FTextData)
     {
-        for (i = 0; i < FRows; i++)
+        for (i = 0; i < FViewRows; i++)
             if (FTextData[i])
                 delete FTextData[i];
 
         delete FTextData;
 
         FTextData = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::ClearTextRows
+#
+#   Purpose....: Clear text rows
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::ClearTextRows()
+{
+    int i; 
+
+    if (FTextData)
+    {
+        for (i = 0; i < FViewRows; i++)
+        {
+            if (FTextData[i])
+                delete FTextData[i];
+            FTextData[i] = 0;
+        }
     }
 }
 
@@ -656,86 +683,102 @@ void TFileViewControl::CreateTextRows(int rows)
 
     for (i = 0; i < rows; i++)
         FTextData[i] = 0;
+
+    FViewRows = rows;
 }
 
 /*##########################################################################
 #
-#   Name       : TFileViewControl::FreeFilePos
+#   Name       : TFileViewControl::CacheRows
 #
-#   Purpose....: Free file positions
+#   Purpose....: Cache rows in file
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileViewControl::FreeFilePos()
+void TFileViewControl::CacheRows(int rows)
 {
-    if (FFilePos)
-    {
-        delete FFilePos;
-        FFilePos = 0;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TFileViewControl::CreateFilePos
-#
-#   Purpose....: Create file positions
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFileViewControl::CreateFilePos(int rows)
-{
-    int i;
-    
-    FFilePos = new long[rows];
-
-    for (i = 0; i < rows; i++)
-        FFilePos[i] = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFileViewControl::LoadFromPos
-#
-#   Purpose....: Load from specified position
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFileViewControl::LoadFromPos(long pos)
-{
+    long *NewPos;
+    int *NewSize;
     char *buf;
     char *dbuf;
-    int src;
-    int dest;
     long fsize;
     int bsize;
     int dsize;
     int done;
     int row;
-    char ch;
+    int count;
+    long pos;
 
-    buf = new char[4097];
-    dbuf = new char[17000];
-
-    if (FFile)
+    if (rows)
     {
+        NewPos = new long[rows];
+        NewSize = new int[rows];
+    }
+    else
+    {
+        NewPos = 0;
+        NewSize = 0;
+    }
+
+    count = rows;
+    if (count > FFileRows)
+        count = FFileRows;
+
+    for (row = 0; row < count; row++)
+    {
+        NewPos[row] = FFilePos[row];
+        NewSize[row] = FFileSize[row];
+    }
+
+    if (count)
+    {
+        for (row = count; row < rows; row++)
+        {
+            NewPos[row] = FFilePos[count - 1];
+            NewSize[row] = 0;
+        }
+        pos = NewPos[count - 1] + NewSize[count - 1];
+    }
+    else
+    {
+        for (row = count; row < rows; row++)
+        {
+            NewPos[row] = 0;
+            NewSize[row] = 0;
+        }
+        pos = 0;
+    }
+
+    if (FFilePos)
+        delete FFilePos;
+
+    if (FFileSize)
+        delete FFileSize;
+    
+    FFilePos = NewPos;
+    FFileSize = NewSize;
+    FFileRows = rows;
+
+    if (FFile && rows)
+    {
+        buf = new char[4097];
+        dbuf = new char[17000];
+    
         fsize = FFile->GetSize();
         if (fsize < pos)
             pos = fsize;
 
-        for (row = 0; row < FRows; row++)
-        {        
-            FFilePos[row] = pos;
+        if (FLastRow > fsize)
+        {
+            FLastRow = 0;
+            FLastPos = 0;
+        }
             
+        for (row = count; row < rows; row++)
+        {        
             FFile->SetPos(pos);
             bsize = FFile->Read(buf, 4096);
             
@@ -773,16 +816,97 @@ void TFileViewControl::LoadFromPos(long pos)
             if (fsize)
                 dsize++;
 
-            if (FTextData[row])
+            if (bsize && buf[fsize] == 0xd)
+                fsize++;
+
+            done = FALSE;
+            while (fsize < bsize && !done)
             {
-                delete FTextData[row];
-                FTextData[row] = 0;
+                switch (buf[fsize])
+                {
+                    case 0xa:
+                        fsize++;
+                        break;
+
+                    default:
+                        done = TRUE;
+                        break;
+                }
             }
 
-            if (dsize)
+            FFilePos[row] = pos;
+            FFileSize[row] = dsize;
+
+            pos += fsize;
+
+            if (bsize)
+            {
+                if (row > FLastRow)
+                {
+                    FLastRow = row;
+                    FLastPos = pos;
+                }
+            }
+        }
+
+        delete buf;
+        delete dbuf;
+                
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::BufferTexts
+#
+#   Purpose....: Buffer texts for display
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::BufferTexts(int StartRow)
+{
+    char *buf;
+    char *dbuf;
+    int rows;
+    int row;
+    int i;
+    int size;
+    int src;
+	 int dest;
+    char ch;
+
+    FStartRow = StartRow;
+
+    ClearTextRows();
+    
+    if (StartRow + FViewRows > FFileRows)
+    {
+        rows = 2 * FFileRows;
+        if (rows < StartRow + FViewRows)
+            rows = StartRow + FViewRows;
+            
+        CacheRows(rows);    
+    }
+
+    if (FFile)
+    {
+
+        buf = new char[4097];
+        dbuf = new char[17000];
+
+        row = StartRow;
+        for (i = 0; i < FViewRows; i++)       
+        {
+            FFile->SetPos(FFilePos[row]);
+            size = FFile->Read(buf, FFileSize[row]);
+
+            if (size)
             {
                 dest = 0;
-                for (src = 0; src < dsize; src++)
+                for (src = 0; src < size; src++)
                 {
                     ch = buf[src];
                     if (ch == 0x9)
@@ -804,49 +928,16 @@ void TFileViewControl::LoadFromPos(long pos)
                 }
                 dbuf[dest] = 0;
 
-                FTextData[row] = new char[dest + 1];
-                strcpy(FTextData[row], dbuf);
+                FTextData[i] = new char[dest + 1];
+                strcpy(FTextData[i], dbuf);
             }
 
-            if (bsize && buf[fsize] == 0xd)
-                fsize++;
-
-            done = FALSE;
-            while (fsize < bsize && !done)
-            {
-                switch (buf[fsize])
-                {
-                    case 0xa:
-                        fsize++;
-                        break;
-
-                    default:
-                        done = TRUE;
-                        break;
-                }
-            }
-            pos += fsize;
+            row++;            
         }
-        FNextPos = pos;
-                
-    }
-    else
-    {
-        for (row = 0; row < FRows; row++)
-        {        
-            FFilePos[row] = 0;
 
-            if (FTextData[row])
-            {
-                delete FTextData[row];
-                FTextData[row] = 0;
-            }
-        }
-        FNextPos = 0;
+        delete buf;
+        delete dbuf;
     }
-
-    delete buf;
-    delete dbuf;
 }
 
 /*##########################################################################
@@ -862,12 +953,14 @@ void TFileViewControl::LoadFromPos(long pos)
 ##########################################################################*/
 void TFileViewControl::Load(const char *FileName)
 {
+    CacheRows(0);
+
     if (FFile)
         delete FFile;
 
     FFile = new TFile(FileName);
 
-    LoadFromPos(0);
+    BufferTexts(0);
 }
 
 /*##########################################################################
@@ -883,12 +976,34 @@ void TFileViewControl::Load(const char *FileName)
 ##########################################################################*/
 void TFileViewControl::Load(TString &FileName)
 {
+    CacheRows(0);
+
     if (FFile)
         delete FFile;
 
     FFile = new TFile(FileName.GetData());
 
-    LoadFromPos(0);
+    BufferTexts(0);
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::RedrawTrans
+#
+#   Purpose....: Redraw without erasing background
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::RedrawTrans()
+{
+    int wastrans = FBackTrans;
+
+    FBackTrans = TRUE;
+    Redraw();
+    FBackTrans = wastrans;
 }
 
 /*##########################################################################
@@ -904,7 +1019,260 @@ void TFileViewControl::Load(TString &FileName)
 ##########################################################################*/
 void TFileViewControl::GotoStart()
 {
-    LoadFromPos(0);
+    BufferTexts(0);
+    RedrawTrans();
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::GotoEnd
+#
+#   Purpose....: Goto end of file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::GotoEnd()
+{
+    if (FFile)
+        while (FLastPos < FFile->GetSize())
+            CacheRows(2 * FFileRows + 16);    
+
+    if (FLastRow < FViewRows)
+        BufferTexts(0);
+    else
+        BufferTexts(FLastRow - FViewRows + 1);
+
+    RedrawTrans();
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::Goto
+#
+#   Purpose....: Goto specified line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::Goto(int row)
+{
+    if (FFile)
+    {
+        if (row + FViewRows > FLastRow)
+            if (FLastPos < FFile->GetSize())
+                CacheRows(row + FViewRows);
+                
+        if (row + FViewRows - 1 >= FLastRow)
+            row = FLastRow - FViewRows + 1;
+
+        if (row < 0)
+            row = 0;
+
+        BufferTexts(row);
+        RedrawTrans();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::ScrollDown
+#
+#   Purpose....: Goto next line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::ScrollDown()
+{
+    int row;
+
+    row = FStartRow;
+
+    if (FFile)
+    {
+        if (FLastPos < FFile->GetSize())
+            row++;
+        else
+        {
+            if (FStartRow + FViewRows - 1 < FLastRow)
+                row++;
+        }
+    }
+
+    if (row != FStartRow)
+    {
+        BufferTexts(row);
+        RedrawTrans();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::ScrollUp
+#
+#   Purpose....: Goto previous line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::ScrollUp()
+{
+    if (FStartRow)
+    {
+        BufferTexts(FStartRow - 1);
+        RedrawTrans();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::PageDown
+#
+#   Purpose....: Do page down
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::PageDown()
+{
+    int row;
+
+    if (FFile)
+    {
+        row = FStartRow + FViewRows;
+
+        if (row + FViewRows > FLastRow)
+            if (FLastPos < FFile->GetSize())
+                CacheRows(FFileRows + FViewRows);    
+        
+        if (row + FViewRows - 1 >= FLastRow)
+            row = FLastRow - FViewRows + 1;
+
+        BufferTexts(row);
+        RedrawTrans();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::PageUp
+#
+#   Purpose....: Goto previous page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::PageUp()
+{
+    int row;
+
+    if (FStartRow)
+    {
+        row = FStartRow - FViewRows;
+
+        if (row < 0)
+            row = 0;
+            
+        BufferTexts(row);
+        RedrawTrans();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::OnKeyPressed
+#
+#   Purpose....: Handle key pressed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFileViewControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+{
+    switch (VirtualKey)
+    {
+        case VK_HOME:
+        case VK_NUMPAD7:
+            GotoStart();
+            return TRUE;
+
+        case VK_END:
+        case VK_NUMPAD1:
+            GotoEnd();
+            return TRUE;
+
+        case VK_UP:
+        case VK_NUMPAD8:
+            ScrollUp();
+            return TRUE;
+
+        case VK_DOWN:
+        case VK_NUMPAD2:
+            ScrollDown();
+            return TRUE;
+
+        case VK_NEXT:
+        case VK_NUMPAD3:
+            PageDown();
+            return TRUE;
+
+        case VK_PRIOR:
+        case VK_NUMPAD9:
+            PageUp();
+            return TRUE;
+
+        default:
+            return FALSE;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::OnKeyReleased
+#
+#   Purpose....: Handle key released
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFileViewControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+{
+    switch (VirtualKey)
+    {
+        case VK_HOME:
+        case VK_NUMPAD7:
+        case VK_END:
+        case VK_NUMPAD1:
+        case VK_UP:
+        case VK_NUMPAD8:
+        case VK_DOWN:
+        case VK_NUMPAD2:
+        case VK_NEXT:
+        case VK_NUMPAD3:
+        case VK_PRIOR:
+        case VK_NUMPAD9:
+            return TRUE;
+
+        default:
+            return FALSE;
+    }
 }
 
 /*##########################################################################
@@ -962,10 +1330,10 @@ void TFileViewControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width,
         dev->SetFont(FFont);
         dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
         
-        for (row = 0; row < FRows; row++)
+        for (row = 0; row < FViewRows; row++)
         {
-				if (FTextData[row])
-					 dev->DrawString(xstart, ystart, FTextData[row]);
+			if (FTextData[row])
+			    dev->DrawString(xstart, ystart, FTextData[row]);
 
             ystart += ysize;
         }

@@ -33,6 +33,7 @@
 #include "mouse.h"
 #include "datetime.h"
 #include "sigdev.h"
+#include "sprite.h"
 
 class TControlThread;
 
@@ -136,6 +137,7 @@ public:
 
     void Add(TKeyboardDevice *Keyboard);
     void Add(TMouseDevice *Mouse);
+    void SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY);
 
     void SetDefaultRedrawTimeout(int millisec);
     void DisableRedraw();
@@ -176,6 +178,7 @@ protected:
     TGraphicDevice *FGraphic;
     TKeyboardDevice *FKeyboard;
     TMouseDevice *FMouse; 
+    TSprite *FMouseSprite;
 
     int DefaultRedrawTimeout;
     int Enabled;

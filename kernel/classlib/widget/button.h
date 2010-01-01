@@ -20,13 +20,13 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# keyctl.h
-# Basic key control class
+# button.h
+# Button control class
 #
 ########################################################################*/
 
-#ifndef _KEYCTL_H
-#define _KEYCTL_H
+#ifndef _BUTTONCTL_H
+#define _BUTTONCTL_H
 
 #include "bitdev.h"
 #include "control.h"

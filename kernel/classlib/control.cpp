@@ -1419,7 +1419,6 @@ int TControl::OnMouseMove(int x, int y, int ButtonState, int KeyState)
 int TControl::OnLeftUp(int x, int y, int ButtonState, int KeyState)
 {
     TControl *control;
-    int handled = FALSE;
 
     Protect();
 
@@ -1427,16 +1426,13 @@ int TControl::OnLeftUp(int x, int y, int ButtonState, int KeyState)
 
     while (control)
     {
-        if (control->IsEnabled())
-            if (control->OnLeftUp(x - FXMin, y - FYMin, ButtonState, KeyState))
-                handled = FALSE;
-
+        control->OnLeftUp(x - FXMin, y - FYMin, ButtonState, KeyState);
         control = control->FNext;
     }
 
     Unprotect();
 
-    return handled;
+    return FALSE;
 }
 
 /*##########################################################################
@@ -1555,6 +1551,7 @@ int TControl::OnRightDown(int x, int y, int ButtonState, int KeyState)
 TControlThread::TControlThread(const char *name, TGraphicDevice *dev)
 {
     FGraphic = new TGraphicDevice(*dev);
+    FMouseSprite = 0;
     FKeyboard = 0;
     FMouse = 0;
 
@@ -1603,6 +1600,12 @@ TControlThread::~TControlThread()
     }
 
     Unprotect();
+
+    if (FMouseSprite)
+    {
+        FMouseSprite->Hide();
+        delete FMouseSprite;
+    }
 
     delete FGraphic;
 }
@@ -1754,7 +1757,35 @@ void TControlThread::Add(TMouseDevice *Mouse)
     Mouse->OnLeftDown = LeftDown;
 	Mouse->OnRightUp = RightUp;
     Mouse->OnRightDown = RightDown;
+
+	Mouse->SetWindow(0, 0, FGraphic->GetWidth(), FGraphic->GetHeight());
+	Mouse->SetMickey(1, 1);
+	Mouse->SetPosition(FGraphic->GetWidth() / 2, FGraphic->GetHeight() / 2);
+    
     FWait.Add(FMouse);
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::SetMouseMarker
+#
+#   Purpose....: Set mouse marker
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY)
+{
+    if (FMouseSprite)
+    {
+        FMouseSprite->Hide();
+        delete FMouseSprite;
+    }
+
+	FMouseSprite = FGraphic->CreateSprite(MouseBitmap, MouseMask, HotX, HotY);
+	FMouseSprite->Show();
 }
 
 /*##########################################################################
@@ -1998,6 +2029,9 @@ void TControlThread::NotifyMouseMove(int x, int y, int ButtonState, int KeyState
     if (OnMouseMove)
         (*OnMouseMove)(this, x, y, ButtonState, KeyState);
 
+    if (FMouseSprite)
+        FMouseSprite->Move(x, y);
+
     Protect();
 
     control = FControlList;
@@ -2072,10 +2106,7 @@ void TControlThread::NotifyLeftUp(int x, int y, int ButtonState, int KeyState)
 
     while (control)
     {
-        if (control->IsEnabled())
-            if (control->OnLeftUp(x, y, ButtonState, KeyState))
-                break;
-            
+        control->OnLeftUp(x, y, ButtonState, KeyState);    
         control = control->FNext;
     }
 
