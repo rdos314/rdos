@@ -1108,7 +1108,7 @@ void TPanelControl::EnableHorScroll()
 ##########################################################################*/
 void TPanelControl::DisableVerScroll()
 {
-    if (FVerScroll)
+    if (FVerScroll && FVerScroll->IsEnabled())
     {
         FVerScroll->Disable();
         FVerScroll->Hide();
@@ -1130,7 +1130,7 @@ void TPanelControl::DisableVerScroll()
 ##########################################################################*/
 void TPanelControl::DisableHorScroll()
 {
-    if (FHorScroll)
+    if (FHorScroll && FHorScroll->IsEnabled())
     {
         FHorScroll->Disable();
         FHorScroll->Hide();
@@ -1693,6 +1693,36 @@ void TPanelControl::PageDown()
 ##########################################################################*/
 void TPanelControl::VerMove(long double pos)
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::IsInsidePanel
+#
+#   Purpose....: Check if position is inside control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPanelControl::IsInsidePanel(int x, int y) const
+{
+    int xstart, ystart;
+    int xsize, ysize;
+    int xoffs, yoffs;
+    int xdiff, ydiff;
+
+	 GetPos(&xstart, &ystart);
+    GetSize(&xsize, &ysize);
+    GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
+
+    xstart += xoffs;
+    ystart += yoffs;
+    xsize -= xdiff;
+    ysize -= ydiff;
+
+	return xstart <= x && xstart + xsize > x && ystart <= y && ystart + ysize > y;
 }
 
 /*##########################################################################

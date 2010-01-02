@@ -36,7 +36,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TString EmptyStr;
+static TString EmptyStr;
 
 /*##########################################################################
 #

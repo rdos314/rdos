@@ -10,6 +10,7 @@
 #include "keyboard.h"
 #include "mouse.h"
 #include "scroll.h"
+#include "listbox.h"
 
 #include "bmp.h"
 
@@ -28,6 +29,7 @@ int main(int argc, char **argv)
 	TMouseDevice *Mouse;
 	TGraphicDevice *MouseMask;
 	TGraphicDevice *MouseBitmap;
+	TListControl *listbox;
 
 	if (argc == 1)
 	{
@@ -71,6 +73,29 @@ int main(int argc, char **argv)
 	MouseBitmap->DrawLine(10, 0, 10, 20);
 
 	controlthread->SetMouseMarker(MouseBitmap, MouseMask, 10, 10);
+
+	listbox = new TListControl(controlthread, 0, 0, 200, 150);
+	listbox->DefineScroll(25);
+	listbox->SetFont(12);
+	listbox->Enable();
+	listbox->Show();
+	listbox->Redraw();
+
+   int i;
+	char str[40];
+
+	for (i = 0; i < 200; i++)
+	{
+		RdosWaitMilli(2000);
+		sprintf(str, "%d", i);
+		listbox->Add(str);
+	}
+
+	for (i = 0; i < 200; i++)
+	{
+		RdosWaitMilli(2000);
+		listbox->Remove();
+	}
 
 	fileview = new TFileViewControl(controlthread, 0, 0, width - 50, height - 50);
 	fileview->DefineScroll(25);

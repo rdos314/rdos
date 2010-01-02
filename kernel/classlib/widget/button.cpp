@@ -1189,7 +1189,7 @@ int TButtonControl::OnLeftUp(int x, int y, int ButtonState, int KeyState)
         Redraw();
     }
 
-    return FALSE;
+    return TControl::OnLeftUp(x, y, ButtonState, KeyState);
 }
 
 /*##########################################################################
@@ -1222,7 +1222,7 @@ int TButtonControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
             FPressed = FALSE;
             Redraw();
         }
-        return FALSE;
+        return TControl::OnLeftDown(x, y, ButtonState, KeyState);
     }
 }
 
@@ -1258,7 +1258,7 @@ int TButtonControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int S
             Redraw();
         }
     }
-    return FALSE;
+    return TControl::OnKeyPressed(ExtKey, KeyState, VirtualKey, ScanCode);
 }
 
 /*##########################################################################
@@ -1282,7 +1282,7 @@ int TButtonControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int 
             Redraw();
         }
     }
-    return FALSE;
+    return TControl::OnKeyReleased(ExtKey, KeyState, VirtualKey, ScanCode);
 }
 
 /*##########################################################################

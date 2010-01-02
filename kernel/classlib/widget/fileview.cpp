@@ -1237,7 +1237,8 @@ int TFileViewControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int
             return TRUE;
 
         default:
-            return FALSE;
+            return TControl::OnKeyPressed(ExtKey, KeyState, VirtualKey, ScanCode);
+
     }
 }
 
@@ -1271,7 +1272,7 @@ int TFileViewControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, in
             return TRUE;
 
         default:
-            return FALSE;
+            return TControl::OnKeyPressed(ExtKey, KeyState, VirtualKey, ScanCode);
     }
 }
 

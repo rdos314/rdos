@@ -212,6 +212,7 @@ protected:
 
     void UpdateScroll();
     void GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff);
+    int IsInsidePanel(int x, int y) const;
 
     int FBackTrans;
 
