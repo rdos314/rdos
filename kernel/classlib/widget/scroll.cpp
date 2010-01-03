@@ -1339,10 +1339,8 @@ void TScrollControl::Set(const char *IniName, const char *IniSection)
 {
     TIniFile Ini(IniName);
     char str[256];
-    int size;
 
-    Ini.GotoSection(IniSection);
-
+	 Ini.GotoSection(IniSection);
 
     if (Ini.ReadVar("Up.Shift.X", str, 255))
         FUp.ShiftX = atoi(str);

@@ -38,6 +38,13 @@ class TButtonFactoryParam
 {
 public:
     TButtonFactoryParam();
+	TButtonFactoryParam(const TButtonFactoryParam &source);
+    ~TButtonFactoryParam();
+
+    int GetHeight();
+
+    void Delete();
+    void Define(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
 
     TBitmapGraphicDevice *Left;
     TBitmapGraphicDevice *Mid;
@@ -46,13 +53,27 @@ public:
     int ShiftX;
     int ShiftY;
 
-    int TextR;
-    int TextG;
-    int TextB;
+    int BorderWidth;
+
+    int ButtonR;
+    int ButtonG;
+    int ButtonB;
+
+    int DrawR;
+    int DrawG;
+    int DrawB;
 
     int ShadowR;
     int ShadowG;
     int ShadowB;
+
+    int BorderLightR;
+    int BorderLightG;
+    int BorderLightB;
+
+    int BorderDarkR;
+    int BorderDarkG;
+    int BorderDarkB;
 };
 
 class TButtonFactory
@@ -68,16 +89,38 @@ public:
     void DefineDisabled(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
 
     void SetWidth(int width);
+    void SetHeight(int height);
+
     void SetUpShift(int x, int y);
     void SetDownShift(int x, int y);
     void SetDisabledShift(int x, int y);
+
+    void SetFont(int height);
     void SetFont(TFont *Font);
-    void SetUpTextColor(int r, int g, int b);
-    void SetDownTextColor(int r, int g, int b);
-    void SetDisabledTextColor(int r, int g, int b);
+    
+    void SetUpButtonColor(int r, int g, int b);
+    void SetDownButtonColor(int r, int g, int b);
+    void SetDisabledButtonColor(int r, int g, int b);
+
+    void SetUpDrawColor(int r, int g, int b);
+    void SetDownDrawColor(int r, int g, int b);
+    void SetDisabledDrawColor(int r, int g, int b);
+
+    void SetUpBorderWidth(int width);
+    void SetDownBorderWidth(int width);
+    void SetDisabledBorderWidth(int width);
+
     void SetUpShadowColor(int r, int g, int b);
     void SetDownShadowColor(int r, int g, int b);
     void SetDisabledShadowColor(int r, int g, int b);
+    
+    void SetUpLightBorderColor(int r, int g, int b);
+    void SetDownLightBorderColor(int r, int g, int b);
+    void SetDisabledLightBorderColor(int r, int g, int b);
+    
+    void SetUpDarkBorderColor(int r, int g, int b);
+    void SetDownDarkBorderColor(int r, int g, int b);
+    void SetDisabledDarkBorderColor(int r, int g, int b);
 
 	TButtonControl *Create(TControlThread *dev, const char *text, char ch, int xstart, int ystart);
 	TButtonControl *Create(TControl *control, const char *text, char ch, int xstart, int ystart);
@@ -86,14 +129,7 @@ public:
 	TButtonControl *Create(TControl *control, const char *text, char ch, const char *IniName, const char *IniSection);
 	
 protected:
-    void CreateFont();
-    void Delete(TButtonFactoryParam &Param);
-    int GetHeight(TButtonFactoryParam &Param);
-    int GetWidth(TButtonFactoryParam &Param, const char *text);
-    void GetTextStart(TButtonFactoryParam &Param, const char *text, int *x, int *y);
-	TBitmapGraphicDevice *CreateBitmap(TButtonFactoryParam &Param, int width);
-	void DrawText(TButtonFactoryParam &Param, TBitmapGraphicDevice *bitmap, const char *text, int x, int y);
-    TBitmapGraphicDevice *CreateButton(TButtonFactoryParam &Param, const char *text);
+    void SetParam(TButtonControl *button);
 
     TButtonFactoryParam FUp;
     TButtonFactoryParam FDown;
@@ -101,20 +137,74 @@ protected:
     
     TFont *FFont;
     int FWidth;
+    int FHeight;
 };
 
 class TButtonControl : public TControl
 {
+friend class TButtonFactory;
 public:
-    TButtonControl(TControlThread *dev, const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, char ch, int xstart, int ystart);
-    TButtonControl(TControl *control, const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, char ch, int xstart, int ystart);
+    TButtonControl(TControlThread *dev, TFont *font, const char *text, char ch, int xstart, int ystart, int width, int height);
+    TButtonControl(TControl *control, TFont *font, const char *text, char ch, int xstart, int ystart, int width, int height);
+    TButtonControl(TControlThread *dev, const char *text, char ch);
+    TButtonControl(TControl *control, const char *text, char ch);
     ~TButtonControl();
 
+    void SetText(const char *text);
+    void SetText(TString &text);
+
+    void DefineUp(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
+    void DefineDown(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
+    void DefineDisabled(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
+
+    virtual void Set(const char *IniName, const char *IniSection);
+
+    void SetUpShift(int x, int y);
+    void SetDownShift(int x, int y);
+    void SetDisabledShift(int x, int y);
+
+    void SetFont(int height);
+    void SetFont(TFont *Font);
+    
+    void SetUpButtonColor(int r, int g, int b);
+    void SetDownButtonColor(int r, int g, int b);
+    void SetDisabledButtonColor(int r, int g, int b);
+
+    void SetUpDrawColor(int r, int g, int b);
+    void SetDownDrawColor(int r, int g, int b);
+    void SetDisabledDrawColor(int r, int g, int b);
+
+    void SetUpBorderWidth(int width);
+    void SetDownBorderWidth(int width);
+    void SetDisabledBorderWidth(int width);
+
+    void SetUpShadowColor(int r, int g, int b);
+    void SetDownShadowColor(int r, int g, int b);
+    void SetDisabledShadowColor(int r, int g, int b);
+    
+    void SetUpLightBorderColor(int r, int g, int b);
+    void SetDownLightBorderColor(int r, int g, int b);
+    void SetDisabledLightBorderColor(int r, int g, int b);
+    
+    void SetUpDarkBorderColor(int r, int g, int b);
+    void SetDownDarkBorderColor(int r, int g, int b);
+    void SetDisabledDarkBorderColor(int r, int g, int b);
+
     void EnableKeepDown();
-    void ChangeImage(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable);
     void ForceUp();    
 
 protected:
+    TBitmapGraphicDevice *CreateBitmap(TButtonFactoryParam &Param, int width);
+    void CreateBitmapButtons(int width);
+
+    void CreateFont(int xsize, int ysize);
+    void DrawAliasedText(TGraphicDevice *dev, TButtonFactoryParam &Param, int xstart, int ystart, int xsize, int ysize);
+
+    void PaintDescrButton(TGraphicDevice *dev, int xstart, int ystart, int xsize, int ysize, int state);
+    void PaintButton(TGraphicDevice *dev, int xstart, int ystart, int xsize, int ysize, int state);
+
+    virtual void NotifyResize();
+
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 	virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
 	virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
@@ -122,19 +212,22 @@ protected:
 	virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 
 private:
-    void Init(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, char ch, int xstart, int ystart);
-    void DeleteKeys();
-    void UpdateKeys(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable);
+    void Init(char ch);
+    void SetSize(TFont *font, const char *text, int xsize, int ysize);
 
+    TButtonFactoryParam FUp;
+    TButtonFactoryParam FDown;
+    TButtonFactoryParam FDisabled;
+
+    TBitmapGraphicDevice *FUpBitmap;
+    TBitmapGraphicDevice *FDownBitmap;
+    TBitmapGraphicDevice *FDisabledBitmap;
+    
+    TFont *FFont;
+
+    TString FText;
 	char FKey;
-    TBitmapGraphicDevice *FUp;
-    TBitmapGraphicDevice *FDown;	
-    TBitmapGraphicDevice *FDisabled;	
     int FPressed;
-    int FStartX;
-    int FStartY;
-    int FSizeX;
-    int FSizeY;
     int FKeepDown;
     int FActive;
 };        

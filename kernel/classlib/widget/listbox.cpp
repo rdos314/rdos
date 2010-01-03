@@ -614,6 +614,7 @@ void TListControl::Set(const char *IniName, const char *IniSection)
         FStartY = atoi(str);
 
     TPanelControl::Set(IniName, IniSection);
+    NotifyResize();
 }
 
 /*##########################################################################
@@ -673,6 +674,8 @@ void TListControl::SetSpace(int xstart, int ystart)
 {
     FStartX = xstart;
     FStartY = ystart;
+
+    NotifyResize();
 }
 
 /*##########################################################################
@@ -921,6 +924,7 @@ void TListControl::Remove()
         FSelected = -1;
         
     FList.Remove();
+    SetPos(FStartRow);
     UpdateList();
 }
 
@@ -944,6 +948,7 @@ void TListControl::Remove(int pos)
         FSelected--;
         
     FList.Remove(pos);
+    SetPos(FStartRow);
     UpdateList();
 }
 
@@ -1009,12 +1014,12 @@ TString TListControl::Get(int pos)
 void TListControl::SetPos(int pos)
 {
     int size = FList.GetSize();
-    
-    if (pos < 0)
-        pos = 0;
 
     if (pos > size - FRows)
         pos = size - FRows;
+    
+    if (pos < 0)
+        pos = 0;
 
     if (pos != FStartRow)
     {
@@ -1050,7 +1055,7 @@ void TListControl::SetSelected(int pos)
         SetPos(pos);
 
     if (pos >= FStartRow + FRows)
-        SetPos(pos + FRows - 1);
+        SetPos(pos - FRows + 1);
 
     if (pos != FSelected)
     {

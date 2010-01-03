@@ -11,6 +11,7 @@
 #include "mouse.h"
 #include "scroll.h"
 #include "listbox.h"
+#include "button.h"
 
 #include "bmp.h"
 
@@ -30,6 +31,7 @@ int main(int argc, char **argv)
 	TGraphicDevice *MouseMask;
 	TGraphicDevice *MouseBitmap;
 	TListControl *listbox;
+	TButtonControl *button;
 
 	if (argc == 1)
 	{
@@ -74,38 +76,59 @@ int main(int argc, char **argv)
 
 	controlthread->SetMouseMarker(MouseBitmap, MouseMask, 10, 10);
 
-	listbox = new TListControl(controlthread, 0, 0, 200, 150);
+/*	listbox = new TListControl(controlthread, 0, 0, 200, 150);
 	listbox->DefineScroll(25);
 	listbox->SetFont(12);
+	listbox->SetSpace(2, 2);
 	listbox->Enable();
 	listbox->Show();
 	listbox->Redraw();
 
-   int i;
+	int i;
 	char str[40];
 
 	for (i = 0; i < 200; i++)
 	{
-		RdosWaitMilli(2000);
+		RdosWaitMilli(200);
 		sprintf(str, "%d", i);
 		listbox->Add(str);
 	}
 
-	for (i = 0; i < 200; i++)
+	for (i = 0; i < 100; i++)
 	{
-		RdosWaitMilli(2000);
+		RdosWaitMilli(200);
+		listbox->Remove(i);
+	}
+
+	for (i = 0; i < 100; i++)
+	{
+		RdosWaitMilli(200);
 		listbox->Remove();
 	}
 
+*/
 	fileview = new TFileViewControl(controlthread, 0, 0, width - 50, height - 50);
 	fileview->DefineScroll(25);
-	fileview->EnableVerScroll();
-	fileview->EnableHorScroll();
 	fileview->SetFont(12);
 	fileview->Load(FileName);
 	fileview->Enable();
 	fileview->Show();
 	fileview->Redraw();
+
+	button = new TButtonControl(controlthread, new TFont(24), "Start", VK_HOME, 0, height - 40, 75, 35);
+	button->SetUpBorderWidth(3);
+	button->SetDownBorderWidth(3);
+	button->Enable();
+	button->Show();
+	button->Redraw();
+
+	button = new TButtonControl(controlthread, new TFont(24), "End", VK_END, 100, height - 40, 75, 35);
+	button->SetUpBorderWidth(3);
+	button->SetDownBorderWidth(3);
+	button->Enable();
+	button->Show();
+	button->Redraw();
+
 
 	for (;;)
 		RdosWaitMilli(2000);

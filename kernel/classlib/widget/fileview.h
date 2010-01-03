@@ -32,6 +32,7 @@
 #include "panel.h"
 #include "str.h"
 #include "file.h"
+#include "strarr.h"
 
 class TFileViewControl;
 
@@ -99,20 +100,22 @@ public:
     virtual void ScrollUp();
     virtual void PageDown();
     virtual void PageUp();
+    virtual void VerMove(long double pos);
     
 protected:
+    void SetPos(int pos);
+    void Load(int pos);
+    
 	virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 	virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
     virtual void NotifyResize(); 	
 
-    void FreeTextRows();
-    void ClearTextRows();
-    void CreateTextRows(int rows);
+    void UpdateList();
+    void UpdatePos();
 
-    void CacheRows(int rows);
-    void BufferTexts(int StartRow);
+    TStringArray FList;
 
 private:
     void Init();
@@ -128,15 +131,9 @@ private:
     TFont *FFont;
     TFile *FFile;
 
+    int FRowHeight;
+    int FRows;
     int FStartRow;
-    int FViewRows;
-    char **FTextData;
-
-    int FFileRows;
-    long *FFilePos;
-    int *FFileSize;
-    int FLastRow;
-    long FLastPos;
     
 };
 
