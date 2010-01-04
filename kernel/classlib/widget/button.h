@@ -148,6 +148,8 @@ public:
     TButtonControl(TControl *control, TFont *font, const char *text, char ch, int xstart, int ystart, int width, int height);
     TButtonControl(TControlThread *dev, const char *text, char ch);
     TButtonControl(TControl *control, const char *text, char ch);
+    TButtonControl(TControlThread *dev);
+    TButtonControl(TControl *control);
     ~TButtonControl();
 
     void SetText(const char *text);

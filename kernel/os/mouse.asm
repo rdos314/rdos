@@ -270,6 +270,9 @@ set_mouse_int_signal:
     or bx,bx
     jz set_mouse_done
 ;
+    verr bx
+    jnz set_mouse_done
+;    
     mov es,bx
     SignalWait
 	mov ds:m_avail_obj,0

@@ -1030,10 +1030,14 @@ void TPanelControl::DefineScroll(const char *IniName, const char *IniSection)
     if (Ini.ReadVar("Width", str, 255))
         width = atoi(str);
 
-    FVerScroll = new TVerPanelScrollControl(this, width);
+    if (!FVerScroll)
+        FVerScroll = new TVerPanelScrollControl(this, width);
+
     FVerScroll->Set(IniName, IniSection);
-    
-    FHorScroll = new THorPanelScrollControl(this, width);
+
+    if (!FHorScroll)       
+        FHorScroll = new THorPanelScrollControl(this, width);
+
     FHorScroll->Set(IniName, IniSection);
 }
 
@@ -1770,7 +1774,7 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
         if (FVerScroll && FVerScroll->IsEnabled())
         {
-            FVerScroll->Move(ximax + 1, ymin);
+            FVerScroll->Move(ximax + 1, 0);
 			FVerScroll->Resize(FVerScroll->FCreateWidth, yscroll);
 			FVerScroll->Show();
 			FVerScroll->Redraw();
@@ -1778,7 +1782,7 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
 		if (FHorScroll && FHorScroll->IsEnabled())
 		{
-			FHorScroll->Move(xmin, yimax + 1);
+			FHorScroll->Move(0, yimax + 1);
 			FHorScroll->Resize(xscroll, FHorScroll->FCreateWidth);
             FHorScroll->Show();
             FHorScroll->Redraw();

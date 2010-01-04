@@ -39,6 +39,74 @@
 
 /*##########################################################################
 #
+#   Name       : DecodeKey
+#
+#   Purpose....: Decode key-string to VK-key
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static char DecodeKey(const char *key)
+{
+    if (strlen(key) == 1)
+        return key[0];
+
+    if (!strcmp(key, "BACK"))
+        return VK_BACK;    
+
+    if (!strcmp(key, "TAB"))
+        return VK_TAB;    
+
+    if (!strcmp(key, "CLEAR"))
+        return VK_CLEAR;    
+
+    if (!strcmp(key, "RETURN"))
+        return VK_RETURN;    
+
+    if (!strcmp(key, "ESC"))
+        return VK_ESCAPE;    
+
+    if (!strcmp(key, "ESCAPE"))
+        return VK_ESCAPE;    
+
+    if (!strcmp(key, "SPACE"))
+        return VK_SPACE;    
+
+    if (!strcmp(key, "PRIOR"))
+        return VK_PRIOR;    
+
+    if (!strcmp(key, "NEXT"))
+        return VK_NEXT;    
+
+    if (!strcmp(key, "END"))
+        return VK_END;    
+
+    if (!strcmp(key, "HOME"))
+        return VK_HOME;    
+
+    if (!strcmp(key, "LEFT"))
+        return VK_LEFT;    
+
+    if (!strcmp(key, "UP"))
+        return VK_UP;    
+
+    if (!strcmp(key, "RIGHT"))
+        return VK_RIGHT;    
+
+    if (!strcmp(key, "DOWN"))
+        return VK_DOWN;    
+
+    if (!strcmp(key, "INSERT"))
+        return VK_INSERT;    
+
+    if (!strcmp(key, "DELETE"))
+        return VK_DELETE;    
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonFactoryParam::TButtonFactoryParam
 #
 #   Purpose....: Button factory parameters constructor
@@ -1321,6 +1389,40 @@ TButtonControl::TButtonControl(TControl *control, const char *text, char ch)
 
 /*##########################################################################
 #
+#   Name       : TButtonControl::TButtonControl
+#
+#   Purpose....: Key control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TButtonControl::TButtonControl(TControlThread *dev)
+  : TControl(dev)
+{
+    Init(0);
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::TButtonControl
+#
+#   Purpose....: Key control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TButtonControl::TButtonControl(TControl *control)
+  : TControl(control)
+{
+    Init(0);
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonControl::~TButtonControl
 #
 #   Purpose....: Key control destructor
@@ -1485,6 +1587,9 @@ void TButtonControl::Set(const char *IniName, const char *IniSection)
         }
     }
 
+
+    if (Ini.ReadVar("Key", str, 255))
+        FKey = DecodeKey(str);
 
     if (Ini.ReadVar("Up.Shift.X", str, 255))
         FUp.ShiftX = atoi(str);
@@ -1666,6 +1771,7 @@ void TButtonControl::Set(const char *IniName, const char *IniSection)
     if (Ini.ReadVar("Disabled.BorderDarkColor.B", str, 255))
         FDisabled.BorderDarkB = atoi(str);
 
+    TControl::Set(IniName, IniSection);
 }
 
 /*##########################################################################
@@ -2467,7 +2573,9 @@ int TButtonControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
 {
     if (IsInside(x, y))
     {
-        PutKey(FKey);
+        if (FKey)
+            PutKey(FKey);
+
         if (!FKeepDown)
         {
             FPressed = TRUE;

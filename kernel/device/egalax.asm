@@ -108,6 +108,8 @@ htClearLoop:
     jmp htControl
 
 htLoop:
+    xor ax,ax
+    mov es,ax
     mov bx,ds:td_wait
     WaitWithoutTimeout
 ;

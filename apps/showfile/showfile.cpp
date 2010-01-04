@@ -107,24 +107,24 @@ int main(int argc, char **argv)
 	}
 
 */
-	fileview = new TFileViewControl(controlthread, 0, 0, width - 50, height - 50);
-	fileview->DefineScroll(25);
-	fileview->SetFont(12);
+	fileview = new TFileViewControl(controlthread, 0, 0, width, height - 50);
+	fileview->DefineScroll(50);
+	fileview->SetFont(20);
 	fileview->Load(FileName);
 	fileview->Enable();
 	fileview->Show();
 	fileview->Redraw();
 
-	button = new TButtonControl(controlthread, new TFont(24), "Start", VK_HOME, 0, height - 40, 75, 35);
-	button->SetUpBorderWidth(3);
-	button->SetDownBorderWidth(3);
+	button = new TButtonControl(controlthread, new TFont(30), "Start", VK_HOME, 0, height - 50, 125, 50);
+	button->SetUpBorderWidth(5);
+	button->SetDownBorderWidth(5);
 	button->Enable();
 	button->Show();
 	button->Redraw();
 
-	button = new TButtonControl(controlthread, new TFont(24), "End", VK_END, 100, height - 40, 75, 35);
-	button->SetUpBorderWidth(3);
-	button->SetDownBorderWidth(3);
+	button = new TButtonControl(controlthread, new TFont(30), "End", VK_END, 150, height - 50, 125, 50);
+	button->SetUpBorderWidth(5);
+	button->SetDownBorderWidth(5);
 	button->Enable();
 	button->Show();
 	button->Redraw();
