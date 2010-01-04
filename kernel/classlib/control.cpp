@@ -498,8 +498,6 @@ void TControl::Delete(TControl *control)
     TControl *curr;
     TControl *prev;
 
-    control->FNext = 0;
-
     Protect();
 
     if (FControlList)
@@ -521,6 +519,8 @@ void TControl::Delete(TControl *control)
                 prev->FNext = curr->FNext;            
         }
     }
+
+    control->FNext = 0;
 
     Unprotect();
 }        
@@ -1843,8 +1843,6 @@ void TControlThread::Delete(TControl *control)
     TControl *curr;
     TControl *prev;
 
-    control->FNext = 0;
-
     Protect();
 
     if (FControlList)
@@ -1866,6 +1864,8 @@ void TControlThread::Delete(TControl *control)
                 prev->FNext = curr->FNext;            
         }
     }
+
+    control->FNext = 0;
 
     Unprotect();
 }
