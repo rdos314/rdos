@@ -143,6 +143,22 @@ TVerPanelScrollControl::~TVerPanelScrollControl()
 
 /*##########################################################################
 #
+#   Name       : TVerPanelScrollControl::GetWidth
+#
+#   Purpose....: Get width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TVerPanelScrollControl::GetWidth()
+{
+    return FCreateWidth;
+}
+
+/*##########################################################################
+#
 #   Name       : TVerPanelScrollControl::OnScrollUp
 #
 #   Purpose....: Scroll up
@@ -256,6 +272,22 @@ THorPanelScrollControl::THorPanelScrollControl(TPanelControl *panel, int width)
 ##########################################################################*/
 THorPanelScrollControl::~THorPanelScrollControl()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : THorPanelScrollControl::GetWidth
+#
+#   Purpose....: Get width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THorPanelScrollControl::GetWidth()
+{
+    return FCreateWidth;
 }
 
 /*##########################################################################
@@ -1505,10 +1537,10 @@ void TPanelControl::GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff)
     *ydiff = FUpperWidth + FLowerWidth;
 
     if (FHorScroll && FHorScroll->IsEnabled())
-		  *ydiff += FHorScroll->FCreateWidth;
+		  *ydiff += FHorScroll->GetWidth();
 
 	 if (FVerScroll && FVerScroll->IsEnabled())
-		  *xdiff += FVerScroll->FCreateWidth;
+		  *xdiff += FVerScroll->GetWidth();
 }
 
 /*##########################################################################
@@ -1755,13 +1787,13 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
     if (FHorScroll && FHorScroll->IsEnabled())
     {
-		  yimax -= FHorScroll->FCreateWidth;
+		  yimax -= FHorScroll->GetWidth();
 		  scrolls++;
 	 }
 
 	 if (FVerScroll && FVerScroll->IsEnabled())
 	 {
-        ximax -= FVerScroll->FCreateWidth;
+        ximax -= FVerScroll->GetWidth();
         scrolls++;
     }
 
@@ -1775,7 +1807,7 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
         if (FVerScroll && FVerScroll->IsEnabled())
         {
             FVerScroll->Move(ximax + 1, 0);
-			FVerScroll->Resize(FVerScroll->FCreateWidth, yscroll);
+			FVerScroll->Resize(FVerScroll->GetWidth(), yscroll);
 			FVerScroll->Show();
 			FVerScroll->Redraw();
 		}
@@ -1783,7 +1815,7 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 		if (FHorScroll && FHorScroll->IsEnabled())
 		{
 			FHorScroll->Move(0, yimax + 1);
-			FHorScroll->Resize(xscroll, FHorScroll->FCreateWidth);
+			FHorScroll->Resize(xscroll, FHorScroll->GetWidth());
             FHorScroll->Show();
             FHorScroll->Redraw();
         }
@@ -1801,13 +1833,13 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
         if (scrolls == 2 && !FBackTrans)
         {
             dev->SetClipRect(  ximax + 1, yimax + 1,
-									ximax + FVerScroll->FCreateWidth,
-									yimax + FHorScroll->FCreateWidth);
+									ximax + FVerScroll->GetWidth(),
+									yimax + FHorScroll->GetWidth());
 
 				SetBackColor(dev);
 				dev->DrawRect(     ximax + 1, yimax + 1,
-									ximax + FVerScroll->FCreateWidth,
-									yimax + FHorScroll->FCreateWidth);
+									ximax + FVerScroll->GetWidth(),
+									yimax + FHorScroll->GetWidth());
         }
 
         dev->SetClipRect(  ximin, yimin,

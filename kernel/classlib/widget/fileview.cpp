@@ -438,6 +438,9 @@ void TFileViewControl::Init()
 
     FRows = 0;
     FStartRow = 0;
+    FStartCol = 0;
+    FMaxWidth = 0;
+    FControlWidth = 0;
 }
 
 /*##########################################################################
@@ -453,29 +456,6 @@ void TFileViewControl::Init()
 ##########################################################################*/
 void TFileViewControl::NotifyResize()
 {
-	int xstart, ystart;
-	int xsize, ysize;
-	int xdiff, ydiff;
-	int xcontr, ycontr;
-
-    if (FFont)
-        FFont->GetStringMetrics("", &xsize, &ysize);
-    else
-        ysize = 0;
-
-    if (ysize)
-    {
-        TControl::GetSize(&xcontr, &ycontr);
-        GetInner(&xstart, &ystart, &xdiff, &ydiff);
-        ycontr -= ydiff;
-
-        FRowHeight = ysize + FStartY;
-
-        FRows = ycontr / FRowHeight;
-    }
-    else
-        FRows = 0;
-
     UpdateList();
 }
     
@@ -810,38 +790,107 @@ void TFileViewControl::RedrawTrans()
 ##########################################################################*/
 void TFileViewControl::UpdateList()
 {
-    int size;
+    TString str;
+    int i;
+    int size = FList.GetSize();
+    int xstart, ystart;
+    int xsize, ysize;
+    int xdiff, ydiff;
+	int xcontr, ycontr;
+    int maxwidth = 0;
     long double pos;
 
-    size = FList.GetSize();
+    ysize = 0;
+
+    if (FFont)
+    {
+        for (i = 0; i < size; i++)
+        {
+            str = FList[i];
+            FFont->GetStringMetrics(str.GetData(), &xsize, &ysize);
+
+            if (xsize > maxwidth)
+                maxwidth = xsize;
+        }
+    }
+
+    TControl::GetSize(&xcontr, &ycontr);
+    GetInner(&xstart, &ystart, &xdiff, &ydiff);
+
+    if (FVerScroll && FVerScroll->IsEnabled())
+        xdiff -= FVerScroll->GetWidth();
+
+    if (FHorScroll && FHorScroll->IsEnabled())
+        ydiff -= FHorScroll->GetWidth();
+
+    xcontr -= xdiff;
+    ycontr -= ydiff;
+
+    if (ysize)
+    {
+
+        FRowHeight = ysize + FStartY;
+
+        FRows = ycontr / FRowHeight;
+    }
+    else
+        FRows = 0;
     
     if (size > FRows)
     {
         EnableVerScroll();
-        
-        pos = (long double)FRows / (long double)size;
-        FVerScroll->SetScrollWidth(pos);
+		xcontr -= FVerScroll->GetWidth();
 
-        UpdatePos();
-    }        
+		pos = (long double)FRows / (long double)size;
+		FVerScroll->SetScrollWidth(pos);
+
+		UpdateVerPos();
+    }
+
+	FMaxWidth = 0;
+
+	if (maxwidth > xcontr)
+    {
+		 EnableHorScroll();
+		ycontr -= FHorScroll->GetWidth();
+
+		pos = (long double)xcontr / (long double)maxwidth;
+		FHorScroll->SetScrollWidth(pos);
+		FMaxWidth = maxwidth;
+		FControlWidth = xcontr;
+		FRows = ycontr / FRowHeight;
+
+		UpdateHorPos();
+	 }
+	 else
+	    DisableHorScroll();
+
+	 if (size > FRows)
+	 {
+	    EnableVerScroll();
+		pos = (long double)FRows / (long double)size;
+		FVerScroll->SetScrollWidth(pos);
+
+		UpdateVerPos();
+    }    
     else
-        DisableVerScroll();
+        DisableVerScroll();    
 
     Redraw();
 }
 
 /*##########################################################################
 #
-#   Name       : TFileViewControl::UpdatePos
+#   Name       : TFileViewControl::UpdateVerPos
 #
-#   Purpose....: Update scroll pos
+#   Purpose....: Update vertical scroll pos
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileViewControl::UpdatePos()
+void TFileViewControl::UpdateVerPos()
 {
     int size;
     long double pos;
@@ -857,16 +906,38 @@ void TFileViewControl::UpdatePos()
 
 /*##########################################################################
 #
-#   Name       : TFileViewControl::SetPos
+#   Name       : TFileViewControl::UpdateHorPos
 #
-#   Purpose....: Set new start pos
+#   Purpose....: Update horisontal scroll pos
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileViewControl::SetPos(int pos)
+void TFileViewControl::UpdateHorPos()
+{
+	long double pos;
+
+	if (FMaxWidth > FControlWidth)
+    {
+        pos = (long double)FStartCol / (long double)(FMaxWidth - FControlWidth);
+        FHorScroll->SetScrollPos(pos);        
+    }        
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::SetVerPos
+#
+#   Purpose....: Set new vertical start pos
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::SetVerPos(int pos)
 {
     int size = FList.GetSize();
 
@@ -880,7 +951,38 @@ void TFileViewControl::SetPos(int pos)
     {
         FStartRow = pos;
         
-        UpdatePos();
+        UpdateVerPos();
+        RedrawTrans();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::SetHorPos
+#
+#   Purpose....: Set new horisontal start pos
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::SetHorPos(int pos)
+{
+	int val;
+
+
+	 if (pos > FMaxWidth - FControlWidth)
+		  pos = FMaxWidth - FControlWidth;
+    
+    if (pos < 0)
+        pos = 0;
+
+    if (pos != FStartCol)
+    {
+        FStartCol = pos;
+        
+        UpdateHorPos();
         RedrawTrans();
     }
 }
@@ -898,7 +1000,7 @@ void TFileViewControl::SetPos(int pos)
 ##########################################################################*/
 void TFileViewControl::GotoStart()
 {
-    SetPos(0);
+    SetVerPos(0);
 }
 
 /*##########################################################################
@@ -914,7 +1016,7 @@ void TFileViewControl::GotoStart()
 ##########################################################################*/
 void TFileViewControl::GotoEnd()
 {
-    SetPos(FList.GetSize() - 1);
+    SetVerPos(FList.GetSize() - 1);
 }
 
 /*##########################################################################
@@ -930,7 +1032,7 @@ void TFileViewControl::GotoEnd()
 ##########################################################################*/
 void TFileViewControl::Goto(int row)
 {
-    SetPos(row);
+    SetVerPos(row);
 }
 
 /*##########################################################################
@@ -946,7 +1048,7 @@ void TFileViewControl::Goto(int row)
 ##########################################################################*/
 void TFileViewControl::ScrollDown()
 {
-    SetPos(FStartRow + 1);
+    SetVerPos(FStartRow + 1);
 }
 
 /*##########################################################################
@@ -962,7 +1064,7 @@ void TFileViewControl::ScrollDown()
 ##########################################################################*/
 void TFileViewControl::ScrollUp()
 {
-    SetPos(FStartRow - 1);
+    SetVerPos(FStartRow - 1);
 }
 
 /*##########################################################################
@@ -978,7 +1080,7 @@ void TFileViewControl::ScrollUp()
 ##########################################################################*/
 void TFileViewControl::PageDown()
 {
-    SetPos(FStartRow + FRows);
+    SetVerPos(FStartRow + FRows);
 }
 
 /*##########################################################################
@@ -994,7 +1096,7 @@ void TFileViewControl::PageDown()
 ##########################################################################*/
 void TFileViewControl::PageUp()
 {
-    SetPos(FStartRow - FRows);
+    SetVerPos(FStartRow - FRows);
 }
 
 /*##########################################################################
@@ -1018,7 +1120,107 @@ void TFileViewControl::VerMove(long double pos)
     if (size > FRows)
     {
         row = (int)(pos * (long double)(size - FRows));
-        SetPos(row);        
+        SetVerPos(row);        
+    }            
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::ScrollRight
+#
+#   Purpose....: Goto next col
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::ScrollRight()
+{
+    int xsize, ysize;
+
+    if (FFont)
+        FFont->GetStringMetrics("i", &xsize, &ysize);
+    else
+        xsize = 10;
+        
+    SetHorPos(FStartCol + xsize);
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::ScrollLeft
+#
+#   Purpose....: Goto previous col
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::ScrollLeft()
+{
+    int xsize, ysize;
+
+    if (FFont)
+        FFont->GetStringMetrics("i", &xsize, &ysize);
+    else
+        xsize = 10;
+        
+    SetHorPos(FStartCol - xsize);
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::PageRight
+#
+#   Purpose....: Do page right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::PageRight()
+{
+    SetHorPos(FStartCol + FControlWidth / 2);
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::PageLeft
+#
+#   Purpose....: Goto previous page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::PageLeft()
+{
+    SetHorPos(FStartCol - FControlWidth / 2);
+}
+
+/*##########################################################################
+#
+#   Name       : TFileViewControl::HorMove
+#
+#   Purpose....: Horisontal scroll ruler moving
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::HorMove(long double pos)
+{
+	int val;
+
+	if (FMaxWidth > FControlWidth)
+    {
+        val = (int)(pos * (long double)(FMaxWidth - FControlWidth));
+        SetHorPos(val);        
     }            
 }
 
@@ -1165,7 +1367,7 @@ void TFileViewControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width,
             curr = FStartRow + row;
 
             str = FList[curr];            
-			dev->DrawString(xstart, ystart, str.GetData());
+			dev->DrawString(xstart - FStartCol, ystart, str.GetData());
 
             ystart += FRowHeight;
         }

@@ -102,8 +102,15 @@ public:
     virtual void PageUp();
     virtual void VerMove(long double pos);
     
+    virtual void ScrollLeft();
+    virtual void ScrollRight();
+    virtual void PageLeft();
+    virtual void PageRight();
+    virtual void HorMove(long double pos);
+    
 protected:
-    void SetPos(int pos);
+    void SetVerPos(int pos);
+    void SetHorPos(int pos);
     void Load(int pos);
     
 	virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
@@ -113,7 +120,8 @@ protected:
     virtual void NotifyResize(); 	
 
     void UpdateList();
-    void UpdatePos();
+    void UpdateVerPos();
+    void UpdateHorPos();
 
     TStringArray FList;
 
@@ -134,6 +142,10 @@ private:
     int FRowHeight;
     int FRows;
     int FStartRow;
+    int FStartCol;
+
+    int FMaxWidth;
+    int FControlWidth;
     
 };
 

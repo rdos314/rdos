@@ -57,6 +57,8 @@ public:
     TVerPanelScrollControl(TPanelControl *panel, int width);
     ~TVerPanelScrollControl();
 
+    int GetWidth();
+
 protected:
 	virtual void OnScrollUp();
 	virtual void OnScrollDown();
@@ -74,6 +76,8 @@ class THorPanelScrollControl : public THorScrollControl
 public:
     THorPanelScrollControl(TPanelControl *panel, int width);
     ~THorPanelScrollControl();
+
+    int GetWidth();
 
 protected:
 	virtual void OnScrollLeft();
