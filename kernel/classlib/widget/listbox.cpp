@@ -1027,6 +1027,7 @@ void TListControl::SetPos(int pos)
         
         UpdatePos();
         RedrawTrans();
+        NotifyChanged();
     }
 }
 
@@ -1061,6 +1062,7 @@ void TListControl::SetSelected(int pos)
     {
         FSelected = pos;
         RedrawTrans();
+        NotifyChanged();
     }
 }
 

@@ -72,6 +72,10 @@ public:
     void Redraw(int millisec);
     void ClearRedraw();
 
+	void (*OnChanged)(TControl *control);
+
+    void *Owner;
+
 protected:
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 	virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
@@ -86,6 +90,8 @@ protected:
 
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
+
+    void NotifyChanged();
 
     int IsRedrawEnabled();
     int IsDirty();

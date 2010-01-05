@@ -1004,6 +1004,73 @@ void TPanelControl::Init(int border)
     FVerScroll = 0;
     FHorScroll = 0;
     FScrollChanged = FALSE;
+
+    FVerLeft = FALSE;
+    FHorUp = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetVerLeft
+#
+#   Purpose....: Place vertical scroll to the left
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetVerLeft()
+{
+    FVerLeft = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetVerRight
+#
+#   Purpose....: Place vertical scroll to the right
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetVerRight()
+{
+    FVerLeft = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetHorTop
+#
+#   Purpose....: Place horisontal scroll at the top
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetHorTop()
+{
+    FHorUp = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetHorBottom
+#
+#   Purpose....: Place horisontal scroll at the bottom
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetHorBottom()
+{
+    FHorUp = FALSE;
 }
 
 /*##########################################################################
@@ -1282,6 +1349,24 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
     if (Ini.ReadVar("RightWidth", str, 255))
         FRightWidth = atoi(str);
 
+    if (Ini.ReadVar("Scroll.Hor", str, 255))
+    {
+		if (!strcmp(str, "Top"))
+			FHorUp = TRUE;
+
+		if (!strcmp(str, "Bottom"))
+			FHorUp = FALSE;
+	}
+
+	if (Ini.ReadVar("Scroll.Ver", str, 255))
+	{
+		if (!strcmp(str, "Left"))
+			FVerLeft = TRUE;
+
+        if (!strcmp(str, "Right"))
+            FVerLeft = FALSE;
+    }
+
     TControl::Set(IniName, IniSection);
 }
 
@@ -1537,10 +1622,21 @@ void TPanelControl::GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff)
     *ydiff = FUpperWidth + FLowerWidth;
 
     if (FHorScroll && FHorScroll->IsEnabled())
-		  *ydiff += FHorScroll->GetWidth();
+    {
+        *ydiff += FHorScroll->GetWidth();
 
-	 if (FVerScroll && FVerScroll->IsEnabled())
-		  *xdiff += FVerScroll->GetWidth();
+        if (FHorUp)
+            *ystart += FHorScroll->GetWidth();
+    }
+		  
+
+	if (FVerScroll && FVerScroll->IsEnabled())
+	{
+        *xdiff += FVerScroll->GetWidth();
+
+        if (FVerLeft)
+            *xstart += FVerScroll->GetWidth();
+    }
 }
 
 /*##########################################################################
@@ -1787,13 +1883,19 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
     if (FHorScroll && FHorScroll->IsEnabled())
     {
-		  yimax -= FHorScroll->GetWidth();
-		  scrolls++;
-	 }
+        if (FHorUp)
+            yimin += FHorScroll->GetWidth();
+        else
+		    yimax -= FHorScroll->GetWidth();
+		scrolls++;
+    }
 
-	 if (FVerScroll && FVerScroll->IsEnabled())
-	 {
-        ximax -= FVerScroll->GetWidth();
+	if (FVerScroll && FVerScroll->IsEnabled())
+	{
+	    if (FVerLeft)
+	        ximin += FVerScroll->GetWidth();
+	    else
+            ximax -= FVerScroll->GetWidth();
         scrolls++;
     }
 
@@ -1806,7 +1908,21 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
         if (FVerScroll && FVerScroll->IsEnabled())
         {
-            FVerScroll->Move(ximax + 1, 0);
+            if (FVerLeft)
+            {
+                if (scrolls == 2 && FHorUp)
+                    FVerScroll->Move(0, FHorScroll->GetWidth());
+                else
+                    FVerScroll->Move(0, 0);
+            }
+            else
+            {
+                if (scrolls == 2 && FHorUp)
+                    FVerScroll->Move(xscroll, FHorScroll->GetWidth());
+                else
+                    FVerScroll->Move(xscroll, 0);
+            }
+
 			FVerScroll->Resize(FVerScroll->GetWidth(), yscroll);
 			FVerScroll->Show();
 			FVerScroll->Redraw();
@@ -1814,7 +1930,21 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
 		if (FHorScroll && FHorScroll->IsEnabled())
 		{
-			FHorScroll->Move(0, yimax + 1);
+		    if (FHorUp)
+		    {
+		        if (scrolls == 2 && FVerLeft)
+        			FHorScroll->Move(FVerScroll->GetWidth(), 0);
+        	    else
+        			FHorScroll->Move(0, 0);
+        	}
+        	else
+        	{
+		        if (scrolls == 2 && FVerLeft)        	    
+        			FHorScroll->Move(FVerScroll->GetWidth(), yscroll);
+        	    else
+        			FHorScroll->Move(0, yscroll);
+        	}
+
 			FHorScroll->Resize(xscroll, FHorScroll->GetWidth());
             FHorScroll->Show();
             FHorScroll->Redraw();
@@ -1832,14 +1962,64 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
         if (scrolls == 2 && !FBackTrans)
         {
-            dev->SetClipRect(  ximax + 1, yimax + 1,
-									ximax + FVerScroll->GetWidth(),
-									yimax + FHorScroll->GetWidth());
+            if (FVerLeft)
+            {
+                if (FHorUp)
+                {
+                    dev->SetClipRect(   ximin - FVerScroll->GetWidth(), 
+                                        yimin - FHorScroll->GetWidth(),
+		        						ximin,
+				        				yimin);
 
-				SetBackColor(dev);
-				dev->DrawRect(     ximax + 1, yimax + 1,
-									ximax + FVerScroll->GetWidth(),
-									yimax + FHorScroll->GetWidth());
+			        SetBackColor(dev);
+			        dev->DrawRect(      ximin - FVerScroll->GetWidth(), 
+                                        yimin - FHorScroll->GetWidth(),
+		        						ximin,
+				        				yimin);
+				}
+				else
+				{
+                    dev->SetClipRect(   ximin - FVerScroll->GetWidth(), 
+                                        yimax + 1,
+		        						ximin,
+				        				yimax + FHorScroll->GetWidth());
+
+			        SetBackColor(dev);
+			        dev->DrawRect(      ximin - FVerScroll->GetWidth(), 
+                                        yimax + 1,
+		        						ximin,
+				        				yimax + FHorScroll->GetWidth());
+                }
+            }
+            else
+            {
+                if (FHorUp)
+                {
+                    dev->SetClipRect(   ximax + 1, 
+                                        yimin - FHorScroll->GetWidth(),
+		        						ximax + FVerScroll->GetWidth(),
+				        				yimin);
+
+			        SetBackColor(dev);
+			        dev->DrawRect(      ximax + 1, 
+                                        yimin - FHorScroll->GetWidth(),
+		        						ximax + FVerScroll->GetWidth(),
+				        				yimin);
+				}
+				else
+				{
+                    dev->SetClipRect(   ximax + 1,
+                                        yimax + 1,
+		        						ximax + FVerScroll->GetWidth(),
+				        				yimax + FHorScroll->GetWidth());
+
+			        SetBackColor(dev);
+			        dev->DrawRect(      ximax + 1,
+			                            yimax + 1,
+					        			ximax + FVerScroll->GetWidth(),
+							        	yimax + FHorScroll->GetWidth());
+				}
+		    }
         }
 
         dev->SetClipRect(  ximin, yimin,

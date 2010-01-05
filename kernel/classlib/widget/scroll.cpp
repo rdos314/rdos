@@ -1297,6 +1297,7 @@ void TScrollControl::SetScrollPos(long double relpos)
     FScrollPos = abspos;
 
     Redraw();
+    NotifyChanged();
 }
 
 /*##########################################################################

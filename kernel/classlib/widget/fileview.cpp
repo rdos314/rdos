@@ -953,6 +953,7 @@ void TFileViewControl::SetVerPos(int pos)
         
         UpdateVerPos();
         RedrawTrans();
+        NotifyChanged();
     }
 }
 
@@ -984,6 +985,7 @@ void TFileViewControl::SetHorPos(int pos)
         
         UpdateHorPos();
         RedrawTrans();
+        NotifyChanged();
     }
 }
 

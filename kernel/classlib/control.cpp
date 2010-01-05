@@ -328,9 +328,29 @@ TControl::~TControl()
 ##########################################################################*/
 void TControl::Init()
 {
+    OnChanged = 0;
+    Owner = 0;
+    
     FControlList = 0;
     FDelay = 0;
     FDirty = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::NotifyChanged
+#
+#   Purpose....: Notify control change
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::NotifyChanged()
+{
+    if (OnChanged)
+        (*OnChanged)(this);
 }
 
 /*##########################################################################

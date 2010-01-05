@@ -33,7 +33,33 @@
 
 #define FALSE   0
 #define TRUE    !FALSE
-    
+
+#define FORM_TYPE_CONTROL       1
+#define FORM_TYPE_LABEL         2
+#define FORM_TYPE_BUTTON        3
+#define FORM_TYPE_FILE_VIEW     4
+#define FORM_TYPE_LIST          5
+#define FORM_TYPE_VER_SCROLL    6
+#define FORM_TYPE_HOR_SCROLL    7
+
+/*##########################################################################
+#
+#   Name       : ControlChanged
+#
+#   Purpose....: Control changed callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ControlChanged(TControl *Control)
+{
+    TFormControl *form = (TFormControl *)Control->Owner;
+
+    form->NotifyChanged(Control);
+}
+
 /*##########################################################################
 #
 #   Name       : TFormControlEntry::TFormControlEntry
@@ -45,11 +71,16 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFormControlEntry::TFormControlEntry(TControl *control, const char *Name)
-  : FName(Name)
+TFormControlEntry::TFormControlEntry(TControl *control, const char *name, int type)
+  : FName(name)
 {
     FControl = control;
     FNext = 0;
+    FType = type;
+    FStartX = 0;
+    FStartY = 0;
+    FSizeX = 0;
+    FSizeY = 0;
 }
     
 /*##########################################################################
@@ -64,216 +95,6 @@ TFormControlEntry::TFormControlEntry(TControl *control, const char *Name)
 #
 ##########################################################################*/
 TFormControlEntry::~TFormControlEntry()
-{
-    if (FControl)
-        delete FControl;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormLabelEntry::TFormLabelEntry
-#
-#   Purpose....: Form label control entry constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormLabelEntry::TFormLabelEntry(TLabelControl *control, const char *Name)
-  : FName(Name)
-{
-    FControl = control;
-    FNext = 0;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormLabelEntry::~TFormLabelEntry
-#
-#   Purpose....: Form label control entry destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormLabelEntry::~TFormLabelEntry()
-{
-    if (FControl)
-        delete FControl;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormButtonEntry::TFormButtonEntry
-#
-#   Purpose....: Form button control entry constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormButtonEntry::TFormButtonEntry(TButtonControl *control, const char *Name)
-  : FName(Name)
-{
-    FControl = control;
-    FNext = 0;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormButtonEntry::~TFormButtonEntry
-#
-#   Purpose....: Form button control entry destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormButtonEntry::~TFormButtonEntry()
-{
-    if (FControl)
-        delete FControl;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormFileViewEntry::TFormFileViewEntry
-#
-#   Purpose....: Form file-view control entry constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormFileViewEntry::TFormFileViewEntry(TFileViewControl *control, const char *Name)
-  : FName(Name)
-{
-    FControl = control;
-    FNext = 0;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormFileViewEntry::~TFormFileViewEntry
-#
-#   Purpose....: Form file-view entry destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormFileViewEntry::~TFormFileViewEntry()
-{
-    if (FControl)
-        delete FControl;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormListboxEntry::TFormListboxEntry
-#
-#   Purpose....: Form listbox control entry constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormListboxEntry::TFormListboxEntry(TListControl *control, const char *Name)
-  : FName(Name)
-{
-    FControl = control;
-    FNext = 0;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormListboxEntry::~TFormListboxEntry
-#
-#   Purpose....: Form listbox control entry destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormListboxEntry::~TFormListboxEntry()
-{
-    if (FControl)
-        delete FControl;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormVerScrollEntry::TFormVerScrollEntry
-#
-#   Purpose....: Form vertical scroll control entry constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormVerScrollEntry::TFormVerScrollEntry(TVerScrollControl *control, const char *Name)
-  : FName(Name)
-{
-    FControl = control;
-    FNext = 0;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormVerScrollEntry::~TFormVerScrollEntry
-#
-#   Purpose....: Form vertical scroll control entry destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormVerScrollEntry::~TFormVerScrollEntry()
-{
-    if (FControl)
-        delete FControl;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormHorScrollEntry::TFormHorScrollEntry
-#
-#   Purpose....: Form horisontal scroll control entry constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormHorScrollEntry::TFormHorScrollEntry(THorScrollControl *control, const char *Name)
-  : FName(Name)
-{
-    FControl = control;
-    FNext = 0;
-}
-    
-/*##########################################################################
-#
-#   Name       : TFormHorScrollEntry::~TFormHorScrollEntry
-#
-#   Purpose....: Form horisontal scroll control entry destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFormHorScrollEntry::~TFormHorScrollEntry()
 {
     if (FControl)
         delete FControl;
@@ -328,24 +149,6 @@ TFormControl::~TFormControl()
 {
     while (FControlList)
         Remove(FControlList);
-        
-    while (FLabelList)
-        Remove(FLabelList);
-        
-    while (FButtonList)
-        Remove(FButtonList);
-        
-    while (FFileViewList)
-        Remove(FFileViewList);
-        
-    while (FListboxList)
-        Remove(FListboxList);
-
-    while (FVerScrollList)
-        Remove(FVerScrollList);
-
-    while (FHorScrollList)
-        Remove(FHorScrollList);
 }
 
 /*##########################################################################
@@ -362,12 +165,6 @@ TFormControl::~TFormControl()
 void TFormControl::Init()
 {
     FControlList = 0;
-    FLabelList = 0;
-    FButtonList = 0;
-    FFileViewList = 0;
-    FListboxList = 0;
-    FVerScrollList = 0;
-    FHorScrollList = 0;
 }
 
 /*##########################################################################
@@ -381,140 +178,46 @@ void TFormControl::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::Add(TFormControlEntry *entry)
+void TFormControl::Add(const char *name, TControl *control, int type)
 {
+    TFormControlEntry *entry;
+    int xsize, ysize;
+    int xstart, ystart;
+    
+    control->GetPos(&xstart, &ystart);
+    control->GetSize(&xsize, &ysize);
+
+    entry = new TFormControlEntry(control, name, type);
+    entry->FStartX = xstart;
+    entry->FStartY = ystart;
+    entry->FSizeX = xsize;
+    entry->FSizeY = ysize;
+
     FSection.Enter();
 
     entry->FNext = FControlList;
     FControlList = entry;
 
     FSection.Leave();
+    
+    control->Owner = this;
+    control->OnChanged = ControlChanged;
 }
 
 /*##########################################################################
 #
 #   Name       : TFormControl::Add
 #
-#   Purpose....: Add label control
+#   Purpose....: Add control
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::Add(TFormLabelEntry *entry)
+void TFormControl::Add(const char *name, TControl *control)
 {
-    FSection.Enter();
-
-    entry->FNext = FLabelList;
-    FLabelList = entry;
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Add
-#
-#   Purpose....: Add button control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Add(TFormButtonEntry *entry)
-{
-    FSection.Enter();
-
-    entry->FNext = FButtonList;
-    FButtonList = entry;
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Add
-#
-#   Purpose....: Add file-view control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Add(TFormFileViewEntry *entry)
-{
-    FSection.Enter();
-
-    entry->FNext = FFileViewList;
-    FFileViewList = entry;
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Add
-#
-#   Purpose....: Add list control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Add(TFormListboxEntry *entry)
-{
-    FSection.Enter();
-
-    entry->FNext = FListboxList;
-    FListboxList = entry;
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Add
-#
-#   Purpose....: Add vertical scroll control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Add(TFormVerScrollEntry *entry)
-{
-    FSection.Enter();
-
-    entry->FNext = FVerScrollList;
-    FVerScrollList = entry;
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Add
-#
-#   Purpose....: Add horisontal scroll control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Add(TFormHorScrollEntry *entry)
-{
-    FSection.Enter();
-
-    entry->FNext = FHorScrollList;
-    FHorScrollList = entry;
-
-    FSection.Leave();
+    Add(name, control, FORM_TYPE_CONTROL);
 }
 
 /*##########################################################################
@@ -532,6 +235,8 @@ void TFormControl::Remove(TFormControlEntry *entry)
 {
     TFormControlEntry *p;
 
+    entry->FControl->OnChanged = 0;
+
     FSection.Enter();
 
     if (entry == FControlList)
@@ -542,258 +247,6 @@ void TFormControl::Remove(TFormControlEntry *entry)
     else
     {
         p = FControlList;
-
-        while (p)
-        {
-            if (p->FNext == entry)
-            {
-                p->FNext = entry->FNext;
-                delete entry;
-                break;
-            }
-            else
-                p = p->FNext;
-        }
-    }
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Remove
-#
-#   Purpose....: Remove label control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Remove(TFormLabelEntry *entry)
-{
-    TFormLabelEntry *p;
-
-    FSection.Enter();
-
-    if (entry == FLabelList)
-    {
-        FLabelList = entry->FNext;
-        delete entry;
-    }
-    else
-    {
-        p = FLabelList;
-
-        while (p)
-        {
-            if (p->FNext == entry)
-            {
-                p->FNext = entry->FNext;
-                delete entry;
-                break;
-            }
-            else
-                p = p->FNext;
-        }
-    }
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Remove
-#
-#   Purpose....: Remove button control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Remove(TFormButtonEntry *entry)
-{
-    TFormButtonEntry *p;
-
-    FSection.Enter();
-
-    if (entry == FButtonList)
-    {
-        FButtonList = entry->FNext;
-        delete entry;
-    }
-    else
-    {
-        p = FButtonList;
-
-        while (p)
-        {
-            if (p->FNext == entry)
-            {
-                p->FNext = entry->FNext;
-                delete entry;
-                break;
-            }
-            else
-                p = p->FNext;
-        }
-    }
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Remove
-#
-#   Purpose....: Remove file view control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Remove(TFormFileViewEntry *entry)
-{
-    TFormFileViewEntry *p;
-
-    FSection.Enter();
-
-    if (entry == FFileViewList)
-    {
-        FFileViewList = entry->FNext;
-        delete entry;
-    }
-    else
-    {
-        p = FFileViewList;
-
-        while (p)
-        {
-            if (p->FNext == entry)
-            {
-                p->FNext = entry->FNext;
-                delete entry;
-                break;
-            }
-            else
-                p = p->FNext;
-        }
-    }
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Remove
-#
-#   Purpose....: Remove list control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Remove(TFormListboxEntry *entry)
-{
-    TFormListboxEntry *p;
-
-    FSection.Enter();
-
-    if (entry == FListboxList)
-    {
-        FListboxList = entry->FNext;
-        delete entry;
-    }
-    else
-    {
-        p = FListboxList;
-
-        while (p)
-        {
-            if (p->FNext == entry)
-            {
-                p->FNext = entry->FNext;
-                delete entry;
-                break;
-            }
-            else
-                p = p->FNext;
-        }
-    }
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Remove
-#
-#   Purpose....: Remove vertical scroll control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Remove(TFormVerScrollEntry *entry)
-{
-    TFormVerScrollEntry *p;
-
-    FSection.Enter();
-
-    if (entry == FVerScrollList)
-    {
-        FVerScrollList = entry->FNext;
-        delete entry;
-    }
-    else
-    {
-        p = FVerScrollList;
-
-        while (p)
-        {
-            if (p->FNext == entry)
-            {
-                p->FNext = entry->FNext;
-                delete entry;
-                break;
-            }
-            else
-                p = p->FNext;
-        }
-    }
-
-    FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TFormControl::Remove
-#
-#   Purpose....: Remove horisontal scroll control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFormControl::Remove(TFormHorScrollEntry *entry)
-{
-    TFormHorScrollEntry *p;
-
-    FSection.Enter();
-
-    if (entry == FHorScrollList)
-    {
-        FHorScrollList = entry->FNext;
-        delete entry;
-    }
-    else
-    {
-        p = FHorScrollList;
 
         while (p)
         {
@@ -844,33 +297,7 @@ TControl *TFormControl::GetControl(const char *name)
     if (p)
         return p->FControl;
     else
-    {
-        control = GetLabel(name);
-        if (control)
-            return control;
-
-        control = GetButton(name);
-        if (control)
-            return control;
-
-        control = GetFileView(name);
-        if (control)
-            return control;
-
-        control = GetList(name);
-        if (control)
-            return control;
-
-        control = GetVerScroll(name);
-        if (control)
-            return control;
-
-        control = GetHorScroll(name);
-        if (control)
-            return control;
-
-    }
-    return 0;
+        return 0;
 }
 
 /*##########################################################################
@@ -886,15 +313,16 @@ TControl *TFormControl::GetControl(const char *name)
 ##########################################################################*/
 TLabelControl *TFormControl::GetLabel(const char *name)
 {
-    TFormLabelEntry *p;
+    TFormControlEntry *p;
+    TControl *control;
 
     FSection.Enter();
 
-    p = FLabelList;
+    p = FControlList;
 
     while (p)
     {
-        if (p->FName == name)
+        if (p->FType == FORM_TYPE_LABEL && p->FName == name)
             break;
         else
             p = p->FNext;
@@ -903,7 +331,7 @@ TLabelControl *TFormControl::GetLabel(const char *name)
     FSection.Leave();
 
     if (p)
-        return p->FControl;
+        return (TLabelControl *)p->FControl;
     else
         return 0;
 }
@@ -921,15 +349,16 @@ TLabelControl *TFormControl::GetLabel(const char *name)
 ##########################################################################*/
 TButtonControl *TFormControl::GetButton(const char *name)
 {
-    TFormButtonEntry *p;
+    TFormControlEntry *p;
+    TControl *control;
 
     FSection.Enter();
 
-    p = FButtonList;
+    p = FControlList;
 
     while (p)
     {
-        if (p->FName == name)
+        if (p->FType == FORM_TYPE_BUTTON && p->FName == name)
             break;
         else
             p = p->FNext;
@@ -938,7 +367,7 @@ TButtonControl *TFormControl::GetButton(const char *name)
     FSection.Leave();
 
     if (p)
-        return p->FControl;
+        return (TButtonControl *)p->FControl;
     else
         return 0;
 }
@@ -956,15 +385,16 @@ TButtonControl *TFormControl::GetButton(const char *name)
 ##########################################################################*/
 TFileViewControl *TFormControl::GetFileView(const char *name)
 {
-    TFormFileViewEntry *p;
+    TFormControlEntry *p;
+    TControl *control;
 
     FSection.Enter();
 
-    p = FFileViewList;
+    p = FControlList;
 
     while (p)
     {
-        if (p->FName == name)
+        if (p->FType == FORM_TYPE_FILE_VIEW && p->FName == name)
             break;
         else
             p = p->FNext;
@@ -973,7 +403,7 @@ TFileViewControl *TFormControl::GetFileView(const char *name)
     FSection.Leave();
 
     if (p)
-        return p->FControl;
+        return (TFileViewControl *)p->FControl;
     else
         return 0;
 }
@@ -991,15 +421,16 @@ TFileViewControl *TFormControl::GetFileView(const char *name)
 ##########################################################################*/
 TListControl *TFormControl::GetList(const char *name)
 {
-    TFormListboxEntry *p;
+    TFormControlEntry *p;
+    TControl *control;
 
     FSection.Enter();
 
-    p = FListboxList;
+    p = FControlList;
 
     while (p)
     {
-        if (p->FName == name)
+        if (p->FType == FORM_TYPE_LIST && p->FName == name)
             break;
         else
             p = p->FNext;
@@ -1008,7 +439,7 @@ TListControl *TFormControl::GetList(const char *name)
     FSection.Leave();
 
     if (p)
-        return p->FControl;
+        return (TListControl *)p->FControl;
     else
         return 0;
 }
@@ -1026,15 +457,16 @@ TListControl *TFormControl::GetList(const char *name)
 ##########################################################################*/
 TVerScrollControl *TFormControl::GetVerScroll(const char *name)
 {
-    TFormVerScrollEntry *p;
+    TFormControlEntry *p;
+    TControl *control;
 
     FSection.Enter();
 
-    p = FVerScrollList;
+    p = FControlList;
 
     while (p)
     {
-        if (p->FName == name)
+        if (p->FType == FORM_TYPE_VER_SCROLL && p->FName == name)
             break;
         else
             p = p->FNext;
@@ -1043,7 +475,7 @@ TVerScrollControl *TFormControl::GetVerScroll(const char *name)
     FSection.Leave();
 
     if (p)
-        return p->FControl;
+        return (TVerScrollControl *)p->FControl;
     else
         return 0;
 }
@@ -1061,15 +493,16 @@ TVerScrollControl *TFormControl::GetVerScroll(const char *name)
 ##########################################################################*/
 THorScrollControl *TFormControl::GetHorScroll(const char *name)
 {
-    TFormHorScrollEntry *p;
+    TFormControlEntry *p;
+    TControl *control;
 
     FSection.Enter();
 
-    p = FHorScrollList;
+    p = FControlList;
 
     while (p)
     {
-        if (p->FName == name)
+        if (p->FType == FORM_TYPE_HOR_SCROLL && p->FName == name)
             break;
         else
             p = p->FNext;
@@ -1078,7 +511,7 @@ THorScrollControl *TFormControl::GetHorScroll(const char *name)
     FSection.Leave();
 
     if (p)
-        return p->FControl;
+        return (THorScrollControl *)p->FControl;
     else
         return 0;
 }
@@ -1202,15 +635,12 @@ void TFormControl::OnCreateHorScroll(const char *name, THorScrollControl *scroll
 void TFormControl::LoadLabel(const char *IniName, const char *Name)
 {
     TLabelControl *label;
-    TFormLabelEntry *entry;
 
     label = new TLabelControl(this);
     label->Set(IniName, Name);
-
-    entry = new TFormLabelEntry(label, Name);
-    Add(entry);
-
     OnCreateLabel(Name, label);    
+
+    Add(Name, label, FORM_TYPE_LABEL);
 }
 
 /*##########################################################################
@@ -1227,15 +657,13 @@ void TFormControl::LoadLabel(const char *IniName, const char *Name)
 void TFormControl::LoadButton(const char *IniName, const char *Name)
 {
     TButtonControl *button;
-    TFormButtonEntry *entry;
 
     button = new TButtonControl(this);
     button->Set(IniName, Name);
-
-    entry = new TFormButtonEntry(button, Name);
-    Add(entry);
-
     OnCreateButton(Name, button); 
+
+    Add(Name, button, FORM_TYPE_BUTTON);
+
 }
 
 /*##########################################################################
@@ -1252,16 +680,13 @@ void TFormControl::LoadButton(const char *IniName, const char *Name)
 void TFormControl::LoadFileView(const char *IniName, const char *Name)
 {
     TFileViewControl *fileview;
-    TFormFileViewEntry *entry;
 
     fileview = new TFileViewControl(this);
     fileview->Set(IniName, Name);
-
-    entry = new TFormFileViewEntry(fileview, Name);
-    Add(entry);
-
     OnCreatePanel(Name, fileview); 
     OnCreateFileView(Name, fileview); 
+
+    Add(Name, fileview, FORM_TYPE_FILE_VIEW);
 }
 
 /*##########################################################################
@@ -1278,16 +703,13 @@ void TFormControl::LoadFileView(const char *IniName, const char *Name)
 void TFormControl::LoadList(const char *IniName, const char *Name)
 {
     TListControl *list;
-    TFormListboxEntry *entry;
 
 	list = new TListControl(this);
     list->Set(IniName, Name);
-
-    entry = new TFormListboxEntry(list, Name);
-    Add(entry);
-
     OnCreatePanel(Name, list); 
     OnCreateList(Name, list); 
+
+    Add(Name, list, FORM_TYPE_LIST);
 }
 
 /*##########################################################################
@@ -1304,15 +726,12 @@ void TFormControl::LoadList(const char *IniName, const char *Name)
 void TFormControl::LoadVerScroll(const char *IniName, const char *Name)
 {
     TVerScrollControl *scroll;
-    TFormVerScrollEntry *entry;
 
     scroll = new TVerScrollControl(this);
     scroll->Set(IniName, Name);
-
-	entry = new TFormVerScrollEntry(scroll, Name);
-	Add(entry);
-
 	OnCreateVerScroll(Name, scroll);
+
+	Add(Name, scroll, FORM_TYPE_VER_SCROLL);
 }
 
 /*##########################################################################
@@ -1329,15 +748,12 @@ void TFormControl::LoadVerScroll(const char *IniName, const char *Name)
 void TFormControl::LoadHorScroll(const char *IniName, const char *Name)
 {
 	THorScrollControl *scroll;
-	TFormHorScrollEntry *entry;
 
 	scroll = new THorScrollControl(this);
 	scroll->Set(IniName, Name);
-
-	entry = new TFormHorScrollEntry(scroll, Name);
-	Add(entry);
-
     OnCreateHorScroll(Name, scroll); 
+
+	Add(Name, scroll, FORM_TYPE_HOR_SCROLL);
 }
 
 /*##########################################################################
@@ -1418,4 +834,19 @@ void TFormControl::LoadControls(const char *IniName)
         else
             done = TRUE;
     }    
+}
+
+/*##########################################################################
+#
+#   Name       : TFormControl::NotifyChanged
+#
+#   Purpose....: Control changed callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::NotifyChanged(TControl *Control)
+{
 }

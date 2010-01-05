@@ -178,6 +178,11 @@ public:
     void DisableVerScroll();
     void DisableHorScroll();
 
+    void SetVerLeft();
+    void SetVerRight();
+    void SetHorTop();
+    void SetHorBottom();
+
     void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
 
     void SetBackColor(int r, int g, int b);
@@ -253,6 +258,9 @@ private:
     int FDisabledB;
 
     int FScrollChanged;
+
+    int FVerLeft;
+    int FHorUp;
 };        
 
 #endif

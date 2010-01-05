@@ -38,78 +38,18 @@
 class TFormControlEntry
 {
 public:
-    TFormControlEntry(TControl *control, const char *Name);
+    TFormControlEntry(TControl *control, const char *name, int type);
     ~TFormControlEntry();
 
     TString FName;
     TControl *FControl;
     TFormControlEntry *FNext;
-};
-
-class TFormLabelEntry
-{
-public:
-    TFormLabelEntry(TLabelControl *label, const char *Name);
-    ~TFormLabelEntry();
-
-    TString FName;
-    TLabelControl *FControl;
-    TFormLabelEntry *FNext;
-};
-
-class TFormButtonEntry
-{
-public:
-    TFormButtonEntry(TButtonControl *button, const char *Name);
-    ~TFormButtonEntry();
-
-    TString FName;
-    TButtonControl *FControl;
-    TFormButtonEntry *FNext;
-};
-
-class TFormFileViewEntry
-{
-public:
-    TFormFileViewEntry(TFileViewControl *fileview, const char *Name);
-    ~TFormFileViewEntry();
-
-    TString FName;
-    TFileViewControl *FControl;
-    TFormFileViewEntry *FNext;
-};
-
-class TFormListboxEntry
-{
-public:
-    TFormListboxEntry(TListControl *list, const char *Name);
-    ~TFormListboxEntry();
-
-    TString FName;
-    TListControl *FControl;
-    TFormListboxEntry *FNext;
-};
-
-class TFormVerScrollEntry
-{
-public:
-    TFormVerScrollEntry(TVerScrollControl *scroll, const char *Name);
-    ~TFormVerScrollEntry();
-
-    TString FName;
-    TVerScrollControl *FControl;
-    TFormVerScrollEntry *FNext;
-};
-
-class TFormHorScrollEntry
-{
-public:
-    TFormHorScrollEntry(THorScrollControl *scroll, const char *Name);
-    ~TFormHorScrollEntry();
-
-    TString FName;
-    THorScrollControl *FControl;
-    TFormHorScrollEntry *FNext;
+    
+    int FType;
+    int FStartX;
+    int FStartY;
+    int FSizeX;
+    int FSizeY;
 };
 
 class TFormControl : public TPanelControl
@@ -120,6 +60,9 @@ public:
     ~TFormControl();
     
     void LoadControls(const char *IniName);
+    void Add(const char *name, TControl *control);
+
+    virtual void NotifyChanged(TControl *control);
     
 protected:
     virtual void OnCreatePanel(const char *name, TPanelControl *panel);
@@ -130,21 +73,8 @@ protected:
     virtual void OnCreateVerScroll(const char *name, TVerScrollControl *list);
     virtual void OnCreateHorScroll(const char *name, THorScrollControl *list);
 
-    void Add(TFormControlEntry *entry);
-    void Add(TFormLabelEntry *entry);
-    void Add(TFormButtonEntry *entry);
-    void Add(TFormFileViewEntry *entry);
-    void Add(TFormListboxEntry *entry);
-    void Add(TFormVerScrollEntry *entry);
-	void Add(TFormHorScrollEntry *entry);
-
+    void Add(const char *name, TControl *control, int type);
     void Remove(TFormControlEntry *entry);
-    void Remove(TFormLabelEntry *entry);
-    void Remove(TFormButtonEntry *entry);
-    void Remove(TFormFileViewEntry *entry);
-    void Remove(TFormListboxEntry *entry);
-    void Remove(TFormVerScrollEntry *entry);
-    void Remove(TFormHorScrollEntry *entry);
 
     TControl *GetControl(const char *name);
     TLabelControl *GetLabel(const char *name);
@@ -164,12 +94,6 @@ protected:
     void LoadControl(const char *IniName, const char *Name);
 
     TFormControlEntry *FControlList;
-    TFormLabelEntry *FLabelList;
-    TFormButtonEntry *FButtonList;
-    TFormFileViewEntry *FFileViewList;
-    TFormListboxEntry *FListboxList;
-    TFormVerScrollEntry *FVerScrollList;
-    TFormHorScrollEntry *FHorScrollList;
 
     TSection FSection;
 
