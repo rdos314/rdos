@@ -643,6 +643,26 @@ void TImageControl::Load(int MaxCount)
 
 /*##########################################################################
 #
+#   Name       : TImageControl::LoadImage
+#
+#   Purpose....: Load a single image without a sequence loader
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TImageControl::LoadImage(const char *FileName)
+{
+    FLoading = TRUE;
+    FCount = 0;
+    LoadOne(FileName, 1);
+    FLoading = FALSE;
+    Redraw();
+}
+
+/*##########################################################################
+#
 #   Name       : TImageControl::SetBackColor
 #
 #   Purpose....: Set background

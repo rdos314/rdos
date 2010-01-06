@@ -34,6 +34,7 @@
 #include "fileview.h"
 #include "listbox.h"
 #include "scroll.h"
+#include "image.h"
 
 class TFormControlEntry
 {
@@ -70,8 +71,9 @@ protected:
     virtual void OnCreateButton(const char *name, TButtonControl *button);
     virtual void OnCreateFileView(const char *name, TFileViewControl *fileview);
     virtual void OnCreateList(const char *name, TListControl *list);
-    virtual void OnCreateVerScroll(const char *name, TVerScrollControl *list);
-    virtual void OnCreateHorScroll(const char *name, THorScrollControl *list);
+    virtual void OnCreateVerScroll(const char *name, TVerScrollControl *scroll);
+    virtual void OnCreateHorScroll(const char *name, THorScrollControl *scroll);
+    virtual void OnCreateImage(const char *name, TImageControl *image);
 
     void Add(const char *name, TControl *control, int type);
     void Remove(TFormControlEntry *entry);
@@ -83,6 +85,7 @@ protected:
     TListControl *GetList(const char *name);
     TVerScrollControl *GetVerScroll(const char *name);
     THorScrollControl *GetHorScroll(const char *name);
+    TImageControl *GetImage(const char *name);
 
     void LoadLabel(const char *IniName, const char *Name);
     void LoadButton(const char *IniName, const char *Name);
@@ -90,6 +93,7 @@ protected:
     void LoadList(const char *IniName, const char *Name);
     void LoadVerScroll(const char *IniName, const char *Name);
     void LoadHorScroll(const char *IniName, const char *Name);
+    void LoadImage(const char *IniName, const char *Name);
 
     void LoadControl(const char *IniName, const char *Name);
 

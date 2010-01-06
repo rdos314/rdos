@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2002, Leif Ekblad
+# Copyright (C) 1988-2010, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@
 #define FORM_TYPE_LIST          5
 #define FORM_TYPE_VER_SCROLL    6
 #define FORM_TYPE_HOR_SCROLL    7
+#define FORM_TYPE_IMAGE         8
 
 /*##########################################################################
 #
@@ -518,6 +519,42 @@ THorScrollControl *TFormControl::GetHorScroll(const char *name)
 
 /*##########################################################################
 #
+#   Name       : TFormControl::GetImage
+#
+#   Purpose....: Get an image control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TImageControl *TFormControl::GetImage(const char *name)
+{
+    TFormControlEntry *p;
+    TControl *control;
+
+    FSection.Enter();
+
+    p = FControlList;
+
+    while (p)
+    {
+        if (p->FType == FORM_TYPE_IMAGE && p->FName == name)
+            break;
+        else
+            p = p->FNext;
+    }
+
+    FSection.Leave();
+
+    if (p)
+        return (TImageControl *)p->FControl;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFormControl::OnCreatePanel
 #
 #   Purpose....: Create panel notification
@@ -618,6 +655,21 @@ void TFormControl::OnCreateVerScroll(const char *name, TVerScrollControl *scroll
 #
 ##########################################################################*/
 void TFormControl::OnCreateHorScroll(const char *name, THorScrollControl *scroll)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFormControl::OnCreateImage
+#
+#   Purpose....: Create image notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::OnCreateImage(const char *name, TImageControl *image)
 {
 }
 
@@ -758,6 +810,28 @@ void TFormControl::LoadHorScroll(const char *IniName, const char *Name)
 
 /*##########################################################################
 #
+#   Name       : TFormControl::LoadImage
+#
+#   Purpose....: Load an image control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::LoadImage(const char *IniName, const char *Name)
+{
+	TImageControl *image;
+
+	image = new TImageControl(this);
+	image->Set(IniName, Name);
+    OnCreateImage(Name, image); 
+
+	Add(Name, image, FORM_TYPE_IMAGE);
+}
+
+/*##########################################################################
+#
 #   Name       : TFormControl::LoadControl
 #
 #   Purpose....: Load a control
@@ -793,6 +867,9 @@ void TFormControl::LoadControl(const char *IniName, const char *Name)
 
         if (!strcmp(str, "HorScroll"))
             LoadHorScroll(IniName, Name);
+
+        if (!strcmp(str, "Image"))
+            LoadImage(IniName, Name);
     }
 }
 

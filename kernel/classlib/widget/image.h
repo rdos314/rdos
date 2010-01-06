@@ -41,6 +41,8 @@ public:
 
 	virtual void Set(const char *IniName, const char *IniSection);
 
+	void LoadImage(const char *FileName);
+
 	void SetLoader(TLoaderThread *Loader);
 	void SetLoadIni(const char *IniName, const char *IniSection);
 
