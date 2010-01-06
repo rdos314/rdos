@@ -1467,8 +1467,9 @@ void TListControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int
         dev->SetLgopNone();
         dev->SetFilledStyle();
 
-        dev->SetClipRect(  xmin, ymin,
-                           xmax, ymax);
+        SetClipRect(    dev,
+                        xmin, ymin,
+                        xmax, ymax);
 
         xstart = xmin + FStartX;
         ystart = ymin + FStartY;

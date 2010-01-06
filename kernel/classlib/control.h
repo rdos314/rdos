@@ -87,11 +87,13 @@ protected:
 	virtual int OnRightDown(int x, int y, int ButtonState, int KeyState);
 
     virtual void NotifyResize();
+    virtual void ChildChange();
 
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
 
     void NotifyChanged();
+    void NotifyChildChange();
 
     int IsRedrawEnabled();
     int IsDirty();
@@ -101,6 +103,7 @@ protected:
     void Unload();
     void HandleUpdate();
 	void SetClipRect(TGraphicDevice *dev, int xmin, int ymin);
+	void SetClipRect(TGraphicDevice *dev, int xmin, int ymin, int xmax, int ymax);
 	void UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 	void RedrawChildren(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 

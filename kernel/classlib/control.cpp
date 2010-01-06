@@ -370,6 +370,22 @@ void TControl::NotifyResize()
 
 /*##########################################################################
 #
+#   Name       : TControl::ChildChange
+#
+#   Purpose....: Notify a significant change in a child-control that requires
+#                a complete redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::ChildChange()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::IsRedrawEnabled
 #
 #   Purpose....: Check if redraw is enabled
@@ -463,6 +479,36 @@ void TControl::RedrawParent()
 
 /*##########################################################################
 #
+#   Name       : TControl::NotifyChildChange
+#
+#   Purpose....: Notify a change in a child control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::NotifyChildChange()
+{
+    TControl *parent;
+
+    Protect();
+
+    ChildChange();
+
+    parent = FParent;
+
+    while (parent)
+    {
+        parent->ChildChange();
+        parent = parent->FParent;
+    }
+
+    Unprotect();
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::Add
 #
 #   Purpose....: Add child control
@@ -499,7 +545,9 @@ void TControl::Add(TControl *control)
     else
         FControlList = control;   
 
-    Unprotect();
+    Unprotect();    
+
+    NotifyChildChange();
 }
 
 /*##########################################################################
@@ -543,6 +591,8 @@ void TControl::Delete(TControl *control)
     control->FNext = 0;
 
     Unprotect();
+
+    NotifyChildChange();
 }        
 
 /*##########################################################################
@@ -639,6 +689,7 @@ void TControl::Set(const char *IniName, const char *IniSection)
 void TControl::Show()
 {
     FVisible = TRUE;
+    NotifyChildChange();
     Redraw();
 }
 
@@ -656,6 +707,7 @@ void TControl::Show()
 void TControl::Hide()
 {
     FVisible = FALSE;
+    NotifyChildChange();
 
     if (FParent)
         FParent->Redraw();
@@ -757,6 +809,8 @@ void TControl::Resize(int xsize, int ysize)
 
     if (FVisible)
     {
+        NotifyChildChange();
+        
         if (FParent)
             FParent->Redraw();
         else
@@ -782,6 +836,8 @@ void TControl::Move(int xstart, int ystart)
 
     if (FVisible)
     {
+        NotifyChildChange();
+
         if (FParent)
             FParent->Redraw();
         else
@@ -855,7 +911,16 @@ void TControl::PutKey(char ch)
 ##########################################################################*/
 int TControl::IsInside(int x, int y) const
 {
-	 return FXMin <= x && FXMin + FWidth > x && FYMin <= y && FYMin + FHeight > y;
+    if (FXMin <= x && FXMin + FWidth > x && FYMin <= y && FYMin + FHeight > y)
+    {
+        if (FParent)
+            return FParent->IsInside(FParent->FXMin + x, FParent->FYMin + y);
+        else
+            return TRUE;
+    }
+    else
+        return FALSE;
+    
 }
 
 /*##########################################################################
@@ -1204,11 +1269,61 @@ void TControl::HandleUpdate()
 #   Returns....: *
 #
 ##########################################################################*/
+void TControl::SetClipRect(TGraphicDevice *dev, int xmin, int ymin, int xmax, int ymax)
+{
+    TControl *parent;
+    int xstart, ystart;
+
+    xstart = FXMin;
+    ystart = FYMin;
+
+    parent = FParent;
+    while (parent)
+    {
+        xstart += FParent->FXMin;
+        ystart += FParent->FYMin;
+        parent = parent->FParent;
+    }
+
+    if (xstart > xmin)
+        xmin = xstart;
+
+    if (ystart > ymin)
+        ymin = ystart;
+
+    if (xstart + FWidth - 1 < xmax)
+        xmax = xstart + FWidth - 1;
+
+    if (ystart + FHeight - 1 < ymax)
+        ymax = ystart + FHeight - 1;        
+
+    if (FParent)
+        FParent->SetClipRect(   dev, 
+                                xmin, ymin,
+                                xmax, ymax);        
+    else
+        dev->SetClipRect(   xmin, ymin,
+                            xmax, ymax);
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::SetClipRect
+#
+#   Purpose....: Set cliprec for control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 void TControl::SetClipRect(TGraphicDevice *dev, int xstart, int ystart)
 {
-    dev->SetClipRect(   xstart, ystart,
-        			    xstart + FWidth - 1,
-        				ystart + FHeight - 1);
+    SetClipRect(    dev,
+                    xstart, 
+                    ystart,
+        		    xstart + FWidth - 1,
+        			ystart + FHeight - 1);
 }
 
 /*##########################################################################
@@ -1256,9 +1371,9 @@ void TControl::RedrawChildren(TGraphicDevice *dev, int xmin, int ymin, int width
                 xstart = xmin + control->FXMin;
                 ystart = ymin + control->FYMin;
             
-            	dev->SetClipRect(  xstart, ystart,
-            					   xstart + control->FWidth - 1,
-        	    				   ystart + control->FHeight - 1);
+            	SetClipRect(    dev, xstart, ystart,
+            					xstart + control->FWidth - 1,
+        	    				ystart + control->FHeight - 1);
 
                 control->ResetDirty();
                 control->Paint(dev, xstart, ystart, control->FWidth, control->FHeight);
@@ -1302,9 +1417,9 @@ void TControl::UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width
                 xstart = xmin + control->FXMin;
                 ystart = ymin + control->FYMin;
             
-            	dev->SetClipRect(  xstart, ystart,
-            					   xstart + control->FWidth - 1,
-        	    				   ystart + control->FHeight - 1);
+            	SetClipRect(    dev, xstart, ystart,
+            				    xstart + control->FWidth - 1,
+        	    				ystart + control->FHeight - 1);
 
                 if (control->IsDirty())
                 {

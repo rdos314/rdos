@@ -1175,6 +1175,24 @@ void TScrollControl::Init()
 
     FScrollDist = 0.01;
     FPageDist = 0.1;
+
+    FRedrawButtons = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TScrollControl::ChildChange
+#
+#   Purpose....: A significant change in a child occured
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TScrollControl::ChildChange()
+{
+    FRedrawButtons = TRUE;
 }
 
 /*##########################################################################
@@ -2748,12 +2766,14 @@ void TVerScrollControl::ClearButtons()
     {
         redraw = TRUE;
         FUpPressed = FALSE;
+        FRedrawButtons = TRUE;        
     }
 
     if (FDownPressed)
     {
         redraw = TRUE;
         FDownPressed = FALSE;
+        FRedrawButtons = TRUE;        
     }
 
     if (redraw)
@@ -2876,9 +2896,13 @@ int TVerScrollControl::OnMouseMove(int x, int y, int ButtonState, int KeyState)
     int availwidth;
     int dcoord;
     long double dpos;
+    int xstart, ystart;
 
     if (FScrollPressed && IsInside(x, y))
     {
+        GetPos(&xstart, &ystart);
+        y -= ystart;
+
         availwidth = FScrollSize - FCurrScrollButton;
 
         if (availwidth > 0)
@@ -2943,6 +2967,7 @@ int TVerScrollControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
         if (y < FButtonSize)
         {
             FUpPressed = TRUE;
+            FRedrawButtons = TRUE;
             OnScrollUp();
             return TRUE;
         }
@@ -2950,6 +2975,7 @@ int TVerScrollControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
         if (y > FSize - FButtonSize)
         {
             FDownPressed = TRUE;
+            FRedrawButtons = TRUE;
             OnScrollDown();
             return TRUE;
         }
@@ -3033,11 +3059,18 @@ void TVerScrollControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
 
 	if (IsVisible())
 	{
-        dev->SetClipRect(  xmin, ymin,
-            			   xmax, ymax);
+        SetClipRect(    dev,
+                        xmin, ymin,
+            			xmax, ymax);
 
-	    PaintUpButton(dev, xmin, ymin);
-	    PaintDownButton(dev, xmin, ymin + FSize - FButtonSize);
+        if (FRedrawButtons)
+        {
+            FRedrawButtons = FALSE;
+            
+    	    PaintUpButton(dev, xmin, ymin);
+	        PaintDownButton(dev, xmin, ymin + FSize - FButtonSize);
+	    }
+	    
 	    PaintUpScrollArea(dev, xmin, ymin + FButtonSize, FScrollPos);
 	    PaintDownScrollArea(dev, xmin, ymin + FButtonSize + FScrollPos + FCurrScrollButton, FScrollSize - FCurrScrollButton - FScrollPos);
 	    PaintScrollButton(dev, xmin, ymin + FButtonSize + FScrollPos);
@@ -3226,11 +3259,11 @@ void THorScrollControl::DrawLeftArrow(TGraphicDevice *dev, int xstart, int ystar
 
 		for (i = 0; i < width; i++)
 		{
-    		dev->DrawLine(xstart + xmid, ystart + ymid + i, xstart + xmid + w, ystart + ymid - w + i);
-            dev->DrawLine(xstart + xmid, ystart + ymid + i, xstart + xmid + w, ystart + ymid + w + i);
+    		dev->DrawLine(xstart + xmid + i, ystart + ymid, xstart + xmid + w + i, ystart + ymid - w);
+            dev->DrawLine(xstart + xmid + i, ystart + ymid, xstart + xmid + w + i, ystart + ymid + w);
 
-    		dev->DrawLine(xstart + xmid, ystart + ymid - i, xstart + xmid + w, ystart + ymid - w - i);
-            dev->DrawLine(xstart + xmid, ystart + ymid - i, xstart + xmid + w, ystart + ymid + w - i);
+    		dev->DrawLine(xstart + xmid - i, ystart + ymid, xstart + xmid + w - i, ystart + ymid - w);
+            dev->DrawLine(xstart + xmid - i, ystart + ymid, xstart + xmid + w - i, ystart + ymid + w);
 		  }
 
 	 }
@@ -3723,12 +3756,14 @@ void THorScrollControl::ClearButtons()
     {
         redraw = TRUE;
         FLeftPressed = FALSE;
+        FRedrawButtons = TRUE;    
     }
 
     if (FRightPressed)
     {
         redraw = TRUE;
         FRightPressed = FALSE;
+        FRedrawButtons = TRUE;    
     }
 
     if (redraw)
@@ -3847,9 +3882,13 @@ int THorScrollControl::OnMouseMove(int x, int y, int ButtonState, int KeyState)
     int availwidth;
     int dcoord;
     long double dpos;
+    int xstart, ystart;
 
     if (FScrollPressed && IsInside(x, y))
     {
+        GetPos(&xstart, &ystart);
+        x -= xstart;
+
         availwidth = FScrollSize - FCurrScrollButton;
 
         if (availwidth > 0)
@@ -3915,6 +3954,7 @@ int THorScrollControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
         if (x < FButtonSize)
         {
             FLeftPressed = TRUE;
+            FRedrawButtons = TRUE;    
             OnScrollLeft();
             return TRUE;
         }
@@ -3922,6 +3962,7 @@ int THorScrollControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
         if (x > FSize - FButtonSize)
         {
             FRightPressed = TRUE;
+            FRedrawButtons = TRUE;    
             OnScrollRight();
             return TRUE;
         }
@@ -4005,11 +4046,18 @@ void THorScrollControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
 
 	if (IsVisible())
 	{
-        dev->SetClipRect(  xmin, ymin,
-            			   xmax, ymax);
+        SetClipRect(    dev,
+                        xmin, ymin,
+            			xmax, ymax);
 
-	    PaintLeftButton(dev, xmin, ymin);
-	    PaintRightButton(dev, xmin + FSize - FButtonSize, ymin);
+        if (FRedrawButtons)
+        {
+            FRedrawButtons = FALSE;
+
+    	    PaintLeftButton(dev, xmin, ymin);
+    	    PaintRightButton(dev, xmin + FSize - FButtonSize, ymin);
+    	}
+    	
 	    PaintLeftScrollArea(dev, xmin + FButtonSize, ymin, FScrollPos);
 	    PaintRightScrollArea(dev, xmin + FButtonSize + FScrollPos + FCurrScrollButton, ymin, FScrollSize - FCurrScrollButton - FScrollPos);
 	    PaintScrollButton(dev, xmin + FButtonSize + FScrollPos, ymin);

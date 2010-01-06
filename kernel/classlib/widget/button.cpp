@@ -2695,8 +2695,9 @@ void TButtonControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, i
 
     if (IsVisible())
     {
-        dev->SetClipRect(  xmin, ymin,
-            			   xmax, ymax);
+        SetClipRect(    dev,
+                        xmin, ymin,
+            			xmax, ymax);
 
         dev->SetLgopNone();
         dev->SetFilledStyle();

@@ -970,9 +970,6 @@ void TFileViewControl::SetVerPos(int pos)
 ##########################################################################*/
 void TFileViewControl::SetHorPos(int pos)
 {
-	int val;
-
-
 	 if (pos > FMaxWidth - FControlWidth)
 		  pos = FMaxWidth - FControlWidth;
     
@@ -1128,6 +1125,33 @@ void TFileViewControl::VerMove(long double pos)
 
 /*##########################################################################
 #
+#   Name       : TFileViewControl::AdjustHor
+#
+#   Purpose....: Adjust horisontal position to 4-tabs
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFileViewControl::AdjustHor()
+{
+    int xsize, ysize;
+    int count;
+
+    if (FFont)
+        FFont->GetStringMetrics("    ", &xsize, &ysize);
+    else
+        xsize = 10;
+
+    count = (FStartCol + xsize / 2) / xsize;
+    FStartCol = xsize * count;
+
+    return xsize;
+}
+
+/*##########################################################################
+#
 #   Name       : TFileViewControl::ScrollRight
 #
 #   Purpose....: Goto next col
@@ -1139,14 +1163,10 @@ void TFileViewControl::VerMove(long double pos)
 ##########################################################################*/
 void TFileViewControl::ScrollRight()
 {
-    int xsize, ysize;
+	 int xsize;
 
-    if (FFont)
-        FFont->GetStringMetrics("i", &xsize, &ysize);
-    else
-        xsize = 10;
-        
-    SetHorPos(FStartCol + xsize);
+	 xsize = AdjustHor();
+	 SetHorPos(FStartCol + xsize);
 }
 
 /*##########################################################################
@@ -1162,14 +1182,10 @@ void TFileViewControl::ScrollRight()
 ##########################################################################*/
 void TFileViewControl::ScrollLeft()
 {
-    int xsize, ysize;
+	 int xsize;
 
-    if (FFont)
-        FFont->GetStringMetrics("i", &xsize, &ysize);
-    else
-        xsize = 10;
-        
-    SetHorPos(FStartCol - xsize);
+	 xsize = AdjustHor();
+	 SetHorPos(FStartCol - xsize);
 }
 
 /*##########################################################################
@@ -1271,6 +1287,14 @@ int TFileViewControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int
             PageUp();
             return TRUE;
 
+        case VK_NUMPAD4:
+            ScrollLeft();
+            return TRUE;
+
+        case VK_NUMPAD6:
+            ScrollRight();
+            return TRUE;
+
         default:
             return TControl::OnKeyPressed(ExtKey, KeyState, VirtualKey, ScanCode);
 
@@ -1304,6 +1328,8 @@ int TFileViewControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, in
         case VK_NUMPAD3:
         case VK_PRIOR:
         case VK_NUMPAD9:
+        case VK_NUMPAD4:
+        case VK_NUMPAD6:
             return TRUE;
 
         default:
@@ -1355,20 +1381,24 @@ void TFileViewControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width,
         dev->SetLgopNone();
         dev->SetFilledStyle();
 
-        dev->SetClipRect(  xmin, ymin,
-                           xmax, ymax);
+        SetClipRect(    dev,
+                        xmin, ymin,
+                        xmax, ymax);
 
         xstart = xmin + FStartX;
         ystart = ymin + FStartY;
 
         dev->SetFont(FFont);
-        dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
 
         for (row = 0; row < FRows; row++)
         {
             curr = FStartRow + row;
 
             str = FList[curr];            
+				SetBackColor(dev);
+				dev->DrawRect(xmin, ystart, xmax, ystart + FRowHeight - 1);
+
+            dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
 			dev->DrawString(xstart - FStartCol, ystart, str.GetData());
 
             ystart += FRowHeight;

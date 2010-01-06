@@ -122,6 +122,7 @@ protected:
     void UpdateList();
     void UpdateVerPos();
     void UpdateHorPos();
+    int AdjustHor();
 
     TStringArray FList;
 

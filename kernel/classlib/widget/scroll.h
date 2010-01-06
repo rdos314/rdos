@@ -188,6 +188,8 @@ public:
     void SetDisabledDarkBorderColor(int r, int g, int b);
 
 protected:
+    virtual void ChildChange();
+
     TScrollParam *GetParam(int state);
     void PaintButton(TGraphicDevice *dev, int xstart, int ystart, int xsize, int ysize, int state);
 
@@ -202,6 +204,8 @@ protected:
     int FMinScrollButton;
     int FCurrScrollButton;
     int FScrollPos;
+
+    int FRedrawButtons;
 
 private:
     void Init();

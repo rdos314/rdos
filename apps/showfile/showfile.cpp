@@ -107,9 +107,12 @@ int main(int argc, char **argv)
 	}
 
 */
-	fileview = new TFileViewControl(controlthread, 0, 0, width, height - 50);
+	fileview = new TFileViewControl(controlthread, 0, 0, width - 50, height - 50);
 	fileview->DefineScroll(50);
 	fileview->SetFont(20);
+	fileview->SetBorderWidth(3);
+   fileview->SetBackColor(255, 255, 255);
+	fileview->SetBorderColor(128, 128, 128);
 	fileview->Load(FileName);
 	fileview->Enable();
 	fileview->Show();

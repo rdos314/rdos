@@ -217,6 +217,8 @@ protected:
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
 
+    virtual void ChildChange();
+
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
     void UpdateScroll();
@@ -261,6 +263,8 @@ private:
 
     int FVerLeft;
     int FHorUp;
+
+    int FRedrawBack;
 };        
 
 #endif
