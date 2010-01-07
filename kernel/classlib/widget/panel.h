@@ -230,6 +230,8 @@ protected:
     THorPanelScrollControl *FHorScroll;
     TVerPanelScrollControl *FVerScroll;
 
+    int FRedrawBack;
+
 private:
     void Init(int border);
 
@@ -263,8 +265,6 @@ private:
 
     int FVerLeft;
     int FHorUp;
-
-    int FRedrawBack;
 };        
 
 #endif

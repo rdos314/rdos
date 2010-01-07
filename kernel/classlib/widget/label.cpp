@@ -1169,7 +1169,10 @@ void TLabelControl::SetText(const char *Text)
     if (FBackTrans && HasParent())
         RedrawParent();
     else
+    {
+        FRedrawBack = TRUE;
         Redraw(1);
+    }
 }
 
 /*##########################################################################

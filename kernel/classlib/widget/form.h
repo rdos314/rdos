@@ -99,7 +99,7 @@ protected:
 
     TFormControlEntry *FControlList;
 
-    TSection FSection;
+    static TSection FSection;
 
 private:
     void Init();

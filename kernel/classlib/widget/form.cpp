@@ -43,6 +43,8 @@
 #define FORM_TYPE_HOR_SCROLL    7
 #define FORM_TYPE_IMAGE         8
 
+TSection TFormControl::FSection;
+
 /*##########################################################################
 #
 #   Name       : ControlChanged

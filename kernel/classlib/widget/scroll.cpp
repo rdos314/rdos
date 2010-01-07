@@ -3063,7 +3063,7 @@ void TVerScrollControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
                         xmin, ymin,
             			xmax, ymax);
 
-        if (FRedrawButtons)
+/*        if (FRedrawButtons) */
         {
             FRedrawButtons = FALSE;
             
@@ -4050,7 +4050,7 @@ void THorScrollControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
                         xmin, ymin,
             			xmax, ymax);
 
-        if (FRedrawButtons)
+/*        if (FRedrawButtons) */
         {
             FRedrawButtons = FALSE;
 
