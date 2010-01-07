@@ -1771,6 +1771,9 @@ void TButtonControl::Set(const char *IniName, const char *IniSection)
     if (Ini.ReadVar("Disabled.BorderDarkColor.B", str, 255))
         FDisabled.BorderDarkB = atoi(str);
 
+    if (Ini.ReadVar("Text", str, 255))
+        SetText(str);
+
     TControl::Set(IniName, IniSection);
 }
 

@@ -1271,10 +1271,10 @@ void TControl::HandleUpdate()
 ##########################################################################*/
 void TControl::SetClipRect(TGraphicDevice *dev, int xmin, int ymin, int xmax, int ymax)
 {
-    dev->SetClipRect(   xmin, ymin,
+/*    dev->SetClipRect(   xmin, ymin,
                         xmax, ymax);
+*/
 
-/*
     TControl *parent;
     int xstart, ystart;
 
@@ -1284,8 +1284,8 @@ void TControl::SetClipRect(TGraphicDevice *dev, int xmin, int ymin, int xmax, in
     parent = FParent;
     while (parent)
     {
-        xstart += FParent->FXMin;
-        ystart += FParent->FYMin;
+        xstart += parent->FXMin;
+        ystart += parent->FYMin;
         parent = parent->FParent;
     }
 
@@ -1308,7 +1308,7 @@ void TControl::SetClipRect(TGraphicDevice *dev, int xmin, int ymin, int xmax, in
     else
         dev->SetClipRect(   xmin, ymin,
                             xmax, ymax);
-*/
+
 }
 
 /*##########################################################################

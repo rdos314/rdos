@@ -773,6 +773,10 @@ void TLabelControl::Set(const char *IniName, const char *IniSection)
     if (Ini.ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
 
+
+    if (Ini.ReadVar("Text", str, 255))
+        SetText(str);
+
     TPanelControl::Set(IniName, IniSection);
 }
 

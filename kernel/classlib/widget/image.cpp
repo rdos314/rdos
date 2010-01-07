@@ -251,6 +251,9 @@ void TImageControl::Set(const char *IniName, const char *IniSection)
 
     if (Ini.ReadVar("BackColor.B", str, 255))
         FBackB = atoi(str);
+
+    if (Ini.ReadVar("Picture", str, 255))
+        LoadImage(str);
     
     TControl::Set(IniName, IniSection);
 }

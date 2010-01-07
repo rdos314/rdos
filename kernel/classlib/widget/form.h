@@ -75,6 +75,7 @@ protected:
     virtual void OnCreateHorScroll(const char *name, THorScrollControl *scroll);
     virtual void OnCreateImage(const char *name, TImageControl *image);
 
+    void RecalcInner();
     void Add(const char *name, TControl *control, int type);
     void Remove(TFormControlEntry *entry);
 
@@ -100,6 +101,9 @@ protected:
     TFormControlEntry *FControlList;
 
     static TSection FSection;
+
+    int FInnerWidth;
+    int FInnerHeight;
 
 private:
     void Init();

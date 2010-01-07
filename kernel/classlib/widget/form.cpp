@@ -168,6 +168,49 @@ TFormControl::~TFormControl()
 void TFormControl::Init()
 {
     FControlList = 0;
+    FInnerWidth = 0;
+    FInnerHeight = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFormControl::RecalcInner
+#
+#   Purpose....: Recalculate inner width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::RecalcInner()
+{
+	 int xstart, ystart;
+	 int xsize, ysize;
+
+    TFormControlEntry *p;
+
+    FSection.Enter();
+
+    FInnerWidth = 0;
+    FInnerHeight = 0;
+    
+    p = FControlList;
+
+    while (p)
+    {
+        p->FControl->GetPos(&xstart, &ystart);
+        p->FControl->GetSize(&xsize, &ysize);
+
+        if (FInnerWidth < xstart + xsize - 1)
+           FInnerWidth = xstart + xsize - 1;
+
+        if (FInnerHeight < ystart + ysize - 1)
+            FInnerHeight = ystart + ysize - 1;
+
+		  p = p->FNext;
+	 }
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -197,6 +240,12 @@ void TFormControl::Add(const char *name, TControl *control, int type)
     entry->FSizeY = ysize;
 
     FSection.Enter();
+
+    if (FInnerWidth < xstart + xsize - 1)
+        FInnerWidth = xstart + xsize - 1;
+
+    if (FInnerHeight < ystart + ysize - 1)
+        FInnerHeight = ystart + ysize - 1;
 
     entry->FNext = FControlList;
     FControlList = entry;
@@ -262,9 +311,11 @@ void TFormControl::Remove(TFormControlEntry *entry)
             else
                 p = p->FNext;
         }
-    }
+    }    
 
     FSection.Leave();
+
+    RecalcInner();
 }
 
 /*##########################################################################

@@ -4,14 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "fileview.h"
 #include "videodev.h"
 #include "waitdev.h"
 #include "keyboard.h"
 #include "mouse.h"
-#include "scroll.h"
-#include "listbox.h"
-#include "button.h"
+#include "fileform.h"
 
 #include "bmp.h"
 
@@ -24,14 +21,12 @@ int main(int argc, char **argv)
 	int height = 480;
 	TGraphicDevice *vbe;
 	TControlThread *controlthread;
-	TFileViewControl *fileview;
 	char FileName[256];
 	TKeyboardDevice *Keyboard;
 	TMouseDevice *Mouse;
 	TGraphicDevice *MouseMask;
 	TGraphicDevice *MouseBitmap;
-	TListControl *listbox;
-	TButtonControl *button;
+	TFileFormControl *fileform;
 
 	if (argc == 1)
 	{
@@ -76,67 +71,10 @@ int main(int argc, char **argv)
 
 	controlthread->SetMouseMarker(MouseBitmap, MouseMask, 10, 10);
 
-/*	listbox = new TListControl(controlthread, 0, 0, 200, 150);
-	listbox->DefineScroll(25);
-	listbox->SetFont(12);
-	listbox->SetSpace(2, 2);
-	listbox->Enable();
-	listbox->Show();
-	listbox->Redraw();
+	fileform = new TFileFormControl(controlthread);
+	fileform->Run(FileName);
+	delete fileform;
 
-	int i;
-	char str[40];
-
-	for (i = 0; i < 200; i++)
-	{
-		RdosWaitMilli(200);
-		sprintf(str, "%d", i);
-		listbox->Add(str);
-	}
-
-	for (i = 0; i < 100; i++)
-	{
-		RdosWaitMilli(200);
-		listbox->Remove(i);
-	}
-
-	for (i = 0; i < 100; i++)
-	{
-		RdosWaitMilli(200);
-		listbox->Remove();
-	}
-
-*/
-	fileview = new TFileViewControl(controlthread, 0, 0, width - 50, height - 50);
-	fileview->DefineScroll(50);
-	fileview->SetFont(20);
-	fileview->SetBorderWidth(3);
-   fileview->SetBackColor(255, 255, 255);
-	fileview->SetBorderColor(128, 128, 128);
-	fileview->Load(FileName);
-	fileview->Enable();
-	fileview->Show();
-	fileview->Redraw();
-
-	button = new TButtonControl(controlthread, new TFont(30), "Start", VK_HOME, 0, height - 50, 125, 50);
-	button->SetUpBorderWidth(5);
-	button->SetDownBorderWidth(5);
-	button->Enable();
-	button->Show();
-	button->Redraw();
-
-	button = new TButtonControl(controlthread, new TFont(30), "End", VK_END, 150, height - 50, 125, 50);
-	button->SetUpBorderWidth(5);
-	button->SetDownBorderWidth(5);
-	button->Enable();
-	button->Show();
-	button->Redraw();
-
-
-	for (;;)
-		RdosWaitMilli(2000);
-
-	delete fileview;
 	delete controlthread;
 	delete vbe;
 
