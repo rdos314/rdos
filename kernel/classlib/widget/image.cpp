@@ -774,6 +774,7 @@ void TImageControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     TBitmapGraphicDevice *bitmap;
     
     dev->SetLgopNone();
+    SetClipRect(dev, xmin, ymin);
 
     ClearRedraw();
 
