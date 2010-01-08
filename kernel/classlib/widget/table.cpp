@@ -218,11 +218,11 @@ TTableRow::~TTableRow()
     for (col = 0; col < FCount; col++)
 	{
 		if (FLabelArr[col])
-			FLabelArr[col]->Delete();
+			delete FLabelArr[col];
 		else
 		{
 			if (FPanelArr[col])
-				FPanelArr[col]->Delete();
+				delete FPanelArr[col];
 		}
 	}
 }

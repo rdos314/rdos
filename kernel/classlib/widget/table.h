@@ -115,6 +115,7 @@ friend class TTableRow;
 public:
     TTableControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
     TTableControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
+    virtual ~TTableControl();
 
     int AddPanelColumn(TPanelFactory *factory, int width);
     int AddLabelColumn(TLabelFactory *factory, int width);
@@ -134,8 +135,6 @@ public:
     TLabelControl *GetLabelControl(int row, int col);
 
 protected:
-    virtual ~TTableControl();
-
     void NotifyHeightChange(int row, int height);
 
 private:

@@ -155,6 +155,7 @@ public:
     TButtonControl(TControl *control, const char *text, char ch);
     TButtonControl(TControlThread *dev);
     TButtonControl(TControl *control);
+    virtual ~TButtonControl();
 
     void SetText(const char *text);
     void SetText(TString &text);
@@ -205,8 +206,6 @@ public:
     void ForceUp();    
 
 protected:
-    virtual ~TButtonControl();
-
     TBitmapGraphicDevice *CreateBitmap(TButtonFactoryParam &Param);
     void CreateBitmapButtons();
 

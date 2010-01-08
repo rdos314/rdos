@@ -297,22 +297,22 @@ TControl::~TControl()
         FControlList = control->FNext;
         delete control;
 
-        control = FControlList;
-    }
+		  control = FControlList;
+	 }
 
-    if (FDelay)
-    {
-        delete FDelay;
-        FDelay = 0;
-    }
+	 if (FDelay)
+	 {
+		  delete FDelay;
+		  FDelay = 0;
+	 }
 
-    Unprotect();
+	 Unprotect();
 
-    if (FParent)
-        FParent->Delete(this);
+	 if (FParent)
+		  FParent->Delete(this);
 
-    if (FDev)
-        FDev->Delete(this);
+	 if (FDev)
+		  FDev->Delete(this);
 }
 
 /*##########################################################################
@@ -328,29 +328,12 @@ TControl::~TControl()
 ##########################################################################*/
 void TControl::Init()
 {
-    OnChanged = 0;
-    Owner = 0;
-    
-    FControlList = 0;
-    FDelay = 0;
-    FDirty = TRUE;
-	FDeleted = FALSE;
-}
+	 OnChanged = 0;
+	 Owner = 0;
 
-/*##########################################################################
-#
-#   Name       : TControl::Delete
-#
-#   Purpose....: 
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TControl::Delete()
-{
-    FDeleted = TRUE;
+	 FControlList = 0;
+	 FDelay = 0;
+	 FDirty = TRUE;
 }
 
 /*##########################################################################
@@ -1265,21 +1248,12 @@ void TControl::HandleUpdate()
 
         while (control)
         {
-            if (control->FDeleted)
-            {
-                dcontrol = control;
-                control = control->FNext;
-                delete dcontrol;
-            }
-            else
-            {                
-                if (control->IsVisible())
-                    if (currtime > control->GetRedrawTime())
-	    			    control->HandleUpdate();
+				if (control->IsVisible())
+					if (currtime > control->GetRedrawTime())
+						 control->HandleUpdate();
 
-                control = control->FNext;
-            }
-        }
+				control = control->FNext;
+		  }
     }
 
     Unprotect();
@@ -2430,21 +2404,12 @@ void TControlThread::HandleUpdate()
 
     while (control)
     {
-        if (control->FDeleted)
-        {
-            dcontrol = control;
-            control = control->FNext;
-            delete dcontrol;
-        }
-        else
-        {
-            if (control->IsVisible())
-                if (currtime > control->GetRedrawTime())
-                    control->HandleUpdate();
+		  if (control->IsVisible())
+				if (currtime > control->GetRedrawTime())
+					 control->HandleUpdate();
 
-            control = control->FNext;
-        }
-    }
+		  control = control->FNext;
+	 }
 
     Unprotect();
 }

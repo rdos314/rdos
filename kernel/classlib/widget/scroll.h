@@ -218,10 +218,9 @@ public:
     TVerScrollControl(TControl *control, int xstart, int ystart, int width, int len);
     TVerScrollControl(TControlThread *dev);
     TVerScrollControl(TControl *control);
-
+    virtual ~TVerScrollControl();
 
 protected:
-    virtual ~TVerScrollControl();
 	virtual void OnScrollUp();
 	virtual void OnScrollDown();
 	virtual void OnScrollPageUp();
@@ -278,13 +277,13 @@ private:
 class THorScrollControl : public TScrollControl
 {
 public:
-	 THorScrollControl(TControlThread *dev, int xstart, int ystart, int width, int len);
-	 THorScrollControl(TControl *control, int xstart, int ystart, int width, int len);
-	 THorScrollControl(TControlThread *dev);
-	 THorScrollControl(TControl *control);
+	THorScrollControl(TControlThread *dev, int xstart, int ystart, int width, int len);
+	THorScrollControl(TControl *control, int xstart, int ystart, int width, int len);
+	THorScrollControl(TControlThread *dev);
+	THorScrollControl(TControl *control);
+	virtual ~THorScrollControl();
 
 protected:
-	virtual ~THorScrollControl();
 	virtual void OnScrollLeft();
 	virtual void OnScrollRight();
 	virtual void OnScrollPageLeft();

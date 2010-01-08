@@ -45,8 +45,7 @@ public:
 	TControl(TControlThread *dev, int xmin, int ymin, int width, int height);
 	TControl(TControl *Control);
 	TControl(TControl *Control, int xmin, int ymin, int width, int height);
-
-    virtual void Delete();
+    virtual ~TControl();    
 
     virtual void Set(const char *IniName, const char *IniSection);
 
@@ -78,7 +77,6 @@ public:
     void *Owner;
 
 protected:
-    virtual ~TControl();    
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 	virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 	virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
@@ -132,7 +130,6 @@ private:
     int FVisible;
 
     int FDirty;
-    int FDeleted;
 
     TControlThread *FDev;    
     TControl *FNext;    

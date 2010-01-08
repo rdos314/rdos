@@ -79,6 +79,7 @@ public:
     TFileViewControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
     TFileViewControl(TControlThread *dev);
     TFileViewControl(TControl *control);
+    virtual ~TFileViewControl();
 
     virtual void Set(const char *IniName, const char *IniSection);
 
@@ -108,8 +109,6 @@ public:
     virtual void HorMove(long double pos);
     
 protected:
-    virtual ~TFileViewControl();
-
     void SetVerPos(int pos);
     void SetHorPos(int pos);
     void Load(int pos);
