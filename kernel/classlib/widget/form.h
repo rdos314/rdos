@@ -58,7 +58,6 @@ class TFormControl : public TPanelControl
 public:
     TFormControl(TControlThread *dev);
     TFormControl(TControl *control);
-    ~TFormControl();
     
     void LoadControls(const char *IniName);
     void Add(const char *name, TControl *control);
@@ -66,6 +65,8 @@ public:
     virtual void NotifyChanged(TControl *control);
     
 protected:
+    virtual ~TFormControl();
+
     virtual void OnCreatePanel(const char *name, TPanelControl *panel);
     virtual void OnCreateLabel(const char *name, TLabelControl *label);
     virtual void OnCreateButton(const char *name, TButtonControl *button);

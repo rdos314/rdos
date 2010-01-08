@@ -35,12 +35,14 @@ friend class TBitmapGraphicDevice;
 
 public:
 	TFont(int height);
+	TFont(const TFont &font);
 	~TFont();
 
     void GetStringMetrics(const char *str, int *width, int *height);
 
 protected:
     int FFontHandle;
+    int FHeight;
 };
 
 #endif

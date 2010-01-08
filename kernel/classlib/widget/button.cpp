@@ -118,9 +118,9 @@ static char DecodeKey(const char *key)
 ##########################################################################*/
 TButtonFactoryParam::TButtonFactoryParam()
 {
-    Left = 0;
-    Mid = 0;
-    Right = 0;
+    Bitmap = 0;
+    HotX = 0;
+    HotY = 0;
 
     ShiftX = 0;
     ShiftY = 0;
@@ -161,20 +161,13 @@ TButtonFactoryParam::TButtonFactoryParam()
 ##########################################################################*/
 TButtonFactoryParam::TButtonFactoryParam(const TButtonFactoryParam &src)
 {
-    if (src.Left)
-        Left = new TBitmapGraphicDevice(*src.Left);
+    if (src.Bitmap)
+        Bitmap = new TBitmapGraphicDevice(*src.Bitmap);
     else
-        Left = 0;
+        Bitmap = 0;
 
-    if (src.Mid)
-        Mid = new TBitmapGraphicDevice(*src.Mid);
-    else
-        Mid = 0;
-
-    if (src.Right)
-        Right = new TBitmapGraphicDevice(*src.Right);
-    else
-        Right = 0;
+    HotX = src.HotX;
+    HotY = src.HotY;
 
     ShiftX = src.ShiftX;
     ShiftY = src.ShiftY;
@@ -231,67 +224,50 @@ TButtonFactoryParam::~TButtonFactoryParam()
 ##########################################################################*/
 void TButtonFactoryParam::Delete()
 {
-    if (Left)
-        delete Left;
-    Left = 0;
-
-    if (Mid)
-        delete Mid;
-    Mid = 0;
-
-    if (Right)
-        delete Right;                
-    Right = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TButtonFactoryParam::GetHeight
-#
-#   Purpose....: Get height of button
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TButtonFactoryParam::GetHeight()
-{
-    int height = 0;
-
-    if (Left)
-        if (Left->GetHeight() > height)
-            height = Left->GetHeight();
-    
-    if (Mid)
-        if (Mid->GetHeight() > height)
-            height = Mid->GetHeight();
-
-    if (Right)
-        if (Right->GetHeight() > height)
-            height = Right->GetHeight();
-
-    return height;    
+    if (Bitmap)
+        delete Bitmap;
+    Bitmap = 0;
 }
 
 /*##########################################################################
 #
 #   Name       : TButtonFactory::Define
 #
-#   Purpose....: Define up button bitmaps
+#   Purpose....: Define button bitmaps
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactoryParam::Define(TBitmapGraphicDevice *left, TBitmapGraphicDevice *mid, TBitmapGraphicDevice *right)
+void TButtonFactoryParam::Define(TBitmapGraphicDevice *bitmap, int x, int y)
 {
     Delete();
     
-    Left = new TBitmapGraphicDevice(*left);
-    Mid = new TBitmapGraphicDevice(*mid);
-    Right = new TBitmapGraphicDevice(*right);
+    Bitmap = new TBitmapGraphicDevice(*bitmap);
+	HotX = x;
+    HotY = y;
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::Define
+#
+#   Purpose....: Define button bitmaps
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactoryParam::Define(TBitmapGraphicDevice *bitmap)
+{
+    int x, y;
+
+    x = bitmap->GetWidth() / 2;
+    y = bitmap->GetHeight() / 2;
+
+    Define(bitmap, x, y);
 }
 
 /*##########################################################################
@@ -566,6 +542,21 @@ void TButtonFactory::Set(const char *IniName, const char *IniSection)
 
 }
 
+/*##########################################################################
+#
+#   Name       : TButtonFactory::DefineUp
+#
+#   Purpose....: Define up button bitmaps
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::DefineUp(TBitmapGraphicDevice *bitmap, int x, int y)
+{        
+    FUp.Define(bitmap, x, y);
+}
 
 /*##########################################################################
 #
@@ -578,32 +569,9 @@ void TButtonFactory::Set(const char *IniName, const char *IniSection)
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactory::DefineUp(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right)
-{
-    int height;
-
-    if (Left)
-    {
-        height = Left->GetHeight();
-        if (height > FHeight)
-            FHeight = height;
-    }
-
-    if (Mid)
-    {
-        height = Mid->GetHeight();
-        if (height > FHeight)
-            FHeight = height;
-    }
-
-    if (Right)
-    {
-        height = Right->GetHeight();
-        if (height > FHeight)
-            FHeight = height;
-    }
-        
-    FUp.Define(Left, Mid, Right);
+void TButtonFactory::DefineUp(TBitmapGraphicDevice *bitmap)
+{        
+    FUp.Define(bitmap);
 }
 
 /*##########################################################################
@@ -617,32 +585,25 @@ void TButtonFactory::DefineUp(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactory::DefineDown(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right)
-{
-    int height;
+void TButtonFactory::DefineDown(TBitmapGraphicDevice *bitmap, int x, int y)
+{        
+    FDown.Define(bitmap, x, y);
+}
 
-    if (Left)
-    {
-        height = Left->GetHeight();
-        if (height > FHeight)
-            FHeight = height;
-    }
-
-    if (Mid)
-    {
-        height = Mid->GetHeight();
-        if (height > FHeight)
-            FHeight = height;
-    }
-
-    if (Right)
-    {
-        height = Right->GetHeight();
-        if (height > FHeight)
-            FHeight = height;
-    }
-        
-    FDown.Define(Left, Mid, Right);
+/*##########################################################################
+#
+#   Name       : TButtonFactory::DefineDown
+#
+#   Purpose....: Define down button bitmaps
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::DefineDown(TBitmapGraphicDevice *bitmap)
+{        
+    FDown.Define(bitmap);
 }
 
 /*##########################################################################
@@ -656,32 +617,25 @@ void TButtonFactory::DefineDown(TBitmapGraphicDevice *Left, TBitmapGraphicDevice
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactory::DefineDisabled(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right)
-{
-    int height;
+void TButtonFactory::DefineDisabled(TBitmapGraphicDevice *bitmap, int x, int y)
+{        
+    FDisabled.Define(bitmap, x, y);
+}
 
-    if (Left)
-    {
-        height = Left->GetHeight();
-        if (height > FHeight)
-            FHeight = height;
-    }
-
-    if (Mid)
-    {
-        height = Mid->GetHeight();
-        if (height > FHeight)
-            FHeight = height;
-    }
-
-    if (Right)
-    {
-        height = Right->GetHeight();
-        if (height > FHeight)
-            FHeight = height;
-    }
-        
-    FDisabled.Define(Left, Mid, Right);
+/*##########################################################################
+#
+#   Name       : TButtonFactory::DefineDisabled
+#
+#   Purpose....: Define disabled button bitmaps
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::DefineDisabled(TBitmapGraphicDevice *bitmap)
+{        
+    FDisabled.Define(bitmap);
 }
 
 /*##########################################################################
@@ -1318,7 +1272,7 @@ TButtonControl::TButtonControl(TControlThread *dev, TFont *font, const char *tex
 {
     Init(ch);
 
-    FFont = font;
+    FFont = new TFont(*font);
 
     SetSize(font, text, xsize, ysize);
     Move(xstart, ystart);
@@ -1343,7 +1297,7 @@ TButtonControl::TButtonControl(TControl *control, TFont *font, const char *text,
 {
     Init(ch);
 
-    FFont = font;
+    FFont = new TFont(*font);
 
     SetSize(font, text, xsize, ysize);
     Move(xstart, ystart);
@@ -1461,7 +1415,7 @@ TButtonControl::~TButtonControl()
 void TButtonControl::Init(char ch)
 {
     FUpBitmap = 0;
-	 FDownBitmap = 0;
+	FDownBitmap = 0;
     FDisabledBitmap = 0;
 
     FFont = 0;
@@ -1487,6 +1441,7 @@ void TButtonControl::Init(char ch)
     FKey = ch;
     FKeepDown = FALSE;
     FActive = FALSE;
+    FRecreate = TRUE;
 }
 
 /*##########################################################################
@@ -1788,10 +1743,33 @@ void TButtonControl::Set(const char *IniName, const char *IniSection)
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonControl::DefineUp(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right)
+void TButtonControl::DefineUp(TBitmapGraphicDevice *bitmap, int x, int y)
 {
-    FUp.Define(Left, Mid, Right);
-    NotifyResize();
+    FUp.Define(bitmap, x, y);
+    FRecreate = TRUE;
+
+    if (IsEnabled() && !FPressed)
+        NotifyResize();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::DefineUp
+#
+#   Purpose....: Define up button bitmaps
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::DefineUp(TBitmapGraphicDevice *bitmap)
+{
+    FUp.Define(bitmap);
+    FRecreate = TRUE;
+
+    if (IsEnabled() && !FPressed)
+        NotifyResize();
 }
 
 /*##########################################################################
@@ -1805,10 +1783,33 @@ void TButtonControl::DefineUp(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonControl::DefineDown(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right)
+void TButtonControl::DefineDown(TBitmapGraphicDevice *bitmap, int x, int y)
 {
-    FDown.Define(Left, Mid, Right);
-    NotifyResize();
+    FDown.Define(bitmap, x, y);
+    FRecreate = TRUE;
+
+    if (IsEnabled() && FPressed)
+        NotifyResize();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::DefineDown
+#
+#   Purpose....: Define down button bitmaps
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::DefineDown(TBitmapGraphicDevice *bitmap)
+{
+    FDown.Define(bitmap);
+    FRecreate = TRUE;
+
+    if (IsEnabled() && FPressed)
+        NotifyResize();
 }
 
 /*##########################################################################
@@ -1822,10 +1823,33 @@ void TButtonControl::DefineDown(TBitmapGraphicDevice *Left, TBitmapGraphicDevice
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonControl::DefineDisabled(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right)
+void TButtonControl::DefineDisabled(TBitmapGraphicDevice *bitmap, int x, int y)
 {
-    FDisabled.Define(Left, Mid, Right);
-    NotifyResize();
+    FDisabled.Define(bitmap, x, y);
+    FRecreate = TRUE;
+
+    if (!IsEnabled())
+        NotifyResize();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::DefineDisabled
+#
+#   Purpose....: Define disabled button bitmaps
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::DefineDisabled(TBitmapGraphicDevice *bitmap)
+{
+    FDisabled.Define(bitmap);
+    FRecreate = TRUE;
+
+    if (!IsEnabled())
+        NotifyResize();
 }
 
 /*##########################################################################
@@ -2286,30 +2310,72 @@ void TButtonControl::EnableKeepDown()
 #   Returns....: *
 #
 ##########################################################################*/
-TBitmapGraphicDevice *TButtonControl::CreateBitmap(TButtonFactoryParam &Param, int width)
+TBitmapGraphicDevice *TButtonControl::CreateBitmap(TButtonFactoryParam &Param)
 {
     TBitmapGraphicDevice *bitmap;
-    int midsize;
+    TBitmapGraphicDevice *temp;
     int i;
-    int left;
-    int right;
-    int height;
+    int xsize, ysize;
+    int xhot, yhot;
+    int width, height;
 
-    if (Param.Left && Param.Mid && Param.Right)
+    if (Param.Bitmap)
     {
-		  height = Param.GetHeight();
-		  left = Param.Left->GetWidth();
-		  right = Param.Right->GetWidth();
-		  midsize = width - left - right;
+        xhot = Param.HotX;
+        yhot = Param.HotY;
 
-		  bitmap = new TBitmapGraphicDevice(24, width, height);
-		  bitmap->SetLgopNone();
+        GetSize(&xsize, &ysize);
+    
+		height = Param.Bitmap->GetHeight();
+		width = Param.Bitmap->GetWidth();
+		  
+		temp = new TBitmapGraphicDevice(24, width, ysize);
+		temp->SetLgopNone();
 
-        bitmap->Blit(Param.Left, 0, 0, 0, 0, left, height);
-        bitmap->Blit(Param.Right, 0, 0, width - right, 0, right, height);
+		if (height > ysize)
+		{
+		    for (i = 0; i < ysize; i++)
+                temp->Blit(Param.Bitmap, 0, i, 0, i, width, 1);
 
-        for (i = 0; i < midsize; i++)
-            bitmap->Blit(Param.Mid, 0, 0, i + left, 0, 1, height);
+            for (i = ysize / 2; i < ysize; i++)
+                temp->Blit(Param.Bitmap, 0, i + height - ysize, 0, i, width, 1);
+        }
+        else
+        {
+		    for (i = 0; i < yhot; i++)
+                temp->Blit(Param.Bitmap, 0, i, 0, i, width, 1);
+
+		    for (i = yhot; i < ysize - height + yhot; i++)
+                temp->Blit(Param.Bitmap, 0, yhot, 0, i, width, 1);
+
+		    for (i = yhot; i < height; i++)
+                temp->Blit(Param.Bitmap, 0, i, 0, i + ysize - height, width, 1);
+        }
+		  
+		bitmap = new TBitmapGraphicDevice(24, xsize, ysize);
+		bitmap->SetLgopNone();
+
+		if (width > xsize)
+		{
+		    for (i = 0; i < xsize; i++)
+                bitmap->Blit(temp, i, 0, i, 0, 1, height);
+
+            for (i = xsize / 2; i < xsize; i++)
+                bitmap->Blit(temp, i + width - xsize, 0, i, 0, 1, height);
+        }
+        else
+        {
+		    for (i = 0; i < xhot; i++)
+                bitmap->Blit(temp, i, 0, i, 0, 1, height);
+
+		    for (i = xhot; i < xsize - width + xhot; i++)
+                bitmap->Blit(temp, xhot, 0, i, 0, 1, height);
+
+		    for (i = xhot; i < width; i++)
+                bitmap->Blit(temp, i, 0, i + xsize - width, 0, 1, height);
+        }
+
+        delete temp;
 
         return bitmap;
     }
@@ -2328,19 +2394,19 @@ TBitmapGraphicDevice *TButtonControl::CreateBitmap(TButtonFactoryParam &Param, i
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonControl::CreateBitmapButtons(int width)
+void TButtonControl::CreateBitmapButtons()
 {
     if (FUpBitmap)
         delete FUpBitmap;
-    FUpBitmap = CreateBitmap(FUp, width);
+    FUpBitmap = CreateBitmap(FUp);
 
     if (FDownBitmap)
         delete FDownBitmap;
-    FDownBitmap = CreateBitmap(FDown, width);
+    FDownBitmap = CreateBitmap(FDown);
 
     if (FDisabledBitmap)
         delete FDisabledBitmap;
-    FDisabledBitmap = CreateBitmap(FDisabled, width);
+    FDisabledBitmap = CreateBitmap(FDisabled);
 }
 
 /*##########################################################################
@@ -2673,11 +2739,7 @@ int TButtonControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int 
 ##########################################################################*/
 void TButtonControl::NotifyResize()
 {
-    int x, y;
-
-    GetSize(&x, &y);
-
-    CreateBitmapButtons(x);
+	FRecreate = TRUE;
 }
 
 /*##########################################################################
@@ -2693,17 +2755,23 @@ void TButtonControl::NotifyResize()
 ##########################################################################*/
 void TButtonControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
-    int xmax = xmin + width - 1;
-    int ymax = ymin + height - 1;
+	int xmax = xmin + width - 1;
+	int ymax = ymin + height - 1;
 
-    if (IsVisible())
-    {
-        SetClipRect(    dev,
-                        xmin, ymin,
-            			xmax, ymax);
+	if (IsVisible())
+	{
+		if (FRecreate)
+		{
+			FRecreate = FALSE;
+			CreateBitmapButtons();
+		}
 
-        dev->SetLgopNone();
-        dev->SetFilledStyle();
+		SetClipRect(    dev,
+						xmin, ymin,
+						xmax, ymax);
+
+		dev->SetLgopNone();
+		dev->SetFilledStyle();
 
         if (IsEnabled())
         {

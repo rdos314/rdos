@@ -37,7 +37,6 @@ public:
     TImageControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
     TImageControl(TControlThread *dev);
 	TImageControl(TControl *control);
-	~TImageControl();
 
 	virtual void Set(const char *IniName, const char *IniSection);
 
@@ -58,6 +57,8 @@ public:
     void SetKey(char key);
 
 protected:
+	virtual ~TImageControl();
+
     int CheckJpg(const char *path);
     int CheckPng(const char *path);
     int CheckBmp(const char *path);

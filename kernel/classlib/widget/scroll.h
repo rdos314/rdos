@@ -142,7 +142,6 @@ friend class TScrollFactory;
 public:
     TScrollControl(TControlThread *dev);
     TScrollControl(TControl *control);
-    ~TScrollControl();
 
     void SetPageDist(long double dist);
     void SetScrollDist(long double dist);
@@ -188,6 +187,7 @@ public:
     void SetDisabledDarkBorderColor(int r, int g, int b);
 
 protected:
+    virtual ~TScrollControl();
     virtual void ChildChange();
 
     TScrollParam *GetParam(int state);
@@ -218,10 +218,10 @@ public:
     TVerScrollControl(TControl *control, int xstart, int ystart, int width, int len);
     TVerScrollControl(TControlThread *dev);
     TVerScrollControl(TControl *control);
-    ~TVerScrollControl();
 
 
 protected:
+    virtual ~TVerScrollControl();
 	virtual void OnScrollUp();
 	virtual void OnScrollDown();
 	virtual void OnScrollPageUp();
@@ -282,9 +282,9 @@ public:
 	 THorScrollControl(TControl *control, int xstart, int ystart, int width, int len);
 	 THorScrollControl(TControlThread *dev);
 	 THorScrollControl(TControl *control);
-	 ~THorScrollControl();
 
 protected:
+	virtual ~THorScrollControl();
 	virtual void OnScrollLeft();
 	virtual void OnScrollRight();
 	virtual void OnScrollPageLeft();

@@ -92,7 +92,6 @@ public:
     TLabelControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
     TLabelControl(TControlThread *dev);
     TLabelControl(TControl *control);
-    ~TLabelControl();
 
     virtual void Set(const char *IniName, const char *IniSection);
 
@@ -118,6 +117,7 @@ public:
     virtual int GetMinHeight();
     
 protected:
+    virtual ~TLabelControl();
   	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
 
 private:

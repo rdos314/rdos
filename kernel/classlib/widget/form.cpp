@@ -100,7 +100,7 @@ TFormControlEntry::TFormControlEntry(TControl *control, const char *name, int ty
 TFormControlEntry::~TFormControlEntry()
 {
     if (FControl)
-        delete FControl;
+		FControl->Delete();
 }
     
 /*##########################################################################

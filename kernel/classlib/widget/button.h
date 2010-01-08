@@ -41,14 +41,14 @@ public:
 	TButtonFactoryParam(const TButtonFactoryParam &source);
     ~TButtonFactoryParam();
 
-    int GetHeight();
-
     void Delete();
-    void Define(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
 
-    TBitmapGraphicDevice *Left;
-    TBitmapGraphicDevice *Mid;
-    TBitmapGraphicDevice *Right;
+    void Define(TBitmapGraphicDevice *bitmap, int x, int y);
+    void Define(TBitmapGraphicDevice *bitmap);
+
+    TBitmapGraphicDevice *Bitmap;
+    int HotX;
+    int HotY;
 
     int ShiftX;
     int ShiftY;
@@ -84,9 +84,14 @@ public:
 
     virtual void Set(const char *IniName, const char *IniSection);
 
-    void DefineUp(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
-    void DefineDown(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
-    void DefineDisabled(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
+    void DefineUp(TBitmapGraphicDevice *bitmap, int x, int y);
+    void DefineUp(TBitmapGraphicDevice *bitmap);
+
+    void DefineDown(TBitmapGraphicDevice *bitmap, int x, int y);
+    void DefineDown(TBitmapGraphicDevice *bitmap);
+
+    void DefineDisabled(TBitmapGraphicDevice *bitmap, int x, int y);
+    void DefineDisabled(TBitmapGraphicDevice *bitmap);
 
     void SetWidth(int width);
     void SetHeight(int height);
@@ -150,14 +155,18 @@ public:
     TButtonControl(TControl *control, const char *text, char ch);
     TButtonControl(TControlThread *dev);
     TButtonControl(TControl *control);
-    ~TButtonControl();
 
     void SetText(const char *text);
     void SetText(TString &text);
 
-    void DefineUp(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
-    void DefineDown(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
-    void DefineDisabled(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right);
+    void DefineUp(TBitmapGraphicDevice *bitmap, int x, int y);
+    void DefineUp(TBitmapGraphicDevice *bitmap);
+
+    void DefineDown(TBitmapGraphicDevice *bitmap, int x, int y);
+    void DefineDown(TBitmapGraphicDevice *bitmap);
+
+    void DefineDisabled(TBitmapGraphicDevice *bitmap, int x, int y);
+    void DefineDisabled(TBitmapGraphicDevice *bitmap);
 
     virtual void Set(const char *IniName, const char *IniSection);
 
@@ -196,8 +205,10 @@ public:
     void ForceUp();    
 
 protected:
-    TBitmapGraphicDevice *CreateBitmap(TButtonFactoryParam &Param, int width);
-    void CreateBitmapButtons(int width);
+    virtual ~TButtonControl();
+
+    TBitmapGraphicDevice *CreateBitmap(TButtonFactoryParam &Param);
+    void CreateBitmapButtons();
 
     void CreateFont(int xsize, int ysize);
     void DrawAliasedText(TGraphicDevice *dev, TButtonFactoryParam &Param, int xstart, int ystart, int xsize, int ysize);
@@ -232,6 +243,7 @@ private:
     int FPressed;
     int FKeepDown;
     int FActive;
+    int FRecreate;
 };        
 
 #endif

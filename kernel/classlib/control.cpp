@@ -334,6 +334,23 @@ void TControl::Init()
     FControlList = 0;
     FDelay = 0;
     FDirty = TRUE;
+	FDeleted = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Delete
+#
+#   Purpose....: 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Delete()
+{
+    FDeleted = TRUE;
 }
 
 /*##########################################################################
@@ -1226,6 +1243,7 @@ void TControl::HandleUpdate()
 {
     TDateTime currtime;
     TControl *control;
+    TControl *dcontrol;
     int redrawn;
 
     Protect();
@@ -1247,11 +1265,20 @@ void TControl::HandleUpdate()
 
         while (control)
         {
-            if (control->IsVisible())
-                if (currtime > control->GetRedrawTime())
-				    control->HandleUpdate();
+            if (control->FDeleted)
+            {
+                dcontrol = control;
+                control = control->FNext;
+                delete dcontrol;
+            }
+            else
+            {                
+                if (control->IsVisible())
+                    if (currtime > control->GetRedrawTime())
+	    			    control->HandleUpdate();
 
-            control = control->FNext;
+                control = control->FNext;
+            }
         }
     }
 
@@ -2394,6 +2421,7 @@ TDateTime TControlThread::GetRedrawTime()
 void TControlThread::HandleUpdate()
 {
     TControl *control;
+    TControl *dcontrol;
     TDateTime currtime;
 
     Protect();
@@ -2402,11 +2430,20 @@ void TControlThread::HandleUpdate()
 
     while (control)
     {
-        if (control->IsVisible())
-            if (currtime > control->GetRedrawTime())
-                control->HandleUpdate();
+        if (control->FDeleted)
+        {
+            dcontrol = control;
+            control = control->FNext;
+            delete dcontrol;
+        }
+        else
+        {
+            if (control->IsVisible())
+                if (currtime > control->GetRedrawTime())
+                    control->HandleUpdate();
 
-        control = control->FNext;
+            control = control->FNext;
+        }
     }
 
     Unprotect();

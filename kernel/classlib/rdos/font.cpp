@@ -42,6 +42,24 @@
 TFont::TFont(int height)
 {
     FFontHandle = RdosOpenFont(height);
+    FHeight = height;
+}
+
+/*##########################################################################
+#
+#   Name       : TFont::TFont
+#
+#   Purpose....: Copy constructor for TFont		                          
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFont::TFont(const TFont &src)
+{
+    FHeight = src.FHeight;
+    FFontHandle = RdosOpenFont(FHeight);
 }
 
 /*##########################################################################
