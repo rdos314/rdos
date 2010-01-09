@@ -20,16 +20,19 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# wwwdata.h
+# bindata.h
 # Data-type for binary data store
 #
 ########################################################################*/
 
-#ifndef WWWDATA_H
-#define WWWDATA_H
+#ifndef BINDATA_H
+#define BINDATA_H
+
+#include "file.h"
+#include "device.h"
 
 #define RAD_COUNT       10
-#define WWW_DATA_VER    1
+#define BIN_DATA_VER    1
 
 struct TBoolData
 {
@@ -43,7 +46,7 @@ struct TFloatData
     char valid;
 };
 
-struct TWwwRadData
+struct TBinRadData
 {
     TFloatData Ref;
     TFloatData Temp;
@@ -52,7 +55,7 @@ struct TWwwRadData
     TFloatData AuxTemp;
 };
 
-struct TWwwDataEntry
+struct TBinDataEntry
 {
     TFloatData Temp;
     TFloatData Humidity;
@@ -69,20 +72,57 @@ struct TWwwDataEntry
     TBoolData Vp;
     TBoolData Ep;
 
-	TWwwRadData Rad[RAD_COUNT];
+	TBinRadData Rad[RAD_COUNT];
 };
 
-struct TWwwHeader
+struct TBinHeader
 {
 	char Version;
-	long FirstEntry;
-	long LastEntry;
 };
 
-struct TWwwData
+class TBinData
 {
-	TWwwHeader header;
-    TWwwDataEntry data[24 * 60];
+public:
+    TBinData();
+    ~TBinData();
+
+    void Clear();
+    void LoadCotex(int year, int month, int day);
+    void SaveBin(int year, int month, int day);
+    void Update(TDeviceMsg *doc);
+
+    void LoadBin(int year, int month, int day);
+    void LoadNewest();
+
+    TDateTime GetTimeBase();
+    TBinRadData *GetData(TDateTime &time);
+
+    void AddData(TDeviceMsg *doc);
+
+protected:
+    void InitRadEntry(TBinRadData *data);
+    void InitEntry(TBinDataEntry *data);
+
+    void DecodeOutdoor(TDeviceTag *tag, TBinDataEntry *data);
+    void DecodeCirc(TDeviceTag *tag, TBinDataEntry *data);
+    void DecodeVp(TDeviceTag *tag, TBinDataEntry *data);
+    void DecodeTank(TDeviceTag *tag, TBinDataEntry *data);
+    void DecodeHeat(TDeviceTag *tag, TBinDataEntry *data);
+    void DecodeRadData(TDeviceTag *tag, TBinRadData *data);
+    void DecodeRad(TDeviceTag *tag, TBinDataEntry *data);
+    void CotexToBinary(TDeviceMsg *doc, TBinDataEntry *data);
+
+    TDeviceMsg *GetNextCotex(TFile *file);
+
+    void CreateRootDir();
+	void CreateDayFile(int year, int month, int day);
+    void OpenDayFile(int year, int month, int day);
+    
+    int FFirstEntry;   
+    TDateTime FTimeBase; 
+    TBinDataEntry FData[24 * 60];
+
+    TFile *FFile;
 };    
 
 #endif

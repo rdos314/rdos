@@ -30,6 +30,7 @@
 
 #include "device.h"
 #include "file.h"
+#include "bindata.h"
 
 class TDataStore : public TThread
 {
@@ -49,6 +50,12 @@ protected:
     char FRootDir[256];
     long FServerIp;
     int FServerPort;
+
+    TBinData FBin;
+    int FCurrYear;
+    int FCurrMonth;
+    int FCurrDay;
+
 };
 
 #endif

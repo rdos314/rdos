@@ -174,10 +174,24 @@ void TDataStore::HandleMsg(TDeviceMsg *doc)
 	header = doc->GetTag(LOG_TAG_HEADER);
 	 if (header)
 	{
-		  msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
-		  lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
+		msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
+		lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
 		RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
 		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+
+		if (FCurrYear == year && FCurrMonth == month && FCurrDay == day)
+			FBin.Update(doc);
+		else
+		{
+			FCurrYear = year;
+			FCurrMonth = month;
+			FCurrDay = day;
+
+			FBin.Clear();
+			FBin.LoadCotex(FCurrYear, FCurrMonth, FCurrDay);
+			FBin.SaveBin(FCurrYear, FCurrMonth, FCurrDay);
+			FBin.Update(doc);
+		}
 
     	file = CreateDayFile(year, month, day);
 
@@ -212,6 +226,14 @@ void TDataStore::Execute()
 	TDeviceMsg *doc;
 	char ch;
 	long NtpIp;
+    TDateTime time;
+
+    FCurrYear = time.GetYear();
+    FCurrMonth = time.GetMonth();
+    FCurrDay = time.GetDay();
+
+	FBin.LoadCotex(FCurrYear, FCurrMonth, FCurrDay);
+	FBin.SaveBin(FCurrYear, FCurrMonth, FCurrDay);
 
 	NtpIp = RdosNameToIp("ntp.lth.se");
 
