@@ -1511,6 +1511,22 @@ void TButtonControl::SetText(TString &text)
 
 /*##########################################################################
 #
+#   Name       : TButtonControl::SetKey
+#
+#   Purpose....: Set control key
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetKey(char key)
+{
+    FKey = key;
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonControl::Set
 #
 #   Purpose....: Set control settings from Ini-file section
@@ -2358,21 +2374,21 @@ TBitmapGraphicDevice *TButtonControl::CreateBitmap(TButtonFactoryParam &Param)
 		if (width > xsize)
 		{
 		    for (i = 0; i < xsize; i++)
-                bitmap->Blit(temp, i, 0, i, 0, 1, height);
+                bitmap->Blit(temp, i, 0, i, 0, 1, ysize);
 
             for (i = xsize / 2; i < xsize; i++)
-                bitmap->Blit(temp, i + width - xsize, 0, i, 0, 1, height);
+                bitmap->Blit(temp, i + width - xsize, 0, i, 0, 1, ysize);
         }
         else
         {
 		    for (i = 0; i < xhot; i++)
-                bitmap->Blit(temp, i, 0, i, 0, 1, height);
+                bitmap->Blit(temp, i, 0, i, 0, 1, ysize);
 
 		    for (i = xhot; i < xsize - width + xhot; i++)
-                bitmap->Blit(temp, xhot, 0, i, 0, 1, height);
+                bitmap->Blit(temp, xhot, 0, i, 0, 1, ysize);
 
 		    for (i = xhot; i < width; i++)
-                bitmap->Blit(temp, i, 0, i + xsize - width, 0, 1, height);
+                bitmap->Blit(temp, i, 0, i + xsize - width, 0, 1, ysize);
         }
 
         delete temp;

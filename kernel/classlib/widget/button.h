@@ -160,6 +160,8 @@ public:
     void SetText(const char *text);
     void SetText(TString &text);
 
+    void SetKey(char key);
+
     void DefineUp(TBitmapGraphicDevice *bitmap, int x, int y);
     void DefineUp(TBitmapGraphicDevice *bitmap);
 
