@@ -96,6 +96,42 @@ TGraphicDevice::TGraphicDevice(const TGraphicDevice &dev)
 
 /*##########################################################################
 #
+#   Name       : TGraphicDevice::operator=
+#
+#   Purpose....: Assignment operator for TGraphicDevice
+#
+#   In params..: dev		graphic device to alias
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TGraphicDevice &TGraphicDevice::operator=(const TGraphicDevice &dev)
+{
+    if (this != &dev)
+    {
+    	FBpp = dev.FBpp;
+	    FWidth = dev.FWidth;
+    	FHeight = dev.FHeight;
+	    FRowSize = dev.FRowSize;
+    	FLinear = dev.FLinear;
+	    if (FBpp == 1)
+		    FColor = 0xFFFFFF;
+    	else
+	    	FColor = 0;
+    	FLgop = LGOP_NONE;
+	    FFilledStyle = FALSE;
+    	if (dev.FBitmapHandle)
+	    	FBitmapHandle = RdosDuplicateBitmapHandle(dev.FBitmapHandle);
+    	else
+	    	FBitmapHandle = 0;
+        FFontHandle = 0;
+        InitDevice();
+    }
+    return *this;
+}
+
+/*##########################################################################
+#
 #   Name       : TGraphicDevice::~TGraphicDevice
 #
 #   Purpose....: Destructor for TGraphicDevice

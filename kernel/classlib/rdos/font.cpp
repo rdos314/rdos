@@ -64,6 +64,27 @@ TFont::TFont(const TFont &src)
 
 /*##########################################################################
 #
+#   Name       : TFont::operator=
+#
+#   Purpose....: Assignment operator for TFont		                          
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFont &TFont::operator=(const TFont &src)
+{
+    if (this != &src)
+    {
+        FHeight = src.FHeight;
+        FFontHandle = RdosOpenFont(FHeight);
+    }
+    return *this;
+}
+
+/*##########################################################################
+#
 #   Name       : TFont::~TFont
 #
 #   Purpose....: Destructor for TFont		                          

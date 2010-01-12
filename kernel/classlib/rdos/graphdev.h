@@ -38,6 +38,7 @@ friend class TSprite;
 public:
 	TGraphicDevice(int bpp, int width, int height);
 	TGraphicDevice(const TGraphicDevice &dev);
+	TGraphicDevice &operator=(const TGraphicDevice &src);
 	virtual ~TGraphicDevice();
     
     int GetBpp();

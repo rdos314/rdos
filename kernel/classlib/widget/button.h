@@ -39,6 +39,7 @@ class TButtonFactoryParam
 public:
     TButtonFactoryParam();
 	TButtonFactoryParam(const TButtonFactoryParam &source);
+	TButtonFactoryParam &operator=(const TButtonFactoryParam &l);
     ~TButtonFactoryParam();
 
     void Delete();
@@ -244,7 +245,6 @@ private:
     int FPressed;
     int FKeepDown;
     int FActive;
-    int FRecreate;
 };        
 
 #endif

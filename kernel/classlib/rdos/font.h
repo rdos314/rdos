@@ -36,6 +36,7 @@ friend class TBitmapGraphicDevice;
 public:
 	TFont(int height);
 	TFont(const TFont &font);
+	TFont &operator=(const TFont &src);
 	~TFont();
 
     void GetStringMetrics(const char *str, int *width, int *height);

@@ -197,6 +197,57 @@ TButtonFactoryParam::TButtonFactoryParam(const TButtonFactoryParam &src)
 
 /*##########################################################################
 #
+#   Name       : TButtonFactoryParam::operator=
+#
+#   Purpose....: Asignment operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TButtonFactoryParam &TButtonFactoryParam::operator=(const TButtonFactoryParam &src)
+{
+    if (this != &src)
+    {
+        if (src.Bitmap)
+            Bitmap = new TBitmapGraphicDevice(*src.Bitmap);
+        else
+            Bitmap = 0;
+
+        HotX = src.HotX;
+        HotY = src.HotY;
+
+        ShiftX = src.ShiftX;
+        ShiftY = src.ShiftY;
+
+        BorderWidth = src.BorderWidth;
+
+        ButtonR = src.ButtonR;
+        ButtonG = src.ButtonG;
+        ButtonB = src.ButtonB;
+
+        DrawR = src.DrawR;
+        DrawG = src.DrawG;
+        DrawB = src.DrawB;
+
+        ShadowR = src.ShadowR;
+        ShadowG = src.ShadowG;
+        ShadowB = src.ShadowB;
+
+        BorderLightR = src.BorderLightR;
+        BorderLightG = src.BorderLightG;
+        BorderLightB = src.BorderLightB;
+
+        BorderDarkR = src.BorderDarkR;
+        BorderDarkG = src.BorderDarkG;
+        BorderDarkB = src.BorderDarkB;
+    }
+    return *this;
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonFactoryParam::~TButtonFactoryParam
 #
 #   Purpose....: Button factory parameters destructor
@@ -208,7 +259,9 @@ TButtonFactoryParam::TButtonFactoryParam(const TButtonFactoryParam &src)
 ##########################################################################*/
 TButtonFactoryParam::~TButtonFactoryParam()
 {
-    Delete();
+    if (Bitmap)
+        delete Bitmap;
+    Bitmap = 0;
 }
 
 /*##########################################################################
@@ -1096,6 +1149,8 @@ void TButtonFactory::SetParam(TButtonControl *button)
 
     if (FFont)
     	button->SetFont(FFont);
+
+    button->CreateBitmapButtons();
 }
 
 /*##########################################################################
@@ -1441,7 +1496,6 @@ void TButtonControl::Init(char ch)
     FKey = ch;
     FKeepDown = FALSE;
     FActive = FALSE;
-    FRecreate = TRUE;
 }
 
 /*##########################################################################
@@ -1762,7 +1816,10 @@ void TButtonControl::Set(const char *IniName, const char *IniSection)
 void TButtonControl::DefineUp(TBitmapGraphicDevice *bitmap, int x, int y)
 {
     FUp.Define(bitmap, x, y);
-    FRecreate = TRUE;
+
+    if (FUpBitmap)
+        delete FUpBitmap;
+    FUpBitmap = CreateBitmap(FUp);
 
     if (IsEnabled() && !FPressed)
         NotifyResize();
@@ -1782,7 +1839,10 @@ void TButtonControl::DefineUp(TBitmapGraphicDevice *bitmap, int x, int y)
 void TButtonControl::DefineUp(TBitmapGraphicDevice *bitmap)
 {
     FUp.Define(bitmap);
-    FRecreate = TRUE;
+
+    if (FUpBitmap)
+        delete FUpBitmap;
+    FUpBitmap = CreateBitmap(FUp);
 
     if (IsEnabled() && !FPressed)
         NotifyResize();
@@ -1802,7 +1862,10 @@ void TButtonControl::DefineUp(TBitmapGraphicDevice *bitmap)
 void TButtonControl::DefineDown(TBitmapGraphicDevice *bitmap, int x, int y)
 {
     FDown.Define(bitmap, x, y);
-    FRecreate = TRUE;
+
+    if (FDownBitmap)
+        delete FDownBitmap;
+    FDownBitmap = CreateBitmap(FDown);
 
     if (IsEnabled() && FPressed)
         NotifyResize();
@@ -1822,7 +1885,10 @@ void TButtonControl::DefineDown(TBitmapGraphicDevice *bitmap, int x, int y)
 void TButtonControl::DefineDown(TBitmapGraphicDevice *bitmap)
 {
     FDown.Define(bitmap);
-    FRecreate = TRUE;
+
+    if (FDownBitmap)
+        delete FDownBitmap;
+    FDownBitmap = CreateBitmap(FDown);
 
     if (IsEnabled() && FPressed)
         NotifyResize();
@@ -1842,7 +1908,10 @@ void TButtonControl::DefineDown(TBitmapGraphicDevice *bitmap)
 void TButtonControl::DefineDisabled(TBitmapGraphicDevice *bitmap, int x, int y)
 {
     FDisabled.Define(bitmap, x, y);
-    FRecreate = TRUE;
+
+    if (FDisabledBitmap)
+        delete FDisabledBitmap;
+    FDisabledBitmap = CreateBitmap(FDisabled);
 
     if (!IsEnabled())
         NotifyResize();
@@ -1862,7 +1931,10 @@ void TButtonControl::DefineDisabled(TBitmapGraphicDevice *bitmap, int x, int y)
 void TButtonControl::DefineDisabled(TBitmapGraphicDevice *bitmap)
 {
     FDisabled.Define(bitmap);
-    FRecreate = TRUE;
+
+    if (FDisabledBitmap)
+        delete FDisabledBitmap;
+    FDisabledBitmap = CreateBitmap(FDisabled);
 
     if (!IsEnabled())
         NotifyResize();
@@ -2755,7 +2827,7 @@ int TButtonControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int 
 ##########################################################################*/
 void TButtonControl::NotifyResize()
 {
-	FRecreate = TRUE;
+    CreateBitmapButtons();
 }
 
 /*##########################################################################
@@ -2776,12 +2848,6 @@ void TButtonControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, i
 
 	if (IsVisible())
 	{
-		if (FRecreate)
-		{
-			FRecreate = FALSE;
-			CreateBitmapButtons();
-		}
-
 		SetClipRect(    dev,
 						xmin, ymin,
 						xmax, ymax);
