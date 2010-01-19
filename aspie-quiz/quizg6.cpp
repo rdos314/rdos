@@ -21,8 +21,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quizg5.cpp
-# Quiz final version 2, release 5 class
+# quizg6.cpp
+# Quiz final version 2, release 6 class
 #
 #######################################################################*/
 
@@ -30,9 +30,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizg5.h"
+#include "quizg6.h"
 #include "file.h"
-#include "quizdbg5.h"
+#include "quizdbg6.h"
 
 #define CI	1
 
@@ -60,26 +60,27 @@ public:
 
 /*##########################################################################
 #
-#   Name       : TQuizG5::TQuizG5
+#   Name       : TQuizG6::TQuizG6
 #
-#   Purpose....: Constructor for TQuizG5
+#   Purpose....: Constructor for TQuizG6
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizG5::TQuizG5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15, TQuiz *QuizGe, TQuiz *QuizGe2, TQuiz *QuizGe3, TQuiz *QuizG1, TQuiz *QuizG2, TQuiz *QuizG3, TQuiz *QuizG4)
-  : TQuizFinal2(205, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4, QuizF5, QuizF6, QuizF7, QuizF8, QuizF9, QuizF10, QuizF11, QuizF12, QuizF13, QuizF14, QuizF15, QuizGe, QuizGe2, QuizGe3),
+TQuizG6::TQuizG6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15, TQuiz *QuizGe, TQuiz *QuizGe2, TQuiz *QuizGe3, TQuiz *QuizG1, TQuiz *QuizG2, TQuiz *QuizG3, TQuiz *QuizG4, TQuiz *QuizG5)
+  : TQuizFinal2(155, QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4, QuizF5, QuizF6, QuizF7, QuizF8, QuizF9, QuizF10, QuizF11, QuizF12, QuizF13, QuizF14, QuizF15, QuizGe, QuizGe2, QuizGe3),
 	FDataFile(FileName)
 {
 	DefineCross(51, QuizG1);
 	DefineCross(52, QuizG2);
 	DefineCross(53, QuizG3);
 	DefineCross(54, QuizG4);
+	DefineCross(55, QuizG5);
 
 	SetupTexts();
-	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4, QuizF5, QuizF6, QuizF7, QuizF8, QuizF9, QuizF10, QuizF11, QuizF12, QuizF13, QuizF14, QuizF15, QuizGe, QuizGe2, QuizGe3, QuizG1, QuizG2, QuizG3, QuizG4);
+	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11, QuizS12, QuizN1, QuizN2, QuizN3, QuizN4, QuizFI, QuizF1, QuizF2, QuizF3, QuizF4, QuizF5, QuizF6, QuizF7, QuizF8, QuizF9, QuizF10, QuizF11, QuizF12, QuizF13, QuizF14, QuizF15, QuizGe, QuizGe2, QuizGe3, QuizG1, QuizG2, QuizG3, QuizG4, QuizG5);
 
 //    DefineQuiz();
 	InitReferers();
@@ -92,27 +93,27 @@ TQuizG5::TQuizG5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 
 /*##########################################################################
 #
-#   Name       : TQuizG5::~TQuizG5
+#   Name       : TQuizG6::~TQuizG6
 #
-#   Purpose....: Destructor for TQuizG5
+#   Purpose....: Destructor for TQuizG6
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizG5::~TQuizG5()
+TQuizG6::~TQuizG6()
 {
 }
 
-/*##################  TQuizG5::GetCatCount ##########################
+/*##################  TQuizG6::GetCatCount ##########################
 *   Purpose....: Return number of categories for question  	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizG5::GetCatCount(int Question)
+int TQuizG6::GetCatCount(int Question)
 {
     return 3;
 }
@@ -124,14 +125,14 @@ int TQuizG5::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizG5::GetQuizN()
+int TQuizG6::GetQuizN()
 {
-	return 205;
+	return 155;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizG5::WriteName
+#   Name       : TQuizG6::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -140,14 +141,14 @@ int TQuizG5::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizG5::WriteName(TFile &File)
+void TQuizG6::WriteName(TFile &File)
 {
-	 File.Write("G5");
+	 File.Write("G6");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizG5::WriteLongName
+#   Name       : TQuizG6::WriteLongName
 #
 #   Purpose....: Write long quiz name
 #
@@ -156,25 +157,25 @@ void TQuizG5::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizG5::WriteLongName(TFile &File)
+void TQuizG6::WriteLongName(TFile &File)
 {
-	 File.Write("final version 2:5");
+	 File.Write("final version 2:6");
 }
 
-/*##################  TQuizG5::DefineQuiz ##########################
+/*##################  TQuizG6::DefineQuiz ##########################
 *   Purpose....: Define global IDs in quiz                	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizG5::DefineQuiz()
+void TQuizG6::DefineQuiz()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizG5::SetupTexts
+#   Name       : TQuizG6::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -183,147 +184,31 @@ void TQuizG5::DefineQuiz()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizG5::SetupTexts()
+void TQuizG6::SetupTexts()
 {
-  Quiz[171].Reverse = TRUE;
-  Quiz[174].Reverse = TRUE;
-  Quiz[175].Reverse = TRUE;
-  Quiz[177].Reverse = TRUE;
-  Quiz[180].Reverse = TRUE;
-  Quiz[185].Reverse = TRUE;
-  Quiz[188].Reverse = TRUE;
-  Quiz[190].Reverse = TRUE;
-  Quiz[191].Reverse = TRUE;
-  Quiz[193].Reverse = TRUE;
-  Quiz[194].Reverse = TRUE;
-  Quiz[195].Reverse = TRUE;
-  Quiz[196].Reverse = TRUE;
-  Quiz[201].Reverse = TRUE;
-  Quiz[202].Reverse = TRUE;
 
   Quiz[150].MyGroup = GROUP_MIXED;
   Quiz[151].MyGroup = GROUP_MIXED;
   Quiz[152].MyGroup = GROUP_MIXED;
   Quiz[153].MyGroup = GROUP_MIXED;
   Quiz[154].MyGroup = GROUP_MIXED;
-  Quiz[155].MyGroup = GROUP_MIXED;
-  Quiz[156].MyGroup = GROUP_MIXED;
-  Quiz[157].MyGroup = GROUP_MIXED;
-  Quiz[158].MyGroup = GROUP_MIXED;
-  Quiz[159].MyGroup = GROUP_MIXED;
-  Quiz[160].MyGroup = GROUP_MIXED;
-  Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_MIXED;
-  Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_MIXED;
-  Quiz[165].MyGroup = GROUP_MIXED;
-  Quiz[166].MyGroup = GROUP_MIXED;
-  Quiz[167].MyGroup = GROUP_MIXED;
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
-  Quiz[170].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[171].MyGroup = GROUP_NT_TALENT;
-  Quiz[172].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[174].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[175].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[176].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[177].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[178].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[179].MyGroup = GROUP_NT_NVC;
-  Quiz[180].MyGroup = GROUP_NT_NVC;
-  Quiz[181].MyGroup = GROUP_NT_NVC;
-  Quiz[182].MyGroup = GROUP_NT_NVC;
-  Quiz[183].MyGroup = GROUP_NT_NVC;
-  Quiz[184].MyGroup = GROUP_NT_NVC;
-  Quiz[185].MyGroup = GROUP_NT_HUNTING;
-  Quiz[186].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[187].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[188].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[189].MyGroup = GROUP_MIXED;
-  Quiz[190].MyGroup = GROUP_MIXED;
-  Quiz[191].MyGroup = GROUP_MIXED;
-  Quiz[192].MyGroup = GROUP_MIXED;
-  Quiz[193].MyGroup = GROUP_MIXED;
-  Quiz[194].MyGroup = GROUP_MIXED;
-  Quiz[195].MyGroup = GROUP_MIXED;
-  Quiz[196].MyGroup = GROUP_MIXED;
-  Quiz[197].MyGroup = GROUP_MIXED;
-  Quiz[198].MyGroup = GROUP_MIXED;
-  Quiz[199].MyGroup = GROUP_MIXED;
-  Quiz[200].MyGroup = GROUP_MIXED;
-  Quiz[201].MyGroup = GROUP_MIXED;
-  Quiz[202].MyGroup = GROUP_MIXED;
-  Quiz[203].MyGroup = GROUP_MIXED;
-  Quiz[204].MyGroup = GROUP_MIXED;
 
-
-  Quiz[150].Text = "Do you think that just behaviour is always rewarded?";
-  Quiz[151].Text = "Do you think that unjust behaviour is always punished?";
-  Quiz[152].Text = "Do you think that in this life each one has what one deserves?";
-  Quiz[153].Text = "Do you think you should sacrifice your wellbeing for the common good?";
-  Quiz[154].Text = "Do corruption of customs affect just the ones that corrupt?";
-  Quiz[155].Text = "Do economic corruption affect just the ones that corrupt?";
-  Quiz[156].Text = "Do moral corruption affect just the ones that corrupt?";
-  Quiz[157].Text = "Do you not mind to strive for the benefit of others?";
-  Quiz[158].Text = "Do you think there is no evil, rather only bad things?";
-  Quiz[159].Text = "Do you think that if you know what ‘good’ is, then you can do it?";
-  Quiz[160].Text = "Do you think that human beings have both a material and a spiritual component?";
-  Quiz[161].Text = "Do you think that emotions and feelings are just physical-chemical reactions?";
-  Quiz[162].Text = "Do you think that a mysterious force in the cosmos guides us towards the good?";
-  Quiz[163].Text = "Do you feel more compelled to do evil than to do good things?";
-  Quiz[164].Text = "Do you often have a reason to do good things?";
-  Quiz[165].Text = "Do you often have a reason to do evil things?";
-  Quiz[166].Text = "Do you think it is convenient to do good things regardless of whom it is for?";
-  Quiz[167].Text = "Do you find self-reward in doing your work properly?";
-  Quiz[168].Text = "Do people work just for money?";
-  Quiz[169].Text = "Do you attend religious services on a regular basis?";
-  Quiz[170].Text = "Do you have a vivid imagination?";
-  Quiz[171].Text = "Do you love to read challenging material?";
-  Quiz[172].Text = "Are you attached to conventional ways?";
-  Quiz[173].Text = "Do you go on binges?";
-  Quiz[174].Text = "Are you always prepared?";
-  Quiz[175].Text = "Do you rarely overindulge?";
-  Quiz[176].Text = "Do you leave a mess in your room?";
-  Quiz[177].Text = "Do you easily resist temptations?";
-  Quiz[178].Text = "Do you rush into things?";
-  Quiz[179].Text = "Do you believe that you are better than others?";
-  Quiz[180].Text = "Do you sympathize with the homeless?";
-  Quiz[181].Text = "Do you insult people?";
-  Quiz[182].Text = "Do you obstruct others' plans?";
-  Quiz[183].Text = "Do you get back at others?";
-  Quiz[184].Text = "Do you boast about your virtues?";
-  Quiz[185].Text = "Do you do a lot in your spare time?";
-  Quiz[186].Text = "Do you experience your emotions intensely?";
-  Quiz[187].Text = "Do you yell at people?";
-  Quiz[188].Text = "Do you trust what people say?";
-  Quiz[189].Text = "Do you believe in the importance of art?";
-  Quiz[190].Text = "Do you keep your promises?";
-  Quiz[191].Text = "Do you work hard?";
-  Quiz[192].Text = "Do you enjoy wild flights of fantasy?";
-  Quiz[193].Text = "Do you excel in what you do?";
-  Quiz[194].Text = "Do you tell the truth?";
-  Quiz[195].Text = "Are you always on the go?";
-  Quiz[196].Text = "Do you believe that there is no absolute right or wrong?";
-  Quiz[197].Text = "Do you not like poetry?";
-  Quiz[198].Text = "Do you take advantage of others?";
-  Quiz[199].Text = "Do you break rules?";
-  Quiz[200].Text = "Do you waste your time?";
-  Quiz[201].Text = "Do you tend to vote for conservative political candidates?";
-  Quiz[202].Text = "Do you act wild and crazy?";
-  Quiz[203].Text = "Are you not interested in theoretical discussions?";
-  Quiz[204].Text = "Do you believe that we should be tough on crime?";
+  Quiz[150].Text = "Do you feel guilt when people expect you to?";
+  Quiz[151].Text = "Do you feel shame when people expect you to?";
+  Quiz[152].Text = "Do you feel regret when people expect you to?";
+  Quiz[153].Text = "Do you feel gratitude when people expect you to?";
+  Quiz[154].Text = "Do you feel grief when people die?";
 
 }
 
-/*##################  TQuizG5::LoadReferers ##########################
+/*##################  TQuizG6::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizG5::LoadReferers()
+void TQuizG6::LoadReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
@@ -370,7 +255,7 @@ void TQuizG5::LoadReferers()
 
 /*##########################################################################
 #
-#   Name       : TQuizG5::LoadPopulations
+#   Name       : TQuizG6::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -379,7 +264,7 @@ void TQuizG5::LoadReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizG5::LoadPopulations()
+void TQuizG6::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
@@ -537,7 +422,7 @@ void TQuizG5::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizG5::SetupCross
+#   Name       : TQuizG6::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -546,73 +431,24 @@ void TQuizG5::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizG5::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15, TQuiz *QuizGE, TQuiz *QuizGE2, TQuiz *QuizGE3, TQuiz *QuizG1, TQuiz *QuizG2, TQuiz *QuizG3, TQuiz *QuizG4)
+void TQuizG6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11, TQuiz *QuizS12, TQuiz *QuizN1, TQuiz *QuizN2, TQuiz *QuizN3, TQuiz *QuizN4, TQuiz *QuizFI, TQuiz *QuizF1, TQuiz *QuizF2, TQuiz *QuizF3, TQuiz *QuizF4, TQuiz *QuizF5, TQuiz *QuizF6, TQuiz *QuizF7, TQuiz *QuizF8, TQuiz *QuizF9, TQuiz *QuizF10, TQuiz *QuizF11, TQuiz *QuizF12, TQuiz *QuizF13, TQuiz *QuizF14, TQuiz *QuizF15, TQuiz *QuizGE, TQuiz *QuizGE2, TQuiz *QuizGE3, TQuiz *QuizG1, TQuiz *QuizG2, TQuiz *QuizG3, TQuiz *QuizG4, TQuiz *QuizG5)
 {
     int i;
 
     for (i = 0; i < 150; i++)
-	    DefineCross(QuizG4, i, i);
+	    DefineCross(QuizG5, i, i);
 
-    DefineCross(QuizG4, 150, 153);
-    DefineCross(QuizG4, 151, 154);
-    DefineCross(QuizG4, 152, 155);
-    DefineCross(QuizG4, 153, 157);
-    DefineCross(QuizG4, 154, 160);
-    DefineCross(QuizG4, 155, 161);
-    DefineCross(QuizG4, 156, 162);
-    DefineCross(QuizG4, 157, 163);
-    DefineCross(QuizG4, 158, 164);
-    DefineCross(QuizG4, 159, 165);
-    DefineCross(QuizG4, 160, 166);
-    DefineCross(QuizG4, 161, 169);
-    DefineCross(QuizG4, 162, 170);
-    DefineCross(QuizG4, 163, 173);
-    DefineCross(QuizG4, 164, 174);
-    DefineCross(QuizG4, 165, 175);
-    DefineCross(QuizG4, 166, 176);
-    DefineCross(QuizG4, 167, 177);
-    DefineCross(QuizG4, 168, 178);
-    DefineCross(QuizG4, 169, 186);
-    DefineCross(QuizF2, 170, 152);
-    DefineCross(QuizF2, 171, 172);
-    DefineCross(QuizF2, 172, 257);
-    DefineCross(QuizF2, 173, 170);
-    DefineCross(QuizF2, 174, 174);
-    DefineCross(QuizF2, 175, 200);
-    DefineCross(QuizF2, 176, 219);
-    DefineCross(QuizF2, 177, 230);
-    DefineCross(QuizF2, 178, 239);
-    DefineCross(QuizF2, 179, 173);
-    DefineCross(QuizF2, 180, 178);
-    DefineCross(QuizF2, 181, 228);
-    DefineCross(QuizF2, 182, 248);
-    DefineCross(QuizF2, 183, 258);
-    DefineCross(QuizF2, 184, 263);
-    DefineCross(QuizF2, 185, 226);
-    DefineCross(QuizF2, 186, 162);
-    DefineCross(QuizF2, 187, 198);
-    DefineCross(QuizF2, 188, 213);
-    DefineCross(QuizF2, 189, 157);
-    DefineCross(QuizF2, 190, 164);
-    DefineCross(QuizF2, 191, 169);
-    DefineCross(QuizF2, 192, 182);
-    DefineCross(QuizF2, 193, 184);
-    DefineCross(QuizF2, 194, 194);
-    DefineCross(QuizF2, 195, 196);
-    DefineCross(QuizF2, 196, 207);
-    DefineCross(QuizF2, 197, 217);
-    DefineCross(QuizF2, 198, 218);
-    DefineCross(QuizF2, 199, 224);
-    DefineCross(QuizF2, 200, 234);
-    DefineCross(QuizF2, 201, 237);
-    DefineCross(QuizF2, 202, 261);
-    DefineCross(QuizF2, 203, 262);
-    DefineCross(QuizF2, 204, 267);	
+	DefineGlobalId(150, 1744);
+	DefineGlobalId(151, 1745);
+	DefineGlobalId(152, 1746);
+	DefineGlobalId(153, 1747);
+	DefineGlobalId(154, 1748);
+
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizG5::GetReferer
+#   Name       : TQuizG6::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -621,7 +457,7 @@ void TQuizG5::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizG5::GetReferer(const char *referer, TPopulation *pop)
+void TQuizG6::GetReferer(const char *referer, TPopulation *pop)
 {
 	int i;
 	TReferer *ref;
@@ -693,14 +529,14 @@ static int IsPca(TQuizRow *row, int PcaType)
 	return FALSE;
 }
 
-/*##################  TQuizG5::ExportExcelCases ##########################
+/*##################  TQuizG6::ExportExcelCases ##########################
 *   Purpose....: Export cases as excel-data. Make ? into 'NO' case 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizG5::ExportExcelCase(const char *filename, int PcaType)
+void TQuizG6::ExportExcelCase(const char *filename, int PcaType)
 {
 	TQuizRow Row;
 	int i;
@@ -762,14 +598,14 @@ void TQuizG5::ExportExcelCase(const char *filename, int PcaType)
 	}
 }
 
-/*##################  TQuizG5::ExportExcelAspie ##########################
+/*##################  TQuizG6::ExportExcelAspie ##########################
 *   Purpose....: Export cases as excel-data. Invert NT questions 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizG5::ExportExcelAspie(const char *filename)
+void TQuizG6::ExportExcelAspie(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -830,14 +666,14 @@ void TQuizG5::ExportExcelAspie(const char *filename)
 	}
 }
 
-/*##################  TQuizG5::ExportExcelGroups ##########################
+/*##################  TQuizG6::ExportExcelGroups ##########################
 *   Purpose....: Export group cases in excel format             	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizG5::ExportExcelGroups(const char *filename)
+void TQuizG6::ExportExcelGroups(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -918,14 +754,14 @@ void TQuizG5::ExportExcelGroups(const char *filename)
 	}
 }
 
-/*##################  TQuizG5::ImportMvsp ##########################
+/*##################  TQuizG6::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings   	      			      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizG5::ImportMvsp(const char *filename, int PcaType)
+void TQuizG6::ImportMvsp(const char *filename, int PcaType)
 {
 	char buf[MAX_IN_ROW];
 	int size;
@@ -1394,14 +1230,14 @@ void TRace::WriteNonUsRow(TFile &file, int index, const char *text)
 }
 
 
-/*##################  TQuizG5::WriteRace ##########################
+/*##################  TQuizG6::WriteRace ##########################
 *   Purpose....: Write race report                   			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizG5::WriteRace(const char *filename)
+void TQuizG6::WriteRace(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1449,14 +1285,14 @@ void TQuizG5::WriteRace(const char *filename)
 	file.Write("</table>");
 }
 
-/*##################  TQuizG5::WriteRetest ##########################
+/*##################  TQuizG6::WriteRetest ##########################
 *   Purpose....: Write retest report             			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizG5::WriteRetest(const char *filename)
+void TQuizG6::WriteRetest(const char *filename)
 {
 	TQuizRow Row;
 	int userid;
