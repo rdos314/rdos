@@ -480,6 +480,8 @@ TQuiz::TQuiz(int Questions)
         Quiz[i].NtSd = 0;
         Quiz[i].Chi2 = 0;
         Quiz[i].Corr = 0;
+        Quiz[i].Aspie = FALSE;
+        Quiz[i].Nt = FALSE;
         Quiz[i].Used = FALSE;
         Quiz[i].MyGroup = 0;
 		Quiz[i].Reverse = FALSE;
@@ -1111,7 +1113,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
     for (i = 0; i < N; i++)
     {
         found = FALSE;
-        
+
         if (Quiz[i].GlobalId >= 0)
         {            
             for (cross = 0; cross < MAX_CROSS && !found; cross++)
@@ -1142,7 +1144,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
         found = FALSE;
         
         if (Quiz[i].GlobalId >= 0)
-        {            
+		  {
 			for (cross = 0; cross < MAX_CROSS && !found; cross++)
             {
 					 quiz = CrossQuiz[cross];
@@ -1173,7 +1175,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
 			case GROUP_ASPIE_SENSORY:
                 file.Write("GROUP_ASPIE_SENSORY");
-                break;
+					 break;
 
             case GROUP_NT_SENSORY:
                 file.Write("GROUP_NT_SENSORY");
@@ -1204,7 +1206,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
 					 break;
 
             case GROUP_ASPIE_OBSESSION:
-                file.Write("GROUP_ASPIE_OBSESSION");
+					 file.Write("GROUP_ASPIE_OBSESSION");
                 break;
 
             case GROUP_ASPIE_HUNTING:
@@ -1362,11 +1364,33 @@ void TQuiz::WriteSetupCross(const char *filename)
 
         if (!found)
         {
-            sprintf(str, "  DefineGlobalId( %d, %d);\n", i, GlobalId);
+				sprintf(str, "  DefineGlobalId( %d, %d);\n", i, GlobalId);
 			file.Write(str);
-            GlobalId++;
-        }
-    }
+				GlobalId++;
+		  }
+	 }
+}
+
+/*##################  TQuiz::ExportExcelAspieItems ##########################
+*   Purpose....: Export aspie items only                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportExcelAspieItems(const char *filename)
+{
+}
+
+/*##################  TQuiz::ExportExcelNtItems ##########################
+*   Purpose....: Export NT items only                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportExcelNtItems(const char *filename)
+{
 }
 
 /*##################  TQuiz::ImportFinalMvsp ##########################

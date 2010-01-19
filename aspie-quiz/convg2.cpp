@@ -32,6 +32,7 @@
 #include "pop.h"
 #include "file.h"
 #include "quizdbg2.h"
+#include "quizdbb.h"
 #include "convg.h"
 
 #define FALSE 0
@@ -43,6 +44,7 @@
 const char InsertString[] = "INSERT INTO aspie-quiz-g2 VALUES(";
 
 TFile quizfile("quizg2.bin", 0);
+TFile ancfile("ancg2.bin", 0);
 
 
 /*##################  HandleRow ##########################
@@ -233,8 +235,9 @@ char *ProcessRow(char *str)
 	int SmileyArr[12];
 	int count;
 	int val;
+	TQuizAncestry2Row AncestryRow;
 
-//    AncestryRow.Lang = 0;
+    AncestryRow.Lang = 0;
 
     for (i = 150; i < 390; i++)
         Row.Quiz[i] = 0;
@@ -298,43 +301,47 @@ char *ProcessRow(char *str)
 
 				case 5:
 					Row.BirthYear = atoi(valstr);
-//					AncestryRow.BirthYear = atoi(valstr);
+					AncestryRow.BirthYear = atoi(valstr);
 					break;
 
 				case 6:
 					Row.BirthMonth = atoi(valstr);
-//					AncestryRow.BirthMonth = atoi(valstr);
+					AncestryRow.BirthMonth = atoi(valstr);
 					break;
 
 				case 7:
 					Row.Gender = atoi(valstr);
-//					AncestryRow.Gender = atoi(valstr);
+					AncestryRow.Gender = atoi(valstr);
 					break;
 
 				case 8:
 					Row.Country = atoi(valstr);
-//					AncestryRow.Country = atoi(valstr);
+					AncestryRow.Country = atoi(valstr);
 					break;
 
 				case 9:
 					Row.Ancestry = atoi(valstr);
-//					AncestryRow.Ancestry = atoi(valstr);
+					AncestryRow.Ancestry = atoi(valstr);
 					break;
 
 				case 10:
 					Row.Aspie = atoi(valstr);
+					AncestryRow.Aspie = atoi(valstr);
 					break;
 
 				case 11:
 					Row.ADHD = atoi(valstr);
+					AncestryRow.ADHD = atoi(valstr);
 					break;
 
 				case 12:
 					Row.OCD = atoi(valstr);
+					AncestryRow.OCD = atoi(valstr);
 					break;
 
 				case 13:
 					Row.Social = atoi(valstr);
+					AncestryRow.Social = atoi(valstr);
 					break;
 
 				case 14:
@@ -345,19 +352,23 @@ char *ProcessRow(char *str)
 						if (strlen(valstr) >= 100)
 							valstr[99] = 0;
 						strcpy(Row.Referer, valstr);
+						strcpy(AncestryRow.Referer, valstr);
 					}
 					else
+					{
 						Row.Referer[0] = 0;
+						AncestryRow.Referer[0] = 0;
+				    }
 					break;
 
 				case 15:
 					Row.AsResult = atoi(valstr);
-//					AncestryRow.AsResult = atoi(valstr);
+					AncestryRow.AsResult = atoi(valstr);
 					break;
 
 				case 16:
 					Row.NtResult = atoi(valstr);
-//					AncestryRow.NtResult = atoi(valstr);
+					AncestryRow.NtResult = atoi(valstr);
 					break;
 
 				case 17:
@@ -372,6 +383,9 @@ char *ProcessRow(char *str)
 					{
 					    i -= 12;
         				Row.Quiz[i] = atoi(valstr);
+
+    					if (i < 150)
+        					AncestryRow.Quiz[i] = atoi(valstr);
     	    		}
 					break;
 			}
@@ -410,7 +424,7 @@ char *ProcessRow(char *str)
 	UpdateScore(&Row);
 	HandleRow(&Row);
 
-//	ancfile.Write(&AncestryRow, sizeof(TQuizAncestryRow));
+	ancfile.Write(&AncestryRow, sizeof(TQuizAncestry2Row));
 
 	return str;
 }

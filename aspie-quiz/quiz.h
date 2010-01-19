@@ -162,6 +162,8 @@ struct TQuizQuestion
 	int GlobalId;
 	int Changed;
 	int Cats;
+	int Nt;
+	int Aspie;
 	TQuizGroup Group[MAX_GROUP_COUNT];
 	TQuizDx Dx[DX_COUNT];
     long double Pca[MAX_PCA_AXIS];
@@ -342,6 +344,9 @@ public:
 	virtual void ImportMvspAspie(const char *filename);
 	virtual void ExportExcelCase(const char *filename, int PcaType) = 0;
 	virtual void ExportExcelAspie(const char *filename) = 0;
+
+    virtual void ExportExcelAspieItems(const char *filename);
+    virtual void ExportExcelNtItems(const char *filename);
 
 	virtual void WriteIQ(const char *filename);
 	virtual void WriteHair(const char *filename);

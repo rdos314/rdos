@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# convg5.cpp
-# Convert exported quiz-g5 to binary file
+# convg6.cpp
+# Convert exported quiz-g6 to binary file
 #
 ########################################################################*/
 #include <stdio.h>
@@ -31,7 +31,7 @@
 
 #include "pop.h"
 #include "file.h"
-#include "quizdbg5.h"
+#include "quizdbg6.h"
 #include "quizdbb.h"
 #include "convg.h"
 
@@ -41,10 +41,10 @@
 #define MAX_IN_ROW      0x8000
 #define MAX_REFERERS    1024
 
-const char InsertString[] = "INSERT INTO aspie-quiz-g5 VALUES(";
+const char InsertString[] = "INSERT INTO aspie-quiz-g6 VALUES(";
 
-TFile quizfile("quizg5.bin", 0);
-TFile ancfile("ancg5.bin", 0);
+TFile quizfile("quizg6.bin", 0);
+TFile ancfile("ancg6.bin", 0);
 
 
 /*##################  HandleRow ##########################
@@ -230,16 +230,12 @@ char *ProcessRow(char *str)
 	int i;
 	int j;
 	TQuizRow Row;
-	int quote;
-	int Smiley;
-	int SmileyArr[12];
-	int count;
-	int val;
 	TQuizAncestry2Row AncestryRow;
+	int quote;
 
     AncestryRow.Lang = 0;
     
-	for (fieldno = 0; fieldno < 222; fieldno++)
+	for (fieldno = 0; fieldno < 172; fieldno++)
 	{
 		valstr = str;
 
@@ -318,7 +314,7 @@ char *ProcessRow(char *str)
 
 				case 9:
 					Row.Ancestry = atoi(valstr);
-    				AncestryRow.Ancestry = atoi(valstr);
+					AncestryRow.Ancestry = atoi(valstr);
 					break;
 
 				case 10:
@@ -370,10 +366,11 @@ char *ProcessRow(char *str)
 
 				default:
 					i = fieldno - 17;
-        			Row.Quiz[i] = atoi(valstr);
+					if (i >= 0)
+        				Row.Quiz[i] = atoi(valstr);
 
-	    			if (i < 150)
-    	    			AncestryRow.Quiz[i] = atoi(valstr);
+					if (i < 150)
+    					AncestryRow.Quiz[i] = atoi(valstr);
 					break;
 			}
 		}
@@ -401,7 +398,7 @@ int main(int argc, char **argv)
 	char *rowstr;
 	char *ptr;
 	long pos = 0;
-	TFile infile("quizg5.sql");
+	TFile infile("quizg6.sql");
 	int i;
 	int grp;
 	int max;

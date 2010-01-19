@@ -88,6 +88,7 @@
 #include "quizge2.h"
 #include "quizge3.h"
 #include "quizdba.h"
+#include "quizdbb.h"
 #include "quizg1.h"
 #include "quizg2.h"
 #include "quizg3.h"
@@ -95,6 +96,7 @@
 #include "quizg5.h"
 
 #include "quizdbf.h"
+#include "quizdbg.h"
 
 #include "pop.h"
 
@@ -460,6 +462,276 @@ void ExportAncestry(const char *filename, int Ancestry)
 	}
 }
 
+
+/*##################  ExportAncestry2 ##########################
+*   Purpose....: Export ancestry to PCA, version 2               	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void ExportAncestry2(const char *filename, int Ancestry)
+{
+	TQuizAncestry2Row Row;
+	int i;
+	int v;
+	int ival;
+	char str[80];
+	int use;
+	TFile *infile;
+	TFile outfile(filename, 0);
+
+	outfile.Write("\"\", ");
+	outfile.Write("\"\", ");
+
+	for (i = 0; i < 150; i++)
+	{
+		outfile.Write("\"");
+
+		sprintf(str, "#%d", i + 1);
+		outfile.Write(str);
+
+		outfile.Write("\"");
+		if (i != 149)
+			outfile.Write(", ");
+	}
+	outfile.Write("\n");
+
+	 for (v = 0; v < 5; v++)
+	{
+		  switch (v)
+		{
+			case 0:
+				infile = new TFile("ancg1.bin");
+				break;
+
+			case 1:
+				infile = new TFile("ancg2.bin");
+				break;
+
+			case 2:
+				infile = new TFile("ancg3.bin");
+				break;
+
+			case 3:
+				infile = new TFile("ancg4.bin");
+				break;
+
+			case 4:
+				infile = new TFile("ancg5.bin");
+				break;
+
+		  }
+
+		while (infile->Read(&Row, sizeof(Row)))
+		{
+			 use = FALSE;
+			 switch (Ancestry)
+			 {
+			        case ANCESTRY_ALL:
+			            use = TRUE;
+			            break;
+			    
+					case ANCESTRY_CAUCASIAN:
+					    if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
+					   	    use = TRUE;
+						 break;
+
+					case ANCESTRY_ASIAN:
+						if (Row.Ancestry >= 4000)
+								use = TRUE;
+						  break;
+
+					case ANCESTRY_AMERIND:
+						if (Row.Ancestry == 3 || Row.Ancestry == 4)
+								use = TRUE;
+						  break;
+
+					case ANCESTRY_AFRICAN:
+						if ((Row.Ancestry >= 1000 && Row.Ancestry < 2000) || Row.Ancestry == 5)
+								use = TRUE;
+						  break;
+
+					case ANCESTRY_ARAB:
+						if (Row.Ancestry >= 3000 && Row.Ancestry < 4000 && Row.Ancestry != 3205)
+							use = TRUE;
+							break;
+
+					case ANCESTRY_AUSTRALIAN:
+						if (Row.Ancestry == 1)
+							use = TRUE;
+							break;
+
+					case ANCESTRY_ENGLAND:
+						if (Row.Lang == 0)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_SWEDEN:
+						if (Row.Lang == 1)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_NORWAY:
+						if (Row.Lang == 2)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_PORTUGAL:
+						if (Row.Lang == 3)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_GERMANY:
+						if (Row.Lang == 4)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_CZECH:
+						if (Row.Lang == 5)
+							use = TRUE;
+						break;
+
+					case ANCESTRY_HOLLAND:
+						if (Row.Lang == 6)
+							use = TRUE;
+						break;
+
+				  case COUNTRY_SSA:
+					 if (Row.Lang == 0 && Row.Country >= 1000 && Row.Country < 2000)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_ARAB:
+					 if (Row.Lang == 0 && Row.Country >= 3000 && Row.Country < 4000)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_S_ASIA:
+					 if (Row.Lang == 0 && Row.Country >= 4400 && Row.Country < 4600)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_E_ASIA:
+					 if (Row.Lang == 0 && Row.Country >= 4300 && Row.Country < 4400)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_N_ASIA:
+					 if (Row.Lang == 0 && Row.Country >= 4100 && Row.Country < 4300)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_N_EUROPE:
+					 if (Row.Lang == 0 && Row.Country >= 2100 && Row.Country < 2400)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_S_EUROPE:
+					 if (Row.Lang == 0 && Row.Country >= 2400 && Row.Country < 2600)
+						 use = TRUE;
+						 break;
+
+				  case COUNTRY_E_EUROPE:
+					 if (Row.Lang == 0 && Row.Country >= 2600 && Row.Country < 2800)
+						 use = TRUE;
+						 break;
+
+				  case REGION_EUROPE:
+					 if (Row.Lang == 0 && Row.Country >= 2000 && Row.Country < 3000)
+						 use = TRUE;
+						 break;
+
+				  case REGION_US:
+					 if (Row.Lang == 0 && Row.Country == 7302 && Row.Ancestry > 6)
+						 use = TRUE;
+						 break;
+
+				  case REGION_AUSTRALIA:
+					 if (Row.Lang == 0 && Row.Country == 8101 && Row.Ancestry > 6)
+						 use = TRUE;
+						 break;
+
+				  case REGION_AFRO_US:
+					 if (Row.Lang == 0 && Row.Ancestry == 5)
+						 use = TRUE;
+						 break;
+
+                  case US_INDIAN:
+                  	 if (Row.Ancestry == 3 && Row.Country == 7302)
+                  	    use = TRUE;
+					 break;
+
+                  case US_AFRO:
+					 if ((Row.Ancestry == 5 || (Row.Ancestry >= 1000 && Row.Ancestry < 2000)) && Row.Country == 7302)
+						use = TRUE;
+					 break;
+
+				  case US_HISPANIC:
+					 if (Row.Ancestry == 6 && Row.Country == 7302)
+						use = TRUE;
+					 break;
+
+				  case US_CAUC:
+					 if (((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205) && Row.Country == 7302)
+						use = TRUE;
+					 break;
+
+				  case US_ASIA:
+					 if (Row.Ancestry >= 4000 && Row.Country == 7302)
+						use = TRUE;
+					 break;
+
+				  case ALL_INDIAN:
+					 if (Row.Ancestry == 3)
+						use = TRUE;
+					 break;
+
+				  case ALL_AFRO:
+					 if (Row.Ancestry == 5 || (Row.Ancestry >= 1000 && Row.Ancestry < 2000))
+						use = TRUE;
+					 break;
+
+				  case ALL_CAUC:
+					 if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
+						use = TRUE;
+					 break;
+
+				  case ALL_ASIA:
+					 if (Row.Ancestry >= 4000)
+						use = TRUE;
+					 break;
+				}
+
+				if (use)
+				{
+					sprintf(str, "\"%d\", ", Row.AsResult);
+				outfile.Write(str);
+
+				sprintf(str, "\"%d\", ", Row.NtResult);
+				outfile.Write(str);
+
+				for (i = 0; i < 150; i++)
+				{
+					ival = Row.Quiz[i];
+	    	    	if (ival)
+				    	ival--;
+
+					if (ival > 2)
+						ival = 0;
+
+					sprintf(str, "\"%d\"", ival);
+					outfile.Write(str);
+					 if (i != 149)
+						 outfile.Write(", ");
+				}
+				outfile.Write("\n");
+			}
+		}
+		delete infile;
+	}
+}
+
 /*##################  ExportFinal ##########################
 *   Purpose....: Export final version data                       	        #
 *   In params..: *                                                          #
@@ -546,6 +818,79 @@ void ExportFinal(const char *filename)
 
 			case 15:
 				infile = new TFile("ancfi.bin");
+				break;
+		}
+
+		while (infile->Read(&ARow, sizeof(ARow)))
+		{
+			if (ARow.Lang == 0)
+			{
+				QRow.BirthYear = ARow.BirthYear;
+				QRow.BirthMonth = ARow.BirthMonth;
+				QRow.Gender = ARow.Gender;
+				QRow.Country = ARow.Country;
+				QRow.Ancestry = ARow.Ancestry;
+				QRow.Aspie = ARow.Aspie;
+				QRow.ADHD = ARow.ADHD;
+				QRow.OCD = ARow.OCD;
+				QRow.Social = ARow.Social;
+				QRow.AsResult = ARow.AsResult;
+				QRow.NtResult = ARow.NtResult;
+
+				strcpy(QRow.Referer, ARow.Referer);
+
+				for (i = 0; i < 150; i++)
+					QRow.Quiz[i] = ARow.Quiz[i];
+
+				outfile.Write(&QRow, sizeof(QRow));
+			}
+		}
+		delete infile;
+	}
+}
+
+/*##################  ExportFinal2 ##########################
+*   Purpose....: Export final version 2 data                       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void ExportFinal2(const char *filename)
+{
+	TQuizAncestry2Row ARow;
+	TQuiz2Row QRow;
+	int i;
+	int v;
+	int ival;
+	char str[80];
+	int use;
+	TFile *infile;
+	TFile outfile(filename, 0);
+
+
+	for (v = 0; v < 5; v++)
+	{
+		switch (v)
+		{
+			case 0:
+				infile = new TFile("ancg1.bin");
+				break;
+
+			case 1:
+				infile = new TFile("ancg2.bin");
+				break;
+
+			case 2:
+				infile = new TFile("ancg3.bin");
+				break;
+
+			case 3:
+				infile = new TFile("ancg4.bin");
+				break;
+
+			case 4:
+				infile = new TFile("ancg5.bin");
 				break;
 		}
 
@@ -766,6 +1111,7 @@ int main(int argc, char **argv)
 	Quiz[36]->WritePartner("eval\\partner.htm");
 
 //	ExportFinal("final.bin");
+	ExportFinal2("final2.bin");
 
 #ifdef ANCESTRY
 
