@@ -1370,6 +1370,7 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
     }
 
     TControl::Set(IniName, IniSection);
+    FRedrawBack = TRUE;
 }
 
 /*##########################################################################
@@ -1388,6 +1389,7 @@ void TPanelControl::SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int 
 	FBackground = bitmap;
     FBitStartX = xstart;
     FBitStartY = ystart;
+    FRedrawBack = TRUE;
 }
 
 /*##########################################################################
@@ -1408,6 +1410,7 @@ void TPanelControl::SetBackColor(int r, int g, int b)
     FBackB = b;
 
     FBackTrans = FALSE;
+    FRedrawBack = TRUE;
 }
 
 /*##########################################################################
@@ -1444,6 +1447,7 @@ void TPanelControl::SetDisabledColor(int r, int g, int b)
     FDisabledR = r;
     FDisabledG = g;
     FDisabledB = b;
+    FRedrawBack = TRUE;
 }
 
 /*##########################################################################

@@ -45,6 +45,7 @@ public:
 
 	void Play();
 
+    int IsRunning();
 	void Start();
 	void Stop();
 

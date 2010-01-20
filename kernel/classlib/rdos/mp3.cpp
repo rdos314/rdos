@@ -611,3 +611,19 @@ void TMp3Player::Stop()
 {
         FThreadRunning = FALSE;
 }
+
+/*##########################################################################
+#
+#   Name       : TMp3Player::IsRunning
+#
+#   Purpose....: Check if thread is running
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TMp3Player::IsRunning()
+{
+    return FThreadRunning;
+}

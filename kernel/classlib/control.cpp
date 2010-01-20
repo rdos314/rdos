@@ -1372,7 +1372,7 @@ void TControl::RedrawChildren(TGraphicDevice *dev, int xmin, int ymin, int width
 
         while (control)
         {
-            if (control->IsVisible())
+            if (control->IsVisible() && IsRedrawEnabled())
             {
                 xstart = xmin + control->FXMin;
                 ystart = ymin + control->FYMin;
@@ -1418,7 +1418,7 @@ void TControl::UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width
 
         while (control)
         {
-            if (control->IsVisible())
+            if (control->IsVisible() && IsRedrawEnabled())
             {
                 xstart = xmin + control->FXMin;
                 ystart = ymin + control->FYMin;
@@ -2046,7 +2046,7 @@ void TControlThread::Update(TControl *control)
 		parent = parent->FParent;
     }
 
-    if (visible)
+    if (visible && IsRedrawEnabled())
     {
         control->ClearRedraw();
     
