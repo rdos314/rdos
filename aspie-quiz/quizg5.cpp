@@ -976,7 +976,7 @@ void TQuizG5::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

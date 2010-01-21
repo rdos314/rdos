@@ -1119,7 +1119,7 @@ int main(int argc, char **argv)
 	Quiz[36]->WritePartner("eval\\partner.htm");
 
 //	ExportFinal("final.bin");
-//	ExportFinal2("final2.bin");
+	ExportFinal2("final2.bin");
 
 #ifdef ANCESTRY
 
@@ -1556,8 +1556,6 @@ int main(int argc, char **argv)
 	Quiz[50]->ExportExcelCase("pca\\youngge3.dat", PCA_TYPE_YOUNG);
 	Quiz[50]->ExportExcelCase("pca\\oldge3.dat", PCA_TYPE_OLD);
 
-#endif
-
 	printf("allg1\r\n");
 	 Quiz[51]->ExportExcelCase("pca\\allg1.dat", PCA_TYPE_ALL);
 	 Quiz[51]->ExportExcelCase("pca\\maleg1.dat", PCA_TYPE_MALE);
@@ -1585,6 +1583,9 @@ int main(int argc, char **argv)
 	 Quiz[54]->ExportExcelCase("pca\\femaleg4.dat", PCA_TYPE_FEMALE);
 	Quiz[54]->ExportExcelCase("pca\\youngg4.dat", PCA_TYPE_YOUNG);
 	Quiz[54]->ExportExcelCase("pca\\oldg4.dat", PCA_TYPE_OLD);
+
+
+#endif
 
 	printf("allg5\r\n");
 	 Quiz[55]->ExportExcelCase("pca\\allg5.dat", PCA_TYPE_ALL);
@@ -1654,12 +1655,12 @@ int main(int argc, char **argv)
 	 Quiz[48]->ExportExcelAspie("pca\\aspiege.dat");
 	 Quiz[49]->ExportExcelAspie("pca\\aspiege2.dat");
 	 Quiz[50]->ExportExcelAspie("pca\\aspiege3.dat");
-#endif
-
 	 Quiz[51]->ExportExcelAspie("pca\\aspieg1.dat");
 	 Quiz[52]->ExportExcelAspie("pca\\aspieg2.dat");
 	 Quiz[53]->ExportExcelAspie("pca\\aspieg3.dat");
 	 Quiz[54]->ExportExcelAspie("pca\\aspieg4.dat");
+#endif
+
 	 Quiz[55]->ExportExcelAspie("pca\\aspieg5.dat");
 	 Quiz[56]->ExportExcelAspie("pca\\aspieg6.dat");
 
@@ -2616,8 +2617,8 @@ int main(int argc, char **argv)
 	 Quiz[53]->WriteRetest("eval\\retestg3.htm");
 	 Quiz[54]->WriteRetest("eval\\retestg4.htm");
 	 Quiz[55]->WriteRetest("eval\\retestg5.htm");
-	 Quiz[56]->WriteRetest("eval\\retestg6.htm");
-	 Quiz[56]->WriteVersionRetest("eval\\vervar.htm");
+//	 Quiz[56]->WriteRetest("eval\\retestg6.htm");
+	 Quiz[55]->WriteVersionRetest("eval\\vervar.htm");
 
 	Quiz[47]->WriteAncestryChildren("anc.txt", "ancestry.txt");
 

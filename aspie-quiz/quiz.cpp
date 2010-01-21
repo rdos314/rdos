@@ -14268,99 +14268,102 @@ void TQuiz::ExportGlobalSql(const char *filename)
     file.Write("  PRIMARY KEY  (`ID`)\n");
     file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
 
-    file.Write("INSERT INTO `global` (`ID`, `Text`, `Count`, `Cats`, `AsNtCorr`, `Chi2`, `Cramer`, `AspieLoad`, `NtLoad`, `GLoad`) VALUES\n");
+	file.Write("INSERT INTO `global` (`ID`, `Text`, `Count`, `Cats`, `AsNtCorr`, `Chi2`, `Cramer`, `AspieLoad`, `NtLoad`, `GLoad`) VALUES\n");
 
-    first = TRUE;
-    
-    for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
-    {
-        TopQuiz = GlobalTopQuiz[i];
+	first = TRUE;
+
+	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+	{
+		TopQuiz = GlobalTopQuiz[i];
 		TopQuestion = GlobalTopQuestion[i];
 
 		if (TopQuiz)
 		{
-            if (first)
-				first = FALSE;
-            else
-    		    file.Write("),\n");
+			count = 0;
 
-            file.Write("(");
-
-            sprintf(str, "%d, \"", i);
-			file.Write(str);
-
-			str[1] = 0;
-			ptr = TopQuiz->Quiz[TopQuestion].Text;
-			while (*ptr)
+			TopQuiz->ClearUsed(TopQuestion);
+			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+			while (quiz)
 			{
-				switch (*ptr)
+				count += quiz->All.Count[q];
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+			}
+
+			if (count)
+			{
+				if (first)
+					first = FALSE;
+				else
+					file.Write("),\n");
+
+				file.Write("(");
+
+				sprintf(str, "%d, \"", i);
+				file.Write(str);
+
+				str[1] = 0;
+				ptr = TopQuiz->Quiz[TopQuestion].Text;
+				while (*ptr)
 				{
-					case '"':
-						file.Write("\\\"");
-						break;
+					switch (*ptr)
+					{
+						case '"':
+							file.Write("\\\"");
+							break;
 
-					default:
-						str[0] = *ptr;
-						file.Write(str);
-                        break;                
-                }
-                ptr++;
-            }
-            file.Write("\", ");
+						default:
+							str[0] = *ptr;
+							file.Write(str);
+							break;
+					}
+					ptr++;
+				}
+				file.Write("\", ");
 
-            count = 0;
+				sprintf(str, "%d, ", count);
+				file.Write(str);
 
-		    TopQuiz->ClearUsed(TopQuestion);
-    	    quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-    		while (quiz)
-            {
-                count += quiz->All.Count[q];
-		    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-    		}
+				sprintf(str, "%d, ", GlobalCatCount[i]);
+				file.Write(str);
 
-            sprintf(str, "%d, ", count);
-    		file.Write(str);
+				val = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
+				sprintf(str, "%4.3Lf, ", val);
+				file.Write(str);
 
-            sprintf(str, "%d, ", GlobalCatCount[i]);
-    		file.Write(str);
+				val = GlobalChi2[i];
+				sprintf(str, "%4.3Lf, ", val);
+				file.Write(str);
 
-			val = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
-        	sprintf(str, "%4.3Lf, ", val);
-			file.Write(str);
+				val = sqrtl(GlobalChi2[i] / count);
+				sprintf(str, "%4.3Lf, ", val);
+				file.Write(str);
 
-			val = GlobalChi2[i];
-        	sprintf(str, "%4.3Lf, ", val);
-    		file.Write(str);
+				if (GlobalPcaCount[i][0])
+					val = GlobalPcaSum[i][0] / GlobalPcaCount[i][0];
+				else
+					val = 0.0;
 
-			val = sqrtl(GlobalChi2[i] / count);
-        	sprintf(str, "%4.3Lf, ", val);
-    		file.Write(str);
+				sprintf(str, "%4.3Lf, ", val);
+				file.Write(str);
 
-    		if (GlobalPcaCount[i][0])
-    		    val = GlobalPcaSum[i][0] / GlobalPcaCount[i][0];
-    		else
-    		    val = 0.0;
+				if (GlobalPcaCount[i][1])
+					val = GlobalPcaSum[i][1] / GlobalPcaCount[i][1];
+				else
+					val = 0.0;
 
-        	sprintf(str, "%4.3Lf, ", val);
-    		file.Write(str);
+				sprintf(str, "%4.3Lf, ", val);
+				file.Write(str);
 
-    		if (GlobalPcaCount[i][1])
-    		    val = GlobalPcaSum[i][1] / GlobalPcaCount[i][1];
-    		else
-    		    val = 0.0;
+				if (GlobalPcaCount[i][2])
+					val = GlobalPcaSum[i][2] / GlobalPcaCount[i][2];
+				else
+					val = 0.0;
 
-        	sprintf(str, "%4.3Lf, ", val);
-    		file.Write(str);
-
-    		if (GlobalPcaCount[i][2])
-    		    val = GlobalPcaSum[i][2] / GlobalPcaCount[i][2];
-			else
-    		    val = 0.0;
-
-        	sprintf(str, "%4.3Lf", val);
-    		file.Write(str);
-        }
-    }
+				sprintf(str, "%4.3Lf", val);
+				file.Write(str);
+			}
+		}
+	}
 	file.Write(");\n");
 }
 

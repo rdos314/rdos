@@ -186,11 +186,16 @@ void TQuizG6::DefineQuiz()
 ##########################################################################*/
 void TQuizG6::SetupTexts()
 {
+  Quiz[150].Reverse = TRUE;
+  Quiz[151].Reverse = TRUE;
+  Quiz[152].Reverse = TRUE;
+  Quiz[153].Reverse = TRUE;
+  Quiz[154].Reverse = TRUE;
 
-  Quiz[150].MyGroup = GROUP_MIXED;
-  Quiz[151].MyGroup = GROUP_MIXED;
-  Quiz[152].MyGroup = GROUP_MIXED;
-  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_NT_NVC;
+  Quiz[151].MyGroup = GROUP_NT_NVC;
+  Quiz[152].MyGroup = GROUP_NT_NVC;
+  Quiz[153].MyGroup = GROUP_NT_NVC;
   Quiz[154].MyGroup = GROUP_MIXED;
 
   Quiz[150].Text = "Do you feel guilt when people expect you to?";
@@ -812,7 +817,7 @@ void TQuizG6::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
