@@ -4313,6 +4313,7 @@ get_exe_size_loop:
 	mov edi,edx
 
 get_exe_done:
+    clc
 	pop esi
 	pop edx
 	pop ecx
@@ -4373,6 +4374,7 @@ get_env_size_loop:
     UnlockProcEnv
 
 get_env_done:
+    clc
 	pop esi
 	pop edx
 	pop ecx
@@ -4396,6 +4398,7 @@ get_cmd_line	Proc far
 	mov di,pe_app_sel
 	mov ds,di
 	mov edi,ds:pe_cmd_line
+	clc
 	pop ds
 	ret
 get_cmd_line	Endp

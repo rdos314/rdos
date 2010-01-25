@@ -1327,7 +1327,7 @@ void TWdSocketServer::ReqProgLoad()
     
 	if (str.GetSize())
 	{
-    	FDebug = new TDebug(str.GetData(), "", curdir.Get().GetData());
+		FDebug = new TDebug(str.GetData(), "", curdir.Get().GetData());
 
 		FDebug->WaitForLoad(5000);
 

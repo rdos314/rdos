@@ -53,7 +53,7 @@ WString
 CPPOBJ
 13
 WVList
-15
+16
 14
 MVState
 15
@@ -234,29 +234,41 @@ WString
 WPP
 59
 WString
-39
-??2??Pentium Pro Register based calling
+33
+r????80386 Register based calling
 1
 0
 60
+MRState
+61
+WString
+3
+WPP
+62
+WString
+21
+r?2??32bit Flat model
+1
+0
+63
 WVList
 0
 -1
 1
 1
 0
-61
+64
 MItem
 13
 ..\ws2300.cpp
-62
+65
 WString
 6
 CPPOBJ
-63
+66
 WVList
 0
-64
+67
 WVList
 0
 11

@@ -53,7 +53,7 @@ WString
 CPPOBJ
 13
 WVList
-5
+4
 14
 MRState
 15
@@ -103,35 +103,35 @@ WString
 1
 0
 26
-MRState
-27
-WString
-3
-WPP
-28
-WString
-39
-??2??Pentium Pro Register based calling
-1
-0
-29
 WVList
 0
 -1
 1
 1
 0
-30
+27
 MItem
 13
 ..\ftpeng.cpp
-31
+28
 WString
 6
 CPPOBJ
-32
+29
 WVList
-7
+6
+30
+MRState
+31
+WString
+3
+WPP
+32
+WString
+20
+?????Warning level 3
+1
+1
 33
 MRState
 34
@@ -141,9 +141,9 @@ WPP
 35
 WString
 20
-?????Warning level 3
+?????Warning level 4
 1
-1
+0
 36
 MRState
 37
@@ -152,8 +152,8 @@ WString
 WPP
 38
 WString
-20
-?????Warning level 4
+27
+?????Default byte alignment
 1
 0
 39
@@ -164,8 +164,8 @@ WString
 WPP
 41
 WString
-27
-?????Default byte alignment
+21
+?????Compiler default
 1
 0
 42
@@ -177,9 +177,9 @@ WPP
 44
 WString
 21
-?????1 byte alignment
+?????Compiler default
 1
-1
+0
 45
 MRState
 46
@@ -188,74 +188,50 @@ WString
 WPP
 47
 WString
-21
-?????Compiler default
-1
-0
-48
-MRState
-49
-WString
-3
-WPP
-50
-WString
-21
-?????Compiler default
-1
-0
-51
-MRState
-52
-WString
-3
-WPP
-53
-WString
 33
 r????80386 Register based calling
 1
 0
-54
+48
 WVList
 0
 11
 1
 1
 0
-55
+49
 MItem
 4
 *.rc
-56
+50
 WString
 5
 WRESC
-57
+51
 WVList
 0
-58
+52
 WVList
 0
 -1
 1
 1
 0
-59
+53
 MItem
 12
 ..\ftpeng.rc
-60
+54
 WString
 5
 WRESC
-61
-WVList
-0
-62
-WVList
-0
 55
+WVList
+0
+56
+WVList
+0
+49
 1
 1
 0

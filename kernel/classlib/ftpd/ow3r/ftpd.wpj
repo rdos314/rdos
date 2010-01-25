@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-1920
-487
+396
+234
 8192
 9216
 2
@@ -34,8 +34,8 @@ VComponent
 WRect
 0
 0
-5680
-4261
+5674
+4252
 0
 0
 10
@@ -48,10 +48,10 @@ ftpd.tgt
 VComponent
 12
 WRect
-1359
-936
-5680
-4261
+1353
+926
+5674
+4252
 0
 0
 13
