@@ -1635,7 +1635,7 @@ int TPanelControl::GetMinHeight()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPanelControl::GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff)
+void TPanelControl::GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff) const
 {
     *xstart = FLeftWidth;
     *ystart = FUpperWidth;

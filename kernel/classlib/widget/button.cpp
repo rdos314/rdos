@@ -103,6 +103,8 @@ static char DecodeKey(const char *key)
 
     if (!strcmp(key, "DELETE"))
         return VK_DELETE;    
+
+    return 0;        
 }
 
 /*##########################################################################

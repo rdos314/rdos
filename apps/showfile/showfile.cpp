@@ -28,13 +28,15 @@ int main(int argc, char **argv)
 	TGraphicDevice *MouseBitmap;
 	TFileFormControl *fileform;
 
-	if (argc == 1)
-	{
-		printf("usage: showfile filename\r\n");
-		return 1;
-	 }
+//	if (argc == 1)
+//	{
+//		printf("usage: showfile filename\r\n");
+//		return 1;
+//	 }
 
-	strcpy(FileName, argv[1]);
+//	strcpy(FileName, argv[1]);
+    strcpy(FileName, "showfile.cpp");
+
 	strlwr(FileName);
 
 	vbe = new TVideoGraphicDevice(24, width, height);

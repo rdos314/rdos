@@ -976,11 +976,13 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     
 #pragma aux RdosReadFile = \
     CallGate_read_file  \
+    ValidateEax \
     parm [ebx] [edi] [ecx]  \
     value [eax];
 
 #pragma aux RdosWriteFile = \
     CallGate_write_file  \
+    ValidateEax \
     parm [ebx] [edi] [ecx]  \
     value [eax];
 
@@ -2864,11 +2866,13 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     
 #pragma aux RdosReadFile = \
     CallGate_read_file  \
+    ValidateAx \
     parm [ebx] [edi] [ecx]  \
     value [eax];
 
 #pragma aux RdosWriteFile = \
     CallGate_write_file  \
+    ValidateAx \
     parm [ebx] [edi] [ecx]  \
     value [eax];
 

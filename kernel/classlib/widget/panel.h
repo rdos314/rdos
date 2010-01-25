@@ -222,7 +222,7 @@ protected:
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
     void UpdateScroll();
-    void GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff);
+    void GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff) const;
     int IsInsidePanel(int x, int y) const;
 
     int FBackTrans;
