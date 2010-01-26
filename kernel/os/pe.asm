@@ -1303,6 +1303,8 @@ RunDll	Proc near
 	add eax,edi
 	push eax
 	movzx eax,es:lib_init_param
+    movzx ebx,es:mod_handle
+    mov edx,1
 	CallPM32
 
 rdDone:
