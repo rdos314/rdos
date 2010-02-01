@@ -2372,30 +2372,88 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetMasterVolume = \
     CallGate_get_master_volume \
-    "movzx ebx,al" \
-    "mov [esi],ebx" \
-    "movzx ebx,ah" \
-    "mov [edi],ebx" \    
+    "mov cx,ax" \
+    "mov dl,0x7F" \
+    "sub dl,al" \
+    "movsx edx,dl" \ 
+    "mov eax,200" \
+    "imul edx" \
+    "sar eax,8" \
+    "mov [esi],eax" \    
+    "mov dl,0x7F" \
+    "sub dl,ch" \
+    "movsx edx,dl" \ 
+    "mov eax,200" \
+    "imul edx" \
+    "sar eax,8" \
+    "mov [edi],eax" \    
     parm [esi] [edi] \
-    modify [eax ebx];
+    modify [eax cx edx];
 
 #pragma aux RdosSetMasterVolume = \
-    "mov ah,dl" \
+    "mov ecx,edx" \
+    "mov esi,eax" \
+    "xor edx,edx" \
+    "shl esi,1" \
+    "sbb edx,0" \
+    "mov esi,200" \
+    "idiv esi" \
+    "mov bl,0x7F" \
+    "sub bl,al" \
+    "mov eax,ecx" \
+    "mov esi,eax" \
+    "xor edx,edx" \
+    "shl esi,1" \
+    "sbb edx,0" \
+    "mov esi,200" \
+    "idiv esi" \
+    "mov bh,0x7F" \
+    "sub bh,al" \
+    "mov ax,bx" \
     CallGate_set_master_volume \
     parm [eax] [edx] \
-    modify [eax];
+    modify [eax ebx ecx edx esi];
 
 #pragma aux RdosGetLineOutVolume = \
     CallGate_get_line_out_volume \
-    "movzx ebx,al" \
-    "mov [esi],ebx" \
-    "movzx ebx,ah" \
-    "mov [edi],ebx" \    
+    "mov cx,ax" \
+    "mov dl,0x7F" \
+    "sub dl,al" \
+    "movsx edx,dl" \ 
+    "mov eax,200" \
+    "imul edx" \
+    "sar eax,8" \
+    "mov [esi],eax" \    
+    "mov dl,0x7F" \
+    "sub dl,ch" \
+    "movsx edx,dl" \ 
+    "mov eax,200" \
+    "imul edx" \
+    "sar eax,8" \
+    "mov [edi],eax" \    
     parm [esi] [edi] \
-    modify [eax ebx];
+    modify [eax cx edx];
 
 #pragma aux RdosSetLineOutVolume = \
-    "mov ah,dl" \
+    "mov ecx,edx" \
+    "mov esi,eax" \
+    "xor edx,edx" \
+    "shl esi,1" \
+    "sbb edx,0" \
+    "mov esi,200" \
+    "idiv esi" \
+    "mov bl,0x7F" \
+    "sub bl,al" \
+    "mov eax,ecx" \
+    "mov esi,eax" \
+    "xor edx,edx" \
+    "shl esi,1" \
+    "sbb edx,0" \
+    "mov esi,200" \
+    "idiv esi" \
+    "mov bh,0x7F" \
+    "sub bh,al" \
+    "mov ax,bx" \
     CallGate_set_line_out_volume \
     parm [eax] [edx] \
     modify [eax];

@@ -1147,12 +1147,11 @@ remove_ini_section	Proc near
 ;
 	mov ax,INI_HANDLE
 	DerefHandle
-	jc rmiDone
+	jc rmiFail
 ;
     mov ax,ds:[bx].ih_name_sel
     or ax,ax
-    stc
-    jz rmiDone
+    jz rmiFail
 ;
     call LockIni
     call FindIniSection    
@@ -1164,6 +1163,13 @@ remove_ini_section	Proc near
     sub edi,eax
     add ecx,eax
 	call DeleteSection
+	jmp rmiDone
+
+rmiFail:
+    pop edi
+    pop ecx
+    stc
+    jmp rmiEnd
 
 rmiDone:
     pop edi
@@ -1171,7 +1177,8 @@ rmiDone:
     pushf
     call UnlockIni
     popf
-;    
+
+rmiEnd:    
     pop esi
     pop bx
     pop eax
@@ -1222,12 +1229,12 @@ read_ini	Proc near
 ;
 	mov ax,INI_HANDLE
 	DerefHandle
-	jc riDone
+	jc riFail
 ;
     mov ax,ds:[bx].ih_name_sel
     or ax,ax
     stc
-    jz riDone
+    jz riFail
 ;
     call LockIni
     call FindIniSection    
@@ -1258,6 +1265,13 @@ riCopy:
     xor al,al
     stos byte ptr es:[edi]
     clc
+    jmp riDone
+
+riFail:
+    pop edi
+    pop ecx
+    stc
+    jmp riEnd
 
 riDone:
     pop edi
@@ -1265,7 +1279,8 @@ riDone:
     pushf
     call UnlockIni
     popf
-;    
+
+riEnd:    
     pop esi
     pop bx
     pop eax
@@ -1695,12 +1710,11 @@ write_ini	Proc near
 ;    
 	mov ax,INI_HANDLE
 	DerefHandle
-	jc wiDone
+	jc wiFail
 ;
     mov ax,ds:[bx].ih_name_sel
     or ax,ax
-    stc
-    jz wiDone
+    jz wiFail
 ;
     call LockIni
 
@@ -1753,12 +1767,18 @@ wiAdd:
 wiSizeOk:
 	call MoveForEntry
 	call AddEntry
+	jmp wiDone
+
+wiFail:
+    stc
+    jmp wiEnd
 
 wiDone:
     pushf
     call UnlockIni
     popf
-;    
+
+wiEnd:
     popad
     pop fs
     pop ds

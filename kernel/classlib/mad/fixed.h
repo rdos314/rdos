@@ -101,8 +101,22 @@ typedef mad_fixed_t mad_sample_t;
 extern "C" {
 #endif
 
+#ifdef __WATCOMC__
+
+mad_fixed_t MadMul32(mad_fixed_t x, mad_fixed_t y);
+
+#pragma aux MadMul32 = \
+    "imul edx" \
+    "shrd eax, edx, 28" \
+    parm [eax] [edx] \
+    value [eax] \
+    modify [edx];
+
+#else
+
 mad_fixed_t __stdcall MadMul32(mad_fixed_t x, mad_fixed_t y);
 
+#endif
 
 #ifdef __cplusplus
 }
