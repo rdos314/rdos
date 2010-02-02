@@ -45,6 +45,9 @@ unsigned ReqProg_load( void )
 	prog_load_req   *acc;
     prog_load_ret   *ret;
 	char            *parm;
+	char            argstr[256];
+    char            *src;
+    char            *dst;
 	char            exe_name[256];
 	int				drive;
 	char			start_dir[256];
@@ -64,7 +67,25 @@ unsigned ReqProg_load( void )
 		start_dir[2] = '\\';
 		RdosGetCurDir(drive, &start_dir[3]);
 
-		ret->mod_handle = RdosSpawnDebug(exe_name, "", start_dir, &CurrThread);
+        dst = argstr;
+        src = parm;
+        while( *src != 0 )
+            src++;
+        src++;
+
+        // parm layout
+        // <--parameters-->0<--program_name-->0<--arguments-->0
+        //
+
+        while( *src != 0 )
+        {
+            *dst = *src;
+            src++;
+            dst++;
+        }
+        *dst = 0;
+
+		ret->mod_handle = RdosSpawnDebug(exe_name, argstr, start_dir, &CurrThread);
 		if (ret->mod_handle == 0)
 			ret->err = 1;
 		else

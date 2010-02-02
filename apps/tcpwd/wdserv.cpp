@@ -1303,6 +1303,7 @@ void TWdSocketServer::ReqProgLoad()
 {
 	char truearg;
 	char name[256];
+	char *argstr;
 	TPathName curdir;
 	TString str;
 
@@ -1327,7 +1328,8 @@ void TWdSocketServer::ReqProgLoad()
     
 	if (str.GetSize())
 	{
-		FDebug = new TDebug(str.GetData(), "", curdir.Get().GetData());
+	    argstr = name + strlen(name) + 1;	    
+		FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData());
 
 		FDebug->WaitForLoad(5000);
 

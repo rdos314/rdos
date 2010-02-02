@@ -7,60 +7,37 @@
 
 #include "fm.h"
 
-#define FALSE	0
-#define	TRUE	!FALSE
+#define FALSE   0
+#define TRUE    !FALSE
 
 int main(int argc, char **argv)
 {
-	int L, R;
-	int i;
+        int L, R;
+        int i;
+        TMp3Player mp3;
+        char FileName[256];
 
-	char FileName[256];
-	TMp3Player mp3;
+        if (argc == 1)
+        {
+                printf("usage: playmp3 filename\r\n");
+                return 1;
+        }
 
-	RdosSetCodecGpio0(1);
+        RdosWaitMilli(250);
 
-	RdosGetMasterVolume(&L, &R);
-	if (L < 0 && R < 0)
-		RdosSetMasterVolume(0, 100);
+        strcpy(FileName, argv[1]);
+        strlwr(FileName);
 
-	RdosGetLineOutVolume(&L, &R);
-	if (L < 0 && R < 0)
-		RdosSetLineOutVolume(100, 100);
+        RdosGetMasterVolume(&L, &R);
+        if (L < 0 && R < 0)
+                RdosSetMasterVolume(0, 100);
 
-	TFm *fm;
-	fm = new TFm(48000);
-	TFmInstrument *inst = fm->Create(1, 1, 1.0);
-	inst->SetAttack(2.0);
-	inst->SetSustain(10000.0, 35.0);
-	inst->SetRelease(2.0, 25.0);
+        RdosGetLineOutVolume(&L, &R);
+        if (L < 0 && R < 0)
+                RdosSetLineOutVolume(100, 100);
 
-	inst->PlayB(0, 100.0, 100.0, 2500.0);
+        mp3.Load(FileName);
+        mp3.Play();
 
-	delete inst;
-	delete fm;
-
-	if (argc == 1)
-	{
-		printf("usage: playmp3 filename\r\n");
-		return 1;
-	}
-
-	RdosWaitMilli(250);
-
-	strcpy(FileName, argv[1]);
-	strlwr(FileName);
-
-	RdosGetMasterVolume(&L, &R);
-	if (L < 0 && R < 0)
-		RdosSetMasterVolume(0, 100);
-
-	RdosGetLineOutVolume(&L, &R);
-	if (L < 0 && R < 0)
-		RdosSetLineOutVolume(100, 100);
-
-	mp3.Load(FileName);
-	mp3.Play();
-
-	return 0;
+        return 0;
 }

@@ -2394,21 +2394,23 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov ecx,edx" \
     "mov esi,eax" \
     "xor edx,edx" \
-    "shl esi,1" \
+    "shl eax,8" \
     "sbb edx,0" \
     "mov esi,200" \
     "idiv esi" \
     "mov bl,0x7F" \
     "sub bl,al" \
+    "adc bl,0" \
     "mov eax,ecx" \
     "mov esi,eax" \
     "xor edx,edx" \
-    "shl esi,1" \
+    "shl eax,8" \
     "sbb edx,0" \
     "mov esi,200" \
     "idiv esi" \
     "mov bh,0x7F" \
     "sub bh,al" \
+    "adc bh,0" \
     "mov ax,bx" \
     CallGate_set_master_volume \
     parm [eax] [edx] \
@@ -2438,25 +2440,27 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov ecx,edx" \
     "mov esi,eax" \
     "xor edx,edx" \
-    "shl esi,1" \
+    "shl eax,8" \
     "sbb edx,0" \
     "mov esi,200" \
     "idiv esi" \
     "mov bl,0x7F" \
     "sub bl,al" \
+    "adc bl,0" \
     "mov eax,ecx" \
     "mov esi,eax" \
     "xor edx,edx" \
-    "shl esi,1" \
+    "shl eax,8" \
     "sbb edx,0" \
     "mov esi,200" \
     "idiv esi" \
     "mov bh,0x7F" \
     "sub bh,al" \
+    "adc bh,0" \
     "mov ax,bx" \
     CallGate_set_line_out_volume \
     parm [eax] [edx] \
-    modify [eax];
+    modify [eax ebx ecx edx esi];
 
 #pragma aux RdosCreateAudioOutChannel = \
     CallGate_create_audio_out_channel \
