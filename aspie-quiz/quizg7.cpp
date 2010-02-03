@@ -187,16 +187,18 @@ void TQuizG7::DefineQuiz()
 ##########################################################################*/
 void TQuizG7::SetupTexts()
 {
+  Quiz[153].Reverse = TRUE;
+
   Quiz[150].MyGroup = GROUP_MIXED;
   Quiz[151].MyGroup = GROUP_MIXED;
   Quiz[152].MyGroup = GROUP_MIXED;
-  Quiz[153].MyGroup = GROUP_MIXED;
-  Quiz[154].MyGroup = GROUP_MIXED;
-  Quiz[155].MyGroup = GROUP_MIXED;
-  Quiz[156].MyGroup = GROUP_MIXED;
-  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[154].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[155].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[156].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[157].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[158].MyGroup = GROUP_MIXED;
-  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_ASPIE_HUNTING;
 
   Quiz[150].Text = "Do you feel guilt?";
   Quiz[151].Text = "Do you feel shame?";
