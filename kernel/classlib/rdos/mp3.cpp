@@ -513,6 +513,7 @@ void TMp3Player::Play()
                         RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[1]);
                 else
                         RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[0]);
+
         }
 
         RdosCloseAudioOutChannel(FAudioHandle);

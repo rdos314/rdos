@@ -110,7 +110,7 @@ mad_fixed_t MadMul32(mad_fixed_t x, mad_fixed_t y);
     "shrd eax, edx, 28" \
     parm [eax] [edx] \
     value [eax] \
-    modify [edx];
+    modify exact [eax edx];
 
 #else
 

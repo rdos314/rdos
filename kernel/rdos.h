@@ -2463,9 +2463,20 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     modify [eax ebx ecx edx esi];
 
 #pragma aux RdosCreateAudioOutChannel = \
+    "push eax" \
+    "mov eax,edx" \
+    "shl eax,16" \
+    "xor edx,edx" \
+    "mov ebx,100" \
+    "div ebx" \
+    "sub eax,1" \
+    "adc eax,0" \
+    "mov dx,ax" \
+    "pop eax" \
     CallGate_create_audio_out_channel \
     ValidateHandle \
     parm [eax] [ecx] [edx] \
+    modify [ebx] \
     value [ebx];
 
 #pragma aux RdosCloseAudioOutChannel = \
