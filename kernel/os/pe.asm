@@ -1960,13 +1960,39 @@ FreePeDll	Proc near
 	jnz free_pe_dll_done
 ;
 	push ds
-	push ax
-	push bx
+	push eax
+	push ebx
 	push ecx
 	push edx
 	push si
 	push edi
 ;
+	mov ax,flat_data_sel
+	mov ds,ax
+	mov eax,es:lib_header
+	mov eax,[eax].peh_entry_point
+	or eax,eax
+	jz fdMod
+;	
+    int 3
+    push ds
+    push es
+    push fs
+    pushad
+;        
+	add eax,es:lib_base
+	push eax
+	movzx eax,es:lib_init_param
+    movzx ebx,es:mod_handle
+    mov edx,0
+	CallPM32
+;
+    popad
+    pop fs
+    pop es
+    pop ds	
+
+fdMod:
     FreeModule
 ;    
 	mov ax,pe_app_sel
@@ -2006,8 +2032,8 @@ free_pe_dll_removed:
 	pop si
 	pop edx
 	pop ecx
-	pop bx
-	pop ax
+	pop ebx
+	pop eax
 	pop ds
 
 free_pe_dll_done:
