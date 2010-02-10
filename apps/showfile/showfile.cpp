@@ -12,9 +12,6 @@
 
 #include "bmp.h"
 
-#define FALSE   0
-#define TRUE    !FALSE
-
 int main(int argc, char **argv)
 {
         int width = 640;
@@ -27,6 +24,11 @@ int main(int argc, char **argv)
         TGraphicDevice *MouseMask;
         TGraphicDevice *MouseBitmap;
         TFileFormControl *fileform;
+
+    int handle;
+
+    handle = RdosLoadDll("testthr.dll");
+    RdosFreeDll(handle);
 
       if (argc == 1)
       {
