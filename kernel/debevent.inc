@@ -31,6 +31,7 @@ EVENT_CREATE_PROCESS = 3
 EVENT_TERMINATE_THREAD = 4
 EVENT_TERMINATE_PROCESS = 5
 EVENT_LOAD_DLL = 6
+EVENT_FREE_DLL = 7
 
 
 create_process_event_struc	STRUC
@@ -75,6 +76,13 @@ ldeImageSize	DD ?
 ldeObjectRva    DD ?
 
 load_dll_event_struc	ENDS
+
+
+free_dll_event_struc	STRUC
+
+fdeHandle		DD ?
+
+free_dll_event_struc ENDS
 
 
 exception_event_struc	STRUC

@@ -38,6 +38,10 @@ int main(int argc, char **argv)
 	TWdSupplFactory *suppl;
 	TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
 
+// test only
+	RdosSetCurDrive('d' - 'a');
+	RdosSetCurDir("r1");
+
 	suppl = new TWdFileFactory(&fact);
 	suppl = new TWdFileInfoFactory(&fact);
 	suppl = new TWdEnvFactory(&fact);

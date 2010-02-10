@@ -38,6 +38,7 @@
 #define EVENT_TERMINATE_THREAD  4
 #define EVENT_TERMINATE_PROCESS 5
 #define EVENT_LOAD_DLL          6
+#define EVENT_FREE_DLL          7
 
 /*##########################################################################
 #
@@ -849,6 +850,105 @@ void TDebug::InsertModule(TDebugModule *mod)
 
 /*##########################################################################
 #
+#   Name       : TDebug::RemoveThread
+#
+#   Purpose....: Remove a thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::RemoveThread(int thread)
+{
+    TDebugThread *p;
+    TDebugThread *t;
+
+    FSection.Enter();
+
+    p = 0;
+    t = ThreadList;
+
+    while (t)
+    {
+        if (t->ThreadID == thread)
+        {
+            if (p)
+                p->Next = t->Next;
+            else
+                ThreadList = t->Next;
+            break;            
+        }
+        else
+        {
+            p = t;
+            t = t->Next;
+        }
+    }
+
+    if (t)
+    {
+        if (t == CurrentThread)
+        {
+            CurrentThread = 0;
+            FSection.Leave();
+
+            RdosWaitMilli(25);
+
+            FSection.Enter();
+        }
+        delete t;
+    }
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::RemoveModule
+#
+#   Purpose....: Remove a module
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::RemoveModule(int module)
+{
+    TDebugModule *p;
+    TDebugModule *m;
+
+    FSection.Enter();
+
+    p = 0;
+    m = ModuleList;
+
+    while (m)
+    {
+        if (m->Handle == module)
+        {
+            if (p)
+                p->Next = m->Next;
+            else
+                ModuleList = m->Next;
+            break;            
+        }
+        else
+        {
+            p = m;
+            m = m->Next;
+        }
+    }
+
+    if (m)
+        delete m;
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::WaitForLoad
 #
 #   Purpose....: Wait for app to load
@@ -1416,6 +1516,7 @@ void TDebug::HandleCreateThread(TCreateThreadEvent *event)
 ##########################################################################*/
 void TDebug::HandleTerminateThread(int thread)
 {
+    RemoveThread(thread);
 }
 
 /*##########################################################################
@@ -1464,6 +1565,22 @@ void TDebug::HandleLoadDll(TLoadDllEvent *event)
 
 /*##########################################################################
 #
+#   Name       : TDebug::HandleFreeDll
+#
+#   Purpose....: Handle free DLL event
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::HandleFreeDll(int handle)
+{
+    RemoveModule(handle);
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::SignalNewData
 #
 #   Purpose....: Signal new data is available
@@ -1482,6 +1599,7 @@ void TDebug::SignalNewData()
     TLoadDllEvent lde;
     TExceptionEvent ee;
     int ExitCode;
+    int handle;
     TDebugThread *newt;
 
         RdosWaitMilli(5);
@@ -1527,6 +1645,13 @@ void TDebug::SignalNewData()
                         RdosWriteString("Load DLL\r\n");
                         RdosGetDebugEventData(FHandle, &lde);
                         HandleLoadDll(&lde);
+                        FModuleChanged = TRUE;
+                        break;
+
+                case EVENT_FREE_DLL:
+                        RdosWriteString("Free DLL\r\n");
+                        RdosGetDebugEventData(FHandle, &handle);
+                        HandleFreeDll(handle);
                         FModuleChanged = TRUE;
                         break;
 

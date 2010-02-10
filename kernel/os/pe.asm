@@ -413,6 +413,40 @@ LoadDllEvent	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FreeDllEvent
+;
+;		DESCRIPTION:    Free DLL debug event
+;
+;		PARAMETERS:     DS		Lib
+;
+;		RETURNS:		ES		Event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDllEvent Proc near
+	push eax
+	push ebx
+;
+	mov eax,SIZE free_dll_event_struc
+	mov di,SIZE event_struc
+	add ax,di
+	AllocateSmallGlobalMem
+	sub ax,di
+	mov es:event_size,ax
+	mov es:event_code,EVENT_FREE_DLL
+;	
+    movzx ebx,ds:mod_handle
+    DerefModuleHandle
+    mov es:[di].fdeHandle,ebx    
+;
+	pop ebx
+	pop eax
+	ret
+FreeDllEvent Endp
+                                          
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CreateLib
 ;
 ;		DESCRIPTION:    Create lib
@@ -1967,6 +2001,18 @@ FreePeDll	Proc near
 	push si
 	push edi
 ;
+	mov dx,es:lib_debug_lib
+	or dx,dx
+	jnz fdNotifyDone
+;
+	push es
+	mov ax,es
+	mov ds,ax
+	call FreeDllEvent
+	call SendEvent
+	pop es
+
+fdNotifyDone:
 	mov ax,flat_data_sel
 	mov ds,ax
 	mov eax,es:lib_header
@@ -1974,7 +2020,6 @@ FreePeDll	Proc near
 	or eax,eax
 	jz fdMod
 ;	
-    int 3
     push ds
     push es
     push fs

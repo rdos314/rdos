@@ -234,12 +234,16 @@ protected:
 	void InsertThread(TDebugThread *thread);
 	void InsertModule(TDebugModule *module);
 
+	void RemoveThread(int thread);
+	void RemoveModule(int handle);
+
     void HandleCreateProcess(TCreateProcessEvent *event);
     void HandleTerminateProcess(int exitcode);
     void HandleCreateThread(TCreateThreadEvent *event);
     void HandleTerminateThread(int thread);
 	void HandleException(TExceptionEvent *event, int thread);
     void HandleLoadDll(TLoadDllEvent *event);
+    void HandleFreeDll(int handle);
 
     TString FProgram;
     TString FParam;
