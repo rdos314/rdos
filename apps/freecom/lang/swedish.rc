@@ -219,12 +219,12 @@ STRINGTABLE
  1238, "Milj”segment    : max %5u byte; ledigt %5u byte\r\n";
  1239, "Kontext-segment : max %5u byte; ledigt %5u byte\r\n";
  1240, "Heap            : ledigt %5lu byte\r\n";
- 1241, "	Alias         : gr„ns %5u byte, nuvarande %5u byte, %5u objekt\r\n";
- 1242, "	Tidigare      : gr„ns %5u byte, nuvarande %5u byte, %5u objekt\r\n";
- 1243, "	Katalogstack  : gr„ns %5u byte, nuvarande %5u byte, %5u objekt\r\n";
- 1244, "	F”reg†ende kat : anv„nt  %5u byte, %5u objekt\r\n";
- 1245, "	Batch nesting  : anv„nt  %5u byte, %5u objekt\r\n";
- 1246, "	Swappinfo       : anv„nt  %5u byte, %5u objekt\r\n";
+ 1241, "        Alias         : gr„ns %5u byte, nuvarande %5u byte, %5u objekt\r\n";
+ 1242, "        Tidigare      : gr„ns %5u byte, nuvarande %5u byte, %5u objekt\r\n";
+ 1243, "        Katalogstack  : gr„ns %5u byte, nuvarande %5u byte, %5u objekt\r\n";
+ 1244, "        F”reg†ende kat : anv„nt  %5u byte, %5u objekt\r\n";
+ 1245, "        Batch nesting  : anv„nt  %5u byte, %5u objekt\r\n";
+ 1246, "        Swappinfo       : anv„nt  %5u byte, %5u objekt\r\n";
  1247, "Kunde inte h„mta codepage fr†n systemet.\r\n";
  1248, "Kunde inte „ndra aktuellt codepage.\r\n";
  1249, "Aktuell codepage „r %u.\r\n";
@@ -233,8 +233,8 @@ STRINGTABLE
  1252, "\r\n";
  1253, "ALIAS [variabel[=][sträng]]\r\n";
  1254, "\r\n";
- 1255, "	variabel  Anger namn p† alias.\r\n";
- 1256, "	str„ng    Anger en serie tecken som ges till alias.\r\n";
+ 1255, "        variabel  Anger namn p† alias.\r\n";
+ 1256, "        str„ng    Anger en serie tecken som ges till alias.\r\n";
  1257, "\r\n";
  1258, "\r\n";
  1259, "ALIAS utan parametrar visar aktuella alias.\r\n";
@@ -330,8 +330,8 @@ STRINGTABLE
  1349, "\r\n";
  1350, "  [enhet:][s”kv„g]filnamn Anger fil eller filer att ta bort. \r\n";
  1351, "                          Flera filer anges med jokertecken.\r\n";
- 1352, "  /P	Kr„ver bekr„ftelse vid borttagning av fil.\r\n";
- 1353, "  /V	Visar alla borttagna filer.\r\n";
+ 1352, "  /P    Kr„ver bekr„ftelse vid borttagning av fil.\r\n";
+ 1353, "  /V    Visar alla borttagna filer.\r\n";
  1354, "Visar en lista med filer och underkataloger i en katalog.\r\n";
  1355, "\r\n";
  1356, "DIR [enhet:][s”kv„g][filnamn] [/P] [/W] [/A[[:]attribut]]\r\n";
@@ -350,7 +350,7 @@ STRINGTABLE
  1369, " sortorder   N  Efter namn (alfabetisk)    S  Efter storlek (minst f”rst)\r\n";
  1370, "             E  Efter till„gg (alfabetisk) D  Datum och tid (äldst f”rst)\r\n";
  1371, "             G  Gruppera kataloger f”rst   -  Prefix f”r omv„nd ordning\r\n";
- 1372, "             U  Osorterade		      (Standard „r /ONG)\r\n";
+ 1372, "             U  Osorterade                    (Standard „r /ONG)\r\n";
  1373, " /S         Visar filer i angiven katalog och filerna i dess underkataloger.\r\n";
  1374, " /B         Enkelt format (Ingen inledande information och sammanfattning).\r\n";
  1375, " /L         Anv„nder gemener.\r\n";
@@ -1046,7 +1046,6 @@ STRINGTABLE
  TEXT_VOLUME_R_ON, "1760,1";
  TEXT_VOLUME_OFF, "1761,1";
  TEXT_VOLUME_ON, "1762,1";
- TEXT_ERROR_OPT_ARG , "1763,1";
  TEXT_CMDHELP_COPY, "1764,18";
 }
 
