@@ -32,16 +32,67 @@
 #include "thread.h"
 #include "str.h"
 
+class TFtpEntry
+{
+public:
+    TFtpEntry(int year, int month, int day, int hour, int min, const char *name);
+    virtual ~TFtpEntry();
+
+    virtual int IsDir() = 0;
+
+    TDateTime time;
+    TString name;
+    TFtpEntry *next;
+};    
+
+class TFtpDirEntry : public TFtpEntry
+{
+public:
+    TFtpDirEntry(int year, int month, int day, int hour, int min, const char *name);
+    virtual ~TFtpDirEntry();
+
+    virtual int IsDir();
+};    
+
+class TFtpFileEntry : public TFtpEntry
+{
+public:
+    TFtpFileEntry(int year, int month, int day, int hour, int min, const char *name, int size);
+    virtual ~TFtpFileEntry();
+
+    virtual int IsDir();
+
+    int size;
+};    
+
+
 class TFtp : public TThread
 {
 public:
     TFtp(long IP, int port, const char *user, const char *passw);
     virtual ~TFtp();
 
+    void (*OnMsg)(TFtp *ftp, const char *msg);
+
+    void HandleDataSocket();
+
 protected:
+    void NotifyMsg(const char *msg);
+    void SendUser();
+    void SendPassword();
+    void SendPwd();
+    void DecodePwd(const char *param);
+    void SendList();
+    void SendPasv();
+    void DecodePasv(const char *param);
+    void HandleResponse(int code, const char *param);
     void HandleResponse(const char *msg);
     void HandleOpen();
     void HandleClosed();
+    void ClearEntries();
+    void AddEntry(TFtpEntry *entry);
+    void HandleDirEntry(char *data);
+    void HandleDirData(char *data, int size);
     virtual void Execute();
 
     long FIp;
@@ -49,6 +100,17 @@ protected:
     TString FUser;
     TString FPassw;
     TSocket *FSocket;
+    TSocket *FDataSocket;
+
+    int FGetDir;
+    char *FDirData;
+
+    int FCloseData;    
+    int FLastCode;
+    TString FCurrDir;
+
+    TSection FSection;
+    TFtpEntry *FEntryList;
 };
 
 #endif

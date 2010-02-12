@@ -3797,6 +3797,12 @@ close_tcp_connection	Proc far
 	call word ptr cs:[bx].close_tab
 	LeaveSection ds:tcp_section
 ;
+    mov bx,ds:tcp_owner
+    or bx,bx
+    jz close_tcp_owner_ok
+    Signal
+
+close_tcp_owner_ok:
     mov bx,ds:tcp_wait	
     or bx,bx
     clc
