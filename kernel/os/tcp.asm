@@ -2302,6 +2302,8 @@ ProcessData	Proc near;
 	or ds:tcp_pending, FLAG_REC_FIN
 	mov eax,es:[di].tcp_seq
 	Reverse
+	movzx ecx,cx
+	add eax,ecx
 	mov ds:tcp_fin_seq,eax
 
 process_data_no_fin:
@@ -4061,7 +4063,7 @@ is_tcp_connection_closed	Proc far
 	ja is_tcp_closed_fail
 ;
     mov ax,ds:tcp_pending
-    test ax,FLAG_DELETE_NET
+    test ax,FLAG_DELETE_NET OR FLAG_CLOSED
     jnz is_tcp_closed_fail
 
 is_tcp_closed_ok:
