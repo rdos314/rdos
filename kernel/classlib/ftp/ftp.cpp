@@ -21,7 +21,7 @@
 # The author of this program may be contacted at leif@rdos.net
 #
 # ftp.cpp
-# FTP class
+# FTP client class
 #
 ########################################################################*/
 
@@ -200,10 +200,20 @@ TFtp::TFtp(long IP, int port, const char *user, const char *passw)
     FDataSocket = 0;
     OnMsg = 0;
     FLastCode = -1;
-    FEntryList = 0;
+    FDirList = 0;
+    FFileList = 0;
+
+    FCurrDir = 0;
+    FCurrFile = 0;
     
     FCloseData = FALSE;
+    FDirCached = FALSE;
     FGetDir = FALSE;
+    FSetDir = FALSE;
+    FGetFile = FALSE;
+    FReady = FALSE;
+    FSuccess = FALSE;
+    FFile = 0;
     
     Start("FTP", STACK_SIZE);
 }
@@ -239,6 +249,341 @@ TFtp::~TFtp()
     }
 
     ClearEntries();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::SetDir
+#
+#   Purpose....: Set current directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtp::SetDir(const char *path)
+{
+    int ok = FALSE;
+
+    FAppSection.Enter();
+    ClearEntries();
+
+    if (!FReady)
+        FAppSignal.WaitTimeout(15000);
+
+    if (FReady)
+    {
+        FSuccess = FALSE;
+        FReady = FALSE;
+        FSetDir = TRUE;
+        SendCwd(path);
+    
+        FAppSignal.WaitTimeout(15000);     
+        ok = FSuccess;  
+    }
+
+    FAppSection.Leave();
+
+    FSetDir = FALSE;
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::SetAsciiMode
+#
+#   Purpose....: Set ASCII file transfer mode
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::SetAsciiMode()
+{
+    FAppSection.Enter();
+
+    if (!FReady)
+        FAppSignal.WaitTimeout(15000);
+
+    if (FReady)
+        SendType('A');
+
+    FAppSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::SetBinaryMode
+#
+#   Purpose....: Set binary file transfer mode
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::SetBinaryMode()
+{
+    FAppSection.Enter();
+
+    if (!FReady)
+        FAppSignal.WaitTimeout(15000);
+
+    if (FReady)
+        SendType('I');
+
+    FAppSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::GetFile
+#
+#   Purpose....: Get a single file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtp::GetFile(const char *remote, TFile *file, int size)
+{
+    int ok = FALSE;
+
+    FAppSection.Enter();
+
+    if (!FReady)
+        FAppSignal.WaitTimeout(15000);
+
+    if (FReady)
+    {
+        FSuccess = FALSE;
+
+        FFileSize = size;
+        FFile = file;
+        FFile->SetSize(0);
+        FFile->SetPos(0);
+        FRemoteFile = TString(remote);
+
+        FReady = FALSE;
+        FGetFile = TRUE;
+        SendPasv();
+    
+        FAppSignal.WaitTimeout(15000);       
+
+        ok = FSuccess;
+    }
+
+    FGetFile = FALSE;
+
+    FAppSection.Leave();
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::CacheDir
+#
+#   Purpose....: Cache current directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::CacheDir()
+{
+    FAppSection.Enter();
+
+    if (!FReady)
+        FAppSignal.WaitTimeout(15000);
+
+    if (FReady)
+    {
+        FReady = FALSE;
+        FGetDir = TRUE;
+        SendPasv();
+    
+        FAppSignal.WaitTimeout(15000);       
+    }
+
+    FGetDir = FALSE;
+
+    FAppSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::GetCurrDirName
+#
+#   Purpose....: Get name of current directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TFtp::GetCurrDirName()
+{
+    FAppSection.Enter();
+
+    if (!FReady)
+        FAppSignal.WaitTimeout(15000);
+
+    FAppSection.Leave();
+
+    if (FReady)
+        return FCurrDirName;
+    else
+        return TString();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::GotoFirstDir
+#
+#   Purpose....: Goto first directory entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtp::GotoFirstDir()
+{
+    FCurrDir = 0;
+    
+    if (!FDirCached)
+        CacheDir();
+
+    if (FDirCached)
+        FCurrDir = FDirList;
+
+    if (FCurrDir)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::GotoFirstFile
+#
+#   Purpose....: Goto first file entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtp::GotoFirstFile()
+{
+    FCurrFile = 0;
+    
+    if (!FDirCached)
+        CacheDir();
+
+    if (FDirCached)
+        FCurrFile = FFileList;
+
+    if (FCurrFile)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::GotoNextDir
+#
+#   Purpose....: Goto next directory entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtp::GotoNextDir()
+{
+    if (FCurrDir)
+        FCurrDir = FCurrDir->next;
+
+    if (FCurrDir)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::GotoNextFile
+#
+#   Purpose....: Goto next file entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtp::GotoNextFile()
+{
+    if (FCurrFile)
+        FCurrFile = FCurrFile->next;
+
+    if (FCurrFile)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::GetDir
+#
+#   Purpose....: Get info about current directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtp::GetDir(TString &name, TDateTime &time)
+{
+    if (FCurrDir)
+    {
+        name = FCurrDir->name;
+        time = FCurrDir->time;
+        return TRUE;
+    }
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::GetFile
+#
+#   Purpose....: Get info about current file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtp::GetFile(TString &name, TDateTime &time, int *size)
+{
+    if (FCurrFile)
+    {
+        name = FCurrFile->name;
+        time = FCurrFile->time;
+        *size = FCurrFile->size;
+        return TRUE;
+    }
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -321,6 +666,31 @@ void TFtp::SendPwd()
 
 /*##########################################################################
 #
+#   Name       : TFtp::SendCwd
+#
+#   Purpose....: Send cwd
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::SendCwd(const char *path)
+{
+    char str[260];
+
+    strcpy(str, "CWD ");
+    strcat(str, path);
+    strcat(str, "\r\n");
+
+//    NotifyMsg(str);
+
+    FSocket->Write(str);
+    FSocket->Push();
+}
+
+/*##########################################################################
+#
 #   Name       : TFtp::SendList
 #
 #   Purpose....: Send list
@@ -342,6 +712,57 @@ void TFtp::SendList()
 
 /*##########################################################################
 #
+#   Name       : TFtp::SendType
+#
+#   Purpose....: Send transfer type
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::SendType(char type)
+{
+    char str[10];
+
+    strcpy(str, "TYPE ");
+    str[5] = type;
+    str[6] = 0;
+    strcat(str,"\r\n");
+
+//    NotifyMsg(str);
+
+    FSocket->Write(str);
+    FSocket->Push();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::SendRetr
+#
+#   Purpose....: Send retr
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::SendRetr()
+{
+    char str[260];
+
+    strcpy(str, "RETR ");
+    strcat(str, FRemoteFile.GetData());
+    strcat(str, "\r\n");
+
+    NotifyMsg(str);
+
+    FSocket->Write(str);
+    FSocket->Push();
+}
+
+/*##########################################################################
+#
 #   Name       : TFtp::SendPasv
 #
 #   Purpose....: Send pasv
@@ -353,7 +774,7 @@ void TFtp::SendList()
 ##########################################################################*/
 void TFtp::SendPasv()
 {
-    NotifyMsg("PASV\r\n");
+//    NotifyMsg("PASV\r\n");
 
     FSocket->Write("PASV\r\n");
     FSocket->Push();
@@ -397,7 +818,7 @@ void TFtp::DecodePwd(const char *param)
         *dptr = 0;
     }
 
-    FCurrDir = TString(dir);
+    FCurrDirName = TString(dir);
 }
 
 /*##########################################################################
@@ -491,10 +912,37 @@ void TFtp::DecodePasv(const char *param)
 ##########################################################################*/
 void TFtp::HandleResponse(int code, const char *param)
 {
+    FReady = FALSE;
+    
     switch (code)
     {
+        case 200:
+            FReady = TRUE;
+            break;
+        
         case 220:
             SendUser();
+            break;
+
+        case 226:
+            if (FDataSocket == 0)
+                FReady = TRUE;
+                
+            if (FGetDir)
+            {
+                FDirCached = TRUE;
+
+                if (FReady)
+                    FAppSignal.Signal();
+            }
+
+            if (FGetFile)
+            {
+                FSuccess = TRUE;
+
+                if (FReady)
+                    FAppSignal.Signal();
+            }
             break;
 
         case 227:
@@ -502,20 +950,40 @@ void TFtp::HandleResponse(int code, const char *param)
 
             if (FGetDir)
                 SendList();
+
+            if (FGetFile)
+                SendRetr();
             break;
 
         case 230:
             SendPwd();
             break;
 
+        case 250:
+            if (FSetDir)
+            {
+                FSuccess = TRUE;
+                SendPwd();
+            }
+            break;
+
         case 257:
             DecodePwd(param);
-            SendPasv();
-            FGetDir = TRUE;
+            FReady = TRUE;
+            FAppSignal.Signal();
             break;
 
         case 331:
             SendPassword();
+            break;
+
+        case 550:
+            if (FSetDir)
+            {
+                FSuccess = FALSE;
+                FReady = TRUE;
+                FAppSignal.Signal();
+            }
             break;
     }
 }
@@ -593,6 +1061,12 @@ void TFtp::HandleOpen()
 ##########################################################################*/
 void TFtp::HandleClosed()
 {
+    FGetDir = FALSE;
+    FSetDir = FALSE;
+    FReady = FALSE;
+    
+    ClearEntries();
+
     if (FSocket)
         delete FSocket;
 
@@ -618,15 +1092,29 @@ void TFtp::HandleClosed()
 ##########################################################################*/
 void TFtp::ClearEntries()
 {   
-    TFtpEntry *entry;
+    TFtpDirEntry *dir;
+    TFtpFileEntry *file;
 
     FSection.Enter();
 
-    while (FEntryList)
+    FCurrDir = 0;
+    FCurrFile = 0;
+    FDirCached = FALSE;
+
+    RdosWaitMilli(25);
+
+    while (FDirList)
     {
-        entry = FEntryList->next;
-        delete FEntryList;
-        FEntryList = entry;
+        dir = FDirList->next;
+        delete FDirList;
+        FDirList = dir;
+    }
+
+    while (FFileList)
+    {
+        file = FFileList->next;
+        delete FFileList;
+        FFileList = file;
     }
 
     FSection.Leave();
@@ -634,21 +1122,42 @@ void TFtp::ClearEntries()
 
 /*##########################################################################
 #
-#   Name       : TFtp::AddEntry
+#   Name       : TFtp::AddDir
 #
-#   Purpose....: Add decoded entry
+#   Purpose....: Add decoded dir entry
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFtp::AddEntry(TFtpEntry *entry)
+void TFtp::AddDir(TFtpDirEntry *entry)
 {   
     FSection.Enter();
 
-    entry->next = FEntryList;
-    FEntryList = entry;
+    entry->next = FDirList;
+    FDirList = entry;
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::AddFile
+#
+#   Purpose....: Add decoded file entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::AddFile(TFtpFileEntry *entry)
+{   
+    FSection.Enter();
+
+    entry->next = FFileList;
+    FFileList = entry;
 
     FSection.Leave();
 }
@@ -674,7 +1183,6 @@ void TFtp::HandleDirEntry(char *data)
     TDateTime time;
     int year, month, day;
     int hour, min;
-    TFtpEntry *entry;
 
     if (strlen(data) > 10)
     {
@@ -833,11 +1341,10 @@ void TFtp::HandleDirEntry(char *data)
         }
 
         if (dir == 'd' || dir == 'D')
-            entry = new TFtpDirEntry(year, month, day, hour, min, data);
+            AddDir(new TFtpDirEntry(year, month, day, hour, min, data));
         else
-            entry = new TFtpFileEntry(year, month, day, hour, min, data, size);
+            AddFile(new TFtpFileEntry(year, month, day, hour, min, data, size));
 
-        AddEntry(entry);
     }
 }
 
@@ -933,6 +1440,14 @@ void TFtp::HandleDataSocket()
         {
             if (FGetDir)
                 HandleDirData(buf, count);
+
+            if (FGetFile && FFile)
+            {
+                FFile->Write(buf, count);
+
+                if (FFile->GetSize() == FFileSize)
+                    break;
+            }
         }
     }
 
@@ -947,6 +1462,11 @@ void TFtp::HandleDataSocket()
         delete FDataSocket;
         FDataSocket = 0;
     }
+
+    FReady = TRUE;
+
+    if (!FGetFile && !FGetDir)
+        FAppSignal.Signal();
 }
 
 /*##########################################################################

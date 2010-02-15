@@ -21,7 +21,7 @@
 # The author of this program may be contacted at leif@rdos.net
 #
 # ftp.h
-# FTP class
+# FTP client class
 #
 ########################################################################*/
 
@@ -30,6 +30,8 @@
 
 #include "socket.h"
 #include "thread.h"
+#include "sigdev.h"
+#include "file.h"
 #include "str.h"
 
 class TFtpEntry
@@ -42,7 +44,6 @@ public:
 
     TDateTime time;
     TString name;
-    TFtpEntry *next;
 };    
 
 class TFtpDirEntry : public TFtpEntry
@@ -52,6 +53,8 @@ public:
     virtual ~TFtpDirEntry();
 
     virtual int IsDir();
+
+    TFtpDirEntry *next;
 };    
 
 class TFtpFileEntry : public TFtpEntry
@@ -63,6 +66,8 @@ public:
     virtual int IsDir();
 
     int size;
+
+    TFtpFileEntry *next;
 };    
 
 
@@ -74,6 +79,19 @@ public:
 
     void (*OnMsg)(TFtp *ftp, const char *msg);
 
+    int SetDir(const char *path);
+    void SetAsciiMode();
+    void SetBinaryMode();
+    int GetFile(const char *remote, TFile *file, int size);
+
+    int GotoFirstDir();
+    int GotoFirstFile();
+    int GotoNextDir();
+    int GotoNextFile();
+    TString GetCurrDirName();
+    int GetDir(TString &name, TDateTime &time);
+    int GetFile(TString &name, TDateTime &time, int *size);
+
     void HandleDataSocket();
 
 protected:
@@ -81,19 +99,24 @@ protected:
     void SendUser();
     void SendPassword();
     void SendPwd();
+    void SendCwd(const char *path);
     void DecodePwd(const char *param);
     void SendList();
+    void SendRetr();
     void SendPasv();
+    void SendType(char type);
     void DecodePasv(const char *param);
     void HandleResponse(int code, const char *param);
     void HandleResponse(const char *msg);
     void HandleOpen();
     void HandleClosed();
     void ClearEntries();
-    void AddEntry(TFtpEntry *entry);
+    void AddDir(TFtpDirEntry *entry);
+    void AddFile(TFtpFileEntry *entry);
     void HandleDirEntry(char *data);
     void HandleDirData(char *data, int size);
     virtual void Execute();
+    void CacheDir();
 
     long FIp;
     int FPort;
@@ -102,15 +125,29 @@ protected:
     TSocket *FSocket;
     TSocket *FDataSocket;
 
+    TSection FAppSection;
+    TSignalDevice FAppSignal;
+    int FReady;
+    int FDirCached;
     int FGetDir;
+    int FSetDir;
+    int FGetFile;
     char *FDirData;
+    int FSuccess;
+    TFile *FFile;
+    int FFileSize;
+    TString FRemoteFile;
 
     int FCloseData;    
     int FLastCode;
-    TString FCurrDir;
+    TString FCurrDirName;
 
     TSection FSection;
-    TFtpEntry *FEntryList;
+    TFtpDirEntry *FDirList;
+    TFtpFileEntry *FFileList;
+
+    TFtpDirEntry *FCurrDir;
+    TFtpFileEntry *FCurrFile;
 };
 
 #endif
