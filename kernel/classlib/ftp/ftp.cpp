@@ -349,7 +349,7 @@ void TFtp::SetBinaryMode()
 #   Returns....: *
 #
 ##########################################################################*/
-int TFtp::GetFile(const char *remote, TFile *file, int size)
+int TFtp::GetFile(const char *remote, TFile *file)
 {
     int ok = FALSE;
 
@@ -362,7 +362,6 @@ int TFtp::GetFile(const char *remote, TFile *file, int size)
     {
         FSuccess = FALSE;
 
-        FFileSize = size;
         FFile = file;
         FFile->SetSize(0);
         FFile->SetPos(0);
@@ -372,7 +371,7 @@ int TFtp::GetFile(const char *remote, TFile *file, int size)
         FGetFile = TRUE;
         SendPasv();
     
-        FAppSignal.WaitTimeout(15000);       
+        FAppSignal.WaitTimeout(25000);       
 
         ok = FSuccess;
     }
@@ -925,23 +924,10 @@ void TFtp::HandleResponse(int code, const char *param)
             break;
 
         case 226:
-            if (FDataSocket == 0)
+            if (FDataSocket == 0 && !FReady)
+            {
                 FReady = TRUE;
-                
-            if (FGetDir)
-            {
-                FDirCached = TRUE;
-
-                if (FReady)
-                    FAppSignal.Signal();
-            }
-
-            if (FGetFile)
-            {
-                FSuccess = TRUE;
-
-                if (FReady)
-                    FAppSignal.Signal();
+                FAppSignal.Signal();
             }
             break;
 
@@ -1442,12 +1428,7 @@ void TFtp::HandleDataSocket()
                 HandleDirData(buf, count);
 
             if (FGetFile && FFile)
-            {
                 FFile->Write(buf, count);
-
-                if (FFile->GetSize() == FFileSize)
-                    break;
-            }
         }
     }
 
@@ -1464,9 +1445,14 @@ void TFtp::HandleDataSocket()
     }
 
     FReady = TRUE;
+            
+    if (FGetDir)
+        FDirCached = TRUE;
 
-    if (!FGetFile && !FGetDir)
-        FAppSignal.Signal();
+    if (FGetFile)
+        FSuccess = TRUE;
+
+    FAppSignal.Signal();
 }
 
 /*##########################################################################

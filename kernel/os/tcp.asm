@@ -2094,6 +2094,11 @@ update_send_wnd_new:
 	jmp update_send_wnd_done
 
 update_send_wnd_old:
+	mov ax,es:[di].tcp_window
+	xchg al,ah
+	cmp ax,ds:tcp_send_wnd
+	jne update_send_wnd_new
+;
 	mov eax,ds:tcp_send_una
 	cmp eax,ds:tcp_send_next
 	je update_send_wnd_empty
@@ -5209,6 +5214,13 @@ poll_tcp_connection	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateConnection	Proc near
+    mov dx,ds:tcp_writer
+    or dx,dx
+    jz update_send_no_writer
+;    
+    or ds:tcp_pending,FLAG_SEND_PUSH
+    
+update_send_no_writer:    
     mov dx,ds:tcp_send_timeout
     or dx,dx
     jz update_send_timeout_done

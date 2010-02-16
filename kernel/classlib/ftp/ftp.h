@@ -82,7 +82,7 @@ public:
     int SetDir(const char *path);
     void SetAsciiMode();
     void SetBinaryMode();
-    int GetFile(const char *remote, TFile *file, int size);
+    int GetFile(const char *remote, TFile *file);
 
     int GotoFirstDir();
     int GotoFirstFile();
@@ -135,7 +135,6 @@ protected:
     char *FDirData;
     int FSuccess;
     TFile *FFile;
-    int FFileSize;
     TString FRemoteFile;
 
     int FCloseData;    
