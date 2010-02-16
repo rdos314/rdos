@@ -99,8 +99,8 @@ TDnaPopulation::~TDnaPopulation()
 ##########################################################################*/
 TDnaPopulation *TDnaPopulation::Split(int size)
 {
-	int i;
-	int base;
+    int i;
+    int base;
     TDnaPopulation *pop;
     TDnaIndividual **NewIndArr;
 
@@ -117,22 +117,22 @@ TDnaPopulation *TDnaPopulation::Split(int size)
 
     pop = new TDnaPopulation(FMutator, FCrossOverRate, FSeqSize);
     
-	pop->FSize = size;
-	pop->FIndArr = new TDnaIndividual* [size];
+    pop->FSize = size;
+    pop->FIndArr = new TDnaIndividual* [size];
 
-	NewIndArr = new TDnaIndividual* [base];
+    NewIndArr = new TDnaIndividual* [base];
 
-	for (i = 0; i < base; i++)
-	    NewIndArr[i] = FIndArr[i];
+    for (i = 0; i < base; i++)
+        NewIndArr[i] = FIndArr[i];
 
-	for (i = 0; i < size; i++)
+    for (i = 0; i < size; i++)
         pop->FIndArr[i] = FIndArr[base + i];
 
     delete FIndArr;
     FIndArr = NewIndArr;        
     FSize = base;
 
-	return pop;
+    return pop;
 }
 
 /*##########################################################################
@@ -148,7 +148,7 @@ TDnaPopulation *TDnaPopulation::Split(int size)
 ##########################################################################*/
 void TDnaPopulation::Merge(TDnaPopulation *pop)
 {
-	int i;
+    int i;
     TDnaIndividual **NewIndArr;
     int size;
 
@@ -160,20 +160,20 @@ void TDnaPopulation::Merge(TDnaPopulation *pop)
 
     size = FSize + pop->FSize;
     
-	NewIndArr = new TDnaIndividual* [size];
+    NewIndArr = new TDnaIndividual* [size];
 
-	for (i = 0; i < FSize; i++)
-	    NewIndArr[i] = FIndArr[i];
+    for (i = 0; i < FSize; i++)
+        NewIndArr[i] = FIndArr[i];
 
-	for (i = 0; i < pop->FSize; i++)
+    for (i = 0; i < pop->FSize; i++)
         NewIndArr[FSize + i] = pop->FIndArr[i];
 
     delete FIndArr;
     FIndArr = NewIndArr;        
     FSize = size;
 
-	delete pop->FIndArr;
-	pop->FIndArr = 0;
+    delete pop->FIndArr;
+    pop->FIndArr = 0;
 
     delete pop;
 }
@@ -239,19 +239,19 @@ void TDnaPopulation::FreePairArr(TDnaPair **PairArr, int Size)
 ##########################################################################*/
 void TDnaPopulation::CreateRandom(int size)
 {
-	 int i;
+     int i;
 
-	 if (FIndArr)
-	 {
-		  FreeIndArr(FIndArr, FSize);
-		  delete FIndArr;
-	 }
+     if (FIndArr)
+     {
+          FreeIndArr(FIndArr, FSize);
+          delete FIndArr;
+     }
 
-	 FSize = size;
-	 FIndArr = new TDnaIndividual* [FSize];
+     FSize = size;
+     FIndArr = new TDnaIndividual* [FSize];
 
-	 for (i = 0; i < size; i++)
-		  FIndArr[i] = new TDnaIndividual(FSeqSize);
+     for (i = 0; i < size; i++)
+          FIndArr[i] = new TDnaIndividual(FSeqSize);
 }
 
 /*##########################################################################
@@ -267,20 +267,20 @@ void TDnaPopulation::CreateRandom(int size)
 ##########################################################################*/
 void TDnaPopulation::CreateUniform(TDnaSequence *seq, int size)
 {
-	 int i;
+     int i;
 
-	 if (FIndArr)
-	 {
-		  FreeIndArr(FIndArr, FSize);
-		  delete FIndArr;
-	 }
+     if (FIndArr)
+     {
+          FreeIndArr(FIndArr, FSize);
+          delete FIndArr;
+     }
 
-	 FSize = size;
-	 FIndArr = new TDnaIndividual* [FSize];
-	 FSeqSize = seq->GetSize();
+     FSize = size;
+     FIndArr = new TDnaIndividual* [FSize];
+     FSeqSize = seq->GetSize();
 
-	 for (i = 0; i < size; i++)
-		  FIndArr[i] = new TDnaIndividual(seq);
+     for (i = 0; i < size; i++)
+          FIndArr[i] = new TDnaIndividual(seq);
 }
 
 /*##########################################################################
@@ -312,40 +312,40 @@ void TDnaPopulation::Set(TDnaMutator *Mutator)
 ##########################################################################*/
 int TDnaPopulation::GetMatchScore(TDnaIndividual *ind1, TDnaIndividual *ind2)
 {
-	int score;
-	long double val;
-	long double fscore;
-	long double divi;
+    int score;
+    long double val;
+    long double fscore;
+    long double divi;
 
-	divi = (long double)FSeqSize / 4.0;
+    divi = (long double)FSeqSize / 4.0;
 
-	val = (long double)ind1->FMotherSeq.GetSimilarity(ind2->FMotherSeq, FSeqSize / 4);
-	val = val / divi;
-	fscore = val * val;
+    val = (long double)ind1->FMotherSeq.GetSimilarity(ind2->FMotherSeq, FSeqSize / 4);
+    val = val / divi;
+    fscore = val * val;
 
-	val = (long double)ind1->FMotherSeq.GetSimilarity(ind2->FFatherSeq, FSeqSize / 4);
-	val = val / divi;
-	fscore += val * val;
+    val = (long double)ind1->FMotherSeq.GetSimilarity(ind2->FFatherSeq, FSeqSize / 4);
+    val = val / divi;
+    fscore += val * val;
 
-	val = (long double)ind1->FFatherSeq.GetSimilarity(ind2->FMotherSeq, FSeqSize / 4);
-	val = val / divi;
-	fscore += val * val;
+    val = (long double)ind1->FFatherSeq.GetSimilarity(ind2->FMotherSeq, FSeqSize / 4);
+    val = val / divi;
+    fscore += val * val;
 
-	val = (long double)ind1->FFatherSeq.GetSimilarity(ind2->FFatherSeq, FSeqSize / 4);
-	val = val / divi;
-	fscore += val * val;
+    val = (long double)ind1->FFatherSeq.GetSimilarity(ind2->FFatherSeq, FSeqSize / 4);
+    val = val / divi;
+    fscore += val * val;
 
-	fscore = 500.0 * sqrtl(fscore);
+    fscore = 500.0 * sqrt(fscore);
 
-	score = (int)fscore;
+    score = (int)fscore;
 
-	if (score <= 0)
-		score = 1;
+    if (score <= 0)
+        score = 1;
 
-	if (score > 1000)
-		score = 1000;
+    if (score > 1000)
+        score = 1000;
 
-	return score;
+    return score;
 }
 
 /*##########################################################################
@@ -361,30 +361,30 @@ int TDnaPopulation::GetMatchScore(TDnaIndividual *ind1, TDnaIndividual *ind2)
 ##########################################################################*/
 void TDnaPopulation::Pairbond(int tries)
 {
-	int *Paired;
-	int i;
-	int j;
-	int k;
-	int max;
-	int p;
-	int score;
-	int ok;
+    int *Paired;
+    int i;
+    int j;
+    int k;
+    int max;
+    int p;
+    int score;
+    int ok;
 
-	if (FPairArr)
-	{
-	    FreePairArr(FPairArr, FPairs);
-	    delete FPairArr;
-	}
+    if (FPairArr)
+    {
+        FreePairArr(FPairArr, FPairs);
+        delete FPairArr;
+    }
 
-	Paired = new int[FSize];
+    Paired = new int[FSize];
 
-	for (i = 0; i < FSize; i++)
-	    Paired[i] = FALSE;
+    for (i = 0; i < FSize; i++)
+        Paired[i] = FALSE;
 
-	FPairs = FSize * 80 / 100 / 2;
-	FPairArr = new TDnaPair* [FPairs];
+    FPairs = FSize * 80 / 100 / 2;
+    FPairArr = new TDnaPair* [FPairs];
 
-	for (p = 0; p < FPairs; p++)
+    for (p = 0; p < FPairs; p++)
     {
         for (i = p; i < FSize; i++)
             if (!Paired[i])
@@ -401,20 +401,20 @@ void TDnaPopulation::Pairbond(int tries)
 
             if (!Paired[k])
             {
-   			    score = GetMatchScore(FIndArr[i], FIndArr[k]);
-			    if (score > max)
-			    {
-			        score = max;
-			        j = k;
+                score = GetMatchScore(FIndArr[i], FIndArr[k]);
+                if (score > max)
+                {
+                    score = max;
+                    j = k;
 
-			        if (Random(tries) == 0)
-			            break;
-			    }
-			}
-	    }
+                    if (Random(tries) == 0)
+                        break;
+                }
+            }
+        }
 
-	    Paired[j] = TRUE;	
-		FPairArr[p] = new TDnaPair(FIndArr[i], FIndArr[j]);
+        Paired[j] = TRUE;   
+        FPairArr[p] = new TDnaPair(FIndArr[i], FIndArr[j]);
     }
 
     delete Paired;            
@@ -433,47 +433,47 @@ void TDnaPopulation::Pairbond(int tries)
 ##########################################################################*/
 void TDnaPopulation::CreateChildren()
 {
-	TDnaIndividual **ChildArr;
-	TDnaIndividual *child;
-	int NewSize;
-	int c;
-	int p;
-	int ok;
-	int val;
-	int *IndArr;
-	int pc;
-	int ind;
+    TDnaIndividual **ChildArr;
+    TDnaIndividual *child;
+    int NewSize;
+    int c;
+    int p;
+    int ok;
+    int val;
+    int *IndArr;
+    int pc;
+    int ind;
 
-	NewSize = FSize;
-	ChildArr = new TDnaIndividual* [NewSize];
+    NewSize = FSize;
+    ChildArr = new TDnaIndividual* [NewSize];
 
     c = 0;
     pc = FPairs;
 
-	 IndArr = new int[FPairs];
+     IndArr = new int[FPairs];
 
-	 for (p = 0; p < FPairs; p++)
-		  IndArr[p] = p;
+     for (p = 0; p < FPairs; p++)
+          IndArr[p] = p;
 
-	 while (c < NewSize)
-	 {
-		ChildArr[c] = FPairArr[IndArr[0]]->CreateChild(FMutator, FCrossOverRate);
-		c++;
+     while (c < NewSize)
+     {
+        ChildArr[c] = FPairArr[IndArr[0]]->CreateChild(FMutator, FCrossOverRate);
+        c++;
 
-		for (p = 0; p < pc / 2 && c < NewSize; p++)
+        for (p = 0; p < pc / 2 && c < NewSize; p++)
         {
             
             if (Random(2))
             {
                 IndArr[p] = IndArr[2 * p];
-        		ChildArr[c] = FPairArr[IndArr[p]]->CreateChild(FMutator, FCrossOverRate);
+                ChildArr[c] = FPairArr[IndArr[p]]->CreateChild(FMutator, FCrossOverRate);
             }
-            else        		
+            else                
             {
                 IndArr[p] = IndArr[2 * p + 1];
-        		ChildArr[c] = FPairArr[IndArr[p]]->CreateChild(FMutator, FCrossOverRate);
+                ChildArr[c] = FPairArr[IndArr[p]]->CreateChild(FMutator, FCrossOverRate);
             }
-    		c++;
+            c++;
         }
 
         pc = pc / 2;
@@ -481,21 +481,21 @@ void TDnaPopulation::CreateChildren()
 
     delete IndArr;
 
-	if (FIndArr)
-	{
-		FreeIndArr(FIndArr, FSize);
-		delete FIndArr;
-	}
+    if (FIndArr)
+    {
+        FreeIndArr(FIndArr, FSize);
+        delete FIndArr;
+    }
 
-	if (FPairArr)
-	{
-		FreePairArr(FPairArr, FPairs);
-		delete FPairArr;
-	}
+    if (FPairArr)
+    {
+        FreePairArr(FPairArr, FPairs);
+        delete FPairArr;
+    }
 
-	FSize = NewSize;
-	FIndArr = ChildArr;
-	FPairArr = 0;
+    FSize = NewSize;
+    FIndArr = ChildArr;
+    FPairArr = 0;
 }
 
 /*##########################################################################
@@ -511,62 +511,62 @@ void TDnaPopulation::CreateChildren()
 ##########################################################################*/
 void TDnaPopulation::CreateChildren(TDnaEvaluator *eval)
 {
-	TDnaIndividual **ChildArr;
-	TDnaIndividual *child;
-	int NewSize;
-	int c;
-	int p;
-	int ok;
-	int score1;
-	int score2;
-	int val;
-	int *IndArr;
-	int pc;
-	int ind;
+    TDnaIndividual **ChildArr;
+    TDnaIndividual *child;
+    int NewSize;
+    int c;
+    int p;
+    int ok;
+    int score1;
+    int score2;
+    int val;
+    int *IndArr;
+    int pc;
+    int ind;
 
-	NewSize = FSize;
-	ChildArr = new TDnaIndividual* [NewSize];
+    NewSize = FSize;
+    ChildArr = new TDnaIndividual* [NewSize];
 
     c = 0;
     pc = FPairs;
 
-	 IndArr = new int[FPairs];
+     IndArr = new int[FPairs];
 
-	 for (p = 0; p < FPairs; p++)
-		  IndArr[p] = p;
+     for (p = 0; p < FPairs; p++)
+          IndArr[p] = p;
 
-	 while (c < NewSize)
-	 {
-		ChildArr[c] = FPairArr[IndArr[0]]->CreateChild(FMutator, FCrossOverRate);
-		c++;
+     while (c < NewSize)
+     {
+        ChildArr[c] = FPairArr[IndArr[0]]->CreateChild(FMutator, FCrossOverRate);
+        c++;
 
-		  for (p = 0; p < pc / 2 && c < NewSize; p++)
+          for (p = 0; p < pc / 2 && c < NewSize; p++)
         {
             ind = IndArr[2 * p];
             score1 = 0;
-				val = eval->Score(FPairArr[ind]->Mate1);
-				score1 = val * val;
-				val = eval->Score(FPairArr[ind]->Mate2);
-				score1 += val * val;
+                val = eval->Score(FPairArr[ind]->Mate1);
+                score1 = val * val;
+                val = eval->Score(FPairArr[ind]->Mate2);
+                score1 += val * val;
 
-				ind = IndArr[2 * p + 1];
-				score2 = 0;
-				val = eval->Score(FPairArr[ind]->Mate1);
-				score2 = val * val;
+                ind = IndArr[2 * p + 1];
+                score2 = 0;
+                val = eval->Score(FPairArr[ind]->Mate1);
+                score2 = val * val;
             val = eval->Score(FPairArr[ind]->Mate2);
             score2 += val * val;
             
             if (score1 > score2)
             {
                 IndArr[p] = IndArr[2 * p];
-        		ChildArr[c] = FPairArr[IndArr[p]]->CreateChild(FMutator, FCrossOverRate);
+                ChildArr[c] = FPairArr[IndArr[p]]->CreateChild(FMutator, FCrossOverRate);
             }
-            else        		
+            else                
             {
                 IndArr[p] = IndArr[2 * p + 1];
-        		ChildArr[c] = FPairArr[IndArr[p]]->CreateChild(FMutator, FCrossOverRate);
+                ChildArr[c] = FPairArr[IndArr[p]]->CreateChild(FMutator, FCrossOverRate);
             }
-    		c++;
+            c++;
         }
 
         pc = pc / 2;
@@ -574,21 +574,21 @@ void TDnaPopulation::CreateChildren(TDnaEvaluator *eval)
 
     delete IndArr;
 
-	if (FIndArr)
-	{
-		FreeIndArr(FIndArr, FSize);
-		delete FIndArr;
-	}
+    if (FIndArr)
+    {
+        FreeIndArr(FIndArr, FSize);
+        delete FIndArr;
+    }
 
-	if (FPairArr)
-	{
-		FreePairArr(FPairArr, FPairs);
-		delete FPairArr;
-	}
+    if (FPairArr)
+    {
+        FreePairArr(FPairArr, FPairs);
+        delete FPairArr;
+    }
 
-	FSize = NewSize;
-	FIndArr = ChildArr;
-	FPairArr = 0;
+    FSize = NewSize;
+    FIndArr = ChildArr;
+    FPairArr = 0;
 }
 
 /*##########################################################################
@@ -609,22 +609,22 @@ void TDnaPopulation::ExportRaw(const char *filename)
     TDnaIndividual *ind;
     char str[40];
 
-	for (i = 0; i < FSize; i++)
-	{
-		ind = FIndArr[i];
-		if (ind)
-		{
-		    sprintf(str, "M%05d: ", i);
-		    file.Write(str);
+    for (i = 0; i < FSize; i++)
+    {
+        ind = FIndArr[i];
+        if (ind)
+        {
+            sprintf(str, "M%05d: ", i);
+            file.Write(str);
             ind->FMotherSeq.Write(file);
             file.Write("\r\n");
 
-		    sprintf(str, "F%05d: ", i);
-		    file.Write(str);
+            sprintf(str, "F%05d: ", i);
+            file.Write(str);
             ind->FFatherSeq.Write(file);
             file.Write("\r\n");
-		}
-	}
+        }
+    }
 }
 
 /*##########################################################################
@@ -648,11 +648,11 @@ void TDnaPopulation::ExportQuiz(const char *filename, TDnaSequence *ref, TDnaSeq
     char str[40];
     char *fseq;
     char *mseq;
-	 char *rseq;
-	 char *rseq1;
-	 char *rseq2;
-	 int score;
-	 int score1;
+     char *rseq;
+     char *rseq1;
+     char *rseq2;
+     int score;
+     int score1;
     int score2;
     long double mean;
     long double *SdArr;
@@ -670,34 +670,34 @@ void TDnaPopulation::ExportQuiz(const char *filename, TDnaSequence *ref, TDnaSeq
         sum = 0;
         count = 0;
 
-    	for (j = 0; j < FSize; j++)
-	    {
-		    ind = FIndArr[j];
-		    if (ind)
-    		{
-			    sum += ind->FFatherSeq.FSeq[i];
-				sum += ind->FMotherSeq.FSeq[i];
-				count++;
-    		}
+        for (j = 0; j < FSize; j++)
+        {
+            ind = FIndArr[j];
+            if (ind)
+            {
+                sum += ind->FFatherSeq.FSeq[i];
+                sum += ind->FMotherSeq.FSeq[i];
+                count++;
+            }
         }
 
         mean = (long double)sum / (long double)(2 * count);
 
         rsum = 0;
 
-    	for (j = 0; j < FSize; j++)
-	    {
-		    ind = FIndArr[j];
-		    if (ind)
-    		{
-    		    val = (long double)ind->FFatherSeq.FSeq[i] - mean;
-    		    rsum += val * val;
-    		    
-    		    val = (long double)ind->FMotherSeq.FSeq[i] - mean;
-    		    rsum += val * val;
-    		}
+        for (j = 0; j < FSize; j++)
+        {
+            ind = FIndArr[j];
+            if (ind)
+            {
+                val = (long double)ind->FFatherSeq.FSeq[i] - mean;
+                rsum += val * val;
+                
+                val = (long double)ind->FMotherSeq.FSeq[i] - mean;
+                rsum += val * val;
+            }
         }
-        SdArr[i] = sqrtl(rsum / ((long double)2 * count - 1));
+        SdArr[i] = sqrt(rsum / ((long double)2 * count - 1));
     }
 
     for (i = 0; i < 150; i++)
@@ -718,41 +718,41 @@ void TDnaPopulation::ExportQuiz(const char *filename, TDnaSequence *ref, TDnaSeq
     }
 
 
-	 file.Write("\"\", \"\", ");
-	 for (j = 0; j < 150; j++)
-	 {
-		  sprintf(str, "\"#%d\"", j + 1);
-		  file.Write(str);
-		  if (j != FSeqSize - 1)
-				file.Write(", ");
-	 }
-	 file.Write("\r\n");
+     file.Write("\"\", \"\", ");
+     for (j = 0; j < 150; j++)
+     {
+          sprintf(str, "\"#%d\"", j + 1);
+          file.Write(str);
+          if (j != FSeqSize - 1)
+                file.Write(", ");
+     }
+     file.Write("\r\n");
 
-	for (i = 0; i < FSize; i++)
-	{
-		ind = FIndArr[i];
-		if (ind)
-		{
-			sprintf(str, "\"%d\", ", i + 1);
-			file.Write(str);
-			file.Write(str);
+    for (i = 0; i < FSize; i++)
+    {
+        ind = FIndArr[i];
+        if (ind)
+        {
+            sprintf(str, "\"%d\", ", i + 1);
+            file.Write(str);
+            file.Write(str);
 
-			rseq = ref->FSeq;
-			rseq1 = ref1->FSeq;
-			rseq2 = ref2->FSeq;
-			fseq = ind->FFatherSeq.FSeq;
-			mseq = ind->FMotherSeq.FSeq;
+            rseq = ref->FSeq;
+            rseq1 = ref1->FSeq;
+            rseq2 = ref2->FSeq;
+            fseq = ind->FFatherSeq.FSeq;
+            mseq = ind->FMotherSeq.FSeq;
 
-			for (j = 0; j < 150; j++)
-		    {
+            for (j = 0; j < 150; j++)
+            {
                 k = RefArr[j];
-	
-				score1 = 0;
-				score2 = 0;
+    
+                score1 = 0;
+                score2 = 0;
 
                 if (fseq[k] == rseq1[k])
                     score1++;
-		        
+                
                 if (mseq[k] == rseq1[k])
                     score1++;
 
@@ -783,14 +783,14 @@ void TDnaPopulation::ExportQuiz(const char *filename, TDnaSequence *ref, TDnaSeq
                 file.Write(str);
                 if (j != 149)
                     file.Write(", ");
-		            
-		    }
+                    
+            }
 
-		    file.Write("\r\n");
-		}
-	}
+            file.Write("\r\n");
+        }
+    }
 
-	delete SdArr;
+    delete SdArr;
 }
 
 /*##########################################################################
@@ -807,16 +807,16 @@ void TDnaPopulation::ExportQuiz(const char *filename, TDnaSequence *ref, TDnaSeq
 void TDnaPopulation::WriteScores(TDnaEvaluator *eval)
 {
     int i;
-	int score;
+    int score;
 
-	for (i = 0; i < FSize; i++)
-	{
-		if (FIndArr[i])
-		{
-			score = eval->Score(FIndArr[i]);
-			printf("%d\n", score);
-		}
-	}
+    for (i = 0; i < FSize; i++)
+    {
+        if (FIndArr[i])
+        {
+            score = eval->Score(FIndArr[i]);
+            printf("%d\n", score);
+        }
+    }
 }
 
 /*##########################################################################

@@ -96,7 +96,7 @@ TDnaEvaluator::~TDnaEvaluator()
 ##########################################################################*/
 TDnaSequence *TDnaEvaluator::GetSeq()
 {
-	return &FRefSeq;
+    return &FRefSeq;
 }
 
 /*##########################################################################
@@ -116,24 +116,24 @@ int TDnaEvaluator::Score(TDnaIndividual *ind)
     long double val;
     long double fscore;
 
-	val = (long double)FRefSeq.GetSimilarity(ind->FMotherSeq);
-	val = val / (long double)FSize;
-	fscore = val * val;
+    val = (long double)FRefSeq.GetSimilarity(ind->FMotherSeq);
+    val = val / (long double)FSize;
+    fscore = val * val;
 
-	val = (long double)FRefSeq.GetSimilarity(ind->FFatherSeq);
-	val = val / (long double)FSize;
-	fscore += val * val;
+    val = (long double)FRefSeq.GetSimilarity(ind->FFatherSeq);
+    val = val / (long double)FSize;
+    fscore += val * val;
 
-	fscore = 1000.0 * sqrtl(fscore / 2.0);
+    fscore = 1000.0 * sqrt(fscore / 2.0);
 
-	score = (int)fscore;
+    score = (int)fscore;
 
-	if (score < 0)
-		 score = 0;
+    if (score < 0)
+         score = 0;
 
-	if (score > 1000)
-		 score = 1000;
+    if (score > 1000)
+         score = 1000;
 
-	 return score;
+     return score;
 }
 
