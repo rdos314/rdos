@@ -4,9 +4,9 @@ projectIdent
 VpeMain
 1
 WRect
-1309
-448
-8316
+1045
+585
+7987
 9216
 2
 MProject
@@ -28,8 +28,8 @@ WVList
 VComponent
 8
 WRect
-1075
-1267
+0
+0
 5712
 4320
 0
@@ -39,5 +39,5 @@ WFileName
 8
 ftpd.tgt
 0
-0
+6
 7
