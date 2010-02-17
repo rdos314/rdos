@@ -578,6 +578,10 @@ int TFtp::GetFile(TString &name, TDateTime &time, int *size)
     {
         name = FCurrFile->name;
         time = FCurrFile->time;
+
+        while (time.GetMicroSec() != 0)
+            time.AddMicro(1);
+            
         *size = FCurrFile->size;
         return TRUE;
     }
@@ -911,27 +915,23 @@ void TFtp::DecodePasv(const char *param)
 ##########################################################################*/
 void TFtp::HandleResponse(int code, const char *param)
 {
-    FReady = FALSE;
-    
     switch (code)
     {
+        case 150:
+        case 226:
+            break;
+            
         case 200:
             FReady = TRUE;
             break;
         
         case 220:
             SendUser();
-            break;
-
-        case 226:
-            if (FDataSocket == 0 && !FReady)
-            {
-                FReady = TRUE;
-                FAppSignal.Signal();
-            }
+            FReady = FALSE;    
             break;
 
         case 227:
+            FReady = FALSE;    
             DecodePasv(param);
 
             if (FGetDir)
@@ -942,10 +942,12 @@ void TFtp::HandleResponse(int code, const char *param)
             break;
 
         case 230:
+            FReady = FALSE;    
             SendPwd();
             break;
 
         case 250:
+            FReady = FALSE;    
             if (FSetDir)
             {
                 FSuccess = TRUE;
@@ -960,6 +962,7 @@ void TFtp::HandleResponse(int code, const char *param)
             break;
 
         case 331:
+            FReady = FALSE;    
             SendPassword();
             break;
 
@@ -970,6 +973,12 @@ void TFtp::HandleResponse(int code, const char *param)
                 FReady = TRUE;
                 FAppSignal.Signal();
             }
+            else
+                FReady = FALSE;            
+            break;
+
+        default:
+            FReady = FALSE;
             break;
     }
 }
