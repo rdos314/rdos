@@ -17,6 +17,12 @@ int main(int argc, char **argv)
         TMp3Player mp3;
         char FileName[256];
 
+        char str[50];
+        long double speed;
+
+        speed = 6.506896551724139;
+        sprintf(str, "Circ: %4.1Lf V", speed);
+
         if (argc == 1)
         {
                 printf("usage: playmp3 filename\r\n");
