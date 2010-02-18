@@ -25,11 +25,6 @@ int main(int argc, char **argv)
         TGraphicDevice *MouseBitmap;
         TFileFormControl *fileform;
 
-    int handle;
-
-    handle = RdosLoadDll("testthr.dll");
-    RdosFreeDll(handle);
-
       if (argc == 1)
       {
               printf("usage: showfile filename\r\n");
