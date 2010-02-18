@@ -1702,6 +1702,8 @@ get_entry_time	Proc near
 	add ah,ah
 	and ah,3Fh
 	TimeToBinary
+	add eax,1193
+	adc edx,0
 ;
 	pop cx
 	pop bx
@@ -2058,6 +2060,8 @@ set_dir_time	Proc near
 	push cx
 	push edx
 ;	
+    add eax,1193
+    adc edx,0
 	BinaryToTime
 	shl cl,3
 	shr cx,3

@@ -1184,7 +1184,7 @@ unsigned long TDeviceVar::GetUnsigned32()
         default:
             str = GetString();
             if (str)
-                sscanf(str, "%U", &val);
+                sscanf(str, "%lu", &val);
             else
             {
                 val_long = GetSigned32();

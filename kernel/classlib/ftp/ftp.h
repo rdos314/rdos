@@ -133,6 +133,7 @@ protected:
     int FSetDir;
     int FGetFile;
     char *FDirData;
+    int FDirCount;
     int FSuccess;
     TFile *FFile;
     TString FRemoteFile;

@@ -1358,7 +1358,6 @@ void TFtp::HandleDirData(char *data, int size)
 {   
     char *curr;
     char *ptr;
-    char row[257];
     int count;
 
     curr = data;
@@ -1373,12 +1372,7 @@ void TFtp::HandleDirData(char *data, int size)
             ptr++;
             size--;
             
-            if (FDirData)
-                strcpy(row, FDirData);
-            else
-                row[0] = 0;
-            strcat(row, curr);
-            HandleDirEntry(row);
+            HandleDirEntry(curr);
 
             while (size && (*ptr == 0xd || *ptr == 0xa))
             {
@@ -1407,7 +1401,10 @@ void TFtp::HandleDirData(char *data, int size)
     {
         FDirData = new char[count];
         memcpy(FDirData, curr, count);
+        FDirCount = count;
     }    
+    else
+        FDirCount = 0;
 }
 
 /*##########################################################################
@@ -1427,14 +1424,25 @@ void TFtp::HandleDataSocket()
     int count;
 
     FDirData = 0;
+    FDirCount = 0;
     
     while (FInstalled && FDataSocket && FDataSocket->IsOpen() && !FCloseData)
     {
-        count = FDataSocket->Read(buf, 512);
+        if (FDirData)
+        {
+            memcpy(buf, FDirData, FDirCount);
+            delete FDirData;
+            FDirData = 0;            
+
+            count = FDataSocket->Read(buf + FDirCount, 512 - FDirCount);
+        }
+        else            
+            count = FDataSocket->Read(buf, 512);
+
         if (count)
         {
             if (FGetDir)
-                HandleDirData(buf, count);
+                HandleDirData(buf, count + FDirCount);
 
             if (FGetFile && FFile)
                 FFile->Write(buf, count);
