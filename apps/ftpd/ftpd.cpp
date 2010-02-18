@@ -38,7 +38,7 @@
 #define TRUE !FALSE
 
 /*##################  WriteCommand ##########################
-*   Purpose....: Write command echo	   					      	        #
+*   Purpose....: Write command echo                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -46,11 +46,11 @@
 *##########################################################################*/
 void WriteCommand(TFtpSocketServer *server, const char *str)
 {
-	printf(str);
+    printf(str);
 }
 
 /*##################  GetIwsIp ##########################
-*   Purpose....: Get IWS local IP	   					      	        #
+*   Purpose....: Get IWS local IP                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -76,22 +76,22 @@ long GetIwsIp()
             
         while (IwsSocket.WaitForChar(2500) && !startok)
         {
-		    ch = IwsSocket.Read();
-			if (ch == '=')
-				startok = TRUE;
-		}
+            ch = IwsSocket.Read();
+            if (ch == '=')
+                startok = TRUE;
+        }
 
         count = 0;
 
         while (IwsSocket.WaitForChar(100))
         {
-			Buf[count] = IwsSocket.Read();
-			count++;
-		}
+            Buf[count] = IwsSocket.Read();
+            count++;
+        }
 
-		Buf[count] = 0;
+        Buf[count] = 0;
 
-		count = sscanf(Buf, "%d.%d.%d.%d", &ipdig[0], &ipdig[1], &ipdig[2], &ipdig[3]);
+        count = sscanf(Buf, "%d.%d.%d.%d", &ipdig[0], &ipdig[1], &ipdig[2], &ipdig[3]);
         if (count == 4)
             return (ipdig[3] << 24) | (ipdig[2] << 16) | (ipdig[1] << 8) | ipdig[0];
 
@@ -100,7 +100,7 @@ long GetIwsIp()
 }
 
 /*##################  main ##########################
-*   Purpose....: Program entry-point	   					      	        #
+*   Purpose....: Program entry-point                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -108,30 +108,30 @@ long GetIwsIp()
 *##########################################################################*/
 void cdecl main()
 {
-    long IwsIp = GetIwsIp();    
+//    long IwsIp = GetIwsIp();    
 
-	TFtpSocketServerFactory Factory(21, 50, 0x4000);
+    TFtpSocketServerFactory Factory(21, 50, 0x4000);
 
-	if (IwsIp)
-	    Factory.SetMyIp(IwsIp);
+//    if (IwsIp)
+//        Factory.SetMyIp(IwsIp);
 
-	Factory.AddUser("c-drive", "rdos", "c:\\");
-	Factory.AddUser("d-drive", "rdos", "d:\\");
-	Factory.AddUser("e-drive", "rdos", "e:\\");
-	Factory.AddUser("f-drive", "rdos", "f:\\");
-	Factory.AddUser("g-drive", "rdos", "g:\\");
-	Factory.AddUser("h-drive", "rdos", "h\\");
-	Factory.AddUser("i-drive", "rdos", "i:\\");
-	Factory.AddUser("j-drive", "rdos", "j:\\");
-	Factory.AddUser("k-drive", "rdos", "k:\\");
-	Factory.AddUser("l-drive", "rdos", "l:\\");
-	Factory.AddUser("m-drive", "rdos", "m:\\");
-	Factory.AddUser("n-drive", "rdos", "n:\\");
-	Factory.AddUser("z-drive", "rdos", "z:\\");
-	Factory.OnCommand = WriteCommand;
-	Factory.SetDataPort(2100);
+    Factory.AddUser("c-drive", "rdos", "c:\\");
+    Factory.AddUser("d-drive", "rdos", "d:\\");
+    Factory.AddUser("e-drive", "rdos", "e:\\");
+    Factory.AddUser("f-drive", "rdos", "f:\\");
+    Factory.AddUser("g-drive", "rdos", "g:\\");
+    Factory.AddUser("h-drive", "rdos", "h\\");
+    Factory.AddUser("i-drive", "rdos", "i:\\");
+    Factory.AddUser("j-drive", "rdos", "j:\\");
+    Factory.AddUser("k-drive", "rdos", "k:\\");
+    Factory.AddUser("l-drive", "rdos", "l:\\");
+    Factory.AddUser("m-drive", "rdos", "m:\\");
+    Factory.AddUser("n-drive", "rdos", "n:\\");
+    Factory.AddUser("z-drive", "rdos", "z:\\");
+    Factory.OnCommand = WriteCommand;
+    Factory.SetDataPort(2100);
 
-	for (;;)
-		Factory.WaitForever();
+    for (;;)
+        Factory.WaitForever();
 }
 
