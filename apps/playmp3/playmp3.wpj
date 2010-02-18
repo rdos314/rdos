@@ -4,9 +4,9 @@ projectIdent
 VpeMain
 1
 WRect
-826
-458
-8235
+810
+175
+8228
 9216
 2
 MProject
@@ -28,10 +28,10 @@ WVList
 VComponent
 8
 WRect
-577
-565
-5675
-4291
+0
+0
+5680
+4300
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 11
 playmp3.tgt
 0
-1
+0
 7
