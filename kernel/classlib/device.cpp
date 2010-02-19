@@ -1416,7 +1416,7 @@ long TDeviceVar::GetSigned32()
         default:
             str = GetString();
             if (str)
-                sscanf(str, "%D", &val);
+                sscanf(str, "%ld", &val);
             break;
     }
     return val;

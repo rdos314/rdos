@@ -186,8 +186,9 @@ void TString::ConcatCopy(const char *str1, int len1, const char *str2, int len2)
 void TString::ConcatInPlace(const char *str, int size)
 {
     if (FData == 0)
-        AllocBuffer(size);
-            
+        AssignCopy(str, size + 1);
+    else 
+    {           
         if (size)
         {
                 if (FData->FRefs > 1 || FData->FDataSize + size > FData->FAllocSize)
@@ -203,6 +204,7 @@ void TString::ConcatInPlace(const char *str, int size)
                         *(FBuf+FData->FDataSize - 1) = 0;
                 }
         }
+    }
 }
 
 /*##########################################################################
