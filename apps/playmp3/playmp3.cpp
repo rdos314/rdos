@@ -17,6 +17,10 @@ int main(int argc, char **argv)
         TMp3Player mp3;
         char FileName[256];
 
+        i = 0;
+        scanf("%d", &i);
+        printf("%d", i);
+
         if (argc == 1)
         {
                 printf("usage: playmp3 filename\r\n");
