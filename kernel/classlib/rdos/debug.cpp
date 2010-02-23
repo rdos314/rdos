@@ -216,10 +216,12 @@ int TDebugThread::WriteMem(int Sel, long Offset, char *Buf, int Size)
 void TDebugThread::SetupGo()
 {
     int update = FALSE;
-        Tss tss;
-        unsigned char ch = 0;
+    Tss tss;
+    unsigned char ch = 0;
 
-        FWasTrace = FALSE;
+    FDebug = FALSE;
+    
+    FWasTrace = FALSE;
 
         RdosGetThreadTss(ThreadID, &tss);
         RdosReadThreadMem(ThreadID, tss.cs, tss.eip, (char *)&ch, 1);
@@ -255,10 +257,11 @@ void TDebugThread::SetupGo()
 void TDebugThread::SetupTrace()
 {
     int update = FALSE;
-        Tss tss;
-        unsigned char ch = 0;
+    Tss tss;
+    unsigned char ch = 0;
 
-        FWasTrace = TRUE;
+    FWasTrace = TRUE;
+    FDebug = FALSE;
 
     RdosGetThreadTss(ThreadID, &tss);
 
@@ -1631,6 +1634,15 @@ void TDebug::SignalNewData()
                         RdosWriteString("Terminate thread\r\n");
                         HandleTerminateThread(thread);
                         FThreadChanged = TRUE;
+						if (!CurrentThread)
+						{
+							CurrentThread = ThreadList;
+							while (CurrentThread && !CurrentThread->IsDebug())
+								CurrentThread = CurrentThread->Next;
+
+							if (!CurrentThread)
+								CurrentThread = ThreadList;
+                        }
                         break;
 
                 case EVENT_TERMINATE_PROCESS:

@@ -2003,7 +2003,7 @@ FreePeDll	Proc near
 ;
 	mov dx,es:lib_debug_lib
 	or dx,dx
-	jnz fdNotifyDone
+	jz fdNotifyDone
 ;
 	push es
 	mov ax,es
@@ -3328,21 +3328,34 @@ get_debug_event_data Proc far
 	pop edi
 ;
     mov al,ds:event_code
+    cmp al,EVENT_FREE_DLL
+    je gdedFreeDll
+;    
 	cmp al,EVENT_CREATE_PROCESS
 	je gdedDuplFile
 	cmp al,EVENT_LOAD_DLL
 	jne gdedDone
 
 gdedDuplFile:
+    mov bx,es:[edi+4]
+    mov ds,bx
+    AliasModuleHandle
+    mov es:[edi+4],bx	
+    mov ds:lib_local_handle,bx
+;
 	mov ax,es:[edi]
 	mov cx,es:[edi+2]
 	DuplFileInfo
 	movzx eax,bx
 	mov es:[edi],eax
 ;
-    mov bx,es:[edi+4]
-    AliasModuleHandle
-    mov es:[edi+4],bx	
+    jmp gdedDone
+
+gdedFreeDll:
+    mov bx,es:[edi]
+    mov ds,bx
+    mov bx,ds:lib_local_handle
+    mov es:[edi],bx	
 
 gdedDone:
 	pop esi
