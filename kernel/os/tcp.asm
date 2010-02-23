@@ -1963,6 +1963,8 @@ new_ack_congestion:
 	mov eax,es:[di].tcp_ack
 	Reverse
 	sub eax,ds:tcp_send_una
+	jl new_ack_done
+;	
 	mul eax
 	div ds:tcp_cwnd
 	add ds:tcp_cwnd,eax

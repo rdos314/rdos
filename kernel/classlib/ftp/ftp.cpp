@@ -371,7 +371,7 @@ int TFtp::GetFile(const char *remote, TFile *file)
         FGetFile = TRUE;
         SendPasv();
     
-        FAppSignal.WaitTimeout(25000);       
+        FAppSignal.WaitForever();       
 
         ok = FSuccess;
     }
