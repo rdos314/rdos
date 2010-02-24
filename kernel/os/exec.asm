@@ -737,7 +737,7 @@ load_process_fail:
 ;						DX			Debug module handle
 ;
 ;       RETURN VALUE:   AX		    Thread ID
-;						DX		    Aliased module handle (or 0 if no debugging)
+;                       DX          Process handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

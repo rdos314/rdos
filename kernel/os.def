@@ -507,5 +507,9 @@ device_reset_dtr_nr         EQU 348
 wait_for_line_state_nr      EQU 349
 get_line_state_nr           EQU 350
 
+create_proc_handle_nr       EQU 337
+deref_proc_handle_nr        EQU 340
+free_proc_handle_nr         EQU 341
+
 osgate_entries				EQU 360
 
