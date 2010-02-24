@@ -664,6 +664,30 @@ RdosSpawnDebug	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosFreeProcessHandle
+;
+;		description:	Free process handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosFreeProcessHandle
+
+RdosFreeProcessHandle	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov ebx,[ebp+8]
+	UserGate free_proc_handle_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosFreeProcessHandle	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosCpuReset
 ;
 ;		description:    Cpu reset

@@ -730,6 +730,7 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
 
     FThreadChanged = FALSE;
     FModuleChanged = FALSE;
+    FHandle = 0;
 
     Start("Debug device", 0x4000);
 }
@@ -747,6 +748,8 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
 ##########################################################################*/
 TDebug::~TDebug()
 {
+    if (FHandle)
+        RdosFreeProcessHandle(FHandle);
 }
 
 /*##########################################################################
