@@ -1054,6 +1054,12 @@ spawn_program32	Endp
 unload_exe_name DB 'Unload Exe',0
 	
 unload_exe	Proc far
+	mov bx,thread_sel
+	mov ds,bx
+	mov ds,ds:p_process_sel
+    mov ds,ds:ms_pd_sel
+    mov ds:pd_exit_code,ax
+;
 	push ax
 	UnhookMouse
 	mov ax,thread_app_sel

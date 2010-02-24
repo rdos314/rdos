@@ -794,9 +794,21 @@ init_process_block	PROC near
 	mov es:ms_virt_flags,7200h
 	mov es:ms_wait_sti,0
 	mov es:ms_thread_count,1
-	mov ax,es
+	mov bx,es
+;	
+	mov eax,SIZE proc_descr_seg
+	AllocateSmallGlobalMem
+	mov es:pd_proc_sel,bx
+	mov es:pd_exit_code,0
+	mov es:pd_ref_count,1
+    InitSection es:pd_section
+;    
+    mov ax,es
+    mov es,bx
+    mov es:ms_pd_sel,ax
+;	
 	pop es
-	mov es:p_process_sel,ax
+	mov es:p_process_sel,bx
 ;
 	push fs
 	push es
@@ -1417,6 +1429,28 @@ terminate_app_handled:
 	int 47h
 
 terminate_proc:
+	mov bx,thread_sel
+	mov ds,bx
+	mov ds,ds:p_process_sel
+    mov ds,ds:ms_pd_sel
+    sub ds:pd_ref_count,1
+    jz terminate_free_pd
+;
+    EnterSection ds:pd_section
+    mov ds:pd_proc_sel,0
+    LeaveSection ds:pd_section
+    xor ax,ax
+    mov ds,ax
+    jmp terminate_pd_done    
+
+terminate_free_pd:
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem        
+
+terminate_pd_done:
 	call trap_terminate_thread
 	call free_handle_process
 	call trap_terminate_process
