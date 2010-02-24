@@ -462,4 +462,6 @@ is_tcp_connection_idle_nr	= 379
 
 set_codec_gpio0_nr	        = 380
 
-usergate_entries			= 381
+free_proc_handle_nr         = 381
+
+usergate_entries			= 382

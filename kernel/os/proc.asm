@@ -231,7 +231,7 @@ free_proc_handle_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 free_proc_handle    Endp
 
 PAGE
@@ -388,9 +388,9 @@ init_thread	PROC near
 ;
 	mov si,OFFSET free_proc_handle
 	mov di,OFFSET free_proc_handle_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,free_proc_handle_nr
-	RegisterOsGate
+	RegisterBimodalUserGate
 ;
 	pop ds
 	popa

@@ -90,6 +90,7 @@ s_param				DW ?
 s_thread			DW ?
 s_app				DW ?
 s_ret_code			DW ?
+s_proc_sel          DW ?
 s_sect1				section_typ <>
 s_sect2				section_typ <>
 s_switch			DB ?

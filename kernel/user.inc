@@ -589,7 +589,7 @@ DosExtExec	MACRO
 ; IN  FS:(E)BX	Startup directory & drive
 ; IN  DX		Debug module handle
 ; OUT AX		Thread #
-; OUT DX		Module handle
+; OUT DX		Process handle
 SpawnExe	MACRO
 	UserGate spawn_exe_nr
 					ENDM
@@ -597,6 +597,11 @@ SpawnExe	MACRO
 ; IN  AX		Exit code
 UnloadExe	MACRO
 	UserGate unload_exe_nr
+					ENDM
+
+; IN  BX        Process handle
+FreeProcHandle	MACRO
+	UserGate free_proc_handle_nr
 					ENDM
 
 ; IN  EAX		0 = don't show text
@@ -845,32 +850,32 @@ SuspendAndSignalThread     MACRO
 	UserGate suspend_and_signal_thread_nr
 						ENDM
 
-;  IN  AX   Module handle
+;  IN  AX   Process handle
 ;  IN  BX	Wait handle
 ;  IN  ECX  Signalled ID
 AddWaitForDebugEvent MACRO
 	UserGate add_wait_for_debug_event_nr
 						ENDM
 
-;  IN  BX   Module handle
+;  IN  BX   Process handle
 ;  OUT AX   Thread #
 ;  OUT BL   Event type  
 GetDebugEvent MACRO
 	UserGate get_debug_event_nr
 						ENDM
 
-;  IN  BX       Module handle
+;  IN  BX       Process handle
 ;  IN  ES:EDI	Event buffer
 GetDebugEventData MACRO
 	UserGate get_debug_event_data_nr
 						ENDM
 
-;  IN  BX       Module handle
+;  IN  BX       Process handle
 ClearDebugEvent MACRO
 	UserGate clear_debug_event_nr
 						ENDM
 
-;  IN  BX       Module handle
+;  IN  BX       Process handle
 ;  IN  EAX	    Thread #
 ContinueDebugEvent MACRO
 	UserGate continue_debug_event_nr

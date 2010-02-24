@@ -1594,11 +1594,6 @@ DerefProcHandle	MACRO
 	OsGate deref_proc_handle_nr
 					ENDM
 
-; IN  BX        Process handle
-FreeProcHandle	MACRO
-	OsGate free_proc_handle_nr
-					ENDM
-
 ;;;;;;;;;;;; FOCUS ;;;;;;;;;;;;;
 
 ;	ES:DI		ADDRESS TILL CALLBACK

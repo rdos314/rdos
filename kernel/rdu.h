@@ -462,3 +462,5 @@
 
 #define CallGate_set_codec_gpio0 0x9a 124 1 0 0 2 0
 
+#define CallGate_free_proc_handle 0x9a 125 1 0 0 2 0
+

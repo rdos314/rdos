@@ -308,6 +308,7 @@ int RDOSAPI RdosExec(const char *prog, const char *param);
 int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, int *thread);
 int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, int *thread);
 void RDOSAPI RdosUnloadExe(int ExitCode);
+void RDOSAPI RdosFreeProcessHandle(int handle);
 int RDOSAPI RdosShowExceptionText();
 void RDOSAPI RdosWaitMilli(int ms);
 void RDOSAPI RdosWaitMicro(int us);
@@ -467,7 +468,7 @@ int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
 void * RDOSAPI RdosGetModuleProc(int handle, const char *ProcName);
 char RDOSAPI RdosGetModuleFocusKey(int handle);
 
-void RDOSAPI RdosAddWaitForDebugEvent(int Handle, int ModuleHandle, void *ID);
+void RDOSAPI RdosAddWaitForDebugEvent(int Handle, int ProcessHandle, void *ID);
 char RDOSAPI RdosGetDebugEvent(int handle, int *thread);
 void RDOSAPI RdosGetDebugEventData(int handle, void *buf);
 void RDOSAPI RdosClearDebugEvent(int handle);
@@ -1189,6 +1190,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosUnloadExe = \
     CallGate_unload_exe  \
     parm [eax];
+
+#pragma aux RdosFreeProcessHandle = \
+    CallGate_free_proc_handle  \
+    parm [ebx];
 
 #pragma aux RdosShowExceptionText = \
     CallGate_show_exception_text  \
@@ -3152,6 +3157,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosUnloadExe = \
     CallGate_unload_exe  \
     parm [eax];
+
+#pragma aux RdosFreeProcessHandle = \
+    CallGate_free_proc_handle  \
+    parm [bx];
 
 #pragma aux RdosShowExceptionText = \
     CallGate_show_exception_text  \

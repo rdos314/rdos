@@ -830,6 +830,13 @@ spawn_dir_ok:
 	mov ds,ax
 	mov ax,ds:app_sel
 	mov gs:s_app,ax
+;
+	mov ax,thread_sel
+	mov ds,ax
+	mov ds,ds:p_process_sel
+    mov ax,ds:ms_pd_sel
+    mov gs:s_proc_sel,ax
+;
 	mov ax,gs
 	mov ds,ax
 	mov es,ax
@@ -964,40 +971,43 @@ spawn_focus_done:
 	mov ax,gs
 	mov ds,ax
 	EnterSection ds:s_sect1
+;
 	mov ax,ds:s_thread
 	mov dx,ds:s_app
 	mov bx,ds:s_ret_code
-	LeaveSection ds:s_sect2
+	mov cx,ds:s_proc_sel
 ;
     or bx,bx
     jnz spawn_no_pid
 ;    
-    push es
     mov es,ax
     mov ax,es:p_id
-    pop es
 ;
     push ax
     push bx
 ;    
-	mov ax,gs:s_param
+	mov ax,ds:s_param
 	or ax,ax
-	jz spawn_no_debug_alias
+	jz spawn_lib_ok
 ;	
-    mov ds,dx
-    mov bx,ds:app_lib_sel
-    AliasModuleHandle
-    mov ax,bx
+    mov es,dx
+    mov ax,es:app_lib_sel
 
-spawn_no_debug_alias:
-    mov dx,ax
+spawn_lib_ok:
+    mov dx,cx
+    CreateProcHandle
+    mov dx,bx
+;    
     pop bx
     pop ax
 
 spawn_no_pid:
+	LeaveSection ds:s_sect2
+;
    	xor cx,cx
 	mov ds,cx
 	mov fs,cx
+	mov gs,cx
 ;
 	or bx,bx
 	jz spawn_ok

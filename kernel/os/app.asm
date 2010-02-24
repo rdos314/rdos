@@ -66,7 +66,7 @@ module_handle_seg		ENDS
 debug_event_wait_header	STRUC
 
 dew_obj			wait_obj_header <>
-dew_handle		DW ?
+dew_lib_sel		DW ?
 
 debug_event_wait_header	ENDS
 
@@ -1543,16 +1543,7 @@ start_wait_for_debug_event	PROC far
     push eax
     push bx
 ;
-    mov bx,es:dew_handle
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc start_wait_for_done
-;
-    mov bx,[bx].mh_sel
-    or bx,bx
-    stc
-    jz start_wait_for_done
-;
+    mov bx,es:dew_lib_sel
     mov ds,bx
     mov eax,ds:mod_start_wait_for_debug_event_proc
     or eax,eax
@@ -1584,16 +1575,7 @@ stop_wait_for_debug_event	PROC far
     push eax
     push bx
 ;
-    mov bx,es:dew_handle
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc stop_wait_for_done
-;
-    mov bx,[bx].mh_sel
-    or bx,bx
-    stc
-    jz stop_wait_for_done
-;
+    mov bx,es:dew_lib_sel
     mov ds,bx
     mov eax,ds:mod_stop_wait_for_debug_event_proc
     or eax,eax
@@ -1644,16 +1626,7 @@ is_debug_event_idle	PROC far
     push eax
     push bx
 ;
-    mov bx,es:dew_handle
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc is_idle_done
-;
-    mov bx,[bx].mh_sel
-    or bx,bx
-    stc
-    jz is_idle_done
-;
+    mov bx,es:dew_lib_sel
     mov ds,bx
     mov eax,ds:mod_is_debug_event_idle_proc
     or eax,eax
@@ -1676,7 +1649,7 @@ is_debug_event_idle Endp
 ;
 ;		DESCRIPTION:	Add a wait for debug event
 ;
-;		PARAMETERS:		AX      Module handle
+;		PARAMETERS:		AX      Process handle
 ;                       BX      Wait handle
 ;                       ECX     Signalled ID
 ;
@@ -1694,7 +1667,14 @@ add_wait_for_debug_event	PROC far
 	push ds
 	push es
 	push eax
+	push dx
 	push di
+;
+    push bx
+    mov bx,ax
+    DerefProcHandle
+	pop bx
+    jc add_wait_done
 ;
     push ax
     mov ax,cs
@@ -1704,11 +1684,12 @@ add_wait_for_debug_event	PROC far
     AddWait
     pop ax
     jc add_wait_done
-;
-	mov es:dew_handle,ax
+;    
+	mov es:dew_lib_sel,ax
 
 add_wait_done:
     pop di
+    pop dx
     pop eax
     pop es
     pop ds
@@ -1724,7 +1705,7 @@ PAGE
 ;
 ;		DESCRIPTION:    Get current debug event
 ;
-;		PARAMETERS:		BX      Module handle
+;		PARAMETERS:		BX      Process handle
 ;
 ;       RETURNS:        AX      Thread ID
 ;                       BL      Event type  
@@ -1736,19 +1717,13 @@ get_debug_event_name	DB 'Get Debug Event',0
 get_debug_event  Proc far
     push ds
     push ecx
+    push dx
 ;    
-    push ax
-	mov ax,MODULE_HANDLE
-	DerefHandle
-	pop ax
+    DerefProcHandle
 	jc get_debug_event_done
 ;
-    mov bx,[bx].mh_sel
-    or bx,bx
-    stc
-    jz get_debug_event_done
-;
-    mov ds,bx
+    mov bx,ax
+    mov ds,ax
     mov ecx,ds:mod_get_debug_event_proc
     or ecx,ecx
     stc
@@ -1757,6 +1732,7 @@ get_debug_event  Proc far
     call ds:mod_get_debug_event_proc
 
 get_debug_event_done:
+    pop dx
     pop ecx
     pop ds
     retf32
@@ -1780,24 +1756,22 @@ get_debug_event_data32  Proc far
     push ds
     push eax
     push bx
+    push dx
 ;    
-	mov ax,MODULE_HANDLE
-	DerefHandle
+    DerefProcHandle
 	jc get_debug_event_data_done32
 ;
-    mov bx,[bx].mh_sel
-    or bx,bx
-    stc
-    jz get_debug_event_data_done32
-;
-    mov ds,bx
+    mov ds,ax
+    mov bx,ax
     mov eax,ds:mod_get_debug_event_data_proc
+    or eax,eax
     stc
     jz get_debug_event_data_done32
 ;    
     call ds:mod_get_debug_event_data_proc
 
 get_debug_event_data_done32:
+    pop dx
     pop bx
     pop eax
     pop ds
@@ -1808,19 +1782,14 @@ get_debug_event_data16  Proc far
     push ds
     push eax
     push bx
+    push dx
     push edi
-;    
-    movzx edi,di
-	mov ax,MODULE_HANDLE
-	DerefHandle
+;        
+    DerefProcHandle
 	jc get_debug_event_data_done16
 ;
-    mov bx,[bx].mh_sel
-    or bx,bx
-    stc
-    jz get_debug_event_data_done16
-;
-    mov ds,bx
+    mov bx,ax
+    mov ds,ax
     mov eax,ds:mod_get_debug_event_data_proc
     or eax,eax
     stc
@@ -1830,6 +1799,7 @@ get_debug_event_data16  Proc far
 
 get_debug_event_data_done16:
     pop edi
+    pop dx
     pop bx
     pop eax
     pop ds
@@ -1851,21 +1821,16 @@ clear_debug_event_name	DB 'Clear Debug Event',0
 
 clear_debug_event  Proc far
     push ds
+    push ax
     push bx
     push ecx
-;    
-    push ax
-	mov ax,MODULE_HANDLE
-	DerefHandle
-	pop ax
+    push dx
+;        
+    DerefProcHandle
 	jc clear_debug_event_done
 ;
-    mov bx,[bx].mh_sel
-    or bx,bx
-    stc
-    jz clear_debug_event_done
-;
-    mov ds,bx
+    mov bx,ax
+    mov ds,ax
     mov ecx,ds:mod_clear_debug_event_proc
     or ecx,ecx
     stc
@@ -1874,8 +1839,10 @@ clear_debug_event  Proc far
     call ds:mod_clear_debug_event_proc
 
 clear_debug_event_done:
+    pop dx
     pop ecx
     pop bx
+    pop ax
     pop ds
     retf32
 clear_debug_event  Endp
@@ -1898,19 +1865,16 @@ continue_debug_event  Proc far
     push ds
     push bx
     push ecx
-;    
-    push ax
-	mov ax,MODULE_HANDLE
-	DerefHandle
-	pop ax
+    push dx
+    push esi
+;        
+    mov esi,eax
+    DerefProcHandle
 	jc continue_debug_event_done
 ;
-    mov bx,[bx].mh_sel
-    or bx,bx
-    stc
-    jz continue_debug_event_done
-;
-    mov ds,bx
+    mov bx,ax
+    mov ds,ax
+    mov eax,esi
     mov ecx,ds:mod_continue_debug_event_proc
     or ecx,ecx
     stc
@@ -1919,6 +1883,8 @@ continue_debug_event  Proc far
     call ds:mod_continue_debug_event_proc
 
 continue_debug_event_done:
+    pop esi
+    pop dx
     pop ecx
     pop bx
     pop ds
