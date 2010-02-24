@@ -38,6 +38,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\handle.inc
+include ..\wait.inc
 
 thread_data_seg	STRUC
 
@@ -65,6 +66,13 @@ ph_lib_sel              DW ?
 ph_proc_sel             DW ?
 
 proc_handle_seg		ENDS
+
+proc_end_wait_header	STRUC
+
+pew_obj		    	wait_obj_header <>
+pew_proc_sel		DW ?
+
+proc_end_wait_header	ENDS
 
 process_callback_seg	STRUC
 cm_mode		DW ?
@@ -940,6 +948,7 @@ init_process_block	PROC near
 	mov es:pd_proc_sel,bx
 	mov es:pd_exit_code,0
 	mov es:pd_ref_count,1
+	mov es:pd_wait,0
     InitSection es:pd_section
 ;    
     mov ax,es
@@ -1577,6 +1586,14 @@ terminate_proc:
 ;
     EnterSection ds:pd_section
     mov ds:pd_proc_sel,0
+    mov ax,ds:pd_wait
+    or ax,ax
+    jz terminate_proc_sig_done
+;
+	mov es,ax
+	SignalWait
+
+terminate_proc_sig_done:   
     LeaveSection ds:pd_section
     xor ax,ax
     mov ds,ax

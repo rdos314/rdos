@@ -50,8 +50,8 @@
 TExecCommand::TExecCommand(TSession *session, const char *name, const char *param, int detach)
   : TCommand(session, param)
 {
-	FDetach = detach;
-	FProgName = name;
+    FDetach = detach;
+    FProgName = name;
 }
 
 /*##########################################################################
@@ -67,16 +67,22 @@ TExecCommand::TExecCommand(TSession *session, const char *name, const char *para
 ##########################################################################*/
 int TExecCommand::Execute(char *param)
 {
-	TPathName StartupDir;
-	int ThreadId;
+    TPathName StartupDir;
+    int ThreadId;
+    int Handle;
 
-	if (FDetach)
-	{
-		if (RdosSpawn(FProgName.GetData(), param, StartupDir.Get().GetData(), &ThreadId))
-			return 0;
-		else
-			 return -1;
-	 }
-	 else
-		  return RdosExec(FProgName.GetData(), param);
+    if (FDetach)
+    {
+        Handle = RdosSpawn(FProgName.GetData(), param, StartupDir.Get().GetData(), &ThreadId);
+        if (Handle)
+        {
+            RdosFreeProcessHandle(Handle);
+            return 0;
+         }
+         else
+            return -1;
+     }
+     else
+          return RdosExec(FProgName.GetData(), param);
 }
+

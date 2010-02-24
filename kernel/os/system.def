@@ -193,6 +193,7 @@ thread_seg	ENDS
 proc_descr_seg  STRUC
     pd_proc_sel     DW ?
     pd_exit_code    DW ?
+    pd_wait         DW ?
     pd_ref_count    DB ?
     pd_section		section_typ <>    
 proc_descr_seg  ENDS
