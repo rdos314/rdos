@@ -37,6 +37,7 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
+INCLUDE ..\handle.inc
 
 thread_data_seg	STRUC
 
@@ -55,6 +56,15 @@ init_tasking_arr		DW 2*32 DUP(?)
 proc_data_sel_size		DB ?
 
 thread_data_seg	ENDS
+
+proc_handle_seg		STRUC
+
+ph_base	handle_header <>
+
+ph_lib_sel              DW ?
+ph_proc_sel             DW ?
+
+proc_handle_seg		ENDS
 
 process_callback_seg	STRUC
 cm_mode		DW ?
@@ -112,6 +122,117 @@ code	SEGMENT byte public use16 'CODE'
 	extrn free_handle_process:near
 
 	assume cs:code
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateProcHandle
+;
+;		DESCRIPTION:	Create a process handle
+;
+;       PARAMETERS:     AX      Lib selector
+;                       DX      Process descriptor
+;
+;       RETURNS:        BX      Process handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_proc_handle_name	DB 'Create Process Handle',0
+
+create_proc_handle	PROC far
+    push ds
+	mov cx,SIZE proc_handle_seg
+	AllocateHandle
+	mov [bx].ph_lib_sel,ax
+	mov [bx].ph_proc_sel,dx
+	mov [bx].hh_sign,PROCESS_HANDLE
+	mov bx,[bx].hh_handle
+;
+    mov ds,dx
+    inc ds:pd_ref_count
+;    	
+    pop ds
+    ret
+create_proc_handle  Endp    
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DerefProcHandle
+;
+;		DESCRIPTION:	Deref a process handle
+;
+;       PARAMETERS:     BX      Process handle
+;
+;       RETURNS:        AX      Lib selector
+;                       DX      Process descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+deref_proc_handle_name	DB 'Deref Process Handle',0
+
+deref_proc_handle	PROC far
+    push ds
+    push bx
+;    
+	mov ax,PROCESS_HANDLE
+	DerefHandle
+	jc deref_proc_handle_done
+;
+	mov ax,[bx].ph_lib_sel
+	mov dx,[bx].ph_proc_sel
+
+deref_proc_handle_done:
+    pop bx
+    pop ds
+    ret
+deref_proc_handle   Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FreeProcHandle
+;
+;		DESCRIPTION:	Free a process handle
+;
+;       PARAMETERS:     BX      Process handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_proc_handle_name	DB 'Free Process Handle',0
+
+free_proc_handle	PROC far
+    push ds
+    push ax
+    push bx
+    push dx
+;    
+	mov ax,PROCESS_HANDLE
+	DerefHandle
+	jc free_proc_handle_done
+;
+	mov dx,[bx].ph_proc_sel
+	FreeHandle
+;	
+    mov ds,dx
+    sub ds:pd_ref_count,1
+    jnz free_proc_handle_done
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem        
+    pop es
+
+free_proc_handle_done:
+    pop dx
+    pop bx
+    pop ax
+    pop ds
+    ret
+free_proc_handle    Endp
 
 PAGE
 
@@ -251,6 +372,24 @@ init_thread	PROC near
 	mov di,OFFSET hook_init_tasking_name
 	xor cl,cl
 	mov ax,hook_init_tasking_nr
+	RegisterOsGate
+;
+	mov si,OFFSET create_proc_handle
+	mov di,OFFSET create_proc_handle_name
+	xor cl,cl
+	mov ax,create_proc_handle_nr
+	RegisterOsGate
+;
+	mov si,OFFSET deref_proc_handle
+	mov di,OFFSET deref_proc_handle_name
+	xor cl,cl
+	mov ax,deref_proc_handle_nr
+	RegisterOsGate
+;
+	mov si,OFFSET free_proc_handle
+	mov di,OFFSET free_proc_handle_name
+	xor cl,cl
+	mov ax,free_proc_handle_nr
 	RegisterOsGate
 ;
 	pop ds
