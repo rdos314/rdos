@@ -606,6 +606,12 @@ AddWaitForProcEnd MACRO
 	UserGate add_wait_for_proc_end_nr
 						ENDM
 
+;  IN  BX   Process handle
+;  OUT AX	Exit code
+GetProcExitCode	MACRO
+	UserGate get_proc_exit_code_nr
+					ENDM
+
 ; IN  BX        Process handle
 FreeProcHandle	MACRO
 	UserGate free_proc_handle_nr

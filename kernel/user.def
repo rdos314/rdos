@@ -464,5 +464,6 @@ set_codec_gpio0_nr	        = 380
 
 free_proc_handle_nr         = 381
 add_wait_for_proc_end_nr    = 382
+get_proc_exit_code_nr       = 383
 
-usergate_entries			= 383
+usergate_entries			= 384

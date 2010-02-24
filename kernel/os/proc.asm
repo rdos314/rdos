@@ -189,6 +189,7 @@ deref_proc_handle	PROC far
 ;
 	mov ax,[bx].ph_lib_sel
 	mov dx,[bx].ph_proc_sel
+	clc
 
 deref_proc_handle_done:
     pop bx
@@ -233,6 +234,7 @@ free_proc_handle	PROC far
     mov ds,ax
     FreeMem        
     pop es
+    clc
 
 free_proc_handle_done:
     pop dx
@@ -241,6 +243,42 @@ free_proc_handle_done:
     pop ds
     retf32
 free_proc_handle    Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetProcExitCode
+;
+;		DESCRIPTION:	Get process exit code
+;
+;       PARAMETERS:     BX      Process handle
+;
+;       RETURNS:        AX      Exit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_proc_exit_code_name	DB 'Get Process Exit Code',0
+
+get_proc_exit_code	PROC far
+    push ds
+    push bx
+;    
+	mov ax,PROCESS_HANDLE
+	DerefHandle
+	mov ax,-1
+	jc get_proc_exit_done
+;
+	mov ds,[bx].ph_proc_sel
+	mov ax,ds:pd_exit_code
+	clc
+
+get_proc_exit_done:
+    pop bx
+    pop ds
+    retf32
+get_proc_exit_code   Endp
 
 PAGE
 	
@@ -560,6 +598,12 @@ init_thread	PROC near
 	mov di,OFFSET free_proc_handle_name
 	xor dx,dx
 	mov ax,free_proc_handle_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_proc_exit_code
+	mov di,OFFSET get_proc_exit_code_name
+	xor dx,dx
+	mov ax,get_proc_exit_code_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET add_wait_for_proc_end

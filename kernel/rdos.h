@@ -309,6 +309,7 @@ int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir,
 int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, int *thread);
 void RDOSAPI RdosUnloadExe(int ExitCode);
 void RDOSAPI RdosFreeProcessHandle(int handle);
+int RDOSAPI RdosGetProcessExitCode(int handle);
 void RDOSAPI RdosAddWaitForProcessEnd(int Handle, int ProcessHandle, void *ID);
 int RDOSAPI RdosShowExceptionText();
 void RDOSAPI RdosWaitMilli(int ms);
@@ -1199,6 +1200,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosAddWaitForProcessEnd = \
     CallGate_add_wait_for_proc_end  \
     parm [ebx] [eax] [ecx];
+
+#pragma aux RdosGetProcessExitCode = \
+    CallGate_get_proc_exit_code  \
+    "movsx eax,ax" \
+    parm [ebx]  \
+    value [eax];
 
 #pragma aux RdosShowExceptionText = \
     CallGate_show_exception_text  \
@@ -3170,6 +3177,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosAddWaitForProcessEnd = \
     CallGate_add_wait_for_proc_end  \
     parm [bx] [ax] [ecx];
+
+#pragma aux RdosGetProcessExitCode = \
+    CallGate_get_proc_exit_code  \
+    parm [bx]  \
+    value [ax];
 
 #pragma aux RdosShowExceptionText = \
     CallGate_show_exception_text  \
