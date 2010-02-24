@@ -599,6 +599,13 @@ UnloadExe	MACRO
 	UserGate unload_exe_nr
 					ENDM
 
+;  IN  AX   Process handle
+;  IN  BX	Wait handle
+;  IN  ECX  Signalled ID
+AddWaitForProcEnd MACRO
+	UserGate add_wait_for_proc_end_nr
+						ENDM
+
 ; IN  BX        Process handle
 FreeProcHandle	MACRO
 	UserGate free_proc_handle_nr

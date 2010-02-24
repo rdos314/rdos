@@ -243,6 +243,168 @@ free_proc_handle_done:
 free_proc_handle    Endp
 
 PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StartWaitForProcEnd
+;
+;		DESCRIPTION:	Start a wait for process end event
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_proc_end	PROC far
+    push ds
+    push eax
+;
+	ClearSignal
+    mov ax,es:pew_proc_sel
+    mov ds,ax
+	mov ds:pd_wait,es
+;
+	mov ax,ds:pd_proc_sel
+	or ax,ax
+    jnz start_wait_done
+;
+	mov ds:pd_wait,0
+    SignalWait
+
+start_wait_done:    
+    pop eax
+    pop ds
+    ret
+start_wait_for_proc_end Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StopWaitForProcEnd
+;
+;		DESCRIPTION:	Stop a wait for process end event
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_proc_end	PROC far
+    push ds
+    push eax
+;
+    mov ax,es:pew_proc_sel
+    mov ds,ax
+	mov ds:pd_wait,0
+;    
+    pop eax
+    pop ds
+    ret
+stop_wait_for_proc_end Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DummyClearProcEnd
+;
+;		DESCRIPTION:	Clear process end event
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dummy_clear_proc_end	PROC far
+    ret
+dummy_clear_proc_end Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			IsProcEndIdle
+;
+;		DESCRIPTION:	Check if proc end is idle
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_proc_end_idle	PROC far
+    push ds
+    push eax
+;
+    mov ax,es:pew_proc_sel
+    mov ds,ax
+	mov ax,ds:pd_proc_sel
+	or ax,ax
+	clc
+	jne is_idle_done
+;
+	stc
+
+is_idle_done:    
+    pop eax
+    pop ds
+    ret
+is_proc_end_idle Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddWaitForProcEnd
+;
+;		DESCRIPTION:	Add a wait for process end
+;
+;		PARAMETERS:		AX      Process handle
+;                       BX      Wait handle
+;                       ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_proc_end_name	DB 'Add Wait For Process End',0
+
+add_wait_tab:
+aw0	DW OFFSET start_wait_for_proc_end,    	kernel_code
+aw1 DW OFFSET stop_wait_for_proc_end,		kernel_code
+aw2	DW OFFSET dummy_clear_proc_end,			kernel_code
+aw3	DW OFFSET is_proc_end_idle,		    	kernel_code
+
+add_wait_for_proc_end	PROC far
+	push ds
+	push es
+	push eax
+	push dx
+	push di
+;
+    push bx
+    mov bx,ax
+    DerefProcHandle
+	pop bx
+    jc add_wait_done
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+   	mov ax,SIZE proc_end_wait_header - SIZE wait_obj_header
+    mov di,OFFSET add_wait_tab
+    AddWait
+    pop ax
+    jc add_wait_done
+;    
+	mov es:pew_proc_sel,dx
+
+add_wait_done:
+    pop di
+    pop dx
+    pop eax
+    pop es
+    pop ds
+	retf32
+add_wait_for_proc_end	ENDP
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -398,6 +560,12 @@ init_thread	PROC near
 	mov di,OFFSET free_proc_handle_name
 	xor dx,dx
 	mov ax,free_proc_handle_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET add_wait_for_proc_end
+	mov di,OFFSET add_wait_for_proc_end_name
+	xor dx,dx
+	mov ax,add_wait_for_proc_end_nr
 	RegisterBimodalUserGate
 ;
 	pop ds
