@@ -561,6 +561,7 @@ RdosExec	ENDP
 ;       parameters:     exe name
 ;                       cmd line
 ;                       start directory
+;                       env
 ;                       &thread handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -570,24 +571,66 @@ RdosExec	ENDP
 RdosSpawn	PROC
 	push ebp
 	mov ebp,esp
-	push fs
-	push ebx
+	sub esp,18h
 	push edx
 	push esi
 	push edi
 ;
-    mov dx,ds
-    mov fs,dx
-    xor edx,edx
 	mov esi,[ebp+8]
-	mov edi,[ebp+12]
-    mov ebx,[ebp+16]
+	mov edi,ebp
+	sub edi,18h
+	mov eax,[ebp+12]
+	or eax,eax
+	jz rsNoParam
+;
+    mov [edi],eax
+    mov eax,ds
+    mov [edi+4],eax
+    jmp rsParamOk
+
+rsNoParam:
+    xor eax,eax
+    mov [edi],eax
+    mov [edi+4],eax
+
+rsParamOk:
+	mov eax,[ebp+16]
+	or eax,eax
+	jz rsNoDir
+;
+    mov [edi+8],eax
+    mov eax,ds
+    mov [edi+12],eax
+    jmp rsDirOk
+
+rsNoDir:
+    xor eax,eax
+    mov [edi+8],eax
+    mov [edi+12],eax
+
+rsDirOk:
+	mov eax,[ebp+20]
+	or eax,eax
+	jz rsNoEnv
+;
+    mov [edi+16],eax
+    mov eax,ds
+    mov [edi+20],eax
+    jmp rsEnvOk
+
+rsNoEnv:
+    xor eax,eax
+    mov [edi+16],eax
+    mov [edi+20],eax
+
+rsEnvOk:
+    xor edx,edx
 	UserGate spawn_exe_nr
 	jc rsFail
 ;	
-    mov ebx,[ebp+20]
+    mov esi,[ebp+24]
     movzx eax,ax
-    mov [ebx],eax
+    mov [esi],eax
 ;
     movzx eax,dx
     jmp rsDone
@@ -599,10 +642,9 @@ rsDone:
 	pop edi
 	pop esi
 	pop edx
-	pop ebx
-	pop fs
+	add esp,18h
 	pop ebp
-	ret 16
+	ret 20
 RdosSpawn	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -615,9 +657,8 @@ RdosSpawn	ENDP
 ;       parameters:     exe name
 ;                       cmd line
 ;                       start directory
+;                       env
 ;                       &thread handle
-;
-;       returns:        Process handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -626,24 +667,66 @@ RdosSpawn	ENDP
 RdosSpawnDebug	PROC
 	push ebp
 	mov ebp,esp
-	push fs
-	push ebx
+	sub esp,18h
 	push edx
 	push esi
 	push edi
 ;
-    mov edx,fs:pvModuleHandle
-    mov bx,ds
-    mov fs,bx
 	mov esi,[ebp+8]
-	mov edi,[ebp+12]
-    mov ebx,[ebp+16]
+	mov edi,ebp
+	sub edi,18h
+	mov eax,[ebp+12]
+	or eax,eax
+	jz rsdNoParam
+;
+    mov [edi],eax
+    mov eax,ds
+    mov [edi+4],eax
+    jmp rsdParamOk
+
+rsdNoParam:
+    xor eax,eax
+    mov [edi],eax
+    mov [edi+4],eax
+
+rsdParamOk:
+	mov eax,[ebp+16]
+	or eax,eax
+	jz rsdNoDir
+;
+    mov [edi+8],eax
+    mov eax,ds
+    mov [edi+12],eax
+    jmp rsdDirOk
+
+rsdNoDir:
+    xor eax,eax
+    mov [edi+8],eax
+    mov [edi+12],eax
+
+rsdDirOk:
+	mov eax,[ebp+20]
+	or eax,eax
+	jz rsdNoEnv
+;
+    mov [edi+16],eax
+    mov eax,ds
+    mov [edi+20],eax
+    jmp rsdEnvOk
+
+rsdNoEnv:
+    xor eax,eax
+    mov [edi+16],eax
+    mov [edi+20],eax
+
+rsdEnvOk:
+    mov edx,fs:pvModuleHandle
 	UserGate spawn_exe_nr
 	jc rsdFail
 ;	
-    mov ebx,[ebp+20]
+    mov esi,[ebp+24]
     movzx eax,ax
-    mov [ebx],eax
+    mov [esi],eax
 ;
     movzx eax,dx
     jmp rsdDone
@@ -655,10 +738,9 @@ rsdDone:
 	pop edi
 	pop esi
 	pop edx
-	pop ebx
-	pop fs
+	add esp,18h
 	pop ebp
-	ret 16
+	ret 20
 RdosSpawnDebug	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

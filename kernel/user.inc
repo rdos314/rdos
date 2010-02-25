@@ -585,16 +585,6 @@ DosExtExec	MACRO
 					ENDM
 
 ; IN  DS:(E)SI	Program name
-; IN  ES:(E)DI	Command line
-; IN  FS:(E)BX	Startup directory & drive
-; IN  DX		Debug module handle
-; OUT AX		Thread #
-; OUT DX		Process handle
-SpawnExe	MACRO
-	UserGate spawn_exe_nr
-					ENDM
-
-; IN  DS:(E)SI	Program name
 ; IN  ES:(E)DI	Parameters
 ;               +0  Command line
 ;               +8  Startup directory & drive
@@ -602,8 +592,8 @@ SpawnExe	MACRO
 ; IN  DX		Debug module handle
 ; OUT AX		Thread #
 ; OUT DX		Process handle
-NewSpawnExe	MACRO
-	UserGate new_spawn_nr
+SpawnExe	MACRO
+	UserGate spawn_exe_nr
 					ENDM
 
 ; IN  AX		Exit code
