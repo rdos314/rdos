@@ -594,6 +594,18 @@ SpawnExe	MACRO
 	UserGate spawn_exe_nr
 					ENDM
 
+; IN  DS:(E)SI	Program name
+; IN  ES:(E)DI	Parameters
+;               +0  Command line
+;               +8  Startup directory & drive
+;               +12 Environment
+; IN  DX		Debug module handle
+; OUT AX		Thread #
+; OUT DX		Process handle
+NewSpawnExe	MACRO
+	UserGate new_spawn_nr
+					ENDM
+
 ; IN  AX		Exit code
 UnloadExe	MACRO
 	UserGate unload_exe_nr

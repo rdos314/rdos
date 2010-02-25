@@ -466,4 +466,6 @@ free_proc_handle_nr         = 381
 add_wait_for_proc_end_nr    = 382
 get_proc_exit_code_nr       = 383
 
-usergate_entries			= 384
+new_spawn_nr                = 384
+
+usergate_entries			= 385

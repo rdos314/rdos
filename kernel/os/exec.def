@@ -85,6 +85,7 @@ spawn_struc	STRUC
 s_name				DW ?
 s_cmd				DW ?
 s_curr_dir			DW ?
+s_env               DW ?
 s_loader_name		DD ?
 s_param				DW ?
 s_thread			DW ?
@@ -96,3 +97,14 @@ s_sect2				section_typ <>
 s_switch			DB ?
 
 spawn_struc	ENDS
+
+spawn_param_struc   STRUC
+
+sp_param_offs       DD ?
+sp_param_sel        DD ?
+sp_startdir_offs    DD ?
+sp_startdir_sel     DD ?
+sp_env_offs         DD ?
+sp_env_sel          DD ?
+
+spawn_param_struc   ENDS

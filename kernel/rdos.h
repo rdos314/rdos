@@ -173,6 +173,7 @@ typedef struct _EXCEPTION_POINTERS {
     CONTEXT *ContextRecord;
 } EXCEPTION_POINTERS;
 
+
 // API functions
 
 void RDOSAPI RdosDebug();
@@ -307,6 +308,7 @@ int RDOSAPI RdosGetThreadHandle();
 int RDOSAPI RdosExec(const char *prog, const char *param);
 int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, int *thread);
 int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, int *thread);
+int RDOSAPI RdosNewSpawn(const char *prog, const char *param, const char *startdir, const char *env, int *thread);
 void RDOSAPI RdosUnloadExe(int ExitCode);
 void RDOSAPI RdosFreeProcessHandle(int handle);
 int RDOSAPI RdosGetProcessExitCode(int handle);

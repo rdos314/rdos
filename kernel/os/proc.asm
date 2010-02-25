@@ -149,6 +149,7 @@ create_proc_handle_name	DB 'Create Process Handle',0
 
 create_proc_handle	PROC far
     push ds
+    push cx
 	mov cx,SIZE proc_handle_seg
 	AllocateHandle
 	mov [bx].ph_lib_sel,ax
@@ -159,6 +160,7 @@ create_proc_handle	PROC far
     mov ds,dx
     inc ds:pd_ref_count
 ;    	
+    pop cx
     pop ds
     ret
 create_proc_handle  Endp    
