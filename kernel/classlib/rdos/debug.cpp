@@ -1637,14 +1637,14 @@ void TDebug::SignalNewData()
                         RdosWriteString("Terminate thread\r\n");
                         HandleTerminateThread(thread);
                         FThreadChanged = TRUE;
-						if (!CurrentThread)
-						{
-							CurrentThread = ThreadList;
-							while (CurrentThread && !CurrentThread->IsDebug())
-								CurrentThread = CurrentThread->Next;
+                                                if (!CurrentThread)
+                                                {
+                                                        CurrentThread = ThreadList;
+                                                        while (CurrentThread && !CurrentThread->IsDebug())
+                                                                CurrentThread = CurrentThread->Next;
 
-							if (!CurrentThread)
-								CurrentThread = ThreadList;
+                                                        if (!CurrentThread)
+                                                                CurrentThread = ThreadList;
                         }
                         break;
 
@@ -1722,7 +1722,7 @@ void TDebug::Execute()
 
         RdosWaitMilli(250);
 
-        FHandle = RdosNewSpawnDebug(FProgram.GetData(), FParam.GetData(), FStartDir.GetData(), 0, &thread);
+        FHandle = RdosSpawnDebug(FProgram.GetData(), FParam.GetData(), FStartDir.GetData(), 0, &thread);
 
     if (!FHandle)
         FInstalled = FALSE;

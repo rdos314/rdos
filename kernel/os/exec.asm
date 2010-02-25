@@ -2069,18 +2069,18 @@ init	PROC far
 	mov ax,unload_exe_nr
 	RegisterBimodalUserGate
 ;
-	mov bx,OFFSET spawn_program16
-	mov si,OFFSET spawn_program32
-	mov di,OFFSET spawn_exe_name
-	mov dx,virt_es_in OR virt_ds_in
-	mov ax,spawn_exe_nr
-	RegisterUserGate
+;	mov bx,OFFSET spawn_program16
+;	mov si,OFFSET spawn_program32
+;	mov di,OFFSET spawn_exe_name
+;	mov dx,virt_es_in OR virt_ds_in
+;	mov ax,spawn_exe_nr
+;	RegisterUserGate
 ;
 	mov bx,OFFSET new_spawn_program16
 	mov si,OFFSET new_spawn_program32
 	mov di,OFFSET new_spawn_exe_name
 	mov dx,virt_es_in OR virt_ds_in
-	mov ax,new_spawn_nr
+	mov ax,spawn_exe_nr
 	RegisterUserGate
 ;
 	mov si,OFFSET get_exit_code
