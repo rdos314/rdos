@@ -1590,8 +1590,10 @@ CreateSpawnHandle Proc near
 	or ax,ax
 	jz spLibOk
 ;	
-    mov es,dx
+    push es
+	mov es,gs:s_app
     mov ax,es:app_lib_sel
+    pop es
 
 spLibOk:
 	mov dx,gs:s_proc_sel
@@ -1809,18 +1811,15 @@ spDone:
 new_spawn_program	Endp
 	
 new_spawn_program16	Proc far
-	push ebx
 	push esi
 	push edi
 ;
-	movzx ebx,bx
 	movzx esi,si
 	movzx edi,di
 	call new_spawn_program
 ;
 	pop edi
 	pop esi
-	pop ebx
 	ret
 new_spawn_program16	Endp
 	

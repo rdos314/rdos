@@ -309,6 +309,7 @@ int RDOSAPI RdosExec(const char *prog, const char *param);
 int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, int *thread);
 int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, int *thread);
 int RDOSAPI RdosNewSpawn(const char *prog, const char *param, const char *startdir, const char *env, int *thread);
+int RDOSAPI RdosNewSpawnDebug(const char *prog, const char *param, const char *startdir, const char *env, int *thread);
 void RDOSAPI RdosUnloadExe(int ExitCode);
 void RDOSAPI RdosFreeProcessHandle(int handle);
 int RDOSAPI RdosGetProcessExitCode(int handle);
