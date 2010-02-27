@@ -300,6 +300,7 @@ int RDOSAPI RdosSuspendThread(int Thread);
 int RDOSAPI RdosSuspendAndSignalThread(int Thread);
 
 void RDOSAPI RdosCpuReset();
+int RDOSAPI RdosGetCpuVersion(char *VendorStr, int *FeatureFlags);
 void RDOSAPI RdosGetVersion(int *Major, int *Minor, int *Release);
 void RDOSAPI RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
 void RDOSAPI RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const char *Name, void *Param, int StackSize);
@@ -1146,6 +1147,13 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov [edi],ecx" \
     parm [ebx] [esi] [edi]  \
     modify [eax ecx edx];
+
+#pragma aux RdosGetCpuVersion = \
+    CallGate_get_cpu_version  \
+    "movzx  eax,al" \
+    "mov [ebx],edx" \
+    parm [edi] [ebx] \
+    value [eax];
 
 #pragma aux RdosTerminateThread = \
     CallGate_terminate_thread;
@@ -3084,6 +3092,13 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosCpuReset = \
     CallGate_cpu_reset;
+
+#pragma aux RdosGetCpuVersion = \
+    CallGate_get_cpu_version  \
+    "movzx  ax,al" \
+    "mov [bx],edx" \
+    parm [di] [bx]
+    value [ax];
 
 #pragma aux RdosGetVersion = \
     CallGate_get_version  \

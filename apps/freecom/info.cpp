@@ -65,7 +65,7 @@ TInfoFactory::TInfoFactory()
 ##########################################################################*/
 TCommand *TInfoFactory::Create(TSession *session, const char *param)
 {
-	return new TInfoCommand(session, param);
+    return new TInfoCommand(session, param);
 }
 
 /*##########################################################################
@@ -82,7 +82,7 @@ TCommand *TInfoFactory::Create(TSession *session, const char *param)
 TInfoCommand::TInfoCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_INFO);
+    FHelpScreen.Load(TEXT_CMDHELP_INFO);
 }
 
 /*##########################################################################
@@ -113,8 +113,8 @@ TInfoCommand::~TInfoCommand()
 ##########################################################################*/
 int TInfoCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
-	OptError(optstr);
-	return E_Useage;
+    OptError(optstr);
+    return E_Useage;
 }
 
 /*##########################################################################
@@ -146,43 +146,200 @@ void TInfoCommand::InitOptions()
 int TInfoCommand::Execute(char *param)
 {
     long PhysMem;
-	 long Gdt;
-	 long Linear;
-	 long mb;
-	 long kb;
+    long Gdt;
+    long Linear;
+    long mb;
+    long kb;
+    char CpuType[80];
+    char CpuVendor[80];
+    int CpuVer;
+    int FeatureBits; 
 
-	InitOptions();
+    InitOptions();
 
-	if (LeadOptions(&param, 0) != E_None)
-		return 1;
+    if (LeadOptions(&param, 0) != E_None)
+        return 1;
 
-	PhysMem = RdosGetFreePhysical();
-	mb = PhysMem / 1024 / 1024;
-	kb = PhysMem - mb * 1024 * 1024;
-	kb = kb * 1000 / 1024;
-	kb = kb * 100 / 1024;
-	FMsg.printf(TEXT_INFO_PHYSICAL, mb, kb);
-	Write(FMsg.GetData());
+    PhysMem = RdosGetFreePhysical();
+    mb = PhysMem / 1024 / 1024;
+    kb = PhysMem - mb * 1024 * 1024;
+    kb = kb * 1000 / 1024;
+    kb = kb * 100 / 1024;
+    FMsg.printf(TEXT_INFO_PHYSICAL, mb, kb);
+    Write(FMsg.GetData());
 
-	Gdt = RdosGetFreeGdt();
-	FMsg.printf(TEXT_INFO_GDT, Gdt);
-	Write(FMsg.GetData());
+    Gdt = RdosGetFreeGdt();
+    FMsg.printf(TEXT_INFO_GDT, Gdt);
+    Write(FMsg.GetData());
 
-	Linear = RdosGetFreeSmallKernelLinear();
-	mb = Linear / 1024 / 1024;
-	kb = Linear - mb * 1024 * 1024;
-	kb = kb * 1000 / 1024;
-	kb = kb * 100 / 1024;
-	FMsg.printf(TEXT_INFO_SMALL_KERNEL, mb, kb);
-	Write(FMsg.GetData());
+    Linear = RdosGetFreeSmallKernelLinear();
+    mb = Linear / 1024 / 1024;
+    kb = Linear - mb * 1024 * 1024;
+    kb = kb * 1000 / 1024;
+    kb = kb * 100 / 1024;
+    FMsg.printf(TEXT_INFO_SMALL_KERNEL, mb, kb);
+    Write(FMsg.GetData());
 
-	Linear = RdosGetFreeBigKernelLinear();
-	mb = Linear / 1024 / 1024;
-	kb = Linear - mb * 1024 * 1024;
-	kb = kb * 1000 / 1024;
-	kb = kb * 100 / 1024;
-	FMsg.printf(TEXT_INFO_BIG_KERNEL, mb, kb);
-	Write(FMsg.GetData());
+    Linear = RdosGetFreeBigKernelLinear();
+    mb = Linear / 1024 / 1024;
+    kb = Linear - mb * 1024 * 1024;
+    kb = kb * 1000 / 1024;
+    kb = kb * 100 / 1024;
+    FMsg.printf(TEXT_INFO_BIG_KERNEL, mb, kb);
+    Write(FMsg.GetData());
 
-	return 0;
+    CpuVer = RdosGetCpuVersion(CpuVendor, &FeatureBits);
+
+    if (!strcmp(CpuVendor, "AMDisbetter!"))
+        strcpy(CpuVendor, "AMD K5");
+        
+    if (!strcmp(CpuVendor, "AuthenticAMD"))
+        strcpy(CpuVendor, "AMD");
+
+    if (!strcmp(CpuVendor, "CentaurHauls"))
+        strcpy(CpuVendor, "Centaur");
+
+    if (!strcmp(CpuVendor, "CyrixInstead"))
+        strcpy(CpuVendor, "Cyrix");
+
+    if (!strcmp(CpuVendor, "GenuineIntel"))
+        strcpy(CpuVendor, "Intel");
+
+    if (!strcmp(CpuVendor, "Geode by NSC"))
+        strcpy(CpuVendor, "Geode");
+
+    if (!strcmp(CpuVendor, "NexGenDriven"))
+        strcpy(CpuVendor, "NexGen");
+
+    if (!strcmp(CpuVendor, "RiseRiseRise"))
+        strcpy(CpuVendor, "Rise");
+
+    if (!strcmp(CpuVendor, "SiS SiS SiS "))
+        strcpy(CpuVendor, "SiS");
+
+    if (!strcmp(CpuVendor, "UMC UMC UMC "))
+        strcpy(CpuVendor, "UMC");
+
+    if (!strcmp(CpuVendor, "VIA VIA VIA "))
+        strcpy(CpuVendor, "VIA");
+
+    switch (CpuVer)
+    {
+        case 3:
+            strcpy(CpuType, "386");
+            break;
+
+        case 4:
+            strcpy(CpuType, "486");
+            break;
+
+        case 5:
+            strcpy(CpuType, "Pentium");
+            break;
+
+        case 6:
+            strcpy(CpuType, "Pentium Pro");
+            break;
+
+        default:
+            sprintf(CpuType, "%d86", CpuVer);
+            break;
+    }
+    
+    FMsg.printf(TEXT_INFO_CPU, CpuType, CpuVendor);
+    Write(FMsg.GetData());
+
+    FMsg.printf(TEXT_INFO_FEATURE);
+    Write(FMsg.GetData());
+
+    if (FeatureBits & 1)
+        Write("FPU ");
+
+    if (FeatureBits & 2)
+        Write("VME ");
+
+    if (FeatureBits & 4)
+        Write("DE ");
+
+    if (FeatureBits & 8)
+        Write("PSE ");
+
+    if (FeatureBits & 0x10)
+        Write("TSC ");
+
+    if (FeatureBits & 0x20)
+        Write("MSR ");
+
+    if (FeatureBits & 0x40)
+        Write("PAE ");
+
+    if (FeatureBits & 0x80)
+        Write("MCE ");
+
+    if (FeatureBits & 0x100)
+        Write("CX8 ");
+
+    if (FeatureBits & 0x200)
+        Write("APIC ");
+
+    if (FeatureBits & 0x800)
+        Write("SEP ");
+
+    if (FeatureBits & 0x1000)
+        Write("MTRR ");
+
+    if (FeatureBits & 0x2000)
+        Write("PGE ");
+
+    if (FeatureBits & 0x4000)
+        Write("MCA ");
+
+    if (FeatureBits & 0x8000)
+        Write("CMOV ");
+
+    if (FeatureBits & 0x10000)
+        Write("PAT ");
+
+    if (FeatureBits & 0x20000)
+        Write("PSE36 ");
+
+    if (FeatureBits & 0x40000)
+        Write("PSN ");
+
+    if (FeatureBits & 0x80000)
+        Write("CLFSH ");
+
+    if (FeatureBits & 0x200000)
+        Write("DS ");
+
+    if (FeatureBits & 0x400000)
+        Write("ACPI ");
+
+    if (FeatureBits & 0x800000)
+        Write("MMX ");
+
+    if (FeatureBits & 0x1000000)
+        Write("FXSR ");
+
+    if (FeatureBits & 0x2000000)
+        Write("SSE ");
+
+    if (FeatureBits & 0x4000000)
+        Write("SSE2 ");
+
+    if (FeatureBits & 0x8000000)
+        Write("SS ");
+
+    if (FeatureBits & 0x10000000)
+        Write("HTT ");
+
+    if (FeatureBits & 0x20000000)
+        Write("TM ");
+
+    if (FeatureBits & 0x80000000)
+        Write("PBE ");
+
+    Write("\r\n");    
+
+    return 0;
 }

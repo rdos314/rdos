@@ -557,6 +557,13 @@ ReplyMailslot		MACRO
 
 ;;;;;;;;;;;; PROGRAMS & DLLS ;;;;;;;;;;;;;;;;
 
+; IN  ES:(E)DI)     CPU vendor string
+; OUT AL            CPU version
+; OUT EDX           Feature flags
+GetCpuVersion	MACRO
+	UserGate get_cpu_version_nr
+					ENDM
+
 ; OUT AX Minor version
 ; OUT DX Major version
 ; OUT CX Release #

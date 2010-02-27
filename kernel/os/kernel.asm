@@ -75,6 +75,7 @@ RELEASE = 0
 	extrn init_osgate:near
 	extrn init_systemgate:near
 	extrn init_usergate:near
+	extrn init_cpu:near
 	extrn init_io:near
 	extrn init_int:near
 	extrn init_irq:near
@@ -547,6 +548,7 @@ prot_init:
 	call init_idt
 	call init_system
 	call init_physical_gates
+    call init_cpu
 	call move_adapters
 	call init_paging_gates
 	call init_physical_gates
