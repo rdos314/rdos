@@ -559,6 +559,7 @@ ReplyMailslot		MACRO
 
 ; IN  ES:(E)DI)     CPU vendor string
 ; OUT AL            CPU version
+; OUT EBX           Frequency (MHz)
 ; OUT EDX           Feature flags
 GetCpuVersion	MACRO
 	UserGate get_cpu_version_nr

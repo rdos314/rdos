@@ -36,6 +36,7 @@ INCLUDE ..\driver.def
 INCLUDE port.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
+INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
@@ -68,6 +69,128 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RTC_INT
+;
+;		DESCRIPTION:	RTC INTERRUPT
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+rtc_int:
+	push ds
+	push es
+	pushad
+;
+	mov al,20h
+	out INT0_CONTROL,al
+;
+    mov bx,system_data_sel
+    mov ds,bx
+;
+	out INT1_CONTROL,al
+;
+    mov al,0Ch
+    out 70h,al
+	jmp short $+2
+;
+    in al,71h	
+    test al,40h
+    jz rtc_int_done
+;        
+    mov eax,ds:last_time
+    or eax,ds:last_time+4
+    jz rtc_int_first
+
+rtc_int_update:
+    GetSystemTime
+    mov ecx,ds:last_time
+    mov ds:last_time,eax
+    mov ds:last_time+4,edx
+    sub eax,ecx
+    add eax,eax
+    sub eax,1193182
+    mov ds:time_drift,eax
+    jmp rtc_int_done
+
+rtc_int_first:    
+    GetSystemTime
+    mov ds:last_time,eax
+    mov ds:last_time+4,edx
+
+rtc_int_done:
+	popad
+	pop es
+	pop ds
+	iretd
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			setup_int
+;
+;		DESCRIPTION:	Set up 2Hz interrupt for system time survailance
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_int	PROC near
+    mov bx,system_data_sel
+	mov ds,bx
+    mov ds:last_time,0
+    mov ds:last_time+4,0
+    mov ds:time_drift,0
+;    
+	mov ax,cs
+	mov ds,ax
+	mov al,38h
+	mov bl,0
+	mov esi,OFFSET rtc_int 
+	CreateIntGateSelector
+;	
+	cli
+	mov al,0Ah
+	out 70h,al
+	jmp short $+2
+;	
+    in al,71h
+    mov ah,al
+	jmp short $+2
+;    
+	mov al,0Ah
+	out 70h,al
+	jmp short $+2
+;
+    mov al,ah
+    or al,0Fh
+    out 71h,al    
+	jmp short $+2
+;
+	mov al,0Bh
+	out 70h,al
+	jmp short $+2
+;
+    in al,71h
+    mov ah,al
+	jmp short $+2
+;    
+	mov al,0Bh
+	out 70h,al
+	jmp short $+2
+;
+    mov al,ah
+    or al,40h
+    out 71h,al
+    sti
+    ret
+setup_int   Endp
+    
 PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -600,6 +723,7 @@ init	Proc far
 	call get_cmos_time
 	TimeToBinary
 	SetSystemTime
+	call setup_int
 ;
 	popa
 	pop es

@@ -732,7 +732,7 @@ STRINGTABLE
  1751, "Free GDT entries: %d\r\n";
  1752, "Free small kernel memory: %d.%05d MB\r\n";
  1753, "Free big kernel memory: %d.%05d MB\r\n";
- 1754, "%s CPU (%s)\r\n";
+ 1754, "%d MHz %s CPU (%s)\r\n";
  1755, "Feature bits: \r\n";
  1756, "Audio volume\r\n";
  1757, "\r\n";

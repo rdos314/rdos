@@ -153,7 +153,8 @@ int TInfoCommand::Execute(char *param)
     char CpuType[80];
     char CpuVendor[80];
     int CpuVer;
-    int FeatureBits; 
+    int FeatureBits;
+    int Freq;
 
     InitOptions();
 
@@ -188,7 +189,7 @@ int TInfoCommand::Execute(char *param)
     FMsg.printf(TEXT_INFO_BIG_KERNEL, mb, kb);
     Write(FMsg.GetData());
 
-    CpuVer = RdosGetCpuVersion(CpuVendor, &FeatureBits);
+    CpuVer = RdosGetCpuVersion(CpuVendor, &FeatureBits, &Freq);
 
     if (!strcmp(CpuVendor, "AMDisbetter!"))
         strcpy(CpuVendor, "AMD K5");
@@ -246,7 +247,7 @@ int TInfoCommand::Execute(char *param)
             break;
     }
     
-    FMsg.printf(TEXT_INFO_CPU, CpuType, CpuVendor);
+    FMsg.printf(TEXT_INFO_CPU, Freq, CpuType, CpuVendor);
     Write(FMsg.GetData());
 
     FMsg.printf(TEXT_INFO_FEATURE);

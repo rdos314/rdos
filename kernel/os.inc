@@ -25,6 +25,16 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+cpuid   MACRO
+    db 0Fh
+    db 0A2h
+        ENDM
+
+rdtsc   MACRO
+    db 0Fh
+    db 31h
+        ENDM
+
 Retf16	MACRO
 	db 66h
 	db 0CBh

@@ -101,6 +101,17 @@ rom_adapters		DD 16 DUP(?,?,?)
 
 check_point			DW ?
 
+cpu_type            DB ?
+cpu_vendor          DB 13 DUP(?)
+cpu_feature_flags   DD ?
+max_cpuid           DD ?
+
+last_time           DD ?,?
+time_drift          DD ?
+
+tsc_tics            DD ?
+tsc_rest            DW ?
+
 system_size			DB ?
 
 system_seg	ENDS

@@ -35,6 +35,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.def
 INCLUDE protseg.def
 INCLUDE system.def
+INCLUDE port.def
 INCLUDE ..\driver.def
 INCLUDE ..\os.inc
 
@@ -75,7 +76,7 @@ RELEASE = 0
 	extrn init_osgate:near
 	extrn init_systemgate:near
 	extrn init_usergate:near
-	extrn init_cpu:near
+	extrn init_cpu_gates:near
 	extrn init_io:near
 	extrn init_int:near
 	extrn init_irq:near
@@ -446,13 +447,113 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+read_tics   MACRO
+    mov al,0
+	out TIMER_CONTROL,al
+	jmp short $+2
+	in al,TIMER0
+	mov ah,al
+	jmp short $+2
+	in al,TIMER0
+	xchg al,ah
+	        ENDM
+
 init:
-    mov eax,cr0
-;    or al,22h
-;    or al,4        ; enable this for FPU emulation
-    and al,NOT 4    ; enable this for real FPU
-    mov cr0,eax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:cpu_type,3
+    mov ds:cpu_vendor,0
+    mov ds:cpu_feature_flags,0
+    mov ds:max_cpuid,0
+    mov ds:tsc_tics,0
+    mov ds:tsc_rest,0
 ;
+    pushfd
+    pop eax
+    mov ecx,eax
+    xor eax,40000h
+    push eax
+    popfd
+    pushfd
+    pop eax
+    xor eax,ecx
+    jz init_cpu_ok
+;
+    mov ds:cpu_type,4
+    mov eax,ecx
+    xor eax,200000h
+    push eax
+    popfd
+    pushfd
+    pop eax
+    xor eax,ecx
+    je init_cpu_ok
+;
+    mov eax,0
+    cpuid
+    mov ds:cpu_vendor+12,0
+    mov dword ptr ds:cpu_vendor,ebx   
+    mov dword ptr ds:cpu_vendor+4,edx   
+    mov dword ptr ds:cpu_vendor+8,ecx   
+;
+    mov eax,1
+    cpuid
+    mov ds:cpu_feature_flags,edx
+    mov al,ah
+    and al,0Fh
+    mov ds:cpu_type,al       
+
+init_cpu_ok:
+    mov eax,ds:cpu_feature_flags
+    test al,1
+    jz init_no_fpu
+
+init_fpu:    
+    mov eax,cr0
+    and al,NOT 4    ; real FPU
+    mov cr0,eax
+    jmp init_cpu_done
+
+init_no_fpu:
+    mov eax,cr0
+    or al,4         ; emulated FPU
+    mov cr0,eax
+
+init_cpu_done:
+    mov eax,ds:cpu_feature_flags
+    test al,10h
+    jz init_tsc_done    
+
+init_tsc_wait_start:
+    read_tics    
+    or ax,ax
+    jne init_tsc_wait_start
+;
+    rdtsc
+    mov esi,eax
+    mov edi,edx
+
+init_tsc_wait_high:    
+    read_tics
+    test ax,8000h
+    jz init_tsc_wait_high
+
+init_tsc_wait_low:    
+    read_tics
+    test ax,8000h
+    jnz init_tsc_wait_low
+;    
+    rdtsc
+    sub eax,esi
+    sbb edx,edi
+;
+    mov ecx,65536
+    div ecx
+;        
+    mov ds:tsc_tics,eax
+    mov ds:tsc_rest,dx
+    
+init_tsc_done:
 	call ZeroRam
 	call MarkupRam
 ;
@@ -548,7 +649,7 @@ prot_init:
 	call init_idt
 	call init_system
 	call init_physical_gates
-    call init_cpu
+    call init_cpu_gates
 	call move_adapters
 	call init_paging_gates
 	call init_physical_gates
