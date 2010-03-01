@@ -71,6 +71,13 @@ get_cpu_version	Proc near
 ;    
     mov ax,system_data_sel
     mov ds,ax
+;    
+    mov edx,10000h
+    xor eax,eax
+    mov ecx,ds:tsc_tics
+    shl ecx,16
+    mov cx,ds:tsc_rest
+    div ecx    
 ;
     mov ecx,1193182
     movzx eax,ds:tsc_rest

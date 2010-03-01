@@ -99,57 +99,44 @@ timer_struc	ENDS
 
 task_seg	STRUC
 
-ptab			DW 256 DUP(?)
+ptab			    DW 256 DUP(?)
 
-prio_act		DW ?
+prio_act		    DW ?
 
-thread_act		DW ?
+thread_act		    DW ?
 
-timer_nesting	DW ?
+timer_nesting	    DW ?
 
-help_call_ip	DW ?
-help_call_cs	DW ?
+help_call_ip	    DW ?
+help_call_cs	    DW ?
 
-clock_tics		DW ?
-system_time		DD ?,?
-time_diff		DD ?,?
+init_clock_proc     DW ?
+update_clock_proc   DW ?
 
-update_tics		DD ?
+tsc_sub_tics        DD ?
+tsc_guard           DD ?
+last_tsc            DD ?
 
-preempt_lsb		DD ?
-preempt_msb		DD ?
+clock_tics		    DW ?
+system_time		    DD ?,?
+time_diff		    DD ?,?
 
-signal_list		DW ?
+update_tics		    DD ?
 
-timer_head		DW ?
-timer_free		DW ?
-timer_entries	DB 256 * SIZE timer_struc DUP(?)
+preempt_lsb		    DD ?
+preempt_msb		    DD ?
 
-task_seg_size	DB ?
+signal_list		    DW ?
+
+timer_head		    DW ?
+timer_free		    DW ?
+timer_entries	    DB 256 * SIZE timer_struc DUP(?)
+
+task_seg_size	    DB ?
 
 task_seg	ENDS
 
 	.386p
-
-UpdateClock	MACRO
-	local update_not_big
-	mov al,80h
-	out TIMER_CONTROL,al
-	jmp short $+2
-	in al,TIMER2
-	mov ah,al
-	jmp short $+2
-	in al,TIMER2
-	xchg al,ah
-	mov dx,ax
-	xchg ax,ds:clock_tics
-	sub ax,dx
-	movzx eax,ax
-	add ds:system_time,eax
-	adc ds:system_time+4,0
-	add es:p_lsb_tics,eax
-	adc es:p_msb_tics,0
-					ENDM
 
 GetUpdateTics	MACRO
 	mov ax,100h
@@ -158,7 +145,7 @@ GetUpdateTics	MACRO
 	xchg ah,al
 	jmp short $+2
 	out TIMER0,al
-	UpdateClock
+	call ds:update_clock_proc
 	LocalGetSystemTime
 	xor al,al
 	out TIMER_CONTROL,al
@@ -444,6 +431,132 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			InitPitClock
+;
+;		DESCRIPTION:	Init clock using PIT timer 2
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitPitClock	Proc near
+	mov al,0B4h
+	out TIMER_CONTROL,al
+	jmp short $+2
+	mov al,0
+	out TIMER2,al
+	jmp short $+2
+	out TIMER2,al
+	mov ds:clock_tics,0
+	jmp short $+2
+	mov al,0Dh
+	out 61h,al
+	ret
+InitPitClock    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			UpdatePitClock
+;
+;		DESCRIPTION:	Update clock using PIT timer 2
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePitClock	Proc near
+	mov al,80h
+	out TIMER_CONTROL,al
+	jmp short $+2
+	in al,TIMER2
+	mov ah,al
+	jmp short $+2
+	in al,TIMER2
+	xchg al,ah
+	mov dx,ax
+	xchg ax,ds:clock_tics
+	sub ax,dx
+	movzx eax,ax
+	add ds:system_time,eax
+	adc ds:system_time+4,0
+	add es:p_lsb_tics,eax
+	adc es:p_msb_tics,0
+	ret
+UpdatePitClock  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InitTscClock
+;
+;		DESCRIPTION:	Init clock using TSC
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitTscClock	Proc near
+    push es
+    pushad
+;    
+    mov ax,system_data_sel
+    mov es,ax
+    mov edx,10000h
+    xor eax,eax
+    mov ecx,es:tsc_tics
+    shl ecx,16
+    mov cx,es:tsc_rest
+    div ecx
+    mov ds:tsc_sub_tics,eax
+;    
+	rdtsc
+	mov ds:last_tsc,eax
+	mov ds:tsc_guard,0
+;
+    popad
+    pop es	
+	ret
+InitTscClock    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			UpdateTscClock
+;
+;		DESCRIPTION:	Update clock using TSC
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateTscClock	Proc near
+    rdtsc
+	mov edx,ds:last_tsc
+	mov ds:last_tsc,eax
+	sub eax,edx
+	mul ds:tsc_sub_tics
+	add ds:tsc_guard,eax
+	pushf
+	adc ds:system_time,edx
+	adc ds:system_time+4,0
+	popf
+	adc es:p_lsb_tics,edx
+	adc es:p_msb_tics,0
+	ret
+UpdateTscClock  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			INIT_TASK
 ;
 ;		DESCRIPTION:	Init module
@@ -490,6 +603,10 @@ ptab_init:
 	mov ds:timer_head,bx
 ;
 	mov ds:update_tics,0
+;	mov ds:init_clock_proc,OFFSET InitPitClock
+;	mov ds:update_clock_proc,OFFSET UpdatePitClock
+	mov ds:init_clock_proc,OFFSET InitTscClock
+	mov ds:update_clock_proc,OFFSET UpdateTscClock
 ;
 	mov cx,0FFh
 	add bx,SIZE timer_struc
@@ -1676,7 +1793,7 @@ UpdateTimer	Proc near
 update_timer_loop:
 	mov es,ds:thread_act
 	cli
-	UpdateClock
+	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,ds:update_tics
 	adc edx,0
@@ -1717,7 +1834,7 @@ reload_timer:
 	mov ax,[si]
 	cmp ax,ds:thread_act
 	je update_timer_done
-	UpdateClock
+	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,1193
 	adc edx,0
@@ -1940,17 +2057,7 @@ init_first_thread	Proc near
 	out TIMER_CONTROL,al
 	GetUpdateTics
 ;
-	mov al,0B4h
-	out TIMER_CONTROL,al
-	jmp short $+2
-	mov al,0
-	out TIMER2,al
-	jmp short $+2
-	out TIMER2,al
-	mov ds:clock_tics,0
-	jmp short $+2
-	mov al,0Dh
-	out 61h,al
+    call ds:init_clock_proc
 ;
 	in al,INT0_MASK
 	and al,NOT 1
@@ -2024,7 +2131,7 @@ init_task_pr:
 	mov es:p_sleep_sel,0
 	mov es:p_sleep_offset,0
 	cli
-	UpdateClock
+	call ds:update_clock_proc
 	RemoveBlock
 	push es
 	jmp schedule_task
@@ -2048,7 +2155,7 @@ wait_sleep_task:
 	mov es:p_sleep_sel,0
 	mov es:p_sleep_offset,0
 	cli
-	UpdateClock
+	call ds:update_clock_proc
 	RemoveBlock
 	mov ax,es
 	pop es
@@ -2076,7 +2183,7 @@ wait_run_task	Proc far
 	mov es:p_sleep_sel,0
 	mov es:p_sleep_offset,0
 	cli
-	UpdateClock
+	call ds:update_clock_proc
 	RemoveBlock
 	mov ax,es
 	pop es
@@ -2118,7 +2225,7 @@ enter_task_no_error_code:
 	mov si,es:p_prio
 	mov es:p_sleep_sel,0
 	mov es:p_sleep_offset,0
-	UpdateClock
+	call ds:update_clock_proc
 	RemoveBlock
 	mov ax,es
 	pop es
@@ -3372,7 +3479,7 @@ wait_milli_sec	PROC far
 	pop ebx
 	mov es,ds:thread_act
 	cli
-	UpdateClock
+	call ds:update_clock_proc
 	LocalGetSystemTime
 	sti
 	add eax,ebx
@@ -3430,7 +3537,7 @@ wait_micro_sec	PROC far
 	pop ebx
 	mov es,ds:thread_act
 	cli
-	UpdateClock
+	call ds:update_clock_proc
 	LocalGetSystemTime
 	sti
 	add eax,ebx
@@ -3577,7 +3684,7 @@ get_system_time	PROC far
 	mov ds,ax
 	mov es,ds:thread_act
 	cli
-	UpdateClock
+	call ds:update_clock_proc
 	LocalGetSystemTime
 	sti
 	pop es
@@ -3607,7 +3714,7 @@ get_time	PROC far
 	mov ds,ax
 	mov es,ds:thread_act
 	cli
-	UpdateClock
+	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,ds:time_diff
 	adc edx,ds:time_diff+4
