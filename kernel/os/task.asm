@@ -603,10 +603,10 @@ ptab_init:
 	mov ds:timer_head,bx
 ;
 	mov ds:update_tics,0
-;	mov ds:init_clock_proc,OFFSET InitPitClock
-;	mov ds:update_clock_proc,OFFSET UpdatePitClock
-	mov ds:init_clock_proc,OFFSET InitTscClock
-	mov ds:update_clock_proc,OFFSET UpdateTscClock
+	mov ds:init_clock_proc,OFFSET InitPitClock
+	mov ds:update_clock_proc,OFFSET UpdatePitClock
+;	mov ds:init_clock_proc,OFFSET InitTscClock
+;	mov ds:update_clock_proc,OFFSET UpdateTscClock
 ;
 	mov cx,0FFh
 	add bx,SIZE timer_struc
