@@ -526,8 +526,8 @@ init_cpu_done:
 
 init_tsc_wait_start:
     read_tics    
-    or ax,ax
-    jne init_tsc_wait_start
+    test ax,8000h
+    jnz init_tsc_wait_start
 ;
     rdtsc
     mov esi,eax
