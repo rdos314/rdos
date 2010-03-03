@@ -524,10 +524,15 @@ init_cpu_done:
     test al,10h
     jz init_tsc_done    
 
-init_tsc_wait_start:
+init_tsc_wait_start_high:
     read_tics    
     test ax,8000h
-    jnz init_tsc_wait_start
+    jz init_tsc_wait_start_high
+
+init_tsc_wait_start_low:
+    read_tics    
+    test ax,8000h
+    jnz init_tsc_wait_start_low
 ;
     rdtsc
     mov esi,eax
@@ -547,11 +552,16 @@ init_tsc_wait_low:
     sub eax,esi
     sbb edx,edi
 ;
-    mov ecx,65536
+    mov ecx,8000h
     div ecx
 ;        
     mov ds:tsc_tics,eax
     mov ds:tsc_rest,dx
+;
+    or eax,eax
+    jnz init_tsc_done
+;
+    and ds:cpu_feature_flags, NOT 10h
     
 init_tsc_done:
 	call ZeroRam

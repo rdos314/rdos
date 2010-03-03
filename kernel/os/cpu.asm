@@ -72,6 +72,10 @@ get_cpu_version	Proc near
     mov ax,system_data_sel
     mov ds,ax
 ;    
+    xor ebx,ebx
+    test ds:cpu_feature_flags, 10h
+    jz gcvFreqOk
+;    
     mov edx,10000h
     xor eax,eax
     mov ecx,ds:tsc_tics
@@ -95,7 +99,8 @@ get_cpu_version	Proc near
     mov ecx,1000000
     div ecx
     mov ebx,eax
-;    
+
+gcvFreqOk:    
     mov ecx,13
     mov esi,OFFSET cpu_vendor
     rep movs byte ptr es:[edi],[esi]

@@ -510,5 +510,7 @@ get_line_state_nr           EQU 350
 create_proc_handle_nr       EQU 351
 deref_proc_handle_nr        EQU 352
 
+notify_time_drift_nr        EQU 353
+
 osgate_entries				EQU 360
 

@@ -116,6 +116,7 @@ rtc_int_update:
     add eax,eax
     sub eax,1193182
     mov ds:time_drift,eax
+    NotifyTimeDrift
     jmp rtc_int_done
 
 rtc_int_first:    
@@ -155,6 +156,14 @@ setup_int	PROC near
 	CreateIntGateSelector
 ;	
 	cli
+;
+    mov al,0Ch
+    out 70h,al
+	jmp short $+2
+;
+    in al,71h	
+	jmp short $+2
+;
 	mov al,0Ah
 	out 70h,al
 	jmp short $+2

@@ -1089,6 +1089,10 @@ SetSystemTime	MACRO
 	OsGate set_system_time_nr
 					ENDM
 
+NotifyTimeDrift	MACRO
+	OsGate notify_time_drift_nr
+					ENDM
+
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;
 
 ; IN  AX		Signature

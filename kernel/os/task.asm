@@ -440,6 +440,12 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitPitClock	Proc near
+    push ds
+    push ax
+;
+    mov ax,task_sel
+    mov ds,ax
+;    
 	mov al,0B4h
 	out TIMER_CONTROL,al
 	jmp short $+2
@@ -451,6 +457,9 @@ InitPitClock	Proc near
 	jmp short $+2
 	mov al,0Dh
 	out 61h,al
+;
+    pop ax
+    pop ds	
 	ret
 InitPitClock    Endp
 
@@ -557,6 +566,73 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			NotifyTimeDrift
+;
+;		DESCRIPTION:	Notification of time drift
+;
+;		PARAMETERS:		DS      System data sel
+;                       EAX     Drift in tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_time_drift_name	DB 'Notify Time Drift',0
+
+MAX_DRIFT = 250000
+
+notify_time_drift	Proc far
+    push es
+    push eax
+    push ecx
+    push edx
+;    
+	mov cx,task_sel
+	mov es,cx
+;
+    sub es:time_diff,eax
+    sbb es:time_diff,0
+;    
+    mov ecx,ds:tsc_tics
+    or ecx,ecx
+    jz ntdPit
+;
+;    cmp eax,MAX_DRIFT
+;    jge ntdSetPit
+;
+;    cmp eax,-MAX_DRIFT
+;    jle ntdSetPit
+;
+    mov ecx,es:tsc_sub_tics
+    shr ecx,3
+    imul ecx
+;
+    mov ecx,1193182
+    idiv ecx
+;        
+    sub es:tsc_sub_tics,eax
+    jmp ntdDone
+
+ntdSetPit:
+    mov ds:tsc_tics,0
+    and ds:cpu_feature_flags, NOT 10h
+    call InitPitClock
+	mov es:update_clock_proc,OFFSET UpdatePitClock
+    jmp ntdDone
+
+ntdPit:
+
+ntdDone:
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+	ret
+notify_time_drift  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			INIT_TASK
 ;
 ;		DESCRIPTION:	Init module
@@ -602,12 +678,19 @@ ptab_init:
 	mov [bx].timer_lsb,0FFFFFFFFh
 	mov ds:timer_head,bx
 ;
+    mov ax,system_data_sel
+    mov es,ax
 	mov ds:update_tics,0
 	mov ds:init_clock_proc,OFFSET InitPitClock
 	mov ds:update_clock_proc,OFFSET UpdatePitClock
+    mov eax,es:tsc_tics
+    or eax,eax
+    jz timer_clock_done
+;
 	mov ds:init_clock_proc,OFFSET InitTscClock
 	mov ds:update_clock_proc,OFFSET UpdateTscClock
-;
+
+timer_clock_done:
 	mov cx,0FFh
 	add bx,SIZE timer_struc
 	mov ds:timer_free,bx
@@ -754,6 +837,12 @@ timer_free_list_create:
 	xor dx,dx
 	mov ax,wait_until_nr
 	RegisterBimodalUserGate
+;
+	mov si,OFFSET notify_time_drift
+	mov di,OFFSET notify_time_drift_name
+	xor cl,cl
+	mov ax,notify_time_drift_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET get_system_time
 	mov di,OFFSET get_system_time_name

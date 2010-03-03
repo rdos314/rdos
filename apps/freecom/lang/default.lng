@@ -1690,8 +1690,12 @@ Free small kernel memory: %d.%05d MB
 Free big kernel memory: %d.%05d MB
 .
 
-:TEXT_INFO_CPU
+:TEXT_INFO_CPU_FREQ
 %d MHz %s CPU (%s)
+.
+
+:TEXT_INFO_CPU
+%s CPU (%s)
 .
 
 :TEXT_INFO_FEATURE

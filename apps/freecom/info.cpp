@@ -246,8 +246,11 @@ int TInfoCommand::Execute(char *param)
             sprintf(CpuType, "%d86", CpuVer);
             break;
     }
-    
-    FMsg.printf(TEXT_INFO_CPU, Freq, CpuType, CpuVendor);
+
+    if (Freq)
+        FMsg.printf(TEXT_INFO_CPU_FREQ, Freq, CpuType, CpuVendor);
+    else
+        FMsg.printf(TEXT_INFO_CPU, CpuType, CpuVendor);
     Write(FMsg.GetData());
 
     FMsg.printf(TEXT_INFO_FEATURE);
