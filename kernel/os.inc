@@ -35,6 +35,11 @@ rdtsc   MACRO
     db 31h
         ENDM
 
+rdmsr   MACRO
+    db 0Fh
+    db 32h
+        ENDM
+
 Retf16	MACRO
 	db 66h
 	db 0CBh

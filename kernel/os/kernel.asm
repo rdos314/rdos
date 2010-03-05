@@ -523,31 +523,46 @@ init_cpu_done:
     mov eax,ds:cpu_feature_flags
     test al,10h
     jz init_tsc_done    
+;    
+    xor cx,cx    
 
 init_tsc_wait_start_high:
     read_tics    
     test ax,8000h
-    jz init_tsc_wait_start_high
+    jnz init_tsc_wait_start_high_ok
+    loop init_tsc_wait_start_high    
+
+init_tsc_wait_start_high_ok:
+    xor cx,cx    
 
 init_tsc_wait_start_low:
     read_tics    
     test ax,8000h
-    jnz init_tsc_wait_start_low
-;
+    jz init_tsc_wait_start_low_ok
+    loop init_tsc_wait_start_low
+
+init_tsc_wait_start_low_ok:    
     rdtsc
     mov esi,eax
     mov edi,edx
+    xor cx,cx
 
 init_tsc_wait_high:    
     read_tics
     test ax,8000h
-    jz init_tsc_wait_high
+    jnz init_tsc_wait_high_ok
+    loop init_tsc_wait_high
+
+init_tsc_wait_high_ok:
+    xor cx,cx
 
 init_tsc_wait_low:    
     read_tics
     test ax,8000h
-    jnz init_tsc_wait_low
-;    
+    jz init_tsc_wait_low_ok
+    loop init_tsc_wait_low
+
+init_tsc_wait_low_ok:
     rdtsc
     sub eax,esi
     sbb edx,edi
@@ -653,7 +668,7 @@ prot_init:
 	xor dx,dx
 	mov ax,get_version_nr
 	RegisterBimodalUserGate
-;	
+;
 	call init_mem
 	call init_gdt
 	call init_idt
@@ -678,6 +693,28 @@ prot_init:
 	call init_swap
 	call init_random
 	call init_crc
+;
+;    mov ecx,1Bh
+;    rdmsr
+;    push eax
+;    mov eax,1000h
+;    AllocateBigLinear
+;    pop eax
+;    and ax,0F000h
+;    or ax,67h
+;    SetPhysicalPage
+;    AllocateGdt
+;    mov ecx,1000h
+;    CreateDataSelector16
+;    mov es,bx
+;    mov bx,200h
+;    mov esi,es:[bx]
+;    mov bx,210h
+;    mov edi,es:[bx]
+;    mov bx,220h
+;    mov eax,es:[bx]    
+;    int 3	
+;
 	call init_device    
 	call init_first_process
 	call init_first_thread

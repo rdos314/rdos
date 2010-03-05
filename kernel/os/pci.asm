@@ -825,7 +825,7 @@ init_pci_next:
     je init_pci_device_done
 ;
 	add ecx,100h
-	cmp ecx,8100000h
+	cmp ecx,81000000h
 	jne init_pci_device_loop
 
 init_pci_device_done:	
@@ -861,6 +861,7 @@ init	Proc far
 	rep stosd
 ;
     call init_pci_devices
+    int 3
 ;
 	mov ax,cs
 	mov ds,ax

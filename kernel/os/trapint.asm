@@ -1087,6 +1087,22 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			SpuriousApic
+;
+;		DESCRIPTION:	Spurious interrupt from APIC
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+apic_spur:
+	iretd
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DEFAULT_INT1
 ;
 ;		DESCRIPTION:	Default int 1
@@ -1417,6 +1433,7 @@ pg11	DW	11,		OFFSET pretask11,		kernel_code,	0
 pg12	DW	12,		OFFSET pretask12,		kernel_code,	0
 pg13	DW	13,		OFFSET pretask13,		kernel_code,	0
 pg14	DW	14,		OFFSET prepaging14,		kernel_code,	0
+pg15	DW	15,		OFFSET apic_spur,		kernel_code,	0
 pg16	DW	16,		OFFSET pretask16,		kernel_code,	0
 ri0		DW	28h,	OFFSET timer_int,		kernel_code,	0
 ri1		DW	29h,	OFFSET default_int1,	kernel_code,	0
