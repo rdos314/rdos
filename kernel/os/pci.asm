@@ -861,7 +861,6 @@ init	Proc far
 	rep stosd
 ;
     call init_pci_devices
-    int 3
 ;
 	mov ax,cs
 	mov ds,ax
