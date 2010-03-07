@@ -37,12 +37,14 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
+INCLUDE apic.inc
 
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
+
 
 PAGE
 
@@ -128,6 +130,62 @@ get_cpu_version32   Proc far
     retf32
 get_cpu_version32   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			cpu
+;
+;		DESCRIPTION:	cpu handling thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cpu_name	DB 'CPU',0
+
+cpu_pr:
+    int 3
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    mov eax,ds:apic_tics
+    mov dx,ds:apic_rest
+    
+    
+
+cpu_done:
+
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			init_cpu_thread
+;
+;		DESCRIPTION:	Init cpu threads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_cpu_thread	PROC far
+	push ds
+	push es
+	pusha
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov si,OFFSET cpu_pr
+	mov di,OFFSET cpu_name
+	mov cx,500
+	mov ax,4
+	CreateThread
+;
+	popa
+	pop es
+	pop ds
+	ret
+init_cpu_thread	ENDP
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -162,6 +220,35 @@ init_cpu_gates	PROC near
     pop ds	
 	ret
 init_cpu_gates	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InitCpuTasks
+;
+;		DESCRIPTION:	Init cpu module tasks
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_cpu_tasks
+    
+init_cpu_tasks	PROC near
+    push ds
+    push es
+    pusha
+;
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET init_cpu_thread
+	HookInitTasking
+;
+    popa
+    pop es
+    pop ds	
+	ret
+init_cpu_tasks	ENDP
 
 
 code	ENDS

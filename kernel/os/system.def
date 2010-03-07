@@ -112,6 +112,9 @@ time_drift          DD ?
 tsc_tics            DD ?
 tsc_rest            DW ?
 
+apic_tics           DD ?
+apic_rest           DW ?
+
 system_size			DB ?
 
 system_seg	ENDS

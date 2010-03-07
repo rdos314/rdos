@@ -113,8 +113,7 @@ rtc_int_update:
     mov ds:last_time,eax
     mov ds:last_time+4,edx
     sub eax,ecx
-    add eax,eax
-    sub eax,1193182
+    sub eax,1193182 / 2
     mov ds:time_drift,eax
     NotifyTimeDrift
     jmp rtc_int_done
