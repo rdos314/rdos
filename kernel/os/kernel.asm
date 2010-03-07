@@ -38,7 +38,7 @@ INCLUDE system.def
 INCLUDE port.def
 INCLUDE ..\driver.def
 INCLUDE ..\os.inc
-INCLUDE apic.inc
+INCLUDE mp.inc
 
 MAJOR_VERSION = 8
 MINOR_VERSION = 9
@@ -78,7 +78,8 @@ RELEASE = 0
 	extrn init_systemgate:near
 	extrn init_usergate:near
 	extrn init_cpu_gates:near
-	extrn init_cpu_tasks:near
+	extrn init_mp_gates:near
+	extrn init_mp_tasks:near
 	extrn init_io:near
 	extrn init_int:near
 	extrn init_irq:near
@@ -574,7 +575,7 @@ init_apic_stop_done:
     sub eax,esi
     sbb edx,edi
 ;
-    mov ecx,10000h
+    mov ecx,8000h
     div ecx
 ;        
     mov ds:tsc_tics,eax
@@ -593,7 +594,7 @@ init_tsc_done:
     mov eax,-1
     sub eax,ebp
     xor edx,edx
-    mov ecx,10000h
+    mov ecx,8000h
     div ecx
 ;
     mov ds:apic_tics,eax
@@ -778,6 +779,7 @@ prot_init:
 	call init_system
 	call init_physical_gates
     call init_cpu_gates
+    call init_mp_gates
 	call move_adapters
 	call init_paging_gates
 	call init_physical_gates
@@ -797,7 +799,7 @@ prot_init:
 	call init_swap
 	call init_random
 	call init_crc
-    call init_cpu_tasks
+    call init_mp_tasks
 ;
 	call init_device    
 	call init_first_process

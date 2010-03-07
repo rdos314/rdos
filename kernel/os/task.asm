@@ -39,6 +39,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE mp.inc
 
 section_num	EQU 512
 
@@ -112,6 +113,7 @@ help_call_cs	    DW ?
 
 init_clock_proc     DW ?
 update_clock_proc   DW ?
+reload_timer_proc   DW ?
 
 tsc_sub_tics        DD ?
 tsc_guard           DD ?
@@ -120,6 +122,9 @@ last_tsc            DD ?
 clock_tics		    DW ?
 system_time		    DD ?,?
 time_diff		    DD ?,?
+
+apic_mul_tics       DD ?
+apic_mul_rest       DW ?
 
 update_tics		    DD ?
 
@@ -138,45 +143,9 @@ task_seg	ENDS
 
 	.386p
 
-GetUpdateTics	MACRO
-	mov ax,100h
-	cli
-	out TIMER0,al
-	xchg ah,al
-	jmp short $+2
-	out TIMER0,al
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	xor al,al
-	out TIMER_CONTROL,al
-	jmp short $+2
-	in al,TIMER0
-	mov ah,al
-	jmp short $+2
-	in al,TIMER0
-	xchg al,ah
-	neg ax
-	add ax,100h
-	movzx eax,ax
-	add eax,eax
-	add eax,eax
-	mov ds:update_tics,eax
-					ENDM
-
 LocalGetSystemTime	MACRO
 	mov eax,ds:system_time
 	mov edx,ds:system_time+4
-					ENDM
-
-LocalReloadTimer	MACRO
-	out TIMER0,al
-	xchg al,ah
-	jmp short $+2
-	out TIMER0,al
-;
-	in al,INT0_MASK
-	and al,NOT 1
-	out INT0_MASK,al
 					ENDM
 
 LocalRemoveTimer	MACRO
@@ -560,6 +529,176 @@ UpdateTscClock	Proc near
 	adc es:p_msb_tics,0
 	ret
 UpdateTscClock  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetPitUpdateTics
+;
+;		DESCRIPTION:	Get PIT update tics
+;
+;		PARAMETERS:		DS      Task sel
+;                       EAX     Drift in tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPitUpdateTics	Proc near
+	mov ax,30h
+	out TIMER_CONTROL,al
+;
+	mov ax,100h
+	cli
+	out TIMER0,al
+	xchg ah,al
+	jmp short $+2
+	out TIMER0,al
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	xor al,al
+	out TIMER_CONTROL,al
+	jmp short $+2
+	in al,TIMER0
+	mov ah,al
+	jmp short $+2
+	in al,TIMER0
+	xchg al,ah
+	neg ax
+	add ax,100h
+	movzx eax,ax
+	add eax,eax
+	add eax,eax
+	mov ds:update_tics,eax
+	mov ds:reload_timer_proc,OFFSET ReloadPitTimer
+;
+	in al,INT0_MASK
+	and al,NOT 1
+	out INT0_MASK,al
+	ret
+GetPitUpdateTics    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReloadPitTimer
+;
+;		DESCRIPTION:	Reload PIT timer
+;
+;		PARAMETERS:		DS      Task sel
+;                       AX      Reload count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReloadPitTimer	Proc near
+	out TIMER0,al
+	xchg al,ah
+	jmp short $+2
+	out TIMER0,al
+;
+	in al,INT0_MASK
+	and al,NOT 1
+	out INT0_MASK,al
+	ret
+ReloadPitTimer  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetApicTics
+;
+;		DESCRIPTION:	Get parameters for APIC timer operation
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetApicTics	Proc near
+    push es
+    pushad
+;    
+    push ds
+	mov ax,cs
+	mov ds,ax
+	mov al,40h
+	mov bl,0
+	mov esi,OFFSET apic_int 
+	CreateIntGateSelector
+	pop ds
+;    
+    mov ax,system_data_sel
+    mov es,ax
+    mov eax,es:apic_tics
+    mov ds:apic_mul_tics,eax
+    mov ax,es:apic_rest
+    mov ds:apic_mul_rest,ax
+;
+    mov edx,10000h
+    xor eax,eax
+    mov ecx,es:apic_tics
+    shl ecx,16
+    mov cx,es:apic_rest
+    div ecx
+    mov esi,eax
+;
+	mov eax,80000000h
+	cli
+    mov bx,apic_data_sel
+    mov es,bx
+    mov es:APIC_INIT_COUNT,eax    
+    push esi
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	pop esi
+    mov eax,es:APIC_CURR_COUNT    
+	neg eax
+	add eax,80000000h
+	mul esi
+	add eax,eax
+	adc edx,edx
+	add eax,80000000h
+	adc edx,0
+	mov ds:update_tics,edx
+	mov ds:reload_timer_proc,OFFSET ReloadApicTimer
+;
+    mov eax,40h
+    mov es:APIC_TIMER,eax
+;
+    popad
+    pop es	
+	ret
+GetApicTics    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReloadApicTimer
+;
+;		DESCRIPTION:	Reload APIC timer
+;
+;		PARAMETERS:		DS      Task sel
+;                       AX      Reload count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReloadApicTimer	Proc near
+    mov ecx,ds:apic_mul_tics
+    shl ecx,16
+    mov cx,ds:apic_mul_rest
+    shl eax,16
+    mul ecx
+    inc edx
+    mov ax,apic_data_sel
+    mov es,ax    
+    mov es:APIC_INIT_COUNT,edx
+	ret
+ReloadApicTimer  Endp
 
 PAGE
 
@@ -1917,7 +2056,7 @@ reload_timer:
 	sub ds:timer_nesting,1
 	jnc update_timer_done
 	neg eax
-	LocalReloadTimer
+	call ds:reload_timer_proc
 ;
 	mov si,ds:prio_act
 	mov ax,[si]
@@ -2051,6 +2190,37 @@ timer_int:
 	pop ds
 	iretd
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			apic_int
+;
+;		DESCRIPTION:	APIC int
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+apic_int:
+	push ds
+	push es
+	pushad
+;
+    mov ax,apic_data_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax	
+;
+	mov ax,task_sel
+	mov ds,ax
+	call UpdateTimer
+;
+	popad
+	pop es
+	pop ds
+	iretd
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2142,15 +2312,20 @@ init_first_thread	Proc near
 	mov ds:prio_act,di
 	InsertBlock
 ;
-	mov ax,30h
-	out TIMER_CONTROL,al
-	GetUpdateTics
-;
+    mov ax,system_data_sel
+    mov es,ax
+    test es:cpu_feature_flags,200h
+    jz init_use_pit_timer
+
+init_use_apic_timer:
+    call GetApicTics
+    jmp init_timer_sel_ok
+
+init_use_pit_timer:
+    call GetPitUpdateTics
+
+init_timer_sel_ok:
     call ds:init_clock_proc
-;
-	in al,INT0_MASK
-	and al,NOT 1
-	out INT0_MASK,al
 ;
 	call GetNextThread
 	call UpdateTimer
