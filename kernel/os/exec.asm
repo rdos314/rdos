@@ -727,332 +727,6 @@ load_process_fail:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			spawn_program16/32
-;
-;		DESCRIPTION:    Load & detach executable file
-;
-;		PARAMETERS:     DS:(E)SI	Filename
-;						ES:(E)DI	Command line
-;						FS:(E)BX	Startup dir
-;						DX			Debug module handle
-;
-;       RETURN VALUE:   AX		    Thread ID
-;                       DX          Process handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-spawn_exe_name	DB 'Spawn Exe',0
-
-spawn_startup:
-	mov gs,bx
-	mov ax,exec_sys_sel
-	mov ds,ax
-	SaveContext
-	xor eax,eax
-	push eax
-	push eax
-	push eax
-	push eax
-	push eax
-	push eax
-	push eax
-;
-	push es
-	mov ax,thread_app_sel
-	mov es,ax
-	mov es:app_context,bx
-;
-	mov ax,3Bh
-	EnableFocus
-	SetFocus
-	mov es:app_key,al
-;
-	xor si,si
-	mov ds,gs:s_name	
-	mov di,OFFSET app_exe_name
-
-spawn_copy_exe_loop:
-	lodsb
-	stosb
-	or al,al
-	jne spawn_copy_exe_loop
-;
-	pop ds
-	xor bx,bx
-;
-	mov ax,thread_sel
-	mov es,ax
-	mov al,gs:s_switch
-	mov es:p_parent_switch,al
-;
-	mov es,gs:s_curr_dir
-	xor di,di
-	mov ax,es:[di]
-	cmp ah,':'
-	jne spawn_dir_ok
-;
-	sub al,'A'
-	jc spawn_dir_ok
-;
-	cmp al,26
-	jc spawn_set_drive
-;
-	sub al,20h
-	jc spawn_dir_ok
-;
-	cmp al,26
-	jnc spawn_dir_ok
-
-spawn_set_drive:
-	SetCurDrive
-	add di,2
-	SetCurDir
-	
-spawn_dir_ok:
-	xor di,di
-	mov es,gs:s_name
-	xor cx,cx
-	OpenFile
-	jc spawn_fail
-;
-	xor esi,esi
-	xor edi,edi
-	mov ds,gs:s_name
-	mov es,gs:s_cmd
-;
-	call load_exe_file
-	jc spawn_close_fail
-;
-	mov gs:s_ret_code,0
-	GetThread
-	mov gs:s_thread,ax
-	mov ax,thread_app_sel
-	mov ds,ax
-	mov ax,ds:app_sel
-	mov gs:s_app,ax
-;
-	mov ax,thread_sel
-	mov ds,ax
-	mov ds,ds:p_process_sel
-    mov ax,ds:ms_pd_sel
-    mov gs:s_proc_sel,ax
-;
-	mov ax,gs
-	mov ds,ax
-	mov es,ax
-	LeaveSection ds:s_sect1
-	EnterSection ds:s_sect2
-;
-	mov ax,10
-	WaitMilliSec
-;
-	mov ax,thread_app_sel
-	mov ds,ax
-	mov eax,ds:app_spawn_proc
-	or eax,eax
-	jz spawn_notify_done
-;
-	call ds:app_spawn_proc
-
-spawn_notify_done:
-	mov ds,gs:s_name
-	mov es,gs:s_cmd
-	mov fs,gs:s_curr_dir
-	call leave_process
-;
-	mov ax,gs
-	mov es,ax
-	xor ax,ax
-	mov gs,ax
-	FreeMem
-;
-	test byte ptr [bp+2].load_eflags,2
-	jnz spawn_vm16
-;
-	mov ds,[bp].load_ds
-	mov es,[bp].load_es
-	mov fs,[bp].load_fs
-	mov gs,[bp].load_gs
-
-spawn_vm16:
-	pop ebp
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	iretd
-
-spawn_close_fail:
-	CloseFile
-
-spawn_fail:
-	mov gs:s_ret_code,-1
-	mov ax,gs
-	mov ds,ax
-	LeaveSection ds:s_sect1
-	EnterSection ds:s_sect2
-;
-	mov ax,10
-	WaitMilliSec
-;
-	mov ds,gs:s_name
-	mov es,gs:s_cmd
-	mov fs,gs:s_curr_dir
-	call leave_process
-;
-	mov ax,gs
-	mov es,ax
-	xor ax,ax
-	mov gs,ax
-    UnloadExe
-
-spawn_program	Proc near
-	push ds
-	push es
-	push gs
-	push bx
-	push cx
-	push esi
-	push edi
-;
-	call enter_process
-	push es
-	mov eax,SIZE spawn_struc
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov gs,ax
-	pop es
-	mov gs:s_name,ds
-	mov gs:s_cmd,es
-	mov gs:s_curr_dir,fs
-;
-	mov gs:s_param,0
-    mov bx,dx
-    DerefModuleHandle	
-    jc spawn_debug_ok
-;    
-	mov gs:s_param,bx
-
-spawn_debug_ok:
-	mov gs:s_switch,0
-;
-	GetThread
-	mov bx,ax
-	GetThreadFocusKey
-	jc spawn_focus_done
-;
-	mov gs:s_switch,al
-
-spawn_focus_done:
-	push ds
-	mov ax,thread_app_sel
-	mov ds,ax
-	mov eax,ds:app_loader_name
-	mov gs:s_loader_name,eax
-	pop ds
-;
-	mov gs:s_sect1.cs_value,-1
-	mov gs:s_sect1.cs_list,0
-	mov gs:s_sect2.cs_value,-1
-	mov gs:s_sect2.cs_list,0
-;	
-	mov ax,ds
-	mov es,ax
-	mov ax,cs
-	mov ds,ax
-	mov si,OFFSET spawn_startup
-	mov bx,gs
-	mov ax,2
-	mov ecx,200h
-	CreateProcess
-;
-	mov ax,gs
-	mov ds,ax
-	EnterSection ds:s_sect1
-;
-	mov ax,ds:s_thread
-	mov dx,ds:s_app
-	mov bx,ds:s_ret_code
-	mov cx,ds:s_proc_sel
-;
-    or bx,bx
-    jnz spawn_no_pid
-;    
-    mov es,ax
-    mov ax,es:p_id
-;
-    push ax
-    push bx
-;    
-	mov ax,ds:s_param
-	or ax,ax
-	jz spawn_lib_ok
-;	
-    mov es,dx
-    mov ax,es:app_lib_sel
-
-spawn_lib_ok:
-    mov dx,cx
-    CreateProcHandle
-    mov dx,bx
-;    
-    pop bx
-    pop ax
-
-spawn_no_pid:
-	LeaveSection ds:s_sect2
-;
-   	xor cx,cx
-	mov ds,cx
-	mov fs,cx
-	mov gs,cx
-;
-	or bx,bx
-	jz spawn_ok
-;
-	stc
-	jmp spawn_done
-
-spawn_ok:
-	clc
-
-spawn_done:
-	pop edi
-	pop esi
-	pop cx
-	pop bx
-	pop gs
-	pop es
-	pop ds
-	ret
-spawn_program	Endp
-	
-spawn_program16	Proc far
-	push ebx
-	push esi
-	push edi
-;
-	movzx ebx,bx
-	movzx esi,si
-	movzx edi,di
-	call spawn_program
-;
-	pop edi
-	pop esi
-	pop ebx
-	ret
-spawn_program16	Endp
-	
-spawn_program32	Proc far
-	call spawn_program
-	retf32
-spawn_program32	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			CreateSpawnProg
 ;
 ;		DESCRIPTION:   	Make global copy of program name
@@ -1316,6 +990,76 @@ CreateSpawnEnv Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			CreateSpawnOptions
+;
+;		DESCRIPTION:   	Make global copy of options
+;
+;		PARAMETERS:     ES:EDI		Param struc
+;                       GS          Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSpawnOptions Proc near
+    push ds
+	push es
+	push eax
+	push ecx
+	push esi
+	push edi
+;
+    mov eax,es:[edi].sp_option_sel
+    or ax,3
+    verr ax
+    stc
+    jnz csoNoOpt
+;
+    mov ds,ax
+    mov esi,es:[edi].sp_option_offs
+    mov edi,esi
+	xor ecx,ecx
+
+csoLoop:
+	inc ecx
+	lods byte ptr [esi]
+	or al,al
+	jnz csoLoop
+;
+	inc ecx
+	lods byte ptr [esi]
+	or al,al
+	jnz csoLoop
+
+csoSizeOk:
+    mov esi,edi
+	mov eax,ecx
+	AllocateSmallGlobalMem
+	xor edi,edi
+	push ecx
+	rep movs byte ptr es:[edi],[esi]	
+	pop ecx
+    jmp csoDone
+
+csoNoOpt:
+    xor ax,ax
+    mov es,ax
+    xor ecx,ecx
+
+csoDone:    
+    mov gs:s_opt,es
+    mov gs:s_opt_size,cx
+;	
+	pop edi
+	pop esi
+	pop ecx
+	pop eax
+	pop es
+	pop ds
+    ret
+CreateSpawnOptions Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			SetupSpawnDir
 ;
 ;		DESCRIPTION:   	Setup spawn directory
@@ -1412,6 +1156,9 @@ FreeSpawn Proc near
     mov es,gs:s_env
     FreeMem        
 ;
+    mov es,gs:s_opt
+    FreeMem
+;
 	mov ax,gs
 	mov es,ax
 	xor ax,ax
@@ -1449,6 +1196,7 @@ SetupSpawn Proc near
     mov gs:s_cmd,0
     mov gs:s_curr_dir,0
     mov gs:s_env,0
+    mov gs:s_opt,0
 	mov gs:s_param,0
     mov bx,dx
     DerefModuleHandle
@@ -1507,7 +1255,7 @@ DoSpawn Proc near
     xor di,di
 	mov ax,cs
 	mov ds,ax
-	mov si,OFFSET new_spawn_startup
+	mov si,OFFSET spawn_startup
 	mov bx,gs
 	mov ax,2
 	mov ecx,200h
@@ -1615,7 +1363,7 @@ CreateSpawnHandle   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-new_spawn_startup:
+spawn_startup:
 	mov gs,bx
 	mov ax,exec_sys_sel
 	mov ds,ax
@@ -1755,6 +1503,7 @@ spFail:
 ;                                   +0  command line
 ;                                   +8  startdir
 ;                                   +12 env
+;                                   +16 options (file redir)
 ;						DX			Debug module handle
 ;
 ;       RETURN VALUE:   AX		    Thread ID
@@ -1762,9 +1511,9 @@ spFail:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-new_spawn_exe_name	DB 'Spawn Exe',0
+spawn_exe_name	DB 'Spawn Exe',0
 
-new_spawn_program	Proc near
+spawn_program	Proc near
     push gs
     push bx
     push cx
@@ -1774,6 +1523,7 @@ new_spawn_program	Proc near
     call CreateSpawnParam
     call CreateSpawnStartDir
     call CreateSpawnEnv
+    call CreateSpawnOptions
 ;
 	call DoSpawn
 	call WaitForSpawn
@@ -1808,25 +1558,25 @@ spDone:
     pop bx
     pop gs
 	ret
-new_spawn_program	Endp
+spawn_program	Endp
 	
-new_spawn_program16	Proc far
+spawn_program16	Proc far
 	push esi
 	push edi
 ;
 	movzx esi,si
 	movzx edi,di
-	call new_spawn_program
+	call spawn_program
 ;
 	pop edi
 	pop esi
 	ret
-new_spawn_program16	Endp
+spawn_program16	Endp
 	
-new_spawn_program32	Proc far
-	call new_spawn_program
+spawn_program32	Proc far
+	call spawn_program
 	retf32
-new_spawn_program32	Endp
+spawn_program32	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2069,16 +1819,9 @@ init	PROC far
 	mov ax,unload_exe_nr
 	RegisterBimodalUserGate
 ;
-;	mov bx,OFFSET spawn_program16
-;	mov si,OFFSET spawn_program32
-;	mov di,OFFSET spawn_exe_name
-;	mov dx,virt_es_in OR virt_ds_in
-;	mov ax,spawn_exe_nr
-;	RegisterUserGate
-;
-	mov bx,OFFSET new_spawn_program16
-	mov si,OFFSET new_spawn_program32
-	mov di,OFFSET new_spawn_exe_name
+	mov bx,OFFSET spawn_program16
+	mov si,OFFSET spawn_program32
+	mov di,OFFSET spawn_exe_name
 	mov dx,virt_es_in OR virt_ds_in
 	mov ax,spawn_exe_nr
 	RegisterUserGate

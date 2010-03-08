@@ -86,6 +86,8 @@ s_name				DW ?
 s_cmd				DW ?
 s_curr_dir			DW ?
 s_env               DW ?
+s_opt               DW ?
+s_opt_size          DW ?
 s_loader_name		DD ?
 s_param				DW ?
 s_thread			DW ?
@@ -106,5 +108,7 @@ sp_startdir_offs    DD ?
 sp_startdir_sel     DD ?
 sp_env_offs         DD ?
 sp_env_sel          DD ?
+sp_option_offs      DD ?
+sp_option_sel       DD ?
 
 spawn_param_struc   ENDS
