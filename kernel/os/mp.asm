@@ -50,8 +50,38 @@ mp_data_seg ENDS
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
-
     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			RealInit
+;
+;		DESCRIPTION:	Real mode processor init
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; this code is loaded at 0100:0000. It should contain no near jumps!
+
+real_start:    
+    mov al,0Fh
+    out 70h,al
+	jmp short $+2
+;
+    xor al,al
+    out 71h,al
+  	jmp short $+2
+;
+    mov ax,0
+    mov ds,ax
+    mov bx,0F00h
+    mov eax,12345678h
+    mov [bx],eax
+    cli
+    hlt
+
+real_end:
+    
+   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -65,20 +95,7 @@ mp_name	DB 'MP Test',0
 
 mp_pr:
     int 3
-;	
-	cli
 ;
-    mov al,0Fh
-    out 70h,al
-	jmp short $+2
-;
-    in al,71h	
-	jmp short $+2
-    sti
-    int 3
-
-
-
     mov eax,100000h
     AllocateBigLinear
 ;
@@ -98,6 +115,55 @@ alloc_loop:
     CreateDataSelector32
     mov gs,bx
 ;
+    int 3
+    mov es,bx
+    mov di,1000h
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET real_start
+    mov cx,OFFSET real_end - OFFSET real_start
+    rep movsb
+;
+    mov bx,467h
+    mov ax,0
+    mov es:[bx],ax
+    mov ax,100h
+    mov es:[bx+2],ax
+;
+    mov al,0Fh
+    out 70h,al
+	jmp short $+2
+;
+    mov al,0Ah
+    out 71h,al
+  	jmp short $+2
+;
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov eax,0CC500h
+    mov ds:APIC_ICR,eax
+    int 3
+    mov eax,0C8500h
+    mov ds:APIC_ICR,eax
+    int 3
+;
+    mov eax,ds:APIC_ICR
+    mov al,0Fh
+    out 70h,al
+	jmp short $+2
+;
+    in al,71h
+  	jmp short $+2
+    int 3
+;
+    mov eax,0C8601h
+    mov ds:APIC_ICR,eax
+    int 3
+;
+    mov eax,ds:APIC_ICR
+    
+
+    
     mov eax,05F504D5Fh
 ;
     mov ebx,40Eh
