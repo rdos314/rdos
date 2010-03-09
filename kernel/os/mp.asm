@@ -65,6 +65,20 @@ mp_name	DB 'MP Test',0
 
 mp_pr:
     int 3
+;	
+	cli
+;
+    mov al,0Fh
+    out 70h,al
+	jmp short $+2
+;
+    in al,71h	
+	jmp short $+2
+    sti
+    int 3
+
+
+
     mov eax,100000h
     AllocateBigLinear
 ;
