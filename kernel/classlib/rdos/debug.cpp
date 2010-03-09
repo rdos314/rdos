@@ -1716,10 +1716,11 @@ void TDebug::SignalNewData()
 #   Returns....: *
 #
 ##########################################################################*/
+
 void TDebug::Execute()
 {
         int thread;
-
+        
         RdosWaitMilli(250);
 
         FHandle = RdosSpawnDebug(FProgram.GetData(), FParam.GetData(), FStartDir.GetData(), 0, 0, &thread);

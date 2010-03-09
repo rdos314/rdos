@@ -306,7 +306,7 @@ void RDOSAPI RdosCreateThread(void (*Start)(void *Param), const char *Name, void
 void RDOSAPI RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const char *Name, void *Param, int StackSize);
 void RDOSAPI RdosTerminateThread();
 int RDOSAPI RdosGetThreadHandle();
-int RDOSAPI RdosExec(const char *prog, const char *param);
+int RDOSAPI RdosExec(const char *prog, const char *param, const char *options);
 int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, const char *env, const char *options, int *thread);
 int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, const char *env, const char *options, int *thread);
 void RDOSAPI RdosUnloadExe(int ExitCode);
@@ -463,6 +463,7 @@ unsigned short int RDOSAPI RdosCalcCrc(int Handle, unsigned short int CrcVal, co
 int RDOSAPI RdosGetModuleHandle();
 const char *RDOSAPI RdosGetExeName();
 const char *RDOSAPI RdosGetCmdLine();
+const char *RDOSAPI RdosGetOptions();
 int RDOSAPI RdosLoadDll(const char *Name);
 void RDOSAPI RdosFreeDll(int handle);
 int RDOSAPI RdosGetModuleName(int handle, char *Buf, int Size);
@@ -1165,10 +1166,14 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     value [eax];
 
 #pragma aux RdosExec = \
+    "push gs" \
+    "mov ax,ds" \
+    "mov gs,ax" \
     CallGate_load_exe  \
+    "pop gs" \
     CallGate_get_exit_code  \
     "movzx eax,ax"  \
-    parm [esi] [edi] \
+    parm [esi] [edi] [ebx] \
     value [eax];
 
 #pragma aux RdosUnloadExe = \
@@ -2021,6 +2026,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetCmdLine = \
     CallGate_get_cmd_line  \
+    ValidateEdi \
+    value [edi];
+
+#pragma aux RdosGetOptions = \
+    CallGate_get_options  \
     ValidateEdi \
     value [edi];
 
@@ -3125,7 +3135,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_load_exe  \
     CallGate_get_exit_code  \
     "movzx eax,ax"  \
-    parm [esi] [edi] \
+    parm [esi] [edi] [ebx] \
     value [eax];
 
 #pragma aux RdosUnloadExe = \
@@ -3971,6 +3981,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosGetCmdLine = \
     CallGate_get_cmd_line  \
+    ValidateDi \
+    value [edi];
+
+#pragma aux RdosGetOptions = \
+    CallGate_get_options  \
     ValidateDi \
     value [edi];
 

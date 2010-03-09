@@ -177,6 +177,12 @@ init_app	PROC near
 	mov ax,alias_module_handle_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET set_options
+	mov di,OFFSET set_options_name
+	xor cl,cl
+	mov ax,set_options_nr
+	RegisterOsGate
+;
 	mov si,OFFSET get_exe_name
 	mov di,OFFSET get_exe_name_name
 	mov dx,virt_es_in
@@ -193,6 +199,12 @@ init_app	PROC near
 	mov di,OFFSET get_env_name
 	mov dx,virt_es_in
 	mov ax,get_env_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_options
+	mov di,OFFSET get_options_name
+	mov dx,virt_es_in
+	mov ax,get_options_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET allocate_app_mem
@@ -457,6 +469,8 @@ run_open_hooks	Proc near
 	mov ds:app_get_exe_proc,0
 	mov ds:app_get_cmd_line_proc,0
 	mov ds:app_get_env_proc,0
+	mov ds:app_get_options_proc,0
+	mov ds:app_set_options_proc,0
 	mov ds:app_allocate_mem_proc,0
 	mov ds:app_free_mem_proc,0
 	mov ds:app_init_thread_proc,0
@@ -1010,6 +1024,74 @@ get_env_done:
 	pop ds
 	retf32
 get_env	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetOptions
+;
+;		DESCRIPTION:	Set options
+;
+;		RETURNS:		ES  option selector or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_options_name	DB 'Set Options',0
+
+set_options	PROC far
+	push ds
+;
+	push eax
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov eax,ds:app_set_options_proc
+	or eax,eax
+	pop eax
+	stc
+	jz set_options_done
+;
+	call ds:app_set_options_proc
+
+set_options_done:
+	pop ds
+	ret
+set_options	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetOptions
+;
+;		DESCRIPTION:	Get options
+;
+;		RETURNS:		ES:(E)DI		Options
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_options_name	DB 'Get Options',0
+
+get_options	PROC far
+	push ds
+;
+	push eax
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov eax,ds:app_get_options_proc
+	or eax,eax
+	pop eax
+	stc
+	jz get_options_done
+;
+	call ds:app_get_options_proc
+
+get_options_done:
+	pop ds
+	retf32
+get_options	ENDP
 
 PAGE
 	

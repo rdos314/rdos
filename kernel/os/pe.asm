@@ -671,6 +671,10 @@ InsertApp	Proc near
 	mov word ptr ds:app_get_exe_proc+2,cs 
 	mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
 	mov word ptr ds:app_get_cmd_line_proc+2,cs 
+	mov word ptr ds:app_get_options_proc,OFFSET get_options
+	mov word ptr ds:app_get_options_proc+2,cs 
+	mov word ptr ds:app_set_options_proc,OFFSET set_options
+	mov word ptr ds:app_set_options_proc+2,cs 
 	mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
 	mov word ptr ds:app_allocate_mem_proc+2,cs 
 	mov word ptr ds:app_free_mem_proc,OFFSET free_mem
@@ -2701,6 +2705,7 @@ load_pe_name_size:
 	add eax,ebx
 	UserGateForce32 allocate_app_mem_nr	
 	mov fs:pe_cmd_line,edx
+	mov fs:pe_options,0
 ;
 	push es
 	push ecx
@@ -4488,6 +4493,76 @@ get_cmd_line	Proc far
 	pop ds
 	ret
 get_cmd_line	Endp
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetOptions
+;
+;		DESCRIPTION:    Set options
+;
+;       PARAMETERS:     ES  Option selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_options	Proc far
+	push ds
+	push es
+	pusha
+;
+    mov ax,es
+    mov ds,ax
+    xor si,si
+    xor cx,cx
+
+set_opt_size:
+    lodsb
+    inc cx
+    or al,al
+    jnz set_opt_size
+;
+    lodsb
+    inc cx
+    or al,al
+    jnz set_opt_size
+;
+	mov eax,ecx
+	UserGateForce32 allocate_app_mem_nr
+	mov edi,edx
+	xor esi,esi
+	mov ax,flat_data_sel
+	mov es,ax
+	rep movs byte ptr es:[edi],[esi]
+;        
+   	mov ax,pe_app_sel
+	mov ds,ax
+	mov ds:pe_options,edx
+;
+	clc
+	popa
+	pop es
+	pop ds
+	ret
+set_options	Endp
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetOptions
+;
+;		DESCRIPTION:    Get options
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_options	Proc far
+	push ds
+	mov di,pe_app_sel
+	mov ds,di
+	mov edi,ds:pe_options
+	clc
+	pop ds
+	ret
+get_options	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -100,6 +100,14 @@ s_switch			DB ?
 
 spawn_struc	ENDS
 
+exec_struc	STRUC
+
+e_name				DW ?
+e_cmd				DW ?
+e_opt               DW ?
+
+exec_struc	ENDS
+
 spawn_param_struc   STRUC
 
 sp_param_offs       DD ?

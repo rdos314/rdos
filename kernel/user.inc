@@ -582,6 +582,7 @@ XmsHandler	MACRO
 
 ; IN  DS:(E)SI	Program name
 ; IN  ES:(E)DI	Command line
+; IN  GS:(E)BX	Options
 LoadExe	MACRO
 	UserGate load_exe_nr
 					ENDM
@@ -645,6 +646,11 @@ GetExeName	MACRO
 ; OUT ES:(E)DI	Command line
 GetCmdLine	MACRO
 	UserGate get_cmd_line_nr
+					ENDM
+
+; OUT ES:(E)DI	Options
+GetOptions	MACRO
+	UserGate get_options_nr
 					ENDM
 
 ; OUT ES:(E)DI	Environment

@@ -145,196 +145,272 @@ load_exe_file	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			enter_load
+;		NAME:		    SetupExec
 ;
-;		DESCRIPTION:   	Make a global copy of parameters
+;		DESCRIPTION:   	Setup exec
 ;
-;		PARAMETERS:     DS:ESI		Filename
-;						ES:EDI		Command line
-;
-;       RETURN VALUE:   DS:ESI		Global filename
-;						ES:EDI		Global command line
+;       RETURNS:        FS          Exec sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enter_load	Proc near
+SetupExec Proc near	
+    push ds
+    push es
+    push eax
+; 
+    mov eax,SIZE exec_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov fs,ax
+;  
+    mov fs:e_name,0
+    mov fs:e_cmd,0
+    mov fs:e_opt,0
+;
+    pop eax
+    pop es
+    pop ds
+    ret
+SetupExec  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateExecProg
+;
+;		DESCRIPTION:   	Make global copy of program name
+;
+;		PARAMETERS:     DS:ESI		Filename
+;                       FS          Exec sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateExecProg Proc near
+	push es
 	push eax
 	push ecx
-;
-	xor ecx,ecx
 	push esi
+	push edi
+;
+    mov edi,esi
+	xor ecx,ecx
 
-enter_clone_file_size_loop:
+ceprLoop:
 	lods byte ptr [esi]
 	or al,al
-	jz enter_clone_file_size_ok
+	jz ceprSizeOk
 ;
 	inc ecx
-	jmp enter_clone_file_size_loop
+	jmp ceprLoop
 
-enter_clone_file_size_ok:
+ceprSizeOk:
+    mov esi,edi
+	inc ecx	
+	mov eax,ecx
+	AllocateSmallGlobalMem
+    mov fs:e_name,es
+	xor edi,edi
+	rep movs byte ptr es:[edi],[esi]	
+;    
+	pop edi
 	pop esi
+	pop ecx
+	pop eax
+	pop es
+    ret
+CreateExecProg Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;
+;		NAME:			CreateExecParam
+;
+;		DESCRIPTION:   	Make global copy of parameters
+;
+;		PARAMETERS:     ES:EDI		Cmd line
+;                       FS          Exec sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateExecParam Proc near
+    push ds
 	push es
+	push eax
+	push ecx
+	push esi
 	push edi
+;
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+	xor ecx,ecx
+
+cepaLoop:
+	lods byte ptr [esi]
+	or al,al
+	jz cepaSizeOk
+;
+	inc ecx
+	jmp cepaLoop
+
+cepaSizeOk:
+    mov esi,edi
 	inc ecx	
 	mov eax,ecx
 	AllocateSmallGlobalMem
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]
-	mov ax,es
-	mov ds,ax
-	pop edi
-	pop es
-;
-	xor ecx,ecx
-	push edi
+	rep movs byte ptr es:[edi],[esi]	
+    jmp cepaDone
 
-enter_clone_cmd_size_loop:
-	mov al,es:[edi]
-	inc edi
-	or al,al
-	jz enter_clone_cmd_size_ok
-;
-	inc ecx
-	jmp enter_clone_cmd_size_loop
-
-enter_clone_cmd_size_ok:
-	pop edi
-;
-	inc ecx
-	push ds
-	push esi
-	mov ax,es
-	mov ds,ax
-	mov esi,edi
-	mov eax,ecx
+cepaNoParam:
+    mov eax,1
 	AllocateSmallGlobalMem
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]
+    xor al,al
+    stos byte ptr es:[edi]
+
+cepaDone:    
+    mov fs:e_cmd,es
+;	
+	pop edi
 	pop esi
-	pop ds
-;
-	xor esi,esi
-	xor edi,edi
-;
 	pop ecx
 	pop eax
-	ret
-enter_load	Endp
+	pop es
+	pop ds
+    ret
+CreateExecParam Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			leave_load
+;		NAME:			CreateExecOptions
 ;
-;		DESCRIPTION:    Free global copy of parameters
+;		DESCRIPTION:   	Make global copy of options
 ;
-;		PARAMETERS:     DS:ESI		Filename
-;						ES:EDI		Command line
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-leave_load	Proc near
-	push ax
-	FreeMem
-	mov ax,ds
-	mov es,ax
-	xor ax,ax
-	mov ds,ax
-	FreeMem
-	pop ax
-	ret
-leave_load	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			enter_process
-;
-;		DESCRIPTION:   	Make a global copy of parameters
-;
-;		PARAMETERS:     DS:ESI		Filename
-;						ES:EDI		Command line
-;						FS:EBX		Current dir
-;
-;       RETURN VALUE:   DS:ESI		Global filename
-;						ES:EDI		Global command line
-;						FS:EBX		Global current dir
+;		PARAMETERS:     GS:EBX		Param struc
+;                       FS          Exec sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enter_process	Proc near
+CreateExecOptions Proc near
+    push ds
+	push es
 	push eax
 	push ecx
-;
-	call enter_load
-;
-	xor ecx,ecx
-	push ebx
-
-enter_clone_curdir_size_loop:
-	mov al,fs:[ebx]
-	inc ebx
-	or al,al
-	jz enter_clone_curdir_size_ok
-;
-	inc ecx
-	jmp enter_clone_curdir_size_loop
-
-enter_clone_curdir_size_ok:
-	pop ebx
-;
-	inc ecx
-	push ds
-	push es
 	push esi
 	push edi
-	mov ax,fs
-	mov ds,ax
-	mov esi,ebx
+;   
+    mov ax,gs
+    mov ds,ax
+    mov esi,ebx
+    mov edi,esi
+	xor ecx,ecx
+
+ceoLoop:
+	inc ecx
+	lods byte ptr [esi]
+	or al,al
+	jnz ceoLoop
+;
+	inc ecx
+	lods byte ptr [esi]
+	or al,al
+	jnz ceoLoop
+
+ceoSizeOk:
+    mov esi,edi
 	mov eax,ecx
 	AllocateSmallGlobalMem
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]
-	mov ax,es
-	mov fs,ax
+	push ecx
+	rep movs byte ptr es:[edi],[esi]	
+	pop ecx
+    jmp ceoDone
+
+ceoNoOpt:
+    xor ax,ax
+    mov es,ax
+    xor ecx,ecx
+
+ceoDone:    
+    mov fs:e_opt,es
 	pop edi
 	pop esi
-	pop es
-	pop ds
-;
-	xor ebx,ebx
-;
 	pop ecx
 	pop eax
-	ret
-enter_process	Endp
+	pop es
+	pop ds
+    ret
+CreateExecOptions Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			leave_process
+;		NAME:			SetupExecOptions
 ;
-;		DESCRIPTION:    Free global copy of parameters
+;		DESCRIPTION:   	Setup exec options
 ;
-;		PARAMETERS:     DS:ESI		Filename
-;						ES:EDI		Command line
-;						FS:EBX		Current dir
+;		PARAMETERS:     GS          Spawn sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-leave_process	Proc near
-	call leave_load
-	push ax
-	mov ax,fs
+SetupExecOptions Proc near
+    push es
+    push ax
+;
+    mov ax,gs:e_opt
+    or ax,ax
+    jz seoDone
+;
+	mov es,ax
+	SetOptions
+
+seoDone:	
+    pop ax
+    pop es
+    ret
+SetupExecOptions   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeExec
+;
+;		DESCRIPTION:   	Free exec environment
+;
+;		PARAMETERS:     GS          Exec sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeExec Proc near
+    push ax
+;    
+    xor ax,ax
+    mov ds,ax
+    mov es,gs:e_name
+    FreeMem
+;
+    mov es,gs:e_cmd
+    FreeMem
+;
+    mov ax,gs:e_opt
+    or ax,ax
+    jz feOptOk
+;    
+    mov es,ax
+    FreeMem
+
+feOptOk:
+	mov ax,gs
 	mov es,ax
 	xor ax,ax
-	mov fs,ax
+	mov gs,ax
 	FreeMem
-	pop ax
-	ret
-leave_process	Endp
+;
+    pop ax
+    ret
+FreeExec   Endp	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -345,123 +421,43 @@ leave_process	Endp
 ;
 ;		PARAMETERS:     DS:(E)SI	Filename
 ;						ES:(E)DI	Command line
+;                       GS:(E)BX    Options
 ;
 ;       RETURN VALUE:   
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_exe_name	DB 'Load Exe',0
-	
-load_program16:
+
+load_program    Proc near
 	pop ax
-	pop dx
-	movzx edx,dx
-	push edx
-	movzx eax,ax
-	push eax
+;	
+	push word ptr 0
+	push cs
+	push word ptr 0
+	push ax
+;	
+    call SetupExec
+    call CreateExecProg
+    call CreateExecParam
+    call CreateExecOptions
+;	
 	SimSti
 	SaveContext
 	xor eax,eax
+	push eax
+	push eax
+	push eax
+	push eax
+	push eax
+	push eax
+	push eax
+;
+    mov ax,fs
+    mov gs,ax
+    xor ax,ax
 	mov fs,ax
-	mov gs,ax
-	push eax
-	push eax
-	push eax
-	push eax
-	push eax
-	push eax
-	push eax
 ;
-	movzx esi,si
-	movzx edi,di
-	push bx
-	GetPsp
-	call enter_load
-	OpenApp
-	SetPsp
-	pop bx
-	push es
-	push di
-	mov ax,thread_app_sel
-	mov es,ax
-	mov es:app_context,bx
-;
-	push si
-	mov di,OFFSET app_exe_name
-
-load_copy_exe_loop16:
-	lodsb
-	stosb
-	or al,al
-	jne load_copy_exe_loop16
-;
-	pop di
-;
-	movzx esi,di
-	mov ax,ds
-	mov es,ax
-	xor cx,cx
-	OpenFile
-	pop di
-	pop es
-	jc load_fail16
-;
-	call load_exe_file
-	jc load_close_fail16
-;
-	call leave_load
-	test byte ptr [bp+2].load_eflags,2
-	jnz load_prog_vm16
-;
-	mov ds,[bp].load_ds
-	mov es,[bp].load_es
-	mov fs,[bp].load_fs
-	mov gs,[bp].load_gs
-
-load_prog_vm16:
-	pop ebp
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	iretd
-
-load_close_fail16:
-	CloseFile
-
-load_fail16:
-	call leave_load
-	CloseApp
-;
-	mov ax,thread_app_sel
-	mov ds,ax
-	mov bx,ds:app_context
-	RestoreContext
-	push ds
-	mov ax,thread_app_sel
-	mov ds,ax
-	mov ax,ds:app_exit_code
-	pop ds
-	stc
-	retf32
-	
-load_program32:
-	SimSti
-	SaveContext
-	xor eax,eax
-	mov fs,ax
-	mov gs,ax
-	push eax
-	push eax
-	push eax
-	push eax
-	push eax
-	push eax
-	push eax
-;
-	call enter_load
 	OpenApp
 	push es
 	push edi
@@ -469,39 +465,39 @@ load_program32:
 	mov es,ax
 	mov es:app_context,bx
 ;
-	push esi
-	mov edi,OFFSET app_exe_name
+	xor si,si
+	mov ds,gs:e_name
+	mov di,OFFSET app_exe_name
 
-load_copy_exe_loop32:
-	lods byte ptr [esi]
-	stos byte ptr es:[edi]
+epCopyExeLoop:
+	lodsb
+	stosb
 	or al,al
-	jne load_copy_exe_loop32
+	jne epCopyExeLoop
 ;
-	pop edi
+	mov es,gs:e_name
+	xor di,di
+	OpenFile
+	jc load_fail
 ;
-	mov esi,edi
-	mov ax,ds
-	mov es,ax
-	xor cx,cx
-	UserGateForce32 open_file_nr
-	pop edi
-	pop es
-	jc load_fail32
-;
+	xor esi,esi
+	xor edi,edi
+	mov ds,gs:e_name
+	mov es,gs:e_cmd
 	call load_exe_file
-	jc load_close_fail32
+	jc load_close_fail
 ;
-	call leave_load
+    call SetupExecOptions
+    call FreeExec
 	test byte ptr [bp+2].load_eflags,2
-	jnz load_prog_vm32
+	jnz load_prog_vm
 ;
 	mov ds,[bp].load_ds
 	mov es,[bp].load_es
 	mov fs,[bp].load_fs
 	mov gs,[bp].load_gs
 
-load_prog_vm32:
+load_prog_vm:
 	pop ebp
 	pop edi
 	pop esi
@@ -511,11 +507,11 @@ load_prog_vm32:
 	pop eax
 	iretd
 
-load_close_fail32:
+load_close_fail:
 	CloseFile
 
-load_fail32:
-	call leave_load
+load_fail:
+    call FreeExec
 	CloseApp
 ;
 	mov ax,thread_app_sel
@@ -529,6 +525,37 @@ load_fail32:
 	pop ds
 	stc
 	retf32
+load_program    Endp
+	
+load_program16 Proc far
+    push fs
+    push ebx
+    push esi
+    push edi
+;
+    movzx ebx,bx
+    movzx esi,si
+    movzx edi,di        
+    call load_program
+;
+    pop edi
+    pop esi
+    pop ebx
+    pop fs
+    ret
+load_program16  Endp
+	
+load_program32 Proc far
+    push fs
+    push bx
+;
+    int 3
+    call load_program
+;
+    pop bx
+    pop fs
+    retf32
+load_program32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1135,6 +1162,34 @@ SetupSpawnEnv   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			SetupSpawnOptions
+;
+;		DESCRIPTION:   	Setup span options
+;
+;		PARAMETERS:     GS          Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupSpawnOptions Proc near
+    push es
+    push ax
+;
+    mov ax,gs:s_opt
+    or ax,ax
+    jz ssoDone
+;
+	mov es,ax
+	SetOptions
+
+ssoDone:	
+    pop ax
+    pop es
+    ret
+SetupSpawnOptions   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			FreeSpawn
 ;
 ;		DESCRIPTION:   	Free spawn environment
@@ -1156,9 +1211,14 @@ FreeSpawn Proc near
     mov es,gs:s_env
     FreeMem        
 ;
-    mov es,gs:s_opt
+    mov ax,gs:s_opt
+    or ax,ax
+    jz fsOptOk
+;    
+    mov es,ax
     FreeMem
-;
+
+fsOptOk:
 	mov ax,gs
 	mov es,ax
 	xor ax,ax
@@ -1424,6 +1484,8 @@ spCopyExeLoop:
 ;
 	call load_exe_file
 	jc spCloseFail
+;
+    call SetupSpawnOptions
 ;
 	mov gs:s_ret_code,0
 	mov ax,thread_app_sel
