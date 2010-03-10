@@ -186,6 +186,7 @@ clts_txt			DB 'clts',0
 cmc_txt				DB 'cmc',0
 cmp_txt				DB 'cmp',0
 cmps_txt			DB 'cmps',0
+cpuid_txt			DB 'cpuid',0
 cr_txt				DB 'cr',0
 cs_txt				DB 'cs',0
 cwd_txt				DB 'cwd',0
@@ -355,6 +356,8 @@ qword_txt			DB 'qword',0
 qword_ptr_txt		DB 'qword ptr',0
 rcl_txt				DB 'rcl',0
 rcr_txt				DB 'rcr',0
+rdmsr_txt			DB 'rdmsr',0
+rdtsc_txt			DB 'rdtsc',0
 repnz_txt			DB 'repnz',0
 repz_txt			DB 'repz',0
 retf_txt			DB 'retf',0
@@ -409,6 +412,7 @@ w_txt				DB 'w',0
 wait_txt			DB 'wait',0
 word_txt			DB 'word',0
 word_ptr_txt		DB 'word ptr',0
+wrmsr_txt			DB 'wrmsr',0
 xchg_txt			DB 'xchg',0
 xlat_txt			DB 'xlat',0
 xor_txt				DB 'xor',0
@@ -4123,22 +4127,22 @@ oppr0F2F:
 			DW 0FFFFh
 
 oppr0F30:
-			DW OFFSET op_illegal
-			DW 0FFFFh
+			DW OFFSET op_one
+			DW OFFSET wrmsr_txt - OFFSET mne_tab + blank_sep
 			DW 0FFFFh
 			DW 0FFFFh
 			DW 0FFFFh
 
 oppr0F31:
-			DW OFFSET op_illegal
-			DW 0FFFFh
+			DW OFFSET op_one
+			DW OFFSET rdtsc_txt - OFFSET mne_tab + blank_sep
 			DW 0FFFFh
 			DW 0FFFFh
 			DW 0FFFFh
 
 oppr0F32:
-			DW OFFSET op_illegal
-			DW 0FFFFh
+			DW OFFSET op_one
+			DW OFFSET rdmsr_txt - OFFSET mne_tab + blank_sep
 			DW 0FFFFh
 			DW 0FFFFh
 			DW 0FFFFh
@@ -4921,8 +4925,8 @@ oppr0FA1:
 			DW 0FFFFh
 
 oppr0FA2:
-			DW OFFSET op_illegal
-			DW 0FFFFh
+			DW OFFSET op_one
+			DW OFFSET cpuid_txt - OFFSET mne_tab + blank_sep
 			DW 0FFFFh
 			DW 0FFFFh
 			DW 0FFFFh

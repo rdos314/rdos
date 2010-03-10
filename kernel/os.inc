@@ -40,6 +40,11 @@ rdmsr   MACRO
     db 32h
         ENDM
 
+wrmsr   MACRO
+    db 0Fh
+    db 30h
+        ENDM
+    
 Retf16	MACRO
 	db 66h
 	db 0CBh

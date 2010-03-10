@@ -41,7 +41,10 @@ INCLUDE mp.inc
 
 mp_data_seg	STRUC
 
-mp_thread   DW ?
+mp_init_proc        DW ?
+mp_startup_proc     DW ?
+
+mp_thread           DW ?
 
 mp_data_seg ENDS
 
@@ -80,7 +83,220 @@ real_start:
     hlt
 
 real_end:
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DelayMs
+;
+;		DESCRIPTION:	Delay for Init/SIPI
+;
+;       PARAMETERS:     AX      Delay in ms
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DelayMs Proc near
+    WaitMilliSec
+    ret
+DelayMs Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendInitMem
+;
+;		DESCRIPTION:	Send init request using shared memory
+;
+;       PARAMETERS:     EDX     Destination
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendInitMem Proc near
+    push ds
+    push eax
+    push edx
+;    
+    shl edx,24
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov ds:APIC_ICR+10h,edx
+;
+    mov eax,0C500h
+    mov ds:APIC_ICR,eax
+;    
+    mov ax,1
+    call DelayMs
+;
+    mov eax,08500h
+    mov ds:APIC_ICR,eax
+;
+    pop edx
+    pop eax
+    pop ds
+    ret
+SendInitMem Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendInitMsr
+;
+;		DESCRIPTION:	Send init request using MSRs
+;
+;       PARAMETERS:     EDX     Destination
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendInitMsr Proc near
+    push eax
+    push ecx
+;
+    mov eax,0C500h
+    mov ecx,MSR_APIC_ICR
+    wrmsr
+;    
+    mov ax,1
+    call DelayMs
+;
+    mov eax,08500h
+    mov ecx,MSR_APIC_ICR
+    wrmsr
+;
+    pop ecx
+    pop eax
+    ret
+SendInitMsr Endp
+           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendInit
+;
+;		DESCRIPTION:	Send init request
+;
+;       PARAMETERS:     EDX     Destination
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendInit Proc near
+    call ds:mp_init_proc
+    mov ax,20
+    call DelayMs
+    ret
+SendInit Endp
     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendStartupMem
+;
+;		DESCRIPTION:	Send startup request using shared memory
+;
+;       PARAMETERS:     EDX     Destination
+;                       AL      Vector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendStartupMem Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+;    
+    shl edx,24
+    mov cx,apic_data_sel
+    mov ds,cx
+    mov ds:APIC_ICR+10h,edx
+;
+    mov ah,46h
+    movzx eax,ax
+    mov ds:APIC_ICR,eax
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+SendStartupMem Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendStartupMsr
+;
+;		DESCRIPTION:	Send startup request using MSRs
+;
+;       PARAMETERS:     EDX     Destination
+;                       AL      Vector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendStartupMsr Proc near
+    push eax
+    push ecx
+;
+    mov ah,46h
+    movzx eax,ax
+    mov ecx,MSR_APIC_ICR
+    wrmsr
+;
+    pop ecx
+    pop eax
+    ret
+SendStartupMsr Endp
+           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendStartup
+;
+;		DESCRIPTION:	Send startup request
+;
+;       PARAMETERS:     EDX     Destination
+;                       AL      Vector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendStartup Proc near
+    call ds:mp_startup_proc
+    mov ax,1
+    call DelayMs
+    ret
+SendStartup Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetupMemGates
+;
+;		DESCRIPTION:	Set up shared memory gates for APIC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupMemGates   Proc near
+    mov ax,mp_data_sel
+    mov ds,ax
+    mov ds:mp_init_proc, OFFSET SendInitMem
+    mov ds:mp_startup_proc, OFFSET SendStartupMem
+    ret
+SetupMemGates   Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetupMsrGates
+;
+;		DESCRIPTION:	Set up MSR gates for x2APIC mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupMsrGates   Proc near
+    mov ax,mp_data_sel
+    mov ds,ax
+    mov ds:mp_init_proc, OFFSET SendInitMsr
+    mov ds:mp_startup_proc, OFFSET SendStartupMsr
+    ret
+SetupMsrGates   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -94,6 +310,29 @@ real_end:
 mp_name	DB 'MP Test',0
 
 mp_pr:
+    int 3
+;    
+    mov ecx,1Bh
+    rdmsr
+    test ah,8
+    jz mp_pr_done
+;
+    test ah,4
+    jnz mp_pr_apic_msr
+
+mp_pr_apic_mmio:
+    call SetupMemGates
+    jmp mp_pr_gates_ok
+
+mp_pr_apic_msr:
+    call SetupMsrGates
+
+mp_pr_gates_ok:     
+    mov edx,1
+    call SendInit
+    mov al,1
+    call SendStartup
+    call SendStartup
     int 3
 ;
     mov eax,100000h
@@ -201,7 +440,9 @@ find_ok:
 
 find_fail:
     int 3
-            
+
+mp_pr_done:
+    retf            
 
 PAGE
 	
@@ -299,3 +540,4 @@ init_mp_tasks	ENDP
 code	ENDS
 
 	END
+
