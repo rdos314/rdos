@@ -816,20 +816,7 @@ ptab_init:
 	mov [bx].timer_msb,0FFFFFFFFh
 	mov [bx].timer_lsb,0FFFFFFFFh
 	mov ds:timer_head,bx
-;
-    mov ax,system_data_sel
-    mov es,ax
-	mov ds:update_tics,0
-	mov ds:init_clock_proc,OFFSET InitPitClock
-	mov ds:update_clock_proc,OFFSET UpdatePitClock
-    mov eax,es:tsc_tics
-    or eax,eax
-    jz timer_clock_done
-;
-	mov ds:init_clock_proc,OFFSET InitTscClock
-	mov ds:update_clock_proc,OFFSET UpdateTscClock
-
-timer_clock_done:
+;	
 	mov cx,0FFh
 	add bx,SIZE timer_struc
 	mov ds:timer_free,bx
@@ -2314,6 +2301,17 @@ init_first_thread	Proc near
 ;
     mov ax,system_data_sel
     mov es,ax
+	mov ds:update_tics,0
+	mov ds:init_clock_proc,OFFSET InitPitClock
+	mov ds:update_clock_proc,OFFSET UpdatePitClock
+    mov eax,es:tsc_tics
+    or eax,eax
+    jz timer_clock_done
+;
+	mov ds:init_clock_proc,OFFSET InitTscClock
+	mov ds:update_clock_proc,OFFSET UpdateTscClock
+
+timer_clock_done:
     test es:cpu_feature_flags,200h
     jz init_use_pit_timer
 
