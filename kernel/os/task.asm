@@ -39,7 +39,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE mp.inc
+INCLUDE apic.inc
 
 section_num	EQU 512
 
@@ -647,7 +647,7 @@ GetApicTics	Proc near
 ;
 	mov eax,80000000h
 	cli
-    mov bx,apic_data_sel
+    mov bx,apic_mem_sel
     mov es,bx
     mov es:APIC_INIT_COUNT,eax    
     push esi
@@ -694,7 +694,7 @@ ReloadApicTimer	Proc near
     shl eax,16
     mul ecx
     inc edx
-    mov ax,apic_data_sel
+    mov ax,apic_mem_sel
     mov es,ax    
     mov es:APIC_INIT_COUNT,edx
 	ret
@@ -2207,7 +2207,7 @@ apic_int:
 	push es
 	pushad
 ;
-    mov ax,apic_data_sel
+    mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax	

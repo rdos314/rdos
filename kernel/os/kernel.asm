@@ -38,7 +38,7 @@ INCLUDE system.def
 INCLUDE port.def
 INCLUDE ..\driver.def
 INCLUDE ..\os.inc
-INCLUDE mp.inc
+INCLUDE apic.inc
 
 MAJOR_VERSION = 8
 MINOR_VERSION = 9
@@ -78,8 +78,6 @@ RELEASE = 0
 	extrn init_systemgate:near
 	extrn init_usergate:near
 	extrn init_cpu_gates:near
-	extrn init_mp_gates:near
-	extrn init_mp_tasks:near
 	extrn init_io:near
 	extrn init_int:near
 	extrn init_irq:near
@@ -442,175 +440,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Init_timers
-;
-;		DESCRIPTION:    Init timers
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_tics   MACRO
-    mov al,0
-	out TIMER_CONTROL,al
-	jmp short $+2
-	in al,TIMER0
-	mov ah,al
-	jmp short $+2
-	in al,TIMER0
-	xchg al,ah
-	        ENDM
-
-init_timers Proc near    
-    push ds
-    push es
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:cpu_feature_flags
-    test ax,200h
-    jz init_tsc_start    
-;    
-    mov ecx,1Bh
-    rdmsr
-;    
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-    pop eax
-    and ax,0F000h
-    or ax,33h
-    SetPhysicalPage    
-    mov bx,apic_data_sel
-    mov ecx,1000h
-    CreateDataSelector16
-    mov es,bx
-;
-    mov eax,8700h
-    mov es:APIC_LINT0,eax
-;
-    mov eax,400h
-    mov es:APIC_LINT1,eax 
-;   
-    mov eax,10000h
-    mov es:APIC_LERROR,eax
-;
-    mov eax,10000h
-    mov es:APIC_THERMAL,eax
-;
-    mov eax,10000h
-    mov es:APIC_PERF,eax
-;
-    mov eax,10000h
-    mov es:APIC_TIMER,eax
-;
-    mov eax,es:APIC_SPUR
-    or eax,100h
-    mov al,0Fh
-    mov es:APIC_SPUR,eax    
-;
-    mov eax,0Bh
-    mov es:APIC_DIV_CONFIG,eax
-
-init_tsc_start:
-    mov eax,ds:cpu_feature_flags
-    test al,10h
-    jz init_timer_done    
-;    
-    xor cx,cx    
-
-init_tsc_wait_start_high:
-    read_tics    
-    test ax,8000h
-    jnz init_tsc_wait_start_high_ok
-    loop init_tsc_wait_start_high    
-
-init_tsc_wait_start_high_ok:
-    xor cx,cx    
-
-init_tsc_wait_start_low:
-    read_tics    
-    test ax,8000h
-    jz init_tsc_wait_start_low_ok
-    loop init_tsc_wait_start_low
-
-init_tsc_wait_start_low_ok:    
-    mov eax,ds:cpu_feature_flags
-    test ax,200h
-    jz init_apic_start_done
-;
-    mov eax,0FFFFFFFFh
-    mov es:APIC_INIT_COUNT,eax
-
-init_apic_start_done:
-    rdtsc
-    mov esi,eax
-    mov edi,edx
-    xor cx,cx
-
-init_tsc_wait_high:    
-    read_tics
-    test ax,8000h
-    jnz init_tsc_wait_high_ok
-    loop init_tsc_wait_high
-
-init_tsc_wait_high_ok:
-    xor cx,cx
-
-init_tsc_wait_low:    
-    read_tics
-    test ax,8000h
-    jz init_tsc_wait_low_ok
-    loop init_tsc_wait_low
-
-init_tsc_wait_low_ok:
-    mov eax,ds:cpu_feature_flags
-    test ax,200h
-    jz init_apic_stop_done
-;
-    mov ebp,es:APIC_CURR_COUNT
-
-init_apic_stop_done:
-    rdtsc
-    sub eax,esi
-    sbb edx,edi
-;
-    mov ecx,8000h
-    div ecx
-;        
-    mov ds:tsc_tics,eax
-    mov ds:tsc_rest,dx
-;
-    or eax,eax
-    jnz init_tsc_done
-;
-    and ds:cpu_feature_flags, NOT 10h
-    
-init_tsc_done:
-    mov eax,ds:cpu_feature_flags
-    test ax,200h
-    jz init_timer_done
-;    
-    mov eax,-1
-    sub eax,ebp
-    xor edx,edx
-    mov ecx,8000h
-    div ecx
-;
-    mov ds:apic_tics,eax
-    mov ds:apic_rest,dx    
-
-init_timer_done:    
-    pop es
-    pop ds
-    ret
-init_timers Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			Init
 ;
 ;		DESCRIPTION:	Kernel startup procedure
@@ -779,12 +608,11 @@ prot_init:
 	call init_system
 	call init_physical_gates
     call init_cpu_gates
-    call init_mp_gates
 	call move_adapters
 	call init_paging_gates
 	call init_physical_gates
 	call init_mem_sels
-    call init_timers
+;    call init_timers
 	call init_systemgate
 	call init_state
 	call init_task
@@ -799,7 +627,6 @@ prot_init:
 	call init_swap
 	call init_random
 	call init_crc
-    call init_mp_tasks
 ;
 	call init_device    
 	call init_first_process
