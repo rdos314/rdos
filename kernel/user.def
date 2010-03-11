@@ -469,4 +469,6 @@ get_proc_exit_code_nr       = 383
 get_cpu_version_nr          = 384
 get_options_nr              = 385
 
-usergate_entries			= 386
+fork_nr                     = 386
+
+usergate_entries			= 387

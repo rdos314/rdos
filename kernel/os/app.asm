@@ -129,6 +129,12 @@ init_app	PROC near
 	mov ax,close_app_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET clone_app
+	mov di,OFFSET clone_app_name
+	xor cl,cl
+	mov ax,clone_app_nr
+	RegisterOsGate
+;
 	mov si,OFFSET hook_open_app
 	mov di,OFFSET hook_open_app_name
 	xor cl,cl
@@ -465,6 +471,7 @@ run_open_hooks	Proc near
 	mov ax,thread_app_sel
 	mov ds,ax
 ;	
+    mov ds:app_fork_id,0
     mov ds:app_handle,0
 	mov ds:app_get_exe_proc,0
 	mov ds:app_get_cmd_line_proc,0
@@ -476,6 +483,7 @@ run_open_hooks	Proc near
 	mov ds:app_init_thread_proc,0
 	mov ds:app_free_thread_proc,0
 	mov ds:app_spawn_proc,0
+	mov ds:app_clone_proc,0
 	mov ds:app_close_proc,0
 	mov ds:app_load_dll_proc,0
 ;
@@ -1168,6 +1176,40 @@ free_mem_done:
 	pop ds
 	retf32
 free_app_mem	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:		    CloneApp
+;
+;		DESCRIPTION:	Clone running application (fork)
+;
+;       RETURNS:        ES      Clone page arr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clone_app_name	DB 'Clone App',0
+
+clone_app	PROC far
+	push ds
+	push eax
+;
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov eax,ds:app_clone_proc
+	or eax,eax
+	stc
+	jz caDone
+;
+    call ds:app_clone_proc
+
+caDone:
+    pop eax
+	pop ds
+	ret
+clone_app	ENDP
 
 PAGE
 	

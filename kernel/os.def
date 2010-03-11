@@ -513,5 +513,8 @@ deref_proc_handle_nr        EQU 352
 notify_time_drift_nr        EQU 353
 set_options_nr              EQU 354
 
+clone_handle_mem_nr         EQU 355
+clone_app_nr                EQU 356
+
 osgate_entries				EQU 360
 

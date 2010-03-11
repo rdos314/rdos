@@ -685,6 +685,8 @@ InsertApp	Proc near
 	mov word ptr ds:app_free_thread_proc+2,cs
 	mov word ptr ds:app_spawn_proc,OFFSET spawn_proc
 	mov word ptr ds:app_spawn_proc+2,cs
+	mov word ptr ds:app_clone_proc,OFFSET clone_proc
+	mov word ptr ds:app_clone_proc+2,cs
 	mov word ptr ds:app_close_proc,OFFSET close_proc
 	mov word ptr ds:app_close_proc+2,cs
 	mov word ptr ds:app_load_dll_proc,OFFSET load_dll
@@ -3109,6 +3111,38 @@ spawn_wd_debug:
 spawn_no_debug:
 	ret
 spawn_proc	Endp
+
+PAGE
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			clone_proc
+;
+;		DESCRIPTION:    Request to clone environment
+;
+;       RETURNS:        ES      Clone selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clone_proc	Proc far
+    push ds
+    pushad
+;    
+    mov eax,SIZE pe_clone_seg
+    AllocateSmallGlobalMem
+    mov es:pcs_entries,0
+;
+	mov ax,pe_app_sel
+	mov ds,ax
+	mov ds,ds:pe_app
+    mov ax,ds:lib_file_handle
+    mov es:pcs_file_handle,ax
+;
+    popad
+    pop ds    
+    ret
+clone_proc  Endp
 
 PAGE
                                            

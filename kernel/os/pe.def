@@ -235,3 +235,23 @@ ppe_dlls		DW ?
 ppe_section		section_typ <>
 
 pe_process_seg	ENDS
+
+PE_CLONE_PARENT = 1
+PE_CLONE_CHILD  = 2
+
+pe_clone_entry    STRUC
+
+pce_linear      DD ?
+pce_phys        DD ?
+
+pe_clone_entry  ENDS
+
+pe_clone_seg    STRUC
+
+pcs_next        DW ?
+pcs_file_handle DW ?
+pcs_entries     DW ?
+
+; entry array is here!
+
+pe_clone_seg    ENDS

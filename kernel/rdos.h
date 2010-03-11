@@ -309,6 +309,7 @@ int RDOSAPI RdosGetThreadHandle();
 int RDOSAPI RdosExec(const char *prog, const char *param, const char *options);
 int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, const char *env, const char *options, int *thread);
 int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, const char *env, const char *options, int *thread);
+int RDOSAPI RdosFork(const char *name, const char *options);
 void RDOSAPI RdosUnloadExe(int ExitCode);
 void RDOSAPI RdosFreeProcessHandle(int handle);
 int RDOSAPI RdosGetProcessExitCode(int handle);
@@ -1174,6 +1175,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_get_exit_code  \
     "movzx eax,ax"  \
     parm [esi] [edi] [ebx] \
+    value [eax];
+
+#pragma aux RdosFork = \
+    CallGate_fork  \
+    "movsx eax,ax"  \
+    parm [esi] [edi] \
     value [eax];
 
 #pragma aux RdosUnloadExe = \
@@ -3136,6 +3143,12 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_get_exit_code  \
     "movzx eax,ax"  \
     parm [esi] [edi] [ebx] \
+    value [eax];
+
+#pragma aux RdosFork = \
+    CallGate_fork  \
+    "movsx eax,ax"  \
+    parm [esi] [edi] \
     value [eax];
 
 #pragma aux RdosUnloadExe = \

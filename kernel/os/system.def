@@ -138,11 +138,13 @@ app_free_mem_proc		DD ?
 app_init_thread_proc	DD ?
 app_free_thread_proc	DD ?
 app_spawn_proc			DD ?
+app_clone_proc	        DD ?
 app_close_proc			DD ?
 app_load_dll_proc       DD ?
 app_loader_name			DD ?
 
 app_exit_code			DW ?
+app_fork_id             DW ?
 
 app_ldt_section		section_typ <>
 app_ldt_data_sel	DW ?

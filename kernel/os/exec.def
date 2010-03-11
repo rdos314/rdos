@@ -108,6 +108,16 @@ e_opt               DW ?
 
 exec_struc	ENDS
 
+fork_struc	STRUC
+
+f_name				DW ?
+f_opt               DW ?
+f_handle            DW ?
+f_exe_name          DW ?
+f_app               DW ?
+
+fork_struc	ENDS
+
 spawn_param_struc   STRUC
 
 sp_param_offs       DD ?

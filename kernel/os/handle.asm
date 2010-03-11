@@ -71,6 +71,15 @@ hd_list		DW ?
 
 handle_data_seg	ENDS
 
+clone_seg   STRUC
+
+c_list	    DW ?
+c_arr	    DW MAX_HANDLES DUP (?)
+
+c_mem_sel   DW ?
+
+clone_seg   ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
@@ -435,6 +444,70 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			CloneHandleMem
+;
+;		DESCRIPTION:	Clone handle mem for fork
+;
+;
+;		RETURNS:		ES      Clone sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clone_handle_mem_name	DB 'Clone Handle Mem',0
+
+clone_handle_mem	PROC far
+    push ds
+    push gs
+	push eax
+	push si
+	push di
+;
+    mov eax,SIZE clone_seg
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+;
+    mov eax,10000h
+    AllocateGlobalMem
+    mov gs:c_mem_sel,es
+;    
+	mov ax,handle_sel
+	mov ds,ax
+	EnterSection ds:handle_section
+;
+    mov ax,handle_mem_sel
+    mov ds,ax
+    xor si,si
+    xor di,di
+    mov cx,4000h
+    rep movsd
+;
+    mov ax,gs
+    mov es,ax
+	mov ax,handle_sel
+	mov ds,ax
+    mov ax,ds:handle_list
+    mov es:c_list,ax
+    mov si,OFFSET handle_arr
+    mov di,OFFSET c_arr
+    mov cx,MAX_HANDLES
+    rep movsw
+;    
+	LeaveSection ds:handle_section
+;
+    pop di
+	pop si
+	pop eax
+	pop gs
+	pop ds
+	ret
+clone_handle_mem	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			DerefHandle
 ;
 ;		DESCRIPTION:	Deref a handle
@@ -783,6 +856,12 @@ init_handle	PROC near
 	mov di,OFFSET deref_handle_name
 	xor cl,cl
 	mov ax,deref_handle_nr
+	RegisterOsGate
+;
+	mov si,OFFSET clone_handle_mem
+	mov di,OFFSET clone_handle_mem_name
+	xor cl,cl
+	mov ax,clone_handle_mem_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_free_handles

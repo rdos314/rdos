@@ -469,3 +469,5 @@
 #define CallGate_get_cpu_version 0x9a 128 1 0 0 2 0
 #define CallGate_get_options 0x9a 129 1 0 0 2 0
 
+#define CallGate_fork 0x9a 130 1 0 0 2 0
+

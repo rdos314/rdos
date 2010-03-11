@@ -598,11 +598,19 @@ DosExtExec	MACRO
 ;               +0  Command line
 ;               +8  Startup directory & drive
 ;               +12 Environment
+;               +16 Options
 ; IN  DX		Debug module handle
 ; OUT AX		Thread #
 ; OUT DX		Process handle
 SpawnExe	MACRO
 	UserGate spawn_exe_nr
+					ENDM
+
+; IN  DS:(E)SI	New process name
+; IN  ES:(E)DI	Options
+; OUT AX		Process handle (parent) or 0 (child)
+Fork	MACRO
+	UserGate fork_nr
 					ENDM
 
 ; IN  AX		Exit code
