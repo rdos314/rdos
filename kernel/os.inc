@@ -590,6 +590,11 @@ AllocateMultiplePhysical	MACRO
 
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
+;   OUT EDX     APIC ID
+GetApicId    MACRO
+	OsGate get_apic_id_nr
+						ENDM
+
 ;       AL              PRIORITET
 ;       AH              MODE, 0=PM, 1=VM
 ;       ECX             STACK SIZE

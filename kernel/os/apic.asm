@@ -64,6 +64,29 @@ code	SEGMENT byte public use16 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; this code is loaded at 0000:0F80h
+
+table_start:
+
+gdt0:
+	dw 0
+	dd 0
+	dw 0
+gdt8:
+	dw 20h-1
+	dd 92000F80h
+	dw 0
+gdt10:
+	dw 0FFFFh
+	dd 9A001800h
+	dw 0
+gdt18:
+	dw 0FFFFh
+	dd 92000000h
+	dw 0
+
+table_end:
+
 ; this code is loaded at 0100:0000. It should contain no near jumps!
 
 real_start:    
@@ -75,15 +98,44 @@ real_start:
     out 71h,al
   	jmp short $+2
 ;
-    mov ax,0
+    xor ax,ax
     mov ds,ax
     mov bx,0F00h
     mov eax,12345678h
     mov [bx],eax
+;
+    mov bx,0F88h
+    lgdt fword ptr ds:[bx]
+;
+	mov eax,cr0
+	or al,1
+	mov cr0,eax
+;
+	db 0EAh
+	dw 0
+	dw 10h
+
+real_end:
+
+
+; this code is loaded at 01800. It should contain no near jumps!
+        
+prot_start:
+    mov ax,18h
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    mov ss,ax
+    mov sp,0F00h
+;    
+    mov bx,0F04h
+    mov eax,98765432h
+    mov [bx],eax
     cli
     hlt
 
-real_end:
+prot_end:
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -100,6 +152,46 @@ DelayMs Proc near
     WaitMilliSec
     ret
 DelayMs Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetId
+;
+;		DESCRIPTION:	Get own ID, memory mode
+;
+;       RETURNS:        EDX     Apic ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_id_name    DB 'Get Apic ID',0
+
+get_id_mem  Proc far
+    push ds
+    push ax
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov edx,ds:APIC_ID
+    shr edx,24
+;
+    pop ax
+    pop ds
+    ret
+get_id_mem Endp
+
+get_id_msr Proc far
+    push eax
+    push ecx
+;
+    mov ecx,MSR_APIC_ID
+    rdmsr
+    mov edx,eax
+;
+    pop ecx
+    pop eax
+    ret
+get_id_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -180,9 +272,17 @@ SendInitMsr Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendInit Proc near
+    push ds
+    push ax
+;    
+    mov ax,apic_data_sel
+    mov ds,ax
     call ds:mp_init_proc
     mov ax,20
     call DelayMs
+;
+    pop ax
+    pop ds    
     ret
 SendInit Endp
     
@@ -259,9 +359,19 @@ SendStartupMsr Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendStartup Proc near
+    push ds
+    push ax
+    push bx
+;    
+    mov bx,apic_data_sel
+    mov ds,bx
     call ds:mp_startup_proc
     mov ax,1
     call DelayMs
+;
+    pop bx
+    pop ax
+    pop ds    
     ret
 SendStartup Endp
        
@@ -279,6 +389,17 @@ SetupMemGates   Proc near
     mov ds,ax
     mov ds:mp_init_proc, OFFSET SendInitMem
     mov ds:mp_startup_proc, OFFSET SendStartupMem
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov si,OFFSET get_id_mem
+	mov di,OFFSET get_id_name
+	xor cl,cl
+	mov ax,get_apic_id_nr
+	RegisterOsGate
+;    
     ret
 SetupMemGates   Endp
    
@@ -296,72 +417,69 @@ SetupMsrGates   Proc near
     mov ds,ax
     mov ds:mp_init_proc, OFFSET SendInitMsr
     mov ds:mp_startup_proc, OFFSET SendStartupMsr
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov si,OFFSET get_id_msr
+	mov di,OFFSET get_id_name
+	xor cl,cl
+	mov ax,get_apic_id_nr
+	RegisterOsGate
+;	
     ret
 SetupMsrGates   Endp
+
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			apic_pr
+;		NAME:		    StartCore
 ;
-;		DESCRIPTION:	APIC test thread
+;		DESCRIPTION:	Start a CPU core
+;
+;       PARAMETERS:     EDX         APIC ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-apic_name	DB 'Apic Test',0
-
-apic_pr:
-    int 3
-;    
-    mov ecx,1Bh
-    rdmsr
-    test ah,8
-    jz apic_pr_done
+StartCore   Proc near
+    push ds
+    push es
+    pushad
 ;
-    test ah,4
-    jnz apic_pr_msr
-
-apic_pr_mmio:
-    call SetupMemGates
-    jmp apic_pr_gates_ok
-
-apic_pr_msr:
-    call SetupMsrGates
-
-apic_pr_gates_ok:     
-    mov edx,1
-    call SendInit
-    mov al,1
-    call SendStartup
-    call SendStartup
-    int 3
-;
-    mov eax,100000h
+    mov ebp,edx    
+    mov eax,2000h
     AllocateBigLinear
 ;
-    mov cx,100h
     mov eax,63h
-    push edx
-
-alloc_loop:
     SetPhysicalPage
-    add eax,1000h
+;    
+    mov eax,1063h
     add edx,1000h
-    loop alloc_loop
+    SetPhysicalPage
 ;
-    pop edx    
+    sub edx,1000h
     AllocateGdt
     mov ecx,100000h
     CreateDataSelector32
-    mov gs,bx
-;
-    int 3
     mov es,bx
-    mov di,1000h
     mov ax,cs
     mov ds,ax
+;
+    mov di,0F80h
+    mov si,OFFSET table_start
+    mov cx,OFFSET table_end - OFFSET table_start
+    rep movsb
+;
+    mov di,1000h
     mov si,OFFSET real_start
     mov cx,OFFSET real_end - OFFSET real_start
+    rep movsb
+;
+    mov di,1800h
+    mov si,OFFSET prot_start
+    mov cx,OFFSET prot_end - OFFSET prot_start
     rep movsb
 ;
     mov bx,467h
@@ -378,31 +496,96 @@ alloc_loop:
     out 71h,al
   	jmp short $+2
 ;
-    mov ax,apic_mem_sel
-    mov ds,ax
-    mov eax,0CC500h
-    mov ds:APIC_ICR,eax
-    int 3
-    mov eax,0C8500h
-    mov ds:APIC_ICR,eax
-    int 3
+    mov bx,0F00h
+    xor eax,eax
+    mov es:[ebx],eax
 ;
-    mov eax,ds:APIC_ICR
+    xchg edx,ebp
+    call SendInit
+;
+    mov eax,es:[ebx]
+    cmp eax,12345678h
+    je scOk
+;    
+    mov al,1
+    call SendStartup
+;
+    mov cx,250
+
+scLoop1:
+    mov eax,es:[ebx]
+    cmp eax,12345678h
+    je scOk
+;    
+    mov ax,1
+    call DelayMs    
+    loop scLoop1
+;
+    mov al,1    
+    call SendStartup
+;    
+    mov cx,250
+
+scLoop2:
+    mov eax,es:[ebx]
+    cmp eax,12345678h
+    je scOk
+;    
+    mov ax,1
+    call DelayMs    
+    loop scLoop2
+;
+    stc
+    jmp scDone
+
+scOk:
+    clc
+
+scDone:
+    pushf
+;
     mov al,0Fh
     out 70h,al
 	jmp short $+2
 ;
-    in al,71h
+    xor al,al
+    out 71h,al
   	jmp short $+2
-    int 3
 ;
-    mov eax,0C8601h
-    mov ds:APIC_ICR,eax
-    int 3
+    mov edx,ebp
+    xor eax,eax
+    add edx,1000h
+    SetPhysicalPage
+;    
+    sub edx,1000h
+    SetPhysicalPage
+    FreeMem
 ;
-    mov eax,ds:APIC_ICR
-    
+    popf   
+    popad
+    pop es
+    pop ds
+    ret
+StartCore   Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			apic_pr
+;
+;		DESCRIPTION:	APIC test thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+apic_name	DB 'Apic Test',0
+
+apic_pr:
+    int 3
+;    
+    GetApicId
+    xor dl,1    
+    call StartCore
+    int 3
     
     mov eax,05F504D5Fh
 ;
@@ -465,6 +648,11 @@ init_apic_thread	PROC far
     mov ds,ax
     mov eax,ds:cpu_feature_flags
     test ax,200h
+    jz init_thread_done
+;    
+    mov ecx,1Bh
+    rdmsr
+    test ah,8
     jz init_thread_done
 ;
 	mov ax,cs
@@ -671,6 +859,22 @@ init	PROC far
 ;
     call InitTimers
 ;
+    mov ecx,1Bh
+    rdmsr
+    test ah,8
+    jz init_apic_gates_ok
+;
+    test ah,4
+    jnz init_apic_msr
+
+init_apic_mmio:
+    call SetupMemGates
+    jmp init_apic_gates_ok
+
+init_apic_msr:
+    call SetupMsrGates
+
+init_apic_gates_ok:     
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_apic_thread

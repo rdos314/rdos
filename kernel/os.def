@@ -516,5 +516,7 @@ set_options_nr              EQU 354
 clone_handle_mem_nr         EQU 355
 clone_app_nr                EQU 356
 
+get_apic_id_nr              EQU 357
+
 osgate_entries				EQU 360
 
