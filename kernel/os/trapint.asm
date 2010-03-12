@@ -885,6 +885,9 @@ math_real_fpu:
 	or ax,ax
 	jz math_reload
 ;
+    verr ax
+    jnz math_reload
+;    
 	mov ds,ax
 	push bx
 	mov bx,OFFSET math_control
