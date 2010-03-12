@@ -595,6 +595,18 @@ GetApicId    MACRO
 	OsGate get_apic_id_nr
 						ENDM
 
+EnterInt    MACRO
+	OsGate enter_int_nr
+						ENDM
+
+LeaveInt    MACRO
+	OsGate leave_int_nr
+						ENDM
+
+ProtDebug    MACRO
+	OsGate prot_debug_nr
+						ENDM
+
 ;       AL              PRIORITET
 ;       AH              MODE, 0=PM, 1=VM
 ;       ECX             STACK SIZE
