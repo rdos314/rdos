@@ -764,9 +764,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitTimers
+;		NAME:			InitApicTimer
 ;
-;		DESCRIPTION:    Init timers
+;		DESCRIPTION:    Init APIC timer
 ;
 ;		PARAMETERS:		
 ;
@@ -783,12 +783,9 @@ read_tics   MACRO
 	xchg al,ah
 	        ENDM
 
-InitTimers Proc near    
+InitApicTimer Proc near    
     mov ax,system_data_sel
     mov ds,ax
-    mov eax,ds:cpu_feature_flags
-    test ax,200h
-    jz init_tsc_start    
 ;    
     mov ecx,1Bh
     rdmsr
@@ -832,10 +829,6 @@ InitTimers Proc near
     mov es:APIC_DIV_CONFIG,eax
 
 init_tsc_start:
-    mov eax,ds:cpu_feature_flags
-    test al,10h
-    jz init_timer_done    
-;    
     xor cx,cx    
 
 init_tsc_wait_start_high:
@@ -854,17 +847,10 @@ init_tsc_wait_start_low:
     loop init_tsc_wait_start_low
 
 init_tsc_wait_start_low_ok:    
-    mov eax,ds:cpu_feature_flags
-    test ax,200h
-    jz init_apic_start_done
-;
-    mov eax,0FFFFFFFFh
+    mov eax,-1
     mov es:APIC_INIT_COUNT,eax
 
 init_apic_start_done:
-    rdtsc
-    mov esi,eax
-    mov edi,edx
     xor cx,cx
 
 init_tsc_wait_high:    
@@ -883,45 +869,17 @@ init_tsc_wait_low:
     loop init_tsc_wait_low
 
 init_tsc_wait_low_ok:
-    mov eax,ds:cpu_feature_flags
-    test ax,200h
-    jz init_apic_stop_done
-;
-    mov ebp,es:APIC_CURR_COUNT
-
-init_apic_stop_done:
-    rdtsc
-    sub eax,esi
-    sbb edx,edi
-;
-    mov ecx,8000h
-    div ecx
-;        
-    mov ds:tsc_tics,eax
-    mov ds:tsc_rest,dx
-;
-    or eax,eax
-    jnz init_tsc_done
-;
-    and ds:cpu_feature_flags, NOT 10h
-    
-init_tsc_done:
-    mov eax,ds:cpu_feature_flags
-    test ax,200h
-    jz init_timer_done
-;    
     mov eax,-1
-    sub eax,ebp
+    sub eax,es:APIC_CURR_COUNT    
     xor edx,edx
     mov ecx,8000h
     div ecx
 ;
     mov ds:apic_tics,eax
     mov ds:apic_rest,dx    
-
-init_timer_done:    
+;    
     ret
-InitTimers Endp
+InitApicTimer Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -944,8 +902,24 @@ init	PROC far
 	mov bx,apic_data_sel
 	AllocateFixedSystemMem
 ;
-    call InitTimers
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_feature_flags
+    test ax,200h
+    jz init_apic_gates_ok
 ;
+    test ax,10h
+    jz init_apic_timer_ok
+;    
+    call InitApicTimer
+
+init_apic_timer_ok:    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_feature_flags
+    test ax,20h
+    jz init_apic_mmio
+;    
     mov ecx,1Bh
     rdmsr
     test ah,8

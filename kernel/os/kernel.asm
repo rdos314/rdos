@@ -440,6 +440,95 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			init_tsc
+;
+;		DESCRIPTION:    Init TSC (meassure frequency)
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_tics   MACRO
+    mov al,0
+	out TIMER_CONTROL,al
+	jmp short $+2
+	in al,TIMER0
+	mov ah,al
+	jmp short $+2
+	in al,TIMER0
+	xchg al,ah
+	        ENDM
+
+init_tsc Proc near    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_feature_flags
+    test al,10h
+    jz init_tsc_done    
+;    
+    xor cx,cx    
+
+init_tsc_wait_start_high:
+    read_tics    
+    test ax,8000h
+    jnz init_tsc_wait_start_high_ok
+    loop init_tsc_wait_start_high    
+
+init_tsc_wait_start_high_ok:
+    xor cx,cx    
+
+init_tsc_wait_start_low:
+    read_tics    
+    test ax,8000h
+    jz init_tsc_wait_start_low_ok
+    loop init_tsc_wait_start_low
+
+init_tsc_wait_start_low_ok:    
+    rdtsc
+    mov esi,eax
+    mov edi,edx
+    xor cx,cx
+
+init_tsc_wait_high:    
+    read_tics
+    test ax,8000h
+    jnz init_tsc_wait_high_ok
+    loop init_tsc_wait_high
+
+init_tsc_wait_high_ok:
+    xor cx,cx
+
+init_tsc_wait_low:    
+    read_tics
+    test ax,8000h
+    jz init_tsc_wait_low_ok
+    loop init_tsc_wait_low
+
+init_tsc_wait_low_ok:
+    rdtsc
+    sub eax,esi
+    sbb edx,edi
+;
+    mov ecx,8000h
+    div ecx
+;        
+    mov ds:tsc_tics,eax
+    mov ds:tsc_rest,dx
+;
+    or eax,eax
+    jnz init_tsc_done
+;
+    and ds:cpu_feature_flags, NOT 10h
+    
+init_tsc_done:
+    ret
+init_tsc Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			Init
 ;
 ;		DESCRIPTION:	Kernel startup procedure
@@ -612,7 +701,7 @@ prot_init:
 	call init_paging_gates
 	call init_physical_gates
 	call init_mem_sels
-;    call init_timers
+    call init_tsc
 	call init_systemgate
 	call init_state
 	call init_task
