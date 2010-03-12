@@ -101,18 +101,6 @@ init_task_tasks	Proc near
 	mov di,OFFSET virt_debug_name
 	CreateTask
 ;
-	mov al,20
-	mov bx,47h * 8
-	mov si,OFFSET terminate_thread
-	mov di,OFFSET terminate_thread_name
-	CreateTask
-;
-	mov al,20
-	mov bx,48h * 8
-	mov si,OFFSET terminate_process
-	mov di,OFFSET terminate_process_name
-	CreateTask
-;
 	ret
 init_task_tasks	Endp
 
@@ -429,98 +417,6 @@ virt_debug_loop:
 	WaitSleepTask
 	jmp virt_debug_loop
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			TERMINATE THREAD
-;
-;		DESCRIPTION:	Terminate thread handler
-;
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-terminate_thread_name	DB 'Terminate Thread',0
-
-terminate_thread:
-	InitTask
-terminate_thread_loop:
-	mov es,ax
-	mov bx,es:p_tss_data_sel
-	FreeGdt
-	mov bx,es:p_tss_sel
-	FreeGdt
-	FreeMem
-	InitTask
-	jmp terminate_thread_loop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			TERMINATE PROCESS
-;
-;		DESCRIPTION:	Terminate process handler
-;
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-terminate_process_name	DB 'Terminate Process',0
-
-terminate_process:
-	InitTask
-terminate_process_loop:
-	mov es,ax
-;
-	mov ax,es:p_process_sel
-	push es
-	mov es,ax
-	FreeMem
-	pop es
-;
-	mov bx,es
-	mov ax,process_dir_sel
-	mov ds,ax
-	mov si,alias_linear SHR 20
-	mov eax,es:p_cr3
-	mov [si],eax
-	mov eax,cr3
-	mov cr3,eax
-;
-    mov ax,flat_sel
-    mov ds,ax
-	mov cx,400h
-	mov edx,alias_linear + (handle_linear SHR 10)
-
-terminate_process_linear_loop:
-	mov eax,[edx]
-	test al,1
-	jz terminate_process_linear_next
-;
-	FreePhysical
-
-terminate_process_linear_next:
-	add edx,4
-	loop terminate_process_linear_loop
-;
-	mov ax,process_page_sel
-	mov ds,ax
-	mov edx,(alias_linear + (handle_linear SHR 10)) SHR 10
-	mov eax,[edx]
-	FreePhysical
-;
-	mov eax,es:p_cr3
-	FreePhysical
-;
-	mov bx,es:p_tss_data_sel
-	FreeGdt
-;
-	mov bx,es:p_tss_sel
-	FreeGdt
-;
-	FreeMem
-;
-	InitTask
-	jmp terminate_process_loop
 	
 code	ENDS
 

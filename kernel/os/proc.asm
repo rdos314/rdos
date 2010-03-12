@@ -1758,17 +1758,16 @@ PAGE
 sys_thread_name	DB 'System', 0
 
 sys_thread_pr:
-    int 3
     mov ax,proc_data_sel
     mov ds,ax
     GetThread
     mov ds:sys_thread,ax
 
 sWait:
-    WaitForSignal
-;
     mov ax,proc_data_sel
     mov ds,ax
+    WaitForSignal
+;    
     xor ax,ax
     xchg ax,ds:sys_term_thread
     or ax,ax
@@ -1910,7 +1909,15 @@ no_free_ss:
 
 terminate_app_handled:
 	call trap_terminate_thread
-	int 47h
+;	int 47h
+;
+    mov ax,proc_data_sel
+	mov ds,ax
+	EnterSection ds:sys_section
+	GetThread
+	mov ds:sys_term_thread,ax
+	mov bx,ds:sys_thread
+	jmp signal_terminate
 
 terminate_proc:
 	mov bx,thread_sel
@@ -1947,7 +1954,15 @@ terminate_pd_done:
 	call free_handle_process
 	call trap_terminate_process
 	call free_process_paging
-	int 48h
+;	int 48h
+;
+    mov ax,proc_data_sel
+	mov ds,ax
+	EnterSection ds:sys_section
+	GetThread
+	mov ds:sys_term_process,ax
+	mov bx,ds:sys_thread
+	jmp signal_terminate
 
 PAGE
 
