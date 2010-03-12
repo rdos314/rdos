@@ -42,6 +42,12 @@ include ..\wait.inc
 
 thread_data_seg	STRUC
 
+sys_section             section_typ <>
+
+sys_thread              DW ?
+sys_term_thread         DW ?
+sys_term_process        DW ?
+
 create_thread_hooks		DB ?
 terminate_thread_hooks	DB ?
 create_process_hooks	DB ?
@@ -53,8 +59,6 @@ terminate_process_arr	DW 2*32 DUP(?)
 create_thread_arr		DW 2*8 DUP(?)
 terminate_thread_arr	DW 2*8 DUP(?)
 init_tasking_arr		DW 2*32 DUP(?)
-
-proc_data_sel_size		DB ?
 
 thread_data_seg	ENDS
 
@@ -116,7 +120,8 @@ cr_edi		EQU -34
 
 code	SEGMENT byte public use16 'CODE'
 
-	extrn terminate_thread_pr:near
+    extrn signal_terminate:near
+
 	extrn wake_new:near
 
 	extrn init_process_paging:near
@@ -468,7 +473,7 @@ init_thread	PROC near
 	push ds
 ;
 	mov bx,proc_data_sel
-	mov eax,OFFSET proc_data_sel_size
+	mov eax,SIZE thread_data_seg
 	AllocateFixedSystemMem
 	mov ds,bx
 	xor ax,ax
@@ -477,6 +482,10 @@ init_thread	PROC near
 	mov ds:create_process_hooks,al
 	mov ds:terminate_process_hooks,al
 	mov ds:init_tasking_hooks,al
+	mov ds:sys_thread,0
+	mov ds:sys_term_thread,0
+	mov ds:sys_term_process,0
+	InitSection ds:sys_section
 ;
 	mov ax,system_data_sel
 	mov ds,ax
@@ -816,6 +825,16 @@ PAGE
 trap_init_tasking	PROC near
 	call init_task_tasks
 	call init_task_traps
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET sys_thread_pr
+    mov di,OFFSET sys_thread_name
+    mov ax,10
+    mov ecx,200h
+    CreateProcess
+;    
 	call trap_create_process
 	push cx
 	mov ax,proc_data_sel
@@ -1723,6 +1742,109 @@ create_thread32	Proc far
 	call create_thread
 	retf32
 create_thread32	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SysThread
+;
+;		DESCRIPTION:	System thread
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sys_thread_name	DB 'System', 0
+
+sys_thread_pr:
+    int 3
+    mov ax,proc_data_sel
+    mov ds,ax
+    GetThread
+    mov ds:sys_thread,ax
+
+sWait:
+    WaitForSignal
+;
+    mov ax,proc_data_sel
+    mov ds,ax
+    xor ax,ax
+    xchg ax,ds:sys_term_thread
+    or ax,ax
+    jz sCheckProcess
+
+sTermThread:
+	mov es,ax
+	mov bx,es:p_tss_data_sel
+	FreeGdt
+	mov bx,es:p_tss_sel
+	FreeGdt
+	FreeMem
+	jmp sLeave
+
+sCheckProcess:
+    xor ax,ax
+    xchg ax,ds:sys_term_process
+    or ax,ax
+    jz sWait
+
+sTermProcess:
+	mov es,ax
+;
+	mov ax,es:p_process_sel
+	push es
+	mov es,ax
+	FreeMem
+	pop es
+;
+	mov bx,es
+	mov ax,process_dir_sel
+	mov ds,ax
+	mov si,alias_linear SHR 20
+	mov eax,es:p_cr3
+	mov [si],eax
+	mov eax,cr3
+	mov cr3,eax
+;
+    mov ax,flat_sel
+    mov ds,ax
+	mov cx,400h
+	mov edx,alias_linear + (handle_linear SHR 10)
+
+sTermProcessLinearLoop:
+	mov eax,[edx]
+	test al,1
+	jz sTermProcessLinearNext
+;
+	FreePhysical
+
+sTermProcessLinearNext:
+	add edx,4
+	loop sTermProcessLinearLoop
+;
+	mov ax,process_page_sel
+	mov ds,ax
+	mov edx,(alias_linear + (handle_linear SHR 10)) SHR 10
+	mov eax,[edx]
+	FreePhysical
+;
+	mov eax,es:p_cr3
+	FreePhysical
+;
+	mov bx,es:p_tss_data_sel
+	FreeGdt
+;
+	mov bx,es:p_tss_sel
+	FreeGdt
+;
+	FreeMem
+
+sLeave:
+    mov ax,proc_data_sel
+    mov ds,ax
+    LeaveSection ds:sys_section
+    jmp sWait	
 
 PAGE
 	
