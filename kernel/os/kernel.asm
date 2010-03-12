@@ -80,7 +80,6 @@ RELEASE = 0
 	extrn init_cpu_gates:near
 	extrn init_io:near
 	extrn init_int:near
-	extrn init_irq:near
 	extrn init_app:near
 	extrn init_trap_vectors:near
 	extrn move_adapters:near
@@ -711,7 +710,6 @@ prot_init:
 	call init_thread
 	call init_handle
 	call init_int
-	call init_irq
 	call init_trap_vectors
 	call init_swap
 	call init_random

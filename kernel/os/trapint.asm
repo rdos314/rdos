@@ -38,6 +38,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE irq.inc
 
 ;
 seg_es	EQU 0
@@ -378,10 +379,6 @@ trap_5:
 	extrn call_vm_ret:near
 	extrn call_pm16_ret:near
 	extrn call_pm32_ret:near
-
-	extrn irq_vm:near
-	extrn irq_pm16:near
-	extrn irq_pm32:near
 
 emulate_6:
 	mov al,6
@@ -1537,12 +1534,79 @@ init_idt	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+irq_vm_0:
+	IrqVm 0
+
+irq_vm:
+	int 3
+
+irq_pm16_0:
+	IrqProt16 0
+
+irq_pm16:
+	int 3
+
+irq_pm32_0:
+	IrqProt32 0
+
+irq_pm32:
+	int 3
+
 	extrn vm_exception_handler:near
 	extrn pm_exception_handler:near
 
 	public init_trap_vectors
 
 init_trap_vectors	PROC near
+	mov eax,4*16
+	AllocateFixedVmLinear
+	shr edx,4
+	mov ds:irq_vm_seg,dx
+	shl edx,4
+	mov cx,16
+	mov ax,flat_sel
+	mov es,ax
+	mov eax,dword ptr cs:irq_vm_0
+init_irq_vm_loop:
+	mov es:[edx],eax
+	add edx,4
+	add eax,1000000h
+	loop init_irq_vm_loop
+;
+	mov eax,4*16
+	AllocateSmallGlobalMem
+	mov bx,es
+	or bx,3
+	mov ds:irq_pm16_sel,bx
+	mov cx,16
+	mov eax,dword ptr cs:irq_pm16_0
+	xor di,di
+init_irq_pm16_loop:
+	stosd
+	add eax,1000000h
+	loop init_irq_pm16_loop
+	and bx,0FFF8h
+	mov ax,gdt_sel
+	mov es,ax
+	mov byte ptr es:[bx+5],0FAh
+;
+	mov eax,4*16
+	AllocateSmallGlobalMem
+	mov bx,es
+	or bx,3
+	mov ds:irq_pm32_sel,bx
+	mov cx,16
+	mov eax,dword ptr cs:irq_pm32_0
+	xor di,di
+init_irq_pm32_loop:
+	stosd
+	add eax,1000000h
+	loop init_irq_pm32_loop
+	and bx,0FFF8h
+	mov ax,gdt_sel
+	mov es,ax
+	mov byte ptr es:[bx+5],0FAh
+;
 	xor cx,cx
 	mov ax,cs
 	mov ds,ax

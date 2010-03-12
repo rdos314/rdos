@@ -838,6 +838,18 @@ timer_free_list_create:
 	mov ds,ax
 	mov es,ax
 ;
+	mov si,OFFSET enter_int
+	mov di,OFFSET enter_int_name
+	xor cl,cl
+	mov ax,enter_int_nr
+	RegisterOsGate
+;
+	mov si,OFFSET leave_int
+	mov di,OFFSET leave_int_name
+	xor cl,cl
+	mov ax,leave_int_nr
+	RegisterOsGate
+;
 	mov si,OFFSET start_timer
 	mov di,OFFSET start_timer_name
 	xor cl,cl
@@ -2106,15 +2118,15 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ENTER_INT
+;		NAME:			EnterInt
 ;
 ;		DESCRIPTION:	Enter interrupt notification
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public enter_int
+enter_int_name	DB 'Enter Int',0
 
-enter_int	Proc near		
+enter_int	Proc far
 	mov ax,task_sel
 	mov ds,ax
 	inc ds:timer_nesting
@@ -2126,15 +2138,15 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LEAVE_INT
+;		NAME:			LeaveInt
 ;
 ;		DESCRIPTION:	Leave interrupt notification
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public leave_int
+leave_int_name	DB 'Leave Int',0
 
-leave_int	Proc near
+leave_int	Proc far
 	mov ax,task_sel
 	mov ds,ax
 	sub ds:timer_nesting,1

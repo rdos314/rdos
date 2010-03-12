@@ -82,6 +82,10 @@ exec_srcs = EXEC.ASM
 exec_objs = $(exec_srcs:.ASM=.OBJ)
 exec_rdvs = $(exec_srcs:.ASM=.RDV)
 
+pic_srcs = PIC.ASM
+pic_objs = $(pic_srcs:.ASM=.OBJ)
+pic_rdvs = $(pic_srcs:.ASM=.RDV)
+
 apic_srcs = APIC.ASM
 apic_objs = $(apic_srcs:.ASM=.OBJ)
 apic_rdvs = $(apic_srcs:.ASM=.RDV)
@@ -236,7 +240,7 @@ p1_srcs =   PAGING.ASM				TASK.ASM                STATE.ASM	\
 			DEVICE.ASM				IO.ASM      			HANDLE.ASM	\
 			PROC.ASM 				APP.ASM
 
-p2_srcs =   PHYSICAL.ASM    		IRQ.ASM				    SWAP.ASM    \
+p2_srcs =   PHYSICAL.ASM    		SWAP.ASM    \
 			MEM.ASM                 GDT.ASM                 \
 			INT.ASM                 INT16.ASM               INT32.ASM       
 
@@ -271,7 +275,8 @@ srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs
 			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) $(apic_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs) \
-			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs)
+			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs) \
+			$(pic_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -298,7 +303,7 @@ rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(font_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
-			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs)
+			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs) $(pic_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -620,6 +625,14 @@ EXEC.RDV : $(exec_objs)
 	$(exec_objs)
 	EXEC.RDV
 	EXEC;
+!
+
+PIC.RDV : $(pic_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(pic_objs)
+	PIC.RDV
+	PIC;
 !
 
 APIC.RDV : $(apic_objs)
