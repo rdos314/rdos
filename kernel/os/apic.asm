@@ -58,9 +58,9 @@ code	SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			RealInit
+;		NAME:			Tables
 ;
-;		DESCRIPTION:	Real mode processor init
+;		DESCRIPTION:	GDT for protected mode initialization of AP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -73,23 +73,37 @@ gdt0:
 	dd 0
 	dw 0
 gdt8:
-	dw 20h-1
+	dw 28h-1
 	dd 92000F80h
 	dw 0
 gdt10:
 	dw 0FFFFh
-	dd 9A001800h
+	dd 9A001400h
 	dw 0
 gdt18:
 	dw 0FFFFh
 	dd 92000000h
 	dw 0
+gdt20:
+	dw 0FFFFh
+	dd 92001800h
+	dw 0
 
 table_end:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			RealMode
+;
+;		DESCRIPTION:	Real mode AP processor init
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; this code is loaded at 0100:0000. It should contain no near jumps!
 
 real_start:    
+    cli
     mov al,0Fh
     out 70h,al
 	jmp short $+2
@@ -116,9 +130,17 @@ real_start:
 	dw 10h
 
 real_end:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ProtMode
+;
+;		DESCRIPTION:	Unpaged, protected mode AP processor init
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-; this code is loaded at 01800. It should contain no near jumps!
+; this code is loaded at 01400. It should contain no near jumps!
         
 prot_start:
     mov ax,18h
@@ -132,10 +154,69 @@ prot_start:
     mov bx,0F04h
     mov eax,98765432h
     mov [bx],eax
-    cli
-    hlt
+;
+    mov ax,20h
+    mov es,ax
+    mov eax,es:ps_cr3
+    mov cr3,eax
+;
+    lgdt fword ptr es:ps_gdt
+    lidt fword ptr es:ps_idt
+;
+    mov eax,cr0
+    or eax,80000000h        
+    mov cr0,eax
+;
+    db 0EAh
+    dw OFFSET ApInit
+    dw apic_code_sel
 
 prot_end:
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Paging
+;
+;		DESCRIPTION:	Paging variables for AP initialization
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; this code is loaded at 01800h. The code is relative to GDT selector 20h
+
+page_struc  STRUC
+
+ps_cr3  DD ?
+ps_gdt  DB 6 DUP(?)
+ps_idt  DB 6 DUP(?)
+
+page_struc  ENDS
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ApInit
+;
+;		DESCRIPTION:	Paged entry-point for AP initialization
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ApInit:
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+;
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    mov bx,0F08h
+    mov eax,0ABCD9876h
+    mov [bx],eax
+;    
+    cli
+    hlt
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -458,10 +539,10 @@ StartCore   Proc near
     mov eax,1063h
     add edx,1000h
     SetPhysicalPage
-;
     sub edx,1000h
+;
     AllocateGdt
-    mov ecx,100000h
+    mov ecx,2000h
     CreateDataSelector32
     mov es,bx
     mov ax,cs
@@ -477,10 +558,17 @@ StartCore   Proc near
     mov cx,OFFSET real_end - OFFSET real_start
     rep movsb
 ;
-    mov di,1800h
+    mov di,1400h
     mov si,OFFSET prot_start
     mov cx,OFFSET prot_end - OFFSET prot_start
     rep movsb
+;
+    mov di,1800h
+    mov eax,cr3
+    mov es:[di].ps_cr3,eax
+;
+    sgdt fword ptr es:[di].ps_gdt
+    sidt fword ptr es:[di].ps_idt
 ;
     mov bx,467h
     mov ax,0
@@ -556,8 +644,8 @@ scDone:
     xor eax,eax
     add edx,1000h
     SetPhysicalPage
-;    
     sub edx,1000h
+;    
     SetPhysicalPage
     FreeMem
 ;
@@ -580,8 +668,7 @@ StartCore   Endp
 apic_name	DB 'Apic Test',0
 
 apic_pr:
-    int 3
-;    
+    int 3    
     GetApicId
     xor dl,1    
     call StartCore
