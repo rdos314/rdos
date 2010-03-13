@@ -2214,9 +2214,38 @@ PAGE
 UpdateTimer	Proc near
 	cli
 	add ds:timer_nesting,1
-	jc update_timer_loop
+	jc update_timer_do
+;
 	dec ds:timer_nesting
 	jmp update_timer_done
+
+update_timer_do:
+    mov ax,ds:thread_act
+    or ax,ax
+    jz update_timer_loop
+;
+    mov es,ax    
+    mov ds,es:p_tss_data_sel
+    mov dword ptr ds:tss_eip,OFFSET update_timer_done
+    pushfd
+    pop dword ptr ds:tss_eflags
+    mov dword ptr ds:tss_eax,eax
+    mov dword ptr ds:tss_ecx,ecx
+    mov dword ptr ds:tss_edx,edx
+    mov dword ptr ds:tss_ebx,ebx
+    mov dword ptr ds:tss_esp,esp
+    mov dword ptr ds:tss_ebp,ebp
+    mov dword ptr ds:tss_esi,esi
+    mov dword ptr ds:tss_edi,edi
+    mov word ptr ds:tss_es,es
+    mov word ptr ds:tss_cs,cs
+    mov word ptr ds:tss_ss,ss
+    mov word ptr ds:tss_ds,ds
+    mov word ptr ds:tss_fs,fs
+    mov word ptr ds:tss_gs,gs
+	mov ax,task_sel
+	mov ds,ax
+
 update_timer_loop:
 	cli
 	call ds:update_clock_proc
@@ -2269,31 +2298,6 @@ reload_timer:
 	mov ds:preempt_msb,edx
 
 update_timer_load:
-    mov ax,ds:thread_act
-    or ax,ax
-    jz update_save_ok
-;
-    mov es,ax    
-    mov ds,es:p_tss_data_sel
-    mov dword ptr ds:tss_eip,OFFSET update_timer_done
-    pushfd
-    pop dword ptr ds:tss_eflags
-    mov dword ptr ds:tss_eax,eax
-    mov dword ptr ds:tss_ecx,ecx
-    mov dword ptr ds:tss_edx,edx
-    mov dword ptr ds:tss_ebx,ebx
-    mov dword ptr ds:tss_esp,esp
-    mov dword ptr ds:tss_ebp,ebp
-    mov dword ptr ds:tss_esi,esi
-    mov dword ptr ds:tss_edi,edi
-    mov word ptr ds:tss_es,es
-    mov word ptr ds:tss_cs,cs
-    mov word ptr ds:tss_ss,ss
-    mov word ptr ds:tss_ds,ds
-    mov word ptr ds:tss_fs,fs
-    mov word ptr ds:tss_gs,gs
-
-update_save_ok:
     jmp LoadCurrentThread
 
 update_timer_done:
