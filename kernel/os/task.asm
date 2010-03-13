@@ -2085,7 +2085,7 @@ reload_timer:
 	mov si,ds:prio_act
 	mov ax,[si]
 	cmp ax,ds:thread_act
-	je update_timer_done
+	je update_timer_load
 ;
 	call ds:update_clock_proc
 	LocalGetSystemTime
@@ -2093,7 +2093,8 @@ reload_timer:
 	adc edx,0
 	mov ds:preempt_lsb,eax
 	mov ds:preempt_msb,edx
-;
+
+update_timer_load:
     mov ax,ds:thread_act
     or ax,ax
     jz update_save_ok
