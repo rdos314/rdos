@@ -2274,10 +2274,6 @@ update_timer_load:
     jz update_save_ok
 ;
     mov es,ax    
-	mov ax,gdt_sel
-	mov ds,ax
-	and byte ptr ds:[bx+5],NOT 2
-;
     mov ds,es:p_tss_data_sel
     mov dword ptr ds:tss_eip,OFFSET update_timer_done
     pushfd
