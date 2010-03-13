@@ -2024,6 +2024,181 @@ get_next_int_ok:
 	ret
 GetNextThread	Endp
 
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LoadCurrentThread
+;
+;		DESCRIPTION:	Load register-state for current thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadCurrentThread:
+	mov ax,task_sel
+	mov ds,ax
+	mov si,ds:prio_act
+	mov es,[si]
+	mov ds:thread_act,es
+;	
+	mov ax,gdt_sel
+	mov ds,ax
+	mov bx,es:p_tss_sel
+	and byte ptr ds:[bx+5],NOT 2
+	ltr bx
+;	
+	mov ax,task_sel
+	mov ds,ax
+	SetEnviroment
+    mov ds,es:p_tss_data_sel
+;
+    mov eax,cr0
+    or al,8
+    mov cr0,eax    
+;
+    lldt ds:tss_ldt
+;    
+    test dword ptr ds:tss_eflags,20000h
+    jnz load_vm
+;
+    test word ptr ds:tss_cs,3
+    jnz load_pm_app
+
+load_kernel:
+    mov ax,word ptr ds:tss_ss
+    mov ss,ax
+    mov esp,dword ptr ds:tss_esp
+    push dword ptr ds:tss_eflags
+    push dword ptr ds:tss_cs
+    push dword ptr ds:tss_eip
+;	
+    mov eax,dword ptr ds:tss_eax
+    mov ecx,dword ptr ds:tss_ecx
+    mov edx,dword ptr ds:tss_edx
+    mov ebx,dword ptr ds:tss_ebx
+    mov ebp,dword ptr ds:tss_ebp
+    mov esi,dword ptr ds:tss_esi
+    mov edi,dword ptr ds:tss_edi
+;
+    test ds:tss_t,1
+    jz load_kernel_t_ok
+;    
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	mov ds:tss_t,0
+	mov ax,thread_sel
+	mov ds,ax
+	call dword ptr ds:p_trap_ads
+	pop ds
+	pop ebx
+	pop eax
+	pop bp
+	add sp,4
+
+load_kernel_t_ok:
+    mov es,word ptr ds:tss_es
+    mov fs,word ptr ds:tss_fs
+    mov gs,word ptr ds:tss_gs
+    mov ds,word ptr ds:tss_ds
+    iretd
+
+load_pm_app:    
+    mov ax,word ptr ds:tss_ess0
+    mov ss,ax
+    mov esp,dword ptr ds:tss_esp0
+;
+    push dword ptr ds:tss_ss
+    push dword ptr ds:tss_esp
+    push dword ptr ds:tss_eflags
+    push dword ptr ds:tss_cs
+    push dword ptr ds:tss_eip
+;	
+    mov eax,dword ptr ds:tss_eax
+    mov ecx,dword ptr ds:tss_ecx
+    mov edx,dword ptr ds:tss_edx
+    mov ebx,dword ptr ds:tss_ebx
+    mov ebp,dword ptr ds:tss_ebp
+    mov esi,dword ptr ds:tss_esi
+    mov edi,dword ptr ds:tss_edi
+;
+    test ds:tss_t,1
+    jz load_pm_t_ok
+;    
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	mov ds:tss_t,0
+	mov ax,thread_sel
+	mov ds,ax
+	call dword ptr ds:p_trap_ads
+	pop ds
+	pop ebx
+	pop eax
+	pop bp
+	add sp,4
+
+load_pm_t_ok:
+    mov es,word ptr ds:tss_es
+    mov fs,word ptr ds:tss_fs
+    mov gs,word ptr ds:tss_gs
+    mov ds,word ptr ds:tss_ds
+    iretd
+
+load_vm:
+    mov ax,word ptr ds:tss_ess0
+    mov ss,ax
+    mov esp,dword ptr ds:tss_esp0
+;
+    push dword ptr ds:tss_gs
+    push dword ptr ds:tss_fs
+    push dword ptr ds:tss_ds
+    push dword ptr ds:tss_es
+    push dword ptr ds:tss_ss
+    push dword ptr ds:tss_esp
+    push dword ptr ds:tss_eflags
+    push dword ptr ds:tss_cs
+    push dword ptr ds:tss_eip
+;
+    mov eax,dword ptr ds:tss_eax
+    mov ecx,dword ptr ds:tss_ecx
+    mov edx,dword ptr ds:tss_edx
+    mov ebx,dword ptr ds:tss_ebx
+    mov ebp,dword ptr ds:tss_ebp
+    mov esi,dword ptr ds:tss_esi
+    mov edi,dword ptr ds:tss_edi
+;
+    test ds:tss_t,1
+    jz load_vm_t_ok
+;    
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	mov ds:tss_t,0
+	mov ax,thread_sel
+	mov ds,ax
+	call dword ptr ds:p_trap_ads
+	pop ds
+	pop ebx
+	pop eax
+	pop bp
+	add sp,4
+
+load_vm_t_ok:
+    iretd
+
+
 PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2124,166 +2299,7 @@ update_timer_load:
     mov word ptr ds:tss_gs,gs
 
 update_save_ok:
-	mov ax,task_sel
-	mov ds,ax
-	mov si,ds:prio_act
-	mov es,[si]
-	mov ds:thread_act,es
-;	
-	mov ax,gdt_sel
-	mov ds,ax
-	mov bx,es:p_tss_sel
-	and byte ptr ds:[bx+5],NOT 2
-	ltr bx
-;	
-	mov ax,task_sel
-	mov ds,ax
-	SetEnviroment
-    mov ds,es:p_tss_data_sel
-;
-    mov eax,cr0
-    or al,8
-    mov cr0,eax    
-;
-    lldt ds:tss_ldt
-;    
-    test dword ptr ds:tss_eflags,20000h
-    jnz switch_vm
-;
-    test word ptr ds:tss_cs,3
-    jnz switch_pm_app
-
-switch_kernel:
-    mov ax,word ptr ds:tss_ss
-    mov ss,ax
-    mov esp,dword ptr ds:tss_esp
-    push dword ptr ds:tss_eflags
-    push dword ptr ds:tss_cs
-    push dword ptr ds:tss_eip
-;	
-    mov eax,dword ptr ds:tss_eax
-    mov ecx,dword ptr ds:tss_ecx
-    mov edx,dword ptr ds:tss_edx
-    mov ebx,dword ptr ds:tss_ebx
-    mov ebp,dword ptr ds:tss_ebp
-    mov esi,dword ptr ds:tss_esi
-    mov edi,dword ptr ds:tss_edi
-;
-    test ds:tss_t,1
-    jz kernel_t_ok
-;    
-	push dword ptr 0
-	push bp
-	mov bp,sp
-	push eax
-	push ebx
-	push ds
-	mov ds:tss_t,0
-	mov ax,thread_sel
-	mov ds,ax
-	call dword ptr ds:p_trap_ads
-	pop ds
-	pop ebx
-	pop eax
-	pop bp
-	add sp,4
-
-kernel_t_ok:
-    mov es,word ptr ds:tss_es
-    mov fs,word ptr ds:tss_fs
-    mov gs,word ptr ds:tss_gs
-    mov ds,word ptr ds:tss_ds
-    iretd
-
-switch_pm_app:    
-    mov ax,word ptr ds:tss_ess0
-    mov ss,ax
-    mov esp,dword ptr ds:tss_esp0
-;
-    push dword ptr ds:tss_ss
-    push dword ptr ds:tss_esp
-    push dword ptr ds:tss_eflags
-    push dword ptr ds:tss_cs
-    push dword ptr ds:tss_eip
-;	
-    mov eax,dword ptr ds:tss_eax
-    mov ecx,dword ptr ds:tss_ecx
-    mov edx,dword ptr ds:tss_edx
-    mov ebx,dword ptr ds:tss_ebx
-    mov ebp,dword ptr ds:tss_ebp
-    mov esi,dword ptr ds:tss_esi
-    mov edi,dword ptr ds:tss_edi
-;
-    test ds:tss_t,1
-    jz pm_t_ok
-;    
-	push dword ptr 0
-	push bp
-	mov bp,sp
-	push eax
-	push ebx
-	push ds
-	mov ds:tss_t,0
-	mov ax,thread_sel
-	mov ds,ax
-	call dword ptr ds:p_trap_ads
-	pop ds
-	pop ebx
-	pop eax
-	pop bp
-	add sp,4
-
-pm_t_ok:
-    mov es,word ptr ds:tss_es
-    mov fs,word ptr ds:tss_fs
-    mov gs,word ptr ds:tss_gs
-    mov ds,word ptr ds:tss_ds
-    iretd
-
-switch_vm:
-    mov ax,word ptr ds:tss_ess0
-    mov ss,ax
-    mov esp,dword ptr ds:tss_esp0
-;
-    push dword ptr ds:tss_gs
-    push dword ptr ds:tss_fs
-    push dword ptr ds:tss_ds
-    push dword ptr ds:tss_es
-    push dword ptr ds:tss_ss
-    push dword ptr ds:tss_esp
-    push dword ptr ds:tss_eflags
-    push dword ptr ds:tss_cs
-    push dword ptr ds:tss_eip
-;
-    mov eax,dword ptr ds:tss_eax
-    mov ecx,dword ptr ds:tss_ecx
-    mov edx,dword ptr ds:tss_edx
-    mov ebx,dword ptr ds:tss_ebx
-    mov ebp,dword ptr ds:tss_ebp
-    mov esi,dword ptr ds:tss_esi
-    mov edi,dword ptr ds:tss_edi
-;
-    test ds:tss_t,1
-    jz vm_t_ok
-;    
-	push dword ptr 0
-	push bp
-	mov bp,sp
-	push eax
-	push ebx
-	push ds
-	mov ds:tss_t,0
-	mov ax,thread_sel
-	mov ds,ax
-	call dword ptr ds:p_trap_ads
-	pop ds
-	pop ebx
-	pop eax
-	pop bp
-	add sp,4
-
-vm_t_ok:
-    iretd
+    jmp LoadCurrentThread
 
 update_timer_done:
 	ret
