@@ -460,8 +460,15 @@ UpdatePitClock	Proc near
 	movzx eax,ax
 	add ds:system_time,eax
 	adc ds:system_time+4,0
+	mov dx,ds:thread_act
+	or dx,dx
+	jz upcDone
+;
+    mov es,dx
 	add es:p_lsb_tics,eax
 	adc es:p_msb_tics,0
+
+upcDone:
 	ret
 UpdatePitClock  Endp
 
@@ -524,9 +531,21 @@ UpdateTscClock	Proc near
 	pushf
 	adc ds:system_time,edx
 	adc ds:system_time+4,0
+;
+	mov ax,ds:thread_act
+	or ax,ax
+	jz utcNoThread
+;
 	popf
+    mov es,ax
 	adc es:p_lsb_tics,edx
 	adc es:p_msb_tics,0
+	jmp utcDone
+
+utcNoThread:
+    popf
+	
+utcDone:
 	ret
 UpdateTscClock  Endp
 
@@ -827,7 +846,7 @@ timer_free_list_create:
 	mov bx,ax
 	loop timer_free_list_create
 ;
-	mov ds:thread_act,virt_thread_sel
+	mov ds:thread_act,0
 ;
 	mov eax,SIZE section_proc_seg
 	mov bx,section_proc_sel
@@ -2075,11 +2094,11 @@ reload_timer:
 	mov ds:preempt_lsb,eax
 	mov ds:preempt_msb,edx
 ;
-    mov es,ds:thread_act
-	mov bx,es:p_tss_sel
-	cmp bx,kernel_tss
-	je update_save_ok
-;	
+    mov ax,ds:thread_act
+    or ax,ax
+    jz update_save_ok
+;
+    mov es,ax    
 	mov ax,gdt_sel
 	mov ds,ax
 	and byte ptr ds:[bx+5],NOT 2
