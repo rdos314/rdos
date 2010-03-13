@@ -2252,8 +2252,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateTimer	Proc near
-    call UpdatePreempt
-;    
 	cli
 	add ds:timer_nesting,1
 	jc update_timer_do
@@ -2409,7 +2407,10 @@ leave_int	Proc far
 	mov ds,ax
 	sub ds:timer_nesting,1
 	jnc leave_int_done
+;	
+    call UpdatePreempt
 	call UpdateTimer
+
 leave_int_done:
 	ret
 leave_int	Endp
@@ -2440,6 +2441,7 @@ timer_int:
 	out INT0_CONTROL,al
 	mov ax,task_sel
 	mov ds,ax
+	call UpdatePreempt
 	call UpdateTimer
 ;
 	popad
@@ -2471,6 +2473,7 @@ apic_int:
 ;
 	mov ax,task_sel
 	mov ds,ax
+	call UpdatePreempt
 	call UpdateTimer
 ;
 	popad
