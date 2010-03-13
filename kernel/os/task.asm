@@ -922,6 +922,12 @@ timer_free_list_create:
 	mov ax,get_thread_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET get_processor
+	mov di,OFFSET get_processor_name
+	xor dx,dx
+	mov ax,get_processor_nr
+	RegisterBimodalUserGate
+;
 	mov si,OFFSET get_cpu_time
 	mov di,OFFSET get_cpu_time_name
 	xor dx,dx
@@ -2061,25 +2067,204 @@ reload_timer:
 	mov ax,[si]
 	cmp ax,ds:thread_act
 	je update_timer_done
+;
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,1193
 	adc edx,0
 	mov ds:preempt_lsb,eax
 	mov ds:preempt_msb,edx
+;
+    mov es,ds:thread_act
+	mov bx,es:p_tss_sel
+	cmp bx,kernel_tss
+	je update_save_ok
+;	
+	mov ax,gdt_sel
+	mov ds,ax
+	and byte ptr ds:[bx+5],NOT 2
+;
+    mov ds,es:p_tss_data_sel
+    mov dword ptr ds:tss_eip,OFFSET update_timer_done
+    pushfd
+    pop dword ptr ds:tss_eflags
+    mov dword ptr ds:tss_eax,eax
+    mov dword ptr ds:tss_ecx,ecx
+    mov dword ptr ds:tss_edx,edx
+    mov dword ptr ds:tss_ebx,ebx
+    mov dword ptr ds:tss_esp,esp
+    mov dword ptr ds:tss_ebp,ebp
+    mov dword ptr ds:tss_esi,esi
+    mov dword ptr ds:tss_edi,edi
+    mov word ptr ds:tss_es,es
+    mov word ptr ds:tss_cs,cs
+    mov word ptr ds:tss_ss,ss
+    mov word ptr ds:tss_ds,ds
+    mov word ptr ds:tss_fs,fs
+    mov word ptr ds:tss_gs,gs
+
+update_save_ok:
+	mov ax,task_sel
+	mov ds,ax
 	mov si,ds:prio_act
 	mov es,[si]
 	mov ds:thread_act,es
-	str ax
-	mov si,es:p_tss_sel
-	cmp ax,si
-	je update_timer_done
-	SetEnviroment
+;	
+	mov ax,gdt_sel
+	mov ds,ax
+	mov bx,es:p_tss_sel
+	and byte ptr ds:[bx+5],NOT 2
+	ltr bx
+;	
 	mov ax,task_sel
 	mov ds,ax
-	mov es,ax
-	mov ds:help_call_cs,si
-	jmp dword ptr ds:help_call_ip
+	SetEnviroment
+    mov ds,es:p_tss_data_sel
+;
+    mov eax,cr0
+    or al,8
+    mov cr0,eax    
+;
+    lldt ds:tss_ldt
+;    
+    test dword ptr ds:tss_eflags,20000h
+    jnz switch_vm
+;
+    test word ptr ds:tss_cs,3
+    jnz switch_pm_app
+
+switch_kernel:
+    mov ax,word ptr ds:tss_ss
+    mov ss,ax
+    mov esp,dword ptr ds:tss_esp
+    push dword ptr ds:tss_eflags
+    push dword ptr ds:tss_cs
+    push dword ptr ds:tss_eip
+;	
+    mov eax,dword ptr ds:tss_eax
+    mov ecx,dword ptr ds:tss_ecx
+    mov edx,dword ptr ds:tss_edx
+    mov ebx,dword ptr ds:tss_ebx
+    mov ebp,dword ptr ds:tss_ebp
+    mov esi,dword ptr ds:tss_esi
+    mov edi,dword ptr ds:tss_edi
+;
+    test ds:tss_t,1
+    jz kernel_t_ok
+;    
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	mov ds:tss_t,0
+	mov ax,thread_sel
+	mov ds,ax
+	call dword ptr ds:p_trap_ads
+	pop ds
+	pop ebx
+	pop eax
+	pop bp
+	add sp,4
+
+kernel_t_ok:
+    mov es,word ptr ds:tss_es
+    mov fs,word ptr ds:tss_fs
+    mov gs,word ptr ds:tss_gs
+    mov ds,word ptr ds:tss_ds
+    iretd
+
+switch_pm_app:    
+    mov ax,word ptr ds:tss_ess0
+    mov ss,ax
+    mov esp,dword ptr ds:tss_esp0
+;
+    push dword ptr ds:tss_ss
+    push dword ptr ds:tss_esp
+    push dword ptr ds:tss_eflags
+    push dword ptr ds:tss_cs
+    push dword ptr ds:tss_eip
+;	
+    mov eax,dword ptr ds:tss_eax
+    mov ecx,dword ptr ds:tss_ecx
+    mov edx,dword ptr ds:tss_edx
+    mov ebx,dword ptr ds:tss_ebx
+    mov ebp,dword ptr ds:tss_ebp
+    mov esi,dword ptr ds:tss_esi
+    mov edi,dword ptr ds:tss_edi
+;
+    test ds:tss_t,1
+    jz pm_t_ok
+;    
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	mov ds:tss_t,0
+	mov ax,thread_sel
+	mov ds,ax
+	call dword ptr ds:p_trap_ads
+	pop ds
+	pop ebx
+	pop eax
+	pop bp
+	add sp,4
+
+pm_t_ok:
+    mov es,word ptr ds:tss_es
+    mov fs,word ptr ds:tss_fs
+    mov gs,word ptr ds:tss_gs
+    mov ds,word ptr ds:tss_ds
+    iretd
+
+switch_vm:
+    mov ax,word ptr ds:tss_ess0
+    mov ss,ax
+    mov esp,dword ptr ds:tss_esp0
+;
+    push dword ptr ds:tss_gs
+    push dword ptr ds:tss_fs
+    push dword ptr ds:tss_ds
+    push dword ptr ds:tss_es
+    push dword ptr ds:tss_ss
+    push dword ptr ds:tss_esp
+    push dword ptr ds:tss_eflags
+    push dword ptr ds:tss_cs
+    push dword ptr ds:tss_eip
+;
+    mov eax,dword ptr ds:tss_eax
+    mov ecx,dword ptr ds:tss_ecx
+    mov edx,dword ptr ds:tss_edx
+    mov ebx,dword ptr ds:tss_ebx
+    mov ebp,dword ptr ds:tss_ebp
+    mov esi,dword ptr ds:tss_esi
+    mov edi,dword ptr ds:tss_edi
+;
+    test ds:tss_t,1
+    jz vm_t_ok
+;    
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	mov ds:tss_t,0
+	mov ax,thread_sel
+	mov ds,ax
+	call dword ptr ds:p_trap_ads
+	pop ds
+	pop ebx
+	pop eax
+	pop bp
+	add sp,4
+
+vm_t_ok:
+    iretd
+
 update_timer_done:
 	ret
 UpdateTimer	Endp
@@ -3655,6 +3840,26 @@ get_thread_pr	PROC far
 	pop ds
 	retf32
 get_thread_pr	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetProcessor
+;
+;		DESCRIPTION:	Get current processor
+;
+;		RETURNS:		AX		Processor
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_processor_name	DB 'Get Processor',0
+
+get_processor	PROC far
+    xor ax,ax
+	retf32
+get_processor	ENDP
 
 PAGE
 

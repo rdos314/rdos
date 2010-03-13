@@ -471,4 +471,6 @@ get_options_nr              = 385
 
 fork_nr                     = 386
 
-usergate_entries			= 387
+get_processor_nr            = 387
+
+usergate_entries			= 388

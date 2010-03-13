@@ -47,6 +47,8 @@ mp_startup_proc     DW ?
 
 mp_thread           DW ?
 
+apic_arr            DW 256 DUP(?)
+
 apic_data_seg ENDS
 
 	.386p
@@ -154,6 +156,9 @@ prot_start:
     mov bx,0F04h
     mov eax,98765432h
     mov [bx],eax
+;    
+    cli
+    hlt
 ;
     mov ax,20h
     mov es,ax
@@ -273,6 +278,56 @@ get_id_msr Proc far
     pop eax
     ret
 get_id_msr Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetProcessor
+;
+;		DESCRIPTION:	Get processor #
+;
+;       RETURNS:        AX  Processor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_processor_name    DB 'Get Processor',0
+
+get_processor_mem  Proc far
+    push ds
+    push ebx
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov ebx,ds:APIC_ID
+    shr ebx,24
+    add bx,bx
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov ax,ds:[bx].apic_arr
+;
+    pop ebx
+    pop ds
+    retf32
+get_processor_mem Endp
+
+get_processor_msr Proc far
+    push ds
+    push bx
+    push ecx
+;
+    mov ecx,MSR_APIC_ID
+    rdmsr
+    movzx bx,al
+    add bx,bx
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov ax,ds:[bx].apic_arr
+;
+    pop ecx
+    pop bx
+    pop ds
+    retf32
+get_processor_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -480,6 +535,12 @@ SetupMemGates   Proc near
 	xor cl,cl
 	mov ax,get_apic_id_nr
 	RegisterOsGate
+;
+	mov si,OFFSET get_processor_mem
+	mov di,OFFSET get_processor_name
+	xor dx,dx
+	mov ax,get_processor_nr
+	RegisterBimodalUserGate
 ;    
     ret
 SetupMemGates   Endp
@@ -508,6 +569,12 @@ SetupMsrGates   Proc near
 	xor cl,cl
 	mov ax,get_apic_id_nr
 	RegisterOsGate
+;
+	mov si,OFFSET get_processor_msr
+	mov di,OFFSET get_processor_name
+	xor dx,dx
+	mov ax,get_processor_nr
+	RegisterBimodalUserGate
 ;	
     ret
 SetupMsrGates   Endp
@@ -901,6 +968,10 @@ init	PROC far
 	mov eax,SIZE apic_data_seg
 	mov bx,apic_data_sel
 	AllocateFixedSystemMem
+	mov di,OFFSET apic_arr
+	xor ax,ax
+	mov cx,100h
+	rep stosw
 ;
     mov ax,system_data_sel
     mov ds,ax
