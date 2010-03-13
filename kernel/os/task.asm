@@ -2015,6 +2015,7 @@ get_next_int_loop:
 	pop ds
 	jmp get_next_int_loop
 get_next_int_ok:
+	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,1193
 	adc edx,0
@@ -2316,8 +2317,7 @@ check_preempt:
     mov eax,-1	
 
 reload_timer:
-	sub ds:timer_nesting,1
-	jnc update_timer_done
+	dec ds:timer_nesting
 	neg eax
 	call ds:reload_timer_proc
 ;
