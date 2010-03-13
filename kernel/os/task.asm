@@ -2314,12 +2314,8 @@ check_preempt:
 	sub eax,ds:preempt_lsb
 	sbb edx,ds:preempt_msb
 	jc reload_timer
-	sti
-	nop
-	cli
-	call GetNextThread
-	sti
-	jmp update_timer_loop
+;
+    mov eax,-1	
 
 reload_timer:
 	sub ds:timer_nesting,1
