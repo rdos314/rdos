@@ -2218,7 +2218,6 @@ UpdateTimer	Proc near
 	dec ds:timer_nesting
 	jmp update_timer_done
 update_timer_loop:
-	mov es,ds:thread_act
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
