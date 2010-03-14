@@ -2040,6 +2040,56 @@ PAGE
 LoadCurrentThread:
 	mov ax,task_sel
 	mov ds,ax
+
+load_timer_loop:
+	cli
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	add eax,ds:update_tics
+	adc edx,0
+	mov bx,ds:timer_head
+	mov ecx,ds:preempt_msb
+	cmp ecx,[bx].timer_msb
+	jc load_check_preempt
+	jnz load_check_timer
+;	
+	mov ecx,ds:preempt_lsb
+	cmp ecx,[bx].timer_lsb
+	jc load_check_preempt
+
+load_check_timer:
+	sub eax,[bx].timer_lsb
+	sbb edx,[bx].timer_msb
+	jc load_reload_timer
+;	
+	LocalRemoveTimer
+	jmp load_timer_loop
+
+load_check_preempt:
+	sub eax,ds:preempt_lsb
+	sbb edx,ds:preempt_msb
+	jc load_reload_timer
+;
+    mov eax,-1	
+
+load_reload_timer:
+	dec ds:timer_nesting
+	neg eax
+	call ds:reload_timer_proc
+;
+	mov si,ds:prio_act
+	mov ax,[si]
+	cmp ax,ds:thread_act
+	je load_do
+;
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	add eax,1193
+	adc edx,0
+	mov ds:preempt_lsb,eax
+	mov ds:preempt_msb,edx
+
+load_do:
 	mov si,ds:prio_act
 	mov es,[si]
 	mov ds:thread_act,es
@@ -2213,19 +2263,15 @@ PAGE
 UpdatePreempt	Proc near
 	cli
 	add ds:timer_nesting,1
-	jc update_preempt_do
+	jnc update_preempt_done
 ;
-	dec ds:timer_nesting
-	jmp update_preempt_done
-
-update_preempt_do:
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,1193 / 4
 	adc edx,0
 	sub eax,ds:preempt_lsb
 	sbb edx,ds:preempt_msb
-	jc update_preempt_ok
+	jc update_preempt_done
 ;	
 	sti
 	nop
@@ -2233,10 +2279,8 @@ update_preempt_do:
 	call GetNextThread
 	sti
 
-update_preempt_ok:
-    dec ds:timer_nesting
-
 update_preempt_done:
+    dec ds:timer_nesting
     ret
 UpdatePreempt   Endp
 
@@ -2255,15 +2299,11 @@ PAGE
 UpdateTimer	Proc near
 	cli
 	add ds:timer_nesting,1
-	jc update_timer_do
-;
-	dec ds:timer_nesting
-	jmp update_timer_done
-
-update_timer_do:
+	jnc update_timer_done
+;	
     mov ax,ds:thread_act
     or ax,ax
-    jz update_timer_loop
+    jz update_timer_load
 ;
     mov es,ax    
     mov ds,es:p_tss_data_sel
@@ -2287,56 +2327,11 @@ update_timer_do:
 	mov ax,task_sel
 	mov ds,ax
 
-update_timer_loop:
-	cli
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	add eax,ds:update_tics
-	adc edx,0
-	mov bx,ds:timer_head
-	mov ecx,ds:preempt_msb
-	cmp ecx,[bx].timer_msb
-	jc check_preempt
-	jnz check_timer
-	mov ecx,ds:preempt_lsb
-	cmp ecx,[bx].timer_lsb
-	jc check_preempt
-
-check_timer:
-	sub eax,[bx].timer_lsb
-	sbb edx,[bx].timer_msb
-	jc reload_timer
-	LocalRemoveTimer
-	jmp update_timer_loop
-
-check_preempt:
-	sub eax,ds:preempt_lsb
-	sbb edx,ds:preempt_msb
-	jc reload_timer
-;
-    mov eax,-1	
-
-reload_timer:
-	dec ds:timer_nesting
-	neg eax
-	call ds:reload_timer_proc
-;
-	mov si,ds:prio_act
-	mov ax,[si]
-	cmp ax,ds:thread_act
-	je update_timer_load
-;
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	add eax,1193
-	adc edx,0
-	mov ds:preempt_lsb,eax
-	mov ds:preempt_msb,edx
-
 update_timer_load:
     jmp LoadCurrentThread
 
 update_timer_done:
+	dec ds:timer_nesting
 	ret
 UpdateTimer	Endp
 	
