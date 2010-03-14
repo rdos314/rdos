@@ -215,8 +215,6 @@ draw_string_nr				= 197
 xms_handler_nr				= 198
 ems_handler_nr				= 199
 
-test_nr						= 200
-
 resize_flat_linear_nr		= 201
 
 set_drawcolor_nr			= 202

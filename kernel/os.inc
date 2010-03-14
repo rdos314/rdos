@@ -590,9 +590,19 @@ AllocateMultiplePhysical	MACRO
 
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
+TestGate    MACRO
+	OsGate test_nr
+						ENDM
+
 ;   OUT EDX     APIC ID
 GetApicId    MACRO
 	OsGate get_apic_id_nr
+						ENDM
+
+;   OUT AX      Processor #
+;   OUT ES      Processor selector
+CreateProcessor    MACRO
+	OsGate create_processor_nr
 						ENDM
 
 EnterInt    MACRO

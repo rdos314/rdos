@@ -40,6 +40,7 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE apic.inc
+INCLUDE proc.inc
 
 section_num	EQU 512
 
@@ -132,6 +133,9 @@ preempt_lsb		    DD ?
 preempt_msb		    DD ?
 
 signal_list		    DW ?
+
+processor_count     DW ?
+processor_arr       DW 256 DUP(?)
 
 timer_head		    DW ?
 timer_free		    DW ?
@@ -823,12 +827,21 @@ init_task	PROC near
 	mov ds:time_diff+4,0
 	mov bx,OFFSET ptab
 	mov ds:prio_act,bx
+;
 	mov cx,256
 ptab_init:
 	mov word ptr [bx],0
-	inc bx
-	inc bx
+	add bx,2
 	loop ptab_init
+;
+	mov bx,OFFSET processor_arr
+	mov ds:processor_count,0
+;
+	mov cx,256
+proc_init:
+	mov word ptr [bx],0
+	add bx,2
+	loop proc_init
 ;
 	mov bx,OFFSET timer_entries
 	mov [bx].timer_next,0
@@ -856,6 +869,18 @@ timer_free_list_create:
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov si,OFFSET test_gate
+	mov di,OFFSET test_gate_name
+	xor cl,cl
+	mov ax,test_nr
+	RegisterOsGate
+;
+	mov si,OFFSET create_processor
+	mov di,OFFSET create_processor_name
+	xor cl,cl
+	mov ax,create_processor_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET enter_int
 	mov di,OFFSET enter_int_name
@@ -2363,6 +2388,71 @@ schedule	PROC near
 	pop ds
 	ret
 schedule	ENDP
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TestGate
+;
+;		DESCRIPTION:	Test gate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name	DB 'Test Gate',0
+
+test_gate	Proc far
+    ret
+test_gate   Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateProcessor
+;
+;		DESCRIPTION:	Create processor
+;
+;       RETURNS:        AX      Processor #
+;                       ES      Processor sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_processor_name	DB 'Create Processor',0
+
+create_processor	Proc far
+    push ds
+    push si
+;    
+    mov eax,SIZE processor_seg
+    AllocateSmallGlobalMem
+;
+    push es
+    mov eax,200h    
+    AllocateSmallGlobalMem
+    mov ax,es
+    pop es
+    mov es:ps_ss,ax
+    mov es:ps_sp,200h
+;
+	mov ax,task_sel
+	mov ds,ax
+	mov ax,ds:processor_count
+	mov si,ax
+	add si,si
+	mov [si].processor_arr,es
+;
+    mov es:ps_id,ax	
+    mov es:ps_cr3,0
+;
+    pop si
+    pop ds	
+	ret
+create_processor	Endp
+
+PAGE	
 
 PAGE	
 

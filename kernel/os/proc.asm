@@ -39,6 +39,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\handle.inc
 include ..\wait.inc
+include proc.inc
 
 thread_data_seg	STRUC
 
@@ -2740,6 +2741,11 @@ PAGE
 
 init_first_process_callback:
 	call init_process_paging
+;
+    CreateProcessor
+    mov eax,cr3
+    mov es:ps_cr3,eax
+;	
 	call trap_init_tasking
 	sti
 	
