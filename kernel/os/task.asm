@@ -2407,6 +2407,7 @@ SaveCurrentThread	Proc near
 ;
     mov ax,task_sel
     mov ds,ax
+	inc ds:timer_nesting
 ;        
     mov ds,ds:thread_act
     mov ds,ds:p_tss_data_sel
@@ -2440,7 +2441,6 @@ SaveCurrentThread	Proc near
     mov ax,task_sel
     mov ds,ax
     GetProcessorNr
-	inc ds:timer_nesting
     mov bx,ax
     add bx,bx
     mov fs,ds:[bx].processor_arr
