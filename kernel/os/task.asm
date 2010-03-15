@@ -2394,6 +2394,80 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			SaveCurrentThread
+;
+;		DESCRIPTION:	Save state of current thread
+;
+;       PARAMETERS:     Stack, return IP
+;
+;       RETURNS:        SS:SP       Processor stack
+;                       DS          Task sel
+;                       FS          Processor selector
+;                       ES, GS      Clear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SaveCurrentThread	Proc near	
+    push ds
+    push ax
+;
+    mov ax,task_sel
+    mov ds,ax
+;        
+    mov ds,ds:thread_act
+    mov ds,ds:p_tss_data_sel
+    pushfd
+    pop dword ptr ds:tss_eflags
+    mov dword ptr ds:tss_ecx,ecx
+    mov dword ptr ds:tss_edx,edx
+    mov dword ptr ds:tss_ebx,ebx
+    mov dword ptr ds:tss_ebp,ebp
+    mov dword ptr ds:tss_esi,esi
+    mov dword ptr ds:tss_edi,edi
+    mov word ptr ds:tss_es,es
+    mov word ptr ds:tss_cs,cs
+    mov word ptr ds:tss_ss,ss
+    mov word ptr ds:tss_fs,fs
+    mov word ptr ds:tss_gs,gs
+;
+    pop ax
+    mov dword ptr ds:tss_eax,eax
+;
+    pop word ptr ds:tss_ds
+    pop bp
+    pop dx
+    movzx edx,dx
+    mov dword ptr ds:tss_eip,edx
+    mov dword ptr ds:tss_esp,esp
+    mov edx,dword ptr ds:tss_edx
+;
+    push ax
+    push bx
+    mov ax,task_sel
+    mov ds,ax
+    GetProcessorNr
+	inc ds:timer_nesting
+    mov bx,ax
+    add bx,bx
+    mov fs,ds:[bx].processor_arr
+    pop bx
+    pop ax
+;    
+    mov ss,fs:ps_ss
+    mov sp,fs:ps_sp
+    push bp
+;
+    xor bp,bp
+    mov es,bp
+    mov gs,bp    
+    ret
+SaveCurrentThread   Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			TestGate
 ;
 ;		DESCRIPTION:	Test gate
@@ -2403,6 +2477,39 @@ PAGE
 test_gate_name	DB 'Test Gate',0
 
 test_gate	Proc far
+    int 3
+    push OFFSET test_gate_done
+    call SaveCurrentThread
+;
+	mov bx,1193
+	mul bx
+	push dx
+	push ax
+	pop ebx
+	mov es,ds:thread_act
+	cli
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	sti
+	add eax,ebx
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET wake_until
+	mov cx,ds:thread_act
+	xor bx,bx
+	cli
+	LocalStartTimer
+	mov es,ds:thread_act
+	mov si,es:p_prio
+	mov es:p_sleep_sel,0
+	mov es:p_sleep_offset,1
+	RemoveBlock
+	call GetNextThread
+    jmp LoadCurrentThread
+
+test_gate_done:
+    int 3
     ret
 test_gate   Endp
 
@@ -2443,6 +2550,7 @@ create_processor	Proc far
 	mov si,ax
 	add si,si
 	mov [si].processor_arr,es
+	inc ds:processor_count
 ;
     mov es:ps_id,ax	
     mov es:ps_cr3,0
@@ -4165,12 +4273,9 @@ PAGE
 wait_milli_name	DB 'Wait Milli Sec',0
 
 wait_milli_sec	PROC far
-	push ds
-	push es
-	pushad
+    push OFFSET wait_milli_done
+    call SaveCurrentThread
 ;
-	mov bx,task_sel
-	mov ds,bx
 	mov bx,1193
 	mul bx
 	push dx
@@ -4196,12 +4301,9 @@ wait_milli_sec	PROC far
 	mov es:p_sleep_offset,1
 	RemoveBlock
 	call GetNextThread
-	call UpdateTimer
-	sti
-;
-	popad
-	pop es
-	pop ds
+    jmp LoadCurrentThread
+
+wait_milli_done:
 	retf32
 wait_milli_sec	ENDP
 

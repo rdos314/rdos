@@ -805,12 +805,12 @@ init_apic_thread	PROC far
     mov ds,ax
     mov eax,ds:cpu_feature_flags
     test ax,200h
-    jz init_thread_done
+;    jz init_thread_done
 ;    
-    mov ecx,1Bh
-    rdmsr
-    test ah,8
-    jz init_thread_done
+;    mov ecx,1Bh
+;    rdmsr
+;    test ah,8
+;    jz init_thread_done
 ;
 	mov ax,cs
 	mov ds,ax
