@@ -4323,12 +4323,9 @@ PAGE
 wait_micro_name	DB 'Wait Micro Seconds',0
 
 wait_micro_sec	PROC far
-	push ds
-	push es
-	pushad
+    push OFFSET wait_micro_done
+    call SaveCurrentThread
 ;
-	mov bx,task_sel
-	mov ds,bx
 	movzx eax,ax
 	mov ebx,78184
 	mul ebx
@@ -4356,12 +4353,9 @@ wait_micro_sec	PROC far
 	mov es:p_sleep_offset,1
 	RemoveBlock
 	call GetNextThread
-	call UpdateTimer
-	sti
-;
-	popad
-	pop es
-	pop ds
+    jmp LoadCurrentThread
+
+wait_micro_done:
 	retf32
 wait_micro_sec	ENDP
 
