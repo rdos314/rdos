@@ -2360,35 +2360,6 @@ update_timer_done:
 	ret
 UpdateTimer	Endp
 	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SCHEDULE
-;
-;		DESCRIPTION:	Schedule new thread
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-schedule	PROC near
-	push ds
-	push es
-	pushad
-;
-	mov ax,task_sel
-	mov ds,ax
-	cli
-	call GetNextThread
-	call UpdateTimer
-	sti
-;
-	popad
-	pop es
-	pop ds
-	ret
-schedule	ENDP
-
 PAGE	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3117,36 +3088,32 @@ PAGE
 sleep_thread_name	DB 'Sleep',0
 
 sleep_thread	PROC far
-	push ds
-	push es
-	push ebx
-	push ecx
-	push edx
-	push esi
-	push edi
+    push ds
+    push es
+    mov ax,ds
 ;
-	mov cx,ds
-	mov si,task_sel
-	mov ds,si
+    push OFFSET sleep_thread_done
+    call SaveCurrentThread
+;
+	mov cx,ax
+	mov ax,task_sel
+	mov ds,ax
 	cli
 	mov es,ds:thread_act
 	mov si,es:p_prio
 	RemoveBlock
 	mov ds,cx
 	InsertBlock
-	mov cx,task_sel
-	mov ds,cx
+	mov ax,task_sel
+	mov ds,ax
 	call GetNextThread
-	call UpdateTimer
-	sti
+    jmp LoadCurrentThread
+
+sleep_thread_done:
+	mov ax,task_sel
+	mov ds,ax
 	mov es,ds:thread_act
 	mov eax,es:p_data
-;
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
 	pop es
 	pop ds
 	ret
