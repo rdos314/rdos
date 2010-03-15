@@ -3044,18 +3044,14 @@ PAGE
 swap_name	DB 'Swap',0
 
 swap_out	PROC far
-	push ds
-	push es
-	pushad
-	mov ax,task_sel
-	mov ds,ax
+    push OFFSET swap_out_done
+    call SaveCurrentThread
+;
 	cli
 	call GetNextThread
-	call UpdateTimer
-	sti
-	popad
-	pop es
-	pop ds
+    jmp LoadCurrentThread
+
+swap_out_done:
 	retf32
 swap_out	ENDP
 
