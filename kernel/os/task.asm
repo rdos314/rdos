@@ -2098,7 +2098,6 @@ load_check_preempt:
     mov eax,-1	
 
 load_reload_timer:
-	dec ds:timer_nesting
 	neg eax
 	call ds:reload_timer_proc
 ;
@@ -2158,7 +2157,21 @@ load_kernel:
     mov esi,dword ptr ds:tss_esi
     mov edi,dword ptr ds:tss_edi
 ;
+    mov es,word ptr ds:tss_es
+    mov fs,word ptr ds:tss_fs
+    mov gs,word ptr ds:tss_gs
     test ds:tss_t,1
+    mov ds,word ptr ds:tss_ds
+;
+    push ds
+    pushf
+    push ax
+    mov ax,task_sel
+    mov ds,ax
+	dec ds:timer_nesting
+    pop ax
+    popf
+    pop ds
     jz load_kernel_t_ok
 ;    
 	push dword ptr 0
@@ -2167,6 +2180,8 @@ load_kernel:
 	push eax
 	push ebx
 	push ds
+	mov ax,thread_tss_sel
+	mov ds,ax
 	mov ds:tss_t,0
 	mov ax,thread_sel
 	mov ds,ax
@@ -2178,10 +2193,6 @@ load_kernel:
 	add sp,4
 
 load_kernel_t_ok:
-    mov es,word ptr ds:tss_es
-    mov fs,word ptr ds:tss_fs
-    mov gs,word ptr ds:tss_gs
-    mov ds,word ptr ds:tss_ds
     iretd
 
 load_pm_app:    
@@ -2202,8 +2213,22 @@ load_pm_app:
     mov ebp,dword ptr ds:tss_ebp
     mov esi,dword ptr ds:tss_esi
     mov edi,dword ptr ds:tss_edi
-;
+;    
+    mov es,word ptr ds:tss_es
+    mov fs,word ptr ds:tss_fs
+    mov gs,word ptr ds:tss_gs
     test ds:tss_t,1
+    mov ds,word ptr ds:tss_ds
+;
+    push ds
+    pushf
+    push ax
+    mov ax,task_sel
+    mov ds,ax
+	dec ds:timer_nesting
+    pop ax
+    popf
+    pop ds
     jz load_pm_t_ok
 ;    
 	push dword ptr 0
@@ -2212,6 +2237,8 @@ load_pm_app:
 	push eax
 	push ebx
 	push ds
+	mov ax,thread_tss_sel
+	mov ds,ax
 	mov ds:tss_t,0
 	mov ax,thread_sel
 	mov ds,ax
@@ -2223,10 +2250,6 @@ load_pm_app:
 	add sp,4
 
 load_pm_t_ok:
-    mov es,word ptr ds:tss_es
-    mov fs,word ptr ds:tss_fs
-    mov gs,word ptr ds:tss_gs
-    mov ds,word ptr ds:tss_ds
     iretd
 
 load_vm:
