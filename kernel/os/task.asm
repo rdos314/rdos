@@ -4209,12 +4209,9 @@ PAGE
 wait_until_name	DB 'Wait Until',0
 
 wait_until	PROC far
-	push ds
-	push es
-	pushad
+    push OFFSET wait_until_done
+    call SaveCurrentThread
 ;
-	mov bx,task_sel
-	mov ds,bx
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
@@ -4228,12 +4225,9 @@ wait_until	PROC far
 	mov es:p_sleep_offset,1
 	RemoveBlock
 	call GetNextThread
-	call UpdateTimer
-	sti
-;
-	popad
-	pop es
-	pop ds
+    jmp LoadCurrentThread
+
+wait_until_done:
 	retf32
 wait_until	ENDP
 
