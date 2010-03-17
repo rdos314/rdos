@@ -2467,6 +2467,52 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			SkipCurrentThread
+;
+;		DESCRIPTION:	Skip current thread (no save of registers)
+;
+;       RETURNS:        SS:SP       Processor stack
+;                       DS          Task sel
+;                       FS          Processor selector
+;                       ES, GS      Clear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SkipCurrentThread	Proc near	
+    push ax
+    mov ax,task_sel
+    mov ds,ax
+	inc ds:timer_nesting        
+    pop ax
+;    
+    pop bp
+;
+    push ax
+    push bx
+    mov ax,task_sel
+    mov ds,ax
+    GetProcessorNr
+    mov bx,ax
+    add bx,bx
+    mov fs,ds:[bx].processor_arr	
+    pop bx
+    pop ax
+;    
+    mov ss,fs:ps_ss
+    mov sp,fs:ps_sp
+    push bp
+;
+    xor bp,bp
+    mov es,bp
+    mov gs,bp    
+    ret
+SkipCurrentThread   Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			TestGate
 ;
 ;		DESCRIPTION:	Test gate
@@ -3053,6 +3099,159 @@ swap_out	PROC far
 swap_out_done:
 	retf32
 swap_out	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CleanupThread
+;
+;		DESCRIPTION:	Free resources for current thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public cleanup_thread
+    
+cleanup_thread:
+    call SkipCurrentThread
+;    
+    cli	
+	mov es,ds:thread_act
+	mov si,es:p_prio
+	RemoveBlock
+	push es
+;
+	call GetNextThread
+;
+	mov si,ds:prio_act
+	mov es,[si]
+	mov ds:thread_act,es
+;	
+	mov ax,gdt_sel
+	mov ds,ax
+	mov bx,es:p_tss_sel
+	and byte ptr ds:[bx+5],NOT 2
+	ltr bx
+;
+	SetEnviroment
+    mov ds,es:p_tss_data_sel
+;
+    lldt ds:tss_ldt
+;
+	pop es
+	sti
+;
+	push es
+	mov es,es:p_tss_data_sel
+	mov es,es:tss_ess0
+	FreeMem
+	pop es
+;
+	mov bx,es:p_tss_data_sel
+	FreeGdt
+;
+	mov bx,es:p_tss_sel
+	FreeGdt
+;
+	FreeMem
+    jmp LoadCurrentThread
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CleanupProcess
+;
+;		DESCRIPTION:	Free resources for current process
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public cleanup_process
+    
+cleanup_process:
+    call SkipCurrentThread
+;    
+    cli	
+	mov es,ds:thread_act
+	mov si,es:p_prio
+	RemoveBlock
+	push es
+;
+	call GetNextThread
+;
+	mov si,ds:prio_act
+	mov es,[si]
+	mov ds:thread_act,es
+;	
+	mov ax,gdt_sel
+	mov ds,ax
+	mov bx,es:p_tss_sel
+	and byte ptr ds:[bx+5],NOT 2
+	ltr bx
+;
+	SetEnviroment
+    mov ds,es:p_tss_data_sel
+;
+    lldt ds:tss_ldt
+;
+	pop es
+	sti
+	mov ax,es:p_process_sel
+	push es
+	mov es,ax
+	FreeMem
+	pop es
+;
+	mov bx,es
+	mov ax,process_dir_sel
+	mov ds,ax
+	mov si,alias_linear SHR 20
+	mov eax,es:p_cr3
+	mov [si],eax
+	mov eax,cr3
+	mov cr3,eax
+;
+    mov ax,flat_sel
+    mov ds,ax
+	mov cx,400h
+	mov edx,alias_linear + (handle_linear SHR 10)
+
+cleanup_process_linear_loop:
+	mov eax,[edx]
+	test al,1
+	jz cleanup_process_linear_next
+;
+	FreePhysical
+
+cleanup_process_linear_next:
+	add edx,4
+	loop cleanup_process_linear_loop
+;
+	mov ax,process_page_sel
+	mov ds,ax
+	mov edx,(alias_linear + (handle_linear SHR 10)) SHR 10
+	mov eax,[edx]
+	FreePhysical
+;
+	mov eax,es:p_cr3
+	FreePhysical
+;
+	push es
+	mov es,es:p_tss_data_sel
+	mov es,es:tss_ess0
+	FreeMem
+	pop es
+;
+	mov bx,es:p_tss_data_sel
+	FreeGdt
+;
+	mov bx,es:p_tss_sel
+	FreeGdt
+;
+	FreeMem
+    jmp LoadCurrentThread
 
 PAGE
 
