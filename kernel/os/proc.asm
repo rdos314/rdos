@@ -2745,6 +2745,8 @@ init_first_process_callback:
     CreateProcessor
     mov eax,cr3
     mov es:ps_cr3,eax
+    GetThread
+    mov es:ps_null,ax
 ;	
 	call trap_init_tasking
 	sti

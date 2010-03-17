@@ -2295,6 +2295,11 @@ load_vm:
 	add sp,4
 
 load_vm_t_ok:
+    push ax
+    mov ax,task_sel
+    mov ds,ax
+	dec ds:timer_nesting
+    pop ax
     iretd
 
 PAGE
