@@ -996,6 +996,49 @@ segment_not_present	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			TRAP_12
+;
+;		DESCRIPTION:	Stack fault
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_12:
+	sti
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	mov ax,thread_tss_sel
+	mov ds,ax
+	mov ax,[bp].vm_err
+	mov ds:tss_error_code,ax
+	mov al,11
+	test byte ptr [bp+2].vm_eflags,2
+	jnz t11_vm
+;
+	mov al,12
+	call prot_exception
+	jmp t12_ret
+
+t12_vm:
+	mov al,12
+	call emulate
+
+t12_ret:
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			TRAP_13
 ;
 ;		DESCRIPTION:	General protection fault
@@ -1165,6 +1208,7 @@ tg6		DW	6,		OFFSET trap_6,			kernel_code,	0
 tg7		DW	7,		OFFSET trap_7,			kernel_code,	0
 tg9		DW	9,		OFFSET trap_9,			kernel_code,	0
 tg11	DW	11,		OFFSET trap_11,			kernel_code,	0
+tg12	DW	12,		OFFSET trap_12,			kernel_code,	0
 tg13	DW	13,		OFFSET trap_13,			kernel_code,	0
 tg16	DW	16,		OFFSET trap_16,			kernel_code,	0
 tg7_end	DW	0FFFFh
