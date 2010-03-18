@@ -3039,7 +3039,7 @@ PAGE
 init_first_thread:
 	mov ax,task_sel
 	mov ds,ax
-	inc ds:timer_nesting
+	call ds:lock_proc
 	mov di,es:p_prio
 	mov ds:prio_act,di
 	InsertBlock
