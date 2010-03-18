@@ -134,6 +134,9 @@ preempt_msb		    DD ?
 
 signal_list		    DW ?
 
+lock_proc           DW ?
+unlock_proc         DW ?
+
 processor_count     DW ?
 processor_arr       DW 256 DUP(?)
 
@@ -818,6 +821,8 @@ init_task	PROC near
 ;
 	mov ax,task_sel
 	mov ds,ax
+	mov ds:lock_proc,OFFSET LockSingle
+	mov ds:unlock_proc,OFFSET UnlockSingle
 	mov ds:timer_nesting,-1
 	mov ds:signal_list,0
 	mov ds:help_call_ip,0
@@ -2138,7 +2143,7 @@ load_kernel:
     push ax
     mov ax,task_sel
     mov ds,ax
-	dec ds:timer_nesting
+    call ds:unlock_proc
     pop ax
     popf
     pop ds
@@ -2195,7 +2200,7 @@ load_pm_app:
     push ax
     mov ax,task_sel
     mov ds,ax
-	dec ds:timer_nesting
+    call ds:unlock_proc
     pop ax
     popf
     pop ds
@@ -2268,7 +2273,7 @@ load_vm_t_ok:
     push ax
     mov ax,task_sel
     mov ds,ax
-	dec ds:timer_nesting
+    call ds:unlock_proc
     pop ax
     iretd
 
@@ -2354,7 +2359,7 @@ update_timer_load:
     jmp LoadCurrentThread
 
 update_timer_done:
-	dec ds:timer_nesting
+    dec ds:timer_nesting
 	ret
 UpdateTimer	Endp
 	
@@ -2382,7 +2387,7 @@ SaveCurrentThread	Proc near
 ;
     mov ax,task_sel
     mov ds,ax
-	inc ds:timer_nesting
+    call ds:lock_proc
 ;        
     mov ds,ds:thread_act
     mov ds,ds:p_tss_data_sel
@@ -2452,7 +2457,7 @@ SkipCurrentThread	Proc near
     push ax
     mov ax,task_sel
     mov ds,ax
-	inc ds:timer_nesting        
+    call ds:lock_proc
     pop ax
 ;    
     pop bp
@@ -2496,7 +2501,7 @@ debug_exception_name    DB 'Debug Exception', 0
 debug_exception:
     mov ax,task_sel
     mov ds,ax
-	inc ds:timer_nesting
+    call ds:lock_proc
 ;        
     mov ds,ds:thread_act
     mov ds,ds:p_tss_data_sel
@@ -2627,7 +2632,7 @@ double_fault:
 ;    
     mov ax,task_sel
     mov ds,ax
-	inc ds:timer_nesting
+    call ds:lock_proc
 ;	
     mov ax,task_sel
     mov ds,ax
@@ -2758,6 +2763,40 @@ create_processor	Proc far
 create_processor	Endp
 
 PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LockSingle
+;
+;		DESCRIPTION:	Lock, single processor version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockSingle	Proc near
+	inc ds:timer_nesting
+	ret
+LockSingle	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UnlockSingle
+;
+;		DESCRIPTION:	Unlock, single processor version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockSingle	Proc near
+    dec ds:timer_nesting
+	ret
+UnlockSingle	Endp
 
 PAGE	
 
