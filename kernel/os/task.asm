@@ -4754,19 +4754,6 @@ PAGE
 debug_break_name	DB 'Debug Break',0
 
 debug_break:
-	test byte ptr [bp+2].vm_eflags,2
-	jz debug_break_prot
-
-debug_break_virt:
-    DebugException
-
-debug_break_prot:
-	test byte ptr [bp].vm_cs,3
-	jz debug_break_kernel
-	DebugException
-
-debug_break_kernel:
-	add sp,8
 	DebugException
 
 PAGE

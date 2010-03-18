@@ -890,19 +890,8 @@ restore_context	ENDP
 
 	public pm_exception_handler
 
-pm_exception_handler	PROC far
-	push ax
-	push cs
-	call get_thread
-	mov ds,ax
-	mov ds,ds:p_tss_data_sel
-	pop ax
+pm_exception_handler:
 	DebugException
-;	xor ah,ah
-;	mov al,[bp+2].vm_err
-;	int 45h
-	ret
-pm_exception_handler	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -933,14 +922,8 @@ vm_exception_handler	PROC far
 	mov ax,[ebx+2]
 	mov [bp].vm_cs,ax
 	add word ptr [bp].vm_esp,6
+
 vm_except_do:
-	push cs
-	call get_thread
-	mov ds,ax
-	mov ds,ds:p_tss_data_sel
-;	xor ah,ah
-;	mov al,[bp+2].vm_err
-;	int 46h
     DebugException
 	ret
 vm_exception_handler	ENDP
@@ -2096,7 +2079,7 @@ reflect_exception:
 	iretd
 
 reflect_exc_break:
-	DebugBreak
+	DebugException
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

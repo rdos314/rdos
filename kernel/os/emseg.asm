@@ -135,9 +135,7 @@ emulate_ret_kernel_stack_ok:
 	pop word ptr [bp].pm_ds
 	pop fs
 	pop gs
-	xor dx,dx
-	movzx ax, byte ptr [bp+2].vm_err
-	DebugBreak
+    DebugException
 	ret
 EmulateError	Endp
 	
