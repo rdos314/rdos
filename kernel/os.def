@@ -149,14 +149,11 @@ free_physical_nr			EQU 72
 create_process_nr			EQU 74
 wake_thread_nr				EQU 79
 sleep_thread_nr				EQU 80
-wake32_thread_nr			EQU 81
-sleep32_thread_nr			EQU 82
 clear_signal_nr				EQU 83
 signal_nr					EQU 84
 wait_for_signal_nr			EQU 85
 enter_section_nr			EQU 86
 leave_section_nr			EQU 87
-leave_section_sleep_nr		EQU 88
 start_timer_nr				EQU 89
 stop_timer_nr				EQU 90
 change_enviroment_nr		EQU 91

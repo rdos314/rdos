@@ -924,18 +924,6 @@ timer_free_list_create:
 	mov ax,sleep_thread_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET wake32_thread
-	mov di,OFFSET wake32_thread_name
-	xor cl,cl
-	mov ax,wake32_thread_nr
-	RegisterOsGate
-;
-	mov si,OFFSET sleep32_thread
-	mov di,OFFSET sleep32_thread_name
-	xor cl,cl
-	mov ax,sleep32_thread_nr
-	RegisterOsGate
-;
 	mov si,OFFSET clear_signal
 	mov di,OFFSET clear_signal_name
 	xor cl,cl
@@ -1090,12 +1078,6 @@ timer_free_list_create:
 	mov di,OFFSET leave_section_name
 	xor cl,cl
 	mov ax,leave_section_nr
-	RegisterOsGate
-;
-	mov si,OFFSET leave_section_sleep
-	mov di,OFFSET leave_section_sleep_name
-	xor cl,cl
-	mov ax,leave_section_sleep_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET create_user_section
@@ -3352,104 +3334,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WAKE32_THREAD
-;
-;		DESCRIPTION:	Wake up thread
-;
-;		PARAMETERS:		DS:ESI		Thread list
-;						EAX			Status to thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-wake32_thread_name	DB 'Wake32',0
-
-wake32_thread	PROC far
-	push ds
-	push es
-	pushad
-;
-	cli
-	mov di,[esi]
-	or di,di
-	jz wake32_done
-	RemoveBlock32
-	mov di,task_sel
-	mov ds,di
-	mov di,es:p_prio
-	mov es:p_data,eax
-	InsertBlock
-	cmp di,ds:prio_act
-	jb wake32_done
-	mov ds:prio_act,di
-	call GetNextThread
-	call UpdateTimer
-wake32_done:
-	sti
-;
-	popad
-	pop es
-	pop ds
-	ret
-wake32_thread	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SLEEP32
-;
-;		DESCRIPTION:	Suspend thread
-;
-;		PARAMETERS:		DS:EDI	Suspend list
-;
-;		RETURNS:		EAX		Wake up status
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-sleep32_thread_name	DB 'Sleep32',0
-
-sleep32_thread	PROC far
-	push ds
-	push es
-	push ebx
-	push ecx
-	push edx
-	push esi
-	push edi
-;
-	mov cx,ds
-	mov si,task_sel
-	mov ds,si
-	cli
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	RemoveBlock
-	mov ds,cx
-	InsertBlock32
-	mov cx,task_sel
-	mov ds,cx
-	call GetNextThread
-	call UpdateTimer
-	sti
-	mov es,ds:thread_act
-	mov eax,es:p_data
-;
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop es
-	pop ds
-	ret
-sleep32_thread	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			ClearSignal
 ;
 ;		DESCRIPTION:	Set status to unsignaled
@@ -3844,76 +3728,6 @@ leave_section_done:
 	pop ds
 	ret
 leave_section	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			leave_section_sleep
-;
-;		DESCRIPTION:	Leave section and sleep
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;						FS:EDI		SLEEP LIST
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-leave_section_sleep_name	DB 'Leave Critical Section Sleep',0
- 
-leave_section_sleep	PROC far
-	push ds
-	push es
-	push fs
-	pushad
-;
-	push ds
-	push esi
-	mov cx,fs
-	mov ax,task_sel
-	mov ds,ax
-	cli
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	RemoveBlock
-	mov ds,cx
-	InsertBlock32
-	pop ebx
-	pop fs
-	add fs:[ebx].cs_value,1
-	jc leave_section_sleep_done
-	mov ax,fs:[ebx].cs_list
-	or ax,ax
-	jz leave_section_sleep_done
-	mov es,ax
-	mov di,es:p_prev
-	cmp di,fs:[ebx].cs_list
-	mov fs:[ebx].cs_list,di
-	mov si,es:p_next
-	mov ds,di
-	mov ds:p_next,si
-	mov ds,si
-	mov ds:p_prev,di
-	jne leave_section_sleep_empty
-	mov word ptr fs:[ebx].cs_list,0
-leave_section_sleep_empty:
-	mov ax,task_sel
-	mov ds,ax
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jb leave_section_sleep_done
-	mov ds:prio_act,di
-leave_section_sleep_done:
-	call GetNextThread
-	call UpdateTimer
-	sti
-	popad
-	pop fs
-	pop es
-	pop ds
-	ret
-leave_section_sleep	ENDP
 
 PAGE
 	

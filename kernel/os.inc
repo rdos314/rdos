@@ -639,18 +639,6 @@ Sleep	MACRO
 	OsGate sleep_thread_nr
 					ENDM
 
-;	DS:ESI		TRèD
-;	AX			STATUS TILL TRèD
-Wake32	MACRO
-	OsGate wake32_thread_nr
-					ENDM
-
-;	DS:EDI	SOVLISTA
-;	AX		DATA
-Sleep32	MACRO
-	OsGate sleep32_thread_nr
-					ENDM
-
 ClearSignal	MACRO
 	OsGate clear_signal_nr
 					ENDM
@@ -809,12 +797,6 @@ LeaveWriteSection       MACRO section
 	pop esi
 leave_section_done:
 	popf
-						ENDM
-
-;       DS:ESI          SECTION DATA
-;       FS:EDI          LIST
-LeaveSectionSleep       MACRO
-	OsGate leave_section_sleep_nr
 						ENDM
 
 InitFarSection     MACRO seg, section
