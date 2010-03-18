@@ -3432,36 +3432,42 @@ PAGE
 wait_for_signal_name	DB 'Wait For Signal',0
 
 wait_for_signal	PROC far
-	push ds
-	push es
-	pushad
+    push ds
+    push ax
 ;
 	mov ax,task_sel
 	mov ds,ax
 	cli
-	mov es,ds:thread_act
+	mov ds,ds:thread_act
 	xor al,al
-	xchg al,es:p_signal
+	xchg al,ds:p_signal
 	or al,al
 	jnz wait_for_signal_done
 ;
-	mov si,es:p_prio
-	RemoveBlock
-	mov di,OFFSET signal_list
-	InsertBlock
-	call GetNextThread
-	call UpdateTimer
+    sti
+    push OFFSET wait_for_signal_clear
+    call SaveCurrentThread
 ;
 	mov ax,task_sel
 	mov ds,ax
 	mov es,ds:thread_act
-	mov es:p_signal,0
+	mov si,es:p_prio
+    cli
+	RemoveBlock
+	mov di,OFFSET signal_list
+	InsertBlock
+	call GetNextThread
+	jmp LoadCurrentThread
+
+wait_for_signal_clear:
+	mov ax,task_sel
+	mov ds,ax
+	mov ds,ds:thread_act
+	mov ds:p_signal,0
 	
 wait_for_signal_done:
 	sti
-;
-	popad
-	pop es
+	pop ax
 	pop ds
 	ret
 wait_for_signal	ENDP
