@@ -2973,9 +2973,10 @@ PAGE
 
 	public init_first_thread
 
-init_first_thread	Proc near
+init_first_thread:
 	mov ax,task_sel
 	mov ds,ax
+	inc ds:timer_nesting
 	mov di,es:p_prio
 	mov ds:prio_act,di
 	InsertBlock
@@ -3007,10 +3008,7 @@ init_timer_sel_ok:
     call ds:init_clock_proc
 ;
 	call GetNextThread
-	call UpdateTimer
-	sti
-	ret
-init_first_thread	Endp
+	jmp LoadCurrentThread
 
 PAGE
 
