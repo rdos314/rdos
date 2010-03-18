@@ -2773,10 +2773,12 @@ PAGE
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
+;       RETURNS:        CY      Owner of section
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockSingle	Proc near
-	inc ds:timer_nesting
+	add ds:timer_nesting,1
 	ret
 LockSingle	Endp
 
@@ -2794,7 +2796,26 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockSingle	Proc near
-    dec ds:timer_nesting
+    push es
+    push ax
+;    
+    sub ds:timer_nesting,1
+	jnc unlock_single_done
+;	
+    mov es,ds:thread_act
+    mov ax,ds:prio_act
+    cmp ax,es:p_prio
+    jbe unlock_single_done
+;
+    push OFFSET unlock_single_done
+    call SaveCurrentThread
+    cli
+    call GetNextThread
+    jmp LoadCurrentThread
+
+unlock_single_done:
+    pop ax
+    pop es
 	ret
 UnlockSingle	Endp
 
@@ -2814,7 +2835,7 @@ enter_int_name	DB 'Enter Int',0
 enter_int	Proc far
 	mov ax,task_sel
 	mov ds,ax
-	inc ds:timer_nesting
+	call ds:lock_proc
 	ret
 enter_int	Endp
 
@@ -2834,13 +2855,7 @@ leave_int_name	DB 'Leave Int',0
 leave_int	Proc far
 	mov ax,task_sel
 	mov ds,ax
-	sub ds:timer_nesting,1
-	jnc leave_int_done
-;	
-    call UpdatePreempt
-	call UpdateTimer
-
-leave_int_done:
+	call ds:unlock_proc
 	ret
 leave_int	Endp
 
