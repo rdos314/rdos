@@ -43,70 +43,57 @@ INCLUDE protseg.def
 
 .386p
 
-
-pm_ss		EQU 22
-pm_esp		EQU 18
-pm_eflags	EQU 14
-pm_cs		EQU 10
-pm_eip		EQU 6
-pm_err		EQU 2
-
-	extrn get_thread:near
-
-	extrn prot_exception:near
-
-	extrn boot_ram:near
+	extrn double_fault:near
 
 code	SEGMENT byte use16 public 'CODE'
 
 	assume cs:code
 
-
 	public init_task_tasks
 
 init_task_tasks	Proc near
-	mov ax,idt_sel
-	mov fs,ax
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+    mov eax,400h
+    AllocateSmallLinear
+    mov bx,double_tss_sel
+	mov ecx,400h
+	CreateTssSelector
 ;
-	mov al,20
+    mov bx,double_tss_data_sel
+    mov ecx,400h
+    CreateDataSelector16
+    mov ds,bx
+    mov es,bx
+;    
+    xor di,di
+    mov cx,100h
+    xor eax,eax
+    rep stosd
+;
+    mov eax,200h
+    AllocateSmallGlobalMem
+    mov ds:tss_ss,es
+    mov dword ptr ds:tss_esp,200h
+    mov eax,cr3
+    mov dword ptr ds:tss_cr3,eax
+;
+    mov ds:tss_bitmap, OFFSET tss_bitmap_space
+    mov bx,3FFh
+    mov byte ptr ds:[bx],-1    
+;
+    mov ds:tss_cs,cs
+    mov dword ptr ds:tss_eip,OFFSET double_fault
+;
+	mov ax,idt_sel
+	mov ds,ax
 	mov bx,8 * 8
-	mov si,OFFSET double_fault
-	mov di,OFFSET double_fault_name
-	CreateTask
+	mov word ptr [bx],0
+	mov word ptr [bx+2],double_tss_sel
+	mov byte ptr [bx+4],0
+	mov byte ptr [bx+5],85h
+	mov word ptr [bx+6],0    
 ;
 	ret
 init_task_tasks	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DOUBLE_FAULT
-;
-;		DESCRIPTION:	Double fault handler
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-double_fault_name	DB 'Double Fault',0
-
-double_fault:
-	mov ax,system_data_sel
-	mov ds,ax
-	mov di,OFFSET debug_list	
-	InitTask
-double_fault_loop:
-	push es
-	mov es,ax
-	mov es:p_error_code,8
-	mov es,es:p_tss_data_sel
-	mov es:tss_error_code,dx
-	pop es
-	WaitSleepTask
-	jmp double_fault_loop
 	
 code	ENDS
 

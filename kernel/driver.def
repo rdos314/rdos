@@ -145,6 +145,9 @@ handle_sel			EQU 290h
 handle_mem_sel		EQU 298h
 handle_data_sel		EQU 2A0h
 
+double_tss_sel      EQU 2B0h
+double_tss_data_sel EQU 2B8h
+
 ;
 ; GDT selectors device-driver selectors
 ;

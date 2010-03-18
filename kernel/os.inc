@@ -627,25 +627,6 @@ CreateProcess    MACRO
 	OsGate create_process_nr
 						ENDM
 
-;	AL		PRIORITET
-;	FS:BX	TASK GATE SELECTOR IN IDT OR GDT
-;	DS:SI	START ADDRESS OF TASK
-;	ES:DI	TASK NAME	
-CreateTask	MACRO
-	OsGate create_task_nr
-					ENDM
-
-;	AX			CALLING THREAD
-InitTask	MACRO
-	OsGate init_task_nr
-					ENDM
-
-;	AX			CALLING THREAD
-;	DS:DI		SOVLISTA
-WaitSleepTask	MACRO
-	OsGate wait_sleep_task_nr
-					ENDM
-
 ;	DS:SI		TRèD
 ;	AX			STATUS TILL TRèD
 Wake	MACRO

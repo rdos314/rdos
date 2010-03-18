@@ -984,18 +984,6 @@ timer_free_list_create:
 	mov ax,get_cpu_time_nr
 	RegisterBimodalUserGate
 ;
-	mov si,OFFSET init_task_pr
-	mov di,OFFSET init_task_name
-	xor cl,cl
-	mov ax,init_task_nr
-	RegisterOsGate
-;
-	mov si,OFFSET wait_sleep_task
-	mov di,OFFSET wait_sleep_task_name
-	xor cl,cl
-	mov ax,wait_sleep_task_nr
-	RegisterOsGate
-;
 	mov si,OFFSET change_enviroment
 	mov di,OFFSET change_enviroment_name
 	xor cl,cl
@@ -2635,6 +2623,55 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DoubleFault
+;
+;		DESCRIPTION:	Handle double fault exception (from task-gate)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public double_fault
+    
+double_fault:
+    mov ax,task_sel
+    mov ds,ax
+	inc ds:timer_nesting
+;	
+    mov ax,task_sel
+    mov ds,ax
+    GetProcessorNr
+    mov bx,ax
+    add bx,bx
+    mov fs,ds:[bx].processor_arr
+;    
+    mov ss,fs:ps_ss
+    mov sp,fs:ps_sp
+;
+    xor ax,ax
+    mov es,ax
+    mov gs,ax    
+;
+	mov es,ds:thread_act
+	mov es:p_error_code,8
+	mov si,es:p_prio
+	mov es:p_sleep_sel,0
+	mov es:p_sleep_offset,1
+	RemoveBlock
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	mov di,OFFSET debug_list	
+	InsertBlock
+;	
+    mov ax,task_sel
+    mov ds,ax
+	call GetNextThread
+    jmp LoadCurrentThread
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			TestGate
 ;
 ;		DESCRIPTION:	Test gate
@@ -2994,173 +3031,6 @@ change_enviroment	Proc far
 	pop ds
 	ret
 change_enviroment	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			INIT_TASK_PR,WAIT_RUN_TASK,WAIT_SLEEP_TASK
-;
-;		DESCRIPTION:	Task handling. Obsolete, should not be used
-;
-;		PARAMETERS:		AX		CALLING THREAD
-;						DS:DI	SLEEP LIST
-;						EDX		ERROR CODE
-;												
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_task_name	DB 'Init Task',0
-
-init_task_pr:
-	push ds
-	push es
-	push fs
-	push si
-	push di
-	mov si,task_sel
-	mov ds,si
-	mov es,ds:thread_act
-	mov fs,es:p_tss_data_sel
-	mov si,es:p_prio
-	mov es:p_sleep_sel,0
-	mov es:p_sleep_offset,0
-	cli
-	call ds:update_clock_proc
-	RemoveBlock
-	push es
-	jmp schedule_task
-
-wait_sleep_task_name	DB 'Wait Sleep Task',0
-
-wait_sleep_task:
-	push ds
-	push es
-	push fs
-	push si
-	push di
-;
-	push ds
-	push ax
-	mov si,task_sel
-	mov ds,si
-	mov es,ds:thread_act
-	mov fs,es:p_tss_data_sel
-	mov si,es:p_prio
-	mov es:p_sleep_sel,0
-	mov es:p_sleep_offset,0
-	cli
-	call ds:update_clock_proc
-	RemoveBlock
-	mov ax,es
-	pop es
-	pop ds
-	push ax
-	InsertBlock
-	mov si,task_sel
-	mov ds,si
-	jmp schedule_task
-
-wait_run_task_name	DB 'Wait Run Task',0
-	
-wait_run_task	Proc far
-	push ds
-	push es
-	push fs
-	push si
-	push di
-	push ax
-	mov si,task_sel
-	mov ds,si
-	mov es,ds:thread_act
-	mov fs,es:p_tss_data_sel
-	mov si,es:p_prio
-	mov es:p_sleep_sel,0
-	mov es:p_sleep_offset,0
-	cli
-	call ds:update_clock_proc
-	RemoveBlock
-	mov ax,es
-	pop es
-	push ax
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jb schedule_task
-	mov ds:prio_act,di
-	jmp leave_task_end
-schedule_task:
-	call GetNextThread
-	mov si,ds:prio_act
-	mov es,[si]
-leave_task_end:
-	mov ds:thread_act,es
-	mov si,es:p_tss_sel
-	mov fs:tss_back_link,si
-	pushf
-	pop ax
-	or ax,4000h
-	push ax
-	popf
-	SetEnviroment
-	mov ax,gdt_sel
-	mov es,ax
-	mov fs,ax
-	mov ax,task_sel
-	mov ds,ax
-	mov byte ptr es:[si+5],8Bh
-	mov ax,sp
-	iretd
-	xor edx,edx
-	cmp ax,sp
-	je enter_task_no_error_code
-	pop edx
-enter_task_no_error_code:
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	mov es:p_sleep_sel,0
-	mov es:p_sleep_offset,0
-	call ds:update_clock_proc
-	RemoveBlock
-	mov ax,es
-	pop es
-	push ax
-	mov di,es:p_prio
-	InsertBlock
-	mov ds:thread_act,es
-	push ds
-	SetEnviroment
-	pop ds
-	mov es,es:p_tss_data_sel
-	mov si,es:tss_back_link
-	mov bx,gdt_sel
-	mov es,bx
-	mov byte ptr es:[si+5],89h
-	pushf
-	pop ax
-	and ax,NOT 4000h
-	push ax
-	popf
-	cmp di,ds:prio_act
-	jb enter_prio_lower
-	mov ds:prio_act,di
-	sti
-	jmp enter_task_end
-enter_prio_lower:
-	pushad
-	call GetNextThread
-	call UpdateTimer
-	sti
-	popad
-enter_task_end:
-	pop ax
-	pop di
-	pop si
-	pop fs
-	pop es
-	pop ds
-	ret
-wait_run_task	Endp
 
 PAGE
 
