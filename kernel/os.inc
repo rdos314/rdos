@@ -613,8 +613,9 @@ LeaveInt    MACRO
 	OsGate leave_int_nr
 						ENDM
 
-ProtDebug    MACRO
-	OsGate prot_debug_nr
+;   SS:BP     Exception stack
+DebugException    MACRO
+	OsGate debug_exception_nr
 						ENDM
 
 ;       AL              PRIORITET

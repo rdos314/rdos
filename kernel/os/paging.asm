@@ -1023,8 +1023,9 @@ page_fault_error2:
 	pop eax
 	pop bp
 	add sp,12
-	mov al,14
-	int 46h
+;	mov al,14
+	mov byte ptr [bp].vm_err+2,14
+	DebugException
 
 page_fault_error:
 	pop ax

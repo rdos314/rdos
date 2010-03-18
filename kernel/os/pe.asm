@@ -3643,7 +3643,7 @@ neInsDone:
 neSignalDone:
 	pop ax
 	pop es
-	int 45h
+	DebugException
 
 neDone:
 	pop dx

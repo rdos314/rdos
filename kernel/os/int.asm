@@ -897,9 +897,10 @@ pm_exception_handler	PROC far
 	mov ds,ax
 	mov ds,ds:p_tss_data_sel
 	pop ax
-	xor ah,ah
-	mov al,[bp+2].vm_err
-	int 45h
+	DebugException
+;	xor ah,ah
+;	mov al,[bp+2].vm_err
+;	int 45h
 	ret
 pm_exception_handler	ENDP
 
@@ -937,9 +938,10 @@ vm_except_do:
 	call get_thread
 	mov ds,ax
 	mov ds,ds:p_tss_data_sel
-	xor ah,ah
-	mov al,[bp+2].vm_err
-	int 46h
+;	xor ah,ah
+;	mov al,[bp+2].vm_err
+;	int 46h
+    DebugException
 	ret
 vm_exception_handler	ENDP
 

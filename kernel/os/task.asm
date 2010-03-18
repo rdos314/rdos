@@ -894,6 +894,12 @@ timer_free_list_create:
 	mov ax,leave_int_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET debug_exception
+	mov di,OFFSET debug_exception_name
+	xor cl,cl
+	mov ax,debug_exception_nr
+	RegisterOsGate
+;
 	mov si,OFFSET start_timer
 	mov di,OFFSET start_timer_name
 	xor cl,cl
@@ -2507,6 +2513,128 @@ SkipCurrentThread	Proc near
     mov gs,bp    
     ret
 SkipCurrentThread   Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DebugException
+;
+;		DESCRIPTION:	Save current state from stack + local registers
+;
+;       PARAMETERS:     SS:BP       Exception stack
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_exception_name    DB 'Debug Exception', 0
+
+debug_exception:
+    mov ax,task_sel
+    mov ds,ax
+	inc ds:timer_nesting
+;        
+    mov ds,ds:thread_act
+    mov ds,ds:p_tss_data_sel
+;
+	mov eax,[bp].vm_eax
+	mov dword ptr ds:tss_eax,eax
+	mov eax,[bp].vm_ebx
+	mov dword ptr ds:tss_ebx,eax
+    mov dword ptr ds:tss_ecx,ecx
+    mov dword ptr ds:tss_edx,edx
+    mov dword ptr ds:tss_esi,esi
+    mov dword ptr ds:tss_edi,edi
+	mov eax,ebp
+	mov ax,[bp]
+	mov dword ptr ds:tss_ebp,eax
+;	
+	mov eax,[bp].vm_eflags
+	mov dword ptr ds:tss_eflags,eax
+	mov ax,[bp].vm_cs
+	mov ds:tss_cs,ax
+	mov eax,[bp].vm_eip
+	mov dword ptr ds:tss_eip,eax
+;	
+    test dword ptr [bp].vm_eflags,20000h
+    jnz debug_vm
+
+debug_pm:
+	mov al,[bp].vm_cs
+	test al,3
+	jz debug_kernel
+;
+	mov ax,[bp].vm_ss
+	mov ds:tss_ss,ax
+	mov eax,[bp].vm_esp
+	mov dword ptr ds:tss_esp,eax
+	jmp debug_pm_common
+	
+debug_kernel:
+    mov ax,ss
+    mov ds:tss_ss,ax
+    mov ax,bp
+    add ax,vm_esp
+    movzx eax,ax
+	mov dword ptr ds:tss_esp,eax
+	
+debug_pm_common:
+	mov ax,[bp].pm_ds
+	mov ds:tss_ds,ax
+	mov ax,es
+	mov ds:tss_es,ax
+	mov ax,fs
+	mov ds:tss_fs,ax
+	mov ax,gs
+	mov ds:tss_gs,ax
+	jmp debug_save_ok
+
+debug_vm:
+	mov ax,[bp].vm_gs
+	mov ds:tss_gs,ax
+	mov ax,[bp].vm_fs
+	mov ds:tss_fs,ax
+	mov ax,[bp].vm_ds
+	mov ds:tss_ds,ax
+	mov ax,[bp].vm_es
+	mov ds:tss_es,ax
+	mov ax,[bp].vm_ss
+	mov ds:tss_ss,ax
+	mov eax,[bp].vm_esp
+	mov dword ptr ds:tss_esp,eax
+
+debug_save_ok:
+    movzx dx,byte ptr [bp].vm_err+2
+    mov ax,task_sel
+    mov ds,ax
+    GetProcessorNr
+    mov bx,ax
+    add bx,bx
+    mov fs,ds:[bx].processor_arr
+;    
+    mov ss,fs:ps_ss
+    mov sp,fs:ps_sp
+;
+    xor ax,ax
+    mov es,ax
+    mov gs,ax    
+;
+	mov es,ds:thread_act
+	mov es:p_error_code,dx
+	mov si,es:p_prio
+	mov es:p_sleep_sel,0
+	mov es:p_sleep_offset,1
+	RemoveBlock
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	mov di,OFFSET debug_list	
+	InsertBlock
+;	
+    mov ax,task_sel
+    mov ds,ax
+	call GetNextThread
+    jmp LoadCurrentThread
 
 PAGE	
 
@@ -4630,16 +4758,16 @@ debug_break:
 	jz debug_break_prot
 
 debug_break_virt:
-	int 46h
+    DebugException
 
 debug_break_prot:
 	test byte ptr [bp].vm_cs,3
 	jz debug_break_kernel
-	int 45h
+	DebugException
 
 debug_break_kernel:
 	add sp,8
-	int 45h
+	DebugException
 
 PAGE
 	
