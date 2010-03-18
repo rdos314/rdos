@@ -3421,65 +3421,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SignalTerminate
-;
-;		DESCRIPTION:	Send a signal to a thread and terminate self
-;
-;		PARAMETERS:		BX			Thread to signal
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public signal_terminate
-    
-signal_terminate:
-	mov ax,task_sel
-	mov ds,ax
-;
-    cli	
-    push bx
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	RemoveBlock
-	pop bx
-	mov es,bx
-;
-	mov es:p_signal,1
-	mov si,OFFSET signal_list
-	mov ax,[si]
-	or ax,ax
-	jz find_signal_term_done
-;	
-	mov dx,ax
-	
-find_signal_term_loop:
-	cmp dx,bx
-	je find_signal_term_wake
-;	
-	mov es,dx
-	mov dx,es:p_next
-	cmp dx,ax
-	jne find_signal_term_loop
-
-find_signal_term_done:
-	call GetNextThread
-    jmp UpdateTimer
-
-find_signal_term_wake:
-	mov [si],bx
-	RemoveBlock
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jbe find_signal_term_done
-;
-	mov ds:prio_act,di
-	jmp find_signal_term_done
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			WaitForSignal
 ;
 ;		DESCRIPTION:	Wait for a signal

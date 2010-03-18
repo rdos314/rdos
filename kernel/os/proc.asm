@@ -115,8 +115,6 @@ cr_edi		EQU -34
 
 code	SEGMENT byte public use16 'CODE'
 
-    extrn signal_terminate:near
-
     extrn cleanup_thread:near
     extrn cleanup_process:near
 

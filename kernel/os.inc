@@ -799,47 +799,6 @@ leave_section_done:
 	popf
 						ENDM
 
-InitFarSection     MACRO seg, section
-	mov seg:section.cs_value,0
-	mov seg:section.cs_list,0
-						ENDM
-
-EnterFarSection    MACRO seg, section
-	LOCAL enter_section_done
-	pushf
-	cli
-	sub seg:section.cs_value,1
-	jc enter_section_done
-	push ds
-	push esi
-	mov si,seg
-	mov ds,si
-	lea esi,seg:section
-	OsGate enter_section_nr
-	pop esi
-	pop ds
-enter_section_done:
-	popf
-						ENDM
-
-LeaveFarSection    MACRO seg, section
-	LOCAL leave_section_done
-	pushf
-	cli
-	add seg:section.cs_value,1
-	jc leave_section_done
-	push ds
-	push esi
-	mov si,seg
-	mov ds,si
-	lea esi,seg:section
-	OsGate leave_section_nr
-	pop esi
-	pop ds
-leave_section_done:
-	popf
-						ENDM
-
 ;	ES:DI		PROCEDURE
 ;	EDX:EAX		TID F™R ANROP
 ;	BX			TIMER THREAD (OWNER)
