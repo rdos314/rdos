@@ -736,9 +736,8 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3  
-    mov sp,0FFCh
-    push ax
-    push bx
+    mov ax,1234
+    ltr ax
     int 3
 ;     
     CreateProcessor

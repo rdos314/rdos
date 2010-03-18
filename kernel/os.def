@@ -149,7 +149,6 @@ free_physical_nr			EQU 72
 create_process_nr			EQU 74
 create_task_nr				EQU 75
 init_task_nr				EQU 76
-wait_run_task_nr			EQU 77
 wait_sleep_task_nr			EQU 78
 wake_thread_nr				EQU 79
 sleep_thread_nr				EQU 80

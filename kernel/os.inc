@@ -641,11 +641,6 @@ InitTask	MACRO
 					ENDM
 
 ;	AX			CALLING THREAD
-WaitRunTask	MACRO
-	OsGate wait_run_task_nr
-					ENDM
-
-;	AX			CALLING THREAD
 ;	DS:DI		SOVLISTA
 WaitSleepTask	MACRO
 	OsGate wait_sleep_task_nr

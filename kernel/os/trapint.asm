@@ -942,6 +942,49 @@ trap_9:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			TRAP_10
+;
+;		DESCRIPTION:	Invalid TSS
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_10:
+	sti
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	mov ax,thread_tss_sel
+	mov ds,ax
+	mov ax,[bp].vm_err
+	mov ds:tss_error_code,ax
+	mov al,10
+	test byte ptr [bp+2].vm_eflags,2
+	jnz t10_vm
+;
+	mov al,10
+	call prot_exception
+	jmp t10_ret
+
+t10_vm:
+	mov al,10
+	call emulate
+
+t10_ret:
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			TRAP_11
 ;
 ;		DESCRIPTION:	Segment not present fault
@@ -1207,6 +1250,7 @@ tg5		DW	5,		OFFSET trap_5,			kernel_code,	0
 tg6		DW	6,		OFFSET trap_6,			kernel_code,	0
 tg7		DW	7,		OFFSET trap_7,			kernel_code,	0
 tg9		DW	9,		OFFSET trap_9,			kernel_code,	0
+tg10	DW	10,		OFFSET trap_10,			kernel_code,	0
 tg11	DW	11,		OFFSET trap_11,			kernel_code,	0
 tg12	DW	12,		OFFSET trap_12,			kernel_code,	0
 tg13	DW	13,		OFFSET trap_13,			kernel_code,	0

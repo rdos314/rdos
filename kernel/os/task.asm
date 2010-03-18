@@ -990,12 +990,6 @@ timer_free_list_create:
 	mov ax,init_task_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET wait_run_task
-	mov di,OFFSET wait_run_task_name
-	xor cl,cl
-	mov ax,wait_run_task_nr
-	RegisterOsGate
-;
 	mov si,OFFSET wait_sleep_task
 	mov di,OFFSET wait_sleep_task_name
 	xor cl,cl

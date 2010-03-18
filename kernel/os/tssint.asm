@@ -77,12 +77,6 @@ init_task_tasks	Proc near
 	mov di,OFFSET double_fault_name
 	CreateTask
 ;
-	mov al,20
-	mov bx,10 * 8
-	mov si,OFFSET tss_fault
-	mov di,OFFSET tss_fault_name
-	CreateTask
-;
 	ret
 init_task_tasks	Endp
 
@@ -113,45 +107,6 @@ double_fault_loop:
 	pop es
 	WaitSleepTask
 	jmp double_fault_loop
-
-	mov eax,200h
-	AllocateSmallGlobalMem
-	mov dx,es
-	mov ax,ss
-	mov ss,dx
-	mov sp,200h
-	mov es,ax
-	FreeMem
-;	
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			TSS_FAULT
-;
-;		DESCRIPTION:	Invalid TSS handler
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-tss_fault_name	DB 'Tss Fault',0
-
-tss_fault:
-	mov ax,system_data_sel
-	mov ds,ax
-	mov di,OFFSET debug_list	
-	InitTask
-tss_fault_loop:
-	push es
-	mov es,ax
-	mov es:p_error_code,10
-	mov es,es:p_tss_data_sel
-	mov es:tss_error_code,dx
-	pop es
-	WaitSleepTask
-	jmp tss_fault_loop
-
 	
 code	ENDS
 
