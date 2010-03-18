@@ -2632,6 +2632,17 @@ PAGE
     public double_fault
     
 double_fault:
+    pushf
+    pop ax
+    and ax,NOT 4000h
+    push ax
+    popf
+;	
+	mov ax,gdt_sel
+	mov ds,ax
+	mov bx,double_tss_sel
+	and byte ptr ds:[bx+5],NOT 2
+;    
     mov ax,task_sel
     mov ds,ax
 	inc ds:timer_nesting
