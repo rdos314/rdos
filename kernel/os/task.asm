@@ -134,6 +134,7 @@ preempt_msb		    DD ?
 
 signal_list		    DW ?
 
+try_lock_proc       DW ?
 lock_proc           DW ?
 unlock_proc         DW ?
 
@@ -821,6 +822,7 @@ init_task	PROC near
 ;
 	mov ax,task_sel
 	mov ds,ax
+	mov ds:try_lock_proc,OFFSET TryLockSingle
 	mov ds:lock_proc,OFFSET LockSingle
 	mov ds:unlock_proc,OFFSET UnlockSingle
 	mov ds:timer_nesting,-1
@@ -2767,6 +2769,26 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			TryLockSingle
+;
+;		DESCRIPTION:	Try t lock, single processor version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;       RETURNS:        CY      Owner of section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TryLockSingle	Proc near
+	add ds:timer_nesting,1
+	ret
+TryLockSingle	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			LockSingle
 ;
 ;		DESCRIPTION:	Lock, single processor version
@@ -2779,6 +2801,11 @@ PAGE
 
 LockSingle	Proc near
 	add ds:timer_nesting,1
+	jc lsOk
+;
+    int 3
+
+lsOk:
 	ret
 LockSingle	Endp
 
