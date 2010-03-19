@@ -3175,20 +3175,24 @@ PAGE
 	public wake_new
 
 wake_new	PROC near
-	mov ax,task_sel
-	mov ds,ax
+    mov dx,es
+    push OFFSET wake_new_done
+    call SaveCurrentThread
+;
+    mov es,dx
 	cli
 	mov di,es:p_prio
 	InsertBlock
 	cmp di,ds:prio_act
-	jb cr_prio_lower
+	jb wake_new_lower
+;	
 	mov ds:prio_act,di
-	xor ax,ax
-	mov es,ax
 	call GetNextThread
-	call UpdateTimer
-cr_prio_lower:
-	sti
+
+wake_new_lower:
+    jmp LoadCurrentThread
+
+wake_new_done:
 	ret
 wake_new	ENDP
 
