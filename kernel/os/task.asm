@@ -3836,13 +3836,13 @@ PAGE
 enter_section_name	DB 'Enter Critical Section',0
 
 enter_section	PROC far
-	push ds
-	push es
-	push fs
-	pushad
+    push dx
+    mov dx,ds
 ;
-	mov ax,ds
-	mov fs,ax
+    push OFFSET enter_section_done
+    call SaveCurrentThread
+;
+    mov gs,dx
 	mov ebx,esi
 	mov ax,task_sel
 	mov ds,ax
@@ -3851,12 +3851,13 @@ enter_section	PROC far
 	cli
 	RemoveBlock
 ;
-	mov es:p_sleep_sel,fs
+	mov es:p_sleep_sel,gs
 	mov es:p_sleep_offset,ebx
 	add es:p_sleep_offset,OFFSET cs_list
-	mov di,fs:[ebx].cs_list
+	mov di,gs:[ebx].cs_list
 	or di,di
 	je enter_ins_empty
+;	
 	mov ds,di
 	mov si,ds:p_prev
 	mov ds:p_prev,es
@@ -3865,21 +3866,20 @@ enter_section	PROC far
 	mov es:p_next,di
 	mov es:p_prev,si
 	jmp enter_inserted
+	
 enter_ins_empty:
 	mov es:p_next,es
 	mov es:p_prev,es
-	mov fs:[ebx].cs_list,es
+	mov gs:[ebx].cs_list,es
+	
 enter_inserted:
 	mov ax,task_sel
 	mov ds,ax
 	call GetNextThread
-	call UpdateTimer
+    jmp LoadCurrentThread
+    	
 enter_section_done:
-	sti
-	popad
-	pop fs
-	pop es
-	pop ds
+    pop dx
 	ret
 enter_section	ENDP
 
