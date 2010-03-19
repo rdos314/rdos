@@ -4117,11 +4117,11 @@ enter_user_section	PROC far
 	test ah,80h
 	jz enter_user_section_fail
 ;
-	str ax
 	cli
 	sub ds:[bx].ucs_value,1
 	jc enter_user_section_done
 ;
+	str ax
 	cmp ax,ds:[bx].ucs_owner
 	jne enter_user_section_block
 ;
@@ -4129,24 +4129,22 @@ enter_user_section	PROC far
 	jmp enter_user_section_done
 
 enter_user_section_block:
-	push ds
-	push es
-	push fs
-	pushad
-;
+    mov ax,ds
+    push OFFSET enter_user_section_done
+    call SaveCurrentThread
+;    
+    mov gs,ax
 	movzx ebx,bx
-	mov ax,ds
-	mov fs,ax
 	mov ax,task_sel
 	mov ds,ax
 	mov es,ds:thread_act
 	mov si,es:p_prio
 	RemoveBlock
 ;
-	mov es:p_sleep_sel,fs
+	mov es:p_sleep_sel,gs
 	mov es:p_sleep_offset,ebx
 	add es:p_sleep_offset,OFFSET ucs_list
-	mov di,fs:[bx].ucs_list
+	mov di,gs:[bx].ucs_list
 	or di,di
 	je enter_user_ins_empty
 ;
@@ -4162,20 +4160,16 @@ enter_user_section_block:
 enter_user_ins_empty:
 	mov es:p_next,es
 	mov es:p_prev,es
-	mov fs:[bx].ucs_list,es
+	mov gs:[bx].ucs_list,es
 
 enter_user_inserted:
 	mov ax,task_sel
 	mov ds,ax
 	call GetNextThread
-	call UpdateTimer
-;
-	popad
-	pop fs
-	pop es
-	pop ds
+    jmp LoadCurrentThread
 
 enter_user_section_done:
+	str ax
 	mov ds:[bx].ucs_owner,ax
 	inc ds:[bx].ucs_count
 	sti
