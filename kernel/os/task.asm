@@ -2801,11 +2801,6 @@ PAGE
 
 LockSingle	Proc near
 	add ds:timer_nesting,1
-	jc lsOk
-;
-    int 3
-
-lsOk:
 	ret
 LockSingle	Endp
 
