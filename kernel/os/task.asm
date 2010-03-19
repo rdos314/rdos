@@ -3393,14 +3393,17 @@ PAGE
 wake_thread_name	DB 'Wake',0
 
 wake_thread	PROC far
-	push ds
-	push es
-	pushad
+    push dx
+    mov dx,ds
+    push OFFSET wake_done
+    call SaveCurrentThread
 ;
+    mov ds,dx
 	cli
 	mov di,[si]
 	or di,di
-	jz wake_done
+	jz wake_reload
+;	
 	RemoveBlock
 	mov di,task_sel
 	mov ds,di
@@ -3408,15 +3411,16 @@ wake_thread	PROC far
 	mov es:p_data,eax
 	InsertBlock
 	cmp di,ds:prio_act
-	jb wake_done
+	jb wake_reload
+;	
 	mov ds:prio_act,di
 	call GetNextThread
-	call UpdateTimer
+
+wake_reload:
+    jmp LoadCurrentThread
+	
 wake_done:
-	sti
-	popad
-	pop es
-	pop ds
+    pop dx
 	ret
 wake_thread	ENDP
 
