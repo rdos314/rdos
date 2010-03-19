@@ -3899,50 +3899,50 @@ PAGE
 leave_section_name	DB 'Leave Critical Section',0
  
 leave_section	PROC far
-	push ds
-	push es
-	push fs
-	pushad
+    push dx
+    mov dx,ds
 ;
-	mov ax,ds
-	mov fs,ax
+    push OFFSET leave_section_done
+    call SaveCurrentThread
+;
+    mov gs,dx
 	mov ebx,esi
 	mov ax,task_sel
 	mov ds,ax
 	cli
-	mov ax,fs:[ebx].cs_list
+	mov ax,gs:[ebx].cs_list
 	or ax,ax
-	jz leave_section_done
+	jz leave_section_restore
 ;
 	mov es,ax
 	mov di,es:p_prev
-	cmp di,fs:[ebx].cs_list
-	mov fs:[ebx].cs_list,di
+	cmp di,gs:[ebx].cs_list
+	mov gs:[ebx].cs_list,di
 	mov si,es:p_next
 	mov ds,di
 	mov ds:p_next,si
 	mov ds,si
 	mov ds:p_prev,di
 	jne leave_section_empty
-	mov word ptr fs:[ebx].cs_list,0
+;
+	mov word ptr gs:[ebx].cs_list,0
+
 leave_section_empty:
 	mov ax,task_sel
 	mov ds,ax
 	mov di,es:p_prio
 	InsertBlock
 	cmp di,ds:prio_act
-	jb leave_section_done
+	jb leave_section_restore
+;
 	mov ds:prio_act,di
-	xor ax,ax
-	mov es,ax
 	call GetNextThread
-	call UpdateTimer
+
+leave_section_restore:
+    jmp LoadCurrentThread
+
 leave_section_done:
-	sti
-	popad
-	pop fs
-	pop es
-	pop ds
+    pop dx
 	ret
 leave_section	ENDP
 
