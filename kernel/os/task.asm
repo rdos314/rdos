@@ -879,12 +879,6 @@ timer_free_list_create:
 	mov ds,ax
 	mov es,ax
 ;
-	mov si,OFFSET test_gate
-	mov di,OFFSET test_gate_name
-	xor cl,cl
-	mov ax,test_nr
-	RegisterOsGate
-;
 	mov si,OFFSET create_processor
 	mov di,OFFSET create_processor_name
 	xor cl,cl
@@ -2039,6 +2033,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Load register-state for current thread
 ;
+;       PARAMETERS:     FS      Processor selector
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadCurrentThread:
@@ -2801,56 +2797,6 @@ double_fault:
     mov ds,ax
 	call GetNextThread
     jmp LoadCurrentThread
-
-PAGE	
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			TestGate
-;
-;		DESCRIPTION:	Test gate
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name	DB 'Test Gate',0
-
-test_gate	Proc far
-    int 3
-    push OFFSET test_gate_done
-    call SaveCurrentThread
-;
-	mov bx,1193
-	mul bx
-	push dx
-	push ax
-	pop ebx
-	mov es,ds:thread_act
-	cli
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	sti
-	add eax,ebx
-	adc edx,0
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET wake_until
-	mov cx,ds:thread_act
-	xor bx,bx
-	cli
-	LocalStartTimer
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	mov es:p_sleep_sel,0
-	mov es:p_sleep_offset,1
-	RemoveBlock
-	call GetNextThread
-    jmp LoadCurrentThread
-
-test_gate_done:
-    int 3
-    ret
-test_gate   Endp
 
 PAGE	
 

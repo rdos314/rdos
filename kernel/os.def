@@ -516,7 +516,6 @@ leave_int_nr                EQU 359
 
 debug_exception_nr          EQU 360
 
-test_nr                     EQU 361
 create_processor_nr         EQU 362
 
 osgate_entries				EQU 370

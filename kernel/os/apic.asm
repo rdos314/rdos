@@ -735,16 +735,9 @@ StartCore   Endp
 apic_name	DB 'Apic Test',0
 
 apic_pr:
-    int 3
-    mov ax,0FFCh
-    mov sp,ax
-    push ax
-    push bx
-    int 3    
-;     
+    int 3     
     CreateProcessor
     int 3 
-    TestGate
     GetApicId
     xor dl,1    
     call StartCore
