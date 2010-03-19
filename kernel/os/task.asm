@@ -2029,6 +2029,65 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			ReloadTimer
+;
+;		DESCRIPTION:	Reload timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReloadTimer Proc near
+	mov ax,task_sel
+	mov ds,ax
+	cli
+	add ds:timer_nesting,1
+	jnc reload_timer_done
+
+reload_timer_loop:
+	cli
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	add eax,ds:update_tics
+	adc edx,0
+	mov bx,ds:timer_head
+	mov ecx,ds:preempt_msb
+	cmp ecx,[bx].timer_msb
+	jc reload_check_preempt
+	jnz reload_check_timer
+;	
+	mov ecx,ds:preempt_lsb
+	cmp ecx,[bx].timer_lsb
+	jc reload_check_preempt
+
+reload_check_timer:
+	sub eax,[bx].timer_lsb
+	sbb edx,[bx].timer_msb
+	jc reload_timer_do
+;	
+	LocalRemoveTimer
+	jmp reload_timer_loop
+
+reload_check_preempt:
+	sub eax,ds:preempt_lsb
+	sbb edx,ds:preempt_msb
+	jc reload_timer_do
+;
+    mov eax,-1	
+
+reload_timer_do:
+	neg eax
+	call ds:reload_timer_proc
+
+reload_timer_done:
+	sti
+	dec ds:timer_nesting
+    ret
+ReloadTimer Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			LoadCurrentThread
 ;
 ;		DESCRIPTION:	Load register-state for current thread
@@ -3119,7 +3178,7 @@ start_timer	PROC far
 	mov ds,si
 	cli
 	LocalStartTimer
-	call UpdateTimer
+	call ReloadTimer
 	sti
 ;
 	popad
@@ -3152,7 +3211,7 @@ stop_timer	PROC far
 	mov ds,si
 	cli
 	LocalStopTimer
-	call UpdateTimer
+	call ReloadTimer
 	sti
 ;
 	popad
