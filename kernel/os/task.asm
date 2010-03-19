@@ -2991,8 +2991,8 @@ usSigPrioOk:
 
 usSignalLoop:
 	mov es,dx
-	mov al,es:p_signal
-	or al,al
+	mov cl,es:p_signal
+	or cl,cl
 	jz usSignalNext
 ;
 	mov [si],dx
@@ -3655,47 +3655,27 @@ PAGE
 signal_thread_name	DB 'Signal',0
 
 signal_thread	PROC far
-	push ds
-	push es
-	pushad
+    push ds
+    push es
+    push ax
 ;
+    or bx,bx
+    jz signal_done
+;    
 	mov ax,task_sel
 	mov ds,ax
-	or bx,bx
-	jz find_signal_done
-	mov es,bx
-	cli
-	mov es:p_signal,1
-	mov si,OFFSET signal_list
-	mov ax,[si]
-	or ax,ax
-	jz find_signal_done
-	mov dx,ax
-find_signal_loop:
-	cmp dx,bx
-	je find_signal_wake
-	mov es,dx
-	mov dx,es:p_next
-	cmp dx,ax
-	jne find_signal_loop
-	jmp find_signal_done
-
-find_signal_wake:
-	mov [si],bx
-	RemoveBlock
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jbe find_signal_done
-	mov ds:prio_act,di
-	call GetNextThread
-	call UpdateTimer
-
-find_signal_done:
-	sti
-	popad
-	pop es
-	pop ds
+	call ds:try_lock_proc
+;
+    mov es,bx
+    mov es:p_signal,1
+    mov ds:has_signal,1
+;
+    call ds:unlock_proc
+    
+signal_done:       
+    pop ax
+    pop es
+    pop ds
 	ret
 signal_thread	ENDP
 
