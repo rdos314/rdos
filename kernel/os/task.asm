@@ -2134,9 +2134,35 @@ load_kernel:
     mov esi,dword ptr ds:tss_esi
     mov edi,dword ptr ds:tss_edi
 ;
-    mov es,word ptr ds:tss_es
-    mov fs,word ptr ds:tss_fs
-    mov gs,word ptr ds:tss_gs
+    push ax
+    mov ax,word ptr ds:tss_es
+	verr ax
+	jz load_kernel_es
+;
+	xor ax,ax
+	
+load_kernel_es:
+	mov es,ax
+;	
+    mov ax,word ptr ds:tss_fs
+	verr ax
+	jz load_kernel_fs
+;
+	xor ax,ax
+	
+load_kernel_fs:
+	mov fs,ax
+;	
+    mov ax,word ptr ds:tss_gs
+	verr ax
+	jz load_kernel_gs
+;
+	xor ax,ax
+	
+load_kernel_gs:
+	mov gs,ax
+;
+    pop ax
     test ds:tss_t,1
     mov ds,word ptr ds:tss_ds
 ;
