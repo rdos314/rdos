@@ -2213,29 +2213,59 @@ load_pm_app:
     push dword ptr ds:tss_cs
     push dword ptr ds:tss_eip
 ;	
-    mov eax,dword ptr ds:tss_eax
     mov ecx,dword ptr ds:tss_ecx
     mov edx,dword ptr ds:tss_edx
     mov ebx,dword ptr ds:tss_ebx
     mov ebp,dword ptr ds:tss_ebp
     mov esi,dword ptr ds:tss_esi
     mov edi,dword ptr ds:tss_edi
-;    
-    mov es,word ptr ds:tss_es
-    mov fs,word ptr ds:tss_fs
-    mov gs,word ptr ds:tss_gs
-    test ds:tss_t,1
-    mov ds,word ptr ds:tss_ds
 ;
-    push ds
+    mov ax,word ptr ds:tss_es
+	verr ax
+	jz load_pm_app_es
+;
+	xor ax,ax
+	
+load_pm_app_es:
+	mov es,ax
+;	
+    mov ax,word ptr ds:tss_fs
+	verr ax
+	jz load_pm_app_fs
+;
+	xor ax,ax
+	
+load_pm_app_fs:
+	mov fs,ax
+;	
+    mov ax,word ptr ds:tss_gs
+	verr ax
+	jz load_pm_app_gs
+;
+	xor ax,ax
+	
+load_pm_app_gs:
+	mov gs,ax
+;	
+    mov ax,word ptr ds:tss_ds
+	verr ax
+	jz load_pm_app_ds
+;
+	xor ax,ax
+	
+load_pm_app_ds:
+    test ds:tss_t,1
     pushf
     push ax
+    push dword ptr ds:tss_eax
+;    
     mov ax,task_sel
     mov ds,ax
     call ds:unlock_proc
-    pop ax
-    popf
+;    
+    pop eax
     pop ds
+    popf
     jz load_pm_t_ok
 ;    
 	push dword ptr 0
