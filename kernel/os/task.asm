@@ -4216,23 +4216,22 @@ leave_user_section	PROC far
 	jc leave_user_section_done
 ;
     mov ds:[bx].ucs_owner,-1
-	push es
-	push fs
-	pushad
+    mov ax,ds
+    push OFFSET leave_user_section_done
+    call SaveCurrentThread
 ;
-	mov ax,ds
-	mov fs,ax
+	mov gs,ax
 	mov ax,task_sel
 	mov ds,ax
 ;
-	mov ax,fs:[bx].ucs_list
+	mov ax,gs:[bx].ucs_list
 	or ax,ax
-	jz leave_user_section_pop
+	jz leave_user_section_restore
 ;
 	mov es,ax
 	mov di,es:p_next
-	cmp di,fs:[bx].ucs_list
-	mov fs:[bx].ucs_list,di
+	cmp di,gs:[bx].ucs_list
+	mov gs:[bx].ucs_list,di
 	mov si,es:p_prev
 	mov ds,di
 	mov ds:p_prev,si
@@ -4240,7 +4239,7 @@ leave_user_section	PROC far
 	mov ds:p_next,di
 	jne leave_user_section_empty
 ;
-	mov word ptr fs:[bx].ucs_list,0
+	mov word ptr gs:[bx].ucs_list,0
 
 leave_user_section_empty:
 	mov ax,task_sel
@@ -4248,18 +4247,13 @@ leave_user_section_empty:
 	mov di,es:p_prio
 	InsertBlock
 	cmp di,ds:prio_act
-	jb leave_user_section_pop
+	jb leave_user_section_restore
 ;
 	mov ds:prio_act,di
-	xor ax,ax
-	mov es,ax
 	call GetNextThread
-	call UpdateTimer
 
-leave_user_section_pop:
-	popad
-	pop fs
-	pop es
+leave_user_section_restore:
+    jmp LoadCurrentThread
 
 leave_user_section_done:
 	sti
