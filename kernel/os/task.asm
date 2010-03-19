@@ -2126,7 +2126,6 @@ load_kernel:
     push dword ptr ds:tss_cs
     push dword ptr ds:tss_eip
 ;	
-    mov eax,dword ptr ds:tss_eax
     mov ecx,dword ptr ds:tss_ecx
     mov edx,dword ptr ds:tss_edx
     mov ebx,dword ptr ds:tss_ebx
@@ -2134,7 +2133,6 @@ load_kernel:
     mov esi,dword ptr ds:tss_esi
     mov edi,dword ptr ds:tss_edi
 ;
-    push ax
     mov ax,word ptr ds:tss_es
 	verr ax
 	jz load_kernel_es
@@ -2161,20 +2159,26 @@ load_kernel_fs:
 	
 load_kernel_gs:
 	mov gs,ax
+;	
+    mov ax,word ptr ds:tss_ds
+	verr ax
+	jz load_kernel_ds
 ;
-    pop ax
+	xor ax,ax
+	
+load_kernel_ds:
     test ds:tss_t,1
-    mov ds,word ptr ds:tss_ds
-;
-    push ds
     pushf
     push ax
+    push dword ptr ds:tss_eax
+;
     mov ax,task_sel
     mov ds,ax
     call ds:unlock_proc
-    pop ax
-    popf
+;    
+    pop eax
     pop ds
+    popf
     jz load_kernel_t_ok
 ;    
 	push dword ptr 0
