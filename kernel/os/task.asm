@@ -133,6 +133,7 @@ preempt_lsb		    DD ?
 preempt_msb		    DD ?
 
 signal_list		    DW ?
+has_signal          DB ?
 
 try_lock_proc       DW ?
 lock_proc           DW ?
@@ -827,6 +828,7 @@ init_task	PROC near
 	mov ds:unlock_proc,OFFSET UnlockSingle
 	mov ds:timer_nesting,-1
 	mov ds:signal_list,0
+	mov ds:has_signal,0
 	mov ds:help_call_ip,0
 	mov ds:system_time,0
 	mov ds:system_time+4,0
@@ -2504,6 +2506,79 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			SaveLockedThread
+;
+;		DESCRIPTION:	Save state of current thread when lock is already taken
+;
+;       PARAMETERS:     Stack, return IP
+;
+;       RETURNS:        SS:SP       Processor stack
+;                       DS          Task sel
+;                       FS          Processor selector
+;                       ES, GS      Clear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SaveLockedThread	Proc near	
+    push ds
+    push ax
+;
+    mov ax,task_sel
+    mov ds,ax
+;        
+    mov ds,ds:thread_act
+    mov ds,ds:p_tss_data_sel
+    pushfd
+    pop dword ptr ds:tss_eflags
+    mov dword ptr ds:tss_ecx,ecx
+    mov dword ptr ds:tss_edx,edx
+    mov dword ptr ds:tss_ebx,ebx
+    mov dword ptr ds:tss_ebp,ebp
+    mov dword ptr ds:tss_esi,esi
+    mov dword ptr ds:tss_edi,edi
+    mov word ptr ds:tss_es,es
+    mov word ptr ds:tss_cs,cs
+    mov word ptr ds:tss_ss,ss
+    mov word ptr ds:tss_fs,fs
+    mov word ptr ds:tss_gs,gs
+;
+    pop ax
+    mov dword ptr ds:tss_eax,eax
+;
+    pop word ptr ds:tss_ds
+    pop bp
+    pop dx
+    movzx edx,dx
+    mov dword ptr ds:tss_eip,edx
+    mov dword ptr ds:tss_esp,esp
+    mov edx,dword ptr ds:tss_edx
+;
+    push ax
+    push bx
+    mov ax,task_sel
+    mov ds,ax
+    GetProcessorNr
+    mov bx,ax
+    add bx,bx
+    mov fs,ds:[bx].processor_arr
+    pop bx
+    pop ax
+;    
+    mov ss,fs:ps_ss
+    mov sp,fs:ps_sp
+    push bp
+;
+    xor bp,bp
+    mov es,bp
+    mov gs,bp    
+    ret
+SaveLockedThread   Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			SkipCurrentThread
 ;
 ;		DESCRIPTION:	Skip current thread (no save of registers)
@@ -2877,25 +2952,89 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 UnlockSingle	Proc near
     push es
     push ax
-;    
+
+usRetry:    
     sub ds:timer_nesting,1
-	jnc unlock_single_done
+	jnc usDone
 ;	
+    mov al,ds:has_signal
+    or al,al
+    jz usNoSignal
+;
+    add ds:timer_nesting,1
+    jnc usRetry
+;
+    push OFFSET usDone
+    call SaveLockedThread
+;    
     mov es,ds:thread_act
     mov ax,ds:prio_act
     cmp ax,es:p_prio
-    jbe unlock_single_done
+    jbe usSigPrioOk
 ;
-    push OFFSET unlock_single_done
+    cli
+    call GetNextThread
+
+usSigPrioOk:
+    mov ds:has_signal,0
+    cli
+	mov si,OFFSET signal_list
+	mov ax,[si]
+	or ax,ax
+	jz usSignalDone
+;	
+	mov dx,ax
+
+usSignalLoop:
+	mov es,dx
+	mov al,es:p_signal
+	or al,al
+	jz usSignalNext
+;
+	mov [si],dx
+	RemoveBlock
+	mov di,es:p_prio
+	InsertBlock
+	cmp di,ds:prio_act
+	jbe usSignalPrioOk
+;	
+	mov ds:prio_act,di
+	call GetNextThread
+
+usSignalPrioOk:
+	mov si,OFFSET signal_list
+    mov ax,[si]
+	or ax,ax
+	jz usSignalDone
+;	
+    mov dx,ax
+    jmp usSignalLoop
+
+usSignalNext:	
+	mov dx,es:p_next
+	cmp dx,ax
+	jne usSignalLoop
+
+usSignalDone:
+    jmp LoadCurrentThread
+
+usNoSignal:
+    mov es,ds:thread_act
+    mov ax,ds:prio_act
+    cmp ax,es:p_prio
+    jbe usDone
+;
+    push OFFSET usDone
     call SaveCurrentThread
     cli
     call GetNextThread
     jmp LoadCurrentThread
 
-unlock_single_done:
+usDone:
     pop ax
     pop es
 	ret
