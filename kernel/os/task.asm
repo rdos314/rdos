@@ -3844,6 +3844,11 @@ PAGE
 enter_section_name	DB 'Enter Critical Section',0
 
 enter_section	PROC far
+	pushf
+	cli
+	sub ds:[esi].cs_value,1
+	jc enter_section_end
+;
     push dx
     mov dx,ds
 ;
@@ -3888,6 +3893,9 @@ enter_inserted:
     	
 enter_section_done:
     pop dx
+
+enter_section_end:
+	popf
 	ret
 enter_section	ENDP
 
@@ -3907,6 +3915,11 @@ PAGE
 leave_section_name	DB 'Leave Critical Section',0
  
 leave_section	PROC far
+	pushf
+	cli
+	add ds:[esi].cs_value,1
+	jc leave_section_end
+;
     push dx
     mov dx,ds
 ;
@@ -3951,6 +3964,9 @@ leave_section_restore:
 
 leave_section_done:
     pop dx
+
+leave_section_end:
+    popf
 	ret
 leave_section	ENDP
 

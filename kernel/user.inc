@@ -380,6 +380,36 @@ LeaveUserSection	MACRO
 	UserGate leave_user_section_nr
 					ENDM
 
+; OUT BX		Section handle
+CreateUserReadWriteSection	MACRO
+	UserGate create_read_write_section_nr
+					ENDM
+
+; IN  BX		Section handle
+DeleteUserReadWriteSection	MACRO
+	UserGate delete_read_write_section_nr
+					ENDM
+
+; IN  BX		Section handle
+EnterUserReadSection	MACRO
+	UserGate enter_read_section_nr
+					ENDM
+
+; IN  BX		Section handle
+LeaveUserReadSection	MACRO
+	UserGate leave_read_section_nr
+					ENDM
+
+; IN  BX		Section handle
+EnterUserWriteSection	MACRO
+	UserGate enter_write_section_nr
+					ENDM
+
+; IN  BX		Section handle
+LeaveUserWriteSection	MACRO
+	UserGate leave_write_section_nr
+					ENDM
+
 ;;;;;;;;; WAITABLE OBJECTS ;;;;;;;;;;;;
 
 ; OUT BX		Wait handle
