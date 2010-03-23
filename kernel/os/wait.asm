@@ -121,6 +121,7 @@ create_wait_name    DB 'Create Wait', 0
 create_wait Proc far
 	push ds
 	push cx
+	push esi
 ;
 	mov cx,SIZE wait_handle_seg
 	AllocateHandle
@@ -128,10 +129,12 @@ create_wait Proc far
 	mov [bx].wh_obj_list,0
 	mov [bx].wh_running,0
 	mov [bx].wh_thread,0
-	InitSection ds:[bx].wh_section 
+	lea esi,[bx].wh_section
+	InitNewSection
 	mov bx,[bx].hh_handle
 	clc
 ;
+	pop esi
     pop cx
 	pop ds
 	retf32
@@ -220,6 +223,7 @@ is_wait_idle Proc far
 	push eax
 	push ebx
 	push dx
+	push esi
 ;
     xor ecx,ecx
 	mov ax,WAIT_HANDLE
@@ -227,7 +231,9 @@ is_wait_idle Proc far
 	jc is_wait_idle_done
 ;
     movzx ebx,bx
-    EnterSection ds:[ebx].wh_section
+    lea esi,[ebx].wh_section
+    EnterNewSection
+;
     mov dx,ds:[bx].wh_obj_list
     or dx,dx
     jz is_wait_idle_ok_leave
@@ -242,16 +248,17 @@ is_wait_idle_loop:
     jnz is_wait_idle_loop
 
 is_wait_idle_ok_leave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection
 	clc
 	jmp is_wait_idle_done
 
 is_wait_idle_fail_leave:
 	mov ecx,es:wo_id
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection
 	stc
 
 is_wait_idle_done:
+    pop esi
     pop dx
     pop ebx
     pop eax
@@ -281,6 +288,7 @@ wait_no_timeout Proc far
 	push eax
 	push ebx
 	push dx
+	push esi
 ;
     xor ecx,ecx
 	mov ax,WAIT_HANDLE
@@ -288,7 +296,9 @@ wait_no_timeout Proc far
 	jc wait_no_timeout_done
 ;
     movzx ebx,bx
-    EnterSection ds:[ebx].wh_section
+    lea esi,[ebx].wh_section
+    EnterNewSection
+;    
     mov al,ds:[bx].wh_running
     or al,al
     jnz wait_no_timeout_stopped_leave
@@ -311,12 +321,12 @@ wait_no_timeout_start_loop:
 
 wait_no_timeout_start_leave:
     inc ds:[bx].wh_running
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection
 
 wait_no_timeout_do:
     WaitForSignal
 ;
-    EnterSection ds:[ebx].wh_section
+    EnterNewSection
     mov al,ds:[bx].wh_running
     or al,al
     jz wait_no_timeout_stopped_leave
@@ -348,10 +358,11 @@ wait_no_timeout_stop_next:
     jnz wait_no_timeout_stop_loop
 
 wait_no_timeout_stopped_leave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection
     clc
 
 wait_no_timeout_done:
+    pop esi
     pop dx
     pop ebx
     pop eax
@@ -399,6 +410,7 @@ wait_timeout Proc far
 	push eax
 	push ebx
 	push dx
+	push esi
 	push di
 ;
 	push ax
@@ -409,7 +421,9 @@ wait_timeout Proc far
 	jc wait_timeout_done
 ;
     movzx ebx,bx
-    EnterSection ds:[ebx].wh_section
+    lea esi,[ebx].wh_section
+    EnterNewSection
+;
 	push ax
     mov al,ds:[bx].wh_running
     or al,al
@@ -451,7 +465,7 @@ wait_timeout_start_timer:
 	pop bx
 ;
     inc ds:[bx].wh_running
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection
 
 wait_timeout_do:
     WaitForSignal
@@ -462,7 +476,7 @@ wait_timeout_do:
 	pop bx
 ;
     xor ecx,ecx
-    EnterSection ds:[ebx].wh_section
+    EnterNewSection
     mov al,ds:[bx].wh_running
     or al,al
     jz wait_timeout_stopped_leave
@@ -494,11 +508,12 @@ wait_timeout_stop_next:
     jnz wait_timeout_stop_loop
 
 wait_timeout_stopped_leave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection
     clc
 
 wait_timeout_done:
 	pop di
+	pop esi
     pop dx
     pop ebx
     pop eax
@@ -525,13 +540,15 @@ stop_wait Proc far
 	push es
 	push eax
 	push ebx
+	push esi
 ;
 	mov ax,WAIT_HANDLE
 	DerefHandle
 	jc stop_wait_done
 ;
     movzx ebx,bx
-    EnterSection ds:[ebx].wh_section
+    lea esi,[ebx].wh_section
+    EnterNewSection
     mov al,ds:[bx].wh_running
     or al,al
     jz stop_wait_leave
@@ -561,10 +578,11 @@ stop_wait_signal:
     pop bx
 
 stop_wait_leave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection
     clc
 
 stop_wait_done:
+    pop esi
     pop ebx
     pop eax
     pop es
@@ -609,8 +627,11 @@ add_wait    Proc far
 	pop ax
 	jc add_wait_done
 ;
+    push esi
     movzx ebx,bx
-    EnterSection ds:[ebx].wh_section
+    lea esi,[ebx].wh_section
+    EnterNewSection
+    pop esi
 ;    
     movzx eax,ax
     add eax,SIZE wait_obj_header
@@ -639,7 +660,11 @@ add_wait    Proc far
     pop bx
 
 awLeave:
-    LeaveSection ds:[ebx].wh_section
+    push esi
+    movzx ebx,bx
+    lea esi,[ebx].wh_section
+    LeaveNewSection
+    pop esi
 	clc
 
 add_wait_done:
@@ -673,13 +698,15 @@ remove_wait    Proc far
 	push ax
 	push ebx
 	push dx
+	push esi
 ;
 	mov ax,WAIT_HANDLE
 	DerefHandle
 	jc remove_wait_done
 ;
     movzx ebx,bx
-    EnterSection ds:[ebx].wh_section
+    lea esi,[ebx].wh_section
+    EnterNewSection
 ;
     xor dx,dx
     mov ax,ds:[bx].wh_obj_list
@@ -711,10 +738,11 @@ remove_wait_head:
     jmp remove_wait_loop
 
 remove_wait_leave:
-    LeaveSection ds:[ebx].wh_section
+    LeaveNewSection
 	clc
 
 remove_wait_done:
+    pop esi
     pop dx
     pop ebx
     pop ax
