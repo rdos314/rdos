@@ -347,6 +347,13 @@ void RDOSAPI RdosDeleteSection(int Handle);
 void RDOSAPI RdosEnterSection(int Handle);
 void RDOSAPI RdosLeaveSection(int Handle);
 
+int RDOSAPI RdosCreateReadWriteSection();
+void RDOSAPI RdosDeleteReadWriteSection(int Handle);
+void RDOSAPI RdosEnterReadSection(int Handle);
+void RDOSAPI RdosLeaveReadSection(int Handle);
+void RDOSAPI RdosEnterWriteSection(int Handle);
+void RDOSAPI RdosLeaveWriteSection(int Handle);
+
 int RDOSAPI RdosCreateWait();
 void RDOSAPI RdosCloseWait(int Handle);
 void * RDOSAPI RdosCheckWait(int Handle);
@@ -1456,6 +1463,31 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosLeaveSection = \
     CallGate_leave_user_section  \
+    parm [ebx];
+
+#pragma aux RdosCreateReadWriteSection = \
+    CallGate_create_read_write_section  \
+    ValidateHandle  \
+    value [ebx];
+
+#pragma aux RdosDeleteReadWriteSection = \
+    CallGate_delete_read_write_section  \
+    parm [ebx];
+
+#pragma aux RdosEnterReadSection = \
+    CallGate_enter_read_section  \
+    parm [ebx];
+
+#pragma aux RdosLeaveReadSection = \
+    CallGate_leave_read_section  \
+    parm [ebx];
+
+#pragma aux RdosEnterWriteSection = \
+    CallGate_enter_write_section  \
+    parm [ebx];
+
+#pragma aux RdosLeaveWriteSection = \
+    CallGate_leave_write_section  \
     parm [ebx];
 
 #pragma aux RdosGetFreeHandles = \
