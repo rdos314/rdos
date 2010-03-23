@@ -202,12 +202,15 @@ lock_sys_env_name	DB 'Lock Sys Env',0
 
 lock_sys_env    Proc far
     push ds
+    push esi
 ;
     mov bx,env_sys_sel
     mov ds,bx
-    EnterSection ds:env_sys_section
+    mov esi,OFFSET env_sys_section
+    EnterNewSection
     mov bx,ds:env_sys_raw_sel
 ;
+    pop esi
     pop ds
     ret
 lock_sys_env    Endp
@@ -227,13 +230,14 @@ unlock_sys_env_name	DB 'Unlock Sys Env',0
 
 unlock_sys_env    Proc far
     push ds
-    push bx
+    push esi
 ;
-    mov bx,env_sys_sel
-    mov ds,bx
-    LeaveSection ds:env_sys_section
+    mov si,env_sys_sel
+    mov ds,si
+    mov esi,OFFSET env_sys_section
+    LeaveNewSection
 ;
-    pop bx
+    pop esi
     pop ds
     ret
 unlock_sys_env    Endp
@@ -255,12 +259,15 @@ lock_proc_env_name	DB 'Lock Proc Env',0
 
 lock_proc_env    Proc far
     push ds
+    push esi
 ;
     mov bx,env_proc_sel
     mov ds,bx
-    EnterSection ds:env_proc_section
+    mov esi,OFFSET env_proc_section
+    EnterNewSection
     mov bx,ds:env_proc_raw_sel
 ;
+    pop esi
     pop ds
     ret
 lock_proc_env    Endp
@@ -280,13 +287,14 @@ unlock_proc_env_name	DB 'Unlock Proc Env',0
 
 unlock_proc_env    Proc far
     push ds
-    push bx
+    push esi
 ;
-    mov bx,env_proc_sel
-    mov ds,bx
-    LeaveSection ds:env_proc_section
+    mov si,env_proc_sel
+    mov ds,si
+    mov esi,OFFSET env_proc_section
+    LeaveNewSection
 ;
-    pop bx
+    pop esi
     pop ds
     ret
 unlock_proc_env    Endp
@@ -1171,7 +1179,8 @@ init_proc_var_loop:
 ;
 	mov ax,env_proc_sel
 	mov ds,ax
-	InitSection ds:env_proc_section
+	mov esi,OFFSET env_proc_section
+	InitNewSection
 	mov ds:env_proc_raw_sel,es
 ;
 	popad
@@ -1224,7 +1233,9 @@ init_device_loop:
 	mov bx,env_sys_sel
 	AllocateFixedSystemMem
 ;
-    InitSection es:env_sys_section
+    mov ds,bx
+    mov esi,OFFSET env_sys_section
+    InitNewSection
     mov es:env_sys_raw_sel,dx
 ;
 	mov eax,SIZE env_proc_seg
