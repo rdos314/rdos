@@ -217,7 +217,10 @@ LockIni	Proc near
 ;	
     push ds
     mov ds,[si].ih_sel
-    EnterSection ds:if_section
+    push esi
+    mov esi,OFFSET if_section
+    EnterNewSection
+    pop esi
     pop ds
 ;
 	mov bx,[si].ih_file_handle
@@ -279,7 +282,8 @@ UnlockIni	Proc near
 
 uiNoMem:
     mov ds,[si].ih_sel
-    LeaveSection ds:if_section
+    mov esi,OFFSET if_section
+    LeaveNewSection
 ;    
 	popad
 	pop es
@@ -736,19 +740,23 @@ CreateIniSel	proc near
 	push es
 	push eax
 	push cx
+	push esi
 ;
 	mov eax,SIZE ini_file_seg
 	AllocateSmallGlobalMem
 	mov ax,es
 	mov ds,ax
 ;
-	InitSection ds:if_section
+    mov esi,OFFSET if_section
+    InitNewSection
+;    
 	GetFileInfo
 	mov ds:if_access,cl
 	mov ds:if_file_sel,ax
 	mov ds:if_usage,0
 	mov ds:if_list,0
 ;
+    pop esi
 	pop cx
 	pop eax
 	pop es
@@ -770,6 +778,7 @@ FreeIniSel	proc near
 	push es
 	push ax
 	push cx
+	push esi
 ;
 	sub ds:if_usage,1
 	jnz fisDone
@@ -780,11 +789,12 @@ FreeIniSel	proc near
 	cmp cx,ds:is_sys_sel
 	jne fisPriv
 ;
-	EnterSection ds:is_section
+    mov esi,OFFSET is_section
+    EnterNewSection
 	mov es,cx
 	mov ds:is_sys_sel,0
 	FreeMem
-	LeaveSection ds:is_section
+	LeaveNewSection
 	jmp fisDone
 
 fisPriv:
@@ -792,6 +802,7 @@ fisPriv:
 	FreeMem
 
 fisDone:
+    pop esi
 	pop cx
 	pop ax
 	pop es
@@ -859,11 +870,13 @@ open_sys_ini	Proc far
 	push ds
 	push es
 	push ax
+	push esi
 ;
 	xor bx,bx
 	mov ax,inifile_sys_sel
 	mov ds,ax
-	EnterSection ds:is_section
+	mov esi,OFFSET is_section
+	EnterNewSection
 ;
 	mov ax,ds:is_sys_sel
 	or ax,ax
@@ -881,13 +894,15 @@ open_sys_ini	Proc far
 osiCreateHandle:
 	mov ax,inifile_sys_sel
 	mov ds,ax
-	LeaveSection ds:is_section
+	mov esi,OFFSET is_section
+	LeaveNewSection
 ;
 	mov ds,ds:is_sys_sel
 	call CreateIniHandle
 	clc
 
 osiDone:
+    pop esi
 	pop ax
 	pop es
 	pop ds
@@ -1899,7 +1914,10 @@ init	Proc far
 	mov eax,SIZE ini_sys_seg
 	mov bx,inifile_sys_sel
 	AllocateFixedSystemMem
-	InitSection es:is_section
+	mov ax,es
+	mov ds,ax
+	mov esi,OFFSET is_section
+	InitNewSection
 	mov es:is_sys_sel,0
 ;
 	mov ax,cs
