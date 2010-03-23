@@ -147,8 +147,11 @@ validate_drive_retry:
 	stc
 	jnz validate_drive_done
 ;
-	EnterSection ds:fs_init_section
-	LeaveSection ds:fs_init_section
+    push esi
+    mov esi,OFFSET fs_init_section
+    EnterNewSection
+    LeaveNewSection
+    pop esi
 	jmp validate_drive_retry
 
 validate_drive_defined:
@@ -364,8 +367,12 @@ CreateDirSel	PROC near
 	mov ds,bx
 	pop bx
 ;
+    push esi
 	InitReadWriteSection ds:ds_access_section
-	InitSection ds:ds_list_section
+    mov esi,OFFSET ds_list_section
+    InitNewSection	
+    pop esi
+;
 	mov ds:ds_dir_ptr,0
 	mov ds:ds_file_ptr,0
 	mov ds:ds_usage,0
@@ -628,7 +635,11 @@ parse_dir_root:
 	jz parse_dir_fail
 ;
 	mov ds,bx
-	EnterSection ds:fs_list_section
+	push esi
+	mov esi,OFFSET fs_list_section
+	EnterNewSection
+	pop esi
+;	
 	mov ebp,ds:fs_mount_id
 	mov bx,ds:fs_root_dir_sel
 	or bx,bx
@@ -648,8 +659,11 @@ parse_dir_root:
 	pop ds
 
 parse_dir_buffered:
+    push esi
 	EnterReadSection ds:fs_access_section
-	LeaveSection ds:fs_list_section
+	mov esi,OFFSET fs_list_section
+	LeaveNewSection
+	pop esi
 
 parse_dir_start:
 	mov ds:fs_access_parse,1
@@ -709,9 +723,12 @@ parse_dir_dot_loop:
 	jne parse_dir_dot_ended
 ;
 	inc edi
-	EnterSection ds:ds_list_section
+	push esi
+	mov esi,OFFSET ds_list_section
+	EnterNewSection
 	mov bx,ds:ds_parent
-	LeaveSection ds:ds_list_section
+	LeaveNewSection
+	pop esi
 	or bx,bx
 	jz parse_dir_fail
 ;
@@ -747,9 +764,11 @@ parse_dir_next:
 	jmp parse_dir_ok
 
 parse_dir_tree_next:
+	mov esi,OFFSET ds_list_section
+	EnterNewSection
+;
 	pop esi
 	pop esi
-	EnterSection ds:ds_list_section
 	mov bx,fs:[esi].de_sel
 	or bx,bx
 	jnz parse_dir_tree_cached
@@ -762,7 +781,11 @@ parse_dir_tree_next:
 	mov fs:[esi].de_sel,bx
 
 parse_dir_tree_cached:
-	LeaveSection ds:ds_list_section
+    push esi
+    mov esi,OFFSET ds_list_section
+    LeaveNewSection
+    pop esi
+;    
 	mov ax,ds
 	mov ds,bx
 	EnterReadSection ds:ds_access_section
@@ -844,7 +867,7 @@ GetDeviceRoot	Proc near
 	push bx
 	push cx
 	push edx
-	push si
+	push esi
 	push ebp
 ;
 	mov al,80h
@@ -853,8 +876,12 @@ GetDeviceRoot	Proc near
 	movzx si,al
 	add si,si
 	mov ds,ds:[si].fs_sel
+	push esi
 	EnterReadSection ds:fs_access_section
-	EnterSection ds:fs_list_section
+	mov esi,OFFSET fs_list_section
+	EnterNewSection
+	pop esi
+;	
 	mov bx,ds:fs_root_dir_sel
 	or bx,bx
 	jnz get_device_root_done
@@ -872,11 +899,12 @@ GetDeviceRoot	Proc near
 	pop ds
 
 get_device_root_done:
-	LeaveSection ds:fs_list_section
+    mov esi,OFFSET fs_list_section
+    LeaveNewSection
 	mov ds,bx
 ;
 	pop ebp
-	pop si
+	pop esi
 	pop edx
 	pop cx
 	pop bx
@@ -1992,9 +2020,12 @@ PAGE
 
 SetupFileSel	Proc near
 	push ecx
+	push esi
 ;
 	mov al,ds:ds_drive
-	EnterSection ds:ds_list_section
+	mov esi,OFFSET ds_list_section
+	EnterNewSection
+;	
 	mov bx,fs:[edx].dfe_file_sel
 	or bx,bx
 	jnz setup_file_sel_leave
@@ -2005,8 +2036,10 @@ SetupFileSel	Proc near
 	mov fs:[edx].dfe_file_sel,bx
 
 setup_file_sel_leave:
-	LeaveSection ds:ds_list_section
+    mov esi,OFFSET ds_list_section
+    LeaveNewSection
 ;
+    pop esi
 	pop ecx
 	ret
 SetupFileSel	Endp
