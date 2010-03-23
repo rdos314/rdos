@@ -45,6 +45,9 @@ INCLUDE ..\driver.def
 	extrn create_int_gate_sel:near
 	extrn create_tss_sel:near
 	extrn AllocateRam:near
+	extrn init_new_section:near
+	extrn enter_new_section:near
+	extrn leave_new_section:near
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -173,7 +176,10 @@ init_physical	PROC near
 	mov ax,system_data_sel
 	mov ds,ax
 ;
-	InitSection ds:phys_section
+    mov esi,OFFSET phys_section
+    push cs
+    call init_new_section
+;    
 	mov bx,phys_page_sel
 	mov edx,phys_page_linear
 	mov ecx,ds:phys_free_pages
@@ -290,7 +296,9 @@ allocate_physical	PROC far
 	mov ds,bx
 	push ds
 ;
-    EnterSection ds:phys_section
+    mov esi,OFFSET phys_section
+    push cs
+    call enter_new_section
 ;	
 	dec ds:phys_free_pages
 	mov dx,phys_list_sel
@@ -319,7 +327,9 @@ allocate_mark:
 	xor al,al
 	pop ds
 ;
-    LeaveSection ds:phys_section
+    mov esi,OFFSET phys_section
+    push cs
+    call leave_new_section
 ;    
     pop esi	
 	pop edx
@@ -349,10 +359,16 @@ allocate_dma_physical	PROC far
 	push es
 	push ebx
 	push edx
+	push esi
+;	
 	mov bx,system_data_sel
 	mov ds,bx
 	push ds
-	EnterSection ds:phys_section
+;	
+	mov esi,OFFSET phys_section
+	push cs
+	call enter_new_section
+;	
 	dec ds:phys_free_pages
 	mov dx,phys_list_sel
 	mov es,dx
@@ -368,7 +384,12 @@ allocate_dma_physical	PROC far
 	mov eax,[eax]
 	xor al,al
 	pop ds
-	LeaveSection ds:phys_section
+;
+    mov esi,OFFSET phys_section
+    push cs
+    call leave_new_section
+;
+    pop esi
 	pop edx
 	pop ebx
 	pop es
@@ -397,11 +418,17 @@ free_physical	PROC far
 	push es
 	push ebx
 	push edx
+	push esi
+;	
 	and ax,0F000h
 	mov bx,system_data_sel
 	mov ds,bx
 	push ds
-	EnterSection ds:phys_section
+;
+    mov esi,OFFSET phys_section
+    push cs
+    call enter_new_section
+;    	
 	inc ds:phys_free_pages
 	xor ebx,ebx
 	mov dx,phys_list_sel
@@ -427,7 +454,12 @@ free_link_page:
 	mov ds,dx
 	mov [ebx],eax
 	pop ds
-	LeaveSection ds:phys_section
+;
+    mov esi,OFFSET phys_section
+    push cs
+    call leave_new_section	
+;
+    pop esi	
 	pop edx
 	pop ebx
 	pop es
@@ -618,6 +650,7 @@ allocate_multiple_physical	PROC far
 	push fs
 	push ebx
 	push edx
+	push esi
 ;
 	mov ax,system_data_sel
 	mov ds,ax
@@ -625,7 +658,11 @@ allocate_multiple_physical	PROC far
 	mov es,ax
 	mov ax,phys_page_sel
 	mov fs,ax
-	EnterSection ds:phys_section
+;
+    mov esi,OFFSET phys_section
+    push cs
+    call enter_new_section
+;    	
 	or ecx,ecx
 	jz allocate_multi_fail
 ;
@@ -640,14 +677,19 @@ allocate_multiple_physical	PROC far
 	mov eax,edx
 	clc
 ;
-	LeaveSection ds:phys_section
+    mov esi,OFFSET phys_section
+    push cs
+    call leave_new_section
 	jmp allocate_multi_done
 
 allocate_multi_fail:
-	LeaveSection ds:phys_section
+    mov esi,OFFSET phys_section
+    push cs
+    call leave_new_section
 	stc
 
 allocate_multi_done:
+    pop esi
 	pop edx
 	pop ebx
 	pop fs

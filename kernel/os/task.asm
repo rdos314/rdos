@@ -3884,6 +3884,8 @@ PAGE
 
 enter_new_section_name	DB 'Enter Critical Section',0
 
+    public enter_new_section
+    
 enter_new_section	PROC far
     pushf
     push dx
@@ -3952,7 +3954,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 leave_new_section_name	DB 'Leave Critical Section',0
- 
+
+    public leave_new_section
+    
 leave_new_section	PROC far
     pushf
     push dx
