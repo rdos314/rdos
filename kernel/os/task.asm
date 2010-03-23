@@ -3861,6 +3861,8 @@ PAGE
 
 init_new_section_name	DB 'Init Critical Section',0
 
+    public init_new_section
+
 init_new_section	PROC far
 	mov ds:[esi].cs_value,0
 	mov ds:[esi].cs_list,0
