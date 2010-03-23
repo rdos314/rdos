@@ -45,6 +45,7 @@ code	SEGMENT byte public use16 'CODE'
 	assume cs:code
 
 	extrn create_data_sel16:near
+	extrn init_new_section:near
 
 PAGE
 
@@ -64,7 +65,7 @@ PAGE
 create_gdt	PROC near
 	push ds
 	push es
-	pusha
+	pushad
 ;
 	mov bx,gdt_sel
 	mov ds,bx
@@ -116,9 +117,11 @@ init_free_dt_loop:
 ;
 	mov ax,system_data_sel
 	mov ds,ax
-	InitSection ds:gdt_section
+	mov esi,OFFSET gdt_section
+	push cs
+	call init_new_section
 ;
-	popa
+	popad
 	pop es
 	pop ds
 	ret
@@ -225,14 +228,16 @@ allocate_name	DB 'Allocate Gdt',0
 allocate_gdt	PROC far
 	push ds
 	push es
-	push si
+	push esi
 	push di
 ;
 	mov si,system_data_sel
 	mov ds,si
 	mov si,gdt_sel
 	mov es,si
-	EnterSection ds:gdt_section
+	mov esi,OFFSET gdt_section
+	EnterNewSection
+;	
 	xor di,di
 	mov si,es:[di]
 	or si,si
@@ -286,10 +291,11 @@ alloc_gdt_room:
 	mov bx,si
 	mov si,es:[si]
 	mov es:[di],si
-	LeaveSection ds:gdt_section
+	mov esi,OFFSET gdt_section
+	LeaveNewSection
 ;
 	pop di
-	pop si
+	pop esi
 	pop es
 	pop ds
 	ret
@@ -313,23 +319,27 @@ free_name	DB 'Free Gdt',0
 free_gdt	PROC far
 	push ds
 	push es
-	push si
+	push esi
 ;
 	mov si,system_data_sel
 	mov ds,si
 	mov si,gdt_sel
 	mov es,si
 ;
-	EnterSection ds:gdt_section
+    mov esi,OFFSET gdt_section
+    EnterNewSection
+;    
 	mov byte ptr es:[bx+5],0
 	xor si,si
 	mov si,es:[si]
 	mov es:[bx],si
 	xor si,si
 	mov es:[si],bx
-	LeaveSection ds:gdt_section
+;	
+    mov esi,OFFSET gdt_section
+    LeaveNewSection
 ;
-	pop si
+	pop esi
 	pop es
 	pop ds
 	ret
@@ -353,7 +363,7 @@ get_free_gdt_name	DB 'Get Free Gdt Entries',0
 get_free_gdt	PROC far
 	push ds
 	push es
-	push si
+	push esi
 	push di
 ;
     xor ax,ax
@@ -361,7 +371,9 @@ get_free_gdt	PROC far
 	mov ds,si
 	mov si,gdt_sel
 	mov es,si
-	EnterSection ds:gdt_section
+	mov esi,OFFSET gdt_section
+	EnterNewSection
+;	
 	xor di,di
 	mov si,es:[di]
 
@@ -377,10 +389,11 @@ gfgLoop:
     jmp gfgLoop
 
 gfgDone:
-	LeaveSection ds:gdt_section
+    mov esi,OFFSET gdt_section
+    LeaveNewSection
 ;
     pop di
-    pop si
+    pop esi
     pop es
     pop ds
     retf32
