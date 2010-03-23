@@ -3855,15 +3855,15 @@ PAGE
 ;
 ;		DESCRIPTION:	Init section
 ;
-;		PARAMETERS:		DS:SI		ADDRESS OF SECTION
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_new_section_name	DB 'Init Critical Section',0
 
 init_new_section	PROC far
-	mov ds:[si].cs_value,0
-	mov ds:[si].cs_list,0
+	mov ds:[esi].cs_value,0
+	mov ds:[esi].cs_list,0
     ret
 init_new_section    ENDP
     
@@ -3876,7 +3876,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Enter section
 ;
-;		PARAMETERS:		DS:SI		ADDRESS OF SECTION
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3888,14 +3888,14 @@ enter_new_section	PROC far
     mov dx,ds
 ;    
 	cli
-	sub ds:[si].cs_value,1
+	sub ds:[esi].cs_value,1
 	jc ecsDone
 ;
     push OFFSET ecsDone
     call SaveCurrentThread
 ;
     mov gs,dx
-	movzx ebx,si
+	mov ebx,esi
 	mov ax,task_sel
 	mov ds,ax
 	mov es,ds:thread_act
@@ -3945,7 +3945,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Leave section
 ;
-;		PARAMETERS:		DS:SI		ADDRESS OF SECTION
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3957,14 +3957,14 @@ leave_new_section	PROC far
     mov dx,ds
 ;
 	cli
-	add ds:[si].cs_value,1
+	add ds:[esi].cs_value,1
 	jc lcsDone
 ;
     push OFFSET lcsDone
     call SaveCurrentThread
 ;
     mov gs,dx
-	movzx ebx,si
+	mov ebx,esi
 	mov ax,task_sel
 	mov ds,ax
 	cli

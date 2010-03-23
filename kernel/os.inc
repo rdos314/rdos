@@ -670,17 +670,17 @@ SignalWait	MACRO
 					ENDM
 
 
-; IN  DS:SI        Section
+; IN  DS:ESI        Section
 InitNewSection     MACRO section
 	OsGate init_new_section_nr
 						ENDM
 
-; IN  DS:SI        Section
+; IN  DS:ESI        Section
 EnterNewSection    MACRO section
 	OsGate enter_new_section_nr
 						ENDM
 
-; IN  DS:SI        Section
+; IN  DS:ESI        Section
 LeaveNewSection    MACRO section
 	OsGate leave_new_section_nr
 						ENDM
