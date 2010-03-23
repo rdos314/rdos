@@ -746,13 +746,16 @@ init	PROC far
 	mov bx,fs_data_sel
 	AllocateFixedSystemMem
 ;
-	InitSection es:fs_init_section
-	EnterSection es:fs_init_section
-	mov es:fs_init_done,0
-	mov es:file_defs,0
-	mov es:fs_init_hooks,0
-	mov es:fs_file_list,0
-	InitSection es:fs_file_section
+    push ds
+    mov ds,bx
+	InitSection ds:fs_init_section
+	EnterSection ds:fs_init_section
+	mov ds:fs_init_done,0
+	mov ds:file_defs,0
+	mov ds:fs_init_hooks,0
+	mov ds:fs_file_list,0
+	InitSection ds:fs_file_section
+	pop ds
 ;
 	mov di,OFFSET fs_sel
 	mov cx,256

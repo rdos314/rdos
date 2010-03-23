@@ -284,10 +284,14 @@ allocate_physical	PROC far
 	push es
 	push ebx
 	push edx
+    push esi
+;    
 	mov bx,system_data_sel
 	mov ds,bx
 	push ds
-	EnterSection ds:phys_section
+;
+    EnterSection ds:phys_section
+;	
 	dec ds:phys_free_pages
 	mov dx,phys_list_sel
 	mov es,dx
@@ -314,7 +318,10 @@ allocate_mark:
 	mov eax,[eax]
 	xor al,al
 	pop ds
-	LeaveSection ds:phys_section
+;
+    LeaveSection ds:phys_section
+;    
+    pop esi	
 	pop edx
 	pop ebx
 	pop es
