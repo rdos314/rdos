@@ -1406,9 +1406,14 @@ get_pixel	PROC far
 	mov ds,[bx].bm_sel
 	pop bx
 	pop ax
-	EnterSection ds:v_section
+;
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
 	call ds:get_pixel_proc
-	LeaveSection ds:v_section
+	LeaveNewSection
+	pop esi
+;
 	pop ds	
     retf32
 
@@ -1452,7 +1457,12 @@ set_pixel	PROC far
     push [bx].bm_x_max
     push [bx].bm_y_max
 	mov ds,[bx].bm_sel
-	EnterSection ds:v_section
+;
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;    	
 	pop ds:v_y_max
 	pop ds:v_x_max
 	pop ds:v_y_min
@@ -1462,7 +1472,12 @@ set_pixel	PROC far
 	pop bx
 	pop eax
 	call ds:set_pixel_proc
-	LeaveSection ds:v_section
+;
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
+;    
 	pop ds
 	retf32	
 
@@ -1558,10 +1573,17 @@ blit_pr	PROC far
 
 blit_take_src_first:
     mov ds,[bp].blit_src_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
 ;
 	mov ds,[bp].blit_dest_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;    
 	pop ds:v_y_max
 	pop ds:v_x_max
 	pop ds:v_y_min
@@ -1572,7 +1594,11 @@ blit_take_src_first:
 
 blit_take_dest_first:
 	mov ds,[bp].blit_dest_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;	
 	pop ds:v_y_max
 	pop ds:v_x_max
 	pop ds:v_y_min
@@ -1581,7 +1607,10 @@ blit_take_dest_first:
 	pop ds:v_lgop
 ;
     mov ds,[bp].blit_src_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
     	
 blit_entered:
 	mov ds,[bp].blit_src_sel
@@ -1642,9 +1671,16 @@ blit_diff_next:
 ;
 	FreeMem	
 	mov ds,[bp].blit_dest_sel
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
+;
     mov ds,[bp].blit_src_sel
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
 	clc
 	jmp blit_done
 
@@ -1666,15 +1702,26 @@ blit_same_bpp:
 	jnz blit_same_bpp
 ;
 	mov ds,[bp].blit_dest_sel
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
+;    
     mov ds,[bp].blit_src_sel
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
 	clc
 	jmp blit_done
 
 blit_same_bitmap:
 	mov ds,[bp].blit_src_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;
 	pop ds:v_y_max
 	pop ds:v_x_max
 	pop ds:v_y_min
@@ -1709,7 +1756,10 @@ blit_reverse_loop:
 	jnz blit_reverse_loop
 ;
     mov ds,[bp].blit_src_sel
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
 	clc
 	jmp blit_done
 
@@ -1729,7 +1779,10 @@ blit_forward:
 	jnz blit_forward
 ;
     mov ds,[bp].blit_src_sel
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
 	clc
 	jmp blit_done
 
@@ -1758,7 +1811,10 @@ blit_same_line_loop:
 ;
 	FreeMem
     mov ds,[bp].blit_src_sel
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
 	clc
 	jmp blit_done
 
@@ -1782,9 +1838,16 @@ blit1_line_loop:
 	jnz blit1_line_loop
 ;
     mov ds,[bp].blit_dest_sel
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
+;
     mov ds,[bp].blit_src_sel
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
 	clc
 	jmp blit_done
 
@@ -1841,7 +1904,11 @@ draw_mask	PROC far
     push [bx].bm_x_max
     push [bx].bm_y_max
 	mov ds,[bx].bm_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;    
 	pop ds:v_y_max
 	pop ds:v_x_max
 	pop ds:v_y_min
@@ -1866,7 +1933,11 @@ draw_mask_loop:
 	jmp draw_mask_loop
 
 draw_mask_leave:
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
+;    
 	pop ds	
 	jmp draw_mask_done
 
@@ -1921,7 +1992,11 @@ draw_string16	PROC far
     push [bx].bm_x_max
     push [bx].bm_y_max
 	mov ds,[bx].bm_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;    
 	pop ds:v_y_max
 	pop ds:v_x_max
 	pop ds:v_y_min
@@ -1932,7 +2007,11 @@ draw_string16	PROC far
 	pop bx
 	pop eax
 	call ds:draw_string_proc
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
+;    
 	pop ds	
 	jmp draw_string16_done
 
@@ -1963,7 +2042,11 @@ draw_string32	PROC far
     push [bx].bm_x_max
     push [bx].bm_y_max
 	mov ds,[bx].bm_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;
 	pop ds:v_y_max
 	pop ds:v_x_max
 	pop ds:v_y_min
@@ -1974,7 +2057,10 @@ draw_string32	PROC far
 	pop bx
 	pop eax
 	call ds:draw_string_proc
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
 	pop ds
 	retf32
 
@@ -2020,7 +2106,11 @@ draw_line	PROC far
     push [bx].bm_x_max
     push [bx].bm_y_max
 	mov ds,[bx].bm_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;    
 	pop ds:v_y_max
 	pop ds:v_x_max
 	pop ds:v_y_min
@@ -2030,7 +2120,12 @@ draw_line	PROC far
 	pop bx
 	pop eax
 	call ds:draw_line_proc
-	LeaveSection ds:v_section
+;
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
+;    
 	pop ds	
 	retf32
 
@@ -2077,7 +2172,11 @@ draw_rect	PROC far
     push [bx].bm_y_max
     mov al,[bx].bm_style
 	mov ds,[bx].bm_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;    
 	mov ds:v_style,al
 	pop ds:v_y_max
 	pop ds:v_x_max
@@ -2088,7 +2187,12 @@ draw_rect	PROC far
 	pop bx
 	pop ax
 	call ds:draw_rect_proc
-	LeaveSection ds:v_section
+;
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
+;    
 	pop ds	
 	retf32
 
@@ -2135,7 +2239,11 @@ draw_ellipse	PROC far
     push [bx].bm_y_max
     mov al,[bx].bm_style
 	mov ds,[bx].bm_sel
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;    
 	mov ds:v_style,al
 	pop ds:v_y_max
 	pop ds:v_x_max
@@ -2146,7 +2254,11 @@ draw_ellipse	PROC far
 	pop bx
 	pop ax
 	call ds:draw_ellipse_proc
-	LeaveSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
+;    
 	pop ds	
 	retf32
 
