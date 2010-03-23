@@ -1083,6 +1083,24 @@ timer_free_list_create:
 	mov ax,leave_section_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET init_new_section
+	mov di,OFFSET init_new_section_name
+	xor cl,cl
+	mov ax,init_new_section_nr
+	RegisterOsGate
+;
+	mov si,OFFSET enter_new_section
+	mov di,OFFSET enter_new_section_name
+	xor cl,cl
+	mov ax,enter_new_section_nr
+	RegisterOsGate
+;
+	mov si,OFFSET leave_new_section
+	mov di,OFFSET leave_new_section_name
+	xor cl,cl
+	mov ax,leave_new_section_nr
+	RegisterOsGate
+;
 	mov si,OFFSET create_user_section
 	mov di,OFFSET create_user_section_name
 	xor dx,dx
@@ -3827,6 +3845,165 @@ wait_for_signal_timeout_done:
 	pop ds
 	ret
 wait_for_signal_timeout	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InitSection
+;
+;		DESCRIPTION:	Init section
+;
+;		PARAMETERS:		DS:SI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_new_section_name	DB 'Init Critical Section',0
+
+init_new_section	PROC far
+	mov ds:[si].cs_value,0
+	mov ds:[si].cs_list,0
+    ret
+init_new_section    ENDP
+    
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			EnterSection
+;
+;		DESCRIPTION:	Enter section
+;
+;		PARAMETERS:		DS:SI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enter_new_section_name	DB 'Enter Critical Section',0
+
+enter_new_section	PROC far
+    pushf
+    push dx
+    mov dx,ds
+;    
+	cli
+	sub ds:[si].cs_value,1
+	jc ecsDone
+;
+    push OFFSET ecsDone
+    call SaveCurrentThread
+;
+    mov gs,dx
+	movzx ebx,si
+	mov ax,task_sel
+	mov ds,ax
+	mov es,ds:thread_act
+	mov si,es:p_prio
+	cli
+	RemoveBlock
+;
+	mov es:p_sleep_sel,gs
+	mov es:p_sleep_offset,ebx
+	add es:p_sleep_offset,OFFSET cs_list
+	mov di,gs:[ebx].cs_list
+	or di,di
+	je ecsInsEmpty
+;	
+	mov ds,di
+	mov si,ds:p_prev
+	mov ds:p_prev,es
+	mov ds,si
+	mov ds:p_next,es
+	mov es:p_next,di
+	mov es:p_prev,si
+	jmp ecsInserted
+	
+ecsInsEmpty:
+	mov es:p_next,es
+	mov es:p_prev,es
+	mov gs:[ebx].cs_list,es
+	
+ecsInserted:
+	mov ax,task_sel
+	mov ds,ax
+	call GetNextThread
+    jmp LoadCurrentThread
+    	
+ecsDone:
+    pop dx
+    popf
+	ret
+enter_new_section	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LeaveSection
+;
+;		DESCRIPTION:	Leave section
+;
+;		PARAMETERS:		DS:SI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+leave_new_section_name	DB 'Leave Critical Section',0
+ 
+leave_new_section	PROC far
+    pushf
+    push dx
+    mov dx,ds
+;
+	cli
+	add ds:[si].cs_value,1
+	jc lcsDone
+;
+    push OFFSET lcsDone
+    call SaveCurrentThread
+;
+    mov gs,dx
+	movzx ebx,si
+	mov ax,task_sel
+	mov ds,ax
+	cli
+	mov ax,gs:[ebx].cs_list
+	or ax,ax
+	jz lcsRestore
+;
+	mov es,ax
+	mov di,es:p_prev
+	cmp di,gs:[ebx].cs_list
+	mov gs:[ebx].cs_list,di
+	mov si,es:p_next
+	mov ds,di
+	mov ds:p_next,si
+	mov ds,si
+	mov ds:p_prev,di
+	jne lcsEmpty
+;
+	mov word ptr gs:[ebx].cs_list,0
+
+lcsEmpty:
+	mov ax,task_sel
+	mov ds,ax
+	mov di,es:p_prio
+	InsertBlock
+	cmp di,ds:prio_act
+	jb lcsRestore
+;
+	mov ds:prio_act,di
+	call GetNextThread
+
+lcsRestore:
+    jmp LoadCurrentThread
+
+lcsDone:
+    pop dx
+    popf
+	ret
+leave_new_section	ENDP
 
 PAGE
 	

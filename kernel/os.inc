@@ -669,6 +669,23 @@ SignalWait	MACRO
 	OsGate signal_wait_nr
 					ENDM
 
+
+; IN  DS:SI        Section
+InitNewSection     MACRO section
+	OsGate init_new_section_nr
+						ENDM
+
+; IN  DS:SI        Section
+EnterNewSection    MACRO section
+	OsGate enter_new_section_nr
+						ENDM
+
+; IN  DS:SI        Section
+LeaveNewSection    MACRO section
+	OsGate leave_new_section_nr
+						ENDM
+
+
 ;       ES:(E)DI        NAME OF SECTION
 InitSection     MACRO section
 	mov section.cs_value,0
