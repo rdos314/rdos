@@ -86,7 +86,10 @@ SendEvent Proc near
 	mov ds,ax
 	mov ds,ds:pe_app
 ;	
-	EnterSection ds:lib_section
+    push esi
+    mov esi,OFFSET lib_section
+    EnterNewSection
+    pop esi
 ;
 	mov ax,ds:lib_events
 	or ax,ax
@@ -113,7 +116,10 @@ seInsDone:
 	mov ds:lib_events,es
 	xor ax,ax
 	mov es,ax
-	LeaveSection ds:lib_section
+	push esi
+	mov esi,OFFSET lib_section
+	LeaveNewSection
+	pop esi
 ;
     push es
 
@@ -488,7 +494,15 @@ create_lib_size_ok:
 	rep movs byte ptr es:[edi],fs:[esi]
 	mov byte ptr es:[edi],0
 	mov es:lib_usage_count,1
-	InitSection es:lib_section
+	push ds
+	push esi
+	mov ax,es
+	mov ds,ax
+	mov esi,OFFSET lib_section
+	InitNewSection
+	pop esi
+	pop ds
+;	
 	mov es:lib_base,0
 	mov es:lib_process,0
 	mov es:lib_size,0
@@ -552,11 +566,12 @@ CreateLib	Endp
 InsertDll	Proc near
 	push ds
 	push ax
-	push si
+	push esi
 ;
 	mov ax,pe_app_sel
 	mov ds,ax
-	EnterSection ds:pe_section
+	mov esi,OFFSET pe_section
+	EnterNewSection
 ;
 	mov ax,ds:pe_dlls
 	or ax,ax
@@ -581,9 +596,10 @@ ins_dll_empty:
 
 ins_dll_done:
 	mov ds:pe_dlls,es
-	LeaveSection ds:pe_section
+	mov esi,OFFSET pe_section
+	LeaveNewSection
 ;
-	pop si
+	pop esi
 	pop ax
 	pop ds
 	ret
@@ -603,11 +619,12 @@ InsertDll	Endp
 InsertSysDll	Proc near
 	push ds
 	push ax
-	push si
+	push esi
 ;
 	mov ax,pe_process_sel
 	mov ds,ax
-	EnterSection ds:ppe_section
+	mov esi,OFFSET ppe_section
+	EnterNewSection
 ;
 	mov ax,ds:ppe_dlls
 	or ax,ax
@@ -632,9 +649,10 @@ ins_sysdll_empty:
 
 ins_sysdll_done:
 	mov ds:ppe_dlls,es
-	LeaveSection ds:ppe_section
+	mov esi,OFFSET ppe_section
+	LeaveNewSection
 ;
-	pop si
+	pop esi
 	pop ax
 	pop ds
 	ret
@@ -717,11 +735,13 @@ FindLib	Proc near
 	push ds
 	push eax
 	push ecx
-	push si
+	push esi
 ;
 	mov ax,pe_process_sel
 	mov ds,ax
-	EnterSection ds:ppe_section
+	mov esi,OFFSET ppe_section
+	EnterNewSection
+;	
 	mov ax,ds:ppe_dlls
 	or ax,ax
 	jz find_lib_not_sys
@@ -739,19 +759,23 @@ find_syslib_dll_next:
 	jne find_syslib_dll_loop
 
 find_lib_not_sys:
-	LeaveSection ds:ppe_section
+    mov esi,OFFSET ppe_section
+    LeaveNewSection
 	jmp find_lib_app
 
 find_syslib_ok:
 	mov edi,es:lib_base
-	LeaveSection ds:ppe_section
+    mov esi,OFFSET ppe_section
+    LeaveNewSection
 	clc
 	jmp find_lib_done
 
 find_lib_app:
 	mov ax,pe_app_sel
 	mov ds,ax
-	EnterSection ds:pe_section
+	mov esi,OFFSET pe_section
+	EnterNewSection
+;	
 	mov ax,ds:pe_dlls
 	or ax,ax
 	jz find_lib_try_app
@@ -780,17 +804,19 @@ find_lib_try_app:
 	jc find_lib_ok
 
 find_lib_fail:
-	LeaveSection ds:pe_section
+    mov esi,OFFSET pe_section
+    LeaveNewSection
 	stc
 	jmp find_lib_done
 
 find_lib_ok:
 	mov edi,es:lib_base
-	LeaveSection ds:pe_section
+    mov esi,OFFSET pe_section
+    LeaveNewSection
 	clc
 
 find_lib_done:
-	pop si
+	pop esi
 	pop ecx
 	pop eax
 	pop ds
@@ -853,7 +879,11 @@ FindDll	Proc near
 ;
 	mov ax,pe_app_sel
 	mov ds,ax
-	EnterSection ds:pe_section
+	push esi
+	mov esi,OFFSET pe_section
+	EnterNewSection
+	pop esi
+;	
 	mov ax,ds:pe_dlls
 	or ax,ax
 	jz find_dll_fail
@@ -894,7 +924,10 @@ find_dll_ok:
 
 find_dll_end:
 	pushf
-	LeaveSection ds:pe_section
+	push esi
+	mov esi,OFFSET pe_section
+	LeaveNewSection
+	pop esi
 	popf
 ;
 	pop dx
@@ -912,7 +945,11 @@ FindSysDll	Proc near
 ;
 	mov ax,pe_process_sel
 	mov ds,ax
-	EnterSection ds:ppe_section
+	push esi
+	mov esi,OFFSET ppe_section
+	EnterNewSection
+	pop esi
+;	
 	mov ax,ds:ppe_dlls
 	or ax,ax
 	jz find_sysdll_fail
@@ -953,7 +990,10 @@ find_sysdll_ok:
 
 find_sysdll_end:
 	pushf
-	LeaveSection ds:ppe_section
+	push esi
+	mov esi,OFFSET ppe_section
+	LeaveNewSection
+	pop esi
 	popf
 ;
 	pop dx
@@ -971,7 +1011,11 @@ FindApp	Proc near
 ;
 	mov bx,pe_app_sel
 	mov ds,bx
-	EnterSection ds:pe_section
+	push esi
+	mov esi,OFFSET pe_section
+	EnterNewSection
+	pop esi
+;	
 	mov ax,ds:pe_app
 	or ax,ax
 	jz find_app_fail
@@ -1008,7 +1052,10 @@ find_app_ok:
 
 find_app_end:
 	pushf
-	LeaveSection ds:pe_section
+	push esi
+	mov esi,OFFSET pe_section
+	LeaveNewSection
+	pop esi
 	popf
 ;
 	pop dx
@@ -2004,7 +2051,7 @@ FreePeDll	Proc near
 	push ebx
 	push ecx
 	push edx
-	push si
+	push esi
 	push edi
 ;
 	mov dx,es:lib_debug_lib
@@ -2048,7 +2095,9 @@ fdMod:
 ;    
 	mov ax,pe_app_sel
 	mov ds,ax
-	EnterSection ds:pe_section
+	mov esi,OFFSET pe_section
+	EnterNewSection
+;	
 	mov ds:pe_dlls,es
 	mov ax,es:lib_prev
 	cmp ax,ds:pe_dlls
@@ -2065,7 +2114,8 @@ fdMod:
 	mov ds:pe_dlls,0
 
 free_pe_dll_removed:
-	LeaveSection ds:pe_section
+    mov esi,OFFSET pe_section
+    LeaveNewSection
 ;
 	mov ax,flat_data_sel
 	mov ds,ax
@@ -2080,7 +2130,7 @@ free_pe_dll_removed:
 	FreeMem
 ;
 	pop edi
-	pop si
+	pop esi
 	pop edx
 	pop ecx
 	pop ebx
@@ -2116,7 +2166,8 @@ load_object	Proc far
 ;
     mov ax,es
     mov ds,ax
-    EnterSection ds:lib_section
+    mov esi,OFFSET lib_section
+    EnterNewSection
 ;
 	mov cx,process_page_sel
 	mov ds,cx
@@ -2219,7 +2270,8 @@ load_object_save:
 load_object_leave:
     mov ax,es
     mov ds,ax
-    LeaveSection ds:lib_section
+    mov esi,OFFSET lib_section
+    LeaveNewSection
     
 load_object_done:
 	popad
@@ -3291,10 +3343,12 @@ is_debug_event_idle Endp
 get_debug_event Proc far
 	push ds
 	push es
-	push si
+	push esi
 ;
     mov ds,bx
-	EnterSection ds:lib_section
+    mov esi,OFFSET lib_section
+    EnterNewSection
+;
 	mov ax,ds:lib_events
 	or ax,ax
 	jz gdeLeaveFail
@@ -3315,7 +3369,8 @@ get_debug_event Proc far
 	mov ds:lib_events,0
 
 gdeRemoved:
-	LeaveSection ds:lib_section
+    mov esi,OFFSET lib_section
+    LeaveNewSection
 ;
     mov ds:lib_curr_event,es
     mov bl,es:event_code
@@ -3324,13 +3379,14 @@ gdeRemoved:
     jmp gdeDone
 
 gdeLeaveFail:
-	LeaveSection ds:lib_section
+    mov esi,OFFSET lib_section
+    LeaveNewSection
 	xor bl,bl
 	xor ax,ax
     stc
 
 gdeDone:
-	pop si
+	pop esi
 	pop es
 	pop ds	
 	ret
@@ -3603,7 +3659,10 @@ notify_pe_exception	Proc far
 	mov ax,pe_app_sel
 	mov ds,ax
 	mov ds,ds:pe_app
-	EnterSection ds:lib_section
+	push esi
+	mov esi,OFFSET lib_section
+	EnterNewSection
+	pop esi
 ;
 	mov ax,ds:lib_events
 	or ax,ax
@@ -3631,7 +3690,10 @@ neInsDone:
 	xor ax,ax
 	mov es,ax
 	cli
-	LeaveSection ds:lib_section
+	push esi
+	mov esi,OFFSET lib_section
+	LeaveNewSection
+	pop esi
 ;
 	mov ax,ds:lib_debug_obj
 	or ax,ax
@@ -3671,6 +3733,7 @@ allocate_mem	PROC far
 	push es
 	push eax
 	push ecx
+	push esi
 ;
 	dec eax
 	and ax,0F000h
@@ -3687,14 +3750,14 @@ allocate_mem	PROC far
 	mov es:mem_size,ecx
 	mov ax,pe_app_sel
 	mov ds,ax
-	EnterSection ds:pe_section
+	mov esi,OFFSET pe_section
+	EnterNewSection
 ;
 	mov ax,ds:pe_mem_blocks
 	or ax,ax
 	je alloc_ins_empty
 ;
 	push ds
-	push si
 	mov ds,ax
 	mov si,ds:mem_prev
 	mov ds:mem_prev,es
@@ -3702,7 +3765,6 @@ allocate_mem	PROC far
 	mov ds:mem_next,es
 	mov es:mem_next,ax
 	mov es:mem_prev,si
-	pop si
 	pop ds
 	jmp alloc_ins_done
 
@@ -3712,8 +3774,10 @@ alloc_ins_empty:
 
 alloc_ins_done:
 	mov ds:pe_mem_blocks,es
-	LeaveSection ds:pe_section
+	mov esi,OFFSET pe_section
+	LeaveNewSection
 ;
+    pop esi
 	pop ecx
 	pop eax
 	pop es
@@ -3740,12 +3804,13 @@ free_mem	PROC far
 	push eax
 	push ecx
 	push edx
-	push si
+	push esi
 	push edi
 ;
 	mov ax,pe_app_sel
 	mov ds,ax
-	EnterSection ds:pe_section
+	mov esi,OFFSET pe_section
+	EnterNewSection
 
 free_mem_more:
 	mov ax,ds:pe_mem_blocks
@@ -3791,10 +3856,11 @@ free_mem_last_block:
 	mov ds:pe_mem_blocks,0
 
 free_mem_done:
-	LeaveSection ds:pe_section
+    mov esi,OFFSET pe_section
+    LeaveNewSection
 ;
 	pop edi
-	pop si
+	pop esi
 	pop edx
 	pop ecx
 	pop eax
@@ -4293,10 +4359,15 @@ get_resource	Endp
 
 init_process	Proc far
 	push ds
+	push esi
+;	
 	mov ax,pe_process_sel
 	mov ds,ax
 	mov ds:ppe_dlls,0
-	InitSection ds:ppe_section
+	mov esi,OFFSET ppe_section
+	InitNewSection
+;
+    pop esi	
 	pop ds
 	ret
 init_process	Endp
@@ -4312,12 +4383,17 @@ init_process	Endp
 
 open_app	Proc far
 	push ds
+	push esi
+;	
 	mov ax,pe_app_sel
 	mov ds,ax
 	mov ds:pe_dlls,0
 	mov ds:pe_app,0
 	mov ds:pe_mem_blocks,0
-	InitSection ds:pe_section
+	mov esi,OFFSET pe_section
+	InitNewSection
+;
+    pop esi	
 	pop ds
 	ret
 open_app	Endp
