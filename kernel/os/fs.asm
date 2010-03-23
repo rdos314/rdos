@@ -338,7 +338,7 @@ install_file_system	Proc far
 	push es
 	push bx
 	push cx
-	push si
+	push esi
 	push di
 ;
 	mov cx,fs_data_sel
@@ -372,7 +372,9 @@ init_file_old_freed:
 	mov word ptr ds:fs_sys_arr,di
 	mov word ptr ds:fs_sys_arr+2,es
 	mov dword ptr ds:fs_sys_arr+4,0
-	InitSection ds:fs_list_section
+	mov esi,OFFSET fs_list_section
+	InitNewSection
+;	
 	InitReadWriteSection ds:fs_access_section
 ;	EnterWriteSection ds:fs_access_section
 	mov ds:fs_access_parse,0
@@ -385,7 +387,7 @@ init_file_old_freed:
 
 install_file_sys_done:
 	pop di
-	pop si
+	pop esi
 	pop cx
 	pop bx
 	pop es
@@ -584,7 +586,8 @@ hook_thread_loop:
 
 hook_thread_done:
 	mov ds:fs_init_done,1
-	LeaveSection ds:fs_init_section
+	mov esi,OFFSET fs_init_section
+	LeaveNewSection
 	ret
 hook_thread	Endp
 
@@ -748,13 +751,16 @@ init	PROC far
 ;
     push ds
     mov ds,bx
-	InitSection ds:fs_init_section
-	EnterSection ds:fs_init_section
+    mov esi,OFFSET fs_init_section
+    InitNewSection
+    EnterNewSection
+;    
 	mov ds:fs_init_done,0
 	mov ds:file_defs,0
 	mov ds:fs_init_hooks,0
 	mov ds:fs_file_list,0
-	InitSection ds:fs_file_section
+	mov esi,OFFSET fs_file_section
+	InitNewSection
 	pop ds
 ;
 	mov di,OFFSET fs_sel
