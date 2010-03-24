@@ -2751,7 +2751,10 @@ utDevLoop:
 ;
     mov esi,OFFSET uds_section
     EnterNewSection
+;    
     call HandleDevice
+;    
+    mov esi,OFFSET uds_section
     LeaveNewSection
 ;
     pop esi
@@ -2953,8 +2956,8 @@ apNoRecover:
 	mov es:uds_flag,0
 ;
     push ds
-    mov ax,es
-    mov ds,ax
+    mov si,es
+    mov ds,si
     mov esi,OFFSET uds_section
     InitNewSection
     pop ds
