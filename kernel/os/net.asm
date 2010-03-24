@@ -1349,7 +1349,7 @@ get_net_buffer	Proc far
 	push bx
 	push es
 	push cx
-	push si
+	push esi
 ;
 	movzx eax,ds:p_logical_addr_len
 	add ax,OFFSET arp_logical_addr
@@ -1393,7 +1393,7 @@ get_buf_arp_empty:
 get_buf_arp_done:
 	mov esi,OFFSET arp_section
 	LeaveNewSection
-	pop si
+	pop esi
 	pop cx
 	pop es
 	mov bx,ds:arp_thread
@@ -1450,7 +1450,7 @@ send_net	Proc far
 	push bx
 	push es
 	push cx
-	push si
+	push esi
 ;
 	movzx eax,ds:p_logical_addr_len
 	add ax,OFFSET arp_logical_addr
@@ -1494,7 +1494,7 @@ ins_arp_empty:
 ins_arp_done:
 	mov esi,OFFSET arp_section
 	LeaveNewSection
-	pop si
+	pop esi
 	pop cx
 	pop es
 	mov bx,ds:arp_thread
