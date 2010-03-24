@@ -199,7 +199,8 @@ keyboard_thread_loop:
 	mov bx,key_focus_sel
 	mov ds,bx
 ;
-    EnterSection ds:key_section
+    mov esi,OFFSET key_section
+    EnterNewSection
 	mov bx,ds:key_buffer_tail
 	mov si,bx
 	add bx,SIZE key_buf_struc
@@ -220,7 +221,8 @@ keyboard_thread_no_circ:
 	mov ds:[si].kb_state,ax
 ;	
 	mov ds:key_buffer_tail,bx
-	LeaveSection ds:key_section
+    mov esi,OFFSET key_section
+    LeaveNewSection
 ;
     mov bx,ds:key_avail_obj
     or bx,bx
@@ -251,13 +253,21 @@ keyboard_wake:
 
 keyb_io_read	PROC far
 keyb_io_wait:
-    EnterSection ds:key_section
+    push esi
+    mov esi,OFFSET key_section
+    EnterNewSection
+    pop esi
+;    
     call remove_non_key
 	mov bx,ds:key_buffer_head
 	cmp bx,ds:key_buffer_tail
 	jne keyb_io_get_ch
 ;
-	LeaveSection ds:key_section
+    push esi
+    mov esi,OFFSET key_section
+    LeaveNewSection
+    pop esi
+;
 	push di
 	mov di,OFFSET key_proc_wait
 	Sleep
@@ -274,14 +284,20 @@ keyb_io_get_ch:
 	
 kr_no_circ_buff:
 	mov ds:key_buffer_head,bx
-	LeaveSection ds:key_section
+    push esi
+    mov esi,OFFSET key_section
+    LeaveNewSection
+    pop esi
 	mov bx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
 	ret
 keyb_io_read	ENDP
 
 keyb_io_poll	PROC far
-    EnterSection ds:key_section
+    push esi
+    mov esi,OFFSET key_section
+    EnterNewSection
+    pop esi
     call remove_non_key
 	mov bx,ds:key_buffer_head
 	cmp bx,ds:key_buffer_tail
@@ -289,13 +305,19 @@ keyb_io_poll	PROC far
 ;
 	and word ptr [bp].vm_eflags,NOT 40h
 	mov ax,[bx]
-    LeaveSection ds:key_section
+    push esi
+    mov esi,OFFSET key_section
+    LeaveNewSection
+    pop esi
 	mov bx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
 	ret
 	
 keyb_p_empty:
-    LeaveSection ds:key_section
+    push esi
+    mov esi,OFFSET key_section
+    LeaveNewSection
+    pop esi
 	or word ptr [bp].vm_eflags,40h
 	mov bx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
@@ -475,11 +497,13 @@ poll_keyboard_name	DB 'Poll Keyboard',0
 poll_keyboard	PROC far
 	push ds
 	push bx
+	push esi
 	sti
 	mov bx,key_local_sel
 	mov ds,bx
 ;
-    EnterSection ds:key_section
+    mov esi,OFFSET key_section
+    EnterNewSection
     call remove_non_key
 ;
 	mov bx,ds:key_buffer_head
@@ -487,15 +511,19 @@ poll_keyboard	PROC far
 	je poll_key_empty
 	
 poll_key_avail:
-    LeaveSection ds:key_section
+    mov esi,OFFSET key_section
+    LeaveNewSection
 	clc
+	pop esi
 	pop bx
 	pop ds
 	retf32
 	
 poll_key_empty:
-    LeaveSection ds:key_section
+    mov esi,OFFSET key_section
+    LeaveNewSection
 	stc
+	pop esi
 	pop bx
 	pop ds
 	retf32
@@ -660,18 +688,22 @@ read_keyboard_name	DB 'Read Keyboard',0
 read_keyboard	PROC far
 	push ds
 	push bx
+	push esi
 	sti
 	mov bx,key_local_sel	
 	mov ds,bx
 
 read_key_wait:
-    EnterSection ds:key_section
+    mov esi,OFFSET key_section
+    EnterNewSection
     call remove_non_key
 	mov bx,ds:key_buffer_head
 	cmp bx,ds:key_buffer_tail
 	jne read_key_get
 ;
-    LeaveSection ds:key_section
+    mov esi,OFFSET key_section
+    LeaveNewSection
+;    
 	push di
 	mov di,OFFSET key_proc_wait
 	Sleep
@@ -688,8 +720,10 @@ read_key_get:
 
 read_key_no_circ_buff:
 	mov ds:key_buffer_head,bx
-	LeaveSection ds:key_section
+    mov esi,OFFSET key_section
+    LeaveNewSection
 ;
+    pop esi
 	pop bx
 	pop ds
 	retf32
@@ -714,16 +748,21 @@ peek_key_event_name	DB 'Peek Key Event',0
 peek_key_event	PROC far
 	push ds
 	push bx
+	push esi
+;	
 	sti
 	mov bx,key_local_sel
 	mov ds,bx
 ;
-    EnterSection ds:key_section
+    mov esi,OFFSET key_section
+    EnterNewSection
+;
 	mov bx,ds:key_buffer_head
 	cmp bx,ds:key_buffer_tail
 	jne peek_key_event_get
 ;
-    LeaveSection ds:key_section
+    mov esi,OFFSET key_section
+    LeaveNewSection
     stc
     jmp peek_key_event_done
     
@@ -732,10 +771,12 @@ peek_key_event_get:
 	mov cx,[bx].kb_state
 	mov dl,[bx].kb_vk_code
 	mov dh,[bx].kb_scan_code
-	LeaveSection ds:key_section
+    mov esi,OFFSET key_section
+    LeaveNewSection
 	clc
 
 peek_key_event_done:
+    pop esi
 	pop bx
 	pop ds
 	retf32
@@ -760,16 +801,21 @@ read_key_event_name	DB 'Read Key Event',0
 read_key_event	PROC far
 	push ds
 	push bx
+	push esi
+;	
 	sti
 	mov bx,key_local_sel
 	mov ds,bx
 ;
-    EnterSection ds:key_section
+    mov esi,OFFSET key_section
+    EnterNewSection
+;
 	mov bx,ds:key_buffer_head
 	cmp bx,ds:key_buffer_tail
 	jne read_key_event_get
 ;
-    LeaveSection ds:key_section
+    mov esi,OFFSET key_section
+    LeaveNewSection
     stc
     jmp read_key_event_done
     
@@ -787,10 +833,12 @@ read_key_event_get:
 
 read_key_event_no_circ:
 	mov ds:key_buffer_head,bx
-	LeaveSection ds:key_section
+    mov esi,OFFSET key_section
+    LeaveNewSection
 	clc
 
 read_key_event_done:
+    pop esi
 	pop bx
 	pop ds
 	retf32
@@ -812,12 +860,17 @@ flush_keyboard_name	DB 'Flush Keyboard',0
 flush_keyboard	PROC far
 	push ds
 	push bx
+	push esi
+;
 	mov bx,key_local_sel
 	mov ds,bx
-	EnterSection ds:key_section
+    mov esi,OFFSET key_section
+    EnterNewSection
 	mov bx,ds:key_buffer_head
 	mov ds:key_buffer_tail,bx
-	LeaveSection ds:key_section
+    LeaveNewSection
+;
+    pop esi
 	pop bx
 	pop ds
 	retf32
@@ -969,7 +1022,11 @@ key_wait_loop:
 	mov bx,key_focus_sel
 	mov ds,bx
 ;
-    EnterSection ds:key_section
+    push esi
+    mov esi,OFFSET key_section
+    EnterNewSection
+    pop esi
+;
     call remove_non_key
 	mov bx,ds:key_buffer_tail
 	mov si,bx
@@ -982,14 +1039,21 @@ key_wait_loop:
 key_emul_no_circ:
 	mov [si],ax
 	mov ds:key_buffer_tail,bx
-	LeaveSection ds:key_section
+;	
+    push esi
+    mov esi,OFFSET key_section
+    LeaveNewSection
+    pop esi
 ;
 	mov si,OFFSET key_proc_wait
 	mov ax,[si]
 	or ax,ax
 	jz key_emul_loop
 ;
-	LeaveSection ds:key_section
+    push esi
+    mov esi,OFFSET key_section
+    LeaveNewSection
+    pop esi
 	Wake
 	jmp key_emul_loop
 
@@ -1205,7 +1269,8 @@ PAGE
 init_local_sel	PROC far
 	mov ax,key_local_sel
 	mov ds,ax
-	InitSection ds:key_section
+	mov esi,OFFSET key_section
+	InitNewSection
 	mov ax,OFFSET key_buffer_start
 	mov ds:key_buffer_head,ax
 	mov ds:key_buffer_tail,ax
