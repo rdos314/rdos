@@ -101,11 +101,13 @@ PAGE
 FindHostByAddress	Proc near
 	push ds
 	push es
+	push esi
 ;
 	mov ax,ip_data_sel
 	mov ds,ax
 ;
-	EnterSection ds:ip_cache_section
+    mov esi,OFFSET ip_cache_section
+    EnterNewSection
 	mov ax,ds:ip_cache_list
 
 find_address_loop:
@@ -120,17 +122,20 @@ find_address_loop:
 	jmp find_address_loop
 
 find_address_fail:
-	LeaveSection ds:ip_cache_section
+    mov esi,OFFSET ip_cache_section
+    LeaveNewSection
 	stc
 	jmp find_address_done
 
 find_address_ok:
-	LeaveSection ds:ip_cache_section
+    mov esi,OFFSET ip_cache_section
+    LeaveNewSection
 	mov ax,es
 	mov bx,ds:ip_cache_entry_size
 	clc
 
 find_address_done:
+    pop esi
 	pop es
 	pop ds
 	ret
@@ -160,7 +165,8 @@ FindHostByName	Proc near
 ;
 	mov ax,ip_data_sel
 	mov ds,ax
-	EnterSection ds:ip_cache_section
+    mov esi,OFFSET ip_cache_section
+    EnterNewSection
 	mov ax,ds:ip_cache_list
 
 find_name_loop:
@@ -203,13 +209,15 @@ find_name_fail_pop:
 	pop edi
 
 find_name_fail:
-	LeaveSection ds:ip_cache_section
+    mov esi,OFFSET ip_cache_section
+    LeaveNewSection
 	stc
 	jmp find_name_done
 
 find_name_ok:
 	pop edi
-	LeaveSection ds:ip_cache_section
+    mov esi,OFFSET ip_cache_section
+    LeaveNewSection
 	mov ax,fs
 	mov bx,ds:ip_cache_entry_size
 	clc
@@ -239,7 +247,15 @@ InitHostData	Proc near
 	mov es:host_rto,3 * 1193000
 	mov es:host_rtt,0
 	mov es:host_rtm,0
-	InitSection es:host_section
+;
+    push ds
+    push esi
+    mov si,es
+    mov ds,si
+    mov esi,OFFSET host_section
+    InitNewSection
+    pop esi
+    pop ds
 	ret
 InitHostData	Endp
 
@@ -263,11 +279,14 @@ UpdateHost	Proc near
 	push fs
 	push ax
 	push edx
+	push esi
 ;
 	mov ax,ip_data_sel
 	mov ds,ax
 ;
-	EnterSection ds:ip_cache_section
+    mov esi,OFFSET ip_cache_section
+    EnterNewSection
+;    
 	mov bx,ds:ip_cache_list
 	xor ax,ax
 	mov edx,es:host_addr
@@ -306,16 +325,19 @@ update_host_do:
 	pop cx
 	pop ds
 	FreeMem
-	LeaveSection ds:ip_cache_section
+    mov esi,OFFSET ip_cache_section
+    LeaveNewSection
 	jmp update_host_done
 
 update_host_insert:
 	mov ax,ds:ip_cache_list
 	mov ds:ip_cache_list,es
 	mov es:host_next,ax
-	LeaveSection ds:ip_cache_section
+    mov esi,OFFSET ip_cache_section
+    LeaveNewSection
 
 update_host_done:
+    pop esi
 	pop edx
 	pop ax
 	pop fs
@@ -653,8 +675,11 @@ update_round_trip_time_name	DB 'Update Round Trip Time',0
 update_round_trip_time	Proc far
 	push eax
 	push edx
+	push esi
 ;
-	EnterSection ds:host_section
+    mov esi,OFFSET host_section
+    EnterNewSection
+;    
 	mov ecx,ds:host_rtt
 	or ecx,ecx
 	jz update_rto_first
@@ -694,8 +719,10 @@ update_rto_bound:
 
 update_rto_small:
 	mov ds:host_rto,eax
-	LeaveSection ds:host_section
+    mov esi,OFFSET host_section
+    LeaveNewSection
 ;
+    pop esi
 	pop edx
 	pop eax
 	ret
@@ -782,7 +809,8 @@ init_cache	PROC near
 	mov ds:ip_cache_list,0
 	mov ds:ip_cache_hooks,0
 	mov ds:ip_cache_entry_size, SIZE host_entry
-	InitSection ds:ip_cache_section
+	mov esi,OFFSET ip_cache_section
+	InitNewSection
 	ret
 init_cache	ENDP
 
