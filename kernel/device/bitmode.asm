@@ -94,7 +94,9 @@ switch_mode_done:
 	mov es,ax
 	mov es:v_curr_object,ds
 ;
-	EnterSection ds:v_section
+    mov esi,OFFSET v_section
+    EnterNewSection
+;    
 	push ds
 	mov ds:v_has_focus,1
 	mov es,ds:v_mem_sel
@@ -104,7 +106,8 @@ switch_mode_done:
 	mov ecx,1000h
 	rep stos dword ptr es:[edi]
 	pop ds
-	LeaveSection ds:v_section
+    mov esi,OFFSET v_section
+    LeaveNewSection
 
 switch_to_done:
 	popad
@@ -127,12 +130,13 @@ switch_from	Proc far
 	push es
 	pushad
 ;
-	EnterSection ds:v_section
+    mov esi,OFFSET v_section
+    EnterNewSection
 	push ds
 	mov ds:v_has_focus,0
 	mov es,ds:v_buf_sel
 	pop ds
-	LeaveSection ds:v_section
+    LeaveNewSection
 ;
 	popad
 	pop es
@@ -187,7 +191,10 @@ init_mode12	Proc far
 	mov ds:v_mode,12h
 	mov ds:v_buf_sel,es
 	mov ds:v_has_focus,0
-	InitSection ds:v_section
+;	
+	mov esi,OFFSET v_section
+	InitNewSection
+;	
 	mov ds:v_mem_sel,bx
 	mov ds:v_mem_base,edx
 ;
