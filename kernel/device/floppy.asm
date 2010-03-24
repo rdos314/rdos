@@ -1411,9 +1411,13 @@ demand_mount	Proc far
 	mov ds,ax
 	mov al,es:disc_sub_unit
 	mov edi,OFFSET boot_sect
-	EnterSection ds:FloppySection
+	mov esi,OFFSET FloppySection
+	EnterNewSection
 	call ReadBootSector
-	LeaveSection ds:FloppySection
+	pushf
+	mov esi,OFFSET FloppySection
+	LeaveNewSection
+	popf
 	jc drive_assign_done1
 ;
 	call InstallMain
@@ -1480,10 +1484,12 @@ check_media	Proc near
 	push eax
 	push bx
 	push dx
+	push esi
 ;
 	mov bx,fs
 	mov ds,bx
-	EnterSection ds:disc_section
+	mov esi,OFFSET disc_section
+	EnterNewSection
 ;
 	mov al,fs:boot_drive_nr
 	mov bx,floppy_data_sel
@@ -1545,8 +1551,12 @@ check_media_free:
 check_media_done:
 	mov bx,fs
 	mov ds,bx
-	LeaveSection ds:disc_section
+	mov esi,OFFSET disc_section
+	pushf
+	LeaveNewSection
+	popf
 ;
+    pop esi
 	pop dx
 	pop bx
 	pop eax
@@ -1571,14 +1581,20 @@ check_media_proc	Proc far
 	push ds
 	push fs
 	push ax
+	push esi
 ;
 	mov ax,floppy_data_sel
 	mov ds,ax
 	mov fs,bx
-	EnterSection ds:FloppySection
+    mov esi,OFFSET FloppySection
+    EnterNewSection
 	call check_media
-	LeaveSection ds:FloppySection
+	pushf
+    mov esi,OFFSET FloppySection
+    LeaveNewSection
+    popf
 ;
+    pop esi
 	pop ax
 	pop fs
 	pop ds
@@ -1881,9 +1897,11 @@ discbuf_thread:
 
 discbuf_thread_loop:
 	WaitForDiscRequest
-	EnterSection ds:FloppySection
+	mov esi,OFFSET FloppySection
+	EnterNewSection
 	call perform_one
-	LeaveSection ds:FloppySection
+	mov esi,OFFSET FloppySection
+	LeaveNewSection
 	jmp discbuf_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1919,7 +1937,15 @@ install_unit	Proc near
 	mov fs,bx
 	pop ax
 	mov fs:disc_sub_unit,al
-	InitSection fs:disc_section
+;
+    push ds
+    push esi
+    mov si,fs
+    mov ds,si
+    mov esi,OFFSET disc_section
+    InitNewSection
+    pop esi
+    pop ds	
 ;
 	mov ecx,200h
 	mov bx,fs
@@ -2093,6 +2119,11 @@ open_floppy_started:
 	mov cx,ax
 	xor al,al
 	rep stosb
+;
+    mov ax,es
+    mov ds,ax
+    mov esi,OFFSET FloppySection
+    InitNewSection	
 ;
 	mov ax,cs
 	mov ds,ax
