@@ -192,6 +192,7 @@ PAGE
 CreateDefaultControl    Proc near    
     push es
     push cx
+    push esi
     push edi
 ;    
     push ax
@@ -208,7 +209,13 @@ CreateDefaultControl    Proc near
     mov fs:usbp_maxlen,8
     mov fs:usbp_device_sel,0
     mov fs:usbp_usage,1
-    InitSection fs:usbp_section
+;    
+    push ds
+    mov ax,fs
+    mov ds,ax
+    mov esi,usbp_section
+    InitNewSection
+    pop ds
 ;    
     mov eax,8
     AllocateSmallGlobalMem
@@ -235,6 +242,7 @@ CreateDefaultControl    Proc near
     popf
 ;
     pop edi
+    pop esi
     pop cx
     pop es
     ret
@@ -261,6 +269,7 @@ CreateBulk    Proc near
     push es
     push ax
     push bx
+    push esi
 ;    
     call ds:create_bulk_proc    
     movzx bx,dl
@@ -278,8 +287,15 @@ CreateBulk    Proc near
     mov fs:usbp_maxlen,cx
     mov fs:usbp_device_sel,0
     mov fs:usbp_usage,1
-    InitSection fs:usbp_section
 ;
+    push ds
+    mov si,fs
+    mov ds,si
+    mov esi,usbp_section
+    InitNewSection
+    pop ds        
+;
+    pop esi
     pop bx
     pop ax
     pop es
@@ -308,6 +324,7 @@ CreateInterrupt    Proc near
     push es
     push ax
     push bx
+    push esi
 ;    
     mov al,dh
     call ds:create_interrupt_proc    
@@ -326,8 +343,15 @@ CreateInterrupt    Proc near
     mov fs:usbp_maxlen,cx
     mov fs:usbp_device_sel,0
     mov fs:usbp_usage,1
-    InitSection fs:usbp_section
 ;
+    push ds
+    mov si,fs
+    mov ds,si
+    mov esi,usbp_section
+    InitNewSection
+    pop ds        
+;
+    pop esi
     pop bx
     pop ax
     pop es
@@ -1299,8 +1323,11 @@ start_usb_req	Proc far
     jnz surStart
 ;
     push ds
+    push esi
 	mov ds,[bx].rh_pipe_sel
-    EnterSection ds:usbp_section
+	mov esi,OFFSET usbp_section
+	EnterNewSection
+	pop esi
     pop ds
     or ds:[bx].rh_flags,REQ_FLAG_LOCKED
 
@@ -1375,8 +1402,11 @@ stop_usb_req	Proc far
     jz sturDone
 ;
     push ds
+    push esi
 	mov ds,[bx].rh_pipe_sel
-    LeaveSection ds:usbp_section
+	mov esi,OFFSET usbp_section
+	LeaveNewSection
+    pop esi
     pop ds
     and ds:[bx].rh_flags,NOT REQ_FLAG_LOCKED
 
@@ -1597,8 +1627,11 @@ crFreeHandle:
     jz crLockOk
 ;
     push ds
+    push esi
 	mov ds,[bx].rh_pipe_sel
-    LeaveSection ds:usbp_section
+	mov esi,OFFSET usbp_section
+	LeaveNewSection
+    pop esi
     pop ds
 
 crLockOk:
@@ -2346,8 +2379,11 @@ lock_usb_pipe   Proc far
 	jc lupDone
 ;
     push ds
+    push esi
     mov ds,ds:[bx].up_pipe_sel
-    EnterSection ds:usbp_section
+	mov esi,OFFSET usbp_section
+	EnterNewSection
+	pop esi
     pop ds
 
 lupDone:
@@ -2382,8 +2418,11 @@ unlock_usb_pipe   Proc far
 	jc uupDone
 ;	
     push ds
+    push esi
     mov ds,ds:[bx].up_pipe_sel
-    LeaveSection ds:usbp_section
+	mov esi,OFFSET usbp_section
+	LeaveNewSection
+    pop esi
     pop ds
 
 uupDone:
