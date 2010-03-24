@@ -184,13 +184,18 @@ CreateControlSector	Endp
 CreateRootDir	Proc near
 	mov ecx,2
 	mov eax,-1
-	EnterSection ds:alloc_section
+	mov esi,OFFSET alloc_section
+	EnterNewSection
+;
 	mov ds:info_sector.ri_target_sector,0
 	mov ds:info_sector.ri_target_offset,0
 	mov ds:info_sector.ri_state,INFO_STATE_ALLOC
 	mov ds:info_sector.ri_count,ecx
 	call AllocateSectors
-	LeaveSection ds:alloc_section
+	mov esi,OFFSET alloc_section
+	pushf
+	LeaveNewSection
+	popf
 	jc create_root_fail
 ;
 	call CreateControlSector
