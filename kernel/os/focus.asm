@@ -113,17 +113,19 @@ init	PROC far
 	mov eax,SIZE focus_seg
 	AllocateFixedSystemMem
 	mov es,bx
+	mov ds,bx
 	mov di,OFFSET focus_thread
 	mov cx,256
 	xor ax,ax
 	rep stosw
-	mov es:lost_focus_hooks,0
-	mov es:got_focus_hooks,0
-	mov es:enable_focus_hooks,0
-	mov es:focus_switched,0
-	mov es:focus_alloc_rel,0
-	mov es:focus_current_thread,0
-	InitSection es:focus_section
+	mov ds:lost_focus_hooks,0
+	mov ds:got_focus_hooks,0
+	mov ds:enable_focus_hooks,0
+	mov ds:focus_switched,0
+	mov ds:focus_alloc_rel,0
+	mov ds:focus_current_thread,0
+	mov esi,OFFSET focus_section
+	InitNewSection
 ;	
 	mov bx,focus_process_sel
 	mov eax,SIZE focus_process_seg
@@ -707,7 +709,8 @@ set_focus	PROC far
 	pushad
 	mov bx,focus_sel
 	mov ds,bx
-	EnterSection ds:focus_section
+	mov esi,OFFSET focus_section
+	EnterNewSection
 	xor bh,bh
 	mov bl,al
 	add bx,bx
@@ -746,7 +749,8 @@ set_focus_no_lost:
 	mov ds,bx
 	call trap_got_focus
 set_focus_done:
-	LeaveSection ds:focus_section
+    mov esi,OFFSET focus_section
+    LeaveNewSection
 	popad
 	pop es
 	pop ds
