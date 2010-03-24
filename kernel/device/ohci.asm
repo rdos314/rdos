@@ -2842,6 +2842,9 @@ Init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
+;	
+	mov esi,OFFSET OhciSection
+	InitNewSection
 ;
 	mov ax,cs
 	mov es,ax
