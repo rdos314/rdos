@@ -865,8 +865,10 @@ PurgeTx	Proc near
     push es
     push fs
     push edx
+    push esi
 ;    
-    EnterSection ds:TxSection
+    mov esi,OFFSET TxSection
+    EnterNewSection
 ;
     mov fs,ds:TxRingSel
 
@@ -894,8 +896,10 @@ ptLoop:
     jmp ptLoop
 
 ptLeave:
-    LeaveSection ds:TxSection
+    mov esi,OFFSET TxSection
+    LeaveNewSection
 ;
+    pop esi
     pop edx
     pop fs
     pop es    
@@ -1223,7 +1227,10 @@ send_do:
 	and dx,0FFFh
 	or ax,dx
 ;
-	EnterSection ds:TxSection
+    push esi
+    mov esi,OFFSET TxSection
+    EnterNewSection
+    pop esi
 
 send_retry_buf:
     mov edx,ds:TxRingCurrPtr
@@ -1308,7 +1315,9 @@ send_resume:
 send_leave:    
     xor ax,ax
     mov es,ax
-	LeaveSection ds:TxSection
+;    
+    mov esi,OFFSET TxSection
+    LeaveNewSection
 	mov ds,ax
 ;
 	pop edi
@@ -1700,7 +1709,8 @@ Init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
-	InitSection ds:TxSection
+	mov esi,OFFSET TxSection
+	InitNewSection
 ;
 	mov eax,SIZE data
 	mov bx,ether_data2_sel
@@ -1711,7 +1721,8 @@ Init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
-	InitSection ds:TxSection
+	mov esi,OFFSET TxSection
+	InitNewSection
 ;
 	mov ax,cs
 	mov es,ax
