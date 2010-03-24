@@ -946,7 +946,8 @@ allocate_page_local_linear:
 	mov dx,local_mem_sel
 	mov ds,dx
 	mov es,dx
-	EnterSection ds:local_mem_section
+	mov esi,OFFSET local_mem_section
+	EnterNewSection
 	mov ebx,local_page_linear
 	shr ebx,10
 	add ebx,4
