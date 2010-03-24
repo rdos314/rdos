@@ -380,7 +380,7 @@ next_cluster12	PROC near
 	push esi
 ;
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;    
 	mov cx,dx
 	add dx,dx
@@ -440,7 +440,7 @@ next_cluster_ok:
 next_cluster12_done:
 	pushf
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 	popf
 ;
 	pop esi
@@ -472,7 +472,7 @@ next_cluster16	PROC near
 	push esi
 ;
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;
 	add edx,edx
 	mov cx,dx
@@ -491,7 +491,7 @@ next_cluster16	PROC near
 next_cluster16_done:
 	pushf
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 	popf
 ;
 	pop esi
@@ -523,7 +523,7 @@ next_cluster32	PROC near
 	push esi
 ;
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;    
 	shl edx,2
 	mov cx,dx
@@ -543,7 +543,7 @@ next_cluster32	PROC near
 next_cluster32_done:
 	pushf
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 	popf
 ;
 	pop esi
@@ -786,7 +786,7 @@ allocate_cluster12	PROC near
 	push edi
 ;
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;    
     dec ds:free_clusters
 	mov edx,ds:fat1_sector
@@ -915,7 +915,7 @@ allocate_cluster12_done:
 allocate_cluster12_fail:
 	pushf
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 	popf
 ;
 	pop edi
@@ -945,7 +945,7 @@ allocate_cluster16	PROC near
 	push edi
 ;
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;    
     dec ds:free_clusters
 	mov edx,ds:fat1_sector
@@ -998,7 +998,7 @@ allocate_cluster16_done:
 allocate_cluster16_fail:
 	pushf
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 	popf
 ;
 	pop edi
@@ -1028,7 +1028,7 @@ allocate_cluster32	PROC near
 	push edi
 ;
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;    
     dec ds:free_clusters
     mov edx,ds:info_sector
@@ -1093,7 +1093,7 @@ allocate_cluster32_done:
 allocate_cluster32_fail:
 	pushf
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 	popf
 ;
 	pop edi
@@ -1161,7 +1161,7 @@ free_cluster	Proc near
 	push esi
 ;
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;	
 	cmp ds:fat_type,fat12
 	je free12
@@ -1208,7 +1208,7 @@ free12:
 
 free_cluster_done:
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 ;    
 	pop esi
 	pop ecx
@@ -1234,7 +1234,7 @@ link_cluster	Proc near
     push esi
 ;
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;    
 	cmp ds:fat_type,fat12
 	je link12
@@ -1255,7 +1255,7 @@ link12:
 
 link_cluster_done:
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
 	ret
@@ -1279,7 +1279,7 @@ eof_cluster	Proc near
     push esi
 ;
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;    
 	cmp ds:fat_type,fat12
 	je eof12
@@ -1303,7 +1303,7 @@ eof12:
 
 eof_cluster_done:
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi    
 	ret
@@ -1327,7 +1327,7 @@ bad_cluster	Proc near
     push esi
 ;
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;    
 	cmp ds:fat_type,fat12
 	je bad12
@@ -1351,7 +1351,7 @@ bad12:
 
 bad_cluster_done:
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi    
 	ret
@@ -1379,7 +1379,7 @@ get_free_cluster12	PROC near
 ;
     xor ebp,ebp
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;    
 	mov edx,ds:fat1_sector
 	xor edi,edi
@@ -1503,7 +1503,7 @@ get_free_cluster12_done:
 
 get_free_cluster12_leave:
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 ;
     mov edx,ebp
     pop ebp
@@ -1536,7 +1536,7 @@ get_free_cluster16	PROC near
 ;
 	xor ebp,ebp
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;
 	mov edx,ds:fat1_sector
 	xor edi,edi
@@ -1586,7 +1586,7 @@ get_free_cluster16_done:
 
 get_free_cluster16_leave:
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 ;
     mov edx,ebp
     pop ebp
@@ -1619,7 +1619,7 @@ get_free_cluster32	PROC near
 ;
     xor ebp,ebp
     mov esi,OFFSET cluster_section
-    EnterNewSection
+    EnterSection
 ;    
 	mov edx,ds:fat1_sector
 	xor edi,edi
@@ -1667,7 +1667,7 @@ get_free_cluster32_done:
     
 get_free_cluster32_leave:
     mov esi,OFFSET cluster_section
-    LeaveNewSection
+    LeaveSection
 ;
     mov edx,ebp
     pop ebp

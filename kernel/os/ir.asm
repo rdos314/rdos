@@ -119,7 +119,7 @@ notify_ir_data	Proc far
     mov ax,ir_data_sel
     mov ds,ax
     mov esi,OFFSET ir_section
-    EnterNewSection
+    EnterSection
 ;
     or cx,cx
     jz nidLeave
@@ -132,7 +132,7 @@ nidLoop:
 
 nidLeave:
     mov esi,OFFSET ir_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop di
     pop esi
@@ -230,7 +230,7 @@ init	Proc far
 	rep stosb
 ;	
     mov esi,OFFSET ir_section
-    InitNewSection
+    InitSection
 ;
 	mov ax,cs
 	mov ds,ax

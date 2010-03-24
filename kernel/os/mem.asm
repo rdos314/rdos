@@ -92,7 +92,7 @@ local_mem_seg	ENDS
 	extrn create_call_gate_sel16:near
 	extrn create_int_gate_sel:near
 	extrn create_tss_sel:near
-	extrn init_new_section:near
+	extrn init_section:near
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -179,13 +179,13 @@ init_mem	PROC near
 	mov ds:big_avail_mem,edx
 	mov esi,OFFSET big_section
 	push cs
-	call init_new_section
+	call init_section
 ;
 	mov edx,global_byte_size - 10h
 	mov ds:small_avail_mem,edx
 	mov esi,OFFSET small_section
 	push cs
-	call init_new_section
+	call init_section
 ;
 	mov ds:big_used_mem,0
 	mov ds:small_used_mem,0
@@ -515,11 +515,11 @@ init_process_mem	PROC near
 ;
     mov esi,OFFSET local_mem_section
     push cs
-    call init_new_section
+    call init_section
 ;
     mov esi,OFFSET vm_mem_section
     push cs
-    call init_new_section
+    call init_section
 ;
 	mov ax,process_page_sel
 	mov es,ax
@@ -641,7 +641,7 @@ allocate_big_linear	PROC far
 	mov ds,dx
 	mov es,dx
 	mov esi,OFFSET big_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov ebx,global_page_size
 	sub ebx,es:big_avail_mem
@@ -690,7 +690,7 @@ allocate_global_mark:
 	mov ax,mem_sel
 	mov ds,ax
 	mov esi,OFFSET big_section
-	LeaveNewSection
+	LeaveSection
 	shl edx,10
 ;
     pop esi	
@@ -730,7 +730,7 @@ allocate_small_linear	PROC far
 	mov ds,dx
 	mov es,dx
 	mov esi,OFFSET small_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov edx,es:small_avail_mem
 	add es:small_used_mem,eax
@@ -806,7 +806,7 @@ no_small_biggest_block:
 	mov ax,mem_sel
 	mov ds,ax
 	mov esi,OFFSET small_section
-	LeaveNewSection
+	LeaveSection
 	add edx,global_byte_linear + 10h
 ;
     pop esi	
@@ -852,7 +852,7 @@ allocate_local_linear	PROC far
 	mov ds,dx
 	mov es,dx
 	mov esi,OFFSET local_mem_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov edx,ds:local_avail_mem
 	add ds:local_used_mem,eax
@@ -928,7 +928,7 @@ no_local_biggest_block:
 	mov ax,local_mem_sel
 	mov ds,ax
 	mov esi,OFFSET local_mem_section
-	LeaveNewSection
+	LeaveSection
 	add edx,local_byte_linear + 10h
 ;
     pop esi	
@@ -947,7 +947,7 @@ allocate_page_local_linear:
 	mov ds,dx
 	mov es,dx
 	mov esi,OFFSET local_mem_section
-	EnterNewSection
+	EnterSection
 	mov ebx,local_page_linear
 	shr ebx,10
 	add ebx,4
@@ -990,7 +990,7 @@ allocate_blocal_mark:
 	mov ax,local_mem_sel
 	mov ds,ax
 	mov esi,OFFSET local_mem_section
-	LeaveNewSection
+	LeaveSection
 	shl edx,10
 ;
     pop esi	
@@ -1032,7 +1032,7 @@ reserve_local_linear	PROC far
 	mov bx,local_mem_sel
 	mov ds,bx
 	mov esi,OFFSET local_mem_section
-	EnterNewSection
+	EnterSection
 ;	
 	cmp edx,local_page_linear
 	jc reserve_local_linear_inv_range
@@ -1081,7 +1081,7 @@ reserve_local_linear_done:
 	mov ax,local_mem_sel
 	mov ds,ax
 	mov esi,OFFSET local_mem_section
-	LeaveNewSection
+	LeaveSection
 	popf
 ;
     pop esi
@@ -1121,7 +1121,7 @@ resize_flat_linear	PROC far
 	mov bx,local_mem_sel
 	mov ds,bx
 	mov esi,OFFSET local_mem_section
-	EnterNewSection
+	EnterSection
 ;
 	add edx,local_page_linear
 	cmp edx,local_page_linear
@@ -1184,7 +1184,7 @@ resize_flat_grow_loop:
 	add ds:local_big_used_mem,ecx
 ;
     mov esi,OFFSET local_mem_section
-    LeaveNewSection
+    LeaveSection
 	add sp,12
 	clc
 	jmp resize_flat_done
@@ -1194,7 +1194,7 @@ resize_flat_grow_copy:
 	mov bx,local_mem_sel
 	mov ds,bx
 	mov esi,OFFSET local_mem_section
-	LeaveNewSection
+	LeaveSection
 ;
 	pop ebx
 	pop ecx
@@ -1267,7 +1267,7 @@ resize_flat_leave:
 	mov bx,local_mem_sel
 	mov ds,bx
 	mov esi,OFFSET local_mem_section
-	LeaveNewSection
+	LeaveSection
 
 resize_flat_done:
 	mov edx,cr3
@@ -1312,7 +1312,7 @@ allocate_vm_linear	PROC far
 	mov ds,dx
 	mov es,dx
 	mov esi,OFFSET vm_mem_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov dx,es:vm_avail_mem
 	add es:vm_used_mem,ax
@@ -1390,7 +1390,7 @@ no_vm_biggest_block:
 	movzx edx,si
 	add edx,vm_linear + 8
 	mov esi,OFFSET vm_mem_section
-    LeaveNewSection
+    LeaveSection
 ;    	
 	pop di
 	pop esi
@@ -1870,7 +1870,7 @@ free_big_mem	PROC near
 	mov ax,mem_sel
 	mov ds,ax
 	mov esi,OFFSET big_section
-	EnterNewSection
+	EnterSection
 ;	
 	add es:big_avail_mem,ecx
 	sub es:big_used_mem,ecx
@@ -1894,7 +1894,7 @@ free_big_nopage:
 	mov ax,mem_sel
 	mov ds,ax
 	mov esi,OFFSET big_section
-	LeaveNewSection
+	LeaveSection
 	mov edx,cr3
 	mov cr3,edx
 	ret
@@ -1905,7 +1905,7 @@ free_small_mem	PROC near
 	mov ax,mem_sel
 	mov ds,ax
 	mov esi,OFFSET small_section
-	EnterNewSection
+	EnterSection
 ;
 	mov ax,small_mem_sel
 	mov ds,ax
@@ -2007,7 +2007,7 @@ free_small_not_limit_page:
 	mov bx,mem_sel
 	mov ds,bx
 	mov esi,OFFSET small_section
-	LeaveNewSection
+	LeaveSection
 	ret
 free_small_mem	ENDP
 
@@ -2029,7 +2029,7 @@ free_local_mem	PROC near
 	mov ds,ax
 	mov es,ax
 	mov esi,OFFSET local_mem_section
-	EnterNewSection
+	EnterSection
 ;	
 	sub edx,local_byte_linear
 	sub edx,10h
@@ -2130,7 +2130,7 @@ free_local_not_limit_page:
 	mov bx,local_mem_sel
 	mov ds,bx
 	mov esi,OFFSET local_mem_section
-	LeaveNewSection
+	LeaveSection
 	ret
 free_local_mem	ENDP
 
@@ -2147,7 +2147,7 @@ free_vm_mem	PROC near
 	mov ds,ax
 	mov es,ax
 	mov esi,OFFSET vm_mem_section
-	EnterNewSection
+	EnterSection
 ;	
 	sub edx,vm_linear
 	mov si,dx
@@ -2233,7 +2233,7 @@ free_vm_not_limit_page:
 	mov bx,local_mem_sel
 	mov ds,bx
 	mov esi,OFFSET vm_mem_section
-	LeaveNewSection
+	LeaveSection
 	ret
 free_vm_mem	ENDP
 
@@ -2242,7 +2242,7 @@ free_big_local_mem	PROC near
 	mov ds,ax
 	mov es,ax
 	mov esi,OFFSET local_mem_section
-	EnterNewSection
+	EnterSection
 ;	
 	shr edx,10
 	dec ecx
@@ -2270,7 +2270,7 @@ free_blocal_nopage:
 	mov bx,local_mem_sel
 	mov ds,bx
 	mov esi,OFFSET local_mem_section
-	LeaveNewSection
+	LeaveSection
 	mov edx,cr3
 	mov cr3,edx
 	ret

@@ -130,7 +130,7 @@ create_wait Proc far
 	mov [bx].wh_running,0
 	mov [bx].wh_thread,0
 	lea esi,[bx].wh_section
-	InitNewSection
+	InitSection
 	mov bx,[bx].hh_handle
 	clc
 ;
@@ -232,7 +232,7 @@ is_wait_idle Proc far
 ;
     movzx ebx,bx
     lea esi,[ebx].wh_section
-    EnterNewSection
+    EnterSection
 ;
     mov dx,ds:[bx].wh_obj_list
     or dx,dx
@@ -248,13 +248,13 @@ is_wait_idle_loop:
     jnz is_wait_idle_loop
 
 is_wait_idle_ok_leave:
-    LeaveNewSection
+    LeaveSection
 	clc
 	jmp is_wait_idle_done
 
 is_wait_idle_fail_leave:
 	mov ecx,es:wo_id
-    LeaveNewSection
+    LeaveSection
 	stc
 
 is_wait_idle_done:
@@ -297,7 +297,7 @@ wait_no_timeout Proc far
 ;
     movzx ebx,bx
     lea esi,[ebx].wh_section
-    EnterNewSection
+    EnterSection
 ;    
     mov al,ds:[bx].wh_running
     or al,al
@@ -321,12 +321,12 @@ wait_no_timeout_start_loop:
 
 wait_no_timeout_start_leave:
     inc ds:[bx].wh_running
-    LeaveNewSection
+    LeaveSection
 
 wait_no_timeout_do:
     WaitForSignal
 ;
-    EnterNewSection
+    EnterSection
     mov al,ds:[bx].wh_running
     or al,al
     jz wait_no_timeout_stopped_leave
@@ -358,7 +358,7 @@ wait_no_timeout_stop_next:
     jnz wait_no_timeout_stop_loop
 
 wait_no_timeout_stopped_leave:
-    LeaveNewSection
+    LeaveSection
     clc
 
 wait_no_timeout_done:
@@ -422,7 +422,7 @@ wait_timeout Proc far
 ;
     movzx ebx,bx
     lea esi,[ebx].wh_section
-    EnterNewSection
+    EnterSection
 ;
 	push ax
     mov al,ds:[bx].wh_running
@@ -465,7 +465,7 @@ wait_timeout_start_timer:
 	pop bx
 ;
     inc ds:[bx].wh_running
-    LeaveNewSection
+    LeaveSection
 
 wait_timeout_do:
     WaitForSignal
@@ -476,7 +476,7 @@ wait_timeout_do:
 	pop bx
 ;
     xor ecx,ecx
-    EnterNewSection
+    EnterSection
     mov al,ds:[bx].wh_running
     or al,al
     jz wait_timeout_stopped_leave
@@ -508,7 +508,7 @@ wait_timeout_stop_next:
     jnz wait_timeout_stop_loop
 
 wait_timeout_stopped_leave:
-    LeaveNewSection
+    LeaveSection
     clc
 
 wait_timeout_done:
@@ -548,7 +548,7 @@ stop_wait Proc far
 ;
     movzx ebx,bx
     lea esi,[ebx].wh_section
-    EnterNewSection
+    EnterSection
     mov al,ds:[bx].wh_running
     or al,al
     jz stop_wait_leave
@@ -578,7 +578,7 @@ stop_wait_signal:
     pop bx
 
 stop_wait_leave:
-    LeaveNewSection
+    LeaveSection
     clc
 
 stop_wait_done:
@@ -630,7 +630,7 @@ add_wait    Proc far
     push esi
     movzx ebx,bx
     lea esi,[ebx].wh_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
     movzx eax,ax
@@ -663,7 +663,7 @@ awLeave:
     push esi
     movzx ebx,bx
     lea esi,[ebx].wh_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 	clc
 
@@ -706,7 +706,7 @@ remove_wait    Proc far
 ;
     movzx ebx,bx
     lea esi,[ebx].wh_section
-    EnterNewSection
+    EnterSection
 ;
     xor dx,dx
     mov ax,ds:[bx].wh_obj_list
@@ -738,7 +738,7 @@ remove_wait_head:
     jmp remove_wait_loop
 
 remove_wait_leave:
-    LeaveNewSection
+    LeaveSection
 	clc
 
 remove_wait_done:

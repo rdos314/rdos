@@ -553,7 +553,7 @@ ReadDrive	Proc near
 	mov ds,fs:disc_ide_sel
 	push esi
 	mov esi,OFFSET IdeSection
-	EnterNewSection
+	EnterSection
 	pop esi
 ;
 	GetThread
@@ -599,7 +599,7 @@ ReadDriveDone:
 	mov ds:IdeThread,0
 	push esi
 	mov esi,OFFSET IdeSection
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	popf
 	ret
@@ -625,7 +625,7 @@ WriteDrive	Proc near
 	mov ds,fs:disc_ide_sel
 	push esi
 	mov esi,OFFSET IdeSection
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	GetThread
@@ -670,7 +670,7 @@ WriteDriveDone:
 	mov ds:IdeThread,0
 	push esi
 	mov esi,OFFSET IdeSection
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	popf
 	ret
@@ -1325,7 +1325,7 @@ read_drive	Proc near
 	mov ds,fs:disc_ide_sel
 	push esi
 	mov esi,OFFSET IdeSection
-	EnterNewSection
+	EnterSection
 	pop esi
 	mov bp,3
 
@@ -1438,7 +1438,7 @@ read_drive_ok:
 read_drive_done:
 	push esi
 	mov esi,OFFSET IdeSection
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	ret
 read_drive	Endp
@@ -1462,7 +1462,7 @@ write_drive	Proc near
 	mov ds,fs:disc_ide_sel
 	push esi
 	mov esi,OFFSET IdeSection
-	EnterNewSection
+	EnterSection
 	pop esi
 	mov bp,3
 
@@ -1568,7 +1568,7 @@ write_drive_ok:
 write_drive_done:
 	push esi
 	mov esi,OFFSET IdeSection
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	ret
 write_drive	Endp
@@ -2338,7 +2338,7 @@ init_ide_primary:
 	mov ax,es
 	mov ds,ax
 	mov esi,OFFSET IdeSection
-	InitNewSection
+	InitSection
 ;	
 	mov ds:IdeThread,0
 	mov ds:DriveSelArr,0
@@ -2368,7 +2368,7 @@ init_ide_second:
 	mov ax,es
 	mov ds,ax
 	mov esi,OFFSET IdeSection
-	InitNewSection
+	InitSection
 	mov ds:IdeThread,0
 	mov ds:DriveSelArr,0
 	mov ds:DriveSelArr+2,0

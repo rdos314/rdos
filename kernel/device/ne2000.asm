@@ -2786,7 +2786,7 @@ SendIo32	Proc far
 	add cx,14
 	push esi
 	mov esi,OFFSET SendSection
-	EnterNewSection
+	EnterSection
 	pop esi
 	call WaitForSendBuffer
 ;
@@ -2878,7 +2878,7 @@ send_io32_done:
 	mov ds:SendPending,al
 	push esi
 	mov esi,OFFSET SendSection
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	call StartTransmit
 ;
@@ -2925,7 +2925,7 @@ SendIo16	Proc far
 	add cx,14
 	push esi
 	mov esi,OFFSET SendSection
-	EnterNewSection
+	EnterSection
 	pop esi
 	call WaitForSendBuffer
 ;
@@ -2996,7 +2996,7 @@ send_io16_done:
 	mov ds:SendPending,al
 	push esi
 	mov esi,OFFSET SendSection
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	call StartTransmit
 ;
@@ -3043,7 +3043,7 @@ SendIo8	Proc far
 	add cx,14
 	push esi
 	mov esi,OFFSET SendSection
-	EnterNewSection
+	EnterSection
 	pop esi
 	call WaitForSendBuffer
 ;
@@ -3116,7 +3116,7 @@ SendIo8	Proc far
 	mov ds:SendPending,al
 	push esi
 	mov esi,OFFSET SendSection
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	call StartTransmit
 ;
@@ -3166,7 +3166,7 @@ SendMem16	Proc far
 	add cx,14
 	push esi
 	mov esi,OFFSET SendSection
-	EnterNewSection
+	EnterSection
 	pop esi
 	call WaitForSendBuffer
 ;
@@ -3234,7 +3234,7 @@ send_mem16_sent:
 	mov ds:SendPending,al
 	push esi
 	mov esi,OFFSET SendSection
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	call StartTransmit
 ;
@@ -3285,7 +3285,7 @@ SendMem8	Proc far
 	add cx,14
 	push esi
 	mov esi,OFFSET SendSection
-	EnterNewSection
+	EnterSection
 	pop esi
 	call WaitForSendBuffer
 ;
@@ -3368,7 +3368,7 @@ SendMem8	Proc far
 	mov ds:SendPending,al
 	push esi
 	mov esi,OFFSET SendSection
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	call StartTransmit
 ;
@@ -3596,7 +3596,7 @@ Init	Proc far
 	rep stosb
 ;
     mov esi,OFFSET SendSection
-    InitNewSection
+    InitSection
 ;
 ;	call InitAdapter
 ;	jc init_fail

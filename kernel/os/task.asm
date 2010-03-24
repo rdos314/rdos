@@ -1071,32 +1071,32 @@ timer_free_list_create:
 	mov ax,debug_break_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET enter_section
-	mov di,OFFSET enter_section_name
+	mov si,OFFSET enter_old_section
+	mov di,OFFSET enter_old_section_name
 	xor cl,cl
 	mov ax,enter_section_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET leave_section
-	mov di,OFFSET leave_section_name
+	mov si,OFFSET leave_old_section
+	mov di,OFFSET leave_old_section_name
 	xor cl,cl
 	mov ax,leave_section_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET init_new_section
-	mov di,OFFSET init_new_section_name
+	mov si,OFFSET init_section
+	mov di,OFFSET init_section_name
 	xor cl,cl
 	mov ax,init_new_section_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET enter_new_section
-	mov di,OFFSET enter_new_section_name
+	mov si,OFFSET enter_section
+	mov di,OFFSET enter_section_name
 	xor cl,cl
 	mov ax,enter_new_section_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET leave_new_section
-	mov di,OFFSET leave_new_section_name
+	mov si,OFFSET leave_section
+	mov di,OFFSET leave_section_name
 	xor cl,cl
 	mov ax,leave_new_section_nr
 	RegisterOsGate
@@ -3859,15 +3859,15 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_new_section_name	DB 'Init Critical Section',0
+init_section_name	DB 'Init Critical Section',0
 
-    public init_new_section
+    public init_section
 
-init_new_section	PROC far
+init_section	PROC far
 	mov ds:[esi].cs_value,0
 	mov ds:[esi].cs_list,0
     ret
-init_new_section    ENDP
+init_section    ENDP
     
 PAGE
 	
@@ -3882,11 +3882,11 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enter_new_section_name	DB 'Enter Critical Section',0
+enter_section_name	DB 'Enter Critical Section',0
 
-    public enter_new_section
+    public enter_section
     
-enter_new_section	PROC far
+enter_section	PROC far
     pushf
     push dx
     mov dx,ds
@@ -3938,7 +3938,7 @@ ecsDone:
     pop dx
     popf
 	ret
-enter_new_section	ENDP
+enter_section	ENDP
 
 PAGE
 	
@@ -3953,11 +3953,11 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-leave_new_section_name	DB 'Leave Critical Section',0
+leave_section_name	DB 'Leave Critical Section',0
 
-    public leave_new_section
+    public leave_section
     
-leave_new_section	PROC far
+leave_section	PROC far
     pushf
     push dx
     mov dx,ds
@@ -4009,7 +4009,7 @@ lcsDone:
     pop dx
     popf
 	ret
-leave_new_section	ENDP
+leave_section	ENDP
 
 PAGE
 	
@@ -4024,9 +4024,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enter_section_name	DB 'Enter Critical Section',0
+enter_old_section_name	DB 'Enter Critical Section',0
 
-enter_section	PROC far
+enter_old_section	PROC far
     push dx
     mov dx,ds
 ;
@@ -4072,7 +4072,7 @@ enter_inserted:
 enter_section_done:
     pop dx
 	ret
-enter_section	ENDP
+enter_old_section	ENDP
 
 PAGE
 	
@@ -4087,9 +4087,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-leave_section_name	DB 'Leave Critical Section',0
+leave_old_section_name	DB 'Leave Critical Section',0
  
-leave_section	PROC far
+leave_old_section	PROC far
     push dx
     mov dx,ds
 ;
@@ -4135,7 +4135,7 @@ leave_section_restore:
 leave_section_done:
     pop dx
 	ret
-leave_section	ENDP
+leave_old_section	ENDP
 
 PAGE
 	
@@ -4155,7 +4155,7 @@ init_process_task	Proc near
 	mov ds,ax
 ;
     mov esi,OFFSET section_handle_section
-    InitNewSection
+    InitSection
 ;    
 	mov cx,section_num
 	mov di,8 * section_num + OFFSET section_list
@@ -4193,7 +4193,7 @@ create_user_section	PROC far
 	mov ax,section_proc_sel
 	mov ds,ax
 	mov esi,OFFSET section_handle_section
-	EnterNewSection
+	EnterSection
 ;
 	allocate_section
 	mov ds:[bx].ucs_value,0
@@ -4201,7 +4201,7 @@ create_user_section	PROC far
 	mov ds:[bx].ucs_owner,0
 	mov ds:[bx].ucs_count,0
 ;
-    LeaveNewSection
+    LeaveSection
 	offset_to_section bx
 	clc
 ;
@@ -4234,7 +4234,7 @@ create_blocked_user_section	PROC far
 	mov ax,section_proc_sel
 	mov ds,ax
 	mov esi,OFFSET section_handle_section
-	EnterNewSection
+	EnterSection
 ;	
 	allocate_section
 	mov ds:[bx].ucs_value,-1
@@ -4242,7 +4242,7 @@ create_blocked_user_section	PROC far
 	mov ds:[bx].ucs_owner,-1
 	mov ds:[bx].ucs_count,1
 ;
-    LeaveNewSection
+    LeaveSection
 	offset_to_section bx
 	clc
 ;
@@ -4275,7 +4275,7 @@ delete_user_section	PROC far
 	mov ax,section_proc_sel
 	mov ds,ax
 	mov esi,OFFSET section_handle_section
-	EnterNewSection
+	EnterSection
 ;	
 	section_to_offset bx
 	mov ax,[bx]
@@ -4286,7 +4286,7 @@ delete_user_section	PROC far
 	free_section
 
 free_section_done:
-    LeaveNewSection
+    LeaveSection
 	xor bx,bx
 	clc
 ;

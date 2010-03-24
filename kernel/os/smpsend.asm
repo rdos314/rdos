@@ -150,7 +150,7 @@ FindSendMailslot	Proc near
 	mov ds,ax
 	push ds
 	mov esi,OFFSET shd_section
-	EnterNewSection
+	EnterSection
 ;
 	mov ax,bx
 	mov bx,ds:shd_mailslot_list
@@ -174,7 +174,7 @@ find_send_mailslot_done:
 	pop ds
 	pushf
 	mov esi,OFFSET shd_section
-	LeaveNewSection
+	LeaveSection
 	popf
 	mov ds,bx
 ;
@@ -239,7 +239,7 @@ SendData	Proc near
 	mov gs,ax
 	push esi
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	mov ds,ax
 ;
@@ -300,7 +300,7 @@ SendAck	Proc near
 	mov gs,ax
 	push esi
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	mov ds,ax
 ;
@@ -449,7 +449,7 @@ CreateMailslot	Proc near
 	mov ds:vm_pending_list,0
 	mov ds:vm_valid,0
 	mov esi,OFFSET m_section
-	InitNewSection
+	InitSection
 	pop ds
 ;
 	mov esi,edi
@@ -499,7 +499,7 @@ QueryMailslot	Proc near
 	push esi
 	mov ds,bx
 	mov esi,OFFSET m_section
-	EnterNewSection
+	EnterSection
 	pop esi
 	pop ds
 ;	
@@ -562,7 +562,7 @@ GetSendMailslot	Proc near
 ;
     push esi
     mov esi,OFFSET shd_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
 	mov bx,ds:shd_mailslot_list
@@ -594,7 +594,7 @@ get_send_mailslot_found:
 ;	
     push esi
     mov esi,OFFSET shd_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;    
 	mov ds,bx
@@ -611,13 +611,13 @@ get_send_mailslot_query:
 	call QueryMailslot
 	push esi
     mov esi,OFFSET shd_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
 	mov ds,ax
 	push esi
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	call SendNameRequest
 
@@ -854,7 +854,7 @@ dequeue_active_conn_ok:
 ;
     push esi
 	mov esi,OFFSET m_section
-	EnterNewSection
+	EnterSection
 	pop esi
 
 dequeue_active_no_pending:
@@ -963,7 +963,7 @@ activate_mailslot_loop:
 ;	
     push esi
 	mov esi,OFFSET m_section
-	EnterNewSection
+	EnterSection
 	pop esi
 	jmp activate_mailslot_loop
 
@@ -1288,7 +1288,7 @@ SendToSmp	Proc near
 ;
     push esi
 	mov esi,OFFSET m_section
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	mov gs:l_size,ecx
@@ -1334,7 +1334,7 @@ send_to_smp_queue:
 ;
     push esi
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 
 send_to_smp_wait:
@@ -1388,7 +1388,7 @@ SmpToSender	Proc near
 ;
     push esi
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	mov es,bx
@@ -1629,7 +1629,7 @@ copy_reply_leave:
 	xor ax,ax
 	mov gs,ax
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 
 copy_reply_done:
 	popad
@@ -1664,7 +1664,7 @@ HandleReply	Proc near
 ;
     push esi
 	mov esi,OFFSET m_section
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	mov eax,es:[di].sh_connection
@@ -1697,7 +1697,7 @@ handle_reply_leave:
 	mov gs,ax
     push esi
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 
 handle_reply_done:
@@ -1772,7 +1772,7 @@ HandleReset	Proc near
 ;
     push esi
 	mov esi,OFFSET m_section
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	mov eax,es:[si].sr_connection
@@ -1793,7 +1793,7 @@ handle_reset_do:
 ;	
     push esi
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;	
 	mov fs,ds:vm_host
@@ -1801,14 +1801,14 @@ handle_reset_do:
 ;
     push esi
 	mov esi,OFFSET m_section
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	call ResetMailslot
 ;	
     push esi
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	push ds
@@ -1827,7 +1827,7 @@ handle_reset_do:
 handle_reset_leave:
     push esi
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 
 handle_reset_done:
@@ -1859,7 +1859,7 @@ HandleName	Proc near
 	push esi
 ;
 	mov esi,OFFSET m_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov al,ds:vm_valid
 	or al,al
@@ -1906,7 +1906,7 @@ handle_name_rtt_done:
 
 handle_name_done:
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 ;
 	pop esi
 	pop edx
@@ -1948,7 +1948,7 @@ NameReply	Proc near
 ;
     push esi
 	mov esi,OFFSET shd_section
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	push ds
@@ -1988,7 +1988,7 @@ name_reply_pop_done:
 ;	
     push esi
 	mov esi,OFFSET shd_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	jmp name_reply_done
 
@@ -2001,7 +2001,7 @@ name_reply_found:
 ;	
     push esi
 	mov esi,OFFSET shd_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	mov ds,bx
@@ -2070,7 +2070,7 @@ SendSupervise	Proc near
 	mov ds,ax
 ;
 	mov esi,OFFSET shd_section
-	EnterNewSection
+	EnterSection
 ;	
 	push ds
 	mov bx,ds:shd_mailslot_list
@@ -2089,7 +2089,7 @@ send_supervise_leave:
 	pop ds
 ;	
 	mov esi,OFFSET shd_section
-	LeaveNewSection
+	LeaveSection
 	ret
 SendSupervise	Endp
 
@@ -2108,7 +2108,7 @@ ResendData	Proc near
 	push gs
 ;
 	mov esi,OFFSET m_section
-	EnterNewSection
+	EnterSection
 ;
 	mov si,OFFSET vm_arr
 	mov cx,MAX_PENDING_REQUESTS
@@ -2144,7 +2144,7 @@ resend_data_timeout_ok:
 	call SendData
     push esi
 	mov esi,OFFSET m_section
-	EnterNewSection
+	EnterSection
 	pop esi
 
 resend_data_next:
@@ -2156,7 +2156,7 @@ resend_data_next:
 	xor ax,ax
 	mov gs,ax
 	mov esi,OFFSET m_section
-	LeaveNewSection
+	LeaveSection
 	pop gs
 	ret
 ResendData	Endp

@@ -671,54 +671,18 @@ SignalWait	MACRO
 
 
 ; IN  DS:ESI        Section
-InitNewSection     MACRO section
+InitSection     MACRO section
 	OsGate init_new_section_nr
 						ENDM
 
 ; IN  DS:ESI        Section
-EnterNewSection    MACRO section
+EnterSection    MACRO section
 	OsGate enter_new_section_nr
 						ENDM
 
 ; IN  DS:ESI        Section
-LeaveNewSection    MACRO section
-	OsGate leave_new_section_nr
-						ENDM
-
-
-;       ES:(E)DI        NAME OF SECTION
-InitSection     MACRO section
-	mov section.cs_value,0
-	mov section.cs_list,0
-						ENDM
-
-
-EnterSection    MACRO section
-	LOCAL enter_section_donep
-	pushf
-	cli
-	sub section.cs_value,1
-	jc enter_section_donep
-	push esi
-	lea esi,section
-	OsGate enter_section_nr
-	pop esi
-enter_section_donep:
-	popf
-						ENDM
-
 LeaveSection    MACRO section
-	LOCAL leave_section_donep
-	pushf
-	cli
-	add section.cs_value,1
-	jc leave_section_donep
-	push esi
-	lea esi,section
-	OsGate leave_section_nr
-	pop esi
-leave_section_donep:
-	popf
+	OsGate leave_new_section_nr
 						ENDM
 
 

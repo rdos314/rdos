@@ -270,7 +270,7 @@ AllocateBlock32	PROC near
     mov ax,ohci_data_sel
     mov ds,ax
     mov esi,OFFSET OhciSection
-    EnterNewSection
+    EnterSection
 ;    
     mov edx,ds:OhciList32
 	or edx,edx
@@ -299,7 +299,7 @@ allocate_block32_done:
 	mov eax,es:[edx]
 	mov ds:OhciList32,eax
 	mov esi,OFFSET OhciSection
-	LeaveNewSection
+	LeaveSection
 ;
     pop esi
 	pop eax
@@ -331,11 +331,11 @@ FreeBlock32	PROC near
     mov ds,ax
 ;    
 	mov esi,OFFSET OhciSection
-	EnterNewSection
+	EnterSection
 	mov eax,ds:OhciList32
 	mov es:[edx],eax
 	mov ds:OhciList32,edx
-	LeaveNewSection
+	LeaveSection
 ;	
     pop esi
 	pop eax
@@ -645,7 +645,7 @@ AddControlEd	PROC near
     push esi
 ;
     mov esi,OFFSET ohc_section
-    EnterNewSection
+    EnterSection
 ;    
     call AllocateEd
     mov gs,ds:ohc_reg_sel
@@ -671,7 +671,7 @@ AddControlEd	PROC near
     pop eax
 ;    
     mov esi,OFFSET ohc_section
-    LeaveNewSection
+    LeaveSection
 ;    
     pop esi
     pop ebx
@@ -703,7 +703,7 @@ AddBulkEd	PROC near
     push esi
 ;
     mov esi,OFFSET ohc_section
-    EnterNewSection
+    EnterSection
 ;    
     call AllocateEd
     mov gs,ds:ohc_reg_sel
@@ -729,7 +729,7 @@ AddBulkEd	PROC near
     pop eax
 ;    
     mov esi,OFFSET ohc_section
-    LeaveNewSection
+    LeaveSection
 ;    
     pop esi
     pop ebx
@@ -916,7 +916,7 @@ AddIntrEd	PROC near
     push esi
 ;
     mov esi,OFFSET ohc_section
-    EnterNewSection
+    EnterSection
 ;    
     call AllocateEd
 ;
@@ -943,7 +943,7 @@ AddIntrEd	PROC near
     pop eax
 ;    
     mov esi,OFFSET ohc_section
-    LeaveNewSection
+    LeaveSection
 ;    
     pop esi
     pop ebx
@@ -1962,7 +1962,7 @@ ClosePipe   Proc far
     call RemovePipe
 ;
     mov esi,OFFSET ohc_section
-    EnterNewSection
+    EnterSection
 ;    
     mov edx,fs:osp_ed
     mov al,fs:usbp_mode
@@ -2143,7 +2143,7 @@ rpSetupDone:
     WaitMilliSec
 ;
     mov esi,OFFSET ohc_section
-    LeaveNewSection
+    LeaveSection
 ;    
     mov ax,fs
     mov es,ax
@@ -2549,7 +2549,7 @@ ifTabLoop:
     InitUsbDevice
 ;    
     mov esi,OFFSET ohc_section
-    InitNewSection
+    InitSection
     mov fs,ds:ohc_reg_sel
 ;    
     mov eax,0C000007Fh    
@@ -2844,7 +2844,7 @@ Init	Proc far
 	rep stosb
 ;	
 	mov esi,OFFSET OhciSection
-	InitNewSection
+	InitSection
 ;
 	mov ax,cs
 	mov es,ax

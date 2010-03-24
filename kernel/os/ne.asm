@@ -470,7 +470,7 @@ demand_load_ldt:
 	push esi
 	mov ds,ax
 	mov esi,OFFSET lib_section
-	EnterNewSection
+	EnterSection
 	pop esi
 	pop ds
 	mov cl,[bx+5]
@@ -592,7 +592,7 @@ demand_load_leave:
 	mov ax,es
 	mov ds,ax
 	mov esi,OFFSET lib_section
-	LeaveNewSection
+	LeaveSection
 	clc
 demand_load_end:
 	pop edi
@@ -1011,7 +1011,7 @@ create_lib	Proc near
     mov ax,es
     mov ds,ax
     mov esi,OFFSET lib_section
-    InitNewSection
+    InitSection
     pop esi
 ;    
 	push ds
@@ -1019,11 +1019,11 @@ create_lib	Proc near
 	mov ax,ne_app_sel
 	mov ds,ax
     mov esi,OFFSET lib_module_section
-    EnterNewSection	
+    EnterSection	
 	mov di,OFFSET lib_modules
 	InsertLib
 	mov esi,OFFSET lib_module_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	pop ds
 ;
@@ -1173,7 +1173,7 @@ get_dll	Proc near
 ;	
 	push esi
 	mov esi,OFFSET lib_module_section
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	mov bx,ds:lib_modules
@@ -1207,7 +1207,7 @@ get_dll_end:
 ;
     push esi
     mov esi,OFFSET lib_module_section
-    LeaveNewSection
+    LeaveSection
     pop esi	
 ;
 	pop di
@@ -1482,14 +1482,14 @@ free_dll	Proc near
 	mov ax,ne_app_sel
 	mov ds,ax
 	mov esi,OFFSET lib_module_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov si,OFFSET lib_modules
 	FreeModule
 	RemoveLib
 ;
     mov esi,OFFSET lib_module_section
-    LeaveNewSection
+    LeaveSection
 ;    	
 	call destroy_lib
 	mov bx,es:lib_file_handle
@@ -1872,7 +1872,7 @@ open_app	Proc far
 	mov ds,ax
 	mov ds:lib_modules,0
 	mov esi,OFFSET lib_module_section
-	InitNewSection
+	InitSection
 ;
     pop esi
 	pop ds

@@ -520,7 +520,7 @@ request_private_irq_handler	Proc far
 	push esi
 	lea si,[si].usage_section
 	movzx esi,si
-	EnterNewSection
+	EnterSection
 	pop esi
 	mov ds:[si].user_data,dx
 	mov word ptr ds:[si].user_handler,di
@@ -763,7 +763,7 @@ remove_pic_done:
 	push esi
 	lea si,[bx].usage_section
 	movzx esi,si
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	pop bx
@@ -923,18 +923,18 @@ init_irq_loop:
 	mov ds:[bx].pm32_sel,dx
 	add ax,4
 	lea si,[bx].usage_section
-	InitNewSection
+	InitSection
 	add bx,SIZE irq_struc
 	loop init_irq_loop
 ;
 	mov bx,OFFSET irq_arr
 	mov ds:[bx].owner_cr3,-1
 	lea si,[bx].usage_section
-	EnterNewSection
+	EnterSection
 	add bx,2 * SIZE irq_struc
 	mov ds:[bx].owner_cr3,-1
 	lea si,[bx].usage_section
-	EnterNewSection
+	EnterSection
 ;
 	mov ax,cs
 	mov es,ax

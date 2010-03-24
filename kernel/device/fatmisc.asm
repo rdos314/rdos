@@ -135,7 +135,7 @@ get_param16:
 	push esi
 ;
     mov esi,OFFSET cluster_section
-    InitNewSection
+    InitSection
 ;    
 	mov ds:drive_root_handle,0
 	mov ds:drive_nr,al
@@ -216,7 +216,7 @@ get_param32	Proc near
 	push esi
 ;
     mov esi,OFFSET cluster_section
-    InitNewSection
+    InitSection
 ;    
 	mov ds:drive_root_handle,0
 	mov ds:drive_nr,al

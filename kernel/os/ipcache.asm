@@ -107,7 +107,7 @@ FindHostByAddress	Proc near
 	mov ds,ax
 ;
     mov esi,OFFSET ip_cache_section
-    EnterNewSection
+    EnterSection
 	mov ax,ds:ip_cache_list
 
 find_address_loop:
@@ -123,13 +123,13 @@ find_address_loop:
 
 find_address_fail:
     mov esi,OFFSET ip_cache_section
-    LeaveNewSection
+    LeaveSection
 	stc
 	jmp find_address_done
 
 find_address_ok:
     mov esi,OFFSET ip_cache_section
-    LeaveNewSection
+    LeaveSection
 	mov ax,es
 	mov bx,ds:ip_cache_entry_size
 	clc
@@ -166,7 +166,7 @@ FindHostByName	Proc near
 	mov ax,ip_data_sel
 	mov ds,ax
     mov esi,OFFSET ip_cache_section
-    EnterNewSection
+    EnterSection
 	mov ax,ds:ip_cache_list
 
 find_name_loop:
@@ -210,14 +210,14 @@ find_name_fail_pop:
 
 find_name_fail:
     mov esi,OFFSET ip_cache_section
-    LeaveNewSection
+    LeaveSection
 	stc
 	jmp find_name_done
 
 find_name_ok:
 	pop edi
     mov esi,OFFSET ip_cache_section
-    LeaveNewSection
+    LeaveSection
 	mov ax,fs
 	mov bx,ds:ip_cache_entry_size
 	clc
@@ -253,7 +253,7 @@ InitHostData	Proc near
     mov si,es
     mov ds,si
     mov esi,OFFSET host_section
-    InitNewSection
+    InitSection
     pop esi
     pop ds
 	ret
@@ -285,7 +285,7 @@ UpdateHost	Proc near
 	mov ds,ax
 ;
     mov esi,OFFSET ip_cache_section
-    EnterNewSection
+    EnterSection
 ;    
 	mov bx,ds:ip_cache_list
 	xor ax,ax
@@ -326,7 +326,7 @@ update_host_do:
 	pop ds
 	FreeMem
     mov esi,OFFSET ip_cache_section
-    LeaveNewSection
+    LeaveSection
 	jmp update_host_done
 
 update_host_insert:
@@ -334,7 +334,7 @@ update_host_insert:
 	mov ds:ip_cache_list,es
 	mov es:host_next,ax
     mov esi,OFFSET ip_cache_section
-    LeaveNewSection
+    LeaveSection
 
 update_host_done:
     pop esi
@@ -678,7 +678,7 @@ update_round_trip_time	Proc far
 	push esi
 ;
     mov esi,OFFSET host_section
-    EnterNewSection
+    EnterSection
 ;    
 	mov ecx,ds:host_rtt
 	or ecx,ecx
@@ -720,7 +720,7 @@ update_rto_bound:
 update_rto_small:
 	mov ds:host_rto,eax
     mov esi,OFFSET host_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
 	pop edx
@@ -810,7 +810,7 @@ init_cache	PROC near
 	mov ds:ip_cache_hooks,0
 	mov ds:ip_cache_entry_size, SIZE host_entry
 	mov esi,OFFSET ip_cache_section
-	InitNewSection
+	InitSection
 	ret
 init_cache	ENDP
 

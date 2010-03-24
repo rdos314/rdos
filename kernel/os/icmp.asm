@@ -302,7 +302,7 @@ ping_node Proc far
 	mov ax,ip_data_sel
 	mov ds,ax
 	mov esi,OFFSET ping_section
-	EnterNewSection
+	EnterSection
 	push edx
 	GetSystemTime
 	mov ds:ping_id,eax
@@ -358,7 +358,7 @@ ping_node Proc far
 	mov ds:ping_thread,0
 	mov al,ds:ping_status
 	mov esi,OFFSET ping_section
-	LeaveNewSection
+	LeaveSection
 ;
 	or al,al
 	stc
@@ -371,7 +371,7 @@ ping_pop_fail:
 	mov ax,ip_data_sel
 	mov ds,ax
 	mov esi,OFFSET ping_section
-	LeaveNewSection
+	LeaveSection
 	pop eax
 
 ping_done:
@@ -402,7 +402,7 @@ init_icmp	PROC near
 	mov ax,ip_data_sel
 	mov ds,ax
 	mov esi,OFFSET ping_section
-	InitNewSection
+	InitSection
 	mov ds:ping_thread,0
 ;
 	mov ax,cs

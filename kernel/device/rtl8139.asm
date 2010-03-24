@@ -797,7 +797,7 @@ sPadOk:
 ;
     push esi
     mov esi,OFFSET TxSection
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
 	or ecx,80000h
@@ -854,7 +854,7 @@ ssNoPrev:
 ;
     push esi
     mov esi,OFFSET TxSection
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
 	pop edi
@@ -1169,7 +1169,7 @@ Init	Proc far
 ;
 	mov ds:EeAdrLen,8
 	mov esi,OFFSET TxSection
-	InitNewSection
+	InitSection
 ;
 	mov eax,SIZE data
 	mov bx,ether_data2_sel
@@ -1183,7 +1183,7 @@ Init	Proc far
 ;
 	mov ds:EeAdrLen,8
 	mov esi,OFFSET TxSection
-	InitNewSection
+	InitSection
 ;
 	mov ax,cs
 	mov es,ax

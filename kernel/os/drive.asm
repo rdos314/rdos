@@ -1630,9 +1630,9 @@ endif
 block_do:
     push esi
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
  	WaitForSignal
- 	EnterNewSection
+ 	EnterSection
  	pop esi
 ;	
     mov bx,es:[edi].dh_thread
@@ -1919,13 +1919,13 @@ wait_for_disc_request	Proc far
 
 wait_for_disc_req_loop:
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 	GetThread
 	mov ds:disc_thread,ax
 	call update_async_write
 	call update_async_timer
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 ;
 	cli
 	mov ebx,ds:disc_pend_list
@@ -2006,7 +2006,7 @@ get_disc_request	Proc far
 	mov es,ax
 	mov ds,bx
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 	call update_async_write
 	call update_async_timer
 	call update_disc_seq
@@ -2015,14 +2015,14 @@ get_disc_request	Proc far
 
 get_disc_req_fail:
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	stc
 	jmp get_disc_req_done
 
 get_disc_req_ok:
 	or es:[edi].dh_flags,FLAG_IO_BUSY
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	clc
 	
 get_disc_req_done:
@@ -2068,7 +2068,7 @@ new_disc_request	Proc far
 	mov cx,dx
 	mov dx,ax
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 ;
 	call check_buf
 	jnc new_disc_req_fail
@@ -2098,13 +2098,13 @@ new_disc_request	Proc far
 	call insert_buf
 	inc es:[edi].dh_lock_count
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	clc
 	jmp new_disc_req_done
 
 new_disc_req_fail:
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	stc
 
 new_disc_req_done:
@@ -2150,7 +2150,7 @@ lock_disc_request	PROC far
 	mov cx,dx
 	mov dx,ax
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 lock_disc_loop:
 	call check_buf
@@ -2257,7 +2257,7 @@ unlock_disc_request	PROC far
 ;
 	mov ds,es:[edi].dh_buf_sel
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
 	pop ds
@@ -2293,7 +2293,7 @@ disc_request_completed	Proc far
 	mov es,ax
 	mov ds,bx
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 ifdef DEBUG	
     call CheckDeleted
@@ -2366,7 +2366,7 @@ endif
 
 completed_done:
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	xor edi,edi
 ;
     pop esi
@@ -2411,7 +2411,7 @@ get_disc_request_array	Proc far
 	mov es,ax
 	mov ds,bx
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
     mov ax,ds:disc_io_count
     or ax,ax
     jz get_disc_req_arr_io_ok
@@ -2546,7 +2546,7 @@ ifdef DEBUG
 endif
     push esi
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
     pop esi    
 	or ecx,ecx
 	stc
@@ -2637,7 +2637,7 @@ install_disc_loop:
 	mov ds:disc_readahead,ecx
     push esi
     mov esi,OFFSET disc_section
-    InitNewSection
+    InitSection
     pop esi
 	mov ds:disc_pend_count,0
 	mov ds:disc_io_count,0
@@ -2920,7 +2920,7 @@ flush_drive	Proc far
 	mov ds,ds:drive_disc
 ;
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 	movzx ebp,ds:disc_sectors_per_unit
 	push edx
 	pop ax
@@ -2995,7 +2995,7 @@ flush_next_unit:
 
 flush_leave:
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 ;
 	popad
 	pop es
@@ -3129,7 +3129,7 @@ new_inrange:
 	div ds:disc_sectors_per_unit
 	mov cx,ax
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 new_loop:
 	call check_buf
@@ -3156,7 +3156,7 @@ new_loop:
 new_done:
 	inc es:[edi].dh_lock_count
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	mov esi,es:[edi].dh_data
 	mov ebx,edi
 
@@ -3219,7 +3219,7 @@ lock_inrange:
 	div ds:disc_sectors_per_unit
 	mov cx,ax
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 lock_loop:
 	call check_buf
@@ -3308,7 +3308,7 @@ lock_found:
 	inc es:[edi].dh_lock_count
 	inc es:[edi].dh_usage
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 ;    
 	mov al,es:[edi].dh_state
 	cmp al,STATE_USED
@@ -3361,7 +3361,7 @@ modify_sector	PROC far
 	mov ds,es:[edi].dh_buf_sel
 	ClearSignal
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 ifdef DEBUG	
     call CheckBuffered
@@ -3393,7 +3393,7 @@ modify_clean:
 
 modify_done:
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	clc
 ;
 	popad
@@ -3426,7 +3426,7 @@ flush_sector	PROC far
 	mov ds,es:[edi].dh_buf_sel
 	ClearSignal
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 ifdef DEBUG
     call CheckBuffered
@@ -3452,7 +3452,7 @@ flush_dirty:
 
 flush_done:
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	clc
 ;
 	popad
@@ -3526,7 +3526,7 @@ modify_seq_sector	PROC far
 	mov ds,es:[edi].dh_buf_sel
 	ClearSignal
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 ifdef DEBUG	
     call CheckBuffered
@@ -3555,7 +3555,7 @@ modify_seq_clean:
 
 modify_seq_done:
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	clc
 ;
 	popad
@@ -3592,7 +3592,7 @@ perform_disc_seq	PROC far
 ;
 	mov ds,ax
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 ;
 	mov bx,ds:disc_seq_list
 	or bx,bx
@@ -3627,7 +3627,7 @@ perform_disc_fail:
 
 perform_disc_leave:
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	mov bx,ds:disc_thread
 	Signal
 	clc
@@ -3666,7 +3666,7 @@ unlock_sector	PROC far
 	mov edi,ebx
 	mov ds,es:[edi].dh_buf_sel
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 ifdef DEBUG	
     call CheckBuffered
@@ -3701,7 +3701,7 @@ endif
 
 unlock_done:
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	xor ebx,ebx
 ;
 	pop edi
@@ -3763,7 +3763,7 @@ req_inrange:
 	mov cx,ax
 	push esi
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
     pop esi
 
 req_loop:
@@ -3836,7 +3836,7 @@ req_ok:
 	inc es:[edi].dh_usage
 	push esi
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
 	mov bx,ds:disc_thread
@@ -3904,7 +3904,7 @@ define_inrange:
 	mov cx,ax
 	push esi
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
     pop esi
 
 define_loop:
@@ -3977,7 +3977,7 @@ define_ok:
 	inc es:[edi].dh_usage
 	push esi
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;    
 	mov al,es:[edi].dh_state
@@ -4196,7 +4196,7 @@ wait_for_sector	PROC far
 	mov edi,ebx
 	mov ds,es:[edi].dh_buf_sel
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 ifdef DEBUG	
     call CheckBuffered
@@ -4219,7 +4219,7 @@ wait_sector_block:
 
 wait_sector_found:
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	clc
 ;
 	pop edi
@@ -4441,7 +4441,7 @@ read_disc	PROC near
 	div ds:disc_sectors_per_unit
 	mov cx,ax
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 read_disc_loop:
 	call check_buf
@@ -4497,7 +4497,7 @@ read_disc_found:
 	rep movs dword ptr es:[edi],[esi]
 	pop ds
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	clc
 	jmp read_disc_done
 
@@ -4577,7 +4577,7 @@ write_disc	PROC near
 	div ds:disc_sectors_per_unit
 	mov cx,ax
     mov esi,OFFSET disc_section
-    EnterNewSection
+    EnterSection
 
 write_disc_loop:
 	call check_buf
@@ -4640,7 +4640,7 @@ write_disc_found:
 	call insert_async_write
 	call update_async_timer
     mov esi,OFFSET disc_section
-    LeaveNewSection
+    LeaveSection
 	clc
 	jmp write_disc_done
 

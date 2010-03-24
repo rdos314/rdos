@@ -45,7 +45,7 @@ code	SEGMENT byte public use16 'CODE'
 	assume cs:code
 
 	extrn create_data_sel16:near
-	extrn init_new_section:near
+	extrn init_section:near
 
 PAGE
 
@@ -119,7 +119,7 @@ init_free_dt_loop:
 	mov ds,ax
 	mov esi,OFFSET gdt_section
 	push cs
-	call init_new_section
+	call init_section
 ;
 	popad
 	pop es
@@ -236,7 +236,7 @@ allocate_gdt	PROC far
 	mov si,gdt_sel
 	mov es,si
 	mov esi,OFFSET gdt_section
-	EnterNewSection
+	EnterSection
 ;	
 	xor di,di
 	mov si,es:[di]
@@ -292,7 +292,7 @@ alloc_gdt_room:
 	mov si,es:[si]
 	mov es:[di],si
 	mov esi,OFFSET gdt_section
-	LeaveNewSection
+	LeaveSection
 ;
 	pop di
 	pop esi
@@ -327,7 +327,7 @@ free_gdt	PROC far
 	mov es,si
 ;
     mov esi,OFFSET gdt_section
-    EnterNewSection
+    EnterSection
 ;    
 	mov byte ptr es:[bx+5],0
 	xor si,si
@@ -337,7 +337,7 @@ free_gdt	PROC far
 	mov es:[si],bx
 ;	
     mov esi,OFFSET gdt_section
-    LeaveNewSection
+    LeaveSection
 ;
 	pop esi
 	pop es
@@ -372,7 +372,7 @@ get_free_gdt	PROC far
 	mov si,gdt_sel
 	mov es,si
 	mov esi,OFFSET gdt_section
-	EnterNewSection
+	EnterSection
 ;	
 	xor di,di
 	mov si,es:[di]
@@ -390,7 +390,7 @@ gfgLoop:
 
 gfgDone:
     mov esi,OFFSET gdt_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop di
     pop esi

@@ -1364,7 +1364,7 @@ Send	Proc far
 	mov ds,bx
 	push esi
 	mov esi,OFFSET SendSection
-	EnterNewSection
+	EnterSection
 	pop esi
 
 send_try_loop:
@@ -1420,7 +1420,7 @@ send_copy_save_tail:
 send_done:
 	push esi
 	mov esi,OFFSET SendSection
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	pop edi
@@ -1616,7 +1616,7 @@ Init	Proc far
 	rep stosb
 ;	
 	mov esi,OFFSET SendSection
-	InitNewSection
+	InitSection
 ;
 	mov ds:RecCount,0
 	mov ds:Mode,0

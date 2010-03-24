@@ -471,7 +471,7 @@ FindListen	Proc near
 	mov ds,ax
 	push esi
 	mov esi,OFFSET udp_section
-	EnterNewSection
+	EnterSection
 	pop esi
 	mov ax,ds:listen_list
 
@@ -489,7 +489,7 @@ find_listen_next:
 find_listen_fail:
 	push esi
 	mov esi,OFFSET udp_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	stc
 	jmp find_listen_done
@@ -497,7 +497,7 @@ find_listen_fail:
 find_listen_ok:
 	push esi
 	mov esi,OFFSET udp_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	mov ax,es
 	mov ds,ax
@@ -735,16 +735,16 @@ listen_udp_port	Proc far
 	mov ax,es
 	mov ds,ax
 	mov esi,OFFSET udp_listen_section
-	InitNewSection
+	InitSection
 ;	
 	mov ax,udp_data_sel
 	mov ds,ax
 	mov esi,OFFSET udp_section
-	EnterNewSection
+	EnterSection
 	mov ax,ds:listen_list
 	mov es:udp_listen_next,ax
 	mov ds:listen_list,es
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	pop cx
@@ -779,7 +779,7 @@ init_udp	PROC near
 	mov es,bx
 ;
     mov esi,OFFSET udp_section
-    InitNewSection
+    InitSection
 ;    
 	mov ds:listen_list,0
 	mov cx,UDP_QUERY_ENTRIES - 1

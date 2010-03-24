@@ -846,7 +846,7 @@ QueueReq   Proc near
     mov es:dqe_thread,ax
 ;    
     mov esi,OFFSET ListSection
-    EnterNewSection
+    EnterSection
 ;
     movzx ax,es:dqe_queue
     and al,2    
@@ -855,7 +855,7 @@ QueueReq   Proc near
     call DioInsert
 ;    
     mov esi,OFFSET ListSection
-    LeaveNewSection
+    LeaveSection
 ;
     movzx ax,es:dqe_queue
     and al,2    
@@ -1174,22 +1174,22 @@ ptLoop1:
     
 ptNoReset1:
     mov esi,OFFSET ListSection
-    EnterNewSection
+    EnterSection
 ;    
     call DioCheckReady1
     call DioCheckIdle1
 ;    
     mov esi,OFFSET ListSection
-    LeaveNewSection
+    LeaveSection
 ;
     mov esi,OFFSET ListSection
-    EnterNewSection
+    EnterSection
 ;    
     call DioCheckReady1
     call DioCheckIdle1
 ;    
     mov esi,OFFSET ListSection
-    LeaveNewSection
+    LeaveSection
 ;
 	GetSystemTime
 	add eax,5 * 1193000
@@ -1282,22 +1282,22 @@ ptLoop2:
     
 ptNoReset2:
     mov esi,OFFSET ListSection
-    EnterNewSection
+    EnterSection
 ;
     call DioCheckReady2
     call DioCheckIdle2
 ;    
     mov esi,OFFSET ListSection
-    LeaveNewSection
+    LeaveSection
 ;
     mov esi,OFFSET ListSection
-    EnterNewSection
+    EnterSection
 ;
     call DioCheckReady2
     call DioCheckIdle2
 ;    
     mov esi,OFFSET ListSection
-    LeaveNewSection
+    LeaveSection
 ;
 	GetSystemTime
 	add eax,5 * 1193000
@@ -2131,7 +2131,7 @@ init	PROC far
     mov ax,es
     mov ds,ax
     mov esi,OFFSET ListSection
-    InitNewSection	
+    InitSection	
 ;
     mov di,NodeArr
     mov cx,NODE_CNT

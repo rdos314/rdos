@@ -4085,7 +4085,7 @@ Send	Proc far
 	mov ds,ax
 	push esi
 	mov esi,OFFSET access_section
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	mov di,ds:send_tail
@@ -4102,7 +4102,7 @@ send_set_tail:
 ;	
 	push esi
 	mov esi,OFFSET access_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	mov ax,es
@@ -4534,7 +4534,7 @@ Init	Proc far
 	rep stosb
 ;
     mov esi,OFFSET access_section
-    InitNewSection	
+    InitSection	
 ;
 	mov ax,cs
 	mov es,ax

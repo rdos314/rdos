@@ -485,7 +485,7 @@ open_fm    Proc
     mov ax,es
     mov ds,ax
     mov esi,OFFSET f_section
-    InitNewSection
+    InitSection
     pop ds
 ;
     push ds
@@ -493,7 +493,7 @@ open_fm    Proc
     mov ax,fm_data_sel
     mov ds,ax
     mov esi,OFFSET fm_section
-    EnterNewSection
+    EnterSection
 ;
     mov bx,OFFSET fm_sel_arr
     mov ax,ds:fm_sel_count
@@ -503,7 +503,7 @@ open_fm    Proc
     inc ds:fm_sel_count
 ;
     mov esi,OFFSET fm_section
-    LeaveNewSection
+    LeaveSection
     pop bx
     pop ds    
 ;
@@ -1079,12 +1079,12 @@ pfnAttOk:
 ;
     push esi
     mov esi,OFFSET f_section
-    EnterNewSection
+    EnterSection
     mov es:n_curr_volume,0
     mov es:n_callb, OFFSET PlayAttack
     call InsertNoteSel
     mov esi,OFFSET f_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
     mov ax,fm_data_sel
@@ -1592,7 +1592,7 @@ ufsCheckZero:
     jz ufsDone
 ;
     mov esi,OFFSET f_section
-    EnterNewSection
+    EnterSection
     mov ax,ds:f_note_list
     mov si,ax
 
@@ -1608,13 +1608,13 @@ ufsSetLoop:
     mov es,ax
     push esi
     mov esi,OFFSET f_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 
 ufsHasBuffers:
     push esi
     mov esi,OFFSET f_section
-    EnterNewSection
+    EnterSection
     pop esi
 
 ufsRestart:
@@ -1666,7 +1666,7 @@ ufsLeave:
     mov gs,ax
     push esi
     mov esi,OFFSET f_section
-    LeaveNewSection
+    LeaveSection
     pop esi    
 ;    
     mov bx,ds:f_thread
@@ -1700,7 +1700,7 @@ ufsPostDone:
 ;
     push esi
     mov esi,OFFSET f_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
     or ds:f_flags,FLAG_FM_ZERO
@@ -1725,7 +1725,7 @@ ufsClearNext:
     xor ax,ax
     mov es,ax
     mov esi,OFFSET f_section
-    LeaveNewSection
+    LeaveSection
     jmp ufsDone
 
 ufsFreeAudio:
@@ -1771,7 +1771,7 @@ fm_wait_loop:
     jz fm_wait_loop
 ;    
     mov esi,OFFSET fm_section
-    EnterNewSection
+    EnterSection
     mov cx,ds:fm_sel_count
 
 fm_handle_loop:
@@ -1820,7 +1820,7 @@ fm_free_next:
 
 fm_leave:
     mov esi,OFFSET fm_section
-    LeaveNewSection
+    LeaveSection
     jmp fm_wait_loop    
 
 
@@ -1942,7 +1942,7 @@ init	Proc far
 	mov ax,es
 	mov ds,ax
 	mov esi,OFFSET fm_section
-	InitNewSection
+	InitSection
 ;
 	popa
 	pop es

@@ -373,7 +373,7 @@ init_file_old_freed:
 	mov word ptr ds:fs_sys_arr+2,es
 	mov dword ptr ds:fs_sys_arr+4,0
 	mov esi,OFFSET fs_list_section
-	InitNewSection
+	InitSection
 ;	
 	InitReadWriteSection ds:fs_access_section
 ;	EnterWriteSection ds:fs_access_section
@@ -587,7 +587,7 @@ hook_thread_loop:
 hook_thread_done:
 	mov ds:fs_init_done,1
 	mov esi,OFFSET fs_init_section
-	LeaveNewSection
+	LeaveSection
 	ret
 hook_thread	Endp
 
@@ -752,15 +752,15 @@ init	PROC far
     push ds
     mov ds,bx
     mov esi,OFFSET fs_init_section
-    InitNewSection
-    EnterNewSection
+    InitSection
+    EnterSection
 ;    
 	mov ds:fs_init_done,0
 	mov ds:file_defs,0
 	mov ds:fs_init_hooks,0
 	mov ds:fs_file_list,0
 	mov esi,OFFSET fs_file_section
-	InitNewSection
+	InitSection
 	pop ds
 ;
 	mov di,OFFSET fs_sel

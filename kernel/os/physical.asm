@@ -45,9 +45,9 @@ INCLUDE ..\driver.def
 	extrn create_int_gate_sel:near
 	extrn create_tss_sel:near
 	extrn AllocateRam:near
-	extrn init_new_section:near
-	extrn enter_new_section:near
-	extrn leave_new_section:near
+	extrn init_section:near
+	extrn enter_section:near
+	extrn leave_section:near
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -178,7 +178,7 @@ init_physical	PROC near
 ;
     mov esi,OFFSET phys_section
     push cs
-    call init_new_section
+    call init_section
 ;    
 	mov bx,phys_page_sel
 	mov edx,phys_page_linear
@@ -298,7 +298,7 @@ allocate_physical	PROC far
 ;
     mov esi,OFFSET phys_section
     push cs
-    call enter_new_section
+    call enter_section
 ;	
 	dec ds:phys_free_pages
 	mov dx,phys_list_sel
@@ -329,7 +329,7 @@ allocate_mark:
 ;
     mov esi,OFFSET phys_section
     push cs
-    call leave_new_section
+    call leave_section
 ;    
     pop esi	
 	pop edx
@@ -367,7 +367,7 @@ allocate_dma_physical	PROC far
 ;	
 	mov esi,OFFSET phys_section
 	push cs
-	call enter_new_section
+	call enter_section
 ;	
 	dec ds:phys_free_pages
 	mov dx,phys_list_sel
@@ -387,7 +387,7 @@ allocate_dma_physical	PROC far
 ;
     mov esi,OFFSET phys_section
     push cs
-    call leave_new_section
+    call leave_section
 ;
     pop esi
 	pop edx
@@ -427,7 +427,7 @@ free_physical	PROC far
 ;
     mov esi,OFFSET phys_section
     push cs
-    call enter_new_section
+    call enter_section
 ;    	
 	inc ds:phys_free_pages
 	xor ebx,ebx
@@ -457,7 +457,7 @@ free_link_page:
 ;
     mov esi,OFFSET phys_section
     push cs
-    call leave_new_section	
+    call leave_section	
 ;
     pop esi	
 	pop edx
@@ -661,7 +661,7 @@ allocate_multiple_physical	PROC far
 ;
     mov esi,OFFSET phys_section
     push cs
-    call enter_new_section
+    call enter_section
 ;    	
 	or ecx,ecx
 	jz allocate_multi_fail
@@ -679,13 +679,13 @@ allocate_multiple_physical	PROC far
 ;
     mov esi,OFFSET phys_section
     push cs
-    call leave_new_section
+    call leave_section
 	jmp allocate_multi_done
 
 allocate_multi_fail:
     mov esi,OFFSET phys_section
     push cs
-    call leave_new_section
+    call leave_section
 	stc
 
 allocate_multi_done:

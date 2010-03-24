@@ -214,7 +214,7 @@ CreateDefaultControl    Proc near
     mov ax,fs
     mov ds,ax
     mov esi,usbp_section
-    InitNewSection
+    InitSection
     pop ds
 ;    
     mov eax,8
@@ -292,7 +292,7 @@ CreateBulk    Proc near
     mov si,fs
     mov ds,si
     mov esi,usbp_section
-    InitNewSection
+    InitSection
     pop ds        
 ;
     pop esi
@@ -348,7 +348,7 @@ CreateInterrupt    Proc near
     mov si,fs
     mov ds,si
     mov esi,usbp_section
-    InitNewSection
+    InitSection
     pop ds        
 ;
     pop esi
@@ -1326,7 +1326,7 @@ start_usb_req	Proc far
     push esi
 	mov ds,[bx].rh_pipe_sel
 	mov esi,OFFSET usbp_section
-	EnterNewSection
+	EnterSection
 	pop esi
     pop ds
     or ds:[bx].rh_flags,REQ_FLAG_LOCKED
@@ -1405,7 +1405,7 @@ stop_usb_req	Proc far
     push esi
 	mov ds,[bx].rh_pipe_sel
 	mov esi,OFFSET usbp_section
-	LeaveNewSection
+	LeaveSection
     pop esi
     pop ds
     and ds:[bx].rh_flags,NOT REQ_FLAG_LOCKED
@@ -1630,7 +1630,7 @@ crFreeHandle:
     push esi
 	mov ds,[bx].rh_pipe_sel
 	mov esi,OFFSET usbp_section
-	LeaveNewSection
+	LeaveSection
     pop esi
     pop ds
 
@@ -2382,7 +2382,7 @@ lock_usb_pipe   Proc far
     push esi
     mov ds,ds:[bx].up_pipe_sel
 	mov esi,OFFSET usbp_section
-	EnterNewSection
+	EnterSection
 	pop esi
     pop ds
 
@@ -2421,7 +2421,7 @@ unlock_usb_pipe   Proc far
     push esi
     mov ds,ds:[bx].up_pipe_sel
 	mov esi,OFFSET usbp_section
-	LeaveNewSection
+	LeaveSection
     pop esi
     pop ds
 

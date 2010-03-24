@@ -101,7 +101,7 @@ create_lib_size_ok:
 	mov ax,es
 	mov ds,ax
 	mov esi,OFFSET lib_section
-	InitNewSection
+	InitSection
 	pop esi
 	pop ds
 ;	
@@ -205,7 +205,7 @@ FindLib	Proc near
 	mov ax,elf_app_sel
 	mov ds,ax
 	mov esi,OFFSET elf_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov ax,ds:elf_dlls
 	or ax,ax
@@ -239,13 +239,13 @@ find_lib_try_app:
 
 find_lib_fail:
     mov esi,OFFSET elf_section
-    LeaveNewSection
+    LeaveSection
 	stc
 	jmp find_lib_done
 
 find_lib_ok:
     mov esi,OFFSET elf_section
-    LeaveNewSection
+    LeaveSection
 	clc
 
 find_lib_done:
@@ -889,7 +889,7 @@ open_app	Proc far
 	mov ds:elf_dlls,0
 	mov ds:elf_mem_blocks,0
 	mov esi,OFFSET elf_section
-	InitNewSection
+	InitSection
 ;
     pop esi	
 	pop ds
@@ -951,7 +951,7 @@ allocate_mem	PROC far
 	mov ax,elf_app_sel
 	mov ds,ax
 	mov esi,OFFSET elf_section
-	EnterNewSection
+	EnterSection
 ;
 	mov ax,ds:elf_mem_blocks
 	or ax,ax
@@ -975,7 +975,7 @@ alloc_ins_empty:
 alloc_ins_done:
 	mov ds:elf_mem_blocks,es
 	mov esi,OFFSET elf_section
-	LeaveNewSection
+	LeaveSection
 ;
     pop esi
 	pop ecx
@@ -1010,7 +1010,7 @@ free_mem	PROC far
 	mov ax,elf_app_sel
 	mov ds,ax
 	mov esi,OFFSET elf_section
-	EnterNewSection
+	EnterSection
 
 free_mem_more:
 	mov ax,ds:elf_mem_blocks
@@ -1057,7 +1057,7 @@ free_mem_last_block:
 
 free_mem_done:
     mov esi,OFFSET elf_section
-    LeaveNewSection
+    LeaveSection
 ;
 	pop edi
 	pop esi

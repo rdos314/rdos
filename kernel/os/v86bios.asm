@@ -463,11 +463,11 @@ bios_proc_check:
 ;
     push esi
     mov esi,OFFSET bios_section
-    EnterNewSection
+    EnterSection
 	mov fs,ds:bios_list
 	mov ax,fs:list_link
 	mov ds:bios_list,ax
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	mov ax,flat_sel
@@ -550,11 +550,11 @@ V86_bios_int	Proc far
 	ClearSignal
 	push esi
 	mov esi,OFFSET bios_section
-	EnterNewSection
+	EnterSection
 	mov ax,ds:bios_list
 	mov es:list_link,ax
 	mov ds:bios_list,es
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	mov bx,ds:bios_thread
@@ -620,7 +620,7 @@ init	PROC far
 	AllocateFixedSystemMem
 	mov ds,bx
 	mov esi,OFFSET bios_section
-	InitNewSection
+	InitSection
 	mov ds:bios_list,0
 	mov ds:bios_thread,0
 ;

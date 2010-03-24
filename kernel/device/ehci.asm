@@ -208,7 +208,7 @@ AllocateBlock64	PROC near
     mov ax,ehci_data_sel
     mov ds,ax
     mov esi,OFFSET EhciSection
-    EnterNewSection
+    EnterSection
     mov edx,ds:EhciList64
 	or edx,edx
 	jnz allocate_block64_done
@@ -236,7 +236,7 @@ allocate_block64_done:
 	mov eax,es:[edx]
 	mov ds:EhciList64,eax
     mov esi,OFFSET EhciSection
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
 	pop eax
@@ -268,11 +268,11 @@ FreeBlock64	PROC near
     mov ds,ax
 ;    
     mov esi,OFFSET EhciSection
-    EnterNewSection
+    EnterSection
 	mov eax,ds:EhciList64
 	mov es:[edx],eax
 	mov ds:EhciList64,edx
-    LeaveNewSection
+    LeaveSection
 ;	
     pop esi
 	pop eax
@@ -536,7 +536,7 @@ AddControlQh	PROC near
     push esi
 ;
     mov esi,OFFSET ehc_section
-    EnterNewSection
+    EnterSection
 ;    
     call AllocateQh
     mov ebx,eax
@@ -594,7 +594,7 @@ acqEndFound:
 acqDone:
     mov eax,ebx
     mov esi,OFFSET ehc_section
-    LeaveNewSection
+    LeaveSection
 ;    
     pop esi
     pop ebx
@@ -1418,7 +1418,7 @@ ifTabLoop:
 ;
     InitUsbDevice
     mov esi,OFFSET ehc_section
-    InitNewSection
+    InitSection
 ;
     mov fs,ds:ehc_reg_sel
     mov fs:HcSegmentSelector,0
@@ -1765,7 +1765,7 @@ Init	Proc far
 	rep stosb
 ;
     mov esi,OFFSET EhciSection
-    InitNewSection
+    InitSection
 ;
 	mov ax,cs
 	mov es,ax

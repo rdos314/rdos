@@ -1164,7 +1164,7 @@ init_process_block	PROC near
 	mov si,es
 	mov ds,si
 	mov esi,OFFSET pd_section
-	InitNewSection
+	InitSection
 	pop esi
 	pop ds
 ;    
@@ -1769,7 +1769,7 @@ terminate_proc:
     jz terminate_free_pd
 ;
     mov esi,OFFSET pd_section
-    EnterNewSection
+    EnterSection
 ;    
     mov ds:pd_proc_sel,0
     mov ax,ds:pd_wait
@@ -1781,7 +1781,7 @@ terminate_proc:
 
 terminate_proc_sig_done:   
     mov esi,OFFSET pd_section
-    LeaveNewSection
+    LeaveSection
     xor ax,ax
     mov ds,ax
     jmp terminate_pd_done    

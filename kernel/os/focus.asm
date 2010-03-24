@@ -125,7 +125,7 @@ init	PROC far
 	mov ds:focus_alloc_rel,0
 	mov ds:focus_current_thread,0
 	mov esi,OFFSET focus_section
-	InitNewSection
+	InitSection
 ;	
 	mov bx,focus_process_sel
 	mov eax,SIZE focus_process_seg
@@ -710,7 +710,7 @@ set_focus	PROC far
 	mov bx,focus_sel
 	mov ds,bx
 	mov esi,OFFSET focus_section
-	EnterNewSection
+	EnterSection
 	xor bh,bh
 	mov bl,al
 	add bx,bx
@@ -750,7 +750,7 @@ set_focus_no_lost:
 	call trap_got_focus
 set_focus_done:
     mov esi,OFFSET focus_section
-    LeaveNewSection
+    LeaveSection
 	popad
 	pop es
 	pop ds

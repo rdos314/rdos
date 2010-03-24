@@ -154,7 +154,7 @@ FindHost	Proc near
 	mov ax,ipc_data_sel
 	mov ds,ax
 	mov esi,OFFSET ipc_section
-	EnterNewSection
+	EnterSection
 ;
 	mov bx,ds:ipc_cache_offset
 	mov ax,es:[bx]
@@ -175,22 +175,22 @@ FindHost	Proc near
 	mov ds:shd_host,fs
 	mov ds:shd_sign,HOST_SIGN
 	mov esi,OFFSET shd_section
-	InitNewSection
+	InitSection
 	pop ds
 ;
     mov esi,OFFSET smp_host_section
-    EnterNewSection	
+    EnterSection	
 	mov ax,ds:smp_host_list
 	mov es:shd_link,ax
 	mov ds:smp_host_list,es
 	mov ax,es
 	mov fs:[bx],ax
 	pop fs
-    LeaveNewSection	
+    LeaveSection	
 
 find_host_buffered:
     mov esi,OFFSET ipc_section
-    LeaveNewSection
+    LeaveSection
 	clc
 
 find_host_done:
@@ -398,7 +398,7 @@ Supervise	Proc near
 	mov ax,ipc_data_sel
 	mov ds,ax
     mov esi,OFFSET smp_host_section
-    EnterNewSection
+    EnterSection
 	mov ax,ds:smp_host_list
 
 supervise_loop:
@@ -420,7 +420,7 @@ supervise_leave:
 	xor ax,ax
 	mov fs,ax
     mov esi,OFFSET smp_host_section
-    LeaveNewSection
+    LeaveSection
 ;
 	or cx,cx
 	stc

@@ -144,7 +144,7 @@ init_ldt_loop:
 	stosw
 ;
     mov esi,OFFSET app_ldt_section
-    InitNewSection
+    InitSection
 	mov ds:app_ldt_free,ldt_start
 ;	
 	popad
@@ -229,7 +229,7 @@ allocate_ldt	PROC far
 	mov ds,bx
 	mov es,bx
 	mov esi,OFFSET app_ldt_section
-	EnterNewSection
+	EnterSection
 ;
 	mov ds,ds:app_ldt_data_sel
 allocate_ldt_again:
@@ -290,7 +290,7 @@ al1:
 	mov di,ds
 	pop ds
 	mov esi,OFFSET app_ldt_section
-	LeaveNewSection
+	LeaveSection
 	mov ds,di
 ;
 	pop di
@@ -379,7 +379,7 @@ allocate_multiple_ldt	PROC far
 	mov es,bx
 	push ds
 	mov esi,OFFSET app_ldt_section
-	EnterNewSection
+	EnterSection
 ;
 	mov ds,ds:app_ldt_data_sel
 	mov bx,ldt_start
@@ -437,7 +437,7 @@ allocate_mldt_end:
 	pop cx
 	pop ds
 	mov esi,OFFSET app_ldt_section
-	LeaveNewSection
+	LeaveSection
 ;
 	pop di
 	pop esi
@@ -471,7 +471,7 @@ free_ldt	PROC far
 	mov ds,si
 	push ds
 	mov esi,OFFSET app_ldt_section
-	EnterNewSection
+	EnterSection
 	mov si,ds
 	mov es,si
 	mov ds,ds:app_ldt_data_sel
@@ -481,7 +481,7 @@ free_ldt	PROC far
 	mov es:app_ldt_free,bx
 	pop ds
 	mov esi,OFFSET app_ldt_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	pop es
 	pop ds

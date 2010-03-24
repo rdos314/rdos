@@ -200,7 +200,7 @@ keyboard_thread_loop:
 	mov ds,bx
 ;
     mov esi,OFFSET key_section
-    EnterNewSection
+    EnterSection
 	mov bx,ds:key_buffer_tail
 	mov si,bx
 	add bx,SIZE key_buf_struc
@@ -222,7 +222,7 @@ keyboard_thread_no_circ:
 ;	
 	mov ds:key_buffer_tail,bx
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
 ;
     mov bx,ds:key_avail_obj
     or bx,bx
@@ -255,7 +255,7 @@ keyb_io_read	PROC far
 keyb_io_wait:
     push esi
     mov esi,OFFSET key_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
     call remove_non_key
@@ -265,7 +265,7 @@ keyb_io_wait:
 ;
     push esi
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
 	push di
@@ -286,7 +286,7 @@ kr_no_circ_buff:
 	mov ds:key_buffer_head,bx
     push esi
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 	mov bx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
@@ -296,7 +296,7 @@ keyb_io_read	ENDP
 keyb_io_poll	PROC far
     push esi
     mov esi,OFFSET key_section
-    EnterNewSection
+    EnterSection
     pop esi
     call remove_non_key
 	mov bx,ds:key_buffer_head
@@ -307,7 +307,7 @@ keyb_io_poll	PROC far
 	mov ax,[bx]
     push esi
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 	mov bx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
@@ -316,7 +316,7 @@ keyb_io_poll	PROC far
 keyb_p_empty:
     push esi
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 	or word ptr [bp].vm_eflags,40h
 	mov bx,[bp].vm_ebx
@@ -503,7 +503,7 @@ poll_keyboard	PROC far
 	mov ds,bx
 ;
     mov esi,OFFSET key_section
-    EnterNewSection
+    EnterSection
     call remove_non_key
 ;
 	mov bx,ds:key_buffer_head
@@ -512,7 +512,7 @@ poll_keyboard	PROC far
 	
 poll_key_avail:
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
 	clc
 	pop esi
 	pop bx
@@ -521,7 +521,7 @@ poll_key_avail:
 	
 poll_key_empty:
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
 	stc
 	pop esi
 	pop bx
@@ -695,14 +695,14 @@ read_keyboard	PROC far
 
 read_key_wait:
     mov esi,OFFSET key_section
-    EnterNewSection
+    EnterSection
     call remove_non_key
 	mov bx,ds:key_buffer_head
 	cmp bx,ds:key_buffer_tail
 	jne read_key_get
 ;
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
 ;    
 	push di
 	mov di,OFFSET key_proc_wait
@@ -721,7 +721,7 @@ read_key_get:
 read_key_no_circ_buff:
 	mov ds:key_buffer_head,bx
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
 	pop bx
@@ -755,14 +755,14 @@ peek_key_event	PROC far
 	mov ds,bx
 ;
     mov esi,OFFSET key_section
-    EnterNewSection
+    EnterSection
 ;
 	mov bx,ds:key_buffer_head
 	cmp bx,ds:key_buffer_tail
 	jne peek_key_event_get
 ;
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
     stc
     jmp peek_key_event_done
     
@@ -772,7 +772,7 @@ peek_key_event_get:
 	mov dl,[bx].kb_vk_code
 	mov dh,[bx].kb_scan_code
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
 	clc
 
 peek_key_event_done:
@@ -808,14 +808,14 @@ read_key_event	PROC far
 	mov ds,bx
 ;
     mov esi,OFFSET key_section
-    EnterNewSection
+    EnterSection
 ;
 	mov bx,ds:key_buffer_head
 	cmp bx,ds:key_buffer_tail
 	jne read_key_event_get
 ;
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
     stc
     jmp read_key_event_done
     
@@ -834,7 +834,7 @@ read_key_event_get:
 read_key_event_no_circ:
 	mov ds:key_buffer_head,bx
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
 	clc
 
 read_key_event_done:
@@ -865,10 +865,10 @@ flush_keyboard	PROC far
 	mov bx,key_local_sel
 	mov ds,bx
     mov esi,OFFSET key_section
-    EnterNewSection
+    EnterSection
 	mov bx,ds:key_buffer_head
 	mov ds:key_buffer_tail,bx
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
 	pop bx
@@ -1024,7 +1024,7 @@ key_wait_loop:
 ;
     push esi
     mov esi,OFFSET key_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;
     call remove_non_key
@@ -1042,7 +1042,7 @@ key_emul_no_circ:
 ;	
     push esi
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
 	mov si,OFFSET key_proc_wait
@@ -1052,7 +1052,7 @@ key_emul_no_circ:
 ;
     push esi
     mov esi,OFFSET key_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 	Wake
 	jmp key_emul_loop
@@ -1270,7 +1270,7 @@ init_local_sel	PROC far
 	mov ax,key_local_sel
 	mov ds,ax
 	mov esi,OFFSET key_section
-	InitNewSection
+	InitSection
 	mov ax,OFFSET key_buffer_start
 	mov ds:key_buffer_head,ax
 	mov ds:key_buffer_tail,ax

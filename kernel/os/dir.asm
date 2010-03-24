@@ -149,8 +149,8 @@ validate_drive_retry:
 ;
     push esi
     mov esi,OFFSET fs_init_section
-    EnterNewSection
-    LeaveNewSection
+    EnterSection
+    LeaveSection
     pop esi
 	jmp validate_drive_retry
 
@@ -370,7 +370,7 @@ CreateDirSel	PROC near
     push esi
 	InitReadWriteSection ds:ds_access_section
     mov esi,OFFSET ds_list_section
-    InitNewSection	
+    InitSection	
     pop esi
 ;
 	mov ds:ds_dir_ptr,0
@@ -637,7 +637,7 @@ parse_dir_root:
 	mov ds,bx
 	push esi
 	mov esi,OFFSET fs_list_section
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	mov ebp,ds:fs_mount_id
@@ -662,7 +662,7 @@ parse_dir_buffered:
     push esi
 	EnterReadSection ds:fs_access_section
 	mov esi,OFFSET fs_list_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 
 parse_dir_start:
@@ -725,9 +725,9 @@ parse_dir_dot_loop:
 	inc edi
 	push esi
 	mov esi,OFFSET ds_list_section
-	EnterNewSection
+	EnterSection
 	mov bx,ds:ds_parent
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	or bx,bx
 	jz parse_dir_fail
@@ -765,7 +765,7 @@ parse_dir_next:
 
 parse_dir_tree_next:
 	mov esi,OFFSET ds_list_section
-	EnterNewSection
+	EnterSection
 ;
 	pop esi
 	pop esi
@@ -783,7 +783,7 @@ parse_dir_tree_next:
 parse_dir_tree_cached:
     push esi
     mov esi,OFFSET ds_list_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;    
 	mov ax,ds
@@ -879,7 +879,7 @@ GetDeviceRoot	Proc near
 	push esi
 	EnterReadSection ds:fs_access_section
 	mov esi,OFFSET fs_list_section
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	mov bx,ds:fs_root_dir_sel
@@ -900,7 +900,7 @@ GetDeviceRoot	Proc near
 
 get_device_root_done:
     mov esi,OFFSET fs_list_section
-    LeaveNewSection
+    LeaveSection
 	mov ds,bx
 ;
 	pop ebp
@@ -2024,7 +2024,7 @@ SetupFileSel	Proc near
 ;
 	mov al,ds:ds_drive
 	mov esi,OFFSET ds_list_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov bx,fs:[edx].dfe_file_sel
 	or bx,bx
@@ -2037,7 +2037,7 @@ SetupFileSel	Proc near
 
 setup_file_sel_leave:
     mov esi,OFFSET ds_list_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
 	pop ecx

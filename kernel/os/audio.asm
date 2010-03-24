@@ -267,7 +267,7 @@ create_audio_out_channel	Proc far
     mov ds,ax
     push esi
     mov esi,OFFSET ads_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
     mov ax,ds:ads_out_mixer
@@ -298,7 +298,7 @@ caocHasMixer:
     mov ds,ax
     push esi
     mov esi,OFFSET ads_section
-    LeaveNewSection
+    LeaveSection
     pop esi
     pop bx    
     pop ds
@@ -341,7 +341,7 @@ FreeMixerChannel	Proc near
 	mov ds,ax
     push esi
     mov esi,OFFSET ads_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
     mov cx,fs:ams_count
@@ -370,7 +370,7 @@ fmcDone:
     mov fs,ax
     push esi
     mov esi,OFFSET ads_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;	
     pop dx
@@ -1150,7 +1150,7 @@ atWait:
 atActive:
     push esi
     mov esi,OFFSET ads_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
     mov ax,ds:ads_out_mixer
@@ -1161,7 +1161,7 @@ atActive:
     pushf
     push esi
     mov esi,OFFSET ads_section
-    LeaveNewSection
+    LeaveSection
     pop esi
     popf
     jc atActiveWait
@@ -1186,7 +1186,7 @@ atActiveWait:
 atActiveLeave:	
     push esi
     mov esi,OFFSET ads_section
-    LeaveNewSection
+    LeaveSection
     pop esi
     jmp atWait
 
@@ -1290,7 +1290,7 @@ init	PROC far
 	mov ds,bx
 	mov ds:ads_out_mixer,0
 	mov esi,OFFSET ads_section
-	InitNewSection
+	InitSection
 ;
 	ret
 init	ENDP

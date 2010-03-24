@@ -84,9 +84,9 @@ init_video_bitmap	Proc far
     mov si,es
     mov ds,si
     mov esi,OFFSET v_section
-    InitNewSection
+    InitSection
     mov esi,OFFSET v_sprite_section
-    InitNewSection
+    InitSection
     pop esi
 ;    
 	mov es:v_usage_count,1
@@ -286,9 +286,9 @@ create_bitmap	Proc far
     mov si,es
     mov ds,si
     mov esi,OFFSET v_section
-    InitNewSection
+    InitSection
     mov esi,OFFSET v_sprite_section
-    InitNewSection
+    InitSection
     pop esi
 ;        
 	mov es:v_usage_count,1

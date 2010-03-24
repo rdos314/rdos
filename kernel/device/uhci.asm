@@ -277,7 +277,7 @@ AllocateBlock32	PROC near
     mov ax,uhci_data_sel
     mov ds,ax
     mov esi,OFFSET UhciSection
-    EnterNewSection
+    EnterSection
     mov edx,ds:UhciList32
 	or edx,edx
 	jnz allocate_block32_done
@@ -305,7 +305,7 @@ allocate_block32_done:
 	mov eax,es:[edx]
 	mov ds:UhciList32,eax
 	mov esi,OFFSET UhciSection
-	LeaveNewSection
+	LeaveSection
 ;
     pop esi
 	pop eax
@@ -337,11 +337,11 @@ FreeBlock32	PROC near
     mov ds,ax
 ;    
 	mov esi,OFFSET UhciSection
-	EnterNewSection
+	EnterSection
 	mov eax,ds:UhciList32
 	mov es:[edx],eax
 	mov ds:UhciList32,edx
-	LeaveNewSection
+	LeaveSection
 ;	
     pop esi
 	pop eax
@@ -2868,7 +2868,7 @@ Init	Proc far
 	rep stosb
 ;	
     mov esi,OFFSET UhciSection
-    InitNewSection
+    InitSection
 ;
 	mov ax,cs
 	mov es,ax

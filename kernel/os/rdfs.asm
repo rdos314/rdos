@@ -193,7 +193,7 @@ CreateDrive	Proc near
 ;
     push esi
     mov esi,OFFSET alloc_section
-    InitNewSection
+    InitSection
     pop esi	
 	mov ds:alloc_sel,0
 ;

@@ -165,7 +165,7 @@ switch_mode_done:
 ;
     push esi
     mov esi,OFFSET v_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
 	push ds
@@ -192,7 +192,7 @@ switch_mode_done:
 ;	
     push esi
     mov esi,OFFSET v_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
 	pop eax
@@ -248,7 +248,7 @@ switch_from	Proc far
 	SetPhysicalPage
 ;
     mov esi,OFFSET v_section
-    EnterNewSection
+    EnterSection
 	push ds
 	mov eax,cr3
 	mov cr3,eax
@@ -271,7 +271,7 @@ switch_from	Proc far
 	SetThreadPhysicalPage
 ;	
     mov esi,OFFSET v_section
-    LeaveNewSection
+    LeaveSection
 ;
 	pop eax
 	push ax
@@ -319,7 +319,7 @@ set_cursor_pos	PROC far
 	push esi
 ;
     mov esi,OFFSET v_section
-    EnterNewSection
+    EnterSection
 ;    
 	mov ds:v_row,dx
 	mov ds:v_col,cx
@@ -330,7 +330,7 @@ set_cursor_pos	PROC far
 	call SetCursorPhysical
 
 set_cursor_done:
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
 	pop dx
@@ -362,7 +362,7 @@ write_char	Proc far
 	push edi
 ;
     mov esi,OFFSET v_section
-    EnterNewSection
+    EnterSection
 	push ds
 	mov ah,bh
 	shl ah,4
@@ -383,7 +383,7 @@ write_char	Proc far
 	pop ax
 	mov [di],ax
 	pop ds
-    LeaveNewSection
+    LeaveSection
 ;
 	pop edi
 	pop esi
@@ -457,7 +457,7 @@ clear	Proc far
 ;
 	push esi
     mov esi,OFFSET v_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;
 	push ds
@@ -501,7 +501,7 @@ clear_done:
 ;
     push esi
     mov esi,OFFSET v_section	
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	pop dx
@@ -546,7 +546,7 @@ scroll_up	Proc far
 ;
     push esi
     mov esi,OFFSET v_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;
 	mov [bp].suLowerRow,di
@@ -626,7 +626,7 @@ scroll_up_done:
 ;
     push esi
     mov esi,OFFSET v_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
 	pop di
@@ -674,7 +674,7 @@ scroll_down	Proc far
 ;
     push esi
     mov esi,OFFSET v_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
 	mov [bp].sdUpperRow,dx
@@ -756,7 +756,7 @@ scroll_down_done:
 ;	
     push esi
     mov esi,OFFSET v_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
 	pop di
@@ -818,7 +818,7 @@ init_mode3	Proc far
 	mov ds:v_row,0
 	mov ds:v_col,0
 	mov esi,OFFSET v_section
-	InitNewSection
+	InitSection
 ;
 	mov bx,gdt_sel
 	mov es,bx

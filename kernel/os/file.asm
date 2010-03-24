@@ -102,7 +102,7 @@ InsertFileSel	Proc near
     mov ax,fs_data_sel
     mov ds,ax
     mov esi,OFFSET fs_file_section
-    EnterNewSection
+    EnterSection
 ;
     mov es,bx
 	mov di,ds:fs_file_list
@@ -127,7 +127,7 @@ ins_file_sel_empty:
 
 ins_file_sel_leave:
     mov esi,OFFSET fs_file_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop di
     pop esi
@@ -160,7 +160,7 @@ RemoveFileSel	Proc near
     mov ax,fs_data_sel
     mov ds,ax
     mov esi,OFFSET fs_file_section
-    EnterNewSection
+    EnterSection
 ;
     mov es,bx
     cmp bx,es:file_next
@@ -184,7 +184,7 @@ rem_file_sel_empty:
 
 rem_file_sel_leave:
     mov esi,OFFSET fs_file_section
-    LeaveNewSection
+    LeaveSection
 ;    
 	pop esi
     pop ebx
@@ -579,7 +579,7 @@ crfs_init:
 	InitReadWriteSection ds:file_size_section
 ;	
 	mov esi,OFFSET file_list_section
-	InitNewSection
+	InitSection
 ;	
 	mov ds:file_usage,0
 	mov ds:file_drive,bl
@@ -1126,7 +1126,7 @@ swap_all    Proc near
     mov ax,fs_data_sel
     mov ds,ax
     mov esi,OFFSET fs_file_section
-    EnterNewSection
+    EnterSection
 ;    
     mov bx,ds:fs_file_list
 
@@ -1146,7 +1146,7 @@ swap_all_loop:
     xor ax,ax
     mov es,ax
     mov esi,OFFSET fs_file_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
     pop bx
@@ -1230,7 +1230,7 @@ read_file_mem_ok:
 ;	
 	push esi
 	mov esi,OFFSET file_list_section
-	EnterNewSection
+	EnterSection
 	pop esi
 ;	
 	or ebx,ebx
@@ -1267,7 +1267,7 @@ read_file_check_base:
 	mov dword ptr es:[ebx+esi],0
 	push esi
 	mov esi,OFFSET file_list_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	jmp read_file_done
 
@@ -1278,7 +1278,7 @@ read_file_do_first:
 ;	
 	push esi
 	mov esi,OFFSET file_list_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	push ds
@@ -1466,7 +1466,7 @@ write_file_check_base:
 	mov dword ptr es:[ebx+esi],0
 	push esi
 	mov esi,OFFSET file_list_section
-	LeaveNewSection
+	LeaveSection
 	pop esi
 	jmp write_file_done
 
@@ -2343,7 +2343,7 @@ map_to_file	Proc near
 ;	
 	push esi
 	mov esi,OFFSET file_list_section
-	EnterNewSection
+	EnterSection
 	pop esi
 	or ebx,ebx
 	jnz map_to_file_check_mid
@@ -2380,7 +2380,7 @@ map_to_file_check_base:
     call FreeListEntry
     push esi
     mov esi,OFFSET file_list_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 	stc
 	jmp map_to_file_leave
@@ -2407,7 +2407,7 @@ map_to_file_do_first:
 ;
     push esi
     mov esi,OFFSET file_list_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 	clc
 
@@ -2477,7 +2477,7 @@ sync_memmap	Proc near
 	mov es,ax
 ;
     mov esi,OFFSET file_list_section
-    EnterNewSection
+    EnterSection
 ;    
 	mov esi,ebp
 	mov cl,ds:file_dir_shift
@@ -2508,7 +2508,7 @@ sync_memmap	Proc near
 
 sync_memmap_leave:
     mov esi,OFFSET file_list_section
-    LeaveNewSection
+    LeaveSection
 
 sync_memmap_done:
     popad
@@ -2559,7 +2559,7 @@ free_memmap	Proc near
 	mov es,ax
 ;
     mov esi,OFFSET file_list_section
-    EnterNewSection
+    EnterSection
 ;    
 	mov esi,edx
 	mov cl,ds:file_dir_shift
@@ -2582,7 +2582,7 @@ free_memmap	Proc near
 
 free_memmap_leave:
     mov esi,OFFSET file_list_section
-    LeaveNewSection
+    LeaveSection
 	clc
 
 free_memmap_done:
@@ -2656,7 +2656,7 @@ swap_proc	Proc far
     mov ax,fs_data_sel
     mov ds,ax
     mov esi,OFFSET fs_file_section
-    EnterNewSection
+    EnterSection
 ;    
     mov bx,ds:fs_file_list
 
@@ -2676,7 +2676,7 @@ swap_loop:
     xor ax,ax
     mov es,ax
     mov esi,OFFSET fs_file_section
-    LeaveNewSection
+    LeaveSection
 	ret
 swap_proc	Endp
 

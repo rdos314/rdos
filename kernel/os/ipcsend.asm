@@ -149,7 +149,7 @@ do_rec_zero:
 	FreeMem
 ;
     mov esi,OFFSET m_section
-    LeaveNewSection	
+    LeaveSection	
 ;
 	pop edi
 	pop esi
@@ -444,7 +444,7 @@ SendLocal	Proc near
 ;
     push esi
     mov esi,OFFSET m_section
-    EnterNewSection	
+    EnterSection	
     pop esi
 ;    
 	ClearSignal
@@ -466,7 +466,7 @@ send_local_busy:
 	mov gs,ax
     push esi	
     mov esi,OFFSET m_section
-    LeaveNewSection	
+    LeaveSection	
     pop esi
 	jmp send_local_wait
 

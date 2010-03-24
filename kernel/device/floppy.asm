@@ -1412,11 +1412,11 @@ demand_mount	Proc far
 	mov al,es:disc_sub_unit
 	mov edi,OFFSET boot_sect
 	mov esi,OFFSET FloppySection
-	EnterNewSection
+	EnterSection
 	call ReadBootSector
 	pushf
 	mov esi,OFFSET FloppySection
-	LeaveNewSection
+	LeaveSection
 	popf
 	jc drive_assign_done1
 ;
@@ -1489,7 +1489,7 @@ check_media	Proc near
 	mov bx,fs
 	mov ds,bx
 	mov esi,OFFSET disc_section
-	EnterNewSection
+	EnterSection
 ;
 	mov al,fs:boot_drive_nr
 	mov bx,floppy_data_sel
@@ -1553,7 +1553,7 @@ check_media_done:
 	mov ds,bx
 	mov esi,OFFSET disc_section
 	pushf
-	LeaveNewSection
+	LeaveSection
 	popf
 ;
     pop esi
@@ -1587,11 +1587,11 @@ check_media_proc	Proc far
 	mov ds,ax
 	mov fs,bx
     mov esi,OFFSET FloppySection
-    EnterNewSection
+    EnterSection
 	call check_media
 	pushf
     mov esi,OFFSET FloppySection
-    LeaveNewSection
+    LeaveSection
     popf
 ;
     pop esi
@@ -1898,10 +1898,10 @@ discbuf_thread:
 discbuf_thread_loop:
 	WaitForDiscRequest
 	mov esi,OFFSET FloppySection
-	EnterNewSection
+	EnterSection
 	call perform_one
 	mov esi,OFFSET FloppySection
-	LeaveNewSection
+	LeaveSection
 	jmp discbuf_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1943,7 +1943,7 @@ install_unit	Proc near
     mov si,fs
     mov ds,si
     mov esi,OFFSET disc_section
-    InitNewSection
+    InitSection
     pop esi
     pop ds	
 ;
@@ -2123,7 +2123,7 @@ open_floppy_started:
     mov ax,es
     mov ds,ax
     mov esi,OFFSET FloppySection
-    InitNewSection	
+    InitSection	
 ;
 	mov ax,cs
 	mov ds,ax

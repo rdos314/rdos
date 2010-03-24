@@ -185,7 +185,7 @@ CreateRootDir	Proc near
 	mov ecx,2
 	mov eax,-1
 	mov esi,OFFSET alloc_section
-	EnterNewSection
+	EnterSection
 ;
 	mov ds:info_sector.ri_target_sector,0
 	mov ds:info_sector.ri_target_offset,0
@@ -194,7 +194,7 @@ CreateRootDir	Proc near
 	call AllocateSectors
 	mov esi,OFFSET alloc_section
 	pushf
-	LeaveNewSection
+	LeaveSection
 	popf
 	jc create_root_fail
 ;

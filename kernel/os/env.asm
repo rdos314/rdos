@@ -207,7 +207,7 @@ lock_sys_env    Proc far
     mov bx,env_sys_sel
     mov ds,bx
     mov esi,OFFSET env_sys_section
-    EnterNewSection
+    EnterSection
     mov bx,ds:env_sys_raw_sel
 ;
     pop esi
@@ -235,7 +235,7 @@ unlock_sys_env    Proc far
     mov si,env_sys_sel
     mov ds,si
     mov esi,OFFSET env_sys_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
     pop ds
@@ -264,7 +264,7 @@ lock_proc_env    Proc far
     mov bx,env_proc_sel
     mov ds,bx
     mov esi,OFFSET env_proc_section
-    EnterNewSection
+    EnterSection
     mov bx,ds:env_proc_raw_sel
 ;
     pop esi
@@ -292,7 +292,7 @@ unlock_proc_env    Proc far
     mov si,env_proc_sel
     mov ds,si
     mov esi,OFFSET env_proc_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
     pop ds
@@ -1180,7 +1180,7 @@ init_proc_var_loop:
 	mov ax,env_proc_sel
 	mov ds,ax
 	mov esi,OFFSET env_proc_section
-	InitNewSection
+	InitSection
 	mov ds:env_proc_raw_sel,es
 ;
 	popad
@@ -1235,7 +1235,7 @@ init_device_loop:
 ;
     mov ds,bx
     mov esi,OFFSET env_sys_section
-    InitNewSection
+    InitSection
     mov es:env_sys_raw_sel,dx
 ;
 	mov eax,SIZE env_proc_seg

@@ -856,9 +856,9 @@ open_com_ftdi	Proc far
     mov ax,es
     mov ds,ax
     mov esi,OFFSET uds_section
-    EnterNewSection
+    EnterSection
     mov ds:uds_port_sel,dx
-    LeaveNewSection
+    LeaveSection
 ;
     mov ax,usbcom_data_sel
     mov ds,ax    
@@ -915,9 +915,9 @@ ccfTimerClosed:
 ;
     mov ds,bx    
     mov esi,OFFSET uds_section
-    EnterNewSection
+    EnterSection
     mov ds:uds_port_sel,0
-    LeaveNewSection
+    LeaveSection
 
 ccfNoDevice:    
     mov ds,ax
@@ -1800,9 +1800,9 @@ open_com_pl	Proc far
     mov ax,es
     mov ds,ax
     mov esi,OFFSET uds_section
-    EnterNewSection
+    EnterSection
     mov ds:uds_port_sel,dx
-    LeaveNewSection
+    LeaveSection
 ;
     mov ax,usbcom_data_sel
     mov ds,ax    
@@ -1859,9 +1859,9 @@ ccpTimerClosed:
 ;
     mov ds,bx    
     mov esi,OFFSET uds_section
-    EnterNewSection
+    EnterSection
     mov ds:uds_port_sel,0
-    LeaveNewSection
+    LeaveSection
 
 ccpNoDevice:    
     mov ds,ax
@@ -2750,12 +2750,12 @@ utDevLoop:
     push esi
 ;
     mov esi,OFFSET uds_section
-    EnterNewSection
+    EnterSection
 ;    
     call HandleDevice
 ;    
     mov esi,OFFSET uds_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
     pop cx
@@ -2900,7 +2900,7 @@ apDescrDone:
     mov ds,dx
     push esi
     mov esi,OFFSET uds_section
-    EnterNewSection
+    EnterSection
     pop esi
 ;
     mov al,ds:uds_flag
@@ -2917,7 +2917,7 @@ apDescrDone:
     mov dx,es
     mov ds,dx    
     mov esi,OFFSET uds_section
-    LeaveNewSection
+    LeaveSection
 ;    
     mov ax,usbcom_data_sel
     mov ds,ax
@@ -2959,7 +2959,7 @@ apNoRecover:
     mov si,es
     mov ds,si
     mov esi,OFFSET uds_section
-    InitNewSection
+    InitSection
     pop ds
 ;
     mov si,ds:sd_ports
@@ -3483,7 +3483,7 @@ udCheckLoop:
     mov ds,dx
     push esi
     mov esi,OFFSET uds_section
-    EnterNewSection
+    EnterSection
     pop esi
     or ds:uds_flag,FLAG_UDS_DISCONNECT
 ;    
@@ -3525,7 +3525,7 @@ udPortSendOk:
 
 udPortHandleOk:    
     mov esi,OFFSET uds_section
-    LeaveNewSection
+    LeaveSection
 ;    
     popad
     pop ds

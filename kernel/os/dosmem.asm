@@ -88,7 +88,7 @@ allocate_dos_linear	PROC far
 	mov bx,dos_process_sel
 	mov ds,bx
 	mov esi,OFFSET dos_mem_section
-	EnterNewSection
+	EnterSection
 ;	
 	dec eax
 	shr eax,4
@@ -151,7 +151,7 @@ dos_alloc_done:
 	mov bx,dos_process_sel
 	mov ds,bx
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 	add edx,10h
 	clc
 ;	
@@ -166,7 +166,7 @@ dos_alloc_error:
 	mov bx,dos_process_sel
 	mov ds,bx
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 	stc
 	pop esi
 	pop cx
@@ -208,7 +208,7 @@ resize_dos_linear	PROC far
 	mov ax,dos_process_sel
 	mov ds,ax
 	mov esi,OFFSET dos_mem_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov ax,flat_sel
 	mov ds,ax
@@ -226,7 +226,7 @@ resize_dos_find_loop:
 	mov ax,dos_process_sel
 	mov ds,ax
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 ;	
 	pop ebx
 	pop eax
@@ -251,7 +251,7 @@ resize_dos_mem_inv:
 	mov ax,dos_process_sel
 	mov ds,ax
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 ;	
 	pop ebx
 	pop eax
@@ -329,7 +329,7 @@ resize_dos_grow_insuff_occupied:
 	mov ax,dos_process_sel
 	mov ds,ax
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 ;	
 	pop eax
 	pop eax
@@ -370,7 +370,7 @@ resize_dos_leave:
 	mov ax,dos_process_sel
 	mov ds,ax
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 ;	
 	pop ebx
 	pop eax
@@ -410,7 +410,7 @@ free_dos_linear	PROC far
 	mov ax,dos_process_sel
 	mov ds,ax
 	mov esi,OFFSET dos_mem_section
-	EnterNewSection
+	EnterSection
 ;	
 	xor ebx,ebx
 	mov ebx,DOS_MEM_START SHL 4
@@ -427,7 +427,7 @@ free_dos_loop:
 	mov ax,dos_process_sel
 	mov ds,ax
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 	mov ax,7
 	stc
 	jmp free_dos_done
@@ -448,7 +448,7 @@ free_dos_mem_inv:
 	mov ax,dos_process_sel
 	mov ds,ax
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 	mov ax,9
 	stc
 	jmp free_dos_done
@@ -496,7 +496,7 @@ free_dos_no_merge_up:
 
 free_dos_leave:
     mov esi,OFFSET dos_mem_section
-    LeaveNewSection
+    LeaveSection
 	clc
 
 free_dos_done:
@@ -538,7 +538,7 @@ free_dos_prog_mem_start:
 	mov bx,dos_process_sel
 	mov ds,bx
 	mov esi,OFFSET dos_mem_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov edx,DOS_MEM_START SHL 4
 	mov bx,flat_sel
@@ -557,7 +557,7 @@ free_dos_prog_mem_ok:
 	mov bx,dos_process_sel
 	mov ds,bx
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 	add edx,10h
 	FreeLinear
 	jmp free_dos_prog_mem_start
@@ -573,7 +573,7 @@ free_dos_prog_mem_done:
 	mov bx,dos_process_sel
 	mov ds,bx
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 
 free_app_mem_done:
     pop esi
@@ -610,7 +610,7 @@ available_dos_linear	PROC far
 	mov bx,dos_process_sel
 	mov ds,bx
 	mov esi,OFFSET dos_mem_section
-	EnterNewSection 
+	EnterSection 
 ;	
 	mov ebx,DOS_MEM_START SHL 4
 	mov ax,flat_sel
@@ -656,7 +656,7 @@ dos_avail_nothing2:
 	mov bx,dos_process_sel
 	mov ds,bx
 	mov esi,OFFSET dos_mem_section
-	LeaveNewSection
+	LeaveSection
 ;
     pop esi
 	pop ecx
@@ -876,7 +876,7 @@ init_process_mem	PROC near
 	mov ax,dos_process_sel
 	mov ds,ax
 	mov esi,OFFSET dos_mem_section
-	InitNewSection
+	InitSection
 ;
     LockSysEnv
     mov ds,bx

@@ -182,9 +182,9 @@ CreateReceiveEntry	Proc near
 ;
     push esi
     mov esi,OFFSET ListSection
-    EnterNewSection	
+    EnterSection	
 	call AllocateDescriptor
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	mov eax,1000h
@@ -231,9 +231,9 @@ FreeReceiveEntry	Proc near
 	mov ax,flat_sel
 	mov es,ax
     mov esi,OFFSET ListSection
-    EnterNewSection	
+    EnterSection	
 	call FreeDescriptor
-    LeaveNewSection	
+    LeaveSection	
 ;
     pop esi
 	pop eax
@@ -265,7 +265,7 @@ InsertReceiveEntry	Proc near
 	mov es,ax
 ;
     mov esi,OFFSET ListSection
-    EnterNewSection	
+    EnterSection	
 ;
 	mov eax,ds:RxList
 	or eax,eax
@@ -315,7 +315,7 @@ ireEmpty:
 
 ireDone:
     mov esi,OFFSET ListSection
-    LeaveNewSection	
+    LeaveSection	
 ;
 	pop esi
 	pop edx
@@ -353,9 +353,9 @@ CreateSendEntry	Proc near
 ;
     push esi
     mov esi,OFFSET ListSection
-    EnterNewSection	
+    EnterSection	
 	call AllocateDescriptor
-    LeaveNewSection	
+    LeaveSection	
     pop esi
 ;
 	push ecx
@@ -404,7 +404,7 @@ InsertSendEntry	Proc near
 iteSendLoop:
     push esi
     mov esi,OFFSET ListSection
-    EnterNewSection	
+    EnterSection	
     pop esi
 ;    
 	mov eax,ds:TxList
@@ -422,7 +422,7 @@ iteSendLoop:
 ;
     push esi
     mov esi,OFFSET ListSection
-    LeaveNewSection	
+    LeaveSection	
     pop esi
 ;	
 	call FreeSendEntry
@@ -471,7 +471,7 @@ iteDone:
 ;
     push esi
     mov esi,OFFSET ListSection
-    LeaveNewSection	
+    LeaveSection	
     pop esi
 ;    
 	pop edx
@@ -507,9 +507,9 @@ FreeSendEntry	Proc near
 ;
     push esi
     mov esi,OFFSET ListSection
-    EnterNewSection
+    EnterSection
 	call FreeDescriptor
-	LeaveNewSection
+	LeaveSection
 	pop esi
 ;
 	pop eax
@@ -818,7 +818,7 @@ Preview	Proc far
 pvCheckTx:
     push esi
     mov esi,OFFSET ListSection
-    EnterNewSection
+    EnterSection
     pop esi
 ;    
 	mov edi,ds:TxList
@@ -835,7 +835,7 @@ pvCheckTx:
 ;	
     push esi
     mov esi,OFFSET ListSection
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
 	call FreeSendEntry
@@ -860,7 +860,7 @@ pvCheckRx:
 pvDone:
     push esi
     mov esi,OFFSET ListSection
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;
 	pop edi
@@ -1294,7 +1294,7 @@ Init	Proc far
 	rep stosb
 ;
     mov esi,OFFSET ListSection
-    InitNewSection
+    InitSection
 ;    	
 	mov ds:FreeList,0
 	mov ds:RxList,0

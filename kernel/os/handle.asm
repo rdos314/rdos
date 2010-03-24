@@ -364,7 +364,7 @@ allocate_handle	PROC far
 	mov si,handle_sel
 	mov ds,si
 	mov esi,OFFSET handle_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov ax,cx
 	call allocate_handle_mem
@@ -383,7 +383,7 @@ alloc_retry:
 ;	
     push esi
     mov esi,OFFSET handle_section
-    LeaveNewSection
+    LeaveSection
     pop esi
 ;	
 	mov ax,handle_mem_sel
@@ -421,7 +421,7 @@ free_handle	PROC far
 	mov ax,handle_sel
 	mov ds,ax
 	mov esi,OFFSET handle_section
-	EnterNewSection
+	EnterSection
 ;	
 	mov ax,handle_mem_sel
 	mov ds,ax
@@ -438,7 +438,7 @@ free_handle	PROC far
 	mov [si],ax
 	mov ds:handle_list,si
 	mov esi,OFFSET handle_section
-	LeaveNewSection
+	LeaveSection
 	xor bx,bx
 ;
 	pop esi
@@ -482,7 +482,7 @@ clone_handle_mem	PROC far
 	mov ax,handle_sel
 	mov ds,ax
 	mov esi,OFFSET handle_section
-	EnterNewSection
+	EnterSection
 ;
     mov ax,handle_mem_sel
     mov ds,ax
@@ -503,7 +503,7 @@ clone_handle_mem	PROC far
     rep movsw
 ;    
     mov esi,OFFSET handle_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop di
 	pop esi
@@ -544,9 +544,9 @@ deref_handle	PROC far
 	push bx
 	add bx,bx
 	mov esi,OFFSET handle_section
-	EnterNewSection
+	EnterSection
 	mov bx,word ptr [bx].handle_arr
-	LeaveNewSection
+	LeaveSection
 	pop si
 ;	
 	mov dx,handle_mem_sel
@@ -604,7 +604,7 @@ init_process	PROC far
 	mov ax,handle_sel
 	mov ds,ax
 	mov esi,OFFSET handle_section
-	InitNewSection
+	InitSection
 ;
 	mov cx,MAX_HANDLES
 	mov di,2 * MAX_HANDLES + OFFSET handle_arr
@@ -684,7 +684,7 @@ get_free_handles	Proc far
 	mov si,handle_sel
 	mov ds,si
 	mov esi,OFFSET handle_section
-	EnterNewSection
+	EnterSection
 ;
 	xor ax,ax	
 	mov si,ds:handle_list
@@ -699,7 +699,7 @@ get_free_loop:
 
 get_free_done:   
     mov esi,OFFSET handle_section
-    LeaveNewSection
+    LeaveSection
 ;
     pop esi
     pop ds
