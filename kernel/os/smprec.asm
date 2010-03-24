@@ -63,7 +63,6 @@ reorder_entry	ENDS
 rec_list_data	STRUC
 
 l_ml_data			mailslot_list_data <>
-l_section			section_typ <>
 l_receive_ip		DD ?
 l_connection		DD ?
 l_host_entry		DW ?
@@ -129,10 +128,12 @@ FindReceiveMailslot	Proc near
 	push fs
 	push ax
 	push bx
+	push esi
 ;
 	mov ax,ipc_data_sel
 	mov ds,ax
-	EnterSection ds:ipc_section
+	mov esi,OFFSET ipc_section
+	EnterNewSection
 	mov ax,ds:ipc_mailslot_list
 
 find_rec_mailslot_search:
@@ -152,13 +153,15 @@ find_rec_mailslot_leave:
 	pushf
 	xor ax,ax
 	mov fs,ax
-	LeaveSection ds:ipc_section
+	mov esi,OFFSET ipc_section
+	LeaveNewSection
 	popf
 	jc find_rec_mailslot_done
 ;
 	mov ds,bx
 
 find_rec_mailslot_done:
+    pop esi
 	pop bx
 	pop ax
 	pop fs
@@ -186,8 +189,10 @@ PAGE
 FindReceiveMailslotHost	Proc near
 	push es
 	push bx
+	push esi
 ;
-	EnterSection ds:m_host_section
+    mov esi,OFFSET m_host_section
+    EnterNewSection
 	mov ax,ds:m_host_list
 
 find_rec_mailslot_host_loop:
@@ -207,9 +212,11 @@ find_rec_mailslot_host_done:
 	pushf
 	xor bx,bx
 	mov es,bx
-	LeaveSection ds:m_host_section
+    mov esi,OFFSET m_host_section
+    LeaveNewSection
 	popf
 ;
+    pop esi
 	pop bx
 	pop es
 	ret
@@ -235,6 +242,7 @@ AddReceiveMailslotHost	Proc near
 	push es
 	push cx
 	push edx
+	push esi
 	push di
 ;
 	mov eax,SIZE rec_host_data
@@ -252,16 +260,24 @@ AddReceiveMailslotHost	Proc near
 	mov cx,MAX_PENDING_REQUESTS
 	xor ax,ax
 	rep stosw	
-	InitSection es:h_req_section
-	InitSection es:h_reply_section
-	EnterSection ds:m_host_section
+	push ds
+	mov esi,OFFSET h_req_section
+	InitNewSection
+;	
+    mov esi,OFFSET h_reply_section
+    InitNewSection
+    pop ds
+;    
+    mov esi,OFFSET m_host_section
+    EnterNewSection
 	mov ax,ds:m_host_list
 	mov es:h_link,ax
 	mov ds:m_host_list,es
-	LeaveSection ds:m_host_section
+	LeaveNewSection
 	mov ax,es
 ;
 	pop di
+	pop esi
 	pop edx
 	pop cx
 	pop es
@@ -289,12 +305,17 @@ ResetReceiveMailslotHost	Proc near
 	push eax
 	push cx
 	push edx
+	push esi
 	push di
 ;
 	mov ds,ax
 	call FlushResponses
-	EnterSection ds:h_req_section
-	EnterSection ds:h_reply_section
+;
+    mov esi,OFFSET h_req_section
+    EnterNewSection
+;
+    mov esi,OFFSET h_reply_section
+    EnterNewSection    	
 ;
 	add ds:h_req_connection,10000h
 	mov ds:h_req_index,0
@@ -327,11 +348,15 @@ reset_req_next:
 	add di,2
 	loop reset_req_loop
 ;
-	LeaveSection ds:h_reply_section
-	LeaveSection ds:h_req_section
+    mov esi,OFFSET h_reply_section
+    LeaveNewSection
+;    
+    mov esi,OFFSET h_req_section
+    LeaveNewSection
 
 reset_host_done:
 	pop di
+	pop esi
 	pop edx
 	pop cx
 	pop eax
@@ -449,7 +474,10 @@ SendData	Proc near
 	xor ax,ax
 	mov fs,ax
 	mov gs,ax
-	LeaveSection ds:h_reply_section
+	push esi
+    mov esi,OFFSET h_reply_section
+    LeaveNewSection
+    pop esi
 	mov ds,ax
 ;
 	add cx,bx
@@ -803,7 +831,8 @@ CopyFromSmp	Proc near
 ;
 	xor ax,ax
 	mov es,ax
-	LeaveSection ds:m_section
+    mov esi,OFFSET m_section
+    LeaveNewSection
 ;
 	pop edi
 	pop esi
@@ -846,7 +875,11 @@ ReplyToSmp	Proc near
 	FreeMem
 	pop es
 ;
-	EnterSection ds:h_reply_section
+    push esi
+    mov esi,OFFSET h_reply_section
+    EnterNewSection
+    pop esi
+;    
 	mov es:l_host_entry,ds
 	mov es:l_connection,ebx
 	mov es:l_size,ecx
@@ -888,7 +921,11 @@ PAGE
 SmpToReceiver	Proc near
 	push ax
 ;
-	EnterSection ds:m_section
+    push esi
+    mov esi,OFFSET m_section
+    EnterNewSection
+    pop esi
+;    
 	mov ax,ds:m_rec_thread
 	or ax,ax
 	jz send_smp_busy
@@ -901,7 +938,10 @@ send_smp_busy:
 	call QueueReceiveRequest
 	xor ax,ax
 	mov es,ax
-	LeaveSection ds:m_section
+	push esi
+    mov esi,OFFSET m_section
+    LeaveNewSection
+    pop esi
 	jmp send_smp_done
 
 send_smp_idle:
@@ -1160,7 +1200,6 @@ CreateRequest	Proc near
 	mov es:l_connection,edx
 	mov es:l_receive_ip,edi
 	mov es:l_size,ecx	
-	InitSection es:l_section
 	mov ds:[bx].h_req_arr,es
 	inc ds:h_req_unacked
 	mov ax,es
@@ -1300,7 +1339,11 @@ HandleRequest	Proc near
 	push eax
 	push bx
 ;
-	EnterSection ds:h_req_section
+    push esi
+    mov esi,OFFSET h_req_section
+    EnterNewSection
+    pop esi
+;    
 	mov eax,es:[di].sh_connection
 	Reverse
 	sub eax,ds:h_req_connection
@@ -1348,12 +1391,19 @@ handle_req_out_of_range:
 	jmp handle_req_leave
 
 handle_req_check_reply:
-	LeaveSection ds:h_req_section
+    push esi
+    mov esi,OFFSET h_req_section
+    LeaveNewSection
+    pop esi
 ;
 	mov eax,es:[di].sh_connection
 	Reverse
 	mov ebx,eax
-	EnterSection ds:h_reply_section
+;	
+    push esi
+    mov esi,OFFSET h_reply_section
+    EnterNewSection
+    pop esi
 	call FindReply
 	jc handle_reply_reset
 ;
@@ -1374,7 +1424,10 @@ handle_reply_reset:
 	pop ds
 
 handle_reply_leave:
-	LeaveSection ds:h_reply_section
+    push esi
+    mov esi,OFFSET h_reply_section
+    LeaveNewSection
+    pop esi
 	jmp handle_req_done
 
 handle_req_reset_leave:
@@ -1388,7 +1441,10 @@ handle_req_reset_leave:
 	pop ds
 
 handle_req_leave:
-	LeaveSection ds:h_req_section
+    push esi
+    mov esi,OFFSET h_req_section
+    LeaveNewSection
+    pop esi
 
 handle_req_done:
 	pop bx
@@ -1494,7 +1550,10 @@ ReceiverAck	Proc near
 	Reverse
 	mov ebx,eax
 ;
-	EnterSection ds:h_reply_section
+    push esi
+    mov esi,OFFSET h_reply_section
+    EnterNewSection
+    pop esi
 	call FindReply
 	jc proc_ack_done
 ;
@@ -1511,7 +1570,10 @@ ReceiverAck	Proc near
 proc_ack_done:
 	xor ax,ax
 	mov es,ax
-	LeaveSection ds:h_reply_section
+    push esi
+    mov esi,OFFSET h_reply_section
+    LeaveNewSection
+    pop esi
 	clc
 ;
 	pop edx
@@ -1546,7 +1608,11 @@ NameRequest	Proc near
 	mov di,si
 	mov ax,ipc_data_sel
 	mov ds,ax
-	EnterSection ds:ipc_section
+    push esi
+    mov esi,OFFSET ipc_section
+    EnterNewSection
+    pop esi
+;    
 	mov bx,ds:ipc_mailslot_list
 	or bx,bx
 	jz name_res_done_leave
@@ -1583,9 +1649,12 @@ name_res_ok:
 	pop di
 ;
 	push ds
+    push esi
 	mov ax,ipc_data_sel
 	mov ds,ax
-	LeaveSection ds:ipc_section
+    mov esi,OFFSET ipc_section
+    LeaveNewSection
+    pop esi
 	pop ds
 ;
 	call GetReceiveMailslot
@@ -1596,7 +1665,8 @@ name_res_ok:
 	jmp name_res_done
 
 name_res_done_leave:
-	LeaveSection ds:ipc_section
+    mov esi,OFFSET ipc_section
+    LeaveNewSection
 
 name_res_done:
 	popad
@@ -1638,7 +1708,9 @@ SuperviseMailslot	Proc near
 	push cx
 ;
 	xor cx,cx
-	EnterSection ds:m_host_section
+    mov esi,OFFSET m_host_section
+    EnterNewSection
+;    
 	mov ax,ds:m_host_list
 	push ds
 
@@ -1656,7 +1728,9 @@ supervise_mailslot_host_loop:
 
 supervise_mailslot_host_done:
 	pop ds
-	LeaveSection ds:m_host_section
+;	
+    mov esi,OFFSET m_host_section
+    LeaveNewSection
 ;
 	or cx,cx
 	stc
@@ -1687,7 +1761,8 @@ ReceiveSupervise	Proc near
 ;
 	mov ax,ipc_data_sel
 	mov ds,ax
-	EnterSection ds:ipc_section
+    mov esi,OFFSET ipc_section
+    EnterNewSection
 	mov ax,ds:ipc_mailslot_list
 	push ds
 
@@ -1707,7 +1782,8 @@ receive_supervise_next:
 
 receive_supervise_leave:
 	pop ds
-	LeaveSection ds:ipc_section
+    mov esi,OFFSET ipc_section
+    LeaveNewSection
 ;
 	or cx,cx
 	stc
