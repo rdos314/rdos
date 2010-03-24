@@ -195,11 +195,13 @@ get_local_mailslot	Proc near
 	push ds
 	push ax
 	push dx
-	push si
+	push esi
 ;
 	mov ax,ipc_data_sel
 	mov ds,ax
-	EnterSection ds:ipc_section
+	mov esi,OFFSET ipc_section
+	EnterNewSection
+;	
 	mov bx,ds:ipc_mailslot_list
 	or bx,bx
 	jz get_local_fail
@@ -231,7 +233,8 @@ get_local_next:
 get_local_fail:	
 	mov ax,ipc_data_sel
 	mov ds,ax
-	LeaveSection ds:ipc_section
+	mov esi,OFFSET ipc_section
+	LeaveNewSection
 	stc
 	jmp get_local_done
 
@@ -239,13 +242,14 @@ get_local_ok:
 	inc ds:m_usage
 	mov ax,ipc_data_sel
 	mov ds,ax
-	LeaveSection ds:ipc_section
+	mov esi,OFFSET ipc_section
+	LeaveNewSection
 	call AllocateIpcHandle
 	pop edi
 	clc
 
 get_local_done:
-	pop si
+	pop esi
 	pop dx
 	pop ax
 	pop ds
@@ -425,18 +429,25 @@ define_mailslot	Proc near
 	mov eax,OFFSET m_name
 	add eax,ecx
 	AllocateSmallGlobalMem
-	mov es:m_rec_max_size,ebx
-	mov es:m_link,0
-	mov es:m_usage,0
-	mov es:m_rec_thread,0
-	mov es:m_send_thread,0
-	mov es:m_req_list,0
-	mov es:m_host_list,0
-	mov es:m_rec_callb,0
-	mov es:m_reply_callb,0
-	mov es:m_send_callb,OFFSET SendLocal
-	InitSection es:m_section
-	InitSection es:m_host_section
+	mov ax,es
+	mov ds,ax
+	mov ds:m_rec_max_size,ebx
+	mov ds:m_link,0
+	mov ds:m_usage,0
+	mov ds:m_rec_thread,0
+	mov ds:m_send_thread,0
+	mov ds:m_req_list,0
+	mov ds:m_host_list,0
+	mov ds:m_rec_callb,0
+	mov ds:m_reply_callb,0
+	mov ds:m_send_callb,OFFSET SendLocal
+;
+    mov esi,OFFSET m_section
+    InitNewSection
+;        
+    mov esi,OFFSET m_host_section
+    InitNewSection
+;    
 	pop esi
 	pop ds
 	mov edi,OFFSET m_name
@@ -448,11 +459,12 @@ define_mailslot	Proc near
 ;
 	mov ax,ipc_data_sel
 	mov ds,ax
-	EnterSection ds:ipc_section
+	mov esi,OFFSET ipc_section
+	EnterNewSection
 	mov ax,ds:ipc_mailslot_list
 	mov ds:ipc_mailslot_list,es
 	mov es:m_link,ax
-	LeaveSection ds:ipc_section
+	LeaveNewSection
 ;
 	pop edi
 	pop esi
@@ -602,7 +614,8 @@ CopyToReceiver	Proc near
 	mov es,bx
 	mov fs,bx
 	xchg bx,ds:m_rec_thread
-	LeaveSection ds:m_section
+	mov esi,OFFSET m_section
+	LeaveNewSection
 	Signal
 ;
 	pop edi
@@ -760,7 +773,11 @@ receive_mailslot	Proc near
 	jz receive_mailslot_done
 ;
 	mov ds,ax
-	EnterSection ds:m_section
+	push esi
+	mov esi,OFFSET m_section
+	EnterNewSection
+	pop esi
+;	
 	mov ax,ds:m_req_list
 	or ax,ax
 	jz rec_empty
@@ -792,13 +809,20 @@ rec_empty:
 	GetThread
 	mov ds:m_rec_thread,ax
 	call InsertReceive
-	LeaveSection ds:m_section
-	WaitForSignal
 ;
-	EnterSection ds:m_section
+    push esi	
+	mov esi,OFFSET m_section
+	LeaveNewSection
+	WaitForSignal
+	EnterNewSection
+	pop esi
+;
 	call RemoveReceive
 	mov ecx,ds:m_rec_size
-	LeaveSection ds:m_section
+	push esi
+	mov esi,OFFSET m_section
+	LeaveNewSection
+	pop esi
 	clc
 
 receive_mailslot_done:
@@ -986,8 +1010,12 @@ init	PROC far
 	AllocateFixedSystemMem
 	mov ds,bx
 	mov es,bx
-	InitSection ds:ipc_section
-	InitSection ds:smp_host_section
+    mov esi,OFFSET ipc_section
+    InitNewSection
+;    
+    mov esi,OFFSET smp_host_section
+    InitNewSection
+;    
 	mov ds:ipc_mailslot_list,0
 	mov ds:smp_thread,0
 	mov ds:smp_host_list,0
