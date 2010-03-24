@@ -134,7 +134,9 @@ get_param16:
 	push edx
 	push esi
 ;
-	InitSection ds:cluster_section
+    mov esi,OFFSET cluster_section
+    InitNewSection
+;    
 	mov ds:drive_root_handle,0
 	mov ds:drive_nr,al
 	mov ds:file_list_ptr,0
@@ -213,7 +215,9 @@ get_param32	Proc near
 	push edx
 	push esi
 ;
-	InitSection ds:cluster_section
+    mov esi,OFFSET cluster_section
+    InitNewSection
+;    
 	mov ds:drive_root_handle,0
 	mov ds:drive_nr,al
 	mov ds:file_list_ptr,0
