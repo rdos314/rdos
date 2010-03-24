@@ -1362,7 +1362,10 @@ Send	Proc far
 	mov ah,[esi]
 	mov bx,sernet_data_sel
 	mov ds,bx
-	EnterSection ds:SendSection
+	push esi
+	mov esi,OFFSET SendSection
+	EnterNewSection
+	pop esi
 
 send_try_loop:
 	test ds:Mode, MODE_ONLINE
@@ -1415,7 +1418,10 @@ send_copy_save_tail:
 	mov ds:SendTail,bx
 
 send_done:
-	LeaveSection ds:SendSection
+	push esi
+	mov esi,OFFSET SendSection
+	LeaveNewSection
+	pop esi
 ;
 	pop edi
 	pop dx
@@ -1608,6 +1614,9 @@ Init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
+;	
+	mov esi,OFFSET SendSection
+	InitNewSection
 ;
 	mov ds:RecCount,0
 	mov ds:Mode,0
