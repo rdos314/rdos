@@ -469,7 +469,10 @@ FindListen	Proc near
 ;
 	mov ax,udp_data_sel
 	mov ds,ax
-	EnterSection ds:udp_section
+	push esi
+	mov esi,OFFSET udp_section
+	EnterNewSection
+	pop esi
 	mov ax,ds:listen_list
 
 find_listen_loop:
@@ -484,12 +487,18 @@ find_listen_next:
 	jmp find_listen_loop
 
 find_listen_fail:
-	LeaveSection ds:udp_section
+	push esi
+	mov esi,OFFSET udp_section
+	LeaveNewSection
+	pop esi
 	stc
 	jmp find_listen_done
 
 find_listen_ok:
-	LeaveSection ds:udp_section
+	push esi
+	mov esi,OFFSET udp_section
+	LeaveNewSection
+	pop esi
 	mov ax,es
 	mov ds,ax
 	clc
@@ -720,15 +729,23 @@ listen_udp_port	Proc far
 	AllocateSmallGlobalMem
 	mov es:udp_listen_callback,di
 	mov es:udp_listen_callback+2,cx
-	InitSection es:udp_listen_section
 	mov es:udp_listen_port,si
+;
+    push esi	
+	mov ax,es
+	mov ds,ax
+	mov esi,OFFSET udp_listen_section
+	InitNewSection
+;	
 	mov ax,udp_data_sel
 	mov ds,ax
-	EnterSection ds:udp_section
+	mov esi,OFFSET udp_section
+	EnterNewSection
 	mov ax,ds:listen_list
 	mov es:udp_listen_next,ax
 	mov ds:listen_list,es
-	LeaveSection ds:udp_section
+	LeaveNewSection
+	pop esi
 ;
 	pop cx
 	pop eax
@@ -761,7 +778,9 @@ init_udp	PROC near
 	mov ds,bx
 	mov es,bx
 ;
-	InitSection ds:udp_section
+    mov esi,OFFSET udp_section
+    InitNewSection
+;    
 	mov ds:listen_list,0
 	mov cx,UDP_QUERY_ENTRIES - 1
 	mov bx,OFFSET udp_queries
