@@ -945,6 +945,7 @@ AddIntrEd	PROC near
     mov esi,OFFSET ohc_section
     LeaveNewSection
 ;    
+    pop esi
     pop ebx
     ret
 AddIntrEd  ENDP
