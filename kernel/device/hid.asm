@@ -346,12 +346,13 @@ PAGE
 GetHidSel Proc near
     push ds
     push es
-    push si
+    push esi
 	push di
 ;
     mov di,hid_data_sel
     mov ds,di
-    EnterSection ds:hid_section
+    mov esi,OFFSET hid_section
+    EnterNewSection
 ;
     mov di,ds:hid_dev_list
     or di,di
@@ -379,10 +380,11 @@ ghsOk:
     clc
 
 ghsDone:   
-    LeaveSection ds:hid_section
+    mov esi,OFFSET hid_section
+    LeaveNewSection
 ;    
     pop di
-    pop si
+    pop esi
     pop es
     pop ds
     ret
@@ -405,11 +407,13 @@ InsertHidSel	Proc near
     push ds
     push es
     push ax
+    push esi
 	push di
 ;
     mov ax,hid_data_sel
     mov ds,ax
-    EnterSection ds:hid_section
+    mov esi,OFFSET hid_section
+    EnterNewSection
 ;
     mov es,bx
 	mov di,ds:hid_dev_list
@@ -435,9 +439,11 @@ ins_hid_sel_empty:
 	mov ds:hid_dev_list,es
 
 ins_hid_sel_leave:
-    LeaveSection ds:hid_section
+    mov esi,OFFSET hid_section
+    LeaveNewSection
 ;
     pop di
+    pop esi
     pop ax
     pop es
     pop ds
@@ -461,11 +467,12 @@ RemoveHidSel	Proc near
     push ds
     push es
     push ax
-	push si
+	push esi
 ;
     mov ax,hid_data_sel
     mov ds,ax
-    EnterSection ds:hid_section
+    mov esi,OFFSET hid_section
+    EnterNewSection
 ;
     mov es,bx
     cmp bx,es:hid_next
@@ -488,8 +495,10 @@ rem_hid_sel_empty:
 	mov ds:hid_dev_list,0
 
 rem_hid_sel_leave:
-    LeaveSection ds:hid_section
-	pop si
+    mov esi,OFFSET hid_section
+    LeaveNewSection
+;    
+	pop esi
     pop ax
     pop es
     pop ds 
@@ -2292,6 +2301,11 @@ init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
+;	
+    mov ax,es
+    mov ds,ax
+    mov esi,OFFSET hid_section
+    InitNewSection
 ;	
 	mov ax,cs
 	mov ds,ax
