@@ -104,7 +104,8 @@ CreateSegment	Proc near
 ;
 	mov ax,fs
 	mov ds,ax
-	EnterSection ds:shd_section
+	mov esi,OFFSET shd_section
+	EnterNewSection
 ;
 	push ds
 	mov ax,ds:shd_response_list
@@ -169,7 +170,11 @@ create_segment_leave:
 	pop di
 	pop ds
 	mov ds:shd_response_list,0
-	LeaveSection ds:shd_section
+;
+    push esi
+	mov esi,OFFSET shd_section
+	LeaveNewSection
+	pop esi
 	mov es:[di].sh_responses,dl
 	jmp create_segment_done
 
@@ -225,7 +230,10 @@ FlushResponses	Proc near
 ;
 	mov ax,fs
 	mov ds,ax
-	EnterSection ds:shd_section
+	push esi
+	mov esi,OFFSET shd_section
+	EnterNewSection
+	pop esi
 ;
 	mov ax,ds:shd_response_list
 
@@ -240,7 +248,10 @@ flush_resp_loop:
 
 flush_resp_leave:
 	mov ds:shd_response_list,0
-	LeaveSection ds:shd_section
+	push esi
+	mov esi,OFFSET shd_section
+	LeaveNewSection
+	pop esi
 
 flush_resp_done:
 	pop ax
@@ -448,7 +459,11 @@ PAGE
 QueueResponse	Proc near
 	push bx
 ;
-	EnterSection ds:shd_section
+    push esi
+	mov esi,OFFSET shd_section
+	EnterNewSection
+	pop esi
+;	
 	push ax
 	mov ax,ds:shd_response_list
 	mov es:shr_link,ax
@@ -475,7 +490,11 @@ queue_response_set_timeout:
 queue_response_leave:
 	xor ax,ax
 	mov es,ax
-	LeaveSection ds:shd_section
+;	
+    push esi
+	mov esi,OFFSET shd_section
+	LeaveNewSection
+	pop esi
 ;
 	pop bx
 	ret
