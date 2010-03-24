@@ -517,7 +517,11 @@ request_private_irq_handler	Proc far
 	mov si,bx
 	add si,si
 	mov si,word ptr cs:[si].irq_offs_table
-	EnterSection ds:[si].usage_section
+	push esi
+	lea si,[si].usage_section
+	movzx esi,si
+	EnterNewSection
+	pop esi
 	mov ds:[si].user_data,dx
 	mov word ptr ds:[si].user_handler,di
 	mov word ptr ds:[si].user_handler+2,es
@@ -755,7 +759,12 @@ remove_pic_done:
 	mov ds,ax
 	add bx,bx
 	mov bx,word ptr cs:[bx].irq_offs_table
-	LeaveSection ds:[bx].usage_section
+;	
+	push esi
+	lea si,[bx].usage_section
+	movzx esi,si
+	LeaveNewSection
+	pop esi
 ;
 	pop bx
 	pop ax
@@ -896,6 +905,7 @@ init	PROC far
 	AllocateFixedSystemMem
 	mov ds,bx
 ;
+    xor esi,esi
 	mov cx,16
 	mov bx,OFFSET irq_arr
 	xor eax,eax
@@ -912,16 +922,19 @@ init_irq_loop:
 	mov dx,ds:irq_pm32_sel
 	mov ds:[bx].pm32_sel,dx
 	add ax,4
-	InitSection ds:[bx].usage_section
+	lea si,[bx].usage_section
+	InitNewSection
 	add bx,SIZE irq_struc
 	loop init_irq_loop
 ;
 	mov bx,OFFSET irq_arr
 	mov ds:[bx].owner_cr3,-1
-	EnterSection ds:[bx].usage_section
+	lea si,[bx].usage_section
+	EnterNewSection
 	add bx,2 * SIZE irq_struc
 	mov ds:[bx].owner_cr3,-1
-	EnterSection ds:[bx].usage_section
+	lea si,[bx].usage_section
+	EnterNewSection
 ;
 	mov ax,cs
 	mov es,ax
