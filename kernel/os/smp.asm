@@ -145,6 +145,7 @@ FindHost	Proc near
 	push ds
 	push es
 	push bx
+	push esi
 	push di
 ;
 	LookupIpCache
@@ -152,7 +153,8 @@ FindHost	Proc near
 ;
 	mov ax,ipc_data_sel
 	mov ds,ax
-	EnterSection ds:ipc_section
+	mov esi,OFFSET ipc_section
+	EnterNewSection
 ;
 	mov bx,ds:ipc_cache_offset
 	mov ax,es:[bx]
@@ -164,27 +166,36 @@ FindHost	Proc near
 	mov fs,ax
 	mov eax,SIZE smp_host_data
 	AllocateSmallGlobalMem
-	mov es:shd_mailslot_list,0
-	mov es:shd_response_list,0
-	mov es:shd_ip,edx
-	mov es:shd_host,fs
-	mov es:shd_sign,HOST_SIGN
-	InitSection es:shd_section
-	EnterSection ds:smp_host_section
+	push ds
+	mov ax,es
+	mov ds,ax
+	mov ds:shd_mailslot_list,0
+	mov ds:shd_response_list,0
+	mov ds:shd_ip,edx
+	mov ds:shd_host,fs
+	mov ds:shd_sign,HOST_SIGN
+	mov esi,OFFSET shd_section
+	InitNewSection
+	pop ds
+;
+    mov esi,OFFSET smp_host_section
+    EnterNewSection	
 	mov ax,ds:smp_host_list
 	mov es:shd_link,ax
 	mov ds:smp_host_list,es
 	mov ax,es
 	mov fs:[bx],ax
 	pop fs
-	LeaveSection ds:smp_host_section
+    LeaveNewSection	
 
 find_host_buffered:
-	LeaveSection ds:ipc_section
+    mov esi,OFFSET ipc_section
+    LeaveNewSection
 	clc
 
 find_host_done:
 	pop di
+	pop esi
 	pop bx
 	pop es
 	pop ds
@@ -386,7 +397,8 @@ Supervise	Proc near
 ;
 	mov ax,ipc_data_sel
 	mov ds,ax
-	EnterSection ds:smp_host_section
+    mov esi,OFFSET smp_host_section
+    EnterNewSection
 	mov ax,ds:smp_host_list
 
 supervise_loop:
@@ -407,7 +419,8 @@ supervise_loop:
 supervise_leave:
 	xor ax,ax
 	mov fs,ax
-	LeaveSection ds:smp_host_section
+    mov esi,OFFSET smp_host_section
+    LeaveNewSection
 ;
 	or cx,cx
 	stc
