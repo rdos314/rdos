@@ -4154,7 +4154,9 @@ init_process_task	Proc near
 	mov ax,section_proc_sel
 	mov ds,ax
 ;
-	InitSection ds:section_handle_section
+    mov esi,OFFSET section_handle_section
+    InitNewSection
+;    
 	mov cx,section_num
 	mov di,8 * section_num + OFFSET section_list
 
@@ -4186,19 +4188,24 @@ create_user_section_name	DB 'Create User Section',0
 create_user_section	PROC far
 	push ds
 	push eax
+	push esi
 ;
 	mov ax,section_proc_sel
 	mov ds,ax
-	EnterSection ds:section_handle_section
+	mov esi,OFFSET section_handle_section
+	EnterNewSection
+;
 	allocate_section
 	mov ds:[bx].ucs_value,0
 	mov ds:[bx].ucs_list,0
 	mov ds:[bx].ucs_owner,0
 	mov ds:[bx].ucs_count,0
-	LeaveSection ds:section_handle_section
+;
+    LeaveNewSection
 	offset_to_section bx
 	clc
 ;
+    pop esi
 	pop eax
 	pop ds
 	retf32
@@ -4222,19 +4229,24 @@ create_blocked_user_section_name	DB 'Create Blocked User Section',0
 create_blocked_user_section	PROC far
 	push ds
 	push eax
+	push esi
 ;
 	mov ax,section_proc_sel
 	mov ds,ax
-	EnterSection ds:section_handle_section
+	mov esi,OFFSET section_handle_section
+	EnterNewSection
+;	
 	allocate_section
 	mov ds:[bx].ucs_value,-1
 	mov ds:[bx].ucs_list,0
 	mov ds:[bx].ucs_owner,-1
 	mov ds:[bx].ucs_count,1
-	LeaveSection ds:section_handle_section
+;
+    LeaveNewSection
 	offset_to_section bx
 	clc
 ;
+    pop esi
 	pop eax
 	pop ds
 	retf32
@@ -4258,10 +4270,13 @@ delete_user_section_name	DB 'Delete User Section',0
 delete_user_section	PROC far
 	push ds
 	push eax
+	push esi
 ;
 	mov ax,section_proc_sel
 	mov ds,ax
-	EnterSection ds:section_handle_section
+	mov esi,OFFSET section_handle_section
+	EnterNewSection
+;	
 	section_to_offset bx
 	mov ax,[bx]
 	dec ax
@@ -4271,10 +4286,11 @@ delete_user_section	PROC far
 	free_section
 
 free_section_done:
-	LeaveSection ds:section_handle_section
+    LeaveNewSection
 	xor bx,bx
 	clc
 ;
+    pop esi
 	pop eax
 	pop ds
 	retf32
