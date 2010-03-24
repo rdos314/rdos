@@ -551,7 +551,11 @@ WriteTaskFile	ENDP
 ReadDrive	Proc near
 	push bx
 	mov ds,fs:disc_ide_sel
-	EnterSection ds:IdeSection
+	push esi
+	mov esi,OFFSET IdeSection
+	EnterNewSection
+	pop esi
+;
 	GetThread
 	mov ds:IdeThread,ax
 	pop bx
@@ -593,7 +597,10 @@ ReadDriveStart:
 ReadDriveDone:
 	pushf
 	mov ds:IdeThread,0
-	LeaveSection ds:IdeSection
+	push esi
+	mov esi,OFFSET IdeSection
+	LeaveNewSection
+	pop esi
 	popf
 	ret
 ReadDrive	Endp
@@ -616,7 +623,11 @@ ReadDrive	Endp
 WriteDrive	Proc near
 	push bx
 	mov ds,fs:disc_ide_sel
-	EnterSection ds:IdeSection
+	push esi
+	mov esi,OFFSET IdeSection
+	EnterNewSection
+	pop esi
+;	
 	GetThread
 	mov ds:IdeThread,ax
 	pop bx
@@ -657,7 +668,10 @@ WriteDriveStart:
 WriteDriveDone:
 	pushf
 	mov ds:IdeThread,0
-	LeaveSection ds:IdeSection
+	push esi
+	mov esi,OFFSET IdeSection
+	LeaveNewSection
+	pop esi
 	popf
 	ret
 WriteDrive	Endp
@@ -1309,7 +1323,10 @@ PAGE
 
 read_drive	Proc near
 	mov ds,fs:disc_ide_sel
-	EnterSection ds:IdeSection
+	push esi
+	mov esi,OFFSET IdeSection
+	EnterNewSection
+	pop esi
 	mov bp,3
 
 read_drive_retry_loop:
@@ -1419,7 +1436,10 @@ read_drive_ok:
 	jnz read_sector_loop
 
 read_drive_done:
-	LeaveSection ds:IdeSection
+	push esi
+	mov esi,OFFSET IdeSection
+	LeaveNewSection
+	pop esi
 	ret
 read_drive	Endp
 
@@ -1440,7 +1460,10 @@ PAGE
 
 write_drive	Proc near
 	mov ds,fs:disc_ide_sel
-	EnterSection ds:IdeSection
+	push esi
+	mov esi,OFFSET IdeSection
+	EnterNewSection
+	pop esi
 	mov bp,3
 
 write_drive_retry_loop:
@@ -1543,7 +1566,10 @@ write_drive_ok:
 	jnz write_sector_loop
 
 write_drive_done:
-	LeaveSection ds:IdeSection
+	push esi
+	mov esi,OFFSET IdeSection
+	LeaveNewSection
+	pop esi
 	ret
 write_drive	Endp
 
@@ -2309,10 +2335,14 @@ init_ide_primary:
 	mov eax,SIZE ide_data
 	mov bx,ide_data_sel1
 	AllocateFixedSystemMem
-	InitSection es:IdeSection
-	mov es:IdeThread,0
-	mov es:DriveSelArr,0
-	mov es:DriveSelArr+2,0
+	mov ax,es
+	mov ds,ax
+	mov esi,OFFSET IdeSection
+	InitNewSection
+;	
+	mov ds:IdeThread,0
+	mov ds:DriveSelArr,0
+	mov ds:DriveSelArr+2,0
 ;
 	mov al,0Eh
 	mov bx,ide_data_sel1
@@ -2335,10 +2365,13 @@ init_ide_second:
 	mov eax,SIZE ide_data
 	mov bx,ide_data_sel2
 	AllocateFixedSystemMem
-	InitSection es:IdeSection
-	mov es:IdeThread,0
-	mov es:DriveSelArr,0
-	mov es:DriveSelArr+2,0
+	mov ax,es
+	mov ds,ax
+	mov esi,OFFSET IdeSection
+	InitNewSection
+	mov ds:IdeThread,0
+	mov ds:DriveSelArr,0
+	mov ds:DriveSelArr+2,0
 ;
 	mov al,0Fh
 	mov bx,ide_data_sel2
