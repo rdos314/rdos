@@ -462,6 +462,7 @@ open_fm    Proc
     push ds
     push eax
     push cx
+    push esi
 ;
 	mov cx,SIZE fm_struc
 	AllocateHandle
@@ -480,13 +481,19 @@ open_fm    Proc
     mov es:f_buf_pos,0
     mov es:f_thread,0
     mov es:f_flags,0
-    InitSection es:f_section
+    push ds
+    mov ax,es
+    mov ds,ax
+    mov esi,OFFSET f_section
+    InitNewSection
+    pop ds
 ;
     push ds
     push bx
     mov ax,fm_data_sel
     mov ds,ax
-    EnterSection ds:fm_section
+    mov esi,OFFSET fm_section
+    EnterNewSection
 ;
     mov bx,OFFSET fm_sel_arr
     mov ax,ds:fm_sel_count
@@ -495,13 +502,15 @@ open_fm    Proc
     mov ds:[bx],es
     inc ds:fm_sel_count
 ;
-    LeaveSection ds:fm_section
+    mov esi,OFFSET fm_section
+    LeaveNewSection
     pop bx
     pop ds    
 ;
     mov [bx].f_sel,es
 	mov bx,[bx].hh_handle
 ;
+    pop esi
     pop cx
     pop eax
     pop ds
@@ -1068,11 +1077,15 @@ pfnAttOk:
     pop edx
     pop ebx   
 ;
-    EnterSection ds:f_section
+    push esi
+    mov esi,OFFSET f_section
+    EnterNewSection
     mov es:n_curr_volume,0
     mov es:n_callb, OFFSET PlayAttack
     call InsertNoteSel
-    LeaveSection ds:f_section
+    mov esi,OFFSET f_section
+    LeaveNewSection
+    pop esi
 ;
     mov ax,fm_data_sel
     mov ds,ax
@@ -1578,7 +1591,8 @@ ufsCheckZero:
     or ax,ax
     jz ufsDone
 ;
-    EnterSection ds:f_section
+    mov esi,OFFSET f_section
+    EnterNewSection
     mov ax,ds:f_note_list
     mov si,ax
 
@@ -1592,10 +1606,16 @@ ufsSetLoop:
 ;
     xor ax,ax
     mov es,ax
-    LeaveSection ds:f_section
+    push esi
+    mov esi,OFFSET f_section
+    LeaveNewSection
+    pop esi
 
 ufsHasBuffers:
-    EnterSection ds:f_section
+    push esi
+    mov esi,OFFSET f_section
+    EnterNewSection
+    pop esi
 
 ufsRestart:
     mov ax,ds:f_note_list
@@ -1644,7 +1664,10 @@ ufsLeave:
     mov es,ax
     mov fs,ax
     mov gs,ax
-    LeaveSection ds:f_section
+    push esi
+    mov esi,OFFSET f_section
+    LeaveNewSection
+    pop esi    
 ;    
     mov bx,ds:f_thread
     Signal
@@ -1675,7 +1698,11 @@ ufsPostDone:
     or ax,ax
     jz ufsFreeAudio
 ;
-    EnterSection ds:f_section
+    push esi
+    mov esi,OFFSET f_section
+    EnterNewSection
+    pop esi
+;    
     or ds:f_flags,FLAG_FM_ZERO
     mov ds:f_buf_pos,0
 ;
@@ -1697,7 +1724,8 @@ ufsClearNext:
 ;
     xor ax,ax
     mov es,ax
-    LeaveSection ds:f_section
+    mov esi,OFFSET f_section
+    LeaveNewSection
     jmp ufsDone
 
 ufsFreeAudio:
@@ -1742,7 +1770,8 @@ fm_wait_loop:
     or cx,cx
     jz fm_wait_loop
 ;    
-    EnterSection ds:fm_section
+    mov esi,OFFSET fm_section
+    EnterNewSection
     mov cx,ds:fm_sel_count
 
 fm_handle_loop:
@@ -1790,7 +1819,8 @@ fm_free_next:
     loop fm_free_loop    
 
 fm_leave:
-    LeaveSection ds:fm_section
+    mov esi,OFFSET fm_section
+    LeaveNewSection
     jmp fm_wait_loop    
 
 
@@ -1909,7 +1939,10 @@ init	Proc far
 	AllocateFixedSystemMem
 	mov es:fm_thread,0
 	mov es:fm_sel_count,0
-	InitSection es:fm_section
+	mov ax,es
+	mov ds,ax
+	mov esi,OFFSET fm_section
+	InitNewSection
 ;
 	popa
 	pop es
