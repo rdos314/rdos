@@ -163,7 +163,11 @@ switch_mode_done:
 	or ax,807h
 	SetPhysicalPage
 ;
-	EnterSection ds:v_section
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;    
 	push ds
 	GetFocusThread
 	mov bx,ax
@@ -185,7 +189,11 @@ switch_mode_done:
 	rep movsd
 ;
 	pop ds
-	LeaveSection ds:v_section
+;	
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
 ;
 	pop eax
 	push ax
@@ -239,7 +247,8 @@ switch_from	Proc far
 	or ax,807h
 	SetPhysicalPage
 ;
-	EnterSection ds:v_section
+    mov esi,OFFSET v_section
+    EnterNewSection
 	push ds
 	mov eax,cr3
 	mov cr3,eax
@@ -260,7 +269,9 @@ switch_from	Proc far
 	or ax,807h
 	mov edx,ds:v_mem_base
 	SetThreadPhysicalPage
-	LeaveSection ds:v_section
+;	
+    mov esi,OFFSET v_section
+    LeaveNewSection
 ;
 	pop eax
 	push ax
@@ -305,8 +316,11 @@ set_cursor_pos	PROC far
 	push ax
 	push bx
 	push dx
+	push esi
 ;
-	EnterSection ds:v_section
+    mov esi,OFFSET v_section
+    EnterNewSection
+;    
 	mov ds:v_row,dx
 	mov ds:v_col,cx
 	mov al,ds:v_has_focus
@@ -316,8 +330,9 @@ set_cursor_pos	PROC far
 	call SetCursorPhysical
 
 set_cursor_done:
-	LeaveSection ds:v_section
+    LeaveNewSection
 ;
+    pop esi
 	pop dx
 	pop bx
 	pop ax
@@ -343,9 +358,11 @@ PAGE
 
 write_char	Proc far
 	push ax
+	push esi
 	push edi
 ;
-	EnterSection ds:v_section
+    mov esi,OFFSET v_section
+    EnterNewSection
 	push ds
 	mov ah,bh
 	shl ah,4
@@ -366,9 +383,10 @@ write_char	Proc far
 	pop ax
 	mov [di],ax
 	pop ds
-	LeaveSection ds:v_section
+    LeaveNewSection
 ;
 	pop edi
+	pop esi
 	pop ax
 	ret
 write_char	Endp
@@ -437,7 +455,11 @@ clear	Proc far
 	push ax
 	push dx
 ;
-	EnterSection ds:v_section
+	push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;
 	push ds
 	push es
 	mov ax,dosB800
@@ -476,7 +498,11 @@ clear_row_loop:
 clear_done:
 	pop es
 	pop ds
-	LeaveSection ds:v_section
+;
+    push esi
+    mov esi,OFFSET v_section	
+	LeaveNewSection
+	pop esi
 ;
 	pop dx
 	pop ax
@@ -515,9 +541,13 @@ scroll_up	Proc far
 	push dx
 	push si
 	push di
-	EnterSection ds:v_section
 	push ds
 	push es
+;
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
 ;
 	mov [bp].suLowerRow,di
 	mov [bp].suLowerCol,si
@@ -593,7 +623,11 @@ scroll_up_clear_row_loop:
 scroll_up_done:
 	pop es
 	pop ds
-	LeaveSection ds:v_section
+;
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
 ;
 	pop di
 	pop si
@@ -635,10 +669,14 @@ scroll_down	Proc far
 	push dx
 	push si
 	push di
-	EnterSection ds:v_section
 	push ds
 	push es
 ;
+    push esi
+    mov esi,OFFSET v_section
+    EnterNewSection
+    pop esi
+;    
 	mov [bp].sdUpperRow,dx
 	mov [bp].sdLowerCol,si
 	mov [bp].sdRows,ax
@@ -715,7 +753,11 @@ scroll_down_clear_row_loop:
 scroll_down_done:
 	pop es
 	pop ds
-	LeaveSection ds:v_section
+;	
+    push esi
+    mov esi,OFFSET v_section
+    LeaveNewSection
+    pop esi
 ;
 	pop di
 	pop si
@@ -743,7 +785,7 @@ init_mode3	Proc far
 	push ds
 	push es
 	push cx
-	push si
+	push esi
 	push di
 ;
 	mov eax,SIZE video_object
@@ -775,7 +817,8 @@ init_mode3	Proc far
 	mov ds:v_has_focus,0
 	mov ds:v_row,0
 	mov ds:v_col,0
-	InitSection ds:v_section
+	mov esi,OFFSET v_section
+	InitNewSection
 ;
 	mov bx,gdt_sel
 	mov es,bx
@@ -808,7 +851,7 @@ init_mono_loop:
 	clc
 ;
 	pop di
-	pop si
+	pop esi
 	pop cx
 	pop es
 	pop ds
