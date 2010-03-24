@@ -123,7 +123,6 @@ usbcom_device_struc   ENDS
 
 serial_data STRUC
 
-sd_section          section_typ <>
 sd_thread           DW ?
 sd_dead_list        DW ?
 
@@ -856,9 +855,10 @@ open_com_ftdi	Proc far
     mov dx,ds
     mov ax,es
     mov ds,ax
-    EnterSection ds:uds_section
+    mov esi,OFFSET uds_section
+    EnterNewSection
     mov ds:uds_port_sel,dx
-    LeaveSection ds:uds_section       
+    LeaveNewSection
 ;
     mov ax,usbcom_data_sel
     mov ds,ax    
@@ -888,6 +888,7 @@ PAGE
 close_com_ftdi	Proc far
     push ds
     push bx
+    push esi
 ;
     mov al,ds:ups_timer_active
     or al,al
@@ -913,9 +914,10 @@ ccfTimerClosed:
     jz ccfNoDevice
 ;
     mov ds,bx    
-    EnterSection ds:uds_section
+    mov esi,OFFSET uds_section
+    EnterNewSection
     mov ds:uds_port_sel,0
-    LeaveSection ds:uds_section       
+    LeaveNewSection
 
 ccfNoDevice:    
     mov ds,ax
@@ -926,6 +928,7 @@ ccfNoDevice:
     mov bx,ds:sd_thread
     Signal    
 ;
+    pop esi
     pop bx
     pop ds    
 	ret
@@ -1796,9 +1799,10 @@ open_com_pl	Proc far
     mov dx,ds
     mov ax,es
     mov ds,ax
-    EnterSection ds:uds_section
+    mov esi,OFFSET uds_section
+    EnterNewSection
     mov ds:uds_port_sel,dx
-    LeaveSection ds:uds_section       
+    LeaveNewSection
 ;
     mov ax,usbcom_data_sel
     mov ds,ax    
@@ -1828,6 +1832,7 @@ PAGE
 close_com_pl	Proc far
     push ds
     push bx
+    push esi
 ;
     mov al,ds:ups_timer_active
     or al,al
@@ -1853,9 +1858,10 @@ ccpTimerClosed:
     jz ccpNoDevice
 ;
     mov ds,bx    
-    EnterSection ds:uds_section
+    mov esi,OFFSET uds_section
+    EnterNewSection
     mov ds:uds_port_sel,0
-    LeaveSection ds:uds_section       
+    LeaveNewSection
 
 ccpNoDevice:    
     mov ds,ax
@@ -1866,6 +1872,7 @@ ccpNoDevice:
     mov bx,ds:sd_thread
     Signal    
 ;
+    pop esi
     pop bx
     pop ds    
 	ret
@@ -2740,13 +2747,14 @@ utDevLoop:
 ;
     mov ds,ax
     push cx
-    push si
+    push esi
 ;
-    EnterSection ds:uds_section
+    mov esi,OFFSET uds_section
+    EnterNewSection
     call HandleDevice
-    LeaveSection ds:uds_section
+    LeaveNewSection
 ;
-    pop si
+    pop esi
     pop cx
     
 utDevNext:
@@ -2887,7 +2895,11 @@ apDescrDone:
     sti
     mov dx,es
     mov ds,dx
-    EnterSection ds:uds_section
+    push esi
+    mov esi,OFFSET uds_section
+    EnterNewSection
+    pop esi
+;
     mov al,ds:uds_flag
     or al,FLAG_UDS_REINIT
     and al,NOT FLAG_UDS_DISCONNECT
@@ -2901,7 +2913,8 @@ apDescrDone:
 ;
     mov dx,es
     mov ds,dx    
-    LeaveSection ds:uds_section
+    mov esi,OFFSET uds_section
+    LeaveNewSection
 ;    
     mov ax,usbcom_data_sel
     mov ds,ax
@@ -2938,7 +2951,13 @@ apNoRecover:
 	mov es:uds_intr_buffer,0
 	mov es:uds_intr_req,0
 	mov es:uds_flag,0
-	InitSection es:uds_section
+;
+    push ds
+    mov ax,es
+    mov ds,ax
+    mov esi,OFFSET uds_section
+    InitNewSection
+    pop ds
 ;
     mov si,ds:sd_ports
     add si,si
@@ -3457,8 +3476,12 @@ udCheckLoop:
 ;
     push ds
     pushad
+;    
     mov ds,dx
-    EnterSection ds:uds_section
+    push esi
+    mov esi,OFFSET uds_section
+    EnterNewSection
+    pop esi
     or ds:uds_flag,FLAG_UDS_DISCONNECT
 ;    
     mov dx,usbcom_data_sel
@@ -3498,7 +3521,8 @@ udPortSendOk:
     pop es
 
 udPortHandleOk:    
-    LeaveSection ds:uds_section    
+    mov esi,OFFSET uds_section
+    LeaveNewSection
 ;    
     popad
     pop ds
@@ -3540,7 +3564,6 @@ init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
-	InitSection es:sd_section
 	mov es:sd_ports,0
 	mov es:sd_thread,0
 	mov es:sd_dead_list,0
