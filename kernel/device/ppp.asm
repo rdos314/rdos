@@ -4083,7 +4083,11 @@ Send	Proc far
 ;
 	mov ax,ppp_data_sel
 	mov ds,ax
-	EnterSection ds:access_section
+	push esi
+	mov esi,OFFSET access_section
+	EnterNewSection
+	pop esi
+;	
 	mov di,ds:send_tail
 	mov ax,di
 	add ax,cx
@@ -4095,7 +4099,11 @@ Send	Proc far
 	sub ax,SEND_BUFFER_SIZE
 send_set_tail:
 	mov ds:send_tail,ax
-	LeaveSection ds:access_section
+;	
+	push esi
+	mov esi,OFFSET access_section
+	LeaveNewSection
+	pop esi
 ;
 	mov ax,es
 	mov ds,ax
@@ -4524,6 +4532,9 @@ Init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
+;
+    mov esi,OFFSET access_section
+    InitNewSection	
 ;
 	mov ax,cs
 	mov es,ax
