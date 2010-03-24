@@ -603,7 +603,8 @@ init_process	PROC far
 ;
 	mov ax,handle_sel
 	mov ds,ax
-	InitSection ds:handle_section
+	mov esi,OFFSET handle_section
+	InitNewSection
 ;
 	mov cx,MAX_HANDLES
 	mov di,2 * MAX_HANDLES + OFFSET handle_arr
