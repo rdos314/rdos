@@ -1192,7 +1192,8 @@ hide_sprite	Proc far
 ;
     mov fs,ds:[bx].sp_sel
     mov ds,fs:sp_dest_sel
-    EnterSection ds:v_sprite_section
+    mov esi,OFFSET v_sprite_section
+    EnterNewSection
 ;
     test fs:sp_flags,SP_FLAG_VISIBLE
     jz hide_sprite_leave
@@ -1224,7 +1225,8 @@ hide_sprite	Proc far
 
 hide_sprite_leave:
     mov ds,fs:sp_dest_sel
-	LeaveSection ds:v_sprite_section
+    mov esi,OFFSET v_sprite_section
+    LeaveNewSection
 
 hide_sprite_done:
 	popad
@@ -1263,7 +1265,8 @@ show_sprite	Proc far
 ;
     mov fs,ds:[bx].sp_sel
     mov ds,fs:sp_dest_sel
-    EnterSection ds:v_sprite_section
+    mov esi,OFFSET v_sprite_section
+    EnterNewSection
 ;
     test fs:sp_flags,SP_FLAG_VISIBLE
     jnz show_sprite_leave
@@ -1295,7 +1298,8 @@ show_sprite	Proc far
 
 show_sprite_leave:
     mov ds,fs:sp_dest_sel
-    LeaveSection ds:v_sprite_section
+    mov esi,OFFSET v_sprite_section
+    LeaveNewSection
     clc
 
 show_sprite_done:
@@ -1560,7 +1564,8 @@ move_sprite	Proc far
 ;
     mov fs,ds:[bx].sp_sel
     mov ds,fs:sp_dest_sel
-    EnterSection ds:v_sprite_section
+    mov esi,OFFSET v_sprite_section
+    EnterNewSection
 ;
     push ds:v_x_min
     push ds:v_y_min
@@ -1666,7 +1671,8 @@ move_sprite_coord:
     pop ds:v_x_max
     pop ds:v_y_min
     pop ds:v_x_min
-    LeaveSection ds:v_sprite_section
+    mov esi,OFFSET v_sprite_section
+    LeaveNewSection
     clc
 
 move_sprite_done:
@@ -1702,7 +1708,8 @@ delete_sprite	Proc near
     push bx
 ;
     mov ds,fs:sp_dest_sel
-    EnterSection ds:v_sprite_section
+    mov esi,OFFSET v_sprite_section
+    EnterNewSection
 ;
 	test fs:sp_flags,SP_FLAG_VISIBLE
     jz delete_sprite_hidden
@@ -1808,7 +1815,8 @@ delete_sprite_spl_next:
     loop delete_sprite_spl_loop
 ;
     mov ds,fs:sp_dest_sel
-    LeaveSection ds:v_sprite_section
+    mov esi,OFFSET v_sprite_section
+    LeaveNewSection
     mov ax,fs
     mov es,ax
     xor ax,ax
