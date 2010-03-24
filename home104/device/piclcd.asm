@@ -836,6 +836,7 @@ QueueReq   Proc near
     push ds
     push ax
     push bx
+    push esi
     push di
 ;   
     mov ax,piclcd_data_sel
@@ -844,7 +845,8 @@ QueueReq   Proc near
     GetThread
     mov es:dqe_thread,ax
 ;    
-    EnterSection ds:ListSection
+    mov esi,OFFSET ListSection
+    EnterNewSection
 ;
     movzx ax,es:dqe_queue
     and al,2    
@@ -852,7 +854,8 @@ QueueReq   Proc near
     add di,ax
     call DioInsert
 ;    
-    LeaveSection ds:ListSection
+    mov esi,OFFSET ListSection
+    LeaveNewSection
 ;
     movzx ax,es:dqe_queue
     and al,2    
@@ -862,6 +865,7 @@ QueueReq   Proc near
     Signal    
 ;
     pop di
+    pop esi
     pop bx
     pop ax
     pop ds 
@@ -1169,15 +1173,23 @@ ptLoop1:
     Signal
     
 ptNoReset1:
-    EnterSection ds:ListSection
+    mov esi,OFFSET ListSection
+    EnterNewSection
+;    
     call DioCheckReady1
     call DioCheckIdle1
-    LeaveSection ds:ListSection
+;    
+    mov esi,OFFSET ListSection
+    LeaveNewSection
 ;
-    EnterSection ds:ListSection
+    mov esi,OFFSET ListSection
+    EnterNewSection
+;    
     call DioCheckReady1
     call DioCheckIdle1
-    LeaveSection ds:ListSection
+;    
+    mov esi,OFFSET ListSection
+    LeaveNewSection
 ;
 	GetSystemTime
 	add eax,5 * 1193000
@@ -1269,15 +1281,23 @@ ptLoop2:
     Signal
     
 ptNoReset2:
-    EnterSection ds:ListSection
-    call DioCheckReady2
-    call DioCheckIdle2
-    LeaveSection ds:ListSection
+    mov esi,OFFSET ListSection
+    EnterNewSection
 ;
-    EnterSection ds:ListSection
     call DioCheckReady2
     call DioCheckIdle2
-    LeaveSection ds:ListSection
+;    
+    mov esi,OFFSET ListSection
+    LeaveNewSection
+;
+    mov esi,OFFSET ListSection
+    EnterNewSection
+;
+    call DioCheckReady2
+    call DioCheckIdle2
+;    
+    mov esi,OFFSET ListSection
+    LeaveNewSection
 ;
 	GetSystemTime
 	add eax,5 * 1193000
@@ -2107,7 +2127,11 @@ init	PROC far
 	mov es:PicOut,al
 	mov dx,IO_BASE + 8
 	out dx,al
-	InitSection es:ListSection
+;
+    mov ax,es
+    mov ds,ax
+    mov esi,OFFSET ListSection
+    InitNewSection	
 ;
     mov di,NodeArr
     mov cx,NODE_CNT

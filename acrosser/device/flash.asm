@@ -534,11 +534,13 @@ discbuf_thread_loop:
 	mov bx,fs:disc_sel
 	WaitForDiscRequest
 ;
-    EnterSection ds:flash_section
+    mov esi,OFFSET flash_section
+    EnterNewSection
     push ds
    	call perform_one
    	pop ds
-   	LeaveSection ds:flash_section
+    mov esi,OFFSET flash_section
+    LeaveNewSection
 	jmp discbuf_thread_loop
 
 PAGE
@@ -744,7 +746,8 @@ disc_assign	Proc far
 ;
     mov ax,flash_disc_data_sel
     mov ds,ax
-    EnterSection ds:flash_section
+    mov esi,OFFSET flash_section
+    EnterNewSection
     push ds
 ;    
 	mov al,0
@@ -756,7 +759,8 @@ disc_assign	Proc far
 	call install_unit
 ;
     pop ds
-   	LeaveSection ds:flash_section
+    mov esi,OFFSET flash_section
+    LeaveNewSection
 ;
 	popa
 	pop es

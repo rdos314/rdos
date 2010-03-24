@@ -41,33 +41,11 @@ piclcd_srcs = PICLCD.ASM
 piclcd_objs = $(piclcd_srcs:.ASM=.OBJ)
 piclcd_rdvs = PICLCD.RDV
 
-ewlcd_srcs = EWLCD.ASM
-ewlcd_objs = $(ewlcd_srcs:.ASM=.OBJ)
-ewlcd_rdvs = EWLCD.RDV
-
-keylcd_srcs = KEYLCD.ASM
-keylcd_objs = $(keylcd_srcs:.ASM=.OBJ)
-keylcd_rdvs = KEYLCD.RDV
-
-anio_srcs = ANIO.ASM
-anio_objs = $(anio_srcs:.ASM=.OBJ)
-anio_rdvs = ANIO.RDV
-
-digio_srcs = DIGIO.ASM
-digio_objs = $(digio_srcs:.ASM=.OBJ)
-digio_rdvs = DIGIO.RDV
-
-dcf_srcs = DCF.ASM
-dcf_objs = $(dcf_srcs:.ASM=.OBJ)
-dcf_rdvs = DCF.RDV
-
-srcs =      $(ewlcd_srcs) $(keylcd_srcs) $(piclcd_srcs) \
-			$(anio_srcs) $(digio_srcs) $(dcf_srcs)
-
+srcs =      $(piclcd_srcs)
+			
 objs =      $(srcs:.ASM=.OBJ)
 
-rdvs =      $(ewlcd_rdvs) $(keylcd_rdvs) $(piclcd_rdvs) \
-			$(anio_rdvs) $(digio_rdvs) $(dcf_rdvs)
+rdvs =      $(piclcd_rdvs) 
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -94,44 +72,4 @@ PICLCD.RDV : $(piclcd_objs)
 	$(piclcd_objs)
 	PICLCD.RDV
 	PICLCD;       
-!
-
-EWLCD.RDV : $(ewlcd_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(ewlcd_objs)
-	EWLCD.RDV
-	EWLCD;       
-!
-
-KEYLCD.RDV : $(keylcd_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(keylcd_objs)
-	KEYLCD.RDV
-	KEYLCD;       
-!
-
-ANIO.RDV : $(anio_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(anio_objs)
-	ANIO.RDV
-	ANIO;
-!
-
-DIGIO.RDV : $(digio_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(digio_objs)
-	DIGIO.RDV
-	DIGIO;
-!
-
-DCF.RDV : $(dcf_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(dcf_objs)
-	DCF.RDV
-	DCF;
 !
