@@ -138,10 +138,12 @@ get_random	PROC far
     push ds
     push bx
     push edx
+    push esi
 ;    
     mov bx,random_proc_sel
     mov ds,bx
-	EnterSection ds:mtsect
+    mov esi,OFFSET mtsect
+    EnterNewSection
 ;
     mov bx,ds:mti
     cmp bx,4 * N
@@ -173,7 +175,10 @@ get_random_do:
     shr edx,18
     xor eax,edx
 ;
-	LeaveSection ds:mtsect
+    mov esi,OFFSET mtsect
+    LeaveNewSection
+;    
+    pop esi	
     pop edx
     pop bx
     pop ds    
@@ -227,7 +232,8 @@ init_genrand_loop:
 ;
     shl ecx,2
     mov ds:mti,cx
-	InitSection ds:mtsect
+    mov esi,OFFSET mtsect
+    InitNewSection
 ;
     popad
     pop ds
