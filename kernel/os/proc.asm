@@ -1158,7 +1158,15 @@ init_process_block	PROC near
 	mov es:pd_exit_code,0
 	mov es:pd_ref_count,1
 	mov es:pd_wait,0
-    InitSection es:pd_section
+;	
+	push ds
+	push esi
+	mov si,es
+	mov ds,si
+	mov esi,OFFSET pd_section
+	InitNewSection
+	pop esi
+	pop ds
 ;    
     mov ax,es
     mov es,bx
@@ -1760,7 +1768,9 @@ terminate_proc:
     sub ds:pd_ref_count,1
     jz terminate_free_pd
 ;
-    EnterSection ds:pd_section
+    mov esi,OFFSET pd_section
+    EnterNewSection
+;    
     mov ds:pd_proc_sel,0
     mov ax,ds:pd_wait
     or ax,ax
@@ -1770,7 +1780,8 @@ terminate_proc:
 	SignalWait
 
 terminate_proc_sig_done:   
-    LeaveSection ds:pd_section
+    mov esi,OFFSET pd_section
+    LeaveNewSection
     xor ax,ax
     mov ds,ax
     jmp terminate_pd_done    
