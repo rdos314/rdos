@@ -1282,8 +1282,6 @@ spFocusDone:
 ;
 	mov gs:s_sect1.cs_value,-1
 	mov gs:s_sect1.cs_list,0
-	mov gs:s_sect2.cs_value,-1
-	mov gs:s_sect2.cs_list,0
 ;
     pop bx
     pop eax
@@ -1344,13 +1342,14 @@ DoSpawn Endp
 
 WaitForSpawn Proc near	
     push ds
-    push ax
+    push esi
 ;    
-	mov ax,gs
-	mov ds,ax
-	EnterSection ds:s_sect1
+	mov si,gs
+	mov ds,si
+	mov esi,OFFSET s_sect1
+	EnterNewSection
 ;
-    pop ax
+    pop esi
     pop ds
     ret
 WaitForSpawn    Endp
@@ -1502,7 +1501,10 @@ spCopyExeLoop:
 	mov ax,gs
 	mov ds,ax
 	mov es,ax
-	LeaveSection ds:s_sect1
+	push esi
+	mov esi,OFFSET s_sect1
+	LeaveNewSection
+	pop esi
 	WaitForSignal
 ;
 	mov ax,10
@@ -1544,7 +1546,8 @@ spFail:
 	mov gs:s_ret_code,-1
 	mov ax,gs
 	mov ds,ax
-	LeaveSection ds:s_sect1
+	mov esi,OFFSET s_sect1
+	LeaveNewSection
 	WaitForSignal
 ;
 	mov ax,10
