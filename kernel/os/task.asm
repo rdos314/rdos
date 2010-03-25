@@ -4343,7 +4343,7 @@ leave_user_section_name	DB 'Leave User Section',0
  
 leave_user_section	PROC far
     push ds
-    push ax
+    push eax
     push bx
 ;
 	mov ax,SECTION_HANDLE
@@ -4358,49 +4358,22 @@ leave_user_section	PROC far
 	jc leave_user_section_done
 ;
     mov ds:[bx].us_owner,-1
-    mov ax,ds
-    push OFFSET leave_user_section_done
-    call SaveCurrentThread
+    push dx
+    push esi
+;    
+    mov dx,ds
+    lea si,[bx].us_list
+    movzx esi,si
+    xor eax,eax
+    call WakeThread    
 ;
-	mov gs,ax
-	mov ax,task_sel
-	mov ds,ax
-;
-	mov ax,gs:[bx].us_list
-	or ax,ax
-	jz leave_user_section_restore
-;
-	mov es,ax
-	mov di,es:p_next
-	cmp di,gs:[bx].us_list
-	mov gs:[bx].us_list,di
-	mov si,es:p_prev
-	mov ds,di
-	mov ds:p_prev,si
-	mov ds,si
-	mov ds:p_next,di
-	jne leave_user_section_empty
-;
-	mov word ptr gs:[bx].us_list,0
-
-leave_user_section_empty:
-	mov ax,task_sel
-	mov ds,ax
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jb leave_user_section_restore
-;
-	mov ds:prio_act,di
-	call GetNextThread
-
-leave_user_section_restore:
-    jmp LoadCurrentThread
+    pop esi
+    pop dx
 
 leave_user_section_done:
 	sti
 	pop bx
-	pop ax
+	pop eax
 	pop ds
 	retf32
 leave_user_section	ENDP
