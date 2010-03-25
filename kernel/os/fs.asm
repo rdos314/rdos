@@ -375,8 +375,9 @@ init_file_old_freed:
 	mov esi,OFFSET fs_list_section
 	InitSection
 ;	
-	InitReadWriteSection ds:fs_access_section
-;	EnterWriteSection ds:fs_access_section
+    mov esi,OFFSET fs_access_section
+	InitNewReadWriteSection
+;
 	mov ds:fs_access_parse,0
 	mov ds:fs_root_dir_sel,0
 	mov ds:fs_mount_id,1

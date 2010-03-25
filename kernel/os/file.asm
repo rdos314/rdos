@@ -576,7 +576,9 @@ crfs_skip_lists:
 crfs_init:
 	pop edx
 	pop ecx
-	InitReadWriteSection ds:file_size_section
+;
+    mov esi,OFFSET file_size_section
+    InitNewReadWriteSection	
 ;	
 	mov esi,OFFSET file_list_section
 	InitSection
@@ -1132,10 +1134,14 @@ swap_all    Proc near
 
 swap_all_loop:	
     push ds
+    push esi
     mov ds,bx
-	EnterWriteSection ds:file_size_section
+    mov esi,OFFSET file_size_section
+    EnterNewWriteSection
     call swap_file
-	LeaveWriteSection ds:file_size_section
+    mov esi,OFFSET file_size_section
+    LeaveNewWriteSection
+	pop esi
 	pop ds
 ;
     mov es,bx
@@ -1198,7 +1204,11 @@ read_file	Proc near
     call swap_all 
 
 read_file_mem_all_ok:	
-	EnterReadSection ds:file_size_section
+    push esi
+    mov esi,OFFSET file_size_section
+    EnterNewReadSection
+    pop esi
+;
 	cmp edx,ds:file_size
 	jnc read_file_done
 ;
@@ -1329,7 +1339,8 @@ read_file_do:
 
 read_file_done:
 	pushf
-	LeaveReadSection ds:file_size_section
+    mov esi,OFFSET file_size_section
+    LeaveNewReadSection
 	popf
 	mov eax,ebp
 ;
@@ -1386,7 +1397,11 @@ write_file	Proc near
     call swap_all 
 
 write_file_mem_all_ok:	
-	EnterWriteSection ds:file_size_section
+    push esi
+    mov esi,OFFSET file_size_section
+    EnterNewWriteSection
+    pop esi
+;
 	cmp edx,ds:file_size
 	jnc write_file_extend
 ;
@@ -1538,7 +1553,8 @@ write_file_do:
 
 write_file_done:
 	pushf
-	LeaveWriteSection ds:file_size_section
+    mov esi,OFFSET file_size_section
+    LeaveNewWriteSection
 	popf
 	mov eax,ebp
 ;
@@ -1793,6 +1809,7 @@ get_file_size:
 	push ds
 	push bx
 	push edx
+	push esi
 ;
 	mov ax,FILE_HANDLE
 	DerefHandle
@@ -1804,12 +1821,14 @@ get_file_size:
 	jz get_file_size_done
 ;
 	mov ds,bx
-	EnterReadSection ds:file_size_section
+    mov esi,OFFSET file_size_section
+    EnterNewReadSection
 	mov eax,ds:file_size
-	LeaveReadSection ds:file_size_section
+    LeaveNewReadSection
 	clc
 
 get_file_size_done:
+    pop esi
 	pop edx
 	pop bx
 	pop ds
@@ -1834,6 +1853,7 @@ set_file_size:
 	push eax
 	push bx
 	push edx
+	push esi
 ;
 	mov edx,eax
 	mov ax,FILE_HANDLE
@@ -1847,11 +1867,16 @@ set_file_size:
 	jz set_file_size_done
 ;
 	mov ds,bx
-	EnterWriteSection ds:file_size_section
+    mov esi,OFFSET file_size_section
+    EnterNewWriteSection
+;
 	CallFileSystem set_file_size_proc
-	LeaveWriteSection ds:file_size_section
+;	
+    mov esi,OFFSET file_size_section
+    LeaveNewWriteSection
 
 set_file_size_done:
+    pop esi
 	pop edx
 	pop bx
 	pop eax
@@ -2331,7 +2356,9 @@ map_to_file	Proc near
 	mov ax,flat_sel
 	mov es,ax
 ;
-	EnterReadSection ds:file_size_section
+    mov esi,OFFSET file_size_section
+    EnterNewReadSection
+;
 	cmp edx,ds:file_size
 	jnc map_to_file_leave
 ;
@@ -2412,7 +2439,8 @@ map_to_file_do_first:
 	clc
 
 map_to_file_leave:
-	LeaveReadSection ds:file_size_section
+    mov esi,OFFSET file_size_section
+    LeaveNewReadSection
 	jmp map_to_file_done
 
 map_to_file_read:
@@ -2663,9 +2691,13 @@ swap_proc	Proc far
 swap_loop:	
     push ds
     mov ds,bx
-	EnterWriteSection ds:file_size_section
+    mov esi,OFFSET file_size_section
+    EnterNewWriteSection
+;
     call swap_file
-	LeaveWriteSection ds:file_size_section
+;    
+    mov esi,OFFSET file_size_section
+    LeaveNewWriteSection
 	pop ds
 ;
     mov es,bx
