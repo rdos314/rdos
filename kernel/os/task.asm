@@ -3152,7 +3152,7 @@ enter_int_name	DB 'Enter Int',0
 enter_int	Proc far
 	mov ax,task_sel
 	mov ds,ax
-	call ds:lock_proc
+	call ds:try_lock_proc
 	ret
 enter_int	Endp
 
