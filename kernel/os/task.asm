@@ -219,10 +219,12 @@ GetPrioThread	MACRO
 	mov ax,[si]
 	or ax,ax
 	je find_prio_lower
+;
 	mov es,ax
 	mov ax,es:p_next
 	mov [si],ax
 	jmp find_prio_end	
+	
 find_prio_lower:
 	sub si,2
 	jnc find_prio_loop
@@ -2015,8 +2017,10 @@ get_next_int_loop:
 	mov es,es:p_process_sel
 	test es:ms_virt_flags,200h
 	jnz get_next_int_ok
+;	
 	cmp ax,es:ms_cli_thread
 	jz get_next_int_ok
+;	
 	mov ax,es
 	mov si,ds:prio_act
 	RemoveBlock              
@@ -2028,13 +2032,6 @@ get_next_int_loop:
 	jmp get_next_int_loop
 
 get_next_int_ok:
-    mov es,ds:thread_act
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	add eax,1193
-	adc edx,0
-	mov ds:preempt_lsb,eax
-	mov ds:preempt_msb,edx
 	pop es
 	ret
 GetNextThread	Endp
