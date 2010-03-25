@@ -203,8 +203,6 @@ dpmi_code32_sel		EQU 518h
 
 state_save_sel		EQU 523h
 
-section_proc_sel	EQU 528h
-
 discbuf_code_sel	EQU 530h
 ac97_code_sel       EQU 538h
 

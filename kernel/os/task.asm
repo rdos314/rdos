@@ -41,53 +41,19 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE apic.inc
 INCLUDE proc.inc
+INCLUDE ..\handle.inc
 
-section_num	EQU 512
+section_handle_seg		STRUC
 
-user_section	STRUC
+us_base	    handle_header <>
 
-ucs_value	DW ?
-ucs_list	DW ?
-ucs_owner	DW ?
-ucs_count	DW ?
+us_value	DW ?
+us_list	    DW ?
+us_owner	DW ?
+us_count	DW ?
 
-user_section	ENDS
+section_handle_seg		ENDS
 
-section_to_offset	MACRO reg
-	dec reg
-	shl reg,3
-	add reg,OFFSET section_list
-					ENDM
-
-offset_to_section	MACRO reg
-	sub reg,OFFSET section_list
-	shr reg,3
-	inc reg
-					ENDM
-
-allocate_section	MACRO
-	push ax
-	mov bx,ds:section_free_list
-	mov ax,[bx]
-	mov ds:section_free_list,ax
-	pop ax
-				ENDM
-
-free_section	MACRO
-	push ax
-	mov ax,ds:section_free_list
-	mov [bx],ax
-	mov ds:section_free_list,bx
-	pop ax
-			ENDM
-
-section_proc_seg	STRUC
-
-section_free_list		DW ?
-section_list			DB 8 * section_num DUP(?)
-section_handle_section	section_typ <>
-
-section_proc_seg	ENDS
 
 timer_struc	STRUC
 timer_next		DW ?
@@ -869,11 +835,6 @@ timer_free_list_create:
 	loop timer_free_list_create
 ;
 	mov ds:thread_act,0
-;
-	mov eax,SIZE section_proc_seg
-	mov bx,section_proc_sel
-	push cs
-	call allocate_fixed_process_mem
 ;
 	mov ax,cs
 	mov ds,ax
@@ -4170,39 +4131,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			init_process_task
-;
-;		DESCRIPTION:	Init process task
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public init_process_task
-
-init_process_task	Proc near
-	mov ax,section_proc_sel
-	mov ds,ax
-;
-    mov esi,OFFSET section_handle_section
-    InitSection
-;    
-	mov cx,section_num
-	mov di,8 * section_num + OFFSET section_list
-
-init_section_tab_loop:
-	mov ax,di
-	sub di,8
-	mov ds:[di],ax
-	loop init_section_tab_loop
-;
-	mov ds:section_free_list,di
-	ret
-init_process_task	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
 ;		NAME:			create_user_section
 ;
 ;		DESCRIPTION:	Create user section
@@ -4216,24 +4144,19 @@ create_user_section_name	DB 'Create User Section',0
 create_user_section	PROC far
 	push ds
 	push eax
-	push esi
+	push cx
 ;
-	mov ax,section_proc_sel
-	mov ds,ax
-	mov esi,OFFSET section_handle_section
-	EnterSection
-;
-	allocate_section
-	mov ds:[bx].ucs_value,0
-	mov ds:[bx].ucs_list,0
-	mov ds:[bx].ucs_owner,0
-	mov ds:[bx].ucs_count,0
-;
-    LeaveSection
-	offset_to_section bx
+   	mov cx,SIZE section_handle_seg
+	AllocateHandle
+	mov ds:[bx].us_value,0
+	mov ds:[bx].us_list,0
+	mov ds:[bx].us_owner,0
+	mov ds:[bx].us_count,0
+	mov [bx].hh_sign,SECTION_HANDLE
+	mov bx,[bx].hh_handle
 	clc
 ;
-    pop esi
+    pop cx
 	pop eax
 	pop ds
 	retf32
@@ -4257,24 +4180,19 @@ create_blocked_user_section_name	DB 'Create Blocked User Section',0
 create_blocked_user_section	PROC far
 	push ds
 	push eax
-	push esi
+	push cx
 ;
-	mov ax,section_proc_sel
-	mov ds,ax
-	mov esi,OFFSET section_handle_section
-	EnterSection
-;	
-	allocate_section
-	mov ds:[bx].ucs_value,-1
-	mov ds:[bx].ucs_list,0
-	mov ds:[bx].ucs_owner,-1
-	mov ds:[bx].ucs_count,1
-;
-    LeaveSection
-	offset_to_section bx
+   	mov cx,SIZE section_handle_seg
+	AllocateHandle
+	mov ds:[bx].us_value,-1
+	mov ds:[bx].us_list,0
+	mov ds:[bx].us_owner,-1
+	mov ds:[bx].us_count,1
+	mov [bx].hh_sign,SECTION_HANDLE
+	mov bx,[bx].hh_handle
 	clc
 ;
-    pop esi
+    pop cx
 	pop eax
 	pop ds
 	retf32
@@ -4296,30 +4214,18 @@ PAGE
 delete_user_section_name	DB 'Delete User Section',0
 
 delete_user_section	PROC far
-	push ds
-	push eax
-	push esi
+    push ds
+    push bx
 ;
-	mov ax,section_proc_sel
-	mov ds,ax
-	mov esi,OFFSET section_handle_section
-	EnterSection
-;	
-	section_to_offset bx
-	mov ax,[bx]
-	dec ax
-	test ah,80h
-	jz free_section_done
+	mov ax,SECTION_HANDLE
+	DerefHandle
+	jc free_section_done
 ;
-	free_section
+	FreeHandle
+	clc
 
 free_section_done:
-    LeaveSection
-	xor bx,bx
-	clc
-;
-    pop esi
-	pop eax
+    pop bx
 	pop ds
 	retf32
 delete_user_section	ENDP
@@ -4340,27 +4246,23 @@ PAGE
 enter_user_section_name	DB 'Enter User Section',0
 
 enter_user_section	PROC far
-	push ds
-	push ax
-	push bx
+    push ds
+    push ax
+    push bx
 ;
-	mov ax,section_proc_sel
-	mov ds,ax
-	section_to_offset bx
-	mov ax,[bx].ucs_value
-	dec ax
-	test ah,80h
-	jz enter_user_section_fail
+	mov ax,SECTION_HANDLE
+	DerefHandle
+	jc enter_user_section_fail
 ;
 	cli
-	sub ds:[bx].ucs_value,1
+	sub ds:[bx].us_value,1
 	jc enter_user_section_done
 ;
 	str ax
-	cmp ax,ds:[bx].ucs_owner
+	cmp ax,ds:[bx].us_owner
 	jne enter_user_section_block
 ;
-	add ds:[bx].ucs_value,1
+	add ds:[bx].us_value,1
 	jmp enter_user_section_done
 
 enter_user_section_block:
@@ -4378,8 +4280,8 @@ enter_user_section_block:
 ;
 	mov es:p_sleep_sel,gs
 	mov es:p_sleep_offset,ebx
-	add es:p_sleep_offset,OFFSET ucs_list
-	mov di,gs:[bx].ucs_list
+	add es:p_sleep_offset,OFFSET us_list
+	mov di,gs:[bx].us_list
 	or di,di
 	je enter_user_ins_empty
 ;
@@ -4395,7 +4297,7 @@ enter_user_section_block:
 enter_user_ins_empty:
 	mov es:p_next,es
 	mov es:p_prev,es
-	mov gs:[bx].ucs_list,es
+	mov gs:[bx].us_list,es
 
 enter_user_inserted:
 	mov ax,task_sel
@@ -4405,8 +4307,8 @@ enter_user_inserted:
 
 enter_user_section_done:
 	str ax
-	mov ds:[bx].ucs_owner,ax
-	inc ds:[bx].ucs_count
+	mov ds:[bx].us_owner,ax
+	inc ds:[bx].us_count
 	sti
 
 enter_user_section_fail:
@@ -4432,25 +4334,22 @@ PAGE
 leave_user_section_name	DB 'Leave User Section',0
  
 leave_user_section	PROC far
-	push ds
-	push ax
-	push bx
+    push ds
+    push ax
+    push bx
 ;
-	mov ax,section_proc_sel
-	mov ds,ax
-	section_to_offset bx
-	mov ax,[bx].ucs_value
-	test ah,80h
-	jz leave_user_section_done
-;
-	cli
-	sub ds:[bx].ucs_count,1
-	jnz leave_user_section_done
-;
-	add ds:[bx].ucs_value,1
+	mov ax,SECTION_HANDLE
+	DerefHandle
 	jc leave_user_section_done
 ;
-    mov ds:[bx].ucs_owner,-1
+	cli
+	sub ds:[bx].us_count,1
+	jnz leave_user_section_done
+;
+	add ds:[bx].us_value,1
+	jc leave_user_section_done
+;
+    mov ds:[bx].us_owner,-1
     mov ax,ds
     push OFFSET leave_user_section_done
     call SaveCurrentThread
@@ -4459,14 +4358,14 @@ leave_user_section	PROC far
 	mov ax,task_sel
 	mov ds,ax
 ;
-	mov ax,gs:[bx].ucs_list
+	mov ax,gs:[bx].us_list
 	or ax,ax
 	jz leave_user_section_restore
 ;
 	mov es,ax
 	mov di,es:p_next
-	cmp di,gs:[bx].ucs_list
-	mov gs:[bx].ucs_list,di
+	cmp di,gs:[bx].us_list
+	mov gs:[bx].us_list,di
 	mov si,es:p_prev
 	mov ds,di
 	mov ds:p_prev,si
@@ -4474,7 +4373,7 @@ leave_user_section	PROC far
 	mov ds:p_next,di
 	jne leave_user_section_empty
 ;
-	mov word ptr gs:[bx].ucs_list,0
+	mov word ptr gs:[bx].us_list,0
 
 leave_user_section_empty:
 	mov ax,task_sel
