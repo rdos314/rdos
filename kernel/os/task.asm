@@ -2923,6 +2923,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockWakeupSingle	Proc near
+    cli
 	ret
 LockWakeupSingle	Endp
 
@@ -2940,6 +2941,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockWakeupSingle	Proc near
+    sti
 	ret
 UnlockWakeupSingle	Endp
 
@@ -3006,7 +3008,7 @@ usRetry:
 	jnc usDone
 ;	
     mov al,ds:has_signal
-    or al,al
+    or al,ds:has_wakeup
     jz usNoSignal
 ;
     add ds:timer_nesting,1
@@ -3014,16 +3016,30 @@ usRetry:
 ;
     push OFFSET usDone
     call SaveLockedThread
-;    
-    mov es,ds:thread_act
-    mov ax,ds:prio_act
-    cmp ax,es:p_prio
-    jbe usSigPrioOk
-;
-    cli
-    call GetNextThread
 
-usSigPrioOk:
+usWakeupLoop:
+    mov ds:has_wakeup,0
+    call ds:lock_wakeup_proc
+    mov si,OFFSET wakeup_list
+    mov ax,[si]
+    or ax,ax
+    jz usWakeupDone
+;
+	RemoveBlock
+	mov di,es:p_prio
+	InsertBlock
+	cmp di,ds:prio_act
+	jbe usWakeupPrioOk
+;	
+	mov ds:prio_act,di
+
+usWakeupPrioOk:
+    call ds:unlock_wakeup_proc
+    jmp usWakeupLoop
+
+usWakeupDone:
+    call ds:unlock_wakeup_proc
+;    
     mov ds:has_signal,0
     cli
 	mov si,OFFSET signal_list
@@ -3047,7 +3063,6 @@ usSignalLoop:
 	jbe usSignalPrioOk
 ;	
 	mov ds:prio_act,di
-	call GetNextThread
 
 usSignalPrioOk:
 	mov si,OFFSET signal_list
@@ -3063,7 +3078,16 @@ usSignalNext:
 	cmp dx,ax
 	jne usSignalLoop
 
-usSignalDone:
+usSignalDone:    
+    mov es,ds:thread_act
+    mov ax,ds:prio_act
+    cmp ax,es:p_prio
+    jbe usPrioOk
+;
+    cli
+    call GetNextThread
+
+usPrioOk:
     jmp LoadCurrentThread
 
 usNoSignal:
@@ -4596,19 +4620,11 @@ wake_until	PROC far
 	mov ax,task_sel
 	mov ds,ax
 	mov es,cx
-	cli
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jbe wake_until_lower
-	mov ds:prio_act,di
-	LocalGetSystemTime
-	add eax,1193
-	adc edx,0
-	mov ds:preempt_lsb,eax
-	mov ds:preempt_msb,edx
-wake_until_lower:
-	sti
+	mov ds:has_wakeup,1
+    call ds:lock_wakeup_proc
+    mov di,OFFSET wakeup_list
+    InsertBlock
+    call ds:unlock_wakeup_proc
 	ret
 wake_until	ENDP
 
