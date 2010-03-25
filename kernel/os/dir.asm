@@ -1212,6 +1212,7 @@ get_cur_dir_loop:
 	pop ds
 ;
 	LeaveNewReadSection
+	mov si,ds
 	mov ds,bx
 	mov eax,ds:ds_dir_ptr
 
@@ -2256,7 +2257,7 @@ create_file_normal:
 	jc create_file_pop_failed
 ;
     mov esi,OFFSET ds_access_section
-    EnterNewReadSection
+    EnterNewWriteSection
 ;    
 	dec ds:ds_usage
 	call ParseFile
@@ -2271,7 +2272,7 @@ create_file_normal:
 	call SetupFileSel
 ;	
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveNewWriteSection
 	pop edi
 	jmp create_file_handle
 
@@ -2284,7 +2285,7 @@ create_file_truncate:
 	pop edx
 ;
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveNewWriteSection
 
 create_file_handle:
 	call CreateFileHandle
@@ -2294,7 +2295,7 @@ create_file_handle:
 
 create_file_leave_failed:
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveNewWriteSection
 	call ParseEnd
 
 create_file_pop_failed:
