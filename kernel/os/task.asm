@@ -2411,7 +2411,7 @@ PAGE
 ;		DESCRIPTION:	Block thread and schedule next thread. Registers
 ;                       must be saved before doing call this procedure
 ;
-;		PARAMETERS:		AX:EDI	Block list
+;		PARAMETERS:		AX:EDI	Block list. AX = 0, no sleep list
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2426,13 +2426,17 @@ BlockThread:
 	mov si,es:p_prio
 	RemoveBlock
 ;
+    or cx,cx
+    jz rtSchedule
+;    
     call ds:lock_list_proc	
 	mov ds,cx
 	InsertBlock32
 	mov ax,task_sel
 	mov ds,ax
     call ds:unlock_list_proc
-;	
+
+rtSchedule:	
 	call GetNextThread
     jmp LoadCurrentThread
 
@@ -4569,13 +4573,10 @@ wait_until	PROC far
 	xor bx,bx
 	cli
 	LocalStartTimer
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	mov es:p_sleep_sel,0
-	mov es:p_sleep_offset,1
-	RemoveBlock
-	call GetNextThread
-    jmp LoadCurrentThread
+;
+    xor ax,ax
+    mov edi,1
+    jmp BlockThread
 
 wait_until_done:
 	retf32
@@ -4619,13 +4620,10 @@ wait_milli_sec	PROC far
 	xor bx,bx
 	cli
 	LocalStartTimer
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	mov es:p_sleep_sel,0
-	mov es:p_sleep_offset,1
-	RemoveBlock
-	call GetNextThread
-    jmp LoadCurrentThread
+;	
+    xor ax,ax
+    mov edi,1
+    jmp BlockThread
 
 wait_milli_done:
 	retf32
@@ -4671,13 +4669,10 @@ wait_micro_sec	PROC far
 	xor bx,bx
 	cli
 	LocalStartTimer
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	mov es:p_sleep_sel,0
-	mov es:p_sleep_offset,1
-	RemoveBlock
-	call GetNextThread
-    jmp LoadCurrentThread
+;	
+    xor ax,ax
+    mov edi,1
+    jmp BlockThread
 
 wait_micro_done:
 	retf32
