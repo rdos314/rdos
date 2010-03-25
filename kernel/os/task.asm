@@ -219,12 +219,10 @@ GetPrioThread	MACRO
 	mov ax,[si]
 	or ax,ax
 	je find_prio_lower
-;
 	mov es,ax
 	mov ax,es:p_next
 	mov [si],ax
 	jmp find_prio_end	
-	
 find_prio_lower:
 	sub si,2
 	jnc find_prio_loop
@@ -2017,10 +2015,8 @@ get_next_int_loop:
 	mov es,es:p_process_sel
 	test es:ms_virt_flags,200h
 	jnz get_next_int_ok
-;	
 	cmp ax,es:ms_cli_thread
 	jz get_next_int_ok
-;	
 	mov ax,es
 	mov si,ds:prio_act
 	RemoveBlock              
@@ -2032,6 +2028,13 @@ get_next_int_loop:
 	jmp get_next_int_loop
 
 get_next_int_ok:
+    mov es,ds:thread_act
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	add eax,1193
+	adc edx,0
+	mov ds:preempt_lsb,eax
+	mov ds:preempt_msb,edx
 	pop es
 	ret
 GetNextThread	Endp
@@ -2384,7 +2387,8 @@ SaveCurrentThread	Proc near
     mov ds,ax
     call ds:lock_proc
 ;        
-    mov ds,ds:thread_act
+    mov ax,thread_sel
+    mov ds,ax
     mov ds,ds:p_tss_data_sel
     pushfd
     pop dword ptr ds:tss_eflags
@@ -2457,7 +2461,8 @@ SaveLockedThread	Proc near
     mov ax,task_sel
     mov ds,ax
 ;        
-    mov ds,ds:thread_act
+    mov ax,thread_sel
+    mov ds,ax
     mov ds,ds:p_tss_data_sel
     pushfd
     pop dword ptr ds:tss_eflags
@@ -2625,6 +2630,7 @@ PAGE
 ;                       must be saved before doing call this procedure
 ;
 ;		PARAMETERS:		AX:EDI	Block list. AX = 0, no sleep list
+;                       FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2726,7 +2732,8 @@ debug_exception:
     mov ds,ax
     call ds:lock_proc
 ;        
-    mov ds,ds:thread_act
+    mov ax,thread_sel
+    mov ds,ax
     mov ds,ds:p_tss_data_sel
 ;
 	mov eax,[bp].vm_eax
@@ -3645,7 +3652,6 @@ sleep_thread_name	DB 'Sleep',0
 
 sleep_thread	PROC far
     push ds
-    push es
     mov ax,ds
 ;
     push OFFSET sleep_thread_done
@@ -3655,11 +3661,9 @@ sleep_thread	PROC far
     jmp BlockThread
 
 sleep_thread_done:
-	mov ax,task_sel
+	mov ax,thread_sel
 	mov ds,ax
-	mov es,ds:thread_act
-	mov eax,es:p_data
-	pop es
+	mov eax,ds:p_data
 	pop ds
 	ret
 sleep_thread	ENDP
@@ -3681,9 +3685,8 @@ clear_signal	PROC far
 	push ds
 	push ax
 ;
-	mov ax,task_sel
+	mov ax,thread_sel
 	mov ds,ax
-	mov ds,ds:thread_act
 	mov ds:p_signal,0
 ;
 	pop ax
@@ -3750,10 +3753,9 @@ wait_for_signal	PROC far
     push ds
     push ax
 ;
-	mov ax,task_sel
+	mov ax,thread_sel
 	mov ds,ax
 	cli
-	mov ds,ds:thread_act
 	xor al,al
 	xchg al,ds:p_signal
 	or al,al
@@ -3767,9 +3769,8 @@ wait_for_signal	PROC far
     jmp BlockThread
 
 wait_for_signal_clear:
-	mov ax,task_sel
+	mov ax,thread_sel
 	mov ds,ax
-	mov ds,ds:thread_act
 	mov ds:p_signal,0
 	
 wait_for_signal_done:
