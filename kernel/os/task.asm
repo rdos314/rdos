@@ -100,7 +100,7 @@ preempt_msb		    DD ?
 
 signal_list		    DW ?
 has_signal          DB ?
-has_wakeup          DB ?
+has_list            DB ?
 
 wakeup_list         DW ?
 
@@ -108,8 +108,8 @@ try_lock_proc       DW ?
 lock_proc           DW ?
 unlock_proc         DW ?
 
-lock_wakeup_proc    DW ?
-unlock_wakeup_proc  DW ?
+lock_list_proc      DW ?
+unlock_list_proc    DW ?
 
 processor_count     DW ?
 processor_arr       DW 256 DUP(?)
@@ -798,13 +798,13 @@ init_task	PROC near
 	mov ds:try_lock_proc,OFFSET TryLockSingle
 	mov ds:lock_proc,OFFSET LockSingle
 	mov ds:unlock_proc,OFFSET UnlockSingle
-    mov ds:lock_wakeup_proc,OFFSET LockWakeupSingle
-    mov ds:unlock_wakeup_proc,OFFSET UnlockWakeupSingle
+    mov ds:lock_list_proc,OFFSET LockListSingle
+    mov ds:unlock_list_proc,OFFSET UnlockListSingle
 	mov ds:timer_nesting,-1
 	mov ds:signal_list,0
 	mov ds:wakeup_list,0
 	mov ds:has_signal,0
-	mov ds:has_wakeup,0
+	mov ds:has_list,0
 	mov ds:help_call_ip,0
 	mov ds:system_time,0
 	mov ds:system_time+4,0
@@ -2914,36 +2914,36 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LockWakeupSingle
+;		NAME:			LockListSingle
 ;
-;		DESCRIPTION:	Lock wakeup-list, single processor version
+;		DESCRIPTION:	Lock list, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LockWakeupSingle	Proc near
+LockListSingle	Proc near
     cli
 	ret
-LockWakeupSingle	Endp
+LockListSingle	Endp
 
 PAGE	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UnlockWakeupSingle
+;		NAME:			UnlockListSingle
 ;
-;		DESCRIPTION:	Unlock wakeup-list, single processor version
+;		DESCRIPTION:	Unlock list, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlockWakeupSingle	Proc near
+UnlockListSingle	Proc near
     sti
 	ret
-UnlockWakeupSingle	Endp
+UnlockListSingle	Endp
 
 PAGE	
 
@@ -3008,7 +3008,7 @@ usRetry:
 	jnc usDone
 ;	
     mov al,ds:has_signal
-    or al,ds:has_wakeup
+    or al,ds:has_list
     jz usNoSignal
 ;
     add ds:timer_nesting,1
@@ -3018,8 +3018,8 @@ usRetry:
     call SaveLockedThread
 
 usWakeupLoop:
-    mov ds:has_wakeup,0
-    call ds:lock_wakeup_proc
+    mov ds:has_list,0
+    call ds:lock_list_proc
     mov si,OFFSET wakeup_list
     mov ax,[si]
     or ax,ax
@@ -3034,11 +3034,11 @@ usWakeupLoop:
 	mov ds:prio_act,di
 
 usWakeupPrioOk:
-    call ds:unlock_wakeup_proc
+    call ds:unlock_list_proc
     jmp usWakeupLoop
 
 usWakeupDone:
-    call ds:unlock_wakeup_proc
+    call ds:unlock_list_proc
 ;    
     mov ds:has_signal,0
     cli
@@ -3600,34 +3600,44 @@ PAGE
 wake_thread_name	DB 'Wake',0
 
 wake_thread	PROC far
+    push ds
+    push es
+    push bx
     push dx
+    push di
+;    
     mov dx,ds
-    push OFFSET wake_done
-    call SaveCurrentThread
+    mov es,dx
+    mov bx,task_sel
+    mov ds,bx
+    call ds:try_lock_proc
 ;
-    mov ds,dx
-	cli
-	mov di,[si]
+	mov di,es:[si]
 	or di,di
-	jz wake_reload
+	jz wake_unlock
 ;	
+    call ds:lock_list_proc
+;
+    push ds
+    mov ds,dx    
 	RemoveBlock
-	mov di,task_sel
-	mov ds,di
-	mov di,es:p_prio
 	mov es:p_data,eax
+	pop ds
+;
+	mov di,OFFSET wakeup_list
 	InsertBlock
-	cmp di,ds:prio_act
-	jb wake_reload
 ;	
-	mov ds:prio_act,di
-	call GetNextThread
-
-wake_reload:
-    jmp LoadCurrentThread
-	
-wake_done:
+	mov ds:has_list,1
+	call ds:unlock_list_proc
+    	
+wake_unlock:    
+    call ds:unlock_proc
+;
+    pop di
     pop dx
+    pop bx
+    pop es	
+    pop ds
 	ret
 wake_thread	ENDP
 
@@ -4620,11 +4630,11 @@ wake_until	PROC far
 	mov ax,task_sel
 	mov ds,ax
 	mov es,cx
-	mov ds:has_wakeup,1
-    call ds:lock_wakeup_proc
+    call ds:lock_list_proc
     mov di,OFFSET wakeup_list
     InsertBlock
-    call ds:unlock_wakeup_proc
+	mov ds:has_list,1
+    call ds:unlock_list_proc
 	ret
 wake_until	ENDP
 
