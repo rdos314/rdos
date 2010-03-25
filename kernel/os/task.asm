@@ -2411,7 +2411,7 @@ PAGE
 ;		DESCRIPTION:	Block thread and schedule next thread. Registers
 ;                       must be saved before doing call this procedure
 ;
-;		PARAMETERS:		AX:DI	Block list
+;		PARAMETERS:		AX:EDI	Block list
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2426,7 +2426,7 @@ BlockThread:
 ;
     call ds:lock_list_proc	
 	mov ds,cx
-	InsertBlock
+	InsertBlock32
 	mov ax,task_sel
 	mov ds,ax
     call ds:unlock_list_proc
@@ -2824,7 +2824,7 @@ debug_save_ok:
 	mov es:p_sleep_offset,1
 ;
     mov ax,system_data_sel
-	mov di,OFFSET debug_list	
+	mov edi,OFFSET debug_list	
 	jmp BlockThread
 
 PAGE	
@@ -2876,7 +2876,7 @@ double_fault:
 	mov es:p_sleep_offset,1
 ;
     mov ax,system_data_sel
-	mov di,OFFSET debug_list	
+	mov edi,OFFSET debug_list	
 	jmp BlockThread
 
 PAGE	
@@ -3685,6 +3685,8 @@ sleep_thread	PROC far
 ;
     push OFFSET sleep_thread_done
     call SaveCurrentThread
+;
+    movzx edi,di    
     jmp BlockThread
 
 sleep_thread_done:
@@ -3796,7 +3798,7 @@ wait_for_signal	PROC far
     call SaveCurrentThread
 ;
 	mov ax,task_sel
-    mov di,signal_list
+    mov edi,signal_list
     jmp BlockThread
 
 wait_for_signal_clear:
@@ -3873,7 +3875,7 @@ wait_for_signal_timeout	PROC far
     call SaveCurrentThread
 ;
 	mov ax,task_sel
-    mov di,signal_list
+    mov edi,signal_list
     jmp BlockThread
 
 wait_for_signal_timeout_clear:
