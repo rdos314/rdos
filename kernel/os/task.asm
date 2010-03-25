@@ -2106,6 +2106,7 @@ LoadCurrentThread:
 	mov ds,ax
 
 load_timer_loop:
+	mov es,ds:thread_act
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
@@ -2115,6 +2116,7 @@ load_timer_loop:
 	mov ecx,ds:preempt_msb
 	cmp ecx,[bx].timer_msb
 	jc load_check_preempt
+;
 	jnz load_check_timer
 ;	
 	mov ecx,ds:preempt_lsb
@@ -2133,8 +2135,13 @@ load_check_preempt:
 	sub eax,ds:preempt_lsb
 	sbb edx,ds:preempt_msb
 	jc load_reload_timer
-;
-    mov eax,-1	
+;	
+	sti
+	nop
+	cli
+	call GetNextThread
+	sti
+	jmp load_timer_loop
 
 load_reload_timer:
 	neg eax
@@ -2527,92 +2534,6 @@ update_preempt_done:
     dec ds:timer_nesting
     ret
 UpdatePreempt   Endp
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			OldUpdateTimer
-;
-;		DESCRIPTION:	Update timers
-;						uses EAX,BX and EDX
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OldUpdateTimer	Proc near
-	cli
-	add ds:timer_nesting,1
-	jc old_update_timer_loop
-	dec ds:timer_nesting
-	jmp old_update_timer_done
-	
-old_update_timer_loop:
-	mov es,ds:thread_act
-	cli
-	UpdateClock
-	LocalGetSystemTime
-	add eax,ds:update_tics
-	adc edx,0
-	mov bx,ds:timer_head
-	mov ecx,ds:preempt_msb
-	cmp ecx,[bx].timer_msb
-	jc old_check_preempt
-	jnz old_check_timer
-	mov ecx,ds:preempt_lsb
-	cmp ecx,[bx].timer_lsb
-	jc old_check_preempt
-
-old_check_timer:
-	sub eax,[bx].timer_lsb
-	sbb edx,[bx].timer_msb
-	jc old_reload_timer
-	LocalRemoveTimer
-	jmp old_update_timer_loop
-
-old_check_preempt:
-	sub eax,ds:preempt_lsb
-	sbb edx,ds:preempt_msb
-	jc old_reload_timer
-	sti
-	nop
-	cli
-	call GetNextThread
-	sti
-	jmp old_update_timer_loop
-
-old_reload_timer:
-	sub ds:timer_nesting,1
-	jnc old_update_timer_done
-	neg eax
-	LocalReloadTimer
-;
-	mov si,ds:prio_act
-	mov ax,[si]
-	cmp ax,ds:thread_act
-	je old_update_timer_done
-	UpdateClock
-	LocalGetSystemTime
-	add eax,1193
-	adc edx,0
-	mov ds:preempt_lsb,eax
-	mov ds:preempt_msb,edx
-	mov si,ds:prio_act
-	mov es,[si]
-	mov ds:thread_act,es
-	str ax
-	mov si,es:p_tss_sel
-	cmp ax,si
-	je old_update_timer_done
-	SetEnviroment
-	mov ax,task_sel
-	mov ds,ax
-	mov es,ax
-	mov ds:help_call_cs,si
-	jmp dword ptr ds:help_call_ip
-old_update_timer_done:
-	ret
-OldUpdateTimer	Endp
 
 PAGE
 	
