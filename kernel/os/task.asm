@@ -3872,14 +3872,9 @@ wait_for_signal_timeout	PROC far
     push OFFSET wait_for_signal_timeout_clear
     call SaveCurrentThread
 ;
-	cli
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	RemoveBlock
-	mov di,OFFSET signal_list
-	InsertBlock
-	call GetNextThread
-	jmp LoadCurrentThread
+	mov ax,task_sel
+    mov di,signal_list
+    jmp BlockThread
 
 wait_for_signal_timeout_clear:
 	mov ax,task_sel
