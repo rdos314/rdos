@@ -2437,6 +2437,59 @@ BlockThread:
     jmp LoadCurrentThread
 
 PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WakeThread
+;
+;		DESCRIPTION:	Wake up thread
+;
+;		PARAMETERS:		DX:ESI		Thread list
+;						EAX			Status to thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WakeThread	PROC near
+    push ds
+    push es
+    push bx
+    push di
+;    
+    mov es,dx
+    mov bx,task_sel
+    mov ds,bx
+    call ds:try_lock_proc
+;
+	mov di,es:[esi]
+	or di,di
+	jz wtUnlock
+;	
+    call ds:lock_list_proc
+;
+    push ds
+    mov ds,dx    
+	RemoveBlock32
+	mov es:p_data,eax
+	pop ds
+;
+	mov di,OFFSET wakeup_list
+	InsertBlock
+;	
+	mov ds:has_list,1
+	call ds:unlock_list_proc
+    	
+wtUnlock:    
+    call ds:unlock_proc
+;
+    pop di
+    pop bx
+    pop es	
+    pop ds
+	ret
+WakeThread	ENDP
+
+PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3618,44 +3671,15 @@ PAGE
 wake_thread_name	DB 'Wake',0
 
 wake_thread	PROC far
-    push ds
-    push es
-    push bx
     push dx
-    push di
+    push esi
 ;    
     mov dx,ds
-    mov es,dx
-    mov bx,task_sel
-    mov ds,bx
-    call ds:try_lock_proc
+    movzx esi,si
+    call WakeThread
 ;
-	mov di,es:[si]
-	or di,di
-	jz wake_unlock
-;	
-    call ds:lock_list_proc
-;
-    push ds
-    mov ds,dx    
-	RemoveBlock
-	mov es:p_data,eax
-	pop ds
-;
-	mov di,OFFSET wakeup_list
-	InsertBlock
-;	
-	mov ds:has_list,1
-	call ds:unlock_list_proc
-    	
-wake_unlock:    
-    call ds:unlock_proc
-;
-    pop di
+    pop esi
     pop dx
-    pop bx
-    pop es	
-    pop ds
 	ret
 wake_thread	ENDP
 
