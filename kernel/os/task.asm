@@ -4308,41 +4308,10 @@ enter_user_section_block:
     mov ax,ds
     push OFFSET enter_user_section_done
     call SaveCurrentThread
-;    
-    mov gs,ax
-	movzx ebx,bx
-	mov ax,task_sel
-	mov ds,ax
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	RemoveBlock
 ;
-	mov es:p_sleep_sel,gs
-	mov es:p_sleep_offset,ebx
-	add es:p_sleep_offset,OFFSET us_list
-	mov di,gs:[bx].us_list
-	or di,di
-	je enter_user_ins_empty
-;
-	mov ds,di
-	mov si,ds:p_prev
-	mov ds:p_prev,es
-	mov ds,si
-	mov ds:p_next,es
-	mov es:p_next,di
-	mov es:p_prev,si
-	jmp enter_user_inserted
-
-enter_user_ins_empty:
-	mov es:p_next,es
-	mov es:p_prev,es
-	mov gs:[bx].us_list,es
-
-enter_user_inserted:
-	mov ax,task_sel
-	mov ds,ax
-	call GetNextThread
-    jmp LoadCurrentThread
+	lea di,[bx].us_list	
+	movzx edi,di
+	jmp BlockThread
 
 enter_user_section_done:
 	str ax
