@@ -3940,8 +3940,8 @@ enter_section_name	DB 'Enter Critical Section',0
     
 enter_section	PROC far
     pushf
-    push dx
-    mov dx,ds
+    push ax
+    mov ax,ds
 ;    
 	cli
 	sub ds:[esi].cs_value,1
@@ -3950,44 +3950,14 @@ enter_section	PROC far
     push OFFSET ecsDone
     call SaveCurrentThread
 ;
-    mov gs,dx
-	mov ebx,esi
-	mov ax,task_sel
-	mov ds,ax
+	lea edi,[esi].cs_list	
 	mov es,ds:thread_act
-	mov si,es:p_prio
-	cli
-	RemoveBlock
-;
-	mov es:p_sleep_sel,gs
+	mov es:p_sleep_sel,dx
 	mov es:p_sleep_offset,ebx
-	add es:p_sleep_offset,OFFSET cs_list
-	mov di,gs:[ebx].cs_list
-	or di,di
-	je ecsInsEmpty
-;	
-	mov ds,di
-	mov si,ds:p_prev
-	mov ds:p_prev,es
-	mov ds,si
-	mov ds:p_next,es
-	mov es:p_next,di
-	mov es:p_prev,si
-	jmp ecsInserted
-	
-ecsInsEmpty:
-	mov es:p_next,es
-	mov es:p_prev,es
-	mov gs:[ebx].cs_list,es
-	
-ecsInserted:
-	mov ax,task_sel
-	mov ds,ax
-	call GetNextThread
-    jmp LoadCurrentThread
+	jmp BlockThread
     	
 ecsDone:
-    pop dx
+    pop ax
     popf
 	ret
 enter_section	ENDP
