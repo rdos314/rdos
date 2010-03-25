@@ -672,17 +672,17 @@ SignalWait	MACRO
 
 ; IN  DS:ESI        Section
 InitSection     MACRO section
-	OsGate init_new_section_nr
+	OsGate init_section_nr
 						ENDM
 
 ; IN  DS:ESI        Section
 EnterSection    MACRO section
-	OsGate enter_new_section_nr
+	OsGate enter_section_nr
 						ENDM
 
 ; IN  DS:ESI        Section
 LeaveSection    MACRO section
-	OsGate leave_new_section_nr
+	OsGate leave_section_nr
 						ENDM
 
 
@@ -701,17 +701,17 @@ EnterReadSection        MACRO section
     push esi
 ;    
     mov esi,OFFSET section.ssync_value
-    OsGate enter_new_section_nr
+    OsGate enter_section_nr
 ;    
 	sub section.sread_value,1
 	jnc enter_read_ok
 ;	
     mov esi,OFFSET section.swrite_value
-    OsGate enter_new_section_nr
+    OsGate enter_section_nr
 
 enter_read_ok:
     mov esi,OFFSET section.ssync_value
-    OsGate leave_new_section_nr
+    OsGate leave_section_nr
 ;    
 	pop esi
 	popf
@@ -724,17 +724,17 @@ LeaveReadSection        MACRO section
 	push esi
 ;
     mov esi,OFFSET section.ssync_value
-    OsGate enter_new_section_nr
+    OsGate enter_section_nr
 ;    
 	add section.sread_value,1
 	jnc leave_read_ok
 ;	
     mov esi,OFFSET section.swrite_value
-    OsGate leave_new_section_nr
+    OsGate leave_section_nr
     
 leave_read_ok:
     mov esi,OFFSET section.ssync_value
-    OsGate leave_new_section_nr
+    OsGate leave_section_nr
 ;
     pop esi    
 	popf
@@ -745,7 +745,7 @@ EnterWriteSection       MACRO section
 	push esi
 ;	
 	mov esi,OFFSET section.swrite_value
-	OsGate enter_new_section_nr
+	OsGate enter_section_nr
 ;
     pop esi	
 	popf
@@ -756,7 +756,7 @@ LeaveWriteSection       MACRO section
     push esi
 ;    
     mov esi,OFFSET section.swrite_value
-    OsGate leave_new_section_nr
+    OsGate leave_section_nr
 ;
     pop esi
     popf

@@ -1071,34 +1071,22 @@ timer_free_list_create:
 	mov ax,debug_break_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET enter_old_section
-	mov di,OFFSET enter_old_section_name
-	xor cl,cl
-	mov ax,enter_section_nr
-	RegisterOsGate
-;
-	mov si,OFFSET leave_old_section
-	mov di,OFFSET leave_old_section_name
-	xor cl,cl
-	mov ax,leave_section_nr
-	RegisterOsGate
-;
 	mov si,OFFSET init_section
 	mov di,OFFSET init_section_name
 	xor cl,cl
-	mov ax,init_new_section_nr
+	mov ax,init_section_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET enter_section
 	mov di,OFFSET enter_section_name
 	xor cl,cl
-	mov ax,enter_new_section_nr
+	mov ax,enter_section_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET leave_section
 	mov di,OFFSET leave_section_name
 	xor cl,cl
-	mov ax,leave_new_section_nr
+	mov ax,leave_section_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET create_user_section
@@ -4010,132 +3998,6 @@ lcsDone:
     popf
 	ret
 leave_section	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			enter_section
-;
-;		DESCRIPTION:	Enter section
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-enter_old_section_name	DB 'Enter Critical Section',0
-
-enter_old_section	PROC far
-    push dx
-    mov dx,ds
-;
-    push OFFSET enter_section_done
-    call SaveCurrentThread
-;
-    mov gs,dx
-	mov ebx,esi
-	mov ax,task_sel
-	mov ds,ax
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	cli
-	RemoveBlock
-;
-	mov es:p_sleep_sel,gs
-	mov es:p_sleep_offset,ebx
-	add es:p_sleep_offset,OFFSET cs_list
-	mov di,gs:[ebx].cs_list
-	or di,di
-	je enter_ins_empty
-;	
-	mov ds,di
-	mov si,ds:p_prev
-	mov ds:p_prev,es
-	mov ds,si
-	mov ds:p_next,es
-	mov es:p_next,di
-	mov es:p_prev,si
-	jmp enter_inserted
-	
-enter_ins_empty:
-	mov es:p_next,es
-	mov es:p_prev,es
-	mov gs:[ebx].cs_list,es
-	
-enter_inserted:
-	mov ax,task_sel
-	mov ds,ax
-	call GetNextThread
-    jmp LoadCurrentThread
-    	
-enter_section_done:
-    pop dx
-	ret
-enter_old_section	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			leave_section
-;
-;		DESCRIPTION:	Leave section
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-leave_old_section_name	DB 'Leave Critical Section',0
- 
-leave_old_section	PROC far
-    push dx
-    mov dx,ds
-;
-    push OFFSET leave_section_done
-    call SaveCurrentThread
-;
-    mov gs,dx
-	mov ebx,esi
-	mov ax,task_sel
-	mov ds,ax
-	cli
-	mov ax,gs:[ebx].cs_list
-	or ax,ax
-	jz leave_section_restore
-;
-	mov es,ax
-	mov di,es:p_prev
-	cmp di,gs:[ebx].cs_list
-	mov gs:[ebx].cs_list,di
-	mov si,es:p_next
-	mov ds,di
-	mov ds:p_next,si
-	mov ds,si
-	mov ds:p_prev,di
-	jne leave_section_empty
-;
-	mov word ptr gs:[ebx].cs_list,0
-
-leave_section_empty:
-	mov ax,task_sel
-	mov ds,ax
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jb leave_section_restore
-;
-	mov ds:prio_act,di
-	call GetNextThread
-
-leave_section_restore:
-    jmp LoadCurrentThread
-
-leave_section_done:
-    pop dx
-	ret
-leave_old_section	ENDP
 
 PAGE
 	
