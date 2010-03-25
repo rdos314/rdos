@@ -4007,22 +4007,24 @@ leave_section_name	DB 'Leave Critical Section',0
     
 leave_section	PROC far
     pushf
-    push dx
-    mov dx,ds
-;
 	cli
 	add ds:[esi].cs_value,1
 	jc lcsDone
 ;
+    push eax
+    push edx
     push esi
+;    
     mov dx,ds
     add esi,OFFSET cs_list
     xor eax,eax
     call WakeThread    
+;
     pop esi
+    pop edx
+    pop eax
 
 lcsDone:
-    pop dx
     popf
 	ret
 leave_section	ENDP
