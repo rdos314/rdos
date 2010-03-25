@@ -2421,6 +2421,8 @@ BlockThread:
 	mov ds,ax
 	cli
 	mov es,ds:thread_act
+	mov es:p_sleep_sel,ax
+	mov es:p_sleep_offset,edi
 	mov si,es:p_prio
 	RemoveBlock
 ;
@@ -2820,8 +2822,6 @@ debug_save_ok:
 ;
 	mov es,ds:thread_act
 	mov es:p_error_code,dx
-	mov es:p_sleep_sel,0
-	mov es:p_sleep_offset,1
 ;
     mov ax,system_data_sel
 	mov edi,OFFSET debug_list	
@@ -2872,8 +2872,6 @@ double_fault:
 ;
 	mov es,ds:thread_act
 	mov es:p_error_code,8
-	mov es:p_sleep_sel,0
-	mov es:p_sleep_offset,1
 ;
     mov ax,system_data_sel
 	mov edi,OFFSET debug_list	
@@ -3951,9 +3949,6 @@ enter_section	PROC far
     call SaveCurrentThread
 ;
 	lea edi,[esi].cs_list	
-	mov es,ds:thread_act
-	mov es:p_sleep_sel,dx
-	mov es:p_sleep_offset,ebx
 	jmp BlockThread
     	
 ecsDone:
