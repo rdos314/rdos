@@ -2995,6 +2995,11 @@ PAGE
 
 LockSingle	Proc near
 	add ds:timer_nesting,1
+	jc lsDone
+;
+    int 3
+
+lsDone:	
 	ret
 LockSingle	Endp
 
