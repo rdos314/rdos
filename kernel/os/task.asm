@@ -2003,7 +2003,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Get next thread to run
 ;
-;		PARAMETERS:	
+;		PARAMETERS:	    FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2091,7 +2091,7 @@ load_check_preempt:
 	sti
 	nop
 	cli
-	call GetNextThread
+	call GetNextThread          ; ok
 	sti
 	jmp load_timer_loop
 
@@ -2605,7 +2605,7 @@ reload_check_preempt:
 ;
     push OFFSET reload_timer_end
     call SaveLockedThread
-    call GetNextThread
+    call GetNextThread          ; ok
     jmp LoadCurrentThread
 
 reload_timer_do:
@@ -2656,7 +2656,7 @@ BlockThread:
     call ds:unlock_list_proc
 
 rtSchedule:	
-	call GetNextThread
+	call GetNextThread          ; ok
     jmp LoadCurrentThread
 
 PAGE
@@ -3106,13 +3106,13 @@ usSignalDone:
     jbe usPrioOk
 ;
     cli
-    call GetNextThread
+    call GetNextThread          ; ok
 
 usPrioOk:
     jmp LoadCurrentThread
 
 usNoSignal:
-    mov es,ds:thread_act        ; ok
+    mov es,ds:thread_act        ; fail
     mov ax,ds:prio_act
     cmp ax,es:p_prio
     jbe usDone
@@ -3120,7 +3120,7 @@ usNoSignal:
     push OFFSET usDone
     call SaveCurrentThread
     cli
-    call GetNextThread
+    call GetNextThread          ; ok
     jmp LoadCurrentThread
 
 usDone:
@@ -3358,7 +3358,7 @@ init_use_pit_timer:
 init_timer_sel_ok:
     call ds:init_clock_proc
 ;
-	call GetNextThread
+	call GetNextThread      ; fail. Need FS load
 	jmp LoadCurrentThread
 
 PAGE
@@ -3420,7 +3420,7 @@ wake_new	PROC near
 	jb wake_new_lower
 ;	
 	mov ds:prio_act,di
-	call GetNextThread
+	call GetNextThread      ; ok
 
 wake_new_lower:
     jmp LoadCurrentThread
@@ -3449,7 +3449,7 @@ swap_out	PROC far
     call SaveCurrentThread
 ;
 	cli
-	call GetNextThread
+	call GetNextThread      ; ok
     jmp LoadCurrentThread
 
 swap_out_done:
@@ -3478,7 +3478,7 @@ cleanup_thread:
 	RemoveBlock
 	push es
 ;
-	call GetNextThread
+	call GetNextThread          ; ok
 ;
 	mov si,ds:prio_act
 	mov es,[si]
@@ -3535,7 +3535,7 @@ cleanup_process:
 	RemoveBlock
 	push es
 ;
-	call GetNextThread
+	call GetNextThread          ; ok
 ;
 	mov si,ds:prio_act
 	mov es,[si]
