@@ -2872,20 +2872,12 @@ double_fault:
 ;
 	mov es,ds:thread_act
 	mov es:p_error_code,8
-	mov si,es:p_prio
 	mov es:p_sleep_sel,0
 	mov es:p_sleep_offset,1
-	RemoveBlock
 ;
-	mov ax,system_data_sel
-	mov ds,ax
+    mov ax,system_data_sel
 	mov di,OFFSET debug_list	
-	InsertBlock
-;	
-    mov ax,task_sel
-    mov ds,ax
-	call GetNextThread
-    jmp LoadCurrentThread
+	jmp BlockThread
 
 PAGE	
 
@@ -3080,6 +3072,7 @@ usSignalLoop:
 	or cl,cl
 	jz usSignalNext
 ;
+    call ds:lock_list_proc
 	mov [si],dx
 	RemoveBlock
 	mov di,es:p_prio
@@ -3090,6 +3083,8 @@ usSignalLoop:
 	mov ds:prio_act,di
 
 usSignalPrioOk:
+    call ds:unlock_list_proc
+;    
 	mov si,OFFSET signal_list
     mov ax,[si]
 	or ax,ax
@@ -3801,15 +3796,8 @@ wait_for_signal	PROC far
     call SaveCurrentThread
 ;
 	mov ax,task_sel
-	mov ds,ax
-	mov es,ds:thread_act
-	mov si,es:p_prio
-    cli
-	RemoveBlock
-	mov di,OFFSET signal_list
-	InsertBlock
-	call GetNextThread
-	jmp LoadCurrentThread
+    mov di,signal_list
+    jmp BlockThread
 
 wait_for_signal_clear:
 	mov ax,task_sel
