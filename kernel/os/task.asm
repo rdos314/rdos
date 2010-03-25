@@ -1089,6 +1089,36 @@ timer_free_list_create:
 	mov ax,leave_section_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET init_read_write_section
+	mov di,OFFSET init_read_write_section_name
+	xor cl,cl
+	mov ax,init_read_write_section_nr
+	RegisterOsGate
+;
+	mov si,OFFSET enter_read_section
+	mov di,OFFSET enter_read_section_name
+	xor cl,cl
+	mov ax,enter_read_section_nr
+	RegisterOsGate
+;
+	mov si,OFFSET leave_read_section
+	mov di,OFFSET leave_read_section_name
+	xor cl,cl
+	mov ax,leave_read_section_nr
+	RegisterOsGate
+;
+	mov si,OFFSET enter_write_section
+	mov di,OFFSET enter_write_section_name
+	xor cl,cl
+	mov ax,enter_write_section_nr
+	RegisterOsGate
+;
+	mov si,OFFSET leave_write_section
+	mov di,OFFSET leave_write_section_name
+	xor cl,cl
+	mov ax,leave_write_section_nr
+	RegisterOsGate
+;
 	mov si,OFFSET create_user_section
 	mov di,OFFSET create_user_section_name
 	xor dx,dx
@@ -3998,6 +4028,142 @@ lcsDone:
     popf
 	ret
 leave_section	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InitReadWrieSection
+;
+;		DESCRIPTION:	Init read/write section
+;
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_read_write_section_name	DB 'Init Read/Write Section',0
+
+init_read_write_section	PROC far
+	mov [esi].ssync_value,0
+	mov [esi].ssync_list,0
+	mov [esi].sread_value,0
+	mov [esi].swrite_value,0
+	mov [esi].swrite_list,0
+    ret
+init_read_write_section    ENDP
+    
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			EnterReadSection
+;
+;		DESCRIPTION:	Enter section as reader
+;
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enter_read_section_name	DB 'Enter Read Section',0
+    
+enter_read_section	PROC far
+    add esi,OFFSET ssync_value
+    EnterSection
+    sub esi,OFFSET ssync_value
+;    
+	sub [esi].sread_value,1
+	jnc enter_read_ok
+;	
+    add esi,OFFSET swrite_value
+    EnterSection
+    sub esi,OFFSET swrite_value
+
+enter_read_ok:
+    add esi,OFFSET ssync_value
+    LeaveSection
+    sub esi,OFFSET ssync_value
+	ret
+enter_read_section	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LeaveReadSection
+;
+;		DESCRIPTION:	Leave section as reader
+;
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+leave_read_section_name	DB 'Leave Read Section',0
+    
+leave_read_section	PROC far
+    add esi,OFFSET ssync_value
+    EnterSection
+    sub esi,OFFSET ssync_value
+;    
+	add [esi].sread_value,1
+	jnc leave_read_ok
+;	
+    add esi,OFFSET swrite_value
+    LeaveSection
+    sub esi,OFFSET swrite_value
+    
+leave_read_ok:
+    add esi,OFFSET ssync_value
+    LeaveSection
+    sub esi,OFFSET ssync_value
+	ret
+leave_read_section	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			EnterWriteSection
+;
+;		DESCRIPTION:	Enter section as writer
+;
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enter_write_section_name	DB 'Enter Write Section',0
+    
+enter_write_section	PROC far
+	add esi,OFFSET swrite_value
+	EnterSection
+	sub esi,OFFSET swrite_value
+	ret
+enter_write_section	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LeaveWriteSection
+;
+;		DESCRIPTION:	Leave section as writer
+;
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+leave_write_section_name	DB 'Leave Write Section',0
+    
+leave_write_section	PROC far
+    add esi,OFFSET swrite_value
+    LeaveSection
+    sub esi,OFFSET swrite_value
+	ret
+leave_write_section	ENDP
 
 PAGE
 	

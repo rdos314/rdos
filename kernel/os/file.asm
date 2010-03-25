@@ -578,7 +578,7 @@ crfs_init:
 	pop ecx
 ;
     mov esi,OFFSET file_size_section
-    InitNewReadWriteSection	
+    InitReadWriteSection	
 ;	
 	mov esi,OFFSET file_list_section
 	InitSection
@@ -1137,10 +1137,10 @@ swap_all_loop:
     push esi
     mov ds,bx
     mov esi,OFFSET file_size_section
-    EnterNewWriteSection
+    EnterWriteSection
     call swap_file
     mov esi,OFFSET file_size_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 	pop esi
 	pop ds
 ;
@@ -1206,7 +1206,7 @@ read_file	Proc near
 read_file_mem_all_ok:	
     push esi
     mov esi,OFFSET file_size_section
-    EnterNewReadSection
+    EnterReadSection
     pop esi
 ;
 	cmp edx,ds:file_size
@@ -1340,7 +1340,7 @@ read_file_do:
 read_file_done:
 	pushf
     mov esi,OFFSET file_size_section
-    LeaveNewReadSection
+    LeaveReadSection
 	popf
 	mov eax,ebp
 ;
@@ -1399,7 +1399,7 @@ write_file	Proc near
 write_file_mem_all_ok:	
     push esi
     mov esi,OFFSET file_size_section
-    EnterNewWriteSection
+    EnterWriteSection
     pop esi
 ;
 	cmp edx,ds:file_size
@@ -1554,7 +1554,7 @@ write_file_do:
 write_file_done:
 	pushf
     mov esi,OFFSET file_size_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 	popf
 	mov eax,ebp
 ;
@@ -1822,9 +1822,9 @@ get_file_size:
 ;
 	mov ds,bx
     mov esi,OFFSET file_size_section
-    EnterNewReadSection
+    EnterReadSection
 	mov eax,ds:file_size
-    LeaveNewReadSection
+    LeaveReadSection
 	clc
 
 get_file_size_done:
@@ -1868,12 +1868,12 @@ set_file_size:
 ;
 	mov ds,bx
     mov esi,OFFSET file_size_section
-    EnterNewWriteSection
+    EnterWriteSection
 ;
 	CallFileSystem set_file_size_proc
 ;	
     mov esi,OFFSET file_size_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 
 set_file_size_done:
     pop esi
@@ -2357,7 +2357,7 @@ map_to_file	Proc near
 	mov es,ax
 ;
     mov esi,OFFSET file_size_section
-    EnterNewReadSection
+    EnterReadSection
 ;
 	cmp edx,ds:file_size
 	jnc map_to_file_leave
@@ -2440,7 +2440,7 @@ map_to_file_do_first:
 
 map_to_file_leave:
     mov esi,OFFSET file_size_section
-    LeaveNewReadSection
+    LeaveReadSection
 	jmp map_to_file_done
 
 map_to_file_read:
@@ -2692,12 +2692,12 @@ swap_loop:
     push ds
     mov ds,bx
     mov esi,OFFSET file_size_section
-    EnterNewWriteSection
+    EnterWriteSection
 ;
     call swap_file
 ;    
     mov esi,OFFSET file_size_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 	pop ds
 ;
     mov es,bx

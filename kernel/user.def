@@ -471,11 +471,11 @@ fork_nr                     = 386
 
 get_processor_nr            = 387
 
-create_read_write_section_nr	= 388
-delete_read_write_section_nr	= 389
-enter_read_section_nr		    = 390
-leave_read_section_nr		    = 391
-enter_write_section_nr		    = 392
-leave_write_section_nr		    = 393
+create_user_read_write_section_nr	= 388
+delete_user_read_write_section_nr	= 389
+enter_user_read_section_nr		    = 390
+leave_user_read_section_nr		    = 391
+enter_user_write_section_nr		    = 392
+leave_user_write_section_nr		    = 393
 
 usergate_entries			= 394

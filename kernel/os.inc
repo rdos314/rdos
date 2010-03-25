@@ -685,70 +685,29 @@ LeaveSection    MACRO section
 	OsGate leave_section_nr
 						ENDM
 
-
 ; IN  DS:ESI        Section
-InitNewReadWriteSection    MACRO
-	mov [esi].ssync_value,0
-	mov [esi].ssync_list,0
-	mov [esi].sread_value,0
-	mov [esi].swrite_value,0
-	mov [esi].swrite_list,0
+InitReadWriteSection    MACRO
+	OsGate init_read_write_section_nr
 						ENDM
 
 ; IN  DS:ESI        Section
-EnterNewReadSection        MACRO
-	LOCAL enter_read_ok
-
-    add esi,OFFSET ssync_value
-    OsGate enter_section_nr
-    sub esi,OFFSET ssync_value
-;    
-	sub [esi].sread_value,1
-	jnc enter_read_ok
-;	
-    add esi,OFFSET swrite_value
-    OsGate enter_section_nr
-    sub esi,OFFSET swrite_value
-
-enter_read_ok:
-    add esi,OFFSET ssync_value
-    OsGate leave_section_nr
-    sub esi,OFFSET ssync_value
+EnterReadSection        MACRO
+	OsGate enter_read_section_nr
 						ENDM
 
 ; IN  DS:ESI        Section
-LeaveNewReadSection        MACRO
-	LOCAL leave_read_ok
-
-    add esi,OFFSET ssync_value
-    OsGate enter_section_nr
-    sub esi,OFFSET ssync_value
-;    
-	add [esi].sread_value,1
-	jnc leave_read_ok
-;	
-    add esi,OFFSET swrite_value
-    OsGate leave_section_nr
-    sub esi,OFFSET swrite_value
-    
-leave_read_ok:
-    add esi,OFFSET ssync_value
-    OsGate leave_section_nr
-    sub esi,OFFSET ssync_value
+LeaveReadSection        MACRO
+	OsGate leave_read_section_nr
 						ENDM
 
 ; IN  DS:ESI        Section
-EnterNewWriteSection       MACRO
-	add esi,OFFSET swrite_value
-	OsGate enter_section_nr
-	sub esi,OFFSET swrite_value
+EnterWriteSection       MACRO
+	OsGate enter_write_section_nr
 						ENDM
 
 ; IN  DS:ESI        Section
-LeaveNewWriteSection       MACRO
-    add esi,OFFSET swrite_value
-    OsGate leave_section_nr
-    sub esi,OFFSET swrite_value
+LeaveWriteSection       MACRO
+	OsGate leave_write_section_nr
 						ENDM
 
 ;	ES:DI		PROCEDURE

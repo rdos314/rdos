@@ -369,7 +369,7 @@ CreateDirSel	PROC near
 ;
     push esi
     mov esi,OFFSET ds_access_section
-    InitNewReadWriteSection
+    InitReadWriteSection
 ;    
     mov esi,OFFSET ds_list_section
     InitSection	
@@ -611,7 +611,7 @@ parse_dir_rel:
 ;
     push esi
     mov esi,OFFSET fs_access_section
-    EnterNewReadSection
+    EnterReadSection
     pop esi    
 	jmp parse_dir_start
 
@@ -666,7 +666,7 @@ parse_dir_root:
 parse_dir_buffered:
     push esi
     mov esi,OFFSET fs_access_section
-    EnterNewReadSection
+    EnterReadSection
 ;
 	mov esi,OFFSET fs_list_section
 	LeaveSection
@@ -680,7 +680,7 @@ parse_dir_start:
 ;
 	push esi
     mov esi,OFFSET ds_access_section
-    EnterNewReadSection
+    EnterReadSection
     pop esi
 
 parse_dir_tree_loop:
@@ -747,9 +747,9 @@ parse_dir_dot_loop:
 	mov ax,ds
 	mov ds,bx
 	mov esi,OFFSET ds_access_section
-	EnterNewReadSection	
+	EnterReadSection	
 	mov ds,ax
-	LeaveNewReadSection
+	LeaveReadSection
 	mov ds,bx
 	pop esi
 	jmp parse_dir_dot_loop
@@ -768,7 +768,7 @@ parse_dir_dot_ended:
 parse_dir_dot_fail:
     push esi
 	mov esi,OFFSET ds_access_section
-	LeaveNewReadSection	
+	LeaveReadSection	
 	pop esi
 	jmp parse_dir_fail
 
@@ -804,9 +804,9 @@ parse_dir_tree_cached:
 	mov ax,ds
 	mov ds,bx
 	mov esi,OFFSET ds_access_section
-	EnterNewReadSection
+	EnterReadSection
 	mov ds,ax
-	LeaveNewReadSection
+	LeaveReadSection
 	mov ds,bx
     pop esi
 ;
@@ -818,7 +818,7 @@ parse_dir_ok:
 	inc ds:ds_usage
 	push esi
 	mov esi,OFFSET ds_access_section
-	LeaveNewReadSection
+	LeaveReadSection
 	pop esi
 	clc
 	jmp parse_dir_done
@@ -864,7 +864,7 @@ ParseEnd	Proc near
 	mov ds:fs_access_parse,0
 ;
     mov esi,OFFSET fs_access_section
-    LeaveNewReadSection
+    LeaveReadSection
 ;
 	pop esi
 	pop ax
@@ -902,7 +902,7 @@ GetDeviceRoot	Proc near
 ;	
 	push esi
 	mov esi,OFFSET fs_access_section
-    EnterNewReadSection
+    EnterReadSection
 ;
 	mov esi,OFFSET fs_list_section
 	EnterSection
@@ -1178,7 +1178,7 @@ GetCurDirBase	Proc near
 	mov ds,ds:[bx].fs_sel
 ;
 	mov esi,OFFSET fs_access_section
-    EnterNewReadSection
+    EnterReadSection
 ;	
 	mov ds:fs_access_parse,1
 	mov edx,ds:fs_mount_id
@@ -1198,7 +1198,7 @@ GetCurDirBase	Proc near
 	jne get_cur_dir_ok
 ;
 	mov esi,OFFSET ds_access_section
-	EnterNewReadSection
+	EnterReadSection
 
 get_cur_dir_loop:
 	mov bx,ds:ds_parent
@@ -1208,10 +1208,10 @@ get_cur_dir_loop:
 	push ds
 	mov ds,bx
 	mov esi,OFFSET ds_access_section
-	EnterNewReadSection
+	EnterReadSection
 	pop ds
 ;
-	LeaveNewReadSection
+	LeaveReadSection
 	mov si,ds
 	mov ds,bx
 	mov eax,ds:ds_dir_ptr
@@ -1264,7 +1264,7 @@ get_cur_dir_no_slash:
 
 get_cur_dir_leave:
 	mov esi,OFFSET ds_access_section
-	LeaveNewReadSection
+	LeaveReadSection
 	mov al,ds:ds_drive
 
 get_cur_dir_ok:
@@ -1277,7 +1277,7 @@ get_cur_dir_ok:
 	mov ds:fs_access_parse,0
 ;
 	mov esi,OFFSET fs_access_section
-    LeaveNewReadSection
+    LeaveReadSection
 	clc
 
 get_cur_dir_done:
@@ -1386,7 +1386,7 @@ CreateDirBase	Proc near
 ;
     push esi
 	mov esi,OFFSET ds_access_section
-	EnterNewWriteSection
+	EnterWriteSection
     pop esi
 ;
 	dec ds:ds_usage
@@ -1396,7 +1396,7 @@ CreateDirBase	Proc near
 create_dir_leave_fail:
     push esi
 	mov esi,OFFSET ds_access_section
-	LeaveNewWriteSection
+	LeaveWriteSection
     pop esi    
 	call ParseEnd
 	jmp create_dir_pop_failed
@@ -1412,7 +1412,7 @@ create_dir_check:
 ;
     push esi
 	mov esi,OFFSET ds_access_section
-	LeaveNewWriteSection
+	LeaveWriteSection
     pop esi    
 	pop edi
 	call ParseEnd
@@ -1465,7 +1465,7 @@ DeleteDirBase	Proc near
 	jc delete_dir_done
 ;
 	mov esi,OFFSET ds_access_section
-	EnterNewWriteSection
+	EnterWriteSection
 ;
 	dec ds:ds_usage
 	mov edx,ds:ds_handle
@@ -1488,7 +1488,7 @@ DeleteDirBase	Proc near
 	push ds
 	mov ds,bx
 	mov esi,OFFSET ds_access_section
-	EnterNewWriteSection
+	EnterWriteSection
 ;
 	mov ax,fs:[edx].de_usage
 	or ax,ax
@@ -1514,7 +1514,7 @@ delete_dir_unlink:
 	
 delete_dir_leave:
 	mov esi,OFFSET ds_access_section
-	LeaveNewWriteSection
+	LeaveWriteSection
 ;
 	mov al,ds:ds_drive
 	CallFileSystem delete_dir_proc
@@ -1526,12 +1526,12 @@ delete_dir_leave:
 
 delete_dir_pop_fail:
 	mov esi,OFFSET ds_access_section
-	LeaveNewWriteSection
+	LeaveWriteSection
 	pop ds
 
 delete_dir_fail:
 	mov esi,OFFSET ds_access_section
-	LeaveNewWriteSection
+	LeaveWriteSection
 	call ParseEnd
 	stc
 
@@ -1580,7 +1580,7 @@ GetFileAttribBase	Proc near
 	jc get_file_attrib_done
 ;
     mov esi,OFFSET ds_access_section
-    EnterNewReadSection
+    EnterReadSection
 ;    
 	dec ds:ds_usage
 	mov al,es:[edi]
@@ -1608,14 +1608,14 @@ get_file_attrib_root:
 
 get_file_attrib_fail:
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveReadSection
 	call ParseEnd
 	stc
 	jmp get_file_attrib_done
 
 get_file_attrib_ok:
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveReadSection
 	call ParseEnd
 	clc
 
@@ -1659,7 +1659,7 @@ SetFileAttribBase	Proc near
 	jc set_file_attrib_done
 ;
     mov esi,OFFSET ds_access_section
-    EnterNewWriteSection
+    EnterWriteSection
 ;    
 	dec ds:ds_usage
 	mov al,es:[edi]
@@ -1690,14 +1690,14 @@ set_file_attrib_dir:
 
 set_file_attrib_fail:
     mov esi,OFFSET ds_access_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 	call ParseEnd
 	stc
 	jmp set_file_attrib_done
 
 set_file_attrib_ok:
     mov esi,OFFSET ds_access_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 	call ParseEnd
 	clc
 
@@ -1790,7 +1790,7 @@ DeleteFileBase	Proc near
 	jc delete_file_done
 ;
     mov esi,OFFSET ds_access_section
-    EnterNewWriteSection
+    EnterWriteSection
 ;
 	dec ds:ds_usage
 	mov al,es:[edi]
@@ -1824,7 +1824,7 @@ delete_file_unlink:
 
 delete_file_leave:
     mov esi,OFFSET ds_access_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 	call ParseEnd
 ;
 	call DeleteFilePhysical
@@ -1832,7 +1832,7 @@ delete_file_leave:
 
 delete_file_fail:
     mov esi,OFFSET ds_access_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 	call ParseEnd
 	stc
 
@@ -1873,7 +1873,7 @@ OpenDirBase	Proc near
 	jc open_dir_done
 ;
     mov esi,OFFSET ds_access_section
-    EnterNewReadSection
+    EnterReadSection
 ;
 	dec ds:ds_usage
 	mov al,es:[edi]
@@ -1881,7 +1881,7 @@ OpenDirBase	Proc near
 	je open_dir_do
 ;
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveReadSection
 	call ParseEnd
 	stc
 	jmp open_dir_done
@@ -1895,7 +1895,7 @@ open_dir_do:
 	call CreateDirHandle
 ;	
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveReadSection
 	call ParseEnd
 	pop fs
 	clc
@@ -2157,12 +2157,12 @@ OpenFileBase	Proc near
 	jc open_file_normal
 ;
     mov esi,OFFSET ds_access_section
-    EnterNewReadSection
+    EnterReadSection
 ;
 	call SetupFileSel
 ;	
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveReadSection
 	jmp open_file_handle
 
 open_file_normal:
@@ -2172,7 +2172,7 @@ open_file_normal:
 	jc open_file_pop_failed
 ;
     mov esi,OFFSET ds_access_section
-    EnterNewReadSection
+    EnterReadSection
 ;    
 	dec ds:ds_usage
 	call ParseFile
@@ -2182,7 +2182,7 @@ open_file_normal:
 	call SetupFileSel
 ;
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveReadSection
 
 open_file_handle:
 	call CreateFileHandle
@@ -2192,7 +2192,7 @@ open_file_handle:
 
 open_file_leave_failed:
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveReadSection
 	call ParseEnd
 
 open_file_pop_failed:
@@ -2242,12 +2242,12 @@ CreateFileBase	Proc near
 	jc create_file_normal
 ;
     mov esi,OFFSET ds_access_section
-    EnterNewReadSection
+    EnterReadSection
 ;    
 	call SetupFileSel
 ;	
     mov esi,OFFSET ds_access_section
-    LeaveNewReadSection
+    LeaveReadSection
 	jmp create_file_handle
 
 create_file_normal:
@@ -2257,7 +2257,7 @@ create_file_normal:
 	jc create_file_pop_failed
 ;
     mov esi,OFFSET ds_access_section
-    EnterNewWriteSection
+    EnterWriteSection
 ;    
 	dec ds:ds_usage
 	call ParseFile
@@ -2272,7 +2272,7 @@ create_file_normal:
 	call SetupFileSel
 ;	
     mov esi,OFFSET ds_access_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 	pop edi
 	jmp create_file_handle
 
@@ -2285,7 +2285,7 @@ create_file_truncate:
 	pop edx
 ;
     mov esi,OFFSET ds_access_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 
 create_file_handle:
 	call CreateFileHandle
@@ -2295,7 +2295,7 @@ create_file_handle:
 
 create_file_leave_failed:
     mov esi,OFFSET ds_access_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 	call ParseEnd
 
 create_file_pop_failed:
@@ -2918,7 +2918,7 @@ stop_file_system	Proc far
 
 stop_file_enter:
 	mov esi,OFFSET fs_access_section
-    EnterNewWriteSection
+    EnterWriteSection
 ;
 	CallFileSystem flush_proc
 	jc stop_leave_done
@@ -2953,7 +2953,7 @@ stop_leave_pop_done:
 
 stop_leave_done:
 	mov esi,OFFSET fs_access_section
-    LeaveNewWriteSection
+    LeaveWriteSection
 	
 stop_done:
 	popad

@@ -519,5 +519,11 @@ debug_exception_nr          EQU 360
 
 create_processor_nr         EQU 362
 
+init_read_write_section_nr  EQU 363
+enter_read_section_nr       EQU 364
+leave_read_section_nr       EQU 365
+enter_write_section_nr      EQU 366
+leave_write_section_nr      EQU 367
+
 osgate_entries				EQU 370
 
