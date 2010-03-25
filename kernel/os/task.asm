@@ -100,10 +100,16 @@ preempt_msb		    DD ?
 
 signal_list		    DW ?
 has_signal          DB ?
+has_wakeup          DB ?
+
+wakeup_list         DW ?
 
 try_lock_proc       DW ?
 lock_proc           DW ?
 unlock_proc         DW ?
+
+lock_wakeup_proc    DW ?
+unlock_wakeup_proc  DW ?
 
 processor_count     DW ?
 processor_arr       DW 256 DUP(?)
@@ -792,9 +798,13 @@ init_task	PROC near
 	mov ds:try_lock_proc,OFFSET TryLockSingle
 	mov ds:lock_proc,OFFSET LockSingle
 	mov ds:unlock_proc,OFFSET UnlockSingle
+    mov ds:lock_wakeup_proc,OFFSET LockWakeupSingle
+    mov ds:unlock_wakeup_proc,OFFSET UnlockWakeupSingle
 	mov ds:timer_nesting,-1
 	mov ds:signal_list,0
+	mov ds:wakeup_list,0
 	mov ds:has_signal,0
+	mov ds:has_wakeup,0
 	mov ds:help_call_ip,0
 	mov ds:system_time,0
 	mov ds:system_time+4,0
@@ -2035,8 +2045,7 @@ PAGE
 ReloadTimer Proc near
 	mov ax,task_sel
 	mov ds,ax
-	cli
-	add ds:timer_nesting,1
+	call ds:try_lock_proc
 	jnc reload_timer_done
 
 reload_timer_loop:
@@ -2075,8 +2084,7 @@ reload_timer_do:
 	call ds:reload_timer_proc
 
 reload_timer_done:
-	sti
-	dec ds:timer_nesting
+	call ds:unlock_proc
     ret
 ReloadTimer Endp
 
@@ -2900,6 +2908,40 @@ create_processor	Proc far
     pop ds	
 	ret
 create_processor	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LockWakeupSingle
+;
+;		DESCRIPTION:	Lock wakeup-list, single processor version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockWakeupSingle	Proc near
+	ret
+LockWakeupSingle	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UnlockWakeupSingle
+;
+;		DESCRIPTION:	Unlock wakeup-list, single processor version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockWakeupSingle	Proc near
+	ret
+UnlockWakeupSingle	Endp
 
 PAGE	
 
@@ -4542,6 +4584,39 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			WakeUntil
+;
+;		DESCRIPTION:	Timer callback for wait time
+;
+;		PARAMETERS:	    CX      Thread to wake up
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wake_until	PROC far
+	mov ax,task_sel
+	mov ds,ax
+	mov es,cx
+	cli
+	mov di,es:p_prio
+	InsertBlock
+	cmp di,ds:prio_act
+	jbe wake_until_lower
+	mov ds:prio_act,di
+	LocalGetSystemTime
+	add eax,1193
+	adc edx,0
+	mov ds:preempt_lsb,eax
+	mov ds:preempt_msb,edx
+wake_until_lower:
+	sti
+	ret
+wake_until	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			WAIT_UNTIL
 ;
 ;		DESCRIPTION:	Wait until time occurs.
@@ -4574,26 +4649,6 @@ wait_until	PROC far
 wait_until_done:
 	retf32
 wait_until	ENDP
-
-wake_until	PROC far
-	mov ax,task_sel
-	mov ds,ax
-	mov es,cx
-	cli
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jbe wake_until_lower
-	mov ds:prio_act,di
-	LocalGetSystemTime
-	add eax,1193
-	adc edx,0
-	mov ds:preempt_lsb,eax
-	mov ds:preempt_msb,edx
-wake_until_lower:
-	sti
-	ret
-wake_until	ENDP
 
 PAGE
 	
