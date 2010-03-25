@@ -2036,63 +2036,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			ReloadTimer
-;
-;		DESCRIPTION:	Reload timer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReloadTimer Proc near
-	mov ax,task_sel
-	mov ds,ax
-	call ds:try_lock_proc
-	jnc reload_timer_done
-
-reload_timer_loop:
-	cli
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	add eax,ds:update_tics
-	adc edx,0
-	mov bx,ds:timer_head
-	mov ecx,ds:preempt_msb
-	cmp ecx,[bx].timer_msb
-	jc reload_check_preempt
-	jnz reload_check_timer
-;	
-	mov ecx,ds:preempt_lsb
-	cmp ecx,[bx].timer_lsb
-	jc reload_check_preempt
-
-reload_check_timer:
-	sub eax,[bx].timer_lsb
-	sbb edx,[bx].timer_msb
-	jc reload_timer_do
-;	
-	LocalRemoveTimer
-	jmp reload_timer_loop
-
-reload_check_preempt:
-	sub eax,ds:preempt_lsb
-	sbb edx,ds:preempt_msb
-	jc reload_timer_do
-;
-    mov eax,-1	
-
-reload_timer_do:
-	neg eax
-	call ds:reload_timer_proc
-
-reload_timer_done:
-	call ds:unlock_proc
-    ret
-ReloadTimer Endp
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
 ;		NAME:			LoadCurrentThread
 ;
 ;		DESCRIPTION:	Load register-state for current thread
@@ -2408,184 +2351,6 @@ load_vm_t_ok:
     pop ax
     iretd
 
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			BlockThread
-;
-;		DESCRIPTION:	Block thread and schedule next thread. Registers
-;                       must be saved before doing call this procedure
-;
-;		PARAMETERS:		AX:EDI	Block list. AX = 0, no sleep list
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BlockThread:    
-	mov cx,ax
-	mov ax,task_sel
-	mov ds,ax
-	cli
-	mov es,ds:thread_act
-	mov es:p_sleep_sel,ax
-	mov es:p_sleep_offset,edi
-	mov si,es:p_prio
-	RemoveBlock
-;
-    or cx,cx
-    jz rtSchedule
-;    
-    call ds:lock_list_proc	
-	mov ds,cx
-	InsertBlock32
-	mov ax,task_sel
-	mov ds,ax
-    call ds:unlock_list_proc
-
-rtSchedule:	
-	call GetNextThread
-    jmp LoadCurrentThread
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WakeThread
-;
-;		DESCRIPTION:	Wake up thread
-;
-;		PARAMETERS:		DX:ESI		Thread list
-;						EAX			Status to thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WakeThread	PROC near
-    push ds
-    push es
-    push bx
-    push di
-;    
-    mov es,dx
-    mov bx,task_sel
-    mov ds,bx
-    call ds:try_lock_proc
-;
-	mov di,es:[esi]
-	or di,di
-	jz wtUnlock
-;	
-    call ds:lock_list_proc
-;
-    push ds
-    mov ds,dx    
-	RemoveBlock32
-	mov es:p_data,eax
-	pop ds
-;
-	mov di,OFFSET wakeup_list
-	InsertBlock
-;	
-	mov ds:has_list,1
-	call ds:unlock_list_proc
-    	
-wtUnlock:    
-    call ds:unlock_proc
-;
-    pop di
-    pop bx
-    pop es	
-    pop ds
-	ret
-WakeThread	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			UpdatePreempt
-;
-;		DESCRIPTION:	Update preemption
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePreempt	Proc near
-	cli
-	add ds:timer_nesting,1
-	jnc update_preempt_done
-;
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	add eax,1193 / 4
-	adc edx,0
-	sub eax,ds:preempt_lsb
-	sbb edx,ds:preempt_msb
-	jc update_preempt_done
-;	
-	sti
-	nop
-	cli
-	call GetNextThread
-	sti
-
-update_preempt_done:
-    dec ds:timer_nesting
-    ret
-UpdatePreempt   Endp
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			UpdateTimer
-;
-;		DESCRIPTION:	Update timers
-;						uses EAX,BX and EDX
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateTimer	Proc near
-	cli
-	add ds:timer_nesting,1
-	jnc update_timer_done
-;	
-    mov ax,ds:thread_act
-    or ax,ax
-    jz update_timer_load
-;
-    mov es,ax    
-    mov ds,es:p_tss_data_sel
-    mov dword ptr ds:tss_eip,OFFSET update_timer_done
-    pushfd
-    pop dword ptr ds:tss_eflags
-    mov dword ptr ds:tss_eax,eax
-    mov dword ptr ds:tss_ecx,ecx
-    mov dword ptr ds:tss_edx,edx
-    mov dword ptr ds:tss_ebx,ebx
-    mov dword ptr ds:tss_esp,esp
-    mov dword ptr ds:tss_ebp,ebp
-    mov dword ptr ds:tss_esi,esi
-    mov dword ptr ds:tss_edi,edi
-    mov word ptr ds:tss_es,es
-    mov word ptr ds:tss_cs,cs
-    mov word ptr ds:tss_ss,ss
-    mov word ptr ds:tss_ds,ds
-    mov word ptr ds:tss_fs,fs
-    mov word ptr ds:tss_gs,gs
-	mov ax,task_sel
-	mov ds,ax
-
-update_timer_load:
-    jmp LoadCurrentThread
-
-update_timer_done:
-    dec ds:timer_nesting
-	ret
-UpdateTimer	Endp
-	
 PAGE	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2778,6 +2543,160 @@ SkipCurrentThread	Proc near
     mov gs,bp    
     ret
 SkipCurrentThread   Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReloadTimer
+;
+;		DESCRIPTION:	Reload timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReloadTimer Proc near
+	mov ax,task_sel
+	mov ds,ax
+	call ds:try_lock_proc
+	jnc reload_timer_done
+
+reload_timer_loop:
+	cli
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	add eax,ds:update_tics
+	adc edx,0
+	mov bx,ds:timer_head
+	mov ecx,ds:preempt_msb
+	cmp ecx,[bx].timer_msb
+	jc reload_check_preempt
+	jnz reload_check_timer
+;	
+	mov ecx,ds:preempt_lsb
+	cmp ecx,[bx].timer_lsb
+	jc reload_check_preempt
+
+reload_check_timer:
+	sub eax,[bx].timer_lsb
+	sbb edx,[bx].timer_msb
+	jc reload_timer_do
+;	
+	LocalRemoveTimer
+	jmp reload_timer_loop
+
+reload_check_preempt:
+	sub eax,ds:preempt_lsb
+	sbb edx,ds:preempt_msb
+	jc reload_timer_do
+;
+    push OFFSET reload_timer_end
+    call SaveLockedThread
+    call GetNextThread
+    jmp LoadCurrentThread
+
+reload_timer_do:
+	neg eax
+	call ds:reload_timer_proc
+
+reload_timer_done:
+	call ds:unlock_proc
+
+reload_timer_end:	
+    ret
+ReloadTimer Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			BlockThread
+;
+;		DESCRIPTION:	Block thread and schedule next thread. Registers
+;                       must be saved before doing call this procedure
+;
+;		PARAMETERS:		AX:EDI	Block list. AX = 0, no sleep list
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BlockThread:    
+	mov cx,ax
+	mov ax,task_sel
+	mov ds,ax
+	cli
+	mov es,ds:thread_act
+	mov es:p_sleep_sel,ax
+	mov es:p_sleep_offset,edi
+	mov si,es:p_prio
+	RemoveBlock
+;
+    or cx,cx
+    jz rtSchedule
+;    
+    call ds:lock_list_proc	
+	mov ds,cx
+	InsertBlock32
+	mov ax,task_sel
+	mov ds,ax
+    call ds:unlock_list_proc
+
+rtSchedule:	
+	call GetNextThread
+    jmp LoadCurrentThread
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WakeThread
+;
+;		DESCRIPTION:	Wake up thread
+;
+;		PARAMETERS:		DX:ESI		Thread list
+;						EAX			Status to thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WakeThread	PROC near
+    push ds
+    push es
+    push bx
+    push di
+;    
+    mov es,dx
+    mov bx,task_sel
+    mov ds,bx
+    call ds:try_lock_proc
+;
+	mov di,es:[esi]
+	or di,di
+	jz wtUnlock
+;	
+    call ds:lock_list_proc
+;
+    push ds
+    mov ds,dx    
+	RemoveBlock32
+	mov es:p_data,eax
+	pop ds
+;
+	mov di,OFFSET wakeup_list
+	InsertBlock
+;	
+	mov ds:has_list,1
+	call ds:unlock_list_proc
+    	
+wtUnlock:    
+    call ds:unlock_proc
+;
+    pop di
+    pop bx
+    pop es	
+    pop ds
+	ret
+WakeThread	ENDP
 
 PAGE	
 
@@ -3263,8 +3182,7 @@ timer_int:
 	out INT0_CONTROL,al
 	mov ax,task_sel
 	mov ds,ax
-	call UpdatePreempt
-	call UpdateTimer
+	call ReloadTimer
 ;
 	popad
 	pop es
@@ -3295,8 +3213,7 @@ apic_int:
 ;
 	mov ax,task_sel
 	mov ds,ax
-	call UpdatePreempt
-	call UpdateTimer
+	call ReloadTimer
 ;
 	popad
 	pop es
