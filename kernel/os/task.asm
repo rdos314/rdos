@@ -2402,6 +2402,39 @@ load_vm_t_ok:
     iretd
 
 PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			BlockThread
+;
+;		DESCRIPTION:	Block thread and schedule next thread. Registers
+;                       must be saved before doing call this procedure
+;
+;		PARAMETERS:		AX:DI	Block list
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BlockThread:    
+	mov cx,ax
+	mov ax,task_sel
+	mov ds,ax
+	cli
+	mov es,ds:thread_act
+	mov si,es:p_prio
+	RemoveBlock
+;
+    call ds:lock_list_proc	
+	mov ds,cx
+	InsertBlock
+	mov ax,task_sel
+	mov ds,ax
+    call ds:unlock_list_proc
+;	
+	call GetNextThread
+    jmp LoadCurrentThread
+
+PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3665,20 +3698,7 @@ sleep_thread	PROC far
 ;
     push OFFSET sleep_thread_done
     call SaveCurrentThread
-;
-	mov cx,ax
-	mov ax,task_sel
-	mov ds,ax
-	cli
-	mov es,ds:thread_act
-	mov si,es:p_prio
-	RemoveBlock
-	mov ds,cx
-	InsertBlock
-	mov ax,task_sel
-	mov ds,ax
-	call GetNextThread
-    jmp LoadCurrentThread
+    jmp BlockThread
 
 sleep_thread_done:
 	mov ax,task_sel
