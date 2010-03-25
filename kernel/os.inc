@@ -695,91 +695,71 @@ InitReadWriteSection    MACRO section
 						ENDM
 
 EnterReadSection        MACRO section
-	LOCAL enter_sync_ok,enter_read_ok,enter_read_done
+	LOCAL enter_read_ok
+
 	pushf
-	cli
-	sub section.ssync_value,1
-	jc enter_sync_ok
-	push esi
-	mov esi,OFFSET section.ssync_value
-	OsGate enter_section_nr
-	pop esi
-enter_sync_ok:
+    push esi
+;    
+    mov esi,OFFSET section.ssync_value
+    OsGate enter_new_section_nr
+;    
 	sub section.sread_value,1
 	jnc enter_read_ok
-	sub section.swrite_value,1
-	jc enter_read_ok
-	push esi
-	mov esi,OFFSET section.swrite_value
-	OsGate enter_section_nr
-	pop esi
+;	
+    mov esi,OFFSET section.swrite_value
+    OsGate enter_new_section_nr
+
 enter_read_ok:
-	add section.ssync_value,1
-	jc enter_read_done
-	push esi
-	mov esi,OFFSET section.ssync_value
-	OsGate leave_section_nr
+    mov esi,OFFSET section.ssync_value
+    OsGate leave_new_section_nr
+;    
 	pop esi
-enter_read_done:
 	popf
 						ENDM
 
 LeaveReadSection        MACRO section
-	LOCAL leave_sync_ok,leave_read_ok,leave_read_done
+	LOCAL leave_read_ok
+
 	pushf
-	cli
-	sub section.ssync_value,1
-	jc leave_sync_ok
 	push esi
-	mov esi,OFFSET section.ssync_value
-	OsGate enter_section_nr
-	pop esi
-leave_sync_ok:
+;
+    mov esi,OFFSET section.ssync_value
+    OsGate enter_new_section_nr
+;    
 	add section.sread_value,1
 	jnc leave_read_ok
-	add section.swrite_value,1
-	jc leave_read_ok
-	push esi
-	mov esi,OFFSET section.swrite_value
-	OsGate leave_section_nr
-	pop esi
+;	
+    mov esi,OFFSET section.swrite_value
+    OsGate leave_new_section_nr
+    
 leave_read_ok:
-	add section.ssync_value,1
-	jc leave_read_done
-	push esi
-	mov esi,OFFSET section.ssync_value
-	OsGate leave_section_nr
-	pop esi
-leave_read_done:
+    mov esi,OFFSET section.ssync_value
+    OsGate leave_new_section_nr
+;
+    pop esi    
 	popf
 						ENDM
 
 EnterWriteSection       MACRO section
-	LOCAL enter_section_done
 	pushf
-	cli
-	sub section.swrite_value,1
-	jc enter_section_done
 	push esi
+;	
 	mov esi,OFFSET section.swrite_value
-	OsGate enter_section_nr
-	pop esi
-enter_section_done:
+	OsGate enter_new_section_nr
+;
+    pop esi	
 	popf
 						ENDM
 
 LeaveWriteSection       MACRO section
-	LOCAL leave_section_done
-	pushf
-	cli
-	add section.swrite_value,1
-	jc leave_section_done
-	push esi
-	mov esi,OFFSET section.swrite_value
-	OsGate leave_section_nr
-	pop esi
-leave_section_done:
-	popf
+    pushf
+    push esi
+;    
+    mov esi,OFFSET section.swrite_value
+    OsGate leave_new_section_nr
+;
+    pop esi
+    popf
 						ENDM
 
 ;	ES:DI		PROCEDURE
