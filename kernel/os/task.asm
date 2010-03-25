@@ -3068,8 +3068,8 @@ PAGE
 
 
 UnlockSingle	Proc near
-    push es
     push ax
+    push es
 
 usRetry:    
     sub ds:timer_nesting,1
@@ -3175,7 +3175,14 @@ usNoSignal:
 
 usDone:
     pop ax
-    pop es
+	verr ax
+	jz usEsOk
+;
+	xor ax,ax
+	
+usEsOk:
+	mov es,ax
+	pop ax
 	ret
 UnlockSingle	Endp
 
@@ -4007,44 +4014,12 @@ leave_section	PROC far
 	add ds:[esi].cs_value,1
 	jc lcsDone
 ;
-    push OFFSET lcsDone
-    call SaveCurrentThread
-;
-    mov gs,dx
-	mov ebx,esi
-	mov ax,task_sel
-	mov ds,ax
-	cli
-	mov ax,gs:[ebx].cs_list
-	or ax,ax
-	jz lcsRestore
-;
-	mov es,ax
-	mov di,es:p_prev
-	cmp di,gs:[ebx].cs_list
-	mov gs:[ebx].cs_list,di
-	mov si,es:p_next
-	mov ds,di
-	mov ds:p_next,si
-	mov ds,si
-	mov ds:p_prev,di
-	jne lcsEmpty
-;
-	mov word ptr gs:[ebx].cs_list,0
-
-lcsEmpty:
-	mov ax,task_sel
-	mov ds,ax
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jb lcsRestore
-;
-	mov ds:prio_act,di
-	call GetNextThread
-
-lcsRestore:
-    jmp LoadCurrentThread
+    push esi
+    mov dx,ds
+    add esi,OFFSET cs_list
+    xor eax,eax
+    call WakeThread    
+    pop esi
 
 lcsDone:
     pop dx
