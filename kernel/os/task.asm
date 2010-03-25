@@ -422,7 +422,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Update clock using PIT timer 2
 ;
-;		PARAMETERS:		
+;		PARAMETERS:		ES      Current thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -441,11 +441,10 @@ UpdatePitClock	Proc near
 	movzx eax,ax
 	add ds:system_time,eax
 	adc ds:system_time+4,0
-	mov dx,ds:thread_act
+	mov dx,es
 	or dx,dx
 	jz upcDone
 ;
-    mov es,dx
 	add es:p_lsb_tics,eax
 	adc es:p_msb_tics,0
 
@@ -498,7 +497,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Update clock using TSC
 ;
-;		PARAMETERS:		
+;		PARAMETERS:		ES      Current thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -513,12 +512,11 @@ UpdateTscClock	Proc near
 	adc ds:system_time,edx
 	adc ds:system_time+4,0
 ;
-	mov ax,ds:thread_act
+	mov ax,es
 	or ax,ax
 	jz utcNoThread
 ;
 	popf
-    mov es,ax
 	adc es:p_lsb_tics,edx
 	adc es:p_msb_tics,0
 	jmp utcDone
@@ -545,6 +543,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPitUpdateTics	Proc near
+    push es
+    xor ax,ax
+    mov es,ax
+;    
 	mov ax,30h
 	out TIMER_CONTROL,al
 ;
@@ -575,6 +577,7 @@ GetPitUpdateTics	Proc near
 	in al,INT0_MASK
 	and al,NOT 1
 	out INT0_MASK,al
+	pop es
 	ret
 GetPitUpdateTics    Endp
 
@@ -650,10 +653,14 @@ GetApicTics	Proc near
     mov bx,apic_mem_sel
     mov es,bx
     mov es:APIC_INIT_COUNT,eax    
+    push es
     push esi
+    xor ax,ax
+    mov es,ax
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	pop esi
+	pop es
     mov eax,es:APIC_CURR_COUNT    
 	neg eax
 	add eax,80000000h
@@ -2019,7 +2026,9 @@ get_next_int_loop:
 	InsertBlock
 	pop ds
 	jmp get_next_int_loop
+
 get_next_int_ok:
+    mov es,ds:thread_act
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,1193
@@ -2095,6 +2104,7 @@ load_reload_timer:
 	cmp ax,ds:thread_act
 	je load_do
 ;
+    mov es,ds:thread_act
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,1193
@@ -2562,6 +2572,7 @@ ReloadTimer Proc near
 	jnc reload_timer_done
 
 reload_timer_loop:
+	mov es,ds:thread_act
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
