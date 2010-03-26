@@ -2023,7 +2023,9 @@ update_prio_lower:
 	sub si,2
 	jnc update_prio_loop
 ;	
-	ShutDownTask
+    xor si,si
+    mov es,fs:ps_null_thread
+    jmp update_prio_done
 
 update_prio_loop:
 	mov ax,[si]
@@ -2033,7 +2035,8 @@ update_prio_loop:
 	sub si,2
 	jnc update_prio_loop
 ;	
-	ShutDownTask
+    xor si,si
+    mov es,fs:ps_null_thread
 
 update_prio_done:
 	mov ds:prio_act,si
@@ -2061,7 +2064,34 @@ update_int_ok:
     mov es,ax
         
 update_load:
-	mov fs:ps_curr_thread,es
+    mov ax,es
+    cmp ax,fs:ps_curr_thread
+    je update_done
+;    
+    mov si,es:p_prio
+    or si,si
+    jz update_remove_done
+;
+    RemoveBlock
+
+update_remove_done:
+    push es
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz update_insert_done
+;    
+    mov es,ax
+    mov di,es:p_prio
+    or di,di
+    jz update_insert_done
+;
+    InsertBlock
+
+update_insert_done:    
+    pop es
+    mov fs:ps_curr_thread,es
+
+update_done:
     ret
 UpdateThread    Endp
 
@@ -2633,8 +2663,7 @@ BlockThread:
 	mov es,fs:ps_curr_thread
 	mov es:p_sleep_sel,ax
 	mov es:p_sleep_offset,edi
-	mov si,es:p_prio
-	RemoveBlock
+	mov fs:ps_curr_thread,0
 ;
     or cx,cx
     jz rtSchedule
@@ -2903,6 +2932,7 @@ create_processor	Proc far
     mov es:ps_cr3,0
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
+    mov es:ps_curr_prio,0
     mov es:ps_flags,0
     mov es:ps_null_thread,0
 ;
@@ -3546,8 +3576,6 @@ cleanup_thread:
 ;    
     cli	
     mov es,fs:ps_curr_thread
-	mov si,es:p_prio
-	RemoveBlock
 	push es
 ;
     mov es,fs:ps_null_thread
@@ -3601,8 +3629,6 @@ cleanup_process:
 ;    
     cli	
     mov es,fs:ps_curr_thread
-	mov si,es:p_prio
-	RemoveBlock
 	push es
 ;
     mov es,fs:ps_null_thread

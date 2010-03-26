@@ -36,6 +36,7 @@ ps_null         DW ?
 ps_cr3          DD ?
 ps_nesting      DW ?
 ps_curr_thread  DW ?
+ps_curr_prio    DW ?
 ps_flags        DW ?
 ps_null_thread  DW ?
 
