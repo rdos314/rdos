@@ -2903,6 +2903,7 @@ create_processor	Proc far
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
     mov es:ps_flags,0
+    mov es:ps_null_thread,0
 ;
     pop si
     pop ds	
