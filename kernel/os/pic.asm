@@ -59,6 +59,7 @@ irq&nr:
 	mov bp,sp
 	push ds
 	push es
+	push fs
 	pushad
 ;
     EnterInt
@@ -207,6 +208,7 @@ ENDIF
     LeaveInt
 irq_unmask_done&nr:
 	popad
+	pop fs
 	pop es
 	pop ds
 	pop bp

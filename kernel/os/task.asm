@@ -2171,7 +2171,7 @@ load_kernel_es:
 	xor ax,ax
 	
 load_kernel_fs:
-	mov fs,ax
+    push ax
 ;	
     mov ax,word ptr ds:tss_gs
 	verr ax
@@ -2201,6 +2201,7 @@ load_kernel_ds:
     pop eax
     pop ds
     popf
+    pop fs
     jz load_kernel_t_ok
 ;    
 	push dword ptr 0
@@ -2258,7 +2259,7 @@ load_pm_app_es:
 	xor ax,ax
 	
 load_pm_app_fs:
-	mov fs,ax
+    push ax
 ;	
     mov ax,word ptr ds:tss_gs
 	verr ax
@@ -2288,6 +2289,7 @@ load_pm_app_ds:
     pop eax
     pop ds
     popf
+    pop fs
     jz load_pm_t_ok
 ;    
 	push dword ptr 0
@@ -2380,6 +2382,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SaveCurrentThread	Proc near	
+    push fs
     push ds
     push ax
 ;
@@ -2401,13 +2404,13 @@ SaveCurrentThread	Proc near
     mov word ptr ds:tss_es,es
     mov word ptr ds:tss_cs,cs
     mov word ptr ds:tss_ss,ss
-    mov word ptr ds:tss_fs,fs
     mov word ptr ds:tss_gs,gs
 ;
     pop ax
     mov dword ptr ds:tss_eax,eax
 ;
     pop word ptr ds:tss_ds
+    pop word ptr ds:tss_fs
     pop bp
     pop dx
     movzx edx,dx
@@ -2676,6 +2679,7 @@ PAGE
 WakeThread	PROC near
     push ds
     push es
+    push fs
     push bx
     push di
 ;    
@@ -2707,6 +2711,7 @@ wtUnlock:
 ;
     pop di
     pop bx
+    pop fs
     pop es	
     pop ds
 	ret
@@ -2728,6 +2733,7 @@ PAGE
 debug_exception_name    DB 'Debug Exception', 0
 
 debug_exception:
+    push fs
     mov ax,task_sel
     mov ds,ax
     call ds:lock_proc
@@ -2735,6 +2741,7 @@ debug_exception:
     mov ax,thread_sel
     mov ds,ax
     mov ds,ds:p_tss_data_sel
+    pop fs
 ;
 	mov eax,[bp].vm_eax
 	mov dword ptr ds:tss_eax,eax
@@ -3192,6 +3199,7 @@ PAGE
 timer_int:
 	push ds
 	push es
+	push fs
 	pushad
 ;
 	in al,INT0_MASK
@@ -3205,6 +3213,7 @@ timer_int:
 	call ReloadTimer
 ;
 	popad
+	pop fs
 	pop es
 	pop ds
 	iretd
@@ -3224,6 +3233,7 @@ timer_int:
 apic_int:
 	push ds
 	push es
+	push fs
 	pushad
 ;
     mov ax,apic_mem_sel
@@ -3236,6 +3246,7 @@ apic_int:
 	call ReloadTimer
 ;
 	popad
+	pop fs
 	pop es
 	pop ds
 	iretd
@@ -3261,6 +3272,7 @@ start_timer_name DB 'Start Timer',0
 start_timer	PROC far
 	push ds
 	push es
+	push fs
 	pushad
 ;
 	mov si,task_sel
@@ -3271,6 +3283,7 @@ start_timer	PROC far
 	sti
 ;
 	popad
+	pop fs
 	pop es
 	pop ds
 	ret
@@ -3294,6 +3307,7 @@ stop_timer_name DB 'Stop Timer',0
 stop_timer	PROC far
 	push ds
 	push es
+	push fs
 	pushad
 ;
 	mov si,task_sel
@@ -3304,6 +3318,7 @@ stop_timer	PROC far
 	sti
 ;
 	popad
+	pop fs
 	pop es
 	pop ds
 	ret
@@ -3717,6 +3732,7 @@ signal_thread_name	DB 'Signal',0
 signal_thread	PROC far
     push ds
     push es
+    push fs
     push ax
 ;
     or bx,bx
@@ -3734,6 +3750,7 @@ signal_thread	PROC far
     
 signal_done:       
     pop ax
+    pop fs
     pop es
     pop ds
 	ret
