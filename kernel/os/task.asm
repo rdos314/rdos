@@ -3893,51 +3893,52 @@ wait_for_signal_timeout_name	DB 'Wait For Signal With Timeout',0
 
 wait_for_signal_timeout	PROC far
     push ds
-    push es
-    push ax
-    push bx
-    push cx
-    push di
+;    
+	cli
+	push ax
+	mov ax,thread_sel
+	mov ds,ax
+	xor al,al
+	xchg al,ds:p_signal
+	or al,al
+	pop ax
+	jnz wait_for_signal_timeout_done
+;
+    push OFFSET wait_for_signal_timeout_clear
+    call SaveCurrentThread
 ;
 	mov cx,task_sel
 	mov ds,cx
     mov cx,cs
     mov es,cx
     mov di,OFFSET signal_timeout    
-    mov bx,ds:thread_act            ; fail
+    mov bx,ds:thread_act            ; ok
     mov cx,bx
     StartTimer
-;    
-	cli
-	mov es,ds:thread_act            ; fail
-	xor al,al
-	xchg al,es:p_signal
-	or al,al
-	jnz wait_for_signal_timeout_done
-;
-    push OFFSET wait_for_signal_timeout_clear
-    call SaveCurrentThread
 ;
 	mov ax,task_sel
     mov edi,signal_list
     jmp BlockThread
 
-wait_for_signal_timeout_clear:
-	mov ax,task_sel
-	mov ds,ax
-	mov es,ds:thread_act        ; ok
-	mov es:p_signal,0
-	
-wait_for_signal_timeout_done:
+wait_for_signal_timeout_clear:	
+    push es
+    push fs
+    push bx
+;    
+    mov ax,task_sel
+    mov ds,ax
+    GetProcessor
 	mov bx,ds:thread_act        ; ok
 	StopTimer
-    sti
-;
-    pop di
-	pop cx
-	pop bx
-	pop ax
+    mov es,bx
+	mov es:p_signal,0
+;	
+    pop bx
+	pop fs
 	pop es
+	
+wait_for_signal_timeout_done:
+    sti
 	pop ds
 	ret
 wait_for_signal_timeout	ENDP
