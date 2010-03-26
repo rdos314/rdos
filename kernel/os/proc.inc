@@ -25,6 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+PS_FLAG_PREEMPT = 1
+
 processor_seg   STRUC
 
 ps_id           DW ?
@@ -34,5 +36,6 @@ ps_null         DW ?
 ps_cr3          DD ?
 ps_nesting      DW ?
 ps_curr_thread  DW ?
+ps_flags        DW ?
 
 processor_seg   ENDS

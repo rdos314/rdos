@@ -2062,6 +2062,13 @@ LoadCurrentThread:
 	mov ds,ax
 
 load_timer_loop:
+    test fs:ps_flags,PS_FLAG_PREEMPT
+    jz load_preempt_done
+;
+    and fs:ps_flags,NOT PS_FLAG_PREEMPT
+    call GetNextThread
+        
+load_preempt_done:
     mov es,fs:ps_curr_thread
 	cli
 	call ds:update_clock_proc
@@ -2641,7 +2648,7 @@ BlockThread:
     call ds:unlock_list_proc
 
 rtSchedule:	
-	call GetNextThread          ; ok
+    or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 
 PAGE
@@ -2897,6 +2904,7 @@ create_processor	Proc far
     mov es:ps_cr3,0
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
+    mov es:ps_flags,0
 ;
     pop si
     pop ds	
