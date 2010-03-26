@@ -2424,7 +2424,6 @@ SaveCurrentThread	Proc near
     push ax
     mov ax,task_sel
     mov ds,ax
-    call ds:get_processor_proc
     pop ax
 ;    
     mov ss,fs:ps_ss
@@ -2530,12 +2529,6 @@ SkipCurrentThread	Proc near
     pop ax
 ;    
     pop bp
-;
-    push ax
-    mov ax,task_sel
-    mov ds,ax
-    call ds:get_processor_proc
-    pop ax
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
@@ -2845,10 +2838,6 @@ double_fault:
     mov ax,task_sel
     mov ds,ax
     call ds:lock_proc
-;	
-    mov ax,task_sel
-    mov ds,ax
-    call ds:get_processor_proc
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
