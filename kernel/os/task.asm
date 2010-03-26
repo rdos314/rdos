@@ -2003,24 +2003,33 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			GetNextThread
+;		NAME:			UpdateThread
 ;
-;		DESCRIPTION:	Get next thread to run
+;		DESCRIPTION:	Update next thread to run
 ;
-;		PARAMETERS:	    FS      Processor selector
+;		PARAMETERS:	    DS      Task sel
+;                       FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetNextThread	Proc near
-	push es
-get_next_int_loop:
+UpdateThread    Proc near
+    sti
+    test fs:ps_flags,PS_FLAG_PREEMPT
+    jz update_load
+;
+    cli
+    and fs:ps_flags,NOT PS_FLAG_PREEMPT
+
+update_int_loop:
 	GetPrioThread
 	mov es,ax
 	mov es,es:p_process_sel
 	test es:ms_virt_flags,200h
-	jnz get_next_int_ok
+	jnz update_int_ok
+;
 	cmp ax,es:ms_cli_thread
-	jz get_next_int_ok
+	jz update_int_ok
+;
 	mov ax,es
 	mov si,ds:prio_act
 	RemoveBlock              
@@ -2029,20 +2038,25 @@ get_next_int_loop:
 	mov di,OFFSET ms_wait_sti
 	InsertBlock
 	pop ds
-	jmp get_next_int_loop
+	jmp update_int_loop
 
-get_next_int_ok:
+update_int_ok:
     mov es,fs:ps_curr_thread
+    cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,1193
 	adc edx,0
 	mov ds:preempt_lsb,eax
 	mov ds:preempt_msb,edx
-	pop es
-	ret
-GetNextThread	Endp
-
+	sti
+        
+update_load:
+	mov si,ds:prio_act
+	mov es,[si]
+	mov fs:ps_curr_thread,es
+    ret
+UpdateThread    Endp
 
 PAGE
 	
@@ -2067,19 +2081,9 @@ LoadCurrentThread:
     sti	
 
 load_timer_loop:
-    sti
-    test fs:ps_flags,PS_FLAG_PREEMPT
-    jz load_preempt_done
+    call UpdateThread
 ;
-    cli
-    and fs:ps_flags,NOT PS_FLAG_PREEMPT
-    call GetNextThread
-        
-load_preempt_done:
-	mov si,ds:prio_act
-	mov es,[si]
-	mov fs:ps_curr_thread,es
-;
+    mov es,fs:ps_curr_thread
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
