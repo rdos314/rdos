@@ -2148,6 +2148,7 @@ load_reload_timer:
 	neg eax
 	call ds:reload_timer_proc
 ;	
+    mov es,fs:ps_curr_thread
 	mov ax,gdt_sel
 	mov ds,ax
 	mov bx,es:p_tss_sel
@@ -3563,6 +3564,7 @@ PAGE
     public cleanup_thread
     
 cleanup_thread:
+    int 3
     call SkipCurrentThread
 ;    
     cli	
@@ -3616,6 +3618,7 @@ PAGE
     public cleanup_process
     
 cleanup_process:
+    int 3
     call SkipCurrentThread
 ;    
     cli	
