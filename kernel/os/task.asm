@@ -3544,7 +3544,7 @@ cleanup_thread:
 	push es
 ;
     mov es,fs:ps_null_thread
-	mov fs:ps_curr_thread,es
+	mov fs:ps_curr_thread,0
 	or fs:ps_flags,PS_FLAG_PREEMPT
 ;	
 	mov ax,gdt_sel
@@ -3599,7 +3599,7 @@ cleanup_process:
 	push es
 ;
     mov es,fs:ps_null_thread
-	mov fs:ps_curr_thread,es
+	mov fs:ps_curr_thread,0
 	or fs:ps_flags,PS_FLAG_PREEMPT
 ;	
 	mov ax,gdt_sel
