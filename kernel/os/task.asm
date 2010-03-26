@@ -3120,6 +3120,7 @@ usSignalNext:
 	jne usSignalLoop
 
 usSignalDone:    
+    sti
     mov es,fs:ps_curr_thread
     mov ax,ds:prio_act
     cmp ax,es:p_prio
