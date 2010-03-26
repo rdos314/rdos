@@ -27,11 +27,12 @@
 
 processor_seg   STRUC
 
-ps_id       DW ?
-ps_ss       DW ?
-ps_sp       DW ?
-ps_null     DW ?
-ps_cr3      DD ?
-ps_nesting  DW ?
+ps_id           DW ?
+ps_ss           DW ?
+ps_sp           DW ?
+ps_null         DW ?
+ps_cr3          DD ?
+ps_nesting      DW ?
+ps_curr_thread  DW ?
 
 processor_seg   ENDS

@@ -71,8 +71,6 @@ ptab			    DW 256 DUP(?)
 
 prio_act		    DW ?
 
-thread_act		    DW ?
-
 help_call_ip	    DW ?
 help_call_cs	    DW ?
 
@@ -850,8 +848,6 @@ timer_free_list_create:
 	mov [bx].timer_next,ax
 	mov bx,ax
 	loop timer_free_list_create
-;
-	mov ds:thread_act,0
 ;
 	mov ax,cs
 	mov ds,ax
@@ -2036,7 +2032,7 @@ get_next_int_loop:
 	jmp get_next_int_loop
 
 get_next_int_ok:
-    mov es,ds:thread_act            ; ok
+    mov es,fs:ps_curr_thread
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,1193
@@ -2066,7 +2062,7 @@ LoadCurrentThread:
 	mov ds,ax
 
 load_timer_loop:
-	mov es,ds:thread_act            ; ok
+    mov es,fs:ps_curr_thread
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
@@ -2109,10 +2105,10 @@ load_reload_timer:
 ;
 	mov si,ds:prio_act
 	mov ax,[si]
-	cmp ax,ds:thread_act        ; ok
+	cmp ax,fs:ps_curr_thread
 	je load_do
 ;
-    mov es,ds:thread_act        ; ok
+    mov es,fs:ps_curr_thread
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,1193
@@ -2123,7 +2119,7 @@ load_reload_timer:
 load_do:
 	mov si,ds:prio_act
 	mov es,[si]
-	mov ds:thread_act,es        ; ok
+	mov fs:ps_curr_thread,es
 ;	
 	mov ax,gdt_sel
 	mov ds,ax
@@ -2563,7 +2559,7 @@ ReloadTimer Proc near
 	jnc reload_timer_done
 
 reload_timer_loop:
-	mov es,ds:thread_act            ; ok
+    mov es,fs:ps_curr_thread
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
@@ -2628,7 +2624,7 @@ BlockThread:
 	mov ax,task_sel
 	mov ds,ax
 	cli
-	mov es,ds:thread_act            ; ok
+	mov es,fs:ps_curr_thread
 	mov es:p_sleep_sel,ax
 	mov es:p_sleep_offset,edi
 	mov si,es:p_prio
@@ -2808,7 +2804,7 @@ debug_save_ok:
     mov es,ax
     mov gs,ax    
 ;
-	mov es,ds:thread_act        ; ok
+    mov es,fs:ps_curr_thread
 	mov es:p_error_code,dx
 ;
     mov ax,system_data_sel
@@ -2851,7 +2847,7 @@ double_fault:
     mov es,ax
     mov gs,ax    
 ;
-	mov es,ds:thread_act        ; ok
+    mov es,fs:ps_curr_thread
 	mov es:p_error_code,8
 ;
     mov ax,system_data_sel
@@ -2900,6 +2896,7 @@ create_processor	Proc far
     mov es:ps_id,ax	
     mov es:ps_cr3,0
     mov es:ps_nesting,-1
+    mov es:ps_curr_thread,0
 ;
     pop si
     pop ds	
@@ -3117,7 +3114,7 @@ usSignalNext:
 	jne usSignalLoop
 
 usSignalDone:    
-    mov es,ds:thread_act        ; ok
+    mov es,fs:ps_curr_thread
     mov ax,ds:prio_act
     cmp ax,es:p_prio
     jbe usPrioOk
@@ -3129,7 +3126,7 @@ usPrioOk:
     jmp LoadCurrentThread
 
 usNoSignal:
-    mov es,ds:thread_act        ; ok
+    mov es,fs:ps_curr_thread
     mov ax,ds:prio_act
     cmp ax,es:p_prio
     jbe usDone
@@ -3544,7 +3541,7 @@ cleanup_thread:
     call SkipCurrentThread
 ;    
     cli	
-	mov es,ds:thread_act        ; ok
+    mov es,fs:ps_curr_thread
 	mov si,es:p_prio
 	RemoveBlock
 	push es
@@ -3553,7 +3550,7 @@ cleanup_thread:
 ;
 	mov si,ds:prio_act
 	mov es,[si]
-	mov ds:thread_act,es        ; ok
+	mov fs:ps_curr_thread,es
 ;	
 	mov ax,gdt_sel
 	mov ds,ax
@@ -3601,7 +3598,7 @@ cleanup_process:
     call SkipCurrentThread
 ;    
     cli	
-	mov es,ds:thread_act        ; ok
+    mov es,fs:ps_curr_thread
 	mov si,es:p_prio
 	RemoveBlock
 	push es
@@ -3610,7 +3607,7 @@ cleanup_process:
 ;
 	mov si,ds:prio_act
 	mov es,[si]
-	mov ds:thread_act,es        ; ok
+	mov fs:ps_curr_thread,es
 ;	
 	mov ax,gdt_sel
 	mov ds,ax
@@ -3912,7 +3909,7 @@ wait_for_signal_timeout	PROC far
     mov cx,cs
     mov es,cx
     mov di,OFFSET signal_timeout    
-    mov bx,ds:thread_act            ; ok
+    mov bx,fs:ps_curr_thread
     mov cx,bx
     StartTimer
 ;
@@ -3925,10 +3922,8 @@ wait_for_signal_timeout_clear:
     push fs
     push bx
 ;    
-    mov ax,task_sel
-    mov ds,ax
     GetProcessor
-	mov bx,ds:thread_act        ; ok
+    mov bx,fs:ps_curr_thread
 	StopTimer
     mov es,bx
 	mov es:p_signal,0
@@ -4422,8 +4417,7 @@ get_thread_pre_tasking:
 get_thread_norm:
     push fs
     GetProcessor
-	mov ds,ax
-	mov ax,ds:thread_act        ; ok
+    mov ax,fs:ps_curr_thread
 	pop fs
 	verr ax
 	jnz get_thread_pre_tasking
@@ -4455,7 +4449,7 @@ get_thread_pr	PROC far
 	mov ax,task_sel
 	mov ds,ax
 	GetProcessor
-	mov ax,ds:thread_act        ; ok
+	mov ax,fs:ps_curr_thread
 ;
     pop fs	
 	pop ds
@@ -4592,7 +4586,7 @@ wait_until	PROC far
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
-	mov cx,ds:thread_act        ; ok
+	mov cx,fs:ps_curr_thread
 	xor bx,bx
 	cli
 	LocalStartTimer
@@ -4629,7 +4623,7 @@ wait_milli_sec	PROC far
 	push dx
 	push ax
 	pop ebx
-	mov es,ds:thread_act            ; ok
+	mov es,fs:ps_curr_thread
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
@@ -4639,7 +4633,7 @@ wait_milli_sec	PROC far
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
-	mov cx,ds:thread_act            ; ok
+	mov cx,fs:ps_curr_thread
 	xor bx,bx
 	cli
 	LocalStartTimer
@@ -4678,7 +4672,7 @@ wait_micro_sec	PROC far
 	push eax
 	pop ax
 	pop ebx
-	mov es,ds:thread_act        ; ok
+	mov es,fs:ps_curr_thread
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
@@ -4688,7 +4682,7 @@ wait_micro_sec	PROC far
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
-	mov cx,ds:thread_act        ; ok
+	mov cx,fs:ps_curr_thread
 	xor bx,bx
 	cli
 	LocalStartTimer
