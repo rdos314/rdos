@@ -3549,10 +3549,9 @@ cleanup_thread:
 	RemoveBlock
 	push es
 ;
-    call GetNextThread
-	mov si,ds:prio_act
-	mov es,[si]
+    mov es,fs:ps_null_thread
 	mov fs:ps_curr_thread,es
+	or fs:ps_flags,PS_FLAG_PREEMPT
 ;	
 	mov ax,gdt_sel
 	mov ds,ax
@@ -3605,10 +3604,9 @@ cleanup_process:
 	RemoveBlock
 	push es
 ;
-	call GetNextThread
-	mov si,ds:prio_act
-	mov es,[si]
+    mov es,fs:ps_null_thread
 	mov fs:ps_curr_thread,es
+	or fs:ps_flags,PS_FLAG_PREEMPT
 ;	
 	mov ax,gdt_sel
 	mov ds,ax
