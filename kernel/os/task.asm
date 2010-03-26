@@ -2036,7 +2036,7 @@ get_next_int_loop:
 	jmp get_next_int_loop
 
 get_next_int_ok:
-    mov es,ds:thread_act        ; needs FS on entry
+    mov es,ds:thread_act            ; ok
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	add eax,1193
@@ -2563,7 +2563,7 @@ ReloadTimer Proc near
 	jnc reload_timer_done
 
 reload_timer_loop:
-	mov es,ds:thread_act            ; try lock / lock returns FS?
+	mov es,ds:thread_act            ; ok
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
@@ -3129,7 +3129,7 @@ usPrioOk:
     jmp LoadCurrentThread
 
 usNoSignal:
-    mov es,ds:thread_act        ; fail
+    mov es,ds:thread_act        ; ok
     mov ax,ds:prio_act
     cmp ax,es:p_prio
     jbe usDone
@@ -3428,7 +3428,8 @@ init_use_pit_timer:
 init_timer_sel_ok:
     call ds:init_clock_proc
 ;
-	call GetNextThread      ; fail. Need FS load
+    call ds:get_processor_proc
+	call GetNextThread      ; ok
 	jmp LoadCurrentThread
 
 PAGE
@@ -4412,14 +4413,20 @@ get_thread	PROC far
 	mov ax,task_sel
 	verr ax
 	jz get_thread_norm
+
 get_thread_pre_tasking:
 	mov ax,virt_thread_sel
 	jmp get_thread_done
+
 get_thread_norm:
+    push fs
+    GetProcessor
 	mov ds,ax
-	mov ax,ds:thread_act        ; fail
+	mov ax,ds:thread_act        ; ok
+	pop fs
 	verr ax
 	jnz get_thread_pre_tasking
+
 get_thread_done:
 	pop ds
 	ret
@@ -4442,9 +4449,14 @@ get_thread_name	DB 'Get Thread',0
 
 get_thread_pr	PROC far
 	push ds
+	push fs
+;	
 	mov ax,task_sel
 	mov ds,ax
-	mov ax,ds:thread_act        ; fail
+	GetProcessor
+	mov ax,ds:thread_act        ; ok
+;
+    pop fs	
 	pop ds
 	retf32
 get_thread_pr	ENDP
