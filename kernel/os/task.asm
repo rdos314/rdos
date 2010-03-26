@@ -2959,10 +2959,12 @@ PAGE
 ;       PARAMETERS:     DS      Task_sel
 ;
 ;       RETURNS:        CY      Owner of section
+;                       FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TryLockSingle	Proc near
+    call ds:get_processor_proc
 	add ds:timer_nesting,1
 	ret
 TryLockSingle	Endp
@@ -2979,10 +2981,12 @@ PAGE
 ;       PARAMETERS:     DS      Task_sel
 ;
 ;       RETURNS:        CY      Owner of section
+;                       FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockSingle	Proc near
+    call ds:get_processor_proc
 	add ds:timer_nesting,1
 	jc lsDone
 ;
@@ -3002,6 +3006,7 @@ PAGE
 ;		DESCRIPTION:	Unlock, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
+;                       FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3010,6 +3015,20 @@ UnlockSingle	Proc near
     push ax
     push es
 
+; test only!
+    push dx
+    push fs
+    call ds:get_processor_proc
+    mov ax,fs
+    pop dx
+    cmp ax,dx
+    je usTestPass
+;
+    int 3
+
+usTestPass:
+    pop dx    
+    
 usRetry:    
     sub ds:timer_nesting,1
 	jnc usDone
