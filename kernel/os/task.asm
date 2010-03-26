@@ -111,6 +111,8 @@ unlock_proc         DW ?
 lock_list_proc      DW ?
 unlock_list_proc    DW ?
 
+get_processor_proc  DW ?
+
 processor_count     DW ?
 processor_arr       DW 256 DUP(?)
 
@@ -807,6 +809,7 @@ init_task	PROC near
 	mov ds:unlock_proc,OFFSET UnlockSingle
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
+    mov ds:get_processor_proc,OFFSET GetProcessorSingle
 	mov ds:timer_nesting,-1
 	mov ds:signal_list,0
 	mov ds:wakeup_list,0
@@ -2419,14 +2422,9 @@ SaveCurrentThread	Proc near
     mov edx,dword ptr ds:tss_edx
 ;
     push ax
-    push bx
     mov ax,task_sel
     mov ds,ax
-    GetProcessorNr
-    mov bx,ax
-    add bx,bx
-    mov fs,ds:[bx].processor_arr
-    pop bx
+    call ds:get_processor_proc
     pop ax
 ;    
     mov ss,fs:ps_ss
@@ -2493,14 +2491,9 @@ SaveLockedThread	Proc near
     mov edx,dword ptr ds:tss_edx
 ;
     push ax
-    push bx
     mov ax,task_sel
     mov ds,ax
-    GetProcessorNr
-    mov bx,ax
-    add bx,bx
-    mov fs,ds:[bx].processor_arr
-    pop bx
+    call ds:get_processor_proc
     pop ax
 ;    
     mov ss,fs:ps_ss
@@ -2539,14 +2532,9 @@ SkipCurrentThread	Proc near
     pop bp
 ;
     push ax
-    push bx
     mov ax,task_sel
     mov ds,ax
-    GetProcessorNr
-    mov bx,ax
-    add bx,bx
-    mov fs,ds:[bx].processor_arr	
-    pop bx
+    call ds:get_processor_proc
     pop ax
 ;    
     mov ss,fs:ps_ss
@@ -2813,10 +2801,7 @@ debug_save_ok:
     movzx dx,byte ptr [bp].vm_err+2
     mov ax,task_sel
     mov ds,ax
-    GetProcessorNr
-    mov bx,ax
-    add bx,bx
-    mov fs,ds:[bx].processor_arr
+    call ds:get_processor_proc
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
@@ -2863,10 +2848,7 @@ double_fault:
 ;	
     mov ax,task_sel
     mov ds,ax
-    GetProcessorNr
-    mov bx,ax
-    add bx,bx
-    mov fs,ds:[bx].processor_arr
+    call ds:get_processor_proc
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
@@ -3142,6 +3124,51 @@ usEsOk:
 	pop ax
 	ret
 UnlockSingle	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetProcessorSingle
+;
+;		DESCRIPTION:	Get current processor, single processor version
+;
+;       RETRURNS:       FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetProcessorSingle   Proc near
+    mov fs,ds:processor_arr
+    ret
+GetProcessorSingle   Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetProcessorMulti
+;
+;		DESCRIPTION:	Get current processor, multi processor version
+;
+;       RETRURNS:       FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetProcessorMulti   Proc near
+    push ax
+    push bx
+    mov ax,task_sel
+    mov ds,ax
+    GetProcessorNr
+    mov bx,ax
+    add bx,bx
+    mov fs,ds:[bx].processor_arr
+    pop bx
+    pop ax
+    ret
+GetProcessorMulti   Endp
 
 PAGE	
 
