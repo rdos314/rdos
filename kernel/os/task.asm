@@ -1990,10 +1990,19 @@ UpdateThread    Proc near
     jz update_preempt
 ;
     mov es,ax
-    mov ax,es:p_prio
-    cmp ax,ds:prio_act
-    jc update_preempt
-;    
+    mov di,es:p_prio
+    or di,di
+    jz update_insert_done
+;
+    InsertBlock
+
+update_insert_done:
+    cmp di,ds:prio_act
+    jbe update_check_preempt
+;
+    mov ds:prio_act,di
+    
+update_check_preempt:
     test fs:ps_flags,PS_FLAG_PREEMPT
     jz update_load
 
@@ -2064,10 +2073,6 @@ update_int_ok:
     mov es,ax
         
 update_load:
-    mov ax,es
-    cmp ax,fs:ps_curr_thread
-    je update_done
-;    
     mov si,es:p_prio
     or si,si
     jz update_remove_done
@@ -2075,20 +2080,6 @@ update_load:
     RemoveBlock
 
 update_remove_done:
-    push es
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz update_insert_done
-;    
-    mov es,ax
-    mov di,es:p_prio
-    or di,di
-    jz update_insert_done
-;
-    InsertBlock
-
-update_insert_done:    
-    pop es
     mov fs:ps_curr_thread,es
 
 update_done:
