@@ -2597,7 +2597,7 @@ reload_check_preempt:
 ;
     push OFFSET reload_timer_end
     call SaveLockedThread
-    call GetNextThread          ; ok
+    or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 
 reload_timer_do:
@@ -3127,8 +3127,7 @@ usSignalDone:
     cmp ax,es:p_prio
     jbe usPrioOk
 ;
-    cli
-    call GetNextThread          ; ok
+    or fs:ps_flags,PS_FLAG_PREEMPT
 
 usPrioOk:
     jmp LoadCurrentThread
@@ -3141,8 +3140,7 @@ usNoSignal:
 ;
     push OFFSET usDone
     call SaveCurrentThread
-    cli
-    call GetNextThread          ; ok
+    or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 
 usDone:
@@ -3434,7 +3432,7 @@ init_timer_sel_ok:
     call ds:init_clock_proc
 ;
     call ds:get_processor_proc
-	call GetNextThread      ; ok
+    or fs:ps_flags,PS_FLAG_PREEMPT
 	jmp LoadCurrentThread
 
 PAGE
@@ -3496,7 +3494,7 @@ wake_new	PROC near
 	jb wake_new_lower
 ;	
 	mov ds:prio_act,di
-	call GetNextThread      ; ok
+    or fs:ps_flags,PS_FLAG_PREEMPT
 
 wake_new_lower:
     jmp LoadCurrentThread
@@ -3523,9 +3521,7 @@ swap_name	DB 'Swap',0
 swap_out	PROC far
     push OFFSET swap_out_done
     call SaveCurrentThread
-;
-	cli
-	call GetNextThread      ; ok
+    or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 
 swap_out_done:
@@ -3554,8 +3550,7 @@ cleanup_thread:
 	RemoveBlock
 	push es
 ;
-	call GetNextThread          ; ok
-;
+    call GetNextThread
 	mov si,ds:prio_act
 	mov es,[si]
 	mov fs:ps_curr_thread,es
@@ -3611,8 +3606,7 @@ cleanup_process:
 	RemoveBlock
 	push es
 ;
-	call GetNextThread          ; ok
-;
+	call GetNextThread
 	mov si,ds:prio_act
 	mov es,[si]
 	mov fs:ps_curr_thread,es
