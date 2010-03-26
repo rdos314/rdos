@@ -3453,6 +3453,11 @@ init_use_pit_timer:
 init_timer_sel_ok:
     call ds:init_clock_proc
 ;
+    mov bx,task_sel
+    GetSelectorBaseSize
+    mov bx,tasking_sel
+    CreateDataSelector16
+;
     call ds:get_processor_proc
     or fs:ps_flags,PS_FLAG_PREEMPT
 	jmp LoadCurrentThread
@@ -3924,7 +3929,10 @@ wait_for_signal_timeout	PROC far
     push cx
     push di
 ;
-	GetProcessor
+    mov ax,task_sel
+    mov ds,ax
+    call ds:lock_proc
+;
     mov cx,cs
     mov es,cx
     mov di,OFFSET signal_timeout    
@@ -3932,30 +3940,30 @@ wait_for_signal_timeout	PROC far
     mov cx,bx
     StartTimer
 ;    
-	cli
 	mov es,bx
 	xor al,al
 	xchg al,es:p_signal
 	or al,al
-	jnz wait_for_signal_timeout_done
+	jnz wait_for_signal_timeout_unlock
 ;
     push OFFSET wait_for_signal_timeout_clear
-    call SaveCurrentThread
+    call SaveLockedThread
 ;
 	mov ax,task_sel
     mov edi,signal_list
     jmp BlockThread
 
 wait_for_signal_timeout_clear:
-	mov ax,task_sel
-	mov ds,ax
-	mov es,fs:ps_curr_thread
+    mov ax,task_sel
+    mov ds,ax
+    call ds:lock_proc
+    mov es,fs:ps_curr_thread
 	mov es:p_signal,0
 	
-wait_for_signal_timeout_done:
+wait_for_signal_timeout_unlock:
 	mov bx,fs:ps_curr_thread
 	StopTimer
-    sti
+    call ds:unlock_proc
 ;
     pop di
 	pop cx

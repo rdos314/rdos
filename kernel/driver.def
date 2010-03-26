@@ -100,6 +100,7 @@ exec_sys_sel		EQU 160h
 kernel_tss			EQU 178h
 kernel_stack		EQU 188h
 ;
+tasking_sel         EQU 190h
 virt_tss			EQU 198h
 ;
 env_sys_sel         EQU 1A0h
