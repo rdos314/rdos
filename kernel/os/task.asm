@@ -2062,9 +2062,11 @@ LoadCurrentThread:
 	mov ds,ax
 
 load_timer_loop:
+    sti
     test fs:ps_flags,PS_FLAG_PREEMPT
     jz load_preempt_done
 ;
+    cli
     and fs:ps_flags,NOT PS_FLAG_PREEMPT
     call GetNextThread
         
