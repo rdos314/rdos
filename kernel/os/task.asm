@@ -2099,11 +2099,7 @@ load_check_preempt:
 	sbb edx,ds:preempt_msb
 	jc load_reload_timer
 ;	
-	sti
-	nop
-	cli
-	call GetNextThread          ; ok
-	sti
+    or fs:ps_flags,PS_FLAG_PREEMPT
 	jmp load_timer_loop
 
 load_reload_timer:
