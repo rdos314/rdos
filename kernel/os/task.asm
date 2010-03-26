@@ -2446,15 +2446,16 @@ PAGE
 ;		DESCRIPTION:	Save state of current thread when lock is already taken
 ;
 ;       PARAMETERS:     Stack, return IP
+;                       FS          Processor selector
 ;
 ;       RETURNS:        SS:SP       Processor stack
 ;                       DS          Task sel
-;                       FS          Processor selector
 ;                       ES, GS      Clear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SaveLockedThread	Proc near	
+    push fs
     push ds
     push ax
 ;
@@ -2475,13 +2476,13 @@ SaveLockedThread	Proc near
     mov word ptr ds:tss_es,es
     mov word ptr ds:tss_cs,cs
     mov word ptr ds:tss_ss,ss
-    mov word ptr ds:tss_fs,fs
     mov word ptr ds:tss_gs,gs
 ;
     pop ax
     mov dword ptr ds:tss_eax,eax
 ;
     pop word ptr ds:tss_ds
+    pop word ptr ds:tss_fs
     pop bp
     pop dx
     movzx edx,dx
@@ -2492,7 +2493,6 @@ SaveLockedThread	Proc near
     push ax
     mov ax,task_sel
     mov ds,ax
-    call ds:get_processor_proc
     pop ax
 ;    
     mov ss,fs:ps_ss
