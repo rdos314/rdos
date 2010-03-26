@@ -1985,12 +1985,19 @@ PAGE
 
 UpdateThread    Proc near
     sti
-	mov si,ds:prio_act
-	mov es,[si]
-;	
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz update_preempt
+;
+    mov es,ax
+    mov ax,es:p_prio
+    cmp ax,ds:prio_act
+    jc update_preempt
+;    
     test fs:ps_flags,PS_FLAG_PREEMPT
     jz update_load
-;
+
+update_preempt:
     and fs:ps_flags,NOT PS_FLAG_PREEMPT    
     cli
     mov es,fs:ps_curr_thread
