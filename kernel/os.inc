@@ -605,6 +605,11 @@ CreateProcessor    MACRO
 	OsGate create_processor_nr
 						ENDM
 
+;   OUT FS      Processor selector
+GetProcessor    MACRO
+	OsGate get_processor_nr
+						ENDM
+
 EnterInt    MACRO
 	OsGate enter_int_nr
 						ENDM

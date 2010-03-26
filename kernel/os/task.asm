@@ -73,8 +73,6 @@ prio_act		    DW ?
 
 thread_act		    DW ?
 
-timer_nesting	    DW ?
-
 help_call_ip	    DW ?
 help_call_cs	    DW ?
 
@@ -810,7 +808,6 @@ init_task	PROC near
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
     mov ds:get_processor_proc,OFFSET GetProcessorSingle
-	mov ds:timer_nesting,-1
 	mov ds:signal_list,0
 	mov ds:wakeup_list,0
 	mov ds:has_signal,0
@@ -864,6 +861,12 @@ timer_free_list_create:
 	mov di,OFFSET create_processor_name
 	xor cl,cl
 	mov ax,create_processor_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_processor
+	mov di,OFFSET get_processor_name
+	xor cl,cl
+	mov ax,get_processor_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET enter_int
@@ -944,10 +947,10 @@ timer_free_list_create:
 	mov ax,get_thread_nr
 	RegisterBimodalUserGate
 ;
-	mov si,OFFSET get_processor
-	mov di,OFFSET get_processor_name
+	mov si,OFFSET get_processor_id
+	mov di,OFFSET get_processor_id_name
 	xor dx,dx
-	mov ax,get_processor_nr
+	mov ax,get_processor_id_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_cpu_time
@@ -1176,6 +1179,8 @@ timer_free_list_create:
 ;
 	mov di,OFFSET check_list
 	HookState
+;
+    CreateProcessor
 ;
 	pop ds
 	popa
@@ -2894,11 +2899,40 @@ create_processor	Proc far
 ;
     mov es:ps_id,ax	
     mov es:ps_cr3,0
+    mov es:ps_nesting,-1
 ;
     pop si
     pop ds	
 	ret
 create_processor	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetProcessor
+;
+;		DESCRIPTION:	Get current processor selector
+;
+;       RETURNS:        FS      Processor sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_processor_name	DB 'Get Processor',0
+
+get_processor	Proc far
+    push ds
+    push ax
+;
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_processor_proc
+;
+    pop ax
+    pop ds	
+	ret
+get_processor	Endp
 
 PAGE	
 
@@ -2954,7 +2988,7 @@ PAGE
 
 TryLockSingle	Proc near
     call ds:get_processor_proc
-	add ds:timer_nesting,1
+	add fs:ps_nesting,1
 	ret
 TryLockSingle	Endp
 
@@ -2976,7 +3010,7 @@ PAGE
 
 LockSingle	Proc near
     call ds:get_processor_proc
-	add ds:timer_nesting,1
+	add fs:ps_nesting,1
 	jc lsDone
 ;
     int 3
@@ -3003,30 +3037,16 @@ PAGE
 UnlockSingle	Proc near
     push ax
     push es
-
-; test only!
-    push dx
-    push fs
-    call ds:get_processor_proc
-    mov ax,fs
-    pop dx
-    cmp ax,dx
-    je usTestPass
-;
-    int 3
-
-usTestPass:
-    pop dx    
     
 usRetry:    
-    sub ds:timer_nesting,1
+    sub fs:ps_nesting,1
 	jnc usDone
 ;	
     mov al,ds:has_signal
     or al,ds:has_list
     jz usNoSignal
 ;
-    add ds:timer_nesting,1
+    add fs:ps_nesting,1
     jnc usRetry
 ;
     push OFFSET usDone
@@ -3169,7 +3189,7 @@ GetProcessorMulti   Proc near
     push bx
     mov ax,task_sel
     mov ds,ax
-    GetProcessorNr
+    GetProcessorId
     mov bx,ax
     add bx,bx
     mov fs,ds:[bx].processor_arr
@@ -4436,18 +4456,18 @@ PAGE
 ;
 ;		NAME:			GetProcessor
 ;
-;		DESCRIPTION:	Get current processor
+;		DESCRIPTION:	Get current processor #
 ;
 ;		RETURNS:		AX		Processor
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_processor_name	DB 'Get Processor',0
+get_processor_id_name	DB 'Get Processor ID',0
 
-get_processor	PROC far
+get_processor_id	PROC far
     xor ax,ax
 	retf32
-get_processor	ENDP
+get_processor_id	ENDP
 
 PAGE
 

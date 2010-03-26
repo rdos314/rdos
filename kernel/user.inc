@@ -312,8 +312,8 @@ CpuReset        MACRO
 						ENDM
 
 ; OUT AX         Processor nr
-GetProcessorNr        MACRO
-	UserGate get_processor_nr
+GetProcessorId        MACRO
+	UserGate get_processor_id_nr
 						ENDM
 
 ; IN  AX         Number of milliseconds

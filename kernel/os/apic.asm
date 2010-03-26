@@ -290,7 +290,7 @@ get_id_msr Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_processor_name    DB 'Get Processor',0
+get_processor_id_name    DB 'Get Processor ID',0
 
 get_processor_mem  Proc far
     push ds
@@ -537,9 +537,9 @@ SetupMemGates   Proc near
 	RegisterOsGate
 ;
 	mov si,OFFSET get_processor_mem
-	mov di,OFFSET get_processor_name
+	mov di,OFFSET get_processor_id_name
 	xor dx,dx
-	mov ax,get_processor_nr
+	mov ax,get_processor_id_nr
 	RegisterBimodalUserGate
 ;    
     ret
@@ -571,9 +571,9 @@ SetupMsrGates   Proc near
 	RegisterOsGate
 ;
 	mov si,OFFSET get_processor_msr
-	mov di,OFFSET get_processor_name
+	mov di,OFFSET get_processor_id_name
 	xor dx,dx
-	mov ax,get_processor_nr
+	mov ax,get_processor_id_nr
 	RegisterBimodalUserGate
 ;	
     ret

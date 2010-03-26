@@ -2397,11 +2397,11 @@ PAGE
 init_first_process_callback:
 	call init_process_paging
 ;
-    CreateProcessor
+    GetProcessor
     mov eax,cr3
-    mov es:ps_cr3,eax
+    mov fs:ps_cr3,eax
     GetThread
-    mov es:ps_null,ax
+    mov fs:ps_null,ax
 ;	
 	call trap_init_tasking
 	sti

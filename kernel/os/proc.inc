@@ -32,5 +32,6 @@ ps_ss       DW ?
 ps_sp       DW ?
 ps_null     DW ?
 ps_cr3      DD ?
+ps_nesting  DW ?
 
 processor_seg   ENDS

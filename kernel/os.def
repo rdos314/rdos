@@ -525,5 +525,7 @@ leave_read_section_nr       EQU 365
 enter_write_section_nr      EQU 366
 leave_write_section_nr      EQU 367
 
+get_processor_nr            EQU 368
+
 osgate_entries				EQU 370
 
