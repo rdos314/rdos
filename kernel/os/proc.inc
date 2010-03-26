@@ -37,5 +37,6 @@ ps_cr3          DD ?
 ps_nesting      DW ?
 ps_curr_thread  DW ?
 ps_flags        DW ?
+ps_null_thread  DW ?
 
 processor_seg   ENDS
