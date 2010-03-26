@@ -1985,11 +1985,21 @@ PAGE
 
 UpdateThread    Proc near
     sti
+	mov si,ds:prio_act
+	mov es,[si]
+;	
     test fs:ps_flags,PS_FLAG_PREEMPT
     jz update_load
 ;
+    and fs:ps_flags,NOT PS_FLAG_PREEMPT    
     cli
-    and fs:ps_flags,NOT PS_FLAG_PREEMPT
+    mov es,fs:ps_curr_thread
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	add eax,1193
+	adc edx,0
+	mov ds:preempt_lsb,eax
+	mov ds:preempt_msb,edx
 
 update_int_loop:
 	mov si,ds:prio_act
@@ -2041,19 +2051,9 @@ update_prio_end:
 	jmp update_int_loop
 
 update_int_ok:
-    mov es,fs:ps_curr_thread
-    cli
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	add eax,1193
-	adc edx,0
-	mov ds:preempt_lsb,eax
-	mov ds:preempt_msb,edx
-	sti
+    mov es,ax
         
 update_load:
-	mov si,ds:prio_act
-	mov es,[si]
 	mov fs:ps_curr_thread,es
     ret
 UpdateThread    Endp
