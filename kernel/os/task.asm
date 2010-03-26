@@ -2060,6 +2060,11 @@ PAGE
 LoadCurrentThread:
 	mov ax,task_sel
 	mov ds,ax
+;
+    mov es,fs:ps_curr_thread
+	cli
+	call ds:update_clock_proc
+    sti	
 
 load_timer_loop:
     sti
@@ -2071,7 +2076,10 @@ load_timer_loop:
     call GetNextThread
         
 load_preempt_done:
-    mov es,fs:ps_curr_thread
+	mov si,ds:prio_act
+	mov es,[si]
+	mov fs:ps_curr_thread,es
+;
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
@@ -2107,24 +2115,6 @@ load_check_preempt:
 load_reload_timer:
 	neg eax
 	call ds:reload_timer_proc
-;
-	mov si,ds:prio_act
-	mov ax,[si]
-	cmp ax,fs:ps_curr_thread
-	je load_do
-;
-    mov es,fs:ps_curr_thread
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	add eax,1193
-	adc edx,0
-	mov ds:preempt_lsb,eax
-	mov ds:preempt_msb,edx
-
-load_do:
-	mov si,ds:prio_act
-	mov es,[si]
-	mov fs:ps_curr_thread,es
 ;	
 	mov ax,gdt_sel
 	mov ds,ax
