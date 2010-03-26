@@ -3844,31 +3844,40 @@ wait_for_signal_name	DB 'Wait For Signal',0
 
 wait_for_signal	PROC far
     push ds
+    push es
+    push fs
     push ax
 ;
-	mov ax,thread_sel
-	mov ds,ax
-	cli
+    mov ax,task_sel
+    mov ds,ax
+    call ds:lock_proc
+;    
+    mov es,fs:ps_curr_thread
 	xor al,al
-	xchg al,ds:p_signal
+	xchg al,es:p_signal
 	or al,al
-	jnz wait_for_signal_done
+	jnz wait_for_signal_unlock
 ;
     push OFFSET wait_for_signal_clear
-    call SaveCurrentThread
+    call SaveLockedThread
 ;
 	mov ax,task_sel
     mov edi,signal_list
     jmp BlockThread
 
 wait_for_signal_clear:
-	mov ax,thread_sel
-	mov ds,ax
-	mov ds:p_signal,0
-	
-wait_for_signal_done:
-	sti
+    mov ax,task_sel
+    mov ds,ax
+    call ds:lock_proc
+    mov es,fs:ps_curr_thread
+	mov es:p_signal,0
+
+wait_for_signal_unlock:
+    call ds:unlock_proc
+;	
 	pop ax
+	pop fs
+	pop es
 	pop ds
 	ret
 wait_for_signal	ENDP
