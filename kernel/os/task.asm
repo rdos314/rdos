@@ -2626,7 +2626,6 @@ BlockThread:
 	mov cx,ax
 	mov ax,task_sel
 	mov ds,ax
-	cli
 	mov es,fs:ps_curr_thread
 	mov es:p_sleep_sel,ax
 	mov es:p_sleep_offset,edi
