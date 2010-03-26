@@ -3564,7 +3564,6 @@ PAGE
     public cleanup_thread
     
 cleanup_thread:
-    int 3
     call SkipCurrentThread
 ;    
     cli	
@@ -3618,7 +3617,6 @@ PAGE
     public cleanup_process
     
 cleanup_process:
-    int 3
     call SkipCurrentThread
 ;    
     cli	
