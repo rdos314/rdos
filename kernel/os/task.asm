@@ -208,35 +208,6 @@ timer_stop_this:
 timer_stop_done:
 				ENDM
 
-GetPrioThread	MACRO
-	LOCAL find_prio_lower
-	LOCAL find_prio_loop
-	LOCAL find_prio_done
-	LOCAL find_prio_end
-	mov si,ds:prio_act
-	mov ax,[si]
-	or ax,ax
-	je find_prio_lower
-	mov es,ax
-	mov ax,es:p_next
-	mov [si],ax
-	jmp find_prio_end	
-find_prio_lower:
-	sub si,2
-	jnc find_prio_loop
-	ShutDownTask
-find_prio_loop:
-	mov ax,[si]
-	or ax,ax
-	jne find_prio_done
-	sub si,2
-	jnc find_prio_loop
-	ShutDownTask
-find_prio_done:
-	mov ds:prio_act,si
-find_prio_end:
-				ENDM
-
 ;	ds:di	list
 ;	es		block
 
@@ -2021,7 +1992,36 @@ UpdateThread    Proc near
     and fs:ps_flags,NOT PS_FLAG_PREEMPT
 
 update_int_loop:
-	GetPrioThread
+	mov si,ds:prio_act
+	mov ax,[si]
+	or ax,ax
+	je update_prio_lower
+;	
+	mov es,ax
+	mov ax,es:p_next
+	mov [si],ax
+	jmp update_prio_end	
+	
+update_prio_lower:
+	sub si,2
+	jnc update_prio_loop
+;	
+	ShutDownTask
+
+update_prio_loop:
+	mov ax,[si]
+	or ax,ax
+	jne update_prio_done
+;	
+	sub si,2
+	jnc update_prio_loop
+;	
+	ShutDownTask
+
+update_prio_done:
+	mov ds:prio_act,si
+
+update_prio_end:
 	mov es,ax
 	mov es,es:p_process_sel
 	test es:ms_virt_flags,200h
