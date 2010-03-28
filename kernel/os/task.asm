@@ -2391,7 +2391,7 @@ SaveCurrentThread	Proc near
     mov ds,ax
     call ds:lock_proc
 ;        
-    mov ax,thread_sel
+    mov ax,fs:ps_curr_thread
     mov ds,ax
     mov ds,ds:p_tss_data_sel
     pushfd
@@ -2667,6 +2667,8 @@ null_base   DB 'Null'
     public null_thread0
 
 null_thread0:
+    GetProcessor
+	or fs:ps_flags,PS_FLAG_NULL_SKIP
     jmp null_loop
 
 null_thread:
@@ -2682,7 +2684,7 @@ null_thread:
 ;
     call SkipCurrentThread
 	mov fs:ps_curr_thread,0
-	or fs:ps_flags,PS_FLAG_PREEMPT
+	or fs:ps_flags,PS_FLAG_PREEMPT OR PS_FLAG_NULL_SKIP
     jmp LoadCurrentThread
 	
 null_loop:

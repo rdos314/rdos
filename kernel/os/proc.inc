@@ -25,7 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PS_FLAG_PREEMPT = 1
+PS_FLAG_PREEMPT     = 1
+PS_FLAG_NULL_SKIP   = 2
 
 timer_struc	STRUC
 
