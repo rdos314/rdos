@@ -55,16 +55,6 @@ us_count	DW ?
 section_handle_seg		ENDS
 
 
-timer_struc	STRUC
-timer_next		DW ?
-timer_id		DW ?
-timer_lsb		DD ?
-timer_msb		DD ?
-timer_offset	DW ?
-timer_sel		DW ?
-timer_owner		DW ?
-timer_struc	ENDS
-
 task_seg	STRUC
 
 ptab			    DW 256 DUP(?)
@@ -91,9 +81,6 @@ apic_mul_rest       DW ?
 
 update_tics		    DD ?
 
-preempt_lsb		    DD ?
-preempt_msb		    DD ?
-
 signal_list		    DW ?
 has_signal          DB ?
 has_list            DB ?
@@ -112,10 +99,6 @@ get_processor_proc  DW ?
 processor_count     DW ?
 processor_arr       DW 256 DUP(?)
 
-timer_head		    DW ?
-timer_free		    DW ?
-timer_entries	    DB 256 * SIZE timer_struc DUP(?)
-
 task_seg_size	    DB ?
 
 task_seg	ENDS
@@ -131,17 +114,18 @@ LocalRemoveTimer	MACRO
 	local timer_return
 
 	cli
-	mov bx,ds:timer_head
-	mov ax,[bx].timer_next
-	mov ds:timer_head,ax
+	mov bx,fs:ps_timer_head
+	mov ax,fs:[bx].ps_timer_next
+	mov fs:ps_timer_head,ax
 	sti
-	mov cx,[bx].timer_id
-	mov eax,[bx].timer_lsb
-	mov edx,[bx].timer_msb	
+	mov cx,fs:[bx].ps_timer_id
+	mov eax,fs:[bx].ps_timer_lsb
+	mov edx,fs:[bx].ps_timer_msb	
+	push fs
 	push bx
 	push cs
 	push OFFSET timer_return	
-	push dword ptr [bx].timer_offset
+	push dword ptr fs:[bx].ps_timer_offset
 	xor bx,bx
 	mov ds,bx
 	mov es,bx
@@ -149,41 +133,42 @@ LocalRemoveTimer	MACRO
 
 timer_return:
 	pop bx
+	pop fs
 	mov ax,task_sel
 	mov ds,ax
 	cli
-	mov ax,ds:timer_free
-	mov [bx].timer_next,ax
-	mov ds:timer_free,bx
+	mov ax,fs:ps_timer_free
+	mov fs:[bx].ps_timer_next,ax
+	mov fs:ps_timer_free,bx
 	sti
 					ENDM
 
 LocalStartTimer	MACRO
 	LOCAL start_try_next
 	LOCAL start_insert
-	mov si,ds:timer_free
-	mov [si].timer_owner,bx
-	mov bx,[si].timer_next
-	mov ds:timer_free,bx
-	mov [si].timer_lsb,eax
-	mov [si].timer_msb,edx
-	mov [si].timer_id,cx
-	mov [si].timer_offset,di
-	mov [si].timer_sel,es
-	mov bx,OFFSET timer_head
+	mov si,fs:ps_timer_free
+	mov fs:[si].ps_timer_owner,bx
+	mov bx,fs:[si].ps_timer_next
+	mov fs:ps_timer_free,bx
+	mov fs:[si].ps_timer_lsb,eax
+	mov fs:[si].ps_timer_msb,edx
+	mov fs:[si].ps_timer_id,cx
+	mov fs:[si].ps_timer_offset,di
+	mov fs:[si].ps_timer_sel,es
+	mov bx,OFFSET ps_timer_head
 	push si
 start_try_next:
 	mov si,bx
-	mov bx,[bx].timer_next
-	cmp edx,[bx].timer_msb
+	mov bx,fs:[bx].ps_timer_next
+	cmp edx,fs:[bx].ps_timer_msb
 	jc start_insert
 	jnz start_try_next
-	cmp eax,[bx].timer_lsb
+	cmp eax,fs:[bx].ps_timer_lsb
 	jnc start_try_next
 start_insert:
-	pop [si].timer_next
-	mov si,[si].timer_next
-	mov [si].timer_next,bx
+	pop fs:[si].ps_timer_next
+	mov si,fs:[si].ps_timer_next
+	mov fs:[si].ps_timer_next,bx
 				ENDM
 
 LocalStopTimer	MACRO
@@ -191,20 +176,20 @@ LocalStopTimer	MACRO
 	LOCAL timer_stop_this
 	LOCAL timer_stop_done
 	mov cx,bx
-	mov bx,OFFSET timer_head
+	mov bx,OFFSET ps_timer_head
 timer_stop_next:
 	mov si,bx
-	mov bx,[bx].timer_next
+	mov bx,fs:[bx].ps_timer_next
 	or bx,bx
 	je timer_stop_done
-	cmp cx,[bx].timer_owner
+	cmp cx,fs:[bx].ps_timer_owner
 	jne timer_stop_next
 timer_stop_this:
-	mov ax,[bx].timer_next
-	mov [si].timer_next,ax
-	mov ax,ds:timer_free
-	mov [bx].timer_next,ax
-	mov ds:timer_free,bx
+	mov ax,fs:[bx].ps_timer_next
+	mov fs:[si].ps_timer_next,ax
+	mov ax,fs:ps_timer_free
+	mov fs:[bx].ps_timer_next,ax
+	mov fs:ps_timer_free,bx
 timer_stop_done:
 				ENDM
 
@@ -803,22 +788,6 @@ proc_init:
 	mov word ptr [bx],0
 	add bx,2
 	loop proc_init
-;
-	mov bx,OFFSET timer_entries
-	mov [bx].timer_next,0
-	mov [bx].timer_msb,0FFFFFFFFh
-	mov [bx].timer_lsb,0FFFFFFFFh
-	mov ds:timer_head,bx
-;	
-	mov cx,0FFh
-	add bx,SIZE timer_struc
-	mov ds:timer_free,bx
-timer_free_list_create:
-	mov ax,bx
-	add ax,SIZE timer_struc
-	mov [bx].timer_next,ax
-	mov bx,ax
-	loop timer_free_list_create
 ;
 	mov ax,cs
 	mov ds,ax
@@ -2014,8 +1983,8 @@ update_preempt:
 	LocalGetSystemTime
 	add eax,1193
 	adc edx,0
-	mov ds:preempt_lsb,eax
-	mov ds:preempt_msb,edx
+	mov fs:ps_preempt_lsb,eax
+	mov fs:ps_preempt_msb,edx
 
 update_int_loop:
 	mov si,ds:prio_act
@@ -2117,28 +2086,28 @@ load_timer_loop:
 	LocalGetSystemTime
 	add eax,ds:update_tics
 	adc edx,0
-	mov bx,ds:timer_head
-	mov ecx,ds:preempt_msb
-	cmp ecx,[bx].timer_msb
+	mov bx,fs:ps_timer_head
+	mov ecx,fs:ps_preempt_msb
+	cmp ecx,fs:[bx].ps_timer_msb
 	jc load_check_preempt
 ;
 	jnz load_check_timer
 ;	
-	mov ecx,ds:preempt_lsb
-	cmp ecx,[bx].timer_lsb
+	mov ecx,fs:ps_preempt_lsb
+	cmp ecx,fs:[bx].ps_timer_lsb
 	jc load_check_preempt
 
 load_check_timer:
-	sub eax,[bx].timer_lsb
-	sbb edx,[bx].timer_msb
+	sub eax,fs:[bx].ps_timer_lsb
+	sbb edx,fs:[bx].ps_timer_msb
 	jc load_reload_timer
 ;	
 	LocalRemoveTimer
 	jmp load_timer_loop
 
 load_check_preempt:
-	sub eax,ds:preempt_lsb
-	sbb edx,ds:preempt_msb
+	sub eax,fs:ps_preempt_lsb
+	sbb edx,fs:ps_preempt_msb
 	jc load_reload_timer
 ;	
     or fs:ps_flags,PS_FLAG_PREEMPT
@@ -2593,27 +2562,27 @@ reload_timer_loop:
 	LocalGetSystemTime
 	add eax,ds:update_tics
 	adc edx,0
-	mov bx,ds:timer_head
-	mov ecx,ds:preempt_msb
-	cmp ecx,[bx].timer_msb
+	mov bx,fs:ps_timer_head
+	mov ecx,fs:ps_preempt_msb
+	cmp ecx,fs:[bx].ps_timer_msb
 	jc reload_check_preempt
 	jnz reload_check_timer
 ;	
-	mov ecx,ds:preempt_lsb
-	cmp ecx,[bx].timer_lsb
+	mov ecx,fs:ps_preempt_lsb
+	cmp ecx,fs:[bx].ps_timer_lsb
 	jc reload_check_preempt
 
 reload_check_timer:
-	sub eax,[bx].timer_lsb
-	sbb edx,[bx].timer_msb
+	sub eax,fs:[bx].ps_timer_lsb
+	sbb edx,fs:[bx].ps_timer_msb
 	jc reload_timer_do
 ;	
 	LocalRemoveTimer
 	jmp reload_timer_loop
 
 reload_check_preempt:
-	sub eax,ds:preempt_lsb
-	sbb edx,ds:preempt_msb
+	sub eax,fs:ps_preempt_lsb
+	sbb edx,fs:ps_preempt_msb
 	jc reload_timer_do
 ;
     push OFFSET reload_timer_end
@@ -2899,6 +2868,8 @@ create_processor_name	DB 'Create Processor',0
 
 create_processor	Proc far
     push ds
+    push bx
+    push cx
     push si
 ;    
     mov eax,SIZE processor_seg
@@ -2928,7 +2899,27 @@ create_processor	Proc far
     mov es:ps_flags,0
     mov es:ps_null_thread,0
 ;
+	mov bx,OFFSET ps_timer_entries
+	mov es:[bx].ps_timer_next,0
+	mov es:[bx].ps_timer_msb,0FFFFFFFFh
+	mov es:[bx].ps_timer_lsb,0FFFFFFFFh
+	mov es:ps_timer_head,bx
+;	
+	mov cx,0FFh
+	add bx,SIZE timer_struc
+	mov es:ps_timer_free,bx
+timer_free_list_create:
+	mov ax,bx
+	add ax,SIZE timer_struc
+	mov es:[bx].ps_timer_next,ax
+	mov bx,ax
+	loop timer_free_list_create
+;
+    mov ax,es:ps_id	
+;
     pop si
+    pop cx
+    pop bx
     pop ds	
 	ret
 create_processor	Endp
@@ -3357,6 +3348,7 @@ start_timer	PROC far
 ;
 	mov si,task_sel
 	mov ds,si
+	call ds:get_processor_proc
 	cli
 	LocalStartTimer
 	call ReloadTimer
@@ -3392,6 +3384,7 @@ stop_timer	PROC far
 ;
 	mov si,task_sel
 	mov ds,si
+	call ds:get_processor_proc
 	cli
 	LocalStopTimer
 	call ReloadTimer

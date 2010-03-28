@@ -27,17 +27,36 @@
 
 PS_FLAG_PREEMPT = 1
 
+timer_struc	STRUC
+
+ps_timer_next		DW ?
+ps_timer_id		    DW ?
+ps_timer_lsb		DD ?
+ps_timer_msb		DD ?
+ps_timer_offset	    DW ?
+ps_timer_sel		DW ?
+ps_timer_owner		DW ?
+
+timer_struc	ENDS
+
 processor_seg   STRUC
 
-ps_id           DW ?
-ps_ss           DW ?
-ps_sp           DW ?
-ps_null         DW ?
-ps_cr3          DD ?
-ps_nesting      DW ?
-ps_curr_thread  DW ?
-ps_curr_prio    DW ?
-ps_flags        DW ?
-ps_null_thread  DW ?
+ps_id               DW ?
+ps_ss               DW ?
+ps_sp               DW ?
+ps_null             DW ?
+ps_cr3              DD ?
+ps_nesting          DW ?
+ps_curr_thread      DW ?
+ps_curr_prio        DW ?
+ps_flags            DW ?
+ps_null_thread      DW ?
+
+ps_preempt_lsb      DD ?
+ps_preempt_msb	    DD ?
+
+ps_timer_head		DW ?
+ps_timer_free		DW ?
+ps_timer_entries    DB 256 * SIZE timer_struc DUP(?)
 
 processor_seg   ENDS
