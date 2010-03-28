@@ -130,6 +130,7 @@ code	SEGMENT byte public use16 'CODE'
 	extrn free_handle_process:near
 
 	extrn start_processor_null_threads:near
+	extrn null_thread0:near
 
 	assume cs:code
 	
@@ -2225,7 +2226,7 @@ PAGE
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-null_name	DB 'Null',0
+null_name	DB 'Null 0',0
 
 init_first_thread	PROC near
 	xor eax,eax
@@ -2380,9 +2381,8 @@ init_first_process	Proc near
 	call init_first_tss
 	call create_enviroment
 	mov ds:tss_es,fs
-;
-    GetProcessor
-    mov fs:ps_null_thread,es    	
+	GetProcessor
+	mov fs:ps_null_thread,es
 	ret
 init_first_process	Endp
 
@@ -2401,14 +2401,11 @@ PAGE
 
 init_first_process_callback:
 	call init_process_paging
+    call start_processor_null_threads
 	call trap_init_tasking
 	sti
-    call start_processor_null_threads
-
-null_p:
-    hlt
-    jmp null_p
-
+    jmp null_thread0
+	
 	
 code	ENDS
 

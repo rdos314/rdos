@@ -2616,21 +2616,6 @@ PAGE
     public start_processor_null_threads
 
 start_processor_null_threads    Proc near
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov ax,1
-    mov cx,200h
-    mov si,OFFSET startup_thread
-    mov di,OFFSET startup_name
-    CreateThread
-    ret
-start_processor_null_threads    Endp
-
-startup_name    DB 'Startup', 0
-
-startup_thread:
-    int 3
     mov eax,10
     AllocateSmallGlobalMem
     xor di,di
@@ -2647,6 +2632,10 @@ startup_thread:
     mov ds,ax
     mov cx,ds:processor_count
     mov bx,OFFSET processor_arr
+;
+    add bx,2
+    sub cx,1
+    jz start_processor_free
 
 create_null_loop:
     push ds
@@ -2654,7 +2643,7 @@ create_null_loop:
 ;    
     mov ax,cs
     mov ds,ax
-    mov ax,1
+    xor ax,ax
     mov ecx,200h
     mov si,OFFSET null_thread
     xor di,di
@@ -2667,23 +2656,34 @@ create_null_loop:
 ;    
     add bx,2
     loop create_null_loop
-;
-    FreeMem
 
-null_p:
-    hlt
-    jmp null_p
-        
-    TerminateThread
+start_processor_free:
+    FreeMem
+    ret
+start_processor_null_threads    Endp
 
 null_base   DB 'Null'
 
+    public null_thread0
+
+null_thread0:
+    jmp null_loop
+
 null_thread:
-    int 3
+    sti
     mov ax,task_sel
     mov ds,ax
     mov fs,ds:[bx]
-    sti
+    GetThread
+    mov fs:ps_null_thread,ax
+    mov es,ax
+    mov ds,es:p_tss_data_sel
+    mov dword ptr ds:tss_eip, OFFSET null_loop
+;
+    call SkipCurrentThread
+	mov fs:ps_curr_thread,0
+	or fs:ps_flags,PS_FLAG_PREEMPT
+    jmp LoadCurrentThread
 	
 null_loop:
 	hlt
