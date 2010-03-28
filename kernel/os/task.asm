@@ -2623,7 +2623,7 @@ start_processor_null_threads    Proc near
     stosd
     mov al,' '
     stosb
-    mov al,'0'
+    mov al,'1'
     stosb
     xor al,al
     stosb
@@ -2643,7 +2643,7 @@ create_null_loop:
 ;    
     mov ax,cs
     mov ds,ax
-    xor ax,ax
+    mov ax,1
     mov ecx,200h
     mov si,OFFSET null_thread
     xor di,di

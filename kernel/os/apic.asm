@@ -735,8 +735,6 @@ StartCore   Endp
 apic_name	DB 'Apic Test',0
 
 apic_pr:
-    int 3     
-    CreateProcessor
     int 3 
     GetApicId
     xor dl,1    
@@ -1013,6 +1011,8 @@ init_apic_gates_ok:
 	mov es,ax
 	mov di,OFFSET init_apic_thread
 	HookInitTasking
+;	
+    CreateProcessor
 ;
     popad
     pop es
