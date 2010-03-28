@@ -26,7 +26,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PS_FLAG_PREEMPT     = 1
-PS_FLAG_NULL_SKIP   = 2
 
 timer_struc	STRUC
 
@@ -47,7 +46,7 @@ ps_ss               DW ?
 ps_sp               DW ?
 ps_nesting          DW ?
 ps_curr_thread      DW ?
-ps_curr_prio        DW ?
+ps_skip_thread      DW ?
 ps_flags            DW ?
 ps_null_thread      DW ?
 

@@ -2393,6 +2393,9 @@ SaveCurrentThread	Proc near
 ;        
     mov ax,fs:ps_curr_thread
     mov ds,ax
+    cmp ax,fs:ps_skip_thread
+    je save_thread_skip
+;    
     mov ds,ds:p_tss_data_sel
     pushfd
     pop dword ptr ds:tss_eflags
@@ -2418,7 +2421,15 @@ SaveCurrentThread	Proc near
     mov dword ptr ds:tss_eip,edx
     mov dword ptr ds:tss_esp,esp
     mov edx,dword ptr ds:tss_edx
-;
+    jmp save_thread_setup
+
+save_thread_skip:
+    pop ax
+    add sp,4
+    pop bp
+    add sp,2
+
+save_thread_setup:
     push ax
     mov ax,task_sel
     mov ds,ax
@@ -2668,7 +2679,12 @@ null_base   DB 'Null'
 
 null_thread0:
     GetProcessor
-	or fs:ps_flags,PS_FLAG_NULL_SKIP
+    mov es,fs:ps_null_thread
+    mov ds,es:p_tss_data_sel
+    mov dword ptr ds:tss_eip, OFFSET null_loop
+    mov eax,dword ptr ds:tss_esp0
+    mov dword ptr ds:tss_esp,eax
+    mov fs:ps_skip_thread,es
     jmp null_loop
 
 null_thread:
@@ -2678,13 +2694,14 @@ null_thread:
     mov fs,ds:[bx]
     GetThread
     mov fs:ps_null_thread,ax
+    mov fs:ps_skip_thread,ax
     mov es,ax
     mov ds,es:p_tss_data_sel
     mov dword ptr ds:tss_eip, OFFSET null_loop
 ;
     call SkipCurrentThread
 	mov fs:ps_curr_thread,0
-	or fs:ps_flags,PS_FLAG_PREEMPT OR PS_FLAG_NULL_SKIP
+	or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 	
 null_loop:
@@ -2984,9 +3001,9 @@ create_processor	Proc far
     mov es:ps_id,ax	
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
-    mov es:ps_curr_prio,0
     mov es:ps_flags,0
     mov es:ps_null_thread,0
+    mov es:ps_skip_thread,-1
 ;
 	mov bx,OFFSET ps_timer_entries
 	mov es:[bx].ps_timer_next,0
