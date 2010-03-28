@@ -129,6 +129,8 @@ code	SEGMENT byte public use16 'CODE'
 	extrn trap_single_step:near
 	extrn free_handle_process:near
 
+	extrn start_processor_null_threads:near
+
 	assume cs:code
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2399,19 +2401,14 @@ PAGE
 
 init_first_process_callback:
 	call init_process_paging
-;
-    GetProcessor
-    mov eax,cr3
-    mov fs:ps_cr3,eax
-    GetThread
-    mov fs:ps_null,ax
-;	
+;    call start_processor_null_threads
 	call trap_init_tasking
 	sti
-	
-null_loop:
-	hlt
-	jmp null_loop
+
+null_p:
+    hlt
+    jmp null_p
+
 	
 code	ENDS
 

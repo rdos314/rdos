@@ -2606,6 +2606,94 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			StartProcessorNullThreads
+;
+;		DESCRIPTION:    Start each of the null threads for a processor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+    public start_processor_null_threads
+
+start_processor_null_threads    Proc near
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    xor ax,ax
+    mov ecx,200h
+    mov si,OFFSET startup_thread
+    mov di,OFFSET startup_name
+    CreateThread
+    ret
+start_processor_null_threads    Endp
+
+startup_name    DB 'Startup', 0
+
+startup_thread:
+    int 3
+    mov eax,10
+    AllocateSmallGlobalMem
+    xor di,di
+    mov eax,cs:dword ptr null_base
+    stosd
+    mov al,' '
+    stosb
+    mov al,'0'
+    stosb
+    xor al,al
+    stosb
+;
+    mov ax,task_sel
+    mov ds,ax
+    mov cx,ds:processor_count
+    mov bx,OFFSET processor_arr
+
+create_null_loop:
+    push ds
+    push cx
+;    
+    mov ax,cs
+    mov ds,ax
+    xor ax,ax
+    mov ecx,200h
+    mov si,OFFSET null_thread
+    xor di,di
+    CreateThread
+;
+    pop cx
+    pop ds
+    mov di,5
+    inc byte ptr es:[di]
+;    
+    add bx,2
+    loop create_null_loop
+;
+    FreeMem
+
+null_p:
+    hlt
+    jmp null_p
+        
+    TerminateThread
+
+null_base   DB 'Null'
+
+null_thread:
+    int 3
+    mov ax,task_sel
+    mov ds,ax
+    mov fs,ds:[bx]
+    sti
+	
+null_loop:
+	hlt
+	jmp null_loop
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			BlockThread
 ;
 ;		DESCRIPTION:	Block thread and schedule next thread. Registers
@@ -2892,7 +2980,6 @@ create_processor	Proc far
 	inc ds:processor_count
 ;
     mov es:ps_id,ax	
-    mov es:ps_cr3,0
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
     mov es:ps_curr_prio,0
