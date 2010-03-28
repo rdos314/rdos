@@ -2401,9 +2401,9 @@ PAGE
 
 init_first_process_callback:
 	call init_process_paging
-;    call start_processor_null_threads
 	call trap_init_tasking
 	sti
+    call start_processor_null_threads
 
 null_p:
     hlt

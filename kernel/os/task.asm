@@ -2619,8 +2619,8 @@ start_processor_null_threads    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
-    xor ax,ax
-    mov ecx,200h
+    mov ax,1
+    mov cx,200h
     mov si,OFFSET startup_thread
     mov di,OFFSET startup_name
     CreateThread
@@ -2654,7 +2654,7 @@ create_null_loop:
 ;    
     mov ax,cs
     mov ds,ax
-    xor ax,ax
+    mov ax,1
     mov ecx,200h
     mov si,OFFSET null_thread
     xor di,di
