@@ -2780,7 +2780,7 @@ create_null_loop:
 ;    
     mov ax,cs
     mov ds,ax
-    mov ax,1
+    xor ax,ax
     mov ecx,200h
     mov si,OFFSET null_thread
     xor di,di

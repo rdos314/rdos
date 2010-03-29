@@ -235,7 +235,35 @@ ApInit:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DelayMs Proc near
-    WaitMilliSec
+    push ds
+    push es
+    pushad
+;
+    mov dx,system_data_sel
+    mov ds,dx
+    movzx eax,ax
+    mov ecx,1193
+    mul ecx
+;        
+    mov ecx,ds:apic_tics
+    shl ecx,16
+    mov cx,ds:apic_rest
+    shl eax,16
+    mul ecx
+    inc edx
+;
+    mov ax,apic_mem_sel
+    mov es,ax    
+    mov es:APIC_INIT_COUNT,edx
+
+dmLoop:
+    mov eax,es:APIC_CURR_COUNT
+    or eax,eax
+    jnz dmLoop
+;       
+    popad
+    pop es
+    pop ds
     ret
 DelayMs Endp
    
@@ -736,9 +764,6 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3 
-    GetApicId
-    xor dl,1    
-    call StartCore
     int 3
     
     mov eax,05F504D5Fh
@@ -1007,6 +1032,11 @@ init_apic_msr:
     call SetupMsrGates
 
 init_apic_start_cpu:
+    GetApicId
+    xor dl,1    
+    call StartCore
+    jc init_apic_gates_ok
+;    
     CreateProcessor
 
 init_apic_gates_ok:     
