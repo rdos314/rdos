@@ -2065,6 +2065,50 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			ThreadSuspend
+;
+;		DESCRIPTION:	Suspend thread callback from scheduler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn prot_exception:near
+    extrn virt_exception:near
+    
+thread_suspend:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+;
+	mov eax,[bp].vm_eflags
+	or eax,10100h
+	mov [bp].vm_eflags,eax
+	test eax,20000h
+	jnz tsVm
+;
+	mov al,1
+	call prot_exception
+	jmp tsRet
+
+tsVm:
+	mov al,1
+	call virt_exception
+
+tsRet:
+    pop ds
+    pop ebx
+    pop eax
+	pop bp
+	add sp,4
+	iretd
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			AddCallback
 ;
 ;		DESCRIPTION:	Add callback to thread
@@ -2173,7 +2217,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     extrn thread_create:near
-    extrn thread_suspend:near
 
 LoadCurrentThread:
 	mov ax,task_sel
