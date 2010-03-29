@@ -2740,6 +2740,8 @@ PAGE
     public init_cpu
 
 init_cpu:
+    hlt
+    jmp init_cpu
     int 3
     
 PAGE
