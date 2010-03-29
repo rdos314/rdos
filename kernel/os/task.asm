@@ -4207,7 +4207,7 @@ enter_section	PROC far
     mov ds,dx
     call ds:try_lock_proc
     mov ds,ax
-	sub ds:[esi].cs_value,1
+	lock sub ds:[esi].cs_value,1
 	jc ecsUnlock
 ;
     push OFFSET ecsDone
@@ -4248,7 +4248,7 @@ leave_section_name	DB 'Leave Critical Section',0
 leave_section	PROC far
     pushf
 ;    
-	add ds:[esi].cs_value,1
+	lock add ds:[esi].cs_value,1
 	jc lcsDone
 ;
     push eax
