@@ -4057,10 +4057,10 @@ PAGE
 signal_thread_name	DB 'Signal',0
 
 signal_thread	PROC far
+    push ax
     push ds
     push es
     push fs
-    push ax
 ;
     or bx,bx
     jz signal_done
@@ -4077,9 +4077,32 @@ signal_thread	PROC far
     
 signal_done:       
     pop ax
-    pop fs
-    pop es
-    pop ds
+	verr ax
+	jz signal_fs_ok
+;
+	xor ax,ax
+	
+signal_fs_ok:
+	mov fs,ax
+;	
+    pop ax
+	verr ax
+	jz signal_es_ok
+;
+	xor ax,ax
+	
+signal_es_ok:
+	mov es,ax
+;	
+    pop ax
+	verr ax
+	jz signal_ds_ok
+;
+	xor ax,ax
+	
+signal_ds_ok:
+	mov ds,ax
+    pop ax
 	ret
 signal_thread	ENDP
 

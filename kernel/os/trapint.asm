@@ -170,27 +170,6 @@ tsRet:
 	add sp,4
 	iretd
 
-	public trap_single_step
-
-trap_single_step	PROC far
-	mov eax,[bp].vm_eflags
-	or eax,10100h
-	mov [bp].vm_eflags,eax
-	test eax,20000h
-	jnz ts_vm
-	pop ax
-	add sp,2
-	push ax
-	mov al,1
-	jmp prot_exception
-
-ts_vm:
-	mov al,1
-	call virt_exception
-ts_ret:
-	ret
-trap_single_step	ENDP
-
 trap_1:
 	push dword ptr 0
 	push bp
@@ -207,8 +186,21 @@ trap_1:
 	sti
 	mov ax,thread_sel
 	mov ds,ax
-	call dword ptr ds:p_step_ads
+;
+	mov eax,[bp].vm_eflags
+	or eax,10100h
+	mov [bp].vm_eflags,eax
+	test eax,20000h
+	jnz t1_vm
+;
+	mov al,1
+	call prot_exception
+	jmp t1_ret
 
+t1_vm:
+	mov al,1
+	call virt_exception
+	
 t1_ret:
 	pop ds
 	pop ebx

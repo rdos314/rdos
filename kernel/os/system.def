@@ -198,7 +198,6 @@ thread_seg	STRUC
 	p_flags         DW ?
 	p_events		DW ?
 	p_process_sel	DW ?
-	p_step_ads		DW ?,?
 	p_ldt_sel		DW ?
 	p_signal		DB ?
 	p_parent_switch	DB ?

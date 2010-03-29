@@ -126,7 +126,6 @@ code	SEGMENT byte public use16 'CODE'
 	extrn init_process_app:near
 	extrn init_task_traps:near
 	extrn init_task_tasks:near
-	extrn trap_single_step:near
 	extrn free_handle_process:near
 
 	extrn start_processor_null_threads:near
@@ -1653,8 +1652,6 @@ create_prot:
 create_tss_done:
 ;
     mov es:p_flags,THREAD_FLAG_CREATE
-	mov es:p_step_ads,OFFSET trap_single_step
-	mov es:p_step_ads+2,cs
 	call wake_new
 	pop edi
 	pop esi
@@ -2059,8 +2056,6 @@ create_mod_tss_done:
 	call init_process_tss
 	call init_process_callback
 ;
-	mov es:p_step_ads,OFFSET trap_single_step
-	mov es:p_step_ads+2,cs
 	call wake_new
 	pop edi
 	pop esi
