@@ -116,10 +116,7 @@ real_start:
 ;
     xor ax,ax
     mov ds,ax
-    mov bx,0F00h
-    mov eax,12345678h
-    mov [bx],eax
-;
+;    
     mov bx,0F88h
     lgdt fword ptr ds:[bx]
 ;
@@ -152,9 +149,9 @@ prot_start:
     mov gs,ax
     mov ss,ax
     mov sp,0F00h
-;    
-    mov bx,0F04h
-    mov eax,98765432h
+;
+    mov bx,0F00h
+    mov eax,12345678h
     mov [bx],eax
 ;    
     cli
