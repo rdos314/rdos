@@ -162,11 +162,18 @@ prot_start:
     mov bx,0F04h
     mov [bx],eax
 ;    
+    db 66h
+    lgdt fword ptr es:ps_gdt
+;    
+    db 66h
+    lidt fword ptr es:ps_idt
+;    
+    mov bx,0F08h
+    db 66h
+    sidt fword ptr [bx]
+;    
     cli
     hlt
-;
-    lgdt fword ptr es:ps_gdt
-    lidt fword ptr es:ps_idt
 ;
     mov eax,cr0
     or eax,80000000h        
@@ -662,7 +669,10 @@ StartCore   Proc near
     mov eax,cr3
     mov es:[di].ps_cr3,eax
 ;
+    db 66h
     sgdt fword ptr es:[di].ps_gdt
+;
+    db 66h
     sidt fword ptr es:[di].ps_idt
 ;
     mov bx,467h
