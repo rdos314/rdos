@@ -170,6 +170,7 @@ block_seg	ENDS
 
 
 THREAD_FLAG_CREATE  = 1
+THREAD_FLAG_BP      = 2
 
 thread_seg	STRUC
 	p_next			DW ?

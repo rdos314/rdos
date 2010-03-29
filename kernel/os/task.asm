@@ -1444,8 +1444,8 @@ PAGE
 
 debug_pace_name	DB 'Debug Pace',0
 
-
-load_break	PROC far
+load_breaks Proc near
+    push ds
 	mov ax,thread_tss_sel
 	mov ds,ax
 	mov eax,ds:tss_dr0
@@ -1459,12 +1459,16 @@ load_break	PROC far
 	mov eax,ds:tss_dr7
 	mov dr7,eax
 	and ax,0FFh
-	jz load_break_done
-	mov ds:tss_t,1
+	jnz load_break_done
+;
+    mov ax,thread_sel
+    mov ds,ax
+    and ds:p_flags,NOT THREAD_FLAG_BP
+	
 load_break_done:
-	ret
-load_break	ENDP
-
+    pop ds
+    ret
+load_breaks Endp    
 
 debug_pace	PROC far
 	push ds
@@ -1583,12 +1587,14 @@ debug_pace_trace:
 	mov ax,es:tss_eflags
 	or ax,100h
 	mov es:tss_eflags,ax
+
 debug_pace_do:
-;
+	mov es:tss_t,0
 	mov bx,es:tss_thread
 	mov ds,bx
-	mov ds:p_trap_ads,OFFSET load_break
-	mov ds:p_trap_ads+2,cs
+    or ds:p_flags,THREAD_FLAG_BP
+;	mov ds:p_trap_ads,OFFSET load_break
+;	mov ds:p_trap_ads+2,cs
 ;
 	mov ax,system_data_sel
 	mov ds,ax
@@ -2249,6 +2255,12 @@ load_reload_timer:
     call AddCallback
         
 load_create_done:
+    test ax,THREAD_FLAG_BP
+    jz load_bp_done
+;
+    call load_breaks
+
+load_bp_done:
 
 load_actions_done:    
 ;    
