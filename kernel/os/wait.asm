@@ -248,11 +248,15 @@ is_wait_idle_loop:
     jnz is_wait_idle_loop
 
 is_wait_idle_ok_leave:
+    movzx ebx,bx
+    lea esi,[ebx].wh_section
     LeaveSection
 	clc
 	jmp is_wait_idle_done
 
 is_wait_idle_fail_leave:
+    movzx ebx,bx
+    lea esi,[ebx].wh_section
 	mov ecx,es:wo_id
     LeaveSection
 	stc
@@ -321,6 +325,8 @@ wait_no_timeout_start_loop:
 
 wait_no_timeout_start_leave:
     inc ds:[bx].wh_running
+    movzx ebx,bx
+    lea esi,[ebx].wh_section
     LeaveSection
 
 wait_no_timeout_do:
@@ -358,6 +364,8 @@ wait_no_timeout_stop_next:
     jnz wait_no_timeout_stop_loop
 
 wait_no_timeout_stopped_leave:
+    movzx ebx,bx
+    lea esi,[ebx].wh_section
     LeaveSection
     clc
 
@@ -465,6 +473,8 @@ wait_timeout_start_timer:
 	pop bx
 ;
     inc ds:[bx].wh_running
+    movzx ebx,bx
+    lea esi,[ebx].wh_section
     LeaveSection
 
 wait_timeout_do:
@@ -508,6 +518,8 @@ wait_timeout_stop_next:
     jnz wait_timeout_stop_loop
 
 wait_timeout_stopped_leave:
+    movzx ebx,bx
+    lea esi,[ebx].wh_section
     LeaveSection
     clc
 
@@ -578,6 +590,8 @@ stop_wait_signal:
     pop bx
 
 stop_wait_leave:
+    movzx ebx,bx
+    lea esi,[ebx].wh_section
     LeaveSection
     clc
 
@@ -738,6 +752,8 @@ remove_wait_head:
     jmp remove_wait_loop
 
 remove_wait_leave:
+    movzx ebx,bx
+    lea esi,[ebx].wh_section
     LeaveSection
 	clc
 
