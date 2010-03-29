@@ -4181,6 +4181,102 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			InitPhysSection
+;
+;		DESCRIPTION:	Init physical section
+;
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_phys_section
+
+init_phys_section	PROC near
+	mov ds:[esi].cs_value,0
+	mov ds:[esi].cs_list,0
+    ret
+init_phys_section    ENDP
+    
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			EnterPhysSection
+;
+;		DESCRIPTION:	Enter physical section
+;
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public enter_phys_section
+    
+enter_phys_section	PROC near
+    pushf
+    push ax
+    mov ax,ds
+;    
+	cli
+	sub ds:[esi].cs_value,1
+	jc efcsDone
+;
+    push OFFSET ecsDone
+    call SaveCurrentThread
+;
+	lea edi,[esi].cs_list	
+	jmp BlockThread
+    	
+efcsDone:
+    pop ax
+    popf
+	ret
+enter_phys_section	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LeavePhysSection
+;
+;		DESCRIPTION:	Leave physical section
+;
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public leave_phys_section
+    
+leave_phys_section	PROC near
+    pushf
+	cli
+	add ds:[esi].cs_value,1
+	jc lfcsDone
+;
+    push eax
+    push edx
+    push esi
+;    
+    mov dx,ds
+    add esi,OFFSET cs_list
+    xor eax,eax
+    call WakeThread    
+;
+    pop esi
+    pop edx
+    pop eax
+
+lfcsDone:
+    popf
+	ret
+leave_phys_section	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			InitReadWrieSection
 ;
 ;		DESCRIPTION:	Init read/write section
