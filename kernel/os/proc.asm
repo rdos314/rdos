@@ -1652,8 +1652,6 @@ create_prot:
 create_tss_done:
 ;
     mov es:p_flags,THREAD_FLAG_CREATE
-;	mov es:p_trap_ads,OFFSET trap_create_thread
-;	mov es:p_trap_ads+2,cs
 	mov es:p_step_ads,OFFSET trap_single_step
 	mov es:p_step_ads+2,cs
 	call wake_new
