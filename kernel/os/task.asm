@@ -4929,6 +4929,7 @@ wait_until	PROC far
 	xor bx,bx
 	cli
 	LocalStartTimer
+	sti
 ;
     xor ax,ax
     mov edi,1
@@ -4976,6 +4977,7 @@ wait_milli_sec	PROC far
 	xor bx,bx
 	cli
 	LocalStartTimer
+	sti
 ;	
     xor ax,ax
     mov edi,1
@@ -5025,6 +5027,7 @@ wait_micro_sec	PROC far
 	xor bx,bx
 	cli
 	LocalStartTimer
+	sti
 ;	
     xor ax,ax
     mov edi,1
