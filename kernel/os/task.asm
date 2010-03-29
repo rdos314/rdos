@@ -2146,7 +2146,8 @@ acVm:
 
 acDone:   
     mov ds:tss_cs,cs
-    mov ds:tss_eip,bx
+    movzx ebx,bx
+    mov dword ptr ds:tss_eip,ebx
 ;
     pop di
     pop si
