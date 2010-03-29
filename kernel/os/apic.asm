@@ -153,14 +153,17 @@ prot_start:
     mov bx,0F00h
     mov eax,12345678h
     mov [bx],eax
-;    
-    cli
-    hlt
 ;
     mov ax,20h
     mov es,ax
     mov eax,es:ps_cr3
     mov cr3,eax
+;
+    mov bx,0F04h
+    mov [bx],eax
+;    
+    cli
+    hlt
 ;
     lgdt fword ptr es:ps_gdt
     lidt fword ptr es:ps_idt
