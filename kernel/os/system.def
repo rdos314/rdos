@@ -168,6 +168,9 @@ block_seg	STRUC
 	b_prev			DW ?
 block_seg	ENDS
 
+
+THREAD_FLAG_CREATE  = 1
+
 thread_seg	STRUC
 	p_next			DW ?
 	p_prev			DW ?
@@ -190,6 +193,7 @@ thread_seg	STRUC
 	p_pm_deb_sel	DW ?
 	p_pm_deb_offs	DD ?
 	p_id			DW ?
+	p_flags         DW ?
 	p_trap_ads		DW ?,?
 	p_events		DW ?
 	p_process_sel	DW ?

@@ -2061,6 +2061,104 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			AddCallback
+;
+;		DESCRIPTION:	Add callback to thread
+;
+;       PARAMETERS:     DS      Thread TSS
+;                       ES      Thread block
+;                       BX      Callback routine
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCallback Proc near
+    push dx
+    push si
+    push di
+;    
+    test dword ptr ds:tss_eflags,20000h
+    jnz acVm
+;
+    test word ptr ds:tss_cs,3
+    jnz acPm
+
+acKernel:
+    mov si,ss
+    mov di,sp
+;    
+    mov dx,ds:tss_ss
+    mov ss,dx
+    mov sp,ds:tss_esp
+;
+    push dword ptr ds:tss_eflags
+    push dword ptr ds:tss_cs
+    push dword ptr ds:tss_eip
+;
+    mov ds:tss_ss,ss
+    mov ds:tss_esp,sp
+    mov ss,si
+    mov sp,di
+    jmp acDone
+
+acPm:
+    mov si,ss
+    mov di,sp
+;    
+    mov dx,ds:tss_ess0
+    mov ss,dx
+    mov sp,ds:tss_esp0
+;
+    push dword ptr ds:tss_ss
+    push dword ptr ds:tss_esp
+    push dword ptr ds:tss_eflags
+    push dword ptr ds:tss_cs
+    push dword ptr ds:tss_eip
+;
+    mov ds:tss_ss,ss
+    mov ds:tss_esp,sp
+    mov ss,si
+    mov sp,di
+    jmp acDone
+
+acVm:
+    mov si,ss
+    mov di,sp
+;    
+    mov dx,ds:tss_ess0
+    mov ss,dx
+    mov sp,ds:tss_esp0
+;
+    push dword ptr ds:tss_gs
+    push dword ptr ds:tss_fs
+    push dword ptr ds:tss_ds
+    push dword ptr ds:tss_es
+    push dword ptr ds:tss_ss
+    push dword ptr ds:tss_esp
+    push dword ptr ds:tss_eflags
+    push dword ptr ds:tss_cs
+    push dword ptr ds:tss_eip
+;
+    mov ds:tss_ss,ss
+    mov ds:tss_esp,sp
+    and dword ptr ds:tss_eflags,NOT 20000h
+    mov ss,si
+    mov sp,di
+
+acDone:   
+    mov ds:tss_cs,cs
+    mov ds:tss_eip,bx
+;
+    pop di
+    pop si
+    pop dx
+    ret
+AddCallback Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			LoadCurrentThread
 ;
 ;		DESCRIPTION:	Load register-state for current thread
