@@ -2254,15 +2254,16 @@ load_reload_timer:
     call AddCallback
         
 load_create_done:
-;    test ax,THREAD_FLAG_SUSPEND
-;    jz load_suspend_done
-    jmp load_suspend_done
+    mov ax,es:p_flags
+    test ax,THREAD_FLAG_SUSPEND
+    jz load_suspend_done
 ;
     and es:p_flags,NOT THREAD_FLAG_SUSPEND
     mov bx,OFFSET thread_suspend
     call AddCallback
 
 load_suspend_done:
+    mov ax,es:p_flags
     test ax,THREAD_FLAG_BP
     jz load_bp_done
 ;

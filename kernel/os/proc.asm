@@ -1125,6 +1125,7 @@ init_thread_block	PROC near
 	mov es:p_kill,0
 	mov es:p_ref_count,0
 	mov es:p_is_waiting,0
+	mov es:p_flags,0
 ;
 	add dx,dx
 	mov es:p_prio,dx
