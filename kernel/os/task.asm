@@ -1960,9 +1960,9 @@ UpdateThread    Proc near
 ;
     mov es,ax
     mov di,es:p_prio
-    or di,di
-    jz update_insert_done
-;
+    cmp ax,fs:ps_null_thread
+    je update_insert_done
+;    
     InsertBlock
 
 update_insert_done:
@@ -2042,10 +2042,11 @@ update_int_ok:
     mov es,ax
         
 update_load:
+    mov ax,es
+    cmp ax,fs:ps_null_thread
+    je update_remove_done
+;    
     mov si,es:p_prio
-    or si,si
-    jz update_remove_done
-;
     RemoveBlock
 
 update_remove_done:
