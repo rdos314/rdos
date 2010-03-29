@@ -91,6 +91,8 @@ code	SEGMENT byte use16 public 'CODE'
 	extrn prot_exception:near
 	extrn virt_exception:near
 
+	extrn init_cpu:near
+
 	assume cs:code
 
 emulate	PROC near
@@ -1236,6 +1238,7 @@ tg11	DW	11,		OFFSET trap_11,			kernel_code,	0
 tg12	DW	12,		OFFSET trap_12,			kernel_code,	0
 tg13	DW	13,		OFFSET trap_13,			kernel_code,	0
 tg16	DW	16,		OFFSET trap_16,			kernel_code,	0
+tg80	DW	80h,	OFFSET init_cpu,		kernel_code,	0
 tg7_end	DW	0FFFFh
 
 ;

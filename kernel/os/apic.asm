@@ -44,6 +44,7 @@ apic_data_seg	STRUC
 
 mp_init_proc        DW ?
 mp_startup_proc     DW ?
+mp_int_proc         DW ?
 
 mp_thread           DW ?
 
@@ -540,6 +541,95 @@ SendStartup Proc near
     pop ds    
     ret
 SendStartup Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendIntMem
+;
+;		DESCRIPTION:	Send int request using shared memory
+;
+;       PARAMETERS:     EDX     Destination
+;                       AL      Vector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendIntMem Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+;    
+    shl edx,24
+    mov cx,apic_mem_sel
+    mov ds,cx
+    mov ds:APIC_ICR+10h,edx
+;
+    mov ah,40h
+    movzx eax,ax
+    mov ds:APIC_ICR,eax
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+SendIntMem Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendIntMsr
+;
+;		DESCRIPTION:	Send int request using MSRs
+;
+;       PARAMETERS:     EDX     Destination
+;                       AL      Vector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendIntMsr Proc near
+    push eax
+    push ecx
+;
+    mov ah,40h
+    movzx eax,ax
+    mov ecx,MSR_APIC_ICR
+    wrmsr
+;
+    pop ecx
+    pop eax
+    ret
+SendIntMsr Endp
+           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendInt
+;
+;		DESCRIPTION:	Send int request
+;
+;       PARAMETERS:     EDX     Destination
+;                       AL      Vector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_int_name    DB 'Send Int',0
+
+send_int Proc far
+    push ds
+    push ax
+    push bx
+;    
+    mov bx,apic_data_sel
+    mov ds,bx
+    call ds:mp_int_proc
+;
+    pop bx
+    pop ax
+    pop ds    
+    ret
+send_int Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -555,6 +645,7 @@ SetupMemGates   Proc near
     mov ds,ax
     mov ds:mp_init_proc, OFFSET SendInitMem
     mov ds:mp_startup_proc, OFFSET SendStartupMem
+    mov ds:mp_int_proc, OFFSET SendIntMem
 ;
 	mov ax,cs
 	mov ds,ax
@@ -564,6 +655,12 @@ SetupMemGates   Proc near
 	mov di,OFFSET get_id_name
 	xor cl,cl
 	mov ax,get_apic_id_nr
+	RegisterOsGate
+;
+	mov si,OFFSET send_int
+	mov di,OFFSET send_int_name
+	xor cl,cl
+	mov ax,send_int_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_processor_mem
@@ -589,6 +686,7 @@ SetupMsrGates   Proc near
     mov ds,ax
     mov ds:mp_init_proc, OFFSET SendInitMsr
     mov ds:mp_startup_proc, OFFSET SendStartupMsr
+    mov ds:mp_int_proc, OFFSET SendIntMsr
 ;
 	mov ax,cs
 	mov ds,ax
@@ -776,6 +874,9 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3 
+    mov al,80h
+    mov edx,1
+    SendInt
     int 3
     
     mov eax,05F504D5Fh

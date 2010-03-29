@@ -610,6 +610,12 @@ GetProcessor    MACRO
 	OsGate get_processor_nr
 						ENDM
 
+;   IN  EDX     Processor #
+;   IN  AL      Vector #
+SendInt    MACRO
+	OsGate send_int_nr
+						ENDM
+
 EnterInt    MACRO
 	OsGate enter_int_nr
 						ENDM

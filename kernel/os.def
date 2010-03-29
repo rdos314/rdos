@@ -527,5 +527,7 @@ leave_write_section_nr      EQU 367
 
 get_processor_nr            EQU 368
 
+send_int_nr                 EQU 369
+
 osgate_entries				EQU 370
 
