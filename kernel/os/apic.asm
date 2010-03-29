@@ -150,31 +150,19 @@ prot_start:
     mov ss,ax
     mov sp,0F00h
 ;
-    mov bx,0F00h
-    mov eax,12345678h
-    mov [bx],eax
-;
     mov ax,20h
     mov es,ax
     mov eax,es:ps_cr3
     mov cr3,eax
-;
-    mov bx,0F04h
-    mov [bx],eax
 ;    
     db 66h
     lgdt fword ptr es:ps_gdt
 ;    
     db 66h
     lidt fword ptr es:ps_idt
-;    
-    mov bx,0F08h
-    db 66h
-    sidt fword ptr [bx]
-;    
-    cli
-    hlt
 ;
+    mov dx,es:ps_ss
+;    
     mov eax,cr0
     or eax,80000000h        
     mov cr0,eax
@@ -198,6 +186,7 @@ prot_end:
 
 page_struc  STRUC
 
+ps_ss   DW ?
 ps_cr3  DD ?
 ps_gdt  DB 6 DUP(?)
 ps_idt  DB 6 DUP(?)
@@ -220,15 +209,21 @@ ApInit:
     mov fs,ax
     mov gs,ax
 ;
+    mov ss,dx
+    mov sp,200h    
+;
     mov ax,flat_sel
     mov ds,ax    
-;
-    mov bx,0F08h
-    mov eax,0ABCD9876h
-    mov [bx],eax
 ;    
-    cli
+    call InitApic
+;
+    mov bx,0F00h
+    mov eax,12345678h
+    mov [bx],eax
+;
+    sti
     hlt
+    int 3
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -675,6 +670,13 @@ StartCore   Proc near
     db 66h
     sidt fword ptr es:[di].ps_idt
 ;
+    push es
+    mov eax,200h
+    AllocateSmallGlobalMem
+    mov ax,es
+    pop es
+    mov es:[di].ps_ss,ax
+;
     mov bx,467h
     mov ax,0
     mov es:[bx],ax
@@ -866,6 +868,52 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			InitApic
+;
+;		DESCRIPTION:    Init APIC timer
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+InitApic    Proc near
+    mov bx,apic_mem_sel
+    mov es,bx
+;
+    mov eax,8700h
+    mov es:APIC_LINT0,eax
+;
+    mov eax,400h
+    mov es:APIC_LINT1,eax 
+;   
+    mov eax,10000h
+    mov es:APIC_LERROR,eax
+;
+    mov eax,10000h
+    mov es:APIC_THERMAL,eax
+;
+    mov eax,10000h
+    mov es:APIC_PERF,eax
+;
+    mov eax,10000h
+    mov es:APIC_TIMER,eax
+;
+    mov eax,es:APIC_SPUR
+    or eax,100h
+    mov al,0Fh
+    mov es:APIC_SPUR,eax    
+;
+    mov eax,0Bh
+    mov es:APIC_DIV_CONFIG,eax
+    ret
+InitApic    Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			InitApicTimer
 ;
 ;		DESCRIPTION:    Init APIC timer
@@ -902,33 +950,7 @@ InitApicTimer Proc near
     mov bx,apic_mem_sel
     mov ecx,1000h
     CreateDataSelector16
-    mov es,bx
-;
-    mov eax,8700h
-    mov es:APIC_LINT0,eax
-;
-    mov eax,400h
-    mov es:APIC_LINT1,eax 
-;   
-    mov eax,10000h
-    mov es:APIC_LERROR,eax
-;
-    mov eax,10000h
-    mov es:APIC_THERMAL,eax
-;
-    mov eax,10000h
-    mov es:APIC_PERF,eax
-;
-    mov eax,10000h
-    mov es:APIC_TIMER,eax
-;
-    mov eax,es:APIC_SPUR
-    or eax,100h
-    mov al,0Fh
-    mov es:APIC_SPUR,eax    
-;
-    mov eax,0Bh
-    mov es:APIC_DIV_CONFIG,eax
+    call InitApic
 
 init_tsc_start:
     xor cx,cx    
