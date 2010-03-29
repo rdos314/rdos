@@ -2168,8 +2168,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-thread_init:
-    iretd
+    extrn thread_create:near
 
 LoadCurrentThread:
 	mov ax,task_sel
@@ -2246,7 +2245,7 @@ load_reload_timer:
     jz load_create_done
 ;
     and es:p_flags,NOT THREAD_FLAG_CREATE
-    mov bx,OFFSET thread_init
+    mov bx,OFFSET thread_create
     call AddCallback
         
 load_create_done:

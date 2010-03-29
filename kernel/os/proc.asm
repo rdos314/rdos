@@ -629,6 +629,28 @@ PAGE
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public thread_create
+
+thread_create:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	push es
+;
+    push cs
+    call trap_create_thread
+;
+    pop es
+	pop ds
+	pop ebx
+	pop eax
+	pop bp
+	add sp,4
+    iretd    
+
 trap_create_thread	PROC near
 	sti
 	push cx
@@ -1360,7 +1382,7 @@ init_default_tss	PROC near
 	sldt dx
 	mov [bx],edx
 	add bx,4
-	mov dx,1
+;	mov dx,1
 	mov [bx],dx
 	mov word ptr [bx+2],OFFSET tss_bitmap_space
 	add bx,4
@@ -1630,8 +1652,8 @@ create_prot:
 create_tss_done:
 ;
     mov es:p_flags,THREAD_FLAG_CREATE
-	mov es:p_trap_ads,OFFSET trap_create_thread
-	mov es:p_trap_ads+2,cs
+;	mov es:p_trap_ads,OFFSET trap_create_thread
+;	mov es:p_trap_ads+2,cs
 	mov es:p_step_ads,OFFSET trap_single_step
 	mov es:p_step_ads+2,cs
 	call wake_new
