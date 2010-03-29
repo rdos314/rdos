@@ -2167,6 +2167,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+thread_init:
+    iretd
+
 LoadCurrentThread:
 	mov ax,task_sel
 	mov ds,ax
@@ -2233,6 +2236,21 @@ load_reload_timer:
     mov cr0,eax    
 ;
     lldt ds:tss_ldt
+;
+    mov ax,es:p_flags
+    or ax,ax
+    jz load_actions_done
+;
+    test ax,THREAD_FLAG_CREATE
+    jz load_create_done
+;
+    and es:p_flags,NOT THREAD_FLAG_CREATE
+    mov bx,OFFSET thread_init
+    call AddCallback
+        
+load_create_done:
+
+load_actions_done:    
 ;    
     test dword ptr ds:tss_eflags,20000h
     jnz load_vm
