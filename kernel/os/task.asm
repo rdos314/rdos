@@ -4196,13 +4196,6 @@ PAGE
 enter_section_name	DB 'Enter Critical Section',0
     
 enter_section	PROC far
-    push ds
-    push ax
-    mov ax,task_sel
-    mov ds,ax
-    pop ax
-    pop ds
-;
     pushf
     push ax
     mov ax,ds
@@ -4220,6 +4213,7 @@ enter_section	PROC far
 ecsDone:
     pop ax
     popf
+    sti
 	ret
 enter_section	ENDP
 
@@ -4240,6 +4234,7 @@ leave_section_name	DB 'Leave Critical Section',0
     
 leave_section	PROC far
     pushf
+;    
 	cli
 	add ds:[esi].cs_value,1
 	jc lcsDone
@@ -4259,6 +4254,7 @@ leave_section	PROC far
 
 lcsDone:
     popf
+    sti
 	ret
 leave_section	ENDP
 
