@@ -756,9 +756,9 @@ init_task	PROC near
 ;
 	mov ax,task_sel
 	mov ds,ax
-	mov ds:try_lock_proc,OFFSET TryLockSingle
-	mov ds:lock_proc,OFFSET LockSingle
-	mov ds:unlock_proc,OFFSET UnlockSingle
+	mov ds:try_lock_proc,OFFSET TryLockDefault
+	mov ds:lock_proc,OFFSET LockDefault
+	mov ds:unlock_proc,OFFSET UnlockDefault
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
     mov ds:get_processor_proc,OFFSET GetProcessorSingle
@@ -1117,6 +1117,12 @@ proc_init:
 	HookState
 ;
     CreateProcessor
+;    
+	mov ax,task_sel
+	mov ds,ax
+	mov ds:try_lock_proc,OFFSET TryLockSingle
+	mov ds:lock_proc,OFFSET LockSingle
+	mov ds:unlock_proc,OFFSET UnlockSingle
 ;
 	pop ds
 	popa
@@ -3117,6 +3123,61 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			TryLockDefault
+;
+;		DESCRIPTION:	Try t lock, pre-tasking version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;       RETURNS:        CY      Owner of section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TryLockDefault	Proc near
+    stc
+	ret
+TryLockDefault	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LockDefault
+;
+;		DESCRIPTION:	Lock, pre-tasking version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockDefault	Proc near
+    stc
+	ret
+LockDefault	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UnlockDefault
+;
+;		DESCRIPTION:	Unlock, pre-tasking version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockDefault	Proc near
+	ret
+UnlockDefault	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			TryLockSingle
 ;
 ;		DESCRIPTION:	Try t lock, single processor version
@@ -4133,10 +4194,15 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enter_section_name	DB 'Enter Critical Section',0
-
-    public enter_section
     
 enter_section	PROC far
+    push ds
+    push ax
+    mov ax,task_sel
+    mov ds,ax
+    pop ax
+    pop ds
+;
     pushf
     push ax
     mov ax,ds
@@ -4171,8 +4237,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 leave_section_name	DB 'Leave Critical Section',0
-
-    public leave_section
     
 leave_section	PROC far
     pushf
