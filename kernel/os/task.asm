@@ -649,6 +649,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReloadApicTimer	Proc near
+    push es
     mov ecx,ds:apic_mul_tics
     shl ecx,16
     mov cx,ds:apic_mul_rest
@@ -658,6 +659,7 @@ ReloadApicTimer	Proc near
     mov ax,apic_mem_sel
     mov es,ax    
     mov es:APIC_INIT_COUNT,edx
+    pop es
 	ret
 ReloadApicTimer  Endp
 
@@ -2821,12 +2823,14 @@ null_thread:
     mov fs:ps_skip_thread,ax
     mov es,ax
     mov ds,es:p_tss_data_sel
-    mov dword ptr ds:tss_eip, OFFSET null_loop
+    mov dword ptr ds:tss_eip, OFFSET ap_null_thread
 ;
     call SkipCurrentThread
 	mov fs:ps_curr_thread,0
 	or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
+
+ap_null_thread:
 	
 null_loop:
 	hlt
@@ -4361,7 +4365,6 @@ ecsDone:
     pop fs
     pop ds
     popf
-    sti
 	ret
 enter_section	ENDP
 
@@ -4401,7 +4404,6 @@ leave_section	PROC far
 
 lcsDone:
     popf
-    sti
 	ret
 leave_section	ENDP
 
