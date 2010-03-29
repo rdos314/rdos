@@ -1001,7 +1001,7 @@ init_apic_timer_ok:
 
 init_apic_mmio:
     call SetupMemGates
-    jmp init_apic_gates_ok
+    jmp init_apic_start_cpu
 
 init_apic_msr:
     call SetupMsrGates
@@ -1010,7 +1010,7 @@ init_apic_start_cpu:
     CreateProcessor
 
 init_apic_gates_ok:     
-	mov ax,cs
+    mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_apic_thread
 	HookInitTasking
