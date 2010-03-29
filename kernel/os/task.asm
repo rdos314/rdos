@@ -4621,42 +4621,58 @@ enter_user_section_name	DB 'Enter User Section',0
 
 enter_user_section	PROC far
     push ds
+    push fs
     push ax
     push bx
+    push dx
 ;
 	mov ax,SECTION_HANDLE
 	DerefHandle
-	jc enter_user_section_fail
+	jc enter_user_section_end
 ;
-	cli
-	sub ds:[bx].us_value,1
-	jc enter_user_section_done
+    mov ax,ds
+    mov dx,task_sel
+    mov ds,dx
+    call ds:lock_proc
+    mov ds,ax
+	lock sub ds:[bx].us_value,1
+	jc enter_user_section_unlock
 ;
 	str ax
 	cmp ax,ds:[bx].us_owner
 	jne enter_user_section_block
 ;
-	add ds:[bx].us_value,1
-	jmp enter_user_section_done
+	lock add ds:[bx].us_value,1
+	jmp enter_user_section_unlock
 
 enter_user_section_block:
     mov ax,ds
     push OFFSET enter_user_section_done
-    call SaveCurrentThread
+    call SaveLockedThread
 ;
 	lea di,[bx].us_list	
 	movzx edi,di
 	jmp BlockThread
 
+enter_user_section_unlock:
+	str ax
+	mov ds:[bx].us_owner,ax
+	inc ds:[bx].us_count
+    mov ds,dx
+    call ds:unlock_proc
+    jmp enter_user_section_end
+	
 enter_user_section_done:
 	str ax
 	mov ds:[bx].us_owner,ax
 	inc ds:[bx].us_count
 	sti
 
-enter_user_section_fail:
+enter_user_section_end:
+    pop dx
 	pop bx
 	pop ax
+	pop fs
 	pop ds
 	retf32
 enter_user_section	ENDP
@@ -4685,11 +4701,10 @@ leave_user_section	PROC far
 	DerefHandle
 	jc leave_user_section_done
 ;
-	cli
-	sub ds:[bx].us_count,1
+	lock sub ds:[bx].us_count,1
 	jnz leave_user_section_done
 ;
-	add ds:[bx].us_value,1
+	lock add ds:[bx].us_value,1
 	jc leave_user_section_done
 ;
     mov ds:[bx].us_owner,-1
