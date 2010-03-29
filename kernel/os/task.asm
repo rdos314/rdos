@@ -2327,8 +2327,6 @@ load_kernel_gs:
 	xor ax,ax
 	
 load_kernel_ds:
-    test ds:tss_t,1
-    pushf
     push ax
     push dword ptr ds:tss_eax
 ;
@@ -2338,29 +2336,7 @@ load_kernel_ds:
 ;    
     pop eax
     pop ds
-    popf
     pop fs
-    jz load_kernel_t_ok
-;    
-	push dword ptr 0
-	push bp
-	mov bp,sp
-	push eax
-	push ebx
-	push ds
-	mov ax,thread_tss_sel
-	mov ds,ax
-	mov ds:tss_t,0
-	mov ax,thread_sel
-	mov ds,ax
-	call dword ptr ds:p_trap_ads
-	pop ds
-	pop ebx
-	pop eax
-	pop bp
-	add sp,4
-
-load_kernel_t_ok:
     iretd
 
 load_pm_app:    
@@ -2415,8 +2391,6 @@ load_pm_app_gs:
 	xor ax,ax
 	
 load_pm_app_ds:
-    test ds:tss_t,1
-    pushf
     push ax
     push dword ptr ds:tss_eax
 ;    
@@ -2426,29 +2400,7 @@ load_pm_app_ds:
 ;    
     pop eax
     pop ds
-    popf
     pop fs
-    jz load_pm_t_ok
-;    
-	push dword ptr 0
-	push bp
-	mov bp,sp
-	push eax
-	push ebx
-	push ds
-	mov ax,thread_tss_sel
-	mov ds,ax
-	mov ds:tss_t,0
-	mov ax,thread_sel
-	mov ds,ax
-	call dword ptr ds:p_trap_ads
-	pop ds
-	pop ebx
-	pop eax
-	pop bp
-	add sp,4
-
-load_pm_t_ok:
     iretd
 
 load_vm:
@@ -2474,26 +2426,6 @@ load_vm:
     mov esi,dword ptr ds:tss_esi
     mov edi,dword ptr ds:tss_edi
 ;
-    test ds:tss_t,1
-    jz load_vm_t_ok
-;    
-	push dword ptr 0
-	push bp
-	mov bp,sp
-	push eax
-	push ebx
-	push ds
-	mov ds:tss_t,0
-	mov ax,thread_sel
-	mov ds,ax
-	call dword ptr ds:p_trap_ads
-	pop ds
-	pop ebx
-	pop eax
-	pop bp
-	add sp,4
-
-load_vm_t_ok:
     push ax
     mov ax,task_sel
     mov ds,ax

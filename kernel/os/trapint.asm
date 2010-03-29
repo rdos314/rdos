@@ -203,23 +203,12 @@ trap_1:
 	mov ds,ax
 	mov ax,[bp].vm_err
 	mov ds:tss_error_code,ax
-	mov eax,dr6
-	test ax,8000h
-	jz trap_no_task_switch
-	and ax,7FFFh
-	mov dr6,eax
-	mov ax,thread_tss_sel
-	mov ds,ax
-	mov ds:tss_t,0
-	mov ax,thread_sel
-	mov ds,ax
-	call dword ptr ds:p_trap_ads
-	jmp t1_ret
-trap_no_task_switch:
+;	
 	sti
 	mov ax,thread_sel
 	mov ds,ax
 	call dword ptr ds:p_step_ads
+
 t1_ret:
 	pop ds
 	pop ebx

@@ -196,7 +196,6 @@ thread_seg	STRUC
 	p_pm_deb_offs	DD ?
 	p_id			DW ?
 	p_flags         DW ?
-	p_trap_ads		DW ?,?
 	p_events		DW ?
 	p_process_sel	DW ?
 	p_step_ads		DW ?,?

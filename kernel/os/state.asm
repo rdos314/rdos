@@ -338,12 +338,6 @@ suspend_thread_next:
 
 suspend_thread_found:
     or es:p_flags,THREAD_FLAG_SUSPEND
-    cli
-;	mov es:p_trap_ads,OFFSET trap_single_step
-;	mov es:p_trap_ads+2,cs
-	mov es,es:p_tss_data_sel
-;	mov es:tss_t,1
-	sti
 	clc
 
 suspend_thread_done:
@@ -402,11 +396,6 @@ suspend_signal_next:
 suspend_signal_found:
     mov bx,es
     or es:p_flags,THREAD_FLAG_SUSPEND
-    cli
-;	mov es:p_trap_ads,OFFSET trap_single_step
-;	mov es:p_trap_ads+2,cs
-	mov es,es:p_tss_data_sel
-;	mov es:tss_t,1
     Signal
 	sti
 	clc
