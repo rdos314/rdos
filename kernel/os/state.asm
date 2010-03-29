@@ -337,6 +337,7 @@ suspend_thread_next:
     jmp suspend_thread_done        
 
 suspend_thread_found:
+;    or es:p_flags,THREAD_FLAG_SUSPEND
     cli
 	mov es:p_trap_ads,OFFSET trap_single_step
 	mov es:p_trap_ads+2,cs
@@ -400,6 +401,7 @@ suspend_signal_next:
 
 suspend_signal_found:
     mov bx,es
+;    or es:p_flags,THREAD_FLAG_SUSPEND
     cli
 	mov es:p_trap_ads,OFFSET trap_single_step
 	mov es:p_trap_ads+2,cs

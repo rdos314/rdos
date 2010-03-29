@@ -138,6 +138,38 @@ trap_0:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public thread_suspend
+
+thread_suspend:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+;
+	mov eax,[bp].vm_eflags
+	or eax,10100h
+	mov [bp].vm_eflags,eax
+	test eax,20000h
+	jnz tsVm
+;
+	mov al,1
+	call prot_exception
+	jmp tsRet
+
+tsVm:
+	mov al,1
+	call virt_exception
+
+tsRet:
+    pop ds
+    pop ebx
+    pop eax
+	pop bp
+	add sp,4
+	iretd
+
 	public trap_single_step
 
 trap_single_step	PROC far

@@ -1593,8 +1593,6 @@ debug_pace_do:
 	mov bx,es:tss_thread
 	mov ds,bx
     or ds:p_flags,THREAD_FLAG_BP
-;	mov ds:p_trap_ads,OFFSET load_break
-;	mov ds:p_trap_ads+2,cs
 ;
 	mov ax,system_data_sel
 	mov ds,ax
@@ -2175,6 +2173,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     extrn thread_create:near
+    extrn thread_suspend:near
 
 LoadCurrentThread:
 	mov ax,task_sel
@@ -2255,6 +2254,15 @@ load_reload_timer:
     call AddCallback
         
 load_create_done:
+;    test ax,THREAD_FLAG_SUSPEND
+;    jz load_suspend_done
+    jmp load_suspend_done
+;
+    and es:p_flags,NOT THREAD_FLAG_SUSPEND
+    mov bx,OFFSET thread_suspend
+    call AddCallback
+
+load_suspend_done:
     test ax,THREAD_FLAG_BP
     jz load_bp_done
 ;
@@ -2262,8 +2270,7 @@ load_create_done:
 
 load_bp_done:
 
-load_actions_done:    
-;    
+load_actions_done:        
     test dword ptr ds:tss_eflags,20000h
     jnz load_vm
 ;

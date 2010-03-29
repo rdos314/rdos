@@ -171,6 +171,7 @@ block_seg	ENDS
 
 THREAD_FLAG_CREATE  = 1
 THREAD_FLAG_BP      = 2
+THREAD_FLAG_SUSPEND = 4
 
 thread_seg	STRUC
 	p_next			DW ?
