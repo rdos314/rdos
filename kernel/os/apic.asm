@@ -994,7 +994,7 @@ init_apic_timer_ok:
     mov ecx,1Bh
     rdmsr
     test ah,8
-    jz init_apic_gates_ok
+    jz init_apic_start_cpu
 ;
     test ah,4
     jnz init_apic_msr
@@ -1006,13 +1006,14 @@ init_apic_mmio:
 init_apic_msr:
     call SetupMsrGates
 
+init_apic_start_cpu:
+    CreateProcessor
+
 init_apic_gates_ok:     
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_apic_thread
 	HookInitTasking
-;	
-    CreateProcessor
 ;
     popad
     pop es
