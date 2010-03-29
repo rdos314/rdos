@@ -1117,12 +1117,6 @@ proc_init:
 	HookState
 ;
     CreateProcessor
-;    
-	mov ax,task_sel
-	mov ds,ax
-	mov ds:try_lock_proc,OFFSET TryLockSingle
-	mov ds:lock_proc,OFFSET LockSingle
-	mov ds:unlock_proc,OFFSET UnlockSingle
 ;
 	pop ds
 	popa
@@ -2633,6 +2627,12 @@ PAGE
     public start_processor_null_threads
 
 start_processor_null_threads    Proc near
+	mov ax,task_sel
+	mov ds,ax
+	mov ds:try_lock_proc,OFFSET TryLockSingle
+	mov ds:lock_proc,OFFSET LockSingle
+	mov ds:unlock_proc,OFFSET UnlockSingle
+;    
 	mov ax,system_data_sel
 	mov ds,ax
 ;
@@ -4197,21 +4197,34 @@ enter_section_name	DB 'Enter Critical Section',0
     
 enter_section	PROC far
     pushf
+    push ds
+    push fs
     push ax
-    mov ax,ds
+    push dx
 ;    
-	cli
+    mov ax,ds
+    mov dx,task_sel
+    mov ds,dx
+    call ds:try_lock_proc
+    mov ds,ax
 	sub ds:[esi].cs_value,1
-	jc ecsDone
+	jc ecsUnlock
 ;
     push OFFSET ecsDone
-    call SaveCurrentThread
+    call SaveLockedThread
 ;
 	lea edi,[esi].cs_list	
 	jmp BlockThread
+
+ecsUnlock:
+    mov ds,dx
+    call ds:unlock_proc
     	
 ecsDone:
+    pop dx
     pop ax
+    pop fs
+    pop ds
     popf
     sti
 	ret
@@ -4235,7 +4248,6 @@ leave_section_name	DB 'Leave Critical Section',0
 leave_section	PROC far
     pushf
 ;    
-	cli
 	add ds:[esi].cs_value,1
 	jc lcsDone
 ;
