@@ -2627,6 +2627,12 @@ PAGE
     public start_processor_null_threads
 
 start_processor_null_threads    Proc near
+	mov ax,system_data_sel
+	mov ds,ax
+;
+    mov esi,OFFSET phys_section
+    call enter_phys_section     ; lock section and use lock/unlock method
+;    
     mov eax,10
     AllocateSmallGlobalMem
     xor di,di
@@ -2907,7 +2913,19 @@ debug_save_ok:
     mov es,ax
     mov gs,ax    
 ;
-    mov es,fs:ps_curr_thread
+    mov ax,fs:ps_curr_thread
+    cmp ax,fs:ps_null_thread
+    jne debug_block
+;
+    mov es,ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov di,OFFSET debug_list
+    InsertBlock
+    ShutDownTask
+    
+debug_block:
+    mov es,ax
 	mov es:p_error_code,dx
 ;
     mov ax,system_data_sel
@@ -3137,7 +3155,7 @@ LockSingle	Proc near
 	add fs:ps_nesting,1
 	jc lsDone
 ;
-    int 3
+    ShutDownTask
 
 lsDone:	
 	ret
@@ -3252,7 +3270,11 @@ usPrioOk:
     jmp LoadCurrentThread
 
 usNoSignal:
-    mov es,fs:ps_curr_thread
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz usDone
+;    
+    mov es,ax
     mov ax,ds:prio_act
     cmp ax,es:p_prio
     jbe usDone
@@ -4214,21 +4236,22 @@ PAGE
     
 enter_phys_section	PROC near
     pushf
-    push ax
-    mov ax,ds
 ;    
 	cli
 	sub ds:[esi].cs_value,1
 	jc efcsDone
 ;
-    push OFFSET ecsDone
-    call SaveCurrentThread
+    push ds
+    push ax
 ;
-	lea edi,[esi].cs_list	
-	jmp BlockThread
+    mov ax,task_sel
+    mov ds,ax
+    call ds:lock_list_proc
+;
+    pop ax
+    pop ds    
     	
 efcsDone:
-    pop ax
     popf
 	ret
 enter_phys_section	ENDP
@@ -4254,18 +4277,15 @@ leave_phys_section	PROC near
 	add ds:[esi].cs_value,1
 	jc lfcsDone
 ;
-    push eax
-    push edx
-    push esi
-;    
-    mov dx,ds
-    add esi,OFFSET cs_list
-    xor eax,eax
-    call WakeThread    
+    push ds
+    push ax
 ;
-    pop esi
-    pop edx
-    pop eax
+    mov ax,task_sel
+    mov ds,ax
+    call ds:unlock_list_proc
+;
+    pop ax
+    pop ds    
 
 lfcsDone:
     popf
