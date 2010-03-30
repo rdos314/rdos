@@ -771,8 +771,8 @@ init_task	PROC near
 	mov ds:try_lock_proc,OFFSET TryLockDefault
 	mov ds:lock_proc,OFFSET LockDefault
 	mov ds:unlock_proc,OFFSET UnlockDefault
-    mov ds:lock_list_proc,OFFSET LockListSingle
-    mov ds:unlock_list_proc,OFFSET UnlockListSingle
+    mov ds:lock_list_proc,OFFSET LockListMultiple
+    mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:get_processor_proc,OFFSET GetProcessorSingle
 	mov ds:signal_list,0
 	mov ds:wakeup_list,0
@@ -3149,7 +3149,61 @@ debug_exception:
     mov ax,task_sel
     mov ds,ax
     call ds:try_lock_proc
-;        
+    jc debug_normal
+;
+    mov ds,fs:ps_null_thread 
+    mov ds,ds:p_tss_data_sel  
+    pop fs 
+;    
+	mov eax,[bp].vm_eax
+	mov dword ptr ds:tss_eax,eax
+	mov eax,[bp].vm_ebx
+	mov dword ptr ds:tss_ebx,eax
+    mov dword ptr ds:tss_ecx,ecx
+    mov dword ptr ds:tss_edx,edx
+    mov dword ptr ds:tss_esi,esi
+    mov dword ptr ds:tss_edi,edi
+	mov eax,ebp
+	mov ax,[bp]
+	mov dword ptr ds:tss_ebp,eax
+;	
+	mov eax,[bp].vm_eflags
+	mov dword ptr ds:tss_eflags,eax
+	mov ax,[bp].vm_cs
+	mov ds:tss_cs,ax
+	mov eax,[bp].vm_eip
+	mov dword ptr ds:tss_eip,eax
+;
+    mov ax,ss
+    mov ds:tss_ss,ax
+    mov ax,bp
+    add ax,vm_esp
+    movzx eax,ax
+	mov dword ptr ds:tss_esp,eax
+;	
+	mov ax,[bp].pm_ds
+	mov ds:tss_ds,ax
+	mov ax,es
+	mov ds:tss_es,ax
+	mov ax,fs
+	mov ds:tss_fs,ax
+	mov ax,gs
+	mov ds:tss_gs,ax
+;
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_processor_proc
+    mov es,fs:ps_null_thread
+    movzx dx,byte ptr [bp].vm_err+2
+	mov es:p_error_code,dx
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov di,OFFSET debug_list
+    InsertBlock
+    ShutDownTask
+   
+debug_normal:       
     mov ax,thread_sel
     mov ds,ax
     mov ds,ds:p_tss_data_sel
@@ -3239,6 +3293,7 @@ debug_save_ok:
     jne debug_block
 ;
     mov es,ax
+	mov es:p_error_code,dx
     mov ax,system_data_sel
     mov ds,ax
     mov di,OFFSET debug_list
@@ -5456,17 +5511,14 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wake_until	PROC far
-    push fs
 	mov ax,task_sel
 	mov ds,ax
 	mov es,cx
-	call ds:get_processor_proc
     call ds:lock_list_proc
     mov di,OFFSET wakeup_list
     InsertBlock
 	mov ds:has_list,1
     call ds:unlock_list_proc
-    pop fs
 	ret
 wake_until	ENDP
 
