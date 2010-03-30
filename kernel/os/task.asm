@@ -84,12 +84,17 @@ update_tics		    DD ?
 signal_list		    DW ?
 has_signal          DB ?
 has_list            DB ?
+has_term            DB ?
+owner_wait          DB ?
 
 wakeup_list         DW ?
+term_thread_list    DW ?
+term_proc_list      DW ?
+
+system_thread       DW ?
 
 owner_sel           DW ?
 owner_lock          DW ?
-owner_wait          DW ?
 
 try_lock_proc       DW ?
 lock_proc           DW ?
@@ -770,9 +775,13 @@ init_task	PROC near
     mov ds:get_processor_proc,OFFSET GetProcessorSingle
 	mov ds:signal_list,0
 	mov ds:wakeup_list,0
+	mov ds:term_thread_list,0
+	mov ds:term_proc_list,0
 	mov ds:has_signal,0
 	mov ds:has_list,0
+	mov ds:has_term,0
 	mov ds:owner_sel,0
+	mov ds:system_thread,0
 	mov ds:owner_lock,0
 	mov ds:owner_wait,0
 	mov ds:help_call_ip,0
@@ -1010,6 +1019,12 @@ proc_init:
 	mov di,OFFSET enter_section_name
 	xor cl,cl
 	mov ax,enter_section_nr
+	RegisterOsGate
+;
+	mov si,OFFSET enter_nolock_section
+	mov di,OFFSET enter_nolock_section_name
+	xor cl,cl
+	mov ax,enter_nolock_section_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET leave_section
@@ -2756,6 +2771,31 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			System thread
+;
+;		DESCRIPTION:    Cleans up threads & processes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+system_thread_name  DB 'System', 0
+
+system_thread_pr:
+    mov ax,task_sel
+    mov ds,ax
+    GetThread
+    mov ds:system_thread,ax
+
+system_thread_loop:
+    WaitForSignal
+;
+    int 3
+    jmp system_thread_loop        
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			StartProcessorNullThreads
 ;
 ;		DESCRIPTION:    Start each of the null threads for a processor
@@ -2777,6 +2817,15 @@ start_processor_null_threads    Proc near
 ;
     mov esi,OFFSET phys_section
     call enter_phys_section     ; lock section and use lock/unlock method
+;
+    mov ax,1
+    mov ecx,200h
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET system_thread_pr
+    mov di,OFFSET system_thread_name
+    CreateThread
 ;    
     mov eax,10
     AllocateSmallGlobalMem
@@ -3733,9 +3782,9 @@ umRetry:
 
 umWake:
     mov ds:owner_sel,0
-    xor ax,ax
-    xchg ax,ds:owner_wait
-    or ax,ax
+    xor al,al
+    xchg al,ds:owner_wait
+    or al,al
     jz umUnlock
 ;    
     mov ds:owner_lock,0
@@ -4604,6 +4653,55 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			EnterNolockSection
+;
+;		DESCRIPTION:	Enter section, no locking
+;
+;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enter_nolock_section_name	DB 'Enter Critical Section',0
+    
+enter_nolock_section	PROC far
+    pushf
+    push ds
+    push fs
+    push ax
+    push dx
+;    
+    mov ax,ds
+    mov dx,task_sel
+    mov ds,dx
+    call ds:try_lock_proc
+    mov ds,ax
+	lock sub ds:[esi].cs_value,1
+	jc encsUnlock
+;
+    push OFFSET encsDone
+    call SaveLockedThread
+;
+	lea edi,[esi].cs_list	
+	jmp BlockThread
+
+encsUnlock:
+    mov ds,dx
+    call ds:unlock_proc
+    	
+encsDone:
+    pop dx
+    pop ax
+    pop fs
+    pop ds
+    popf
+	ret
+enter_nolock_section	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			EnterSection
 ;
 ;		DESCRIPTION:	Enter section
@@ -4624,7 +4722,7 @@ enter_section	PROC far
     mov ax,ds
     mov dx,task_sel
     mov ds,dx
-    call ds:try_lock_proc
+    call ds:lock_proc
     mov ds,ax
 	lock sub ds:[esi].cs_value,1
 	jc ecsUnlock
