@@ -708,7 +708,7 @@ PAGE
 ;
 ;		NAME:			ALLOCATE_SMALL_LINEAR
 ;
-;		DESCRIPTION:	Allocate byte-aligned kernel memory
+;		DESCRIPTION:	Allocate byte-aligned (dword) kernel memory
 ;
 ;		PARAMETERS:		EAX		# of bytes
 ;
@@ -732,6 +732,10 @@ allocate_small_linear	PROC far
 	mov esi,OFFSET small_section
 	EnterSection
 ;	
+    dec eax
+    and al,0FCh
+    add eax,4
+;    
 	mov edx,es:small_avail_mem
 	add es:small_used_mem,eax
 	sub edx,eax
@@ -847,6 +851,10 @@ allocate_local_linear	PROC far
 	jz allocate_page_local_linear
 	cmp eax,4000h
 	jnc allocate_page_local_linear
+;
+    dec eax
+    and al,0FCh
+    add eax,4
 ;
 	mov dx,local_mem_sel
 	mov ds,dx
@@ -2518,7 +2526,7 @@ PAGE
 ;
 ;		NAME:			ALLOCATE_SMALL_MEM
 ;
-;		DESCRIPTION:	Allocate byte-aligned process memory
+;		DESCRIPTION:	Allocate byte-aligned (dword-aligned) process memory
 ;
 ;		PARAMETERS:		EAX		Number of bytes
 ;
