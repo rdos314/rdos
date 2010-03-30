@@ -2771,6 +2771,108 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DeleteThread
+;
+;		DESCRIPTION:    Delete a thread
+;
+;       PARAMETERS:     ES      Thread block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteThread    Proc near
+	push es
+	mov es,es:p_tss_data_sel
+	mov es,es:tss_ess0
+	FreeMem
+	pop es
+;
+	mov bx,es:p_tss_data_sel
+	FreeGdt
+;
+	mov bx,es:p_tss_sel
+	FreeGdt
+;
+	FreeMem
+	ret
+DeleteThread    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DeleteProcess
+;
+;		DESCRIPTION:    Delete a process
+;
+;       PARAMETERS:     ES      Thread block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteProcess    Proc near
+	mov ax,es:p_process_sel
+	push es
+	mov es,ax
+	FreeMem
+	pop es
+;
+    cli
+	mov bx,es
+	mov ax,process_dir_sel
+	mov ds,ax
+	mov si,alias_linear SHR 20
+	mov eax,es:p_cr3
+	mov [si],eax
+	mov eax,cr3
+	mov cr3,eax
+;
+    mov ax,flat_sel
+    mov ds,ax
+	mov cx,400h
+	mov edx,alias_linear + (handle_linear SHR 10)
+
+cleanup_process_linear_loop:
+	mov eax,[edx]
+	test al,1
+	jz cleanup_process_linear_next
+;
+	FreePhysical
+
+cleanup_process_linear_next:
+	add edx,4
+	loop cleanup_process_linear_loop
+;
+	mov ax,process_page_sel
+	mov ds,ax
+	mov edx,(alias_linear + (handle_linear SHR 10)) SHR 10
+	mov eax,[edx]
+	FreePhysical
+;
+	mov eax,es:p_cr3
+	FreePhysical
+;
+    sti
+	push es
+	mov es,es:p_tss_data_sel
+	mov es,es:tss_ess0
+	FreeMem
+	pop es
+;
+	mov bx,es:p_tss_data_sel
+	FreeGdt
+;
+	mov bx,es:p_tss_sel
+	FreeGdt
+;
+	FreeMem
+	ret
+DeleteProcess   Endp
+	
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			System thread
 ;
 ;		DESCRIPTION:    Cleans up threads & processes
@@ -4198,41 +4300,20 @@ PAGE
 cleanup_thread:
     call SkipCurrentThread
 ;    
-    cli	
     mov es,fs:ps_curr_thread
-	push es
+    mov ax,task_sel
+    mov ds,ax
 ;
-    mov es,fs:ps_null_thread
+    call ds:lock_list_proc
+    mov di,OFFSET term_thread_list
+    InsertBlock
+    call ds:unlock_list_proc
+;    
+    mov bx,ds:system_thread
+    Signal    
+;
 	mov fs:ps_curr_thread,0
-	or fs:ps_flags,PS_FLAG_PREEMPT
-;	
-	mov ax,gdt_sel
-	mov ds,ax
-	mov bx,es:p_tss_sel
-	and byte ptr ds:[bx+5],NOT 2
-	ltr bx
-;
-	SetEnviroment
-    mov ds,es:p_tss_data_sel
-;
-    lldt ds:tss_ldt
-;
-	pop es
-	sti
-;
-	push es
-	mov es,es:p_tss_data_sel
-	mov es,es:tss_ess0
-	FreeMem
-	pop es
-;
-	mov bx,es:p_tss_data_sel
-	FreeGdt
-;
-	mov bx,es:p_tss_sel
-	FreeGdt
-;
-	FreeMem
+	or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
 
 PAGE
@@ -4251,80 +4332,20 @@ PAGE
 cleanup_process:
     call SkipCurrentThread
 ;    
-    cli	
     mov es,fs:ps_curr_thread
-	push es
-;
-    mov es,fs:ps_null_thread
-	mov fs:ps_curr_thread,0
-	or fs:ps_flags,PS_FLAG_PREEMPT
-;	
-	mov ax,gdt_sel
-	mov ds,ax
-	mov bx,es:p_tss_sel
-	and byte ptr ds:[bx+5],NOT 2
-	ltr bx
-;
-	SetEnviroment
-    mov ds,es:p_tss_data_sel
-;
-    lldt ds:tss_ldt
-;
-	pop es
-	sti
-	mov ax,es:p_process_sel
-	push es
-	mov es,ax
-	FreeMem
-	pop es
-;
-	mov bx,es
-	mov ax,process_dir_sel
-	mov ds,ax
-	mov si,alias_linear SHR 20
-	mov eax,es:p_cr3
-	mov [si],eax
-	mov eax,cr3
-	mov cr3,eax
-;
-    mov ax,flat_sel
+    mov ax,task_sel
     mov ds,ax
-	mov cx,400h
-	mov edx,alias_linear + (handle_linear SHR 10)
-
-cleanup_process_linear_loop:
-	mov eax,[edx]
-	test al,1
-	jz cleanup_process_linear_next
 ;
-	FreePhysical
-
-cleanup_process_linear_next:
-	add edx,4
-	loop cleanup_process_linear_loop
+    call ds:lock_list_proc
+    mov di,OFFSET term_proc_list
+    InsertBlock
+    call ds:unlock_list_proc
+;    
+    mov bx,ds:system_thread
+    Signal    
 ;
-	mov ax,process_page_sel
-	mov ds,ax
-	mov edx,(alias_linear + (handle_linear SHR 10)) SHR 10
-	mov eax,[edx]
-	FreePhysical
-;
-	mov eax,es:p_cr3
-	FreePhysical
-;
-	push es
-	mov es,es:p_tss_data_sel
-	mov es,es:tss_ess0
-	FreeMem
-	pop es
-;
-	mov bx,es:p_tss_data_sel
-	FreeGdt
-;
-	mov bx,es:p_tss_sel
-	FreeGdt
-;
-	FreeMem
+	mov fs:ps_curr_thread,0
+	or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
 
 PAGE
