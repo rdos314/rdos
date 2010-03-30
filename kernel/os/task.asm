@@ -2889,8 +2889,6 @@ system_thread_pr:
 
 stLoop:
     WaitForSignal
-;
-    int 3
 
 stThreadLoop:
     mov si,OFFSET term_thread_list
