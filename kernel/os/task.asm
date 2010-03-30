@@ -87,7 +87,6 @@ has_list            DB ?
 
 wakeup_list         DW ?
 
-try_lock_proc       DW ?
 lock_proc           DW ?
 unlock_proc         DW ?
 
@@ -758,7 +757,6 @@ init_task	PROC near
 ;
 	mov ax,task_sel
 	mov ds,ax
-	mov ds:try_lock_proc,OFFSET TryLockDefault
 	mov ds:lock_proc,OFFSET LockDefault
 	mov ds:unlock_proc,OFFSET UnlockDefault
     mov ds:lock_list_proc,OFFSET LockListSingle
@@ -2677,7 +2675,7 @@ PAGE
 ReloadTimer Proc near
 	mov ax,task_sel
 	mov ds,ax
-	call ds:try_lock_proc
+	call ds:lock_proc
 	jnc reload_timer_done
 
 reload_timer_loop:
@@ -2761,7 +2759,6 @@ PAGE
 start_processor_null_threads    Proc near
 	mov ax,task_sel
 	mov ds,ax
-	mov ds:try_lock_proc,OFFSET TryLockSingle
 	mov ds:lock_proc,OFFSET LockSingle
 	mov ds:unlock_proc,OFFSET UnlockSingle
 ;    
@@ -2917,7 +2914,7 @@ WakeThread	PROC near
     mov es,dx
     mov bx,task_sel
     mov ds,bx
-    call ds:try_lock_proc
+    call ds:lock_proc
 ;
 	mov di,es:[esi]
 	or di,di
@@ -3162,6 +3159,8 @@ create_processor	Proc far
     mov es:ps_flags,0
     mov es:ps_null_thread,0
     mov es:ps_skip_thread,-1
+    mov es:ps_nest_lock,0
+    mov es:ps_list_lock,0
 ;
 	mov bx,OFFSET ps_timer_entries
 	mov es:[bx].ps_timer_next,0
@@ -3221,11 +3220,109 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			UpdateLists
+;
+;		DESCRIPTION:	Update lists (signals + wakeup)
+;
+;       PARAMETERS:     DS      Task_sel
+;                       FS      Processor sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLists Proc near
+    push OFFSET ulDone
+    call SaveLockedThread
+
+ulWakeupLoop:
+    mov ds:has_list,0
+    call ds:lock_list_proc
+    mov si,OFFSET wakeup_list
+    mov ax,[si]
+    or ax,ax
+    jz ulWakeupDone
+;
+	RemoveBlock
+	mov di,es:p_prio
+	InsertBlock
+	cmp di,ds:prio_act
+	jbe ulWakeupPrioOk
+;	
+	mov ds:prio_act,di
+
+ulWakeupPrioOk:
+    call ds:unlock_list_proc
+    jmp ulWakeupLoop
+
+ulWakeupDone:
+    call ds:unlock_list_proc
+;    
+    mov ds:has_signal,0
+    cli
+	mov si,OFFSET signal_list
+	mov ax,[si]
+	or ax,ax
+	jz ulSignalDone
+;	
+	mov dx,ax
+
+ulSignalLoop:
+	mov es,dx
+	mov cl,es:p_signal
+	or cl,cl
+	jz ulSignalNext
+;
+    call ds:lock_list_proc
+	mov [si],dx
+	RemoveBlock
+	mov di,es:p_prio
+	InsertBlock
+	cmp di,ds:prio_act
+	jbe ulSignalPrioOk
+;	
+	mov ds:prio_act,di
+
+ulSignalPrioOk:
+    call ds:unlock_list_proc
+;    
+	mov si,OFFSET signal_list
+    mov ax,[si]
+	or ax,ax
+	jz ulSignalDone
+;	
+    mov dx,ax
+    jmp ulSignalLoop
+
+ulSignalNext:	
+	mov dx,es:p_next
+	cmp dx,ax
+	jne ulSignalLoop
+
+ulSignalDone:    
+    mov es,fs:ps_curr_thread
+    mov ax,ds:prio_act
+    cmp ax,es:p_prio
+    jbe ulPrioOk
+;
+    or fs:ps_flags,PS_FLAG_PREEMPT
+
+ulPrioOk:
+    jmp LoadCurrentThread
+
+ulDone:
+    ret    
+UpdateLists Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			LockListSingle
 ;
 ;		DESCRIPTION:	Lock list, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
+;                       FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3244,6 +3341,7 @@ PAGE
 ;		DESCRIPTION:	Unlock list, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
+;                       FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3257,20 +3355,57 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TryLockDefault
+;		NAME:			LockListMultiple
 ;
-;		DESCRIPTION:	Try t lock, pre-tasking version
+;		DESCRIPTION:	Lock list, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
-;
-;       RETURNS:        CY      Owner of section
+;                       FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TryLockDefault	Proc near
-    stc
+LockListMultiple	Proc near
+    push eax
+
+llSpinLock:    
+    sti
+    mov eax,fs:ps_list_lock
+    or eax,eax
+    je llGet
+;
+    pause
+    jmp llSpinLock
+
+llGet:
+    cli
+    inc eax
+    xchg eax,fs:ps_list_lock
+    or eax,eax
+    jne llSpinLock
+;
+    pop eax    
 	ret
-TryLockDefault	Endp
+LockListMultiple	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UnlockListMultiple
+;
+;		DESCRIPTION:	Unlock list, multiple processor version
+;
+;       PARAMETERS:     DS      Task_sel
+;                       FS      Processor sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockListMultiple	Proc near
+    mov fs:ps_list_lock,0
+    sti
+	ret
+UnlockListMultiple	Endp
 
 PAGE	
 
@@ -3312,28 +3447,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TryLockSingle
-;
-;		DESCRIPTION:	Try t lock, single processor version
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;       RETURNS:        CY      Owner of section
-;                       FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TryLockSingle	Proc near
-    call ds:get_processor_proc
-	add fs:ps_nesting,1
-	ret
-TryLockSingle	Endp
-
-PAGE	
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			LockSingle
 ;
 ;		DESCRIPTION:	Lock, single processor version
@@ -3348,11 +3461,6 @@ PAGE
 LockSingle	Proc near
     call ds:get_processor_proc
 	add fs:ps_nesting,1
-	jc lsDone
-;
-    ShutDownTask
-
-lsDone:	
 	ret
 LockSingle	Endp
 
@@ -3370,10 +3478,8 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 UnlockSingle	Proc near
     push ax
-    push es
     
 usRetry:    
     sub fs:ps_nesting,1
@@ -3381,114 +3487,15 @@ usRetry:
 ;	
     mov al,ds:has_signal
     or al,ds:has_list
-    jz usNoSignal
+    jz usDone
 ;
     add fs:ps_nesting,1
     jnc usRetry
 ;
-    push OFFSET usDone
-    call SaveLockedThread
-
-usWakeupLoop:
-    mov ds:has_list,0
-    call ds:lock_list_proc
-    mov si,OFFSET wakeup_list
-    mov ax,[si]
-    or ax,ax
-    jz usWakeupDone
-;
-	RemoveBlock
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jbe usWakeupPrioOk
-;	
-	mov ds:prio_act,di
-
-usWakeupPrioOk:
-    call ds:unlock_list_proc
-    jmp usWakeupLoop
-
-usWakeupDone:
-    call ds:unlock_list_proc
-;    
-    mov ds:has_signal,0
-    cli
-	mov si,OFFSET signal_list
-	mov ax,[si]
-	or ax,ax
-	jz usSignalDone
-;	
-	mov dx,ax
-
-usSignalLoop:
-	mov es,dx
-	mov cl,es:p_signal
-	or cl,cl
-	jz usSignalNext
-;
-    call ds:lock_list_proc
-	mov [si],dx
-	RemoveBlock
-	mov di,es:p_prio
-	InsertBlock
-	cmp di,ds:prio_act
-	jbe usSignalPrioOk
-;	
-	mov ds:prio_act,di
-
-usSignalPrioOk:
-    call ds:unlock_list_proc
-;    
-	mov si,OFFSET signal_list
-    mov ax,[si]
-	or ax,ax
-	jz usSignalDone
-;	
-    mov dx,ax
-    jmp usSignalLoop
-
-usSignalNext:	
-	mov dx,es:p_next
-	cmp dx,ax
-	jne usSignalLoop
-
-usSignalDone:    
-    mov es,fs:ps_curr_thread
-    mov ax,ds:prio_act
-    cmp ax,es:p_prio
-    jbe usPrioOk
-;
-    or fs:ps_flags,PS_FLAG_PREEMPT
-
-usPrioOk:
-    jmp LoadCurrentThread
-
-usNoSignal:
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz usDone
-;    
-    mov es,ax
-    mov ax,ds:prio_act
-    cmp ax,es:p_prio
-    jbe usDone
-;
-    push OFFSET usDone
-    call SaveCurrentThread
-    or fs:ps_flags,PS_FLAG_PREEMPT
-    jmp LoadCurrentThread
+    call UpdateLists
 
 usDone:
     pop ax
-	verr ax
-	jz usEsOk
-;
-	xor ax,ax
-	
-usEsOk:
-	mov es,ax
-	pop ax
 	ret
 UnlockSingle	Endp
 
@@ -3553,7 +3560,7 @@ enter_int_name	DB 'Enter Int',0
 enter_int	Proc far
 	mov ax,task_sel
 	mov ds,ax
-	call ds:try_lock_proc
+	call ds:lock_proc
 	ret
 enter_int	Endp
 
@@ -4132,7 +4139,7 @@ signal_thread	PROC far
 ;    
 	mov ax,task_sel
 	mov ds,ax
-	call ds:try_lock_proc
+	call ds:lock_proc
 ;
     mov es,bx
     mov es:p_signal,1
@@ -4362,7 +4369,7 @@ enter_section	PROC far
     mov ax,ds
     mov dx,task_sel
     mov ds,dx
-    call ds:try_lock_proc
+    call ds:lock_proc
     mov ds,ax
 	lock sub ds:[esi].cs_value,1
 	jc ecsUnlock
@@ -4469,13 +4476,16 @@ enter_phys_section	PROC near
 	jc efcsDone
 ;
     push ds
+    push fs
     push ax
 ;
     mov ax,task_sel
     mov ds,ax
+    call ds:get_processor_proc
     call ds:lock_list_proc
 ;
     pop ax
+    pop fs
     pop ds    
     	
 efcsDone:
@@ -4505,13 +4515,16 @@ leave_phys_section	PROC near
 	jc lfcsDone
 ;
     push ds
+    push fs
     push ax
 ;
     mov ax,task_sel
     mov ds,ax
+    call ds:get_processor_proc
     call ds:unlock_list_proc
 ;
     pop ax
+    pop fs
     pop ds    
 
 lfcsDone:
@@ -5047,14 +5060,17 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wake_until	PROC far
+    push fs
 	mov ax,task_sel
 	mov ds,ax
 	mov es,cx
+	call ds:get_processor_proc
     call ds:lock_list_proc
     mov di,OFFSET wakeup_list
     InsertBlock
 	mov ds:has_list,1
     call ds:unlock_list_proc
+    pop fs
 	ret
 wake_until	ENDP
 
