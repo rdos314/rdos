@@ -87,6 +87,11 @@ has_list            DB ?
 
 wakeup_list         DW ?
 
+owner_sel           DW ?
+owner_lock          DW ?
+owner_wait          DW ?
+
+try_lock_proc       DW ?
 lock_proc           DW ?
 unlock_proc         DW ?
 
@@ -757,6 +762,7 @@ init_task	PROC near
 ;
 	mov ax,task_sel
 	mov ds,ax
+	mov ds:try_lock_proc,OFFSET TryLockDefault
 	mov ds:lock_proc,OFFSET LockDefault
 	mov ds:unlock_proc,OFFSET UnlockDefault
     mov ds:lock_list_proc,OFFSET LockListSingle
@@ -766,6 +772,9 @@ init_task	PROC near
 	mov ds:wakeup_list,0
 	mov ds:has_signal,0
 	mov ds:has_list,0
+	mov ds:owner_sel,0
+	mov ds:owner_lock,0
+	mov ds:owner_wait,0
 	mov ds:help_call_ip,0
 	mov ds:system_time,0
 	mov ds:system_time+4,0
@@ -2675,7 +2684,7 @@ PAGE
 ReloadTimer Proc near
 	mov ax,task_sel
 	mov ds,ax
-	call ds:lock_proc
+	call ds:try_lock_proc
 	jnc reload_timer_done
 
 reload_timer_loop:
@@ -2759,6 +2768,7 @@ PAGE
 start_processor_null_threads    Proc near
 	mov ax,task_sel
 	mov ds,ax
+	mov ds:try_lock_proc,OFFSET TryLockSingle
 	mov ds:lock_proc,OFFSET LockSingle
 	mov ds:unlock_proc,OFFSET UnlockSingle
 ;    
@@ -2914,7 +2924,7 @@ WakeThread	PROC near
     mov es,dx
     mov bx,task_sel
     mov ds,bx
-    call ds:lock_proc
+    call ds:try_lock_proc
 ;
 	mov di,es:[esi]
 	or di,di
@@ -2964,7 +2974,7 @@ debug_exception:
     push fs
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call ds:try_lock_proc
 ;        
     mov ax,thread_sel
     mov ds,ax
@@ -3096,7 +3106,7 @@ double_fault:
 ;    
     mov ax,task_sel
     mov ds,ax
-    call ds:lock_proc
+    call ds:try_lock_proc
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
@@ -3159,7 +3169,6 @@ create_processor	Proc far
     mov es:ps_flags,0
     mov es:ps_null_thread,0
     mov es:ps_skip_thread,-1
-    mov es:ps_nest_lock,0
     mov es:ps_list_lock,0
 ;
 	mov bx,OFFSET ps_timer_entries
@@ -3412,6 +3421,24 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			TryLockDefault
+;
+;		DESCRIPTION:	Try to lock, pre-tasking version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TryLockDefault	Proc near
+    stc
+	ret
+TryLockDefault	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			LockDefault
 ;
 ;		DESCRIPTION:	Lock, pre-tasking version
@@ -3447,6 +3474,28 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			TryLockSingle
+;
+;		DESCRIPTION:	Try to lock, single processor version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;       RETURNS:        CY      Owner of section
+;                       FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TryLockSingle	Proc near
+    call ds:get_processor_proc
+	add fs:ps_nesting,1
+	ret
+TryLockSingle	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			LockSingle
 ;
 ;		DESCRIPTION:	Lock, single processor version
@@ -3461,6 +3510,11 @@ PAGE
 LockSingle	Proc near
     call ds:get_processor_proc
 	add fs:ps_nesting,1
+	jc lsDone
+;
+    CpuReset
+
+lsDone:    	
 	ret
 LockSingle	Endp
 
@@ -3498,6 +3552,207 @@ usDone:
     pop ax
 	ret
 UnlockSingle	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TryLockMultiple
+;
+;		DESCRIPTION:	Try to lock, multiple processor version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;       RETURNS:        CY      Owner of section
+;                       FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TryLockMultiple	Proc near
+    push ax
+    push dx
+
+tlmSpinLock:
+    sti
+    mov ax,ds:owner_lock
+    or ax,ax
+    jz tlmGet
+;
+    pause
+    jmp tlmSpinLock
+
+tlmGet:
+    cli
+    inc ax
+    xchg ax,ds:owner_lock
+    or ax,ax
+    jnz tlmSpinLock
+;
+    mov ax,ds:owner_sel
+    or ax,ax
+    jz tlmTake
+;
+    mov dx,fs
+    cmp ax,dx
+    je tlmTake
+
+tlmFail:
+    mov ds:owner_lock,0
+   	lock add fs:ps_nesting,1
+    clc
+    jmp tlmDone
+
+tlmTake:
+    mov ds:owner_sel,fs
+   	lock add fs:ps_nesting,1
+    mov ds:owner_lock,0    
+
+tlmDone:
+   	sti
+;
+    pop dx
+    pop ax
+	ret
+TryLockMultiple	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LockMultiple
+;
+;		DESCRIPTION:	Lock, multiple processor version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;       RETURNS:        CY      Owner of section
+;                       FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockMultiple	Proc near
+    push ax
+    push dx
+
+lmSpinLock:
+    sti
+    mov ax,ds:owner_lock
+    or ax,ax
+    jz lmGet
+;
+    pause
+    jmp lmSpinLock
+
+lmGet:
+    cli
+    inc ax
+    xchg ax,ds:owner_lock
+    or ax,ax
+    jnz lmSpinLock
+;
+    mov ax,ds:owner_sel
+    or ax,ax
+    jz lmTake
+;
+    mov dx,fs
+    cmp ax,dx
+    je lmTake
+
+lmHalt:
+    mov ds:owner_wait,1
+    mov ds:owner_lock,0
+    sti
+    hlt
+    jmp lmSpinLock
+
+lmTake:
+    mov ds:owner_sel,fs
+    mov ds:owner_lock,0    
+   	add fs:ps_nesting,1
+   	sti
+;
+    pop dx
+    pop ax
+	ret
+LockMultiple	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UnlockMultiple
+;
+;		DESCRIPTION:	Unlock, multiple processor version
+;
+;       PARAMETERS:     DS      Task_sel
+;                       FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockMultiple	Proc near
+    push ax
+
+umSpinLock:
+    sti
+    mov ax,ds:owner_lock
+    or ax,ax
+    jz umGet
+;
+    pause
+    jmp umSpinLock
+
+umGet:
+    cli
+    inc ax
+    xchg ax,ds:owner_lock
+    or ax,ax
+    jnz umSpinLock
+    
+umRetry:    
+    sub fs:ps_nesting,1
+	jnc umUnlock
+;
+    mov ax,fs
+    cmp ax,ds:owner_sel
+    jne umUnlock
+;	
+    mov al,ds:has_signal
+    or al,ds:has_list
+    jz umWake
+;
+    add fs:ps_nesting,1
+    jnc umRetry
+;
+    mov ds:owner_lock,0
+    sti
+    call UpdateLists
+    jmp umSpinLock
+
+umWake:
+    mov ds:owner_sel,0
+    xor ax,ax
+    xchg ax,ds:owner_wait
+    or ax,ax
+    jz umUnlock
+;    
+    mov ds:owner_lock,0
+    sti
+;
+; wake-up processors here!
+;    
+    jmp umDone
+
+umUnlock:
+    mov ds:owner_lock,0
+
+umDone:
+    sti
+    pop ax
+	ret
+UnlockMultiple	Endp
 
 PAGE	
 
@@ -3560,7 +3815,7 @@ enter_int_name	DB 'Enter Int',0
 enter_int	Proc far
 	mov ax,task_sel
 	mov ds,ax
-	call ds:lock_proc
+	call ds:try_lock_proc
 	ret
 enter_int	Endp
 
@@ -4139,7 +4394,7 @@ signal_thread	PROC far
 ;    
 	mov ax,task_sel
 	mov ds,ax
-	call ds:lock_proc
+	call ds:try_lock_proc
 ;
     mov es,bx
     mov es:p_signal,1
@@ -4369,7 +4624,7 @@ enter_section	PROC far
     mov ax,ds
     mov dx,task_sel
     mov ds,dx
-    call ds:lock_proc
+    call ds:try_lock_proc
     mov ds,ax
 	lock sub ds:[esi].cs_value,1
 	jc ecsUnlock
