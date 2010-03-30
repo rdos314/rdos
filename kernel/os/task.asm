@@ -95,6 +95,7 @@ system_thread       DW ?
 
 owner_sel           DW ?
 owner_lock          DW ?
+list_lock           DW ?
 
 try_lock_proc       DW ?
 lock_proc           DW ?
@@ -784,6 +785,7 @@ init_task	PROC near
 	mov ds:system_thread,0
 	mov ds:owner_lock,0
 	mov ds:owner_wait,0
+	mov ds:list_lock,0
 	mov ds:help_call_ip,0
 	mov ds:system_time,0
 	mov ds:system_time+4,0
@@ -3341,7 +3343,6 @@ create_processor	Proc far
     mov es:ps_flags,0
     mov es:ps_null_thread,0
     mov es:ps_skip_thread,-1
-    mov es:ps_list_lock,0
 ;
 	mov bx,OFFSET ps_timer_entries
 	mov es:[bx].ps_timer_next,0
@@ -3503,7 +3504,6 @@ PAGE
 ;		DESCRIPTION:	Lock list, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3522,7 +3522,6 @@ PAGE
 ;		DESCRIPTION:	Unlock list, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3541,17 +3540,16 @@ PAGE
 ;		DESCRIPTION:	Lock list, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockListMultiple	Proc near
-    push eax
+    push ax
 
 llSpinLock:    
     sti
-    mov eax,fs:ps_list_lock
-    or eax,eax
+    mov ax,ds:list_lock
+    or ax,ax
     je llGet
 ;
     pause
@@ -3559,12 +3557,12 @@ llSpinLock:
 
 llGet:
     cli
-    inc eax
-    xchg eax,fs:ps_list_lock
-    or eax,eax
+    inc ax
+    xchg ax,ds:list_lock
+    or ax,ax
     jne llSpinLock
 ;
-    pop eax    
+    pop ax    
 	ret
 LockListMultiple	Endp
 
@@ -3578,12 +3576,11 @@ PAGE
 ;		DESCRIPTION:	Unlock list, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockListMultiple	Proc near
-    mov fs:ps_list_lock,0
+    mov ds:list_lock,0
     sti
 	ret
 UnlockListMultiple	Endp
@@ -3744,6 +3741,8 @@ PAGE
 TryLockMultiple	Proc near
     push ax
     push dx
+;
+    call ds:get_processor_proc
 
 tlmSpinLock:
     sti
@@ -3807,6 +3806,8 @@ PAGE
 LockMultiple	Proc near
     push ax
     push dx
+;
+    call ds:get_processor_proc
 
 lmSpinLock:
     sti

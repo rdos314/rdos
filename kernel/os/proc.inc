@@ -41,8 +41,6 @@ timer_struc	ENDS
 
 processor_seg   STRUC
 
-ps_list_lock        DD ?
-
 ps_id               DW ?
 ps_ss               DW ?
 ps_sp               DW ?
