@@ -2887,11 +2887,34 @@ system_thread_pr:
     GetThread
     mov ds:system_thread,ax
 
-system_thread_loop:
+stLoop:
     WaitForSignal
 ;
     int 3
-    jmp system_thread_loop        
+
+stThreadLoop:
+    mov si,OFFSET term_thread_list
+    mov ax,[si]
+    or ax,ax
+    jz stThreadOK
+;
+    call ds:lock_list_proc
+    RemoveBlock
+    call ds:unlock_list_proc
+    call DeleteThread
+    jmp stThreadLoop
+
+stThreadOk:
+    mov si,OFFSET term_proc_list
+    mov ax,[si]
+    or ax,ax
+    jz stLoop
+;
+    call ds:lock_list_proc
+    RemoveBlock
+    call ds:unlock_list_proc
+    call DeleteProcess
+    jmp stThreadLoop
     
 PAGE
 
