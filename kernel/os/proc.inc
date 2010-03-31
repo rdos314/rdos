@@ -26,6 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PS_FLAG_PREEMPT     = 1
+PS_FLAG_PRIO_CHANGE = 2
 
 timer_struc	STRUC
 

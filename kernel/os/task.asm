@@ -1982,6 +1982,7 @@ PAGE
 
 GetNextThread    Proc near
     sti
+    and fs:ps_flags,NOT PS_FLAG_PRIO_CHANGE
     mov si,ds:prio_act
     mov ax,[si]
     or ax,ax
@@ -1992,8 +1993,11 @@ GetNextThread    Proc near
     jz gntLoad
 
 gntPreempt:
+    xor ax,ax
+    mov es,ax
     and fs:ps_flags,NOT PS_FLAG_PREEMPT    
-    cli
+	cli
+	call ds:update_clock_proc
 	LocalGetSystemTime
 	sti
 	add eax,1193
@@ -2005,7 +2009,7 @@ gntIntLoop:
 	mov si,ds:prio_act
 	mov ax,[si]
 	or ax,ax
-	je gntPrioLower
+	jz gntPrioLower
 ;	
 	mov es,ax
 	mov ax,es:p_next
@@ -2276,6 +2280,11 @@ load_retry:
 ;
     mov di,es:p_prio
     InsertBlock
+    cmp di,ds:prio_act
+    jbe load_thread_loop
+;
+    mov ds:prio_act,di
+    or fs:ps_flags,PS_FLAG_PRIO_CHANGE
     jmp load_thread_loop
 
 load_reload_timer:
@@ -2337,7 +2346,7 @@ load_actions_done:
     call ds:unlock_proc
     pop ds
 ;
-    test fs:ps_flags,PS_FLAG_PREEMPT
+    test fs:ps_flags,PS_FLAG_PREEMPT OR PS_FLAG_PRIO_CHANGE
     jz load_regs
 ;
     mov ax,task_sel
@@ -2709,7 +2718,7 @@ ContinueCurrentThread	Proc near
     jbe cctPop
 ;
     mov ds:prio_act,di
-    or fs:ps_flags,PS_FLAG_PREEMPT
+    or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 cctPop:
     pop es    
@@ -2794,6 +2803,7 @@ reload_check_preempt:
 	sbb edx,fs:ps_preempt_msb
 	jc reload_timer_do
 ;
+    or fs:ps_flags,PS_FLAG_PREEMPT
     mov ax,fs:ps_curr_thread
     or ax,ax
     jz reload_preempt_block
@@ -2801,18 +2811,17 @@ reload_check_preempt:
     push OFFSET reload_timer_end
     call SaveLockedThread
     call ContinueCurrentThread
-    or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 
 reload_preempt_block:
     cli
+	call ds:update_clock_proc
 	LocalGetSystemTime
 	sti
 	add eax,1193
 	adc edx,0
 	mov fs:ps_preempt_lsb,eax
 	mov fs:ps_preempt_msb,edx
-    or fs:ps_flags,PS_FLAG_PREEMPT
     jmp reload_timer_loop
 
 reload_timer_do:
@@ -3102,7 +3111,6 @@ null_thread:
 ;
     call SkipCurrentThread
     call BlockCurrentThread
-	or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 
 ap_null_thread:
@@ -3631,6 +3639,7 @@ ulWakeupLoop:
 	jbe ulWakeupPrioOk
 ;	
 	mov ds:prio_act,di
+	or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 ulWakeupPrioOk:
     call ds:unlock_list_proc
@@ -3663,6 +3672,7 @@ ulSignalLoop:
 	jbe ulSignalPrioOk
 ;	
 	mov ds:prio_act,di
+	or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 ulSignalPrioOk:
     call ds:unlock_list_proc
@@ -4439,7 +4449,6 @@ init_timer_sel_ok:
     CreateDataSelector16
 ;
     call ds:get_processor_proc
-    or fs:ps_flags,PS_FLAG_PREEMPT
 	jmp LoadCurrentThread
 
 PAGE
@@ -4502,7 +4511,7 @@ wake_new	PROC near
 	jb wake_new_lower
 ;	
 	mov ds:prio_act,di
-    or fs:ps_flags,PS_FLAG_PREEMPT
+    or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 wake_new_lower:
     jmp LoadCurrentThread
@@ -4530,7 +4539,6 @@ swap_out	PROC far
     push OFFSET swap_out_done
     call SaveCurrentThread
     call ContinueCurrentThread
-    or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 
 swap_out_done:
@@ -4565,7 +4573,6 @@ cleanup_thread:
     mov bx,ds:system_thread
     Signal    
 ;
-	or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
 
 PAGE
@@ -4596,7 +4603,6 @@ cleanup_process:
     mov bx,ds:system_thread
     Signal    
 ;
-	or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
 
 PAGE
