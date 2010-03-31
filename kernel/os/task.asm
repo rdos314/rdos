@@ -2355,6 +2355,7 @@ PAGE
 LoadCurrentThread:
 	mov ax,task_sel
 	mov ds,ax
+    and fs:ps_flags,NOT PS_FLAG_TIMER	
     call ds:lock_proc
 
 load_thread_loop:
@@ -2398,7 +2399,7 @@ load_retry:
     je load_thread_loop
 ;
     mov di,es:p_prio
-    InsertBlock
+    InsertFirst
     cmp di,ds:prio_act
     jbe load_thread_loop
 ;
@@ -2891,9 +2892,13 @@ ReloadTimer Proc near
 	mov ax,task_sel
 	mov ds,ax
 	call ds:try_lock_proc
-	jnc reload_timer_done
+	jc reload_timer_loop
+;
+    or fs:ps_flags,PS_FLAG_TIMER	
+	jmp reload_timer_done
 
 reload_timer_loop:
+    and fs:ps_flags,NOT PS_FLAG_TIMER	
     mov es,fs:ps_curr_thread
 	cli
 	call ds:update_clock_proc
@@ -3138,9 +3143,9 @@ PAGE
 start_processor_null_threads    Proc near
 	mov ax,task_sel
 	mov ds,ax
-	mov ds:try_lock_proc,OFFSET TryLockMultiple
-	mov ds:lock_proc,OFFSET LockMultiple
-	mov ds:unlock_proc,OFFSET UnlockMultiple
+	mov ds:try_lock_proc,OFFSET TryLockSingle
+	mov ds:lock_proc,OFFSET LockSingle
+	mov ds:unlock_proc,OFFSET UnlockSingle
 ;    
 	mov ax,system_data_sel
 	mov ds,ax
@@ -4035,6 +4040,16 @@ usRetry:
     sub fs:ps_nesting,1
 	jnc usDone
 ;	
+    test fs:ps_flags,PS_FLAG_TIMER	
+    jz usTimerOk
+;
+    push es
+    pushad
+    call ReloadTimer
+    popad
+    pop es
+
+usTimerOk:    
     mov al,ds:has_signal
     or al,ds:has_list
     jz usDone
@@ -4237,6 +4252,20 @@ umRetry:
     cmp ax,ds:owner_sel
     jne umUnlock
 ;	
+    test fs:ps_flags,PS_FLAG_TIMER	
+    jz umTimerOk
+;
+    mov ds:owner_lock,0
+    sti
+;
+    push es
+    pushad
+    call ReloadTimer
+    popad
+    pop es
+    jmp umSpinLock
+
+umTimerOk:    	
     mov al,ds:has_signal
     or al,ds:has_list
     jz umWake
