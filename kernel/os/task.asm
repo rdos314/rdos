@@ -239,6 +239,40 @@ ins_empty:
 ins_done:
 		ENDM
 
+;	ds:di	list
+;	es		block
+
+InsertFirst	MACRO
+	LOCAL ins_empty
+	LOCAL ins_done
+	mov es:p_sleep_sel,ds
+	mov word ptr es:p_sleep_offset,di
+	mov word ptr es:p_sleep_offset+2,0
+	push di
+	mov di,[di]
+	or di,di
+	je ins_empty
+	push ds
+	push si
+	mov ds,di
+	mov si,ds:p_prev
+	mov ds:p_prev,es
+	mov ds,si
+	mov ds:p_next,es
+	mov es:p_next,di
+	mov es:p_prev,si
+	pop si
+	pop ds
+	pop di
+	jmp ins_done
+ins_empty:
+	mov es:p_next,es
+	mov es:p_prev,es
+	pop di
+ins_done:
+	mov [di],es
+		ENDM
+
 ;	ds:si		list
 ;	es			block
 
@@ -2799,7 +2833,7 @@ ContinueCurrentThread	Proc near
     cmp ax,fs:ps_null_thread
     je cctPop
 ;    
-    InsertBlock
+    InsertFirst
     cmp di,ds:prio_act
     jbe cctPop
 ;
@@ -2904,7 +2938,7 @@ reload_preempt_block:
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	sti
-	add eax,1193
+	add eax,11
 	adc edx,0
 	mov fs:ps_preempt_lsb,eax
 	mov fs:ps_preempt_msb,edx
@@ -4061,12 +4095,6 @@ tlmSpinLock:
     or ax,ax
     jz tlmGet
 ;
-    mov cx,ds:owner_lock
-    mov dx,ds:list_lock
-    mov si,fs:ps_nesting
-    mov di,ds:owner_sel
-        
-    call Shutdown
     pause
     jmp tlmSpinLock
 
@@ -4086,7 +4114,6 @@ tlmGet:
     je tlmTake
 
 tlmFail:
-    call Shutdown
     mov ds:owner_lock,0
    	lock add fs:ps_nesting,1
     clc
@@ -4133,7 +4160,6 @@ lmSpinLock:
     or ax,ax
     jz lmGet
 ;
-    call Shutdown
     pause
     jmp lmSpinLock
 
@@ -4153,7 +4179,6 @@ lmGet:
     je lmTake
 
 lmHalt:
-    call Shutdown
     mov ds:owner_wait,1
     mov ds:owner_lock,0
     sti
@@ -4194,7 +4219,6 @@ umSpinLock:
     or ax,ax
     jz umGet
 ;
-    call Shutdown
     pause
     jmp umSpinLock
 

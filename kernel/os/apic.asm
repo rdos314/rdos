@@ -874,6 +874,7 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3 
+    GetProcessor
     mov al,80h
     mov edx,1
     SendInt
