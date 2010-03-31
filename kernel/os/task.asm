@@ -1025,12 +1025,6 @@ proc_init:
 	mov ax,enter_section_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET enter_nolock_section
-	mov di,OFFSET enter_nolock_section_name
-	xor cl,cl
-	mov ax,enter_nolock_section_nr
-	RegisterOsGate
-;
 	mov si,OFFSET leave_section
 	mov di,OFFSET leave_section_name
 	xor cl,cl
@@ -4937,56 +4931,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			EnterNolockSection
-;
-;		DESCRIPTION:	Enter section, no locking
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-enter_nolock_section_name	DB 'Enter Critical Section',0
-    
-enter_nolock_section	PROC far
-    pushf
-    push ds
-    push fs
-    push ax
-    push dx
-;    
-    mov ax,ds
-    mov dx,task_sel
-    mov ds,dx
-    call ds:try_lock_proc
-    mov ds,ax
-	lock sub ds:[esi].cs_value,1
-	jc encsUnlock
-;
-    push OFFSET encsDone
-    call SaveLockedThread
-    call BlockCurrentThread
-;
-	lea edi,[esi].cs_list	
-	jmp BlockThread
-
-encsUnlock:
-    mov ds,dx
-    call ds:unlock_proc
-    	
-encsDone:
-    pop dx
-    pop ax
-    pop fs
-    pop ds
-    popf
-	ret
-enter_nolock_section	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
 ;		NAME:			EnterSection
 ;
 ;		DESCRIPTION:	Enter section
@@ -5002,25 +4946,11 @@ enter_section	PROC far
     push ds
     push fs
     push ax
-    push ecx
-    push edx
+    push dx
 ;    
     mov ax,ds
     mov dx,task_sel
     mov ds,dx
-;    
-    push bp
-    mov bp,sp
-    mov cx,bp
-    add cx,62 + 4
-    cmp cx,stack0_size
-    ja eloaded
-;
-    mov ecx,[bp+18]
-    mov edx,[bp+62]
-
-eloaded:
-    pop bp
 ;    
     call ds:lock_proc
     mov ds,ax
@@ -5040,8 +4970,7 @@ ecsUnlock:
     call ds:unlock_proc
     	
 ecsDone:
-    pop edx
-    pop ecx
+    pop dx
     pop ax
     pop fs
     pop ds

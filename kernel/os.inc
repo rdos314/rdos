@@ -692,11 +692,6 @@ InitSection     MACRO section
 						ENDM
 
 ; IN  DS:ESI        Section
-EnterNolockSection    MACRO section
-	OsGate enter_nolock_section_nr
-						ENDM
-
-; IN  DS:ESI        Section
 EnterSection    MACRO section
 	OsGate enter_section_nr
 						ENDM
