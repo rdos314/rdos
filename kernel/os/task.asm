@@ -1969,6 +1969,175 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			HandlePreempt
+;
+;		DESCRIPTION:	Handle preempt
+;
+;		PARAMETERS:	    DS      Task sel
+;                       FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePreempt    Proc near
+    test fs:ps_flags,PS_FLAG_PREEMPT
+    jz hpDone
+;
+	mov si,ds:prio_act
+	mov ax,[si]
+	or ax,ax
+	jz hpDone
+;	
+    cmp ax,fs:ps_last_thread
+    jne hpDone
+;    
+	mov es,ax
+	mov ax,es:p_next
+	mov [si],ax
+
+hpDone:
+    ret
+HandlePreempt   Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			HandlePrio
+;
+;		DESCRIPTION:	Handle prio
+;
+;		PARAMETERS:	    DS      Task sel
+;                       FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePrio    Proc near
+    mov si,ds:prio_act
+    mov ax,[si]
+    or ax,ax
+    jnz hpqInt
+;
+    or si,si
+    jz hpqDone
+;
+    sub si,2
+    jmp HandlePrio
+
+hpqInt:
+	mov es,ax
+	mov es,es:p_process_sel
+	test es:ms_virt_flags,200h
+	jnz hpqDone
+;
+	cmp ax,es:ms_cli_thread
+	je hpqDone
+;
+    call ds:lock_list_proc
+	mov ax,es
+	mov si,ds:prio_act
+	RemoveBlock              
+	push ds  
+	mov ds,ax
+	mov di,OFFSET ms_wait_sti
+	InsertBlock
+	pop ds
+    call ds:unlock_list_proc
+	jmp HandlePrio
+
+hpqDone:
+    ret
+HandlePrio  Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetPrioThread
+;
+;		DESCRIPTION:	Get thread from standard list
+;
+;		PARAMETERS:	    DS      Task sel
+;                       FS      Processor selector
+;
+;       RETURNS:        ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPrioThread    Proc near
+    mov si,ds:prio_act
+    mov ax,[si]
+    or ax,ax
+    jz gptNull
+;    
+    RemoveBlock
+
+gptLoop:
+    mov ax,[si]
+    or ax,ax
+    jnz gptDone
+;
+    or si,si    
+    jz gptDone
+;
+    sub si,2
+    mov ds:prio_act,si
+    jmp gptLoop
+
+gptNull:
+    mov es,fs:ps_null_thread
+
+gptDone:
+    ret
+GetPrioThread   Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetupPreempt
+;
+;		DESCRIPTION:	Setup preempt
+;
+;		PARAMETERS:	    DS      Task sel
+;                       FS      Processor selector
+;                       ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupPreempt    Proc near
+    mov ax,es
+    cmp ax,fs:ps_null_thread
+    je spSet
+;    
+    cmp ax,fs:ps_last_thread
+    jne spSet
+;
+    test fs:ps_flags,PS_FLAG_PREEMPT
+    jz spDone    
+
+spSet:
+	cli
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	sti
+	add eax,1193
+	adc edx,0
+	mov fs:ps_preempt_lsb,eax
+	mov fs:ps_preempt_msb,edx
+
+spDone:
+    and fs:ps_flags,NOT PS_FLAG_PREEMPT
+    ret
+SetupPreempt    Endp
+    
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			GetNextThread
 ;
 ;		DESCRIPTION:	Get next thread to run
@@ -1983,97 +2152,13 @@ PAGE
 GetNextThread    Proc near
     sti
     and fs:ps_flags,NOT PS_FLAG_PRIO_CHANGE
-    mov si,ds:prio_act
-    mov ax,[si]
-    or ax,ax
-    jz gntPreempt
 ;
-    mov es,ax
-    test fs:ps_flags,PS_FLAG_PREEMPT
-    jz gntLoad
-
-gntPreempt:
-    xor ax,ax
-    mov es,ax
-    and fs:ps_flags,NOT PS_FLAG_PREEMPT    
-	cli
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	sti
-	add eax,1193
-	adc edx,0
-	mov fs:ps_preempt_lsb,eax
-	mov fs:ps_preempt_msb,edx
-
-gntIntLoop:
-	mov si,ds:prio_act
-	mov ax,[si]
-	or ax,ax
-	jz gntPrioLower
-;	
-	mov es,ax
-	mov ax,es:p_next
-	mov [si],ax
-	jmp gntPrioEnd	
-	
-gntPrioLower:
-	sub si,2
-	jnc gntPrioLoop
-;	
-    xor si,si
-    mov ax,fs:ps_null_thread
-    jmp gntPrioDone
-
-gntPrioLoop:
-	mov ax,[si]
-	or ax,ax
-	jne gntPrioDone
-;	
-	sub si,2
-	jnc gntPrioLoop
-;	
-    xor si,si
-    mov ax,fs:ps_null_thread
-
-gntPrioDone:
-	mov ds:prio_act,si
-
-gntPrioEnd:
-	mov es,ax
-	mov es,es:p_process_sel
-	test es:ms_virt_flags,200h
-	jnz gntIntOk
-;
-	cmp ax,es:ms_cli_thread
-	jz gntIntOk
-;
-    call ds:lock_list_proc
-	mov ax,es
-	mov si,ds:prio_act
-	RemoveBlock              
-	push ds  
-	mov ds,ax
-	mov di,OFFSET ms_wait_sti
-	InsertBlock
-	pop ds
-    call ds:unlock_list_proc
-	jmp gntIntLoop
-
-gntIntOk:
-    mov es,ax
-        
-gntLoad:
-    mov ax,es
-    cmp ax,fs:ps_null_thread
-    je gntRemoveDone
-;    
-    mov si,es:p_prio
-    RemoveBlock
-
-gntRemoveDone:
-    sti
+    call HandlePreempt
+    call HandlePrio
+    call GetPrioThread
+    call SetupPreempt
     ret
-GetNextThread    Endp
+GetNextThread   Endp
 
 PAGE
 	
@@ -2357,6 +2442,7 @@ load_actions_done:
 load_regs:
     cli
     mov fs:ps_curr_thread,es
+    mov fs:ps_last_thread,es
 ;
     test dword ptr ds:tss_eflags,20000h
     jnz load_vm
@@ -3551,6 +3637,7 @@ create_processor	Proc far
     mov es:ps_id,ax	
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
+    mov es:ps_last_thread,-1
     mov es:ps_flags,0
     mov es:ps_null_thread,0
     mov es:ps_skip_thread,-1

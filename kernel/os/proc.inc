@@ -48,6 +48,7 @@ ps_sp               DW ?
 ps_nesting          DW ?
 ps_curr_thread      DW ?
 ps_skip_thread      DW ?
+ps_last_thread      DW ?
 ps_flags            DW ?
 ps_null_thread      DW ?
 
