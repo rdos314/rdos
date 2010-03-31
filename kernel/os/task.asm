@@ -3143,9 +3143,9 @@ PAGE
 start_processor_null_threads    Proc near
 	mov ax,task_sel
 	mov ds,ax
-	mov ds:try_lock_proc,OFFSET TryLockSingle
-	mov ds:lock_proc,OFFSET LockSingle
-	mov ds:unlock_proc,OFFSET UnlockSingle
+	mov ds:try_lock_proc,OFFSET TryLockMultiple
+	mov ds:lock_proc,OFFSET LockMultiple
+	mov ds:unlock_proc,OFFSET UnlockMultiple
 ;    
 	mov ax,system_data_sel
 	mov ds,ax
@@ -4251,21 +4251,7 @@ umRetry:
     mov ax,fs
     cmp ax,ds:owner_sel
     jne umUnlock
-;	
-    test fs:ps_flags,PS_FLAG_TIMER	
-    jz umTimerOk
 ;
-    mov ds:owner_lock,0
-    sti
-;
-    push es
-    pushad
-    call ReloadTimer
-    popad
-    pop es
-    jmp umSpinLock
-
-umTimerOk:    	
     mov al,ds:has_signal
     or al,ds:has_list
     jz umWake
@@ -4294,17 +4280,31 @@ umBusy:
     jmp umSpinLock
 
 umWake:
-    mov ds:owner_sel,0
+    mov ds:owner_sel,0	
     xor al,al
     xchg al,ds:owner_wait
     or al,al
-    jz umUnlock
+    jz umTimer
 ;    
     mov ds:owner_lock,0
     sti
 ;
 ; wake-up processors here!
 ;    
+    jmp umSpinLock
+
+umTimer:
+    test fs:ps_flags,PS_FLAG_TIMER	
+    jz umUnlock
+;
+    mov ds:owner_lock,0
+    sti
+;
+    push es
+    pushad
+    call ReloadTimer
+    popad
+    pop es
     jmp umDone
 
 umUnlock:
