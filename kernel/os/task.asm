@@ -3104,9 +3104,9 @@ PAGE
 start_processor_null_threads    Proc near
 	mov ax,task_sel
 	mov ds,ax
-	mov ds:try_lock_proc,OFFSET TryLockSingle
-	mov ds:lock_proc,OFFSET LockSingle
-	mov ds:unlock_proc,OFFSET UnlockSingle
+	mov ds:try_lock_proc,OFFSET TryLockMultiple
+	mov ds:lock_proc,OFFSET LockMultiple
+	mov ds:unlock_proc,OFFSET UnlockMultiple
 ;    
 	mov ax,system_data_sel
 	mov ds,ax
@@ -4061,6 +4061,12 @@ tlmSpinLock:
     or ax,ax
     jz tlmGet
 ;
+    mov cx,ds:owner_lock
+    mov dx,ds:list_lock
+    mov si,fs:ps_nesting
+    mov di,ds:owner_sel
+        
+    call Shutdown
     pause
     jmp tlmSpinLock
 
@@ -4080,6 +4086,7 @@ tlmGet:
     je tlmTake
 
 tlmFail:
+    call Shutdown
     mov ds:owner_lock,0
    	lock add fs:ps_nesting,1
     clc
@@ -4126,6 +4133,7 @@ lmSpinLock:
     or ax,ax
     jz lmGet
 ;
+    call Shutdown
     pause
     jmp lmSpinLock
 
@@ -4145,6 +4153,7 @@ lmGet:
     je lmTake
 
 lmHalt:
+    call Shutdown
     mov ds:owner_wait,1
     mov ds:owner_lock,0
     sti
@@ -4185,6 +4194,7 @@ umSpinLock:
     or ax,ax
     jz umGet
 ;
+    call Shutdown
     pause
     jmp umSpinLock
 
@@ -4232,13 +4242,13 @@ umBusy:
 
 umWake:
     mov ds:owner_sel,0
-    sti
     xor al,al
     xchg al,ds:owner_wait
     or al,al
     jz umUnlock
 ;    
     mov ds:owner_lock,0
+    sti
 ;
 ; wake-up processors here!
 ;    
