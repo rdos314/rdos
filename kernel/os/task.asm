@@ -2067,6 +2067,7 @@ gntLoad:
     RemoveBlock
 
 gntRemoveDone:
+    sti
     ret
 GetNextThread    Endp
 
@@ -2275,7 +2276,6 @@ load_retry:
 ;
     mov di,es:p_prio
     InsertBlock
-    mov [di],es
     jmp load_thread_loop
 
 load_reload_timer:
@@ -2705,8 +2705,6 @@ ContinueCurrentThread	Proc near
     je cctPop
 ;    
     InsertBlock
-    mov ds:[di],es
-;
     cmp di,ds:prio_act
     jbe cctPop
 ;
