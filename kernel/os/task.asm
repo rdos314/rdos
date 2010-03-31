@@ -131,6 +131,7 @@ LocalRemoveTimer	MACRO
 	mov cx,fs:[bx].ps_timer_id
 	mov eax,fs:[bx].ps_timer_lsb
 	mov edx,fs:[bx].ps_timer_msb	
+	push es
 	push fs
 	push bx
 	push cs
@@ -144,6 +145,7 @@ LocalRemoveTimer	MACRO
 timer_return:
 	pop bx
 	pop fs
+	pop es
 	mov ax,task_sel
 	mov ds,ax
 	cli
@@ -1973,91 +1975,81 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			UpdateThread
+;		NAME:			GetNextThread
 ;
-;		DESCRIPTION:	Update next thread to run
+;		DESCRIPTION:	Get next thread to run
 ;
 ;		PARAMETERS:	    DS      Task sel
 ;                       FS      Processor selector
 ;
+;       RETURNS:        ES      Thread to run next
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateThread    Proc near
+GetNextThread    Proc near
     sti
-    mov ax,fs:ps_curr_thread
+    mov si,ds:prio_act
+    mov ax,[si]
     or ax,ax
-    jz update_preempt
+    jz gntPreempt
 ;
     mov es,ax
-    mov di,es:p_prio
-    cmp ax,fs:ps_null_thread
-    je update_insert_done
-;    
-    InsertBlock
-
-update_insert_done:
-    cmp di,ds:prio_act
-    jbe update_check_preempt
-;
-    mov ds:prio_act,di
-    
-update_check_preempt:
     test fs:ps_flags,PS_FLAG_PREEMPT
-    jz update_load
+    jz gntLoad
 
-update_preempt:
+gntPreempt:
     and fs:ps_flags,NOT PS_FLAG_PREEMPT    
     cli
-    mov es,fs:ps_curr_thread
-	call ds:update_clock_proc
 	LocalGetSystemTime
+	sti
 	add eax,1193
 	adc edx,0
 	mov fs:ps_preempt_lsb,eax
 	mov fs:ps_preempt_msb,edx
 
-update_int_loop:
+gntIntLoop:
 	mov si,ds:prio_act
 	mov ax,[si]
 	or ax,ax
-	je update_prio_lower
+	je gntPrioLower
 ;	
 	mov es,ax
 	mov ax,es:p_next
 	mov [si],ax
-	jmp update_prio_end	
+	jmp gntPrioEnd	
 	
-update_prio_lower:
+gntPrioLower:
 	sub si,2
-	jnc update_prio_loop
+	jnc gntPrioLoop
 ;	
     xor si,si
-    mov es,fs:ps_null_thread
-    jmp update_prio_done
+    mov ax,fs:ps_null_thread
+    jmp gntPrioDone
 
-update_prio_loop:
+gntPrioLoop:
 	mov ax,[si]
 	or ax,ax
-	jne update_prio_done
+	jne gntPrioDone
 ;	
 	sub si,2
-	jnc update_prio_loop
+	jnc gntPrioLoop
 ;	
     xor si,si
-    mov es,fs:ps_null_thread
+    mov ax,fs:ps_null_thread
 
-update_prio_done:
+gntPrioDone:
 	mov ds:prio_act,si
 
-update_prio_end:
+gntPrioEnd:
 	mov es,ax
 	mov es,es:p_process_sel
 	test es:ms_virt_flags,200h
-	jnz update_int_ok
+	jnz gntIntOk
 ;
 	cmp ax,es:ms_cli_thread
-	jz update_int_ok
+	jz gntIntOk
 ;
+    call ds:lock_list_proc
 	mov ax,es
 	mov si,ds:prio_act
 	RemoveBlock              
@@ -2066,25 +2058,23 @@ update_prio_end:
 	mov di,OFFSET ms_wait_sti
 	InsertBlock
 	pop ds
-	jmp update_int_loop
+    call ds:unlock_list_proc
+	jmp gntIntLoop
 
-update_int_ok:
+gntIntOk:
     mov es,ax
         
-update_load:
+gntLoad:
     mov ax,es
     cmp ax,fs:ps_null_thread
-    je update_remove_done
+    je gntRemoveDone
 ;    
     mov si,es:p_prio
     RemoveBlock
 
-update_remove_done:
-    mov fs:ps_curr_thread,es
-
-update_done:
+gntRemoveDone:
     ret
-UpdateThread    Endp
+GetNextThread    Endp
 
 PAGE
 	
@@ -2247,16 +2237,12 @@ PAGE
 LoadCurrentThread:
 	mov ax,task_sel
 	mov ds,ax
-;
-    mov es,fs:ps_curr_thread
-	cli
-	call ds:update_clock_proc
-    sti	
+    call ds:lock_proc
 
-load_timer_loop:
-    call UpdateThread
-;
-    mov es,fs:ps_curr_thread
+load_thread_loop:
+    call GetNextThread
+
+load_reload_loop:
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
@@ -2279,7 +2265,7 @@ load_check_timer:
 	jc load_reload_timer
 ;	
 	LocalRemoveTimer
-	jmp load_timer_loop
+	jmp load_reload_loop
 
 load_check_preempt:
 	sub eax,fs:ps_preempt_lsb
@@ -2287,13 +2273,22 @@ load_check_preempt:
 	jc load_reload_timer
 ;	
     or fs:ps_flags,PS_FLAG_PREEMPT
-	jmp load_timer_loop
+
+load_retry:
+    mov ax,es
+    cmp ax,fs:ps_null_thread
+    je load_thread_loop
+;
+    mov di,es:p_prio
+    InsertBlock
+    mov [di],es
+    jmp load_thread_loop
 
 load_reload_timer:
 	neg eax
 	call ds:reload_timer_proc
 ;	
-    mov es,fs:ps_curr_thread
+    sti
 	mov ax,gdt_sel
 	mov ds,ax
 	mov bx,es:p_tss_sel
@@ -2347,6 +2342,18 @@ load_actions_done:
     call ds:get_processor_proc
     call ds:unlock_proc
     pop ds
+;
+    test fs:ps_flags,PS_FLAG_PREEMPT
+    jz load_regs
+;
+    mov ax,task_sel
+    mov ds,ax
+    call ds:lock_proc
+    jmp load_retry
+            
+load_regs:
+    cli
+    mov fs:ps_curr_thread,es
 ;
     test dword ptr ds:tss_eflags,20000h
     jnz load_vm
@@ -2674,6 +2681,80 @@ SkipCurrentThread	Proc near
     ret
 SkipCurrentThread   Endp
 
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ContinueCurrentThread
+;
+;		DESCRIPTION:	Continue current thread, by putting it into the ready-list.
+;                       Also releases scheduler lock
+;
+;       PARAMETERS:     FS          Processor selector
+;                       DS          Task sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ContinueCurrentThread	Proc near	
+    push ax
+    push di
+;    
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz cctDone
+;
+    push es
+    mov es,ax
+    mov di,es:p_prio
+    cmp ax,fs:ps_null_thread
+    je cctPop
+;    
+    InsertBlock
+    mov ds:[di],es
+;
+    cmp di,ds:prio_act
+    jbe cctPop
+;
+    mov ds:prio_act,di
+    or fs:ps_flags,PS_FLAG_PREEMPT
+
+cctPop:
+    pop es    
+
+cctDone:
+    mov fs:ps_curr_thread,0
+    call ds:unlock_proc
+;
+    pop di
+    pop ax
+    ret
+ContinueCurrentThread   Endp    
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			BlockCurrentThread
+;
+;		DESCRIPTION:	Block current thread.
+;                       Also releases scheduler lock
+;
+;       PARAMETERS:     FS          Processor selector
+;                       DS          Task sel
+;
+;       RETURNS:        ES          Blocked thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BlockCurrentThread	Proc near	
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+    call ds:unlock_proc
+    ret
+BlockCurrentThread   Endp    
+
 PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2721,10 +2802,26 @@ reload_check_preempt:
 	sbb edx,fs:ps_preempt_msb
 	jc reload_timer_do
 ;
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz reload_preempt_block
+;    
     push OFFSET reload_timer_end
     call SaveLockedThread
+    call ContinueCurrentThread
     or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
+
+reload_preempt_block:
+    cli
+	LocalGetSystemTime
+	sti
+	add eax,1193
+	adc edx,0
+	mov fs:ps_preempt_lsb,eax
+	mov fs:ps_preempt_msb,edx
+    or fs:ps_flags,PS_FLAG_PREEMPT
+    jmp reload_timer_loop
 
 reload_timer_do:
 	neg eax
@@ -3012,7 +3109,7 @@ null_thread:
     mov dword ptr ds:tss_eip, OFFSET ap_null_thread
 ;
     call SkipCurrentThread
-	mov fs:ps_curr_thread,0
+    call BlockCurrentThread
 	or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 
@@ -3034,6 +3131,7 @@ PAGE
 ;
 ;		PARAMETERS:		AX:EDI	Block list. AX = 0, no sleep list
 ;                       FS      Processor sel
+;                       ES      Thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3042,10 +3140,8 @@ BlockThread:
 	mov cx,ax
 	mov ax,task_sel
 	mov ds,ax
-	mov es,fs:ps_curr_thread
-	mov es:p_sleep_sel,ax
+	mov es:p_sleep_sel,cx
 	mov es:p_sleep_offset,edi
-	mov fs:ps_curr_thread,0
 ;
     or cx,cx
     jz rtSchedule
@@ -3107,7 +3203,6 @@ WakeThread	PROC near
     	
 wtUnlock:    
     call ds:unlock_proc
-    sti
 ;
     pop di
     pop bx
@@ -3208,7 +3303,8 @@ debug_exception:
     mov ds,ax
     call ds:try_lock_proc
     jc debug_normal
-;
+
+debug_fault:
     mov ds,fs:ps_null_thread 
     mov ds,ds:p_tss_data_sel  
     pop fs 
@@ -3262,7 +3358,10 @@ debug_exception:
     ShutDownTask
    
 debug_normal:       
-    mov ax,thread_sel
+    mov ax,fs:ps_curr_thread 
+    or ax,ax
+    jz debug_fault
+;    
     mov ds,ax
     mov ds,ds:p_tss_data_sel
     pop fs
@@ -3359,7 +3458,7 @@ debug_save_ok:
     ShutDownTask
     
 debug_block:
-    mov es,ax
+    call BlockCurrentThread
 	mov es:p_error_code,dx
 ;
     mov ax,system_data_sel
@@ -3402,7 +3501,7 @@ double_fault:
     mov es,ax
     mov gs,ax    
 ;
-    mov es,fs:ps_curr_thread
+    call BlockCurrentThread
 	mov es:p_error_code,8
 ;
     mov ax,system_data_sel
@@ -3525,8 +3624,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateLists Proc near
-    push OFFSET ulDone
-    call SaveLockedThread
 
 ulWakeupLoop:
     mov ds:has_list,0
@@ -3593,17 +3690,6 @@ ulSignalNext:
 	jne ulSignalLoop
 
 ulSignalDone:    
-    mov es,fs:ps_curr_thread
-    mov ax,ds:prio_act
-    cmp ax,es:p_prio
-    jbe ulPrioOk
-;
-    or fs:ps_flags,PS_FLAG_PREEMPT
-
-ulPrioOk:
-    jmp LoadCurrentThread
-
-ulDone:
     ret    
 UpdateLists Endp
 
@@ -3835,10 +3921,26 @@ usRetry:
     jnc usRetry
 ;
     sti
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz usBusy
+;    
+    push OFFSET usDone
+    call SaveLockedThread
+    call ContinueCurrentThread
     call UpdateLists
-    cli
+    jmp LoadCurrentThread
+
+usBusy:
+    push es
+    pushad
+    call UpdateLists
+    popad
+    pop es
+    jmp usRetry
 
 usDone:
+    sti
     pop ax
 	ret
 UnlockSingle	Endp
@@ -4022,19 +4124,33 @@ umRetry:
 ;
     mov ds:owner_lock,0
     sti
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz umBusy
+;    
+    push OFFSET umDone
+    call SaveLockedThread
+    call ContinueCurrentThread
     call UpdateLists
-    cli
-    jmp umDone
+    jmp LoadCurrentThread
+
+umBusy:
+    push es
+    pushad
+    call UpdateLists
+    popad
+    pop es
+    jmp umSpinLock
 
 umWake:
     mov ds:owner_sel,0
+    sti
     xor al,al
     xchg al,ds:owner_wait
     or al,al
     jz umUnlock
 ;    
     mov ds:owner_lock,0
-    sti
 ;
 ; wake-up processors here!
 ;    
@@ -4044,6 +4160,7 @@ umUnlock:
     mov ds:owner_lock,0
 
 umDone:
+    sti
     pop ax
 	ret
 UnlockMultiple	Endp
@@ -4384,6 +4501,7 @@ wake_new	PROC near
     mov dx,es
     push OFFSET wake_new_done
     call SaveCurrentThread
+    call ContinueCurrentThread
 ;
     mov es,dx
 	cli
@@ -4420,6 +4538,7 @@ swap_name	DB 'Swap',0
 swap_out	PROC far
     push OFFSET swap_out_done
     call SaveCurrentThread
+    call ContinueCurrentThread
     or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 
@@ -4442,8 +4561,8 @@ PAGE
     
 cleanup_thread:
     call SkipCurrentThread
+    call BlockCurrentThread
 ;    
-    mov es,fs:ps_curr_thread
     mov ax,task_sel
     mov ds,ax
 ;
@@ -4455,7 +4574,6 @@ cleanup_thread:
     mov bx,ds:system_thread
     Signal    
 ;
-	mov fs:ps_curr_thread,0
 	or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
 
@@ -4474,8 +4592,8 @@ PAGE
     
 cleanup_process:
     call SkipCurrentThread
+    call BlockCurrentThread
 ;    
-    mov es,fs:ps_curr_thread
     mov ax,task_sel
     mov ds,ax
 ;
@@ -4487,7 +4605,6 @@ cleanup_process:
     mov bx,ds:system_thread
     Signal    
 ;
-	mov fs:ps_curr_thread,0
 	or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
 
@@ -4543,6 +4660,7 @@ sleep_thread	PROC far
 ;
     push OFFSET sleep_thread_done
     call SaveCurrentThread
+    call BlockCurrentThread
 ;
     movzx edi,di    
     jmp BlockThread
@@ -4679,6 +4797,7 @@ wait_for_signal	PROC far
 ;
     push OFFSET wait_for_signal_clear
     call SaveLockedThread
+    call BlockCurrentThread
 ;
 	mov ax,task_sel
     mov edi,signal_list
@@ -4762,6 +4881,7 @@ wait_for_signal_timeout	PROC far
 ;
     push OFFSET wait_for_signal_timeout_clear
     call SaveLockedThread
+    call BlockCurrentThread
 ;
 	mov ax,task_sel
     mov edi,signal_list
@@ -4844,6 +4964,7 @@ enter_nolock_section	PROC far
 ;
     push OFFSET encsDone
     call SaveLockedThread
+    call BlockCurrentThread
 ;
 	lea edi,[esi].cs_list	
 	jmp BlockThread
@@ -4908,6 +5029,7 @@ eloaded:
 ;
     push OFFSET ecsDone
     call SaveLockedThread
+    call BlockCurrentThread
 ;
 	lea edi,[esi].cs_list	
 	jmp BlockThread
@@ -5351,6 +5473,7 @@ enter_user_section_block:
     mov ax,ds
     push OFFSET enter_user_section_done
     call SaveLockedThread
+    call BlockCurrentThread
 ;
 	lea di,[bx].us_list	
 	movzx edi,di
@@ -5623,15 +5746,18 @@ wait_until_name	DB 'Wait Until',0
 wait_until	PROC far
     push OFFSET wait_until_done
     call SaveCurrentThread
+    call BlockCurrentThread
 ;
+    push es
+	mov cx,es
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
-	mov cx,fs:ps_curr_thread
 	xor bx,bx
 	cli
 	LocalStartTimer
 	sti
+	pop es
 ;
     xor ax,ax
     mov edi,1
@@ -5659,27 +5785,31 @@ wait_milli_name	DB 'Wait Milli Sec',0
 wait_milli_sec	PROC far
     push OFFSET wait_milli_done
     call SaveCurrentThread
+    call BlockCurrentThread
 ;
 	mov bx,1193
 	mul bx
 	push dx
 	push ax
 	pop ebx
-	mov es,fs:ps_curr_thread
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	sti
+;
 	add eax,ebx
 	adc edx,0
+;	
+    push es	
+	mov cx,es
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
-	mov cx,fs:ps_curr_thread
 	xor bx,bx
 	cli
 	LocalStartTimer
 	sti
+	pop es
 ;	
     xor ax,ax
     mov edi,1
@@ -5707,6 +5837,7 @@ wait_micro_name	DB 'Wait Micro Seconds',0
 wait_micro_sec	PROC far
     push OFFSET wait_micro_done
     call SaveCurrentThread
+    call BlockCurrentThread
 ;
 	movzx eax,ax
 	mov ebx,78184
@@ -5715,21 +5846,23 @@ wait_micro_sec	PROC far
 	push eax
 	pop ax
 	pop ebx
-	mov es,fs:ps_curr_thread
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	sti
 	add eax,ebx
 	adc edx,0
+;
+    push es	
+	mov cx,es
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
-	mov cx,fs:ps_curr_thread
 	xor bx,bx
 	cli
 	LocalStartTimer
 	sti
+	pop es
 ;	
     xor ax,ax
     mov edi,1
