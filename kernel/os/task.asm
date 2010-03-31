@@ -3146,7 +3146,6 @@ BlockThread:
     call ds:unlock_list_proc
 
 rtSchedule:	
-    or fs:ps_flags,PS_FLAG_PREEMPT
     jmp LoadCurrentThread
 
 PAGE
