@@ -2341,6 +2341,13 @@ load_suspend_done:
 load_bp_done:
 
 load_actions_done:        
+    push ds
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_processor_proc
+    call ds:unlock_proc
+    pop ds
+;
     test dword ptr ds:tss_eflags,20000h
     jnz load_vm
 ;
@@ -2378,7 +2385,7 @@ load_kernel_es:
 	xor ax,ax
 	
 load_kernel_fs:
-    push ax
+    mov fs,ax
 ;	
     mov ax,word ptr ds:tss_gs
 	verr ax
@@ -2397,15 +2404,8 @@ load_kernel_gs:
 	
 load_kernel_ds:
     push ax
-    push dword ptr ds:tss_eax
-;
-    mov ax,task_sel
-    mov ds,ax
-    call ds:unlock_proc
-;    
-    pop eax
+    mov eax,dword ptr ds:tss_eax
     pop ds
-    pop fs
     iretd
 
 load_pm_app:    
@@ -2442,7 +2442,7 @@ load_pm_app_es:
 	xor ax,ax
 	
 load_pm_app_fs:
-    push ax
+    mov fs,ax
 ;	
     mov ax,word ptr ds:tss_gs
 	verr ax
@@ -2461,15 +2461,8 @@ load_pm_app_gs:
 	
 load_pm_app_ds:
     push ax
-    push dword ptr ds:tss_eax
-;    
-    mov ax,task_sel
-    mov ds,ax
-    call ds:unlock_proc
-;    
-    pop eax
+    mov eax,dword ptr ds:tss_eax
     pop ds
-    pop fs
     iretd
 
 load_vm:
@@ -2494,12 +2487,6 @@ load_vm:
     mov ebp,dword ptr ds:tss_ebp
     mov esi,dword ptr ds:tss_esi
     mov edi,dword ptr ds:tss_edi
-;
-    push ax
-    mov ax,task_sel
-    mov ds,ax
-    call ds:unlock_proc
-    pop ax
     iretd
 
 PAGE	
@@ -3120,6 +3107,7 @@ WakeThread	PROC near
     	
 wtUnlock:    
     call ds:unlock_proc
+    sti
 ;
     pop di
     pop bx
@@ -3128,6 +3116,76 @@ wtUnlock:
     pop ds
 	ret
 WakeThread	ENDP
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Shutdown
+;
+;		DESCRIPTION:	Shutdown
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Shutdown proc near
+    push ds
+    push fs
+;
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_processor_proc
+    mov ds,fs:ps_null_thread 
+    mov ds,ds:p_tss_data_sel  
+;    
+	mov dword ptr ds:tss_ebx,ebx
+    mov dword ptr ds:tss_ecx,ecx
+    mov dword ptr ds:tss_edx,edx
+    mov dword ptr ds:tss_esi,esi
+    mov dword ptr ds:tss_edi,edi
+	mov dword ptr ds:tss_ebp,ebp
+;
+    pop ax
+	mov ds:tss_fs,ax
+;
+    pop ax	
+	mov ds:tss_ds,ax
+;
+	mov ax,es
+	mov ds:tss_es,ax
+	mov ax,gs
+	mov ds:tss_gs,ax
+;
+    pushfd
+	pop dword ptr ds:tss_eflags
+;	
+	mov ax,cs
+	mov ds:tss_cs,ax
+	pop ax
+	movzx eax,ax
+	mov dword ptr ds:tss_eip,eax
+;
+    pop ax
+	mov dword ptr ds:tss_eax,eax
+;
+    mov ax,ss
+    mov ds:tss_ss,ax
+;    
+    mov ax,sp
+    movzx eax,ax
+	mov dword ptr ds:tss_esp,eax
+;	
+    mov es,fs:ps_null_thread 
+    mov ax,task_sel
+    mov ds,ax
+	mov es:p_error_code,3
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov di,OFFSET debug_list
+    InsertBlock
+    ShutDownTask
+Shutdown    Endp    
 
 PAGE	
 
@@ -3607,6 +3665,7 @@ llSpinLock:
     or ax,ax
     je llGet
 ;
+    call Shutdown
     pause
     jmp llSpinLock
 
@@ -3615,8 +3674,12 @@ llGet:
     inc ax
     xchg ax,ds:list_lock
     or ax,ax
-    jne llSpinLock
+    je llDone
 ;
+    call Shutdown
+    jmp llSpinLock
+
+llDone:
     pop ax    
 	ret
 LockListMultiple	Endp
@@ -3736,7 +3799,7 @@ LockSingle	Proc near
 	add fs:ps_nesting,1
 	jc lsDone
 ;
-    CpuReset
+    call Shutdown
 
 lsDone:    	
 	ret
@@ -3760,6 +3823,7 @@ UnlockSingle	Proc near
     push ax
     
 usRetry:    
+    cli
     sub fs:ps_nesting,1
 	jnc usDone
 ;	
@@ -3770,7 +3834,9 @@ usRetry:
     add fs:ps_nesting,1
     jnc usRetry
 ;
+    sti
     call UpdateLists
+    cli
 
 usDone:
     pop ax
@@ -3957,7 +4023,8 @@ umRetry:
     mov ds:owner_lock,0
     sti
     call UpdateLists
-    jmp umSpinLock
+    cli
+    jmp umDone
 
 umWake:
     mov ds:owner_sel,0
@@ -3977,7 +4044,6 @@ umUnlock:
     mov ds:owner_lock,0
 
 umDone:
-    sti
     pop ax
 	ret
 UnlockMultiple	Endp
@@ -4815,11 +4881,26 @@ enter_section	PROC far
     push ds
     push fs
     push ax
-    push dx
+    push ecx
+    push edx
 ;    
     mov ax,ds
     mov dx,task_sel
     mov ds,dx
+;    
+    push bp
+    mov bp,sp
+    mov cx,bp
+    add cx,62 + 4
+    cmp cx,stack0_size
+    ja eloaded
+;
+    mov ecx,[bp+18]
+    mov edx,[bp+62]
+
+eloaded:
+    pop bp
+;    
     call ds:lock_proc
     mov ds,ax
 	lock sub ds:[esi].cs_value,1
@@ -4832,11 +4913,13 @@ enter_section	PROC far
 	jmp BlockThread
 
 ecsUnlock:
+    mov dx,task_sel
     mov ds,dx
     call ds:unlock_proc
     	
 ecsDone:
-    pop dx
+    pop edx
+    pop ecx
     pop ax
     pop fs
     pop ds
