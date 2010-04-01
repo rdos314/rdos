@@ -3162,7 +3162,19 @@ start_processor_null_threads    Proc near
 	mov ds:try_lock_proc,OFFSET TryLockSingle
 	mov ds:lock_proc,OFFSET LockSingle
 	mov ds:unlock_proc,OFFSET UnlockSingle
-;    
+    mov ds:lock_list_proc,OFFSET LockListSingle
+    mov ds:unlock_list_proc,OFFSET UnlockListSingle
+    mov cx,ds:processor_count
+    cmp cx,1
+    jne start_locks_ok
+;
+	mov ds:try_lock_proc,OFFSET TryLockMultiple
+	mov ds:lock_proc,OFFSET LockMultiple
+	mov ds:unlock_proc,OFFSET UnlockMultiple
+    mov ds:lock_list_proc,OFFSET LockListMultiple
+    mov ds:unlock_list_proc,OFFSET UnlockListMultiple
+
+start_locks_ok:    
 	mov ax,system_data_sel
 	mov ds,ax
 ;
