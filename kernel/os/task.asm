@@ -5191,8 +5191,6 @@ PAGE
     public enter_phys_section
     
 enter_phys_section	PROC near
-    pushf
-;    
 	cli
 	sub ds:[esi].cs_value,1
 	jc efcsDone
@@ -5211,7 +5209,6 @@ enter_phys_section	PROC near
     pop ds    
     	
 efcsDone:
-    popf
 	ret
 enter_phys_section	ENDP
 
@@ -5231,7 +5228,6 @@ PAGE
     public leave_phys_section
     
 leave_phys_section	PROC near
-    pushf
 	cli
 	add ds:[esi].cs_value,1
 	jc lfcsDone
@@ -5250,7 +5246,7 @@ leave_phys_section	PROC near
     pop ds    
 
 lfcsDone:
-    popf
+    sti
 	ret
 leave_phys_section	ENDP
 
