@@ -1185,7 +1185,7 @@ upResetDone:
     jmp upDone
             
 upNotify:
-    mov ax,100
+    mov ax,200
     WaitMilliSec
 ;    
     xor ah,ah

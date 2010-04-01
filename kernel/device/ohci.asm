@@ -2357,7 +2357,7 @@ upResetLoop:
     mov es:[si].HcRhPortStatus,eax
     
 epNotify:
-    mov ax,100
+    mov ax,200
     WaitMilliSec
 ;    
     mov eax,es:[si].HcRhPortStatus

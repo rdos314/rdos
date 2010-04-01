@@ -2319,7 +2319,7 @@ upAttach:
 
 epNotify:
     push ax
-    mov ax,100
+    mov ax,200
     WaitMilliSec
     pop ax
 ;    

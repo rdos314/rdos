@@ -3166,7 +3166,7 @@ start_processor_null_threads    Proc near
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
     mov cx,ds:processor_count
     cmp cx,1
-    jne start_locks_ok
+    jbe start_locks_ok
 ;
 	mov ds:try_lock_proc,OFFSET TryLockMultiple
 	mov ds:lock_proc,OFFSET LockMultiple
