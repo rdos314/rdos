@@ -3253,6 +3253,7 @@ null_thread:
     call SkipCurrentThread
 ;
     xor ax,ax
+    xor edi,edi
     call BlockCurrentThread
     jmp LoadCurrentThread
 
