@@ -900,13 +900,16 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3 
+    GetProcessor
+    mov edx,fs:ps_apic
+;    
     mov ax,apic_data_sel
     mov ds,ax
     mov eax,ds:mp_processor_sign
     mov edx,ds:mp_apic
     mov fs,ds:mp_processor_sel
-
-
+    mov edx,fs:ps_apic
+;
     
     GetProcessor
     mov al,80h
@@ -1203,7 +1206,9 @@ init_apic_msr:
     call SetupMsrGates
 
 init_apic_start_cpu:
+    GetProcessor
     GetApicId
+    mov fs:ps_apic,edx
     xor dl,1    
     call StartCore
     jc init_apic_gates_ok

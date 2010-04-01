@@ -3685,6 +3685,7 @@ create_processor	Proc far
     mov es:ps_flags,0
     mov es:ps_null_thread,0
     mov es:ps_skip_thread,-1
+    mov es:ps_apic,-1
 ;
 	mov bx,OFFSET ps_timer_entries
 	mov es:[bx].ps_timer_next,0
