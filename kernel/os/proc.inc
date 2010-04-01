@@ -52,6 +52,7 @@ ps_skip_thread      DW ?
 ps_last_thread      DW ?
 ps_flags            DW ?
 ps_null_thread      DW ?
+ps_apic             DD ?
 
 ps_preempt_lsb      DD ?
 ps_preempt_msb	    DD ?

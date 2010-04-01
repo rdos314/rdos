@@ -39,6 +39,7 @@ INCLUDE ..\driver.def
 INCLUDE port.def
 INCLUDE system.def
 INCLUDE apic.inc
+INCLUDE proc.inc
 
 apic_data_seg	STRUC
 
@@ -47,6 +48,10 @@ mp_startup_proc     DW ?
 mp_int_proc         DW ?
 
 mp_thread           DW ?
+
+mp_processor_sign   DD ?
+mp_apic             DD ?
+mp_processor_sel    DW ?
 
 apic_arr            DW 256 DUP(?)
 
@@ -153,16 +158,16 @@ prot_start:
 ;
     mov ax,20h
     mov es,ax
-    mov eax,es:ps_cr3
+    mov eax,es:ap_cr3
     mov cr3,eax
 ;    
     db 66h
-    lgdt fword ptr es:ps_gdt
+    lgdt fword ptr es:ap_gdt
 ;    
     db 66h
-    lidt fword ptr es:ps_idt
+    lidt fword ptr es:ap_idt
 ;
-    mov dx,es:ps_ss
+    mov dx,es:ap_ss
 ;    
     mov eax,cr0
     or eax,80000000h        
@@ -187,10 +192,10 @@ prot_end:
 
 page_struc  STRUC
 
-ps_ss   DW ?
-ps_cr3  DD ?
-ps_gdt  DB 6 DUP(?)
-ps_idt  DB 6 DUP(?)
+ap_ss   DW ?
+ap_cr3  DD ?
+ap_gdt  DB 6 DUP(?)
+ap_idt  DB 6 DUP(?)
 
 page_struc  ENDS
     
@@ -218,13 +223,16 @@ ApInit:
 ;    
     call InitApic
 ;
-    mov bx,0F00h
+    mov ax,apic_data_sel
+    mov ds,ax
     mov eax,12345678h
-    mov [bx],eax
-;
+    mov ds:mp_processor_sign,eax
+    GetApicId
+    mov ds:mp_apic,edx
     sti
     hlt
     int 3
+
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -614,9 +622,7 @@ SendIntMsr Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-send_int_name    DB 'Send Int',0
-
-send_int Proc far
+SendInt Proc near
     push ds
     push ax
     push bx
@@ -629,7 +635,24 @@ send_int Proc far
     pop ax
     pop ds    
     ret
-send_int Endp
+SendInt Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendProcessorResume
+;
+;		DESCRIPTION:	Send a resume request
+;
+;       PARAMETERS:     FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_processor_resume_name    DB 'Send Processor Resume',0
+
+send_processor_resume  Proc far
+    ret
+send_processor_resume  Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -657,10 +680,10 @@ SetupMemGates   Proc near
 	mov ax,get_apic_id_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET send_int
-	mov di,OFFSET send_int_name
+	mov si,OFFSET send_processor_resume
+	mov di,OFFSET send_processor_resume_name
 	xor cl,cl
-	mov ax,send_int_nr
+	mov ax,send_processor_resume_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_processor_mem
@@ -722,8 +745,12 @@ SetupMsrGates   Endp
 StartCore   Proc near
     push ds
     push es
+    push fs
     pushad
 ;
+    mov ax,apic_data_sel
+    mov fs,ax
+;    
     mov ebp,edx    
     mov eax,2000h
     AllocateBigLinear
@@ -760,20 +787,20 @@ StartCore   Proc near
 ;
     mov di,1800h
     mov eax,cr3
-    mov es:[di].ps_cr3,eax
+    mov es:[di].ap_cr3,eax
 ;
     db 66h
-    sgdt fword ptr es:[di].ps_gdt
+    sgdt fword ptr es:[di].ap_gdt
 ;
     db 66h
-    sidt fword ptr es:[di].ps_idt
+    sidt fword ptr es:[di].ap_idt
 ;
     push es
     mov eax,200h
     AllocateSmallGlobalMem
     mov ax,es
     pop es
-    mov es:[di].ps_ss,ax
+    mov es:[di].ap_ss,ax
 ;
     mov bx,467h
     mov ax,0
@@ -789,14 +816,12 @@ StartCore   Proc near
     out 71h,al
   	jmp short $+2
 ;
-    mov bx,0F00h
-    xor eax,eax
-    mov es:[ebx],eax
+    mov fs:mp_processor_sign,0
 ;
     xchg edx,ebp
     call SendInit
 ;
-    mov eax,es:[ebx]
+    mov eax,fs:mp_processor_sign
     cmp eax,12345678h
     je scOk
 ;    
@@ -806,7 +831,7 @@ StartCore   Proc near
     mov cx,250
 
 scLoop1:
-    mov eax,es:[ebx]
+    mov eax,fs:mp_processor_sign
     cmp eax,12345678h
     je scOk
 ;    
@@ -820,7 +845,7 @@ scLoop1:
     mov cx,250
 
 scLoop2:
-    mov eax,es:[ebx]
+    mov eax,fs:mp_processor_sign
     cmp eax,12345678h
     je scOk
 ;    
@@ -856,6 +881,7 @@ scDone:
 ;
     popf   
     popad
+    pop fs
     pop es
     pop ds
     ret
@@ -874,10 +900,21 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3 
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov eax,ds:mp_processor_sign
+    mov edx,ds:mp_apic
+    mov fs,ds:mp_processor_sel
+
+
+    
     GetProcessor
     mov al,80h
     mov edx,1
-    SendInt
+
+    SendProcessorResume
+    SendProcessorResume
+    SendProcessorResume
     int 3
     
     mov eax,05F504D5Fh
@@ -1171,7 +1208,17 @@ init_apic_start_cpu:
     call StartCore
     jc init_apic_gates_ok
 ;    
-    CreateProcessor
+    CreateProcessor    
+	mov bx,apic_data_sel
+	mov ds,bx
+    mov ds:mp_processor_sel,es
+;
+    movzx bx,dl
+    add bx,bx
+    mov [bx].apic_arr,ax
+;
+    mov edx,ds:mp_apic
+    mov es:ps_apic,edx
 
 init_apic_gates_ok:     
     mov ax,cs

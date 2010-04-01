@@ -2355,8 +2355,8 @@ PAGE
 LoadCurrentThread:
 	mov ax,task_sel
 	mov ds,ax
-    and fs:ps_flags,NOT PS_FLAG_TIMER	
     call ds:lock_proc
+    and fs:ps_flags,NOT PS_FLAG_TIMER	
 
 load_thread_loop:
     call GetNextThread
@@ -2990,9 +2990,18 @@ PAGE
     public init_cpu
 
 init_cpu:
-    hlt
-    jmp init_cpu
-    int 3
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_processor_proc
+    mov ax,flat_sel
+    mov ds,ax
+    mov bx,0F08h
+    mov [bx],fs
+    mov ax,fs:ps_null_thread
+    mov [bx+2],ax
+;
+    or fs:ps_flags,PS_FLAG_PREEMPT    
+    jmp LoadCurrentThread
     
 PAGE
 
@@ -3173,6 +3182,7 @@ start_processor_null_threads    Proc near
 	mov ds:unlock_proc,OFFSET UnlockMultiple
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
+    mov ds:get_processor_proc,OFFSET GetProcessorMultiple
 
 start_locks_ok:    
     mov ax,system_data_sel
@@ -3241,13 +3251,17 @@ null_base   DB 'Null'
 
 null_thread0:
     GetProcessor
-    mov es,fs:ps_null_thread
-    mov ds,es:p_tss_data_sel
-    mov dword ptr ds:tss_eip, OFFSET null_loop
-    mov eax,dword ptr ds:tss_esp0
-    mov dword ptr ds:tss_esp,eax
-    mov fs:ps_skip_thread,es
-    jmp null_loop
+    GetThread
+    mov fs:ps_null_thread,ax
+;    mov fs:ps_skip_thread,ax
+;
+    push OFFSET null_loop
+    call SaveCurrentThread
+;
+    xor ax,ax
+    xor edi,edi
+    call BlockCurrentThread
+    jmp LoadCurrentThread
 
 null_thread:
     sti
@@ -3256,19 +3270,15 @@ null_thread:
     mov fs,ds:[bx]
     GetThread
     mov fs:ps_null_thread,ax
-    mov fs:ps_skip_thread,ax
-    mov es,ax
-    mov ds,es:p_tss_data_sel
-    mov dword ptr ds:tss_eip, OFFSET ap_null_thread
+;    mov fs:ps_skip_thread,ax
 ;
-    call SkipCurrentThread
+    push OFFSET null_loop
+    call SaveCurrentThread
 ;
     xor ax,ax
     xor edi,edi
     call BlockCurrentThread
     jmp LoadCurrentThread
-
-ap_null_thread:
 	
 null_loop:
 	hlt
@@ -3873,7 +3883,7 @@ llSpinLock:
     or ax,ax
     je llGet
 ;
-    call Shutdown
+;    call Shutdown
     pause
     jmp llSpinLock
 
@@ -3884,7 +3894,7 @@ llGet:
     or ax,ax
     je llDone
 ;
-    call Shutdown
+;    call Shutdown
     jmp llSpinLock
 
 llDone:
@@ -4342,7 +4352,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetProcessorMulti   Proc near
+GetProcessorMultiple   Proc near
     push ax
     push bx
     mov ax,task_sel
@@ -4354,7 +4364,7 @@ GetProcessorMulti   Proc near
     pop bx
     pop ax
     ret
-GetProcessorMulti   Endp
+GetProcessorMultiple   Endp
 
 PAGE	
 
@@ -4557,7 +4567,7 @@ PAGE
 init_first_thread:
 	mov ax,task_sel
 	mov ds,ax
-	call ds:lock_proc
+;	call ds:lock_proc
 	mov di,es:p_prio
 	mov ds:prio_act,di
 	InsertBlock

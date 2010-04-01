@@ -615,10 +615,9 @@ GetProcessor    MACRO
 	OsGate get_processor_nr
 						ENDM
 
-;   IN  EDX     Processor #
-;   IN  AL      Vector #
-SendInt    MACRO
-	OsGate send_int_nr
+;   IN  FS      Processor selector
+SendProcessorResume    MACRO
+	OsGate send_processor_resume_nr
 						ENDM
 
 EnterInt    MACRO
