@@ -3175,11 +3175,10 @@ start_processor_null_threads    Proc near
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
 
 start_locks_ok:    
-	mov ax,system_data_sel
-	mov ds,ax
-;
-    mov esi,OFFSET phys_section
-    call enter_phys_section     ; lock section and use lock/unlock method
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:phys_lock_proc,OFFSET PhysLock
+    mov ds:phys_unlock_proc,OFFSET PhysUnlock
 ;
     mov ax,1
     mov ecx,200h
@@ -5080,10 +5079,10 @@ enter_section_name	DB 'Enter Critical Section',0
     
 enter_section	PROC far
     pushf
-    push ds
-    push fs
     push ax
     push dx
+    push ds
+    push fs
 ;    
     mov ax,ds
     mov dx,task_sel
@@ -5107,10 +5106,26 @@ ecsUnlock:
     call ds:unlock_proc
     	
 ecsDone:
+    pop ax
+	verr ax
+	jz ecsFs
+;
+	xor ax,ax
+	
+ecsFs:
+	mov fs,ax
+;
+    pop ax
+	verr ax
+	jz ecsDs
+;
+	xor ax,ax
+	
+ecsDs:
+	mov ds,ax
+;
     pop dx
     pop ax
-    pop fs
-    pop ds
     popf
 	ret
 enter_section	ENDP
@@ -5159,6 +5174,90 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:		    PhysLockDefault
+;
+;		DESCRIPTION:	Lock physical section, pretasking version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PhysLockDefault    Proc near
+    ret
+PhysLockDefault    Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			PhysUnlockDefault
+;
+;		DESCRIPTION:	Unlock physical section, pretasking version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+PhysUnlockDefault	PROC near
+	ret
+PhysUnlockDefault	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:		    PhysLock
+;
+;		DESCRIPTION:	Lock physical section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PhysLock    Proc near
+    push ds
+    push fs
+    push ax
+;
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_processor_proc
+    call ds:lock_list_proc
+;    
+    pop ax
+    pop fs
+    pop ds
+    ret
+PhysLock    Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			PhysUnlock
+;
+;		DESCRIPTION:	Unlock physical section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+PhysUnlock	PROC near
+    push ds
+    push fs
+    push ax
+;
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_processor_proc
+    call ds:unlock_list_proc
+;
+    pop ax
+    pop fs
+    pop ds    
+	ret
+PhysUnlock	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			InitPhysSection
 ;
 ;		DESCRIPTION:	Init physical section
@@ -5170,8 +5269,8 @@ PAGE
     public init_phys_section
 
 init_phys_section	PROC near
-	mov ds:[esi].cs_value,0
-	mov ds:[esi].cs_list,0
+    mov ds:phys_lock_proc,OFFSET PhysLockDefault
+    mov ds:phys_unlock_proc,OFFSET PhysUnlockDefault
     ret
 init_phys_section    ENDP
     
@@ -5191,24 +5290,7 @@ PAGE
     public enter_phys_section
     
 enter_phys_section	PROC near
-	cli
-	sub ds:[esi].cs_value,1
-	jc efcsDone
-;
-    push ds
-    push fs
-    push ax
-;
-    mov ax,task_sel
-    mov ds,ax
-    call ds:get_processor_proc
-    call ds:lock_list_proc
-;
-    pop ax
-    pop fs
-    pop ds    
-    	
-efcsDone:
+    call ds:phys_lock_proc
 	ret
 enter_phys_section	ENDP
 
@@ -5228,25 +5310,7 @@ PAGE
     public leave_phys_section
     
 leave_phys_section	PROC near
-	cli
-	add ds:[esi].cs_value,1
-	jc lfcsDone
-;
-    push ds
-    push fs
-    push ax
-;
-    mov ax,task_sel
-    mov ds,ax
-    call ds:get_processor_proc
-    call ds:unlock_list_proc
-;
-    pop ax
-    pop fs
-    pop ds    
-
-lfcsDone:
-    sti
+    call ds:phys_unlock_proc
 	ret
 leave_phys_section	ENDP
 

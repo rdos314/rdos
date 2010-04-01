@@ -115,6 +115,9 @@ tsc_rest            DW ?
 apic_tics           DD ?
 apic_rest           DW ?
 
+phys_lock_proc      DW ?
+phys_unlock_proc    DW ?
+
 system_size			DB ?
 
 system_seg	ENDS
