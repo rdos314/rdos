@@ -807,8 +807,8 @@ init_task	PROC near
 	mov ds:try_lock_proc,OFFSET TryLockDefault
 	mov ds:lock_proc,OFFSET LockDefault
 	mov ds:unlock_proc,OFFSET UnlockDefault
-    mov ds:lock_list_proc,OFFSET LockListMultiple
-    mov ds:unlock_list_proc,OFFSET UnlockListMultiple
+    mov ds:lock_list_proc,OFFSET LockListSingle
+    mov ds:unlock_list_proc,OFFSET UnlockListSingle
     mov ds:get_processor_proc,OFFSET GetProcessorSingle
 	mov ds:signal_list,0
 	mov ds:wakeup_list,0
@@ -2863,7 +2863,8 @@ PAGE
 ;		DESCRIPTION:	Block current thread.
 ;                       Also releases scheduler lock
 ;
-;       PARAMETERS:     FS          Processor selector
+;		PARAMETERS:		AX:EDI	    Block list. AX = 0, no sleep list
+;                       FS          Processor selector
 ;                       DS          Task sel
 ;
 ;       RETURNS:        ES          Blocked thread
@@ -2873,6 +2874,21 @@ PAGE
 BlockCurrentThread	Proc near	
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
+;
+	mov es:p_sleep_sel,ax
+	mov es:p_sleep_offset,edi
+;
+    or ax,ax
+    jz bctUnlock
+;    
+    push ds
+    call ds:lock_list_proc	
+	mov ds,ax
+	InsertBlock32
+	pop ds
+    call ds:unlock_list_proc
+
+bctUnlock:	
     call ds:unlock_proc
     ret
 BlockCurrentThread   Endp    
@@ -3143,9 +3159,9 @@ PAGE
 start_processor_null_threads    Proc near
 	mov ax,task_sel
 	mov ds,ax
-	mov ds:try_lock_proc,OFFSET TryLockMultiple
-	mov ds:lock_proc,OFFSET LockMultiple
-	mov ds:unlock_proc,OFFSET UnlockMultiple
+	mov ds:try_lock_proc,OFFSET TryLockSingle
+	mov ds:lock_proc,OFFSET LockSingle
+	mov ds:unlock_proc,OFFSET UnlockSingle
 ;    
 	mov ax,system_data_sel
 	mov ds,ax
@@ -3235,6 +3251,8 @@ null_thread:
     mov dword ptr ds:tss_eip, OFFSET ap_null_thread
 ;
     call SkipCurrentThread
+;
+    xor ax,ax
     call BlockCurrentThread
     jmp LoadCurrentThread
 
@@ -3243,43 +3261,6 @@ ap_null_thread:
 null_loop:
 	hlt
 	jmp null_loop
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			BlockThread
-;
-;		DESCRIPTION:	Block thread and schedule next thread. Registers
-;                       must be saved before doing call this procedure
-;
-;		PARAMETERS:		AX:EDI	Block list. AX = 0, no sleep list
-;                       FS      Processor sel
-;                       ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BlockThread:    
-    sti
-	mov cx,ax
-	mov ax,task_sel
-	mov ds,ax
-	mov es:p_sleep_sel,cx
-	mov es:p_sleep_offset,edi
-;
-    or cx,cx
-    jz rtSchedule
-;    
-    call ds:lock_list_proc	
-	mov ds,cx
-	InsertBlock32
-	mov ax,task_sel
-	mov ds,ax
-    call ds:unlock_list_proc
-
-rtSchedule:	
-    jmp LoadCurrentThread
 
 PAGE
 
@@ -3582,12 +3563,13 @@ debug_save_ok:
     ShutDownTask
     
 debug_block:
-    call BlockCurrentThread
+    mov es,fs:ps_curr_thread
 	mov es:p_error_code,dx
 ;
     mov ax,system_data_sel
 	mov edi,OFFSET debug_list	
-	jmp BlockThread
+    call BlockCurrentThread
+	jmp LoadCurrentThread
 
 PAGE	
 
@@ -3625,12 +3607,13 @@ double_fault:
     mov es,ax
     mov gs,ax    
 ;
-    call BlockCurrentThread
+    mov es,fs:ps_curr_thread
 	mov es:p_error_code,8
 ;
     mov ax,system_data_sel
 	mov edi,OFFSET debug_list	
-	jmp BlockThread
+    call BlockCurrentThread
+	jmp LoadCurrentThread
 
 PAGE	
 
@@ -4064,8 +4047,8 @@ usTimerOk:
 ;    
     push OFFSET usDone
     call SaveLockedThread
-    call ContinueCurrentThread
     call UpdateLists
+    call ContinueCurrentThread
     jmp LoadCurrentThread
 
 usBusy:
@@ -4267,8 +4250,8 @@ umRetry:
 ;    
     push OFFSET umDone
     call SaveLockedThread
-    call ContinueCurrentThread
     call UpdateLists
+    call ContinueCurrentThread
     jmp LoadCurrentThread
 
 umBusy:
@@ -4651,7 +4634,6 @@ wake_new	PROC near
     mov dx,es
     push OFFSET wake_new_done
     call SaveCurrentThread
-    call ContinueCurrentThread
 ;
     mov es,dx
 	cli
@@ -4664,6 +4646,7 @@ wake_new	PROC near
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 wake_new_lower:
+    call ContinueCurrentThread
     jmp LoadCurrentThread
 
 wake_new_done:
@@ -4710,19 +4693,13 @@ PAGE
     
 cleanup_thread:
     call SkipCurrentThread
-    call BlockCurrentThread
-;    
-    mov ax,task_sel
-    mov ds,ax
-;
-    call ds:lock_list_proc
-    mov di,OFFSET term_thread_list
-    InsertBlock
-    call ds:unlock_list_proc
 ;    
     mov bx,ds:system_thread
     Signal    
 ;
+    mov ax,task_sel
+    mov edi,OFFSET term_thread_list
+    call BlockCurrentThread
     jmp LoadCurrentThread
 
 PAGE
@@ -4740,19 +4717,13 @@ PAGE
     
 cleanup_process:
     call SkipCurrentThread
-    call BlockCurrentThread
-;    
-    mov ax,task_sel
-    mov ds,ax
-;
-    call ds:lock_list_proc
-    mov di,OFFSET term_proc_list
-    InsertBlock
-    call ds:unlock_list_proc
 ;    
     mov bx,ds:system_thread
     Signal    
 ;
+    mov ax,task_sel
+    mov edi,OFFSET term_proc_list
+    call BlockCurrentThread
     jmp LoadCurrentThread
 
 PAGE
@@ -4807,10 +4778,10 @@ sleep_thread	PROC far
 ;
     push OFFSET sleep_thread_done
     call SaveCurrentThread
-    call BlockCurrentThread
 ;
     movzx edi,di    
-    jmp BlockThread
+    call BlockCurrentThread
+    jmp LoadCurrentThread
 
 sleep_thread_done:
 	mov ax,thread_sel
@@ -4944,11 +4915,11 @@ wait_for_signal	PROC far
 ;
     push OFFSET wait_for_signal_clear
     call SaveLockedThread
-    call BlockCurrentThread
 ;
 	mov ax,task_sel
-    mov edi,signal_list
-    jmp BlockThread
+    mov edi,OFFSET signal_list
+    call BlockCurrentThread
+    jmp LoadCurrentThread
 
 wait_for_signal_clear:
     mov ax,task_sel
@@ -5028,11 +4999,11 @@ wait_for_signal_timeout	PROC far
 ;
     push OFFSET wait_for_signal_timeout_clear
     call SaveLockedThread
-    call BlockCurrentThread
 ;
 	mov ax,task_sel
-    mov edi,signal_list
-    jmp BlockThread
+    mov edi,OFFSET signal_list
+    call BlockCurrentThread
+    jmp LoadCurrentThread
 
 wait_for_signal_timeout_clear:
     mov ax,task_sel
@@ -5112,10 +5083,10 @@ enter_section	PROC far
 ;
     push OFFSET ecsDone
     call SaveLockedThread
-    call BlockCurrentThread
 ;
 	lea edi,[esi].cs_list	
-	jmp BlockThread
+    call BlockCurrentThread
+	jmp LoadCurrentThread
 
 ecsUnlock:
     mov dx,task_sel
@@ -5555,11 +5526,11 @@ enter_user_section_block:
     mov ax,ds
     push OFFSET enter_user_section_done
     call SaveLockedThread
-    call BlockCurrentThread
 ;
 	lea di,[bx].us_list	
 	movzx edi,di
-	jmp BlockThread
+    call BlockCurrentThread
+	jmp LoadCurrentThread
 
 enter_user_section_unlock:
 	str ax
@@ -5828,10 +5799,8 @@ wait_until_name	DB 'Wait Until',0
 wait_until	PROC far
     push OFFSET wait_until_done
     call SaveCurrentThread
-    call BlockCurrentThread
 ;
-    push es
-	mov cx,es
+	mov cx,fs:ps_curr_thread
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
@@ -5839,11 +5808,11 @@ wait_until	PROC far
 	cli
 	LocalStartTimer
 	sti
-	pop es
 ;
-    xor ax,ax
+    xor ax,ax    
     mov edi,1
-    jmp BlockThread
+    call BlockCurrentThread
+    jmp LoadCurrentThread
 
 wait_until_done:
 	retf32
@@ -5867,8 +5836,8 @@ wait_milli_name	DB 'Wait Milli Sec',0
 wait_milli_sec	PROC far
     push OFFSET wait_milli_done
     call SaveCurrentThread
-    call BlockCurrentThread
 ;
+	mov es,fs:ps_curr_thread
 	mov bx,1193
 	mul bx
 	push dx
@@ -5882,7 +5851,6 @@ wait_milli_sec	PROC far
 	add eax,ebx
 	adc edx,0
 ;	
-    push es	
 	mov cx,es
 	mov bx,cs
 	mov es,bx
@@ -5890,12 +5858,12 @@ wait_milli_sec	PROC far
 	xor bx,bx
 	cli
 	LocalStartTimer
-	sti
-	pop es
-;	
+	sti	
+;    
     xor ax,ax
     mov edi,1
-    jmp BlockThread
+    call BlockCurrentThread
+    jmp LoadCurrentThread
 
 wait_milli_done:
 	retf32
@@ -5919,8 +5887,8 @@ wait_micro_name	DB 'Wait Micro Seconds',0
 wait_micro_sec	PROC far
     push OFFSET wait_micro_done
     call SaveCurrentThread
-    call BlockCurrentThread
 ;
+	mov es,fs:ps_curr_thread
 	movzx eax,ax
 	mov ebx,78184
 	mul ebx
@@ -5935,7 +5903,6 @@ wait_micro_sec	PROC far
 	add eax,ebx
 	adc edx,0
 ;
-    push es	
 	mov cx,es
 	mov bx,cs
 	mov es,bx
@@ -5944,11 +5911,11 @@ wait_micro_sec	PROC far
 	cli
 	LocalStartTimer
 	sti
-	pop es
-;	
+;    
     xor ax,ax
     mov edi,1
-    jmp BlockThread
+    call BlockCurrentThread
+    jmp LoadCurrentThread
 
 wait_micro_done:
 	retf32
