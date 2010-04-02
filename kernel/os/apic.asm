@@ -237,14 +237,7 @@ ApInit:
     mov ds:mp_apic,edx
     sti
     hlt
-    add ds:mp_processor_sign,11111111h
-    sti
-    hlt
-    add ds:mp_processor_sign,11111111h
-    sti
-    hlt
-    int 3
-
+    StartProcessor
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -766,6 +759,19 @@ SendEoiMsr Endp
 send_processor_resume_name    DB 'Send Processor Resume',0
 
 send_processor_resume  Proc far
+    push ds
+    push ax
+    push edx
+;
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov al,80h
+    mov edx,fs:ps_apic
+    call ds:mp_int_proc
+;
+    pop edx
+    pop ax
+    pop ds
     ret
 send_processor_resume  Endp
        
@@ -1025,23 +1031,13 @@ apic_pr:
     mov eax,ds:mp_processor_sign
     mov edx,ds:mp_apic
     mov fs,ds:mp_processor_sel
-    mov edx,fs:ps_apic
 ;
-    mov edx,ds:mp_apic
-    mov al,80h
-    call SendInt
-;
+    SendProcessorResume
     mov eax,ds:mp_processor_sign
 ;
-    mov edx,ds:mp_apic
-    mov al,80h
-    call SendInt
-;
+    SendProcessorResume
     mov eax,ds:mp_processor_sign
 
-    SendProcessorResume
-    SendProcessorResume
-    SendProcessorResume
     int 3
     
     mov eax,05F504D5Fh

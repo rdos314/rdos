@@ -620,6 +620,10 @@ SendProcessorResume    MACRO
 	OsGate send_processor_resume_nr
 						ENDM
 
+StartProcessor    MACRO
+	OsGate start_processor_nr
+						ENDM
+
 EnterInt    MACRO
 	OsGate enter_int_nr
 						ENDM

@@ -858,6 +858,12 @@ proc_init:
 	mov ax,get_processor_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET start_processor
+	mov di,OFFSET start_processor_name
+	xor cl,cl
+	mov ax,start_processor_nr
+	RegisterOsGate
+;
 	mov si,OFFSET enter_int
 	mov di,OFFSET enter_int_name
 	xor cl,cl
@@ -2978,15 +2984,15 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitCpu
+;		NAME:			StartProcessor
 ;
-;		DESCRIPTION:    Initialize processor (int-gate)
+;		DESCRIPTION:    Start processor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_cpu
+start_processor_name    DB 'Start Processor', 0
 
-init_cpu:
+start_processor:
     mov ax,task_sel
     mov ds,ax
     GetProcessor
