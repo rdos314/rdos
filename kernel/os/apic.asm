@@ -744,11 +744,80 @@ SendEoiMsr Proc near
     pop eax
     ret
 SendEoiMsr Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReloadSysTimer
+;
+;		DESCRIPTION:	Reload APIC timer
+;
+;		PARAMETERS:		AX      Reload tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reload_apic_timer_name    DB 'Reload Apic Timer', 0
+
+reload_apic_mem_timer    Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov cx,system_data_sel
+    mov ds,cx
+;    
+    mov ecx,ds:apic_tics
+    shl ecx,16
+    mov cx,ds:apic_rest
+    shl eax,16
+    mul ecx
+    inc edx
+    mov ax,apic_mem_sel
+    mov ds,ax    
+    mov ds:APIC_INIT_COUNT,edx
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+	ret
+reload_apic_mem_timer  Endp
+
+reload_apic_msr_timer    Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov cx,system_data_sel
+    mov ds,cx
+;    
+    mov ecx,ds:apic_tics
+    shl ecx,16
+    mov cx,ds:apic_rest
+    shl eax,16
+    mul ecx
+    inc edx
+;
+    mov eax,edx
+    mov ecx,MSR_APIC_INIT_COUNT
+    wrmsr
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+	ret
+reload_apic_msr_timer  Endp
+
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			SendProcessorResume
+;		NAME:			ResumeProcessor
 ;
 ;		DESCRIPTION:	Send a resume request
 ;
@@ -756,9 +825,9 @@ SendEoiMsr Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-send_processor_resume_name    DB 'Send Processor Resume',0
+resume_processor_name    DB 'Resume Processor',0
 
-send_processor_resume  Proc far
+resume_processor  Proc far
     push ds
     push ax
     push edx
@@ -773,7 +842,38 @@ send_processor_resume  Proc far
     pop ax
     pop ds
     ret
-send_processor_resume  Endp
+resume_processor  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			PreemptProcessor
+;
+;		DESCRIPTION:	Send a preempt req
+;
+;       PARAMETERS:     FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+preempt_processor_name    DB 'Preempt Processor',0
+
+preempt_processor  Proc far
+    push ds
+    push ax
+    push edx
+;
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov al,81h
+    mov edx,fs:ps_apic
+    call ds:mp_int_proc
+;
+    pop edx
+    pop ax
+    pop ds
+    ret
+preempt_processor  Endp
+
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -802,10 +902,10 @@ SetupMemGates   Proc near
 	mov ax,get_apic_id_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET send_processor_resume
-	mov di,OFFSET send_processor_resume_name
+	mov si,OFFSET reload_apic_mem_timer
+	mov di,OFFSET reload_apic_timer_name
 	xor cl,cl
-	mov ax,send_processor_resume_nr
+	mov ax,reload_sys_timer_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_processor_id_mem
@@ -844,6 +944,12 @@ SetupMsrGates   Proc near
 	mov ax,get_apic_id_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET reload_apic_msr_timer
+	mov di,OFFSET reload_apic_timer_name
+	xor cl,cl
+	mov ax,reload_sys_timer_nr
+	RegisterOsGate
+;
 	mov si,OFFSET get_processor_id_msr
 	mov di,OFFSET get_processor_id_name
 	xor dx,dx
@@ -852,7 +958,6 @@ SetupMsrGates   Proc near
 ;	
     ret
 SetupMsrGates   Endp
-
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1032,12 +1137,10 @@ apic_pr:
     mov edx,ds:mp_apic
     mov fs,ds:mp_processor_sel
 ;
-    SendProcessorResume
-    mov eax,ds:mp_processor_sign
-;
-    SendProcessorResume
-    mov eax,ds:mp_processor_sign
-
+    ResumeProcessor
+    PreemptProcessor
+    PreemptProcessor
+    PreemptProcessor
     int 3
     
     mov eax,05F504D5Fh
@@ -1292,6 +1395,36 @@ resume_int:
     pop ds
     iretd
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			PreemptInt
+;
+;		DESCRIPTION:    Preempt IPI int
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+preempt_int:
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,apic_data_sel
+    mov ds,ax
+    call ds:mp_eoi_proc
+    DoPreemptProcessor
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -1307,6 +1440,7 @@ ipi_tab:
 ;			int #	Entry			
 ;
 ipi80	DW	80h,	OFFSET resume_int
+ipi81	DW	81h,	OFFSET preempt_int
         DW	0FFFFh
 
 ;
@@ -1375,6 +1509,21 @@ init_smp_check_msr:
 	RegisterOsGate
 
 init_smp_done:
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov si,OFFSET resume_processor
+	mov di,OFFSET resume_processor_name
+	xor cl,cl
+	mov ax,resume_processor_nr
+	RegisterOsGate
+;
+	mov si,OFFSET preempt_processor
+	mov di,OFFSET preempt_processor_name
+	xor cl,cl
+	mov ax,preempt_processor_nr
+	RegisterOsGate
     ret
 InitSmp Endp
 

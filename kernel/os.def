@@ -527,8 +527,13 @@ leave_write_section_nr      EQU 367
 
 get_processor_nr            EQU 368
 
-send_processor_resume_nr    EQU 369
+resume_processor_nr         EQU 369
 start_processor_nr          EQU 370
+
+preempt_processor_nr        EQU 371
+do_preempt_processor_nr     EQU 372
+
+reload_sys_timer_nr         EQU 373
 
 osgate_entries				EQU 380
 

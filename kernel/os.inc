@@ -616,12 +616,26 @@ GetProcessor    MACRO
 						ENDM
 
 ;   IN  FS      Processor selector
-SendProcessorResume    MACRO
-	OsGate send_processor_resume_nr
+ResumeProcessor    MACRO
+	OsGate resume_processor_nr
 						ENDM
 
 StartProcessor    MACRO
 	OsGate start_processor_nr
+						ENDM
+
+;   IN  FS      Processor selector
+PreemptProcessor    MACRO
+	OsGate preempt_processor_nr
+						ENDM
+
+DoPreemptProcessor    MACRO
+	OsGate do_preempt_processor_nr
+						ENDM
+
+;   IN  AX      Tic count
+ReloadSysTimer    MACRO
+	OsGate reload_sys_timer_nr
 						ENDM
 
 EnterInt    MACRO

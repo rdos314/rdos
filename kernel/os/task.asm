@@ -541,6 +541,8 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPitUpdateTics	Proc near
+    mov ax,task_sel
+    mov ds,ax
     push es
     xor ax,ax
     mov es,ax
@@ -588,12 +590,11 @@ PAGE
 ;
 ;		DESCRIPTION:	Reload PIT timer
 ;
-;		PARAMETERS:		DS      Task sel
-;                       AX      Reload count
+;		PARAMETERS:		AX      Reload count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReloadPitTimer	Proc near
+ReloadPitTimer    Proc near
 	out TIMER0,al
 	xchg al,ah
 	jmp short $+2
@@ -604,6 +605,33 @@ ReloadPitTimer	Proc near
 	out INT0_MASK,al
 	ret
 ReloadPitTimer  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReloadSysTimer
+;
+;		DESCRIPTION:	Reload PIT timer
+;
+;		PARAMETERS:		AX      Reload count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reload_pit_timer_name    DB 'Reload Pit Timer', 0
+
+reload_pit_timer    Proc far
+	out TIMER0,al
+	xchg al,ah
+	jmp short $+2
+	out TIMER0,al
+;
+	in al,INT0_MASK
+	and al,NOT 1
+	out INT0_MASK,al
+	ret
+reload_pit_timer  Endp
 
 PAGE
 
@@ -862,6 +890,18 @@ proc_init:
 	mov di,OFFSET start_processor_name
 	xor cl,cl
 	mov ax,start_processor_nr
+	RegisterOsGate
+;
+	mov si,OFFSET do_preempt_processor
+	mov di,OFFSET do_preempt_processor_name
+	xor cl,cl
+	mov ax,do_preempt_processor_nr
+	RegisterOsGate
+;
+	mov si,OFFSET reload_pit_timer
+	mov di,OFFSET reload_pit_timer_name
+	xor cl,cl
+	mov ax,reload_sys_timer_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET enter_int
@@ -4427,6 +4467,27 @@ apic_int:
 	pop es
 	pop ds
 	iretd
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DoPreemptProcessor
+;
+;		DESCRIPTION:	Preempt processor from running thread
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+do_preempt_processor_name   DB 'Do Preempt Processor', 0
+
+do_preempt_processor    Proc far
+	mov ax,task_sel
+	mov ds,ax
+	call ReloadTimer
+	ret
+do_preempt_processor    Endp
 
 PAGE
 
