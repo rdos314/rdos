@@ -49,6 +49,7 @@ apic_data_seg	STRUC
 mp_init_proc        DW ?
 mp_startup_proc     DW ?
 mp_int_proc         DW ?
+mp_eoi_proc         DW ?
 
 mp_thread           DW ?
 
@@ -234,6 +235,12 @@ ApInit:
     mov ds:mp_processor_sign,eax
     GetApicId
     mov ds:mp_apic,edx
+    sti
+    hlt
+    add ds:mp_processor_sign,11111111h
+    sti
+    hlt
+    add ds:mp_processor_sign,11111111h
     sti
     hlt
     int 3
@@ -699,6 +706,51 @@ SendInt Proc near
     pop ds    
     ret
 SendInt Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendEoiMem
+;
+;		DESCRIPTION:	Send EOI using shared memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendEoiMem Proc near
+    push ds
+    push eax
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;
+    pop eax
+    pop ds
+    ret
+SendEoiMem Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendEoiMsr
+;
+;		DESCRIPTION:	Send EOI using MSRs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendEoiMsr Proc near
+    push eax
+    push ecx
+;
+    xor eax,eax
+    mov ecx,MSR_APIC_EOI
+    wrmsr
+;
+    pop ecx
+    pop eax
+    ret
+SendEoiMsr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -732,6 +784,7 @@ SetupMemGates   Proc near
     mov ds:mp_init_proc, OFFSET SendInitMem
     mov ds:mp_startup_proc, OFFSET SendStartupMem
     mov ds:mp_int_proc, OFFSET SendIntMem
+    mov ds:mp_eoi_proc, OFFSET SendEoiMem
 ;
 	mov ax,cs
 	mov ds,ax
@@ -773,6 +826,7 @@ SetupMsrGates   Proc near
     mov ds:mp_init_proc, OFFSET SendInitMsr
     mov ds:mp_startup_proc, OFFSET SendStartupMsr
     mov ds:mp_int_proc, OFFSET SendIntMsr
+    mov ds:mp_eoi_proc, OFFSET SendEoiMsr
 ;
 	mov ax,cs
 	mov ds,ax
@@ -973,10 +1027,17 @@ apic_pr:
     mov fs,ds:mp_processor_sel
     mov edx,fs:ps_apic
 ;
-    
-    GetProcessor
+    mov edx,ds:mp_apic
     mov al,80h
-    mov edx,1
+    call SendInt
+;
+    mov eax,ds:mp_processor_sign
+;
+    mov edx,ds:mp_apic
+    mov al,80h
+    call SendInt
+;
+    mov eax,ds:mp_processor_sign
 
     SendProcessorResume
     SendProcessorResume
@@ -1210,6 +1271,117 @@ init_tsc_wait_low_ok:
     ret
 InitApicTimer Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ResumeInt
+;
+;		DESCRIPTION:    Resume IPI int
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+resume_int:
+    push ds
+    push ax
+;
+    mov ax,apic_data_sel
+    mov ds,ax
+    call ds:mp_eoi_proc
+;
+    pop ax
+    pop ds
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InitIpi
+;
+;		DESCRIPTION:	Init IPIs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+ipi_tab:
+;
+;			int #	Entry			
+;
+ipi80	DW	80h,	OFFSET resume_int
+        DW	0FFFFh
+
+;
+; tabell offsets
+;
+ipi_nr		EQU 0
+ipi_entry	EQU 2
+
+InitIpi Proc near
+    mov ax,cs
+    mov ds,ax
+    xor bl,bl
+	mov di,OFFSET ipi_tab
+
+ipiLoop:
+	mov ax,cs:[di]
+	cmp ax,0FFFFh
+	jz ipiDone
+;
+	mov al,cs:[di].ipi_nr
+	movzx esi, word ptr cs:[di].ipi_entry
+	CreateIntGateSelector
+	add di,4
+	jmp ipiLoop
+	
+ipiDone:
+    ret
+InitIpi Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InitSmp
+;
+;		DESCRIPTION:	Init multiprocessing
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitSmp Proc near
+    mov ax,apic_data_sel
+    mov ds,ax
+    test ds:mp_flags,MP_FLAG_MEM
+    jnz init_smp_check_msr
+;    
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET get_processor_mem
+	mov di,OFFSET get_processor_name
+	xor cl,cl
+	mov ax,get_processor_nr
+	RegisterOsGate
+	jmp init_smp_done
+
+init_smp_check_msr:
+    test ds:mp_flags,MP_FLAG_MSR
+    jnz init_smp_done
+;    
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET get_processor_msr
+	mov di,OFFSET get_processor_name
+	xor cl,cl
+	mov ax,get_processor_nr
+	RegisterOsGate
+
+init_smp_done:
+    ret
+InitSmp Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -1295,31 +1467,8 @@ init_apic_start_cpu:
     mov edx,ds:mp_apic
     mov es:ps_apic,edx
 ;
-    test ds:mp_flags,MP_FLAG_MEM
-    jnz init_apic_mem_done
-;    
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET get_processor_mem
-	mov di,OFFSET get_processor_name
-	xor cl,cl
-	mov ax,get_processor_nr
-	RegisterOsGate
-	jmp init_apic_gates_ok
-
-init_apic_mem_done:
-    test ds:mp_flags,MP_FLAG_MSR
-    jnz init_apic_gates_ok
-;    
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET get_processor_msr
-	mov di,OFFSET get_processor_name
-	xor cl,cl
-	mov ax,get_processor_nr
-	RegisterOsGate
+    call InitSmp
+    call InitIpi
 
 init_apic_gates_ok:     
     mov ax,cs
