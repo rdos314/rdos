@@ -41,6 +41,9 @@ INCLUDE system.def
 INCLUDE apic.inc
 INCLUDE proc.inc
 
+MP_FLAG_MEM = 1
+MP_FLAG_MSR = 2
+
 apic_data_seg	STRUC
 
 mp_init_proc        DW ?
@@ -48,6 +51,8 @@ mp_startup_proc     DW ?
 mp_int_proc         DW ?
 
 mp_thread           DW ?
+
+mp_flags            DW ?
 
 mp_processor_sign   DD ?
 mp_apic             DD ?
@@ -321,7 +326,7 @@ get_id_msr Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			GetProcessor
+;		NAME:			GetProcessorId
 ;
 ;		DESCRIPTION:	Get processor #
 ;
@@ -331,7 +336,7 @@ get_id_msr Endp
 
 get_processor_id_name    DB 'Get Processor ID',0
 
-get_processor_mem  Proc far
+get_processor_id_mem  Proc far
     push ds
     push ebx
 ;    
@@ -342,14 +347,15 @@ get_processor_mem  Proc far
     add bx,bx
     mov ax,apic_data_sel
     mov ds,ax
-    mov ax,ds:[bx].apic_arr
+    mov ds,ds:[bx].apic_arr
+    mov ax,ds:ps_id
 ;
     pop ebx
     pop ds
     retf32
-get_processor_mem Endp
+get_processor_id_mem Endp
 
-get_processor_msr Proc far
+get_processor_id_msr Proc far
     push ds
     push bx
     push ecx
@@ -360,12 +366,69 @@ get_processor_msr Proc far
     add bx,bx
     mov ax,apic_data_sel
     mov ds,ax
-    mov ax,ds:[bx].apic_arr
+    mov ds,ds:[bx].apic_arr
+    mov ax,ds:ps_id
 ;
     pop ecx
     pop bx
     pop ds
     retf32
+get_processor_id_msr Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetProcessor
+;
+;		DESCRIPTION:	Get processor selector
+;
+;       RETURNS:        FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_processor_name    DB 'Get Processor',0
+
+get_processor_mem  Proc far
+    push ds
+    push ax
+    push ebx
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov ebx,ds:APIC_ID
+    shr ebx,24
+    add bx,bx
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov fs,ds:[bx].apic_arr
+;
+    pop ebx
+    pop ax
+    pop ds
+    ret
+get_processor_mem Endp
+
+get_processor_msr Proc far
+    push ds
+    push eax
+    push bx
+    push ecx
+    push edx
+;
+    mov ecx,MSR_APIC_ID
+    rdmsr
+    movzx bx,al
+    add bx,bx
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov fs,ds:[bx].apic_arr
+;
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    pop ds
+    ret
 get_processor_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -686,7 +749,7 @@ SetupMemGates   Proc near
 	mov ax,send_processor_resume_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET get_processor_mem
+	mov si,OFFSET get_processor_id_mem
 	mov di,OFFSET get_processor_id_name
 	xor dx,dx
 	mov ax,get_processor_id_nr
@@ -721,7 +784,7 @@ SetupMsrGates   Proc near
 	mov ax,get_apic_id_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET get_processor_msr
+	mov si,OFFSET get_processor_id_msr
 	mov di,OFFSET get_processor_id_name
 	xor dx,dx
 	mov ax,get_processor_id_nr
@@ -1199,31 +1262,64 @@ init_apic_timer_ok:
     jnz init_apic_msr
 
 init_apic_mmio:
+    or es:mp_flags, MP_FLAG_MEM
     call SetupMemGates
     jmp init_apic_start_cpu
 
 init_apic_msr:
+    or es:mp_flags, MP_FLAG_MSR
     call SetupMsrGates
 
 init_apic_start_cpu:
+	mov bx,apic_data_sel
+	mov ds,bx
+;
     GetProcessor
     GetApicId
+    movzx bx,dl
+    add bx,bx
+    mov [bx].apic_arr,fs    
     mov fs:ps_apic,edx
+;    
     xor dl,1    
     call StartCore
     jc init_apic_gates_ok
 ;    
     CreateProcessor    
-	mov bx,apic_data_sel
-	mov ds,bx
     mov ds:mp_processor_sel,es
 ;
     movzx bx,dl
     add bx,bx
-    mov [bx].apic_arr,ax
+    mov [bx].apic_arr,es
 ;
     mov edx,ds:mp_apic
     mov es:ps_apic,edx
+;
+    test ds:mp_flags,MP_FLAG_MEM
+    jnz init_apic_mem_done
+;    
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET get_processor_mem
+	mov di,OFFSET get_processor_name
+	xor cl,cl
+	mov ax,get_processor_nr
+	RegisterOsGate
+	jmp init_apic_gates_ok
+
+init_apic_mem_done:
+    test ds:mp_flags,MP_FLAG_MSR
+    jnz init_apic_gates_ok
+;    
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET get_processor_msr
+	mov di,OFFSET get_processor_name
+	xor cl,cl
+	mov ax,get_processor_nr
+	RegisterOsGate
 
 init_apic_gates_ok:     
     mov ax,cs

@@ -104,8 +104,6 @@ unlock_proc         DW ?
 lock_list_proc      DW ?
 unlock_list_proc    DW ?
 
-get_processor_proc  DW ?
-
 processor_count     DW ?
 processor_arr       DW 256 DUP(?)
 
@@ -809,7 +807,6 @@ init_task	PROC near
 	mov ds:unlock_proc,OFFSET UnlockDefault
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
-    mov ds:get_processor_proc,OFFSET GetProcessorSingle
 	mov ds:signal_list,0
 	mov ds:wakeup_list,0
 	mov ds:term_thread_list,0
@@ -2462,7 +2459,7 @@ load_actions_done:
     push ds
     mov ax,task_sel
     mov ds,ax
-    call ds:get_processor_proc
+    GetProcessor
     call ds:unlock_proc
     pop ds
 ;
@@ -2992,7 +2989,7 @@ PAGE
 init_cpu:
     mov ax,task_sel
     mov ds,ax
-    call ds:get_processor_proc
+    GetProcessor
     mov ax,flat_sel
     mov ds,ax
     mov bx,0F08h
@@ -3182,7 +3179,6 @@ start_processor_null_threads    Proc near
 	mov ds:unlock_proc,OFFSET UnlockMultiple
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
-    mov ds:get_processor_proc,OFFSET GetProcessorMultiple
 
 start_locks_ok:    
     mov ax,system_data_sel
@@ -3356,7 +3352,7 @@ Shutdown proc near
 ;
     mov ax,task_sel
     mov ds,ax
-    call ds:get_processor_proc
+    GetProcessor
     mov ds,fs:ps_null_thread 
     mov ds,ds:p_tss_data_sel  
 ;    
@@ -3473,7 +3469,7 @@ debug_fault:
 ;
     mov ax,task_sel
     mov ds,ax
-    call ds:get_processor_proc
+    GetProcessor
     mov es,fs:ps_null_thread
     movzx dx,byte ptr [bp].vm_err+2
 	mov es:p_error_code,dx
@@ -3563,7 +3559,7 @@ debug_save_ok:
     movzx dx,byte ptr [bp].vm_err+2
     mov ax,task_sel
     mov ds,ax
-    call ds:get_processor_proc
+    GetProcessor
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
@@ -3728,15 +3724,11 @@ PAGE
 get_processor_name	DB 'Get Processor',0
 
 get_processor	Proc far
-    push ds
     push ax
-;
     mov ax,task_sel
-    mov ds,ax
-    call ds:get_processor_proc
-;
+    mov fs,ax
+    mov fs,fs:processor_arr
     pop ax
-    pop ds	
 	ret
 get_processor	Endp
 
@@ -3992,7 +3984,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TryLockSingle	Proc near
-    call ds:get_processor_proc
+    GetProcessor
 	add fs:ps_nesting,1
 	ret
 TryLockSingle	Endp
@@ -4014,7 +4006,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockSingle	Proc near
-    call ds:get_processor_proc
+    GetProcessor
 	add fs:ps_nesting,1
 	jc lsDone
 ;
@@ -4108,7 +4100,7 @@ TryLockMultiple	Proc near
     push ax
     push dx
 ;
-    call ds:get_processor_proc
+    GetProcessor
 
 tlmSpinLock:
     sti
@@ -4173,7 +4165,7 @@ LockMultiple	Proc near
     push ax
     push dx
 ;
-    call ds:get_processor_proc
+    GetProcessor
 
 lmSpinLock:
     sti
@@ -4327,51 +4319,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetProcessorSingle
-;
-;		DESCRIPTION:	Get current processor, single processor version
-;
-;       RETRURNS:       FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetProcessorSingle   Proc near
-    mov fs,ds:processor_arr
-    ret
-GetProcessorSingle   Endp
-
-PAGE	
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetProcessorMulti
-;
-;		DESCRIPTION:	Get current processor, multi processor version
-;
-;       RETRURNS:       FS      Processor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetProcessorMultiple   Proc near
-    push ax
-    push bx
-    mov ax,task_sel
-    mov ds,ax
-    GetProcessorId
-    mov bx,ax
-    add bx,bx
-    mov fs,ds:[bx].processor_arr
-    pop bx
-    pop ax
-    ret
-GetProcessorMultiple   Endp
-
-PAGE	
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			EnterInt
 ;
 ;		DESCRIPTION:	Enter interrupt notification
@@ -4501,7 +4448,7 @@ start_timer	PROC far
 ;
 	mov si,task_sel
 	mov ds,si
-	call ds:get_processor_proc
+    GetProcessor
 	cli
 	LocalStartTimer
 	call ReloadTimer
@@ -4537,7 +4484,7 @@ stop_timer	PROC far
 ;
 	mov si,task_sel
 	mov ds,si
-	call ds:get_processor_proc
+    GetProcessor
 	cli
 	LocalStopTimer
 	call ReloadTimer
@@ -4604,7 +4551,7 @@ init_timer_sel_ok:
     mov bx,tasking_sel
     CreateDataSelector16
 ;
-    call ds:get_processor_proc
+    GetProcessor
 	jmp LoadCurrentThread
 
 PAGE
@@ -5228,7 +5175,7 @@ PhysLock    Proc near
 ;
     mov ax,task_sel
     mov ds,ax
-    call ds:get_processor_proc
+    GetProcessor
     call ds:lock_list_proc
 ;    
     pop ax
@@ -5255,7 +5202,7 @@ PhysUnlock	PROC near
 ;
     mov ax,task_sel
     mov ds,ax
-    call ds:get_processor_proc
+    GetProcessor
     call ds:unlock_list_proc
 ;
     pop ax
