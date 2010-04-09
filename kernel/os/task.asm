@@ -2398,6 +2398,8 @@ PAGE
 LoadCurrentThread:
 	mov ax,task_sel
 	mov ds,ax
+	call ds:unlock_proc
+;
     call ds:lock_proc
     and fs:ps_flags,NOT PS_FLAG_TIMER	
 
@@ -2689,6 +2691,16 @@ SaveCurrentThread	Proc near
     mov ax,task_sel
     mov ds,ax
     call ds:lock_proc
+;
+    mov ax,ss
+    cmp ax,fs:ps_ss
+    jne save_ss_ok
+;
+    call ds:unlock_proc
+    int 3
+
+save_ss_ok:    
+
 ;        
     mov ax,fs:ps_curr_thread
     mov ds,ax
@@ -2863,10 +2875,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ContinueCurrentThread	Proc near	
-    push ax
-    push di
-;    
+ContinueCurrentThread:
     mov ax,fs:ps_curr_thread
     or ax,ax
     jz cctDone
@@ -2889,12 +2898,7 @@ cctPop:
 
 cctDone:
     mov fs:ps_curr_thread,0
-    call ds:unlock_proc
-;
-    pop di
-    pop ax
-    ret
-ContinueCurrentThread   Endp    
+    jmp LoadCurrentThread
 
 PAGE	
 
@@ -2914,7 +2918,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-BlockCurrentThread	Proc near	
+BlockCurrentThread:
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
@@ -2932,9 +2936,7 @@ BlockCurrentThread	Proc near
     call ds:unlock_list_proc
 
 bctUnlock:	
-    call ds:unlock_proc
-    ret
-BlockCurrentThread   Endp    
+    jmp LoadCurrentThread
 
 PAGE
 	
@@ -2994,8 +2996,7 @@ reload_check_preempt:
 ;    
     push OFFSET reload_timer_end
     call SaveLockedThread
-    call ContinueCurrentThread
-    jmp LoadCurrentThread
+    jmp ContinueCurrentThread
 
 reload_preempt_block:
     cli
@@ -3035,7 +3036,7 @@ start_processor_name    DB 'Start Processor', 0
 start_processor:
     mov ax,task_sel
     mov ds,ax
-    GetProcessor
+    call ds:lock_proc
     mov ax,flat_sel
     mov ds,ax
     mov bx,0F08h
@@ -3302,8 +3303,7 @@ null_thread0:
 ;
     xor ax,ax
     xor edi,edi
-    call BlockCurrentThread
-    jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 null_thread:
     sti
@@ -3319,8 +3319,7 @@ null_thread:
 ;
     xor ax,ax
     xor edi,edi
-    call BlockCurrentThread
-    jmp LoadCurrentThread
+    jmp BlockCurrentThread
 	
 null_loop:
 	hlt
@@ -3632,8 +3631,7 @@ debug_block:
 ;
     mov ax,system_data_sel
 	mov edi,OFFSET debug_list	
-    call BlockCurrentThread
-	jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 PAGE	
 
@@ -3676,8 +3674,7 @@ double_fault:
 ;
     mov ax,system_data_sel
 	mov edi,OFFSET debug_list	
-    call BlockCurrentThread
-	jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 PAGE	
 
@@ -4109,8 +4106,7 @@ usTimerOk:
     push OFFSET usDone
     call SaveLockedThread
     call UpdateLists
-    call ContinueCurrentThread
-    jmp LoadCurrentThread
+    jmp ContinueCurrentThread
 
 usBusy:
     push es
@@ -4312,8 +4308,7 @@ umRetry:
     push OFFSET umDone
     call SaveLockedThread
     call UpdateLists
-    call ContinueCurrentThread
-    jmp LoadCurrentThread
+    jmp ContinueCurrentThread
 
 umBusy:
     push es
@@ -4582,7 +4577,7 @@ PAGE
 init_first_thread:
 	mov ax,task_sel
 	mov ds,ax
-;	call ds:lock_proc
+	call ds:lock_proc
 	mov di,es:p_prio
 	mov ds:prio_act,di
 	InsertBlock
@@ -4683,8 +4678,7 @@ wake_new	PROC near
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 wake_new_lower:
-    call ContinueCurrentThread
-    jmp LoadCurrentThread
+    jmp ContinueCurrentThread
 
 wake_new_done:
 	ret
@@ -4708,8 +4702,7 @@ swap_name	DB 'Swap',0
 swap_out	PROC far
     push OFFSET swap_out_done
     call SaveCurrentThread
-    call ContinueCurrentThread
-    jmp LoadCurrentThread
+    jmp ContinueCurrentThread
 
 swap_out_done:
 	retf32
@@ -4736,8 +4729,7 @@ cleanup_thread:
 ;
     mov ax,task_sel
     mov edi,OFFSET term_thread_list
-    call BlockCurrentThread
-    jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 PAGE
 
@@ -4760,8 +4752,7 @@ cleanup_process:
 ;
     mov ax,task_sel
     mov edi,OFFSET term_proc_list
-    call BlockCurrentThread
-    jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 PAGE
 
@@ -4817,8 +4808,7 @@ sleep_thread	PROC far
     call SaveCurrentThread
 ;
     movzx edi,di    
-    call BlockCurrentThread
-    jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 sleep_thread_done:
 	mov ax,thread_sel
@@ -4955,8 +4945,7 @@ wait_for_signal	PROC far
 ;
 	mov ax,task_sel
     mov edi,OFFSET signal_list
-    call BlockCurrentThread
-    jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 wait_for_signal_clear:
     mov ax,task_sel
@@ -5039,8 +5028,7 @@ wait_for_signal_timeout	PROC far
 ;
 	mov ax,task_sel
     mov edi,OFFSET signal_list
-    call BlockCurrentThread
-    jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 wait_for_signal_timeout_clear:
     mov ax,task_sel
@@ -5122,8 +5110,7 @@ enter_section	PROC far
     call SaveLockedThread
 ;
 	lea edi,[esi].cs_list	
-    call BlockCurrentThread
-	jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 ecsUnlock:
     mov dx,task_sel
@@ -5627,8 +5614,7 @@ enter_user_section_block:
 ;
 	lea di,[bx].us_list	
 	movzx edi,di
-    call BlockCurrentThread
-	jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 enter_user_section_unlock:
 	str ax
@@ -5909,8 +5895,7 @@ wait_until	PROC far
 ;
     xor ax,ax    
     mov edi,1
-    call BlockCurrentThread
-    jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 wait_until_done:
 	retf32
@@ -5960,8 +5945,7 @@ wait_milli_sec	PROC far
 ;    
     xor ax,ax
     mov edi,1
-    call BlockCurrentThread
-    jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 wait_milli_done:
 	retf32
@@ -6012,8 +5996,7 @@ wait_micro_sec	PROC far
 ;    
     xor ax,ax
     mov edi,1
-    call BlockCurrentThread
-    jmp LoadCurrentThread
+    jmp BlockCurrentThread
 
 wait_micro_done:
 	retf32
