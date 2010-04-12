@@ -1630,6 +1630,39 @@ irq_pm32:
 	public init_trap_vectors
 
 init_trap_vectors	PROC near
+	xor eax,eax
+	mov ax,SIZE irq_proc_seg
+	mov bx,irq_proc_sel
+	AllocateFixedProcessMem
+;
+	xor eax,eax
+	mov ax,SIZE irq_sys_seg
+	mov bx,irq_sys_sel
+	AllocateFixedSystemMem
+	mov ds,bx
+;
+    xor esi,esi
+	mov cx,16
+	mov bx,OFFSET irq_arr
+	xor eax,eax
+init_irq_loop:
+	mov ds:[bx].owner_cr3,0
+	mov ds:[bx].user_handler,0
+	mov ds:[bx].vm_offs,ax
+	mov dx,ds:irq_vm_seg
+	mov ds:[bx].vm_seg,dx
+	mov ds:[bx].pm16_offs,ax
+	mov dx,ds:irq_pm16_sel
+	mov ds:[bx].pm16_sel,dx
+	mov ds:[bx].pm32_offs,eax
+	mov dx,ds:irq_pm32_sel
+	mov ds:[bx].pm32_sel,dx
+	add ax,4
+	lea si,[bx].usage_section
+	InitSection
+	add bx,SIZE irq_struc
+	loop init_irq_loop
+;    
 	mov eax,4*16
 	AllocateFixedVmLinear
 	shr edx,4
@@ -1678,6 +1711,15 @@ init_irq_pm32_loop:
 	mov ax,gdt_sel
 	mov es,ax
 	mov byte ptr es:[bx+5],0FAh
+;
+	mov bx,OFFSET irq_arr
+	mov ds:[bx].owner_cr3,-1
+	lea si,[bx].usage_section
+	EnterSection
+	add bx,2 * SIZE irq_struc
+	mov ds:[bx].owner_cr3,-1
+	lea si,[bx].usage_section
+	EnterSection
 ;
 	xor cx,cx
 	mov ax,cs
