@@ -3717,6 +3717,7 @@ create_processor	Proc far
     mov es:ps_null_thread,0
     mov es:ps_skip_thread,-1
     mov es:ps_apic,-1
+    mov es:ps_wait,0
 ;
 	mov bx,OFFSET ps_timer_entries
 	mov es:[bx].ps_timer_next,0
@@ -4145,6 +4146,51 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			WakeProcessor
+;
+;		DESCRIPTION:	Wake up a processor
+;
+;       PARAMETERS:     DS      Task_sel
+;                       FS      Processor selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WakeProcessor	Proc near
+    push fs
+    push ax
+    push bx
+    push cx
+;
+    mov cx,ds:processor_count
+    mov bx,OFFSET processor_arr
+
+wpLoop:
+    mov fs,[bx]
+    xor ax,ax
+    xchg ax,fs:ps_wait
+    or ax,ax
+    jz wpNext
+;
+    ResumeProcessor
+    jmp wpDone
+
+wpNext:
+    add bx,2
+    loop wpLoop
+
+wpDone:    
+    pop cx
+    pop bx
+    pop ax
+    pop fs    
+    ret
+WakeProcessor   Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			TryLockMultiple
 ;
 ;		DESCRIPTION:	Try to lock, multiple processor version
@@ -4187,8 +4233,8 @@ tlmGet:
     je tlmTake
 
 tlmFail:
-    mov ds:owner_lock,0
    	lock add fs:ps_nesting,1
+    mov ds:owner_lock,0
     clc
     jmp tlmDone
 
@@ -4252,10 +4298,12 @@ lmGet:
     je lmTake
 
 lmHalt:
-    mov ds:owner_wait,1
+    inc ds:owner_wait
+    mov fs:ps_wait,1
     mov ds:owner_lock,0
     sti
     hlt
+    mov fs:ps_wait,0
     jmp lmSpinLock
 
 lmTake:
@@ -4312,7 +4360,7 @@ tumRetry:
 ;
     mov ax,fs:ps_curr_thread
     or ax,ax
-    jz tumUnlock
+    jz tumWake
 ;
     test fs:ps_flags,PS_FLAG_TIMER	
     jnz tumSwap
@@ -4333,16 +4381,15 @@ tumSwap:
 
 tumWake:
     mov ds:owner_sel,0	
-    xor al,al
-    xchg al,ds:owner_wait
+    mov al,ds:owner_wait
     or al,al
     jz tumUnlock
-;    
+;
+    dec ds:owner_wait    
     mov ds:owner_lock,0
     sti
-;
-; wake-up processors here!
-;    
+    call WakeProcessor
+    jmp tumDone
 
 tumUnlock:
     mov ds:owner_lock,0
@@ -4402,16 +4449,15 @@ lumNestingOk:
 
 lumOwnerOk:    
     mov ds:owner_sel,0	
-    xor al,al
-    xchg al,ds:owner_wait
+    mov al,ds:owner_wait
     or al,al
     jz lumUnlock
-;    
+;
+    dec ds:owner_wait    
     mov ds:owner_lock,0
     sti
-;
-; wake-up processors here!
-;    
+    call WakeProcessor
+    jmp lumDone
 
 lumUnlock:
     mov ds:owner_lock,0
