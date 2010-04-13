@@ -99,8 +99,8 @@ list_lock           DW ?
 
 try_lock_proc       DW ?
 lock_proc           DW ?
-try_unlock_proc     DW ?
 unlock_proc         DW ?
+load_unlock_proc    DW ?
 
 lock_list_proc      DW ?
 unlock_list_proc    DW ?
@@ -833,8 +833,8 @@ init_task	PROC near
 	mov ds,ax
 	mov ds:try_lock_proc,OFFSET TryLockDefault
 	mov ds:lock_proc,OFFSET LockDefault
-	mov ds:try_unlock_proc,OFFSET TryUnlockDefault
 	mov ds:unlock_proc,OFFSET UnlockDefault
+	mov ds:load_unlock_proc,OFFSET LoadUnlockDefault
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
 	mov ds:signal_list,0
@@ -2400,7 +2400,7 @@ PAGE
 LoadCurrentThread:
 	mov ax,task_sel
 	mov ds,ax
-;	call ds:unlock_proc
+;	call ds:load_unlock_proc
 ;
 ;   call ds:lock_proc
 
@@ -2511,7 +2511,7 @@ load_actions_done:
     mov ax,task_sel
     mov ds,ax
     GetProcessor
-    call ds:unlock_proc
+    call ds:load_unlock_proc
     mov al,ds:has_signal
     or al,ds:has_list
     pop ds
@@ -3011,7 +3011,7 @@ reload_timer_do:
 	call ds:reload_timer_proc
 
 reload_timer_done:
-	call ds:try_unlock_proc
+	call ds:unlock_proc
 
 reload_timer_end:	
     ret
@@ -3211,8 +3211,8 @@ start_processor_null_threads    Proc near
 	mov ds,ax
 	mov ds:try_lock_proc,OFFSET TryLockSingle
 	mov ds:lock_proc,OFFSET LockSingle
-	mov ds:try_unlock_proc,OFFSET TryUnlockSingle
 	mov ds:unlock_proc,OFFSET UnlockSingle
+	mov ds:load_unlock_proc,OFFSET LoadUnlockSingle
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
     mov cx,ds:processor_count
@@ -3221,8 +3221,8 @@ start_processor_null_threads    Proc near
 ;
 	mov ds:try_lock_proc,OFFSET TryLockMultiple
 	mov ds:lock_proc,OFFSET LockMultiple
-	mov ds:try_unlock_proc,OFFSET TryUnlockMultiple
 	mov ds:unlock_proc,OFFSET UnlockMultiple
+	mov ds:load_unlock_proc,OFFSET LoadUnlockMultiple
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
 
@@ -3369,7 +3369,7 @@ WakeThread	PROC near
 	call ds:unlock_list_proc
     	
 wtUnlock:    
-    call ds:try_unlock_proc
+    call ds:unlock_proc
 ;
     pop di
     pop bx
@@ -3996,23 +3996,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TryUnlockDefault
-;
-;		DESCRIPTION:	Try unlock, pre-tasking version
-;
-;       PARAMETERS:     DS      Task_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TryUnlockDefault	Proc near
-	ret
-TryUnlockDefault	Endp
-
-PAGE	
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			UnlockDefault
 ;
 ;		DESCRIPTION:	Unlock, pre-tasking version
@@ -4024,6 +4007,23 @@ PAGE
 UnlockDefault	Proc near
 	ret
 UnlockDefault	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LoadUnlockDefault
+;
+;		DESCRIPTION:	Thread load unlock, pre-tasking version
+;
+;       PARAMETERS:     DS      Task_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadUnlockDefault	Proc near
+	ret
+LoadUnlockDefault	Endp
 
 PAGE	
 
@@ -4079,27 +4079,27 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TryUnlockSingle
+;		NAME:			UnlockSingle
 ;
-;		DESCRIPTION:	Try unlock, single processor version
+;		DESCRIPTION:	Unlock, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;                       FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TryUnlockSingle	Proc near
+UnlockSingle	Proc near
     push ax
     
 tusRetry:    
     cli
     sub fs:ps_nesting,1
 	jnc tusDone
-;	
+;
     mov ax,fs:ps_curr_thread
     or ax,ax
     jz tusDone
-;
+;    
     test fs:ps_flags,PS_FLAG_TIMER	
     jnz tusSwap
 ;    
@@ -4120,32 +4120,32 @@ tusDone:
     sti
     pop ax
 	ret
-TryUnlockSingle	Endp
+UnlockSingle	Endp
 
 PAGE	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UnlockSingle
+;		NAME:			LoadUnlockSingle
 ;
-;		DESCRIPTION:	Unlock, single processor version
+;		DESCRIPTION:	Thread load unlock, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;                       FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlockSingle	Proc near
+LoadUnlockSingle	Proc near
     cli
     sub fs:ps_nesting,1
-	jc usDone
+	jc lusDone
 ;
     call Shutdown
 
-usDone:    	
+lusDone:    	
 	ret
-UnlockSingle	Endp
+LoadUnlockSingle	Endp
 
 PAGE	
 
@@ -4281,16 +4281,16 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TryUnlockMultiple
+;		NAME:			UnlockMultiple
 ;
-;		DESCRIPTION:	Try unlock, multiple processor version
+;		DESCRIPTION:	Unlock, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;                       FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TryUnlockMultiple	Proc near
+UnlockMultiple	Proc near
     push ax
 
 tumSpinLock:
@@ -4359,74 +4359,74 @@ tumDone:
     sti
     pop ax
 	ret
-TryUnlockMultiple	Endp
+UnlockMultiple	Endp
 
 PAGE	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UnlockMultiple
+;		NAME:			LoadUnlockMultiple
 ;
-;		DESCRIPTION:	Unlock, multiple processor version
+;		DESCRIPTION:	Thread load unlock, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;                       FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlockMultiple	Proc near
+LoadUnlockMultiple	Proc near
     push ax
 
-umSpinLock:
+lumSpinLock:
     sti
     mov ax,ds:owner_lock
     or ax,ax
-    jz umGet
+    jz lumGet
 ;
     pause
-    jmp umSpinLock
+    jmp lumSpinLock
 
-umGet:
+lumGet:
     cli
     inc ax
     xchg ax,ds:owner_lock
     or ax,ax
-    jnz umSpinLock
+    jnz lumSpinLock
 ;    
     sub fs:ps_nesting,1
-	jc umNestingOk
+	jc lumNestingOk
 ;
     call Shutdown
 
-umNestingOk:
+lumNestingOk:
     mov ax,fs
     cmp ax,ds:owner_sel
-    je umOwnerOk
+    je lumOwnerOk
 ;
     call Shutdown
 
-umOwnerOk:    
+lumOwnerOk:    
     mov ds:owner_sel,0	
     xor al,al
     xchg al,ds:owner_wait
     or al,al
-    jz umUnlock
+    jz lumUnlock
 ;    
     mov ds:owner_lock,0
     sti
 ;
 ; wake-up processors here!
 ;    
-    jmp umSpinLock
+    jmp lumSpinLock
 
-umUnlock:
+lumUnlock:
     mov ds:owner_lock,0
 
-umDone:
+lumDone:
     pop ax
 	ret
-UnlockMultiple	Endp
+LoadUnlockMultiple	Endp
 
 PAGE	
 
@@ -4464,7 +4464,7 @@ leave_int_name	DB 'Leave Int',0
 leave_int	Proc far
 	mov ax,task_sel
 	mov ds,ax
-	call ds:try_unlock_proc
+	call ds:unlock_proc
 	ret
 leave_int	Endp
 
@@ -4949,7 +4949,7 @@ signal_thread	PROC far
     mov es:p_signal,1
     mov ds:has_signal,1
 ;
-    call ds:try_unlock_proc
+    call ds:unlock_proc
     
 signal_done:       
     pop ax
@@ -5028,7 +5028,7 @@ wait_for_signal_clear:
 	mov es:p_signal,0
 
 wait_for_signal_unlock:
-    call ds:try_unlock_proc
+    call ds:unlock_proc
 ;	
 	pop ax
 	pop fs
@@ -5113,7 +5113,7 @@ wait_for_signal_timeout_clear:
 wait_for_signal_timeout_unlock:
 	mov bx,fs:ps_curr_thread
 	StopTimer
-    call ds:try_unlock_proc
+    call ds:unlock_proc
 ;
     pop di
 	pop cx
@@ -5188,7 +5188,7 @@ enter_section	PROC far
 ecsUnlock:
     mov dx,task_sel
     mov ds,dx
-    call ds:try_unlock_proc
+    call ds:unlock_proc
     	
 ecsDone:
     pop ax
@@ -5694,7 +5694,7 @@ enter_user_section_unlock:
 	mov ds:[bx].us_owner,ax
 	inc ds:[bx].us_count
     mov ds,dx
-    call ds:try_unlock_proc
+    call ds:unlock_proc
     jmp enter_user_section_end
 	
 enter_user_section_done:
