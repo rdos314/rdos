@@ -4137,36 +4137,13 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockSingle	Proc near
-    push ax
-    
-usRetry:    
     cli
     sub fs:ps_nesting,1
-	jnc usDone
-;	
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz tusDone
+	jc usDone
 ;
-    test fs:ps_flags,PS_FLAG_TIMER	
-    jnz usSwap
-;    
-    mov al,ds:has_signal
-    or al,ds:has_list
-    jz usDone
+    call Shutdown
 
-usSwap:
-    add fs:ps_nesting,1
-    jnc tusRetry
-;
-    sti
-    push OFFSET usDone
-    call SaveLockedThread
-    jmp ContinueCurrentThread
-
-usDone:
-    sti
-    pop ax
+usDone:    	
 	ret
 UnlockSingle	Endp
 
@@ -4416,37 +4393,20 @@ umGet:
     xchg ax,ds:owner_lock
     or ax,ax
     jnz umSpinLock
-    
-umRetry:    
+;    
     sub fs:ps_nesting,1
-	jnc umUnlock
+	jc umNestingOk
 ;
+    call Shutdown
+
+umNestingOk:
     mov ax,fs
     cmp ax,ds:owner_sel
-    jne umUnlock
+    je umOwnerOk
 ;
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz umUnlock
-;
-    test fs:ps_flags,PS_FLAG_TIMER	
-    jnz umSwap
-;	
-    mov al,ds:has_signal
-    or al,ds:has_list
-    jz umWake
+    call Shutdown
 
-umSwap:
-    add fs:ps_nesting,1
-    jnc umRetry
-;
-    mov ds:owner_lock,0
-    sti
-    push OFFSET umDone
-    call SaveLockedThread
-    jmp ContinueCurrentThread
-
-umWake:
+umOwnerOk:    
     mov ds:owner_sel,0	
     xor al,al
     xchg al,ds:owner_wait
@@ -4464,7 +4424,6 @@ umUnlock:
     mov ds:owner_lock,0
 
 umDone:
-    sti
     pop ax
 	ret
 UnlockMultiple	Endp
@@ -5069,8 +5028,7 @@ wait_for_signal_clear:
 	mov es:p_signal,0
 
 wait_for_signal_unlock:
-    call ds:unlock_proc
-    sti
+    call ds:try_unlock_proc
 ;	
 	pop ax
 	pop fs
@@ -5155,8 +5113,7 @@ wait_for_signal_timeout_clear:
 wait_for_signal_timeout_unlock:
 	mov bx,fs:ps_curr_thread
 	StopTimer
-    call ds:unlock_proc
-    sti
+    call ds:try_unlock_proc
 ;
     pop di
 	pop cx
@@ -5231,8 +5188,7 @@ enter_section	PROC far
 ecsUnlock:
     mov dx,task_sel
     mov ds,dx
-    call ds:unlock_proc
-    sti
+    call ds:try_unlock_proc
     	
 ecsDone:
     pop ax
@@ -5738,8 +5694,7 @@ enter_user_section_unlock:
 	mov ds:[bx].us_owner,ax
 	inc ds:[bx].us_count
     mov ds,dx
-    call ds:unlock_proc
-    sti
+    call ds:try_unlock_proc
     jmp enter_user_section_end
 	
 enter_user_section_done:
