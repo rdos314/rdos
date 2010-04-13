@@ -57,6 +57,7 @@ mp_flags            DW ?
 
 mp_processor_sign   DD ?
 mp_apic             DD ?
+mp_proc             DW ?
 mp_processor_sel    DW ?
 
 apic_arr            DW 256 DUP(?)
@@ -235,6 +236,7 @@ ApInit:
     mov ds:mp_processor_sign,eax
     GetApicId
     mov ds:mp_apic,edx
+;    
     sti
     hlt
     StartProcessor

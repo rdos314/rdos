@@ -3034,13 +3034,6 @@ start_processor:
     mov ax,task_sel
     mov ds,ax
     call ds:lock_proc
-    mov ax,flat_sel
-    mov ds,ax
-    mov bx,0F08h
-    mov [bx],fs
-    mov ax,fs:ps_null_thread
-    mov [bx+2],ax
-;
     or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
     
@@ -4268,7 +4261,7 @@ lmHalt:
 lmTake:
     mov ds:owner_sel,fs
     mov ds:owner_lock,0    
-   	add fs:ps_nesting,1
+   	lock add fs:ps_nesting,1
    	sti
 ;
     pop dx
@@ -4350,7 +4343,6 @@ tumWake:
 ;
 ; wake-up processors here!
 ;    
-    jmp tumSpinLock
 
 tumUnlock:
     mov ds:owner_lock,0
@@ -4397,6 +4389,8 @@ lumGet:
     sub fs:ps_nesting,1
 	jc lumNestingOk
 ;
+    mov cx,fs:ps_nesting
+    mov di,ds:owner_sel
     call Shutdown
 
 lumNestingOk:
@@ -4418,7 +4412,6 @@ lumOwnerOk:
 ;
 ; wake-up processors here!
 ;    
-    jmp lumSpinLock
 
 lumUnlock:
     mov ds:owner_lock,0
