@@ -795,11 +795,7 @@ sPadOk:
 	and dx,0FFFh
 	or ax,dx
 ;
-    push esi
-    mov esi,OFFSET TxSection
-    EnterSection
-    pop esi
-;    
+	EnterSection ds:TxSection
 	or ecx,80000h
 	push ecx
 	push eax
@@ -851,11 +847,7 @@ ssNoPrev:
     inc bx
     and bx,3
     mov ds:TxBufPtr,bx
-;
-    push esi
-    mov esi,OFFSET TxSection
-    LeaveSection
-    pop esi
+	LeaveSection ds:TxSection
 ;
 	pop edi
 	pop dx
@@ -1168,8 +1160,7 @@ Init	Proc far
 	rep stosb
 ;
 	mov ds:EeAdrLen,8
-	mov esi,OFFSET TxSection
-	InitSection
+	InitSection ds:TxSection
 ;
 	mov eax,SIZE data
 	mov bx,ether_data2_sel
@@ -1182,8 +1173,7 @@ Init	Proc far
 	rep stosb
 ;
 	mov ds:EeAdrLen,8
-	mov esi,OFFSET TxSection
-	InitSection
+	InitSection ds:TxSection
 ;
 	mov ax,cs
 	mov es,ax

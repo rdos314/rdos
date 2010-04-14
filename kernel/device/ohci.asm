@@ -265,13 +265,10 @@ PAGE
 AllocateBlock32	PROC near
     push ds
     push eax
-    push esi
 ;    
     mov ax,ohci_data_sel
     mov ds,ax
-    mov esi,OFFSET OhciSection
-    EnterSection
-;    
+    EnterSection ds:OhciSection
     mov edx,ds:OhciList32
 	or edx,edx
 	jnz allocate_block32_done
@@ -298,10 +295,8 @@ allocate_block32_loop:
 allocate_block32_done:
 	mov eax,es:[edx]
 	mov ds:OhciList32,eax
-	mov esi,OFFSET OhciSection
-	LeaveSection
+    LeaveSection ds:OhciSection
 ;
-    pop esi
 	pop eax
 	pop ds
 	ret
@@ -325,19 +320,16 @@ PAGE
 FreeBlock32	PROC near
     push ds
 	push eax
-	push esi
 ;
     mov ax,ohci_data_sel
     mov ds,ax
 ;    
-	mov esi,OFFSET OhciSection
-	EnterSection
+    EnterSection ds:OhciSection
 	mov eax,ds:OhciList32
 	mov es:[edx],eax
 	mov ds:OhciList32,edx
-	LeaveSection
+    LeaveSection ds:OhciSection
 ;	
-    pop esi
 	pop eax
 	pop ds
 	ret
@@ -642,11 +634,8 @@ PAGE
 AddControlEd	PROC near
     push gs
     push ebx
-    push esi
 ;
-    mov esi,OFFSET ohc_section
-    EnterSection
-;    
+    EnterSection ds:ohc_section
     call AllocateEd
     mov gs,ds:ohc_reg_sel
     mov ebx,gs:HcControlHeadEd
@@ -669,11 +658,8 @@ AddControlEd	PROC near
 ;    
     pop edx
     pop eax
+    LeaveSection ds:ohc_section
 ;    
-    mov esi,OFFSET ohc_section
-    LeaveSection
-;    
-    pop esi
     pop ebx
     pop gs
     ret
@@ -700,11 +686,8 @@ PAGE
 AddBulkEd	PROC near
     push gs
     push ebx
-    push esi
 ;
-    mov esi,OFFSET ohc_section
-    EnterSection
-;    
+    EnterSection ds:ohc_section
     call AllocateEd
     mov gs,ds:ohc_reg_sel
     mov ebx,gs:HcBulkHeadEd
@@ -727,11 +710,8 @@ AddBulkEd	PROC near
 ;    
     pop edx
     pop eax
+    LeaveSection ds:ohc_section
 ;    
-    mov esi,OFFSET ohc_section
-    LeaveSection
-;    
-    pop esi
     pop ebx
     pop gs
     ret
@@ -913,11 +893,8 @@ PAGE
 
 AddIntrEd	PROC near
     push ebx
-    push esi
 ;
-    mov esi,OFFSET ohc_section
-    EnterSection
-;    
+    EnterSection ds:ohc_section
     call AllocateEd
 ;
     call GetIntrEd
@@ -941,11 +918,8 @@ AddIntrEd	PROC near
 ;    
     pop edx
     pop eax
+    LeaveSection ds:ohc_section
 ;    
-    mov esi,OFFSET ohc_section
-    LeaveSection
-;    
-    pop esi
     pop ebx
     ret
 AddIntrEd  ENDP
@@ -1961,9 +1935,7 @@ ClosePipe   Proc far
 ;        
     call RemovePipe
 ;
-    mov esi,OFFSET ohc_section
-    EnterSection
-;    
+    EnterSection ds:ohc_section
     mov edx,fs:osp_ed
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
@@ -2142,9 +2114,7 @@ rpSetupDone:
     mov ax,2
     WaitMilliSec
 ;
-    mov esi,OFFSET ohc_section
-    LeaveSection
-;    
+    LeaveSection ds:ohc_section
     mov ax,fs
     mov es,ax
     xor ax,ax
@@ -2548,8 +2518,7 @@ ifTabLoop:
 ;
     InitUsbDevice
 ;    
-    mov esi,OFFSET ohc_section
-    InitSection
+    InitSection ds:ohc_section
     mov fs,ds:ohc_reg_sel
 ;    
     mov eax,0C000007Fh    
@@ -2843,8 +2812,7 @@ Init	Proc far
 	xor al,al
 	rep stosb
 ;	
-	mov esi,OFFSET OhciSection
-	InitSection
+	InitSection ds:OhciSection
 ;
 	mov ax,cs
 	mov es,ax

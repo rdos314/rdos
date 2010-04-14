@@ -703,44 +703,78 @@ SignalWait	MACRO
 					ENDM
 
 
-; IN  DS:ESI        Section
 InitSection     MACRO section
-	OsGate init_section_nr
+    push esi
+    lea esi,section
+    OsGate init_section_nr
+    pop esi
 						ENDM
 
-; IN  DS:ESI        Section
 EnterSection    MACRO section
+    pushf
+	cli
+    push esi
+	lea esi,section
 	OsGate enter_section_nr
+	pop esi
+	popf
 						ENDM
 
-; IN  DS:ESI        Section
 LeaveSection    MACRO section
+	pushf
+	cli
+	push esi
+	lea esi,section
 	OsGate leave_section_nr
+	pop esi
+	popf
 						ENDM
 
-; IN  DS:ESI        Section
-InitReadWriteSection    MACRO
-	OsGate init_read_write_section_nr
+InitReadWriteSection    MACRO section
+    push esi
+    lea esi,section
+    OsGate init_read_write_section_nr
+    pop esi
 						ENDM
 
-; IN  DS:ESI        Section
-EnterReadSection        MACRO
+EnterReadSection        MACRO section
+	pushf
+	cli
+	push esi
+	mov esi,OFFSET section.ssync_value
 	OsGate enter_read_section_nr
+	pop esi
+	popf
 						ENDM
 
-; IN  DS:ESI        Section
-LeaveReadSection        MACRO
+LeaveReadSection        MACRO section
+	pushf
+	cli
+	push esi
+	mov esi,OFFSET section.ssync_value
 	OsGate leave_read_section_nr
+	pop esi
+	popf
 						ENDM
 
-; IN  DS:ESI        Section
-EnterWriteSection       MACRO
+EnterWriteSection       MACRO section
+	pushf
+	cli
+	push esi
+	mov esi,OFFSET section.swrite_value
 	OsGate enter_write_section_nr
+	pop esi
+	popf
 						ENDM
 
-; IN  DS:ESI        Section
-LeaveWriteSection       MACRO
+LeaveWriteSection       MACRO section
+	pushf
+	cli
+	push esi
+	mov esi,OFFSET section.swrite_value
 	OsGate leave_write_section_nr
+	pop esi
+	popf
 						ENDM
 
 ;	ES:DI		PROCEDURE

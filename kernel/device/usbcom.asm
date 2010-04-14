@@ -855,10 +855,9 @@ open_com_ftdi	Proc far
     mov dx,ds
     mov ax,es
     mov ds,ax
-    mov esi,OFFSET uds_section
-    EnterSection
+    EnterSection ds:uds_section
     mov ds:uds_port_sel,dx
-    LeaveSection
+    LeaveSection ds:uds_section       
 ;
     mov ax,usbcom_data_sel
     mov ds,ax    
@@ -888,7 +887,6 @@ PAGE
 close_com_ftdi	Proc far
     push ds
     push bx
-    push esi
 ;
     mov al,ds:ups_timer_active
     or al,al
@@ -914,10 +912,9 @@ ccfTimerClosed:
     jz ccfNoDevice
 ;
     mov ds,bx    
-    mov esi,OFFSET uds_section
-    EnterSection
+    EnterSection ds:uds_section
     mov ds:uds_port_sel,0
-    LeaveSection
+    LeaveSection ds:uds_section       
 
 ccfNoDevice:    
     mov ds,ax
@@ -928,7 +925,6 @@ ccfNoDevice:
     mov bx,ds:sd_thread
     Signal    
 ;
-    pop esi
     pop bx
     pop ds    
 	ret
@@ -1799,10 +1795,9 @@ open_com_pl	Proc far
     mov dx,ds
     mov ax,es
     mov ds,ax
-    mov esi,OFFSET uds_section
-    EnterSection
+    EnterSection ds:uds_section
     mov ds:uds_port_sel,dx
-    LeaveSection
+    LeaveSection ds:uds_section       
 ;
     mov ax,usbcom_data_sel
     mov ds,ax    
@@ -1832,7 +1827,6 @@ PAGE
 close_com_pl	Proc far
     push ds
     push bx
-    push esi
 ;
     mov al,ds:ups_timer_active
     or al,al
@@ -1858,10 +1852,9 @@ ccpTimerClosed:
     jz ccpNoDevice
 ;
     mov ds,bx    
-    mov esi,OFFSET uds_section
-    EnterSection
+    EnterSection ds:uds_section
     mov ds:uds_port_sel,0
-    LeaveSection
+    LeaveSection ds:uds_section       
 
 ccpNoDevice:    
     mov ds,ax
@@ -1872,7 +1865,6 @@ ccpNoDevice:
     mov bx,ds:sd_thread
     Signal    
 ;
-    pop esi
     pop bx
     pop ds    
 	ret
@@ -2747,17 +2739,13 @@ utDevLoop:
 ;
     mov ds,ax
     push cx
-    push esi
+    push si
 ;
-    mov esi,OFFSET uds_section
-    EnterSection
-;    
+    EnterSection ds:uds_section
     call HandleDevice
-;    
-    mov esi,OFFSET uds_section
-    LeaveSection
+    LeaveSection ds:uds_section
 ;
-    pop esi
+    pop si
     pop cx
     
 utDevNext:
@@ -2898,11 +2886,7 @@ apDescrDone:
     sti
     mov dx,es
     mov ds,dx
-    push esi
-    mov esi,OFFSET uds_section
-    EnterSection
-    pop esi
-;
+    EnterSection ds:uds_section
     mov al,ds:uds_flag
     or al,FLAG_UDS_REINIT
     and al,NOT FLAG_UDS_DISCONNECT
@@ -2916,8 +2900,7 @@ apDescrDone:
 ;
     mov dx,es
     mov ds,dx    
-    mov esi,OFFSET uds_section
-    LeaveSection
+    LeaveSection ds:uds_section
 ;    
     mov ax,usbcom_data_sel
     mov ds,ax
@@ -2958,8 +2941,7 @@ apNoRecover:
     push ds
     mov si,es
     mov ds,si
-    mov esi,OFFSET uds_section
-    InitSection
+    InitSection ds:uds_section
     pop ds
 ;
     mov si,ds:sd_ports
@@ -3479,12 +3461,8 @@ udCheckLoop:
 ;
     push ds
     pushad
-;    
     mov ds,dx
-    push esi
-    mov esi,OFFSET uds_section
-    EnterSection
-    pop esi
+    EnterSection ds:uds_section
     or ds:uds_flag,FLAG_UDS_DISCONNECT
 ;    
     mov dx,usbcom_data_sel
@@ -3524,8 +3502,7 @@ udPortSendOk:
     pop es
 
 udPortHandleOk:    
-    mov esi,OFFSET uds_section
-    LeaveSection
+    LeaveSection ds:uds_section    
 ;    
     popad
     pop ds

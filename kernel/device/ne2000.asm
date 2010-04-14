@@ -2784,10 +2784,7 @@ SendIo32	Proc far
 	mov ds,ax
 ;
 	add cx,14
-	push esi
-	mov esi,OFFSET SendSection
-	EnterSection
-	pop esi
+	EnterSection ds:SendSection
 	call WaitForSendBuffer
 ;
 	push ax
@@ -2876,10 +2873,7 @@ send_io32_done:
 	sti
 	pop ax
 	mov ds:SendPending,al
-	push esi
-	mov esi,OFFSET SendSection
-	LeaveSection
-	pop esi
+	LeaveSection ds:SendSection
 	call StartTransmit
 ;
 	pop di
@@ -2923,10 +2917,7 @@ SendIo16	Proc far
 	mov ds,ax
 ;
 	add cx,14
-	push esi
-	mov esi,OFFSET SendSection
-	EnterSection
-	pop esi
+	EnterSection ds:SendSection
 	call WaitForSendBuffer
 ;
 	push ax
@@ -2994,10 +2985,7 @@ send_io16_done:
 	sti
 	pop ax
 	mov ds:SendPending,al
-	push esi
-	mov esi,OFFSET SendSection
-	LeaveSection
-	pop esi
+	LeaveSection ds:SendSection
 	call StartTransmit
 ;
 	pop di
@@ -3041,10 +3029,7 @@ SendIo8	Proc far
 	mov ds,ax
 ;
 	add cx,14
-	push esi
-	mov esi,OFFSET SendSection
-	EnterSection
-	pop esi
+	EnterSection ds:SendSection
 	call WaitForSendBuffer
 ;
 	push ax
@@ -3114,10 +3099,7 @@ SendIo8	Proc far
 	sti
 	pop ax
 	mov ds:SendPending,al
-	push esi
-	mov esi,OFFSET SendSection
-	LeaveSection
-	pop esi
+	LeaveSection ds:SendSection
 	call StartTransmit
 ;
 	pop di
@@ -3164,10 +3146,7 @@ SendMem16	Proc far
 	mov gs,ax
 ;
 	add cx,14
-	push esi
-	mov esi,OFFSET SendSection
-	EnterSection
-	pop esi
+	EnterSection ds:SendSection
 	call WaitForSendBuffer
 ;
 	push ax
@@ -3232,10 +3211,7 @@ send_mem16_sent:
 	pop ds
 	pop ax
 	mov ds:SendPending,al
-	push esi
-	mov esi,OFFSET SendSection
-	LeaveSection
-	pop esi
+	LeaveSection ds:SendSection
 	call StartTransmit
 ;
 	pop di
@@ -3283,10 +3259,7 @@ SendMem8	Proc far
 	mov gs,ax
 ;
 	add cx,14
-	push esi
-	mov esi,OFFSET SendSection
-	EnterSection
-	pop esi
+	EnterSection ds:SendSection
 	call WaitForSendBuffer
 ;
 	push ax
@@ -3366,10 +3339,7 @@ SendMem8	Proc far
 	pop ds
 	pop ax
 	mov ds:SendPending,al
-	push esi
-	mov esi,OFFSET SendSection
-	LeaveSection
-	pop esi
+	LeaveSection ds:SendSection
 	call StartTransmit
 ;
 	pop di
@@ -3594,9 +3564,7 @@ Init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
-;
-    mov esi,OFFSET SendSection
-    InitSection
+	InitSection ds:SendSection
 ;
 ;	call InitAdapter
 ;	jc init_fail

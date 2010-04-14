@@ -551,11 +551,7 @@ WriteTaskFile	ENDP
 ReadDrive	Proc near
 	push bx
 	mov ds,fs:disc_ide_sel
-	push esi
-	mov esi,OFFSET IdeSection
-	EnterSection
-	pop esi
-;
+	EnterSection ds:IdeSection
 	GetThread
 	mov ds:IdeThread,ax
 	pop bx
@@ -597,10 +593,7 @@ ReadDriveStart:
 ReadDriveDone:
 	pushf
 	mov ds:IdeThread,0
-	push esi
-	mov esi,OFFSET IdeSection
-	LeaveSection
-	pop esi
+	LeaveSection ds:IdeSection
 	popf
 	ret
 ReadDrive	Endp
@@ -623,11 +616,7 @@ ReadDrive	Endp
 WriteDrive	Proc near
 	push bx
 	mov ds,fs:disc_ide_sel
-	push esi
-	mov esi,OFFSET IdeSection
-	EnterSection
-	pop esi
-;	
+	EnterSection ds:IdeSection
 	GetThread
 	mov ds:IdeThread,ax
 	pop bx
@@ -668,10 +657,7 @@ WriteDriveStart:
 WriteDriveDone:
 	pushf
 	mov ds:IdeThread,0
-	push esi
-	mov esi,OFFSET IdeSection
-	LeaveSection
-	pop esi
+	LeaveSection ds:IdeSection
 	popf
 	ret
 WriteDrive	Endp
@@ -1323,10 +1309,7 @@ PAGE
 
 read_drive	Proc near
 	mov ds,fs:disc_ide_sel
-	push esi
-	mov esi,OFFSET IdeSection
-	EnterSection
-	pop esi
+	EnterSection ds:IdeSection
 	mov bp,3
 
 read_drive_retry_loop:
@@ -1436,10 +1419,7 @@ read_drive_ok:
 	jnz read_sector_loop
 
 read_drive_done:
-	push esi
-	mov esi,OFFSET IdeSection
-	LeaveSection
-	pop esi
+	LeaveSection ds:IdeSection
 	ret
 read_drive	Endp
 
@@ -1460,10 +1440,7 @@ PAGE
 
 write_drive	Proc near
 	mov ds,fs:disc_ide_sel
-	push esi
-	mov esi,OFFSET IdeSection
-	EnterSection
-	pop esi
+	EnterSection ds:IdeSection
 	mov bp,3
 
 write_drive_retry_loop:
@@ -1566,10 +1543,7 @@ write_drive_ok:
 	jnz write_sector_loop
 
 write_drive_done:
-	push esi
-	mov esi,OFFSET IdeSection
-	LeaveSection
-	pop esi
+	LeaveSection ds:IdeSection
 	ret
 write_drive	Endp
 
@@ -2337,8 +2311,7 @@ init_ide_primary:
 	AllocateFixedSystemMem
 	mov ax,es
 	mov ds,ax
-	mov esi,OFFSET IdeSection
-	InitSection
+	InitSection ds:IdeSection
 ;	
 	mov ds:IdeThread,0
 	mov ds:DriveSelArr,0
@@ -2367,8 +2340,7 @@ init_ide_second:
 	AllocateFixedSystemMem
 	mov ax,es
 	mov ds,ax
-	mov esi,OFFSET IdeSection
-	InitSection
+	InitSection ds:IdeSection
 	mov ds:IdeThread,0
 	mov ds:DriveSelArr,0
 	mov ds:DriveSelArr+2,0

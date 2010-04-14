@@ -179,13 +179,9 @@ CreateReceiveEntry	Proc near
 ;
 	mov ax,flat_sel
 	mov es,ax
-;
-    push esi
-    mov esi,OFFSET ListSection
-    EnterSection	
+	EnterSection ds:ListSection
 	call AllocateDescriptor
-	LeaveSection
-	pop esi
+	LeaveSection ds:ListSection
 ;
 	mov eax,1000h
 	AllocateBigLinear
@@ -226,16 +222,13 @@ PAGE
 FreeReceiveEntry	Proc near
 	push es
 	push eax
-	push esi
 ;
 	mov ax,flat_sel
 	mov es,ax
-    mov esi,OFFSET ListSection
-    EnterSection	
+	EnterSection ds:ListSection
 	call FreeDescriptor
-    LeaveSection	
+	LeaveSection ds:ListSection
 ;
-    pop esi
 	pop eax
 	pop es
 	ret
@@ -259,14 +252,11 @@ InsertReceiveEntry	Proc near
 	push eax
 	push ecx
 	push edx
-	push esi
 ;
 	mov ax,flat_sel
 	mov es,ax
 ;
-    mov esi,OFFSET ListSection
-    EnterSection	
-;
+	EnterSection ds:ListSection
 	mov eax,ds:RxList
 	or eax,eax
 	jz ireEmpty
@@ -314,10 +304,7 @@ ireEmpty:
 	out dx,eax
 
 ireDone:
-    mov esi,OFFSET ListSection
-    LeaveSection	
-;
-	pop esi
+	LeaveSection ds:ListSection
 	pop edx
 	pop ecx
 	pop eax
@@ -350,13 +337,9 @@ CreateSendEntry	Proc near
 	mov bx,es
 	mov ax,flat_sel
 	mov es,ax
-;
-    push esi
-    mov esi,OFFSET ListSection
-    EnterSection	
+	EnterSection ds:ListSection
 	call AllocateDescriptor
-    LeaveSection	
-    pop esi
+	LeaveSection ds:ListSection
 ;
 	push ecx
 	GetSelectorBaseSize
@@ -402,11 +385,7 @@ InsertSendEntry	Proc near
 	mov es,ax
 
 iteSendLoop:
-    push esi
-    mov esi,OFFSET ListSection
-    EnterSection	
-    pop esi
-;    
+	EnterSection ds:ListSection
 	mov eax,ds:TxList
 	or eax,eax
 	jz iteEmpty
@@ -419,12 +398,7 @@ iteSendLoop:
 	mov edi,ds:TxList
 	mov eax,es:[edi].dh_link_linear
 	mov ds:TxList,eax
-;
-    push esi
-    mov esi,OFFSET ListSection
-    LeaveSection	
-    pop esi
-;	
+	LeaveSection ds:ListSection
 	call FreeSendEntry
 	pop edi
     jmp iteSendLoop
@@ -469,11 +443,7 @@ iteDone:
 	mov eax,1
 	out dx,eax
 ;
-    push esi
-    mov esi,OFFSET ListSection
-    LeaveSection	
-    pop esi
-;    
+	LeaveSection ds:ListSection
 	pop edx
 	pop ecx
 	pop eax
@@ -504,13 +474,9 @@ FreeSendEntry	Proc near
 	mov es,es:[edi].dh_data_sel
 	FreeMem
 	pop es
-;
-    push esi
-    mov esi,OFFSET ListSection
-    EnterSection
+	EnterSection ds:ListSection
 	call FreeDescriptor
-	LeaveSection
-	pop esi
+	LeaveSection ds:ListSection
 ;
 	pop eax
 	pop es
@@ -816,11 +782,7 @@ Preview	Proc far
 	mov es,ax
 
 pvCheckTx:
-    push esi
-    mov esi,OFFSET ListSection
-    EnterSection
-    pop esi
-;    
+	EnterSection ds:ListSection
 	mov edi,ds:TxList
 	or edi,edi
 	jz pvCheckRx
@@ -832,12 +794,7 @@ pvCheckTx:
 	mov edi,ds:TxList
 	mov eax,es:[edi].dh_link_linear
 	mov ds:TxList,eax
-;	
-    push esi
-    mov esi,OFFSET ListSection
-    LeaveSection
-    pop esi
-;
+	LeaveSection ds:ListSection
 	call FreeSendEntry
 	jmp pvCheckTx	
 
@@ -858,11 +815,7 @@ pvCheckRx:
 	clc
 
 pvDone:
-    push esi
-    mov esi,OFFSET ListSection
-    LeaveSection
-    pop esi
-;
+	LeaveSection ds:ListSection
 	pop edi
 	pop eax
 	pop es
@@ -1292,10 +1245,7 @@ Init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
-;
-    mov esi,OFFSET ListSection
-    InitSection
-;    	
+	InitSection ds:ListSection	
 	mov ds:FreeList,0
 	mov ds:RxList,0
 	mov ds:TxList,0

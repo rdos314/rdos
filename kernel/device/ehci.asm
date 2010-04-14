@@ -203,12 +203,10 @@ PAGE
 AllocateBlock64	PROC near
     push ds
     push eax
-    push esi
 ;    
     mov ax,ehci_data_sel
     mov ds,ax
-    mov esi,OFFSET EhciSection
-    EnterSection
+    EnterSection ds:EhciSection
     mov edx,ds:EhciList64
 	or edx,edx
 	jnz allocate_block64_done
@@ -235,10 +233,8 @@ allocate_block64_loop:
 allocate_block64_done:
 	mov eax,es:[edx]
 	mov ds:EhciList64,eax
-    mov esi,OFFSET EhciSection
-    LeaveSection
+    LeaveSection ds:EhciSection
 ;
-    pop esi
 	pop eax
 	pop ds
 	ret
@@ -262,19 +258,16 @@ PAGE
 FreeBlock64	PROC near
     push ds
 	push eax
-	push esi
 ;
     mov ax,ehci_data_sel
     mov ds,ax
 ;    
-    mov esi,OFFSET EhciSection
-    EnterSection
+    EnterSection ds:EhciSection
 	mov eax,ds:EhciList64
 	mov es:[edx],eax
 	mov ds:EhciList64,edx
-    LeaveSection
+    LeaveSection ds:EhciSection
 ;	
-    pop esi
 	pop eax
 	pop ds
 	ret
@@ -533,11 +526,8 @@ PAGE
 AddControlQh	PROC near
     push gs
     push ebx
-    push esi
 ;
-    mov esi,OFFSET ehc_section
-    EnterSection
-;    
+    EnterSection ds:ehc_section
     call AllocateQh
     mov ebx,eax
 ;    
@@ -571,6 +561,8 @@ AddControlQh	PROC near
     jmp acqDone
 
 acqInsert:
+    push esi
+;    
     mov esi,eax
     mov eax,es:[esi].qh_link
     mov es:[edx].qh_link,eax
@@ -590,13 +582,13 @@ acqEndFound:
     or si,2
     mov es:[eax].qh_link,esi
     mov es:[eax].qh_link_va,edx
+;
+    pop esi        
 
 acqDone:
     mov eax,ebx
-    mov esi,OFFSET ehc_section
-    LeaveSection
+    LeaveSection ds:ehc_section
 ;    
-    pop esi
     pop ebx
     pop gs
     ret
@@ -1417,8 +1409,7 @@ ifTabLoop:
     loop ifTabLoop    
 ;
     InitUsbDevice
-    mov esi,OFFSET ehc_section
-    InitSection
+    InitSection ds:ehc_section
 ;
     mov fs,ds:ehc_reg_sel
     mov fs:HcSegmentSelector,0
@@ -1764,9 +1755,7 @@ Init	Proc far
 	xor al,al
 	rep stosb
 ;
-    mov esi,OFFSET EhciSection
-    InitSection
-;
+    InitSection ds:EhciSection
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_usb
