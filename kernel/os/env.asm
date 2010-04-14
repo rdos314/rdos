@@ -1224,8 +1224,9 @@ init_device_loop:
 	mov bx,env_sys_sel
 	AllocateFixedSystemMem
 ;
-    InitSection es:env_sys_section
-    mov es:env_sys_raw_sel,dx
+    mov ds,bx
+    InitSection ds:env_sys_section
+    mov ds:env_sys_raw_sel,dx
 ;
 	mov eax,SIZE env_proc_seg
 	mov bx,env_proc_sel
