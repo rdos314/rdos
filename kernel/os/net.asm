@@ -114,12 +114,9 @@ FindAddress	Proc near
 	push edi
 ;
 	push ds
-	push esi
 	mov ax,net_data_sel
 	mov ds,ax
-	mov esi,OFFSET arp_section
-	EnterSection
-	pop esi
+	EnterSection ds:arp_section
 	pop ds
 	mov ax,ds:p_entry_list
 find_addr_loop:
@@ -141,12 +138,9 @@ find_addr_check_failed:
 
 find_addr_failed:
 	push ds
-	push esi
 	mov ax,net_data_sel
 	mov ds,ax
-	mov esi,OFFSET arp_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:arp_section
 	pop ds
 	xor ax,ax
 	stc
@@ -154,12 +148,9 @@ find_addr_failed:
 
 find_addr_ok:
 	push ds
-	push esi
 	mov ax,net_data_sel
 	mov ds,ax
-	mov esi,OFFSET arp_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:arp_section
 	pop ds
 	mov ax,es
 	clc
@@ -362,16 +353,12 @@ InsertAddress	Proc near
 	mov fs,ax
 	mov ax,net_data_sel
 	mov ds,ax
-	push esi
-	mov esi,OFFSET arp_section
-	EnterSection
-	pop esi
+	EnterSection ds:arp_section
 	mov di,fs:p_entry_list
 	mov fs:p_entry_list,es
 	mov es:prot_next,di
 	call CheckArp
-	mov esi,OFFSET arp_section
-	LeaveSection
+	LeaveSection ds:arp_section
 	mov ax,es
 ;
 	pop bp
@@ -980,7 +967,6 @@ ReceiveData	Proc near
 	push bx
 	push ecx
 	push dx
-	push esi
 	push edi
 ;
 	mov ax,net_data_sel
@@ -1028,9 +1014,7 @@ receive_data_arp_rec:
 
 receive_data_handle_arp:
 	mov es:ar_driver,fs
-	mov esi,OFFSET arp_section
-	EnterSection
-;	
+	EnterSection ds:arp_section
 	mov ax,ds:arp_rec_list
 	or ax,ax
 	je ins_ar_empty
@@ -1054,8 +1038,7 @@ ins_ar_empty:
 ins_ar_done:
 	xor ax,ax
 	mov es,ax
-	mov esi,OFFSET arp_section
-	LeaveSection
+	LeaveSection ds:arp_section
 	mov bx,ds:arp_thread
 	Signal
 	jmp receive_data_loop
@@ -1106,7 +1089,6 @@ receive_data_norm_remove:
 
 receive_data_done:
 	pop edi
-    pop esi
 	pop dx
 	pop ecx
 	pop bx
@@ -1349,7 +1331,7 @@ get_net_buffer	Proc far
 	push bx
 	push es
 	push cx
-	push esi
+	push si
 ;
 	movzx eax,ds:p_logical_addr_len
 	add ax,OFFSET arp_logical_addr
@@ -1368,8 +1350,7 @@ get_net_buffer	Proc far
 ;
 	mov ax,net_data_sel
 	mov ds,ax
-	mov esi,OFFSET arp_section
-	EnterSection
+	EnterSection ds:arp_section
 	mov ax,ds:arp_send_list
 	or ax,ax
 	je get_buf_arp_empty
@@ -1391,9 +1372,8 @@ get_buf_arp_empty:
 	mov ds:arp_send_list,es
 
 get_buf_arp_done:
-	mov esi,OFFSET arp_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:arp_section
+	pop si
 	pop cx
 	pop es
 	mov bx,ds:arp_thread
@@ -1450,7 +1430,7 @@ send_net	Proc far
 	push bx
 	push es
 	push cx
-	push esi
+	push si
 ;
 	movzx eax,ds:p_logical_addr_len
 	add ax,OFFSET arp_logical_addr
@@ -1469,8 +1449,7 @@ send_net	Proc far
 ;
 	mov ax,net_data_sel
 	mov ds,ax
-	mov esi,OFFSET arp_section
-	EnterSection
+	EnterSection ds:arp_section
 	mov ax,ds:arp_send_list
 	or ax,ax
 	je ins_arp_empty
@@ -1492,9 +1471,8 @@ ins_arp_empty:
 	mov ds:arp_send_list,es
 
 ins_arp_done:
-	mov esi,OFFSET arp_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:arp_section
+	pop si
 	pop cx
 	pop es
 	mov bx,ds:arp_thread
@@ -1948,8 +1926,7 @@ arp_thread_loop:
 arp_rec_loop:
 	mov ax,net_data_sel
 	mov ds,ax
-	mov esi,OFFSET arp_section
-	EnterSection
+	EnterSection ds:arp_section
 	mov ax,ds:arp_rec_list
 	or ax,ax
 	jz arp_rec_done
@@ -1968,8 +1945,7 @@ arp_rec_loop:
 	mov ds:arp_rec_list,0
 
 arp_rec_handle:
-	mov esi,OFFSET arp_section
-	LeaveSection
+	LeaveSection ds:arp_section
 	mov fs,es:ar_driver
 	call ReceivedArp
 	FreeMem
@@ -1994,8 +1970,7 @@ arp_send_loop:
 	sub es:arp_retries,1
 	jz arp_send_remove
 ;
-	mov esi,OFFSET arp_section
-	LeaveSection
+	LeaveSection ds:arp_section
 	add eax,1193 * 250 
 	adc edx,0
 	mov es:arp_timeout,eax
@@ -2022,8 +1997,7 @@ arp_send_remove:
 	mov ds:arp_send_list,0
 
 arp_send_remove_done:
-	mov esi,OFFSET arp_section
-	LeaveSection
+	LeaveSection ds:arp_section
 	mov bx,es:arp_owner
 	Signal
 	xor ax,ax
@@ -2064,13 +2038,11 @@ arp_send_done:
 	mov ds:arp_answ_list,0
 
 arp_answ_handle:
-	mov esi,OFFSET arp_section
-	LeaveSection
+	LeaveSection ds:arp_section
 	jmp arp_rec_loop
 	
 arp_answ_done:
-	mov esi,OFFSET arp_section
-	LeaveSection
+	LeaveSection ds:arp_section
 	jmp arp_thread_loop
 
 PAGE
@@ -2162,8 +2134,7 @@ capture_thread_pr:
     mov ds,bx
     GetThread
     mov ds:capture_thread,ax
-    mov esi,OFFSET capture_section
-    LeaveSection
+    LeaveSection ds:capture_section
 ;    
     mov ax,flat_sel
     mov es,ax
@@ -2233,8 +2204,7 @@ ctpLoop:
     WaitForSignal
 
 ctpMore:
-    mov esi,OFFSET capture_section
-    EnterSection
+    EnterSection ds:capture_section    
     mov ax,ds:capture_thread
     or ax,ax
     jz ctpExit
@@ -2259,8 +2229,7 @@ ctpUnlink:
     mov ds:capture_list,eax
 
 ctpWrite:	
-    mov esi,OFFSET capture_section
-    LeaveSection
+    LeaveSection ds:capture_section
 ;    
     mov edi,edx
     mov ecx,es:[edi].cb_len1
@@ -2273,14 +2242,12 @@ ctpWrite:
     jmp ctpMore
     
 ctpNext:
-    mov esi,OFFSET capture_section
-    LeaveSection
+    LeaveSection ds:capture_section
     jmp ctpLoop
 
 ctpExit:  
     mov ds:capture_thread,0
-    mov esi,OFFSET capture_section
-    LeaveSection
+    LeaveSection ds:capture_section
     retf    
 
 PAGE
@@ -2302,12 +2269,10 @@ notify_ethernet_packet_name DB 'Notify Ethernet Packet', 0
 notify_ethernet_packet	Proc far
     push ds
     push ax
-    push esi
 ;
     mov ax,net_data_sel
     mov ds,ax
-    mov esi,OFFSET capture_section
-    EnterSection
+    EnterSection ds:capture_section
     mov ax,ds:capture_thread
     or ax,ax
     jz nepLeave
@@ -2362,10 +2327,8 @@ nepSignal:
     pop es
 
 nepLeave:
-    mov esi,OFFSET capture_section
-    LeaveSection
+    LeaveSection ds:capture_section
 ;    
-    pop esi
     pop ax
     pop ds    
 	ret
@@ -2390,13 +2353,12 @@ start_net_capture	Proc
     push ax
     push bx
     push cx
-    push esi
+    push si
     push di
 ;    
     mov ax,net_data_sel
     mov ds,ax
-    mov esi,OFFSET capture_section
-    EnterSection
+    EnterSection ds:capture_section
 ;
     mov ds:capture_handle,bx
 	mov ax,cs
@@ -2409,7 +2371,7 @@ start_net_capture	Proc
 	CreateThread
 ;	
 	pop di
-    pop esi
+    pop si
     pop cx
     pop bx
     pop ax
@@ -2432,14 +2394,10 @@ stop_net_capture_name DB 'Stop Net Capture', 0
 stop_net_capture	Proc
     push ds
     push bx
-    push esi
 ;    
     mov bx,net_data_sel
     mov ds,bx
-;
-    mov esi,OFFSET capture_section
-    EnterSection
-;    
+    EnterSection ds:capture_section
     xor bx,bx
     xchg bx,ds:capture_thread
     or bx,bx
@@ -2451,10 +2409,8 @@ stop_net_capture	Proc
 
 sncThreadDone:
     mov ds:capture_handle,0
-    mov esi,OFFSET capture_section
-    LeaveSection
+    LeaveSection ds:capture_section        
 ;
-    pop esi
     pop bx
     pop ds    
 	retf32
@@ -2531,12 +2487,8 @@ init	PROC far
 	mov ds:capture_handle,0
 	mov ds:capture_thread,0
 	mov ds:capture_list,0
-;
-    mov esi,OFFSET arp_section
-    InitSection
-;
-    mov esi,OFFSET capture_section
-    InitSection    	
+    InitSection ds:arp_section
+    InitSection ds:capture_section
 ;
 	mov ax,cs
 	mov ds,ax

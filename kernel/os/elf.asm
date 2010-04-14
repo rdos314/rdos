@@ -97,12 +97,9 @@ create_lib_size_ok:
 	mov byte ptr es:[edi],0
 	mov es:lib_usage_count,1
 	push ds
-	push esi
 	mov ax,es
 	mov ds,ax
-	mov esi,OFFSET lib_section
-	InitSection
-	pop esi
+	InitSection ds:lib_section
 	pop ds
 ;	
 	mov es:lib_file_handle,bx
@@ -200,13 +197,11 @@ FindLib	Proc near
 	push ds
 	push eax
 	push ecx
-	push esi
+	push si
 ;
 	mov ax,elf_app_sel
 	mov ds,ax
-	mov esi,OFFSET elf_section
-	EnterSection
-;	
+	EnterSection ds:elf_section
 	mov ax,ds:elf_dlls
 	or ax,ax
 	jz find_lib_try_app
@@ -238,18 +233,16 @@ find_lib_try_app:
 	jc find_lib_ok
 
 find_lib_fail:
-    mov esi,OFFSET elf_section
-    LeaveSection
+	LeaveSection ds:elf_section
 	stc
 	jmp find_lib_done
 
 find_lib_ok:
-    mov esi,OFFSET elf_section
-    LeaveSection
+	LeaveSection ds:elf_section
 	clc
 
 find_lib_done:
-	pop esi
+	pop si
 	pop ecx
 	pop eax
 	pop ds
@@ -881,17 +874,12 @@ load_elf	Endp
 
 open_app	Proc far
 	push ds
-	push esi
-;	
 	mov ax,elf_app_sel
 	mov ds,ax
 	mov ds:elf_app,0
 	mov ds:elf_dlls,0
 	mov ds:elf_mem_blocks,0
-	mov esi,OFFSET elf_section
-	InitSection
-;
-    pop esi	
+	InitSection ds:elf_section
 	pop ds
 	ret
 open_app	Endp
@@ -933,7 +921,6 @@ allocate_mem	PROC far
 	push es
 	push eax
 	push ecx
-	push esi
 ;
 	dec eax
 	and ax,0F000h
@@ -950,14 +937,14 @@ allocate_mem	PROC far
 	mov es:mem_size,ecx
 	mov ax,elf_app_sel
 	mov ds,ax
-	mov esi,OFFSET elf_section
-	EnterSection
+	EnterSection ds:elf_section
 ;
 	mov ax,ds:elf_mem_blocks
 	or ax,ax
 	je alloc_ins_empty
 ;
 	push ds
+	push si
 	mov ds,ax
 	mov si,ds:mem_prev
 	mov ds:mem_prev,es
@@ -965,6 +952,7 @@ allocate_mem	PROC far
 	mov ds:mem_next,es
 	mov es:mem_next,ax
 	mov es:mem_prev,si
+	pop si
 	pop ds
 	jmp alloc_ins_done
 
@@ -974,10 +962,8 @@ alloc_ins_empty:
 
 alloc_ins_done:
 	mov ds:elf_mem_blocks,es
-	mov esi,OFFSET elf_section
-	LeaveSection
+	LeaveSection ds:elf_section
 ;
-    pop esi
 	pop ecx
 	pop eax
 	pop es
@@ -1004,13 +990,12 @@ free_mem	PROC far
 	push eax
 	push ecx
 	push edx
-	push esi
+	push si
 	push edi
 ;
 	mov ax,elf_app_sel
 	mov ds,ax
-	mov esi,OFFSET elf_section
-	EnterSection
+	EnterSection ds:elf_section
 
 free_mem_more:
 	mov ax,ds:elf_mem_blocks
@@ -1056,11 +1041,10 @@ free_mem_last_block:
 	mov ds:elf_mem_blocks,0
 
 free_mem_done:
-    mov esi,OFFSET elf_section
-    LeaveSection
+	LeaveSection ds:elf_section
 ;
 	pop edi
-	pop esi
+	pop si
 	pop edx
 	pop ecx
 	pop eax

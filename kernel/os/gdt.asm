@@ -228,16 +228,14 @@ allocate_name	DB 'Allocate Gdt',0
 allocate_gdt	PROC far
 	push ds
 	push es
-	push esi
+	push si
 	push di
 ;
 	mov si,system_data_sel
 	mov ds,si
 	mov si,gdt_sel
 	mov es,si
-	mov esi,OFFSET gdt_section
-	EnterSection
-;	
+	EnterSection ds:gdt_section
 	xor di,di
 	mov si,es:[di]
 	or si,si
@@ -291,11 +289,10 @@ alloc_gdt_room:
 	mov bx,si
 	mov si,es:[si]
 	mov es:[di],si
-	mov esi,OFFSET gdt_section
-	LeaveSection
+	LeaveSection ds:gdt_section
 ;
 	pop di
-	pop esi
+	pop si
 	pop es
 	pop ds
 	ret
@@ -319,27 +316,23 @@ free_name	DB 'Free Gdt',0
 free_gdt	PROC far
 	push ds
 	push es
-	push esi
+	push si
 ;
 	mov si,system_data_sel
 	mov ds,si
 	mov si,gdt_sel
 	mov es,si
 ;
-    mov esi,OFFSET gdt_section
-    EnterSection
-;    
+	EnterSection ds:gdt_section
 	mov byte ptr es:[bx+5],0
 	xor si,si
 	mov si,es:[si]
 	mov es:[bx],si
 	xor si,si
 	mov es:[si],bx
-;	
-    mov esi,OFFSET gdt_section
-    LeaveSection
+	LeaveSection ds:gdt_section
 ;
-	pop esi
+	pop si
 	pop es
 	pop ds
 	ret
@@ -363,7 +356,7 @@ get_free_gdt_name	DB 'Get Free Gdt Entries',0
 get_free_gdt	PROC far
 	push ds
 	push es
-	push esi
+	push si
 	push di
 ;
     xor ax,ax
@@ -371,9 +364,7 @@ get_free_gdt	PROC far
 	mov ds,si
 	mov si,gdt_sel
 	mov es,si
-	mov esi,OFFSET gdt_section
-	EnterSection
-;	
+	EnterSection ds:gdt_section
 	xor di,di
 	mov si,es:[di]
 
@@ -389,11 +380,10 @@ gfgLoop:
     jmp gfgLoop
 
 gfgDone:
-    mov esi,OFFSET gdt_section
-    LeaveSection
+	LeaveSection ds:gdt_section
 ;
     pop di
-    pop esi
+    pop si
     pop es
     pop ds
     retf32

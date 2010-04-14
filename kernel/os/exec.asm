@@ -1342,14 +1342,13 @@ DoSpawn Endp
 
 WaitForSpawn Proc near	
     push ds
-    push esi
+    push ax
 ;    
-	mov si,gs
-	mov ds,si
-	mov esi,OFFSET s_sect1
-	EnterSection
+	mov ax,gs
+	mov ds,ax
+	EnterSection ds:s_sect1
 ;
-    pop esi
+    pop ax
     pop ds
     ret
 WaitForSpawn    Endp
@@ -1501,10 +1500,7 @@ spCopyExeLoop:
 	mov ax,gs
 	mov ds,ax
 	mov es,ax
-	push esi
-	mov esi,OFFSET s_sect1
-	LeaveSection
-	pop esi
+	LeaveSection ds:s_sect1
 	WaitForSignal
 ;
 	mov ax,10
@@ -1546,8 +1542,7 @@ spFail:
 	mov gs:s_ret_code,-1
 	mov ax,gs
 	mov ds,ax
-	mov esi,OFFSET s_sect1
-	LeaveSection
+	LeaveSection ds:s_sect1
 	WaitForSignal
 ;
 	mov ax,10

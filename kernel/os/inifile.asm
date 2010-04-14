@@ -217,10 +217,7 @@ LockIni	Proc near
 ;	
     push ds
     mov ds,[si].ih_sel
-    push esi
-    mov esi,OFFSET if_section
-    EnterSection
-    pop esi
+    EnterSection ds:if_section
     pop ds
 ;
 	mov bx,[si].ih_file_handle
@@ -282,8 +279,7 @@ UnlockIni	Proc near
 
 uiNoMem:
     mov ds,[si].ih_sel
-    mov esi,OFFSET if_section
-    LeaveSection
+    LeaveSection ds:if_section
 ;    
 	popad
 	pop es
@@ -740,23 +736,19 @@ CreateIniSel	proc near
 	push es
 	push eax
 	push cx
-	push esi
 ;
 	mov eax,SIZE ini_file_seg
 	AllocateSmallGlobalMem
 	mov ax,es
 	mov ds,ax
 ;
-    mov esi,OFFSET if_section
-    InitSection
-;    
+	InitSection ds:if_section
 	GetFileInfo
 	mov ds:if_access,cl
 	mov ds:if_file_sel,ax
 	mov ds:if_usage,0
 	mov ds:if_list,0
 ;
-    pop esi
 	pop cx
 	pop eax
 	pop es
@@ -778,7 +770,6 @@ FreeIniSel	proc near
 	push es
 	push ax
 	push cx
-	push esi
 ;
 	sub ds:if_usage,1
 	jnz fisDone
@@ -789,12 +780,11 @@ FreeIniSel	proc near
 	cmp cx,ds:is_sys_sel
 	jne fisPriv
 ;
-    mov esi,OFFSET is_section
-    EnterSection
+	EnterSection ds:is_section
 	mov es,cx
 	mov ds:is_sys_sel,0
 	FreeMem
-	LeaveSection
+	LeaveSection ds:is_section
 	jmp fisDone
 
 fisPriv:
@@ -802,7 +792,6 @@ fisPriv:
 	FreeMem
 
 fisDone:
-    pop esi
 	pop cx
 	pop ax
 	pop es
@@ -870,13 +859,11 @@ open_sys_ini	Proc far
 	push ds
 	push es
 	push ax
-	push esi
 ;
 	xor bx,bx
 	mov ax,inifile_sys_sel
 	mov ds,ax
-	mov esi,OFFSET is_section
-	EnterSection
+	EnterSection ds:is_section
 ;
 	mov ax,ds:is_sys_sel
 	or ax,ax
@@ -894,15 +881,13 @@ open_sys_ini	Proc far
 osiCreateHandle:
 	mov ax,inifile_sys_sel
 	mov ds,ax
-	mov esi,OFFSET is_section
-	LeaveSection
+	LeaveSection ds:is_section
 ;
 	mov ds,ds:is_sys_sel
 	call CreateIniHandle
 	clc
 
 osiDone:
-    pop esi
 	pop ax
 	pop es
 	pop ds
@@ -1916,8 +1901,7 @@ init	Proc far
 	AllocateFixedSystemMem
 	mov ax,es
 	mov ds,ax
-	mov esi,OFFSET is_section
-	InitSection
+	InitSection ds:is_section
 	mov es:is_sys_sel,0
 ;
 	mov ax,cs

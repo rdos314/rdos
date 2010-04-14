@@ -1183,12 +1183,11 @@ init_process_block	PROC near
 	mov es:pd_wait,0
 ;	
 	push ds
-	push esi
+	push si
 	mov si,es
 	mov ds,si
-	mov esi,OFFSET pd_section
-	InitSection
-	pop esi
+	InitSection ds:pd_section
+	pop si
 	pop ds
 ;    
     mov ax,es
@@ -1788,8 +1787,7 @@ terminate_proc:
     sub ds:pd_ref_count,1
     jz terminate_free_pd
 ;
-    mov esi,OFFSET pd_section
-    EnterSection
+    EnterSection ds:pd_section
 ;    
     mov ds:pd_proc_sel,0
     mov ax,ds:pd_wait
@@ -1800,8 +1798,7 @@ terminate_proc:
 	SignalWait
 
 terminate_proc_sig_done:   
-    mov esi,OFFSET pd_section
-    LeaveSection
+    LeaveSection ds:pd_section
     xor ax,ax
     mov ds,ax
     jmp terminate_pd_done    

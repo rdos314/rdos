@@ -5478,21 +5478,15 @@ PAGE
 enter_read_section_name	DB 'Enter Read Section',0
     
 enter_read_section	PROC far
-    add esi,OFFSET ssync_value
-    EnterSection
-    sub esi,OFFSET ssync_value
+    EnterSection ds:[esi].ssync_value
 ;    
 	sub [esi].sread_value,1
 	jnc enter_read_ok
 ;	
-    add esi,OFFSET swrite_value
-    EnterSection
-    sub esi,OFFSET swrite_value
+    EnterSection ds:[esi].swrite_value
 
 enter_read_ok:
-    add esi,OFFSET ssync_value
-    LeaveSection
-    sub esi,OFFSET ssync_value
+    LeaveSection ds:[esi].ssync_value
 	ret
 enter_read_section	ENDP
 
@@ -5512,21 +5506,15 @@ PAGE
 leave_read_section_name	DB 'Leave Read Section',0
     
 leave_read_section	PROC far
-    add esi,OFFSET ssync_value
-    EnterSection
-    sub esi,OFFSET ssync_value
+    EnterSection ds:[esi].ssync_value
 ;    
 	add [esi].sread_value,1
 	jnc leave_read_ok
 ;	
-    add esi,OFFSET swrite_value
-    LeaveSection
-    sub esi,OFFSET swrite_value
+    LeaveSection ds:[esi].swrite_value
     
 leave_read_ok:
-    add esi,OFFSET ssync_value
-    LeaveSection
-    sub esi,OFFSET ssync_value
+    LeaveSection ds:[esi].ssync_value
 	ret
 leave_read_section	ENDP
 
@@ -5546,9 +5534,7 @@ PAGE
 enter_write_section_name	DB 'Enter Write Section',0
     
 enter_write_section	PROC far
-	add esi,OFFSET swrite_value
-	EnterSection
-	sub esi,OFFSET swrite_value
+	EnterSection [esi].swrite_value
 	ret
 enter_write_section	ENDP
 
@@ -5568,9 +5554,7 @@ PAGE
 leave_write_section_name	DB 'Leave Write Section',0
     
 leave_write_section	PROC far
-    add esi,OFFSET swrite_value
-    LeaveSection
-    sub esi,OFFSET swrite_value
+    LeaveSection ds:[esi].swrite_value
 	ret
 leave_write_section	ENDP
 

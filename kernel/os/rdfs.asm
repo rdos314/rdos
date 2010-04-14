@@ -190,11 +190,7 @@ CreateDrive	Proc near
 	mov ds:info_sector.ri_data_sectors,edx
 	mov ds:info_sector.ri_free_sectors,edx
 	mov ds:info_sector.ri_hole_size,edx
-;
-    push esi
-    mov esi,OFFSET alloc_section
-    InitSection
-    pop esi	
+	InitSection ds:alloc_section
 	mov ds:alloc_sel,0
 ;
 	pop edx

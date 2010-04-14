@@ -519,11 +519,7 @@ request_private_irq_handler	Proc far
 	mov si,bx
 	add si,si
 	mov si,word ptr cs:[si].irq_offs_table
-	push esi
-	lea si,[si].usage_section
-	movzx esi,si
-	EnterSection
-	pop esi
+	EnterSection ds:[si].usage_section
 	mov ds:[si].user_data,dx
 	mov word ptr ds:[si].user_handler,di
 	mov word ptr ds:[si].user_handler+2,es
@@ -761,12 +757,7 @@ remove_pic_done:
 	mov ds,ax
 	add bx,bx
 	mov bx,word ptr cs:[bx].irq_offs_table
-;	
-	push esi
-	lea si,[bx].usage_section
-	movzx esi,si
-	LeaveSection
-	pop esi
+	LeaveSection ds:[bx].usage_section
 ;
 	pop bx
 	pop ax

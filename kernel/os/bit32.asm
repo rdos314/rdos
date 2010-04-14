@@ -805,11 +805,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetMask	Proc near
-    push esi
-    mov esi,OFFSET v_sprite_section
-    EnterSection
-    pop esi
-;    
+	EnterSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push ebx
 	push cx
@@ -878,11 +874,7 @@ set_mask_done:
 	pop cx
 	pop ebx
 	pop word ptr [bp].curr_x
-;
-    push esi
-    mov esi,OFFSET v_sprite_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:v_sprite_section
 	ret
 SetMask Endp
 
@@ -901,11 +893,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HollowLine	Proc near
-    push esi
-    mov esi,OFFSET v_sprite_section
-    EnterSection
-    pop esi
-;
+	EnterSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push cx
 	push edi
@@ -989,11 +977,7 @@ hollow_line_done:
 	pop edi
 	pop cx
 	pop word ptr [bp].curr_x
-;
-    push esi
-    mov esi,OFFSET v_sprite_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:v_sprite_section
 	ret
 HollowLine	Endp
 
@@ -1012,11 +996,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FilledLine	Proc near
-    push esi
-    mov esi,OFFSET v_sprite_section
-    EnterSection
-    pop esi
-;
+	EnterSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push cx
 	push edi
@@ -1083,11 +1063,7 @@ filled_line_done:
 	pop edi
 	pop cx
 	pop word ptr [bp].curr_x
-;
-    push esi
-    mov esi,OFFSET v_sprite_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:v_sprite_section
 	ret
 FilledLine	Endp
 
@@ -1107,11 +1083,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SplitLine	Proc near
-    push esi
-    mov esi,OFFSET v_sprite_section
-    EnterSection
-    pop esi
-;    
+	EnterSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push cx
 	push dx
@@ -1216,11 +1188,7 @@ split_line_done:
 	pop dx
 	pop cx
 	pop word ptr [bp].curr_x
-;
-    push esi
-    mov esi,OFFSET v_sprite_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:v_sprite_section
 	ret
 SplitLine	Endp
 
@@ -1300,11 +1268,7 @@ set_native	Proc far
 	sub sp,4
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
-;	
-    push esi
-    mov esi,OFFSET v_sprite_section
-    EnterSection
-    pop esi
+	EnterSection ds:v_sprite_section
 ;
     cmp dx,ds:v_y_min
     jl set_native_done
@@ -1377,11 +1341,7 @@ set_native_sprite_hidden:
     ShowSpriteLine
 
 set_native_done:
-    push esi
-    mov esi,OFFSET v_sprite_section
-    LeaveSection
-    pop esi
-;    
+	LeaveSection ds:v_sprite_section
     add sp,4
 	popad
 	pop fs
@@ -1573,11 +1533,7 @@ set_pixel	Proc far
 	sub sp,4
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
-;
-    push esi
-    mov esi,OFFSET v_sprite_section
-    EnterSection
-    pop esi
+	EnterSection ds:v_sprite_section
 ;
     cmp cx,ds:v_x_min
     jl set_pixel_done
@@ -1617,11 +1573,7 @@ set_pixel_no_sprite:
     call ds:set_proc
 
 set_pixel_done:
-    push esi
-    mov esi,OFFSET v_sprite_section
-    LeaveSection
-    pop esi
-;
+	LeaveSection ds:v_sprite_section
     add sp,4
     pop bp
 	pop edi
@@ -1658,11 +1610,7 @@ draw_mask_line	Proc far
 	mov bp,sp
 	sub sp,4	
 	mov [bp].curr_x,edx
-;
-    push esi
-    mov esi,OFFSET v_sprite_section
-    EnterSection
-    pop esi
+	EnterSection ds:v_sprite_section
 ;
     push ax
     mov ax,[bp].curr_y
@@ -1768,11 +1716,7 @@ draw_mask_line_do:
     ShowSpriteLine
 
 draw_mask_line_done:
-    push esi
-    mov esi,OFFSET v_sprite_section
-    LeaveSection
-    pop esi
-;    
+	LeaveSection ds:v_sprite_section
     add sp,4
 	popad
 	pop gs
@@ -2195,11 +2139,7 @@ line_bresen_sprite:
 	jmp line_bresen_dx_sprite_next
 
 line_bresen_dx_sprite_loop:
-    push esi
-    mov esi,OFFSET v_sprite_section
-    EnterSection
-    pop esi
-;    
+	EnterSection ds:v_sprite_section
 	push ax
 	mov ax,1
 	HideSpriteLine
@@ -2207,11 +2147,7 @@ line_bresen_dx_sprite_loop:
 	call ds:set_proc
 	ShowSpriteLine
 	pop ax
-;	
-    push esi
-    mov esi,OFFSET v_sprite_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:v_sprite_section
 ;
 	cmp cx,[bp].dl_x2
 	je line_done
@@ -2247,11 +2183,7 @@ line_bresen_dx_sprite_next:
 	jmp line_bresen_dx_sprite_loop
 
 line_bresen_dy_sprite_loop:
-    push esi
-    mov esi,OFFSET v_sprite_section
-    EnterSection
-    pop esi
-;
+	EnterSection ds:v_sprite_section
 	push ax
 	mov ax,1
 	HideSpriteLine
@@ -2259,11 +2191,7 @@ line_bresen_dy_sprite_loop:
 	call ds:set_proc
 	ShowSpriteLine
 	pop ax
-;	
-    push esi
-    mov esi,OFFSET v_sprite_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:v_sprite_section
 ;
 	cmp dx,[bp].dl_y2
 	je line_done
@@ -2425,22 +2353,14 @@ line_vert_sprite_loop:
     cmp dx,ds:v_y_max
     jg line_vert_sprite_next
 ;
-    push esi
-    mov esi,OFFSET v_sprite_section
-    EnterSection
-    pop esi
-;    
+	EnterSection ds:v_sprite_section
     push ax
     mov ax,1
     HideSpriteLine
     pop ax
 	call ds:set_proc
 	ShowSpriteLine
-;
-    push esi
-    mov esi,OFFSET v_sprite_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:v_sprite_section
 
 line_vert_sprite_next:
 	add edi,esi

@@ -461,14 +461,11 @@ bios_proc_check:
 	or ax,ax
 	jz bios_proc_loop
 ;
-    push esi
-    mov esi,OFFSET bios_section
-    EnterSection
+	EnterSection ds:bios_section
 	mov fs,ds:bios_list
 	mov ax,fs:list_link
 	mov ds:bios_list,ax
-	LeaveSection
-	pop esi
+	LeaveSection ds:bios_section
 ;
 	mov ax,flat_sel
 	mov ds,ax
@@ -548,14 +545,11 @@ V86_bios_int	Proc far
 	mov ds,ax
 ;
 	ClearSignal
-	push esi
-	mov esi,OFFSET bios_section
-	EnterSection
+	EnterSection ds:bios_section
 	mov ax,ds:bios_list
 	mov es:list_link,ax
 	mov ds:bios_list,es
-	LeaveSection
-	pop esi
+	LeaveSection ds:bios_section
 ;
 	mov bx,ds:bios_thread
 	Signal
@@ -619,8 +613,7 @@ init	PROC far
 	mov bx,v86_bios_data_sel
 	AllocateFixedSystemMem
 	mov ds,bx
-	mov esi,OFFSET bios_section
-	InitSection
+	InitSection ds:bios_section
 	mov ds:bios_list,0
 	mov ds:bios_thread,0
 ;

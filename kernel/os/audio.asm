@@ -265,11 +265,7 @@ create_audio_out_channel	Proc far
 ;    
     mov ax,audio_data_sel
     mov ds,ax
-    push esi
-    mov esi,OFFSET ads_section
-    EnterSection
-    pop esi
-;    
+    EnterSection ds:ads_section
     mov ax,ds:ads_out_mixer
     or ax,ax
     jnz caocHasMixer
@@ -296,10 +292,7 @@ caocHasMixer:
 ;    
     mov ax,audio_data_sel
     mov ds,ax
-    push esi
-    mov esi,OFFSET ads_section
-    LeaveSection
-    pop esi
+    LeaveSection ds:ads_section
     pop bx    
     pop ds
 ;	
@@ -339,10 +332,7 @@ FreeMixerChannel	Proc near
 ;    
 	mov ax,audio_data_sel
 	mov ds,ax
-    push esi
-    mov esi,OFFSET ads_section
-    EnterSection
-    pop esi
+	EnterSection ds:ads_section
 ;    
     mov cx,fs:ams_count
     mov bx,OFFSET ams_sel_arr
@@ -368,10 +358,7 @@ fmcCopy:
 fmcDone:        
     xor ax,ax
     mov fs,ax
-    push esi
-    mov esi,OFFSET ads_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:ads_section
 ;	
     pop dx
     pop cx
@@ -1148,21 +1135,14 @@ atWait:
     jmp atWait
 
 atActive:
-    push esi
-    mov esi,OFFSET ads_section
-    EnterSection
-    pop esi
-;    
+    EnterSection ds:ads_section
     mov ax,ds:ads_out_mixer
     or ax,ax
     jz atActiveLeave
 ;   
     call UpdateMixer
     pushf
-    push esi
-    mov esi,OFFSET ads_section
-    LeaveSection
-    pop esi
+    LeaveSection ds:ads_section
     popf
     jc atActiveWait
 ;
@@ -1184,10 +1164,7 @@ atActiveWait:
 ;
 
 atActiveLeave:	
-    push esi
-    mov esi,OFFSET ads_section
-    LeaveSection
-    pop esi
+    LeaveSection ds:ads_section
     jmp atWait
 
 PAGE
@@ -1289,8 +1266,7 @@ init	PROC far
 	AllocateFixedSystemMem
 	mov ds,bx
 	mov ds:ads_out_mixer,0
-	mov esi,OFFSET ads_section
-	InitSection
+	InitSection ds:ads_section
 ;
 	ret
 init	ENDP

@@ -103,7 +103,7 @@ PAGE
 create_ldt	PROC near
 	push ds
 	push es
-	pushad
+	pusha
 ;
 	mov ax,thread_app_sel
 	mov ds,ax
@@ -143,11 +143,10 @@ init_ldt_loop:
 	sub di,8
 	stosw
 ;
-    mov esi,OFFSET app_ldt_section
-    InitSection
+	InitSection ds:app_ldt_section
 	mov ds:app_ldt_free,ldt_start
 ;	
-	popad
+	popa
 	pop es
 	pop ds
 	ret
@@ -220,17 +219,13 @@ allocate_name	DB 'Allocate Ldt',0
 
 allocate_ldt	PROC far
 	push es
-	push esi
 	push di
-;	
 	mov bx,thread_app_sel
 	mov ds,bx
 	push bx
 	mov ds,bx
 	mov es,bx
-	mov esi,OFFSET app_ldt_section
-	EnterSection
-;
+	EnterSection ds:app_ldt_section
 	mov ds,ds:app_ldt_data_sel
 allocate_ldt_again:
 	mov bx,es:app_ldt_free
@@ -289,12 +284,10 @@ al1:
 	mov es:app_ldt_free,di
 	mov di,ds
 	pop ds
-	mov esi,OFFSET app_ldt_section
-	LeaveSection
+	LeaveSection ds:app_ldt_section
 	mov ds,di
 ;
 	pop di
-	pop esi
 	pop es
 	ret
 allocate_ldt	ENDP
@@ -365,7 +358,7 @@ allocate_multiple_ldt	PROC far
 	push es
 	push ax
 	push dx
-	push esi
+	push si
 	push di
 	mov ax,thread_tss_sel
 	mov ds,ax
@@ -378,9 +371,7 @@ allocate_multiple_ldt	PROC far
 	mov ds,bx
 	mov es,bx
 	push ds
-	mov esi,OFFSET app_ldt_section
-	EnterSection
-;
+	EnterSection ds:app_ldt_section
 	mov ds,ds:app_ldt_data_sel
 	mov bx,ldt_start
 allocate_mldt_retry_loop:
@@ -436,11 +427,10 @@ allocate_mldt_save_head:
 allocate_mldt_end:
 	pop cx
 	pop ds
-	mov esi,OFFSET app_ldt_section
-	LeaveSection
+	LeaveSection ds:app_ldt_section
 ;
 	pop di
-	pop esi
+	pop si
 	pop dx
 	pop ax
 	pop es
@@ -466,12 +456,11 @@ free_name	DB 'Free Ldt',0
 free_ldt	PROC far
 	push ds
 	push es
-	push esi
+	push si
 	mov si,thread_app_sel
 	mov ds,si
 	push ds
-	mov esi,OFFSET app_ldt_section
-	EnterSection
+	EnterSection ds:app_ldt_section
 	mov si,ds
 	mov es,si
 	mov ds,ds:app_ldt_data_sel
@@ -480,9 +469,8 @@ free_ldt	PROC far
 	mov [bx],si
 	mov es:app_ldt_free,bx
 	pop ds
-	mov esi,OFFSET app_ldt_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:app_ldt_section
+	pop si
 	pop es
 	pop ds
 	ret

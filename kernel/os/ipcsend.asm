@@ -147,9 +147,7 @@ do_rec_zero:
 	mov ds:m_send_thread,ax
 	mov ecx,es:il_send_size
 	FreeMem
-;
-    mov esi,OFFSET m_section
-    LeaveSection	
+	LeaveSection ds:m_section
 ;
 	pop edi
 	pop esi
@@ -442,11 +440,7 @@ SendLocal	Proc near
 	push esi
 	push edi
 ;
-    push esi
-    mov esi,OFFSET m_section
-    EnterSection	
-    pop esi
-;    
+	EnterSection ds:m_section
 	ClearSignal
 	mov ax,ds:m_rec_thread
 	or ax,ax
@@ -464,10 +458,7 @@ send_local_busy:
 	mov edi,gs:il_reply_base
 	xor ax,ax
 	mov gs,ax
-    push esi	
-    mov esi,OFFSET m_section
-    LeaveSection	
-    pop esi
+	LeaveSection ds:m_section
 	jmp send_local_wait
 
 send_local_idle:

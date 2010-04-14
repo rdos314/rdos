@@ -467,11 +467,8 @@ demand_load_ldt:
 	stc
 	jnz demand_load_end
 	push ds
-	push esi
 	mov ds,ax
-	mov esi,OFFSET lib_section
-	EnterSection
-	pop esi
+	EnterSection ds:lib_section
 	pop ds
 	mov cl,[bx+5]
 	test cl,80h
@@ -591,8 +588,7 @@ demand_load_data:
 demand_load_leave:
 	mov ax,es
 	mov ds,ax
-	mov esi,OFFSET lib_section
-	LeaveSection
+	LeaveSection ds:lib_section
 	clc
 demand_load_end:
 	pop edi
@@ -1007,24 +1003,17 @@ create_lib	Proc near
 	mov cx,es:lib_resident_size
 	call null_terminate_table
 ;
-    push esi
     mov ax,es
     mov ds,ax
-    mov esi,OFFSET lib_section
-    InitSection
-    pop esi
+    InitSection ds:lib_section
 ;    
 	push ds
-	push esi
 	mov ax,ne_app_sel
 	mov ds,ax
-    mov esi,OFFSET lib_module_section
-    EnterSection	
+	EnterSection ds:lib_module_section
 	mov di,OFFSET lib_modules
 	InsertLib
-	mov esi,OFFSET lib_module_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:lib_module_section
 	pop ds
 ;
     mov es:mod_free_dll_proc,0
@@ -1170,12 +1159,7 @@ get_dll	Proc near
 	mov bx,ne_app_sel
 	mov ds,bx
 	push ds
-;	
-	push esi
-	mov esi,OFFSET lib_module_section
-	EnterSection
-	pop esi
-;	
+	EnterSection ds:lib_module_section
 	mov bx,ds:lib_modules
 	or bx,bx
 	jz get_dll_fail
@@ -1204,11 +1188,7 @@ get_dll_ok:
 	clc
 get_dll_end:
 	pop ds
-;
-    push esi
-    mov esi,OFFSET lib_module_section
-    LeaveSection
-    pop esi	
+	LeaveSection ds:lib_module_section
 ;
 	pop di
 	pop si		
@@ -1481,16 +1461,11 @@ free_dll	Proc near
 	mov es,bx
 	mov ax,ne_app_sel
 	mov ds,ax
-	mov esi,OFFSET lib_module_section
-	EnterSection
-;	
+	EnterSection ds:lib_module_section
 	mov si,OFFSET lib_modules
 	FreeModule
 	RemoveLib
-;
-    mov esi,OFFSET lib_module_section
-    LeaveSection
-;    	
+	LeaveSection ds:lib_module_section
 	call destroy_lib
 	mov bx,es:lib_file_handle
 	CloseFile
@@ -1866,15 +1841,12 @@ get_resource	Endp
 
 open_app	Proc far
 	push ds
-	push esi
 ;
 	mov ax,ne_app_sel
 	mov ds,ax
 	mov ds:lib_modules,0
-	mov esi,OFFSET lib_module_section
-	InitSection
+	InitSection ds:lib_module_section
 ;
-    pop esi
 	pop ds
 	ret
 open_app	Endp

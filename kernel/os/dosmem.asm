@@ -83,13 +83,9 @@ allocate_dos_linear	PROC far
 	push eax
 	push ebx
 	push cx
-	push esi
-;	
 	mov bx,dos_process_sel
 	mov ds,bx
-	mov esi,OFFSET dos_mem_section
-	EnterSection
-;	
+	EnterSection ds:dos_mem_section
 	dec eax
 	shr eax,4
 	add ax,2
@@ -150,12 +146,9 @@ dos_alloc_do:
 dos_alloc_done:
 	mov bx,dos_process_sel
 	mov ds,bx
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
+	LeaveSection ds:dos_mem_section
 	add edx,10h
 	clc
-;	
-	pop esi
 	pop cx
 	pop ebx
 	pop eax
@@ -165,10 +158,8 @@ dos_alloc_done:
 dos_alloc_error:
 	mov bx,dos_process_sel
 	mov ds,bx
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
+	LeaveSection ds:dos_mem_section
 	stc
-	pop esi
 	pop cx
 	pop ebx
 	pop eax
@@ -200,16 +191,13 @@ resize_dos_linear	PROC far
 	push ebx
 	push ecx
 	push edx
-	push esi
 ;
 	push eax
 	push ebx
 	mov ecx,eax
 	mov ax,dos_process_sel
 	mov ds,ax
-	mov esi,OFFSET dos_mem_section
-	EnterSection
-;	
+	EnterSection ds:dos_mem_section
 	mov ax,flat_sel
 	mov ds,ax
 	xor ebx,ebx
@@ -225,9 +213,7 @@ resize_dos_find_loop:
 	je resize_dos_id_ok
 	mov ax,dos_process_sel
 	mov ds,ax
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
-;	
+	LeaveSection ds:dos_mem_section
 	pop ebx
 	pop eax
 	xor ebx,ebx
@@ -250,9 +236,7 @@ resize_dos_id_ok:
 resize_dos_mem_inv:
 	mov ax,dos_process_sel
 	mov ds,ax
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
-;	
+	LeaveSection ds:dos_mem_section
 	pop ebx
 	pop eax
 	xor ebx,ebx
@@ -328,9 +312,7 @@ resize_dos_grow_insuff_occupied:
 	mov bx,ax
 	mov ax,dos_process_sel
 	mov ds,ax
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
-;	
+	LeaveSection ds:dos_mem_section
 	pop eax
 	pop eax
 	mov ax,8
@@ -369,15 +351,12 @@ resize_dos_grow_nosplit:
 resize_dos_leave:
 	mov ax,dos_process_sel
 	mov ds,ax
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
-;	
+	LeaveSection ds:dos_mem_section
 	pop ebx
 	pop eax
 	clc
 
 resize_dos_done:
-    pop esi
 	pop edx
 	pop ecx
 	pop ebx
@@ -405,13 +384,10 @@ free_dos_linear	PROC far
 	push ebx
 	push ecx
 	push edx
-	push esi
 ;
 	mov ax,dos_process_sel
 	mov ds,ax
-	mov esi,OFFSET dos_mem_section
-	EnterSection
-;	
+	EnterSection ds:dos_mem_section
 	xor ebx,ebx
 	mov ebx,DOS_MEM_START SHL 4
 	mov ax,flat_sel
@@ -426,8 +402,7 @@ free_dos_loop:
 	je free_dos_mem_ok
 	mov ax,dos_process_sel
 	mov ds,ax
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
+	LeaveSection ds:dos_mem_section
 	mov ax,7
 	stc
 	jmp free_dos_done
@@ -447,8 +422,7 @@ free_dos_mem_ok:
 free_dos_mem_inv:
 	mov ax,dos_process_sel
 	mov ds,ax
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
+	LeaveSection ds:dos_mem_section
 	mov ax,9
 	stc
 	jmp free_dos_done
@@ -495,12 +469,10 @@ free_dos_no_merge_up:
 	mov ds,ax
 
 free_dos_leave:
-    mov esi,OFFSET dos_mem_section
-    LeaveSection
+	LeaveSection ds:dos_mem_section
 	clc
 
 free_dos_done:
-    pop esi
 	pop edx
 	pop ecx
 	pop ebx
@@ -528,7 +500,6 @@ free_app_mem	PROC near
 	push eax
 	push ebx
 	push cx
-	push esi
 ;
 	call get_prot_psp
 	or bx,bx
@@ -537,9 +508,7 @@ free_app_mem	PROC near
 free_dos_prog_mem_start:
 	mov bx,dos_process_sel
 	mov ds,bx
-	mov esi,OFFSET dos_mem_section
-	EnterSection
-;	
+	EnterSection ds:dos_mem_section
 	mov edx,DOS_MEM_START SHL 4
 	mov bx,flat_sel
 	mov ds,bx
@@ -556,8 +525,7 @@ free_dos_prog_mem_ok:
 	jne free_dos_prog_mem_next
 	mov bx,dos_process_sel
 	mov ds,bx
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
+	LeaveSection ds:dos_mem_section
 	add edx,10h
 	FreeLinear
 	jmp free_dos_prog_mem_start
@@ -572,11 +540,9 @@ free_dos_prog_mem_next:
 free_dos_prog_mem_done:
 	mov bx,dos_process_sel
 	mov ds,bx
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
+	LeaveSection ds:dos_mem_section
 
 free_app_mem_done:
-    pop esi
 	pop cx
 	pop ebx
 	pop eax
@@ -605,13 +571,9 @@ available_dos_linear	PROC far
 	push ds
 	push ebx
 	push ecx
-	push esi
-;	
 	mov bx,dos_process_sel
 	mov ds,bx
-	mov esi,OFFSET dos_mem_section
-	EnterSection 
-;	
+	EnterSection ds:dos_mem_section
 	mov ebx,DOS_MEM_START SHL 4
 	mov ax,flat_sel
 	mov ds,ax
@@ -655,10 +617,7 @@ dos_avail_nothing1:
 dos_avail_nothing2:
 	mov bx,dos_process_sel
 	mov ds,bx
-	mov esi,OFFSET dos_mem_section
-	LeaveSection
-;
-    pop esi
+	LeaveSection ds:dos_mem_section
 	pop ecx
 	pop ebx
 	pop ds
@@ -870,13 +829,11 @@ init_process_mem	PROC near
 	push es
 	push eax
 	push edx
-	push esi
 	push di
 ;
 	mov ax,dos_process_sel
 	mov ds,ax
-	mov esi,OFFSET dos_mem_section
-	InitSection
+	InitSection ds:dos_mem_section
 ;
     LockSysEnv
     mov ds,bx
@@ -934,7 +891,6 @@ init_vect_loop:
 	loop init_vect_loop
 ;
 	pop di
-	pop esi
 	pop edx
 	pop eax
 	pop es

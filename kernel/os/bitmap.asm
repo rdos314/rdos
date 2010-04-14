@@ -80,14 +80,12 @@ init_video_bitmap	Proc far
 	push si
 	push di
 ;
-    push esi
+    push si
     mov si,es
     mov ds,si
-    mov esi,OFFSET v_section
-    InitSection
-    mov esi,OFFSET v_sprite_section
-    InitSection
-    pop esi
+    InitSection ds:v_section
+    InitSection ds:v_sprite_section
+    pop si
 ;    
 	mov es:v_usage_count,1
 	mov es:v_color,0
@@ -282,14 +280,12 @@ create_bitmap	Proc far
 	AllocateSmallKernelMem
 	pop eax
 ;
-    push esi
+    push si
     mov si,es
     mov ds,si
-    mov esi,OFFSET v_section
-    InitSection
-    mov esi,OFFSET v_sprite_section
-    InitSection
-    pop esi
+    InitSection ds:v_section
+    InitSection ds:v_sprite_section
+    pop si
 ;        
 	mov es:v_usage_count,1
 	mov es:v_color,0

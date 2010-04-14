@@ -359,13 +359,11 @@ allocate_handle_name	DB 'Allocate Handle',0
 
 allocate_handle	PROC far
 	push ax
-	push esi
+	push si
 ;
 	mov si,handle_sel
 	mov ds,si
-	mov esi,OFFSET handle_section
-	EnterSection
-;	
+	EnterSection ds:handle_section
 	mov ax,cx
 	call allocate_handle_mem
 	mov [bx].hh_sign,0
@@ -381,10 +379,7 @@ alloc_retry:
 	cmp si,OFFSET handle_arr
 	jbe alloc_retry
 ;	
-    push esi
-    mov esi,OFFSET handle_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:handle_section
 ;	
 	mov ax,handle_mem_sel
 	mov ds,ax
@@ -393,7 +388,7 @@ alloc_retry:
 	shr si,1
 	mov [bx].hh_handle,si
 ;
-	pop esi
+	pop si
 	pop ax
 	ret
 allocate_handle	ENDP
@@ -416,13 +411,11 @@ free_handle_name	DB 'Free Handle',0
 free_handle	PROC far
 	push ds
 	push ax
-	push esi
+	push si
 ;
 	mov ax,handle_sel
 	mov ds,ax
-	mov esi,OFFSET handle_section
-	EnterSection
-;	
+	EnterSection ds:handle_section
 	mov ax,handle_mem_sel
 	mov ds,ax
 	mov si,[bx].hh_handle
@@ -437,11 +430,10 @@ free_handle	PROC far
 	mov ax,ds:handle_list
 	mov [si],ax
 	mov ds:handle_list,si
-	mov esi,OFFSET handle_section
-	LeaveSection
+	LeaveSection ds:handle_section
 	xor bx,bx
 ;
-	pop esi
+	pop si
 	pop ax
 	pop ds
 	ret
@@ -467,7 +459,7 @@ clone_handle_mem	PROC far
     push ds
     push gs
 	push eax
-	push esi
+	push si
 	push di
 ;
     mov eax,SIZE clone_seg
@@ -481,8 +473,7 @@ clone_handle_mem	PROC far
 ;    
 	mov ax,handle_sel
 	mov ds,ax
-	mov esi,OFFSET handle_section
-	EnterSection
+	EnterSection ds:handle_section
 ;
     mov ax,handle_mem_sel
     mov ds,ax
@@ -502,11 +493,10 @@ clone_handle_mem	PROC far
     mov cx,MAX_HANDLES
     rep movsw
 ;    
-    mov esi,OFFSET handle_section
-    LeaveSection
+	LeaveSection ds:handle_section
 ;
     pop di
-	pop esi
+	pop si
 	pop eax
 	pop gs
 	pop ds
@@ -534,21 +524,17 @@ deref_handle_name	DB 'Deref Handle',0
 
 deref_handle	PROC far
 	push dx
-	push esi
+	push si
 ;
 	cmp bx,MAX_HANDLES
 	jae deref_fail
 ;
 	mov dx,handle_sel
 	mov ds,dx
-	push bx
-	add bx,bx
-	mov esi,OFFSET handle_section
-	EnterSection
-	mov bx,word ptr [bx].handle_arr
-	LeaveSection
-	pop si
-;	
+	mov si,bx
+	EnterSection ds:handle_section
+	mov bx,word ptr [bx+si].handle_arr
+	LeaveSection ds:handle_section
 	mov dx,handle_mem_sel
 	mov ds,dx
 	cmp ax,[bx].hh_sign
@@ -564,7 +550,7 @@ deref_fail:
 	stc
 
 deref_done:	
-	pop esi
+	pop si
 	pop dx
 	ret
 deref_handle	ENDP
@@ -603,8 +589,7 @@ init_process	PROC far
 ;
 	mov ax,handle_sel
 	mov ds,ax
-	mov esi,OFFSET handle_section
-	InitSection
+	InitSection ds:handle_section
 ;
 	mov cx,MAX_HANDLES
 	mov di,2 * MAX_HANDLES + OFFSET handle_arr
@@ -679,12 +664,11 @@ get_free_handles_name	DB 'Get Free Handles', 0
 
 get_free_handles	Proc far
     push ds
-	push esi
+	push si
 ;
 	mov si,handle_sel
 	mov ds,si
-	mov esi,OFFSET handle_section
-	EnterSection
+	EnterSection ds:handle_section
 ;
 	xor ax,ax	
 	mov si,ds:handle_list
@@ -698,10 +682,9 @@ get_free_loop:
     jmp get_free_loop 
 
 get_free_done:   
-    mov esi,OFFSET handle_section
-    LeaveSection
+	LeaveSection ds:handle_section
 ;
-    pop esi
+    pop si
     pop ds
 	retf32
 get_free_handles	Endp

@@ -113,13 +113,12 @@ notify_ir_data	Proc far
     push ds
     push ax
     push cx
-    push esi
     push di
 ;    
     mov ax,ir_data_sel
     mov ds,ax
-    mov esi,OFFSET ir_section
-    EnterSection
+;
+    EnterSection ds:ir_section
 ;
     or cx,cx
     jz nidLeave
@@ -131,11 +130,9 @@ nidLoop:
     loop nidLoop
 
 nidLeave:
-    mov esi,OFFSET ir_section
-    LeaveSection
+    LeaveSection ds:ir_section
 ;
     pop di
-    pop esi
     pop cx
     pop ax
     pop ds            
@@ -229,8 +226,7 @@ init	Proc far
 	xor di,di
 	rep stosb
 ;	
-    mov esi,OFFSET ir_section
-    InitSection
+    InitSection ds:ir_section
 ;
 	mov ax,cs
 	mov ds,ax

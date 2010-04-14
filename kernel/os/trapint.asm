@@ -1658,8 +1658,7 @@ init_irq_loop:
 	mov dx,ds:irq_pm32_sel
 	mov ds:[bx].pm32_sel,dx
 	add ax,4
-	lea si,[bx].usage_section
-	InitSection
+	InitSection ds:[bx].usage_section
 	add bx,SIZE irq_struc
 	loop init_irq_loop
 ;    
@@ -1714,12 +1713,10 @@ init_irq_pm32_loop:
 ;
 	mov bx,OFFSET irq_arr
 	mov ds:[bx].owner_cr3,-1
-	lea si,[bx].usage_section
-	EnterSection
+	EnterSection ds:[bx].usage_section
 	add bx,2 * SIZE irq_struc
 	mov ds:[bx].owner_cr3,-1
-	lea si,[bx].usage_section
-	EnterSection
+	EnterSection ds:[bx].usage_section
 ;
 	xor cx,cx
 	mov ax,cs

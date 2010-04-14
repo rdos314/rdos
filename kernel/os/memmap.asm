@@ -95,7 +95,6 @@ PAGE
 CreateUnnamed	Proc near
 	push ax
 	push edx
-	push esi
 ;
 	push eax
 	mov ax,fs_data_sel
@@ -115,19 +114,18 @@ CreateUnnamed	Proc near
     push ds
     mov ax,es
     mov ds,ax
-    mov esi,OFFSET map_section
-    InitSection
-    EnterSection
+    InitSection ds:map_section
+    EnterSection ds:map_section
     pop ds    
 	mov es:map_owner, OFFSET map_list
 ;
-    mov esi,OFFSET sys_section
-    EnterSection
+	EnterSection ds:sys_section
 	mov ax,ds:map_list
 	or ax,ax
 	je create_unnamed_empty
 ;
 	push ds
+	push si
 	mov ds,ax
 	mov si,ds:map_prev
 	mov ds:map_prev,es
@@ -135,6 +133,7 @@ CreateUnnamed	Proc near
 	mov ds:map_next,es
 	mov es:map_next,ax
 	mov es:map_prev,si
+	pop si
 	pop ds
 	jmp create_unnamed_leave
 
@@ -144,10 +143,8 @@ create_unnamed_empty:
 	mov ds:map_list,es
 
 create_unnamed_leave:
-    mov esi,OFFSET sys_section
-    LeaveSection    
+	LeaveSection ds:sys_section
 ;
-    pop esi
 	pop edx
 	pop ax
 	ret
@@ -201,16 +198,13 @@ CreateNamed	Proc near
 	mov es:map_file,0
 	mov ax,es
 	mov ds,ax
-	mov esi,OFFSET map_section
-	InitSection
-	EnterSection
+	InitSection ds:map_section
+	EnterSection ds:map_section
 	mov es:map_owner, OFFSET map_named_list
 ;
 	mov ax,fs_data_sel
 	mov ds,ax
-	mov esi,OFFSET sys_section
-	EnterSection
-;	
+	EnterSection ds:sys_section
 	mov ax,ds:map_named_list
 	or ax,ax
 	je create_named_empty
@@ -234,8 +228,7 @@ create_named_empty:
 	mov ds:map_named_list,es
 
 create_named_leave:
-    mov esi,OFFSET sys_section
-    LeaveSection
+	LeaveSection ds:sys_section
 ;
 	pop edi
 	pop esi
@@ -262,7 +255,6 @@ PAGE
 CreateUnnamedFile	Proc near
 	push ax
 	push edx
-	push esi
 ;
 	push eax
 	mov ax,fs_data_sel
@@ -281,15 +273,12 @@ CreateUnnamedFile	Proc near
     push ds
     mov ax,es
     mov ds,ax
-    mov esi,OFFSET map_section
-    InitSection
-    EnterSection	
+    InitSection ds:map_section
+    EnterSection ds:map_section
     pop ds
 	mov es:map_owner, OFFSET map_list
 ;
-    mov esi,OFFSET sys_section
-    EnterSection
-;    
+	EnterSection ds:sys_section
 	mov ax,ds:map_list
 	or ax,ax
 	je create_unnamed_file_empty
@@ -313,10 +302,8 @@ create_unnamed_file_empty:
 	mov ds:map_list,es
 
 create_unnamed_file_leave:
-    mov esi,OFFSET sys_section
-    LeaveSection
+	LeaveSection ds:sys_section
 ;
-    pop esi
 	pop edx
 	pop ax
 	ret
@@ -370,16 +357,13 @@ CreateNamedFile	Proc near
 	mov es:map_file,bx
 	mov ax,es
 	mov ds,ax
-	mov esi,OFFSET map_section
-	InitSection
-	EnterSection
+	InitSection ds:map_section
+	EnterSection ds:map_section
 	mov es:map_owner, OFFSET map_named_list
 ;
 	mov ax,fs_data_sel
 	mov ds,ax
-	mov esi,OFFSET sys_section
-	EnterSection
-;	
+	EnterSection ds:sys_section
 	mov ax,ds:map_named_list
 	or ax,ax
 	je create_named_file_empty
@@ -403,8 +387,7 @@ create_named_file_empty:
 	mov ds:map_named_list,es
 
 create_named_file_leave:
-    mov esi,OFFSET sys_section
-    LeaveSection
+	LeaveSection ds:sys_section
 ;
 	pop edi
 	pop esi
@@ -653,12 +636,10 @@ CloseMapped	Proc near
 	jnz close_mapped_done
 ;
 	push ax
-	push esi
+	push si
 	mov ax,fs_data_sel
 	mov ds,ax
-	mov esi,OFFSET sys_section
-	EnterSection
-;	
+	EnterSection ds:sys_section
 	mov si,es:map_owner
 	mov [si],es
 	push ds
@@ -678,8 +659,7 @@ CloseMapped	Proc near
 	mov word ptr [si],0
 
 close_mapped_leave:
-    mov esi,OFFSET sys_section
-    LeaveSection
+	LeaveSection ds:sys_section
 ;
 	mov ecx,es:map_size
 	mov edx,es:map_base
@@ -690,7 +670,7 @@ close_mapped_leave:
 
 close_mapped_free_sel:
 	FreeMem
-	pop esi
+	pop si
 	pop ax
 
 close_mapped_done:
@@ -714,13 +694,11 @@ FindNamed	Proc near
 	push ax
 	push ebx
 	push dx
-	push esi
+	push si
 ;
 	mov ax,fs_data_sel
 	mov ds,ax
-	mov esi,OFFSET sys_section
-	EnterSection
-;	
+	EnterSection ds:sys_section
 	mov ax,ds:map_named_list
 	or ax,ax
 	je find_named_fail
@@ -755,8 +733,7 @@ find_named_next:
 find_named_fail:
 	mov ax,fs_data_sel
 	mov ds,ax
-	mov esi,OFFSET sys_section
-	LeaveSection
+	LeaveSection ds:sys_section
 	stc
 	jmp find_named_done
 
@@ -766,12 +743,11 @@ find_named_ok:
 	inc es:map_users
 	mov ax,fs_data_sel
 	mov ds,ax
-	mov esi,OFFSET sys_section
-	LeaveSection
+	LeaveSection ds:sys_section
 	clc
 
 find_named_done:
-	pop esi
+	pop si
 	pop dx
 	pop ebx
 	pop ax
@@ -856,17 +832,12 @@ create_mapping_name DB 'Create Mapping',0
 create_mapping	Proc far
 	push ds
 	push es
-	push esi
-;	
 	call CreateUnnamed
 	call CreateHandle
 	push es
 	pop ds
-	mov esi,OFFSET map_section
-	LeaveSection
+	LeaveSection ds:map_section
 	clc
-;	
-	pop esi
 	pop es
 	pop ds
 	retf32
@@ -896,12 +867,9 @@ create_named_mapping	Proc near
 ;
 	call CreateNamed
 	push ds
-	push esi
 	push es
 	pop ds
-	mov esi,OFFSET map_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:map_section
 	pop ds
 
 create_named_ok:
@@ -957,10 +925,7 @@ create_file_mapping	Proc near
 	call CreateHandle
 	push es
 	pop ds
-	push esi
-	mov esi,OFFSET map_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:map_section
 	clc
 
 create_file_mapping_done:
@@ -1003,12 +968,9 @@ create_named_file_mapping	Proc near
 ;
 	call CreateNamedFile
 	push ds
-	push esi
 	push es
 	pop ds
-	mov esi,OFFSET map_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:map_section
 	pop ds
 
 create_named_file_ok:
@@ -1241,7 +1203,7 @@ map_fault	Proc far
 	push bx
 	push cx
 	push edx
-	push esi
+	push si
 ;
 	mov ax,fs_process_sel
 	mov es,ax
@@ -1273,8 +1235,7 @@ map_fault_loop:
 	and ax,0F000h
 	and dx,0F000h
 	mov ds,ds:[bx].memmap_sel
-	mov esi,OFFSET map_section
-	EnterSection
+	EnterSection ds:map_section
 ;
 	mov bx,ds:map_file
 	or bx,bx
@@ -1289,8 +1250,7 @@ map_fault_mem:
 	call map_to_user
 
 map_fault_leave:
-    mov esi,OFFSET map_section
-    LeaveSection
+	LeaveSection ds:map_section
 	jmp map_fault_done
 
 map_fault_find_next:
@@ -1302,7 +1262,7 @@ map_fault_fail:
 	int 3
 
 map_fault_done:
-	pop esi
+	pop si
 	pop edx
 	pop cx
 	pop bx
@@ -1604,8 +1564,7 @@ init_memmap	PROC near
 	mov ds,ax
 	mov ds:map_list,0
 	mov ds:map_named_list,0
-	mov esi,OFFSET sys_section
-	InitSection
+	InitSection ds:sys_section
 	ret
 init_memmap	ENDP
 

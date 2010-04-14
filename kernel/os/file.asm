@@ -96,13 +96,11 @@ InsertFileSel	Proc near
     push es
     push eax
     push ebx
-    push esi
 	push di
 ;
     mov ax,fs_data_sel
     mov ds,ax
-    mov esi,OFFSET fs_file_section
-    EnterSection
+    EnterSection ds:fs_file_section
 ;
     mov es,bx
 	mov di,ds:fs_file_list
@@ -110,6 +108,7 @@ InsertFileSel	Proc near
 	je ins_file_sel_empty
 ;
 	push ds
+	push si
 	mov ds,di
 	mov si,ds:file_prev
 	mov ds:file_prev,es
@@ -117,6 +116,7 @@ InsertFileSel	Proc near
 	mov ds:file_next,es
 	mov es:file_next,di
 	mov es:file_prev,si
+	pop si
 	pop ds
 	jmp ins_file_sel_leave
 	
@@ -126,11 +126,9 @@ ins_file_sel_empty:
 	mov ds:fs_file_list,es
 
 ins_file_sel_leave:
-    mov esi,OFFSET fs_file_section
-    LeaveSection
+    LeaveSection ds:fs_file_section
 ;
     pop di
-    pop esi
     pop ebx
     pop eax
     pop es
@@ -155,12 +153,11 @@ RemoveFileSel	Proc near
     push ds
     push eax
     push ebx
-	push esi
+	push si
 ;
     mov ax,fs_data_sel
     mov ds,ax
-    mov esi,OFFSET fs_file_section
-    EnterSection
+    EnterSection ds:fs_file_section
 ;
     mov es,bx
     cmp bx,es:file_next
@@ -183,10 +180,8 @@ rem_file_sel_empty:
 	mov ds:fs_file_list,0
 
 rem_file_sel_leave:
-    mov esi,OFFSET fs_file_section
-    LeaveSection
-;    
-	pop esi
+    LeaveSection ds:fs_file_section
+	pop si
     pop ebx
     pop eax
     pop ds 
@@ -506,7 +501,6 @@ CreateFileSel	PROC near
 	push ds
 	push es
 	push eax
-	push esi
 	push di
 ;
 	push ecx
@@ -576,13 +570,8 @@ crfs_skip_lists:
 crfs_init:
 	pop edx
 	pop ecx
-;
-    mov esi,OFFSET file_size_section
-    InitReadWriteSection	
-;	
-	mov esi,OFFSET file_list_section
-	InitSection
-;	
+	InitReadWriteSection ds:file_size_section
+	InitSection ds:file_list_section
 	mov ds:file_usage,0
 	mov ds:file_drive,bl
 	mov ds:file_attrib,bh
@@ -592,7 +581,6 @@ crfs_init:
 	call InsertFileSel
 ;
 	pop di
-	pop esi
 	pop eax
 	pop es
 	pop ds
@@ -1123,25 +1111,19 @@ swap_all    Proc near
     push es
     push ax
     push bx
-    push esi
 ;
     mov ax,fs_data_sel
     mov ds,ax
-    mov esi,OFFSET fs_file_section
-    EnterSection
+    EnterSection ds:fs_file_section
 ;    
     mov bx,ds:fs_file_list
 
 swap_all_loop:	
     push ds
-    push esi
     mov ds,bx
-    mov esi,OFFSET file_size_section
-    EnterWriteSection
+	EnterWriteSection ds:file_size_section
     call swap_file
-    mov esi,OFFSET file_size_section
-    LeaveWriteSection
-	pop esi
+	LeaveWriteSection ds:file_size_section
 	pop ds
 ;
     mov es,bx
@@ -1151,10 +1133,8 @@ swap_all_loop:
 ;    
     xor ax,ax
     mov es,ax
-    mov esi,OFFSET fs_file_section
-    LeaveSection
+    LeaveSection ds:fs_file_section
 ;
-    pop esi
     pop bx
     pop ax
     pop es
@@ -1204,11 +1184,7 @@ read_file	Proc near
     call swap_all 
 
 read_file_mem_all_ok:	
-    push esi
-    mov esi,OFFSET file_size_section
-    EnterReadSection
-    pop esi
-;
+	EnterReadSection ds:file_size_section
 	cmp edx,ds:file_size
 	jnc read_file_done
 ;
@@ -1237,12 +1213,7 @@ read_file_mem_ok:
 	shr esi,cl
 	shl si,2
 	mov ebx,ds:[si].file_entries
-;	
-	push esi
-	mov esi,OFFSET file_list_section
-	EnterSection
-	pop esi
-;	
+	EnterSection ds:file_list_section
 	or ebx,ebx
 	jnz read_file_check_mid
 ;
@@ -1275,21 +1246,14 @@ read_file_check_base:
 	jnc read_file_do_first
 ;
 	mov dword ptr es:[ebx+esi],0
-	push esi
-	mov esi,OFFSET file_list_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:file_list_section
 	jmp read_file_done
 
 read_file_do_first:
 	mov esi,es:[ebx+esi]
 	inc es:[esi].fl_usage
 	inc es:[esi].fl_ref_count
-;	
-	push esi
-	mov esi,OFFSET file_list_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:file_list_section
 ;
 	push ds
 	push es
@@ -1339,8 +1303,7 @@ read_file_do:
 
 read_file_done:
 	pushf
-    mov esi,OFFSET file_size_section
-    LeaveReadSection
+	LeaveReadSection ds:file_size_section
 	popf
 	mov eax,ebp
 ;
@@ -1397,11 +1360,7 @@ write_file	Proc near
     call swap_all 
 
 write_file_mem_all_ok:	
-    push esi
-    mov esi,OFFSET file_size_section
-    EnterWriteSection
-    pop esi
-;
+	EnterWriteSection ds:file_size_section
 	cmp edx,ds:file_size
 	jnc write_file_extend
 ;
@@ -1479,10 +1438,7 @@ write_file_check_base:
 	jnc write_file_do_first
 ;
 	mov dword ptr es:[ebx+esi],0
-	push esi
-	mov esi,OFFSET file_list_section
-	LeaveSection
-	pop esi
+	LeaveSection ds:file_list_section
 	jmp write_file_done
 
 write_file_do_first:
@@ -1553,8 +1509,7 @@ write_file_do:
 
 write_file_done:
 	pushf
-    mov esi,OFFSET file_size_section
-    LeaveWriteSection
+	LeaveWriteSection ds:file_size_section
 	popf
 	mov eax,ebp
 ;
@@ -1809,7 +1764,6 @@ get_file_size:
 	push ds
 	push bx
 	push edx
-	push esi
 ;
 	mov ax,FILE_HANDLE
 	DerefHandle
@@ -1821,14 +1775,12 @@ get_file_size:
 	jz get_file_size_done
 ;
 	mov ds,bx
-    mov esi,OFFSET file_size_section
-    EnterReadSection
+	EnterReadSection ds:file_size_section
 	mov eax,ds:file_size
-    LeaveReadSection
+	LeaveReadSection ds:file_size_section
 	clc
 
 get_file_size_done:
-    pop esi
 	pop edx
 	pop bx
 	pop ds
@@ -1853,7 +1805,6 @@ set_file_size:
 	push eax
 	push bx
 	push edx
-	push esi
 ;
 	mov edx,eax
 	mov ax,FILE_HANDLE
@@ -1867,16 +1818,11 @@ set_file_size:
 	jz set_file_size_done
 ;
 	mov ds,bx
-    mov esi,OFFSET file_size_section
-    EnterWriteSection
-;
+	EnterWriteSection ds:file_size_section
 	CallFileSystem set_file_size_proc
-;	
-    mov esi,OFFSET file_size_section
-    LeaveWriteSection
+	LeaveWriteSection ds:file_size_section
 
 set_file_size_done:
-    pop esi
 	pop edx
 	pop bx
 	pop eax
@@ -2356,9 +2302,7 @@ map_to_file	Proc near
 	mov ax,flat_sel
 	mov es,ax
 ;
-    mov esi,OFFSET file_size_section
-    EnterReadSection
-;
+	EnterReadSection ds:file_size_section
 	cmp edx,ds:file_size
 	jnc map_to_file_leave
 ;
@@ -2367,11 +2311,7 @@ map_to_file	Proc near
 	shr esi,cl
 	shl si,2
 	mov ebx,ds:[si].file_entries
-;	
-	push esi
-	mov esi,OFFSET file_list_section
-	EnterSection
-	pop esi
+	EnterSection ds:file_list_section
 	or ebx,ebx
 	jnz map_to_file_check_mid
 ;
@@ -2405,10 +2345,7 @@ map_to_file_check_base:
     xor eax,eax
     xchg eax,es:[ebx+esi]
     call FreeListEntry
-    push esi
-    mov esi,OFFSET file_list_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:file_list_section
 	stc
 	jmp map_to_file_leave
 
@@ -2432,15 +2369,11 @@ map_to_file_do_first:
 	and al,NOT 40h
 	mov es:[edi],eax
 ;
-    push esi
-    mov esi,OFFSET file_list_section
-    LeaveSection
-    pop esi
+	LeaveSection ds:file_list_section
 	clc
 
 map_to_file_leave:
-    mov esi,OFFSET file_size_section
-    LeaveReadSection
+	LeaveReadSection ds:file_size_section
 	jmp map_to_file_done
 
 map_to_file_read:
@@ -2504,13 +2437,11 @@ sync_memmap	Proc near
 	mov ax,flat_sel
 	mov es,ax
 ;
-    mov esi,OFFSET file_list_section
-    EnterSection
-;    
 	mov esi,ebp
 	mov cl,ds:file_dir_shift
 	shr esi,cl
 	shl si,2
+	EnterSection ds:file_list_section
 	mov ebx,ds:[si].file_entries
 	or ebx,ebx
 	clc
@@ -2535,8 +2466,7 @@ sync_memmap	Proc near
 	pop bx
 
 sync_memmap_leave:
-    mov esi,OFFSET file_list_section
-    LeaveSection
+    LeaveSection ds:file_list_section
 
 sync_memmap_done:
     popad
@@ -2586,13 +2516,11 @@ free_memmap	Proc near
 	mov ax,flat_sel
 	mov es,ax
 ;
-    mov esi,OFFSET file_list_section
-    EnterSection
-;    
 	mov esi,edx
 	mov cl,ds:file_dir_shift
 	shr esi,cl
 	shl si,2
+	EnterSection ds:file_list_section
 	mov ebx,ds:[si].file_entries
 	or ebx,ebx
 	jz free_memmap_leave
@@ -2609,8 +2537,7 @@ free_memmap	Proc near
     dec es:[esi].fl_usage
 
 free_memmap_leave:
-    mov esi,OFFSET file_list_section
-    LeaveSection
+	LeaveSection ds:file_list_section
 	clc
 
 free_memmap_done:
@@ -2683,21 +2610,16 @@ PAGE
 swap_proc	Proc far
     mov ax,fs_data_sel
     mov ds,ax
-    mov esi,OFFSET fs_file_section
-    EnterSection
+    EnterSection ds:fs_file_section
 ;    
     mov bx,ds:fs_file_list
 
 swap_loop:	
     push ds
     mov ds,bx
-    mov esi,OFFSET file_size_section
-    EnterWriteSection
-;
+	EnterWriteSection ds:file_size_section
     call swap_file
-;    
-    mov esi,OFFSET file_size_section
-    LeaveWriteSection
+	LeaveWriteSection ds:file_size_section
 	pop ds
 ;
     mov es,bx
@@ -2707,8 +2629,7 @@ swap_loop:
 ;    
     xor ax,ax
     mov es,ax
-    mov esi,OFFSET fs_file_section
-    LeaveSection
+    LeaveSection ds:fs_file_section
 	ret
 swap_proc	Endp
 
