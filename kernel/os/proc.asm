@@ -1183,11 +1183,9 @@ init_process_block	PROC near
 	mov es:pd_wait,0
 ;	
 	push ds
-	push si
-	mov si,es
-	mov ds,si
+	mov ax,es
+	mov ds,ax
 	InitSection ds:pd_section
-	pop si
 	pop ds
 ;    
     mov ax,es
