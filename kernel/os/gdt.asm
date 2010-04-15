@@ -45,7 +45,6 @@ code	SEGMENT byte public use16 'CODE'
 	assume cs:code
 
 	extrn create_data_sel16:near
-	extrn init_section:near
 
 PAGE
 
@@ -65,7 +64,7 @@ PAGE
 create_gdt	PROC near
 	push ds
 	push es
-	pushad
+	pusha
 ;
 	mov bx,gdt_sel
 	mov ds,bx
@@ -117,11 +116,9 @@ init_free_dt_loop:
 ;
 	mov ax,system_data_sel
 	mov ds,ax
-	mov esi,OFFSET gdt_section
-	push cs
-	call init_section
+	InitSection ds:gdt_section
 ;
-	popad
+	popa
 	pop es
 	pop ds
 	ret
