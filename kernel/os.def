@@ -154,7 +154,6 @@ signal_nr					EQU 84
 wait_for_signal_nr			EQU 85
 enter_section_nr			EQU 86
 leave_section_nr			EQU 87
-init_section_nr             EQU 88
 start_timer_nr				EQU 89
 stop_timer_nr				EQU 90
 change_enviroment_nr		EQU 91
@@ -518,12 +517,6 @@ leave_int_nr                EQU 359
 debug_exception_nr          EQU 360
 
 create_processor_nr         EQU 362
-
-init_read_write_section_nr  EQU 363
-enter_read_section_nr       EQU 364
-leave_read_section_nr       EQU 365
-enter_write_section_nr      EQU 366
-leave_write_section_nr      EQU 367
 
 get_processor_nr            EQU 368
 
