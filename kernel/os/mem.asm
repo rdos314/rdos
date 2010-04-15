@@ -92,7 +92,6 @@ local_mem_seg	ENDS
 	extrn create_call_gate_sel16:near
 	extrn create_int_gate_sel:near
 	extrn create_tss_sel:near
-	extrn init_section:near
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -177,15 +176,11 @@ init_mem	PROC near
 	mov ds,ax
 	mov edx,global_page_size
 	mov ds:big_avail_mem,edx
-	mov esi,OFFSET big_section
-	push cs
-	call init_section
+	InitSection ds:big_section
 ;
 	mov edx,global_byte_size - 10h
 	mov ds:small_avail_mem,edx
-	mov esi,OFFSET small_section
-	push cs
-	call init_section
+	InitSection ds:small_section
 ;
 	mov ds:big_used_mem,0
 	mov ds:small_used_mem,0
@@ -489,7 +484,6 @@ init_process_mem	PROC near
 	push es
 	push eax
 	push edx
-	push esi
 	push di
 ;
 	mov ax,local_linear_sel
@@ -512,14 +506,8 @@ init_process_mem	PROC near
 	mov ds:local_used_mem,0
 	mov ds:local_big_avail_mem,flat_size - local_page_linear
 	mov ds:local_big_used_mem,0
-;
-    mov esi,OFFSET local_mem_section
-    push cs
-    call init_section
-;
-    mov esi,OFFSET vm_mem_section
-    push cs
-    call init_section
+	InitSection ds:local_mem_section
+	InitSection ds:vm_mem_section
 ;
 	mov ax,process_page_sel
 	mov es,ax
@@ -548,7 +536,6 @@ init_process_mem	PROC near
 	mov ds:vm_used_mem,0
 ;
 	pop di
-	pop esi
 	pop edx
 	pop eax
 	pop es
