@@ -595,7 +595,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReloadPitTimer    Proc near
+ReloadPitTimer	Proc near
 	out TIMER0,al
 	xchg al,ah
 	jmp short $+2
@@ -863,9 +863,9 @@ ptab_init:
 	add bx,2
 	loop ptab_init
 ;
-	mov bx,OFFSET processor_arr
 	mov ds:processor_count,0
 ;
+	mov bx,OFFSET processor_arr
 	mov cx,256
 proc_init:
 	mov word ptr [bx],0
@@ -1092,12 +1092,6 @@ proc_init:
 	mov ax,debug_break_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET init_section
-	mov di,OFFSET init_section_name
-	xor cl,cl
-	mov ax,init_section_nr
-	RegisterOsGate
-;
 	mov si,OFFSET enter_section
 	mov di,OFFSET enter_section_name
 	xor cl,cl
@@ -1108,36 +1102,6 @@ proc_init:
 	mov di,OFFSET leave_section_name
 	xor cl,cl
 	mov ax,leave_section_nr
-	RegisterOsGate
-;
-	mov si,OFFSET init_read_write_section
-	mov di,OFFSET init_read_write_section_name
-	xor cl,cl
-	mov ax,init_read_write_section_nr
-	RegisterOsGate
-;
-	mov si,OFFSET enter_read_section
-	mov di,OFFSET enter_read_section_name
-	xor cl,cl
-	mov ax,enter_read_section_nr
-	RegisterOsGate
-;
-	mov si,OFFSET leave_read_section
-	mov di,OFFSET leave_read_section_name
-	xor cl,cl
-	mov ax,leave_read_section_nr
-	RegisterOsGate
-;
-	mov si,OFFSET enter_write_section
-	mov di,OFFSET enter_write_section_name
-	xor cl,cl
-	mov ax,enter_write_section_nr
-	RegisterOsGate
-;
-	mov si,OFFSET leave_write_section
-	mov di,OFFSET leave_write_section_name
-	xor cl,cl
-	mov ax,leave_write_section_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET create_user_section
@@ -2539,6 +2503,17 @@ load_regs:
 
 load_kernel:
     mov ax,word ptr ds:tss_ss
+    cmp ax,word ptr ds:tss_ess0
+    je load_kernel_ss0_ok
+;
+    mov ax,es
+    cmp ax,fs:ps_null_thread
+    je load_kernel_ss0_ok
+;
+    int 3
+
+load_kernel_ss0_ok:
+    mov ax,word ptr ds:tss_ss
     mov ss,ax
     mov esp,dword ptr ds:tss_esp
     push dword ptr ds:tss_eflags
@@ -3220,11 +3195,6 @@ start_processor_null_threads    Proc near
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
 
 start_locks_ok:    
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ds:phys_lock_proc,OFFSET PhysLock
-    mov ds:phys_unlock_proc,OFFSET PhysUnlock
-;
     mov ax,1
     mov ecx,200h
     mov ax,cs
@@ -4133,11 +4103,11 @@ PAGE
 LoadUnlockSingle	Proc near
     cli
     sub fs:ps_nesting,1
-	jc lusDone
+	jc lulsDone
 ;
     call Shutdown
 
-lusDone:    	
+lulsDone:    	
 	ret
 LoadUnlockSingle	Endp
 
@@ -5169,30 +5139,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			InitSection
-;
-;		DESCRIPTION:	Init section
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_section_name	DB 'Init Critical Section',0
-
-    public init_section
-
-init_section	PROC far
-	mov ds:[esi].cs_value,0
-	mov ds:[esi].cs_list,0
-    ret
-init_section    ENDP
-    
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			EnterSection
+;		NAME:			enter_section
 ;
 ;		DESCRIPTION:	Enter section
 ;
@@ -5201,9 +5148,8 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enter_section_name	DB 'Enter Critical Section',0
-    
+
 enter_section	PROC far
-    pushf
     push ax
     push dx
     push ds
@@ -5212,12 +5158,17 @@ enter_section	PROC far
     mov ax,ds
     mov dx,task_sel
     mov ds,dx
-;    
     call ds:lock_proc
-    mov ds,ax
-	lock sub ds:[esi].cs_value,1
-	jc ecsUnlock
 ;
+    mov ds,ax
+    mov dx,ds:[esi].cs_list
+    cmp dx,-1
+    jne ecsBlock
+;
+    mov ds:[esi].cs_list,0
+    jmp ecsUnlock
+
+ecsBlock:
     push OFFSET ecsDone
     call SaveLockedThread
 ;
@@ -5250,7 +5201,6 @@ ecsDs:
 ;
     pop dx
     pop ax
-    popf
 	ret
 enter_section	ENDP
 
@@ -5268,295 +5218,81 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 leave_section_name	DB 'Leave Critical Section',0
-    
+ 
 leave_section	PROC far
-    pushf
-;    
-	lock add ds:[esi].cs_value,1
-	jc lcsDone
+    push ax
+	push dx
+    push ds
+    push fs
 ;
-    push eax
-    push edx
-    push esi
-;    
     mov dx,ds
-    add esi,OFFSET cs_list
-    xor eax,eax
-    call WakeThread    
+    mov ax,task_sel
+    mov ds,ax
+	call ds:lock_proc
 ;
-    pop esi
-    pop edx
-    pop eax
+    mov ds,dx
+	mov ax,ds:[esi].cs_list
+	or ax,ax
+	jnz lcsUnblock
+;
+    mov ds:[esi].cs_list,-1
+    mov ax,task_sel
+    mov ds,ax
+    jmp lcsUnlock
+
+lcsUnblock:
+    push es    
+    push esi
+    push di
+;
+    mov ax,task_sel
+    mov ds,ax
+;	
+    call ds:lock_list_proc
+;
+    push ds
+    mov ds,dx
+    add esi,OFFSET cs_list
+	RemoveBlock32
+	mov es:p_data,0
+	pop ds
+;
+	mov di,OFFSET wakeup_list
+	InsertBlock
+;	
+	mov ds:has_list,1
+	call ds:unlock_list_proc
+;	
+    pop di
+	pop esi
+    pop es
+
+lcsUnlock:
+    call ds:unlock_proc
 
 lcsDone:
-    popf
+    pop ax
+	verr ax
+	jz lcsFs
+;
+	xor ax,ax
+	
+lcsFs:
+	mov fs,ax
+;
+    pop ax
+	verr ax
+	jz lcsDs
+;
+	xor ax,ax
+	
+lcsDs:
+	mov ds,ax
+;
+	pop dx
+    pop ax
 	ret
 leave_section	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:		    PhysLockDefault
-;
-;		DESCRIPTION:	Lock physical section, pretasking version
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PhysLockDefault    Proc near
-    ret
-PhysLockDefault    Endp
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			PhysUnlockDefault
-;
-;		DESCRIPTION:	Unlock physical section, pretasking version
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-PhysUnlockDefault	PROC near
-	ret
-PhysUnlockDefault	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:		    PhysLock
-;
-;		DESCRIPTION:	Lock physical section
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PhysLock    Proc near
-    push ds
-    push fs
-    push ax
-;
-    mov ax,task_sel
-    mov ds,ax
-    GetProcessor
-    call ds:lock_list_proc
-;    
-    pop ax
-    pop fs
-    pop ds
-    ret
-PhysLock    Endp
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			PhysUnlock
-;
-;		DESCRIPTION:	Unlock physical section
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-PhysUnlock	PROC near
-    push ds
-    push fs
-    push ax
-;
-    mov ax,task_sel
-    mov ds,ax
-    GetProcessor
-    call ds:unlock_list_proc
-;
-    pop ax
-    pop fs
-    pop ds    
-	ret
-PhysUnlock	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			InitPhysSection
-;
-;		DESCRIPTION:	Init physical section
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_phys_section
-
-init_phys_section	PROC near
-    mov ds:phys_lock_proc,OFFSET PhysLockDefault
-    mov ds:phys_unlock_proc,OFFSET PhysUnlockDefault
-    ret
-init_phys_section    ENDP
-    
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			EnterPhysSection
-;
-;		DESCRIPTION:	Enter physical section
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public enter_phys_section
-    
-enter_phys_section	PROC near
-    call ds:phys_lock_proc
-	ret
-enter_phys_section	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LeavePhysSection
-;
-;		DESCRIPTION:	Leave physical section
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public leave_phys_section
-    
-leave_phys_section	PROC near
-    call ds:phys_unlock_proc
-	ret
-leave_phys_section	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			InitReadWrieSection
-;
-;		DESCRIPTION:	Init read/write section
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_read_write_section_name	DB 'Init Read/Write Section',0
-
-init_read_write_section	PROC far
-	mov [esi].ssync_value,0
-	mov [esi].ssync_list,0
-	mov [esi].sread_value,0
-	mov [esi].swrite_value,0
-	mov [esi].swrite_list,0
-    ret
-init_read_write_section    ENDP
-    
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			EnterReadSection
-;
-;		DESCRIPTION:	Enter section as reader
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-enter_read_section_name	DB 'Enter Read Section',0
-    
-enter_read_section	PROC far
-    EnterSection ds:[esi].ssync_value
-;    
-	sub [esi].sread_value,1
-	jnc enter_read_ok
-;	
-    EnterSection ds:[esi].swrite_value
-
-enter_read_ok:
-    LeaveSection ds:[esi].ssync_value
-	ret
-enter_read_section	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LeaveReadSection
-;
-;		DESCRIPTION:	Leave section as reader
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-leave_read_section_name	DB 'Leave Read Section',0
-    
-leave_read_section	PROC far
-    EnterSection ds:[esi].ssync_value
-;    
-	add [esi].sread_value,1
-	jnc leave_read_ok
-;	
-    LeaveSection ds:[esi].swrite_value
-    
-leave_read_ok:
-    LeaveSection ds:[esi].ssync_value
-	ret
-leave_read_section	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			EnterWriteSection
-;
-;		DESCRIPTION:	Enter section as writer
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-enter_write_section_name	DB 'Enter Write Section',0
-    
-enter_write_section	PROC far
-	EnterSection [esi].swrite_value
-	ret
-enter_write_section	ENDP
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LeaveWriteSection
-;
-;		DESCRIPTION:	Leave section as writer
-;
-;		PARAMETERS:		DS:ESI		ADDRESS OF SECTION
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-leave_write_section_name	DB 'Leave Write Section',0
-    
-leave_write_section	PROC far
-    LeaveSection ds:[esi].swrite_value
-	ret
-leave_write_section	ENDP
 
 PAGE
 	
@@ -5678,60 +5414,79 @@ PAGE
 enter_user_section_name	DB 'Enter User Section',0
 
 enter_user_section	PROC far
-    push ds
-    push fs
     push ax
     push bx
     push dx
+    push ds
+    push fs
 ;
 	mov ax,SECTION_HANDLE
 	DerefHandle
-	jc enter_user_section_end
+	jc eusEnd
 ;
-    mov ax,ds
-    mov dx,task_sel
-    mov ds,dx
-    call ds:lock_proc
-    mov ds,ax
 	lock sub ds:[bx].us_value,1
-	jc enter_user_section_unlock
+	jc eusDone
 ;
 	str ax
 	cmp ax,ds:[bx].us_owner
-	jne enter_user_section_block
+	je eusDone
 ;
-	lock add ds:[bx].us_value,1
-	jmp enter_user_section_unlock
+    push ds
+    mov ax,task_sel
+    mov ds,ax
+    call ds:lock_proc
+    pop ds
+;    
+    mov ax,ds:[bx].us_list
+    cmp ax,-1
+    jne eusBlock
+;
+    mov ds:[bx].us_list,0
+    jmp eusUnlock
 
-enter_user_section_block:
+eusBlock:
     mov ax,ds
-    push OFFSET enter_user_section_done
+    push OFFSET eusDone
     call SaveLockedThread
 ;
 	lea di,[bx].us_list	
 	movzx edi,di
     jmp BlockCurrentThread
 
-enter_user_section_unlock:
-	str ax
-	mov ds:[bx].us_owner,ax
-	inc ds:[bx].us_count
-    mov ds,dx
+eusUnlock:
+    push ds
+    mov ax,task_sel
+    mov ds,ax
     call ds:unlock_proc
-    jmp enter_user_section_end
+    pop ds
 	
-enter_user_section_done:
+eusDone:
 	str ax
 	mov ds:[bx].us_owner,ax
 	inc ds:[bx].us_count
-	sti
 
-enter_user_section_end:
+eusEnd:
+    pop ax
+	verr ax
+	jz eusFs
+;
+	xor ax,ax
+	
+eusFs:
+	mov fs,ax
+;
+    pop ax
+	verr ax
+	jz eusDs
+;
+	xor ax,ax
+	
+eusDs:
+	mov ds,ax
+;
     pop dx
-	pop bx
-	pop ax
-	pop fs
-	pop ds
+    pop bx
+    pop ax
 	retf32
 enter_user_section	ENDP
 
@@ -5751,38 +5506,114 @@ PAGE
 leave_user_section_name	DB 'Leave User Section',0
  
 leave_user_section	PROC far
-    push ds
-    push eax
+    push ax
     push bx
+    push dx
+    push ds
+    push fs
 ;
 	mov ax,SECTION_HANDLE
 	DerefHandle
-	jc leave_user_section_done
+	jc lusDone
 ;
-	lock sub ds:[bx].us_count,1
-	jnz leave_user_section_done
+    str ax
+    cmp ax,ds:[bx].us_owner
+    jne lusDone
 ;
+	sub ds:[bx].us_count,1
+	jz lusFreeOwner
+;
+    jnc lusNotOverflowError
+;
+    int 3
+
+lusNotOverflowError:    
 	lock add ds:[bx].us_value,1
-	jc leave_user_section_done
+	jnc lusNotValueError
+;
+    int 3
+
+lusNotValueError:	
+	jmp lusDone
+
+lusFreeOwner:
+    jnc lusNotCountError
+;
+    int 3
+
+lusNotCountError:
+	lock add ds:[bx].us_value,1
+    jc lusDone
+;    
+    push ds
+    mov ax,task_sel
+    mov ds,ax
+	call ds:lock_proc
+	pop ds
 ;
     mov ds:[bx].us_owner,-1
-    push dx
-    push esi
-;    
-    mov dx,ds
-    lea si,[bx].us_list
-    movzx esi,si
-    xor eax,eax
-    call WakeThread    
+	mov ax,ds:[bx].us_list
+	or ax,ax
+	jnz lusUnblock
 ;
-    pop esi
-    pop dx
+    mov ds:[bx].us_list,-1
+    mov ax,task_sel
+    mov ds,ax
+    jmp lusUnlock
 
-leave_user_section_done:
-	sti
-	pop bx
-	pop eax
+lusUnblock:
+    push es
+    push esi
+    push di
+;    
+    lea esi,ds:[bx].us_list
+    mov dx,ds
+;    
+    mov ax,task_sel
+    mov ds,ax	
+    call ds:lock_list_proc
+;
+    push ds
+    mov ds,dx
+	RemoveBlock32
+	mov es:p_data,0
 	pop ds
+;
+	mov di,OFFSET wakeup_list
+	InsertBlock
+;	
+	mov ds:has_list,1
+	call ds:unlock_list_proc
+;
+    pop di
+	pop esi
+    pop es
+
+lusUnlock:
+    call ds:unlock_proc
+
+lusDone:
+    pop ax
+	verr ax
+	jz lusFs
+;
+	xor ax,ax
+	
+lusFs:
+	mov fs,ax
+;
+    pop ax
+	verr ax
+	jz lusDs
+;
+	xor ax,ax
+	
+lusDs:
+	mov ds,ax
+;
+	pop dx
+	pop bx
+    pop ax
 	retf32
 leave_user_section	ENDP
 
