@@ -629,6 +629,11 @@ DoPreemptProcessor    MACRO
 	OsGate do_preempt_processor_nr
 						ENDM
 
+;   OUT EAX      Update tics
+StartSysTimer    MACRO
+	OsGate start_sys_timer_nr
+						ENDM
+
 ;   IN  AX      Tic count
 ReloadSysTimer    MACRO
 	OsGate reload_sys_timer_nr

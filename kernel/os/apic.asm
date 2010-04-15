@@ -752,6 +752,106 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			StartSysTimer
+;
+;		DESCRIPTION:	Start APIC timer
+;
+;		RETURNS:		EAX      Update tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_apic_timer_name    DB 'Start Apic Timer', 0
+
+start_apic_mem_timer    Proc far
+    push ds
+    push es
+    push ecx
+    push edx
+    push esi
+;
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    mov edx,10000h
+    xor eax,eax
+    mov ecx,es:apic_tics
+    shl ecx,16
+    mov cx,es:apic_rest
+    div ecx
+    mov esi,eax
+;
+	mov eax,80000000h
+    mov bx,apic_mem_sel
+    mov es,bx
+    mov es:APIC_INIT_COUNT,eax    
+    GetSystemTime
+    mov eax,es:APIC_CURR_COUNT    
+	neg eax
+	add eax,80000000h
+	mul esi
+	add eax,eax
+	adc edx,edx
+	add eax,80000000h
+	adc edx,0
+;
+    mov eax,81h
+    mov es:APIC_TIMER,eax
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop es
+    pop ds
+	ret
+start_apic_mem_timer  Endp
+
+start_apic_msr_timer    Proc far
+    push ds
+    push ecx
+    push edx
+    push esi
+;
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    mov edx,10000h
+    xor eax,eax
+    mov ecx,es:apic_tics
+    shl ecx,16
+    mov cx,es:apic_rest
+    div ecx
+    mov esi,eax
+;
+	mov eax,80000000h
+    mov ecx,MSR_APIC_INIT_COUNT
+    wrmsr
+    GetSystemTime
+    mov ecx,MSR_APIC_CURR_COUNT
+    rdmsr
+	neg eax
+	add eax,80000000h
+	mul esi
+	add eax,eax
+	adc edx,edx
+	add eax,80000000h
+	adc edx,0
+;
+    mov eax,81h
+    mov ecx,MSR_APIC_TIMER
+    wrmsr
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+	ret
+start_apic_msr_timer  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			ReloadSysTimer
 ;
 ;		DESCRIPTION:	Reload APIC timer
@@ -904,6 +1004,12 @@ SetupMemGates   Proc near
 	mov ax,get_apic_id_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET start_apic_mem_timer
+	mov di,OFFSET start_apic_timer_name
+	xor cl,cl
+	mov ax,start_sys_timer_nr
+	RegisterOsGate
+;
 	mov si,OFFSET reload_apic_mem_timer
 	mov di,OFFSET reload_apic_timer_name
 	xor cl,cl
@@ -944,6 +1050,12 @@ SetupMsrGates   Proc near
 	mov di,OFFSET get_id_name
 	xor cl,cl
 	mov ax,get_apic_id_nr
+	RegisterOsGate
+;
+	mov si,OFFSET start_apic_msr_timer
+	mov di,OFFSET start_apic_timer_name
+	xor cl,cl
+	mov ax,start_sys_timer_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET reload_apic_msr_timer
@@ -1561,11 +1673,10 @@ init	PROC far
     jz init_apic_gates_ok
 ;
     test ax,10h
-    jz init_apic_timer_ok
+    jz init_apic_gates_ok
 ;    
     call InitApicTimer
-
-init_apic_timer_ok:    
+;    
     mov ax,system_data_sel
     mov ds,ax
     mov eax,ds:cpu_feature_flags

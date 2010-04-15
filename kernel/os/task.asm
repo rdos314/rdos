@@ -66,7 +66,6 @@ help_call_cs	    DW ?
 
 init_clock_proc     DW ?
 update_clock_proc   DW ?
-reload_timer_proc   DW ?
 
 tsc_sub_tics        DD ?
 tsc_guard           DD ?
@@ -532,16 +531,17 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			GetPitUpdateTics
+;		NAME:			StartSysTimer
 ;
-;		DESCRIPTION:	Get PIT update tics
+;		DESCRIPTION:	Start PIT timer
 ;
-;		PARAMETERS:		DS      Task sel
-;                       EAX     Drift in tics
+;		RETURNS:		EAX      Update tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetPitUpdateTics	Proc near
+start_pit_timer_name    DB 'Start Pit Timer', 0
+
+start_pit_timer    Proc far
     mov ax,task_sel
     mov ds,ax
     push es
@@ -572,40 +572,16 @@ GetPitUpdateTics	Proc near
 	movzx eax,ax
 	add eax,eax
 	add eax,eax
-	mov ds:update_tics,eax
-	mov ds:reload_timer_proc,OFFSET ReloadPitTimer
 ;
+    push eax
 	in al,INT0_MASK
 	and al,NOT 1
 	out INT0_MASK,al
+	pop eax
+;	
 	pop es
 	ret
-GetPitUpdateTics    Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			ReloadPitTimer
-;
-;		DESCRIPTION:	Reload PIT timer
-;
-;		PARAMETERS:		AX      Reload count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReloadPitTimer	Proc near
-	out TIMER0,al
-	xchg al,ah
-	jmp short $+2
-	out TIMER0,al
-;
-	in al,INT0_MASK
-	and al,NOT 1
-	out INT0_MASK,al
-	ret
-ReloadPitTimer  Endp
+start_pit_timer    Endp
 
 PAGE
 
@@ -633,79 +609,6 @@ reload_pit_timer    Proc far
 	out INT0_MASK,al
 	ret
 reload_pit_timer  Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			GetApicTics
-;
-;		DESCRIPTION:	Get parameters for APIC timer operation
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetApicTics	Proc near
-    push es
-    pushad
-;    
-    push ds
-	mov ax,cs
-	mov ds,ax
-	mov al,40h
-	mov bl,0
-	mov esi,OFFSET apic_int 
-	CreateIntGateSelector
-	pop ds
-;    
-    mov ax,system_data_sel
-    mov es,ax
-    mov eax,es:apic_tics
-    mov ds:apic_mul_tics,eax
-    mov ax,es:apic_rest
-    mov ds:apic_mul_rest,ax
-;
-    mov edx,10000h
-    xor eax,eax
-    mov ecx,es:apic_tics
-    shl ecx,16
-    mov cx,es:apic_rest
-    div ecx
-    mov esi,eax
-;
-	mov eax,80000000h
-	cli
-    mov bx,apic_mem_sel
-    mov es,bx
-    mov es:APIC_INIT_COUNT,eax    
-    push es
-    push esi
-    xor ax,ax
-    mov es,ax
-	call ds:update_clock_proc
-	LocalGetSystemTime
-	pop esi
-	pop es
-    mov eax,es:APIC_CURR_COUNT    
-	neg eax
-	add eax,80000000h
-	mul esi
-	add eax,eax
-	adc edx,edx
-	add eax,80000000h
-	adc edx,0
-	mov ds:update_tics,edx
-	mov ds:reload_timer_proc,OFFSET ReloadApicTimer
-;
-    mov eax,40h
-    mov es:APIC_TIMER,eax
-;
-    popad
-    pop es	
-	ret
-GetApicTics    Endp
 
 PAGE
 
@@ -898,6 +801,12 @@ proc_init:
 	mov di,OFFSET do_preempt_processor_name
 	xor cl,cl
 	mov ax,do_preempt_processor_nr
+	RegisterOsGate
+;
+	mov si,OFFSET start_pit_timer
+	mov di,OFFSET start_pit_timer_name
+	xor cl,cl
+	mov ax,start_sys_timer_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET reload_pit_timer
@@ -2421,7 +2330,8 @@ load_retry:
 
 load_reload_timer:
 	neg eax
-	call ds:reload_timer_proc
+	ReloadSysTimer
+;	call ds:reload_timer_proc
 ;	
     sti
 	mov ax,gdt_sel
@@ -2506,14 +2416,12 @@ load_kernel:
     cmp ax,word ptr ds:tss_ess0
     je load_kernel_ss0_ok
 ;
-    mov ax,es
-    cmp ax,fs:ps_null_thread
-    je load_kernel_ss0_ok
-;
+    mov dx,word ptr ds:tss_ess0
+    mov esi,dword ptr ds:tss_eip
+    mov di,word ptr ds:tss_cs
     int 3
 
 load_kernel_ss0_ok:
-    mov ax,word ptr ds:tss_ss
     mov ss,ax
     mov esp,dword ptr ds:tss_esp
     push dword ptr ds:tss_eflags
@@ -2676,6 +2584,25 @@ SaveCurrentThread	Proc near
 ;        
     mov ax,fs:ps_curr_thread
     mov ds,ax
+;
+
+    push ds
+    push ax
+    push dx
+    mov ds,ds:p_tss_data_sel
+    mov ax,word ptr ds:tss_ess0
+    mov dx,ss
+    cmp ax,dx
+    pop dx
+    pop ax
+    pop ds
+    je save_ss_ok
+;
+    int 3
+
+save_ss_ok:
+        
+    
     cmp ax,fs:ps_skip_thread
     je save_thread_skip
 ;    
@@ -2754,8 +2681,31 @@ SaveLockedThread	Proc near
     mov ax,task_sel
     mov ds,ax
 ;        
-    mov ax,thread_sel
+    mov ax,fs:ps_curr_thread
     mov ds,ax
+
+;
+
+    push ds
+    push ax
+    push dx
+    mov ds,ds:p_tss_data_sel
+    mov ax,word ptr ds:tss_ess0
+    mov dx,ss
+    cmp ax,dx
+    pop dx
+    pop ax
+    pop ds
+    je save_locked_ss_ok
+;
+    call Shutdown
+
+save_locked_ss_ok:
+            
+
+    cmp ax,fs:ps_skip_thread
+    je save_locked_thread_skip
+;
     mov ds,ds:p_tss_data_sel
     pushfd
     pop dword ptr ds:tss_eflags
@@ -2781,7 +2731,15 @@ SaveLockedThread	Proc near
     mov dword ptr ds:tss_eip,edx
     mov dword ptr ds:tss_esp,esp
     mov edx,dword ptr ds:tss_edx
-;
+    jmp save_locked_thread_setup
+
+save_locked_thread_skip:
+    pop ax
+    add sp,4
+    pop bp
+    add sp,2
+
+save_locked_thread_setup:
     push ax
     mov ax,task_sel
     mov ds,ax
@@ -2983,7 +2941,8 @@ reload_preempt_block:
 
 reload_timer_do:
 	neg eax
-	call ds:reload_timer_proc
+	ReloadSysTimer
+;	call ds:reload_timer_proc
 
 reload_timer_done:
 	call ds:unlock_proc
@@ -3435,6 +3394,8 @@ debug_exception:
     jc debug_normal
 
 debug_fault:
+    CpuReset
+;
     mov ds,fs:ps_null_thread 
     mov ds,ds:p_tss_data_sel  
     pop fs 
@@ -4407,7 +4368,11 @@ lumGet:
 	jc lumNestingOk
 ;
     mov cx,fs:ps_nesting
-    mov di,ds:owner_sel
+    pop ax
+    pop dx
+    mov si,fs
+    GetProcessor
+    mov di,fs
     call Shutdown
 
 lumNestingOk:
@@ -4502,39 +4467,6 @@ timer_int:
 ;
 	mov al,20h
 	out INT0_CONTROL,al
-	mov ax,task_sel
-	mov ds,ax
-	call ReloadTimer
-;
-	popad
-	pop fs
-	pop es
-	pop ds
-	iretd
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			apic_int
-;
-;		DESCRIPTION:	APIC int
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-apic_int:
-	push ds
-	push es
-	push fs
-	pushad
-;
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax	
-;
 	mov ax,task_sel
 	mov ds,ax
 	call ReloadTimer
@@ -4657,6 +4589,12 @@ PAGE
 	public init_first_thread
 
 init_first_thread:
+    mov ds,es:p_tss_data_sel
+    mov ax,word ptr ds:tss_ss
+    mov word ptr ds:tss_ess0,ax
+    mov eax,dword ptr ds:tss_esp
+    mov dword ptr ds:tss_esp0,eax
+;    
 	mov ax,task_sel
 	mov ds,ax
 	call ds:lock_proc
@@ -4677,17 +4615,8 @@ init_first_thread:
 	mov ds:update_clock_proc,OFFSET UpdateTscClock
 
 timer_clock_done:
-    test es:cpu_feature_flags,200h
-    jz init_use_pit_timer
-
-init_use_apic_timer:
-    call GetApicTics
-    jmp init_timer_sel_ok
-
-init_use_pit_timer:
-    call GetPitUpdateTics
-
-init_timer_sel_ok:
+    StartSysTimer
+	mov ds:update_tics,eax
     call ds:init_clock_proc
 ;
     mov bx,task_sel

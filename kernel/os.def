@@ -527,6 +527,7 @@ preempt_processor_nr        EQU 371
 do_preempt_processor_nr     EQU 372
 
 reload_sys_timer_nr         EQU 373
+start_sys_timer_nr          EQU 374
 
 osgate_entries				EQU 380
 
