@@ -55,6 +55,8 @@ mp_thread           DW ?
 
 mp_flags            DW ?
 
+mp_get_proc         DW ?
+
 mp_processor_sign   DD ?
 mp_apic             DD ?
 mp_proc             DW ?
@@ -387,8 +389,6 @@ get_processor_id_msr Endp
 ;       RETURNS:        FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_processor_name    DB 'Get Processor',0
 
 get_processor_mem  Proc far
     push ds
@@ -1596,31 +1596,19 @@ InitIpi Endp
 InitSmp Proc near
     mov ax,apic_data_sel
     mov ds,ax
+    mov ds:mp_get_proc,0
+;    
     test ds:mp_flags,MP_FLAG_MEM
     jnz init_smp_check_msr
-;    
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET get_processor_mem
-	mov di,OFFSET get_processor_name
-	xor cl,cl
-	mov ax,get_processor_nr
-	RegisterOsGate
+;   
+    mov ds:mp_get_proc,OFFSET get_processor_mem
 	jmp init_smp_done
 
 init_smp_check_msr:
     test ds:mp_flags,MP_FLAG_MSR
     jnz init_smp_done
 ;    
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET get_processor_msr
-	mov di,OFFSET get_processor_name
-	xor cl,cl
-	mov ax,get_processor_nr
-	RegisterOsGate
+    mov ds:mp_get_proc,OFFSET get_processor_msr
 
 init_smp_done:
 	mov ax,cs
@@ -1715,6 +1703,11 @@ init_apic_start_cpu:
     call StartCore
     jc init_apic_gates_ok
 ;    
+    call InitSmp
+;    
+    mov di,ds:mp_get_proc
+    mov ax,cs
+    mov es,ax
     CreateProcessor    
     mov ds:mp_processor_sel,es
 ;
@@ -1725,7 +1718,6 @@ init_apic_start_cpu:
     mov edx,ds:mp_apic
     mov es:ps_apic,edx
 ;
-    call InitSmp
     call InitIpi
 
 init_apic_gates_ok:     

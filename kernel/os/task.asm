@@ -104,6 +104,8 @@ load_unlock_proc    DW ?
 lock_list_proc      DW ?
 unlock_list_proc    DW ?
 
+get_cpu_proc        DD ?
+
 processor_count     DW ?
 processor_arr       DW 256 DUP(?)
 
@@ -1090,6 +1092,7 @@ proc_init:
 	mov di,OFFSET check_list
 	HookState
 ;
+    mov di,OFFSET get_processor_single
     CreateProcessor
 ;
 	pop ds
@@ -2379,7 +2382,7 @@ load_actions_done:
     push ds
     mov ax,task_sel
     mov ds,ax
-    GetProcessor
+    call ds:get_cpu_proc
     call ds:load_unlock_proc
     mov al,ds:has_signal
     or al,ds:has_list
@@ -3209,7 +3212,9 @@ null_base   DB 'Null'
     public null_thread0
 
 null_thread0:
-    GetProcessor
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_cpu_proc
     GetThread
     mov fs:ps_null_thread,ax
 ;    mov fs:ps_skip_thread,ax
@@ -3313,7 +3318,7 @@ Shutdown proc near
 ;
     mov ax,task_sel
     mov ds,ax
-    GetProcessor
+    call ds:get_cpu_proc
     mov ds,fs:ps_null_thread 
     mov ds,ds:p_tss_data_sel  
 ;    
@@ -3432,7 +3437,7 @@ debug_fault:
 ;
     mov ax,task_sel
     mov ds,ax
-    GetProcessor
+    call ds:get_cpu_proc
     mov es,fs:ps_null_thread
     movzx dx,byte ptr [bp].vm_err+2
 	mov es:p_error_code,dx
@@ -3522,7 +3527,7 @@ debug_save_ok:
     movzx dx,byte ptr [bp].vm_err+2
     mov ax,task_sel
     mov ds,ax
-    GetProcessor
+    call ds:get_cpu_proc
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
@@ -3603,6 +3608,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Create processor
 ;
+;       PARAMETERS:     ES:DI   Get processor callback
+;
 ;       RETURNS:        AX      Processor #
 ;                       ES      Processor sel
 ;
@@ -3615,6 +3622,11 @@ create_processor	Proc far
     push bx
     push cx
     push si
+;    
+    mov ax,task_sel
+    mov ds,ax
+    mov word ptr ds:get_cpu_proc,di
+    mov word ptr ds:get_cpu_proc+2,es
 ;    
     mov eax,SIZE processor_seg
     AllocateSmallGlobalMem
@@ -3675,6 +3687,28 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetProcessorSingle
+;
+;		DESCRIPTION:	Get current processor selector (single processor version)
+;
+;       RETURNS:        FS      Processor sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_processor_single	Proc far
+    push ax
+    mov ax,task_sel
+    mov fs,ax
+    mov fs,fs:processor_arr
+    pop ax
+	ret
+get_processor_single	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			GetProcessor
 ;
 ;		DESCRIPTION:	Get current processor selector
@@ -3686,11 +3720,15 @@ PAGE
 get_processor_name	DB 'Get Processor',0
 
 get_processor	Proc far
+    push ds
     push ax
+;
     mov ax,task_sel
-    mov fs,ax
-    mov fs,fs:processor_arr
+    mov ds,ax
+    call ds:get_cpu_proc
+;
     pop ax
+    pop ds
 	ret
 get_processor	Endp
 
@@ -3962,7 +4000,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TryLockSingle	Proc near
-    GetProcessor
+    call ds:get_cpu_proc
 	add fs:ps_nesting,1
 	ret
 TryLockSingle	Endp
@@ -3984,7 +4022,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockSingle	Proc near
-    GetProcessor
+    call ds:get_cpu_proc
 	add fs:ps_nesting,1
 	jc lsDone
 ;
@@ -4132,7 +4170,7 @@ TryLockMultiple	Proc near
     push ax
     push dx
 ;
-    GetProcessor
+    call ds:get_cpu_proc
 
 tlmSpinLock:
     sti
@@ -4197,7 +4235,7 @@ LockMultiple	Proc near
     push ax
     push dx
 ;
-    GetProcessor
+    call ds:get_cpu_proc
 
 lmSpinLock:
     sti
@@ -4366,7 +4404,7 @@ lumGet:
     pop ax
     pop dx
     mov si,fs
-    GetProcessor
+    call ds:get_cpu_proc
     mov di,fs
     call Shutdown
 
@@ -4519,7 +4557,7 @@ start_timer	PROC far
 ;
 	mov si,task_sel
 	mov ds,si
-    GetProcessor
+    call ds:get_cpu_proc
 	cli
 	LocalStartTimer
 	call ReloadTimer
@@ -4555,7 +4593,7 @@ stop_timer	PROC far
 ;
 	mov si,task_sel
 	mov ds,si
-    GetProcessor
+    call ds:get_cpu_proc
 	cli
 	LocalStopTimer
 	call ReloadTimer
@@ -4619,7 +4657,9 @@ timer_clock_done:
     mov bx,tasking_sel
     CreateDataSelector16
 ;
-    GetProcessor
+    mov bx,task_sel
+    mov ds,bx
+    call ds:get_cpu_proc
 	jmp LoadCurrentThread
 
 PAGE
@@ -5595,7 +5635,7 @@ get_thread_pr	PROC far
 ;	
 	mov ax,task_sel
 	mov ds,ax
-	GetProcessor
+    call ds:get_cpu_proc
 	mov ax,fs:ps_curr_thread
 ;
     pop fs	

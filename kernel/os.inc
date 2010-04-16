@@ -600,6 +600,7 @@ GetApicId    MACRO
 	OsGate get_apic_id_nr
 						ENDM
 
+;   IN  ES:DI   Callback for get processor
 ;   OUT AX      Processor #
 ;   OUT ES      Processor selector
 CreateProcessor    MACRO
