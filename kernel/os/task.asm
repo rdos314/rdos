@@ -1412,16 +1412,14 @@ PAGE
 ;
 ;		DESCRIPTION:	Pace one instruction in debugged thread
 ;
-;		PARAMETERS:		
+;		PARAMETERS:		DS      Tss sel
+;                       ES      Thread sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 debug_pace_name	DB 'Debug Pace',0
 
 load_breaks Proc near
-    push ds
-	mov ax,thread_tss_sel
-	mov ds,ax
 	mov eax,ds:tss_dr0
 	mov dr0,eax
 	mov eax,ds:tss_dr1
@@ -1435,12 +1433,9 @@ load_breaks Proc near
 	and ax,0FFh
 	jnz load_break_done
 ;
-    mov ax,thread_sel
-    mov ds,ax
-    and ds:p_flags,NOT THREAD_FLAG_BP
+    and es:p_flags,NOT THREAD_FLAG_BP
 	
 load_break_done:
-    pop ds
     ret
 load_breaks Endp    
 
@@ -5451,12 +5446,7 @@ leave_user_section	PROC far
 ;
 	sub ds:[bx].us_count,1
 	jz lusFreeOwner
-;
-    jnc lusNotOverflowError
-;
-    int 3
-
-lusNotOverflowError:    
+;	
 	lock add ds:[bx].us_value,1
 	jnc lusNotValueError
 ;
@@ -5471,6 +5461,7 @@ lusFreeOwner:
     int 3
 
 lusNotCountError:
+    mov ds:[bx].us_owner,0
 	lock add ds:[bx].us_value,1
     jc lusDone
 ;    
@@ -5480,7 +5471,6 @@ lusNotCountError:
 	call ds:lock_proc
 	pop ds
 ;
-    mov ds:[bx].us_owner,-1
 	mov ax,ds:[bx].us_list
 	or ax,ax
 	jnz lusUnblock
