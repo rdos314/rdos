@@ -152,8 +152,9 @@ InsertApp	Proc near
 	mov ds,ax
 	mov ds:elf_app,es
 ;
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov word ptr ds:app_loader_name,OFFSET elf_loader_name
 	mov word ptr ds:app_loader_name+2,cs
 	mov word ptr ds:app_get_env_proc,OFFSET get_env
@@ -1076,8 +1077,9 @@ get_exe_name	Proc far
 	or edi,edi
 	jnz get_exe_done
 ;	
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov si,OFFSET app_exe_name
 
 get_exe_size_loop:

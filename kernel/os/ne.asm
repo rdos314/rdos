@@ -1632,8 +1632,9 @@ load_ne	Proc far
 	pop es
 	FreeMem
 	mov word ptr [bp].load_es,0
-	mov ax,thread_app_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_app_sel
 	mov word ptr ds:app_loader_name,OFFSET ne_loader_name
 	mov word ptr ds:app_loader_name+2,cs
 	mov word ptr ds:app_load_dll_proc,OFFSET load_dll_pr

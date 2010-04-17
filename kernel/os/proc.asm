@@ -1447,8 +1447,9 @@ PAGE
 init_prot_tss	PROC near
 	push fs
 ;
-	mov ax,thread_app_sel
-	mov fs,ax
+    GetThread
+    mov fs,ax
+    mov fs,fs:p_app_sel
 ;
 	mov dx,[bp].cr_flags
 	or dx,200h

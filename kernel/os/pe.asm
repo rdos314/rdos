@@ -668,8 +668,9 @@ InsertApp	Proc near
 	mov ds:pe_env,0
 	mov ds:pe_exe_name,0
 ;
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov word ptr ds:app_get_env_proc,OFFSET get_env
 	mov word ptr ds:app_get_env_proc+2,cs 
 	mov word ptr ds:app_get_exe_proc,OFFSET get_exe_name
@@ -2929,8 +2930,9 @@ start_thread	PROC far
     or bp,bp
     je start_thread_done
 ;    
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov ax,word ptr ds:app_loader_name
 	cmp ax,OFFSET pe_loader_name
 	jne start_thread_done
@@ -2973,8 +2975,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_thread	Proc far
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov ax,word ptr ds:app_loader_name
 	cmp ax,OFFSET pe_loader_name
 	jne free_thread_no_debug
@@ -3163,8 +3166,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_proc	Proc far
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov ax,word ptr ds:app_loader_name
 	cmp ax,OFFSET pe_loader_name
 	jne free_process_no_debug
@@ -4419,8 +4423,9 @@ get_exe_name	Proc far
 	or edi,edi
 	jnz get_exe_done
 ;	
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov si,OFFSET app_exe_name
 
 get_exe_size_loop:
