@@ -661,14 +661,15 @@ allocate_dos_mem_single:
 	mov cx,1
 	AllocateLdt
 allocate_dos_mem_setup_ldt:
-	push cx
-	mov cx,flat_sel
-	mov ds,cx
+	push ax
+	mov ax,flat_sel
+	mov ds,ax
 	mov [edx].dos_mem_sel,bx
-	mov cx,thread_sel
-	mov ds,cx
+	GetThread
+	mov ds,ax
 	mov ds,ds:p_ldt_sel
-	pop cx
+	pop ax
+;	
 	push bx
 allocate_dos_mem_ldt_loop:
 	cmp cx,1

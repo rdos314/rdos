@@ -458,7 +458,7 @@ demand_load_ldt:
 	stc
 	jz demand_load_end
 ;
-	mov ax,thread_sel
+    GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bx,0FFF8h
@@ -682,7 +682,7 @@ read_segment_farstack:
 read_segment_no_auto:	    
 	mov cx,ds:seh_segment_entries
 	push ds
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	xor di,di
@@ -1050,7 +1050,7 @@ create_lib	Endp
 destroy_lib	Proc near 
 	mov cx,es:lib_segment_entries
 	mov di,OFFSET lib_tables
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 destroy_selectors:
@@ -1407,7 +1407,7 @@ load_dll	Proc near
     CreateModule
 ;
 	push ds
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds:p_lib_sel,es
 	pop ds
@@ -1522,7 +1522,7 @@ run_ne_sp_add:
 ;
 	mov cx,ds:seh_sp
 	push ds
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bx,0FFF8h
@@ -1626,7 +1626,7 @@ load_ne	Proc far
 	SetModule
 ;
 	call run_ne
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds:p_lib_sel,es
 	pop es

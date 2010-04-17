@@ -1114,7 +1114,7 @@ enter_dos32	PROC far
 	push bx
 	push edx
 	push si
-    mov ax,thread_sel
+	GetThread
     mov ds,ax
 	mov ds,ds:p_ldt_sel
 	call get_prot_psp

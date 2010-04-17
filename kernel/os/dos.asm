@@ -463,7 +463,7 @@ set_virt_psp_nofree:
 	movzx edx,bx
 	shl edx,4
 	push ds
-    mov ax,thread_sel
+    GetThread
     mov ds,ax
 	mov ds,ds:p_ldt_sel
 	AllocateLdt
@@ -597,7 +597,7 @@ set_virt_dta_nofree:
 	movzx edx,bx
 	shl edx,4
 	push ds
-    mov ax,thread_sel
+    GetThread
     mov ds,ax
 	mov ds,ds:p_ldt_sel
 	AllocateLdt
@@ -927,7 +927,7 @@ create_psp	PROC near
 
 create_psp_virt_psp_nofree:
 	push ds
-    mov ax,thread_sel
+    GetThread
     mov ds,ax
 	mov ds,ds:p_ldt_sel
 	AllocateLdt
@@ -1058,7 +1058,7 @@ create_psp_virt_psp_nofree:
 
 create_psp_virt_dta_nofree:
 	push ds
-    mov ax,thread_sel
+    GetThread
     mov ds,ax
 	mov ds,ds:p_ldt_sel
 	AllocateLdt
