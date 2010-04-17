@@ -312,8 +312,9 @@ setup_idt16	PROC near
 	push cx
 	push edx
 ;
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov bx,OFFSET app_pm_int
 	mov cx,100h
 	xor edx,edx
@@ -396,8 +397,11 @@ get_exception_vector_name	DB 'Get Exception Vector',0
 get_exception_vector	PROC far
 	push ds
 	push bx
-	mov bx,thread_app_sel
-	mov ds,bx
+	push ax
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_app_sel
+	pop ax
 	movzx bx,al
 	shl bx,3
 	mov di,word ptr ds:[bx].app_pm_exc
@@ -426,8 +430,11 @@ set_exception_vector_name	DB 'Set Exception Vector',0
 set_exception_vector	PROC far
 	push ds
 	push bx
-	mov bx,thread_app_sel
-	mov ds,bx
+	push ax
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_app_sel
+	pop ax
 	movzx bx,al
 	shl bx,3
 	mov word ptr ds:[bx].app_pm_exc,di
@@ -455,8 +462,11 @@ PAGE
 default_get_pm_int	PROC far
 	push ds
 	push bx
-	mov bx,thread_app_sel
-	mov ds,bx
+	push ax
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_app_sel
+	pop ax
 	movzx bx,al
 	shl bx,3
 	mov di,word ptr ds:[bx].app_pm_int
@@ -483,8 +493,11 @@ PAGE
 default_set_pm_int	PROC far
 	push ds
 	push bx
-	mov bx,thread_app_sel
-	mov ds,bx
+	push ax
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_app_sel
+	pop ax
 	movzx bx,al
 	shl bx,3
 	mov word ptr ds:[bx].app_pm_int,di
@@ -1246,8 +1259,11 @@ prot_exception16	PROC near
 	cmp bl,3
 	jne run_default_exception
 ;
-	mov bx,thread_app_sel
-	mov ds,bx
+	push ax
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_app_sel
+	pop ax
 	movzx bx,al
 ;
 	shl bx,3

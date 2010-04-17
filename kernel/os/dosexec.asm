@@ -298,8 +298,9 @@ load_com	PROC near
 	SetFlags
 	mov [bp].load_eflags,ax
 ;
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov word ptr ds:app_loader_name,OFFSET com_loader_name
 	mov word ptr ds:app_loader_name+2,cs
 	clc
@@ -468,8 +469,9 @@ load_exe_noreloc2:
 ;
 	mov ax,ds
 	mov es,ax
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov word ptr ds:app_loader_name,OFFSET exe_loader_name
 	mov word ptr ds:app_loader_name+2,cs
 	FreeMem
@@ -814,8 +816,9 @@ load_ext_exe_noreloc2:
 ;
 	mov ax,ds
 	mov es,ax
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov word ptr ds:app_loader_name,OFFSET exe_loader_name
 	mov word ptr ds:app_loader_name+2,cs
 	FreeMem
