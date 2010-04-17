@@ -667,8 +667,6 @@ sim16_end	PROC far
 	rep movsw
 	xor bx,bx
 	mov [bx],si
-	mov ax,thread_sel
-	mov ds,ax
 	pop ax
 	popad
 	popf
@@ -700,8 +698,6 @@ sim16_begin:
 	push gs
 	pushf
 	pushad
-	mov ax,thread_sel
-	mov ds,ax
 	push word ptr 0
 	mov bp,sp
 	cld

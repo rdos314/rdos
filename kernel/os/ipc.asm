@@ -91,7 +91,7 @@ SelectorToLinear	PROC near
 	jz selector_to_linear_gdt
 
 selector_to_linear_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp selector_to_linear_check_selector

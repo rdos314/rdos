@@ -69,7 +69,7 @@ get_cs_bitness_pm:
 	jz get_cs_bitness_gdt
 
 get_cs_bitness_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp get_cs_bitness_test
@@ -111,7 +111,7 @@ get_ss_bitness_pm:
 	jz get_ss_bitness_gdt
 
 get_ss_bitness_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp get_ss_bitness_test
@@ -157,7 +157,7 @@ read_segment_to_linear_pm:
 	jz read_segment_to_linear_gdt
 
 read_segment_to_linear_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp read_segment_to_linear_check_selector
@@ -246,7 +246,7 @@ write_segment_to_linear_pm:
 	jz write_segment_to_linear_gdt
 
 write_segment_to_linear_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp write_segment_to_linear_check_selector

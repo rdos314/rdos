@@ -123,7 +123,7 @@ create_ldt	PROC near
 	lldt bx
 	AllocateGdt
 	CreateDataSelector16
-	mov ax,thread_sel
+	GetThread
 	mov es,ax
 	mov es:p_ldt_sel,bx
 	mov ds:app_ldt_data_sel,bx
@@ -187,7 +187,7 @@ destroy_ldt	PROC near
 	lldt ax
 	FreeGdt
 ;
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	xor ax,ax
 	xchg ax,ds:p_ldt_sel
