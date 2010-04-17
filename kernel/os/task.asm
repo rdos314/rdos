@@ -1681,8 +1681,10 @@ PAGE
 	public virt_sti
 
 virt_sti	PROC near
-	mov bx,thread_sel
-	mov ds,bx
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
 	mov ds,ds:p_process_sel
 	mov ds:ms_virt_flags,7200h
 virt_sti_test_wake:
@@ -1717,10 +1719,10 @@ sim_sti_name	DB 'Simulate Sti',0
 
 sim_sti	PROC far
 	push ds
-	push bx
+	push ax
 	sti
-	mov bx,thread_sel
-	mov ds,bx
+	GetThread
+	mov ds,ax
 	mov ds,ds:p_process_sel
 	mov ds:ms_virt_flags,7200h
 sim_sti_test_wake:
@@ -1732,7 +1734,7 @@ sim_sti_test_wake:
 	pop si
 	jmp sim_sti_test_wake
 sim_sti_nowake:
-	pop bx
+	pop ax
 	pop ds
 	ret
 sim_sti	ENDP
@@ -1753,15 +1755,16 @@ PAGE
 	public virt_cli
 
 virt_cli	PROC near
-	mov bx,thread_sel
-	mov ds,bx
-	mov bx,ds:p_thread_sel
+    push ax
+    GetThread
+    mov ds,ax
 	mov ds,ds:p_process_sel
 	cli
-	mov ds:ms_cli_thread,bx
+	mov ds:ms_cli_thread,ax
 	mov ds:ms_virt_flags,7000h
 	sti
 	inc byte ptr [bp].vm_eip
+    pop ax
 	ret
 virt_cli	ENDP
 
@@ -1782,16 +1785,15 @@ sim_cli_name	DB 'Simulate Cli',0
 
 sim_cli	PROC far
 	push ds
-	push bx
-	mov bx,thread_sel
-	mov ds,bx
-	mov bx,ds:p_thread_sel
+	push ax
+	GetThread
+	mov ds,ax
 	mov ds,ds:p_process_sel
 	cli
-	mov ds:ms_cli_thread,bx
+	mov ds:ms_cli_thread,ax
 	mov ds:ms_virt_flags,7000h
 	sti
-	pop bx
+	pop ax
 	pop ds
 	ret
 sim_cli	ENDP
@@ -1812,9 +1814,11 @@ PAGE
 	public set_flags
 
 set_flags	PROC near
-	mov bx,thread_sel
-	mov ds,bx
-	mov bx,ds:p_thread_sel
+    push ax
+    GetThread
+    mov ds,ax
+    mov bx,ax
+    pop ax
 	mov ds,ds:p_process_sel
 	cli
 	mov ds:ms_cli_thread,bx
@@ -1879,8 +1883,10 @@ PAGE
 	public get_flags
 
 get_flags	PROC near
-	mov bx,thread_sel
-	mov ds,bx
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
 	mov ds,ds:p_process_sel
 	and ax,NOT 200h
 	mov bx,ds:ms_virt_flags
@@ -4874,7 +4880,7 @@ sleep_thread	PROC far
     jmp BlockCurrentThread
 
 sleep_thread_done:
-	mov ax,thread_sel
+    GetThread
 	mov ds,ax
 	mov eax,ds:p_data
 	pop ds
@@ -4898,7 +4904,7 @@ clear_signal	PROC far
 	push ds
 	push ax
 ;
-	mov ax,thread_sel
+    GetThread
 	mov ds,ax
 	mov ds:p_signal,0
 ;
@@ -6010,7 +6016,7 @@ get_system_time	PROC far
 	push es
 	mov ax,task_sel
 	mov ds,ax
-	mov ax,thread_sel
+	GetThread
     mov es,ax
 	cli
 	call ds:update_clock_proc
@@ -6041,7 +6047,7 @@ get_time	PROC far
 	push es
 	mov ax,task_sel
 	mov ds,ax
-	mov ax,thread_sel
+	GetThread
 	mov es,ax
 	cli
 	call ds:update_clock_proc

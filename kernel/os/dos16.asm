@@ -178,11 +178,11 @@ allocate_mem_single:
 	mov cx,1
 	AllocateLdt
 allocate_mem_setup_ldt:
-	push cx
-	mov cx,thread_sel
-	mov ds,cx
+	push ax
+	GetThread
+	mov ds,ax
 	mov ds,ds:p_ldt_sel
-	pop cx
+	pop ax
 	push bx
 allocate_mem_ldt_loop:
 	cmp cx,1
@@ -1216,7 +1216,7 @@ enter_dos16	PROC far
 	push ax
 	push bx
 	push edx
-    mov ax,thread_sel
+    GetThread
     mov ds,ax
 	mov ds,ds:p_ldt_sel
 	call get_prot_psp
