@@ -698,8 +698,11 @@ set_bitness	PROC far
 	push ds
 	push bx
 ;
-	mov bx,thread_app_sel
-	mov ds,bx
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    pop ax
 	cmp al,16
 	je set_bitness16
 
@@ -2030,8 +2033,11 @@ prot_exception:
 	shl bx,2
 	jmp dword ptr [bx]
 prot_exception_user:
-	mov bx,thread_app_sel
-	mov ds,bx
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    pop ax
 	test ds:app_bitness,1
 	jz prot_exception16
 	jmp prot_exception32
@@ -2170,8 +2176,9 @@ raw_switch_v86:
 	mov sp,stack0_size
 ;
 	push ax
-	mov ax,thread_app_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_app_sel
 	test ds:app_bitness,1
 	jz raw_switch16_v86
 
