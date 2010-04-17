@@ -65,7 +65,7 @@ allocate_descr	PROC far
 dpmi_create_one: 
 	AllocateLdt
 dpmi_create_done:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	xor ax,ax
@@ -178,8 +178,8 @@ page
 get_descr_base	PROC far
 	test bl,4
 	jz get_descr_base_fail
-	mov cx,thread_sel
-	mov ds,cx
+	GetThread
+	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bl,0F8h
 	mov al,[bx+5]
@@ -217,8 +217,10 @@ set_descr_base	PROC far
 	push gs
 	test bl,4
 	jz set_descr_base_fail
-	mov ax,thread_sel
+	push ax
+	GetThread
 	mov ds,ax
+	pop ax
 	mov ds,ds:p_ldt_sel
 	and bl,0F8h
 	mov al,[bx+5]
@@ -263,7 +265,7 @@ set_descr_limit	PROC far
 	push gs
 	test bl,4
 	jz set_descr_limit_fail
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bl,0F8h
@@ -323,7 +325,7 @@ create_code_descr_alias	PROC far
 	jnz create_code_alias_fail
 	test bl,4
 	jz create_code_alias_fail
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bl,0F8h
@@ -419,7 +421,7 @@ set_descr_access_ok:
 	test ch,30h
 	jnz set_descr_access_fail
 	and ch,0F0h
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bl,0F8h
@@ -465,7 +467,7 @@ page
 get_descr	PROC far
 	test bl,4
 	jz get_descr_fail
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bl,0F8h
@@ -521,7 +523,7 @@ set_descr	PROC far
 	test al,2
 	jz set_descr_fail
 set_descr_ok:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bl,0F8h
@@ -568,7 +570,7 @@ allocate_specific_descr	PROC far
 	cmp bx,100h
 	jnc alloc_spec_descr_fail
 	and bl,0F8h	
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	mov al,[bx+5]
@@ -614,7 +616,7 @@ allocate_dos_mem	PROC far
 	shl eax,4
 	AllocateDosMem
 	jc allocate_dos_mem_fail
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	mov bx,es

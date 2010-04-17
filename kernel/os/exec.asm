@@ -1458,7 +1458,7 @@ spCopyExeLoop:
 	pop ds
 	xor bx,bx
 ;
-	mov ax,thread_sel
+	GetThread
 	mov es,ax
 	mov al,gs:s_switch
 	mov es:p_parent_switch,al
@@ -1491,7 +1491,7 @@ spCopyExeLoop:
 	mov ax,ds:app_sel
 	mov gs:s_app,ax
 ;
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_process_sel
     mov ax,ds:ms_pd_sel
@@ -1652,8 +1652,11 @@ spawn_program32	Endp
 unload_exe_name DB 'Unload Exe',0
 	
 unload_exe	Proc far
-	mov bx,thread_sel
-	mov ds,bx
+	push ax
+	GetThread
+	mov ds,ax
+	pop ax
+;	
 	mov ds,ds:p_process_sel
     mov ds,ds:ms_pd_sel
     mov ds:pd_exit_code,ax
