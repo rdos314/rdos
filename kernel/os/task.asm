@@ -2016,6 +2016,14 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPrioThread    Proc near
+    mov ax,fs:ps_id
+    or ax,ax
+    jz gptNormal
+;
+    mov es,fs:ps_null_thread
+    jmp gptDone
+
+gptNormal:    
     mov si,ds:prio_act
     mov ax,[si]
     or ax,ax
@@ -2329,7 +2337,6 @@ load_retry:
 load_reload_timer:
 	neg eax
 	ReloadSysTimer
-;	call ds:reload_timer_proc
 ;	
     sti
 	mov ax,gdt_sel
@@ -2400,6 +2407,17 @@ load_relock:
     jmp load_retry
             
 load_regs:
+    mov ax,fs:ps_id
+    or ax,ax
+    jz load_bproc
+;
+    mov ax,es
+    cmp ax,fs:ps_null_thread
+    je load_bproc
+;
+    call Shutdown        
+
+load_bproc:
     mov fs:ps_curr_thread,es
     mov fs:ps_last_thread,es
 ;
@@ -2966,6 +2984,7 @@ start_processor:
     mov ax,task_sel
     mov ds,ax
     call ds:lock_proc
+    StartSysTimer
     or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadCurrentThread
     
@@ -3394,8 +3413,6 @@ debug_exception:
     jc debug_normal
 
 debug_fault:
-    CpuReset
-;
     mov ds,fs:ps_null_thread 
     mov ds,ds:p_tss_data_sel  
     pop fs 

@@ -774,9 +774,9 @@ start_apic_mem_timer    Proc far
 ;
     mov edx,10000h
     xor eax,eax
-    mov ecx,es:apic_tics
+    mov ecx,ds:apic_tics
     shl ecx,16
-    mov cx,es:apic_rest
+    mov cx,ds:apic_rest
     div ecx
     mov esi,eax
 ;
@@ -816,9 +816,9 @@ start_apic_msr_timer    Proc far
 ;
     mov edx,10000h
     xor eax,eax
-    mov ecx,es:apic_tics
+    mov ecx,ds:apic_tics
     shl ecx,16
-    mov cx,es:apic_rest
+    mov cx,ds:apic_rest
     div ecx
     mov esi,eax
 ;
@@ -1611,6 +1611,7 @@ init_smp_check_msr:
     mov ds:mp_get_proc,OFFSET get_processor_msr
 
 init_smp_done:
+    push ds
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -1626,6 +1627,7 @@ init_smp_done:
 	xor cl,cl
 	mov ax,preempt_processor_nr
 	RegisterOsGate
+	pop ds
     ret
 InitSmp Endp
 

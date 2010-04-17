@@ -1728,7 +1728,7 @@ terminate_thread_name	DB 'Terminate Thread',0
 
 terminate_thread:
 	SimSti
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov bx,ds:p_tss_data_sel
 ;
@@ -1741,7 +1741,7 @@ terminate_thread:
 	mov ds:math_tss,0
 
 terminate_fpu_ok:
-	mov ax,thread_sel
+    GetThread
 	mov ds,ax
 	mov al,ds:p_parent_switch
 	or al,al
@@ -1759,13 +1759,13 @@ terminate_focus_ok:
 	FreeMem
 
 no_free_ss:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_process_sel
 	sub ds:ms_thread_count,1
 	jz terminate_proc
 ;
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov eax,ds:p_free_proc
 	or eax,eax
@@ -1778,8 +1778,8 @@ terminate_app_handled:
     jmp cleanup_thread
 
 terminate_proc:
-	mov bx,thread_sel
-	mov ds,bx
+    GetThread
+	mov ds,ax
 	mov ds,ds:p_process_sel
     mov ds,ds:ms_pd_sel
     sub ds:pd_ref_count,1
@@ -2192,7 +2192,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_process_callback:
-	mov ax,thread_sel
+    GetThread
 	mov fs,ax
 	push ds
 	call trap_create_process
