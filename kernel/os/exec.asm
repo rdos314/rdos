@@ -461,8 +461,9 @@ load_program    Proc near
 	OpenApp
 	push es
 	push edi
-	mov ax,thread_app_sel
+	GetThread
 	mov es,ax
+	mov es,es:p_app_sel
 	mov es:app_context,bx
 ;
 	xor si,si
@@ -514,13 +515,15 @@ load_fail:
     call FreeExec
 	CloseApp
 ;
-	mov ax,thread_app_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_app_sel
 	mov bx,ds:app_context
 	RestoreContext
 	push ds
-	mov ax,thread_app_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_app_sel
 	mov ax,ds:app_exit_code
 	pop ds
 	stc
@@ -595,8 +598,9 @@ dos_ext_exec16:
 	movzx edi,di
 	push es
 	push di
-	mov ax,thread_app_sel
+	GetThread
 	mov es,ax
+	mov es,es:p_app_sel
 	mov es:app_context,bx
 ;
 	push si
@@ -644,13 +648,15 @@ dos_ext_close_fail16:
 	CloseFile
 
 dos_ext_fail16:
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov bx,ds:app_context
 	RestoreContext
 	push ds
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov ax,ds:app_exit_code
 	pop ds
 	stc
@@ -699,8 +705,9 @@ load_process_default_drive:
 	mov ds,ax
 	mov si,di
 ;	
-	mov ax,thread_app_sel
-	mov es,ax	
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
 	mov ax,3Bh
 	EnableFocus
 	SetFocus
@@ -1275,8 +1282,9 @@ spDebugOk:
 	mov gs:s_switch,al
 
 spFocusDone:
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_loader_name
 	mov gs:s_loader_name,eax
 ;
@@ -1436,8 +1444,9 @@ spawn_startup:
 	push eax
 ;
 	push es
-	mov ax,thread_app_sel
-	mov es,ax
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
 	mov es:app_context,bx
 ;
 	mov ax,3Bh
@@ -1486,8 +1495,9 @@ spCopyExeLoop:
     call SetupSpawnOptions
 ;
 	mov gs:s_ret_code,0
-	mov ax,thread_app_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_app_sel
 	mov ax,ds:app_sel
 	mov gs:s_app,ax
 ;
@@ -1506,8 +1516,9 @@ spCopyExeLoop:
 	mov ax,10
 	WaitMilliSec
 ;
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_spawn_proc
 	or eax,eax
 	jz spNotifyDone
@@ -1663,13 +1674,15 @@ unload_exe	Proc far
 ;
 	push ax
 	UnhookMouse
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	push ds:app_context
 	CloseApp
 	pop bx
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	pop ax
 	or bx,bx
 	jz unload_exe
@@ -1683,8 +1696,9 @@ unload_exe	Proc far
 ;
 	RestoreContext
 	push ds
-	mov ax,thread_app_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_app_sel
 	mov ax,ds:app_exit_code
 	pop ds
 	clc
@@ -1976,8 +1990,9 @@ get_exit_code_name DB 'Get Exit Code',0
 	
 get_exit_code	Proc far
 	push ds
-	mov ax,thread_app_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_app_sel
 	mov ax,ds:app_exit_code
 	pop ds
 	retf32
