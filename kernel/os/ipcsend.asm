@@ -478,7 +478,7 @@ send_local_wait:
 	WaitForSignal
 	call RemoveSend
 	push ds
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ecx,ds:p_data
 	pop ds

@@ -554,7 +554,7 @@ open_app	PROC far
 	push fs
 	pushad
 ;
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 ;
 	mov eax,1000h
@@ -643,7 +643,7 @@ trap_close_app_done:
 	mov gs,ax
 	call destroy_ldt
 ;
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov es,ds:p_app_sel
 	movzx eax,es:app_next

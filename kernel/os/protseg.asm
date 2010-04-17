@@ -36,6 +36,8 @@ GateSize = 16
 INCLUDE protseg.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 
@@ -70,7 +72,7 @@ get_selector_base_size	PROC far
 	jz get_selector_gdt
 
 get_selector_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp get_selector_check
@@ -147,7 +149,7 @@ create_data_sel16	PROC far
 	jz create_data16_gdt
 
 create_data16_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp create_data16_dt_ok
@@ -220,7 +222,7 @@ create_data_sel32	PROC far
 	jz create_data32_gdt
 
 create_data32_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp create_data32_dt_ok
@@ -294,7 +296,7 @@ create_alias_sel16	PROC far
 	jz create_alias16_gdt
 
 create_alias16_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp create_alias16_dt_ok
@@ -368,7 +370,7 @@ create_alias_sel32	PROC far
 	jz create_alias32_gdt
 
 create_alias32_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp create_alias32_dt_ok
@@ -442,7 +444,7 @@ create_code_sel16	PROC far
 	jz create_code16_gdt
 
 create_code16_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp create_code16_dt_ok
@@ -515,7 +517,7 @@ create_code_sel32	PROC far
 	jz create_code32_gdt
 
 create_code32_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp create_code32_dt_ok
@@ -589,7 +591,7 @@ create_conform_sel16	PROC far
 	jz create_conform16_gdt
 
 create_conform16_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp create_conform16_dt_ok
@@ -662,7 +664,7 @@ create_conform_sel32	PROC far
 	jz create_conform32_gdt
 
 create_conform32_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp create_conform32_dt_ok
@@ -851,7 +853,7 @@ create_call_gate_sel16	PROC far
 	jz create_call_gate16_gdt
 
 create_call_gate16_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov es,ax
 	mov es,es:p_ldt_sel
 	jmp create_call_gate16_dt_ok
@@ -903,7 +905,7 @@ create_call_gate_sel32	PROC far
 	jz create_call_gate32_gdt
 
 create_call_gate32_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov es,ax
 	mov es,es:p_ldt_sel
 	jmp create_call_gate32_dt_ok
@@ -954,7 +956,7 @@ create_task_gate_sel	PROC far
 	jz create_task_gate_gdt
 
 create_task_gate_ldt:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	jmp create_task_gate_dt_ok
