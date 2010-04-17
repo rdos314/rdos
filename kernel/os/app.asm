@@ -468,8 +468,9 @@ run_open_hooks	Proc near
 	push ax
 	push cx
 ;
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 ;	
     mov ds:app_fork_id,0
     mov ds:app_handle,0
@@ -606,8 +607,9 @@ PAGE
 close_app_name	DB 'Close App',0
 
 close_app	PROC far
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_close_proc
 	or eax,eax
 	jz close_proc_handled
@@ -723,8 +725,9 @@ set_module	PROC far
     mov ds:mod_handle,bx
     mov ds:mod_list,0
 ;    
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
     mov ds:app_handle,bx
     mov ds:app_lib_sel,dx
     mov al,ds:app_key
@@ -757,8 +760,9 @@ reset_module	PROC far
     push bx
     push dx
 ;
-    mov ax,thread_app_sel
+    GetThread
     mov ds,ax
+    mov ds,ds:p_app_sel
     mov bx,ds:app_handle
 	mov ax,MODULE_HANDLE
 	DerefHandle
@@ -825,8 +829,9 @@ create_module	PROC far
     mov es:mod_list,0
 ;    
     mov dx,es
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
     mov bx,ds:app_handle
 	mov ax,MODULE_HANDLE
 	DerefHandle
@@ -873,8 +878,9 @@ free_module	PROC far
     push dx
 ;
     mov dx,es
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
     mov bx,ds:app_handle
 	mov ax,MODULE_HANDLE
 	DerefHandle
@@ -950,8 +956,9 @@ get_exe_name	PROC far
 	push ds
 ;
 	push eax
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_get_exe_proc
 	or eax,eax
 	pop eax
@@ -984,8 +991,9 @@ get_cmd_line	PROC far
 	push ds
 ;
 	push eax
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_get_cmd_line_proc
 	or eax,eax
 	pop eax
@@ -1018,8 +1026,9 @@ get_env	PROC far
 	push ds
 ;
 	push eax
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_get_env_proc
 	or eax,eax
 	pop eax
@@ -1052,8 +1061,9 @@ set_options	PROC far
 	push ds
 ;
 	push eax
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_set_options_proc
 	or eax,eax
 	pop eax
@@ -1086,8 +1096,9 @@ get_options	PROC far
 	push ds
 ;
 	push eax
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_get_options_proc
 	or eax,eax
 	pop eax
@@ -1122,8 +1133,9 @@ allocate_app_mem	PROC far
 	push ds
 ;
 	push eax
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_allocate_mem_proc
 	or eax,eax
 	pop eax
@@ -1159,8 +1171,9 @@ free_app_mem	PROC far
 	push ds
 ;
 	push eax
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_free_mem_proc
 	or eax,eax
 	pop eax
@@ -1196,8 +1209,9 @@ clone_app	PROC far
 	push ds
 	push eax
 ;
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_clone_proc
 	or eax,eax
 	stc
@@ -1327,8 +1341,9 @@ load_dll32  Proc far
     push ds
     push eax
 ;    
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_load_dll_proc
 	or eax,eax
 	stc
@@ -1354,8 +1369,9 @@ load_dll16  Proc far
     push edi
 ;    
     movzx edi,di
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov eax,ds:app_load_dll_proc
 	or eax,eax
 	stc
