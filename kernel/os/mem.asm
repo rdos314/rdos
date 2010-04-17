@@ -2252,7 +2252,7 @@ free_mem	PROC far
 	test bx,4
 	pushf
 	jz free_in_gdt
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bx,0FFF8h
@@ -2341,7 +2341,7 @@ free_selector	PROC far
 	jz free_selector_end
 	test bx,4
 	jz free_selector_in_gdt
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bx,0FFF8h
@@ -2746,7 +2746,7 @@ selector_to_segment	PROC far
 	mov bx,ax
 	test bx,4
 	jz get_in_gdt
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bx,0FFF8h
@@ -2870,7 +2870,7 @@ PAGE
 translate_selector	PROC near
 	test bx,4
 	jz translate_in_gdt
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bx,0FFF8h

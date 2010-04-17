@@ -35,6 +35,8 @@ INCLUDE protseg.def
 INCLUDE port.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
@@ -152,7 +154,7 @@ trap_1:
 	mov ds:tss_error_code,ax
 ;	
 	sti
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 ;
 	mov eax,[bp].vm_eflags
@@ -851,7 +853,7 @@ math_emulate_fpu:
 	jmp math_done
 
 math_real_fpu:
-	mov ax,thread_sel
+	GetThread
 	mov ds,ax
 	mov bx,ds:p_tss_data_sel
 ;
