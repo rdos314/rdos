@@ -105,8 +105,9 @@ create_ldt	PROC near
 	push es
 	pusha
 ;
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	sldt bx
 	mov ds:app_parent_ldt,bx
 ;
@@ -173,8 +174,9 @@ destroy_ldt	PROC near
 	push ax
 	push bx
 ;
-	mov ax,thread_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
 	mov ax,ds:app_ldt_sel
 	cmp ax,ds:app_parent_ldt
 	je destroy_ldt_done
@@ -220,8 +222,14 @@ allocate_name	DB 'Allocate Ldt',0
 allocate_ldt	PROC far
 	push es
 	push di
-	mov bx,thread_app_sel
-	mov ds,bx
+;	
+	push ax
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_app_sel
+	pop ax
+;
+    mov bx,ds	
 	push bx
 	mov ds,bx
 	mov es,bx
@@ -367,8 +375,13 @@ allocate_multiple_ldt	PROC far
 	mov ds,ax
 	mov dx,[bx]
 	inc dx
-	mov bx,thread_app_sel
-	mov ds,bx
+;
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel	
+    pop ax
+    mov bx,ds
 	mov es,bx
 	push ds
 	EnterSection ds:app_ldt_section
@@ -457,8 +470,13 @@ free_ldt	PROC far
 	push ds
 	push es
 	push si
-	mov si,thread_app_sel
-	mov ds,si
+;	
+	push ax
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_app_sel
+	pop ax
+;	
 	push ds
 	EnterSection ds:app_ldt_section
 	mov si,ds

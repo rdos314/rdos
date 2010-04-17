@@ -58,7 +58,6 @@ phys_list_sel		EQU 78h
 phys_page_sel		EQU 80h
 temp_sel			EQU 88h
 ;
-thread_app_sel		EQU 98h
 thread_tss_sel		EQU 0A0h
 thread_ss0_sel		EQU 0A8h
 ;

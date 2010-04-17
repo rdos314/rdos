@@ -301,11 +301,6 @@ init_app	PROC near
 	mov ax,continue_debug_event_nr
 	RegisterBimodalUserGate
 ;
-	mov bx,thread_app_sel
-	mov edx,app_linear
-	mov ecx,SIZE app_seg
-	CreateDataSelector16
-;
 	mov bx,app_data_sel
 	mov eax,SIZE app_data_seg
 	AllocateFixedSystemMem

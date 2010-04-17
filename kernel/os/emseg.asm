@@ -346,8 +346,9 @@ IntFarPm:
 	jz EmulateError
 ;
 	push ax
-	mov ax,thread_app_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_app_sel
 	mov al,ds:app_bitness
 	or al,al
 	pop ax
@@ -406,8 +407,9 @@ ExcFar	Proc near
 	jz EmulateError
 ;
 	push ax
-	mov ax,thread_app_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_app_sel
 	mov al,ds:app_bitness
 	or al,al
 	jnz ExcFarPm32
