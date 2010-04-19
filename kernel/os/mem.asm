@@ -65,7 +65,6 @@ small_section		section_typ <>
 
 system_alloc_base	DD ?
 process_alloc_base	DD ?
-thread_alloc_base	DD ?
 fixed_vm_base		DD ?
 
 mem_seg	ENDS
@@ -185,7 +184,6 @@ init_mem	PROC near
 	mov ds:big_used_mem,0
 	mov ds:small_used_mem,0
 	mov ds:process_alloc_base,fixed_process_linear + SIZE process_seg
-	mov ds:thread_alloc_base,thread_linear
 	mov ds:fixed_vm_base,fixed_vm_linear
 ;
 	mov ax,cs
@@ -300,12 +298,6 @@ init_mem	PROC near
 	mov ax,free_selector_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET allocate_thread_linear
-	mov di,OFFSET allocate_thread_linear_name
-	xor cl,cl
-	mov ax,allocate_thread_linear_nr
-	RegisterOsGate
-;
 	mov si,OFFSET allocate_process_linear
 	mov di,OFFSET allocate_process_linear_name
 	xor cl,cl
@@ -316,12 +308,6 @@ init_mem	PROC near
 	mov di,OFFSET allocate_system_linear_name
 	xor cl,cl
 	mov ax,allocate_system_linear_nr
-	RegisterOsGate
-;
-	mov si,OFFSET allocate_fixed_thread_mem
-	mov di,OFFSET allocate_fixed_thread_mem_name
-	xor cl,cl
-	mov ax,allocate_fixed_thread_mem_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET allocate_fixed_process_mem
@@ -2910,33 +2896,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			ALLOCATE_THREAD_LINEAR
-;
-;		DESCRIPTION:	Allocate fixed thread linear
-;
-;		PARAMETERS:		EAX		Number of bytes
-;
-;		RETURNS:		EDX		Linear base address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_thread_linear_name	DB 'Allocate Thread Linear',0
-
-allocate_thread_linear	PROC far
-	push ds
-	mov dx,mem_sel
-	mov ds,dx
-	mov edx,ds:thread_alloc_base
-	add ds:thread_alloc_base,eax
-	pop ds
-	ret
-allocate_thread_linear	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
 ;		NAME:			ALLOCATE_PROCESS_LINEAR
 ;
 ;		DESCRIPTION:	Allocate fixed process linear
@@ -3017,40 +2976,6 @@ allocate_fixed_vm_linear	PROC near
 	pop ds
 	retf
 allocate_fixed_vm_linear	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			ALLOCATE_FIXED_THREAD_MEM
-;
-;		DESCRIPTION:	Allocate fixed thread memory
-;
-;		PARAMETERS:		EAX		Number of bytes
-;						BX		Selector
-;
-;		RETURNS:		ES		Selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_fixed_thread_mem_name	DB 'Allocate Fixed Thread Mem',0
-
-allocate_fixed_thread_mem	PROC far
-	push ds
-	push ecx
-	push edx
-;
-	AllocateThreadLinear
-	mov ecx,eax
-	CreateDataSelector16
-	mov es,bx
-;
-	pop edx
-	pop ecx
-	pop ds
-	ret
-allocate_fixed_thread_mem	ENDP
 
 PAGE
 

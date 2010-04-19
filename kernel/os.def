@@ -130,10 +130,8 @@ resize_linear_nr			EQU 57
 used_big_linear_nr			EQU 60
 used_small_linear_nr		EQU 61
 used_local_linear_thread_nr	EQU 62
-allocate_fixed_thread_mem_nr	EQU 63
 allocate_fixed_process_mem_nr	EQU 64
 allocate_fixed_system_mem_nr	EQU 65
-allocate_thread_linear_nr	EQU 66
 allocate_process_linear_nr	EQU 67
 allocate_system_linear_nr	EQU 68
 allocate_fixed_vm_linear_nr	EQU 69

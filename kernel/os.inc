@@ -524,13 +524,6 @@ UsedSmallLinear	MACRO
 UsedLocalLinearThread	MACRO
 	OsGate used_local_linear_thread_nr
 					ENDM
-	
-;	EAX		ANTAL BYTES
-;	BX		SELECTOR IN
-;	ES		SELECTOR UT
-AllocateFixedThreadMem	MACRO
-	OsGate allocate_fixed_thread_mem_nr
-					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	BX		SELECTOR IN
@@ -544,12 +537,6 @@ AllocateFixedProcessMem	MACRO
 ;	ES		SELECTOR UT
 AllocateFixedSystemMem	MACRO
 	OsGate allocate_fixed_system_mem_nr
-					ENDM
-	
-;	EAX		ANTAL BYTES
-;	EDX		LINJŽR ADDRESS
-AllocateThreadLinear	MACRO
-	OsGate allocate_thread_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES

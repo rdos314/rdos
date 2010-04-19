@@ -84,12 +84,6 @@ phys_page_linear		EQU 0FDC00000h
 
 video_focus_linear		EQU 0FE000000h
 
-thread_block_linear		EQU 0FE020000h
-thread_data_linear		EQU 0FE020100h
-thread_tss_linear		EQU 0FE020200h
-thread_ss0_linear		EQU 0FE020600h
-thread_linear			EQU 0FE020800h
-
 app_linear				EQU 0FE021000h
 
 page0_linear			EQU 0FE022000h
