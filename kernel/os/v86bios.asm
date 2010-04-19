@@ -400,8 +400,9 @@ bios_loop:
 	add bx,4
 	loop bios_loop
 ;
-	mov ax,thread_tss_sel
-	mov es,ax
+    GetThread
+    mov es,ax
+    mov es,es:p_tss_data_sel
 	mov di,OFFSET tss_bitmap_space + (200h SHR 3)
 	xor ax,ax
 	mov cx,20h

@@ -32,6 +32,8 @@ GateSize = 16
 INCLUDE protseg.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
@@ -139,8 +141,9 @@ translate_pm_system	PROC near
 	push ds
 	push eax
 	mov bx,ax
-	mov ax,thread_tss_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_tss_data_sel
 	mov ax,ds:tss_esp0
 	push ax
 	mov ax,sp

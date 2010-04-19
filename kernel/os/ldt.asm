@@ -117,8 +117,9 @@ create_ldt	PROC near
 	mov cx,1000h
 	CreateLdtSelector
 ;
-	mov ax,thread_tss_sel
-	mov es,ax
+    GetThread
+    mov es,ax
+    mov es,es:p_tss_data_sel
 	mov es:tss_ldt,bx
 	mov ds:app_ldt_sel,bx
 	lldt bx
@@ -181,8 +182,9 @@ destroy_ldt	PROC near
 	cmp ax,ds:app_parent_ldt
 	je destroy_ldt_done
 ;
-	mov ax,thread_tss_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
 	xor bx,bx
 	xchg bx,ds:tss_ldt
 	xor ax,ax
@@ -246,8 +248,9 @@ allocate_ldt_again:
 	push es
 	mov ax,ds
 	mov es,ax
-	mov ax,thread_tss_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
 	mov bx,ds:tss_ldt
 	mov ax,gdt_sel
 	mov ds,ax
@@ -324,8 +327,9 @@ allocate_mldt_extend	PROC near
 	push es
 	mov ax,ds
 	mov es,ax
-	mov ax,thread_tss_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
 	mov bx,ds:tss_ldt
 	mov ax,gdt_sel
 	mov ds,ax
@@ -368,8 +372,9 @@ allocate_multiple_ldt	PROC far
 	push dx
 	push si
 	push di
-	mov ax,thread_tss_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
 	mov bx,ds:tss_ldt
 	mov ax,gdt_sel
 	mov ds,ax

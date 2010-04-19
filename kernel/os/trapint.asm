@@ -148,8 +148,9 @@ trap_1:
 	push ebx
 	push ds
 ;
-	mov ax,thread_tss_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
 	mov ax,[bp].vm_err
 	mov ds:tss_error_code,ax
 ;	
@@ -200,8 +201,9 @@ trap_2:
 	push eax
 	push ebx
 	push ds
-	mov ax,thread_tss_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
 	mov ax,[bp].vm_err
 	mov ds:tss_error_code,ax
 	mov al,2
@@ -239,8 +241,9 @@ trap_3:
 	push eax
 	push ebx
 	push ds
-	mov ax,thread_tss_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
 	mov ax,[bp].vm_err
 	mov ds:tss_error_code,ax
 	mov eax,[bp].vm_eflags
@@ -771,10 +774,9 @@ trap_6:
 	push eax
 	push ebx
 	push ds
-	mov ax,thread_tss_sel
-	mov ds,ax
-	mov ax,[bp].vm_err
-	mov ds:tss_error_code,ax
+;
+;	mov ax,[bp].vm_err
+;	mov ds:tss_error_code,ax
 	test byte ptr [bp+2].vm_eflags,2
 	jnz t6_vm
 	mov ds,[bp].vm_cs
@@ -839,8 +841,9 @@ trap_7:
 	push eax
 	push ebx
 	push ds
-	mov ax,thread_tss_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_tss_data_sel
 	mov ax,[bp].vm_err
 	mov ds:tss_error_code,ax
 	mov eax,cr0
@@ -940,8 +943,9 @@ trap_10:
 	push eax
 	push ebx
 	push ds
-	mov ax,thread_tss_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_tss_data_sel
 	mov ax,[bp].vm_err
 	mov ds:tss_error_code,ax
 	mov al,10
@@ -985,8 +989,9 @@ trap_11:
 	push eax
 	push ebx
 	push ds
-	mov ax,thread_tss_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_tss_data_sel
 	mov ax,[bp].vm_err
 	mov ds:tss_error_code,ax
 	mov al,11
@@ -1037,8 +1042,9 @@ trap_12:
 	push eax
 	push ebx
 	push ds
-	mov ax,thread_tss_sel
+	GetThread
 	mov ds,ax
+	mov ds,ds:p_tss_data_sel
 	mov ax,[bp].vm_err
 	mov ds:tss_error_code,ax
 	mov al,11

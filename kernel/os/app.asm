@@ -663,8 +663,9 @@ close_app_last:
 	mov eax,ds:p_cr3
 	mov cr3,eax
 ;
-	mov ax,thread_tss_sel
+    GetThread
 	mov es,ax
+    mov es,es:p_tss_data_sel
 	cli
 	mov bx,fs
 	or bx,bx
