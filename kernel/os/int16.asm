@@ -632,10 +632,10 @@ hook_set_pm_int	ENDP
 	public sim16_end
 
 sim16_end	PROC far
-	mov ax,thread_int_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
 	mov es,ax
-	mov ds,ds:pint_locked_stack
+	mov ds,ds:p_int_locked_stack
 	xor bx,bx
 	mov bx,[bx]
 	movzx eax,word ptr [bx].sim_edi
@@ -667,7 +667,7 @@ sim16_end	PROC far
 	mov bp,[bp].vm_bp
 	mov [si].vcs_ebp,ebp
 ;
-	mov ds,es:pint_locked_stack
+	mov ds,es:p_int_locked_stack
 	mov si,bx
 	mov di,[si].sim_esp
 	sub di,22h
@@ -719,9 +719,9 @@ sim16_begin:
 	xor ax,ax
 	call set_flags
 sim_no_cli:
-	mov bx,thread_int_sel
-	mov ds,bx
-	mov bx,ds:pint_locked_stack
+    GetThread
+    mov ds,ax
+	mov bx,ds:p_int_locked_stack
 	or bx,bx
 	jnz sim_int_save_pm
 	call allocate_switch_stack
@@ -761,14 +761,14 @@ sim_int_save_pm:
 	or ax,ax
 	jnz sim_int_push_stack
 	push ds
-	mov ax,thread_int_sel
+	GetThread
 	mov ds,ax
-	mov edx,ds:pint_real_stack
+	mov edx,ds:p_int_real_stack
 	or edx,edx
 	jnz sim_int_stack_ok
 	mov eax,210h
 	AllocateVMLinear
-	mov ds:pint_real_stack,edx
+	mov ds:p_int_real_stack,edx
 sim_int_stack_ok:
 	mov eax,edx
 	shr eax,4
@@ -987,9 +987,9 @@ vm_callback16:
 	pop fs
 	mov sp,stack0_size
 ;
-	mov bx,thread_int_sel
-	mov ds,bx
-	mov bx,ds:pint_locked_stack
+    GetThread
+    mov ds,ax
+	mov bx,ds:p_int_locked_stack
 	or bx,bx
 	jnz vm_callback_do
 	call allocate_switch_stack
@@ -1071,9 +1071,9 @@ pm_callback16:
 	push es:[di].vcs_cs
 	push 0
 	push es:[di].vcs_ip
-	mov bx,thread_int_sel
-	mov ds,bx
-	mov ds,ds:pint_locked_stack
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_int_locked_stack
 	xor bx,bx
 	mov si,[bx]
 	add si,8

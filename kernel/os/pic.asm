@@ -128,14 +128,14 @@ irq_not_context32_&nr:
 	je irq_not_context16_&nr
 	int 3
 irq_not_context16_&nr:
-	mov ax,thread_int_sel
-	mov es,ax
-	mov edx,es:pint_real_stack
+    GetThread
+    mov es,ax
+	mov edx,es:p_int_real_stack
 	or edx,edx
 	jnz irq_real_stack_ok&nr
 	mov eax,210h
 	AllocateVMLinear
-	mov es:pint_real_stack,edx
+	mov es:p_int_real_stack,edx
 irq_real_stack_ok&nr:
 	mov ax,flat_sel
 	mov es,ax

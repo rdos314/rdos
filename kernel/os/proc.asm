@@ -507,11 +507,6 @@ init_thread	PROC near
 	mov ds,ax
 	mov byte ptr [bx+5],0FAh
 ;
-;	mov edx,thread_ss0_linear
-;	mov ecx,200h
-;	mov bx,thread_ss0_sel
-;	CreateDataSelector16
-;
 	mov edx,fixed_process_linear
 	mov ecx,SIZE process_seg
 	mov bx,process_sel

@@ -101,10 +101,6 @@ init_int	PROC near
 	pusha
 	push ds
 ;
-	mov eax,OFFSET pint_seg_size
-	mov bx,thread_int_sel
-	AllocateFixedThreadMem
-;
 	mov bx,int_data_sel
 	mov eax,OFFSET int_seg_size
 	AllocateFixedSystemMem
@@ -456,12 +452,12 @@ init_thread_int	PROC far
 	push ax
 	mov ax,200h
 	call set_flags
-	mov ax,thread_int_sel
-	mov ds,ax
-	mov ds:pint_locked_stack,0
-	mov ds:pint_prot16_stack,0
-	mov ds:pint_prot32_stack,0
-	mov ds:pint_real_stack,0
+	GetThread
+    mov ds,ax	
+	mov ds:p_int_locked_stack,0
+	mov ds:p_int_prot16_stack,0
+	mov ds:p_int_prot32_stack,0
+	mov ds:p_int_real_stack,0
 	pop ax
 	pop bx
 	pop ds
@@ -486,9 +482,9 @@ free_thread_int	PROC far
 	push ecx
 	push edx
 ;
-	mov ax,thread_int_sel
+    GetThread
 	mov ds,ax
-	mov ax,ds:pint_locked_stack
+	mov ax,ds:p_int_locked_stack
 	or ax,ax
 	jz free_locked_ok
 ;
@@ -496,7 +492,7 @@ free_thread_int	PROC far
 	FreeMem
 
 free_locked_ok:
-	mov ax,ds:pint_prot16_stack
+	mov ax,ds:p_int_prot16_stack
 	or ax,ax
 	jz free_prot16_ok
 ;
@@ -504,7 +500,7 @@ free_locked_ok:
 	FreeMem
 
 free_prot16_ok:
-	mov ax,ds:pint_prot32_stack
+	mov ax,ds:p_int_prot32_stack
 	or ax,ax
 	jz free_prot32_ok
 ;
@@ -512,7 +508,7 @@ free_prot16_ok:
 	FreeMem
 
 free_prot32_ok:
-	mov edx,ds:pint_real_stack
+	mov edx,ds:p_int_real_stack
 	or edx,edx
 	jz free_real_ok
 ;
@@ -577,9 +573,12 @@ allocate_switch_stack	Proc near
 	push eax
 	push edx
 ;
+    GetThread
+    mov ds,ax
+;    
 	mov eax,800h
 	AllocateSmallGlobalMem
-	mov ds:pint_locked_stack,es
+	mov ds:p_int_locked_stack,es
 	xor bx,bx
 	mov word ptr es:[bx],800h
 	mov bx,es
@@ -611,10 +610,10 @@ get_exception_stack16	Proc far
 	push eax
 	push edx
 ;
-	mov ax,thread_int_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
 ;
-	mov bx,ds:pint_prot16_stack
+	mov bx,ds:p_int_prot16_stack
 	or bx,bx
 	jnz get_exc_stack16_done
 ;
@@ -625,7 +624,7 @@ get_exception_stack16	Proc far
 	or bx,3
 	CreateDataSelector16
 ;
-	mov ds:pint_prot16_stack,bx
+	mov ds:p_int_prot16_stack,bx
 
 get_exc_stack16_done:
 	pop edx
@@ -655,10 +654,10 @@ get_exception_stack32	Proc far
 	push eax
 	push edx
 ;
-	mov ax,thread_int_sel
+    GetThread
 	mov ds,ax
 ;
-	mov bx,ds:pint_prot32_stack
+	mov bx,ds:p_int_prot32_stack
 	or bx,bx
 	jnz get_exc_stack32_done
 ;
@@ -669,7 +668,7 @@ get_exception_stack32	Proc far
 	or bx,3
 	CreateDataSelector32
 ;
-	mov ds:pint_prot32_stack,bx
+	mov ds:p_int_prot32_stack,bx
 
 get_exc_stack32_done:
 	pop edx
@@ -743,9 +742,9 @@ save_context	PROC far
 	push gs
 	pushf
 	pushad
-	mov bx,thread_int_sel
-	mov ds,bx
-	mov bx,ds:pint_locked_stack
+	GetThread
+	mov ds,ax
+	mov bx,ds:p_int_locked_stack
 	or bx,bx
 	jnz save_context_start
 	call allocate_switch_stack
@@ -784,11 +783,13 @@ save_context_start:
 	push dword ptr 0
 	mov bp,sp
 	push ds
-	mov bx,thread_int_sel
-	mov ds,bx
-	mov ds,ds:pint_locked_stack
+	push ax
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_int_locked_stack
 	xor bx,bx
 	mov bx,[bx]
+	pop ax
 	pop ds
 	push dx
 	push ax
@@ -811,9 +812,9 @@ PAGE
 restore_context_name	DB 'Restore Context',0
 
 restore_context	PROC far
-	mov ax,thread_int_sel
-	mov ds,ax
-	mov ds,ds:pint_locked_stack
+    GetThread
+    mov ds,ax
+	mov ds,ds:p_int_locked_stack
 	mov si,bx
 	lodsw
 	mov cx,ax
@@ -1054,9 +1055,9 @@ call_vm	Proc far
 	push si
 	push di
 ;
-	mov bx,thread_int_sel
-	mov ds,bx
-	mov bx,ds:pint_locked_stack
+    GetThread
+    mov ds,ax
+	mov bx,ds:p_int_locked_stack
 	or bx,bx
 	jnz call_vm_save_context
 	call allocate_switch_stack
@@ -1108,14 +1109,14 @@ call_vm_save_context:
 	push word ptr 0
 	push bx
 ;
-	mov ax,thread_int_sel
+    GetThread
 	mov ds,ax
-	mov edx,ds:pint_real_stack
+	mov edx,ds:p_int_real_stack
 	or edx,edx
 	jnz call_vm_real_stack_ok
 	mov eax,210h
 	AllocateVMLinear
-	mov ds:pint_real_stack,edx
+	mov ds:p_int_real_stack,edx
 call_vm_real_stack_ok:
 	mov eax,edx
 	shr eax,4
@@ -1172,9 +1173,9 @@ call_vm_ret:
 	mov ss:[bx+8],ax
 	mov ebx,[bp].vm_ebx
 ;
-	mov ax,thread_int_sel
+    GetThread
 	mov ds,ax
-	mov ds,ds:pint_locked_stack
+	mov ds,ds:p_int_locked_stack
 	xor bx,bx
 	mov bx,[bx]
 	mov ax,stack0_size
@@ -1286,9 +1287,9 @@ call_pm16	Proc far
 	push si
 	push di
 ;
-	mov bx,thread_int_sel
-	mov ds,bx
-	mov bx,ds:pint_locked_stack
+    GetThread
+    mov ds,ax    
+	mov bx,ds:p_int_locked_stack
 	or bx,bx
 	jnz call_pm16_save_context
 	call allocate_switch_stack
@@ -1380,9 +1381,9 @@ call_pm16_ret:
 	mov ss:[bx+4],ax
 	mov ebx,[bp].vm_ebx
 ;
-	mov ax,thread_int_sel
-	mov ds,ax
-	mov ds,ds:pint_locked_stack
+    GetThread
+    mov ds,ax
+	mov ds,ds:p_int_locked_stack
 	xor bx,bx
 	mov bx,[bx]
 	mov ax,stack0_size
@@ -1456,9 +1457,9 @@ call_pm32	Proc far
 	push si
 	push di
 ;
-	mov bx,thread_int_sel
-	mov ds,bx
-	mov bx,ds:pint_locked_stack
+    GetThread
+    mov ds,ax
+	mov bx,ds:p_int_locked_stack
 	or bx,bx
 	jnz call_pm32_save_context
 	call allocate_switch_stack
@@ -1562,9 +1563,9 @@ call_pm32_ret:
 	FreeLinear
 	pop ecx
 ;
-	mov ax,thread_int_sel
-	mov ds,ax
-	mov ds,ds:pint_locked_stack
+    GetThread
+    mov ds,ax
+	mov ds,ds:p_int_locked_stack
 	xor bx,bx
 	mov bx,[bx]
 	mov ax,stack0_size
@@ -1679,10 +1680,11 @@ reflect_end	PROC near
 	push cx
 	push si
 	push di
-	mov bx,thread_int_sel
-	mov ds,bx
+;
+    GetThread
+    mov ds,ax	
 	xor bx,bx
-	mov ds,ds:pint_locked_stack
+	mov ds,ds:p_int_locked_stack
 	mov si,[bx]
 	mov ax,ss
 	mov es,ax
@@ -1690,10 +1692,12 @@ reflect_end	PROC near
 	add di,vm_eip
 	mov cx,vm_ss - vm_eip + 4
 	rep movsb
-	mov bx,thread_int_sel
-	mov ds,bx
+;	
+    GetThread
+    mov ds,ax
 	xor bx,bx
 	mov [bx],si
+;	
 	pop di
 	pop si
 	pop cx
@@ -1737,9 +1741,9 @@ reflect_pm_to_vm	PROC far
 	mov eax,[bp].vm_eflags
 	mov ss:[bx+20],eax
 ;
-	mov bx,thread_int_sel
-	mov ds,bx
-	mov bx,ds:pint_locked_stack
+    GetThread
+    mov ds,ax
+	mov bx,ds:p_int_locked_stack
 	or bx,bx
 	jnz reflect_pm_locked_move
 	call allocate_switch_stack
@@ -1772,14 +1776,14 @@ reflect_pm_locked_move:
 	push eax
 	push eax
 ;
-	mov ax,thread_int_sel
-	mov ds,ax
-	mov edx,ds:pint_real_stack
+    GetThread
+    mov ds,ax
+	mov edx,ds:p_int_real_stack
 	or edx,edx
 	jnz refl_pm_to_vm_stack_ok
 	mov eax,210h
 	AllocateVMLinear
-	mov ds:pint_real_stack,edx
+	mov ds:p_int_real_stack,edx
 refl_pm_to_vm_stack_ok:
 	mov eax,edx
 	shr edx,4
@@ -1899,9 +1903,9 @@ reflect_pm_to_vm_done	PROC far
 	mov eax,[bp].vm_eflags
 	mov ss:[bx+20],eax
 ;
-	mov bx,thread_int_sel
-	mov ds,bx
-	mov ds,ds:pint_locked_stack
+    GetThread
+    mov ds,ax
+	mov ds,ds:p_int_locked_stack
 	xor bx,bx
 	mov si,[bx]
 	lodsw
@@ -1970,8 +1974,6 @@ simulate_exception:
 	push edx
 	mov bx,vm_int_sel
 	mov ds,bx
-	mov bx,thread_int_sel
-	mov es,bx
 	xor ebx,ebx
 	mov bl,al
 	shl ebx,2

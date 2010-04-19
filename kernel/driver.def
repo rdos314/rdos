@@ -58,8 +58,6 @@ phys_list_sel		EQU 78h
 phys_page_sel		EQU 80h
 temp_sel			EQU 88h
 ;
-thread_ss0_sel		EQU 0A8h
-;
 mem_sel				EQU 0B0h
 small_mem_sel		EQU 0B8h
 local_mem_sel		EQU 0C0h
@@ -115,7 +113,6 @@ def_exception_sel	EQU 1E8h
 ;
 vm_linear_sel		EQU 1F0h
 vm_int_sel			EQU 1F8h
-thread_int_sel		EQU 200h
 ;
 callb_exc16_sel		EQU 213h
 callb_exc32_sel		EQU 21Bh

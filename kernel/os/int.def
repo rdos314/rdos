@@ -66,17 +66,6 @@ int_seg_size		DB ?
 
 int_seg	ENDS
 
-pint_seg	STRUC
-
-pint_locked_stack	DW ?
-pint_prot16_stack	DW ?
-pint_prot32_stack	DW ?
-pint_real_stack		DD ?
-
-pint_seg_size		DB ?
-
-pint_seg	ENDS
-
 vm_call_struc	STRUC
 
 vcs_edi		DD ?

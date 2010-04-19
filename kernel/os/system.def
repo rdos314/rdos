@@ -174,41 +174,47 @@ THREAD_FLAG_BP      = 2
 THREAD_FLAG_SUSPEND = 4
 
 thread_seg	STRUC
-	p_next			DW ?
-	p_prev			DW ?
-	p_prio			DW ?
-	p_lsb_tics		DD ?
-	p_msb_tics		DD ?
-	p_data			DD ?
-	p_tss_sel		DW ?
-	p_tss_data_sel	DW ?
-	p_387_sel		DW ?
-	p_thread_sel	DW ?
-	p_thread_page	DD ?
-	p_app_sel		DW ?
-	p_app_page		DD ?
-	p_free_proc		DD ?
-	p_cr3			DD ?
-	p_error_code	DW ?
-	p_vm_deb_sel	DW ?
-	p_vm_deb_offs	DD ?
-	p_pm_deb_sel	DW ?
-	p_pm_deb_offs	DD ?
-	p_id			DW ?
-	p_flags         DW ?
-	p_events		DW ?
-	p_process_sel	DW ?
-	p_ldt_sel		DW ?
-	p_signal		DB ?
-	p_parent_switch	DB ?
-	p_lib_sel		DW ?
-	p_stack_sel		DW ?
-	p_sleep_sel		DW ?
-	p_sleep_offset	DD ?
-	p_wait_list		DW ?
-	p_kill			DB ?
-	p_is_waiting	DB ?
-	p_ref_count		DW ?
+	p_next			    DW ?
+	p_prev			    DW ?
+	p_prio			    DW ?
+	p_lsb_tics		    DD ?
+	p_msb_tics		    DD ?
+	p_data			    DD ?
+	p_tss_sel		    DW ?
+	p_tss_data_sel	    DW ?
+	p_387_sel		    DW ?
+	p_thread_sel	    DW ?
+	p_thread_page	    DD ?
+	p_app_sel		    DW ?
+	p_app_page		    DD ?
+	p_free_proc		    DD ?
+	p_cr3			    DD ?
+	p_error_code	    DW ?
+	p_vm_deb_sel	    DW ?
+	p_vm_deb_offs	    DD ?
+	p_pm_deb_sel	    DW ?
+	p_pm_deb_offs	    DD ?
+	p_id			    DW ?
+	p_flags             DW ?
+	p_events		    DW ?
+	p_process_sel	    DW ?
+	p_ldt_sel		    DW ?
+	p_signal		    DB ?
+	p_parent_switch	    DB ?
+	p_lib_sel		    DW ?
+	p_stack_sel		    DW ?
+	p_sleep_sel		    DW ?
+	p_sleep_offset	    DD ?
+	p_wait_list		    DW ?
+	p_kill			    DB ?
+	p_is_waiting	    DB ?
+	p_ref_count		    DW ?
+
+    p_int_locked_stack	DW ?
+    p_int_prot16_stack	DW ?
+    p_int_prot32_stack	DW ?
+    p_int_real_stack	DD ?
+	
 	thread_name		DB 32 DUP(?)
 thread_seg	ENDS
 
