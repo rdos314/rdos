@@ -1073,11 +1073,6 @@ init_thread_block	PROC near
 	GetThread
 	mov ds,ax
 ;
-	mov si,thread_linear - thread_block_linear
-	mov di,si
-	mov cx,(1000h - thread_linear + thread_block_linear) SHR 2
-;	rep movsd
-;
 	push fs
 	mov ax,ds:p_process_sel
 	mov fs,ax
@@ -1192,11 +1187,6 @@ init_process_block	PROC near
 	pop fs
 ;
 	mov es:p_ldt_sel,0
-;
-	xor eax,eax
-	mov di,thread_linear - thread_block_linear
-	mov cx,(1000h - thread_linear + thread_block_linear) SHR 2
-;	rep stosd
 	ret
 init_process_block	ENDP
 
