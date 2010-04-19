@@ -761,14 +761,6 @@ get_thread_physical_page	Proc far
 	push si
 ;
 	and dx,0F000h
-	cmp edx,thread_block_linear
-	jne get_thread_phys_not_thread_block
-;
-	mov es,bx
-	mov eax,es:p_thread_page
-	jmp get_thread_phys_done
-
-get_thread_phys_not_thread_block:
 	cmp edx,app_linear
 	jne get_thread_phys_not_client
 ;

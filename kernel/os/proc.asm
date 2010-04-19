@@ -1046,13 +1046,6 @@ allocate_thread_block	PROC near
 	mov es,bx
 	mov es:p_thread_sel,bx
 ;
-	mov eax,edx
-	shr eax,10
-	mov bx,sys_page_sel
-	mov fs,bx
-	mov eax,fs:[eax]
-	mov es:p_thread_page,eax
-;
 	add edx,200h
 	AllocateGdt
 	mov ecx,400h
