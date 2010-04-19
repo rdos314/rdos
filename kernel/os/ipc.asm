@@ -445,9 +445,9 @@ define_mailslot	Proc near
 	mov edi,OFFSET m_name
 	rep movs byte ptr es:[edi],[esi]
 ;
-	mov ax,ipc_thread_sel
+    GetThread
 	mov ds,ax
-	mov ds:ipc_mailslot_sel,es
+	mov ds:p_mailslot_sel,es
 ;
 	mov ax,ipc_data_sel
 	mov ds,ax
@@ -755,9 +755,9 @@ receive_mailslot	Proc near
 	push ds
 	push ax
 ;
-	mov ax,ipc_thread_sel
+    GetThread
 	mov ds,ax
-	mov ax,ds:ipc_mailslot_sel
+	mov ax,ds:p_mailslot_sel
 	or ax,ax
 	stc
 	jz receive_mailslot_done
@@ -844,9 +844,9 @@ reply_mailslot	Proc near
 	push ds
 	push ax
 ;
-	mov ax,ipc_thread_sel
+    GetThread
 	mov ds,ax
-	mov ax,ds:ipc_mailslot_sel
+	mov ax,ds:p_mailslot_sel
 	or ax,ax
 	stc
 	jz reply_mailslot_done
@@ -930,9 +930,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_thread	PROC far
-	mov ax,ipc_thread_sel
+    GetThread
 	mov ds,ax
-	mov ds:ipc_mailslot_sel,0
+	mov ds:p_mailslot_sel,0
 	ret
 init_thread	ENDP
 
@@ -950,9 +950,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_thread	PROC far
-	mov ax,ipc_thread_sel
+    GetThread
 	mov ds,ax
-	mov ax,ds:ipc_mailslot_sel
+	mov ax,ds:p_mailslot_sel
 	or ax,ax
 	jz free_thread_done
 ;
@@ -994,10 +994,6 @@ init	PROC far
 	mov ds:ipc_mailslot_list,0
 	mov ds:smp_thread,0
 	mov ds:smp_host_list,0
-;
-	mov eax,SIZE ipc_thread_data
-	mov bx,ipc_thread_sel
-	AllocateFixedThreadMem
 ;
 	mov ax,cs
 	mov ds,ax

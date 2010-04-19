@@ -332,8 +332,6 @@ ipc_data_sel		EQU 818h
 
 ether_data2_sel		EQU 820h
 
-ipc_thread_sel		EQU 828h
-
 v86_bios_code_sel	EQU 830h
 v86_bios_data_sel	EQU 838h
 v86_bios_ds_sel		EQU 840h

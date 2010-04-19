@@ -39,12 +39,6 @@ super_mailslot_list	DW ?
 
 ipc_data	ENDS
 
-ipc_thread_data	STRUC
-
-ipc_mailslot_sel	DW ?
-
-ipc_thread_data	ENDS
-
 mailslot_data	STRUC
 
 m_link				DW ?
