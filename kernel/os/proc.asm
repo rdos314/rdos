@@ -1038,15 +1038,12 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_thread_block	PROC near
-	mov eax,1000h
-	AllocateBigLinear
-	AllocateGdt
-	mov ecx,eax
-	CreateDataSelector16
-	mov es,bx
-	mov es:p_thread_sel,bx
+    mov eax,SIZE thread_seg
+    AllocateSmallGlobalMem
+    mov es:p_thread_sel,es
 ;
-	add edx,200h
+    mov eax,400h
+    AllocateSmallLinear
 	AllocateGdt
 	mov ecx,400h
 	CreateTssSelector
@@ -1079,7 +1076,7 @@ init_thread_block	PROC near
 	mov si,thread_linear - thread_block_linear
 	mov di,si
 	mov cx,(1000h - thread_linear + thread_block_linear) SHR 2
-	rep movsd
+;	rep movsd
 ;
 	push fs
 	mov ax,ds:p_process_sel
@@ -1199,7 +1196,7 @@ init_process_block	PROC near
 	xor eax,eax
 	mov di,thread_linear - thread_block_linear
 	mov cx,(1000h - thread_linear + thread_block_linear) SHR 2
-	rep stosd
+;	rep stosd
 	ret
 init_process_block	ENDP
 
