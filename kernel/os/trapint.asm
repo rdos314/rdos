@@ -337,7 +337,6 @@ trap_5:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-	extrn translate_vm_system:near
 	extrn translate_vm_reflect:near
 	extrn translate_pm16_reflect:near
 	extrn translate_pm32_reflect:near
@@ -497,7 +496,7 @@ vm_EA	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_EC	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_EE	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_F0	DW OFFSET emulate_6,			OFFSET translate_vm_reflect
-vm_F2	DW OFFSET translate_vm_system,	OFFSET emulate_6
+vm_F2	DW OFFSET emulate_6,        	OFFSET emulate_6
 vm_F4	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_F6	DW OFFSET emulate_6,			OFFSET enter_dpmi
 vm_F8	DW OFFSET emulate_6,			OFFSET emulate_6

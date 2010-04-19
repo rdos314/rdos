@@ -105,8 +105,7 @@ flat_code_sel		EQU 1B3h
 flat_data_sel		EQU 1BBh
 ;
 virt_idt_sel		EQU 1C0h
-default_reflect_sel	EQU 1CBh
-locked_stack_sel	EQU 1D3h
+;
 kernel32_code		EQU 1D8h
 int_data_sel		EQU 1E0h
 def_exception_sel	EQU 1E8h

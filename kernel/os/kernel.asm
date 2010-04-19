@@ -75,7 +75,6 @@ RELEASE = 0
 	extrn init_handle:near
 	extrn init_mem_sels:near
 	extrn init_osgate:near
-	extrn init_systemgate:near
 	extrn init_usergate:near
 	extrn init_cpu_gates:near
 	extrn init_io:near
@@ -701,7 +700,6 @@ prot_init:
 	call init_physical_gates
 	call init_mem_sels
     call init_tsc
-	call init_systemgate
 	call init_state
 	call init_task
 	call init_io

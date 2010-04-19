@@ -244,7 +244,7 @@ p2_srcs =   PHYSICAL.ASM    		SWAP.ASM    \
 			MEM.ASM                 GDT.ASM                 \
 			INT.ASM                 INT16.ASM               INT32.ASM       
 
-pgen_srcs = PROTSEG.ASM             SYSTEM.ASM              RAND.ASM \
+pgen_srcs = PROTSEG.ASM             RAND.ASM \
 			TRAPINT.ASM             TSSINT.ASM              LDT.ASM         \
 			OS.ASM                  USER.ASM                CRC.ASM \
 			CPU.ASM               
