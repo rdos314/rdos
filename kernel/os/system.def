@@ -216,8 +216,14 @@ thread_seg	STRUC
     p_int_real_stack	DD ?
 
     p_mailslot_sel      DW ?
+
+    p_forecolor	        DB ?
+    p_backcolor	        DB ?
+    p_row			    DW ?
+    p_col			    DW ?
 	
-	thread_name		DB 32 DUP(?)
+	thread_name		    DB 32 DUP(?)
+
 thread_seg	ENDS
 
 proc_descr_seg  STRUC

@@ -53,15 +53,6 @@ mode_resv       DB ?
 
 video_mode_entry	ENDS
 
-video_thread_seg	STRUC
-
-vt_forecolor	DB ?
-vt_backcolor	DB ?
-vt_row			DW ?
-vt_col			DW ?
-
-video_thread_seg	ENDS
-
 CallVideo	MACRO	call_proc
 	push ds
 	push ax
@@ -392,10 +383,10 @@ set_cursor_position	PROC far
 	CallVideo set_cursor_position_proc
 	push ds
 	push ax
-	mov ax,video_thread_sel
+	GetThread
 	mov ds,ax
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	pop ax
 	pop ds
 	retf32
@@ -419,12 +410,14 @@ get_cursor_pos_name	DB 'Get Cursor Position',0
 
 get_cursor_position	PROC far
 	push ds
+	push ax
 ;
-	mov cx,video_thread_sel
-	mov ds,cx
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+    GetThread
+    mov ds,ax
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 ;
+    pop ax
 	pop ds
 	retf32
 get_cursor_position	ENDP
@@ -448,9 +441,11 @@ set_forecolor	PROC far
 	push ds
 	push bx
 ;
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov ds:vt_forecolor,al
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+	mov ds:p_forecolor,al
 ;
 	pop bx
 	pop ds
@@ -476,9 +471,11 @@ set_backcolor	PROC far
 	push ds
 	push bx
 ;
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov ds:vt_backcolor,al
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+	mov ds:p_backcolor,al
 ;
 	pop bx
 	pop ds
@@ -756,10 +753,12 @@ get_char_attrib	PROC far
 	push dx
 ;
     HideMouse
-	mov dx,video_thread_sel
-	mov ds,dx
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 	CallVideo read_char_proc
 	ShowMouse
 ;
@@ -791,15 +790,17 @@ write_char	PROC far
 	push dx
 ;
     HideMouse
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov bl,ds:vt_forecolor
-	mov bh,ds:vt_backcolor
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+	mov bl,ds:p_forecolor
+	mov bh,ds:p_backcolor
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 	call WriteOne
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	CallVideo set_cursor_position_proc
 	ShowMouse
 ;
@@ -834,12 +835,14 @@ write_asciiz16	PROC far
 	push di
 ;
     HideMouse
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov bl,ds:vt_forecolor
-	mov bh,ds:vt_backcolor
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+	mov bl,ds:p_forecolor
+	mov bh,ds:p_backcolor
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 
 write_asciiz_loop16:
 	mov al,es:[di]
@@ -851,8 +854,8 @@ write_asciiz_loop16:
 	jmp write_asciiz_loop16
 
 write_asciiz_done16:
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	CallVideo set_cursor_position_proc
 	ShowMouse
 ;
@@ -874,12 +877,14 @@ write_asciiz32	PROC far
 	push edi
 ;
     HideMouse
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov bl,ds:vt_forecolor
-	mov bh,ds:vt_backcolor
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+	mov bl,ds:p_forecolor
+	mov bh,ds:p_backcolor
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 
 write_asciiz_loop32:
 	mov al,es:[edi]
@@ -891,8 +896,8 @@ write_asciiz_loop32:
 	jmp write_asciiz_loop32
 
 write_asciiz_done32:
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	CallVideo set_cursor_position_proc
 	ShowMouse
 ;
@@ -929,12 +934,14 @@ write_dos_string	PROC far
 	push edi
 ;
     HideMouse
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov bl,ds:vt_forecolor
-	mov bh,ds:vt_backcolor
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+	mov bl,ds:p_forecolor
+	mov bh,ds:p_backcolor
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 
 write_dos_string_loop:
 	mov al,es:[edi]
@@ -946,8 +953,8 @@ write_dos_string_loop:
 	jmp write_dos_string_loop
 
 write_dos_string_done:
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	CallVideo set_cursor_position_proc
 	ShowMouse
 ;
@@ -985,12 +992,12 @@ write_size_string16	PROC far
     jz write_size_string_done16
 ;
 	mov si,cx
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov bl,ds:vt_forecolor
-	mov bh,ds:vt_backcolor
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+	GetThread
+	mov ds,ax
+	mov bl,ds:p_forecolor
+	mov bh,ds:p_backcolor
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 ;
 	or si,si
 	je write_size_string_done16
@@ -1003,8 +1010,8 @@ write_size_string_loop16:
 	jnz write_size_string_loop16
 
 write_size_string_done16:
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	CallVideo set_cursor_position_proc
 	ShowMouse
 ;	
@@ -1022,12 +1029,12 @@ write_size_string32	PROC far
     jz write_size_string_done32
 ;
 	mov esi,ecx
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov bl,ds:vt_forecolor
-	mov bh,ds:vt_backcolor
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+	GetThread
+	mov ds,ax
+	mov bl,ds:p_forecolor
+	mov bh,ds:p_backcolor
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 ;
 	or esi,esi
 	je write_size_string_done32
@@ -1040,8 +1047,8 @@ write_size_string_loop32:
 	jnz write_size_string_loop32
 
 write_size_string_done32:
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	CallVideo set_cursor_position_proc
 	ShowMouse
 ;
@@ -2180,10 +2187,10 @@ set_cursor_pos	PROC far
 	CallVideo set_cursor_position_proc
 	push ds
 	push ax
-	mov ax,video_thread_sel
+	GetThread
 	mov ds,ax
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	pop ax
 	pop ds
 	pop dx
@@ -2209,10 +2216,12 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_cursor_pos	PROC far
-	mov dx,video_thread_sel
-	mov ds,dx
-	mov dh,byte ptr ds:vt_row
-	mov dl,byte ptr ds:vt_col
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+	mov dh,byte ptr ds:p_row
+	mov dl,byte ptr ds:p_col
 	xor bh,bh
 	mov cl,1
 	mov ch,8
@@ -2257,10 +2266,10 @@ read_video_attrib	PROC far
 	push cx
 	push dx
 	HideMouse
-	mov ax,video_thread_sel
+	GetThread
 	mov ds,ax
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 	CallVideo read_char_proc
 	mov ah,bh
 	shl ah,4
@@ -2294,10 +2303,12 @@ write_ch_attr	PROC far
 ;
     HideMouse
 	mov si,cx
-	mov dx,video_thread_sel
-	mov ds,dx
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+	push ax
+	GetThread
+	mov ds,ax
+	pop ax
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 	mov bx,[bp].vm_ebx
 	mov bh,bl
 	shr bh,4
@@ -2314,8 +2325,8 @@ write_ch_attr_loop:
 	jnz write_ch_attr_loop
 
 write_ch_attr_done:
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	CallVideo set_cursor_position_proc
 	ShowMouse
 ;
@@ -2345,12 +2356,14 @@ write_ch	PROC far
 ;
     HideMouse
 	mov si,cx
-	mov dx,video_thread_sel
-	mov ds,dx
-	mov bl,ds:vt_forecolor
-	mov bh,ds:vt_backcolor
-	mov dx,ds:vt_row
-	mov cx,ds:vt_col
+	push ax
+	GetThread
+	mov ds,ax
+	pop ax
+	mov bl,ds:p_forecolor
+	mov bh,ds:p_backcolor
+	mov dx,ds:p_row
+	mov cx,ds:p_col
 	or si,si
 	jz write_ch_done
 
@@ -2362,8 +2375,8 @@ write_ch_loop:
 	jnz write_ch_loop
 
 write_ch_done:
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	CallVideo set_cursor_position_proc
 	ShowMouse
 ;
@@ -2564,8 +2577,8 @@ write_char_m_loop:
 	jmp write_char_m_loop
 
 write_ch_m_end:
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	CallVideo set_cursor_position_proc
 	ret
 write_char_move	ENDP
@@ -2605,8 +2618,8 @@ write_attr_m_loop:
 	jmp write_attr_m_loop
 
 write_attr_m_end:
-	mov ds:vt_row,dx
-	mov ds:vt_col,cx
+	mov ds:p_row,dx
+	mov ds:p_col,cx
 	CallVideo set_cursor_position_proc
 	ret
 write_attr_move	ENDP
@@ -2645,8 +2658,8 @@ write_stg_pm:
 	mov fs,ax
 
 write_stg_do:
-	mov ax,video_thread_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
 	mov si,cx
 	movzx cx,dl
 	movzx dx,dh
@@ -2928,11 +2941,11 @@ PAGE
 
 bda_get_cursor_col	Proc far
 	push ds
-	push bx
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov al,byte ptr ds:vt_col
-	pop bx
+    push ax
+    GetThread	
+    mov ds,ax
+    pop ax
+	mov al,byte ptr ds:p_col	
 	pop ds
 	ret
 bda_get_cursor_col	Endp
@@ -2953,11 +2966,11 @@ PAGE
 
 bda_set_cursor_col	Proc far
 	push ds
-	push bx
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov byte ptr ds:vt_col,al
-	pop bx
+	push ax
+	GetThread
+	mov ds,ax
+	pop ax
+	mov byte ptr ds:p_col,al
 	pop ds
 	ret
 bda_set_cursor_col	Endp
@@ -2978,11 +2991,11 @@ PAGE
 
 bda_get_cursor_row	Proc far
 	push ds
-	push bx
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov al,byte ptr ds:vt_row
-	pop bx
+	push ax
+	GetThread
+	mov ds,ax
+	pop ax
+	mov al,byte ptr ds:p_row
 	pop ds
 	ret
 bda_get_cursor_row	Endp
@@ -3003,11 +3016,11 @@ PAGE
 
 bda_set_cursor_row	Proc far
 	push ds
-	push bx
-	mov bx,video_thread_sel
-	mov ds,bx
-	mov byte ptr ds:vt_row,al
-	pop bx
+	push ax
+	GetThread
+	mov ds,ax
+	pop ax
+	mov byte ptr ds:p_row,al
 	pop ds
 	ret
 bda_set_cursor_row	Endp
@@ -3027,12 +3040,12 @@ init_thread	PROC far
 	push ds
 	push ax
 ;
-	mov ax,video_thread_sel
-	mov ds,ax
-	mov ds:vt_forecolor,7
-	mov ds:vt_backcolor,0
-	mov ds:vt_row,0
-	mov ds:vt_col,0
+    GetThread
+    mov ds,ax
+	mov ds:p_forecolor,7
+	mov ds:p_backcolor,0
+	mov ds:p_row,0
+	mov ds:p_col,0
 ;
 	pop ax
 	pop ds
@@ -3112,10 +3125,6 @@ init	PROC far
 	mov bx,video_data_sel
 	AllocateFixedSystemMem
 	mov es:v_list,0
-;
-	mov eax,SIZE video_thread_seg
-	mov bx,video_thread_sel
-	AllocateFixedThreadMem
 ;
 	mov eax,SIZE video_focus_seg
 	mov bx,video_local_sel

@@ -340,7 +340,6 @@ v86_bios_es_sel		EQU 848h
 video_code_sel		EQU 850h
 video_data_sel		EQU 858h
 video_proc_sel		EQU 860h
-video_thread_sel	EQU 868h
 video_local_sel		EQU 870h
 video_focus_sel		EQU 878h
 
@@ -352,7 +351,6 @@ ipc_debug_data_sel	EQU 898h
 
 pc_video_code_sel	EQU 8A0h
 pc_video_data_sel	EQU 8A8h
-pc_video_thread_sel	EQU 8B0h
 
 power_code_sel      EQU 8C0h
 power_data_sel      EQU 8C8h
