@@ -1597,6 +1597,7 @@ InitSmp Proc near
     mov ax,apic_data_sel
     mov ds,ax
     mov ds:mp_get_proc,0
+    mov ax,ds:mp_flags
 ;    
     test ds:mp_flags,MP_FLAG_MEM
     jnz init_smp_check_msr
@@ -1655,6 +1656,7 @@ init	PROC far
 	xor ax,ax
 	mov cx,100h
 	rep stosw
+	mov es:mp_flags,0
 ;
     mov ax,system_data_sel
     mov ds,ax

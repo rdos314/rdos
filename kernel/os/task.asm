@@ -355,9 +355,6 @@ SetEnviroment	MACRO
 	mov ds,ax
 	mov eax,es:p_cr3
 	mov cr3,eax
-	mov ebx,thread_block_linear SHR 10
-	mov eax,es:p_thread_page
-	mov [ebx],eax
 	mov ebx,app_linear SHR 10
 	mov eax,es:p_app_page
 	mov [ebx],eax
