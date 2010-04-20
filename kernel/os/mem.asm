@@ -1190,6 +1190,9 @@ resize_flat_shrink:
 	shr ecx,12
 	mov ax,process_page_sel
 	mov ds,ax
+;
+    push ecx
+    push edx
 
 resize_flat_shrink_loop:
 	cmp edx,flat_size SHR 10
@@ -1209,6 +1212,12 @@ resize_flat_shrink_nopage:
 	add edx,4
 	loop resize_flat_shrink_loop
 ;
+    pop edx
+    pop ecx
+	shl edx,10
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:tlb_flush_proc
 	clc
 
 resize_flat_leave:
@@ -1217,9 +1226,6 @@ resize_flat_leave:
 	LeaveSection ds:local_mem_section
 
 resize_flat_done:
-	mov edx,cr3
-	mov cr3,edx
-;
 	pop edx
 	pop ecx
 	pop ebx
@@ -1817,6 +1823,10 @@ free_big_mem	PROC near
 	shr ecx,12
 	mov ax,sys_page_sel
 	mov ds,ax
+;
+    push ecx
+    push edx
+    	
 free_big_loop:
 	xor eax,eax
 	xchg eax,[edx]
@@ -1831,11 +1841,17 @@ free_big_loop:
 free_big_nopage:
 	add edx,4
 	loop free_big_loop
+;
+    pop edx
+    pop ecx
+	shl edx,10
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:tlb_flush_proc
+;	
 	mov ax,mem_sel
 	mov ds,ax
 	LeaveSection ds:big_section
-	mov edx,cr3
-	mov cr3,edx
 	ret
 free_big_mem	ENDP
 
@@ -2181,6 +2197,9 @@ free_big_local_mem	PROC near
 	shr ecx,12
 	mov ax,process_page_sel
 	mov ds,ax
+	push ecx
+	push edx
+	
 free_blocal_loop:
 	xor eax,eax
 	xchg eax,[edx]
@@ -2195,11 +2214,17 @@ free_blocal_loop:
 free_blocal_nopage:
 	add edx,4
 	loop free_blocal_loop
+;
+    pop edx
+    pop ecx
+	shl edx,10
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:tlb_flush_proc
+;	
 	mov bx,local_mem_sel
 	mov ds,bx
 	LeaveSection ds:local_mem_section
-	mov edx,cr3
-	mov cr3,edx
 	ret
 free_big_local_mem	ENDP
 	

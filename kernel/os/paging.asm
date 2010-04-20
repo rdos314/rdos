@@ -1647,6 +1647,9 @@ set_flat_linear_readwrite	PROC far
 	sub ecx,edx
 	shr edx,10
 	shr ecx,12
+;
+    push ecx
+    push edx
 
 set_readwrite_mark:
 	mov eax,[edx]
@@ -1668,11 +1671,15 @@ set_readwrite_allocated:
 set_readwrite_next:
 	add edx,4
 	loop set_readwrite_mark
+;	
+    pop edx
+    pop ecx
+	shl edx,10
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:tlb_flush_proc
 
 set_readwrite_done:
-	mov eax,cr3
-	mov cr3,eax
-;
 	pop edx
 	pop ecx
 	pop eax
