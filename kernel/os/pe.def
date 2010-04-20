@@ -228,13 +228,6 @@ event_code		DB ?
 
 event_struc ENDS
 
-pe_process_seg	STRUC
-
-ppe_dlls		DW ?
-ppe_section		section_typ <>
-
-pe_process_seg	ENDS
-
 PE_CLONE_PARENT = 1
 PE_CLONE_CHILD  = 2
 
