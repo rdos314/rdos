@@ -92,8 +92,6 @@ lib_struc STRUC
 
 lib_mod             module_struc <>
 
-lib_prev			DW ?
-lib_next			DW ?
 lib_file_offset		DD ?
 lib_object_size		DW ?
 lib_object_count	DW ?
@@ -115,15 +113,3 @@ lib_section			section_typ <>
 lib_name			DB ?
 
 lib_struc ENDS
-
-elf_data_seg	STRUC
-
-elf_dlls		DW ?
-elf_app			DW ?
-elf_cmd_line	DD ?
-elf_env			DD ?
-elf_exe_name	DD ?
-elf_section		section_typ <>
-elf_mem_blocks	DW ?
-
-elf_data_seg	ENDS

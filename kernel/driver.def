@@ -247,7 +247,6 @@ disc_code_sel		EQU 630h
 disc_data_sel		EQU 638h
 
 elf_code_sel		EQU 640h
-elf_app_sel			EQU 648h
 
 debug_tss_sel		EQU 650h
 
