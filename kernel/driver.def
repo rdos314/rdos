@@ -306,7 +306,6 @@ ne_code_sel			EQU 790h
 ne_app_sel			EQU 798h
 
 pe_code_sel			EQU 7A0h
-pe_app_sel			EQU 7A8h
 
 ether_code_sel		EQU 7B0h
 ether_data_sel		EQU 7B8h

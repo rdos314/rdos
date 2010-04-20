@@ -144,8 +144,14 @@ app_exit_code			DW ?
 app_fork_id             DW ?
 
 app_handle              DW ?
-app_lib_sel             DW ?
+app_mod_sel             DW ?
 app_lib_section         section_typ <>
+
+app_env                 DD ?
+app_name                DD ?
+app_cmd_line            DD ?
+app_options             DD ?
+app_mem_blocks          DW ?
 
 app_ldt_section		    section_typ <>
 app_ldt_data_sel	    DW ?
@@ -160,7 +166,7 @@ app_key                 DB ?
 app_pm_int			    DD 100h DUP(?,?)
 app_pm_exc			    DD 20h DUP(?,?)
 
-app_exe_name		    DB 100h DUP(?)
+app_exe_name            DB 100h DUP(?)
 
 app_seg	ENDS
 

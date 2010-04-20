@@ -1406,7 +1406,7 @@ CreateSpawnHandle Proc near
 ;	
     push es
 	mov es,gs:s_app
-    mov ax,es:app_lib_sel
+    mov ax,es:app_mod_sel
     pop es
 
 spLibOk:

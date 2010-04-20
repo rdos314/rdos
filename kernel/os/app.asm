@@ -484,6 +484,11 @@ run_open_hooks	Proc near
 	mov ds:app_load_dll_proc,0
 ;
     InitSection ds:app_lib_section
+	mov ds:app_env,0
+	mov ds:app_name,0
+	mov ds:app_cmd_line,0
+	mov ds:app_options,0
+	mov ds:app_mem_blocks,0
 ;
 	mov ax,app_data_sel
 	mov ds,ax
@@ -728,7 +733,7 @@ set_module	PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds:app_handle,bx
-    mov ds:app_lib_sel,dx
+    mov ds:app_mod_sel,dx
     mov al,ds:app_key
     mov es:mod_key,al
 ;    

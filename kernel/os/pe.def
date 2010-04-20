@@ -194,17 +194,6 @@ res_data		DD ?
 
 resource_descr	ENDS
 
-pe_data_seg	STRUC
-
-pe_dlls			DW ?
-pe_env			DD ?
-pe_exe_name		DD ?
-pe_cmd_line		DD ?
-pe_options      DD ?
-pe_mem_blocks	DW ?
-
-pe_data_seg	ENDS
-
 pe_mem_struc STRUC
 
 mem_prev	DW ?

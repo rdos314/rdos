@@ -85,7 +85,7 @@ SendEvent Proc near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_lib_sel
+	mov ds,ds:app_mod_sel
 	EnterSection ds:mod_section
 ;
 	mov ax,ds:lib_events
@@ -554,12 +554,6 @@ pe_loader_name	DB 'PE',0
 InsertApp	Proc near
 	push ds
 	push ax
-;
-	mov ax,pe_app_sel
-	mov ds,ax
-;	mov ds:pe_app,es
-	mov ds:pe_env,0
-	mov ds:pe_exe_name,0
 ;
     GetThread
     mov ds,ax
@@ -2459,8 +2453,9 @@ load_pe	Proc far
 	push esi
 	push edi
 ;
-	mov ax,pe_app_sel
-	mov fs,ax
+    GetThread
+    mov fs,ax
+    mov fs,fs:p_app_sel
 ;
 	xor ecx,ecx
 	push edi
@@ -2488,8 +2483,8 @@ load_pe_name_size:
 	mov eax,ecx
 	add eax,ebx
 	UserGateForce32 allocate_app_mem_nr	
-	mov fs:pe_cmd_line,edx
-	mov fs:pe_options,0
+	mov fs:app_cmd_line,edx
+	mov fs:app_options,0
 ;
 	push es
 	push ecx
@@ -2725,7 +2720,7 @@ start_thread	PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_lib_sel
+	mov ds,ds:app_mod_sel
 	mov ax,ds:lib_debug_lib
 	or ax,ax
 	jz start_thread_done
@@ -2766,7 +2761,7 @@ free_thread	Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_lib_sel	
+	mov ds,ds:app_mod_sel	
 	mov ax,ds:lib_debug_lib
 	or ax,ax
 	jz free_thread_no_debug
@@ -2830,7 +2825,7 @@ spawn_proc	Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov es,ds:app_lib_sel
+	mov es,ds:app_mod_sel
 	mov ax,flat_data_sel
 	mov ds,ax
 	mov fs,[bp].load_fs
@@ -2923,7 +2918,7 @@ clone_proc	Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_lib_sel
+	mov ds,ds:app_mod_sel
     mov ax,ds:lib_file_handle
     mov es:pcs_file_handle,ax
 ;
@@ -2960,7 +2955,7 @@ close_proc	Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_lib_sel	
+	mov ds,ds:app_mod_sel	
 	mov ax,ds:lib_debug_lib
 	or ax,ax
 	jz free_process_no_debug
@@ -3393,7 +3388,7 @@ notify_pe_exception	Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_lib_sel
+	mov ds,ds:app_mod_sel
 	EnterSection ds:mod_section
 ;
 	mov ax,ds:lib_events
@@ -3482,11 +3477,7 @@ allocate_mem	PROC far
     mov ds,ds:p_app_sel
     EnterSection ds:app_lib_section	
 ;
-	mov ax,pe_app_sel
-	mov ds,ax
-;	EnterSection ds:pe_section
-;
-	mov ax,ds:pe_mem_blocks
+	mov ax,ds:app_mem_blocks
 	or ax,ax
 	je alloc_ins_empty
 ;
@@ -3508,12 +3499,8 @@ alloc_ins_empty:
 	mov es:mem_prev,es
 
 alloc_ins_done:
-	mov ds:pe_mem_blocks,es
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
+	mov ds:app_mem_blocks,es
     LeaveSection ds:app_lib_section	
-;	LeaveSection ds:pe_section
 ;
 	pop ecx
 	pop eax
@@ -3548,13 +3535,9 @@ free_mem	PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     EnterSection ds:app_lib_section	
-;
-	mov ax,pe_app_sel
-	mov ds,ax
-;	EnterSection ds:pe_section
 
 free_mem_more:
-	mov ax,ds:pe_mem_blocks
+	mov ax,ds:app_mem_blocks
 	or ax,ax
 	jz free_mem_failed
 	mov si,ax
@@ -3577,12 +3560,12 @@ free_mem_ok:
 	add edx,local_page_linear
 	mov ecx,es:mem_size
 	FreeLinear
-	mov ds:pe_mem_blocks,es
+	mov ds:app_mem_blocks,es
 	mov ax,es:mem_prev
-	cmp ax,ds:pe_mem_blocks
+	cmp ax,ds:app_mem_blocks
 	pushf
 	push ds
-	mov ds:pe_mem_blocks,ax
+	mov ds:app_mem_blocks,ax
 	mov si,es:mem_next
 	mov ds,ax
 	mov ds:mem_next,si
@@ -3594,14 +3577,10 @@ free_mem_ok:
 	jne free_mem_done
 
 free_mem_last_block:
-	mov ds:pe_mem_blocks,0
+	mov ds:app_mem_blocks,0
 
 free_mem_done:
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
     LeaveSection ds:app_lib_section	
-;	LeaveSection ds:pe_section
 ;
 	pop edi
 	pop si
@@ -4099,13 +4078,11 @@ get_resource	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_app	Proc far
-	push ds
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov ds:pe_dlls,0
-;	mov ds:pe_app,0
-	mov ds:pe_mem_blocks,0
-;	InitSection ds:pe_section
+    push ds
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_mem_blocks,0
 	pop ds
 	ret
 open_app	Endp
@@ -4123,7 +4100,7 @@ close_app	Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ax,ds:app_lib_sel
+	mov ax,ds:app_mod_sel
 	or ax,ax
 	jz close_app_done
 ;	
@@ -4197,15 +4174,14 @@ get_exe_name	Proc far
 	push edx
 	push esi
 ;
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov edi,ds:pe_exe_name
-	or edi,edi
-	jnz get_exe_done
-;	
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
+;
+	mov edi,ds:app_name
+	or edi,edi
+	jnz get_exe_done
+;	
 	mov si,OFFSET app_exe_name
 
 get_exe_size_loop:
@@ -4222,9 +4198,7 @@ get_exe_size_loop:
 	mov esi,OFFSET app_exe_name
 	rep movs byte ptr es:[edi],[esi]
 ;
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov ds:pe_exe_name,edx
+	mov ds:app_name,edx
 	mov edi,edx
 
 get_exe_done:
@@ -4255,9 +4229,10 @@ get_env	Proc far
 	push edx
 	push esi
 ;
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov edi,ds:pe_env
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov edi,ds:app_env
 	or edi,edi
 	jnz get_env_done
 ;	
@@ -4281,9 +4256,7 @@ get_env_size_loop:
 	xor esi,esi
 	rep movs byte ptr es:[edi],[esi]
 ;
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov ds:pe_env,edx
+	mov ds:app_env,edx
 	mov edi,edx
 ;
     UnlockProcEnv
@@ -4310,10 +4283,15 @@ get_env	Endp
 
 get_cmd_line	Proc far
 	push ds
-	mov di,pe_app_sel
-	mov ds,di
-	mov edi,ds:pe_cmd_line
+	push ax
+;	
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_app_sel
+	mov edi,ds:app_cmd_line
+;	
 	clc
+	pop ax
 	pop ds
 	ret
 get_cmd_line	Endp
@@ -4358,9 +4336,10 @@ set_opt_size:
 	mov es,ax
 	rep movs byte ptr es:[edi],[esi]
 ;        
-   	mov ax,pe_app_sel
-	mov ds,ax
-	mov ds:pe_options,edx
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds:app_options,edx
 ;
 	clc
 	popa
@@ -4380,10 +4359,15 @@ set_options	Endp
 
 get_options	Proc far
 	push ds
-	mov di,pe_app_sel
-	mov ds,di
-	mov edi,ds:pe_options
+	push ax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel	
+	mov edi,ds:app_options
 	clc
+;
+    pop ax	
 	pop ds
 	ret
 get_options	Endp
@@ -4404,10 +4388,6 @@ init	PROC far
 ;
 	mov bx,pe_code_sel
 	InitDevice
-;
-	mov bx,pe_app_sel
-	mov eax,SIZE pe_data_seg
-	AllocateFixedAppMem
 ;
 	mov ax,cs
 	mov ds,ax
