@@ -161,7 +161,6 @@ mon_video_code_sel	EQU 450h
 video_pos_sel		EQU 458h
 
 dos_code_sel		EQU 460h
-dos_app_sel			EQU 468h
 dos_process_sel		EQU 470h
 dos_vm_sel			EQU 47Bh
 

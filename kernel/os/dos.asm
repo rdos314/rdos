@@ -44,20 +44,6 @@ INCLUDE dos.inc
 mode_vm	EQU 2
 mode_pm EQU 0
 
-dos_app_seg	STRUC
-
-vm_psp_seg		DW ?
-pm_psp_sel		DW ?
-vm_mem_strat	DW ?
-vm_dta_seg		DW ?
-pm_dta_sel		DW ?
-dta_offset		DD ?
-psp_mode		DB ?
-dta_mode		DB ?
-find_sel		DW ?
-
-dos_app_seg	ENDS
-
 	.386p
 
 
@@ -195,20 +181,22 @@ create_enviroment	PROC near
 	push esi
 	push edi
 ;
+    GetThread
+    mov fs,ax
+    mov fs,fs:p_app_sel
+;    
     mov ax,bx
     LockProcEnv
     or ax,ax
     jz create_env_start
 ;
     mov bx,ax
-	cmp fs:psp_mode,mode_pm
+	cmp fs:app_psp_mode,mode_pm
 	jz create_env_start
 ;
 	SegmentToSelector
 
 create_env_start:    
-	mov ax,dos_app_sel
-	mov fs,ax
 	push ds
 	push esi
 	xor cx,cx
@@ -245,7 +233,7 @@ create_env_find_sep:
 	xor esi,esi
 	rep movs byte ptr es:[edi],[esi]
 	pop cx
-	cmp fs:psp_mode,mode_pm
+	cmp fs:app_psp_mode,mode_pm
 	jz create_env_no_free
 ;
 	mov ax,ds
@@ -270,7 +258,7 @@ create_env_no_free:
 
 create_env_fail:
 	pop edx
-	cmp fs:psp_mode,mode_pm
+	cmp fs:app_psp_mode,mode_pm
 	jz create_env_no_fail_free
 	push es
 	mov ax,ds
@@ -316,9 +304,14 @@ get_psp_name	DB 'Get Psp',0
 
 get_psp_gate	PROC far
 	push ds
-	mov bx,dos_app_sel
-	mov ds,bx
-	mov bx,ds:vm_psp_seg
+	push ax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel	
+	mov bx,ds:app_vm_psp_seg
+;
+    pop ax	
 	pop ds
 	ret
 get_psp_gate	ENDP
@@ -342,9 +335,12 @@ set_psp_name	DB 'Set Psp',0
 set_psp_gate	PROC far
 	push ds
 	push ax
-	mov ax,dos_app_sel
-	mov ds,ax
-	mov ds:vm_psp_seg,bx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel	
+	mov ds:app_vm_psp_seg,bx
+;
 	pop ax
 	pop ds
 	ret
@@ -368,9 +364,14 @@ get_psp_sel_name	DB 'Get Psp Sel',0
 
 get_psp_sel	PROC far
 	push ds
-	mov bx,dos_app_sel
-	mov ds,bx
-	mov bx,ds:pm_psp_sel
+	push ax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel	
+	mov bx,ds:app_pm_psp_sel
+;
+    pop ax	
 	pop ds
 	retf32
 get_psp_sel	ENDP
@@ -390,15 +391,16 @@ PAGE
 
 clear_psp	PROC near
 	push ds
-	push bx
+	push ax
 ;
-	mov bx,dos_app_sel
-	mov ds,bx
-	mov ds:vm_psp_seg,0
-	mov ds:pm_psp_sel,0
-	mov ds:psp_mode,mode_vm
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds:app_vm_psp_seg,0
+	mov ds:app_pm_psp_sel,0
+	mov ds:app_psp_mode,mode_vm
 ;
-	pop bx
+	pop ax
 	pop ds
 	ret
 clear_psp	ENDP
@@ -420,9 +422,14 @@ PAGE
 
 get_virt_psp	PROC near
 	push ds
-	mov bx,dos_app_sel
-	mov ds,bx
-	mov bx,ds:vm_psp_seg
+	push ax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov bx,ds:app_vm_psp_seg
+;
+    pop ax
 	pop ds
 	ret
 get_virt_psp	ENDP
@@ -447,14 +454,16 @@ set_virt_psp	PROC near
 	push ax
 	push bx
 	push edx
-	mov ax,dos_app_sel
-	mov ds,ax
-	mov ds:vm_psp_seg,bx
-	cmp ds:psp_mode,mode_pm
+;	
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds:app_vm_psp_seg,bx
+	cmp ds:app_psp_mode,mode_pm
 	je set_virt_psp_nofree
 ;
 	push bx
-	mov bx,ds:pm_psp_sel
+	mov bx,ds:app_pm_psp_sel
 	and bx,0FFF8h
 	FreeLdt
 	pop bx
@@ -473,8 +482,9 @@ set_virt_psp_nofree:
 	mov word ptr [bx+6],0
 	or bx,7
 	pop ds
-	mov ds:pm_psp_sel,bx
-	mov ds:psp_mode,mode_vm
+	mov ds:app_pm_psp_sel,bx
+	mov ds:app_psp_mode,mode_vm
+;	
 	pop edx
 	pop bx
 	pop ax
@@ -499,9 +509,14 @@ PAGE
 
 get_prot_psp	PROC near
 	push ds
-	mov bx,dos_app_sel
-	mov ds,bx
-	mov bx,ds:pm_psp_sel
+    push ax
+;	
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov bx,ds:app_pm_psp_sel
+;
+    pop ax
 	pop ds
 	ret
 get_prot_psp	ENDP
@@ -525,10 +540,12 @@ set_prot_psp	PROC near
 	push ds
 	push ax
 ;
-	mov ax,dos_app_sel
-	mov ds,ax
-	mov ds:pm_psp_sel,bx
-	mov ds:psp_mode,mode_pm
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds:app_pm_psp_sel,bx
+	mov ds:app_psp_mode,mode_pm
+;
 	pop ax
 	pop ds
 	ret
@@ -551,10 +568,15 @@ PAGE
 
 get_virt_dta	PROC near
 	push ds
-	mov bx,dos_app_sel
-	mov ds,bx
-	mov dx,ds:vm_dta_seg
-	mov bx,word ptr ds:dta_offset
+	push ax
+;	
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov dx,ds:app_vm_dta_seg
+	mov bx,word ptr ds:app_dta_offset
+;
+    pop ax	
 	pop ds
 	ret
 get_virt_dta	Endp
@@ -580,19 +602,22 @@ set_virt_dta	PROC near
 	push bx
 	push edx
 ;
-	mov ax,dos_app_sel
-	mov ds,ax
-	mov ds:vm_dta_seg,dx
-	mov word ptr ds:dta_offset,bx
-	mov word ptr ds:dta_offset+2,0
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds:app_vm_dta_seg,dx
+	mov word ptr ds:app_dta_offset,bx
+	mov word ptr ds:app_dta_offset+2,0
 	mov bx,dx
-	cmp ds:dta_mode,mode_pm
+	cmp ds:app_dta_mode,mode_pm
 	je set_virt_dta_nofree
+;
 	push bx
-	mov bx,ds:pm_dta_sel
+	mov bx,ds:app_pm_dta_sel
 	and bx,0FFF8h
 	FreeLdt
 	pop bx
+
 set_virt_dta_nofree:
 	movzx edx,bx
 	shl edx,4
@@ -607,8 +632,9 @@ set_virt_dta_nofree:
 	mov word ptr [bx+6],0
 	or bx,7
 	pop ds
-	mov ds:pm_dta_sel,bx
-	mov ds:dta_mode,mode_vm
+	mov ds:app_pm_dta_sel,bx
+	mov ds:app_dta_mode,mode_vm
+;
 	pop edx
 	pop bx
 	pop ax
@@ -633,10 +659,15 @@ PAGE
 
 get_prot_dta	PROC near
 	push ds
-	mov bx,dos_app_sel
-	mov ds,bx
-	mov dx,ds:pm_dta_sel
-	mov ebx,ds:dta_offset
+	push ax
+;	
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov dx,ds:app_pm_dta_sel
+	mov ebx,ds:app_dta_offset
+;
+    pop ax
 	pop ds
 	ret
 get_prot_dta	Endp
@@ -660,11 +691,14 @@ set_prot_dta	PROC near
 	push ds
 	push ax
 	push bx
-	mov ax,dos_app_sel
-	mov ds,ax
-	mov ds:dta_mode,mode_pm
-	mov ds:pm_dta_sel,dx
-	mov ds:dta_offset,ebx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel	
+	mov ds:app_dta_mode,mode_pm
+	mov ds:app_pm_dta_sel,dx
+	mov ds:app_dta_offset,ebx
+;	
 	pop bx
 	pop ax
 	pop ds
@@ -688,9 +722,14 @@ PAGE
 
 get_find_sel	Proc near
 	push ds
-	mov bx,dos_app_sel
-	mov ds,bx
-	mov bx,ds:find_sel
+	push ax
+;	
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov bx,ds:app_find_sel
+;
+    pop ax	
 	pop ds
 	ret
 get_find_sel	Endp
@@ -712,11 +751,14 @@ PAGE
 
 set_find_sel	Proc near
 	push ds
-	push bx
-	mov bx,dos_app_sel
-	mov ds,bx
-	pop bx
-	mov ds:find_sel,bx
+	push ax
+;	
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds:app_find_sel,bx
+;
+    pop ax
 	pop ds
 	ret
 set_find_sel	Endp
@@ -739,15 +781,16 @@ reset_find_sel	Proc near
 	push es
 	push ax
 ;
-	mov ax,dos_app_sel
-	mov ds,ax
-	mov ax,ds:find_sel
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ax,ds:app_find_sel
 	or ax,ax
 	jz reset_find_done
 ;
 	mov es,ax
 	FreeMem
-	mov ds:find_sel,0
+	mov ds:app_find_sel,0
 
 reset_find_done:
 	pop ax
@@ -906,19 +949,23 @@ create_psp	PROC near
 	push dx
 	push di
 ;
-	mov dx,dos_app_sel
-	mov ds,dx
-	push ds:vm_psp_seg
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    pop ax
+;    
+	push ds:app_vm_psp_seg
 	push ax
 	push bx
 ;
 	movzx edx,bx
 	shl edx,4
-	mov ds:vm_psp_seg,bx
-	cmp ds:psp_mode,mode_pm
+	mov ds:app_vm_psp_seg,bx
+	cmp ds:app_psp_mode,mode_pm
 	je create_psp_virt_psp_nofree
 ;
-	mov bx,ds:pm_psp_sel
+	mov bx,ds:app_pm_psp_sel
 	or bx,bx
 	jz create_psp_virt_psp_nofree
 ;
@@ -937,8 +984,8 @@ create_psp_virt_psp_nofree:
 	mov word ptr [bx+6],0
 	or bx,7
 	pop ds
-	mov ds:pm_psp_sel,bx
-	mov ds:psp_mode,mode_vm
+	mov ds:app_pm_psp_sel,bx
+	mov ds:app_psp_mode,mode_vm
 ;
 	mov es,bx
 	xor di,di
@@ -1030,7 +1077,7 @@ create_psp_virt_psp_nofree:
 	mov al,24h
 	SetVMInt
 ;
-	mov bx,ds:vm_psp_seg
+	mov bx,ds:app_vm_psp_seg
 	push ds
 	mov ax,flat_sel
 	mov ds,ax
@@ -1040,16 +1087,14 @@ create_psp_virt_psp_nofree:
 	mov [eax+1],bx
 	pop ds
 ;
-	mov ax,dos_app_sel
-	mov ds,ax
-	mov ds:vm_dta_seg,bx
-	mov ds:dta_offset,80h
+	mov ds:app_vm_dta_seg,bx
+	mov ds:app_dta_offset,80h
 	movzx edx,bx
 	shl edx,4
-	cmp ds:dta_mode,mode_pm
+	cmp ds:app_dta_mode,mode_pm
 	je create_psp_virt_dta_nofree
 ;
-	mov bx,ds:pm_dta_sel
+	mov bx,ds:app_pm_dta_sel
 	or bx,bx
 	jz create_psp_virt_dta_nofree
 ;
@@ -1068,8 +1113,8 @@ create_psp_virt_dta_nofree:
 	mov word ptr [bx+6],0
 	or bx,7
 	pop ds
-	mov ds:pm_dta_sel,bx
-	mov ds:dta_mode,mode_vm
+	mov ds:app_pm_dta_sel,bx
+	mov ds:app_dta_mode,mode_vm
 ;
 	pop bx
 	mov es:psp_parent,bx
@@ -1101,9 +1146,10 @@ unload_program	Proc near
 	push es
 	pusha
 ;
-	mov bx,dos_app_sel
-	mov ds,bx
-	mov bx,ds:pm_psp_sel
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov bx,ds:app_pm_psp_sel
 	or bx,bx
 	jz unload_program_done
 ;
@@ -1162,9 +1208,10 @@ PAGE
 
 get_allocation_strat	Proc near
 	push ds
-	mov ax,dos_app_sel
+	GetThread
 	mov ds,ax
-	mov ax,ds:vm_mem_strat
+	mov ds,ds:p_app_sel
+	mov ax,ds:app_vm_mem_strat
 	pop ds
 	ret
 get_allocation_strat	Endp
@@ -1187,11 +1234,12 @@ PAGE
 
 set_allocation_strat	Proc near
 	push ds
-	push bx
-	mov bx,dos_app_sel
-	mov ds,bx
-	mov ds:vm_mem_strat,ax
-	pop bx
+	push ax
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_app_sel
+	pop ax
+	mov ds:app_vm_mem_strat,ax
 	pop ds
 	ret
 set_allocation_strat	Endp
@@ -1227,16 +1275,11 @@ open_app	Proc far
 	push ds
 	push ax
 ;
-	mov ax,dos_app_sel
-	mov ds,ax
-	mov ds:vm_psp_seg,0
-	mov ds:pm_psp_sel,0
-	mov ds:vm_mem_strat,0
-	mov ds:vm_dta_seg,0
-	mov ds:pm_dta_sel,0
-	mov ds:psp_mode,mode_vm
-	mov ds:dta_mode,mode_vm
-	mov ds:find_sel,0
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel    
+	mov ds:app_psp_mode,mode_vm
+	mov ds:app_dta_mode,mode_vm
 ;
 	pop ax
 	pop ds
@@ -1321,10 +1364,6 @@ init	PROC far
 ;
 	mov eax,OFFSET doscallback_end - OFFSET doscallback_start
 	AllocateFixedVMLinear
-;
-	mov eax,SIZE dos_app_seg
-	mov bx,dos_app_sel
-	AllocateFixedAppMem
 ;
 	push edx
 	mov eax,OFFSET dos_vm_size

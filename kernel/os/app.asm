@@ -490,6 +490,15 @@ run_open_hooks	Proc near
 	mov ds:app_options,0
 	mov ds:app_mem_blocks,0
 ;
+	mov ds:app_vm_psp_seg,0
+	mov ds:app_pm_psp_sel,0
+	mov ds:app_vm_mem_strat,0
+	mov ds:app_vm_dta_seg,0
+	mov ds:app_pm_dta_sel,0
+	mov ds:app_find_sel,0
+	mov ds:app_psp_mode,0
+	mov ds:app_dta_mode,0
+;
 	mov ax,app_data_sel
 	mov ds,ax
 	mov cl,ds:open_app_hooks
