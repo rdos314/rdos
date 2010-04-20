@@ -116,7 +116,7 @@ apic_tics           DD ?
 apic_rest           DW ?
 
 ; EDX   Linear address
-; ECX   Size of region
+; ECX   Pages
 tlb_flush_proc      DD ?
 
 system_size			DB ?

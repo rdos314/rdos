@@ -1534,7 +1534,7 @@ set_flat_linear_invalid	PROC far
 	mov ds,cx
 ;
 	or eax,eax
-	jz short set_inv_done
+	jz set_inv_done
 ;
 	add edx,local_page_linear
 	cmp edx,local_page_linear
@@ -1552,6 +1552,8 @@ set_flat_linear_invalid	PROC far
 	sub ecx,edx
 	shr edx,10
 	shr ecx,12
+	push ecx
+	push edx
 
 set_inv_mark:
 	mov eax,[edx]
@@ -1585,11 +1587,15 @@ set_inv_free:
 set_inv_next:
 	add edx,4
 	loop set_inv_mark
-
-set_inv_done:
-	mov eax,cr3
-	mov cr3,eax
 ;
+    pop edx
+    pop ecx
+	shl edx,10
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:tlb_flush_proc
+    
+set_inv_done:
 	pop edx
 	pop ecx
 	pop eax

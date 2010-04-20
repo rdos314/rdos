@@ -691,6 +691,64 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			TlbFlush386
+;
+;		DESCRIPTION:	TLB flush, 386 version
+;
+;		PARAMETERS:		EDX     Linear base
+;                       ECX     Page entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+TlbFlush386 Proc far
+    push eax
+    mov eax,cr3
+    mov cr3,eax
+    pop eax
+    ret
+TlbFlush386 Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			TlbFlush486
+;
+;		DESCRIPTION:	TLB flush, 486 or higher version
+;
+;		PARAMETERS:		EDX     Linear base
+;                       ECX     Page entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ .486p
+
+TlbFlush486 Proc far
+    push ecx
+    push edx
+;
+    or ecx,ecx
+    jz tfDone
+
+tfLoop:
+    invlpg [edx]
+    add edx,1000h
+    loop tfLoop        
+
+tfDone:    
+    pop edx
+    pop ecx
+    ret
+TlbFlush486 Endp
+
+ .386p
+ 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			INIT_TASK
 ;
 ;		DESCRIPTION:	Init module
@@ -707,6 +765,18 @@ PAGE
 init_task	PROC near
 	pusha
 	push ds
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov word ptr ds:tlb_flush_proc+2,cs
+    mov word ptr ds:tlb_flush_proc,OFFSET TlbFlush386
+    mov al,ds:cpu_type
+    cmp al,3
+    je init_tlb_done
+;
+    mov word ptr ds:tlb_flush_proc,OFFSET TlbFlush486
+
+init_tlb_done:
 	mov bx,task_sel
 	mov eax,OFFSET task_seg_size
 	push cs
