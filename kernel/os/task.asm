@@ -351,11 +351,16 @@ rem_done:
 		ENDM
 
 SetEnviroment	MACRO
-	mov ax,process_page_sel
-	mov ds,ax
+    local cr3_ok
+
+    mov eax,cr3
+    cmp eax,es:p_cr3
+    je cr3_ok
+;    
 	mov eax,es:p_cr3
 	mov cr3,eax
-;
+
+cr3_ok:
 	mov ax,sys_dir_sel
 	mov ds,ax
 	mov bx,io_focus_linear SHR 20
