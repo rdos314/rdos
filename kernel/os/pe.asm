@@ -86,7 +86,7 @@ SendEvent Proc near
 	mov ds,ax
 	mov ds,ds:pe_app
 ;	
-	EnterSection ds:lib_section
+	EnterSection ds:mod_section
 ;
 	mov ax,ds:lib_events
 	or ax,ax
@@ -113,7 +113,7 @@ seInsDone:
 	mov ds:lib_events,es
 	xor ax,ax
 	mov es,ax
-	LeaveSection ds:lib_section
+	LeaveSection ds:mod_section
 ;
     push es
 
@@ -488,11 +488,6 @@ create_lib_size_ok:
 	rep movs byte ptr es:[edi],fs:[esi]
 	mov byte ptr es:[edi],0
 	mov es:lib_usage_count,1
-	push ds
-	mov ax,es
-	mov ds,ax
-	InitSection ds:lib_section
-	pop ds
 ;	
 	mov es:lib_base,0
 	mov es:lib_process,0
@@ -629,9 +624,10 @@ FindLib	Proc near
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     DerefModuleHandle
-	jc find_lib_fail
+	jc find_lib_done
 ;    
     mov ds,bx
+    EnterSection ds:mod_section
     mov ax,ds:mod_list
     or ax,ax
     jz find_lib_try_app
@@ -661,11 +657,13 @@ find_lib_try_app:
 	jc find_lib_ok
 
 find_lib_fail:
+    LeaveSection ds:mod_section
 	stc
 	jmp find_lib_done
 
 find_lib_ok:
     mov edi,es:lib_base
+    LeaveSection ds:mod_section
 	clc
 
 find_lib_done:
@@ -739,6 +737,7 @@ FindDll	Proc near
 	jc find_dll_fail
 ;    
     mov ds,bx
+    EnterSection ds:mod_section
     mov ax,ds:mod_list
     or ax,ax
     jz find_dll_fail
@@ -771,12 +770,14 @@ find_dll_next:
 	jne find_dll_check_dll
 
 find_dll_fail:
+    LeaveSection ds:mod_section
 	stc
 	jmp find_dll_end
 
 find_dll_ok:
 	pop esi
 	mov edi,es:lib_base
+    LeaveSection ds:mod_section
 	clc
 
 find_dll_end:
@@ -1897,7 +1898,7 @@ load_object	Proc far
 ;
     mov ax,es
     mov ds,ax
-    EnterSection ds:lib_section
+    EnterSection ds:mod_section
 ;
 	mov cx,process_page_sel
 	mov ds,cx
@@ -2000,7 +2001,7 @@ load_object_save:
 load_object_leave:
     mov ax,es
     mov ds,ax
-    LeaveSection ds:lib_section
+    LeaveSection ds:mod_section
     
 load_object_done:
 	popad
@@ -3078,7 +3079,7 @@ get_debug_event Proc far
 	push si
 ;
     mov ds,bx
-	EnterSection ds:lib_section
+	EnterSection ds:mod_section
 	mov ax,ds:lib_events
 	or ax,ax
 	jz gdeLeaveFail
@@ -3099,7 +3100,7 @@ get_debug_event Proc far
 	mov ds:lib_events,0
 
 gdeRemoved:
-	LeaveSection ds:lib_section
+	LeaveSection ds:mod_section
 ;
     mov ds:lib_curr_event,es
     mov bl,es:event_code
@@ -3108,7 +3109,7 @@ gdeRemoved:
     jmp gdeDone
 
 gdeLeaveFail:
-	LeaveSection ds:lib_section
+	LeaveSection ds:mod_section
 	xor bl,bl
 	xor ax,ax
     stc
@@ -3387,7 +3388,7 @@ notify_pe_exception	Proc far
 	mov ax,pe_app_sel
 	mov ds,ax
 	mov ds,ds:pe_app
-	EnterSection ds:lib_section
+	EnterSection ds:mod_section
 ;
 	mov ax,ds:lib_events
 	or ax,ax
@@ -3415,7 +3416,7 @@ neInsDone:
 	xor ax,ax
 	mov es,ax
 	cli
-	LeaveSection ds:lib_section
+	LeaveSection ds:mod_section
 ;
 	mov ax,ds:lib_debug_obj
 	or ax,ax

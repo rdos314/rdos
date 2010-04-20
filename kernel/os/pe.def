@@ -150,7 +150,6 @@ lib_debug_obj   	DW ?
 lib_events			DW ?
 lib_curr_event      DW ?
 lib_local_handle    DW ?
-lib_section			section_typ <>
 lib_run_now			DW ?
 lib_init_param		DW ?
 lib_fs              DW ?

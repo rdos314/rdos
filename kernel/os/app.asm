@@ -720,6 +720,7 @@ set_module	PROC far
 	mov bx,[bx].hh_handle
 ;
     mov ds,dx
+    InitSection ds:mod_section
     mov ds:mod_handle,bx
     mov ds:mod_list,0
 ;    
@@ -817,6 +818,10 @@ create_module	PROC far
     push bx
     push dx
 ;
+    mov ax,es
+    mov ds,ax
+    InitSection ds:mod_section
+;    
 	mov cx,SIZE module_handle_seg
 	AllocateHandle
 	mov [bx].mh_sel,es
@@ -840,9 +845,11 @@ create_module	PROC far
     jz create_module_done
 ;
     mov ds,ax    
+    EnterSection ds:mod_section
     mov ax,ds:mod_list
     mov ds:mod_list,es
     mov es:mod_next,ax
+    LeaveSection ds:mod_section
         
 create_module_done:    
     pop dx
@@ -874,6 +881,7 @@ free_module	PROC far
     push ax
     push bx
     push dx
+    push si
 ;
     mov dx,es
     GetThread
@@ -884,14 +892,15 @@ free_module	PROC far
 	DerefHandle
 	jc free_module_done
 ;
-    mov ax,[bx].mh_sel
-    or ax,ax
+    mov si,[bx].mh_sel
+    or si,si
     jz free_module_done
 ;
-    mov ds,ax    
+    mov ds,si
+    EnterSection ds:mod_section
     mov ax,ds:mod_list
     or ax,ax
-    jz free_module_done
+    jz free_module_leave
 ;
     cmp ax,dx
     jne free_mod_not_head
@@ -911,7 +920,7 @@ free_mod_not_head:
     or ax,ax
     jnz free_mod_not_head
 ;
-    jmp free_module_done
+    jmp free_module_leave
 
 free_mod_in_list:
     mov ds,dx
@@ -922,9 +931,13 @@ free_mod_in_list:
 free_mod_handle:
 	mov ax,MODULE_HANDLE
 	DerefHandle
-	jc free_module_done
+	jc free_module_leave
 ;
 	FreeHandle
+
+free_module_leave:	
+    mov ds,si
+    LeaveSection ds:mod_section
             
 free_module_done:
     pop dx
