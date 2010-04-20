@@ -1082,8 +1082,6 @@ init_thread_block	PROC near
 ;
 	mov ax,ds:p_app_sel
 	mov es:p_app_sel,ax
-	mov eax,ds:p_app_page
-	mov es:p_app_page,eax
 	mov ax,ds:p_ldt_sel
 	mov es:p_ldt_sel,ax
 	mov ax,ds:p_lib_sel
@@ -1176,14 +1174,8 @@ init_process_block	PROC near
 	mov fs:app_next,0
 	mov fs:app_sel,fs
 ;
-	shr edx,10
-	mov ax,sys_page_sel
-	mov es,ax
-	mov eax,es:[edx]
 	pop es
 	mov es:p_app_sel,bx
-	mov es:p_app_page,eax
-	mov fs:app_page,eax
 	pop fs
 ;
 	mov es:p_ldt_sel,0

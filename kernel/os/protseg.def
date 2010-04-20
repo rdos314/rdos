@@ -84,8 +84,6 @@ phys_page_linear		EQU 0FDC00000h
 
 video_focus_linear		EQU 0FE000000h
 
-app_linear				EQU 0FE021000h
-
 page0_linear			EQU 0FE022000h
 gdt_linear				EQU 0FE023000h
 system_linear			EQU 0FE033000h

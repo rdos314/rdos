@@ -123,7 +123,6 @@ app_seg	STRUC
 
 app_next			    DW ?
 app_sel				    DW ?
-app_page			    DD ?
 
 app_get_cmd_line_proc	DD ?
 app_get_exe_proc		DD ?
@@ -202,7 +201,6 @@ thread_seg	STRUC
 	p_387_sel		    DW ?
 	p_thread_sel	    DW ?
 	p_app_sel		    DW ?
-	p_app_page		    DD ?
 	p_free_proc		    DD ?
 	p_cr3			    DD ?
 	p_error_code	    DW ?

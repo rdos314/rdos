@@ -302,7 +302,6 @@ read_ini_nr                 = 269
 write_ini_nr                = 270
 delete_ini_nr               = 271
 
-app_debug_nr				= 272
 get_version_nr              = 273
 
 enable_status_led_nr        = 274

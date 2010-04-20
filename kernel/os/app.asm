@@ -211,12 +211,6 @@ init_app	PROC near
 	mov ax,free_app_mem_nr
 	RegisterBimodalUserGate
 ;
-	mov si,OFFSET app_debug
-	mov di,OFFSET app_debug_name
-	xor dx,dx
-	mov ax,app_debug_nr
-	RegisterBimodalUserGate
-;
 	mov bx,OFFSET load_dll16
 	mov si,OFFSET load_dll32
 	mov di,OFFSET load_dll_name
@@ -504,22 +498,8 @@ open_app	PROC far
 	mov ax,ds:p_app_sel
 	mov fs:app_next,ax
 	mov fs:app_sel,fs
-;
-	shr edx,10
-	mov ax,sys_page_sel
-	mov es,ax
-	mov eax,es:[edx]
 	mov ds:p_app_sel,bx
-	mov ds:p_app_page,eax
-	mov fs:app_page,eax
 ;
-	mov ax,process_page_sel
-	mov es,ax
-	mov ebx,app_linear SHR 10
-	mov eax,ds:p_app_page
-	mov es:[ebx],eax
-	mov eax,ds:p_cr3
-	mov cr3,eax
 	call create_ldt
 	call run_open_hooks
 ;
@@ -591,19 +571,9 @@ trap_close_app_done:
 ;
 	mov fs,ax
 	mov ds:p_app_sel,ax
-	mov eax,fs:app_page
 
 close_app_last:
-	mov ds:p_app_page,eax
 	FreeMem
-;
-	mov ax,process_page_sel
-	mov es,ax
-	mov ebx,app_linear SHR 10
-	mov eax,ds:p_app_page
-	mov es:[ebx],eax
-	mov eax,ds:p_cr3
-	mov cr3,eax
 ;
     GetThread
 	mov es,ax
@@ -1176,31 +1146,6 @@ caDone:
 	ret
 clone_app	ENDP
 
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			AppDebug
-;
-;		DESCRIPTION:	Debug app selector
-;
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-app_debug_name	DB 'App Debug',0
-
-app_debug	PROC far
-	push ds
-;
-	mov ax,process_page_sel
-	mov ds,ax
-	mov eax,app_linear SHR 10
-	mov eax,ds:[eax]
-;
-	pop ds
-	retf32
-app_debug	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

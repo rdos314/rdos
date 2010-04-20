@@ -761,14 +761,6 @@ get_thread_physical_page	Proc far
 	push si
 ;
 	and dx,0F000h
-	cmp edx,app_linear
-	jne get_thread_phys_not_client
-;
-	mov es,bx
-	mov eax,es:p_app_page
-	jmp get_thread_phys_done
-
-get_thread_phys_not_client:
 	SimCli
 	mov ax,process_dir_sel
 	mov ds,ax
