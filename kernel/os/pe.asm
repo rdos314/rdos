@@ -82,10 +82,10 @@ SendEvent Proc near
 	or ax,ax
 	jz seDone
 ;
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov ds,ds:pe_app
-;	
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds,ds:app_lib_sel
 	EnterSection ds:mod_section
 ;
 	mov ax,ds:lib_events
@@ -557,7 +557,7 @@ InsertApp	Proc near
 ;
 	mov ax,pe_app_sel
 	mov ds,ax
-	mov ds:pe_app,es
+;	mov ds:pe_app,es
 	mov ds:pe_env,0
 	mov ds:pe_exe_name,0
 ;
@@ -2722,9 +2722,10 @@ start_thread	PROC far
 	jnz start_thread_done
 ;
 	mov edx,[bp].vm_eip
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov ds,ds:pe_app	
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds,ds:app_lib_sel
 	mov ax,ds:lib_debug_lib
 	or ax,ax
 	jz start_thread_done
@@ -2762,9 +2763,10 @@ free_thread	Proc far
 	cmp ax,word ptr ds:app_loader_name+2
 	jne free_thread_no_debug
 ;
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov ds,ds:pe_app	
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds,ds:app_lib_sel	
 	mov ax,ds:lib_debug_lib
 	or ax,ax
 	jz free_thread_no_debug
@@ -2825,9 +2827,10 @@ kernel_dll		DB 'kernel32.dll',0
 debug_startup	DB 'DebugStartup',0
 
 spawn_proc	Proc far
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov es,ds:pe_app
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov es,ds:app_lib_sel
 	mov ax,flat_data_sel
 	mov ds,ax
 	mov fs,[bp].load_fs
@@ -2917,9 +2920,10 @@ clone_proc	Proc far
     AllocateSmallGlobalMem
     mov es:pcs_entries,0
 ;
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov ds,ds:pe_app
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds,ds:app_lib_sel
     mov ax,ds:lib_file_handle
     mov es:pcs_file_handle,ax
 ;
@@ -2953,9 +2957,10 @@ close_proc	Proc far
 	cmp ax,word ptr ds:app_loader_name+2
 	jne free_process_no_debug
 ;
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov ds,ds:pe_app	
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds,ds:app_lib_sel	
 	mov ax,ds:lib_debug_lib
 	or ax,ax
 	jz free_process_no_debug
@@ -3385,9 +3390,10 @@ notify_pe_exception	Proc far
 	pop es
 	mov es:event_thread_id,ax
 ;
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov ds,ds:pe_app
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ds,ds:app_lib_sel
 	EnterSection ds:mod_section
 ;
 	mov ax,ds:lib_events
@@ -4097,7 +4103,7 @@ open_app	Proc far
 	mov ax,pe_app_sel
 	mov ds,ax
 	mov ds:pe_dlls,0
-	mov ds:pe_app,0
+;	mov ds:pe_app,0
 	mov ds:pe_mem_blocks,0
 ;	InitSection ds:pe_section
 	pop ds
@@ -4114,9 +4120,10 @@ open_app	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_app	Proc far
-	mov ax,pe_app_sel
-	mov ds,ax
-	mov ax,ds:pe_app
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ax,ds:app_lib_sel
 	or ax,ax
 	jz close_app_done
 ;	
