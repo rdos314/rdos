@@ -728,7 +728,7 @@ FindDll	Proc near
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     DerefModuleHandle
-	jc find_dll_fail
+	jc find_dll_end
 ;    
     mov ds,bx
     EnterSection ds:mod_section

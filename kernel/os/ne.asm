@@ -440,6 +440,7 @@ r7	DW OFFSET reloc_error
 demand_load_name	DB 'Segment Not Present',0
 
 demand_load	Proc far
+    push ds
 	push es
 	push fs
 	push ecx
@@ -450,13 +451,21 @@ demand_load	Proc far
 	test bx,4
 	stc
 	jz demand_load_end
+
 demand_load_ldt:
-	mov ax,ne_app_sel
-	mov ds,ax
-	mov ax,ds:lib_modules
-	or ax,ax
-	stc
-	jz demand_load_end
+    push bx
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov bx,ds:app_handle
+    DerefModuleHandle
+    mov ax,bx
+    pop bx
+	jc demand_load_end
+;    
+    push ax
+    mov ds,ax
+    EnterSection ds:mod_section
 ;
     GetThread
 	mov ds,ax
@@ -465,11 +474,8 @@ demand_load_ldt:
 	mov ax,[bx+2]
 	verr ax
 	stc
-	jnz demand_load_end
-	push ds
-	mov ds,ax
-	EnterSection ds:lib_section
-	pop ds
+	jnz demand_load_leave
+;
 	mov cl,[bx+5]
 	test cl,80h
 	jnz demand_load_leave
@@ -586,9 +592,8 @@ demand_load_data:
 	mov [bx+5],dl
 
 demand_load_leave:
-	mov ax,es
-	mov ds,ax
-	LeaveSection ds:lib_section
+    pop ds
+	LeaveSection ds:mod_section
 	clc
 demand_load_end:
 	pop edi
@@ -597,6 +602,7 @@ demand_load_end:
 	pop ecx
 	pop fs
 	pop es
+	pop ds
 	ret
 demand_load	Endp
 
@@ -1003,19 +1009,6 @@ create_lib	Proc near
 	mov cx,es:lib_resident_size
 	call null_terminate_table
 ;
-    mov ax,es
-    mov ds,ax
-    InitSection ds:lib_section
-;    
-	push ds
-	mov ax,ne_app_sel
-	mov ds,ax
-	EnterSection ds:lib_module_section
-	mov di,OFFSET lib_modules
-	InsertLib
-	LeaveSection ds:lib_module_section
-	pop ds
-;
     mov es:mod_free_dll_proc,0
     mov es:mod_get_proc_proc,0
     mov es:mod_get_name_proc,0
@@ -1156,16 +1149,24 @@ get_dll	Proc near
 	push si
 	push di
 ;
-	mov bx,ne_app_sel
-	mov ds,bx
-	push ds
-	EnterSection ds:lib_module_section
-	mov bx,ds:lib_modules
-	or bx,bx
-	jz get_dll_fail
-	mov ds,bx
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov bx,ds:app_handle
+    DerefModuleHandle
+	jc get_dll_end
+;
+    push ds
+    mov ds,bx
+    EnterSection ds:mod_section
+    mov ax,ds:mod_list
+    or ax,ax
+    jz get_dll_fail
+
 get_dll_check_dll:
+    mov ds,ax
 	mov si,ds:lib_resident_offset
+
 get_dll_check_name:
 	lodsb
 	cmp al,es:[di]
@@ -1174,22 +1175,26 @@ get_dll_check_name:
 	je get_dll_ok
 	inc di
 	jmp get_dll_check_name
+
 get_dll_next:
-	mov ax,ds:lib_next
-	mov ds,ax
-	cmp ax,bx
+    mov ax,ds:mod_next
+    or ax,ax
 	jne get_dll_check_dll
+
 get_dll_fail:
 	xor bx,bx
+    pop ds
+    LeaveSection ds:mod_section
 	stc
 	jmp get_dll_end
+
 get_dll_ok:
 	mov bx,ds
+    pop ds
+    LeaveSection ds:mod_section
 	clc
+
 get_dll_end:
-	pop ds
-	LeaveSection ds:lib_module_section
-;
 	pop di
 	pop si		
 	pop ds
@@ -1459,13 +1464,9 @@ free_dll	Proc near
 	push es
 	pusha
 	mov es,bx
-	mov ax,ne_app_sel
-	mov ds,ax
-	EnterSection ds:lib_module_section
-	mov si,OFFSET lib_modules
+;
 	FreeModule
-	RemoveLib
-	LeaveSection ds:lib_module_section
+;	
 	call destroy_lib
 	mov bx,es:lib_file_handle
 	CloseFile
@@ -1841,14 +1842,6 @@ get_resource	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_app	Proc far
-	push ds
-;
-	mov ax,ne_app_sel
-	mov ds,ax
-	mov ds:lib_modules,0
-	InitSection ds:lib_module_section
-;
-	pop ds
 	ret
 open_app	Endp
                                            
@@ -1862,28 +1855,36 @@ open_app	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_app	Proc far
-	mov ax,ne_app_sel
-	mov ds,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov ax,ds:app_mod_sel
+	or ax,ax
+	jz close_app_done
 ;
+    mov es,ax
     ResetModule
 ;
 	xor ax,ax
 	mov es,ax
 	mov fs,ax
 	mov gs,ax
+;
+    mov bx,es:mod_list
+    or bx,bx
+    jz close_app_done	
 
 unload_loop:
-	mov si,OFFSET lib_modules
-	mov bx,[si]
-	or bx,bx
-	jz unload_ne_done
-;
+    mov es,bx
 	push ds
 	call free_dll
 	pop ds
-	jmp unload_loop
+;
+    mov bx,es:mod_next	
+	or bx,bx
+	jnz unload_loop
 
-unload_ne_done:
+close_app_done:
 	ret
 close_app	Endp
 
@@ -1910,28 +1911,6 @@ delete_handle	Proc far
 	jc delete_handle_done
 ;
     mov bx,ds:[bx].lh_sel
-;
-	mov ax,ne_app_sel
-	mov ds,ax
-	mov si,OFFSET lib_modules
-	mov ax,[si]
-	or ax,ax
-	jz delete_handle_done
-;
-    mov dx,ax
-
-delete_handle_loop:
-    cmp ax,bx
-    jne delete_handle_next
-;
-	call free_dll
-	jmp delete_handle_done
-
-delete_handle_next:
-    mov es,ax
-    mov ax,es:lib_next
-    cmp ax,dx
-    jne delete_handle_loop
 
 delete_handle_done:
     popad
@@ -1956,10 +1935,6 @@ init	PROC far
 ;
 	mov bx,ne_code_sel
 	InitDevice
-;
-	mov eax,SIZE ne_data_seg
-	mov bx,ne_app_sel
-	AllocateFixedAppMem
 ;
 	mov ax,cs
 	mov ds,ax

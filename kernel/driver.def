@@ -301,8 +301,6 @@ ramdrive_process_sel EQU 780h
 flashfs_code_sel	EQU 788h
 
 ne_code_sel			EQU 790h
-ne_app_sel			EQU 798h
-
 pe_code_sel			EQU 7A0h
 
 ether_code_sel		EQU 7B0h
