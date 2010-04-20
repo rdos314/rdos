@@ -546,67 +546,6 @@ CreateLib	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InsertDll
-;
-;		DESCRIPTION:    Insert DLL image into module list
-;
-;		PARAMETERS:     ES		Lib handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertDll	Proc near
-	push ds
-	push ax
-	push si
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section
-;    
-	mov ax,pe_app_sel
-	mov ds,ax
-;	EnterSection ds:pe_section
-;
-	mov ax,ds:pe_dlls
-	or ax,ax
-	je ins_dll_empty
-;
-	push ds
-	push si
-	mov ds,ax
-	mov si,ds:lib_prev
-	mov ds:lib_prev,es
-	mov ds,si
-	mov ds:lib_next,es
-	mov es:lib_next,ax
-	mov es:lib_prev,si
-	pop si
-	pop ds
-	jmp ins_dll_done
-
-ins_dll_empty:
-	mov es:lib_next,es
-	mov es:lib_prev,es
-
-ins_dll_done:
-	mov ds:pe_dlls,es
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    LeaveSection ds:app_lib_section	
-;	LeaveSection ds:pe_section
-;
-	pop si
-	pop ax
-	pop ds
-	ret
-InsertDll	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			InsertApp
 ;
 ;		DESCRIPTION:    Insert App image into module list
@@ -681,65 +620,58 @@ InsertApp	Endp
 FindLib	Proc near
 	push ds
 	push eax
+	push bx
 	push ecx
 	push si
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section	
+    mov bx,ds:app_handle
+    DerefModuleHandle
+	jc find_lib_fail
 ;    
-	mov ax,pe_app_sel
-	mov ds,ax
-;	EnterSection ds:pe_section
-	mov ax,ds:pe_dlls
-	or ax,ax
-	jz find_lib_try_app
-	mov si,ax
+    mov ds,bx
+    mov ax,ds:mod_list
+    or ax,ax
+    jz find_lib_try_app
+
 find_lib_dll_loop:
-	mov es,ax
+    mov es,ax
 	mov ecx,edx
 	sub ecx,es:lib_base
 	jc find_lib_dll_next
+;	
 	cmp ecx,es:lib_size
 	jc find_lib_ok
+
 find_lib_dll_next:
-	mov ax,es:lib_next
-	cmp ax,si
-	jne find_lib_dll_loop
+    mov ax,es:mod_next
+    or ax,ax
+    jne find_lib_dll_loop
 
 find_lib_try_app:
-	mov ax,ds:pe_app
-	or ax,ax
-	jz find_lib_fail
-	mov es,ax
+    mov ax,ds
+    mov es,ax
 	mov ecx,edx
 	sub ecx,es:lib_base
 	jc find_lib_fail
+;	
 	cmp ecx,es:lib_size
 	jc find_lib_ok
 
 find_lib_fail:
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    LeaveSection ds:app_lib_section	
-;	LeaveSection ds:pe_section
 	stc
 	jmp find_lib_done
 
 find_lib_ok:
-	mov edi,es:lib_base
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    LeaveSection ds:app_lib_section	
-;	LeaveSection ds:pe_section
+    mov edi,es:lib_base
 	clc
 
 find_lib_done:
 	pop si
 	pop ecx
+	pop bx
 	pop eax
 	pop ds
 	ret
@@ -802,15 +734,15 @@ FindDll	Proc near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section	
-;
-	mov ax,pe_app_sel
-	mov ds,ax
-;	EnterSection ds:pe_section
-	mov ax,ds:pe_dlls
-	or ax,ax
-	jz find_dll_fail
-	mov dx,ax
+    mov bx,ds:app_handle
+    DerefModuleHandle
+	jc find_dll_fail
+;    
+    mov ds,bx
+    mov ax,ds:mod_list
+    or ax,ax
+    jz find_dll_fail
+
 find_dll_check_dll:
 	mov es,ax
 	mov di,OFFSET lib_name
@@ -824,16 +756,18 @@ find_dll_check_name:
 	mov ah,byte ptr cs:[bx].UCaseTab
 	cmp al,ah
 	jne find_dll_next
+;	
 	or al,al
 	je find_dll_ok
+;
 	inc esi
 	inc di
 	jmp find_dll_check_name
 
 find_dll_next:
 	pop esi
-	mov ax,es:lib_next
-	cmp ax,dx
+    mov ax,es:mod_next
+    or ax,ax
 	jne find_dll_check_dll
 
 find_dll_fail:
@@ -846,14 +780,6 @@ find_dll_ok:
 	clc
 
 find_dll_end:
-	pushf
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    LeaveSection ds:app_lib_section	
-;	LeaveSection ds:pe_section
-	popf
-;
 	pop dx
 	pop bx
 	pop ax
@@ -870,17 +796,14 @@ FindApp	Proc near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section	
+    mov bx,ds:app_handle
+    DerefModuleHandle
+	jc find_app_fail
 ;
-	mov bx,pe_app_sel
-	mov ds,bx
-;	EnterSection ds:pe_section
-	mov ax,ds:pe_app
-	or ax,ax
-	jz find_app_fail
-	mov es,ax
+    mov es,bx
 	mov di,OFFSET lib_name
 	push esi
+
 find_app_check_name:
 	mov al,es:[di]
 	inc di
@@ -910,14 +833,6 @@ find_app_ok:
 	clc
 
 find_app_end:
-	pushf
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    LeaveSection ds:app_lib_section	
-;	LeaveSection ds:pe_section
-	popf
-;
 	pop dx
 	pop bx
 	pop ax
@@ -1828,7 +1743,6 @@ load_dll_do:
 ;	
 	call CreateImage
 	mov edi,es:lib_base
-	call InsertDll
 ;
 	mov es:lib_debug_lib,dx
 	mov ax,gs:lib_fs
@@ -1933,36 +1847,6 @@ fdNotifyDone:
 
 fdMod:
     FreeModule
-;    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section	
-;    
-	mov ax,pe_app_sel
-	mov ds,ax
-;	EnterSection ds:pe_section
-	mov ds:pe_dlls,es
-	mov ax,es:lib_prev
-	cmp ax,ds:pe_dlls
-	push ds
-	mov ds:pe_dlls,ax
-	mov si,es:lib_next
-	mov ds,ax
-	mov ds:lib_next,si
-	mov ds,si
-	mov ds:lib_prev,ax
-	pop ds
-	jne free_pe_dll_removed
-;
-	mov ds:pe_dlls,0
-
-free_pe_dll_removed:
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    LeaveSection ds:app_lib_section	
-;	LeaveSection ds:pe_section
 ;
 	mov ax,flat_data_sel
 	mov ds,ax

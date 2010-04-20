@@ -138,8 +138,6 @@ lib_struc STRUC
 
 lib_mod	    		module_struc <>
 
-lib_prev			DW ?
-lib_next			DW ?
 lib_base			DD ?
 lib_size			DD ?
 lib_header			DD ?
