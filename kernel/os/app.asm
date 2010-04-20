@@ -44,8 +44,6 @@ include ..\wait.inc
 
 app_data_seg	STRUC
 
-app_alloc_base		DD ?
-
 open_app_hooks		DB ?
 close_app_hooks		DB ?
 
@@ -104,18 +102,6 @@ init_app	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-;
-	mov si,OFFSET allocate_fixed_app_mem
-	mov di,OFFSET allocate_fixed_app_mem_name
-	xor cl,cl
-	mov ax,allocate_fixed_app_mem_nr
-	RegisterOsGate
-;
-	mov si,OFFSET allocate_fixed_app_linear
-	mov di,OFFSET allocate_fixed_app_linear_name
-	xor cl,cl
-	mov ax,allocate_fixed_app_linear_nr
-	RegisterOsGate
 ;
 	mov si,OFFSET open_app
 	mov di,OFFSET open_app_name
@@ -308,72 +294,12 @@ init_app	PROC near
 	xor ax,ax
 	mov ds:open_app_hooks,al
 	mov ds:close_app_hooks,al
-	mov ds:app_alloc_base,app_linear + SIZE app_seg
 ;
 	popa
 	pop es
 	pop ds
 	ret
 init_app	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			AllocateFixedAppLinear
-;
-;		DESCRIPTION:	Allocate per app linear memory
-;
-;		PARAMETERS:		EAX		# BYTES
-;						EDX		LINEAR BASE ADDRESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_fixed_app_linear_name	DB 'Allocate Fixed App Linear',0
-
-allocate_fixed_app_linear	PROC far
-	push ds
-	mov dx,app_data_sel
-	mov ds,dx
-	mov edx,ds:app_alloc_base
-	add ds:app_alloc_base,eax
-	pop ds
-	ret
-allocate_fixed_app_linear	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			AllocateFixedAppMem
-;
-;		DESCRIPTION:	Allocate fixed app memory
-;
-;		PARAMETERS:		EAX 	# BYTES
-;						BX		SELECTOR IN
-;						ES		SELECTOR UT
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_fixed_app_mem_name	DB 'Allocate Fixed App Mem',0
-
-allocate_fixed_app_mem	PROC far
-	push ds
-	push ecx
-	push edx
-;
-	AllocateFixedAppLinear
-	mov ecx,eax
-	CreateDataSelector16
-	mov es,bx
-;
-	pop edx
-	pop ecx
-	pop ds
-	ret
-allocate_fixed_app_mem	ENDP
 
 PAGE
 	

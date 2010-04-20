@@ -260,8 +260,6 @@ check_device_nr				EQU 174
 
 ; app
 
-allocate_fixed_app_linear_nr EQU 175
-allocate_fixed_app_mem_nr	EQU 176
 hook_open_app_nr			EQU 177
 hook_close_app_nr			EQU 178
 hook_load_exe_nr			EQU 179

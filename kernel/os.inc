@@ -1504,19 +1504,6 @@ UnlockProcEnv	MACRO
 	OsGate unlock_proc_env_nr
 			ENDM
 
-;	EAX		# BYTES
-;	EDX		BASE ADDRESS
-AllocateFixedAppLinear	MACRO
-	OsGate allocate_fixed_app_linear_nr
-					ENDM
-	
-;	EAX		ANTAL BYTES
-;	BX		SELECTOR IN
-;	ES		SELECTOR UT
-AllocateFixedAppMem	MACRO
-	OsGate allocate_fixed_app_mem_nr
-					ENDM
-
 ;	ES:DI		ADDRESS TO CALLBACK
 HookOpenApp	MACRO
 	OsGate hook_open_app_nr
