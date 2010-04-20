@@ -489,15 +489,11 @@ open_app	PROC far
 	GetThread
 	mov ds,ax
 ;
-	mov eax,1000h
-	AllocateBigLinear
-	AllocateGdt
-	mov ecx,eax
-	CreateDataSelector16
-	mov fs,bx
+    mov eax,SIZE app_seg
+    AllocateSmallGlobalMem
+    mov bx,es
 	mov ax,ds:p_app_sel
-	mov fs:app_next,ax
-	mov fs:app_sel,fs
+	mov es:app_next,ax
 	mov ds:p_app_sel,bx
 ;
 	call create_ldt

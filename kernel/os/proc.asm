@@ -1080,8 +1080,8 @@ init_thread_block	PROC near
 	mov es:p_process_sel,ax
 	pop fs
 ;
-	mov ax,ds:p_app_sel
-	mov es:p_app_sel,ax
+    mov ax,ds:p_app_sel
+    mov es:p_app_sel,ax
 	mov ax,ds:p_ldt_sel
 	mov es:p_ldt_sel,ax
 	mov ax,ds:p_lib_sel
@@ -1163,20 +1163,14 @@ init_process_block	PROC near
 	pop es
 	mov es:p_process_sel,bx
 ;
-	push fs
 	push es
-	mov eax,1000h
-	AllocateBigLinear
-	AllocateGdt
-	mov ecx,eax
-	CreateDataSelector16
-	mov fs,bx
-	mov fs:app_next,0
-	mov fs:app_sel,fs
+	mov eax,SIZE app_seg
+	AllocateSmallGlobalMem
+	mov bx,es
+	mov es:app_next,0
 ;
 	pop es
 	mov es:p_app_sel,bx
-	pop fs
 ;
 	mov es:p_ldt_sel,0
 	ret

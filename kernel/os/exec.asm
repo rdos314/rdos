@@ -1497,8 +1497,7 @@ spCopyExeLoop:
 	mov gs:s_ret_code,0
 	GetThread
 	mov ds,ax
-	mov ds,ds:p_app_sel
-	mov ax,ds:app_sel
+	mov ax,ds:p_app_sel
 	mov gs:s_app,ax
 ;
 	GetThread
