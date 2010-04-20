@@ -178,8 +178,7 @@ prot_start:
 ;
     mov dx,es:ap_ss
 ;    
-    mov eax,cr0
-    or eax,80000000h        
+    mov eax,es:ap_cr0
     mov cr0,eax
 ;
     db 0EAh
@@ -202,7 +201,9 @@ prot_end:
 page_struc  STRUC
 
 ap_ss   DW ?
+ap_cr0  DD ?
 ap_cr3  DD ?
+ap_cr4  DD ?
 ap_gdt  DB 6 DUP(?)
 ap_idt  DB 6 DUP(?)
 
@@ -218,6 +219,11 @@ page_struc  ENDS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ApInit:
+    mov eax,es:ap_cr4
+    db 0Fh
+    db 22h
+    db 0E0h     ; mov cr4,eax
+;    
     xor ax,ax
     mov ds,ax
     mov es,ax
@@ -1128,8 +1134,15 @@ StartCore   Proc near
     rep movsb
 ;
     mov di,1800h
+    mov eax,cr0
+    mov es:[di].ap_cr0,eax
     mov eax,cr3
     mov es:[di].ap_cr3,eax
+;
+    db 0Fh
+    db 20h
+    db 0E0h     ; mov eax,cr4
+    mov es:[di].ap_cr4,eax
 ;
     db 66h
     sgdt fword ptr es:[di].ap_gdt

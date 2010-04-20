@@ -962,7 +962,7 @@ page_fault_global	PROC near
     push eax
 	push cs
 	call allocate_physical
-	or ax,10Fh
+	or ax,107h
 	mov [ebx],eax
     pop eax
 
@@ -1002,7 +1002,7 @@ page_fault_system	PROC near
     push eax
 	push cs
 	call allocate_physical
-	mov al,0Fh
+	mov al,07h
 	mov [ebx],eax
     pop eax
 

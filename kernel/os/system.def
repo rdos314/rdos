@@ -115,6 +115,10 @@ tsc_rest            DW ?
 apic_tics           DD ?
 apic_rest           DW ?
 
+; EDX   Linear address
+; ECX   Size of region
+tlb_flush_proc      DD ?
+
 system_size			DB ?
 
 system_seg	ENDS
