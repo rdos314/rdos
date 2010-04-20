@@ -121,12 +121,9 @@ system_seg	ENDS
 
 app_seg	STRUC
 
-app_next			DW ?
-app_sel				DW ?
-app_page			DD ?
-
-app_handle          DW ?
-app_lib_sel         DW ?
+app_next			    DW ?
+app_sel				    DW ?
+app_page			    DD ?
 
 app_get_cmd_line_proc	DD ?
 app_get_exe_proc		DD ?
@@ -146,20 +143,24 @@ app_loader_name			DD ?
 app_exit_code			DW ?
 app_fork_id             DW ?
 
-app_ldt_section		section_typ <>
-app_ldt_data_sel	DW ?
-app_ldt_free		DW ?
-app_ldt_sel			DW ?
-app_parent_ldt		DW ?
+app_handle              DW ?
+app_lib_sel             DW ?
+app_lib_section         section_typ <>
 
-app_context			DW ?
-app_bitness			DB ?
-app_key             DB ?
+app_ldt_section		    section_typ <>
+app_ldt_data_sel	    DW ?
+app_ldt_free		    DW ?
+app_ldt_sel			    DW ?
+app_parent_ldt		    DW ?
 
-app_pm_int			DD 100h DUP(?,?)
-app_pm_exc			DD 20h DUP(?,?)
+app_context			    DW ?
+app_bitness			    DB ?
+app_key                 DB ?
 
-app_exe_name		DB 100h DUP(?)
+app_pm_int			    DD 100h DUP(?,?)
+app_pm_exc			    DD 20h DUP(?,?)
+
+app_exe_name		    DB 100h DUP(?)
 
 app_seg	ENDS
 

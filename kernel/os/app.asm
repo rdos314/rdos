@@ -483,6 +483,8 @@ run_open_hooks	Proc near
 	mov ds:app_close_proc,0
 	mov ds:app_load_dll_proc,0
 ;
+    InitSection ds:app_lib_section
+;
 	mov ax,app_data_sel
 	mov ds,ax
 	mov cl,ds:open_app_hooks

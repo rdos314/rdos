@@ -206,7 +206,6 @@ pe_exe_name		DD ?
 pe_cmd_line		DD ?
 pe_options      DD ?
 pe_mem_blocks	DW ?
-pe_section		section_typ <>
 
 pe_data_seg	ENDS
 
