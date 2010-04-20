@@ -387,6 +387,23 @@ start_paging	Proc near
 	or eax,80000000h
 	mov cr0,eax
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_feature_flags
+    test ax,2000h
+    jz start_paging_global_done
+;    
+    db 0Fh
+    db 20h
+    db 0E0h     ; mov eax,cr4
+;
+    or ax,80h   ; enable global pages
+;
+    db 0Fh
+    db 22h
+    db 0E0h     ; mov cr4,eax
+
+start_paging_global_done:
 	mov bx,sys_dir_sel
 	mov ecx,1000h
 	mov edx,sys_page_linear + (sys_page_linear SHR 10)
