@@ -835,11 +835,6 @@ DebugBreak	MACRO
 	OsGate debug_break_nr
 					ENDM
 
-;	AX			THREAD TO DEBUG
-ChangeEnviroment	MACRO
-	OsGate change_enviroment_nr
-					ENDM
-
 ;	ES:DI		ADDRESS TILL CALLBACK
 HookCreateThread	MACRO
 	OsGate hook_create_thread_nr

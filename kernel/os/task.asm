@@ -350,27 +350,6 @@ RemoveBlock32	MACRO
 rem_done:
 		ENDM
 
-SetEnviroment	MACRO
-    local cr3_ok
-
-    mov eax,cr3
-    cmp eax,es:p_cr3
-    je cr3_ok
-;    
-	mov eax,es:p_cr3
-	mov cr3,eax
-
-cr3_ok:
-	mov ax,sys_dir_sel
-	mov ds,ax
-	mov bx,io_focus_linear SHR 20
-	mov eax,[bx]
-	mov bx,process_dir_sel
-	mov ds,bx
-	mov bx,io_focus_linear SHR 20
-	mov [bx],eax	
-		ENDM
-
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
@@ -905,12 +884,6 @@ proc_init:
 	xor dx,dx
 	mov ax,get_cpu_time_nr
 	RegisterBimodalUserGate
-;
-	mov si,OFFSET change_enviroment
-	mov di,OFFSET change_enviroment_name
-	xor cl,cl
-	mov ax,change_enviroment_nr
-	RegisterOsGate
 ;
 	mov si,OFFSET swap_out
 	mov di,OFFSET swap_name
@@ -2349,10 +2322,27 @@ load_reload_timer:
 	mov bx,es:p_tss_sel
 	and byte ptr ds:[bx+5],NOT 2
 	ltr bx
-;	
-	mov ax,task_sel
+;
+	mov ax,sys_dir_sel
 	mov ds,ax
-	SetEnviroment
+	mov bx,io_focus_linear SHR 20
+	mov edx,[bx]
+	mov bx,process_dir_sel
+	mov ds,bx
+	mov bx,io_focus_linear SHR 20
+	cmp edx,[bx]
+	jne load_reload_cr3
+;
+    mov eax,cr3
+    cmp eax,es:p_cr3
+    je load_cr3_ok
+
+load_reload_cr3:    
+	mov [bx],edx		
+	mov eax,es:p_cr3
+	mov cr3,eax
+
+load_cr3_ok:
     mov ds,es:p_tss_data_sel
 ;
     mov eax,cr0
@@ -4683,37 +4673,6 @@ timer_clock_done:
     mov ds,bx
     call ds:get_cpu_proc
 	jmp LoadCurrentThread
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CHANGE_ENVIROMENT
-;
-;		DESCRIPTION:	Change thread environment (fixed thread addresses)
-;
-;		PARAMETERS:		AX		THREAD
-;												
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-change_enviroment_name	DB 'Change Enviroment',0
-
-change_enviroment	Proc far
-	push ds
-	push es
-	push eax
-	push ebx
-	mov es,ax
-	SetEnviroment
-	mov ds,es:p_tss_data_sel
-	lldt ds:tss_ldt
-	pop ebx
-	pop eax
-	pop es	
-	pop ds
-	ret
-change_enviroment	Endp
 
 PAGE
 
