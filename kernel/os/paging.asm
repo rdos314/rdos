@@ -935,6 +935,46 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			page_fault_global
+;
+;		DESCRIPTION:	pagefault in global system memory
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_fault_global	PROC near
+	mov ax,[bp].vm_eflags
+	and ax,NOT 4500h
+	push ax
+	mov eax,cr2
+	popf
+
+	mov bx,process_page_sel
+	mov ds,bx
+	mov ebx,eax
+	shr ebx,10
+	and bx,0FFFCh
+	mov al,[ebx]
+	test al,1
+	jnz page_fault_global_retry
+;
+    push eax
+	push cs
+	call allocate_physical
+	or ax,10Fh
+	mov [ebx],eax
+    pop eax
+
+page_fault_global_retry:
+	ret
+page_fault_global	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			page_fault_system
 ;
 ;		DESCRIPTION:	pagefault in system memory
@@ -962,7 +1002,7 @@ page_fault_system	PROC near
     push eax
 	push cs
 	call allocate_physical
-	mov al,7
+	mov al,0Fh
 	mov [ebx],eax
     pop eax
 
@@ -991,7 +1031,11 @@ page_fault	Proc near
 	jc page_fault_user
 ;
 	cmp eax,handle_linear
+;	jc page_fault_global	
 	je page_fault_user
+;
+    cmp eax,kernel_linear
+    jnc page_fault_global
 ;
 	cmp eax,io_focus_linear
 	je page_fault_user
