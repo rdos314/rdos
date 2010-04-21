@@ -36,6 +36,7 @@ INCLUDE ..\driver.def
 INCLUDE port.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
+INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
@@ -1072,28 +1073,51 @@ PAGE
 ;
 ;		DESCRIPTION:	Check if thread is in a keyboard list
 ;
-;		PARAMETERS:		BX:EAX   	address of list
-;						CX:EDX   	cs:eip
-;						BX:EAX   	returned data to write
-;						ES:EDI   	state string
-;						NC	    	processed
+;		PARAMETERS:		BX          Thread selector
+;                       ES:EDI      Buffer
+;
+;       RETURNS:		NC	    	processed
+;                       CX:EDX      List
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Key_state DB 'Keyboard',0
 
 check_list	Proc far
-	cmp bx,key_local_sel
+    push fs
+    push ax
+    push si
+;    
+    mov fs,bx
+    mov cx,fs:p_sleep_sel
+    mov edx,fs:p_sleep_offset
+	cmp ax,key_local_sel
 	jne check_not_local
-	mov ax,cs
-	mov es,ax
-	mov edi,OFFSET Key_state
-	xor bx,bx
-	xor eax,eax
-	clc
-	ret
+;
+    mov si,OFFSET Key_state
+
+check_copy:
+    mov al,cs:[si]
+    or al,al
+    jz check_copy_done
+;
+    inc si
+    stos byte ptr es:[edi]
+    jmp check_copy
+
+check_copy_done:
+    xor al,al
+    stos byte ptr es:[edi]
+    clc
+    jmp check_done
+    
 check_not_local:
 	stc
+
+check_done:
+    pop si
+    pop ax
+    pop fs
 	ret
 check_list	Endp
 

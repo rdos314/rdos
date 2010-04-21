@@ -240,13 +240,18 @@ void TStateCommand::WriteOne(ThreadState *State)
 
         Write(str);
 
-        sprintf(str, "%04hX:", State->Sel);
-        Write(str);
+        if (State->Sel)
+        {
+            sprintf(str, "%04hX:", State->Sel);
+            Write(str);
 
-        sprintf(str, "%08lX", State->Offset);
-        Write(str);
+            sprintf(str, "%08lX", State->Offset);
+            Write(str);
+        }
+        else
+            Write("             ");
 
-         Write("\r\n");
+        Write("\r\n");
 
 }
 

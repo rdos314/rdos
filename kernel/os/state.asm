@@ -65,21 +65,45 @@ PAGE
 ;
 ;		DESCRIPTION:	Default (unknown) state
 ;
-;		PARAMETERS:		BX:EAX   	address of list
-;						CX:EDX   	cs:eip
-;						BX:EAX   	returned data to write
-;						ES:EDI   	state string
-;						NC	    	processed
+;		PARAMETERS:		BX          Thread selector
+;                       ES:EDI      Buffer
+;
+;       RETURNS:		NC	    	processed
+;                       CX:EDX      List
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 unknown_state	DB 'Unknown State',0
 
 default_state	Proc far
-	mov di,cs
-	mov es,di
-	mov edi,OFFSET unknown_state
-	clc
+    push ds
+    push ax
+    push si
+;    
+    mov si,OFFSET unknown_state
+
+default_copy:
+    mov al,cs:[si]
+    or al,al
+    jz default_copy_done
+;
+    inc si
+    stos byte ptr es:[edi]
+    jmp default_copy
+
+default_copy_done:
+    xor al,al
+    stos byte ptr es:[edi]
+;
+    mov ds,bx
+    mov ds,ds:p_tss_data_sel
+    mov cx,ds:tss_cs
+    mov edx,dword ptr ds:tss_eip
+    clc
+;
+    pop si
+    pop ax
+    pop ds
 	ret
 default_state	Endp
 
@@ -94,11 +118,8 @@ PAGE
 ;
 ;		PARAMETERS:		ES:DI		Callback
 ;
-;		CALLED WITH:	BX:EAX   	address of list
-;						CX:EDX   	cs:eip
-;						BX:EAX   	returned data to write
-;						ES:EDI   	state string
-;						NC	    	processed
+;		CALLED WITH:	BX          Thread selector
+;                       ES:EDI      Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -212,6 +233,7 @@ get_thread_state	Proc far
 	or ax,ax
 	stc
 	jz get_state_done
+;
 	mov ds,ax
 	mov ax,ds:p_id
 	mov es:[edi].st_id,ax
@@ -221,52 +243,35 @@ get_thread_state	Proc far
 	add edi,OFFSET st_name
 	rep movs byte ptr es:[edi],[esi]
 	pop edi
+;	
 	mov eax,ds:p_msb_tics
 	mov es:[edi].st_time,eax
 	mov eax,ds:p_lsb_tics
 	mov es:[edi].st_time+4,eax
 ;
-	mov bx,ds:p_sleep_sel
-	mov eax,ds:p_sleep_offset
-	mov ds,ds:p_tss_data_sel
-	mov cx,ds:tss_cs
-	mov edx,dword ptr ds:tss_eip
-	push es
-	push edi
-	mov di,state_data_sel
-	mov ds,di
-	sti
-	mov di,OFFSET state_arr
-get_state_loop:
-	call dword ptr [di]
-	jnc get_state_found
-	add di,4
-	jmp get_state_loop
-get_state_found:
-	mov si,es
-	mov ds,si
-	mov esi,edi
-	pop edi
-	pop es
-;
-	push edi
-	mov es:[edi].st_offs,eax
-	mov es:[edi].st_sel,bx
+    push edi
 	add edi,OFFSET st_list
-	mov ecx,32
-move_list_loop:
-	lods byte ptr [esi]
-	or al,al
-	jz move_list_pad
-	stos byte ptr es:[edi]
-	loop move_list_loop
-	jmp move_list_done
-move_list_pad:
-	mov al,' '
-	rep stos byte ptr es:[edi]
-move_list_done:
-	pop edi
+    mov bx,ds
+;    
+	sti
+	mov ax,state_data_sel
+	mov ds,ax
+	mov si,OFFSET state_arr
+	
+get_state_loop:
+	call dword ptr [si]
+	jnc get_state_found
+;
+	add si,4
+	jmp get_state_loop
+
+get_state_found:
+    pop edi
+;
+	mov es:[edi].st_sel,cx
+	mov es:[edi].st_offs,edx
 	clc
+
 get_state_done:
 	sti
 	pop edi

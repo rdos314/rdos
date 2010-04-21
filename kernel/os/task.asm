@@ -3300,6 +3300,9 @@ null_thread0:
     mov ds,ax
     call ds:get_cpu_proc
     GetThread
+    mov es,ax
+    mov es:p_sleep_sel,fs
+    mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
 ;    mov fs:ps_skip_thread,ax
 ;
@@ -3316,6 +3319,9 @@ null_thread:
     mov ds,ax
     mov fs,ds:[bx]
     GetThread
+    mov es,ax
+    mov es:p_sleep_sel,fs
+    mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
 ;    mov fs:ps_skip_thread,ax
 ;
@@ -5948,11 +5954,11 @@ PAGE
 ;
 ;		DESCRIPTION:	Check if thread is in list
 ;
-;		PARAMETERS:		BX:EAX   	address of list
-;						CX:EDX   	cs:eip
-;						BX:EAX   	returned data to write
-;						ES:EDI   	state string
-;						NC	    	processed
+;		PARAMETERS:		BX          Thread selector
+;                       ES:EDI      Buffer
+;
+;       RETURNS:		NC	    	processed
+;                       CX:EDX      List
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5961,50 +5967,140 @@ Ready_state DB 'Ready',0
 Signal_state DB 'Signal',0
 Debug_state DB 'Debug',0
 
+Run_state DB 'Run ', 0
+
 check_list	Proc far
+    push ds
+    push fs
+    push ax
+    push si
+;
+    mov ax,task_sel
+    mov ds,ax
+    mov cx,ds:processor_count
+    mov si,OFFSET processor_arr
+    xor dx,dx
+
+check_cpu_loop:
+    mov fs,ds:[si]
+    cmp bx,fs:ps_curr_thread
+    je check_curr_ok
+;
+    cmp bx,fs:ps_null_thread
+    je check_null_ok
+;
+    inc dx
+    add si,2
+    loop check_cpu_loop
+    jmp check_not_cpu
+
+check_curr_ok:
+    mov si,OFFSET Run_state
+    jmp check_copy_id
+
+check_null_ok:
+    mov si,OFFSET Ready_state
+    jmp check_copy_cpu
+
+check_copy_id:
+    mov al,cs:[si]
+    or al,al
+    jz check_copy_id_done
+;
+    inc si
+    stos byte ptr es:[edi]
+    jmp check_copy_id
+
+check_copy_id_done:
+    mov al,'0'
+    add al,dl
+    stos byte ptr es:[edi]
+    xor al,al
+    stos byte ptr es:[edi]
+;
+    mov ds,bx
+    mov ds,ds:p_tss_data_sel
+    mov cx,ds:tss_cs
+    mov edx,dword ptr ds:tss_eip   
+    clc
+    jmp check_done
+    
+check_not_cpu:
+    mov fs,bx
+    mov eax,fs:p_sleep_offset
 	cmp eax,1
 	jnz check_not_wait
-	mov ax,cs
-	mov es,ax
-	mov edi,OFFSET Wait_state
-	xor eax,eax
-	xor bx,bx
-	clc
-	ret
+;
+	mov si,OFFSET Wait_state
+	jmp check_copy_zero
+	
 check_not_wait:
-	cmp bx,task_sel
+    mov ax,fs:p_sleep_sel
+	cmp ax,task_sel
 	jne check_not_task
+;
+    mov eax,fs:p_sleep_offset
 	cmp eax,OFFSET signal_list
 	jne check_not_signal
-	mov ax,cs
-	mov es,ax
-	mov edi,OFFSET Signal_state
-	xor eax,eax
-	xor bx,bx
-	clc
-	ret
+;	
+	mov si,OFFSET Signal_state
+	jmp check_copy_zero
+	
 check_not_signal:
-	mov ax,cs
-	mov es,ax
-	mov edi,OFFSET Ready_state
-	mov bx,cx
-	mov eax,edx
-	clc
-	ret
+	mov si,OFFSET Ready_state
+	jmp check_copy_cpu
+
 check_not_task:
-	cmp bx,system_data_sel
+	cmp ax,system_data_sel
 	jne check_not_system
+;	
+    mov eax,fs:p_sleep_offset
 	cmp eax,OFFSET debug_list
 	jne check_not_system
-	mov ax,cs
-	mov es,ax
-	mov edi,OFFSET Debug_state
-	mov bx,cx
-	mov eax,edx
-	clc
-	ret
+;
+	mov si,OFFSET Debug_state
+	jmp check_copy_cpu
+
+check_copy_zero:
+    xor cx,cx
+    xor edx,edx
+    jmp check_copy
+
+check_copy_cpu:
+    mov ds,bx
+    mov ds,ds:p_tss_data_sel
+    mov cx,ds:tss_cs
+    mov edx,dword ptr ds:tss_eip   
+    jmp check_copy
+
+check_copy_sleep:
+    mov ds,bx
+    mov cx,ds:p_sleep_sel
+    mov edx,ds:p_sleep_offset
+
+check_copy:
+    mov al,cs:[si]
+    or al,al
+    jz check_copy_done
+
+    inc si
+    stos byte ptr es:[edi]
+    jmp check_copy
+
+check_copy_done:
+    xor al,al
+    stos byte ptr es:[edi]
+    clc
+    jmp check_done
+	
 check_not_system:
 	stc
+
+check_done:
+    pop si
+    pop ax
+    pop fs
+    pop ds
 	ret
 check_list	Endp
 
