@@ -1265,6 +1265,9 @@ apic_pr:
     mov fs,ds:mp_processor_sel
 ;
     ResumeProcessor
+    mov al,82h
+    call SendInt 
+;       
     PreemptProcessor
     PreemptProcessor
     PreemptProcessor
@@ -1527,6 +1530,25 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			ShutdownInt
+;
+;		DESCRIPTION:    Shutdown IPI int
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+shutdown_int:
+    mov di,apic_mem_sel
+    mov es,di    
+    mov edi,es:APIC_CURR_COUNT
+    Shutdown
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			PreemptInt
 ;
 ;		DESCRIPTION:    Preempt IPI int
@@ -1568,6 +1590,7 @@ ipi_tab:
 ;
 ipi80	DW	80h,	OFFSET resume_int
 ipi81	DW	81h,	OFFSET preempt_int
+ipi82	DW	82h,	OFFSET shutdown_int
         DW	0FFFFh
 
 ;

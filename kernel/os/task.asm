@@ -106,8 +106,10 @@ unlock_list_proc    DW ?
 
 get_cpu_proc        DD ?
 
+processor_preempt   DD ?
+
 processor_count     DW ?
-processor_arr       DW 256 DUP(?)
+processor_arr       DW 32 DUP(?)
 
 task_seg_size	    DB ?
 
@@ -816,10 +818,11 @@ ptab_init:
 	add bx,2
 	loop ptab_init
 ;
+    mov ds:processor_preempt,0
 	mov ds:processor_count,0
 ;
 	mov bx,OFFSET processor_arr
-	mov cx,256
+	mov cx,32
 proc_init:
 	mov word ptr [bx],0
 	add bx,2
@@ -828,6 +831,12 @@ proc_init:
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov si,OFFSET shutdown_pr
+	mov di,OFFSET shutdown_name
+	xor cl,cl
+	mov ax,shutdown_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET create_processor
 	mov di,OFFSET create_processor_name
@@ -2336,6 +2345,10 @@ load_thread_loop:
     call GetNextThread
 
 load_reload_loop:
+    mov eax,fs:ps_mask
+    not eax
+    lock and ds:processor_preempt,eax
+;    
     and fs:ps_flags,NOT PS_FLAG_TIMER	
 	cli
 	call ds:update_clock_proc
@@ -2480,7 +2493,7 @@ load_regs:
     cmp ax,fs:ps_null_thread
     je load_bproc
 ;
-    call Shutdown        
+    call ShutdownLocal        
 
 load_bproc:
     mov fs:ps_curr_thread,es
@@ -2664,29 +2677,10 @@ SaveCurrentThread	Proc near
     call ds:lock_proc
 ;        
     mov ax,fs:ps_curr_thread
-    mov ds,ax
-;
-
-    push ds
-    push ax
-    push dx
-    mov ds,ds:p_tss_data_sel
-    mov ax,word ptr ds:tss_ess0
-    mov dx,ss
-    cmp ax,dx
-    pop dx
-    pop ax
-    pop ds
-    je save_ss_ok
-;
-    int 3
-
-save_ss_ok:
-        
-    
     cmp ax,fs:ps_skip_thread
     je save_thread_skip
 ;    
+    mov ds,ax
     mov ds,ds:p_tss_data_sel
     pushfd
     pop dword ptr ds:tss_eflags
@@ -2763,30 +2757,10 @@ SaveLockedThread	Proc near
     mov ds,ax
 ;        
     mov ax,fs:ps_curr_thread
-    mov ds,ax
-
-;
-
-    push ds
-    push ax
-    push dx
-    mov ds,ds:p_tss_data_sel
-    mov ax,word ptr ds:tss_ess0
-    mov dx,ss
-    cmp ax,dx
-    pop dx
-    pop ax
-    pop ds
-    je save_locked_ss_ok
-;
-    call Shutdown
-
-save_locked_ss_ok:
-            
-
     cmp ax,fs:ps_skip_thread
     je save_locked_thread_skip
 ;
+    mov ds,ax
     mov ds,ds:p_tss_data_sel
     pushfd
     pop dword ptr ds:tss_eflags
@@ -2967,9 +2941,15 @@ ReloadTimer Proc near
 	jc reload_timer_loop
 ;
     or fs:ps_flags,PS_FLAG_TIMER	
+    mov eax,fs:ps_mask
+    lock or ds:processor_preempt,eax
 	jmp reload_timer_done
 
 reload_timer_loop:
+    mov eax,fs:ps_mask
+    not eax
+    lock and ds:processor_preempt,eax
+;    
     and fs:ps_flags,NOT PS_FLAG_TIMER	
     mov es,fs:ps_curr_thread
 	cli
@@ -3396,13 +3376,13 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Shutdown
+;		NAME:			ShutdownLocal
 ;
 ;		DESCRIPTION:	Shutdown
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Shutdown proc near
+ShutdownLocal proc near
     push ds
     push fs
 ;
@@ -3459,7 +3439,79 @@ Shutdown proc near
     mov di,OFFSET debug_list
     InsertBlock
     ShutDownTask
-Shutdown    Endp    
+ShutdownLocal    Endp    
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Shutdown
+;
+;		DESCRIPTION:	Shutdown
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+shutdown_name   DB 'Shutdown', 0
+
+shutdown_pr proc far
+    push ds
+    push fs
+;
+    push eax
+    mov ax,task_sel
+    mov ds,ax
+    mov ecx,ds:processor_preempt
+    call ds:get_cpu_proc
+    mov ds,fs:ps_null_thread 
+    mov ds,ds:p_tss_data_sel  
+    pop dword ptr ds:tss_eax
+;
+    mov bx,fs:ps_nesting
+    mov dx,fs:ps_flags
+;    
+	mov dword ptr ds:tss_ebx,ebx
+    mov dword ptr ds:tss_ecx,ecx
+    mov dword ptr ds:tss_edx,edx
+    mov dword ptr ds:tss_esi,esi
+    mov dword ptr ds:tss_edi,edi
+	mov dword ptr ds:tss_ebp,ebp
+;
+    pop ax
+	mov ds:tss_fs,ax
+;
+    pop ax	
+	mov ds:tss_ds,ax
+;
+	mov ax,es
+	mov ds:tss_es,ax
+	mov ax,gs
+	mov ds:tss_gs,ax
+;
+    add sp,4
+    pop dword ptr ds:tss_eip
+    pop eax
+    mov word ptr ds:tss_cs,ax
+	pop dword ptr ds:tss_eflags
+;
+    mov ax,ss
+    mov ds:tss_ss,ax
+;    
+    mov ax,sp
+    movzx eax,ax
+	mov dword ptr ds:tss_esp,eax
+;	
+    mov es,fs:ps_null_thread 
+    mov ax,task_sel
+    mov ds,ax
+	mov es:p_error_code,3
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov di,OFFSET debug_list
+    InsertBlock
+    ShutDownTask
+shutdown_pr    Endp    
 
 PAGE	
 
@@ -3736,6 +3788,11 @@ create_processor	Proc far
 	inc ds:processor_count
 ;
     mov es:ps_id,ax	
+    mov cl,al
+    mov eax,1
+    shl eax,cl
+    mov es:ps_mask,eax
+;
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
     mov es:ps_last_thread,-1
@@ -4114,7 +4171,7 @@ LockSingle	Proc near
 	add fs:ps_nesting,1
 	jc lsDone
 ;
-    call Shutdown
+    call ShutdownLocal
 
 lsDone:    	
 	ret
@@ -4187,7 +4244,7 @@ LoadUnlockSingle	Proc near
     sub fs:ps_nesting,1
 	jc lulsDone
 ;
-    call Shutdown
+    call ShutdownLocal
 
 lulsDone:    	
 	ret
@@ -4384,7 +4441,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockMultiple	Proc near
-    push ax
+    push eax
 
 tumSpinLock:
     sti
@@ -4444,11 +4501,34 @@ tumWake:
     jmp tumDone
 
 tumUnlock:
+    mov eax,fs:ps_mask
+    not eax
+    and eax,ds:processor_preempt
+    jz tumUnlockDo
+;
+    push fs
+    push bx
+    mov bx,OFFSET processor_arr
+
+tumPreemptLoop:
+    rcr eax,1
+    jc tumPreemptDo
+;
+    add bx,2
+    jmp tumPreemptLoop
+
+tumPreemptDo: 
+    mov fs,ds:[bx]
+    PreemptProcessor
+    pop bx
+    pop fs
+
+tumUnlockDo:
     mov ds:owner_lock,0
 
 tumDone:
     sti
-    pop ax
+    pop eax
 	ret
 UnlockMultiple	Endp
 
@@ -4467,7 +4547,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadUnlockMultiple	Proc near
-    push ax
+    push eax
 
 lumSpinLock:
     sti
@@ -4494,14 +4574,14 @@ lumGet:
     mov si,fs
     call ds:get_cpu_proc
     mov di,fs
-    call Shutdown
+    call ShutdownLocal
 
 lumNestingOk:
     mov ax,fs
     cmp ax,ds:owner_sel
     je lumOwnerOk
 ;
-    call Shutdown
+    call ShutdownLocal
 
 lumOwnerOk:    
     mov ds:owner_sel,0	
@@ -4516,10 +4596,33 @@ lumOwnerOk:
     jmp lumDone
 
 lumUnlock:
+    mov eax,fs:ps_mask
+    not eax
+    and eax,ds:processor_preempt
+    jz lumUnlockDo
+;
+    push fs
+    push bx
+    mov bx,OFFSET processor_arr
+
+lumPreemptLoop:
+    rcr eax,1
+    jc lumPreemptDo
+;
+    add bx,2
+    jmp lumPreemptLoop
+
+lumPreemptDo: 
+    mov fs,ds:[bx]
+    PreemptProcessor
+    pop bx
+    pop fs
+
+lumUnlockDo:
     mov ds:owner_lock,0
 
 lumDone:
-    pop ax
+    pop eax
 	ret
 LoadUnlockMultiple	Endp
 

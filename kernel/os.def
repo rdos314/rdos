@@ -513,6 +513,8 @@ debug_exception_nr          EQU 360
 
 create_processor_nr         EQU 362
 
+shutdown_nr                 EQU 363
+
 get_processor_nr            EQU 368
 
 resume_processor_nr         EQU 369

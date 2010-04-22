@@ -1042,9 +1042,14 @@ RequestSharedIrqHandler	MACRO
 SetupIrqDetect	MACRO
 	OsGate setup_irq_detect_nr
 					ENDM
+
 ;   AX      Detected IRQs
 PollIrqDetect	MACRO
 	OsGate poll_irq_detect_nr
+					ENDM
+
+Shutdown	MACRO
+	OsGate shutdown_nr
 					ENDM
 
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;

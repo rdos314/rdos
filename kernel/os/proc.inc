@@ -54,6 +54,7 @@ ps_flags            DW ?
 ps_null_thread      DW ?
 ps_apic             DD ?
 ps_wait             DW ?
+ps_mask             DD ?
 
 ps_preempt_lsb      DD ?
 ps_preempt_msb	    DD ?
