@@ -421,14 +421,6 @@ UpdatePitClock	Proc near
 	movzx eax,ax
 	add ds:system_time,eax
 	adc ds:system_time+4,0
-	mov dx,es
-	or dx,dx
-	jz upcDone
-;
-	add es:p_lsb_tics,eax
-	adc es:p_msb_tics,0
-
-upcDone:
 	ret
 UpdatePitClock  Endp
 
@@ -488,23 +480,8 @@ UpdateTscClock	Proc near
 	sub eax,edx
 	mul ds:tsc_sub_tics
 	add ds:tsc_guard,eax
-	pushf
 	adc ds:system_time,edx
 	adc ds:system_time+4,0
-;
-	mov ax,es
-	or ax,ax
-	jz utcNoThread
-;
-	popf
-	adc es:p_lsb_tics,edx
-	adc es:p_msb_tics,0
-	jmp utcDone
-
-utcNoThread:
-    popf
-	
-utcDone:
 	ret
 UpdateTscClock  Endp
 
@@ -2077,8 +2054,8 @@ GetPrioThread    Proc near
     or ax,ax
     jz gptNormal
 ;
-    mov es,fs:ps_null_thread
-    jmp gptDone
+;    mov es,fs:ps_null_thread
+;    jmp gptDone
 
 gptNormal:    
     mov si,ds:prio_act
@@ -2353,6 +2330,7 @@ load_reload_loop:
 	cli
 	call ds:update_clock_proc
 	LocalGetSystemTime
+	mov fs:ps_last_lsb,eax
 	add eax,ds:update_tics
 	adc edx,0
 	mov bx,fs:ps_timer_head
@@ -2670,22 +2648,30 @@ PAGE
 SaveCurrentThread	Proc near	
     push fs
     push ds
-    push ax
+    push eax
+    push edx
 ;
     mov ax,task_sel
     mov ds,ax
     call ds:lock_proc
+;
+    cli    
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	sti
+    mov ds,fs:ps_curr_thread
+    sub eax,fs:ps_last_lsb
+    add ds:p_lsb_tics,eax
+    adc ds:p_msb_tics,0
 ;        
-    mov ax,fs:ps_curr_thread
+    mov ax,ds
     cmp ax,fs:ps_skip_thread
     je save_thread_skip
 ;    
-    mov ds,ax
     mov ds,ds:p_tss_data_sel
     pushfd
     pop dword ptr ds:tss_eflags
     mov dword ptr ds:tss_ecx,ecx
-    mov dword ptr ds:tss_edx,edx
     mov dword ptr ds:tss_ebx,ebx
     mov dword ptr ds:tss_ebp,ebp
     mov dword ptr ds:tss_esi,esi
@@ -2695,7 +2681,8 @@ SaveCurrentThread	Proc near
     mov word ptr ds:tss_ss,ss
     mov word ptr ds:tss_gs,gs
 ;
-    pop ax
+    pop dword ptr ds:tss_edx
+    pop eax
     mov dword ptr ds:tss_eax,eax
 ;
     pop word ptr ds:tss_ds
@@ -2709,7 +2696,8 @@ SaveCurrentThread	Proc near
     jmp save_thread_setup
 
 save_thread_skip:
-    pop ax
+    pop edx
+    pop eax
     add sp,4
     pop bp
     add sp,2
@@ -2751,21 +2739,29 @@ PAGE
 SaveLockedThread	Proc near	
     push fs
     push ds
-    push ax
+    push eax
+    push edx
 ;
     mov ax,task_sel
     mov ds,ax
+;
+    cli    
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	sti
+    mov ds,fs:ps_curr_thread
+    sub eax,fs:ps_last_lsb
+    add ds:p_lsb_tics,eax
+    adc ds:p_msb_tics,0
 ;        
     mov ax,fs:ps_curr_thread
     cmp ax,fs:ps_skip_thread
     je save_locked_thread_skip
 ;
-    mov ds,ax
     mov ds,ds:p_tss_data_sel
     pushfd
     pop dword ptr ds:tss_eflags
     mov dword ptr ds:tss_ecx,ecx
-    mov dword ptr ds:tss_edx,edx
     mov dword ptr ds:tss_ebx,ebx
     mov dword ptr ds:tss_ebp,ebp
     mov dword ptr ds:tss_esi,esi
@@ -2775,7 +2771,8 @@ SaveLockedThread	Proc near
     mov word ptr ds:tss_ss,ss
     mov word ptr ds:tss_gs,gs
 ;
-    pop ax
+    pop dword ptr ds:tss_edx
+    pop eax
     mov dword ptr ds:tss_eax,eax
 ;
     pop word ptr ds:tss_ds
@@ -2789,7 +2786,8 @@ SaveLockedThread	Proc near
     jmp save_locked_thread_setup
 
 save_locked_thread_skip:
-    pop ax
+    pop edx
+    pop eax
     add sp,4
     pop bp
     add sp,2
@@ -2832,6 +2830,19 @@ SkipCurrentThread	Proc near
     mov ds,ax
     call ds:lock_proc
     pop ax
+;
+    push eax
+    cli    
+	call ds:update_clock_proc
+	LocalGetSystemTime
+	sti
+	push ds
+    mov ds,fs:ps_curr_thread
+    sub eax,fs:ps_last_lsb
+    add ds:p_lsb_tics,eax
+    adc ds:p_msb_tics,0
+    pop ds
+    pop eax
 ;    
     pop bp
 ;    
@@ -3801,6 +3812,7 @@ create_processor	Proc far
     mov es:ps_skip_thread,-1
     mov es:ps_apic,-1
     mov es:ps_wait,0
+    mov es:ps_last_lsb,0
 ;
 	mov bx,OFFSET ps_timer_entries
 	mov es:[bx].ps_timer_next,0
@@ -4495,10 +4507,8 @@ tumWake:
     jz tumUnlock
 ;
     dec ds:owner_wait    
-    mov ds:owner_lock,0
-    sti
     call WakeProcessor
-    jmp tumDone
+    jmp tumUnlockDo
 
 tumUnlock:
     mov eax,fs:ps_mask
@@ -4590,10 +4600,8 @@ lumOwnerOk:
     jz lumUnlock
 ;
     dec ds:owner_wait    
-    mov ds:owner_lock,0
-    sti
     call WakeProcessor
-    jmp lumDone
+    jmp lumUnlockDo
 
 lumUnlock:
     mov eax,fs:ps_mask

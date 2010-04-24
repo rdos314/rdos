@@ -59,6 +59,8 @@ ps_mask             DD ?
 ps_preempt_lsb      DD ?
 ps_preempt_msb	    DD ?
 
+ps_last_lsb         DD ?
+
 ps_timer_head		DW ?
 ps_timer_free		DW ?
 ps_timer_entries    DB 256 * SIZE timer_struc DUP(?)
