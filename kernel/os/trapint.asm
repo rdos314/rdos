@@ -1042,6 +1042,18 @@ trap_12:
 	push ebx
 	push ds
 	GetThread
+    or ax,ax
+    jnz t12_thread
+;
+    pop ds
+    pop ebx
+    pop eax    
+    pop bp
+	add sp,4
+;
+    Shutdown
+
+t12_thread:
 	mov ds,ax
 	mov ds,ds:p_tss_data_sel
 	mov ax,[bp].vm_err

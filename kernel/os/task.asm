@@ -2463,17 +2463,6 @@ load_relock:
     jmp load_retry
             
 load_regs:
-    mov ax,fs:ps_id
-    or ax,ax
-    jz load_bproc
-;
-    mov ax,es
-    cmp ax,fs:ps_null_thread
-    je load_bproc
-;
-    call ShutdownLocal        
-
-load_bproc:
     mov fs:ps_curr_thread,es
     mov fs:ps_last_thread,es
 ;
@@ -3430,8 +3419,8 @@ ShutdownLocal proc near
 	movzx eax,ax
 	mov dword ptr ds:tss_eip,eax
 ;
-    pop ax
-	mov dword ptr ds:tss_eax,eax
+;   pop ax
+;	mov dword ptr ds:tss_eax,eax
 ;
     mov ax,ss
     mov ds:tss_ss,ax
@@ -3477,9 +3466,6 @@ shutdown_pr proc far
     mov ds,fs:ps_null_thread 
     mov ds,ds:p_tss_data_sel  
     pop dword ptr ds:tss_eax
-;
-    mov bx,fs:ps_nesting
-    mov dx,fs:ps_flags
 ;    
 	mov dword ptr ds:tss_ebx,ebx
     mov dword ptr ds:tss_ecx,ecx
@@ -4354,14 +4340,14 @@ tlmGet:
     je tlmTake
 
 tlmFail:
-   	lock add fs:ps_nesting,1
+   	add fs:ps_nesting,1
     mov ds:owner_lock,0
     clc
     jmp tlmDone
 
 tlmTake:
     mov ds:owner_sel,fs
-   	lock add fs:ps_nesting,1
+   	add fs:ps_nesting,1
     mov ds:owner_lock,0    
 
 tlmDone:
@@ -4429,8 +4415,8 @@ lmHalt:
 
 lmTake:
     mov ds:owner_sel,fs
+   	add fs:ps_nesting,1
     mov ds:owner_lock,0    
-   	lock add fs:ps_nesting,1
    	sti
 ;
     pop dx
@@ -4579,7 +4565,7 @@ lumGet:
 	jc lumNestingOk
 ;
     mov cx,fs:ps_nesting
-    pop ax
+    pop eax
     pop dx
     mov si,fs
     call ds:get_cpu_proc
