@@ -2050,14 +2050,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPrioThread    Proc near
-    mov ax,fs:ps_id
-    or ax,ax
-    jz gptNormal
-;
-;    mov es,fs:ps_null_thread
-;    jmp gptDone
-
-gptNormal:    
     mov si,ds:prio_act
     mov ax,[si]
     or ax,ax
@@ -3305,6 +3297,7 @@ null_thread:
     mov fs:ps_null_thread,ax
 ;    mov fs:ps_skip_thread,ax
 ;
+    ResumeProcessor
     push OFFSET null_loop
     call SaveCurrentThread
 ;
