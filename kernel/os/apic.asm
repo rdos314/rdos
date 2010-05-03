@@ -44,6 +44,15 @@ INCLUDE proc.inc
 MP_FLAG_MEM = 1
 MP_FLAG_MSR = 2
 
+ioapic_data_seg STRUC
+
+ioapic_regsel       DB ?
+ioapic_resv         DB 15 DUP(?)
+
+ioapic_window       DD ?
+
+ioapic_data_seg ENDS
+
 apic_data_seg	STRUC
 
 mp_init_proc        DW ?
@@ -1245,6 +1254,41 @@ StartCore   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			ReadIoApicInt
+;
+;		DESCRIPTION:	Read sxetting for IO-APIC int
+;
+;       PARAMETERS:     AL      Int #
+;
+;       RETURNS:        EDX:EAX IO-APIC setting
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadIoApicInt   Proc near
+    push ds
+    push bx
+;    
+    mov bx,ioapic_mem_sel
+    mov ds,bx
+    mov bl,10h
+    add bl,al
+    add bl,al
+;    
+    mov ds:ioapic_regsel,bl
+    mov eax,ds:ioapic_window
+;
+    inc bl
+    mov ds:ioapic_regsel,bl
+    mov edx,ds:ioapic_window
+;
+    pop bx
+    pop ds
+    ret
+ReadIoApicInt   Endp 
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			apic_pr
 ;
 ;		DESCRIPTION:	APIC test thread
@@ -1255,6 +1299,54 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3 
+    mov al,0
+    call ReadIoApicInt
+;    
+    mov al,1
+    call ReadIoApicInt
+;    
+    mov al,2
+    call ReadIoApicInt
+;
+    mov al,3
+    call ReadIoApicInt   
+;
+    mov al,4
+    call ReadIoApicInt   
+;
+    mov al,5
+    call ReadIoApicInt   
+;
+    mov al,6
+    call ReadIoApicInt   
+;
+    mov al,7
+    call ReadIoApicInt   
+;
+    mov al,8
+    call ReadIoApicInt
+;    
+    mov al,9
+    call ReadIoApicInt
+;    
+    mov al,10
+    call ReadIoApicInt
+;
+    mov al,11
+    call ReadIoApicInt   
+;
+    mov al,12
+    call ReadIoApicInt   
+;
+    mov al,13
+    call ReadIoApicInt   
+;
+    mov al,14
+    call ReadIoApicInt   
+;
+    mov al,15
+    call ReadIoApicInt   
+;    
     GetProcessor
     mov edx,fs:ps_apic
 ;    
@@ -1445,6 +1537,16 @@ InitApicTimer Proc near
     mov bx,apic_mem_sel
     mov ecx,1000h
     CreateDataSelector16
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov eax,0FEC00000h
+    or ax,33h
+    SetPhysicalPage    
+    mov bx,ioapic_mem_sel
+    mov ecx,1000h
+    CreateDataSelector16
+;
     call InitApic
 
 init_tsc_start:

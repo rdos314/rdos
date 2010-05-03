@@ -420,6 +420,8 @@ apic_mem_sel        EQU 0A50h
 
 pic_code_sel        EQU 0A58h
 
+ioapic_mem_sel      EQU 0A60h
+
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h
 video_page2_sel		EQU 0F10h

@@ -393,15 +393,15 @@ start_paging	Proc near
     test ax,2000h
     jz start_paging_global_done
 ;    
-    db 0Fh
-    db 20h
-    db 0E0h     ; mov eax,cr4
+;    db 0Fh
+;    db 20h
+;    db 0E0h     ; mov eax,cr4
 ;
-    or ax,80h   ; enable global pages
+;    or ax,80h   ; enable global pages
 ;
-    db 0Fh
-    db 22h
-    db 0E0h     ; mov cr4,eax
+;    db 0Fh
+;    db 22h
+;    db 0E0h     ; mov cr4,eax
 
 start_paging_global_done:
 	mov bx,sys_dir_sel

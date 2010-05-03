@@ -753,7 +753,7 @@ init_task	PROC near
     cmp al,3
     je init_tlb_done
 ;
-    mov word ptr ds:tlb_flush_proc,OFFSET TlbFlush486
+;    mov word ptr ds:tlb_flush_proc,OFFSET TlbFlush486
 
 init_tlb_done:
 	mov bx,task_sel
