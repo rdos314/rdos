@@ -43,14 +43,14 @@
 #   Returns....: *
 #
 ##########################################################################*/
-RdosImage::RdosImage()
+TRdosImage::TRdosImage()
 {
     Init();
 }
 
 /*##########################################################################
 #
-#   Name       : RdosImage::RdosImage
+#   Name       : TRdosImage::TRdosImage
 #
 #   Purpose....: Constructor
 #
@@ -59,7 +59,7 @@ RdosImage::RdosImage()
 #   Returns....: *
 #
 ##########################################################################*/
-RdosImage::RdosImage(const char *ImageName)
+TRdosImage::TRdosImage(const char *ImageName)
 {
     Init();
     Load(ImageName);
@@ -67,7 +67,7 @@ RdosImage::RdosImage(const char *ImageName)
 
 /*##########################################################################
 #
-#   Name       : RdosImage::RdosImage
+#   Name       : TRdosImage::TRdosImage
 #
 #   Purpose....: Constructor
 #
@@ -76,7 +76,7 @@ RdosImage::RdosImage(const char *ImageName)
 #   Returns....: *
 #
 ##########################################################################*/
-RdosImage::RdosImage(TString &ImageName)
+TRdosImage::TRdosImage(TString &ImageName)
 {
     Init();
     Load(ImageName);
@@ -84,7 +84,7 @@ RdosImage::RdosImage(TString &ImageName)
 
 /*##########################################################################
 #
-#   Name       : RdosImage::Init
+#   Name       : TRdosImage::Init
 #
 #   Purpose....: Initializer
 #
@@ -93,14 +93,14 @@ RdosImage::RdosImage(TString &ImageName)
 #   Returns....: *
 #
 ##########################################################################*/
-void RdosImage::Init()
+void TRdosImage::Init()
 {
     FImageFile = 0;
 }
 
 /*##########################################################################
 #
-#   Name       : RdosImage::~RdosImage
+#   Name       : TRdosImage::~TRdosImage
 #
 #   Purpose....: Destructor
 #
@@ -109,7 +109,7 @@ void RdosImage::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-RdosImage::~RdosImage()
+TRdosImage::~TRdosImage()
 {
     if (FImageFile)
         delete FImageFile;
@@ -117,7 +117,7 @@ RdosImage::~RdosImage()
 
 /*##########################################################################
 #
-#   Name       : RdosImage::Load
+#   Name       : TRdosImage::Load
 #
 #   Purpose....: Load image
 #
@@ -126,7 +126,7 @@ RdosImage::~RdosImage()
 #   Returns....: *
 #
 ##########################################################################*/
-void RdosImage::Load(const char *ImageFile)
+void TRdosImage::Load(const char *ImageFile)
 {
     if (FImageFile)
         delete FImageFile;
@@ -138,7 +138,7 @@ void RdosImage::Load(const char *ImageFile)
 
 /*##########################################################################
 #
-#   Name       : RdosImage::Load
+#   Name       : TRdosImage::Load
 #
 #   Purpose....: Load image
 #
@@ -147,7 +147,7 @@ void RdosImage::Load(const char *ImageFile)
 #   Returns....: *
 #
 ##########################################################################*/
-void RdosImage::Load(TString &ImageFile)
+void TRdosImage::Load(TString &ImageFile)
 {
     if (FImageFile)
         delete FImageFile;
@@ -159,7 +159,7 @@ void RdosImage::Load(TString &ImageFile)
 
 /*##########################################################################
 #
-#   Name       : RdosImage::LoadImage
+#   Name       : TRdosImage::LoadImage
 #
 #   Purpose....: Load image
 #
@@ -168,6 +168,7 @@ void RdosImage::Load(TString &ImageFile)
 #   Returns....: *
 #
 ##########################################################################*/
-void RdosImage::LoadImage()
+void TRdosImage::LoadImage()
 {
 }
+

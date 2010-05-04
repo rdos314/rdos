@@ -1261,6 +1261,7 @@ node_string		DB 'Input IP address to debug> ',0
 mailslot_name	DB 'Debug',0
 
 ReadNode	Proc near
+    int 3
 	xor cx,cx
 	xor dx,dx
 	SetCursorPosition
