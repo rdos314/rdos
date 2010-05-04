@@ -41,5 +41,6 @@
 ##########################################################################*/
 long Random(int Range)
 {
-    return random(Range);
+    return rand() % Range;
 }
+

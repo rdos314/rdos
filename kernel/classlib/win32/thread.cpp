@@ -45,14 +45,15 @@
 ##########################################################################*/
 DWORD WINAPI ThreadStartup(void *ptr)
 {
-	((TThread *)ptr)->Run();
+    ((TThread *)ptr)->Run();
+    return 0;
 }
 
 /*##########################################################################
 #
 #   Name       : TThread::TThread
 #
-#   Purpose....: Constructor for TThread		                          
+#   Purpose....: Constructor for TThread                                          
 #
 #   In params..: *
 #   Out params.: *
@@ -61,15 +62,15 @@ DWORD WINAPI ThreadStartup(void *ptr)
 ##########################################################################*/
 TThread::TThread()
 {
-	FInstalled = TRUE;
-	FThreadRunning = FALSE;
+        FInstalled = TRUE;
+        FThreadRunning = FALSE;
 }
 
 /*##########################################################################
 #
 #   Name       : TThread::TThread
 #
-#   Purpose....: Constructor for TThread		                          
+#   Purpose....: Constructor for TThread                                          
 #
 #   In params..: *
 #   Out params.: *
@@ -78,17 +79,17 @@ TThread::TThread()
 ##########################################################################*/
 TThread::TThread(const char *ThreadName, int StackSize)
 {
-	FInstalled = TRUE;
-	FThreadRunning = FALSE;
-	
-	Start(ThreadName, StackSize);
+        FInstalled = TRUE;
+        FThreadRunning = FALSE;
+        
+        Start(ThreadName, StackSize);
 }
 
 /*##########################################################################
 #
 #   Name       : TThread::~TThread
 #
-#   Purpose....: Destructor for TThread		                          
+#   Purpose....: Destructor for TThread                                   
 #
 #   In params..: *
 #   Out params.: *
@@ -97,7 +98,7 @@ TThread::TThread(const char *ThreadName, int StackSize)
 ##########################################################################*/
 TThread::~TThread()
 {
-	Stop();
+        Stop();
 }
 
 /*##########################################################################
@@ -113,9 +114,9 @@ TThread::~TThread()
 ##########################################################################*/
 void TThread::Stop()
 {
-	FInstalled = FALSE;
-	while (FThreadRunning)
-		;
+        FInstalled = FALSE;
+        while (FThreadRunning)
+                ;
 }
 
 /*##########################################################################
@@ -132,9 +133,9 @@ void TThread::Stop()
 ##########################################################################*/
 void TThread::Start(const char *ThreadName, int StackSize)
 {
-	unsigned long ThreadId;
+        unsigned long ThreadId;
 
-	CreateThread(NULL, StackSize, ThreadStartup, this, 0, &ThreadId);
+        CreateThread(NULL, StackSize, ThreadStartup, this, 0, &ThreadId);
 }
 
 /*##########################################################################
@@ -152,12 +153,12 @@ void TThread::Start(const char *ThreadName, int StackSize)
 void TThread::Run()
 {
     FInstalled = TRUE;
-	if (!FThreadRunning)
-	{
-		FThreadRunning = TRUE;
-		Execute();
-		FThreadRunning = FALSE;
-	}
+        if (!FThreadRunning)
+        {
+                FThreadRunning = TRUE;
+                Execute();
+                FThreadRunning = FALSE;
+        }
 }
 
 /*##########################################################################

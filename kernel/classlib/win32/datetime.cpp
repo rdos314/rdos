@@ -47,8 +47,8 @@
 ##########################################################################*/
 TDateTime::TDateTime()
 {
-	Win32GetTics(GetTickCount(), &FMsb, &FLsb);
-	RawToRecord();
+        Win32GetTics(GetTickCount(), &FMsb, &FLsb);
+        RawToRecord();
 }
 
 /*##########################################################################
@@ -57,16 +57,16 @@ TDateTime::TDateTime()
 #
 #   Purpose....: Copy constructor
 #
-#   In params..: source		TDateTime to copy
+#   In params..: source         TDateTime to copy
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 TDateTime::TDateTime(const TDateTime &source)
 {
-	FMsb = source.FMsb;
-	FLsb = source.FLsb;
-	RawToRecord();
+        FMsb = source.FMsb;
+        FLsb = source.FLsb;
+        RawToRecord();
 }
 
 /*##########################################################################
@@ -75,16 +75,16 @@ TDateTime::TDateTime(const TDateTime &source)
 #
 #   Purpose....: Constructor from raw format
 #
-#   In params..: msb, lsb		raw rdos format of date & time
+#   In params..: msb, lsb               raw rdos format of date & time
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 TDateTime::TDateTime(unsigned long Msb, unsigned long Lsb)
 {
-	FMsb = Msb;
-	FLsb = Lsb;
-	RawToRecord();
+        FMsb = Msb;
+        FLsb = Lsb;
+        RawToRecord();
 }
 
 /*##########################################################################
@@ -100,11 +100,9 @@ TDateTime::TDateTime(unsigned long Msb, unsigned long Lsb)
 ##########################################################################*/
 TDateTime::TDateTime(long double real)
 {
-#if sizeof(int) == 4
-	FMsb = (unsigned long)floorl(real);
-	FLsb = (unsigned long)((real - (long double)FMsb) * 65536.0 * 65536.0);
-	RawToRecord();
-#endif
+    FMsb = (unsigned long)floor(real);
+    FLsb = (unsigned long)((real - (long double)FMsb) * 65536.0 * 65536.0);
+    RawToRecord();
 }
 
 /*##########################################################################
@@ -120,13 +118,13 @@ TDateTime::TDateTime(long double real)
 ##########################################################################*/
 TDateTime::TDateTime(int Year, int Month, int Day)
 {
-	FYear = Year;
-	FMonth = Month;
-	FDay = Day;
-	FHour = 0;
-	FMin = 0;
-	FSec = 0;
-	FMilli = 0;
+        FYear = Year;
+        FMonth = Month;
+        FDay = Day;
+        FHour = 0;
+        FMin = 0;
+        FSec = 0;
+        FMilli = 0;
 }
 
 /*##########################################################################
@@ -142,13 +140,13 @@ TDateTime::TDateTime(int Year, int Month, int Day)
 ##########################################################################*/
 TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec)
 {
-	FYear = Year;
-	FMonth = Month;
-	FDay = Day;
-	FHour = Hour;
-	FMin = Min;
-	FSec = Sec;
-	FMilli = 0;
+        FYear = Year;
+        FMonth = Month;
+        FDay = Day;
+        FHour = Hour;
+        FMin = Min;
+        FSec = Sec;
+        FMilli = 0;
 }
 
 /*##########################################################################
@@ -164,13 +162,13 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec)
 ##########################################################################*/
 TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int Milli)
 {
-	FYear = Year;
-	FMonth = Month;
-	FDay = Day;
-	FHour = Hour;
-	FMin = Min;
-	FSec = Sec;
-	FMilli = Milli;
+        FYear = Year;
+        FMonth = Month;
+        FDay = Day;
+        FHour = Hour;
+        FMin = Min;
+        FSec = Sec;
+        FMilli = Milli;
 }
 
 /*##########################################################################
@@ -186,10 +184,10 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, i
 ##########################################################################*/
 TDateTime::operator long double () const
 {
-	long double fract;
+        long double fract;
 
-	fract = (long double)FLsb / 65536.0 / 65536.0;
-	return (long double)FMsb + fract;
+        fract = (long double)FLsb / 65536.0 / 65536.0;
+        return (long double)FMsb + fract;
 }
 
 /*##########################################################################
@@ -198,16 +196,16 @@ TDateTime::operator long double () const
 #
 #   Purpose....: Set data in raw format
 #
-#   In params..: msb, lsb		raw rdos format of date & time
+#   In params..: msb, lsb               raw rdos format of date & time
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TDateTime::SetRaw(unsigned long Msb, unsigned long Lsb)
 {
-	FMsb = Msb;
-	FLsb = Lsb;
-	RawToRecord();
+        FMsb = Msb;
+        FLsb = Lsb;
+        RawToRecord();
 }
 
 /*##########################################################################
@@ -223,7 +221,7 @@ void TDateTime::SetRaw(unsigned long Msb, unsigned long Lsb)
 ##########################################################################*/
 long TDateTime::GetMsb() const
 {
-	return FMsb;
+        return FMsb;
 }
 
 /*##########################################################################
@@ -239,7 +237,7 @@ long TDateTime::GetMsb() const
 ##########################################################################*/
 long TDateTime::GetLsb() const
 {
-	return FLsb;
+        return FLsb;
 }
 
 /*##########################################################################
@@ -255,20 +253,20 @@ long TDateTime::GetLsb() const
 ##########################################################################*/
 int TDateTime::HasExpired() const
 {
-	unsigned long msb, lsb;
+        unsigned long msb, lsb;
 
-	Win32GetTics(GetTickCount(), &msb, &lsb);
+        Win32GetTics(GetTickCount(), &msb, &lsb);
 
-	if (msb > FMsb)
-		return TRUE;
+        if (msb > FMsb)
+                return TRUE;
 
-	if (msb < FMsb)
-		return FALSE;
+        if (msb < FMsb)
+                return FALSE;
 
-	if (lsb > FLsb)
-		return TRUE;
-	else
-		return FALSE;
+        if (lsb > FLsb)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -284,7 +282,7 @@ int TDateTime::HasExpired() const
 ##########################################################################*/
 int TDateTime::GetYear() const
 {
-	return FYear;
+        return FYear;
 }
 
 /*##########################################################################
@@ -300,7 +298,7 @@ int TDateTime::GetYear() const
 ##########################################################################*/
 int TDateTime::GetMonth() const
 {
-	return FMonth;
+        return FMonth;
 }
 
 /*##########################################################################
@@ -316,7 +314,7 @@ int TDateTime::GetMonth() const
 ##########################################################################*/
 int TDateTime::GetDay() const
 {
-	return FDay;
+        return FDay;
 }
 
 /*##########################################################################
@@ -332,7 +330,7 @@ int TDateTime::GetDay() const
 ##########################################################################*/
 int TDateTime::GetHour() const
 {
-	return FHour;
+        return FHour;
 }
 
 /*##########################################################################
@@ -348,7 +346,7 @@ int TDateTime::GetHour() const
 ##########################################################################*/
 int TDateTime::GetMin() const
 {
-	return FMin;
+        return FMin;
 }
 
 /*##########################################################################
@@ -364,7 +362,7 @@ int TDateTime::GetMin() const
 ##########################################################################*/
 int TDateTime::GetSec() const
 {
-	return FSec;
+        return FSec;
 }
 
 /*##########################################################################
@@ -380,7 +378,7 @@ int TDateTime::GetSec() const
 ##########################################################################*/
 int TDateTime::GetMilliSec() const
 {
-	return FMilli;
+        return FMilli;
 }
 
 /*##########################################################################
@@ -396,7 +394,7 @@ int TDateTime::GetMilliSec() const
 ##########################################################################*/
 void TDateTime::RawToRecord()
 {
-	Win32TicsToRecord(FMsb, FLsb, &FYear, &FMonth, &FDay, &FHour, &FMin, &FSec, &FMilli);
+        Win32TicsToRecord(FMsb, FLsb, &FYear, &FMonth, &FDay, &FHour, &FMin, &FSec, &FMilli);
 }
 
 /*##########################################################################
@@ -412,7 +410,7 @@ void TDateTime::RawToRecord()
 ##########################################################################*/
 void TDateTime::RecordToRaw()
 {
-	Win32RecordToTics(&FMsb, &FLsb, FYear, FMonth, FDay, FHour, FMin, FSec, FMilli);
+        Win32RecordToTics(&FMsb, &FLsb, FYear, FMonth, FDay, FHour, FMin, FSec, FMilli);
 }
 
 /*##########################################################################
@@ -421,15 +419,15 @@ void TDateTime::RecordToRaw()
 #
 #   Purpose....: Add tics to time
 #
-#   In params..: tics		tics to add
+#   In params..: tics           tics to add
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TDateTime::AddTics(long tics)
 {
-	Win32AddTics(&FMsb, &FLsb, tics);
-	RawToRecord();
+        Win32AddTics(&FMsb, &FLsb, tics);
+        RawToRecord();
 }
 
 /*##########################################################################
@@ -438,15 +436,15 @@ void TDateTime::AddTics(long tics)
 #
 #   Purpose....: Add milliseconds
 #
-#   In params..: ms		milliseconds
+#   In params..: ms             milliseconds
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TDateTime::AddMilli(long ms)
 {
-	Win32AddMilli(&FMsb, &FLsb, ms);
-	RawToRecord();
+        Win32AddMilli(&FMsb, &FLsb, ms);
+        RawToRecord();
 }
 
 /*##########################################################################
@@ -455,15 +453,15 @@ void TDateTime::AddMilli(long ms)
 #
 #   Purpose....: Add seconds
 #
-#   In params..: sec	seconds
+#   In params..: sec    seconds
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TDateTime::AddSec(long sec)
 {
-	Win32AddSec(&FMsb, &FLsb, sec);
-	RawToRecord();
+        Win32AddSec(&FMsb, &FLsb, sec);
+        RawToRecord();
 }
 
 /*##########################################################################
@@ -472,15 +470,15 @@ void TDateTime::AddSec(long sec)
 #
 #   Purpose....: Add minutes
 #
-#   In params..: min	minute
+#   In params..: min    minute
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TDateTime::AddMin(long min)
 {
-	Win32AddMin(&FMsb, &FLsb, min);
-	RawToRecord();
+        Win32AddMin(&FMsb, &FLsb, min);
+        RawToRecord();
 }
 
 /*##########################################################################
@@ -489,15 +487,15 @@ void TDateTime::AddMin(long min)
 #
 #   Purpose....: Add hours
 #
-#   In params..: hour	hours
+#   In params..: hour   hours
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TDateTime::AddHour(long hour)
 {
-	Win32AddHour(&FMsb, &FLsb, hour);
-	RawToRecord();
+        Win32AddHour(&FMsb, &FLsb, hour);
+        RawToRecord();
 }
 
 /*##########################################################################
@@ -506,13 +504,13 @@ void TDateTime::AddHour(long hour)
 #
 #   Purpose....: Add days
 #
-#   In params..: day	days
+#   In params..: day    days
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 void TDateTime::AddDay(long day)
 {
-	Win32AddDay(&FMsb, &FLsb, day);
-	RawToRecord();
+        Win32AddDay(&FMsb, &FLsb, day);
+        RawToRecord();
 }
