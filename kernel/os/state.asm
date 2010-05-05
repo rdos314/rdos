@@ -737,6 +737,13 @@ init_state_hooks:
 	add di,4
 	loop init_state_hooks
 ;
+    mov ax,system_data_sel
+    mov es,ax
+    mov di,OFFSET thread_arr
+    xor ax,ax
+    mov	cx,256
+    rep stosw
+;
 	popa
 	pop es
 	pop ds

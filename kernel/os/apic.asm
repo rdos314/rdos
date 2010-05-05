@@ -254,6 +254,10 @@ ApInit:
     GetApicId
     mov ds:mp_apic,edx
 ;    
+stopl:
+    cli
+    jmp stopl
+;    
     sti
     hlt
     StartProcessor
@@ -1298,9 +1302,11 @@ ReadIoApicInt   Endp
 apic_name	DB 'Apic Test',0
 
 apic_pr:
-    int 3 
+    int 3
     mov al,0
     call ReadIoApicInt
+    mov esi,eax
+    mov edi,edx
 ;    
     mov al,1
     call ReadIoApicInt
