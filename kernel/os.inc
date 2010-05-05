@@ -1155,6 +1155,13 @@ GetNetBuffer	MACRO
 						ENDM
 
 ; IN  BX		PROTOCOL HANDLE
+; IN  DS:ESI	DEST ADDRESS
+; OUT NC		SUCCESS
+IsNetAddressValid	MACRO
+	OsGate is_net_address_valid_nr
+						ENDM
+
+; IN  BX		PROTOCOL HANDLE
 ; IN  ECX		SIZE
 ; IN  DS:ESI	DEST ADDRESS
 ; IN  ES		DATA

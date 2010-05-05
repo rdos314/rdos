@@ -64,6 +64,7 @@ dhcp_wanted_ip		DD ?
 dhcp_server			DD ?
 dhcp_option_list	DW ?
 dhcp_driver_sel     DW ?
+dhcp_ip             DD ?
 dhcp_ip2            DD ?
 ;dhcp_mask2          DD ?
 ;dhcp_gateway2       DD ?
@@ -82,6 +83,7 @@ dsd_hw_data     DB 10h DUP(?)
 
 dhcp_serv_data  ENDS
 
+    extrn is_ip_in_use:near
 	extrn define_ip:near
 	extrn get_gateway_driver:near
 	extrn ping_gateway:near
@@ -1679,6 +1681,61 @@ ReqIpData	Proc near
 ReqIpData	Endp
 	
 PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			DeclIpSize
+;
+;	Purpose:		Size of declined IP
+;
+;	Parameters:		DS			Class selector
+;					FS			Driver selector
+;
+;	Returns:		CX			Size of client IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeclIpSize	Proc near
+	mov cx,6
+	ret
+DeclIpSize	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			DeclIpData
+;
+;	Purpose:		Copy declined client IP
+;
+;	Parameters:		DS			Class selector
+;					FS			Driver selector
+;					ES:DI		Position to copy at
+;
+;	Returns:		ES:DI		New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeclIpData	Proc near
+	push ds
+	push eax
+;
+	mov al,50
+	stosb
+	mov al,4
+	stosb
+;
+	mov ax,dhcp_data_sel
+	mov ds,ax
+	mov eax,ds:dhcp_ip
+	stosd
+;
+	pop eax
+	pop ds
+	ret
+DeclIpData	Endp
+	
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1901,6 +1958,111 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DhcpDecline
+;
+;		DESCRIPTION:    Send DHCP decline for a driver
+;
+;       PARAMETERS:     DS			Class selector
+;						FS			Driver selector
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;   	size-proc				data-proc
+
+DeclOptTab:
+de00 DW OFFSET ClientSize,		OFFSET ClientData
+de01 DW OFFSET DeclIpSize,		OFFSET DeclIpData
+de02 DW OFFSET ServerSize,		OFFSET ServerData
+de03 DW -1
+
+DhcpDecline	Proc far
+	mov dx,SIZE dhcp_header + 1
+	mov bx,OFFSET DeclOptTab
+
+dhcp_decl_size_loop:
+	mov ax,cs:[bx]
+	cmp ax,-1
+	jz dhcp_decl_size_ok
+;
+	call word ptr cs:[bx]
+	add dx,cx
+	add bx,4
+	jmp dhcp_decl_size_loop
+
+dhcp_decl_size_ok:
+	mov cx,dx
+	push cx
+	call CreateDhcpReqBroadcast
+	mov es:[di].dhcp_op,1
+	mov al,ds:class_id
+	mov es:[di].dhcp_hw_type,al
+	mov al,ds:addr_len
+	mov es:[di].dhcp_hw_len,al
+	mov es:[di].dhcp_hops,0
+;
+	push ds
+	mov ax,dhcp_data_sel
+	mov ds,ax
+	mov eax,ds:dhcp_ident
+	pop ds
+	mov es:[di].dhcp_id,eax
+	mov es:[di].dhcp_elapsed,0
+	mov es:[di].dhcp_flags,0
+	mov es:[di].dhcp_client_ip,0
+	mov es:[di].dhcp_req_ip,0
+	mov es:[di].dhcp_server_ip,0
+	mov es:[di].dhcp_relay_ip,0
+	mov es:[di].dhcp_magic,63538263h
+	mov es:[di].dhcp_msg_code,53
+	mov es:[di].dhcp_msg_len,1
+	mov es:[di].dhcp_msg_type,4
+;
+	push di
+	mov cx,34h
+	add di,OFFSET dhcp_hw_addr
+	xor eax,eax
+	rep stosd
+	pop di
+;
+	movzx cx,ds:addr_len
+	push ds
+	push di
+	call fs:d_address
+	add di,OFFSET dhcp_hw_addr
+	rep movsb
+	pop di
+	pop ds
+;
+	push di
+	add di,SIZE dhcp_header
+	mov bx,OFFSET DeclOptTab
+
+dhcp_decl_data_loop:
+	mov ax,cs:[bx]
+	cmp ax,-1
+	jz dhcp_decl_data_ok
+;
+	call word ptr cs:[bx+2]
+	add bx,4
+	jmp dhcp_decl_data_loop
+
+dhcp_decl_data_ok:
+	mov al,-1
+	stosb
+;
+	pop di
+	pop cx
+	call SendDhcpBroadcast
+	ret
+DhcpDecline	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			AddDhcpOption
 ;
 ;		DESCRIPTION:    Add a requested DHCP option to ask for
@@ -2076,14 +2238,14 @@ PAGE
 ReceiveAck	Proc near
 	push ds
 	push fs
-	push ax
+	push eax
 	push bx
+	push edx
 ;
-	mov eax,es:[di].dhcp_req_ip
-	call define_ip
-;
+	mov edx,es:[di].dhcp_req_ip
 	mov ax,dhcp_data_sel
 	mov ds,ax
+	mov ds:dhcp_ip,edx
 ;
 	add di,SIZE dhcp_header
 
@@ -2124,10 +2286,13 @@ receive_ack_next:
 
 receive_ack_leave:
 	mov ds:dhcp_driver_sel,gs
+
+receive_ack_done:
 	FreeMem
 ;
+    pop edx
 	pop bx
-	pop ax
+	pop eax
 	pop fs
 	pop ds
 	ret
@@ -2246,23 +2411,40 @@ dhcp_thread_pr:
 	mov ax,250
 	WaitMilliSec
 ;
+	mov bx,dhcp_data_sel
+	mov ds,bx
+    GetIpAddress
+    mov ds:dhcp_ip,edx
+;    
     mov cx,8
 
 dhcp_thread_retry:    
+	mov ds:dhcp_server,0
+;	
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET DhcpDiscover
 	NetBroadcast
 ;
-    mov ax,250
+    mov ax,500
     WaitMilliSec	
 ;    
 	mov bx,dhcp_data_sel
 	mov ds,bx
     mov ax,ds:dhcp_driver_sel
     or ax,ax
-    jnz dhcp_thread_done
+    jz dhcp_thread_failed
 ;
+    mov edx,ds:dhcp_ip
+	call is_ip_in_use
+	jc dhcp_thread_done
+;
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET DhcpDecline
+	NetBroadcast
+
+dhcp_thread_failed:
     loop dhcp_thread_retry    
 ;    
     mov ds:dhcp_driver_sel,1
@@ -2280,7 +2462,9 @@ dhcp_thread_retry:
 dhcp_gw_ok:
     mov ds:dhcp_driver_sel,bx
 
-dhcp_thread_done:
+dhcp_thread_done:    
+    mov eax,ds:dhcp_ip
+    call define_ip
 	retf
 
 PAGE

@@ -1303,6 +1303,99 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			IsNetAddressValid
+;
+;	Purpose:		Check if network address is valid (in use)
+;
+;	Parameters:		BX		protocol handle
+;					DS:ESI	dest address
+;
+;	returns:		NC      Address is valid / in use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_net_address_valid_name	DB 'Is Net Address Valid',0
+
+is_net_address_valid	Proc far
+    push ds
+	push fs
+	push eax
+;
+	mov ax,ds
+	mov fs,ax
+	mov ds,bx
+	call FindAddress
+	jnc is_valid_done
+;
+	push bx
+	push es
+	push cx
+	push si
+	push di
+;
+	movzx eax,ds:p_logical_addr_len
+	add ax,OFFSET arp_logical_addr
+	AllocateSmallGlobalMem
+	mov es:arp_protocol,ds
+	mov es:arp_retries,2
+	mov es:arp_timeout,0
+	mov es:arp_timeout+4,0
+	GetThread
+	mov es:arp_owner,ax
+	mov al,ds:p_logical_addr_len
+	mov es:arp_logical_addr_len,al
+	mov di,OFFSET arp_logical_addr
+	movzx cx,al
+	rep movs byte ptr es:[di],fs:[si]
+;
+	mov ax,net_data_sel
+	mov ds,ax
+	EnterSection ds:arp_section
+	mov ax,ds:arp_send_list
+	or ax,ax
+	je check_address_arp_empty
+;
+    push fs
+	mov fs,ax
+	mov si,fs:arp_prev
+	mov fs:arp_prev,es
+	mov fs,si
+	mov fs:arp_next,es
+	mov es:arp_next,ax
+	mov es:arp_prev,si
+	pop fs
+	jmp check_address_arp_done
+
+check_address_arp_empty:
+	mov es:arp_next,es
+	mov es:arp_prev,es
+	mov ds:arp_send_list,es
+
+check_address_arp_done:
+	LeaveSection ds:arp_section
+	pop di
+	pop si
+	pop cx
+	pop es
+	mov bx,ds:arp_thread
+	Signal
+	pop bx
+;	
+	mov ds,bx
+	WaitForSignal
+	call FindAddress
+
+is_valid_done:
+	pop eax
+	pop fs
+	pop ds
+	ret
+is_net_address_valid	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			GetNetBuffer
 ;
 ;	Purpose:		Get network buffer
@@ -1332,6 +1425,7 @@ get_net_buffer	Proc far
 	push es
 	push cx
 	push si
+	push di
 ;
 	movzx eax,ds:p_logical_addr_len
 	add ax,OFFSET arp_logical_addr
@@ -1373,6 +1467,7 @@ get_buf_arp_empty:
 
 get_buf_arp_done:
 	LeaveSection ds:arp_section
+	pop di
 	pop si
 	pop cx
 	pop es
@@ -2496,6 +2591,12 @@ init	PROC far
 ;
 	mov di,OFFSET init_net
 	HookInitTasking
+;
+	mov si,OFFSET is_net_address_valid
+	mov di,OFFSET is_net_address_valid_name
+	xor cl,cl
+	mov ax,is_net_address_valid_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET get_net_driver
 	mov di,OFFSET get_net_driver_name

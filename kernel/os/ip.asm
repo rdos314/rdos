@@ -1191,6 +1191,49 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			is_ip_in_use
+;
+;		description:	Check if IP is already in use
+;
+;       PARAMETERS:     EDX     IP
+;
+;		RETURNS:		NC      In use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public is_ip_in_use
+
+is_ip_in_use	Proc near
+    push ds
+    push ax
+    push bx
+    push esi
+;    
+	mov ax,ip_data_sel
+	mov ds,ax
+	mov bx,ds:ip_handle
+;
+    push edx
+    mov ax,ss
+    mov ds,ax
+    mov si,sp
+    movzx esi,si
+;    
+	IsNetAddressValid
+	pop edx
+;
+    pop esi
+    pop bx
+    pop ax
+    pop ds
+    ret
+is_ip_in_use  Endp	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			define_ip
 ;
 ;		description:	Define IP
@@ -1588,10 +1631,13 @@ init	PROC far
 	mov dx,800h
 	mov ax,ip_data_sel
 	mov ds,ax
+	push ds:my_ip
+	mov ds:my_ip,0
 	mov si,OFFSET my_ip
 	mov di,OFFSET receive
 	RegisterNetProtocol
 	mov ds:ip_handle,bx
+	pop ds:my_ip
 ;
 	call init_dhcp
 ;
