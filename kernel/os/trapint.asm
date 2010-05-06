@@ -1661,80 +1661,20 @@ init_trap_vectors	PROC near
 	mov ds,bx
 ;
     xor esi,esi
-	mov cx,16
+	mov cx,24
 	mov bx,OFFSET irq_arr
 	xor eax,eax
 init_irq_loop:
-	mov ds:[bx].owner_cr3,0
 	mov ds:[bx].user_handler,0
-	mov ds:[bx].vm_offs,ax
-	mov dx,ds:irq_vm_seg
-	mov ds:[bx].vm_seg,dx
-	mov ds:[bx].pm16_offs,ax
-	mov dx,ds:irq_pm16_sel
-	mov ds:[bx].pm16_sel,dx
-	mov ds:[bx].pm32_offs,eax
-	mov dx,ds:irq_pm32_sel
-	mov ds:[bx].pm32_sel,dx
+	mov ds:[bx].user_data,0
 	add ax,4
 	InitSection ds:[bx].usage_section
 	add bx,SIZE irq_struc
 	loop init_irq_loop
-;    
-	mov eax,4*16
-	AllocateFixedVmLinear
-	shr edx,4
-	mov ds:irq_vm_seg,dx
-	shl edx,4
-	mov cx,16
-	mov ax,flat_sel
-	mov es,ax
-	mov eax,dword ptr cs:irq_vm_0
-init_irq_vm_loop:
-	mov es:[edx],eax
-	add edx,4
-	add eax,1000000h
-	loop init_irq_vm_loop
-;
-	mov eax,4*16
-	AllocateSmallGlobalMem
-	mov bx,es
-	or bx,3
-	mov ds:irq_pm16_sel,bx
-	mov cx,16
-	mov eax,dword ptr cs:irq_pm16_0
-	xor di,di
-init_irq_pm16_loop:
-	stosd
-	add eax,1000000h
-	loop init_irq_pm16_loop
-	and bx,0FFF8h
-	mov ax,gdt_sel
-	mov es,ax
-	mov byte ptr es:[bx+5],0FAh
-;
-	mov eax,4*16
-	AllocateSmallGlobalMem
-	mov bx,es
-	or bx,3
-	mov ds:irq_pm32_sel,bx
-	mov cx,16
-	mov eax,dword ptr cs:irq_pm32_0
-	xor di,di
-init_irq_pm32_loop:
-	stosd
-	add eax,1000000h
-	loop init_irq_pm32_loop
-	and bx,0FFF8h
-	mov ax,gdt_sel
-	mov es,ax
-	mov byte ptr es:[bx+5],0FAh
 ;
 	mov bx,OFFSET irq_arr
-	mov ds:[bx].owner_cr3,-1
 	EnterSection ds:[bx].usage_section
 	add bx,2 * SIZE irq_struc
-	mov ds:[bx].owner_cr3,-1
 	EnterSection ds:[bx].usage_section
 ;
 	xor cx,cx

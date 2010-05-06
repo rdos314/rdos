@@ -49,11 +49,6 @@ code	SEGMENT byte public use16 'CODE'
 
 irqmac	MACRO nr
 
-irq_thread&nr:
-	int 3
-	jmp irq_thread&nr
-
-
 irq&nr:
 	push bp
 	mov bp,sp
@@ -63,109 +58,8 @@ irq&nr:
 	pushad
 ;
     EnterInt
-	mov al,nr
 	sti
-irq_mask_done&nr:
-	mov bx,OFFSET irq_arr + nr * SIZE irq_struc
-	mov eax,ds:[bx].owner_cr3
-	or eax,eax
-	jz irq_default&nr
 ;	
-	int 3
-	mov edx,cr3
-	cmp eax,edx
-	jne irq_handle_in_thread&nr
-	mov ax,irq_proc_sel
-	mov es,ax
-IF nr LE 7
-	test es:mask0,1 SHL nr
-ELSE
-	test es:mask1,1 SHL (nr-8)
-ENDIF
-	jnz irq_default&nr
-	GetFlags
-	test ax,200h
-	jz irq_handle_in_thread&nr
-	test byte ptr [bp+2].irq_eflags,2
-	jz irq_handle_prot&nr
-irq_handle_virt&nr:
-	mov ax,ds:[bx].vm_seg
-	cmp ax,ds:irq_vm_seg
-	je irq_save_context&nr
-	mov ax,flat_sel
-	mov es,ax
-	mov edx,[bp].irq_ss
-	shl edx,4
-	movzx eax,word ptr [bp].irq_esp
-	sub ax,6
-	mov [bp].irq_esp,ax
-	add edx,eax
-	mov ax,ds:[bx].vm_offs
-	mov es:[edx],ax
-	mov ax,ds:[bx].vm_seg
-	mov es:[edx+2],ax
-	mov ax,[bp].irq_eflags
-	mov es:[edx+4],ax
-	jmp irq_handle_done&nr
-irq_handle_prot&nr:
-	int 3
-	mov al,[bp].irq_cs
-	and al,3
-	cmp al,3
-	jne irq_save_context&nr
-	int 3
-irq_save_context&nr:
-	mov dx,bx
-	SaveContext
-	xchg bx,dx
-	mov ax,ds:[bx].pm32_sel
-	cmp ax,ds:irq_pm32_sel
-	je irq_not_context32_&nr
-	int 3
-irq_not_context32_&nr:
-	mov ax,ds:[bx].pm16_sel
-	cmp ax,ds:irq_pm16_sel
-	je irq_not_context16_&nr
-	int 3
-irq_not_context16_&nr:
-    GetThread
-    mov es,ax
-	mov edx,es:p_int_real_stack
-	or edx,edx
-	jnz irq_real_stack_ok&nr
-	mov eax,210h
-	AllocateVMLinear
-	mov es:p_int_real_stack,edx
-irq_real_stack_ok&nr:
-	mov ax,flat_sel
-	mov es,ax
-	mov eax,edx
-	shr edx,4
-	and eax,0Fh
-	add eax,200h-6
-	mov [bp].vm_ss,dx
-	mov [bp].vm_esp,eax
-	shl edx,4
-	add edx,eax
-	mov ax,ds:[bx].vm_offs
-	mov es:[edx],ax
-	mov ax,ds:[bx].vm_seg
-	mov es:[edx+2],ax
-	mov ax,[bp].vm_eflags
-	mov es:[edx+4],ax
-	mov ax,ds:[bx].vm_offs
-	mov [bp].vm_eip,ax
-	mov ax,ds:[bx].vm_seg
-	mov [bp].vm_cs,ax
-	mov ax,[bp].irq_eflags
-	mov [bp].vm_eflags,ax
-	mov byte ptr [bp+2].vm_eflags,2
-	iretd	
-	jmp irq_handle_done&nr
-irq_handle_in_thread&nr:
-	int 3
-	
-irq_default&nr:
 	mov ax,irq_sys_sel
 	mov es,ax
 	mov bx,OFFSET irq_arr + nr * SIZE irq_struc
@@ -214,79 +108,33 @@ irq_unmask_done&nr:
 	pop bp
 	iretd
 
-get_irq&nr	Proc far
-	push ds
-	push eax
-	mov bx,irq_sys_sel
-	mov ds,bx
-	mov eax,cr3
-	mov bx,OFFSET irq_arr + nr * SIZE irq_struc
-	cmp eax,ds:[bx].owner_cr3
-	jne get_irq_default&nr
-	mov bx,ds:[bx].vm_offs
-	mov dx,ds:[bx].vm_seg
-	jmp get_irq_done&nr
-get_irq_default&nr:
-	mov bx,nr*4
-	mov dx,ds:irq_vm_seg
-get_irq_done&nr:
-	pop eax
-	pop ds
-	ret
-get_irq&nr	Endp
-
-set_irq&nr	Proc far
-	push ds
-	push eax
-	push cx
-	mov cx,irq_sys_sel
-	mov ds,cx
-	mov cx,bx
-	mov bx,OFFSET irq_arr + nr * SIZE irq_struc
-set_irq_try&nr:
-	mov eax,cr3
-	cmp eax,ds:[bx].owner_cr3
-	je set_irq_do&nr
-;	EnterSection ds:[bx].usage_section
-	mov ds:[bx].owner_cr3,eax
-set_irq_do&nr:
-	mov ds:[bx].vm_offs,cx
-	mov ds:[bx].vm_seg,dx
-	cmp dx,ds:irq_vm_seg
-	jne set_irq_not_free&nr
-	mov ax,ds:[bx].pm16_sel
-	cmp ax,ds:irq_pm16_sel
-	jne set_irq_not_free&nr
-	mov ax,ds:[bx].pm32_sel
-	cmp ax,ds:irq_pm32_sel
-	jne set_irq_not_free&nr
-;	LeaveSection ds:[bx].usage_section
-set_irq_not_free&nr:
-	pop cx
-	pop eax
-	pop ds
-	ret
-set_irq&nr	Endp
-
 	ENDM
 
 irq_offs_table:
-	DW OFFSET irq_arr
-	DW OFFSET irq_arr + SIZE irq_struc
-	DW OFFSET irq_arr + 2 * SIZE irq_struc
-	DW OFFSET irq_arr + 3 * SIZE irq_struc
-	DW OFFSET irq_arr + 4 * SIZE irq_struc
-	DW OFFSET irq_arr + 5 * SIZE irq_struc
-	DW OFFSET irq_arr + 6 * SIZE irq_struc
-	DW OFFSET irq_arr + 7 * SIZE irq_struc
-	DW OFFSET irq_arr + 8 * SIZE irq_struc
-	DW OFFSET irq_arr + 9 * SIZE irq_struc
-	DW OFFSET irq_arr + 10 * SIZE irq_struc
-	DW OFFSET irq_arr + 11 * SIZE irq_struc
-	DW OFFSET irq_arr + 12 * SIZE irq_struc
-	DW OFFSET irq_arr + 13 * SIZE irq_struc
-	DW OFFSET irq_arr + 14 * SIZE irq_struc
-	DW OFFSET irq_arr + 15 * SIZE irq_struc
+io00 DW OFFSET irq_arr
+io01 DW OFFSET irq_arr + SIZE irq_struc
+io02 DW OFFSET irq_arr + 2 * SIZE irq_struc
+io03 DW OFFSET irq_arr + 3 * SIZE irq_struc
+io04 DW OFFSET irq_arr + 4 * SIZE irq_struc
+io05 DW OFFSET irq_arr + 5 * SIZE irq_struc
+io06 DW OFFSET irq_arr + 6 * SIZE irq_struc
+io07 DW OFFSET irq_arr + 7 * SIZE irq_struc
+io08 DW OFFSET irq_arr + 8 * SIZE irq_struc
+io09 DW OFFSET irq_arr + 9 * SIZE irq_struc
+io0A DW OFFSET irq_arr + 10 * SIZE irq_struc
+io0B DW OFFSET irq_arr + 11 * SIZE irq_struc
+io0C DW OFFSET irq_arr + 12 * SIZE irq_struc
+io0D DW OFFSET irq_arr + 13 * SIZE irq_struc
+io0E DW OFFSET irq_arr + 14 * SIZE irq_struc
+io0F DW OFFSET irq_arr + 15 * SIZE irq_struc
+io10 DW OFFSET irq_arr + 16 * SIZE irq_struc
+io11 DW OFFSET irq_arr + 17 * SIZE irq_struc
+io12 DW OFFSET irq_arr + 18 * SIZE irq_struc
+io13 DW OFFSET irq_arr + 19 * SIZE irq_struc
+io14 DW OFFSET irq_arr + 20 * SIZE irq_struc
+io15 DW OFFSET irq_arr + 21 * SIZE irq_struc
+io16 DW OFFSET irq_arr + 22 * SIZE irq_struc
+io17 DW OFFSET irq_arr + 23 * SIZE irq_struc
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -496,35 +344,18 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			request_private_irq_handler
+;		NAME:			EnableIrq
 ;
-;		description:	Request for a private irq handler (non sharable)
+;		description:	Enable IRQ in PIC controller
 ;
-;		PARAMETERS:		ds			data for handler
-;						al			irq nr
-;						es:di		handler address
+;		PARAMETERS:		AL			irq nr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-request_private_irq_handler_name DB 'Request Private Irq Handler',0
-
-request_private_irq_handler	Proc far
-	push ds
-	pusha
-;
-	mov dx,ds
-	movzx bx,al
-	mov ax,irq_sys_sel
-	mov ds,ax
-	mov si,bx
-	add si,si
-	mov si,word ptr cs:[si].irq_offs_table
-	EnterSection ds:[si].usage_section
-	mov ds:[si].user_data,dx
-	mov word ptr ds:[si].user_handler,di
-	mov word ptr ds:[si].user_handler+2,es
-;
-	mov al,bl
+enable_irq  Proc far
+    push ax
+    push cx
+;    
 	test al,8
 	jz set_pic1
 set_pic2:
@@ -540,6 +371,7 @@ set_pic2:
 	out 0A1h,al
 	sti
 	jmp set_pic_done
+	
 set_pic1:
 	mov cl,al
 	mov ah,1
@@ -551,9 +383,128 @@ set_pic1:
 	and al,ah
 	out 21h,al
 	sti
+
 set_pic_done:
+    pop cx
+    pop ax
+    ret
+enable_irq  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	popa
+;
+;		NAME:			DisableIrq
+;
+;		description:	Disable IRQ in PIC controller
+;
+;		PARAMETERS:		AL			irq nr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disable_irq  Proc far
+    push ax
+    push cx    
+;
+	test al,8
+	jz remove_pic1
+
+remove_pic2:
+	sub al,8
+	mov cl,al
+	mov ah,1
+	rol ah,cl
+	cli
+	in al,0A1h
+	or al,ah
+	out 0A1h,al
+	sti
+	jmp remove_pic_done
+
+remove_pic1:
+	mov cl,al
+	mov ah,1
+	rol ah,cl
+	cli
+	in al,21h
+	or al,ah
+	out 21h,al
+	sti
+remove_pic_done:
+    pop cx
+    pop ax
+    ret
+disable_irq Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EnableIrqDetect
+;
+;		description:	Enable IRQ detect in PIC controller
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_irq_detect  Proc far
+    push ax
+;    
+	xor al,al
+	out 21h,al
+	jmp short $+2
+;	
+    xor al,al
+	out 0A1h,al
+;
+    pop ax
+    ret
+enable_irq_detect   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			request_private_irq_handler
+;
+;		description:	Request for a private irq handler (non sharable)
+;
+;		PARAMETERS:		ds			data for handler
+;						al			irq nr
+;						es:di		handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+request_private_irq_handler_name DB 'Request Private Irq Handler',0
+
+request_private_irq_handler	Proc far
+	push ds
+	push ax
+	push bx
+	push dx
+	push si
+;
+	mov dx,ds
+	movzx bx,al
+	mov ax,irq_sys_sel
+	mov ds,ax
+	mov si,bx
+	add si,si
+	mov si,word ptr cs:[si].irq_offs_table
+	EnterSection ds:[si].usage_section
+	mov ds:[si].user_data,dx
+	mov word ptr ds:[si].user_handler,di
+	mov word ptr ds:[si].user_handler+2,es
+;
+	mov al,bl
+	call ds:[si].irq_enable_proc
+;
+	pop si
+	pop dx
+	pop bx
+	pop ax
 	pop ds
 	ret
 request_private_irq_handler	Endp
@@ -563,17 +514,13 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			request_shared_irq_handler
+;		NAME:			SharedIrq
 ;
-;		description:	Request for a shared irq handler
+;		description:	Shared IRQ handler
 ;
-;		PARAMETERS:		ds			data for handler
-;						al			irq nr
-;						es:di		handler address
+;		PARAMETERS:     DS  Irq share struc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-request_shared_irq_handler_name DB 'Request Shared Irq Handler',0
 
 shared_irq  Proc far
     mov cx,ds:share_count
@@ -604,6 +551,23 @@ shared_irq_next:
 shared_irq_done:
     ret
 shared_irq  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			request_shared_irq_handler
+;
+;		description:	Request for a shared irq handler
+;
+;		PARAMETERS:		ds			data for handler
+;						al			irq nr
+;						es:di		handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+request_shared_irq_handler_name DB 'Request Shared Irq Handler',0
 
 request_shared_irq_handler	Proc far
 	push ds
@@ -727,38 +691,17 @@ release_private_irq_handler	Proc far
 	push ds
 	push ax
 	push bx
-;
+	push dx
+;	
 	movzx bx,al
-	mov al,bl
-	test al,8
-	jz remove_pic1
-remove_pic2:
-	sub al,8
-	mov cl,al
-	mov ah,1
-	rol ah,cl
-	cli
-	in al,0A1h
-	or al,ah
-	out 0A1h,al
-	sti
-	jmp remove_pic_done
-remove_pic1:
-	mov cl,al
-	mov ah,1
-	rol ah,cl
-	cli
-	in al,21h
-	or al,ah
-	out 21h,al
-	sti
-remove_pic_done:
-	mov ax,irq_sys_sel
-	mov ds,ax
+	mov dx,irq_sys_sel
+	mov ds,dx
 	add bx,bx
 	mov bx,word ptr cs:[bx].irq_offs_table
+	call ds:[bx].irq_disable_proc
 	LeaveSection ds:[bx].usage_section
 ;
+    pop dx
 	pop bx
 	pop ax
 	pop ds
@@ -786,12 +729,7 @@ setup_irq_detect	Proc far
 	mov ds,ax
 	mov ds:bad_irqs,0
 ;	
-	xor al,al
-	out 21h,al
-	jmp short $+2
-;	
-    xor al,al
-	out 0A1h,al
+    call enable_irq_detect
 ;
     Swap
     Swap
@@ -924,118 +862,6 @@ init	PROC far
 	mov dx,0A1h
 	HookOut
 ;
-	mov di,OFFSET get_irq1
-	mov al,9
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq1
-	mov al,9
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq3
-	mov al,0Bh
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq3
-	mov al,0Bh
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq4
-	mov al,0Ch
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq4
-	mov al,0Ch
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq5
-	mov al,0Dh
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq5
-	mov al,0Dh
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq6
-	mov al,0Eh
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq6
-	mov al,0Eh
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq7
-	mov al,0Fh
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq7
-	mov al,0Fh
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq8
-	mov al,78h
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq8
-	mov al,78h
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq9
-	mov al,79h
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq9
-	mov al,79h
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq10
-	mov al,7Ah
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq10
-	mov al,7Ah
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq11
-	mov al,7Bh
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq11
-	mov al,7Bh
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq12
-	mov al,7Ch
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq12
-	mov al,7Ch
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq13
-	mov al,7Dh
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq13
-	mov al,7Dh
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq14
-	mov al,7Eh
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq14
-	mov al,7Eh
-	HookSetVMInt
-;
-	mov di,OFFSET get_irq15
-	mov al,7Fh
-	HookGetVMInt
-;
-	mov di,OFFSET set_irq15
-	mov al,7Fh
-	HookSetVMInt
-;
 	mov ax,cs
 	mov ds,ax
 	xor bl,bl
@@ -1139,6 +965,23 @@ init	PROC far
 	mov al,-1
 	out INT1_MASK,al
 	jmp short $+2
+;
+	mov bx,irq_sys_sel
+	mov ds,bx
+;	
+	mov cx,16
+	mov bx,OFFSET irq_arr
+	xor eax,eax
+
+init_irq_loop:
+	mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
+	mov word ptr ds:[bx].irq_enable_proc+2,cs
+;
+	mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
+	mov word ptr ds:[bx].irq_disable_proc+2,cs
+;
+	add bx,SIZE irq_struc
+	loop init_irq_loop
 ;
 	popa
 	pop es

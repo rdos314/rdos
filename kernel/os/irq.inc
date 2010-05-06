@@ -27,23 +27,13 @@
 
 irq_struc	STRUC
 
-user_data		DW ?
-user_handler	DD ?
+user_data		    DW ?
+user_handler	    DD ?
 
-owner_cr3		DD ?
+usage_section	    section_typ <>
 
-vm_offs			DW ?
-vm_seg			DW ?
-
-pm16_offs		DW ?
-pm16_sel		DW ?
-
-pm32_offs		DD ?
-pm32_sel		DW ?
-
-emul_thread		DW ?
-
-usage_section	section_typ <>
+irq_enable_proc     DD ?
+irq_disable_proc    DD ?
 
 irq_struc	ENDS
 
@@ -56,13 +46,9 @@ irq_proc_seg	ENDS
 
 irq_sys_seg	STRUC
 
-irq_vm_seg		DW ?
-irq_pm16_sel	DW ?
-irq_pm32_sel	DW ?
+bad_irqs            DW ?
 
-bad_irqs        DW ?
-
-irq_arr			DB 16 * SIZE irq_struc DUP(?)
+irq_arr			    DB 24 * SIZE irq_struc DUP(?)
 
 irq_sys_seg	ENDS
 
