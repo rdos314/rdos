@@ -1614,6 +1614,393 @@ init_idt	Proc near
 	ret
 init_idt	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			irq_offs_table
+;
+;		description:	Offsets in IRQ table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+irq_offs_table:
+io00 DW OFFSET irq_arr
+io01 DW OFFSET irq_arr + SIZE irq_struc
+io02 DW OFFSET irq_arr + 2 * SIZE irq_struc
+io03 DW OFFSET irq_arr + 3 * SIZE irq_struc
+io04 DW OFFSET irq_arr + 4 * SIZE irq_struc
+io05 DW OFFSET irq_arr + 5 * SIZE irq_struc
+io06 DW OFFSET irq_arr + 6 * SIZE irq_struc
+io07 DW OFFSET irq_arr + 7 * SIZE irq_struc
+io08 DW OFFSET irq_arr + 8 * SIZE irq_struc
+io09 DW OFFSET irq_arr + 9 * SIZE irq_struc
+io0A DW OFFSET irq_arr + 10 * SIZE irq_struc
+io0B DW OFFSET irq_arr + 11 * SIZE irq_struc
+io0C DW OFFSET irq_arr + 12 * SIZE irq_struc
+io0D DW OFFSET irq_arr + 13 * SIZE irq_struc
+io0E DW OFFSET irq_arr + 14 * SIZE irq_struc
+io0F DW OFFSET irq_arr + 15 * SIZE irq_struc
+io10 DW OFFSET irq_arr + 16 * SIZE irq_struc
+io11 DW OFFSET irq_arr + 17 * SIZE irq_struc
+io12 DW OFFSET irq_arr + 18 * SIZE irq_struc
+io13 DW OFFSET irq_arr + 19 * SIZE irq_struc
+io14 DW OFFSET irq_arr + 20 * SIZE irq_struc
+io15 DW OFFSET irq_arr + 21 * SIZE irq_struc
+io16 DW OFFSET irq_arr + 22 * SIZE irq_struc
+io17 DW OFFSET irq_arr + 23 * SIZE irq_struc
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			request_private_irq_handler
+;
+;		description:	Request for a private irq handler (non sharable)
+;
+;		PARAMETERS:		ds			data for handler
+;						al			irq nr
+;						es:di		handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+request_private_irq_handler_name DB 'Request Private Irq Handler',0
+
+request_private_irq_handler	Proc far
+	push ds
+	push ax
+	push bx
+	push dx
+	push si
+;
+	mov dx,ds
+	movzx bx,al
+	mov ax,irq_sys_sel
+	mov ds,ax
+	mov si,bx
+	add si,si
+	mov si,word ptr cs:[si].irq_offs_table
+	EnterSection ds:[si].usage_section
+	mov ds:[si].user_data,dx
+	mov word ptr ds:[si].user_handler,di
+	mov word ptr ds:[si].user_handler+2,es
+;
+	mov al,bl
+	call ds:[si].irq_enable_proc
+;
+	pop si
+	pop dx
+	pop bx
+	pop ax
+	pop ds
+	ret
+request_private_irq_handler	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SharedIrq
+;
+;		description:	Shared IRQ handler
+;
+;		PARAMETERS:     DS  Irq share struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+shared_irq  Proc far
+    mov cx,ds:share_count
+    mov bx,OFFSET share_handler
+    or cx,cx
+    jz shared_irq_done
+
+shared_irq_loop:
+    push ds
+    push bx
+    push cx
+;
+	mov ax,ds:[bx].sh_user_data
+	push cs
+	push OFFSET shared_irq_next
+	push ds:[bx].sh_user_handler
+	mov ds,ax
+	retf
+
+shared_irq_next:
+    pop cx
+    pop bx
+    pop ds
+;    
+    add bx,SIZE share_handle_struc
+    loop shared_irq_loop
+
+shared_irq_done:
+    ret
+shared_irq  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			request_shared_irq_handler
+;
+;		description:	Request for a shared irq handler
+;
+;		PARAMETERS:		ds			data for handler
+;						al			irq nr
+;						es:di		handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+request_shared_irq_handler_name DB 'Request Shared Irq Handler',0
+
+request_shared_irq_handler	Proc far
+	push ds
+	pusha
+;
+	mov dx,ds
+	movzx bx,al
+	mov ax,irq_sys_sel
+	mov ds,ax
+	mov si,bx
+	add si,si
+	mov si,word ptr cs:[si].irq_offs_table
+	mov ax,cs
+    cmp ax,word ptr ds:[si].user_handler+2
+    jne rsih_req
+;    	
+    mov ax,word ptr ds:[si].user_handler
+    cmp ax,OFFSET shared_irq
+    je rsih_add
+
+rsih_req:
+    push ds
+    push es
+    push di
+;    
+    mov eax,SIZE share_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,ax
+    xor ax,ax
+    rep stosb
+;    
+    mov ax,es
+    mov ds,ax
+    mov ax,cs
+    mov es,ax
+    mov al,bl
+    mov di,OFFSET shared_irq
+    RequestPrivateIrqHandler   
+;
+    pop di
+    pop es
+    pop ds
+
+rsih_add:
+    mov ds,ds:[si].user_data
+    mov cx,ds:share_count
+    mov ax,cx
+    push dx
+    mov dx,SIZE share_handle_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET share_handler
+    mov word ptr ds:[bx].sh_user_handler,di
+    mov word ptr ds:[bx].sh_user_handler+2,es
+    mov ds:[bx].sh_user_data,dx
+    inc cx
+    mov ds:share_count,cx
+;
+	popa
+	pop ds
+	ret
+request_shared_irq_handler	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			is_irq_free
+;
+;		description:	Check if IRQ can be reserved
+;
+;		PARAMETERS:		al			irq nr
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_irq_free_name DB 'Is Irq Free',0
+
+is_irq_free	Proc far
+	push ds
+	push ax
+	push si
+;
+	movzx si,al
+	mov ax,irq_sys_sel
+	mov ds,ax
+	add si,si
+	mov si,word ptr cs:[si].irq_offs_table
+    mov ax,ds:[si].usage_section.cs_value
+    or ax,ax
+    clc
+    jz is_irq_free_done
+;
+    stc
+
+is_irq_free_done:
+	pop si
+	pop ax
+	pop ds
+	ret
+is_irq_free	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			release_private_irq_handler
+;
+;		description:	Release a no shareable irq handler
+;
+;		PARAMETERS:		al			irq nr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+release_private_irq_handler_name	DB 'Release Private Irq Handler',0
+
+release_private_irq_handler	Proc far
+	push ds
+	push ax
+	push bx
+	push dx
+;	
+	movzx bx,al
+	mov dx,irq_sys_sel
+	mov ds,dx
+	add bx,bx
+	mov bx,word ptr cs:[bx].irq_offs_table
+	call ds:[bx].irq_disable_proc
+	LeaveSection ds:[bx].usage_section
+;
+    pop dx
+	pop bx
+	pop ax
+	pop ds
+	ret
+release_private_irq_handler	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			setup_irq_detect
+;
+;		description:	Setup IRQ detect
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_irq_detect_name	DB 'Setup IRQ detect',0
+
+setup_irq_detect	Proc far
+	push ds
+	push ax
+;	
+	mov ax,irq_sys_sel
+	mov ds,ax
+	mov ds:bad_irqs,0
+;	
+    call ds:irq_detect_proc
+;
+    Swap
+    Swap
+;
+    mov ds:bad_irqs,0    	
+;
+	pop ax
+	pop ds
+	ret
+setup_irq_detect	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			poll_irq_detect
+;
+;		description:	Poll detected IRQs
+;
+;       RETURNS:        AX      Detected IRQs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_irq_detect_name	DB 'Poll IRQ detect',0
+
+poll_irq_detect	Proc far
+	push ds
+;	
+	mov ax,irq_sys_sel
+	mov ds,ax
+	mov ax,ds:bad_irqs
+;
+	pop ds
+	ret
+poll_irq_detect	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DummyEnable
+;
+;		DESCRIPTION:	Dummy enable IRQ
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dummy_enable    Proc far
+    ret
+dummy_enable    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DummyDisable
+;
+;		DESCRIPTION:	Dummy disable IRQ
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dummy_disable    Proc far
+    ret
+dummy_disable    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DummyDetect
+;
+;		DESCRIPTION:	Dummy detect IRQ
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dummy_detect    Proc far
+    ret
+dummy_detect    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1659,6 +2046,9 @@ init_trap_vectors	PROC near
 	mov bx,irq_sys_sel
 	AllocateFixedSystemMem
 	mov ds,bx
+;	
+    mov word ptr ds:irq_detect_proc,OFFSET dummy_detect
+    mov word ptr ds:irq_detect_proc+2,cs
 ;
     xor esi,esi
 	mov cx,24
@@ -1669,6 +2059,13 @@ init_irq_loop:
 	mov ds:[bx].user_data,0
 	add ax,4
 	InitSection ds:[bx].usage_section
+;
+	mov word ptr ds:[bx].irq_enable_proc,OFFSET dummy_enable
+	mov word ptr ds:[bx].irq_enable_proc+2,cs
+;
+	mov word ptr ds:[bx].irq_disable_proc,OFFSET dummy_disable
+	mov word ptr ds:[bx].irq_disable_proc+2,cs
+;
 	add bx,SIZE irq_struc
 	loop init_irq_loop
 ;
@@ -1717,6 +2114,42 @@ init_irq_loop:
 	mov di,OFFSET segment_not_present_name
 	xor cl,cl
 	mov ax,segment_not_present_nr
+	RegisterOsGate
+;
+	mov si,OFFSET is_irq_free
+	mov di,OFFSET is_irq_free_name
+	xor cl,cl
+	mov ax,is_irq_free_nr
+	RegisterOsGate
+;
+	mov si,OFFSET request_private_irq_handler
+	mov di,OFFSET request_private_irq_handler_name
+	xor cl,cl
+	mov ax,request_private_irq_handler_nr
+	RegisterOsGate
+;
+	mov si,OFFSET request_shared_irq_handler
+	mov di,OFFSET request_shared_irq_handler_name
+	xor cl,cl
+	mov ax,request_shared_irq_handler_nr
+	RegisterOsGate
+;
+	mov si,OFFSET release_private_irq_handler
+	mov di,OFFSET release_private_irq_handler_name
+	xor cl,cl
+	mov ax,release_private_irq_handler_nr
+	RegisterOsGate
+;
+	mov si,OFFSET setup_irq_detect
+	mov di,OFFSET setup_irq_detect_name
+	xor cl,cl
+	mov ax,setup_irq_detect_nr
+	RegisterOsGate
+;
+	mov si,OFFSET poll_irq_detect
+	mov di,OFFSET poll_irq_detect_name
+	xor cl,cl
+	mov ax,poll_irq_detect_nr
 	RegisterOsGate
 	ret
 init_trap_vectors	ENDP
