@@ -75,6 +75,53 @@ apic_arr            DW 256 DUP(?)
 
 apic_data_seg ENDS
 
+irqmac	MACRO nr
+
+msr_irq&nr:
+	push ds
+	push es
+	push fs
+	pushad
+;
+    EnterInt
+	sti
+;	
+	mov ax,irq_sys_sel
+	mov es,ax
+	mov bx,OFFSET irq_arr + nr * SIZE irq_struc
+	mov eax,es:[bx].user_handler
+	or eax,eax
+	jz msr_irq_default_error&nr
+;
+	mov ds,es:[bx].user_data
+	push cs
+	push OFFSET irq_handle_done&nr
+	push es:[bx].user_handler
+	xor ax,ax
+	mov es,ax
+	retf
+
+msr_irq_default_error&nr:
+;
+; unmask IRQ here
+;
+	or es:bad_irqs, 1 SHL nr
+
+msr_irq_handle_done&nr:
+	cli
+    xor eax,eax
+    mov ecx,MSR_APIC_EOI
+    wrmsr
+;
+	popad
+	pop fs
+	pop es
+	pop ds
+	iretd
+
+	ENDM
+	
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'

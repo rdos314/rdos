@@ -1939,7 +1939,7 @@ PAGE
 ;
 ;		description:	Poll detected IRQs
 ;
-;       RETURNS:        AX      Detected IRQs
+;       RETURNS:        EAX      Detected IRQs
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1950,7 +1950,7 @@ poll_irq_detect	Proc far
 ;	
 	mov ax,irq_sys_sel
 	mov ds,ax
-	mov ax,ds:bad_irqs
+	mov eax,ds:bad_irqs
 ;
 	pop ds
 	ret
@@ -2051,7 +2051,7 @@ init_trap_vectors	PROC near
     mov word ptr ds:irq_detect_proc+2,cs
 ;
     xor esi,esi
-	mov cx,24
+	mov cx,32
 	mov bx,OFFSET irq_arr
 	xor eax,eax
 init_irq_loop:

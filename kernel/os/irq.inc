@@ -46,11 +46,11 @@ irq_proc_seg	ENDS
 
 irq_sys_seg	STRUC
 
-bad_irqs            DW ?
+bad_irqs            DD ?
 
 irq_detect_proc     DD ?
 
-irq_arr			    DB 24 * SIZE irq_struc DUP(?)
+irq_arr			    DB 32 * SIZE irq_struc DUP(?)
 
 irq_sys_seg	ENDS
 
