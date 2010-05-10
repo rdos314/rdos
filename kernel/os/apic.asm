@@ -95,7 +95,7 @@ msr_irq&nr:
 ;
 	mov ds,es:[bx].user_data
 	push cs
-	push OFFSET irq_handle_done&nr
+	push OFFSET msr_irq_handle_done&nr
 	push es:[bx].user_handler
 	xor ax,ax
 	mov es,ax
@@ -112,6 +112,52 @@ msr_irq_handle_done&nr:
     xor eax,eax
     mov ecx,MSR_APIC_EOI
     wrmsr
+    LeaveInt
+;
+	popad
+	pop fs
+	pop es
+	pop ds
+	iretd
+
+mem_irq&nr:
+	push ds
+	push es
+	push fs
+	pushad
+;
+    EnterInt
+	sti
+;	
+	mov ax,irq_sys_sel
+	mov es,ax
+	mov bx,OFFSET irq_arr + nr * SIZE irq_struc
+	mov eax,es:[bx].user_handler
+	or eax,eax
+	jz mem_irq_default_error&nr
+;
+	mov ds,es:[bx].user_data
+	push cs
+	push OFFSET mem_irq_handle_done&nr
+	push es:[bx].user_handler
+	xor ax,ax
+	mov es,ax
+	retf
+
+mem_irq_default_error&nr:
+;
+; unmask IRQ here
+;
+	or es:bad_irqs, 1 SHL nr
+
+mem_irq_handle_done&nr:
+	cli
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    LeaveInt
 ;
 	popad
 	pop fs
@@ -1336,6 +1382,172 @@ ReadIoApicInt   Proc near
     pop ds
     ret
 ReadIoApicInt   Endp 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IRQx
+;
+;		DESCRIPTION:	IRQ handlers
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	irqmac 1
+	irqmac 3
+	irqmac 4
+	irqmac 5
+	irqmac 6
+	irqmac 7
+	irqmac 8
+	irqmac 9
+	irqmac 10
+	irqmac 11
+	irqmac 12
+	irqmac 13
+	irqmac 14
+	irqmac 15
+	irqmac 16
+	irqmac 17
+	irqmac 18
+	irqmac 19
+	irqmac 20
+	irqmac 21
+	irqmac 22
+	irqmac 23
+	irqmac 24
+	irqmac 25
+	irqmac 26
+	irqmac 27
+	irqmac 28
+	irqmac 29
+	irqmac 30
+	irqmac 31
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EnableIrq
+;
+;		description:	Enable IRQ in IOAPIC controller
+;
+;		PARAMETERS:		AL			irq nr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_irq  Proc far
+    push ax
+    push cx
+;    
+	test al,8
+	jz set_pic1
+set_pic2:
+	sub al,8
+	mov cl,al
+	mov ah,1
+	rol ah,cl
+	not ah
+	cli
+	in al,0A1h
+	jmp short $+2
+	and al,ah
+	out 0A1h,al
+	sti
+	jmp set_pic_done
+	
+set_pic1:
+	mov cl,al
+	mov ah,1
+	rol ah,cl
+	not ah
+	cli
+	in al,21h
+	jmp short $+2
+	and al,ah
+	out 21h,al
+	sti
+
+set_pic_done:
+    pop cx
+    pop ax
+    ret
+enable_irq  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DisableIrq
+;
+;		description:	Disable IRQ in PIC controller
+;
+;		PARAMETERS:		AL			irq nr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disable_irq  Proc far
+    push ax
+    push cx    
+;
+	test al,8
+	jz remove_pic1
+
+remove_pic2:
+	sub al,8
+	mov cl,al
+	mov ah,1
+	rol ah,cl
+	cli
+	in al,0A1h
+	or al,ah
+	out 0A1h,al
+	sti
+	jmp remove_pic_done
+
+remove_pic1:
+	mov cl,al
+	mov ah,1
+	rol ah,cl
+	cli
+	in al,21h
+	or al,ah
+	out 21h,al
+	sti
+remove_pic_done:
+    pop cx
+    pop ax
+    ret
+disable_irq Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EnableIrqDetect
+;
+;		description:	Enable IRQ detect in PIC controller
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_irq_detect  Proc far
+    push ax
+;    
+	xor al,al
+	out 21h,al
+	jmp short $+2
+;	
+    xor al,al
+	out 0A1h,al
+;
+    pop ax
+    ret
+enable_irq_detect   Endp
+
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
