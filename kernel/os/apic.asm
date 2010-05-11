@@ -40,6 +40,7 @@ INCLUDE port.def
 INCLUDE system.def
 INCLUDE apic.inc
 INCLUDE proc.inc
+INCLUDE irq.inc
 
 MP_FLAG_MEM = 1
 MP_FLAG_MSR = 2

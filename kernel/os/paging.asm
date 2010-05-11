@@ -1552,8 +1552,8 @@ set_flat_linear_invalid	PROC far
 	sub ecx,edx
 	shr edx,10
 	shr ecx,12
-	push ecx
-	push edx
+;	push ecx
+;	push edx
 
 set_inv_mark:
 	mov eax,[edx]
@@ -1588,14 +1588,17 @@ set_inv_next:
 	add edx,4
 	loop set_inv_mark
 ;
-    pop edx
-    pop ecx
-	shl edx,10
-    mov ax,system_data_sel
-    mov ds,ax
-    call ds:tlb_flush_proc
+;    pop edx
+;    pop ecx
+;	shl edx,10
+;    mov ax,system_data_sel
+;    mov ds,ax
+;    call ds:tlb_flush_proc
     
 set_inv_done:
+    mov eax,cr3
+    mov cr3,eax
+;    
 	pop edx
 	pop ecx
 	pop eax
@@ -1648,8 +1651,8 @@ set_flat_linear_readwrite	PROC far
 	shr edx,10
 	shr ecx,12
 ;
-    push ecx
-    push edx
+;    push ecx
+;    push edx
 
 set_readwrite_mark:
 	mov eax,[edx]
@@ -1672,14 +1675,17 @@ set_readwrite_next:
 	add edx,4
 	loop set_readwrite_mark
 ;	
-    pop edx
-    pop ecx
-	shl edx,10
-    mov ax,system_data_sel
-    mov ds,ax
-    call ds:tlb_flush_proc
+;    pop edx
+;    pop ecx
+;	shl edx,10
+;    mov ax,system_data_sel
+;    mov ds,ax
+;    call ds:tlb_flush_proc
 
 set_readwrite_done:
+    mov eax,cr3
+    mov cr3,eax
+;    
 	pop edx
 	pop ecx
 	pop eax
