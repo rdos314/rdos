@@ -1740,7 +1740,6 @@ enable_apic:
     mov ds:ioapic_regsel,bl
     movzx eax,al
     add al,40h
-    mov ah,80h
     mov ds:ioapic_window,eax
 ;
     inc bl
@@ -2301,6 +2300,48 @@ InitSmp Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetupIrq
+;
+;		DESCRIPTION:	Setup IRQs to IOAPIC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupIrq    Proc near
+    push ds
+    push eax
+    push bx
+    push cx
+;    
+    mov ax,irq_sys_sel
+    mov ds,ax
+;    
+    mov word ptr ds:irq_detect_proc,OFFSET enable_irq_detect
+    mov word ptr ds:irq_detect_proc+2,cs
+;    
+	mov cx,32
+	mov bx,OFFSET irq_arr
+	xor eax,eax
+
+init_irq_loop:
+	mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
+	mov word ptr ds:[bx].irq_enable_proc+2,cs
+;
+	mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
+	mov word ptr ds:[bx].irq_disable_proc+2,cs
+;
+	add bx,SIZE irq_struc
+	loop init_irq_loop
+;
+    pop cx
+    pop bx
+    pop eax
+    pop ds
+    ret
+SetupIrq    Endp	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			Init
 ;
 ;		DESCRIPTION:	Init apic mp module
@@ -2352,6 +2393,7 @@ init	PROC far
 init_apic_mmio:
     or es:mp_flags, MP_FLAG_MEM
     call SetupMemGates
+    call SetupIrq
     jmp init_apic_start_cpu
 
 init_apic_msr:
@@ -2395,30 +2437,6 @@ init_apic_gates_ok:
 	mov es,ax
 	mov di,OFFSET init_apic_thread
 	HookInitTasking
-;
-	mov bx,irq_sys_sel
-	mov ds,bx
-;    
-	mov bx,OFFSET irq_arr + 6 * SIZE irq_struc
-	mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
-	mov word ptr ds:[bx].irq_enable_proc+2,cs
-;
-	mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
-	mov word ptr ds:[bx].irq_disable_proc+2,cs
-;    
-	mov bx,OFFSET irq_arr + 14 * SIZE irq_struc
-	mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
-	mov word ptr ds:[bx].irq_enable_proc+2,cs
-;
-	mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
-	mov word ptr ds:[bx].irq_disable_proc+2,cs
-;    
-	mov bx,OFFSET irq_arr + 15 * SIZE irq_struc
-	mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
-	mov word ptr ds:[bx].irq_enable_proc+2,cs
-;
-	mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
-	mov word ptr ds:[bx].irq_disable_proc+2,cs
 ;
     popad
     pop es
