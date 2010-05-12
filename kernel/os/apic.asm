@@ -1696,8 +1696,40 @@ enable_irq  Proc far
     push ds
     push eax
     push bx
+    push cx
     push edx
 ;    
+    push ax
+    test al,10h
+    jae enable_apic
+;    
+	test al,8
+	jz dis_pic1
+
+dis_pic2:
+	sub al,8
+	mov cl,al
+	mov ah,1
+	rol ah,cl
+	cli
+	in al,0A1h
+	or al,ah
+	out 0A1h,al
+	sti
+	jmp enable_apic
+
+dis_pic1:
+	mov cl,al
+	mov ah,1
+	rol ah,cl
+	cli
+	in al,21h
+	or al,ah
+	out 21h,al
+	sti
+	
+enable_apic:
+    pop ax
     mov bx,ioapic_mem_sel
     mov ds,bx
 ;       
@@ -1708,6 +1740,7 @@ enable_irq  Proc far
     mov ds:ioapic_regsel,bl
     movzx eax,al
     add al,40h
+    mov ah,80h
     mov ds:ioapic_window,eax
 ;
     inc bl
@@ -1717,6 +1750,7 @@ enable_irq  Proc far
     mov ds:ioapic_window,edx
 ;
     pop edx
+    pop cx
     pop bx
     pop eax
     pop ds
@@ -1980,6 +2014,7 @@ InitApic    Proc near
     mov es:APIC_TIMER,eax
 ;
     mov eax,es:APIC_SPUR
+    and eax,NOT 1000h
     or eax,100h
     mov al,0Fh
     mov es:APIC_SPUR,eax    
