@@ -2006,6 +2006,7 @@ HandlePrio    Proc near
     jz hpqDone
 ;
     sub si,2
+    mov ds:prio_act,si
     jmp HandlePrio
 
 hpqInt:
@@ -3379,6 +3380,13 @@ ShutdownLocal proc near
     push ds
     push fs
 ;
+    mov ax,wd_code_sel
+    verr ax
+    jnz slDo
+;
+    CpuReset
+
+slDo:
     mov ax,task_sel
     mov ds,ax
     call ds:get_cpu_proc
@@ -3452,6 +3460,14 @@ shutdown_pr proc far
     push fs
 ;
     push eax
+;
+    mov ax,wd_code_sel
+    verr ax
+    jnz spDo
+;
+    CpuReset
+
+spDo:
     mov ax,task_sel
     mov ds,ax
     mov ecx,ds:processor_preempt
@@ -3526,6 +3542,13 @@ debug_exception:
     jc debug_normal
 
 debug_fault:
+    mov ax,wd_code_sel
+    verr ax
+    jnz dfDo
+;
+    CpuReset
+
+dfDo:
     mov ds,fs:ps_null_thread 
     mov ds,ds:p_tss_data_sel  
     pop fs 
@@ -3671,6 +3694,13 @@ debug_save_ok:
     jne debug_block
 ;
     mov es,ax
+    mov ax,wd_code_sel
+    verr ax
+    jnz dbDo
+;
+    CpuReset
+
+dbDo:
 	mov es:p_error_code,dx
     mov ax,system_data_sel
     mov ds,ax
