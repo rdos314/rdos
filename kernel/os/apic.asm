@@ -349,8 +349,8 @@ ApInit:
     mov ds:mp_apic,edx
 ;    
 stopl:
-    cli
-    jmp stopl
+;    cli
+;    jmp stopl
 ;    
     sti
     hlt
