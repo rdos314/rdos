@@ -2633,67 +2633,12 @@ SaveCurrentThread	Proc near
 ;
     mov ax,task_sel
     mov ds,ax
-
-
-
-
-    push ax
-    call ds:get_cpu_proc
-    mov ax,fs:ps_nesting
-    cmp ax,-1
-    jz save_enest_ok
-;
-    mov si,ax
-    call ShutdownLocal
-
-save_enest_ok:
-    pop ax
-
-
-
-
-
     call ds:lock_proc
 ;
-
-
-    push ax
-    call ds:get_cpu_proc
-    mov ax,fs:ps_nesting
-    or ax,ax
-    jz save_ldnest_ok
-;
-    mov si,ax
-    call ShutdownLocal
-
-save_ldnest_ok:
-    pop ax
-
-
-
-
-
     cli    
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	sti
-
-
-    push ax
-    call ds:get_cpu_proc
-    mov ax,fs:ps_nesting
-    or ax,ax
-    jz save_ltnest_ok
-;
-    mov si,ax
-    call ShutdownLocal
-
-save_ltnest_ok:
-    pop ax
-
-
-
-	
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -2750,23 +2695,6 @@ save_thread_setup:
     xor bp,bp
     mov es,bp
     mov gs,bp    
-
-
-
-    push ax
-    call ds:get_cpu_proc
-    mov ax,fs:ps_nesting
-    or ax,ax
-    jz save_lnest_ok
-;
-    mov si,ax
-    call ShutdownLocal
-
-save_lnest_ok:
-    pop ax
-
-
-    
     ret
 SaveCurrentThread   Endp
 
@@ -2994,12 +2922,13 @@ PAGE
 ;
 ;		DESCRIPTION:	Reload timer
 ;
+;       PARAMETERS:     DS      Task sel
+;                       FS      Processor sel
+;                       CY      Lock succeeded
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReloadTimer Proc near
-	mov ax,task_sel
-	mov ds,ax
-	call ds:try_lock_proc
 	jc reload_timer_loop
 ;
     or fs:ps_flags,PS_FLAG_TIMER	
@@ -3620,7 +3549,6 @@ debug_fault:
 dfDo:
     mov ds,fs:ps_null_thread 
     mov ds,ds:p_tss_data_sel  
-    pop fs 
 ;    
 	mov eax,[bp].vm_eax
 	mov dword ptr ds:tss_eax,eax
@@ -3652,14 +3580,15 @@ dfDo:
 	mov ds:tss_ds,ax
 	mov ax,es
 	mov ds:tss_es,ax
-	mov ax,fs
+;
+    pop ax	
 	mov ds:tss_fs,ax
+;	
 	mov ax,gs
 	mov ds:tss_gs,ax
 ;
     mov ax,task_sel
     mov ds,ax
-    call ds:get_cpu_proc
     mov es,fs:ps_null_thread
     movzx dx,byte ptr [bp].vm_err+2
 	mov es:p_error_code,dx
@@ -3677,7 +3606,6 @@ debug_normal:
 ;    
     mov ds,ax
     mov ds,ds:p_tss_data_sel
-    pop fs
 ;
 	mov eax,[bp].vm_eax
 	mov dword ptr ds:tss_eax,eax
@@ -3698,6 +3626,7 @@ debug_normal:
 	mov eax,[bp].vm_eip
 	mov dword ptr ds:tss_eip,eax
 ;	
+    pop si
     test dword ptr [bp].vm_eflags,20000h
     jnz debug_vm
 
@@ -3725,8 +3654,7 @@ debug_pm_common:
 	mov ds:tss_ds,ax
 	mov ax,es
 	mov ds:tss_es,ax
-	mov ax,fs
-	mov ds:tss_fs,ax
+	mov ds:tss_fs,si
 	mov ax,gs
 	mov ds:tss_gs,ax
 	jmp debug_save_ok
@@ -3749,7 +3677,6 @@ debug_save_ok:
     movzx dx,byte ptr [bp].vm_err+2
     mov ax,task_sel
     mov ds,ax
-    call ds:get_cpu_proc
 ;    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
@@ -3825,9 +3752,6 @@ double_fault:
     or ax,ax
     jnz double_block
 ;
-    mov ax,task_sel
-    mov ds,ax
-    call ds:get_cpu_proc
     mov ds,fs:ps_null_thread 
     mov es,ds:p_tss_data_sel  
 ;    
@@ -4507,8 +4431,6 @@ PAGE
 TryLockMultiple	Proc near
     push ax
     push dx
-;
-    call ds:get_cpu_proc
 
 tlmSpinLock:
     sti
@@ -4526,6 +4448,7 @@ tlmGet:
     or ax,ax
     jnz tlmSpinLock
 ;
+    call ds:get_cpu_proc
     mov ax,ds:owner_sel
     or ax,ax
     jz tlmTake
@@ -4572,8 +4495,6 @@ PAGE
 LockMultiple	Proc near
     push ax
     push dx
-;
-    call ds:get_cpu_proc
 
 lmSpinLock:
     sti
@@ -4591,6 +4512,7 @@ lmGet:
     or ax,ax
     jnz lmSpinLock
 ;
+    call ds:get_cpu_proc
     mov ax,ds:owner_sel
     or ax,ax
     jz lmTake
@@ -4882,6 +4804,7 @@ timer_int:
 	out INT0_CONTROL,al
 	mov ax,task_sel
 	mov ds,ax
+	call ds:try_lock_proc
 	call ReloadTimer
 ;
 	popad
@@ -4907,6 +4830,7 @@ do_preempt_processor_name   DB 'Do Preempt Processor', 0
 do_preempt_processor    Proc far
 	mov ax,task_sel
 	mov ds,ax
+	call ds:try_lock_proc
 	call ReloadTimer
 	ret
 do_preempt_processor    Endp
@@ -4937,9 +4861,11 @@ start_timer	PROC far
 ;
 	mov si,task_sel
 	mov ds,si
-    call ds:get_cpu_proc
+	call ds:try_lock_proc
 	cli
+    pushf
 	LocalStartTimer
+	popf
 	call ReloadTimer
 	sti
 ;
@@ -4973,9 +4899,11 @@ stop_timer	PROC far
 ;
 	mov si,task_sel
 	mov ds,si
-    call ds:get_cpu_proc
+	call ds:try_lock_proc
 	cli
+	pushf
 	LocalStopTimer
+	popf
 	call ReloadTimer
 	sti
 ;
@@ -5984,8 +5912,9 @@ get_thread_pr	PROC far
 ;	
 	mov ax,task_sel
 	mov ds,ax
-    call ds:get_cpu_proc
+	call ds:lock_proc
 	mov ax,fs:ps_curr_thread
+	call ds:unlock_proc
 ;
     pop fs	
 	pop ds
