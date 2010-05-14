@@ -3821,7 +3821,103 @@ double_fault:
     mov es,ax
     mov gs,ax    
 ;
-    mov es,fs:ps_curr_thread
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jnz double_block
+;
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_cpu_proc
+    mov ds,fs:ps_null_thread 
+    mov es,ds:p_tss_data_sel  
+;    
+    mov ax,double_tss_data_sel
+    mov ds,ax
+    mov bx,ds:tss_back_link
+;
+	mov ax,gdt_sel
+	mov ds,ax
+	and bx,0FFF8h
+	xor ecx,ecx
+	mov cl,[bx+6]
+	and cl,0Fh
+	shl ecx,16
+	mov cx,[bx]
+	inc ecx
+	mov edx,[bx+2]
+	rol edx,8
+	mov dl,[bx+7]
+	ror edx,8
+;	
+    AllocateGdt
+    CreateDataSelector16
+    mov ds,bx
+;    
+    mov esi,dword ptr ds:tss_cs
+    mov edi,dword ptr ds:tss_eip
+	call ShutdownLocal
+;
+    mov eax,dword ptr ds:tss_eax
+    mov dword ptr es:tss_eax,eax
+;
+    mov eax,dword ptr ds:tss_ebx
+    mov dword ptr es:tss_ebx,eax
+;
+    mov eax,dword ptr ds:tss_ecx
+    mov dword ptr es:tss_ecx,eax
+;
+    mov eax,dword ptr ds:tss_edx
+    mov dword ptr es:tss_edx,eax
+;
+    mov eax,dword ptr ds:tss_esi
+    mov dword ptr es:tss_esi,eax
+;
+    mov eax,dword ptr ds:tss_edi
+    mov dword ptr es:tss_edi,eax
+;
+    mov eax,dword ptr ds:tss_ebp
+    mov dword ptr es:tss_ebp,eax
+;
+    mov ax,ds:tss_ds
+    mov es:tss_ds,ax
+;
+    mov ax,ds:tss_es
+    mov es:tss_es,ax
+;
+    mov ax,ds:tss_fs
+    mov es:tss_fs,ax
+;
+    mov ax,ds:tss_gs
+    mov es:tss_gs,ax
+;
+    mov ax,ds:tss_ss
+    mov es:tss_ss,ax
+;
+    mov eax,dword ptr ds:tss_esp
+    mov dword ptr ds:tss_esp,eax
+;
+    mov ax,ds:tss_cs
+    mov es:tss_cs,ax
+;
+    mov eax,dword ptr ds:tss_eip               
+    mov dword ptr es:tss_eip,eax
+;
+    mov eax,dword ptr ds:tss_eflags
+    mov dword ptr es:tss_eflags,eax
+;	
+    mov es,fs:ps_null_thread 
+    mov ax,task_sel
+    mov ds,ax
+	mov es:p_error_code,8
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov di,OFFSET debug_list
+    InsertBlock
+    ShutDownTask
+    
+double_block:
+    mov es,ax    
 	mov es:p_error_code,8
 ;
     mov ax,system_data_sel
@@ -4340,6 +4436,7 @@ LoadUnlockSingle	Proc near
     sub fs:ps_nesting,1
 	jc lulsDone
 ;
+    mov cx,fs:ps_nesting
     call ShutdownLocal
 
 lulsDone:    	
