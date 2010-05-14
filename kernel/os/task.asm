@@ -2297,15 +2297,14 @@ PAGE
 ;
 ;		DESCRIPTION:	Load register-state for current thread
 ;
-;       PARAMETERS:     FS      Processor selector
+;       PARAMETERS:     DS      Task sel
+;                       FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     extrn thread_create:near
 
 LoadCurrentThread:
-	mov ax,task_sel
-	mov ds,ax
 ;	call ds:load_unlock_proc
 ;
 ;   call ds:lock_proc
@@ -2434,11 +2433,10 @@ load_suspend_done:
 
 load_bp_done:
 
-load_actions_done:        
+load_actions_done: 
     push ds
     mov ax,task_sel
     mov ds,ax
-    call ds:get_cpu_proc
     call ds:load_unlock_proc
     mov al,ds:has_signal
     or al,ds:has_list
@@ -2635,12 +2633,67 @@ SaveCurrentThread	Proc near
 ;
     mov ax,task_sel
     mov ds,ax
+
+
+
+
+    push ax
+    call ds:get_cpu_proc
+    mov ax,fs:ps_nesting
+    cmp ax,-1
+    jz save_enest_ok
+;
+    mov si,ax
+    call ShutdownLocal
+
+save_enest_ok:
+    pop ax
+
+
+
+
+
     call ds:lock_proc
 ;
+
+
+    push ax
+    call ds:get_cpu_proc
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz save_ldnest_ok
+;
+    mov si,ax
+    call ShutdownLocal
+
+save_ldnest_ok:
+    pop ax
+
+
+
+
+
     cli    
 	call ds:update_clock_proc
 	LocalGetSystemTime
 	sti
+
+
+    push ax
+    call ds:get_cpu_proc
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz save_ltnest_ok
+;
+    mov si,ax
+    call ShutdownLocal
+
+save_ltnest_ok:
+    pop ax
+
+
+
+	
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -2697,6 +2750,23 @@ save_thread_setup:
     xor bp,bp
     mov es,bp
     mov gs,bp    
+
+
+
+    push ax
+    call ds:get_cpu_proc
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz save_lnest_ok
+;
+    mov si,ax
+    call ShutdownLocal
+
+save_lnest_ok:
+    pop ax
+
+
+    
     ret
 SaveCurrentThread   Endp
 
@@ -2726,7 +2796,6 @@ SaveLockedThread	Proc near
 ;
     mov ax,task_sel
     mov ds,ax
-;
     cli    
 	call ds:update_clock_proc
 	LocalGetSystemTime
@@ -4093,6 +4162,8 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TryLockDefault	Proc near
+    call ds:get_cpu_proc
+	add fs:ps_nesting,1
     stc
 	ret
 TryLockDefault	Endp
@@ -4111,6 +4182,8 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockDefault	Proc near
+    call ds:get_cpu_proc
+	add fs:ps_nesting,1
     stc
 	ret
 LockDefault	Endp
@@ -4129,6 +4202,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockDefault	Proc near
+    sub fs:ps_nesting,1
 	ret
 UnlockDefault	Endp
 
@@ -4146,6 +4220,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadUnlockDefault	Proc near
+    sub fs:ps_nesting,1
 	ret
 LoadUnlockDefault	Endp
 
@@ -5955,7 +6030,6 @@ wait_until	PROC far
 	cli
 	LocalStartTimer
 	sti
-;
     xor ax,ax    
     mov edi,1
     jmp BlockCurrentThread
@@ -5996,7 +6070,7 @@ wait_milli_sec	PROC far
 ;
 	add eax,ebx
 	adc edx,0
-;	
+;
 	mov cx,es
 	mov bx,cs
 	mov es,bx
