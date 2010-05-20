@@ -86,7 +86,7 @@ SendEvent Proc near
     mov ds,ax
     mov ds,ds:p_app_sel
 	mov ds,ds:app_mod_sel
-	EnterSection ds:mod_section
+	EnterInt
 ;
 	mov ax,ds:lib_events
 	or ax,ax
@@ -113,7 +113,7 @@ seInsDone:
 	mov ds:lib_events,es
 	xor ax,ax
 	mov es,ax
-	LeaveSection ds:mod_section
+	LeaveInt
 ;
     push es
 
@@ -3079,7 +3079,7 @@ get_debug_event Proc far
 	push si
 ;
     mov ds,bx
-	EnterSection ds:mod_section
+	EnterInt
 	mov ax,ds:lib_events
 	or ax,ax
 	jz gdeLeaveFail
@@ -3100,7 +3100,7 @@ get_debug_event Proc far
 	mov ds:lib_events,0
 
 gdeRemoved:
-	LeaveSection ds:mod_section
+	LeaveInt
 ;
     mov ds:lib_curr_event,es
     mov bl,es:event_code
@@ -3109,7 +3109,7 @@ gdeRemoved:
     jmp gdeDone
 
 gdeLeaveFail:
-	LeaveSection ds:mod_section
+	LeaveInt
 	xor bl,bl
 	xor ax,ax
     stc
@@ -3389,7 +3389,7 @@ notify_pe_exception	Proc far
     mov ds,ax
     mov ds,ds:p_app_sel
 	mov ds,ds:app_mod_sel
-	EnterSection ds:mod_section
+	EnterInt
 ;
 	mov ax,ds:lib_events
 	or ax,ax
@@ -3417,7 +3417,7 @@ neInsDone:
 	xor ax,ax
 	mov es,ax
 	cli
-	LeaveSection ds:mod_section
+	LeaveInt
 ;
 	mov ax,ds:lib_debug_obj
 	or ax,ax

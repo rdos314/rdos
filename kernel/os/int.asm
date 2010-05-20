@@ -52,8 +52,6 @@ INCLUDE int.def
 	extrn prot_exception16:near
 	extrn prot_exception32:near
 
-	extrn get_thread:near
-
 	extrn create_code_selector:near
 
 	extrn set_flags:near

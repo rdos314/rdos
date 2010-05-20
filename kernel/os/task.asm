@@ -5879,12 +5879,30 @@ get_thread_pre_tasking:
 	jmp get_thread_done
 
 get_thread_norm:
-    push fs
-    GetProcessor
-    mov ax,fs:ps_curr_thread
-	pop fs
-	verr ax
-	jnz get_thread_pre_tasking
+    push es
+    push si
+    push di
+;    
+	mov ds,ax
+	mov ax,gdt_sel
+	mov es,ax
+	mov di,tss_data_sel
+	call ds:lock_list_proc
+    str si
+    movs word ptr es:[di],es:[si]
+    movs word ptr es:[di],es:[si]
+    lods word ptr es:[si]
+    mov ah,92h
+    stos word ptr es:[di]
+    movs word ptr es:[di],es:[si]
+    mov ax,tss_data_sel
+    mov es,ax
+    mov ax,es:tss_thread
+    call ds:unlock_list_proc
+;    
+    pop di
+    pop si
+    pop es
 
 get_thread_done:
 	pop ds
