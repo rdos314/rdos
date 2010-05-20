@@ -3803,8 +3803,12 @@ double_fault:
     CreateDataSelector16
     mov ds,bx
 ;    
-    mov esi,dword ptr ds:tss_cs
-    mov edi,dword ptr ds:tss_eip
+;    mov esi,dword ptr ds:tss_cs
+;    mov edi,dword ptr ds:tss_eip
+    mov bx,word ptr ds:tss_ebp
+    mov es,word ptr ds:tss_ss
+    mov esi,es:[bx].vm_cs
+    mov edi,es:[bx].vm_eip
 	call ShutdownLocal
 ;
     mov eax,dword ptr ds:tss_eax
