@@ -517,6 +517,9 @@ shutdown_nr                 EQU 363
 
 locked_debug_exception_nr   EQU 364
 
+lock_task_nr                EQU 365
+unlock_task_nr              EQU 366
+
 get_processor_nr            EQU 368
 
 resume_processor_nr         EQU 369

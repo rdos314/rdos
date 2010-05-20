@@ -635,6 +635,14 @@ LeaveInt    MACRO
 	OsGate leave_int_nr
 						ENDM
 
+LockTask    MACRO
+	OsGate lock_task_nr
+						ENDM
+
+UnlockTask    MACRO
+	OsGate unlock_task_nr
+						ENDM
+
 ;   SS:BP     Exception stack
 DebugException    MACRO
 	OsGate debug_exception_nr

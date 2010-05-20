@@ -863,6 +863,18 @@ proc_init:
 	mov ax,leave_int_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET lock_task
+	mov di,OFFSET lock_task_name
+	xor cl,cl
+	mov ax,lock_task_nr
+	RegisterOsGate
+;
+	mov si,OFFSET unlock_task
+	mov di,OFFSET unlock_task_name
+	xor cl,cl
+	mov ax,unlock_task_nr
+	RegisterOsGate
+;
 	mov si,OFFSET debug_exception
 	mov di,OFFSET debug_exception_name
 	xor cl,cl
@@ -3540,6 +3552,7 @@ debug_exception_name            DB 'Debug Exception', 0
 locked_debug_exception_name     DB 'Locked Debug Exception', 0
 
 locked_debug_exception:
+    push fs
     mov ax,task_sel
     mov ds,ax
     call ds:get_cpu_proc
@@ -4789,6 +4802,63 @@ leave_int	Proc far
 	call ds:unlock_proc
 	ret
 leave_int	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LockTask
+;
+;		DESCRIPTION:	Lock task
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_task_name	DB 'Lock Task',0
+
+lock_task	Proc far
+    push ds
+    push fs
+    push ax
+;    
+	mov ax,task_sel
+	mov ds,ax
+	call ds:lock_proc
+;	
+    pop ax
+    pop fs
+    pop ds
+	ret
+lock_task	Endp
+
+PAGE	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UnlockTask
+;
+;		DESCRIPTION:	Unlock task
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlock_task_name	DB 'Unlock Task',0
+
+unlock_task	Proc far
+    push ds
+    push fs
+    push ax
+;    
+	mov ax,task_sel
+	mov ds,ax
+	call ds:get_cpu_proc
+	call ds:unlock_proc
+;
+    pop ax
+    pop fs
+    pop ds	
+	ret
+unlock_task	Endp
 
 PAGE	
 
