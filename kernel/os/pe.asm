@@ -3416,8 +3416,6 @@ neInsDone:
 	mov ds:lib_events,es
 	xor ax,ax
 	mov es,ax
-	cli
-	LeaveInt
 ;
 	mov ax,ds:lib_debug_obj
 	or ax,ax
@@ -3429,7 +3427,7 @@ neInsDone:
 neSignalDone:
 	pop ax
 	pop es
-	DebugException
+	LockedDebugException
 
 neDone:
 	pop dx

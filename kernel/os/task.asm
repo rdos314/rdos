@@ -869,6 +869,12 @@ proc_init:
 	mov ax,debug_exception_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET locked_debug_exception
+	mov di,OFFSET locked_debug_exception_name
+	xor cl,cl
+	mov ax,locked_debug_exception_nr
+	RegisterOsGate
+;
 	mov si,OFFSET start_timer
 	mov di,OFFSET start_timer_name
 	xor cl,cl
@@ -3522,7 +3528,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DebugException
+;		NAME:			DebugException / LockedDebugException
 ;
 ;		DESCRIPTION:	Save current state from stack + local registers
 ;
@@ -3530,7 +3536,14 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-debug_exception_name    DB 'Debug Exception', 0
+debug_exception_name            DB 'Debug Exception', 0
+locked_debug_exception_name     DB 'Locked Debug Exception', 0
+
+locked_debug_exception:
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_cpu_proc
+    jmp debug_normal
 
 debug_exception:
     push fs

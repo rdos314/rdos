@@ -640,6 +640,11 @@ DebugException    MACRO
 	OsGate debug_exception_nr
 						ENDM
 
+;   SS:BP     Exception stack
+LockedDebugException    MACRO
+	OsGate locked_debug_exception_nr
+						ENDM
+
 ;       AL              PRIORITET
 ;       AH              MODE, 0=PM, 1=VM
 ;       ECX             STACK SIZE
