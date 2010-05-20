@@ -1788,6 +1788,27 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3
+;	
+	mov ax,task_sel
+	mov ds,ax
+	mov ax,gdt_sel
+	mov es,ax
+	mov di,tss_data_sel
+;	call ds:lock_list_proc
+    str si
+    movs word ptr es:[di],es:[si]
+    movs word ptr es:[di],es:[si]
+    lods word ptr es:[si]
+    mov ah,92h
+    stos word ptr es:[di]
+    movs word ptr es:[di],es:[si]
+    mov ax,tss_data_sel
+    mov es,ax
+    mov ax,es:tss_thread
+;   call ds:unlock_list_proc
+	
+
+
 ;    
     mov al,14
     call ReadIoApicInt

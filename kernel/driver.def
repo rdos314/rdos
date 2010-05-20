@@ -58,6 +58,8 @@ phys_list_sel		EQU 78h
 phys_page_sel		EQU 80h
 temp_sel			EQU 88h
 ;
+tss_data_sel        EQU 90h
+;
 mem_sel				EQU 0B0h
 small_mem_sel		EQU 0B8h
 local_mem_sel		EQU 0C0h

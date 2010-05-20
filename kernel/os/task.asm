@@ -5908,15 +5908,31 @@ get_thread_name	DB 'Get Thread',0
 
 get_thread_pr	PROC far
 	push ds
-	push fs
+	push es
+	push si
+	push di
 ;	
 	mov ax,task_sel
 	mov ds,ax
-	call ds:lock_proc
-	mov ax,fs:ps_curr_thread
-	call ds:unlock_proc
+	mov ax,gdt_sel
+	mov es,ax
+	mov di,tss_data_sel
+	call ds:lock_list_proc
+    str si
+    movs word ptr es:[di],es:[si]
+    movs word ptr es:[di],es:[si]
+    lods word ptr es:[si]
+    mov ah,92h
+    stos word ptr es:[di]
+    movs word ptr es:[di],es:[si]
+    mov ax,tss_data_sel
+    mov es,ax
+    mov ax,es:tss_thread
+    call ds:unlock_list_proc
 ;
-    pop fs	
+    pop di
+    pop si
+    pop es
 	pop ds
 	retf32
 get_thread_pr	ENDP
