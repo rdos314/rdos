@@ -898,7 +898,9 @@ start_apic_mem_timer    Proc far
     mov bx,apic_mem_sel
     mov es,bx
     mov es:APIC_INIT_COUNT,eax    
-    GetSystemTime
+    push fs
+    GetProcessor
+    pop fs
     mov eax,es:APIC_CURR_COUNT    
 	neg eax
 	add eax,80000000h
@@ -939,7 +941,9 @@ start_apic_msr_timer    Proc far
 	mov eax,80000000h
     mov ecx,MSR_APIC_INIT_COUNT
     wrmsr
-    GetSystemTime
+    push fs
+    GetProcessor
+    pop fs
     mov ecx,MSR_APIC_CURR_COUNT
     rdmsr
 	neg eax
