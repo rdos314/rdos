@@ -117,7 +117,7 @@ LowRamLoop:
     je RamFound
 LowRamNext:
     add esi,1000h
-    cmp esi,0A0000h
+    cmp esi,09F000h
     jc LowRamLoop
     mov esi,100000h
 HighRamLoop:

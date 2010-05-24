@@ -91,7 +91,7 @@ LowRamLoop:
     je RamFound
 LowRamNext:
     add esi,1000h
-    cmp esi,0A0000h
+    cmp esi,9F000h
     jc LowRamLoop
     mov esi,100000h
 HighRamLoop:
@@ -874,7 +874,7 @@ prot_init:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
-	mov ds:ram1_size,0A0000h
+	mov ds:ram1_size,09F000h
 	mov ds:ram2_base,100000h
 	mov eax,cs:code_base
 	mov ds:rom1_base,eax

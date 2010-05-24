@@ -536,8 +536,27 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init:
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov ebx,40Eh
+    mov bx,[bx]
+    movzx ebx,bx
+    shl ebx,4
+;
     mov ax,system_data_sel
     mov ds,ax
+;
+    cmp ebx,80000h
+    jb init_no_bda
+;       
+    mov eax,ds:ram1_size
+    cmp eax,ebx
+    jbe init_no_bda
+;    
+    mov ds:ram1_size,ebx
+
+init_no_bda:   
     mov ds:cpu_type,3
     mov ds:cpu_vendor,0
     mov ds:cpu_feature_flags,0
