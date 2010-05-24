@@ -35,10 +35,12 @@ INCLUDE ..\..\kernel\os.inc
 INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
+INCLUDE acpi.def
 
 acpi_data_seg STRUC
 
-acpi_rsdp  DD ?
+acpi_table_count        DW ?
+acpi_table_arr          DD ?
 
 acpi_data_seg ENDS
 
@@ -195,6 +197,7 @@ get_rsdp_done:
     xor eax,eax
     mov ds,ax
     SetPhysicalPage
+    mov ecx,1000h
     FreeLinear
     FreeGdt    
     popf
@@ -210,6 +213,177 @@ get_rsdp_done:
     pop ds
     ret
 GetRsdp Endp
+
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetTable
+;
+;		DESCRIPTION:    Get a table
+;
+;       PARAMETERS:     EAX     Physical address
+;
+;       RETURNS:        NC      OK
+;                       ES      Table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetTable Proc near
+    push ds
+    pushad
+;   
+    mov ebp,eax 
+    mov eax,1000h
+    AllocateBigLinear
+    mov eax,ebp
+    movzx ebx,ax
+    and bx,0FFFh
+    and ax,0F000h
+    or al,7    
+    SetPhysicalPage
+;    
+    push edx
+    add edx,ebx
+    AllocateGdt        
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds,bx    
+    pop edx
+;
+    mov ecx,ds:acpi_size
+    xor eax,eax
+    mov ds,ax
+    SetPhysicalPage
+    push ecx
+    mov ecx,1000h
+    FreeLinear
+    pop ecx
+    FreeGdt
+;    
+    cmp ecx,10000h - SIZE acpi_table
+    jae get_table_fail
+;   
+    mov eax,ecx     
+    sub eax,SIZE acpi_header
+    add eax,SIZE acpi_table
+    AllocateSmallGlobalMem
+    mov eax,ecx
+    sub eax,SIZE acpi_header
+    mov es:act_size,ax
+    mov di,SIZE acpi_table
+;    
+    mov eax,ecx
+    add eax,1000h
+    dec eax
+    and ax,0F00h
+    add eax,1000h
+    AllocateBigLinear
+;
+    mov ecx,eax
+    shr ecx,12
+    push ecx
+;        
+    mov eax,ebp
+    movzx ebx,ax
+    and bx,0FFFh
+;
+    push ecx
+    push edx
+    add edx,ebx
+    AllocateGdt        
+    shl ecx,12
+    CreateDataSelector16
+    mov ds,bx    
+    pop edx
+    pop ecx
+;
+    push edx
+    and ax,0F000h
+    or al,7    
+
+get_table_set_phys:
+    SetPhysicalPage
+    add eax,1000h
+    add edx,1000h
+    loop get_table_set_phys
+    pop edx
+;    
+    mov si,SIZE acpi_header
+    mov ecx,ds:acpi_size
+    sub ecx,SIZE acpi_header
+;
+    xor ah,ah
+
+get_table_copy:
+    lodsb
+    add ah,al
+    stosb
+    loop get_table_copy
+;
+    mov cx,SIZE acpi_header
+    xor si,si
+
+get_table_check:
+    lodsb
+    add ah,al
+    loop get_table_check
+;
+    or ah,ah
+    jnz get_table_pop_fail
+;
+    mov eax,ds:acpi_sign
+    mov es:act_sign,eax
+    mov eax,ds:acpi_oem_id
+    mov es:act_oem_id,eax
+    mov eax,ds:acpi_oem_id+4
+    mov es:act_oem_id+4,eax
+    jmp get_table_free
+
+get_table_pop_fail:
+    pop ecx
+    jmp get_table_fail
+
+get_table_free:
+    pop ecx
+;
+    xor eax,eax
+    push ecx
+    push edx
+
+get_table_free_phys:
+    SetPhysicalPage
+    add edx,1000h
+    loop get_table_free_phys
+    pop edx
+    pop ecx
+;
+    shl ecx,12
+    movzx ecx,cx
+    FreeLinear
+;
+    xor ax,ax
+    mov ds,ax
+    FreeGdt
+;
+    mov eax,es:act_sign
+    or eax,eax
+    jnz get_table_ok    
+
+get_table_fail:
+    FreeMem
+    stc
+    jmp get_table_done
+
+get_table_ok:
+    clc
+
+get_table_done:
+    popad
+    pop ds
+    ret
+GetTable    Endp    
+
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -225,33 +399,17 @@ acpi_name	DB 'Acpi',0
 
 acpi_pr:
     int 3
-    call GetRsdp
-    jc acpi_fail
-;
-    push eax
-    mov eax,2000h
-    AllocateBigLinear
-    pop eax
-    movzx ebx,ax
-    and bx,0FFFh
-    and ax,0F000h
-    or al,7    
-    SetPhysicalPage
-    add eax,1000h
-    add edx,1000h
-    SetPhysicalPage
-    sub edx,1000h
-;    
-    push edx
-    add edx,ebx
-    AllocateGdt        
-    mov ecx,1000h
-    CreateDataSelector16
-    mov ds,bx    
-    pop edx
-;    
+    mov ax,acpi_data_sel
+    mov ds,ax
+    mov cx,ds:acpi_table_count
+    mov si,OFFSET acpi_table_arr
 
-acpi_fail:
+acpi_loop:
+    mov es,[si]
+    add si,2
+    loop acpi_loop
+;
+
     
 PAGE
 	
@@ -306,16 +464,50 @@ init	Proc far
 	mov bx,acpi_code_sel
 	InitDevice
 ;
-	mov eax,SIZE acpi_data_seg
+    call GetRsdp
+    jc acpi_fail
+;    
+    call GetTable
+    jc acpi_fail
+;
+    mov ax,es
+    mov ds,ax
+    mov cx,ds:act_size
+    shr cx,1
+;    
+	mov ax,OFFSET acpi_table_arr
+	add ax,cx
+	movzx eax,ax
 	mov bx,acpi_data_sel
 	AllocateFixedSystemMem
 	mov es,bx
+;
+    shr cx,1
+    mov es:acpi_table_count,cx
+;
+    mov si,SIZE acpi_table
+    mov di,OFFSET acpi_table_arr
+
+acpi_load_loop:
+    lods dword ptr [si]
+    push es
+    call GetTable
+    mov ax,es
+    pop es
+    jnc acpi_load_save
+;        
+    xor ax,ax
+
+acpi_load_save:
+    stosw
+    loop acpi_load_loop
 ;
     mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_acpi_thread
 	HookInitTasking
-;
+
+acpi_fail:
 	popa
 	pop es
 	pop ds

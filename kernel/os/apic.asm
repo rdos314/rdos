@@ -352,8 +352,8 @@ ApInit:
     hlt
         
 stopl:
-;    cli
-;    jmp stopl
+    cli
+    jmp stopl
 
     StartProcessor
    
