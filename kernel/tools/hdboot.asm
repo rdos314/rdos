@@ -90,6 +90,14 @@ fat_file_size	DD ?
 
 fat_dir_struc	ENDS
 
+bios_mem_type   STRUC
+
+mem_base        DD ?, ?
+mem_size        DD ?, ?
+mem_type        DD ?
+
+bios_mem_type   ENDS
+
 	extrn Init:near
 
 .code
@@ -1920,12 +1928,47 @@ LoadAdapterDone	DB 'Load adapter done',0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+bios_buf bios_mem_type <>
+bios_smap  DB 'SMAP'
+
 GetRamSize	Proc near
 	push ds
 	push es
 	push eax
 	push ebx
+	push di
 ;
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET bios_buf
+    xor ebx,ebx
+
+GetRamSizeRetry:    
+    mov eax,0E820h
+    mov ecx,20
+    mov edx,dword ptr cs:bios_smap
+    int 15h
+    jc GetRamSizeScan
+;
+    cmp eax,dword ptr cs:bios_smap
+    jne GetRamSizeScan
+;
+    mov eax,cs:bios_buf.mem_type
+    cmp eax,1
+    jne GetRamSizeNext 
+;
+    mov ecx,cs:bios_buf.mem_base
+    cmp ecx,100000h
+    jb GetRamSizeNext
+;
+    add ecx,cs:bios_buf.mem_size
+    jmp GetRamSizeExit
+
+GetRamSizeNext:
+    or ebx,ebx
+    jnz GetRamSizeRetry
+    
+GetRamSizeScan:
 	mov word ptr cs:GetRamSizeRmCs,cs
 	cli
 	mov eax,cr0
@@ -1965,6 +2008,9 @@ GetRamSizeRmCs:
 GetRamSizeRm:
 	mov ecx,ebx
 	sti
+
+GetRamSizeExit:	
+	pop di
 	pop ebx
 	pop eax
 	pop es
