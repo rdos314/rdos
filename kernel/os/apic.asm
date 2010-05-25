@@ -46,6 +46,9 @@ INCLUDE acpi.def
 MP_FLAG_MEM = 1
 MP_FLAG_MSR = 2
 
+
+; PIC IRQs active low, edge triggered
+
 apic_struc  STRUC
 
 apic_type       DB ?
