@@ -580,6 +580,12 @@ AllocateMultiplePhysical	MACRO
 	OsGate allocate_multiple_physical_nr
 					ENDM
 
+;	IN  EAX     Table name
+;	OUT ES      Table selector
+GetAcpiTable	MACRO
+	OsGate get_acpi_table_nr
+					ENDM
+
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 ;   OUT EDX     APIC ID

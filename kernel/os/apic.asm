@@ -41,9 +41,69 @@ INCLUDE system.def
 INCLUDE apic.inc
 INCLUDE proc.inc
 INCLUDE irq.inc
+INCLUDE acpi.def
 
 MP_FLAG_MEM = 1
 MP_FLAG_MSR = 2
+
+apic_struc  STRUC
+
+apic_type       DB ?
+apic_len        DB ?
+
+apic_struc  ENDS
+
+apic_processor_struc  STRUC
+
+ap_base         apic_struc <>
+
+ap_acpi_id      DB ?
+ap_apic_id      DB ?
+ap_flags        DD ?
+
+apic_processor_struc  ENDS
+
+apic_ioapic_struc   STRUC
+
+aio_base        apic_struc <>
+
+aio_apic_id     DB ?
+aio_resv        DB ?
+aoi_phys        DD ?
+aoi_int_base    DD ?
+
+apic_ioapic_struc   ENDS
+
+apic_override_struc STRUC
+
+ao_base         apic_struc <>
+
+ao_bus          DB ?
+ao_source       DB ?
+ao_int          DD ?
+ao_flags        DW ?
+
+apic_override_struc ENDS
+
+
+apic_table  STRUC
+
+apic_base       acpi_table <>
+
+apic_phys       DD ?
+apic_flags      DD ?
+
+apic_entries    DB ?
+
+apic_table  ENDS
+
+isa_redir   STRUC
+
+isa_int     DD ?
+isa_flags   DW ?
+isa_pad     DW ?
+
+isa_redir   ENDS
 
 ioapic_data_seg STRUC
 
@@ -71,6 +131,8 @@ mp_processor_sign   DD ?
 mp_apic             DD ?
 mp_proc             DW ?
 mp_processor_sel    DW ?
+
+isa_redir_arr       DD 2 * 16 DUP(?)
 
 apic_arr            DW 256 DUP(?)
 
@@ -356,6 +418,8 @@ stopl:
     jmp stopl
 
     StartProcessor
+
+apic_tab    DB 'APIC'
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1793,6 +1857,9 @@ apic_name	DB 'Apic Test',0
 apic_pr:
     int 3
 ;	
+    mov eax,dword ptr cs:apic_tab
+    GetAcpiTable
+;    
 	mov ax,task_sel
 	mov ds,ax
 	mov ax,gdt_sel
@@ -2021,7 +2088,7 @@ PAGE
 ;
 ;		DESCRIPTION:    Init APIC timer
 ;
-;		PARAMETERS:		
+;		PARAMETERS:		EAX     Physical base of timer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2056,6 +2123,7 @@ InitApicTimer Proc near
 ;
     mov eax,1000h
     AllocateBigLinear
+    mov eax,ebp
     mov eax,0FEC00000h
     or ax,33h
     SetPhysicalPage    
@@ -2362,9 +2430,8 @@ init	PROC far
 ;
     test ax,10h
     jz init_apic_gates_ok
-;    
+;
     call InitApicTimer
-;    
     mov ax,system_data_sel
     mov ds,ax
     mov eax,ds:cpu_feature_flags
