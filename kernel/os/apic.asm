@@ -2389,7 +2389,7 @@ init_apic_msr:
     call SetupMsrGates
 
 init_apic_start_cpu:
-    call SetupIrq
+;    call SetupIrq
 	mov bx,apic_data_sel
 	mov ds,bx
 ;
