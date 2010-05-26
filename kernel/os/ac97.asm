@@ -188,7 +188,8 @@ set_line_out_volume	PROC far
     shr ax,2
 
 slovSet:        
-    mov ax,0808h
+    xor ax,ax
+;    mov ax,0808h
     mov bx,18h
     WriteCodec
 ;

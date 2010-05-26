@@ -118,6 +118,8 @@ public:
     virtual int GetMinHeight();
     
 protected:
+    void ReformatText();
+    virtual void NotifyResize();
   	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
 
 private:

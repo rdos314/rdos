@@ -797,6 +797,8 @@ void TLabelControl::SetFont(int height)
         delete FFont;
         
     FFont = new TFont(height);
+
+    ReformatText();
 }
 
 /*##########################################################################
@@ -816,6 +818,8 @@ void TLabelControl::SetFont(TFont *font)
         delete FFont;
         
     FFont = new TFont(*font);
+
+    ReformatText();
 }
 
 /*##########################################################################
@@ -833,6 +837,8 @@ void TLabelControl::SetSpace(int xstart, int ystart)
 {
     FStartX = xstart;
     FStartY = ystart;
+
+    ReformatText();
 }
 
 /*##########################################################################
@@ -1008,19 +1014,18 @@ void TLabelControl::AlignBottomRight()
 
 /*##########################################################################
 #
-#   Name       : TLabelControl::SetText
+#   Name       : TLabelControl::ReformatText
 #
-#   Purpose....: Set text
+#   Purpose....: Reformat text
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TLabelControl::SetText(const char *Text)
+void TLabelControl::ReformatText()
 {
     int row;
-    int len = strlen(Text);
     char *ptr;
     char *start;
     char *prev;
@@ -1032,9 +1037,8 @@ void TLabelControl::SetText(const char *Text)
     int xoffs, yoffs;
     int xdiff, ydiff;
 
-    if (FOrgText && len > 0)
-        if (!strcmp(Text, FOrgText))
-            return;
+    if (FText == 0)
+        return;
 
     for (row = 0; row < MAX_LABEL_ROWS; row++)
         FTextRow[row] = 0;
@@ -1042,23 +1046,17 @@ void TLabelControl::SetText(const char *Text)
     if (!FFont)
         SetFont(12);
 
-    if (FText)
-        delete FText;
-
-    FText = new char[len + 1];
-    strcpy(FText, Text);
-
-    if (FOrgText)
-        delete FOrgText;
-
-    FOrgText = new char[len + 1];
-    strcpy(FOrgText, Text);
-
     GetSize(&xsize, &ysize);
     GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
 
+    if (xsize == 0 || ysize == 0)
+        return;
+
     xsize -= 2 * FStartX;
     xsize -= xdiff;
+
+    if (xsize <= 0 || ysize <= 0)
+        return;
 
     row = 0;
     start = FText;
@@ -1167,8 +1165,42 @@ void TLabelControl::SetText(const char *Text)
     }
 
     if (FTextRow[row])
-                if (strlen(FTextRow[row]) == 0)
+        if (strlen(FTextRow[row]) == 0)
             FTextRow[row] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::SetText
+#
+#   Purpose....: Set text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::SetText(const char *Text)
+{
+    int len = strlen(Text);
+
+    if (FOrgText && len > 0)
+        if (!strcmp(Text, FOrgText))
+            return;
+
+    if (FText)
+        delete FText;
+
+    FText = new char[len + 1];
+    strcpy(FText, Text);
+
+    if (FOrgText)
+        delete FOrgText;
+
+    FOrgText = new char[len + 1];
+    strcpy(FOrgText, Text);
+
+    ReformatText();
 
     if (FBackTrans && HasParent())
         RedrawParent();
@@ -1224,6 +1256,22 @@ int TLabelControl::GetMinHeight()
             break;
 
     return height;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::NotifyResize
+#
+#   Purpose....: Notify resize
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::NotifyResize()
+{
+    ReformatText();
 }
 
 /*##########################################################################
