@@ -1929,7 +1929,6 @@ LoadAdapterDone	DB 'Load adapter done',0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 bios_buf bios_mem_type <>
-bios_smap  DB 'SMAP'
 
 GetRamSize	Proc near
 	push ds
@@ -1946,11 +1945,11 @@ GetRamSize	Proc near
 GetRamSizeRetry:    
     mov eax,0E820h
     mov ecx,20
-    mov edx,dword ptr cs:bios_smap
+    mov edx,534D4150h
     int 15h
     jc GetRamSizeScan
 ;
-    cmp eax,dword ptr cs:bios_smap
+    cmp eax,534D4150h
     jne GetRamSizeScan
 ;
     mov eax,cs:bios_buf.mem_type
