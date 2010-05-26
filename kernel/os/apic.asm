@@ -100,14 +100,6 @@ apic_entries    DB ?
 
 apic_table  ENDS
 
-isa_redir   STRUC
-
-isa_int     DD ?
-isa_flags   DW ?
-isa_pad     DW ?
-
-isa_redir   ENDS
-
 ioapic_data_seg STRUC
 
 ioapic_regsel       DB ?
@@ -135,7 +127,7 @@ mp_apic             DD ?
 mp_proc             DW ?
 mp_processor_sel    DW ?
 
-isa_redir_arr       DD 2 * 16 DUP(?)
+isa_redir_arr       DD 16 DUP(?,?)
 
 apic_arr            DW 256 DUP(?)
 
@@ -1860,8 +1852,9 @@ apic_name	DB 'Apic Test',0
 apic_pr:
     int 3
 ;	
-    mov eax,dword ptr cs:apic_tab
-    GetAcpiTable
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov bx,OFFSET isa_redir_arr
 ;    
 	mov ax,task_sel
 	mov ds,ax
@@ -2424,6 +2417,91 @@ init	PROC far
 	mov cx,100h
 	rep stosw
 	mov es:mp_flags,0
+;
+    mov ax,apic_data_sel
+    mov ds,ax
+    mov bx,OFFSET isa_redir_arr
+    xor edx,edx
+    mov eax,2040h
+    mov cx,16
+
+init_redir_loop:
+    mov [bx],eax
+    add bx,4
+    mov [bx],edx
+    add bx,4
+    inc al
+    loop init_redir_loop
+;
+    mov bx,OFFSET isa_redir_arr + 2 * 8
+    mov eax,10000h
+    mov [bx],eax 
+;       
+    mov eax,dword ptr cs:apic_tab
+    GetAcpiTable
+    jc init_apic_gates_ok
+;
+    mov di,OFFSET apic_entries
+    mov cx,es:act_size
+    sub cx,OFFSET apic_entries - OFFSET apic_phys
+
+init_redir_table_loop:
+    mov al,es:[di].apic_type
+    cmp al,2
+    jne init_redir_table_next
+;
+    mov al,es:[di].ao_bus
+    or al,al
+    jnz init_redir_table_next
+;
+    mov al,es:[di].ao_source
+    cmp al,16
+    jae init_redir_table_next
+;
+    movzx bx,al
+    shl bx,3
+    add bx,OFFSET isa_redir_arr
+;
+    mov eax,es:[di].ao_int
+    cmp eax,80h
+    jae init_redir_table_next
+;
+    add al,40h
+    mov [bx],al
+;
+    mov ax,es:[di].ao_flags
+    test al,1
+    jz init_redir_pol_ok
+;
+    test al,2
+    jz init_redir_pol_high
+
+init_redir_pol_low:
+    or word ptr [bx],2000h
+    jmp init_redir_pol_ok
+
+init_redir_pol_high:
+    and word ptr [bx], NOT 2000h
+
+init_redir_pol_ok:
+    test al,4
+    jz init_redir_table_next
+;
+    test al,8
+    jz init_redir_edge
+
+init_redir_level:
+    or word ptr [bx],8000h
+    jmp init_redir_table_next
+
+init_redir_edge:
+    and word ptr [bx],NOT 8000h
+
+init_redir_table_next:
+    movzx ax,es:[di].apic_len
+    add di,ax
+    sub cx,ax
+    ja init_redir_table_loop
 ;
     mov ax,system_data_sel
     mov ds,ax
