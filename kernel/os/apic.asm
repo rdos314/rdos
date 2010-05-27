@@ -408,8 +408,8 @@ ApInit:
     hlt
         
 stopl:
-;    cli
-;    jmp stopl
+    cli
+    jmp stopl
 
     StartProcessor
 
@@ -2578,8 +2578,6 @@ init_ap_create:
     mov al,es:[di].ap_acpi_id
     mov fs:ps_acpi,al
 ;
-    pop di
-    pop es
     inc bp
     jmp init_table_next
 
