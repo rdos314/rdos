@@ -2100,6 +2100,10 @@ read_tics   MACRO
 	        ENDM
 
 InitApicTimer Proc near    
+    push ds
+    push es
+    pushad
+;    
     mov ax,system_data_sel
     mov ds,ax
 ;    
@@ -2179,8 +2183,57 @@ init_tsc_wait_low_ok:
     mov ds:apic_tics,eax
     mov ds:apic_rest,dx    
 ;    
+    popad
+    pop es
+    pop ds
     ret
 InitApicTimer Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitLocalApic
+;
+;		DESCRIPTION:    Init local APIC access
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitLocalApic   Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:cpu_feature_flags
+    test ax,20h
+    jz init_local_apic_mmio
+;    
+    mov ecx,1Bh
+    rdmsr
+    test ah,8
+    jz init_local_apic_done
+;
+    test ah,4
+    jnz init_local_apic_msr
+
+init_local_apic_mmio:
+    or es:mp_flags, MP_FLAG_MEM
+    call SetupMemGates
+    jmp init_local_apic_done
+
+init_local_apic_msr:
+    or es:mp_flags, MP_FLAG_MSR
+    call SetupMsrGates
+
+init_local_apic_done:
+    popad
+    pop es
+    pop ds
+    ret
+InitLocalApic   Endp
 
 PAGE
 
@@ -2441,22 +2494,25 @@ init_redir_loop:
     GetAcpiTable
     jc init_apic_gates_ok
 ;
+    call InitApicTimer
+    call InitLocalApic
+;
     mov di,OFFSET apic_entries
     mov cx,es:act_size
     sub cx,OFFSET apic_entries - OFFSET apic_phys
 
-init_redir_table_loop:
+init_table_loop:
     mov al,es:[di].apic_type
     cmp al,2
-    jne init_redir_table_next
+    jne init_table_next
 ;
     mov al,es:[di].ao_bus
     or al,al
-    jnz init_redir_table_next
+    jnz init_table_next
 ;
     mov al,es:[di].ao_source
     cmp al,16
-    jae init_redir_table_next
+    jae init_table_next
 ;
     movzx bx,al
     shl bx,3
@@ -2464,79 +2520,47 @@ init_redir_table_loop:
 ;
     mov eax,es:[di].ao_int
     cmp eax,80h
-    jae init_redir_table_next
+    jae init_table_next
 ;
     add al,40h
     mov [bx],al
 ;
     mov ax,es:[di].ao_flags
     test al,1
-    jz init_redir_pol_ok
+    jz init_pol_ok
 ;
     test al,2
-    jz init_redir_pol_high
+    jz init_pol_high
 
-init_redir_pol_low:
+init_pol_low:
     or word ptr [bx],2000h
-    jmp init_redir_pol_ok
+    jmp init_pol_ok
 
-init_redir_pol_high:
+init_pol_high:
     and word ptr [bx], NOT 2000h
 
-init_redir_pol_ok:
+init_pol_ok:
     test al,4
-    jz init_redir_table_next
+    jz init_table_next
 ;
     test al,8
-    jz init_redir_edge
+    jz init_edge
 
-init_redir_level:
+init_level:
     or word ptr [bx],8000h
-    jmp init_redir_table_next
+    jmp init_table_next
 
-init_redir_edge:
+init_edge:
     and word ptr [bx],NOT 8000h
 
-init_redir_table_next:
+init_table_next:
     movzx ax,es:[di].apic_len
     add di,ax
     sub cx,ax
-    ja init_redir_table_loop
+    ja init_table_loop
 ;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:cpu_feature_flags
-    test ax,200h
-    jz init_apic_gates_ok
-;
-    test ax,10h
-    jz init_apic_gates_ok
-;
-    call InitApicTimer
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:cpu_feature_flags
-    test ax,20h
-    jz init_apic_mmio
-;    
-    mov ecx,1Bh
-    rdmsr
-    test ah,8
-    jz init_apic_start_cpu
-;
-    test ah,4
-    jnz init_apic_msr
 
-init_apic_mmio:
-    or es:mp_flags, MP_FLAG_MEM
-    call SetupMemGates
-    jmp init_apic_start_cpu
 
-init_apic_msr:
-    or es:mp_flags, MP_FLAG_MSR
-    call SetupMsrGates
-
-init_apic_start_cpu:
 ;    call SetupIrq
 	mov bx,apic_data_sel
 	mov ds,bx
