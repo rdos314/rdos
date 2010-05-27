@@ -1665,7 +1665,7 @@ StartCore   Endp
 ;
 ;		NAME:			ReadIoApicInt
 ;
-;		DESCRIPTION:	Read sxetting for IO-APIC int
+;		DESCRIPTION:	Read setting for IO-APIC int
 ;
 ;       PARAMETERS:     AL      Int #
 ;
@@ -1757,6 +1757,19 @@ enable_irq  Proc far
     push bx
     push edx
 ;
+    movzx edx,al
+    cmp al,10h
+    jae enable_irq_do
+;    
+    mov bx,apic_data_sel
+    mov ds,bx
+    movzx bx,al
+    shl bx,3
+    mov edx,[bx].isa_redir_arr
+    sub dl,40h
+    mov al,dl
+    
+enable_irq_do:
     mov bx,ioapic_mem_sel
     mov ds,bx
 ;       
@@ -1765,9 +1778,8 @@ enable_irq  Proc far
     add bl,al
 ;    
     mov ds:ioapic_regsel,bl
-    movzx eax,al
-    add al,40h
-    mov ds:ioapic_window,eax
+    add dl,40h
+    mov ds:ioapic_window,edx
 ;
     inc bl
     mov ds:ioapic_regsel,bl
@@ -2489,7 +2501,7 @@ init	PROC far
     mov ds,ax
     mov bx,OFFSET isa_redir_arr
     xor edx,edx
-    mov eax,2040h
+    mov eax,40h
     mov cx,16
 
 init_redir_loop:
@@ -2635,8 +2647,7 @@ init_table_next:
     sub cx,ax
     ja init_table_loop
 ;
-;    call SetupIrq
-;    
+    call SetupIrq    
 
 init_apic_gates_ok:     
     mov ax,cs
