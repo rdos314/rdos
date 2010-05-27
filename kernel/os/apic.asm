@@ -125,7 +125,6 @@ mp_get_proc         DW ?
 mp_processor_sign   DD ?
 mp_apic             DD ?
 mp_proc             DW ?
-mp_processor_sel    DW ?
 
 isa_redir_arr       DD 16 DUP(?,?)
 
@@ -1851,6 +1850,8 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3
+
+
 ;	
     mov ax,apic_data_sel
     mov ds,ax
@@ -2335,6 +2336,9 @@ ipi_nr		EQU 0
 ipi_entry	EQU 2
 
 InitIpi Proc near
+    push ds
+    pushad
+;    
     mov ax,cs
     mov ds,ax
     xor bl,bl
@@ -2352,6 +2356,8 @@ ipiLoop:
 	jmp ipiLoop
 	
 ipiDone:
+    popad
+    pop ds
     ret
 InitIpi Endp
 
@@ -2365,6 +2371,10 @@ InitIpi Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitSmp Proc near
+    push ds
+    push es
+    pushad
+;    
     mov ax,apic_data_sel
     mov ds,ax
     mov ds:mp_get_proc,0
@@ -2383,7 +2393,6 @@ init_smp_check_msr:
     mov ds:mp_get_proc,OFFSET get_processor_msr
 
 init_smp_done:
-    push ds
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -2399,6 +2408,9 @@ init_smp_done:
 	xor cl,cl
 	mov ax,preempt_processor_nr
 	RegisterOsGate
+;
+    popad	
+    pop es
 	pop ds
     ret
 InitSmp Endp
@@ -2500,12 +2512,70 @@ init_redir_loop:
     mov di,OFFSET apic_entries
     mov cx,es:act_size
     sub cx,OFFSET apic_entries - OFFSET apic_phys
+    xor bp,bp
 
 init_table_loop:
     mov al,es:[di].apic_type
+    or al,al
+    jz init_proc
     cmp al,2
-    jne init_table_next
+    je init_redir
+    
+init_proc:
+    or bp,bp
+    jnz init_ap_proc
+
+init_boot_proc:
+    GetProcessor
+    movzx edx,es:[di].ap_apic_id
+    movzx bx,dl
+    add bx,bx
+    mov [bx].apic_arr,fs    
+    mov fs:ps_apic,edx
 ;
+    mov al,es:[di].ap_acpi_id
+    mov fs:ps_acpi,al
+    inc bp
+    jmp init_table_next
+
+init_ap_proc:
+    mov eax,es:[di].ap_flags
+    test al,1
+    jz init_table_next
+;    
+    movzx edx,es:[di].ap_apic_id
+    call StartCore
+    jc init_table_next    
+;    
+    cmp bp,1
+    jnz init_ap_create
+;    
+    call InitSmp
+    call InitIpi
+
+init_ap_create:   
+    push es
+    push di
+;    
+    mov di,ds:mp_get_proc
+    mov ax,cs
+    mov es,ax
+    CreateProcessor    
+    mov es:ps_apic,edx
+;
+    movzx bx,dl
+    add bx,bx
+    mov [bx].apic_arr,es
+;
+    mov al,es:[di].ap_acpi_id
+    mov es:ps_acpi,al
+;
+    pop di
+    pop es
+    inc bp
+    jmp init_table_next
+
+init_redir:
     mov al,es:[di].ao_bus
     or al,al
     jnz init_table_next
@@ -2527,30 +2597,30 @@ init_table_loop:
 ;
     mov ax,es:[di].ao_flags
     test al,1
-    jz init_pol_ok
+    jz init_redir_pol_ok
 ;
     test al,2
-    jz init_pol_high
+    jz init_redir_pol_high
 
-init_pol_low:
+init_redir_pol_low:
     or word ptr [bx],2000h
-    jmp init_pol_ok
+    jmp init_redir_pol_ok
 
-init_pol_high:
+init_redir_pol_high:
     and word ptr [bx], NOT 2000h
 
-init_pol_ok:
+init_redir_pol_ok:
     test al,4
     jz init_table_next
 ;
     test al,8
-    jz init_edge
+    jz init_redir_edge
 
-init_level:
+init_redir_level:
     or word ptr [bx],8000h
     jmp init_table_next
 
-init_edge:
+init_redir_edge:
     and word ptr [bx],NOT 8000h
 
 init_table_next:
@@ -2559,41 +2629,12 @@ init_table_next:
     sub cx,ax
     ja init_table_loop
 ;
-
-
 ;    call SetupIrq
-	mov bx,apic_data_sel
-	mov ds,bx
-;
-    GetProcessor
-    GetApicId
-    movzx bx,dl
-    add bx,bx
-    mov [bx].apic_arr,fs    
-    mov fs:ps_apic,edx
 ;    
-    xor dl,1    
-    call StartCore
-    jc init_apic_gates_ok
-;    
-    call InitSmp
-;    
-    mov di,ds:mp_get_proc
-    mov ax,cs
-    mov es,ax
-    CreateProcessor    
-    mov ds:mp_processor_sel,es
-;
-    movzx bx,dl
-    add bx,bx
-    mov [bx].apic_arr,es
-;
-    mov edx,ds:mp_apic
-    mov es:ps_apic,edx
-;
-    call InitIpi
 
 init_apic_gates_ok:     
+
+;
     mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_apic_thread
