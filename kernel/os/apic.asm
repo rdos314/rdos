@@ -408,8 +408,8 @@ ApInit:
     hlt
         
 stopl:
-    cli
-    jmp stopl
+;    cli
+;    jmp stopl
 
     StartProcessor
 
@@ -1852,6 +1852,8 @@ apic_pr:
     int 3
 
 
+
+
 ;	
     mov ax,apic_data_sel
     mov ds,ax
@@ -2520,6 +2522,8 @@ init_table_loop:
     jz init_proc
     cmp al,2
     je init_redir
+;
+    jmp init_table_next    
     
 init_proc:
     or bp,bp
@@ -2552,23 +2556,27 @@ init_ap_proc:
 ;    
     call InitSmp
     call InitIpi
-
-init_ap_create:   
+    
+init_ap_create:       
     push es
-    push di
-;    
+    push di    
     mov di,ds:mp_get_proc
     mov ax,cs
     mov es,ax
     CreateProcessor    
-    mov es:ps_apic,edx
+    mov ax,es
+    mov fs,ax
+    pop di
+    pop es
+;
+    mov fs:ps_apic,edx
 ;
     movzx bx,dl
     add bx,bx
-    mov [bx].apic_arr,es
+    mov [bx].apic_arr,fs
 ;
     mov al,es:[di].ap_acpi_id
-    mov es:ps_acpi,al
+    mov fs:ps_acpi,al
 ;
     pop di
     pop es
@@ -2633,8 +2641,6 @@ init_table_next:
 ;    
 
 init_apic_gates_ok:     
-
-;
     mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_apic_thread
