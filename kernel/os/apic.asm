@@ -408,8 +408,8 @@ ApInit:
     hlt
         
 stopl:
-;    cli
-;    jmp stopl
+    cli
+    jmp stopl
 
     StartProcessor
 
@@ -1852,6 +1852,171 @@ enable_irq_detect   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			CheckMp
+;
+;		DESCRIPTION:    Check for an MP header
+;
+;       PARAMETERS:     DS:SI       Base address to check
+;
+;       RETURNS:        NC          OK
+;                       EAX         Physical address
+;                       EDX         Feature bits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mp_sign DB '_MP_'
+
+CheckMp   Proc near
+    mov eax,dword ptr cs:mp_sign
+    cmp eax,[si]
+    jne check_mp_fail
+;
+    push cx
+    push si
+;    
+    xor al,al        
+    mov cx,10h
+
+check_mp_loop:
+    add al,[si]
+    inc si
+    loop check_mp_loop
+;
+    pop si
+    pop cx    
+;
+    or al,al
+    jnz check_mp_fail
+;
+    movzx ax,byte ptr [si+8]
+    shl ax,4
+    cmp ax,10h
+    jb check_mp_fail
+;    
+    mov eax,[si+4]
+    mov ebp,[si+11]
+    clc
+    jmp check_mp_done
+
+check_mp_fail:
+    stc
+
+check_mp_done:    
+    ret
+CheckMp   Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetMp
+;
+;		DESCRIPTION:    Get the MP
+;
+;       RETURNS:        NC          OK
+;                       EAX         Physical address
+;                       EBP         Feature bits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMp Proc near
+    push ds
+    push es
+    push ebx
+    push ecx
+    push esi
+    push edi
+    push bp
+;
+    mov eax,1000h
+    AllocateBigLinear
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov eax,7h
+    SetPhysicalPage
+    mov ds,bx    
+;    
+    mov esi,40Eh
+    mov si,[si]
+    movzx esi,si
+    shl esi,4
+;
+    mov eax,esi
+    and ax,0F000h
+    or al,7
+    SetPhysicalPage
+    and si,0FFFh
+    mov eax,cr3
+    mov cr3,eax
+;        
+    mov cx,40h
+
+get_mp_bda:
+    call CheckMp
+    jnc get_mp_ok
+;
+    add si,10h
+    loop get_mp_bda
+;     
+    mov edi,0E0000h
+    mov bp,20h
+
+get_mp_bios:
+    mov eax,edi
+    and ax,0F000h
+    or al,7
+    SetPhysicalPage
+    mov eax,cr3
+    mov cr3,eax
+;
+    mov esi,edi
+    and si,0FFFh
+;
+    mov cx,100h
+
+get_mp_bios_page:
+    call CheckMp
+    jnc get_mp_ok
+;    
+    add si,10h
+    loop get_mp_bios_page
+;
+    add edi,1000h
+    sub bp,1
+    jnz get_mp_bios
+;
+    stc
+    jmp get_mp_done
+
+get_mp_ok:
+    clc
+
+get_mp_done:	
+    push eax
+    pushf
+    xor eax,eax
+    mov ds,ax
+    SetPhysicalPage
+    mov ecx,1000h
+    FreeLinear
+    FreeGdt    
+    popf
+    pop eax
+    mov edx,ebp
+;    
+    pop bp
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+GetMp Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			apic_pr
 ;
 ;		DESCRIPTION:	APIC test thread
@@ -1862,6 +2027,7 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3
+    call GetMp
 
 
 
@@ -2647,7 +2813,7 @@ init_table_next:
     sub cx,ax
     ja init_table_loop
 ;
-    call SetupIrq    
+;    call SetupIrq    
 
 init_apic_gates_ok:     
     mov ax,cs
