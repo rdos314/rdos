@@ -3,3 +3,5 @@ tdstrp32 \rdos\apps\ftpd\ftpd
 ..\..\kernel\tools\cfg2bin safe
 ..\..\kernel\tools\cfg2bin rdos
 ..\..\kernel\tools\cfg2bin boot
+..\..\kernel\tools\cfg2bin n101
+..\..\kernel\tools\cfg2bin n102

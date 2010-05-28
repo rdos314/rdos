@@ -274,6 +274,8 @@ int TFtp::SetDir(const char *path)
 
     if (FReady)
     {
+        FAppSignal.Clear();
+
         FSuccess = FALSE;
         FReady = FALSE;
         FSetDir = TRUE;
