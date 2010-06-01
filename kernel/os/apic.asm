@@ -1163,6 +1163,41 @@ preempt_processor  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupMemGates   Proc near
+    mov ax,apic_mem_sel
+    mov ds,ax    
+;
+    mov eax,ds:APIC_LINT0
+    test eax,10000h
+    jnz smemgLint0Ok
+;    
+    and ah,7
+    cmp ah,4
+    je smemgLint0Disable
+;
+    cmp ah,7
+    jne smemgLint0Ok
+
+smemgLint0Disable:
+    mov eax,10000h
+    mov ds:APIC_LINT0,eax
+
+smemgLint0Ok:
+    mov eax,ds:APIC_LINT1
+    test eax,10000h
+    jnz smemgLint1Ok
+;    
+    and ah,7
+    cmp ah,4
+    je smemgLint1Disable
+;
+    cmp ah,7
+    jne smemgLint1Ok
+
+smemgLint1Disable:
+    mov eax,10000h
+    mov ds:APIC_LINT1,eax
+
+smemgLint1Ok:
     mov ax,apic_data_sel
     mov ds,ax
     mov ds:mp_init_proc, OFFSET SendInitMem
@@ -1335,6 +1370,40 @@ SetupMemGates   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupMsrGates   Proc near
+    mov ecx,MSR_APIC_LINT0
+    rdmsr
+    test eax,10000h
+    jnz smsrgLint0Ok
+;    
+    and ah,7
+    cmp ah,4
+    je smsrgLint0Disable
+;
+    cmp ah,7
+    jne smsrgLint0Ok
+
+smsrgLint0Disable:
+    mov eax,10000h
+    wrmsr
+
+smsrgLint0Ok:
+    mov ecx,MSR_APIC_LINT1
+    rdmsr
+    test eax,10000h
+    jnz smsrgLint1Ok
+;    
+    and ah,7
+    cmp ah,4
+    je smsrgLint1Disable
+;
+    cmp ah,7
+    jne smsrgLint1Ok
+
+smsrgLint1Disable:
+    mov eax,10000h
+    wrmsr
+
+smsrgLint1Ok:
     mov ax,apic_data_sel
     mov ds,ax
     mov ds:mp_init_proc, OFFSET SendInitMsr
@@ -1767,7 +1836,8 @@ enable_irq  Proc far
     shl bx,3
     mov edx,[bx].isa_redir_arr
     sub dl,40h
-    mov al,dl
+    xchg al,dl
+    add dl,40h
     
 enable_irq_do:
     mov bx,ioapic_mem_sel
@@ -1778,7 +1848,6 @@ enable_irq_do:
     add bl,al
 ;    
     mov ds:ioapic_regsel,bl
-    add dl,40h
     mov ds:ioapic_window,edx
 ;
     inc bl
@@ -2027,7 +2096,10 @@ apic_name	DB 'Apic Test',0
 
 apic_pr:
     int 3
-    call GetMp
+    mov ax,apic_mem_sel
+    mov ds,ax    
+    mov eax,ds:APIC_LINT0
+    mov eax,ds:APIC_LINT1
 
 
 
@@ -2813,7 +2885,7 @@ init_table_next:
     sub cx,ax
     ja init_table_loop
 ;
-;    call SetupIrq    
+    call SetupIrq    
 
 init_apic_gates_ok:     
     mov ax,cs
