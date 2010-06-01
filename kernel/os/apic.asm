@@ -408,8 +408,8 @@ ApInit:
     hlt
         
 stopl:
-    cli
-    jmp stopl
+;    cli
+;    jmp stopl
 
     StartProcessor
 
@@ -808,11 +808,24 @@ SendIntMem Proc near
     shl edx,24
     mov cx,apic_mem_sel
     mov ds,cx
+
+simemLoop:
+    cli
+    mov ecx,ds:APIC_ICR
+    test cx,1000h
+    jz simemDo
+;
+    sti
+    pause
+    jmp simemLoop
+
+simemDo:    
     mov ds:APIC_ICR+10h,edx
 ;
     mov ah,40h
     movzx eax,ax
     mov ds:APIC_ICR,eax
+    sti
 ;
     pop edx
     pop ecx
@@ -839,8 +852,27 @@ SendIntMsr Proc near
 ;
     mov ah,40h
     movzx eax,ax
+    push eax
+    push edx
+
+simsrLoop:
+    mov ecx,MSR_APIC_ICR
+    cli
+    rdmsr
+    test ax,1000h
+    jz simemDo
+;    
+    sti
+    pause
+    jmp simsrLoop
+        
+simsrDo:
+    pop edx    
+    pop eax
+;
     mov ecx,MSR_APIC_ICR
     wrmsr
+    sti
 ;
     pop ecx
     pop eax
