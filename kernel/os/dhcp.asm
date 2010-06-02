@@ -70,6 +70,8 @@ dhcp_ip2            DD ?
 ;dhcp_gateway2       DD ?
 dhcp_serv_arr       DW 256 DUP(?)
 
+dhcp_enabled        DB ?
+
 dhcp_data	ENDS
 
 dhcp_serv_data  STRUC
@@ -88,6 +90,7 @@ dhcp_serv_data  ENDS
 	extrn get_gateway_driver:near
 	extrn ping_gateway:near
 	extrn GetIPNumber:near
+	extrn GetValue:near
 
 code	SEGMENT byte public 'CODE'
 
@@ -2413,8 +2416,13 @@ dhcp_thread_pr:
 ;
 	mov bx,dhcp_data_sel
 	mov ds,bx
+;	
     GetIpAddress
     mov ds:dhcp_ip,edx
+;	
+	mov al,ds:dhcp_enabled
+	or al,al
+	jz dhcp_thread_disabled
 ;    
     mov cx,8
 
@@ -2446,7 +2454,8 @@ dhcp_thread_retry:
 
 dhcp_thread_failed:
     loop dhcp_thread_retry    
-;    
+
+dhcp_thread_disabled:    
     mov ds:dhcp_driver_sel,1
 ;    
     call get_gateway_driver
@@ -2513,6 +2522,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+dhcp_name           DB 'DHCP', 0
 dhcp_ip_name		DB 'DHCP.IP',0
 
 	public init_dhcp
@@ -2544,6 +2554,14 @@ init_dhcp	PROC near
 	call GetIPNumber
 	mov ds:dhcp_ip2,eax
 ;
+    mov ds:dhcp_enabled,1
+    mov di,OFFSET dhcp_name
+    call GetValue	
+    jc init_dhcp_enabled_ok
+;
+    mov ds:dhcp_enabled,al
+
+init_dhcp_enabled_ok:
 	mov ax,cs
 	mov ds,ax
 	mov es,ax

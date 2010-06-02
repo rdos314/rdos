@@ -1502,6 +1502,97 @@ find_ip_done:
 	ret
 GetIPNumber	Endp
 
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			GetValue
+;
+;	Purpose:		Get value from environment
+;
+;	Parameters:		ES:DI	Name
+;
+;	Returns:		NC		Found
+;			        AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetValue
+    
+GetValue	Proc near
+	push ds
+	push bx
+	push cx
+	push si
+;
+    LockSysEnv
+	mov ds,bx
+	xor si,si
+	
+find_val:
+	push di
+
+find_val_loop:
+	cmpsb
+	jnz find_val_next
+;	
+	mov al,es:[di]
+	or al,al
+	jnz find_val_loop
+	mov al,[si]
+	cmp al,'='
+	je find_val_found
+
+find_val_next:
+	pop di
+
+find_val_next_bp:
+	lodsb
+	or al,al
+	jnz find_val_next_bp
+;
+	mov al,[si]
+	or al,al
+	jne find_val
+;
+	xor ax,ax
+	stc
+	jmp find_val_done
+
+find_val_found:
+	pop di
+	inc si	
+	xor ax,ax
+
+find_val_digit:
+	mov bl,[si]
+	inc si
+	sub bl,'0'
+	jc find_val_save
+;
+	cmp bl,10
+	jnc find_val_save
+;	
+    mov cx,10
+	mul cx
+	add al,bl
+	adc ah,0
+	jmp find_val_digit
+
+find_val_save:
+	clc
+
+find_val_done:
+    pushf
+    UnlockSysEnv
+    popf
+;
+	pop si
+	pop cx
+	pop bx
+	pop ds
+	ret
+GetValue	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

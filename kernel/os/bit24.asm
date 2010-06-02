@@ -1582,6 +1582,7 @@ PAGE
 set_rgb	Proc far
 	push ds
 	push es
+	push fs
 	pushad
 	mov bp,sp
 	sub sp,4
@@ -1650,21 +1651,19 @@ set_rgb_do:
     pop cx
 
 set_rgb_sprite_hidden:
-    push ds
 	mov ax,es
-	mov ds,ax
+	mov fs,ax
 	mov ax,flat_sel
 	mov es,ax
 	add bx,bx
 
 set_rgb_loop:
-	lods dword ptr [esi]
+	lods dword ptr fs:[esi]
 	call ds:set_proc
 	add edi,3
 	inc word ptr [bp].curr_x
 	loop set_rgb_loop
 ;
-    pop ds
     cmp ds:v_sprite_count,0
     jz set_rgb_done
 ;
@@ -1674,6 +1673,7 @@ set_rgb_done:
 	LeaveSection ds:v_sprite_section
     add sp,4
 	popad
+	pop fs
 	pop es
 	pop ds
 	ret
