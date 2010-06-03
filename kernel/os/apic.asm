@@ -24,16 +24,20 @@
 ; Multiprocessing module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME mp
+                                                
+                NAME mp
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
+
+        .686p
+
+
+code    SEGMENT byte public use16 'CODE'
+
 GateSize = 16
 
-INCLUDE ..\user.def
 INCLUDE ..\os.def
-INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE port.def
@@ -42,6 +46,14 @@ INCLUDE apic.inc
 INCLUDE proc.inc
 INCLUDE irq.inc
 INCLUDE acpi.def
+
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
+
+ipause   MACRO
+    db 0F3h
+    db 90h
+        ENDM
 
 MP_FLAG_MEM = 1
 MP_FLAG_MSR = 2
@@ -109,7 +121,7 @@ ioapic_window       DD ?
 
 ioapic_data_seg ENDS
 
-apic_data_seg	STRUC
+apic_data_seg   STRUC
 
 mp_init_proc        DW ?
 mp_startup_proc     DW ?
@@ -132,83 +144,83 @@ apic_arr            DW 256 DUP(?)
 
 apic_data_seg ENDS
 
-irqmac	MACRO nr
+irqmac  MACRO nr
 
 msr_irq&nr:
-	push ds
-	push es
-	push fs
-	pushad
+        push ds
+        push es
+        push fs
+        pushad
 ;
     EnterInt
-	sti
-;	
-	mov ax,irq_sys_sel
-	mov es,ax
-	mov bx,OFFSET irq_arr + nr * SIZE irq_struc
-	mov eax,es:[bx].user_handler
-	or eax,eax
-	jz msr_irq_default_error&nr
+        sti
+;       
+        mov ax,irq_sys_sel
+        mov es,ax
+        mov bx,OFFSET irq_arr + nr * SIZE irq_struc
+        mov eax,es:[bx].user_handler
+        or eax,eax
+        jz msr_irq_default_error&nr
 ;
-	mov ds,es:[bx].user_data
-	push cs
-	push OFFSET msr_irq_handle_done&nr
-	push es:[bx].user_handler
-	xor ax,ax
-	mov es,ax
-	retf
+        mov ds,es:[bx].user_data
+        push cs
+        push OFFSET msr_irq_handle_done&nr
+        push es:[bx].user_handler
+        xor ax,ax
+        mov es,ax
+        retf
 
 msr_irq_default_error&nr:
 ;
 ; unmask IRQ here
 ;
-	or es:bad_irqs, 1 SHL nr
+        or es:bad_irqs, 1 SHL nr
 
 msr_irq_handle_done&nr:
-	cli
+        cli
     xor eax,eax
     mov ecx,MSR_APIC_EOI
     wrmsr
     LeaveInt
 ;
-	popad
-	pop fs
-	pop es
-	pop ds
-	iretd
+        popad
+        pop fs
+        pop es
+        pop ds
+        iretd
 
 mem_irq&nr:
-	push ds
-	push es
-	push fs
-	pushad
+        push ds
+        push es
+        push fs
+        pushad
 ;
     EnterInt
-	sti
-;	
-	mov ax,irq_sys_sel
-	mov es,ax
-	mov bx,OFFSET irq_arr + nr * SIZE irq_struc
-	mov eax,es:[bx].user_handler
-	or eax,eax
-	jz mem_irq_default_error&nr
+        sti
+;       
+        mov ax,irq_sys_sel
+        mov es,ax
+        mov bx,OFFSET irq_arr + nr * SIZE irq_struc
+        mov eax,es:[bx].user_handler
+        or eax,eax
+        jz mem_irq_default_error&nr
 ;
-	mov ds,es:[bx].user_data
-	push cs
-	push OFFSET mem_irq_handle_done&nr
-	push es:[bx].user_handler
-	xor ax,ax
-	mov es,ax
-	retf
+        mov ds,es:[bx].user_data
+        push cs
+        push OFFSET mem_irq_handle_done&nr
+        push es:[bx].user_handler
+        xor ax,ax
+        mov es,ax
+        retf
 
 mem_irq_default_error&nr:
 ;
 ; unmask IRQ here
 ;
-	or es:bad_irqs, 1 SHL nr
+        or es:bad_irqs, 1 SHL nr
 
 mem_irq_handle_done&nr:
-	cli
+        cli
 ;    
     mov ax,apic_mem_sel
     mov ds,ax
@@ -216,27 +228,23 @@ mem_irq_handle_done&nr:
     mov ds:APIC_EOI,eax
     LeaveInt
 ;
-	popad
-	pop fs
-	pop es
-	pop ds
-	iretd
+        popad
+        pop fs
+        pop es
+        pop ds
+        iretd
 
-	ENDM
-	
+        ENDM
+        
 
-	.386p
-
-code	SEGMENT byte public use16 'CODE'
-
-	assume cs:code
-    
+        assume cs:code
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			Tables
+;               NAME:                   Tables
 ;
-;		DESCRIPTION:	GDT for protected mode initialization of AP
+;               DESCRIPTION:    GDT for protected mode initialization of AP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -245,34 +253,34 @@ code	SEGMENT byte public use16 'CODE'
 table_start:
 
 gdt0:
-	dw 0
-	dd 0
-	dw 0
+        dw 0
+        dd 0
+        dw 0
 gdt8:
-	dw 28h-1
-	dd 92000F80h
-	dw 0
+        dw 28h-1
+        dd 92000F80h
+        dw 0
 gdt10:
-	dw 0FFFFh
-	dd 9A001400h
-	dw 0
+        dw 0FFFFh
+        dd 9A001400h
+        dw 0
 gdt18:
-	dw 0FFFFh
-	dd 92000000h
-	dw 0
+        dw 0FFFFh
+        dd 92000000h
+        dw 0
 gdt20:
-	dw 0FFFFh
-	dd 92001800h
-	dw 0
+        dw 0FFFFh
+        dd 92001800h
+        dw 0
 
 table_end:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			RealMode
+;               NAME:                   RealMode
 ;
-;		DESCRIPTION:	Real mode AP processor init
+;               DESCRIPTION:    Real mode AP processor init
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -282,11 +290,11 @@ real_start:
     cli
     mov al,0Fh
     out 70h,al
-	jmp short $+2
+        jmp short $+2
 ;
     xor al,al
     out 71h,al
-  	jmp short $+2
+        jmp short $+2
 ;
     xor ax,ax
     mov ds,ax
@@ -294,22 +302,22 @@ real_start:
     mov bx,0F88h
     lgdt fword ptr ds:[bx]
 ;
-	mov eax,cr0
-	or al,1
-	mov cr0,eax
+        mov eax,cr0
+        or al,1
+        mov cr0,eax
 ;
-	db 0EAh
-	dw 0
-	dw 10h
+        db 0EAh
+        dw 0
+        dw 10h
 
 real_end:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ProtMode
+;               NAME:                   ProtMode
 ;
-;		DESCRIPTION:	Unpaged, protected mode AP processor init
+;               DESCRIPTION:    Unpaged, protected mode AP processor init
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -347,11 +355,11 @@ prot_start:
 prot_end:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			Paging
+;               NAME:                   Paging
 ;
-;		DESCRIPTION:	Paging variables for AP initialization
+;               DESCRIPTION:    Paging variables for AP initialization
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -369,11 +377,11 @@ ap_idt  DB 6 DUP(?)
 page_struc  ENDS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ApInit
+;               NAME:                   ApInit
 ;
-;		DESCRIPTION:	Paged entry-point for AP initialization
+;               DESCRIPTION:    Paged entry-point for AP initialization
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -408,19 +416,19 @@ ApInit:
     hlt
         
 stopl:
-;    cli
-;    jmp stopl
+    cli
+    jmp stopl
 
     StartProcessor
 
 apic_tab    DB 'APIC'
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			DelayMs
+;               NAME:                   DelayMs
 ;
-;		DESCRIPTION:	Delay for Init/SIPI
+;               DESCRIPTION:    Delay for Init/SIPI
 ;
 ;       PARAMETERS:     AX      Delay in ms
 ;
@@ -460,11 +468,11 @@ dmLoop:
 DelayMs Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			GetId
+;               NAME:                   GetId
 ;
-;		DESCRIPTION:	Get own ID, memory mode
+;               DESCRIPTION:    Get own ID, memory mode
 ;
 ;       RETURNS:        EDX     Apic ID
 ;
@@ -500,11 +508,11 @@ get_id_msr Proc far
 get_id_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			GetProcessorId
+;               NAME:                   GetProcessorId
 ;
-;		DESCRIPTION:	Get processor #
+;               DESCRIPTION:    Get processor #
 ;
 ;       RETURNS:        AX  Processor
 ;
@@ -552,11 +560,11 @@ get_processor_id_msr Proc far
 get_processor_id_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			GetProcessor
+;               NAME:                   GetProcessor
 ;
-;		DESCRIPTION:	Get processor selector
+;               DESCRIPTION:    Get processor selector
 ;
 ;       RETURNS:        FS      Processor selector
 ;
@@ -606,11 +614,11 @@ get_processor_msr Proc far
 get_processor_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendInitMem
+;               NAME:                   SendInitMem
 ;
-;		DESCRIPTION:	Send init request using shared memory
+;               DESCRIPTION:    Send init request using shared memory
 ;
 ;       PARAMETERS:     EDX     Destination
 ;
@@ -642,11 +650,11 @@ SendInitMem Proc near
 SendInitMem Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendInitMsr
+;               NAME:                   SendInitMsr
 ;
-;		DESCRIPTION:	Send init request using MSRs
+;               DESCRIPTION:    Send init request using MSRs
 ;
 ;       PARAMETERS:     EDX     Destination
 ;
@@ -673,11 +681,11 @@ SendInitMsr Proc near
 SendInitMsr Endp
            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendInit
+;               NAME:                   SendInit
 ;
-;		DESCRIPTION:	Send init request
+;               DESCRIPTION:    Send init request
 ;
 ;       PARAMETERS:     EDX     Destination
 ;
@@ -699,11 +707,11 @@ SendInit Proc near
 SendInit Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendStartupMem
+;               NAME:                   SendStartupMem
 ;
-;		DESCRIPTION:	Send startup request using shared memory
+;               DESCRIPTION:    Send startup request using shared memory
 ;
 ;       PARAMETERS:     EDX     Destination
 ;                       AL      Vector
@@ -733,11 +741,11 @@ SendStartupMem Proc near
 SendStartupMem Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendStartupMsr
+;               NAME:                   SendStartupMsr
 ;
-;		DESCRIPTION:	Send startup request using MSRs
+;               DESCRIPTION:    Send startup request using MSRs
 ;
 ;       PARAMETERS:     EDX     Destination
 ;                       AL      Vector
@@ -759,11 +767,11 @@ SendStartupMsr Proc near
 SendStartupMsr Endp
            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendStartup
+;               NAME:                   SendStartup
 ;
-;		DESCRIPTION:	Send startup request
+;               DESCRIPTION:    Send startup request
 ;
 ;       PARAMETERS:     EDX     Destination
 ;                       AL      Vector
@@ -788,11 +796,11 @@ SendStartup Proc near
 SendStartup Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendIntMem
+;               NAME:                   SendIntMem
 ;
-;		DESCRIPTION:	Send int request using shared memory
+;               DESCRIPTION:    Send int request using shared memory
 ;
 ;       PARAMETERS:     EDX     Destination
 ;                       AL      Vector
@@ -816,7 +824,7 @@ simemLoop:
     jz simemDo
 ;
     sti
-    pause
+    ipause
     jmp simemLoop
 
 simemDo:    
@@ -835,11 +843,11 @@ simemDo:
 SendIntMem Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendIntMsr
+;               NAME:                   SendIntMsr
 ;
-;		DESCRIPTION:	Send int request using MSRs
+;               DESCRIPTION:    Send int request using MSRs
 ;
 ;       PARAMETERS:     EDX     Destination
 ;                       AL      Vector
@@ -863,7 +871,7 @@ simsrLoop:
     jz simsrDo
 ;    
     sti
-    pause
+    ipause
     jmp simsrLoop
         
 simsrDo:
@@ -880,11 +888,11 @@ simsrDo:
 SendIntMsr Endp
            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendInt
+;               NAME:                   SendInt
 ;
-;		DESCRIPTION:	Send int request
+;               DESCRIPTION:    Send int request
 ;
 ;       PARAMETERS:     EDX     Destination
 ;                       AL      Vector
@@ -907,11 +915,11 @@ SendInt Proc near
 SendInt Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendEoiMem
+;               NAME:                   SendEoiMem
 ;
-;		DESCRIPTION:	Send EOI using shared memory
+;               DESCRIPTION:    Send EOI using shared memory
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -930,11 +938,11 @@ SendEoiMem Proc near
 SendEoiMem Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SendEoiMsr
+;               NAME:                   SendEoiMsr
 ;
-;		DESCRIPTION:	Send EOI using MSRs
+;               DESCRIPTION:    Send EOI using MSRs
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -951,16 +959,15 @@ SendEoiMsr Proc near
     ret
 SendEoiMsr Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			StartSysTimer
+;               NAME:                   StartSysTimer
 ;
-;		DESCRIPTION:	Start APIC timer
+;               DESCRIPTION:    Start APIC timer
 ;
-;		RETURNS:		EAX      Update tics
+;               RETURNS:                EAX      Update tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -984,7 +991,7 @@ start_apic_mem_timer    Proc far
     div ecx
     mov esi,eax
 ;
-	mov eax,80000000h
+        mov eax,80000000h
     mov bx,apic_mem_sel
     mov es,bx
     mov es:APIC_INIT_COUNT,eax    
@@ -992,13 +999,13 @@ start_apic_mem_timer    Proc far
     GetProcessor
     pop fs
     mov eax,es:APIC_CURR_COUNT    
-	neg eax
-	add eax,80000000h
-	mul esi
-	add eax,eax
-	adc edx,edx
-	add eax,80000000h
-	adc edx,0
+        neg eax
+        add eax,80000000h
+        mul esi
+        add eax,eax
+        adc edx,edx
+        add eax,80000000h
+        adc edx,0
 ;
     mov eax,81h
     mov es:APIC_TIMER,eax
@@ -1008,7 +1015,7 @@ start_apic_mem_timer    Proc far
     pop ecx
     pop es
     pop ds
-	ret
+        ret
 start_apic_mem_timer  Endp
 
 start_apic_msr_timer    Proc far
@@ -1028,7 +1035,7 @@ start_apic_msr_timer    Proc far
     div ecx
     mov esi,eax
 ;
-	mov eax,80000000h
+        mov eax,80000000h
     mov ecx,MSR_APIC_INIT_COUNT
     wrmsr
     push fs
@@ -1036,13 +1043,13 @@ start_apic_msr_timer    Proc far
     pop fs
     mov ecx,MSR_APIC_CURR_COUNT
     rdmsr
-	neg eax
-	add eax,80000000h
-	mul esi
-	add eax,eax
-	adc edx,edx
-	add eax,80000000h
-	adc edx,0
+        neg eax
+        add eax,80000000h
+        mul esi
+        add eax,eax
+        adc edx,edx
+        add eax,80000000h
+        adc edx,0
 ;
     mov eax,81h
     mov ecx,MSR_APIC_TIMER
@@ -1052,19 +1059,18 @@ start_apic_msr_timer    Proc far
     pop edx
     pop ecx
     pop ds
-	ret
+        ret
 start_apic_msr_timer  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ReloadSysTimer
+;               NAME:                   ReloadSysTimer
 ;
-;		DESCRIPTION:	Reload APIC timer
+;               DESCRIPTION:    Reload APIC timer
 ;
-;		PARAMETERS:		AX      Reload tics
+;               PARAMETERS:             AX      Reload tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1093,7 +1099,7 @@ reload_apic_mem_timer    Proc far
     pop ecx
     pop eax
     pop ds
-	ret
+        ret
 reload_apic_mem_timer  Endp
 
 reload_apic_msr_timer    Proc far
@@ -1120,16 +1126,16 @@ reload_apic_msr_timer    Proc far
     pop ecx
     pop eax
     pop ds
-	ret
+        ret
 reload_apic_msr_timer  Endp
 
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ResumeProcessor
+;               NAME:                   ResumeProcessor
 ;
-;		DESCRIPTION:	Send a resume request
+;               DESCRIPTION:    Send a resume request
 ;
 ;       PARAMETERS:     FS      Processor selector
 ;
@@ -1155,11 +1161,11 @@ resume_processor  Proc far
 resume_processor  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			PreemptProcessor
+;               NAME:                   PreemptProcessor
 ;
-;		DESCRIPTION:	Send a preempt req
+;               DESCRIPTION:    Send a preempt req
 ;
 ;       PARAMETERS:     FS      Processor selector
 ;
@@ -1186,11 +1192,11 @@ preempt_processor  Endp
 
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SetupMemGates
+;               NAME:                   SetupMemGates
 ;
-;		DESCRIPTION:	Set up shared memory gates for APIC
+;               DESCRIPTION:    Set up shared memory gates for APIC
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1237,167 +1243,167 @@ smemgLint1Ok:
     mov ds:mp_int_proc, OFFSET SendIntMem
     mov ds:mp_eoi_proc, OFFSET SendEoiMem
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov si,OFFSET get_id_mem
-	mov di,OFFSET get_id_name
-	xor cl,cl
-	mov ax,get_apic_id_nr
-	RegisterOsGate
+        mov si,OFFSET get_id_mem
+        mov di,OFFSET get_id_name
+        xor cl,cl
+        mov ax,get_apic_id_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET start_apic_mem_timer
-	mov di,OFFSET start_apic_timer_name
-	xor cl,cl
-	mov ax,start_sys_timer_nr
-	RegisterOsGate
+        mov si,OFFSET start_apic_mem_timer
+        mov di,OFFSET start_apic_timer_name
+        xor cl,cl
+        mov ax,start_sys_timer_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET reload_apic_mem_timer
-	mov di,OFFSET reload_apic_timer_name
-	xor cl,cl
-	mov ax,reload_sys_timer_nr
-	RegisterOsGate
+        mov si,OFFSET reload_apic_mem_timer
+        mov di,OFFSET reload_apic_timer_name
+        xor cl,cl
+        mov ax,reload_sys_timer_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET get_processor_id_mem
-	mov di,OFFSET get_processor_id_name
-	xor dx,dx
-	mov ax,get_processor_id_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET get_processor_id_mem
+        mov di,OFFSET get_processor_id_name
+        xor dx,dx
+        mov ax,get_processor_id_nr
+        RegisterBimodalUserGate
 ;
-	mov ax,cs
-	mov ds,ax
-	xor bl,bl
+        mov ax,cs
+        mov ds,ax
+        xor bl,bl
 ;
-	mov al,41h
-	mov esi,OFFSET mem_irq1
-	CreateIntGateSelector
+        mov al,41h
+        mov esi,OFFSET mem_irq1
+        CreateIntGateSelector
 ;
-	mov al,43h
-	mov esi,OFFSET mem_irq3
-	CreateIntGateSelector
+        mov al,43h
+        mov esi,OFFSET mem_irq3
+        CreateIntGateSelector
 ;
-	mov al,44h
-	mov esi,OFFSET mem_irq4
-	CreateIntGateSelector
+        mov al,44h
+        mov esi,OFFSET mem_irq4
+        CreateIntGateSelector
 ;
-	mov al,45h
-	mov esi,OFFSET mem_irq5
-	CreateIntGateSelector
+        mov al,45h
+        mov esi,OFFSET mem_irq5
+        CreateIntGateSelector
 ;
-	mov al,46h
-	mov esi,OFFSET mem_irq6
-	CreateIntGateSelector
+        mov al,46h
+        mov esi,OFFSET mem_irq6
+        CreateIntGateSelector
 ;
-	mov al,47h
-	mov esi,OFFSET mem_irq7
-	CreateIntGateSelector
+        mov al,47h
+        mov esi,OFFSET mem_irq7
+        CreateIntGateSelector
 ;
-	mov al,48h
-	mov esi,OFFSET mem_irq8
-	CreateIntGateSelector
+        mov al,48h
+        mov esi,OFFSET mem_irq8
+        CreateIntGateSelector
 ;
-	mov al,49h
-	mov esi,OFFSET mem_irq9
-	CreateIntGateSelector
+        mov al,49h
+        mov esi,OFFSET mem_irq9
+        CreateIntGateSelector
 ;
-	mov al,4Ah
-	mov esi,OFFSET mem_irq10
-	CreateIntGateSelector
+        mov al,4Ah
+        mov esi,OFFSET mem_irq10
+        CreateIntGateSelector
 ;
-	mov al,4Bh
-	mov esi,OFFSET mem_irq11
-	CreateIntGateSelector
+        mov al,4Bh
+        mov esi,OFFSET mem_irq11
+        CreateIntGateSelector
 ;
-	mov al,4Ch
-	mov esi,OFFSET mem_irq12
-	CreateIntGateSelector
+        mov al,4Ch
+        mov esi,OFFSET mem_irq12
+        CreateIntGateSelector
 ;
-	mov al,4Dh
-	mov esi,OFFSET mem_irq13
-	CreateIntGateSelector
+        mov al,4Dh
+        mov esi,OFFSET mem_irq13
+        CreateIntGateSelector
 ;
-	mov al,4Eh
-	mov esi,OFFSET mem_irq14
-	CreateIntGateSelector
+        mov al,4Eh
+        mov esi,OFFSET mem_irq14
+        CreateIntGateSelector
 ;
-	mov al,4Fh
-	mov esi,OFFSET mem_irq15
-	CreateIntGateSelector
+        mov al,4Fh
+        mov esi,OFFSET mem_irq15
+        CreateIntGateSelector
 ;
-	mov al,50h
-	mov esi,OFFSET mem_irq16
-	CreateIntGateSelector
+        mov al,50h
+        mov esi,OFFSET mem_irq16
+        CreateIntGateSelector
 ;
-	mov al,51h
-	mov esi,OFFSET mem_irq17
-	CreateIntGateSelector
+        mov al,51h
+        mov esi,OFFSET mem_irq17
+        CreateIntGateSelector
 ;
-	mov al,52h
-	mov esi,OFFSET mem_irq18
-	CreateIntGateSelector
+        mov al,52h
+        mov esi,OFFSET mem_irq18
+        CreateIntGateSelector
 ;
-	mov al,53h
-	mov esi,OFFSET mem_irq19
-	CreateIntGateSelector
+        mov al,53h
+        mov esi,OFFSET mem_irq19
+        CreateIntGateSelector
 ;
-	mov al,54h
-	mov esi,OFFSET mem_irq20
-	CreateIntGateSelector
+        mov al,54h
+        mov esi,OFFSET mem_irq20
+        CreateIntGateSelector
 ;
-	mov al,55h
-	mov esi,OFFSET mem_irq21
-	CreateIntGateSelector
+        mov al,55h
+        mov esi,OFFSET mem_irq21
+        CreateIntGateSelector
 ;
-	mov al,56h
-	mov esi,OFFSET mem_irq22
-	CreateIntGateSelector
+        mov al,56h
+        mov esi,OFFSET mem_irq22
+        CreateIntGateSelector
 ;
-	mov al,57h
-	mov esi,OFFSET mem_irq23
-	CreateIntGateSelector
+        mov al,57h
+        mov esi,OFFSET mem_irq23
+        CreateIntGateSelector
 ;
-	mov al,58h
-	mov esi,OFFSET mem_irq24
-	CreateIntGateSelector
+        mov al,58h
+        mov esi,OFFSET mem_irq24
+        CreateIntGateSelector
 ;
-	mov al,59h
-	mov esi,OFFSET mem_irq25
-	CreateIntGateSelector
+        mov al,59h
+        mov esi,OFFSET mem_irq25
+        CreateIntGateSelector
 ;
-	mov al,5Ah
-	mov esi,OFFSET mem_irq26
-	CreateIntGateSelector
+        mov al,5Ah
+        mov esi,OFFSET mem_irq26
+        CreateIntGateSelector
 ;
-	mov al,5Bh
-	mov esi,OFFSET mem_irq27
-	CreateIntGateSelector
+        mov al,5Bh
+        mov esi,OFFSET mem_irq27
+        CreateIntGateSelector
 ;
-	mov al,5Ch
-	mov esi,OFFSET mem_irq28
-	CreateIntGateSelector
+        mov al,5Ch
+        mov esi,OFFSET mem_irq28
+        CreateIntGateSelector
 ;
-	mov al,5Dh
-	mov esi,OFFSET mem_irq29
-	CreateIntGateSelector
+        mov al,5Dh
+        mov esi,OFFSET mem_irq29
+        CreateIntGateSelector
 ;
-	mov al,5Eh
-	mov esi,OFFSET mem_irq30
-	CreateIntGateSelector
+        mov al,5Eh
+        mov esi,OFFSET mem_irq30
+        CreateIntGateSelector
 ;
-	mov al,5Fh
-	mov esi,OFFSET mem_irq31
-	CreateIntGateSelector
+        mov al,5Fh
+        mov esi,OFFSET mem_irq31
+        CreateIntGateSelector
 ;    
     ret
 SetupMemGates   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SetupMsrGates
+;               NAME:                   SetupMsrGates
 ;
-;		DESCRIPTION:	Set up MSR gates for x2APIC mode
+;               DESCRIPTION:    Set up MSR gates for x2APIC mode
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1443,167 +1449,167 @@ smsrgLint1Ok:
     mov ds:mp_int_proc, OFFSET SendIntMsr
     mov ds:mp_eoi_proc, OFFSET SendEoiMsr
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov si,OFFSET get_id_msr
-	mov di,OFFSET get_id_name
-	xor cl,cl
-	mov ax,get_apic_id_nr
-	RegisterOsGate
+        mov si,OFFSET get_id_msr
+        mov di,OFFSET get_id_name
+        xor cl,cl
+        mov ax,get_apic_id_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET start_apic_msr_timer
-	mov di,OFFSET start_apic_timer_name
-	xor cl,cl
-	mov ax,start_sys_timer_nr
-	RegisterOsGate
+        mov si,OFFSET start_apic_msr_timer
+        mov di,OFFSET start_apic_timer_name
+        xor cl,cl
+        mov ax,start_sys_timer_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET reload_apic_msr_timer
-	mov di,OFFSET reload_apic_timer_name
-	xor cl,cl
-	mov ax,reload_sys_timer_nr
-	RegisterOsGate
+        mov si,OFFSET reload_apic_msr_timer
+        mov di,OFFSET reload_apic_timer_name
+        xor cl,cl
+        mov ax,reload_sys_timer_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET get_processor_id_msr
-	mov di,OFFSET get_processor_id_name
-	xor dx,dx
-	mov ax,get_processor_id_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET get_processor_id_msr
+        mov di,OFFSET get_processor_id_name
+        xor dx,dx
+        mov ax,get_processor_id_nr
+        RegisterBimodalUserGate
 ;
-	mov ax,cs
-	mov ds,ax
-	xor bl,bl
+        mov ax,cs
+        mov ds,ax
+        xor bl,bl
 ;
-	mov al,41h
-	mov esi,OFFSET msr_irq1
-	CreateIntGateSelector
+        mov al,41h
+        mov esi,OFFSET msr_irq1
+        CreateIntGateSelector
 ;
-	mov al,43h
-	mov esi,OFFSET msr_irq3
-	CreateIntGateSelector
+        mov al,43h
+        mov esi,OFFSET msr_irq3
+        CreateIntGateSelector
 ;
-	mov al,44h
-	mov esi,OFFSET msr_irq4
-	CreateIntGateSelector
+        mov al,44h
+        mov esi,OFFSET msr_irq4
+        CreateIntGateSelector
 ;
-	mov al,45h
-	mov esi,OFFSET msr_irq5
-	CreateIntGateSelector
+        mov al,45h
+        mov esi,OFFSET msr_irq5
+        CreateIntGateSelector
 ;
-	mov al,46h
-	mov esi,OFFSET msr_irq6
-	CreateIntGateSelector
+        mov al,46h
+        mov esi,OFFSET msr_irq6
+        CreateIntGateSelector
 ;
-	mov al,47h
-	mov esi,OFFSET msr_irq7
-	CreateIntGateSelector
+        mov al,47h
+        mov esi,OFFSET msr_irq7
+        CreateIntGateSelector
 ;
-	mov al,48h
-	mov esi,OFFSET msr_irq8
-	CreateIntGateSelector
+        mov al,48h
+        mov esi,OFFSET msr_irq8
+        CreateIntGateSelector
 ;
-	mov al,49h
-	mov esi,OFFSET msr_irq9
-	CreateIntGateSelector
+        mov al,49h
+        mov esi,OFFSET msr_irq9
+        CreateIntGateSelector
 ;
-	mov al,4Ah
-	mov esi,OFFSET msr_irq10
-	CreateIntGateSelector
+        mov al,4Ah
+        mov esi,OFFSET msr_irq10
+        CreateIntGateSelector
 ;
-	mov al,4Bh
-	mov esi,OFFSET msr_irq11
-	CreateIntGateSelector
+        mov al,4Bh
+        mov esi,OFFSET msr_irq11
+        CreateIntGateSelector
 ;
-	mov al,4Ch
-	mov esi,OFFSET msr_irq12
-	CreateIntGateSelector
+        mov al,4Ch
+        mov esi,OFFSET msr_irq12
+        CreateIntGateSelector
 ;
-	mov al,4Dh
-	mov esi,OFFSET msr_irq13
-	CreateIntGateSelector
+        mov al,4Dh
+        mov esi,OFFSET msr_irq13
+        CreateIntGateSelector
 ;
-	mov al,4Eh
-	mov esi,OFFSET msr_irq14
-	CreateIntGateSelector
+        mov al,4Eh
+        mov esi,OFFSET msr_irq14
+        CreateIntGateSelector
 ;
-	mov al,4Fh
-	mov esi,OFFSET msr_irq15
-	CreateIntGateSelector
+        mov al,4Fh
+        mov esi,OFFSET msr_irq15
+        CreateIntGateSelector
 ;
-	mov al,50h
-	mov esi,OFFSET msr_irq16
-	CreateIntGateSelector
+        mov al,50h
+        mov esi,OFFSET msr_irq16
+        CreateIntGateSelector
 ;
-	mov al,51h
-	mov esi,OFFSET msr_irq17
-	CreateIntGateSelector
+        mov al,51h
+        mov esi,OFFSET msr_irq17
+        CreateIntGateSelector
 ;
-	mov al,52h
-	mov esi,OFFSET msr_irq18
-	CreateIntGateSelector
+        mov al,52h
+        mov esi,OFFSET msr_irq18
+        CreateIntGateSelector
 ;
-	mov al,53h
-	mov esi,OFFSET msr_irq19
-	CreateIntGateSelector
+        mov al,53h
+        mov esi,OFFSET msr_irq19
+        CreateIntGateSelector
 ;
-	mov al,54h
-	mov esi,OFFSET msr_irq20
-	CreateIntGateSelector
+        mov al,54h
+        mov esi,OFFSET msr_irq20
+        CreateIntGateSelector
 ;
-	mov al,55h
-	mov esi,OFFSET msr_irq21
-	CreateIntGateSelector
+        mov al,55h
+        mov esi,OFFSET msr_irq21
+        CreateIntGateSelector
 ;
-	mov al,56h
-	mov esi,OFFSET msr_irq22
-	CreateIntGateSelector
+        mov al,56h
+        mov esi,OFFSET msr_irq22
+        CreateIntGateSelector
 ;
-	mov al,57h
-	mov esi,OFFSET msr_irq23
-	CreateIntGateSelector
+        mov al,57h
+        mov esi,OFFSET msr_irq23
+        CreateIntGateSelector
 ;
-	mov al,58h
-	mov esi,OFFSET msr_irq24
-	CreateIntGateSelector
+        mov al,58h
+        mov esi,OFFSET msr_irq24
+        CreateIntGateSelector
 ;
-	mov al,59h
-	mov esi,OFFSET msr_irq25
-	CreateIntGateSelector
+        mov al,59h
+        mov esi,OFFSET msr_irq25
+        CreateIntGateSelector
 ;
-	mov al,5Ah
-	mov esi,OFFSET msr_irq26
-	CreateIntGateSelector
+        mov al,5Ah
+        mov esi,OFFSET msr_irq26
+        CreateIntGateSelector
 ;
-	mov al,5Bh
-	mov esi,OFFSET msr_irq27
-	CreateIntGateSelector
+        mov al,5Bh
+        mov esi,OFFSET msr_irq27
+        CreateIntGateSelector
 ;
-	mov al,5Ch
-	mov esi,OFFSET msr_irq28
-	CreateIntGateSelector
+        mov al,5Ch
+        mov esi,OFFSET msr_irq28
+        CreateIntGateSelector
 ;
-	mov al,5Dh
-	mov esi,OFFSET msr_irq29
-	CreateIntGateSelector
+        mov al,5Dh
+        mov esi,OFFSET msr_irq29
+        CreateIntGateSelector
 ;
-	mov al,5Eh
-	mov esi,OFFSET msr_irq30
-	CreateIntGateSelector
+        mov al,5Eh
+        mov esi,OFFSET msr_irq30
+        CreateIntGateSelector
 ;
-	mov al,5Fh
-	mov esi,OFFSET msr_irq31
-	CreateIntGateSelector
-;	
+        mov al,5Fh
+        mov esi,OFFSET msr_irq31
+        CreateIntGateSelector
+;       
     ret
 SetupMsrGates   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:		    StartCore
+;               NAME:               StartCore
 ;
-;		DESCRIPTION:	Start a CPU core
+;               DESCRIPTION:    Start a CPU core
 ;
 ;       PARAMETERS:     EDX         APIC ID
 ;
@@ -1684,11 +1690,11 @@ StartCore   Proc near
 ;
     mov al,0Fh
     out 70h,al
-	jmp short $+2
+        jmp short $+2
 ;
     mov al,0Ah
     out 71h,al
-  	jmp short $+2
+        jmp short $+2
 ;
     mov fs:mp_processor_sign,0
 ;
@@ -1738,11 +1744,11 @@ scDone:
 ;
     mov al,0Fh
     out 70h,al
-	jmp short $+2
+        jmp short $+2
 ;
     xor al,al
     out 71h,al
-  	jmp short $+2
+        jmp short $+2
 ;
     mov edx,ebp
     xor eax,eax
@@ -1762,11 +1768,11 @@ scDone:
 StartCore   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ReadIoApicInt
+;               NAME:                   ReadIoApicInt
 ;
-;		DESCRIPTION:	Read setting for IO-APIC int
+;               DESCRIPTION:    Read setting for IO-APIC int
 ;
 ;       PARAMETERS:     AL      Int #
 ;
@@ -1800,55 +1806,54 @@ ReadIoApicInt   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			IRQx
+;               NAME:                   IRQx
 ;
-;		DESCRIPTION:	IRQ handlers
+;               DESCRIPTION:    IRQ handlers
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	irqmac 1
-	irqmac 3
-	irqmac 4
-	irqmac 5
-	irqmac 6
-	irqmac 7
-	irqmac 8
-	irqmac 9
-	irqmac 10
-	irqmac 11
-	irqmac 12
-	irqmac 13
-	irqmac 14
-	irqmac 15
-	irqmac 16
-	irqmac 17
-	irqmac 18
-	irqmac 19
-	irqmac 20
-	irqmac 21
-	irqmac 22
-	irqmac 23
-	irqmac 24
-	irqmac 25
-	irqmac 26
-	irqmac 27
-	irqmac 28
-	irqmac 29
-	irqmac 30
-	irqmac 31
+        irqmac 1
+        irqmac 3
+        irqmac 4
+        irqmac 5
+        irqmac 6
+        irqmac 7
+        irqmac 8
+        irqmac 9
+        irqmac 10
+        irqmac 11
+        irqmac 12
+        irqmac 13
+        irqmac 14
+        irqmac 15
+        irqmac 16
+        irqmac 17
+        irqmac 18
+        irqmac 19
+        irqmac 20
+        irqmac 21
+        irqmac 22
+        irqmac 23
+        irqmac 24
+        irqmac 25
+        irqmac 26
+        irqmac 27
+        irqmac 28
+        irqmac 29
+        irqmac 30
+        irqmac 31
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EnableIrq
+;               NAME:                   EnableIrq
 ;
-;		description:	Enable IRQ in IOAPIC controller
+;               description:    Enable IRQ in IOAPIC controller
 ;
-;		PARAMETERS:		AL			irq nr
+;               PARAMETERS:             AL                      irq nr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1895,16 +1900,15 @@ enable_irq_do:
     ret
 enable_irq  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DisableIrq
+;               NAME:                   DisableIrq
 ;
-;		description:	Disable IRQ in PIC controller
+;               description:    Disable IRQ in PIC controller
 ;
-;		PARAMETERS:		AL			irq nr
+;               PARAMETERS:             AL                      irq nr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1935,14 +1939,13 @@ disable_irq  Proc far
     ret
 disable_irq Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EnableIrqDetect
+;               NAME:                   EnableIrqDetect
 ;
-;		description:	Enable IRQ detect in PIC controller
+;               description:    Enable IRQ detect in PIC controller
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1951,11 +1954,11 @@ enable_irq_detect  Proc far
 enable_irq_detect   Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			CheckMp
+;               NAME:                   CheckMp
 ;
-;		DESCRIPTION:    Check for an MP header
+;               DESCRIPTION:    Check for an MP header
 ;
 ;       PARAMETERS:     DS:SI       Base address to check
 ;
@@ -2007,11 +2010,11 @@ check_mp_done:
 CheckMp   Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			GetMp
+;               NAME:                   GetMp
 ;
-;		DESCRIPTION:    Get the MP
+;               DESCRIPTION:    Get the MP
 ;
 ;       RETURNS:        NC          OK
 ;                       EAX         Physical address
@@ -2092,7 +2095,7 @@ get_mp_bios_page:
 get_mp_ok:
     clc
 
-get_mp_done:	
+get_mp_done:    
     push eax
     pushf
     xor eax,eax
@@ -2116,15 +2119,15 @@ get_mp_done:
 GetMp Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			apic_pr
+;               NAME:                   apic_pr
 ;
-;		DESCRIPTION:	APIC test thread
+;               DESCRIPTION:    APIC test thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-apic_name	DB 'Apic Test',0
+apic_name       DB 'Apic Test',0
 
 apic_pr:
     int 3
@@ -2136,17 +2139,17 @@ apic_pr:
 
 
 
-;	
+;       
     mov ax,apic_data_sel
     mov ds,ax
     mov bx,OFFSET isa_redir_arr
 ;    
-	mov ax,task_sel
-	mov ds,ax
-	mov ax,gdt_sel
-	mov es,ax
-	mov di,tss_data_sel
-;	call ds:lock_list_proc
+        mov ax,task_sel
+        mov ds,ax
+        mov ax,gdt_sel
+        mov es,ax
+        mov di,tss_data_sel
+;       call ds:lock_list_proc
     str si
     movs word ptr es:[di],es:[si]
     movs word ptr es:[di],es:[si]
@@ -2158,7 +2161,7 @@ apic_pr:
     mov es,ax
     mov ax,es:tss_thread
 ;   call ds:unlock_list_proc
-	
+        
 
 
 ;    
@@ -2269,21 +2272,20 @@ find_fail:
 apic_pr_done:
     retf            
 
-PAGE
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			init_apic_thread
+;               NAME:                   init_apic_thread
 ;
-;		DESCRIPTION:	Init apic threads
+;               DESCRIPTION:    Init apic threads
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_apic_thread	PROC far
-	push ds
-	push es
-	pusha
+init_apic_thread        PROC far
+        push ds
+        push es
+        pusha
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -2296,33 +2298,32 @@ init_apic_thread	PROC far
 ;    test ah,8
 ;    jz init_thread_done
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-;	
-	mov si,OFFSET apic_pr
-	mov di,OFFSET apic_name
-	mov cx,500
-	mov ax,4
-	CreateThread
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+;       
+        mov si,OFFSET apic_pr
+        mov di,OFFSET apic_name
+        mov cx,500
+        mov ax,4
+        CreateThread
 
 init_thread_done:
-	popa
-	pop es
-	pop ds
-	ret
-init_apic_thread	ENDP
+        popa
+        pop es
+        pop ds
+        ret
+init_apic_thread        ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitApic
+;               NAME:                   InitApic
 ;
-;		DESCRIPTION:    Init APIC timer
+;               DESCRIPTION:    Init APIC timer
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2360,29 +2361,28 @@ InitApic    Proc near
     ret
 InitApic    Endp
     
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitApicTimer
+;               NAME:                   InitApicTimer
 ;
-;		DESCRIPTION:    Init APIC timer
+;               DESCRIPTION:    Init APIC timer
 ;
-;		PARAMETERS:		EAX     Physical base of timer
+;               PARAMETERS:             EAX     Physical base of timer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_tics   MACRO
     mov al,0
-	out TIMER_CONTROL,al
-	jmp short $+2
-	in al,TIMER0
-	mov ah,al
-	jmp short $+2
-	in al,TIMER0
-	xchg al,ah
-	        ENDM
+        out TIMER_CONTROL,al
+        jmp short $+2
+        in al,TIMER0
+        mov ah,al
+        jmp short $+2
+        in al,TIMER0
+        xchg al,ah
+                ENDM
 
 InitApicTimer Proc near    
     push ds
@@ -2474,14 +2474,13 @@ init_tsc_wait_low_ok:
     ret
 InitApicTimer Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitLocalApic
+;               NAME:                   InitLocalApic
 ;
-;		DESCRIPTION:    Init local APIC access
+;               DESCRIPTION:    Init local APIC access
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2520,16 +2519,15 @@ init_local_apic_done:
     ret
 InitLocalApic   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ResumeInt
+;               NAME:                   ResumeInt
 ;
-;		DESCRIPTION:    Resume IPI int
+;               DESCRIPTION:    Resume IPI int
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2545,16 +2543,15 @@ resume_int:
     pop ds
     iretd
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ShutdownInt
+;               NAME:                   ShutdownInt
 ;
-;		DESCRIPTION:    Shutdown IPI int
+;               DESCRIPTION:    Shutdown IPI int
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2564,16 +2561,15 @@ shutdown_int:
     mov edi,es:APIC_CURR_COUNT
     Shutdown
     
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PreemptInt
+;               NAME:                   PreemptInt
 ;
-;		DESCRIPTION:    Preempt IPI int
+;               DESCRIPTION:    Preempt IPI int
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2595,29 +2591,29 @@ preempt_int:
     iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			InitIpi
+;               NAME:                   InitIpi
 ;
-;		DESCRIPTION:	Init IPIs
+;               DESCRIPTION:    Init IPIs
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ipi_tab:
 ;
-;			int #	Entry			
+;                       int #   Entry                   
 ;
-ipi80	DW	80h,	OFFSET resume_int
-ipi81	DW	81h,	OFFSET preempt_int
-ipi82	DW	82h,	OFFSET shutdown_int
-        DW	0FFFFh
+ipi80   DW      80h,    OFFSET resume_int
+ipi81   DW      81h,    OFFSET preempt_int
+ipi82   DW      82h,    OFFSET shutdown_int
+        DW      0FFFFh
 
 ;
 ; tabell offsets
 ;
-ipi_nr		EQU 0
-ipi_entry	EQU 2
+ipi_nr          EQU 0
+ipi_entry       EQU 2
 
 InitIpi Proc near
     push ds
@@ -2626,19 +2622,19 @@ InitIpi Proc near
     mov ax,cs
     mov ds,ax
     xor bl,bl
-	mov di,OFFSET ipi_tab
+        mov di,OFFSET ipi_tab
 
 ipiLoop:
-	mov ax,cs:[di]
-	cmp ax,0FFFFh
-	jz ipiDone
+        mov ax,cs:[di]
+        cmp ax,0FFFFh
+        jz ipiDone
 ;
-	mov al,cs:[di].ipi_nr
-	movzx esi, word ptr cs:[di].ipi_entry
-	CreateIntGateSelector
-	add di,4
-	jmp ipiLoop
-	
+        mov al,cs:[di].ipi_nr
+        movzx esi, word ptr cs:[di].ipi_entry
+        CreateIntGateSelector
+        add di,4
+        jmp ipiLoop
+        
 ipiDone:
     popad
     pop ds
@@ -2646,11 +2642,11 @@ ipiDone:
 InitIpi Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			InitSmp
+;               NAME:                   InitSmp
 ;
-;		DESCRIPTION:	Init multiprocessing
+;               DESCRIPTION:    Init multiprocessing
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2668,7 +2664,7 @@ InitSmp Proc near
     jnz init_smp_check_msr
 ;   
     mov ds:mp_get_proc,OFFSET get_processor_mem
-	jmp init_smp_done
+        jmp init_smp_done
 
 init_smp_check_msr:
     test ds:mp_flags,MP_FLAG_MSR
@@ -2677,34 +2673,34 @@ init_smp_check_msr:
     mov ds:mp_get_proc,OFFSET get_processor_msr
 
 init_smp_done:
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov si,OFFSET resume_processor
-	mov di,OFFSET resume_processor_name
-	xor cl,cl
-	mov ax,resume_processor_nr
-	RegisterOsGate
+        mov si,OFFSET resume_processor
+        mov di,OFFSET resume_processor_name
+        xor cl,cl
+        mov ax,resume_processor_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET preempt_processor
-	mov di,OFFSET preempt_processor_name
-	xor cl,cl
-	mov ax,preempt_processor_nr
-	RegisterOsGate
+        mov si,OFFSET preempt_processor
+        mov di,OFFSET preempt_processor_name
+        xor cl,cl
+        mov ax,preempt_processor_nr
+        RegisterOsGate
 ;
-    popad	
+    popad       
     pop es
-	pop ds
+        pop ds
     ret
 InitSmp Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SetupIrq
+;               NAME:                   SetupIrq
 ;
-;		DESCRIPTION:	Setup IRQs to IOAPIC
+;               DESCRIPTION:    Setup IRQs to IOAPIC
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2720,52 +2716,52 @@ SetupIrq    Proc near
     mov word ptr ds:irq_detect_proc,OFFSET enable_irq_detect
     mov word ptr ds:irq_detect_proc+2,cs
 ;    
-	mov cx,32
-	mov bx,OFFSET irq_arr
-	xor eax,eax
+        mov cx,32
+        mov bx,OFFSET irq_arr
+        xor eax,eax
 
 init_irq_loop:
-	mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
-	mov word ptr ds:[bx].irq_enable_proc+2,cs
+        mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
+        mov word ptr ds:[bx].irq_enable_proc+2,cs
 ;
-	mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
-	mov word ptr ds:[bx].irq_disable_proc+2,cs
+        mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
+        mov word ptr ds:[bx].irq_disable_proc+2,cs
 ;
-	add bx,SIZE irq_struc
-	loop init_irq_loop
+        add bx,SIZE irq_struc
+        loop init_irq_loop
 ;
     pop cx
     pop bx
     pop eax
     pop ds
     ret
-SetupIrq    Endp	
+SetupIrq    Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			Init
+;               NAME:                   Init
 ;
-;		DESCRIPTION:	Init apic mp module
+;               DESCRIPTION:    Init apic mp module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	push ds
-	push es
-	pushad
-;	
-	mov bx,apic_code_sel
-	InitDevice
+init    PROC far
+        push ds
+        push es
+        pushad
+;       
+        mov bx,apic_code_sel
+        InitDevice
 ;
-	mov eax,SIZE apic_data_seg
-	mov bx,apic_data_sel
-	AllocateFixedSystemMem
-	mov di,OFFSET apic_arr
-	xor ax,ax
-	mov cx,100h
-	rep stosw
-	mov es:mp_flags,0
+        mov eax,SIZE apic_data_seg
+        mov bx,apic_data_sel
+        AllocateFixedSystemMem
+        mov di,OFFSET apic_arr
+        xor ax,ax
+        mov cx,100h
+        rep stosw
+        mov es:mp_flags,0
 ;
     mov ax,apic_data_sel
     mov ds,ax
@@ -2909,7 +2905,7 @@ init_redir_level:
     jmp init_table_next
 
 init_redir_edge:
-    and word ptr [bx],NOT 8000h
+    and word ptr [bx],7FFFh
 
 init_table_next:
     movzx ax,es:[di].apic_len
@@ -2921,17 +2917,17 @@ init_table_next:
 
 init_apic_gates_ok:     
     mov ax,cs
-	mov es,ax
-	mov di,OFFSET init_apic_thread
-	HookInitTasking
+        mov es,ax
+        mov di,OFFSET init_apic_thread
+        HookInitTasking
 ;
     popad
     pop es
-    pop ds	
-	ret
-init	ENDP
+    pop ds      
+        ret
+init    ENDP
 
-code	ENDS
+code    ENDS
 
-	END init
+        END init
 

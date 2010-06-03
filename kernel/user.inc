@@ -168,7 +168,7 @@ UsedVMLinear    MACRO
 						ENDM
 
 ; OUT AX      Number of free handles
-UsedLocalLinear MACRO
+GetFreeHandles MACRO
 	UserGate get_free_handles_nr
 						ENDM
 
