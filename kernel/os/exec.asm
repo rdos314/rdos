@@ -210,7 +210,7 @@ ceprSizeOk:
 	AllocateSmallGlobalMem
     mov fs:e_name,es
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
 ;    
 	pop edi
 	pop esi
@@ -259,7 +259,7 @@ cepaSizeOk:
 	mov eax,ecx
 	AllocateSmallGlobalMem
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
     jmp cepaDone
 
 cepaNoParam:
@@ -324,7 +324,7 @@ ceoSizeOk:
 	AllocateSmallGlobalMem
 	xor edi,edi
 	push ecx
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
 	pop ecx
     jmp ceoDone
 
@@ -795,7 +795,7 @@ csprSizeOk:
 	AllocateSmallGlobalMem
     mov gs:s_name,es
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
 ;    
 	pop edi
 	pop esi
@@ -850,7 +850,7 @@ cspaSizeOk:
 	mov eax,ecx
 	AllocateSmallGlobalMem
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
     jmp cspaDone
 
 cspaNoParam:
@@ -917,7 +917,7 @@ cssdSizeOk:
 	mov eax,ecx
 	AllocateSmallGlobalMem
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
     jmp cssdDone
 
 cssdNoStartDir:
@@ -997,7 +997,7 @@ cseSizeOk:
 	mov eax,ecx
 	AllocateSmallGlobalMem
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
     jmp cseDone
 
 cseNoEnv:
@@ -1069,7 +1069,7 @@ csoSizeOk:
 	AllocateSmallGlobalMem
 	xor edi,edi
 	push ecx
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
 	pop ecx
     jmp csoDone
 
@@ -1744,7 +1744,7 @@ cfnSizeOk:
 	AllocateSmallGlobalMem
     mov gs:f_name,es
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
 ;
 	pop edi
 	pop esi
@@ -1795,7 +1795,7 @@ cfoSizeOk:
 	mov eax,ecx
 	AllocateSmallGlobalMem
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
     mov gs:f_opt,es
 ;	
 	pop edi
@@ -1848,7 +1848,7 @@ cfenSizeOk:
 	AllocateSmallGlobalMem
     mov gs:f_exe_name,es
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]	
+	rep movs byte ptr es:[edi],ds:[esi]	
 ;
 	pop edi
 	pop esi
@@ -2021,7 +2021,7 @@ run_process	PROC near
 	mov eax,1000h
 	AllocateGlobalMem
 	xor edi,edi
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	xor edi,edi
 	mov bx,es
 	mov ax,cs

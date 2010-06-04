@@ -1362,7 +1362,7 @@ get_native	Proc far
 	test si,1
 	jz get_native_even
 ;
-	movs byte ptr es:[edi],[esi]
+	movs byte ptr es:[edi],ds:[esi]
 	sub ecx,1
 	jz get_native_done
 
@@ -1373,18 +1373,18 @@ get_native_even:
 	test si,2
 	jz get_native_double
 ;
-	movs word ptr es:[edi],[esi]
+	movs word ptr es:[edi],ds:[esi]
 	sub ecx,2
 
 get_native_double:
 	push cx
 	shr ecx,2
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	pop cx
 	and ecx,3
 
 get_native_last:
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 
 get_native_done:
 	pop edi

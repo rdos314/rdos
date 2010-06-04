@@ -1293,7 +1293,7 @@ get_native	Proc far
 	test si,2
 	jz get_native_double
 ;
-	movs word ptr es:[edi],[esi]
+	movs word ptr es:[edi],ds:[esi]
 	sub cx,1
 	jz get_native_done
 
@@ -1301,12 +1301,12 @@ get_native_double:
 	push cx
 	movzx ecx,cx
 	shr ecx,1
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	pop cx
 	test cx,1
 	jz get_native_done
 ;	
-	movs word ptr es:[edi],[esi]
+	movs word ptr es:[edi],ds:[esi]
 
 get_native_done:
 	pop edi

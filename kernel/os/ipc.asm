@@ -443,7 +443,7 @@ define_mailslot	Proc near
 	pop esi
 	pop ds
 	mov edi,OFFSET m_name
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
     GetThread
 	mov ds,ax

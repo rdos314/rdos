@@ -1231,7 +1231,7 @@ get_native	Proc far
 	mov ds,dx
 	pop cx
 ;
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 
 get_native_done:
 	pop edi

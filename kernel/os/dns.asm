@@ -264,7 +264,7 @@ name_to_ip_move_part:
 	pop esi
 	mov al,cl
 	stosb
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	lods byte ptr [esi]
 	cmp al,'.'
 	je name_to_ip_move_loop

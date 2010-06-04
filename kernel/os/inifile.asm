@@ -347,6 +347,7 @@ FindIniSectionScan:
 
 FindIniSectionCheck:
 	xor esi,esi
+;	repe cmps byte ptr es:[edi],fs:[esi]
 	repe cmps byte ptr fs:[esi],es:[edi]
 	dec esi
 	dec edi
@@ -442,6 +443,7 @@ FindIniKeyControlPass:
 FindIniKeyScan:
     mov ds:[bx].ih_entry_start,edi
 	push esi
+;	repe cmps byte ptr es:[edi],fs:[esi]
 	repe cmps byte ptr fs:[esi],es:[edi]
 	dec esi
 	dec edi
@@ -1049,7 +1051,7 @@ gisSectSizeOk:
     pop ds
     mov esi,edi
     xor edi,edi
-    rep movs byte ptr es:[edi],[esi]
+    rep movs byte ptr es:[edi],ds:[esi]
     clc
 
 gisDone:

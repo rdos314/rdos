@@ -127,6 +127,7 @@ find_addr_loop:
 	movzx ecx,ds:p_logical_addr_len
 	push esi
 	mov edi,OFFSET prot_logical_addr
+;	repz cmps byte ptr es:[edi],fs:[esi]
 	repz cmps byte ptr fs:[esi],es:[edi]
 	pop esi
 	jnz find_addr_check_failed
@@ -275,6 +276,7 @@ check_arp_send_loop:
 	mov si,OFFSET arp_logical_addr
 	movzx cx,al
 	mov di,OFFSET prot_logical_addr
+;	repz cmps byte ptr es:[di],gs:[si]
 	repz cmps byte ptr gs:[si],es:[di]
 	jnz check_arp_next
 ;
@@ -579,7 +581,8 @@ receive_arp_check_dest:
 	mov cl,es:ar_data.arp_prot_len
 	add di,cx
 	mov si,OFFSET p_logical_my_addr
-	repz cmps byte ptr [si],es:[di]
+;	repz cmps byte ptr es:[di],ds:[si]
+	repz cmps byte ptr ds:[si],es:[di]
 	jnz receive_arp_forward_req
 ;
 	push es
@@ -1004,7 +1007,7 @@ receive_data_arp_rec:
 	mov edi,OFFSET ar_data
 	add eax,edi
 	AllocateSmallGlobalMem
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	mov bx,es
 	mov ax,ds
 	mov es,ax
@@ -1883,7 +1886,7 @@ define_protocol_address	Proc far
     mov es,bx
     movzx ecx,es:p_logical_addr_len
     mov edi,OFFSET p_logical_my_addr
-    rep movs byte ptr es:[edi],[esi]
+    rep movs byte ptr es:[edi],ds:[esi]
 ;	
     pop edi
     pop esi

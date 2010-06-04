@@ -1267,7 +1267,7 @@ read_boot_sector_read:
 	mov ds,cx
 	mov esi,ebx
 	mov ecx,128
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	mov cx,floppy_data_sel
 	mov ds,cx
 	movzx bx,al
@@ -1521,6 +1521,7 @@ check_media_retry:
 ;
 	mov esi,OFFSET boot_sect
 	mov ecx,80h
+;	repe cmps dword ptr es:[edi],fs:[esi]
 	repe cmps dword ptr fs:[esi],es:[edi]
 	clc
 	jz check_media_free

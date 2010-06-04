@@ -1057,7 +1057,7 @@ ofsDirFound:
 	AllocateLocalMem
 	push eax
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	or di,di
 	jz ofsDirNotRoot
 ;
@@ -1559,7 +1559,7 @@ fffFirst:
 	mov esi,12
 	add edi, OFFSET dm_attr
 	mov ecx, SIZE dir_cache
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	mov ds:[8],esi
 ;
 	pop edi

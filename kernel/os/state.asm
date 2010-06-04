@@ -241,7 +241,7 @@ get_thread_state	Proc far
 	mov ecx,32
 	push edi
 	add edi,OFFSET st_name
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	pop edi
 ;	
 	mov eax,ds:p_msb_tics
@@ -467,7 +467,7 @@ get_thread_tss_found:
 	mov ds,ds:p_tss_data_sel
 	xor esi,esi
 	mov ecx,OFFSET math_st0
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
     mov eax,cr0
     test al,4
@@ -488,7 +488,7 @@ get_thread_emul_fpu:
 
 get_thread_emul_loop:
     mov ecx,10
-    rep movs byte ptr es:[edi],[esi]
+    rep movs byte ptr es:[edi],ds:[esi]
 ;
     inc al
     cmp al,8
@@ -504,7 +504,7 @@ get_thread_emul_next:
 
 get_thread_real_fpu:
     mov ecx,2 * 10
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 
 get_thread_fpu_done:
 	pop edi
@@ -590,7 +590,7 @@ set_thread_tss_found:
 	mov esi,edi
 	xor edi,edi
 	mov ecx,OFFSET math_st0
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
     mov eax,cr0
     test al,4
@@ -611,7 +611,7 @@ set_thread_emul_fpu:
 
 set_thread_emul_loop:
     mov ecx,10
-    rep movs byte ptr es:[edi],[esi]
+    rep movs byte ptr es:[edi],ds:[esi]
 ;
     inc al
     cmp al,8
@@ -627,7 +627,7 @@ set_thread_emul_next:
 
 set_thread_real_fpu:
     mov ecx,2 * 10
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 
 set_thread_fpu_done:
 	pop edi

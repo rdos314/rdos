@@ -140,7 +140,7 @@ register_device	PROC far
 	AllocateFixedVMLinear
 	mov edi,edx
 	movzx esi,bx
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	shr edx,4
 	mov ax,flat_sel
 	mov ds,ax
@@ -1339,7 +1339,7 @@ con_read_all:
 	push ecx
 	push edi
 	mov ecx,eax
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	pop edi
 	pop ecx
 	mov ds:con_buf_start,OFFSET con_buf
@@ -1349,7 +1349,7 @@ con_read_partial:
 	push ecx
 	push edi
 	mov eax,ecx
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	mov ds:con_buf_start,si
 	pop edi
 	pop ecx
@@ -1519,7 +1519,7 @@ init	PROC far
 	mov ecx,eax
 	mov edi,edx
 	mov esi,OFFSET nul_device_begin
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	shr edx,4
 	mov ax,dosdev_data_sel
 	mov es,ax

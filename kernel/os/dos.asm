@@ -231,7 +231,7 @@ create_env_find_sep:
 	push cx
 	mov ecx,esi
 	xor esi,esi
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	pop cx
 	cmp fs:app_psp_mode,mode_pm
 	jz create_env_no_free
@@ -252,7 +252,7 @@ create_env_no_free:
 	pop ds
 	mov ax,1
 	stos word ptr es:[edi]
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	clc
 	jmp create_env_done
 
@@ -1396,7 +1396,7 @@ init	PROC far
 	mov es,ax
 	mov esi,OFFSET doscallback_start
 	mov ecx,OFFSET doscallback_end - OFFSET doscallback_start
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	call init_dos_mem
 	call init_dosvm

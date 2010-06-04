@@ -105,7 +105,7 @@ CopyFromSender	Proc near
 	mov es,ax
 	mov edi,esi
 	xor esi,esi
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	pop es
 	pop ds
 ;

@@ -91,7 +91,7 @@ do_reply_inrange:
 	mov ds,ax
 	mov esi,edi	
 	xor edi,edi
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	xor ax,ax
 	mov es,ax
 	pop ds

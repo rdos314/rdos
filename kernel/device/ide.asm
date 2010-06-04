@@ -1239,10 +1239,10 @@ InstallPartition	Proc near
 	mov edx,edi
 	lea esi,[edi+36h]
 	xor edi,edi
-	movs dword ptr es:[edi],[esi]
-	movs dword ptr es:[edi],[esi]
-	movs dword ptr es:[edi],[esi]
-	movs dword ptr es:[edi],[esi]
+	movs dword ptr es:[edi],ds:[esi]
+	movs dword ptr es:[edi],ds:[esi]
+	movs dword ptr es:[edi],ds:[esi]
+	movs dword ptr es:[edi],ds:[esi]
 	xor ecx,ecx
 	FreeLinear
 ;

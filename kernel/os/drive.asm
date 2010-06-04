@@ -4428,7 +4428,7 @@ read_disc_found:
 	pop es
 ;
 	shr ecx,2
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	pop ds
 	LeaveSection ds:disc_section
 	clc
@@ -4561,7 +4561,7 @@ write_disc_found:
 	pop ds
 ;
 	shr ecx,2
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 ;
 	mov edi,ebx
 	pop ds
@@ -4690,10 +4690,10 @@ format_drive	Proc near
 	mov eax,10h
 	AllocateSmallGlobalMem
 	xor edi,edi
-	movs dword ptr es:[edi],[esi]
-	movs dword ptr es:[edi],[esi]
-	movs dword ptr es:[edi],[esi]
-	movs dword ptr es:[edi],[esi]
+	movs dword ptr es:[edi],ds:[esi]
+	movs dword ptr es:[edi],ds:[esi]
+	movs dword ptr es:[edi],ds:[esi]
+	movs dword ptr es:[edi],ds:[esi]
 	pop ax
 	xor di,di
 	IsFileSystemAvailable

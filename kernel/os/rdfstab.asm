@@ -74,7 +74,7 @@ FormatInfoSector	Proc near
 	mov edi,esi
 	mov esi,OFFSET info_sector
 	mov ecx,SIZE rdfs_info_struc
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	ModifySector
 	UnlockSector
@@ -91,7 +91,7 @@ FormatInfoSector	Proc near
 	mov edi,esi
 	mov esi,OFFSET info_sector
 	mov ecx,SIZE rdfs_info_struc
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	ModifySector
 	UnlockSector
@@ -216,7 +216,7 @@ WriteInfoSector	Proc near
 	mov edi,esi
 	mov esi,OFFSET info_sector
 	mov ecx,SIZE rdfs_info_struc
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	ModifySeqSector
 	UnlockSector
@@ -230,7 +230,7 @@ WriteInfoSector	Proc near
 	mov edi,esi
 	mov esi,OFFSET info_sector
 	mov ecx,SIZE rdfs_info_struc
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	ModifySeqSector
 	UnlockSector

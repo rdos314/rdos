@@ -593,10 +593,10 @@ CopyToBuffer    Proc near
 ;
     push cx
     shr cx,2
-    rep movs dword ptr es:[edi],[esi]
+    rep movs dword ptr es:[edi],ds:[esi]
     pop cx
     and cx,3
-    rep movs byte ptr es:[edi],[esi]
+    rep movs byte ptr es:[edi],ds:[esi]
     mov bx,di
 ;
     pop edi

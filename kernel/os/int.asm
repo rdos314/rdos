@@ -280,7 +280,7 @@ init_exc_loop:
 	mov ax,cs
 	mov ds,ax
 	mov esi,OFFSET raw_switch_v86_begin
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	mov eax,OFFSET raw_switch_prot_end - OFFSET raw_switch_prot_begin
 	mov ecx,eax

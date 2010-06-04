@@ -424,7 +424,7 @@ xms_move_do:
 	or ecx,ecx
 	jz xms_move_done
 ;
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 
 xms_move_done:
 	mov cx,dx

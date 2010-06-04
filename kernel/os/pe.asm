@@ -2277,7 +2277,7 @@ InitStack	Proc near
 	mov edi,edx
 	mov bx,ds
 	mov es,bx
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	pop edi
 	pop eax
 	int 3
@@ -2493,7 +2493,7 @@ load_pe_name_size:
 	mov es,ax
 	mov edi,edx
 	mov ecx,ebx
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	mov edx,edi
 	pop edi
 	pop ecx
@@ -2506,7 +2506,7 @@ load_pe_name_size:
 	mov ax,flat_data_sel
 	mov es,ax
 	mov byte ptr es:[edi-1],' '
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	clc
 	jmp load_pe_done
 
@@ -3148,7 +3148,7 @@ get_debug_event_data Proc far
 	mov esi,SIZE event_struc
 	movzx ecx,ds:event_size
 	push edi
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	pop edi
 ;
     mov al,ds:event_code
@@ -4194,7 +4194,7 @@ get_exe_size_loop:
 	UserGateForce32 allocate_app_mem_nr
 	mov edi,edx
 	mov esi,OFFSET app_exe_name
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	mov ds:app_name,edx
 	mov edi,edx
@@ -4252,7 +4252,7 @@ get_env_size_loop:
 	UserGateForce32 allocate_app_mem_nr
 	mov edi,edx
 	xor esi,esi
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	mov ds:app_env,edx
 	mov edi,edx
@@ -4332,7 +4332,7 @@ set_opt_size:
 	xor esi,esi
 	mov ax,flat_data_sel
 	mov es,ax
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;        
     GetThread
     mov ds,ax

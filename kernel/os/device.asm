@@ -163,7 +163,7 @@ move_adapter_loop:
 	dec ecx
 	shr ecx,2
 	inc ecx
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 ;
 	pop es
 	jmp move_page_done

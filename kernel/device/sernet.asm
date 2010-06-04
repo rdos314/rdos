@@ -1291,10 +1291,10 @@ Receive	Proc far
 	add esi,OFFSET DataBytes
 	push cx
 	shr cx,2
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	pop cx
 	and cx,3
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	pop edi
 	pop esi

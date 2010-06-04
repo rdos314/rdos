@@ -225,7 +225,7 @@ SendData	Proc near
 	movzx edi,bx
 	mov esi,gs:l_pos
 	add gs:l_pos,ecx
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	pop di
 	pop cx
 	pop ds
@@ -1534,7 +1534,7 @@ copy_reply_do:
 	mov ax,es
 	mov ds,ax
 	mov es,gs:l_reply_glob_sel
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	pop ecx
 	pop ax

@@ -654,10 +654,10 @@ read_file_do:
 	add esi,edx
 	mov eax,ecx
 	shr ecx,2
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	movzx ecx,al
 	and cl,3
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	clc
 
 read_file_done:

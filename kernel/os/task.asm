@@ -1353,7 +1353,7 @@ get_debug_tss32	PROC far
 	mov ds,ds:p_tss_data_sel
 	xor esi,esi
 	mov ecx,OFFSET tss_bitmap_space
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 get_debug_tss_done32:	
 	pop esi
 	pop ds

@@ -148,7 +148,7 @@ get_param	Proc near
 	mov es,ax
 	mov edi,OFFSET info_sector
 	mov ecx,SIZE rdfs_info_struc
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	pop es
 	pop ds
 	UnlockSector

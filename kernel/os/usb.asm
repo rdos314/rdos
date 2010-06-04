@@ -1697,7 +1697,7 @@ get_usb_device	Proc near
 gudCopy:
     movzx ecx,cx
     mov eax,ecx
-    rep movs byte ptr es:[edi],[esi]        
+    rep movs byte ptr es:[edi],ds:[esi]        
 ;
     pop edi
     pop ecx
@@ -1807,7 +1807,7 @@ get_usb_config	Proc near
 gucCopy:
     movzx ecx,cx
     mov eax,ecx
-    rep movs byte ptr es:[edi],[esi]        
+    rep movs byte ptr es:[edi],ds:[esi]        
 ;
     pop edi
     pop ecx

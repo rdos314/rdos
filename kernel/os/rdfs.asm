@@ -105,20 +105,20 @@ get_rdfs_info	Proc near
 	mov ds,ax
 	mov esi,OFFSET KeyTab
 	mov ecx,2 * 2048
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	pop edi
 	pop es
 ;
 	mov esi,OFFSET CryptTab
 	mov ecx,4096 / 4
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 ;
 	mov ax,gs
 	mov es,ax
 	mov edi,ebx
 	mov esi,OFFSET ExtentSizeTab
 	mov ecx,80h
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 ;
 	pop edi
 	pop esi

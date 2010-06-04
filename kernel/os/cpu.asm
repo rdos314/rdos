@@ -104,7 +104,7 @@ get_cpu_version	Proc near
 gcvFreqOk:    
     mov ecx,13
     mov esi,OFFSET cpu_vendor
-    rep movs byte ptr es:[edi],[esi]
+    rep movs byte ptr es:[edi],ds:[esi]
 ;    
     mov al,ds:cpu_type
     mov edx,ds:cpu_feature_flags

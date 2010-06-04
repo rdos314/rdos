@@ -801,7 +801,7 @@ CopyFromSmp	Proc near
 	mov es,ax
 	mov edi,esi
 	mov esi,OFFSET l_msg
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	pop ecx
 	pop ds
 ;
@@ -864,7 +864,7 @@ ReplyToSmp	Proc near
 	pop ds
 	mov esi,edi
 	mov edi,OFFSET l_msg
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	mov ds,ax
 	pop bx
 	call SendData
@@ -1237,7 +1237,7 @@ copy_req_move_it:
 	push ecx
 	push edi
 	add edi,OFFSET l_msg
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	pop edi
 	pop ecx
 ;

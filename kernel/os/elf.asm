@@ -838,7 +838,7 @@ load_elf_name_size:
 	mov es,ax
 	mov edi,edx
 	mov ecx,ebx
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	mov edx,edi
 	pop edi
 	pop ecx
@@ -851,7 +851,7 @@ load_elf_name_size:
 	mov ax,flat_data_sel
 	mov es,ax
 	mov byte ptr es:[edi-1],' '
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	clc
 	jmp load_elf_done
 
@@ -1094,7 +1094,7 @@ get_exe_size_loop:
 	UserGateForce32 allocate_app_mem_nr
 	mov edi,edx
 	mov esi,OFFSET app_exe_name
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	mov ds:app_name,edx
 	mov edi,edx
@@ -1152,7 +1152,7 @@ get_env_size_loop:
 	UserGateForce32 allocate_app_mem_nr
 	mov edi,edx
 	xor esi,esi
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 ;
 	mov ds:app_env,edx
 	mov edi,edx

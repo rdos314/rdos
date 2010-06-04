@@ -213,7 +213,7 @@ init_flat_check:
 	mov bx,process_page_sel
 	mov ds,bx
 	mov es,bx
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	pop es
 	pop ds
 ;
@@ -440,7 +440,7 @@ switch_to_active:
 	mov ds,bx
 	mov bx,flat_sel
 	mov es,bx
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	SimSti
 	pop ds
 ;
@@ -501,7 +501,7 @@ switch_from_linear	Proc far
 	mov ds,bx
 	mov bx,flat_sel
 	mov es,bx
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 	SimSti
 	pop ds
 ;

@@ -844,7 +844,7 @@ init_process_mem	PROC near
 	xor esi,esi
 	mov edi,DOS_MEM_START SHL 4 + 10h
 	lsl ecx,eax
-	rep movs byte ptr es:[edi],[esi]
+	rep movs byte ptr es:[edi],ds:[esi]
 	xor ax,ax
 	stos word ptr es:[edi]
 	mov edx,edi
@@ -860,7 +860,7 @@ init_process_mem	PROC near
 	mov ds,ax
 	mov esi,OFFSET dos_int_vect
 	mov ecx,5
-	rep movs dword ptr es:[edi],[esi]
+	rep movs dword ptr es:[edi],ds:[esi]
 ;
 	mov ax,flat_sel
 	mov ds,ax
