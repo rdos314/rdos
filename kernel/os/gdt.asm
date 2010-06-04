@@ -46,7 +46,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	extrn create_data_sel16:near
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -96,7 +95,7 @@ create_gdt	PROC near
 	mov ax,[bx]
 	mov [bx+2],ax
 	db 66h
-	lgdt [bx+2]
+	lgdt fword ptr [bx+2]
 ;
 	mov ax,gdt_sel
 	mov ds,ax
@@ -124,7 +123,6 @@ init_free_dt_loop:
 	ret
 create_gdt	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -205,7 +203,6 @@ init_gdt	PROC near
 	ret
 init_gdt	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -260,7 +257,7 @@ alloc_gdt_not_full:
 	mov ax,es:[si]
 	mov es:[bx+2],ax
 	db 66h
-	lgdt es:[bx+2]
+	lgdt fword ptr es:[bx+2]
 	mov bx,gdt_sel
 	mov ds,bx
 ;
@@ -295,7 +292,6 @@ alloc_gdt_room:
 	ret
 allocate_gdt	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -335,7 +331,6 @@ free_gdt	PROC far
 	ret
 free_gdt	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

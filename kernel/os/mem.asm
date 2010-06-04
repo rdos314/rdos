@@ -96,7 +96,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -134,7 +133,6 @@ create_mem	PROC near
 	ret
 create_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -450,7 +448,6 @@ init_mem	PROC near
 	ret
 init_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -529,7 +526,6 @@ init_process_mem	PROC near
 	ret
 init_process_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -584,8 +580,6 @@ init_mem_sels	PROC near
 	popa
 	ret
 init_mem_sels	ENDP
-
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -668,7 +662,6 @@ allocate_global_mark:
 	ret
 allocate_big_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -784,7 +777,6 @@ no_small_biggest_block:
 	ret
 allocate_small_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -960,7 +952,6 @@ allocate_blocal_mark:
 	ret
 allocate_local_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1046,7 +1037,6 @@ reserve_local_linear_done:
 	ret
 reserve_local_linear	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1238,8 +1228,6 @@ resize_flat_done:
 resize_flat_linear	ENDP
 
 
-PAGE
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -1352,7 +1340,6 @@ no_vm_biggest_block:
 	ret
 allocate_vm_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1376,7 +1363,6 @@ available_big_linear	PROC far
 	retf32
 available_big_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1400,7 +1386,6 @@ available_small_linear	PROC far
 	retf32
 available_small_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1424,7 +1409,6 @@ available_local_linear	PROC far
 	retf32
 available_local_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1448,7 +1432,6 @@ available_vm_linear	PROC far
 	retf32
 available_vm_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1472,7 +1455,6 @@ used_big_linear	PROC far
 	ret
 used_big_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1496,7 +1478,6 @@ used_small_linear	PROC far
 	ret
 used_small_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1520,7 +1501,6 @@ used_local_linear	PROC far
 	retf32
 used_local_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1544,7 +1524,6 @@ used_vm_linear	PROC far
 	retf32
 used_vm_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1595,7 +1574,6 @@ used_local_linear_thread	PROC far
 	ret
 used_local_linear_thread	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1631,7 +1609,6 @@ allocate_global_mem	PROC far
 	ret
 allocate_global_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1666,7 +1643,6 @@ allocate_page	PROC far
 	ret
 allocate_page	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1706,7 +1682,6 @@ free_page	PROC far
 	ret
 free_page	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1750,7 +1725,6 @@ alloc_small_g_not_page:
 	ret
 allocate_small_global_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1797,8 +1771,6 @@ no_free_pages:
 	ret
 free_pages	ENDP
 
-
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2331,7 +2303,6 @@ free_mem_end:
 	retf32
 free_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2376,7 +2347,6 @@ free_selector_end:
 	ret
 free_selector	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2422,7 +2392,6 @@ free_linear_clear:
 	ret
 free_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2470,7 +2439,6 @@ resize_mem_error:
 	ret
 resize_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2533,7 +2501,6 @@ alloc_small_big_seg_ok:
 	ret
 allocate_small_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2572,7 +2539,6 @@ allocate_small_kernel_mem	PROC far
 	ret
 allocate_small_kernel_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2628,7 +2594,6 @@ alloc_big_big_seg_ok:
 	ret
 allocate_big_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2740,7 +2705,6 @@ alloc_local_big_seg_ok32:
 	retf32
 allocate_local_mem32	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2790,7 +2754,6 @@ get_seg_end:
 	ret
 selector_to_segment	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2845,7 +2808,6 @@ translate_dpl_segment	PROC near
 	ret
 translate_dpl_segment	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2867,7 +2829,6 @@ segment_to_selector	PROC far
 	ret
 segment_to_selector	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2923,7 +2884,6 @@ translate_sel_end:
 	ret
 translate_selector	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2950,7 +2910,6 @@ allocate_process_linear	PROC far
 	ret
 allocate_process_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2977,7 +2936,6 @@ allocate_system_linear	PROC near
 	retf
 allocate_system_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3009,7 +2967,6 @@ allocate_fixed_vm_linear	PROC near
 	retf
 allocate_fixed_vm_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3045,7 +3002,6 @@ allocate_fixed_process_mem	PROC far
 	ret
 allocate_fixed_process_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3083,7 +3039,6 @@ allocate_fixed_system_mem	PROC far
 	ret
 allocate_fixed_system_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3166,7 +3121,6 @@ validate_descriptor_done:
 	ret
 validate_descriptor	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3233,7 +3187,6 @@ validate_thread_done:
 	ret
 validate_thread_selector	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3277,7 +3230,6 @@ get_thread_linear_done:
 	ret
 get_thread_linear	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3356,7 +3308,6 @@ read_thread_selector_done:
 	ret
 read_thread_selector	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3433,7 +3384,6 @@ write_thread_selector_done:
 	ret
 write_thread_selector	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3509,7 +3459,6 @@ read_thread_mem32	Proc far
 	retf32
 read_thread_mem32	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3585,7 +3534,6 @@ write_thread_mem32	Proc far
 	retf32
 write_thread_mem32	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3675,7 +3623,6 @@ read_thread_segment_done:
 	ret
 read_thread_segment	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3754,7 +3701,6 @@ write_thread_segment_do:
 	ret
 write_thread_segment	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	

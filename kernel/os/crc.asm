@@ -53,12 +53,6 @@ crc_handle_sel      DW ?
 
 crc_handle_seg		ENDS
 
-;   IN  BX          CRC handle
-CloseCrc      MACRO
-	UserGate close_crc_nr
-						ENDM
-
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -165,7 +159,6 @@ no_xor7:
 	retf32
 create_crc	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -275,7 +268,6 @@ calc_crc16  Proc far
     ret
 calc_crc16  Endp
     	
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -309,7 +301,6 @@ delete_handle_done:
 	ret
 delete_handle	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
