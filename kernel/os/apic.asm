@@ -24,13 +24,14 @@
 ; Multiprocessing module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME mp
+                                            
+            NAME mp
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 
-        .686p
+;   .686p
+    .386p
 
 
 code    SEGMENT byte public use16 'CODE'
@@ -53,7 +54,7 @@ INCLUDE ..\user.inc
 ipause   MACRO
     db 0F3h
     db 90h
-        ENDM
+    ENDM
 
 MP_FLAG_MEM = 1
 MP_FLAG_MSR = 2
@@ -147,80 +148,80 @@ apic_data_seg ENDS
 irqmac  MACRO nr
 
 msr_irq&nr:
-        push ds
-        push es
-        push fs
-        pushad
+    push ds
+    push es
+    push fs
+    pushad
 ;
     EnterInt
-        sti
+    sti
 ;       
-        mov ax,irq_sys_sel
-        mov es,ax
-        mov bx,OFFSET irq_arr + nr * SIZE irq_struc
-        mov eax,es:[bx].user_handler
-        or eax,eax
-        jz msr_irq_default_error&nr
+    mov ax,irq_sys_sel
+    mov es,ax
+    mov bx,OFFSET irq_arr + nr * SIZE irq_struc
+    mov eax,es:[bx].user_handler
+    or eax,eax
+    jz msr_irq_default_error&nr
 ;
-        mov ds,es:[bx].user_data
-        push cs
-        push OFFSET msr_irq_handle_done&nr
-        push es:[bx].user_handler
-        xor ax,ax
-        mov es,ax
-        retf
+    mov ds,es:[bx].user_data
+    push cs
+    push OFFSET msr_irq_handle_done&nr
+    push es:[bx].user_handler
+    xor ax,ax
+    mov es,ax
+    retf
 
 msr_irq_default_error&nr:
 ;
 ; unmask IRQ here
 ;
-        or es:bad_irqs, 1 SHL nr
+    or es:bad_irqs, 1 SHL nr
 
 msr_irq_handle_done&nr:
-        cli
+    cli
     xor eax,eax
     mov ecx,MSR_APIC_EOI
     wrmsr
     LeaveInt
 ;
-        popad
-        pop fs
-        pop es
-        pop ds
-        iretd
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
 
 mem_irq&nr:
-        push ds
-        push es
-        push fs
-        pushad
+    push ds
+    push es
+    push fs
+    pushad
 ;
     EnterInt
-        sti
+    sti
 ;       
-        mov ax,irq_sys_sel
-        mov es,ax
-        mov bx,OFFSET irq_arr + nr * SIZE irq_struc
-        mov eax,es:[bx].user_handler
-        or eax,eax
-        jz mem_irq_default_error&nr
+    mov ax,irq_sys_sel
+    mov es,ax
+    mov bx,OFFSET irq_arr + nr * SIZE irq_struc
+    mov eax,es:[bx].user_handler
+    or eax,eax
+    jz mem_irq_default_error&nr
 ;
-        mov ds,es:[bx].user_data
-        push cs
-        push OFFSET mem_irq_handle_done&nr
-        push es:[bx].user_handler
-        xor ax,ax
-        mov es,ax
-        retf
+    mov ds,es:[bx].user_data
+    push cs
+    push OFFSET mem_irq_handle_done&nr
+    push es:[bx].user_handler
+    xor ax,ax
+    mov es,ax
+    retf
 
 mem_irq_default_error&nr:
 ;
 ; unmask IRQ here
 ;
-        or es:bad_irqs, 1 SHL nr
+    or es:bad_irqs, 1 SHL nr
 
 mem_irq_handle_done&nr:
-        cli
+    cli
 ;    
     mov ax,apic_mem_sel
     mov ds,ax
@@ -228,17 +229,17 @@ mem_irq_handle_done&nr:
     mov ds:APIC_EOI,eax
     LeaveInt
 ;
-        popad
-        pop fs
-        pop es
-        pop ds
-        iretd
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
 
-        ENDM
-        
+    ENDM
+    
 
-        assume cs:code
-        
+    assume cs:code
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -253,25 +254,25 @@ mem_irq_handle_done&nr:
 table_start:
 
 gdt0:
-        dw 0
-        dd 0
-        dw 0
+    dw 0
+    dd 0
+    dw 0
 gdt8:
-        dw 28h-1
-        dd 92000F80h
-        dw 0
+    dw 28h-1
+    dd 92000F80h
+    dw 0
 gdt10:
-        dw 0FFFFh
-        dd 9A001400h
-        dw 0
+    dw 0FFFFh
+    dd 9A001400h
+    dw 0
 gdt18:
-        dw 0FFFFh
-        dd 92000000h
-        dw 0
+    dw 0FFFFh
+    dd 92000000h
+    dw 0
 gdt20:
-        dw 0FFFFh
-        dd 92001800h
-        dw 0
+    dw 0FFFFh
+    dd 92001800h
+    dw 0
 
 table_end:
     
@@ -290,11 +291,11 @@ real_start:
     cli
     mov al,0Fh
     out 70h,al
-        jmp short $+2
+    jmp short $+2
 ;
     xor al,al
     out 71h,al
-        jmp short $+2
+    jmp short $+2
 ;
     xor ax,ax
     mov ds,ax
@@ -302,13 +303,13 @@ real_start:
     mov bx,0F88h
     lgdt fword ptr ds:[bx]
 ;
-        mov eax,cr0
-        or al,1
-        mov cr0,eax
+    mov eax,cr0
+    or al,1
+    mov cr0,eax
 ;
-        db 0EAh
-        dw 0
-        dw 10h
+    db 0EAh
+    dw 0
+    dw 10h
 
 real_end:
     
@@ -322,7 +323,7 @@ real_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; this code is loaded at 01400. It should contain no near jumps!
-        
+    
 prot_start:
     mov ax,18h
     mov ds,ax
@@ -414,7 +415,7 @@ ApInit:
 ;    
     sti
     hlt
-        
+    
 stopl:
     cli
     jmp stopl
@@ -679,7 +680,7 @@ SendInitMsr Proc near
     pop eax
     ret
 SendInitMsr Endp
-           
+       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -765,7 +766,7 @@ SendStartupMsr Proc near
     pop eax
     ret
 SendStartupMsr Endp
-           
+       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -873,7 +874,7 @@ simsrLoop:
     sti
     ipause
     jmp simsrLoop
-        
+    
 simsrDo:
     pop edx    
     pop eax
@@ -886,7 +887,7 @@ simsrDo:
     pop eax
     ret
 SendIntMsr Endp
-           
+       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -991,7 +992,7 @@ start_apic_mem_timer    Proc far
     div ecx
     mov esi,eax
 ;
-        mov eax,80000000h
+    mov eax,80000000h
     mov bx,apic_mem_sel
     mov es,bx
     mov es:APIC_INIT_COUNT,eax    
@@ -999,13 +1000,13 @@ start_apic_mem_timer    Proc far
     GetProcessor
     pop fs
     mov eax,es:APIC_CURR_COUNT    
-        neg eax
-        add eax,80000000h
-        mul esi
-        add eax,eax
-        adc edx,edx
-        add eax,80000000h
-        adc edx,0
+    neg eax
+    add eax,80000000h
+    mul esi
+    add eax,eax
+    adc edx,edx
+    add eax,80000000h
+    adc edx,0
 ;
     mov eax,81h
     mov es:APIC_TIMER,eax
@@ -1015,7 +1016,7 @@ start_apic_mem_timer    Proc far
     pop ecx
     pop es
     pop ds
-        ret
+    ret
 start_apic_mem_timer  Endp
 
 start_apic_msr_timer    Proc far
@@ -1035,7 +1036,7 @@ start_apic_msr_timer    Proc far
     div ecx
     mov esi,eax
 ;
-        mov eax,80000000h
+    mov eax,80000000h
     mov ecx,MSR_APIC_INIT_COUNT
     wrmsr
     push fs
@@ -1043,13 +1044,13 @@ start_apic_msr_timer    Proc far
     pop fs
     mov ecx,MSR_APIC_CURR_COUNT
     rdmsr
-        neg eax
-        add eax,80000000h
-        mul esi
-        add eax,eax
-        adc edx,edx
-        add eax,80000000h
-        adc edx,0
+    neg eax
+    add eax,80000000h
+    mul esi
+    add eax,eax
+    adc edx,edx
+    add eax,80000000h
+    adc edx,0
 ;
     mov eax,81h
     mov ecx,MSR_APIC_TIMER
@@ -1059,7 +1060,7 @@ start_apic_msr_timer    Proc far
     pop edx
     pop ecx
     pop ds
-        ret
+    ret
 start_apic_msr_timer  Endp
 
 
@@ -1099,7 +1100,7 @@ reload_apic_mem_timer    Proc far
     pop ecx
     pop eax
     pop ds
-        ret
+    ret
 reload_apic_mem_timer  Endp
 
 reload_apic_msr_timer    Proc far
@@ -1126,7 +1127,7 @@ reload_apic_msr_timer    Proc far
     pop ecx
     pop eax
     pop ds
-        ret
+    ret
 reload_apic_msr_timer  Endp
 
    
@@ -1243,157 +1244,157 @@ smemgLint1Ok:
     mov ds:mp_int_proc, OFFSET SendIntMem
     mov ds:mp_eoi_proc, OFFSET SendEoiMem
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov si,OFFSET get_id_mem
-        mov di,OFFSET get_id_name
-        xor cl,cl
-        mov ax,get_apic_id_nr
-        RegisterOsGate
+    mov si,OFFSET get_id_mem
+    mov di,OFFSET get_id_name
+    xor cl,cl
+    mov ax,get_apic_id_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET start_apic_mem_timer
-        mov di,OFFSET start_apic_timer_name
-        xor cl,cl
-        mov ax,start_sys_timer_nr
-        RegisterOsGate
+    mov si,OFFSET start_apic_mem_timer
+    mov di,OFFSET start_apic_timer_name
+    xor cl,cl
+    mov ax,start_sys_timer_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET reload_apic_mem_timer
-        mov di,OFFSET reload_apic_timer_name
-        xor cl,cl
-        mov ax,reload_sys_timer_nr
-        RegisterOsGate
+    mov si,OFFSET reload_apic_mem_timer
+    mov di,OFFSET reload_apic_timer_name
+    xor cl,cl
+    mov ax,reload_sys_timer_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET get_processor_id_mem
-        mov di,OFFSET get_processor_id_name
-        xor dx,dx
-        mov ax,get_processor_id_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET get_processor_id_mem
+    mov di,OFFSET get_processor_id_name
+    xor dx,dx
+    mov ax,get_processor_id_nr
+    RegisterBimodalUserGate
 ;
-        mov ax,cs
-        mov ds,ax
-        xor bl,bl
+    mov ax,cs
+    mov ds,ax
+    xor bl,bl
 ;
-        mov al,41h
-        mov esi,OFFSET mem_irq1
-        CreateIntGateSelector
+    mov al,41h
+    mov esi,OFFSET mem_irq1
+    CreateIntGateSelector
 ;
-        mov al,43h
-        mov esi,OFFSET mem_irq3
-        CreateIntGateSelector
+    mov al,43h
+    mov esi,OFFSET mem_irq3
+    CreateIntGateSelector
 ;
-        mov al,44h
-        mov esi,OFFSET mem_irq4
-        CreateIntGateSelector
+    mov al,44h
+    mov esi,OFFSET mem_irq4
+    CreateIntGateSelector
 ;
-        mov al,45h
-        mov esi,OFFSET mem_irq5
-        CreateIntGateSelector
+    mov al,45h
+    mov esi,OFFSET mem_irq5
+    CreateIntGateSelector
 ;
-        mov al,46h
-        mov esi,OFFSET mem_irq6
-        CreateIntGateSelector
+    mov al,46h
+    mov esi,OFFSET mem_irq6
+    CreateIntGateSelector
 ;
-        mov al,47h
-        mov esi,OFFSET mem_irq7
-        CreateIntGateSelector
+    mov al,47h
+    mov esi,OFFSET mem_irq7
+    CreateIntGateSelector
 ;
-        mov al,48h
-        mov esi,OFFSET mem_irq8
-        CreateIntGateSelector
+    mov al,48h
+    mov esi,OFFSET mem_irq8
+    CreateIntGateSelector
 ;
-        mov al,49h
-        mov esi,OFFSET mem_irq9
-        CreateIntGateSelector
+    mov al,49h
+    mov esi,OFFSET mem_irq9
+    CreateIntGateSelector
 ;
-        mov al,4Ah
-        mov esi,OFFSET mem_irq10
-        CreateIntGateSelector
+    mov al,4Ah
+    mov esi,OFFSET mem_irq10
+    CreateIntGateSelector
 ;
-        mov al,4Bh
-        mov esi,OFFSET mem_irq11
-        CreateIntGateSelector
+    mov al,4Bh
+    mov esi,OFFSET mem_irq11
+    CreateIntGateSelector
 ;
-        mov al,4Ch
-        mov esi,OFFSET mem_irq12
-        CreateIntGateSelector
+    mov al,4Ch
+    mov esi,OFFSET mem_irq12
+    CreateIntGateSelector
 ;
-        mov al,4Dh
-        mov esi,OFFSET mem_irq13
-        CreateIntGateSelector
+    mov al,4Dh
+    mov esi,OFFSET mem_irq13
+    CreateIntGateSelector
 ;
-        mov al,4Eh
-        mov esi,OFFSET mem_irq14
-        CreateIntGateSelector
+    mov al,4Eh
+    mov esi,OFFSET mem_irq14
+    CreateIntGateSelector
 ;
-        mov al,4Fh
-        mov esi,OFFSET mem_irq15
-        CreateIntGateSelector
+    mov al,4Fh
+    mov esi,OFFSET mem_irq15
+    CreateIntGateSelector
 ;
-        mov al,50h
-        mov esi,OFFSET mem_irq16
-        CreateIntGateSelector
+    mov al,50h
+    mov esi,OFFSET mem_irq16
+    CreateIntGateSelector
 ;
-        mov al,51h
-        mov esi,OFFSET mem_irq17
-        CreateIntGateSelector
+    mov al,51h
+    mov esi,OFFSET mem_irq17
+    CreateIntGateSelector
 ;
-        mov al,52h
-        mov esi,OFFSET mem_irq18
-        CreateIntGateSelector
+    mov al,52h
+    mov esi,OFFSET mem_irq18
+    CreateIntGateSelector
 ;
-        mov al,53h
-        mov esi,OFFSET mem_irq19
-        CreateIntGateSelector
+    mov al,53h
+    mov esi,OFFSET mem_irq19
+    CreateIntGateSelector
 ;
-        mov al,54h
-        mov esi,OFFSET mem_irq20
-        CreateIntGateSelector
+    mov al,54h
+    mov esi,OFFSET mem_irq20
+    CreateIntGateSelector
 ;
-        mov al,55h
-        mov esi,OFFSET mem_irq21
-        CreateIntGateSelector
+    mov al,55h
+    mov esi,OFFSET mem_irq21
+    CreateIntGateSelector
 ;
-        mov al,56h
-        mov esi,OFFSET mem_irq22
-        CreateIntGateSelector
+    mov al,56h
+    mov esi,OFFSET mem_irq22
+    CreateIntGateSelector
 ;
-        mov al,57h
-        mov esi,OFFSET mem_irq23
-        CreateIntGateSelector
+    mov al,57h
+    mov esi,OFFSET mem_irq23
+    CreateIntGateSelector
 ;
-        mov al,58h
-        mov esi,OFFSET mem_irq24
-        CreateIntGateSelector
+    mov al,58h
+    mov esi,OFFSET mem_irq24
+    CreateIntGateSelector
 ;
-        mov al,59h
-        mov esi,OFFSET mem_irq25
-        CreateIntGateSelector
+    mov al,59h
+    mov esi,OFFSET mem_irq25
+    CreateIntGateSelector
 ;
-        mov al,5Ah
-        mov esi,OFFSET mem_irq26
-        CreateIntGateSelector
+    mov al,5Ah
+    mov esi,OFFSET mem_irq26
+    CreateIntGateSelector
 ;
-        mov al,5Bh
-        mov esi,OFFSET mem_irq27
-        CreateIntGateSelector
+    mov al,5Bh
+    mov esi,OFFSET mem_irq27
+    CreateIntGateSelector
 ;
-        mov al,5Ch
-        mov esi,OFFSET mem_irq28
-        CreateIntGateSelector
+    mov al,5Ch
+    mov esi,OFFSET mem_irq28
+    CreateIntGateSelector
 ;
-        mov al,5Dh
-        mov esi,OFFSET mem_irq29
-        CreateIntGateSelector
+    mov al,5Dh
+    mov esi,OFFSET mem_irq29
+    CreateIntGateSelector
 ;
-        mov al,5Eh
-        mov esi,OFFSET mem_irq30
-        CreateIntGateSelector
+    mov al,5Eh
+    mov esi,OFFSET mem_irq30
+    CreateIntGateSelector
 ;
-        mov al,5Fh
-        mov esi,OFFSET mem_irq31
-        CreateIntGateSelector
+    mov al,5Fh
+    mov esi,OFFSET mem_irq31
+    CreateIntGateSelector
 ;    
     ret
 SetupMemGates   Endp
@@ -1449,157 +1450,157 @@ smsrgLint1Ok:
     mov ds:mp_int_proc, OFFSET SendIntMsr
     mov ds:mp_eoi_proc, OFFSET SendEoiMsr
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov si,OFFSET get_id_msr
-        mov di,OFFSET get_id_name
-        xor cl,cl
-        mov ax,get_apic_id_nr
-        RegisterOsGate
+    mov si,OFFSET get_id_msr
+    mov di,OFFSET get_id_name
+    xor cl,cl
+    mov ax,get_apic_id_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET start_apic_msr_timer
-        mov di,OFFSET start_apic_timer_name
-        xor cl,cl
-        mov ax,start_sys_timer_nr
-        RegisterOsGate
+    mov si,OFFSET start_apic_msr_timer
+    mov di,OFFSET start_apic_timer_name
+    xor cl,cl
+    mov ax,start_sys_timer_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET reload_apic_msr_timer
-        mov di,OFFSET reload_apic_timer_name
-        xor cl,cl
-        mov ax,reload_sys_timer_nr
-        RegisterOsGate
+    mov si,OFFSET reload_apic_msr_timer
+    mov di,OFFSET reload_apic_timer_name
+    xor cl,cl
+    mov ax,reload_sys_timer_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET get_processor_id_msr
-        mov di,OFFSET get_processor_id_name
-        xor dx,dx
-        mov ax,get_processor_id_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET get_processor_id_msr
+    mov di,OFFSET get_processor_id_name
+    xor dx,dx
+    mov ax,get_processor_id_nr
+    RegisterBimodalUserGate
 ;
-        mov ax,cs
-        mov ds,ax
-        xor bl,bl
+    mov ax,cs
+    mov ds,ax
+    xor bl,bl
 ;
-        mov al,41h
-        mov esi,OFFSET msr_irq1
-        CreateIntGateSelector
+    mov al,41h
+    mov esi,OFFSET msr_irq1
+    CreateIntGateSelector
 ;
-        mov al,43h
-        mov esi,OFFSET msr_irq3
-        CreateIntGateSelector
+    mov al,43h
+    mov esi,OFFSET msr_irq3
+    CreateIntGateSelector
 ;
-        mov al,44h
-        mov esi,OFFSET msr_irq4
-        CreateIntGateSelector
+    mov al,44h
+    mov esi,OFFSET msr_irq4
+    CreateIntGateSelector
 ;
-        mov al,45h
-        mov esi,OFFSET msr_irq5
-        CreateIntGateSelector
+    mov al,45h
+    mov esi,OFFSET msr_irq5
+    CreateIntGateSelector
 ;
-        mov al,46h
-        mov esi,OFFSET msr_irq6
-        CreateIntGateSelector
+    mov al,46h
+    mov esi,OFFSET msr_irq6
+    CreateIntGateSelector
 ;
-        mov al,47h
-        mov esi,OFFSET msr_irq7
-        CreateIntGateSelector
+    mov al,47h
+    mov esi,OFFSET msr_irq7
+    CreateIntGateSelector
 ;
-        mov al,48h
-        mov esi,OFFSET msr_irq8
-        CreateIntGateSelector
+    mov al,48h
+    mov esi,OFFSET msr_irq8
+    CreateIntGateSelector
 ;
-        mov al,49h
-        mov esi,OFFSET msr_irq9
-        CreateIntGateSelector
+    mov al,49h
+    mov esi,OFFSET msr_irq9
+    CreateIntGateSelector
 ;
-        mov al,4Ah
-        mov esi,OFFSET msr_irq10
-        CreateIntGateSelector
+    mov al,4Ah
+    mov esi,OFFSET msr_irq10
+    CreateIntGateSelector
 ;
-        mov al,4Bh
-        mov esi,OFFSET msr_irq11
-        CreateIntGateSelector
+    mov al,4Bh
+    mov esi,OFFSET msr_irq11
+    CreateIntGateSelector
 ;
-        mov al,4Ch
-        mov esi,OFFSET msr_irq12
-        CreateIntGateSelector
+    mov al,4Ch
+    mov esi,OFFSET msr_irq12
+    CreateIntGateSelector
 ;
-        mov al,4Dh
-        mov esi,OFFSET msr_irq13
-        CreateIntGateSelector
+    mov al,4Dh
+    mov esi,OFFSET msr_irq13
+    CreateIntGateSelector
 ;
-        mov al,4Eh
-        mov esi,OFFSET msr_irq14
-        CreateIntGateSelector
+    mov al,4Eh
+    mov esi,OFFSET msr_irq14
+    CreateIntGateSelector
 ;
-        mov al,4Fh
-        mov esi,OFFSET msr_irq15
-        CreateIntGateSelector
+    mov al,4Fh
+    mov esi,OFFSET msr_irq15
+    CreateIntGateSelector
 ;
-        mov al,50h
-        mov esi,OFFSET msr_irq16
-        CreateIntGateSelector
+    mov al,50h
+    mov esi,OFFSET msr_irq16
+    CreateIntGateSelector
 ;
-        mov al,51h
-        mov esi,OFFSET msr_irq17
-        CreateIntGateSelector
+    mov al,51h
+    mov esi,OFFSET msr_irq17
+    CreateIntGateSelector
 ;
-        mov al,52h
-        mov esi,OFFSET msr_irq18
-        CreateIntGateSelector
+    mov al,52h
+    mov esi,OFFSET msr_irq18
+    CreateIntGateSelector
 ;
-        mov al,53h
-        mov esi,OFFSET msr_irq19
-        CreateIntGateSelector
+    mov al,53h
+    mov esi,OFFSET msr_irq19
+    CreateIntGateSelector
 ;
-        mov al,54h
-        mov esi,OFFSET msr_irq20
-        CreateIntGateSelector
+    mov al,54h
+    mov esi,OFFSET msr_irq20
+    CreateIntGateSelector
 ;
-        mov al,55h
-        mov esi,OFFSET msr_irq21
-        CreateIntGateSelector
+    mov al,55h
+    mov esi,OFFSET msr_irq21
+    CreateIntGateSelector
 ;
-        mov al,56h
-        mov esi,OFFSET msr_irq22
-        CreateIntGateSelector
+    mov al,56h
+    mov esi,OFFSET msr_irq22
+    CreateIntGateSelector
 ;
-        mov al,57h
-        mov esi,OFFSET msr_irq23
-        CreateIntGateSelector
+    mov al,57h
+    mov esi,OFFSET msr_irq23
+    CreateIntGateSelector
 ;
-        mov al,58h
-        mov esi,OFFSET msr_irq24
-        CreateIntGateSelector
+    mov al,58h
+    mov esi,OFFSET msr_irq24
+    CreateIntGateSelector
 ;
-        mov al,59h
-        mov esi,OFFSET msr_irq25
-        CreateIntGateSelector
+    mov al,59h
+    mov esi,OFFSET msr_irq25
+    CreateIntGateSelector
 ;
-        mov al,5Ah
-        mov esi,OFFSET msr_irq26
-        CreateIntGateSelector
+    mov al,5Ah
+    mov esi,OFFSET msr_irq26
+    CreateIntGateSelector
 ;
-        mov al,5Bh
-        mov esi,OFFSET msr_irq27
-        CreateIntGateSelector
+    mov al,5Bh
+    mov esi,OFFSET msr_irq27
+    CreateIntGateSelector
 ;
-        mov al,5Ch
-        mov esi,OFFSET msr_irq28
-        CreateIntGateSelector
+    mov al,5Ch
+    mov esi,OFFSET msr_irq28
+    CreateIntGateSelector
 ;
-        mov al,5Dh
-        mov esi,OFFSET msr_irq29
-        CreateIntGateSelector
+    mov al,5Dh
+    mov esi,OFFSET msr_irq29
+    CreateIntGateSelector
 ;
-        mov al,5Eh
-        mov esi,OFFSET msr_irq30
-        CreateIntGateSelector
+    mov al,5Eh
+    mov esi,OFFSET msr_irq30
+    CreateIntGateSelector
 ;
-        mov al,5Fh
-        mov esi,OFFSET msr_irq31
-        CreateIntGateSelector
+    mov al,5Fh
+    mov esi,OFFSET msr_irq31
+    CreateIntGateSelector
 ;       
     ret
 SetupMsrGates   Endp
@@ -1690,11 +1691,11 @@ StartCore   Proc near
 ;
     mov al,0Fh
     out 70h,al
-        jmp short $+2
+    jmp short $+2
 ;
     mov al,0Ah
     out 71h,al
-        jmp short $+2
+    jmp short $+2
 ;
     mov fs:mp_processor_sign,0
 ;
@@ -1744,11 +1745,11 @@ scDone:
 ;
     mov al,0Fh
     out 70h,al
-        jmp short $+2
+    jmp short $+2
 ;
     xor al,al
     out 71h,al
-        jmp short $+2
+    jmp short $+2
 ;
     mov edx,ebp
     xor eax,eax
@@ -1814,36 +1815,36 @@ ReadIoApicInt   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        irqmac 1
-        irqmac 3
-        irqmac 4
-        irqmac 5
-        irqmac 6
-        irqmac 7
-        irqmac 8
-        irqmac 9
-        irqmac 10
-        irqmac 11
-        irqmac 12
-        irqmac 13
-        irqmac 14
-        irqmac 15
-        irqmac 16
-        irqmac 17
-        irqmac 18
-        irqmac 19
-        irqmac 20
-        irqmac 21
-        irqmac 22
-        irqmac 23
-        irqmac 24
-        irqmac 25
-        irqmac 26
-        irqmac 27
-        irqmac 28
-        irqmac 29
-        irqmac 30
-        irqmac 31
+    irqmac 1
+    irqmac 3
+    irqmac 4
+    irqmac 5
+    irqmac 6
+    irqmac 7
+    irqmac 8
+    irqmac 9
+    irqmac 10
+    irqmac 11
+    irqmac 12
+    irqmac 13
+    irqmac 14
+    irqmac 15
+    irqmac 16
+    irqmac 17
+    irqmac 18
+    irqmac 19
+    irqmac 20
+    irqmac 21
+    irqmac 22
+    irqmac 23
+    irqmac 24
+    irqmac 25
+    irqmac 26
+    irqmac 27
+    irqmac 28
+    irqmac 29
+    irqmac 30
+    irqmac 31
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2144,11 +2145,11 @@ apic_pr:
     mov ds,ax
     mov bx,OFFSET isa_redir_arr
 ;    
-        mov ax,task_sel
-        mov ds,ax
-        mov ax,gdt_sel
-        mov es,ax
-        mov di,tss_data_sel
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,gdt_sel
+    mov es,ax
+    mov di,tss_data_sel
 ;       call ds:lock_list_proc
     str si
     movs word ptr es:[di],es:[si]
@@ -2161,7 +2162,7 @@ apic_pr:
     mov es,ax
     mov ax,es:tss_thread
 ;   call ds:unlock_list_proc
-        
+    
 
 
 ;    
@@ -2272,7 +2273,7 @@ find_fail:
 apic_pr_done:
     retf            
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2283,9 +2284,9 @@ apic_pr_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_apic_thread        PROC far
-        push ds
-        push es
-        pusha
+    push ds
+    push es
+    pusha
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -2298,21 +2299,21 @@ init_apic_thread        PROC far
 ;    test ah,8
 ;    jz init_thread_done
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;       
-        mov si,OFFSET apic_pr
-        mov di,OFFSET apic_name
-        mov cx,500
-        mov ax,4
-        CreateThread
+    mov si,OFFSET apic_pr
+    mov di,OFFSET apic_name
+    mov cx,500
+    mov ax,4
+    CreateThread
 
 init_thread_done:
-        popa
-        pop es
-        pop ds
-        ret
+    popa
+    pop es
+    pop ds
+    ret
 init_apic_thread        ENDP
 
 
@@ -2375,14 +2376,14 @@ InitApic    Endp
 
 read_tics   MACRO
     mov al,0
-        out TIMER_CONTROL,al
-        jmp short $+2
-        in al,TIMER0
-        mov ah,al
-        jmp short $+2
-        in al,TIMER0
-        xchg al,ah
-                ENDM
+    out TIMER_CONTROL,al
+    jmp short $+2
+    in al,TIMER0
+    mov ah,al
+    jmp short $+2
+    in al,TIMER0
+    xchg al,ah
+            ENDM
 
 InitApicTimer Proc near    
     push ds
@@ -2607,7 +2608,7 @@ ipi_tab:
 ipi80   DW      80h,    OFFSET resume_int
 ipi81   DW      81h,    OFFSET preempt_int
 ipi82   DW      82h,    OFFSET shutdown_int
-        DW      0FFFFh
+    DW      0FFFFh
 
 ;
 ; tabell offsets
@@ -2622,19 +2623,19 @@ InitIpi Proc near
     mov ax,cs
     mov ds,ax
     xor bl,bl
-        mov di,OFFSET ipi_tab
+    mov di,OFFSET ipi_tab
 
 ipiLoop:
-        mov ax,cs:[di]
-        cmp ax,0FFFFh
-        jz ipiDone
+    mov ax,cs:[di]
+    cmp ax,0FFFFh
+    jz ipiDone
 ;
-        mov al,cs:[di].ipi_nr
-        movzx esi, word ptr cs:[di].ipi_entry
-        CreateIntGateSelector
-        add di,4
-        jmp ipiLoop
-        
+    mov al,cs:[di].ipi_nr
+    movzx esi, word ptr cs:[di].ipi_entry
+    CreateIntGateSelector
+    add di,4
+    jmp ipiLoop
+    
 ipiDone:
     popad
     pop ds
@@ -2664,7 +2665,7 @@ InitSmp Proc near
     jnz init_smp_check_msr
 ;   
     mov ds:mp_get_proc,OFFSET get_processor_mem
-        jmp init_smp_done
+    jmp init_smp_done
 
 init_smp_check_msr:
     test ds:mp_flags,MP_FLAG_MSR
@@ -2673,25 +2674,25 @@ init_smp_check_msr:
     mov ds:mp_get_proc,OFFSET get_processor_msr
 
 init_smp_done:
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov si,OFFSET resume_processor
-        mov di,OFFSET resume_processor_name
-        xor cl,cl
-        mov ax,resume_processor_nr
-        RegisterOsGate
+    mov si,OFFSET resume_processor
+    mov di,OFFSET resume_processor_name
+    xor cl,cl
+    mov ax,resume_processor_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET preempt_processor
-        mov di,OFFSET preempt_processor_name
-        xor cl,cl
-        mov ax,preempt_processor_nr
-        RegisterOsGate
+    mov si,OFFSET preempt_processor
+    mov di,OFFSET preempt_processor_name
+    xor cl,cl
+    mov ax,preempt_processor_nr
+    RegisterOsGate
 ;
     popad       
     pop es
-        pop ds
+    pop ds
     ret
 InitSmp Endp
 
@@ -2716,19 +2717,19 @@ SetupIrq    Proc near
     mov word ptr ds:irq_detect_proc,OFFSET enable_irq_detect
     mov word ptr ds:irq_detect_proc+2,cs
 ;    
-        mov cx,32
-        mov bx,OFFSET irq_arr
-        xor eax,eax
+    mov cx,32
+    mov bx,OFFSET irq_arr
+    xor eax,eax
 
 init_irq_loop:
-        mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
-        mov word ptr ds:[bx].irq_enable_proc+2,cs
+    mov word ptr ds:[bx].irq_enable_proc,OFFSET enable_irq
+    mov word ptr ds:[bx].irq_enable_proc+2,cs
 ;
-        mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
-        mov word ptr ds:[bx].irq_disable_proc+2,cs
+    mov word ptr ds:[bx].irq_disable_proc,OFFSET disable_irq
+    mov word ptr ds:[bx].irq_disable_proc+2,cs
 ;
-        add bx,SIZE irq_struc
-        loop init_irq_loop
+    add bx,SIZE irq_struc
+    loop init_irq_loop
 ;
     pop cx
     pop bx
@@ -2747,21 +2748,21 @@ SetupIrq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-        push ds
-        push es
-        pushad
+    push ds
+    push es
+    pushad
 ;       
-        mov bx,apic_code_sel
-        InitDevice
+    mov bx,apic_code_sel
+    InitDevice
 ;
-        mov eax,SIZE apic_data_seg
-        mov bx,apic_data_sel
-        AllocateFixedSystemMem
-        mov di,OFFSET apic_arr
-        xor ax,ax
-        mov cx,100h
-        rep stosw
-        mov es:mp_flags,0
+    mov eax,SIZE apic_data_seg
+    mov bx,apic_data_sel
+    AllocateFixedSystemMem
+    mov di,OFFSET apic_arr
+    xor ax,ax
+    mov cx,100h
+    rep stosw
+    mov es:mp_flags,0
 ;
     mov ax,apic_data_sel
     mov ds,ax
@@ -2917,17 +2918,17 @@ init_table_next:
 
 init_apic_gates_ok:     
     mov ax,cs
-        mov es,ax
-        mov di,OFFSET init_apic_thread
-        HookInitTasking
+    mov es,ax
+    mov di,OFFSET init_apic_thread
+    HookInitTasking
 ;
     popad
     pop es
     pop ds      
-        ret
+    ret
 init    ENDP
 
 code    ENDS
 
-        END init
+    END init
 

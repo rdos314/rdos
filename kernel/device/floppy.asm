@@ -1521,8 +1521,7 @@ check_media_retry:
 ;
 	mov esi,OFFSET boot_sect
 	mov ecx,80h
-;	repe cmps dword ptr es:[edi],fs:[esi]
-	repe cmps dword ptr fs:[esi],es:[edi]
+	repe cmps dword ptr fs:[esi],[edi]
 	clc
 	jz check_media_free
 ;

@@ -127,8 +127,7 @@ find_addr_loop:
 	movzx ecx,ds:p_logical_addr_len
 	push esi
 	mov edi,OFFSET prot_logical_addr
-;	repz cmps byte ptr es:[edi],fs:[esi]
-	repz cmps byte ptr fs:[esi],es:[edi]
+	repz cmps byte ptr fs:[esi],[edi]
 	pop esi
 	jnz find_addr_check_failed
 	jmp find_addr_ok
@@ -276,8 +275,7 @@ check_arp_send_loop:
 	mov si,OFFSET arp_logical_addr
 	movzx cx,al
 	mov di,OFFSET prot_logical_addr
-;	repz cmps byte ptr es:[di],gs:[si]
-	repz cmps byte ptr gs:[si],es:[di]
+	repz cmps byte ptr gs:[si],[di]
 	jnz check_arp_next
 ;
 	call MoveArp
@@ -581,8 +579,7 @@ receive_arp_check_dest:
 	mov cl,es:ar_data.arp_prot_len
 	add di,cx
 	mov si,OFFSET p_logical_my_addr
-;	repz cmps byte ptr es:[di],ds:[si]
-	repz cmps byte ptr ds:[si],es:[di]
+	repz cmps byte ptr ds:[si],[di]
 	jnz receive_arp_forward_req
 ;
 	push es

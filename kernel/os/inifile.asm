@@ -67,6 +67,7 @@ if_list			DD ?
 if_usage		DW ?
 if_file_sel     DW ?
 if_access       DB ?
+if_drive        DB ?
 
 ini_file_seg ENDS
 
@@ -347,8 +348,7 @@ FindIniSectionScan:
 
 FindIniSectionCheck:
 	xor esi,esi
-;	repe cmps byte ptr es:[edi],fs:[esi]
-	repe cmps byte ptr fs:[esi],es:[edi]
+	repe cmps byte ptr fs:[esi],[edi]
 	dec esi
 	dec edi
 	inc ecx
@@ -443,8 +443,7 @@ FindIniKeyControlPass:
 FindIniKeyScan:
     mov ds:[bx].ih_entry_start,edi
 	push esi
-;	repe cmps byte ptr es:[edi],fs:[esi]
-	repe cmps byte ptr fs:[esi],es:[edi]
+	repe cmps byte ptr fs:[esi],[edi]
 	dec esi
 	dec edi
 	inc ecx
@@ -747,6 +746,7 @@ CreateIniSel	proc near
 	InitSection ds:if_section
 	GetFileInfo
 	mov ds:if_access,cl
+	mov ds:if_drive,ch
 	mov ds:if_file_sel,ax
 	mov ds:if_usage,0
 	mov ds:if_list,0
@@ -824,6 +824,7 @@ CreateIniHandle	proc near
 	jnz cihNew
 ;
 	mov cl,ds:if_access
+	mov ch,ds:if_drive
 	mov ax,ds:if_file_sel
 	DuplFileInfo
 

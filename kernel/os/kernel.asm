@@ -44,7 +44,8 @@ MAJOR_VERSION = 8
 MINOR_VERSION = 9
 RELEASE = 2
 
-.686p
+;   .686p
+    .386p
 
 	extrn create_data_sel16:near
 	extrn create_call_gate_sel16:near

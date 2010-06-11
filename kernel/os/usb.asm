@@ -1385,6 +1385,9 @@ stop_usb_req	Proc far
 	mov ds,ds:[bx].rh_func_sel
     call ds:end_transfer_proc
     pop ds
+;
+    mov ax,5
+    WaitMilliSec    
 ;    
     test ds:[bx].rh_flags,REQ_FLAG_LOCKED
     jz sturDone
@@ -1591,6 +1594,9 @@ close_usb_req	Proc far
 	mov ds,ds:[bx].rh_func_sel
     call ds:end_transfer_proc
     pop ds
+;    
+    mov ax,5
+    WaitMilliSec    
 
 crFreeList:
     mov ax,ds:[bx].rh_list

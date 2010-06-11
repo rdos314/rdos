@@ -1042,8 +1042,7 @@ check_lfn_file_loop:
     lea edi,[edx].ffe_fat_name
     mov esi,OFFSET lfn_fat_name
     mov ecx,11
-;    repe cmps byte ptr es:[edi],fs:[esi]
-    repe cmps byte ptr fs:[esi],es:[edi]
+    repe cmps byte ptr fs:[esi],[edi]
     jz check_lfn_file_ok
 ;
     mov edx,es:[edx].de_next
@@ -1089,8 +1088,7 @@ check_lfn_dir_loop:
     lea edi,[edx].fde_fat_name
     mov esi,OFFSET lfn_fat_name
     mov ecx,11
-;    repe cmps byte ptr es:[edi],fs:[esi]
-    repe cmps byte ptr fs:[esi],es:[edi]
+    repe cmps byte ptr fs:[esi],[edi]
     jz check_lfn_dir_ok
 ;
     mov edx,es:[edx].de_next

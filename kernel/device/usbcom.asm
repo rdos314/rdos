@@ -118,6 +118,7 @@ uds_link            DW ?
 uds_port_offset     DW ?
 uds_flag            DB ?
 uds_intr_interval   DB ?
+uds_signal_thread   DW ?
 
 usbcom_device_struc   ENDS
 
@@ -156,9 +157,6 @@ SendSignal  Proc far
     push ds
     push ax
     push bx
-;    
-    verw cx
-    jnz ssiDone
 ;    
     mov ds,cx
     mov ds:ups_timer_active,0
@@ -912,8 +910,11 @@ ccfTimerClosed:
     jz ccfNoDevice
 ;
     mov ds,bx    
+;
     EnterSection ds:uds_section
     mov ds:uds_port_sel,0
+    GetThread
+    mov ds:uds_signal_thread,ax
     LeaveSection ds:uds_section       
 
 ccfNoDevice:    
@@ -924,6 +925,7 @@ ccfNoDevice:
     mov ds,bx
     mov bx,ds:sd_thread
     Signal    
+    WaitForSignal
 ;
     pop bx
     pop ds    
@@ -1799,6 +1801,9 @@ open_com_pl	Proc far
     mov ds:uds_port_sel,dx
     LeaveSection ds:uds_section       
 ;
+;    mov ax,250
+;    WaitMilliSec
+;    
     mov ax,usbcom_data_sel
     mov ds,ax    
     mov bx,ds:sd_thread
@@ -1854,6 +1859,8 @@ ccpTimerClosed:
     mov ds,bx    
     EnterSection ds:uds_section
     mov ds:uds_port_sel,0
+    GetThread
+    mov ds:uds_signal_thread,ax
     LeaveSection ds:uds_section       
 
 ccpNoDevice:    
@@ -1864,6 +1871,7 @@ ccpNoDevice:
     mov ds,bx
     mov bx,ds:sd_thread
     Signal    
+    WaitForSignal
 ;
     pop bx
     pop ds    
@@ -2695,7 +2703,30 @@ hdClosed:
     jz hdDone
 
 hdIsClosed:
+    mov bx,ds:uds_in_req
+    StopUsbReq
+;    
+    mov bx,ds:uds_intr_req
+    or bx,bx
+    jz hdCloseIntrDone
+;
+    IsUsbReqStarted
+    jc hdCloseIntrDone
+;
+    StopUsbReq
+    
+hdCloseIntrDone:
+    mov bx,ds:uds_out_req
+    IsUsbReqStarted
+    jc hdCloseWriteDone
+;    
+    StopUsbReq
+
+hdCloseWriteDone:
     call ClosePort
+    xor bx,bx
+    xchg bx,ds:uds_signal_thread
+    Signal
     
 hdDone:
     xor ax,ax
@@ -2919,6 +2950,7 @@ apNoRecover:
 	mov es:uds_device_type,dx
 	pop dx
 	mov es:uds_port_sel,0
+	mov es:uds_signal_thread,0
 	mov es:uds_bulk_in,dh
 	mov es:uds_bulk_out,dl
 ;

@@ -400,7 +400,7 @@ add_env_base    Proc near
     xor edi,edi
 
 add_env_search_loop:
-    cmps byte ptr es:[edi],ds:[esi]
+    cmps byte ptr [esi],[edi]
     jnz add_env_next
 ;
     mov al,[esi]
@@ -607,7 +607,7 @@ delete_env_base Proc near
     xor ebx,ebx
 
 del_env_search_loop:
-    cmps byte ptr es:[edi],ds:[esi]
+    cmps byte ptr [esi],[edi]
     jnz del_env_next
 ;
     inc ebx
@@ -751,7 +751,7 @@ find_env_base   Proc near
     xor edi,edi
 
 find_env_search_loop:
-    cmps byte ptr es:[edi],ds:[esi]
+    cmps byte ptr [esi],[edi]
     jnz find_env_next
 ;
     mov al,[esi]
