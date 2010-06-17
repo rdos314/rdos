@@ -836,7 +836,6 @@ QueueReq   Proc near
     push ds
     push ax
     push bx
-    push esi
     push di
 ;   
     mov ax,piclcd_data_sel
@@ -845,8 +844,7 @@ QueueReq   Proc near
     GetThread
     mov es:dqe_thread,ax
 ;    
-    mov esi,OFFSET ListSection
-    EnterSection
+    EnterSection ds:ListSection
 ;
     movzx ax,es:dqe_queue
     and al,2    
@@ -854,8 +852,7 @@ QueueReq   Proc near
     add di,ax
     call DioInsert
 ;    
-    mov esi,OFFSET ListSection
-    LeaveSection
+    LeaveSection ds:ListSection
 ;
     movzx ax,es:dqe_queue
     and al,2    
@@ -865,7 +862,6 @@ QueueReq   Proc near
     Signal    
 ;
     pop di
-    pop esi
     pop bx
     pop ax
     pop ds 
@@ -1173,23 +1169,15 @@ ptLoop1:
     Signal
     
 ptNoReset1:
-    mov esi,OFFSET ListSection
-    EnterSection
-;    
+    EnterSection ds:ListSection
     call DioCheckReady1
     call DioCheckIdle1
-;    
-    mov esi,OFFSET ListSection
-    LeaveSection
+    LeaveSection ds:ListSection
 ;
-    mov esi,OFFSET ListSection
-    EnterSection
-;    
+    EnterSection ds:ListSection
     call DioCheckReady1
     call DioCheckIdle1
-;    
-    mov esi,OFFSET ListSection
-    LeaveSection
+    LeaveSection ds:ListSection
 ;
 	GetSystemTime
 	add eax,5 * 1193000
@@ -1281,23 +1269,15 @@ ptLoop2:
     Signal
     
 ptNoReset2:
-    mov esi,OFFSET ListSection
-    EnterSection
-;
+    EnterSection ds:ListSection
     call DioCheckReady2
     call DioCheckIdle2
-;    
-    mov esi,OFFSET ListSection
-    LeaveSection
+    LeaveSection ds:ListSection
 ;
-    mov esi,OFFSET ListSection
-    EnterSection
-;
+    EnterSection ds:ListSection
     call DioCheckReady2
     call DioCheckIdle2
-;    
-    mov esi,OFFSET ListSection
-    LeaveSection
+    LeaveSection ds:ListSection
 ;
 	GetSystemTime
 	add eax,5 * 1193000
@@ -2127,11 +2107,7 @@ init	PROC far
 	mov es:PicOut,al
 	mov dx,IO_BASE + 8
 	out dx,al
-;
-    mov ax,es
-    mov ds,ax
-    mov esi,OFFSET ListSection
-    InitSection	
+	InitSection es:ListSection
 ;
     mov di,NodeArr
     mov cx,NODE_CNT
