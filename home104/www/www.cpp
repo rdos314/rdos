@@ -38,8 +38,8 @@
 #include "cotdata.h"
 #include "bindata.h"
 
-#define FALSE	0
-#define TRUE	!FALSE
+#define FALSE   0
+#define TRUE    !FALSE
 
 
 /*##########################################################################
@@ -56,80 +56,95 @@
 void HandleRealData(TDeviceMsg *doc)
 {
     unsigned long msb, lsb;
-	TDeviceTag *header;
-	int year, month, day, hour;
-	int min, sec, ms, us;
-	TFile *file;
-	int size;
-	char *msg;
+    TDeviceTag *header;
+    int year, month, day, hour;
+    int min, sec, ms, us;
+    TFile *file;
+    int size;
+    char *msg;
 
-	header = doc->GetTag(LOG_TAG_HEADER);
-	if (header)
-	{
-		  msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
-		lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
-		RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+    header = doc->GetTag(LOG_TAG_HEADER);
+    if (header)
+    {
+          msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
+        lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
+        RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+        RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
 
-		printf("%04d-%02d-%02d %02d.%02d\r\n", year, month, day, hour, min);
-	 }
+        printf("%04d-%02d-%02d %02d.%02d\r\n", year, month, day, hour, min);
+     }
 }
 
 void cdecl main()
 {
-	TSocket *socket;
-	int size;
-	int count;
-	char *msg;
-	TDeviceMsg *doc;
+    TSocket *socket;
+    int size;
+    int count;
+    char *msg;
+    TDeviceMsg *doc;
+    unsigned long Node;
+    int i;
 
-	TDataStore *DataStore;
+    TDataStore *DataStore;
 
-	DataStore = new TDataStore("e:\\data", "Data store", 0x2800A8C0, 600);
-	 DataStore->NotifyData = HandleRealData;
+    Node = 0x2800A8C0;
 
-	 for (;;)
-	 {
-		  socket = new TSocket(0x2800A8C0, 601, 600000, 0x4000);
-		  socket->WaitForConnection(600000);
+    for (i = 0; i < 10; i++)
+    {
+        if (RdosPing(Node, 2000))
+        {
+            printf("Weather station found\r\n");
+            break;
+        }
+        else
+            printf("Weather station ping failed\r\n");
+    }
 
-		  while (socket->IsOpen())
-		  {
-				  if (socket->WaitForChar(30000))
-				  {
-					count = socket->Read((char *)&size, 4);
-					if (count == 4)
-					{
-						 msg = new char[size];
-						count = socket->Read(msg, size);
+    DataStore = new TDataStore("e:\\data", "Data store", Node, 600);
+     DataStore->NotifyData = HandleRealData;
 
-						if (count == size)
-						{
-							  doc = new TDeviceMsg(MAX_MSG_SIZE);
+     for (;;)
+     {
+          socket = new TSocket(0x2800A8C0, 601, 600000, 0x4000);
+          socket->WaitForConnection(600000);
 
-							if (doc->Parse(COT_SIGN, msg, size))
-							{
-								 delete msg;
-								HandleRealData(doc);
-					    	}
-						    else
-						    { 
-							    delete msg;
-								socket->Close();
-						    }
+          while (socket->IsOpen())
+          {
+                  if (socket->WaitForChar(30000))
+                  {
+                    count = socket->Read((char *)&size, 4);
+                    if (count == 4)
+                    {
+                         msg = new char[size];
+                        count = socket->Read(msg, size);
 
-						    delete doc;
-       					 }
-					     else
-						    socket->Close();
-				    }
-				}
-				else
-				{
-    				socket->Push();
-					 RdosWaitMilli(250);
-    		    }
-		  }
-		  delete socket;
-	 }
+                        if (count == size)
+                        {
+                              doc = new TDeviceMsg(MAX_MSG_SIZE);
+
+                            if (doc->Parse(COT_SIGN, msg, size))
+                            {
+                                 delete msg;
+                                HandleRealData(doc);
+                            }
+                            else
+                            { 
+                                delete msg;
+                                socket->Close();
+                            }
+
+                            delete doc;
+                         }
+                         else
+                            socket->Close();
+                    }
+                }
+                else
+                {
+                    socket->Push();
+                     RdosWaitMilli(250);
+                }
+          }
+          delete socket;
+     }
 }
