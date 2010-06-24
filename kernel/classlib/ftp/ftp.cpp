@@ -354,15 +354,19 @@ void TFtp::SetBinaryMode()
 int TFtp::GetFile(const char *remote, TFile *file)
 {
     int ok = FALSE;
+    int tries;
 
     FAppSection.Enter();
 
     if (!FReady)
         FAppSignal.WaitTimeout(15000);
 
-    if (FReady)
+
+    for (tries = 0; tries < 3 && FReady; tries++)
     {
+        FAppSignal.Clear();
         FSuccess = FALSE;
+        FAborted = FALSE;
 
         FFile = file;
         FFile->SetSize(0);
@@ -375,8 +379,14 @@ int TFtp::GetFile(const char *remote, TFile *file)
     
         FAppSignal.WaitForever();       
 
-        ok = FSuccess;
+        if (FAborted)
+            FAborted = FALSE;
+
+        if (FSuccess)
+            break;
+
     }
+    ok = FSuccess;
 
     FGetFile = FALSE;
 
@@ -397,18 +407,33 @@ int TFtp::GetFile(const char *remote, TFile *file)
 ##########################################################################*/
 void TFtp::CacheDir()
 {
+    int tries;
+
     FAppSection.Enter();
 
     if (!FReady)
         FAppSignal.WaitTimeout(15000);
 
-    if (FReady)
+    for (tries = 0; tries < 3 && FReady; tries++)
     {
-        FReady = FALSE;
-        FGetDir = TRUE;
-        SendPasv();
+        FAppSignal.Clear();
+        FSuccess = FALSE;
+        FAborted = FALSE;
+        
+        if (FReady)
+        {
+            FReady = FALSE;
+            FGetDir = TRUE;
+            SendPasv();
     
-        FAppSignal.WaitTimeout(15000);       
+            FAppSignal.WaitTimeout(15000);       
+        }
+
+        if (FAborted)
+            FAborted = FALSE;
+
+        if (FSuccess)
+            break;
     }
 
     FGetDir = FALSE;
@@ -977,6 +1002,13 @@ void TFtp::HandleResponse(int code, const char *param)
             }
             else
                 FReady = FALSE;            
+            break;
+
+        case 425:
+            FAborted = TRUE;
+            FSuccess = FALSE;
+            FReady = TRUE;
+            FAppSignal.Signal();
             break;
 
         default:

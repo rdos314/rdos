@@ -2705,9 +2705,17 @@ ReceiveEstab	Proc near
 	call CheckRst
 	jc receive_estab_done
 ;
-	call CheckSyn
-	jc receive_estab_done
+    test es:[di].tcp_flags, SYN
+    jz receive_estab_normal
 ;
+	test es:[di].tcp_flags, ACK
+	jz receive_estab_done
+;
+	and ds:tcp_pending,NOT FLAG_ACK
+    call SendAck
+    jmp receive_estab_done
+
+receive_estab_normal:
 	test es:[di].tcp_flags, ACK
 	jz receive_estab_done
 ;

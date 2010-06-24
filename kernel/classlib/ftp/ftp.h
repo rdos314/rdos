@@ -127,6 +127,7 @@ protected:
 
     TSection FAppSection;
     TSignalDevice FAppSignal;
+    int FAborted;
     int FReady;
     int FDirCached;
     int FGetDir;

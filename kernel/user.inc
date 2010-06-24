@@ -307,6 +307,12 @@ FreeVMCallback  MACRO
 
 ;;;;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;
 
+;  OUT AX       0 = power ok
+;               1 = power failure
+PowerFailure        MACRO
+	UserGate power_failure_nr
+						ENDM
+
 CpuReset        MACRO
 	UserGate cpu_reset_nr
 						ENDM

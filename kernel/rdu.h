@@ -302,7 +302,6 @@
 #define CallGate_write_ini 0x9a 14 1 0 0 2 0
 #define CallGate_delete_ini 0x9a 15 1 0 0 2 0
 
-#define CallGate_app_debug 0x9a 16 1 0 0 2 0
 #define CallGate_get_version 0x9a 17 1 0 0 2 0
 
 #define CallGate_enable_status_led 0x9a 18 1 0 0 2 0
@@ -469,12 +468,14 @@
 
 #define CallGate_fork 0x9a 130 1 0 0 2 0
 
-#define CallGate_get_processor 0x9a 131 1 0 0 2 0
+#define CallGate_get_processor_id 0x9a 131 1 0 0 2 0
 
-#define CallGate_create_read_write_section 0x9a 132 1 0 0 2 0
-#define CallGate_delete_read_write_section 0x9a 133 1 0 0 2 0
-#define CallGate_enter_read_section 0x9a 134 1 0 0 2 0
-#define CallGate_leave_read_section 0x9a 135 1 0 0 2 0
-#define CallGate_enter_write_section 0x9a 136 1 0 0 2 0
-#define CallGate_leave_write_section 0x9a 137 1 0 0 2 0
+#define CallGate_create_user_read_write_section 0x9a 132 1 0 0 2 0
+#define CallGate_delete_user_read_write_section 0x9a 133 1 0 0 2 0
+#define CallGate_enter_user_read_section 0x9a 134 1 0 0 2 0
+#define CallGate_leave_user_read_section 0x9a 135 1 0 0 2 0
+#define CallGate_enter_user_write_section 0x9a 136 1 0 0 2 0
+#define CallGate_leave_user_write_section 0x9a 137 1 0 0 2 0
+
+#define CallGate_power_failure 0x9a 138 1 0 0 2 0
 

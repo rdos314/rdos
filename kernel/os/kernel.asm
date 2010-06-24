@@ -42,7 +42,7 @@ INCLUDE apic.inc
 
 MAJOR_VERSION = 8
 MINOR_VERSION = 9
-RELEASE = 3
+RELEASE = 4
 
 ;   .686p
     .386p

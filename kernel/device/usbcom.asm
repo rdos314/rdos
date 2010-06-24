@@ -21,7 +21,7 @@
 ; The author of this program may be contacted at leif@rdos.net
 ;
 ; USBCOM.ASM
-; FTDI and PL2303 based USB serial port device
+; FTDI, PL2303 and mct_u232 based USB serial port device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
@@ -61,6 +61,7 @@ FLAG_FIFO_ERR	= 8000h
 
 DEVICE_TYPE_FTDI = 100h
 DEVICE_TYPE_PL2303 = 200h
+DEVICE_TYPE_MCT  = 300h
 
 DEVICE_TYPE_SIO = DEVICE_TYPE_FTDI + 1
 DEVICE_TYPE_FT232AM = DEVICE_TYPE_FTDI + 2
@@ -69,6 +70,9 @@ DEVICE_TYPE_FT2232C = DEVICE_TYPE_FTDI + 4
 
 DEVICE_TYPE_PL_01 = DEVICE_TYPE_PL2303 + 1
 DEVICE_TYPE_PL_HX = DEVICE_TYPE_PL2303 + 2
+
+DEVICE_TYPE_MCT_SITECOM = DEVICE_TYPE_MCT + 1
+DEVICE_TYPE_MCT_BELKIN = DEVICE_TYPE_MCT + 2
 
 usbcom_port_struc	STRUC
 
@@ -100,7 +104,8 @@ uds_base_struc    com_device_struc <>
 uds_section         section_typ <>
 uds_port_sel        DW ?
 uds_device_type     DW ?
-uds_maxsize         DW ?
+uds_in_size         DW ?
+uds_out_size        DW ?
 uds_interface       DB ?
 uds_intr_in         DB ?
 uds_bulk_in         DB ?
@@ -118,7 +123,6 @@ uds_link            DW ?
 uds_port_offset     DW ?
 uds_flag            DB ?
 uds_intr_interval   DB ?
-uds_signal_thread   DW ?
 
 usbcom_device_struc   ENDS
 
@@ -157,6 +161,9 @@ SendSignal  Proc far
     push ds
     push ax
     push bx
+;    
+    verw cx
+    jnz ssiDone
 ;    
     mov ds,cx
     mov ds:ups_timer_active,0
@@ -910,11 +917,8 @@ ccfTimerClosed:
     jz ccfNoDevice
 ;
     mov ds,bx    
-;
     EnterSection ds:uds_section
     mov ds:uds_port_sel,0
-    GetThread
-    mov ds:uds_signal_thread,ax
     LeaveSection ds:uds_section       
 
 ccfNoDevice:    
@@ -925,7 +929,6 @@ ccfNoDevice:
     mov ds,bx
     mov bx,ds:sd_thread
     Signal    
-    WaitForSignal
 ;
     pop bx
     pop ds    
@@ -1801,9 +1804,6 @@ open_com_pl	Proc far
     mov ds:uds_port_sel,dx
     LeaveSection ds:uds_section       
 ;
-;    mov ax,250
-;    WaitMilliSec
-;    
     mov ax,usbcom_data_sel
     mov ds,ax    
     mov bx,ds:sd_thread
@@ -1859,8 +1859,6 @@ ccpTimerClosed:
     mov ds,bx    
     EnterSection ds:uds_section
     mov ds:uds_port_sel,0
-    GetThread
-    mov ds:uds_signal_thread,ax
     LeaveSection ds:uds_section       
 
 ccpNoDevice:    
@@ -1871,7 +1869,6 @@ ccpNoDevice:
     mov ds,bx
     mov bx,ds:sd_thread
     Signal    
-    WaitForSignal
 ;
     pop bx
     pop ds    
@@ -2039,6 +2036,817 @@ reset_rts_pl	Proc far
     call WriteControl
 	ret
 reset_rts_pl	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        GetFixedMctDivisor
+;
+;		description:	Get divisor for fixed MCT rates
+;
+;		PARAMETERS:		ECX     Baudrate
+;
+;       RETURNS:        ECX     Divisor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFixedMctDivisor	Proc near
+    cmp ecx,300
+    jne gfmdNot300
+;
+    mov ecx,1
+    jmp gfmdDone
+
+gfmdNot300:
+    cmp ecx,600
+    jne gfmdNot600
+;
+    mov ecx,2
+    jmp gfmdDone
+
+gfmdNot600:
+    cmp ecx,1200
+    jne gfmdNot1200
+;
+    mov ecx,3
+    jmp gfmdDone
+
+gfmdNot1200:
+    cmp ecx,2400
+    jne gfmdNot2400
+;
+    mov ecx,4
+    jmp gfmdDone
+
+gfmdNot2400:
+    cmp ecx,4800
+    jne gfmdNot4800
+;
+    mov ecx,6
+    jmp gfmdDone
+
+gfmdNot4800:
+    cmp ecx,9600
+    jne gfmdNot9600
+;
+    mov ecx,8
+    jmp gfmdDone
+
+gfmdNot9600:
+    cmp ecx,19200
+    jne gfmdNot19200
+;
+    mov ecx,9
+    jmp gfmdDone
+
+gfmdNot19200:
+    cmp ecx,38400
+    jne gfmdNot38400
+;
+    mov ecx,10
+    jmp gfmdDone
+
+gfmdNot38400:
+    cmp ecx,57600
+    jne gfmdNot57600
+;
+    mov ecx,11
+    jmp gfmdDone
+
+gfmdNot57600:
+    cmp ecx,115200
+    jne gfmdNot115200
+;
+    mov ecx,12
+    jmp gfmdDone
+
+gfmdNot115200:
+    mov ecx,8
+
+gfmdDone:               
+    ret
+GetFixedMctDivisor  Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        GetVariableMctDivisor
+;
+;		description:	Get divisor for variable MCT rates
+;
+;		PARAMETERS:		ECX     Baudrate
+;
+;       RETURNS:        ECX     Divisor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetVariableMctDivisor	Proc near
+    push eax
+    push edx
+;
+    xor edx,edx
+    mov eax,115200
+    div ecx
+    mov ecx,eax
+;
+    pop edx
+    pop eax            
+    ret
+GetVariableMctDivisor   Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetBaudMct
+;
+;		DESCRIPTION:	Set baudrate, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetBaudMct	PROC near
+    push es
+    push bx
+    push cx
+    push edx
+    push edi
+;
+    push bp   
+    mov eax,ds:ups_divisor
+    push eax    
+    mov bp,sp
+;
+    mov bx,ds:ups_control_pipe
+;
+    push ax
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    pop ax
+    mov es:usd_type,40h
+    mov es:usd_req,5
+    mov es:usd_value,0
+    mov es:usd_index,0
+    mov es:usd_len,4
+    xor edi,edi
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+;
+    push es
+    mov ax,ss
+    mov es,ax
+    mov di,bp
+    mov cx,4
+    WriteUsbData
+    pop es
+;        
+    ReqUsbStatus
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+    FreeMem
+;    
+    mov bx,ds:ups_control_pipe
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop eax
+    pop bp
+    pop edi
+    pop edx
+    pop cx
+    pop bx
+    pop es    
+    ret
+SetBaudMct Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        SendUnknownMct
+;
+;		description:	Send unknown message #1, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendUnknownMct	Proc near
+    push es
+    push bx
+    push cx
+    push edx
+    push edi
+;
+    push bp   
+    xor ax,ax
+    push ax    
+    mov bp,sp
+;
+    mov bx,ds:ups_control_pipe
+;    
+    push ax
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    pop ax
+    mov es:usd_type,40h
+    mov es:usd_req,0Bh
+    mov es:usd_value,0
+    mov es:usd_index,0
+    mov es:usd_len,1
+    xor edi,edi
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+;
+    push es
+    mov ax,ss
+    mov es,ax
+    mov di,bp
+    mov cx,1
+    WriteUsbData
+    pop es
+;        
+    ReqUsbStatus
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+    FreeMem
+;    
+    mov bx,ds:ups_control_pipe
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop ax
+    pop bp
+    pop edi
+    pop edx
+    pop cx
+    pop bx
+    pop es    
+    ret
+SendUnknownMct    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        SendCtsMct
+;
+;		description:	Send CTS control, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCtsMct	Proc near
+    push es
+    push bx
+    push cx
+    push edx
+    push edi
+;
+    push bp   
+    xor ax,ax
+    test ds:ups_control,CONTROL_CTS
+    jz scmValOk
+;
+    mov al,1
+
+scmValOk:
+    push ax    
+    mov bp,sp
+;
+    mov bx,ds:ups_control_pipe
+;    
+    push ax
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    pop ax
+    mov es:usd_type,40h
+    mov es:usd_req,0Ch
+    mov es:usd_value,0
+    mov es:usd_index,0
+    mov es:usd_len,1
+    xor edi,edi
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+;
+    push es
+    mov ax,ss
+    mov es,ax
+    mov di,bp
+    mov cx,1
+    WriteUsbData
+    pop es
+;        
+    ReqUsbStatus
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+    FreeMem
+;    
+    mov bx,ds:ups_control_pipe
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop ax
+    pop bp
+    pop edi
+    pop edx
+    pop cx
+    pop bx
+    pop es    
+    ret
+SendCtsMct    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        SetLineControl
+;
+;		description:	Set line control register
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetLineControl	Proc near
+    push es
+    push bx
+    push cx
+    push edx
+    push edi
+;
+    push bp  
+;    
+    mov al,ds:ups_data_bits
+	sub al,5
+	and al,3
+;
+	mov ah,ds:ups_stop_bits
+	dec ah
+	and ah,1
+	shl ah,2
+	or al,ah
+;
+    mov ah,ds:ups_parity 
+	cmp ah,'E'
+	je slcEven
+;	
+	cmp ah,'O'
+	je slcOdd
+;
+	jmp slcParityOk
+
+slcEven:
+	or al,18h
+	jmp slcParityOk
+
+slcOdd:
+	or al,8
+
+slcParityOk:
+    push ax    
+    mov bp,sp
+;
+    mov bx,ds:ups_control_pipe
+;    
+    push ax
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    pop ax
+    mov es:usd_type,40h
+    mov es:usd_req,7
+    mov es:usd_value,0
+    mov es:usd_index,0
+    mov es:usd_len,1
+    xor edi,edi
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+;
+    push es
+    mov ax,ss
+    mov es,ax
+    mov di,bp
+    mov cx,1
+    WriteUsbData
+    pop es
+;        
+    ReqUsbStatus
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+    FreeMem
+;    
+    mov bx,ds:ups_control_pipe
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop ax
+    pop bp
+    pop edi
+    pop edx
+    pop cx
+    pop bx
+    pop es    
+    ret
+SetLineControl    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:	        WriteModemControl
+;
+;		description:	Write modem control register
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteModemControl	Proc near
+    push es
+    push bx
+    push cx
+    push edx
+    push edi
+;
+    push bp   
+    mov ax,8
+    test ds:ups_control,CONTROL_RTS
+    jz rmcRtsOk
+;
+    or al,2
+
+rmcRtsOk:
+    test ds:ups_control,CONTROL_DTR
+    jz rmcDtrOk
+;
+    or al,1
+
+rmcDtrOk:        
+    push ax    
+    mov bp,sp
+;
+    mov bx,ds:ups_control_pipe
+;    
+    push ax
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    pop ax
+    mov es:usd_type,40h
+    mov es:usd_req,0Ah
+    mov es:usd_value,0
+    mov es:usd_index,0
+    mov es:usd_len,1
+    xor edi,edi
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+;
+    push es
+    mov ax,ss
+    mov es,ax
+    mov di,bp
+    mov cx,1
+    WriteUsbData
+    pop es
+;        
+    ReqUsbStatus
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+    FreeMem
+;    
+    mov bx,ds:ups_control_pipe
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    pop ax
+    pop bp
+    pop edi
+    pop edx
+    pop cx
+    pop bx
+    pop es    
+    ret
+WriteModemControl    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitComMct
+;
+;		description:	Init a serial port, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;		        		ES		Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitComMct	Proc near
+    push ds
+    pushad
+;
+    call SetBaudMct
+    call SendUnknownMct
+    call SendCtsMct
+    call SetLineControl
+    call WriteModemControl
+;
+    popad
+    pop ds
+    ret
+InitComMct Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			open_com_mct
+;
+;		description:	Open a serial port, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;		        		ES		Device selector
+;						AH		# of data bits
+;						BL		# of stop bits
+;						BH		parity
+;						ECX		baudrate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_com_mct	Proc far
+    push ds
+    pushad
+;
+    mov ds:ups_timer_active,0
+    mov ds:ups_data_bits,ah
+    mov ds:ups_stop_bits,bl
+    mov ds:ups_parity,bh
+;
+    mov ax,es:uds_device_type
+    mov ds:ups_device_type,ax
+    cmp ax,DEVICE_TYPE_MCT_SITECOM
+    je icmFixed
+;
+    cmp ax,DEVICE_TYPE_MCT_BELKIN
+    je icmFixed
+;
+    call GetVariableMctDivisor
+    jmp icmDivisorOk
+
+icmFixed:
+    call GetFixedMctDivisor
+
+icmDivisorOk:  
+    mov ds:ups_divisor,ecx
+    mov ds:ups_control,CONTROL_DTR OR CONTROL_RTS
+;
+    CreateWait
+    mov ds:ups_control_wait,bx
+;
+    mov bx,ds:ups_controller
+    mov ax,ds:ups_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:ups_control_pipe,bx
+;
+    mov ax,ds:ups_control_pipe
+    mov bx,ds:ups_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;    
+    call InitComMct
+;    
+    mov ds:ups_device_sel,es
+    mov dx,ds
+    mov ax,es
+    mov ds,ax
+    EnterSection ds:uds_section
+    mov ds:uds_port_sel,dx
+    LeaveSection ds:uds_section       
+;
+    mov ax,usbcom_data_sel
+    mov ds,ax    
+    mov bx,ds:sd_thread
+    Signal    
+    clc
+;
+    popad
+    pop ds
+    ret
+open_com_mct Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			close_com_mct
+;
+;		description:	Close serial port, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_com_mct	Proc far
+    push ds
+    push bx
+;
+    int 3
+;
+    pop bx
+    pop ds    
+	ret
+close_com_mct	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			enable_cts_mct
+;
+;		DESCRIPTION:	Enable CTS signal, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_cts_mct	PROC far
+    push es
+    pushad
+;
+    or ds:ups_control,CONTROL_CTS
+    call SetBaudMct
+    call SendUnknownMct
+    call SendCtsMct
+    call SetLineControl
+;
+    popad
+    pop es    
+    ret
+enable_cts_mct Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			disable_cts_mct
+;
+;		DESCRIPTION:	Disable CTS signal, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disable_cts_mct	PROC far
+    push es
+    pushad
+;
+    and ds:ups_control,NOT CONTROL_CTS
+    call SetBaudMct
+    call SendUnknownMct
+    call SendCtsMct
+    call SetLineControl
+;
+    popad
+    pop es    
+    ret
+disable_cts_mct Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			set_dtr_mct
+;
+;		description:	Set DTR signal, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_dtr_mct	Proc far
+    or ds:ups_control,CONTROL_DTR
+    call WriteModemControl
+	ret
+set_dtr_mct	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			reset_dtr_mct
+;
+;		description:	Reset DTR signal, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_dtr_mct	Proc far
+    and ds:ups_control,NOT CONTROL_DTR
+    call WriteModemControl
+	ret
+reset_dtr_mct	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			set_rts_mct
+;
+;		description:	Set RTS signal, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_rts_mct	Proc far
+    or ds:ups_control,CONTROL_RTS
+    call WriteModemControl
+	ret
+set_rts_mct	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			reset_rts_mct
+;
+;		description:	Reset RTS signal, MCT version
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_rts_mct	Proc far
+    and ds:ups_control,NOT CONTROL_RTS
+    call WriteModemControl
+	ret
+reset_rts_mct	Endp
 
 PAGE
 	
@@ -2239,6 +3047,59 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:	        CreatePortMct
+;
+;		description:	Create port selector
+;
+;		RETURNS:		ES      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mct_port_tab:
+mct00 DW OFFSET open_com_mct,   	    usbcom_code_sel
+mct01 DW OFFSET close_com_mct,          usbcom_code_sel
+mct02 DW OFFSET enable_cts_mct,         usbcom_code_sel
+mct03 DW OFFSET disable_cts_mct,        usbcom_code_sel
+mct04 DW OFFSET set_dtr_mct,            usbcom_code_sel
+mct05 DW OFFSET reset_dtr_mct,          usbcom_code_sel
+mct06 DW OFFSET set_rts_mct,            usbcom_code_sel
+mct07 DW OFFSET reset_rts_mct,          usbcom_code_sel
+mct08 DW OFFSET enable_auto_rts,        usbcom_code_sel
+mct09 DW OFFSET disable_auto_rts,       usbcom_code_sel
+mct10 DW OFFSET flush_com,              usbcom_code_sel
+mct11 DW OFFSET start_send,             usbcom_code_sel
+
+CreatePortMct	Proc far
+    pushad
+;
+    mov eax,SIZE usbcom_port_struc
+    AllocateSmallGlobalMem
+    mov cx,ax
+    xor di,di
+    xor al,al
+    rep stosb
+;
+    mov si,OFFSET mct_port_tab
+    xor di,di
+    mov cx,12
+    rep movs dword ptr es:[di],cs:[si]
+;
+    movzx ax,ds:uds_interface
+    mov es:ups_index,ax    
+    mov ax,ds:cd_controller
+    mov es:ups_controller,ax
+    mov ax,ds:cd_device
+    mov es:ups_device,ax
+;        
+    popad
+	ret
+CreatePortMct	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    OpenPort
 ;
 ;		DESCRIPTION:    Open port
@@ -2249,11 +3110,11 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPort    Proc near
-    movzx eax,ds:uds_maxsize
+    movzx eax,ds:uds_in_size
     AllocateSmallGlobalMem
     mov ds:uds_in_buffer,es
 ;
-    movzx eax,ds:uds_maxsize
+    movzx eax,ds:uds_out_size
     inc eax
     AllocateSmallGlobalMem
     mov ds:uds_out_buffer,es
@@ -2266,7 +3127,7 @@ OpenPort    Proc near
 ;
     CreateUsbReq
     mov ds:uds_in_req,bx    
-    mov cx,ds:uds_maxsize
+    mov cx,ds:uds_in_size
     mov es,ds:uds_in_buffer
     AddReadUsbDataReq
 ;
@@ -2278,7 +3139,7 @@ OpenPort    Proc near
 ;
     CreateUsbReq
     mov ds:uds_out_req,bx
-    mov cx,ds:uds_maxsize
+    mov cx,ds:uds_out_size
     mov es,ds:uds_out_buffer
     AddWriteUsbDataReq
 ;
@@ -2286,7 +3147,7 @@ OpenPort    Proc near
     or dl,dl
     jz opDone
 ;    
-    movzx eax,ds:uds_maxsize
+    movzx eax,ds:uds_in_size
     AllocateSmallGlobalMem
     mov ds:uds_intr_buffer,es
 ;    
@@ -2297,7 +3158,7 @@ OpenPort    Proc near
 ;    
     CreateUsbReq
     mov ds:uds_intr_req,bx
-    mov cx,ds:uds_maxsize
+    mov cx,ds:uds_in_size
     mov es,ds:uds_intr_buffer
     AddReadUsbDataReq
 
@@ -2511,7 +3372,7 @@ PollWrite    Proc near
     push fs
 ;   
     xor cx,cx
-    mov bp,ds:uds_maxsize
+    mov bp,ds:uds_out_size
     mov es,ds:uds_out_buffer
     mov ds,ds:uds_port_sel
     mov al,ds:ups_timer_active
@@ -2703,30 +3564,7 @@ hdClosed:
     jz hdDone
 
 hdIsClosed:
-    mov bx,ds:uds_in_req
-    StopUsbReq
-;    
-    mov bx,ds:uds_intr_req
-    or bx,bx
-    jz hdCloseIntrDone
-;
-    IsUsbReqStarted
-    jc hdCloseIntrDone
-;
-    StopUsbReq
-    
-hdCloseIntrDone:
-    mov bx,ds:uds_out_req
-    IsUsbReqStarted
-    jc hdCloseWriteDone
-;    
-    StopUsbReq
-
-hdCloseWriteDone:
     call ClosePort
-    xor bx,bx
-    xchg bx,ds:uds_signal_thread
-    Signal
     
 hdDone:
     xor ax,ax
@@ -2811,6 +3649,7 @@ create_port_tab:
 cpt00 DW OFFSET CreatePortError
 cpt01 DW OFFSET CreatePortFtdi
 cpt02 DW OFFSET CreatePortPl2303
+cpt03 DW OFFSET CreatePortMct
 
 AddPort Proc near
     push ds
@@ -2848,6 +3687,9 @@ AddPort Proc near
     pop ds
     	    
 apThreadStarted:
+    push bx
+    xor bx,bx
+    xor bp,bp
     xor dx,dx
     xor si,si
     movzx cx,es:[di].uid_len
@@ -2873,17 +3715,37 @@ apDescrLoop:
 apDescrBulkOut:
     and cl,0Fh
     mov dl,cl
+    mov bx,es:[di].ued_maxsize
     jmp apDescrNext
 
 apDescrIntr:
     mov cl,es:[di].ued_address
-    and cl,0Fh
+    or bp,bp
+    jz apIntrGetSize
+;
+    or si,si
+    jz apIntrGetIntr
+;
+    cmp bp,2
+    je apBulkIn
+;
+    push cx
+    mov cx,si
+    mov dh,cl
+    pop cx
+    jmp apIntrGetIntr
+
+apIntrGetSize:
+    mov bp,es:[di].ued_maxsize
+
+apIntrGetIntr:    
+    and cl,8Fh
     mov ch,es:[di].ued_interval
     mov si,cx
     jmp apDescrNext
 
 apBulkIn:
-    and cl,0Fh
+    and cl,8Fh
     mov dh,cl
     mov bp,es:[di].ued_maxsize
     
@@ -2894,6 +3756,10 @@ apDescrNext:
     jb apDescrLoop    
     	
 apDescrDone:
+    shl ebp,16
+    mov bp,bx    
+    pop bx
+;    
     mov cx,dx
     pop di
     pop dx
@@ -2950,7 +3816,6 @@ apNoRecover:
 	mov es:uds_device_type,dx
 	pop dx
 	mov es:uds_port_sel,0
-	mov es:uds_signal_thread,0
 	mov es:uds_bulk_in,dh
 	mov es:uds_bulk_out,dl
 ;
@@ -2958,7 +3823,9 @@ apNoRecover:
     mov es:uds_intr_in,dl
     mov es:uds_intr_interval,dh
 ;    	
-	mov es:uds_maxsize,bp
+    mov es:uds_out_size,bp
+    shr ebp,16
+    mov es:uds_in_size,bp
 	mov es:uds_in_handle,0
 	mov es:uds_in_req,0
 	mov es:uds_in_buffer,0
@@ -3437,6 +4304,115 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:	        AttachMct
+;
+;		description:	Attach MCT devices
+;
+;		Parameters:     BX      Controller #
+;                       AL      Device address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mctTab:
+mc00	DW 0711h,	0210h	; Original
+mc01	DW 0711h,	0230h	; Sitecom
+mc02	DW 0711h,	0200h	; D-link
+mc03	DW 050Dh,	0109h	; Belkin
+ 
+AttachMct  Proc near
+    push es
+;    
+    push ax
+    mov eax,1000h
+    AllocateSmallGlobalMem
+    mov cx,SIZE usb_device_descr
+    pop ax
+    xor di,di
+    push ax
+    GetUsbDevice
+    cmp ax,cx
+    pop ax
+    jne amctDone
+;
+    mov si,es:udd_vendor
+    mov di,es:udd_prod
+
+    mov cx,4
+    mov bp,OFFSET mctTab
+
+amctLoop:
+    cmp si,cs:[bp]
+    jne amctNext
+;
+    cmp di,cs:[bp+2]
+    je amctFound
+
+amctNext:
+    add bp,4
+    loop amctLoop        
+;
+    jmp amctDone    
+
+amctFound:
+    cmp si,50Dh
+    je amctBelkin
+;    
+    mov si,DEVICE_TYPE_MCT
+    cmp di,230h
+    jne amctDeviceOk
+;
+    mov si,DEVICE_TYPE_MCT_SITECOM
+    jmp amctDeviceOk
+
+amctBelkin:
+    mov si,DEVICE_TYPE_MCT_BELKIN
+
+amctDeviceOk:
+    xor dl,dl
+    mov cx,1000h
+    xor di,di
+    push ax
+    GetUsbConfig
+    mov cx,ax
+    pop ax
+    or cx,cx
+    jz amctDone
+;
+    mov dl,es:ucd_config_id
+    ConfigUsbDevice
+    jc amctDone
+;
+    xor di,di
+    movzx cx,es:ucd_len
+    add di,cx
+
+amctDescrLoop:
+    mov cl,es:[di].udd_type
+    cmp cl,4
+    jne amctDescrNext
+; 
+    mov dx,si
+    call AddPort
+    jmp amctDone
+
+amctDescrNext:    
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb amctDescrLoop    
+    
+amctDone:
+    FreeMem
+;
+    pop es    
+    ret
+AttachMct  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:	        usb_attach
 ;
 ;		description:	USB attach callback
@@ -3449,6 +4425,7 @@ PAGE
 usb_attach  Proc far
     call AttachFTDI
     call AttachPL2303
+    call AttachMct
     ret
 usb_attach  Endp
     

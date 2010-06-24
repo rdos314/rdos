@@ -224,7 +224,6 @@ void RDOSAPI RdosSetBackColor(int color);
 
 void *RDOSAPI RdosAllocateMem(int Size);
 void RDOSAPI RdosFreeMem(void *ptr);
-int RDOSAPI RdosAppDebug();
 
 long RDOSAPI RdosGetThreadLinear(int Thread, int Sel, long Offset);
 int RDOSAPI RdosReadThreadMem(int Thread, int Sel, long Offset, char *Buf, int Size);
@@ -300,6 +299,7 @@ int RDOSAPI RdosSuspendThread(int Thread);
 int RDOSAPI RdosSuspendAndSignalThread(int Thread);
 
 void RDOSAPI RdosCpuReset();
+int RDOSAPI RdosPowerFailure();
 int RDOSAPI RdosGetCpuVersion(char *VendorStr, int *FeatureFlags, int *freq);
 void RDOSAPI RdosGetVersion(int *Major, int *Minor, int *Release);
 void RDOSAPI RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
@@ -346,13 +346,6 @@ int RDOSAPI RdosCreateSection();
 void RDOSAPI RdosDeleteSection(int Handle);
 void RDOSAPI RdosEnterSection(int Handle);
 void RDOSAPI RdosLeaveSection(int Handle);
-
-int RDOSAPI RdosCreateReadWriteSection();
-void RDOSAPI RdosDeleteReadWriteSection(int Handle);
-void RDOSAPI RdosEnterReadSection(int Handle);
-void RDOSAPI RdosLeaveReadSection(int Handle);
-void RDOSAPI RdosEnterWriteSection(int Handle);
-void RDOSAPI RdosLeaveWriteSection(int Handle);
 
 int RDOSAPI RdosCreateWait();
 void RDOSAPI RdosCloseWait(int Handle);
@@ -811,9 +804,6 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_free_app_mem  \
     parm [edx];
 
-#pragma aux RdosAppDebug = \
-    CallGate_app_debug;
-
 #pragma aux RdosGetThreadLinear = \
     CallGate_get_thread_linear  \
     ValidateEdx \
@@ -1146,6 +1136,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosCpuReset = \
     CallGate_cpu_reset;
 
+#pragma aux RdosPowerFailure = \
+    CallGate_power_failure \
+    "movzx eax,ax"  \
+    value [eax];
+
 #pragma aux RdosGetVersion = \
     CallGate_get_version  \
     "movzx edx,dx"  \
@@ -1463,31 +1458,6 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosLeaveSection = \
     CallGate_leave_user_section  \
-    parm [ebx];
-
-#pragma aux RdosCreateReadWriteSection = \
-    CallGate_create_read_write_section  \
-    ValidateHandle  \
-    value [ebx];
-
-#pragma aux RdosDeleteReadWriteSection = \
-    CallGate_delete_read_write_section  \
-    parm [ebx];
-
-#pragma aux RdosEnterReadSection = \
-    CallGate_enter_read_section  \
-    parm [ebx];
-
-#pragma aux RdosLeaveReadSection = \
-    CallGate_leave_read_section  \
-    parm [ebx];
-
-#pragma aux RdosEnterWriteSection = \
-    CallGate_enter_write_section  \
-    parm [ebx];
-
-#pragma aux RdosLeaveWriteSection = \
-    CallGate_leave_write_section  \
     parm [ebx];
 
 #pragma aux RdosGetFreeHandles = \
@@ -2806,9 +2776,6 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_free_app_mem  \
     parm [es];
 
-#pragma aux RdosAppDebug = \
-    CallGate_app_debug;
-
 /* continue from here */
 
 #pragma aux RdosGetThreadLinear = \
@@ -3142,6 +3109,10 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosCpuReset = \
     CallGate_cpu_reset;
+
+#pragma aux RdosPowerFailure = \
+    CallGate_power_failure \
+    value [ax];
 
 #pragma aux RdosGetCpuVersion = \
     CallGate_get_cpu_version  \

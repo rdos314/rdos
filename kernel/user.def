@@ -477,4 +477,6 @@ leave_user_read_section_nr		    = 391
 enter_user_write_section_nr		    = 392
 leave_user_write_section_nr		    = 393
 
-usergate_entries			= 394
+power_failure_nr                    = 394
+
+usergate_entries			= 396

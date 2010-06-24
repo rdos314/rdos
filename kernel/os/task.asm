@@ -941,6 +941,12 @@ proc_init:
 	mov ax,cpu_reset_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET power_failure
+	mov di,OFFSET power_failure_name
+	xor dx,dx
+	mov ax,power_failure_nr
+	RegisterBimodalUserGate
+;
 	mov si,OFFSET get_thread_pr
 	mov di,OFFSET get_thread_name
 	xor dx,dx
@@ -3400,6 +3406,7 @@ ShutdownLocal proc near
     verr ax
     jnz slDo
 ;
+    cli
     CpuReset
 
 slDo:
@@ -3481,6 +3488,7 @@ shutdown_pr proc far
     verr ax
     jnz spDo
 ;
+    cli
     CpuReset
 
 spDo:
@@ -3570,6 +3578,7 @@ debug_fault:
     verr ax
     jnz dfDo
 ;
+    cli
     CpuReset
 
 dfDo:
@@ -3720,6 +3729,7 @@ debug_save_ok:
     verr ax
     jnz dbDo
 ;
+    cli
     CpuReset
 
 dbDo:
@@ -6098,6 +6108,27 @@ reset_wait:
     
 	retf32
 cpu_reset	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			PowerFailure
+;
+;		DESCRIPTION:	Power failure indication
+;
+;       RETURNS:        AX  0 = power ok
+;                           1 = power failure
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+power_failure_name	DB 'Power Failure',0
+
+power_failure	PROC far
+    xor ax,ax
+    retf32
+power_failure   Endp
 
 PAGE
 

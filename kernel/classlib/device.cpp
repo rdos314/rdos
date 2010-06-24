@@ -37,7 +37,7 @@
 #include "device.h"
 #include "sigdev.h"
 
-#ifndef MSVC
+#if !defined(MSVC) && defined(__RDOS__)
 #include "rdos.h"
 #endif
 
@@ -76,7 +76,7 @@
 TSection TDevice::FListSection;
 TDevice *TDevice::FDeviceList = 0;
 
-#ifndef MSVC
+#if !defined(MSVC) && defined(__RDOS__)
 int CrcHandle = RdosCreateCrc(0x8005);
 #endif
 
@@ -4885,7 +4885,7 @@ int TDeviceMsg::GetSize()
 *##########################################################################*/
 unsigned short int TDeviceMsg::Crc(const char *Data, int Size) const
 {
-#ifndef MSVC
+#if !defined(MSVC) && defined(__RDOS__)
         return RdosCalcCrc(CrcHandle, 0, Data, Size);
 #else
 

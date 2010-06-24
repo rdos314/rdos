@@ -303,7 +303,7 @@ ihsEndDescr:
     test al,80h
     jz ihsDescrLoop
 ;
-    and al,7Fh    
+    and al,8Fh    
     mov ds:hid_intr_in,al    
     jmp ihsDescrLoop
 

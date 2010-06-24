@@ -1829,16 +1829,16 @@ EndTransfer   Proc far
     test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
     jz etDone
 ;
-    mov ax,flat_sel
-    mov es,ax
-;
     mov fs:osp_data_size,0     
     and fs:osp_flags, NOT OSP_FLAG_TRANSFER_PENDING
     and fs:osp_flags, NOT OSP_FLAG_TRANSFER_OK
 ;    
     mov edx,fs:osp_data_list
     or edx,edx
-    jz etStop
+    jz etDone
+;
+    mov ax,flat_sel
+    mov es,ax
 ;    
     xor bp,bp
     mov edx,fs:osp_data_list
@@ -1877,13 +1877,9 @@ etNext:
     mov fs:osp_data_size,bp
     mov fs:osp_data_list,0
     or fs:osp_flags, OSP_FLAG_TRANSFER_OK
-
-etStop:
+;
     mov edx,fs:osp_ed
     or es:[edx].oes_fa_en,4000h
-;
-;    mov ax,5
-;    WaitMilliSec
 
 etDone:
     pop bp
