@@ -21,12 +21,12 @@ MCommand
 0
 5
 MCommand
-26
-wdump env.sym -Dn >env.map
+28
+wdump acpi.sym -Dn >acpi.map
 6
 MItem
-7
-env.exe
+8
+acpi.exe
 7
 WString
 3
@@ -64,8 +64,8 @@ WVList
 0
 15
 MItem
-13
-..\os\env.asm
+14
+..\os\acpi.asm
 16
 WString
 6
