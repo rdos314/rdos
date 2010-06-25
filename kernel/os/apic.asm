@@ -420,7 +420,7 @@ ApInit:
     hlt
     
 stopl:
-    cli
+   cli
     jmp stopl
 
     StartProcessor
