@@ -177,10 +177,6 @@ v86bios_srcs = V86BIOS.ASM
 v86bios_objs = $(v86bios_srcs:.ASM=.OBJ)
 v86bios_rdvs = V86BIOS.RDV
 
-multiplx_srcs = MULTIPLX.ASM
-multiplx_objs = $(multiplx_srcs:.ASM=.OBJ)
-multiplx_rdvs = MULTIPLX.RDV
-
 drive_srcs = drive.ASM
 drive_objs = $(drive_srcs:.ASM=.OBJ)
 drive_rdvs = drive.RDV
@@ -269,7 +265,7 @@ prot_objs = $(kernel_objs) $(p1_objs) $(p2_objs) $(pgen_objs)
 
 prot_exes = KERNEL.EXE
 
-srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
+srcs =      $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs) $(env_srcs) \
@@ -297,7 +293,7 @@ fonts =     SYS8.GFT                SYS12.GFT               SYS14.GFT       \
 
 exes =      $(prot_exes) $(pcshut_exes)
 
-rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
+rdvs =      $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 			$(fs_rdvs) $(bios_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
 		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
@@ -694,15 +690,6 @@ V86BIOS.RDV : $(v86bios_objs)
 	V86BIOS.RDV
 	V86BIOS;
 !
-
-MULTIPLX.RDV : $(multiplx_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(multiplx_objs)
-	MULTIPLX.RDV
-	MULTIPLX;
-!
-
 
 drive.RDV : $(drive_objs)
     tlink @&&!
