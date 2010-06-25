@@ -228,8 +228,6 @@ fs_code_sel			EQU 5B0h
 fs_data_sel			EQU 5B8h
 fs_process_sel		EQU 5C0h
 
-multiplx_code_sel	EQU 5D0h
-
 dosdev_process_sel	EQU 5D8h
 dosdev_code_sel		EQU 5E0h
 dosdev_data_sel		EQU 5E8h
