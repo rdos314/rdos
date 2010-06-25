@@ -118,7 +118,7 @@ map_dir	Proc near
 	mov bx,(sys_page_linear SHR 20) AND 0FFFh
 	mov al,3
 	mov [bx],eax
-	mov bx,process_page_linear SHR 20
+	mov bx,(process_page_linear SHR 20) AND 0FFFh
 	mov [bx],eax
 	ret
 map_dir	Endp
@@ -400,7 +400,9 @@ start_paging	Proc near
 start_paging_global_done:
 	mov bx,sys_dir_sel
 	mov ecx,1000h
-	mov edx,sys_page_linear + (sys_page_linear SHR 10)
+	mov edx,sys_page_linear
+	shr edx,10
+	add edx,sys_page_linear
 	push cs
 	call create_data_sel16
 ;
@@ -412,7 +414,9 @@ start_paging_global_done:
 ;
 	mov bx,process_dir_sel
 	mov ecx,1000h
-	mov edx,process_page_linear + (process_page_linear SHR 10)
+	mov edx,process_page_linear
+	shr edx,10
+	add edx,process_page_linear
 	push cs
 	call create_data_sel16
 ;
@@ -485,7 +489,7 @@ unmap_loop2:
 unmap_done2:
 	mov ax,sys_dir_sel
 	mov ds,ax
-	mov bx,sys_page_linear SHR 20
+	mov bx,(sys_page_linear SHR 20) AND 0FFFh
 	mov edx,[bx]
 	and dx,0F000h
 ;
@@ -539,7 +543,8 @@ free_process_paging	Proc near
 	mov bx,process_dir_sel
 	mov es,bx
 	xor esi,esi
-	mov cx,flat_size SHR 22
+	mov ecx,flat_size
+	shr ecx,22
 	xor edi,edi
 
 free_process_dir_loop:
@@ -582,7 +587,10 @@ free_process_next_dir_page:
 	add edi,4
 	loop free_process_dir_loop
 ;
-	mov cx,400h - (flat_size SHR 22)
+    mov eax,flat_size
+    shr eax,22
+    mov cx,400h
+    sub cx,ax
 	mov bx,sys_dir_sel
 	mov ds,bx
 
@@ -600,10 +608,10 @@ free_global_loop:
 	cmp eax,ebx
 	je free_global_next
 ;
-	cmp edi,fixed_process_linear SHR 20
+	cmp edi,(fixed_process_linear SHR 20) AND 0FFFh
 	je free_global_next
 ;
-	cmp edi,process_page_linear SHR 20
+	cmp edi,(process_page_linear SHR 20) AND 0FFFh
 	je free_global_next
 ;
 	xor eax,eax
