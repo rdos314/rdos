@@ -117,6 +117,7 @@ task_seg        ENDS
 
 IFDEF __WASM__
         .686p
+        .xmm2
 ELSE
         .386p
 ENDIF
@@ -694,7 +695,9 @@ TlbFlush386 Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+IFNDEF __WASM__
  .486p
+ENDIF
 
 TlbFlush486 Proc far
     push ecx
@@ -714,7 +717,9 @@ tfDone:
     ret
 TlbFlush486 Endp
 
+IFNDEF __WASM__
  .386p
+ENDIF
  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4121,7 +4126,7 @@ llSpinLock:
     je llGet
 ;
 ;    call Shutdown
-    do_pause
+    pause
     jmp llSpinLock
 
 llGet:
@@ -4417,7 +4422,7 @@ tlmSpinLock:
     or ax,ax
     jz tlmGet
 ;
-    do_pause
+    pause
     jmp tlmSpinLock
 
 tlmGet:
@@ -4480,7 +4485,7 @@ lmSpinLock:
     or ax,ax
     jz lmGet
 ;
-    do_pause
+    pause
     jmp lmSpinLock
 
 lmGet:
@@ -4541,7 +4546,7 @@ tumSpinLock:
     or ax,ax
     jz tumGet
 ;
-    do_pause
+    pause
     jmp tumSpinLock
 
 tumGet:
@@ -4644,7 +4649,7 @@ lumSpinLock:
     or ax,ax
     jz lumGet
 ;
-    do_pause
+    pause
     jmp lumSpinLock
 
 lumGet:
