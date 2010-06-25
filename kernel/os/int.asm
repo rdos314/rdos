@@ -42,8 +42,6 @@ INCLUDE int.def
 
 	.386p
 
-	extrn create_idt16:near
-
 	extrn init_int16:near
 	extrn init_int32:near
 	extrn translate_segment:near
@@ -51,8 +49,6 @@ INCLUDE int.def
 
 	extrn prot_exception16:near
 	extrn prot_exception32:near
-
-	extrn create_code_selector:near
 
 	extrn set_flags:near
 	extrn get_flags:near

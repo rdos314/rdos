@@ -979,7 +979,6 @@ t10_ret:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	extrn define_usergate:near
 
 trap_11:
 	sti
@@ -1168,7 +1167,6 @@ trap_16:
 	add sp,4
 	iretd
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1184,7 +1182,6 @@ PAGE
 apic_spur:
 	iretd
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1204,7 +1201,6 @@ default_int1:
 	pop ax
 	iretd
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1607,14 +1603,13 @@ init_idt	Proc near
 	mov al,[bx+7]
 	mov [bx+5],al
 	db 66h
-	lidt [bx]
+	lidt fword ptr [bx]
 	popa
 	pop es
 	pop ds
 	ret
 init_idt	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1651,7 +1646,6 @@ io15 DW OFFSET irq_arr + 21 * SIZE irq_struc
 io16 DW OFFSET irq_arr + 22 * SIZE irq_struc
 io17 DW OFFSET irq_arr + 23 * SIZE irq_struc
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1698,7 +1692,6 @@ request_private_irq_handler	Proc far
 	ret
 request_private_irq_handler	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1741,7 +1734,6 @@ shared_irq_done:
     ret
 shared_irq  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1822,7 +1814,6 @@ rsih_add:
 	ret
 request_shared_irq_handler	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1861,7 +1852,6 @@ is_irq_free_done:
 	ret
 is_irq_free	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1897,7 +1887,6 @@ release_private_irq_handler	Proc far
 	ret
 release_private_irq_handler	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1930,7 +1919,6 @@ setup_irq_detect	Proc far
 	ret
 setup_irq_detect	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -115,7 +115,7 @@ map_dir	Proc near
 	mov ax,sys_dir_sel
 	mov ds,ax
 	mov eax,cr3
-	mov bx,sys_page_linear SHR 20
+	mov bx,(sys_page_linear SHR 20) AND 0FFFh
 	mov al,3
 	mov [bx],eax
 	mov bx,process_page_linear SHR 20

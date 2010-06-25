@@ -494,7 +494,8 @@ init_process_mem	PROC near
 ;
 	mov ax,process_page_sel
 	mov es,ax
-	mov di,vm_linear SHR 10
+	mov edi,vm_linear
+	shr edi,10
 	mov cx,0Fh
 	xor eax,eax
 	rep stosd
@@ -550,7 +551,8 @@ init_mem_sels	PROC near
 	AllocatePhysical
 	and ax,0F000h
 	or ax,807h
-	mov ebx,fixed_vm_linear SHR 10
+	mov ebx,fixed_vm_linear
+	shr ebx,10
 	mov [ebx],eax
 ;
 	mov edx,local_page_linear
@@ -621,10 +623,13 @@ allocate_big_linear	PROC far
 	shr eax,12
 	xor edx,edx
 allocate_global_loop:
-	cmp ebx,(global_page_linear + global_page_size) SHR 10
+	cmp ebx,((global_page_linear + global_page_size) SHR 10) AND 003FFFFFh
 	jne allocate_global_no_wrap
-	mov ebx,global_page_linear SHR 10
+;
+    mov ebx,global_page_linear
+    shr ebx,10	
 	xor edx,edx
+
 allocate_global_no_wrap:
 	inc edx
 	mov ecx,[ebx]
@@ -911,10 +916,14 @@ allocate_page_local_linear:
 	mov ds,dx
 	xor dx,dx
 allocate_blocal_loop:
-	cmp ebx,flat_size SHR 10
+	cmp ebx,(flat_size SHR 10) AND 003FFFFFh
 	jne allocate_blocal_no_wrap
-	mov ebx,local_page_linear SHR 10 + 4
+;
+	mov ebx,local_page_linear
+	shr ebx,10
+	add ebx,4
 	xor dx,dx
+
 allocate_blocal_no_wrap:
 	inc dx
 	mov cl,[ebx]
@@ -1154,7 +1163,7 @@ resize_flat_grow_copy:
 	mov ds,ax
 
 resize_flat_grow_copy_loop:
-	cmp ebx,flat_size SHR 10
+	cmp ebx,(flat_size SHR 10) AND 003FFFFFh
 	jae resize_flat_grow_copy_done
 ;
 	mov eax,2
@@ -1185,7 +1194,7 @@ resize_flat_shrink:
 ;    push edx
 
 resize_flat_shrink_loop:
-	cmp edx,flat_size SHR 10
+	cmp edx,(flat_size SHR 10) AND 003FFFFFh
 	jae resize_flat_leave
 ;
 	xor eax,eax
@@ -1930,7 +1939,7 @@ free_small_no_merge_up:
 	mov [ebx].sls_prev,edx
 free_small_not_limit_page:
 	add edx,10h
-    add edx,global_byte_linear SHR 10
+    add edx,(global_byte_linear SHR 10) AND 003FFFFFh
 	mov bx,sys_page_sel
 	mov ds,bx
 ;	call free_pages

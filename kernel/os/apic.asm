@@ -30,8 +30,11 @@
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 
-;   .686p
+IFDEF __WASM__
+   .686p
+ELSE
     .386p
+ENDIF
 
 
 code    SEGMENT byte public use16 'CODE'

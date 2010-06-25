@@ -24,8 +24,8 @@
 ; Kernel module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME  kernel
+                                                
+                NAME  kernel
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -44,74 +44,75 @@ MAJOR_VERSION = 8
 MINOR_VERSION = 9
 RELEASE = 4
 
-;   .686p
+IFDEF __WASM__
+   .686p
+ELSE
     .386p
+ENDIF
 
-	extrn create_data_sel16:near
-	extrn create_call_gate_sel16:near
-	extrn create_int_gate_sel:near
-	extrn create_tss_sel:near
+        extrn create_data_sel16:near
+        extrn create_call_gate_sel16:near
+        extrn create_int_gate_sel:near
+        extrn create_tss_sel:near
 
-	extrn write_hex_dword:near
+        extrn create_gdt:near
+        extrn create_mem:near
+        extrn init_pretask_traps:near
 
-	extrn create_gdt:near
-	extrn create_mem:near
-	extrn init_pretask_traps:near
+        extrn init_paging:near
+        extrn start_paging:near
+        extrn init_physical_dir:near
+        extrn init_physical:near
+        extrn init_paging_trap:near
+        extrn init_physical_gates:near
+        extrn init_protseg:near
+        extrn init_paging_gates:near
+        extrn init_mem:near
+        extrn init_gdt:near
+        extrn init_idt:near
+        extrn init_ldt:near
+        extrn init_state:near
+        extrn init_task:near
+        extrn init_thread:near
+        extrn init_handle:near
+        extrn init_mem_sels:near
+        extrn init_osgate:near
+        extrn init_usergate:near
+        extrn init_cpu_gates:near
+        extrn init_io:near
+        extrn init_int:near
+        extrn init_app:near
+        extrn init_trap_vectors:near
+        extrn move_adapters:near
+        extrn init_device:near
+        extrn init_swap:near
+        extrn init_random:near
+        extrn init_crc:near
 
-	extrn init_paging:near
-	extrn start_paging:near
-	extrn init_physical_dir:near
-	extrn init_physical:near
-	extrn init_paging_trap:near
-	extrn init_physical_gates:near
-	extrn init_protseg:near
-	extrn init_paging_gates:near
-	extrn init_mem:near
-	extrn init_gdt:near
-	extrn init_idt:near
-	extrn init_ldt:near
-	extrn init_state:near
-	extrn init_task:near
-	extrn init_thread:near
-	extrn init_handle:near
-	extrn init_mem_sels:near
-	extrn init_osgate:near
-	extrn init_usergate:near
-	extrn init_cpu_gates:near
-	extrn init_io:near
-	extrn init_int:near
-	extrn init_app:near
-	extrn init_trap_vectors:near
-	extrn move_adapters:near
-	extrn init_device:near
-	extrn init_swap:near
-	extrn init_random:near
-	extrn init_crc:near
+        extrn init_first_process:near
+        extrn init_first_thread:near
+        
+code    SEGMENT byte use16 public 'CODE'
 
-	extrn init_first_process:near
-	extrn init_first_thread:near
-	
-code	SEGMENT byte use16 public 'CODE'
-
-	assume cs:code
+        assume cs:code
 
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:	        Break for invalid returns
+;               NAME:           Break for invalid returns
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     int 3
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			Get version
+;               NAME:                   Get version
 ;
-;		DESCRIPTION:	Get RDOS version
+;               DESCRIPTION:    Get RDOS version
 ;
 ;       RETURNS:        AX Minor version
 ;                       DX Major version
@@ -129,87 +130,87 @@ get_version Proc far
 get_version Endp
 
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ZeroRam
+;               NAME:                   ZeroRam
 ;
-;		DESCRIPTION:	zero ram content
+;               DESCRIPTION:    zero ram content
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ZeroRam	Proc near
-	push ds
-	push es
-	push eax
-	push edx
-	push esi
+ZeroRam Proc near
+        push ds
+        push es
+        push eax
+        push edx
+        push esi
 ;
     mov ax,flat_sel
     mov ds,ax
-	mov ax,system_data_sel
-	mov es,ax
+        mov ax,system_data_sel
+        mov es,ax
 ;
-	xor eax,eax
-	mov esi,es:alloc_base
+        xor eax,eax
+        mov esi,es:alloc_base
 
 ZeroRamLoop1:
-	mov [esi],eax
+        mov [esi],eax
 ZeroRamNext1:
     add esi,1000h
     cmp esi,es:ram1_size
     jc ZeroRamLoop1
 ;
-	mov esi,es:ram2_base
-	mov ecx,es:ram2_size
-	or ecx,ecx
-	jz ZeroRamDone
+        mov esi,es:ram2_base
+        mov ecx,es:ram2_size
+        or ecx,ecx
+        jz ZeroRamDone
 
 ZeroRamLoop2:
     mov [esi],eax
 ZeroRamNext2:
     add esi,1000h
-	sub ecx,1000h
-	jnz ZeroRamLoop2
+        sub ecx,1000h
+        jnz ZeroRamLoop2
 
 ZeroRamDone:
-	pop esi
-	pop edx
-	pop eax
-	pop es
-	pop ds
-	ret
-ZeroRam	Endp
+        pop esi
+        pop edx
+        pop eax
+        pop es
+        pop ds
+        ret
+ZeroRam Endp
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			MarkupRam
+;               NAME:                   MarkupRam
 ;
-;		DESCRIPTION:	mark up ram with boot signature
+;               DESCRIPTION:    mark up ram with boot signature
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MarkupRam	Proc near
-	push ds
-	push es
-	push eax
-	push edx
-	push esi
+MarkupRam       Proc near
+        push ds
+        push es
+        push eax
+        push edx
+        push esi
 ;
     mov ax,flat_sel
     mov ds,ax
-	mov ax,system_data_sel
-	mov es,ax
+        mov ax,system_data_sel
+        mov es,ax
 ;
-	mov esi,es:alloc_base
+        mov esi,es:alloc_base
 
 MarkupRamLoop1:
-	mov eax,[esi]
-	or eax,eax
-	jnz MarkupRamNext1
+        mov eax,[esi]
+        or eax,eax
+        jnz MarkupRamNext1
     mov eax,BootMemSign
     mov [esi],eax
 MarkupRamNext1:
@@ -217,77 +218,77 @@ MarkupRamNext1:
     cmp esi,es:ram1_size
     jc MarkupRamLoop1
 
-	mov esi,es:ram2_base
-	mov ecx,es:ram2_size
-	or ecx,ecx
-	jz MarkupRamDone
+        mov esi,es:ram2_base
+        mov ecx,es:ram2_size
+        or ecx,ecx
+        jz MarkupRamDone
 
 MarkupRamLoop2:
-	mov eax,[esi]
-	or eax,eax
-	jnz MarkupRamNext2
+        mov eax,[esi]
+        or eax,eax
+        jnz MarkupRamNext2
     mov eax,BootMemSign
     mov [esi],eax
 MarkupRamNext2:
     add esi,1000h
-	sub ecx,1000h
+        sub ecx,1000h
     jnz MarkupRamLoop2
 
 MarkupRamDone:
-	pop esi
-	pop edx
-	pop eax
-	pop es
-	pop ds
-	ret
-MarkupRam	Endp
+        pop esi
+        pop edx
+        pop eax
+        pop es
+        pop ds
+        ret
+MarkupRam       Endp
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			AllocateRam
+;               NAME:                   AllocateRam
 ;
-;		DESCRIPTION:	get free ram during startup
+;               DESCRIPTION:    get free ram during startup
 ;
-;		RETURNS:		NC	ESI		address to use
-;						CY			no more free ram
+;               RETURNS:                NC      ESI             address to use
+;                                               CY                      no more free ram
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public AllocateRam
+        public AllocateRam
 
-AllocateRam	Proc near
-	push ds
-	push es
-	push eax
+AllocateRam     Proc near
+        push ds
+        push es
+        push eax
 ;
     mov ax,flat_sel
     mov ds,ax
-	mov ax,system_data_sel
-	mov es,ax
+        mov ax,system_data_sel
+        mov es,ax
 ;
-	mov esi,es:alloc_base
-	cmp esi,es:ram1_size
-	jb AllocRamNext1
+        mov esi,es:alloc_base
+        cmp esi,es:ram1_size
+        jb AllocRamNext1
 ;
-	mov eax,es:ram2_size
-	or eax,eax
-	stc
-	jz AllocRamDone
+        mov eax,es:ram2_size
+        or eax,eax
+        stc
+        jz AllocRamDone
 ;
-	cmp esi,es:ram2_base
-	jae AllocRamNext2
+        cmp esi,es:ram2_base
+        jae AllocRamNext2
 ;
-	mov esi,es:ram2_base
-	sub esi,1000h
-	jmp AllocRamNext2
+        mov esi,es:ram2_base
+        sub esi,1000h
+        jmp AllocRamNext2
 
 AllocRamLoop1:
-	mov eax,[esi]
-	cmp eax,BootMemSign
-	jne AllocRamNext1
-	mov eax,AllocMemSign
+        mov eax,[esi]
+        cmp eax,BootMemSign
+        jne AllocRamNext1
+        mov eax,AllocMemSign
     mov [esi],eax
     cmp eax,[esi]
     je AllocRamFound
@@ -296,158 +297,158 @@ AllocRamNext1:
     cmp esi,es:ram1_size
     jc AllocRamLoop1
 
-	mov esi,es:ram2_base
-	sub esi,1000h
-	jmp AllocRamNext2
+        mov esi,es:ram2_base
+        sub esi,1000h
+        jmp AllocRamNext2
 
 AllocRamLoop2:
-	mov eax,[esi]
-	cmp eax,BootMemSign
-	jne AllocRamNext2
-	mov eax,AllocMemSign
+        mov eax,[esi]
+        cmp eax,BootMemSign
+        jne AllocRamNext2
+        mov eax,AllocMemSign
     mov [esi],eax
     cmp eax,[esi]
     je AllocRamFound
 AllocRamNext2:
     add esi,1000h
-	mov eax,es:ram2_base
-	add eax,es:ram2_size
+        mov eax,es:ram2_base
+        add eax,es:ram2_size
     cmp esi,eax
     jc AllocRamLoop2
-	stc
-	jmp AllocRamDone
+        stc
+        jmp AllocRamDone
 
 AllocRamFound:
-	mov es:alloc_base,esi
-	clc
+        mov es:alloc_base,esi
+        clc
 
 AllocRamDone:
-	pop eax
-	pop es
-	pop ds
-	ret
-AllocateRam	Endp
+        pop eax
+        pop es
+        pop ds
+        ret
+AllocateRam     Endp
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			INIT_PRE_TASKING
+;               NAME:                   INIT_PRE_TASKING
 ;
-;		DESCRIPTION:	Init pretasking
+;               DESCRIPTION:    Init pretasking
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 virt_thread_name DB 'Pretasking                      '
 
-init_pre_tasking	PROC near
-	call AllocateRam
-	mov bx,virt_thread_sel
-	mov ecx,1000h
-	mov edx,esi
-	push cs
-	call create_data_sel16
-	mov es,bx
+init_pre_tasking        PROC near
+        call AllocateRam
+        mov bx,virt_thread_sel
+        mov ecx,1000h
+        mov edx,esi
+        push cs
+        call create_data_sel16
+        mov es,bx
 ;
-	call AllocateRam
-	mov cr3,esi
-	mov es:p_thread_sel,es
-	mov es:p_tss_sel,kernel_tss
-	mov es:p_tss_data_sel,0
-	mov es:p_cr3,esi
-	mov ax,cs
-	mov ds,ax
-	mov si,OFFSET virt_thread_name
-	mov di,OFFSET thread_name
-	mov cx,32
-	rep movsb
-	ret
-init_pre_tasking	ENDP
+        call AllocateRam
+        mov cr3,esi
+        mov es:p_thread_sel,es
+        mov es:p_tss_sel,kernel_tss
+        mov es:p_tss_data_sel,0
+        mov es:p_cr3,esi
+        mov ax,cs
+        mov ds,ax
+        mov si,OFFSET virt_thread_name
+        mov di,OFFSET thread_name
+        mov cx,32
+        rep movsb
+        ret
+init_pre_tasking        ENDP
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			INIT_BOOT_SYSTEM
+;               NAME:                   INIT_BOOT_SYSTEM
 ;
-;		DESCRIPTION:	Init system_data_sel
+;               DESCRIPTION:    Init system_data_sel
 ;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_boot_system	PROC near
-	mov ax,system_data_sel
-	mov ds,ax
-	xor ax,ax
-	mov ds:debug_list,ax
-	mov ds:math_tss,ax
-	mov ds:check_point,0
-	ret
-init_boot_system	ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			INIT_SYSTEM
-;
-;		DESCRIPTION:	Move system_data_sel from boot area
-;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_system	Proc near
-	push ds
-	push es
-	pusha
-	mov bx,system_data_sel
-	mov ds,bx
-	mov cx,OFFSET system_size
-	movzx eax,cx
-	mov bx,temp_sel
-	AllocateFixedSystemMem
-	xor si,si
-	xor di,di
-	rep movsb
-	mov si,bx
-	mov di,system_data_sel
-	mov ax,gdt_sel
-	mov ds,ax
-	mov es,ax
-	movsd
-	movsd	
-	popa
-	pop es
-	pop ds
-	ret
-init_system	Endp
+init_boot_system        PROC near
+        mov ax,system_data_sel
+        mov ds,ax
+        xor ax,ax
+        mov ds:debug_list,ax
+        mov ds:math_tss,ax
+        mov ds:check_point,0
+        ret
+init_boot_system        ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			init_tsc
+;               NAME:                   INIT_SYSTEM
 ;
-;		DESCRIPTION:    Init TSC (meassure frequency)
+;               DESCRIPTION:    Move system_data_sel from boot area
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_system     Proc near
+        push ds
+        push es
+        pusha
+        mov bx,system_data_sel
+        mov ds,bx
+        mov cx,OFFSET system_size
+        movzx eax,cx
+        mov bx,temp_sel
+        AllocateFixedSystemMem
+        xor si,si
+        xor di,di
+        rep movsb
+        mov si,bx
+        mov di,system_data_sel
+        mov ax,gdt_sel
+        mov ds,ax
+        mov es,ax
+        movsd
+        movsd   
+        popa
+        pop es
+        pop ds
+        ret
+init_system     Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   init_tsc
+;
+;               DESCRIPTION:    Init TSC (meassure frequency)
+;
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_tics   MACRO
     mov al,0
-	out TIMER_CONTROL,al
-	jmp short $+2
-	in al,TIMER0
-	mov ah,al
-	jmp short $+2
-	in al,TIMER0
-	xchg al,ah
-	        ENDM
+        out TIMER_CONTROL,al
+        jmp short $+2
+        in al,TIMER0
+        mov ah,al
+        jmp short $+2
+        in al,TIMER0
+        xchg al,ah
+                ENDM
 
 init_tsc Proc near    
     mov ax,system_data_sel
@@ -518,11 +519,11 @@ init_tsc Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Init
+;               NAME:                   Init
 ;
-;		DESCRIPTION:	Kernel startup procedure
+;               DESCRIPTION:    Kernel startup procedure
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -609,130 +610,130 @@ init_no_fpu:
     mov cr0,eax
 
 init_cpu_done:
-	call ZeroRam
-	call MarkupRam
+        call ZeroRam
+        call MarkupRam
 ;
     mov ax,flat_sel
     mov ds,ax
-	mov ax,gdt_sel
-	mov es,ax
+        mov ax,gdt_sel
+        mov es,ax
 ;
-	call AllocateRam
-	mov bx,idt_sel
-	mov word ptr es:[bx],7FFh
-	mov es:[bx+2],esi
-	lidt fword ptr es:[bx]
-	mov ah,92h
-	xchg ah,es:[bx+5]
-	xor al,al
-	mov es:[bx+6],ax
+        call AllocateRam
+        mov bx,idt_sel
+        mov word ptr es:[bx],7FFh
+        mov es:[bx+2],esi
+        lidt fword ptr es:[bx]
+        mov ah,92h
+        xchg ah,es:[bx+5]
+        xor al,al
+        mov es:[bx+6],ax
 ;
-	call init_pretask_traps
+        call init_pretask_traps
 ;
-	call AllocateRam
-	mov edx,esi
-	mov bx,kernel_stack
-	mov ecx,800h
-	push cs
-	call create_data_sel16
+        call AllocateRam
+        mov edx,esi
+        mov bx,kernel_stack
+        mov ecx,800h
+        push cs
+        call create_data_sel16
 ;
-	add edx,800h
-	mov bx,virt_tss
-	mov ecx,400h
-	push cs
-	call create_tss_sel
-	ltr bx
+        add edx,800h
+        mov bx,virt_tss
+        mov ecx,400h
+        push cs
+        call create_tss_sel
+        ltr bx
 ;
-	add edx,400h
-	mov bx,kernel_tss
-	mov ecx,400h
-	push cs
-	call create_data_sel16
+        add edx,400h
+        mov bx,kernel_tss
+        mov ecx,400h
+        push cs
+        call create_data_sel16
 ;
-	mov ds,bx
-	mov ds:tss_cs,cs
-	mov dword ptr ds:tss_eip,OFFSET prot_init
-	mov ds:tss_ss,kernel_stack
-	mov ds:tss_esp,800h
-	mov ds:tss_ds,0
-	mov ds:tss_es,0
-	mov ds:tss_fs,0
-	mov ds:tss_gs,0
-	mov ds:tss_ldt,0
-	mov dword ptr ds:tss_eflags,0
-	mov dword ptr ds:tss_back_link,0
-	mov ds:tss_t,0
-	mov ds:tss_bitmap,800h
-	xor ax,ax
-	mov ds,ax
-	push cs
-	call create_tss_sel
+        mov ds,bx
+        mov ds:tss_cs,cs
+        mov dword ptr ds:tss_eip,OFFSET prot_init
+        mov ds:tss_ss,kernel_stack
+        mov ds:tss_esp,800h
+        mov ds:tss_ds,0
+        mov ds:tss_es,0
+        mov ds:tss_fs,0
+        mov ds:tss_gs,0
+        mov ds:tss_ldt,0
+        mov dword ptr ds:tss_eflags,0
+        mov dword ptr ds:tss_back_link,0
+        mov ds:tss_t,0
+        mov ds:tss_bitmap,800h
+        xor ax,ax
+        mov ds,ax
+        push cs
+        call create_tss_sel
 ;
-	xor ax,ax
-	mov ds,ax
-	mov es,ax
-	mov fs,ax
-	mov gs,ax
-	lldt ax
+        xor ax,ax
+        mov ds,ax
+        mov es,ax
+        mov fs,ax
+        mov gs,ax
+        lldt ax
 ;
-	db 0EAh
-	dw 0,kernel_tss
+        db 0EAh
+        dw 0,kernel_tss
 
 prot_init:
-	cli
-	call init_pre_tasking
-	call init_boot_system
-	call init_paging
-	call init_physical_dir
-	call start_paging
-	call init_physical
-	call init_paging_trap
-	call create_mem
-	call create_gdt
-	call init_osgate
-	call init_protseg
-	call init_usergate
+        cli
+        call init_pre_tasking
+        call init_boot_system
+        call init_paging
+        call init_physical_dir
+        call start_paging
+        call init_physical
+        call init_paging_trap
+        call create_mem
+        call create_gdt
+        call init_osgate
+        call init_protseg
+        call init_usergate
 ;
-	mov si,OFFSET get_version
-	mov di,OFFSET get_version_name
-	xor dx,dx
-	mov ax,get_version_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET get_version
+        mov di,OFFSET get_version_name
+        xor dx,dx
+        mov ax,get_version_nr
+        RegisterBimodalUserGate
 ;
-	call init_mem
-	call init_gdt
-	call init_idt
-	call init_system
-	call init_physical_gates
+        call init_mem
+        call init_gdt
+        call init_idt
+        call init_system
+        call init_physical_gates
     call init_cpu_gates
-	call move_adapters
-	call init_paging_gates
-	call init_physical_gates
-	call init_mem_sels
+        call move_adapters
+        call init_paging_gates
+        call init_physical_gates
+        call init_mem_sels
     call init_tsc
-	call init_state
-	call init_task
-	call init_io
-	call init_ldt
-	call init_app
-	call init_thread
-	call init_handle
-	call init_int
-	call init_trap_vectors
-	call init_swap
-	call init_random
-	call init_crc
+        call init_state
+        call init_task
+        call init_io
+        call init_ldt
+        call init_app
+        call init_thread
+        call init_handle
+        call init_int
+        call init_trap_vectors
+        call init_swap
+        call init_random
+        call init_crc
 ;
-	call init_device    
-	call init_first_process
-	call init_first_thread
-	int 3
+        call init_device    
+        call init_first_process
+        call init_first_thread
+        int 3
 stop_l:
-	int 3
-	jmp stop_l
-	
-code	ENDS
+        int 3
+        jmp stop_l
+        
+code    ENDS
 
 .186
 
-	END init
+        END init

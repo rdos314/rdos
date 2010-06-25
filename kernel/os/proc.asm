@@ -248,7 +248,6 @@ free_proc_handle_done:
     retf32
 free_proc_handle    Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -284,7 +283,6 @@ get_proc_exit_done:
     retf32
 get_proc_exit_code   Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -343,7 +341,6 @@ stop_wait_for_proc_end	PROC far
     ret
 stop_wait_for_proc_end Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -360,7 +357,6 @@ dummy_clear_proc_end	PROC far
     ret
 dummy_clear_proc_end Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -446,7 +442,6 @@ add_wait_done:
 	retf32
 add_wait_for_proc_end	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -600,7 +595,6 @@ init_thread	PROC near
 	ret
 init_thread	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -670,7 +664,6 @@ trap_create_thread_done:
 	retf
 trap_create_thread	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -717,7 +710,6 @@ trap_terminate_thread_done:
 	ret
 trap_terminate_thread	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -765,7 +757,6 @@ trap_create_process_done:
 	ret
 trap_create_process	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -802,7 +793,6 @@ trap_terminate_process_done:
 	ret
 trap_terminate_process	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -842,7 +832,6 @@ trap_init_tasking_done:
 	ret
 trap_init_tasking	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -878,7 +867,6 @@ hook_create_thread	PROC far
 	ret
 hook_create_thread	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -914,7 +902,6 @@ hook_terminate_thread	PROC far
 	ret
 hook_terminate_thread	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -952,7 +939,6 @@ hook_create_process	PROC far
 	ret
 hook_create_process	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -988,7 +974,6 @@ hook_terminate_process	PROC far
 	ret
 hook_terminate_process	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1024,7 +1009,6 @@ hook_init_tasking	PROC far
 	ret
 hook_init_tasking	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1055,7 +1039,6 @@ allocate_thread_block	PROC near
 	ret
 allocate_thread_block	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1120,7 +1103,6 @@ init_thread_block	PROC near
 	ret
 init_thread_block	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1176,7 +1158,6 @@ init_process_block	PROC near
 	ret
 init_process_block	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1209,7 +1190,6 @@ pm_move_pad_done:
 	ret
 init_prot_thread	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1250,7 +1230,6 @@ vm_move_pad_done:
 	ret
 init_virt_thread	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1387,7 +1366,6 @@ fill_bm_vm_more:
 	ret
 init_default_tss	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1477,7 +1455,6 @@ init_prot_tss_com:
 	ret
 init_prot_tss	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1540,7 +1517,6 @@ init_virt_tss	PROC near
 	ret
 init_virt_tss	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1663,7 +1639,6 @@ create_thread32	Proc far
 	retf32
 create_thread32	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1767,7 +1742,6 @@ terminate_pd_done:
 	call free_process_paging
     jmp cleanup_process
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1823,7 +1797,6 @@ init_tss_iopl_done:
 	ret
 init_process_tss	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1871,7 +1844,6 @@ init_process_callback	PROC near
 	ret
 init_process_callback	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1894,10 +1866,15 @@ create_enviroment	PROC near
 	mov ds,ax
 	xor ax,ax
 	mov di,1000h
-	mov cx,system_mem_start SHR 22
+	mov ecx,system_mem_start
+	shr ecx,22
 	rep stosd
-	mov si,system_mem_start SHR 20
-	mov cx,400h - system_mem_start SHR 22
+	mov eax,system_mem_start
+	mov esi,eax
+	shr esi,20
+	shr eax,22
+	mov cx,400h
+	sub cx,ax
 	rep movsd
 ;
 	mov ax,sys_page_sel
@@ -1924,7 +1901,8 @@ create_enviroment	PROC near
 ;
 	mov eax,[edx+4]
 	mov al,7
-	mov bx,process_page_linear SHR 20
+	mov ebx,process_page_linear
+	shr ebx,20
 	mov es:[bx+di],eax
 ;
 	mov dx,es
@@ -1936,7 +1914,6 @@ create_enviroment	PROC near
 	ret
 create_enviroment	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2044,7 +2021,6 @@ crm_zero_ds:
 	ret
 create_process	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2090,7 +2066,6 @@ init_virt_callback_frame	PROC near
 	ret
 init_virt_callback_frame	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2130,7 +2105,6 @@ init_prot_callback_frame	PROC near
 	ret
 init_prot_callback_frame	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2177,7 +2151,6 @@ create_callback_frame_done:
 	iretd
 ;
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2234,7 +2207,6 @@ first_move_done:
 	ret
 init_first_thread	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2316,7 +2288,6 @@ fill_bm_mod_more:
 	ret
 init_first_tss	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2350,7 +2321,6 @@ init_first_process	Proc near
 	ret
 init_first_process	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	

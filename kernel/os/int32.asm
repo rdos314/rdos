@@ -69,8 +69,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	extrn create_ldt:near
 
-	extrn create_data_selector:near
-
 	extrn get_flags:near
 	extrn set_flags:near
 

@@ -1071,7 +1071,6 @@ create_trap_gate_sel	PROC far
 	ret
 create_trap_gate_sel	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -422,7 +422,8 @@ init_focus_process	Proc far
 ;	
 	mov ax,process_page_sel
 	mov ds,ax
-	mov ebx,io_local_linear SHR 10
+	mov ebx,io_local_linear
+	shr ebx,10
 	mov cx,400h
 	xor eax,eax
 init_local_loop:
@@ -458,7 +459,8 @@ free_focus_process	Proc far
 ;
 	mov ax,process_page_sel
 	mov ds,ax
-	mov ebx,io_local_linear SHR 10
+	mov ebx,io_local_linear
+	shr ebx,10
 	mov cx,400h
 free_local_loop:
 	mov eax,[ebx]
@@ -730,14 +732,16 @@ set_focus_no_lost:
 	mov eax,ds:p_cr3
 	mov bx,process_dir_sel
 	mov ds,bx
-	mov bx,io_local_linear SHR 20
+	mov ebx,io_local_linear
+	shr ebx,20
 	cli
 	mov cr3,eax
 	mov edx,[bx]
 	pop eax
 	mov cr3,eax
 	sti
-	mov bx,io_focus_linear SHR 20
+	mov ebx,io_focus_linear
+	shr ebx,20
 	mov [bx],edx
 	mov ax,sys_dir_sel
 	mov ds,ax

@@ -99,7 +99,8 @@ create_gdt	PROC near
 ;
 	mov ax,gdt_sel
 	mov ds,ax
-	mov cx,0D000h SHR 3
+	mov cx,0D000h
+	shr cx,3
 	mov si,2000h
 	xor bx,bx
 
