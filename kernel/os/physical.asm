@@ -75,7 +75,7 @@ init_physical_dir	Proc near
 ;
 	call AllocateRam
 	mov edx,esi
-	mov bx,phys_page_linear SHR 20
+	mov bx,(phys_page_linear SHR 20) AND 0FFFh
 	and bl,0FCh
 	or si,3
 	mov es:[bx],esi
@@ -89,7 +89,7 @@ init_phys_page_pages:
 ;
 	call AllocateRam
 	mov edx,esi
-	mov bx,phys_list_linear SHR 20
+	mov bx,(phys_list_linear SHR 20) AND 0FFFh
 	and bl,0FCh
 	or si,3
 	mov es:[bx],esi
@@ -107,7 +107,7 @@ init_free_dir_loop:
 	call AllocateRam
 	jc init_free_done
 ;
-	mov di,phys_page_linear SHR 20
+	mov di,(phys_page_linear SHR 20) AND 0FFFh
 	mov edx,es:[di]
 	xor dl,dl
 ;
@@ -118,7 +118,7 @@ init_free_dir_loop:
 	call AllocateRam
 	jc init_free_done
 ;
-	mov edi,phys_list_linear SHR 20
+	mov edi,(phys_list_linear SHR 20) AND 0FFFh
 	mov edx,es:[di]
 	xor dl,dl
 ;
@@ -754,7 +754,7 @@ get_thread_physical_page	Proc far
 	SimCli
 	mov ax,process_dir_sel
 	mov ds,ax
-	mov si,alias_linear SHR 20
+	mov si,(alias_linear SHR 20) AND 0FFFh
 	mov es,bx
 	mov eax,es:p_cr3
 	or ax,803h
@@ -820,7 +820,7 @@ set_thread_physical_page	Proc far
 	SimCli
 	mov ax,process_dir_sel
 	mov ds,ax
-	mov si,alias_linear SHR 20
+	mov si,(alias_linear SHR 20) AND 0FFFh
 	mov es,bx
 	mov eax,es:p_cr3
 	or ax,803h

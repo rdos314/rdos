@@ -2502,7 +2502,8 @@ init_common	Proc near
 ;
 	mov cx,sys_page_sel
 	mov ds,cx
-	mov edx,page0_linear SHR 10
+	mov edx,page0_linear
+	shr edx,10
 	mov byte ptr [edx],3
 	ret
 init_common	Endp

@@ -21,7 +21,9 @@ MCommand
 0
 5
 MCommand
-0
+34
+wdump kernel.sym -Dn >kernel.map
+
 6
 MItem
 10
