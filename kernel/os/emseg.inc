@@ -26,9 +26,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	extrn ValidateSegment:near
-	extrn ValidateJmpSegment:near
-	extrn ValidateCallSegment:near
-	extrn ValidateRetSegment:near
 	extrn EmulateError:near
 
 	extrn JmpFar:near

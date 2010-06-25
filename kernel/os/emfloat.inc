@@ -51,5 +51,4 @@
 	extrn CalcPartialRemainder:near
 	extrn CalcSin:near
 	extrn CalcCos:near
-	extrn CalcTan:near
 	extrn CalcAtan:near
