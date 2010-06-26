@@ -74,7 +74,7 @@ bs_status			DB ?
 
 block_sector_struc	ENDS
 
-block_seg	STRUC
+fl_block_seg	STRUC
 
 bc_op_handle		DD ?
 bc_op_ads           DD ?
@@ -86,7 +86,7 @@ bc_phys_sector_ptr	DD ?
 bc_version          DW ?
 bc_logical_block	DB ?
 
-block_seg	ENDS
+fl_block_seg	ENDS
 
 fc_logical_block	EQU 1F8h
 fc_version			EQU 1FAh
