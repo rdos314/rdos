@@ -190,8 +190,8 @@ WVList
 0
 43
 MItem
-18
-..\os\emstring.asm
+15
+..\os\emseg.asm
 44
 WString
 6
@@ -208,8 +208,8 @@ WVList
 0
 47
 MItem
-17
-..\os\emtrans.asm
+18
+..\os\emstring.asm
 48
 WString
 6
@@ -227,7 +227,7 @@ WVList
 51
 MItem
 17
-..\os\emulate.asm
+..\os\emtrans.asm
 52
 WString
 6
@@ -244,8 +244,8 @@ WVList
 0
 55
 MItem
-27
-D:\rdos\kernel\os\emseg.asm
+17
+..\os\emulate.asm
 56
 WString
 6
