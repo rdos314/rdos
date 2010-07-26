@@ -380,7 +380,18 @@ int TFtp::GetFile(const char *remote, TFile *file)
         FAppSignal.WaitForever();       
 
         if (FAborted)
+        {
+            FCloseData = TRUE;
+            FDataSocket->Push();
+            FDataSocket->Close();
+
+            NotifyMsg("Data socket closed\r\n");
+
+            while (FDataSocket)
+                RdosWaitMilli(50);
+
             FAborted = FALSE;
+        }
 
         if (FSuccess)
             break;
@@ -417,7 +428,7 @@ void TFtp::CacheDir()
     for (tries = 0; tries < 3 && FReady; tries++)
     {
         FAppSignal.Clear();
-        FSuccess = FALSE;
+        FDirCached = FALSE;
         FAborted = FALSE;
         
         if (FReady)
@@ -430,9 +441,20 @@ void TFtp::CacheDir()
         }
 
         if (FAborted)
-            FAborted = FALSE;
+        {
+            FCloseData = TRUE;
+            FDataSocket->Push();
+            FDataSocket->Close();
 
-        if (FSuccess)
+            NotifyMsg("Data socket closed\r\n");
+
+            while (FDataSocket)
+                RdosWaitMilli(50);
+
+            FAborted = FALSE;
+        }
+
+        if (FDirCached)
             break;
     }
 
@@ -1460,7 +1482,7 @@ void TFtp::HandleDataSocket()
     FDirData = 0;
     FDirCount = 0;
     
-    while (FInstalled && FDataSocket && FDataSocket->IsOpen() && !FCloseData)
+    while (FInstalled && FDataSocket && FDataSocket->IsOpen() && !FCloseData && !FAborted)
     {
         if (FDirData)
         {
@@ -1495,15 +1517,18 @@ void TFtp::HandleDataSocket()
         FDataSocket = 0;
     }
 
-    FReady = TRUE;
+    if (!FAborted)
+    {
+        FReady = TRUE;
             
-    if (FGetDir)
-        FDirCached = TRUE;
+        if (FGetDir)
+            FDirCached = TRUE;
 
-    if (FGetFile)
-        FSuccess = TRUE;
+        if (FGetFile)
+            FSuccess = TRUE;
 
-    FAppSignal.Signal();
+        FAppSignal.Signal();
+    }
 }
 
 /*##########################################################################
