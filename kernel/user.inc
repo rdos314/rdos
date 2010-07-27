@@ -998,6 +998,18 @@ SetThreadTss	MACRO
 	UserGate set_thread_tss_nr
 					ENDM
 
+;  IN  AL        Disc #
+;  IN  EDX       Sector #
+DefineFaultSave     MACRO
+	UserGate define_fault_save_nr
+						ENDM
+
+; IN  ES:(E)DI   	State buffer
+; IN  AX           	Fault thread #
+GetFaultThreadState     MACRO
+	UserGate get_fault_thread_state_nr
+						ENDM
+
 ;;;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
 ; IN  BX			Thread handle

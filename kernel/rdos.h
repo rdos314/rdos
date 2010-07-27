@@ -294,6 +294,9 @@ int RDOSAPI RdosOpenDir(const char *PathName);
 void RDOSAPI RdosCloseDir(int Handle);
 int RDOSAPI RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
 
+void RDOSAPI RdosDefineFaultSave(int DiscNr, long Sector);
+int RDOSAPI RdosGetFaultThreadState(int ThreadNr, ThreadState *State);
+
 int RDOSAPI RdosGetThreadState(int ThreadNr, ThreadState *State);
 int RDOSAPI RdosSuspendThread(int Thread);
 int RDOSAPI RdosSuspendAndSignalThread(int Thread);
@@ -1114,6 +1117,16 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [ebx];
 
 // ReadDir here
+
+#pragma aux RdosDefineFaultSave = \
+    CallGate_define_fault_save  \
+    parm [eax] [edx];
+
+#pragma aux RdosGetFaultThreadState = \
+    CallGate_get_fault_thread_state  \
+    CarryToBool \
+    parm [eax] [edi] \
+    value [eax];
 
 #pragma aux RdosGetThreadState = \
     CallGate_get_thread_state  \
@@ -3088,6 +3101,16 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [ebx];
 
 // ReadDir here
+
+#pragma aux RdosDefineFaultSave = \
+    CallGate_define_fault_save  \
+    parm [eax] [edx];
+
+#pragma aux RdosGetFaultThreadState = \
+    CallGate_get_fault_thread_state  \
+    CarryToBool \
+    parm [eax] [edi] \
+    value [eax];
 
 #pragma aux RdosGetThreadState = \
     CallGate_get_thread_state  \

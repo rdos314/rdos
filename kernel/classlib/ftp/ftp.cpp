@@ -31,6 +31,8 @@
 
 #include "rdos.h"
 
+#define DEBUG 1
+
 #define STACK_SIZE  0x4000
 
 #define FALSE   0
@@ -377,7 +379,7 @@ int TFtp::GetFile(const char *remote, TFile *file)
         FGetFile = TRUE;
         SendPasv();
     
-        FAppSignal.WaitForever();       
+        FAppSignal.WaitTimeout(10 * 60000);       
 
         if (FAborted)
         {
@@ -936,8 +938,8 @@ void TFtp::DecodePasv(const char *param)
             IP = (arr[3] << 24) | (arr[2] << 16) | (arr[1] << 8) | arr[0];
             port = (arr[4] << 8) | arr[5];
 
-            FDataSocket = new TSocket(IP, port, 6000, 0x4000);
-            FDataSocket->WaitForConnection(6000);
+            FDataSocket = new TSocket(IP, port, 15000, 0x4000);
+            FDataSocket->WaitForConnection(15000);
 
             if (FDataSocket->IsOpen())
             {
@@ -946,7 +948,13 @@ void TFtp::DecodePasv(const char *param)
                 NotifyMsg("Data socket established\r\n");
             }
             else
+            {
                 NotifyMsg("Data socket failed\r\n");
+                delete FDataSocket;
+                FDataSocket = 0;
+                FReady = TRUE;
+                FAppSignal.Signal();
+            }
         }        
     }
 }
@@ -1015,6 +1023,37 @@ void TFtp::HandleResponse(int code, const char *param)
             SendPassword();
             break;
 
+        case 421:
+            FAborted = TRUE;
+            FSuccess = FALSE;
+            FReady = FALSE;
+
+            if (FDataSocket)
+                FDataSocket->Close();
+
+            if (FSocket)
+                FSocket->Close();
+
+            break;
+
+        case 425:
+            FAborted = TRUE;
+            FSuccess = FALSE;
+            FReady = TRUE;
+            FAppSignal.Signal();
+            break;
+
+        case 426:
+            FAborted = TRUE;
+            FSuccess = FALSE;
+            FReady = TRUE;
+
+            if (FDataSocket)
+                FDataSocket->Close();
+
+            FAppSignal.Signal();
+            break;
+
         case 550:
             if (FSetDir)
             {
@@ -1024,13 +1063,6 @@ void TFtp::HandleResponse(int code, const char *param)
             }
             else
                 FReady = FALSE;            
-            break;
-
-        case 425:
-            FAborted = TRUE;
-            FSuccess = FALSE;
-            FReady = TRUE;
-            FAppSignal.Signal();
             break;
 
         default:
@@ -1126,8 +1158,8 @@ void TFtp::HandleClosed()
 
     NotifyMsg("Connecting\r\n");
 
-    FSocket = new TSocket(FIp, FPort, 6000, 0x1000);
-    FSocket->WaitForConnection(6000);
+    FSocket = new TSocket(FIp, FPort, 15000, 0x1000);
+    FSocket->WaitForConnection(15000);
 }
 
 /*##########################################################################

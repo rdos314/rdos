@@ -479,3 +479,6 @@
 
 #define CallGate_power_failure 0x9a 138 1 0 0 2 0
 
+#define CallGate_define_fault_save 0x9a 139 1 0 0 2 0
+#define CallGate_get_fault_thread_state 0x9a 140 1 0 0 2 0
+
