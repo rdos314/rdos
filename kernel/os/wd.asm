@@ -38,7 +38,11 @@ INCLUDE ..\..\kernel\os\system.def
 
 wd_data_seg STRUC
 
-wd_tics     DD ?
+wd_tics                 DD ?
+
+fault_disc              DB ?
+fault_start_sector      DD ?
+fault_sectors           DD ?
 
 wd_data_seg ENDS
 
@@ -195,6 +199,123 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DefineFaultSave
+;
+;		DESCRIPTION:	Define fault save position on disc
+;
+;       PARAMETERS:     AL      Disc #
+;                       EDX     Start sector #
+;                       ECX     Number of available sectors
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+define_fault_save_name	DB 'Define Fault Save',0
+
+define_fault_save	PROC far
+    push ds
+    push bx
+;
+    mov bx,wd_data_sel
+    mov ds,bx
+    mov ds:fault_disc,al
+    mov ds:fault_start_sector,edx
+    mov ds:fault_sectors,ecx
+;    
+    pop bx
+    pop ds
+    retf32
+define_fault_save   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ClearFaultSave
+;
+;		DESCRIPTION:	Clear fault save data
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_fault_save_name	DB 'Clear Fault Save',0
+
+clear_fault_save	PROC far
+    retf32
+clear_fault_save   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetFaultThreadState
+;
+;		DESCRIPTION:	Get fault thread state
+;
+;       PARAMETERS:     AX          Thread #
+;                       ES:E(DI)    State buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_fault_thread_state_name	DB 'Get Fault Thread State',0
+
+get_fault_thread_state	PROC near
+    stc
+    ret
+get_fault_thread_state   Endp
+
+get_fault_thread_state16	Proc far
+	push edi
+	movzx edi,di
+	call get_fault_thread_state
+	pop edi
+	ret
+get_fault_thread_state16	Endp
+
+get_fault_thread_state32	Proc far
+	call get_fault_thread_state
+	Retf32
+get_fault_thread_state32	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetFaultThreadTss
+;
+;		DESCRIPTION:	Get fault thread tss
+;
+;       PARAMETERS:     AX          Thread #
+;                       ES:E(DI)    Tss buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_fault_thread_tss_name	DB 'Get Fault Thread Tss',0
+
+get_fault_thread_tss	PROC near
+    stc
+    ret
+get_fault_thread_tss   Endp
+
+get_fault_thread_tss16	Proc far
+	push edi
+	movzx edi,di
+	call get_fault_thread_tss
+	pop edi
+	ret
+get_fault_thread_tss16	Endp
+
+get_fault_thread_tss32	Proc far
+	call get_fault_thread_tss
+	Retf32
+get_fault_thread_tss32	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			Init
 ;
 ;		DESCRIPTION:	Initialize module
@@ -216,6 +337,7 @@ init	Proc far
 	AllocateFixedSystemMem
 	mov es,bx
 	mov es:wd_tics,0
+	mov es:fault_sectors,0
 ;
 	mov ax,cs
 	mov ds,ax
@@ -244,6 +366,32 @@ init	Proc far
 	xor dx,dx
 	mov ax,get_watchdog_tics_nr
 	RegisterBimodalUserGate
+;
+	mov si,OFFSET define_fault_save
+	mov di,OFFSET define_fault_save_name
+	xor dx,dx
+	mov ax,define_fault_save_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET clear_fault_save
+	mov di,OFFSET clear_fault_save_name
+	xor dx,dx
+	mov ax,clear_fault_save_nr
+	RegisterBimodalUserGate
+;
+	mov bx,OFFSET get_fault_thread_state16
+	mov si,OFFSET get_fault_thread_state32
+	mov di,OFFSET get_fault_thread_state_name
+	mov dx,virt_es_in
+	mov ax,get_fault_thread_state_nr
+	RegisterUserGate
+;
+	mov bx,OFFSET get_fault_thread_tss16
+	mov si,OFFSET get_fault_thread_tss32
+	mov di,OFFSET get_fault_thread_tss_name
+	mov dx,virt_es_in
+	mov ax,get_fault_thread_tss_nr
+	RegisterUserGate
 ;
 	popa
 	pop es

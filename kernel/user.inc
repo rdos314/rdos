@@ -172,6 +172,11 @@ GetFreeHandles MACRO
 	UserGate get_free_handles_nr
 						ENDM
 
+; OUT EAX     Amount of free handle memory
+GetFreeHandleMem MACRO
+	UserGate get_free_handle_mem_nr
+						ENDM
+
 ;;;;;;;;;;; PAGING ;;;;;;;;;;;;;;
 
 FreeV86	MACRO
@@ -998,16 +1003,27 @@ SetThreadTss	MACRO
 	UserGate set_thread_tss_nr
 					ENDM
 
-;  IN  AL        Disc #
-;  IN  EDX       Sector #
+;  IN  AL       Disc #
+;  IN  EDX      Start sector #
+;  IN  ECX      Number of sectors
 DefineFaultSave     MACRO
 	UserGate define_fault_save_nr
 						ENDM
 
-; IN  ES:(E)DI   	State buffer
+ClearFaultSave     MACRO
+	UserGate clear_fault_save_nr
+						ENDM
+
+; IN  ES:(E)DI      State buffer
 ; IN  AX           	Fault thread #
 GetFaultThreadState     MACRO
 	UserGate get_fault_thread_state_nr
+						ENDM
+
+; IN  ES:(E)DI      TSS data buffer
+; IN  AX           	Fault thread #
+GetFaultThreadTss     MACRO
+	UserGate get_fault_thread_tss_nr
 						ENDM
 
 ;;;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;

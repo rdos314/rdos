@@ -212,7 +212,9 @@ TFtp::TFtp(long IP, int port, const char *user, const char *passw)
     FDirCached = FALSE;
     FGetDir = FALSE;
     FSetDir = FALSE;
+    FMkDir = FALSE;
     FGetFile = FALSE;
+    FWriteFile = FALSE;
     FReady = FALSE;
     FSuccess = FALSE;
     FFile = 0;
@@ -404,6 +406,111 @@ int TFtp::GetFile(const char *remote, TFile *file)
     FGetFile = FALSE;
 
     FAppSection.Leave();
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::CreateFile
+#
+#   Purpose....: Create a single file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtp::CreateFile(const char *remote, TFile *file)
+{
+    int ok = FALSE;
+    int tries;
+
+    FAppSection.Enter();
+
+    if (!FReady)
+        FAppSignal.WaitTimeout(15000);
+
+
+    for (tries = 0; tries < 3 && FReady; tries++)
+    {
+        FAppSignal.Clear();
+        FSuccess = FALSE;
+        FAborted = FALSE;
+
+        FFile = file;
+        FFile->SetPos(0);
+        FRemoteFile = TString(remote);
+
+        FReady = FALSE;
+        FWriteFile = TRUE;
+        SendPasv();
+    
+        FAppSignal.WaitTimeout(10 * 60000);       
+
+        if (FAborted)
+        {
+            FCloseData = TRUE;
+            FDataSocket->Push();
+            FDataSocket->Close();
+
+            NotifyMsg("Data socket closed\r\n");
+
+            while (FDataSocket)
+                RdosWaitMilli(50);
+
+            FAborted = FALSE;
+        }
+
+        if (FSuccess)
+            break;
+
+    }
+    ok = FSuccess;
+
+    FWriteFile = FALSE;
+
+    FAppSection.Leave();
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::MkDir
+#
+#   Purpose....: Create remote directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtp::MkDir(const char *path)
+{
+    int ok = FALSE;
+
+    FAppSection.Enter();
+    ClearEntries();
+
+    if (!FReady)
+        FAppSignal.WaitTimeout(15000);
+
+    if (FReady)
+    {
+        FAppSignal.Clear();
+
+        FSuccess = FALSE;
+        FReady = FALSE;
+        FMkDir = TRUE;
+        SendMkd(path);
+    
+        FAppSignal.WaitTimeout(15000);     
+        ok = FSuccess;  
+    }
+
+    FAppSection.Leave();
+
+    FMkDir = FALSE;
+
     return ok;
 }
 
@@ -745,6 +852,31 @@ void TFtp::SendCwd(const char *path)
 
 /*##########################################################################
 #
+#   Name       : TFtp::Sendmkd
+#
+#   Purpose....: Send mkd
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::SendMkd(const char *path)
+{
+    char str[260];
+
+    strcpy(str, "MKD ");
+    strcat(str, path);
+    strcat(str, "\r\n");
+
+    NotifyMsg(str);
+
+    FSocket->Write(str);
+    FSocket->Push();
+}
+
+/*##########################################################################
+#
 #   Name       : TFtp::SendList
 #
 #   Purpose....: Send list
@@ -806,6 +938,31 @@ void TFtp::SendRetr()
     char str[260];
 
     strcpy(str, "RETR ");
+    strcat(str, FRemoteFile.GetData());
+    strcat(str, "\r\n");
+
+    NotifyMsg(str);
+
+    FSocket->Write(str);
+    FSocket->Push();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::SendStor
+#
+#   Purpose....: Send stor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::SendStor()
+{
+    char str[260];
+
+    strcpy(str, "STOR ");
     strcat(str, FRemoteFile.GetData());
     strcat(str, "\r\n");
 
@@ -996,6 +1153,9 @@ void TFtp::HandleResponse(int code, const char *param)
 
             if (FGetFile)
                 SendRetr();
+
+            if (FWriteFile)
+                SendStor();
             break;
 
         case 230:
@@ -1013,6 +1173,9 @@ void TFtp::HandleResponse(int code, const char *param)
             break;
 
         case 257:
+            if (FMkDir)
+                FSuccess = TRUE;
+                
             DecodePwd(param);
             FReady = TRUE;
             FAppSignal.Signal();
@@ -1125,10 +1288,17 @@ void TFtp::HandleOpen()
 {
     int count;
     char str[1025];
+
+    FSocket->Push();
     
-    count = FSocket->Read(str, 1024);
-    str[count] = 0;
-    HandleResponse(str);
+    if (FSocket->WaitForChar(2 * 60000))
+    {
+        count = FSocket->Read(str, 1024);
+        str[count] = 0;
+        HandleResponse(str);
+    }
+    else
+        FSocket->Close();
 }
 
 /*##########################################################################
@@ -1146,6 +1316,7 @@ void TFtp::HandleClosed()
 {
     FGetDir = FALSE;
     FSetDir = FALSE;
+    FMkDir = FALSE;
     FReady = FALSE;
     
     ClearEntries();
@@ -1513,27 +1684,44 @@ void TFtp::HandleDataSocket()
 
     FDirData = 0;
     FDirCount = 0;
-    
-    while (FInstalled && FDataSocket && FDataSocket->IsOpen() && !FCloseData && !FAborted)
+
+    if (FWriteFile)
     {
-        if (FDirData)
-        {
-            memcpy(buf, FDirData, FDirCount);
-            delete FDirData;
-            FDirData = 0;            
+        FFile->SetPos(0);
+        count = FFile->Read(buf, 512);
 
-            count = FDataSocket->Read(buf + FDirCount, 512 - FDirCount);
+        while (count)
+        {
+            FDataSocket->Write(buf, count);
+            count = FFile->Read(buf, 512);
         }
-        else            
-            count = FDataSocket->Read(buf, 512);
 
-        if (count)
+        FDataSocket->Push();
+        FDataSocket->Close();
+    }
+    else
+    {    
+        while (FInstalled && FDataSocket && FDataSocket->IsOpen() && !FCloseData && !FAborted)
         {
-            if (FGetDir)
-                HandleDirData(buf, count + FDirCount);
+            if (FDirData)
+            {
+                memcpy(buf, FDirData, FDirCount);
+                delete FDirData;
+                FDirData = 0;            
 
-            if (FGetFile && FFile)
-                FFile->Write(buf, count);
+                count = FDataSocket->Read(buf + FDirCount, 512 - FDirCount);
+            }
+            else            
+                count = FDataSocket->Read(buf, 512);
+
+            if (count)
+            {
+                if (FGetDir)
+                    HandleDirData(buf, count + FDirCount);
+
+                if (FGetFile && FFile)
+                    FFile->Write(buf, count);
+            }
         }
     }
 
@@ -1557,6 +1745,9 @@ void TFtp::HandleDataSocket()
             FDirCached = TRUE;
 
         if (FGetFile)
+            FSuccess = TRUE;
+
+        if (FWriteFile)
             FSuccess = TRUE;
 
         FAppSignal.Signal();

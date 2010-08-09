@@ -84,6 +84,9 @@ public:
     void SetBinaryMode();
     int GetFile(const char *remote, TFile *file);
 
+    int MkDir(const char *path);
+    int CreateFile(const char *remote, TFile *file);
+
     int GotoFirstDir();
     int GotoFirstFile();
     int GotoNextDir();
@@ -100,9 +103,11 @@ protected:
     void SendPassword();
     void SendPwd();
     void SendCwd(const char *path);
+    void SendMkd(const char *path);
     void DecodePwd(const char *param);
     void SendList();
     void SendRetr();
+    void SendStor();
     void SendPasv();
     void SendType(char type);
     void DecodePasv(const char *param);
@@ -133,6 +138,8 @@ protected:
     int FGetDir;
     int FSetDir;
     int FGetFile;
+    int FWriteFile;
+    int FMkDir;
     char *FDirData;
     int FDirCount;
     int FSuccess;

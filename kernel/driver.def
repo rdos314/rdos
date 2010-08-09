@@ -111,6 +111,8 @@ flat_data_sel		EQU 1BBh
 ;
 virt_idt_sel		EQU 1C0h
 ;
+fault_sector_sel    EQU 1C8h
+;
 kernel32_code		EQU 1D8h
 int_data_sel		EQU 1E0h
 def_exception_sel	EQU 1E8h

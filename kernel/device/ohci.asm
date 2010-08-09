@@ -1827,7 +1827,7 @@ EndTransfer   Proc far
     push bp
 ;    
     test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
-    jz etDone
+    jz etReset
 ;
     mov fs:osp_data_size,0     
     and fs:osp_flags, NOT OSP_FLAG_TRANSFER_PENDING
@@ -1877,7 +1877,8 @@ etNext:
     mov fs:osp_data_size,bp
     mov fs:osp_data_list,0
     or fs:osp_flags, OSP_FLAG_TRANSFER_OK
-;
+
+etReset:
     mov edx,fs:osp_ed
     or es:[edx].oes_fa_en,4000h
 

@@ -481,4 +481,8 @@
 
 #define CallGate_define_fault_save 0x9a 139 1 0 0 2 0
 #define CallGate_get_fault_thread_state 0x9a 140 1 0 0 2 0
+#define CallGate_get_fault_thread_tss 0x9a 141 1 0 0 2 0
+#define CallGate_clear_fault_save 0x9a 142 1 0 0 2 0
+
+#define CallGate_get_free_handle_mem 0x9a 143 1 0 0 2 0
 

@@ -134,6 +134,59 @@ register_handle	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			CheckSizeList
+;
+;		DESCRIPTION:	Check mem size list consistence
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+check_size_list	Proc near
+    push ds
+    pusha
+;    
+	mov si,handle_mem_sel
+	mov ds,si
+	xor si,si
+	mov bx,[si].hs_next
+
+check_size_loop:
+    cmp bx,si
+    ja check_size_gt
+;
+    int 3 
+
+check_size_gt:
+    cmp bx,0FFF8h
+    je check_size_done
+;
+    mov si,bx
+    mov bx,[si].hs_next    
+    jmp check_size_loop
+
+check_size_done:
+    popa
+    pop ds
+	ret
+check_size_list	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CheckHandleMem
+;
+;		DESCRIPTION:	Check handle mem consistency
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+check_handle_mem    Proc near
+    call check_size_list
+    ret
+check_handle_mem    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			allocate_handle_mem
 ;
 ;		DESCRIPTION:	Allocate memory for handle
@@ -150,6 +203,8 @@ allocate_handle_mem	Proc near
 	push si
 	push di
 ;
+    call check_handle_mem
+    
 	add ax,8
 	mov si,handle_mem_sel
 	mov ds,si
@@ -228,6 +283,7 @@ allocate_mem_no_biggest_block:
 	mov [si].hf_next,di
 ;
 	lea bx,[si+8]
+    call check_handle_mem   
 ;
 	pop di
 	pop si
@@ -249,6 +305,8 @@ allocate_handle_mem	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_handle_mem	PROC near
+    call check_handle_mem   
+    push ax
 	push bx
 	push si
 	push di
@@ -280,11 +338,15 @@ free_handle_no_merge_down:
 	mov [bx].hf_prev,si
 
 free_handle_test_up:
-	mov di,[si].hs_next
+    mov ax,[si].hs_next
+    mov di,ax
 	mov di,[di].hf_prev
 	inc di
 	or di,di
 	jz free_handle_no_merge_up
+;
+    cmp ax,0FFF8h
+    je free_handle_no_merge_up
 ;
 	push si
 	mov si,[si].hs_next
@@ -333,6 +395,8 @@ free_handle_not_limit_page:
 	pop di
 	pop si
 	pop bx
+	pop ax
+    call check_handle_mem   
 	ret
 free_handle_mem	ENDP
 
@@ -681,6 +745,54 @@ get_free_handles	Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetFreeHandleMem
+;
+;		DESCRIPTION:	Get amount of free handle memory
+;
+;		RETURNS:        EAX      Free handle memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_free_handle_mem_name	DB 'Get Free Handle Mem', 0
+
+get_free_handle_mem	Proc far
+    push ds
+	push si
+;
+	mov si,handle_sel
+	mov ds,si
+	EnterSection ds:handle_section
+;
+    xor eax,eax
+	mov si,handle_mem_sel
+	mov ds,si
+;
+	xor si,si
+	mov si,[si].hf_next
+
+get_free_mem_loop:
+	mov cx,[si].hs_next
+	sub cx,si
+	movzx ecx,cx
+	add eax,ecx
+;
+	mov si,[si].hf_next
+	or si,si
+	jnz get_free_mem_loop
+;
+	mov si,handle_sel
+	mov ds,si
+	LeaveSection ds:handle_section
+;
+    pop si
+    pop ds
+	retf32
+get_free_handle_mem	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			delete_handle
@@ -855,6 +967,12 @@ init_handle	PROC near
 	mov di,OFFSET get_free_handles_name
 	xor dx,dx
 	mov ax,get_free_handles_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_free_handle_mem
+	mov di,OFFSET get_free_handle_mem_name
+	xor dx,dx
+	mov ax,get_free_handle_mem_nr
 	RegisterBimodalUserGate
 ;
 	popa

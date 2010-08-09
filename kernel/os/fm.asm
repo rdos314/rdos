@@ -676,15 +676,15 @@ create_fm_instrument    Proc
     mov es:i_fm_sel,si
     fstp es:i_beta
 ;    
-    mov ds:i_att_samples,0
-    mov ds:i_sus_vol_ind,0
-    mov ds:i_sus_vol_fract,0
-    mov ds:i_sus_mod_ind,0
-    mov ds:i_sus_mod_fract,0
-    mov ds:i_rel_vol_ind,0FFFFh
-    mov ds:i_rel_vol_fract,0
-    mov ds:i_rel_mod_ind,0
-    mov ds:i_rel_mod_fract,0
+    mov es:i_att_samples,0
+    mov es:i_sus_vol_ind,0
+    mov es:i_sus_vol_fract,0
+    mov es:i_sus_mod_ind,0
+    mov es:i_sus_mod_fract,0
+    mov es:i_rel_vol_ind,0FFFFh
+    mov es:i_rel_vol_fract,0
+    mov es:i_rel_mod_ind,0
+    mov es:i_rel_mod_fract,0
 ;
     mov [bx].i_sel,es
 	mov bx,[bx].hh_handle
