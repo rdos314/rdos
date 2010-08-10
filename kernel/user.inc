@@ -1060,6 +1060,10 @@ UpdateTime	MACRO
 	UserGate update_time_nr
 					ENDM
 
+UpdateRtc	MACRO
+	UserGate update_rtc_nr
+					ENDM
+
 ; IN  DX		Year
 ; IN  CH		Month
 ; OUT AL		Days in month

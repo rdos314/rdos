@@ -1073,10 +1073,6 @@ Shutdown	MACRO
 
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
-UpdateRtc	MACRO
-	OsGate update_rtc_nr
-					ENDM
-
 ;	EDX:EAX		SYSTEM TIME
 SetSystemTime	MACRO
 	OsGate set_system_time_nr

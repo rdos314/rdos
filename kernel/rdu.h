@@ -215,6 +215,8 @@
 #define CallGate_xms_handler 0x9a 198 0 0 0 2 0
 #define CallGate_ems_handler 0x9a 199 0 0 0 2 0
 
+#define CallGate_update_rtc 0x9a 200 0 0 0 2 0
+
 #define CallGate_resize_flat_linear 0x9a 201 0 0 0 2 0
 
 #define CallGate_set_drawcolor 0x9a 202 0 0 0 2 0

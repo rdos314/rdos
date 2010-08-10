@@ -1265,6 +1265,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov eax,esi" \
     "mov edx,edi" \
     CallGate_update_time  \
+    CallGate_update_rtc  \
     parm [edi] [esi] \
     modify [eax edx esi edi];
 
@@ -3256,6 +3257,7 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov eax,esi" \
     "mov edx,edi" \
     CallGate_update_time  \
+    CallGate_update_rtc  \
     parm [edi] [esi] \
     modify [eax edx esi edi];
 

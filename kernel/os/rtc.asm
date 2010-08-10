@@ -492,7 +492,7 @@ update_rtc	Proc far
 ;
 	pop edx
 	pop eax
-	ret
+	retf32
 update_rtc	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -720,9 +720,9 @@ init	Proc far
 ;
 	mov si,OFFSET update_rtc
 	mov di,OFFSET update_rtc_name
-	xor cl,cl
+    xor dx,dx
 	mov ax,update_rtc_nr
-	RegisterOsGate
+    RegisterBimodalUserGate
 ;
 	mov al,1Ah
 	mov di,OFFSET rtc_io

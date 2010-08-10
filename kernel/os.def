@@ -199,7 +199,6 @@ release_private_irq_handler_nr	EQU 125
 
 ; time & date
 
-update_rtc_nr				EQU 127
 set_system_time_nr			EQU 128
 
 ; Handles
