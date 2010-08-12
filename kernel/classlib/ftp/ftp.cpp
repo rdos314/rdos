@@ -215,6 +215,8 @@ TFtp::TFtp(long IP, int port, const char *user, const char *passw)
     FMkDir = FALSE;
     FGetFile = FALSE;
     FWriteFile = FALSE;
+    FStorSent = FALSE;
+    FWriteWait = FALSE;
     FReady = FALSE;
     FSuccess = FALSE;
     FFile = 0;
@@ -442,6 +444,8 @@ int TFtp::CreateFile(const char *remote, TFile *file)
         FRemoteFile = TString(remote);
 
         FReady = FALSE;
+        FStorSent = FALSE;
+        FWriteWait = FALSE;
         FWriteFile = TRUE;
         SendPasv();
     
@@ -1132,7 +1136,17 @@ void TFtp::HandleResponse(int code, const char *param)
     switch (code)
     {
         case 150:
+            if (FWriteFile && FWriteWait)
+                FStorSent = TRUE;
+            break;
+        
         case 226:
+            if (FWriteFile && FWriteWait)
+            {
+                FReady = TRUE;
+                FSuccess = TRUE;
+                FAppSignal.Signal();
+            }                
             break;
             
         case 200:
@@ -1155,7 +1169,10 @@ void TFtp::HandleResponse(int code, const char *param)
                 SendRetr();
 
             if (FWriteFile)
+            {
+                FWriteWait = TRUE;
                 SendStor();
+            }
             break;
 
         case 230:
@@ -1291,7 +1308,7 @@ void TFtp::HandleOpen()
 
     FSocket->Push();
     
-    if (FSocket->WaitForChar(2 * 60000))
+    if (FSocket->WaitForChar(10 * 60000))
     {
         count = FSocket->Read(str, 1024);
         str[count] = 0;
@@ -1687,17 +1704,23 @@ void TFtp::HandleDataSocket()
 
     if (FWriteFile)
     {
-        FFile->SetPos(0);
-        count = FFile->Read(buf, 512);
+        while (FWriteFile && !FStorSent)
+            RdosWaitMilli(150);
 
-        while (count)
-        {
-            FDataSocket->Write(buf, count);
+        if (FWriteFile)
+        {            
+            FFile->SetPos(0);
             count = FFile->Read(buf, 512);
-        }
 
-        FDataSocket->Push();
-        FDataSocket->Close();
+            while (count)
+            {
+                FDataSocket->Write(buf, count);
+                count = FFile->Read(buf, 512);
+            }
+
+            FDataSocket->Push();
+            FDataSocket->Close();
+        }
     }
     else
     {    
@@ -1747,10 +1770,8 @@ void TFtp::HandleDataSocket()
         if (FGetFile)
             FSuccess = TRUE;
 
-        if (FWriteFile)
-            FSuccess = TRUE;
-
-        FAppSignal.Signal();
+        if (!FWriteFile)
+            FAppSignal.Signal();
     }
 }
 

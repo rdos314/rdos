@@ -139,6 +139,8 @@ protected:
     int FSetDir;
     int FGetFile;
     int FWriteFile;
+    int FWriteWait;
+    int FStorSent;
     int FMkDir;
     char *FDirData;
     int FDirCount;

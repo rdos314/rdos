@@ -1827,7 +1827,7 @@ EndTransfer   Proc far
     push bp
 ;    
     test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
-    jz etReset
+    jz etDone
 ;
     mov fs:osp_data_size,0     
     and fs:osp_flags, NOT OSP_FLAG_TRANSFER_PENDING
@@ -2291,6 +2291,13 @@ UpdatePort   Proc near
     push si
     push di
 ;    
+    mov eax,ds:ohc_reclaim_list
+    or eax,eax
+    jz upNoReclaim
+;
+    int 3
+
+upNoReclaim:    
     movzx si,cl
     shl si,2
     movzx di,cl

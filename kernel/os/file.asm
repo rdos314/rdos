@@ -2030,6 +2030,11 @@ read_file32_buf:
 read_file32_save:
 	pop ds
 	pushf
+    jnc read_file32_success
+;
+    xor eax,eax
+
+read_file32_success:    
 	add [si].file_handle_pos,eax
 	popf
 
@@ -2076,6 +2081,11 @@ read_file16_buf:
 read_file16_save:
 	pop ds
 	pushf
+    jnc read_file16_success
+;
+    xor eax,eax
+
+read_file16_success:
 	add [si].file_handle_pos,eax
 	popf
 

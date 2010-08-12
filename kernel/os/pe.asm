@@ -1882,6 +1882,7 @@ load_object	Proc far
 	push ds
 	push es
 	pushad
+;	
 	sub edx,local_page_linear
 	mov ax,flat_data_sel
 	mov ds,ax
