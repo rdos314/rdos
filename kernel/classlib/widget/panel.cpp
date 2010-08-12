@@ -1009,6 +1009,24 @@ void TPanelControl::Init(int border)
     FHorUp = FALSE;
 
     FRedrawBack = TRUE;
+
+	FKey = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::SetKey
+#
+#   Purpose....: Set key
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetKey(char ch)
+{
+    FKey = ch;
 }
 
 /*##########################################################################
@@ -1892,6 +1910,30 @@ int TPanelControl::IsInsidePanel(int x, int y) const
 void TPanelControl::ChildChange()
 {
     FRedrawBack = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::OnLeftDown
+#
+#   Purpose....: Handle left button down
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPanelControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
+{
+    if (FKey)
+    {
+        if (IsInside(x, y))
+        {
+            PutKey(FKey);
+            return TRUE;
+        }
+    }
+    return TControl::OnLeftDown(x, y, ButtonState, KeyState);
 }
 
 /*##########################################################################

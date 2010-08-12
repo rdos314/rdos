@@ -201,6 +201,8 @@ public:
 
     void SetBackColor(TGraphicDevice *dev);
 
+    void SetKey(char key);
+
 protected:
     virtual void ScrollLeft();
     virtual void ScrollRight();
@@ -219,6 +221,7 @@ protected:
 
     virtual void ChildChange();
 
+	virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
     void UpdateScroll();
@@ -231,6 +234,8 @@ protected:
     TVerPanelScrollControl *FVerScroll;
 
     int FRedrawBack;
+
+	char FKey;
 
 private:
     void Init(int border);
