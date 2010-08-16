@@ -35,6 +35,17 @@ INCLUDE ..\..\kernel\os.inc
 INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
+INCLUDE ..\..\kernel\os\state.def
+
+FAULT_SIGN  EQU 0AC92BE63h
+
+fault_sector_seg STRUC
+
+fss_sign                DD ?
+fss_state               state_struc <>
+fss_tss                 tss_seg <>
+
+fault_sector_seg ENDS
 
 wd_data_seg STRUC
 
@@ -115,13 +126,83 @@ start_watchdog   Endp
 kick_watchdog_name DB 'Kick Watchdog', 0
 
 kick_watchdog   Proc far
+    push ds
     push es
+    push fs
     pushad
-;    
+;        
     GetDebugThread
     or ax,ax
-    jnz kw_done
-;       
+    jz kw_kick
+;
+    mov bp,ax
+    mov bx,wd_data_sel
+    mov fs,bx
+    mov ecx,fs:fault_sectors
+    or ecx,ecx
+    jz kw_done
+;    
+    mov fs:fault_sectors,0
+    mov edx,fs:fault_start_sector
+;
+    mov bx,fault_sector_sel
+    mov es,bx
+    GetDebugThread
+
+kw_save_loop:
+    mov ds,ax
+;
+    mov es:fss_sign,FAULT_SIGN
+	mov ax,ds:p_id
+	mov es:fss_state.st_id,ax
+;
+    push cx
+	mov si,OFFSET thread_name
+	mov cx,32
+	mov di,OFFSET fss_state.st_name
+	rep movsb
+;
+    mov cx,32
+    mov di,OFFSET fss_state.st_list
+    mov al,' '
+    rep stosb	
+	pop cx
+;	
+	mov eax,ds:p_msb_tics
+	mov es:fss_state.st_time,eax
+	mov eax,ds:p_lsb_tics
+	mov es:fss_state.st_time+4,eax
+;
+    mov es:fss_state.st_offs,0
+    mov es:fss_state.st_sel,0
+;
+    mov ds,ds:p_tss_data_sel
+    push cx
+    mov cx,SIZE tss_seg
+    xor si,si
+    mov di,OFFSET fss_tss
+    rep movsb
+    pop cx
+;
+    push cx
+    mov al,fs:fault_disc
+    mov cx,512
+    xor di,di           
+    WriteDisc
+    pop cx
+;
+    DebugNext    
+    GetDebugThread
+    cmp ax,bp
+    je kw_done
+;
+    inc edx
+    sub ecx,1
+    jnz kw_save_loop    
+;
+    jmp kw_done    
+        
+kw_kick:
 	GetSystemTime
     mov bx,wd_data_sel
     mov es,bx
@@ -137,7 +218,9 @@ kick_watchdog   Proc far
 
 kw_done:
     popad	
+    pop fs
     pop es
+    pop ds
     retf32
 kick_watchdog   Endp
 
@@ -240,6 +323,41 @@ PAGE
 clear_fault_save_name	DB 'Clear Fault Save',0
 
 clear_fault_save	PROC far
+    push ds
+    push es
+    pushad
+;    
+    mov ax,wd_data_sel
+    mov ds,ax
+    mov ax,fault_sector_sel
+    mov es,ax
+    xor di,di
+    mov cx,512
+    xor al,al
+    rep stosb
+;
+    mov ecx,ds:fault_sectors
+    mov edx,ds:fault_start_sector
+
+cfsLoop:
+    or ecx,ecx
+    jz cfsDone
+;
+    push cx
+    mov al,ds:fault_disc
+    mov cx,512
+    xor di,di
+    WriteDisc
+    pop cx
+;
+    inc edx
+    dec ecx
+    jmp cfsLoop 
+
+cfsDone:   
+    popad
+    pop es
+    pop ds
     retf32
 clear_fault_save   Endp
 
@@ -260,7 +378,54 @@ PAGE
 get_fault_thread_state_name	DB 'Get Fault Thread State',0
 
 get_fault_thread_state	PROC near
+    push ds
+    push es
+    push fs
+    pushad
+;   
+    mov bp,es
+    mov fs,bp
+    mov ebp,edi
+;    
+    movzx eax,ax
+    mov bx,wd_data_sel
+    mov ds,bx
+    mov bx,fault_sector_sel
+    mov es,bx
+;
+    mov ecx,ds:fault_sectors
+    cmp eax,ecx
+    jae gfsFail
+;
+    mov edx,ds:fault_start_sector
+    add edx,eax
+    mov al,ds:fault_disc
+    mov cx,512
+    xor di,di
+    ReadDisc
+    mov eax,es:fss_sign
+    cmp eax,FAULT_SIGN
+    jne gfsFail
+;
+    mov ax,es
+    mov ds,ax
+    mov esi,OFFSET fss_state
+    mov ax,fs
+    mov es,ax
+    mov edi,ebp
+    mov ecx,SIZE state_struc
+    rep movs byte ptr es:[edi],ds:[esi]
+    clc
+    jmp gfsEnd    
+        
+gfsFail:
     stc
+
+gfsEnd:
+    popad
+    pop fs
+    pop es
+    pop ds
     ret
 get_fault_thread_state   Endp
 
@@ -294,7 +459,54 @@ PAGE
 get_fault_thread_tss_name	DB 'Get Fault Thread Tss',0
 
 get_fault_thread_tss	PROC near
+    push ds
+    push es
+    push fs
+    pushad
+;   
+    mov bp,es
+    mov fs,bp
+    mov ebp,edi
+;    
+    movzx eax,ax
+    mov bx,wd_data_sel
+    mov ds,bx
+    mov bx,fault_sector_sel
+    mov es,bx
+;
+    mov ecx,ds:fault_sectors
+    cmp eax,ecx
+    jae gftFail
+;
+    mov edx,ds:fault_start_sector
+    add edx,eax
+    mov al,ds:fault_disc
+    mov cx,512
+    xor di,di
+    ReadDisc
+    mov eax,es:fss_sign
+    cmp eax,FAULT_SIGN
+    jne gftFail
+;
+    mov ax,es
+    mov ds,ax
+    mov esi,OFFSET fss_tss
+    mov ax,fs
+    mov es,ax
+    mov edi,ebp
+    mov ecx,SIZE tss_seg
+    rep movs byte ptr es:[edi],ds:[esi]
+    clc
+    jmp gftEnd    
+        
+gftFail:
     stc
+
+gftEnd:
+    popad
+    pop fs
+    pop es
+    pop ds
     ret
 get_fault_thread_tss   Endp
 
@@ -338,6 +550,10 @@ init	Proc far
 	mov es,bx
 	mov es:wd_tics,0
 	mov es:fault_sectors,0
+;
+	mov eax,512
+	mov bx,fault_sector_sel
+	AllocateFixedSystemMem
 ;
 	mov ax,cs
 	mov ds,ax
