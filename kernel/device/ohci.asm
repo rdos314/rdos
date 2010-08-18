@@ -2252,7 +2252,7 @@ update_insert_pipe:
 update_insert_reclaim:
     mov ecx,ds:ohc_reclaim_list
     mov es:[edx].otd_next_va,ecx
-    mov ds:ohc_reclaim_list,ecx
+    mov ds:ohc_reclaim_list,edx
 
 update_reverse_next:
     mov eax,es:[edx].otd_next_td
@@ -2295,7 +2295,40 @@ UpdatePort   Proc near
     or eax,eax
     jz upNoReclaim
 ;
-    int 3
+    push gs
+    push ecx
+    push edx
+    mov ax,flat_sel
+    mov es,ax
+    cli
+    mov edx,ds:ohc_reclaim_list
+    mov ecx,es:[edx].otd_next_va
+    mov ds:ohc_reclaim_list,ecx
+    sti
+;    
+    mov ax,es:[edx].otd_pipe_sel
+    or ax,ax
+    jz upReclaimOk
+;
+    mov gs,ax
+    mov ax,5
+    WaitMilliSec
+;    
+    test gs:osp_flags, OSP_FLAG_TRANSFER_PENDING
+    jz upReclaimOk
+;    
+    mov ecx,gs:osp_data_list
+    mov es:[edx].otd_next_va,ecx
+    mov gs:osp_data_list,edx
+;
+    xor bx,bx
+    xchg bx,gs:osp_signal
+    Signal    
+
+upReclaimOk:
+    pop edx
+    pop ecx
+    pop gs
 
 upNoReclaim:    
     movzx si,cl

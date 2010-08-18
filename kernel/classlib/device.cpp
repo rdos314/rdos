@@ -5050,6 +5050,83 @@ TDeviceTag *TDeviceMsg::GetTag(unsigned short int ID)
 
 /*##########################################################################
 #
+#   Name       : TDeviceDebug::TDeviceDebug
+#
+#   Purpose....: Virtual base class for device debugging                                           
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDeviceDebug::TDeviceDebug()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceDebug::~TDeviceDebug
+#
+#   Purpose....: Destructor for device debugging                                           
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDeviceDebug::~TDeviceDebug()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceDebug::RequestFile
+#
+#   Purpose....: Request a file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *TDeviceDebug::RequestFile(TDevice *Device)
+{
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceDebug::ReleaseFile
+#
+#   Purpose....: Release a file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceDebug::ReleaseFile(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceDebug::MaxFileSize
+#
+#   Purpose....: Get max file size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDeviceDebug::MaxFileSize()
+{
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TDevice::InsertDevice
 #
 #   Purpose....: Insert device into m_DeviceList
@@ -5195,6 +5272,9 @@ void TDevice::Init()
     FPhysUnit = 0;
 
     FRemote = FALSE;
+
+    FDebug = 0;
+    FDebugFile = 0;
 
     FName = 0;
         FReset = FALSE;
@@ -5756,6 +5836,58 @@ short int TDevice::GetUnitType()
 short int TDevice::GetUnitNumber()
 {
         return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDevice::Install
+#
+#   Purpose....: Install device debug
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::Install(TDeviceDebug *Debug)
+{
+    FDebug = Debug;
+}
+
+/*##########################################################################
+#
+#   Name       : TDevice::StartDebug
+#
+#   Purpose....: Starts device debugging
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::StartDebug()
+{
+    if (FDebug)
+        FDebugFile = FDebug->RequestFile(this);
+}
+
+/*##########################################################################
+#
+#   Name       : TDevice::StopDebug
+#
+#   Purpose....: Stops device debugging
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::StopDebug()
+{
+    if (FDebug)
+        FDebug->ReleaseFile(this);
+
+    FDebugFile = 0;
 }
 
 /*##########################################################################
