@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2002, Leif Ekblad
+# Copyright (C) 1988-2010, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,155 +20,96 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# rdimage.cpp
-# RDOS image file class
+# rdosimg.cpp
+# RDOS image creator / manipulator
 #
 ########################################################################*/
 
-#include "rdimage.h"
+#include "rdosimg.h"
 
-#include <rdos.h>
-
-#define FALSE 0
-#define TRUE !FALSE
+#define     FALSE	0
+#define     TRUE	!FALSE
 
 /*##########################################################################
 #
-#   Name       : RdosImage::RdosImage
+#   Name       : TRdosObject::TRdosObject
 #
-#   Purpose....: Default constructor
+#   Purpose....: Constructor for TRdosObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosImage::TRdosImage()
+TRdosObject::TRdosObject()
 {
-    Init();
+    FData = 0;
+    FSize = 0;
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosImage::TRdosImage
+#   Name       : TRdosObject::~TRdosObject
 #
-#   Purpose....: Constructor
+#   Purpose....: Destructor for TRdosObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosImage::TRdosImage(const char *ImageName)
+TRdosObject::~TRdosObject()
 {
-    Init();
-    Load(ImageName);
+    if (FData)
+        delete FData;
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosImage::TRdosImage
+#   Name       : TRdosObject::CreateObject
 #
-#   Purpose....: Constructor
+#   Purpose....: Create a new object
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosImage::TRdosImage(TString &ImageName)
+void TRdosObject::CreateObject(int size)
 {
-    Init();
-    Load(ImageName);
+    if (FData)
+        delete FData;
+
+    FData = new char[size];
+    FSize = size;
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosImage::Init
+#   Name       : TRdosFont::TRdosFont
 #
-#   Purpose....: Initializer
+#   Purpose....: Constructor for TRdosFont
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosImage::Init()
+TRdosFont::TRdosFont(const char *FontFileName)
 {
-    FImageFile = 0;
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosImage::~TRdosImage
+#   Name       : TRdosFont::~TRdosFont
 #
-#   Purpose....: Destructor
+#   Purpose....: Destructor for TRdosFont
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosImage::~TRdosImage()
-{
-    if (FImageFile)
-        delete FImageFile;
-}
-
-/*##########################################################################
-#
-#   Name       : TRdosImage::Load
-#
-#   Purpose....: Load image
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TRdosImage::Load(const char *ImageFile)
-{
-    if (FImageFile)
-        delete FImageFile;
-        
-    FImageFile = new TFile(ImageFile);
-
-    LoadImage();
-}
-
-/*##########################################################################
-#
-#   Name       : TRdosImage::Load
-#
-#   Purpose....: Load image
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TRdosImage::Load(TString &ImageFile)
-{
-    if (FImageFile)
-        delete FImageFile;
-        
-    FImageFile = new TFile(ImageFile.GetData());
-
-    LoadImage();
-}
-
-/*##########################################################################
-#
-#   Name       : TRdosImage::LoadImage
-#
-#   Purpose....: Load image
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TRdosImage::LoadImage()
+TRdosFont::~TRdosFont()
 {
 }
-

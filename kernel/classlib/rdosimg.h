@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2002, Leif Ekblad
+# Copyright (C) 1988-2010, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,36 +20,32 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# rdimage.h
-# RDOS image class
+# rdosimg.h
+# Rdos image creator / manipulator
 #
 ########################################################################*/
 
-#ifndef _RDOS_IMAGE_H
-#define _RDOS_IMAGE_H
+#ifndef _RDOSIMG_H
+#define _RDOSIMG_H
 
-#include "file.h"
-#include "str.h"
-
-class TRdosImage
+class TRdosObject 
 {
 public:
-	TRdosImage();
-	TRdosImage(const char *ImageName);
-	TRdosImage(TString &ImageName);
-	virtual ~TRdosImage();
-
-    void Load(const char *ImageName);
-    void Load(TString &ImageName);
+    TRdosObject();
+    virtual ~TRdosObject();
 
 protected:
-    void LoadImage();
+    void CreateObject(int size);
 
-    TFile *FImageFile;
+    char *FData;
+    int FSize;
+};
 
-private:
-    void Init();
+class TRdosFont : public TRdosObject
+{
+public:
+    TRdosFont(const char *FontFileName);
+    virtual ~TRdosFont();
 };
 
 #endif
-
