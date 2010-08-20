@@ -79,6 +79,9 @@ public:
 
     void (*OnMsg)(TFtp *ftp, const char *msg);
 
+    void Enable();
+    void Disable();
+
     int SetDir(const char *path);
     void SetAsciiMode();
     void SetBinaryMode();
@@ -147,6 +150,8 @@ protected:
     int FSuccess;
     TFile *FFile;
     TString FRemoteFile;
+
+    int FEnabled;
 
     int FCloseData;    
     int FLastCode;

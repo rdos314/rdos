@@ -220,6 +220,7 @@ TFtp::TFtp(long IP, int port, const char *user, const char *passw)
     FReady = FALSE;
     FSuccess = FALSE;
     FFile = 0;
+    FEnabled = FALSE;
     
     Start("FTP", STACK_SIZE);
 }
@@ -255,6 +256,53 @@ TFtp::~TFtp()
     }
 
     ClearEntries();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::Enable
+#
+#   Purpose....: Enable client
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::Enable()
+{
+    FEnabled = TRUE;
+
+    FAppSection.Enter();
+
+    if (!FReady)
+        FAppSignal.WaitTimeout(15000);
+
+    FAppSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtp::Disable
+#
+#   Purpose....: Disable client
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtp::Disable()
+{
+    if (FEnabled)
+    {
+        NotifyMsg("QUIT\r\n");
+
+        FSocket->Write("QUIT\r\n");
+        FSocket->Push();
+
+        FEnabled = FALSE;
+    }        
 }
 
 /*##########################################################################
@@ -1792,9 +1840,24 @@ void TFtp::Execute()
 
     while (FInstalled)
     {
-        if (FSocket && FSocket->IsOpen())
-            HandleOpen();
+        if (FEnabled)
+        {
+            if (FSocket && FSocket->IsOpen())
+                HandleOpen();
+            else
+                HandleClosed();
+        }
         else
-            HandleClosed();
+        {
+            if (FSocket && FSocket->IsOpen())
+            {
+                FSocket->Push();
+                FSocket->Close();
+                delete FSocket;
+                FSocket = 0;
+            }
+            else
+                RdosWaitMilli(100);
+        }
     }
 }
