@@ -33,9 +33,11 @@ extern int strnicmp (const char *string1, const char *string2, size_t max_len);
 
 extern char *strupr (char *string);
 extern char *ltoa (long value, char *string, int radix);
+
+#ifndef __WATCOMC__
 extern unsigned long _lrotl (unsigned long arg, int count);
 extern unsigned long _lrotr (unsigned long arg, int count);
-
+#endif
 
 /* Modification History */
 /* 15.01.93 - file erzeugt */

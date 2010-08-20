@@ -88,6 +88,8 @@ struct dirent *readdir (DIR *dir_p)
 }  /* readdir */
 
 #endif
+
+#ifndef __WATCOMC__
 #if (ACT_OP_SYSTEM == WIN_32) || (ACT_OP_SYSTEM == RDOS)
 
 
@@ -155,6 +157,8 @@ struct dirent *readdir (DIR *dir_p)
 
 #endif
 #endif
+#endif
+
 
 /* -FF-  */
 
