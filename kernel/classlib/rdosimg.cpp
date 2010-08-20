@@ -26,9 +26,12 @@
 ########################################################################*/
 
 #include "rdosimg.h"
+#include "file.h"
 
-#define     FALSE	0
-#define     TRUE	!FALSE
+#define RDOS_SIGN   0x5A1E75D4
+
+#define     FALSE   0
+#define     TRUE    !FALSE
 
 /*##########################################################################
 #
@@ -45,6 +48,7 @@ TRdosObject::TRdosObject()
 {
     FData = 0;
     FSize = 0;
+    FType = 0;
 }
 
 /*##########################################################################
@@ -86,6 +90,34 @@ void TRdosObject::CreateObject(int size)
 
 /*##########################################################################
 #
+#   Name       : TRdosObject::LoadFile
+#
+#   Purpose....: Load object from file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosObject::LoadFile(const char *FileName)
+{
+    TFile File(FileName);
+
+    if (FData)
+        delete FData;
+    FData = 0;
+    FSize = 0;
+
+    if (File.IsOpen())
+    {
+        FSize = File.GetSize();
+        FData = new char[FSize];
+        File.Read(FData, FSize);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosFont::TRdosFont
 #
 #   Purpose....: Constructor for TRdosFont
@@ -97,6 +129,8 @@ void TRdosObject::CreateObject(int size)
 ##########################################################################*/
 TRdosFont::TRdosFont(const char *FontFileName)
 {
+    FType = RDOS_OBJECT_FONT;
+    LoadFile(FontFileName);
 }
 
 /*##########################################################################

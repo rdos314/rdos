@@ -20,53 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# rdosimg.h
-# Rdos image creator / manipulator
+# cfg2bin.cpp
+# CFG2BIN utility
 #
 ########################################################################*/
 
-#ifndef _RDOSIMG_H
-#define _RDOSIMG_H
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
 
-#define RDOS_OBJECT_KERNEL      0
-#define RDOS_OBJECT_FONT        1
-#define RDOS_OBJECT_DEVICE      2
-#define RDOS_OBJECT_SHUTDOWN    3
-#define RDOS_OBJECT_FILE        6
-#define RDOS_OBJECT_COMMAND     7
-#define RDOS_OBJECT_SET         8
-#define RDOS_OBJECT_PATH        9
-#define RDOS_OBJECT_DLL         10
+#include "rdosimg.h"
 
-struct TRdosObjectHeader
+#define FALSE 0
+#define TRUE !FALSE
+
+/*##################  main ##########################
+*   Purpose....: Program entry-point                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int main(int argc, char **argv)
 {
-    long sign;
-    long len;
-    short int type;
-    short int crc;    
-};
+    TRdosFont("e:\\rdos\\board\\black28.gft");
+}
 
-class TRdosObject 
-{
-public:
-    TRdosObject();
-    virtual ~TRdosObject();
-
-protected:
-    void CreateObject(int size);
-    void LoadFile(const char *FileName);
-
-    char *FData;
-    int FSize;
-    short int FType;
-    
-};
-
-class TRdosFont : public TRdosObject
-{
-public:
-    TRdosFont(const char *FontFileName);
-    virtual ~TRdosFont();
-};
-
-#endif
