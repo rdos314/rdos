@@ -46,6 +46,12 @@ struct TRdosObjectHeader
     short int crc;    
 };
 
+struct TRdosDeviceHeader
+{
+    short int StartIp;
+};
+
+
 class TRdosObject 
 {
 public:
@@ -62,6 +68,19 @@ protected:
     
 };
 
+class TRdosDeviceBase : public TRdosObject
+{
+public:
+    TRdosDeviceBase();
+    virtual ~TRdosDeviceBase();
+
+protected:
+    void LoadDeviceFile(const char *FileName);
+
+    TRdosDeviceHeader FDeviceHeader;    
+};
+
+    
 class TRdosFont : public TRdosObject
 {
 public:

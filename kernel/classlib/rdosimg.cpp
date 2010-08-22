@@ -33,6 +33,24 @@
 #define     FALSE   0
 #define     TRUE    !FALSE
 
+struct TExeHeader
+{
+    short int Signature;
+    short int LsbSize;
+    short int MsbSize;
+    short int RelocCount;
+    short int HeaderSize;
+    short int MinAlloc;
+    short int MaxAlloc;
+    short int Ss;
+    short int Sp;
+    short int Checksum;
+    short int Ip;
+    short int Cs;    
+    short int RelocOffs;
+    short int OvNo;
+};
+
 /*##########################################################################
 #
 #   Name       : TRdosObject::TRdosObject
@@ -111,6 +129,78 @@ void TRdosObject::LoadFile(const char *FileName)
     if (File.IsOpen())
     {
         FSize = File.GetSize();
+        FData = new char[FSize];
+        File.Read(FData, FSize);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDeviceBase::TRdosDeviceBase
+#
+#   Purpose....: Constructor for TRdosDeviceBase
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDeviceBase::TRdosDeviceBase()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDeviceBase::~TRdosDeviceBase
+#
+#   Purpose....: Destructor for TRdosDeviceBase
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDeviceBase::~TRdosDeviceBase()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDeviceBase::LoadDeviceFile
+#
+#   Purpose....: Load device file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosDeviceBase::LoadDeviceFile(const char *FileName)
+{
+    TExeHeader ExeHeader;
+    TFile File(FileName);
+    int HeaderSize;
+    int Size;
+
+    if (FData)
+        delete FData;
+    FData = 0;
+    FSize = 0;
+
+    if (File.IsOpen())
+    {
+        File.Read(&ExeHeader, sizeof(TExeHeader));
+        FDeviceHeader.StartIp = ExeHeader.Ip;
+
+        HeaderSize = ExeHeader.HeaderSize << 4;        
+        File.SetPos(HeaderSize);
+        
+        Size = ExeHeader.MsbSize << 5;
+        Size += (ExeHeader.LsbSize >> 4) + 1;
+        Size -= ExeHeader.HeaderSize;
+        Size += ExeHeader.MinAlloc;
+
+        FSize = Size >> 4;
         FData = new char[FSize];
         File.Read(FData, FSize);
     }
