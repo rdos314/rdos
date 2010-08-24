@@ -2476,10 +2476,15 @@ otLoop:
     push si
 ;    
     mov ds,ds:[si]
-    call UpdateQueue
-;
     mov es,ds:ohc_reg_sel
     mov eax,es:HcInterruptStatus
+    test eax,2
+    jz otQueueDone
+;
+    call UpdateQueue
+
+otQueueDone:
+    mov es,ds:ohc_reg_sel
     mov es:HcInterruptStatus,eax
     or ds:ohc_int_status,eax
 ;
@@ -2487,6 +2492,7 @@ otLoop:
     jz otNext
 ;    
 	Signal
+
 otNext:
     pop si
     pop cx

@@ -271,9 +271,14 @@ TFtp::~TFtp()
 ##########################################################################*/
 void TFtp::Enable()
 {
+    int tries;
+    
     FEnabled = TRUE;
 
     FAppSection.Enter();
+
+    for (tries = 0; tries < 100 && !FSocket; tries++)
+        RdosWaitMilli(100);
 
     if (!FReady)
         FAppSignal.WaitTimeout(15000);
@@ -302,6 +307,7 @@ void TFtp::Disable()
         FSocket->Push();
 
         FEnabled = FALSE;
+        FReady = FALSE;
     }        
 }
 
@@ -333,9 +339,11 @@ int TFtp::SetDir(const char *path)
         FSuccess = FALSE;
         FReady = FALSE;
         FSetDir = TRUE;
+
         SendCwd(path);
     
-        FAppSignal.WaitTimeout(15000);     
+        FAppSignal.WaitTimeout(15000);
+
         ok = FSuccess;  
     }
 
