@@ -48,7 +48,7 @@ public:
 	void SetSize(long Size);
 	long GetPos();
 	void SetPos(long Pos);
-//	TDateTime GetTime();
+	TDateTime GetTime();
 //	void SetTime(const TDateTime &time);
 
 	int Read(void *Buf, int Size);

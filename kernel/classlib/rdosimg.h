@@ -28,6 +28,8 @@
 #ifndef _RDOSIMG_H
 #define _RDOSIMG_H
 
+#include "file.h"
+
 #define RDOS_OBJECT_KERNEL      0
 #define RDOS_OBJECT_FONT        1
 #define RDOS_OBJECT_DEVICE      2
@@ -36,7 +38,6 @@
 #define RDOS_OBJECT_COMMAND     7
 #define RDOS_OBJECT_SET         8
 #define RDOS_OBJECT_PATH        9
-#define RDOS_OBJECT_DLL         10
 
 struct TRdosObjectHeader
 {
@@ -51,6 +52,17 @@ struct TRdosDeviceHeader
     short int StartIp;
 };
 
+struct TRdosFileHeader
+{
+    char Base[8];
+    char Ext[3];
+    char Attrib;
+    char Resv[10];
+    short int Time;
+    short int Date;
+    short int Cluster;
+    int Size;
+};
 
 class TRdosObject 
 {
@@ -60,6 +72,7 @@ public:
 
 protected:
     void CreateObject(int size);
+    void LoadFile(TFile *File);
     void LoadFile(const char *FileName);
 
     char *FData;
@@ -68,11 +81,11 @@ protected:
     
 };
 
-class TRdosDeviceBase : public TRdosObject
+class TRdosDeviceBaseObject : public TRdosObject
 {
 public:
-    TRdosDeviceBase();
-    virtual ~TRdosDeviceBase();
+    TRdosDeviceBaseObject();
+    virtual ~TRdosDeviceBaseObject();
 
 protected:
     void LoadDeviceFile(const char *FileName);
@@ -81,11 +94,65 @@ protected:
 };
 
     
-class TRdosFont : public TRdosObject
+class TRdosKernelObject : public TRdosDeviceBaseObject
 {
 public:
-    TRdosFont(const char *FontFileName);
-    virtual ~TRdosFont();
+    TRdosKernelObject(const char *KernelFileName);
+    virtual ~TRdosKernelObject();
+};
+    
+class TRdosFontObject : public TRdosObject
+{
+public:
+    TRdosFontObject(const char *FontFileName);
+    virtual ~TRdosFontObject();
+};
+    
+class TRdosDeviceObject : public TRdosDeviceBaseObject
+{
+public:
+    TRdosDeviceObject(const char *DeviceFileName);
+    virtual ~TRdosDeviceObject();
+};
+    
+class TRdosShutdownObject : public TRdosDeviceBaseObject
+{
+public:
+    TRdosShutdownObject(const char *ShutdownFileName);
+    virtual ~TRdosShutdownObject();
+};
+    
+class TRdosFileObject : public TRdosObject
+{
+public:
+    TRdosFileObject(const char *FileName);
+    virtual ~TRdosFileObject();
+
+protected:
+    TFile *CreateFileHeader(const char *FileName);
+
+    TRdosFileHeader FFileHeader;
+};
+    
+class TRdosCommandObject : public TRdosObject
+{
+public:
+    TRdosCommandObject(const char *Cmd);
+    virtual ~TRdosCommandObject();
+};
+    
+class TRdosSetObject : public TRdosObject
+{
+public:
+    TRdosSetObject(const char *Param);
+    virtual ~TRdosSetObject();
+};
+    
+class TRdosPathObject : public TRdosObject
+{
+public:
+    TRdosPathObject(const char *Param);
+    virtual ~TRdosPathObject();
 };
 
 #endif
