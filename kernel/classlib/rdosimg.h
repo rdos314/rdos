@@ -90,7 +90,9 @@ public:
 protected:
     void LoadDeviceFile(const char *FileName);
 
-    TRdosDeviceHeader FDeviceHeader;    
+    TRdosDeviceHeader *FDeviceHeader;    
+    char *FDeviceData;
+    int FDeviceSize;
 };
 
     
@@ -129,9 +131,11 @@ public:
     virtual ~TRdosFileObject();
 
 protected:
-    TFile *CreateFileHeader(const char *FileName);
+    void LoadFileAndHeader(const char *FileName);
 
-    TRdosFileHeader FFileHeader;
+    TRdosFileHeader *FFileHeader;
+    char *FFileData;
+    int FFileSize;    
 };
     
 class TRdosCommandObject : public TRdosObject

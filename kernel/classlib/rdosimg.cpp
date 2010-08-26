@@ -207,7 +207,6 @@ void TRdosDeviceBaseObject::LoadDeviceFile(const char *FileName)
     if (File.IsOpen())
     {
         File.Read(&ExeHeader, sizeof(TExeHeader));
-        FDeviceHeader.StartIp = ExeHeader.Ip;
 
         HeaderSize = ExeHeader.HeaderSize << 4;        
         File.SetPos(HeaderSize);
@@ -217,9 +216,15 @@ void TRdosDeviceBaseObject::LoadDeviceFile(const char *FileName)
         Size -= ExeHeader.HeaderSize;
         Size += ExeHeader.MinAlloc;
 
-        FSize = Size >> 4;
+        FDeviceSize = Size >> 4;
+        FSize = FDeviceSize + sizeof(TRdosDeviceHeader);
         FData = new char[FSize];
-        File.Read(FData, FSize);
+        FDeviceHeader = (TRdosDeviceHeader *)FData;
+        FDeviceData = FData + sizeof(TRdosDeviceHeader);
+
+        FDeviceHeader->StartIp = ExeHeader.Ip;
+
+        File.Read(FDeviceData, FDeviceSize);
     }
 }
 
@@ -364,14 +369,9 @@ TRdosShutdownObject::~TRdosShutdownObject()
 ##########################################################################*/
 TRdosFileObject::TRdosFileObject(const char *FileName)
 {
-    TFile *File;
-
     FType = RDOS_OBJECT_FILE;
 
-    File = CreateFileHeader(FileName);
-
-    if (File)
-        LoadFile(File);
+    LoadFileAndHeader(FileName);
 }
 
 /*##########################################################################
@@ -391,29 +391,33 @@ TRdosFileObject::~TRdosFileObject()
 
 /*##########################################################################
 #
-#   Name       : TRdosFileObject::CreateFileHeader
+#   Name       : TRdosFileObject::LoadFileAndHeader
 #
-#   Purpose....: Create file header
+#   Purpose....: Load header and file contents
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFile *TRdosFileObject::CreateFileHeader(const char *FileName)
+void TRdosFileObject::LoadFileAndHeader(const char *FileName)
 {
-    TFile *File;
+    TFile File(FileName);
     int i;
     const char *ptr;
 
-    File = new TFile(FileName);
-
-    if (File->IsOpen())
+    if (File.IsOpen())
     {
+        FFileSize = File.GetSize();
+        FSize = FFileSize + sizeof(TRdosFileHeader);
+        FData = new char[FSize];
+        FFileHeader = (TRdosFileHeader *)FData;
+        FFileData = FData + sizeof(TRdosFileHeader);
+                    
         ptr = FileName;
 
         for (i = 0; i < 8; i++)
-            FFileHeader.Base[i] = ' ';
+            FFileHeader->Base[i] = ' ';
             
         for (i = 0; i < 8; i++)
         {
@@ -425,7 +429,7 @@ TFile *TRdosFileObject::CreateFileHeader(const char *FileName)
 
             if (*ptr)
             {
-                FFileHeader.Base[i] = *ptr;
+                FFileHeader->Base[i] = *ptr;
                 ptr++;
             }
             else
@@ -434,27 +438,26 @@ TFile *TRdosFileObject::CreateFileHeader(const char *FileName)
 
 
         for (i = 0; i < 3; i++)
-            FFileHeader.Ext[i] = ' ';
+            FFileHeader->Ext[i] = ' ';
             
         for (i = 0; i < 3; i++)
         {
             if (*ptr)
             {
-                FFileHeader.Base[i] = *ptr;
+                FFileHeader->Base[i] = *ptr;
                 ptr++;
             }
             else
                 break;            
         }
 
-        FFileHeader.Attrib = 0;
-        FFileHeader.Time = 0;
-        FFileHeader.Date = 0;
-        FFileHeader.Size = File->GetSize();
-    }
+        FFileHeader->Attrib = 0;
+        FFileHeader->Time = 0;
+        FFileHeader->Date = 0;
+        FFileHeader->Size = File.GetSize();
 
-    return File;
-    
+        File.Read(FFileData, FFileSize);
+    }
 }
 
 /*##########################################################################
