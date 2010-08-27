@@ -564,3 +564,155 @@ TRdosPathObject::TRdosPathObject(const char *Path)
 TRdosPathObject::~TRdosPathObject()
 {
 }
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::TRdosImage
+#
+#   Purpose....: Constructor for TRdosImage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosImage::TRdosImage()
+{
+    FObjectList = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::TRdosImage
+#
+#   Purpose....: Constructor for TRdosImage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosImage::TRdosImage(const char *ImageFile)
+{
+    FObjectList = 0;
+    Add(ImageFile);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::~TRdosImage
+#
+#   Purpose....: Destructor for TRdosImage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosImage::~TRdosImage()
+{
+    Clear();
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::Clear
+#
+#   Purpose....: Clear image
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosImage::Clear()
+{
+    TRdosObject *obj;
+    
+    while (FObjectList)
+    {
+        obj = FObjectList->FLink;
+        delete FObjectList;
+        FObjectList = obj;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::Add
+#
+#   Purpose....: Add object to image
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosImage::Add(TRdosObject *obj)
+{
+    TRdosObject *p;
+
+    if (FObjectList)
+    {
+        p = FObjectList;
+
+        while (p->FLink)
+            p = p->FLink;
+
+        p->FLink = obj;
+    }
+    else
+        FObjectList = obj;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::Remove
+#
+#   Purpose....: Remove object to image
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosImage::Remove(TRdosObject *obj)
+{
+    TRdosObject *p;
+    TRdosObject *h;
+
+    h = 0;
+    p = FObjectList;
+
+    while (p)
+    {
+        if (p == obj)
+        {
+            if (h)
+                h->FLink = p->FLink;
+            else
+                FObjectList = p->FLink;
+            break;
+        }
+        else
+        {
+            h = p;
+            p = p->FLink;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::Add
+#
+#   Purpose....: Add image file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosImage::Add(const char *ImageFile)
+{
+}

@@ -70,6 +70,8 @@ public:
     TRdosObject();
     virtual ~TRdosObject();
 
+    TRdosObject *FLink;
+
 protected:
     void CreateObject(int size);
     void LoadFile(TFile *File);
@@ -157,6 +159,23 @@ class TRdosPathObject : public TRdosObject
 public:
     TRdosPathObject(const char *Param);
     virtual ~TRdosPathObject();
+};
+
+class TRdosImage
+{
+public:
+    TRdosImage();
+    TRdosImage(const char *ImageFile);
+    virtual ~TRdosImage();
+
+    void Clear();
+    void Add(const char *ImageFile);
+
+    TRdosObject *FObjectList;
+
+protected:
+    void Add(TRdosObject *obj);
+    void Remove(TRdosObject *obj);
 };
 
 #endif
