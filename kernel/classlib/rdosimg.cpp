@@ -72,6 +72,25 @@ TRdosObject::TRdosObject()
 
 /*##########################################################################
 #
+#   Name       : TRdosObject::TRdosObject
+#
+#   Purpose....: Constructor for TRdosObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosObject::TRdosObject(TFile *File, int Size)
+{
+    FSize = Size;
+    FType = 0;
+    FData = new char[FSize];
+    File->Read(FData, FSize);
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosObject::~TRdosObject
 #
 #   Purpose....: Destructor for TRdosObject
@@ -168,6 +187,25 @@ TRdosDeviceBaseObject::TRdosDeviceBaseObject()
 
 /*##########################################################################
 #
+#   Name       : TRdosDeviceBaseObject::TRdosDeviceBaseObject
+#
+#   Purpose....: Constructor for TRdosDeviceBaseObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDeviceBaseObject::TRdosDeviceBaseObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FDeviceSize = FSize - sizeof(TRdosDeviceHeader);
+    FDeviceHeader = (TRdosDeviceHeader *)FData;
+    FDeviceData = FData + sizeof(TRdosDeviceHeader);    
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosDeviceBaseObject::~TRdosDeviceBaseObject
 #
 #   Purpose....: Destructor for TRdosDeviceBaseObject
@@ -247,6 +285,23 @@ TRdosKernelObject::TRdosKernelObject(const char *KernelFileName)
 
 /*##########################################################################
 #
+#   Name       : TRdosKernelObject::TRdosKernelObject
+#
+#   Purpose....: Constructor for TRdosKernelObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosKernelObject::TRdosKernelObject(TFile *File, int Size)
+ : TRdosDeviceBaseObject(File, Size)
+{
+    FType = RDOS_OBJECT_KERNEL;
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosKernelObject::~TRdosKernelObject
 #
 #   Purpose....: Destructor for TRdosKernelObject
@@ -275,6 +330,23 @@ TRdosFontObject::TRdosFontObject(const char *FontFileName)
 {
     FType = RDOS_OBJECT_FONT;
     LoadFile(FontFileName);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosFontObject::TRdosFontObject
+#
+#   Purpose....: Constructor for TRdosFontObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosFontObject::TRdosFontObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FType = RDOS_OBJECT_FONT;
 }
 
 /*##########################################################################
@@ -311,6 +383,23 @@ TRdosDeviceObject::TRdosDeviceObject(const char *DeviceFileName)
 
 /*##########################################################################
 #
+#   Name       : TRdosDeviceObject::TRdosDeviceObject
+#
+#   Purpose....: Constructor for TRdosDeviceObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDeviceObject::TRdosDeviceObject(TFile *File, int Size)
+ : TRdosDeviceBaseObject(File, Size)
+{
+    FType = RDOS_OBJECT_DEVICE;
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosDeviceObject::~TRdosDeviceObject
 #
 #   Purpose....: Destructor for TRdosDeviceObject
@@ -339,6 +428,23 @@ TRdosShutdownObject::TRdosShutdownObject(const char *ShutdownFileName)
 {
     FType = RDOS_OBJECT_SHUTDOWN;
     LoadDeviceFile(ShutdownFileName);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosShutdownObject::TRdosShutdownObject
+#
+#   Purpose....: Constructor for TRdosShutdownObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosShutdownObject::TRdosShutdownObject(TFile *File, int Size)
+ : TRdosDeviceBaseObject(File, Size)
+{
+    FType = RDOS_OBJECT_SHUTDOWN;
 }
 
 /*##########################################################################
@@ -372,6 +478,23 @@ TRdosFileObject::TRdosFileObject(const char *FileName)
     FType = RDOS_OBJECT_FILE;
 
     LoadFileAndHeader(FileName);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosFileObject::TRdosFileObject
+#
+#   Purpose....: Constructor for TRdosFileObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosFileObject::TRdosFileObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FType = RDOS_OBJECT_FILE;
 }
 
 /*##########################################################################
@@ -482,6 +605,23 @@ TRdosCommandObject::TRdosCommandObject(const char *Cmd)
 
 /*##########################################################################
 #
+#   Name       : TRdosCommandObject::TRdosCommandObject
+#
+#   Purpose....: Constructor for TRdosCommandObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosCommandObject::TRdosCommandObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FType = RDOS_OBJECT_COMMAND;
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosCommandObject::~TRdosCommandObject
 #
 #   Purpose....: Destructor for TRdosCommandObject
@@ -513,6 +653,23 @@ TRdosSetObject::TRdosSetObject(const char *Param)
     FSize = strlen(Param) + 1;
     FData = new char[FSize];
     memcpy(FData, Param, FSize);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosSetObject::TRdosSetObject
+#
+#   Purpose....: Constructor for TRdosSetObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosSetObject::TRdosSetObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FType = RDOS_OBJECT_SET;
 }
 
 /*##########################################################################
@@ -552,6 +709,23 @@ TRdosPathObject::TRdosPathObject(const char *Path)
 
 /*##########################################################################
 #
+#   Name       : TRdosPathObject::TRdosPathObject
+#
+#   Purpose....: Constructor for TRdosPathObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosPathObject::TRdosPathObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FType = RDOS_OBJECT_PATH;
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosPathObject::~TRdosPathObject
 #
 #   Purpose....: Destructor for TRdosPathObject
@@ -577,6 +751,7 @@ TRdosPathObject::~TRdosPathObject()
 #
 ##########################################################################*/
 TRdosImage::TRdosImage()
+ : FCrc(0x1021)
 {
     FObjectList = 0;
 }
@@ -593,6 +768,7 @@ TRdosImage::TRdosImage()
 #
 ##########################################################################*/
 TRdosImage::TRdosImage(const char *ImageFile)
+ : FCrc(0x1021)
 {
     FObjectList = 0;
     Add(ImageFile);
@@ -715,4 +891,52 @@ void TRdosImage::Remove(TRdosObject *obj)
 ##########################################################################*/
 void TRdosImage::Add(const char *ImageFile)
 {
+    int size;
+    TFile File(ImageFile);
+    TRdosObjectHeader Header;
+    TRdosObject *obj;
+
+    if (File.IsOpen())
+    {
+        size = File.Read(&Header, sizeof(Header));        
+        while (size == sizeof(Header) && Header.sign == RDOS_SIGN)
+        {
+            switch (Header.type)
+            {
+                case RDOS_OBJECT_KERNEL:
+                    obj = new TRdosKernelObject(&File, Header.len);
+                    break;
+
+                case RDOS_OBJECT_FONT:
+                    obj = new TRdosFontObject(&File, Header.len);
+                    break;
+
+                case RDOS_OBJECT_DEVICE:
+                    obj = new TRdosDeviceObject(&File, Header.len);
+                    break;
+
+                case RDOS_OBJECT_SHUTDOWN:
+                    obj = new TRdosShutdownObject(&File, Header.len);
+                    break;
+
+                case RDOS_OBJECT_FILE:
+                    obj = new TRdosFileObject(&File, Header.len);
+                    break;
+
+                case RDOS_OBJECT_COMMAND:
+                    obj = new TRdosCommandObject(&File, Header.len);
+                    break;
+
+                case RDOS_OBJECT_SET:
+                    obj = new TRdosSetObject(&File, Header.len);
+                    break;
+
+                case RDOS_OBJECT_PATH:
+                    obj = new TRdosPathObject(&File, Header.len);
+                    break;
+
+            }                
+            size = File.Read(&Header, sizeof(Header));        
+        }
+    }
 }

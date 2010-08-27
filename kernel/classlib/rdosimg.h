@@ -29,6 +29,7 @@
 #define _RDOSIMG_H
 
 #include "file.h"
+#include "crc.h"
 
 #define RDOS_OBJECT_KERNEL      0
 #define RDOS_OBJECT_FONT        1
@@ -39,12 +40,14 @@
 #define RDOS_OBJECT_SET         8
 #define RDOS_OBJECT_PATH        9
 
+#define RDOS_SIGN    0x5A1E75D4
+
 struct TRdosObjectHeader
 {
     long sign;
     long len;
     short int type;
-    short int crc;    
+    unsigned short int crc;    
 };
 
 struct TRdosDeviceHeader
@@ -68,6 +71,7 @@ class TRdosObject
 {
 public:
     TRdosObject();
+    TRdosObject(TFile *File, int Size);
     virtual ~TRdosObject();
 
     TRdosObject *FLink;
@@ -87,6 +91,7 @@ class TRdosDeviceBaseObject : public TRdosObject
 {
 public:
     TRdosDeviceBaseObject();
+    TRdosDeviceBaseObject(TFile *File, int Size);
     virtual ~TRdosDeviceBaseObject();
 
 protected:
@@ -102,6 +107,7 @@ class TRdosKernelObject : public TRdosDeviceBaseObject
 {
 public:
     TRdosKernelObject(const char *KernelFileName);
+    TRdosKernelObject(TFile *File, int Size);
     virtual ~TRdosKernelObject();
 };
     
@@ -109,6 +115,7 @@ class TRdosFontObject : public TRdosObject
 {
 public:
     TRdosFontObject(const char *FontFileName);
+    TRdosFontObject(TFile *File, int Size);
     virtual ~TRdosFontObject();
 };
     
@@ -116,6 +123,7 @@ class TRdosDeviceObject : public TRdosDeviceBaseObject
 {
 public:
     TRdosDeviceObject(const char *DeviceFileName);
+    TRdosDeviceObject(TFile *File, int Size);
     virtual ~TRdosDeviceObject();
 };
     
@@ -123,6 +131,7 @@ class TRdosShutdownObject : public TRdosDeviceBaseObject
 {
 public:
     TRdosShutdownObject(const char *ShutdownFileName);
+    TRdosShutdownObject(TFile *File, int Size);
     virtual ~TRdosShutdownObject();
 };
     
@@ -130,6 +139,7 @@ class TRdosFileObject : public TRdosObject
 {
 public:
     TRdosFileObject(const char *FileName);
+    TRdosFileObject(TFile *File, int Size);
     virtual ~TRdosFileObject();
 
 protected:
@@ -144,6 +154,7 @@ class TRdosCommandObject : public TRdosObject
 {
 public:
     TRdosCommandObject(const char *Cmd);
+    TRdosCommandObject(TFile *File, int Size);
     virtual ~TRdosCommandObject();
 };
     
@@ -151,6 +162,7 @@ class TRdosSetObject : public TRdosObject
 {
 public:
     TRdosSetObject(const char *Param);
+    TRdosSetObject(TFile *File, int Size);
     virtual ~TRdosSetObject();
 };
     
@@ -158,6 +170,7 @@ class TRdosPathObject : public TRdosObject
 {
 public:
     TRdosPathObject(const char *Param);
+    TRdosPathObject(TFile *File, int Size);
     virtual ~TRdosPathObject();
 };
 
@@ -176,6 +189,8 @@ public:
 protected:
     void Add(TRdosObject *obj);
     void Remove(TRdosObject *obj);
+
+    TCrc FCrc;
 };
 
 #endif

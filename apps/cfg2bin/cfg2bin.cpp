@@ -44,5 +44,8 @@
 *##########################################################################*/
 int main(int argc, char **argv)
 {
+    TRdosImage img;
+
+    img.Add("\\rdos\\board\\ppc\\rdos.bin");
 }
 
