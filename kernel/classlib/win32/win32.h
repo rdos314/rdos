@@ -17,6 +17,9 @@ void __stdcall Win32AddMin(unsigned long *msb, unsigned long *lsb, long min);
 void __stdcall Win32AddHour(unsigned long *msb, unsigned long *lsb, long hour);
 void __stdcall Win32AddDay(unsigned long *msb, unsigned long *lsb, long day);
 
+void __stdcall Win32InitCrc(unsigned short int *buf, unsigned short int poly);
+unsigned short int __stdcall Win32CalcCrc(unsigned short int *buf, unsigned short int crcin, const char *data, int size);
+
 
 #ifdef __cplusplus
 }
