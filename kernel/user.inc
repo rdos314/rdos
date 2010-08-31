@@ -2264,7 +2264,7 @@ StopWatchdog      MACRO
 
 ;   OUT EAX     Maximum tics between kicks. If 0, watchdog not running.
 GetWatchdogTics      MACRO
-	UserGate start_watchdog_nr
+	UserGate get_watchdog_tics_nr
 						ENDM
 						
 ;	IN  BX		File handle

@@ -108,6 +108,25 @@ TRdosObject::~TRdosObject()
 
 /*##########################################################################
 #
+#   Name       : TRdosObject::CalcCrc
+#
+#   Purpose....: Calculate object CRC
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned short int TRdosObject::CalcCrc(TCrc *Crc)
+{
+    if (FSize)
+        return Crc->CalcCrc(0, FData, FSize);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosObject::CreateObject
 #
 #   Purpose....: Create a new object
@@ -254,7 +273,7 @@ void TRdosDeviceBaseObject::LoadDeviceFile(const char *FileName)
         Size -= ExeHeader.HeaderSize;
         Size += ExeHeader.MinAlloc;
 
-        FDeviceSize = Size >> 4;
+        FDeviceSize = Size << 4;
         FSize = FDeviceSize + sizeof(TRdosDeviceHeader);
         FData = new char[FSize];
         FDeviceHeader = (TRdosDeviceHeader *)FData;
@@ -317,6 +336,22 @@ TRdosKernelObject::~TRdosKernelObject()
 
 /*##########################################################################
 #
+#   Name       : TRdosKernelObject::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosKernelObject::GetInfo()
+{
+    return TString("Kernel");
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosFontObject::TRdosFontObject
 #
 #   Purpose....: Constructor for TRdosFontObject
@@ -362,6 +397,22 @@ TRdosFontObject::TRdosFontObject(TFile *File, int Size)
 ##########################################################################*/
 TRdosFontObject::~TRdosFontObject()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosFontObject::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosFontObject::GetInfo()
+{
+    return TString("Font");
 }
 
 /*##########################################################################
@@ -415,6 +466,22 @@ TRdosDeviceObject::~TRdosDeviceObject()
 
 /*##########################################################################
 #
+#   Name       : TRdosDeviceObject::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosDeviceObject::GetInfo()
+{
+    return TString("Device");
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosShutdownObject::TRdosShutdownObject
 #
 #   Purpose....: Constructor for TRdosShutdownObject
@@ -464,6 +531,22 @@ TRdosShutdownObject::~TRdosShutdownObject()
 
 /*##########################################################################
 #
+#   Name       : TRdosShutdownObject::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosShutdownObject::GetInfo()
+{
+    return TString("Shutdown");
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosFileObject::TRdosFileObject
 #
 #   Purpose....: Constructor for TRdosFileObject
@@ -494,6 +577,9 @@ TRdosFileObject::TRdosFileObject(const char *FileName)
 TRdosFileObject::TRdosFileObject(TFile *File, int Size)
  : TRdosObject(File, Size)
 {
+    FFileSize = FSize - sizeof(TRdosFileHeader);
+    FFileHeader = (TRdosFileHeader *)FData;
+    FFileData = FData + sizeof(TRdosFileHeader);    
     FType = RDOS_OBJECT_FILE;
 }
 
@@ -510,6 +596,55 @@ TRdosFileObject::TRdosFileObject(TFile *File, int Size)
 ##########################################################################*/
 TRdosFileObject::~TRdosFileObject()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosFileObject::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosFileObject::GetInfo()
+{
+    int i;
+    char str[255];
+    char name[64];
+    char *ptr;
+
+    strcpy(str, "File ");
+
+    ptr = name;
+
+    for (i = 0; i < 8; i++)
+        if (FFileHeader->Base[i] != ' ')
+        {
+            *ptr = FFileHeader->Base[i];
+            ptr++;
+        }
+        else
+            break;
+
+    *ptr = '.';
+    ptr++;
+    
+    for (i = 0; i < 3; i++)
+        if (FFileHeader->Ext[i] != ' ')
+        {
+            *ptr = FFileHeader->Ext[i];
+            ptr++;
+        }
+        else
+            break;
+
+    *ptr = 0;            
+    strcat(str, name);
+        
+    return TString(str);
 }
 
 /*##########################################################################
@@ -537,7 +672,13 @@ void TRdosFileObject::LoadFileAndHeader(const char *FileName)
         FFileHeader = (TRdosFileHeader *)FData;
         FFileData = FData + sizeof(TRdosFileHeader);
                     
-        ptr = FileName;
+        ptr = FileName + strlen(FileName) - 1;
+
+        while (ptr != FileName && *ptr != '\\' && *ptr != '/')
+            ptr--;
+
+        if (*ptr == '\\' || *ptr == '/')
+            ptr++;
 
         for (i = 0; i < 8; i++)
             FFileHeader->Base[i] = ' ';
@@ -567,7 +708,7 @@ void TRdosFileObject::LoadFileAndHeader(const char *FileName)
         {
             if (*ptr)
             {
-                FFileHeader->Base[i] = *ptr;
+                FFileHeader->Ext[i] = *ptr;
                 ptr++;
             }
             else
@@ -637,6 +778,27 @@ TRdosCommandObject::~TRdosCommandObject()
 
 /*##########################################################################
 #
+#   Name       : TRdosCommandObject::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosCommandObject::GetInfo()
+{
+    char str[256];
+
+    strcpy(str, "Run ");
+    strcat(str, FData);
+
+    return TString(str);
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosSetObject::TRdosSetObject
 #
 #   Purpose....: Constructor for TRdosSetObject
@@ -685,6 +847,27 @@ TRdosSetObject::TRdosSetObject(TFile *File, int Size)
 ##########################################################################*/
 TRdosSetObject::~TRdosSetObject()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosSetObject::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosSetObject::GetInfo()
+{
+    char str[256];
+
+    strcpy(str, "Set ");
+    strcat(str, FData);
+
+    return TString(str);
 }
 
 /*##########################################################################
@@ -741,19 +924,23 @@ TRdosPathObject::~TRdosPathObject()
 
 /*##########################################################################
 #
-#   Name       : TRdosImage::TRdosImage
+#   Name       : TRdosPathObject::GetInfo
 #
-#   Purpose....: Constructor for TRdosImage
+#   Purpose....: Get printable object info
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosImage::TRdosImage()
- : FCrc(0x1021)
+TString TRdosPathObject::GetInfo()
 {
-    FObjectList = 0;
+    char str[256];
+
+    strcpy(str, "Path ");
+    strcat(str, FData);
+
+    return TString(str);
 }
 
 /*##########################################################################
@@ -767,11 +954,10 @@ TRdosImage::TRdosImage()
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosImage::TRdosImage(const char *ImageFile)
+TRdosImage::TRdosImage()
  : FCrc(0x1021)
 {
     FObjectList = 0;
-    Add(ImageFile);
 }
 
 /*##########################################################################
@@ -828,6 +1014,8 @@ void TRdosImage::Add(TRdosObject *obj)
 {
     TRdosObject *p;
 
+    obj->FLink = 0;
+
     if (FObjectList)
     {
         p = FObjectList;
@@ -880,7 +1068,7 @@ void TRdosImage::Remove(TRdosObject *obj)
 
 /*##########################################################################
 #
-#   Name       : TRdosImage::Add
+#   Name       : TRdosImage::AddImage
 #
 #   Purpose....: Add image file
 #
@@ -889,8 +1077,9 @@ void TRdosImage::Remove(TRdosObject *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosImage::Add(const char *ImageFile)
+void TRdosImage::AddImage(const char *ImageFile)
 {
+    unsigned short int crc;
     int size;
     TFile File(ImageFile);
     TRdosObjectHeader Header;
@@ -901,42 +1090,217 @@ void TRdosImage::Add(const char *ImageFile)
         size = File.Read(&Header, sizeof(Header));        
         while (size == sizeof(Header) && Header.sign == RDOS_SIGN)
         {
-            switch (Header.type)
+            size = Header.len - sizeof(Header);
+            if (size >= 0)
             {
-                case RDOS_OBJECT_KERNEL:
-                    obj = new TRdosKernelObject(&File, Header.len);
-                    break;
+                obj = 0;
 
-                case RDOS_OBJECT_FONT:
-                    obj = new TRdosFontObject(&File, Header.len);
-                    break;
+                switch (Header.type)
+                {
+                    case RDOS_OBJECT_KERNEL:
+                        obj = new TRdosKernelObject(&File, size);
+                        break;
 
-                case RDOS_OBJECT_DEVICE:
-                    obj = new TRdosDeviceObject(&File, Header.len);
-                    break;
+                    case RDOS_OBJECT_FONT:
+                        obj = new TRdosFontObject(&File, size);
+                        break;
 
-                case RDOS_OBJECT_SHUTDOWN:
-                    obj = new TRdosShutdownObject(&File, Header.len);
-                    break;
+                    case RDOS_OBJECT_DEVICE:
+                        obj = new TRdosDeviceObject(&File, size);
+                        break;
 
-                case RDOS_OBJECT_FILE:
-                    obj = new TRdosFileObject(&File, Header.len);
-                    break;
+                    case RDOS_OBJECT_SHUTDOWN:
+                        obj = new TRdosShutdownObject(&File, size);
+                        break;
 
-                case RDOS_OBJECT_COMMAND:
-                    obj = new TRdosCommandObject(&File, Header.len);
-                    break;
+                    case RDOS_OBJECT_FILE:
+                        obj = new TRdosFileObject(&File, size);
+                        break;
 
-                case RDOS_OBJECT_SET:
-                    obj = new TRdosSetObject(&File, Header.len);
-                    break;
+                    case RDOS_OBJECT_COMMAND:
+                        obj = new TRdosCommandObject(&File, size);
+                        break;
 
-                case RDOS_OBJECT_PATH:
-                    obj = new TRdosPathObject(&File, Header.len);
-                    break;
+                    case RDOS_OBJECT_SET:
+                        obj = new TRdosSetObject(&File, size);
+                        break;
 
-            }                
+                    case RDOS_OBJECT_PATH:
+                        obj = new TRdosPathObject(&File, size);
+                        break;
+
+                }                
+
+                if (obj)
+                {
+                    crc = obj->CalcCrc(&FCrc);
+                    if (crc == Header.crc)   
+                        Add(obj);
+                    else
+                    {
+                        delete obj;
+                        obj = 0;
+                    }
+                }
+            }
             size = File.Read(&Header, sizeof(Header));        
         }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::AddConfigCmd
+#
+#   Purpose....: Add config row
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
+{
+    TRdosObject *obj = 0;
+    
+    if (!strcmp(cmd, "kernel"))
+        obj = new TRdosKernelObject(param);
+    
+    if (!strcmp(cmd, "font"))
+        obj = new TRdosFontObject(param);
+    
+    if (!strcmp(cmd, "device"))
+        obj = new TRdosDeviceObject(param);
+    
+    if (!strcmp(cmd, "shutdown"))
+        obj = new TRdosShutdownObject(param);
+    
+    if (!strcmp(cmd, "file"))
+        obj = new TRdosFileObject(param);
+    
+    if (!strcmp(cmd, "run"))
+        obj = new TRdosCommandObject(param);
+    
+    if (!strcmp(cmd, "set"))
+        obj = new TRdosSetObject(param);
+    
+    if (!strcmp(cmd, "path"))
+        obj = new TRdosPathObject(param);
+
+    if (obj)
+        Add(obj);        
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::AddConfigRow
+#
+#   Purpose....: Add config row
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosImage::AddConfigRow(const char *Row)
+{
+    int i;
+    const char *ptr;
+    char cmd[64];
+    char ch;
+
+    ptr = Row;
+
+    for (i = 0; i < 63 && *ptr; i++)
+    {
+        ch = tolower(*ptr);
+    
+        if (ch == ' ' || ch == 0x8 || ch == '=')
+            break;
+        else
+        {
+            cmd[i] = ch;
+            ptr++;
+        }
+    }
+
+    cmd[i] = 0;    
+
+    while (*ptr == ' ' || *ptr == 0x8 || *ptr == '=')
+        ptr++;
+
+    AddConfigCmd(cmd, ptr);        
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::AddConfig
+#
+#   Purpose....: Add config file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosImage::AddConfig(const char *ConfigFile)
+{
+    int pos;
+    int size;
+    char CurrentRow[1024];
+    char *ptr;
+    TFile File(ConfigFile);
+    TRdosObject *obj;
+
+    if (File.IsOpen())
+    {
+        pos = 0;
+
+        for (;;)
+        {
+            size = File.Read(CurrentRow, 1023);
+
+            if (size)
+            {
+                CurrentRow[size] = 0;
+    
+                ptr = CurrentRow;
+                size = 0;
+                while (*ptr == 0xd || *ptr == 0xa || *ptr == ' ' || *ptr == 0x8)
+                {
+                    ptr++;
+                    size++;
+                }
+
+                pos += size;
+                File.SetPos(pos);
+            }
+
+            size = File.Read(CurrentRow, 1023);
+            if (size)
+            {
+                CurrentRow[size] = 0;
+
+                ptr = CurrentRow;
+                size = 0;
+                while (*ptr && *ptr != 0xd && *ptr != 0xa)
+                {
+                    size++;
+                    ptr++;
+                }
+
+                pos += size;
+                pos++;
+
+                File.SetPos(pos);
+
+                *ptr = 0;
+
+                AddConfigRow(CurrentRow);
+            }
+            else
+                break;
+                
+        }                   
     }
 }

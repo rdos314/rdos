@@ -45,7 +45,20 @@
 int main(int argc, char **argv)
 {
     TRdosImage img;
+    TRdosObject *obj;
+    TString str;
 
-    img.Add("\\rdos\\board\\ppc\\rdos.bin");
+    img.AddConfig("rdos.cfg");
+
+    obj = img.FObjectList;
+
+    while (obj)
+    {
+        str = obj->GetInfo();
+        printf(str.GetData());
+        printf("\r\n");
+
+        obj = obj->FLink;
+    }    
 }
 

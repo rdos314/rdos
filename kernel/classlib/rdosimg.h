@@ -30,6 +30,7 @@
 
 #include "file.h"
 #include "crc.h"
+#include "str.h"
 
 #define RDOS_OBJECT_KERNEL      0
 #define RDOS_OBJECT_FONT        1
@@ -74,6 +75,9 @@ public:
     TRdosObject(TFile *File, int Size);
     virtual ~TRdosObject();
 
+    unsigned short int CalcCrc(TCrc *Crc);
+    virtual TString GetInfo() = 0;
+
     TRdosObject *FLink;
 
 protected:
@@ -109,6 +113,8 @@ public:
     TRdosKernelObject(const char *KernelFileName);
     TRdosKernelObject(TFile *File, int Size);
     virtual ~TRdosKernelObject();
+
+    virtual TString GetInfo();
 };
     
 class TRdosFontObject : public TRdosObject
@@ -117,6 +123,8 @@ public:
     TRdosFontObject(const char *FontFileName);
     TRdosFontObject(TFile *File, int Size);
     virtual ~TRdosFontObject();
+
+    virtual TString GetInfo();
 };
     
 class TRdosDeviceObject : public TRdosDeviceBaseObject
@@ -125,6 +133,8 @@ public:
     TRdosDeviceObject(const char *DeviceFileName);
     TRdosDeviceObject(TFile *File, int Size);
     virtual ~TRdosDeviceObject();
+
+    virtual TString GetInfo();
 };
     
 class TRdosShutdownObject : public TRdosDeviceBaseObject
@@ -133,6 +143,8 @@ public:
     TRdosShutdownObject(const char *ShutdownFileName);
     TRdosShutdownObject(TFile *File, int Size);
     virtual ~TRdosShutdownObject();
+
+    virtual TString GetInfo();
 };
     
 class TRdosFileObject : public TRdosObject
@@ -141,6 +153,8 @@ public:
     TRdosFileObject(const char *FileName);
     TRdosFileObject(TFile *File, int Size);
     virtual ~TRdosFileObject();
+
+    virtual TString GetInfo();
 
 protected:
     void LoadFileAndHeader(const char *FileName);
@@ -156,6 +170,8 @@ public:
     TRdosCommandObject(const char *Cmd);
     TRdosCommandObject(TFile *File, int Size);
     virtual ~TRdosCommandObject();
+
+    virtual TString GetInfo();
 };
     
 class TRdosSetObject : public TRdosObject
@@ -164,6 +180,8 @@ public:
     TRdosSetObject(const char *Param);
     TRdosSetObject(TFile *File, int Size);
     virtual ~TRdosSetObject();
+
+    virtual TString GetInfo();
 };
     
 class TRdosPathObject : public TRdosObject
@@ -172,23 +190,27 @@ public:
     TRdosPathObject(const char *Param);
     TRdosPathObject(TFile *File, int Size);
     virtual ~TRdosPathObject();
+
+    virtual TString GetInfo();
 };
 
 class TRdosImage
 {
 public:
     TRdosImage();
-    TRdosImage(const char *ImageFile);
     virtual ~TRdosImage();
 
     void Clear();
-    void Add(const char *ImageFile);
+    void AddImage(const char *ImageFile);
+    void AddConfig(const char *ConfigFile);
+    void AddConfigCmd(const char *cmd, const char *param);
 
     TRdosObject *FObjectList;
 
 protected:
     void Add(TRdosObject *obj);
     void Remove(TRdosObject *obj);
+    void AddConfigRow(const char *Row);
 
     TCrc FCrc;
 };
