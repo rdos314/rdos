@@ -27,6 +27,7 @@
 
 #include <memory.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include "rdosimg.h"
 
@@ -1080,7 +1081,7 @@ void TRdosFileObject::LoadFileAndHeader(const char *FileName)
         strcpy(&FFileHeader->FileName, ptr);
 
         FFileHeader->Size = HeaderSize;
-        FFileHeader->Attrib = 0x20;
+        FFileHeader->Attrib = 0;
         FFileHeader->FileSize = File.GetSize();
 
         time = File.GetTime();        

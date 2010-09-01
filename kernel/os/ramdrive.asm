@@ -1031,6 +1031,9 @@ cache_file_size_loop:
 	mov edi,edx
 	add edx,OFFSET rfe_name
 	mov es:[edi].de_name,edx
+	mov ax,cx
+	dec ax
+	mov es:[edi].de_name_size,ax
 ;
     push esi
     push edi
