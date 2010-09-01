@@ -964,6 +964,135 @@ void TRdosOldFileObject::LoadFileAndHeader(const char *FileName)
 
 /*##########################################################################
 #
+#   Name       : TRdosFileObject::TRdosFileObject
+#
+#   Purpose....: Constructor for TRdosFileObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosFileObject::TRdosFileObject(const char *FileName)
+{
+    FType = RDOS_OBJECT_FILE;
+
+    LoadFileAndHeader(FileName);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosFileObject::TRdosFileObject
+#
+#   Purpose....: Constructor for TRdosFileObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosFileObject::TRdosFileObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FFileHeader = (TRdosFileHeader *)FData;
+    FFileSize = FSize - FFileHeader->Size;
+    FFileData = FData + FFileHeader->Size;    
+    FType = RDOS_OBJECT_FILE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosFileObject::~TRdosFileObject
+#
+#   Purpose....: Destructor for TRdosFileObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosFileObject::~TRdosFileObject()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosFileObject::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosFileObject::GetInfo()
+{
+    char str[256];
+    char *ptr;
+
+    strcpy(str, "File ");
+
+    ptr = &FFileHeader->FileName;
+    strcat(str, ptr);
+    
+    return TString(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosFileObject::LoadFileAndHeader
+#
+#   Purpose....: Load header and file contents
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosFileObject::LoadFileAndHeader(const char *FileName)
+{
+    TFile File(FileName);
+    int i;
+    const char *ptr;
+    int HeaderSize;
+    TDateTime time;
+
+    if (File.IsOpen())
+    {
+         ptr = FileName + strlen(FileName) - 1;
+
+        while (ptr != FileName && *ptr != '\\' && *ptr != '/')
+            ptr--;
+
+        if (*ptr == '\\' || *ptr == '/')
+            ptr++;
+    
+        HeaderSize = sizeof(TRdosFileHeader);
+        HeaderSize += strlen(ptr);
+    
+        FFileSize = File.GetSize();
+        FSize = FFileSize + HeaderSize;
+        FData = new char[FSize];
+        FFileHeader = (TRdosFileHeader *)FData;
+        FFileData = FData + HeaderSize;
+
+        strcpy(&FFileHeader->FileName, ptr);
+
+        FFileHeader->Size = HeaderSize;
+        FFileHeader->Attrib = 0x20;
+        FFileHeader->FileSize = File.GetSize();
+
+        time = File.GetTime();        
+        FFileHeader->LsbTime = time.GetLsb();
+        FFileHeader->MsbTime = time.GetMsb();
+
+        File.Read(FFileData, FFileSize);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosCommandObject::TRdosCommandObject
 #
 #   Purpose....: Constructor for TRdosCommandObject
@@ -1357,6 +1486,10 @@ void TRdosImage::AddImage(const char *ImageFile)
 
                     case RDOS_OBJECT_FILE:
                         obj = new TRdosFileObject(&File, size);
+                        break;
+
+                    case RDOS_OBJECT_OLD_FILE:
+                        obj = new TRdosOldFileObject(&File, size);
                         break;
 
                     case RDOS_OBJECT_COMMAND:

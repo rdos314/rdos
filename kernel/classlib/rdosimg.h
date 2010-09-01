@@ -42,6 +42,7 @@
 #define RDOS_OBJECT_PATH            9
 
 #define RDOS_OBJECT_DEVICE          16
+#define RDOS_OBJECT_FILE            17
 
 #define RDOS_SIGN    0x5A1E75D4
 
@@ -76,6 +77,16 @@ struct TRdosOldFileHeader
     short int Date;
     short int Cluster;
     int Size;
+};
+
+struct TRdosFileHeader
+{
+    int Size;
+    unsigned long LsbTime;
+    unsigned long MsbTime;
+    int FileSize;
+    char Attrib;
+    char FileName;
 };
 
 class TRdosObject 
@@ -198,6 +209,23 @@ protected:
     void LoadFileAndHeader(const char *FileName);
 
     TRdosOldFileHeader *FFileHeader;
+    char *FFileData;
+    int FFileSize;    
+};
+    
+class TRdosFileObject : public TRdosObject
+{
+public:
+    TRdosFileObject(const char *FileName);
+    TRdosFileObject(TFile *File, int Size);
+    virtual ~TRdosFileObject();
+
+    virtual TString GetInfo();
+
+protected:
+    void LoadFileAndHeader(const char *FileName);
+
+    TRdosFileHeader *FFileHeader;
     char *FFileData;
     int FFileSize;    
 };

@@ -38,12 +38,13 @@ RdosKernel = 0
 RdosFont = 1
 RdosSimpleDevice = 2
 RdosShutDown = 3
-RdosFile = 6
+RdosOldFile = 6
 RdosCommand = 7
 RdosSet = 8
 RdosPath = 9
 
 RdosDevice = 16
+RdosFile = 17
 
 RdosEnd = 0E5E5h
 

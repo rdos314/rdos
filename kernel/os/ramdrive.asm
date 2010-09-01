@@ -47,17 +47,28 @@ dev_next		EQU 0E0h
 dev_type		EQU 0E4h
 dev_ip			EQU 0FAh
 
+old_file_header	STRUC
+
+old_head_base		DB 8 DUP(?)
+old_head_ext		DB 3 DUP(?)
+old_head_attrib		DB ?
+old_head_resv		DB 10 DUP(?)
+old_head_time		DW ?
+old_head_date		DW ?
+old_head_cluster	DW ?
+old_head_size		DD ?
+old_head_data		DB ?
+
+old_file_header	ENDS
+
 file_header	STRUC
 
-head_base		DB 8 DUP(?)
-head_ext		DB 3 DUP(?)
-head_attrib		DB ?
-head_resv		DB 10 DUP(?)
-head_time		DW ?
-head_date		DW ?
-head_cluster	DW ?
-head_size		DD ?
-head_data		DB ?
+head_size           DD ?
+head_lsb            DD ?
+head_msb            DD ?
+head_file_size      DD ?
+head_attrib         DB ?
+head_name           DB ?
 
 file_header	ENDS
 
@@ -775,9 +786,9 @@ write_file_block	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			get_entry_name_size
+;		NAME:			get_old_entry_name_size
 ;
-;		DESCRIPTION:	Get dir entry name size
+;		DESCRIPTION:	Get old dir entry name size
 ;
 ;		PARAMETERS:		ESI		Entry data
 ;
@@ -785,7 +796,7 @@ write_file_block	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_entry_name_size	Proc near
+get_old_entry_name_size	Proc near
 	push dx
 	push esi
 ;
@@ -793,37 +804,37 @@ get_entry_name_size	Proc near
 	xor dl,dl
 	mov cx,8
 
-get_name_base_loop:
+get_old_name_base_loop:
 	lods byte ptr es:[esi]
 	cmp al,' '
-	je get_name_base_ok
+	je get_old_name_base_ok
 ;
 	inc dl
-	loop get_name_base_loop
+	loop get_old_name_base_loop
 ;
 	inc esi
 
-get_name_base_ok:
+get_old_name_base_ok:
 	dec esi
 	add esi,ecx
 	inc dl
 ;
 	mov cx,3
 
-get_name_ext_loop:
+get_old_name_ext_loop:
 	lods byte ptr es:[esi]
 	cmp al,' '
-	je get_name_ext_ok
+	je get_old_name_ext_ok
 ;
 	inc dl
-	loop get_name_ext_loop
+	loop get_old_name_ext_loop
 
-get_name_ext_ok:
+get_old_name_ext_ok:
 	movzx ecx,dl
 	pop esi
 	pop dx
 	ret
-get_entry_name_size	Endp
+get_old_entry_name_size	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -910,7 +921,7 @@ get_entry_time	Proc near
 	push bx
 	push cx
 ;
-	mov dx,es:[esi].head_date
+	mov dx,es:[esi].old_head_date
 	mov ax,dx
 	shr dx,9
 	add dx,1980
@@ -920,14 +931,14 @@ get_entry_time	Proc near
 	and ch,0Fh
 	mov cl,al
 	and cl,1Fh
-	mov bx,es:[esi].head_time
+	mov bx,es:[esi].old_head_time
 	mov ax,bx
 	shr bx,11
 	mov bh,bl
 	shr ax,5
 	and al,3Fh
 	mov bl,al
-	mov ax,es:[esi].head_time
+	mov ax,es:[esi].old_head_time
 	mov ah,al
 	add ah,ah
 	and ah,3Fh
@@ -937,6 +948,55 @@ get_entry_time	Proc near
 	pop bx
 	ret
 get_entry_time	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CACHE_OLD_FILE_ENTRY
+;
+;		DESCRIPTION:	Cache old file entry
+;
+;		PARAMETERS:		ES:EDX	device header
+;						FS		dir
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cache_old_file_entry	Proc near
+	pushad
+;
+	mov esi,edx
+	add esi,SIZE rdos_header
+	call get_old_entry_name_size
+	mov eax,SIZE rfe_struc
+	add eax,ecx
+	AllocateSmallLinear
+	mov edi,edx
+	add edx,OFFSET rfe_name
+	mov es:[edi].de_name,edx
+	mov al,ds:drive_nr
+	mov es:[edi].de_drive,al
+	mov es:[edi].de_usage,0
+	mov al,es:[esi].old_head_attrib
+	or al,80h
+	mov es:[edi].de_attrib,al
+	call copy_entry_name
+	call get_entry_time
+	mov es:[edi].de_time,eax
+	mov es:[edi+4].de_time,edx
+	mov es:[edi].dfe_file_sel,0
+	mov eax,es:[esi].old_head_size
+	mov es:[edi].dfe_data_size,eax
+	lea edx,[esi].old_head_data
+	mov es:[edi].rfe_data,edx
+;
+	mov bx,fs
+	mov edx,edi
+	InsertFileEntry
+;
+	popad
+	ret
+cache_old_file_entry	Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -953,30 +1013,50 @@ get_entry_time	Endp
 cache_file_entry	Proc near
 	pushad
 ;
+    add edx,SIZE rdos_header
 	mov esi,edx
-	add esi,SIZE rdos_header
-	call get_entry_name_size
-	mov eax,SIZE rfe_struc
+    add esi,OFFSET head_name
+	xor ecx,ecx
+
+cache_file_size_loop:
+    inc ecx
+    lods byte ptr es:[esi]
+    or al,al
+    jnz cache_file_size_loop
+;
+	mov esi,edx    
+  	mov eax,SIZE rfe_struc
 	add eax,ecx
 	AllocateSmallLinear
 	mov edi,edx
 	add edx,OFFSET rfe_name
 	mov es:[edi].de_name,edx
+;
+    push esi
+    push edi
+    add esi,OFFSET head_name
+    mov edi,es:[edi].de_name
+    rep movs byte ptr es:[edi],es:[esi]
+    pop edi
+    pop esi
+;	
 	mov al,ds:drive_nr
 	mov es:[edi].de_drive,al
 	mov es:[edi].de_usage,0
 	mov al,es:[esi].head_attrib
 	or al,80h
 	mov es:[edi].de_attrib,al
-	call copy_entry_name
-	call get_entry_time
+	mov eax,es:[esi].head_lsb
 	mov es:[edi].de_time,eax
-	mov es:[edi+4].de_time,edx
+    mov eax,es:[esi].head_msb
+	mov es:[edi+4].de_time,eax
 	mov es:[edi].dfe_file_sel,0
-	mov eax,es:[esi].head_size
+	mov eax,es:[esi].head_file_size
 	mov es:[edi].dfe_data_size,eax
-	lea edx,[esi].head_data
-	mov es:[edi].rfe_data,edx
+;
+    mov eax,es:[esi].head_size
+    add eax,esi
+	mov es:[edi].rfe_data,eax
 ;
 	mov bx,fs
 	mov edx,edi
@@ -1006,6 +1086,13 @@ cache_adapter_files	Proc near
 
 cache_adapter_files_loop:
 	mov ax,es:[edx].typ
+	cmp ax,RdosOldFile
+	jne cache_not_old_file
+;
+	call cache_old_file_entry
+	jmp cache_adapter_files_next
+
+cache_not_old_file:	
 	cmp ax,RdosFile
 	jne cache_adapter_skip
 ;
