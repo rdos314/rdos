@@ -1,6 +1,6 @@
 tdstrp32 \rdos\apps\freecom\command
 tdstrp32 \rdos\apps\ftpd\ftpd
-..\..\kernel\tools\cfg2bin init
-..\..\kernel\tools\cfg2bin safe
-..\..\kernel\tools\cfg2bin rdos
-..\..\kernel\tools\cfg2bin noftp
+\rdos\apps\cfg2bin\win32\cfg2bin init
+\rdos\apps\cfg2bin\win32\cfg2bin safe
+\rdos\apps\cfg2bin\win32\cfg2bin rdos
+\rdos\apps\cfg2bin\win32\cfg2bin noftp

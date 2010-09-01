@@ -36,13 +36,14 @@ RdosSign EQU 5A1E75D4h
 
 RdosKernel = 0
 RdosFont = 1
-RdosDevice = 2
+RdosSimpleDevice = 2
 RdosShutDown = 3
 RdosFile = 6
 RdosCommand = 7
 RdosSet = 8
 RdosPath = 9
-RdosDll = 10
+
+RdosDevice = 16
 
 RdosEnd = 0E5E5h
 
@@ -61,9 +62,18 @@ crc     DW ?
 
 rdos_header  ENDS
 
-device_header   STRUC
+simple_device_header   STRUC
 
 init_ip DW ?
+
+simple_device_header   ENDS
+
+device_header   STRUC
+
+dev_size        DW ?
+dev_sel         DW ?
+dev_init_ip     DW ?
+dev_name_parm   DB ?
 
 device_header   ENDS
 

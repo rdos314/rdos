@@ -32,14 +32,16 @@
 #include "crc.h"
 #include "str.h"
 
-#define RDOS_OBJECT_KERNEL      0
-#define RDOS_OBJECT_FONT        1
-#define RDOS_OBJECT_DEVICE      2
-#define RDOS_OBJECT_SHUTDOWN    3
-#define RDOS_OBJECT_FILE        6
-#define RDOS_OBJECT_COMMAND     7
-#define RDOS_OBJECT_SET         8
-#define RDOS_OBJECT_PATH        9
+#define RDOS_OBJECT_KERNEL          0
+#define RDOS_OBJECT_FONT            1
+#define RDOS_OBJECT_SIMPLE_DEVICE   2
+#define RDOS_OBJECT_SHUTDOWN        3
+#define RDOS_OBJECT_OLD_FILE        6
+#define RDOS_OBJECT_COMMAND         7
+#define RDOS_OBJECT_SET             8
+#define RDOS_OBJECT_PATH            9
+
+#define RDOS_OBJECT_DEVICE          16
 
 #define RDOS_SIGN    0x5A1E75D4
 
@@ -51,12 +53,20 @@ struct TRdosObjectHeader
     unsigned short int crc;    
 };
 
-struct TRdosDeviceHeader
+struct TRdosSimpleDeviceHeader
 {
     short int StartIp;
 };
 
-struct TRdosFileHeader
+struct TRdosDeviceHeader
+{
+    short int Size;
+    short int Sel;
+    short int StartIp;
+    char NameParam;
+};
+
+struct TRdosOldFileHeader
 {
     char Base[8];
     char Ext[3];
@@ -76,7 +86,11 @@ public:
     virtual ~TRdosObject();
 
     unsigned short int CalcCrc(TCrc *Crc);
+    int GetSize();
+    short int GetType();
+
     virtual TString GetInfo() = 0;
+    virtual void WriteObject(TFile *File);
 
     TRdosObject *FLink;
 
@@ -91,6 +105,21 @@ protected:
     
 };
 
+class TRdosSimpleDeviceBaseObject : public TRdosObject
+{
+public:
+    TRdosSimpleDeviceBaseObject();
+    TRdosSimpleDeviceBaseObject(TFile *File, int Size);
+    virtual ~TRdosSimpleDeviceBaseObject();
+
+protected:
+    void LoadDeviceFile(const char *FileName);
+
+    TRdosSimpleDeviceHeader *FDeviceHeader;    
+    char *FDeviceData;
+    int FDeviceSize;
+};
+
 class TRdosDeviceBaseObject : public TRdosObject
 {
 public:
@@ -99,15 +128,14 @@ public:
     virtual ~TRdosDeviceBaseObject();
 
 protected:
-    void LoadDeviceFile(const char *FileName);
+    void LoadDeviceFile(const char *FileName, const char *Param);
 
     TRdosDeviceHeader *FDeviceHeader;    
     char *FDeviceData;
     int FDeviceSize;
 };
-
     
-class TRdosKernelObject : public TRdosDeviceBaseObject
+class TRdosKernelObject : public TRdosSimpleDeviceBaseObject
 {
 public:
     TRdosKernelObject(const char *KernelFileName);
@@ -127,6 +155,16 @@ public:
     virtual TString GetInfo();
 };
     
+class TRdosSimpleDeviceObject : public TRdosSimpleDeviceBaseObject
+{
+public:
+    TRdosSimpleDeviceObject(const char *DeviceFileName);
+    TRdosSimpleDeviceObject(TFile *File, int Size);
+    virtual ~TRdosSimpleDeviceObject();
+
+    virtual TString GetInfo();
+};
+    
 class TRdosDeviceObject : public TRdosDeviceBaseObject
 {
 public:
@@ -137,7 +175,7 @@ public:
     virtual TString GetInfo();
 };
     
-class TRdosShutdownObject : public TRdosDeviceBaseObject
+class TRdosShutdownObject : public TRdosSimpleDeviceBaseObject
 {
 public:
     TRdosShutdownObject(const char *ShutdownFileName);
@@ -147,19 +185,19 @@ public:
     virtual TString GetInfo();
 };
     
-class TRdosFileObject : public TRdosObject
+class TRdosOldFileObject : public TRdosObject
 {
 public:
-    TRdosFileObject(const char *FileName);
-    TRdosFileObject(TFile *File, int Size);
-    virtual ~TRdosFileObject();
+    TRdosOldFileObject(const char *FileName);
+    TRdosOldFileObject(TFile *File, int Size);
+    virtual ~TRdosOldFileObject();
 
     virtual TString GetInfo();
 
 protected:
     void LoadFileAndHeader(const char *FileName);
 
-    TRdosFileHeader *FFileHeader;
+    TRdosOldFileHeader *FFileHeader;
     char *FFileData;
     int FFileSize;    
 };
@@ -204,6 +242,8 @@ public:
     void AddImage(const char *ImageFile);
     void AddConfig(const char *ConfigFile);
     void AddConfigCmd(const char *cmd, const char *param);
+
+    void WriteImage(const char *ImageFile);
 
     TRdosObject *FObjectList;
 

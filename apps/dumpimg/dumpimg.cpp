@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cfg2bin.cpp
-# CFG2BIN utility
+# dumpimg.cpp
+# Dump RDOS image
 #
 ########################################################################*/
 
@@ -46,24 +46,28 @@ int main(int argc, char **argv)
 {
     char FileName[256];
     TRdosImage img;
+    TRdosObject *obj;
+    TString info;
 
     if (argc == 2)
     {
         strcpy(FileName, argv[1]);
-        strcat(FileName, ".cfg");
+        strcat(FileName, ".bin");
             
-        img.AddConfig(FileName);
+        img.AddImage(FileName);
 
-        if (img.FObjectList)
+        obj = img.FObjectList;
+
+        while (obj)
         {
-            strcpy(FileName, argv[1]);
-            strcat(FileName, ".bin");
-            img.WriteImage(FileName);
+            info = obj->GetInfo();
+            printf(info.GetData());
+            printf("\r\n");
+
+            obj = obj->FLink;            
         }
-        else
-            printf("No objects in config-file or missing config file <%s>\r\n", FileName);
     }
     else
-        printf("usage: cfg2bin filename base\r\n");        
+        printf("usage: dumpimg image base name\r\n");        
 }
 

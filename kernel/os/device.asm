@@ -290,6 +290,43 @@ init_device_pr	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			install_simple_device
+;
+;		DESCRIPTION:	install simple device
+;
+;		PARAMETERS:		DS:EDX	device header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_simple_device	PROC near
+	push ds
+	push es
+	pushad
+	mov ecx,[edx].len
+	sub ecx,SIZE rdos_header
+	add edx,SIZE rdos_header
+	mov ax,[edx].init_ip
+	sub ecx,SIZE simple_device_header
+	add edx,SIZE simple_device_header
+	mov bx,device_code_sel
+	CreateCodeSelector16
+;
+	push cs
+	push OFFSET install_simple_device_end
+	push bx
+	push ax
+	retf
+install_simple_device_end:
+	popad
+	pop es
+	pop ds
+	ret
+install_simple_device	ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			install_device
 ;
 ;		DESCRIPTION:	install device
@@ -305,9 +342,10 @@ install_device	PROC near
 	mov ecx,[edx].len
 	sub ecx,SIZE rdos_header
 	add edx,SIZE rdos_header
-	mov ax,[edx].init_ip
-	sub ecx,SIZE device_header
-	add edx,SIZE device_header
+	mov ax,[edx].dev_init_ip
+	movzx ebx,[edx].dev_size
+	sub ecx,ebx
+	add edx,ebx
 	mov bx,device_code_sel
 	CreateCodeSelector16
 ;
@@ -316,6 +354,7 @@ install_device	PROC near
 	push bx
 	push ax
 	retf
+
 install_device_end:
 	popad
 	pop es
@@ -344,10 +383,19 @@ install_adapter	Proc near
 	mov ds,ax
 install_adapter_loop:
 	mov ax,[edx].typ
+	cmp ax,RdosSimpleDevice
+	jne not_install_simple_device
+;	
+	call install_simple_device
+	jmp install_adapter_next
+
+not_install_simple_device:
 	cmp ax,RdosDevice
 	jne not_install_device
+;	
 	call install_device
 	jmp install_adapter_next
+	
 not_install_device:
 	cmp ax,RdosEnd
 	je install_adapter_done
