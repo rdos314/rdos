@@ -488,4 +488,7 @@ clear_fault_save_nr         = 398
 
 get_free_handle_mem_nr      = 399
 
-usergate_entries			= 400
+get_image_header_nr         = 400
+get_image_data_nr           = 401
+
+usergate_entries			= 410

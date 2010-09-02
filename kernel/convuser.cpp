@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <file.h>
+#include <string.h>
 
 #define MAX_USER_SIZE   0x10000
 

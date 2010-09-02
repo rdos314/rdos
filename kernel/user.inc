@@ -603,6 +603,20 @@ ReplyMailslot		MACRO
 
 ;;;;;;;;;;;; PROGRAMS & DLLS ;;;;;;;;;;;;;;;;
 
+; IN  AL            Adapter # (0..n)
+; IN  DL            Entry # (0..n)
+; IN  ES:(E)DI      Header buffer
+GetImageHeader	MACRO
+	UserGate get_image_header_nr
+					ENDM
+
+; IN  AL            Adapter # (0..n)
+; IN  DL            Entry # (0..n)
+; IN  ES:(E)DI      Data buffer
+GetImageData	MACRO
+	UserGate get_image_data_nr
+					ENDM
+
 ; IN  ES:(E)DI)     CPU vendor string
 ; OUT AL            CPU version
 ; OUT EBX           Frequency (MHz)

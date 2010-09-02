@@ -31,6 +31,8 @@
 
 GateSize = 16
 
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 INCLUDE protseg.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
@@ -410,6 +412,71 @@ install_adapter_done:
 	ret
 install_adapter	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetImageHeader
+;
+;		DESCRIPTION:	Get image header
+;
+;		PARAMETERS:		AL			Adapter # (0..)
+;                       DL          Entry # (0..)
+;                       ES:(E)DI    Header buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_image_header_name	DB 'Get Image Header',0
+
+get_image_header    Proc near
+    ret
+get_image_header    Endp
+
+get_image_header32  Proc far
+    call get_image_header
+    retf32
+get_image_header32  Endp
+
+get_image_header16  Proc far
+    push edi
+    movzx edi,di
+    call get_image_header
+    pop edi
+    ret
+get_image_header16  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetImageData
+;
+;		DESCRIPTION:	Get image data
+;
+;		PARAMETERS:		AL			Adapter # (0..)
+;                       DL          Entry # (0..)
+;                       ES:(E)DI    Data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_image_data_name	DB 'Get Image Data',0
+
+get_image_data    Proc near
+    ret
+get_image_data    Endp
+
+get_image_data32  Proc far
+    call get_image_data
+    retf32
+get_image_data32  Endp
+
+get_image_data16  Proc far
+    push edi
+    movzx edi,di
+    call get_image_data
+    pop edi
+    ret
+get_image_data16  Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -437,6 +504,20 @@ init_device	PROC near
 	xor cl,cl
 	mov ax,init_device_nr
 	RegisterOsGate
+;
+	mov bx,OFFSET get_image_header16
+	mov si,OFFSET get_image_header32
+	mov di,OFFSET get_image_header_name
+	mov dx,virt_es_in
+	mov ax,get_image_header_nr
+	RegisterUserGate
+;
+	mov bx,OFFSET get_image_data16
+	mov si,OFFSET get_image_data32
+	mov di,OFFSET get_image_data_name
+	mov dx,virt_es_in
+	mov ax,get_image_data_nr
+	RegisterUserGate
 ;
 	mov ax,system_data_sel
 	mov ds,ax
