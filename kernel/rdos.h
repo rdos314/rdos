@@ -6,6 +6,8 @@
 extern "C" {
 #endif
 
+#include "rdoshdr.h"
+
 #ifdef __WATCOMC__
 
 #include "rdu.h"
@@ -303,6 +305,9 @@ int RDOSAPI RdosGetFaultThreadTss(int ThreadNr, Tss *tss);
 int RDOSAPI RdosGetThreadState(int ThreadNr, ThreadState *State);
 int RDOSAPI RdosSuspendThread(int Thread);
 int RDOSAPI RdosSuspendAndSignalThread(int Thread);
+
+int RDOSAPI RdosGetImageHeader(int Adapter, int Entry, TRdosObjectHeader *Header);
+int RDOSAPI RdosGetImageData(int Adapter, int Entry, void *Buf);
 
 void RDOSAPI RdosCpuReset();
 int RDOSAPI RdosPowerFailure();
@@ -1128,6 +1133,18 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosClearFaultSave = \
     CallGate_clear_fault_save;
 
+#pragma aux RdosGetImageHeader = \
+    CallGate_get_image_header  \
+    CarryToBool \
+    parm [eax] [edx] [edi] \
+    value [eax];
+
+#pragma aux RdosGetImageData = \
+    CallGate_get_image_data  \
+    CarryToBool \
+    parm [eax] [edx] [edi] \
+    value [eax];
+
 #pragma aux RdosGetFaultThreadState = \
     CallGate_get_fault_thread_state  \
     CarryToBool \
@@ -1138,6 +1155,18 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_get_fault_thread_tss  \
     CarryToBool \
     parm [eax] [edi] \
+    value [eax];
+
+#pragma aux RdosGetImageHeader = \
+    CallGate_get_image_header  \
+    CarryToBool \
+    parm [eax] [edx] [edi] \
+    value [eax];
+
+#pragma aux RdosGetImageData = \
+    CallGate_get_image_data  \
+    CarryToBool \
+    parm [eax] [edx] [edi] \
     value [eax];
 
 #pragma aux RdosGetThreadState = \

@@ -38,6 +38,11 @@ class TRdosObject
 public:
     TRdosObject();
     TRdosObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosObject();
 
     unsigned short int CalcCrc(TCrc *Crc);
@@ -65,6 +70,11 @@ class TRdosSimpleDeviceBaseObject : public TRdosObject
 public:
     TRdosSimpleDeviceBaseObject();
     TRdosSimpleDeviceBaseObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosSimpleDeviceBaseObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosSimpleDeviceBaseObject();
 
 protected:
@@ -80,6 +90,11 @@ class TRdosDeviceBaseObject : public TRdosObject
 public:
     TRdosDeviceBaseObject();
     TRdosDeviceBaseObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosDeviceBaseObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosDeviceBaseObject();
 
 protected:
@@ -95,6 +110,11 @@ class TRdosKernelObject : public TRdosSimpleDeviceBaseObject
 public:
     TRdosKernelObject(const char *KernelFileName);
     TRdosKernelObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosKernelObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosKernelObject();
 
     virtual TString GetInfo();
@@ -105,6 +125,11 @@ class TRdosFontObject : public TRdosObject
 public:
     TRdosFontObject(const char *FontFileName);
     TRdosFontObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosFontObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosFontObject();
 
     virtual TString GetInfo();
@@ -115,6 +140,11 @@ class TRdosSimpleDeviceObject : public TRdosSimpleDeviceBaseObject
 public:
     TRdosSimpleDeviceObject(const char *DeviceFileName);
     TRdosSimpleDeviceObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosSimpleDeviceObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosSimpleDeviceObject();
 
     virtual TString GetInfo();
@@ -125,6 +155,11 @@ class TRdosDeviceObject : public TRdosDeviceBaseObject
 public:
     TRdosDeviceObject(const char *DeviceFileName);
     TRdosDeviceObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosDeviceObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosDeviceObject();
 
     virtual TString GetInfo();
@@ -135,6 +170,11 @@ class TRdosShutdownObject : public TRdosSimpleDeviceBaseObject
 public:
     TRdosShutdownObject(const char *ShutdownFileName);
     TRdosShutdownObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosShutdownObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosShutdownObject();
 
     virtual TString GetInfo();
@@ -145,6 +185,11 @@ class TRdosOldFileObject : public TRdosObject
 public:
     TRdosOldFileObject(const char *FileName);
     TRdosOldFileObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosOldFileObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosOldFileObject();
 
     virtual TString GetInfo();
@@ -162,6 +207,11 @@ class TRdosFileObject : public TRdosObject
 public:
     TRdosFileObject(const char *FileName);
     TRdosFileObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosFileObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosFileObject();
 
     virtual TString GetInfo();
@@ -179,6 +229,11 @@ class TRdosCommandObject : public TRdosObject
 public:
     TRdosCommandObject(const char *Cmd);
     TRdosCommandObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosCommandObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosCommandObject();
 
     virtual TString GetInfo();
@@ -189,6 +244,11 @@ class TRdosSetObject : public TRdosObject
 public:
     TRdosSetObject(const char *Param);
     TRdosSetObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosSetObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosSetObject();
 
     virtual TString GetInfo();
@@ -199,6 +259,11 @@ class TRdosPathObject : public TRdosObject
 public:
     TRdosPathObject(const char *Param);
     TRdosPathObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosPathObject(int adapter, int entry, int size);
+#endif
+    
     virtual ~TRdosPathObject();
 
     virtual TString GetInfo();
@@ -214,6 +279,10 @@ public:
     void AddImage(const char *ImageFile);
     void AddConfig(const char *ConfigFile);
     void AddConfigCmd(const char *cmd, const char *param);
+
+#ifdef __RDOS__
+    void AddRunning();
+#endif
 
     void WriteImage(const char *ImageFile);
 
