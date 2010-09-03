@@ -1731,3 +1731,9 @@ speaker is turned off, or sound-card is missing
 :TEXT_VOLUME_ON
 Volume is %d of 100
 .
+
+:TEXT_CMDHELP_SYSINFO
+Shows contents of RDOS image file, or running configuration
+
+SYSINFO <image file base>
+.
