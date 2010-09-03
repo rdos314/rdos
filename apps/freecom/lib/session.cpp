@@ -74,6 +74,7 @@
 #include "usb.h"
 #include "info.h"
 #include "volume.h"
+#include "sysinfo.h"
 
 #include "file.h"
 #include "path.h"
@@ -119,6 +120,7 @@ static TCommandFactory *ping;
 static TCommandFactory *prompt;
 static TCommandFactory *showpart;
 static TCommandFactory *synctime;
+static TCommandFactory *sysinfo;
 static TCommandFactory *pause;
 static TCommandFactory *path;
 static TCommandFactory *rd;
@@ -172,6 +174,7 @@ TSession::TSession()
                 usb = new TUsbFactory;
                 timev = new TTimeFactory;
                 type = new TTypeFactory;
+                sysinfo = new TSysinfoFactory;
                 synctime = new TSyncTimeFactory;
                 state = new TStateFactory;
                 set = new TSetFactory;

@@ -428,6 +428,58 @@ install_adapter	Endp
 get_image_header_name	DB 'Get Image Header',0
 
 get_image_header    Proc near
+    push ds
+    push ax
+    push bx
+    push ecx
+    push dx
+    push edi
+    push esi
+;    
+    movzx ax,al
+;    
+	mov bx,system_data_sel
+	mov ds,bx
+	cmp ax,ds:rom_modules
+	jae gihFail
+;	
+    mov bx,ax
+    add bx,bx
+    add bx,OFFSET rom_adapters
+    mov esi,[bx].adapter_base
+;
+	mov ax,flat_sel
+	mov ds,ax
+
+gihLoop:
+    mov ax,[esi].typ
+    cmp ax,RdosEnd
+    je gihFail
+;
+    or dl,dl
+    jz gihOk
+;
+	add esi,[esi].len
+	dec dl
+	jmp gihLoop
+
+gihOk:
+    mov ecx,SIZE rdos_header
+    rep movs byte ptr es:[edi],ds:[esi]
+    clc
+    jmp gihDone
+
+gihFail:
+    stc
+
+gihDone:
+    pop edi
+    pop esi
+    pop dx
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
     ret
 get_image_header    Endp
 
@@ -461,6 +513,62 @@ get_image_header16  Endp
 get_image_data_name	DB 'Get Image Data',0
 
 get_image_data    Proc near
+    push ds
+    push ax
+    push bx
+    push ecx
+    push dx
+    push edi
+    push esi
+;    
+    movzx ax,al
+;    
+	mov bx,system_data_sel
+	mov ds,bx
+	cmp ax,ds:rom_modules
+	jae gidFail
+;	
+    mov bx,ax
+    add bx,bx
+    add bx,OFFSET rom_adapters
+    mov esi,[bx].adapter_base
+;
+	mov ax,flat_sel
+	mov ds,ax
+
+gidLoop:
+    mov ax,[esi].typ
+    cmp ax,RdosEnd
+    je gidFail
+;
+    or dl,dl
+    jz gidOk
+;
+	add esi,[esi].len
+	dec dl
+	jmp gidLoop
+
+gidOk:
+    mov ecx,[esi].len
+    sub ecx,SIZE rdos_header
+    jc gidFail
+;
+    add esi,SIZE rdos_header
+    rep movs byte ptr es:[edi],ds:[esi]
+    clc
+    jmp gidDone
+
+gidFail:
+    stc
+
+gidDone:
+    pop edi
+    pop esi
+    pop dx
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
     ret
 get_image_data    Endp
 
