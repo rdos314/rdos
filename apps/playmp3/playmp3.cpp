@@ -13,13 +13,8 @@
 int main(int argc, char **argv)
 {
         int L, R;
-        int i;
         TMp3Player mp3;
         char FileName[256];
-
-        i = 0;
-        scanf("%d", &i);
-        printf("%d", i);
 
         if (argc == 1)
         {
