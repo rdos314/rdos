@@ -906,6 +906,9 @@ MixChannel  Proc near
     xor esi,esi
     xor edi,edi
     xor ebx,ebx
+;
+    or cx,cx
+    jz mcInterpDone
         
 mcInterpLoop:
     xor eax,eax
@@ -941,7 +944,8 @@ mcInterpNext:
     add di,[bp].rest
     adc esi,[bp].quot
     loop mcInterpLoop
-;    
+
+mcInterpDone:
     add sp,8
     pop bp
     jmp mcDone
