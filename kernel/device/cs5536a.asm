@@ -698,7 +698,6 @@ saoPrd1:
     jmp saoDone
 
 saoStop:
-    int 3
     mov dx,ds:Ac0.AcCmdIo
     in al,dx
     and al,3
