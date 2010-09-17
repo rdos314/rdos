@@ -77,6 +77,8 @@ local_used_mem		DD ?
 local_big_used_mem	DD ?
 local_big_avail_mem	DD ?
 
+local_big_base      DD ?
+
 vm_avail_mem		DW ?
 vm_used_mem			DW ?
 
@@ -388,6 +390,12 @@ init_mem	PROC near
 	mov ax,allocate_local_linear_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET allocate_debug_local_linear
+	mov di,OFFSET allocate_debug_local_linear_name
+	xor cl,cl
+	mov ax,allocate_debug_local_linear_nr
+	RegisterOsGate
+;
 	mov si,OFFSET reserve_local_linear
 	mov di,OFFSET reserve_local_linear_name
 	xor cl,cl
@@ -489,6 +497,7 @@ init_process_mem	PROC near
 	mov ds:local_used_mem,0
 	mov ds:local_big_avail_mem,flat_size - local_page_linear
 	mov ds:local_big_used_mem,0
+	mov ds:local_big_base,local_page_linear
 	InitSection ds:local_mem_section
 	InitSection ds:vm_mem_section
 ;
@@ -961,6 +970,189 @@ allocate_blocal_mark:
 	ret
 allocate_local_linear	ENDP
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ALLOCATE_DEBUG_LOCAL_LINEAR
+;
+;		DESCRIPTION:	Allocate local memory (in process address space)
+;
+;		PARAMETERS:		EAX		Number of bytes
+;
+;		RETURNS:		EDX		Linear base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_debug_local_linear_name	DB 'Allocate Debug Local Linear',0
+
+allocate_debug_local_linear	PROC far
+	push ds
+	push es
+	push eax
+	push ebx
+	push ecx
+	test ax,0FFFh
+	jz allocate_debug_page_local_linear
+	cmp eax,4000h
+	jnc allocate_debug_page_local_linear
+;
+    dec eax
+    and al,0FCh
+    add eax,4
+;
+	mov dx,local_mem_sel
+	mov ds,dx
+	mov es,dx
+	EnterSection ds:local_mem_section
+	mov edx,ds:local_avail_mem
+	add ds:local_used_mem,eax
+	sub edx,eax
+	sub edx,10h
+	add eax,10h
+	mov ds:local_avail_mem,edx
+;
+	mov dx,local_linear_sel
+	mov ds,dx
+	xor edx,edx
+	xor ebx,ebx
+	mov edx,[edx].slf_next
+allocate_debug_local_loop:
+	mov ecx,[edx].sls_next
+	sub ecx,edx
+	cmp ecx,eax
+	jnc allocate_debug_local_found
+	mov ebx,edx
+	mov edx,[edx].slf_next
+	jmp allocate_debug_local_loop
+allocate_debug_local_found:
+	sub ecx,eax
+	cmp ecx,16
+	jc allocate_debug_local_no_split
+	mov ebx,eax
+	add ebx,edx
+;	
+	mov eax,[edx].sls_next
+	mov [ebx].sls_next,eax
+	mov [ebx].sls_prev,edx
+	mov [edx].sls_next,ebx
+	mov [eax].sls_prev,ebx
+;
+	mov eax,[edx].slf_next
+	mov [ebx].slf_next,eax
+	mov [edx].slf_next,ebx
+	or eax,eax
+	jz allocate_debug_local_last_free
+	mov [eax].slf_prev,ebx
+allocate_debug_local_last_free:
+	mov eax,[edx].slf_prev
+	mov [ebx].slf_prev,eax
+	or eax,eax
+	jz allocate_debug_local_first_free
+	mov [eax].slf_next,ebx
+allocate_debug_local_first_free:
+;
+	jmp allocate_debug_local_done
+allocate_debug_local_no_split:
+	mov eax,[edx].slf_prev
+	mov ebx,[edx].slf_next
+	mov [eax].slf_next,ebx
+	mov [ebx].slf_prev,eax
+allocate_debug_local_done:
+	xor eax,eax
+	mov ebx,[eax].slf_next
+	cmp ebx,edx
+	jnz allocate_debug_local_end
+	mov ebx,[edx].slf_next
+	mov [eax].slf_next,ebx
+allocate_debug_local_end:
+	xor eax,eax
+	mov ebx,[eax].sls_prev
+	mov ecx,[edx].sls_next
+	cmp ebx,ecx
+	jnc no_debug_local_biggest_block
+	mov [eax].sls_prev,ecx
+no_debug_local_biggest_block:	
+	dec eax
+	mov [edx].slf_prev,eax
+	mov [edx].slf_next,eax
+	mov ax,local_mem_sel
+	mov ds,ax
+	LeaveSection ds:local_mem_section
+	add edx,local_byte_linear + 10h
+	pop ecx
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+allocate_debug_page_local_linear:
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	mov dx,local_mem_sel
+	mov ds,dx
+	mov es,dx
+	EnterSection ds:local_mem_section
+    mov ebx,ds:local_big_base    
+	shr ebx,10
+	add ds:local_big_used_mem,eax
+	sub ds:local_big_avail_mem,eax
+	shr eax,12
+	mov dx,process_page_sel
+	mov ds,dx
+	xor dx,dx
+allocate_debug_blocal_loop:
+	cmp ebx,(flat_size SHR 10) AND 003FFFFFh
+	jne allocate_debug_blocal_no_wrap
+;
+	mov ebx,local_page_linear
+	shr ebx,10
+	add ebx,4
+	xor dx,dx
+
+allocate_debug_blocal_no_wrap:
+	inc dx
+	mov cl,[ebx]
+	test cl,7
+	jz allocate_debug_blocal_next
+	xor dx,dx
+allocate_debug_blocal_next:
+	add ebx,4
+	cmp ax,dx
+	je allocate_debug_blocal_end
+	jmp allocate_debug_blocal_loop
+allocate_debug_blocal_end:
+	mov cx,ax
+	shl eax,2
+	sub ebx,eax
+	mov dl,2
+	push ebx
+	push cx
+allocate_debug_blocal_mark:
+	mov [ebx],dl
+	add ebx,4
+	loop allocate_debug_blocal_mark
+	pop cx
+	pop edx
+;
+	mov ax,local_mem_sel
+	mov ds,ax
+	shl edx,10
+    mov ds:local_big_base,edx
+    movzx ecx,cx
+    shl ecx,12
+    add ds:local_big_base,ecx
+	LeaveSection ds:local_mem_section
+;
+	pop ecx
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+allocate_debug_local_linear	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	

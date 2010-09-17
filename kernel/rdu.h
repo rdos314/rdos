@@ -491,3 +491,6 @@
 #define CallGate_get_image_header 0x9a 144 1 0 0 2 0
 #define CallGate_get_image_data 0x9a 145 1 0 0 2 0
 
+#define CallGate_allocate_debug_app_mem 0x9a 146 1 0 0 2 0
+#define CallGate_free_debug_app_mem 0x9a 147 1 0 0 2 0
+

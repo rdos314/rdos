@@ -572,6 +572,10 @@ InsertApp	Proc near
 	mov word ptr ds:app_allocate_mem_proc+2,cs 
 	mov word ptr ds:app_free_mem_proc,OFFSET free_mem
 	mov word ptr ds:app_free_mem_proc+2,cs 
+	mov word ptr ds:app_debug_allocate_mem_proc,OFFSET debug_allocate_mem
+	mov word ptr ds:app_debug_allocate_mem_proc+2,cs 
+	mov word ptr ds:app_debug_free_mem_proc,OFFSET debug_free_mem
+	mov word ptr ds:app_debug_free_mem_proc+2,cs 
 	mov word ptr ds:app_init_thread_proc,OFFSET init_thread
 	mov word ptr ds:app_init_thread_proc+2,cs
 	mov word ptr ds:app_free_thread_proc,OFFSET free_thread
@@ -3590,6 +3594,210 @@ free_mem_done:
 	pop ds
 	ret
 free_mem	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DebugAllocateMem
+;
+;		DESCRIPTION:	Allocate memory, debug mode
+;
+;		PARAMETERS:		EAX	Number of bytes
+;
+;		RETURNS:		EDX Offset within flat selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_allocate_mem	PROC far
+	push ds
+	push es
+	push eax
+	push ecx
+;
+    push eax
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	mov ecx,eax
+	push ecx
+	AllocateDebugLocalLinear
+	sub edx,local_page_linear
+;
+	mov eax,SIZE pe_mem_struc
+	AllocateLocalMem
+	pop ecx
+	mov es:mem_base,edx
+	mov es:mem_size,ecx
+	pop eax
+	mov es:mem_alloc,eax
+;
+    cmp eax,ecx
+    je debug_alloc_fill_ok
+;
+    push es
+    push ecx
+    push edi
+    mov edi,edx
+    add edi,eax
+    sub ecx,eax
+;
+    mov ax,flat_data_sel
+    mov es,ax   
+    mov al,0A5h
+    rep stos byte ptr es:[edi]
+    pop edi
+    pop ecx
+    pop es
+
+debug_alloc_fill_ok:
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    EnterSection ds:app_lib_section	
+;
+	mov ax,ds:app_mem_blocks
+	or ax,ax
+	je debug_alloc_ins_empty
+;
+	push ds
+	push si
+	mov ds,ax
+	mov si,ds:mem_prev
+	mov ds:mem_prev,es
+	mov ds,si
+	mov ds:mem_next,es
+	mov es:mem_next,ax
+	mov es:mem_prev,si
+	pop si
+	pop ds
+	jmp debug_alloc_ins_done
+
+debug_alloc_ins_empty:
+	mov es:mem_next,es
+	mov es:mem_prev,es
+
+debug_alloc_ins_done:
+	mov ds:app_mem_blocks,es
+    LeaveSection ds:app_lib_section	
+;
+	pop ecx
+	pop eax
+	pop es
+	pop ds
+	ret
+debug_allocate_mem	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DebugFreeMem
+;
+;		DESCRIPTION:	Free memory, debug mode
+;
+;		PARAMETERS:		EDX Offset within flat selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+debug_free_mem	PROC far
+	push ds
+	push es
+	push eax
+	push ecx
+	push edx
+	push si
+	push edi
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    EnterSection ds:app_lib_section	
+
+debug_free_mem_more:
+	mov ax,ds:app_mem_blocks
+	or ax,ax
+	jz debug_free_mem_failed
+	mov si,ax
+debug_free_mem_loop:
+	mov es,ax
+    cmp edx,es:mem_base
+    je debug_free_mem_ok
+
+debug_free_mem_next:
+	mov ax,es:mem_next
+	cmp ax,si
+	jne debug_free_mem_loop
+
+debug_free_mem_failed:
+    int 3
+	jmp free_mem_done
+
+debug_free_mem_ok:
+    mov edx,es:mem_base
+    mov ecx,es:mem_size
+    mov eax,es:mem_alloc
+    cmp eax,ecx
+    je debug_free_mem_check_done
+;
+    push es
+    push ecx
+    push edi
+    mov edi,edx
+    add edi,eax
+    sub ecx,eax
+;
+    mov ax,flat_data_sel
+    mov es,ax   
+    mov al,0A5h
+    repe scas byte ptr es:[edi]
+    pop edi
+    pop ecx
+    pop es
+;
+    jz debug_free_mem_check_done
+;
+    int 3
+        
+debug_free_mem_check_done:
+	mov edx,es:mem_base
+	add edx,local_page_linear
+	mov ecx,es:mem_size
+	FreeLinear
+;
+	mov ds:app_mem_blocks,es
+	mov ax,es:mem_prev
+	cmp ax,ds:app_mem_blocks
+	pushf
+	push ds
+	mov ds:app_mem_blocks,ax
+	mov si,es:mem_next
+	mov ds,ax
+	mov ds:mem_next,si
+	mov ds,si
+	mov ds:mem_prev,ax
+	pop ds
+	FreeMem
+	popf
+	jne debug_free_mem_done
+
+debug_free_mem_last_block:
+	mov ds:app_mem_blocks,0
+
+debug_free_mem_done:
+    LeaveSection ds:app_lib_section	
+;
+	pop edi
+	pop si
+	pop edx
+	pop ecx
+	pop eax
+	pop es
+	pop ds
+	ret
+debug_free_mem	ENDP
 
 PAGE
 

@@ -485,6 +485,12 @@ AllocateLocalLinear	MACRO
 	OsGate allocate_local_linear_nr
 					ENDM
 
+;	EAX	Bytes
+;	EDX	LINEAR BASE ADDRESS
+AllocateDebugLocalLinear	MACRO
+	OsGate allocate_debug_local_linear_nr
+					ENDM
+
 ;	EAX	ANTAL BYTE
 ;	EDX	LINEAR BASE ADDRESS
 ReserveLocalLinear	MACRO

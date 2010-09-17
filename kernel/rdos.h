@@ -227,6 +227,9 @@ void RDOSAPI RdosSetBackColor(int color);
 void *RDOSAPI RdosAllocateMem(int Size);
 void RDOSAPI RdosFreeMem(void *ptr);
 
+void *RDOSAPI RdosAllocateDebugMem(int Size);
+void RDOSAPI RdosFreeDebugMem(void *ptr);
+
 long RDOSAPI RdosGetThreadLinear(int Thread, int Sel, long Offset);
 int RDOSAPI RdosReadThreadMem(int Thread, int Sel, long Offset, char *Buf, int Size);
 int RDOSAPI RdosWriteThreadMem(int Thread, int Sel, long Offset, char *Buf, int Size);
@@ -813,6 +816,16 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosFreeMem = \
     CallGate_free_app_mem  \
+    parm [edx];
+
+#pragma aux RdosAllocateDebugMem = \
+    CallGate_allocate_debug_app_mem  \
+    ValidateEdx \
+    parm [eax]  \
+    value [edx];
+
+#pragma aux RdosFreeDebugMem = \
+    CallGate_free_debug_app_mem  \
     parm [edx];
 
 #pragma aux RdosGetThreadLinear = \
@@ -2833,6 +2846,16 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosFreeMem = \
     CallGate_free_app_mem  \
+    parm [es];
+
+#pragma aux RdosAllocateDebugMem = \
+    CallGate_allocate_debug_app_mem  \
+    ValidateDx \
+    parm [eax]  \
+    value [es];
+
+#pragma aux RdosFreeDebugMem = \
+    CallGate_free_debug_app_mem  \
     parm [es];
 
 /* continue from here */

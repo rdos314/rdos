@@ -163,6 +163,10 @@ InsertApp	Proc near
 	mov word ptr ds:app_allocate_mem_proc+2,cs 
 	mov word ptr ds:app_free_mem_proc,OFFSET free_mem
 	mov word ptr ds:app_free_mem_proc+2,cs 
+	mov word ptr ds:app_debug_allocate_mem_proc,OFFSET allocate_mem
+	mov word ptr ds:app_debug_allocate_mem_proc+2,cs 
+	mov word ptr ds:app_debug_free_mem_proc,OFFSET free_mem
+	mov word ptr ds:app_debug_free_mem_proc+2,cs 
 ;	mov word ptr ds:app_init_thread_proc,OFFSET init_thread
 ;	mov word ptr ds:app_init_thread_proc+2,cs
 ;	mov word ptr ds:app_free_thread_proc,OFFSET free_thread

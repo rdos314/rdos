@@ -534,5 +534,7 @@ is_net_address_valid_nr     EQU 375
 
 get_acpi_table_nr           EQU 376
 
+allocate_debug_local_linear_nr  EQU 377
+
 osgate_entries				EQU 380
 

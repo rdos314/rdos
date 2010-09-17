@@ -200,6 +200,7 @@ mem_prev	DW ?
 mem_next	DW ?
 mem_base	DD ?
 mem_size	DD ?
+mem_alloc   DD ?
 
 pe_mem_struc ENDS
 

@@ -789,6 +789,17 @@ FreeAppMem     MACRO
 	UserGate free_app_mem_nr
 						ENDM
 
+; IN  EAX     		Number of bytes
+; OUT ES / (E)DX    Selector or linear base address (depends on loader)
+AllocateDebugAppMem     MACRO
+	UserGate allocate_debug_app_mem_nr
+						ENDM
+
+; IN  ES / (E)DX    Selector or linear base address (depends on loader)
+FreeDebugAppMem     MACRO
+	UserGate free_debug_app_mem_nr
+						ENDM
+
 ; OUT BX			PSP Selector
 GetPspSel	MACRO
 	UserGate get_psp_sel_nr

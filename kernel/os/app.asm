@@ -210,6 +210,18 @@ init_app	PROC near
 	mov ax,free_app_mem_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET allocate_debug_app_mem
+	mov di,OFFSET allocate_debug_app_mem_name
+	mov dx,virt_es_out
+	mov ax,allocate_debug_app_mem_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET free_debug_app_mem
+	mov di,OFFSET free_debug_app_mem_name
+	mov dx,virt_es_in
+	mov ax,free_debug_app_mem_nr
+	RegisterBimodalUserGate
+;
 	mov bx,OFFSET load_dll16
 	mov si,OFFSET load_dll32
 	mov di,OFFSET load_dll_name
@@ -392,6 +404,8 @@ run_open_hooks	Proc near
 	mov ds:app_set_options_proc,0
 	mov ds:app_allocate_mem_proc,0
 	mov ds:app_free_mem_proc,0
+	mov ds:app_debug_allocate_mem_proc,0
+	mov ds:app_debug_free_mem_proc,0
 	mov ds:app_init_thread_proc,0
 	mov ds:app_free_thread_proc,0
 	mov ds:app_spawn_proc,0
@@ -1088,6 +1102,102 @@ free_mem_done:
 	pop ds
 	retf32
 free_app_mem	ENDP
+
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AllocateDebugAppMem
+;
+;		DESCRIPTION:	Allocate application memory, debug mode
+;
+;		PARAMETERS:		EAX			Size
+;
+;		RETURNS:		ES / (E)DX	Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_debug_app_mem_name	DB 'Allocate Debug App Mem',0
+
+allocate_debug_app_mem	PROC far
+	push ds
+;
+	push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov eax,ds:app_debug_allocate_mem_proc
+	or eax,eax
+	pop eax
+	jz allocate_debug_mem_norm
+;
+	call ds:app_debug_allocate_mem_proc
+	jmp allocate_debug_mem_done
+
+allocate_debug_mem_norm:
+    push eax
+	mov eax,ds:app_allocate_mem_proc
+	or eax,eax
+	pop eax
+	jz allocate_debug_mem_default
+;
+	call ds:app_allocate_mem_proc
+	jmp allocate_debug_mem_done
+
+allocate_debug_mem_default:
+	AllocateLocalMem
+
+allocate_debug_mem_done:
+	pop ds
+	retf32
+allocate_debug_app_mem	ENDP
+
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FreeDebugAppMem
+;
+;		DESCRIPTION:	Free application memory, debug mode
+;
+;		PARAMETERS:		ES / (E)DX	Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_debug_app_mem_name	DB 'Free Debug App Mem',0
+
+free_debug_app_mem	PROC far
+	push ds
+;
+	push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+	mov eax,ds:app_debug_free_mem_proc
+	or eax,eax
+	pop eax
+	jz free_debug_mem_norm
+;
+	call ds:app_debug_free_mem_proc
+	jmp free_debug_mem_done
+
+free_debug_mem_norm:
+    push eax
+	mov eax,ds:app_free_mem_proc
+	or eax,eax
+	pop eax
+	jz free_debug_mem_default
+;
+	call ds:app_free_mem_proc
+	jmp free_debug_mem_done
+
+free_debug_mem_default:
+	FreeMem
+
+free_debug_mem_done:
+	pop ds
+	retf32
+free_debug_app_mem	ENDP
 
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
