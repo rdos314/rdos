@@ -303,8 +303,11 @@ void TFtp::Disable()
     {
         NotifyMsg("QUIT\r\n");
 
-        FSocket->Write("QUIT\r\n");
-        FSocket->Push();
+        if (FSocket)
+        {
+            FSocket->Write("QUIT\r\n");
+            FSocket->Push();
+        }
 
         FEnabled = FALSE;
         FReady = FALSE;
@@ -839,10 +842,13 @@ void TFtp::SendUser()
 {
     NotifyMsg("USER\r\n");
 
-    FSocket->Write("USER ");
-    FSocket->Write(FUser.GetData());
-    FSocket->Write("\r\n");
-    FSocket->Push();
+    if (FSocket)
+    {
+        FSocket->Write("USER ");
+        FSocket->Write(FUser.GetData());
+        FSocket->Write("\r\n");
+        FSocket->Push();
+    }
 }
 
 /*##########################################################################
@@ -860,10 +866,13 @@ void TFtp::SendPassword()
 {
     NotifyMsg("PASS\r\n");
 
-    FSocket->Write("PASS ");
-    FSocket->Write(FPassw.GetData());
-    FSocket->Write("\r\n");
-    FSocket->Push();
+    if (FSocket)
+    {
+        FSocket->Write("PASS ");
+        FSocket->Write(FPassw.GetData());
+        FSocket->Write("\r\n");
+        FSocket->Push();
+    }
 }
 
 /*##########################################################################
@@ -881,8 +890,11 @@ void TFtp::SendPwd()
 {
     NotifyMsg("PWD\r\n");
 
-    FSocket->Write("PWD\r\n");
-    FSocket->Push();
+    if (FSocket)
+    {
+        FSocket->Write("PWD\r\n");
+        FSocket->Push();
+    }
 }
 
 /*##########################################################################
@@ -906,8 +918,11 @@ void TFtp::SendCwd(const char *path)
 
 //    NotifyMsg(str);
 
-    FSocket->Write(str);
-    FSocket->Push();
+    if (FSocket)
+    {
+        FSocket->Write(str);
+        FSocket->Push();
+    }
 }
 
 /*##########################################################################
@@ -931,8 +946,11 @@ void TFtp::SendMkd(const char *path)
 
     NotifyMsg(str);
 
-    FSocket->Write(str);
-    FSocket->Push();
+    if (FSocket)
+    {
+        FSocket->Write(str);
+        FSocket->Push();
+    }
 }
 
 /*##########################################################################
@@ -952,8 +970,11 @@ void TFtp::SendList()
 
     ClearEntries();
 
-    FSocket->Write("LIST\r\n");
-    FSocket->Push();
+    if (FSocket)
+    {
+        FSocket->Write("LIST\r\n");
+        FSocket->Push();
+    }
 }
 
 /*##########################################################################
@@ -978,8 +999,11 @@ void TFtp::SendType(char type)
 
 //    NotifyMsg(str);
 
-    FSocket->Write(str);
-    FSocket->Push();
+    if (FSocket)
+    {
+        FSocket->Write(str);
+        FSocket->Push();
+    }
 }
 
 /*##########################################################################
@@ -1003,8 +1027,11 @@ void TFtp::SendRetr()
 
     NotifyMsg(str);
 
-    FSocket->Write(str);
-    FSocket->Push();
+    if (FSocket)
+    {
+        FSocket->Write(str);
+        FSocket->Push();
+    }
 }
 
 /*##########################################################################
@@ -1028,8 +1055,11 @@ void TFtp::SendStor()
 
     NotifyMsg(str);
 
-    FSocket->Write(str);
-    FSocket->Push();
+    if (FSocket)
+    {
+        FSocket->Write(str);
+        FSocket->Push();
+    }
 }
 
 /*##########################################################################
@@ -1047,8 +1077,11 @@ void TFtp::SendPasv()
 {
 //    NotifyMsg("PASV\r\n");
 
-    FSocket->Write("PASV\r\n");
-    FSocket->Push();
+    if (FSocket)
+    {
+        FSocket->Write("PASV\r\n");
+        FSocket->Push();
+    }
 }
 
 /*##########################################################################
@@ -1362,16 +1395,20 @@ void TFtp::HandleOpen()
     int count;
     char str[1025];
 
-    FSocket->Push();
-    
-    if (FSocket->WaitForChar(10 * 60000))
-    {
-        count = FSocket->Read(str, 1024);
-        str[count] = 0;
-        HandleResponse(str);
+    if (FSocket)
+        FSocket->Push();
+
+    if (FSocket)
+    {    
+        if (FSocket->WaitForChar(10 * 60000))
+        {
+            count = FSocket->Read(str, 1024);
+            str[count] = 0;
+            HandleResponse(str);
+        }
+        else
+            FSocket->Close();
     }
-    else
-        FSocket->Close();
 }
 
 /*##########################################################################
