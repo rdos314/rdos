@@ -157,6 +157,24 @@ RemoveFileSel	Proc near
     mov ds,ax
     EnterSection ds:fs_file_section
 ;
+    mov ax,ds:fs_file_list
+    or ax,ax
+    jz rem_file_sel_leave
+;    
+    mov si,ax
+
+rem_file_sel_check:
+    mov es,ax
+    cmp ax,bx
+    je rem_file_sel_ok
+;
+    mov ax,es:file_next
+    cmp ax,si
+    jne rem_file_sel_check
+;
+    jmp rem_file_sel_leave
+
+rem_file_sel_ok:
     mov es,bx
     cmp bx,es:file_next
 	je rem_file_sel_empty
