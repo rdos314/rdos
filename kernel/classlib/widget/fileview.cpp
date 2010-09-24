@@ -441,6 +441,27 @@ void TFileViewControl::Init()
     FStartCol = 0;
     FMaxWidth = 0;
     FControlWidth = 0;
+
+    ControlType += TString(".FILEVIEW");
+}
+    
+/*##########################################################################
+#
+#   Name       : TFileViewControl::IsFileViewControl
+#
+#   Purpose....: Check if control is a file-view
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFileViewControl::IsFileViewControl(TControl *control)
+{
+    if (strstr(control->ControlType.GetData(), ".FILEVIEW"))
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################

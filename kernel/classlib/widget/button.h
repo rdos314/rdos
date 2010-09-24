@@ -158,6 +158,8 @@ public:
     TButtonControl(TControl *control);
     virtual ~TButtonControl();
 
+    static int IsButtonControl(TControl *control);
+
     void SetText(const char *text);
     void SetText(TString &text);
 

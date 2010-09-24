@@ -35,6 +35,9 @@
 #define     FALSE	0
 #define     TRUE	!FALSE
 
+static int CurrId = 0;
+static TSection IdSection;
+
 /*##########################################################################
 #
 #   Name       : KeyPress
@@ -334,6 +337,11 @@ void TControl::Init()
 	 FControlList = 0;
 	 FDelay = 0;
 	 FDirty = TRUE;
+
+	 IdSection.Enter();
+	 ControlId = CurrId;
+	 CurrId++;
+	 IdSection.Leave();
 }
 
 /*##########################################################################
@@ -849,7 +857,7 @@ void TControl::Move(int xstart, int ystart)
 #
 #   Name       : TControl::GetPos
 #
-#   Purpose....: Get position of control
+#   Purpose....: Get (relative) position of control
 #
 #   In params..: *
 #   Out params.: *
@@ -860,6 +868,37 @@ void TControl::GetPos(int *x, int *y) const
 {
     *x = FXMin;
     *y = FYMin;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::GetAbsPos
+#
+#   Purpose....: Get absolute position of control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::GetAbsPos(int *x, int *y) const
+{
+    TControl *parent;
+    int xstart, ystart;
+
+    xstart = FXMin;
+    ystart = FYMin;
+
+    parent = FParent;
+    while (parent)
+    {
+        xstart += parent->FXMin;
+        ystart += parent->FYMin;
+        parent = parent->FParent;
+    }
+
+    *x = xstart;
+    *y = ystart;
 }
 
 /*##########################################################################
@@ -1053,6 +1092,39 @@ void TControl::Update()
         FDev->Update(this);
 
     Unprotect();
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::EnumerateControls
+#
+#   Purpose....: List all controls under a protected environment
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::EnumerateControls(void *Data, void (*CallBack)(void *Data, TControl *Control))
+{
+    TControl *control;
+
+    if (IsVisible())
+    {
+        Protect();
+
+        control = FControlList;
+
+        (*CallBack)(Data, this);
+    
+        while (control)
+        {
+            control->EnumerateControls(Data, CallBack);
+            control = control->FNext;
+        }
+
+        Unprotect();
+    }
 }
 
 /*##########################################################################
@@ -2013,6 +2085,23 @@ void TControlThread::Delete(TControl *control)
 
 /*##########################################################################
 #
+#   Name       : TControlThread::GetSize
+#
+#   Purpose....: Get size of control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::GetSize(int *x, int *y) const
+{
+    *x = FGraphic->GetWidth();
+    *y = FGraphic->GetHeight();
+}
+
+/*##########################################################################
+#
 #   Name       : TControlThread::Update
 #
 #   Purpose....: Update control
@@ -2082,6 +2171,34 @@ void TControlThread::Update(TControl *control)
 void TControlThread::DefaultRedraw(TControl *control)
 {
     control->Redraw(DefaultRedrawTimeout);
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::EnumerateControls
+#
+#   Purpose....: List all controls under a protected environment
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::EnumerateControls(void *Data, void (*CallBack)(void *Data, TControl *Control))
+{
+    TControl *control;
+
+    Protect();
+
+    control = FControlList;
+
+    while (control)
+    {
+        control->EnumerateControls(Data, CallBack);
+        control = control->FNext;
+    }
+
+    Unprotect();
 }
 
 /*##########################################################################

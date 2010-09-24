@@ -616,6 +616,27 @@ void TTableControl::Init()
     FSpaceG = 0;
     FSpaceB = 0;
     FSpaceTransparent = FALSE;
+
+    ControlType += TString(".TABLE");
+}
+    
+/*##########################################################################
+#
+#   Name       : TTableControl::IsTableControl
+#
+#   Purpose....: Check if control is a table
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TTableControl::IsTableControl(TControl *control)
+{
+    if (strstr(control->ControlType.GetData(), ".TABLE"))
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################

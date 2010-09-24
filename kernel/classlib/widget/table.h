@@ -117,6 +117,8 @@ public:
     TTableControl(TControl *control, int xstart, int ystart, int xsize, int ysize);
     virtual ~TTableControl();
 
+	static int IsTableControl(TControl *control);
+
     int AddPanelColumn(TPanelFactory *factory, int width);
     int AddLabelColumn(TLabelFactory *factory, int width);
     

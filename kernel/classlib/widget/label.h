@@ -34,6 +34,14 @@
 
 #define MAX_LABEL_ROWS    256
 
+#define HOR_LEFT    0
+#define HOR_CENTER  1
+#define HOR_RIGHT   2
+
+#define VER_TOP     0
+#define VER_CENTER  1
+#define VER_BOTTOM  2
+
 class TLabelControl;
 
 class TLabelFactory : public TPanelFactory
@@ -94,16 +102,23 @@ public:
     TLabelControl(TControl *control);
     virtual ~TLabelControl();
 
+    static int IsLabelControl(TControl *control);
+
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);
     void SetFont(TFont *font);
+    TFont *GetFont();
+    
     void SetSpace(int xspace, int yspace);
     
     void SetDrawColor(int r, int g, int b);
+    void GetDrawColor(int *r, int *g, int *b);
 
     void SetText(TString &Text);
     void SetText(const char *Text);
+
+    const char *GetText();
 
     void AlignTopLeft();
     void AlignTop();
@@ -114,6 +129,8 @@ public:
     void AlignBottomLeft();
     void AlignBottom();
     void AlignBottomRight();
+
+    void GetAlign(int *Hor, int *Ver);
 
     virtual int GetMinHeight();
     

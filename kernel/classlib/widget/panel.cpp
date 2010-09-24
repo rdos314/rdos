@@ -30,8 +30,8 @@
 #include "panel.h"
 #include "ini.h"
 
-#define FALSE	0
-#define TRUE	!FALSE
+#define FALSE   0
+#define TRUE    !FALSE
 
 /*##########################################################################
 #
@@ -77,13 +77,13 @@ TPanelScrollFactory::~TPanelScrollFactory()
 ##########################################################################*/
 TVerPanelScrollControl *TPanelScrollFactory::CreateVer(TPanelControl *panel)
 {
-	TVerPanelScrollControl *scroll;
+        TVerPanelScrollControl *scroll;
 
-	scroll = new TVerPanelScrollControl(panel, FScrollWidth);
+        scroll = new TVerPanelScrollControl(panel, FScrollWidth);
 
-	SetParam(scroll);
+        SetParam(scroll);
 
-	return scroll;
+        return scroll;
 }
 
 /*##########################################################################
@@ -99,13 +99,13 @@ TVerPanelScrollControl *TPanelScrollFactory::CreateVer(TPanelControl *panel)
 ##########################################################################*/
 THorPanelScrollControl *TPanelScrollFactory::CreateHor(TPanelControl *panel)
 {
-	THorPanelScrollControl *scroll;
+        THorPanelScrollControl *scroll;
 
-	scroll = new THorPanelScrollControl(panel, FScrollWidth);
+        scroll = new THorPanelScrollControl(panel, FScrollWidth);
 
     SetParam(scroll);
 
-	return scroll;
+        return scroll;
 }
 
 /*##########################################################################
@@ -577,7 +577,7 @@ void TPanelFactory::Set(const char *IniName, const char *IniSection)
 ##########################################################################*/
 void TPanelFactory::SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart)
 {
-	FBackground = bitmap;
+        FBackground = bitmap;
     FBitStartX = xstart;
     FBitStartY = ystart;
 }
@@ -754,7 +754,7 @@ void TPanelFactory::SetBorderColor(int r, int g, int b)
 ##########################################################################*/
 void TPanelFactory::SetBorderTransparent()
 {
-	FBorderTrans = TRUE;
+        FBorderTrans = TRUE;
 }
 
 /*##########################################################################
@@ -773,17 +773,17 @@ void TPanelFactory::SetDefault(TPanelControl *panel, int xstart, int ystart, int
     if (FBackground)
         panel->SetBackground(FBackground, FBitStartX + xstart, FBitStartY + ystart);
 
-	if (FBackTrans)
-		panel->SetBackTransparent();
-	else
-		panel->SetBackColor(FBackR, FBackG, FBackB);
+        if (FBackTrans)
+                panel->SetBackTransparent();
+        else
+                panel->SetBackColor(FBackR, FBackG, FBackB);
 
-	panel->SetUpperWidth(FUpperWidth);
-	panel->SetLowerWidth(FLowerWidth);
-	panel->SetLeftWidth(FLeftWidth);
-	panel->SetRightWidth(FRightWidth);
+        panel->SetUpperWidth(FUpperWidth);
+        panel->SetLowerWidth(FLowerWidth);
+        panel->SetLeftWidth(FLeftWidth);
+        panel->SetRightWidth(FRightWidth);
 
-	if (FBorderTrans)
+        if (FBorderTrans)
         panel->SetBorderTransparent();
     else
         panel->SetBorderColor(FBorderR, FBorderG, FBorderB);
@@ -925,9 +925,9 @@ TPanelControl::TPanelControl(TControlThread *dev, int xstart, int ystart, int xs
     Init(2);
 
     Resize(xsize, ysize);
-	Move(xstart, ystart);
-//	Show();
-	Enable();
+        Move(xstart, ystart);
+//      Show();
+        Enable();
 }
 
 /*##########################################################################
@@ -947,9 +947,9 @@ TPanelControl::TPanelControl(TControl *control, int xstart, int ystart, int xsiz
     Init(2);
 
     Resize(xsize, ysize);
-	Move(xstart, ystart);
-//	Show();
-	Enable();
+        Move(xstart, ystart);
+//      Show();
+        Enable();
 }
 
 /*##########################################################################
@@ -1010,7 +1010,28 @@ void TPanelControl::Init(int border)
 
     FRedrawBack = TRUE;
 
-	FKey = 0;
+        FKey = 0;
+
+    ControlType += TString(".PANEL");
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::IsPanel
+#
+#   Purpose....: Check if this control is a panel
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPanelControl::IsPanel(TControl *control)
+{
+    if (strstr(control->ControlType.GetData(), ".PANEL"))
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -1290,7 +1311,7 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
     
     if (Ini.ReadVar("BackColor.G", str, 255))
     {
-		FBackG = atoi(str);
+                FBackG = atoi(str);
         FBackTrans = FALSE;
     }
 
@@ -1330,7 +1351,7 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
     {
         FDisabledB = atoi(str);
         FDisabledColorUsed = TRUE;
-	}
+        }
 
     HasWidth = Ini.ReadVar("Width", str, 255);
 
@@ -1371,17 +1392,17 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
 
     if (Ini.ReadVar("Scroll.Hor", str, 255))
     {
-		if (!strcmp(str, "Top"))
-			FHorUp = TRUE;
+                if (!strcmp(str, "Top"))
+                        FHorUp = TRUE;
 
-		if (!strcmp(str, "Bottom"))
-			FHorUp = FALSE;
-	}
+                if (!strcmp(str, "Bottom"))
+                        FHorUp = FALSE;
+        }
 
-	if (Ini.ReadVar("Scroll.Ver", str, 255))
-	{
-		if (!strcmp(str, "Left"))
-			FVerLeft = TRUE;
+        if (Ini.ReadVar("Scroll.Ver", str, 255))
+        {
+                if (!strcmp(str, "Left"))
+                        FVerLeft = TRUE;
 
         if (!strcmp(str, "Right"))
             FVerLeft = FALSE;
@@ -1404,7 +1425,7 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
 ##########################################################################*/
 void TPanelControl::SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart)
 {
-	FBackground = bitmap;
+        FBackground = bitmap;
     FBitStartX = xstart;
     FBitStartY = ystart;
     FRedrawBack = TRUE;
@@ -1429,6 +1450,24 @@ void TPanelControl::SetBackColor(int r, int g, int b)
 
     FBackTrans = FALSE;
     FRedrawBack = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::GetBackColor
+#
+#   Purpose....: Get back color
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::GetBackColor(int *r, int *g, int *b)
+{
+    *r = FBackR;
+    *g = FBackG;
+    *b = FBackB;
 }
 
 /*##########################################################################
@@ -1622,7 +1661,7 @@ void TPanelControl::SetBackColor(TGraphicDevice *dev)
         if (FDisabledColorUsed)
             dev->SetDrawColor(FDisabledR, FDisabledG, FDisabledB);
         else
-           	dev->SetDrawColor(FBackR, FBackG, FBackB);
+                dev->SetDrawColor(FBackR, FBackG, FBackB);
     }
 }
 
@@ -1667,10 +1706,10 @@ void TPanelControl::GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff) c
         if (FHorUp)
             *ystart += FHorScroll->GetWidth();
     }
-		  
+                  
 
-	if (FVerScroll && FVerScroll->IsEnabled())
-	{
+        if (FVerScroll && FVerScroll->IsEnabled())
+        {
         *xdiff += FVerScroll->GetWidth();
 
         if (FVerLeft)
@@ -1691,10 +1730,10 @@ void TPanelControl::GetInner(int *xstart, int *ystart, int *xdiff, int *ydiff) c
 ##########################################################################*/
 void TPanelControl::UpdateChild(TControl *control, int level)
 {
-	if (FBackTrans && !FBackground && HasParent() && level == 1)
-		RedrawParent();
-	else
-		TControl::UpdateChild(control, level);
+        if (FBackTrans && !FBackground && HasParent() && level == 1)
+                RedrawParent();
+        else
+                TControl::UpdateChild(control, level);
 }
 
 /*##########################################################################
@@ -1710,10 +1749,10 @@ void TPanelControl::UpdateChild(TControl *control, int level)
 ##########################################################################*/
 void TPanelControl::RedrawChild(TControl *control, int level)
 {
-	if (FBackTrans && !FBackground && HasParent() && level == 1)
-		RedrawParent();
-	else
-		TControl::RedrawChild(control, level);
+        if (FBackTrans && !FBackground && HasParent() && level == 1)
+                RedrawParent();
+        else
+                TControl::RedrawChild(control, level);
 }
 
 /*##########################################################################
@@ -1884,7 +1923,7 @@ int TPanelControl::IsInsidePanel(int x, int y) const
     int xoffs, yoffs;
     int xdiff, ydiff;
 
-	 GetPos(&xstart, &ystart);
+         GetPos(&xstart, &ystart);
     GetSize(&xsize, &ysize);
     GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
 
@@ -1893,7 +1932,7 @@ int TPanelControl::IsInsidePanel(int x, int y) const
     xsize -= xdiff;
     ysize -= ydiff;
 
-	return xstart <= x && xstart + xsize > x && ystart <= y && ystart + ysize > y;
+        return xstart <= x && xstart + xsize > x && ystart <= y && ystart + ysize > y;
 }
 
 /*##########################################################################
@@ -1965,15 +2004,15 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
         if (FHorUp)
             yimin += FHorScroll->GetWidth();
         else
-		    yimax -= FHorScroll->GetWidth();
-		scrolls++;
+                    yimax -= FHorScroll->GetWidth();
+                scrolls++;
     }
 
-	if (FVerScroll && FVerScroll->IsEnabled())
-	{
-	    if (FVerLeft)
-	        ximin += FVerScroll->GetWidth();
-	    else
+        if (FVerScroll && FVerScroll->IsEnabled())
+        {
+            if (FVerLeft)
+                ximin += FVerScroll->GetWidth();
+            else
             ximax -= FVerScroll->GetWidth();
         scrolls++;
     }
@@ -2003,29 +2042,29 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                     FVerScroll->Move(FLeftWidth + xscroll, FUpperWidth);
             }
 
-			FVerScroll->Resize(FVerScroll->GetWidth(), yscroll);
-			FVerScroll->Show();
-			FVerScroll->Redraw();
-		}
+                        FVerScroll->Resize(FVerScroll->GetWidth(), yscroll);
+                        FVerScroll->Show();
+                        FVerScroll->Redraw();
+                }
 
-		if (FHorScroll && FHorScroll->IsEnabled())
-		{
-		    if (FHorUp)
-		    {
-		        if (scrolls == 2 && FVerLeft)
-        			FHorScroll->Move(FLeftWidth + FVerScroll->GetWidth(), FUpperWidth);
-        	    else
-        			FHorScroll->Move(FLeftWidth, FUpperWidth);
-        	}
-        	else
-        	{
-		        if (scrolls == 2 && FVerLeft)        	    
-        			FHorScroll->Move(FLeftWidth + FVerScroll->GetWidth(), FUpperWidth + yscroll);
-        	    else
-        			FHorScroll->Move(FLeftWidth, FUpperWidth + yscroll);
-        	}
+                if (FHorScroll && FHorScroll->IsEnabled())
+                {
+                    if (FHorUp)
+                    {
+                        if (scrolls == 2 && FVerLeft)
+                                FHorScroll->Move(FLeftWidth + FVerScroll->GetWidth(), FUpperWidth);
+                    else
+                                FHorScroll->Move(FLeftWidth, FUpperWidth);
+                }
+                else
+                {
+                        if (scrolls == 2 && FVerLeft)               
+                                FHorScroll->Move(FLeftWidth + FVerScroll->GetWidth(), FUpperWidth + yscroll);
+                    else
+                                FHorScroll->Move(FLeftWidth, FUpperWidth + yscroll);
+                }
 
-			FHorScroll->Resize(xscroll, FHorScroll->GetWidth());
+                        FHorScroll->Resize(xscroll, FHorScroll->GetWidth());
             FHorScroll->Show();
             FHorScroll->Redraw();
         }
@@ -2035,11 +2074,11 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
     TControl::Paint(dev, xmin, ymin, width, height);
 
-	if (IsVisible() && FRedrawBack)
-	{
-	    FRedrawBack = FALSE;
-	    
-    	dev->SetLgopNone();
+        if (IsVisible() && FRedrawBack)
+        {
+            FRedrawBack = FALSE;
+            
+        dev->SetLgopNone();
         dev->SetFilledStyle();
 
         if (scrolls == 2 && !FBackTrans)
@@ -2051,28 +2090,28 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                     SetClipRect(    dev,
                                     ximin - FVerScroll->GetWidth(), 
                                     yimin - FHorScroll->GetWidth(),
-		        					ximin,
-				        			yimin);
+                                                                ximin,
+                                                                yimin);
 
-			        SetBackColor(dev);
-			        dev->DrawRect(      ximin - FVerScroll->GetWidth(), 
+                                SetBackColor(dev);
+                                dev->DrawRect(      ximin - FVerScroll->GetWidth(), 
                                         yimin - FHorScroll->GetWidth(),
-		        						ximin,
-				        				yimin);
-				}
-				else
-				{
+                                                                        ximin,
+                                                                        yimin);
+                                }
+                                else
+                                {
                     SetClipRect(    dev,
                                     ximin - FVerScroll->GetWidth(), 
                                     yimax + 1,
-		        					ximin,
-				        			yimax + FHorScroll->GetWidth());
+                                                                ximin,
+                                                                yimax + FHorScroll->GetWidth());
 
-			        SetBackColor(dev);
-			        dev->DrawRect(      ximin - FVerScroll->GetWidth(), 
+                                SetBackColor(dev);
+                                dev->DrawRect(      ximin - FVerScroll->GetWidth(), 
                                         yimax + 1,
-		        						ximin,
-				        				yimax + FHorScroll->GetWidth());
+                                                                        ximin,
+                                                                        yimax + FHorScroll->GetWidth());
                 }
             }
             else
@@ -2082,40 +2121,40 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                     SetClipRect(    dev,
                                     ximax + 1, 
                                     yimin - FHorScroll->GetWidth(),
-		        					ximax + FVerScroll->GetWidth(),
-				        			yimin);
+                                                                ximax + FVerScroll->GetWidth(),
+                                                                yimin);
 
-			        SetBackColor(dev);
-			        dev->DrawRect(      ximax + 1, 
+                                SetBackColor(dev);
+                                dev->DrawRect(      ximax + 1, 
                                         yimin - FHorScroll->GetWidth(),
-		        						ximax + FVerScroll->GetWidth(),
-				        				yimin);
-				}
-				else
-				{
+                                                                        ximax + FVerScroll->GetWidth(),
+                                                                        yimin);
+                                }
+                                else
+                                {
                     SetClipRect(    dev,
                                     ximax + 1,
                                     yimax + 1,
-		        					ximax + FVerScroll->GetWidth(),
-				        			yimax + FHorScroll->GetWidth());
+                                                                ximax + FVerScroll->GetWidth(),
+                                                                yimax + FHorScroll->GetWidth());
 
-			        SetBackColor(dev);
-			        dev->DrawRect(      ximax + 1,
-			                            yimax + 1,
-					        			ximax + FVerScroll->GetWidth(),
-							        	yimax + FHorScroll->GetWidth());
-				}
-		    }
+                                SetBackColor(dev);
+                                dev->DrawRect(      ximax + 1,
+                                                    yimax + 1,
+                                                                        ximax + FVerScroll->GetWidth(),
+                                                                        yimax + FHorScroll->GetWidth());
+                                }
+                    }
         }
 
         SetClipRect(    dev,
                         ximin, yimin,
-            			ximax, yimax);
+                                ximax, yimax);
 
         SetBackColor(dev);
         
-		if (FBackground)
-			dev->Blit(FBackground, FBitStartX, FBitStartY, ximin, yimin, FBackground->GetWidth(), FBackground->GetHeight());
+                if (FBackground)
+                        dev->Blit(FBackground, FBitStartX, FBitStartY, ximin, yimin, FBackground->GetWidth(), FBackground->GetHeight());
         else
         {
             if (!FBackTrans)
@@ -2124,7 +2163,7 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
         SetClipRect(    dev,
                         xmin, ymin,
-            			xmax, ymax);
+                                xmax, ymax);
 
         if (!FBorderTrans)
         {

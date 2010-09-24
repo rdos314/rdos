@@ -34,6 +34,7 @@
 #include "datetime.h"
 #include "sigdev.h"
 #include "sprite.h"
+#include "str.h"
 
 class TControlThread;
 
@@ -64,6 +65,7 @@ public:
 
     void GetPos(int *x, int *y) const;
     void GetSize(int *x, int *y) const;
+    void GetAbsPos(int *x, int *y) const;
 
     void PutKey(char ch);
     
@@ -72,9 +74,14 @@ public:
     void Redraw(int millisec);
     void ClearRedraw();
 
+    void EnumerateControls(void *Data, void (*CallBack)(void *Data, TControl *Control));
+
 	void (*OnChanged)(TControl *control);
 
     void *Owner;
+
+    TString ControlType;
+    int ControlId;
 
 protected:
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
@@ -151,6 +158,10 @@ public:
     void SetDefaultRedrawTimeout(int millisec);
     void DisableRedraw();
     void EnableRedraw(int Delay);
+
+    void GetSize(int *x, int *y) const;
+
+    void EnumerateControls(void *Data, void (*CallBack)(void *Data, TControl *Control));
 
 	void NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 	void NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);

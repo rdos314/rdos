@@ -593,7 +593,7 @@ cdCloseOutEndpointNext:
     mov cx,15
     mov bx,OFFSET usbf_in_endpoint_arr
     add bx,2
-    mov al,80h
+    mov al,81h
 
 cdCloseInEndpointLoop:
     mov dx,es:[bx]

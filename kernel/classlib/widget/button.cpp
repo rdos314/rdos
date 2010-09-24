@@ -1498,6 +1498,27 @@ void TButtonControl::Init(char ch)
     FKey = ch;
     FKeepDown = FALSE;
     FActive = FALSE;
+
+    ControlType += TString(".BUTTON");
+}
+    
+/*##########################################################################
+#
+#   Name       : TButtonControl::IsButtonControl
+#
+#   Purpose....: Check if control is a button
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TButtonControl::IsButtonControl(TControl *control)
+{
+    if (strstr(control->ControlType.GetData(), ".BUTTON"))
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################

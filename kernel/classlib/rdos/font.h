@@ -40,6 +40,7 @@ public:
 	~TFont();
 
     void GetStringMetrics(const char *str, int *width, int *height);
+    int GetHeight();
 
 protected:
     int FFontHandle;

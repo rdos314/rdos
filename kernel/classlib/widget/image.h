@@ -39,9 +39,13 @@ public:
 	TImageControl(TControl *control);
 	virtual ~TImageControl();
 
+	static int IsImageControl(TControl *control);
+
 	virtual void Set(const char *IniName, const char *IniSection);
 
 	void LoadImage(const char *FileName);
+
+	const char *GetImage();
 
 	void SetLoader(TLoaderThread *Loader);
 	void SetLoadIni(const char *IniName, const char *IniSection);
@@ -87,6 +91,8 @@ protected:
 	long FDelayArr[MAX_IMAGE_COUNT];
 
 	char FKey;
+
+	TString FImageName;
 
 private:
     void Init();

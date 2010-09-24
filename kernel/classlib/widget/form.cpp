@@ -170,6 +170,27 @@ void TFormControl::Init()
     FControlList = 0;
     FInnerWidth = 0;
     FInnerHeight = 0;
+
+    ControlType += TString(".FORM");
+}
+    
+/*##########################################################################
+#
+#   Name       : TFormControl::IsFormControl
+#
+#   Purpose....: Check if control is a form
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFormControl::IsFormControl(TControl *control)
+{
+    if (strstr(control->ControlType.GetData(), ".FORM"))
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################

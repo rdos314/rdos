@@ -166,6 +166,8 @@ public:
     TPanelControl(TControl *control);
     ~TPanelControl();
 
+    static int IsPanel(TControl *control);
+
     virtual void Set(const char *IniName, const char *IniSection);
 
     void DefineScroll(TPanelScrollFactory *fact);
@@ -186,6 +188,8 @@ public:
     void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
 
     void SetBackColor(int r, int g, int b);
+    void GetBackColor(int *r, int *g, int *b);
+
     void SetBackTransparent();
     void SetDisabledColor(int r, int g, int b);
 

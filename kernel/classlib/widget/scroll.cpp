@@ -1177,6 +1177,27 @@ void TScrollControl::Init()
     FPageDist = 0.1;
 
     FRedrawButtons = TRUE;
+
+    ControlType += TString(".SCROLL");
+}
+    
+/*##########################################################################
+#
+#   Name       : TScrollControl::IsScrollControl
+#
+#   Purpose....: Check if control is a scroll
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TScrollControl::IsScrollControl(TControl *control)
+{
+    if (strstr(control->ControlType.GetData(), ".SCROLL"))
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################

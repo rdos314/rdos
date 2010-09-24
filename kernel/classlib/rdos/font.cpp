@@ -115,3 +115,18 @@ void TFont::GetStringMetrics(const char *str, int *width, int *height)
 {
     RdosGetStringMetrics(FFontHandle, str, width, height);
 }
+
+/*##########################################################################
+#
+#   Name       : TFont::GetHeight
+#
+#   Purpose....: Get height of font
+#
+#   In params..: 
+#   Returns....: *
+#
+##########################################################################*/
+int TFont::GetHeight()
+{
+    return FHeight;
+}

@@ -89,6 +89,8 @@ public:
     TListControl(TControl *control);
     ~TListControl();
 
+    static int IsListControl(TControl *control);
+
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);

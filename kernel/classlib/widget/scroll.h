@@ -143,6 +143,8 @@ public:
     TScrollControl(TControlThread *dev);
     TScrollControl(TControl *control);
 
+    static int IsScrollControl(TControl *control);
+
     void SetPageDist(long double dist);
     void SetScrollDist(long double dist);
 

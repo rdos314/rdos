@@ -81,6 +81,8 @@ public:
     TFileViewControl(TControl *control);
     virtual ~TFileViewControl();
 
+    static int IsFileViewControl(TControl *control);
+
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);

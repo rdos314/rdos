@@ -33,14 +33,6 @@
 #define FALSE   0
 #define TRUE    !FALSE
 
-#define HOR_LEFT    0
-#define HOR_CENTER  1
-#define HOR_RIGHT   2
-
-#define VER_TOP     0
-#define VER_CENTER  1
-#define VER_BOTTOM  2
-
 /*##########################################################################
 #
 #   Name       : TLabelFactory::TLabelFactory
@@ -481,7 +473,7 @@ TLabelControl *TLabelFactory::Create(TControlThread *dev, int xstart, int ystart
 
     SetDefault(label, xstart, ystart, xsize, ysize);
 
-	return label;
+        return label;
 }
 
 /*##########################################################################
@@ -695,6 +687,27 @@ void TLabelControl::Init()
     FDrawR = 0;
     FDrawG = 0;
     FDrawB = 0;
+
+    ControlType += TString(".LABEL");
+}
+    
+/*##########################################################################
+#
+#   Name       : TLabelControl::IsLabelControl
+#
+#   Purpose....: Check if control is a label
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TLabelControl::IsLabelControl(TControl *control)
+{
+    if (strstr(control->ControlType.GetData(), ".LABEL"))
+        return TRUE;
+    else
+        return FALSE;
 }
     
 /*##########################################################################
@@ -824,6 +837,22 @@ void TLabelControl::SetFont(TFont *font)
 
 /*##########################################################################
 #
+#   Name       : TLabelControl::GetFont
+#
+#   Purpose....: Get font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFont *TLabelControl::GetFont()
+{
+    return FFont;
+}
+
+/*##########################################################################
+#
 #   Name       : TLabelControl::SetSpace
 #
 #   Purpose....: Set unused space
@@ -857,6 +886,24 @@ void TLabelControl::SetDrawColor(int r, int g, int b)
     FDrawR = r;
     FDrawG = g;
     FDrawB = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::GetDrawColor
+#
+#   Purpose....: Get draw color
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::GetDrawColor(int *r, int *g, int *b)
+{
+    *r = FDrawR;
+    *g = FDrawG;
+    *b = FDrawB;
 }
 
 /*##########################################################################
@@ -1010,6 +1057,23 @@ void TLabelControl::AlignBottomRight()
 {
     FHorAlign = HOR_RIGHT;
     FVerAlign = VER_BOTTOM;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::GetAlign
+#
+#   Purpose....: Get alignment
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::GetAlign(int *hor, int *ver)
+{
+    *hor = FHorAlign;
+    *ver = FVerAlign;
 }
 
 /*##########################################################################
@@ -1225,6 +1289,25 @@ void TLabelControl::SetText(const char *Text)
 void TLabelControl::SetText(TString &Text)
 {
     SetText(Text.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::GetText
+#
+#   Purpose....: Get text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TLabelControl::GetText()
+{
+    if (FText)
+        return FText;
+    else
+        return "";
 }
 
 /*##########################################################################

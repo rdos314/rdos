@@ -509,6 +509,27 @@ void TListControl::Init()
     FRows = 0;
     FStartRow = 0;
     FSelected = -1;
+
+    ControlType += TString(".LISTBOX");
+}
+    
+/*##########################################################################
+#
+#   Name       : TListControl::IsListControl
+#
+#   Purpose....: Check if control is a listbox
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TListControl::IsListControl(TControl *control)
+{
+    if (strstr(control->ControlType.GetData(), ".LISTBOX"))
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################

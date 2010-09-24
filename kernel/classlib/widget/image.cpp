@@ -195,6 +195,27 @@ void TImageControl::Init()
 
 	FLoader = 0;
 	FLoading = FALSE;
+
+	ControlType += TString(".IMAGE");
+}
+    
+/*##########################################################################
+#
+#   Name       : TImageControl::IsImageControl
+#
+#   Purpose....: Check if control is an image
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TImageControl::IsImageControl(TControl *control)
+{
+    if (strstr(control->ControlType.GetData(), ".IMAGE"))
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -273,6 +294,8 @@ void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
 {
     int i;
     int fh;
+
+    FImageName = TString(IniName) + ":" + TString(IniSection);
 
     if (FLoadIni)
         delete FLoadIni;
@@ -657,11 +680,29 @@ void TImageControl::Load(int MaxCount)
 ##########################################################################*/
 void TImageControl::LoadImage(const char *FileName)
 {
+    FImageName = TString(FileName);
+
     FLoading = TRUE;
     FCount = 0;
     LoadOne(FileName, 1);
     FLoading = FALSE;
     Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TImageControl::GetImage
+#
+#   Purpose....: Get current image reference
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TImageControl::GetImage()
+{
+    return FImageName.GetData();
 }
 
 /*##########################################################################

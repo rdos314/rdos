@@ -59,6 +59,8 @@ public:
     TFormControl(TControlThread *dev);
     TFormControl(TControl *control);
     virtual ~TFormControl();
+
+    static int IsFormControl(TControl *control);
     
     void LoadControls(const char *IniName);
     void Add(const char *name, TControl *control);
