@@ -58,6 +58,26 @@ struct TExeHeader
     short int OvNo;
 };
 
+struct TRdvHeader16
+{
+    short int Signature;
+    short int Ip;
+    short int CodeSize;
+    short int CodeSel;
+    short int DataSize;
+    short int DataSel;
+};
+
+struct TRdvHeader32
+{
+    short int Signature;
+    long Eip;
+    long CodeSize;
+    short int CodeSel;
+    long DataSize;
+    short int DataSel;
+};
+
 /*##########################################################################
 #
 #   Name       : TRdosObject::TRdosObject
@@ -349,7 +369,7 @@ TRdosSimpleDeviceBaseObject::~TRdosSimpleDeviceBaseObject()
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosSimpleDeviceBaseObject::LoadDeviceFile(const char *FileName)
+int TRdosSimpleDeviceBaseObject::LoadDeviceFile(const char *FileName)
 {
     TExeHeader ExeHeader;
     TFile File(FileName);
@@ -364,6 +384,9 @@ void TRdosSimpleDeviceBaseObject::LoadDeviceFile(const char *FileName)
     if (File.IsOpen())
     {
         File.Read(&ExeHeader, sizeof(TExeHeader));
+
+        if (ExeHeader.Signature != 0x5A4D)
+            return FALSE;
 
         HeaderSize = ExeHeader.HeaderSize << 4;        
         File.SetPos(HeaderSize);
@@ -382,39 +405,42 @@ void TRdosSimpleDeviceBaseObject::LoadDeviceFile(const char *FileName)
         FDeviceHeader->StartIp = ExeHeader.Ip;
 
         File.Read(FDeviceData, FDeviceSize);
+
+        return TRUE;
     }
+    return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosDeviceBaseObject::TRdosDeviceBaseObject
+#   Name       : TRdosDosDeviceBaseObject::TRdosDosDeviceBaseObject
 #
-#   Purpose....: Constructor for TRdosDeviceBaseObject
+#   Purpose....: Constructor for TRdosDosDeviceBaseObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDeviceBaseObject::TRdosDeviceBaseObject()
+TRdosDosDeviceBaseObject::TRdosDosDeviceBaseObject()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosDeviceBaseObject::TRdosDeviceBaseObject
+#   Name       : TRdosDeviceDosBaseObject::TRdosDeviceDosBaseObject
 #
-#   Purpose....: Constructor for TRdosDeviceBaseObject
+#   Purpose....: Constructor for TRdosDosDeviceBaseObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDeviceBaseObject::TRdosDeviceBaseObject(TFile *File, int Size)
+TRdosDosDeviceBaseObject::TRdosDosDeviceBaseObject(TFile *File, int Size)
  : TRdosObject(File, Size)
 {
-    FDeviceHeader = (TRdosDeviceHeader *)FData; 
+    FDeviceHeader = (TRdosDosDeviceHeader *)FData; 
     FDeviceSize = FSize - FDeviceHeader->Size;
     FDeviceData = FData + FDeviceHeader->Size;    
 }
@@ -423,19 +449,19 @@ TRdosDeviceBaseObject::TRdosDeviceBaseObject(TFile *File, int Size)
 
 /*##########################################################################
 #
-#   Name       : TRdosDeviceBaseObject::TRdosDeviceBaseObject
+#   Name       : TRdosDosDeviceBaseObject::TRdosDosDeviceBaseObject
 #
-#   Purpose....: Constructor for TRdosDeviceBaseObject
+#   Purpose....: Constructor for TRdosDosDeviceBaseObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDeviceBaseObject::TRdosDeviceBaseObject(int adapter, int entry, int size)
+TRdosDosDeviceBaseObject::TRdosDosDeviceBaseObject(int adapter, int entry, int size)
   : TRdosObject(adapter, entry, size)
 {
-    FDeviceHeader = (TRdosDeviceHeader *)FData; 
+    FDeviceHeader = (TRdosDosDeviceHeader *)FData; 
     FDeviceSize = FSize - FDeviceHeader->Size;
     FDeviceData = FData + FDeviceHeader->Size;    
 }
@@ -444,22 +470,22 @@ TRdosDeviceBaseObject::TRdosDeviceBaseObject(int adapter, int entry, int size)
 
 /*##########################################################################
 #
-#   Name       : TRdosDeviceBaseObject::~TRdosDeviceBaseObject
+#   Name       : TRdosDosDeviceBaseObject::~TRdosDosDeviceBaseObject
 #
-#   Purpose....: Destructor for TRdosDeviceBaseObject
+#   Purpose....: Destructor for TRdosDosDeviceBaseObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDeviceBaseObject::~TRdosDeviceBaseObject()
+TRdosDosDeviceBaseObject::~TRdosDosDeviceBaseObject()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosDeviceBaseObject::LoadDeviceFile
+#   Name       : TRdosDosDeviceBaseObject::LoadDeviceFile
 #
 #   Purpose....: Load device file
 #
@@ -468,7 +494,7 @@ TRdosDeviceBaseObject::~TRdosDeviceBaseObject()
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *Param)
+int TRdosDosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *Param)
 {
     char NameParam[256];
     TExeHeader ExeHeader;
@@ -486,6 +512,9 @@ void TRdosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *Par
     {
         File.Read(&ExeHeader, sizeof(TExeHeader));
 
+        if (ExeHeader.Signature != 0x5A4D)
+            return FALSE;
+
         HeaderSize = ExeHeader.HeaderSize << 4;        
         File.SetPos(HeaderSize);
         
@@ -494,7 +523,7 @@ void TRdosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *Par
         Size -= ExeHeader.HeaderSize;
         Size += ExeHeader.MinAlloc;
 
-        HeaderSize = sizeof(TRdosDeviceHeader);
+        HeaderSize = sizeof(TRdosDosDeviceHeader);
         HeaderSize += strlen(FileName);
         HeaderSize += strlen(Param);
         HeaderSize++;
@@ -502,7 +531,7 @@ void TRdosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *Par
         FDeviceSize = Size << 4;
         FSize = FDeviceSize + HeaderSize;
         FData = new char[FSize];
-        FDeviceHeader = (TRdosDeviceHeader *)FData;
+        FDeviceHeader = (TRdosDosDeviceHeader *)FData;
         FDeviceData = FData + HeaderSize;
 
         FDeviceHeader->Size = HeaderSize;
@@ -516,7 +545,145 @@ void TRdosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *Par
         strcpy(ptr, Param);
 
         File.Read(FDeviceData, FDeviceSize);
+
+        return TRUE;
     }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16BaseObject::TRdosDevice16BaseObject
+#
+#   Purpose....: Constructor for TRdosDevice16BaseObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice16BaseObject::TRdosDevice16BaseObject()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16BaseObject::TRdosDevice16BaseObject
+#
+#   Purpose....: Constructor for TRdosDevice16BaseObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice16BaseObject::TRdosDevice16BaseObject(TFile *File, int Size)
+ : TRdosObject(File, Size)
+{
+    FDeviceHeader = (TRdosDevice16Header *)FData; 
+    FDeviceSize = FSize - FDeviceHeader->Size;
+    FDeviceData = FData + FDeviceHeader->Size;    
+}
+
+#ifdef __RDOS__
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16BaseObject::TRdosDevice16BaseObject
+#
+#   Purpose....: Constructor for TRdosDevice16BaseObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice16BaseObject::TRdosDevice16BaseObject(int adapter, int entry, int size)
+  : TRdosObject(adapter, entry, size)
+{
+    FDeviceHeader = (TRdosDevice16Header *)FData; 
+    FDeviceSize = FSize - FDeviceHeader->Size;
+    FDeviceData = FData + FDeviceHeader->Size;    
+}
+
+#endif
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16BaseObject::~TRdosDevice16BaseObject
+#
+#   Purpose....: Destructor for TRdosDevice16BaseObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice16BaseObject::~TRdosDevice16BaseObject()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16BaseObject::LoadDeviceFile
+#
+#   Purpose....: Load device file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRdosDevice16BaseObject::LoadDeviceFile(const char *FileName, const char *Param)
+{
+    char NameParam[256];
+    TRdvHeader16 ExeHeader;
+    TFile File(FileName);
+    int HeaderSize;
+    int Size;
+    char *ptr;
+
+    if (FData)
+        delete FData;
+    FData = 0;
+    FSize = 0;
+
+    if (File.IsOpen())
+    {
+        File.Read(&ExeHeader, sizeof(TRdvHeader16));
+
+        if (ExeHeader.Signature != 0x3652)
+            return FALSE;
+
+        HeaderSize = sizeof(TRdosDevice16Header);
+        HeaderSize += strlen(FileName);
+        HeaderSize += strlen(Param);
+        HeaderSize++;
+
+        FDeviceSize = ExeHeader.CodeSize + ExeHeader.DataSize;
+        FSize = FDeviceSize + HeaderSize;
+        FData = new char[FSize];
+        FDeviceHeader = (TRdosDevice16Header *)FData;
+        FDeviceData = FData + HeaderSize;
+
+        FDeviceHeader->Size = HeaderSize;
+        FDeviceHeader->StartIp = ExeHeader.Ip;
+        FDeviceHeader->CodeSize = ExeHeader.CodeSize;
+        FDeviceHeader->CodeSel = ExeHeader.CodeSel;
+        FDeviceHeader->DataSize = ExeHeader.DataSize;
+        FDeviceHeader->DataSel = ExeHeader.DataSel;
+
+        ptr = &FDeviceHeader->NameParam;
+        strcpy(ptr, FileName);
+        ptr += strlen(FileName);
+        ptr++;        
+        strcpy(ptr, Param);
+
+        File.Read(FDeviceData, FDeviceSize);
+
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /*##########################################################################
@@ -532,8 +699,8 @@ void TRdosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *Par
 ##########################################################################*/
 TRdosKernelObject::TRdosKernelObject(const char *KernelFileName)
 {
-    FType = RDOS_OBJECT_KERNEL;
-    LoadDeviceFile(KernelFileName);
+    if (LoadDeviceFile(KernelFileName))
+        FType = RDOS_OBJECT_KERNEL;
 }
 
 /*##########################################################################
@@ -704,8 +871,8 @@ TString TRdosFontObject::GetInfo()
 ##########################################################################*/
 TRdosSimpleDeviceObject::TRdosSimpleDeviceObject(const char *DeviceFileName)
 {
-    FType = RDOS_OBJECT_SIMPLE_DEVICE;
-    LoadDeviceFile(DeviceFileName);
+    if (LoadDeviceFile(DeviceFileName))
+        FType = RDOS_OBJECT_SIMPLE_DEVICE;
 }
 
 /*##########################################################################
@@ -774,82 +941,82 @@ TRdosSimpleDeviceObject::~TRdosSimpleDeviceObject()
 ##########################################################################*/
 TString TRdosSimpleDeviceObject::GetInfo()
 {
-    return TString("Device");
+    return TString("DosDevice");
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosDeviceObject::TRdosDeviceObject
+#   Name       : TRdosDosDeviceObject::TRdosDosDeviceObject
 #
-#   Purpose....: Constructor for TRdosDeviceObject
+#   Purpose....: Constructor for TRdosDosDeviceObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDeviceObject::TRdosDeviceObject(const char *DeviceFileName)
+TRdosDosDeviceObject::TRdosDosDeviceObject(const char *DeviceFileName)
 {
-    FType = RDOS_OBJECT_DEVICE;
-    LoadDeviceFile(DeviceFileName, "");
+    if (LoadDeviceFile(DeviceFileName, ""))
+        FType = RDOS_OBJECT_DOS_DEVICE;
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosDeviceObject::TRdosDeviceObject
+#   Name       : TRdosDosDeviceObject::TRdosDosDeviceObject
 #
-#   Purpose....: Constructor for TRdosDeviceObject
+#   Purpose....: Constructor for TRdosDosDeviceObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDeviceObject::TRdosDeviceObject(TFile *File, int Size)
- : TRdosDeviceBaseObject(File, Size)
+TRdosDosDeviceObject::TRdosDosDeviceObject(TFile *File, int Size)
+ : TRdosDosDeviceBaseObject(File, Size)
 {
-    FType = RDOS_OBJECT_DEVICE;
+    FType = RDOS_OBJECT_DOS_DEVICE;
 }
 
 #ifdef __RDOS__
 
 /*##########################################################################
 #
-#   Name       : TRdosDeviceObject::TRdosDeviceObject
+#   Name       : TRdosDosDeviceObject::TRdosDosDeviceObject
 #
-#   Purpose....: Constructor for TRdosDeviceObject
+#   Purpose....: Constructor for TRdosDosDeviceObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDeviceObject::TRdosDeviceObject(int adapter, int entry, int size)
-  : TRdosDeviceBaseObject(adapter, entry, size)
+TRdosDosDeviceObject::TRdosDosDeviceObject(int adapter, int entry, int size)
+  : TRdosDosDeviceBaseObject(adapter, entry, size)
 {
-    FType = RDOS_OBJECT_DEVICE;
+    FType = RDOS_OBJECT_DOS_DEVICE;
 }
 
 #endif
 
 /*##########################################################################
 #
-#   Name       : TRdosDeviceObject::~TRdosDeviceObject
+#   Name       : TRdosDosDeviceObject::~TRdosDosDeviceObject
 #
-#   Purpose....: Destructor for TRdosDeviceObject
+#   Purpose....: Destructor for TRdosDosDeviceObject
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDeviceObject::~TRdosDeviceObject()
+TRdosDosDeviceObject::~TRdosDosDeviceObject()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TRdosDeviceObject::GetInfo
+#   Name       : TRdosDosDeviceObject::GetInfo
 #
 #   Purpose....: Get printable object info
 #
@@ -858,12 +1025,111 @@ TRdosDeviceObject::~TRdosDeviceObject()
 #   Returns....: *
 #
 ##########################################################################*/
-TString TRdosDeviceObject::GetInfo()
+TString TRdosDosDeviceObject::GetInfo()
 {
     char str[256];
     char *ptr;
 
     strcpy(str, "Device ");
+
+    ptr = &FDeviceHeader->NameParam;
+    strcat(str, ptr);
+    strcat(str, " ");
+
+    ptr += strlen(ptr);
+    ptr++;
+    strcat(str, ptr);
+    
+    return TString(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16Object::TRdosDevice16Object
+#
+#   Purpose....: Constructor for TRdosDevice16Object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice16Object::TRdosDevice16Object(const char *DeviceFileName)
+{
+    if (LoadDeviceFile(DeviceFileName, ""))
+        FType = RDOS_OBJECT_DEVICE16;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16Object::TRdosDevice16Object
+#
+#   Purpose....: Constructor for TRdosDevice16Object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice16Object::TRdosDevice16Object(TFile *File, int Size)
+ : TRdosDevice16BaseObject(File, Size)
+{
+    FType = RDOS_OBJECT_DEVICE16;
+}
+
+#ifdef __RDOS__
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16Object::TRdosDevice16Object
+#
+#   Purpose....: Constructor for TRdosDevice16Object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice16Object::TRdosDevice16Object(int adapter, int entry, int size)
+  : TRdosDevice16BaseObject(adapter, entry, size)
+{
+    FType = RDOS_OBJECT_DEVICE16;
+}
+
+#endif
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16Object::~TRdosDevice16Object
+#
+#   Purpose....: Destructor for TRdosDevice16Object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRdosDevice16Object::~TRdosDevice16Object()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosDevice16Object::GetInfo
+#
+#   Purpose....: Get printable object info
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TRdosDevice16Object::GetInfo()
+{
+    char str[256];
+    char *ptr;
+
+    strcpy(str, "Device16 ");
 
     ptr = &FDeviceHeader->NameParam;
     strcat(str, ptr);
@@ -889,8 +1155,8 @@ TString TRdosDeviceObject::GetInfo()
 ##########################################################################*/
 TRdosShutdownObject::TRdosShutdownObject(const char *ShutdownFileName)
 {
-    FType = RDOS_OBJECT_SHUTDOWN;
-    LoadDeviceFile(ShutdownFileName);
+    if (LoadDeviceFile(ShutdownFileName))
+        FType = RDOS_OBJECT_SHUTDOWN;
 }
 
 /*##########################################################################
@@ -1762,8 +2028,12 @@ void TRdosImage::AddImage(const char *ImageFile)
                         obj = new TRdosFontObject(&File, size);
                         break;
 
-                    case RDOS_OBJECT_DEVICE:
-                        obj = new TRdosDeviceObject(&File, size);
+                    case RDOS_OBJECT_DEVICE16:
+                        obj = new TRdosDevice16Object(&File, size);
+                        break;
+
+                    case RDOS_OBJECT_DOS_DEVICE:
+                        obj = new TRdosDosDeviceObject(&File, size);
                         break;
 
                     case RDOS_OBJECT_SIMPLE_DEVICE:
@@ -1855,8 +2125,12 @@ void TRdosImage::AddRunning()
                             obj = new TRdosFontObject(adapter, entry, size);
                             break;
 
-                        case RDOS_OBJECT_DEVICE:
-                            obj = new TRdosDeviceObject(adapter, entry, size);
+                        case RDOS_OBJECT_DEVICE16:
+                            obj = new TRdosDevice16Object(adapter, entry, size);
+                            break;
+
+                        case RDOS_OBJECT_DOS_DEVICE:
+                            obj = new TRdosDosDeviceObject(adapter, entry, size);
                             break;
 
                         case RDOS_OBJECT_SIMPLE_DEVICE:
@@ -1923,7 +2197,14 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
         obj = new TRdosFontObject(param);
     
     if (!strcmp(cmd, "device"))
-        obj = new TRdosDeviceObject(param);
+    {
+        obj = new TRdosDosDeviceObject(param);
+        if (obj->GetType() != RDOS_OBJECT_DOS_DEVICE)
+        {
+            delete obj;
+            obj = new TRdosDevice16Object(param);
+        } 
+    }
     
     if (!strcmp(cmd, "shutdown"))
         obj = new TRdosShutdownObject(param);
