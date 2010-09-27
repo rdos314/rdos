@@ -329,40 +329,40 @@ install_simple_device	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			install_device
+;		NAME:			install_dos_device
 ;
-;		DESCRIPTION:	install device
+;		DESCRIPTION:	install dos device
 ;
 ;		PARAMETERS:		DS:EDX	device header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-install_device	PROC near
+install_dos_device	PROC near
 	push ds
 	push es
 	pushad
 	mov ecx,[edx].len
 	sub ecx,SIZE rdos_header
 	add edx,SIZE rdos_header
-	mov ax,[edx].dev_init_ip
-	movzx ebx,[edx].dev_size
+	mov ax,[edx].dos_dev_init_ip
+	movzx ebx,[edx].dos_dev_size
 	sub ecx,ebx
 	add edx,ebx
 	mov bx,device_code_sel
 	CreateCodeSelector16
 ;
 	push cs
-	push OFFSET install_device_end
+	push OFFSET install_dos_device_end
 	push bx
 	push ax
 	retf
 
-install_device_end:
+install_dos_device_end:
 	popad
 	pop es
 	pop ds
 	ret
-install_device	ENDP
+install_dos_device	ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -392,13 +392,13 @@ install_adapter_loop:
 	jmp install_adapter_next
 
 not_install_simple_device:
-	cmp ax,RdosDevice
-	jne not_install_device
+	cmp ax,RdosDosDevice
+	jne not_install_dos_device
 ;	
-	call install_device
+	call install_dos_device
 	jmp install_adapter_next
 	
-not_install_device:
+not_install_dos_device:
 	cmp ax,RdosEnd
 	je install_adapter_done
 install_adapter_next:
@@ -598,8 +598,69 @@ get_image_data16  Endp
 
 device16_thread_name DB 'Device 16', 0
 
+install_device16    Proc near
+	push ds
+	push es
+	pushad
+	mov ecx,[edx].len
+	sub ecx,SIZE rdos_header
+	add edx,SIZE rdos_header
+	mov ebx,[edx].dev16_size
+	movzx ecx,[edx].dev16_code_size
+	add edx,ebx
+	mov bx,[edx].dev16_code_sel
+	CreateCodeSelector16
+;
+    add edx,ecx
+	movzx ecx,[edx].dev16_data_size
+	mov bx,[edx].dev16_code_sel
+	or ecx,ecx
+	jz install_device16_call
+;
+	CreateCodeSelector16
+
+install_device16_call:
+	mov ax,[edx].dev16_init_ip
+	mov bx,[edx].dev16_code_sel
+	push cs
+	push OFFSET install_device16_end
+	push bx
+	push ax
+	retf
+
+install_device16_end:
+	popad
+	pop es
+	pop ds
+    ret
+install_device16    Endp
+
 device16_thread:
     int 3
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	mov bx,OFFSET rom_adapters
+	mov edx,[bx].adapter_base
+	mov ax,flat_sel
+	mov ds,ax
+device_adapter_loop:
+	mov ax,[edx].typ
+	cmp ax,RdosDevice16
+	jne not_device;	
+	call install_device16
+	jmp device_adapter_next
+	
+not_device:
+	cmp ax,RdosEnd
+	je device_adapter_done
+	
+device_adapter_next:
+	add edx,[edx].len
+	jmp device_adapter_loop
+	
+device_adapter_done:
+	retf
 
 cr_device_thread:
     mov ax,cs
@@ -610,6 +671,7 @@ cr_device_thread:
 	mov ax,2
 	mov cx,100h	
 	CreateThread
+	retf
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

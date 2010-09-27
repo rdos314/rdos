@@ -43,8 +43,10 @@ RdosCommand = 7
 RdosSet = 8
 RdosPath = 9
 
-RdosDevice = 16
+RdosDosDevice = 16
 RdosFile = 17
+
+RdosDevice16 = 18
 
 RdosEnd = 0E5E5h
 
@@ -69,14 +71,25 @@ init_ip DW ?
 
 simple_device_header   ENDS
 
-device_header   STRUC
+dos_device_header   STRUC
 
-dev_size        DW ?
-dev_sel         DW ?
-dev_init_ip     DW ?
-dev_name_parm   DB ?
+dos_dev_size        DW ?
+dos_dev_sel         DW ?
+dos_dev_init_ip     DW ?
+dos_dev_name_parm   DB ?
 
-device_header   ENDS
+dos_device_header   ENDS
+
+device16_header   STRUC
+
+dev16_size          DD ?
+dev16_code_size     DW ?
+dev16_code_sel      DW ?
+dev16_data_size     DW ?
+dev16_data_sel      DW ?
+dev16_init_ip       DW ?
+
+device16_header   ENDS
 
 system_seg	STRUC
 
