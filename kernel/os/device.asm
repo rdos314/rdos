@@ -585,6 +585,32 @@ get_image_data16  Proc far
     ret
 get_image_data16  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			device16_thread
+;
+;		DESCRIPTION:    Device16 test thread
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+device16_thread_name DB 'Device 16', 0
+
+device16_thread:
+    int 3
+
+cr_device_thread:
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+	mov si,OFFSET device16_thread
+	mov di,OFFSET device16_thread_name
+	mov ax,2
+	mov cx,100h	
+	CreateThread
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -636,6 +662,12 @@ init_device_loop:
 	call install_adapter
 	add bx,SIZE adapter_typ
 	loop init_device_loop	
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+	mov di,OFFSET cr_device_thread
+	HookInitTasking
 ;
 	popa
 	pop es
