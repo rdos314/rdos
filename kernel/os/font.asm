@@ -24,8 +24,8 @@
 ; Font handling
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME font
+                        
+        NAME font
 
 GateSize = 16
 
@@ -39,181 +39,180 @@ INCLUDE ..\handle.inc
 INCLUDE system.def
 INCLUDE system.inc
 
-font_seg        STRUC
-
-font_id                                 DW ?
-font_point_size                 DW ?
-font_name                               DB 32 DUP(?)
-font_minch                              DW ?
-font_maxch                              DW ? 
-font_topline                    DW ?
-font_ascent                             DW ?
-font_halfline                   DW ?
-font_descent                    DW ?
-font_botline                    DW ?
-font_maxwidth                   DW ?
-font_cellsize                   DW ?
-font_leftofs                    DW ?
-font_right_ofs                  DW ?
-font_thicken                    DW ?
-font_ulwidth                    DW ?
-font_lightmask                  DW ?
-font_skewmask                   DW ?
-font_flags                              DW ?
-font_hotptr                             DD ?
-font_cotptr                             DD ?
-font_bufptr                             DD ?
-font_fwidth                             DW ?
-font_fheight                    DW ?
-
-font_org_data                   DB ?
-
-fsp                                             DB 8Bh DUP(?)
-
-; this should be offset E0
-
-font_next                               DD ?
-font_type                               DW ?
-
-font_data                               DB ?
-
-font_seg        ENDS
-
 font_handle_struc       STRUC
 
-fh_base                 handle_header <>
-fh_org_sel              DW ?
-fh_buf_sel              DW ?
+fh_base         handle_header <>
+fh_org_sel          DW ?
+fh_buf_sel          DW ?
 
 font_handle_struc       ENDS
 
 font_buf_header STRUC
 
-fh_height               DW ?
+fh_height           DW ?
 
-fh_widths               DW 256 DUP(?)
-fh_bitmaps              DD 256 DUP(?)
+fh_widths           DW 256 DUP(?)
+fh_bitmaps          DD 256 DUP(?)
 
 font_buf_header ENDS
+        
+data    SEGMENT byte public 'DATA'
 
-        .386p
+font_id                 DW ?
+font_point_size         DW ?
+font_name                   DB 32 DUP(?)
+font_minch                  DW ?
+font_maxch                  DW ? 
+font_topline            DW ?
+font_ascent                 DW ?
+font_halfline           DW ?
+font_descent            DW ?
+font_botline            DW ?
+font_maxwidth           DW ?
+font_cellsize           DW ?
+font_leftofs            DW ?
+font_right_ofs          DW ?
+font_thicken            DW ?
+font_ulwidth            DW ?
+font_lightmask          DW ?
+font_skewmask           DW ?
+font_flags                  DW ?
+font_hotptr                 DD ?
+font_cotptr                 DD ?
+font_bufptr                 DD ?
+font_fwidth                 DW ?
+font_fheight            DW ?
 
-code    SEGMENT byte public use16 'CODE'
+font_org_data           DB ?
+
+fsp                         DB 8Bh DUP(?)
+
+; this should be offset E0
+
+font_next                   DD ?
+font_type                   DW ?
+
+font_data                   DB 512 DUP(?)
+        
+data    ENDS
+        
+code    SEGMENT byte use16 public 'CODE'
 
         assume cs:code
 
+    .386p
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   INSTALL_FONT
+;           NAME:           INSTALL_FONT
 ;
-;               DESCRIPTION:    Install a font
+;           DESCRIPTION:    Install a font
 ;
-;               PARAMETERS:             DS:EDX  font header
+;           PARAMETERS:         DS:EDX  font header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 install_font    PROC near
-        push ds
-        push ax
-        push bx
-        push ecx
-        push edx
-        push si
+    push ds
+    push ax
+    push bx
+    push ecx
+    push edx
+    push si
 ;
-        mov ecx,[edx].len
-        sub ecx,SIZE rdos_header
-        add edx,SIZE rdos_header
-        AllocateGdt
-        CreateDataSelector16
+    mov ecx,[edx].len
+    sub ecx,SIZE rdos_header
+    add edx,SIZE rdos_header
+    AllocateGdt
+    CreateDataSelector16
 ;
-        mov ds,bx
-        mov si,ds:font_fheight
-        add si,si
-        mov ax,font_data_sel
-        mov ds,ax
-        mov [si],bx
-        mov cx,200h
-        sub cx,si
-        shr cx,1
-        dec cx
-        mov dx,si
+    mov ds,bx
+    mov si,ds:font_fheight
+    add si,si
+    mov ax,SEG data
+    mov ds,ax
+    mov [si],bx
+    mov cx,200h
+    sub cx,si
+    shr cx,1
+    dec cx
+    mov dx,si
 fill_font_loop:
-        add si,2
-        mov ax,[si]
-        or ax,ax
-        jz fill_font_do
-        push ds
-        mov ds,ax
-        mov ax,ds:font_fheight
-        add ax,ax
-        pop ds
-        cmp ax,dx
-        ja fill_font_next
+    add si,2
+    mov ax,[si]
+    or ax,ax
+    jz fill_font_do
+    push ds
+    mov ds,ax
+    mov ax,ds:font_fheight
+    add ax,ax
+    pop ds
+    cmp ax,dx
+    ja fill_font_next
 fill_font_do:
-        mov [si],bx
+    mov [si],bx
 fill_font_next:
-        loop fill_font_loop
-        pop si
-        pop edx
-        pop ecx
-        pop bx
-        pop ax
-        pop ds
-        ret
+    loop fill_font_loop
+    pop si
+    pop edx
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    ret
 install_font    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   load_adapter_fonts
+;           NAME:           load_adapter_fonts
 ;
-;               DESCRIPTION:    install all fonts in adapter
+;           DESCRIPTION:    install all fonts in adapter
 ;
-;               PARAMETERS:             edx             base address
+;           PARAMETERS:         edx         base address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_adapter_fonts      Proc near
-        push ds
-        push ax
-        push bx
-        push edx
-        mov ax,flat_sel
-        mov ds,ax
+    push ds
+    push ax
+    push bx
+    push edx
+    mov ax,flat_sel
+    mov ds,ax
 load_adapter_fonts_loop:
-        mov ax,[edx].typ
-        cmp ax,RdosFont
-        jne not_install_font
-        call install_font
-        jmp load_adapter_fonts_next
+    mov ax,[edx].typ
+    cmp ax,RdosFont
+    jne not_install_font
+    call install_font
+    jmp load_adapter_fonts_next
 not_install_font:
-        cmp ax,RdosEnd
-        je load_adapter_fonts_done
+    cmp ax,RdosEnd
+    je load_adapter_fonts_done
 load_adapter_fonts_next:
-        add edx,[edx].len
-        jmp load_adapter_fonts_loop
+    add edx,[edx].len
+    jmp load_adapter_fonts_loop
 load_adapter_fonts_done:
-        pop edx
-        pop bx
-        pop ax
-        pop ds
-        ret
+    pop edx
+    pop bx
+    pop ax
+    pop ds
+    ret
 load_adapter_fonts      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   OpenFont
+;           NAME:           OpenFont
 ;
-;               DESCRIPTION:    Open a font and return handle
+;           DESCRIPTION:    Open a font and return handle
 ;
-;               PARAMETERS:             AX              Font height
+;           PARAMETERS:         AX          Font height
 ;
-;               RETURNS:                BX              Font handle
+;           RETURNS:        BX          Font handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -488,498 +487,491 @@ lbt6    DB 3Fh
 lbt7    DB 7Fh
 
 open_font       Proc far
-        push ds
-        push es
-        push eax
-        push ecx
-        push edx
-        push esi
-        push edi
-        push bp
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+    push bp
 ;
-        mov si,ax
-        add si,si
-        mov ax,font_data_sel
-        mov ds,ax
+    mov si,ax
+    add si,si
+    mov ax,SEG data
+    mov ds,ax
 open_font_down_loop:
-        mov ax,[si]
-        or ax,ax
-        jnz open_font_found
-        sub si,2
-        jnc open_font_down_loop
+    mov ax,[si]
+    or ax,ax
+    jnz open_font_found
+    sub si,2
+    jnc open_font_down_loop
 ;
-        mov si,2
+    mov si,2
 
 open_font_up_loop:
-        mov ax,[si]
-        or ax,ax
-        jnz open_font_found
+    mov ax,[si]
+    or ax,ax
+    jnz open_font_found
 ;
-        add si,2
-        jnc open_font_up_loop   
+    add si,2
+    jnc open_font_up_loop   
 ;
-        jmp open_font_end
+    jmp open_font_end
 
 open_font_found:
-        mov ds,ax
-        xor ecx,ecx
-        xor edx,edx
-        mov ax,ds:font_minch
-        mov ebx,ds:font_cotptr
+    mov ds,ax
+    xor ecx,ecx
+    xor edx,edx
+    mov ax,ds:font_minch
+    mov ebx,ds:font_cotptr
 
 open_font_size_loop:
-        mov cx,[ebx+2]
-        or cx,cx
-        jz open_font_size_next
+    mov cx,[ebx+2]
+    or cx,cx
+    jz open_font_size_next
 ;
-        sub cx,[ebx]
-        jbe open_font_size_next
+    sub cx,[ebx]
+    jbe open_font_size_next
 ;
-        dec cx
-        shr cx,3
-        inc cx
-        add edx,ecx
+    dec cx
+    shr cx,3
+    inc cx
+    add edx,ecx
 
 open_font_size_next:
-        add ebx,2
-        inc ax
-        cmp ax,ds:font_maxch
-        jne open_font_size_loop
+    add ebx,2
+    inc ax
+    cmp ax,ds:font_maxch
+    jne open_font_size_loop
 ;
-        movzx eax,ds:font_fheight
-        mul edx
-        add eax,SIZE font_buf_header + 2
-        AllocateSmallGlobalMem
-        mov dx,ds:font_fheight
-        mov es:fh_height,dx
+    movzx eax,ds:font_fheight
+    mul edx
+    add eax,SIZE font_buf_header + 2
+    AllocateSmallGlobalMem
+    mov dx,ds:font_fheight
+    mov es:fh_height,dx
 ;
-        mov edi,SIZE font_buf_header
-        mov ecx,eax
-        sub ecx,edi
-        xor al,al
-        rep stos byte ptr es:[edi]
+    mov edi,SIZE font_buf_header
+    mov ecx,eax
+    sub ecx,edi
+    xor al,al
+    rep stos byte ptr es:[edi]
 ;
-        mov di,OFFSET fh_widths
-        xor ax,ax
-        mov cx,100h
-        rep stosw
+    mov di,OFFSET fh_widths
+    xor ax,ax
+    mov cx,100h
+    rep stosw
 ;
-        mov di,OFFSET fh_bitmaps
-        xor eax,eax
-        mov cx,100h
-        rep stosd
+    mov di,OFFSET fh_bitmaps
+    xor eax,eax
+    mov cx,100h
+    rep stosd
 ;
-        mov edx,SIZE font_buf_header
-        mov esi,OFFSET fh_widths
-        mov edi,OFFSET fh_bitmaps
-        mov cx,ds:font_minch
-        movzx eax,cx
-        add eax,eax
-        add esi,eax
-        add eax,eax
-        add edi,eax
-        mov ebx,ds:font_cotptr
+    mov edx,SIZE font_buf_header
+    mov esi,OFFSET fh_widths
+    mov edi,OFFSET fh_bitmaps
+    mov cx,ds:font_minch
+    movzx eax,cx
+    add eax,eax
+    add esi,eax
+    add eax,eax
+    add edi,eax
+    mov ebx,ds:font_cotptr
 
 open_font_ptr_loop:
-        mov ax,[ebx+2]
-        or ax,ax
-        jz open_font_ptr_next
+    mov ax,[ebx+2]
+    or ax,ax
+    jz open_font_ptr_next
 ;
-        sub ax,[ebx]
-        jbe open_font_ptr_next
+    sub ax,[ebx]
+    jbe open_font_ptr_next
 ;
-        mov es:[esi],ax
-        mov es:[edi],edx
-        dec ax
-        shr ax,3
-        inc ax
-        push dx
-        mul es:fh_height
-        pop dx
-        movzx eax,ax
-        add edx,eax
+    mov es:[esi],ax
+    mov es:[edi],edx
+    dec ax
+    shr ax,3
+    inc ax
+    push dx
+    mul es:fh_height
+    pop dx
+    movzx eax,ax
+    add edx,eax
 
 open_font_ptr_next:
-        inc cx
-        add ebx,2
-        add esi,2
-        add edi,4
-        cmp cx,ds:font_maxch
-        jne open_font_ptr_loop
+    inc cx
+    add ebx,2
+    add esi,2
+    add edi,4
+    cmp cx,ds:font_maxch
+    jne open_font_ptr_loop
 ;
-        mov ebx,ds:font_cotptr
-        mov esi,OFFSET fh_widths
-        mov edi,OFFSET fh_bitmaps
-        mov cx,ds:font_minch
-        movzx eax,cx
-        add eax,eax
-        add esi,eax
-        add eax,eax
-        add edi,eax
+    mov ebx,ds:font_cotptr
+    mov esi,OFFSET fh_widths
+    mov edi,OFFSET fh_bitmaps
+    mov cx,ds:font_minch
+    movzx eax,cx
+    add eax,eax
+    add esi,eax
+    add eax,eax
+    add edi,eax
 
 open_font_char_loop:
-        push ebx
-        push cx
-        push esi
-        push edi
+    push ebx
+    push cx
+    push esi
+    push edi
 ;
-        mov cx,es:[esi]
-        or cx,cx
-        jz open_font_char_next
+    mov cx,es:[esi]
+    or cx,cx
+    jz open_font_char_next
 ;
-        mov bp,cx
-        and bp,7
-        mov al,byte ptr cs:[bp].last_bit_tab
-        mov bp,ax
+    mov bp,cx
+    and bp,7
+    mov al,byte ptr cs:[bp].last_bit_tab
+    mov bp,ax
 ;
-        mov edi,es:[edi]
-        dec cx
-        shr cx,3
-        inc cx
-        mov dx,ds:font_fheight
-        movzx esi,word ptr [ebx]
-        mov ax,si
-        shr si,3
-        and al,7
-        mov ch,cl
-        mov cl,al
-        add esi,ds:font_bufptr
-        mov bx, OFFSET bit_rev_tab
+    mov edi,es:[edi]
+    dec cx
+    shr cx,3
+    inc cx
+    mov dx,ds:font_fheight
+    movzx esi,word ptr [ebx]
+    mov ax,si
+    shr si,3
+    and al,7
+    mov ch,cl
+    mov cl,al
+    add esi,ds:font_bufptr
+    mov bx, OFFSET bit_rev_tab
 
 open_font_data_loop:
-        push cx
-        push esi
+    push cx
+    push esi
 
 open_font_row_loop:
-        mov ax,[esi]
-        xchg al,ah
-        shl ax,cl 
-        mov al,ah
-        xlat byte ptr cs:bit_rev_tab
-        cmp ch,1
-        jne open_font_row_save
+    mov ax,[esi]
+    xchg al,ah
+    shl ax,cl 
+    mov al,ah
+    xlat byte ptr cs:bit_rev_tab
+    cmp ch,1
+    jne open_font_row_save
 ;
-        and ax,bp
+    and ax,bp
 
 open_font_row_save:
-        stos byte ptr es:[edi]
-        inc esi
-        sub ch,1
-        jnz open_font_row_loop  
+    stos byte ptr es:[edi]
+    inc esi
+    sub ch,1
+    jnz open_font_row_loop  
 ;
-        pop esi
-        pop cx
+    pop esi
+    pop cx
 ;
-        movzx eax,ds:font_fwidth
-        add esi,eax
-        sub dx,1
-        jnz open_font_data_loop
+    movzx eax,ds:font_fwidth
+    add esi,eax
+    sub dx,1
+    jnz open_font_data_loop
 
 open_font_char_next:
-        pop edi
-        pop esi
-        pop cx
-        pop ebx
+    pop edi
+    pop esi
+    pop cx
+    pop ebx
 ;
-        inc cx
-        add ebx,2
-        add esi,2
-        add edi,4
-        cmp cx,ds:font_maxch
-        jne open_font_char_loop
+    inc cx
+    add ebx,2
+    add esi,2
+    add edi,4
+    cmp cx,ds:font_maxch
+    jne open_font_char_loop
 ;
-        mov ax,ds
-        mov cx,SIZE font_handle_struc
-        AllocateHandle
-        mov [bx].fh_org_sel,ax
-        mov [bx].fh_buf_sel,es
-        mov [bx].hh_sign,FONT_HANDLE
-        mov bx,[bx].hh_handle
-        clc
+    mov ax,ds
+    mov cx,SIZE font_handle_struc
+    AllocateHandle
+    mov [bx].fh_org_sel,ax
+    mov [bx].fh_buf_sel,es
+    mov [bx].hh_sign,FONT_HANDLE
+    mov bx,[bx].hh_handle
+    clc
 
 open_font_end:
-        pop bp
-        pop edi
-        pop esi
-        pop edx
-        pop ecx
-        pop eax
-        pop es
-        pop ds
-        retf32
+    pop bp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    retf32
 open_font       Endp
-        
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CloseFont
+;           NAME:           CloseFont
 ;
-;               DESCRIPTION:    Close a font handle
+;           DESCRIPTION:    Close a font handle
 ;
-;               PARAMETERS:             BX              Font handle
+;           PARAMETERS:         BX          Font handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_font_name DB 'Close Font',0
 
 close_font      Proc far
-        push ds
-        push es
-        push ax
-        push bx
+    push ds
+    push es
+    push ax
+    push bx
 ;
-        mov ax,FONT_HANDLE
-        DerefHandle
-        jc cl_font_done
+    mov ax,FONT_HANDLE
+    DerefHandle
+    jc cl_font_done
 ;
-        mov es,[bx].fh_buf_sel
-        FreeMem
-        FreeHandle
-        clc
+    mov es,[bx].fh_buf_sel
+    FreeMem
+    FreeHandle
+    clc
 
 cl_font_done:
-        pop bx
-        pop ax
-        pop es
-        pop ds
-        retf32
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    retf32
 close_font      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetStringMetrics
+;           NAME:           GetStringMetrics
 ;
-;               DESCRIPTION:    Get width & height of string
+;           DESCRIPTION:    Get width & height of string
 ;
-;               PARAMETERS:             ES:(E)DI        String 
+;           PARAMETERS:         ES:(E)DI    String 
 ;
-;               RETURNS:                CX                      Width
-;                                               DX                      Height
+;           RETURNS:        CX              Width
+;                           DX              Height
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_string_metrics_name DB 'Get String Metrics',0
 
 get_string_metrics      Proc near
-        push ds
-        push ax
-        push ebx
-        push edi
+    push ds
+    push ax
+    push ebx
+    push edi
 ;
-        mov ax,FONT_HANDLE
-        DerefHandle
-        jc get_string_metr_fail
+    mov ax,FONT_HANDLE
+    DerefHandle
+    jc get_string_metr_fail
 ;
-        mov ds,[bx].fh_org_sel
-        xor cx,cx
-        mov dx,ds:font_fheight
+    mov ds,[bx].fh_org_sel
+    xor cx,cx
+    mov dx,ds:font_fheight
 
 get_string_metr_loop:
-        xor ah,ah
-        mov al,es:[edi]
-        inc edi
-        or al,al
-        clc
-        jz get_string_metr_done
+    xor ah,ah
+    mov al,es:[edi]
+    inc edi
+    or al,al
+    clc
+    jz get_string_metr_done
 ;
-        cmp ax,ds:font_maxch
-        ja get_string_metr_loop
+    cmp ax,ds:font_maxch
+    ja get_string_metr_loop
 ;
-        sub ax,ds:font_minch
-        jb get_string_metr_loop
+    sub ax,ds:font_minch
+    jb get_string_metr_loop
 ;
-        movzx ebx,al
-        add ebx,ebx
-        add ebx,ds:font_cotptr
-        add cx,[ebx+2]
-        sub cx,[ebx]
-        jmp get_string_metr_loop
+    movzx ebx,al
+    add ebx,ebx
+    add ebx,ds:font_cotptr
+    add cx,[ebx+2]
+    sub cx,[ebx]
+    jmp get_string_metr_loop
 
 get_string_metr_fail:
-        xor cx,cx
-        stc
+    xor cx,cx
+    stc
 
 get_string_metr_done:
-        pop edi
-        pop ebx
-        pop ax
-        pop ds
-        ret
+    pop edi
+    pop ebx
+    pop ax
+    pop ds
+    ret
 get_string_metrics      Endp
 
 get_string_metrics32    Proc far
-        call get_string_metrics
-        retf32
+    call get_string_metrics
+    retf32
 get_string_metrics32    Endp
 
 get_string_metrics16    Proc far
-        push edi
-        movzx edi,di
-        call get_string_metrics
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call get_string_metrics
+    pop edi
+    ret
 get_string_metrics16    Endp    
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetCharMask
+;           NAME:           GetCharMask
 ;
-;               DESCRIPTION:    Get mask for string
+;           DESCRIPTION:    Get mask for string
 ;
-;               PARAMETERS:             AL                      char
-;                                               BX                      font handle
+;           PARAMETERS:         AL              char
+;                           BX              font handle
 ;
-;               RETURNS:                CX                      width
-;                                               DX                      height
-;                                               SI                      row size
-;                                               ES:EDI          1-bit string bitmap
+;           RETURNS:        CX              width
+;                           DX              height
+;                           SI              row size
+;                           ES:EDI      1-bit string bitmap
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_char_mask_name      DB 'Get Char Mask',0
 
 get_char_mask   Proc far
-        push ds
-        push ebx
+    push ds
+    push ebx
 ;
-        push ax
-        mov ax,FONT_HANDLE
-        DerefHandle
-        pop ax
-        jc get_char_mask_done
+    push ax
+    mov ax,FONT_HANDLE
+    DerefHandle
+    pop ax
+    jc get_char_mask_done
 ;
-        mov es,[bx].fh_buf_sel
-        movzx ebx,al
-        mov dx,es:fh_height
-        mov cx,es:[2*ebx].fh_widths
-        mov si,cx
-        dec si
-        shr si,3
-        inc si
-        mov edi,es:[4*ebx].fh_bitmaps
-        clc
+    mov es,[bx].fh_buf_sel
+    movzx ebx,al
+    mov dx,es:fh_height
+    mov cx,es:[2*ebx].fh_widths
+    mov si,cx
+    dec si
+    shr si,3
+    inc si
+    mov edi,es:[4*ebx].fh_bitmaps
+    clc
 
 get_char_mask_done:
-        pop ebx
-        pop ds
-        ret
+    pop ebx
+    pop ds
+    ret
 get_char_mask   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   delete_handle
+;           NAME:           delete_handle
 ;
-;               DESCRIPTION:    BX                      Font handle
+;           DESCRIPTION:    BX              Font handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_handle   Proc far
-        push ds
-        push es
-        push ax
-        push bx
+    push ds
+    push es
+    push ax
+    push bx
 ;
-        mov ax,FONT_HANDLE
-        DerefHandle
-        jc delete_handle_done
+    mov ax,FONT_HANDLE
+    DerefHandle
+    jc delete_handle_done
 ;
-        mov es,[bx].fh_buf_sel
-        FreeMem
-        FreeHandle
-        clc
+    mov es,[bx].fh_buf_sel
+    FreeMem
+    FreeHandle
+    clc
 
 delete_handle_done:
-        pop bx
-        pop ax
-        pop es
-        pop ds
-        ret
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
 delete_handle   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   INIT
+;           NAME:           INIT
 ;
-;               DESCRIPTION:    Init device
+;           DESCRIPTION:    Init device
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-        push ds
-        pusha
-        mov bx,font_code_sel
-        InitDevice
-        mov bx,font_data_sel
-        mov eax,512
-        AllocateFixedSystemMem
-        mov ds,bx
-        xor bx,bx
-        mov cx,256
-        xor ax,ax
+    mov ax,SEG code
+    mov ax,SEG data
+;
+    xor bx,bx
+    mov cx,256
+    xor ax,ax
 init_system_font_loop:
-        mov [bx],ax
-        add bx,2
-        loop init_system_font_loop
+    mov [bx],ax
+    add bx,2
+    loop init_system_font_loop
 ;
-        mov ax,system_data_sel
-        mov ds,ax
-        mov cx,ds:rom_modules
-        mov bx,OFFSET rom_adapters
+    mov ax,system_data_sel
+    mov ds,ax
+    mov cx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
 init_font_loop:
-        mov edx,[bx].adapter_base
-        call load_adapter_fonts
-        add bx,SIZE adapter_typ
-        loop init_font_loop     
+    mov edx,[bx].adapter_base
+    call load_adapter_fonts
+    add bx,SIZE adapter_typ
+    loop init_font_loop     
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov ax,FONT_HANDLE
-        mov di,OFFSET delete_handle
-        RegisterHandle
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov ax,FONT_HANDLE
+    mov di,OFFSET delete_handle
+    RegisterHandle
 ;
-        mov si,OFFSET get_char_mask
-        mov di,OFFSET get_char_mask_name
-        xor cl,cl
-        mov ax,get_char_mask_nr
-        RegisterOsGate
+    mov si,OFFSET get_char_mask
+    mov di,OFFSET get_char_mask_name
+    xor cl,cl
+    mov ax,get_char_mask_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET open_font
-        mov di,OFFSET open_font_name
-        xor dx,dx
-        mov ax,open_font_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET open_font
+    mov di,OFFSET open_font_name
+    xor dx,dx
+    mov ax,open_font_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET close_font
-        mov di,OFFSET close_font_name
-        xor dx,dx
-        mov ax,close_font_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET close_font
+    mov di,OFFSET close_font_name
+    xor dx,dx
+    mov ax,close_font_nr
+    RegisterBimodalUserGate
 ;
-        mov bx,OFFSET get_string_metrics16
-        mov si,OFFSET get_string_metrics32
-        mov di,OFFSET get_string_metrics_name
-        mov dx,virt_es_in
-        mov ax,get_string_metrics_nr
-        RegisterUserGate
-;
-        popa
-        pop ds
-        ret
+    mov bx,OFFSET get_string_metrics16
+    mov si,OFFSET get_string_metrics32
+    mov di,OFFSET get_string_metrics_name
+    mov dx,virt_es_in
+    mov ax,get_string_metrics_nr
+    RegisterUserGate
+    ret
 init    ENDP
         
 code    ENDS
 
-        END init
+
+    END init
 

@@ -678,39 +678,31 @@ dummy	ENDP
 flashfs_name	DB 'FLASHFS',0
 
 flashfs_ctrl:
-ffs00	DW OFFSET format,			flashfs_code_sel
-ffs01	DW OFFSET mount,			flashfs_code_sel
-ffs02	DW OFFSET flush,		    flashfs_code_sel
-ffs03	DW OFFSET dismount,			flashfs_code_sel
-ffs04	DW OFFSET get_drive_info,	flashfs_code_sel
-ffs05	DW OFFSET allocate_dir_sel,	flashfs_code_sel
-ffs06	DW OFFSET free_dir_sel,		flashfs_code_sel
-ffs07	DW OFFSET cache_dir,		flashfs_code_sel
-ffs08	DW OFFSET update_dir,		flashfs_code_sel
-ffs09	DW OFFSET update_file,		flashfs_code_sel
-ffs10	DW OFFSET create_dir,		flashfs_code_sel
-ffs11	DW OFFSET delete_dir,		flashfs_code_sel
-ffs12	DW OFFSET delete_file,		flashfs_code_sel
-ffs13	DW OFFSET rename_file,		flashfs_code_sel
-ffs14	DW OFFSET create_file,		flashfs_code_sel
-ffs15	DW OFFSET get_ioctl_data,	flashfs_code_sel
-ffs16	DW OFFSET set_file_size,	flashfs_code_sel
-ffs17	DW OFFSET read_file,		flashfs_code_sel
-ffs18	DW OFFSET write_file,		flashfs_code_sel
-ffs19	DW OFFSET allocate_file_list,flashfs_code_sel
-ffs20	DW OFFSET free_file_list,	flashfs_code_sel
-ffs21	DW OFFSET read_file_block,	flashfs_code_sel
-ffs22	DW OFFSET write_file_block,	flashfs_code_sel
+ffs00	DW OFFSET format,			SEG code
+ffs01	DW OFFSET mount,			SEG code
+ffs02	DW OFFSET flush,		    SEG code
+ffs03	DW OFFSET dismount,			SEG code
+ffs04	DW OFFSET get_drive_info,	SEG code
+ffs05	DW OFFSET allocate_dir_sel,	SEG code
+ffs06	DW OFFSET free_dir_sel,		SEG code
+ffs07	DW OFFSET cache_dir,		SEG code
+ffs08	DW OFFSET update_dir,		SEG code
+ffs09	DW OFFSET update_file,		SEG code
+ffs10	DW OFFSET create_dir,		SEG code
+ffs11	DW OFFSET delete_dir,		SEG code
+ffs12	DW OFFSET delete_file,		SEG code
+ffs13	DW OFFSET rename_file,		SEG code
+ffs14	DW OFFSET create_file,		SEG code
+ffs15	DW OFFSET get_ioctl_data,	SEG code
+ffs16	DW OFFSET set_file_size,	SEG code
+ffs17	DW OFFSET read_file,		SEG code
+ffs18	DW OFFSET write_file,		SEG code
+ffs19	DW OFFSET allocate_file_list,SEG code
+ffs20	DW OFFSET free_file_list,	SEG code
+ffs21	DW OFFSET read_file_block,	SEG code
+ffs22	DW OFFSET write_file_block,	SEG code
 
 init	PROC far
-	push ds
-	push es
-	push fs
-	push gs
-	pushad
-	mov bx,flashfs_code_sel
-	InitDevice
-;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -718,12 +710,6 @@ init	PROC far
 	mov si,OFFSET flashfs_name
 	mov di,OFFSET flashfs_ctrl
 	RegisterFileSystem
-;
-	popad
-	pop gs
-	pop fs
-	pop es
-	pop ds
 	ret
 init	ENDP
 

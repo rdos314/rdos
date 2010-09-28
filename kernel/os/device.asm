@@ -602,29 +602,38 @@ install_device16    Proc near
 	push ds
 	push es
 	pushad
+;	
 	mov ecx,[edx].len
 	sub ecx,SIZE rdos_header
 	add edx,SIZE rdos_header
-	mov ebx,[edx].dev16_size
-	movzx ecx,[edx].dev16_code_size
+	mov esi,edx
+	mov ebx,[esi].dev16_size
+	movzx ecx,[esi].dev16_code_size
 	add edx,ebx
-	mov bx,[edx].dev16_code_sel
+	mov bx,[esi].dev16_code_sel
+	or bx,bx
+	jnz install_device16_cr_code
+;
+	mov bx,device_code_sel
+
+install_device16_cr_code:
+    mov di,bx
 	CreateCodeSelector16
 ;
     add edx,ecx
-	movzx ecx,[edx].dev16_data_size
-	mov bx,[edx].dev16_code_sel
+	movzx ecx,[esi].dev16_data_size
+	mov bx,[esi].dev16_data_sel
 	or ecx,ecx
-	jz install_device16_call
+	jz install_device16_sel_ok
 ;
-	CreateCodeSelector16
+	CreateDataSelector16
 
-install_device16_call:
-	mov ax,[edx].dev16_init_ip
-	mov bx,[edx].dev16_code_sel
+install_device16_sel_ok:
+	mov ax,[esi].dev16_init_ip
+	mov ds,bx
 	push cs
 	push OFFSET install_device16_end
-	push bx
+	push di
 	push ax
 	retf
 

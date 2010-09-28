@@ -47,10 +47,6 @@ ipcdebug_srcs = IPCDEBUG.ASM  $(debug_srcs)
 ipcdebug_objs = $(ipcdebug_srcs:.ASM=.OBJ)
 ipcdebug_rdvs = IPCDEBUG.RDV
 
-font_srcs = FONT.ASM        
-font_objs = $(font_srcs:.ASM=.OBJ)
-font_rdvs = FONT.RDV
-
 env_srcs = ENV.ASM        
 env_objs = $(env_srcs:.ASM=.OBJ)
 env_rdvs = ENV.RDV
@@ -234,43 +230,16 @@ fm_srcs = FM.ASM FMSIN.ASM FMEXP.ASM
 fm_objs = $(fm_srcs:.ASM=.OBJ)
 fm_rdvs = FM.RDV
 
-kernel_srcs =   KERNEL.ASM
-
-p1_srcs =   PAGING.ASM				TASK.ASM                STATE.ASM	\
-			DEVICE.ASM				IO.ASM      			HANDLE.ASM	\
-			PROC.ASM 				APP.ASM
-
-p2_srcs =   PHYSICAL.ASM    		SWAP.ASM    \
-			MEM.ASM                 GDT.ASM                 \
-			INT.ASM                 INT16.ASM               INT32.ASM       
-
-pgen_srcs = PROTSEG.ASM             RAND.ASM \
-			TRAPINT.ASM             TSSINT.ASM              LDT.ASM         \
-			OS.ASM                  USER.ASM                CRC.ASM \
-			CPU.ASM               
-
-
-kernel_objs = $(kernel_srcs:.ASM=.OBJ)
-p1_objs =       $(p1_srcs:.ASM=.OBJ)
-p2_objs =       $(p2_srcs:.ASM=.OBJ)
-pgen_objs =     $(pgen_srcs:.ASM=.OBJ)
-
 pcshut_srcs = PCSHUT.ASM
 pcshut_objs = $(pcshut_srcs:.ASM=.OBJ)
 pcshut_exes = PCSHUT.EXE
-
-prot_srcs = $(kernel_srcs) $(p1_srcs) $(p2_srcs) $(pgen_srcs)
-
-prot_objs = $(kernel_objs) $(p1_objs) $(p2_objs) $(pgen_objs)
-
-prot_exes = KERNEL.EXE
 
 srcs =      $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs) $(env_srcs) \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
-			$(time_srcs) $(font_srcs) $(video_srcs) $(pcshut_srcs)   \
+			$(time_srcs) $(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) $(exec_srcs) \
 			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) $(apic_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
@@ -286,11 +255,6 @@ incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
 			DPMI.INC                INT.DEF			       \
 			FAT.INC                 DOS.INC
 
-fonts =     SYS8.GFT                SYS12.GFT               SYS14.GFT       \
-			SYS16.GFT               SYS17.GFT               SYS22.GFT       \
-			SYS27.GFT               SYS30.GFT               SYS36.GFT       \
-			SYS43.GFT
-
 exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
@@ -302,7 +266,7 @@ rdvs =      $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
 			$(keyboard_rdvs) $(inifile_rdvs) $(env_rdvs) $(apic_rdvs) \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
-			$(rtc_rdvs) $(font_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
+			$(rtc_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
 			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs) $(pic_rdvs) $(acpi_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -310,7 +274,7 @@ maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 bats =      RDOS.BAT
 
 # DEFINE MODULES FOR CMS
-vaxset_modules = $(srcs) $(incs) $(fonts) $(bats)
+vaxset_modules = $(srcs) $(incs) $(bats)
 
 # DEFINE MODULES FOR SYSTEM VERSION
 kit_modules =   $(maps) $(bats) $(bins)
@@ -361,14 +325,6 @@ PCSHUT.EXE : $(pcshut_objs)
 	$(pcshut_objs)
 	PCSHUT
 	PCSHUT;       
-!
-
-FONT.RDV : $(font_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(font_objs)
-	FONT.RDV
-	FONT;
 !
 
 ENV.RDV : $(env_objs)
@@ -809,15 +765,4 @@ TIME.RDV : $(time_objs)
 	$(time_objs)
 	TIME.RDV
 	TIME;
-!
-
-KERNEL.EXE : $(prot_objs)
-    tlink @&&!
-	$(link_opt) +
-	kernel.obj+
-	$(pgen_objs)+
-	$(p1_objs)+
-	$(p2_objs)
-	KERNEL
-	KERNEL;
 !
