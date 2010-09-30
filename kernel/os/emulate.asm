@@ -1229,12 +1229,6 @@ emulate_vm_done:
 emulate	ENDP
 
 init	PROC far
-	push ds
-	push es
-	pusha
-	mov bx,emulator_code_sel
-	InitDevice
-;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -1245,10 +1239,6 @@ init	PROC far
 	RegisterOsGate
 ;
 	call init_common
-;
-	popa
-	pop es
-	pop ds
 	ret
 init	ENDP
 

@@ -61,10 +61,10 @@ struct TExeHeader
 struct TRdvHeader16
 {
     short int Signature;
-    short int Ip;
-    short int CodeSize;
+    unsigned short int Ip;
+    unsigned short int CodeSize;
     short int CodeSel;
-    short int DataSize;
+    unsigned short int DataSize;
     short int DataSel;
 };
 

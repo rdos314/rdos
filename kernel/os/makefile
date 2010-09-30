@@ -52,12 +52,6 @@ video_srcs = VIDEO.ASM BITMAP.ASM BIT1.ASM BIT16.ASM BIT24.ASM BIT32.ASM \
 video_objs = $(video_srcs:.ASM=.OBJ)
 video_rdvs = VIDEO.RDV
 
-em_srcs = EMULATE.ASM EMCOM.ASM EMMEM.ASM EMTRANS.ASM EMARITHM.ASM	\
-		  EMSTRING.ASM EMCONTR.ASM EM387.ASM EMPROT.ASM EMSEG.ASM \
-		  EMFLOAT.ASM
-em_objs = $(em_srcs:.ASM=.OBJ)
-em_rdvs = EMULATE.RDV
-
 wait_srcs = WAIT.ASM
 wait_objs = $(wait_srcs:.ASM=.OBJ)
 wait_rdvs = $(wait_srcs:.ASM=.RDV)
@@ -224,7 +218,7 @@ srcs =      $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs)  \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(video_srcs) $(pcshut_srcs)   \
-			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) $(exec_srcs) \
+			$(prot_srcs) $(timer_srcs) $(file_srcs) $(exec_srcs) \
 			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs) \
@@ -245,7 +239,7 @@ rdvs =      $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 			$(fs_rdvs) $(bios_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
 		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
-			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
+			$(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(keyboard_rdvs) $(inifile_rdvs)  \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
@@ -517,14 +511,6 @@ IPC.RDV : $(ipc_objs)
 	$(ipc_objs)
 	IPC.RDV
 	IPC;
-!
-
-EMULATE.RDV : $(em_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(em_objs)
-	EMULATE.RDV
-	EMULATE;
 !
 
 WAIT.RDV : $(wait_objs)
