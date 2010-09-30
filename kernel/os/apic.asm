@@ -29,16 +29,6 @@
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
-
-IFDEF __WASM__
-   .686p
-ELSE
-    .386p
-ENDIF
-
-
-code    SEGMENT byte public use16 'CODE'
-
 GateSize = 16
 
 INCLUDE ..\os.def
@@ -124,8 +114,8 @@ ioapic_resv         DB 15 DUP(?)
 ioapic_window       DD ?
 
 ioapic_data_seg ENDS
-
-apic_data_seg   STRUC
+        
+data    SEGMENT byte public 'DATA'
 
 mp_init_proc        DW ?
 mp_startup_proc     DW ?
@@ -146,7 +136,11 @@ isa_redir_arr       DD 16 DUP(?,?)
 
 apic_arr            DW 256 DUP(?)
 
-apic_data_seg ENDS
+data    ENDS
+
+.686p
+
+code    SEGMENT byte public use16 'CODE'
 
 irqmac  MACRO nr
 
@@ -354,7 +348,7 @@ prot_start:
 ;
     db 0EAh
     dw OFFSET ApInit
-    dw apic_code_sel
+    dw SEG code
 
 prot_end:
     
@@ -409,7 +403,7 @@ ApInit:
 ;    
     call InitApic
 ;
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov eax,12345678h
     mov ds:mp_processor_sign,eax
@@ -533,7 +527,7 @@ get_processor_id_mem  Proc far
     mov ebx,ds:APIC_ID
     shr ebx,24
     add bx,bx
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ds,ds:[bx].apic_arr
     mov ax,ds:ps_id
@@ -552,7 +546,7 @@ get_processor_id_msr Proc far
     rdmsr
     movzx bx,al
     add bx,bx
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ds,ds:[bx].apic_arr
     mov ax,ds:ps_id
@@ -584,7 +578,7 @@ get_processor_mem  Proc far
     mov ebx,ds:APIC_ID
     shr ebx,24
     add bx,bx
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov fs,ds:[bx].apic_arr
 ;
@@ -605,7 +599,7 @@ get_processor_msr Proc far
     rdmsr
     movzx bx,al
     add bx,bx
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov fs,ds:[bx].apic_arr
 ;
@@ -699,7 +693,7 @@ SendInit Proc near
     push ds
     push ax
 ;    
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     call ds:mp_init_proc
     mov ax,20
@@ -787,7 +781,7 @@ SendStartup Proc near
     push ax
     push bx
 ;    
-    mov bx,apic_data_sel
+    mov bx,SEG data
     mov ds,bx
     call ds:mp_startup_proc
     mov ax,1
@@ -908,7 +902,7 @@ SendInt Proc near
     push ax
     push bx
 ;    
-    mov bx,apic_data_sel
+    mov bx,SEG data
     mov ds,bx
     call ds:mp_int_proc
 ;
@@ -1152,7 +1146,7 @@ resume_processor  Proc far
     push ax
     push edx
 ;
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov al,80h
     mov edx,fs:ps_apic
@@ -1182,7 +1176,7 @@ preempt_processor  Proc far
     push ax
     push edx
 ;
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov al,81h
     mov edx,fs:ps_apic
@@ -1240,7 +1234,7 @@ smemgLint1Disable:
     mov ds:APIC_LINT1,eax
 
 smemgLint1Ok:
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ds:mp_init_proc, OFFSET SendInitMem
     mov ds:mp_startup_proc, OFFSET SendStartupMem
@@ -1446,7 +1440,7 @@ smsrgLint1Disable:
     wrmsr
 
 smsrgLint1Ok:
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ds:mp_init_proc, OFFSET SendInitMsr
     mov ds:mp_startup_proc, OFFSET SendStartupMsr
@@ -1625,7 +1619,7 @@ StartCore   Proc near
     push fs
     pushad
 ;
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov fs,ax
 ;    
     mov ebp,edx    
@@ -1871,11 +1865,11 @@ enable_irq  Proc far
     cmp al,10h
     jae enable_irq_do
 ;    
-    mov bx,apic_data_sel
+    mov bx,SEG data
     mov ds,bx
     movzx bx,al
     shl bx,3
-    mov edx,[bx].isa_redir_arr
+    mov edx,ds:[bx].isa_redir_arr
     sub dl,40h
     xchg al,dl
     add dl,40h
@@ -2144,7 +2138,7 @@ apic_pr:
 
 
 ;       
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov bx,OFFSET isa_redir_arr
 ;    
@@ -2539,7 +2533,7 @@ resume_int:
     push ds
     push ax
 ;
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     call ds:mp_eoi_proc
 ;
@@ -2583,7 +2577,7 @@ preempt_int:
     push fs
     pushad
 ;
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     call ds:mp_eoi_proc
     DoPreemptProcessor
@@ -2659,7 +2653,7 @@ InitSmp Proc near
     push es
     pushad
 ;    
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ds:mp_get_proc,0
     mov ax,ds:mp_flags
@@ -2751,23 +2745,15 @@ SetupIrq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-    push ds
-    push es
-    pushad
-;       
-    mov bx,apic_code_sel
-    InitDevice
-;
-    mov eax,SIZE apic_data_seg
-    mov bx,apic_data_sel
-    AllocateFixedSystemMem
+    mov bx,SEG data
+    mov es,bx
     mov di,OFFSET apic_arr
     xor ax,ax
     mov cx,100h
     rep stosw
     mov es:mp_flags,0
 ;
-    mov ax,apic_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov bx,OFFSET isa_redir_arr
     xor edx,edx
@@ -2816,7 +2802,7 @@ init_boot_proc:
     movzx edx,es:[di].ap_apic_id
     movzx bx,dl
     add bx,bx
-    mov [bx].apic_arr,fs    
+    mov ds:[bx].apic_arr,fs    
     mov fs:ps_apic,edx
 ;
     mov al,es:[di].ap_acpi_id
@@ -2855,7 +2841,7 @@ init_ap_create:
 ;
     movzx bx,dl
     add bx,bx
-    mov [bx].apic_arr,fs
+    mov ds:[bx].apic_arr,fs
 ;
     mov al,es:[di].ap_acpi_id
     mov fs:ps_acpi,al
@@ -2924,10 +2910,6 @@ init_apic_gates_ok:
     mov es,ax
     mov di,OFFSET init_apic_thread
     HookInitTasking
-;
-    popad
-    pop es
-    pop ds      
     ret
 init    ENDP
 

@@ -78,10 +78,6 @@ pic_srcs = PIC.ASM
 pic_objs = $(pic_srcs:.ASM=.OBJ)
 pic_rdvs = $(pic_srcs:.ASM=.RDV)
 
-apic_srcs = APIC.ASM
-apic_objs = $(apic_srcs:.ASM=.OBJ)
-apic_rdvs = $(apic_srcs:.ASM=.RDV)
-
 rtc_srcs = RTC.ASM
 rtc_objs = $(rtc_srcs:.ASM=.OBJ)
 rtc_rdvs = RTC.RDV
@@ -233,7 +229,7 @@ srcs =      $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(time_srcs) $(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) $(exec_srcs) \
-			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) $(apic_srcs) \
+			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs) \
 			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs) \
@@ -255,7 +251,7 @@ rdvs =      $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
 		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
 			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
-			$(keyboard_rdvs) $(inifile_rdvs) $(apic_rdvs) \
+			$(keyboard_rdvs) $(inifile_rdvs)  \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
@@ -573,14 +569,6 @@ PIC.RDV : $(pic_objs)
 	$(pic_objs)
 	PIC.RDV
 	PIC;
-!
-
-APIC.RDV : $(apic_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(apic_objs)
-	APIC.RDV
-	APIC;
 !
 
 RTC.RDV : $(rtc_objs)
