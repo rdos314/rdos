@@ -37,7 +37,7 @@ INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
 INCLUDE acpi.def
 
-acpi_data_seg STRUC
+acpi_data_seg STRUC        
 
 acpi_table_count        DW ?
 acpi_table_arr          DD ?
@@ -502,13 +502,6 @@ init_acpi_thread	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	Proc far
-	push ds
-	push es
-	pusha
-;
-	mov bx,acpi_code_sel
-	InitDevice
-;
     call GetRsdp
     jc acpi_fail
 ;    
@@ -561,9 +554,6 @@ acpi_load_save:
 	HookInitTasking
 
 acpi_fail:
-	popa
-	pop es
-	pop ds
 	ret
 init	Endp
 

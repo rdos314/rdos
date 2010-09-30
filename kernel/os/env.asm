@@ -28,10 +28,6 @@
                 NAME env
 
 
-        .386p
-
-code    SEGMENT byte public use16 'CODE'
-
 GateSize = 16
 
 INCLUDE protseg.def
@@ -54,14 +50,14 @@ env_handle_base handle_header <>
 env_handle_mode DB ?
 
 env_handle_seg  ENDS
-
-env_sys_seg  STRUC
+        
+data    SEGMENT byte public 'DATA'
 
 env_sys_section     section_typ <>
 
 env_sys_raw_sel         DW ?
 
-env_sys_seg  ENDS
+data  ENDS
 
 env_proc_seg  STRUC
 
@@ -70,6 +66,10 @@ env_proc_section     section_typ <>
 env_proc_raw_sel         DW ?
 
 env_proc_seg  ENDS
+        
+code    SEGMENT byte use16 public 'CODE'
+
+        .386p
 
         assume cs:code
 
@@ -200,7 +200,7 @@ lock_sys_env_name       DB 'Lock Sys Env',0
 lock_sys_env    Proc far
     push ds
 ;
-    mov bx,env_sys_sel
+    mov bx,SEG data
     mov ds,bx
     EnterSection ds:env_sys_section
     mov bx,ds:env_sys_raw_sel
@@ -225,7 +225,7 @@ unlock_sys_env    Proc far
     push ds
     push bx
 ;
-    mov bx,env_sys_sel
+    mov bx,SEG data
     mov ds,bx
     LeaveSection ds:env_sys_section
 ;
@@ -1183,12 +1183,6 @@ init_process    Endp
 
 
 init    PROC far
-    push ds
-    pusha
-;   
-    mov bx,env_code_sel
-    InitDevice
-;
     mov eax,4000h
     AllocateGlobalMem
 ;
@@ -1208,10 +1202,7 @@ init_device_loop:
     stosb
 ;
     mov dx,es
-    mov eax,SIZE env_sys_seg
-    mov bx,env_sys_sel
-    AllocateFixedSystemMem
-;
+    mov bx,SEG data
     mov ds,bx
     InitSection ds:env_sys_section
     mov ds:env_sys_raw_sel,dx
@@ -1314,8 +1305,6 @@ init_device_loop:
     mov ax,set_env_data_nr
     RegisterUserGate
 ;   
-    popa
-    pop ds
     ret
 init    ENDP
 

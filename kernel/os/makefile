@@ -47,10 +47,6 @@ ipcdebug_srcs = IPCDEBUG.ASM  $(debug_srcs)
 ipcdebug_objs = $(ipcdebug_srcs:.ASM=.OBJ)
 ipcdebug_rdvs = IPCDEBUG.RDV
 
-env_srcs = ENV.ASM        
-env_objs = $(env_srcs:.ASM=.OBJ)
-env_rdvs = ENV.RDV
-
 video_srcs = VIDEO.ASM BITMAP.ASM BIT1.ASM BIT16.ASM BIT24.ASM BIT32.ASM \
              SPRITE.ASM
 video_objs = $(video_srcs:.ASM=.OBJ)
@@ -65,10 +61,6 @@ em_rdvs = EMULATE.RDV
 wait_srcs = WAIT.ASM
 wait_objs = $(wait_srcs:.ASM=.OBJ)
 wait_rdvs = $(wait_srcs:.ASM=.RDV)
-
-acpi_srcs = ACPI.ASM
-acpi_objs = $(acpi_srcs:.ASM=.OBJ)
-acpi_rdvs = $(acpi_srcs:.ASM=.RDV)
 
 wd_srcs = WD.ASM
 wd_objs = $(wd_srcs:.ASM=.OBJ)
@@ -237,7 +229,7 @@ pcshut_exes = PCSHUT.EXE
 srcs =      $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
-			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs) $(env_srcs) \
+			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs)  \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(time_srcs) $(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) $(exec_srcs) \
@@ -245,7 +237,7 @@ srcs =      $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs) \
 			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs) \
-			$(pic_srcs) $(acpi_srcs)
+			$(pic_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -263,11 +255,11 @@ rdvs =      $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
 		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
 			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
-			$(keyboard_rdvs) $(inifile_rdvs) $(env_rdvs) $(apic_rdvs) \
+			$(keyboard_rdvs) $(inifile_rdvs) $(apic_rdvs) \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
-			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs) $(pic_rdvs) $(acpi_rdvs)
+			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs) $(pic_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -325,14 +317,6 @@ PCSHUT.EXE : $(pcshut_objs)
 	$(pcshut_objs)
 	PCSHUT
 	PCSHUT;       
-!
-
-ENV.RDV : $(env_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(env_objs)
-	ENV.RDV
-	ENV;
 !
 
 VIDEO.RDV : $(video_objs)
@@ -565,14 +549,6 @@ WD.RDV : $(wd_objs)
 	$(wd_objs)
 	WD.RDV
 	WD;
-!
-
-ACPI.RDV : $(acpi_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(acpi_objs)
-	ACPI.RDV
-	ACPI;
 !
 
 TIMER.RDV : $(timer_objs)

@@ -364,6 +364,62 @@ install_dos_device_end:
 	ret
 install_dos_device	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			device16_thread
+;
+;		DESCRIPTION:    Device16 test thread
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_device16    Proc near
+	push ds
+	push es
+	pushad
+;	
+	mov ecx,[edx].len
+	sub ecx,SIZE rdos_header
+	add edx,SIZE rdos_header
+	mov esi,edx
+	mov ebx,[esi].dev16_size
+	movzx ecx,[esi].dev16_code_size
+	add edx,ebx
+	mov bx,[esi].dev16_code_sel
+	or bx,bx
+	jnz install_device16_cr_code
+;
+	mov bx,device_code_sel
+
+install_device16_cr_code:
+    mov di,bx
+	CreateCodeSelector16
+;
+    add edx,ecx
+	movzx ecx,[esi].dev16_data_size
+	mov bx,[esi].dev16_data_sel
+	or ecx,ecx
+	jz install_device16_sel_ok
+;
+	CreateDataSelector16
+
+install_device16_sel_ok:
+	mov ax,[esi].dev16_init_ip
+	mov ds,bx
+	push cs
+	push OFFSET install_device16_end
+	push di
+	push ax
+	retf
+
+install_device16_end:
+	popad
+	pop es
+	pop ds
+    ret
+install_device16    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -399,6 +455,13 @@ not_install_simple_device:
 	jmp install_adapter_next
 	
 not_install_dos_device:
+	cmp ax,RdosDevice16
+	jne not_install_dev16
+;	
+	call install_device16
+	jmp install_adapter_next
+
+not_install_dev16:
 	cmp ax,RdosEnd
 	je install_adapter_done
 install_adapter_next:
@@ -588,104 +651,6 @@ get_image_data16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			device16_thread
-;
-;		DESCRIPTION:    Device16 test thread
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-device16_thread_name DB 'Device 16', 0
-
-install_device16    Proc near
-	push ds
-	push es
-	pushad
-;	
-	mov ecx,[edx].len
-	sub ecx,SIZE rdos_header
-	add edx,SIZE rdos_header
-	mov esi,edx
-	mov ebx,[esi].dev16_size
-	movzx ecx,[esi].dev16_code_size
-	add edx,ebx
-	mov bx,[esi].dev16_code_sel
-	or bx,bx
-	jnz install_device16_cr_code
-;
-	mov bx,device_code_sel
-
-install_device16_cr_code:
-    mov di,bx
-	CreateCodeSelector16
-;
-    add edx,ecx
-	movzx ecx,[esi].dev16_data_size
-	mov bx,[esi].dev16_data_sel
-	or ecx,ecx
-	jz install_device16_sel_ok
-;
-	CreateDataSelector16
-
-install_device16_sel_ok:
-	mov ax,[esi].dev16_init_ip
-	mov ds,bx
-	push cs
-	push OFFSET install_device16_end
-	push di
-	push ax
-	retf
-
-install_device16_end:
-	popad
-	pop es
-	pop ds
-    ret
-install_device16    Endp
-
-device16_thread:
-    int 3
-;
-	mov ax,system_data_sel
-	mov ds,ax
-	mov bx,OFFSET rom_adapters
-	mov edx,[bx].adapter_base
-	mov ax,flat_sel
-	mov ds,ax
-device_adapter_loop:
-	mov ax,[edx].typ
-	cmp ax,RdosDevice16
-	jne not_device;	
-	call install_device16
-	jmp device_adapter_next
-	
-not_device:
-	cmp ax,RdosEnd
-	je device_adapter_done
-	
-device_adapter_next:
-	add edx,[edx].len
-	jmp device_adapter_loop
-	
-device_adapter_done:
-	retf
-
-cr_device_thread:
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-	mov si,OFFSET device16_thread
-	mov di,OFFSET device16_thread_name
-	mov ax,2
-	mov cx,100h	
-	CreateThread
-	retf
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
 ;		NAME:			init_device
 ;
 ;		DESCRIPTION:	Init module (devices)
@@ -733,12 +698,6 @@ init_device_loop:
 	call install_adapter
 	add bx,SIZE adapter_typ
 	loop init_device_loop	
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-	mov di,OFFSET cr_device_thread
-	HookInitTasking
 ;
 	popa
 	pop es
