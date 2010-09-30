@@ -379,8 +379,6 @@ binary_to_time_date_ok:
 binary_to_time	ENDP
 
 init	PROC far
-	mov bx,time_code_sel
-	InitDevice
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
