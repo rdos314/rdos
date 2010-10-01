@@ -1,7 +1,5 @@
-tdstrp32 \rdos\apps\freecom\command
-tdstrp32 \rdos\apps\ftpd\ftpd
-..\..\kernel\tools\cfg2bin safe
-..\..\kernel\tools\cfg2bin rdos
-..\..\kernel\tools\cfg2bin boot
-..\..\kernel\tools\cfg2bin n101
-..\..\kernel\tools\cfg2bin n102
+\rdos\apps\cfg2bin\win32\cfg2bin safe
+\rdos\apps\cfg2bin\win32\cfg2bin rdos
+\rdos\apps\cfg2bin\win32\cfg2bin boot
+\rdos\apps\cfg2bin\win32\cfg2bin n101
+\rdos\apps\cfg2bin\win32\cfg2bin n102
