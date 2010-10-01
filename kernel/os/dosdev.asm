@@ -56,18 +56,6 @@ device_attr		DW ?
 
 device_struc	ENDS
 
-device_seg		STRUC
-
-device_chain		DW ?
-
-device_last			DW ?
-
-devices				DB 16*16 DUP(?)
-
-device_size			DB ?
-  
-device_seg		ENDS
-
 device_process_seg	STRUC
 
 con_buf			DB 256 DUP(?)
@@ -78,13 +66,22 @@ device_process_size	DB ?
 
 device_process_seg	ENDS
 
+data    SEGMENT byte public 'DATA'
+
+device_chain		DW ?
+
+device_last			DW ?
+
+devices				DB 16*16 DUP(?)
+
+data    ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -110,7 +107,7 @@ register_device	PROC far
 	push ecx
 	push esi
 	push edi
-	mov ax,dosdev_data_sel
+	mov ax,SEG data
 	mov es,ax
 	push cx
 	push si
@@ -144,7 +141,7 @@ register_device	PROC far
 	shr edx,4
 	mov ax,flat_sel
 	mov ds,ax
-	mov ax,dosdev_data_sel
+	mov ax,SEG data
 	mov es,ax
 	movzx eax,es:device_chain
 	shl eax,4
@@ -164,7 +161,6 @@ register_device	PROC far
 	ret
 register_device	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -218,7 +214,7 @@ find_device	PROC far
 	push cx
 	push si
 ;
-	mov ax,dosdev_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov bx,OFFSET char_tab
 	mov si,OFFSET devices
@@ -277,7 +273,6 @@ find_device_done:
 	ret
 find_device	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -330,7 +325,6 @@ allocate_dir_sel	PROC far
 	ret
 allocate_dir_sel	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -351,7 +345,6 @@ free_dir_sel	PROC far
 	ret
 free_dir_sel	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -371,7 +364,7 @@ cache_dir	PROC far
 	push es
 	pushad
 ;
-	mov ax,dosdev_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,flat_sel
 	mov es,ax
@@ -429,7 +422,6 @@ cache_name_done:
 	ret
 cache_dir	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -459,7 +451,6 @@ open_file_done:
 	ret
 open_file	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -480,7 +471,6 @@ close_file	PROC far
 	ret
 close_file	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -501,7 +491,6 @@ get_ioctl_data	PROC far
 	ret
 get_ioctl_data	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -525,14 +514,13 @@ read_file	PROC far
 	mov ax,flat_sel
 	mov ds,ax
 	mov bx,[ebx].devfe_data
-	mov ax,dosdev_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	push [bx].device_code
 	push [bx].device_read
 	ret
 read_file	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -556,14 +544,13 @@ write_file	PROC far
 	mov ax,flat_sel
 	mov ds,ax
 	mov bx,[ebx].devfe_data
-	mov ax,dosdev_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	push [bx].device_code
 	push [bx].device_write
  	ret
 write_file	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -598,7 +585,6 @@ clock_write	PROC far
 	ret
 clock_write	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -678,7 +664,6 @@ prn_fail:
 	ret
 prn_write	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1267,7 +1252,6 @@ read_con32	PROC far
 	retf32
 read_con32	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1367,7 +1351,6 @@ con_write	PROC far
 	ret
 con_write	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1406,7 +1389,6 @@ init_device_process	PROC far
 	ret
 init_device_process	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1449,37 +1431,33 @@ dummy	Endp
 fs_name	DB 'DEVICE',0
 
 fs_ctrl:
-fs00	DW OFFSET dummy,			dosdev_code_sel
-fs01	DW OFFSET dummy,			dosdev_code_sel
-fs02	DW OFFSET dummy,			dosdev_code_sel
-fs03	DW OFFSET dummy,			dosdev_code_sel
-fs04	DW OFFSET dummy,			dosdev_code_sel
-fs05	DW OFFSET allocate_dir_sel,	dosdev_code_sel
-fs06	DW OFFSET free_dir_sel,		dosdev_code_sel
-fs07	DW OFFSET cache_dir,		dosdev_code_sel
-fs08	DW OFFSET dummy,			dosdev_code_sel
-fs09	DW OFFSET dummy,			dosdev_code_sel
-fs10	DW OFFSET dummy,			dosdev_code_sel
-fs11	DW OFFSET dummy,			dosdev_code_sel
-fs12	DW OFFSET dummy,			dosdev_code_sel
-fs13	DW OFFSET dummy,			dosdev_code_sel
-fs14	DW OFFSET dummy,			dosdev_code_sel
-fs15	DW OFFSET get_ioctl_data,	dosdev_code_sel
-fs16	DW OFFSET dummy,			dosdev_code_sel
-fs17	DW OFFSET read_file,		dosdev_code_sel
-fs18	DW OFFSET write_file,		dosdev_code_sel
-fs19	DW OFFSET dummy,			dosdev_code_sel
-fs20	DW OFFSET dummy,			dosdev_code_sel
-fs21	DW OFFSET dummy,			dosdev_code_sel
-fs22	DW OFFSET dummy,			dosdev_code_sel
-	
-init	PROC far
-	pusha
-	push ds
-	push es
-	mov bx,dosdev_code_sel
-	InitDevice
-;
+fs00	DW OFFSET dummy,			SEG code
+fs01	DW OFFSET dummy,			SEG code
+fs02	DW OFFSET dummy,			SEG code
+fs03	DW OFFSET dummy,			SEG code
+fs04	DW OFFSET dummy,			SEG code
+fs05	DW OFFSET allocate_dir_sel,	SEG code
+fs06	DW OFFSET free_dir_sel,		SEG code
+fs07	DW OFFSET cache_dir,		SEG code
+fs08	DW OFFSET dummy,			SEG code
+fs09	DW OFFSET dummy,			SEG code
+fs10	DW OFFSET dummy,			SEG code
+fs11	DW OFFSET dummy,			SEG code
+fs12	DW OFFSET dummy,			SEG code
+fs13	DW OFFSET dummy,			SEG code
+fs14	DW OFFSET dummy,			SEG code
+fs15	DW OFFSET get_ioctl_data,	SEG code
+fs16	DW OFFSET dummy,			SEG code
+fs17	DW OFFSET read_file,		SEG code
+fs18	DW OFFSET write_file,		SEG code
+fs19	DW OFFSET dummy,			SEG code
+fs20	DW OFFSET dummy,			SEG code
+fs21	DW OFFSET dummy,			SEG code
+fs22	DW OFFSET dummy,			SEG code
+
+    public init_dosdev
+    	
+init_dosdev	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -1504,10 +1482,6 @@ init	PROC far
 	mov ax,read_con_nr
 	RegisterUserGate
 ;
-	mov ax,OFFSET device_size
-	mov bx,dosdev_data_sel
-	AllocateFixedSystemMem
-;
 	mov ax,OFFSET device_process_size
 	mov bx,dosdev_process_sel
 	AllocateFixedProcessMem
@@ -1521,7 +1495,7 @@ init	PROC far
 	mov esi,OFFSET nul_device_begin
 	rep movs byte ptr es:[edi],ds:[esi]
 	shr edx,4
-	mov ax,dosdev_data_sel
+	mov ax,SEG data
 	mov es,ax
 	mov es:device_chain,dx
 	mov ax,cs
@@ -1584,13 +1558,9 @@ init	PROC far
 	mov al,80h
 	mov di,OFFSET fs_name
 	InstallFileSystem
-;
-	pop es
-	pop ds
-	popa
 	ret
-init	ENDP
+init_dosdev	ENDP
 
 code	ENDS
 
-	END init
+	END

@@ -229,8 +229,6 @@ fs_data_sel			EQU 5B8h
 fs_process_sel		EQU 5C0h
 
 dosdev_process_sel	EQU 5D8h
-dosdev_code_sel		EQU 5E0h
-dosdev_data_sel		EQU 5E8h
 
 debug_code_sel		EQU 5F0h
 
