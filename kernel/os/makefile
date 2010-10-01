@@ -52,10 +52,6 @@ video_srcs = VIDEO.ASM BITMAP.ASM BIT1.ASM BIT16.ASM BIT24.ASM BIT32.ASM \
 video_objs = $(video_srcs:.ASM=.OBJ)
 video_rdvs = VIDEO.RDV
 
-wait_srcs = WAIT.ASM
-wait_objs = $(wait_srcs:.ASM=.OBJ)
-wait_rdvs = $(wait_srcs:.ASM=.RDV)
-
 wd_srcs = WD.ASM
 wd_objs = $(wd_srcs:.ASM=.OBJ)
 wd_rdvs = $(wd_srcs:.ASM=.RDV)
@@ -201,7 +197,7 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(prot_srcs) $(timer_srcs) $(file_srcs) $(exec_srcs) \
 			$(keyboard_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
-			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs) \
+			$(focus_srcs) $(rtc_srcs) $(filedisc_srcs) \
 			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs) \
 			$(pic_srcs)
 
@@ -223,7 +219,7 @@ rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(keyboard_rdvs) $(inifile_rdvs)  \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
-			$(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
+			$(focus_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
 			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs) $(pic_rdvs)
 
@@ -475,14 +471,6 @@ IPC.RDV : $(ipc_objs)
 	$(ipc_objs)
 	IPC.RDV
 	IPC;
-!
-
-WAIT.RDV : $(wait_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(wait_objs)
-	WAIT.RDV
-	WAIT;
 !
 
 WD.RDV : $(wd_objs)

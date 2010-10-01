@@ -25,8 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
-		NAME timer
-
+		NAME wait
+		
 GateSize = 16
 
 INCLUDE protseg.def
@@ -169,7 +169,6 @@ close_wait_done:
 	retf32
 close_wait ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -745,7 +744,6 @@ signal_wait Proc far
     ret
 signal_wait Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -778,7 +776,6 @@ delete_signal_handle_done:
 	ret
 delete_signal_handle	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -812,7 +809,6 @@ create_signal   Proc far
     retf32
 create_signal   Endp	
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -846,7 +842,6 @@ reset_sig_done:
     retf32
 reset_signal Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -884,7 +879,6 @@ is_sig_done:
     retf32
 is_signalled Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -928,7 +922,6 @@ set_sig_done:
     retf32
 set_signal Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -959,7 +952,6 @@ free_sig_done:
     retf32
 free_signal Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1031,7 +1023,6 @@ stop_wait_signal_done:
     ret
 stop_wait_for_signal Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1063,7 +1054,6 @@ clear_signal_done:
     ret
 clear_signal Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1116,10 +1106,10 @@ is_signal_idle Endp
 add_wait_for_signal_name	DB 'Add Wait For Signal',0
 
 add_wait_tab:
-aw0	DW OFFSET start_wait_for_signal,   	wait_code_sel
-aw1 DW OFFSET stop_wait_for_signal,		wait_code_sel
-aw2	DW OFFSET clear_signal,				wait_code_sel
-aw3	DW OFFSET is_signal_idle,		   	wait_code_sel
+aw0	DW OFFSET start_wait_for_signal,   	SEG code
+aw1 DW OFFSET stop_wait_for_signal,		SEG code
+aw2	DW OFFSET clear_signal,				SEG code
+aw3	DW OFFSET is_signal_idle,		   	SEG code
 
 add_wait_for_signal	PROC far
 	push ds
@@ -1155,13 +1145,9 @@ add_wait_for_signal	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	push ds
-	push es
-	pusha
-	mov bx,wait_code_sel
-	InitDevice
-;
+    public init_wait
+
+init_wait	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -1261,13 +1247,9 @@ init	PROC far
 	xor dx,dx
 	mov ax,add_wait_for_signal_nr
 	RegisterBimodalUserGate
-;
-	popa
-	pop es
-	pop ds
 	ret
-init	ENDP
+init_wait	ENDP
 
 code	ENDS
 
-	END init
+	END
