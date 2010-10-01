@@ -162,7 +162,6 @@ dos_data_sel		EQU 430h
 mon_video_data_sel	EQU 438h
 
 mail_code_sel		EQU 440h
-xms_code_sel		EQU 448h
 
 mon_video_code_sel	EQU 450h
 video_pos_sel		EQU 458h
@@ -287,7 +286,6 @@ floppy_data_sel		EQU 728h
 printer_code_sel	EQU 730h
 
 xms_local_sel		EQU 740h
-xms_system_sel		EQU 748h
 
 com_data_sel        EQU 750h
 cbus_data_sel		EQU 758h

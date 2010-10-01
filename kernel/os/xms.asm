@@ -48,12 +48,6 @@ lock_count			DB ?
 
 xms_handle_seg	ENDS
 
-xms_system_seg	STRUC
-
-xms_handler_seg	DW ?
-
-xms_system_seg	ENDS
-
 xms_local_seg	STRUC
 
 xms_hma_state	DB ?
@@ -61,64 +55,18 @@ xms_free_mem	DD ?
 
 xms_local_seg	ENDS
 
+data    SEGMENT byte public 'DATA'
+
+xms_handler_seg	DW ?
+
+data    ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-init	PROC far
-	pusha
-	push ds
-;
-	mov bx,xms_code_sel
-	InitDevice
-	mov eax,SIZE xms_system_seg
-	mov bx,xms_system_sel
-	AllocateFixedSystemMem
-;
-	mov ax,cs
-	mov ds,ax
-	mov bx,OFFSET xmm_device_begin
-	mov cx,OFFSET xmm_device_end - OFFSET xmm_device_begin
-	mov si,OFFSET xmm_read
-	mov di,OFFSET xmm_write
-	RegisterDevice
-	mov ax,xms_system_sel
-	mov ds,ax
-	mov ds:xms_handler_seg,dx
-;
-	mov eax,SIZE xms_local_seg
-	mov bx,xms_local_sel
-	AllocateFixedProcessMem
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET init_xms_process
-	HookCreateProcess
-;
-	mov si,OFFSET xms_handler
-	mov di,OFFSET xms_name
-	mov ax,xms_handler_nr
-	mov dx,virt_ds_in
-	RegisterUserGateV86
-;
-	mov si,OFFSET query_xms
-	mov di,OFFSET query_xms_name
-	xor cl,cl
-	mov ax,query_xms_nr
-	RegisterOsGate
-;
-	mov di,OFFSET delete_handle
-	mov ax,XMS_HANDLE
-	RegisterHandle
-	pop ds
-	popa
-	ret
-init	ENDP
-
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -142,7 +90,6 @@ init_xms_process	PROC far
 	ret
 init_xms_process	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -605,7 +552,6 @@ xms_handle_ret:
 	ret
 xms_handler	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -628,7 +574,7 @@ query_xms	PROC far
 not_xms_inst:
 	cmp al,10h
 	jne not_xms_entry
-	mov bx,xms_system_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:xms_handler_seg
 	mov [bp].vm_es,bx
@@ -638,7 +584,6 @@ not_xms_entry:
 	ret
 query_xms	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -681,6 +626,61 @@ xmm_write	PROC far
 	ret
 xmm_write	ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			INIT
+;
+;		DESCRIPTION:	Init XMS
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_xms
+    
+init_xms	PROC near
+	mov ax,cs
+	mov ds,ax
+	mov bx,OFFSET xmm_device_begin
+	mov cx,OFFSET xmm_device_end - OFFSET xmm_device_begin
+	mov si,OFFSET xmm_read
+	mov di,OFFSET xmm_write
+	RegisterDevice
+;
+	mov ax,SEG data
+	mov ds,ax
+	mov ds:xms_handler_seg,dx
+;
+	mov eax,SIZE xms_local_seg
+	mov bx,xms_local_sel
+	AllocateFixedProcessMem
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET init_xms_process
+	HookCreateProcess
+;
+	mov si,OFFSET xms_handler
+	mov di,OFFSET xms_name
+	mov ax,xms_handler_nr
+	mov dx,virt_ds_in
+	RegisterUserGateV86
+;
+	mov si,OFFSET query_xms
+	mov di,OFFSET query_xms_name
+	xor cl,cl
+	mov ax,query_xms_nr
+	RegisterOsGate
+;
+	mov di,OFFSET delete_handle
+	mov ax,XMS_HANDLE
+	RegisterHandle
+	ret
+init_xms	ENDP
+
 code	ENDS
 
-	END init
+	END
