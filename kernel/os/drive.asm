@@ -5314,7 +5314,6 @@ init	PROC far
 ;
 	mov bx,SEG data
 	mov es,bx
-	AllocateFixedSystemMem
 	mov es:disc_params,0
 ;
 	mov cx,MAX_DRIVES
