@@ -53,19 +53,6 @@ dws_thread			DW ?
 
 drive_wait_struc	ENDS
 
-disc_data_seg		STRUC
-
-disc_params			DB ?
-disc_curr_param		DW ?
-disc_param_arr		DD MAX_DRIVES DUP(?)
-disc_def_arr		DW MAX_DRIVES DUP(?)
-drive_def_arr		DW MAX_DRIVES DUP(?)
-drive_wait_arr		DB 4*DRIVE_WAIT_NUM DUP(?)
-drive_wait_free		DW ?
-drive_wait_count    DW ?
-
-disc_data_seg		ENDS
-
 disc_def_struc		STRUC
 
 disc_nr					DB ?
@@ -157,11 +144,24 @@ boot_param                  boot_media_struc <>
 
 boot_struc		ENDS
 
+data    SEGMENT byte public 'DATA'
+
+disc_params			DB ?
+disc_curr_param		DW ?
+disc_param_arr		DD MAX_DRIVES DUP(?)
+disc_def_arr		DW MAX_DRIVES DUP(?)
+drive_def_arr		DW MAX_DRIVES DUP(?)
+drive_wait_arr		DB 4*DRIVE_WAIT_NUM DUP(?)
+drive_wait_free		DW ?
+drive_wait_count    DW ?
+
+data    ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+	assume cs:code,ds:data
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -562,7 +562,7 @@ CheckDriveWait	Proc near
     push ds
     pushad
 ;
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
     xor cx,cx
 	mov bx,ds:drive_wait_free
@@ -1588,7 +1588,7 @@ ifdef DEBUG
 	call CheckDriveWait
 endif
 	
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov bx,ds:drive_wait_free
 	mov ax,[bx]
@@ -1616,7 +1616,7 @@ block_do:
     je block_do
 ;    
 	push ds
-    mov bx,disc_data_sel
+    mov bx,SEG data
     mov ds,bx
 ;    
     GetThread
@@ -1665,7 +1665,7 @@ start_disc	Proc far
 	push es
 	pusha
 ;
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov cx,MAX_DRIVES
 	mov si,OFFSET drive_def_arr
@@ -1719,7 +1719,7 @@ stop_disc	Proc far
 	push es
 	pusha
 ;
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov cx,MAX_DRIVES
 	mov si,OFFSET drive_def_arr
@@ -2261,7 +2261,7 @@ endif
 	jz completed_wakeup_done
 ;
 	push ds
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 
 completed_wakeup_loop:
@@ -2535,7 +2535,7 @@ install_disc	Proc far
 	push di
 ;
 	push cx
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov si,OFFSET disc_def_arr
 	mov cx,MAX_DRIVES
@@ -2621,7 +2621,7 @@ allocate_fixed_drive	Proc far
 	push ax
 	push bx
 ;
-	mov bx,disc_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	movzx bx,al
 	shl bx,1
@@ -2660,7 +2660,7 @@ allocate_static_drive	Proc far
 	push si
 ;
     push ax
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov si,OFFSET drive_def_arr
 	mov cx,MAX_DRIVES
@@ -2710,7 +2710,7 @@ allocate_dynamic_drive	Proc far
 	push si
 ;
     push ax
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov si,OFFSET drive_def_arr + 2 * (MAX_DRIVES - 1)
 	mov cx,MAX_DRIVES
@@ -2765,7 +2765,7 @@ open_drive	Proc far
 	push di
 ;
 	push ax
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 ;
 	mov eax,SIZE drive_def_struc
@@ -2844,7 +2844,7 @@ flush_drive	Proc far
 ;
 	movzx bx,al
 	shl bx,1
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds,ds:[bx].drive_def_arr
 	mov ax,flat_sel
@@ -2964,7 +2964,7 @@ get_drive_param	PROC far
 ;
 	movzx bx,al
 	shl bx,1
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,ds:[bx].drive_def_arr
 	cmp ax,-1
@@ -3039,7 +3039,7 @@ new_sector	PROC far
 ;
 	movzx bx,al
 	shl bx,1
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds,ds:[bx].drive_def_arr
 	mov ax,flat_sel
@@ -3126,7 +3126,7 @@ lock_sector	PROC far
 ;
 	movzx bx,al
 	shl bx,1
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds,ds:[bx].drive_def_arr
 	mov ax,flat_sel
@@ -3653,7 +3653,7 @@ req_sector	PROC far
 ;
 	movzx bx,al
 	shl bx,1
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds,ds:[bx].drive_def_arr
 	mov ax,flat_sel
@@ -3787,7 +3787,7 @@ define_sector	PROC far
 ;
 	movzx bx,al
 	shl bx,1
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds,ds:[bx].drive_def_arr
 	mov ax,flat_sel
@@ -3925,7 +3925,7 @@ erase_sectors   Proc far
 	push es
 	pushad
 ;
-	mov bx,disc_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	movzx bx,al
 	add bx,bx
@@ -3999,7 +3999,7 @@ erase_disc_sectors   Proc near
 	cmp al,MAX_DRIVES
 	jae erase_disc_sectors_fail
 ;
-	mov bx,disc_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	movzx bx,al
 	add bx,bx
@@ -4141,7 +4141,7 @@ reset_drive	PROC far
 ;
 	movzx bx,al
 	shl bx,1
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,ds:[bx].drive_def_arr
 	or ax,ax
@@ -4185,7 +4185,7 @@ get_disc_info	PROC far
 	cmp al,MAX_DRIVES
 	jae get_disc_info_fail
 ;
-	mov bx,disc_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	movzx bx,al
 	add bx,bx
@@ -4246,7 +4246,7 @@ set_disc_info	PROC far
 	cmp al,MAX_DRIVES
 	jae set_disc_info_fail
 ;
-	mov bx,disc_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	movzx bx,al
 	add bx,bx
@@ -4305,7 +4305,7 @@ read_disc	PROC near
 	cmp al,MAX_DRIVES
 	jae read_disc_fail
 ;
-	mov bx,disc_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	movzx bx,al
 	add bx,bx
@@ -4438,7 +4438,7 @@ write_disc	PROC near
 	cmp al,MAX_DRIVES
 	jae write_disc_fail
 ;
-	mov bx,disc_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	movzx bx,al
 	add bx,bx
@@ -4577,7 +4577,7 @@ get_drive_disc_param	Proc far
 ;
 	movzx bx,al
 	shl bx,1
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,ds:[bx].drive_def_arr
 	or ax,ax
@@ -4647,7 +4647,7 @@ format_drive	Proc near
 	IsFileSystemAvailable
 	jc format_fail
 ;
-	mov bx,disc_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	movzx di,al
 	shl di,1
@@ -4822,7 +4822,7 @@ hook_init_disc	Proc far
 	push ax
 	push bx
 	push cx
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov al,ds:disc_params
 	mov bl,al
@@ -4858,7 +4858,7 @@ run_disc_assign	Proc near
 	push bx
 	push cx
 ;
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	movzx cx,ds:disc_params
 	mov bx,OFFSET disc_param_arr
@@ -4904,7 +4904,7 @@ run_drive_assign1	Proc near
 	push cx
 	push si
 ;
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	xor si,si
 	mov cx,MAX_DRIVES
@@ -4961,7 +4961,7 @@ run_drive_assign2	Proc near
 	push cx
 	push si
 ;
-	mov ax,disc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	xor si,si
 	mov cx,MAX_DRIVES
@@ -5017,7 +5017,7 @@ demand_load_drive	Proc far
 	push ds
 	pushad
 ;
-	mov bx,disc_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	movzx bx,al
 	add bx,bx
@@ -5076,12 +5076,6 @@ init_disc	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
-	push ds
-	push es
-	pusha
-	mov bx,disc_code_sel
-	InitDevice
-;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -5318,8 +5312,8 @@ init	PROC far
 	mov di,OFFSET init_disc
 	HookInitFileSystem
 ;
-	mov eax,SIZE disc_data_seg
-	mov bx,disc_data_sel
+	mov bx,SEG data
+	mov es,bx
 	AllocateFixedSystemMem
 	mov es:disc_params,0
 ;
@@ -5344,10 +5338,6 @@ init_drive_wait_loop:
 	loop init_drive_wait_loop
 	mov es:drive_wait_free,di
 	mov es:drive_wait_count,DRIVE_WAIT_NUM
-;
-	popa
-	pop es
-	pop ds
 	ret
 init	ENDP
 
