@@ -42,6 +42,7 @@ INCLUDE dpmi.inc
 
 	extrn init_bios:near
 	extrn init_v86_bios:near
+	extrn init_ems:near
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -61,6 +62,7 @@ code	SEGMENT byte public use16 'CODE'
 init	PROC far
     call init_bios
     call init_v86_bios
+    call init_ems
     clc
 	ret
 init	ENDP

@@ -80,10 +80,6 @@ xms_srcs = XMS.ASM
 xms_objs = $(xms_srcs:.ASM=.OBJ)
 xms_rdvs = XMS.RDV
 
-ems_srcs = EMS.ASM 
-ems_objs = $(ems_srcs:.ASM=.OBJ)
-ems_rdvs = EMS.RDV
-
 dpmi_srcs = DPMI.ASM    DPMI16.ASM      DPMI32.ASM
 dpmi_objs = $(dpmi_srcs:.ASM=.OBJ)
 dpmi_rdvs = DPMI.RDV
@@ -204,7 +200,7 @@ pcshut_srcs = PCSHUT.ASM
 pcshut_objs = $(pcshut_srcs:.ASM=.OBJ)
 pcshut_exes = PCSHUT.EXE
 
-srcs =      $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
+srcs =      $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs)  \
@@ -227,7 +223,7 @@ incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
 
 exes =      $(prot_exes) $(pcshut_exes)
 
-rdvs =      $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
+rdvs =      $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 			$(fs_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
 		    $(timer_rdvs) $(mouse_rdvs) $(file_rdvs) \
@@ -335,14 +331,6 @@ IR.RDV : $(ir_objs)
 	$(ir_objs)
 	IR.RDV
 	IR;
-!
-
-EMS.RDV : $(ems_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(ems_objs)
-	EMS.RDV
-	EMS;
 !
 
 XMS.RDV : $(xms_objs)
