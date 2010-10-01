@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-30
-0
+440
+170
 7960
 9216
 2
@@ -44,7 +44,7 @@ apic.tgt
 11
 WFileName
 8
-time.tgt
+util.tgt
 12
 WFileName
 11
@@ -59,7 +59,7 @@ WRect
 0
 0
 5670
-4181
+4164
 0
 0
 16
@@ -75,7 +75,7 @@ WRect
 720
 3072
 5670
-4181
+4164
 0
 0
 19
@@ -89,9 +89,9 @@ VComponent
 21
 WRect
 720
-1109
+1092
 5670
-4181
+4164
 0
 0
 22
@@ -139,7 +139,7 @@ WRect
 0
 0
 5700
-4113
+4096
 0
 0
 31
@@ -155,13 +155,13 @@ WRect
 0
 0
 5700
-4130
+4113
 0
 0
 34
 WFileName
 8
-time.tgt
+util.tgt
 0
 0
 35
@@ -171,7 +171,7 @@ WRect
 0
 0
 5700
-4147
+4130
 0
 0
 37
@@ -180,4 +180,4 @@ WFileName
 emulate.tgt
 0
 0
-35
+32

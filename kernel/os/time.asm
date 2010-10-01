@@ -378,7 +378,9 @@ binary_to_time_date_ok:
 	retf32
 binary_to_time	ENDP
 
-init	PROC far
+    public init_time
+    
+init_time	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -414,8 +416,8 @@ init	PROC far
 	RegisterBimodalUserGate
 ;
 	ret
-init	ENDP
+init_time	ENDP
 
 code	ENDS
 
-	END init
+    END
