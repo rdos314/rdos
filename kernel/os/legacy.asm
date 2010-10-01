@@ -45,6 +45,7 @@ INCLUDE dpmi.inc
 	extrn init_ems:near
 	extrn init_xms:near
 	extrn init_dosdev:near
+	extrn init_timer:near
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -67,6 +68,7 @@ init	PROC far
     call init_dosdev
     call init_ems
     call init_xms
+    call init_timer
     clc
 	ret
 init	ENDP

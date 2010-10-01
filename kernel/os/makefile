@@ -56,10 +56,6 @@ wd_srcs = WD.ASM
 wd_objs = $(wd_srcs:.ASM=.OBJ)
 wd_rdvs = $(wd_srcs:.ASM=.RDV)
 
-timer_srcs = TIMER.ASM
-timer_objs = $(timer_srcs:.ASM=.OBJ)
-timer_rdvs = $(timer_srcs:.ASM=.RDV)
-
 exec_srcs = EXEC.ASM
 exec_objs = $(exec_srcs:.ASM=.OBJ)
 exec_rdvs = $(exec_srcs:.ASM=.RDV)
@@ -194,7 +190,7 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs)  \
 			$(fs_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(video_srcs) $(pcshut_srcs)   \
-			$(prot_srcs) $(timer_srcs) $(file_srcs) $(exec_srcs) \
+			$(prot_srcs) $(file_srcs) $(exec_srcs) \
 			$(keyboard_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs) $(filedisc_srcs) \
@@ -214,7 +210,7 @@ exes =      $(prot_exes) $(pcshut_exes)
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 			$(fs_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
-		    $(timer_rdvs) $(mouse_rdvs) $(file_rdvs) \
+		    $(mouse_rdvs) $(file_rdvs) \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(keyboard_rdvs) $(inifile_rdvs)  \
@@ -479,14 +475,6 @@ WD.RDV : $(wd_objs)
 	$(wd_objs)
 	WD.RDV
 	WD;
-!
-
-TIMER.RDV : $(timer_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(timer_objs)
-	TIMER.RDV
-	TIMER;
 !
 
 EXEC.RDV : $(exec_objs)

@@ -49,7 +49,7 @@ timer_resvd		DW ?
 timer_time		DD ?,?
 timer_struc	ENDS
 
-timer_data_seg	STRUC
+data    SEGMENT byte public 'DATA'
 
 timer0		timer_struc <>
 
@@ -67,9 +67,7 @@ timer_tics16_sel	DW ?
 
 timer_thread16		DW ?
 
-timer_data_size		DB ?
-
-timer_data_seg	ENDS
+data    ENDS
 
 	.386p
 
@@ -133,7 +131,7 @@ get_period	ENDP
 
 
 in_timer0	PROC far
-	mov bx,timer_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,OFFSET timer0
 	call get_period
@@ -141,7 +139,7 @@ in_timer0	PROC far
 in_timer0	ENDP
 
 out_timer0	PROC far
-	mov bx,timer_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,OFFSET timer0
 	call set_period
@@ -183,7 +181,7 @@ in_control	PROC far
 in_control	ENDP
 
 out_control	PROC far
-	mov bx,timer_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bl,al
 	and bl,0C0h
@@ -261,7 +259,7 @@ get_tics3	ENDP
 timer_name	DB 'Timer Emulator',0
 
 timer_pr:
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetThread
 	mov ds:timer_thread,ax
@@ -308,7 +306,7 @@ timer_pr:
 	sub sp,6
 timer_tics_entry:
 	SimSti
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetThread
 	cmp ax,ds:timer_thread
@@ -351,7 +349,7 @@ timer_wait_loop:
 ;
 timer_int_entry:
 	SimSti
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetThread
 	cmp ax,ds:timer_thread
@@ -415,7 +413,7 @@ check_timer_start:
 check_timer_state	ENDP
 
 get_vm_timer	PROC far
-	mov bx,timer_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:timer_int_offs
 	mov dx,ds:timer_int_seg
@@ -424,7 +422,7 @@ get_vm_timer	ENDP
 
 set_vm_timer	PROC far
 	push ax
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	pop ax
 	mov ds:timer_int_offs,bx
@@ -434,7 +432,7 @@ set_vm_timer	PROC far
 set_vm_timer	ENDP
 
 get_vm_timer_tick	PROC far
-	mov bx,timer_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:timer_tics_offs
 	mov dx,ds:timer_tics_seg
@@ -443,7 +441,7 @@ get_vm_timer_tick	ENDP
 
 set_vm_timer_tick	PROC far
 	push ax
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	pop ax
 	mov ds:timer_tics_offs,bx
@@ -453,7 +451,7 @@ set_vm_timer_tick	PROC far
 set_vm_timer_tick	ENDP
 
 timer16_pr:
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetThread
 	mov ds:timer_thread16,ax
@@ -486,7 +484,7 @@ timer16_pr:
 	push ds
 	sub sp,6
 timer_tics16_entry:
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetThread
 	cmp ax,ds:timer_thread16
@@ -526,7 +524,7 @@ timer_wait16_loop:
 	iretd
 ;
 timer_int16_entry:
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetThread
 	cmp ax,ds:timer_thread16
@@ -587,7 +585,7 @@ check_timer16_start:
 check_timer16_state	ENDP
 
 get_pm_timer	PROC far
-	mov bx,timer_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:timer_int16_offs
 	mov dx,ds:timer_int16_sel
@@ -596,7 +594,7 @@ get_pm_timer	ENDP
 
 set_pm_timer	PROC far
 	push ax
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	pop ax
 	mov ds:timer_int16_offs,bx
@@ -606,7 +604,7 @@ set_pm_timer	PROC far
 set_pm_timer	ENDP
 
 get_pm_timer_tick	PROC far
-	mov bx,timer_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov di,ds:timer_tics16_offs
 	mov es,ds:timer_tics16_sel
@@ -615,7 +613,7 @@ get_pm_timer_tick	ENDP
 
 set_pm_timer_tick	PROC far
 	push ax
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	pop ax
 	mov ds:timer_tics16_offs,di
@@ -625,7 +623,7 @@ set_pm_timer_tick	PROC far
 set_pm_timer_tick	ENDP
 
 init_timer_process	PROC far
-	mov ax,timer_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetSystemTime
 	mov ds:timer0.timer_state,36h
@@ -647,17 +645,9 @@ init_timer_process	PROC far
 	ret
 init_timer_process	ENDP
 
-init	PROC far
-	push ds
-	push es
-	pusha
-	mov bx,timer_code_sel
-	InitDevice
-	xor eax,eax
-	mov ax,OFFSET timer_data_size
-	mov bx,timer_data_sel
-	AllocateFixedProcessMem
-;
+    public init_timer
+
+init_timer	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -770,13 +760,9 @@ init	PROC far
 	mov di,OFFSET timer_tics16_entry
 	mov al,1Ch
 	HookProt16Int
-;
-	popa
-	pop es
-	pop ds
 	ret
-init	ENDP
+init_timer	ENDP
 
 code	ENDS
 
-	END init
+	END
