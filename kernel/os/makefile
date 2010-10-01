@@ -147,10 +147,6 @@ focus_srcs =     FOCUS.ASM
 focus_objs = $(focus_srcs:.ASM=.OBJ)
 focus_rdvs = FOCUS.RDV
 
-v86bios_srcs = V86BIOS.ASM
-v86bios_objs = $(v86bios_srcs:.ASM=.OBJ)
-v86bios_rdvs = V86BIOS.RDV
-
 drive_srcs = drive.ASM
 drive_objs = $(drive_srcs:.ASM=.OBJ)
 drive_rdvs = drive.RDV
@@ -215,7 +211,7 @@ srcs =      $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(fs_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(timer_srcs) $(file_srcs) $(exec_srcs) \
-			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) \
+			$(dosdev_srcs) $(keyboard_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs) \
 			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs) \
@@ -234,7 +230,7 @@ exes =      $(prot_exes) $(pcshut_exes)
 rdvs =      $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 			$(fs_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
-		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
+		    $(timer_rdvs) $(mouse_rdvs) $(file_rdvs) \
 			$(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(keyboard_rdvs) $(inifile_rdvs)  \
@@ -571,14 +567,6 @@ FOCUS.RDV : $(focus_objs)
 	$(focus_objs)
 	FOCUS.RDV
 	FOCUS;
-!
-
-V86BIOS.RDV : $(v86bios_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(v86bios_objs)
-	V86BIOS.RDV
-	V86BIOS;
 !
 
 drive.RDV : $(drive_objs)
