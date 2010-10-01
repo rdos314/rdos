@@ -397,12 +397,13 @@ install_device16_cr_code:
     mov di,bx
 	CreateCodeSelector16
 ;
+    xor bx,bx
     add edx,ecx
 	movzx ecx,[esi].dev16_data_size
-	mov bx,[esi].dev16_data_sel
 	or ecx,ecx
 	jz install_device16_sel_ok
 ;
+	mov bx,[esi].dev16_data_sel
 	CreateDataSelector16
 
 install_device16_sel_ok:

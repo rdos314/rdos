@@ -1181,8 +1181,9 @@ init_process    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public init_env
 
-init    PROC far
+init_env    PROC near
     mov eax,4000h
     AllocateGlobalMem
 ;
@@ -1306,9 +1307,9 @@ init_device_loop:
     RegisterUserGate
 ;   
     ret
-init    ENDP
+init_env    ENDP
 
 code    ENDS
 
-    END init
+    END
 

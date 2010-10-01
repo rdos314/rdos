@@ -41,6 +41,7 @@ INCLUDE dpmi.inc
 	.386p
 
 	extrn init_time:near
+	extrn init_env:near
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -59,6 +60,7 @@ code	SEGMENT byte public use16 'CODE'
 
 init	PROC far
     call init_time
+    call init_env
     clc
 	ret
 init	ENDP
