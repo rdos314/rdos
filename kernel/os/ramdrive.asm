@@ -92,14 +92,6 @@ rfe_name		DB ?
 
 rfe_struc	ENDS
 
-rfs_data_seg	STRUC
-
-drive_count		DW ?
-drive_arr		DW 26 DUP(?)
-drive_sel_arr	DW MAX_RAM_DRIVES DUP(?)
- 
-rfs_data_seg	ENDS
-
 drive_data_seg	STRUC
 
 drive_list_ptr	DD ?
@@ -108,6 +100,14 @@ drive_free_ptr	DD ?
 drive_nr		DB ?
 
 drive_data_seg	ENDS
+
+data    SEGMENT byte public 'DATA'
+
+drive_count		DW ?
+drive_arr		DW 26 DUP(?)
+drive_sel_arr	DW MAX_RAM_DRIVES DUP(?)
+
+data    ENDS
 
 	.386p
 
@@ -152,7 +152,7 @@ mount	PROC far
 	AllocateSmallGlobalMem
 	mov ax,es
 	mov ds,ax
-	mov ax,ramdrive_data_sel
+	mov ax,SEG data
 	mov es,ax
 	pop eax
 	mov ds:drive_list_ptr,0
@@ -1204,47 +1204,44 @@ dummy	Endp
 fs_name	DB 'MEMORY',0
 
 fs_ctrl:
-fs00	DW OFFSET format,			ramdrive_code_sel
-fs01	DW OFFSET mount,			ramdrive_code_sel
-fs02	DW OFFSET flush,			ramdrive_code_sel
-fs03	DW OFFSET dismount,			ramdrive_code_sel
-fs04	DW OFFSET get_drive_info,	ramdrive_code_sel
-fs05	DW OFFSET allocate_dir_sel,	ramdrive_code_sel
-fs06	DW OFFSET free_dir_sel,		ramdrive_code_sel
-fs07	DW OFFSET cache_dir,		ramdrive_code_sel
-fs08	DW OFFSET update_dir,		ramdrive_code_sel
-fs09	DW OFFSET update_file,		ramdrive_code_sel
-fs10	DW OFFSET create_dir,		ramdrive_code_sel
-fs11	DW OFFSET delete_dir,		ramdrive_code_sel
-fs12	DW OFFSET delete_file,		ramdrive_code_sel
-fs13	DW OFFSET rename_file,		ramdrive_code_sel
-fs14	DW OFFSET create_file,		ramdrive_code_sel
-fs15	DW OFFSET get_ioctl_data,	ramdrive_code_sel
-fs16	DW OFFSET set_file_size,	ramdrive_code_sel
-fs17	DW OFFSET read_file,		ramdrive_code_sel
-fs18	DW OFFSET write_file,		ramdrive_code_sel
-fs19	DW OFFSET allocate_file_list,ramdrive_code_sel
-fs20	DW OFFSET free_file_list,	ramdrive_code_sel
-fs21	DW OFFSET read_file_block,	ramdrive_code_sel
-fs22	DW OFFSET write_file_block,	ramdrive_code_sel
+fs00	DW OFFSET format,			SEG code
+fs01	DW OFFSET mount,			SEG code
+fs02	DW OFFSET flush,			SEG code
+fs03	DW OFFSET dismount,			SEG code
+fs04	DW OFFSET get_drive_info,	SEG code
+fs05	DW OFFSET allocate_dir_sel,	SEG code
+fs06	DW OFFSET free_dir_sel,		SEG code
+fs07	DW OFFSET cache_dir,		SEG code
+fs08	DW OFFSET update_dir,		SEG code
+fs09	DW OFFSET update_file,		SEG code
+fs10	DW OFFSET create_dir,		SEG code
+fs11	DW OFFSET delete_dir,		SEG code
+fs12	DW OFFSET delete_file,		SEG code
+fs13	DW OFFSET rename_file,		SEG code
+fs14	DW OFFSET create_file,		SEG code
+fs15	DW OFFSET get_ioctl_data,	SEG code
+fs16	DW OFFSET set_file_size,	SEG code
+fs17	DW OFFSET read_file,		SEG code
+fs18	DW OFFSET write_file,		SEG code
+fs19	DW OFFSET allocate_file_list,SEG code
+fs20	DW OFFSET free_file_list,	SEG code
+fs21	DW OFFSET read_file_block,	SEG code
+fs22	DW OFFSET write_file_block,	SEG code
 
-init	PROC far
-	push ds
-	push es
-	push fs
-	push gs
-	pushad
-	mov bx,ramdrive_code_sel
-	InitDevice
-;
-	mov eax,SIZE fs_data_seg
-	mov bx,ramdrive_data_sel
-	AllocateFixedSystemMem
-;
-	mov cx,ax
-	xor di,di
-	xor al,al
-	rep stosb
+    public init_ramdrive
+    
+init_ramdrive	PROC near
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+    mov ds:drive_count,0
+    mov cx,26
+    xor ax,ax
+    mov di,OFFSET drive_arr
+    rep stosw
+    mov cx,MAX_RAM_DRIVES
+    mov di,OFFSET drive_sel_arr
+    rep stosw
 ;
 	mov ax,cs
 	mov ds,ax
@@ -1259,16 +1256,10 @@ init	PROC far
 	InstallFileSystem
 	mov ecx,-1
 	StartFileSystem
-;
-	popad
-	pop gs
-	pop fs
-	pop es
-	pop ds
 	ret
-init	ENDP
+init_ramdrive	ENDP
 
 code	ENDS
 
-	END init
+	END
 

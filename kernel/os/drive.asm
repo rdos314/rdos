@@ -163,6 +163,8 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code,ds:data
 
+	extrn init_ramdrive:near
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;		NAME:			Boot sector. DO NOT MOVE THIS CODE!!!
@@ -5337,6 +5339,8 @@ init_drive_wait_loop:
 	loop init_drive_wait_loop
 	mov es:drive_wait_free,di
 	mov es:drive_wait_count,DRIVE_WAIT_NUM
+;
+    call init_ramdrive	
 	ret
 init	ENDP
 

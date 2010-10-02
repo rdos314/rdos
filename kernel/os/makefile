@@ -127,10 +127,6 @@ focus_srcs =     FOCUS.ASM
 focus_objs = $(focus_srcs:.ASM=.OBJ)
 focus_rdvs = FOCUS.RDV
 
-ramdrive_srcs = RAMDRIVE.ASM
-ramdrive_objs = $(ramdrive_srcs:.ASM=.OBJ)
-ramdrive_rdvs = RAMDRIVE.RDV
-
 rdfs_srcs = RDFS.ASM RDFSDIR.ASM RDFSFILE.ASM RDFSCRYP.ASM RDFSMISC.ASM \
 			RDFSTAB.ASM RDFSCONT.ASM
 rdfs_objs = $(rdfs_srcs:.ASM=.OBJ)
@@ -180,7 +176,7 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) $(exec_srcs) \
 			$(keyboard_srcs) \
-			$(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
+			$(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs) $(filedisc_srcs) \
 			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs)
 
@@ -201,7 +197,7 @@ rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(keyboard_rdvs) $(inifile_rdvs)  \
-			$(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
+			$(rdfs_rdvs) $(flashfs_rdvs) \
 			$(focus_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
 			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs)
@@ -494,14 +490,6 @@ FOCUS.RDV : $(focus_objs)
 	$(focus_objs)
 	FOCUS.RDV
 	FOCUS;
-!
-
-RAMDRIVE.RDV : $(ramdrive_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(ramdrive_objs)
-	RAMDRIVE.RDV
-	RAMDRIVE;
 !
 
 RDFS.RDV : $(rdfs_objs)

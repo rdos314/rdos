@@ -290,8 +290,6 @@ cbus_data_sel		EQU 758h
 com_code_sel		EQU 760h
 cbus_code_sel		EQU 768h
 
-ramdrive_code_sel	EQU 770h
-ramdrive_data_sel	EQU 778h
 ramdrive_process_sel EQU 780h
 flashfs_code_sel	EQU 788h
 
