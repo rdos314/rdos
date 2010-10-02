@@ -110,26 +110,9 @@ dos_srcs = DOS.ASM	DOSMEM.ASM	DOSCOM.ASM	DOSEXEC.ASM	\
 dos_objs = $(dos_srcs:.ASM=.OBJ)
 dos_rdvs = DOS.RDV
 
-rdfs_srcs = RDFS.ASM RDFSDIR.ASM RDFSFILE.ASM RDFSCRYP.ASM RDFSMISC.ASM \
-			RDFSTAB.ASM RDFSCONT.ASM
-rdfs_objs = $(rdfs_srcs:.ASM=.OBJ)
-rdfs_rdvs = RDFS.RDV
-
-flashfs_srcs = FLASHFS.ASM FLDIR.ASM FLTAB.ASM FLMISC.ASM
-flashfs_objs = $(flashfs_srcs:.ASM=.OBJ)
-flashfs_rdvs = FLASHFS.RDV
-
-ne_srcs = NE.ASM
-ne_objs = $(ne_srcs:.ASM=.OBJ)
-ne_rdvs = NE.RDV
-
 pe_srcs = PE.ASM
 pe_objs = $(pe_srcs:.ASM=.OBJ)
 pe_rdvs = PE.RDV
-
-elf_srcs = ELF.ASM
-elf_objs = $(elf_srcs:.ASM=.OBJ)
-elf_rdvs = ELF.RDV
 
 ac97_srcs = AC97.ASM
 ac97_objs = $(ac97_srcs:.ASM=.OBJ)
@@ -143,10 +126,9 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(ipc_srcs) $(ipcdebug_srcs)  \
-		    $(ne_srcs) $(pe_srcs) $(elf_srcs) \
+		    $(pe_srcs)  \
 			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) $(exec_srcs) \
-			$(rdfs_srcs) $(flashfs_srcs)	\
 			$(rtc_srcs)  \
 			$(ac97_srcs) $(ir_srcs) $(wd_srcs)
 
@@ -162,11 +144,10 @@ exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
-		    $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
+		    $(pe_rdvs)   \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(inifile_rdvs)  \
-			$(rdfs_rdvs) $(flashfs_rdvs) \
 			$(rtc_rdvs) $(ac97_rdvs) \
 			$(ir_rdvs) $(wd_rdvs)
 
@@ -412,44 +393,12 @@ DOS.RDV : $(dos_objs)
 	DOS;
 !
 
-RDFS.RDV : $(rdfs_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(rdfs_objs)
-	RDFS.RDV
-	RDFS;
-!
-
-FLASHFS.RDV : $(flashfs_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(flashfs_objs)
-	FLASHFS.RDV
-	FLASHFS;
-!
-
-NE.RDV : $(ne_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(ne_objs)
-	NE.RDV
-	NE;
-!
-
 PE.RDV : $(pe_objs)
     tlink @&&!
 	$(link_opt) +
 	$(pe_objs)
 	PE.RDV
 	PE;
-!
-
-ELF.RDV : $(elf_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(elf_objs)
-	ELF.RDV
-	ELF;
 !
 
 DEBUGIO.RDV : $(kdebug_objs)

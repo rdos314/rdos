@@ -1,0 +1,115 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; ELF.DEF
+; Common ELF loader types
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+include module.def
+
+app_fs_data	STRUC
+
+afs_reent	DD ?
+afs_tls     DD ?
+
+app_fs_data	ENDS
+
+EFC32 = 1
+EELSB = 1
+
+ET_EXEC = 2
+ET_DYN = 3
+
+EM_386 = 3
+
+PT_DYNAMIC = 2
+
+elf_header	STRUC
+
+elf_magic		DB ?,?,?,?
+elf_file_class	DB ?
+elf_endian		DB ?
+elf_reserved	DB 10 DUP(?)
+elf_type		DW ?
+elf_machine		DW ?
+elf_version		DD ?
+elf_entry		DD ?
+elf_phoff		DD ?
+elf_shoff		DD ?
+elf_flags		DD ?
+elf_ehsize		DW ?
+elf_phentsize	DW ?
+elf_phnum		DW ?
+elf_shentsize	DW ?
+elf_shnum		DW ?
+elf_shstrndx	DW ?
+
+elf_header	ENDS
+
+elf_program_header	STRUC
+
+ep_type			DD ?
+ep_offset		DD ?
+ep_va			DD ?
+ep_pa			DD ?
+ep_file_size	DD ?
+ep_mem_size		DD ?
+ep_flags		DD ?
+ep_align		DD ?
+
+elf_program_header	ENDS
+
+elf_mem_struc STRUC
+
+mem_prev	DW ?
+mem_next	DW ?
+mem_base	DD ?
+mem_size	DD ?
+
+elf_mem_struc ENDS
+
+lib_struc STRUC
+
+lib_mod             module_struc <>
+
+lib_file_offset		DD ?
+lib_object_size		DW ?
+lib_object_count	DW ?
+lib_objects			DW ?
+lib_base			DD ?
+lib_size			DD ?
+lib_reloc			DD ?
+lib_file_handle		DW ?
+lib_usage_count		DW ?
+lib_proc_table		DD ?
+lib_proc_entries	DD ?
+lib_offset_table	DD ?
+lib_reloc_table		DD ?
+lib_reloc_entries	DD ?
+lib_reloc_size		DD ?
+lib_init			DD ?
+lib_fini			DD ?
+lib_section			section_typ <>
+lib_name			DB ?
+
+lib_struc ENDS
