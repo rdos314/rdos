@@ -144,10 +144,6 @@ filedisc_srcs = FILEDISC.ASM
 filedisc_objs = $(filedisc_srcs:.ASM=.OBJ)
 filedisc_rdvs = FILEDISC.RDV
 
-fs_srcs = FS.ASM DIR.ASM FILE.ASM MEMMAP.ASM
-fs_objs = $(fs_srcs:.ASM=.OBJ)
-fs_rdvs = FS.RDV
-
 ne_srcs = NE.ASM
 ne_objs = $(ne_srcs:.ASM=.OBJ)
 ne_rdvs = NE.RDV
@@ -180,7 +176,7 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs)  \
-			$(fs_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
+		    $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) $(exec_srcs) \
 			$(keyboard_srcs) \
@@ -200,7 +196,7 @@ exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
-			$(fs_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
+		    $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
 		    $(mouse_rdvs) $(file_rdvs) \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
@@ -538,14 +534,6 @@ FILE.RDV : $(file_objs)
 	$(file_objs)
 	FILE.RDV
 	FILE;
-!
-
-FS.RDV : $(fs_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(fs_objs)
-	FS.RDV
-	FS;
 !
 
 NE.RDV : $(ne_objs)

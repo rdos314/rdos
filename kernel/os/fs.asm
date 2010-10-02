@@ -669,13 +669,6 @@ df1E DW OFFSET default_proc,	fs_code_sel
 df1F DW OFFSET default_proc,	fs_code_sel
 
 init	PROC far
-	mov bx,fs_code_sel
-	InitDevice
-;
-	push ds
-	push es
-	pusha
-;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -776,10 +769,6 @@ init	PROC far
 	call init_dir
 	call init_file
 	call init_memmap
-;	
-	popa
-	pop es
-	pop ds
 	ret
 init	ENDP
 
