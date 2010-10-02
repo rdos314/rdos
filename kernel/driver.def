@@ -385,9 +385,6 @@ audio_dev_data_sel  EQU 9E8h
 wd_code_sel         EQU 0A00h
 wd_data_sel         EQU 0A08h
 
-fm_code_sel         EQU 0A10h
-fm_data_sel         EQU 0A18h
-
 hid_code_sel        EQU 0A20h
 hid_data_sel        EQU 0A28h
 

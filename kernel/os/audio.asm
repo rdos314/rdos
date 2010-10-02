@@ -93,8 +93,10 @@ ads_out_mixer   DW ?
 
 data    ENDS
 
-code	SEGMENT byte public use16 'CODE'
+    extrn init_fm:near
 
+code	SEGMENT byte public use16 'CODE'
+    
 	.386
 
 	assume cs:code
@@ -1251,6 +1253,7 @@ init	PROC far
 	mov ds:ads_out_mixer,0
 	InitSection ds:ads_section
 ;
+    call init_fm
 	ret
 init	ENDP
 
