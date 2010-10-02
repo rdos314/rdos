@@ -60,10 +60,6 @@ exec_srcs = EXEC.ASM
 exec_objs = $(exec_srcs:.ASM=.OBJ)
 exec_rdvs = $(exec_srcs:.ASM=.RDV)
 
-pic_srcs = PIC.ASM
-pic_objs = $(pic_srcs:.ASM=.OBJ)
-pic_rdvs = $(pic_srcs:.ASM=.RDV)
-
 rtc_srcs = RTC.ASM
 rtc_objs = $(rtc_srcs:.ASM=.OBJ)
 rtc_rdvs = RTC.RDV
@@ -190,8 +186,7 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(keyboard_srcs) \
 			$(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs) $(filedisc_srcs) \
-			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs) \
-			$(pic_srcs)
+			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -213,7 +208,7 @@ rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(focus_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
-			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs) $(pic_rdvs)
+			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -479,14 +474,6 @@ EXEC.RDV : $(exec_objs)
 	$(exec_objs)
 	EXEC.RDV
 	EXEC;
-!
-
-PIC.RDV : $(pic_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(pic_objs)
-	PIC.RDV
-	PIC;
 !
 
 RTC.RDV : $(rtc_objs)

@@ -446,12 +446,6 @@ enable_irq_detect   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
-	push ds
-	push es
-	pusha
-	mov bx,pic_code_sel
-	InitDevice
-;
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_process
@@ -612,10 +606,6 @@ init_irq_loop:
 ;
 	add bx,SIZE irq_struc
 	loop init_irq_loop
-;
-	popa
-	pop es
-	pop ds
 	ret
 init	ENDP
 
