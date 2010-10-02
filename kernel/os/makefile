@@ -47,11 +47,6 @@ ipcdebug_srcs = IPCDEBUG.ASM  $(debug_srcs)
 ipcdebug_objs = $(ipcdebug_srcs:.ASM=.OBJ)
 ipcdebug_rdvs = IPCDEBUG.RDV
 
-video_srcs = VIDEO.ASM BITMAP.ASM BIT1.ASM BIT16.ASM BIT24.ASM BIT32.ASM \
-             SPRITE.ASM
-video_objs = $(video_srcs:.ASM=.OBJ)
-video_rdvs = VIDEO.RDV
-
 wd_srcs = WD.ASM
 wd_objs = $(wd_srcs:.ASM=.OBJ)
 wd_rdvs = $(wd_srcs:.ASM=.RDV)
@@ -157,7 +152,7 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(ipc_srcs) $(ipcdebug_srcs)  \
 		    $(ne_srcs) $(pe_srcs) $(elf_srcs) \
-			$(video_srcs) $(pcshut_srcs)   \
+			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) $(exec_srcs) \
 			$(rdfs_srcs) $(flashfs_srcs)	\
 			$(rtc_srcs)  \
@@ -180,7 +175,7 @@ rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(inifile_rdvs)  \
 			$(rdfs_rdvs) $(flashfs_rdvs) \
-			$(rtc_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
+			$(rtc_rdvs) $(ac97_rdvs) $(audio_rdvs) \
 			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -239,14 +234,6 @@ PCSHUT.EXE : $(pcshut_objs)
 	$(pcshut_objs)
 	PCSHUT
 	PCSHUT;       
-!
-
-VIDEO.RDV : $(video_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(video_objs)
-	VIDEO.RDV
-	VIDEO;
 !
 
 AC97.RDV : $(ac97_objs)

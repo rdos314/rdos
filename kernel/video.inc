@@ -28,19 +28,6 @@
 STYLE_HOLLOW			EQU 0
 STYLE_FILLED			EQU 1
 
-video_data_seg	STRUC
-
-v_list			DW ?
-
-video_data_seg	ENDS
-
-video_focus_seg	STRUC
-
-v_handle		DW ?
-
-video_focus_seg	ENDS
-
-
 video_api_struc	STRUC
 
 destruct_proc			DD ?

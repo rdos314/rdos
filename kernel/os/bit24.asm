@@ -44,7 +44,7 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -56,7 +56,7 @@ PAGE
 curr_x  EQU -4
 curr_y  EQU -2
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -74,7 +74,7 @@ LgopNull	Proc near
 	ret
 LgopNull	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -96,7 +96,7 @@ LgopNone	Proc near
 	ret
 LgopNone	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -122,7 +122,7 @@ LgopOr	Proc near
 	ret
 LgopOr	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -148,7 +148,7 @@ LgopAnd	Proc near
 	ret
 LgopAnd	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -174,7 +174,7 @@ LgopXor	Proc near
 	ret
 LgopXor	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -200,7 +200,7 @@ LgopInvert	Proc near
 	ret
 LgopInvert	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -227,7 +227,7 @@ LgopInvertOr	Proc near
 	ret
 LgopInvertOr	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -254,7 +254,7 @@ LgopInvertAnd	Proc near
 	ret
 LgopInvertAnd	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -281,7 +281,7 @@ LgopInvertXor	Proc near
 	ret
 LgopInvertXor	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -326,7 +326,7 @@ lgop_add_ok3:
 	ret
 LgopAdd	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -371,7 +371,7 @@ lgop_sub_ok3:
 	ret
 LgopSub	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -415,7 +415,7 @@ LgopMul	Proc near
 	ret
 LgopMul	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -433,7 +433,7 @@ LgopStipple	Proc near
 	ret
 LgopStipple	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -491,7 +491,7 @@ LgopAlpha	Proc near
 	ret
 LgopAlpha	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -518,7 +518,7 @@ lgt0B	DW OFFSET LgopMul
 lgt0C	DW OFFSET LgopStipple
 lgt0D	DW OFFSET LgopAlpha
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -537,7 +537,7 @@ translate_color	Proc far
 	ret
 translate_color	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -560,7 +560,7 @@ set_base	Proc far
     ret
 set_base    Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -673,7 +673,7 @@ slab_done:
 	ret
 slab	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -754,7 +754,7 @@ copy_done:
     ret
 copy    Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -820,7 +820,7 @@ mask_set_line_done:
     ret
 mask_set    Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -903,7 +903,7 @@ mask_copy_done:
     ret
 mask_copy    Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -993,7 +993,7 @@ set_mask_done:
 	ret
 SetMask Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1098,7 +1098,7 @@ hollow_line_done:
 	ret
 HollowLine	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1184,7 +1184,7 @@ filled_line_done:
 	ret
 FilledLine	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1311,7 +1311,7 @@ split_line_done:
 	ret
 SplitLine	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1397,7 +1397,7 @@ get_native_done:
 	ret
 get_native	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1457,7 +1457,7 @@ get_rgb_done:
 	ret
 get_rgb	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1563,7 +1563,7 @@ set_native_done:
 	ret
 set_native	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1679,7 +1679,7 @@ set_rgb_done:
 	ret
 set_rgb	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1763,7 +1763,7 @@ set_sprite_done:
 	ret
 set_sprite	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1805,7 +1805,7 @@ get_line	Proc far
 	ret
 get_line	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1840,7 +1840,7 @@ get_pixel	Proc far
 	ret
 get_pixel	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1919,7 +1919,7 @@ set_pixel_done:
 	ret
 set_pixel	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2056,7 +2056,7 @@ draw_mask_line_done:
 	ret
 draw_mask_line	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2123,7 +2123,7 @@ draw_sprite_done:
     ret
 draw_sprite_line    Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2238,7 +2238,7 @@ draw_string_done:
 	ret
 draw_string	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2755,7 +2755,7 @@ line_done:
 	ret
 draw_line	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2845,7 +2845,7 @@ rect_done:
 	ret
 draw_rect	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3217,7 +3217,7 @@ ellipse_end:
 	ret
 draw_ellipse	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3260,7 +3260,7 @@ attr_to_color	Proc near
 	ret
 attr_to_color	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3283,7 +3283,7 @@ clear	Proc far
 	ret
 clear	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3302,7 +3302,7 @@ set_cursor_pos	Proc far
 	ret
 set_cursor_pos	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3372,7 +3372,7 @@ write_char	Proc far
 	ret
 write_char	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3395,7 +3395,7 @@ read_char	Proc far
 	ret
 read_char	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3419,7 +3419,7 @@ scroll_up	Proc far
 	ret
 scroll_up	Endp
 
-PAGE
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3451,41 +3451,41 @@ errorp	Endp
 	public BitmapTab24
 
 BitmapTab24:
-mt00 DW OFFSET errorp,				video_code_sel
-mt01 DW OFFSET errorp,				video_code_sel
-mt02 DW OFFSET errorp,				video_code_sel
-mt03 DW OFFSET clear,				video_code_sel
-mt04 DW OFFSET set_cursor_pos,		video_code_sel
-mt05 DW OFFSET write_char,			video_code_sel
-mt06 DW OFFSET read_char,			video_code_sel
-mt07 DW OFFSET scroll_up,			video_code_sel
-mt08 DW OFFSET scroll_down,			video_code_sel
-mt09 DW OFFSET errorp,				video_code_sel
-mt0A DW OFFSET errorp,				video_code_sel
-mt0B DW OFFSET errorp,				video_code_sel
-mt0C DW OFFSET errorp,				video_code_sel
-mt0D DW OFFSET errorp,				video_code_sel
-mt0E DW OFFSET errorp,				video_code_sel
-mt0F DW OFFSET translate_color,		video_code_sel
-mt10 DW OFFSET set_base,   			video_code_sel
-mt11 DW OFFSET slab,    			video_code_sel
-mt12 DW OFFSET copy,    			video_code_sel
-mt13 DW OFFSET mask_set,    		video_code_sel
-mt14 DW OFFSET mask_copy,  			video_code_sel
-mt15 DW OFFSET get_line,			video_code_sel
-mt16 DW OFFSET get_pixel,			video_code_sel
-mt17 DW OFFSET set_pixel,			video_code_sel
-mt18 DW OFFSET get_native,			video_code_sel
-mt19 DW OFFSET get_rgb,				video_code_sel
-mt1A DW OFFSET set_native,			video_code_sel
-mt1B DW OFFSET set_rgb,				video_code_sel
-mt1C DW OFFSET draw_mask_line,		video_code_sel
-mt1D DW OFFSET set_sprite,			video_code_sel
-mt1E DW OFFSET draw_sprite_line,	video_code_sel
-mt1F DW OFFSET draw_string,			video_code_sel
-mt20 DW OFFSET draw_line,			video_code_sel
-mt21 DW OFFSET draw_rect,			video_code_sel
-mt22 DW OFFSET draw_ellipse,		video_code_sel
+mt00 DW OFFSET errorp,				SEG code
+mt01 DW OFFSET errorp,				SEG code
+mt02 DW OFFSET errorp,				SEG code
+mt03 DW OFFSET clear,				SEG code
+mt04 DW OFFSET set_cursor_pos,		SEG code
+mt05 DW OFFSET write_char,			SEG code
+mt06 DW OFFSET read_char,			SEG code
+mt07 DW OFFSET scroll_up,			SEG code
+mt08 DW OFFSET scroll_down,			SEG code
+mt09 DW OFFSET errorp,				SEG code
+mt0A DW OFFSET errorp,				SEG code
+mt0B DW OFFSET errorp,				SEG code
+mt0C DW OFFSET errorp,				SEG code
+mt0D DW OFFSET errorp,				SEG code
+mt0E DW OFFSET errorp,				SEG code
+mt0F DW OFFSET translate_color,		SEG code
+mt10 DW OFFSET set_base,   			SEG code
+mt11 DW OFFSET slab,    			SEG code
+mt12 DW OFFSET copy,    			SEG code
+mt13 DW OFFSET mask_set,    		SEG code
+mt14 DW OFFSET mask_copy,  			SEG code
+mt15 DW OFFSET get_line,			SEG code
+mt16 DW OFFSET get_pixel,			SEG code
+mt17 DW OFFSET set_pixel,			SEG code
+mt18 DW OFFSET get_native,			SEG code
+mt19 DW OFFSET get_rgb,				SEG code
+mt1A DW OFFSET set_native,			SEG code
+mt1B DW OFFSET set_rgb,				SEG code
+mt1C DW OFFSET draw_mask_line,		SEG code
+mt1D DW OFFSET set_sprite,			SEG code
+mt1E DW OFFSET draw_sprite_line,	SEG code
+mt1F DW OFFSET draw_string,			SEG code
+mt20 DW OFFSET draw_line,			SEG code
+mt21 DW OFFSET draw_rect,			SEG code
+mt22 DW OFFSET draw_ellipse,		SEG code
 
 code	ENDS
 

@@ -43,6 +43,7 @@ INCLUDE dpmi.inc
 	extrn init_focus:near
 	extrn init_keyboard:near
 	extrn init_mouse:near
+	extrn init_video:near
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -63,6 +64,7 @@ init	PROC far
     call init_focus
     call init_keyboard
     call init_mouse
+    call init_video
     clc
 	ret
 init	ENDP

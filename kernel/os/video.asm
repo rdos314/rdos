@@ -64,6 +64,19 @@ CallVideo	MACRO	call_proc
 	pop ds
 				ENDM
 
+video_focus_seg	STRUC
+
+v_handle		DW ?
+
+video_focus_seg	ENDS
+
+
+data    SEGMENT byte public 'DATA'
+
+v_list			DW ?
+
+data    ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -73,7 +86,6 @@ code	SEGMENT byte public use16 'CODE'
 	extrn init_bitmap:near
 	extrn init_sprite:near
 
-page
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -99,7 +111,7 @@ register_video_mode	PROC far
 ;
 	push es
 	push ax
-	mov ax,video_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov eax,SIZE video_mode_entry
 	AllocateSmallGlobalMem
@@ -122,7 +134,6 @@ register_video_mode	PROC far
 	ret
 register_video_mode	ENDP
 
-page
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -153,7 +164,7 @@ get_video_mode	PROC far
     xor di,di
     xor ah,ah
 ;
-	mov bx,video_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:v_list
 
@@ -235,7 +246,6 @@ get_video_leave:
     retf32
 get_video_mode  Endp
 
-page
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -260,7 +270,7 @@ set_video_mode_name	DB 'Set Video Mode',0
 set_video_mode	PROC far
 	push ds
 ;
-	mov bx,video_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:v_list
 
@@ -333,7 +343,6 @@ set_video_mode_done:
 	retf32
 set_video_mode	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -363,7 +372,6 @@ invert_mouse	PROC far
 	ret
 invert_mouse	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -392,7 +400,6 @@ set_cursor_position	PROC far
 	retf32
 set_cursor_position	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -422,7 +429,6 @@ get_cursor_position	PROC far
 	retf32
 get_cursor_position	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -452,7 +458,6 @@ set_forecolor	PROC far
 	retf32
 set_forecolor	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -482,7 +487,6 @@ set_backcolor	PROC far
 	retf32
 set_backcolor	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -531,7 +535,6 @@ update_video_end:
 	ret
 UpdatePos	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -554,7 +557,6 @@ WriteNormal	PROC near
 	ret
 WriteNormal	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -580,7 +582,6 @@ WriteSkip	PROC near
 	ret
 WriteSkip	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -611,7 +612,6 @@ write_tab_more:
 	ret
 WriteTab	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -633,7 +633,6 @@ WriteDel	PROC near
 	ret
 WriteDel	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -655,7 +654,6 @@ WriteLf	PROC near
 	ret
 WriteLf	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -677,7 +675,6 @@ WriteCr	PROC near
 	ret
 WriteCr	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -730,7 +727,6 @@ write_ansi_done:
 	ret
 WriteOne	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -768,7 +764,6 @@ get_char_attrib	PROC far
 	retf32
 get_char_attrib	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -811,7 +806,6 @@ write_char	PROC far
 	retf32
 write_char	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -910,7 +904,6 @@ write_asciiz_done32:
 	retf32
 write_asciiz32	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -967,7 +960,6 @@ write_dos_string_done:
 	ret
 write_dos_string	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1057,7 +1049,6 @@ write_size_string_done32:
 	retf32
 write_size_string32	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1161,7 +1152,6 @@ set_clip_rect_done:
 	retf32
 set_clip_rect	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1205,7 +1195,6 @@ clear_clip_rect_done:
 	retf32
 clear_clip_rect	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1243,7 +1232,6 @@ set_draw_color_done:
 	retf32
 set_draw_color	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1282,7 +1270,6 @@ set_lgop_done:
 	retf32
 set_lgop	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1315,7 +1302,6 @@ set_hollow_done:
 	retf32
 set_hollow_style	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1348,7 +1334,6 @@ set_filled_done:
 	retf32
 set_filled_style	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1382,7 +1367,6 @@ set_font_done:
 	retf32
 set_font	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1426,7 +1410,6 @@ get_pixel_fail:
 	retf32
 get_pixel	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1480,7 +1463,6 @@ set_pixel_fail:
 	retf32
 set_pixel	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1807,7 +1789,6 @@ blit_done:
 	retf32
 blit_pr	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1890,7 +1871,6 @@ draw_mask_done:
 	retf32
 draw_mask	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1992,7 +1972,6 @@ draw_string32_fail:
 	retf32
 draw_string32	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2048,7 +2027,6 @@ draw_line_fail:
 	retf32
 draw_line	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2106,7 +2084,6 @@ draw_rect_fail:
 	retf32
 draw_rect	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2164,7 +2141,6 @@ draw_ellipse_fail:
 	retf32
 draw_ellipse	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2198,7 +2174,6 @@ set_cursor_pos	PROC far
 	ret
 set_cursor_pos	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2228,7 +2203,6 @@ read_cursor_pos	PROC far
 	ret
 read_cursor_pos	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2246,7 +2220,6 @@ read_light_pen	PROC far
 	ret
 read_light_pen	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2281,7 +2254,6 @@ read_video_attrib	PROC far
 	ret
 read_video_attrib	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2335,7 +2307,6 @@ write_ch_attr_done:
 	ret
 write_ch_attr	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2385,7 +2356,6 @@ write_ch_done:
 	ret
 write_ch	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2433,7 +2403,6 @@ scroll_video_up_done:
 	ret
 scroll_video_up	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2481,7 +2450,6 @@ scroll_video_down_done:
 	ret
 scroll_video_down	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2533,7 +2501,6 @@ write_stg_one_done:
 	ret
 write_stg_one	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2675,7 +2642,6 @@ write_stg_do:
 	ret
 write_stg	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2697,7 +2663,6 @@ dummy_video	PROC far
 	ret
 dummy_video	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2717,7 +2682,6 @@ get_video_state	PROC far
 	ret
 get_video_state	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2740,7 +2704,6 @@ font_info_30:
 	ret
 font_info	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2789,7 +2752,6 @@ video_call_do:
 	mov bx,[bp].vm_ebx
 	retn
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2820,7 +2782,6 @@ lost_focus_hook_switched:
 	ret
 lost_focus_hook	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2851,7 +2812,6 @@ got_focus_hook_switched:
 	ret
 got_focus_hook	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2870,7 +2830,6 @@ bda_get_mode	Proc far
 	ret
 bda_get_mode	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2888,7 +2847,6 @@ bda_set_mode	Proc far
 	ret
 bda_set_mode	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2907,7 +2865,6 @@ bda_get_width	Proc far
 	ret
 bda_get_width	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2925,7 +2882,6 @@ bda_set_width	Proc far
 	ret
 bda_set_width	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2950,7 +2906,6 @@ bda_get_cursor_col	Proc far
 	ret
 bda_get_cursor_col	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2975,7 +2930,6 @@ bda_set_cursor_col	Proc far
 	ret
 bda_set_cursor_col	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3000,7 +2954,6 @@ bda_get_cursor_row	Proc far
 	ret
 bda_get_cursor_row	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3082,7 +3035,6 @@ free_process_done:
 	ret
 free_process	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3102,7 +3054,6 @@ init_focus	PROC far
 	ret
 init_focus	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3114,16 +3065,12 @@ PAGE
 ;		PARAMETERS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			
-init	PROC far
-	pusha
-	push ds
-	mov bx,video_code_sel
-	InitDevice
-;
-	mov eax,SIZE video_data_seg
-	mov bx,video_data_sel
-	AllocateFixedSystemMem
+
+    public init_video
+    			
+init_video	PROC near
+	mov bx,SEG data
+	mov es,bx
 	mov es:v_list,0
 ;
 	mov eax,SIZE video_focus_seg
@@ -3356,12 +3303,9 @@ init	PROC far
 ;
 	call init_bitmap
 	call init_sprite
-;
-	pop ds
-	popa
 	ret
-init	ENDP
+init_video	ENDP
 
 code	ENDS
 
-	END init
+	END
