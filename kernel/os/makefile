@@ -80,10 +80,6 @@ usb_srcs = USB.ASM
 usb_objs = $(usb_srcs:.ASM=.OBJ)
 usb_rdvs = USB.RDV
 
-keyboard_srcs = KEYBOARD.ASM 
-keyboard_objs = $(keyboard_srcs:.ASM=.OBJ)
-keyboard_rdvs = KEYBOARD.RDV
-
 key_srcs = KEY.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM SERKEY.ASM
 key_objs = $(key_srcs:.ASM=.OBJ)
 key_rdvs = KEYSW.RDV KEYUS.RDV KEYUK.RDV KEYFR.RDV SERKEY.RDV
@@ -171,7 +167,6 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 		    $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) $(exec_srcs) \
-			$(keyboard_srcs) \
 			$(rdfs_srcs) $(flashfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs)  \
 			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs)
@@ -192,7 +187,7 @@ rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 		    $(mouse_rdvs)  \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
-			$(keyboard_rdvs) $(inifile_rdvs)  \
+			$(inifile_rdvs)  \
 			$(rdfs_rdvs) $(flashfs_rdvs) \
 			$(focus_rdvs) \
 			$(rtc_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
@@ -326,14 +321,6 @@ USB.RDV : $(usb_objs)
 	$(usb_objs)
 	USB.RDV
 	USB;
-!
-
-KEYBOARD.RDV : $(keyboard_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(keyboard_objs)
-	KEYBOARD.RDV
-	KEYBOARD;
 !
 
 KEYSW.RDV : $(key_objs)

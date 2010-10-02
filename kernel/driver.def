@@ -152,8 +152,8 @@ double_tss_data_sel EQU 2B8h
 ; GDT selectors device-driver selectors
 ;
 
-key_code_sel		EQU 400h
-key_data_sel		EQU 408h
+guidev_code_sel     EQU 400h
+guidev_data_sel     EQU 408h
 
 fat_code_sel		EQU 420h
 rdfs_code_sel		EQU 428h

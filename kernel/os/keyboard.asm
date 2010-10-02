@@ -75,7 +75,7 @@ key_avail_obj       DW ?
 
 key_proc_seg	ENDS
 
-key_data_seg	STRUC
+data    SEGMENT byte public 'DATA'
 
 shift_states	DW ?
 keyboard_thread	DW ?
@@ -86,7 +86,7 @@ scan_code       DB ?
 shift_hooks		DB ?
 shift_hook_arr	DW 2*16 DUP(?)
 
-key_data_seg	ENDS
+data    ENDS
 
 	.386p
 
@@ -94,7 +94,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -112,7 +111,7 @@ hook_shift_keys	Proc far
 	push ds
 	push ax
 	push bx
-	mov ax,key_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov al,ds:shift_hooks
 	mov bl,al
@@ -181,14 +180,14 @@ keyboard_name	DB 'Keyboard',0
 
 keyboard_pr:
 	sti
-	mov ax,key_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetThread
 	mov ds:keyboard_thread,ax
 	
 keyboard_thread_loop:
 	WaitForSignal
-	mov ax,key_data_sel
+	mov ax,SEG data
 	mov es,ax
 	mov ax,es:key_code
 	cmp al,-1
@@ -378,7 +377,7 @@ put_keyboard_code	PROC far
 	push ax
 	push bx
 ;
-	mov bx,key_data_sel
+	mov bx,SEG data
 	mov ds,bx
 ;
 	mov ds:key_code,ax
@@ -623,10 +622,10 @@ clear_keyboard Endp
 add_wait_for_keyboard_name	DB 'Add Wait For Keyboard',0
 
 add_wait_tab:
-aw0	DW OFFSET start_wait_for_keyboard, 	key_code_sel
-aw1 DW OFFSET stop_wait_for_keyboard,	key_code_sel
-aw2	DW OFFSET clear_keyboard,			key_code_sel
-aw3	DW OFFSET is_keyboard_idle,			key_code_sel
+aw0	DW OFFSET start_wait_for_keyboard, 	SEG code
+aw1 DW OFFSET stop_wait_for_keyboard,	SEG code
+aw2	DW OFFSET clear_keyboard,			SEG code
+aw3	DW OFFSET is_keyboard_idle,			SEG code
 
 add_wait_for_keyboard	PROC far
 	push es
@@ -840,7 +839,7 @@ get_keyboard_state_name	DB 'Get Keyboard State',0
 get_keyboard_state	PROC far
 	push ds
 	push bx
-	mov bx,key_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov ax,ds:shift_states
 	pop bx
@@ -866,7 +865,7 @@ set_keyboard_state	PROC far
 	push bx
 	push cx
 ;	
-	mov bx,key_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov ds:shift_states,ax
 ;
@@ -1064,7 +1063,6 @@ set_vm_key	PROC far
 	ret
 set_vm_key	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1121,7 +1119,6 @@ check_done:
 	ret
 check_list	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1137,7 +1134,7 @@ PAGE
 get_status1	Proc far
 	push ds
 	push bx
-	mov ax,key_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov bx,ds:shift_states
 	xor al,al
@@ -1176,7 +1173,6 @@ get1_not_caps:
 	ret
 get_status1	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1192,7 +1188,7 @@ PAGE
 get_status2	Proc far
 	push ds
 	push bx
-	mov ax,key_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov bx,ds:shift_states
 	xor al,al
@@ -1214,7 +1210,6 @@ get2_not_scroll:
 	ret
 get_status2	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1241,7 +1236,6 @@ init_local_sel	PROC far
 	ret
 init_local_sel	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1272,7 +1266,6 @@ init_keyb_thread	PROC far
 	ret
 init_keyb_thread	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1283,13 +1276,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	push ds
-	push es
-	pusha
-	mov bx,key_code_sel
-	InitDevice
-;
+    public init_keyboard
+    
+init_keyboard	PROC near
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_keyb_thread
@@ -1318,10 +1307,6 @@ init	PROC far
 	mov dx,key_focus_sel
 	mov eax,SIZE key_proc_seg
 	AllocateFixedFocusMem
-;
-	mov bx,key_data_sel
-	mov eax,SIZE key_data_seg
-	AllocateFixedSystemMem
 ;
 	mov ax,cs
 	mov ds,ax
@@ -1402,7 +1387,7 @@ init	PROC far
 	mov ax,set_keyboard_state_nr
 	RegisterOsGate
 ;
-	mov ax,key_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	xor ax,ax
 	mov ds:shift_states,ax
@@ -1417,13 +1402,9 @@ init	PROC far
 	mov al,16h
 	mov di,OFFSET int16
 	HookProt16Int
-;
-	popa
-	pop es
-	pop ds
 	ret
-init	ENDP
+init_keyboard	ENDP
 
 code	ENDS
 
-	END init
+	END
