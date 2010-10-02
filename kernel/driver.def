@@ -218,6 +218,8 @@ tcp_data_sel		EQU 578h
 socket_code_sel		EQU 580h
 socket_data_sel		EQU 588h
 
+fs_sys_data_sel     EQU 590h
+
 ems_process_sel		EQU 5A0h
 
 fs_code_sel			EQU 5B0h

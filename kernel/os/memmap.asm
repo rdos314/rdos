@@ -39,8 +39,8 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.inc
-INCLUDE ..\fs.inc
 INCLUDE ..\handle.inc
+INCLUDE ..\fs.inc
 
 memmap_seg		STRUC
 
@@ -69,6 +69,14 @@ map_name		DB ?
 
 mapped_struc	ENDS
 
+data    SEGMENT byte public 'DATA'
+
+map_list			DW ?
+map_named_list		DW ?
+sys_section			section_typ <>
+
+data    ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -96,7 +104,7 @@ CreateUnnamed	Proc near
 	push edx
 ;
 	push eax
-	mov ax,fs_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov eax,OFFSET map_name
 	AllocateSmallGlobalMem
@@ -200,7 +208,7 @@ CreateNamed	Proc near
 	EnterSection ds:map_section
 	mov es:map_owner, OFFSET map_named_list
 ;
-	mov ax,fs_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:sys_section
 	mov ax,ds:map_named_list
@@ -254,7 +262,7 @@ CreateUnnamedFile	Proc near
 	push edx
 ;
 	push eax
-	mov ax,fs_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov eax,OFFSET map_name
 	AllocateSmallGlobalMem
@@ -357,7 +365,7 @@ CreateNamedFile	Proc near
 	EnterSection ds:map_section
 	mov es:map_owner, OFFSET map_named_list
 ;
-	mov ax,fs_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:sys_section
 	mov ax,ds:map_named_list
@@ -628,7 +636,7 @@ CloseMapped	Proc near
 ;
 	push ax
 	push si
-	mov ax,fs_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:sys_section
 	mov si,es:map_owner
@@ -686,7 +694,7 @@ FindNamed	Proc near
 	push dx
 	push si
 ;
-	mov ax,fs_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:sys_section
 	mov ax,ds:map_named_list
@@ -721,7 +729,7 @@ find_named_next:
 	jne find_named_list
 
 find_named_fail:
-	mov ax,fs_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	LeaveSection ds:sys_section
 	stc
@@ -731,7 +739,7 @@ find_named_ok:
 	mov dx,ds
 	mov es,dx
 	inc es:map_users
-	mov ax,fs_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	LeaveSection ds:sys_section
 	clc
@@ -1535,7 +1543,7 @@ init_memmap	PROC near
 	mov ax,unmap_view_nr
 	RegisterBimodalUserGate
 ;
-	mov ax,fs_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds:map_list,0
 	mov ds:map_named_list,0
