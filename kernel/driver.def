@@ -170,9 +170,6 @@ dos_code_sel		EQU 460h
 dos_process_sel		EQU 470h
 dos_vm_sel			EQU 47Bh
 
-mouse_code_sel		EQU 480h
-mouse_data_sel		EQU 488h
-
 kdebug_code_sel		EQU 490h
 kdebug_data_sel		EQU 498h
 

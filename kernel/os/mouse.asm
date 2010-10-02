@@ -36,7 +36,6 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.inc
-INCLUDE mouse.inc
 INCLUDE ..\wait.inc
 
 mouse_wait_header	STRUC
@@ -46,13 +45,78 @@ mw_counter		DD ?
 
 mouse_wait_header	ENDS
 
+mouse_seg	STRUC
+
+m_cursor_flag	DW ?
+
+m_cursor_type	DW ?
+m_cursor_mask	DW ?
+m_screen_mask	DW ?
+
+m_horiz_pos		DW ?
+m_vert_pos		DW ?
+
+m_horiz_motion	DW ?
+m_vert_motion	DW ?
+
+m_horiz_mickey	DW ?
+m_vert_mickey	DW ?
+
+m_horiz_min		DW ?
+m_horiz_max		DW ?
+m_vert_min		DW ?
+m_vert_max		DW ?
+
+m_horiz_limit   DW ?
+m_vert_limit    DW ?
+
+m_botton_status	DW ?
+
+m_horiz_press0	DW ?
+m_vert_press0	DW ?
+m_count_press0	DW ?
+
+m_horiz_press1	DW ?
+m_vert_press1	DW ?
+m_count_press1	DW ?
+
+m_horiz_rel0	DW ?
+m_vert_rel0		DW ?
+m_count_rel0	DW ?
+
+m_horiz_rel1	DW ?
+m_vert_rel1		DW ?
+m_count_rel1	DW ?
+
+m_notify_thread	DW ?
+m_notify_sel	DW ?
+m_notify_offs	DD ?
+
+m_marker_x      DW ?
+m_marker_y      DW ?
+
+m_avail_obj		DW ?
+m_counter		DD ?
+
+mouse_seg	ENDS
+
+data    SEGMENT byte public 'DATA'
+
+md_buttons		DW ?
+md_dx			DW ?
+md_dy			DW ?
+md_x            DW ?
+md_y            DW ?
+md_mouse_thread	DW ?
+
+data    ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -92,7 +156,6 @@ hide_marker_done:
 	ret
 hide_marker	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -142,7 +205,6 @@ show_marker_done:
 	ret
 show_marker	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -172,7 +234,6 @@ set_mouse_limit	PROC far
 	ret
 set_mouse_limit	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -193,7 +254,7 @@ update_mouse	PROC far
 	push ds
 	push bx
 ;
-	mov bx,mouse_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov ds:md_buttons,ax
 	add ds:md_dx,cx
@@ -226,7 +287,6 @@ update_mouse_done:
 	ret
 update_mouse	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -247,7 +307,7 @@ set_mouse	PROC far
 	push ds
 	push bx
 ;
-	mov bx,mouse_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov ds:md_buttons,ax
 	mov ds:md_x,cx
@@ -283,7 +343,6 @@ set_mouse_done:
 	ret
 set_mouse	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -312,7 +371,6 @@ set_horiz_max_ok:
 	ret
 check_horiz_position	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -341,7 +399,6 @@ set_vert_max_ok:
 	ret
 check_vert_position	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -446,7 +503,6 @@ update_rel_vert_done:
 	ret
 refresh_mouse	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -511,7 +567,6 @@ reset	PROC near
 	ret
 reset	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -748,7 +803,6 @@ mouse_call_do:
 	mov bx,[bp].vm_ebx
 	retn
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -778,7 +832,6 @@ show_mouse	PROC far
 	retf32
 show_mouse	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -808,7 +861,6 @@ hide_mouse	PROC far
 	retf32
 hide_mouse	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -838,7 +890,6 @@ get_mouse_position	PROC far
 	retf32
 get_mouse_position	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -872,7 +923,6 @@ set_mouse_position	PROC far
 	retf32
 set_mouse_position	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -902,7 +952,6 @@ get_left_button	PROC far
 	retf32
 get_left_button	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -932,7 +981,6 @@ get_right_button	PROC far
 	retf32
 get_right_button	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -962,7 +1010,6 @@ get_left_button_press_position	PROC far
 	retf32
 get_left_button_press_position	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -992,7 +1039,6 @@ get_right_button_press_position	PROC far
 	retf32
 get_right_button_press_position	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1022,7 +1068,6 @@ get_left_button_release_position	PROC far
 	retf32
 get_left_button_release_position	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1052,7 +1097,6 @@ get_right_button_release_position	PROC far
 	retf32
 get_right_button_release_position	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1089,7 +1133,6 @@ set_mouse_window	PROC far
 	retf32
 set_mouse_window	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1119,7 +1162,6 @@ set_mouse_mickey	PROC far
 	retf32
 set_mouse_mickey	ENDP
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1178,7 +1220,6 @@ stop_wait_for_mouse	PROC far
     ret
 stop_wait_for_mouse Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1205,7 +1246,6 @@ clear_mouse	PROC far
     ret
 clear_mouse Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1254,10 +1294,10 @@ is_mouse_idle Endp
 add_wait_for_mouse_name	DB 'Add Wait For Mouse',0
 
 add_wait_tab:
-aw0	DW OFFSET start_wait_for_mouse, 	mouse_code_sel
-aw1 DW OFFSET stop_wait_for_mouse,		mouse_code_sel
-aw2	DW OFFSET clear_mouse,				mouse_code_sel
-aw3	DW OFFSET is_mouse_idle,			mouse_code_sel
+aw0	DW OFFSET start_wait_for_mouse, 	SEG code
+aw1 DW OFFSET stop_wait_for_mouse,		SEG code
+aw2	DW OFFSET clear_mouse,				SEG code
+aw3	DW OFFSET is_mouse_idle,			SEG code
 
 add_wait_for_mouse	PROC far
 	push ds
@@ -1285,7 +1325,6 @@ add_wait_done:
 	retf32
 add_wait_for_mouse	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1309,7 +1348,7 @@ hook_thread	Proc far
 hook_thread_loop:
 	mov bx,mouse_local_sel
 	mov ds,bx
-	mov ax,mouse_data_sel
+	mov ax,SEG data
 	mov es,ax
 ;
 	WaitForSignal
@@ -1424,7 +1463,6 @@ unhook_mouse	PROC near
 	retf32
 unhook_mouse	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1447,14 +1485,14 @@ mouse_thread	Proc far
 	InitMouse
 
 mouse_init_ok:
-	mov ax,mouse_data_sel
+	mov ax,SEG data
 	mov es,ax
 	GetThread
 	mov es:md_mouse_thread,ax
 mouse_thread_loop:
 	mov bx,mouse_focus_sel
 	mov ds,bx
-	mov ax,mouse_data_sel
+	mov ax,SEG data
 	mov es,ax
 ;
 	WaitForSignal
@@ -1465,7 +1503,6 @@ mouse_thread_loop:
 	ret
 mouse_thread	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1487,12 +1524,11 @@ init_focus	PROC far
 	ret
 init_focus	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			INIT_MOUSE
+;		NAME:			INIT_MOUSE_THREAD
 ;
 ;		DESCRIPTION:	focus init of mouse
 ;
@@ -1500,12 +1536,12 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_mouse	PROC far
+init_mouse_thread	PROC far
 	push ds
 	push es
 	pusha
 ;
-	mov ax,mouse_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds:md_buttons,0
 	mov ds:md_dx,0
@@ -1528,9 +1564,8 @@ init_mouse_done:
 	pop es
 	pop ds
 	ret
-init_mouse	ENDP
+init_mouse_thread	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1543,24 +1578,13 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public init
+	public init_mouse
 
-init	PROC far
-	push ds
-	push es
-	pusha
-;
-	mov bx,mouse_code_sel
-	InitDevice
-;
+init_mouse	PROC near
 	mov bx,mouse_local_sel
 	mov dx,mouse_focus_sel
 	mov eax,SIZE mouse_seg
 	AllocateFixedFocusMem
-;
-	mov bx,mouse_data_sel
-	mov eax,OFFSET md_end
-	AllocateFixedSystemMem
 ;
 	mov ax,cs
 	mov ds,ax
@@ -1569,7 +1593,7 @@ init	PROC far
 	mov di,OFFSET init_focus
 	HookEnableFocus
 ;
-	mov di,OFFSET init_mouse
+	mov di,OFFSET init_mouse_thread
 	HookInitTasking
 ;
 	mov al,33h
@@ -1684,13 +1708,9 @@ init	PROC far
 	xor dx,dx
 	mov ax,unhook_mouse_nr
 	RegisterBimodalUserGate
-;
-	popa
-	pop es
-	pop ds
 	ret
-init	ENDP
+init_mouse	ENDP
 
 code	ENDS
 
-	END init
+	END

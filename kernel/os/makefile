@@ -88,10 +88,6 @@ keym_srcs = KEYMOUSE.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM
 keym_objs = $(keym_srcs:.ASM=.OBJ)
 keym_rdvs = KEYMSW.RDV KEYMUS.RDV KEYMUK.RDV KEYMFR.RDV
 
-mouse_srcs = MOUSE.ASM 
-mouse_objs = $(mouse_srcs:.ASM=.OBJ)
-mouse_rdvs = MOUSE.RDV
-
 ir_srcs = IR.ASM 
 ir_objs = $(ir_srcs:.ASM=.OBJ)
 ir_rdvs = IR.RDV
@@ -163,7 +159,7 @@ pcshut_exes = PCSHUT.EXE
 srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
-			$(ipc_srcs) $(mouse_srcs) $(ipcdebug_srcs)  \
+			$(ipc_srcs) $(ipcdebug_srcs)  \
 		    $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) $(exec_srcs) \
@@ -184,7 +180,6 @@ exes =      $(prot_exes) $(pcshut_exes)
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 		    $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
-		    $(mouse_rdvs)  \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(inifile_rdvs)  \
@@ -393,14 +388,6 @@ SERKEY.RDV : $(key_objs)
 	SERKEY+KEYSW
 	SERKEY.RDV
 	SERKEY;
-!
-
-MOUSE.RDV : $(mouse_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(mouse_objs)
-	MOUSE.RDV
-	MOUSE;
 !
 
 INIFILE.RDV : $(inifile_objs)
