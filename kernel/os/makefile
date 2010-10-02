@@ -135,10 +135,6 @@ ac97_srcs = AC97.ASM
 ac97_objs = $(ac97_srcs:.ASM=.OBJ)
 ac97_rdvs = AC97.RDV
 
-audio_srcs = AUDIO.ASM
-audio_objs = $(audio_srcs:.ASM=.OBJ)
-audio_rdvs = AUDIO.RDV
-
 fm_srcs = FM.ASM FMSIN.ASM FMEXP.ASM
 fm_objs = $(fm_srcs:.ASM=.OBJ)
 fm_rdvs = FM.RDV
@@ -156,7 +152,7 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(prot_srcs) $(file_srcs) $(exec_srcs) \
 			$(rdfs_srcs) $(flashfs_srcs)	\
 			$(rtc_srcs)  \
-			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs)
+			$(ac97_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -175,7 +171,7 @@ rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(inifile_rdvs)  \
 			$(rdfs_rdvs) $(flashfs_rdvs) \
-			$(rtc_rdvs) $(ac97_rdvs) $(audio_rdvs) \
+			$(rtc_rdvs) $(ac97_rdvs) \
 			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -242,14 +238,6 @@ AC97.RDV : $(ac97_objs)
 	$(ac97_objs)
 	AC97.RDV
 	AC97;
-!
-
-AUDIO.RDV : $(audio_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(audio_objs)
-	AUDIO.RDV
-	AUDIO;
 !
 
 FM.RDV : $(fm_objs)

@@ -155,6 +155,9 @@ double_tss_data_sel EQU 2B8h
 guidev_code_sel     EQU 400h
 guidev_data_sel     EQU 408h
 
+audio_code_sel      EQU 410h
+audio_data_sel      EQU 418h
+
 fat_code_sel		EQU 420h
 rdfs_code_sel		EQU 428h
 
@@ -315,8 +318,6 @@ ether_data2_sel		EQU 820h
 v86_bios_ds_sel		EQU 840h
 v86_bios_es_sel		EQU 848h
 
-video_code_sel		EQU 850h
-video_data_sel		EQU 858h
 video_proc_sel		EQU 860h
 video_local_sel		EQU 870h
 video_focus_sel		EQU 878h
@@ -380,9 +381,6 @@ ir_data_sel         EQU 9D8h
 
 audio_dev_code_sel  EQU 9E0h
 audio_dev_data_sel  EQU 9E8h
-
-audio_code_sel      EQU 9F0h
-audio_data_sel      EQU 9F8h
 
 wd_code_sel         EQU 0A00h
 wd_data_sel         EQU 0A08h

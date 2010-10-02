@@ -85,13 +85,13 @@ ao_sel		DW ?
 
 audio_out_struc	ENDS
 
-audio_data_seg  STRUC
+data    SEGMENT byte public 'DATA'
 
 ads_section     section_typ <>
 ads_thread      DW ?
 ads_out_mixer   DW ?
 
-audio_data_seg  ENDS
+data    ENDS
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -99,7 +99,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -141,7 +140,6 @@ CreateMixer Proc near
     ret
 CreateMixer Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -159,7 +157,7 @@ DeleteMixer Proc near
     push fs
     push ax
 ;    
-    mov ax,audio_data_sel
+    mov ax,SEG data
     mov fs,ax
 ;
     mov es,ds:ams_outl_buf_sel
@@ -190,7 +188,6 @@ dmFree:
     ret
 DeleteMixer Endp
     
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -263,7 +260,7 @@ create_audio_out_channel	Proc far
     mov dx,ds
     mov cx,ds:aos_sample_rate
 ;    
-    mov ax,audio_data_sel
+    mov ax,SEG data
     mov ds,ax
     EnterSection ds:ads_section
     mov ax,ds:ads_out_mixer
@@ -290,7 +287,7 @@ caocHasMixer:
     mov ds:aos_mixer,es
     inc es:ams_count
 ;    
-    mov ax,audio_data_sel
+    mov ax,SEG data
     mov ds,ax
     LeaveSection ds:ads_section
     pop bx    
@@ -305,7 +302,6 @@ caocHasMixer:
 	retf32
 create_audio_out_channel	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -330,7 +326,7 @@ FreeMixerChannel	Proc near
     mov fs,ds:aos_mixer
     mov dx,ds
 ;    
-	mov ax,audio_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:ads_section
 ;    
@@ -370,7 +366,6 @@ fmcDone:
     ret
 FreeMixerChannel    Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -414,7 +409,7 @@ fcWait:
     GetThread
     mov ds:aos_thread,ax
 ;
-    mov ax,audio_data_sel
+    mov ax,SEG data
     mov ds,ax
 	mov bx,ds:ads_thread
     Signal        
@@ -431,7 +426,6 @@ fcDone:
     ret
 FlushChannel    Endp        
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -467,7 +461,6 @@ delete_out_channel	Proc near
 	ret
 delete_out_channel	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -500,7 +493,6 @@ caicDone:
 	retf32
 close_audio_out_channel	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -545,7 +537,7 @@ aaWhole:
     mov ds:aos_thread,ax
 ;
     push ds
-    mov ax,audio_data_sel
+    mov ax,SEG data
     mov ds,ax
 	mov bx,ds:ads_thread
 	pop ds
@@ -634,7 +626,6 @@ aaDone:
     ret
 add_audio   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -698,7 +689,6 @@ write_audio16	Proc far
 	ret
 write_audio16	Endp	
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -744,7 +734,6 @@ gaobDone:
     ret
 get_audio_out_buf   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -772,7 +761,7 @@ post_audio_out_buf   Proc far
     mov ax,ds:aos_buffer_size
     mov ds:aos_in_buf_pos,ax
 ;    
-    mov ax,audio_data_sel
+    mov ax,SEG data
     mov ds,ax
 	mov bx,ds:ads_thread
     Signal
@@ -784,7 +773,6 @@ paobDone:
     ret
 post_audio_out_buf   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -852,7 +840,6 @@ delete_out_handle_done:
 	ret
 delete_out_handle	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -982,7 +969,6 @@ mcDone:
     ret
 MixChannel  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1107,7 +1093,6 @@ umDone:
     ret
 UpdateMixer Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1125,7 +1110,7 @@ PAGE
 audio_name	DB 'Audio',0
 
 audio_thread:
-	mov ax,audio_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetThread
 	mov ds:ads_thread,ax
@@ -1171,7 +1156,6 @@ atActiveLeave:
     LeaveSection ds:ads_section
     jmp atWait
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1206,7 +1190,6 @@ init_audio	Proc far
 	ret
 init_audio	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1218,12 +1201,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
-	mov bx,audio_code_sel
-	InitDevice
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;    
 	mov ax,AUDIO_OUT_HANDLE
 	mov di,OFFSET delete_out_handle
 	RegisterHandle
@@ -1265,9 +1246,7 @@ init	PROC far
 	mov ax,is_audio_out_completed_nr
 	RegisterOsGate
 ;
-	mov eax,SIZE audio_data_seg
-	mov bx,audio_data_sel
-	AllocateFixedSystemMem
+	mov bx,SEG data
 	mov ds,bx
 	mov ds:ads_out_mixer,0
 	InitSection ds:ads_section
