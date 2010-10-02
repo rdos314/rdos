@@ -136,10 +136,6 @@ flashfs_srcs = FLASHFS.ASM FLDIR.ASM FLTAB.ASM FLMISC.ASM
 flashfs_objs = $(flashfs_srcs:.ASM=.OBJ)
 flashfs_rdvs = FLASHFS.RDV
 
-filedisc_srcs = FILEDISC.ASM
-filedisc_objs = $(filedisc_srcs:.ASM=.OBJ)
-filedisc_rdvs = FILEDISC.RDV
-
 ne_srcs = NE.ASM
 ne_objs = $(ne_srcs:.ASM=.OBJ)
 ne_rdvs = NE.RDV
@@ -177,7 +173,7 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(prot_srcs) $(file_srcs) $(exec_srcs) \
 			$(keyboard_srcs) \
 			$(rdfs_srcs) $(flashfs_srcs)	\
-			$(focus_srcs) $(rtc_srcs) $(filedisc_srcs) \
+			$(focus_srcs) $(rtc_srcs)  \
 			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
@@ -193,12 +189,12 @@ exes =      $(prot_exes) $(pcshut_exes)
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 		    $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
-		    $(mouse_rdvs) $(file_rdvs) \
+		    $(mouse_rdvs)  \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(keyboard_rdvs) $(inifile_rdvs)  \
 			$(rdfs_rdvs) $(flashfs_rdvs) \
-			$(focus_rdvs) $(filedisc_rdvs)	\
+			$(focus_rdvs) \
 			$(rtc_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
 			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs)
 
@@ -506,22 +502,6 @@ FLASHFS.RDV : $(flashfs_objs)
 	$(flashfs_objs)
 	FLASHFS.RDV
 	FLASHFS;
-!
-
-FILEDISC.RDV : $(filedisc_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(filedisc_objs)
-	FILEDISC.RDV
-	FILEDISC;
-!
-
-FILE.RDV : $(file_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(file_objs)
-	FILE.RDV
-	FILE;
 !
 
 NE.RDV : $(ne_objs)

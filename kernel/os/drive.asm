@@ -164,6 +164,7 @@ code	SEGMENT byte public use16 'CODE'
 	assume cs:code,ds:data
 
 	extrn init_ramdrive:near
+	extrn init_filedisc:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5341,6 +5342,7 @@ init_drive_wait_loop:
 	mov es:drive_wait_count,DRIVE_WAIT_NUM
 ;
     call init_ramdrive	
+    call init_filedisc
 	ret
 init	ENDP
 

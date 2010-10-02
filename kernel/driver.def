@@ -353,8 +353,6 @@ dcf_data_sel		EQU 918h
 digio_code_sel		EQU 920h
 digio_data_sel		EQU 928h
 
-file_disc_code_sel  EQU 930h
-
 flash_disc_code_sel	EQU 940h
 flash_disc_data_sel	EQU 948h
 

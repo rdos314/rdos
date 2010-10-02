@@ -91,7 +91,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -148,7 +147,6 @@ read_drive_next:
 	ret
 read_drive	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -205,7 +203,6 @@ write_drive_next:
 	ret
 write_drive	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -248,7 +245,6 @@ perform_one_done:
 	ret
 perform_one	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -279,7 +275,6 @@ discbuf_thread_loop:
 	call perform_one
 	jmp discbuf_thread_loop
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -458,7 +453,6 @@ create_file_drive16 Proc far
     ret
 create_file_drive16 Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -604,7 +598,6 @@ open_file_drive16 Proc far
     ret
 open_file_drive16 Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -617,13 +610,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	push ds
-	push es
-	pusha
-	mov bx,file_disc_code_sel
-	InitDevice
-;
+    public init_filedisc
+    
+init_filedisc	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -641,14 +630,10 @@ init	PROC far
 	mov dx,virt_es_in
 	mov ax,open_file_drive_nr
 	RegisterUserGate
-;
-	popa
-	pop es
-	pop ds
 	ret
-init	ENDP
+init_filedisc	ENDP
 
 code	ENDS
 
-	END init
+	END
 
