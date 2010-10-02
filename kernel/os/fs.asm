@@ -45,7 +45,7 @@ CallFileSystem	MACRO	call_proc
 	push gs
 	push bp
 	push si
-	mov si,fs_data_sel
+	mov si,fs_sys_data_sel
 	mov ds,si
 	movzx si,al
 	add si,si
@@ -90,7 +90,7 @@ hook_init_file_system	Proc far
 	push bx
 	push cx
 	mov cx,ds
-	mov ax,fs_data_sel
+	mov ax,fs_sys_data_sel
 	mov ds,ax
 	mov al,ds:fs_init_hooks
 	mov bl,al
@@ -128,7 +128,7 @@ register_file_system	Proc far
 	push bx
 	push cx
 	mov cx,ds
-	mov ax,fs_data_sel
+	mov ax,fs_sys_data_sel
 	mov ds,ax
 	mov al,ds:file_defs
 	mov bl,al
@@ -167,7 +167,7 @@ define_media_check	Proc far
 	push ds
 	push si
 ;
-	mov si,fs_data_sel
+	mov si,fs_sys_data_sel
 	mov ds,si
 ;
 	movzx si,al
@@ -201,7 +201,7 @@ demand_load_file_system	Proc far
 	push bx
 	push si
 ;
-	mov bx,fs_data_sel
+	mov bx,fs_sys_data_sel
 	mov ds,bx
 ;
 	movzx bx,al
@@ -246,7 +246,7 @@ GetFileSystem	Proc near
 	push bx
 	push cx
 ;
-	mov cx,fs_data_sel
+	mov cx,fs_sys_data_sel
 	mov ds,cx
 	movzx cx,ds:file_defs
 	mov bx,OFFSET file_def_arr
@@ -341,7 +341,7 @@ install_file_system	Proc far
 	push si
 	push di
 ;
-	mov cx,fs_data_sel
+	mov cx,fs_sys_data_sel
 	mov ds,cx
 	call GetFileSystem
 	jc install_file_sys_done
@@ -442,7 +442,7 @@ start_file_system	Proc far
 	push si
 	push di
 ;
-	mov si,fs_data_sel
+	mov si,fs_sys_data_sel
 	mov es,si
 	movzx di,al
 	add di,di
@@ -483,7 +483,7 @@ stop_file_system	Proc far
 	push si
 	push di
 ;
-	mov si,fs_data_sel
+	mov si,fs_sys_data_sel
 	mov es,si
 ;
 	pop di
@@ -563,7 +563,7 @@ init_process	ENDP
 hook_thread_name DB 'Init File System', 0
 
 hook_thread	PROC far
-	mov ax,fs_data_sel
+	mov ax,fs_sys_data_sel
 	mov ds,ax
 	mov cl,ds:fs_init_hooks
 	or cl,cl
@@ -635,38 +635,38 @@ default_proc	Proc far
 default_proc	Endp
 
 default_fs:
-df00 DW OFFSET default_proc,	fs_code_sel
-df01 DW OFFSET default_proc,	fs_code_sel
-df02 DW OFFSET default_proc,	fs_code_sel
-df03 DW OFFSET default_proc,	fs_code_sel
-df04 DW OFFSET default_proc,	fs_code_sel
-df05 DW OFFSET default_proc,	fs_code_sel
-df06 DW OFFSET default_proc,	fs_code_sel
-df07 DW OFFSET default_proc,	fs_code_sel
-df08 DW OFFSET default_proc,	fs_code_sel
-df09 DW OFFSET default_proc,	fs_code_sel
-df0A DW OFFSET default_proc,	fs_code_sel
-df0B DW OFFSET default_proc,	fs_code_sel
-df0C DW OFFSET default_proc,	fs_code_sel
-df0D DW OFFSET default_proc,	fs_code_sel
-df0E DW OFFSET default_proc,	fs_code_sel
-df0F DW OFFSET default_proc,	fs_code_sel
-df10 DW OFFSET default_proc,	fs_code_sel
-df11 DW OFFSET default_proc,	fs_code_sel
-df12 DW OFFSET default_proc,	fs_code_sel
-df13 DW OFFSET default_proc,	fs_code_sel
-df14 DW OFFSET default_proc,	fs_code_sel
-df15 DW OFFSET default_proc,	fs_code_sel
-df16 DW OFFSET default_proc,	fs_code_sel
-df17 DW OFFSET default_proc,	fs_code_sel
-df18 DW OFFSET default_proc,	fs_code_sel
-df19 DW OFFSET default_proc,	fs_code_sel
-df1A DW OFFSET default_proc,	fs_code_sel
-df1B DW OFFSET default_proc,	fs_code_sel
-df1C DW OFFSET default_proc,	fs_code_sel
-df1D DW OFFSET default_proc,	fs_code_sel
-df1E DW OFFSET default_proc,	fs_code_sel
-df1F DW OFFSET default_proc,	fs_code_sel
+df00 DW OFFSET default_proc,	SEG code
+df01 DW OFFSET default_proc,	SEG code
+df02 DW OFFSET default_proc,	SEG code
+df03 DW OFFSET default_proc,	SEG code
+df04 DW OFFSET default_proc,	SEG code
+df05 DW OFFSET default_proc,	SEG code
+df06 DW OFFSET default_proc,	SEG code
+df07 DW OFFSET default_proc,	SEG code
+df08 DW OFFSET default_proc,	SEG code
+df09 DW OFFSET default_proc,	SEG code
+df0A DW OFFSET default_proc,	SEG code
+df0B DW OFFSET default_proc,	SEG code
+df0C DW OFFSET default_proc,	SEG code
+df0D DW OFFSET default_proc,	SEG code
+df0E DW OFFSET default_proc,	SEG code
+df0F DW OFFSET default_proc,	SEG code
+df10 DW OFFSET default_proc,	SEG code
+df11 DW OFFSET default_proc,	SEG code
+df12 DW OFFSET default_proc,	SEG code
+df13 DW OFFSET default_proc,	SEG code
+df14 DW OFFSET default_proc,	SEG code
+df15 DW OFFSET default_proc,	SEG code
+df16 DW OFFSET default_proc,	SEG code
+df17 DW OFFSET default_proc,	SEG code
+df18 DW OFFSET default_proc,	SEG code
+df19 DW OFFSET default_proc,	SEG code
+df1A DW OFFSET default_proc,	SEG code
+df1B DW OFFSET default_proc,	SEG code
+df1C DW OFFSET default_proc,	SEG code
+df1D DW OFFSET default_proc,	SEG code
+df1E DW OFFSET default_proc,	SEG code
+df1F DW OFFSET default_proc,	SEG code
 
 init	PROC far
 	mov ax,cs
@@ -736,7 +736,7 @@ init	PROC far
 	AllocateFixedProcessMem
 ;	
 	mov eax,SIZE fs_data_seg
-	mov bx,fs_data_sel
+	mov bx,fs_sys_data_sel
 	AllocateFixedSystemMem
 ;
     push ds
@@ -747,8 +747,6 @@ init	PROC far
 	mov ds:fs_init_done,0
 	mov ds:file_defs,0
 	mov ds:fs_init_hooks,0
-	mov ds:fs_file_list,0
-	InitSection ds:fs_file_section
 	pop ds
 ;
 	mov di,OFFSET fs_sel

@@ -55,7 +55,7 @@ CallFileSystem	MACRO	call_proc
 	push gs
 	push bp
 	push si
-	mov si,fs_data_sel
+	mov si,fs_sys_data_sel
 	mov ds,si
 	movzx si,al
 	add si,si
@@ -131,7 +131,7 @@ ValidateDrive	Proc near
 	push bx
 	push si
 ;
-	mov si,fs_data_sel
+	mov si,fs_sys_data_sel
 	mov ds,si
 	movzx si,al
 	add si,si
@@ -210,7 +210,7 @@ cache_dir	PROC far
 	mov al,ds:ds_drive
 	mov bx,ds
 ;
-	mov si,fs_data_sel
+	mov si,fs_sys_data_sel
 	mov ds,si
 	movzx si,al
 	add si,si
@@ -583,7 +583,7 @@ parse_dir_rel:
 ;
 	mov ds,bx
 	mov ebp,ds:ds_mount_id
-	mov si,fs_data_sel
+	mov si,fs_sys_data_sel
 	mov ds,si
 	movzx si,al
 	add si,si
@@ -610,7 +610,7 @@ parse_dir_old_zero:
 	mov ds:[si].cur_dir_sel,0
 
 parse_dir_root:
-	mov bx,fs_data_sel
+	mov bx,fs_sys_data_sel
 	mov ds,bx
 	movzx si,al
 	add si,si
@@ -803,7 +803,7 @@ ParseEnd	Proc near
 ;
 	movzx si,ds:ds_drive
 	add si,si
-	mov ax,fs_data_sel
+	mov ax,fs_sys_data_sel
 	mov ds,ax
 	mov ds,ds:[si].fs_sel
 	cli
@@ -837,7 +837,7 @@ GetDeviceRoot	Proc near
 	push ebp
 ;
 	mov al,80h
-	mov bx,fs_data_sel
+	mov bx,fs_sys_data_sel
 	mov ds,bx
 	movzx si,al
 	add si,si
@@ -1104,7 +1104,7 @@ GetCurDirBase	Proc near
 	call ValidateDrive
 	jc get_cur_dir_done
 ;
-	mov bx,fs_data_sel
+	mov bx,fs_sys_data_sel
 	mov ds,bx
 	movzx bx,al
 	add bx,bx
@@ -1193,7 +1193,7 @@ get_cur_dir_leave:
 	mov al,ds:ds_drive
 
 get_cur_dir_ok:
-	mov bx,fs_data_sel
+	mov bx,fs_sys_data_sel
 	mov ds,bx
 	movzx bx,al
 	add bx,bx
@@ -1817,7 +1817,7 @@ ReadDirBase	Proc near
 ;
 	mov ds,bx
 	mov al,ds:dhs_drive
-	mov si,fs_data_sel
+	mov si,fs_sys_data_sel
 	mov fs,si
 	movzx si,al
 	add si,si
@@ -1905,7 +1905,7 @@ CloseDirBase	Proc near
 	mov ebp,-1
 	mov es,bx
 	mov al,es:dhs_drive
-	mov bx,fs_data_sel
+	mov bx,fs_sys_data_sel
 	mov fs,bx
 	movzx bx,al
 	add bx,bx
@@ -2728,7 +2728,7 @@ stop_file_system	Proc far
 	push fs
 	pushad
 ;
-	mov bx,fs_data_sel
+	mov bx,fs_sys_data_sel
 	mov ds,bx
 	mov bx,flat_sel
 	mov es,bx

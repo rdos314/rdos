@@ -58,7 +58,7 @@ CallFileSystem	MACRO	call_proc
 	push gs
 	push bp
 	push si
-	mov si,fs_data_sel
+	mov si,fs_sys_data_sel
 	mov ds,si
 	movzx si,al
 	add si,si
@@ -71,6 +71,13 @@ CallFileSystem	MACRO	call_proc
 	pop gs
 	pop ds
 				ENDM
+
+data    SEGMENT byte public 'DATA'
+
+fs_file_list        DW ?
+fs_file_section     section_typ <>
+
+data    ENDS
 
 	.386p
 
@@ -97,7 +104,7 @@ InsertFileSel	Proc near
     push ebx
 	push di
 ;
-    mov ax,fs_data_sel
+    mov ax,SEG data
     mov ds,ax
     EnterSection ds:fs_file_section
 ;
@@ -153,7 +160,7 @@ RemoveFileSel	Proc near
     push ebx
 	push si
 ;
-    mov ax,fs_data_sel
+    mov ax,SEG data
     mov ds,ax
     EnterSection ds:fs_file_section
 ;
@@ -1112,7 +1119,7 @@ swap_all    Proc near
     push ax
     push bx
 ;
-    mov ax,fs_data_sel
+    mov ax,SEG data
     mov ds,ax
     EnterSection ds:fs_file_section
 ;    
@@ -2607,7 +2614,7 @@ delete_handle	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 swap_proc	Proc far
-    mov ax,fs_data_sel
+    mov ax,SEG data
     mov ds,ax
     EnterSection ds:fs_file_section
 ;    
@@ -2746,6 +2753,11 @@ init_file	PROC near
 	mov dx,virt_es_in
 	mov ax,write_file_nr
 	RegisterUserGate
+;
+    mov ax,SEG data
+    mov ds,ax	
+	mov ds:fs_file_list,0
+	InitSection ds:fs_file_section
 	ret
 init_file	ENDP
 
