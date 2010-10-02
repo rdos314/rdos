@@ -40,6 +40,7 @@ INCLUDE dpmi.inc
 
 	.386p
 
+	extrn init_focus:near
 	extrn init_keyboard:near
 	extrn init_mouse:near
 
@@ -59,6 +60,7 @@ code	SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
+    call init_focus
     call init_keyboard
     call init_mouse
     clc

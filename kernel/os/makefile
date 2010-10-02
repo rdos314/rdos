@@ -115,10 +115,6 @@ dos_srcs = DOS.ASM	DOSMEM.ASM	DOSCOM.ASM	DOSEXEC.ASM	\
 dos_objs = $(dos_srcs:.ASM=.OBJ)
 dos_rdvs = DOS.RDV
 
-focus_srcs =     FOCUS.ASM
-focus_objs = $(focus_srcs:.ASM=.OBJ)
-focus_rdvs = FOCUS.RDV
-
 rdfs_srcs = RDFS.ASM RDFSDIR.ASM RDFSFILE.ASM RDFSCRYP.ASM RDFSMISC.ASM \
 			RDFSTAB.ASM RDFSCONT.ASM
 rdfs_objs = $(rdfs_srcs:.ASM=.OBJ)
@@ -164,7 +160,7 @@ srcs =      $(dpmi_srcs) $(inifile_srcs)   \
 			$(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) $(exec_srcs) \
 			$(rdfs_srcs) $(flashfs_srcs)	\
-			$(focus_srcs) $(rtc_srcs)  \
+			$(rtc_srcs)  \
 			$(ac97_srcs) $(audio_srcs) $(ir_srcs) $(fm_srcs) $(wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
@@ -184,7 +180,6 @@ rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
 			$(inifile_rdvs)  \
 			$(rdfs_rdvs) $(flashfs_rdvs) \
-			$(focus_rdvs) \
 			$(rtc_rdvs) $(video_rdvs) $(ac97_rdvs) $(audio_rdvs) \
 			$(ir_rdvs) $(fm_rdvs) $(wd_rdvs)
 
@@ -452,14 +447,6 @@ DOS.RDV : $(dos_objs)
 	$(dos_objs)
 	DOS.RDV
 	DOS;
-!
-
-FOCUS.RDV : $(focus_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(focus_objs)
-	FOCUS.RDV
-	FOCUS;
 !
 
 RDFS.RDV : $(rdfs_objs)
