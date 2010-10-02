@@ -58,6 +58,8 @@ TFile::TFile(const char *FileName)
                             OPEN_EXISTING,
                             FILE_ATTRIBUTE_NORMAL,
                             0);
+    if (FHandle < 0)
+        FHandle = 0;
 }
 
 /*##########################################################################
@@ -87,7 +89,8 @@ TFile::TFile(const char *FileName, int Attrib)
                             CREATE_ALWAYS,
                             FILE_ATTRIBUTE_NORMAL,
                             0);
-
+    if (FHandle < 0)
+        FHandle = 0;
 }
 
 /*##########################################################################

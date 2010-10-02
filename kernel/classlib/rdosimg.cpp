@@ -383,6 +383,7 @@ int TRdosSimpleDeviceBaseObject::LoadDeviceFile(const char *FileName)
 
     if (File.IsOpen())
     {
+        ExeHeader.Signature = 0;
         File.Read(&ExeHeader, sizeof(TExeHeader));
 
         if (ExeHeader.Signature != 0x5A4D)
@@ -510,6 +511,7 @@ int TRdosDosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *P
 
     if (File.IsOpen())
     {
+        ExeHeader.Signature = 0;
         File.Read(&ExeHeader, sizeof(TExeHeader));
 
         if (ExeHeader.Signature != 0x5A4D)
@@ -650,6 +652,7 @@ int TRdosDevice16BaseObject::LoadDeviceFile(const char *FileName, const char *Pa
 
     if (File.IsOpen())
     {
+        ExeHeader.Signature = 0;
         File.Read(&ExeHeader, sizeof(TRdvHeader16));
 
         if (ExeHeader.Signature != 0x3652)
