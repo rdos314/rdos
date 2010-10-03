@@ -25,7 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PAGE
 						
 		NAME dos
 
@@ -155,7 +154,6 @@ map_high:
 	retf
 doscallback_end:
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -286,7 +284,6 @@ create_env_done:
 	ret
 create_enviroment	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -316,7 +313,6 @@ get_psp_gate	PROC far
 	ret
 get_psp_gate	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -346,7 +342,6 @@ set_psp_gate	PROC far
 	ret
 set_psp_gate	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -376,7 +371,6 @@ get_psp_sel	PROC far
 	retf32
 get_psp_sel	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -405,7 +399,6 @@ clear_psp	PROC near
 	ret
 clear_psp	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -434,7 +427,6 @@ get_virt_psp	PROC near
 	ret
 get_virt_psp	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -492,7 +484,6 @@ set_virt_psp_nofree:
 	ret
 set_virt_psp	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -521,7 +512,6 @@ get_prot_psp	PROC near
 	ret
 get_prot_psp	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -551,7 +541,6 @@ set_prot_psp	PROC near
 	ret
 set_prot_psp	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -581,7 +570,6 @@ get_virt_dta	PROC near
 	ret
 get_virt_dta	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -642,7 +630,6 @@ set_virt_dta_nofree:
 	ret
 set_virt_dta	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -672,7 +659,6 @@ get_prot_dta	PROC near
 	ret
 get_prot_dta	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -705,7 +691,6 @@ set_prot_dta	PROC near
 	ret
 set_prot_dta	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -734,7 +719,6 @@ get_find_sel	Proc near
 	ret
 get_find_sel	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -763,7 +747,6 @@ set_find_sel	Proc near
 	ret
 set_find_sel	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -799,7 +782,6 @@ reset_find_done:
 	ret
 reset_find_sel	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -924,7 +906,6 @@ default_psp	PROC near
 	ret
 default_psp	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1129,7 +1110,6 @@ create_psp_virt_dta_nofree:
 	ret
 create_psp	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1190,7 +1170,6 @@ unload_program_done:
 	ret
 unload_program	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1216,7 +1195,6 @@ get_allocation_strat	Proc near
 	ret
 get_allocation_strat	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1244,7 +1222,6 @@ set_allocation_strat	Proc near
 	ret
 set_allocation_strat	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1260,7 +1237,6 @@ init_process	Proc far
 	ret
 init_process	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1286,7 +1262,6 @@ open_app	Proc far
 	ret
 open_app	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1304,7 +1279,6 @@ close_app	Proc far
 	ret
 close_app	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1318,11 +1292,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
-	pusha
-	push ds
-	mov bx,dos_code_sel
-	InitDevice
-;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -1353,10 +1322,6 @@ init	PROC far
 ;
 	mov di,OFFSET init_process
 	HookCreateProcess
-;
-	mov eax,SIZE dos_data_seg
-	mov bx,dos_data_sel
-	AllocateFixedSystemMem
 ;
 	mov eax,SIZE dos_process_seg
 	mov bx,dos_process_sel
@@ -1403,9 +1368,7 @@ init	PROC far
 	call init_dos16
 	call init_dos32
 	call init_dos_exec
-;	
-	pop ds
-	popa
+	clc
 	ret
 init	ENDP
 

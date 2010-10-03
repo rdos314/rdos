@@ -97,11 +97,6 @@ ipc_srcs = IPC.ASM IPCREC.ASM IPCSEND.ASM	\
 ipc_objs = $(ipc_srcs:.ASM=.OBJ)
 ipc_rdvs = IPC.RDV
 
-dos_srcs = DOS.ASM	DOSMEM.ASM	DOSCOM.ASM	DOSEXEC.ASM	\
-		   DOSVM.ASM	DOS16.ASM	DOS32.ASM
-dos_objs = $(dos_srcs:.ASM=.OBJ)
-dos_rdvs = DOS.RDV
-
 pe_srcs = PE.ASM
 pe_objs = $(pe_srcs:.ASM=.OBJ)
 pe_rdvs = PE.RDV
@@ -115,7 +110,7 @@ pcshut_objs = $(pcshut_srcs:.ASM=.OBJ)
 pcshut_exes = PCSHUT.EXE
 
 srcs =      $(dpmi_srcs)  \
-			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
+			$(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(ipc_srcs) $(ipcdebug_srcs)  \
 		    $(pe_srcs)  \
@@ -135,7 +130,7 @@ incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
 exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
-			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
+			$(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 		    $(pe_rdvs)   \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) \
@@ -358,14 +353,6 @@ RTC.RDV : $(rtc_objs)
 	$(rtc_objs)
 	RTC.RDV
 	RTC;
-!
-
-DOS.RDV : $(dos_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(dos_objs)
-	DOS.RDV
-	DOS;
 !
 
 PE.RDV : $(pe_objs)

@@ -50,13 +50,20 @@ INCLUDE dos.inc
 	extrn set_prot_psp:near
 	extrn get_prot_psp:near
 
+
+data    SEGMENT byte public 'DATA'
+
+load_dos_exe_hooks	DB ?
+load_dos_exe_arr	DW 2*16 DUP(?)
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
 	
 	assume cs:code
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -75,7 +82,7 @@ hook_load_dos_exe	PROC far
 	push ds
 	push ax
 	push bx
-	mov ax,dos_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov al,ds:load_dos_exe_hooks
 	mov bl,al
@@ -92,7 +99,6 @@ hook_load_dos_exe	PROC far
 	ret
 hook_load_dos_exe	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -218,7 +224,6 @@ setup_cmd_line_terminate:
 	ret
 setup_command_line	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -320,7 +325,6 @@ load_com_done:
 	ret
 load_com	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -570,7 +574,7 @@ load_dos_try_exe:
 	cmp ax,5A4Dh
 	jne load_dos_exe_fail
 ;
-	mov ax,dos_data_sel
+	mov ax,SEG data
 	mov fs,ax
 	mov cl,fs:load_dos_exe_hooks
 	or cl,cl
@@ -653,7 +657,6 @@ load_dos_exe_done:
 	ret
 load_dos_exe	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -871,7 +874,7 @@ init_dos_exec	PROC near
 	pusha
 	push ds
 ;
-	mov ax,dos_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds:load_dos_exe_hooks,0
 ;
