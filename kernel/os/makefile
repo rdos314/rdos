@@ -97,10 +97,6 @@ ipc_srcs = IPC.ASM IPCREC.ASM IPCSEND.ASM	\
 ipc_objs = $(ipc_srcs:.ASM=.OBJ)
 ipc_rdvs = IPC.RDV
 
-pe_srcs = PE.ASM
-pe_objs = $(pe_srcs:.ASM=.OBJ)
-pe_rdvs = PE.RDV
-
 ac97_srcs = AC97.ASM
 ac97_objs = $(ac97_srcs:.ASM=.OBJ)
 ac97_rdvs = AC97.RDV
@@ -113,7 +109,6 @@ srcs =      $(dpmi_srcs)  \
 			$(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(ipc_srcs) $(ipcdebug_srcs)  \
-		    $(pe_srcs)  \
 			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) \
 			$(rtc_srcs)  \
@@ -131,7 +126,6 @@ exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
-		    $(pe_rdvs)   \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) \
 			$(rtc_rdvs) $(ac97_rdvs) \
@@ -353,14 +347,6 @@ RTC.RDV : $(rtc_objs)
 	$(rtc_objs)
 	RTC.RDV
 	RTC;
-!
-
-PE.RDV : $(pe_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(pe_objs)
-	PE.RDV
-	PE;
 !
 
 DEBUGIO.RDV : $(kdebug_objs)

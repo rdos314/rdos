@@ -2687,7 +2687,6 @@ init_thread_no_tls:
 	ret
 init_thread	Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2740,7 +2739,6 @@ start_thread_done:
 	ret
 start_thread	Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2810,7 +2808,6 @@ free_thread_no_tls:
 	ret
 free_thread	Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2899,7 +2896,6 @@ spawn_no_debug:
 	ret
 spawn_proc	Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2932,7 +2928,6 @@ clone_proc	Proc far
     ret
 clone_proc  Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2972,7 +2967,6 @@ free_process_no_debug:
 	ret
 close_proc	Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3007,7 +3001,6 @@ start_wait_done:
 	ret
 start_wait_for_debug_event Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3031,7 +3024,6 @@ stop_wait_for_debug_event Proc far
 	ret
 stop_wait_for_debug_event Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3126,7 +3118,6 @@ gdeDone:
 	ret
 get_debug_event Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3195,7 +3186,6 @@ gdedDone:
 	ret
 get_debug_event_data Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3230,7 +3220,6 @@ clear_debug_done:
 	ret
 clear_debug_event Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3298,7 +3287,6 @@ continue_debug_done:
 	ret
 continue_debug_event Endp
 
-PAGE
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3440,7 +3428,6 @@ neDone:
 	retf32
 notify_pe_exception Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3512,7 +3499,6 @@ alloc_ins_done:
 	ret
 allocate_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3595,7 +3581,6 @@ free_mem_done:
 	ret
 free_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3689,7 +3674,6 @@ debug_alloc_ins_done:
 	ret
 debug_allocate_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -3799,7 +3783,6 @@ debug_free_mem_done:
 	ret
 debug_free_mem	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -4589,13 +4572,6 @@ get_options	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
-	push ds
-	push es
-	pusha
-;
-	mov bx,pe_code_sel
-	InitDevice
-;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -4635,10 +4611,7 @@ init	PROC far
 	xor dx,dx
 	mov ax,show_exception_text_nr
 	RegisterUserGate32
-;
-	popa
-	pop es
-	pop ds
+	clc
 	ret
 init	ENDP
 
