@@ -73,13 +73,6 @@ exeh_ov_nr			DW ?
 exeh_seg	ENDS
 
 
-exec_sys_seg	STRUC
-
-load_exe_hooks	DB ?
-load_exe_arr	DW 2*16 DUP(?)
-
-exec_sys_seg	ENDS
-
 spawn_struc	STRUC
 
 s_name				DW ?

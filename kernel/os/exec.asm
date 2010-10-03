@@ -42,13 +42,19 @@ INCLUDE exec.def
 INCLUDE system.def
 INCLUDE system.inc
 
+data    SEGMENT byte public 'DATA'
+
+load_exe_hooks	DB ?
+load_exe_arr	DW 2*16 DUP(?)
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
 	
 	assume cs:code
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -67,7 +73,7 @@ hook_load_exe	PROC far
 	push ds
 	push ax
 	push bx
-	mov ax,exec_sys_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov al,ds:load_exe_hooks
 	mov bl,al
@@ -84,7 +90,6 @@ hook_load_exe	PROC far
 	ret
 hook_load_exe	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -101,7 +106,7 @@ PAGE
 
 load_exe_file	PROC near
     push gs
-	mov ax,exec_sys_sel
+	mov ax,SEG data
 	mov fs,ax
 	mov cl,fs:load_exe_hooks
 	or cl,cl
@@ -677,7 +682,7 @@ load_cmd_line	DB 0, 0Dh
 
 load_process:
 	SimSti
-	mov ax,exec_sys_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov es,bx
 	xor di,di
@@ -1431,7 +1436,7 @@ CreateSpawnHandle   Endp
 
 spawn_startup:
 	mov gs,bx
-	mov ax,exec_sys_sel
+	mov ax,SEG data
 	mov ds,ax
 	SaveContext
 	xor eax,eax
@@ -1997,7 +2002,6 @@ get_exit_code	Proc far
 	retf32
 get_exit_code	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -2036,7 +2040,6 @@ run_process	PROC near
 	ret
 run_process	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2120,15 +2123,8 @@ init_sys	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
-	push ds
-	push es
-	pusha
-	mov bx,exec_code_sel
-	InitDevice
-;
-	mov eax,SIZE exec_sys_seg
-	mov bx,exec_sys_sel
-	AllocateFixedSystemMem
+	mov bx,SEG data
+	mov es,bx
 	mov es:load_exe_hooks,0
 ;
 	mov ax,cs
@@ -2182,10 +2178,6 @@ init	PROC far
 	xor dx,dx
 	mov ax,get_exit_code_nr
 	RegisterBimodalUserGate
-;
-	popa
-	pop es
-	pop ds
 	ret
 init	ENDP
 

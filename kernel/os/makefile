@@ -51,10 +51,6 @@ wd_srcs = WD.ASM
 wd_objs = $(wd_srcs:.ASM=.OBJ)
 wd_rdvs = $(wd_srcs:.ASM=.RDV)
 
-exec_srcs = EXEC.ASM
-exec_objs = $(exec_srcs:.ASM=.OBJ)
-exec_rdvs = $(exec_srcs:.ASM=.RDV)
-
 rtc_srcs = RTC.ASM
 rtc_objs = $(rtc_srcs:.ASM=.OBJ)
 rtc_rdvs = RTC.RDV
@@ -124,7 +120,7 @@ srcs =      $(dpmi_srcs)  \
 			$(ipc_srcs) $(ipcdebug_srcs)  \
 		    $(pe_srcs)  \
 			$(pcshut_srcs)   \
-			$(prot_srcs) $(file_srcs) $(exec_srcs) \
+			$(prot_srcs) $(file_srcs) \
 			$(rtc_srcs)  \
 			$(ac97_srcs) $(ir_srcs) $(wd_srcs)
 
@@ -142,7 +138,7 @@ rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 		    $(pe_rdvs)   \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
-			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) $(exec_rdvs) \
+			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) \
 			$(rtc_rdvs) $(ac97_rdvs) \
 			$(ir_rdvs) $(wd_rdvs)
 
@@ -354,14 +350,6 @@ WD.RDV : $(wd_objs)
 	$(wd_objs)
 	WD.RDV
 	WD;
-!
-
-EXEC.RDV : $(exec_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(exec_objs)
-	EXEC.RDV
-	EXEC;
 !
 
 RTC.RDV : $(rtc_objs)
