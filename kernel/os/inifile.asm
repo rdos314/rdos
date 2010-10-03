@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
-		NAME ini
+		NAME inifile
 
 GateSize = 16
 
@@ -71,13 +71,13 @@ if_drive        DB ?
 
 ini_file_seg ENDS
 
-ini_sys_seg  STRUC
+data    SEGMENT byte public 'DATA'
 
 is_section      section_typ <>
 
 is_sys_sel      DW ?
 
-ini_sys_seg  ENDS
+data    ENDS
 
 	.386p
 
@@ -777,7 +777,7 @@ FreeIniSel	proc near
 	jnz fisDone
 ;
 	mov cx,ds
-	mov ax,inifile_sys_sel
+	mov ax,SEG data
 	mov ds,ax
 	cmp cx,ds:is_sys_sel
 	jne fisPriv
@@ -864,7 +864,7 @@ open_sys_ini	Proc far
 	push ax
 ;
 	xor bx,bx
-	mov ax,inifile_sys_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:is_section
 ;
@@ -877,12 +877,12 @@ open_sys_ini	Proc far
 ;
 	call CreateIniSel
 ;
-	mov ax,inifile_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov es:is_sys_sel,ds
 
 osiCreateHandle:
-	mov ax,inifile_sys_sel
+	mov ax,SEG data
 	mov ds,ax
 	LeaveSection ds:is_section
 ;
@@ -940,7 +940,6 @@ open_ini32:
     call open_ini
     retf32
     
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1836,7 +1835,6 @@ delete_ini32  Proc far
     retf32
 delete_ini32  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1891,21 +1889,13 @@ delete_handle	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	Proc far
-	push ds
-	push es
-	pusha
-;
-	mov bx,inifile_code_sel
-	InitDevice
-;
-	mov eax,SIZE ini_sys_seg
-	mov bx,inifile_sys_sel
-	AllocateFixedSystemMem
-	mov ax,es
+    public init_inifile
+    
+init_inifile	Proc near
+	mov ax,SEG data
 	mov ds,ax
 	InitSection ds:is_section
-	mov es:is_sys_sel,0
+	mov ds:is_sys_sel,0
 ;
 	mov ax,cs
 	mov ds,ax
@@ -1968,14 +1958,10 @@ init	Proc far
 	mov di,OFFSET delete_handle
 	mov ax,INI_HANDLE
 	RegisterHandle
-;
-	popa
-	pop es
-	pop ds
 	ret
-init	Endp
+init_inifile	Endp
 
 code	ENDS
 
-	END init
+	END
 

@@ -352,9 +352,6 @@ digio_data_sel		EQU 928h
 flash_disc_code_sel	EQU 940h
 flash_disc_data_sel	EQU 948h
 
-inifile_code_sel	EQU 950h
-inifile_sys_sel		EQU 958h
-
 bsp_code_sel        EQU 960h
 bsp_data_sel        EQU 968h
 
