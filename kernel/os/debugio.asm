@@ -44,27 +44,6 @@ INCLUDE system.inc
 
 vm_edx		EQU -12
 
-osgate_entry    STRUC
-og_sel          DW ?
-og_offset           DW ?
-og_name_sel         DW ?
-og_name_offset  DW ?
-osgate_entry    ENDS
-
-usergate_entry	STRUC
-ug_name_sel			DW ?
-ug_name_offset		DW ?
-ug_entry_offset16	DW ?
-ug_entry_sel16		DW ?
-ug_entry_offset32	DW ?
-ug_entry_sel32		DW ?
-ug_entry_offset_v86	DW ?	
-ug_entry_sel_v86	DW ?
-ug_sel16			DW ?
-ug_sel32			DW ?
-ug_transfer			DW ?
-usergate_entry	ENDS
-
 code	SEGMENT byte public 'CODE'
 
 	extrn dis_ass_one:near
@@ -72,6 +51,9 @@ code	SEGMENT byte public 'CODE'
 
 	extrn ReadData:near
 	extrn GetIllegalOsGate:near
+	extrn GetIllegalUserGate:near
+	extrn GetOsCall:near
+	extrn GetUserCall:near
 
 .386p
 
@@ -786,176 +768,6 @@ data_next:
 	ret
 WriteData	ENDP
 
-GetIllegalUserGate	PROC near
-	push ds
-	push fs
-	mov ax,usergate_sel
-	mov ds,ax
-	mov fs,[bx].ug_name_sel
-	mov si,[bx].ug_name_offset
-	mov ax,kdebug_sys_sel
-	mov es,ax
-	mov di,OFFSET op_in_text
-	mov cx,40
-	xor bx,bx
-illegal_out_user_loop:
-	mov al,fs:[si]
-	or al,al
-	je illegal_out_user_ok
-	stosb
-	inc si
-	inc bx
-	loop illegal_out_user_loop
-illegal_out_user_ok:
-	inc cx
-	mov al,' '
-	rep stosb	
-	pop fs
-	pop ds
-	ret
-GetIllegalUserGate	ENDP
-
-; dx:bx	= call address
-
-GetOsCall	PROC near
-	push ds
-	push fs
-	push si
-	mov ax,gs:tss_eflags+2
-	test ax,2
-	jnz short get_oscall_error
-;
-	mov ax,osgate_sel
-	mov ds,ax
-	xor si,si
-	mov cx,osgate_entries
-
-get_oscall_scan_loop:
-	cmp dx,ds:[si].og_sel
-	jne get_oscall_scan_next
-;
-	cmp bx,ds:[si].og_offset
-	je get_oscall_found
-
-get_oscall_scan_next:
-	add si,8
-	loop get_oscall_scan_loop
-;
-	jmp short get_oscall_error
-
-get_oscall_found:
-	mov fs,[si].og_name_sel
-	mov si,[si].og_name_offset
-	mov ax,kdebug_sys_sel
-	mov es,ax
-	mov di,OFFSET op_in_text
-	mov cx,40
-	xor bx,bx
-
-get_oscall_out_loop:
-	mov al,fs:[si]
-	or al,al
-	je get_oscall_out_ok
-;
-	stosb
-	inc si
-	inc bx
-	loop get_oscall_out_loop
-
-get_oscall_out_ok:
-	inc cx
-	mov al,' '
-	rep stosb	
-	clc
-	jmp get_oscall_end
-
-get_oscall_error:
-	stc
-
-get_oscall_end:
-	pop si
-	pop fs
-	pop ds
-	ret
-GetOsCall	ENDP
-
-; dx:bx	= call address
-
-GetUserCall	PROC near
-	push ds
-	push fs
-	push si
-	mov ax,gs:tss_eflags+2
-	test ax,2
-	jnz short get_usercall_error
-;
-	mov ax,usergate_sel
-	mov ds,ax
-	xor si,si
-	mov cx,usergate_entries
-
-get_usercall_scan_loop:
-	cmp dx,ds:[si].ug_entry_sel16
-	jne get_usercall_not_entry16
-;
-	cmp bx,ds:[si].ug_entry_offset16
-	je get_usercall_found
-
-get_usercall_not_entry16:
-	cmp dx,ds:[si].ug_entry_sel32
-	jne get_usercall_not_entry32
-;
-	cmp bx,ds:[si].ug_entry_offset32
-	je get_usercall_found
-
-get_usercall_not_entry32:
-	cmp dx,ds:[si].ug_sel16
-	je get_usercall_found
-;
-	cmp dx,ds:[si].ug_sel32
-	je get_usercall_found
-;
-	add si,32
-	loop get_usercall_scan_loop
-;
-	jmp short get_usercall_error
-
-get_usercall_found:
-	mov fs,[si].ug_name_sel
-	mov si,[si].ug_name_offset
-	mov ax,kdebug_sys_sel
-	mov es,ax
-	mov di,OFFSET op_in_text
-	mov cx,40
-	xor bx,bx
-
-get_usercall_out_loop:
-	mov al,fs:[si]
-	or al,al
-	je get_usercall_out_ok
-;
-	stosb
-	inc si
-	inc bx
-	loop get_usercall_out_loop
-
-get_usercall_out_ok:
-	inc cx
-	mov al,' '
-	rep stosb	
-	clc
-	jmp get_usercall_end
-
-get_usercall_error:
-	stc
-
-get_usercall_end:
-	pop si
-	pop fs
-	pop ds
-	ret
-GetUserCall	ENDP
-
 GetMne	PROC near
 	push si
 	push di
@@ -1038,6 +850,10 @@ write_illegal_usergate:
 ;
 	shl eax,5
 	mov ebx,eax
+	mov ax,kdebug_sys_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
 	call GetIllegalUserGate
 	mov ds:op_size,bx
 	clc
@@ -1060,6 +876,10 @@ not_illegal_op:
 ;
 	shl eax,5
 	mov ebx,eax
+	mov ax,kdebug_sys_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
 	call GetIllegalUserGate
 	mov ds:op_size,bx
 	clc
@@ -1068,12 +888,20 @@ not_illegal_op:
 not_call32:
 	mov bx,[si+1]
 	mov dx,[si+5]
+	mov ax,kdebug_sys_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
 	call GetOsCall
 	mov ds:op_size,bx
 	jnc write_special_end
 ;
 	mov bx,[si+1]
 	mov dx,[si+5]
+	mov ax,kdebug_sys_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
 	call GetUserCall
 	mov ds:op_size,bx
 	jmp write_special_end
@@ -1081,12 +909,20 @@ not_call32:
 write_call_far16:
 	mov bx,[si+1]
 	mov dx,[si+3]
+	mov ax,kdebug_sys_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
 	call GetOsCall
 	mov ds:op_size,bx
 	jnc write_special_end
 ;
 	mov bx,[si+1]
 	mov dx,[si+3]
+	mov ax,kdebug_sys_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
 	call GetUserCall
 	mov ds:op_size,bx
 	jmp write_special_end
@@ -1102,6 +938,10 @@ not_call_far:
 	mov dx,gs:tss_cs
 	add ebx,dword ptr gs:tss_eip
 	add ebx,5
+	mov ax,kdebug_sys_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
 	call GetUserCall
 	mov ds:op_size,bx
 	jmp write_special_end
@@ -1111,6 +951,10 @@ write_call_near16:
 	mov dx,gs:tss_cs
 	add bx,gs:tss_eip
 	add bx,3
+	mov ax,kdebug_sys_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
 	call GetOsCall
 	mov ds:op_size,bx
 	jnc write_special_end
@@ -1119,6 +963,10 @@ write_call_near16:
 	mov dx,gs:tss_cs
 	add bx,gs:tss_eip
 	add bx,3
+	mov ax,kdebug_sys_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
 	call GetUserCall
 	mov ds:op_size,bx
 	jmp write_special_end

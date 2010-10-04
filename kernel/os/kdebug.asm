@@ -52,6 +52,20 @@ og_name_sel         DW ?
 og_name_offset  DW ?
 osgate_entry    ENDS
 
+usergate_entry	STRUC
+ug_name_sel			DW ?
+ug_name_offset		DW ?
+ug_entry_offset16	DW ?
+ug_entry_sel16		DW ?
+ug_entry_offset32	DW ?
+ug_entry_sel32		DW ?
+ug_entry_offset_v86	DW ?	
+ug_entry_sel_v86	DW ?
+ug_sel16			DW ?
+ug_sel32			DW ?
+ug_transfer			DW ?
+usergate_entry	ENDS
+
 code	SEGMENT byte use16 public 'CODE'
 
 	extrn init_local:near
@@ -130,6 +144,209 @@ illegal_out_os_ok:
     pop ds
     ret
 GetIllegalOsGate    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetIllegalUserGate
+;
+;           DESCRIPTION:    Get illegal user gate name
+;
+;           PARAMETERS:     ES:DI       Name buffer
+;                           CX          Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetIllegalUserGate
+    
+GetIllegalUserGate      PROC near
+    push ds
+    push fs
+    mov ax,usergate_sel
+    mov ds,ax
+    mov fs,[bx].ug_name_sel
+    mov si,[bx].ug_name_offset
+    xor bx,bx
+illegal_out_user_loop:
+    mov al,fs:[si]
+    or al,al
+    je illegal_out_user_ok
+    stosb
+    inc si
+    inc bx
+    loop illegal_out_user_loop
+illegal_out_user_ok:
+    inc cx
+    mov al,' '
+    rep stosb       
+    pop fs
+    pop ds
+    ret
+GetIllegalUserGate      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetOsCall
+;
+;           DESCRIPTION:    Get OS call gate name
+;
+;           PARAMETERS:     ES:DI       Name buffer
+;                           CX          Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetOsCall
+    
+GetOsCall       PROC near
+    push ds
+    push fs
+    push si
+;    
+    mov ax,gs:tss_eflags+2
+    test ax,2
+    jnz short get_oscall_error
+;
+    push cx
+    mov ax,osgate_sel
+    mov ds,ax
+    xor si,si
+    mov cx,osgate_entries
+
+get_oscall_scan_loop:
+    cmp dx,ds:[si].og_sel
+    jne get_oscall_scan_next
+;
+    cmp bx,ds:[si].og_offset
+    je get_oscall_found
+
+get_oscall_scan_next:
+    add si,8
+    loop get_oscall_scan_loop
+;
+    pop cx
+    jmp short get_oscall_error
+
+get_oscall_found:
+    pop cx
+    mov fs,[si].og_name_sel
+    mov si,[si].og_name_offset
+    xor bx,bx
+
+get_oscall_out_loop:
+    mov al,fs:[si]
+    or al,al
+    je get_oscall_out_ok
+;
+    stosb
+    inc si
+    inc bx
+    loop get_oscall_out_loop
+
+get_oscall_out_ok:
+    inc cx
+    mov al,' '
+    rep stosb       
+    clc
+    jmp get_oscall_end
+
+get_oscall_error:
+    stc
+
+get_oscall_end:
+    pop si
+    pop fs
+    pop ds
+    ret
+GetOsCall       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetUserCall
+;
+;           DESCRIPTION:    Get user gate name
+;
+;           PARAMETERS:     ES:DI       Name buffer
+;                           CX          Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetUserCall
+    
+GetUserCall     PROC near
+    push ds
+    push fs
+    push si
+    mov ax,gs:tss_eflags+2
+    test ax,2
+    jnz short get_usercall_error
+;
+    push cx
+    mov ax,usergate_sel
+    mov ds,ax
+    xor si,si
+    mov cx,usergate_entries
+
+get_usercall_scan_loop:
+    cmp dx,ds:[si].ug_entry_sel16
+    jne get_usercall_not_entry16
+;
+    cmp bx,ds:[si].ug_entry_offset16
+    je get_usercall_found
+
+get_usercall_not_entry16:
+    cmp dx,ds:[si].ug_entry_sel32
+    jne get_usercall_not_entry32
+;
+    cmp bx,ds:[si].ug_entry_offset32
+    je get_usercall_found
+
+get_usercall_not_entry32:
+    cmp dx,ds:[si].ug_sel16
+    je get_usercall_found
+;
+    cmp dx,ds:[si].ug_sel32
+    je get_usercall_found
+;
+    add si,32
+    loop get_usercall_scan_loop
+;
+    pop cx
+    jmp short get_usercall_error
+
+get_usercall_found:
+    pop cx
+    mov fs,[si].ug_name_sel
+    mov si,[si].ug_name_offset
+    xor bx,bx
+
+get_usercall_out_loop:
+    mov al,fs:[si]
+    or al,al
+    je get_usercall_out_ok
+;
+    stosb
+    inc si
+    inc bx
+    loop get_usercall_out_loop
+
+get_usercall_out_ok:
+    inc cx
+    mov al,' '
+    rep stosb       
+    clc
+    jmp get_usercall_end
+
+get_usercall_error:
+    stc
+
+get_usercall_end:
+    pop si
+    pop fs
+    pop ds
+    ret
+GetUserCall     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
