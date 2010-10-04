@@ -35,12 +35,6 @@ units = G:\BP\UNITS
 
 # DEFINE GROUPS OF MODULES
 
-debug_srcs =  DISNEW.ASM  DISASM.ASM    MATH.ASM                                        
-
-ipcdebug_srcs = IPCDEBUG.ASM  $(debug_srcs)
-ipcdebug_objs = $(ipcdebug_srcs:.ASM=.OBJ)
-ipcdebug_rdvs = IPCDEBUG.RDV
-
 wd_srcs = WD.ASM
 wd_objs = $(wd_srcs:.ASM=.OBJ)
 wd_rdvs = $(wd_srcs:.ASM=.RDV)
@@ -88,7 +82,6 @@ pcshut_exes = PCSHUT.EXE
 srcs =      $(dpmi_srcs)  \
 			$(key_srcs) $(pci_srcs) \
 			$(keym_srcs) $(usb_srcs) $(com_srcs) \
-			$(ipcdebug_srcs)  \
 			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) \
 			$(rtc_srcs)  \
@@ -106,7 +99,6 @@ exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(key_rdvs) $(pci_rdvs)     \
-			$(ipcdebug_rdvs) \
 			$(usb_rdvs) $(com_rdvs) \
 			$(rtc_rdvs) $(ac97_rdvs) \
 			$(ir_rdvs) $(wd_rdvs)
@@ -303,12 +295,4 @@ RTC.RDV : $(rtc_objs)
 	$(rtc_objs)
 	RTC.RDV
 	RTC;
-!
-
-IPCDEBUG.RDV : $(ipcdebug_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(ipcdebug_objs)
-	IPCDEBUG.RDV
-	IPCDEBUG;
 !
