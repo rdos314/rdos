@@ -86,13 +86,32 @@ cb_len2     DD ?
 
 capture_block   ENDS
 
+data    SEGMENT byte public 'DATA'
+
+capture_handle      DW ?
+capture_thread      DW ?
+capture_list        DD ?
+capture_section		section_typ <>
+
+arp_section			section_typ <>
+arp_rec_list		DW ?
+arp_send_list		DW ?
+arp_answ_list		DW ?
+arp_thread			DW ?
+ppp_handle			DW ?
+class_count			DW ?
+class_arr			DW 20h DUP(?)
+protocol_count		DW ?
+protocol_arr		DW 20h DUP(?)
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
 	
 	assume cs:code
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -114,7 +133,7 @@ FindAddress	Proc near
 	push edi
 ;
 	push ds
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:arp_section
 	pop ds
@@ -138,7 +157,7 @@ find_addr_check_failed:
 
 find_addr_failed:
 	push ds
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	LeaveSection ds:arp_section
 	pop ds
@@ -148,7 +167,7 @@ find_addr_failed:
 
 find_addr_ok:
 	push ds
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	LeaveSection ds:arp_section
 	pop ds
@@ -162,7 +181,6 @@ find_addr_done:
 	ret
 FindAddress	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -233,7 +251,6 @@ move_answ_arp_done:
 	ret
 MoveArp	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -296,7 +313,6 @@ check_arp_done:
 	ret
 CheckArp	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -351,7 +367,7 @@ InsertAddress	Proc near
 ;
 	mov ax,ds
 	mov fs,ax
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:arp_section
 	mov di,fs:p_entry_list
@@ -374,7 +390,6 @@ InsertAddress	Proc near
 	ret
 InsertAddress	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -396,7 +411,7 @@ SendArp	Proc near
 ;
 	mov ax,ds
 	mov gs,ax
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov cx,ds:class_count
 	mov bx,OFFSET class_arr
@@ -504,7 +519,6 @@ send_arp_done:
 	ret
 SendArp	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -530,7 +544,7 @@ ReceivedArp	Proc near
 	mov bp,fs
 	mov dx,es:ar_data.arp_type
 	xchg dl,dh
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov cx,ds:protocol_count
 	mov bx,OFFSET protocol_arr
@@ -800,7 +814,6 @@ receive_arp_done:
 	ret
 ReceivedArp	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -834,7 +847,6 @@ get_net_driver_done:
     ret
 get_net_driver  Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -869,7 +881,7 @@ register_net_class	Proc far
 	mov di,OFFSET broadcast_addr
 	rep movsb
 ;
-	mov bx,net_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:class_count
 	inc ds:class_count
@@ -885,7 +897,6 @@ register_net_class	Proc far
 	ret
 register_net_class	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -930,7 +941,7 @@ register_net_protocol	Proc far
 	mov di,OFFSET p_logical_my_addr
 	rep movsb
 ;
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov bx,ds:protocol_count
 	inc ds:protocol_count
@@ -947,7 +958,6 @@ register_net_protocol	Proc far
 	ret
 register_net_protocol	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -969,7 +979,7 @@ ReceiveData	Proc near
 	push dx
 	push edi
 ;
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 
 receive_data_loop:
@@ -1099,7 +1109,6 @@ receive_data_done:
 	ret
 ReceiveData	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1120,7 +1129,6 @@ net_thread_loop:
 	WaitForSignal
 	jmp net_thread_loop
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1158,7 +1166,7 @@ register_net_driver	Proc far
 	mov cx,SIZE driver_data - OFFSET d_preview
 	rep movsb
 ;
-	mov bx,net_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov cx,ds:class_count
 	xor bx,bx
@@ -1202,7 +1210,6 @@ register_driver_done:
 	ret
 register_net_driver	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1235,7 +1242,7 @@ register_ppp_driver	Proc far
 	mov cx,SIZE driver_data - OFFSET d_preview
 	rep movsb
 ;
-	mov bx,net_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov ds:ppp_handle,es
 	mov bx,es
@@ -1249,7 +1256,6 @@ register_ppp_driver	Proc far
 	ret
 register_ppp_driver	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1299,7 +1305,6 @@ add_src_address_done:
 	ret
 add_net_source_address	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1348,7 +1353,7 @@ is_net_address_valid	Proc far
 	movzx cx,al
 	rep movs byte ptr es:[di],fs:[si]
 ;
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:arp_section
 	mov ax,ds:arp_send_list
@@ -1392,7 +1397,6 @@ is_valid_done:
 	ret
 is_net_address_valid	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1442,7 +1446,7 @@ get_net_buffer	Proc far
 	movzx cx,al
 	rep movs byte ptr es:[di],fs:[si]
 ;
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:arp_section
 	mov ax,ds:arp_send_list
@@ -1492,7 +1496,6 @@ get_net_buf_done:
 	ret
 get_net_buffer	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1542,7 +1545,7 @@ send_net	Proc far
 	movzx cx,al
 	rep movs byte ptr es:[di],fs:[si]
 ;
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:arp_section
 	mov ax,ds:arp_send_list
@@ -1603,7 +1606,6 @@ send_done:
 	ret
 send_net	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1624,7 +1626,6 @@ get_broadcast_buffer	Proc far
 	ret
 get_broadcast_buffer	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1656,7 +1657,6 @@ send_broadcast	Proc far
 	ret
 send_broadcast	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1680,7 +1680,7 @@ net_broadcast	Proc far
 	push fs
 	pushad
 ;
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov cx,ds:class_count
 	mov bx,OFFSET class_arr
@@ -1741,7 +1741,6 @@ net_br_done:
 	ret
 net_broadcast	ENDP
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1762,7 +1761,7 @@ get_ppp_buffer_name	DB 'Get Ppp Buffer',0
 get_ppp_buffer	Proc far
 	push fs
 ;
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov fs,ax
 	mov ax,fs:ppp_handle
 	or ax,ax
@@ -1776,7 +1775,6 @@ get_ppp_done:
 	ret
 get_ppp_buffer	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1799,7 +1797,7 @@ send_ppp	Proc far
 	push eax
 	push di
 ;
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,ds:ppp_handle
 	or ax,ax
@@ -1817,7 +1815,6 @@ send_ppp_done:
 	ret
 send_ppp	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1835,7 +1832,7 @@ net_received	Proc far
 	push ds
 	push ax
 	push bx
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	cmp bx,ds:ppp_handle
 	jne net_received_normal
@@ -1858,7 +1855,6 @@ net_received_done:
 	ret
 net_received	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1893,7 +1889,6 @@ define_protocol_address	Proc far
 	ret
 define_protocol_address Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1905,14 +1900,13 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResendTimeout	Proc far
-	mov bx,net_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:arp_thread
 	Signal
 	ret
 ResendTimeout	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2008,7 +2002,7 @@ capture_setup:
     StartNetCapture
 
 capture_done:
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetThread
 	mov ds:arp_thread,ax
@@ -2019,7 +2013,7 @@ arp_thread_loop:
 	StopTimer
 
 arp_rec_loop:
-	mov ax,net_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:arp_section
 	mov ax,ds:arp_rec_list
@@ -2140,7 +2134,6 @@ arp_answ_done:
 	LeaveSection ds:arp_section
 	jmp arp_thread_loop
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2210,7 +2203,6 @@ GetTimestamp    Proc near
     ret
 GetTimestamp    Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2225,7 +2217,7 @@ PAGE
 capture_thread_name DB 'Net Capture', 0
 
 capture_thread_pr:
-    mov bx,net_data_sel
+    mov bx,SEG data
     mov ds,bx
     GetThread
     mov ds:capture_thread,ax
@@ -2345,7 +2337,6 @@ ctpExit:
     LeaveSection ds:capture_section
     retf    
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2365,7 +2356,7 @@ notify_ethernet_packet	Proc far
     push ds
     push ax
 ;
-    mov ax,net_data_sel
+    mov ax,SEG data
     mov ds,ax
     EnterSection ds:capture_section
     mov ax,ds:capture_thread
@@ -2394,7 +2385,7 @@ notify_ethernet_packet	Proc far
     add edi,SIZE capture_block
     rep movs byte ptr es:[edi],ds:[esi]
 ;
-    mov bx,net_data_sel
+    mov bx,SEG data
     mov ds,bx
 ;
 	mov eax,ds:capture_list
@@ -2451,7 +2442,7 @@ start_net_capture	Proc
     push si
     push di
 ;    
-    mov ax,net_data_sel
+    mov ax,SEG data
     mov ds,ax
     EnterSection ds:capture_section
 ;
@@ -2490,7 +2481,7 @@ stop_net_capture	Proc
     push ds
     push bx
 ;    
-    mov bx,net_data_sel
+    mov bx,SEG data
     mov ds,bx
     EnterSection ds:capture_section
     xor bx,bx
@@ -2544,7 +2535,6 @@ init_net	Proc far
 	ret
 init_net	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2560,16 +2550,7 @@ ether_broadcast		DB -1, -1, -1, -1, -1, -1
 sernet_broadcast	DB -1
 
 init	PROC far
-	push ds
-	push es
-	pusha
-;
-	mov bx,net_code_sel
-	InitDevice
-;
-	mov eax,SIZE net_data
-	mov bx,net_data_sel
-	AllocateFixedSystemMem
+	mov bx,SEG data
 	mov ds,bx
 	mov es,bx
 	mov ds:class_count,0
@@ -2720,10 +2701,7 @@ init	PROC far
 	xor dx,dx
 	mov ax,stop_net_capture_nr
 	RegisterBimodalUserGate
-;
-	popa
-	pop es
-	pop ds
+	clc
 	ret
 init	ENDP
 

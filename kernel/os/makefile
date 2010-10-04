@@ -83,10 +83,6 @@ ir_srcs = IR.ASM
 ir_objs = $(ir_srcs:.ASM=.OBJ)
 ir_rdvs = IR.RDV
 
-net_srcs = NET.ASM
-net_objs = $(net_srcs:.ASM=.OBJ)
-net_rdvs = NET.RDV
-
 ip_srcs = IP.ASM DNS.ASM ICMP.ASM IPCACHE.ASM DHCP.ASM UDP.ASM NTP.ASM \
 		  TCP.ASM
 ip_objs = $(ip_srcs:.ASM=.OBJ)
@@ -107,7 +103,7 @@ pcshut_exes = PCSHUT.EXE
 
 srcs =      $(dpmi_srcs)  \
 			$(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
-			$(net_srcs) $(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
+			$(ip_srcs) $(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(ipc_srcs) $(ipcdebug_srcs)  \
 			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) \
@@ -127,7 +123,7 @@ exes =      $(prot_exes) $(pcshut_exes)
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 			$(ipc_rdvs) $(ipcdebug_rdvs) \
-			$(net_rdvs) $(ip_rdvs) $(usb_rdvs) $(com_rdvs) \
+			$(ip_rdvs) $(usb_rdvs) $(com_rdvs) \
 			$(rtc_rdvs) $(ac97_rdvs) \
 			$(ir_rdvs) $(wd_rdvs)
 
@@ -307,14 +303,6 @@ SERKEY.RDV : $(key_objs)
 	SERKEY+KEYSW
 	SERKEY.RDV
 	SERKEY;
-!
-
-NET.RDV : $(net_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(net_objs)
-	NET.RDV
-	NET;
 !
 
 IP.RDV : $(ip_objs)

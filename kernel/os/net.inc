@@ -25,26 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-net_data	STRUC
-
-capture_handle      DW ?
-capture_thread      DW ?
-capture_list        DD ?
-capture_section		section_typ <>
-
-arp_section			section_typ <>
-arp_rec_list		DW ?
-arp_send_list		DW ?
-arp_answ_list		DW ?
-arp_thread			DW ?
-ppp_handle			DW ?
-class_count			DW ?
-class_arr			DW 20h DUP(?)
-protocol_count		DW ?
-protocol_arr		DW 20h DUP(?)
-
-net_data	ENDS
-
 class_data	STRUC
 
 class_id		DB ?
