@@ -760,7 +760,7 @@ WriteFreeMem	ENDP
 
 WriteData	PROC near
 	push ds
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov ds,ax
 	mov al,ds:data_good
 	or al,al
@@ -829,7 +829,7 @@ GetIllegalOsGate	PROC near
 	mov ds,ax
 	mov fs,[bx].og_name_sel
 	mov si,[bx].og_name_offset
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -858,7 +858,7 @@ GetIllegalUserGate	PROC near
 	mov ds,ax
 	mov fs,[bx].ug_name_sel
 	mov si,[bx].ug_name_offset
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -911,7 +911,7 @@ get_oscall_scan_next:
 get_oscall_found:
 	mov fs,[si].og_name_sel
 	mov si,[si].og_name_offset
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -988,7 +988,7 @@ get_usercall_not_entry32:
 get_usercall_found:
 	mov fs,[si].ug_name_sel
 	mov si,[si].ug_name_offset
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -1221,7 +1221,7 @@ code_in_gdt:
 	and ax,1
 	mov di,ax
 seg_size_ok:
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov ds,ax
 	mov es,gs:tss_thread
 	mov dx,gs:tss_cs
@@ -1244,7 +1244,7 @@ WriteInstr	Proc near
 	jnc write_instr_do
 	call dis_ass_one
 write_instr_do:
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov es,ax
 	mov cx,40
 	mov di,OFFSET op_in_text
@@ -1328,7 +1328,7 @@ write_math_norm:
 	push es
 	push ax
 ;
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov al,' '
@@ -2924,7 +2924,7 @@ no_wait_debug:
 	je debug_next
 	cmp al,'N'
 	je debug_next 
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov ds,ax
 	mov si,OFFSET debug_list
 	mov cx,ds:debug_thread
@@ -2933,7 +2933,7 @@ no_wait_debug:
 	mov ax,system_data_sel
 	mov ds,ax
 	mov cx,[si]
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov ds,ax
 	mov ds:debug_thread,cx
 	mov ax,[bp].vm_eax

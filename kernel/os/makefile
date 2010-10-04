@@ -36,12 +36,6 @@ units = G:\BP\UNITS
 # DEFINE GROUPS OF MODULES
 
 debug_srcs =  DISNEW.ASM  DISASM.ASM    MATH.ASM                                        
-kdebug_srcs = DEBUGIO.ASM   KDEBUG.ASM    $(debug_srcs)
-kdeb40_srcs = DEBUG40.ASM   KDEB40.ASM    $(debug_srcs)
-kdebug_objs = $(kdebug_srcs:.ASM=.OBJ)
-kdeb40_objs = $(kdeb40_srcs:.ASM=.OBJ)
-kdebug_rdvs = DEBUGIO.RDV
-kdeb40_rdvs = DEBUG40.RDV
 
 ipcdebug_srcs = IPCDEBUG.ASM  $(debug_srcs)
 ipcdebug_objs = $(ipcdebug_srcs:.ASM=.OBJ)
@@ -92,7 +86,7 @@ pcshut_objs = $(pcshut_srcs:.ASM=.OBJ)
 pcshut_exes = PCSHUT.EXE
 
 srcs =      $(dpmi_srcs)  \
-			$(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
+			$(key_srcs) $(pci_srcs) \
 			$(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(ipcdebug_srcs)  \
 			$(pcshut_srcs)   \
@@ -111,7 +105,7 @@ incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
 exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
-			$(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
+			$(key_rdvs) $(pci_rdvs)     \
 			$(ipcdebug_rdvs) \
 			$(usb_rdvs) $(com_rdvs) \
 			$(rtc_rdvs) $(ac97_rdvs) \
@@ -309,22 +303,6 @@ RTC.RDV : $(rtc_objs)
 	$(rtc_objs)
 	RTC.RDV
 	RTC;
-!
-
-DEBUGIO.RDV : $(kdebug_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(kdebug_objs)
-	DEBUGIO.RDV
-	DEBUGIO;
-!
-
-DEBUG40.RDV : $(kdeb40_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(kdeb40_objs)
-	DEBUG40.RDV
-	DEBUG40;
 !
 
 IPCDEBUG.RDV : $(ipcdebug_objs)

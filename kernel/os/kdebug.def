@@ -47,7 +47,5 @@ debug_thread	DW ?
 
 mouse_pos	DW ?
 
-debug_data_size	DB ?
-
 debug_seg	ENDS
 

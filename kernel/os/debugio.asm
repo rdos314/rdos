@@ -254,7 +254,7 @@ init_debug_process	ENDP
 free_thread	Proc far
 	GetThread
 	mov bx,ax
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov ds,ax
 	mov ax,ds:debug_thread
 	cmp ax,bx
@@ -264,7 +264,7 @@ free_thread	Proc far
 	mov ds,ax
 	mov si,OFFSET debug_list
 	mov bx,[si]
-	mov ax,kdebug_data_sel
+	mov ax,kdebug_sys_sel
 	mov ds,ax
 	mov ds:debug_thread,bx
 
@@ -273,12 +273,6 @@ free_thread_done:
 free_thread	Endp
 
 init	PROC far
-	push ds
-	push es
-	pusha
-	mov bx,kdebug_code_sel
-	InitDevice
-;
 	mov ax,cs
 	mov es,ax
 ;
@@ -288,16 +282,12 @@ init	PROC far
 	mov di,OFFSET free_thread
 	HookTerminateThread
 ;
-	mov bx,kdebug_data_sel
-	mov eax,OFFSET debug_data_size
-	AllocateFixedSystemMem
+	mov bx,kdebug_sys_sel
+	mov es,bx
 	mov es:data_good,0
 	mov es:debug_thread,0
 	mov es:mouse_pos,0
-;
-	popa
-	pop es
-	pop ds
+	clc
 	ret
 init	ENDP
 

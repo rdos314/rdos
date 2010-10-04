@@ -24,8 +24,8 @@
 ; Scheduling and thread handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME task
+                        
+        NAME task
 
 GateSize = 16
 
@@ -43,68 +43,68 @@ INCLUDE apic.inc
 INCLUDE proc.inc
 INCLUDE ..\handle.inc
 
-section_handle_seg              STRUC
+section_handle_seg          STRUC
 
 us_base     handle_header <>
 
-us_value        DW ?
+us_value    DW ?
 us_list     DW ?
-us_owner        DW ?
-us_count        DW ?
+us_owner    DW ?
+us_count    DW ?
 
-section_handle_seg              ENDS
+section_handle_seg          ENDS
 
 
-task_seg        STRUC
+task_seg    STRUC
 
-ptab                        DW 256 DUP(?)
+ptab            DW 256 DUP(?)
 
-prio_act                    DW ?
+prio_act            DW ?
 
-help_call_ip        DW ?
-help_call_cs        DW ?
+help_call_ip    DW ?
+help_call_cs    DW ?
 
 init_clock_proc     DW ?
 update_clock_proc   DW ?
 
-tsc_sub_tics        DD ?
-tsc_guard           DD ?
-last_tsc            DD ?
+tsc_sub_tics    DD ?
+tsc_guard       DD ?
+last_tsc        DD ?
 
-clock_tics                  DW ?
-system_time                 DD ?,?
-time_diff                   DD ?,?
+clock_tics          DW ?
+system_time         DD ?,?
+time_diff           DD ?,?
 
 apic_mul_tics       DD ?
 apic_mul_rest       DW ?
 
-update_tics                 DD ?
+update_tics         DD ?
 
-signal_list                 DW ?
-has_signal          DB ?
-has_list            DB ?
-has_term            DB ?
-owner_wait          DB ?
+signal_list         DW ?
+has_signal      DB ?
+has_list        DB ?
+has_term        DB ?
+owner_wait      DB ?
 
-wakeup_list         DW ?
+wakeup_list     DW ?
 term_thread_list    DW ?
 term_proc_list      DW ?
 
 system_thread       DW ?
 
-owner_sel           DW ?
-owner_lock          DW ?
-list_lock           DW ?
+owner_sel       DW ?
+owner_lock      DW ?
+list_lock       DW ?
 
 try_lock_proc       DW ?
-lock_proc           DW ?
-unlock_proc         DW ?
+lock_proc       DW ?
+unlock_proc     DW ?
 load_unlock_proc    DW ?
 
 lock_list_proc      DW ?
 unlock_list_proc    DW ?
 
-get_cpu_proc        DD ?
+get_cpu_proc    DD ?
 
 processor_preempt   DD ?
 
@@ -113,263 +113,263 @@ processor_arr       DW 32 DUP(?)
 
 task_seg_size       DB ?
 
-task_seg        ENDS
+task_seg    ENDS
 
 IFDEF __WASM__
-        .686p
-        .xmm2
+    .686p
+    .xmm2
 ELSE
-        .386p
+    .386p
 ENDIF
 
 LocalGetSystemTime      MACRO
-        mov eax,ds:system_time
-        mov edx,ds:system_time+4
-                                        ENDM
+    mov eax,ds:system_time
+    mov edx,ds:system_time+4
+                    ENDM
 
-LocalRemoveTimer        MACRO
-        local timer_return
+LocalRemoveTimer    MACRO
+    local timer_return
 
-        cli
-        mov bx,fs:ps_timer_head
-        mov ax,fs:[bx].ps_timer_next
-        mov fs:ps_timer_head,ax
-        sti
-        mov cx,fs:[bx].ps_timer_id
-        mov eax,fs:[bx].ps_timer_lsb
-        mov edx,fs:[bx].ps_timer_msb    
-        push es
-        push fs
-        push bx
-        push cs
-        push OFFSET timer_return        
-        push dword ptr fs:[bx].ps_timer_offset
-        xor bx,bx
-        mov ds,bx
-        mov es,bx
-        retf
+    cli
+    mov bx,fs:ps_timer_head
+    mov ax,fs:[bx].ps_timer_next
+    mov fs:ps_timer_head,ax
+    sti
+    mov cx,fs:[bx].ps_timer_id
+    mov eax,fs:[bx].ps_timer_lsb
+    mov edx,fs:[bx].ps_timer_msb    
+    push es
+    push fs
+    push bx
+    push cs
+    push OFFSET timer_return    
+    push dword ptr fs:[bx].ps_timer_offset
+    xor bx,bx
+    mov ds,bx
+    mov es,bx
+    retf
 
 timer_return:
-        pop bx
-        pop fs
-        pop es
-        mov ax,task_sel
-        mov ds,ax
-        cli
-        mov ax,fs:ps_timer_free
-        mov fs:[bx].ps_timer_next,ax
-        mov fs:ps_timer_free,bx
-        sti
-                                        ENDM
+    pop bx
+    pop fs
+    pop es
+    mov ax,task_sel
+    mov ds,ax
+    cli
+    mov ax,fs:ps_timer_free
+    mov fs:[bx].ps_timer_next,ax
+    mov fs:ps_timer_free,bx
+    sti
+                    ENDM
 
 LocalStartTimer MACRO
-        LOCAL start_try_next
-        LOCAL start_insert
-        mov si,fs:ps_timer_free
-        mov fs:[si].ps_timer_owner,bx
-        mov bx,fs:[si].ps_timer_next
-        mov fs:ps_timer_free,bx
-        mov fs:[si].ps_timer_lsb,eax
-        mov fs:[si].ps_timer_msb,edx
-        mov fs:[si].ps_timer_id,cx
-        mov fs:[si].ps_timer_offset,di
-        mov fs:[si].ps_timer_sel,es
-        mov bx,OFFSET ps_timer_head
-        push si
+    LOCAL start_try_next
+    LOCAL start_insert
+    mov si,fs:ps_timer_free
+    mov fs:[si].ps_timer_owner,bx
+    mov bx,fs:[si].ps_timer_next
+    mov fs:ps_timer_free,bx
+    mov fs:[si].ps_timer_lsb,eax
+    mov fs:[si].ps_timer_msb,edx
+    mov fs:[si].ps_timer_id,cx
+    mov fs:[si].ps_timer_offset,di
+    mov fs:[si].ps_timer_sel,es
+    mov bx,OFFSET ps_timer_head
+    push si
 start_try_next:
-        mov si,bx
-        mov bx,fs:[bx].ps_timer_next
-        cmp edx,fs:[bx].ps_timer_msb
-        jc start_insert
-        jnz start_try_next
-        cmp eax,fs:[bx].ps_timer_lsb
-        jnc start_try_next
+    mov si,bx
+    mov bx,fs:[bx].ps_timer_next
+    cmp edx,fs:[bx].ps_timer_msb
+    jc start_insert
+    jnz start_try_next
+    cmp eax,fs:[bx].ps_timer_lsb
+    jnc start_try_next
 start_insert:
-        pop fs:[si].ps_timer_next
-        mov si,fs:[si].ps_timer_next
-        mov fs:[si].ps_timer_next,bx
-                                ENDM
+    pop fs:[si].ps_timer_next
+    mov si,fs:[si].ps_timer_next
+    mov fs:[si].ps_timer_next,bx
+                ENDM
 
 LocalStopTimer  MACRO
-        LOCAL timer_stop_next
-        LOCAL timer_stop_this
-        LOCAL timer_stop_done
-        mov cx,bx
-        mov bx,OFFSET ps_timer_head
+    LOCAL timer_stop_next
+    LOCAL timer_stop_this
+    LOCAL timer_stop_done
+    mov cx,bx
+    mov bx,OFFSET ps_timer_head
 timer_stop_next:
-        mov si,bx
-        mov bx,fs:[bx].ps_timer_next
-        or bx,bx
-        je timer_stop_done
-        cmp cx,fs:[bx].ps_timer_owner
-        jne timer_stop_next
+    mov si,bx
+    mov bx,fs:[bx].ps_timer_next
+    or bx,bx
+    je timer_stop_done
+    cmp cx,fs:[bx].ps_timer_owner
+    jne timer_stop_next
 timer_stop_this:
-        mov ax,fs:[bx].ps_timer_next
-        mov fs:[si].ps_timer_next,ax
-        mov ax,fs:ps_timer_free
-        mov fs:[bx].ps_timer_next,ax
-        mov fs:ps_timer_free,bx
+    mov ax,fs:[bx].ps_timer_next
+    mov fs:[si].ps_timer_next,ax
+    mov ax,fs:ps_timer_free
+    mov fs:[bx].ps_timer_next,ax
+    mov fs:ps_timer_free,bx
 timer_stop_done:
-                                ENDM
+                ENDM
 
 ;       ds:di   list
-;       es              block
+;       es          block
 
 InsertBlock     MACRO
-        LOCAL ins_empty
-        LOCAL ins_done
-        mov es:p_sleep_sel,ds
-        mov word ptr es:p_sleep_offset,di
-        mov word ptr es:p_sleep_offset+2,0
-        push di
-        mov di,[di]
-        or di,di
-        je ins_empty
-        push ds
-        push si
-        mov ds,di
-        mov si,ds:p_prev
-        mov ds:p_prev,es
-        mov ds,si
-        mov ds:p_next,es
-        mov es:p_next,di
-        mov es:p_prev,si
-        pop si
-        pop ds
-        pop di
-        jmp ins_done
+    LOCAL ins_empty
+    LOCAL ins_done
+    mov es:p_sleep_sel,ds
+    mov word ptr es:p_sleep_offset,di
+    mov word ptr es:p_sleep_offset+2,0
+    push di
+    mov di,[di]
+    or di,di
+    je ins_empty
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:p_prev
+    mov ds:p_prev,es
+    mov ds,si
+    mov ds:p_next,es
+    mov es:p_next,di
+    mov es:p_prev,si
+    pop si
+    pop ds
+    pop di
+    jmp ins_done
 ins_empty:
-        mov es:p_next,es
-        mov es:p_prev,es
-        pop di
-        mov [di],es
+    mov es:p_next,es
+    mov es:p_prev,es
+    pop di
+    mov [di],es
 ins_done:
-                ENDM
+        ENDM
 
 ;       ds:di   list
-;       es              block
+;       es          block
 
 InsertFirst     MACRO
-        LOCAL ins_empty
-        LOCAL ins_done
-        mov es:p_sleep_sel,ds
-        mov word ptr es:p_sleep_offset,di
-        mov word ptr es:p_sleep_offset+2,0
-        push di
-        mov di,[di]
-        or di,di
-        je ins_empty
-        push ds
-        push si
-        mov ds,di
-        mov si,ds:p_prev
-        mov ds:p_prev,es
-        mov ds,si
-        mov ds:p_next,es
-        mov es:p_next,di
-        mov es:p_prev,si
-        pop si
-        pop ds
-        pop di
-        jmp ins_done
+    LOCAL ins_empty
+    LOCAL ins_done
+    mov es:p_sleep_sel,ds
+    mov word ptr es:p_sleep_offset,di
+    mov word ptr es:p_sleep_offset+2,0
+    push di
+    mov di,[di]
+    or di,di
+    je ins_empty
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:p_prev
+    mov ds:p_prev,es
+    mov ds,si
+    mov ds:p_next,es
+    mov es:p_next,di
+    mov es:p_prev,si
+    pop si
+    pop ds
+    pop di
+    jmp ins_done
 ins_empty:
-        mov es:p_next,es
-        mov es:p_prev,es
-        pop di
+    mov es:p_next,es
+    mov es:p_prev,es
+    pop di
 ins_done:
-        mov [di],es
-                ENDM
+    mov [di],es
+        ENDM
 
-;       ds:si           list
-;       es                      block
+;       ds:si       list
+;       es              block
 
 RemoveBlock     MACRO
-        LOCAL rem_done
-        push si
-        mov es,[si]
-        push di
-        push ds
-        mov di,es:p_next
-        cmp di,[si]
-        mov [si],di
-        mov si,es:p_prev
-        mov ds,di
-        mov ds:p_prev,si
-        mov ds,si
-        mov ds:p_next,di
-        pop ds
-        pop di
-        pop si
-        jne rem_done
-        mov word ptr [si],0
+    LOCAL rem_done
+    push si
+    mov es,[si]
+    push di
+    push ds
+    mov di,es:p_next
+    cmp di,[si]
+    mov [si],di
+    mov si,es:p_prev
+    mov ds,di
+    mov ds:p_prev,si
+    mov ds,si
+    mov ds:p_next,di
+    pop ds
+    pop di
+    pop si
+    jne rem_done
+    mov word ptr [si],0
 rem_done:
-                ENDM
-                
+        ENDM
+        
 InsertBlock32   MACRO
-        LOCAL ins_empty
-        LOCAL ins_done
-        mov es:p_sleep_sel,ds
-        mov es:p_sleep_offset,edi
-        push di
-        mov di,[edi]
-        or di,di
-        je ins_empty
-        push ds
-        push si
-        mov ds,di
-        mov si,ds:p_prev
-        mov ds:p_prev,es
-        mov ds,si
-        mov ds:p_next,es
-        mov es:p_next,di
-        mov es:p_prev,si
-        pop si
-        pop ds
-        pop di
-        jmp ins_done
+    LOCAL ins_empty
+    LOCAL ins_done
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,edi
+    push di
+    mov di,[edi]
+    or di,di
+    je ins_empty
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:p_prev
+    mov ds:p_prev,es
+    mov ds,si
+    mov ds:p_next,es
+    mov es:p_next,di
+    mov es:p_prev,si
+    pop si
+    pop ds
+    pop di
+    jmp ins_done
 ins_empty:
-        mov es:p_next,es
-        mov es:p_prev,es
-        pop di
-        mov [edi],es
+    mov es:p_next,es
+    mov es:p_prev,es
+    pop di
+    mov [edi],es
 ins_done:
-                ENDM
+        ENDM
 
 RemoveBlock32   MACRO
-        LOCAL rem_done
-        push esi
-        mov es,[esi]
-        push di
-        push ds
-        mov di,es:p_next
-        cmp di,[esi]
-        mov [esi],di
-        mov si,es:p_prev
-        mov ds,di
-        mov ds:p_prev,si
-        mov ds,si
-        mov ds:p_next,di
-        pop ds
-        pop di
-        pop esi
-        jne rem_done
-        mov word ptr [esi],0
+    LOCAL rem_done
+    push esi
+    mov es,[esi]
+    push di
+    push ds
+    mov di,es:p_next
+    cmp di,[esi]
+    mov [esi],di
+    mov si,es:p_prev
+    mov ds,di
+    mov ds:p_prev,si
+    mov ds,si
+    mov ds:p_next,di
+    pop ds
+    pop di
+    pop esi
+    jne rem_done
+    mov word ptr [esi],0
 rem_done:
-                ENDM
+        ENDM
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   InitPitClock
+;           NAME:           InitPitClock
 ;
-;               DESCRIPTION:    Init clock using PIT timer 2
+;           DESCRIPTION:    Init clock using PIT timer 2
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -380,62 +380,62 @@ InitPitClock    Proc near
     mov ax,task_sel
     mov ds,ax
 ;    
-        mov al,0B4h
-        out TIMER_CONTROL,al
-        jmp short $+2
-        mov al,0
-        out TIMER2,al
-        jmp short $+2
-        out TIMER2,al
-        mov ds:clock_tics,0
-        jmp short $+2
-        mov al,0Dh
-        out 61h,al
+    mov al,0B4h
+    out TIMER_CONTROL,al
+    jmp short $+2
+    mov al,0
+    out TIMER2,al
+    jmp short $+2
+    out TIMER2,al
+    mov ds:clock_tics,0
+    jmp short $+2
+    mov al,0Dh
+    out 61h,al
 ;
     pop ax
     pop ds      
-        ret
+    ret
 InitPitClock    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   UpdatePitClock
+;           NAME:           UpdatePitClock
 ;
-;               DESCRIPTION:    Update clock using PIT timer 2
+;           DESCRIPTION:    Update clock using PIT timer 2
 ;
-;               PARAMETERS:             ES      Current thread
+;           PARAMETERS:         ES      Current thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePitClock  Proc near
-        mov al,80h
-        out TIMER_CONTROL,al
-        jmp short $+2
-        in al,TIMER2
-        mov ah,al
-        jmp short $+2
-        in al,TIMER2
-        xchg al,ah
-        mov dx,ax
-        xchg ax,ds:clock_tics
-        sub ax,dx
-        movzx eax,ax
-        add ds:system_time,eax
-        adc ds:system_time+4,0
-        ret
+    mov al,80h
+    out TIMER_CONTROL,al
+    jmp short $+2
+    in al,TIMER2
+    mov ah,al
+    jmp short $+2
+    in al,TIMER2
+    xchg al,ah
+    mov dx,ax
+    xchg ax,ds:clock_tics
+    sub ax,dx
+    movzx eax,ax
+    add ds:system_time,eax
+    adc ds:system_time+4,0
+    ret
 UpdatePitClock  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   InitTscClock
+;           NAME:           InitTscClock
 ;
-;               DESCRIPTION:    Init clock using TSC
+;           DESCRIPTION:    Init clock using TSC
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -453,48 +453,48 @@ InitTscClock    Proc near
     div ecx
     mov ds:tsc_sub_tics,eax
 ;    
-        rdtsc
-        mov ds:last_tsc,eax
-        mov ds:tsc_guard,0
+    rdtsc
+    mov ds:last_tsc,eax
+    mov ds:tsc_guard,0
 ;
     popad
     pop es      
-        ret
+    ret
 InitTscClock    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   UpdateTscClock
+;           NAME:           UpdateTscClock
 ;
-;               DESCRIPTION:    Update clock using TSC
+;           DESCRIPTION:    Update clock using TSC
 ;
-;               PARAMETERS:             ES      Current thread
+;           PARAMETERS:         ES      Current thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateTscClock  Proc near
     rdtsc
-        mov edx,ds:last_tsc
-        mov ds:last_tsc,eax
-        sub eax,edx
-        mul ds:tsc_sub_tics
-        add ds:tsc_guard,eax
-        adc ds:system_time,edx
-        adc ds:system_time+4,0
-        ret
+    mov edx,ds:last_tsc
+    mov ds:last_tsc,eax
+    sub eax,edx
+    mul ds:tsc_sub_tics
+    add ds:tsc_guard,eax
+    adc ds:system_time,edx
+    adc ds:system_time+4,0
+    ret
 UpdateTscClock  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   StartSysTimer
+;           NAME:           StartSysTimer
 ;
-;               DESCRIPTION:    Start PIT timer
+;           DESCRIPTION:    Start PIT timer
 ;
-;               RETURNS:                EAX      Update tics
+;           RETURNS:        EAX      Update tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -507,77 +507,77 @@ start_pit_timer    Proc far
     xor ax,ax
     mov es,ax
 ;    
-        mov ax,30h
-        out TIMER_CONTROL,al
+    mov ax,30h
+    out TIMER_CONTROL,al
 ;
-        mov ax,100h
-        cli
-        out TIMER0,al
-        xchg ah,al
-        jmp short $+2
-        out TIMER0,al
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        xor al,al
-        out TIMER_CONTROL,al
-        jmp short $+2
-        in al,TIMER0
-        mov ah,al
-        jmp short $+2
-        in al,TIMER0
-        xchg al,ah
-        neg ax
-        add ax,100h
-        movzx eax,ax
-        add eax,eax
-        add eax,eax
+    mov ax,100h
+    cli
+    out TIMER0,al
+    xchg ah,al
+    jmp short $+2
+    out TIMER0,al
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    xor al,al
+    out TIMER_CONTROL,al
+    jmp short $+2
+    in al,TIMER0
+    mov ah,al
+    jmp short $+2
+    in al,TIMER0
+    xchg al,ah
+    neg ax
+    add ax,100h
+    movzx eax,ax
+    add eax,eax
+    add eax,eax
 ;
     push eax
-        in al,INT0_MASK
-        and al,NOT 1
-        out INT0_MASK,al
-        pop eax
+    in al,INT0_MASK
+    and al,NOT 1
+    out INT0_MASK,al
+    pop eax
 ;       
-        pop es
-        ret
+    pop es
+    ret
 start_pit_timer    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ReloadSysTimer
+;           NAME:           ReloadSysTimer
 ;
-;               DESCRIPTION:    Reload PIT timer
+;           DESCRIPTION:    Reload PIT timer
 ;
-;               PARAMETERS:             AX      Reload count
+;           PARAMETERS:         AX      Reload count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reload_pit_timer_name    DB 'Reload Pit Timer', 0
 
 reload_pit_timer    Proc far
-        out TIMER0,al
-        xchg al,ah
-        jmp short $+2
-        out TIMER0,al
+    out TIMER0,al
+    xchg al,ah
+    jmp short $+2
+    out TIMER0,al
 ;
-        in al,INT0_MASK
-        and al,NOT 1
-        out INT0_MASK,al
-        ret
+    in al,INT0_MASK
+    and al,NOT 1
+    out INT0_MASK,al
+    ret
 reload_pit_timer  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ReloadApicTimer
+;           NAME:           ReloadApicTimer
 ;
-;               DESCRIPTION:    Reload APIC timer
+;           DESCRIPTION:    Reload APIC timer
 ;
-;               PARAMETERS:             DS      Task sel
-;                       AX      Reload count
+;           PARAMETERS:         DS      Task sel
+;               AX      Reload count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -593,19 +593,19 @@ ReloadApicTimer Proc near
     mov es,ax    
     mov es:APIC_INIT_COUNT,edx
     pop es
-        ret
+    ret
 ReloadApicTimer  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   NotifyTimeDrift
+;           NAME:           NotifyTimeDrift
 ;
-;               DESCRIPTION:    Notification of time drift
+;           DESCRIPTION:    Notification of time drift
 ;
-;               PARAMETERS:             DS      System data sel
-;                       EAX     Drift in tics
+;           PARAMETERS:         DS      System data sel
+;               EAX     Drift in tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -619,8 +619,8 @@ notify_time_drift       Proc far
     push ecx
     push edx
 ;    
-        mov cx,task_sel
-        mov es,cx
+    mov cx,task_sel
+    mov es,cx
 ;
     sub es:time_diff,eax
     sbb es:time_diff,0
@@ -641,7 +641,7 @@ notify_time_drift       Proc far
 ;
     mov ecx,1193182
     idiv ecx
-;        
+;    
     sub es:tsc_sub_tics,eax
     jmp ntdDone
 
@@ -649,7 +649,7 @@ ntdSetPit:
     mov ds:tsc_tics,0
     and ds:cpu_feature_flags, NOT 10h
     call InitPitClock
-        mov es:update_clock_proc,OFFSET UpdatePitClock
+    mov es:update_clock_proc,OFFSET UpdatePitClock
     jmp ntdDone
 
 ntdPit:
@@ -659,19 +659,19 @@ ntdDone:
     pop ecx
     pop eax
     pop es
-        ret
+    ret
 notify_time_drift  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   TlbFlush386
+;           NAME:           TlbFlush386
 ;
-;               DESCRIPTION:    TLB flush, 386 version
+;           DESCRIPTION:    TLB flush, 386 version
 ;
-;               PARAMETERS:             EDX     Linear base
-;                       ECX     Page entries
+;           PARAMETERS:         EDX     Linear base
+;               ECX     Page entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
@@ -686,12 +686,12 @@ TlbFlush386 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   TlbFlush486
+;           NAME:           TlbFlush486
 ;
-;               DESCRIPTION:    TLB flush, 486 or higher version
+;           DESCRIPTION:    TLB flush, 486 or higher version
 ;
-;               PARAMETERS:             EDX     Linear base
-;                       ECX     Page entries
+;           PARAMETERS:         EDX     Linear base
+;               ECX     Page entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -709,7 +709,7 @@ TlbFlush486 Proc far
 tfLoop:
     invlpg [edx]
     add edx,1000h
-    loop tfLoop        
+    loop tfLoop    
 
 tfDone:    
     pop edx
@@ -725,22 +725,22 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   INIT_TASK
+;           NAME:           INIT_TASK
 ;
-;               DESCRIPTION:    Init module
+;           DESCRIPTION:    Init module
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_task
+    public init_task
 
-        extrn allocate_fixed_system_mem:near
-        extrn allocate_fixed_process_mem:near
+    extrn allocate_fixed_system_mem:near
+    extrn allocate_fixed_process_mem:near
 
 init_task       PROC near
-        pusha
-        push ds
+    pusha
+    push ds
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -753,1101 +753,1106 @@ init_task       PROC near
 ;    mov word ptr ds:tlb_flush_proc,OFFSET TlbFlush486
 
 init_tlb_done:
-        mov bx,task_sel
-        mov eax,OFFSET task_seg_size
-        push cs
-        call allocate_fixed_system_mem
+    mov bx,task_sel
+    mov eax,OFFSET task_seg_size
+    push cs
+    call allocate_fixed_system_mem
 ;
-        mov ax,task_sel
-        mov ds,ax
-        mov ds:try_lock_proc,OFFSET TryLockDefault
-        mov ds:lock_proc,OFFSET LockDefault
-        mov ds:unlock_proc,OFFSET UnlockDefault
-        mov ds:load_unlock_proc,OFFSET LoadUnlockDefault
+	mov bx,kdebug_sys_sel
+	mov eax,SIZE debug_seg
+    push cs
+    call allocate_fixed_system_mem
+;
+    mov ax,task_sel
+    mov ds,ax
+    mov ds:try_lock_proc,OFFSET TryLockDefault
+    mov ds:lock_proc,OFFSET LockDefault
+    mov ds:unlock_proc,OFFSET UnlockDefault
+    mov ds:load_unlock_proc,OFFSET LoadUnlockDefault
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
-        mov ds:signal_list,0
-        mov ds:wakeup_list,0
-        mov ds:term_thread_list,0
-        mov ds:term_proc_list,0
-        mov ds:has_signal,0
-        mov ds:has_list,0
-        mov ds:has_term,0
-        mov ds:owner_sel,0
-        mov ds:system_thread,0
-        mov ds:owner_lock,0
-        mov ds:owner_wait,0
-        mov ds:list_lock,0
-        mov ds:help_call_ip,0
-        mov ds:system_time,0
-        mov ds:system_time+4,0
-        mov ds:time_diff,0
-        mov ds:time_diff+4,0
-        mov bx,OFFSET ptab
-        mov ds:prio_act,bx
+    mov ds:signal_list,0
+    mov ds:wakeup_list,0
+    mov ds:term_thread_list,0
+    mov ds:term_proc_list,0
+    mov ds:has_signal,0
+    mov ds:has_list,0
+    mov ds:has_term,0
+    mov ds:owner_sel,0
+    mov ds:system_thread,0
+    mov ds:owner_lock,0
+    mov ds:owner_wait,0
+    mov ds:list_lock,0
+    mov ds:help_call_ip,0
+    mov ds:system_time,0
+    mov ds:system_time+4,0
+    mov ds:time_diff,0
+    mov ds:time_diff+4,0
+    mov bx,OFFSET ptab
+    mov ds:prio_act,bx
 ;
-        mov cx,256
+    mov cx,256
 ptab_init:
-        mov word ptr [bx],0
-        add bx,2
-        loop ptab_init
+    mov word ptr [bx],0
+    add bx,2
+    loop ptab_init
 ;
     mov ds:processor_preempt,0
-        mov ds:processor_count,0
+    mov ds:processor_count,0
 ;
-        mov bx,OFFSET processor_arr
-        mov cx,32
+    mov bx,OFFSET processor_arr
+    mov cx,32
 proc_init:
-        mov word ptr [bx],0
-        add bx,2
-        loop proc_init
+    mov word ptr [bx],0
+    add bx,2
+    loop proc_init
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov si,OFFSET shutdown_pr
-        mov di,OFFSET shutdown_name
-        xor cl,cl
-        mov ax,shutdown_nr
-        RegisterOsGate
+    mov si,OFFSET shutdown_pr
+    mov di,OFFSET shutdown_name
+    xor cl,cl
+    mov ax,shutdown_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET create_processor
-        mov di,OFFSET create_processor_name
-        xor cl,cl
-        mov ax,create_processor_nr
-        RegisterOsGate
+    mov si,OFFSET create_processor
+    mov di,OFFSET create_processor_name
+    xor cl,cl
+    mov ax,create_processor_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET get_processor
-        mov di,OFFSET get_processor_name
-        xor cl,cl
-        mov ax,get_processor_nr
-        RegisterOsGate
+    mov si,OFFSET get_processor
+    mov di,OFFSET get_processor_name
+    xor cl,cl
+    mov ax,get_processor_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET start_processor
-        mov di,OFFSET start_processor_name
-        xor cl,cl
-        mov ax,start_processor_nr
-        RegisterOsGate
+    mov si,OFFSET start_processor
+    mov di,OFFSET start_processor_name
+    xor cl,cl
+    mov ax,start_processor_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET do_preempt_processor
-        mov di,OFFSET do_preempt_processor_name
-        xor cl,cl
-        mov ax,do_preempt_processor_nr
-        RegisterOsGate
+    mov si,OFFSET do_preempt_processor
+    mov di,OFFSET do_preempt_processor_name
+    xor cl,cl
+    mov ax,do_preempt_processor_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET start_pit_timer
-        mov di,OFFSET start_pit_timer_name
-        xor cl,cl
-        mov ax,start_sys_timer_nr
-        RegisterOsGate
+    mov si,OFFSET start_pit_timer
+    mov di,OFFSET start_pit_timer_name
+    xor cl,cl
+    mov ax,start_sys_timer_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET reload_pit_timer
-        mov di,OFFSET reload_pit_timer_name
-        xor cl,cl
-        mov ax,reload_sys_timer_nr
-        RegisterOsGate
+    mov si,OFFSET reload_pit_timer
+    mov di,OFFSET reload_pit_timer_name
+    xor cl,cl
+    mov ax,reload_sys_timer_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET enter_int
-        mov di,OFFSET enter_int_name
-        xor cl,cl
-        mov ax,enter_int_nr
-        RegisterOsGate
+    mov si,OFFSET enter_int
+    mov di,OFFSET enter_int_name
+    xor cl,cl
+    mov ax,enter_int_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET leave_int
-        mov di,OFFSET leave_int_name
-        xor cl,cl
-        mov ax,leave_int_nr
-        RegisterOsGate
+    mov si,OFFSET leave_int
+    mov di,OFFSET leave_int_name
+    xor cl,cl
+    mov ax,leave_int_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET lock_task
-        mov di,OFFSET lock_task_name
-        xor cl,cl
-        mov ax,lock_task_nr
-        RegisterOsGate
+    mov si,OFFSET lock_task
+    mov di,OFFSET lock_task_name
+    xor cl,cl
+    mov ax,lock_task_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET unlock_task
-        mov di,OFFSET unlock_task_name
-        xor cl,cl
-        mov ax,unlock_task_nr
-        RegisterOsGate
+    mov si,OFFSET unlock_task
+    mov di,OFFSET unlock_task_name
+    xor cl,cl
+    mov ax,unlock_task_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET debug_exception
-        mov di,OFFSET debug_exception_name
-        xor cl,cl
-        mov ax,debug_exception_nr
-        RegisterOsGate
+    mov si,OFFSET debug_exception
+    mov di,OFFSET debug_exception_name
+    xor cl,cl
+    mov ax,debug_exception_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET locked_debug_exception
-        mov di,OFFSET locked_debug_exception_name
-        xor cl,cl
-        mov ax,locked_debug_exception_nr
-        RegisterOsGate
+    mov si,OFFSET locked_debug_exception
+    mov di,OFFSET locked_debug_exception_name
+    xor cl,cl
+    mov ax,locked_debug_exception_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET start_timer
-        mov di,OFFSET start_timer_name
-        xor cl,cl
-        mov ax,start_timer_nr
-        RegisterOsGate
+    mov si,OFFSET start_timer
+    mov di,OFFSET start_timer_name
+    xor cl,cl
+    mov ax,start_timer_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET stop_timer
-        mov di,OFFSET stop_timer_name
-        xor cl,cl
-        mov ax,stop_timer_nr
-        RegisterOsGate
+    mov si,OFFSET stop_timer
+    mov di,OFFSET stop_timer_name
+    xor cl,cl
+    mov ax,stop_timer_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET wake_thread
-        mov di,OFFSET wake_thread_name
-        xor cl,cl
-        mov ax,wake_thread_nr
-        RegisterOsGate
+    mov si,OFFSET wake_thread
+    mov di,OFFSET wake_thread_name
+    xor cl,cl
+    mov ax,wake_thread_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET sleep_thread
-        mov di,OFFSET sleep_thread_name
-        xor cl,cl
-        mov ax,sleep_thread_nr
-        RegisterOsGate
+    mov si,OFFSET sleep_thread
+    mov di,OFFSET sleep_thread_name
+    xor cl,cl
+    mov ax,sleep_thread_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET clear_signal
-        mov di,OFFSET clear_signal_name
-        xor cl,cl
-        mov ax,clear_signal_nr
-        RegisterOsGate
+    mov si,OFFSET clear_signal
+    mov di,OFFSET clear_signal_name
+    xor cl,cl
+    mov ax,clear_signal_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET signal_thread
-        mov di,OFFSET signal_thread_name
-        xor cl,cl
-        mov ax,signal_nr
-        RegisterOsGate
+    mov si,OFFSET signal_thread
+    mov di,OFFSET signal_thread_name
+    xor cl,cl
+    mov ax,signal_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET wait_for_signal
-        mov di,OFFSET wait_for_signal_name
-        xor cl,cl
-        mov ax,wait_for_signal_nr
-        RegisterOsGate
+    mov si,OFFSET wait_for_signal
+    mov di,OFFSET wait_for_signal_name
+    xor cl,cl
+    mov ax,wait_for_signal_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET wait_for_signal_timeout
-        mov di,OFFSET wait_for_signal_timeout_name
-        xor cl,cl
-        mov ax,wait_for_signal_timeout_nr
-        RegisterOsGate
+    mov si,OFFSET wait_for_signal_timeout
+    mov di,OFFSET wait_for_signal_timeout_name
+    xor cl,cl
+    mov ax,wait_for_signal_timeout_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET cpu_reset
-        mov di,OFFSET cpu_reset_name
-        xor dx,dx
-        mov ax,cpu_reset_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET cpu_reset
+    mov di,OFFSET cpu_reset_name
+    xor dx,dx
+    mov ax,cpu_reset_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET power_failure
-        mov di,OFFSET power_failure_name
-        xor dx,dx
-        mov ax,power_failure_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET power_failure
+    mov di,OFFSET power_failure_name
+    xor dx,dx
+    mov ax,power_failure_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET get_thread_pr
-        mov di,OFFSET get_thread_name
-        xor dx,dx
-        mov ax,get_thread_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET get_thread_pr
+    mov di,OFFSET get_thread_name
+    xor dx,dx
+    mov ax,get_thread_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET get_processor_id
-        mov di,OFFSET get_processor_id_name
-        xor dx,dx
-        mov ax,get_processor_id_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET get_processor_id
+    mov di,OFFSET get_processor_id_name
+    xor dx,dx
+    mov ax,get_processor_id_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET get_cpu_time
-        mov di,OFFSET get_cpu_time_name
-        xor dx,dx
-        mov ax,get_cpu_time_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET get_cpu_time
+    mov di,OFFSET get_cpu_time_name
+    xor dx,dx
+    mov ax,get_cpu_time_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET swap_out
-        mov di,OFFSET swap_name
-        xor dx,dx
-        mov ax,swap_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET swap_out
+    mov di,OFFSET swap_name
+    xor dx,dx
+    mov ax,swap_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET wait_milli_sec
-        mov di,OFFSET wait_milli_name
-        xor dx,dx
-        mov ax,wait_milli_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET wait_milli_sec
+    mov di,OFFSET wait_milli_name
+    xor dx,dx
+    mov ax,wait_milli_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET wait_micro_sec
-        mov di,OFFSET wait_micro_name
-        xor dx,dx
-        mov ax,wait_micro_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET wait_micro_sec
+    mov di,OFFSET wait_micro_name
+    xor dx,dx
+    mov ax,wait_micro_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET wait_until
-        mov di,OFFSET wait_until_name
-        xor dx,dx
-        mov ax,wait_until_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET wait_until
+    mov di,OFFSET wait_until_name
+    xor dx,dx
+    mov ax,wait_until_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET notify_time_drift
-        mov di,OFFSET notify_time_drift_name
-        xor cl,cl
-        mov ax,notify_time_drift_nr
-        RegisterOsGate
+    mov si,OFFSET notify_time_drift
+    mov di,OFFSET notify_time_drift_name
+    xor cl,cl
+    mov ax,notify_time_drift_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET get_system_time
-        mov di,OFFSET get_system_time_name
-        xor dx,dx
-        mov ax,get_system_time_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET get_system_time
+    mov di,OFFSET get_system_time_name
+    xor dx,dx
+    mov ax,get_system_time_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET get_time
-        mov di,OFFSET get_time_name
-        xor dx,dx
-        mov ax,get_time_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET get_time
+    mov di,OFFSET get_time_name
+    xor dx,dx
+    mov ax,get_time_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET time_to_system_time
-        mov di,OFFSET time_to_system_time_name
-        xor dx,dx
-        mov ax,time_to_system_time_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET time_to_system_time
+    mov di,OFFSET time_to_system_time_name
+    xor dx,dx
+    mov ax,time_to_system_time_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET system_time_to_time
-        mov di,OFFSET system_time_to_time_name
-        xor dx,dx
-        mov ax,system_time_to_time_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET system_time_to_time
+    mov di,OFFSET system_time_to_time_name
+    xor dx,dx
+    mov ax,system_time_to_time_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET set_system_time
-        mov di,OFFSET set_system_time_name
-        xor cl,cl
-        mov ax,set_system_time_nr
-        RegisterOsGate
+    mov si,OFFSET set_system_time
+    mov di,OFFSET set_system_time_name
+    xor cl,cl
+    mov ax,set_system_time_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET sim_sti
-        mov di,OFFSET sim_sti_name
-        xor cl,cl
-        mov ax,sim_sti_nr
-        RegisterOsGate
+    mov si,OFFSET sim_sti
+    mov di,OFFSET sim_sti_name
+    xor cl,cl
+    mov ax,sim_sti_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET sim_cli
-        mov di,OFFSET sim_cli_name
-        xor cl,cl
-        mov ax,sim_cli_nr
-        RegisterOsGate
+    mov si,OFFSET sim_cli
+    mov di,OFFSET sim_cli_name
+    xor cl,cl
+    mov ax,sim_cli_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET sim_set_flags
-        mov di,OFFSET sim_set_flags_name
-        xor cl,cl
-        mov ax,sim_set_flags_nr
-        RegisterOsGate
+    mov si,OFFSET sim_set_flags
+    mov di,OFFSET sim_set_flags_name
+    xor cl,cl
+    mov ax,sim_set_flags_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET sim_get_flags
-        mov di,OFFSET sim_get_flags_name
-        xor cl,cl
-        mov ax,sim_get_flags_nr
-        RegisterOsGate
+    mov si,OFFSET sim_get_flags
+    mov di,OFFSET sim_get_flags_name
+    xor cl,cl
+    mov ax,sim_get_flags_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET debug_break
-        mov di,OFFSET debug_break_name
-        xor cl,cl
-        mov ax,debug_break_nr
-        RegisterOsGate
+    mov si,OFFSET debug_break
+    mov di,OFFSET debug_break_name
+    xor cl,cl
+    mov ax,debug_break_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET enter_section
-        mov di,OFFSET enter_section_name
-        xor cl,cl
-        mov ax,enter_section_nr
-        RegisterOsGate
+    mov si,OFFSET enter_section
+    mov di,OFFSET enter_section_name
+    xor cl,cl
+    mov ax,enter_section_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET leave_section
-        mov di,OFFSET leave_section_name
-        xor cl,cl
-        mov ax,leave_section_nr
-        RegisterOsGate
+    mov si,OFFSET leave_section
+    mov di,OFFSET leave_section_name
+    xor cl,cl
+    mov ax,leave_section_nr
+    RegisterOsGate
 ;
-        mov si,OFFSET create_user_section
-        mov di,OFFSET create_user_section_name
-        xor dx,dx
-        mov ax,create_user_section_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET create_user_section
+    mov di,OFFSET create_user_section_name
+    xor dx,dx
+    mov ax,create_user_section_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET create_blocked_user_section
-        mov di,OFFSET create_blocked_user_section_name
-        xor dx,dx
-        mov ax,create_blocked_user_section_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET create_blocked_user_section
+    mov di,OFFSET create_blocked_user_section_name
+    xor dx,dx
+    mov ax,create_blocked_user_section_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET delete_user_section
-        mov di,OFFSET delete_user_section_name
-        xor dx,dx
-        mov ax,delete_user_section_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET delete_user_section
+    mov di,OFFSET delete_user_section_name
+    xor dx,dx
+    mov ax,delete_user_section_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET enter_user_section
-        mov di,OFFSET enter_user_section_name
-        xor dx,dx
-        mov ax,enter_user_section_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET enter_user_section
+    mov di,OFFSET enter_user_section_name
+    xor dx,dx
+    mov ax,enter_user_section_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET leave_user_section
-        mov di,OFFSET leave_user_section_name
-        xor dx,dx
-        mov ax,leave_user_section_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET leave_user_section
+    mov di,OFFSET leave_user_section_name
+    xor dx,dx
+    mov ax,leave_user_section_nr
+    RegisterBimodalUserGate
 ;
-        mov bx,OFFSET get_debug_thread16
-        mov si,OFFSET get_debug_thread32
-        mov di,OFFSET get_debug_thread_name
-        xor dx,dx
-        mov ax,get_debug_thread_nr
-        RegisterUserGate
+    mov bx,OFFSET get_debug_thread16
+    mov si,OFFSET get_debug_thread32
+    mov di,OFFSET get_debug_thread_name
+    xor dx,dx
+    mov ax,get_debug_thread_nr
+    RegisterUserGate
 ;
-        mov bx,OFFSET get_debug_tss16
-        mov si,OFFSET get_debug_tss32
-        mov di,OFFSET get_debug_tss_name
-        mov dx,virt_es_in
-        mov ax,get_debug_tss_nr
-        RegisterUserGate
+    mov bx,OFFSET get_debug_tss16
+    mov si,OFFSET get_debug_tss32
+    mov di,OFFSET get_debug_tss_name
+    mov dx,virt_es_in
+    mov ax,get_debug_tss_nr
+    RegisterUserGate
 ;
-        mov si,OFFSET debug_trace
-        mov di,OFFSET debug_trace_name
-        xor dx,dx
-        mov ax,debug_trace_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET debug_trace
+    mov di,OFFSET debug_trace_name
+    xor dx,dx
+    mov ax,debug_trace_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET debug_pace
-        mov di,OFFSET debug_pace_name
-        xor dx,dx
-        mov ax,debug_pace_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET debug_pace
+    mov di,OFFSET debug_pace_name
+    xor dx,dx
+    mov ax,debug_pace_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET debug_go
-        mov di,OFFSET debug_go_name
-        xor dx,dx
-        mov ax,debug_go_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET debug_go
+    mov di,OFFSET debug_go_name
+    xor dx,dx
+    mov ax,debug_go_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET debug_next
-        mov di,OFFSET debug_next_name
-        xor dx,dx
-        mov ax,debug_next_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET debug_next
+    mov di,OFFSET debug_next_name
+    xor dx,dx
+    mov ax,debug_next_nr
+    RegisterBimodalUserGate
 ;
-        mov si,OFFSET update_time
-        mov di,OFFSET update_time_name
-        xor cl,cl
-        mov ax,update_time_nr
-        RegisterBimodalUserGate
+    mov si,OFFSET update_time
+    mov di,OFFSET update_time_name
+    xor cl,cl
+    mov ax,update_time_nr
+    RegisterBimodalUserGate
 ;
-        mov di,OFFSET check_list
-        HookState
+    mov di,OFFSET check_list
+    HookState
 ;
     mov di,OFFSET get_processor_single
     CreateProcessor
 ;
-        pop ds
-        popa
-        ret
+    pop ds
+    popa
+    ret
 init_task       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadWord
+;           NAME:           ReadWord
 ;
-;               DESCRIPTION:    Read a word in another thread
+;           DESCRIPTION:    Read a word in another thread
 ;
-;               PARAMETERS:             DX:ESI  Address
-;                                               ES              TSS
+;           PARAMETERS:         DX:ESI  Address
+;                           ES          TSS
 ;
-;               RETURNS:                AX              Value
+;           RETURNS:        AX          Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadWord        Proc near
-        push bx
-        push cx
-        push esi
-        mov bx,es:tss_thread
-        test es:tss_eflags+2,2
-        jz read_word_prot
+ReadWord    Proc near
+    push bx
+    push cx
+    push esi
+    mov bx,es:tss_thread
+    test es:tss_eflags+2,2
+    jz read_word_prot
 read_word_virt:
-        ReadThreadSegment
-        mov cx,ax
-        inc si
-        ReadThreadSegment
-        mov ah,al
-        mov al,cl
-        jmp read_word_done
+    ReadThreadSegment
+    mov cx,ax
+    inc si
+    ReadThreadSegment
+    mov ah,al
+    mov al,cl
+    jmp read_word_done
 read_word_prot:
-        ReadThreadSelector
-        mov cx,ax
-        inc esi
-        ReadThreadSelector
-        mov ah,al
-        mov al,cl
+    ReadThreadSelector
+    mov cx,ax
+    inc esi
+    ReadThreadSelector
+    mov ah,al
+    mov al,cl
 read_word_done:
-        pop esi
-        pop cx
-        pop bx  
-        ret
-ReadWord        Endp
+    pop esi
+    pop cx
+    pop bx  
+    ret
+ReadWord    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteWord
+;           NAME:           WriteWord
 ;
-;               DESCRIPTION:    Write a word in another thread
+;           DESCRIPTION:    Write a word in another thread
 ;
-;               PARAMETERS:             DX:ESI  Address
-;                                               ES              TSS
-;                                               AX              Value
+;           PARAMETERS:         DX:ESI  Address
+;                           ES          TSS
+;                           AX          Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteWord       Proc near
-        push bx
-        push cx
-        push esi
-        mov cx,ax
-        mov bx,es:tss_thread
-        test es:tss_eflags+2,2
-        jz write_word_prot
+    push bx
+    push cx
+    push esi
+    mov cx,ax
+    mov bx,es:tss_thread
+    test es:tss_eflags+2,2
+    jz write_word_prot
 write_word_virt:
-        mov al,cl
-        WriteThreadSegment
-        inc si
-        mov al,ch
-        WriteThreadSegment
-        jmp write_word_done
+    mov al,cl
+    WriteThreadSegment
+    inc si
+    mov al,ch
+    WriteThreadSegment
+    jmp write_word_done
 write_word_prot:
-        mov al,cl
-        WriteThreadSelector
-        inc esi
-        mov al,ch
-        WriteThreadSelector
+    mov al,cl
+    WriteThreadSelector
+    inc esi
+    mov al,ch
+    WriteThreadSelector
 write_word_done:
-        pop esi
-        pop cx
-        pop bx  
-        ret
+    pop esi
+    pop cx
+    pop bx  
+    ret
 WriteWord       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GET_DEBUG_THREAD
+;           NAME:           GET_DEBUG_THREAD
 ;
-;               DESCRIPTION:    Get currently debugged thread
+;           DESCRIPTION:    Get currently debugged thread
 ;
-;               PARAMETERS:             AX              DEBUG THREAD OR 0
+;           PARAMETERS:         AX          DEBUG THREAD OR 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_debug_thread        PROC near
-        push ds
-        push es
-        push cx
-        push dx
-        push si
-        mov ax,kdebug_data_sel
-        mov ds,ax
-        mov cx,ds:debug_thread
-        mov ax,system_data_sel
-        mov ds,ax
-        mov si,OFFSET debug_list
-        mov ax,[si]
-        or ax,ax
-        jz get_debug_done
-        mov dx,ax
+get_debug_thread    PROC near
+    push ds
+    push es
+    push cx
+    push dx
+    push si
+    mov ax,kdebug_sys_sel
+    mov ds,ax
+    mov cx,ds:debug_thread
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov ax,[si]
+    or ax,ax
+    jz get_debug_done
+    mov dx,ax
 get_debug_try_next:
-        cmp ax,cx
-        je get_debug_default
-        mov es,ax
-        mov ax,es:p_next
-        cmp dx,ax
-        je get_debug_new
-        jmp get_debug_try_next
+    cmp ax,cx
+    je get_debug_default
+    mov es,ax
+    mov ax,es:p_next
+    cmp dx,ax
+    je get_debug_new
+    jmp get_debug_try_next
 get_debug_new:
-        mov cx,[si]
+    mov cx,[si]
 get_debug_default:
-        mov ax,kdebug_data_sel
-        mov ds,ax
-        mov ds:debug_thread,cx
-        mov ax,cx
+    mov ax,kdebug_sys_sel
+    mov ds,ax
+    mov ds:debug_thread,cx
+    mov ax,cx
 get_debug_done:
-        pop si
-        pop dx
-        pop cx
-        pop es
-        pop ds
-        ret
-get_debug_thread        ENDP
+    pop si
+    pop dx
+    pop cx
+    pop es
+    pop ds
+    ret
+get_debug_thread    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GET_DEBUG_THREAD
+;           NAME:           GET_DEBUG_THREAD
 ;
-;               DESCRIPTION:    Get currently debugged thread syscall
+;           DESCRIPTION:    Get currently debugged thread syscall
 ;
-;               PARAMETERS:             AX                      THREAD BLOCK OR 0
+;           PARAMETERS:         AX              THREAD BLOCK OR 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_debug_thread_name   DB 'Get Debug Thread',0
 
 get_debug_thread16      PROC far
-        call get_debug_thread
-        ret
+    call get_debug_thread
+    ret
 get_debug_thread16      ENDP
 
 get_debug_thread32      PROC far
-        call get_debug_thread
-        retf32
+    call get_debug_thread
+    retf32
 get_debug_thread32      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GET_DEBUG_TSS
+;           NAME:           GET_DEBUG_TSS
 ;
-;               DESCRIPTION:    Get currently debugged TSS
+;           DESCRIPTION:    Get currently debugged TSS
 ;
-;               PARAMETERS:             ES:(E)DI        BUFFER FOR TSS
-;                                               AX                      THREAD BLOCK OR 0
+;           PARAMETERS:         ES:(E)DI    BUFFER FOR TSS
+;                           AX              THREAD BLOCK OR 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_debug_tss_name      DB 'Get Debug TSS',0
 
 get_debug_tss16 PROC far
-        push ds
-        push si
-        call get_debug_thread
-        or ax,ax
-        jz get_debug_tss_done16
-        mov ds,ax
-        mov ds,ds:p_tss_data_sel
-        xor si,si
-        mov cx,OFFSET tss_bitmap_space
-        rep movsb
+    push ds
+    push si
+    call get_debug_thread
+    or ax,ax
+    jz get_debug_tss_done16
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
+    xor si,si
+    mov cx,OFFSET tss_bitmap_space
+    rep movsb
 get_debug_tss_done16:   
-        pop si
-        pop ds
-        ret
+    pop si
+    pop ds
+    ret
 get_debug_tss16 ENDP
 
 get_debug_tss32 PROC far
-        push ds
-        push esi
-        call get_debug_thread
-        or ax,ax
-        jz get_debug_tss_done32
-        mov ds,ax
-        mov ds,ds:p_tss_data_sel
-        xor esi,esi
-        mov ecx,OFFSET tss_bitmap_space
-        rep movs byte ptr es:[edi],ds:[esi]
+    push ds
+    push esi
+    call get_debug_thread
+    or ax,ax
+    jz get_debug_tss_done32
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
+    xor esi,esi
+    mov ecx,OFFSET tss_bitmap_space
+    rep movs byte ptr es:[edi],ds:[esi]
 get_debug_tss_done32:   
-        pop esi
-        pop ds
-        retf32
+    pop esi
+    pop ds
+    retf32
 get_debug_tss32 ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DEBUG_TRACE
+;           NAME:           DEBUG_TRACE
 ;
-;               DESCRIPTION:    Trace one instruction in debugged thread
+;           DESCRIPTION:    Trace one instruction in debugged thread
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-debug_trace_name        DB 'Debug Trace',0
+debug_trace_name    DB 'Debug Trace',0
 
 debug_trace     PROC far
-        push ds
-        push es
-        pushad
-        call get_debug_thread
-        or ax,ax
-        jz debug_trace_done
-        mov bx,ax
-        mov es,bx
-        mov es,es:p_tss_data_sel
-        mov dx,es:tss_cs
-        mov esi,dword ptr es:tss_eip
-        call ReadWord
-        push ax
-        add esi,2
-        call ReadWord
-        mov dx,ax
-        pop ax  
-        cmp al,0CDh
-        jne debug_trace_trace
+    push ds
+    push es
+    pushad
+    call get_debug_thread
+    or ax,ax
+    jz debug_trace_done
+    mov bx,ax
+    mov es,bx
+    mov es,es:p_tss_data_sel
+    mov dx,es:tss_cs
+    mov esi,dword ptr es:tss_eip
+    call ReadWord
+    push ax
+    add esi,2
+    call ReadWord
+    mov dx,ax
+    pop ax  
+    cmp al,0CDh
+    jne debug_trace_trace
 ;
-        test es:tss_eflags+2,2
-        jz debug_trace_trace
-        and es:tss_eflags+2,NOT 2
-        mov dx,vm_int_sel
-        movzx esi,ah
-        shl esi,2
-        call ReadWord
-        push ax
-        add si,2
-        call ReadWord
-        mov dx,ax
-        pop bx
+    test es:tss_eflags+2,2
+    jz debug_trace_trace
+    and es:tss_eflags+2,NOT 2
+    mov dx,vm_int_sel
+    movzx esi,ah
+    shl esi,2
+    call ReadWord
+    push ax
+    add si,2
+    call ReadWord
+    mov dx,ax
+    pop bx
 ;
-        push dx
-        push bx
-        or es:tss_eflags+2,2
-        mov bx,es:tss_thread
-        mov dx,es:tss_ss
-        movzx esi,es:tss_esp
-        sub esi,6
-        pop ax
-        pop cx
-        xchg ax,es:tss_eip
-        xchg cx,es:tss_cs
-        add ax,2
-        call WriteWord
-        mov ax,cx
-        add esi,2
-        call WriteWord
-        mov ax,es:tss_eflags
-        add esi,2
-        call WriteWord
-        sub es:tss_esp,6
-        jmp debug_trace_done
+    push dx
+    push bx
+    or es:tss_eflags+2,2
+    mov bx,es:tss_thread
+    mov dx,es:tss_ss
+    movzx esi,es:tss_esp
+    sub esi,6
+    pop ax
+    pop cx
+    xchg ax,es:tss_eip
+    xchg cx,es:tss_cs
+    add ax,2
+    call WriteWord
+    mov ax,cx
+    add esi,2
+    call WriteWord
+    mov ax,es:tss_eflags
+    add esi,2
+    call WriteWord
+    sub es:tss_esp,6
+    jmp debug_trace_done
 debug_trace_trace:
-        mov eax,dr7
-        and ax,0FFFCh
-        mov dr7,eax
-        mov es:tss_dr7,eax
-        mov bx,es:tss_thread
-        mov ax,es:tss_eflags
-        or ax,100h
-        mov es:tss_eflags,ax
-        mov ax,system_data_sel
-        mov ds,ax
-        mov si,OFFSET debug_list
-        mov [si],bx
-        mov es,ax
-        Wake
+    mov eax,dr7
+    and ax,0FFFCh
+    mov dr7,eax
+    mov es:tss_dr7,eax
+    mov bx,es:tss_thread
+    mov ax,es:tss_eflags
+    or ax,100h
+    mov es:tss_eflags,ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov [si],bx
+    mov es,ax
+    Wake
 debug_trace_done:
-        popad
-        pop es
-        pop ds
-        retf32
+    popad
+    pop es
+    pop ds
+    retf32
 debug_trace     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DEBUG_PACE
+;           NAME:           DEBUG_PACE
 ;
-;               DESCRIPTION:    Pace one instruction in debugged thread
+;           DESCRIPTION:    Pace one instruction in debugged thread
 ;
-;               PARAMETERS:             DS      Tss sel
-;                       ES      Thread sel
+;           PARAMETERS:         DS      Tss sel
+;               ES      Thread sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 debug_pace_name DB 'Debug Pace',0
 
 load_breaks Proc near
-        mov eax,ds:tss_dr0
-        mov dr0,eax
-        mov eax,ds:tss_dr1
-        mov dr1,eax
-        mov eax,ds:tss_dr2
-        mov dr2,eax
-        mov eax,ds:tss_dr3
-        mov dr3,eax
-        mov eax,ds:tss_dr7
-        mov dr7,eax
-        and ax,0FFh
-        jnz load_break_done
+    mov eax,ds:tss_dr0
+    mov dr0,eax
+    mov eax,ds:tss_dr1
+    mov dr1,eax
+    mov eax,ds:tss_dr2
+    mov dr2,eax
+    mov eax,ds:tss_dr3
+    mov dr3,eax
+    mov eax,ds:tss_dr7
+    mov dr7,eax
+    and ax,0FFh
+    jnz load_break_done
 ;
     and es:p_flags,NOT THREAD_FLAG_BP
-        
+    
 load_break_done:
     ret
 load_breaks Endp    
 
 debug_pace      PROC far
-        push ds
-        push es
-        pushad
-        call get_debug_thread
-        or ax,ax
-        jz debug_pace_done
-        mov bx,ax
-        mov es,bx
-        mov es,es:p_tss_data_sel
-        mov dx,es:tss_cs
-        mov esi,dword ptr es:tss_eip
-        call ReadWord
-        push ax
-        add esi,2
-        call ReadWord
-        mov dx,ax
-        pop ax
-        xor ebx,ebx
-        add bx,2
-        cmp al,0E2h
-        je debug_pace_step
-        cmp al,0CDh
-        je debug_pace_step
-        inc bx
-        cmp al,0E8h
-        je debug_pace_step
-        add bx,2
-        cmp ax,00B0Fh
-        jne debug_pace_not_gate
-        and dl,0FEh
-        cmp dl,0D6h
-        jne debug_pace_step
-        add bx,3
-        jmp debug_pace_step
+    push ds
+    push es
+    pushad
+    call get_debug_thread
+    or ax,ax
+    jz debug_pace_done
+    mov bx,ax
+    mov es,bx
+    mov es,es:p_tss_data_sel
+    mov dx,es:tss_cs
+    mov esi,dword ptr es:tss_eip
+    call ReadWord
+    push ax
+    add esi,2
+    call ReadWord
+    mov dx,ax
+    pop ax
+    xor ebx,ebx
+    add bx,2
+    cmp al,0E2h
+    je debug_pace_step
+    cmp al,0CDh
+    je debug_pace_step
+    inc bx
+    cmp al,0E8h
+    je debug_pace_step
+    add bx,2
+    cmp ax,00B0Fh
+    jne debug_pace_not_gate
+    and dl,0FEh
+    cmp dl,0D6h
+    jne debug_pace_step
+    add bx,3
+    jmp debug_pace_step
 debug_pace_not_gate:
-        cmp al,9Ah
-        je debug_pace_step
-        inc bx
-        cmp ax,9A66h
-        jne debug_pace_trace
+    cmp al,9Ah
+    je debug_pace_step
+    inc bx
+    cmp ax,9A66h
+    jne debug_pace_trace
 ;
     add bx,2
     
 debug_pace_step:
-        push ax
-        mov ax,es:tss_eflags+2
-        test ax,2
-        jz debug_pace_step_prot
-        pop ax
-        xor eax,eax
-        xor edx,edx
-        mov ax,es:tss_cs
-        shl eax,4
-        mov dx,es:tss_eip
-        add eax,edx
-        jmp debug_pace_step_do
+    push ax
+    mov ax,es:tss_eflags+2
+    test ax,2
+    jz debug_pace_step_prot
+    pop ax
+    xor eax,eax
+    xor edx,edx
+    mov ax,es:tss_cs
+    shl eax,4
+    mov dx,es:tss_eip
+    add eax,edx
+    jmp debug_pace_step_do
 debug_pace_step_prot:
-        mov si,es:tss_cs
-        test si,4
-        jz debug_pace_step_gdt
-        xor eax,eax
-        mov ds,es:tss_thread
-        mov ds,ds:p_ldt_sel
-        mov si,es:tss_cs
-        and si,0FFF8h
-        pop ax
-        cmp al,0E8h
-        jne debug_pace_ldt16
-        mov al,[si+6]
-        test al,40h
-        jz debug_pace_ldt16
-        add bx,2
+    mov si,es:tss_cs
+    test si,4
+    jz debug_pace_step_gdt
+    xor eax,eax
+    mov ds,es:tss_thread
+    mov ds,ds:p_ldt_sel
+    mov si,es:tss_cs
+    and si,0FFF8h
+    pop ax
+    cmp al,0E8h
+    jne debug_pace_ldt16
+    mov al,[si+6]
+    test al,40h
+    jz debug_pace_ldt16
+    add bx,2
 debug_pace_ldt16:
-        mov eax,[si+2]
-        rol eax,8
-        mov al,[si+7]
-        ror eax,8
-        add eax,dword ptr es:tss_eip
-        jmp debug_pace_step_do
+    mov eax,[si+2]
+    rol eax,8
+    mov al,[si+7]
+    ror eax,8
+    add eax,dword ptr es:tss_eip
+    jmp debug_pace_step_do
 debug_pace_step_gdt:
-        and si,0FFF8h
-        mov ax,gdt_sel
-        mov ds,ax
-        pop ax
-        cmp al,0E8h
-        jne debug_pace_gdt16
-        mov al,[si+6]
-        test al,40h
-        jz debug_pace_gdt16
-        add bx,2
+    and si,0FFF8h
+    mov ax,gdt_sel
+    mov ds,ax
+    pop ax
+    cmp al,0E8h
+    jne debug_pace_gdt16
+    mov al,[si+6]
+    test al,40h
+    jz debug_pace_gdt16
+    add bx,2
 debug_pace_gdt16:
-        mov eax,[si+2]
-        rol eax,8
-        mov al,[si+7]
-        ror eax,8
-        add eax,dword ptr es:tss_eip
+    mov eax,[si+2]
+    rol eax,8
+    mov al,[si+7]
+    ror eax,8
+    add eax,dword ptr es:tss_eip
 debug_pace_step_do:
-        add eax,ebx
-        mov es:tss_dr0,eax
-        mov eax,es:tss_dr7
-        and eax,0FFF0FFFCh
-        or ax,1
-        mov es:tss_dr7,eax
-        mov es:tss_t,1
-        mov ax,es:tss_eflags
-        and ax,NOT 100h
-        mov es:tss_eflags,ax
-        jmp debug_pace_do
+    add eax,ebx
+    mov es:tss_dr0,eax
+    mov eax,es:tss_dr7
+    and eax,0FFF0FFFCh
+    or ax,1
+    mov es:tss_dr7,eax
+    mov es:tss_t,1
+    mov ax,es:tss_eflags
+    and ax,NOT 100h
+    mov es:tss_eflags,ax
+    jmp debug_pace_do
 debug_pace_trace:
-        mov eax,dr7
-        and ax,0FFFCh
-        mov dr7,eax
-        mov es:tss_dr7,eax
-        mov ax,es:tss_eflags
-        or ax,100h
-        mov es:tss_eflags,ax
+    mov eax,dr7
+    and ax,0FFFCh
+    mov dr7,eax
+    mov es:tss_dr7,eax
+    mov ax,es:tss_eflags
+    or ax,100h
+    mov es:tss_eflags,ax
 
 debug_pace_do:
-        mov es:tss_t,0
-        mov bx,es:tss_thread
-        mov ds,bx
+    mov es:tss_t,0
+    mov bx,es:tss_thread
+    mov ds,bx
     or ds:p_flags,THREAD_FLAG_BP
 ;
-        mov ax,system_data_sel
-        mov ds,ax
-        mov si,OFFSET debug_list
-        mov [si],bx
-        mov es,ax
-        Wake
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov [si],bx
+    mov es,ax
+    Wake
 debug_pace_done:
-        popad
-        pop es
-        pop ds
-        retf32
+    popad
+    pop es
+    pop ds
+    retf32
 debug_pace      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DEBUG_GO
+;           NAME:           DEBUG_GO
 ;
-;               DESCRIPTION:    Run currently debugged thread
+;           DESCRIPTION:    Run currently debugged thread
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 debug_go_name   DB 'Debug Go',0
 
-debug_go        PROC far
-        push ds
-        push es
-        pushad
-        call get_debug_thread
-        or ax,ax
-        jz debug_go_done
-        mov bx,ax
-        mov es,bx
-        mov es,es:p_tss_data_sel
-        mov eax,dr7
-        and ax,0FFFCh
-        mov dr7,eax
-        mov es:tss_dr7,eax
-        mov ax,es:tss_eflags
-        and ax,NOT 100h
-        mov es:tss_eflags,ax
+debug_go    PROC far
+    push ds
+    push es
+    pushad
+    call get_debug_thread
+    or ax,ax
+    jz debug_go_done
+    mov bx,ax
+    mov es,bx
+    mov es,es:p_tss_data_sel
+    mov eax,dr7
+    and ax,0FFFCh
+    mov dr7,eax
+    mov es:tss_dr7,eax
+    mov ax,es:tss_eflags
+    and ax,NOT 100h
+    mov es:tss_eflags,ax
 ;
-        mov ax,system_data_sel
-        mov ds,ax
-        mov si,OFFSET debug_list
-        mov [si],bx
-        mov es,ax
-        Wake
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov [si],bx
+    mov es,ax
+    Wake
 debug_go_done:
-        popad
-        pop es
-        pop ds
-        retf32
-debug_go        ENDP
+    popad
+    pop es
+    pop ds
+    retf32
+debug_go    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DEBUG_NEXT
+;           NAME:           DEBUG_NEXT
 ;
-;               DESCRIPTION:    Select next thread as currently debugged
+;           DESCRIPTION:    Select next thread as currently debugged
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 debug_next_name DB 'Debug Next',0
 
 debug_next      PROC far
-        push ds
-        push es
-        push ax
-        push si
-        mov ax,system_data_sel
-        mov ds,ax
-        mov si,OFFSET debug_list
-        mov ax,[si]
-        or ax,ax
-        je debug_next_end
-        mov es,ax
-        mov es,es:p_next
-        mov [si],es
-        mov ax,kdebug_data_sel
-        mov ds,ax
-        mov ds:debug_thread,es
+    push ds
+    push es
+    push ax
+    push si
+    mov ax,system_data_sel
+    mov ds,ax
+    mov si,OFFSET debug_list
+    mov ax,[si]
+    or ax,ax
+    je debug_next_end
+    mov es,ax
+    mov es,es:p_next
+    mov [si],es
+    mov ax,kdebug_sys_sel
+    mov ds,ax
+    mov ds:debug_thread,es
 debug_next_end:
-        pop si
-        pop ax
-        pop es
-        pop ds
-        retf32
+    pop si
+    pop ax
+    pop es
+    pop ds
+    retf32
 debug_next      ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   VIRT_sti
+;           NAME:           VIRT_sti
 ;
-;               DESCRIPTION:    Simulate STI
+;           DESCRIPTION:    Simulate STI
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public virt_sti
+    public virt_sti
 
-virt_sti        PROC near
+virt_sti    PROC near
     push ax
     GetThread
     mov ds,ax
     pop ax
-        mov ds,ds:p_process_sel
-        mov ds:ms_virt_flags,7200h
+    mov ds,ds:p_process_sel
+    mov ds:ms_virt_flags,7200h
 virt_sti_test_wake:
-        cli
-        cmp ds:ms_wait_sti,0
-        jz virt_sti_nowake
-        push si
-        mov si,OFFSET ms_wait_sti
-        Wake
-        pop si
-        jmp virt_sti_test_wake
+    cli
+    cmp ds:ms_wait_sti,0
+    jz virt_sti_nowake
+    push si
+    mov si,OFFSET ms_wait_sti
+    Wake
+    pop si
+    jmp virt_sti_test_wake
 virt_sti_nowake:
-        sti
-        inc byte ptr [bp].vm_eip
-        ret
-virt_sti        ENDP
+    sti
+    inc byte ptr [bp].vm_eip
+    ret
+virt_sti    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   sim_sti
+;           NAME:           sim_sti
 ;
-;               DESCRIPTION:    Simulate STI
+;           DESCRIPTION:    Simulate STI
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 sim_sti_name    DB 'Simulate Sti',0
 
 sim_sti PROC far
-        push ds
-        push ax
-        sti
-        GetThread
-        mov ds,ax
-        mov ds,ds:p_process_sel
-        mov ds:ms_virt_flags,7200h
+    push ds
+    push ax
+    sti
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_process_sel
+    mov ds:ms_virt_flags,7200h
 sim_sti_test_wake:
-        cmp ds:ms_wait_sti,0
-        jz sim_sti_nowake
-        push si
-        mov si,OFFSET ms_wait_sti
-        Wake
-        pop si
-        jmp sim_sti_test_wake
+    cmp ds:ms_wait_sti,0
+    jz sim_sti_nowake
+    push si
+    mov si,OFFSET ms_wait_sti
+    Wake
+    pop si
+    jmp sim_sti_test_wake
 sim_sti_nowake:
-        pop ax
-        pop ds
-        ret
+    pop ax
+    pop ds
+    ret
 sim_sti ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   virt_cli
+;           NAME:           virt_cli
 ;
-;               DESCRIPTION:    Simulate CLI
+;           DESCRIPTION:    Simulate CLI
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public virt_cli
+    public virt_cli
 
-virt_cli        PROC near
+virt_cli    PROC near
     push ax
     GetThread
     mov ds,ax
-        mov ds,ds:p_process_sel
-        cli
-        mov ds:ms_cli_thread,ax
-        mov ds:ms_virt_flags,7000h
-        sti
-        inc byte ptr [bp].vm_eip
+    mov ds,ds:p_process_sel
+    cli
+    mov ds:ms_cli_thread,ax
+    mov ds:ms_virt_flags,7000h
+    sti
+    inc byte ptr [bp].vm_eip
     pop ax
-        ret
-virt_cli        ENDP
+    ret
+virt_cli    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   sim_cli
+;           NAME:           sim_cli
 ;
-;               DESCRIPTION:    Simulate CLI
+;           DESCRIPTION:    Simulate CLI
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 sim_cli_name    DB 'Simulate Cli',0
 
 sim_cli PROC far
-        push ds
-        push ax
-        GetThread
-        mov ds,ax
-        mov ds,ds:p_process_sel
-        cli
-        mov ds:ms_cli_thread,ax
-        mov ds:ms_virt_flags,7000h
-        sti
-        pop ax
-        pop ds
-        ret
+    push ds
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_process_sel
+    cli
+    mov ds:ms_cli_thread,ax
+    mov ds:ms_virt_flags,7000h
+    sti
+    pop ax
+    pop ds
+    ret
 sim_cli ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   set_flags
+;           NAME:           set_flags
 ;
-;               DESCRIPTION:    Simulate set flags
+;           DESCRIPTION:    Simulate set flags
 ;
-;               PARAMETERS:             AX              FLAGS
+;           PARAMETERS:         AX          FLAGS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public set_flags
+    public set_flags
 
 set_flags       PROC near
     push ax
@@ -1855,114 +1860,114 @@ set_flags       PROC near
     mov ds,ax
     mov bx,ax
     pop ax
-        mov ds,ds:p_process_sel
-        cli
-        mov ds:ms_cli_thread,bx
-        mov bx,ax
-        and bx,200h
-        or bx,7000h
-        mov ds:ms_virt_flags,bx
-        sti
-        test bx,200h
-        jz set_flags_nowake
+    mov ds,ds:p_process_sel
+    cli
+    mov ds:ms_cli_thread,bx
+    mov bx,ax
+    and bx,200h
+    or bx,7000h
+    mov ds:ms_virt_flags,bx
+    sti
+    test bx,200h
+    jz set_flags_nowake
 set_flags_test_wake:
-        cmp ds:ms_wait_sti,0
-        jz set_flags_nowake
-        push si
-        mov si,OFFSET ms_wait_sti
-        Wake
-        pop si
-        jmp set_flags_test_wake
+    cmp ds:ms_wait_sti,0
+    jz set_flags_nowake
+    push si
+    mov si,OFFSET ms_wait_sti
+    Wake
+    pop si
+    jmp set_flags_test_wake
 set_flags_nowake:
-        and ax,NOT 7000h
-        or ax,200h
-        ret
+    and ax,NOT 7000h
+    or ax,200h
+    ret
 set_flags       ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   sim_set_flags
+;           NAME:           sim_set_flags
 ;
-;               DESCRIPTION:    Simulate set flags
+;           DESCRIPTION:    Simulate set flags
 ;
-;               PARAMETERS:             AX              FLAGS
+;           PARAMETERS:         AX          FLAGS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 sim_set_flags_name      DB 'Set Flags',0
 
 sim_set_flags   PROC far
-        push ds
-        push bx
-        call set_flags
-        pop bx
-        pop ds
-        ret
+    push ds
+    push bx
+    call set_flags
+    pop bx
+    pop ds
+    ret
 sim_set_flags   ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   get_flags
+;           NAME:           get_flags
 ;
-;               DESCRIPTION:    Modify int bit in simulated flags
+;           DESCRIPTION:    Modify int bit in simulated flags
 ;
-;               PARAMETERS:             AX              FLAGS
+;           PARAMETERS:         AX          FLAGS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public get_flags
+    public get_flags
 
 get_flags       PROC near
     push ax
     GetThread
     mov ds,ax
     pop ax
-        mov ds,ds:p_process_sel
-        and ax,NOT 200h
-        mov bx,ds:ms_virt_flags
-        and bx,200h
-        or ax,bx
-        or ax,7000h
-        ret
+    mov ds,ds:p_process_sel
+    and ax,NOT 200h
+    mov bx,ds:ms_virt_flags
+    and bx,200h
+    or ax,bx
+    or ax,7000h
+    ret
 get_flags       ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   sim_get_flags
+;           NAME:           sim_get_flags
 ;
-;               DESCRIPTION:    Modify int bit in simulated flags
+;           DESCRIPTION:    Modify int bit in simulated flags
 ;
-;               PARAMETERS:             AX              FLAGS
+;           PARAMETERS:         AX          FLAGS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 sim_get_flags_name      DB 'Get Flags',0
 
 sim_get_flags   PROC far
-        push ds
-        push bx
-        call get_flags
-        pop bx
-        pop ds
-        ret
+    push ds
+    push bx
+    call get_flags
+    pop bx
+    pop ds
+    ret
 sim_get_flags   ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   HandlePreempt
+;           NAME:           HandlePreempt
 ;
-;               DESCRIPTION:    Handle preempt
+;           DESCRIPTION:    Handle preempt
 ;
-;               PARAMETERS:         DS      Task sel
-;                       FS      Processor selector
+;           PARAMETERS:     DS      Task sel
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1970,32 +1975,32 @@ HandlePreempt    Proc near
     test fs:ps_flags,PS_FLAG_PREEMPT
     jz hpDone
 ;
-        mov si,ds:prio_act
-        mov ax,[si]
-        or ax,ax
-        jz hpDone
+    mov si,ds:prio_act
+    mov ax,[si]
+    or ax,ax
+    jz hpDone
 ;       
     cmp ax,fs:ps_last_thread
     jne hpDone
 ;    
-        mov es,ax
-        mov ax,es:p_next
-        mov [si],ax
+    mov es,ax
+    mov ax,es:p_next
+    mov [si],ax
 
 hpDone:
     ret
 HandlePreempt   Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   HandlePrio
+;           NAME:           HandlePrio
 ;
-;               DESCRIPTION:    Handle prio
+;           DESCRIPTION:    Handle prio
 ;
-;               PARAMETERS:         DS      Task sel
-;                       FS      Processor selector
+;           PARAMETERS:     DS      Task sel
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2013,42 +2018,42 @@ HandlePrio    Proc near
     jmp HandlePrio
 
 hpqInt:
-        mov es,ax
-        mov es,es:p_process_sel
-        test es:ms_virt_flags,200h
-        jnz hpqDone
+    mov es,ax
+    mov es,es:p_process_sel
+    test es:ms_virt_flags,200h
+    jnz hpqDone
 ;
-        cmp ax,es:ms_cli_thread
-        je hpqDone
+    cmp ax,es:ms_cli_thread
+    je hpqDone
 ;
     call ds:lock_list_proc
-        mov ax,es
-        mov si,ds:prio_act
-        RemoveBlock              
-        push ds  
-        mov ds,ax
-        mov di,OFFSET ms_wait_sti
-        InsertBlock
-        pop ds
+    mov ax,es
+    mov si,ds:prio_act
+    RemoveBlock          
+    push ds  
+    mov ds,ax
+    mov di,OFFSET ms_wait_sti
+    InsertBlock
+    pop ds
     call ds:unlock_list_proc
-        jmp HandlePrio
+    jmp HandlePrio
 
 hpqDone:
     ret
 HandlePrio  Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetPrioThread
+;           NAME:           GetPrioThread
 ;
-;               DESCRIPTION:    Get thread from standard list
+;           DESCRIPTION:    Get thread from standard list
 ;
-;               PARAMETERS:         DS      Task sel
-;                       FS      Processor selector
+;           PARAMETERS:     DS      Task sel
+;               FS      Processor selector
 ;
-;       RETURNS:        ES      Thread
+;       RETURNS:    ES      Thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2079,17 +2084,17 @@ gptDone:
     ret
 GetPrioThread   Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetupPreempt
+;           NAME:           SetupPreempt
 ;
-;               DESCRIPTION:    Setup preempt
+;           DESCRIPTION:    Setup preempt
 ;
-;               PARAMETERS:         DS      Task sel
-;                       FS      Processor selector
-;                       ES      Thread
+;           PARAMETERS:     DS      Task sel
+;               FS      Processor selector
+;               ES      Thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2105,32 +2110,32 @@ SetupPreempt    Proc near
     jz spDone    
 
 spSet:
-        cli
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        sti
-        add eax,1193
-        adc edx,0
-        mov fs:ps_preempt_lsb,eax
-        mov fs:ps_preempt_msb,edx
+    cli
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    sti
+    add eax,1193
+    adc edx,0
+    mov fs:ps_preempt_lsb,eax
+    mov fs:ps_preempt_msb,edx
 
 spDone:
     and fs:ps_flags,NOT PS_FLAG_PREEMPT
     ret
 SetupPreempt    Endp
     
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetNextThread
+;           NAME:           GetNextThread
 ;
-;               DESCRIPTION:    Get next thread to run
+;           DESCRIPTION:    Get next thread to run
 ;
-;               PARAMETERS:         DS      Task sel
-;                       FS      Processor selector
+;           PARAMETERS:     DS      Task sel
+;               FS      Processor selector
 ;
-;       RETURNS:        ES      Thread to run next
+;       RETURNS:    ES      Thread to run next
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2145,13 +2150,13 @@ GetNextThread    Proc near
     ret
 GetNextThread   Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ThreadSuspend
+;           NAME:           ThreadSuspend
 ;
-;               DESCRIPTION:    Suspend thread callback from scheduler
+;           DESCRIPTION:    Suspend thread callback from scheduler
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2159,46 +2164,46 @@ GetNextThread   Endp
     extrn virt_exception:near
     
 thread_suspend:
-        push dword ptr 0
-        push bp
-        mov bp,sp
-        push eax
-        push ebx
-        push ds
+    push dword ptr 0
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
 ;
-        mov eax,[bp].vm_eflags
-        or eax,10100h
-        mov [bp].vm_eflags,eax
-        test eax,20000h
-        jnz tsVm
+    mov eax,[bp].vm_eflags
+    or eax,10100h
+    mov [bp].vm_eflags,eax
+    test eax,20000h
+    jnz tsVm
 ;
-        mov al,1
-        call prot_exception
-        jmp tsRet
+    mov al,1
+    call prot_exception
+    jmp tsRet
 
 tsVm:
-        mov al,1
-        call virt_exception
+    mov al,1
+    call virt_exception
 
 tsRet:
     pop ds
     pop ebx
     pop eax
-        pop bp
-        add sp,4
-        iretd
+    pop bp
+    add sp,4
+    iretd
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   AddCallback
+;           NAME:           AddCallback
 ;
-;               DESCRIPTION:    Add callback to thread
+;           DESCRIPTION:    Add callback to thread
 ;
 ;       PARAMETERS:     DS      Thread TSS
-;                       ES      Thread block
-;                       BX      Callback routine
+;               ES      Thread block
+;               BX      Callback routine
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2286,16 +2291,16 @@ acDone:
     ret
 AddCallback Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   LoadCurrentThread
+;           NAME:           LoadCurrentThread
 ;
-;               DESCRIPTION:    Load register-state for current thread
+;           DESCRIPTION:    Load register-state for current thread
 ;
 ;       PARAMETERS:     DS      Task sel
-;                       FS      Processor selector
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2316,35 +2321,35 @@ load_reload_loop:
     lock and ds:processor_preempt,eax
 ;    
     and fs:ps_flags,NOT PS_FLAG_TIMER   
-        cli
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        mov fs:ps_last_lsb,eax
-        add eax,ds:update_tics
-        adc edx,0
-        mov bx,fs:ps_timer_head
-        mov ecx,fs:ps_preempt_msb
-        cmp ecx,fs:[bx].ps_timer_msb
-        jc load_check_preempt
+    cli
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    mov fs:ps_last_lsb,eax
+    add eax,ds:update_tics
+    adc edx,0
+    mov bx,fs:ps_timer_head
+    mov ecx,fs:ps_preempt_msb
+    cmp ecx,fs:[bx].ps_timer_msb
+    jc load_check_preempt
 ;
-        jnz load_check_timer
+    jnz load_check_timer
 ;       
-        mov ecx,fs:ps_preempt_lsb
-        cmp ecx,fs:[bx].ps_timer_lsb
-        jc load_check_preempt
+    mov ecx,fs:ps_preempt_lsb
+    cmp ecx,fs:[bx].ps_timer_lsb
+    jc load_check_preempt
 
 load_check_timer:
-        sub eax,fs:[bx].ps_timer_lsb
-        sbb edx,fs:[bx].ps_timer_msb
-        jc load_reload_timer
+    sub eax,fs:[bx].ps_timer_lsb
+    sbb edx,fs:[bx].ps_timer_msb
+    jc load_reload_timer
 ;       
-        LocalRemoveTimer
-        jmp load_reload_loop
+    LocalRemoveTimer
+    jmp load_reload_loop
 
 load_check_preempt:
-        sub eax,fs:ps_preempt_lsb
-        sbb edx,fs:ps_preempt_msb
-        jc load_reload_timer
+    sub eax,fs:ps_preempt_lsb
+    sbb edx,fs:ps_preempt_msb
+    jc load_reload_timer
 ;       
     or fs:ps_flags,PS_FLAG_PREEMPT
 
@@ -2363,34 +2368,34 @@ load_retry:
     jmp load_thread_loop
 
 load_reload_timer:
-        neg eax
-        ReloadSysTimer
+    neg eax
+    ReloadSysTimer
 ;       
     sti
-        mov ax,gdt_sel
-        mov ds,ax
-        mov bx,es:p_tss_sel
-        and byte ptr ds:[bx+5],NOT 2
-        ltr bx
+    mov ax,gdt_sel
+    mov ds,ax
+    mov bx,es:p_tss_sel
+    and byte ptr ds:[bx+5],NOT 2
+    ltr bx
 ;
-        mov ax,sys_dir_sel
-        mov ds,ax
-        mov bx,(io_focus_linear SHR 20) AND 0FFFh
-        mov edx,[bx]
-        mov bx,process_dir_sel
-        mov ds,bx
-        mov bx,(io_focus_linear SHR 20) AND 0FFFh
-        cmp edx,[bx]
-        jne load_reload_cr3
+    mov ax,sys_dir_sel
+    mov ds,ax
+    mov bx,(io_focus_linear SHR 20) AND 0FFFh
+    mov edx,[bx]
+    mov bx,process_dir_sel
+    mov ds,bx
+    mov bx,(io_focus_linear SHR 20) AND 0FFFh
+    cmp edx,[bx]
+    jne load_reload_cr3
 ;
     mov eax,cr3
     cmp eax,es:p_cr3
     je load_cr3_ok
 
 load_reload_cr3:    
-        mov [bx],edx            
-        mov eax,es:p_cr3
-        mov cr3,eax
+    mov [bx],edx        
+    mov eax,es:p_cr3
+    mov cr3,eax
 
 load_cr3_ok:
     mov ds,es:p_tss_data_sel
@@ -2411,7 +2416,7 @@ load_cr3_ok:
     and es:p_flags,NOT THREAD_FLAG_CREATE
     mov bx,OFFSET thread_create
     call AddCallback
-        
+    
 load_create_done:
     mov ax,es:p_flags
     test ax,THREAD_FLAG_SUSPEND
@@ -2449,7 +2454,7 @@ load_relock:
     mov ds,ax
     call ds:lock_proc
     jmp load_retry
-            
+        
 load_regs:
     mov fs:ps_curr_thread,es
     mov fs:ps_last_thread,es
@@ -2485,38 +2490,38 @@ load_kernel_ss0_ok:
     mov edi,dword ptr ds:tss_edi
 ;
     mov ax,word ptr ds:tss_es
-        verr ax
-        jz load_kernel_es
+    verr ax
+    jz load_kernel_es
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 load_kernel_es:
-        mov es,ax
+    mov es,ax
 ;       
     mov ax,word ptr ds:tss_fs
-        verr ax
-        jz load_kernel_fs
+    verr ax
+    jz load_kernel_fs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 load_kernel_fs:
     mov fs,ax
 ;       
     mov ax,word ptr ds:tss_gs
-        verr ax
-        jz load_kernel_gs
+    verr ax
+    jz load_kernel_gs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 load_kernel_gs:
-        mov gs,ax
+    mov gs,ax
 ;       
     mov ax,word ptr ds:tss_ds
-        verr ax
-        jz load_kernel_ds
+    verr ax
+    jz load_kernel_ds
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 load_kernel_ds:
     push ax
     mov eax,dword ptr ds:tss_eax
@@ -2542,38 +2547,38 @@ load_pm_app:
     mov edi,dword ptr ds:tss_edi
 ;
     mov ax,word ptr ds:tss_es
-        verr ax
-        jz load_pm_app_es
+    verr ax
+    jz load_pm_app_es
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 load_pm_app_es:
-        mov es,ax
+    mov es,ax
 ;       
     mov ax,word ptr ds:tss_fs
-        verr ax
-        jz load_pm_app_fs
+    verr ax
+    jz load_pm_app_fs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 load_pm_app_fs:
     mov fs,ax
 ;       
     mov ax,word ptr ds:tss_gs
-        verr ax
-        jz load_pm_app_gs
+    verr ax
+    jz load_pm_app_gs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 load_pm_app_gs:
-        mov gs,ax
+    mov gs,ax
 ;       
     mov ax,word ptr ds:tss_ds
-        verr ax
-        jz load_pm_app_ds
+    verr ax
+    jz load_pm_app_ds
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 load_pm_app_ds:
     push ax
     mov eax,dword ptr ds:tss_eax
@@ -2608,16 +2613,16 @@ load_vm:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SaveCurrentThread
+;           NAME:           SaveCurrentThread
 ;
-;               DESCRIPTION:    Save state of current thread
+;           DESCRIPTION:    Save state of current thread
 ;
 ;       PARAMETERS:     Stack, return IP
 ;
-;       RETURNS:        SS:SP       Processor stack
-;                       DS          Task sel
-;                       FS          Processor selector
-;                       ES, GS      Clear
+;       RETURNS:    SS:SP       Processor stack
+;               DS      Task sel
+;               FS      Processor selector
+;               ES, GS      Clear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2632,14 +2637,14 @@ SaveCurrentThread       Proc near
     call ds:lock_proc
 ;
     cli    
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        sti
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    sti
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
-;        
+;    
     mov ax,ds
     cmp ax,fs:ps_skip_thread
     je save_thread_skip
@@ -2698,20 +2703,20 @@ SaveCurrentThread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SaveLockedThread
+;           NAME:           SaveLockedThread
 ;
-;               DESCRIPTION:    Save state of current thread when lock is already taken
+;           DESCRIPTION:    Save state of current thread when lock is already taken
 ;
 ;       PARAMETERS:     Stack, return IP
-;                       FS          Processor selector
+;               FS      Processor selector
 ;
-;       RETURNS:        SS:SP       Processor stack
-;                       DS          Task sel
-;                       ES, GS      Clear
+;       RETURNS:    SS:SP       Processor stack
+;               DS      Task sel
+;               ES, GS      Clear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SaveLockedThread        Proc near       
+SaveLockedThread    Proc near       
     push fs
     push ds
     push eax
@@ -2720,14 +2725,14 @@ SaveLockedThread        Proc near
     mov ax,task_sel
     mov ds,ax
     cli    
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        sti
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    sti
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
-;        
+;    
     mov ax,fs:ps_curr_thread
     cmp ax,fs:ps_skip_thread
     je save_locked_thread_skip
@@ -2786,14 +2791,14 @@ SaveLockedThread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SkipCurrentThread
+;           NAME:           SkipCurrentThread
 ;
-;               DESCRIPTION:    Skip current thread (no save of registers)
+;           DESCRIPTION:    Skip current thread (no save of registers)
 ;
-;       RETURNS:        SS:SP       Processor stack
-;                       DS          Task sel
-;                       FS          Processor selector
-;                       ES, GS      Clear
+;       RETURNS:    SS:SP       Processor stack
+;               DS      Task sel
+;               FS      Processor selector
+;               ES, GS      Clear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2806,10 +2811,10 @@ SkipCurrentThread       Proc near
 ;
     push eax
     cli    
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        sti
-        push ds
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    sti
+    push ds
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -2833,13 +2838,13 @@ SkipCurrentThread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ContinueCurrentThread
+;           NAME:           ContinueCurrentThread
 ;
-;               DESCRIPTION:    Continue current thread, by putting it into the ready-list.
-;                       Also releases scheduler lock
+;           DESCRIPTION:    Continue current thread, by putting it into the ready-list.
+;               Also releases scheduler lock
 ;
-;       PARAMETERS:     FS          Processor selector
-;                       DS          Task sel
+;       PARAMETERS:     FS      Processor selector
+;               DS      Task sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2872,16 +2877,16 @@ cctDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   BlockCurrentThread
+;           NAME:           BlockCurrentThread
 ;
-;               DESCRIPTION:    Block current thread.
-;                       Also releases scheduler lock
+;           DESCRIPTION:    Block current thread.
+;               Also releases scheduler lock
 ;
-;               PARAMETERS:             AX:EDI      Block list. AX = 0, no sleep list
-;                       FS          Processor selector
-;                       DS          Task sel
+;           PARAMETERS:         AX:EDI      Block list. AX = 0, no sleep list
+;               FS      Processor selector
+;               DS      Task sel
 ;
-;       RETURNS:        ES          Blocked thread
+;       RETURNS:    ES      Blocked thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2889,43 +2894,43 @@ BlockCurrentThread:
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-        mov es:p_sleep_sel,ax
-        mov es:p_sleep_offset,edi
+    mov es:p_sleep_sel,ax
+    mov es:p_sleep_offset,edi
 ;
     or ax,ax
     jz bctUnlock
 ;    
     push ds
     call ds:lock_list_proc      
-        mov ds,ax
-        InsertBlock32
-        pop ds
+    mov ds,ax
+    InsertBlock32
+    pop ds
     call ds:unlock_list_proc
 
 bctUnlock:      
     jmp LoadCurrentThread
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ReloadTimer
+;           NAME:           ReloadTimer
 ;
-;               DESCRIPTION:    Reload timer
+;           DESCRIPTION:    Reload timer
 ;
 ;       PARAMETERS:     DS      Task sel
-;                       FS      Processor sel
-;                       CY      Lock succeeded
+;               FS      Processor sel
+;               CY      Lock succeeded
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReloadTimer Proc near
-        jc reload_timer_loop
+    jc reload_timer_loop
 ;
-    or fs:ps_flags,PS_FLAG_TIMER        
+    or fs:ps_flags,PS_FLAG_TIMER    
     mov eax,fs:ps_mask
     lock or ds:processor_preempt,eax
-        jmp reload_timer_done
+    jmp reload_timer_done
 
 reload_timer_loop:
     mov eax,fs:ps_mask
@@ -2934,33 +2939,33 @@ reload_timer_loop:
 ;    
     and fs:ps_flags,NOT PS_FLAG_TIMER   
     mov es,fs:ps_curr_thread
-        cli
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        add eax,ds:update_tics
-        adc edx,0
-        mov bx,fs:ps_timer_head
-        mov ecx,fs:ps_preempt_msb
-        cmp ecx,fs:[bx].ps_timer_msb
-        jc reload_check_preempt
-        jnz reload_check_timer
+    cli
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    add eax,ds:update_tics
+    adc edx,0
+    mov bx,fs:ps_timer_head
+    mov ecx,fs:ps_preempt_msb
+    cmp ecx,fs:[bx].ps_timer_msb
+    jc reload_check_preempt
+    jnz reload_check_timer
 ;       
-        mov ecx,fs:ps_preempt_lsb
-        cmp ecx,fs:[bx].ps_timer_lsb
-        jc reload_check_preempt
+    mov ecx,fs:ps_preempt_lsb
+    cmp ecx,fs:[bx].ps_timer_lsb
+    jc reload_check_preempt
 
 reload_check_timer:
-        sub eax,fs:[bx].ps_timer_lsb
-        sbb edx,fs:[bx].ps_timer_msb
-        jc reload_timer_do
+    sub eax,fs:[bx].ps_timer_lsb
+    sbb edx,fs:[bx].ps_timer_msb
+    jc reload_timer_do
 ;       
-        LocalRemoveTimer
-        jmp reload_timer_loop
+    LocalRemoveTimer
+    jmp reload_timer_loop
 
 reload_check_preempt:
-        sub eax,fs:ps_preempt_lsb
-        sbb edx,fs:ps_preempt_msb
-        jc reload_timer_do
+    sub eax,fs:ps_preempt_lsb
+    sbb edx,fs:ps_preempt_msb
+    jc reload_timer_do
 ;
     or fs:ps_flags,PS_FLAG_PREEMPT
     mov ax,fs:ps_curr_thread
@@ -2973,22 +2978,22 @@ reload_check_preempt:
 
 reload_preempt_block:
     cli
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        sti
-        add eax,1193
-        adc edx,0
-        mov fs:ps_preempt_lsb,eax
-        mov fs:ps_preempt_msb,edx
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    sti
+    add eax,1193
+    adc edx,0
+    mov fs:ps_preempt_lsb,eax
+    mov fs:ps_preempt_msb,edx
     jmp reload_timer_loop
 
 reload_timer_do:
-        neg eax
-        ReloadSysTimer
+    neg eax
+    ReloadSysTimer
 ;       call ds:reload_timer_proc
 
 reload_timer_done:
-        call ds:unlock_proc
+    call ds:unlock_proc
 
 reload_timer_end:       
     ret
@@ -2998,9 +3003,9 @@ ReloadTimer Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   StartProcessor
+;           NAME:           StartProcessor
 ;
-;               DESCRIPTION:    Start processor
+;           DESCRIPTION:    Start processor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3018,115 +3023,115 @@ start_processor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DeleteThread
+;           NAME:           DeleteThread
 ;
-;               DESCRIPTION:    Delete a thread
+;           DESCRIPTION:    Delete a thread
 ;
 ;       PARAMETERS:     ES      Thread block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DeleteThread    Proc near
-        push es
-        mov es,es:p_tss_data_sel
-        mov es,es:tss_ess0
-        FreeMem
-        pop es
+    push es
+    mov es,es:p_tss_data_sel
+    mov es,es:tss_ess0
+    FreeMem
+    pop es
 ;
-        mov bx,es:p_tss_sel
-        FreeGdt
+    mov bx,es:p_tss_sel
+    FreeGdt
 ;
-        mov bx,es:p_tss_data_sel
-        FreeMem
+    mov bx,es:p_tss_data_sel
+    FreeMem
 ;
-        FreeMem
-        ret
+    FreeMem
+    ret
 DeleteThread    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DeleteProcess
+;           NAME:           DeleteProcess
 ;
-;               DESCRIPTION:    Delete a process
+;           DESCRIPTION:    Delete a process
 ;
 ;       PARAMETERS:     ES      Thread block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DeleteProcess    Proc near
-        mov ax,es:p_process_sel
-        push es
-        mov es,ax
-        FreeMem
-        pop es
+    mov ax,es:p_process_sel
+    push es
+    mov es,ax
+    FreeMem
+    pop es
 ;
     cli
-        mov bx,es
-        mov ax,process_dir_sel
-        mov ds,ax
-        mov esi,alias_linear
-        shr esi,20
-        mov eax,es:p_cr3
-        mov [si],eax
-        mov eax,cr3
-        mov cr3,eax
+    mov bx,es
+    mov ax,process_dir_sel
+    mov ds,ax
+    mov esi,alias_linear
+    shr esi,20
+    mov eax,es:p_cr3
+    mov [si],eax
+    mov eax,cr3
+    mov cr3,eax
 ;
     mov ax,flat_sel
     mov ds,ax
-        mov cx,400h
-        mov edx,handle_linear
-        shr edx,10
-        add edx,alias_linear
+    mov cx,400h
+    mov edx,handle_linear
+    shr edx,10
+    add edx,alias_linear
 
 cleanup_process_linear_loop:
-        mov eax,[edx]
-        test al,1
-        jz cleanup_process_linear_next
+    mov eax,[edx]
+    test al,1
+    jz cleanup_process_linear_next
 ;
-        FreePhysical
+    FreePhysical
 
 cleanup_process_linear_next:
-        add edx,4
-        loop cleanup_process_linear_loop
+    add edx,4
+    loop cleanup_process_linear_loop
 ;
-        mov ax,process_page_sel
-        mov ds,ax
-        mov edx,handle_linear
-        shr edx,10
-        add edx,alias_linear
-        shr edx,10
-        mov eax,[edx]
-        FreePhysical
+    mov ax,process_page_sel
+    mov ds,ax
+    mov edx,handle_linear
+    shr edx,10
+    add edx,alias_linear
+    shr edx,10
+    mov eax,[edx]
+    FreePhysical
 ;
-        mov eax,es:p_cr3
-        FreePhysical
+    mov eax,es:p_cr3
+    FreePhysical
 ;
     sti
-        push es
-        mov es,es:p_tss_data_sel
-        mov es,es:tss_ess0
-        FreeMem
-        pop es
+    push es
+    mov es,es:p_tss_data_sel
+    mov es,es:tss_ess0
+    FreeMem
+    pop es
 ;
-        mov bx,es:p_tss_data_sel
-        FreeGdt
+    mov bx,es:p_tss_data_sel
+    FreeGdt
 ;
-        mov bx,es:p_tss_sel
-        FreeGdt
+    mov bx,es:p_tss_sel
+    FreeGdt
 ;
-        FreeMem
-        ret
+    FreeMem
+    ret
 DeleteProcess   Endp
-        
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   System thread
+;           NAME:           System thread
 ;
-;               DESCRIPTION:    Cleans up threads & processes
+;           DESCRIPTION:    Cleans up threads & processes
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3169,9 +3174,9 @@ stThreadOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   StartProcessorNullThreads
+;           NAME:           StartProcessorNullThreads
 ;
-;               DESCRIPTION:    Start each of the null threads for a processor
+;           DESCRIPTION:    Start each of the null threads for a processor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3179,22 +3184,22 @@ stThreadOk:
     public start_processor_null_threads
 
 start_processor_null_threads    Proc near
-        mov ax,task_sel
-        mov ds,ax
-        mov ds:try_lock_proc,OFFSET TryLockSingle
-        mov ds:lock_proc,OFFSET LockSingle
-        mov ds:unlock_proc,OFFSET UnlockSingle
-        mov ds:load_unlock_proc,OFFSET LoadUnlockSingle
+    mov ax,task_sel
+    mov ds,ax
+    mov ds:try_lock_proc,OFFSET TryLockSingle
+    mov ds:lock_proc,OFFSET LockSingle
+    mov ds:unlock_proc,OFFSET UnlockSingle
+    mov ds:load_unlock_proc,OFFSET LoadUnlockSingle
     mov ds:lock_list_proc,OFFSET LockListSingle
     mov ds:unlock_list_proc,OFFSET UnlockListSingle
     mov cx,ds:processor_count
     cmp cx,1
     jbe start_locks_ok
 ;
-        mov ds:try_lock_proc,OFFSET TryLockMultiple
-        mov ds:lock_proc,OFFSET LockMultiple
-        mov ds:unlock_proc,OFFSET UnlockMultiple
-        mov ds:load_unlock_proc,OFFSET LoadUnlockMultiple
+    mov ds:try_lock_proc,OFFSET TryLockMultiple
+    mov ds:lock_proc,OFFSET LockMultiple
+    mov ds:unlock_proc,OFFSET UnlockMultiple
+    mov ds:load_unlock_proc,OFFSET LoadUnlockMultiple
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
 
@@ -3295,21 +3300,21 @@ null_thread:
     xor ax,ax
     xor edi,edi
     jmp BlockCurrentThread
-        
+    
 null_loop:
-        hlt
-        jmp null_loop
+    hlt
+    jmp null_loop
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WakeThread
+;           NAME:           WakeThread
 ;
-;               DESCRIPTION:    Wake up thread
+;           DESCRIPTION:    Wake up thread
 ;
-;               PARAMETERS:             DX:ESI          Thread list
-;                                               EAX                     Status to thread
+;           PARAMETERS:         DX:ESI      Thread list
+;                           EAX             Status to thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3325,24 +3330,24 @@ WakeThread      PROC near
     mov ds,bx
     call ds:try_lock_proc
 ;
-        mov di,es:[esi]
-        or di,di
-        jz wtUnlock
+    mov di,es:[esi]
+    or di,di
+    jz wtUnlock
 ;       
     call ds:lock_list_proc
 ;
     push ds
     mov ds,dx    
-        RemoveBlock32
-        mov es:p_data,eax
-        pop ds
+    RemoveBlock32
+    mov es:p_data,eax
+    pop ds
 ;
-        mov di,OFFSET wakeup_list
-        InsertBlock
+    mov di,OFFSET wakeup_list
+    InsertBlock
 ;       
-        mov ds:has_list,1
-        call ds:unlock_list_proc
-        
+    mov ds:has_list,1
+    call ds:unlock_list_proc
+    
 wtUnlock:    
     call ds:unlock_proc
 ;
@@ -3351,16 +3356,16 @@ wtUnlock:
     pop fs
     pop es      
     pop ds
-        ret
+    ret
 WakeThread      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ShutdownLocal
+;           NAME:           ShutdownLocal
 ;
-;               DESCRIPTION:    Shutdown
+;           DESCRIPTION:    Shutdown
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3382,32 +3387,32 @@ slDo:
     mov ds,fs:ps_null_thread 
     mov ds,ds:p_tss_data_sel  
 ;    
-        mov dword ptr ds:tss_ebx,ebx
+    mov dword ptr ds:tss_ebx,ebx
     mov dword ptr ds:tss_ecx,ecx
     mov dword ptr ds:tss_edx,edx
     mov dword ptr ds:tss_esi,esi
     mov dword ptr ds:tss_edi,edi
-        mov dword ptr ds:tss_ebp,ebp
+    mov dword ptr ds:tss_ebp,ebp
 ;
     pop ax
-        mov ds:tss_fs,ax
+    mov ds:tss_fs,ax
 ;
     pop ax      
-        mov ds:tss_ds,ax
+    mov ds:tss_ds,ax
 ;
-        mov ax,es
-        mov ds:tss_es,ax
-        mov ax,gs
-        mov ds:tss_gs,ax
+    mov ax,es
+    mov ds:tss_es,ax
+    mov ax,gs
+    mov ds:tss_gs,ax
 ;
     pushfd
-        pop dword ptr ds:tss_eflags
+    pop dword ptr ds:tss_eflags
 ;       
-        mov ax,cs
-        mov ds:tss_cs,ax
-        pop ax
-        movzx eax,ax
-        mov dword ptr ds:tss_eip,eax
+    mov ax,cs
+    mov ds:tss_cs,ax
+    pop ax
+    movzx eax,ax
+    mov dword ptr ds:tss_eip,eax
 ;
 ;   pop ax
 ;       mov dword ptr ds:tss_eax,eax
@@ -3417,12 +3422,12 @@ slDo:
 ;    
     mov ax,sp
     movzx eax,ax
-        mov dword ptr ds:tss_esp,eax
+    mov dword ptr ds:tss_esp,eax
 ;       
     mov es,fs:ps_null_thread 
     mov ax,task_sel
     mov ds,ax
-        mov es:p_error_code,3
+    mov es:p_error_code,3
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -3435,9 +3440,9 @@ ShutdownLocal    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Shutdown
+;           NAME:           Shutdown
 ;
-;               DESCRIPTION:    Shutdown
+;           DESCRIPTION:    Shutdown
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3465,41 +3470,41 @@ spDo:
     mov ds,ds:p_tss_data_sel  
     pop dword ptr ds:tss_eax
 ;    
-        mov dword ptr ds:tss_ebx,ebx
+    mov dword ptr ds:tss_ebx,ebx
     mov dword ptr ds:tss_ecx,ecx
     mov dword ptr ds:tss_edx,edx
     mov dword ptr ds:tss_esi,esi
     mov dword ptr ds:tss_edi,edi
-        mov dword ptr ds:tss_ebp,ebp
+    mov dword ptr ds:tss_ebp,ebp
 ;
     pop ax
-        mov ds:tss_fs,ax
+    mov ds:tss_fs,ax
 ;
     pop ax      
-        mov ds:tss_ds,ax
+    mov ds:tss_ds,ax
 ;
-        mov ax,es
-        mov ds:tss_es,ax
-        mov ax,gs
-        mov ds:tss_gs,ax
+    mov ax,es
+    mov ds:tss_es,ax
+    mov ax,gs
+    mov ds:tss_gs,ax
 ;
     add sp,4
     pop dword ptr ds:tss_eip
     pop eax
     mov word ptr ds:tss_cs,ax
-        pop dword ptr ds:tss_eflags
+    pop dword ptr ds:tss_eflags
 ;
     mov ax,ss
     mov ds:tss_ss,ax
 ;    
     mov ax,sp
     movzx eax,ax
-        mov dword ptr ds:tss_esp,eax
+    mov dword ptr ds:tss_esp,eax
 ;       
     mov es,fs:ps_null_thread 
     mov ax,task_sel
     mov ds,ax
-        mov es:p_error_code,3
+    mov es:p_error_code,3
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -3512,15 +3517,15 @@ shutdown_pr    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DebugException / LockedDebugException
+;           NAME:           DebugException / LockedDebugException
 ;
-;               DESCRIPTION:    Save current state from stack + local registers
+;           DESCRIPTION:    Save current state from stack + local registers
 ;
 ;       PARAMETERS:     SS:BP       Exception stack
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-debug_exception_name            DB 'Debug Exception', 0
+debug_exception_name        DB 'Debug Exception', 0
 locked_debug_exception_name     DB 'Locked Debug Exception', 0
 
 locked_debug_exception:
@@ -3549,48 +3554,48 @@ dfDo:
     mov ds,fs:ps_null_thread 
     mov ds,ds:p_tss_data_sel  
 ;    
-        mov eax,[bp].vm_eax
-        mov dword ptr ds:tss_eax,eax
-        mov eax,[bp].vm_ebx
-        mov dword ptr ds:tss_ebx,eax
+    mov eax,[bp].vm_eax
+    mov dword ptr ds:tss_eax,eax
+    mov eax,[bp].vm_ebx
+    mov dword ptr ds:tss_ebx,eax
     mov dword ptr ds:tss_ecx,ecx
     mov dword ptr ds:tss_edx,edx
     mov dword ptr ds:tss_esi,esi
     mov dword ptr ds:tss_edi,edi
-        mov eax,ebp
-        mov ax,[bp]
-        mov dword ptr ds:tss_ebp,eax
+    mov eax,ebp
+    mov ax,[bp]
+    mov dword ptr ds:tss_ebp,eax
 ;       
-        mov eax,[bp].vm_eflags
-        mov dword ptr ds:tss_eflags,eax
-        mov ax,[bp].vm_cs
-        mov ds:tss_cs,ax
-        mov eax,[bp].vm_eip
-        mov dword ptr ds:tss_eip,eax
+    mov eax,[bp].vm_eflags
+    mov dword ptr ds:tss_eflags,eax
+    mov ax,[bp].vm_cs
+    mov ds:tss_cs,ax
+    mov eax,[bp].vm_eip
+    mov dword ptr ds:tss_eip,eax
 ;
     mov ax,ss
     mov ds:tss_ss,ax
     mov ax,bp
     add ax,vm_esp
     movzx eax,ax
-        mov dword ptr ds:tss_esp,eax
+    mov dword ptr ds:tss_esp,eax
 ;       
-        mov ax,[bp].pm_ds
-        mov ds:tss_ds,ax
-        mov ax,es
-        mov ds:tss_es,ax
+    mov ax,[bp].pm_ds
+    mov ds:tss_ds,ax
+    mov ax,es
+    mov ds:tss_es,ax
 ;
     pop ax      
-        mov ds:tss_fs,ax
+    mov ds:tss_fs,ax
 ;       
-        mov ax,gs
-        mov ds:tss_gs,ax
+    mov ax,gs
+    mov ds:tss_gs,ax
 ;
     mov ax,task_sel
     mov ds,ax
     mov es,fs:ps_null_thread
     movzx dx,byte ptr [bp].vm_err+2
-        mov es:p_error_code,dx
+    mov es:p_error_code,dx
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -3606,71 +3611,71 @@ debug_normal:
     mov ds,ax
     mov ds,ds:p_tss_data_sel
 ;
-        mov eax,[bp].vm_eax
-        mov dword ptr ds:tss_eax,eax
-        mov eax,[bp].vm_ebx
-        mov dword ptr ds:tss_ebx,eax
+    mov eax,[bp].vm_eax
+    mov dword ptr ds:tss_eax,eax
+    mov eax,[bp].vm_ebx
+    mov dword ptr ds:tss_ebx,eax
     mov dword ptr ds:tss_ecx,ecx
     mov dword ptr ds:tss_edx,edx
     mov dword ptr ds:tss_esi,esi
     mov dword ptr ds:tss_edi,edi
-        mov eax,ebp
-        mov ax,[bp]
-        mov dword ptr ds:tss_ebp,eax
+    mov eax,ebp
+    mov ax,[bp]
+    mov dword ptr ds:tss_ebp,eax
 ;       
-        mov eax,[bp].vm_eflags
-        mov dword ptr ds:tss_eflags,eax
-        mov ax,[bp].vm_cs
-        mov ds:tss_cs,ax
-        mov eax,[bp].vm_eip
-        mov dword ptr ds:tss_eip,eax
+    mov eax,[bp].vm_eflags
+    mov dword ptr ds:tss_eflags,eax
+    mov ax,[bp].vm_cs
+    mov ds:tss_cs,ax
+    mov eax,[bp].vm_eip
+    mov dword ptr ds:tss_eip,eax
 ;       
     pop si
     test dword ptr [bp].vm_eflags,20000h
     jnz debug_vm
 
 debug_pm:
-        mov al,[bp].vm_cs
-        test al,3
-        jz debug_kernel
+    mov al,[bp].vm_cs
+    test al,3
+    jz debug_kernel
 ;
-        mov ax,[bp].vm_ss
-        mov ds:tss_ss,ax
-        mov eax,[bp].vm_esp
-        mov dword ptr ds:tss_esp,eax
-        jmp debug_pm_common
-        
+    mov ax,[bp].vm_ss
+    mov ds:tss_ss,ax
+    mov eax,[bp].vm_esp
+    mov dword ptr ds:tss_esp,eax
+    jmp debug_pm_common
+    
 debug_kernel:
     mov ax,ss
     mov ds:tss_ss,ax
     mov ax,bp
     add ax,vm_esp
     movzx eax,ax
-        mov dword ptr ds:tss_esp,eax
-        
+    mov dword ptr ds:tss_esp,eax
+    
 debug_pm_common:
-        mov ax,[bp].pm_ds
-        mov ds:tss_ds,ax
-        mov ax,es
-        mov ds:tss_es,ax
-        mov ds:tss_fs,si
-        mov ax,gs
-        mov ds:tss_gs,ax
-        jmp debug_save_ok
+    mov ax,[bp].pm_ds
+    mov ds:tss_ds,ax
+    mov ax,es
+    mov ds:tss_es,ax
+    mov ds:tss_fs,si
+    mov ax,gs
+    mov ds:tss_gs,ax
+    jmp debug_save_ok
 
 debug_vm:
-        mov ax,[bp].vm_gs
-        mov ds:tss_gs,ax
-        mov ax,[bp].vm_fs
-        mov ds:tss_fs,ax
-        mov ax,[bp].vm_ds
-        mov ds:tss_ds,ax
-        mov ax,[bp].vm_es
-        mov ds:tss_es,ax
-        mov ax,[bp].vm_ss
-        mov ds:tss_ss,ax
-        mov eax,[bp].vm_esp
-        mov dword ptr ds:tss_esp,eax
+    mov ax,[bp].vm_gs
+    mov ds:tss_gs,ax
+    mov ax,[bp].vm_fs
+    mov ds:tss_fs,ax
+    mov ax,[bp].vm_ds
+    mov ds:tss_ds,ax
+    mov ax,[bp].vm_es
+    mov ds:tss_es,ax
+    mov ax,[bp].vm_ss
+    mov ds:tss_ss,ax
+    mov eax,[bp].vm_esp
+    mov dword ptr ds:tss_esp,eax
 
 debug_save_ok:
     movzx dx,byte ptr [bp].vm_err+2
@@ -3697,7 +3702,7 @@ debug_save_ok:
     CpuReset
 
 dbDo:
-        mov es:p_error_code,dx
+    mov es:p_error_code,dx
     mov ax,system_data_sel
     mov ds,ax
     mov di,OFFSET debug_list
@@ -3706,19 +3711,19 @@ dbDo:
     
 debug_block:
     mov es,fs:ps_curr_thread
-        mov es:p_error_code,dx
+    mov es:p_error_code,dx
 ;
     mov ax,system_data_sel
-        mov edi,OFFSET debug_list       
+    mov edi,OFFSET debug_list       
     jmp BlockCurrentThread
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DoubleFault
+;           NAME:           DoubleFault
 ;
-;               DESCRIPTION:    Handle double fault exception (from task-gate)
+;           DESCRIPTION:    Handle double fault exception (from task-gate)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3731,10 +3736,10 @@ double_fault:
     push ax
     popf
 ;       
-        mov ax,gdt_sel
-        mov ds,ax
-        mov bx,double_tss_sel
-        and byte ptr ds:[bx+5],NOT 2
+    mov ax,gdt_sel
+    mov ds,ax
+    mov bx,double_tss_sel
+    and byte ptr ds:[bx+5],NOT 2
 ;    
     mov ax,task_sel
     mov ds,ax
@@ -3758,19 +3763,19 @@ double_fault:
     mov ds,ax
     mov bx,ds:tss_back_link
 ;
-        mov ax,gdt_sel
-        mov ds,ax
-        and bx,0FFF8h
-        xor ecx,ecx
-        mov cl,[bx+6]
-        and cl,0Fh
-        shl ecx,16
-        mov cx,[bx]
-        inc ecx
-        mov edx,[bx+2]
-        rol edx,8
-        mov dl,[bx+7]
-        ror edx,8
+    mov ax,gdt_sel
+    mov ds,ax
+    and bx,0FFF8h
+    xor ecx,ecx
+    mov cl,[bx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[bx]
+    inc ecx
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
 ;       
     AllocateGdt
     CreateDataSelector16
@@ -3782,7 +3787,7 @@ double_fault:
     mov es,word ptr ds:tss_ss
     mov esi,es:[bx].vm_cs
     mov edi,es:[bx].vm_eip
-        call ShutdownLocal
+    call ShutdownLocal
 ;
     mov eax,dword ptr ds:tss_eax
     mov dword ptr es:tss_eax,eax
@@ -3826,7 +3831,7 @@ double_fault:
     mov ax,ds:tss_cs
     mov es:tss_cs,ax
 ;
-    mov eax,dword ptr ds:tss_eip               
+    mov eax,dword ptr ds:tss_eip           
     mov dword ptr es:tss_eip,eax
 ;
     mov eax,dword ptr ds:tss_eflags
@@ -3835,7 +3840,7 @@ double_fault:
     mov es,fs:ps_null_thread 
     mov ax,task_sel
     mov ds,ax
-        mov es:p_error_code,8
+    mov es:p_error_code,8
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -3845,30 +3850,30 @@ double_fault:
     
 double_block:
     mov es,ax    
-        mov es:p_error_code,8
+    mov es:p_error_code,8
 ;
     mov ax,system_data_sel
-        mov edi,OFFSET debug_list       
+    mov edi,OFFSET debug_list       
     jmp BlockCurrentThread
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateProcessor
+;           NAME:           CreateProcessor
 ;
-;               DESCRIPTION:    Create processor
+;           DESCRIPTION:    Create processor
 ;
 ;       PARAMETERS:     ES:DI   Get processor callback
 ;
-;       RETURNS:        AX      Processor #
-;                       ES      Processor sel
+;       RETURNS:    AX      Processor #
+;               ES      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_processor_name   DB 'Create Processor',0
 
-create_processor        Proc far
+create_processor    Proc far
     push ds
     push bx
     push cx
@@ -3890,13 +3895,13 @@ create_processor        Proc far
     mov es:ps_ss,ax
     mov es:ps_sp,200h
 ;
-        mov ax,task_sel
-        mov ds,ax
-        mov ax,ds:processor_count
-        mov si,ax
-        add si,si
-        mov [si].processor_arr,es
-        inc ds:processor_count
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,ds:processor_count
+    mov si,ax
+    add si,si
+    mov [si].processor_arr,es
+    inc ds:processor_count
 ;
     mov es:ps_id,ax     
     mov cl,al
@@ -3914,21 +3919,21 @@ create_processor        Proc far
     mov es:ps_wait,0
     mov es:ps_last_lsb,0
 ;
-        mov bx,OFFSET ps_timer_entries
-        mov es:[bx].ps_timer_next,0
-        mov es:[bx].ps_timer_msb,0FFFFFFFFh
-        mov es:[bx].ps_timer_lsb,0FFFFFFFFh
-        mov es:ps_timer_head,bx
+    mov bx,OFFSET ps_timer_entries
+    mov es:[bx].ps_timer_next,0
+    mov es:[bx].ps_timer_msb,0FFFFFFFFh
+    mov es:[bx].ps_timer_lsb,0FFFFFFFFh
+    mov es:ps_timer_head,bx
 ;       
-        mov cx,0FFh
-        add bx,SIZE timer_struc
-        mov es:ps_timer_free,bx
+    mov cx,0FFh
+    add bx,SIZE timer_struc
+    mov es:ps_timer_free,bx
 timer_free_list_create:
-        mov ax,bx
-        add ax,SIZE timer_struc
-        mov es:[bx].ps_timer_next,ax
-        mov bx,ax
-        loop timer_free_list_create
+    mov ax,bx
+    add ax,SIZE timer_struc
+    mov es:[bx].ps_timer_next,ax
+    mov bx,ax
+    loop timer_free_list_create
 ;
     mov ax,es:ps_id     
 ;
@@ -3936,18 +3941,18 @@ timer_free_list_create:
     pop cx
     pop bx
     pop ds      
-        ret
-create_processor        Endp
+    ret
+create_processor    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetProcessorSingle
+;           NAME:           GetProcessorSingle
 ;
-;               DESCRIPTION:    Get current processor selector (single processor version)
+;           DESCRIPTION:    Get current processor selector (single processor version)
 ;
-;       RETURNS:        FS      Processor sel
+;       RETURNS:    FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3957,18 +3962,18 @@ get_processor_single    Proc far
     mov fs,ax
     mov fs,fs:processor_arr
     pop ax
-        ret
+    ret
 get_processor_single    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetProcessor
+;           NAME:           GetProcessor
 ;
-;               DESCRIPTION:    Get current processor selector
+;           DESCRIPTION:    Get current processor selector
 ;
-;       RETURNS:        FS      Processor sel
+;       RETURNS:    FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3984,19 +3989,19 @@ get_processor   Proc far
 ;
     pop ax
     pop ds
-        ret
+    ret
 get_processor   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UpdateLists
+;           NAME:           UpdateLists
 ;
-;               DESCRIPTION:    Update lists (signals + wakeup)
+;           DESCRIPTION:    Update lists (signals + wakeup)
 ;
 ;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor sel
+;               FS      Processor sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4010,14 +4015,14 @@ ulWakeupLoop:
     or ax,ax
     jz ulWakeupDone
 ;
-        RemoveBlock
-        mov di,es:p_prio
-        InsertBlock
-        cmp di,ds:prio_act
-        jbe ulWakeupPrioOk
+    RemoveBlock
+    mov di,es:p_prio
+    InsertBlock
+    cmp di,ds:prio_act
+    jbe ulWakeupPrioOk
 ;       
-        mov ds:prio_act,di
-        or fs:ps_flags,PS_FLAG_PRIO_CHANGE
+    mov ds:prio_act,di
+    or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 ulWakeupPrioOk:
     call ds:unlock_list_proc
@@ -4027,45 +4032,45 @@ ulWakeupDone:
     call ds:unlock_list_proc
 ;    
     mov ds:has_signal,0
-        mov si,OFFSET signal_list
-        mov ax,[si]
-        or ax,ax
-        jz ulSignalDone
+    mov si,OFFSET signal_list
+    mov ax,[si]
+    or ax,ax
+    jz ulSignalDone
 ;       
-        mov dx,ax
+    mov dx,ax
 
 ulSignalLoop:
-        mov es,dx
-        mov cl,es:p_signal
-        or cl,cl
-        jz ulSignalNext
+    mov es,dx
+    mov cl,es:p_signal
+    or cl,cl
+    jz ulSignalNext
 ;
     call ds:lock_list_proc
-        mov [si],dx
-        RemoveBlock
-        mov di,es:p_prio
-        InsertBlock
-        cmp di,ds:prio_act
-        jbe ulSignalPrioOk
+    mov [si],dx
+    RemoveBlock
+    mov di,es:p_prio
+    InsertBlock
+    cmp di,ds:prio_act
+    jbe ulSignalPrioOk
 ;       
-        mov ds:prio_act,di
-        or fs:ps_flags,PS_FLAG_PRIO_CHANGE
+    mov ds:prio_act,di
+    or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 ulSignalPrioOk:
     call ds:unlock_list_proc
 ;    
-        mov si,OFFSET signal_list
+    mov si,OFFSET signal_list
     mov ax,[si]
-        or ax,ax
-        jz ulSignalDone
+    or ax,ax
+    jz ulSignalDone
 ;       
     mov dx,ax
     jmp ulSignalLoop
 
 ulSignalNext:   
-        mov dx,es:p_next
-        cmp dx,ax
-        jne ulSignalLoop
+    mov dx,es:p_next
+    cmp dx,ax
+    jne ulSignalLoop
 
 ulSignalDone:    
     ret    
@@ -4074,9 +4079,9 @@ UpdateLists Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LockListSingle
+;           NAME:           LockListSingle
 ;
-;               DESCRIPTION:    Lock list, single processor version
+;           DESCRIPTION:    Lock list, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
@@ -4084,39 +4089,39 @@ UpdateLists Endp
 
 LockListSingle  Proc near
     cli
-        ret
+    ret
 LockListSingle  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UnlockListSingle
+;           NAME:           UnlockListSingle
 ;
-;               DESCRIPTION:    Unlock list, single processor version
+;           DESCRIPTION:    Unlock list, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlockListSingle        Proc near
+UnlockListSingle    Proc near
     sti
-        ret
-UnlockListSingle        Endp
+    ret
+UnlockListSingle    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LockListMultiple
+;           NAME:           LockListMultiple
 ;
-;               DESCRIPTION:    Lock list, multiple processor version
+;           DESCRIPTION:    Lock list, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LockListMultiple        Proc near
+LockListMultiple    Proc near
     push ax
 
 llSpinLock:    
@@ -4141,16 +4146,16 @@ llGet:
 
 llDone:
     pop ax    
-        ret
-LockListMultiple        Endp
+    ret
+LockListMultiple    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UnlockListMultiple
+;           NAME:           UnlockListMultiple
 ;
-;               DESCRIPTION:    Unlock list, multiple processor version
+;           DESCRIPTION:    Unlock list, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
@@ -4159,16 +4164,16 @@ LockListMultiple        Endp
 UnlockListMultiple      Proc near
     mov ds:list_lock,0
     sti
-        ret
+    ret
 UnlockListMultiple      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   TryLockDefault
+;           NAME:           TryLockDefault
 ;
-;               DESCRIPTION:    Try to lock, pre-tasking version
+;           DESCRIPTION:    Try to lock, pre-tasking version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
@@ -4176,18 +4181,18 @@ UnlockListMultiple      Endp
 
 TryLockDefault  Proc near
     call ds:get_cpu_proc
-        add fs:ps_nesting,1
+    add fs:ps_nesting,1
     stc
-        ret
+    ret
 TryLockDefault  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LockDefault
+;           NAME:           LockDefault
 ;
-;               DESCRIPTION:    Lock, pre-tasking version
+;           DESCRIPTION:    Lock, pre-tasking version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
@@ -4195,18 +4200,18 @@ TryLockDefault  Endp
 
 LockDefault     Proc near
     call ds:get_cpu_proc
-        add fs:ps_nesting,1
+    add fs:ps_nesting,1
     stc
-        ret
+    ret
 LockDefault     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UnlockDefault
+;           NAME:           UnlockDefault
 ;
-;               DESCRIPTION:    Unlock, pre-tasking version
+;           DESCRIPTION:    Unlock, pre-tasking version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
@@ -4214,16 +4219,16 @@ LockDefault     Endp
 
 UnlockDefault   Proc near
     sub fs:ps_nesting,1
-        ret
+    ret
 UnlockDefault   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LoadUnlockDefault
+;           NAME:           LoadUnlockDefault
 ;
-;               DESCRIPTION:    Thread load unlock, pre-tasking version
+;           DESCRIPTION:    Thread load unlock, pre-tasking version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
@@ -4231,66 +4236,66 @@ UnlockDefault   Endp
 
 LoadUnlockDefault       Proc near
     sub fs:ps_nesting,1
-        ret
+    ret
 LoadUnlockDefault       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   TryLockSingle
+;           NAME:           TryLockSingle
 ;
-;               DESCRIPTION:    Try to lock, single processor version
+;           DESCRIPTION:    Try to lock, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
-;       RETURNS:        CY      Owner of section
-;                       FS      Processor selector
+;       RETURNS:    CY      Owner of section
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TryLockSingle   Proc near
     call ds:get_cpu_proc
-        add fs:ps_nesting,1
-        ret
+    add fs:ps_nesting,1
+    ret
 TryLockSingle   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LockSingle
+;           NAME:           LockSingle
 ;
-;               DESCRIPTION:    Lock, single processor version
+;           DESCRIPTION:    Lock, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
-;       RETURNS:        CY      Owner of section
-;                       FS      Processor selector
+;       RETURNS:    CY      Owner of section
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockSingle      Proc near
     call ds:get_cpu_proc
-        add fs:ps_nesting,1
-        jc lsDone
+    add fs:ps_nesting,1
+    jc lsDone
 ;
     call ShutdownLocal
 
-lsDone:         
-        ret
+lsDone:     
+    ret
 LockSingle      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UnlockSingle
+;           NAME:           UnlockSingle
 ;
-;               DESCRIPTION:    Unlock, single processor version
+;           DESCRIPTION:    Unlock, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor selector
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4300,7 +4305,7 @@ UnlockSingle    Proc near
 tusRetry:    
     cli
     sub fs:ps_nesting,1
-        jnc tusDone
+    jnc tusDone
 ;
     mov ax,fs:ps_curr_thread
     or ax,ax
@@ -4325,44 +4330,44 @@ tusSwap:
 tusDone:
     sti
     pop ax
-        ret
+    ret
 UnlockSingle    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LoadUnlockSingle
+;           NAME:           LoadUnlockSingle
 ;
-;               DESCRIPTION:    Thread load unlock, single processor version
+;           DESCRIPTION:    Thread load unlock, single processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor selector
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadUnlockSingle        Proc near
+LoadUnlockSingle    Proc near
     cli
     sub fs:ps_nesting,1
-        jc lulsDone
+    jc lulsDone
 ;
     mov cx,fs:ps_nesting
     call ShutdownLocal
 
 lulsDone:       
-        ret
-LoadUnlockSingle        Endp
+    ret
+LoadUnlockSingle    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WakeProcessor
+;           NAME:           WakeProcessor
 ;
-;               DESCRIPTION:    Wake up a processor
+;           DESCRIPTION:    Wake up a processor
 ;
 ;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor selector
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4401,14 +4406,14 @@ WakeProcessor   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   TryLockMultiple
+;           NAME:           TryLockMultiple
 ;
-;               DESCRIPTION:    Try to lock, multiple processor version
+;           DESCRIPTION:    Try to lock, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
-;       RETURNS:        CY      Owner of section
-;                       FS      Processor selector
+;       RETURNS:    CY      Owner of section
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4442,36 +4447,36 @@ tlmGet:
     je tlmTake
 
 tlmFail:
-        add fs:ps_nesting,1
+    add fs:ps_nesting,1
     mov ds:owner_lock,0
     clc
     jmp tlmDone
 
 tlmTake:
     mov ds:owner_sel,fs
-        add fs:ps_nesting,1
+    add fs:ps_nesting,1
     mov ds:owner_lock,0    
 
 tlmDone:
-        sti
+    sti
 ;
     pop dx
     pop ax
-        ret
+    ret
 TryLockMultiple Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LockMultiple
+;           NAME:           LockMultiple
 ;
-;               DESCRIPTION:    Lock, multiple processor version
+;           DESCRIPTION:    Lock, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
 ;
-;       RETURNS:        CY      Owner of section
-;                       FS      Processor selector
+;       RETURNS:    CY      Owner of section
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4515,25 +4520,25 @@ lmHalt:
 
 lmTake:
     mov ds:owner_sel,fs
-        add fs:ps_nesting,1
+    add fs:ps_nesting,1
     mov ds:owner_lock,0    
-        sti
+    sti
 ;
     pop dx
     pop ax
-        ret
+    ret
 LockMultiple    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UnlockMultiple
+;           NAME:           UnlockMultiple
 ;
-;               DESCRIPTION:    Unlock, multiple processor version
+;           DESCRIPTION:    Unlock, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor selector
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4558,7 +4563,7 @@ tumGet:
     
 tumRetry:    
     sub fs:ps_nesting,1
-        jnc tumUnlock
+    jnc tumUnlock
 ;
     mov ax,fs
     cmp ax,ds:owner_sel
@@ -4624,19 +4629,19 @@ tumUnlockDo:
 tumDone:
     sti
     pop eax
-        ret
+    ret
 UnlockMultiple  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LoadUnlockMultiple
+;           NAME:           LoadUnlockMultiple
 ;
-;               DESCRIPTION:    Thread load unlock, multiple processor version
+;           DESCRIPTION:    Thread load unlock, multiple processor version
 ;
 ;       PARAMETERS:     DS      Task_sel
-;                       FS      Processor selector
+;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4660,7 +4665,7 @@ lumGet:
     jnz lumSpinLock
 ;    
     sub fs:ps_nesting,1
-        jc lumNestingOk
+    jc lumNestingOk
 ;
     mov cx,fs:ps_nesting
     pop eax
@@ -4715,54 +4720,54 @@ lumUnlockDo:
 
 lumDone:
     pop eax
-        ret
+    ret
 LoadUnlockMultiple      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   EnterInt
+;           NAME:           EnterInt
 ;
-;               DESCRIPTION:    Enter interrupt notification
+;           DESCRIPTION:    Enter interrupt notification
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enter_int_name  DB 'Enter Int',0
 
 enter_int       Proc far
-        mov ax,task_sel
-        mov ds,ax
-        call ds:try_lock_proc
-        ret
+    mov ax,task_sel
+    mov ds,ax
+    call ds:try_lock_proc
+    ret
 enter_int       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LeaveInt
+;           NAME:           LeaveInt
 ;
-;               DESCRIPTION:    Leave interrupt notification
+;           DESCRIPTION:    Leave interrupt notification
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 leave_int_name  DB 'Leave Int',0
 
 leave_int       Proc far
-        mov ax,task_sel
-        mov ds,ax
-        call ds:unlock_proc
-        ret
+    mov ax,task_sel
+    mov ds,ax
+    call ds:unlock_proc
+    ret
 leave_int       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LockTask
+;           NAME:           LockTask
 ;
-;               DESCRIPTION:    Lock task
+;           DESCRIPTION:    Lock task
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4773,191 +4778,191 @@ lock_task       Proc far
     push fs
     push ax
 ;    
-        mov ax,task_sel
-        mov ds,ax
-        call ds:lock_proc
+    mov ax,task_sel
+    mov ds,ax
+    call ds:lock_proc
 ;       
     pop ax
     pop fs
     pop ds
-        ret
+    ret
 lock_task       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UnlockTask
+;           NAME:           UnlockTask
 ;
-;               DESCRIPTION:    Unlock task
+;           DESCRIPTION:    Unlock task
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-unlock_task_name        DB 'Unlock Task',0
+unlock_task_name    DB 'Unlock Task',0
 
 unlock_task     Proc far
     push ds
     push fs
     push ax
 ;    
-        mov ax,task_sel
-        mov ds,ax
-        call ds:get_cpu_proc
-        call ds:unlock_proc
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_cpu_proc
+    call ds:unlock_proc
 ;
     pop ax
     pop fs
     pop ds      
-        ret
+    ret
 unlock_task     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   TIMER_INT
+;           NAME:           TIMER_INT
 ;
-;               DESCRIPTION:    Timer interrupt handler
+;           DESCRIPTION:    Timer interrupt handler
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public timer_int
+    public timer_int
 
 timer_int:
-        push ds
-        push es
-        push fs
-        pushad
+    push ds
+    push es
+    push fs
+    pushad
 ;
-        in al,INT0_MASK
-        or al,1
-        out INT0_MASK,al
+    in al,INT0_MASK
+    or al,1
+    out INT0_MASK,al
 ;
-        mov al,20h
-        out INT0_CONTROL,al
-        mov ax,task_sel
-        mov ds,ax
-        call ds:try_lock_proc
-        call ReloadTimer
+    mov al,20h
+    out INT0_CONTROL,al
+    mov ax,task_sel
+    mov ds,ax
+    call ds:try_lock_proc
+    call ReloadTimer
 ;
-        popad
-        pop fs
-        pop es
-        pop ds
-        iretd
+    popad
+    pop fs
+    pop es
+    pop ds
+    iretd
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DoPreemptProcessor
+;           NAME:           DoPreemptProcessor
 ;
-;               DESCRIPTION:    Preempt processor from running thread
+;           DESCRIPTION:    Preempt processor from running thread
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 do_preempt_processor_name   DB 'Do Preempt Processor', 0
 
 do_preempt_processor    Proc far
-        mov ax,task_sel
-        mov ds,ax
-        call ds:try_lock_proc
-        call ReloadTimer
-        ret
+    mov ax,task_sel
+    mov ds,ax
+    call ds:try_lock_proc
+    call ReloadTimer
+    ret
 do_preempt_processor    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   START_TIMER
+;           NAME:           START_TIMER
 ;
-;               DESCRIPTION:    Start a timer
+;           DESCRIPTION:    Start a timer
 ;
-;               PARAMETERS:             EDX:EAX         Timeout time
-;                                               ES:DI           Callback
-;                                               BX                      Owner
-;                                               CX                      ID
-;                                                                                               
+;           PARAMETERS:         EDX:EAX     Timeout time
+;                           ES:DI       Callback
+;                           BX              Owner
+;                           CX              ID
+;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_timer_name DB 'Start Timer',0
 
 start_timer     PROC far
-        push ds
-        push es
-        push fs
-        pushad
+    push ds
+    push es
+    push fs
+    pushad
 ;
-        mov si,task_sel
-        mov ds,si
-        call ds:try_lock_proc
-        cli
+    mov si,task_sel
+    mov ds,si
+    call ds:try_lock_proc
+    cli
     pushf
-        LocalStartTimer
-        popf
-        call ReloadTimer
-        sti
+    LocalStartTimer
+    popf
+    call ReloadTimer
+    sti
 ;
-        popad
-        pop fs
-        pop es
-        pop ds
-        ret
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
 start_timer     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   STOP_TIMER
+;           NAME:           STOP_TIMER
 ;
-;               DESCRIPTION:    Stop timer
+;           DESCRIPTION:    Stop timer
 ;
-;               PARAMETERS:             BX                      Owner
-;                                                                                               
+;           PARAMETERS:         BX              Owner
+;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_timer_name DB 'Stop Timer',0
 
 stop_timer      PROC far
-        push ds
-        push es
-        push fs
-        pushad
+    push ds
+    push es
+    push fs
+    pushad
 ;
-        mov si,task_sel
-        mov ds,si
-        call ds:try_lock_proc
-        cli
-        pushf
-        LocalStopTimer
-        popf
-        call ReloadTimer
-        sti
+    mov si,task_sel
+    mov ds,si
+    call ds:try_lock_proc
+    cli
+    pushf
+    LocalStopTimer
+    popf
+    call ReloadTimer
+    sti
 ;
-        popad
-        pop fs
-        pop es
-        pop ds
-        ret
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
 stop_timer      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   init_first_thread
+;           NAME:           init_first_thread
 ;
-;               DESCRIPTION:    Init first thread
+;           DESCRIPTION:    Init first thread
 ;
-;               PARAMETERS:             ES              Thread control block
-;                                                                                               
+;           PARAMETERS:         ES          Thread control block
+;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_first_thread
+    public init_first_thread
 
 init_first_thread:
     mov ds,es:p_tss_data_sel
@@ -4966,28 +4971,28 @@ init_first_thread:
     mov eax,dword ptr ds:tss_esp
     mov dword ptr ds:tss_esp0,eax
 ;    
-        mov ax,task_sel
-        mov ds,ax
-        call ds:lock_proc
-        mov di,es:p_prio
-        mov ds:prio_act,di
-        InsertBlock
+    mov ax,task_sel
+    mov ds,ax
+    call ds:lock_proc
+    mov di,es:p_prio
+    mov ds:prio_act,di
+    InsertBlock
 ;
     mov ax,system_data_sel
     mov es,ax
-        mov ds:update_tics,0
-        mov ds:init_clock_proc,OFFSET InitPitClock
-        mov ds:update_clock_proc,OFFSET UpdatePitClock
+    mov ds:update_tics,0
+    mov ds:init_clock_proc,OFFSET InitPitClock
+    mov ds:update_clock_proc,OFFSET UpdatePitClock
     mov eax,es:tsc_tics
     or eax,eax
     jz timer_clock_done
 ;
-        mov ds:init_clock_proc,OFFSET InitTscClock
-        mov ds:update_clock_proc,OFFSET UpdateTscClock
+    mov ds:init_clock_proc,OFFSET InitTscClock
+    mov ds:update_clock_proc,OFFSET UpdateTscClock
 
 timer_clock_done:
     StartSysTimer
-        mov ds:update_tics,eax
+    mov ds:update_tics,eax
     call ds:init_clock_proc
 ;
     mov bx,task_sel
@@ -4998,74 +5003,74 @@ timer_clock_done:
     mov bx,task_sel
     mov ds,bx
     call ds:get_cpu_proc
-        jmp LoadCurrentThread
+    jmp LoadCurrentThread
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WAKE_NEW
+;           NAME:           WAKE_NEW
 ;
-;               DESCRIPTION:    Wake-up a newly create thread
+;           DESCRIPTION:    Wake-up a newly create thread
 ;
-;               PARAMETERS:             ES                      Thread
-;                                                                                               
+;           PARAMETERS:         ES              Thread
+;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public wake_new
+    public wake_new
 
-wake_new        PROC near
+wake_new    PROC near
     mov dx,es
     push OFFSET wake_new_done
     call SaveCurrentThread
 ;
     mov es,dx
-        cli
-        mov di,es:p_prio
-        InsertBlock
-        cmp di,ds:prio_act
-        jb wake_new_lower
+    cli
+    mov di,es:p_prio
+    InsertBlock
+    cmp di,ds:prio_act
+    jb wake_new_lower
 ;       
-        mov ds:prio_act,di
+    mov ds:prio_act,di
     or fs:ps_flags,PS_FLAG_PRIO_CHANGE
 
 wake_new_lower:
     jmp ContinueCurrentThread
 
 wake_new_done:
-        ret
-wake_new        ENDP
+    ret
+wake_new    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SWAP
+;           NAME:           SWAP
 ;
-;               DESCRIPTION:    Voluntarily swap. Should not be used!
+;           DESCRIPTION:    Voluntarily swap. Should not be used!
 ;
-;               PARAMETER:
+;           PARAMETER:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 swap_name       DB 'Swap',0
 
-swap_out        PROC far
+swap_out    PROC far
     push OFFSET swap_out_done
     call SaveCurrentThread
     jmp ContinueCurrentThread
 
 swap_out_done:
-        retf32
-swap_out        ENDP
+    retf32
+swap_out    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CleanupThread
+;           NAME:           CleanupThread
 ;
-;               DESCRIPTION:    Free resources for current thread
+;           DESCRIPTION:    Free resources for current thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5085,9 +5090,9 @@ cleanup_thread:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CleanupProcess
+;           NAME:           CleanupProcess
 ;
-;               DESCRIPTION:    Free resources for current process
+;           DESCRIPTION:    Free resources for current process
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5107,16 +5112,16 @@ cleanup_process:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WAKE
+;           NAME:           WAKE
 ;
-;               DESCRIPTION:    Wake up thread
+;           DESCRIPTION:    Wake up thread
 ;
-;               PARAMETERS:             DS:SI           Thread list
-;                                               EAX                     Status to thread
+;           PARAMETERS:         DS:SI       Thread list
+;                           EAX             Status to thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-wake_thread_name        DB 'Wake',0
+wake_thread_name    DB 'Wake',0
 
 wake_thread     PROC far
     push dx
@@ -5128,20 +5133,20 @@ wake_thread     PROC far
 ;
     pop esi
     pop dx
-        ret
+    ret
 wake_thread     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SLEEP
+;           NAME:           SLEEP
 ;
-;               DESCRIPTION:    Suspend thread
+;           DESCRIPTION:    Suspend thread
 ;
-;               PARAMETERS:             DS:DI   Suspend list
+;           PARAMETERS:         DS:DI   Suspend list
 ;
-;               RETURNS:                EAX             Wake-up status
+;           RETURNS:        EAX         Wake-up status
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5159,46 +5164,46 @@ sleep_thread    PROC far
 
 sleep_thread_done:
     GetThread
-        mov ds,ax
-        mov eax,ds:p_data
-        pop ds
-        ret
+    mov ds,ax
+    mov eax,ds:p_data
+    pop ds
+    ret
 sleep_thread    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ClearSignal
+;           NAME:           ClearSignal
 ;
-;               DESCRIPTION:    Set status to unsignaled
+;           DESCRIPTION:    Set status to unsignaled
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clear_signal_name       DB 'Clear Signal',0
 
 clear_signal    PROC far
-        push ds
-        push ax
+    push ds
+    push ax
 ;
     GetThread
-        mov ds,ax
-        mov ds:p_signal,0
+    mov ds,ax
+    mov ds:p_signal,0
 ;
-        pop ax
-        pop ds
-        ret
+    pop ax
+    pop ds
+    ret
 clear_signal    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SIGNAL_THREAD
+;           NAME:           SIGNAL_THREAD
 ;
-;               DESCRIPTION:    Send a signal to a thread
+;           DESCRIPTION:    Send a signal to a thread
 ;
-;               PARAMETERS:             BX                      Thread to signal
+;           PARAMETERS:         BX              Thread to signal
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5213,9 +5218,9 @@ signal_thread   PROC far
     or bx,bx
     jz signal_done
 ;    
-        mov ax,task_sel
-        mov ds,ax
-        call ds:try_lock_proc
+    mov ax,task_sel
+    mov ds,ax
+    call ds:try_lock_proc
 ;
     mov es,bx
     mov es:p_signal,1
@@ -5225,44 +5230,44 @@ signal_thread   PROC far
     
 signal_done:       
     pop ax
-        verr ax
-        jz signal_fs_ok
+    verr ax
+    jz signal_fs_ok
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 signal_fs_ok:
-        mov fs,ax
+    mov fs,ax
 ;       
     pop ax
-        verr ax
-        jz signal_es_ok
+    verr ax
+    jz signal_es_ok
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 signal_es_ok:
-        mov es,ax
+    mov es,ax
 ;       
     pop ax
-        verr ax
-        jz signal_ds_ok
+    verr ax
+    jz signal_ds_ok
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 signal_ds_ok:
-        mov ds,ax
+    mov ds,ax
     pop ax
-        ret
+    ret
 signal_thread   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WaitForSignal
+;           NAME:           WaitForSignal
 ;
-;               DESCRIPTION:    Wait for a signal
+;           DESCRIPTION:    Wait for a signal
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5279,15 +5284,15 @@ wait_for_signal PROC far
     call ds:lock_proc
 ;    
     mov es,fs:ps_curr_thread
-        xor al,al
-        xchg al,es:p_signal
-        or al,al
-        jnz wait_for_signal_unlock
+    xor al,al
+    xchg al,es:p_signal
+    or al,al
+    jnz wait_for_signal_unlock
 ;
     push OFFSET wait_for_signal_clear
     call SaveLockedThread
 ;
-        mov ax,task_sel
+    mov ax,task_sel
     mov edi,OFFSET signal_list
     jmp BlockCurrentThread
 
@@ -5296,25 +5301,25 @@ wait_for_signal_clear:
     mov ds,ax
     call ds:lock_proc
     mov es,fs:ps_curr_thread
-        mov es:p_signal,0
+    mov es:p_signal,0
 
 wait_for_signal_unlock:
     call ds:unlock_proc
 ;       
-        pop ax
-        pop fs
-        pop es
-        pop ds
-        ret
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    ret
 wait_for_signal ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   signal_timeout
+;           NAME:           signal_timeout
 ;
-;               DESCRIPTION:    Signal timeout handler
+;           DESCRIPTION:    Signal timeout handler
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5329,11 +5334,11 @@ signal_timeout  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WaitForSignalWithTimeout
+;           NAME:           WaitForSignalWithTimeout
 ;
-;               DESCRIPTION:    Wait for a signal with timeout
+;           DESCRIPTION:    Wait for a signal with timeout
 ;
-;               PARAMETERS:             EDX:EAX     Timeout
+;           PARAMETERS:         EDX:EAX     Timeout
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5359,16 +5364,16 @@ wait_for_signal_timeout PROC far
     mov cx,bx
     StartTimer
 ;    
-        mov es,bx
-        xor al,al
-        xchg al,es:p_signal
-        or al,al
-        jnz wait_for_signal_timeout_unlock
+    mov es,bx
+    xor al,al
+    xchg al,es:p_signal
+    or al,al
+    jnz wait_for_signal_timeout_unlock
 ;
     push OFFSET wait_for_signal_timeout_clear
     call SaveLockedThread
 ;
-        mov ax,task_sel
+    mov ax,task_sel
     mov edi,OFFSET signal_list
     jmp BlockCurrentThread
 
@@ -5377,32 +5382,32 @@ wait_for_signal_timeout_clear:
     mov ds,ax
     call ds:lock_proc
     mov es,fs:ps_curr_thread
-        mov es:p_signal,0
-        
+    mov es:p_signal,0
+    
 wait_for_signal_timeout_unlock:
-        mov bx,fs:ps_curr_thread
-        StopTimer
+    mov bx,fs:ps_curr_thread
+    StopTimer
     call ds:unlock_proc
 ;
     pop di
-        pop cx
-        pop bx
-        pop ax
-        pop fs
-        pop es
-        pop ds
-        ret
+    pop cx
+    pop bx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    ret
 wait_for_signal_timeout ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   enter_section
+;           NAME:           enter_section
 ;
-;               DESCRIPTION:    Enter section
+;           DESCRIPTION:    Enter section
 ;
-;               PARAMETERS:             DS:ESI          ADDRESS OF SECTION
+;           PARAMETERS:         DS:ESI      ADDRESS OF SECTION
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5431,47 +5436,47 @@ ecsBlock:
     push OFFSET ecsDone
     call SaveLockedThread
 ;
-        lea edi,[esi].cs_list   
+    lea edi,[esi].cs_list   
     jmp BlockCurrentThread
 
 ecsUnlock:
     mov dx,task_sel
     mov ds,dx
     call ds:unlock_proc
-        
+    
 ecsDone:
     pop ax
-        verr ax
-        jz ecsFs
+    verr ax
+    jz ecsFs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 ecsFs:
-        mov fs,ax
+    mov fs,ax
 ;
     pop ax
-        verr ax
-        jz ecsDs
+    verr ax
+    jz ecsDs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 ecsDs:
-        mov ds,ax
+    mov ds,ax
 ;
     pop dx
     pop ax
-        ret
+    ret
 enter_section   ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   LeaveSection
+;           NAME:           LeaveSection
 ;
-;               DESCRIPTION:    Leave section
+;           DESCRIPTION:    Leave section
 ;
-;               PARAMETERS:             DS:ESI          ADDRESS OF SECTION
+;           PARAMETERS:         DS:ESI      ADDRESS OF SECTION
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5479,19 +5484,19 @@ leave_section_name      DB 'Leave Critical Section',0
  
 leave_section   PROC far
     push ax
-        push dx
+    push dx
     push ds
     push fs
 ;
     mov dx,ds
     mov ax,task_sel
     mov ds,ax
-        call ds:lock_proc
+    call ds:lock_proc
 ;
     mov ds,dx
-        mov ax,ds:[esi].cs_list
-        or ax,ax
-        jnz lcsUnblock
+    mov ax,ds:[esi].cs_list
+    or ax,ax
+    jnz lcsUnblock
 ;
     mov ds:[esi].cs_list,-1
     mov ax,task_sel
@@ -5511,18 +5516,18 @@ lcsUnblock:
     push ds
     mov ds,dx
     add esi,OFFSET cs_list
-        RemoveBlock32
-        mov es:p_data,0
-        pop ds
+    RemoveBlock32
+    mov es:p_data,0
+    pop ds
 ;
-        mov di,OFFSET wakeup_list
-        InsertBlock
+    mov di,OFFSET wakeup_list
+    InsertBlock
 ;       
-        mov ds:has_list,1
-        call ds:unlock_list_proc
+    mov ds:has_list,1
+    call ds:unlock_list_proc
 ;       
     pop di
-        pop esi
+    pop esi
     pop es
 
 lcsUnlock:
@@ -5530,138 +5535,138 @@ lcsUnlock:
 
 lcsDone:
     pop ax
-        verr ax
-        jz lcsFs
+    verr ax
+    jz lcsFs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 lcsFs:
-        mov fs,ax
+    mov fs,ax
 ;
     pop ax
-        verr ax
-        jz lcsDs
+    verr ax
+    jz lcsDs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 lcsDs:
-        mov ds,ax
+    mov ds,ax
 ;
-        pop dx
+    pop dx
     pop ax
-        ret
+    ret
 leave_section   ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   create_user_section
+;           NAME:           create_user_section
 ;
-;               DESCRIPTION:    Create user section
+;           DESCRIPTION:    Create user section
 ;
-;               RETURNS:                BX              Section handle
+;           RETURNS:        BX          Section handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_user_section_name        DB 'Create User Section',0
+create_user_section_name    DB 'Create User Section',0
 
 create_user_section     PROC far
-        push ds
-        push eax
-        push cx
+    push ds
+    push eax
+    push cx
 ;
-        mov cx,SIZE section_handle_seg
-        AllocateHandle
-        mov ds:[bx].us_value,0
-        mov ds:[bx].us_list,0
-        mov ds:[bx].us_owner,0
-        mov ds:[bx].us_count,0
-        mov [bx].hh_sign,SECTION_HANDLE
-        mov bx,[bx].hh_handle
-        clc
+    mov cx,SIZE section_handle_seg
+    AllocateHandle
+    mov ds:[bx].us_value,0
+    mov ds:[bx].us_list,0
+    mov ds:[bx].us_owner,0
+    mov ds:[bx].us_count,0
+    mov [bx].hh_sign,SECTION_HANDLE
+    mov bx,[bx].hh_handle
+    clc
 ;
     pop cx
-        pop eax
-        pop ds
-        retf32
+    pop eax
+    pop ds
+    retf32
 create_user_section     ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   create_blocked_user_section
+;           NAME:           create_blocked_user_section
 ;
-;               DESCRIPTION:    Create blocked user section
+;           DESCRIPTION:    Create blocked user section
 ;
-;               RETURNS:                BX              Section handle
+;           RETURNS:        BX          Section handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_blocked_user_section_name        DB 'Create Blocked User Section',0
+create_blocked_user_section_name    DB 'Create Blocked User Section',0
 
 create_blocked_user_section     PROC far
-        push ds
-        push eax
-        push cx
+    push ds
+    push eax
+    push cx
 ;
-        mov cx,SIZE section_handle_seg
-        AllocateHandle
-        mov ds:[bx].us_value,-1
-        mov ds:[bx].us_list,0
-        mov ds:[bx].us_owner,-1
-        mov ds:[bx].us_count,1
-        mov [bx].hh_sign,SECTION_HANDLE
-        mov bx,[bx].hh_handle
-        clc
+    mov cx,SIZE section_handle_seg
+    AllocateHandle
+    mov ds:[bx].us_value,-1
+    mov ds:[bx].us_list,0
+    mov ds:[bx].us_owner,-1
+    mov ds:[bx].us_count,1
+    mov [bx].hh_sign,SECTION_HANDLE
+    mov bx,[bx].hh_handle
+    clc
 ;
     pop cx
-        pop eax
-        pop ds
-        retf32
+    pop eax
+    pop ds
+    retf32
 create_blocked_user_section     ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   delete_user_section
+;           NAME:           delete_user_section
 ;
-;               DESCRIPTION:    Delete user section
+;           DESCRIPTION:    Delete user section
 ;
-;               PARAMETERS:             BX              Section handle
+;           PARAMETERS:         BX          Section handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_user_section_name        DB 'Delete User Section',0
+delete_user_section_name    DB 'Delete User Section',0
 
 delete_user_section     PROC far
     push ds
     push bx
 ;
-        mov ax,SECTION_HANDLE
-        DerefHandle
-        jc free_section_done
+    mov ax,SECTION_HANDLE
+    DerefHandle
+    jc free_section_done
 ;
-        FreeHandle
-        clc
+    FreeHandle
+    clc
 
 free_section_done:
     pop bx
-        pop ds
-        retf32
+    pop ds
+    retf32
 delete_user_section     ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   enter_user_section
+;           NAME:           enter_user_section
 ;
-;               DESCRIPTION:    Enter user section
+;           DESCRIPTION:    Enter user section
 ;
-;               PARAMETERS:             BX              Section handle
+;           PARAMETERS:         BX          Section handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5674,16 +5679,16 @@ enter_user_section      PROC far
     push ds
     push fs
 ;
-        mov ax,SECTION_HANDLE
-        DerefHandle
-        jc eusEnd
+    mov ax,SECTION_HANDLE
+    DerefHandle
+    jc eusEnd
 ;
-        lock sub ds:[bx].us_value,1
-        jc eusDone
+    lock sub ds:[bx].us_value,1
+    jc eusDone
 ;
-        str ax
-        cmp ax,ds:[bx].us_owner
-        je eusDone
+    str ax
+    cmp ax,ds:[bx].us_owner
+    je eusDone
 ;
     push ds
     mov ax,task_sel
@@ -5703,8 +5708,8 @@ eusBlock:
     push OFFSET eusDone
     call SaveLockedThread
 ;
-        lea di,[bx].us_list     
-        movzx edi,di
+    lea di,[bx].us_list     
+    movzx edi,di
     jmp BlockCurrentThread
 
 eusUnlock:
@@ -5713,46 +5718,46 @@ eusUnlock:
     mov ds,ax
     call ds:unlock_proc
     pop ds
-        
+    
 eusDone:
-        str ax
-        mov ds:[bx].us_owner,ax
-        inc ds:[bx].us_count
+    str ax
+    mov ds:[bx].us_owner,ax
+    inc ds:[bx].us_count
 
 eusEnd:
     pop ax
-        verr ax
-        jz eusFs
+    verr ax
+    jz eusFs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 eusFs:
-        mov fs,ax
+    mov fs,ax
 ;
     pop ax
-        verr ax
-        jz eusDs
+    verr ax
+    jz eusDs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 eusDs:
-        mov ds,ax
+    mov ds,ax
 ;
     pop dx
     pop bx
     pop ax
-        retf32
+    retf32
 enter_user_section      ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   leave_user_section
+;           NAME:           leave_user_section
 ;
-;               DESCRIPTION:    Leave user section
+;           DESCRIPTION:    Leave user section
 ;
-;               PARAMETERS:             BX              Section handle
+;           PARAMETERS:         BX          Section handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5765,24 +5770,24 @@ leave_user_section      PROC far
     push ds
     push fs
 ;
-        mov ax,SECTION_HANDLE
-        DerefHandle
-        jc lusDone
+    mov ax,SECTION_HANDLE
+    DerefHandle
+    jc lusDone
 ;
     str ax
     cmp ax,ds:[bx].us_owner
     jne lusDone
 ;
-        sub ds:[bx].us_count,1
-        jz lusFreeOwner
+    sub ds:[bx].us_count,1
+    jz lusFreeOwner
 ;       
-        lock add ds:[bx].us_value,1
-        jnc lusNotValueError
+    lock add ds:[bx].us_value,1
+    jnc lusNotValueError
 ;
     int 3
 
 lusNotValueError:       
-        jmp lusDone
+    jmp lusDone
 
 lusFreeOwner:
     jnc lusNotCountError
@@ -5791,18 +5796,18 @@ lusFreeOwner:
 
 lusNotCountError:
     mov ds:[bx].us_owner,0
-        lock add ds:[bx].us_value,1
+    lock add ds:[bx].us_value,1
     jc lusDone
 ;    
     push ds
     mov ax,task_sel
     mov ds,ax
-        call ds:lock_proc
-        pop ds
+    call ds:lock_proc
+    pop ds
 ;
-        mov ax,ds:[bx].us_list
-        or ax,ax
-        jnz lusUnblock
+    mov ax,ds:[bx].us_list
+    or ax,ax
+    jnz lusUnblock
 ;
     mov ds:[bx].us_list,-1
     mov ax,task_sel
@@ -5823,18 +5828,18 @@ lusUnblock:
 ;
     push ds
     mov ds,dx
-        RemoveBlock32
-        mov es:p_data,0
-        pop ds
+    RemoveBlock32
+    mov es:p_data,0
+    pop ds
 ;
-        mov di,OFFSET wakeup_list
-        InsertBlock
+    mov di,OFFSET wakeup_list
+    InsertBlock
 ;       
-        mov ds:has_list,1
-        call ds:unlock_list_proc
+    mov ds:has_list,1
+    call ds:unlock_list_proc
 ;
     pop di
-        pop esi
+    pop esi
     pop es
 
 lusUnlock:
@@ -5842,63 +5847,63 @@ lusUnlock:
 
 lusDone:
     pop ax
-        verr ax
-        jz lusFs
+    verr ax
+    jz lusFs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 lusFs:
-        mov fs,ax
+    mov fs,ax
 ;
     pop ax
-        verr ax
-        jz lusDs
+    verr ax
+    jz lusDs
 ;
-        xor ax,ax
-        
+    xor ax,ax
+    
 lusDs:
-        mov ds,ax
+    mov ds,ax
 ;
-        pop dx
-        pop bx
+    pop dx
+    pop bx
     pop ax
-        retf32
+    retf32
 leave_user_section      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   get_thread
+;           NAME:           get_thread
 ;
-;               DESCRIPTION:    Get current thread control block
+;           DESCRIPTION:    Get current thread control block
 ;
-;               PARAMETERS:             AX              Thread
-;                                               
+;           PARAMETERS:         AX          Thread
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public get_thread
+    public get_thread
 
 get_thread      PROC far
-        push ds
-        mov ax,task_sel
-        verr ax
-        jz get_thread_norm
+    push ds
+    mov ax,task_sel
+    verr ax
+    jz get_thread_norm
 
 get_thread_pre_tasking:
-        mov ax,virt_thread_sel
-        jmp get_thread_done
+    mov ax,virt_thread_sel
+    jmp get_thread_done
 
 get_thread_norm:
     push es
     push si
     push di
 ;    
-        mov ds,ax
-        mov ax,gdt_sel
-        mov es,ax
-        mov di,tss_data_sel
-        call ds:lock_list_proc
+    mov ds,ax
+    mov ax,gdt_sel
+    mov es,ax
+    mov di,tss_data_sel
+    call ds:lock_list_proc
     str si
     movs word ptr es:[di],es:[si]
     movs word ptr es:[di],es:[si]
@@ -5916,36 +5921,36 @@ get_thread_norm:
     pop es
 
 get_thread_done:
-        pop ds
-        ret
+    pop ds
+    ret
 get_thread      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetThread
+;           NAME:           GetThread
 ;
-;               DESCRIPTION:    Get current thread
+;           DESCRIPTION:    Get current thread
 ;
-;               PARAMETERS:             AX              Thread
-;                                               
+;           PARAMETERS:         AX          Thread
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_thread_name DB 'Get Thread',0
 
 get_thread_pr   PROC far
-        push ds
-        push es
-        push si
-        push di
+    push ds
+    push es
+    push si
+    push di
 ;       
-        mov ax,task_sel
-        mov ds,ax
-        mov ax,gdt_sel
-        mov es,ax
-        mov di,tss_data_sel
-        call ds:lock_list_proc
+    mov ax,task_sel
+    mov ds,ax
+    mov ax,gdt_sel
+    mov es,ax
+    mov di,tss_data_sel
+    call ds:lock_list_proc
     str si
     movs word ptr es:[di],es:[si]
     movs word ptr es:[di],es:[si]
@@ -5961,76 +5966,76 @@ get_thread_pr   PROC far
     pop di
     pop si
     pop es
-        pop ds
-        retf32
+    pop ds
+    retf32
 get_thread_pr   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetProcessor
+;           NAME:           GetProcessor
 ;
-;               DESCRIPTION:    Get current processor #
+;           DESCRIPTION:    Get current processor #
 ;
-;               RETURNS:                AX              Processor
-;                                               
+;           RETURNS:        AX          Processor
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_processor_id_name   DB 'Get Processor ID',0
 
-get_processor_id        PROC far
+get_processor_id    PROC far
     xor ax,ax
-        retf32
-get_processor_id        ENDP
+    retf32
+get_processor_id    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CpuReset
+;           NAME:           CpuReset
 ;
-;               DESCRIPTION:    Trigger a CPU reset
-;                                               
+;           DESCRIPTION:    Trigger a CPU reset
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 cpu_reset_name  DB 'Cpu Reset',0
 
 cpu_reset       PROC far
-        cli
+    cli
 wait_gate1:
-        in al,64h
-        and al,2
-        jnz wait_gate1
-        mov al,0D1h
-        out 64h,al
+    in al,64h
+    and al,2
+    jnz wait_gate1
+    mov al,0D1h
+    out 64h,al
 wait_gate2:
-        in al,64h
-        and al,2
-        jnz wait_gate2
-        mov al,0FEh
-        out 60h,al
+    in al,64h
+    and al,2
+    jnz wait_gate2
+    mov al,0FEh
+    out 60h,al
 ;
-        xor eax,eax
-        mov cr3,eax
+    xor eax,eax
+    mov cr3,eax
 
 reset_wait:
     jmp reset_wait
     
-        retf32
+    retf32
 cpu_reset       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PowerFailure
+;           NAME:           PowerFailure
 ;
-;               DESCRIPTION:    Power failure indication
+;           DESCRIPTION:    Power failure indication
 ;
-;       RETURNS:        AX  0 = power ok
-;                           1 = power failure
-;                                               
+;       RETURNS:    AX  0 = power ok
+;               1 = power failure
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 power_failure_name      DB 'Power Failure',0
@@ -6044,60 +6049,60 @@ power_failure   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetCpuTime
+;           NAME:           GetCpuTime
 ;
-;               DESCRIPTION:    Get used CPU time
+;           DESCRIPTION:    Get used CPU time
 ;
-;               PARAMETERS:             BX              Thread
-;               
-;               RETURNS:                EDX:EAX         Used CPU time                           
-;                                               
+;           PARAMETERS:         BX          Thread
+;           
+;           RETURNS:        EDX:EAX     Used CPU time               
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_cpu_time_name       DB 'Get CPU time',0
 
 get_cpu_time    PROC far
-        push ds
-        mov ds,bx
-        mov eax,ds:p_lsb_tics
-        mov edx,ds:p_msb_tics
-        pop ds
-        retf32
+    push ds
+    mov ds,bx
+    mov eax,ds:p_lsb_tics
+    mov edx,ds:p_msb_tics
+    pop ds
+    retf32
 get_cpu_time    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WakeUntil
+;           NAME:           WakeUntil
 ;
-;               DESCRIPTION:    Timer callback for wait time
+;           DESCRIPTION:    Timer callback for wait time
 ;
-;               PARAMETERS:         CX      Thread to wake up
+;           PARAMETERS:     CX      Thread to wake up
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wake_until      PROC far
-        mov ax,task_sel
-        mov ds,ax
-        mov es,cx
+    mov ax,task_sel
+    mov ds,ax
+    mov es,cx
     call ds:lock_list_proc
     mov di,OFFSET wakeup_list
     InsertBlock
-        mov ds:has_list,1
+    mov ds:has_list,1
     call ds:unlock_list_proc
-        ret
+    ret
 wake_until      ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WAIT_UNTIL
+;           NAME:           WAIT_UNTIL
 ;
-;               DESCRIPTION:    Wait until time occurs.
+;           DESCRIPTION:    Wait until time occurs.
 ;
-;               PARAMETERS:             EDX:EAX         System time to wait until
+;           PARAMETERS:         EDX:EAX     System time to wait until
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6107,31 +6112,31 @@ wait_until      PROC far
     push OFFSET wait_until_done
     call SaveCurrentThread
 ;
-        mov cx,fs:ps_curr_thread
-        mov bx,cs
-        mov es,bx
-        mov di,OFFSET wake_until
-        xor bx,bx
-        cli
-        LocalStartTimer
-        sti
+    mov cx,fs:ps_curr_thread
+    mov bx,cs
+    mov es,bx
+    mov di,OFFSET wake_until
+    xor bx,bx
+    cli
+    LocalStartTimer
+    sti
     xor ax,ax    
     mov edi,1
     jmp BlockCurrentThread
 
 wait_until_done:
-        retf32
+    retf32
 wait_until      ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WAIT_MILLI_SEC
+;           NAME:           WAIT_MILLI_SEC
 ;
-;               DESCRIPTION:    Wait a number of ms
+;           DESCRIPTION:    Wait a number of ms
 ;
-;               PARAMETERS:             AX              Value
+;           PARAMETERS:         AX          Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6141,46 +6146,46 @@ wait_milli_sec  PROC far
     push OFFSET wait_milli_done
     call SaveCurrentThread
 ;
-        mov es,fs:ps_curr_thread
-        mov bx,1193
-        mul bx
-        push dx
-        push ax
-        pop ebx
-        cli
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        sti
+    mov es,fs:ps_curr_thread
+    mov bx,1193
+    mul bx
+    push dx
+    push ax
+    pop ebx
+    cli
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    sti
 ;
-        add eax,ebx
-        adc edx,0
+    add eax,ebx
+    adc edx,0
 ;
-        mov cx,es
-        mov bx,cs
-        mov es,bx
-        mov di,OFFSET wake_until
-        xor bx,bx
-        cli
-        LocalStartTimer
-        sti     
+    mov cx,es
+    mov bx,cs
+    mov es,bx
+    mov di,OFFSET wake_until
+    xor bx,bx
+    cli
+    LocalStartTimer
+    sti     
 ;    
     xor ax,ax
     mov edi,1
     jmp BlockCurrentThread
 
 wait_milli_done:
-        retf32
+    retf32
 wait_milli_sec  ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WAIT_MICRO_SEC
+;           NAME:           WAIT_MICRO_SEC
 ;
-;               DESCRIPTION:    Wait a number of us
+;           DESCRIPTION:    Wait a number of us
 ;
-;               PARAMETERS:             AX              Value
+;           PARAMETERS:         AX          Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6190,51 +6195,51 @@ wait_micro_sec  PROC far
     push OFFSET wait_micro_done
     call SaveCurrentThread
 ;
-        mov es,fs:ps_curr_thread
-        movzx eax,ax
-        mov ebx,78184
-        mul ebx
-        push dx
-        push eax
-        pop ax
-        pop ebx
-        cli
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        sti
-        add eax,ebx
-        adc edx,0
+    mov es,fs:ps_curr_thread
+    movzx eax,ax
+    mov ebx,78184
+    mul ebx
+    push dx
+    push eax
+    pop ax
+    pop ebx
+    cli
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    sti
+    add eax,ebx
+    adc edx,0
 ;
-        mov cx,es
-        mov bx,cs
-        mov es,bx
-        mov di,OFFSET wake_until
-        xor bx,bx
-        cli
-        LocalStartTimer
-        sti
+    mov cx,es
+    mov bx,cs
+    mov es,bx
+    mov di,OFFSET wake_until
+    xor bx,bx
+    cli
+    LocalStartTimer
+    sti
 ;    
     xor ax,ax
     mov edi,1
     jmp BlockCurrentThread
 
 wait_micro_done:
-        retf32
+    retf32
 wait_micro_sec  ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CHECK_LIST
+;           NAME:           CHECK_LIST
 ;
-;               DESCRIPTION:    Check if thread is in list
+;           DESCRIPTION:    Check if thread is in list
 ;
-;               PARAMETERS:             BX          Thread selector
-;                       ES:EDI      Buffer
+;           PARAMETERS:         BX      Thread selector
+;               ES:EDI      Buffer
 ;
-;       RETURNS:                NC              processed
-;                       CX:EDX      List
+;       RETURNS:        NC          processed
+;               CX:EDX      List
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6304,38 +6309,38 @@ check_copy_id_done:
 check_not_cpu:
     mov fs,bx
     mov eax,fs:p_sleep_offset
-        cmp eax,1
-        jnz check_not_wait
+    cmp eax,1
+    jnz check_not_wait
 ;
-        mov si,OFFSET Wait_state
-        jmp check_copy_zero
-        
+    mov si,OFFSET Wait_state
+    jmp check_copy_zero
+    
 check_not_wait:
     mov ax,fs:p_sleep_sel
-        cmp ax,task_sel
-        jne check_not_task
+    cmp ax,task_sel
+    jne check_not_task
 ;
     mov eax,fs:p_sleep_offset
-        cmp eax,OFFSET signal_list
-        jne check_not_signal
+    cmp eax,OFFSET signal_list
+    jne check_not_signal
 ;       
-        mov si,OFFSET Signal_state
-        jmp check_copy_zero
-        
+    mov si,OFFSET Signal_state
+    jmp check_copy_zero
+    
 check_not_signal:
-        mov si,OFFSET Ready_state
-        jmp check_copy_cpu
+    mov si,OFFSET Ready_state
+    jmp check_copy_cpu
 
 check_not_task:
-        cmp ax,system_data_sel
-        jne check_not_system
+    cmp ax,system_data_sel
+    jne check_not_system
 ;       
     mov eax,fs:p_sleep_offset
-        cmp eax,OFFSET debug_list
-        jne check_not_system
+    cmp eax,OFFSET debug_list
+    jne check_not_system
 ;
-        mov si,OFFSET Debug_state
-        jmp check_copy_cpu
+    mov si,OFFSET Debug_state
+    jmp check_copy_cpu
 
 check_copy_zero:
     xor cx,cx
@@ -6368,215 +6373,215 @@ check_copy_done:
     stos byte ptr es:[edi]
     clc
     jmp check_done
-        
+    
 check_not_system:
-        stc
+    stc
 
 check_done:
     pop si
     pop ax
     pop fs
     pop ds
-        ret
+    ret
 check_list      Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DebugBreak
+;           NAME:           DebugBreak
 ;
-;               DESCRIPTION:    Put thread in debug list
+;           DESCRIPTION:    Put thread in debug list
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-debug_break_name        DB 'Debug Break',0
+debug_break_name    DB 'Debug Break',0
 
 debug_break:
-        DebugException
+    DebugException
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetSystemTime
+;           NAME:           GetSystemTime
 ;
-;               DESCRIPTION:    Return system time.
+;           DESCRIPTION:    Return system time.
 ;
-;               PARAMETERS:             EDX:EAX         Binary time
+;           PARAMETERS:         EDX:EAX     Binary time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_system_time_name    DB 'Get System Time',0
 
 get_system_time PROC far
-        push ds
-        push es
-        mov ax,task_sel
-        mov ds,ax
-        GetThread
+    push ds
+    push es
+    mov ax,task_sel
+    mov ds,ax
+    GetThread
     mov es,ax
-        cli
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        sti
-        pop es
-        pop ds
-        retf32
+    cli
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    sti
+    pop es
+    pop ds
+    retf32
 get_system_time ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetTime
+;           NAME:           GetTime
 ;
-;               DESCRIPTION:    Return user time
+;           DESCRIPTION:    Return user time
 ;
-;               PARAMETERS:             EDX:EAX         Binary user time
+;           PARAMETERS:         EDX:EAX     Binary user time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_time_name   DB 'Get Time',0
 
-get_time        PROC far
-        push ds
-        push es
-        mov ax,task_sel
-        mov ds,ax
-        GetThread
-        mov es,ax
-        cli
-        call ds:update_clock_proc
-        LocalGetSystemTime
-        add eax,ds:time_diff
-        adc edx,ds:time_diff+4
-        sti
-        pop es
-        pop ds
-        retf32
-get_time        ENDP
+get_time    PROC far
+    push ds
+    push es
+    mov ax,task_sel
+    mov ds,ax
+    GetThread
+    mov es,ax
+    cli
+    call ds:update_clock_proc
+    LocalGetSystemTime
+    add eax,ds:time_diff
+    adc edx,ds:time_diff+4
+    sti
+    pop es
+    pop ds
+    retf32
+get_time    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   TimeToSystemTime
+;           NAME:           TimeToSystemTime
 ;
-;               DESCRIPTION:    Converts real time to system time
+;           DESCRIPTION:    Converts real time to system time
 ;
-;               PARAMETERS:             EDX:EAX         Real time
+;           PARAMETERS:         EDX:EAX     Real time
 ;
-;               RETURNS:                EDX:EAX         System time
+;           RETURNS:        EDX:EAX     System time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-time_to_system_time_name        DB 'Time To System Time',0
+time_to_system_time_name    DB 'Time To System Time',0
 
 time_to_system_time     PROC far
-        push ds
-        push bx
-        mov bx,task_sel
-        mov ds,bx
+    push ds
+    push bx
+    mov bx,task_sel
+    mov ds,bx
 ;
-        cli
-        sub eax,ds:time_diff
-        sbb edx,ds:time_diff+4
-        sti
+    cli
+    sub eax,ds:time_diff
+    sbb edx,ds:time_diff+4
+    sti
 ;
-        pop bx
-        pop ds
-        retf32
+    pop bx
+    pop ds
+    retf32
 time_to_system_time     ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SystemTimeToTime
+;           NAME:           SystemTimeToTime
 ;
-;               DESCRIPTION:    Converts system time to real time
+;           DESCRIPTION:    Converts system time to real time
 ;
-;               PARAMETERS:             EDX:EAX         System time
+;           PARAMETERS:         EDX:EAX     System time
 ;
-;               RETURNS:                EDX:EAX         Real time
+;           RETURNS:        EDX:EAX     Real time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-system_time_to_time_name        DB 'System Time To Time',0
+system_time_to_time_name    DB 'System Time To Time',0
 
 system_time_to_time     PROC far
-        push ds
-        push bx
-        mov bx,task_sel
-        mov ds,bx
+    push ds
+    push bx
+    mov bx,task_sel
+    mov ds,bx
 ;
-        cli
-        add eax,ds:time_diff
-        adc edx,ds:time_diff+4
-        sti
+    cli
+    add eax,ds:time_diff
+    adc edx,ds:time_diff+4
+    sti
 ;
-        pop bx
-        pop ds
-        retf32
+    pop bx
+    pop ds
+    retf32
 system_time_to_time     ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetSystemTime
+;           NAME:           SetSystemTime
 ;
-;               DESCRIPTION:    Set system time. Must not be called after tasking is
-;                                               started.
+;           DESCRIPTION:    Set system time. Must not be called after tasking is
+;                           started.
 ;
-;               PARAMETERS:             EDX:EAX         Binary time
+;           PARAMETERS:         EDX:EAX     Binary time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_system_time_name    DB 'Set System Time',0
 
 set_system_time PROC far
-        push ds
-        push bx
-        mov bx,task_sel
-        mov ds,bx
-        mov ds:system_time,eax
-        mov ds:system_time+4,edx
-        pop bx
-        pop ds
-        ret
+    push ds
+    push bx
+    mov bx,task_sel
+    mov ds,bx
+    mov ds:system_time,eax
+    mov ds:system_time+4,edx
+    pop bx
+    pop ds
+    ret
 set_system_time ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   UpdateTime
+;           NAME:           UpdateTime
 ;
-;               DESCRIPTION:    Sets difference between real time and system time
+;           DESCRIPTION:    Sets difference between real time and system time
 ;
-;               PARAMETERS:             EDX:EAX         Difference
+;           PARAMETERS:         EDX:EAX     Difference
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-update_time_name        DB 'Update Time',0
+update_time_name    DB 'Update Time',0
 
 update_time     PROC far
-        push ds
-        push bx
-        mov bx,task_sel
-        mov ds,bx
-        cli
-        mov ds:time_diff,eax
-        mov ds:time_diff+4,edx
-        sti
-        pop bx
-        pop ds
-        retf32
+    push ds
+    push bx
+    mov bx,task_sel
+    mov ds,bx
+    cli
+    mov ds:time_diff,eax
+    mov ds:time_diff+4,edx
+    sti
+    pop bx
+    pop ds
+    retf32
 update_time     ENDP
 
 code    ENDS
 
-        END
+    END
 

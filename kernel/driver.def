@@ -173,8 +173,10 @@ dos_data_sel		EQU 468h
 dos_process_sel		EQU 470h
 dos_vm_sel			EQU 47Bh
 
-kdebug_code_sel		EQU 490h
-kdebug_data_sel		EQU 498h
+kdebug_code_sel		EQU 480h
+kdebug_data_sel		EQU 488h
+
+kdebug_sys_sel		EQU 490h
 
 legacy_code_sel		EQU 4A0h
 legacy_data_sel		EQU 4A8h
