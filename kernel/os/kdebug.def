@@ -27,25 +27,7 @@
 
 debug_seg	STRUC
 
-op_syntax	DW ?
-op_codes	DW 100 DUP(?)
-op_in_text	DB 100 DUP(?)
-op_text_end	DW ?
-op_size		DW ?
-op_ads		DW ?,?
-gaddr_mode	DB ?
-data_mode	DB ?
-gdata_mode	DB ?
-edata_mode	DB ?
-override	DW ?
-ignore_ptr	DB ?
-data_off	DD ?
-data_sel	DW ?
-data_good	DB ?
-op_in_code	DB 50 DUP(?)
 debug_thread	DW ?
-
-mouse_pos	DW ?
 
 debug_seg	ENDS
 

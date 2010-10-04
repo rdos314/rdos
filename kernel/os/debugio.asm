@@ -29,7 +29,6 @@
 
 GateSize = 16
 
-INCLUDE kdebug.def
 INCLUDE ..\driver.def
 INCLUDE protseg.def
 INCLUDE ..\user.def
@@ -44,11 +43,27 @@ INCLUDE system.inc
 
 vm_edx		EQU -12
 
+data    SEGMENT byte public 'DATA'
+
+op_in_text	DB 100 DUP(?)
+op_text_end	DW ?
+op_size		DW ?
+
+mouse_pos	DW ?
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 	extrn dis_ass_one:near
 	extrn float_to_string:near
 
+    extrn GetDataGood:near
+    extrn GetDataSel:near
+    extrn GetDataOffset:near
+    extrn SetIpAds:near
+    extrn GetOpBuf:near
+    
 	extrn ReadData:near
 	extrn GetIllegalOsGate:near
 	extrn GetIllegalUserGate:near
@@ -737,13 +752,14 @@ WriteFreeMem	ENDP
 
 WriteData	PROC near
 	push ds
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov ds,ax
-	mov al,ds:data_good
+	call GetDataGood
 	or al,al
 	jz data_no_good
-	mov ax,ds:data_sel
-	mov ebx,ds:data_off
+;	
+	call GetDataSel
+	call GetDataOffset
 	call WriteDataRow
 	jmp data_next
 data_no_good:
@@ -818,7 +834,7 @@ get_cs_bitness_test:
 
 get_cs_bitness_done:
 	mov di,OFFSET op_in_text
-	mov si,OFFSET op_in_code
+	call GetOpBuf
 ;
 	mov al,[si]
 	cmp al,66h
@@ -854,7 +870,7 @@ write_illegal_osgate:
 ;
 	shl ax,3
 	mov bx,ax
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -870,7 +886,7 @@ write_illegal_usergate:
 ;
 	shl eax,5
 	mov ebx,eax
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -896,7 +912,7 @@ not_illegal_op:
 ;
 	shl eax,5
 	mov ebx,eax
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -908,7 +924,7 @@ not_illegal_op:
 not_call32:
 	mov bx,[si+1]
 	mov dx,[si+5]
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -918,7 +934,7 @@ not_call32:
 ;
 	mov bx,[si+1]
 	mov dx,[si+5]
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -929,7 +945,7 @@ not_call32:
 write_call_far16:
 	mov bx,[si+1]
 	mov dx,[si+3]
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -939,7 +955,7 @@ write_call_far16:
 ;
 	mov bx,[si+1]
 	mov dx,[si+3]
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -958,7 +974,7 @@ not_call_far:
 	mov dx,gs:tss_cs
 	add ebx,dword ptr gs:tss_eip
 	add ebx,5
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -971,7 +987,7 @@ write_call_near16:
 	mov dx,gs:tss_cs
 	add bx,gs:tss_eip
 	add bx,3
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -983,7 +999,7 @@ write_call_near16:
 	mov dx,gs:tss_cs
 	add bx,gs:tss_eip
 	add bx,3
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
@@ -1028,13 +1044,13 @@ code_in_gdt:
 	and ax,1
 	mov di,ax
 seg_size_ok:
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov es,gs:tss_thread
 	mov dx,gs:tss_cs
 	mov ebx,dword ptr gs:tss_eip
-	mov dword ptr ds:op_ads,ebx
-	mov si,OFFSET op_in_code
+	call SetIpAds
+	call GetOpBuf
 	mov cx,16
 get_instr_loop:
 	call ReadData
@@ -1049,9 +1065,14 @@ WriteInstr	Proc near
 	call LoadInstr
 	call GetMne
 	jnc write_instr_do
+;
+    mov dx,di
+    mov di,OFFSET op_in_text	
 	call dis_ass_one
+	mov ds:op_size,80
+
 write_instr_do:
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov cx,40
 	mov di,OFFSET op_in_text
@@ -1134,7 +1155,7 @@ write_math_norm:
 	push es
 	push ax
 ;
-	mov ax,kdebug_sys_sel
+	mov ax,SEG data
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov al,' '
@@ -2313,50 +2334,29 @@ no_wait_debug:
 	je debug_next
 	cmp al,'N'
 	je debug_next 
-	mov ax,kdebug_sys_sel
-	mov ds,ax
-	mov si,OFFSET debug_list
-	mov cx,ds:debug_thread
-	verr cx
-	jz debug_found
-	mov ax,system_data_sel
-	mov ds,ax
-	mov cx,[si]
-	mov ax,kdebug_sys_sel
-	mov ds,ax
-	mov ds:debug_thread,cx
+;
+    GetDebugThread
+    or ax,ax
+    jnz debug_do
+;    
 	mov ax,[bp].vm_eax
 	mov al,'R'
 	mov [bp].vm_eax,ax
-debug_found:
-	mov es,cx
-	mov ax,system_data_sel
-	mov ds,ax
-	mov ax,[si]
-	mov dx,ax
-	or dx,dx
-	jz debug_error
-debug_try_next:
-	cmp ax,cx
-	je debug_do
-	mov es,ax
-	mov ax,es:p_next
-	cmp dx,ax
-	je debug_error
-	jmp debug_try_next
-debug_error:
 	jmp debug_end
+
 debug_do:
 	mov ds,ax
 	mov ax,ds:p_tss_data_sel
 	mov ds,ax
 	mov gs,ax
+
 debug_next:
 	mov ax,[bp].vm_eax
 	mov bl,al
 	xor bh,bh
 	add bx,bx
 	call word ptr cs:[bx].virt_sw_func_tab
+
 debug_end:
 	xor ax,ax
 	mov ds,ax
@@ -2575,23 +2575,6 @@ init_debug_process	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_thread	Proc far
-	GetThread
-	mov bx,ax
-	mov ax,kdebug_sys_sel
-	mov ds,ax
-	mov ax,ds:debug_thread
-	cmp ax,bx
-	jne free_thread_done
-;
-	mov ax,system_data_sel
-	mov ds,ax
-	mov si,OFFSET debug_list
-	mov bx,[si]
-	mov ax,kdebug_sys_sel
-	mov ds,ax
-	mov ds:debug_thread,bx
-
-free_thread_done:
 	ret
 free_thread	Endp
 
@@ -2607,10 +2590,8 @@ init_local	PROC near
 	mov di,OFFSET free_thread
 	HookTerminateThread
 ;
-	mov bx,kdebug_sys_sel
+	mov bx,SEG data
 	mov es,bx
-	mov es:data_good,0
-	mov es:debug_thread,0
 	mov es:mouse_pos,0
 	clc
 	ret

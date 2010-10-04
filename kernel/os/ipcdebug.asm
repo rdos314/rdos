@@ -40,11 +40,27 @@ INCLUDE system.inc
 INCLUDE ipcdebug.inc
 INCLUDE kdebug.def
 
+data    SEGMENT byte public 'DATA'
+
+op_in_text	DB 100 DUP(?)
+op_text_end	DW ?
+op_size		DW ?
+
+mouse_pos	DW ?
+
+data    ENDS
+
 code    SEGMENT byte public 'CODE'
 
 .386p
 
     extrn dis_ass_one:near
+
+    extrn GetDataGood:near
+    extrn GetDataSel:near
+    extrn GetDataOffset:near
+    extrn SetIpAds:near
+    extrn GetOpBuf:near
 
     extrn ReadData:near
     extrn GetIllegalOsGate:near
@@ -261,7 +277,7 @@ get_cs_bitness_test:
 
 get_cs_bitness_done:
     mov di,OFFSET op_in_text
-    mov si,OFFSET op_in_code
+    call GetOpBuf
 ;
     mov al,[si]
     cmp al,66h
@@ -313,7 +329,7 @@ write_illegal_usergate:
 ;
     shl eax,5
     mov ebx,eax
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
@@ -339,7 +355,7 @@ not_illegal_op:
 ;
     shl eax,5
     mov ebx,eax
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
@@ -351,7 +367,7 @@ not_illegal_op:
 not_call32:
     mov bx,[si+1]
     mov dx,[si+5]
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
@@ -361,7 +377,7 @@ not_call32:
 ;
     mov bx,[si+1]
     mov dx,[si+5]
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
@@ -372,7 +388,7 @@ not_call32:
 write_call_far16:
     mov bx,[si+1]
     mov dx,[si+3]
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
@@ -382,7 +398,7 @@ write_call_far16:
 ;
     mov bx,[si+1]
     mov dx,[si+3]
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
@@ -401,7 +417,7 @@ not_call_far:
     mov dx,gs:tss_cs
     add ebx,dword ptr gs:tss_eip
     add ebx,5
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
@@ -414,7 +430,7 @@ write_call_near16:
     mov dx,gs:tss_cs
     add bx,gs:tss_eip
     add bx,3
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
@@ -426,7 +442,7 @@ write_call_near16:
     mov dx,gs:tss_cs
     add bx,gs:tss_eip
     add bx,3
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
@@ -480,13 +496,13 @@ code_in_gdt:
     and ax,1
     mov di,ax
 seg_size_ok:
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov es,gs:tss_thread
     mov dx,gs:tss_cs
     mov ebx,dword ptr gs:tss_eip
-    mov dword ptr ds:op_ads,ebx
-    mov si,OFFSET op_in_code
+    call SetIpAds
+    call GetOpBuf
     mov cx,16
 get_instr_loop:
     call ReadData
@@ -514,14 +530,18 @@ req_instr       PROC near
     call GetMne
     jnc req_instr_do
 ;
+    mov dx,di
+    mov di,OFFSET op_in_text	
     call dis_ass_one
+	mov ds:op_size,80
+
 req_instr_do:
     pop es
 ;
-    mov ax,ipc_debug_data_sel
+    mov ax,SEG data
     mov ds,ax
 ;
-    mov si,OFFSET op_in_code
+    call GetOpBuf
     mov di,OFFSET ddi_code
     mov cx,8
     rep movsw
@@ -531,11 +551,11 @@ req_instr_do:
     mov di,OFFSET ddi_mne
     rep movsw
 ;
-    mov al,ds:data_good
+    call GetDataGood
     mov es:ddi_data_good,al
-    mov eax,ds:data_off
-    mov es:ddi_data_offset,eax
-    mov ax,ds:data_sel
+    call GetDataOffset
+    mov es:ddi_data_offset,ebx
+    call GetDataSel
     mov es:ddi_data_sel,ax
 ;
     mov cx,SIZE debug_req_instr_struc
@@ -2011,23 +2031,6 @@ debug_thread_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_thread     Proc far
-    GetThread
-    mov bx,ax
-    mov ax,ipc_debug_data_sel
-    mov ds,ax
-    mov ax,ds:debug_thread
-    cmp ax,bx
-    jne free_thread_done
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov si,OFFSET debug_list
-    mov bx,[si]
-    mov ax,ipc_debug_data_sel
-    mov ds,ax
-    mov ds:debug_thread,bx
-
-free_thread_done:
     ret
 free_thread     Endp
 
@@ -2074,11 +2077,6 @@ init_system     ENDP
     public init_ipc_debug
     
 init_ipc_debug  PROC near
-    mov bx,ipc_debug_data_sel
-    mov eax,SIZE debug_seg
-    AllocateFixedSystemMem
-    mov es:debug_thread,0
-;
     mov ax,cs
     mov es,ax
     mov di,OFFSET init_system

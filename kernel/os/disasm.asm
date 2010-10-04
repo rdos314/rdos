@@ -50,6 +50,24 @@ data_48		EQU 3
 addr_16		EQU 0
 addr_32		EQU 1
 
+data    SEGMENT byte public 'DATA'
+
+op_syntax	DW ?
+override	DW ?
+op_ads		DW ?,?
+data_sel	DW ?
+data_off	DD ?
+data_good	DB ?
+data_mode	DB ?
+gaddr_mode	DB ?
+gdata_mode	DB ?
+edata_mode	DB ?
+ignore_ptr	DB ?
+
+op_in_code	DB 50 DUP(?)
+op_codes	DW 100 DUP(?)
+
+data    ENDS
 
 code	SEGMENT byte public 'CODE'
 
@@ -64,6 +82,146 @@ code	SEGMENT byte public 'CODE'
 	extrn cr_tab:near
 	extrn dr_tab:near
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetIpAds
+;
+;		DESCRIPTION:	Set address
+;
+;       PARAMETERS:     EBX     EIP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetIpAds
+    
+SetIpAds	PROC near
+    push ds
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    mov dword ptr ds:op_ads,ebx
+    pop ax
+    pop ds
+    ret
+SetIpAds  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDataGood
+;
+;		DESCRIPTION:	Get data selector
+;
+;       RETURNS:        AL      data good ( = 1 )
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetDataGood
+    
+GetDataGood	PROC near
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov al,ds:data_good
+    pop ds
+    ret
+GetDataGood  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDataSel
+;
+;		DESCRIPTION:	Get data selector
+;
+;       RETURNS:        AX      Data selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetDataSel
+    
+GetDataSel	PROC near
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:data_sel
+    pop ds
+    ret
+GetDataSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetDataSel
+;
+;		DESCRIPTION:	Set data selector
+;
+;       PARAMETERS:     AX      Data selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetDataSel
+    
+SetDataSel	PROC near
+    push ds
+    push bx
+    mov bx,SEG data
+    mov ds,bx
+    mov ds:data_sel,ax
+    pop bx
+    pop ds
+    ret
+SetDataSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDataOffset
+;
+;		DESCRIPTION:	Get data offset
+;
+;       RETURNS:        EBX      Data offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetDataOffset
+    
+GetDataOffset	PROC near
+    push ds
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    mov ebx,ds:data_off
+    pop ax
+    pop ds
+    ret
+GetDataOffset  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetOpBuf
+;
+;		DESCRIPTION:	Get decoded operand buffer
+;
+;       RETURNS:        SI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetOpBuf
+    
+GetOpBuf	PROC near
+    push ds
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    mov si,OFFSET op_in_code
+    pop ax
+    pop ds
+    ret
+GetOpBuf  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1742,7 +1900,7 @@ move_mne_to_buf	ENDP
 ;
 ;		DESCRIPTION:	Convert OP code to text form
 ;
-;		PARAMETERS:		
+;		PARAMETERS:		DI      Opcode buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1751,7 +1909,6 @@ move_mne_to_buf	ENDP
 
 put_opcode_in_text	PROC near
 	mov si,OFFSET op_codes
-	mov di,OFFSET op_in_text
 wr_op_next:
 	mov ax,[si]
 	cmp ax,0FFFFh
@@ -1884,8 +2041,9 @@ decode_data_sel	ENDP
 ;		DESCRIPTION:	Disassembler on instruction
 ;
 ;		PARAMETERS:		DS		Data segment
-;						DI = 0	16 bit segment
-;						DI = 1	32 bit segment
+;						DX = 0	16 bit segment
+;						DX = 1	32 bit segment
+;                       DI      Data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1900,7 +2058,7 @@ dis_ass_one	PROC near
 	push si
 	push di
 ;
-	mov dx,di
+    push di
 	mov ax,ds
 	mov es,ax
 	mov si,OFFSET op_in_code
@@ -1922,17 +2080,20 @@ dis_ass_one	PROC near
 ; ax = index i tabell
 ;
 	call decode_opcode
-	push si
 	mov word ptr [di],0FFFFh
+    pop di	
+	push si
+;	
+    push di
 	call put_opcode_in_text
 	call decode_data_sel
 	mov cx,di
-	sub cx,OFFSET op_in_text
+	pop ax
+	sub cx,ax
 	sub cx,80
 	neg cx
 	mov al,20h
 	rep stosb
-	mov ds:op_size,80
 	pop cx
 	sub cx,OFFSET op_in_code
 	inc cx

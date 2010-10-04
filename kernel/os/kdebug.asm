@@ -71,6 +71,8 @@ code	SEGMENT byte use16 public 'CODE'
 	extrn init_local:near
 	extrn init_ipc_debug:near
 
+    extrn SetDataSel:near
+    
 	assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -877,42 +879,42 @@ incdec_ss       ENDP
 	public ds_sel
 ds_sel	PROC near
 	mov ax,gs:tss_ds
-	mov ds:data_sel,ax
+	call SetDataSel
 	ret
 ds_sel	ENDP
 
 	public ss_sel
 ss_sel	PROC near
 	mov ax,gs:tss_ss
-	mov ds:data_sel,ax
+	call SetDataSel
 	ret
 ss_sel	ENDP
 
 	public cs_sel
 cs_sel	PROC near
 	mov ax,gs:tss_cs
-	mov ds:data_sel,ax
+	call SetDataSel
 	ret
 cs_sel	ENDP
 
 	public es_sel
 es_sel	PROC near
 	mov ax,gs:tss_es
-	mov ds:data_sel,ax
+	call SetDataSel
 	ret
 es_sel	ENDP
 
 	public fs_sel
 fs_sel	PROC near
 	mov ax,gs:tss_fs
-	mov ds:data_sel,ax
+	call SetDataSel
 	ret
 fs_sel	ENDP
 
 	public gs_sel
 gs_sel	PROC near
 	mov ax,gs:tss_gs
-	mov ds:data_sel,ax
+	call SetDataSel
 	ret
 gs_sel	ENDP
 

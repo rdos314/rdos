@@ -762,6 +762,7 @@ init_tlb_done:
 	mov eax,SIZE debug_seg
     push cs
     call allocate_fixed_system_mem
+	mov es:debug_thread,0
 ;
     mov ax,task_sel
     mov ds,ax

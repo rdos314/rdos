@@ -320,9 +320,6 @@ video_focus_sel		EQU 878h
 piclcd_code_sel     EQU 880h
 piclcd_data_sel     EQU 888h
 
-ipc_debug_code_sel	EQU 890h
-ipc_debug_data_sel	EQU 898h
-
 pc_video_code_sel	EQU 8A0h
 pc_video_data_sel	EQU 8A8h
 
