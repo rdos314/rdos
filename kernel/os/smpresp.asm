@@ -57,6 +57,12 @@ shr_data			smp_response <>
 
 smp_host_response	ENDS
 
+data    SEGMENT byte public 'DATA'
+
+super_response_list     DW ?
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
@@ -726,6 +732,26 @@ response_perform_done:
 	mov gs:super_response_list,ax
 	ret
 ResponsePerform	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			init_smp_response
+;
+;		DESCRIPTION:    Init smp response module
+;
+;		PARAMETERS:		GS		IPC data sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public init_smp_response
+
+init_smp_response	Proc near
+    mov ax,SEG data
+    mov ds,ax
+	mov ds:super_response_list,0
+	ret
+init_smp_response   Endp
 
 code    ENDS
 

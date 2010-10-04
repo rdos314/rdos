@@ -83,11 +83,6 @@ ir_srcs = IR.ASM
 ir_objs = $(ir_srcs:.ASM=.OBJ)
 ir_rdvs = IR.RDV
 
-ipc_srcs = IPC.ASM IPCREC.ASM IPCSEND.ASM	\
-		   SMP.ASM SMPREC.ASM SMPSEND.ASM SMPRESP.ASM
-ipc_objs = $(ipc_srcs:.ASM=.OBJ)
-ipc_rdvs = IPC.RDV
-
 ac97_srcs = AC97.ASM
 ac97_objs = $(ac97_srcs:.ASM=.OBJ)
 ac97_rdvs = AC97.RDV
@@ -99,7 +94,7 @@ pcshut_exes = PCSHUT.EXE
 srcs =      $(dpmi_srcs)  \
 			$(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(keym_srcs) $(usb_srcs) $(com_srcs) \
-			$(ipc_srcs) $(ipcdebug_srcs)  \
+			$(ipcdebug_srcs)  \
 			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) \
 			$(rtc_srcs)  \
@@ -117,7 +112,7 @@ exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
-			$(ipc_rdvs) $(ipcdebug_rdvs) \
+			$(ipcdebug_rdvs) \
 			$(usb_rdvs) $(com_rdvs) \
 			$(rtc_rdvs) $(ac97_rdvs) \
 			$(ir_rdvs) $(wd_rdvs)
@@ -298,14 +293,6 @@ SERKEY.RDV : $(key_objs)
 	SERKEY+KEYSW
 	SERKEY.RDV
 	SERKEY;
-!
-
-IPC.RDV : $(ipc_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(ipc_objs)
-	IPC.RDV
-	IPC;
 !
 
 WD.RDV : $(wd_objs)

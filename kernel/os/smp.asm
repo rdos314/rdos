@@ -50,12 +50,26 @@ Reverse	MACRO
 	xchg al,ah
 		ENDM
 
+data    SEGMENT byte public 'DATA'
+
+ipc_cache_offset    DW ?
+smp_host_section    section_typ <>
+smp_host_list       DW ?
+smp_thread          DW ?
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
 	
 	assume cs:code
 
+    extrn init_smp_response:near
+    extrn init_smp_send:near
+    
+    extrn EnterIpcSection:near
+    extrn LeaveIpcSection:near
 	extrn QueryMailslot:near
 	extrn AllocateIpcHandle:near
 	extrn QueueReset:near
@@ -124,7 +138,6 @@ calc_checksum_done:
 	ret
 CalcChecksum	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -150,9 +163,9 @@ FindHost	Proc near
 	LookupIpCache
 	jc find_host_done
 ;
-	mov ax,ipc_data_sel
+	mov ax,SEG data
 	mov ds,ax
-	EnterSection ds:ipc_section
+	call EnterIpcSection
 ;
 	mov bx,ds:ipc_cache_offset
 	mov ax,es:[bx]
@@ -185,7 +198,7 @@ FindHost	Proc near
 	LeaveSection ds:smp_host_section
 
 find_host_buffered:
-	LeaveSection ds:ipc_section
+    call LeaveIpcSection
 	clc
 
 find_host_done:
@@ -196,7 +209,6 @@ find_host_done:
 	ret
 FindHost	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -227,7 +239,6 @@ get_remote_mailslot16	Proc far
 	ret
 get_remote_mailslot16	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -350,7 +361,6 @@ receive_done:
 	ret
 Receive	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -367,7 +377,7 @@ add_host	PROC far
 	push ds
 	push bx
 ;
-	mov bx,ipc_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:ipc_cache_offset
 	mov word ptr es:[bx],0
@@ -389,7 +399,7 @@ add_host	ENDP
 Supervise	Proc near
 	xor cx,cx
 ;
-	mov ax,ipc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:smp_host_section
 	mov ax,ds:smp_host_list
@@ -429,6 +439,30 @@ Supervise	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetSmpThread
+;
+;		DESCRIPTION:    Get smp thread sel
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		BX      Smp thread sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetSmpThread
+
+GetSmpThread    Proc near
+    push ds
+	mov bx,SEG data
+	mov ds,bx
+	mov bx,ds:smp_thread
+	pop ds
+	ret
+GetSmpThread    Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			smp_thread
 ;
 ;		DESCRIPTION:    supervisor thread
@@ -442,13 +476,11 @@ Supervise	Endp
 smp_thread_name	DB 'SMP',0
 
 smp_thread_pr:
-	mov ax,ipc_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov gs,ax
 	GetThread
 	mov ds:smp_thread,ax
-	mov ds:super_response_list,0
-	mov ds:super_mailslot_list,0
 
 smp_thread_loop:
 	mov eax,100
@@ -467,7 +499,6 @@ smp_thread_no_receive:
 	WaitForSignal
 	jmp smp_thread_loop
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -502,7 +533,6 @@ init_system	Proc far
 	ret
 init_system	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -518,9 +548,13 @@ PAGE
 init_smp	PROC near
 	mov ax,2
 	AllocateIpCacheMem
-	mov ax,ipc_data_sel
+;
+	mov ax,SEG data
 	mov ds,ax
 	mov ds:ipc_cache_offset,bx
+    mov ds:smp_host_list,0
+    mov ds:smp_thread,0
+    InitSection ds:smp_host_section
 ;
 	mov ax,cs
 	mov ds,ax
@@ -542,6 +576,9 @@ init_smp	PROC near
 	mov dx,virt_es_in
 	mov ax,get_remote_mailslot_nr
 	RegisterUserGate
+;	
+    call init_smp_response
+    call init_smp_send
 	ret
 init_smp	ENDP
 

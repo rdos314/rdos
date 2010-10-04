@@ -107,12 +107,19 @@ vm_name				DB ?
 
 smp_mailslot_data	ENDS
 
+data    SEGMENT byte public 'DATA'
+
+super_mailslot_list     DW ?
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
 	
 	assume cs:code
 
+    extrn GetSmpThread:near
 	extrn CreateSegment:near
 	extrn CalcChecksum:near
 	extrn SelectorToLinear:near
@@ -122,7 +129,6 @@ code	SEGMENT byte public 'CODE'
 	extrn AllocateIpcHandle:near
 	extrn FlushResponses:near
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -180,7 +186,6 @@ find_send_mailslot_done:
 	ret
 FindSendMailslot	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -259,7 +264,6 @@ SendData	Proc near
 	ret
 SendData	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -317,7 +321,6 @@ SendAck	Proc near
 	ret
 SendAck	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -390,7 +393,6 @@ send_name_size_loop:
 	ret
 SendNameRequest	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -461,7 +463,6 @@ CreateMailslot	Proc near
 	ret
 CreateMailslot	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -477,6 +478,8 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public QueryMailslot
+    
 QueryMailslot	Proc near
 	push bx
 	push edx
@@ -505,9 +508,7 @@ QueryMailslot	Proc near
 	mov ds:vm_name_time,eax
 ;
 	mov ax,ds
-	mov bx,ipc_data_sel
-	mov ds,bx
-	mov bx,ds:smp_thread
+	call GetSmpThread
 	Signal
 	pop ds
 ;
@@ -516,7 +517,6 @@ QueryMailslot	Proc near
 	ret
 QueryMailslot	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -610,7 +610,6 @@ get_send_mailslot_done:
 	ret
 GetSendMailslot	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -654,7 +653,6 @@ queue_pending_done:
 	ret
 QueuePendingRequest	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -697,7 +695,6 @@ dequeue_pending_removed:
 	ret
 DequeuePendingRequest	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -736,7 +733,6 @@ queue_active_conn_ok:
 	ret
 QueueActiveRequest	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -843,7 +839,6 @@ dequeue_active_done:
 	ret
 DequeueActiveRequest	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -889,7 +884,6 @@ reset_mailslot_next:
 	ret
 ResetMailslot	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -938,7 +932,6 @@ activate_mailslot_done:
 	ret
 ActivateMailslot	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -992,7 +985,6 @@ find_req_done:
 	ret
 FindRequest	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1121,7 +1113,6 @@ queue_smp_send_rep_copy:
 	ret
 QueueSend	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1168,7 +1159,6 @@ rem_smp_send_copy:
 	ret
 RemoveSend	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1215,7 +1205,6 @@ rem_reply_copy:
 	ret
 RemoveReply	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1318,7 +1307,6 @@ send_to_smp_wait:
 	ret
 SendToSmp	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1356,7 +1344,6 @@ SmpToSender	Proc near
 	ret
 SmpToSender	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1481,7 +1468,6 @@ insert_reorder_done:
 	ret
 InsertReordered	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1587,7 +1573,6 @@ copy_reply_done:
 	ret
 CopyReplyData	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1652,7 +1637,6 @@ handle_reply_done:
 	ret
 HandleReply	Endp
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1687,7 +1671,6 @@ receive_reply_done:
 	ret
 ReceiveReply	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2124,6 +2107,24 @@ perform_done:
 	mov gs:super_mailslot_list,0
 	ret
 SendPerform	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			init_smp_send
+;
+;		DESCRIPTION:    Init smp send module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public init_smp_send
+
+init_smp_send	Proc near
+    mov ax,SEG data
+    mov ds,ax
+	mov ds:super_mailslot_list,0
+	ret
+init_smp_send   Endp
 
 code    ENDS
 

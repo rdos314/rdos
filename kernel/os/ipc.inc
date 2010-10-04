@@ -25,20 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ipc_data	STRUC
-
-ipc_section			section_typ <>
-ipc_mailslot_list	DW ?
-ipc_cache_offset	DW ?
-smp_thread			DW ?
-smp_host_section	section_typ <>
-smp_host_list		DW ?
-super_response_list	DW ?
-super_host_list		DW ?
-super_mailslot_list	DW ?
-
-ipc_data	ENDS
-
 mailslot_data	STRUC
 
 m_link				DW ?

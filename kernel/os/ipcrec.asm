@@ -52,7 +52,6 @@ code	SEGMENT byte public 'CODE'
 
 	extrn SelectorToLinear:near
 
-PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
