@@ -43,13 +43,18 @@ INCLUDE	ntp.inc
 
 	extrn WriteIpEnv:near
 
+data    SEGMENT byte public 'DATA'
+
+ntp_req		ntp_header <>
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
 	
 	assume cs:code
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -83,7 +88,6 @@ GetTimestamp	Proc near
 	ret
 GetTimestamp	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -107,7 +111,7 @@ sync_time	Proc far
 	push si
 	push di
 ;
-	mov ax,ntp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov es,ax
 	mov cx,SIZE ntp_header
@@ -214,7 +218,6 @@ sync_time_done:
 	retf32
 sync_time	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -251,7 +254,6 @@ define_ntp_server	Proc far
 	ret
 define_ntp_server	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -265,11 +267,6 @@ PAGE
 	public init_ntp
 
 init_ntp	PROC near
-	mov eax,SIZE ntp_data
-	mov bx,ntp_data_sel
-	AllocateFixedSystemMem
-	mov es,bx
-;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax

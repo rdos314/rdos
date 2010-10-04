@@ -57,7 +57,18 @@ dhcp_opt_callb	DD ?
 
 dhcp_option	ENDS
 
-dhcp_data	STRUC
+dhcp_serv_data  STRUC
+
+dsd_orig_ident  DD ?
+dsd_local_ip    DD ?
+dsd_driver_sel  DW ?
+dsd_hw_type     DB ?
+dsd_hw_len      DB ?
+dsd_hw_data     DB 10h DUP(?)
+
+dhcp_serv_data  ENDS
+
+data    SEGMENT byte public 'DATA'
 
 dhcp_ident			DD ?
 dhcp_wanted_ip		DD ?
@@ -72,18 +83,7 @@ dhcp_serv_arr       DW 256 DUP(?)
 
 dhcp_enabled        DB ?
 
-dhcp_data	ENDS
-
-dhcp_serv_data  STRUC
-
-dsd_orig_ident  DD ?
-dsd_local_ip    DD ?
-dsd_driver_sel  DW ?
-dsd_hw_type     DB ?
-dsd_hw_len      DB ?
-dsd_hw_data     DB 10h DUP(?)
-
-dhcp_serv_data  ENDS
+data    ENDS
 
     extrn is_ip_in_use:near
 	extrn define_ip:near
@@ -98,7 +98,6 @@ code	SEGMENT byte public 'CODE'
 	
 	assume cs:code
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -151,7 +150,6 @@ calc_checksum_done:
 	ret
 CalcChecksum	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -203,7 +201,6 @@ create_req_br_done:
 	ret
 CreateDhcpReqBroadcast	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -258,7 +255,6 @@ create_reply_br_done:
 	ret
 CreateDhcpReplyBroadcast	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -302,7 +298,6 @@ SendDhcpBroadcast	Proc near
 	ret
 SendDhcpBroadcast	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -325,7 +320,7 @@ FindServer	Proc near
     push dx
     push bp
 ;
-    mov ax,dhcp_data_sel
+    mov ax,SEG data
     mov fs,ax
     mov bp,OFFSET dhcp_serv_arr+4
     mov cx,256-2
@@ -381,7 +376,6 @@ find_serv_done:
     ret
 FindServer  Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -432,7 +426,6 @@ init_serv_done:
     ret
 InitServerSel   Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -468,7 +461,7 @@ create_serv_new:
 	mov fs,ax
     call InitServerSel
 ;
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 ;
     mov bx,OFFSET dhcp_serv_arr+4
@@ -504,7 +497,6 @@ create_serv_done:
     ret
 CreateServerSel Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -536,7 +528,6 @@ SetHwAddress	Proc near
     ret
 SetHwAddress    Endp	
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -553,7 +544,6 @@ ServLeaseSize	Proc near
 	ret
 ServLeaseSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -585,7 +575,6 @@ ServLeaseData	Proc near
 	ret
 ServLeaseData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -602,7 +591,6 @@ ServRenewSize	Proc near
 	ret
 ServRenewSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -634,7 +622,6 @@ ServRenewData	Proc near
 	ret
 ServRenewData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -651,7 +638,6 @@ ServRebindSize	Proc near
 	ret
 ServRebindSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -683,7 +669,6 @@ ServRebindData	Proc near
 	ret
 ServRebindData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -702,7 +687,6 @@ ServReqIpSize	Proc near
 	ret
 ServReqIpSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -737,7 +721,6 @@ ServReqIpData	Proc near
 	ret
 ServReqIpData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -756,7 +739,6 @@ ServReqMaskSize	Proc near
 	ret
 ServReqMaskSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -792,7 +774,6 @@ ServReqMaskData	Proc near
 	ret
 ServReqMaskData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -811,7 +792,6 @@ ServReqGwSize	Proc near
 	ret
 ServReqGwSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -849,7 +829,6 @@ ServReqGwData	Proc near
 	ret
 ServReqGwData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -882,7 +861,6 @@ ServReqDnsSizeDone:
 	ret
 ServReqDnsSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -934,7 +912,6 @@ ServReqDnsDataDone:
 	ret
 ServReqDnsData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -953,7 +930,6 @@ ServReqIdSize	Proc near
 	ret
 ServReqIdSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -991,7 +967,6 @@ ServReqIdData	Proc near
 	ret
 ServReqIdData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1024,7 +999,7 @@ ReceiveDiscover	Proc near
     push si
     push di
 ;
-    mov ax,dhcp_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ax,ds:dhcp_driver_sel
     or ax,ax
@@ -1097,7 +1072,7 @@ discover_req_new:
 discover_req_options:
 	mov es:[di].dhcp_req_ip,eax
 ;	
-    mov ax,dhcp_data_sel
+    mov ax,SEG data
     mov ds,ax
     GetIpAddress
 	mov es:[di].dhcp_server_ip,edx
@@ -1142,7 +1117,6 @@ discover_req_done:
     ret
 ReceiveDiscover Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1175,7 +1149,7 @@ ReceiveRequest	Proc near
     push si
     push di
 ;
-    mov ax,dhcp_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ax,ds:dhcp_driver_sel
     or ax,ax
@@ -1290,7 +1264,6 @@ req_req_done:
     ret
 ReceiveRequest Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1321,7 +1294,7 @@ ReceiveServerDhcp	Proc near
 	push ax
 	push bx
 ;
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 ;
     mov ax,ds:dhcp_driver_sel
@@ -1374,7 +1347,6 @@ receive_serv_done:
 	ret
 ReceiveServerDhcp	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1395,7 +1367,6 @@ ClientSize	Proc near
 	ret
 ClientSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1430,7 +1401,6 @@ ClientData	Proc near
 	ret
 ClientData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1450,7 +1420,7 @@ ParamSize	Proc near
 	push bx
 ;
 	mov cx,2
-	mov bx,dhcp_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:dhcp_option_list
 
@@ -1469,7 +1439,6 @@ param_size_done:
 	ret
 ParamSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1497,7 +1466,7 @@ ParamData	Proc near
 	mov si,di
 	inc di
 ;
-	mov bx,dhcp_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:dhcp_option_list
 
@@ -1523,7 +1492,6 @@ param_data_done:
 	ret
 ParamData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1542,8 +1510,6 @@ LeaseSize	Proc near
 	mov cx,6
 	ret
 LeaseSize	Endp
-	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1573,7 +1539,6 @@ LeaseData	Proc near
 	ret
 LeaseData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1593,7 +1558,6 @@ ServerSize	Proc near
 	ret
 ServerSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1618,7 +1582,7 @@ ServerData	Proc near
 	mov al,4
 	stosb
 ;
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov eax,ds:dhcp_server
 	stosd
@@ -1628,7 +1592,6 @@ ServerData	Proc near
 	ret
 ServerData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1648,7 +1611,6 @@ ReqIpSize	Proc near
 	ret
 ReqIpSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1673,7 +1635,7 @@ ReqIpData	Proc near
 	mov al,4
 	stosb
 ;
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov eax,ds:dhcp_wanted_ip
 	stosd
@@ -1683,7 +1645,6 @@ ReqIpData	Proc near
 	ret
 ReqIpData	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1703,7 +1664,6 @@ DeclIpSize	Proc near
 	ret
 DeclIpSize	Endp
 	
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1728,7 +1688,7 @@ DeclIpData	Proc near
 	mov al,4
 	stosb
 ;
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov eax,ds:dhcp_ip
 	stosd
@@ -1738,7 +1698,6 @@ DeclIpData	Proc near
 	ret
 DeclIpData	Endp
 	
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1788,7 +1747,7 @@ dhcp_disc_size_ok:
 	mov es:[di].dhcp_hw_len,al
 	mov es:[di].dhcp_hops,0
 	push ds
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov eax,ds:dhcp_ident
 	or eax,eax
@@ -1850,7 +1809,6 @@ dhcp_disc_data_ok:
 	ret
 DhcpDiscover	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1901,7 +1859,7 @@ dhcp_req_size_ok:
 	mov es:[di].dhcp_hw_len,al
 	mov es:[di].dhcp_hops,0
 	push ds
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov eax,ds:dhcp_ident
 	pop ds
@@ -1956,7 +1914,6 @@ dhcp_req_data_ok:
 	ret
 DhcpRequest	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2006,7 +1963,7 @@ dhcp_decl_size_ok:
 	mov es:[di].dhcp_hops,0
 ;
 	push ds
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov eax,ds:dhcp_ident
 	pop ds
@@ -2061,7 +2018,6 @@ dhcp_decl_data_ok:
 	ret
 DhcpDecline	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2092,7 +2048,7 @@ add_dhcp_option	Proc far
 	mov es:dhcp_opt_code,al
 	mov word ptr es:dhcp_opt_callb,di
 	mov word ptr es:dhcp_opt_callb+2,dx
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,ds:dhcp_option_list
 	mov es:dhcp_opt_next,ax
@@ -2105,7 +2061,6 @@ add_dhcp_option	Proc far
 	ret
 add_dhcp_option	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2122,7 +2077,7 @@ IsDhcpDone	Proc near
 	push ds
 	push ax
 ;
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,ds:dhcp_driver_sel
 	or ax,ax
@@ -2137,7 +2092,6 @@ is_dhcp_done:
 	ret
 IsDhcpDone	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2154,7 +2108,6 @@ ReceiveError	Proc near
 	ret
 ReceiveError	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2173,7 +2126,7 @@ ReceiveOffer	Proc near
 	push bx
 	push si
 ;	
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov eax,es:[di].dhcp_req_ip
 	mov ds:dhcp_wanted_ip,eax
@@ -2225,7 +2178,6 @@ receive_offer_done:
 	ret
 ReceiveOffer	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2246,7 +2198,7 @@ ReceiveAck	Proc near
 	push edx
 ;
 	mov edx,es:[di].dhcp_req_ip
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds:dhcp_ip,edx
 ;
@@ -2301,7 +2253,6 @@ receive_ack_done:
 	ret
 ReceiveAck	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2333,7 +2284,7 @@ ReceiveClientDhcp	Proc near
 	push bx
 	push dx
 ;
-	mov ax,dhcp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 ;
 	mov ax,es:[di].udp_source
@@ -2393,7 +2344,6 @@ receive_cl_done:
 	ret
 ReceiveClientDhcp	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2414,7 +2364,7 @@ dhcp_thread_pr:
 	mov ax,250
 	WaitMilliSec
 ;
-	mov bx,dhcp_data_sel
+	mov bx,SEG data
 	mov ds,bx
 ;	
     GetIpAddress
@@ -2437,7 +2387,7 @@ dhcp_thread_retry:
     mov ax,500
     WaitMilliSec	
 ;    
-	mov bx,dhcp_data_sel
+	mov bx,SEG data
 	mov ds,bx
     mov ax,ds:dhcp_driver_sel
     or ax,ax
@@ -2476,7 +2426,6 @@ dhcp_thread_done:
     call define_ip
 	retf
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2511,7 +2460,6 @@ init_dhcp_thread	Proc far
 	ret
 init_dhcp_thread	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2528,10 +2476,9 @@ dhcp_ip_name		DB 'DHCP.IP',0
 	public init_dhcp
 
 init_dhcp	PROC near
-	mov eax,SIZE dhcp_data
-	mov bx,dhcp_data_sel
-	AllocateFixedSystemMem
+	mov bx,SEG data
 	mov ds,bx
+	mov es,bx
 	mov es:dhcp_option_list,0
 	mov es:dhcp_driver_sel,0
 	mov es:dhcp_server,0

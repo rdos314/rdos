@@ -57,27 +57,3 @@ host_rtt		DD ?
 host_rto		DD ?
 
 host_entry	ENDS
-
-ip_data	STRUC
-
-my_ip				DD ?
-dns1				DD ?
-dns2				DD ?
-ip_mask				DD ?
-gateway				DD ?
-ip_handle			DW ?
-curr_id				DW ?
-dns_curr_id			DW ?
-ping_section		section_typ <>
-ping_thread			DW ?
-ping_id				DD ?
-ping_status			DB ?
-ip_cache_section	section_typ <>
-ip_cache_list		DW ?
-ip_cache_entry_size	DW ?
-ip_cache_hooks		DB ?
-ip_cache_hook_arr	DW 2*16 DUP(?)
-protocol_count		DW ?
-protocol_arr		DW 16 DUP(?)
-
-ip_data	ENDS

@@ -53,6 +53,18 @@ Reverse	MACRO
 	extrn ReceiveClientDhcp:near
 	extrn ReceiveServerDhcp:near
 
+data    SEGMENT byte public 'DATA'
+
+curr_port		DW ?
+query_free		DW ?
+query_head		DW ?
+udp_section		section_typ <>
+listen_list		DW ?
+udp_queries		DB UDP_QUERY_ENTRIES * SIZE udp_query DUP(?)
+
+data    ENDS
+
+
 code	SEGMENT byte public 'CODE'
 
 .386p
@@ -110,7 +122,6 @@ calc_checksum_done:
 	ret
 CalcChecksum	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -133,7 +144,6 @@ AllocateQuery	Proc near
 	ret
 AllocateQuery	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -156,7 +166,6 @@ FreeQuery	Proc near
 	ret
 FreeQuery	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -179,7 +188,6 @@ InsertQuery	Proc near
 	ret
 InsertQuery	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -221,7 +229,6 @@ remove_done:
 	ret
 RemoveQuery	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -234,7 +241,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Timeout	Proc far
-	mov ax,udp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	call RemoveQuery
 	jc udp_timeout_done
@@ -245,7 +252,6 @@ udp_timeout_done:
 	ret
 Timeout	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -293,7 +299,6 @@ StartTimeout	Proc near
 	ret
 StartTimeout	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -332,7 +337,7 @@ query_udp	Proc far
 	push bx
 	mov bx,es
 	mov fs,bx
-	mov bx,udp_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	call AllocateQuery
 	or bx,bx
@@ -448,7 +453,6 @@ udp_query_done:
 	ret
 query_udp	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -467,7 +471,7 @@ FindListen	Proc near
 	push es
 	push ax
 ;
-	mov ax,udp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:udp_section
 	mov ax,ds:listen_list
@@ -500,7 +504,6 @@ find_listen_done:
 	ret
 FindListen	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -551,7 +554,7 @@ Receive	Proc far
 	pop di
 	jnz receive_free
 ;
-	mov ax,udp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,es:[di].udp_source
 	xchg al,ah
@@ -690,7 +693,6 @@ receive_done:
 	ret
 Receive	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -726,7 +728,7 @@ listen_udp_port	Proc far
 	mov ds,ax
 	InitSection ds:udp_listen_section
 ;	
-	mov ax,udp_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:udp_section
 	mov ax,ds:listen_list
@@ -741,7 +743,6 @@ listen_udp_port	Proc far
 	ret
 listen_udp_port	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -759,9 +760,7 @@ init_udp	PROC near
 	push es
 	pusha
 ;
-	mov eax,SIZE udp_data
-	mov bx,udp_data_sel
-	AllocateFixedSystemMem
+	mov bx,SEG data
 	mov ds,bx
 	mov es,bx
 ;

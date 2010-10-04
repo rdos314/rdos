@@ -40,10 +40,3 @@ ntp_receive_timestamp	DD ?,?
 ntp_transmit_timestamp	DD ?,?
 
 ntp_header	ENDS
-
-ntp_data	STRUC
-
-ntp_req		ntp_header <>
-
-ntp_data	ENDS
-

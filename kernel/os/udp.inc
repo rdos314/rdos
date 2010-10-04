@@ -54,15 +54,3 @@ udp_listen_port			DW ?
 udp_listen_callback		DW ?,?
 
 udp_listen	ENDS
-
-udp_data	STRUC
-
-curr_port		DW ?
-query_free		DW ?
-query_head		DW ?
-udp_section		section_typ <>
-listen_list		DW ?
-udp_queries		DB UDP_QUERY_ENTRIES * SIZE udp_query DUP(?)
-
-udp_data	ENDS
-

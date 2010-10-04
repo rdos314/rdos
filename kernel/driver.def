@@ -213,8 +213,6 @@ ip_data_sel			EQU 568h
 
 env_code_sel        EQU 570h
 
-tcp_data_sel		EQU 578h
-
 socket_code_sel		EQU 580h
 socket_data_sel		EQU 588h
 
@@ -301,14 +299,9 @@ ether_mem_sel		EQU 7C0h
 ppp_code_sel		EQU 7D0h
 ppp_data_sel		EQU 7D8h
 
-dhcp_data_sel		EQU 7E0h
-udp_data_sel		EQU 7E8h
-
 ide_code_sel		EQU 7F0h
 ide_data_sel1		EQU 7F8h
 ide_data_sel2		EQU 800h
-
-ntp_data_sel		EQU 808h
 
 ipc_code_sel		EQU 810h
 ipc_data_sel		EQU 818h

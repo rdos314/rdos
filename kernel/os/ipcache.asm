@@ -41,6 +41,16 @@ INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ip.inc
 
+data    SEGMENT byte public 'DATA'
+
+ip_cache_section	section_typ <>
+ip_cache_list		DW ?
+ip_cache_entry_size	DW ?
+ip_cache_hooks		DB ?
+ip_cache_hook_arr	DW 2*16 DUP(?)
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
@@ -81,7 +91,6 @@ ctE8 DB	0,		0,		0,		0,		0,		0,		0,		0
 ctF0 DB	0,		0,		0,		0,		0,		0,		0,		0
 ctF8 DB	0,		0,		0,		0,		0,		0,		0,		0
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -102,7 +111,7 @@ FindHostByAddress	Proc near
 	push ds
 	push es
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 ;
 	EnterSection ds:ip_cache_section
@@ -136,7 +145,6 @@ find_address_done:
 	ret
 FindHostByAddress	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -158,7 +166,7 @@ FindHostByName	Proc near
 	push fs
 	push esi
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:ip_cache_section
 	mov ax,ds:ip_cache_list
@@ -221,7 +229,6 @@ find_name_done:
 	ret
 FindHostByName	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -250,7 +257,6 @@ InitHostData	Proc near
 	ret
 InitHostData	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -271,7 +277,7 @@ UpdateHost	Proc near
 	push ax
 	push edx
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 ;
 	EnterSection ds:ip_cache_section
@@ -331,7 +337,6 @@ update_host_done:
 	ret
 UpdateHost	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -351,7 +356,7 @@ InitHost	Proc near
 	push esi
 	push edi
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov cl,ds:ip_cache_hooks
 	or cl,cl
@@ -380,7 +385,6 @@ init_host_done:
 	ret
 InitHost	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -430,7 +434,6 @@ get_name_size_done:
 	ret
 GetHostNameSize	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -451,7 +454,7 @@ DefineHostByAddress	Proc near
 	push di
 ;
 	push ds
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	movzx eax,ds:ip_cache_entry_size
 	mov di,ax
@@ -470,7 +473,6 @@ DefineHostByAddress	Proc near
 	ret
 DefineHostByAddress	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -500,7 +502,7 @@ DefineHostByName	Proc near
 	mov fs,ax
 	mov esi,edi
 	push ds
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,ds:ip_cache_entry_size
 	mov di,ax
@@ -532,7 +534,6 @@ define_name_done:
 	ret
 DefineHostByName	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -550,7 +551,7 @@ hook_ip_cache	Proc far
 	push ds
 	push ax
 	push bx
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov al,ds:ip_cache_hooks
 	mov bl,al
@@ -567,7 +568,6 @@ hook_ip_cache	Proc far
 	ret
 hook_ip_cache	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -585,7 +585,7 @@ allocate_ip_cache_mem_name	DB 'Allocate IP Cache Memory', 0
 
 allocate_ip_cache_mem	Proc far
 	push ds
-	mov bx,ip_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:ip_cache_entry_size
 	add ds:ip_cache_entry_size,ax
@@ -593,7 +593,6 @@ allocate_ip_cache_mem	Proc far
 	ret
 allocate_ip_cache_mem	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -623,7 +622,6 @@ lookup_ok:
 	ret
 lookup_ip_cache	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -784,7 +782,7 @@ init_cache	PROC near
 	mov di,OFFSET init_cache_entries
 	HookInitTasking
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds:ip_cache_list,0
 	mov ds:ip_cache_hooks,0

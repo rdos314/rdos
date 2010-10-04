@@ -57,13 +57,24 @@ Reverse	MACRO
 	xchg al,ah
 		ENDM
 
+data    SEGMENT byte public 'DATA'
+
+my_ip				DD ?
+ip_mask				DD ?
+gateway				DD ?
+ip_handle			DW ?
+curr_id				DW ?
+protocol_count		DW ?
+protocol_arr		DW 16 DUP(?)
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
 	
 	assume cs:code
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -116,7 +127,6 @@ conv_1:
 	ret
 ConvertOne	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -183,7 +193,6 @@ WriteIpEnv	Proc near
 	ret
 WriteIpEnv	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -201,7 +210,7 @@ get_ppp_ip_name	DB 'Get PPP IP',0
 
 get_ppp_ip	Proc far
 	push ds
-	mov dx,ip_data_sel
+	mov dx,SEG data
 	mov ds,dx
 	mov edx,ds:my_ip
 	clc
@@ -209,7 +218,6 @@ get_ppp_ip	Proc far
 	ret
 get_ppp_ip	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -231,33 +239,6 @@ get_ppp_dns	Proc far
 	retf32
 get_ppp_dns	Endp
 
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetDns
-;
-;		description:	Get DNS IP address
-;
-;		RETURNS:		EAX		Primary DNS IP address
-;						EDX		Secondary DNS IP address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_dns_name	DB 'Get DNS IP',0
-
-get_dns	Proc far
-	push ds
-	mov dx,ip_data_sel
-	mov ds,dx
-	mov eax,ds:dns1
-	mov edx,ds:dns2
-	pop ds
-	retf32
-get_dns	Endp
-
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -293,7 +274,7 @@ hook_ip	Proc far
 	pop ax
 	mov es:prot_id,al
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov bx,ds:protocol_count
 	inc ds:protocol_count
@@ -307,7 +288,6 @@ hook_ip	Proc far
 	ret
 hook_ip	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -324,7 +304,7 @@ get_ip_address_name	DB 'Get IP Address',0
 get_ip_address	Proc far
 	push ds
 ;
-	mov dx,ip_data_sel
+	mov dx,SEG data
 	mov ds,dx
 	mov edx,ds:my_ip
 ;
@@ -332,7 +312,6 @@ get_ip_address	Proc far
 	retf32
 get_ip_address	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -349,7 +328,7 @@ get_gateway_name	DB 'Get Gateway',0
 get_gateway	Proc far
 	push ds
 ;
-	mov dx,ip_data_sel
+	mov dx,SEG data
 	mov ds,dx
 	mov edx,ds:gateway
 ;
@@ -357,7 +336,6 @@ get_gateway	Proc far
 	retf32
 get_gateway	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -374,7 +352,7 @@ get_ip_mask_name	DB 'Get IP Mask',0
 get_ip_mask	Proc far
 	push ds
 ;
-	mov dx,ip_data_sel
+	mov dx,SEG data
 	mov ds,dx
 	mov edx,ds:ip_mask
 ;
@@ -382,7 +360,6 @@ get_ip_mask	Proc far
 	retf32
 get_ip_mask	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -455,7 +432,7 @@ create_header_alloc:
 	push ax
 	push bx
 	mov cx,ax
-	mov bx,ip_data_sel
+	mov bx,SEG data
 	mov fs,bx
 	mov bx,fs:ip_handle
 ;
@@ -548,7 +525,7 @@ create_header_fill:
 	mov es:[di].ip_ttl,ah
 	mov es:[di].ip_proto,al
 	mov es:[di].ip_checksum,0
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,ds:curr_id
 	inc ds:curr_id
@@ -607,7 +584,6 @@ create_header_done:
 	ret
 create_ip_header	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -650,7 +626,6 @@ calc_checksum_loop:
 	ret
 CalcChecksum    Endp	
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -682,7 +657,7 @@ send_ip_data	Proc far
 	movzx ecx,ds:[di].ip_size
 	xchg cl,ch
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov fs,ax
 	mov bx,fs:ip_handle
 	mov eax,ds:[di].ip_dest
@@ -740,7 +715,6 @@ send_done:
 	ret
 send_ip_data	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -800,7 +774,7 @@ create_broad_alloc:
 	push ax
 	push bx
 	mov cx,ax
-	mov bx,ip_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:ip_handle
 	GetBroadcastBuffer
@@ -827,7 +801,7 @@ create_broad_fill:
 	mov es:[di].ip_checksum,0
 ;
 	push ds
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,ds:curr_id
 	inc ds:curr_id
@@ -879,7 +853,6 @@ create_broad_done:
 	ret
 create_broadcast_ip	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -909,7 +882,7 @@ send_broadcast_ip	Proc far
 	movzx ecx,ds:[di].ip_size
 	xchg cl,ch
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov bx,ds:ip_handle
 	SendBroadcast
@@ -922,7 +895,6 @@ send_broadcast_ip	Proc far
 	ret
 send_broadcast_ip	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -979,7 +951,7 @@ receive_checksum_loop:
 	jnz receive_done
 
 receive_check_ok:
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 ;
     mov eax,es:[di].ip_source
@@ -1123,7 +1095,6 @@ receive_done:
 	ret
 receive	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1143,7 +1114,7 @@ get_gateway_driver	Proc near
     push ax
     push esi
 ;    
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov fs,ax
 	mov bx,fs:ip_handle
 	mov esi,OFFSET gateway
@@ -1155,7 +1126,6 @@ get_gateway_driver	Proc near
     ret
 get_gateway_driver  Endp	
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1176,7 +1146,7 @@ ping_gateway	Proc near
     push ds
     push edx
 ;    
-    mov dx,ip_data_sel
+    mov dx,SEG data
     mov ds,dx
     mov edx,ds:gateway
     Ping
@@ -1186,7 +1156,6 @@ ping_gateway	Proc near
     ret
 ping_gateway  Endp	
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1209,7 +1178,7 @@ is_ip_in_use	Proc near
     push bx
     push esi
 ;    
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov bx,ds:ip_handle
 ;
@@ -1229,7 +1198,6 @@ is_ip_in_use	Proc near
     ret
 is_ip_in_use  Endp	
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1253,7 +1221,7 @@ define_ip	Proc near
 	push di
 ;
     push ds
-	mov dx,ip_data_sel
+	mov dx,SEG data
 	mov ds,dx
 	mov ds:my_ip,eax
 	mov esi,OFFSET my_ip
@@ -1276,7 +1244,6 @@ define_ip	Proc near
 	ret
 define_ip	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1296,7 +1263,7 @@ define_mask	Proc far
 	push edx
 	push di
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov edx,es:[di]
 	mov ds:ip_mask,edx
@@ -1314,7 +1281,6 @@ define_mask	Proc far
 	ret
 define_mask	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1334,7 +1300,7 @@ define_gateway	Proc far
 	push edx
 	push di
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov edx,es:[di]
 	mov ds:gateway,edx
@@ -1352,66 +1318,6 @@ define_gateway	Proc far
 	ret
 define_gateway	Endp
 	    
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			define_dns
-;
-;	Purpose:		Define DNS
-;
-;	Parameters:		CX			Size of msg
-;					ES:DI		dns
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-define_dns	Proc far
-	push ds
-	push ax
-	push cx
-	push edx
-	push di
-;
-	mov ax,ip_data_sel
-	mov ds,ax
-	or cx,cx
-	jz define_dns_done
-;
-	mov edx,es:[di]
-	mov ds:dns1,edx
-;
-	push es
-	push di
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET dns1_name
-	call WriteIpEnv
-	pop di
-	pop es
-;
-	add di,4
-	sub cx,4
-	or cx,cx
-	jz define_dns_done
-;
-	mov edx,es:[di]
-	mov ds:dns2,edx
-;
-	push es
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET dns2_name
-	call WriteIpEnv
-	pop es
-
-define_dns_done:
-	pop di
-	pop edx
-	pop cx
-	pop ax
-	pop ds
-	ret
-define_dns	Endp
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1593,7 +1499,6 @@ find_val_done:
 	ret
 GetValue	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1605,22 +1510,11 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ip_name			DB 'IP',0
-dns1_name		DB 'DNS1',0
-dns2_name		DB 'DNS2',0
 mask_name		DB 'NETMASK',0
 gateway_name	DB 'GATEWAY',0
 
 init	PROC far
-	push ds
-	push es
-	pusha
-;
-	mov bx,ip_code_sel
-	InitDevice
-;
-	mov eax,SIZE ip_data
-	mov bx,ip_data_sel
-	AllocateFixedSystemMem
+	mov bx,SEG data
 	mov es,bx
 	mov ds,bx
 	mov ds:protocol_count,0
@@ -1631,14 +1525,6 @@ init	PROC far
 	mov di,OFFSET ip_name
 	call GetIPNumber
 	mov ds:my_ip,eax
-;
-	mov di,OFFSET dns1_name
-	call GetIPNumber
-	mov ds:dns1,eax
-;
-	mov di,OFFSET dns2_name
-	call GetIPNumber
-	mov ds:dns2,eax
 ;
 	mov di,OFFSET mask_name
 	call GetIpNumber
@@ -1663,12 +1549,6 @@ init	PROC far
 	xor cl,cl
 	mov ax,get_ppp_ip_nr
 	RegisterOsGate
-;
-	mov si,OFFSET get_dns
-	mov di,OFFSET get_dns_name
-	xor dx,dx
-	mov ax,get_dns_nr
-	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_ppp_dns
 	mov di,OFFSET get_ppp_dns_name
@@ -1720,7 +1600,7 @@ init	PROC far
 ;
 	mov cx,4
 	mov dx,800h
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	push ds:my_ip
 	mov ds:my_ip,0
@@ -1744,20 +1624,13 @@ init	PROC far
 	mov di,OFFSET define_gateway
 	AddDhcpOption
 ;
-	mov al,6
-	mov di,OFFSET define_dns
-	AddDhcpOption
-;
 	call init_cache
 	call init_dns
 	call init_icmp
 	call init_udp
 	call init_ntp
 	call init_tcp
-;
-	popa
-	pop es
-	pop ds
+	clc
 	ret
 init	ENDP
 

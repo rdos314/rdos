@@ -68,13 +68,21 @@ Reverse	MACRO
 	xchg al,ah
 		ENDM
 
+data    SEGMENT byte public 'DATA'
+
+ping_section		section_typ <>
+ping_thread			DW ?
+ping_id				DD ?
+ping_status			DB ?
+
+data    ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
 	
 	assume cs:code
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -127,7 +135,6 @@ calc_checksum_done:
 	ret
 CalcChecksum	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -143,7 +150,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveEchoReply	Proc near
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov bx,ds:ping_thread
 	or bx,bx
@@ -163,7 +170,6 @@ receive_echo_reply_done:
 	ret
 ReceiveEchoReply	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -196,7 +202,6 @@ ReceiveEchoReq	Proc near
 	ret
 ReceiveEchoReq	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -260,7 +265,6 @@ receive_done:
 	ret
 Receive	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -278,7 +282,7 @@ PAGE
 ping_name	DB 'Ping',0
 
 PingTimeout	Proc far
-	mov bx,ip_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov bx,ds:ping_thread
 	Signal
@@ -299,7 +303,7 @@ ping_node Proc far
 	push ebp
 ;
 	push eax
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	EnterSection ds:ping_section
 	push edx
@@ -338,7 +342,7 @@ ping_node Proc far
 	not ax
 	mov es:[di].icmp_checksum,ax
 	SendIp
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ax,cs
 	mov es,ax
@@ -366,7 +370,7 @@ ping_node Proc far
 	jmp ping_done
 
 ping_pop_fail:
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	LeaveSection ds:ping_section
 	pop eax
@@ -396,7 +400,7 @@ ping_node	Endp
 	public init_icmp
 
 init_icmp	PROC near
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	InitSection ds:ping_section
 	mov ds:ping_thread,0

@@ -151,17 +151,3 @@ tcp_delete_timeout  DW ?
 tcp_options			DB ?
 
 tcp_connection	ENDS
-
-tcp_data	STRUC
-
-ListSection			section_typ <>
-Handle				DW ?
-ConnectionList		DW ?
-ConnectionCount     DW ?
-ListenList			DW ?
-TcpThread			DW ?
-LastPort			DW ?
-PortMap				DB 1F00h DUP(?)
-
-tcp_data	ENDS
-

@@ -52,6 +52,16 @@ Reverse	MACRO
 	extrn FindHostByName:near
 	extrn FindHostByAddress:near
 	extrn DefineHostByName:near
+	extrn WriteIpEnv:near
+	extrn GetIPNumber:near
+
+data    SEGMENT byte public 'DATA'
+
+dns1				DD ?
+dns2				DD ?
+dns_curr_id			DW ?
+
+data    ENDS
 
 code	SEGMENT byte public 'CODE'
 
@@ -59,7 +69,6 @@ code	SEGMENT byte public 'CODE'
 	
 	assume cs:code
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -191,7 +200,6 @@ decode_name_done:
 	ret
 DecodeNameRequest	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -271,7 +279,7 @@ name_to_ip_move_part:
 ;
 	xor al,al
 	stosb
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	cli
 	mov ax,ds:dns_curr_id
@@ -411,7 +419,6 @@ name_to_ip32	Proc far
 	retf32
 name_to_ip32	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -544,7 +551,6 @@ decode_node_done:
 	ret
 DecodeNodeRequest	Endp
 
-PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -612,7 +618,31 @@ digit1:
 	ret
 DigitToString	Endp
 
-PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDns
+;
+;		description:	Get DNS IP address
+;
+;		RETURNS:		EAX		Primary DNS IP address
+;						EDX		Secondary DNS IP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_dns_name	DB 'Get DNS IP',0
+
+get_dns	Proc far
+	push ds
+	mov dx,SEG data
+	mov ds,dx
+	mov eax,ds:dns1
+	mov edx,ds:dns2
+	pop ds
+	retf32
+get_dns	Endp
+
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -678,7 +708,7 @@ ip_to_name_lookup:
 	mov cx,7
 	rep movsw
 ;
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	cli
 	mov ax,ds:dns_curr_id
@@ -804,7 +834,66 @@ ip_to_name32	Proc far
 	retf32
 ip_to_name32	Endp
 
-PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			define_dns
+;
+;	Purpose:		Define DNS
+;
+;	Parameters:		CX			Size of msg
+;					ES:DI		dns
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+define_dns	Proc far
+	push ds
+	push ax
+	push cx
+	push edx
+	push di
+;
+	mov ax,SEG data
+	mov ds,ax
+	or cx,cx
+	jz define_dns_done
+;
+	mov edx,es:[di]
+	mov ds:dns1,edx
+;
+	push es
+	push di
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET dns1_name
+	call WriteIpEnv
+	pop di
+	pop es
+;
+	add di,4
+	sub cx,4
+	or cx,cx
+	jz define_dns_done
+;
+	mov edx,es:[di]
+	mov ds:dns2,edx
+;
+	push es
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET dns2_name
+	call WriteIpEnv
+	pop es
+
+define_dns_done:
+	pop di
+	pop edx
+	pop cx
+	pop ax
+	pop ds
+	ret
+define_dns	Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -815,12 +904,26 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+dns1_name		DB 'DNS1',0
+dns2_name		DB 'DNS2',0
+
 	public init_dns
 
 init_dns	PROC near
-	mov ax,ip_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov ds:dns_curr_id,1
+;
+	mov ax,cs
+	mov es,ax
+;
+	mov di,OFFSET dns1_name
+	call GetIPNumber
+	mov ds:dns1,eax
+;
+	mov di,OFFSET dns2_name
+	call GetIPNumber
+	mov ds:dns2,eax
 ;
 	mov ax,cs
 	mov ds,ax
@@ -839,6 +942,16 @@ init_dns	PROC near
 	mov dx,virt_es_in
 	mov ax,ip_to_name_nr
 	RegisterUserGate
+;
+	mov si,OFFSET get_dns
+	mov di,OFFSET get_dns_name
+	xor dx,dx
+	mov ax,get_dns_nr
+	RegisterBimodalUserGate
+;
+	mov al,6
+	mov di,OFFSET define_dns
+	AddDhcpOption
 ;
 	ret
 init_dns	ENDP
