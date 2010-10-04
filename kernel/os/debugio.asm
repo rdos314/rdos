@@ -59,6 +59,22 @@ code	SEGMENT byte public 'CODE'
 	extrn interact_decr:near
 	extrn interact_set_value:near
 
+    extrn incdec_eax:near
+    extrn incdec_ebx:near
+    extrn incdec_ecx:near
+    extrn incdec_edx:near
+    extrn incdec_esi:near
+    extrn incdec_edi:near
+    extrn incdec_esp:near
+    extrn incdec_ebp:near
+    extrn incdec_epc:near
+    extrn incdec_cs:near
+    extrn incdec_ds:near
+    extrn incdec_es:near
+    extrn incdec_fs:near
+    extrn incdec_gs:near
+    extrn incdec_ss:near
+
 .386p
 
 	assume cs:code
@@ -1371,41 +1387,6 @@ interact_set	PROC near
 	ret
 interact_set	ENDP
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			
-;
-;		DESCRIPTION:	Register operations
-;
-;		PARAMETERS:		GS			TSS
-;						DX:ESI		Adress to data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-incdec	PROC near
-	mov fs,dx
-	mov ax,[bp].vm_eax
-	cmp al,'+'
-	jne not_inc_reg
-	inc dword ptr fs:[esi]
-	ret
-not_inc_reg:
-	cmp al,'-'
-	jne not_dec_reg
-	dec dword ptr fs:[esi]
-	ret
-not_dec_reg:
-	ret
-incdec	ENDP
-
-incdec_eax	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_eax
-	call incdec
-	ret
-incdec_eax	ENDP
-
 change_eax	PROC near
 	mov dx,gs
 	mov esi,OFFSET tss_eax
@@ -1413,13 +1394,6 @@ change_eax	PROC near
 	ret
 	ret
 change_eax	ENDP
-
-incdec_ebx	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_ebx
-	call incdec
-	ret
-incdec_ebx	ENDP
 
 change_ebx	PROC near
 	mov dx,gs
@@ -1429,13 +1403,6 @@ change_ebx	PROC near
 	ret
 change_ebx	ENDP
 
-incdec_ecx	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_ecx
-	call incdec
-	ret
-incdec_ecx	ENDP
-
 change_ecx	PROC near
 	mov dx,gs
 	mov esi,OFFSET tss_ecx
@@ -1443,13 +1410,6 @@ change_ecx	PROC near
 	ret
 	ret
 change_ecx	ENDP
-
-incdec_edx	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_edx
-	call incdec
-	ret
-incdec_edx	ENDP
 
 change_edx	PROC near
 	mov dx,gs
@@ -1459,13 +1419,6 @@ change_edx	PROC near
 	ret
 change_edx	ENDP
 
-incdec_esi	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_esi
-	call incdec
-	ret
-incdec_esi	ENDP
-
 change_esi	PROC near
 	mov dx,gs
 	mov esi,OFFSET tss_esi
@@ -1473,13 +1426,6 @@ change_esi	PROC near
 	ret
 	ret
 change_esi	ENDP
-
-incdec_edi	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_edi
-	call incdec
-	ret
-incdec_edi	ENDP
 
 change_edi	PROC near
 	mov dx,gs
@@ -1489,13 +1435,6 @@ change_edi	PROC near
 	ret
 change_edi	ENDP
 
-incdec_esp	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_esp
-	call incdec
-	ret
-incdec_esp	ENDP
-
 change_esp	PROC near
 	mov dx,gs
 	mov esi,OFFSET tss_esp
@@ -1503,13 +1442,6 @@ change_esp	PROC near
 	ret
 	ret
 change_esp	ENDP
-
-incdec_ebp	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_ebp
-	call incdec
-	ret
-incdec_ebp	ENDP
 
 change_ebp	PROC near
 	mov dx,gs
@@ -1519,13 +1451,6 @@ change_ebp	PROC near
 	ret
 change_ebp	ENDP
 
-incdec_epc	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_eip
-	call incdec
-	ret
-incdec_epc	ENDP
-
 change_epc	PROC near
 	mov dx,gs
 	mov esi,OFFSET tss_eip
@@ -1533,14 +1458,6 @@ change_epc	PROC near
 	ret
 	ret
 change_epc	ENDP
-
-
-incdec_cs	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_cs
-	call incdec
-	ret
-incdec_cs	ENDP
 
 change_cs	PROC near
 	and cl,3
@@ -1551,13 +1468,6 @@ change_cs	PROC near
 	ret
 change_cs	ENDP
 
-incdec_ds	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_ds
-	call incdec
-	ret
-incdec_ds	ENDP
-
 change_ds	PROC near
 	and cl,3
 	mov dx,gs
@@ -1566,13 +1476,6 @@ change_ds	PROC near
 	ret
 	ret
 change_ds	ENDP
-
-incdec_es	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_es
-	call incdec
-	ret
-incdec_es	ENDP
 
 change_es	PROC near
 	and cl,3
@@ -1583,13 +1486,6 @@ change_es	PROC near
 	ret
 change_es	ENDP
 
-incdec_fs	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_fs
-	call incdec
-	ret
-incdec_fs	ENDP
-
 change_fs	PROC near
 	and cl,3
 	mov dx,gs
@@ -1599,13 +1495,6 @@ change_fs	PROC near
 	ret
 change_fs	ENDP
 
-incdec_gs	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_gs
-	call incdec
-	ret
-incdec_gs	ENDP
-
 change_gs	PROC near
 	and cl,3
 	mov dx,gs
@@ -1614,13 +1503,6 @@ change_gs	PROC near
 	ret
 	ret
 change_gs	ENDP
-
-incdec_ss	PROC near
-	mov dx,gs
-	mov esi,OFFSET tss_ss
-	call incdec
-	ret
-incdec_ss	ENDP
 
 change_ss	PROC near
 	and cl,3
@@ -1943,6 +1825,7 @@ d_c_loop:
 	jnc not_this_entry
 	xor cl,7
 	and cl,7
+	mov ax,[bp].vm_eax
 	call word ptr cs:[bx+debug_call]
 	jmp d_c_end
 not_this_entry:

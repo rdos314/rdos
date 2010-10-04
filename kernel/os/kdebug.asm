@@ -532,6 +532,338 @@ interact_set_value	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           incdec
+;
+;           DESCRIPTION:    INC / DEC
+;
+;           PARAMETERS:     GS          80386 TSS
+;                           DX:ESI      address to data
+;                           AL          operation ('+' och '-')
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+incdec  PROC near
+    mov fs,dx
+    cmp al,'+'
+    jne not_inc_reg
+;
+    inc dword ptr fs:[esi]
+    ret
+not_inc_reg:
+    cmp al,'-'
+    jne not_dec_reg
+;
+    dec dword ptr fs:[esi]
+    ret
+not_dec_reg:
+    ret
+incdec  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_eax
+;
+;           DESCRIPTION:    INC / DEC EAX
+;
+;           PARAMETERS:     GS              8086 TSS
+;                           AL          operation ('+' och '-')
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_eax
+    
+incdec_eax      PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_eax
+    call incdec
+    ret
+incdec_eax      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_ebx
+;
+;           DESCRIPTION:    INC / DEC EBX
+;
+;           PARAMETERS:         GS              8086 TSS
+;                           AL          operation ('+' och '-')
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_ebx
+
+incdec_ebx      PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_ebx
+    call incdec
+    ret
+incdec_ebx      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_ecx
+;
+;           DESCRIPTION:    INC / DEC ECX
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_ecx
+
+incdec_ecx      PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_ecx
+    call incdec
+    ret
+incdec_ecx      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_edx
+;
+;           DESCRIPTION:    INC / DEC EDX
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_edx
+
+incdec_edx      PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_edx
+    call incdec
+    ret
+incdec_edx      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_esi
+;
+;           DESCRIPTION:    INC / DEC ESI
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_esi
+
+incdec_esi      PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_esi
+    call incdec
+    ret
+incdec_esi      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_edi
+;
+;           DESCRIPTION:    INC / DEC EDI
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_edi
+
+incdec_edi      PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_edi
+    call incdec
+    ret
+incdec_edi      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_esp
+;
+;           DESCRIPTION:    INC / DEC ESP
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_esp
+
+incdec_esp      PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_esp
+    call incdec
+    ret
+incdec_esp      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_ebp
+;
+;           DESCRIPTION:    INC / DEC EBP
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_ebp
+
+incdec_ebp      PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_ebp
+    call incdec
+    ret
+incdec_ebp      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_epc
+;
+;           DESCRIPTION:    INC / DEC EIP
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_epc
+
+incdec_epc      PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_eip
+    call incdec
+    ret
+incdec_epc      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_cs
+;
+;           DESCRIPTION:    INC / DEC CS
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_cs
+
+incdec_cs       PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_cs
+    call incdec
+    ret
+incdec_cs       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_ds
+;
+;           DESCRIPTION:    INC / DEC DS
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_ds
+
+incdec_ds       PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_ds
+    call incdec
+    ret
+incdec_ds       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_es
+;
+;           DESCRIPTION:    INC / DEC ES
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_es
+
+incdec_es       PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_es
+    call incdec
+    ret
+incdec_es       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_fs
+;
+;           DESCRIPTION:    INC / DEC FS
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_fs
+
+incdec_fs       PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_fs
+    call incdec
+    ret
+incdec_fs       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_gs
+;
+;           DESCRIPTION:    INC / DEC GS
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_gs
+
+incdec_gs       PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_gs
+    call incdec
+    ret
+incdec_gs       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           incdec_ss
+;
+;           DESCRIPTION:    INC / DEC SS
+;
+;           PARAMETERS:         GS              8086 TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public incdec_ss
+
+incdec_ss       PROC near
+    mov dx,gs
+    mov esi,OFFSET tss_ss
+    call incdec
+    ret
+incdec_ss       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			Register writes
 ;
 ;		DESCRIPTION:	
