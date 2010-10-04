@@ -38,15 +38,14 @@ INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ipcdebug.inc
-INCLUDE kdebug.def
 
 data    SEGMENT byte public 'DATA'
 
-op_in_text	DB 100 DUP(?)
-op_text_end	DW ?
-op_size		DW ?
+op_in_text      DB 100 DUP(?)
+op_text_end     DW ?
+op_size         DW ?
 
-mouse_pos	DW ?
+mouse_pos       DW ?
 
 data    ENDS
 
@@ -531,9 +530,9 @@ req_instr       PROC near
     jnc req_instr_do
 ;
     mov dx,di
-    mov di,OFFSET op_in_text	
+    mov di,OFFSET op_in_text    
     call dis_ass_one
-	mov ds:op_size,80
+        mov ds:op_size,80
 
 req_instr_do:
     pop es

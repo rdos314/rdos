@@ -29,7 +29,6 @@
 
 GateSize = 16
 
-INCLUDE kdebug.def
 INCLUDE ..\driver.def
 INCLUDE port.def
 INCLUDE protseg.def
@@ -758,12 +757,6 @@ init_tlb_done:
     push cs
     call allocate_fixed_system_mem
 ;
-	mov bx,kdebug_sys_sel
-	mov eax,SIZE debug_seg
-    push cs
-    call allocate_fixed_system_mem
-	mov es:debug_thread,0
-;
     mov ax,task_sel
     mov ds,ax
     mov ds:try_lock_proc,OFFSET TryLockDefault
@@ -1258,11 +1251,9 @@ get_debug_thread    PROC near
     push cx
     push dx
     push si
-    mov ax,kdebug_sys_sel
-    mov ds,ax
-    mov cx,ds:debug_thread
     mov ax,system_data_sel
     mov ds,ax
+    mov cx,ds:debug_thread
     mov si,OFFSET debug_list
     mov ax,[si]
     or ax,ax
@@ -1279,8 +1270,6 @@ get_debug_try_next:
 get_debug_new:
     mov cx,[si]
 get_debug_default:
-    mov ax,kdebug_sys_sel
-    mov ds,ax
     mov ds:debug_thread,cx
     mov ax,cx
 get_debug_done:
@@ -1701,8 +1690,6 @@ debug_next      PROC far
     mov es,ax
     mov es,es:p_next
     mov [si],es
-    mov ax,kdebug_sys_sel
-    mov ds,ax
     mov ds:debug_thread,es
 debug_next_end:
     pop si

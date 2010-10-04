@@ -133,6 +133,8 @@ max_cpuid           DD ?
 last_time           DD ?,?
 time_drift          DD ?
 
+debug_thread        DW ?
+
 tsc_tics            DD ?
 tsc_rest            DW ?
 
