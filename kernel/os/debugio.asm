@@ -55,6 +55,10 @@ code	SEGMENT byte public 'CODE'
 	extrn GetOsCall:near
 	extrn GetUserCall:near
 
+	extrn interact_incr:near
+	extrn interact_decr:near
+	extrn interact_set_value:near
+
 .386p
 
 	assume cs:code
@@ -1350,123 +1354,7 @@ WriteCpu	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			interact_inc
-;
-;		DESCRIPTION:	Interact increment
-;
-;		PARAMETERS:		GS			TSS
-;						DX:ESI		Adress to data
-;						CL  		Number of digits
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-interact_incr	PROC near
-	push eax
-	push bx
-	push esi
-	xor eax,eax
-	clc
-	rcr cl,1
-	mov al,cl
-	pushf
-	add esi,eax
-	mov bx,gs:tss_thread
-	test gs:tss_eflags+2,2
-	jz interact_inc_read_prot
-interact_inc_read_virt:
-	ReadThreadSegment
-	jmp interact_inc_read_done
-interact_inc_read_prot:
-	ReadThreadSelector
-interact_inc_read_done:
-	popf
-	jnc inc_low
-inc_hi:
-	add al,10h
-	jmp inc_j
-inc_low:
-	mov ah,al
-	inc al
-	and al,0Fh
-	and ah,0F0h
-	or al,ah
-inc_j:
-	test gs:tss_eflags+2,2
-	jz interact_inc_write_prot
-interact_inc_write_virt:
-	WriteThreadSegment
-	jmp interact_inc_write_done
-interact_inc_write_prot:
-	WriteThreadSelector
-interact_inc_write_done:
-	pop esi
-	pop bx
-	pop eax
-	ret
-interact_incr	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			interact_dec
-;
-;		DESCRIPTION:	Interact decrement
-;
-;		PARAMETERS:		GS			TSS
-;						DX:ESI		Adress to data
-;						CL  		Number of digits
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-interact_decr	PROC near
-	push eax
-	push bx
-	push esi
-	xor eax,eax
-	clc
-	rcr cl,1
-	mov al,cl
-	pushf
-	add esi,eax
-	mov bx,gs:tss_thread
-	test gs:tss_eflags+2,2
-	jz interact_dec_read_prot
-interact_dec_read_virt:
-	ReadThreadSegment
-	jmp interact_dec_read_done
-interact_dec_read_prot:
-	ReadThreadSelector
-interact_dec_read_done:
-	popf
-	jnc dec_low
-dec_hi:
-	sub al,10h
-	jmp dec_j
-dec_low:
-	mov ah,al
-	dec al
-	and al,0Fh
-	and ah,0F0h
-	or al,ah
-dec_j:
-	test gs:tss_eflags+2,2
-	jz interact_dec_write_prot
-interact_dec_write_virt:
-	WriteThreadSegment
-	jmp interact_dec_write_done
-interact_dec_write_prot:
-	WriteThreadSelector
-interact_dec_write_done:
-	pop esi
-	pop bx
-	pop eax
-	ret
-interact_decr	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			interact_set_value
+;		NAME:			interact_set
 ;
 ;		DESCRIPTION:	Interact set new value
 ;
@@ -1477,51 +1365,11 @@ interact_decr	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-interact_set_value	PROC near
-	push eax
-	push bx
-	push esi
-	xor eax,eax
-	clc
-	rcr cl,1
-	mov al,cl
-	pushf
-	add esi,eax
-	mov bx,gs:tss_thread
-	test gs:tss_eflags+2,2
-	jz interact_set_read_prot
-interact_set_read_virt:
-	ReadThreadSegment
-	jmp interact_set_read_done
-interact_set_read_prot:
-	ReadThreadSelector
-interact_set_read_done:
-	popf
-	jnc set_low
-set_hi:
-	and al,0Fh
-	mov ah,ch
-	shl ah,4
-	or al,ah
-	jmp set_j
-set_low:
-	and al,0F0h
-	or al,ch
-set_j:
-	test gs:tss_eflags+2,2
-	jz interact_set_write_prot
-interact_set_write_virt:
-	WriteThreadSegment
-	jmp interact_set_write_done
-interact_set_write_prot:
-	WriteThreadSelector
-interact_set_write_done:
+interact_set	PROC near
+    call interact_set_value
 	inc word ptr [bp].vm_edx
-	pop esi
-	pop bx
-	pop eax
 	ret
-interact_set_value	ENDP
+interact_set	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2125,7 +1973,7 @@ dec_sw	ENDP
 ;
 set_base_sw	PROC near
 	pusha
-	mov di,OFFSET interact_set_value
+	mov di,OFFSET interact_set
 	call debug_call_do
 	popa
 	ret
