@@ -1,12 +1,12 @@
 !define BLANK ""
-C:\rdos\kernel\os\exec.obj : C:\rdos\kernel\os\exec.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\exec.obj : c:\rdos\kernel\os\exec.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm exec.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\exec.rdv : C:\rdos\kernel\os\exec.obj .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\exec.rdv : c:\rdos\kernel\os\exec.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  @%write exec.lk1 FIL exec.obj
  @%append exec.lk1 
 !ifneq BLANK ""

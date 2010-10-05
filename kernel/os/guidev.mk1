@@ -1,66 +1,66 @@
 !define BLANK ""
-C:\rdos\kernel\os\bit1.obj : C:\rdos\kernel\os\bit1.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\bit1.obj : c:\rdos\kernel\os\bit1.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm bit1.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\bit16.obj : C:\rdos\kernel\os\bit16.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\bit16.obj : c:\rdos\kernel\os\bit16.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm bit16.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\bit24.obj : C:\rdos\kernel\os\bit24.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\bit24.obj : c:\rdos\kernel\os\bit24.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm bit24.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\bit32.obj : C:\rdos\kernel\os\bit32.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\bit32.obj : c:\rdos\kernel\os\bit32.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm bit32.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\bitmap.obj : C:\rdos\kernel\os\bitmap.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\bitmap.obj : c:\rdos\kernel\os\bitmap.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm bitmap.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\focus.obj : C:\rdos\kernel\os\focus.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\focus.obj : c:\rdos\kernel\os\focus.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm focus.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\guidev.obj : C:\rdos\kernel\os\guidev.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\guidev.obj : c:\rdos\kernel\os\guidev.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm guidev.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\keyboard.obj : C:\rdos\kernel\os\keyboard.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\keyboard.obj : c:\rdos\kernel\os\keyboard.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm keyboard.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\mouse.obj : C:\rdos\kernel\os\mouse.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\mouse.obj : c:\rdos\kernel\os\mouse.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm mouse.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\sprite.obj : C:\rdos\kernel\os\sprite.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\sprite.obj : c:\rdos\kernel\os\sprite.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm sprite.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\video.obj : C:\rdos\kernel\os\video.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\video.obj : c:\rdos\kernel\os\video.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm video.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\guidev.rdv : C:\rdos\kernel\os\bit1.obj C:\rdos\kernel\os\&
-bit16.obj C:\rdos\kernel\os\bit24.obj C:\rdos\kernel\os\bit32.obj C:\rdos\ke&
-rnel\os\bitmap.obj C:\rdos\kernel\os\focus.obj C:\rdos\kernel\os\guidev.obj &
-C:\rdos\kernel\os\keyboard.obj C:\rdos\kernel\os\mouse.obj C:\rdos\kernel\os&
-\sprite.obj C:\rdos\kernel\os\video.obj .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\guidev.rdv : c:\rdos\kernel\os\bit1.obj c:\rdos\kernel\os\&
+bit16.obj c:\rdos\kernel\os\bit24.obj c:\rdos\kernel\os\bit32.obj c:\rdos\ke&
+rnel\os\bitmap.obj c:\rdos\kernel\os\focus.obj c:\rdos\kernel\os\guidev.obj &
+c:\rdos\kernel\os\keyboard.obj c:\rdos\kernel\os\mouse.obj c:\rdos\kernel\os&
+\sprite.obj c:\rdos\kernel\os\video.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  @%write guidev.lk1 FIL bit1.obj,bit16.obj,bit24.obj,bit32.obj,bitmap.obj,fo&
 cus.obj,guidev.obj,keyboard.obj,mouse.obj,sprite.obj,video.obj
  @%append guidev.lk1 

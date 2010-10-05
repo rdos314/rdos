@@ -1,28 +1,28 @@
 !define BLANK ""
-C:\rdos\kernel\os\env.obj : C:\rdos\kernel\os\env.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\env.obj : c:\rdos\kernel\os\env.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm env.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\time.obj : C:\rdos\kernel\os\time.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\time.obj : c:\rdos\kernel\os\time.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm time.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\util.obj : C:\rdos\kernel\os\util.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\util.obj : c:\rdos\kernel\os\util.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm util.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\wait.obj : C:\rdos\kernel\os\wait.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\wait.obj : c:\rdos\kernel\os\wait.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm wait.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\util.rdv : C:\rdos\kernel\os\env.obj C:\rdos\kernel\os\tim&
-e.obj C:\rdos\kernel\os\util.obj C:\rdos\kernel\os\wait.obj .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\util.rdv : c:\rdos\kernel\os\env.obj c:\rdos\kernel\os\tim&
+e.obj c:\rdos\kernel\os\util.obj c:\rdos\kernel\os\wait.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  @%write util.lk1 FIL env.obj,time.obj,util.obj,wait.obj
  @%append util.lk1 
 !ifneq BLANK ""

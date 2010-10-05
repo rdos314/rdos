@@ -1,12 +1,12 @@
 !define BLANK ""
-C:\rdos\kernel\os\font.obj : C:\rdos\kernel\os\font.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\font.obj : c:\rdos\kernel\os\font.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm font.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\font.rdv : C:\rdos\kernel\os\font.obj .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\font.rdv : c:\rdos\kernel\os\font.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  @%write font.lk1 FIL font.obj
  @%append font.lk1 
 !ifneq BLANK ""

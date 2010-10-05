@@ -1,45 +1,45 @@
 !define BLANK ""
-C:\rdos\kernel\os\ipc.obj : C:\rdos\kernel\os\ipc.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\ipc.obj : c:\rdos\kernel\os\ipc.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm ipc.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\ipcrec.obj : C:\rdos\kernel\os\ipcrec.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\ipcrec.obj : c:\rdos\kernel\os\ipcrec.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm ipcrec.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\ipcsend.obj : C:\rdos\kernel\os\ipcsend.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\ipcsend.obj : c:\rdos\kernel\os\ipcsend.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm ipcsend.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\smp.obj : C:\rdos\kernel\os\smp.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\smp.obj : c:\rdos\kernel\os\smp.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm smp.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\smprec.obj : C:\rdos\kernel\os\smprec.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\smprec.obj : c:\rdos\kernel\os\smprec.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm smprec.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\smpresp.obj : C:\rdos\kernel\os\smpresp.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\smpresp.obj : c:\rdos\kernel\os\smpresp.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm smpresp.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\smpsend.obj : C:\rdos\kernel\os\smpsend.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\smpsend.obj : c:\rdos\kernel\os\smpsend.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm smpsend.asm -ms -2 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\ipc.rdv : C:\rdos\kernel\os\ipc.obj C:\rdos\kernel\os\ipcr&
-ec.obj C:\rdos\kernel\os\ipcsend.obj C:\rdos\kernel\os\smp.obj C:\rdos\kerne&
-l\os\smprec.obj C:\rdos\kernel\os\smpresp.obj C:\rdos\kernel\os\smpsend.obj &
+c:\rdos\kernel\os\ipc.rdv : c:\rdos\kernel\os\ipc.obj c:\rdos\kernel\os\ipcr&
+ec.obj c:\rdos\kernel\os\ipcsend.obj c:\rdos\kernel\os\smp.obj c:\rdos\kerne&
+l\os\smprec.obj c:\rdos\kernel\os\smpresp.obj c:\rdos\kernel\os\smpsend.obj &
 .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+ @c:
+ cd c:\rdos\kernel\os
  @%write ipc.lk1 FIL ipc.obj,ipcrec.obj,ipcsend.obj,smp.obj,smprec.obj,smpre&
 sp.obj,smpsend.obj
  @%append ipc.lk1 

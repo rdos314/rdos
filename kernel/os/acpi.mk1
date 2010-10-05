@@ -1,12 +1,12 @@
 !define BLANK ""
-C:\rdos\kernel\os\acpi.obj : C:\rdos\kernel\os\acpi.asm .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\acpi.obj : c:\rdos\kernel\os\acpi.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  *wasm acpi.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-C:\rdos\kernel\os\acpi.rdv : C:\rdos\kernel\os\acpi.obj .AUTODEPEND
- @C:
- cd C:\rdos\kernel\os
+c:\rdos\kernel\os\acpi.rdv : c:\rdos\kernel\os\acpi.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
  @%write acpi.lk1 FIL acpi.obj
  @%append acpi.lk1 
 !ifneq BLANK ""
