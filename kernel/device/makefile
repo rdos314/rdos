@@ -101,10 +101,6 @@ printer_srcs = PRINTER.ASM
 printer_objs = $(printer_srcs:.ASM=.OBJ)
 printer_rdvs = PRINTER.RDV
 
-floppy_srcs = FLOPPY.ASM
-floppy_objs = $(floppy_srcs:.ASM=.OBJ)
-floppy_rdvs = FLOPPY.RDV
-
 ne2000_srcs = NE2000.ASM
 ne2000_objs = $(ne2000_srcs:.ASM=.OBJ)
 ne2000_rdvs = NE2000.RDV
@@ -145,7 +141,7 @@ fat_srcs = FAT.ASM FATMISC.ASM FATTAB.ASM FATDIR.ASM FATFILE.ASM FATVERI.ASM
 fat_objs = $(fat_srcs:.ASM=.OBJ)
 fat_rdvs = FAT.RDV
 
-srcs =      $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
+srcs =      $(pcvideo_srcs) $(novideo_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
@@ -155,7 +151,7 @@ srcs =      $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
 
 objs =      $(srcs:.ASM=.OBJ)
 
-rdvs =      $(floppy_rdvs) $(pcvideo_rdvs) $(novideo_rdvs) \
+rdvs =      $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
@@ -325,14 +321,6 @@ PRINTER.RDV : $(printer_objs)
 	$(printer_objs)
 	PRINTER.RDV
 	PRINTER;       
-!
-
-FLOPPY.RDV : $(floppy_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(floppy_objs)
-	FLOPPY.RDV
-	FLOPPY;
 !
 
 NE2000.RDV : $(ne2000_objs)

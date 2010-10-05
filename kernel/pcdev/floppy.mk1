@@ -1,0 +1,16 @@
+!define BLANK ""
+c:\rdos\kernel\pcdev\floppy.obj : c:\rdos\kernel\pcdev\floppy.asm .AUTODEPEN&
+D
+ @c:
+ cd c:\rdos\kernel\pcdev
+ *wasm floppy.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\pcdev\floppy.rdv : c:\rdos\kernel\pcdev\floppy.obj .AUTODEPEN&
+D
+ @c:
+ cd c:\rdos\kernel\pcdev
+ @%write floppy.lk1 FIL floppy.obj
+ @%append floppy.lk1 
+ *wlink name floppy d all sys rdos_dev op codesel=0x720 op datasel=0x728 op &
+m op maplines op v op maxe=25 op symf @floppy.lk1
+
