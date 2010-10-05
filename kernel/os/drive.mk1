@@ -1,0 +1,32 @@
+!define BLANK ""
+c:\rdos\kernel\os\drive.obj : c:\rdos\kernel\os\drive.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm drive.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\filedisc.obj : c:\rdos\kernel\os\filedisc.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm filedisc.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\ramdrive.obj : c:\rdos\kernel\os\ramdrive.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm ramdrive.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\drive.rdv : c:\rdos\kernel\os\drive.obj c:\rdos\kernel\os\&
+filedisc.obj c:\rdos\kernel\os\ramdrive.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ @%write drive.lk1 FIL drive.obj,filedisc.obj,ramdrive.obj
+ @%append drive.lk1 
+!ifneq BLANK ""
+ *wlib -q -n -b drive.imp 
+ @%append drive.lk1 LIBR drive.imp
+!endif
+!ifneq BLANK ""
+ @%append drive.lk1 
+!endif
+ *wlink name drive d all sys rdos_dev op codesel=0x630 op datasel=0x638 op m&
+ op maplines op v op maxe=25 op symf @drive.lk1
+

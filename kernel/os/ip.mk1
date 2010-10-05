@@ -1,0 +1,53 @@
+!define BLANK ""
+c:\rdos\kernel\os\dhcp.obj : c:\rdos\kernel\os\dhcp.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm dhcp.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\dns.obj : c:\rdos\kernel\os\dns.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm dns.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\icmp.obj : c:\rdos\kernel\os\icmp.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm icmp.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\ip.obj : c:\rdos\kernel\os\ip.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm ip.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\ipcache.obj : c:\rdos\kernel\os\ipcache.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm ipcache.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\ntp.obj : c:\rdos\kernel\os\ntp.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm ntp.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\tcp.obj : c:\rdos\kernel\os\tcp.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm tcp.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\udp.obj : c:\rdos\kernel\os\udp.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm udp.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\ip.rdv : c:\rdos\kernel\os\dhcp.obj c:\rdos\kernel\os\dns.&
+obj c:\rdos\kernel\os\icmp.obj c:\rdos\kernel\os\ip.obj c:\rdos\kernel\os\ip&
+cache.obj c:\rdos\kernel\os\ntp.obj c:\rdos\kernel\os\tcp.obj c:\rdos\kernel&
+\os\udp.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ @%write ip.lk1 FIL dhcp.obj,dns.obj,icmp.obj,ip.obj,ipcache.obj,ntp.obj,tcp&
+.obj,udp.obj
+ @%append ip.lk1 
+ *wlink name ip d all sys rdos_dev op codesel=0x560 op datasel=0x568 op m op&
+ maplines op v op maxe=25 op symf @ip.lk1
+

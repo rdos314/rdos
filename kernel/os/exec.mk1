@@ -1,0 +1,21 @@
+!define BLANK ""
+c:\rdos\kernel\os\exec.obj : c:\rdos\kernel\os\exec.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm exec.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\exec.rdv : c:\rdos\kernel\os\exec.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ @%write exec.lk1 FIL exec.obj
+ @%append exec.lk1 
+!ifneq BLANK ""
+ *wlib -q -n -b exec.imp 
+ @%append exec.lk1 LIBR exec.imp
+!endif
+!ifneq BLANK ""
+ @%append exec.lk1 
+!endif
+ *wlink name exec d all sys rdos_dev op codesel=0x3F0 op datasel=0x3F8 op m &
+op maplines op v op maxe=25 op symf @exec.lk1
+

@@ -1,0 +1,55 @@
+!define BLANK ""
+c:\rdos\kernel\os\dos.obj : c:\rdos\kernel\os\dos.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm dos.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\dos16.obj : c:\rdos\kernel\os\dos16.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm dos16.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\dos32.obj : c:\rdos\kernel\os\dos32.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm dos32.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\doscom.obj : c:\rdos\kernel\os\doscom.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm doscom.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\dosexec.obj : c:\rdos\kernel\os\dosexec.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm dosexec.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\dosmem.obj : c:\rdos\kernel\os\dosmem.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm dosmem.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\dosvm.obj : c:\rdos\kernel\os\dosvm.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm dosvm.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\dos.rdv : c:\rdos\kernel\os\dos.obj c:\rdos\kernel\os\dos1&
+6.obj c:\rdos\kernel\os\dos32.obj c:\rdos\kernel\os\doscom.obj c:\rdos\kerne&
+l\os\dosexec.obj c:\rdos\kernel\os\dosmem.obj c:\rdos\kernel\os\dosvm.obj .A&
+UTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ @%write dos.lk1 FIL dos.obj,dos16.obj,dos32.obj,doscom.obj,dosexec.obj,dosm&
+em.obj,dosvm.obj
+ @%append dos.lk1 
+!ifneq BLANK ""
+ *wlib -q -n -b dos.imp 
+ @%append dos.lk1 LIBR dos.imp
+!endif
+!ifneq BLANK ""
+ @%append dos.lk1 
+!endif
+ *wlink name dos d all sys rdos_dev op codesel=0x460 op datasel=0x468 op m o&
+p maplines op v op maxe=25 op symf @dos.lk1
+

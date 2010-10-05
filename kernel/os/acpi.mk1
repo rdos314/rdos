@@ -1,0 +1,21 @@
+!define BLANK ""
+c:\rdos\kernel\os\acpi.obj : c:\rdos\kernel\os\acpi.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm acpi.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\acpi.rdv : c:\rdos\kernel\os\acpi.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ @%write acpi.lk1 FIL acpi.obj
+ @%append acpi.lk1 
+!ifneq BLANK ""
+ *wlib -q -n -b acpi.imp 
+ @%append acpi.lk1 LIBR acpi.imp
+!endif
+!ifneq BLANK ""
+ @%append acpi.lk1 
+!endif
+ *wlink name acpi d all sys rdos_dev op codesel=0xA0 op m op maplines op max&
+e=25 op symf @acpi.lk1
+

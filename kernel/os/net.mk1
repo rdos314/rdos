@@ -1,0 +1,14 @@
+!define BLANK ""
+c:\rdos\kernel\os\net.obj : c:\rdos\kernel\os\net.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm net.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\net.rdv : c:\rdos\kernel\os\net.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ @%write net.lk1 FIL net.obj
+ @%append net.lk1 
+ *wlink name net d all sys rdos_dev op codesel=0x670 op datasel=0x678 op m o&
+p maplines op v op maxe=25 op symf @net.lk1
+
