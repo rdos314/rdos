@@ -1,0 +1,14 @@
+!define BLANK ""
+c:\rdos\kernel\pcdev\ide.obj : c:\rdos\kernel\pcdev\ide.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\pcdev
+ *wasm ide.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\pcdev\ide.rdv : c:\rdos\kernel\pcdev\ide.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\pcdev
+ @%write ide.lk1 FIL ide.obj
+ @%append ide.lk1 
+ *wlink name ide d all sys rdos_dev op codesel=0x7F0 op m op maplines op v o&
+p maxe=25 op symf @ide.lk1
+
