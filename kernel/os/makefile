@@ -39,10 +39,6 @@ wd_srcs = WD.ASM
 wd_objs = $(wd_srcs:.ASM=.OBJ)
 wd_rdvs = $(wd_srcs:.ASM=.RDV)
 
-rtc_srcs = RTC.ASM
-rtc_objs = $(rtc_srcs:.ASM=.OBJ)
-rtc_rdvs = RTC.RDV
-
 dpmi_srcs = DPMI.ASM    DPMI16.ASM      DPMI32.ASM
 dpmi_objs = $(dpmi_srcs:.ASM=.OBJ)
 dpmi_rdvs = DPMI.RDV
@@ -80,7 +76,6 @@ srcs =      $(dpmi_srcs)  \
 			$(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) \
-			$(rtc_srcs)  \
 			$(ac97_srcs) $(ir_srcs) $(wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
@@ -96,7 +91,7 @@ exes =      $(prot_exes) $(pcshut_exes)
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(key_rdvs)   \
 			$(usb_rdvs) $(com_rdvs) \
-			$(rtc_rdvs) $(ac97_rdvs) \
+			$(ac97_rdvs) \
 			$(ir_rdvs) $(wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -275,12 +270,4 @@ WD.RDV : $(wd_objs)
 	$(wd_objs)
 	WD.RDV
 	WD;
-!
-
-RTC.RDV : $(rtc_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(rtc_objs)
-	RTC.RDV
-	RTC;
 !

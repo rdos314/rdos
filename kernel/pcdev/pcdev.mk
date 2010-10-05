@@ -1,3 +1,5 @@
-project : C:\rdos\kernel\pcdev\pci.rdv .SYMBOLIC
+project : c:\rdos\kernel\pcdev\pci.rdv c:\rdos\kernel\pcdev\rtc.rdv .SYMBOLI&
+C
 
-!include C:\rdos\kernel\pcdev\pci.mk1
+!include c:\rdos\kernel\pcdev\pci.mk1
+!include c:\rdos\kernel\pcdev\rtc.mk1
