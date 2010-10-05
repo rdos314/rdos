@@ -1,12 +1,12 @@
 !define BLANK ""
-c:\rdos\kernel\pcdev\pic.obj : c:\rdos\kernel\pcdev\pic.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\pcdev
+C:\rdos\kernel\pcdev\pic.obj : C:\rdos\kernel\pcdev\pic.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\pcdev
  *wasm pic.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\pcdev\pic.rdv : c:\rdos\kernel\pcdev\pic.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\pcdev
+C:\rdos\kernel\pcdev\pic.rdv : C:\rdos\kernel\pcdev\pic.obj .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\pcdev
  @%write pic.lk1 FIL pic.obj
  @%append pic.lk1 
  *wlink name pic d all sys rdos_dev op codesel=0xA58 op m op maplines op v o&

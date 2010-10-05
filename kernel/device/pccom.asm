@@ -34,7 +34,7 @@ include ..\os.inc
 include ..\user.def
 include ..\user.inc
 include ..\driver.def
-include ..\os\pci.inc
+include ..\pcdev\pci.inc
 include ..\os\com.inc
 						
 		NAME pccom

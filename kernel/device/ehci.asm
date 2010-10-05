@@ -34,7 +34,7 @@ INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
-INCLUDE ..\os\pci.inc
+INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\usb.inc
 
 MAX_USB_DEVICES = 16

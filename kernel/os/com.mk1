@@ -1,0 +1,14 @@
+!define BLANK ""
+c:\rdos\kernel\os\com.obj : c:\rdos\kernel\os\com.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ *wasm com.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\os\com.rdv : c:\rdos\kernel\os\com.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\os
+ @%write com.lk1 FIL com.obj
+ @%append com.lk1 
+ *wlink name com d all sys rdos_dev op codesel=0x750 op datasel=0x758 op m o&
+p maplines op v op maxe=25 op symf @com.lk1
+

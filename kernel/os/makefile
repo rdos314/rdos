@@ -43,10 +43,6 @@ dpmi_srcs = DPMI.ASM    DPMI16.ASM      DPMI32.ASM
 dpmi_objs = $(dpmi_srcs:.ASM=.OBJ)
 dpmi_rdvs = DPMI.RDV
 
-com_srcs = COM.ASM
-com_objs = $(com_srcs:.ASM=.OBJ)
-com_rdvs = COM.RDV
-
 usb_srcs = USB.ASM
 usb_objs = $(usb_srcs:.ASM=.OBJ)
 usb_rdvs = USB.RDV
@@ -69,7 +65,7 @@ pcshut_exes = PCSHUT.EXE
 
 srcs =      $(dpmi_srcs)  \
 			$(key_srcs) \
-			$(keym_srcs) $(usb_srcs) $(com_srcs) \
+			$(keym_srcs) $(usb_srcs)  \
 			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) \
 			$(ir_srcs) $(wd_srcs)
@@ -86,7 +82,7 @@ exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(key_rdvs)   \
-			$(usb_rdvs) $(com_rdvs) \
+			$(usb_rdvs) \
 			$(ir_rdvs) $(wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -161,14 +157,6 @@ DPMI.RDV : $(dpmi_objs)
 	$(dpmi_objs)
 	DPMI.RDV
 	DPMI;
-!
-
-COM.RDV : $(com_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(com_objs)
-	COM.RDV
-	COM;
 !
 
 USB.RDV : $(usb_objs)

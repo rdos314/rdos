@@ -34,7 +34,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE ..\os\pci.inc
+INCLUDE ..\pcdev\pci.inc
 
 ACC_GPIO_STATUS = 0
 ACC_GPIO_CONTROL = 4

@@ -34,7 +34,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE ..\os\pci.inc
+INCLUDE ..\pcdev\pci.inc
 
 VIA_PCM_STATUS              = 0
 VIA_PCM_CONTROL             = 1

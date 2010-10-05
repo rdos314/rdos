@@ -1,12 +1,12 @@
 !define BLANK ""
-c:\rdos\kernel\pcdev\pci.obj : c:\rdos\kernel\pcdev\pci.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\pcdev
+C:\rdos\kernel\pcdev\pci.obj : C:\rdos\kernel\pcdev\pci.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\pcdev
  *wasm pci.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\pcdev\pci.rdv : c:\rdos\kernel\pcdev\pci.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\pcdev
+C:\rdos\kernel\pcdev\pci.rdv : C:\rdos\kernel\pcdev\pci.obj .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\pcdev
  @%write pci.lk1 FIL pci.obj
  @%append pci.lk1 
  *wlink name pci d all sys rdos_dev op codesel=0x4F0 op datasel=0x4F8 op m o&

@@ -34,7 +34,7 @@ INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
-INCLUDE ..\os\pci.inc
+INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\net.inc
 
 RX_ENTRIES   EQU 20h

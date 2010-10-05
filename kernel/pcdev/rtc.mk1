@@ -1,12 +1,12 @@
 !define BLANK ""
-c:\rdos\kernel\pcdev\rtc.obj : c:\rdos\kernel\pcdev\rtc.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\pcdev
+C:\rdos\kernel\pcdev\rtc.obj : C:\rdos\kernel\pcdev\rtc.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\pcdev
  *wasm rtc.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\pcdev\rtc.rdv : c:\rdos\kernel\pcdev\rtc.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\pcdev
+C:\rdos\kernel\pcdev\rtc.rdv : C:\rdos\kernel\pcdev\rtc.obj .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\pcdev
  @%write rtc.lk1 FIL rtc.obj
  @%append rtc.lk1 
  *wlink name rtc d all sys rdos_dev op codesel=0x6F0 op datasel=0x6F8 op m o&
