@@ -4,8 +4,8 @@ os\kernel\os\emulate.rdv c:\rdos\kernel\os\legacy.rdv c:\rdos\kernel\os\driv&
 e.rdv c:\rdos\kernel\os\fs.rdv c:\rdos\kernel\os\guidev.rdv c:\rdos\kernel\o&
 s\audio.rdv c:\rdos\kernel\os\exec.rdv c:\rdos\kernel\os\dos.rdv c:\rdos\ker&
 nel\os\pe.rdv c:\rdos\kernel\os\net.rdv c:\rdos\kernel\os\ip.rdv c:\rdos\ker&
-nel\os\ipc.rdv c:\rdos\kernel\os\kdebug.rdv c:\rdos\kernel\os\com.rdv .SYMBO&
-LIC
+nel\os\ipc.rdv c:\rdos\kernel\os\kdebug.rdv c:\rdos\kernel\os\com.rdv c:\rdo&
+s\kernel\os\fat.rdv .SYMBOLIC
 
 !include c:\rdos\kernel\os\kernel.mk1
 !include c:\rdos\kernel\os\font.mk1
@@ -26,3 +26,4 @@ LIC
 !include c:\rdos\kernel\os\ipc.mk1
 !include c:\rdos\kernel\os\kdebug.mk1
 !include c:\rdos\kernel\os\com.mk1
+!include c:\rdos\kernel\os\fat.mk1
