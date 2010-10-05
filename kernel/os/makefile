@@ -47,10 +47,6 @@ dpmi_srcs = DPMI.ASM    DPMI16.ASM      DPMI32.ASM
 dpmi_objs = $(dpmi_srcs:.ASM=.OBJ)
 dpmi_rdvs = DPMI.RDV
 
-pci_srcs = PCI.ASM
-pci_objs = $(pci_srcs:.ASM=.OBJ)
-pci_rdvs = PCI.RDV
-
 com_srcs = COM.ASM
 com_objs = $(com_srcs:.ASM=.OBJ)
 com_rdvs = COM.RDV
@@ -80,7 +76,7 @@ pcshut_objs = $(pcshut_srcs:.ASM=.OBJ)
 pcshut_exes = PCSHUT.EXE
 
 srcs =      $(dpmi_srcs)  \
-			$(key_srcs) $(pci_srcs) \
+			$(key_srcs) \
 			$(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) \
@@ -98,7 +94,7 @@ incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
 exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
-			$(key_rdvs) $(pci_rdvs)     \
+			$(key_rdvs)   \
 			$(usb_rdvs) $(com_rdvs) \
 			$(rtc_rdvs) $(ac97_rdvs) \
 			$(ir_rdvs) $(wd_rdvs)
@@ -183,14 +179,6 @@ DPMI.RDV : $(dpmi_objs)
 	$(dpmi_objs)
 	DPMI.RDV
 	DPMI;
-!
-
-PCI.RDV : $(pci_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(pci_objs)
-	PCI.RDV
-	PCI;
 !
 
 COM.RDV : $(com_objs)

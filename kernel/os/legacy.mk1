@@ -1,50 +1,50 @@
 !define BLANK ""
-c:\rdos\kernel\os\bios.obj : c:\rdos\kernel\os\bios.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+C:\rdos\kernel\os\bios.obj : C:\rdos\kernel\os\bios.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\os
  *wasm bios.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\dosdev.obj : c:\rdos\kernel\os\dosdev.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+C:\rdos\kernel\os\dosdev.obj : C:\rdos\kernel\os\dosdev.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\os
  *wasm dosdev.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\ems.obj : c:\rdos\kernel\os\ems.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+C:\rdos\kernel\os\ems.obj : C:\rdos\kernel\os\ems.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\os
  *wasm ems.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\legacy.obj : c:\rdos\kernel\os\legacy.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+C:\rdos\kernel\os\legacy.obj : C:\rdos\kernel\os\legacy.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\os
  *wasm legacy.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\multiplx.obj : c:\rdos\kernel\os\multiplx.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+C:\rdos\kernel\os\multiplx.obj : C:\rdos\kernel\os\multiplx.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\os
  *wasm multiplx.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\timer.obj : c:\rdos\kernel\os\timer.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+C:\rdos\kernel\os\timer.obj : C:\rdos\kernel\os\timer.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\os
  *wasm timer.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\v86bios.obj : c:\rdos\kernel\os\v86bios.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+C:\rdos\kernel\os\v86bios.obj : C:\rdos\kernel\os\v86bios.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\os
  *wasm v86bios.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\xms.obj : c:\rdos\kernel\os\xms.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+C:\rdos\kernel\os\xms.obj : C:\rdos\kernel\os\xms.asm .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\os
  *wasm xms.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\legacy.rdv : c:\rdos\kernel\os\bios.obj c:\rdos\kernel\os\&
-dosdev.obj c:\rdos\kernel\os\ems.obj c:\rdos\kernel\os\legacy.obj c:\rdos\ke&
-rnel\os\multiplx.obj c:\rdos\kernel\os\timer.obj c:\rdos\kernel\os\v86bios.o&
-bj c:\rdos\kernel\os\xms.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+C:\rdos\kernel\os\legacy.rdv : C:\rdos\kernel\os\bios.obj C:\rdos\kernel\os\&
+dosdev.obj C:\rdos\kernel\os\ems.obj C:\rdos\kernel\os\legacy.obj C:\rdos\ke&
+rnel\os\multiplx.obj C:\rdos\kernel\os\timer.obj C:\rdos\kernel\os\v86bios.o&
+bj C:\rdos\kernel\os\xms.obj .AUTODEPEND
+ @C:
+ cd C:\rdos\kernel\os
  @%write legacy.lk1 FIL bios.obj,dosdev.obj,ems.obj,legacy.obj,multiplx.obj,&
 timer.obj,v86bios.obj,xms.obj
  @%append legacy.lk1 

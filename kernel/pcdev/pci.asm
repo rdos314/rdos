@@ -29,11 +29,11 @@
 
 GateSize = 16
 
-INCLUDE protseg.def
+INCLUDE ..\os\protseg.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
-INCLUDE system.inc
+INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 
@@ -41,7 +41,7 @@ INCLUDE ..\os.inc
 
 MAX_PCI_DEVICES = 256
 
-data    STRUC
+data    SEGMENT byte public 'DATA'
 
 pci_device_arr      DD MAX_PCI_DEVICES DUP(?,?)
 
@@ -414,8 +414,9 @@ find_pci_device	Proc far
 ;	
 	push ecx
 ;
-    mov di,pci_data_sel
+    mov di,SEG data
     mov ds,di
+    mov si,OFFSET pci_device_arr
     xor si,si
 ;
 	mov di,ax
@@ -495,9 +496,9 @@ find_pci_class	Proc far
 	mov ah,ch
 	mov ebx,eax
 ;
-    mov si,pci_data_sel
+    mov si,SEG data
     mov ds,si
-    xor si,si
+    mov si,OFFSET pci_device_arr
     mov cx,MAX_PCI_DEVICES - 1
 
 find_pci_class_loop:
@@ -794,9 +795,9 @@ bios_pci_int	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_pci_devices	Proc near
-    mov ax,pci_data_sel
+    mov ax,SEG data
     mov es,ax
-    xor di,di
+    mov di,OFFSET pci_device_arr
 
 	mov ecx,80000000h
 
@@ -844,20 +845,12 @@ init_pci_devices	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	Proc far
-	push ds
-	push es
-	pusha
-	mov bx,pci_code_sel
-	InitDevice
-;
-	mov eax,SIZE data
-	mov bx,pci_data_sel
-	AllocateFixedSystemMem
+	mov bx,SEG data
 	mov ds,bx
 	mov es,bx
 	mov cx,2 * MAX_PCI_DEVICES
 	mov eax,-1
-	xor di,di
+	mov di,OFFSET pci_device_arr
 	rep stosd
 ;
     call init_pci_devices
@@ -925,10 +918,7 @@ init	Proc far
 	xor cl,cl
 	mov ax,find_pci_cap_nr
 	RegisterOsGate
-;
-	popa
-	pop es
-	pop ds
+	clc
 	ret
 init	Endp
 
