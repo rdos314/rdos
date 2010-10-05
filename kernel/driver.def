@@ -176,6 +176,8 @@ dos_vm_sel			EQU 47Bh
 kdebug_code_sel		EQU 480h
 kdebug_data_sel		EQU 488h
 
+ac97_code_sel       EQU 490h
+
 legacy_code_sel		EQU 4A0h
 legacy_data_sel		EQU 4A8h
 
@@ -200,7 +202,6 @@ dpmi_code32_sel		EQU 518h
 state_save_sel		EQU 523h
 
 discbuf_code_sel	EQU 530h
-ac97_code_sel       EQU 538h
 
 emulator_code_sel	EQU 540h
 emulator_data_sel	EQU 548h

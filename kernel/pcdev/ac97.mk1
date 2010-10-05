@@ -1,0 +1,14 @@
+!define BLANK ""
+c:\rdos\kernel\pcdev\ac97.obj : c:\rdos\kernel\pcdev\ac97.asm .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\pcdev
+ *wasm ac97.asm -ms -2 -d1 -w4 -e25 -zq
+
+c:\rdos\kernel\pcdev\ac97.rdv : c:\rdos\kernel\pcdev\ac97.obj .AUTODEPEND
+ @c:
+ cd c:\rdos\kernel\pcdev
+ @%write ac97.lk1 FIL ac97.obj
+ @%append ac97.lk1 
+ *wlink name ac97 d all sys rdos_dev op codesel=0x490 op m op maplines op v &
+op maxe=25 op symf @ac97.lk1
+

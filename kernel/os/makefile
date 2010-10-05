@@ -63,10 +63,6 @@ ir_srcs = IR.ASM
 ir_objs = $(ir_srcs:.ASM=.OBJ)
 ir_rdvs = IR.RDV
 
-ac97_srcs = AC97.ASM
-ac97_objs = $(ac97_srcs:.ASM=.OBJ)
-ac97_rdvs = AC97.RDV
-
 pcshut_srcs = PCSHUT.ASM
 pcshut_objs = $(pcshut_srcs:.ASM=.OBJ)
 pcshut_exes = PCSHUT.EXE
@@ -76,7 +72,7 @@ srcs =      $(dpmi_srcs)  \
 			$(keym_srcs) $(usb_srcs) $(com_srcs) \
 			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) \
-			$(ac97_srcs) $(ir_srcs) $(wd_srcs)
+			$(ir_srcs) $(wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -91,7 +87,6 @@ exes =      $(prot_exes) $(pcshut_exes)
 rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
 			$(key_rdvs)   \
 			$(usb_rdvs) $(com_rdvs) \
-			$(ac97_rdvs) \
 			$(ir_rdvs) $(wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -150,14 +145,6 @@ PCSHUT.EXE : $(pcshut_objs)
 	$(pcshut_objs)
 	PCSHUT
 	PCSHUT;       
-!
-
-AC97.RDV : $(ac97_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(ac97_objs)
-	AC97.RDV
-	AC97;
 !
 
 IR.RDV : $(ir_objs)
