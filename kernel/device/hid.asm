@@ -34,7 +34,7 @@ include ..\os.inc
 include ..\user.def
 include ..\user.inc
 include ..\driver.def
-include ..\pcdev\usb.inc
+include ..\usbdev\usb.inc
 
 STD_KEY = 1
 CAPS_KEY = 2
