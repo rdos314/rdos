@@ -77,10 +77,6 @@ usbcom_srcs = USBCOM.ASM
 usbcom_objs = $(usbcom_srcs:.ASM=.OBJ)
 usbcom_rdvs = USBCOM.RDV
 
-hid_srcs = HID.ASM
-hid_objs = $(hid_srcs:.ASM=.OBJ)
-hid_rdvs = HID.RDV
-
 printer_srcs = PRINTER.ASM
 printer_objs = $(printer_srcs:.ASM=.OBJ)
 printer_rdvs = PRINTER.RDV
@@ -115,7 +111,7 @@ srcs =      $(novideo_srcs)	\
 			$(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
 			$(egalax_srcs) $(dmc6000_srcs) $(dmc9000_srcs) \
 			$(usbcom_srcs)  \
-			$(hid_srcs) $(cs5536a_srcs) $(cs5536wd_srcs)
+			$(cs5536a_srcs) $(cs5536wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -125,7 +121,7 @@ rdvs =      $(novideo_rdvs) \
 			$(printer_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
 			$(egalax_rdvs) $(dmc6000_rdvs) $(dmc9000_rdvs) \
 			$(usbcom_rdvs) \
-			$(hid_rdvs) $(cs5536a_rdvs) $(cs5536wd_rdvs)
+			$(cs5536a_rdvs) $(cs5536wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -224,14 +220,6 @@ USBCOM.RDV : $(usbcom_objs)
 	$(usbcom_objs)
 	USBCOM.RDV
 	USBCOM;       
-!
-
-HID.RDV : $(hid_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(hid_objs)
-	HID.RDV
-	HID;       
 !
 
 
