@@ -113,10 +113,6 @@ uhci_srcs = UHCI.ASM
 uhci_objs = $(uhci_srcs:.ASM=.OBJ)
 uhci_rdvs = UHCI.RDV
 
-ehci_srcs = EHCI.ASM
-ehci_objs = $(ehci_srcs:.ASM=.OBJ)
-ehci_rdvs = EHCI.RDV
-
 ppp_srcs = PPP.ASM
 ppp_objs = $(ppp_srcs:.ASM=.OBJ)
 ppp_rdvs = PPP.RDV
@@ -130,7 +126,7 @@ srcs =      $(novideo_srcs)	\
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
 			$(ts2003_srcs) $(egalax_srcs) $(dmc6000_srcs) $(dmc9000_srcs) \
-			$(ehci_srcs) \ $(uhci_srcs) $(usbcom_srcs)  \
+			$(uhci_srcs) $(usbcom_srcs)  \
 			$(hid_srcs) $(cs5536a_srcs) $(via82a_srcs) $(cs5536wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
@@ -140,7 +136,7 @@ rdvs =      $(novideo_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
 			$(ts2003_rdvs) $(egalax_rdvs) $(dmc6000_rdvs) $(dmc9000_rdvs) \
-			$(ehci_rdvs) $(uhci_rdvs) $(usbcom_rdvs) \
+			$(uhci_rdvs) $(usbcom_rdvs) \
 			$(hid_rdvs) $(cs5536a_rdvs) $(via82a_rdvs) $(cs5536wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -329,12 +325,4 @@ UHCI.RDV : $(uhci_objs)
 	$(uhci_objs)
 	UHCI.RDV
 	UHCI;
-!
-
-EHCI.RDV : $(ehci_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(ehci_objs)
-	EHCI.RDV
-	EHCI;
 !

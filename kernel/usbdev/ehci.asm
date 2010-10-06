@@ -35,7 +35,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
-INCLUDE ..\usbdev\usb.inc
+INCLUDE usb.inc
 
 MAX_USB_DEVICES = 16
 
@@ -168,13 +168,13 @@ qh_alt_va       DD ?
 
 qh_struc    ENDS
 
-data    STRUC
+data    SEGMENT byte public 'DATA'
 
 EhciList64      DD ?
 EhciSection     section_typ <>
 EhciThread      DW ?
 EhciFuncCount   DW ?
-EhciFuncArr     DW MAX_USB_DEVICES (?)
+EhciFuncArr     DW MAX_USB_DEVICES DUP(?)
 
 data    ENDS
 
@@ -185,7 +185,6 @@ code	SEGMENT byte public 'CODE'
 
 .386p
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -204,7 +203,7 @@ AllocateBlock64	PROC near
     push ds
     push eax
 ;    
-    mov ax,ehci_data_sel
+    mov ax,SEG data
     mov ds,ax
     EnterSection ds:EhciSection
     mov edx,ds:EhciList64
@@ -240,7 +239,6 @@ allocate_block64_done:
 	ret
 AllocateBlock64	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -259,7 +257,7 @@ FreeBlock64	PROC near
     push ds
 	push eax
 ;
-    mov ax,ehci_data_sel
+    mov ax,SEG data
     mov ds,ax
 ;    
     EnterSection ds:EhciSection
@@ -273,7 +271,6 @@ FreeBlock64	PROC near
 	ret
 FreeBlock64	ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -319,7 +316,6 @@ ipDone:
 	ret
 InsertPipe  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -365,7 +361,6 @@ rpDone:
     ret
 RemovePipe  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -406,7 +401,6 @@ InitQh	PROC near
     ret
 InitQh  ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -442,7 +436,6 @@ InitQtd	PROC near
     ret
 InitQtd  ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -473,7 +466,6 @@ AllocateQh	PROC near
     ret
 AllocateQh  ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -505,7 +497,6 @@ AllocateQtd	PROC near
     ret
 AllocateQtd  ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -594,7 +585,6 @@ acqDone:
     ret
 AddControlQh  ENDP
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -679,7 +669,6 @@ afqDone:
     ret
 AllocateFillQtd   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -728,7 +717,6 @@ iqLinked:
     ret
 InsertQtd   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1250,7 +1238,7 @@ UpdateAllPorts  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateUsb  Proc near
-    mov ax,ehci_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov cx,ds:EhciFuncCount
     or cx,cx
@@ -1315,7 +1303,7 @@ ehci_timer  Proc far
     push edx
     push eax
 ;    
-    mov ax,ehci_data_sel
+    mov ax,SEG data
     mov ds,ax
 	mov bx,ds:EhciThread
 ;
@@ -1372,23 +1360,23 @@ ehci_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ehci_tab:
-et00 DW OFFSET CreateControl,   	ehci_code_sel
-et01 DW OFFSET CreateBulk,      	ehci_code_sel
-et02 DW OFFSET CreateIntr,      	ehci_code_sel
-et03 DW OFFSET AddSetup,    	    ehci_code_sel
-et04 DW OFFSET AddOut,      	    ehci_code_sel
-et05 DW OFFSET AddIn,        	    ehci_code_sel
-et06 DW OFFSET AddStatusOut,        ehci_code_sel
-et07 DW OFFSET AddStatusIn,        	ehci_code_sel
-et08 DW OFFSET IssueTransfer,       ehci_code_sel
-et09 DW OFFSET IsTransferDone,      ehci_code_sel
-et10 DW OFFSET EndTransfer,         ehci_code_sel
-et11 DW OFFSET WasTransferOk,       ehci_code_sel
-et12 DW OFFSET GetDataSize,         ehci_code_sel
-et13 DW OFFSET ClosePipe,           ehci_code_sel
-et14 DW OFFSET WaitForCompletion,   ehci_code_sel
-et15 DW OFFSET ChangeAddress,       ehci_code_sel
-et16 DW OFFSET IsConnected,         ehci_code_sel
+et00 DW OFFSET CreateControl,   	SEG code
+et01 DW OFFSET CreateBulk,      	SEG code
+et02 DW OFFSET CreateIntr,      	SEG code
+et03 DW OFFSET AddSetup,    	    SEG code
+et04 DW OFFSET AddOut,      	    SEG code
+et05 DW OFFSET AddIn,        	    SEG code
+et06 DW OFFSET AddStatusOut,        SEG code
+et07 DW OFFSET AddStatusIn,        	SEG code
+et08 DW OFFSET IssueTransfer,       SEG code
+et09 DW OFFSET IsTransferDone,      SEG code
+et10 DW OFFSET EndTransfer,         SEG code
+et11 DW OFFSET WasTransferOk,       SEG code
+et12 DW OFFSET GetDataSize,         SEG code
+et13 DW OFFSET ClosePipe,           SEG code
+et14 DW OFFSET WaitForCompletion,   SEG code
+et15 DW OFFSET ChangeAddress,       SEG code
+et16 DW OFFSET IsConnected,         SEG code
 
 InitFunction    Proc near
     push es
@@ -1571,7 +1559,7 @@ afPowerOk:
     mov es,bx
 ;
     mov bx,ds
-    mov ax,ehci_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov di,ds:EhciFuncCount
     shl di,1
@@ -1655,7 +1643,7 @@ InitPciAdapter	Endp
 ehci_name	DB 'EHCI',0
 
 ehci_thread	proc far
-    mov ax,ehci_data_sel
+    mov ax,SEG data
     mov ds,ax
     GetThread
     mov ds:EhciThread,ax
@@ -1735,39 +1723,19 @@ init_usb	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Init	Proc far
-	push ds
-	push es
-	pusha
-	mov bx,ehci_code_sel
-	InitDevice
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-;
-	mov eax,SIZE data
-	mov bx,ehci_data_sel
-	AllocateFixedSystemMem
+	mov bx,SEG data
 	mov ds,bx
-	mov es,bx
-	mov cx,ax
-	xor di,di
-	xor al,al
-	rep stosb
-;
     InitSection ds:EhciSection
+;
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_usb
 	HookInitTasking
-
-init_fail:
-	popa
-	pop es
-	pop ds
+	clc
+;	
 	ret
 Init	Endp
 
-ENDS
+code ENDS
 
 	END init
