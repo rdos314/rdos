@@ -53,10 +53,6 @@ s2mouse_srcs = S2MOUSE.ASM
 s2mouse_objs = $(s2mouse_srcs:.ASM=.OBJ)
 s2mouse_rdvs = S2MOUSE.RDV
 
-ts2003_srcs = TS2003.ASM
-ts2003_objs = $(ts2003_srcs:.ASM=.OBJ)
-ts2003_rdvs = TS2003.RDV
-
 egalax_srcs = EGALAX.ASM
 egalax_objs = $(egalax_srcs:.ASM=.OBJ)
 egalax_rdvs = EGALAX.RDV
@@ -121,7 +117,7 @@ srcs =      $(novideo_srcs)	\
 			$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
-			$(ts2003_srcs) $(egalax_srcs) $(dmc6000_srcs) $(dmc9000_srcs) \
+			$(egalax_srcs) $(dmc6000_srcs) $(dmc9000_srcs) \
 			$(usbcom_srcs)  \
 			$(hid_srcs) $(cs5536a_srcs) $(via82a_srcs) $(cs5536wd_srcs)
 
@@ -131,7 +127,7 @@ rdvs =      $(novideo_rdvs) \
 			$(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
-			$(ts2003_rdvs) $(egalax_rdvs) $(dmc6000_rdvs) $(dmc9000_rdvs) \
+			$(egalax_rdvs) $(dmc6000_rdvs) $(dmc9000_rdvs) \
 			$(usbcom_rdvs) \
 			$(hid_rdvs) $(cs5536a_rdvs) $(via82a_rdvs) $(cs5536wd_rdvs)
 
@@ -184,14 +180,6 @@ S2MOUSE.RDV : $(s2mouse_objs)
 	$(s2mouse_objs)
 	S2MOUSE.RDV
 	S2MOUSE;  
-!
-
-TS2003.RDV : $(ts2003_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(ts2003_objs)
-	TS2003.RDV
-	TS2003;       
 !
 
 EGALAX.RDV : $(egalax_objs)
