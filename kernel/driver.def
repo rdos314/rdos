@@ -168,8 +168,6 @@ mail_code_sel		EQU 440h
 mon_video_code_sel	EQU 450h
 video_pos_sel		EQU 458h
 
-dos_code_sel		EQU 460h
-dos_data_sel		EQU 468h
 dos_process_sel		EQU 470h
 dos_vm_sel			EQU 47Bh
 
@@ -178,8 +176,8 @@ kdebug_data_sel		EQU 488h
 
 ac97_code_sel       EQU 490h
 
-legacy_code_sel		EQU 4A0h
-legacy_data_sel		EQU 4A8h
+pcbios_code_sel		EQU 4A0h
+pcbios_data_sel		EQU 4A8h
 
 key_focus_sel		EQU 4B0h
 key_local_sel		EQU 4B8h
