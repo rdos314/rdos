@@ -85,10 +85,6 @@ cs5536wd_srcs = CS5536WD.ASM
 cs5536wd_objs = $(cs5536wd_srcs:.ASM=.OBJ)
 cs5536wd_rdvs = CS5536WD.RDV
 
-pccom_srcs = PCCOM.ASM
-pccom_objs = $(pccom_srcs:.ASM=.OBJ)
-pccom_rdvs = PCCOM.RDV
-
 usbcom_srcs = USBCOM.ASM
 usbcom_objs = $(usbcom_srcs:.ASM=.OBJ)
 usbcom_rdvs = USBCOM.RDV
@@ -140,7 +136,7 @@ sernet_rdvs = SERNET.RDV
 srcs =      $(pcvideo_srcs) $(novideo_srcs)	\
 			$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
-			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
+			$(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
 			$(ts2003_srcs) $(egalax_srcs) $(dmc6000_srcs) $(dmc9000_srcs) \
 			$(ehci_srcs) \ $(uhci_srcs) $(usbcom_srcs) $(ohci_srcs)  \
 			$(hid_srcs) $(cs5536a_srcs) $(via82a_srcs) $(cs5536wd_srcs)
@@ -150,7 +146,7 @@ objs =      $(srcs:.ASM=.OBJ)
 rdvs =      $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
-			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
+			$(printer_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
 			$(ts2003_rdvs) $(egalax_rdvs) $(dmc6000_rdvs) $(dmc9000_rdvs) \
 			$(ehci_rdvs) $(uhci_rdvs) $(usbcom_rdvs) $(ohci_rdvs) \
 			$(hid_rdvs) $(cs5536a_rdvs) $(via82a_rdvs) $(cs5536wd_rdvs)
@@ -268,14 +264,6 @@ CS5536WD.RDV : $(cs5536wd_objs)
 	$(cs5536wd_objs)
 	CS5536WD.RDV
 	CS5536WD;       
-!
-
-PCCOM.RDV : $(pccom_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(pccom_objs)
-	PCCOM.RDV
-	PCCOM;       
 !
 
 USBCOM.RDV : $(usbcom_objs)

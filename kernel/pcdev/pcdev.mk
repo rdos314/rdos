@@ -1,11 +1,13 @@
-project : C:\rdos\kernel\pcdev\pci.rdv C:\rdos\kernel\pcdev\rtc.rdv C:\rdos\&
-kernel\pcdev\ac97.rdv C:\rdos\kernel\pcdev\pic.rdv C:\rdos\kernel\pcdev\usb.&
-rdv C:\rdos\kernel\pcdev\ide.rdv C:\rdos\kernel\pcdev\floppy.rdv .SYMBOLIC
+project : c:\rdos\kernel\pcdev\pci.rdv c:\rdos\kernel\pcdev\rtc.rdv c:\rdos\&
+kernel\pcdev\ac97.rdv c:\rdos\kernel\pcdev\pic.rdv c:\rdos\kernel\pcdev\usb.&
+rdv c:\rdos\kernel\pcdev\ide.rdv c:\rdos\kernel\pcdev\floppy.rdv c:\rdos\ker&
+nel\pcdev\stdcom.rdv .SYMBOLIC
 
-!include C:\rdos\kernel\pcdev\pci.mk1
-!include C:\rdos\kernel\pcdev\rtc.mk1
-!include C:\rdos\kernel\pcdev\ac97.mk1
-!include C:\rdos\kernel\pcdev\pic.mk1
-!include C:\rdos\kernel\pcdev\usb.mk1
-!include C:\rdos\kernel\pcdev\ide.mk1
-!include C:\rdos\kernel\pcdev\floppy.mk1
+!include c:\rdos\kernel\pcdev\pci.mk1
+!include c:\rdos\kernel\pcdev\rtc.mk1
+!include c:\rdos\kernel\pcdev\ac97.mk1
+!include c:\rdos\kernel\pcdev\pic.mk1
+!include c:\rdos\kernel\pcdev\usb.mk1
+!include c:\rdos\kernel\pcdev\ide.mk1
+!include c:\rdos\kernel\pcdev\floppy.mk1
+!include c:\rdos\kernel\pcdev\stdcom.mk1
