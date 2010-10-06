@@ -1,28 +1,28 @@
 !define BLANK ""
-c:\rdos\kernel\os\audio.obj : c:\rdos\kernel\os\audio.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\audio.obj : D:\rdos\kernel\os\audio.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm audio.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\fm.obj : c:\rdos\kernel\os\fm.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\fm.obj : D:\rdos\kernel\os\fm.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm fm.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\fmexp.obj : c:\rdos\kernel\os\fmexp.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\fmexp.obj : D:\rdos\kernel\os\fmexp.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm fmexp.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\fmsin.obj : c:\rdos\kernel\os\fmsin.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\fmsin.obj : D:\rdos\kernel\os\fmsin.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm fmsin.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\audio.rdv : c:\rdos\kernel\os\audio.obj c:\rdos\kernel\os\&
-fm.obj c:\rdos\kernel\os\fmexp.obj c:\rdos\kernel\os\fmsin.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\audio.rdv : D:\rdos\kernel\os\audio.obj D:\rdos\kernel\os\&
+fm.obj D:\rdos\kernel\os\fmexp.obj D:\rdos\kernel\os\fmsin.obj .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  @%write audio.lk1 FIL audio.obj,fm.obj,fmexp.obj,fmsin.obj
  @%append audio.lk1 
 !ifneq BLANK ""

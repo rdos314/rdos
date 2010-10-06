@@ -1,12 +1,12 @@
 !define BLANK ""
-c:\rdos\kernel\pcdev\usb.obj : c:\rdos\kernel\pcdev\usb.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\pcdev
+D:\rdos\kernel\pcdev\usb.obj : D:\rdos\kernel\pcdev\usb.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\pcdev
  *wasm usb.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\pcdev\usb.rdv : c:\rdos\kernel\pcdev\usb.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\pcdev
+D:\rdos\kernel\pcdev\usb.rdv : D:\rdos\kernel\pcdev\usb.obj .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\pcdev
  @%write usb.lk1 FIL usb.obj
  @%append usb.lk1 
  *wlink name usb d all sys rdos_dev op codesel=0x990 op datasel=0x998 op m o&

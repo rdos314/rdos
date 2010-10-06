@@ -1,23 +1,23 @@
 !define BLANK ""
-c:\rdos\kernel\os\drive.obj : c:\rdos\kernel\os\drive.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\drive.obj : D:\rdos\kernel\os\drive.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm drive.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\filedisc.obj : c:\rdos\kernel\os\filedisc.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\filedisc.obj : D:\rdos\kernel\os\filedisc.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm filedisc.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\ramdrive.obj : c:\rdos\kernel\os\ramdrive.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\ramdrive.obj : D:\rdos\kernel\os\ramdrive.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm ramdrive.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\drive.rdv : c:\rdos\kernel\os\drive.obj c:\rdos\kernel\os\&
-filedisc.obj c:\rdos\kernel\os\ramdrive.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\drive.rdv : D:\rdos\kernel\os\drive.obj D:\rdos\kernel\os\&
+filedisc.obj D:\rdos\kernel\os\ramdrive.obj .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  @%write drive.lk1 FIL drive.obj,filedisc.obj,ramdrive.obj
  @%append drive.lk1 
 !ifneq BLANK ""

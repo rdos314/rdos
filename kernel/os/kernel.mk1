@@ -1,157 +1,157 @@
 !define BLANK ""
-c:\rdos\kernel\os\app.obj : c:\rdos\kernel\os\app.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm app.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
+D:\rdos\kernel\os\app.obj : D:\rdos\kernel\os\app.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm app.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\cpu.obj : c:\rdos\kernel\os\cpu.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm cpu.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
+D:\rdos\kernel\os\cpu.obj : D:\rdos\kernel\os\cpu.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm cpu.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\crc.obj : c:\rdos\kernel\os\crc.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm crc.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
+D:\rdos\kernel\os\crc.obj : D:\rdos\kernel\os\crc.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm crc.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\device.obj : c:\rdos\kernel\os\device.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm device.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 &
+D:\rdos\kernel\os\device.obj : D:\rdos\kernel\os\device.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm device.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 &
 -zq
 
-c:\rdos\kernel\os\gdt.obj : c:\rdos\kernel\os\gdt.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm gdt.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
+D:\rdos\kernel\os\gdt.obj : D:\rdos\kernel\os\gdt.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm gdt.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\handle.obj : c:\rdos\kernel\os\handle.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm handle.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 &
+D:\rdos\kernel\os\handle.obj : D:\rdos\kernel\os\handle.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm handle.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 &
 -zq
 
-c:\rdos\kernel\os\int.obj : c:\rdos\kernel\os\int.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm int.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
+D:\rdos\kernel\os\int.obj : D:\rdos\kernel\os\int.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm int.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\int16.obj : c:\rdos\kernel\os\int16.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm int16.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -&
+D:\rdos\kernel\os\int16.obj : D:\rdos\kernel\os\int16.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm int16.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -&
 zq
 
-c:\rdos\kernel\os\int32.obj : c:\rdos\kernel\os\int32.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm int32.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -&
+D:\rdos\kernel\os\int32.obj : D:\rdos\kernel\os\int32.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm int32.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -&
 zq
 
-c:\rdos\kernel\os\io.obj : c:\rdos\kernel\os\io.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm io.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
+D:\rdos\kernel\os\io.obj : D:\rdos\kernel\os\io.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm io.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\kernel.obj : c:\rdos\kernel\os\kernel.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm kernel.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 &
+D:\rdos\kernel\os\kernel.obj : D:\rdos\kernel\os\kernel.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm kernel.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 &
 -zq
 
-c:\rdos\kernel\os\ldt.obj : c:\rdos\kernel\os\ldt.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm ldt.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
+D:\rdos\kernel\os\ldt.obj : D:\rdos\kernel\os\ldt.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm ldt.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\mem.obj : c:\rdos\kernel\os\mem.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm mem.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
+D:\rdos\kernel\os\mem.obj : D:\rdos\kernel\os\mem.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm mem.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\os.obj : c:\rdos\kernel\os\os.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm os.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
+D:\rdos\kernel\os\os.obj : D:\rdos\kernel\os\os.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm os.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\paging.obj : c:\rdos\kernel\os\paging.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm paging.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 &
+D:\rdos\kernel\os\paging.obj : D:\rdos\kernel\os\paging.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm paging.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 &
 -zq
 
-c:\rdos\kernel\os\physical.obj : c:\rdos\kernel\os\physical.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm physical.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e2&
+D:\rdos\kernel\os\physical.obj : D:\rdos\kernel\os\physical.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm physical.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e2&
 5 -zq
 
-c:\rdos\kernel\os\proc.obj : c:\rdos\kernel\os\proc.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm proc.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -z&
+D:\rdos\kernel\os\proc.obj : D:\rdos\kernel\os\proc.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm proc.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -z&
 q
 
-c:\rdos\kernel\os\protseg.obj : c:\rdos\kernel\os\protseg.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm protseg.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25&
+D:\rdos\kernel\os\protseg.obj : D:\rdos\kernel\os\protseg.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm protseg.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25&
  -zq
 
-c:\rdos\kernel\os\rand.obj : c:\rdos\kernel\os\rand.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm rand.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -z&
+D:\rdos\kernel\os\rand.obj : D:\rdos\kernel\os\rand.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm rand.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -z&
 q
 
-c:\rdos\kernel\os\state.obj : c:\rdos\kernel\os\state.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm state.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -&
+D:\rdos\kernel\os\state.obj : D:\rdos\kernel\os\state.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm state.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -&
 zq
 
-c:\rdos\kernel\os\swap.obj : c:\rdos\kernel\os\swap.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm swap.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -z&
+D:\rdos\kernel\os\swap.obj : D:\rdos\kernel\os\swap.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm swap.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -z&
 q
 
-c:\rdos\kernel\os\task.obj : c:\rdos\kernel\os\task.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm task.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -z&
+D:\rdos\kernel\os\task.obj : D:\rdos\kernel\os\task.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm task.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -z&
 q
 
-c:\rdos\kernel\os\trapint.obj : c:\rdos\kernel\os\trapint.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm trapint.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25&
+D:\rdos\kernel\os\trapint.obj : D:\rdos\kernel\os\trapint.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm trapint.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25&
  -zq
 
-c:\rdos\kernel\os\tssint.obj : c:\rdos\kernel\os\tssint.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm tssint.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 &
+D:\rdos\kernel\os\tssint.obj : D:\rdos\kernel\os\tssint.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm tssint.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 &
 -zq
 
-c:\rdos\kernel\os\user.obj : c:\rdos\kernel\os\user.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
- *wasm user.asm -i="c:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -z&
+D:\rdos\kernel\os\user.obj : D:\rdos\kernel\os\user.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
+ *wasm user.asm -i="d:\ow\openwatcom\rel2/h" -ml -fp3 -fpi87 -d1 -w4 -e25 -z&
 q
 
-c:\rdos\kernel\os\kernel.exe : c:\rdos\kernel\os\app.obj c:\rdos\kernel\os\c&
-pu.obj c:\rdos\kernel\os\crc.obj c:\rdos\kernel\os\device.obj c:\rdos\kernel&
-\os\gdt.obj c:\rdos\kernel\os\handle.obj c:\rdos\kernel\os\int.obj c:\rdos\k&
-ernel\os\int16.obj c:\rdos\kernel\os\int32.obj c:\rdos\kernel\os\io.obj c:\r&
-dos\kernel\os\kernel.obj c:\rdos\kernel\os\ldt.obj c:\rdos\kernel\os\mem.obj&
- c:\rdos\kernel\os\os.obj c:\rdos\kernel\os\paging.obj c:\rdos\kernel\os\phy&
-sical.obj c:\rdos\kernel\os\proc.obj c:\rdos\kernel\os\protseg.obj c:\rdos\k&
-ernel\os\rand.obj c:\rdos\kernel\os\state.obj c:\rdos\kernel\os\swap.obj c:\&
-rdos\kernel\os\task.obj c:\rdos\kernel\os\trapint.obj c:\rdos\kernel\os\tssi&
-nt.obj c:\rdos\kernel\os\user.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\kernel.exe : D:\rdos\kernel\os\app.obj D:\rdos\kernel\os\c&
+pu.obj D:\rdos\kernel\os\crc.obj D:\rdos\kernel\os\device.obj D:\rdos\kernel&
+\os\gdt.obj D:\rdos\kernel\os\handle.obj D:\rdos\kernel\os\int.obj D:\rdos\k&
+ernel\os\int16.obj D:\rdos\kernel\os\int32.obj D:\rdos\kernel\os\io.obj D:\r&
+dos\kernel\os\kernel.obj D:\rdos\kernel\os\ldt.obj D:\rdos\kernel\os\mem.obj&
+ D:\rdos\kernel\os\os.obj D:\rdos\kernel\os\paging.obj D:\rdos\kernel\os\phy&
+sical.obj D:\rdos\kernel\os\proc.obj D:\rdos\kernel\os\protseg.obj D:\rdos\k&
+ernel\os\rand.obj D:\rdos\kernel\os\state.obj D:\rdos\kernel\os\swap.obj D:\&
+rdos\kernel\os\task.obj D:\rdos\kernel\os\trapint.obj D:\rdos\kernel\os\tssi&
+nt.obj D:\rdos\kernel\os\user.obj .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  @%write kernel.lk1 FIL app.obj,cpu.obj,crc.obj,device.obj,gdt.obj,handle.ob&
 j,int.obj,int16.obj,int32.obj,io.obj,kernel.obj,ldt.obj,mem.obj,os.obj,pagin&
 g.obj,physical.obj,proc.obj,protseg.obj,rand.obj,state.obj,swap.obj,task.obj&

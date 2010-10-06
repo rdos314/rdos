@@ -1,12 +1,12 @@
 !define BLANK ""
-c:\rdos\kernel\os\apic.obj : c:\rdos\kernel\os\apic.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\apic.obj : D:\rdos\kernel\os\apic.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm apic.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\apic.rdv : c:\rdos\kernel\os\apic.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\apic.rdv : D:\rdos\kernel\os\apic.obj .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  @%write apic.lk1 FIL apic.obj
  @%append apic.lk1 
 !ifneq BLANK ""

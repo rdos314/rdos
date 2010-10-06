@@ -1,34 +1,34 @@
 !define BLANK ""
-c:\rdos\kernel\os\dir.obj : c:\rdos\kernel\os\dir.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\dir.obj : D:\rdos\kernel\os\dir.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm dir.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\file.obj : c:\rdos\kernel\os\file.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\file.obj : D:\rdos\kernel\os\file.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm file.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\fs.obj : c:\rdos\kernel\os\fs.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\fs.obj : D:\rdos\kernel\os\fs.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm fs.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\inifile.obj : c:\rdos\kernel\os\inifile.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\inifile.obj : D:\rdos\kernel\os\inifile.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm inifile.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\memmap.obj : c:\rdos\kernel\os\memmap.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\memmap.obj : D:\rdos\kernel\os\memmap.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm memmap.asm -ms -2 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\fs.rdv : c:\rdos\kernel\os\dir.obj c:\rdos\kernel\os\file.&
-obj c:\rdos\kernel\os\fs.obj c:\rdos\kernel\os\inifile.obj c:\rdos\kernel\os&
+D:\rdos\kernel\os\fs.rdv : D:\rdos\kernel\os\dir.obj D:\rdos\kernel\os\file.&
+obj D:\rdos\kernel\os\fs.obj D:\rdos\kernel\os\inifile.obj D:\rdos\kernel\os&
 \memmap.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+ @D:
+ cd D:\rdos\kernel\os
  @%write fs.lk1 FIL dir.obj,file.obj,fs.obj,inifile.obj,memmap.obj
  @%append fs.lk1 
 !ifneq BLANK ""

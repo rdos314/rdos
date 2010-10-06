@@ -1,66 +1,66 @@
 !define BLANK ""
-c:\rdos\kernel\os\em387.obj : c:\rdos\kernel\os\em387.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\em387.obj : D:\rdos\kernel\os\em387.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm em387.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emarithm.obj : c:\rdos\kernel\os\emarithm.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emarithm.obj : D:\rdos\kernel\os\emarithm.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm emarithm.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emcom.obj : c:\rdos\kernel\os\emcom.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emcom.obj : D:\rdos\kernel\os\emcom.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm emcom.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emcontr.obj : c:\rdos\kernel\os\emcontr.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emcontr.obj : D:\rdos\kernel\os\emcontr.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm emcontr.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emfloat.obj : c:\rdos\kernel\os\emfloat.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emfloat.obj : D:\rdos\kernel\os\emfloat.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm emfloat.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emmem.obj : c:\rdos\kernel\os\emmem.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emmem.obj : D:\rdos\kernel\os\emmem.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm emmem.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emprot.obj : c:\rdos\kernel\os\emprot.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emprot.obj : D:\rdos\kernel\os\emprot.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm emprot.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emseg.obj : c:\rdos\kernel\os\emseg.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emseg.obj : D:\rdos\kernel\os\emseg.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm emseg.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emstring.obj : c:\rdos\kernel\os\emstring.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emstring.obj : D:\rdos\kernel\os\emstring.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm emstring.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emtrans.obj : c:\rdos\kernel\os\emtrans.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emtrans.obj : D:\rdos\kernel\os\emtrans.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm emtrans.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emulate.obj : c:\rdos\kernel\os\emulate.asm .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emulate.obj : D:\rdos\kernel\os\emulate.asm .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  *wasm emulate.asm -ms -2 -fp3 -fpi87 -d1 -w4 -e25 -zq
 
-c:\rdos\kernel\os\emulate.rdv : c:\rdos\kernel\os\em387.obj c:\rdos\kernel\o&
-s\emarithm.obj c:\rdos\kernel\os\emcom.obj c:\rdos\kernel\os\emcontr.obj c:\&
-rdos\kernel\os\emfloat.obj c:\rdos\kernel\os\emmem.obj c:\rdos\kernel\os\emp&
-rot.obj c:\rdos\kernel\os\emseg.obj c:\rdos\kernel\os\emstring.obj c:\rdos\k&
-ernel\os\emtrans.obj c:\rdos\kernel\os\emulate.obj .AUTODEPEND
- @c:
- cd c:\rdos\kernel\os
+D:\rdos\kernel\os\emulate.rdv : D:\rdos\kernel\os\em387.obj D:\rdos\kernel\o&
+s\emarithm.obj D:\rdos\kernel\os\emcom.obj D:\rdos\kernel\os\emcontr.obj D:\&
+rdos\kernel\os\emfloat.obj D:\rdos\kernel\os\emmem.obj D:\rdos\kernel\os\emp&
+rot.obj D:\rdos\kernel\os\emseg.obj D:\rdos\kernel\os\emstring.obj D:\rdos\k&
+ernel\os\emtrans.obj D:\rdos\kernel\os\emulate.obj .AUTODEPEND
+ @D:
+ cd D:\rdos\kernel\os
  @%write emulate.lk1 FIL em387.obj,emarithm.obj,emcom.obj,emcontr.obj,emfloa&
 t.obj,emmem.obj,emprot.obj,emseg.obj,emstring.obj,emtrans.obj,emulate.obj
  @%append emulate.lk1 
