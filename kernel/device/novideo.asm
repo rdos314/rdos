@@ -213,7 +213,7 @@ init	PROC far
 	push ds
 	pusha
 ;
-	mov bx,pc_video_code_sel
+	mov bx,vga_code_sel
 	InitDevice
 ;
 	mov ax,cs

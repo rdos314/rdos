@@ -37,10 +37,6 @@ link_opt = /l/s/3
 
 # DEFINE GROUPS OF MODULES
 
-pcvideo_srcs = PCVIDEO.ASM  TEXTMODE.ASM	BITMODE.ASM	VBE.ASM
-pcvideo_objs = $(pcvideo_srcs:.ASM=.OBJ)
-pcvideo_rdvs = PCVIDEO.RDV
-
 novideo_srcs = NOVIDEO.ASM
 novideo_objs = $(novideo_srcs:.ASM=.OBJ)
 novideo_rdvs = NOVIDEO.RDV
@@ -133,7 +129,7 @@ sernet_srcs = SERNET.ASM
 sernet_objs = $(sernet_srcs:.ASM=.OBJ)
 sernet_rdvs = SERNET.RDV
 
-srcs =      $(pcvideo_srcs) $(novideo_srcs)	\
+srcs =      $(novideo_srcs)	\
 			$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
@@ -143,7 +139,7 @@ srcs =      $(pcvideo_srcs) $(novideo_srcs)	\
 
 objs =      $(srcs:.ASM=.OBJ)
 
-rdvs =      $(pcvideo_rdvs) $(novideo_rdvs) \
+rdvs =      $(novideo_rdvs) \
 			$(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
@@ -169,14 +165,6 @@ maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 # +++++++++
 
 MAIN:   $(rdvs)
-
-PCVIDEO.RDV : $(pcvideo_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(pcvideo_objs)
-	PCVIDEO.RDV
-	PCVIDEO;       
-!
 
 NOVIDEO.RDV : $(novideo_objs)
     tlink @&&!

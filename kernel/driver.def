@@ -318,8 +318,8 @@ video_focus_sel		EQU 878h
 piclcd_code_sel     EQU 880h
 piclcd_data_sel     EQU 888h
 
-pc_video_code_sel	EQU 8A0h
-pc_video_data_sel	EQU 8A8h
+vga_code_sel	    EQU 8A0h
+vga_data_sel	    EQU 8A8h
 
 power_code_sel      EQU 8C0h
 power_data_sel      EQU 8C8h
