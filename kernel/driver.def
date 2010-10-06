@@ -190,6 +190,9 @@ video_state_local_sel	EQU 4C8h
 mouse_local_sel		EQU 4D0h
 mouse_focus_sel		EQU 4D8h
 
+dosemu_code_sel     EQU 4E0h
+dosemu_data_sel     EQU 4E8h
+
 pci_code_sel		EQU 4F0h
 pci_data_sel		EQU 4F8h
 
