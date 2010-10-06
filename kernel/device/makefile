@@ -69,10 +69,6 @@ cs5536a_srcs = CS5536A.ASM
 cs5536a_objs = $(cs5536a_srcs:.ASM=.OBJ)
 cs5536a_rdvs = CS5536A.RDV
 
-via82a_srcs = VIA82A.ASM
-via82a_objs = $(via82a_srcs:.ASM=.OBJ)
-via82a_rdvs = VIA82A.RDV
-
 cs5536wd_srcs = CS5536WD.ASM
 cs5536wd_objs = $(cs5536wd_srcs:.ASM=.OBJ)
 cs5536wd_rdvs = CS5536WD.RDV
@@ -119,7 +115,7 @@ srcs =      $(novideo_srcs)	\
 			$(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
 			$(egalax_srcs) $(dmc6000_srcs) $(dmc9000_srcs) \
 			$(usbcom_srcs)  \
-			$(hid_srcs) $(cs5536a_srcs) $(via82a_srcs) $(cs5536wd_srcs)
+			$(hid_srcs) $(cs5536a_srcs) $(cs5536wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -129,7 +125,7 @@ rdvs =      $(novideo_rdvs) \
 			$(printer_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
 			$(egalax_rdvs) $(dmc6000_rdvs) $(dmc9000_rdvs) \
 			$(usbcom_rdvs) \
-			$(hid_rdvs) $(cs5536a_rdvs) $(via82a_rdvs) $(cs5536wd_rdvs)
+			$(hid_rdvs) $(cs5536a_rdvs) $(cs5536wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -212,14 +208,6 @@ CS5536A.RDV : $(cs5536a_objs)
 	$(cs5536a_objs)
 	CS5536A.RDV
 	CS5536A;       
-!
-
-VIA82A.RDV : $(via82a_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(via82a_objs)
-	VIA82A.RDV
-	VIA82A;       
 !
 
 CS5536WD.RDV : $(cs5536wd_objs)
