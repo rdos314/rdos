@@ -39,10 +39,6 @@ wd_srcs = WD.ASM
 wd_objs = $(wd_srcs:.ASM=.OBJ)
 wd_rdvs = $(wd_srcs:.ASM=.RDV)
 
-dpmi_srcs = DPMI.ASM    DPMI16.ASM      DPMI32.ASM
-dpmi_objs = $(dpmi_srcs:.ASM=.OBJ)
-dpmi_rdvs = DPMI.RDV
-
 key_srcs = KEY.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM SERKEY.ASM
 key_objs = $(key_srcs:.ASM=.OBJ)
 key_rdvs = KEYSW.RDV KEYUS.RDV KEYUK.RDV KEYFR.RDV SERKEY.RDV
@@ -59,8 +55,7 @@ pcshut_srcs = PCSHUT.ASM
 pcshut_objs = $(pcshut_srcs:.ASM=.OBJ)
 pcshut_exes = PCSHUT.EXE
 
-srcs =      $(dpmi_srcs)  \
-			$(key_srcs) \
+srcs =      $(key_srcs) \
 			$(keym_srcs) \
 			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) \
@@ -71,12 +66,12 @@ objs =      $(srcs:.ASM=.OBJ)
 incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
 			DISC.DEF                BIOSDATA.DEF    \
 			PROTSEG.INC            \
-			DPMI.INC                INT.DEF			       \
+			INT.DEF			       \
 			FAT.INC                 DOS.INC
 
 exes =      $(prot_exes) $(pcshut_exes)
 
-rdvs =      $(dpmi_rdvs) $(keym_rdvs)  \
+rdvs =      $(keym_rdvs)  \
 			$(key_rdvs)   \
 			$(ir_rdvs) $(wd_rdvs)
 
@@ -144,14 +139,6 @@ IR.RDV : $(ir_objs)
 	$(ir_objs)
 	IR.RDV
 	IR;
-!
-
-DPMI.RDV : $(dpmi_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(dpmi_objs)
-	DPMI.RDV
-	DPMI;
 !
 
 KEYSW.RDV : $(key_objs)

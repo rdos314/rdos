@@ -24,8 +24,8 @@
 ; Various utilities
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME util
+                                                
+                NAME util
 
 GateSize = 16
 
@@ -36,37 +36,36 @@ INCLUDE ..\os.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE dpmi.inc
 
-	.386p
+        .386p
 
-	extrn init_time:near
-	extrn init_env:near
-	extrn init_wait:near
+        extrn init_time:near
+        extrn init_env:near
+        extrn init_wait:near
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			INIT
+;               NAME:                   INIT
 ;
-;		DESCRIPTION:	Init driver
+;               DESCRIPTION:    Init driver
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
+init    PROC far
     call init_time
     call init_env
     call init_wait
     clc
-	ret
-init	ENDP
+        ret
+init    ENDP
 
-code	ENDS
+code    ENDS
 
-	END init
+        END init

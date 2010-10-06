@@ -20,54 +20,18 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; GUIDEV.ASM
-; Base interactive modules
+; DPMI.INC
+; Common types in DPMI driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME guidev
 
-GateSize = 16
+dpmi_data_seg	STRUC
 
-INCLUDE protseg.def
-INCLUDE ..\driver.def
-INCLUDE ..\user.def
-INCLUDE ..\os.def
-INCLUDE system.inc
-INCLUDE ..\user.inc
-INCLUDE ..\os.inc
+dpmi_handler_seg	DW ?
 
-        .386p
+dpmi_mode			DB ?
 
-        extrn init_focus:near
-        extrn init_keyboard:near
-        extrn init_mouse:near
-        extrn init_video:near
+dpmi_data_size		DB ?
 
-code    SEGMENT byte public use16 'CODE'
+dpmi_data_seg	ENDS
 
-        assume cs:code
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   INIT
-;
-;               DESCRIPTION:    Init driver
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init    PROC far
-    call init_focus
-    call init_keyboard
-    call init_mouse
-    call init_video
-    clc
-        ret
-init    ENDP
-
-code    ENDS
-
-        END init
