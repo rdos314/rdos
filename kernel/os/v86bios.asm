@@ -24,8 +24,8 @@
 ; V86 mode code emulation in boot-time environment
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME v86bios
+            
+    NAME v86bios
 
 GateSize = 16
 
@@ -42,26 +42,26 @@ INCLUDE ..\os\int.def
 
 list_entry      STRUC
 
-list_link               DW ?
-list_thread             DW ?
-list_eax                DD ?
-list_ebx                DD ?
-list_ecx                DD ?
-list_edx                DD ?
-list_esi                DD ?
-list_edi                DD ?
-list_ebp                DD ?
-list_ds                 DW ?
-list_es                 DW ?
-list_flags              DW ?
-list_int                DB ?
+list_link       DW ?
+list_thread     DW ?
+list_eax    DD ?
+list_ebx    DD ?
+list_ecx    DD ?
+list_edx    DD ?
+list_esi    DD ?
+list_edi    DD ?
+list_ebp    DD ?
+list_ds     DW ?
+list_es     DW ?
+list_flags      DW ?
+list_int    DB ?
 
 list_entry      ENDS
 
 data    SEGMENT byte public 'DATA'
 
-bios_thread             DW ?
-bios_list               DW ?
+bios_thread     DW ?
+bios_list       DW ?
 bios_section    section_typ <>
 
 data    ENDS
@@ -70,572 +70,611 @@ code    SEGMENT byte public 'CODE'
 
 .386p
 
-        assume cs:code
+    assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DecodeSelector
+;       NAME:       DecodeSelector
 ;
-;               DESCRIPTION:    Decode a selector
+;       DESCRIPTION:    Decode a selector
 ;
-;               PARAMETERS:             BX              Selector
+;       PARAMETERS:     BX      Selector
 ;
-;               RETURNS:                EDX             Base
-;                                               ECX             Limit
+;       RETURNS:    EDX     Base
+;               ECX     Limit
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DecodeSelector  Proc near
-        push ds
+    push ds
 ;
-        test bx,7
-        jnz decode_sel_fail
+    test bx,7
+    jnz decode_sel_fail
 ;
-        GetSelectorBaseSize
-        jc decode_sel_fail
+    GetSelectorBaseSize
+    jc decode_sel_fail
 ;
-        sub edx,global_page_linear
-        jc decode_sel_fail
+    sub edx,global_page_linear
+    jc decode_sel_fail
 ;
-        cmp edx,global_page_size
-        jae decode_sel_fail
+    cmp edx,global_page_size
+    jae decode_sel_fail
 ;
-        test dx,0FFFh
-        jnz decode_sel_fail
+    test dx,0FFFh
+    jnz decode_sel_fail
 ;
-        add edx,global_page_linear
-        clc
-        jmp decode_sel_done
+    add edx,global_page_linear
+    clc
+    jmp decode_sel_done
 
 decode_sel_fail:
-        stc
+    stc
 
 decode_sel_done:
-        pop ds
-        ret
+    pop ds
+    ret
 DecodeSelector  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   HandleInputSel
+;       NAME:       HandleInputSel
 ;
-;               DESCRIPTION:    Handle input selectors
+;       DESCRIPTION:    Handle input selectors
 ;
-;               PARAMETERS:             FS              List
+;       PARAMETERS:     FS      List
 ;
-;               RETURNS:                DS,ES   BIOS selectors
+;       RETURNS:    DS,ES   BIOS selectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleInputSel  Proc near
-        mov bx,fs:list_ds
-        call DecodeSelector
-        jc handle_input_ds_fail
+    mov bx,fs:list_ds
+    call DecodeSelector
+    jc handle_input_ds_fail
 ;
-        mov ax,process_page_sel
-        mov gs,ax
-        mov esi,edx
-        shr esi,10
-        mov edi,40h
-        dec ecx
-        shr ecx,12
-        inc cx
-        cmp cx,10h
-        jbe handle_input_ds_move
+    mov ax,process_page_sel
+    mov gs,ax
+    mov esi,edx
+    shr esi,10
+    mov edi,40h
+    dec ecx
+    shr ecx,12
+    inc cx
+    cmp cx,10h
+    jbe handle_input_ds_move
 ;
-        mov cx,10h
+    mov cx,10h
 
 handle_input_ds_move:
-        mov eax,2
-        xchg eax,gs:[esi]
-        mov gs:[edi],eax
-        add esi,4
-        add edi,4
-        loop handle_input_ds_move
+    mov eax,2
+    xchg eax,gs:[esi]
+    mov gs:[edi],eax
+    add esi,4
+    add edi,4
+    loop handle_input_ds_move
 ;
-        mov ax,v86_bios_ds_sel
-        mov ds,ax
-        jmp handle_input_es
+    mov ax,v86_bios_ds_sel
+    mov ds,ax
+    jmp handle_input_es
 
 handle_input_ds_fail:
-        xor ax,ax
-        mov ds,ax
+    xor ax,ax
+    mov ds,ax
 
 handle_input_es:
-        mov bx,fs:list_es
-        call DecodeSelector
-        jc handle_input_es_fail
+    mov bx,fs:list_es
+    call DecodeSelector
+    jc handle_input_es_fail
 ;
-        mov ax,process_page_sel
-        mov gs,ax
-        mov esi,edx
-        shr esi,10
-        mov edi,80h
-        dec ecx
-        shr ecx,12
-        inc cx
-        cmp cx,10h
-        jbe handle_input_es_move
+    mov ax,process_page_sel
+    mov gs,ax
+    mov esi,edx
+    shr esi,10
+    mov edi,80h
+    dec ecx
+    shr ecx,12
+    inc cx
+    cmp cx,10h
+    jbe handle_input_es_move
 ;
-        mov cx,10h
+    mov cx,10h
 
 handle_input_es_move:
-        mov eax,2
-        xchg eax,gs:[esi]
-        mov gs:[edi],eax
-        add esi,4
-        add edi,4
-        loop handle_input_es_move
+    mov eax,2
+    xchg eax,gs:[esi]
+    mov gs:[edi],eax
+    add esi,4
+    add edi,4
+    loop handle_input_es_move
 ;
-        mov ax,v86_bios_es_sel
-        mov es,ax
-        jmp handle_input_done
+    mov ax,v86_bios_es_sel
+    mov es,ax
+    jmp handle_input_done
 
 handle_input_es_fail:
-        xor ax,ax
-        mov es,ax
+    xor ax,ax
+    mov es,ax
 
 handle_input_done:
-        ret
+    ret
 HandleInputSel  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   HandleOutputSel
+;       NAME:       HandleOutputSel
 ;
-;               DESCRIPTION:    Handle output selectors
+;       DESCRIPTION:    Handle output selectors
 ;
-;               PARAMETERS:             FS              List
+;       PARAMETERS:     FS      List
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleOutputSel Proc near
-        mov ax,process_page_sel
-        mov gs,ax
+    mov ax,process_page_sel
+    mov gs,ax
 ;
-        mov ax,ds
-        or ax,ax
-        jz handle_output_es
+    mov ax,ds
+    or ax,ax
+    jz handle_output_es
 ;
-        cmp ax,v86_bios_ds_sel
-        je handle_output_ds_same
+    cmp ax,v86_bios_ds_sel
+    je handle_output_ds_same
 ;
-        mov bx,fs:list_ds
-        call DecodeSelector
-        jc handle_output_es
+    mov bx,fs:list_ds
+    call DecodeSelector
+    jc handle_output_es
 ;
-        mov edi,edx
-        shr edi,10
+    mov edi,edx
+    shr edi,10
 ;
-        mov bx,ds
-        push ecx
-        GetSelectorBaseSize
-        pop ecx
-        mov esi,edx
-        shr esi,10
-        dec ecx
-        shr ecx,12
-        inc cx
-        cmp cx,10h
-        jbe handle_output_ds_copy
+    mov bx,ds
+    push ecx
+    GetSelectorBaseSize
+    pop ecx
+    mov esi,edx
+    shr esi,10
+    dec ecx
+    shr ecx,12
+    inc cx
+    cmp cx,10h
+    jbe handle_output_ds_copy
 ;
-        mov cx,10h
+    mov cx,10h
 
 handle_output_ds_copy:
-        mov eax,gs:[esi]
-        mov gs:[edi],eax
-        add esi,4
-        add edi,4
-        loop handle_output_ds_copy
+    mov eax,gs:[esi]
+    mov gs:[edi],eax
+    add esi,4
+    add edi,4
+    loop handle_output_ds_copy
 ;
-        jmp handle_output_es
+    jmp handle_output_es
 
 handle_output_ds_same:
-        mov bx,fs:list_ds
-        call DecodeSelector
-        jc handle_output_es
+    mov bx,fs:list_ds
+    call DecodeSelector
+    jc handle_output_es
 ;
-        mov edi,edx
-        shr edi,10
-        mov esi,40h
-        dec ecx
-        shr ecx,12
-        inc cx
-        cmp cx,10h
-        jbe handle_output_ds_move
+    mov edi,edx
+    shr edi,10
+    mov esi,40h
+    dec ecx
+    shr ecx,12
+    inc cx
+    cmp cx,10h
+    jbe handle_output_ds_move
 ;
-        mov cx,10h
+    mov cx,10h
 
 handle_output_ds_move:
-        mov eax,2
-        xchg eax,gs:[esi]
-        mov gs:[edi],eax
-        add esi,4
-        add edi,4
-        loop handle_output_ds_move
+    mov eax,2
+    xchg eax,gs:[esi]
+    mov gs:[edi],eax
+    add esi,4
+    add edi,4
+    loop handle_output_ds_move
 
 handle_output_es:
-        mov ax,es
-        or ax,ax
-        jz handle_output_done
+    mov ax,es
+    or ax,ax
+    jz handle_output_done
 ;
-        cmp ax,v86_bios_es_sel
-        je handle_output_es_same
+    cmp ax,v86_bios_es_sel
+    je handle_output_es_same
 ;
-        mov bx,fs:list_es
-        call DecodeSelector
-        jc handle_output_done
+    mov bx,fs:list_es
+    call DecodeSelector
+    jc handle_output_done
 ;
-        mov edi,edx
-        shr edi,10
+    mov edi,edx
+    shr edi,10
 ;
-        mov bx,es
-        push ecx
-        GetSelectorBaseSize
-        pop ecx
-        mov esi,edx
-        shr esi,10
-        dec ecx
-        shr ecx,12
-        inc cx
-        cmp cx,10h
-        jbe handle_output_es_copy
+    mov bx,es
+    push ecx
+    GetSelectorBaseSize
+    pop ecx
+    mov esi,edx
+    shr esi,10
+    dec ecx
+    shr ecx,12
+    inc cx
+    cmp cx,10h
+    jbe handle_output_es_copy
 ;
-        mov cx,10h
+    mov cx,10h
 
 handle_output_es_copy:
-        mov eax,gs:[esi]
-        mov gs:[edi],eax
-        add esi,4
-        add edi,4
-        loop handle_output_es_copy
-        jmp handle_output_done
+    mov eax,gs:[esi]
+    mov gs:[edi],eax
+    add esi,4
+    add edi,4
+    loop handle_output_es_copy
+    jmp handle_output_done
 
 handle_output_es_same:
-        mov bx,fs:list_es
-        call DecodeSelector
-        jc handle_output_done
+    mov bx,fs:list_es
+    call DecodeSelector
+    jc handle_output_done
 ;
-        mov edi,edx
-        shr edi,10
-        mov esi,80h
-        dec ecx
-        shr ecx,12
-        inc cx
-        cmp cx,10h
-        jbe handle_output_es_move
+    mov edi,edx
+    shr edi,10
+    mov esi,80h
+    dec ecx
+    shr ecx,12
+    inc cx
+    cmp cx,10h
+    jbe handle_output_es_move
 ;
-        mov cx,10h
+    mov cx,10h
 
 handle_output_es_move:
-        mov eax,2
-        xchg eax,gs:[esi]
-        mov gs:[edi],eax
-        add esi,4
-        add edi,4
-        loop handle_output_es_move
+    mov eax,2
+    xchg eax,gs:[esi]
+    mov gs:[edi],eax
+    add esi,4
+    add edi,4
+    loop handle_output_es_move
 
 handle_output_done:
-        mov edi,40h
-        mov cx,20h
+    mov edi,40h
+    mov cx,20h
 
 handle_output_zero:
-        mov eax,2
-        xchg eax,gs:[edi]
-        and ax,0F000h
-        or eax,eax
-        jz handle_output_zero_next
+    mov eax,2
+    xchg eax,gs:[edi]
+    and ax,0F000h
+    or eax,eax
+    jz handle_output_zero_next
 ;
-        FreePhysical
+    FreePhysical
 
 handle_output_zero_next:
-        add esi,4
-        add edi,4
-        loop handle_output_zero
+    add esi,4
+    add edi,4
+    loop handle_output_zero
 ;
-        ret
+    ret
 HandleOutputSel Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   bios_process
+;       NAME:       bios_process
 ;
-;               DESCRIPTION:    BIOS process
+;       DESCRIPTION:    BIOS process
 ;
-;               PARAMETERS:             
+;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-bios_name               DB 'V86 BIOS',0
+bios_name       DB 'V86 BIOS',0
 
 bios_process:
-        mov al,16
-        SetBitness
+    mov al,16
+    SetBitness
 ;
-        mov ax,process_page_sel
-        mov ds,ax
-        xor bx,bx
-        mov eax,7
-        mov [bx],eax
+    mov ax,process_page_sel
+    mov ds,ax
+    xor bx,bx
+    mov eax,7
+    mov [bx],eax
 ;
-        mov eax,0A0007h
-        mov bx,0A0000h SHR 10
-        mov cx,40h
+    mov eax,0A0007h
+    mov bx,0A0000h SHR 10
+    mov cx,40h
 rom_loop:
-        mov [bx],eax
-        add eax,1000h
-        add bx,4
-        loop rom_loop
+    mov [bx],eax
+    add eax,1000h
+    add bx,4
+    loop rom_loop
 ;
-        mov eax,0F0007h
-        mov bx,0F0000h SHR 10
-        mov cx,10h
+    mov eax,0F0007h
+    mov bx,0F0000h SHR 10
+    mov cx,10h
 bios_loop:
-        mov [bx],eax
-        add eax,1000h
-        add bx,4
-        loop bios_loop
+    mov [bx],eax
+    add eax,1000h
+    add bx,4
+    loop bios_loop
+;
+    mov ax,emulate_opcode_nr
+    IsValidOsGate
+    jnc bios_bitmap_done
 ;
     GetThread
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
+    mov ax,flat_sel
     mov es,ax
-    mov es,es:p_tss_data_sel
-        mov di,OFFSET tss_bitmap_space + (200h SHR 3)
-        xor ax,ax
-        mov cx,20h
-        rep stosw       
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        xor al,al
-        mov cx,8
-        xor si,si
+    mov eax,2000h + OFFSET tss_bitmap_space
+    AllocateSmallLinear
+    mov edi,edx
+    xor esi,esi
+    mov cx,OFFSET tss_bitmap_space
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov cx,800h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    GetThread
+    mov ds,ax
+    mov bx,ds:p_tss_data_sel
+    mov ecx,2000h + OFFSET tss_bitmap_space
+    CreateDataSelector16
+;
+    mov bx,ds:p_tss_sel
+    mov ax,gdt_sel
+    mov ds,ax
+;
+    mov al,bl
+    dec ecx
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,8Bh
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    mov [bx+6],cx
+;
+    mov ax,1
+    WaitMilliSec
+
+bios_bitmap_done:
+    mov ax,flat_sel
+    mov ds,ax
+    xor al,al
+    mov cx,8
+    xor si,si
 bios_int_loop1:
-        mov bx,[si]
-        add si,2
-        mov dx,[si]
-        add si,2
-        SetVMInt
-        inc al
-        loop bios_int_loop1
+    mov bx,[si]
+    add si,2
+    mov dx,[si]
+    add si,2
+    SetVMInt
+    inc al
+    loop bios_int_loop1
 ;
-        mov al,10h
-        mov cx,68h
-        mov si,10h * 4
+    mov al,10h
+    mov cx,68h
+    mov si,10h * 4
 bios_int_loop2:
-        mov bx,[si]
-        add si,2
-        mov dx,[si]
-        add si,2
-        SetVMInt
-        inc al
-        loop bios_int_loop2
+    mov bx,[si]
+    add si,2
+    mov dx,[si]
+    add si,2
+    SetVMInt
+    inc al
+    loop bios_int_loop2
 ;
-        mov al,80h
-        mov cx,80h
-        mov si,80h * 4
+    mov al,80h
+    mov cx,80h
+    mov si,80h * 4
 bios_int_loop3:
-        mov bx,[si]
-        add si,2
-        mov dx,[si]
-        add si,2
-        SetVMInt
-        inc al
-        loop bios_int_loop3
+    mov bx,[si]
+    add si,2
+    mov dx,[si]
+    add si,2
+    SetVMInt
+    inc al
+    loop bios_int_loop3
 ;
-        mov ax,SEG data
-        mov ds,ax
-        GetThread
-        mov ds:bios_thread,ax
-        jmp bios_proc_check
+    mov ax,SEG data
+    mov ds,ax
+    GetThread
+    mov ds:bios_thread,ax
+    jmp bios_proc_check
 
 bios_proc_loop:
-        WaitForSignal
-        mov ax,SEG data
-        mov ds,ax
+    WaitForSignal
+    mov ax,SEG data
+    mov ds,ax
 
 bios_proc_check:
-        mov ax,ds:bios_list
-        or ax,ax
-        jz bios_proc_loop
+    mov ax,ds:bios_list
+    or ax,ax
+    jz bios_proc_loop
 ;
-        EnterSection ds:bios_section
-        mov fs,ds:bios_list
-        mov ax,fs:list_link
-        mov ds:bios_list,ax
-        LeaveSection ds:bios_section
+    EnterSection ds:bios_section
+    mov fs,ds:bios_list
+    mov ax,fs:list_link
+    mov ds:bios_list,ax
+    LeaveSection ds:bios_section
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        movzx bx,fs:list_int
-        shl bx,2
-        push dword ptr [bx]
+    mov ax,flat_sel
+    mov ds,ax
+    movzx bx,fs:list_int
+    shl bx,2
+    push dword ptr [bx]
 ;
-        call HandleInputSel
-        push fs:list_flags
-        mov eax,cr3
-        mov cr3,eax
-        mov eax,fs:list_eax
-        mov ebx,fs:list_ebx
-        mov ecx,fs:list_ecx
-        mov edx,fs:list_edx
-        mov esi,fs:list_esi
-        mov edi,fs:list_edi
-        mov ebp,fs:list_ebp
-        popf
-        CallVm
+    call HandleInputSel
+    push fs:list_flags
+    mov eax,cr3
+    mov cr3,eax
+    mov eax,fs:list_eax
+    mov ebx,fs:list_ebx
+    mov ecx,fs:list_ecx
+    mov edx,fs:list_edx
+    mov esi,fs:list_esi
+    mov edi,fs:list_edi
+    mov ebp,fs:list_ebp
+    popf
+    CallVm
 ;
-        pushf
-        pop fs:list_flags
-        mov fs:list_eax,eax
-        mov fs:list_ebx,ebx
-        mov fs:list_ecx,ecx
-        mov fs:list_edx,edx
-        mov fs:list_esi,esi
-        mov fs:list_edi,edi
-        mov fs:list_ebp,ebp
-        call HandleOutputSel
+    pushf
+    pop fs:list_flags
+    mov fs:list_eax,eax
+    mov fs:list_ebx,ebx
+    mov fs:list_ecx,ecx
+    mov fs:list_edx,edx
+    mov fs:list_esi,esi
+    mov fs:list_edi,edi
+    mov fs:list_ebp,ebp
+    call HandleOutputSel
 ;
-        mov bx,fs:list_thread
-        xor ax,ax
-        mov fs,ax
-        Signal
-        jmp bios_proc_loop
+    mov bx,fs:list_thread
+    xor ax,ax
+    mov fs,ax
+    Signal
+    jmp bios_proc_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   V86BiosInt
+;       NAME:       V86BiosInt
 ;
-;               DESCRIPTION:    Run int in real BIOS
+;       DESCRIPTION:    Run int in real BIOS
 ;
-;               PARAMETERS:             Stack   Int #
+;       PARAMETERS:     Stack   Int #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 v86_bios_int_name       DB 'V86 BIOS Int',0
 
 V86_bios_int    Proc far
-        push ds
-        push es
+    push ds
+    push es
 ;
-        push eax
-        pushf
-        mov eax,SIZE list_entry
-        AllocateSmallGlobalMem
-        pop es:list_flags
-        pop es:list_eax
-        pop es:list_es
-        pop es:list_ds
-        mov es:list_ebx,ebx
-        mov es:list_ecx,ecx
-        mov es:list_edx,edx
-        mov es:list_esi,esi
-        mov es:list_edi,edi
-        mov es:list_ebp,ebp
-        mov bp,sp
-        mov al,[bp+4]
-        mov es:list_int,al      
+    push eax
+    pushf
+    mov eax,SIZE list_entry
+    AllocateSmallGlobalMem
+    pop es:list_flags
+    pop es:list_eax
+    pop es:list_es
+    pop es:list_ds
+    mov es:list_ebx,ebx
+    mov es:list_ecx,ecx
+    mov es:list_edx,edx
+    mov es:list_esi,esi
+    mov es:list_edi,edi
+    mov es:list_ebp,ebp
+    mov bp,sp
+    mov al,[bp+4]
+    mov es:list_int,al      
 ;
-        GetThread
-        mov es:list_thread,ax
-        mov ax,SEG data
-        mov ds,ax
+    GetThread
+    mov es:list_thread,ax
+    mov ax,SEG data
+    mov ds,ax
 ;
-        ClearSignal
-        EnterSection ds:bios_section
-        mov ax,ds:bios_list
-        mov es:list_link,ax
-        mov ds:bios_list,es
-        LeaveSection ds:bios_section
+    ClearSignal
+    EnterSection ds:bios_section
+    mov ax,ds:bios_list
+    mov es:list_link,ax
+    mov ds:bios_list,es
+    LeaveSection ds:bios_section
 ;
-        mov bx,ds:bios_thread
-        Signal
-        WaitForSignal
+    mov bx,ds:bios_thread
+    Signal
+    WaitForSignal
 ;
-        mov eax,es:list_eax
-        mov ebx,es:list_ebx
-        mov ecx,es:list_ecx
-        mov edx,es:list_edx
-        mov esi,es:list_esi
-        mov edi,es:list_edi
-        mov ebp,es:list_ebp
-        push es:list_ds
-        push es:list_es
-        push es:list_flags
-        FreeMem
-        popf
+    mov eax,es:list_eax
+    mov ebx,es:list_ebx
+    mov ecx,es:list_ecx
+    mov edx,es:list_edx
+    mov esi,es:list_esi
+    mov edi,es:list_edi
+    mov ebp,es:list_ebp
+    push es:list_ds
+    push es:list_es
+    push es:list_flags
+    FreeMem
+    popf
 ;
-        pop es
-        pop ds
-        ret 2
+    pop es
+    pop ds
+    ret 2
 v86_bios_int    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   init_process
+;       NAME:       init_process
 ;
-;               DESCRIPTION:    init BIOS process
+;       DESCRIPTION:    init BIOS process
 ;
-;               PARAMETERS:             
+;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_process    PROC far
-        push ds
-        push es
-        pusha
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov si,OFFSET bios_process
-        mov di,OFFSET bios_name
-        mov ecx,512
-        mov ax,5
-        CreateProcess
-        popa
-        pop es
-        pop ds
-        ret
+    push ds
+    push es
+    pusha
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET bios_process
+    mov di,OFFSET bios_name
+    mov ecx,512
+    mov ax,5
+    CreateProcess
+    popa
+    pop es
+    pop ds
+    ret
 init_process    ENDP
 
     public init_v86_bios
     
 init_v86_bios   PROC near
-        mov bx,SEG data
-        mov ds,bx
-        InitSection ds:bios_section
-        mov ds:bios_list,0
-        mov ds:bios_thread,0
+    mov bx,SEG data
+    mov ds,bx
+    InitSection ds:bios_section
+    mov ds:bios_list,0
+    mov ds:bios_thread,0
 ;
-        mov bx,v86_bios_ds_sel
-        mov edx,10000h
-        mov ecx,10000h
-        CreateDataSelector16
+    mov bx,v86_bios_ds_sel
+    mov edx,10000h
+    mov ecx,10000h
+    CreateDataSelector16
 ;
-        mov bx,v86_bios_es_sel
-        mov edx,20000h
-        mov ecx,10000h
-        CreateDataSelector16
+    mov bx,v86_bios_es_sel
+    mov edx,20000h
+    mov ecx,10000h
+    CreateDataSelector16
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov di,OFFSET init_process
-        HookInitTasking
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET init_process
+    HookInitTasking
 ;
-        mov si,OFFSET v86_bios_int
-        mov di,OFFSET v86_bios_int_name
-        mov cl,1
-        mov ax,v86_bios_int_nr
-        RegisterOsGate
-        ret
+    mov si,OFFSET v86_bios_int
+    mov di,OFFSET v86_bios_int_name
+    mov cl,1
+    mov ax,v86_bios_int_nr
+    RegisterOsGate
+    ret
 init_v86_bios   ENDP
 
 code    ENDS
 
-        END
+    END

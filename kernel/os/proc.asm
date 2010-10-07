@@ -1026,10 +1026,10 @@ allocate_thread_block	PROC near
     AllocateSmallGlobalMem
     mov es:p_thread_sel,es
 ;
-    mov eax,400h
+    mov eax,tss_size
     AllocateSmallLinear
 	AllocateGdt
-	mov ecx,400h
+	mov ecx,tss_size
 	CreateTssSelector
 	mov es:p_tss_sel,bx
 ;

@@ -1326,6 +1326,9 @@ RequestIRQs Proc near
     mov di,OFFSET com_int
 ;    
     mov cx,ds:sd_ports
+    or cx,cx
+    jz riDone
+;    
     mov bx,OFFSET sd_port_arr
 
 riLoop:
@@ -1342,7 +1345,8 @@ riLoop:
 riNext:
     add bx,2
     loop riLoop
-;
+
+riDone:
     popad
     pop es
     pop ds  
