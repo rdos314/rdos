@@ -38,7 +38,7 @@ INCLUDE system.def
 INCLUDE port.def
 INCLUDE ..\driver.def
 INCLUDE ..\os.inc
-INCLUDE apic.inc
+INCLUDE ..\pcdev\apic.inc
 
 MAJOR_VERSION = 9
 MINOR_VERSION = 0

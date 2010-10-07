@@ -38,7 +38,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE apic.inc
+INCLUDE ..\pcdev\apic.inc
 INCLUDE proc.inc
 INCLUDE ..\handle.inc
 

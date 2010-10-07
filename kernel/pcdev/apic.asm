@@ -34,12 +34,12 @@ GateSize = 16
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
-INCLUDE port.def
-INCLUDE system.def
+INCLUDE ..\os\port.def
+INCLUDE ..\os\system.def
 INCLUDE apic.inc
-INCLUDE proc.inc
-INCLUDE irq.inc
-INCLUDE acpi.def
+INCLUDE ..\os\proc.inc
+INCLUDE ..\os\irq.inc
+INCLUDE ..\os\acpi.def
 
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
