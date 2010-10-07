@@ -1,3 +1,3 @@
-project : D:\rdos\kernel\audiodev\via82a.rdv .SYMBOLIC
+project : c:\rdos\kernel\audiodev\via82a.rdv .SYMBOLIC
 
-!include D:\rdos\kernel\audiodev\via82a.mk1
+!include c:\rdos\kernel\audiodev\via82a.mk1
