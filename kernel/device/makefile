@@ -73,10 +73,6 @@ cs5536wd_srcs = CS5536WD.ASM
 cs5536wd_objs = $(cs5536wd_srcs:.ASM=.OBJ)
 cs5536wd_rdvs = CS5536WD.RDV
 
-usbcom_srcs = USBCOM.ASM
-usbcom_objs = $(usbcom_srcs:.ASM=.OBJ)
-usbcom_rdvs = USBCOM.RDV
-
 printer_srcs = PRINTER.ASM
 printer_objs = $(printer_srcs:.ASM=.OBJ)
 printer_rdvs = PRINTER.RDV
@@ -110,7 +106,6 @@ srcs =      $(novideo_srcs)	\
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
 			$(egalax_srcs) $(dmc6000_srcs) $(dmc9000_srcs) \
-			$(usbcom_srcs)  \
 			$(cs5536a_srcs) $(cs5536wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
@@ -120,7 +115,6 @@ rdvs =      $(novideo_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
 			$(egalax_rdvs) $(dmc6000_rdvs) $(dmc9000_rdvs) \
-			$(usbcom_rdvs) \
 			$(cs5536a_rdvs) $(cs5536wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -212,14 +206,6 @@ CS5536WD.RDV : $(cs5536wd_objs)
 	$(cs5536wd_objs)
 	CS5536WD.RDV
 	CS5536WD;       
-!
-
-USBCOM.RDV : $(usbcom_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(usbcom_objs)
-	USBCOM.RDV
-	USBCOM;       
 !
 
 
