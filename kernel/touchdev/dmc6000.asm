@@ -35,7 +35,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 
-touch_data_seg	SEGMENT AT 0
+touch_data_seg	STRUC
 
 td_wait         DW ?
 td_port         DW ?
@@ -518,7 +518,6 @@ init_touch	Proc far
 	ret
 init_touch	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -532,19 +531,11 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
-	pusha
-	push ds
-;
-	mov bx,touch_code_sel
-	InitDevice
-;
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_touch
 	HookInitTasking
-;
-	pop ds
-	popa
+	clc
 	ret
 init	ENDP
 

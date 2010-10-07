@@ -53,10 +53,6 @@ s2mouse_srcs = S2MOUSE.ASM
 s2mouse_objs = $(s2mouse_srcs:.ASM=.OBJ)
 s2mouse_rdvs = S2MOUSE.RDV
 
-dmc6000_srcs = DMC6000.ASM
-dmc6000_objs = $(dmc6000_srcs:.ASM=.OBJ)
-dmc6000_rdvs = DMC6000.RDV
-
 dmc9000_srcs = DMC9000.ASM
 dmc9000_objs = $(dmc9000_srcs:.ASM=.OBJ)
 dmc9000_rdvs = DMC9000.RDV
@@ -93,7 +89,7 @@ srcs =      $(novideo_srcs)	\
 			$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(dp83815_srcs) $(8255x_srcs) \
-			$(dmc6000_srcs) $(dmc9000_srcs) \
+			$(dmc9000_srcs) \
 			$(cs5536wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
@@ -102,7 +98,7 @@ rdvs =      $(novideo_rdvs) \
 			$(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(8255x_rdvs) \
-			$(dmc6000_rdvs) $(dmc9000_rdvs) \
+			$(dmc9000_rdvs) \
 			$(cs5536wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -154,14 +150,6 @@ S2MOUSE.RDV : $(s2mouse_objs)
 	$(s2mouse_objs)
 	S2MOUSE.RDV
 	S2MOUSE;  
-!
-
-DMC6000.RDV : $(dmc6000_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(dmc6000_objs)
-	DMC6000.RDV
-	DMC6000;       
 !
 
 DMC9000.RDV : $(dmc9000_objs)
