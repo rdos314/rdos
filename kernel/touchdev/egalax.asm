@@ -47,7 +47,7 @@ Y_START = 100
 X_SIZE = 1850
 Y_SIZE = 1850
 
-touch_data_seg	SEGMENT AT 0
+data    SEGMENT byte public 'DATA'
 
 td_wait         DW ?
 td_port         DW ?
@@ -55,7 +55,7 @@ td_x            DW ?
 td_y            DW ?
 td_control      DB ?
 
-touch_data_seg	ENDS
+data    ENDS
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -268,7 +268,7 @@ touch_thread:
     mov ax,500
     WaitMilliSec
 ;
-    mov ax,touch_data_sel
+    mov ax,SEG data
     mov ds,ax
 ;    
     mov al,COM_PORT
@@ -328,7 +328,6 @@ init_touch	Proc far
 	ret
 init_touch	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -342,23 +341,11 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
-	pusha
-	push ds
-;
-	mov bx,touch_code_sel
-	InitDevice
-;
-	mov eax,SIZE touch_data_seg
-	mov bx,touch_data_sel
-	AllocateFixedSystemMem
-;
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_touch
 	HookInitTasking
-;
-	pop ds
-	popa
+	clc
 	ret
 init	ENDP
 
