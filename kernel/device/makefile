@@ -61,10 +61,6 @@ dmc9000_srcs = DMC9000.ASM
 dmc9000_objs = $(dmc9000_srcs:.ASM=.OBJ)
 dmc9000_rdvs = DMC9000.RDV
 
-cs5536a_srcs = CS5536A.ASM
-cs5536a_objs = $(cs5536a_srcs:.ASM=.OBJ)
-cs5536a_rdvs = CS5536A.RDV
-
 cs5536wd_srcs = CS5536WD.ASM
 cs5536wd_objs = $(cs5536wd_srcs:.ASM=.OBJ)
 cs5536wd_rdvs = CS5536WD.RDV
@@ -81,10 +77,6 @@ dp83815_srcs = DP83815.ASM
 dp83815_objs = $(dp83815_srcs:.ASM=.OBJ)
 dp83815_rdvs = DP83815.RDV
 
-rtl8139_srcs = RTL8139.ASM
-rtl8139_objs = $(rtl8139_srcs:.ASM=.OBJ)
-rtl8139_rdvs = RTL8139.RDV
-
 8255x_srcs = 8255x.ASM
 8255x_objs = $(8255x_srcs:.ASM=.OBJ)
 8255x_rdvs = 8255x.RDV
@@ -100,18 +92,18 @@ sernet_rdvs = SERNET.RDV
 srcs =      $(novideo_srcs)	\
 			$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
-			$(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
+			$(dp83815_srcs) $(8255x_srcs) \
 			$(dmc6000_srcs) $(dmc9000_srcs) \
-			$(cs5536a_srcs) $(cs5536wd_srcs)
+			$(cs5536wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 rdvs =      $(novideo_rdvs) \
 			$(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
-			$(printer_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
+			$(printer_rdvs) $(8255x_rdvs) \
 			$(dmc6000_rdvs) $(dmc9000_rdvs) \
-			$(cs5536a_rdvs) $(cs5536wd_rdvs)
+			$(cs5536wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -180,14 +172,6 @@ DMC9000.RDV : $(dmc9000_objs)
 	DMC9000;       
 !
 
-CS5536A.RDV : $(cs5536a_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(cs5536a_objs)
-	CS5536A.RDV
-	CS5536A;       
-!
-
 CS5536WD.RDV : $(cs5536wd_objs)
     tlink @&&!
 	$(link_opt) +
@@ -235,14 +219,6 @@ DP83815.RDV : $(dp83815_objs)
 	$(dp83815_objs)
 	DP83815.RDV
 	DP83815;
-!
-
-RTL8139.RDV : $(rtl8139_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(rtl8139_objs)
-	RTL8139.RDV
-	RTL8139;
 !
 
 8255x.RDV : $(8255x_objs)

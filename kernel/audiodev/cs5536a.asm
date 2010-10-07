@@ -75,7 +75,7 @@ AcFlags         DB ?
 
 audio_channel_struc ENDS
 
-audio_dev_data_seg	SEGMENT AT 0
+data    SEGMENT byte public 'DATA'
 
 IoBase      DW ?
 
@@ -88,7 +88,7 @@ Ac5         audio_channel_struc <>
 Ac6         audio_channel_struc <>
 Ac7         audio_channel_struc <>
 
-audio_dev_data_seg  ENDS
+data    ENDS
 
 	.386p
 
@@ -96,7 +96,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -216,7 +215,6 @@ aiNot7:
 	ret
 AudioInt	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -238,7 +236,7 @@ read_codec	Proc far
     push cx
     push dx
 ;
-    mov dx,audio_dev_data_sel
+    mov dx,SEG data
     mov ds,dx
     mov cx,100
 
@@ -294,7 +292,6 @@ rcDone:
     ret
 read_codec  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -318,7 +315,7 @@ write_codec	Proc far
     push si
 ;
     mov si,ax
-    mov dx,audio_dev_data_sel
+    mov dx,SEG data
     mov ds,dx
     mov cx,100
 
@@ -353,7 +350,6 @@ wcDone:
     ret
 write_codec  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -454,7 +450,6 @@ cptDone:
     ret
 CreatePrdTable  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -499,7 +494,6 @@ fptDone:
     ret
 FreePrdTable  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -520,7 +514,7 @@ open_audio_out	Proc far
     push bx
     push dx
 ;
-    mov ax,audio_dev_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov dx,ds:IoBase
     add dx,ACC_BM0 + ACC_BM_PRD
@@ -534,7 +528,6 @@ open_audio_out	Proc far
     ret
 open_audio_out  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -553,7 +546,7 @@ close_audio_out	Proc far
     push bx
     push dx
 ;
-    mov ax,audio_dev_data_sel
+    mov ax,SEG data
     mov ds,ax
 ;
     mov dx,ds:Ac0.AcCmdIo
@@ -577,7 +570,6 @@ close_audio_out	Proc far
 close_audio_out  Endp
 
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -605,7 +597,7 @@ send_audio_out	Proc far
     mov fs,ax
     mov ax,es
     mov gs,ax
-    mov ax,audio_dev_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ax,flat_sel
     mov es,ax
@@ -713,7 +705,6 @@ saoDone:
     ret
 send_audio_out  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -735,7 +726,7 @@ pci01 	DW 0,	  0
 detect_name	DB 'CS5536-AC97',0
 
 detect_thread	proc far
-	mov ax,audio_dev_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	mov si,OFFSET PciVendorTab
 	xor ax,ax
@@ -805,7 +796,7 @@ init_ch_loop:
 ;    mov bx,0
 ;    WriteCodec
 ;
-    mov ax,audio_dev_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov bx,OFFSET Ac0
     call CreatePrdTable
@@ -846,16 +837,6 @@ init_dev	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
-	pusha
-	push ds
-;
-	mov bx,audio_dev_code_sel
-	InitDevice
-;
-	mov eax,SIZE audio_dev_data_seg
-	mov bx,audio_dev_data_sel
-	AllocateFixedSystemMem
-;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -891,9 +872,7 @@ init	PROC far
 	xor cl,cl
 	mov ax,send_audio_out_nr
 	RegisterOsGate
-;
-	pop ds
-	popa
+	clc
 	ret
 init	ENDP
 
