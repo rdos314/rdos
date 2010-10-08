@@ -1129,6 +1129,46 @@ void TControl::EnumerateControls(void *Data, void (*CallBack)(void *Data, TContr
 
 /*##########################################################################
 #
+#   Name       : TControl::GetControl
+#
+#   Purpose....: Get control from ControlId
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TControl *TControl::GetControl(int Id)
+{
+    TControl *control;
+    TControl *c = 0;
+
+    if (IsVisible())
+    {
+        Protect();
+
+        control = FControlList;
+
+        while (control && !c)
+        {
+            if (control->ControlId == Id)
+                c = control;
+
+            if (!c)
+                c = control->GetControl(Id);
+
+            if (!c)            
+                control = control->FNext;
+        }
+
+        Unprotect();
+    }
+
+    return c;
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::Redraw
 #
 #   Purpose....: Redraw control after specified time
@@ -2203,6 +2243,43 @@ void TControlThread::EnumerateControls(void *Data, void (*CallBack)(void *Data, 
 
 /*##########################################################################
 #
+#   Name       : TControlThread::GetControl
+#
+#   Purpose....: Get control from ControlId
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TControl *TControlThread::GetControl(int Id)
+{
+    TControl *control;
+    TControl *c = 0;
+
+    Protect();
+
+    control = FControlList;
+
+    while (control && !c)
+    {
+        if (control->ControlId == Id)
+            c = control;
+
+        if (!c)
+            c = control->GetControl(Id);
+
+        if (!c)            
+            control = control->FNext;
+    }
+
+    Unprotect();
+
+    return c;
+}
+
+/*##########################################################################
+#
 #   Name       : TControlThread::NotifyKeyPressed
 #
 #   Purpose....: Key pressed callback
@@ -2437,6 +2514,26 @@ void TControlThread::NotifyRightUp(int x, int y, int ButtonState, int KeyState)
     }
 
     Unprotect();
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::NotifyClick
+#
+#   Purpose....: Notify button clicked
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::NotifyClick(TControl *control, int x, int y)
+{
+    if (control->IsEnabled())
+    {
+        control->OnLeftDown(control->FXMin + x, control->FYMin + y, 0, 0);
+        control->OnLeftUp(control->FXMin + x, control->FYMin + y, 0, 0);
+    }
 }
 
 /*##########################################################################

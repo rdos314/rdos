@@ -75,6 +75,7 @@ public:
     void ClearRedraw();
 
     void EnumerateControls(void *Data, void (*CallBack)(void *Data, TControl *Control));
+    TControl *GetControl(int ControlId);
 
 	void (*OnChanged)(TControl *control);
 
@@ -162,6 +163,8 @@ public:
     void GetSize(int *x, int *y) const;
 
     void EnumerateControls(void *Data, void (*CallBack)(void *Data, TControl *Control));
+    TControl *GetControl(int ControlId);
+    void NotifyClick(TControl *Control, int x, int y);
 
 	void NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 	void NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);

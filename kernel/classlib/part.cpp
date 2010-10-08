@@ -1259,17 +1259,10 @@ TFsPartition *TDiscPartition::Add(const char *FsName, long Sectors)
 *##########################################################################*/
 void TDiscPartition::Delete(int Entry)
 {
-        TPartition *Part;
-        int i;
+    TPartition *Part;
+    int i;
 
-        Part = PartArr[Entry];
-        if (Part->FParent)
-        {
-                Part->FParent->FreeEntry(Part->FControlEntry);
-                delete Part;
-
-                PartCount--;
-                for (i = Entry; i < PartCount; i++)
-                        PartArr[i] = PartArr[i+1];
-        }
+    Part = PartArr[Entry];
+    if (Part->FParent)
+        Part->FParent->FreeEntry(Part->FControlEntry);
 }

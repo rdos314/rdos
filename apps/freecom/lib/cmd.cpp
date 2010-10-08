@@ -810,6 +810,7 @@ int TCommand::ParseOptions(void *arg)
 			    {
 			        FArgList = argv->FList;
 			        delete argv;
+			        argv = 0;
 			    }
 			    else
 			    {
@@ -820,6 +821,7 @@ int TCommand::ParseOptions(void *arg)
 			        {
 			            curr->FList = argv->FList;
 			            delete argv;
+    			        argv = 0;
 			        }
 			    }
 				FOptCount++;
@@ -834,8 +836,9 @@ int TCommand::ParseOptions(void *arg)
 		}
 		else
     	    FArgCount++;
-	
-		argv = argv->FList;
+
+        if (argv)	
+    		argv = argv->FList;
 	}
 
 	return E_None;
