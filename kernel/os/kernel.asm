@@ -570,10 +570,6 @@ init_no_bda:
     xor eax,ecx
     jz init_cpu_ok
 ;
-    mov eax,cr4
-    or al,1
-    mov cr4,eax
-;
     mov ds:cpu_type,4
     mov eax,ecx
     xor eax,200000h
@@ -599,6 +595,15 @@ init_no_bda:
     mov ds:cpu_type,al       
 
 init_cpu_ok:
+    mov eax,ds:cpu_feature_flags
+    test al,2
+    jz init_cpu_vme_ok
+;
+    mov eax,cr4
+    or al,1
+    mov cr4,eax
+
+init_cpu_vme_ok:
     mov eax,ds:cpu_feature_flags
     test al,1
     jz init_no_fpu

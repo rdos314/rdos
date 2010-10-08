@@ -300,7 +300,7 @@ void TButtonFactoryParam::Define(TBitmapGraphicDevice *bitmap, int x, int y)
     Delete();
     
     Bitmap = new TBitmapGraphicDevice(*bitmap);
-	HotX = x;
+        HotX = x;
     HotY = y;
 }
 
@@ -347,17 +347,17 @@ TButtonFactory::TButtonFactory()
 
     FDisabled.BorderWidth = 0;
     
-	FDisabled.ButtonR = 128;
-	FDisabled.ButtonG = 128;
-	FDisabled.ButtonB = 128;
+        FDisabled.ButtonR = 128;
+        FDisabled.ButtonG = 128;
+        FDisabled.ButtonB = 128;
 
-	FDisabled.ShadowR = 128;
-	FDisabled.ShadowG = 128;
-	FDisabled.ShadowB = 128;
+        FDisabled.ShadowR = 128;
+        FDisabled.ShadowG = 128;
+        FDisabled.ShadowB = 128;
 
-	FDisabled.DrawR = 150;
-	FDisabled.DrawG = 150;
-	FDisabled.DrawB = 150;
+        FDisabled.DrawR = 150;
+        FDisabled.DrawG = 150;
+        FDisabled.DrawB = 150;
 }
 
 /*##########################################################################
@@ -1109,9 +1109,9 @@ void TButtonFactory::SetUpDarkBorderColor(int r, int g, int b)
 ##########################################################################*/
 void TButtonFactory::SetDownDarkBorderColor(int r, int g, int b)
 {
-	 FDown.BorderDarkR = r;
-	 FDown.BorderDarkG = g;
-	 FDown.BorderDarkB = b;
+         FDown.BorderDarkR = r;
+         FDown.BorderDarkG = g;
+         FDown.BorderDarkB = b;
 }
 
 /*##########################################################################
@@ -1127,9 +1127,9 @@ void TButtonFactory::SetDownDarkBorderColor(int r, int g, int b)
 ##########################################################################*/
 void TButtonFactory::SetDisabledDarkBorderColor(int r, int g, int b)
 {
-	 FDisabled.BorderDarkR = r;
-	 FDisabled.BorderDarkG = g;
-	 FDisabled.BorderDarkB = b;
+         FDisabled.BorderDarkR = r;
+         FDisabled.BorderDarkG = g;
+         FDisabled.BorderDarkB = b;
 }
 
 /*##########################################################################
@@ -1145,12 +1145,12 @@ void TButtonFactory::SetDisabledDarkBorderColor(int r, int g, int b)
 ##########################################################################*/
 void TButtonFactory::SetParam(TButtonControl *button)
 {
-	button->FUp = FUp;
-	button->FDown = FDown;
-	button->FDisabled = FDisabled;
+        button->FUp = FUp;
+        button->FDown = FDown;
+        button->FDisabled = FDisabled;
 
     if (FFont)
-    	button->SetFont(FFont);
+        button->SetFont(FFont);
 
     button->CreateBitmapButtons();
 }
@@ -1472,7 +1472,7 @@ TButtonControl::~TButtonControl()
 void TButtonControl::Init(char ch)
 {
     FUpBitmap = 0;
-	FDownBitmap = 0;
+        FDownBitmap = 0;
     FDisabledBitmap = 0;
 
     FFont = 0;
@@ -1482,17 +1482,17 @@ void TButtonControl::Init(char ch)
 
     FDisabled.BorderWidth = 0;
     
-	FDisabled.ButtonR = 128;
-	FDisabled.ButtonG = 128;
-	FDisabled.ButtonB = 128;
+        FDisabled.ButtonR = 128;
+        FDisabled.ButtonG = 128;
+        FDisabled.ButtonB = 128;
 
-	FDisabled.ShadowR = 128;
-	FDisabled.ShadowG = 128;
-	FDisabled.ShadowB = 128;
+        FDisabled.ShadowR = 128;
+        FDisabled.ShadowG = 128;
+        FDisabled.ShadowB = 128;
 
-	FDisabled.DrawR = 150;
-	FDisabled.DrawG = 150;
-	FDisabled.DrawB = 150;
+        FDisabled.DrawR = 150;
+        FDisabled.DrawG = 150;
+        FDisabled.DrawB = 150;
     
     FPressed = FALSE;
     FKey = ch;
@@ -1584,6 +1584,22 @@ void TButtonControl::SetText(TString &text)
 {
     FText = text;
     Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::GetText
+#
+#   Purpose....: Get text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TButtonControl::GetText()
+{
+    return FText.GetData();
 }
 
 /*##########################################################################
@@ -2058,6 +2074,22 @@ void TButtonControl::SetFont(TFont *Font)
 
 /*##########################################################################
 #
+#   Name       : TButtonControl::GetFont
+#
+#   Purpose....: Get font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFont *TButtonControl::GetFont()
+{
+    return FFont;
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonControl::SetUpButtonColor
 #
 #   Purpose....: Set button color for up button
@@ -2351,9 +2383,9 @@ void TButtonControl::SetUpDarkBorderColor(int r, int g, int b)
 ##########################################################################*/
 void TButtonControl::SetDownDarkBorderColor(int r, int g, int b)
 {
-	 FDown.BorderDarkR = r;
-	 FDown.BorderDarkG = g;
-	 FDown.BorderDarkB = b;
+         FDown.BorderDarkR = r;
+         FDown.BorderDarkG = g;
+         FDown.BorderDarkB = b;
 }
 
 /*##########################################################################
@@ -2369,9 +2401,9 @@ void TButtonControl::SetDownDarkBorderColor(int r, int g, int b)
 ##########################################################################*/
 void TButtonControl::SetDisabledDarkBorderColor(int r, int g, int b)
 {
-	 FDisabled.BorderDarkR = r;
-	 FDisabled.BorderDarkG = g;
-	 FDisabled.BorderDarkB = b;
+         FDisabled.BorderDarkR = r;
+         FDisabled.BorderDarkG = g;
+         FDisabled.BorderDarkB = b;
 }
 
 /*##########################################################################
@@ -2437,15 +2469,15 @@ TBitmapGraphicDevice *TButtonControl::CreateBitmap(TButtonFactoryParam &Param)
 
         GetSize(&xsize, &ysize);
     
-		height = Param.Bitmap->GetHeight();
-		width = Param.Bitmap->GetWidth();
-		  
-		temp = new TBitmapGraphicDevice(24, width, ysize);
-		temp->SetLgopNone();
+                height = Param.Bitmap->GetHeight();
+                width = Param.Bitmap->GetWidth();
+                  
+                temp = new TBitmapGraphicDevice(24, width, ysize);
+                temp->SetLgopNone();
 
-		if (height > ysize)
-		{
-		    for (i = 0; i < ysize; i++)
+                if (height > ysize)
+                {
+                    for (i = 0; i < ysize; i++)
                 temp->Blit(Param.Bitmap, 0, i, 0, i, width, 1);
 
             for (i = ysize / 2; i < ysize; i++)
@@ -2453,22 +2485,22 @@ TBitmapGraphicDevice *TButtonControl::CreateBitmap(TButtonFactoryParam &Param)
         }
         else
         {
-		    for (i = 0; i < yhot; i++)
+                    for (i = 0; i < yhot; i++)
                 temp->Blit(Param.Bitmap, 0, i, 0, i, width, 1);
 
-		    for (i = yhot; i < ysize - height + yhot; i++)
+                    for (i = yhot; i < ysize - height + yhot; i++)
                 temp->Blit(Param.Bitmap, 0, yhot, 0, i, width, 1);
 
-		    for (i = yhot; i < height; i++)
+                    for (i = yhot; i < height; i++)
                 temp->Blit(Param.Bitmap, 0, i, 0, i + ysize - height, width, 1);
         }
-		  
-		bitmap = new TBitmapGraphicDevice(24, xsize, ysize);
-		bitmap->SetLgopNone();
+                  
+                bitmap = new TBitmapGraphicDevice(24, xsize, ysize);
+                bitmap->SetLgopNone();
 
-		if (width > xsize)
-		{
-		    for (i = 0; i < xsize; i++)
+                if (width > xsize)
+                {
+                    for (i = 0; i < xsize; i++)
                 bitmap->Blit(temp, i, 0, i, 0, 1, ysize);
 
             for (i = xsize / 2; i < xsize; i++)
@@ -2476,13 +2508,13 @@ TBitmapGraphicDevice *TButtonControl::CreateBitmap(TButtonFactoryParam &Param)
         }
         else
         {
-		    for (i = 0; i < xhot; i++)
+                    for (i = 0; i < xhot; i++)
                 bitmap->Blit(temp, i, 0, i, 0, 1, ysize);
 
-		    for (i = xhot; i < xsize - width + xhot; i++)
+                    for (i = xhot; i < xsize - width + xhot; i++)
                 bitmap->Blit(temp, xhot, 0, i, 0, 1, ysize);
 
-		    for (i = xhot; i < width; i++)
+                    for (i = xhot; i < width; i++)
                 bitmap->Blit(temp, i, 0, i + xsize - width, 0, 1, ysize);
         }
 
@@ -2551,14 +2583,14 @@ void TButtonControl::PaintDescrButton(TGraphicDevice *dev, int xstart, int ystar
             if (FUp.BorderWidth < size)
             {
                 dev->SetDrawColor(FUp.BorderLightR, FUp.BorderLightG, FUp.BorderLightB);
-			    for (i = 0; i < FUp.BorderWidth; i++)
-			    {
+                            for (i = 0; i < FUp.BorderWidth; i++)
+                            {
                     dev->DrawLine(xstart + i, ystart + i, xstart + i, ystart + ysize - i - 1);
                     dev->DrawLine(xstart + i, ystart + i, xstart + xsize - i - 1, ystart + i);
                 }
 
                 dev->SetDrawColor(FUp.BorderDarkR, FUp.BorderDarkG, FUp.BorderDarkB);
-				for (i = 0; i < FUp.BorderWidth; i++)
+                                for (i = 0; i < FUp.BorderWidth; i++)
                 {
                     dev->DrawLine(xstart + xsize - i - 1, ystart + i, xstart + xsize - i - 1, ystart + ysize - i - 1);
                     dev->DrawLine(xstart + i, ystart + ysize - i - 1, xstart + xsize - i - 1, ystart + ysize - i - 1);
@@ -2574,8 +2606,8 @@ void TButtonControl::PaintDescrButton(TGraphicDevice *dev, int xstart, int ystar
             if (FDown.BorderWidth < size)
             {
                 dev->SetDrawColor(FDown.BorderDarkR, FDown.BorderDarkG, FDown.BorderDarkB);
-			    for (i = 0; i < FDown.BorderWidth; i++)
-			    {
+                            for (i = 0; i < FDown.BorderWidth; i++)
+                            {
                     dev->DrawLine(xstart + i, ystart + i, xstart + i, ystart + ysize - i - 1);
                     dev->DrawLine(xstart + i, ystart + i, xstart + xsize - i - 1, ystart + i);
                 }
@@ -2590,14 +2622,14 @@ void TButtonControl::PaintDescrButton(TGraphicDevice *dev, int xstart, int ystar
             if (FDisabled.BorderWidth < size)
             {
                 dev->SetDrawColor(FDisabled.BorderLightR, FDisabled.BorderLightG, FDisabled.BorderLightB);
-			    for (i = 0; i < FDisabled.BorderWidth; i++)
-			    {
+                            for (i = 0; i < FDisabled.BorderWidth; i++)
+                            {
                     dev->DrawLine(xstart + i, ystart + i, xstart + i, ystart + ysize - i - 1);
                     dev->DrawLine(xstart + i, ystart + i, xstart + xsize - i - 1, ystart + i);
                 }
 
                 dev->SetDrawColor(FDisabled.BorderDarkR, FDisabled.BorderDarkG, FDisabled.BorderDarkB);
-				for (i = 0; i < FDisabled.BorderWidth; i++)
+                                for (i = 0; i < FDisabled.BorderWidth; i++)
                 {
                     dev->DrawLine(xstart + xsize - i - 1, ystart + i, xstart + xsize - i - 1, ystart + ysize - i - 1);
                     dev->DrawLine(xstart + i, ystart + ysize - i - 1, xstart + xsize - i - 1, ystart + ysize - i - 1);
@@ -2668,7 +2700,7 @@ void TButtonControl::DrawAliasedText(TGraphicDevice *dev, TButtonFactoryParam &P
     dev->DrawString(x - 1, y + 1, text);
     dev->DrawString(x + 1, y - 1, text);
 
-	 dev->SetDrawColor(Param.DrawR, Param.DrawG, Param.DrawB);
+         dev->SetDrawColor(Param.DrawR, Param.DrawG, Param.DrawB);
     dev->DrawString(x, y, text);
 }
 
@@ -2693,7 +2725,7 @@ void TButtonControl::PaintButton(TGraphicDevice *dev, int xstart, int ystart, in
             else
                 PaintDescrButton(dev, xstart, ystart, xsize, ysize, state);
 
-		    DrawAliasedText(dev, FUp, xstart, ystart, xsize, ysize);
+                    DrawAliasedText(dev, FUp, xstart, ystart, xsize, ysize);
             break;
 
         case STATE_DOWN:
@@ -2702,7 +2734,7 @@ void TButtonControl::PaintButton(TGraphicDevice *dev, int xstart, int ystart, in
             else
                 PaintDescrButton(dev, xstart, ystart, xsize, ysize, state);
 
-		    DrawAliasedText(dev, FDown, xstart, ystart, xsize, ysize);
+                    DrawAliasedText(dev, FDown, xstart, ystart, xsize, ysize);
             break;
         
         case STATE_DISABLED:
@@ -2711,7 +2743,7 @@ void TButtonControl::PaintButton(TGraphicDevice *dev, int xstart, int ystart, in
             else
                 PaintDescrButton(dev, xstart, ystart, xsize, ysize, state);
 
-		    DrawAliasedText(dev, FDisabled, xstart, ystart, xsize, ysize);
+                    DrawAliasedText(dev, FDisabled, xstart, ystart, xsize, ysize);
             break;
     }
 }
@@ -2866,28 +2898,28 @@ void TButtonControl::NotifyResize()
 ##########################################################################*/
 void TButtonControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
-	int xmax = xmin + width - 1;
-	int ymax = ymin + height - 1;
+        int xmax = xmin + width - 1;
+        int ymax = ymin + height - 1;
 
-	if (IsVisible())
-	{
-		SetClipRect(    dev,
-						xmin, ymin,
-						xmax, ymax);
+        if (IsVisible())
+        {
+                SetClipRect(    dev,
+                                                xmin, ymin,
+                                                xmax, ymax);
 
-		dev->SetLgopNone();
-		dev->SetFilledStyle();
+                dev->SetLgopNone();
+                dev->SetFilledStyle();
 
         if (IsEnabled())
         {
             if (FPressed)
-					 PaintButton(dev, xmin, ymin, width, height, STATE_DOWN);
-				else
-					 PaintButton(dev, xmin, ymin, width, height, STATE_UP);
-		  }
-		  else
-				PaintButton(dev, xmin, ymin, width, height, STATE_DISABLED);
-	 }
+                                         PaintButton(dev, xmin, ymin, width, height, STATE_DOWN);
+                                else
+                                         PaintButton(dev, xmin, ymin, width, height, STATE_UP);
+                  }
+                  else
+                                PaintButton(dev, xmin, ymin, width, height, STATE_DISABLED);
+         }
     else
     {
         FPressed = FALSE;

@@ -163,6 +163,8 @@ public:
     void SetText(const char *text);
     void SetText(TString &text);
 
+    const char *GetText();
+
     void SetKey(char key);
 
     void DefineUp(TBitmapGraphicDevice *bitmap, int x, int y);
@@ -182,6 +184,8 @@ public:
 
     void SetFont(int height);
     void SetFont(TFont *Font);
+
+    TFont *GetFont();
     
     void SetUpButtonColor(int r, int g, int b);
     void SetDownButtonColor(int r, int g, int b);
