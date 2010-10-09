@@ -113,7 +113,6 @@ int TKeybCommand::Execute(char *param)
     }
     else
     {
-        strupr(param);
         if (!RdosSetKeyMap(param))
         {
              FMsg.Load(TEXT_ERROR_INVALID_KEYB);

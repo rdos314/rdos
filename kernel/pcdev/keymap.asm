@@ -405,10 +405,10 @@ AddScanTable    Endp
         extrn scan_tab_uk:near
         extrn scan_tab_us:near
 
-name_fr DB 'FR', 0
-name_sw DB 'SW', 0
-name_uk DB 'UK', 0
-name_us DB 'US', 0
+name_fr DB 'fr', 0
+name_sw DB 'sw', 0
+name_uk DB 'uk', 0
+name_us DB 'us', 0
 
 AddInternal    Proc near
     push ds
