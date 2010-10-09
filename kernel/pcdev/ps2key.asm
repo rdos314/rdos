@@ -20,23 +20,23 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; KEY.ASM
-; Basic keyboard support module.
+; PS2KEY.ASM
+; PS2 keyboard only support module.
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
-		NAME key
+		NAME ps2key
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 GateSize = 16
 
-INCLUDE protseg.def
+INCLUDE ..\os\protseg.def
 INCLUDE ..\driver.def
-INCLUDE port.def
+INCLUDE ..\os\port.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
-INCLUDE system.inc
+INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE key.inc
@@ -62,291 +62,20 @@ ctrl_F10	EQU 9
 status_key_req		EQU 1
 status_key_ack		EQU 4
 
-key_data_seg	STRUC
+data    SEGMENT byte public 'DATA'
 
 mode_thread		DW ?
 command			DB ?
 status			DB ?
 focus_req       DB ?
 
-key_data_seg	ENDS
+data    ENDS
 
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
-
-	extrn scan_code_tab:near
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			dummy_scan
-;
-;		DESCRIPTION:	Handle unsupported keys
-;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-dummy_scan	PROC near
-	stc 
-	ret
-dummy_scan	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			state_scan
-;
-;		DESCRIPTION:	Handle state key
-;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-state_scan	PROC near
-    and ax,80h
-	clc
-	ret
-state_scan	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			del_scan
-;
-;		DESCRIPTION:	Handle DEL key
-;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-del_scan	PROC near
-    push ax
-    GetKeyboardState
-    mov cx,ax
-    pop ax
-;
-	and cx,alt_pressed OR ctrl_pressed
-	cmp cx,alt_pressed OR ctrl_pressed
-	jne num_scan
-;
-    CpuReset
-	ret
-del_scan	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			handle_scan
-;
-;		DESCRIPTION:	Handle a scan
-;
-;		PARAMETERS:		AL      scan code
-;                       CX      State
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-handle_scan Proc near
-    test cx,ctrl_pressed
-    jz handle_not_ctrl
-;
-	mov ah,cs:[bx].ctrl_code
-	cmp ah,-1
-    jne handle_check
-
-handle_not_ctrl:
-    test cx,alt_pressed
-    jz handle_not_alt
-;
-	mov ah,cs:[bx].alt_code
-	cmp ah,-1
-    jne handle_check
-
-handle_not_alt:
-    test cx,shift_pressed
-    jz handle_not_shift
-;
-	mov ah,cs:[bx].shift_code
-	cmp ah,-1
-    jne handle_check
-
-handle_not_shift:
-	mov ah,cs:[bx].normal_code
-
-handle_check:
-	or ah,ah
-	jne handle_no_ext
-;
-    mov cl,al
-	movzx ax,byte ptr cs:[bx].ext_code
-	and cl,80h
-	or al,cl
-	
-handle_no_ext:
-    clc
-    ret
-handle_scan Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			simple_scan
-;
-;		DESCRIPTION:	Handle normal keys
-;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-simple_scan	PROC near
-    push ax
-    GetKeyboardState
-    mov cx,ax
-    pop ax
-    call handle_scan
-	ret
-simple_scan	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			caps_scan
-;
-;		DESCRIPTION:	Handle case sensitive keys
-;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-caps_scan	PROC near
-    push ax
-    GetKeyboardState
-    mov cx,ax
-    pop ax
-;
-	and cx,107h
-	xor cl,ch
-	and cx,7
-	call handle_scan
-	ret
-caps_scan	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			num_scan
-;
-;		DESCRIPTION:	Handle numeric keys
-;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-num_scan	PROC near
-    push ax
-    GetKeyboardState
-    mov cx,ax
-    pop ax
-;
-	and cx,205h
-	shr ch,1
-	xor cl,ch
-	xor ch,ch
-	add bx,cx
-	cmp cx,1
-	jne num_sc_no_num
-;
-	mov ah,cs:[bx]
-	jmp num_sc_end
-	
-num_sc_no_num:
-    mov cl,al
-	movzx ax,byte ptr cs:[bx]
-	and cl,80h
-	or al,cl
-
-num_sc_end:
-	clc
-	ret
-num_scan	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			f_key_scan
-;
-;		DESCRIPTION:	Handle function keys
-;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-f_key_scan	PROC near
-    push ax
-    GetKeyboardState
-    mov cx,ax
-    pop ax
-    call handle_scan
-    xor ah,ah
-	ret
-f_key_scan	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			decode_scan_code
-;
-;		DESCRIPTION:	Decode scan code
-;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-key_type_tab:
-kt00    DW OFFSET dummy_scan
-kt01    DW OFFSET simple_scan
-kt02    DW OFFSET caps_scan
-kt03    DW OFFSET state_scan
-kt04    DW OFFSET num_scan
-kt05    DW OFFSET del_scan
-kt06    DW OFFSET f_key_scan
-
-decode_scan_code	PROC near
-    push di
-;
-    movzx bx,al
-    and bl,NOT 80h
-    mov dh,al
-	shl bx,3
-	add bx,OFFSET scan_code_tab
-;
-    xor di,di
-	push ax
-	GetKeyboardState
-	mov cx,ax
-	pop ax
-	test cx,ext_numpad_active
-	jz decode_scan_get_vk
-;
-	inc di
-	
-decode_scan_get_vk:
-	mov dl,byte ptr cs:[bx+di].vk_code
-;
-    movzx di,byte ptr cs:[bx].key_type
-    add di,di
-	call word ptr cs:[di].key_type_tab
-	jc decode_scan_done
-;
-    PutKeyboardCode
-
-decode_scan_done:
-    pop di
-	ret
-decode_scan_code	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1001,7 +730,7 @@ pFF	DW	OFFSET normal_scan
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TimeoutCommand	Proc far
-	mov ax,pc_key_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	in al,64h
 	test al,2
@@ -1103,7 +832,7 @@ mode_name	DB 'Keyboard LEDs',0
 
 mode_pr:
 	sti
-	mov ax,pc_key_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	GetThread
 	mov ds:mode_thread,ax
@@ -1214,7 +943,7 @@ keyb_int_numpad_handled:
 	call word ptr cs:[bx].handle_scan_code_tab
 	jc keyb_int_done
 ;
-    call decode_scan_code
+    ProcessKeyScan
 
 keyb_int_done:
 	ret
@@ -1234,7 +963,7 @@ init_keyb_thread	PROC far
 	push es
 	pusha
 ;
-	mov bx,pc_key_data_sel
+	mov bx,SEG data
 	mov ds,bx
 	mov al,1
 	mov bx,cs
@@ -1274,35 +1003,18 @@ init_keyb_thread	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
-	push ds
-	push es
-	pusha
-	mov bx,pc_key_code_sel
-	InitDevice
-;
 	mov ax,cs
+	mov ds,ax
 	mov es,ax
 	mov di,OFFSET init_keyb_thread
 	HookInitTasking
 ;
-	mov bx,pc_key_data_sel
-	mov eax,SIZE key_data_seg
-	AllocateFixedSystemMem
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-;
-	mov ax,pc_key_data_sel
+	mov ax,SEG data
 	mov ds,ax
 	xor ax,ax
 	mov ds:mode_thread,ax
 	mov ds:status,0
 	mov ds:focus_req,0
-;
-	popa
-	pop es
-	pop ds
 	ret
 init	ENDP
 
