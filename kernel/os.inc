@@ -1448,6 +1448,11 @@ HookShiftKeys	MACRO
 	OsGate hook_shift_keys_nr
 					ENDM
 
+;	AL          Scan code
+ProcessKeyScan	MACRO
+	OsGate process_key_scan_nr
+					ENDM
+
 ;	AX          Keyboard state
 SetKeyboardState	MACRO
 	OsGate set_keyboard_state_nr

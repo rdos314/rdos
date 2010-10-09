@@ -62,6 +62,285 @@ data    ENDS
 code    SEGMENT byte public use16 'CODE'
 
         assume cs:code
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			dummy_scan
+;
+;		DESCRIPTION:	Handle unsupported keys
+;
+;		PARAMETERS:		AL		scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+dummy_scan	PROC near
+	stc 
+	ret
+dummy_scan	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			state_scan
+;
+;		DESCRIPTION:	Handle state key
+;
+;		PARAMETERS:		AL		scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+state_scan	PROC near
+    and ax,80h
+	clc
+	ret
+state_scan	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			del_scan
+;
+;		DESCRIPTION:	Handle DEL key
+;
+;		PARAMETERS:		AL		scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+del_scan	PROC near
+    push ax
+    GetKeyboardState
+    mov cx,ax
+    pop ax
+;
+	and cx,alt_pressed OR ctrl_pressed
+	cmp cx,alt_pressed OR ctrl_pressed
+	jne num_scan
+;
+    CpuReset
+	ret
+del_scan	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			handle_scan
+;
+;		DESCRIPTION:	Handle a scan
+;
+;		PARAMETERS:		AL      scan code
+;                       CX      State
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_scan Proc near
+    test cx,ctrl_pressed
+    jz handle_not_ctrl
+;
+	mov ah,cs:[bx].ctrl_code
+	cmp ah,-1
+    jne handle_check
+
+handle_not_ctrl:
+    test cx,alt_pressed
+    jz handle_not_alt
+;
+	mov ah,cs:[bx].alt_code
+	cmp ah,-1
+    jne handle_check
+
+handle_not_alt:
+    test cx,shift_pressed
+    jz handle_not_shift
+;
+	mov ah,cs:[bx].shift_code
+	cmp ah,-1
+    jne handle_check
+
+handle_not_shift:
+	mov ah,cs:[bx].normal_code
+
+handle_check:
+	or ah,ah
+	jne handle_no_ext
+;
+    mov cl,al
+	movzx ax,byte ptr cs:[bx].ext_code
+	and cl,80h
+	or al,cl
+	
+handle_no_ext:
+    clc
+    ret
+handle_scan Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			simple_scan
+;
+;		DESCRIPTION:	Handle normal keys
+;
+;		PARAMETERS:		AL		scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+simple_scan	PROC near
+    push ax
+    GetKeyboardState
+    mov cx,ax
+    pop ax
+    call handle_scan
+	ret
+simple_scan	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			caps_scan
+;
+;		DESCRIPTION:	Handle case sensitive keys
+;
+;		PARAMETERS:		AL		scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+caps_scan	PROC near
+    push ax
+    GetKeyboardState
+    mov cx,ax
+    pop ax
+;
+	and cx,107h
+	xor cl,ch
+	and cx,7
+	call handle_scan
+	ret
+caps_scan	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			num_scan
+;
+;		DESCRIPTION:	Handle numeric keys
+;
+;		PARAMETERS:		AL		scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+num_scan	PROC near
+    push ax
+    GetKeyboardState
+    mov cx,ax
+    pop ax
+;
+	and cx,205h
+	shr ch,1
+	xor cl,ch
+	xor ch,ch
+	add bx,cx
+	cmp cx,1
+	jne num_sc_no_num
+;
+	mov ah,cs:[bx]
+	jmp num_sc_end
+	
+num_sc_no_num:
+    mov cl,al
+	movzx ax,byte ptr cs:[bx]
+	and cl,80h
+	or al,cl
+
+num_sc_end:
+	clc
+	ret
+num_scan	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			f_key_scan
+;
+;		DESCRIPTION:	Handle function keys
+;
+;		PARAMETERS:		AL		scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+f_key_scan	PROC near
+    push ax
+    GetKeyboardState
+    mov cx,ax
+    pop ax
+    call handle_scan
+    xor ah,ah
+	ret
+f_key_scan	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			decode_scan_code
+;
+;		DESCRIPTION:	Decode scan code
+;
+;		PARAMETERS:		AL		scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+key_type_tab:
+kt00    DW OFFSET dummy_scan
+kt01    DW OFFSET simple_scan
+kt02    DW OFFSET caps_scan
+kt03    DW OFFSET state_scan
+kt04    DW OFFSET num_scan
+kt05    DW OFFSET del_scan
+kt06    DW OFFSET f_key_scan
+
+process_key_scan_name   DB 'Process Key Scan', 0
+
+process_key_scan   Proc far 
+    push ds
+    push es
+    pusha
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov ds,ds:curr_scan
+    movzx bx,al
+    and bl,NOT 80h
+    mov dh,al
+	shl bx,3
+	add bx,ds:st_offs
+	mov es,ds:st_sel
+;
+    xor di,di
+	push ax
+	GetKeyboardState
+	mov cx,ax
+	pop ax
+	test cx,ext_numpad_active
+	jz proc_scan_get_vk
+;
+	inc di
+	
+proc_scan_get_vk:
+	mov dl,byte ptr es:[bx+di].vk_code
+;
+    movzx di,byte ptr es:[bx].key_type
+    add di,di
+	call word ptr es:[di].key_type_tab
+	jc proc_scan_done
+;
+    PutKeyboardCode
+
+proc_scan_done:
+    popa
+    pop es
+    pop ds
+	ret
+process_key_scan	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -281,40 +560,6 @@ set_key_layout32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   init_keymap
-;
-;               DESCRIPTION:    Init device-driver
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-keymap_name     DB 'Keymap', 0
-
-keymap_thread:
-    int 3
-    retf
-
-init_keymap     Proc far
-        push ds
-        push es
-;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov di,OFFSET keymap_name
-        mov si,OFFSET keymap_thread
-        mov ax,4
-        mov cx,100h
-        CreateThread
-;
-        pop es
-        pop ds
-        ret
-init_keymap     Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;               NAME:                   init
 ;
 ;               DESCRIPTION:    Init device-driver
@@ -322,15 +567,17 @@ init_keymap     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET init_keymap
-    HookInitTasking
-;
     call AddInternal
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov si,OFFSET process_key_scan
+    mov di,OFFSET process_key_scan_name
+    xor cl,cl
+    mov ax,process_key_scan_nr
+    RegisterOsGate
 ;
     mov bx,OFFSET get_key_layout16
     mov si,OFFSET get_key_layout32
@@ -344,10 +591,9 @@ init    PROC far
     mov di,OFFSET set_key_layout_name
     mov dx,virt_es_in
     mov ax,set_key_layout_nr
-    RegisterUserGate
-        
-        clc
-        ret
+    RegisterUserGate    
+    clc
+    ret
 init    ENDP
 
 code    ENDS

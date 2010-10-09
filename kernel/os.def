@@ -536,5 +536,7 @@ get_acpi_table_nr           EQU 376
 
 allocate_debug_local_linear_nr  EQU 377
 
+process_key_scan_nr         EQU 378
+
 osgate_entries				EQU 380
 
