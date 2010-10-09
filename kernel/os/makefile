@@ -51,13 +51,8 @@ ir_srcs = IR.ASM
 ir_objs = $(ir_srcs:.ASM=.OBJ)
 ir_rdvs = IR.RDV
 
-pcshut_srcs = PCSHUT.ASM
-pcshut_objs = $(pcshut_srcs:.ASM=.OBJ)
-pcshut_exes = PCSHUT.EXE
-
 srcs =      $(key_srcs) \
 			$(keym_srcs) \
-			$(pcshut_srcs)   \
 			$(prot_srcs) $(file_srcs) \
 			$(ir_srcs) $(wd_srcs)
 
@@ -69,7 +64,7 @@ incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
 			INT.DEF			       \
 			FAT.INC                 DOS.INC
 
-exes =      $(prot_exes) $(pcshut_exes)
+exes =      $(prot_exes)
 
 rdvs =      $(keym_rdvs)  \
 			$(key_rdvs)   \
@@ -124,14 +119,6 @@ userint.obj:    userint.asm
 OS.OBJ :        ..\os.def
 
 USER.OBJ :      ..\user.def
-
-PCSHUT.EXE : $(pcshut_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(pcshut_objs)
-	PCSHUT
-	PCSHUT;       
-!
 
 IR.RDV : $(ir_objs)
     tlink @&&!
