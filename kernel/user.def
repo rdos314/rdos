@@ -494,4 +494,7 @@ get_image_data_nr           = 401
 allocate_debug_app_mem_nr   = 402
 free_debug_app_mem_nr       = 403
 
+get_key_layout_nr           = 404
+set_key_layout_nr           = 405
+
 usergate_entries			= 410

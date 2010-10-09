@@ -1737,3 +1737,17 @@ Shows contents of RDOS image file, or running configuration
 
 SYSINFO <image file base>
 .
+
+:TEXT_CMDHELP_KEYB
+Show or set keyboard map
+
+KEYB [map name]
+.
+
+:TEXT_MSG_CURRENT_KEYB
+Current keyboard map: %s
+.
+
+:TEXT_ERROR_INVALID_KEYB
+Invalid keyboard map
+.

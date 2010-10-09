@@ -494,3 +494,6 @@
 #define CallGate_allocate_debug_app_mem 0x9a 146 1 0 0 2 0
 #define CallGate_free_debug_app_mem 0x9a 147 1 0 0 2 0
 
+#define CallGate_get_key_layout 0x9a 148 1 0 0 2 0
+#define CallGate_set_key_layout 0x9a 149 1 0 0 2 0
+

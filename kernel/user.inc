@@ -1677,6 +1677,16 @@ UnmapView        MACRO
 
 ;;;;;;;;;;; KEYBOARD ;;;;;;;;;;;;;
 
+;  IN  ES:(E)DI     Layout name buffer (must be at least 3 bytes)
+GetKeyboardLayout    MACRO
+	UserGate get_key_layout_nr
+						ENDM
+
+;  IN  ES:(E)DI     Layout name
+SetKeyboardLayout    MACRO
+	UserGate set_key_layout_nr
+						ENDM
+
 ; OUT  AX			Character read
 ReadKeyboard    MACRO
 	UserGate read_keyboard_nr

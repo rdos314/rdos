@@ -24,8 +24,8 @@
 ; Keyboard mapper module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME keymap
+                                                
+                NAME keymap
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -57,18 +57,18 @@ scan_list   DW ?
 
 data    ENDS
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:		    AddScanTable
+;               NAME:               AddScanTable
 ;
-;		DESCRIPTION:	Adds new scan-table
+;               DESCRIPTION:    Adds new scan-table
 ;
 ;       PARAMETERS:     DS:BX      Table offset
 ;                       ES:DI      Name
@@ -110,21 +110,21 @@ AddScanTable    Proc near
 AddScanTable    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:		    AddInternal
+;               NAME:               AddInternal
 ;
-;		DESCRIPTION:	Add internal scan-tables
+;               DESCRIPTION:    Add internal scan-tables
 ;
 ;       PARAMETERS:     DS:BX      Table offset
 ;                       ES:DI      Name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	extrn scan_tab_fr:near
-	extrn scan_tab_sw:near
-	extrn scan_tab_uk:near
-	extrn scan_tab_us:near
+        extrn scan_tab_fr:near
+        extrn scan_tab_sw:near
+        extrn scan_tab_uk:near
+        extrn scan_tab_us:near
 
 name_fr DB 'FR', 0
 name_sw DB 'SW', 0
@@ -157,6 +157,11 @@ AddInternal    Proc near
     mov di,OFFSET name_us
     call AddScanTable
 ;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:scan_list
+    mov ds:curr_scan,ax    
+;
     pop di
     pop bx
     pop es
@@ -165,58 +170,186 @@ AddInternal    Proc near
 AddInternal    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			init_keymap
+;               NAME:               Get keyboard layout
 ;
-;		DESCRIPTION:	Init device-driver
+;               DESCRIPTION:    Get current keyboard layout
+;
+;       PARAMETERS:     ES:(E)DI      Buffer (must be at least 3 bytes)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-keymap_name	DB 'Keymap', 0
+get_key_layout_name DB 'Get Keyboard Layout', 0
+
+get_key_layout  Proc near
+    push ds
+    push ax
+;    
+    mov byte ptr es:[edi],0
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:curr_scan
+    or ax,ax
+    jz gklDone
+;
+    mov ds,ax
+    mov ax,word ptr ds:st_name
+    mov es:[edi],ax
+    mov byte ptr es:[edi+2],0
+
+gklDone:
+    pop ax
+    pop ds
+    ret
+get_key_layout  Endp
+
+get_key_layout16    Proc far
+    push edi
+    movzx edi,di
+    call get_key_layout
+    pop edi
+    ret
+get_key_layout16    Endp
+
+get_key_layout32    Proc far
+    call get_key_layout
+    retf32
+get_key_layout32    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:               Set keyboard layout
+;
+;               DESCRIPTION:    Set current keyboard layout
+;
+;       PARAMETERS:     ES:(E)DI      Requested layout name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_key_layout_name DB 'Set Keyboard Layout', 0
+
+set_key_layout  Proc near
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:scan_list
+
+sklLoop:
+    or ax,ax
+    stc
+    jz sklDone
+;
+    mov ds,ax
+    mov ax,word ptr ds:st_name
+    cmp ax,es:[edi]
+    je sklSet
+;
+    mov ax,ds:st_next
+    jmp sklLoop
+
+sklSet:
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    pop ax
+    mov ds:curr_scan,ax
+    clc
+    
+sklDone:
+    pop ax
+    pop ds
+    ret
+set_key_layout  Endp
+
+set_key_layout16    Proc far
+    push edi
+    movzx edi,di
+    call set_key_layout
+    pop edi
+    ret
+set_key_layout16    Endp
+
+set_key_layout32    Proc far
+    call set_key_layout
+    retf32
+set_key_layout32    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   init_keymap
+;
+;               DESCRIPTION:    Init device-driver
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+keymap_name     DB 'Keymap', 0
 
 keymap_thread:
     int 3
-    call AddInternal
     retf
 
-init_keymap	Proc far
-	push ds
-	push es
+init_keymap     Proc far
+        push ds
+        push es
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET keymap_name
-	mov si,OFFSET keymap_thread
-	mov ax,4
-	mov cx,100h
-	CreateThread
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET keymap_name
+        mov si,OFFSET keymap_thread
+        mov ax,4
+        mov cx,100h
+        CreateThread
 ;
-	pop es
-	pop ds
-	ret
-init_keymap	Endp
+        pop es
+        pop ds
+        ret
+init_keymap     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			init
+;               NAME:                   init
 ;
-;		DESCRIPTION:	Init device-driver
+;               DESCRIPTION:    Init device-driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET init_keymap
-	HookInitTasking
-	clc
-	ret
-init	ENDP
+init    PROC far
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET init_keymap
+    HookInitTasking
+;
+    call AddInternal
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov bx,OFFSET get_key_layout16
+    mov si,OFFSET get_key_layout32
+    mov di,OFFSET get_key_layout_name
+    mov dx,virt_es_in
+    mov ax,get_key_layout_nr
+    RegisterUserGate
+;
+    mov bx,OFFSET set_key_layout16
+    mov si,OFFSET set_key_layout32
+    mov di,OFFSET set_key_layout_name
+    mov dx,virt_es_in
+    mov ax,set_key_layout_nr
+    RegisterUserGate
+        
+        clc
+        ret
+init    ENDP
 
-code	ENDS
+code    ENDS
 
-	END init
+        END init

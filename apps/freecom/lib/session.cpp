@@ -75,6 +75,7 @@
 #include "info.h"
 #include "volume.h"
 #include "sysinfo.h"
+#include "keyb.h"
 
 #include "file.h"
 #include "path.h"
@@ -111,6 +112,7 @@ static TCommandFactory *help;
 static TCommandFactory *info;
 static TCommandFactory *initfd;
 static TCommandFactory *inithd;
+static TCommandFactory *keyb;
 static TCommandFactory *md;
 static TCommandFactory *mkdir;
 static TCommandFactory *mkpart;
@@ -193,6 +195,7 @@ TSession::TSession()
                 mkpart = new TMakePartitionFactory;
                 mkdir = new TMkdirFactory;
                 md = new TMdFactory;
+                keyb = new TKeybFactory;
                 inithd = new TInitHdFactory;
                 initfd = new TInitFdFactory;
                 info = new TInfoFactory;
