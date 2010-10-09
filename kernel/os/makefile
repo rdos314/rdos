@@ -39,36 +39,15 @@ wd_srcs = WD.ASM
 wd_objs = $(wd_srcs:.ASM=.OBJ)
 wd_rdvs = $(wd_srcs:.ASM=.RDV)
 
-key_srcs = KEY.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM SERKEY.ASM
-key_objs = $(key_srcs:.ASM=.OBJ)
-key_rdvs = KEYSW.RDV KEYUS.RDV KEYUK.RDV KEYFR.RDV SERKEY.RDV
-
-keym_srcs = KEYMOUSE.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM
-keym_objs = $(keym_srcs:.ASM=.OBJ)
-keym_rdvs = KEYMSW.RDV KEYMUS.RDV KEYMUK.RDV KEYMFR.RDV
-
 ir_srcs = IR.ASM 
 ir_objs = $(ir_srcs:.ASM=.OBJ)
 ir_rdvs = IR.RDV
 
-srcs =      $(key_srcs) \
-			$(keym_srcs) \
-			$(prot_srcs) $(file_srcs) \
-			$(ir_srcs) $(wd_srcs)
+srcs =      $(ir_srcs) $(wd_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
-incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
-			DISC.DEF                BIOSDATA.DEF    \
-			PROTSEG.INC            \
-			INT.DEF			       \
-			FAT.INC                 DOS.INC
-
-exes =      $(prot_exes)
-
-rdvs =      $(keym_rdvs)  \
-			$(key_rdvs)   \
-			$(ir_rdvs) $(wd_rdvs)
+rdvs =      $(ir_rdvs) $(wd_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -126,78 +105,6 @@ IR.RDV : $(ir_objs)
 	$(ir_objs)
 	IR.RDV
 	IR;
-!
-
-KEYSW.RDV : $(key_objs)
-    tlink @&&!
-	$(link_opt) +
-	KEY+KEYSW
-	KEYSW.RDV
-	KEYSW;
-!
-
-KEYUS.RDV : $(key_objs)
-    tlink @&&!
-	$(link_opt) +
-	KEY+KEYUS
-	KEYUS.RDV
-	KEYUS;
-!
-
-KEYUK.RDV : $(key_objs)
-    tlink @&&!
-	$(link_opt) +
-	KEY+KEYUK
-	KEYUK.RDV
-	KEYUK;
-!
-
-KEYFR.RDV : $(key_objs)
-    tlink @&&!
-	$(link_opt) +
-	KEY+KEYFR
-	KEYFR.RDV
-	KEYFR;
-!
-
-KEYMSW.RDV : $(keym_objs)
-    tlink @&&!
-	$(link_opt) +
-	KEYMOUSE+KEYSW
-	KEYMSW.RDV
-	KEYMSW;
-!
-
-KEYMUS.RDV : $(keym_objs)
-    tlink @&&!
-	$(link_opt) +
-	KEYMOUSE+KEYUS
-	KEYMUS.RDV
-	KEYMUS;
-!
-
-KEYMUK.RDV : $(keym_objs)
-    tlink @&&!
-	$(link_opt) +
-	KEYMOUSE+KEYUK
-	KEYMUK.RDV
-	KEYMUK;
-!
-
-KEYMFR.RDV : $(keym_objs)
-    tlink @&&!
-	$(link_opt) +
-	KEYMOUSE+KEYFR
-	KEYMFR.RDV
-	KEYMFR;
-!
-
-SERKEY.RDV : $(key_objs)
-    tlink @&&!
-	$(link_opt) +
-	SERKEY+KEYSW
-	SERKEY.RDV
-	SERKEY;
 !
 
 WD.RDV : $(wd_objs)
