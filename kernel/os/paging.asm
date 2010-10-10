@@ -940,8 +940,7 @@ page_fault_user_hook_end:
     jmp page_fault_user_retry
 
 page_fault_user_invalid:
-    mov al,14
-    call prot_exception
+    jmp page_fault_error
 
 page_fault_user_normal:
     push cs
@@ -1112,10 +1111,9 @@ page_fault_error:
     pop ax
     mov eax,cr2
     sti
-    int 3
     pop edi
     pop edx
-    pop cx
+    pop ecx
     pop es
     mov al,14
     call prot_exception
