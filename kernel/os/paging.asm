@@ -1440,21 +1440,24 @@ set_flat_linear_valid_name      DB 'Set Flat Linear Valid',0
 set_flat_linear_valid   PROC far
         push ds
         push eax
+        push bx
         push ecx
         push edx
-;
-        mov cx,process_page_sel
-        mov ds,cx
 ;
         or eax,eax
         jz set_valid_done
 ;
-        add edx,local_page_linear
+        mov bx,system_data_sel
+        mov ds,bx
+        add edx,ds:flat_base
         cmp edx,local_page_linear
         jc set_valid_done
 ;
         cmp edx,flat_size
         jae set_valid_done
+;
+        mov bx,process_page_sel
+        mov ds,bx
 ;
         mov ecx,eax
         add ecx,edx
@@ -1489,6 +1492,7 @@ set_valid_next:
 set_valid_done:
         pop edx
         pop ecx
+        pop bx
         pop eax
         pop ds
         retf32
@@ -1512,21 +1516,24 @@ set_flat_linear_invalid_name    DB 'Set Flat Linear Invalid',0
 set_flat_linear_invalid PROC far
         push ds
         push eax
+        push bx
         push ecx
         push edx
-;
-        mov cx,process_page_sel
-        mov ds,cx
 ;
         or eax,eax
         jz set_inv_done
 ;
-        add edx,local_page_linear
+        mov bx,system_data_sel
+        mov ds,bx
+        add edx,ds:flat_base
         cmp edx,local_page_linear
         jc set_inv_done
 ;
         cmp edx,flat_size
         jae set_inv_done
+;
+        mov bx,process_page_sel
+        mov ds,bx
 ;
         mov ecx,eax
         add ecx,edx
@@ -1586,6 +1593,7 @@ set_inv_done:
 ;    
         pop edx
         pop ecx
+        pop bx
         pop eax
         pop ds
         retf32
@@ -1609,21 +1617,24 @@ set_flat_linear_readwrite_name  DB 'Set Flat Linear Read/Write',0
 set_flat_linear_readwrite       PROC far
         push ds
         push eax
+        push bx
         push ecx
         push edx
-;
-        mov cx,process_page_sel
-        mov ds,cx
 ;
         or eax,eax
         jz set_readwrite_done
 ;
-        add edx,local_page_linear
+        mov bx,system_data_sel
+        mov ds,bx
+        add edx,ds:flat_base
         cmp edx,local_page_linear
         jc set_readwrite_done
 ;
         cmp edx,flat_size
         jae set_readwrite_done
+;
+        mov bx,process_page_sel
+        mov ds,bx
 ;
         mov ecx,eax
         add ecx,edx
@@ -1672,6 +1683,7 @@ set_readwrite_done:
 ;    
         pop edx
         pop ecx
+        pop bx
         pop eax
         pop ds
         retf32
@@ -1695,21 +1707,24 @@ set_flat_linear_read_name       DB 'Set Flat Linear Read',0
 set_flat_linear_read    PROC far
         push ds
         push eax
+        push bx
         push ecx
         push edx
-;
-        mov cx,process_page_sel
-        mov ds,cx
 ;
         or eax,eax
         jz set_read_done
 ;
-        add edx,local_page_linear
+        mov bx,system_data_sel
+        mov ds,bx
+        add edx,ds:flat_base
         cmp edx,local_page_linear
         jc set_read_done
 ;
         cmp edx,flat_size
         jae set_read_done
+;
+        mov bx,process_page_sel
+        mov ds,bx
 ;
         mov ecx,eax
         add ecx,edx
@@ -1746,6 +1761,7 @@ set_read_mark_next:
 set_read_done:
         pop edx
         pop ecx
+        pop bx
         pop eax
         pop ds
         retf32

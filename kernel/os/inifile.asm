@@ -24,8 +24,8 @@
 ; Ini file handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME inifile
+                                                
+                NAME inifile
 
 GateSize = 16
 
@@ -36,35 +36,36 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\handle.inc
+INCLUDE system.def
 
-ini_handle_seg	STRUC
+ini_handle_seg  STRUC
 
-ih_hheader	handle_header <>
+ih_hheader      handle_header <>
 
-ih_sel			DW ?
-ih_file_handle	DW ?
-ih_base			DD ?
-ih_size		    DD ?
+ih_sel                  DW ?
+ih_file_handle  DW ?
+ih_base                 DD ?
+ih_size             DD ?
 ih_file_size    DD ?
-ih_mmap_handle	DW ?
+ih_mmap_handle  DW ?
 ih_name_sel     DW ?
 ih_name_size    DD ?
 ih_sect_start   DD ?
-ih_sect_base	DD ?
-ih_sect_size	DD ?
+ih_sect_base    DD ?
+ih_sect_size    DD ?
 ih_entry_start  DD ?
-ih_entry_base	DD ?
-ih_entry_size	DD ?
+ih_entry_base   DD ?
+ih_entry_size   DD ?
 
-ini_handle_seg	ENDS
+ini_handle_seg  ENDS
 
 ini_file_seg STRUC
 
-if_prev			DW ?
-if_next			DW ?
+if_prev                 DW ?
+if_next                 DW ?
 if_section      section_typ <>
-if_list			DD ?
-if_usage		DW ?
+if_list                 DD ?
+if_usage                DW ?
 if_file_sel     DW ?
 if_access       DB ?
 if_drive        DB ?
@@ -79,11 +80,11 @@ is_sys_sel      DW ?
 
 data    ENDS
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -92,83 +93,83 @@ code	SEGMENT byte public use16 'CODE'
 ;
 ;       DESCRIPTION:    Opens system ini file
 ;
-;		RETURNS:		BX			ini file handle
+;               RETURNS:                BX                      ini file handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DefaultSysIniName	DB 'z:\system.ini', 0
-SysIniVar	DB 'SYSINI', 0
+DefaultSysIniName       DB 'z:\system.ini', 0
+SysIniVar       DB 'SYSINI', 0
 
-OpenSystemIni	Proc near
-	push ds
-	push es
-	push eax
-	push si
-	push di
+OpenSystemIni   Proc near
+        push ds
+        push es
+        push eax
+        push si
+        push di
 ;
-	OpenSysEnv
+        OpenSysEnv
 ;
-	mov eax,1000h
-	AllocateGlobalMem
-	xor di,di
+        mov eax,1000h
+        AllocateGlobalMem
+        xor di,di
 ;
-	mov ax,cs
-	mov ds,ax
-	mov si,OFFSET SysIniVar
+        mov ax,cs
+        mov ds,ax
+        mov si,OFFSET SysIniVar
 ;
-	FindEnvVar
-	pushf
-	CloseEnv
-	popf
-	jc open_sys_ini_test_file
+        FindEnvVar
+        pushf
+        CloseEnv
+        popf
+        jc open_sys_ini_test_file
 ;
-	mov cl,0
-	OpenFile
+        mov cl,0
+        OpenFile
 
 open_sys_ini_test_file:
-	pushf
-	FreeMem
-	popf
-	jnc open_sys_ini_done
-;	
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET DefaultSysIniName
-	OpenFile
-	jnc open_sys_ini_done
+        pushf
+        FreeMem
+        popf
+        jnc open_sys_ini_done
+;       
+        mov ax,cs
+        mov es,ax
+        mov di,OFFSET DefaultSysIniName
+        OpenFile
+        jnc open_sys_ini_done
 ;
-	OpenSysEnv
+        OpenSysEnv
 ;
-	mov eax,1000h
-	AllocateGlobalMem
-	xor di,di
+        mov eax,1000h
+        AllocateGlobalMem
+        xor di,di
 ;
-	mov ax,cs
-	mov ds,ax
-	mov si,OFFSET SysIniVar
+        mov ax,cs
+        mov ds,ax
+        mov si,OFFSET SysIniVar
 ;
-	FindEnvVar
-	pushf
-	CloseEnv
-	popf
-	jc open_sys_ini_free
+        FindEnvVar
+        pushf
+        CloseEnv
+        popf
+        jc open_sys_ini_free
 ;
-	xor cx,cx
-	CreateFile
+        xor cx,cx
+        CreateFile
 
 open_sys_ini_free:
-	pushf
-	FreeMem
-	popf
+        pushf
+        FreeMem
+        popf
 
 open_sys_ini_done:
-	pop di
-	pop si
-	pop eax
-	pop es
-	pop ds
-	ret
-OpenSystemIni	Endp
+        pop di
+        pop si
+        pop eax
+        pop es
+        pop ds
+        ret
+OpenSystemIni   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -179,24 +180,24 @@ OpenSystemIni	Endp
 ;
 ;       PARAMETERS:     ES:EDI      file name
 ;
-;		RETURNS:		BX			ini file handle
+;               RETURNS:                BX                      ini file handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OpenPrivIni	Proc near
+OpenPrivIni     Proc near
     push cx
 ;
-	mov cl,0
-	UserGateForce32 open_file_nr
-	jnc open_priv_ini_done
+        mov cl,0
+        UserGateForce32 open_file_nr
+        jnc open_priv_ini_done
 ;
-	xor cx,cx
-	UserGateForce32 create_file_nr
+        xor cx,cx
+        UserGateForce32 create_file_nr
 
 open_priv_ini_done:
     pop cx
-	ret
-OpenPrivIni	Endp
+        ret
+OpenPrivIni     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -205,47 +206,53 @@ OpenPrivIni	Endp
 ;
 ;       DESCRIPTION:    Lock ini file & goto current section
 ;
-;		PARAMETERS:		DS:BX		handle data
+;               PARAMETERS:             DS:BX           handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LockIni	Proc near
-	push ds
-	push es
-	pushad
+LockIni Proc near
+        push ds
+        push es
+        pushad
 ;
-	mov si,bx
-;	
+        mov si,bx
+;       
     push ds
     mov ds,[si].ih_sel
     EnterSection ds:if_section
     pop ds
 ;
-	mov bx,[si].ih_file_handle
-	GetFileSize
-	mov ds:[si].ih_file_size,eax
-	and ax,0F000h
-	add eax,1000h
-	AllocateLocalLinear
-	sub edx,local_page_linear
-	mov ds:[si].ih_base,edx
-	mov ds:[si].ih_size,eax	
+        mov bx,[si].ih_file_handle
+        GetFileSize
+        mov ds:[si].ih_file_size,eax
+        and ax,0F000h
+        add eax,1000h
+        AllocateLocalLinear
+        push ds
+        push ax
+        mov ax,system_data_sel
+        mov ds,ax
+        sub edx,ds:flat_base
+        pop ax
+        pop ds
+        mov ds:[si].ih_base,edx
+        mov ds:[si].ih_size,eax 
 ;
-	CreateFileMapping
-	mov ds:[si].ih_mmap_handle,bx
+        CreateFileMapping
+        mov ds:[si].ih_mmap_handle,bx
 ;
-	mov ax,flat_data_sel
-	mov es,ax
-	xor eax,eax
-	mov edi,ds:[si].ih_base
-	mov ecx,ds:[si].ih_size
-	UserGateForce32 map_view_nr
+        mov ax,flat_data_sel
+        mov es,ax
+        xor eax,eax
+        mov edi,ds:[si].ih_base
+        mov ecx,ds:[si].ih_size
+        UserGateForce32 map_view_nr
 ;    
-	popad
-	pop es
-	pop ds
-	ret
-LockIni	Endp
+        popad
+        pop es
+        pop ds
+        ret
+LockIni Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -254,39 +261,43 @@ LockIni	Endp
 ;
 ;       DESCRIPTION:    Unlock ini
 ;
-;		PARAMETERS:		DS:BX		handle data
+;               PARAMETERS:             DS:BX           handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnlockIni	Proc near
-	push ds
-	push es
-	pushad
+UnlockIni       Proc near
+        push ds
+        push es
+        pushad
 ;
-	mov si,bx
+        mov si,bx
 ;
-	mov bx,ds:[si].ih_mmap_handle
-	UnmapView
-	CloseMapping
-	mov ds:[si].ih_mmap_handle,0
+        mov bx,ds:[si].ih_mmap_handle
+        UnmapView
+        CloseMapping
+        mov ds:[si].ih_mmap_handle,0
 ;
-	mov edx,ds:[si].ih_base
-	or edx,edx
-	jz uiNoMem
+        mov edx,ds:[si].ih_base
+        or edx,edx
+        jz uiNoMem
 ;
-	add edx,local_page_linear
-	mov ecx,ds:[si].ih_size
-	FreeLinear
+        push ds
+        mov ax,system_data_sel
+        mov ds,ax
+        add edx,ds:flat_base
+        pop ds
+        mov ecx,ds:[si].ih_size
+        FreeLinear
 
 uiNoMem:
     mov ds,[si].ih_sel
     LeaveSection ds:if_section
 ;    
-	popad
-	pop es
-	pop ds
-	ret
-UnlockIni	Endp
+        popad
+        pop es
+        pop ds
+        ret
+UnlockIni       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -295,9 +306,9 @@ UnlockIni	Endp
 ;
 ;       DESCRIPTION:    Find current section
 ;
-;		PARAMETERS:		DS:BX	    Handle data
+;               PARAMETERS:             DS:BX       Handle data
 ;
-;		RETURNS:	    EDI         Linear address to section
+;               RETURNS:            EDI         Linear address to section
 ;                       ECX         Size of section
 ;
 ;
@@ -310,12 +321,12 @@ FindIniSection Proc near
     push ax
     push esi
 ;
-	mov ax,flat_data_sel
-	mov es,ax
-	mov edi,ds:[bx].ih_base
-	mov ecx,ds:[bx].ih_file_size
-	mov fs,ds:[bx].ih_name_sel
-;	
+        mov ax,flat_data_sel
+        mov es,ax
+        mov edi,ds:[bx].ih_base
+        mov ecx,ds:[bx].ih_file_size
+        mov fs,ds:[bx].ih_name_sel
+;       
     or ecx,ecx
     stc
     jz FindIniSectionDone
@@ -328,14 +339,14 @@ FindIniSection Proc near
     inc edi
     dec ecx
     jmp FindIniSectionCheck
-	
+        
 FindIniSectionScan:
-	mov al,'['
-	repne scas byte ptr es:[edi]
-	cmp byte ptr es:[edi-1],'['
-	stc
-	jne FindIniSectionDone
-;	
+        mov al,'['
+        repne scas byte ptr es:[edi]
+        cmp byte ptr es:[edi-1],'['
+        stc
+        jne FindIniSectionDone
+;       
     mov eax,edi
     dec eax
     mov ds:[bx].ih_sect_start,eax
@@ -347,27 +358,27 @@ FindIniSectionScan:
     jne FindIniSectionScan
 
 FindIniSectionCheck:
-	xor esi,esi
-	repe cmps byte ptr fs:[esi],[edi]
-	dec esi
-	dec edi
-	inc ecx
-	lods byte ptr fs:[esi]
-	or al,al
-	jne FindIniSectionScan
+        xor esi,esi
+        repe cmps byte ptr fs:[esi],[edi]
+        dec esi
+        dec edi
+        inc ecx
+        lods byte ptr fs:[esi]
+        or al,al
+        jne FindIniSectionScan
 ;
-	mov al,es:[edi]
-	cmp al,']'
-	jne FindIniSectionScan
+        mov al,es:[edi]
+        cmp al,']'
+        jne FindIniSectionScan
 ;
-	inc edi
-	dec ecx
+        inc edi
+        dec ecx
 ;
     push edi
 
 FindIniSectionNextSize:
-	mov al,'['
-	repne scas byte ptr es:[edi]
+        mov al,'['
+        repne scas byte ptr es:[edi]
     mov al,es:[edi-1]
     cmp al,'['
     jne FindIniSectionSize
@@ -384,9 +395,9 @@ FindIniSectionNextSize:
     jmp FindIniSectionNextSize
 
 FindIniSectionSize:
-	mov ecx,edi
-	pop edi
-	sub ecx,edi
+        mov ecx,edi
+        pop edi
+        sub ecx,edi
     clc
 
 FindIniSectionDone:
@@ -396,7 +407,7 @@ FindIniSectionDone:
     pop es
     pop ds
     ret
-FindIniSection Endp	
+FindIniSection Endp     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -405,7 +416,7 @@ FindIniSection Endp
 ;
 ;       DESCRIPTION:    Find key in section
 ;
-;		PARAMETERS:		DS:BX	    Handle data
+;               PARAMETERS:             DS:BX       Handle data
 ;                       FS:ESI      Key name
 ;                       EDI         Start of section
 ;                       ECX         Size of section
@@ -415,72 +426,72 @@ FindIniSection Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindIniKey	Proc near
+FindIniKey      Proc near
     push es
     push ax
 ;
     mov ax,flat_data_sel
     mov es,ax
-	
+        
 FindIniKeyControl:
-	mov al,es:[edi]
-	cmp al,0Dh
-	je FindIniKeyControlPass
-	cmp al,0Ah
-	je FindIniKeyControlPass
-	cmp al,' '
-	je FindIniKeyControlPass
-	cmp al,9
-	jne FindIniKeyScan
-	
+        mov al,es:[edi]
+        cmp al,0Dh
+        je FindIniKeyControlPass
+        cmp al,0Ah
+        je FindIniKeyControlPass
+        cmp al,' '
+        je FindIniKeyControlPass
+        cmp al,9
+        jne FindIniKeyScan
+        
 FindIniKeyControlPass:
-	inc edi
-	sub ecx,1
-	jnz FindIniKeyControl
-	stc
-	jmp FindIniKeyDone
-	
+        inc edi
+        sub ecx,1
+        jnz FindIniKeyControl
+        stc
+        jmp FindIniKeyDone
+        
 FindIniKeyScan:
     mov ds:[bx].ih_entry_start,edi
-	push esi
-	repe cmps byte ptr fs:[esi],[edi]
-	dec esi
-	dec edi
-	inc ecx
-	lods byte ptr fs:[esi]
-	pop esi
-	or al,al
-	jne FindIniKeyWrongName
-	
+        push esi
+        repe cmps byte ptr fs:[esi],[edi]
+        dec esi
+        dec edi
+        inc ecx
+        lods byte ptr fs:[esi]
+        pop esi
+        or al,al
+        jne FindIniKeyWrongName
+        
 FindIniKeySpacePass:
-	mov al,es:[edi]
-	cmp al,'='
-	je FindIniKeyCorrectName
-	cmp al,' '
-	je FindIniKeySpaceNext
-	cmp al,9
-	jne FindIniKeyWrongName
+        mov al,es:[edi]
+        cmp al,'='
+        je FindIniKeyCorrectName
+        cmp al,' '
+        je FindIniKeySpaceNext
+        cmp al,9
+        jne FindIniKeyWrongName
 
-FindIniKeySpaceNext:	
-	inc edi
-	sub ecx,1
-	jc FindIniKeyDone
-	jmp FindIniKeySpacePass
-	
+FindIniKeySpaceNext:    
+        inc edi
+        sub ecx,1
+        jc FindIniKeyDone
+        jmp FindIniKeySpacePass
+        
 FindIniKeyWrongName:
-	mov al,es:[edi]
-	cmp al,0Dh
-	je FindIniKeyControl
-	inc edi	
-	sub ecx,1
-	jc FindIniKeyDone
-	jmp FindIniKeyWrongName
-	
+        mov al,es:[edi]
+        cmp al,0Dh
+        je FindIniKeyControl
+        inc edi 
+        sub ecx,1
+        jc FindIniKeyDone
+        jmp FindIniKeyWrongName
+        
 FindIniKeyCorrectName:
-	inc edi
-	sub ecx,1
-	jc FindIniKeyDone
-	jz FindIniKeyOk
+        inc edi
+        sub ecx,1
+        jc FindIniKeyDone
+        jz FindIniKeyOk
 ;
     mov al,es:[edi]
     cmp al,' '
@@ -490,13 +501,13 @@ FindIniKeyCorrectName:
     je FindIniKeyCorrectName    
     
 FindIniKeyOk:
-	clc
-	
+        clc
+        
 FindIniKeyDone:
     pop ax
     pop es
-	ret
-FindIniKey	Endp
+        ret
+FindIniKey      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -505,7 +516,7 @@ FindIniKey	Endp
 ;
 ;       DESCRIPTION:    Find a size of key
 ;
-;		PARAMETERS:		FS:ESI      Key name
+;               PARAMETERS:             FS:ESI      Key name
 ;                       EDI         Start of data
 ;                       ECX         Remaining size of section
 ;
@@ -513,7 +524,7 @@ FindIniKey	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindKeySize	Proc near
+FindKeySize     Proc near
     push es
     push ax
     push esi
@@ -522,18 +533,18 @@ FindKeySize	Proc near
     push edi
     mov ax,flat_data_sel
     mov es,ax
-	
+        
 FindKeySizeLoop:
-	mov al,es:[edi]
-	cmp al,0Dh
-	je FindKeyEndFound
-	cmp al,0Ah
-	je FindKeyEndFound
-;	
-	inc edi
-	sub ecx,1
-	jnz FindKeySizeLoop
-	
+        mov al,es:[edi]
+        cmp al,0Dh
+        je FindKeyEndFound
+        cmp al,0Ah
+        je FindKeyEndFound
+;       
+        inc edi
+        sub ecx,1
+        jnz FindKeySizeLoop
+        
 FindKeyEndFound:
     mov ecx,edi
     pop eax
@@ -559,8 +570,8 @@ FindKeySizeDone:
     pop esi
     pop ax
     pop es
-	ret
-FindKeySize	Endp
+        ret
+FindKeySize     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -569,7 +580,7 @@ FindKeySize	Endp
 ;
 ;       DESCRIPTION:    Create current ini section
 ;
-;		PARAMETERS:		DS:BX	    Handle data
+;               PARAMETERS:             DS:BX       Handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -594,10 +605,10 @@ CreateIniSection Proc near
     WriteFile
 ;
     mov es,ds:[si].ih_name_sel
-   	mov ecx,ds:[si].ih_name_size
-   	dec ecx
-   	xor edi,edi
-   	UserGateForce32 write_file_nr
+        mov ecx,ds:[si].ih_name_size
+        dec ecx
+        xor edi,edi
+        UserGateForce32 write_file_nr
 ;
     mov ax,ss
     mov es,ax
@@ -619,7 +630,7 @@ CreateIniSection Proc near
     pop es
     pop ds
     ret
-CreateIniSection Endp	
+CreateIniSection Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -628,13 +639,13 @@ CreateIniSection Endp
 ;
 ;       DESCRIPTION:    Get free size of ini file
 ;
-;		PARAMETERS:		DS:BX       Handle data
+;               PARAMETERS:             DS:BX       Handle data
 ;
 ;       RETURNS:        ECX         Free size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetIniFreeSize	Proc near
+GetIniFreeSize  Proc near
     push es
     push ax
     push edx
@@ -643,11 +654,11 @@ GetIniFreeSize	Proc near
     mov ax,flat_data_sel
     mov es,ax
 
-	mov edi,ds:[bx].ih_base
-	mov edx,ds:[bx].ih_file_size
+        mov edi,ds:[bx].ih_base
+        mov edx,ds:[bx].ih_file_size
 ;
     add edi,edx
-;	
+;       
     xor ecx,ecx
 
 gifLoop:
@@ -668,8 +679,8 @@ gifDone:
     pop edx
     pop ax
     pop es
-	ret
-GetIniFreeSize	Endp
+        ret
+GetIniFreeSize  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -678,7 +689,7 @@ GetIniFreeSize	Endp
 ;
 ;       DESCRIPTION:    Grow ini file size
 ;
-;		PARAMETERS:		DS:BX	    Handle data
+;               PARAMETERS:             DS:BX       Handle data
 ;                       ECX         Byte to add
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -718,7 +729,7 @@ giDone:
     popad
     pop es
     ret
-GrowIni Endp	
+GrowIni Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -727,78 +738,78 @@ GrowIni Endp
 ;
 ;       DESCRIPTION:    Create ini selector
 ;
-;		PARAMETERS:		BX			original file handle
+;               PARAMETERS:             BX                      original file handle
 ;
-;		RETURNS:		DS			ini selector
+;               RETURNS:                DS                      ini selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateIniSel	proc near
-	push es
-	push eax
-	push cx
+CreateIniSel    proc near
+        push es
+        push eax
+        push cx
 ;
-	mov eax,SIZE ini_file_seg
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov ds,ax
+        mov eax,SIZE ini_file_seg
+        AllocateSmallGlobalMem
+        mov ax,es
+        mov ds,ax
 ;
-	InitSection ds:if_section
-	GetFileInfo
-	mov ds:if_access,cl
-	mov ds:if_drive,ch
-	mov ds:if_file_sel,ax
-	mov ds:if_usage,0
-	mov ds:if_list,0
+        InitSection ds:if_section
+        GetFileInfo
+        mov ds:if_access,cl
+        mov ds:if_drive,ch
+        mov ds:if_file_sel,ax
+        mov ds:if_usage,0
+        mov ds:if_list,0
 ;
-	pop cx
-	pop eax
-	pop es
-	ret
-CreateIniSel	Endp
+        pop cx
+        pop eax
+        pop es
+        ret
+CreateIniSel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:         	FreeIniSel
+;       NAME:           FreeIniSel
 ;
 ;       DESCRIPTION:    Free ini selector (if usage permits)
 ;
-;		PARAMETERS:		DS			ini selector
+;               PARAMETERS:             DS                      ini selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeIniSel	proc near
-	push es
-	push ax
-	push cx
+FreeIniSel      proc near
+        push es
+        push ax
+        push cx
 ;
-	sub ds:if_usage,1
-	jnz fisDone
+        sub ds:if_usage,1
+        jnz fisDone
 ;
-	mov cx,ds
-	mov ax,SEG data
-	mov ds,ax
-	cmp cx,ds:is_sys_sel
-	jne fisPriv
+        mov cx,ds
+        mov ax,SEG data
+        mov ds,ax
+        cmp cx,ds:is_sys_sel
+        jne fisPriv
 ;
-	EnterSection ds:is_section
-	mov es,cx
-	mov ds:is_sys_sel,0
-	FreeMem
-	LeaveSection ds:is_section
-	jmp fisDone
+        EnterSection ds:is_section
+        mov es,cx
+        mov ds:is_sys_sel,0
+        FreeMem
+        LeaveSection ds:is_section
+        jmp fisDone
 
 fisPriv:
-	mov es,cx
-	FreeMem
+        mov es,cx
+        FreeMem
 
 fisDone:
-	pop cx
-	pop ax
-	pop es
-	ret
-FreeIniSel	Endp
+        pop cx
+        pop ax
+        pop es
+        ret
+FreeIniSel      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -807,45 +818,45 @@ FreeIniSel	Endp
 ;
 ;       DESCRIPTION:    Create ini handle
 ;
-;		PARAMETERS:		DS			ini selector
-;						BX			"original" file handle or 0
+;               PARAMETERS:             DS                      ini selector
+;                                               BX                      "original" file handle or 0
 ;
-;		RETURNS:		BX			ini handle
+;               RETURNS:                BX                      ini handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateIniHandle	proc near
-	push ds
-	push ax
-	push cx
+CreateIniHandle proc near
+        push ds
+        push ax
+        push cx
 ;
-	inc ds:if_usage
-	or bx,bx
-	jnz cihNew
+        inc ds:if_usage
+        or bx,bx
+        jnz cihNew
 ;
-	mov cl,ds:if_access
-	mov ch,ds:if_drive
-	mov ax,ds:if_file_sel
-	DuplFileInfo
+        mov cl,ds:if_access
+        mov ch,ds:if_drive
+        mov ax,ds:if_file_sel
+        DuplFileInfo
 
 cihNew:
-	push ds
-	push bx
-	mov cx,SIZE ini_handle_seg
-	AllocateHandle
-	pop ax
-	mov [bx].ih_file_handle,ax
-	mov [bx].ih_name_sel,0
-	pop ax
-	mov [bx].ih_sel,ax
-	mov [bx].hh_sign,INI_HANDLE
-	mov bx,[bx].hh_handle
+        push ds
+        push bx
+        mov cx,SIZE ini_handle_seg
+        AllocateHandle
+        pop ax
+        mov [bx].ih_file_handle,ax
+        mov [bx].ih_name_sel,0
+        pop ax
+        mov [bx].ih_sel,ax
+        mov [bx].hh_sign,INI_HANDLE
+        mov bx,[bx].hh_handle
 ;
-	pop cx
-	pop ax
-	pop ds
-	ret
-CreateIniHandle	Endp
+        pop cx
+        pop ax
+        pop ds
+        ret
+CreateIniHandle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -856,46 +867,46 @@ CreateIniHandle	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_sys_ini_name	DB 'Open Sys Ini', 0
+open_sys_ini_name       DB 'Open Sys Ini', 0
 
-open_sys_ini	Proc far
-	push ds
-	push es
-	push ax
+open_sys_ini    Proc far
+        push ds
+        push es
+        push ax
 ;
-	xor bx,bx
-	mov ax,SEG data
-	mov ds,ax
-	EnterSection ds:is_section
+        xor bx,bx
+        mov ax,SEG data
+        mov ds,ax
+        EnterSection ds:is_section
 ;
-	mov ax,ds:is_sys_sel
-	or ax,ax
-	jnz osiCreateHandle
+        mov ax,ds:is_sys_sel
+        or ax,ax
+        jnz osiCreateHandle
 ;
-	call OpenSystemIni
-	jc osiDone
+        call OpenSystemIni
+        jc osiDone
 ;
-	call CreateIniSel
+        call CreateIniSel
 ;
-	mov ax,SEG data
-	mov es,ax
-	mov es:is_sys_sel,ds
+        mov ax,SEG data
+        mov es,ax
+        mov es:is_sys_sel,ds
 
 osiCreateHandle:
-	mov ax,SEG data
-	mov ds,ax
-	LeaveSection ds:is_section
+        mov ax,SEG data
+        mov ds,ax
+        LeaveSection ds:is_section
 ;
-	mov ds,ds:is_sys_sel
-	call CreateIniHandle
-	clc
+        mov ds,ds:is_sys_sel
+        call CreateIniHandle
+        clc
 
 osiDone:
-	pop ax
-	pop es
-	pop ds
-	retf32
-open_sys_ini	Endp
+        pop ax
+        pop es
+        pop ds
+        retf32
+open_sys_ini    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -909,24 +920,24 @@ open_sys_ini	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_ini_name	DB 'Open Ini', 0
+open_ini_name   DB 'Open Ini', 0
 
-open_ini	Proc near
-	push ds
-	push ax
+open_ini        Proc near
+        push ds
+        push ax
 ;
-	call OpenPrivIni
-	jc opiDone
+        call OpenPrivIni
+        jc opiDone
 ;
-	call CreateIniSel
-	call CreateIniHandle
-	clc
+        call CreateIniSel
+        call CreateIniHandle
+        clc
 
 opiDone:
-	pop ax
-	pop ds
-	ret
-open_ini	Endp
+        pop ax
+        pop ds
+        ret
+open_ini        Endp
 
 open_ini16 Proc far
     push edi
@@ -944,25 +955,25 @@ open_ini32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CloseIni
+;               NAME:                   CloseIni
 ;
-;		DESCRIPTION:	Close ini
+;               DESCRIPTION:    Close ini
 ;
-;		PARAMETERS:		BX			INI HANDLE
-;						
+;               PARAMETERS:             BX                      INI HANDLE
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_ini_name	DB 'Close Ini', 0
+close_ini_name  DB 'Close Ini', 0
 
-close_ini	Proc far
-	push ds
-	push es
-	push bx
-	push si
+close_ini       Proc far
+        push ds
+        push es
+        push bx
+        push si
 ;
-	mov ax,INI_HANDLE
-	DerefHandle
-	jc ciDone
+        mov ax,INI_HANDLE
+        DerefHandle
+        jc ciDone
 ;
     mov si,bx
     mov ax,ds:[bx].ih_name_sel
@@ -973,22 +984,22 @@ close_ini	Proc far
     FreeMem
 
 ciCloseFile:
-	push ds:[bx].ih_file_handle
-	mov ds,ds:[bx].ih_sel
-	call FreeIniSel
-	pop bx
-	CloseFile
+        push ds:[bx].ih_file_handle
+        mov ds,ds:[bx].ih_sel
+        call FreeIniSel
+        pop bx
+        CloseFile
 ;
     mov bx,si
     FreeHandle
 
 ciDone:
     pop si
-	pop bx
-	pop es
-	pop ds
-	retf32
-close_ini	Endp
+        pop bx
+        pop es
+        pop ds
+        retf32
+close_ini       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1002,11 +1013,11 @@ close_ini	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-goto_ini_section_name	DB 'Goto Ini Section', 0
+goto_ini_section_name   DB 'Goto Ini Section', 0
 
-goto_ini_section	Proc near
+goto_ini_section        Proc near
     push ds
-	push es
+        push es
     push eax
     push bx
     push ecx
@@ -1014,9 +1025,9 @@ goto_ini_section	Proc near
     push esi
     push edi
 ;
-	mov ax,INI_HANDLE
-	DerefHandle
-	jc gisDone
+        mov ax,INI_HANDLE
+        DerefHandle
+        jc gisDone
 ;
     mov ax,ds:[bx].ih_name_sel
     or ax,ax
@@ -1061,7 +1072,7 @@ gisDone:
     pop ecx
     pop bx
     pop eax
-	pop es
+        pop es
     pop ds
     ret
 goto_ini_section    Endp
@@ -1092,13 +1103,13 @@ goto_ini_section32  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteSection	Proc near
+DeleteSection   Proc near
     push es
     push ax
     push ecx
     push esi
     push edi
-;	
+;       
     or ecx,ecx
     jz dsDone
 ;
@@ -1122,8 +1133,8 @@ dsDone:
     pop ecx
     pop ax
     pop es
-	ret
-DeleteSection	Endp
+        ret
+DeleteSection   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1136,9 +1147,9 @@ DeleteSection	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-remove_ini_section_name	DB 'Remove Ini Section', 0
+remove_ini_section_name DB 'Remove Ini Section', 0
 
-remove_ini_section	Proc near
+remove_ini_section      Proc near
     push ds
     push eax
     push bx
@@ -1147,9 +1158,9 @@ remove_ini_section	Proc near
     push ecx
     push edi
 ;
-	mov ax,INI_HANDLE
-	DerefHandle
-	jc rmiFail
+        mov ax,INI_HANDLE
+        DerefHandle
+        jc rmiFail
 ;
     mov ax,ds:[bx].ih_name_sel
     or ax,ax
@@ -1164,8 +1175,8 @@ remove_ini_section	Proc near
 ;
     sub edi,eax
     add ecx,eax
-	call DeleteSection
-	jmp rmiDone
+        call DeleteSection
+        jmp rmiDone
 
 rmiFail:
     pop edi
@@ -1215,9 +1226,9 @@ remove_ini_section32  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_ini_name	DB 'Read Ini', 0
+read_ini_name   DB 'Read Ini', 0
 
-read_ini	Proc near
+read_ini        Proc near
     push ds
     push fs
     push eax
@@ -1229,9 +1240,9 @@ read_ini	Proc near
     mov ax,ds
     mov fs,ax
 ;
-	mov ax,INI_HANDLE
-	DerefHandle
-	jc riFail
+        mov ax,INI_HANDLE
+        DerefHandle
+        jc riFail
 ;
     mov ax,ds:[bx].ih_name_sel
     or ax,ax
@@ -1261,8 +1272,8 @@ read_ini	Proc near
     dec ecx
 
 riCopy:
-	mov ax,flat_data_sel
-	mov fs,ax
+        mov ax,flat_data_sel
+        mov fs,ax
     rep movs byte ptr es:[edi],fs:[esi]
     xor al,al
     stos byte ptr es:[edi]
@@ -1319,18 +1330,18 @@ read_ini32  Endp
 ;
 ;       PARAMETERS:     DS:BX       Ini handle data
 ;                       FS:ESI      Var name
-;                       ES:EBP	    Buffer
+;                       ES:EBP      Buffer
 ;
-;		RETURNS:		ECX			Required size
+;               RETURNS:                ECX                     Required size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetEntrySize	Proc near
-	push ax
+GetEntrySize    Proc near
+        push ax
     push esi
     push ebp
 ;
-	mov ecx,3
+        mov ecx,3
 
 gesVarLoop:
     mov al,fs:[esi]
@@ -1353,9 +1364,9 @@ gesBufLoop:
 gesSizeOk:
     pop ebp
     pop esi
-	pop ax
-	ret
-GetEntrySize	Endp
+        pop ax
+        ret
+GetEntrySize    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1365,17 +1376,17 @@ GetEntrySize	Endp
 ;       DESCRIPTION:    Get required size of data
 ;
 ;       PARAMETERS:     DS:BX       Ini handle data
-;                       ES:EBP	    Buffer
+;                       ES:EBP      Buffer
 ;
-;		RETURNS:		ECX			Required size
+;               RETURNS:                ECX                     Required size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetDataSize	Proc near
-	push ax
+GetDataSize     Proc near
+        push ax
     push ebp
 ;
-	xor ecx,ecx
+        xor ecx,ecx
 
 gdsBufLoop:
     mov al,es:[ebp]
@@ -1388,9 +1399,9 @@ gdsBufLoop:
 
 gdsSizeOk:
     pop ebp
-	pop ax
-	ret
-GetDataSize	Endp
+        pop ax
+        ret
+GetDataSize     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1405,7 +1416,7 @@ GetDataSize	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteEntryData	Proc near
+DeleteEntryData Proc near
     push es
     push ax
     push ecx
@@ -1435,8 +1446,8 @@ dedDone:
     pop ecx
     pop ax
     pop es
-	ret
-DeleteEntryData	Endp
+        ret
+DeleteEntryData Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1447,23 +1458,23 @@ DeleteEntryData	Endp
 ;
 ;       PARAMETERS:     DS:BX       Ini handle data
 ;                       FS:ESI      Var name
-;                       ES:EBP	    Buffer
+;                       ES:EBP      Buffer
 ;                       EDI         Insert point
 ;                       ECX         Space needed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MoveForData	Proc near
+MoveForData     Proc near
     push es
-	push eax
-	push ecx
-	push esi
-	push edi
+        push eax
+        push ecx
+        push esi
+        push edi
 ;
     mov esi,ds:[bx].ih_base
     add esi,ds:[bx].ih_file_size
-	cmp edi,esi
-	je mfeDone
+        cmp edi,esi
+        je mfeDone
 ;
     dec esi
     mov ax,flat_data_sel
@@ -1479,13 +1490,13 @@ MoveForData	Proc near
     cld
 
 mfdDone:
-	pop edi
-	pop esi
-	pop ecx
-	pop eax
-	pop es
-	ret
-MoveForData	Endp
+        pop edi
+        pop esi
+        pop ecx
+        pop eax
+        pop es
+        ret
+MoveForData     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1496,49 +1507,49 @@ MoveForData	Endp
 ;
 ;       PARAMETERS:     DS:BX       Ini handle data
 ;                       FS:ESI      Var name
-;                       ES:EBP	    Buffer
+;                       ES:EBP      Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CacheEntryAttrib	Proc near
+CacheEntryAttrib        Proc near
     push es
-	push ax
-	push ecx
-	push edi
+        push ax
+        push ecx
+        push edi
 ;
     call GetIniFreeSize
-	mov edi,ds:[bx].ih_base
-	add edi,ds:[bx].ih_file_size
-	sub edi,ecx
-	dec edi
-	call GetEntrySize
+        mov edi,ds:[bx].ih_base
+        add edi,ds:[bx].ih_file_size
+        sub edi,ecx
+        dec edi
+        call GetEntrySize
     mov ax,flat_data_sel
     mov es,ax
-	add ecx,2
-	mov al,es:[edi]
-	cmp al,0Ah
-	jne ceaDone
+        add ecx,2
+        mov al,es:[edi]
+        cmp al,0Ah
+        jne ceaDone
 ;
-	dec ecx
-	dec edi
-	mov al,es:[edi]
-	cmp al,0Dh
-	jne ceaDone
+        dec ecx
+        dec edi
+        mov al,es:[edi]
+        cmp al,0Dh
+        jne ceaDone
 ;
-	dec ecx
-	dec edi
+        dec ecx
+        dec edi
 
 ceaDone:
-	inc edi
-	mov ds:[bx].ih_entry_base,edi
-	mov ds:[bx].ih_entry_size,ecx
+        inc edi
+        mov ds:[bx].ih_entry_base,edi
+        mov ds:[bx].ih_entry_size,ecx
 ;
-	pop edi
-	pop ecx
-	pop ax
-	pop es
-	ret
-CacheEntryAttrib	Endp
+        pop edi
+        pop ecx
+        pop ax
+        pop es
+        ret
+CacheEntryAttrib        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1549,24 +1560,24 @@ CacheEntryAttrib	Endp
 ;
 ;       PARAMETERS:     DS:BX       Ini handle data
 ;                       FS:ESI      Var name
-;                       ES:EBP	    Buffer
+;                       ES:EBP      Buffer
 ;                       ECX         Space needed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MoveForEntry	Proc near
+MoveForEntry    Proc near
     push es
-	push eax
-	push ecx
-	push esi
-	push edi
+        push eax
+        push ecx
+        push esi
+        push edi
 ;
-	mov edi,ds:[bx].ih_sect_base
+        mov edi,ds:[bx].ih_sect_base
     add edi,ds:[bx].ih_sect_size
     mov esi,ds:[bx].ih_base
     add esi,ds:[bx].ih_file_size
-	cmp edi,esi
-	je mfeDone
+        cmp edi,esi
+        je mfeDone
 ;
     dec esi
     mov ax,flat_data_sel
@@ -1582,13 +1593,13 @@ MoveForEntry	Proc near
     cld
 
 mfeDone:
-	pop edi
-	pop esi
-	pop ecx
-	pop eax
-	pop es
-	ret
-MoveForEntry	Endp
+        pop edi
+        pop esi
+        pop ecx
+        pop eax
+        pop es
+        ret
+MoveForEntry    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1599,56 +1610,56 @@ MoveForEntry	Endp
 ;
 ;       PARAMETERS:     DS:BX       Ini handle data
 ;                       FS:ESI      Var name
-;                       ES:EBP	    Buffer
+;                       ES:EBP      Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddEntry	Proc near
-	push ds
-	pushad
+AddEntry        Proc near
+        push ds
+        pushad
 ;
-	mov edx,ds:[bx].ih_entry_base
-	mov ax,flat_data_sel
-	mov ds,ax
+        mov edx,ds:[bx].ih_entry_base
+        mov ax,flat_data_sel
+        mov ds,ax
 ;
-	mov ax,0A0Dh
-	mov ds:[edx],ax
-	inc edx
-	inc edx
+        mov ax,0A0Dh
+        mov ds:[edx],ax
+        inc edx
+        inc edx
 
 aeVarLoop:
     mov al,fs:[esi]
     or al,al
     je aeBuf
 ;
-	mov ds:[edx],al
+        mov ds:[edx],al
     inc esi
-	inc edx
+        inc edx
     jmp aeVarLoop
 
 aeBuf:
-	mov al,'='
-	mov ds:[edx],al
-	inc edx
+        mov al,'='
+        mov ds:[edx],al
+        inc edx
 
 aeBufLoop:
     mov al,es:[ebp]
     or al,al
     je aeFooter
 ;    
-	mov ds:[edx],al
+        mov ds:[edx],al
     inc ebp
     inc edx
     jmp aeBufLoop
 
 aeFooter:
-	mov ax,0A0Dh
-	mov ds:[edx],ax
+        mov ax,0A0Dh
+        mov ds:[edx],ax
 ;
-	popad
-	pop ds
-	ret
-AddEntry	Endp
+        popad
+        pop ds
+        ret
+AddEntry        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1658,33 +1669,33 @@ AddEntry	Endp
 ;       DESCRIPTION:    Add data
 ;
 ;       PARAMETERS:     DS:BX       Ini handle data
-;                       ES:EBP	    Buffer
+;                       ES:EBP      Buffer
 ;                       EDI         Insert point
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddData	Proc near
-	push ds
-	pushad
+AddData Proc near
+        push ds
+        pushad
 ;
-	mov ax,flat_data_sel
-	mov ds,ax
+        mov ax,flat_data_sel
+        mov ds,ax
 
 adBufLoop:
     mov al,es:[ebp]
     or al,al
     je adDone
 ;    
-	mov ds:[edi],al
+        mov ds:[edi],al
     inc ebp
     inc edi
     jmp adBufLoop
 
 adDone:
-	popad
-	pop ds
-	ret
-AddData	Endp
+        popad
+        pop ds
+        ret
+AddData Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1699,9 +1710,9 @@ AddData	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_ini_name	DB 'Write Ini', 0
+write_ini_name  DB 'Write Ini', 0
 
-write_ini	Proc near
+write_ini       Proc near
     push ds
     push fs
     pushad
@@ -1710,9 +1721,9 @@ write_ini	Proc near
     mov ax,ds
     mov fs,ax
 ;    
-	mov ax,INI_HANDLE
-	DerefHandle
-	jc wiFail
+        mov ax,INI_HANDLE
+        DerefHandle
+        jc wiFail
 ;
     mov ax,ds:[bx].ih_name_sel
     or ax,ax
@@ -1731,8 +1742,8 @@ wiFindLoop:
     jc wiDone
 
 wiFindVar:
-	mov ds:[bx].ih_sect_base,edi
-	mov ds:[bx].ih_sect_size,ecx
+        mov ds:[bx].ih_sect_base,edi
+        mov ds:[bx].ih_sect_size,ecx
     call FindIniKey
     jc wiAdd
 
@@ -1756,20 +1767,20 @@ wiReplDo:
     jmp wiDone
 
 wiAdd:
-	call CacheEntryAttrib
+        call CacheEntryAttrib
     call GetIniFreeSize
-	cmp ecx,ds:[bx].ih_entry_size
-	jae wiSizeOk
+        cmp ecx,ds:[bx].ih_entry_size
+        jae wiSizeOk
 ;
     sub ecx,ds:[bx].ih_entry_size
-	neg ecx
+        neg ecx
     call GrowIni
     jmp wiFindLoop
 
 wiSizeOk:
-	call MoveForEntry
-	call AddEntry
-	jmp wiDone
+        call MoveForEntry
+        call AddEntry
+        jmp wiDone
 
 wiFail:
     stc
@@ -1815,9 +1826,9 @@ write_ini32  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_ini_name	DB 'Delete Ini', 0
+delete_ini_name DB 'Delete Ini', 0
 
-delete_ini	Proc near
+delete_ini      Proc near
     stc
     ret
 delete_ini    Endp
@@ -1839,21 +1850,21 @@ delete_ini32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Delete_handle
+;               NAME:                   Delete_handle
 ;
-;		DESCRIPTION:	Delete handle (called from handle module)
+;               DESCRIPTION:    Delete handle (called from handle module)
 ;
-;		PARAMETERS:		BX			INI HANDLE
-;						
+;               PARAMETERS:             BX                      INI HANDLE
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_handle	Proc far
-	push ds
-	push bx
+delete_handle   Proc far
+        push ds
+        push bx
 ;
-	mov ax,INI_HANDLE
-	DerefHandle
-	jc delete_handle_done
+        mov ax,INI_HANDLE
+        DerefHandle
+        jc delete_handle_done
 ;
     mov ax,ds:[bx].ih_name_sel
     or ax,ax
@@ -1869,16 +1880,16 @@ delete_handle_name_done:
     mov es,ax
     FreeMem
     pop es
-	push ds
-	mov ds,ds:[bx].ih_sel
-	call FreeIniSel
-	pop ds
+        push ds
+        mov ds,ds:[bx].ih_sel
+        call FreeIniSel
+        pop ds
 
 delete_handle_done:
-	pop bx
-	pop ds
-	ret
-delete_handle	Endp
+        pop bx
+        pop ds
+        ret
+delete_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1891,77 +1902,77 @@ delete_handle	Endp
 
     public init_inifile
     
-init_inifile	Proc near
-	mov ax,SEG data
-	mov ds,ax
-	InitSection ds:is_section
-	mov ds:is_sys_sel,0
+init_inifile    Proc near
+        mov ax,SEG data
+        mov ds,ax
+        InitSection ds:is_section
+        mov ds:is_sys_sel,0
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov si,OFFSET open_sys_ini
-	mov di,OFFSET open_sys_ini_name
-	xor dx,dx
-	mov ax,open_sys_ini_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET open_sys_ini
+        mov di,OFFSET open_sys_ini_name
+        xor dx,dx
+        mov ax,open_sys_ini_nr
+        RegisterBimodalUserGate
 ;    
-	mov bx,OFFSET open_ini16
-	mov si,OFFSET open_ini32
-	mov di,OFFSET open_ini_name
-	mov dx,virt_es_in
-	mov ax,open_ini_nr
-	RegisterUserGate
+        mov bx,OFFSET open_ini16
+        mov si,OFFSET open_ini32
+        mov di,OFFSET open_ini_name
+        mov dx,virt_es_in
+        mov ax,open_ini_nr
+        RegisterUserGate
 ;
-	mov si,OFFSET close_ini
-	mov di,OFFSET close_ini_name
-	xor dx,dx
-	mov ax,close_ini_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET close_ini
+        mov di,OFFSET close_ini_name
+        xor dx,dx
+        mov ax,close_ini_nr
+        RegisterBimodalUserGate
 ;    
-	mov bx,OFFSET goto_ini_section16
-	mov si,OFFSET goto_ini_section32
-	mov di,OFFSET goto_ini_section_name
-	mov dx,virt_es_in
-	mov ax,goto_ini_section_nr
-	RegisterUserGate
+        mov bx,OFFSET goto_ini_section16
+        mov si,OFFSET goto_ini_section32
+        mov di,OFFSET goto_ini_section_name
+        mov dx,virt_es_in
+        mov ax,goto_ini_section_nr
+        RegisterUserGate
 ;    
-	mov bx,OFFSET remove_ini_section16
-	mov si,OFFSET remove_ini_section32
-	mov di,OFFSET remove_ini_section_name
-	mov dx,virt_es_in
-	mov ax,remove_ini_section_nr
-	RegisterUserGate
+        mov bx,OFFSET remove_ini_section16
+        mov si,OFFSET remove_ini_section32
+        mov di,OFFSET remove_ini_section_name
+        mov dx,virt_es_in
+        mov ax,remove_ini_section_nr
+        RegisterUserGate
 ;    
-	mov bx,OFFSET read_ini16
-	mov si,OFFSET read_ini32
-	mov di,OFFSET read_ini_name
-	mov dx,virt_ds_in OR virt_es_in
-	mov ax,read_ini_nr
-	RegisterUserGate
+        mov bx,OFFSET read_ini16
+        mov si,OFFSET read_ini32
+        mov di,OFFSET read_ini_name
+        mov dx,virt_ds_in OR virt_es_in
+        mov ax,read_ini_nr
+        RegisterUserGate
 ;    
-	mov bx,OFFSET write_ini16
-	mov si,OFFSET write_ini32
-	mov di,OFFSET write_ini_name
-	mov dx,virt_ds_in OR virt_es_in
-	mov ax,write_ini_nr
-	RegisterUserGate
+        mov bx,OFFSET write_ini16
+        mov si,OFFSET write_ini32
+        mov di,OFFSET write_ini_name
+        mov dx,virt_ds_in OR virt_es_in
+        mov ax,write_ini_nr
+        RegisterUserGate
 ;    
-	mov bx,OFFSET delete_ini16
-	mov si,OFFSET delete_ini32
-	mov di,OFFSET delete_ini_name
-	mov dx,virt_ds_in
-	mov ax,delete_ini_nr
-	RegisterUserGate
+        mov bx,OFFSET delete_ini16
+        mov si,OFFSET delete_ini32
+        mov di,OFFSET delete_ini_name
+        mov dx,virt_ds_in
+        mov ax,delete_ini_nr
+        RegisterUserGate
 ;
-	mov di,OFFSET delete_handle
-	mov ax,INI_HANDLE
-	RegisterHandle
-	ret
-init_inifile	Endp
+        mov di,OFFSET delete_handle
+        mov ax,INI_HANDLE
+        RegisterHandle
+        ret
+init_inifile    Endp
 
-code	ENDS
+code    ENDS
 
-	END
+        END
 

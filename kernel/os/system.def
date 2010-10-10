@@ -135,6 +135,8 @@ time_drift          DD ?
 
 debug_thread        DW ?
 
+flat_base           DD ?
+
 tsc_tics            DD ?
 tsc_rest            DW ?
 

@@ -385,6 +385,7 @@ init_boot_system        PROC near
         xor ax,ax
         mov ds:debug_list,ax
         mov ds:debug_thread,ax
+        mov ds:flat_base,local_page_linear
         mov ds:math_tss,ax
         mov ds:check_point,0
         ret

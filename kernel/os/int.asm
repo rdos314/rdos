@@ -1487,11 +1487,13 @@ call_pm32_save_context:
 	push edx
 	mov bp,sp
 ;
-	mov ax,flat_data_sel
-	mov ds,ax
 	mov eax,1000h
 	AllocateLocalLinear
-	sub edx,local_page_linear
+	mov bx,system_data_sel
+	mov ds,bx
+	sub edx,ds:flat_base
+	mov bx,flat_data_sel
+	mov ds,bx
 	mov eax,dword ptr cs:call_pm32_ret_op
 	add edx,0FFCh
 	mov ebx,edx
@@ -1547,7 +1549,9 @@ call_pm32_ret:
 	mov edx,[bp].vm_esp
 	and dx,0F000h
 	mov ecx,1000h
-	add edx,local_page_linear
+	mov ax,system_data_sel
+	mov ds,ax
+	add edx,ds:flat_base
 	FreeLinear
 	pop ecx
 ;
