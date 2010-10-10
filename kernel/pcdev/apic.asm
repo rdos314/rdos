@@ -2129,6 +2129,11 @@ apic_name       DB 'Apic Test',0
 
 apic_pr:
     int 3
+    mov ax,flat_data_sel
+    mov ds,ax
+    xor bx,bx
+    mov ax,ds:[bx]
+;    
     mov ax,apic_mem_sel
     mov ds,ax    
     mov eax,ds:APIC_LINT0

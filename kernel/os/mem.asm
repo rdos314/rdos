@@ -476,7 +476,7 @@ init_process_mem	PROC near
 	push eax
 	push edx
 	push di
-;
+;     
 	mov ax,local_linear_sel
 	mov ds,ax
 	xor eax,eax
@@ -535,7 +535,7 @@ init_process_mem	PROC near
 	pop ds
 	ret
 init_process_mem	ENDP
-
+õ
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
