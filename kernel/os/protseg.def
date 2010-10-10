@@ -53,7 +53,7 @@ fixed_vm_linear			EQU 0000E0000h
 vm_linear				EQU 0000E1000h
 
 local_byte_linear		EQU 000110000h
-local_page_linear		EQU 001000000h
+local_page_linear		EQU 000300000h
 
 flat_size				EQU 0E0000000h
 

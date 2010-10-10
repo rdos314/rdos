@@ -564,17 +564,6 @@ init_mem_sels	PROC near
 	shr ebx,10
 	mov [ebx],eax
 ;
-    mov bx,system_data_sel
-    mov ds,bx
-	mov edx,ds:flat_base
-	mov ecx,flat_size
-	sub ecx,edx
-	mov bx,flat_code_sel
-	CreateCodeSelector32
-;
-	mov bx,flat_data_sel
-	CreateDataSelector32
-;
 	mov bx,local_linear_sel
 	mov edx,local_byte_linear
 	mov ecx,local_page_linear

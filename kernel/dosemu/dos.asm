@@ -1367,17 +1367,21 @@ init    PROC far
         mov ecx,OFFSET doscallback_end - OFFSET doscallback_start
         rep movs byte ptr es:[edi],ds:[esi]
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:flat_base,local_page_linear
+;    
     call init_ems
     call init_multiplx
     call init_xms
 ;    
-        call init_dos_mem
-        call init_dosvm
-        call init_dos16
-        call init_dos32
-        call init_dos_exec
-        clc
-        ret
+    call init_dos_mem
+    call init_dosvm
+    call init_dos16
+    call init_dos32
+    call init_dos_exec
+    clc
+    ret
 init    ENDP
 
 code    ENDS
