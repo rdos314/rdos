@@ -518,6 +518,16 @@ free_startup_zero:
     jmp free_startup_ram_loop
 
 free_startup_ram_done:  
+    mov ax,system_data_sel
+    mov es,ax
+    mov eax,es:flat_base
+    or eax,eax
+    jnz init_paging_flat_ok
+;    
+    xor ebx,ebx
+    mov [ebx],ebx
+
+init_paging_flat_ok:    
     mov eax,cr3
     mov cr3,eax
     ret
