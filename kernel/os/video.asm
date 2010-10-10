@@ -331,7 +331,9 @@ set_video_mode_ok:
 	mov dx,ds:v_height
 	mov si,ds:v_row_size
 	mov edi,ds:v_app_base
-	sub edi,local_page_linear
+	mov ax,system_data_sel
+	mov es,ax
+	sub edi,es:flat_base
 	mov ax,flat_data_sel
 	mov es,ax
 	movzx ax,ds:v_bpp

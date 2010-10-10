@@ -636,7 +636,9 @@ get_bitmap_info	Proc near
 	mov dx,ds:v_height
 	mov si,ds:v_row_size
 	mov edi,ds:v_app_base
-	sub edi,local_page_linear
+	mov bx,system_data_sel
+	mov ds,bx
+	sub edi,ds:flat_base
 	mov bx,flat_data_sel
 	mov es,bx
 	clc

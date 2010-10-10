@@ -564,8 +564,11 @@ init_mem_sels	PROC near
 	shr ebx,10
 	mov [ebx],eax
 ;
-	mov edx,local_page_linear
-	mov ecx,flat_size - local_page_linear
+    mov bx,system_data_sel
+    mov ds,bx
+	mov edx,ds:flat_base
+	mov ecx,flat_size
+	sub ecx,edx
 	mov bx,flat_code_sel
 	CreateCodeSelector32
 ;
@@ -1260,17 +1263,22 @@ resize_flat_linear	PROC far
 	push ebx
 	push ecx
 	push edx
+	push esi
+;	
+    mov bx,system_data_sel
+    mov ds,bx
+    mov esi,ds:flat_base
 ;
 	mov bx,local_mem_sel
 	mov ds,bx
 	EnterSection ds:local_mem_section
 ;
-	add edx,local_page_linear
-	cmp edx,local_page_linear
-	jc resize_flat_leave
-;
 	cmp edx,flat_size
 	jae resize_flat_leave
+;
+	add edx,esi
+	cmp edx,ds:flat_base
+	jc resize_flat_leave
 ;
 	and dx,0F000h
 	dec eax
@@ -1341,9 +1349,9 @@ resize_flat_grow_copy:
 	AllocateLocalLinear
 ;
 	add sp,4
-	sub edx,local_page_linear
+	sub edx,esi
 	push edx
-	add edx,local_page_linear
+	add edx,esi
 ;
 	push ebx
 	push ecx
@@ -1420,6 +1428,7 @@ resize_flat_done:
     mov edx,cr3
     mov cr3,edx
 ;    
+    pop esi
 	pop edx
 	pop ecx
 	pop ebx
@@ -2610,6 +2619,9 @@ free_linear	ENDP
 resize_linear_name	DB 'Resize Linear',0
 
 resize_linear	PROC far
+    push ds
+    push esi
+;    
 	cmp edx,flat_size
 	jnc resize_mem_error
 ;
@@ -2619,24 +2631,31 @@ resize_linear	PROC far
 	cmp edx,local_page_linear
 	jc resize_mem_error
 ;
-	sub edx,local_page_linear
+    mov si,system_data_sel
+    mov ds,si
+    mov esi,ds:flat_base
+	sub edx,esi
 	ResizeFlatLinear
 	jc resize_mem_error
 ;
-	add edx,local_page_linear
+	add edx,ds:flat_base
 	clc
-	ret
+	jmp resize_mem_done
 
 resize_low_mem:
 	cmp edx,vm_linear
 	jnc resize_mem_error
 ;
 	ResizeDosLinear
-	ret
+	jmp resize_mem_done
 
 resize_mem_error:
 	int 3
 	stc
+
+resize_mem_done:
+	pop esi
+	pop ds
 	ret
 resize_linear	ENDP
 
