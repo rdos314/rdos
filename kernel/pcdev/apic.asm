@@ -413,9 +413,9 @@ ApInit:
     sti
     hlt
     
-;stopl:
-;   cli
-;    jmp stopl
+stopl:
+   cli
+    jmp stopl
 
     StartProcessor
 

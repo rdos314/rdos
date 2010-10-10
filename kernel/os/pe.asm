@@ -1855,7 +1855,10 @@ fdMod:
 	mov ecx,es:lib_size
 	mov bx,es:lib_file_handle
 	CloseFile
-	add edx,local_page_linear
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	add edx,ds:flat_base
 	FreeLinear
 	FreeMem
 ;
@@ -1887,7 +1890,10 @@ load_object	Proc far
 	push es
 	pushad
 ;	
-	sub edx,local_page_linear
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ebp,ds:flat_base
+	sub edx,ebp
 	mov ax,flat_data_sel
 	mov ds,ax
 	and dx,0F000h
@@ -1902,7 +1908,7 @@ load_object	Proc far
 	mov cx,process_page_sel
 	mov ds,cx
 	mov eax,edx
-    add eax,local_page_linear
+    add eax,ebp
 	shr eax,10
 ;
 	mov eax,[eax]
@@ -1917,7 +1923,13 @@ load_object	Proc far
     mov ebp,edx
     mov eax,1000h
     AllocateLocalLinear
-    sub edx,local_page_linear
+    push ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    sub edx,ds:flat_base
+    pop ax
+    pop ds
 ;
 	test [esi].o_flags,80h
 	jz load_object_from_file
@@ -1974,10 +1986,12 @@ load_object_size_ok:
 	call RelocObject
 ;
 	mov ecx,[esi].o_flags
+	mov ax,system_data_sel
+	mov ds,ax
+    add edx,ds:flat_base
+    add ebp,ds:flat_base
 	mov ax,process_page_sel
 	mov ds,ax
-    add edx,local_page_linear
-    add ebp,local_page_linear
     push edx
 	shr edx,10
 	shr ebp,10
@@ -2029,6 +2043,14 @@ CreateImage	Proc near
 	push ecx
 	push edx
 	push esi
+	push ebp
+;
+    mov bx,system_data_sel
+    mov ds,bx
+    mov ebp,ds:flat_base
+;
+    mov bx,flat_data_sel
+    mov ds,bx
 ;
 	mov bx,es:lib_file_handle
 	GetFilePos
@@ -2063,13 +2085,13 @@ CreateImage	Proc near
 ;
 	mov edx,es:lib_base
 	mov eax,es:lib_size
-    add edx,local_page_linear
+    add edx,ebp
 	ReserveLocalLinear
 	jnc create_image_alloced
 	AllocateLocalLinear
 
 create_image_alloced:
-	sub edx,local_page_linear
+	sub edx,ebp
 	SetFlatLinearInvalid
 ;
 	pop eax
@@ -2101,7 +2123,7 @@ create_image_alloced:
 hook_object_loop:
 	mov edx,[esi].o_va
 	add edx,edi
-	add edx,local_page_linear
+	add edx,ebp
 	mov eax,[esi].o_virt_size
 	cmp eax,[esi].o_phys_size
 	jae hook_object_do
@@ -2133,7 +2155,7 @@ hook_object_do:
 	push es
 	push edi
 	mov edi,edx
-	add edx,local_page_linear
+	add edx,ebp
 	mov eax,ecx
 	UnhookPage
 	mov ax,ds
@@ -2143,6 +2165,7 @@ hook_object_do:
 	pop es
 
 fixup_done:
+    pop ebp
 	pop esi
 	pop edx
 	pop ecx
@@ -2208,12 +2231,17 @@ Preload	Endp
 InitStack	Proc near
 	push fs
 	push eax
+	push ebx
 	push ecx
 	push edx
 	push esi
 ;
 	push ds
+	mov ax,system_data_sel
+	mov ds,ax
+	mov ebx,ds:flat_base
 	push bx
+;
 	mov eax,1000h
 	AllocateLocalLinear
 	AllocateLdt
@@ -2223,16 +2251,16 @@ InitStack	Proc near
 	mov [bp].load_fs,bx
 	mov es:lib_fs,bx
 	mov fs,bx
-	sub edx,local_page_linear
-	mov fs:pvBase,edx
 	pop bx
 	pop ds
+	sub edx,ebx
+	mov fs:pvBase,edx
 ;
 	mov dword ptr [bp].load_ss,flat_data_sel
 	mov esi,es:lib_header
 	mov eax,[esi].peh_stack_reserve_size
 	AllocateLocalLinear
-	sub edx,local_page_linear
+	sub edx,ebx
 	mov [bp].load_ebx,edx
 	mov fs:pvFirstExcept,-1
 	mov fs:pvStackUserBottom,edx
@@ -2277,7 +2305,7 @@ InitStack	Proc near
 	and ax,0F000h
 	add eax,1000h
 	AllocateLocalLinear
-	sub edx,local_page_linear
+	sub edx,ebx
 	push edi
 	mov edi,edx
 	mov bx,ds
@@ -2331,6 +2359,7 @@ init_stack_no_tls:
 	pop esi
 	pop edx
 	pop ecx
+	pop ebx
 	pop eax
 	pop fs
 	ret
@@ -2549,8 +2578,12 @@ init_thread	PROC far
 	push edx
 	push esi
 	push edi
+	push ebp
 ;
 	push eax
+	mov ax,system_data_sel
+	mov fs,ax
+	mov ebp,fs:flat_base
 	mov ax,flat_data_sel
 	mov fs,ax
 	mov es,ds:tss_ebx
@@ -2577,7 +2610,7 @@ init_thread	PROC far
 	mov ecx,eax	
 	CreateDataSelector32
 	mov es,bx
-	sub edx,local_page_linear
+	sub edx,ebp
 	mov es:pvBase,edx
 	pop edx
 	pop ecx
@@ -2598,7 +2631,7 @@ init_thread	PROC far
 	and ax,0F000h
 	add eax,1000h
 	AllocateLocalLinear
-	sub edx,local_page_linear
+	sub edx,ebp
 	mov dword ptr ds:tss_ebx,edx
 	mov es:pvFirstExcept,-1
 	mov es:pvStackUserBottom,edx
@@ -2641,7 +2674,7 @@ init_thread	PROC far
 	and ax,0F000h
 	add eax,1000h
 	AllocateLocalLinear
-	sub edx,local_page_linear
+	sub edx,ebp
 	push es
 	push edi
 	mov edi,edx
@@ -2677,6 +2710,7 @@ init_thread_no_tls:
 	sub edx,4
 	mov dword ptr ds:tss_esp,edx
 ;
+    pop ebp
 	pop edi
 	pop esi
 	pop edx
@@ -2750,6 +2784,9 @@ start_thread	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_thread	Proc far
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ebp,ds:flat_base
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
@@ -2789,7 +2826,7 @@ free_thread_no_debug:
 	mov edx,[edx]
 	mov esi,fs:pvTLSArray
 	mov edx,[esi+4*edx]
-	add edx,local_page_linear
+	add edx,ebp
 ;
 	mov ecx,[eax].tls_end_data_va
 	sub ecx,[eax].tls_start_data_va
@@ -2797,7 +2834,7 @@ free_thread_no_debug:
 
 free_thread_no_tls:
 	mov edx,fs:pvStackUserBottom
-	add edx,local_page_linear
+	add edx,ebp
 	mov ecx,fs:pvStackUserSize
 	FreeLinear	
 	mov ax,fs
@@ -3454,7 +3491,9 @@ allocate_mem	PROC far
 	mov ecx,eax
 	push ecx
 	AllocateLocalLinear
-	sub edx,local_page_linear
+	mov ax,system_data_sel
+	mov ds,ax
+	sub edx,ds:flat_base
 ;
 	mov eax,SIZE pe_mem_struc
 	AllocateLocalMem
@@ -3545,8 +3584,13 @@ free_mem_failed:
 	jmp free_mem_done
 
 free_mem_ok:
+    push ds
+    mov ax,system_data_sel
+    mov ds,ax
 	mov edx,es:mem_base
-	add edx,local_page_linear
+	add edx,ds:flat_base
+	pop ds
+;
 	mov ecx,es:mem_size
 	FreeLinear
 	mov ds:app_mem_blocks,es
@@ -3608,7 +3652,9 @@ debug_allocate_mem	PROC far
 	mov ecx,eax
 	push ecx
 	AllocateDebugLocalLinear
-	sub edx,local_page_linear
+    mov ax,system_data_sel
+    mov ds,ax
+	sub edx,ds:flat_base
 ;
 	mov eax,SIZE pe_mem_struc
 	AllocateLocalMem
@@ -3746,8 +3792,12 @@ debug_free_mem_ok:
     int 3
         
 debug_free_mem_check_done:
+    push ds
+    mov ax,system_data_sel
+    mov ds,ax
 	mov edx,es:mem_base
-	add edx,local_page_linear
+	add edx,ds:flat_base
+	pop ds
 	mov ecx,es:mem_size
 	FreeLinear
 ;
@@ -3804,7 +3854,15 @@ reserve_pe_mem_name	DB 'Reserve PE Mem',0
 reserve_pe_mem	PROC far
 	push eax
 	push edx
-    add edx,local_page_linear
+;	
+    push ds
+	push bx
+	mov bx,system_data_sel
+	mov ds,bx
+    add edx,ds:flat_base
+    pop bx
+    pop ds
+;
 	cmp edx,flat_size
 	jnc reserve_pe_mem_done
 ;
@@ -4287,6 +4345,10 @@ open_app	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_app	Proc far
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ebp,ds:flat_base
+;    
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
@@ -4318,7 +4380,7 @@ close_app	Proc far
 	mov edx,[edx]
 	mov esi,fs:pvTLSArray
 	mov edx,[esi+4*edx]
-	add edx,local_page_linear
+	add edx,ebp
 ;
 	mov ecx,[eax].tls_end_data_va
 	sub ecx,[eax].tls_start_data_va
@@ -4329,12 +4391,12 @@ unload_no_tls:
 	mov ecx,es:lib_size
 	mov bx,es:lib_file_handle
 	CloseFile
-	add edx,local_page_linear
+	add edx,ebp
 	FreeLinear
 	FreeMem
 ;
 	mov edx,fs:pvStackUserBottom
-	add edx,local_page_linear
+	add edx,ebp
 	mov ecx,fs:pvStackUserSize
 	FreeLinear	
 	mov ax,fs

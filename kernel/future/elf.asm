@@ -273,7 +273,9 @@ load_object	Proc far
 	pushad
 	mov eax,1
 	UnhookPage
-	sub edx,local_page_linear
+	mov ax,system_data_sel
+	mov ds,ax
+	sub edx,ds:flat_base
 	mov ax,flat_data_sel
 	mov ds,ax
 ;
@@ -373,7 +375,12 @@ CreateImage	Proc near
 	push edx
 	push si
 	push edi
+	push ebp
 ;
+    mov ax,system_data_sel
+    mov fs,ax
+    mov ebp,fs:flat_base
+;    
 	mov ax,es
 	mov fs,ax
 	mov ax,fs:lib_object_size
@@ -426,14 +433,14 @@ create_image_size_ok:
 	and ax,0F000h
 	add eax,1000h
 	push edx
-    add edx,local_page_linear
+    add edx,ebp
 	ReserveLocalLinear
 	jnc create_image_alloced
 ;
 	AllocateLocalLinear
 
 create_image_alloced:
-	sub edx,local_page_linear
+	sub edx,ebp
 	SetFlatLinearInvalid
 ;
 	mov fs:lib_base,edx
@@ -455,7 +462,7 @@ hook_object_loop:
 	mov edx,[si].ep_va
 	add edx,fs:lib_reloc
 	mov [si].ep_va,edx
-	add edx,local_page_linear
+	add edx,ebp
 	mov eax,[si].ep_mem_size
 	HookPage
 	add si,fs:lib_object_size	
@@ -468,6 +475,7 @@ create_image_fail:
 	stc
 
 create_image_done:
+    pop ebp
 	pop edi
 	pop si
 	pop edx
@@ -505,12 +513,16 @@ InitStack	Proc near
 	mov fs,bx
 	pop fs
 ;
+    push ds
+    mov ax,system_data_sel
+    mov ds,ax
 	mov eax,100000h
 	AllocateLocalLinear
-	sub edx,local_page_linear
+	sub edx,ds:flat_base
 	add edx,eax
 	mov word ptr [bp].load_ss,flat_data_sel
 	mov [bp].load_esp,edx
+	pop ds
 ;
 	pop edx
 	pop eax
@@ -931,7 +943,9 @@ allocate_mem	PROC far
 	mov ecx,eax
 	push ecx
 	AllocateLocalLinear
-	sub edx,local_page_linear
+	mov ax,system_data_sel
+	mov ds,ax
+	sub edx,ds:flat_base
 ;
 	mov eax,SIZE elf_mem_struc
 	AllocateLocalMem
@@ -997,7 +1011,12 @@ free_mem	PROC far
 	push edx
 	push si
 	push edi
+	push ebp
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ebp,ds:flat_base
+;    
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
@@ -1024,7 +1043,7 @@ free_mem_failed:
 
 free_mem_ok:
 	mov edx,es:mem_base
-	add edx,local_page_linear
+	add edx,ebp
 	mov ecx,es:mem_size
 	FreeLinear
 	mov ds:app_mem_blocks,es
@@ -1049,6 +1068,7 @@ free_mem_last_block:
 free_mem_done:
 	LeaveSection ds:app_lib_section
 ;
+    pop ebp
 	pop edi
 	pop si
 	pop edx
