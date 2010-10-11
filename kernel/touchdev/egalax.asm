@@ -24,8 +24,8 @@
 ; Support for e-Galax touch-screen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME egalax
+                                                
+                NAME egalax
 
 GateSize = 16
 
@@ -35,12 +35,10 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 
-	.386p
-
 ; Auto-detect doesn't seem to work so give COM port here:
 
 COM_PORT = 1
-	
+        
 
 X_START = 100
 Y_START = 100
@@ -57,20 +55,23 @@ td_control      DB ?
 
 data    ENDS
 
-code	SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        .386p
+
+code    SEGMENT byte public use16 'CODE'
+
+        assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			HandleTouch
+;               NAME:                   HandleTouch
 ;
-;		DESCRIPTION:    Handle touch-screen
+;               DESCRIPTION:    Handle touch-screen
 ;
 ;       PARAMETERS:     AL  Port
 ;
-;		RETURNS:		
+;               RETURNS:                
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -252,17 +253,17 @@ htYMaxOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Touch_thread
+;               NAME:                   Touch_thread
 ;
-;		DESCRIPTION:    Touch-screen thread
+;               DESCRIPTION:    Touch-screen thread
 ;
 ;       PARAMETERS:     
 ;
-;		RETURNS:		
+;               RETURNS:                
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-touch_name	DB 'E-GALAX',0
+touch_name      DB 'E-GALAX',0
 
 touch_thread:
     mov ax,500
@@ -298,57 +299,57 @@ ttDone:
     retf
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			INIT_TOUCH
+;               NAME:                   INIT_TOUCH
 ;
-;		DESCRIPTION:	Init touch
+;               DESCRIPTION:    Init touch
 ;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_touch_name	DB 'Init Touch', 0
-
-init_touch	Proc far
-	push ds
-	push es
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET touch_name
-	mov si,OFFSET touch_thread
-	mov ax,4
-	mov cx,100h
-	CreateThread
-;
-	pop es
-	pop ds
-	ret
-init_touch	Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			INIT
-;
-;		DESCRIPTION:	Init touch-screen
-;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET init_touch
-	HookInitTasking
-	clc
-	ret
-init	ENDP
+init_touch_name DB 'Init Touch', 0
 
-code	ENDS
+init_touch      Proc far
+        push ds
+        push es
+;
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET touch_name
+        mov si,OFFSET touch_thread
+        mov ax,4
+        mov cx,100h
+        CreateThread
+;
+        pop es
+        pop ds
+        ret
+init_touch      Endp
 
-	END init
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   INIT
+;
+;               DESCRIPTION:    Init touch-screen
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init    PROC far
+        mov ax,cs
+        mov es,ax
+        mov di,OFFSET init_touch
+        HookInitTasking
+        clc
+        ret
+init    ENDP
+
+code    ENDS
+
+        END init

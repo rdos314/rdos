@@ -1,3 +1,3 @@
-project : D:\rdos\kernel\netdev\rtl8xxx.rdv .SYMBOLIC
+project : c:\rdos\kernel\netdev\rtl8xxx.rdv .SYMBOLIC
 
-!include D:\rdos\kernel\netdev\rtl8xxx.mk1
+!include c:\rdos\kernel\netdev\rtl8xxx.mk1
