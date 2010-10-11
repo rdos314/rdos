@@ -27,6 +27,7 @@
 
 #include <memory.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 
 #include "rdosimg.h"
@@ -2190,6 +2191,7 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
 {
     const char *ptr;
     char file[64];
+    char fullname[_MAX_PATH];
     char ch;
     int i;
     TRdosObject *obj = 0;
@@ -2221,11 +2223,12 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
     
     if (!strcmp(cmd, "device"))
     {
-        obj = new TRdosDosDeviceObject(file, ptr);
+        _fullpath(fullname, file, _MAX_PATH);
+        obj = new TRdosDosDeviceObject(fullname, ptr);
         if (obj->GetType() != RDOS_OBJECT_DOS_DEVICE)
         {
             delete obj;
-            obj = new TRdosDevice16Object(file, ptr);
+            obj = new TRdosDevice16Object(fullname, ptr);
         } 
     }
     
