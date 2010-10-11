@@ -173,7 +173,7 @@ public:
 class TRdosDosDeviceObject : public TRdosDosDeviceBaseObject
 {
 public:
-    TRdosDosDeviceObject(const char *DeviceFileName);
+    TRdosDosDeviceObject(const char *DeviceFileName, const char *Param);
     TRdosDosDeviceObject(TFile *File, int Size);
 
 #ifdef __RDOS__
@@ -188,7 +188,7 @@ public:
 class TRdosDevice16Object : public TRdosDevice16BaseObject
 {
 public:
-    TRdosDevice16Object(const char *DeviceFileName);
+    TRdosDevice16Object(const char *DeviceFileName, const char *Param);
     TRdosDevice16Object(TFile *File, int Size);
 
 #ifdef __RDOS__

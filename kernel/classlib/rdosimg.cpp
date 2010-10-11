@@ -497,7 +497,6 @@ TRdosDosDeviceBaseObject::~TRdosDosDeviceBaseObject()
 ##########################################################################*/
 int TRdosDosDeviceBaseObject::LoadDeviceFile(const char *FileName, const char *Param)
 {
-    char NameParam[256];
     TExeHeader ExeHeader;
     TFile File(FileName);
     int HeaderSize;
@@ -638,7 +637,6 @@ TRdosDevice16BaseObject::~TRdosDevice16BaseObject()
 ##########################################################################*/
 int TRdosDevice16BaseObject::LoadDeviceFile(const char *FileName, const char *Param)
 {
-    char NameParam[256];
     TRdvHeader16 ExeHeader;
     TFile File(FileName);
     int HeaderSize;
@@ -958,9 +956,9 @@ TString TRdosSimpleDeviceObject::GetInfo()
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDosDeviceObject::TRdosDosDeviceObject(const char *DeviceFileName)
+TRdosDosDeviceObject::TRdosDosDeviceObject(const char *DeviceFileName, const char *Param)
 {
-    if (LoadDeviceFile(DeviceFileName, ""))
+    if (LoadDeviceFile(DeviceFileName, Param))
         FType = RDOS_OBJECT_DOS_DEVICE;
 }
 
@@ -1057,9 +1055,9 @@ TString TRdosDosDeviceObject::GetInfo()
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosDevice16Object::TRdosDevice16Object(const char *DeviceFileName)
+TRdosDevice16Object::TRdosDevice16Object(const char *DeviceFileName, const char *Param)
 {
-    if (LoadDeviceFile(DeviceFileName, ""))
+    if (LoadDeviceFile(DeviceFileName, Param))
         FType = RDOS_OBJECT_DEVICE16;
 }
 
@@ -1549,7 +1547,6 @@ TString TRdosFileObject::GetInfo()
 void TRdosFileObject::LoadFileAndHeader(const char *FileName)
 {
     TFile File(FileName);
-    int i;
     const char *ptr;
     int HeaderSize;
     TDateTime time;
@@ -2191,29 +2188,52 @@ void TRdosImage::AddRunning()
 ##########################################################################*/
 void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
 {
+    const char *ptr;
+    char file[64];
+    char ch;
+    int i;
     TRdosObject *obj = 0;
+
+    ptr = param;
+    for (i = 0; i < 63 && *ptr; i++)
+    {
+        ch = tolower(*ptr);
     
+        if (ch == ' ' || ch == 0x8 || ch == '=')
+            break;
+        else
+        {
+            file[i] = ch;
+            ptr++;
+        }
+    }
+
+    file[i] = 0;    
+
+    while (*ptr == ' ' || *ptr == 0x8 || *ptr == '=')
+        ptr++;
+
     if (!strcmp(cmd, "kernel"))
-        obj = new TRdosKernelObject(param);
+        obj = new TRdosKernelObject(file);
     
     if (!strcmp(cmd, "font"))
-        obj = new TRdosFontObject(param);
+        obj = new TRdosFontObject(file);
     
     if (!strcmp(cmd, "device"))
     {
-        obj = new TRdosDosDeviceObject(param);
+        obj = new TRdosDosDeviceObject(file, ptr);
         if (obj->GetType() != RDOS_OBJECT_DOS_DEVICE)
         {
             delete obj;
-            obj = new TRdosDevice16Object(param);
+            obj = new TRdosDevice16Object(file, ptr);
         } 
     }
     
     if (!strcmp(cmd, "shutdown"))
-        obj = new TRdosShutdownObject(param);
+        obj = new TRdosShutdownObject(file);
     
     if (!strcmp(cmd, "file"))
-        obj = new TRdosFileObject(param);
+        obj = new TRdosFileObject(file);
     
     if (!strcmp(cmd, "run"))
         obj = new TRdosCommandObject(param);
@@ -2231,7 +2251,7 @@ void TRdosImage::AddConfigCmd(const char *cmd, const char *param)
         else
         {
             printf("Cannot find <");
-            printf(param);
+            printf(file);
             printf(">\r\n");
             delete obj;
         }
@@ -2303,7 +2323,6 @@ void TRdosImage::AddConfig(const char *ConfigFile)
     char CurrentRow[1024];
     char *ptr;
     TFile File(ConfigFile);
-    TRdosObject *obj;
 
     if (File.IsOpen())
     {

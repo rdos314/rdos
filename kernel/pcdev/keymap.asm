@@ -64,71 +64,71 @@ code    SEGMENT byte public use16 'CODE'
         assume cs:code
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			dummy_scan
+;               NAME:                   dummy_scan
 ;
-;		DESCRIPTION:	Handle unsupported keys
+;               DESCRIPTION:    Handle unsupported keys
 ;
-;		PARAMETERS:		AL		scan code
+;               PARAMETERS:             AL              scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-dummy_scan	PROC near
-	stc 
-	ret
-dummy_scan	ENDP
+dummy_scan      PROC near
+        stc 
+        ret
+dummy_scan      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			state_scan
+;               NAME:                   state_scan
 ;
-;		DESCRIPTION:	Handle state key
+;               DESCRIPTION:    Handle state key
 ;
-;		PARAMETERS:		AL		scan code
+;               PARAMETERS:             AL              scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-state_scan	PROC near
+state_scan      PROC near
     and ax,80h
-	clc
-	ret
-state_scan	ENDP
+        clc
+        ret
+state_scan      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			del_scan
+;               NAME:                   del_scan
 ;
-;		DESCRIPTION:	Handle DEL key
+;               DESCRIPTION:    Handle DEL key
 ;
-;		PARAMETERS:		AL		scan code
+;               PARAMETERS:             AL              scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-del_scan	PROC near
+del_scan        PROC near
     push ax
     GetKeyboardState
     mov cx,ax
     pop ax
 ;
-	and cx,alt_pressed OR ctrl_pressed
-	cmp cx,alt_pressed OR ctrl_pressed
-	jne num_scan
+        and cx,alt_pressed OR ctrl_pressed
+        cmp cx,alt_pressed OR ctrl_pressed
+        jne num_scan
 ;
     CpuReset
-	ret
-del_scan	Endp
+        ret
+del_scan        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			handle_scan
+;               NAME:                   handle_scan
 ;
-;		DESCRIPTION:	Handle a scan
+;               DESCRIPTION:    Handle a scan
 ;
-;		PARAMETERS:		AL      scan code
+;               PARAMETERS:             AL      scan code
 ;                       CX      State
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -137,155 +137,155 @@ handle_scan Proc near
     test cx,ctrl_pressed
     jz handle_not_ctrl
 ;
-	mov ah,cs:[bx].ctrl_code
-	cmp ah,-1
+        mov ah,cs:[bx].ctrl_code
+        cmp ah,-1
     jne handle_check
 
 handle_not_ctrl:
     test cx,alt_pressed
     jz handle_not_alt
 ;
-	mov ah,cs:[bx].alt_code
-	cmp ah,-1
+        mov ah,cs:[bx].alt_code
+        cmp ah,-1
     jne handle_check
 
 handle_not_alt:
     test cx,shift_pressed
     jz handle_not_shift
 ;
-	mov ah,cs:[bx].shift_code
-	cmp ah,-1
+        mov ah,cs:[bx].shift_code
+        cmp ah,-1
     jne handle_check
 
 handle_not_shift:
-	mov ah,cs:[bx].normal_code
+        mov ah,cs:[bx].normal_code
 
 handle_check:
-	or ah,ah
-	jne handle_no_ext
+        or ah,ah
+        jne handle_no_ext
 ;
     mov cl,al
-	movzx ax,byte ptr cs:[bx].ext_code
-	and cl,80h
-	or al,cl
-	
+        movzx ax,byte ptr cs:[bx].ext_code
+        and cl,80h
+        or al,cl
+        
 handle_no_ext:
     clc
     ret
 handle_scan Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			simple_scan
+;               NAME:                   simple_scan
 ;
-;		DESCRIPTION:	Handle normal keys
+;               DESCRIPTION:    Handle normal keys
 ;
-;		PARAMETERS:		AL		scan code
+;               PARAMETERS:             AL              scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-simple_scan	PROC near
+simple_scan     PROC near
     push ax
     GetKeyboardState
     mov cx,ax
     pop ax
     call handle_scan
-	ret
-simple_scan	ENDP
+        ret
+simple_scan     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			caps_scan
+;               NAME:                   caps_scan
 ;
-;		DESCRIPTION:	Handle case sensitive keys
+;               DESCRIPTION:    Handle case sensitive keys
 ;
-;		PARAMETERS:		AL		scan code
+;               PARAMETERS:             AL              scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-caps_scan	PROC near
+caps_scan       PROC near
     push ax
     GetKeyboardState
     mov cx,ax
     pop ax
 ;
-	and cx,107h
-	xor cl,ch
-	and cx,7
-	call handle_scan
-	ret
-caps_scan	ENDP
+        and cx,107h
+        xor cl,ch
+        and cx,7
+        call handle_scan
+        ret
+caps_scan       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			num_scan
+;               NAME:                   num_scan
 ;
-;		DESCRIPTION:	Handle numeric keys
+;               DESCRIPTION:    Handle numeric keys
 ;
-;		PARAMETERS:		AL		scan code
+;               PARAMETERS:             AL              scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-num_scan	PROC near
+num_scan        PROC near
     push ax
     GetKeyboardState
     mov cx,ax
     pop ax
 ;
-	and cx,205h
-	shr ch,1
-	xor cl,ch
-	xor ch,ch
-	add bx,cx
-	cmp cx,1
-	jne num_sc_no_num
+        and cx,205h
+        shr ch,1
+        xor cl,ch
+        xor ch,ch
+        add bx,cx
+        cmp cx,1
+        jne num_sc_no_num
 ;
-	mov ah,cs:[bx]
-	jmp num_sc_end
-	
+        mov ah,cs:[bx]
+        jmp num_sc_end
+        
 num_sc_no_num:
     mov cl,al
-	movzx ax,byte ptr cs:[bx]
-	and cl,80h
-	or al,cl
+        movzx ax,byte ptr cs:[bx]
+        and cl,80h
+        or al,cl
 
 num_sc_end:
-	clc
-	ret
-num_scan	ENDP
+        clc
+        ret
+num_scan        ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			f_key_scan
+;               NAME:                   f_key_scan
 ;
-;		DESCRIPTION:	Handle function keys
+;               DESCRIPTION:    Handle function keys
 ;
-;		PARAMETERS:		AL		scan code
+;               PARAMETERS:             AL              scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-f_key_scan	PROC near
+f_key_scan      PROC near
     push ax
     GetKeyboardState
     mov cx,ax
     pop ax
     call handle_scan
     xor ah,ah
-	ret
-f_key_scan	ENDP
+        ret
+f_key_scan      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			decode_scan_code
+;               NAME:                   decode_scan_code
 ;
-;		DESCRIPTION:	Decode scan code
+;               DESCRIPTION:    Decode scan code
 ;
-;		PARAMETERS:		AL		scan code
+;               PARAMETERS:             AL              scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -309,29 +309,29 @@ process_key_scan   Proc far
     mov ds,bx
     mov ds,ds:curr_scan
     movzx bx,al
-    and bl,NOT 80h
+    and bl,7Fh
     mov dh,al
-	shl bx,3
-	add bx,ds:st_offs
-	mov es,ds:st_sel
+        shl bx,3
+        add bx,ds:st_offs
+        mov es,ds:st_sel
 ;
     xor di,di
-	push ax
-	GetKeyboardState
-	mov cx,ax
-	pop ax
-	test cx,ext_numpad_active
-	jz proc_scan_get_vk
+        push ax
+        GetKeyboardState
+        mov cx,ax
+        pop ax
+        test cx,ext_numpad_active
+        jz proc_scan_get_vk
 ;
-	inc di
-	
+        inc di
+        
 proc_scan_get_vk:
-	mov dl,byte ptr es:[bx+di].vk_code
+        mov dl,byte ptr es:[bx+di].vk_code
 ;
     movzx di,byte ptr es:[bx].key_type
     add di,di
-	call word ptr es:[di].key_type_tab
-	jc proc_scan_done
+        call word ptr es:[di].key_type_tab
+        jc proc_scan_done
 ;
     PutKeyboardCode
 
@@ -339,8 +339,8 @@ proc_scan_done:
     popa
     pop es
     pop ds
-	ret
-process_key_scan	ENDP
+        ret
+process_key_scan        ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -567,6 +567,9 @@ set_key_layout32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    push es
+    push edi
+;    
     call AddInternal
 ;    
     mov ax,cs
@@ -592,6 +595,10 @@ init    PROC far
     mov dx,virt_es_in
     mov ax,set_key_layout_nr
     RegisterUserGate    
+;
+    pop edi
+    pop es
+    call set_key_layout
     clc
     ret
 init    ENDP

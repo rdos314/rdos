@@ -385,6 +385,15 @@ install_device16    Proc near
 	add edx,SIZE rdos_header
 	mov esi,edx
 	mov ebx,[esi].dev16_size
+	mov edi,esi
+	add edi,SIZE device16_header
+
+install_device16_param_loop:
+    mov al,[edi]
+    inc edi
+    or al,al
+    jnz install_device16_param_loop
+;	
 	movzx ecx,[esi].dev16_code_size
 	add edx,ebx
 	mov bx,[esi].dev16_code_sel
@@ -394,7 +403,7 @@ install_device16    Proc near
 	mov bx,device_code_sel
 
 install_device16_cr_code:
-    mov di,bx
+    mov bp,bx
 	CreateCodeSelector16
 ;
     xor bx,bx
@@ -407,11 +416,13 @@ install_device16_cr_code:
 	CreateDataSelector16
 
 install_device16_sel_ok:
+    mov ax,ds
+    mov es,ax
 	mov ax,[esi].dev16_init_ip
 	mov ds,bx
 	push cs
 	push OFFSET install_device16_end
-	push di
+	push bp
 	push ax
 	retf
 
