@@ -1304,8 +1304,8 @@ void TLabelControl::SetText(TString &Text)
 ##########################################################################*/
 const char *TLabelControl::GetText()
 {
-    if (FText)
-        return FText;
+    if (FOrgText)
+        return FOrgText;
     else
         return "";
 }
