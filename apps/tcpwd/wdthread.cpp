@@ -36,6 +36,12 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#define THD_WAIT        2
+#define THD_SIGNAL      3
+#define THD_KEYBOARD    4
+#define THD_BLOCKED     5
+#define THD_RUN         6
+
 /*##########################################################################
 #
 #   Name       : TWdThreadFactory::TWdThreadFactory
@@ -128,6 +134,10 @@ TWdThreadService::~TWdThreadService()
 void TWdThreadService::ReqGetNext()
 {
     int id;
+    char list = 0;
+    int ok;
+    int i;
+    ThreadState state;
     TDebug *Debug = GetDebug();
     
     id = GetDword();
@@ -137,8 +147,44 @@ void TWdThreadService::ReqGetNext()
     else
         id = 0;
 
+    if (id)
+    {
+
+        ok = FALSE;
+    
+        for (i = 0; i < 256 && !ok; i++)
+        {
+            RdosGetThreadState(i, &state);
+            if (state.ID == id)
+                ok = TRUE;
+        }
+
+        if (ok)
+        {
+            list = THD_BLOCKED;
+
+            if (strstr(state.List, "Ready"))
+                list = THD_RUN;
+
+            if (strstr(state.List, "Run"))
+                list = THD_RUN;
+                
+            if (strstr(state.List, "Debug"))
+                list = 0;
+                
+            if (strstr(state.List, "Wait"))
+                list = THD_WAIT;
+
+            if (strstr(state.List, "Signal"))
+                list = THD_SIGNAL;
+
+            if (strstr(state.List, "Keyboard"))
+                list = THD_KEYBOARD;
+        }
+    }
+    
     PutDword(id);
-    PutByte(0);    
+    PutByte(list);
 }
 
 /*##########################################################################
@@ -289,7 +335,7 @@ void TWdThreadService::NotifyMsg()
             break;
 
         case 2:
-			ReqFreeze();
+                        ReqFreeze();
             break;
 
         case 3:
