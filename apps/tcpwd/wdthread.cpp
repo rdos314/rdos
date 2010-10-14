@@ -41,6 +41,7 @@
 #define THD_KEYBOARD    4
 #define THD_BLOCKED     5
 #define THD_RUN         6
+#define THD_DEBUG       7
 
 /*##########################################################################
 #
@@ -134,7 +135,7 @@ TWdThreadService::~TWdThreadService()
 void TWdThreadService::ReqGetNext()
 {
     int id;
-    char list = 0;
+    char list = THD_BLOCKED;
     int ok;
     int i;
     ThreadState state;
@@ -161,8 +162,6 @@ void TWdThreadService::ReqGetNext()
 
         if (ok)
         {
-            list = THD_BLOCKED;
-
             if (strstr(state.List, "Ready"))
                 list = THD_RUN;
 
@@ -170,7 +169,7 @@ void TWdThreadService::ReqGetNext()
                 list = THD_RUN;
                 
             if (strstr(state.List, "Debug"))
-                list = 0;
+                list = THD_DEBUG;
                 
             if (strstr(state.List, "Wait"))
                 list = THD_WAIT;
