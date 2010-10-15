@@ -48,7 +48,7 @@
 #
 ##########################################################################*/
 TWdAsyncFactory::TWdAsyncFactory(TWdSocketServerFactory *factory)
- : TWdSupplFactory(factory, "Async")
+ : TWdSupplFactory(factory, "Asynch")
 {
 }
 
