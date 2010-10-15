@@ -20,32 +20,36 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# tcpwd.cpp
-# TCP-base remote server for WD
+# wdasync.h
+# WD supplementary async support class
 #
 ########################################################################*/
 
-#include "rdos.h"
-#include "wdfact.h"
-#include "wdfile.h"
-#include "wdfinfo.h"
-#include "wdenv.h"
-#include "wdthread.h"
-#include "wdcap.h"
-#include "wdasync.h"
+#ifndef _WDASYNC_H
+#define _WDASYNC_H
 
-int main(int argc, char **argv)
+#include "wdsuppl.h"
+
+class TWdAsyncFactory : public TWdSupplFactory
 {
-	TWdSupplFactory *suppl;
-	TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
+public:
+    TWdAsyncFactory(TWdSocketServerFactory *factory);
+	virtual ~TWdAsyncFactory();
+	
+	virtual TWdSupplService *Create(TWdSocketServer *server);
+};
 
-	suppl = new TWdFileFactory(&fact);
-	suppl = new TWdFileInfoFactory(&fact);
-	suppl = new TWdEnvFactory(&fact);
-	suppl = new TWdThreadFactory(&fact);
-	suppl = new TWdCapFactory(&fact);
-	suppl = new TWdAsyncFactory(&fact);
+class TWdAsyncService : public TWdSupplService
+{
+public:
+    TWdAsyncService(TWdSocketServer *server);
+	virtual ~TWdAsyncService();
 
-	for (;;)
-		fact.WaitForever();
-}
+    virtual void NotifyMsg();
+
+protected:
+    void ReqError();
+
+};
+
+#endif
