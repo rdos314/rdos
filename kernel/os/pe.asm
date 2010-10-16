@@ -1584,7 +1584,7 @@ notify_check_debug:
 	or dx,dx
 	jnz notify_dll_done
 ;
-;	call Preload
+	call Preload
 	push ds
 	push es
 	mov ax,es
@@ -1860,7 +1860,7 @@ load_dll_do:
 	or dx,dx
 	jz load_dll_nodeb
 ;
-;	call Preload
+	call Preload
 	push ds
 	push es
 	mov ax,es
@@ -3195,7 +3195,7 @@ spawn_param_ok:
 	or dx,dx
 	jz spawn_no_debug
 ;
-;	call Preload
+	call Preload
 	push ds
 	push es
 	mov ax,es
