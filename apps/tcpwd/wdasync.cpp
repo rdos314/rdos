@@ -36,6 +36,22 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#define COND_CONFIG         0x1
+#define COND_SECTIONS       0x2
+#define COND_LIBRARIES      0x4
+#define COND_ALIAS          0x8
+#define COND_THREAD         0x10
+#define COND_THREAD_INFO    0x20
+#define COND_TRACE          0x40
+#define COND_BREAK          0x80
+#define COND_WATCH          0x100
+#define COND_USER           0x200
+#define COND_TERMINATE      0x400
+#define COND_EXCEPTION      0x800
+#define COND_MSG            0x1000
+#define COND_STOP           0x2000
+#define COND_RUNNING        0x4000
+
 /*##########################################################################
 #
 #   Name       : TWdAsyncFactory::TWdAsyncFactory
@@ -116,6 +132,154 @@ TWdAsyncService::~TWdAsyncService()
 
 /*##########################################################################
 #
+#   Name       : TWdAsyncService::ReqProgGo
+#
+#   Purpose....: Req run program
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdAsyncService::ReqAsyncGo()
+{
+        short int CondFlags = COND_THREAD_INFO;
+        TDebug *debug = GetDebug();
+        TDebugThread *curr = 0;
+
+        if (debug)
+        {
+        curr = debug->GetCurrentThread();
+                debug->Go();
+
+                if (debug->IsTerminated())
+                        CondFlags |= COND_TERMINATE;
+
+                if (debug->HasThreadChange())
+                {
+                        debug->ClearThreadChange();
+                        CondFlags |= COND_THREAD;
+                        curr = debug->GetCurrentThread();
+                        SetCurrentThread(curr);
+                }
+
+                if (debug->HasModuleChange())
+                {
+                        debug->ClearModuleChange();
+                        CondFlags |= COND_LIBRARIES;
+                }
+
+        if (curr)
+                {
+            if (curr->HasBreakOccurred())
+                CondFlags |= COND_BREAK;
+
+            if (curr->HasTraceOccurred())
+                CondFlags |= COND_WATCH;
+
+            if (curr->HasFaultOccurred())
+                CondFlags |= COND_EXCEPTION;                
+        }
+    }                   
+
+    if (curr)
+    {
+        PutDword(curr->Esp);
+        PutWord((short int)curr->Ss);
+
+        PutDword(curr->Eip);
+        PutWord((short int)curr->Cs);
+
+        PutWord(CondFlags);
+    }
+    else
+        {
+        PutDword(0);
+        PutWord(0);    
+
+        PutDword(0);
+        PutWord(0);   
+
+                PutWord(CondFlags);
+        }
+}
+
+/*##########################################################################
+#
+#   Name       : TWdAsyncService::ReqProgStep
+#
+#   Purpose....: Req step program
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdAsyncService::ReqAsyncStep()
+{
+        short int CondFlags = COND_THREAD_INFO;
+        TDebug *debug = GetDebug();
+        TDebugThread *curr = 0;
+
+        if (debug)
+        {
+        curr = debug->GetCurrentThread();
+                debug->Trace();
+
+                if (debug->IsTerminated())
+                        CondFlags |= COND_TERMINATE;
+
+                if (debug->HasThreadChange())
+                {
+                        debug->ClearThreadChange();
+                        CondFlags |= COND_THREAD;
+                        curr = debug->GetCurrentThread();
+                        SetCurrentThread(curr);
+                }
+
+                if (debug->HasModuleChange())
+                {
+                        debug->ClearModuleChange();
+                        CondFlags |= COND_LIBRARIES;
+                }
+
+                if (curr)
+                {
+                        if (curr->HasBreakOccurred())
+                                CondFlags |= COND_BREAK;
+
+                        if (curr->HasTraceOccurred())
+                                CondFlags |= COND_TRACE;
+
+            if (curr->HasFaultOccurred())
+                CondFlags |= COND_EXCEPTION;                
+        }
+    }                   
+
+    if (curr)
+    {
+        PutDword(curr->Esp);
+        PutWord((short int)curr->Ss);
+
+        PutDword(curr->Eip);
+        PutWord((short int)curr->Cs);
+
+        PutWord(CondFlags);
+    }
+    else
+    {
+        PutDword(0);
+        PutWord(0);    
+
+        PutDword(0);
+        PutWord(0);   
+
+        PutWord(CondFlags);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TWdAsyncService::ReqError
 #
 #   Purpose....: Req error
@@ -149,6 +313,13 @@ void TWdAsyncService::NotifyMsg()
 
     switch (ch)
     {
+        case 0:
+            ReqAsyncGo();
+            break;
+
+        case 1:
+            ReqAsyncStep();
+            break;
 
         default:
             ReqError();

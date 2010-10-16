@@ -57,7 +57,6 @@ public:
     TWdSupplService *FNext;
 
 protected:
-
     char GetByte();
     short int GetWord();
     long GetDword();
@@ -68,6 +67,8 @@ protected:
     void PutDword(long val);
     void PutString(const char *str);
     void PutData(void *ptr, int size);
+
+    void SetCurrentThread(TDebugThread *thread);
 
     TDebug *GetDebug();
     TString GetFullPathName(char *name, const char *ext);

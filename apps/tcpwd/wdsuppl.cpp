@@ -267,6 +267,22 @@ TDebug *TWdSupplService::GetDebug()
 
 /*##########################################################################
 #
+#   Name       : TWdSupplService::SetCurrentThread
+#
+#   Purpose....: Set current thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSupplService::SetCurrentThread(TDebugThread *thread)
+{
+    FServer->FCurrentThread = thread;
+}
+
+/*##########################################################################
+#
 #   Name       : TWdSupplService::GetFullPathName
 #
 #   Purpose....: Get full pathname for file

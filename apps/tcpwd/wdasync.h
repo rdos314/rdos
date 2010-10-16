@@ -48,6 +48,8 @@ public:
     virtual void NotifyMsg();
 
 protected:
+    void ReqAsyncGo();
+    void ReqAsyncStep();
     void ReqError();
 
 };
