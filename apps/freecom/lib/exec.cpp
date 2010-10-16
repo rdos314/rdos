@@ -70,6 +70,7 @@ int TExecCommand::Execute(char *param)
     TPathName StartupDir;
     int ThreadId;
     int Handle;
+    char env[2] = {0, 0};
 
     if (FDetach)
     {
@@ -83,6 +84,6 @@ int TExecCommand::Execute(char *param)
             return -1;
      }
      else
-          return RdosExec(FProgName.GetData(), param, 0);
+          return RdosExec(FProgName.GetData(), param, env);
 }
 

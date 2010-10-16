@@ -2391,6 +2391,7 @@ CreateImage	Proc near
     add edx,ebp
 	ReserveLocalLinear
 	jnc create_image_alloced
+;
 	AllocateLocalLinear
 
 create_image_alloced:
