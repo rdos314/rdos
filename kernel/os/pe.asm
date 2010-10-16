@@ -1008,14 +1008,14 @@ FindObject	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RelocObject
+;		NAME:			RelocPage
 ;
-;		DESCRIPTION:    Relocate a object
+;		DESCRIPTION:    Relocate a single page
 ;
 ;		PARAMETERS:     ES		Lib handle
 ;						EDI		Image base
-;						EDX		Linear address
-;                       EBP     Virtual address
+;						EDX		Allocate buffer
+;						EBP		Real address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1074,7 +1074,7 @@ rtD	DW OFFSET reloc_nop
 rtE	DW OFFSET reloc_nop
 rtF	DW OFFSET reloc_nop
 
-RelocObject	Proc near
+RelocPage	Proc near
 	push eax
 	push ebx
 	push ecx
@@ -1102,6 +1102,7 @@ reloc_object_fixup_search:
 	add eax,edi
 	cmp eax,ebp
 	je reloc_object_fixup_found
+;	
 	mov eax,[esi].fixup_size
 	add esi,eax
 	sub ecx,eax
@@ -1111,9 +1112,6 @@ reloc_object_fixup_search:
 
 reloc_object_fixup_found:
 	sub edi,[ebx].peh_image_base
-	or edi,edi
-	jz reloc_object_done
-;
 	mov ecx,[esi].fixup_size
 	add esi,OFFSET fixup_data
 	sub ecx,OFFSET fixup_data
@@ -1134,7 +1132,116 @@ reloc_object_done:
 	pop ebx
 	pop eax
 	ret
-RelocObject	Endp
+RelocPage	Endp
+                                          
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CheckReloc
+;
+;		DESCRIPTION:    Check if any relocation span pages
+;
+;		PARAMETERS:     ES		Lib handle
+;						EDI		Image base
+;						EBP		Real address
+;
+;       RETURNS:        CY      Relocation spans pages
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reloc_size_tab:
+rs0	DB 0
+rs1	DB 2
+rs2	DB 2
+rs3	DB 4
+rs4	DB 0
+rs5	DB 0
+rs6	DB 0
+rs7	DB 0
+rs8	DB 0
+rs9	DB 0
+rsA	DB 0
+rsB	DB 0
+rsC	DB 0
+rsD	DB 0
+rsE	DB 0
+rsF	DB 0
+
+CheckReloc	Proc near
+	push eax
+	push ebx
+	push ecx
+	push esi
+;
+	mov ebx,es:lib_header
+	mov ecx,[ebx].peh_fixup_size
+	mov esi,[ebx].peh_fixup_va	
+;
+    or ecx,ecx
+    jz check_reloc_ok
+;    	
+	or esi,esi
+	jz check_reloc_ok
+;
+	add esi,edi
+
+check_reloc_fixup_search:
+	or esi,esi
+	jz check_reloc_ok
+	
+	mov eax,[esi].fixup_va
+	or eax,eax
+	je check_reloc_ok
+;
+	add eax,edi
+	cmp eax,ebp
+	je check_reloc_fixup_found
+;	
+	mov eax,[esi].fixup_size
+	add esi,eax
+	sub ecx,eax
+	jz check_reloc_ok
+	jnc check_reloc_fixup_search
+	jmp check_reloc_ok
+
+check_reloc_fixup_found:
+	mov ecx,[esi].fixup_size
+	add esi,OFFSET fixup_data
+	sub ecx,OFFSET fixup_data
+
+check_reloc_loop:
+	lods word ptr [esi]
+	sub ecx,2
+	movzx bx,ah
+	shr bx,4
+	movzx bx,byte ptr cs:[bx].reloc_size_tab
+	or bx,bx
+	jz check_reloc_next
+;	
+	and ax,0FFFh
+	add ax,bx
+	dec ax
+    test ax,1000h
+    jnz check_reloc_failed
+
+check_reloc_next:    	
+	or ecx,ecx
+	jnz check_reloc_loop
+
+check_reloc_ok:
+    clc
+    jmp check_reloc_done
+    
+check_reloc_failed:
+    stc
+
+check_reloc_done:
+	pop esi
+	pop ecx
+	pop ebx
+	pop eax
+	ret
+CheckReloc	Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1477,7 +1584,7 @@ notify_check_debug:
 	or dx,dx
 	jnz notify_dll_done
 ;
-	call Preload
+;	call Preload
 	push ds
 	push es
 	mov ax,es
@@ -1753,7 +1860,7 @@ load_dll_do:
 	or dx,dx
 	jz load_dll_nodeb
 ;
-	call Preload
+;	call Preload
 	push ds
 	push es
 	mov ax,es
@@ -1877,64 +1984,41 @@ FreePeDll Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			load_object
+;		NAME:			LoadPage
 ;
-;		DESCRIPTION:    Demand load object
+;		DESCRIPTION:    Load a single page in the image file
 ;
-;		PARAMETERS:     EDX		LINEAR ADDRESS
+;		PARAMETERS:     ECX     Flat base
+;                       EDX		Allocate address
+;		                ESI		Image object
+;                       EDI     Image base
+;                       EBP     Image address
+;                       DS      Flat data sel
+;                       ES      Lib sel
+;
+;       RETURNS:        NC      Load success
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_object	Proc far
-	push ds
-	push es
-	pushad
-;	
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ebp,ds:flat_base
-	sub edx,ebp
-	mov ax,flat_data_sel
-	mov ds,ax
-	and dx,0F000h
+LoadPage    Proc near
+    pushad
 ;
-	call FindLib
-	jc load_object_done
-;
-    mov ax,es
-    mov ds,ax
-    EnterSection ds:mod_section
-;
-	mov cx,process_page_sel
-	mov ds,cx
-	mov eax,edx
-    add eax,ebp
-	shr eax,10
-;
-	mov eax,[eax]
-	test al,1
-	jnz load_object_leave
-;	
-	mov ax,flat_data_sel
-	mov ds,ax
-	call FindObject
-	jc load_object_leave
-;
-    mov ebp,edx
-    mov eax,1000h
-    AllocateLocalLinear
     push ds
-    push ax
-    mov ax,system_data_sel
-    mov ds,ax
-    sub edx,ds:flat_base
-    pop ax
-    pop ds
-;
+	mov ax,process_page_sel
+	mov ds,ax
+	mov eax,ebp
+    add eax,ecx
+	shr eax,10
+	mov eax,[eax]
+	pop ds
+	test al,1
+	stc
+	jnz load_page_done
+;	
 	test [esi].o_flags,80h
-	jz load_object_from_file
+	jz load_page_from_file
 
-load_object_init:
+load_page_zero:
 	push es
 	push edi
 	mov ax,ds
@@ -1945,26 +2029,27 @@ load_object_init:
 	rep stos dword ptr es:[edi]
 	pop edi
 	pop es
-	jmp load_object_leave
+	clc
+	jmp load_page_done
 
-load_object_from_file:
+load_page_from_file:
 	mov bx,es:lib_file_handle
 	mov eax,ebp
 	sub eax,edi
 	sub eax,[esi].o_va
 	mov ecx,[esi].o_phys_size
 	sub ecx,eax
-	jnc load_object_file
+	jnc load_page_file
 ;
     xor ecx,ecx	
-    jmp load_object_size_ok
+    jmp load_page_size_ok
 	
-load_object_file:
+load_page_file:
 	cmp ecx,1000h
-	jc load_object_size_ok
+	jc load_page_size_ok
 	mov ecx,1000h
 
-load_object_size_ok:
+load_page_size_ok:
 	add eax,[esi].o_phys_offset
 	SetFilePos	
 ;
@@ -1982,33 +2067,251 @@ load_object_size_ok:
 	rep stos dword ptr es:[edi]
 	pop edi
 	pop es
+    clc
+
+load_page_done:
+    popad
+    ret
+LoadPage    Endp
+                                          
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call RelocObject
 ;
-	mov ecx,[esi].o_flags
-	mov ax,system_data_sel
-	mov ds,ax
-    add edx,ds:flat_base
-    add ebp,ds:flat_base
+;		NAME:			MapFromImage
+;
+;		DESCRIPTION:    Map image file to the allocate buffer
+;
+;		PARAMETERS:     EAX     Size to map
+;                       ECX     Flat base
+;                       EDX		Allocated address
+;		                ESI		Image object
+;                       EDI     Image base
+;                       EBP     Image address
+;                       DS      Flat data sel
+;                       ES      Lib sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapFromImage    Proc near
+    push ds
+    pushad
+;    
+    add edx,ecx
+    add ebp,ecx
+;
+    or eax,eax
+    jz map_from_image_done
+;    
+    mov ecx,eax
+    shr ecx,12
 	mov ax,process_page_sel
 	mov ds,ax
-    push edx
 	shr edx,10
 	shr ebp,10
+
+map_from_image_loop:
+    mov eax,ds:[ebp]
+    mov ds:[edx],eax
 ;
+	add edx,4
+	add ebp,4
+	loop map_from_image_loop
+
+map_from_image_done:
+    popad
+    pop ds
+    ret
+MapFromImage  Endp
+                                          
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MapToImage
+;
+;		DESCRIPTION:    Map allocate buffer to the image file
+;
+;		PARAMETERS:     EAX     Size to map
+;                       EBX     Size of buffer
+;                       ECX     Flat base
+;                       EDX		Allocated address
+;		                ESI		Image object
+;                       EDI     Image base
+;                       EBP     Image address
+;                       DS      Flat data sel
+;                       ES      Lib sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapToImage    Proc near
+    push ds
+    pushad
+;
+    sub ebx,eax
+    shr ebx,12
+    push ebx
+;    
+	mov ebx,[esi].o_flags
+    add edx,ecx
+    add ebp,ecx
+;
+    mov ecx,eax
+    shr ecx,12
+	mov ax,process_page_sel
+	mov ds,ax
+	shr edx,10
+	shr ebp,10
+
+map_to_image_loop:
     xor eax,eax
 	xchg eax,[edx]
+	test al,1
+	jnz map_to_image_valid
 ;
-	test ecx,80000000h
-	jnz load_object_save
+    xor eax,eax
+    jmp map_to_image_save	
+
+map_to_image_valid:
+	test ebx,80000000h
+	jnz map_to_image_save
 
 	and al,NOT 2
 
-load_object_save:
+map_to_image_save:
 	mov ds:[ebp],eax
+	add edx,4
+	add ebp,4
+	loop map_to_image_loop
 ;
+    pop ecx
+    or ecx,ecx
+    jz map_to_image_done
+;
+    xor eax,eax
+
+map_to_image_reset:
+    mov ds:[edx],eax
+    add edx,4
+    loop map_to_image_reset
+
+map_to_image_done:    
+    popad
+    pop ds
+    ret
+MapToImage  Endp
+                                          
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			load_object
+;
+;		DESCRIPTION:    Demand load object
+;
+;		PARAMETERS:     EDX		LINEAR ADDRESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_object	Proc far
+	push ds
+	push es
+	pushad
+;	
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ecx,ds:flat_base
+	sub edx,ecx
+	mov ax,flat_data_sel
+	mov ds,ax
+	and dx,0F000h
+;
+	call FindLib
+	jc load_object_done
+;
+	call FindObject
+	jc load_object_done
+;
+    push ds
+    mov ax,es
+    mov ds,ax
+    EnterSection ds:mod_section
+    pop ds
+;
+    xor eax,eax
+    mov ebp,edx
+;    
+	mov ebx,es:lib_header
+	cmp edi,[ebx].peh_image_base
+    je load_object_size_ok
+
+load_object_get_size:
+    call CheckReloc
+    jnc load_object_size_ok
+;
+    add eax,1000h
+    add ebp,1000h
+    jmp load_object_get_size
+
+load_object_size_ok:
+    mov ebp,edx
+    add eax,1000h
+    AllocateLocalLinear
+    push edx    
+    push eax
+;
+    sub edx,ecx
+;
+    push eax
+    push edx
+    push ebp
+
+load_object_load_loop:
+    call LoadPage
+    jc load_object_load_done
+;
+    sub eax,1000h
+    jz load_object_load_done
+;        
+    add edx,1000h
+    add ebp,1000h
+    jmp load_object_load_loop
+
+load_object_load_done:
+    call MapFromImage
+    mov ebx,eax
+;
+    pop ebp
     pop edx
-    mov ecx,1000h
+    pop eax
+;    
+    sub eax,ebx
+;
+    push eax
+    push edx
+    push ebp    
+;
+	mov ebx,es:lib_header
+	cmp edi,[ebx].peh_image_base
+    je load_object_map
+
+load_object_reloc_loop:
+    call RelocPage
+;
+    sub eax,1000h
+    jz load_object_map
+;        
+    add edx,1000h
+    add ebp,1000h
+    jmp load_object_reloc_loop
+
+load_object_map:
+    pop ebp
+    pop edx
+    pop eax
+;
+    pop ebx
+    call MapToImage
+;
+    mov ecx,ebx
+    pop edx
     FreeLinear
 
 load_object_leave:
@@ -2891,7 +3194,7 @@ spawn_param_ok:
 	or dx,dx
 	jz spawn_no_debug
 ;
-	call Preload
+;	call Preload
 	push ds
 	push es
 	mov ax,es
