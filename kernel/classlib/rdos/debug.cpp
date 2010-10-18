@@ -1439,6 +1439,32 @@ void TDebug::Trace()
 
 /*##########################################################################
 #
+#   Name       : TDebug::AsyncGo
+#
+#   Purpose....: Continue active thread, with timeout
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::AsyncGo(int Timeout)
+{
+    if (CurrentThread)
+    {
+        UserSignal.Clear();
+
+        CurrentThread->SetupGo();
+        CurrentThread->ActivateBreaks(BreakList);
+        RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+
+        UserSignal.WaitTimeout(Timeout);
+    }
+    return UserSignal.IsSignalled();
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::HandleCreateProcess
 #
 #   Purpose....: Handle create process event

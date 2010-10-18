@@ -132,7 +132,7 @@ TWdAsyncService::~TWdAsyncService()
 
 /*##########################################################################
 #
-#   Name       : TWdAsyncService::ReqProgGo
+#   Name       : TWdAsyncService::ReqAsyncGo
 #
 #   Purpose....: Req run program
 #
@@ -143,46 +143,52 @@ TWdAsyncService::~TWdAsyncService()
 ##########################################################################*/
 void TWdAsyncService::ReqAsyncGo()
 {
-        short int CondFlags = COND_THREAD_INFO;
-        TDebug *debug = GetDebug();
-        TDebugThread *curr = 0;
+    int ok;
+    short int CondFlags = COND_THREAD_INFO;
+    TDebug *debug = GetDebug();
+    TDebugThread *curr = 0;
 
-        if (debug)
-        {
+    if (debug)
+    {
         curr = debug->GetCurrentThread();
-                debug->Go();
+        ok = debug->AsyncGo(250);
 
-                if (debug->IsTerminated())
-                        CondFlags |= COND_TERMINATE;
+        if (ok)
+        {
+            if (debug->IsTerminated())
+                CondFlags |= COND_TERMINATE;
 
-                if (debug->HasThreadChange())
-                {
-                        debug->ClearThreadChange();
-                        CondFlags |= COND_THREAD;
-                        curr = debug->GetCurrentThread();
-                        SetCurrentThread(curr);
-                }
+            if (debug->HasThreadChange())
+            {
+                debug->ClearThreadChange();
+                CondFlags |= COND_THREAD;
+                curr = debug->GetCurrentThread();
+                SetCurrentThread(curr);
+            }
 
-                if (debug->HasModuleChange())
-                {
-                        debug->ClearModuleChange();
-                        CondFlags |= COND_LIBRARIES;
-                }
+            if (debug->HasModuleChange())
+            {
+                debug->ClearModuleChange();
+                CondFlags |= COND_LIBRARIES;
+            }
 
-        if (curr)
-                {
-            if (curr->HasBreakOccurred())
-                CondFlags |= COND_BREAK;
+            if (curr)
+            {
+                if (curr->HasBreakOccurred())
+                    CondFlags |= COND_BREAK;
 
-            if (curr->HasTraceOccurred())
-                CondFlags |= COND_WATCH;
+                if (curr->HasTraceOccurred())
+                    CondFlags |= COND_WATCH;
 
-            if (curr->HasFaultOccurred())
-                CondFlags |= COND_EXCEPTION;                
+                if (curr->HasFaultOccurred())
+                    CondFlags |= COND_EXCEPTION;
+            }                
         }
+        else
+            CondFlags = COND_RUNNING;
     }                   
 
-    if (curr)
+    if (curr && ok)
     {
         PutDword(curr->Esp);
         PutWord((short int)curr->Ss);
@@ -200,8 +206,8 @@ void TWdAsyncService::ReqAsyncGo()
         PutDword(0);
         PutWord(0);   
 
-                PutWord(CondFlags);
-        }
+        PutWord(CondFlags);
+    }
 }
 
 /*##########################################################################

@@ -218,6 +218,8 @@ public:
 	void Go();
 	void Trace();
 
+    int AsyncGo(int Timeout);
+
 	int HasThreadChange();
     void ClearThreadChange();
 
