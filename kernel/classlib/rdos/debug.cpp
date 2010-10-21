@@ -84,9 +84,9 @@ TDebugThread::TDebugThread(TCreateThreadEvent *event)
     FDebug = FALSE;
     FWasTrace = FALSE;
 
-        FHasBreak = FALSE;
-        FHasTrace = FALSE;
-        FHasException = FALSE;
+    FHasBreak = FALSE;
+    FHasTrace = FALSE;
+    FHasException = FALSE;
 
     ReadState();
 }
@@ -731,6 +731,10 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
     FThreadChanged = FALSE;
     FModuleChanged = FALSE;
     FHandle = 0;
+
+    FAsyncBreak = FALSE;
+    FAsyncSel = 0;
+    FAsyncOffset = 0;
 
     Start("Debug device", 0x4000);
 }
@@ -1472,6 +1476,59 @@ int TDebug::AsyncGo(int Timeout)
 
 /*##########################################################################
 #
+#   Name       : TDebug::AsyncTrace
+#
+#   Purpose....: Trace active thread, with timeout
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::AsyncTrace(int Timeout)
+{
+    int ok;
+    TWaitDevice *wait;
+    char Instr[2] = {0, 0};
+
+    if (CurrentThread)
+    {
+        FAsyncSel = CurrentThread->Cs;
+        FAsyncOffset = CurrentThread->Eip;
+            
+        CurrentThread->ReadMem(FAsyncSel, FAsyncOffset, Instr, 2);
+
+        if (Instr[0] == 0xF && Instr[1] == 0xB)
+        {
+            FAsyncOffset += 7;
+            AddBreak(FAsyncSel, FAsyncOffset);
+            ok = AsyncGo(Timeout);
+            if (ok)
+                ClearBreak(FAsyncSel, FAsyncOffset);
+            else
+                FAsyncBreak = TRUE;
+            return ok;
+        }
+        else
+        {
+            UserSignal.Clear();
+    
+            CurrentThread->SetupTrace();
+            RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+
+            wait = UserSignal.WaitTimeout(Timeout);
+
+            if (wait)
+                return TRUE;
+            else
+                return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::AsyncPoll
 #
 #   Purpose....: Poll running thread
@@ -1488,9 +1545,36 @@ int TDebug::AsyncPoll(int Timeout)
     wait = UserSignal.WaitTimeout(Timeout);
 
     if (wait)
+    {
+        if (FAsyncBreak)
+        {
+            ClearBreak(FAsyncSel, FAsyncOffset);
+            FAsyncBreak = FALSE;
+        }
         return TRUE;
+    }
     else
         return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::ExitAsync
+#
+#   Purpose....: Exit async, and let process continue
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::ExitAsync()
+{
+    if (FAsyncBreak)
+    {
+        ClearBreak(FAsyncSel, FAsyncOffset);
+        FAsyncBreak = FALSE;
+    }
 }
 
 /*##########################################################################

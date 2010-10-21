@@ -219,7 +219,9 @@ public:
 	void Trace();
 
     int AsyncGo(int Timeout);
+    int AsyncTrace(int Timeout);
     int AsyncPoll(int Timeout);
+    void ExitAsync();
 
 	int HasThreadChange();
     void ClearThreadChange();
@@ -265,6 +267,10 @@ protected:
 
     int FThreadChanged;
     int FModuleChanged;
+
+    int FAsyncBreak;
+    int FAsyncSel;
+    long FAsyncOffset;
 
 };
 
