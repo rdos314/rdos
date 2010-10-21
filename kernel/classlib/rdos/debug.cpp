@@ -1450,6 +1450,8 @@ void TDebug::Trace()
 ##########################################################################*/
 int TDebug::AsyncGo(int Timeout)
 {
+    TWaitDevice *wait;
+    
     if (CurrentThread)
     {
         UserSignal.Clear();
@@ -1458,9 +1460,37 @@ int TDebug::AsyncGo(int Timeout)
         CurrentThread->ActivateBreaks(BreakList);
         RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
 
-        UserSignal.WaitTimeout(Timeout);
+        wait = UserSignal.WaitTimeout(Timeout);
+
+        if (wait)
+            return TRUE;
+        else
+            return FALSE;
     }
-    return UserSignal.IsSignalled();
+    return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::AsyncPoll
+#
+#   Purpose....: Poll running thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::AsyncPoll(int Timeout)
+{
+    TWaitDevice *wait;
+    
+    wait = UserSignal.WaitTimeout(Timeout);
+
+    if (wait)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################

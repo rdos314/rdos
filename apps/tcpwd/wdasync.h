@@ -50,6 +50,8 @@ public:
 protected:
     void ReqAsyncGo();
     void ReqAsyncStep();
+    void ReqAsyncPoll();
+    void ReqAsyncStop();
     void ReqError();
 
 };

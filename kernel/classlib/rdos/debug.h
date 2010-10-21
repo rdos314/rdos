@@ -219,6 +219,7 @@ public:
 	void Trace();
 
     int AsyncGo(int Timeout);
+    int AsyncPoll(int Timeout);
 
 	int HasThreadChange();
     void ClearThreadChange();

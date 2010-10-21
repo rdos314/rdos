@@ -286,6 +286,107 @@ void TWdAsyncService::ReqAsyncStep()
 
 /*##########################################################################
 #
+#   Name       : TWdAsyncService::ReqAsyncPoll
+#
+#   Purpose....: Req poll running app
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdAsyncService::ReqAsyncPoll()
+{
+    int ok;
+    short int CondFlags = COND_THREAD_INFO;
+    TDebug *debug = GetDebug();
+    TDebugThread *curr = 0;
+
+    if (debug)
+    {
+        ok = debug->AsyncPoll(250);
+
+        if (ok)
+        {
+            if (debug->IsTerminated())
+                CondFlags |= COND_TERMINATE;
+
+            if (debug->HasThreadChange())
+            {
+                debug->ClearThreadChange();
+                CondFlags |= COND_THREAD;
+                curr = debug->GetCurrentThread();
+                SetCurrentThread(curr);
+            }
+
+            if (debug->HasModuleChange())
+            {
+                debug->ClearModuleChange();
+                CondFlags |= COND_LIBRARIES;
+            }
+
+            if (curr)
+            {
+                if (curr->HasBreakOccurred())
+                    CondFlags |= COND_BREAK;
+
+                if (curr->HasTraceOccurred())
+                    CondFlags |= COND_WATCH;
+
+                if (curr->HasFaultOccurred())
+                    CondFlags |= COND_EXCEPTION;
+            }                
+        }
+        else
+            CondFlags = COND_RUNNING;
+    }                   
+
+    if (curr && ok)
+    {
+        PutDword(curr->Esp);
+        PutWord((short int)curr->Ss);
+
+        PutDword(curr->Eip);
+        PutWord((short int)curr->Cs);
+
+        PutWord(CondFlags);
+    }
+    else
+    {
+        PutDword(0);
+        PutWord(0);    
+
+        PutDword(0);
+        PutWord(0);   
+
+        PutWord(CondFlags);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TWdAsyncService::ReqAsyncStop
+#
+#   Purpose....: Req stop running thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdAsyncService::ReqAsyncStop()
+{
+    PutDword(0);
+    PutWord(0);    
+
+    PutDword(0);
+    PutWord(0);   
+
+    PutWord(COND_TERMINATE);
+}
+
+/*##########################################################################
+#
 #   Name       : TWdAsyncService::ReqError
 #
 #   Purpose....: Req error
@@ -325,6 +426,14 @@ void TWdAsyncService::NotifyMsg()
 
         case 1:
             ReqAsyncStep();
+            break;
+
+        case 2:
+            ReqAsyncPoll();
+            break;
+
+        case 3:
+            ReqAsyncStop();
             break;
 
         default:
