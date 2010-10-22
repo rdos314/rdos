@@ -20,34 +20,42 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# tcpwd.cpp
-# TCP-base remote server for WD
+# wdrtrd.h
+# WD supplementary non-blocking thread support class
 #
 ########################################################################*/
 
-#include "rdos.h"
-#include "wdfact.h"
-#include "wdfile.h"
-#include "wdfinfo.h"
-#include "wdenv.h"
-#include "wdthread.h"
-#include "wdrtrd.h"
-#include "wdcap.h"
-#include "wdasync.h"
+#ifndef _WDRUNTHREAD_H
+#define _WDRUNTHREAD_H
 
-int main(int argc, char **argv)
+#include "wdsuppl.h"
+
+class TWdRunThreadFactory : public TWdSupplFactory
 {
-	TWdSupplFactory *suppl;
-	TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
+public:
+    TWdRunThreadFactory(TWdSocketServerFactory *factory);
+	virtual ~TWdRunThreadFactory();
+	
+	virtual TWdSupplService *Create(TWdSocketServer *server);
+};
 
-	suppl = new TWdFileFactory(&fact);
-	suppl = new TWdFileInfoFactory(&fact);
-	suppl = new TWdEnvFactory(&fact);
-	suppl = new TWdThreadFactory(&fact);
-	suppl = new TWdRunThreadFactory(&fact);
-	suppl = new TWdCapFactory(&fact);
-	suppl = new TWdAsyncFactory(&fact);
+class TWdRunThreadService : public TWdSupplService
+{
+public:
+    TWdRunThreadService(TWdSocketServer *server);
+	virtual ~TWdRunThreadService();
 
-	for (;;)
-		fact.WaitForever();
-}
+    virtual void NotifyMsg();
+
+protected:
+    void ReqInfo();
+    void ReqGetNext();
+    void ReqGetRuntime();
+    void ReqPoll();
+    void ReqStop();
+    void ReqSignalStop();
+    void ReqError();
+
+};
+
+#endif
