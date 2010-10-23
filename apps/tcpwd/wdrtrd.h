@@ -52,6 +52,8 @@ protected:
     void ReqGetNext();
     void ReqGetRuntime();
     void ReqPoll();
+    void ReqSet();
+    void ReqGetName();
     void ReqStop();
     void ReqSignalStop();
     void ReqError();

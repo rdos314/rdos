@@ -914,6 +914,23 @@ find_path_move_loop:
 	jmp find_path_move_loop	
 
 find_path_move_ok:
+    or di,di
+    jz find_path_add_file
+;    
+    mov al,es:[di-1]
+    cmp al,'\'
+    je find_path_add_file
+;
+    cmp al,'/'
+    je find_path_add_file
+;
+    cmp al,':'
+    je find_path_add_file
+;
+    mov al,'\'
+    stosb
+    
+find_path_add_file:    
 	push ebx
 find_path_name_loop:
 	mov al,fs:[ebx]

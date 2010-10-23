@@ -849,6 +849,7 @@ free_module_leave:
     LeaveSection ds:mod_section
             
 free_module_done:
+    pop si
     pop dx
     pop bx
     pop ax

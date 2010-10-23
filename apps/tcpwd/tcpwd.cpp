@@ -30,24 +30,22 @@
 #include "wdfile.h"
 #include "wdfinfo.h"
 #include "wdenv.h"
-#include "wdthread.h"
 #include "wdrtrd.h"
 #include "wdcap.h"
 #include "wdasync.h"
 
 int main(int argc, char **argv)
 {
-	TWdSupplFactory *suppl;
-	TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
+        TWdSupplFactory *suppl;
+        TWdSocketServerFactory fact(0xDEB, 16, 0x7000);
 
-	suppl = new TWdFileFactory(&fact);
-	suppl = new TWdFileInfoFactory(&fact);
-	suppl = new TWdEnvFactory(&fact);
-	suppl = new TWdThreadFactory(&fact);
-	suppl = new TWdRunThreadFactory(&fact);
-	suppl = new TWdCapFactory(&fact);
-	suppl = new TWdAsyncFactory(&fact);
+        suppl = new TWdFileFactory(&fact);
+        suppl = new TWdFileInfoFactory(&fact);
+        suppl = new TWdEnvFactory(&fact);
+        suppl = new TWdRunThreadFactory(&fact);
+        suppl = new TWdCapFactory(&fact);
+        suppl = new TWdAsyncFactory(&fact);
 
-	for (;;)
-		fact.WaitForever();
+        for (;;)
+                fact.WaitForever();
 }

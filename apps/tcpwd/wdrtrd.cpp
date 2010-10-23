@@ -163,13 +163,13 @@ void TWdRunThreadService::ReqInfo()
         case 0:
             PutByte(INFO_TYPE_NAME);
             PutWord(25);
-            PutString("Name");
+            PutString("ID   Name");
             return;
 
         case 1:
             PutByte(INFO_TYPE_EXTRA);
-            PutWord(20);
-            PutString("Time");
+            PutWord(21);
+            PutString("                Time");
             return;
 
         case 2:
@@ -414,6 +414,82 @@ void TWdRunThreadService::ReqPoll()
 
 /*##########################################################################
 #
+#   Name       : TWdRunThreadService::ReqSet
+#
+#   Purpose....: Req set current thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdRunThreadService::ReqSet()
+{
+    TDebugThread *t;
+    int oldid = 0;
+    int newid = 0;
+    int status = MSG_NO_THREAD;
+    TDebug *Debug = GetDebug();
+
+    if (Debug)
+    {
+        t = Debug->GetCurrentThread();
+        if (t)
+        {
+            oldid = t->ThreadID;
+            newid = GetDword();
+            status = 0;
+
+            if (newid)
+                Debug->SetCurrentThread(newid);
+        }
+    }
+
+    PutDword(status);
+    PutDword(oldid);
+}
+
+/*##########################################################################
+#
+#   Name       : TWdRunThreadService::ReqGetName
+#
+#   Purpose....: Req get name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdRunThreadService::ReqGetName()
+{
+    int ThreadID;
+    TDebugThread *t;
+    TDebug *Debug = GetDebug();
+    char str[100];
+
+    ThreadID = GetDword();
+
+    if (ThreadID)
+    {
+        if (Debug)
+        {
+            t = Debug->LockThread(ThreadID);
+
+            if (t)
+            {
+                sprintf(str, "%04hX %s", ThreadID, t->ThreadName.GetData());
+                PutString(str);
+            }
+
+            Debug->UnlockThread();
+        }
+    }
+    else
+        PutString("Name");
+}
+
+/*##########################################################################
+#
 #   Name       : TWdRunThreadService::ReqStop
 #
 #   Purpose....: Req stop a thread
@@ -493,10 +569,18 @@ void TWdRunThreadService::NotifyMsg()
             break;
 
         case 4:
-            ReqStop();
+            ReqSet();
             break;
 
         case 5:
+            ReqGetName();
+            break;
+
+        case 6:
+            ReqStop();
+            break;
+
+        case 7:
             ReqSignalStop();
             break;
 
