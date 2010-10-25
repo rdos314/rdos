@@ -148,6 +148,7 @@ lib_process			DW ?
 lib_debug_lib		DW ?
 lib_debug_obj   	DW ?
 lib_events			DW ?
+lib_suppress        DW ?
 lib_curr_event      DW ?
 lib_local_handle    DW ?
 lib_run_now			DW ?

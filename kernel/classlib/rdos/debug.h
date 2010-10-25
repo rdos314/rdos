@@ -91,6 +91,7 @@ public:
     ~TDebugThread();
 
     void SetException(TExceptionEvent *event);
+    void SetException();
     int IsDebug();
 
     int ReadMem(int Sel, long Offset, char *Buf, int Size);
@@ -247,6 +248,7 @@ protected:
     void HandleCreateThread(TCreateThreadEvent *event);
     void HandleTerminateThread(int thread);
 	void HandleException(TExceptionEvent *event, int thread);
+	void HandleKernelException(int thread);
     void HandleLoadDll(TLoadDllEvent *event);
     void HandleFreeDll(int handle);
 

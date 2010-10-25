@@ -268,7 +268,10 @@ thread_seg	STRUC
     p_backcolor	        DB ?
     p_row			    DW ?
     p_col			    DW ?
-	
+
+    p_debug_proc        DD ?
+    p_debug_event       DW ?
+    
 	thread_name		    DB 32 DUP(?)
 
 thread_seg	ENDS

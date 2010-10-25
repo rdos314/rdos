@@ -1069,6 +1069,8 @@ init_thread_block	PROC near
 	mov es:p_ldt_sel,ax
 	mov ax,ds:p_lib_sel
 	mov es:p_lib_sel,ax
+	mov eax,ds:p_debug_proc
+	mov es:p_debug_proc,eax
 	mov es:p_signal,0
 	mov es:p_parent_switch,0
 	mov es:p_wait_list,0
@@ -1965,6 +1967,7 @@ create_process	PROC far
 	call allocate_thread_block
 	mov dx,[bp].cr_prio
 	call init_thread_block
+	mov es:p_debug_proc,0
 	call init_process_block
 	mov ds,es:p_tss_data_sel
 	call init_default_tss
@@ -2174,6 +2177,7 @@ init_first_thread	PROC near
 	mov es:p_vm_deb_offs,eax
 	mov es:p_pm_deb_sel,ax
 	mov es:p_pm_deb_offs,eax
+	mov es:p_debug_proc,0
 ;
 	mov ax,cs
 	mov ds,ax

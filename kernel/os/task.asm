@@ -3701,6 +3701,13 @@ debug_block:
     mov es,fs:ps_curr_thread
     mov es:p_error_code,dx
 ;
+    mov eax,es:p_debug_proc
+    or eax,eax
+    jz debug_block_do
+;
+    call es:p_debug_proc
+
+debug_block_do:
     mov ax,system_data_sel
     mov edi,OFFSET debug_list       
     jmp BlockCurrentThread

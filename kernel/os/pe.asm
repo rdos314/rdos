@@ -142,6 +142,111 @@ SendEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			AllocateKernelEvent
+;
+;		DESCRIPTION:    Pre-allocate kernel event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateKernelEvent   Proc far
+    push ds
+    push es
+    push eax
+    push di
+;
+	mov eax,0
+	mov di,SIZE event_struc
+	add ax,di
+	AllocateSmallGlobalMem
+	sub ax,di
+	mov es:event_size,ax
+	mov es:event_code,EVENT_KERNEL
+;
+    GetThread
+    mov ds,ax
+	mov ax,ds:p_id
+	mov es:event_thread_id,ax
+    mov ds:p_debug_event,es
+;
+    pop di
+    pop eax 
+    pop es
+    pop ds   
+    ret
+AllocateKernelEvent   Endp
+                                          
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			NotifyKernelDebug
+;
+;		DESCRIPTION:    Notify kernel debug event. Called on scheduler locked stack
+;
+;       PARAMETERS:     ES      Thread sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyKernelDebug   Proc far
+    push ds
+    push es
+    push ax
+;    
+    mov ds,es:p_app_sel
+	mov ds,ds:app_mod_sel
+;
+    mov ax,es:p_debug_event
+    or ax,ax
+    jz nkeDone
+;
+    mov es,ax    
+    xor ax,ax
+    xchg ax,ds:lib_suppress
+    or ax,ax
+    jnz nkeDone
+;    
+	mov ax,ds:lib_events
+	or ax,ax
+	je nkeEmpty
+;
+	push ds
+	push si
+	mov ds,ax
+	mov si,ds:event_prev
+	mov ds:event_prev,es
+	mov ds,si
+	mov ds:event_next,es
+	mov es:event_next,ax
+	mov es:event_prev,si
+	pop si
+	pop ds
+	jmp nkeInsDone
+
+nkeEmpty:
+	mov es:event_next,es
+	mov es:event_prev,es
+
+nkeInsDone:
+	mov ds:lib_events,es
+	xor ax,ax
+	mov es,ax
+;
+	mov ax,ds:lib_debug_obj
+	or ax,ax
+	jz nkeDone
+;	
+    mov es,ax
+	SignalWait
+
+nkeDone:
+    pop ax
+    pop es
+    pop ds
+    ret
+NotifyKernelDebug   Endp
+                                          
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			ExceptionEvent
 ;
 ;		DESCRIPTION:    Exception event
@@ -495,6 +600,7 @@ create_lib_size_ok:
 	mov es:lib_debug_lib,0
 	mov es:lib_debug_obj,0
 	mov es:lib_events,0
+	mov es:lib_suppress,0
 	mov es:lib_file_handle,bx
 	mov es:lib_run_now,0
 	mov es:lib_init_param,0
@@ -3084,6 +3190,7 @@ start_thread	PROC far
 	or ax,ax
 	jz start_thread_done
 ;
+    call AllocateKernelEvent
 	call CreateThreadEvent
 	call SendEvent
 
@@ -3184,6 +3291,15 @@ debug_startup	DB 'DebugStartup',0
 spawn_proc	Proc far
     GetThread
     mov ds,ax
+    mov dx,gs:s_param
+    or dx,dx
+    jz spawn_debug_hook_ok
+;
+    call AllocateKernelEvent
+    mov word ptr ds:p_debug_proc,OFFSET NotifyKernelDebug
+    mov word ptr ds:p_debug_proc+2,cs
+
+spawn_debug_hook_ok:    
     mov ds,ds:p_app_sel
 	mov es,ds:app_mod_sel
 	mov ax,flat_data_sel
@@ -3203,6 +3319,7 @@ spawn_proc	Proc far
     	
 spawn_param_ok:
 	mov es:lib_debug_lib,dx
+	mov es:lib_suppress,1
 	mov es:lib_init_param,dx
 	mov edi,es:lib_base
 	mov es:lib_run_now,1
@@ -3776,6 +3893,7 @@ neInsDone:
 	SignalWait
 
 neSignalDone:
+    mov ds:lib_suppress,1
 	pop ax
 	pop es
 	LockedDebugException

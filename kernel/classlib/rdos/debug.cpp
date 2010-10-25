@@ -39,6 +39,7 @@
 #define EVENT_TERMINATE_PROCESS 5
 #define EVENT_LOAD_DLL          6
 #define EVENT_FREE_DLL          7
+#define EVENT_KERNEL            8
 
 /*##########################################################################
 #
@@ -502,6 +503,75 @@ void TDebugThread::SetException(TExceptionEvent *event)
                   St[i] = tss.st[i];
 
          FDebug = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::SetException
+#
+#   Purpose....: Set exception state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebugThread::SetException()
+{
+    Tss tss;
+    int i;
+
+    FHasException = TRUE;
+
+    FaultText = "Kernel";
+
+    ReadState();
+
+    RdosGetThreadTss(ThreadID, &tss);
+
+    Esp0 = tss.esp0;
+    Ess0 = tss.ess0;
+    Esp1 = tss.esp1;    
+    Ess1 = tss.ess1;
+    Esp2 = tss.esp2;
+    Ess2 = tss.ess2;    
+    Cr3 = tss.cr3;
+    Eflags = tss.eflags;
+    Eax = tss.eax;
+    Ecx = tss.ecx;
+    Edx = tss.edx;
+    Ebx = tss.ebx;
+    Esp = tss.esp;
+    Ebp = tss.ebp;
+    Esi = tss.esi;
+    Edi = tss.edi;
+    Eip = tss.eip;
+    Cs = tss.cs;
+    Es = tss.es;
+    Ss = tss.ss;
+    Ds = tss.ds;
+    Fs = tss.fs;
+    Gs = tss.gs;
+    Ldt = tss.ldt;
+
+    for (i = 0; i < 4; i++)
+        Dr[i] = tss.dr[i];
+
+    Dr7 = tss.dr7;
+    MathControl = tss.MathControl;
+    MathStatus = tss.MathStatus;
+    MathTag = tss.MathTag;
+    MathEip = tss.MathEip;
+    MathCs = tss.MathCs;
+    MathOp[0] = tss.MathOp[0];
+    MathOp[1] = tss.MathOp[1];
+    MathDataOffs = tss.MathDataOffs;
+    MathDataSel = tss.MathDataSel;
+
+    for (i = 0; i < 8; i++)
+        St[i] = tss.st[i];
+
+    FDebug = TRUE;
 }
 
 /*##########################################################################
@@ -1727,6 +1797,34 @@ void TDebug::HandleFreeDll(int handle)
 
 /*##########################################################################
 #
+#   Name       : TDebug::HandleKernelException
+#
+#   Purpose....: Handle kernel exception event
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::HandleKernelException(int thread)
+{
+    TDebugThread *Thread;
+
+    FSection.Enter();
+
+    Thread = ThreadList;
+
+    while (Thread && Thread->ThreadID != thread)
+        Thread = Thread->Next;
+
+    if (Thread)
+        Thread->SetException();
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::SignalNewData
 #
 #   Purpose....: Signal new data is available
@@ -1810,6 +1908,11 @@ void TDebug::SignalNewData()
                         FModuleChanged = TRUE;
                         break;
 
+                case EVENT_KERNEL:
+                        RdosWriteString("Kernel exception\r\n");
+                        HandleKernelException(thread);
+                        break;                    
+
                 case 0:
                         RdosWriteString("Null event\r\n");
                         break;
@@ -1821,7 +1924,7 @@ void TDebug::SignalNewData()
 
         RdosClearDebugEvent(FHandle);
 
-        if (debtype == EVENT_EXCEPTION)
+        if (debtype == EVENT_EXCEPTION || EVENT_KERNEL)
         {
                 if (CurrentThread)
                 {
