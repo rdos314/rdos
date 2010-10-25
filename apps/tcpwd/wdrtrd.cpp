@@ -501,6 +501,12 @@ void TWdRunThreadService::ReqGetName()
 ##########################################################################*/
 void TWdRunThreadService::ReqStop()
 {
+    int id;
+    TDebug *Debug = GetDebug();
+    
+    id = GetDword();
+
+    RdosSuspendThread(id);
 }
 
 /*##########################################################################
@@ -516,6 +522,12 @@ void TWdRunThreadService::ReqStop()
 ##########################################################################*/
 void TWdRunThreadService::ReqSignalStop()
 {
+    int id;
+    TDebug *Debug = GetDebug();
+    
+    id = GetDword();
+
+    RdosSuspendAndSignalThread(id);
 }
 
 /*##########################################################################
