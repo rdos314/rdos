@@ -683,6 +683,7 @@ do16_direct_cs16:
 	mov ax,es:[edi].gate_entry_offset16
 	mov [bp+8],ax
 	sub ax,[bp+14]
+	add ax,4
 	mov ds:[ebx+2],ax
 	mov word ptr ds:[ebx],0E80Eh
 	mov word ptr ds:[ebx+4],9090h

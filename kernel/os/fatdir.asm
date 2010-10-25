@@ -3288,7 +3288,12 @@ create_dir_lfn_done:
 ;
 	mov edi,OFFSET dot_dot_dir
 	mov edx,fs:ds_handle
+	or edx,edx
+	jz create_dir_dot_dot_add
+;
 	mov edx,es:[edx].fde_start_cluster
+
+create_dir_dot_dot_add:
 	call add_dir
 ;
 	pop edi
