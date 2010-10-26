@@ -154,7 +154,7 @@ AllocateKernelEvent   Proc far
     push eax
     push di
 ;
-	mov eax,0
+	mov eax,SIZE kernel_exception_event_struc
 	mov di,SIZE event_struc
 	add ax,di
 	AllocateSmallGlobalMem
@@ -190,7 +190,10 @@ NotifyKernelDebug   Proc far
     push ds
     push es
     push ax
+    push dx
+    push di
 ;    
+    mov dx,es:p_error_code
     mov ds,es:p_app_sel
 	mov ds,ds:app_mod_sel
 ;
@@ -199,6 +202,8 @@ NotifyKernelDebug   Proc far
     jz nkeDone
 ;
     mov es,ax    
+	mov di,SIZE event_struc
+	mov es:[di].kexcVector,dx
     xor ax,ax
     xchg ax,ds:lib_suppress
     or ax,ax
@@ -238,6 +243,8 @@ nkeInsDone:
 	SignalWait
 
 nkeDone:
+    pop di
+    pop dx
     pop ax
     pop es
     pop ds

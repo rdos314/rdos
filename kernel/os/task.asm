@@ -3510,6 +3510,7 @@ shutdown_pr    Endp
 ;           DESCRIPTION:    Save current state from stack + local registers
 ;
 ;       PARAMETERS:     SS:BP       Exception stack
+;                       AL      Fault vector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3517,22 +3518,30 @@ debug_exception_name        DB 'Debug Exception', 0
 locked_debug_exception_name     DB 'Locked Debug Exception', 0
 
 locked_debug_exception:
+    movzx ax,al
     push fs
+    push ax
     mov ax,task_sel
     mov ds,ax
+    pop ax
     call ds:get_cpu_proc
     jmp debug_normal
 
 debug_exception:
+    movzx ax,al
     push fs
+    push ax
     mov ax,task_sel
     mov ds,ax
+    pop ax
     call ds:try_lock_proc
     jc debug_normal
 
 debug_fault:
+    push ax
     mov ax,wd_code_sel
     verr ax
+    pop ax
     jnz dfDo
 ;
     cli
@@ -3540,6 +3549,7 @@ debug_fault:
 
 dfDo:
     mov ds,fs:ps_null_thread 
+    mov ds:p_error_code,ax
     mov ds,ds:p_tss_data_sel  
 ;    
     mov eax,[bp].vm_eax
@@ -3578,12 +3588,13 @@ dfDo:
 ;       
     mov ax,gs
     mov ds:tss_gs,ax
+;    
+    movzx dx,byte ptr [bp].vm_err+2
+    mov ds:tss_error_code,dx
 ;
     mov ax,task_sel
     mov ds,ax
     mov es,fs:ps_null_thread
-    movzx dx,byte ptr [bp].vm_err+2
-    mov es:p_error_code,dx
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -3592,12 +3603,17 @@ dfDo:
     ShutDownTask
    
 debug_normal:       
+    push ax
     mov ax,fs:ps_curr_thread 
     or ax,ax
+    pop ax
     jz debug_fault
 ;    
-    mov ds,ax
+    mov ds,fs:ps_curr_thread 
+    mov ds:p_error_code,ax
     mov ds,ds:p_tss_data_sel
+    movzx dx,byte ptr [bp].vm_err+2
+    mov ds:tss_error_code,dx
 ;
     mov eax,[bp].vm_eax
     mov dword ptr ds:tss_eax,eax
@@ -3666,7 +3682,6 @@ debug_vm:
     mov dword ptr ds:tss_esp,eax
 
 debug_save_ok:
-    movzx dx,byte ptr [bp].vm_err+2
     mov ax,task_sel
     mov ds,ax
 ;    
@@ -3690,7 +3705,6 @@ debug_save_ok:
     CpuReset
 
 dbDo:
-    mov es:p_error_code,dx
     mov ax,system_data_sel
     mov ds,ax
     mov di,OFFSET debug_list
@@ -3699,8 +3713,6 @@ dbDo:
     
 debug_block:
     mov es,fs:ps_curr_thread
-    mov es:p_error_code,dx
-;
     mov eax,es:p_debug_proc
     or eax,eax
     jz debug_block_do

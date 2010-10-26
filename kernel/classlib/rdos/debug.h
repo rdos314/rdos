@@ -71,6 +71,11 @@ struct TExceptionEvent
     unsigned short Cs;
 };    
 
+struct TKernelExceptionEvent
+{
+    unsigned short Vector;
+};    
+
 class TDebugBreak
 {
 public:
@@ -91,7 +96,7 @@ public:
     ~TDebugThread();
 
     void SetException(TExceptionEvent *event);
-    void SetException();
+    void SetException(TKernelExceptionEvent *event);
     int IsDebug();
 
     int ReadMem(int Sel, long Offset, char *Buf, int Size);
@@ -108,6 +113,8 @@ public:
     int HasBreakOccurred();
     int HasTraceOccurred();
     int HasFaultOccurred();
+
+    void ClearBreak();
 
     TString FaultText;
     TString ThreadName;
@@ -248,7 +255,7 @@ protected:
     void HandleCreateThread(TCreateThreadEvent *event);
     void HandleTerminateThread(int thread);
 	void HandleException(TExceptionEvent *event, int thread);
-	void HandleKernelException(int thread);
+	void HandleKernelException(TKernelExceptionEvent *event, int thread);
     void HandleLoadDll(TLoadDllEvent *event);
     void HandleFreeDll(int handle);
 
@@ -270,6 +277,8 @@ protected:
     int FThreadChanged;
     int FModuleChanged;
 
+    int FWaitLoad;
+    
     int FAsyncBreak;
     int FAsyncSel;
     long FAsyncOffset;

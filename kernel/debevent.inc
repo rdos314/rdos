@@ -95,3 +95,9 @@ excCs			DW ?
 
 exception_event_struc ENDS
 
+
+kernel_exception_event_struc    STRUC
+
+kexcVector      DW ?
+
+kernel_exception_event_struc    ENDS
