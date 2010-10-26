@@ -1,25 +1,26 @@
-project : D:\rdos\kernel\os\kernel.exe D:\rdos\kernel\os\font.rdv D:\rdos\ke&
-rnel\os\acpi.rdv D:\rdos\kernel\os\util.rdv D:\rdos\kernel\os\drive.rdv D:\r&
-dos\kernel\os\fs.rdv D:\rdos\kernel\os\guidev.rdv D:\rdos\kernel\os\audio.rd&
-v D:\rdos\kernel\os\exec.rdv D:\rdos\kernel\os\pe.rdv D:\rdos\kernel\os\net.&
-rdv D:\rdos\kernel\os\ip.rdv D:\rdos\kernel\os\ipc.rdv D:\rdos\kernel\os\kde&
-bug.rdv D:\rdos\kernel\os\com.rdv D:\rdos\kernel\os\fat.rdv D:\rdos\kernel\o&
-s\pcbios.rdv .SYMBOLIC
+project : C:\rdos\kernel\os\kernel.exe C:\rdos\kernel\os\font.rdv C:\rdos\ke&
+rnel\os\acpi.rdv C:\rdos\kernel\os\util.rdv C:\rdos\kernel\os\drive.rdv C:\r&
+dos\kernel\os\fs.rdv C:\rdos\kernel\os\guidev.rdv C:\rdos\kernel\os\audio.rd&
+v C:\rdos\kernel\os\exec.rdv C:\rdos\kernel\os\pe.rdv C:\rdos\kernel\os\net.&
+rdv C:\rdos\kernel\os\ip.rdv C:\rdos\kernel\os\ipc.rdv C:\rdos\kernel\os\kde&
+bug.rdv C:\rdos\kernel\os\com.rdv C:\rdos\kernel\os\fat.rdv C:\rdos\kernel\o&
+s\pcbios.rdv C:\rdos\kernel\os\wd.rdv .SYMBOLIC
 
-!include D:\rdos\kernel\os\kernel.mk1
-!include D:\rdos\kernel\os\font.mk1
-!include D:\rdos\kernel\os\acpi.mk1
-!include D:\rdos\kernel\os\util.mk1
-!include D:\rdos\kernel\os\drive.mk1
-!include D:\rdos\kernel\os\fs.mk1
-!include D:\rdos\kernel\os\guidev.mk1
-!include D:\rdos\kernel\os\audio.mk1
-!include D:\rdos\kernel\os\exec.mk1
-!include D:\rdos\kernel\os\pe.mk1
-!include D:\rdos\kernel\os\net.mk1
-!include D:\rdos\kernel\os\ip.mk1
-!include D:\rdos\kernel\os\ipc.mk1
-!include D:\rdos\kernel\os\kdebug.mk1
-!include D:\rdos\kernel\os\com.mk1
-!include D:\rdos\kernel\os\fat.mk1
-!include D:\rdos\kernel\os\pcbios.mk1
+!include C:\rdos\kernel\os\kernel.mk1
+!include C:\rdos\kernel\os\font.mk1
+!include C:\rdos\kernel\os\acpi.mk1
+!include C:\rdos\kernel\os\util.mk1
+!include C:\rdos\kernel\os\drive.mk1
+!include C:\rdos\kernel\os\fs.mk1
+!include C:\rdos\kernel\os\guidev.mk1
+!include C:\rdos\kernel\os\audio.mk1
+!include C:\rdos\kernel\os\exec.mk1
+!include C:\rdos\kernel\os\pe.mk1
+!include C:\rdos\kernel\os\net.mk1
+!include C:\rdos\kernel\os\ip.mk1
+!include C:\rdos\kernel\os\ipc.mk1
+!include C:\rdos\kernel\os\kdebug.mk1
+!include C:\rdos\kernel\os\com.mk1
+!include C:\rdos\kernel\os\fat.mk1
+!include C:\rdos\kernel\os\pcbios.mk1
+!include C:\rdos\kernel\os\wd.mk1

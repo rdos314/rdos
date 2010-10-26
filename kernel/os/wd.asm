@@ -47,7 +47,8 @@ fss_tss                 tss_seg <>
 
 fault_sector_seg ENDS
 
-wd_data_seg STRUC
+
+data    SEGMENT byte public 'DATA'
 
 wd_tics                 DD ?
 
@@ -55,7 +56,7 @@ fault_disc              DB ?
 fault_start_sector      DD ?
 fault_sectors           DD ?
 
-wd_data_seg ENDS
+data    ENDS
 
 	.386p
 
@@ -93,7 +94,7 @@ start_watchdog   Proc far
     push es
     pushad
 ;   
-    mov bx,wd_data_sel
+    mov bx,SEG data
     mov es,bx
 	mov edx,1193
 	mul edx
@@ -106,7 +107,7 @@ start_watchdog   Proc far
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET WdTimeout
-	mov bx,wd_data_sel
+	mov bx,SEG data
 	StartTimer
 ;
     popad
@@ -136,7 +137,7 @@ kick_watchdog   Proc far
     jz kw_kick
 ;
     mov bp,ax
-    mov bx,wd_data_sel
+    mov bx,SEG data
     mov fs,bx
     mov ecx,fs:fault_sectors
     or ecx,ecx
@@ -204,7 +205,7 @@ kw_save_loop:
         
 kw_kick:
 	GetSystemTime
-    mov bx,wd_data_sel
+    mov bx,SEG data
     mov es,bx
 	add eax,es:wd_tics
 	adc edx,0
@@ -212,7 +213,7 @@ kw_kick:
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET WdTimeout
-	mov bx,wd_data_sel
+	mov bx,SEG data
 	StopTimer
 	StartTimer
 
@@ -239,7 +240,7 @@ stop_watchdog   Proc far
     push es
     push bx    
 ;    
-	mov bx,wd_data_sel
+	mov bx,SEG data
 	mov es,bx
 	StopTimer
     mov es:wd_tics,0	
@@ -268,7 +269,7 @@ get_watchdog_tics   Proc far
     push es
     push bx    
 ;    
-	mov bx,wd_data_sel
+	mov bx,SEG data
 	mov es,bx
     mov eax,es:wd_tics
 ;
@@ -277,7 +278,6 @@ get_watchdog_tics   Proc far
     retf32
 get_watchdog_tics   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -298,7 +298,7 @@ define_fault_save	PROC far
     push ds
     push bx
 ;
-    mov bx,wd_data_sel
+    mov bx,SEG data
     mov ds,bx
     mov ds:fault_disc,al
     mov ds:fault_start_sector,edx
@@ -309,7 +309,6 @@ define_fault_save	PROC far
     retf32
 define_fault_save   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -327,7 +326,7 @@ clear_fault_save	PROC far
     push es
     pushad
 ;    
-    mov ax,wd_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ax,fault_sector_sel
     mov es,ax
@@ -361,7 +360,6 @@ cfsDone:
     retf32
 clear_fault_save   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -388,7 +386,7 @@ get_fault_thread_state	PROC near
     mov ebp,edi
 ;    
     movzx eax,ax
-    mov bx,wd_data_sel
+    mov bx,SEG data
     mov ds,bx
     mov bx,fault_sector_sel
     mov es,bx
@@ -442,7 +440,6 @@ get_fault_thread_state32	Proc far
 	Retf32
 get_fault_thread_state32	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -469,7 +466,7 @@ get_fault_thread_tss	PROC near
     mov ebp,edi
 ;    
     movzx eax,ax
-    mov bx,wd_data_sel
+    mov bx,SEG data
     mov ds,bx
     mov bx,fault_sector_sel
     mov es,bx
@@ -523,7 +520,6 @@ get_fault_thread_tss32	Proc far
 	Retf32
 get_fault_thread_tss32	Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -537,16 +533,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	Proc far
-	push ds
-	push es
-	pusha
-;
-	mov bx,wd_code_sel
-	InitDevice
-;
-	mov eax,SIZE wd_data_seg
-	mov bx,wd_data_sel
-	AllocateFixedSystemMem
+	mov bx,SEG data
 	mov es,bx
 	mov es:wd_tics,0
 	mov es:fault_sectors,0
@@ -608,10 +595,6 @@ init	Proc far
 	mov dx,virt_es_in
 	mov ax,get_fault_thread_tss_nr
 	RegisterUserGate
-;
-	popa
-	pop es
-	pop ds
 	ret
 init	Endp
 
