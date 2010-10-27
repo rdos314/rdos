@@ -497,4 +497,6 @@ free_debug_app_mem_nr       = 403
 get_key_layout_nr           = 404
 set_key_layout_nr           = 405
 
+get_device_info_nr          = 406
+
 usergate_entries			= 410

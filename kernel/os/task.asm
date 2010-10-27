@@ -3612,8 +3612,8 @@ debug_normal:
     mov ds,fs:ps_curr_thread 
     mov ds:p_error_code,ax
     mov ds,ds:p_tss_data_sel
-    movzx dx,byte ptr [bp].vm_err+2
-    mov ds:tss_error_code,dx
+    movzx ax,byte ptr [bp].vm_err+2
+    mov ds:tss_error_code,ax
 ;
     mov eax,[bp].vm_eax
     mov dword ptr ds:tss_eax,eax

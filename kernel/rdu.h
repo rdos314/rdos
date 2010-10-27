@@ -497,3 +497,5 @@
 #define CallGate_get_key_layout 0x9a 148 1 0 0 2 0
 #define CallGate_set_key_layout 0x9a 149 1 0 0 2 0
 
+#define CallGate_get_device_info 0x9a 150 1 0 0 2 0
+

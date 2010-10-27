@@ -121,7 +121,6 @@ public:
     void ClearBreak();
 
     int GetMemoryModel();
-    const char *GetModuleName();
 
     TString FaultText;
     TString ThreadName;
@@ -186,7 +185,7 @@ class TDebugModule
 public:
     TDebugModule(TCreateProcessEvent *event);
     TDebugModule(TLoadDllEvent *event);
-    TDebugModule(const char *ModuleName, int Cs);
+    TDebugModule(int Cs);
     ~TDebugModule();
 
     void ReadName();
@@ -198,6 +197,8 @@ public:
 	unsigned int ImageSize;
 	unsigned int ObjectRva;
 	unsigned short int CodeSel;
+	unsigned short int DataSel;
+	unsigned int DataSize;
 
     int FNew;
 

@@ -946,6 +946,10 @@ void TWdSocketServer::ReqMapAddr()
                 PutDword(0);
                 PutDword(mod->ImageSize - 1);
             }
+            else
+            {
+                PutDword(0);
+            }
         }
         FDebug->UnlockModule();
     }        

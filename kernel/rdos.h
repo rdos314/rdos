@@ -311,6 +311,7 @@ int RDOSAPI RdosSuspendAndSignalThread(int Thread);
 
 int RDOSAPI RdosGetImageHeader(int Adapter, int Entry, TRdosObjectHeader *Header);
 int RDOSAPI RdosGetImageData(int Adapter, int Entry, void *Buf);
+int RDOSAPI RdosGetDeviceInfo(int CodeSel, char *Name, unsigned int *CodeSize, unsigned short int *DataSel, unsigned int *DataSize);
 
 void RDOSAPI RdosCpuReset();
 int RDOSAPI RdosPowerFailure();
@@ -1160,6 +1161,18 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     parm [eax] [edx] [edi] \
     value [eax];
 
+#pragma aux RdosGetDeviceInfo = \
+    "push edx" \
+    CallGate_get_device_info  \
+    "mov [ecx],eax" \
+    CarryToBool \
+    "mov [esi],edx" \
+    "pop edx" \
+    "mov [edx],bx" \
+    parm [ebx] [edi] [ecx] [edx] [esi] \
+    modify [ebx edx] \
+    value [eax];
+
 #pragma aux RdosGetFaultThreadState = \
     CallGate_get_fault_thread_state  \
     CarryToBool \
@@ -1182,6 +1195,18 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     CallGate_get_image_data  \
     CarryToBool \
     parm [eax] [edx] [edi] \
+    value [eax];
+
+#pragma aux RdosGetDeviceInfo = \
+    "push edx" \
+    CallGate_get_device_info  \
+    "mov [ecx],eax" \
+    CarryToBool \
+    "mov [esi],edx" \
+    "pop edx" \
+    "mov [edx],bx" \
+    parm [ebx] [edi] [ecx] [edx] [esi] \
+    modify [ebx edx] \
     value [eax];
 
 #pragma aux RdosGetThreadState = \

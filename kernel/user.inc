@@ -617,6 +617,15 @@ GetImageData	MACRO
 	UserGate get_image_data_nr
 					ENDM
 
+; IN  BX            Code selector
+; IN  ES:(E)DI      Name buffer
+; OUT BX            Data selector
+; OUT EAX           Code limit
+; OUT EDX           Data limit
+GetDeviceInfo	MACRO
+	UserGate get_device_info_nr
+					ENDM
+
 ; IN  ES:(E)DI)     CPU vendor string
 ; OUT AL            CPU version
 ; OUT EBX           Frequency (MHz)

@@ -212,28 +212,6 @@ int TDebugThread::GetMemoryModel()
 
 /*##########################################################################
 #
-#   Name       : TDebugThread::GetModuleName
-#
-#   Purpose....: Get current module name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-const char *TDebugThread::GetModuleName()
-{
-    if (Cs == 0x1B3)
-        return "";
-
-    if (Cs == 0x30)
-        return "\\rdos\\kernel\\os\\kernel.exe";
-
-    return "";
-}
-
-/*##########################################################################
-#
 #   Name       : TDebugThread::ReadMem
 #
 #   Purpose....: Read memory in thread
@@ -813,6 +791,7 @@ TDebugModule::TDebugModule(TCreateProcessEvent *event)
     ImageSize = event->ImageSize;
     ObjectRva = event->ObjectRva;
     CodeSel = 0;
+    DataSel = 0;
 
     FNew = FALSE;
 
@@ -838,6 +817,7 @@ TDebugModule::TDebugModule(TLoadDllEvent *event)
     ImageSize = event->ImageSize;
     ObjectRva = event->ObjectRva;
     CodeSel = 0;
+    DataSel = 0;
 
     FNew = TRUE;
 
@@ -855,16 +835,27 @@ TDebugModule::TDebugModule(TLoadDllEvent *event)
 #   Returns....: *
 #
 ##########################################################################*/
-TDebugModule::TDebugModule(const char *Name, int Cs)
- : ModuleName(Name)
+TDebugModule::TDebugModule(int Cs)
 {
-    FileHandle = 0;
-    Handle = 0x8000 | Cs;
-    ImageBase = 0;
-    ImageSize = 0xFFFFFFFF;
-    ObjectRva = 0;
-    CodeSel = Cs;
+    char Name[256];
 
+    FileHandle = 0;
+
+    if (RdosGetDeviceInfo(Cs, Name, &ImageSize, &DataSel, &DataSize)) 
+    {
+        Handle = 0x8000 | Cs;
+        ImageBase = 0;
+        ObjectRva = 0;
+        CodeSel = Cs;
+
+        if (Cs == 0x30)
+            strcpy(Name, "\\rdos\\kernel\\os\\kernel.exe");
+
+        ModuleName = TString(Name);
+    }
+    else
+        Handle = 0;
+        
     FNew = TRUE;
 }
 
@@ -1600,7 +1591,7 @@ int TDebug::HasModule(const char *Name)
 ##########################################################################*/
 void TDebug::UpdateModules()
 {
-    const char *ModuleName;
+    TDebugModule *m;
     int model;
 
     model = CurrentThread->GetMemoryModel();                    
@@ -1612,13 +1603,14 @@ void TDebug::UpdateModules()
     
     if (FMemoryModel != DEBUG_MEMORY_MODEL_FLAT)
     {
-        ModuleName = CurrentThread->GetModuleName();
-        if (strlen(ModuleName))
-            if (!HasModule(ModuleName))
-            {
-                InsertModule(new TDebugModule(ModuleName, CurrentThread->Cs));
-                FModuleChanged = TRUE;
-            }
+        m = new TDebugModule(CurrentThread->Cs);
+        if (m->Handle)
+        {
+            InsertModule(m);
+            FModuleChanged = TRUE;
+        }
+        else
+            delete m;
     }
 }
 
