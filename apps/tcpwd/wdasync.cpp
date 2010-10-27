@@ -172,6 +172,12 @@ void TWdAsyncService::ReqAsyncGo()
                 CondFlags |= COND_LIBRARIES;
             }
 
+            if (debug->HasConfigChange())
+            {
+                debug->ClearConfigChange();
+                CondFlags |= COND_CONFIG;
+            }
+
             if (curr)
             {
                 if (curr->HasBreakOccurred())
@@ -252,6 +258,12 @@ void TWdAsyncService::ReqAsyncStep()
                 CondFlags |= COND_LIBRARIES;
             }
 
+            if (debug->HasConfigChange())
+            {
+                debug->ClearConfigChange();
+                CondFlags |= COND_CONFIG;
+            }
+
             if (curr)
             {
                 if (curr->HasBreakOccurred())
@@ -330,6 +342,12 @@ void TWdAsyncService::ReqAsyncPoll()
             {
                 debug->ClearModuleChange();
                 CondFlags |= COND_LIBRARIES;
+            }
+
+            if (debug->HasConfigChange())
+            {
+                debug->ClearConfigChange();
+                CondFlags |= COND_CONFIG;
             }
 
             if (curr)

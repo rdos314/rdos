@@ -189,6 +189,51 @@ void TDebugThread::ClearBreak()
 
 /*##########################################################################
 #
+#   Name       : TDebugThread::GetMemoryModel
+#
+#   Purpose....: Return current memory model for thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebugThread::GetMemoryModel()
+{
+    if (Cs == 0x1B3)
+        return DEBUG_MEMORY_MODEL_FLAT;
+
+    if (Cs == 0x30)
+        return DEBUG_MEMORY_MODEL_16;
+
+// this need more validation!
+    return DEBUG_MEMORY_MODEL_16;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugThread::GetModuleName
+#
+#   Purpose....: Get current module name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TDebugThread::GetModuleName()
+{
+    if (Cs == 0x1B3)
+        return "";
+
+    if (Cs == 0x30)
+        return "\\rdos\\kernel\\os\\kernel.exe";
+
+    return "";
+}
+
+/*##########################################################################
+#
 #   Name       : TDebugThread::ReadMem
 #
 #   Purpose....: Read memory in thread
@@ -766,11 +811,12 @@ TDebugModule::TDebugModule(TCreateProcessEvent *event)
     Handle = event->Handle;
     ImageBase = event->ImageBase;
     ImageSize = event->ImageSize;
-         ObjectRva = event->ObjectRva;
+    ObjectRva = event->ObjectRva;
+    CodeSel = 0;
 
-         FNew = FALSE;
+    FNew = FALSE;
 
-         ReadName();
+    ReadName();
 }
 
 /*##########################################################################
@@ -786,15 +832,40 @@ TDebugModule::TDebugModule(TCreateProcessEvent *event)
 ##########################################################################*/
 TDebugModule::TDebugModule(TLoadDllEvent *event)
 {
-         FileHandle = event->FileHandle;
-         Handle = event->Handle;
-         ImageBase = event->ImageBase;
-         ImageSize = event->ImageSize;
-         ObjectRva = event->ObjectRva;
+    FileHandle = event->FileHandle;
+    Handle = event->Handle;
+    ImageBase = event->ImageBase;
+    ImageSize = event->ImageSize;
+    ObjectRva = event->ObjectRva;
+    CodeSel = 0;
 
     FNew = TRUE;
 
     ReadName();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebugModule::TDebugModule
+#
+#   Purpose....: Debug module constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugModule::TDebugModule(const char *Name, int Cs)
+ : ModuleName(Name)
+{
+    FileHandle = 0;
+    Handle = 0x8000 | Cs;
+    ImageBase = 0;
+    ImageSize = 0xFFFFFFFF;
+    ObjectRva = 0;
+    CodeSel = Cs;
+
+    FNew = TRUE;
 }
 
 /*##########################################################################
@@ -878,6 +949,9 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
     FModuleChanged = FALSE;
     FHandle = 0;
 
+    FMemoryModel = DEBUG_MEMORY_MODEL_FLAT;
+    FConfigChange = FALSE;
+    
     FAsyncBreak = FALSE;
     FAsyncSel = 0;
     FAsyncOffset = 0;
@@ -1188,6 +1262,38 @@ void TDebug::ClearModuleChange()
 
 /*##########################################################################
 #
+#   Name       : TDebug::HasConfigChange
+#
+#   Purpose....: Check for configuration change
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::HasConfigChange()
+{
+    return FConfigChange;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::ClearConfigChange
+#
+#   Purpose....: Clear config change event
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::ClearConfigChange()
+{
+    FConfigChange = FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::IsTerminated
 #
 #   Purpose....: Check for termination
@@ -1356,6 +1462,22 @@ int TDebug::GetNextModule(int ModuleHandle)
 
 /*##########################################################################
 #
+#   Name       : TDebug::GetMemoryModel
+#
+#   Purpose....: Get current memory model
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::GetMemoryModel()
+{
+    return FMemoryModel;
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::LockThread
 #
 #   Purpose....: Lock thread list and return thread object
@@ -1432,6 +1554,72 @@ TDebugModule *TDebug::LockModule(int Handle)
 void TDebug::UnlockModule()
 {
     FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::HasModule
+#
+#   Purpose....: Check for a loaded module
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::HasModule(const char *Name)
+{
+    TString SearchName(Name);
+    TDebugModule *m;
+    int found = FALSE;
+
+    FSection.Enter();
+
+    m = ModuleList;
+    while (m && !found)
+    {
+        if (SearchName == m->ModuleName)
+            found = TRUE;
+        m = m->Next;    
+    }        
+    FSection.Leave();
+
+    return found;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::UpdateModules
+#
+#   Purpose....: Update loaded modules
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::UpdateModules()
+{
+    const char *ModuleName;
+    int model;
+
+    model = CurrentThread->GetMemoryModel();                    
+    if (model != FMemoryModel)
+    {
+        FMemoryModel = model;
+        FConfigChange = FALSE;
+    }
+    
+    if (FMemoryModel != DEBUG_MEMORY_MODEL_FLAT)
+    {
+        ModuleName = CurrentThread->GetModuleName();
+        if (strlen(ModuleName))
+            if (!HasModule(ModuleName))
+            {
+                InsertModule(new TDebugModule(ModuleName, CurrentThread->Cs));
+                FModuleChanged = TRUE;
+            }
+    }
 }
 
 /*##########################################################################
@@ -2026,6 +2214,7 @@ void TDebug::SignalNewData()
                 }
                 UnlockThread();
             }
+            UpdateModules();
         }
 
         UserSignal.Signal();

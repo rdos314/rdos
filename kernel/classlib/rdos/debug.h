@@ -32,6 +32,10 @@
 #include "str.h"
 #include "sigdev.h"
 
+#define DEBUG_MEMORY_MODEL_FLAT     1
+#define DEBUG_MEMORY_MODEL_16       2
+#define DEBUG_MEMORY_MODEL_32       3
+
 struct TCreateProcessEvent
 {
     int FileHandle;
@@ -116,6 +120,9 @@ public:
 
     void ClearBreak();
 
+    int GetMemoryModel();
+    const char *GetModuleName();
+
     TString FaultText;
     TString ThreadName;
     TString ThreadList;
@@ -179,6 +186,7 @@ class TDebugModule
 public:
     TDebugModule(TCreateProcessEvent *event);
     TDebugModule(TLoadDllEvent *event);
+    TDebugModule(const char *ModuleName, int Cs);
     ~TDebugModule();
 
     void ReadName();
@@ -187,8 +195,9 @@ public:
     int FileHandle;
     int Handle;
     unsigned int ImageBase;
-	 unsigned int ImageSize;
-	 unsigned int ObjectRva;
+	unsigned int ImageSize;
+	unsigned int ObjectRva;
+	unsigned short int CodeSel;
 
     int FNew;
 
@@ -239,6 +248,11 @@ public:
 
 	int IsTerminated();
 
+	int HasConfigChange();
+	void ClearConfigChange();
+
+	int GetMemoryModel();
+
 protected:
 	virtual void SignalNewData();
 	virtual void Add(TWait *Wait);
@@ -246,6 +260,9 @@ protected:
 
 	void InsertThread(TDebugThread *thread);
 	void InsertModule(TDebugModule *module);
+
+	int HasModule(const char *Name);
+	void UpdateModules();
 
 	void RemoveThread(int thread);
 	void RemoveModule(int handle);
@@ -278,6 +295,9 @@ protected:
     int FModuleChanged;
 
     int FWaitLoad;
+
+    int FConfigChange;
+    int FMemoryModel;
     
     int FAsyncBreak;
     int FAsyncSel;
