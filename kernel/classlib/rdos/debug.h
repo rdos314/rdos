@@ -83,11 +83,13 @@ struct TKernelExceptionEvent
 class TDebugBreak
 {
 public:
-	 TDebugBreak(int Sel, long Offset);
+	TDebugBreak(int Sel, long Offset, int Hw);
 
-	 int Sel;
-	 long Offset;
+	int Sel;
+	long Offset;
     char Instr;
+
+    int UseHw;
 
     TDebugBreak *Next;
 };
@@ -172,6 +174,7 @@ public:
 
 protected:
     void ReadState();
+    void RecalcBreak();
 
     int FDebug;
 	int FHasBreak;
@@ -229,7 +232,7 @@ public:
     TDebugModule *LockModule(int Handle);
     void UnlockModule();
 
-	void AddBreak(int Sel, long Offset);
+	void AddBreak(int Sel, long Offset, int Hw);
 	void ClearBreak(int Sel, long Offset);
 
     void WaitForLoad(int timeout);

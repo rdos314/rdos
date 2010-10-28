@@ -342,7 +342,7 @@ void TDebugThread::ActivateBreaks(TDebugBreak *BreakList)
     while (b)
     {
         RdosReadThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
-                  RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
+        RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
 
         b = b->Next;
     }
@@ -363,7 +363,7 @@ void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList)
 {
     TDebugBreak *b = BreakList;
 
-        if (!FWasTrace)
+    if (!FWasTrace)
     {
         while (b)
         {
@@ -907,12 +907,13 @@ void TDebugModule::ReadName()
 #   Returns....: *
 #
 ##########################################################################*/
-TDebugBreak::TDebugBreak(int sel, long offset)
+TDebugBreak::TDebugBreak(int sel, long offset, int Hw)
 {
-         Sel = sel;
-         Offset = offset;
-         Instr = 0xCC;
-         Next = 0;
+    Sel = sel;
+    Offset = offset;
+    Instr = 0xCC;
+    Next = 0;
+    UseHw = Hw;
 }
 
 /*##########################################################################
@@ -1625,9 +1626,9 @@ void TDebug::UpdateModules()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDebug::AddBreak(int Sel, long Offset)
+void TDebug::AddBreak(int Sel, long Offset, int Hw)
 {
-    TDebugBreak *newbr = new TDebugBreak(Sel, Offset);
+    TDebugBreak *newbr = new TDebugBreak(Sel, Offset, Hw);
     TDebugBreak *b;
     int found = FALSE;
     
@@ -1803,7 +1804,7 @@ void TDebug::Trace()
         if (Instr[0] == 0xF && Instr[1] == 0xB)
         {
             Offset += 7;
-            AddBreak(Sel, Offset);
+            AddBreak(Sel, Offset, TRUE);
             Go();
             ClearBreak(Sel, Offset);
         }
@@ -1873,7 +1874,7 @@ int TDebug::AsyncTrace(int Timeout)
         if (Instr[0] == 0xF && Instr[1] == 0xB)
         {
             FAsyncOffset += 7;
-            AddBreak(FAsyncSel, FAsyncOffset);
+            AddBreak(FAsyncSel, FAsyncOffset, TRUE);
             ok = AsyncGo(Timeout);
             if (ok)
                 ClearBreak(FAsyncSel, FAsyncOffset);

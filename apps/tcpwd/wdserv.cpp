@@ -56,47 +56,47 @@
 
 struct x86_cpu
 {
-	 long eax;
-	 long ebx;
-	 long ecx;
-	 long edx;
-	 long esi;
-	 long edi;
-	 long ebp;
-	 long esp;
-	 long eip;
-	 long efl;
-	 long cr0;
-	 long cr2;
-	 long cr3;
-	 short int ds;
-	 short int es;
-	 short int ss;
-	 short int cs;
-	 short int fs;
-	 short int gs;
+         long eax;
+         long ebx;
+         long ecx;
+         long edx;
+         long esi;
+         long edi;
+         long ebp;
+         long esp;
+         long eip;
+         long efl;
+         long cr0;
+         long cr2;
+         long cr3;
+         short int ds;
+         short int es;
+         short int ss;
+         short int cs;
+         short int fs;
+         short int gs;
 };
 
 struct fpu_ptr
 {
-	long     offset;
-	long     segment;
+        long     offset;
+        long     segment;
 };
 
 struct x86_fpu
 {
-	 long           cw;
-	 long           sw;
-	 long           tag;
-	 fpu_ptr        ip_err;
-	 fpu_ptr        op_err;
-	 long double    reg[8];
+         long           cw;
+         long           sw;
+         long           tag;
+         fpu_ptr        ip_err;
+         fpu_ptr        op_err;
+         long double    reg[8];
 };
 
 struct x86_xmm
 {
-	 char    xmm[8][16];
-	 long 	mxcsr;
+         char    xmm[8][16];
+         long   mxcsr;
 };
 
 class x86_mad_registers
@@ -107,9 +107,9 @@ public:
     void Read(TDebugThread *t);
     void Write(TDebugThread *t);
 
-	struct x86_cpu  cpu;
-	struct x86_fpu  fpu;
-	struct x86_xmm  xmm;
+        struct x86_cpu  cpu;
+        struct x86_fpu  fpu;
+        struct x86_xmm  xmm;
 };
 
 /*##########################################################################
@@ -125,7 +125,7 @@ public:
 ##########################################################################*/
 void x86_mad_registers::Init()
 {
-	int i, j;
+        int i, j;
     
     cpu.eax = 0;
     cpu.ebx = 0;
@@ -294,9 +294,9 @@ void x86_mad_registers::Write(TDebugThread *t)
 TWdSocketServer::TWdSocketServer(TWdSocketServerFactory *fact, const char *Name, int StackSize, TSocket *Socket)
   : TSocketServer(Name, StackSize, Socket)
 {
-	 FFactory = fact;
-	 FSupplList = 0;
-	 FDebug = 0;
+         FFactory = fact;
+         FSupplList = 0;
+         FDebug = 0;
 }
 
 /*##########################################################################
@@ -316,7 +316,7 @@ TWdSocketServer::~TWdSocketServer()
 
     while (FSupplList)
     {
-		  service = FSupplList->FNext;
+                  service = FSupplList->FNext;
         delete FSupplList;
         FSupplList = service;
     }
@@ -403,7 +403,7 @@ void TWdSocketServer::GetString(char *str, int maxsize)
         str[len] = 0;
     }
     else
-		  str[0] = 0;
+                  str[0] = 0;
 }
 
 /*##########################################################################
@@ -470,7 +470,7 @@ void TWdSocketServer::PutByte(char val)
 {
     *FOutPtr = val;
     FOutPtr++;
-	 FOutSize++;
+         FOutSize++;
 }
 
 /*##########################################################################
@@ -487,7 +487,7 @@ void TWdSocketServer::PutByte(char val)
 void TWdSocketServer::PutWord(short int val)
 {
     *(short int *)FOutPtr = val;
-	 FOutPtr += 2;
+         FOutPtr += 2;
     FOutSize += 2;
 }
 
@@ -505,7 +505,7 @@ void TWdSocketServer::PutWord(short int val)
 void TWdSocketServer::PutDword(long val)
 {
     *(long *)FOutPtr = val;
-	 FOutPtr += 4;
+         FOutPtr += 4;
     FOutSize += 4;
 }
 
@@ -522,7 +522,7 @@ void TWdSocketServer::PutDword(long val)
 ##########################################################################*/
 void TWdSocketServer::PutString(const char *str)
 {
-	 int len = strlen(str);
+         int len = strlen(str);
 
     memcpy(FOutPtr, str, len + 1);
     FOutPtr += len + 1;
@@ -542,9 +542,9 @@ void TWdSocketServer::PutString(const char *str)
 ##########################################################################*/
 void TWdSocketServer::PutData(void *ptr, int size)
 {
-	 memcpy(FOutPtr, ptr, size);
-	 FOutPtr += size;
-	 FOutSize += size;
+         memcpy(FOutPtr, ptr, size);
+         FOutPtr += size;
+         FOutSize += size;
 }
 
 /*##########################################################################
@@ -560,7 +560,7 @@ void TWdSocketServer::PutData(void *ptr, int size)
 ##########################################################################*/
 TDebug *TWdSocketServer::GetDebug()
 {
-	 return FDebug;
+         return FDebug;
 }
 
 /*##########################################################################
@@ -576,15 +576,15 @@ TDebug *TWdSocketServer::GetDebug()
 ##########################################################################*/
 TString TWdSocketServer::CheckFileExt(const char *path, const char *ext)
 {
-	TPathName FFullPath = TString(path);
-	FFullPath += ext;
+        TPathName FFullPath = TString(path);
+        FFullPath += ext;
 
-	if (FFullPath.IsFile())
-	{
-		 return FFullPath.Get();
-	}
-	else
-		return TString();
+        if (FFullPath.IsFile())
+        {
+                 return FFullPath.Get();
+        }
+        else
+                return TString();
 }
 
 /*##########################################################################
@@ -600,10 +600,10 @@ TString TWdSocketServer::CheckFileExt(const char *path, const char *ext)
 ##########################################################################*/
 TString TWdSocketServer::CheckFileExt(const char *path, const char *name, const char *ext)
 {
-	TPathName pn(path);
-	pn += name;
+        TPathName pn(path);
+        pn += name;
 
-	return CheckFileExt(pn.Get().GetData(), ext);
+        return CheckFileExt(pn.Get().GetData(), ext);
 }
 
 /*##########################################################################
@@ -619,32 +619,32 @@ TString TWdSocketServer::CheckFileExt(const char *path, const char *name, const 
 ##########################################################################*/
 TString TWdSocketServer::CheckPathFileExt(char *path, const char *name, const char *ext)
 {
-	TString str;
-	char *ptr;
+        TString str;
+        char *ptr;
 
-	str = CheckFileExt(name, ext);
+        str = CheckFileExt(name, ext);
 
-	if (str.GetSize())
-		 return str;
+        if (str.GetSize())
+                 return str;
 
-	while (*path)
-	{
-		ptr = strchr(path, ';');
-		if (ptr)
-		{
-			*ptr = 0;
-			str = CheckFileExt(path, name, ext);
+        while (*path)
+        {
+                ptr = strchr(path, ';');
+                if (ptr)
+                {
+                        *ptr = 0;
+                        str = CheckFileExt(path, name, ext);
 
-			if (str.GetSize())
-				 return str;
+                        if (str.GetSize())
+                                 return str;
 
-			path = ptr + 1;
-		}
-		else
-			return CheckFileExt(path, name, ext);
-	}
+                        path = ptr + 1;
+                }
+                else
+                        return CheckFileExt(path, name, ext);
+        }
 
-	return TString();
+        return TString();
 }
 
 /*##########################################################################
@@ -660,50 +660,50 @@ TString TWdSocketServer::CheckPathFileExt(char *path, const char *name, const ch
 ##########################################################################*/
 TString TWdSocketServer::GetFullPathName(char *name, const char *ext)
 {
-	char *path;
-	TEnv *env;
-	TString str;
+        char *path;
+        TEnv *env;
+        TString str;
 
-	if (strchr(name, '\\'))
-	{
-		str = CheckFileExt(name, ext);
+        if (strchr(name, '\\'))
+        {
+                str = CheckFileExt(name, ext);
 
-		if (str.GetSize())
-			 return str;
-	 }
+                if (str.GetSize())
+                         return str;
+         }
 
-	if (strchr(name, '/'))
-	{
-		str = CheckFileExt(name, ext);
+        if (strchr(name, '/'))
+        {
+                str = CheckFileExt(name, ext);
 
-		if (str.GetSize())
-		    return str;
+                if (str.GetSize())
+                    return str;
     }
 
-	if (strchr(name, ':'))
-	{
-	    str = CheckFileExt(name, ext);
-		if (str.GetSize())
-		    return str;
+        if (strchr(name, ':'))
+        {
+            str = CheckFileExt(name, ext);
+                if (str.GetSize())
+                    return str;
     }
 
-	path = new char[512];
-	env = TEnv::OpenSysEnv();
-	if (env->Find("PATH", path))
-	{
-		 str = CheckPathFileExt(path, name, ext);
-	    delete env;
-		delete path;
-		if (str.GetSize())
-			return str;
-	 }
-	 else
-	 {
-		  delete env;
-		  delete path;
-	 }
+        path = new char[512];
+        env = TEnv::OpenSysEnv();
+        if (env->Find("PATH", path))
+        {
+                 str = CheckPathFileExt(path, name, ext);
+            delete env;
+                delete path;
+                if (str.GetSize())
+                        return str;
+         }
+         else
+         {
+                  delete env;
+                  delete path;
+         }
 
-	 return CheckFileExt(name, ext);
+         return CheckFileExt(name, ext);
 }
 
 /*##########################################################################
@@ -841,7 +841,7 @@ void TWdSocketServer::ReqGetSupplService()
     {
         service = factory->Create(this);
         PutDword((long)service);
-	 }
+         }
     else
         PutDword(0);
 }
@@ -859,7 +859,7 @@ void TWdSocketServer::ReqGetSupplService()
 ##########################################################################*/
 void TWdSocketServer::ReqPerformSupplService()
 {
-	 int done = FALSE;
+         int done = FALSE;
     TWdSupplService *service;
     TWdSupplService *ID;
 
@@ -876,7 +876,7 @@ void TWdSocketServer::ReqPerformSupplService()
     }
 
     if (done)
-		  service->NotifyMsg();
+                  service->NotifyMsg();
 }
 
 /*##########################################################################
@@ -894,15 +894,15 @@ void TWdSocketServer::ReqGetSysConfig()
 {
     int major, minor, release;
 
-	 RdosGetVersion(&major, &minor, &release);
+         RdosGetVersion(&major, &minor, &release);
     
-	 PutByte(0x3F);
-	 PutByte(0xF);
-	 PutByte((char)major);
-	 PutByte((char)minor);
-	 PutByte(0);
-	 PutByte(3);
-	 PutWord(1);
+         PutByte(0x3F);
+         PutByte(0xF);
+         PutByte((char)major);
+         PutByte((char)minor);
+         PutByte(0);
+         PutByte(3);
+         PutWord(1);
 }
 
 /*##########################################################################
@@ -921,7 +921,7 @@ void TWdSocketServer::ReqMapAddr()
     long Offset = GetDword();
     int Sel = GetWord();
     int Handle = GetDword();
-	TDebugModule *mod;
+        TDebugModule *mod;
 
     if (FDebug)
     {
@@ -1022,11 +1022,11 @@ void TWdSocketServer::ReqChecksumMem()
 ##########################################################################*/
 void TWdSocketServer::ReqReadMem()
 {
-	int Size;
-	long Offset;
-	short int Sel;
-	int Count = 0;
-	char *Data;
+        int Size;
+        long Offset;
+        short int Sel;
+        int Count = 0;
+        char *Data;
 
     Offset = GetDword();
     Sel = GetWord();
@@ -1034,8 +1034,8 @@ void TWdSocketServer::ReqReadMem()
 
     Data = new char[Size];
     
-	if (FCurrentThread)
-		Count = FCurrentThread->ReadMem(Sel, Offset, Data, Size);
+        if (FCurrentThread)
+                Count = FCurrentThread->ReadMem(Sel, Offset, Data, Size);
 
     if (Count)
         PutData(Data, Count);
@@ -1057,20 +1057,20 @@ void TWdSocketServer::ReqReadMem()
 void TWdSocketServer::ReqWriteMem()
 {
     int Size;
-	char *Data;
-	long Offset;
-	short int Sel;
+        char *Data;
+        long Offset;
+        short int Sel;
 
-	Offset = GetDword();
-	Sel = GetWord();
-	Data = (char *)GetData(&Size);
+        Offset = GetDword();
+        Sel = GetWord();
+        Data = (char *)GetData(&Size);
 
     if (Size > 0)
     {
-    	if (FCurrentThread)
-	    	Size = FCurrentThread->WriteMem(Sel, Offset, Data, Size);
-	    else
-	        Size = 0;
+        if (FCurrentThread)
+                Size = FCurrentThread->WriteMem(Sel, Offset, Data, Size);
+            else
+                Size = 0;
     }
     else
         Size = 0;
@@ -1091,7 +1091,7 @@ void TWdSocketServer::ReqWriteMem()
 ##########################################################################*/
 void TWdSocketServer::ReqReadIo()
 {
-	_asm int 3
+        _asm int 3
 }
 
 /*##########################################################################
@@ -1155,7 +1155,7 @@ void TWdSocketServer::ReqReadFpu()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteCpu()
 {
-	_asm int 3
+        _asm int 3
 }
 
 /*##########################################################################
@@ -1171,7 +1171,7 @@ void TWdSocketServer::ReqWriteCpu()
 ##########################################################################*/
 void TWdSocketServer::ReqWriteFpu()
 {
-	_asm int 3
+        _asm int 3
 }
 
 /*##########################################################################
@@ -1187,30 +1187,30 @@ void TWdSocketServer::ReqWriteFpu()
 ##########################################################################*/
 void TWdSocketServer::ReqProgGo()
 {
-	short int CondFlags = COND_THREAD_INFO;
+        short int CondFlags = COND_THREAD_INFO;
 
-	if (FDebug)
-	{
-		FDebug->Go();
+        if (FDebug)
+        {
+                FDebug->Go();
 
-		if (FDebug->IsTerminated())
-			CondFlags |= COND_TERMINATE;
+                if (FDebug->IsTerminated())
+                        CondFlags |= COND_TERMINATE;
 
-		if (FDebug->HasThreadChange())
-		{
-			FDebug->ClearThreadChange();
-			CondFlags |= COND_THREAD;
-			FCurrentThread = FDebug->GetCurrentThread();
-		}
+                if (FDebug->HasThreadChange())
+                {
+                        FDebug->ClearThreadChange();
+                        CondFlags |= COND_THREAD;
+                        FCurrentThread = FDebug->GetCurrentThread();
+                }
 
-		if (FDebug->HasModuleChange())
-		{
-			FDebug->ClearModuleChange();
-			CondFlags |= COND_LIBRARIES;
-		}
+                if (FDebug->HasModuleChange())
+                {
+                        FDebug->ClearModuleChange();
+                        CondFlags |= COND_LIBRARIES;
+                }
 
         if (FCurrentThread)
-		{
+                {
             if (FCurrentThread->HasBreakOccurred())
                 CondFlags |= COND_BREAK;
 
@@ -1220,7 +1220,7 @@ void TWdSocketServer::ReqProgGo()
             if (FCurrentThread->HasFaultOccurred())
                 CondFlags |= COND_EXCEPTION;                
         }
-    }        		
+    }                   
 
     if (FCurrentThread)
     {
@@ -1233,15 +1233,15 @@ void TWdSocketServer::ReqProgGo()
         PutWord(CondFlags);
     }
     else
-	{
+        {
         PutDword(0);
         PutWord(0);    
 
         PutDword(0);
         PutWord(0);   
 
-		PutWord(CondFlags);
-	}
+                PutWord(CondFlags);
+        }
 }
 
 /*##########################################################################
@@ -1257,40 +1257,40 @@ void TWdSocketServer::ReqProgGo()
 ##########################################################################*/
 void TWdSocketServer::ReqProgStep()
 {
-	short int CondFlags = COND_THREAD_INFO;
+        short int CondFlags = COND_THREAD_INFO;
 
-	if (FDebug)
-	{
-		FDebug->Trace();
+        if (FDebug)
+        {
+                FDebug->Trace();
 
-		if (FDebug->IsTerminated())
-			CondFlags |= COND_TERMINATE;
+                if (FDebug->IsTerminated())
+                        CondFlags |= COND_TERMINATE;
 
-		if (FDebug->HasThreadChange())
-		{
-			FDebug->ClearThreadChange();
-			CondFlags |= COND_THREAD;
-			FCurrentThread = FDebug->GetCurrentThread();
-		}
+                if (FDebug->HasThreadChange())
+                {
+                        FDebug->ClearThreadChange();
+                        CondFlags |= COND_THREAD;
+                        FCurrentThread = FDebug->GetCurrentThread();
+                }
 
-		if (FDebug->HasModuleChange())
-		{
-			FDebug->ClearModuleChange();
-			CondFlags |= COND_LIBRARIES;
-		}
+                if (FDebug->HasModuleChange())
+                {
+                        FDebug->ClearModuleChange();
+                        CondFlags |= COND_LIBRARIES;
+                }
 
-		if (FCurrentThread)
-		{
-			if (FCurrentThread->HasBreakOccurred())
-				CondFlags |= COND_BREAK;
+                if (FCurrentThread)
+                {
+                        if (FCurrentThread->HasBreakOccurred())
+                                CondFlags |= COND_BREAK;
 
-			if (FCurrentThread->HasTraceOccurred())
-				CondFlags |= COND_TRACE;
+                        if (FCurrentThread->HasTraceOccurred())
+                                CondFlags |= COND_TRACE;
 
             if (FCurrentThread->HasFaultOccurred())
                 CondFlags |= COND_EXCEPTION;                
         }
-    }        		
+    }                   
 
     if (FCurrentThread)
     {
@@ -1327,37 +1327,37 @@ void TWdSocketServer::ReqProgStep()
 ##########################################################################*/
 void TWdSocketServer::ReqProgLoad()
 {
-	char truearg;
-	char name[256];
-	char *argstr;
-	TPathName curdir;
-	TString str;
+        char truearg;
+        char name[256];
+        char *argstr;
+        TPathName curdir;
+        TString str;
 
-	if (FDebug)
-		delete FDebug;
+        if (FDebug)
+                delete FDebug;
 
-	FDebug = 0;
-	FMainThread = 0;
-	FCurrentThread = 0;
-	FMainModule = 0;
+        FDebug = 0;
+        FMainThread = 0;
+        FCurrentThread = 0;
+        FMainModule = 0;
 
-	truearg = GetByte();
-	GetString(name, 255);
+        truearg = GetByte();
+        GetString(name, 255);
 
     if (strlen(name))
     {
-	    str = GetFullPathName(name, ".com");
+            str = GetFullPathName(name, ".com");
 
-	    if (str.GetSize() == 0)
-	        str =  GetFullPathName(name, ".exe");
-	}
+            if (str.GetSize() == 0)
+                str =  GetFullPathName(name, ".exe");
+        }
     
-	if (str.GetSize())
-	{
-	    argstr = name + strlen(name) + 1;	    
-		FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData());
+        if (str.GetSize())
+        {
+            argstr = name + strlen(name) + 1;       
+                FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData());
 
-		FDebug->WaitForLoad(5000);
+                FDebug->WaitForLoad(5000);
 
         FMainThread = FDebug->GetMainThread();
         FCurrentThread = FDebug->GetCurrentThread();
@@ -1367,7 +1367,7 @@ void TWdSocketServer::ReqProgLoad()
         {
             PutDword(0);
             PutDword(FMainThread->ThreadID);
-		    PutDword(FMainModule->Handle);
+                    PutDword(FMainModule->Handle);
             PutByte(0x10);
         }
         else
@@ -1376,7 +1376,7 @@ void TWdSocketServer::ReqProgLoad()
             PutDword(0);
             PutDword(0);
             PutByte(0);
-    	}
+        }
     }
     else
     {
@@ -1404,9 +1404,9 @@ void TWdSocketServer::ReqProgKill()
         delete FDebug;
 
     FDebug = 0;
-	FMainThread = 0;
-	FCurrentThread = 0;
-	FMainModule = 0;
+        FMainThread = 0;
+        FCurrentThread = 0;
+        FMainModule = 0;
 
     PutDword(0);
 }
@@ -1456,11 +1456,17 @@ void TWdSocketServer::ReqClearWatch()
 ##########################################################################*/
 void TWdSocketServer::ReqSetBreak()
 {
-	long Offset = GetDword();
+    long Offset = GetDword();
     int Sel = GetWord();
+    int Hw;
+
+    if ((Sel & 3) == 0)
+        Hw = TRUE;
+    else
+        Hw = FALSE;
 
     if (FDebug)
-        FDebug->AddBreak(Sel, Offset);
+        FDebug->AddBreak(Sel, Offset, Hw);
 
     PutDword(0);
 }
@@ -1568,12 +1574,12 @@ void TWdSocketServer::ReqGetLibName()
 
     if (FDebug)
     {
-		Handle = FDebug->GetNextModule(Handle);
+                Handle = FDebug->GetNextModule(Handle);
 
         if (Handle)
         {
             Module = FDebug->LockModule(Handle);
-			if (Module)
+                        if (Module)
             {
                 PutDword(Handle);
                 PutString(Module->ModuleName.GetData());
@@ -1582,8 +1588,8 @@ void TWdSocketServer::ReqGetLibName()
                 Handle = 0;
 
             FDebug->UnlockModule();
-		}
-	}
+                }
+        }
     else
         Handle = 0;
 
@@ -1604,7 +1610,7 @@ void TWdSocketServer::ReqGetLibName()
 ##########################################################################*/
 void TWdSocketServer::ReqGetErrText()
 {
-	int id = GetDword();
+        int id = GetDword();
 
     switch (id)
     {
@@ -1696,16 +1702,16 @@ void TWdSocketServer::ReqRedirStdout()
 ##########################################################################*/
 void TWdSocketServer::ReqSplitCmd()
 {
-	 char Cmd[256];
-	 int CmdSize;
-	 int ParamStart;
-	 int Size;
-	 int i;
-	 int done = FALSE;
-	 int HasParam = FALSE;
+         char Cmd[256];
+         int CmdSize;
+         int ParamStart;
+         int Size;
+         int i;
+         int done = FALSE;
+         int HasParam = FALSE;
 
-	 GetString(Cmd, 255);
-	 Size = strlen(Cmd);
+         GetString(Cmd, 255);
+         Size = strlen(Cmd);
 
     for (i = 0; i < Size && !done; i++)
     {
@@ -1715,10 +1721,10 @@ void TWdSocketServer::ReqSplitCmd()
             case '=':
             case '(':
             case ';':
-				case ',':
+                                case ',':
                 CmdSize = i;
                 ParamStart =  i;
-					 done = TRUE;
+                                         done = TRUE;
                 break;
 
             case ' ':
@@ -1829,7 +1835,7 @@ void TWdSocketServer::NotifyMsg()
             break;
 
         case 1:
-				ReqDisconnect();
+                                ReqDisconnect();
             break;
 
         case 2:
@@ -1838,7 +1844,7 @@ void TWdSocketServer::NotifyMsg()
 
         case 3:
             ReqResume();
-				break;
+                                break;
 
         case 4:
             ReqGetSupplService();
@@ -1864,7 +1870,7 @@ void TWdSocketServer::NotifyMsg()
             ReqChecksumMem();
             break;
 
-		  case 10:
+                  case 10:
             ReqReadMem();
             break;
 
@@ -1873,7 +1879,7 @@ void TWdSocketServer::NotifyMsg()
             break;
 
         case 12:
-				ReqReadIo();
+                                ReqReadIo();
             break;
 
         case 13:
@@ -1908,7 +1914,7 @@ void TWdSocketServer::NotifyMsg()
             ReqProgLoad();
             break;
 
-		  case 21:
+                  case 21:
             ReqProgKill();
             break;
 
@@ -1934,54 +1940,54 @@ void TWdSocketServer::NotifyMsg()
 
         case 27:
             ReqSetUserScreen();
-				break;
+                                break;
 
         case 28:
             ReqSetDebugScreen();
             break;
 
-		  case 29:
-				ReqReadUserKeyboard();
-				break;
+                  case 29:
+                                ReqReadUserKeyboard();
+                                break;
 
-		  case 30:
-				ReqGetLibName();
-				break;
+                  case 30:
+                                ReqGetLibName();
+                                break;
 
-		  case 31:
-				ReqGetErrText();
-				break;
+                  case 31:
+                                ReqGetErrText();
+                                break;
 
-		  case 32:
-				ReqGetMsgText();
-				break;
+                  case 32:
+                                ReqGetMsgText();
+                                break;
 
-		  case 33:
-				ReqRedirStdin();
-				break;
+                  case 33:
+                                ReqRedirStdin();
+                                break;
 
-		  case 34:
-				ReqRedirStdout();
-				break;
+                  case 34:
+                                ReqRedirStdout();
+                                break;
 
-		  case 35:
-				ReqSplitCmd();
-				break;
+                  case 35:
+                                ReqSplitCmd();
+                                break;
 
-		  case 36:
-				ReqReadReg();
-				break;
+                  case 36:
+                                ReqReadReg();
+                                break;
 
-		  case 37:
-				ReqWriteReg();
-				break;
+                  case 37:
+                                ReqWriteReg();
+                                break;
 
-		  case 38:
-				ReqMachineData();
-				break;
+                  case 38:
+                                ReqMachineData();
+                                break;
 
-		  default:
-				ReqError();
+                  default:
+                                ReqError();
             break;
     }    
 
@@ -2004,11 +2010,11 @@ void TWdSocketServer::HandleSocket()
 {
     int count;
     
-	while (FSocket->IsOpen())
-	{
-	    FInSize = 0;
-		if (FSocket->Read((char *)&FInSize, 2) == 2)
-	    {
+        while (FSocket->IsOpen())
+        {
+            FInSize = 0;
+                if (FSocket->Read((char *)&FInSize, 2) == 2)
+            {
             count = FSocket->Read(FInBuf, FInSize);
 
             if (count == FInSize)
@@ -2022,11 +2028,11 @@ void TWdSocketServer::HandleSocket()
 
                 if (!FSuppressAnswer)
                 {
-    			    FSocket->Write((char *)&FOutSize, 2);
+                            FSocket->Write((char *)&FOutSize, 2);
                     FSocket->Write(FOutBuf, FOutSize);
                     FSocket->Push();
                 }
             }
-		}
-	}
+                }
+        }
 }
