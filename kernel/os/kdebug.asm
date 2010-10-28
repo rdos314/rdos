@@ -24,8 +24,6 @@
 ; Kernel part kernel debugger
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME  KDEBUG
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

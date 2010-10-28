@@ -24,8 +24,6 @@
 ; 16-bit protected mode interrupt handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME int16
 
 GateSize = 16
 

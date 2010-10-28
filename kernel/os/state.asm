@@ -24,8 +24,6 @@
 ; Thread state interface module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME state
 
 GateSize = 16
 

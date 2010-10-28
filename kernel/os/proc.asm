@@ -24,8 +24,6 @@
 ; Thread & process handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME proc
 
 GateSize = 16
 

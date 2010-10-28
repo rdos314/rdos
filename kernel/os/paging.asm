@@ -24,8 +24,6 @@
 ; Paging & page fault handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        
-        NAME  Paging
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

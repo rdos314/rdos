@@ -24,8 +24,6 @@
 ; FAT allocation chain support
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME fattab
 
 GateSize = 16
 

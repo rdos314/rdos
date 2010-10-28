@@ -24,8 +24,6 @@
 ; FTDI, PL2303 and mct_u232 based USB serial port device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME usbcom
 
 GateSize = 16
 

@@ -24,8 +24,6 @@
 ; Support for PenMount DMC6000 touch-screen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME dmc6000
 
 GateSize = 16
 

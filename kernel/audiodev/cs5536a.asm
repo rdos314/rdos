@@ -24,8 +24,6 @@
 ; Support for AC97 Audio using Geod companion chip CS5536
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME cs5536a
 
 GateSize = 16
 

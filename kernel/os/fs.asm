@@ -24,8 +24,6 @@
 ; Basic file system support module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME fs
 
 GateSize = 16
 

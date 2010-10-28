@@ -24,8 +24,6 @@
 ; Control transfer functions for instruction emulator
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME emcontr
 
 	.386p
 

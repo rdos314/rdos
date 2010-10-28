@@ -24,8 +24,6 @@
 ; Support for AC97 Audio using VT82Cxxx chip
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME via82a
 
 GateSize = 16
 

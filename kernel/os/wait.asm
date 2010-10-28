@@ -24,8 +24,6 @@
 ; Abortable single & multiple wait functionality
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME wait
 		
 GateSize = 16
 

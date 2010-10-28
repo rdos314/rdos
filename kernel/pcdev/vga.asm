@@ -24,8 +24,6 @@
 ; VGA/VESA based video device driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME vga
 
 GateSize = 16
 

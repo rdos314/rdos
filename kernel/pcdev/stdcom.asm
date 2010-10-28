@@ -24,8 +24,6 @@
 ; Standard serial port device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME stdcom
 
 GateSize = 16
 

@@ -24,8 +24,6 @@
 ; Ini file handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        
-        NAME inifile
 
 GateSize = 16
 

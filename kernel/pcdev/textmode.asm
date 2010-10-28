@@ -24,8 +24,6 @@
 ; PC based text-mode support
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME textmode
 
 GateSize = 16
 

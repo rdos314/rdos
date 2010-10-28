@@ -24,8 +24,6 @@
 ; OS (kernel level) gate handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME os
 
 GateSize = 16
 

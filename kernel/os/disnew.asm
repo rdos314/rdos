@@ -24,8 +24,6 @@
 ; Disassembler tables for kernel debugger
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME DISNEW
 
         assume cs:code
 

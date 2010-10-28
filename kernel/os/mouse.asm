@@ -24,8 +24,6 @@
 ; Basic mouse support module.
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME mouse
 
 GateSize = 16
 

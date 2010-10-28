@@ -24,8 +24,6 @@
 ; Preloadable in-system drive (z:) support.
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME ramdrive
 
 GateSize = 16
 

@@ -24,8 +24,6 @@
 ; V86 mode code emulation in boot-time environment
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            
-    NAME v86bios
 
 GateSize = 16
 

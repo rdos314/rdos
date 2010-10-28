@@ -24,8 +24,6 @@
 ; Untilty functions for RDFS (RDOS File System)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME rdfsmisc
 
 GateSize = 16
 

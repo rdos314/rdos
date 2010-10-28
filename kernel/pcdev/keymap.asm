@@ -24,8 +24,6 @@
 ; Keyboard mapper module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME keymap
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

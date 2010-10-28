@@ -24,8 +24,6 @@
 ; String functions for instruction emulator
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME emstring
 
 	.386p
 

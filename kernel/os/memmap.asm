@@ -24,8 +24,6 @@
 ; Memory-mapped file module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME memmap
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

@@ -24,8 +24,6 @@
 ; PC based bitplane-mode support
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME bitmode
 
 GateSize = 16
 

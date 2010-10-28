@@ -24,8 +24,6 @@
 ; FLASHFS (Flash File System)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME flashfs
 
 GateSize = 16
 

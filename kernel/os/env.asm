@@ -24,8 +24,6 @@
 ; Environment string handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME env
 
 
 GateSize = 16

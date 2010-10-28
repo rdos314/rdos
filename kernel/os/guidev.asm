@@ -24,8 +24,6 @@
 ; Base interactive modules
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME guidev
 
 GateSize = 16
 

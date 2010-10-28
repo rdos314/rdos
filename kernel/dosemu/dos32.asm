@@ -24,8 +24,6 @@
 ; 32-bit protected mode DOS emulation
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME dos32
 
 GateSize = 16
 

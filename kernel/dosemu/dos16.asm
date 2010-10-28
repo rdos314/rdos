@@ -24,8 +24,6 @@
 ; 16-bit protected mode DOS emulation
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME dos16
 
 GateSize = 16
 

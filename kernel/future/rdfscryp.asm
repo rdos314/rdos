@@ -24,8 +24,6 @@
 ; Encryption table for RDFS (RDOS File System)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME rdfscryp
 
 	.386p
 

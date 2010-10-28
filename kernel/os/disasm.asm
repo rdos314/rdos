@@ -24,8 +24,6 @@
 ; Disassembler part kernel debugger
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME DISASM
 
 blank_sep                       EQU 0
 komma_sep                       EQU 1000h

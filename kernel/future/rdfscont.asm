@@ -24,8 +24,6 @@
 ; Control sector support for RDFS (RDOS File System)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME rdfscont
 
 GateSize = 16
 

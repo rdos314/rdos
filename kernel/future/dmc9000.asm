@@ -24,8 +24,6 @@
 ; Support for PenMount DMC9000 touch-screen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME dmc9000
 
 GateSize = 16
 

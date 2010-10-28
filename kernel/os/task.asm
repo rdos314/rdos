@@ -24,8 +24,6 @@
 ; Scheduling and thread handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        
-        NAME task
 
 GateSize = 16
 

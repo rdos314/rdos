@@ -24,8 +24,6 @@
 ; Cluster verification for FAT
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME fatveri
 
 GateSize = 16
 

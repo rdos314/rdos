@@ -24,8 +24,6 @@
 ; Multiplex int (2F) emulation
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME multiplx
 
 GateSize = 16
 

@@ -24,8 +24,6 @@
 ; Utility functions for instruction emulator
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME emcom
 
 include ..\os\protseg.def
 include ..\os.def

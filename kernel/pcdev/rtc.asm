@@ -24,8 +24,6 @@
 ; RTC chip interface & emulation
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME rtc
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

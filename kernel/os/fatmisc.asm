@@ -24,8 +24,6 @@
 ; Untilty functions for FAT
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME fatmisc
 
 GateSize = 16
 

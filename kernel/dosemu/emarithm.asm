@@ -24,8 +24,6 @@
 ; Arithmetric functions for instruction emulator
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME emarithm
 
 GateSize = 16
 

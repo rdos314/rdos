@@ -24,8 +24,6 @@
 ; User interface for kernel debugger
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME debugio
 
 GateSize = 16
 

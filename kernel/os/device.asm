@@ -24,8 +24,6 @@
 ; Device driver handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        
-        NAME  device
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

@@ -24,8 +24,6 @@
 ; PC platform kernel "panic" module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME pcshut
 
 GateSize = 16
 

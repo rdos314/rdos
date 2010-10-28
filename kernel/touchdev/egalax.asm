@@ -24,8 +24,6 @@
 ; Support for e-Galax touch-screen
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME egalax
 
 GateSize = 16
 

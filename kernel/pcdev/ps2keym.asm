@@ -24,8 +24,6 @@
 ; PS2 keyboard & mouse support module.
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME ps2keym
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

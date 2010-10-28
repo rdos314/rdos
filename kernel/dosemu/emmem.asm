@@ -24,8 +24,6 @@
 ; Memory address decoding for instruction emulator
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME emmem
 
 GateSize = 16
 

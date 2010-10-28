@@ -24,8 +24,6 @@
 ; RDFS (RDOS File System), file support
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME rdfsfile
 
 GateSize = 16
 

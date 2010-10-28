@@ -24,8 +24,6 @@
 ; DOS standard device emulation
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME dosdev
 
 GateSize = 16
 

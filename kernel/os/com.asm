@@ -24,8 +24,6 @@
 ; Serial communication base class
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME com
 
 GateSize = 16
 

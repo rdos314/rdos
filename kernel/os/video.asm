@@ -24,8 +24,6 @@
 ; Standard video interface. Hardware independent
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME video
 
 GateSize = 16
 

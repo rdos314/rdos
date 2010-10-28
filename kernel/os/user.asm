@@ -24,8 +24,6 @@
 ; USER (app level) gate handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME user
 
 GateSize = 16
 

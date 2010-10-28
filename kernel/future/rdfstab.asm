@@ -24,8 +24,6 @@
 ; Tables for RDFS (RDOS File System)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME rdfstab
 
 GateSize = 16
 

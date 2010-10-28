@@ -24,8 +24,6 @@
 ; Transaction group functions for instruction emulator
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                
-                NAME emtrans
 
         .386p
 

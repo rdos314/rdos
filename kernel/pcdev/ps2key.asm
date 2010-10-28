@@ -24,8 +24,6 @@
 ; PS2 keyboard only support module.
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME ps2key
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

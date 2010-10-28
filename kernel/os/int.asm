@@ -24,8 +24,6 @@
 ; Software interrupt handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME int
 
 GateSize = 16
 

@@ -24,8 +24,6 @@
 ; Selector management module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME  protseg
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

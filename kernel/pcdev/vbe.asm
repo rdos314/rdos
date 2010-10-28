@@ -24,8 +24,6 @@
 ; VBE based video device driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME vbe
 
 GateSize = 16
 

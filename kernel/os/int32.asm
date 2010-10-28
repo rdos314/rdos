@@ -24,8 +24,6 @@
 ; 32-bit protected mode interrupt handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME int32
 
 GateSize = 16
 

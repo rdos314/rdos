@@ -24,8 +24,6 @@
 ; IPC based kernel debugger
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        
-        NAME ipcdebug
 
 GateSize = 16
 

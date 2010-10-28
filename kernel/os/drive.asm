@@ -24,8 +24,6 @@
 ; Basic physical drive support module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME drive
 
 GateSize = 16
 

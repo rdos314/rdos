@@ -24,8 +24,6 @@
 ; Physical memory module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME physical
 
 GateSize = 16
 

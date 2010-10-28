@@ -24,8 +24,6 @@
 ; Kernel part kernel debugger, 40 column x 16 rows version
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME  KDEB40
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

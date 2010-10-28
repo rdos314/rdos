@@ -24,8 +24,6 @@
 ; Keyboard module. Hardware independent
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME keyboard
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

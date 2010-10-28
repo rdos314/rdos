@@ -24,8 +24,6 @@
 ; Directory handling for FAT
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME fatdir
 
 GateSize = 16
 
