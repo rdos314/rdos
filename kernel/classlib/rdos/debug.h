@@ -268,6 +268,9 @@ protected:
 	void RemoveThread(int thread);
 	void RemoveModule(int handle);
 
+	void DoGo();
+	void DoTrace();
+
     void HandleCreateProcess(TCreateProcessEvent *event);
     void HandleTerminateProcess(int exitcode);
     void HandleCreateThread(TCreateThreadEvent *event);

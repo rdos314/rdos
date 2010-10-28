@@ -237,6 +237,11 @@ int RDOSAPI RdosGetDebugThread();
 void RDOSAPI RdosGetThreadTss(int Thread, Tss *tss);
 void RDOSAPI RdosSetThreadTss(int Thread, Tss *tss);
 
+void RDOSAPI RdosDebugTrace();
+void RDOSAPI RdosDebugPace();
+void RDOSAPI RdosDebugGo();
+void RDOSAPI RdosDebugNext();
+
 int RDOSAPI RdosGetFreePhysical();
 int RDOSAPI RdosGetFreeGdt();
 int RDOSAPI RdosGetFreeSmallKernelLinear();
@@ -860,6 +865,18 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosSetThreadTss = \
     CallGate_set_thread_tss  \
     parm [ebx] [edi];
+
+#pragma aux RdosDebugTrace = \
+    CallGate_debug_trace;
+
+#pragma aux RdosDebugPace = \
+    CallGate_debug_pace;
+
+#pragma aux RdosDebugGo = \
+    CallGate_debug_go;
+
+#pragma aux RdosDebugNext = \
+    CallGate_debug_next;
 
 #pragma aux RdosGetFreePhysical = \
     CallGate_get_free_physical  \
@@ -2925,6 +2942,18 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 #pragma aux RdosSetThreadTss = \
     CallGate_set_thread_tss  \
     parm [ebx] [edi];
+
+#pragma aux RdosDebugTrace = \
+    CallGate_debug_trace;
+
+#pragma aux RdosDebugPace = \
+    CallGate_debug_pace;
+
+#pragma aux RdosDebugGo = \
+    CallGate_debug_go;
+
+#pragma aux RdosDebugNext = \
+    CallGate_debug_next;
 
 #pragma aux RdosGetFreePhysical = \
     CallGate_get_free_physical  \

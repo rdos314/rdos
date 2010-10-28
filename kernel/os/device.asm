@@ -695,7 +695,7 @@ find_dev_loop:
     mov esi,edx
     add esi,SIZE rdos_header
     cmp bx,[esi].dev16_code_sel
-    je find_next_dev
+    jne find_next_dev
 ;
     movzx eax,[esi].dev16_code_size    
     movzx edx,[esi].dev16_data_size
@@ -766,8 +766,8 @@ get_device_info_name    DB 'Get Device Info',0
 get_device_info    Proc near
     push ds
     push ecx
-    push edi
     push esi
+    push edi
 ;    
     mov ax,system_data_sel
     mov ds,ax

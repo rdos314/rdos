@@ -921,34 +921,56 @@ void TWdSocketServer::ReqMapAddr()
     long Offset = GetDword();
     int Sel = GetWord();
     int Handle = GetDword();
-	 TDebugModule *mod;
+	TDebugModule *mod;
 
     if (FDebug)
     {
         mod = FDebug->LockModule(Handle);
         if (mod)
         {
-            if (Sel == -1 || Sel == -2)
+            switch (Sel)
             {
-                if (Sel == -1)
-                {
+                case -2:
                     PutDword(mod->ImageBase + mod->ObjectRva + Offset);
-                    PutDword(0x1B3);
-                }
-            
-                if (Sel == -2)
-                {
+                    PutWord(0x1BB);
+                    PutDword(0);
+                    PutDword(mod->ImageSize - 1);
+                    break;
+
+                case -1:
                     PutDword(mod->ImageBase + mod->ObjectRva + Offset);
-                    PutDword(0x1BB);
-                }
+                    PutWord(0x1B3);
+                    PutDword(0);
+                    PutDword(mod->ImageSize - 1);
+                    break;
 
+                case 0:
+                case 1:
+                    PutDword(Offset);
+                    PutWord(mod->CodeSel);
+                    PutDword(0);
+                    PutDword(mod->ImageSize - 1);
+                    break;                
 
-                PutDword(0);
-                PutDword(mod->ImageSize - 1);
-            }
-            else
-            {
-                PutDword(0);
+                case 2:
+                case 3:
+                    PutDword(Offset);
+                    PutWord(mod->DataSel);
+                    PutDword(0);
+                    if (mod->DataSel && mod->DataSize)
+                        PutDword(mod->DataSize - 1);
+                    else
+                        PutDword(0);
+                    break;
+
+                default:
+                    PutDword(Offset);
+                    PutWord(0);
+                    PutDword(0);
+                    PutWord(0);
+                    PutDword(0);
+                    PutWord(0);
+                    break;
             }
         }
         FDebug->UnlockModule();

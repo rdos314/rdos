@@ -165,7 +165,7 @@ kick_watchdog   Proc far
     push ax
     push dx
 ;    
-    GetDebugThread
+    GetDebugThreadSel
     or ax,ax
     jnz kw_done
 ;    

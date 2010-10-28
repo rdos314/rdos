@@ -3621,10 +3621,10 @@ read_thread_mem	PROC near
     ThreadToSel
     jc read_thread_mem_done
 ;    
-	mov al,dl
-	and al,3
-	cmp al,3
-	jne read_thread_mem_done
+;	mov al,dl
+;	and al,3
+;	cmp al,3
+;	jne read_thread_mem_done
 ;
 	or ecx,ecx
 	jz read_thread_mem_done

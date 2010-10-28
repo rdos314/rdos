@@ -1960,7 +1960,7 @@ DebugFunc       Proc near
     je debug_next 
 ;
     push ax
-    GetDebugThread
+    GetDebugThreadSel
     mov bx,ax
     pop ax
 

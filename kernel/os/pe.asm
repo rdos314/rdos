@@ -3691,6 +3691,10 @@ clear_debug_event Proc far
 	jz clear_debug_done
 ;
     mov es,bx	
+    mov al,es:event_code
+    cmp al,EVENT_KERNEL
+    je clear_debug_done
+;    
 	FreeMem
 
 clear_debug_done:

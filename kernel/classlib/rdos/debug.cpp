@@ -263,19 +263,19 @@ void TDebugThread::SetupGo()
     
     FWasTrace = FALSE;
 
-        RdosGetThreadTss(ThreadID, &tss);
-        RdosReadThreadMem(ThreadID, tss.cs, tss.eip, (char *)&ch, 1);
+    RdosGetThreadTss(ThreadID, &tss);
+    RdosReadThreadMem(ThreadID, tss.cs, tss.eip, (char *)&ch, 1);
 
-        if (ch == 0xCC)
-        {
-                tss.eip++;
-                update = TRUE;
-        }
+    if (ch == 0xCC)
+    {
+        tss.eip++;
+        update = TRUE;
+    }
 
-        if ((tss.eflags & 0x100) != 0)
-        {
-            tss.eflags &= ~0x100;
-            update = TRUE;
+    if ((tss.eflags & 0x100) != 0)
+    {
+        tss.eflags &= ~0x100;
+        update = TRUE;
     }
 
     if (update)
@@ -305,22 +305,22 @@ void TDebugThread::SetupTrace()
 
     RdosGetThreadTss(ThreadID, &tss);
 
-        RdosReadThreadMem(ThreadID, tss.cs, tss.eip, (char *)&ch, 1);
+    RdosReadThreadMem(ThreadID, tss.cs, tss.eip, (char *)&ch, 1);
 
-        if (ch == 0xCC)
-        {
-                tss.eip++;
-                update = TRUE;
-        }
+    if (ch == 0xCC)
+    {
+        tss.eip++;
+        update = TRUE;
+    }
 
-        if ((tss.eflags & 0x100) == 0)
-        {
-                tss.eflags |= 0x100;
-                update = TRUE;
-        }
+    if ((tss.eflags & 0x100) == 0)
+    {
+        tss.eflags |= 0x100;
+        update = TRUE;
+    }
 
     if (update)
-                RdosSetThreadTss(ThreadID, &tss);
+        RdosSetThreadTss(ThreadID, &tss);
 }
 
 /*##########################################################################
@@ -1703,6 +1703,60 @@ void TDebug::ClearBreak(int Sel, long Offset)
 
 /*##########################################################################
 #
+#   Name       : TDebug::DoTrace
+#
+#   Purpose....: Do a trace operation
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::DoTrace()
+{
+    if ((CurrentThread->Cs & 0x3) == 0x3)
+    {
+        CurrentThread->SetupTrace();
+        RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+    }
+    else
+    {
+        while (RdosGetDebugThread() != CurrentThread->ThreadID)
+            RdosDebugNext();
+        RdosDebugTrace();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::DoGo
+#
+#   Purpose....: Do a go operation
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::DoGo()
+{
+    if ((CurrentThread->Cs & 0x3) == 0x3)
+    {
+        CurrentThread->SetupGo();
+        CurrentThread->ActivateBreaks(BreakList);
+        RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+    }
+    else
+    {
+        while (RdosGetDebugThread() != CurrentThread->ThreadID)
+            RdosDebugNext();
+        CurrentThread->ActivateBreaks(BreakList);
+        RdosDebugGo();
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::Go
 #
 #   Purpose....: Continue active thread
@@ -1714,15 +1768,11 @@ void TDebug::ClearBreak(int Sel, long Offset)
 ##########################################################################*/
 void TDebug::Go()
 {
-        if (CurrentThread)
-        {
-                UserSignal.Clear();
-
-                CurrentThread->SetupGo();
-                CurrentThread->ActivateBreaks(BreakList);
-                RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
-
-                UserSignal.WaitForever();
+    if (CurrentThread)
+    {
+        UserSignal.Clear();
+        DoGo();
+        UserSignal.WaitForever();
     }
 }
 
@@ -1743,10 +1793,10 @@ void TDebug::Trace()
     int Sel;
     long Offset;
 
-        if (CurrentThread)
-        {
-            Sel = CurrentThread->Cs;
-            Offset = CurrentThread->Eip;
+    if (CurrentThread)
+    {
+        Sel = CurrentThread->Cs;
+        Offset = CurrentThread->Eip;
             
         CurrentThread->ReadMem(Sel, Offset, Instr, 2);
 
@@ -1759,12 +1809,9 @@ void TDebug::Trace()
         }
         else
         {
-                UserSignal.Clear();
-    
-            CurrentThread->SetupTrace();
-                    RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
-
-                UserSignal.WaitForever();
+            UserSignal.Clear();
+            DoTrace();
+            UserSignal.WaitForever();
         }
     }
 }
@@ -1787,10 +1834,7 @@ int TDebug::AsyncGo(int Timeout)
     if (CurrentThread)
     {
         UserSignal.Clear();
-
-        CurrentThread->SetupGo();
-        CurrentThread->ActivateBreaks(BreakList);
-        RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+        DoGo();
 
         wait = UserSignal.WaitTimeout(Timeout);
 
@@ -1840,9 +1884,7 @@ int TDebug::AsyncTrace(int Timeout)
         else
         {
             UserSignal.Clear();
-    
-            CurrentThread->SetupTrace();
-            RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
+            DoTrace();    
 
             wait = UserSignal.WaitTimeout(Timeout);
 
@@ -1918,7 +1960,7 @@ void TDebug::ExitAsync()
 ##########################################################################*/
 void TDebug::HandleCreateProcess(TCreateProcessEvent *event)
 {
-        InsertThread(new TDebugThread(event));
+    InsertThread(new TDebugThread(event));
     InsertModule(new TDebugModule(event));       
 }
 

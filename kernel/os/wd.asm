@@ -24,7 +24,7 @@
 ; Software watchdog support
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
+                                                
         NAME wd
         
 GateSize = 16
@@ -58,18 +58,18 @@ fault_sectors           DD ?
 
 data    ENDS
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        assume cs:code
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WdTimeout
+;               NAME:                   WdTimeout
 ;
-;		DESCRIPTION:	Watchdog timeout - do reset
+;               DESCRIPTION:    Watchdog timeout - do reset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -80,9 +80,9 @@ WdTimeout:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			StartWatchdog
+;               NAME:                   StartWatchdog
 ;
-;		DESCRIPTION:	Start watchdog
+;               DESCRIPTION:    Start watchdog
 ;
 ;       PARAMETERS:     EAX      Timeout in milliseconds 
 ;
@@ -96,31 +96,31 @@ start_watchdog   Proc far
 ;   
     mov bx,SEG data
     mov es,bx
-	mov edx,1193
-	mul edx
-	mov es:wd_tics,eax
-;	
-	GetSystemTime
-	add eax,es:wd_tics
-	adc edx,0
+        mov edx,1193
+        mul edx
+        mov es:wd_tics,eax
+;       
+        GetSystemTime
+        add eax,es:wd_tics
+        adc edx,0
 ;
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET WdTimeout
-	mov bx,SEG data
-	StartTimer
+        mov bx,cs
+        mov es,bx
+        mov di,OFFSET WdTimeout
+        mov bx,SEG data
+        StartTimer
 ;
     popad
-    pop es	
+    pop es      
     retf32
 start_watchdog   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			KickWatchdog
+;               NAME:                   KickWatchdog
 ;
-;		DESCRIPTION:	Kick watchdog
+;               DESCRIPTION:    Kick watchdog
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -132,7 +132,7 @@ kick_watchdog   Proc far
     push fs
     pushad
 ;        
-    GetDebugThread
+    GetDebugThreadSel
     or ax,ax
     jz kw_kick
 ;
@@ -148,31 +148,31 @@ kick_watchdog   Proc far
 ;
     mov bx,fault_sector_sel
     mov es,bx
-    GetDebugThread
+    GetDebugThreadSel
 
 kw_save_loop:
     mov ds,ax
 ;
     mov es:fss_sign,FAULT_SIGN
-	mov ax,ds:p_id
-	mov es:fss_state.st_id,ax
+        mov ax,ds:p_id
+        mov es:fss_state.st_id,ax
 ;
     push cx
-	mov si,OFFSET thread_name
-	mov cx,32
-	mov di,OFFSET fss_state.st_name
-	rep movsb
+        mov si,OFFSET thread_name
+        mov cx,32
+        mov di,OFFSET fss_state.st_name
+        rep movsb
 ;
     mov cx,32
     mov di,OFFSET fss_state.st_list
     mov al,' '
-    rep stosb	
-	pop cx
-;	
-	mov eax,ds:p_msb_tics
-	mov es:fss_state.st_time,eax
-	mov eax,ds:p_lsb_tics
-	mov es:fss_state.st_time+4,eax
+    rep stosb   
+        pop cx
+;       
+        mov eax,ds:p_msb_tics
+        mov es:fss_state.st_time,eax
+        mov eax,ds:p_lsb_tics
+        mov es:fss_state.st_time+4,eax
 ;
     mov es:fss_state.st_offs,0
     mov es:fss_state.st_sel,0
@@ -193,7 +193,7 @@ kw_save_loop:
     pop cx
 ;
     DebugNext    
-    GetDebugThread
+    GetDebugThreadSel
     cmp ax,bp
     je kw_done
 ;
@@ -204,21 +204,21 @@ kw_save_loop:
     jmp kw_done    
         
 kw_kick:
-	GetSystemTime
+        GetSystemTime
     mov bx,SEG data
     mov es,bx
-	add eax,es:wd_tics
-	adc edx,0
+        add eax,es:wd_tics
+        adc edx,0
 ;
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET WdTimeout
-	mov bx,SEG data
-	StopTimer
-	StartTimer
+        mov bx,cs
+        mov es,bx
+        mov di,OFFSET WdTimeout
+        mov bx,SEG data
+        StopTimer
+        StartTimer
 
 kw_done:
-    popad	
+    popad       
     pop fs
     pop es
     pop ds
@@ -228,9 +228,9 @@ kick_watchdog   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			StopWatchdog
+;               NAME:                   StopWatchdog
 ;
-;		DESCRIPTION:	Stop watchdog
+;               DESCRIPTION:    Stop watchdog
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -240,10 +240,10 @@ stop_watchdog   Proc far
     push es
     push bx    
 ;    
-	mov bx,SEG data
-	mov es,bx
-	StopTimer
-    mov es:wd_tics,0	
+        mov bx,SEG data
+        mov es,bx
+        StopTimer
+    mov es:wd_tics,0    
 ;
     pop bx
     pop es
@@ -254,9 +254,9 @@ stop_watchdog   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetWatchdogTics
+;               NAME:                   GetWatchdogTics
 ;
-;		DESCRIPTION:	Get watchdog tics
+;               DESCRIPTION:    Get watchdog tics
 ;
 ;       RETURNS:        EAX == 0 not running
 ;                       EAX != 0, EAX tics
@@ -269,8 +269,8 @@ get_watchdog_tics   Proc far
     push es
     push bx    
 ;    
-	mov bx,SEG data
-	mov es,bx
+        mov bx,SEG data
+        mov es,bx
     mov eax,es:wd_tics
 ;
     pop bx
@@ -282,19 +282,19 @@ get_watchdog_tics   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DefineFaultSave
+;               NAME:                   DefineFaultSave
 ;
-;		DESCRIPTION:	Define fault save position on disc
+;               DESCRIPTION:    Define fault save position on disc
 ;
 ;       PARAMETERS:     AL      Disc #
 ;                       EDX     Start sector #
 ;                       ECX     Number of available sectors
-;						
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-define_fault_save_name	DB 'Define Fault Save',0
+define_fault_save_name  DB 'Define Fault Save',0
 
-define_fault_save	PROC far
+define_fault_save       PROC far
     push ds
     push bx
 ;
@@ -313,15 +313,15 @@ define_fault_save   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ClearFaultSave
+;               NAME:                   ClearFaultSave
 ;
-;		DESCRIPTION:	Clear fault save data
-;						
+;               DESCRIPTION:    Clear fault save data
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-clear_fault_save_name	DB 'Clear Fault Save',0
+clear_fault_save_name   DB 'Clear Fault Save',0
 
-clear_fault_save	PROC far
+clear_fault_save        PROC far
     push ds
     push es
     pushad
@@ -364,18 +364,18 @@ clear_fault_save   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetFaultThreadState
+;               NAME:                   GetFaultThreadState
 ;
-;		DESCRIPTION:	Get fault thread state
+;               DESCRIPTION:    Get fault thread state
 ;
 ;       PARAMETERS:     AX          Thread #
 ;                       ES:E(DI)    State buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_fault_thread_state_name	DB 'Get Fault Thread State',0
+get_fault_thread_state_name     DB 'Get Fault Thread State',0
 
-get_fault_thread_state	PROC near
+get_fault_thread_state  PROC near
     push ds
     push es
     push fs
@@ -427,35 +427,35 @@ gfsEnd:
     ret
 get_fault_thread_state   Endp
 
-get_fault_thread_state16	Proc far
-	push edi
-	movzx edi,di
-	call get_fault_thread_state
-	pop edi
-	ret
-get_fault_thread_state16	Endp
+get_fault_thread_state16        Proc far
+        push edi
+        movzx edi,di
+        call get_fault_thread_state
+        pop edi
+        ret
+get_fault_thread_state16        Endp
 
-get_fault_thread_state32	Proc far
-	call get_fault_thread_state
-	Retf32
-get_fault_thread_state32	Endp
+get_fault_thread_state32        Proc far
+        call get_fault_thread_state
+        Retf32
+get_fault_thread_state32        Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetFaultThreadTss
+;               NAME:                   GetFaultThreadTss
 ;
-;		DESCRIPTION:	Get fault thread tss
+;               DESCRIPTION:    Get fault thread tss
 ;
 ;       PARAMETERS:     AX          Thread #
 ;                       ES:E(DI)    Tss buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_fault_thread_tss_name	DB 'Get Fault Thread Tss',0
+get_fault_thread_tss_name       DB 'Get Fault Thread Tss',0
 
-get_fault_thread_tss	PROC near
+get_fault_thread_tss    PROC near
     push ds
     push es
     push fs
@@ -507,97 +507,97 @@ gftEnd:
     ret
 get_fault_thread_tss   Endp
 
-get_fault_thread_tss16	Proc far
-	push edi
-	movzx edi,di
-	call get_fault_thread_tss
-	pop edi
-	ret
-get_fault_thread_tss16	Endp
+get_fault_thread_tss16  Proc far
+        push edi
+        movzx edi,di
+        call get_fault_thread_tss
+        pop edi
+        ret
+get_fault_thread_tss16  Endp
 
-get_fault_thread_tss32	Proc far
-	call get_fault_thread_tss
-	Retf32
-get_fault_thread_tss32	Endp
+get_fault_thread_tss32  Proc far
+        call get_fault_thread_tss
+        Retf32
+get_fault_thread_tss32  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Init
+;               NAME:                   Init
 ;
-;		DESCRIPTION:	Initialize module
+;               DESCRIPTION:    Initialize module
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	Proc far
-	mov bx,SEG data
-	mov es,bx
-	mov es:wd_tics,0
-	mov es:fault_sectors,0
+init    Proc far
+        mov bx,SEG data
+        mov es,bx
+        mov es:wd_tics,0
+        mov es:fault_sectors,0
 ;
-	mov eax,512
-	mov bx,fault_sector_sel
-	AllocateFixedSystemMem
+        mov eax,512
+        mov bx,fault_sector_sel
+        AllocateFixedSystemMem
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov si,OFFSET start_watchdog
-	mov di,OFFSET start_watchdog_name
-	xor dx,dx
-	mov ax,start_watchdog_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET start_watchdog
+        mov di,OFFSET start_watchdog_name
+        xor dx,dx
+        mov ax,start_watchdog_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET kick_watchdog
-	mov di,OFFSET kick_watchdog_name
-	xor dx,dx
-	mov ax,kick_watchdog_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET kick_watchdog
+        mov di,OFFSET kick_watchdog_name
+        xor dx,dx
+        mov ax,kick_watchdog_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET stop_watchdog
-	mov di,OFFSET stop_watchdog_name
-	xor dx,dx
-	mov ax,stop_watchdog_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET stop_watchdog
+        mov di,OFFSET stop_watchdog_name
+        xor dx,dx
+        mov ax,stop_watchdog_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET get_watchdog_tics
-	mov di,OFFSET get_watchdog_tics_name
-	xor dx,dx
-	mov ax,get_watchdog_tics_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET get_watchdog_tics
+        mov di,OFFSET get_watchdog_tics_name
+        xor dx,dx
+        mov ax,get_watchdog_tics_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET define_fault_save
-	mov di,OFFSET define_fault_save_name
-	xor dx,dx
-	mov ax,define_fault_save_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET define_fault_save
+        mov di,OFFSET define_fault_save_name
+        xor dx,dx
+        mov ax,define_fault_save_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET clear_fault_save
-	mov di,OFFSET clear_fault_save_name
-	xor dx,dx
-	mov ax,clear_fault_save_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET clear_fault_save
+        mov di,OFFSET clear_fault_save_name
+        xor dx,dx
+        mov ax,clear_fault_save_nr
+        RegisterBimodalUserGate
 ;
-	mov bx,OFFSET get_fault_thread_state16
-	mov si,OFFSET get_fault_thread_state32
-	mov di,OFFSET get_fault_thread_state_name
-	mov dx,virt_es_in
-	mov ax,get_fault_thread_state_nr
-	RegisterUserGate
+        mov bx,OFFSET get_fault_thread_state16
+        mov si,OFFSET get_fault_thread_state32
+        mov di,OFFSET get_fault_thread_state_name
+        mov dx,virt_es_in
+        mov ax,get_fault_thread_state_nr
+        RegisterUserGate
 ;
-	mov bx,OFFSET get_fault_thread_tss16
-	mov si,OFFSET get_fault_thread_tss32
-	mov di,OFFSET get_fault_thread_tss_name
-	mov dx,virt_es_in
-	mov ax,get_fault_thread_tss_nr
-	RegisterUserGate
-	ret
-init	Endp
+        mov bx,OFFSET get_fault_thread_tss16
+        mov si,OFFSET get_fault_thread_tss32
+        mov di,OFFSET get_fault_thread_tss_name
+        mov dx,virt_es_in
+        mov ax,get_fault_thread_tss_nr
+        RegisterUserGate
+        ret
+init    Endp
 
-code	ENDS
+code    ENDS
 
-	END init
+        END init

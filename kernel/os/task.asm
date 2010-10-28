@@ -1063,6 +1063,12 @@ proc_init:
     mov ax,leave_section_nr
     RegisterOsGate
 ;
+    mov si,OFFSET get_debug_thread_sel
+    mov di,OFFSET get_debug_thread_sel_name
+    xor cl,cl
+    mov ax,get_debug_thread_sel_nr
+    RegisterOsGate
+;
     mov si,OFFSET create_user_section
     mov di,OFFSET create_user_section_name
     xor dx,dx
@@ -1093,12 +1099,11 @@ proc_init:
     mov ax,leave_user_section_nr
     RegisterBimodalUserGate
 ;
-    mov bx,OFFSET get_debug_thread16
-    mov si,OFFSET get_debug_thread32
+    mov si,OFFSET get_debug_thread
     mov di,OFFSET get_debug_thread_name
     xor dx,dx
     mov ax,get_debug_thread_nr
-    RegisterUserGate
+    RegisterBimodalUserGate
 ;
     mov bx,OFFSET get_debug_tss16
     mov si,OFFSET get_debug_tss32
@@ -1237,15 +1242,17 @@ WriteWord       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           GET_DEBUG_THREAD
+;           NAME:           GET_DEBUG_THREAD_SEL
 ;
-;           DESCRIPTION:    Get currently debugged thread
+;           DESCRIPTION:    Get currently debugged thread selector
 ;
 ;           PARAMETERS:         AX          DEBUG THREAD OR 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_debug_thread    PROC near
+get_debug_thread_sel_name   DB 'Get Debug Thread Sel', 0
+
+get_debug_thread_sel    PROC far
     push ds
     push es
     push cx
@@ -1257,54 +1264,57 @@ get_debug_thread    PROC near
     mov si,OFFSET debug_list
     mov ax,[si]
     or ax,ax
-    jz get_debug_done
+    jz get_debug_sel_done
+
     mov dx,ax
-get_debug_try_next:
+get_debug_sel_try_next:
     cmp ax,cx
-    je get_debug_default
+    je get_debug_sel_default
     mov es,ax
     mov ax,es:p_next
     cmp dx,ax
-    je get_debug_new
-    jmp get_debug_try_next
-get_debug_new:
+    je get_debug_sel_new
+    jmp get_debug_sel_try_next
+get_debug_sel_new:
     mov cx,[si]
-get_debug_default:
+get_debug_sel_default:
     mov ds:debug_thread,cx
     mov ax,cx
-get_debug_done:
+get_debug_sel_done:
     pop si
     pop dx
     pop cx
     pop es
     pop ds
     ret
-get_debug_thread    ENDP
-
+get_debug_thread_sel    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           GET_DEBUG_THREAD
 ;
-;           DESCRIPTION:    Get currently debugged thread syscall
+;           DESCRIPTION:    Get currently debugged thread ID
 ;
-;           PARAMETERS:         AX              THREAD BLOCK OR 0
+;           PARAMETERS:     AX         DEBUG THREAD ID OR 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_debug_thread_name   DB 'Get Debug Thread',0
+get_debug_thread_name   DB 'Get Debug Thread', 0
 
-get_debug_thread16      PROC far
-    call get_debug_thread
-    ret
-get_debug_thread16      ENDP
+get_debug_thread    PROC far
+    push es
+    call get_debug_thread_sel
+    or ax,ax
+    jz get_debug_done
+;
+    mov es,ax
+    mov ax,es:p_id
 
-get_debug_thread32      PROC far
-    call get_debug_thread
+get_debug_done:
+    pop es
     retf32
-get_debug_thread32      ENDP
-
+get_debug_thread    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1323,7 +1333,7 @@ get_debug_tss_name      DB 'Get Debug TSS',0
 get_debug_tss16 PROC far
     push ds
     push si
-    call get_debug_thread
+    call get_debug_thread_sel
     or ax,ax
     jz get_debug_tss_done16
     mov ds,ax
@@ -1340,7 +1350,7 @@ get_debug_tss16 ENDP
 get_debug_tss32 PROC far
     push ds
     push esi
-    call get_debug_thread
+    call get_debug_thread_sel
     or ax,ax
     jz get_debug_tss_done32
     mov ds,ax
@@ -1372,7 +1382,7 @@ debug_trace     PROC far
     push ds
     push es
     pushad
-    call get_debug_thread
+    call get_debug_thread_sel
     or ax,ax
     jz debug_trace_done
     mov bx,ax
@@ -1484,7 +1494,7 @@ debug_pace      PROC far
     push ds
     push es
     pushad
-    call get_debug_thread
+    call get_debug_thread_sel
     or ax,ax
     jz debug_pace_done
     mov bx,ax
@@ -1635,7 +1645,7 @@ debug_go    PROC far
     push ds
     push es
     pushad
-    call get_debug_thread
+    call get_debug_thread_sel
     or ax,ax
     jz debug_go_done
     mov bx,ax
@@ -2620,6 +2630,12 @@ SaveCurrentThread       Proc near
     push eax
     push edx
 ;
+    pushf
+    pop ax
+    and ax,NOT 100h
+    push ax
+    popf
+;    
     mov ax,task_sel
     mov ds,ax
     call ds:lock_proc
@@ -3952,6 +3968,32 @@ timer_free_list_create:
 create_processor    Endp
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetTaskLock
+;
+;       DESCRIPTION:    Get state of task lock
+;
+;       RETURNS:        AX  Lock count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public get_task_lock
+    
+get_task_lock   Proc near
+    push ds
+    push fs
+    mov ax,task_sel
+    mov ds,ax
+    call ds:get_cpu_proc
+    mov ax,fs:ps_nesting
+    pop fs
+    pop ds
+    ret
+get_task_lock    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5027,6 +5069,7 @@ timer_clock_done:
     public wake_new
 
 wake_new    PROC near
+    pushf
     mov dx,es
     push OFFSET wake_new_done
     call SaveCurrentThread
@@ -5045,6 +5088,7 @@ wake_new_lower:
     jmp ContinueCurrentThread
 
 wake_new_done:
+    popf
     ret
 wake_new    ENDP
 
@@ -5063,11 +5107,13 @@ wake_new    ENDP
 swap_name       DB 'Swap',0
 
 swap_out    PROC far
+    pushf
     push OFFSET swap_out_done
     call SaveCurrentThread
     jmp ContinueCurrentThread
 
 swap_out_done:
+    popf
     retf32
 swap_out    ENDP
 
@@ -5161,6 +5207,7 @@ sleep_thread_name       DB 'Sleep',0
 
 sleep_thread    PROC far
     push ds
+    pushf
     mov ax,ds
 ;
     push OFFSET sleep_thread_done
@@ -5173,6 +5220,7 @@ sleep_thread_done:
     GetThread
     mov ds,ax
     mov eax,ds:p_data
+    popf
     pop ds
     ret
 sleep_thread    ENDP
@@ -6116,6 +6164,7 @@ wake_until      ENDP
 wait_until_name DB 'Wait Until',0
 
 wait_until      PROC far
+    pushf
     push OFFSET wait_until_done
     call SaveCurrentThread
 ;
@@ -6132,6 +6181,7 @@ wait_until      PROC far
     jmp BlockCurrentThread
 
 wait_until_done:
+    popf
     retf32
 wait_until      ENDP
 
@@ -6150,6 +6200,7 @@ wait_until      ENDP
 wait_milli_name DB 'Wait Milli Sec',0
 
 wait_milli_sec  PROC far
+    pushf
     push OFFSET wait_milli_done
     call SaveCurrentThread
 ;
@@ -6181,6 +6232,7 @@ wait_milli_sec  PROC far
     jmp BlockCurrentThread
 
 wait_milli_done:
+    popf
     retf32
 wait_milli_sec  ENDP
 
@@ -6199,6 +6251,7 @@ wait_milli_sec  ENDP
 wait_micro_name DB 'Wait Micro Seconds',0
 
 wait_micro_sec  PROC far
+    pushf
     push OFFSET wait_micro_done
     call SaveCurrentThread
 ;
@@ -6231,6 +6284,7 @@ wait_micro_sec  PROC far
     jmp BlockCurrentThread
 
 wait_micro_done:
+    popf
     retf32
 wait_micro_sec  ENDP
 

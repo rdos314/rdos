@@ -927,9 +927,9 @@ GetDebugTss     MACRO
 						ENDM
 
 ; OUT AX               Thread ID
-GetDebugThread MACRO
-	UserGate get_debug_thread_nr
-						ENDM
+;GetDebugThread MACRO
+;	UserGate get_debug_thread_nr
+;						ENDM
 
 DebugTrace      MACRO
 	UserGate debug_trace_nr
