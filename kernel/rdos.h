@@ -318,6 +318,8 @@ int RDOSAPI RdosGetImageHeader(int Adapter, int Entry, TRdosObjectHeader *Header
 int RDOSAPI RdosGetImageData(int Adapter, int Entry, void *Buf);
 int RDOSAPI RdosGetDeviceInfo(int CodeSel, char *Name, unsigned int *CodeSize, unsigned short int *DataSel, unsigned int *DataSize);
 
+int RDOSAPI RdosGetSelectorInfo(int CodeSel, int *Limit, int *Bitness);
+
 void RDOSAPI RdosCpuReset();
 int RDOSAPI RdosPowerFailure();
 int RDOSAPI RdosGetCpuVersion(char *VendorStr, int *FeatureFlags, int *freq);
@@ -1190,6 +1192,16 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     modify [ebx edx] \
     value [eax];
 
+#pragma aux RdosGetSelectorInfo = \
+    CallGate_get_selector_info  \
+    "mov [esi],ecx" \
+    "movzx eax,al" \
+    "mov [edi],eax" \
+    CarryToBool \
+    parm [bx] [esi] [edi] \
+    modify [ecx] \
+    value [eax];
+
 #pragma aux RdosGetFaultThreadState = \
     CallGate_get_fault_thread_state  \
     CarryToBool \
@@ -1224,6 +1236,16 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov [edx],bx" \
     parm [ebx] [edi] [ecx] [edx] [esi] \
     modify [ebx edx] \
+    value [eax];
+
+#pragma aux RdosGetSelectorInfo = \
+    CallGate_get_selector_info  \
+    "mov [esi],ecx" \
+    "movzx eax,al" \
+    "mov [edi],eax" \
+    CarryToBool \
+    parm [bx] [esi] [edi] \
+    modify [ecx] \
     value [eax];
 
 #pragma aux RdosGetThreadState = \

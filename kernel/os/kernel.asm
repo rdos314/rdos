@@ -63,7 +63,8 @@ ENDIF
     extrn init_physical:near
     extrn init_paging_trap:near
     extrn init_physical_gates:near
-    extrn init_protseg:near
+    extrn init_os_protseg:near
+    extrn init_user_protseg:near
     extrn init_paging_gates:near
     extrn init_mem:near
     extrn init_gdt:near
@@ -700,8 +701,9 @@ prot_init:
     call create_mem
     call create_gdt
     call init_osgate
-    call init_protseg
+    call init_os_protseg
     call init_usergate
+    call init_user_protseg
 ;
     mov si,OFFSET get_version
     mov di,OFFSET get_version_name

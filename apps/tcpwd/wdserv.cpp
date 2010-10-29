@@ -1806,9 +1806,27 @@ void TWdSocketServer::ReqWriteReg()
 ##########################################################################*/
 void TWdSocketServer::ReqMachineData()
 {
-    PutDword(0);
-    PutDword(0xFFFFFFFF);
-    PutByte(1);
+    int size;
+    int bitness;
+    char info = GetByte();
+    int offs = GetDword();
+    int sel = GetWord();
+
+    if (RdosGetSelectorInfo(sel, &size, &bitness))
+    {
+        PutDword(0);
+        PutDword(size);
+        if (bitness == 16)
+            PutByte(0);
+        else
+            PutByte(1);
+    }
+    else
+    {    
+        PutDword(0);
+        PutDword(0xFFFFFFFF);
+        PutByte(1);
+    }
 }
 
 /*##########################################################################

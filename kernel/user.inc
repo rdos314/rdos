@@ -1060,6 +1060,13 @@ GetFaultThreadTss     MACRO
 	UserGate get_fault_thread_tss_nr
 						ENDM
 
+; IN  BX            Selector
+; OUT ECX           Limit
+; OUT AL            Bitness (16 or 32)
+GetSelectorInfo     MACRO
+	UserGate get_selector_info_nr
+						ENDM
+
 ;;;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
 ; IN  BX			Thread handle

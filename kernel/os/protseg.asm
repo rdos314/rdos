@@ -1069,6 +1069,75 @@ create_trap_gate_sel	PROC far
 	ret
 create_trap_gate_sel	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetSelectorInfo
+;
+;		DESCRIPTION:	Get selector size and bitness
+;
+;		PARAMETERS:		BX			Selector
+;
+;		RETURNS:		ECX			Limit
+;                       AL          Bitness (16 or 32)
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_selector_info_name DB 'Get Selector Info',0
+
+get_selector_info	PROC far
+	push ds
+	push bx
+;
+	test bx,4
+	jz get_selector_info_gdt
+
+get_selector_info_ldt:
+	GetThread
+	mov ds,ax
+	mov ds,ds:p_ldt_sel
+	jmp get_selector_info_check
+
+get_selector_info_gdt:
+	mov ax,gdt_sel
+	mov ds,ax
+
+get_selector_info_check:
+	and bx,0FFF8h
+	jz get_selector_info_error
+;
+	mov al,[bx+5]
+	test al,80h
+	jz get_selector_info_error
+;
+	test al,10h
+	jz get_selector_info_error
+;
+	xor ecx,ecx
+	mov cl,[bx+6]
+	and cl,0Fh
+	shl ecx,16
+	mov cx,[bx]
+	mov al,16
+	test byte ptr [bx+6],80h
+	jz get_selector_info_small
+;
+    mov al,32
+	shl ecx,12
+	or cx,0FFFh
+
+get_selector_info_small:
+	clc
+	jmp get_selector_info_done
+
+get_selector_info_error:
+	stc
+
+get_selector_info_done:
+	pop bx
+	pop ds
+	retf32
+get_selector_info	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1081,9 +1150,9 @@ create_trap_gate_sel	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public init_protseg
+	public init_os_protseg
 
-init_protseg	PROC near
+init_os_protseg	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -1185,7 +1254,23 @@ init_protseg	PROC near
 	RegisterOsGate
 ;
 	ret
-init_protseg	ENDP
+init_os_protseg	ENDP
+
+	public init_user_protseg
+
+init_user_protseg	PROC near
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+    mov si,OFFSET get_selector_info
+    mov di,OFFSET get_selector_info_name
+    xor dx,dx
+    mov ax,get_selector_info_nr
+    RegisterBimodalUserGate
+;
+	ret
+init_user_protseg	ENDP
 
 code	ENDS
 

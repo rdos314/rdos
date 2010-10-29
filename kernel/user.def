@@ -498,5 +498,6 @@ get_key_layout_nr           = 404
 set_key_layout_nr           = 405
 
 get_device_info_nr          = 406
+get_selector_info_nr        = 407
 
 usergate_entries			= 410
