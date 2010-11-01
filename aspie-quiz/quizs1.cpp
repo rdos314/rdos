@@ -1991,11 +1991,11 @@ void TQuizS1::WritePictureRating(const char *filename)
 
 	for (i = 0; i < 15; i++)
 	{
-		AsRateSd[i] = sqrtl(AsRateSum[i] / ((long double)AsRateCount[i] - 1));
-		AsViewSd[i] = sqrtl(AsViewSum[i] / ((long double)AsViewCount[i] - 1));
+		AsRateSd[i] = sqrt(AsRateSum[i] / ((long double)AsRateCount[i] - 1));
+		AsViewSd[i] = sqrt(AsViewSum[i] / ((long double)AsViewCount[i] - 1));
 
-		NtRateSd[i] = sqrtl(NtRateSum[i] / ((long double)NtRateCount[i] - 1));
-		NtViewSd[i] = sqrtl(NtViewSum[i] / ((long double)NtViewCount[i] - 1));
+		NtRateSd[i] = sqrt(NtRateSum[i] / ((long double)NtRateCount[i] - 1));
+		NtViewSd[i] = sqrt(NtViewSum[i] / ((long double)NtViewCount[i] - 1));
 	}
 
 	file.Write("<h3>Image rating</h3>");
@@ -2107,7 +2107,7 @@ void TQuizS1::WritePictureRating(const char *filename)
 
 #ifdef CI
 
-		dev = 1.96 * AsRateSd[i] / sqrtl(AsRateCount[i]);
+		dev = 1.96 * AsRateSd[i] / sqrt(AsRateCount[i]);
 
 		val = AsRateMean[i] - dev;
 		if (val < 0.0)
@@ -2142,7 +2142,7 @@ void TQuizS1::WritePictureRating(const char *filename)
 
 #ifdef CI
 
-		dev = 1.96 * NtRateSd[i] / sqrtl(NtRateCount[i]);
+		dev = 1.96 * NtRateSd[i] / sqrt(NtRateCount[i]);
 
 		val = NtRateMean[i] - dev;
 		if (val < 0.0)
@@ -2181,7 +2181,7 @@ void TQuizS1::WritePictureRating(const char *filename)
 
 #ifdef CI
 
-		dev = 1.96 * AsViewSd[i] / sqrtl(AsViewCount[i]);
+		dev = 1.96 * AsViewSd[i] / sqrt(AsViewCount[i]);
 
 		val = AsViewMean[i] - dev;
 		if (val < 0.0)
@@ -2214,7 +2214,7 @@ void TQuizS1::WritePictureRating(const char *filename)
 
 #ifdef  CI
 
-		dev = 1.96 * NtViewSd[i] / sqrtl(NtViewCount[i]);
+		dev = 1.96 * NtViewSd[i] / sqrt(NtViewCount[i]);
 
 		val = NtViewMean[i] - dev;
 		if (val < 0.0)

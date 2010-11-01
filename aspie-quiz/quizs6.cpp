@@ -991,7 +991,7 @@ void TQuizS6::LoadPopulations()
 			}
 		}
 
-		for (i = 0; i < POP_TYPE_COUNT; i++)
+		for (i = 0; i < DX_COUNT; i++)
 			DxArr[i] = DX_STATE_UNKNOWN;
 
 		if (Row.Autism == 2)
@@ -2064,8 +2064,8 @@ void TQuizS6::WriteRetest(const char *filename)
 		    			NtSum += val * val;
 			    	}
 
-				    AsSd = sqrtl(AsSum / index);
-    				NtSd = sqrtl(NtSum / index);
+				    AsSd = sqrt(AsSum / index);
+    				NtSd = sqrt(NtSum / index);
 
 	    			for (q = 0; q < 179; q++)
 		    		{
@@ -2084,7 +2084,7 @@ void TQuizS6::WriteRetest(const char *filename)
 
                         if (count)
                         {
-    			    	    QSd[q] = sqrtl(sum / count);
+    			    	    QSd[q] = sqrt(sum / count);
     
         				    QTot[q] += QSd[q];
     	    			    QCount[q]++;

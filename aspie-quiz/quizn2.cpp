@@ -1856,8 +1856,8 @@ void TQuizN2::WritePictureRating(const char *filename)
 
 	for (i = 0; i < 10; i++)
 	{
-		AsRateSd[i] = sqrtl(AsRateSum[i] / ((long double)AsRateCount[i] - 1));
-		NtRateSd[i] = sqrtl(NtRateSum[i] / ((long double)NtRateCount[i] - 1));
+		AsRateSd[i] = sqrt(AsRateSum[i] / ((long double)AsRateCount[i] - 1));
+		NtRateSd[i] = sqrt(NtRateSum[i] / ((long double)NtRateCount[i] - 1));
 	}
 
 	file.Write("<h3>Video rating</h3>");
@@ -1938,7 +1938,7 @@ void TQuizN2::WritePictureRating(const char *filename)
 
 #ifdef CI
 
-		dev = 1.96 * AsRateSd[i] / sqrtl(AsRateCount[i]);
+		dev = 1.96 * AsRateSd[i] / sqrt(AsRateCount[i]);
 
 		val = AsRateMean[i] - dev;
 		if (val < 0.0)
@@ -1973,7 +1973,7 @@ void TQuizN2::WritePictureRating(const char *filename)
 
 #ifdef CI
 
-		dev = 1.96 * NtRateSd[i] / sqrtl(NtRateCount[i]);
+		dev = 1.96 * NtRateSd[i] / sqrt(NtRateCount[i]);
 
 		val = NtRateMean[i] - dev;
 		if (val < 0.0)
@@ -2202,8 +2202,8 @@ void TQuizN2::WriteRetest(const char *filename)
 						NtSum += val * val;
 					}
 
-					 AsSd = sqrtl(AsSum / index);
-					NtSd = sqrtl(NtSum / index);
+					 AsSd = sqrt(AsSum / index);
+					NtSd = sqrt(NtSum / index);
 
 					for (q = 0; q < 161; q++)
 					{
@@ -2222,7 +2222,7 @@ void TQuizN2::WriteRetest(const char *filename)
 
 								if (count)
 								{
-							 QSd[q] = sqrtl(sum / count);
+							 QSd[q] = sqrt(sum / count);
 
 							 QTot[q] += QSd[q];
 							 QCount[q]++;

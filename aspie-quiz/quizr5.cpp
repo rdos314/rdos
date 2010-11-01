@@ -770,7 +770,7 @@ void TQuizR5::LoadPopulations()
 
 		}
 
-		for (i = 0; i < POP_TYPE_COUNT; i++)
+		for (i = 0; i < DX_COUNT; i++)
 			DxArr[i] = DX_STATE_UNKNOWN;
 
 		if (Row.Autism == 2)

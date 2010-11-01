@@ -44,7 +44,7 @@
 ##########################################################################*/
 TPopulation::TPopulation(int questions)
 {
-	int i,j;
+        int i,j;
 
     ValArr = 0;
 
@@ -53,17 +53,17 @@ TPopulation::TPopulation(int questions)
     ValueCount = 0;
     MaxSize = 0;
 
-	for (i = 0; i < N; i++)
-	{
-		Count[i] = 0;
-		Sum[i] = 0;
+        for (i = 0; i < N; i++)
+        {
+                Count[i] = 0;
+                Sum[i] = 0;
         for (j = 0; j < MAX_CATS; j++)
         {
-			ChiArr[i][j] = 0;
-			MaleChiArr[i][j] = 0;
-			FemaleChiArr[i][j] = 0;
-	    }
-	}
+                        ChiArr[i][j] = 0;
+                        MaleChiArr[i][j] = 0;
+                        FemaleChiArr[i][j] = 0;
+            }
+        }
 }
 
 /*##########################################################################
@@ -79,8 +79,8 @@ TPopulation::TPopulation(int questions)
 ##########################################################################*/
 TPopulation::~TPopulation()
 {
-	if (ValArr)
-		delete ValArr;
+        if (ValArr)
+                delete ValArr;
 }
 
 /*##########################################################################
@@ -96,64 +96,64 @@ TPopulation::~TPopulation()
 ##########################################################################*/
 void TPopulation::Add(int AsScore, int NtScore, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT], char DxScore[DX_COUNT])
 {
-	 int val;
-	 int i;
-	 TValArr *NewArr;
+         int val;
+         int i;
+         TValArr *NewArr;
 
-	 if (ValArr == 0)
-	 {
-		  MaxSize = 8;
-		  ValArr = new TValArr[MaxSize];
-	 }
+         if (ValArr == 0)
+         {
+                  MaxSize = 8;
+                  ValArr = new TValArr[MaxSize];
+         }
 
-	 if (ValueCount >= MaxSize)
-	 {
-		  MaxSize = 3 * MaxSize / 2;
-		  NewArr = new TValArr[MaxSize];
+         if (ValueCount >= MaxSize)
+         {
+                  MaxSize = 3 * MaxSize / 2;
+                  NewArr = new TValArr[MaxSize];
 
-		  for (i = 0; i < ValueCount; i++)
-				NewArr[i] = ValArr[i];
+                  for (i = 0; i < ValueCount; i++)
+                                NewArr[i] = ValArr[i];
 
-		  delete ValArr;
-		  ValArr = NewArr;
-	 }
+                  delete ValArr;
+                  ValArr = NewArr;
+         }
 
-	 ValArr[ValueCount].AsScore = AsScore;
-	 ValArr[ValueCount].NtScore = NtScore;
-	 for (i = 0; i < N; i++)
-	 {
-		val = Arr[i];
-		ValArr[ValueCount].Quiz[i] = val;
-		if (val)
-		{
-			val--;
-			ChiArr[i][val]++;
-			Sum[i] += val;
-			Count[i]++;
+         ValArr[ValueCount].AsScore = AsScore;
+         ValArr[ValueCount].NtScore = NtScore;
+         for (i = 0; i < N; i++)
+         {
+                val = Arr[i];
+                ValArr[ValueCount].Quiz[i] = val;
+                if (val)
+                {
+                        val--;
+                        ChiArr[i][val]++;
+                        Sum[i] += val;
+                        Count[i]++;
 
-			switch (Gender)
-			{
-				case 1:
-					MaleChiArr[i][val]++;
-					break;
+                        switch (Gender)
+                        {
+                                case 1:
+                                        MaleChiArr[i][val]++;
+                                        break;
 
-				case 2:
-					FemaleChiArr[i][val]++;
-					break;
-			}
-		}
-	 }
+                                case 2:
+                                        FemaleChiArr[i][val]++;
+                                        break;
+                        }
+                }
+         }
 
-	 for (i = 0; i < ACTIVE_GROUP_COUNT; i++)
-		ValArr[ValueCount].GroupResult[i] = GroupScore[i];
+         for (i = 0; i < ACTIVE_GROUP_COUNT; i++)
+                ValArr[ValueCount].GroupResult[i] = GroupScore[i];
 
-	 for (i = 0; i < DX_COUNT; i++)
-	 {
-		ValArr[ValueCount].DxArr[i] = DxArr[i];
-		ValArr[ValueCount].DxResult[i] = DxScore[i];
-	 }
+         for (i = 0; i < DX_COUNT; i++)
+         {
+                ValArr[ValueCount].DxArr[i] = DxArr[i];
+                ValArr[ValueCount].DxResult[i] = DxScore[i];
+         }
 
-	 ValueCount++;
+         ValueCount++;
 }
 
 /*##########################################################################
@@ -169,65 +169,65 @@ void TPopulation::Add(int AsScore, int NtScore, char DxArr[DX_COUNT], int Gender
 ##########################################################################*/
 void TPopulation::Add(int Score, char DxArr[DX_COUNT], int Gender, char Arr[MAX_QUESTIONS], char GroupScore[ACTIVE_GROUP_COUNT], char DxScore[DX_COUNT])
 {
-	 int val;
-	 int i;
-	 TValArr *NewArr;
+         int val;
+         int i;
+         TValArr *NewArr;
 
-	 if (ValArr == 0)
-	 {
-		  MaxSize = 8;
-		  ValArr = new TValArr[MaxSize];
-	 }
+         if (ValArr == 0)
+         {
+                  MaxSize = 8;
+                  ValArr = new TValArr[MaxSize];
+         }
 
-	 if (ValueCount >= MaxSize)
-	 {
-		  MaxSize = 3 * MaxSize / 2;
-		  NewArr = new TValArr[MaxSize];
+         if (ValueCount >= MaxSize)
+         {
+                  MaxSize = 3 * MaxSize / 2;
+                  NewArr = new TValArr[MaxSize];
 
-		  for (i = 0; i < ValueCount; i++)
-				NewArr[i] = ValArr[i];
+                  for (i = 0; i < ValueCount; i++)
+                                NewArr[i] = ValArr[i];
 
-		  delete ValArr;
-		  ValArr = NewArr;
-	 }
+                  delete ValArr;
+                  ValArr = NewArr;
+         }
 
-	 ValArr[ValueCount].AsScore = Score;
-	 ValArr[ValueCount].NtScore = 0;
+         ValArr[ValueCount].AsScore = Score;
+         ValArr[ValueCount].NtScore = 0;
 
-	 for (i = 0; i < N; i++)
-	 {
-		val = Arr[i];
-		ValArr[ValueCount].Quiz[i] = val;
-		if (val)
-		{
-			val--;
-			ChiArr[i][val]++;
-			Sum[i] += val;
-			Count[i]++;
+         for (i = 0; i < N; i++)
+         {
+                val = Arr[i];
+                ValArr[ValueCount].Quiz[i] = val;
+                if (val)
+                {
+                        val--;
+                        ChiArr[i][val]++;
+                        Sum[i] += val;
+                        Count[i]++;
 
-			switch (Gender)
-			{
-				case 1:
-					MaleChiArr[i][val]++;
-					break;
+                        switch (Gender)
+                        {
+                                case 1:
+                                        MaleChiArr[i][val]++;
+                                        break;
 
-				case 2:
-					FemaleChiArr[i][val]++;
-					break;
-			}
-		}
-	 }
+                                case 2:
+                                        FemaleChiArr[i][val]++;
+                                        break;
+                        }
+                }
+         }
 
-	 for (i = 0; i < ACTIVE_GROUP_COUNT; i++)
-		ValArr[ValueCount].GroupResult[i] = GroupScore[i];
+         for (i = 0; i < ACTIVE_GROUP_COUNT; i++)
+                ValArr[ValueCount].GroupResult[i] = GroupScore[i];
 
-	 for (i = 0; i < ACTIVE_GROUP_COUNT; i++)
-	 {
-		ValArr[ValueCount].DxArr[i] = DxArr[i];
-		ValArr[ValueCount].DxResult[i] = DxScore[i];
-	 }
+         for (i = 0; i < ACTIVE_GROUP_COUNT; i++)
+         {
+                ValArr[ValueCount].DxArr[i] = DxArr[i];
+                ValArr[ValueCount].DxResult[i] = DxScore[i];
+         }
 
-	 ValueCount++;
+         ValueCount++;
 }
 
 /*##########################################################################
@@ -269,29 +269,29 @@ long double TPopulation::GetSd(int QuestionNr)
 {
     int e;
     int ival;
-	long double val;
-	long double rsum = 0;
-	long double mean = GetMean(QuestionNr);
-	int count;
+        long double val;
+        long double rsum = 0;
+        long double mean = GetMean(QuestionNr);
+        int count;
 
-	if (QuestionNr >= 0 && QuestionNr < N)
-	{
+        if (QuestionNr >= 0 && QuestionNr < N)
+        {
         count = 0;
             
-    	for (e = 0; e < ValueCount; e++)
-    	{
-    	    ival = ValArr[e].Quiz[QuestionNr];
+        for (e = 0; e < ValueCount; e++)
+        {
+            ival = ValArr[e].Quiz[QuestionNr];
             if (ival)
             {
                 count++;
                 ival--;
-    	    	val = (long double)ival - mean;
-        	    rsum += val * val;
-        	}
-    	}
-    	
+                val = (long double)ival - mean;
+                    rsum += val * val;
+                }
+        }
+        
         if (count > 1)
-            return sqrtl(rsum / ((long double)count - 1));
+            return sqrt(rsum / ((long double)count - 1));
         else
             return 0;
     }

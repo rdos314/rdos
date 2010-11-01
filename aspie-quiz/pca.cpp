@@ -98,10 +98,10 @@ TPca::~TPca()
 #   Purpose....: Reduce a real, symmetric matrix to a symmetric, tridiag. matrix.
 #                Householder reduction of matrix a to tridiagonal form.
 #                Algorithm: Martin et al., Num. Math. 11, 181-195, 1968.
-#	             Ref: Smith et al., Matrix Eigensystem Routines -- EISPACK Guide
-#		         Springer-Verlag, 1976, pp. 489-494.
-#		         W H Press et al., Numerical Recipes in C, Cambridge U P,
-#		         1988, pp. 373-374.
+#                    Ref: Smith et al., Matrix Eigensystem Routines -- EISPACK Guide
+#                        Springer-Verlag, 1976, pp. 489-494.
+#                        W H Press et al., Numerical Recipes in C, Cambridge U P,
+#                        1988, pp. 373-374.
 #
 #   In params..: *
 #   Out params.: *
@@ -110,55 +110,55 @@ TPca::~TPca()
 ##########################################################################*/
 void TPca::tred2()
 {
-	int l, k, j, i;
-	long double scale, hh, h, g, f;
+        int l, k, j, i;
+        long double scale, hh, h, g, f;
 
     for (i = Count; i >= 2; i--)
-	{
-	    l = i - 1;
-	    h = scale = 0.0;
-	    if (l > 1)
-		{
-	        for (k = 1; k <= l; k++)
-			    scale += fabs(Corr[i][k]);
-	        if (scale == 0.0)
-		        Interm[i] = Corr[i][l];
-		    else
-			{
-			    for (k = 1; k <= l; k++)
-			    {
-				    Corr[i][k] /= scale;
-		            h += Corr[i][k] * Corr[i][k];
-		        }
-	            f = Corr[i][l];
-	            g = f>0 ? -sqrtl(h) : sqrtl(h);
-		        Interm[i] = scale * g;
-	            h -= f * g;
-		        Corr[i][l] = f - g;
-		        f = 0.0;
-		        for (j = 1; j <= l; j++)
-		        {
-			        Corr[j][i] = Corr[i][j]/h;
-				    g = 0.0;
-				    for (k = 1; k <= j; k++)
-				        g += Corr[j][k] * Corr[i][k];
-				    for (k = j+1; k <= l; k++)
-					    g += Corr[k][j] * Corr[i][k];
-				    Interm[j] = g / h;
-				    f += Interm[j] * Corr[i][j];
-			    }
-		        hh = f / (h + h);
-		        for (j = 1; j <= l; j++)
-				{
-				    f = Corr[i][j];
-				    Interm[j] = g = Interm[j] - hh * f;
-				    for (k = 1; k <= j; k++)
-					    Corr[j][k] -= (f * Interm[k] + g * Corr[i][k]);
-			    }
-	        }
+        {
+            l = i - 1;
+            h = scale = 0.0;
+            if (l > 1)
+                {
+                for (k = 1; k <= l; k++)
+                            scale += fabs(Corr[i][k]);
+                if (scale == 0.0)
+                        Interm[i] = Corr[i][l];
+                    else
+                        {
+                            for (k = 1; k <= l; k++)
+                            {
+                                    Corr[i][k] /= scale;
+                            h += Corr[i][k] * Corr[i][k];
+                        }
+                    f = Corr[i][l];
+                    g = f>0 ? -sqrt(h) : sqrt(h);
+                        Interm[i] = scale * g;
+                    h -= f * g;
+                        Corr[i][l] = f - g;
+                        f = 0.0;
+                        for (j = 1; j <= l; j++)
+                        {
+                                Corr[j][i] = Corr[i][j]/h;
+                                    g = 0.0;
+                                    for (k = 1; k <= j; k++)
+                                        g += Corr[j][k] * Corr[i][k];
+                                    for (k = j+1; k <= l; k++)
+                                            g += Corr[k][j] * Corr[i][k];
+                                    Interm[j] = g / h;
+                                    f += Interm[j] * Corr[i][j];
+                            }
+                        hh = f / (h + h);
+                        for (j = 1; j <= l; j++)
+                                {
+                                    f = Corr[i][j];
+                                    Interm[j] = g = Interm[j] - hh * f;
+                                    for (k = 1; k <= j; k++)
+                                            Corr[j][k] -= (f * Interm[k] + g * Corr[i][k]);
+                            }
+                }
         }
-	    else
-		    Interm[i] = Corr[i][l];
+            else
+                    Interm[i] = Corr[i][l];
         EigenVal[i] = h;
     }
     EigenVal[1] = 0.0;
@@ -167,20 +167,20 @@ void TPca::tred2()
     {
         l = i - 1;
         if (EigenVal[i])
-	    {
-	        for (j = 1; j <= l; j++)
-		    {
-			    g = 0.0;
-			    for (k = 1; k <= l; k++)
-					g += Corr[i][k] * Corr[k][j];
-			    for (k = 1; k <= l; k++)
-					Corr[k][j] -= g * Corr[k][i];
-		    }
-	    }
-	    EigenVal[i] = Corr[i][i];
-	    Corr[i][i] = 1.0;
-	    for (j = 1; j <= l; j++)
-		    Corr[j][i] = Corr[i][j] = 0.0;
+            {
+                for (j = 1; j <= l; j++)
+                    {
+                            g = 0.0;
+                            for (k = 1; k <= l; k++)
+                                        g += Corr[i][k] * Corr[k][j];
+                            for (k = 1; k <= l; k++)
+                                        Corr[k][j] -= g * Corr[k][i];
+                    }
+            }
+            EigenVal[i] = Corr[i][i];
+            Corr[i][i] = 1.0;
+            for (j = 1; j <= l; j++)
+                    Corr[j][i] = Corr[i][j] = 0.0;
     }
 }
 
@@ -197,12 +197,12 @@ void TPca::tred2()
 ##########################################################################*/
 void TPca::tqli()
 {
-	int m, l, iter, i, k;
-	long double s, r, p, g, f, dd, c, b;
+        int m, l, iter, i, k;
+        long double s, r, p, g, f, dd, c, b;
 
     for (i = 2; i <= Count; i++)
         Interm[i-1] = Interm[i];
-	Interm[Count] = 0.0;
+        Interm[Count] = 0.0;
     for (l = 1; l <= Count; l++)
     {
         iter = 0;
@@ -215,16 +215,16 @@ void TPca::tqli()
             }
             if (m != l)
             {
-		        if (iter++ == 30)
-				{
-				    printf("No convergence in TLQI.");
-					exit(0);
-			    }
+                        if (iter++ == 30)
+                                {
+                                    printf("No convergence in TLQI.");
+                                        exit(0);
+                            }
                 g = (EigenVal[l+1] - EigenVal[l]) / (2.0 * Interm[l]);
-		        r = sqrtl((g * g) + 1.0);
+                        r = sqrt((g * g) + 1.0);
                 g = EigenVal[m] - EigenVal[l] + Interm[l] / (g + SIGN(r, g));
                 s = c = 1.0;
-				p = 0.0;
+                                p = 0.0;
                 for (i = m-1; i >= l; i--)
                 {
                     f = s * Interm[i];
@@ -232,34 +232,34 @@ void TPca::tqli()
                     if (fabs(f) >= fabs(g))
                     {
                         c = g / f;
-                        r = sqrtl((c * c) + 1.0);
+                        r = sqrt((c * c) + 1.0);
                         Interm[i+1] = f * r;
                         c *= (s = 1.0/r);
                     }
                     else
                     {
-				        s = f / g;
-				        r = sqrtl((s * s) + 1.0);
-					    Interm[i+1] = g * r;
-					    s *= (c = 1.0/r);
-				    }
-					g = EigenVal[i+1] - p;
-					r = (EigenVal[i] - g) * s + 2.0 * c * b;
-					p = s * r;
-					EigenVal[i+1] = g + p;
-					g = c * r - b;
-					for (k = 1; k <= Count; k++)
-					{
-				        f = Corr[k][i+1];
-					    Corr[k][i+1] = s * Corr[k][i] + c * f;
-						Corr[k][i] = c * Corr[k][i] - s * f;
-					}
-			    }
-			    EigenVal[l] = EigenVal[l] - p;
-			    Interm[l] = g;
-			    Interm[m] = 0.0;
-		    }
-		}  while (m != l);
+                                        s = f / g;
+                                        r = sqrt((s * s) + 1.0);
+                                            Interm[i+1] = g * r;
+                                            s *= (c = 1.0/r);
+                                    }
+                                        g = EigenVal[i+1] - p;
+                                        r = (EigenVal[i] - g) * s + 2.0 * c * b;
+                                        p = s * r;
+                                        EigenVal[i+1] = g + p;
+                                        g = c * r - b;
+                                        for (k = 1; k <= Count; k++)
+                                        {
+                                        f = Corr[k][i+1];
+                                            Corr[k][i+1] = s * Corr[k][i] + c * f;
+                                                Corr[k][i] = c * Corr[k][i] - s * f;
+                                        }
+                            }
+                            EigenVal[l] = EigenVal[l] - p;
+                            Interm[l] = g;
+                            Interm[m] = 0.0;
+                    }
+                }  while (m != l);
     }
 }
 

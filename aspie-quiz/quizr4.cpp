@@ -1835,10 +1835,10 @@ void TQuizR4::WriteAQ(const char *filename)
 	    }
 	}
 
-	AsSd = sqrtl(AsSum / (Count - 1));
-	NtSd = sqrtl(NtSum / (Count - 1));
-	DiffSd = sqrtl(DiffSum / (Count - 1));
-	AqSd = sqrtl(AqSum / (Count - 1));
+	AsSd = sqrt(AsSum / (Count - 1));
+	NtSd = sqrt(NtSum / (Count - 1));
+	DiffSd = sqrt(DiffSum / (Count - 1));
+	AqSd = sqrt(AqSum / (Count - 1));
 
 	AsSum = 0;
 	NtSum = 0;

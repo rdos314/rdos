@@ -380,9 +380,13 @@ char *ProcessRow(char *str)
 	}
 
   	UpdateScore(&Row);
-    HandleRow(&Row);
 
-	ancfile.Write(&AncestryRow, sizeof(TQuizAncestryRow));
+  	if (Row.BirthYear > 1900 && Row.BirthMonth < 13)
+  	{
+        HandleRow(&Row);
+
+	    ancfile.Write(&AncestryRow, sizeof(TQuizAncestryRow));
+	}
 
 	return str;
 }

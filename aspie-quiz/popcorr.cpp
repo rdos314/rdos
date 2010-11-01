@@ -44,17 +44,17 @@
 ##########################################################################*/
 TPopulationCorrelation::TPopulationCorrelation(int questions)
 {
-	int i;
+        int i;
 
-	N = questions;
+        N = questions;
 
-	for (i = 0; i < N; i++)
-	{
-	    mean[i] = 0;
-	    sd[i] = 0;
-	    corr[i] = 0;
-	    chi2[i] = 0;
-	}
+        for (i = 0; i < N; i++)
+        {
+            mean[i] = 0;
+            sd[i] = 0;
+            corr[i] = 0;
+            chi2[i] = 0;
+        }
 }
 
 /*##########################################################################
@@ -85,155 +85,155 @@ TPopulationCorrelation::~TPopulationCorrelation()
 ##########################################################################*/
 void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
 {
-	int i, j;
-	int e;
-	int count;
-	int sum;
-	int ival;
-	long double val;
-	long double rsum;
-	long double zx;
-	long double zy;
-	long double exp;
-	long double cmean;
-	long double csd;
-	long double count1;
-	long double count2;
-	long double val1;
-	long double val2;
+        int i, j;
+        int e;
+        int count;
+        int sum;
+        int ival;
+        long double val;
+        long double rsum;
+        long double zx;
+        long double zy;
+        long double exp;
+        long double cmean;
+        long double csd;
+        long double count1;
+        long double count2;
+        long double val1;
+        long double val2;
 
-	for (i = 0; i < N; i++)
-	{
-	    count = 0;
-		sum = 0;
-		for (e = 0; e < pop1->ValueCount; e++)
-		{
-		    ival = pop1->ValArr[e].Quiz[i];
-		    if (ival)
-		    {
-		        count++;
-		        ival--;
-    			sum += ival;
-    	    }
-    	}
-
-		for (e = 0; e < pop2->ValueCount; e++)
-		{
-		    ival = pop2->ValArr[e].Quiz[i];
-		    if (ival)
-		    {
-		        count++;
-		        ival--;
-    			sum += ival;
-    	    }
-    	}
-
-		if (count > 1)
+        for (i = 0; i < N; i++)
         {
-    		mean[i] = (long double)sum / ((long double)count);
+            count = 0;
+                sum = 0;
+                for (e = 0; e < pop1->ValueCount; e++)
+                {
+                    ival = pop1->ValArr[e].Quiz[i];
+                    if (ival)
+                    {
+                        count++;
+                        ival--;
+                        sum += ival;
+            }
+        }
 
-	    	rsum = 0;
-		    for (e = 0; e < pop1->ValueCount; e++)
-		    {
-    		    ival = pop1->ValArr[e].Quiz[i];
-	    	    if (ival)
-		        {
-		            ival--;
-    			    val = (long double)ival - mean[i];
-        			rsum += val * val;
-		        }
-		    }
+                for (e = 0; e < pop2->ValueCount; e++)
+                {
+                    ival = pop2->ValArr[e].Quiz[i];
+                    if (ival)
+                    {
+                        count++;
+                        ival--;
+                        sum += ival;
+            }
+        }
 
-    		for (e = 0; e < pop2->ValueCount; e++)
-	    	{
-    		    ival = pop2->ValArr[e].Quiz[i];
-	    	    if (ival)
-		        {
-		            ival--;
-        			val = (long double)ival - mean[i];
-        			rsum += val * val;
-        	    }
-    		}
+                if (count > 1)
+        {
+                mean[i] = (long double)sum / ((long double)count);
 
-			sd[i] = sqrtl(rsum / ((long double)count - 1));
+                rsum = 0;
+                    for (e = 0; e < pop1->ValueCount; e++)
+                    {
+                    ival = pop1->ValArr[e].Quiz[i];
+                    if (ival)
+                        {
+                            ival--;
+                            val = (long double)ival - mean[i];
+                                rsum += val * val;
+                        }
+                    }
 
-        	cmean = (long double)pop1->Count[i] / ((long double)count);
+                for (e = 0; e < pop2->ValueCount; e++)
+                {
+                    ival = pop2->ValArr[e].Quiz[i];
+                    if (ival)
+                        {
+                            ival--;
+                                val = (long double)ival - mean[i];
+                                rsum += val * val;
+                    }
+                }
 
-        	val = 1.0 - cmean;
-	        rsum = (long double)pop1->Count[i] * val * val;
+                        sd[i] = sqrt(rsum / ((long double)count - 1));
 
-    	    val = cmean;
-		    rsum += (long double)pop2->Count[i] * val * val;
+                cmean = (long double)pop1->Count[i] / ((long double)count);
 
-    	    csd = sqrtl(rsum / ((long double)count - 1));
+                val = 1.0 - cmean;
+                rsum = (long double)pop1->Count[i] * val * val;
 
-    		rsum = 0;
+            val = cmean;
+                    rsum += (long double)pop2->Count[i] * val * val;
 
-    		if (csd == 0 || sd[i] == 0)
-        		corr[i] = 1.0;
+            csd = sqrt(rsum / ((long double)count - 1));
+
+                rsum = 0;
+
+                if (csd == 0 || sd[i] == 0)
+                        corr[i] = 1.0;
             else
-    		{
-    	    	zx = (1.0 - cmean) / csd;
-	    	    for (e = 0; e < pop1->ValueCount; e++)
-    	    	{
-    		        ival = pop1->ValArr[e].Quiz[i];
-    	    	    if (ival)
-	    	        {
-		                ival--;
-        	    		zy = ((long double)ival - mean[i]) / sd[i];
-						rsum += zx * zy;
-					}
-	    	    }
+                {
+                zx = (1.0 - cmean) / csd;
+                    for (e = 0; e < pop1->ValueCount; e++)
+                {
+                        ival = pop1->ValArr[e].Quiz[i];
+                    if (ival)
+                        {
+                                ival--;
+                                zy = ((long double)ival - mean[i]) / sd[i];
+                                                rsum += zx * zy;
+                                        }
+                    }
     
-        		zx = (0.0 - cmean) / csd;
-	        	for (e = 0; e < pop2->ValueCount; e++)
-		        {
-        		    ival = pop2->ValArr[e].Quiz[i];
-	        	    if (ival)
-		            {
-		                ival--;
-        		    	zy = ((long double)ival - mean[i]) / sd[i];
-            			rsum += zx * zy;
-	    	        }
-		        }
-        		corr[i] = rsum / ((long double)count - 1);
+                        zx = (0.0 - cmean) / csd;
+                        for (e = 0; e < pop2->ValueCount; e++)
+                        {
+                            ival = pop2->ValArr[e].Quiz[i];
+                            if (ival)
+                            {
+                                ival--;
+                                zy = ((long double)ival - mean[i]) / sd[i];
+                                rsum += zx * zy;
+                        }
+                        }
+                        corr[i] = rsum / ((long double)count - 1);
 
-		    }
+                    }
 
-    		rsum = 0;
-		    count1 = (long double)pop1->Count[i];
-		    count2 = (long double)pop2->Count[i];
+                rsum = 0;
+                    count1 = (long double)pop1->Count[i];
+                    count2 = (long double)pop2->Count[i];
 
-			for (j = 0; j < 3; j++)
-			{
-				val1 = (long double)pop1->ChiArr[i][j];
-				val2 = (long double)pop2->ChiArr[i][j];
+                        for (j = 0; j < 3; j++)
+                        {
+                                val1 = (long double)pop1->ChiArr[i][j];
+                                val2 = (long double)pop2->ChiArr[i][j];
 
-				exp = (val1 + val2) * count1 / (count1 + count2);
-				if (exp >= 5.0)
-				{
-					val = val1 - exp;
-					rsum += val * val / exp;
-				}
+                                exp = (val1 + val2) * count1 / (count1 + count2);
+                                if (exp >= 5.0)
+                                {
+                                        val = val1 - exp;
+                                        rsum += val * val / exp;
+                                }
 
-				exp = (val1 + val2) * count2 / (count1 + count2);
-				if (exp >= 5.0)
-				{
-					val = val2 - exp;
-					rsum += val * val / exp;
-				}
-		    }
+                                exp = (val1 + val2) * count2 / (count1 + count2);
+                                if (exp >= 5.0)
+                                {
+                                        val = val2 - exp;
+                                        rsum += val * val / exp;
+                                }
+                    }
 
-    		chi2[i] = rsum;
-	    }
-	    else
-	    {
-	        mean[i] = 0;
-	        sd[i] = 0;
-	        corr[i] = 0;
-	        chi2[i] = 0;
-	    }
-	}
+                chi2[i] = rsum;
+            }
+            else
+            {
+                mean[i] = 0;
+                sd[i] = 0;
+                corr[i] = 0;
+                chi2[i] = 0;
+            }
+        }
 }
 
 /*##########################################################################
@@ -249,26 +249,26 @@ void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
 ##########################################################################*/
 void TPopulationCorrelation::Sort()
 {
-	int i, j;
-	int e;
-	long double val;
+        int i, j;
+        int e;
+        long double val;
 
-	for (i = 0; i < N; i++)
-		IndArr[i] = i;
+        for (i = 0; i < N; i++)
+                IndArr[i] = i;
 
-	for (i = 0; i < N; i++)
-	{
-		val = corr[IndArr[i]];
+        for (i = 0; i < N; i++)
+        {
+                val = corr[IndArr[i]];
 
-		for (j = i + 1; j < N; j++)
-		{
-			if (corr[IndArr[j]] > val)
-			{
-				e = IndArr[j];
-				IndArr[j] = IndArr[i];
-				IndArr[i] = e;
-				val = corr[e];
-			}
-		}
-	}
+                for (j = i + 1; j < N; j++)
+                {
+                        if (corr[IndArr[j]] > val)
+                        {
+                                e = IndArr[j];
+                                IndArr[j] = IndArr[i];
+                                IndArr[i] = e;
+                                val = corr[e];
+                        }
+                }
+        }
 }

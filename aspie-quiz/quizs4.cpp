@@ -2010,10 +2010,10 @@ void TQuizS4::WriteLSAS(const char *filename)
 	    }
 	}
 
-	AsSd = sqrtl(AsSum / (Count - 1));
-	NtSd = sqrtl(NtSum / (Count - 1));
-	DiffSd = sqrtl(DiffSum / (Count - 1));
-	LsasSd = sqrtl(LsasSum / (Count - 1));
+	AsSd = sqrt(AsSum / (Count - 1));
+	NtSd = sqrt(NtSum / (Count - 1));
+	DiffSd = sqrt(DiffSum / (Count - 1));
+	LsasSd = sqrt(LsasSum / (Count - 1));
 
 	AsSum = 0;
 	NtSum = 0;
@@ -2238,8 +2238,8 @@ void TQuizS4::WriteRetest(const char *filename)
 		    			NtSum += val * val;
 			    	}
 
-				    AsSd = sqrtl(AsSum / index);
-    				NtSd = sqrtl(NtSum / index);
+				    AsSd = sqrt(AsSum / index);
+    				NtSd = sqrt(NtSum / index);
 
 	    			for (q = 0; q < 149; q++)
 		    		{
@@ -2258,7 +2258,7 @@ void TQuizS4::WriteRetest(const char *filename)
 
                         if (count)
                         {
-    			    	    QSd[q] = sqrtl(sum / count);
+    			    	    QSd[q] = sqrt(sum / count);
     
         				    QTot[q] += QSd[q];
     	    			    QCount[q]++;

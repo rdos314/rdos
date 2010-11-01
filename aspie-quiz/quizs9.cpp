@@ -2179,10 +2179,10 @@ void TQuizS9::WriteADD(const char *filename)
 	    }
 	}
 
-	AsSd = sqrtl(AsSum / (Count - 1));
-	NtSd = sqrtl(NtSum / (Count - 1));
-	DiffSd = sqrtl(DiffSum / (Count - 1));
-	AddSd = sqrtl(AddSum / (Count - 1));
+	AsSd = sqrt(AsSum / (Count - 1));
+	NtSd = sqrt(NtSum / (Count - 1));
+	DiffSd = sqrt(DiffSum / (Count - 1));
+	AddSd = sqrt(AddSum / (Count - 1));
 
 	AsSum = 0;
 	NtSum = 0;
@@ -2407,8 +2407,8 @@ void TQuizS9::WriteRetest(const char *filename)
 		    			NtSum += val * val;
 			    	}
 
-				    AsSd = sqrtl(AsSum / index);
-    				NtSd = sqrtl(NtSum / index);
+				    AsSd = sqrt(AsSum / index);
+    				NtSd = sqrt(NtSum / index);
 
 	    			for (q = 0; q < 158; q++)
 		    		{
@@ -2427,7 +2427,7 @@ void TQuizS9::WriteRetest(const char *filename)
 
                         if (count)
                         {
-    			    	    QSd[q] = sqrtl(sum / count);
+    			    	    QSd[q] = sqrt(sum / count);
     
         				    QTot[q] += QSd[q];
     	    			    QCount[q]++;

@@ -44,19 +44,19 @@
 ##########################################################################*/
 TDsmPopulation::TDsmPopulation()
 {
-	int i;
+        int i;
 
     for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
     {
-		NoCat[i].ValueCount = 0;
-		NoCat[i].MaxSize = 0;
-		NoCat[i].DataArr = 0;
+                NoCat[i].ValueCount = 0;
+                NoCat[i].MaxSize = 0;
+                NoCat[i].DataArr = 0;
 
-		SelfCat[i].ValueCount = 0;
-		SelfCat[i].MaxSize = 0;
-		SelfCat[i].DataArr = 0;
+                SelfCat[i].ValueCount = 0;
+                SelfCat[i].MaxSize = 0;
+                SelfCat[i].DataArr = 0;
 
-		DxCat[i].ValueCount = 0;
+                DxCat[i].ValueCount = 0;
         DxCat[i].MaxSize = 0;
         DxCat[i].DataArr = 0;
     }        
@@ -105,34 +105,34 @@ TDsmPopulation::~TDsmPopulation()
 void TDsmPopulation::AddNo(int GlobalId, char score)
 {
     TDsmElem *elem;
-	int i;
-	char *NewArr;
+        int i;
+        char *NewArr;
 
     if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
     {
         elem = &NoCat[GlobalId];
     
         if (elem->DataArr == 0)
-	    {
-		    elem->MaxSize = 8;
-		    elem->DataArr = new char[elem->MaxSize];
-	    }
+            {
+                    elem->MaxSize = 8;
+                    elem->DataArr = new char[elem->MaxSize];
+            }
 
-	    if (elem->ValueCount >= elem->MaxSize)
-	    {
-		    elem->MaxSize = 3 * elem->MaxSize / 2;
-		    NewArr = new char[elem->MaxSize];
+            if (elem->ValueCount >= elem->MaxSize)
+            {
+                    elem->MaxSize = 3 * elem->MaxSize / 2;
+                    NewArr = new char[elem->MaxSize];
 
-		    for (i = 0; i < elem->ValueCount; i++)
-			    NewArr[i] = elem->DataArr[i];
+                    for (i = 0; i < elem->ValueCount; i++)
+                            NewArr[i] = elem->DataArr[i];
 
-	        delete elem->DataArr;
-	        elem->DataArr = NewArr;
-	    }
-	    
+                delete elem->DataArr;
+                elem->DataArr = NewArr;
+            }
+            
         elem->DataArr[elem->ValueCount] = score;
-	    elem->ValueCount++;
-	}
+            elem->ValueCount++;
+        }
 }
 
 /*##########################################################################
@@ -148,35 +148,35 @@ void TDsmPopulation::AddNo(int GlobalId, char score)
 ##########################################################################*/
 void TDsmPopulation::AddSelf(int GlobalId, char score)
 {
-	TDsmElem *elem;
-	int i;
-	char *NewArr;
+        TDsmElem *elem;
+        int i;
+        char *NewArr;
 
     if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
     {
         elem = &SelfCat[GlobalId];
     
         if (elem->DataArr == 0)
-	    {
-		    elem->MaxSize = 8;
-			elem->DataArr = new char[elem->MaxSize];
-		}
+            {
+                    elem->MaxSize = 8;
+                        elem->DataArr = new char[elem->MaxSize];
+                }
 
-	    if (elem->ValueCount >= elem->MaxSize)
-	    {
-		    elem->MaxSize = 3 * elem->MaxSize / 2;
-		    NewArr = new char[elem->MaxSize];
+            if (elem->ValueCount >= elem->MaxSize)
+            {
+                    elem->MaxSize = 3 * elem->MaxSize / 2;
+                    NewArr = new char[elem->MaxSize];
 
-		    for (i = 0; i < elem->ValueCount; i++)
-			    NewArr[i] = elem->DataArr[i];
+                    for (i = 0; i < elem->ValueCount; i++)
+                            NewArr[i] = elem->DataArr[i];
 
-	        delete elem->DataArr;
-	        elem->DataArr = NewArr;
-	    }
-	    
+                delete elem->DataArr;
+                elem->DataArr = NewArr;
+            }
+            
         elem->DataArr[elem->ValueCount] = score;
-	    elem->ValueCount++;
-	}
+            elem->ValueCount++;
+        }
 }
 
 /*##########################################################################
@@ -192,35 +192,35 @@ void TDsmPopulation::AddSelf(int GlobalId, char score)
 ##########################################################################*/
 void TDsmPopulation::AddDx(int GlobalId, char score)
 {
-	TDsmElem *elem;
-	int i;
-	char *NewArr;
+        TDsmElem *elem;
+        int i;
+        char *NewArr;
 
-	if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
-	{
-		elem = &DxCat[GlobalId];
+        if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
+        {
+                elem = &DxCat[GlobalId];
 
-		if (elem->DataArr == 0)
-		{
-			elem->MaxSize = 8;
-			elem->DataArr = new char[elem->MaxSize];
-	    }
+                if (elem->DataArr == 0)
+                {
+                        elem->MaxSize = 8;
+                        elem->DataArr = new char[elem->MaxSize];
+            }
 
-	    if (elem->ValueCount >= elem->MaxSize)
-	    {
-		    elem->MaxSize = 3 * elem->MaxSize / 2;
-		    NewArr = new char[elem->MaxSize];
+            if (elem->ValueCount >= elem->MaxSize)
+            {
+                    elem->MaxSize = 3 * elem->MaxSize / 2;
+                    NewArr = new char[elem->MaxSize];
 
-		    for (i = 0; i < elem->ValueCount; i++)
-			    NewArr[i] = elem->DataArr[i];
+                    for (i = 0; i < elem->ValueCount; i++)
+                            NewArr[i] = elem->DataArr[i];
 
-	        delete elem->DataArr;
-	        elem->DataArr = NewArr;
-	    }
-	    
+                delete elem->DataArr;
+                elem->DataArr = NewArr;
+            }
+            
         elem->DataArr[elem->ValueCount] = score;
-	    elem->ValueCount++;
-	}
+            elem->ValueCount++;
+        }
 }
 
 /*##########################################################################
@@ -267,86 +267,86 @@ void TDsmPopulation::Correlate()
 {
     TDsmElem *elem;
     char score;
-	int i, j;
-	int e;
-	int count;
-	int sum;
-	long double mean;
-	long double sd;
-	long double val;
-	long double rsum;
-	long double zx;
-	long double zy;
-	long double cmean;
-	long double csd;
+        int i, j;
+        int e;
+        int count;
+        int sum;
+        long double mean;
+        long double sd;
+        long double val;
+        long double rsum;
+        long double zx;
+        long double zy;
+        long double cmean;
+        long double csd;
 
-	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
-	{
-	    count = 0;
-		sum = 0;
-
-		elem = &NoCat[i];
-
-		for (e = 0; e < elem->ValueCount; e++)
-		{
-		    score = elem->DataArr[e];
-		    count++;
-    	    sum += score;
-    	}
-
-		elem = &SelfCat[i];
-
-		for (e = 0; e < elem->ValueCount; e++)
-		{
-		    score = elem->DataArr[e];
-		    count++;
-    	    sum += score;
-    	}
-		elem = &DxCat[i];
-
-		for (e = 0; e < elem->ValueCount; e++)
-		{
-		    score = elem->DataArr[e];
-		    count++;
-    	    sum += score;
-    	}
-
-		if (count > 1)
+        for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
         {
-    		mean = (long double)sum / ((long double)count);
+            count = 0;
+                sum = 0;
 
-    		rsum = 0;
+                elem = &NoCat[i];
 
-    		elem = &NoCat[i];
+                for (e = 0; e < elem->ValueCount; e++)
+                {
+                    score = elem->DataArr[e];
+                    count++;
+            sum += score;
+        }
+
+                elem = &SelfCat[i];
+
+                for (e = 0; e < elem->ValueCount; e++)
+                {
+                    score = elem->DataArr[e];
+                    count++;
+            sum += score;
+        }
+                elem = &DxCat[i];
+
+                for (e = 0; e < elem->ValueCount; e++)
+                {
+                    score = elem->DataArr[e];
+                    count++;
+            sum += score;
+        }
+
+                if (count > 1)
+        {
+                mean = (long double)sum / ((long double)count);
+
+                rsum = 0;
+
+                elem = &NoCat[i];
     
-	    	for (e = 0; e < elem->ValueCount; e++)
-		    {
-    		    score = elem->DataArr[e];
-    			val = (long double)score - mean;
-        		rsum += val * val;
-        	}
+                for (e = 0; e < elem->ValueCount; e++)
+                    {
+                    score = elem->DataArr[e];
+                        val = (long double)score - mean;
+                        rsum += val * val;
+                }
 
-    		elem = &SelfCat[i];
+                elem = &SelfCat[i];
     
-	    	for (e = 0; e < elem->ValueCount; e++)
-		    {
-    		    score = elem->DataArr[e];
-    			val = (long double)score - mean;
-        		rsum += val * val;
-        	}
+                for (e = 0; e < elem->ValueCount; e++)
+                    {
+                    score = elem->DataArr[e];
+                        val = (long double)score - mean;
+                        rsum += val * val;
+                }
 
-    		elem = &DxCat[i];
+                elem = &DxCat[i];
     
-	    	for (e = 0; e < elem->ValueCount; e++)
-		    {
-    		    score = elem->DataArr[e];
-    			val = (long double)score - mean;
-        		rsum += val * val;
-        	}
+                for (e = 0; e < elem->ValueCount; e++)
+                    {
+                    score = elem->DataArr[e];
+                        val = (long double)score - mean;
+                        rsum += val * val;
+                }
 
-			sd = sqrtl(rsum / ((long double)count - 1));
+                        sd = sqrt(rsum / ((long double)count - 1));
 
-        	cmean = (long double)(2 * DxCat[i].ValueCount + SelfCat[i].ValueCount) / ((long double)count);
+                cmean = (long double)(2 * DxCat[i].ValueCount + SelfCat[i].ValueCount) / ((long double)count);
 
             val = 2.0 - cmean;
             rsum = (long double)(DxCat[i].ValueCount * val * val);
@@ -357,54 +357,54 @@ void TDsmPopulation::Correlate()
             val = 0.0 - cmean;
             rsum += (long double)(NoCat[i].ValueCount * val * val);
 
-    	    csd = sqrtl(rsum / ((long double)count - 1));
+            csd = sqrt(rsum / ((long double)count - 1));
 
-    		rsum = 0;
+                rsum = 0;
 
-			if (csd == 0 || sd == 0)
-        		Corr[i] = 1.0;
+                        if (csd == 0 || sd == 0)
+                        Corr[i] = 1.0;
             else
-    		{
-    	    	zx = (2.0 - cmean) / csd;
-        		elem = &DxCat[i];
+                {
+                zx = (2.0 - cmean) / csd;
+                        elem = &DxCat[i];
     
-	        	for (e = 0; e < elem->ValueCount; e++)
-		        {
-        		    score = elem->DataArr[e];
-					zy = ((long double)score - mean) / sd;
-					rsum += zx * zy;
-				}
+                        for (e = 0; e < elem->ValueCount; e++)
+                        {
+                            score = elem->DataArr[e];
+                                        zy = ((long double)score - mean) / sd;
+                                        rsum += zx * zy;
+                                }
 
 
-				zx = (1.0 - cmean) / csd;
-				elem = &SelfCat[i];
+                                zx = (1.0 - cmean) / csd;
+                                elem = &SelfCat[i];
 
-				for (e = 0; e < elem->ValueCount; e++)
-				{
-					score = elem->DataArr[e];
-					zy = ((long double)score - mean) / sd;
-					rsum += zx * zy;
-				}
+                                for (e = 0; e < elem->ValueCount; e++)
+                                {
+                                        score = elem->DataArr[e];
+                                        zy = ((long double)score - mean) / sd;
+                                        rsum += zx * zy;
+                                }
 
 
-				zx = (0.0 - cmean) / csd;
-				elem = &NoCat[i];
+                                zx = (0.0 - cmean) / csd;
+                                elem = &NoCat[i];
 
-				for (e = 0; e < elem->ValueCount; e++)
-				{
-					score = elem->DataArr[e];
-					zy = ((long double)score - mean) / sd;
-					rsum += zx * zy;
-				}
+                                for (e = 0; e < elem->ValueCount; e++)
+                                {
+                                        score = elem->DataArr[e];
+                                        zy = ((long double)score - mean) / sd;
+                                        rsum += zx * zy;
+                                }
 
-				Corr[i] = rsum / ((long double)count - 1);
-			}
-		}
-		else
-			Corr[i] = 0.0;
-	}
+                                Corr[i] = rsum / ((long double)count - 1);
+                        }
+                }
+                else
+                        Corr[i] = 0.0;
+        }
 
-	Sort();
+        Sort();
 }
 
 /*##########################################################################
@@ -420,30 +420,30 @@ void TDsmPopulation::Correlate()
 ##########################################################################*/
 void TDsmPopulation::Sort()
 {
-	int i, j;
-	int e;
-	long double val;
+        int i, j;
+        int e;
+        long double val;
     long double temp;
 
-	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
-		IndArr[i] = i;
+        for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+                IndArr[i] = i;
 
-	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
-	{
-		val = Corr[IndArr[i]];
-		val = val * val;
+        for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+        {
+                val = Corr[IndArr[i]];
+                val = val * val;
 
-		for (j = i + 1; j < MAX_GLOBAL_QUESTIONS; j++)
-		{
-		    temp = Corr[IndArr[j]];
-			if (temp * temp > val)
-			{
-				e = IndArr[j];
-				IndArr[j] = IndArr[i];
-				IndArr[i] = e;
-				val = Corr[e];
-				val = val * val;
-			}
-		}
-	}
+                for (j = i + 1; j < MAX_GLOBAL_QUESTIONS; j++)
+                {
+                    temp = Corr[IndArr[j]];
+                        if (temp * temp > val)
+                        {
+                                e = IndArr[j];
+                                IndArr[j] = IndArr[i];
+                                IndArr[i] = e;
+                                val = Corr[e];
+                                val = val * val;
+                        }
+                }
+        }
 }

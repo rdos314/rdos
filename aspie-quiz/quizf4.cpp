@@ -1022,8 +1022,8 @@ void TQuizF4::WritePartner(const char *filename)
                 rsum2 += val * val;                    
             }
 
-			sd1 = sqrtl(rsum1 / (long double)(count - 1));
-			sd2 = sqrtl(rsum2 / (long double)(count - 1));
+			sd1 = sqrt(rsum1 / (long double)(count - 1));
+			sd2 = sqrt(rsum2 / (long double)(count - 1));
             
             rsum = 0;
 
@@ -1120,8 +1120,8 @@ void TQuizF4::WritePartner(const char *filename)
                 }
             }
 
-				sd1 = sqrtl(rsum1 / (long double)(count - 1));
-				sd2 = sqrtl(rsum2 / (long double)(count - 1));
+				sd1 = sqrt(rsum1 / (long double)(count - 1));
+				sd2 = sqrt(rsum2 / (long double)(count - 1));
             
             rsum = 0;
 
@@ -1381,9 +1381,9 @@ void TRace::WriteEntry(TFile &file, int val, int count)
 
 	 if (count > 1 && val)
 	 {
-		sd = sqrtl(rsum / ((long double)count - 1));
+		sd = sqrt(rsum / ((long double)count - 1));
 
-		dev = 1.96 * sd / sqrtl(count);
+		dev = 1.96 * sd / sqrt(count);
 
 		r = mean - dev;
 		if (r < 0.0)
@@ -1748,8 +1748,8 @@ void TQuizF4::WriteRetest(const char *filename)
 						NtSum += val * val;
 					}
 
-					 AsSd = sqrtl(AsSum / index);
-					NtSd = sqrtl(NtSum / index);
+					 AsSd = sqrt(AsSum / index);
+					NtSd = sqrt(NtSum / index);
 
 					for (q = 0; q < 147; q++)
 					{
@@ -1768,7 +1768,7 @@ void TQuizF4::WriteRetest(const char *filename)
 
 								if (count)
 								{
-							 QSd[q] = sqrtl(sum / count);
+							 QSd[q] = sqrt(sum / count);
 
 							 QTot[q] += QSd[q];
 							 QCount[q]++;

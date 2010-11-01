@@ -1488,9 +1488,9 @@ void TRace::WriteEntry(TFile &file, int val, int count)
 
 	 if (count > 1 && val)
 	 {
-		sd = sqrtl(rsum / ((long double)count - 1));
+		sd = sqrt(rsum / ((long double)count - 1));
 
-		dev = 1.96 * sd / sqrtl(count);
+		dev = 1.96 * sd / sqrt(count);
 
 		r = mean - dev;
 		if (r < 0.0)
@@ -1855,8 +1855,8 @@ void TQuizF2::WriteRetest(const char *filename)
 						NtSum += val * val;
 					}
 
-					 AsSd = sqrtl(AsSum / index);
-					NtSd = sqrtl(NtSum / index);
+					 AsSd = sqrt(AsSum / index);
+					NtSd = sqrt(NtSum / index);
 
 					for (q = 0; q < 147; q++)
 					{
@@ -1875,7 +1875,7 @@ void TQuizF2::WriteRetest(const char *filename)
 
 								if (count)
 								{
-							 QSd[q] = sqrtl(sum / count);
+							 QSd[q] = sqrt(sum / count);
 
 							 QTot[q] += QSd[q];
 							 QCount[q]++;
@@ -2255,7 +2255,7 @@ void TQuizF2::CalcIpipCongruence()
 			sqsum = xsum * ysum;
 
 			if (sqsum > 0.0)
-				  sqsum = sqrtl(xsum * ysum);
+				  sqsum = sqrt(xsum * ysum);
 
 		    if (sqsum > 0.0)
 				IpipCon[factor][axis] = rsum / sqsum;
@@ -2292,7 +2292,7 @@ void TQuizF2::CalcIpipCongruence()
     sqsum = xsum * ysum;
 
     if (sqsum > 0.0)
-    	sqsum = sqrtl(xsum * ysum);
+    	sqsum = sqrt(xsum * ysum);
 		
     if (sqsum > 0.0)
         IpipPcaCon = (asum[0] + asum[1]) / sqsum;
@@ -2459,18 +2459,18 @@ void TQuizF2::WriteIPIP(const char *filename)
 	    }
 	}
 
-	AsSd = sqrtl(AsSum / (Count - 1));
-	NtSd = sqrtl(NtSum / (Count - 1));
-	DiffSd = sqrtl(DiffSum / (Count - 1));
+	AsSd = sqrt(AsSum / (Count - 1));
+	NtSd = sqrt(NtSum / (Count - 1));
+	DiffSd = sqrt(DiffSum / (Count - 1));
 
     for (grp = 0; grp < ACTIVE_GROUP_COUNT; grp++)
-        GrpSd[grp] = sqrtl(GrpSum[grp] / (Count - 1));
+        GrpSd[grp] = sqrt(GrpSum[grp] / (Count - 1));
 
-	NSd = sqrtl(NSum / (Count - 1));
-	ESd = sqrtl(ESum / (Count - 1));
-	OSd = sqrtl(OSum / (Count - 1));
-	ASd = sqrtl(ASum / (Count - 1));
-	CSd = sqrtl(CSum / (Count - 1));
+	NSd = sqrt(NSum / (Count - 1));
+	ESd = sqrt(ESum / (Count - 1));
+	OSd = sqrt(OSum / (Count - 1));
+	ASd = sqrt(ASum / (Count - 1));
+	CSd = sqrt(CSum / (Count - 1));
 
 	file.Write("<h2>Big-five correlations with Aspie-quiz scores</h2>");
 

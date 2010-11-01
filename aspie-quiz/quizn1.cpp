@@ -2098,8 +2098,8 @@ void TQuizN1::WriteRetest(const char *filename)
 						NtSum += val * val;
 					}
 
-					 AsSd = sqrtl(AsSum / index);
-					NtSd = sqrtl(NtSum / index);
+					 AsSd = sqrt(AsSum / index);
+					NtSd = sqrt(NtSum / index);
 
 					for (q = 0; q < 194; q++)
 					{
@@ -2118,7 +2118,7 @@ void TQuizN1::WriteRetest(const char *filename)
 
 								if (count)
 								{
-							 QSd[q] = sqrtl(sum / count);
+							 QSd[q] = sqrt(sum / count);
 
 							 QTot[q] += QSd[q];
 							 QCount[q]++;
