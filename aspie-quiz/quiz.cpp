@@ -34,7 +34,7 @@
 #include "quiz.h"
 #include "file.h"
 
-const double M_PI = 4.0 * atan(1.0);
+//const double M_PI = 4.0 * atan(1.0);
 
 #define FALSE 0
 #define TRUE !FALSE
