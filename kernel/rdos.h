@@ -237,6 +237,11 @@ int RDOSAPI RdosGetDebugThread();
 void RDOSAPI RdosGetThreadTss(int Thread, Tss *tss);
 void RDOSAPI RdosSetThreadTss(int Thread, Tss *tss);
 
+int RDOSAPI RdosSetCodeBreak(int Thread, int Reg, void *Address);
+int RDOSAPI RdosSetReadDataBreak(int Thread, int Reg, void *Address, int Size);
+int RDOSAPI RdosSetWriteDataBreak(int Thread, int Reg, void *Address, int Size);
+void RDOSAPI RdosClearBreak(int Thread, int Reg);
+
 void RDOSAPI RdosDebugTrace();
 void RDOSAPI RdosDebugPace();
 void RDOSAPI RdosDebugGo();
@@ -879,6 +884,28 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosDebugNext = \
     CallGate_debug_next;
+
+#pragma aux RdosSetCodeBreak = \
+    CallGate_set_code_break  \
+    CarryToBool \
+    parm [ebx] [eax] [edi] \
+    value [eax];
+
+#pragma aux RdosSetReadDataBreak = \
+    CallGate_set_read_data_break  \
+    CarryToBool \
+    parm [ebx] [eax] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosSetWriteDataBreak = \
+    CallGate_set_write_data_break  \
+    CarryToBool \
+    parm [ebx] [eax] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosClearBreak = \
+    CallGate_clear_break  \
+    parm [ebx] [eax];
 
 #pragma aux RdosGetFreePhysical = \
     CallGate_get_free_physical  \
@@ -2976,6 +3003,28 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosDebugNext = \
     CallGate_debug_next;
+
+#pragma aux RdosSetCodeBreak = \
+    CallGate_set_code_break  \
+    CarryToBool \
+    parm [ebx] [eax] [edi] \
+    value [eax];
+
+#pragma aux RdosSetReadDataBreak = \
+    CallGate_set_read_data_break  \
+    CarryToBool \
+    parm [ebx] [eax] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosSetWriteDataBreak = \
+    CallGate_set_write_data_break  \
+    CarryToBool \
+    parm [ebx] [eax] [edi] [ecx] \
+    value [eax];
+
+#pragma aux RdosClearBreak = \
+    CallGate_clear_break  \
+    parm [ebx] [eax];
 
 #pragma aux RdosGetFreePhysical = \
     CallGate_get_free_physical  \

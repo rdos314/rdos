@@ -1112,8 +1112,22 @@ t12_ret:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extrn do_usercall16:near
+;    extrn do_usercall16:near
     extrn do_usercall32:near
+
+usercall_fail:
+    mov al,13
+    jmp emulate
+
+usercall_tab:
+uct00   DW OFFSET usercall_fail
+uct01   DW OFFSET usercall_fail
+uct02   DW OFFSET do_usercall32
+uct03   DW OFFSET usercall_fail
+uct04   DW OFFSET usercall_fail
+uct05   DW OFFSET usercall_fail
+uct06   DW OFFSET usercall_fail
+uct07   DW OFFSET usercall_fail
 
 trap_13:
     sti
@@ -1132,20 +1146,21 @@ trap_13:
     cmp al,9Ah
     jne t13_default
 ;
-    mov ax,[ebx+5]
-    cmp ax,2
-    jne t13_test16
-;
-    call do_usercall32
-    jnc t13_end
-    jmp t13_default
-
-t13_test16:
     mov ax,[ebx+3]
-    cmp ax,1
-    jne t13_default
+    or ax,ax
+    jnz t13_check_call
 ;
-    call do_usercall16
+    mov ax,[ebx+5]
+
+t13_check_call:
+    cmp ax,8
+    jae t13_default
+;    
+    push si
+    mov si,ax
+    add si,si
+    call word ptr cs:[si].usercall_tab
+    pop si    
     jnc t13_end
 
 t13_default:

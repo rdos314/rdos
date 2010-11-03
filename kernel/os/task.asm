@@ -1134,6 +1134,33 @@ proc_init:
     mov ax,debug_next_nr
     RegisterBimodalUserGate
 ;
+    mov bx,OFFSET set_code_break16
+    mov si,OFFSET set_code_break32
+    mov di,OFFSET set_code_break_name
+    mov dx,virt_es_in
+    mov ax,set_code_break_nr
+    RegisterUserGate
+;
+    mov bx,OFFSET set_read_data_break16
+    mov si,OFFSET set_read_data_break32
+    mov di,OFFSET set_read_data_break_name
+    mov dx,virt_es_in
+    mov ax,set_read_data_break_nr
+    RegisterUserGate
+;
+    mov bx,OFFSET set_write_data_break16
+    mov si,OFFSET set_write_data_break32
+    mov di,OFFSET set_write_data_break_name
+    mov dx,virt_es_in
+    mov ax,set_write_data_break_nr
+    RegisterUserGate
+;
+    mov si,OFFSET clear_break
+    mov di,OFFSET clear_break_name
+    xor dx,dx
+    mov ax,clear_break_nr
+    RegisterBimodalUserGate
+;
     mov si,OFFSET update_time
     mov di,OFFSET update_time_name
     xor cl,cl
@@ -1432,9 +1459,8 @@ debug_trace     PROC far
     sub es:tss_esp,6
     jmp debug_trace_done
 debug_trace_trace:
-    mov eax,dr7
+    mov eax,es:tss_dr7
     and ax,0FFFCh
-    mov dr7,eax
     mov es:tss_dr7,eax
     mov bx,es:tss_thread
     mov ax,es:tss_eflags
@@ -1592,22 +1618,19 @@ debug_pace_step_do:
     and eax,0FFF0FFFCh
     or ax,1
     mov es:tss_dr7,eax
-    mov es:tss_t,1
     mov ax,es:tss_eflags
     and ax,NOT 100h
     mov es:tss_eflags,ax
     jmp debug_pace_do
 debug_pace_trace:
-    mov eax,dr7
+    mov eax,es:tss_dr7
     and ax,0FFFCh
-    mov dr7,eax
     mov es:tss_dr7,eax
     mov ax,es:tss_eflags
     or ax,100h
     mov es:tss_eflags,ax
 
 debug_pace_do:
-    mov es:tss_t,0
     mov bx,es:tss_thread
     mov ds,bx
     or ds:p_flags,THREAD_FLAG_BP
@@ -1649,9 +1672,8 @@ debug_go    PROC far
     mov bx,ax
     mov es,bx
     mov es,es:p_tss_data_sel
-    mov eax,dr7
+    mov eax,es:tss_dr7
     and ax,0FFFCh
-    mov dr7,eax
     mov es:tss_dr7,eax
     mov ax,es:tss_eflags
     and ax,NOT 100h
@@ -1707,6 +1729,416 @@ debug_next_end:
     retf32
 debug_next      ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ConvBreakThread
+;
+;           DESCRIPTION:    Convert thread into selector
+;
+;           PARAMETERS:     BX          Thread ID
+;
+;           RETURNS:        ES          Thread selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvBreakThread PROC near
+    push ax
+    push bx
+;    
+    or bx,bx
+    jnz cbtDo
+;
+    GetThread
+    mov es,ax
+    clc
+    jmp cbtDone
+
+cbtDo:
+    ThreadToSel
+    jc cbtDone
+;    
+    mov es,bx
+
+cbtDone:
+    pop bx
+    pop ax
+    ret
+ConvBreakThread Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           BreakToLinear
+;
+;           DESCRIPTION:    Convert break address to linear address
+;
+;           PARAMETERS:     ES:(E)DI        Address
+;
+;           RETURNS:        EDX             Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BreakToLinear PROC near
+    push bx
+    push ecx
+;
+    mov bx,es
+    GetSelectorBaseSize
+    jc btlDone
+;
+    or ecx,ecx
+    jz btlAdd
+;    
+    cmp edi,ecx
+    jae btlFail
+
+btlAdd:
+    add edx,edi
+    clc
+    jmp btlDone
+
+btlFail:
+    stc
+
+btlDone:
+    pop ecx
+    pop bx    
+    ret
+BreakToLinear ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddBreak
+;
+;           DESCRIPTION:    Add a local breakpoint
+;
+;           PARAMETERS:     EDX     Linear address
+;                           ES      Thread sel
+;                           AL      Debug register
+;                           AH      Type coding
+;                           CL      Size of region
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+abSizeTab:
+ast00  DB 0
+ast01  DB 0
+ast02  DB 1
+ast03  DB 3
+ast04  DB 3
+ast05  DB 2
+ast06  DB 2
+ast07  DB 2
+
+AddBreak PROC near
+    push ds
+    push bx
+    push cx
+    push edx
+    push esi
+;
+    mov ds,es:p_tss_data_sel
+    cmp al,4
+    jae abFail
+;   
+    movzx bx,al
+    shl bx,2 
+    add bx,OFFSET tss_dr0
+    mov ds:[bx],edx
+;
+    cmp cl,7
+    jbe abSizeOk
+;
+    mov cl,7
+
+abSizeOk:
+    movzx bx,cl
+;    
+    mov esi,0Fh
+    mov cl,al
+    shl cl,2
+    add cl,16
+    shl esi,cl
+;    
+    mov si,3
+    mov cl,al
+    shl cl,1
+    shl si,cl
+;    
+    not esi
+;    
+    push eax
+    mov cl,al
+    shl cl,2
+    add cl,16
+    movzx eax,ah
+    shl eax,cl
+    movzx edx,byte ptr cs:[bx].abSizeTab
+    add cl,2
+    shl edx,cl
+    or edx,eax
+    pop eax
+;
+    mov cl,al
+    shl cl,1
+    mov dx,1
+    shl dx,cl
+    and ds:tss_dr7,esi
+    or ds:tss_dr7,edx
+    or es:p_flags,THREAD_FLAG_BP
+    clc
+    jmp abDone
+
+abFail:
+    stc
+
+abDone:   
+    pop esi
+    pop edx
+    pop cx
+    pop bx
+    pop ds
+    ret
+AddBreak ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RemoveBreak
+;
+;           DESCRIPTION:    Remove a local breakpoint
+;
+;           PARAMETERS:     ES      Thread sel
+;                           AL      Debug register
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveBreak PROC near
+    push ds
+    push cx
+    push edx
+;
+    mov ds,es:p_tss_data_sel
+    cmp al,4
+    jae rbFail
+;    
+    mov edx,0Fh
+    mov cl,al
+    shl cl,2
+    add cl,16
+    shl edx,cl
+;    
+    mov dx,3
+    mov cl,al
+    shl cl,1
+    shl dx,cl
+;    
+    not edx
+    and ds:tss_dr7,edx
+    clc
+    jmp rbDone
+
+rbFail:
+    stc
+
+rbDone:   
+    pop edx
+    pop cx
+    pop ds
+    ret
+RemoveBreak ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetCodeBreak
+;
+;           DESCRIPTION:    Set a code breakpoint
+;
+;           PARAMETERS:     BX              Thread ID
+;                           ES:(E)DI        Address
+;                           AL              Debug register (0..3)    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_code_break_name DB 'Set Code Break',0
+
+set_code_break PROC near
+    push es
+    push ax
+    push bx
+    push cx
+    push edx
+;    
+    call BreakToLinear
+    jc scbDone
+;
+    call ConvBreakThread
+    jc scbDone
+;
+    xor ah,ah
+    mov cl,1
+    call AddBreak
+
+scbDone:
+    pop edx
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    ret
+set_code_break ENDP
+
+set_code_break16  Proc far
+    push edi
+    movzx edi,di
+    call set_code_break
+    pop edi
+    ret
+set_code_break16  Endp
+
+set_code_break32  Proc far
+    call set_code_break
+    retf32
+set_code_break32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetReadDataBreak
+;
+;           DESCRIPTION:    Set a read-data breakpoint
+;
+;           PARAMETERS:     BX              Thread ID
+;                           ES:(E)DI        Address
+;                           AL              Debug register (1..3)    
+;                           CL              Size of region (1,2,4 or 8)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_read_data_break_name DB 'Set Read Data Break',0
+
+set_read_data_break PROC near
+    push es
+    push ax
+    push bx
+    push edx
+;    
+    call BreakToLinear
+    jc srdDone
+;
+    call ConvBreakThread
+    jc srdDone
+;
+    mov ah,3
+    call AddBreak
+
+srdDone:
+    pop edx
+    pop bx
+    pop ax
+    pop es
+    ret
+set_read_data_break ENDP
+
+set_read_data_break16  Proc far
+    push edi
+    movzx edi,di
+    call set_read_data_break
+    pop edi
+
+    ret
+set_read_data_break16  Endp
+
+set_read_data_break32  Proc far
+    call set_read_data_break
+    retf32
+set_read_data_break32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetWriteDataBreak
+;
+;           DESCRIPTION:    Set a write-data breakpoint
+;
+;           PARAMETERS:     BX              Thread ID
+;                           ES:(E)DI        Address
+;                           AL              Debug register (1..3)    
+;                           CL              Size of region (1,2,4 or 8)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_write_data_break_name DB 'Set Write Data Break',0
+
+set_write_data_break PROC near
+    push es
+    push ax
+    push bx
+    push edx
+;    
+    call BreakToLinear
+    jc swdDone
+;
+    call ConvBreakThread
+    jc swdDone
+;
+    mov ah,1
+    call AddBreak
+
+swdDone:
+    pop edx
+    pop bx
+    pop ax
+    pop es
+    ret
+set_write_data_break ENDP
+
+set_write_data_break16  Proc far
+    push edi
+    movzx edi,di
+    call set_write_data_break
+    pop edi
+    ret
+set_write_data_break16  Endp
+
+set_write_data_break32  Proc far
+    call set_write_data_break
+    retf32
+set_write_data_break32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearBreak
+;
+;           DESCRIPTION:    Clear a breakpoint
+;
+;           PARAMETERS:     BX              Thread ID
+;                           AL              Debug register (0..3)    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_break_name DB 'Clear Break',0
+
+clear_break PROC far
+    push es
+    push ax
+    push bx
+;
+    call ConvBreakThread
+    jc cbDone
+;    
+    call RemoveBreak
+
+cbDone:
+    pop bx
+    pop ax
+    pop es
+    retf32
+clear_break ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

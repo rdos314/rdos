@@ -500,4 +500,9 @@ set_key_layout_nr           = 405
 get_device_info_nr          = 406
 get_selector_info_nr        = 407
 
-usergate_entries			= 410
+set_code_break_nr           = 408
+set_read_data_break_nr      = 409
+set_write_data_break_nr     = 410
+clear_break_nr              = 411
+
+usergate_entries			= 420

@@ -353,6 +353,9 @@ void cdecl main()
 
         RdosWaitMilli(250);
 
+        RdosSetWriteDataBreak(0, 1, &vbe, 4);
+        RdosClearBreak(0, 1);
+
         Keyboard = new TKeyboardDevice;
         Keyboard->OnKeyPress = KeyPress;
         Keyboard->OnKeyRelease = KeyRelease;

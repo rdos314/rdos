@@ -500,3 +500,8 @@
 #define CallGate_get_device_info 0x9a 150 1 0 0 2 0
 #define CallGate_get_selector_info 0x9a 151 1 0 0 2 0
 
+#define CallGate_set_code_break 0x9a 152 1 0 0 2 0
+#define CallGate_set_read_data_break 0x9a 153 1 0 0 2 0
+#define CallGate_set_write_data_break 0x9a 154 1 0 0 2 0
+#define CallGate_clear_break 0x9a 155 1 0 0 2 0
+
