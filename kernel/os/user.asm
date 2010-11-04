@@ -1121,12 +1121,129 @@ do_usergate_force32	ENDP
 	public do_usercall16
 
 do_usercall16	PROC near
+	mov ax,ds
+	test ax,3
+	jnz do_usercall16_gate
+;
 	push es
 	push ecx
 	push edx
 	push edi
 ;
-	movzx edi,word ptr ds:[ebx+1]
+	mov edi,ds:[ebx+2]
+	shl edi,5
+	mov ax,usergate_sel
+	mov es,ax
+;
+	push ebx
+	mov bx,ds
+	push cs
+	call get_selector_base_size
+	pop ebx
+	add	ebx,edx
+	mov ax,flat_sel
+	mov ds,ax
+;
+	test es:[edi].gate_transfer, gate16_override
+	jnz do_call16_direct_to32
+;
+	mov ax,[bp].vm_eflags
+	mov [bp+12],ax
+	mov ax,[bp].vm_cs
+	mov [bp+16],ax
+	mov ax,[bp].vm_eip
+	add ax,8
+	mov [bp+14],ax	
+;
+	mov ax,es:[edi].gate_entry_sel16
+	cmp ax,[bp+16]
+	je do_call16_direct_cs16
+;
+	mov ds:[ebx+3],ax
+	mov [bp+10],ax
+	mov ax,es:[edi].gate_entry_offset16
+	mov ds:[ebx+1],ax
+	mov [bp+8],ax
+	mov byte ptr ds:[ebx],9Ah
+	mov word ptr ds:[ebx+5],9090h
+	mov byte ptr ds:[ebx+7],90h
+	jmp do_call16_direct_do16
+
+do_call16_direct_cs16:
+	mov [bp+10],ax
+	mov ax,es:[edi].gate_entry_offset16
+	mov [bp+8],ax
+	sub ax,[bp+14]
+	add ax,4
+	mov ds:[ebx+2],ax
+	mov word ptr ds:[ebx],0E80Eh
+	mov word ptr ds:[ebx+4],9090h
+	mov word ptr ds:[ebx+6],9090h
+
+do_call16_direct_do16:
+	pop edi
+	pop edx
+	pop ecx
+	pop es
+;
+	mov ds,[bp].pm_ds
+	mov eax,[bp].vm_eax
+	mov ebx,[bp].vm_ebx
+	mov sp,bp
+	pop bp
+	add sp,6
+	iret
+
+do_call16_direct_to32:
+	mov ax,[bp].vm_eflags
+	mov [bp+8],ax
+	movzx eax,word ptr [bp].vm_cs
+	mov [bp+14],eax
+	movzx eax,word ptr [bp].vm_eip
+	add eax,8
+	mov [bp+10],eax	
+;
+	mov ax,es:[edi].gate_entry_sel32
+	cmp ax,[bp+14]
+	je do_call16_direct_cs32
+;
+	mov ds:[ebx+6],ax
+	mov [bp+6],ax
+	movzx eax,es:[edi].gate_entry_offset32
+	mov ds:[ebx+2],eax
+	mov [bp+4],ax
+	mov word ptr ds:[ebx],9A66h
+	jmp do_call16_direct_do32
+
+do_call16_direct_cs32:
+	mov [bp+6],ax
+	movzx eax,es:[edi].gate_entry_offset32
+	mov [bp+4],ax
+	sub eax,[bp+10]
+	mov ds:[ebx+4],eax
+	mov dword ptr ds:[ebx],0E8660E66h
+
+do_call16_direct_do32:
+	pop edi
+	pop edx
+	pop ecx
+	pop es
+;
+	mov ds,[bp].pm_ds
+	mov eax,[bp].vm_eax
+	mov ebx,[bp].vm_ebx
+	mov sp,bp
+	pop bp
+	add sp,2
+	iret
+
+do_usercall16_gate:
+	push es
+	push ecx
+	push edx
+	push edi
+;
+	mov edi,ds:[ebx+2]
 	shl edi,5
 	mov ax,usergate_sel
 	mov es,ax
@@ -1185,8 +1302,11 @@ do16_call_to32:
 	pop ds
 
 do16_call_defined:
+    mov byte ptr ds:[ebx],9Ah
 	mov word ptr ds:[ebx+1],0
 	mov ds:[ebx+3],ax
+	mov byte ptr ds:[ebx+5],90h
+	mov word ptr ds:[ebx+6],9090h
 ;
 	pop edi
 	pop edx

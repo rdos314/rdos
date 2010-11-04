@@ -249,6 +249,7 @@ GetMne  PROC near
     push di
 ;
     xor dl,dl
+    xor dh,dh
     mov bx,gs:tss_cs
     test byte ptr gs:tss_eflags+2,2
     jnz get_cs_bitness_done
@@ -276,10 +277,12 @@ get_cs_bitness_done:
     mov di,OFFSET op_in_text
     call GetOpBuf
 ;
+    mov bp,si
     mov al,[si]
     cmp al,66h
     jne write_op_override_done
 ;
+    inc dh
     inc si
     xor dl,1
 
@@ -310,7 +313,7 @@ write_illegal_osgate:
 ;
     shl ax,3
     mov bx,ax
-    mov ax,ds
+    mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
@@ -336,6 +339,60 @@ write_illegal_usergate:
     jmp write_special_end
 
 not_illegal_op:
+    cmp al,0Eh
+    jne not_push_cs
+;
+    inc dh
+    inc si
+    mov al,[si]
+    cmp al,0E8h
+    je push_cs_call
+;    
+    cmp al,66h
+    jne write_special_fail
+;
+    inc dh
+    inc si
+    mov al,[si]
+    cmp al,0E8h
+    jne write_special_fail
+
+push_cs_call:       
+    inc dh
+    inc si
+    movzx ax,dh
+    add ax,word ptr gs:tss_eip
+    add ax,[si]
+    add ax,2
+    test dl,1
+    jz dir_call_bitness_ok
+;
+    add ax,2
+
+dir_call_bitness_ok:
+    mov bx,ax
+    mov dx,word ptr gs:tss_cs
+;
+    push bx
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetOsCall
+    mov ds:op_size,bx
+    pop bx
+    jnc write_special_end
+;
+    mov dx,word ptr gs:tss_cs
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetUserCall
+    mov ds:op_size,bx
+    jmp write_special_end
+
+not_push_cs:    
     cmp al,9Ah
     jne not_call_far
 ;
@@ -344,8 +401,12 @@ not_illegal_op:
 ;
     mov dx,[si+5]
     cmp dx,2
-    jne not_call32
+    je usercall_32
 ;
+    cmp dx,1
+    jne not_call32
+
+usercall_32:
     mov eax,[si+1]
     cmp eax,usergate_entries
     jnc write_special_fail
@@ -410,10 +471,25 @@ not_call_far:
     test dl,1
     jz write_call_near16
 ;
-    mov ebx,[si+1]
-    mov dx,gs:tss_cs
+    inc si
+    inc dh    
+    movzx ebx,dh
+    add ebx,[si]
     add ebx,dword ptr gs:tss_eip
-    add ebx,5
+    add ebx,4
+;
+    push ebx
+    mov dx,gs:tss_cs
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetOsCall
+    mov ds:op_size,bx
+    pop ebx
+    jnc write_special_end
+;
+    mov dx,gs:tss_cs
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
@@ -423,22 +499,24 @@ not_call_far:
     jmp write_special_end
     
 write_call_near16:
-    mov bx,[si+1]
-    mov dx,gs:tss_cs
+    inc si
+    inc dh
+    movzx bx,dh
+    add bx,[si]
     add bx,gs:tss_eip
-    add bx,3
+    add bx,2
+    push bx
+    mov dx,gs:tss_cs
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text
     mov cx,40
     call GetOsCall
     mov ds:op_size,bx
+    pop bx
     jnc write_special_end
 ;
-    mov bx,[si+1]
     mov dx,gs:tss_cs
-    add bx,gs:tss_eip
-    add bx,3
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET op_in_text

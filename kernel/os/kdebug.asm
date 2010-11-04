@@ -43,77 +43,77 @@ INCLUDE ..\os\system.def
 .387
 
 osgate_entry    STRUC
-og_sel          DW ?
-og_offset           DW ?
-og_name_sel         DW ?
+og_sel      DW ?
+og_offset       DW ?
+og_name_sel     DW ?
 og_name_offset  DW ?
 osgate_entry    ENDS
 
 usergate_entry  STRUC
-ug_name_sel                     DW ?
-ug_name_offset          DW ?
+ug_name_sel             DW ?
+ug_name_offset      DW ?
 ug_entry_offset16       DW ?
-ug_entry_sel16          DW ?
+ug_entry_sel16      DW ?
 ug_entry_offset32       DW ?
-ug_entry_sel32          DW ?
+ug_entry_sel32      DW ?
 ug_entry_offset_v86     DW ?    
-ug_entry_sel_v86        DW ?
-ug_sel16                        DW ?
-ug_sel32                        DW ?
-ug_transfer                     DW ?
+ug_entry_sel_v86    DW ?
+ug_sel16            DW ?
+ug_sel32            DW ?
+ug_transfer             DW ?
 usergate_entry  ENDS
 
 code    SEGMENT byte use16 public 'CODE'
 
-        extrn init_local:near
-        extrn init_ipc_debug:near
+    extrn init_local:near
+    extrn init_ipc_debug:near
 
     extrn SetDataSel:near
     
-        assume cs:code
+    assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadData
+;           NAME:           ReadData
 ;
-;               DESCRIPTION:    
+;           DESCRIPTION:    
 ;
-;               PARAMETERS:             DX:EBX  ADDRESS
-;                                               ES              THREAD
-;                                               AL              RESULT
+;           PARAMETERS:         DX:EBX  ADDRESS
+;                           ES          THREAD
+;                           AL          RESULT
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public ReadData
     
-ReadData        Proc near
-        push bx
-        push esi
-        mov esi,ebx
-        mov bx,es
-        test gs:tss_eflags+2,2
-        jz read_data_prot
+ReadData    Proc near
+    push bx
+    push esi
+    mov esi,ebx
+    mov bx,es
+    test gs:tss_eflags+2,2
+    jz read_data_prot
 read_data_virt:
-        ReadThreadSegment
-        jmp read_data_done
+    ReadThreadSegment
+    jmp read_data_done
 read_data_prot:
-        ReadThreadSelector
+    ReadThreadSelector
 read_data_done:
-        pop esi
-        pop bx
-        ret
-ReadData        Endp
+    pop esi
+    pop bx
+    ret
+ReadData    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetIllegalOsGate
+;       NAME:       GetIllegalOsGate
 ;
-;           DESCRIPTION:    Get illegal OS gate name
+;       DESCRIPTION:    Get illegal OS gate name
 ;
-;           PARAMETERS:     ES:DI       Name buffer
-;                           CX          Buffer size
+;       PARAMETERS:     ES:DI       Name buffer
+;               CX      Buffer size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -147,12 +147,12 @@ GetIllegalOsGate    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetIllegalUserGate
+;       NAME:       GetIllegalUserGate
 ;
-;           DESCRIPTION:    Get illegal user gate name
+;       DESCRIPTION:    Get illegal user gate name
 ;
-;           PARAMETERS:     ES:DI       Name buffer
-;                           CX          Buffer size
+;       PARAMETERS:     ES:DI       Name buffer
+;               CX      Buffer size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -186,12 +186,13 @@ GetIllegalUserGate      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetOsCall
+;       NAME:       GetOsCall
 ;
-;           DESCRIPTION:    Get OS call gate name
+;       DESCRIPTION:    Get OS call gate name
 ;
-;           PARAMETERS:     ES:DI       Name buffer
-;                           CX          Buffer size
+;       PARAMETERS:     ES:DI       Name buffer
+;                       CX          Buffer size
+;                       DX:BX       Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -262,12 +263,13 @@ GetOsCall       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetUserCall
+;       NAME:       GetUserCall
 ;
-;           DESCRIPTION:    Get user gate name
+;       DESCRIPTION:    Get user gate name
 ;
-;           PARAMETERS:     ES:DI       Name buffer
-;                           CX          Buffer size
+;       PARAMETERS:     ES:DI       Name buffer
+;                       CX      Buffer size
+;                       DX:BX       Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -350,194 +352,194 @@ GetUserCall     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   interact_inc
+;           NAME:           interact_inc
 ;
-;               DESCRIPTION:    Interact increment
+;           DESCRIPTION:    Interact increment
 ;
-;               PARAMETERS:             GS                      TSS
-;                                               DX:ESI          Adress to data
-;                                               CL              Number of digits
+;           PARAMETERS:         GS              TSS
+;                           DX:ESI      Adress to data
+;                           CL          Number of digits
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public interact_incr
     
 interact_incr   PROC near
-        push eax
-        push bx
-        push esi
-        xor eax,eax
-        clc
-        rcr cl,1
-        mov al,cl
-        pushf
-        add esi,eax
-        mov bx,gs:tss_thread
-        test gs:tss_eflags+2,2
-        jz interact_inc_read_prot
+    push eax
+    push bx
+    push esi
+    xor eax,eax
+    clc
+    rcr cl,1
+    mov al,cl
+    pushf
+    add esi,eax
+    mov bx,gs:tss_thread
+    test gs:tss_eflags+2,2
+    jz interact_inc_read_prot
 interact_inc_read_virt:
-        ReadThreadSegment
-        jmp interact_inc_read_done
+    ReadThreadSegment
+    jmp interact_inc_read_done
 interact_inc_read_prot:
-        ReadThreadSelector
+    ReadThreadSelector
 interact_inc_read_done:
-        popf
-        jnc inc_low
+    popf
+    jnc inc_low
 inc_hi:
-        add al,10h
-        jmp inc_j
+    add al,10h
+    jmp inc_j
 inc_low:
-        mov ah,al
-        inc al
-        and al,0Fh
-        and ah,0F0h
-        or al,ah
+    mov ah,al
+    inc al
+    and al,0Fh
+    and ah,0F0h
+    or al,ah
 inc_j:
-        test gs:tss_eflags+2,2
-        jz interact_inc_write_prot
+    test gs:tss_eflags+2,2
+    jz interact_inc_write_prot
 interact_inc_write_virt:
-        WriteThreadSegment
-        jmp interact_inc_write_done
+    WriteThreadSegment
+    jmp interact_inc_write_done
 interact_inc_write_prot:
-        WriteThreadSelector
+    WriteThreadSelector
 interact_inc_write_done:
-        pop esi
-        pop bx
-        pop eax
-        ret
+    pop esi
+    pop bx
+    pop eax
+    ret
 interact_incr   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   interact_dec
+;           NAME:           interact_dec
 ;
-;               DESCRIPTION:    Interact decrement
+;           DESCRIPTION:    Interact decrement
 ;
-;               PARAMETERS:             GS                      TSS
-;                                               DX:ESI          Adress to data
-;                                               CL              Number of digits
+;           PARAMETERS:         GS              TSS
+;                           DX:ESI      Adress to data
+;                           CL          Number of digits
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public interact_decr
     
 interact_decr   PROC near
-        push eax
-        push bx
-        push esi
-        xor eax,eax
-        clc
-        rcr cl,1
-        mov al,cl
-        pushf
-        add esi,eax
-        mov bx,gs:tss_thread
-        test gs:tss_eflags+2,2
-        jz interact_dec_read_prot
+    push eax
+    push bx
+    push esi
+    xor eax,eax
+    clc
+    rcr cl,1
+    mov al,cl
+    pushf
+    add esi,eax
+    mov bx,gs:tss_thread
+    test gs:tss_eflags+2,2
+    jz interact_dec_read_prot
 interact_dec_read_virt:
-        ReadThreadSegment
-        jmp interact_dec_read_done
+    ReadThreadSegment
+    jmp interact_dec_read_done
 interact_dec_read_prot:
-        ReadThreadSelector
+    ReadThreadSelector
 interact_dec_read_done:
-        popf
-        jnc dec_low
+    popf
+    jnc dec_low
 dec_hi:
-        sub al,10h
-        jmp dec_j
+    sub al,10h
+    jmp dec_j
 dec_low:
-        mov ah,al
-        dec al
-        and al,0Fh
-        and ah,0F0h
-        or al,ah
+    mov ah,al
+    dec al
+    and al,0Fh
+    and ah,0F0h
+    or al,ah
 dec_j:
-        test gs:tss_eflags+2,2
-        jz interact_dec_write_prot
+    test gs:tss_eflags+2,2
+    jz interact_dec_write_prot
 interact_dec_write_virt:
-        WriteThreadSegment
-        jmp interact_dec_write_done
+    WriteThreadSegment
+    jmp interact_dec_write_done
 interact_dec_write_prot:
-        WriteThreadSelector
+    WriteThreadSelector
 interact_dec_write_done:
-        pop esi
-        pop bx
-        pop eax
-        ret
+    pop esi
+    pop bx
+    pop eax
+    ret
 interact_decr   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   interact_set_value
+;           NAME:           interact_set_value
 ;
-;               DESCRIPTION:    Interact set new value
+;           DESCRIPTION:    Interact set new value
 ;
-;               PARAMETERS:             GS                      TSS
-;                                               DX:ESI          Adress to data
-;                                               CL              Digit #
-;                                               CH                      Value
+;           PARAMETERS:         GS              TSS
+;                           DX:ESI      Adress to data
+;                           CL          Digit #
+;                           CH              Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public interact_set_value
 
 interact_set_value      PROC near
-        push eax
-        push bx
-        push esi
-        xor eax,eax
-        clc
-        rcr cl,1
-        mov al,cl
-        pushf
-        add esi,eax
-        mov bx,gs:tss_thread
-        test gs:tss_eflags+2,2
-        jz interact_set_read_prot
+    push eax
+    push bx
+    push esi
+    xor eax,eax
+    clc
+    rcr cl,1
+    mov al,cl
+    pushf
+    add esi,eax
+    mov bx,gs:tss_thread
+    test gs:tss_eflags+2,2
+    jz interact_set_read_prot
 interact_set_read_virt:
-        ReadThreadSegment
-        jmp interact_set_read_done
+    ReadThreadSegment
+    jmp interact_set_read_done
 interact_set_read_prot:
-        ReadThreadSelector
+    ReadThreadSelector
 interact_set_read_done:
-        popf
-        jnc set_low
+    popf
+    jnc set_low
 set_hi:
-        and al,0Fh
-        mov ah,ch
-        shl ah,4
-        or al,ah
-        jmp set_j
+    and al,0Fh
+    mov ah,ch
+    shl ah,4
+    or al,ah
+    jmp set_j
 set_low:
-        and al,0F0h
-        or al,ch
+    and al,0F0h
+    or al,ch
 set_j:
-        test gs:tss_eflags+2,2
-        jz interact_set_write_prot
+    test gs:tss_eflags+2,2
+    jz interact_set_write_prot
 interact_set_write_virt:
-        WriteThreadSegment
-        jmp interact_set_write_done
+    WriteThreadSegment
+    jmp interact_set_write_done
 interact_set_write_prot:
-        WriteThreadSelector
+    WriteThreadSelector
 interact_set_write_done:
-        pop esi
-        pop bx
-        pop eax
-        ret
+    pop esi
+    pop bx
+    pop eax
+    ret
 interact_set_value      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec
+;       NAME:       incdec
 ;
-;           DESCRIPTION:    INC / DEC
+;       DESCRIPTION:    INC / DEC
 ;
-;           PARAMETERS:     GS          80386 TSS
-;                           DX:ESI      address to data
-;                           AL          operation ('+' och '-')
+;       PARAMETERS:     GS      80386 TSS
+;               DX:ESI      address to data
+;               AL      operation ('+' och '-')
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -561,12 +563,12 @@ incdec  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_eax
+;       NAME:       incdec_eax
 ;
-;           DESCRIPTION:    INC / DEC EAX
+;       DESCRIPTION:    INC / DEC EAX
 ;
-;           PARAMETERS:     GS              8086 TSS
-;                           AL          operation ('+' och '-')
+;       PARAMETERS:     GS          8086 TSS
+;               AL      operation ('+' och '-')
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -582,12 +584,12 @@ incdec_eax      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_ebx
+;       NAME:       incdec_ebx
 ;
-;           DESCRIPTION:    INC / DEC EBX
+;       DESCRIPTION:    INC / DEC EBX
 ;
-;           PARAMETERS:         GS              8086 TSS
-;                           AL          operation ('+' och '-')
+;       PARAMETERS:     GS          8086 TSS
+;               AL      operation ('+' och '-')
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -603,11 +605,11 @@ incdec_ebx      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_ecx
+;       NAME:       incdec_ecx
 ;
-;           DESCRIPTION:    INC / DEC ECX
+;       DESCRIPTION:    INC / DEC ECX
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -623,11 +625,11 @@ incdec_ecx      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_edx
+;       NAME:       incdec_edx
 ;
-;           DESCRIPTION:    INC / DEC EDX
+;       DESCRIPTION:    INC / DEC EDX
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -643,11 +645,11 @@ incdec_edx      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_esi
+;       NAME:       incdec_esi
 ;
-;           DESCRIPTION:    INC / DEC ESI
+;       DESCRIPTION:    INC / DEC ESI
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -663,11 +665,11 @@ incdec_esi      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_edi
+;       NAME:       incdec_edi
 ;
-;           DESCRIPTION:    INC / DEC EDI
+;       DESCRIPTION:    INC / DEC EDI
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -683,11 +685,11 @@ incdec_edi      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_esp
+;       NAME:       incdec_esp
 ;
-;           DESCRIPTION:    INC / DEC ESP
+;       DESCRIPTION:    INC / DEC ESP
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -703,11 +705,11 @@ incdec_esp      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_ebp
+;       NAME:       incdec_ebp
 ;
-;           DESCRIPTION:    INC / DEC EBP
+;       DESCRIPTION:    INC / DEC EBP
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -723,11 +725,11 @@ incdec_ebp      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_epc
+;       NAME:       incdec_epc
 ;
-;           DESCRIPTION:    INC / DEC EIP
+;       DESCRIPTION:    INC / DEC EIP
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -743,11 +745,11 @@ incdec_epc      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_cs
+;       NAME:       incdec_cs
 ;
-;           DESCRIPTION:    INC / DEC CS
+;       DESCRIPTION:    INC / DEC CS
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -763,11 +765,11 @@ incdec_cs       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_ds
+;       NAME:       incdec_ds
 ;
-;           DESCRIPTION:    INC / DEC DS
+;       DESCRIPTION:    INC / DEC DS
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -783,11 +785,11 @@ incdec_ds       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_es
+;       NAME:       incdec_es
 ;
-;           DESCRIPTION:    INC / DEC ES
+;       DESCRIPTION:    INC / DEC ES
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -803,11 +805,11 @@ incdec_es       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_fs
+;       NAME:       incdec_fs
 ;
-;           DESCRIPTION:    INC / DEC FS
+;       DESCRIPTION:    INC / DEC FS
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -823,11 +825,11 @@ incdec_fs       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_gs
+;       NAME:       incdec_gs
 ;
-;           DESCRIPTION:    INC / DEC GS
+;       DESCRIPTION:    INC / DEC GS
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -843,11 +845,11 @@ incdec_gs       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           incdec_ss
+;       NAME:       incdec_ss
 ;
-;           DESCRIPTION:    INC / DEC SS
+;       DESCRIPTION:    INC / DEC SS
 ;
-;           PARAMETERS:         GS              8086 TSS
+;       PARAMETERS:     GS          8086 TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -863,142 +865,142 @@ incdec_ss       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Register writes
+;           NAME:           Register writes
 ;
-;               DESCRIPTION:    
+;           DESCRIPTION:    
 ;
-;               PARAMETERS:             GS                      Address to readable TSS
-;                                               FS                      Screen selector
-;                                               Uses all registers
-;                                               
+;           PARAMETERS:         GS              Address to readable TSS
+;                           FS              Screen selector
+;                           Uses all registers
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ds_sel
+    public ds_sel
 ds_sel  PROC near
-        mov ax,gs:tss_ds
-        call SetDataSel
-        ret
+    mov ax,gs:tss_ds
+    call SetDataSel
+    ret
 ds_sel  ENDP
 
-        public ss_sel
+    public ss_sel
 ss_sel  PROC near
-        mov ax,gs:tss_ss
-        call SetDataSel
-        ret
+    mov ax,gs:tss_ss
+    call SetDataSel
+    ret
 ss_sel  ENDP
 
-        public cs_sel
+    public cs_sel
 cs_sel  PROC near
-        mov ax,gs:tss_cs
-        call SetDataSel
-        ret
+    mov ax,gs:tss_cs
+    call SetDataSel
+    ret
 cs_sel  ENDP
 
-        public es_sel
+    public es_sel
 es_sel  PROC near
-        mov ax,gs:tss_es
-        call SetDataSel
-        ret
+    mov ax,gs:tss_es
+    call SetDataSel
+    ret
 es_sel  ENDP
 
-        public fs_sel
+    public fs_sel
 fs_sel  PROC near
-        mov ax,gs:tss_fs
-        call SetDataSel
-        ret
+    mov ax,gs:tss_fs
+    call SetDataSel
+    ret
 fs_sel  ENDP
 
-        public gs_sel
+    public gs_sel
 gs_sel  PROC near
-        mov ax,gs:tss_gs
-        call SetDataSel
-        ret
+    mov ax,gs:tss_gs
+    call SetDataSel
+    ret
 gs_sel  ENDP
 
-        public no_adr
+    public no_adr
 no_adr  PROC near
-        xor eax,eax
-        ret
+    xor eax,eax
+    ret
 no_adr  ENDP
 
-        public bx_adr
+    public bx_adr
 bx_adr  PROC near
-        movzx eax,gs:tss_ebx
-        ret
+    movzx eax,gs:tss_ebx
+    ret
 bx_adr  ENDP
 
-        public bp_adr
+    public bp_adr
 bp_adr  PROC near
-        movzx eax,gs:tss_ebp
-        ret
+    movzx eax,gs:tss_ebp
+    ret
 bp_adr  ENDP
 
-        public si_adr
+    public si_adr
 si_adr  PROC near
-        movzx eax,gs:tss_esi
-        ret
+    movzx eax,gs:tss_esi
+    ret
 si_adr  ENDP
 
-        public di_adr
+    public di_adr
 di_adr  PROC near
-        movzx eax,gs:tss_edi
-        ret
+    movzx eax,gs:tss_edi
+    ret
 di_adr  ENDP
 
-        public eax_adr
+    public eax_adr
 eax_adr PROC near
-        mov eax,dword ptr gs:tss_eax
-        ret
+    mov eax,dword ptr gs:tss_eax
+    ret
 eax_adr ENDP
 
-        public ebx_adr
+    public ebx_adr
 ebx_adr PROC near
-        mov eax,dword ptr gs:tss_ebx
-        ret
+    mov eax,dword ptr gs:tss_ebx
+    ret
 ebx_adr ENDP
 
-        public ecx_adr
+    public ecx_adr
 ecx_adr PROC near
-        mov eax,dword ptr gs:tss_ecx
-        ret
+    mov eax,dword ptr gs:tss_ecx
+    ret
 ecx_adr ENDP
 
-        public edx_adr
+    public edx_adr
 edx_adr PROC near
-        mov eax,dword ptr gs:tss_edx
-        ret
+    mov eax,dword ptr gs:tss_edx
+    ret
 edx_adr ENDP
 
-        public esi_adr
+    public esi_adr
 esi_adr PROC near
-        mov eax,dword ptr gs:tss_esi
-        ret
+    mov eax,dword ptr gs:tss_esi
+    ret
 esi_adr ENDP
 
-        public edi_adr
+    public edi_adr
 edi_adr PROC near
-        mov eax,dword ptr gs:tss_edi
-        ret
+    mov eax,dword ptr gs:tss_edi
+    ret
 edi_adr ENDP
 
-        public ebp_adr
+    public ebp_adr
 ebp_adr PROC near
-        mov eax,dword ptr gs:tss_ebp
-        ret
+    mov eax,dword ptr gs:tss_ebp
+    ret
 ebp_adr ENDP
 
-        public esp_adr
+    public esp_adr
 esp_adr PROC near
-        mov eax,dword ptr gs:tss_esp
-        ret
+    mov eax,dword ptr gs:tss_esp
+    ret
 esp_adr ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   init
+;           NAME:           init
 ;
-;               DESCRIPTION:    Init kernel debugger
+;           DESCRIPTION:    Init kernel debugger
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1007,7 +1009,7 @@ init    Proc far
     call init_ipc_debug
     ret
 init    Endp
-        
+    
 code    ENDS
 
-        END init
+    END init

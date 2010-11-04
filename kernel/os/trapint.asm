@@ -91,6 +91,9 @@ code    SEGMENT byte use16 public 'CODE'
     extrn prot_exception:near
     extrn virt_exception:near
 
+    extrn do_usercall16:near
+    extrn do_usercall32:near
+
     assume cs:code
 
 emulate PROC near
@@ -122,6 +125,33 @@ em_vm:
     call virt_exception
     ret
 emulate ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Call tables
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usercall_tab16:
+suct00   DW 0
+suct01   DW OFFSET do_usercall16
+suct02   DW 0
+suct03   DW 0
+suct04   DW 0
+suct05   DW 0
+suct06   DW 0
+suct07   DW 0
+
+usercall_tab32:
+luct00   DW 0
+luct01   DW 0
+luct02   DW OFFSET do_usercall32
+luct03   DW 0
+luct04   DW 0
+luct05   DW 0
+luct06   DW 0
+luct07   DW 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1112,23 +1142,6 @@ t12_ret:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;    extrn do_usercall16:near
-    extrn do_usercall32:near
-
-usercall_fail:
-    mov al,13
-    jmp emulate
-
-usercall_tab:
-uct00   DW OFFSET usercall_fail
-uct01   DW OFFSET usercall_fail
-uct02   DW OFFSET do_usercall32
-uct03   DW OFFSET usercall_fail
-uct04   DW OFFSET usercall_fail
-uct05   DW OFFSET usercall_fail
-uct06   DW OFFSET usercall_fail
-uct07   DW OFFSET usercall_fail
-
 trap_13:
     sti
     push bp
@@ -1144,23 +1157,49 @@ trap_13:
     mov ebx,[bp].vm_eip
     mov al,[ebx]
     cmp al,9Ah
-    jne t13_default
-;
-    mov ax,[ebx+3]
-    or ax,ax
-    jnz t13_check_call
+    jne t13_not32
 ;
     mov ax,[ebx+5]
-
-t13_check_call:
     cmp ax,8
     jae t13_default
 ;    
-    push si
-    mov si,ax
-    add si,si
-    call word ptr cs:[si].usercall_tab
-    pop si    
+    push bx
+    mov bx,ax
+    add bx,bx
+    mov ax,word ptr cs:[bx].usercall_tab32
+    pop bx
+    or ax,ax
+    jz t13_default
+;
+    push OFFSET t13_check
+    push ax
+    retn
+
+t13_not32:
+    cmp al,66h
+    jne t13_default
+;
+    mov al,[ebx+1]
+    cmp al,9Ah
+    jne t13_default
+;
+    mov ax,[ebx+6]        
+    cmp ax,8
+    jae t13_default
+;    
+    push bx
+    mov bx,ax
+    add bx,bx
+    mov ax,word ptr cs:[bx].usercall_tab16
+    pop bx
+    or ax,ax
+    jz t13_default
+;
+    push OFFSET t13_check
+    push ax
+    retn
+
+t13_check:    
     jnc t13_end
 
 t13_default:
@@ -1515,8 +1554,71 @@ pretask13:
     push eax
     push ebx
     push ds
+;
+    test byte ptr [bp+2].vm_eflags,2
+    jnz pretask_gpf_default
+;
+    mov ds,[bp].vm_cs
+    mov ebx,[bp].vm_eip
+    mov al,[ebx]
+    cmp al,9Ah
+    jne pretask_gpf_not32
+;
+    mov ax,[ebx+5]
+    cmp ax,8
+    jae pretask_gpf_default
+;    
+    push bx
+    mov bx,ax
+    add bx,bx
+    mov ax,word ptr cs:[bx].usercall_tab32
+    pop bx   
+    or ax,ax
+    jz pretask_gpf_default
+;
+    push OFFSET pretask_gpf_check
+    push ax
+    retn  
+
+pretask_gpf_not32:
+    cmp al,66h
+    jne pretask_gpf_default
+;
+    mov al,[ebx+1]
+    cmp al,9Ah
+    jne pretask_gpf_default
+;
+    mov ax,[ebx+6]        
+    cmp ax,8
+    jae pretask_gpf_default
+;    
+    push bx
+    mov bx,ax
+    add bx,bx
+    mov ax, word ptr cs:[bx].usercall_tab16
+    pop bx
+    or ax,ax
+    jz pretask_gpf_default
+;
+    push OFFSET pretask_gpf_check
+    push ax
+    retn        
+
+pretask_gpf_check:      
+    jnc pretask_gpf_retry
+
+pretask_gpf_default:
     mov al,13
     ShutDownPreTask
+
+pretask_gpf_retry:
+    pop ds
+    pop ebx
+    pop eax
+    and byte ptr [bp+2].vm_eflags, NOT 1
+    pop bp
+    add sp,4
+    iretd
 
 prepaging14:
     push bp
