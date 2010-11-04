@@ -1071,12 +1071,89 @@ do_usercall16	ENDP
 	public do_usercall32
 
 do_usercall32	PROC near
+	mov ax,ds
+	test ax,3
+	jnz do_usercall32_gate
+;
+    int 3
 	push es
 	push ecx
 	push edx
 	push edi
 ;
-	mov edi,ds:[ebx+1]
+	mov edi,ds:[ebx+2]
+	shl edi,5
+	mov ax,usergate_sel
+	mov es,ax
+;
+	push ebx
+	mov bx,ds
+	push cs
+	call get_selector_base_size
+	pop ebx
+	add	ebx,edx
+	mov ax,flat_sel
+	mov ds,ax
+;
+	mov ax,[bp].vm_eflags
+	mov [bp+8],ax
+	movzx eax,word ptr [bp].vm_cs
+	mov [bp+14],eax
+	movzx eax,word ptr [bp].vm_eip
+	add eax,8
+	mov [bp+10],eax	
+;
+	mov ax,es:[edi].gate_entry_sel32
+	cmp ax,[bp+14]
+	je do_call32_direct_cs32
+;
+	mov ds:[ebx+6],ax
+	mov [bp+6],ax
+	movzx eax,es:[edi].gate_entry_offset32
+	mov ds:[ebx+2],eax
+	mov [bp+4],ax
+	mov word ptr ds:[ebx],9A66h
+	jmp do_call32_direct_do32
+
+do_call32_direct_cs32:
+	mov [bp+6],ax
+	movzx eax,es:[edi].gate_entry_offset32
+	mov [bp+4],ax
+	sub eax,[bp+10]
+	mov ds:[ebx+4],eax
+	mov dword ptr ds:[ebx],0E8660E66h
+
+do_call32_direct_do32:
+	pop edi
+	pop edx
+	pop ecx
+	pop es
+;
+	mov ds,[bp].pm_ds
+	mov eax,[bp].vm_eax
+	mov ebx,[bp].vm_ebx
+	mov sp,bp
+	pop bp
+	add sp,2
+	iret
+
+do_usercall32_gate:    
+	push es
+	push ecx
+	push edx
+	push edi
+;
+    mov al,ds:[ebx]
+    cmp al,66h
+    jne do_no_ov32
+;
+    mov edi,ds:[ebx+2]
+    jmp do_ov_ok32
+
+do_no_ov32:
+  	mov edi,ds:[ebx+1]
+
+do_ov_ok32:
 	shl edi,5
 	mov ax,usergate_sel
 	mov es,ax
@@ -1110,9 +1187,20 @@ do_usercall32	PROC near
 	pop ds
 
 do32_call_defined:
+    mov cl,ds:[ebx]
+    cmp cl,66h
+    je do32_gate16
+
+do32_gate32:
 	mov dword ptr ds:[ebx+1],0
 	mov ds:[ebx+5],ax
-;
+	jmp do32_done
+
+do32_gate16:
+	mov dword ptr ds:[ebx+2],0
+	mov ds:[ebx+6],ax
+
+do32_done:
 	pop edi
 	pop edx
 	pop ecx

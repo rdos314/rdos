@@ -136,7 +136,7 @@ emulate ENDP
 usercall_tab16:
 suct00   DW 0
 suct01   DW OFFSET do_usercall16
-suct02   DW 0
+suct02   DW OFFSET do_usercall32
 suct03   DW 0
 suct04   DW 0
 suct05   DW 0
