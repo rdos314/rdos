@@ -402,7 +402,6 @@ trap_5:
     extrn do_osgate32:near
 
     extrn do_usergate_vm:near
-    extrn do_usergate16:near
     extrn do_usergate32:near
     extrn do_usergate_force32:near
 
@@ -665,7 +664,7 @@ pm16_CE DW OFFSET emulate_6,            OFFSET emulate_6
 pm16_D0 DW OFFSET emulate_6,            OFFSET emulate_6
 pm16_D2 DW OFFSET emulate_6,            OFFSET emulate_6
 pm16_D4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm16_D6 DW OFFSET do_usergate16,        OFFSET do_usergate32
+pm16_D6 DW OFFSET emulate_6,            OFFSET do_usergate32
 pm16_D8 DW OFFSET do_usergate_force32,  OFFSET emulate_6
 pm16_DA DW OFFSET emulate_6,            OFFSET emulate_6
 pm16_DC DW OFFSET emulate_6,            OFFSET emulate_6
@@ -795,7 +794,7 @@ pm32_CE DW OFFSET emulate_6,            OFFSET emulate_6
 pm32_D0 DW OFFSET emulate_6,            OFFSET emulate_6
 pm32_D2 DW OFFSET emulate_6,            OFFSET emulate_6
 pm32_D4 DW OFFSET emulate_6,            OFFSET emulate_6
-pm32_D6 DW OFFSET do_usergate16,        OFFSET do_usergate32
+pm32_D6 DW OFFSET emulate_6,            OFFSET do_usergate32
 pm32_D8 DW OFFSET emulate_6,            OFFSET emulate_6
 pm32_DA DW OFFSET emulate_6,            OFFSET emulate_6
 pm32_DC DW OFFSET emulate_6,            OFFSET emulate_6
@@ -1455,9 +1454,6 @@ pretask6:
     cmp al,0CBh
     je pretask_osgate32
 ;
-    cmp al,0D6h
-    je pretask_usergate16
-;
     cmp al,0D7h
     je pretask_usergate32
 ;
@@ -1469,10 +1465,6 @@ pretask_osgate16:
 
 pretask_osgate32:
     call do_osgate32
-    jmp pretask6_retry
-
-pretask_usergate16:
-    call do_usergate16
     jmp pretask6_retry
 
 pretask_usergate32:

@@ -82,12 +82,6 @@ UserGate16	MACRO gate_nr
     dw 1
 			ENDM
 
-;	db 0Fh
-;	db 0Bh
-;	db 0D6h
-;	dd gate_nr
-;	nop
-
 UserGate32	MACRO gate_nr
 	db 0Fh
 	db 0Bh
