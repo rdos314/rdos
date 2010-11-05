@@ -75,10 +75,10 @@ Callf32	MACRO	sel,offs
 		ENDM
 
 OsGate16	MACRO gate_nr
-	db 0Fh
-	db 0Bh
-	db 0CAh
-	dw gate_nr
+    db 66h
+    db 9Ah
+    dd gate_nr
+    dw 3
 			ENDM
 
 OsGate32	MACRO gate_nr

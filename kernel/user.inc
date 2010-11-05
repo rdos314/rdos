@@ -67,14 +67,6 @@ virt_seg_out	EQU 0F0h
 gate16_override	EQU 100h
 gate32_override	EQU 200h
 
-UserTestForce32  MACRO gate_nr
-    db 66h
-    db 9Ah
-    dd gate_nr
-    dw 2
-            ENDM
-
-
 UserGate16	MACRO gate_nr
     db 66h
     db 9Ah

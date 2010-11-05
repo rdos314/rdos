@@ -1583,7 +1583,7 @@ spawn_program   Proc near
     push gs
     push bx
     push cx
-;    
+;
     call SetupSpawn
     call CreateSpawnProg
     call CreateSpawnParam

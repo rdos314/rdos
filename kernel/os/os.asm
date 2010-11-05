@@ -356,6 +356,96 @@ do_osgate32	PROC near
 	iret
 do_osgate32	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DO_OSCALL16
+;
+;		DESCRIPTION:	Translate a 16-bit gate
+;
+;		PARAMETERS:		DS:EBX		Fault address
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public do_oscall16
+
+do_oscall16	PROC near
+	push es
+	push ecx
+	push edx
+	push di
+;
+    mov al,ds:[ebx]
+    cmp al,66h
+    je do16_has_ov
+;
+    mov di,ds:[ebx+1]
+    jmp do16_ov_done
+
+do16_has_ov:
+    mov di,ds:[ebx+2]
+
+do16_ov_done:    
+	shl di,4
+	mov ax,osgate_sel
+	mov es,ax
+;
+	push ebx
+	mov bx,ds
+	push cs
+	call get_selector_base_size
+	pop ebx
+	add	ebx,edx
+	mov ax,flat_sel
+	mov ds,ax
+;
+	mov ax,[bp].vm_eflags
+	mov [bp+12],ax
+	mov ax,[bp].vm_cs
+	mov [bp+16],ax
+	mov ax,[bp].vm_eip
+	add ax,8
+	mov [bp+14],ax	
+;
+	mov ax,es:[di].gate_sel
+	cmp ax,[bp+16]
+	je do16_direct
+;
+	mov ds:[ebx+3],ax
+	mov [bp+10],ax
+	mov eax,es:[di].gate_offset
+	mov ds:[ebx+1],ax
+	mov [bp+8],ax
+	mov byte ptr ds:[ebx],9Ah
+	mov byte ptr ds:[ebx+5],90h
+	mov word ptr ds:[ebx+6],9090h
+	jmp do16_direct_do
+
+do16_direct:
+	mov [bp+10],ax
+	mov eax,es:[di].gate_offset
+	mov [bp+8],ax
+	sub ax,[bp+14]
+	add ax,4
+	mov ds:[ebx+2],ax
+	mov word ptr ds:[ebx],0E80Eh
+	mov dword ptr ds:[ebx+4],90909090h
+
+do16_direct_do:
+	pop di
+	pop edx
+	pop ecx
+	pop es
+;
+	mov ds,[bp].pm_ds
+	mov eax,[bp].vm_eax
+	mov ebx,[bp].vm_ebx
+	mov sp,bp
+	pop bp
+	add sp,6
+	iret
+do_oscall16	ENDP
+
 code	ENDS
 
 	END

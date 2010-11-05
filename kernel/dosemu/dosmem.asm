@@ -638,7 +638,7 @@ allocate_dos_mem16      PROC far
         push edx
         push eax
         AllocateDosLinear
-        jc short allocate_dos_mem_fail16
+        jc allocate_dos_mem_fail16
         cmp eax,10000h
         jc allocate_dos_mem_single
 allocate_dos_mem_multiple:

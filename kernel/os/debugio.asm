@@ -867,7 +867,7 @@ write_illegal_osgate:
     cmp ax,osgate_entries
     jnc write_special_fail
 ;
-    shl ax,3
+    shl ax,4
     mov bx,ax
     mov ax,SEG data
     mov es,ax
@@ -902,6 +902,9 @@ not_illegal_op:
     jz write_call_far16
 ;
     mov dx,[si+5]
+    cmp dx,3
+    je oscall
+;        
     cmp dx,2
     je usercall_32
 ;
@@ -920,6 +923,22 @@ usercall_32:
     mov di,OFFSET op_in_text
     mov cx,40
     call GetIllegalUserGate
+    mov ds:op_size,bx
+    clc
+    jmp write_special_end
+
+oscall:
+    mov eax,[si+1]
+    cmp eax,osgate_entries
+    jnc write_special_fail
+;
+    shl eax,4
+    mov ebx,eax
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetIllegalOsGate
     mov ds:op_size,bx
     clc
     jmp write_special_end
