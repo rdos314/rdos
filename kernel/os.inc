@@ -89,11 +89,15 @@ OsGate32	MACRO gate_nr
 	nop
 			ENDM
 
+IFNDEF @WordSize
+   @WordSize EQU 2
+ENDIF
+
 OsGate	MACRO gate_nr
-IF @WordSize == 4
-	OsGate32 gate_nr
-ELSE
+IF @WordSize EQ 2
 	OsGate16 gate_nr
+ELSE
+	OsGate32 gate_nr
 ENDIF
 			ENDM
 
