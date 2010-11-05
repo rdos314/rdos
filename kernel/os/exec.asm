@@ -1587,9 +1587,6 @@ spawn_program   Proc near
     push gs
     push bx
     push cx
-;
-    int 3
-    UserTestForce32 get_thread_nr
 ;    
     call SetupSpawn
     call CreateSpawnProg

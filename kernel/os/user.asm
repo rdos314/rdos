@@ -1075,13 +1075,22 @@ do_usercall32	PROC near
 	test ax,3
 	jnz do_usercall32_gate
 ;
-    int 3
 	push es
 	push ecx
 	push edx
 	push edi
 ;
-	mov edi,ds:[ebx+2]
+    mov al,ds:[ebx]
+    cmp al,66h
+    jne do_kernel_no_ov32
+;
+    mov edi,ds:[ebx+2]
+    jmp do_kernel_ov_ok32
+
+do_kernel_no_ov32:
+  	mov edi,ds:[ebx+1]
+
+do_kernel_ov_ok32:
 	shl edi,5
 	mov ax,usergate_sel
 	mov es,ax
@@ -1109,19 +1118,45 @@ do_usercall32	PROC near
 ;
 	mov ds:[ebx+6],ax
 	mov [bp+6],ax
-	movzx eax,es:[edi].gate_entry_offset32
+;
+    mov al,ds:[ebx]
+    cmp al,66h
+    jne do_call32_intra32	
+;
+  	movzx eax,es:[edi].gate_entry_offset32
 	mov ds:[ebx+2],eax
 	mov [bp+4],ax
 	mov word ptr ds:[ebx],9A66h
 	jmp do_call32_direct_do32
 
+do_call32_intra32:
+  	movzx eax,es:[edi].gate_entry_offset32
+	mov ds:[ebx+1],eax
+	mov [bp+4],ax
+	mov byte ptr ds:[ebx],9Ah
+	jmp do_call32_direct_do32
+
 do_call32_direct_cs32:
 	mov [bp+6],ax
+;
+    mov al,ds:[ebx]
+    cmp al,66h
+    jne do_call32_direct32	
+;    
 	movzx eax,es:[edi].gate_entry_offset32
 	mov [bp+4],ax
 	sub eax,[bp+10]
 	mov ds:[ebx+4],eax
 	mov dword ptr ds:[ebx],0E8660E66h
+	jmp do_call32_direct_do32
+
+do_call32_direct32:
+	movzx eax,es:[edi].gate_entry_offset32
+	mov [bp+4],ax
+	sub eax,[bp+10]
+	mov ds:[ebx+2],eax
+	mov word ptr ds:[ebx],0E80Eh
+	mov byte ptr ds:[ebx+6],90h
 
 do_call32_direct_do32:
 	pop edi

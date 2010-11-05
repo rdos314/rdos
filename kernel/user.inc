@@ -91,11 +91,10 @@ UserGate32	MACRO gate_nr
 			ENDM
 
 UserGateForce32 MACRO gate_nr
-	db 0Fh
-	db 0Bh
-	db 0D8h
-	dd gate_nr
-	nop
+    db 66h
+    db 9Ah
+    dd gate_nr
+    dw 2
 			ENDM
 
 UserGate        MACRO gate_nr

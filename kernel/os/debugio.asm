@@ -897,60 +897,6 @@ write_illegal_usergate:
     jmp write_special_end
 
 not_illegal_op:
-    cmp al,0Eh
-    jne not_push_cs
-;
-    inc dh
-    inc si
-    mov al,[si]
-    cmp al,0E8h
-    je push_cs_call
-;    
-    cmp al,66h
-    jne write_special_fail
-;
-    inc dh
-    inc si
-    mov al,[si]
-    cmp al,0E8h
-    jne write_special_fail
-
-push_cs_call:       
-    inc dh
-    inc si
-    movzx ax,dh
-    add ax,word ptr gs:tss_eip
-    add ax,[si]
-    add ax,2
-    test dl,1
-    jz dir_call_bitness_ok
-;
-    add ax,2
-
-dir_call_bitness_ok:
-    mov bx,ax
-    mov dx,word ptr gs:tss_cs
-;
-    push bx
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetOsCall
-    mov ds:op_size,bx
-    pop bx
-    jnc write_special_end
-;
-    mov dx,word ptr gs:tss_cs
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetUserCall
-    mov ds:op_size,bx
-    jmp write_special_end
-
-not_push_cs:    
     cmp al,9Ah
     jne not_call_far
 ;
