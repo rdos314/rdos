@@ -25,10 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
-
-GateSize = 16
-
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc

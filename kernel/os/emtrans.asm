@@ -25,11 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
-		NAME emtrans
 
 	.386p
-
-GateSize = 16
 
 include ..\os.def
 include ..\user.def

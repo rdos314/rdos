@@ -24,12 +24,6 @@
 ; Basic keyboard support module.
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME key
-
-;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
-
-GateSize = 16
 
 INCLUDE protseg.def
 INCLUDE ..\driver.def

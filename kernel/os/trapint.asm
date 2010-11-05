@@ -25,10 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
-
-GateSize = 16
-
 INCLUDE protseg.def
 INCLUDE port.def
 INCLUDE ..\os.def

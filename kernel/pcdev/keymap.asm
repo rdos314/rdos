@@ -25,10 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
-
-GateSize = 16
-
 INCLUDE ..\os\protseg.def
 INCLUDE ..\driver.def
 INCLUDE ..\os\port.def

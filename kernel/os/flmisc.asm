@@ -24,10 +24,6 @@
 ; FLMISC (Flash File System, misc functions)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME flmisc
-
-GateSize = 16
 
 INCLUDE ..\driver.def
 INCLUDE protseg.def

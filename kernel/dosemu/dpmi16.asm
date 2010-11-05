@@ -25,8 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GateSize = 16
-
 INCLUDE ..\os\protseg.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def

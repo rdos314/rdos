@@ -25,8 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GateSize = 16
-
 INCLUDE protseg.def
 INCLUDE ..\user.def
 INCLUDE state.def

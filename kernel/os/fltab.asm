@@ -24,10 +24,6 @@
 ; FLTAB (Flash File System, logical sector handling)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME fltab
-
-GateSize = 16
 
 INCLUDE ..\driver.def
 INCLUDE protseg.def

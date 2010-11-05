@@ -24,8 +24,6 @@
 ; Software watchdog support
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        
-GateSize = 16
 
 INCLUDE ..\..\kernel\user.def
 INCLUDE ..\..\kernel\os.def

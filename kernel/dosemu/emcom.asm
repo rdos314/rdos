@@ -34,8 +34,6 @@ include ..\driver.def
 include ..\os\system.def
 include ..\os\int.def
 
-GateSize = 16
-
         .386p
 
 include emulate.inc

@@ -66,13 +66,8 @@
 ;           of data-segment layout of key.asm
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-
-;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 	.386p
-
-GateSize = 16
 
 INCLUDE key.inc
 

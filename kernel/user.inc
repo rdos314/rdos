@@ -83,11 +83,9 @@ UserGate16	MACRO gate_nr
 			ENDM
 
 UserGate32	MACRO gate_nr
-	db 0Fh
-	db 0Bh
-	db 0D7h
-	dd gate_nr
-	nop
+    db 9Ah
+    dd gate_nr
+    dw 2
 			ENDM
 
 UserGateForce32 MACRO gate_nr
@@ -98,14 +96,10 @@ UserGateForce32 MACRO gate_nr
 			ENDM
 
 UserGate        MACRO gate_nr
-IF GateSize EQ 16
-	UserGate16 gate_nr
+IF @WordSize == 4
+	UserGate32 gate_nr
 ELSE
-	IF GateSize EQ 32
-		UserGate32 gate_nr
-	ELSE
-		UserGate16 gate_nr
-	ENDIF
+    UserGate16 gate_nr
 ENDIF
 			ENDM
 

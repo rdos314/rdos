@@ -24,8 +24,6 @@
 ; Abortable single & multiple wait functionality
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		
-GateSize = 16
 
 INCLUDE protseg.def
 INCLUDE ..\driver.def

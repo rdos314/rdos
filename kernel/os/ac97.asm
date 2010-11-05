@@ -24,12 +24,6 @@
 ; AC97 audio module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME ac97
-
-;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
-
-GateSize = 16
 
 INCLUDE ..\user.def
 INCLUDE ..\os.def

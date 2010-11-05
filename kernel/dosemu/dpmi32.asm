@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GateSize = 32
+@WordSize = 4
 
 INCLUDE protseg.def
 INCLUDE ..\driver.def

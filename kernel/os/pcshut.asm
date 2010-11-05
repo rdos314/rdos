@@ -27,8 +27,6 @@
 						
 		NAME pcshut
 
-GateSize = 16
-
 INCLUDE protseg.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def

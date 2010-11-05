@@ -27,8 +27,6 @@
 
         .386p
 
-GateSize = 16
-
 include ..\os.def
 include ..\user.def
 include ..\os\protseg.def

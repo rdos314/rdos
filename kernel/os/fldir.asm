@@ -24,10 +24,6 @@
 ; FLDIR (Flash File System, directory handling)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME fldir
-
-GateSize = 16
 
 INCLUDE ..\driver.def
 INCLUDE protseg.def

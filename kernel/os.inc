@@ -90,7 +90,7 @@ OsGate32	MACRO gate_nr
 			ENDM
 
 OsGate	MACRO gate_nr
-IF GateSize EQ 32
+IF @WordSize == 4
 	OsGate32 gate_nr
 ELSE
 	OsGate16 gate_nr
