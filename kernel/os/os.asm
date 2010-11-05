@@ -32,10 +32,11 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 
 gate_entry	STRUC
+gate_offset			DD ?
 gate_sel			DW ?
-gate_offset			DW ?
+gate_name_offset	DD ?
 gate_name_sel		DW ?
-gate_name_offset	DW ?
+gate_flags          DW ?
 gate_entry	ENDS
 
 code	SEGMENT byte public 'CODE'
@@ -79,10 +80,10 @@ init_osgate	PROC near
 ;	call create_call_gate_sel16
 ;
 	mov bx,osgate_sel
-	mov eax,osgate_entries SHL 3
+	mov eax,osgate_entries SHL 4
 	push cs
 	call allocate_fixed_system_mem
-	mov cx,osgate_entries SHL 3
+	mov cx,osgate_entries SHL 4
 	xor al,al
 	xor di,di
 	rep stosb
@@ -92,13 +93,14 @@ init_osgate	PROC near
 	mov es:[di].gate_name_offset,OFFSET register_gate_name
 	mov es:[di].gate_name_sel,cs
 	mov cx,osgate_entries-1
-	mov di,8
+	mov di,16
 init_osgate_loop:
 	mov es:[di].gate_sel,0
 	mov es:[di].gate_offset,0
 	mov es:[di].gate_name_offset,OFFSET illegal_gate_name
 	mov es:[di].gate_name_sel,cs
-	add di,8
+	mov es:[di].gate_flags,0
+	add di,16
 	loop init_osgate_loop
 ;
 	mov ax,cs
@@ -147,18 +149,24 @@ register_gate	PROC far
 	push fs
 	push gs
 	push bx
+	push esi
+	push edi
 ;
+    movzx esi,si
+    movzx edi,di
 	push ds
 	mov bx,ax
 	mov ax,osgate_sel
 	mov ds,ax
 	pop ax
-	shl bx,3
+	shl bx,4
 	mov [bx].gate_sel,ax
-	mov [bx].gate_offset,si
+	mov [bx].gate_offset,esi
 	mov [bx].gate_name_sel,es
-	mov [bx].gate_name_offset,di
+	mov [bx].gate_name_offset,edi
 ;
+    pop edi
+    pop esi
 	pop bx
 	pop gs
 	pop fs
@@ -188,7 +196,7 @@ is_valid_osgate	PROC far
 	mov bx,ax
 	mov ax,osgate_sel
 	mov ds,ax
-	shl bx,3
+	shl bx,4
 	mov ax,[bx].gate_sel
 	or ax,ax
 	clc
@@ -224,7 +232,7 @@ do_osgate16	PROC near
 	push di
 ;
 	mov di,ds:[ebx+3]
-	shl di,3
+	shl di,4
 	mov ax,osgate_sel
 	mov es,ax
 ;
@@ -251,7 +259,7 @@ do_osgate16	PROC near
 ;
 	mov ds:[ebx+3],ax
 	mov [bp+10],ax
-	mov ax,es:[di].gate_offset
+	mov eax,es:[di].gate_offset
 	mov ds:[ebx+1],ax
 	mov [bp+8],ax
 	mov byte ptr ds:[ebx],9Ah
@@ -259,7 +267,7 @@ do_osgate16	PROC near
 
 do_direct:
 	mov [bp+10],ax
-	mov ax,es:[di].gate_offset
+	mov eax,es:[di].gate_offset
 	mov [bp+8],ax
 	sub ax,[bp+14]
 	inc ax
@@ -304,7 +312,7 @@ do_osgate32	PROC near
 ;
 	mov al,ds:[ebx+5]
 	mov di,ds:[ebx+3]
-	shl di,3
+	shl di,4
 	mov ax,osgate_sel
 	mov es,ax
 ;
@@ -328,7 +336,7 @@ do_osgate32	PROC near
 	mov ax,es:[di].gate_sel
 	mov ds:[ebx+4],ax
 	mov [bp+10],ax
-	mov ax,es:[di].gate_offset
+	mov eax,es:[di].gate_offset
 	mov ds:[ebx+2],ax
 	mov [bp+8],ax
 	mov byte ptr ds:[ebx],66h

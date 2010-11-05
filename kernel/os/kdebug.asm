@@ -39,10 +39,11 @@ INCLUDE ..\os\system.def
 .387
 
 osgate_entry    STRUC
-og_sel      DW ?
-og_offset       DW ?
+og_offset       DD ?
+og_sel          DW ?
+og_name_offset  DD ?
 og_name_sel     DW ?
-og_name_offset  DW ?
+og_flags        DW ?
 osgate_entry    ENDS
 
 usergate_entry  STRUC
@@ -121,7 +122,7 @@ GetIllegalOsGate    PROC near
     mov ax,osgate_sel
     mov ds,ax
     mov fs,[bx].og_name_sel
-    mov si,[bx].og_name_offset
+    mov esi,[bx].og_name_offset
     xor bx,bx
 illegal_out_os_loop:
     mov al,fs:[si]
@@ -213,7 +214,7 @@ get_oscall_scan_loop:
     cmp dx,ds:[si].og_sel
     jne get_oscall_scan_next
 ;
-    cmp bx,ds:[si].og_offset
+    cmp bx,word ptr ds:[si].og_offset
     je get_oscall_found
 
 get_oscall_scan_next:
@@ -226,7 +227,7 @@ get_oscall_scan_next:
 get_oscall_found:
     pop cx
     mov fs,[si].og_name_sel
-    mov si,[si].og_name_offset
+    mov si,word ptr [si].og_name_offset
     xor bx,bx
 
 get_oscall_out_loop:
