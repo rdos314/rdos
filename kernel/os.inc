@@ -82,11 +82,9 @@ OsGate16	MACRO gate_nr
 			ENDM
 
 OsGate32	MACRO gate_nr
-	db 0Fh
-	db 0Bh
-	db 0CBh
-	dw gate_nr
-	nop
+    db 9Ah
+    dd gate_nr
+    dw 3
 			ENDM
 
 IFNDEF @WordSize
