@@ -4607,8 +4607,8 @@ llSpinLock:
     or ax,ax
     je llGet
 ;
-;    call Shutdown
     pause
+;    call ShutdownLocal
     jmp llSpinLock
 
 llGet:
@@ -4618,7 +4618,7 @@ llGet:
     or ax,ax
     je llDone
 ;
-;    call Shutdown
+;    call ShutdownLocal
     jmp llSpinLock
 
 llDone:
@@ -4883,6 +4883,34 @@ WakeProcessor   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ShowDebug
+;
+;           DESCRIPTION:    Show debug char
+;
+;       PARAMETERS:         FS      Processor
+;                           AL      Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShowDebug   Proc near
+    push ds
+    push bx
+    mov bx,__B800
+    mov ds,bx
+    mov bx,fs:ps_id
+    add bx,50
+    add bx,bx
+    mov ah,7
+    mov ds:[bx],ax
+    pop bx
+    pop ds
+    ret
+ShowDebug   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           TryLockMultiple
 ;
 ;           DESCRIPTION:    Try to lock, multiple processor version
@@ -4893,7 +4921,7 @@ WakeProcessor   Endp
 ;               FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+ 
 TryLockMultiple Proc near
     push ax
     push dx
@@ -4915,6 +4943,10 @@ tlmGet:
     jnz tlmSpinLock
 ;
     call ds:get_cpu_proc
+;
+    mov al,'1'
+    call ShowDebug
+;    
     mov ax,ds:owner_sel
     or ax,ax
     jz tlmTake
@@ -4924,12 +4956,18 @@ tlmGet:
     je tlmTake
 
 tlmFail:
+    mov al,'2'
+    call ShowDebug
+;
     add fs:ps_nesting,1
     mov ds:owner_lock,0
     clc
     jmp tlmDone
 
 tlmTake:
+    mov al,'A'
+    call ShowDebug
+;
     mov ds:owner_sel,fs
     add fs:ps_nesting,1
     mov ds:owner_lock,0    
@@ -4978,6 +5016,9 @@ lmGet:
     jnz lmSpinLock
 ;
     call ds:get_cpu_proc
+    mov al,'4'
+    call ShowDebug
+;    
     mov ax,ds:owner_sel
     or ax,ax
     jz lmTake
@@ -4987,15 +5028,24 @@ lmGet:
     je lmTake
 
 lmHalt:
+    mov al,'5'
+    call ShowDebug
+    
     inc ds:owner_wait
     mov fs:ps_wait,1
     mov ds:owner_lock,0
     sti
     hlt
     mov fs:ps_wait,0
+;    
+    mov al,'6'
+    call ShowDebug
     jmp lmSpinLock
 
 lmTake:
+    mov al,'A'
+    call ShowDebug
+    
     mov ds:owner_sel,fs
     add fs:ps_nesting,1
     mov ds:owner_lock,0    
@@ -5022,6 +5072,9 @@ LockMultiple    Endp
 UnlockMultiple  Proc near
     push eax
 
+    mov al,'a'
+    call ShowDebug
+
 tumSpinLock:
     sti
     mov ax,ds:owner_lock
@@ -5039,6 +5092,10 @@ tumGet:
     jnz tumSpinLock
     
 tumRetry:    
+    mov al,'b'
+    call ShowDebug
+
+
     sub fs:ps_nesting,1
     jnc tumUnlock
 ;
@@ -5078,6 +5135,9 @@ tumWake:
     jmp tumUnlockDo
 
 tumUnlock:
+    mov al,'c'
+    call ShowDebug
+
     mov eax,fs:ps_mask
     not eax
     and eax,ds:processor_preempt
@@ -5104,6 +5164,9 @@ tumUnlockDo:
     mov ds:owner_lock,0
 
 tumDone:
+    mov al,'0'
+    call ShowDebug
+
     sti
     pop eax
     ret
@@ -5125,6 +5188,9 @@ UnlockMultiple  Endp
 LoadUnlockMultiple      Proc near
     push eax
 
+    mov al,'z'
+    call ShowDebug
+
 lumSpinLock:
     sti
     mov ax,ds:owner_lock
@@ -5141,6 +5207,10 @@ lumGet:
     or ax,ax
     jnz lumSpinLock
 ;    
+
+    mov al,'y'
+    call ShowDebug
+
     sub fs:ps_nesting,1
     jc lumNestingOk
 ;
@@ -5160,16 +5230,29 @@ lumNestingOk:
     call ShutdownLocal
 
 lumOwnerOk:    
+    mov al,'x'
+    call ShowDebug
+
     mov ds:owner_sel,0  
     mov al,ds:owner_wait
     or al,al
     jz lumUnlock
 ;
+    mov al,'w'
+    call ShowDebug
+
     dec ds:owner_wait    
     call WakeProcessor
+
+    mov al,'t'
+    call ShowDebug
+
     jmp lumUnlockDo
 
 lumUnlock:
+    mov al,'s'
+    call ShowDebug
+
     mov eax,fs:ps_mask
     not eax
     and eax,ds:processor_preempt
@@ -5196,6 +5279,9 @@ lumUnlockDo:
     mov ds:owner_lock,0
 
 lumDone:
+    mov al,'0'
+    call ShowDebug
+
     pop eax
     ret
 LoadUnlockMultiple      Endp
