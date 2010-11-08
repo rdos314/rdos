@@ -37,24 +37,24 @@ WVList
 MCState
 10
 WString
-7
-WINLINK
+8
+RDOSLINK
 11
 WString
-10
-?????Quiet
+21
+?????Verbose map file
 1
-0
+1
 12
 MCState
 13
 WString
-7
-WINLINK
+8
+RDOSLINK
 14
 WString
-24
-?????Produce symbol file
+10
+?????Quiet
 1
 0
 15
