@@ -407,11 +407,11 @@ ApInit:
     sti
     hlt
 
-; uncomment to start AP cores
+; comment to start AP cores
     
-;stopl:
-;   cli
-;    jmp stopl
+stopl:
+   cli
+    jmp stopl
 
     StartProcessor
 
