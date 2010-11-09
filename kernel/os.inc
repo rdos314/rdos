@@ -1742,6 +1742,15 @@ FindPciClass	MACRO
 	OsGate find_pci_class_nr
 					ENDM
 
+; IN  BH	Class
+; IN  BL 	Sub class
+; IN  AX	Device number
+; OUT BH	Bus
+; OUT BL 	Device
+FindPciClassAll	MACRO
+	OsGate find_pci_class_all_nr
+					ENDM
+
 ; IN  CX	Device ID
 ; IN  DX	Vendor ID
 ; IN  AX	Device number

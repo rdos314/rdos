@@ -542,6 +542,82 @@ find_pci_class	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FindPciClassAll
+;
+;		DESCRIPTION:	Find PCI class, ignore interface
+;
+;		PARAMETERS:		BH		Class
+;						BL 		Sub class
+;						AX		Device number
+;
+;		RETURNS:		NC		Success
+;						BH		Bus
+;						BL 		Device
+;                       CH      Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+find_pci_class_all_name	DB 'Find PCI Class All',0
+
+find_pci_class_all	Proc far
+    push ds
+	push eax
+	push dx
+	push si
+	push di
+;
+	mov di,ax
+;
+    mov si,SEG data
+    mov ds,si
+    mov si,OFFSET pci_device_arr
+    mov cx,MAX_PCI_DEVICES - 1
+
+find_pci_class_all_loop:
+    mov eax,ds:[si+4]
+	mov dx,0CF8h
+	mov al,8
+	cli
+	out dx,eax
+	mov dx,0CFCh
+	in eax,dx
+	sti
+	shr eax,16
+	cmp ax,bx
+	jne find_pci_class_all_next	
+;
+	or di,di
+	jz find_pci_class_all_ok
+;
+	sub di,1
+
+find_pci_class_all_next:
+    add si,8
+    loop find_pci_class_all_loop
+;
+	stc
+	jmp find_pci_class_all_done
+
+find_pci_class_all_ok:
+    mov ebx,ds:[si+5]
+	shr bl,3
+;
+	mov cx,ds:[si+4]
+	and cx,700h
+	clc
+
+find_pci_class_all_done:
+    pop di
+	pop si
+	pop dx
+	pop eax
+	pop ds
+	ret
+find_pci_class_all	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			FindPciCapability
 ;
 ;		DESCRIPTION:	Find a PCI capability
@@ -901,6 +977,12 @@ init	Proc far
 	mov di,OFFSET find_pci_class_name
 	xor cl,cl
 	mov ax,find_pci_class_nr
+	RegisterOsGate
+;
+	mov si,OFFSET find_pci_class_all
+	mov di,OFFSET find_pci_class_all_name
+	xor cl,cl
+	mov ax,find_pci_class_all_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET find_pci_device

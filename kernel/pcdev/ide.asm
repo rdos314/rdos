@@ -34,44 +34,53 @@ INCLUDE ..\drive.inc
 
 part_struc      STRUC
 
-part_status                 DB ?
-part_start_head         DB ?
+part_status         DB ?
+part_start_head     DB ?
 part_start_cyl_sector   DW ?
-part_type                   DB ?
-part_end_head           DB ?
-part_end_cyl_sector         DW ?
-part_start_sector           DD ?
-part_sectors            DD ?
+part_type           DB ?
+part_end_head       DB ?
+part_end_cyl_sector     DW ?
+part_start_sector       DD ?
+part_sectors        DD ?
 
 part_struc      ENDS
 
-drive_data          STRUC
+drive_data      STRUC
 
-drive_lba_mode              DB ?
-drive_precomp               DB ?
+drive_lba_mode          DB ?
+drive_precomp           DB ?
 drive_sectors_per_cyl       DW ?
-drive_heads                     DW ?
-drive_cyls                      DW ?
+drive_heads             DW ?
+drive_cyls              DW ?
 drive_sectors_per_unit      DW ?
-drive_units                     DW ?
-drive_lba_sectors               DD ?
-disc_io_base        DW ?
-disc_ide_sel        DW ?
-disc_sel                    DW ?
-disc_thread                     DW ?
-disc_sub_unit               DB ?
-disc_nr                     DB ?
+drive_units             DW ?
+drive_lba_sectors           DD ?
+disc_io_base    DW ?
+disc_ide_sel    DW ?
+disc_sel            DW ?
+disc_thread             DW ?
+disc_sub_unit           DB ?
+disc_nr             DB ?
 
-drive_data          ENDS
+drive_data      ENDS
 
 ide_data    STRUC
 
-IdeThread           DW ?
-DriveSelArr         DW 2 DUP(?)
-IdeSection          section_typ <>
+IdeThread       DW ?
+DriveSelArr     DW 2 DUP(?)
+IdeSection      section_typ <>
 IntFlag     DB ?
 
 ide_data    ENDS
+
+MAX_PCI_COUNT = 16
+
+data    SEGMENT byte public 'DATA'
+
+ide_pci_count   DW ?
+ide_pci_arr     DW MAX_PCI_COUNT DUP(?)
+
+data    ENDS
 
     .386p
 
@@ -83,11 +92,11 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           IDE_INT
+;       NAME:       IDE_INT
 ;
-;           DESCRIPTION:    IDE INTERRUPT
+;       DESCRIPTION:    IDE INTERRUPT
 ;
-;           PARAMETERS:         
+;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -101,12 +110,12 @@ ide_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CheckReady
+;       NAME:       CheckReady
 ;
-;           DESCRIPTION:    Wait for ready
+;       DESCRIPTION:    Wait for ready
 ;
-;           PARAMETERS:         DS          IDE_DATA
-;               DX      Io base
+;       PARAMETERS:     DS      IDE_DATA
+;           DX      Io base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -141,12 +150,12 @@ CheckReady      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WaitReady
+;       NAME:       WaitReady
 ;
-;           DESCRIPTION:    Wait for DRDY signal
+;       DESCRIPTION:    Wait for DRDY signal
 ;
-;           PARAMETERS:         DS          IDE_DATA
-;               DX      Io base
+;       PARAMETERS:     DS      IDE_DATA
+;           DX      Io base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -181,12 +190,12 @@ WaitReady       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WaitDrq
+;       NAME:       WaitDrq
 ;
-;           DESCRIPTION:    Wait for data request
+;       DESCRIPTION:    Wait for data request
 ;
-;           PARAMETERS:         DS          IDE_DATA
-;               DX      Disc io base
+;       PARAMETERS:     DS      IDE_DATA
+;           DX      Disc io base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -216,12 +225,12 @@ WaitDrq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CheckStatus
+;       NAME:       CheckStatus
 ;
-;           DESCRIPTION:    Check transfer status
+;       DESCRIPTION:    Check transfer status
 ;
-;           PARAMETERS:         DS          IDE_DATA
-;               DX      Disc io base
+;       PARAMETERS:     DS      IDE_DATA
+;           DX      Disc io base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -255,17 +264,17 @@ CheckStatus     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupIdeTaskFile
+;       NAME:       SetupIdeTaskFile
 ;
-;           DESCRIPTION:    Setup IDE comp. task file
+;       DESCRIPTION:    Setup IDE comp. task file
 ;
-;           PARAMETERS:         DS          IDE_DATA
-;                           FS          Disc sel
-;                           AH          Precomp
-;                           BH          Head #
-;                           BL          Sector
-;                           CX          Number of sectors
-;                           DX          Cylinder
+;       PARAMETERS:     DS      IDE_DATA
+;               FS      Disc sel
+;               AH      Precomp
+;               BH      Head #
+;               BL      Sector
+;               CX      Number of sectors
+;               DX      Cylinder
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -345,15 +354,15 @@ SetupIdeTaskFile    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupLbaTaskFile
+;       NAME:       SetupLbaTaskFile
 ;
-;           DESCRIPTION:    Setup LBA comp. task file
+;       DESCRIPTION:    Setup LBA comp. task file
 ;
-;           PARAMETERS:         DS          IDE_DATA
-;                           FS          Disc sel
-;                           AH          Precomp
-;                           CX          Number of sectors
-;                           EDX         Sector #
+;       PARAMETERS:     DS      IDE_DATA
+;               FS      Disc sel
+;               AH      Precomp
+;               CX      Number of sectors
+;               EDX     Sector #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -433,15 +442,15 @@ SetupLbaTaskFile    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadTaskFile
+;       NAME:       ReadTaskFile
 ;
-;           DESCRIPTION:    Read data from device
+;       DESCRIPTION:    Read data from device
 ;
-;           PARAMETERS:         DS          IDE SEGMENT
-;                           AL          COMMAND CODE
-;                           CX          Number of sectors
-;               DX      Disc io base
-;                           ES:EDI  Logical address of buffer
+;       PARAMETERS:     DS      IDE SEGMENT
+;               AL      COMMAND CODE
+;               CX      Number of sectors
+;           DX      Disc io base
+;               ES:EDI  Logical address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -475,15 +484,15 @@ ReadTaskFile    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteTaskFile
+;       NAME:       WriteTaskFile
 ;
-;           DESCRIPTION:    Write data to device
+;       DESCRIPTION:    Write data to device
 ;
-;           PARAMETERS:         DS          IDE SEGMENT
-;                           AL          Command code
-;                           CX          Number of sectors
-;               DX      Disc io base
-;                           ES:EDI  Logical address of buffer
+;       PARAMETERS:     DS      IDE SEGMENT
+;               AL      Command code
+;               CX      Number of sectors
+;           DX      Disc io base
+;               ES:EDI  Logical address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -529,15 +538,15 @@ WriteTaskFile   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadDrive
+;       NAME:       ReadDrive
 ;
-;           DESCRIPTION:    Read data
+;       DESCRIPTION:    Read data
 ;
-;           PARAMETERS:         FS          Disc sel
-;                           BX          Sector #
-;                           CX          Number of sectors
-;                           EDX         Unit #
-;                           EDI         Logical address of buffer
+;       PARAMETERS:     FS      Disc sel
+;               BX      Sector #
+;               CX      Number of sectors
+;               EDX     Unit #
+;               EDI     Logical address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -594,15 +603,15 @@ ReadDrive       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteDrive
+;       NAME:       WriteDrive
 ;
-;           DESCRIPTION:    Write data
+;       DESCRIPTION:    Write data
 ;
-;           PARAMETERS:         FS          Disc sel
-;                           BX          Sector #
-;                           CX          Number of sectors
-;                           EDX         Unit #
-;                           EDI         Logical address of buffer
+;       PARAMETERS:     FS      Disc sel
+;               BX      Sector #
+;               CX      Number of sectors
+;               EDX     Unit #
+;               EDI     Logical address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -659,12 +668,12 @@ WriteDrive      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetDriveParams
+;       NAME:       GetDriveParams
 ;
-;           DESCRIPTION:    Get drive param
+;       DESCRIPTION:    Get drive param
 ;
-;           PARAMETERS:         DS          IDE SEGMENT
-;                           FS          DRIVE SEL
+;       PARAMETERS:     DS      IDE SEGMENT
+;               FS      DRIVE SEL
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -744,12 +753,12 @@ GetDriveParams  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CalcParam
+;       NAME:       CalcParam
 ;
-;           DESCRIPTION:    Calculate various parameters
+;       DESCRIPTION:    Calculate various parameters
 ;
-;           PARAMETERS:         DS          IDE SEGMENT
-;                           FS          DRIVE SEL
+;       PARAMETERS:     DS      IDE SEGMENT
+;               FS      DRIVE SEL
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -863,15 +872,15 @@ CalcParam       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ChsToLba
+;       NAME:       ChsToLba
 ;
-;           DESCRIPTION:    Convert CHS to LBA
+;       DESCRIPTION:    Convert CHS to LBA
 ;
-;           PARAMETERS:         DS          IDE SEGMENT
-;                           FS          DRIVE SEGMENT
-;                           ES:EDI  CHS address
+;       PARAMETERS:     DS      IDE SEGMENT
+;               FS      DRIVE SEGMENT
+;               ES:EDI  CHS address
 ;
-;           RETURNS:        EDX         LBA address
+;       RETURNS:    EDX     LBA address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -914,16 +923,16 @@ ChsToLba    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InstallPartition
+;       NAME:       InstallPartition
 ;
-;           DESCRIPTION:    Install partition
+;       DESCRIPTION:    Install partition
 ;
-;           PARAMETERS:         DS          IDE SEGMENT
-;                           ES          FLAT_SEL
-;                           FS          Disc sel
-;                           CL          PARTITION TYPE
-;                           EDX         START SECTOR
-;                           EAX         NUMBER OF SECTORS
+;       PARAMETERS:     DS      IDE SEGMENT
+;               ES      FLAT_SEL
+;               FS      Disc sel
+;               CL      PARTITION TYPE
+;               EDX     START SECTOR
+;               EAX     NUMBER OF SECTORS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1285,13 +1294,13 @@ InstallPartition    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           read_drive
+;       NAME:       read_drive
 ;
-;           DESCRIPTION:    Read drive
+;       DESCRIPTION:    Read drive
 ;
-;           PARAMETERS:         FS          Disc selector
-;                           ESI         Disc handle array
-;                           ECX         Entries
+;       PARAMETERS:     FS      Disc selector
+;               ESI     Disc handle array
+;               ECX     Entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1413,13 +1422,13 @@ read_drive      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           write_drive
+;       NAME:       write_drive
 ;
-;           DESCRIPTION:    Perform a write request
+;       DESCRIPTION:    Perform a write request
 ;
-;           PARAMETERS:         FS          Disc selector
-;                           ESI         Disc handle array
-;                           ECX         Entries
+;       PARAMETERS:     FS      Disc selector
+;               ESI     Disc handle array
+;               ECX     Entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1533,11 +1542,11 @@ write_drive     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           perform_one
+;       NAME:       perform_one
 ;
-;           DESCRIPTION:    Perform one request
+;       DESCRIPTION:    Perform one request
 ;
-;           PARAMETERS:         FS          Disc selector
+;       PARAMETERS:     FS      Disc selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1575,11 +1584,11 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DISCBUF_THREAD
+;       NAME:       DISCBUF_THREAD
 ;
-;           DESCRIPTION:    Thread to handle disc buffer queue
+;       DESCRIPTION:    Thread to handle disc buffer queue
 ;
-;           PARAMETERS:         FS          Disc handle
+;       PARAMETERS:     FS      Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1601,9 +1610,9 @@ discbuf_thread_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INSTALL_TIMEOUT1
+;       NAME:       INSTALL_TIMEOUT1
 ;
-;           DESCRIPTION:    Install unit timeout
+;       DESCRIPTION:    Install unit timeout
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1628,9 +1637,9 @@ install_timeout1    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INSTALL_TIMEOUT2
+;       NAME:       INSTALL_TIMEOUT2
 ;
-;           DESCRIPTION:    Install unit timeout
+;       DESCRIPTION:    Install unit timeout
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1655,12 +1664,12 @@ install_timeout2    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INSTALL_UNIT
+;       NAME:       INSTALL_UNIT
 ;
-;           DESCRIPTION:    Install a unit
+;       DESCRIPTION:    Install a unit
 ;
-;           PARAMETERS:         AL          UNIT #
-;               DX      IO BASE
+;       PARAMETERS:     AL      UNIT #
+;           DX      IO BASE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1812,11 +1821,11 @@ install_unit    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DISC_ASSIGN1
+;       NAME:       DISC_ASSIGN1
 ;
-;           DESCRIPTION:    Assign discs on primary adapter
+;       DESCRIPTION:    Assign discs on primary adapter
 ;
-;           PARAMETERS:         
+;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1849,11 +1858,11 @@ disc_assign1    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DISC_ASSIGN2
+;       NAME:       DISC_ASSIGN2
 ;
-;           DESCRIPTION:    Assign discs
+;       DESCRIPTION:    Assign discs
 ;
-;           PARAMETERS:         
+;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1886,11 +1895,11 @@ disc_assign2    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DRIVE_ASSIGN1
+;       NAME:       DRIVE_ASSIGN1
 ;
-;           DESCRIPTION:    Drive assign, pass 1
+;       DESCRIPTION:    Drive assign, pass 1
 ;
-;           PARAMETERS:         BX          Disc handle
+;       PARAMETERS:     BX      Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1937,16 +1946,16 @@ drive_assign1   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InstallExtended
+;       NAME:       InstallExtended
 ;
-;           DESCRIPTION:    Install extended partion on drive
+;       DESCRIPTION:    Install extended partion on drive
 ;
-;           PARAMETERS:         DS          IDE SEGMENT
-;                           ES          FLAT_SEL
-;                           FS          Disc sel
-;                           EDX         Current sector
-;                           EDI         200H buffer with partition sector
-;                           ESI         Partition offset
+;       PARAMETERS:     DS      IDE SEGMENT
+;               ES      FLAT_SEL
+;               FS      Disc sel
+;               EDX     Current sector
+;               EDI     200H buffer with partition sector
+;               ESI     Partition offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2049,11 +2058,11 @@ InstallExtended Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DRIVE_ASSIGN2
+;       NAME:       DRIVE_ASSIGN2
 ;
-;           DESCRIPTION:    Assign disc drives, pass 2
+;       DESCRIPTION:    Assign disc drives, pass 2
 ;
-;           PARAMETERS:         BX          Disc handle
+;       PARAMETERS:     BX      Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2121,11 +2130,11 @@ drive_assign2   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DEMAND_MOUNT
+;       NAME:       DEMAND_MOUNT
 ;
-;           DESCRIPTION:    Mount disc drive on demand
+;       DESCRIPTION:    Mount disc drive on demand
 ;
-;           PARAMETERS:         BX          Disc handle
+;       PARAMETERS:     BX      Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2137,13 +2146,13 @@ demand_mount    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ERASE
+;       NAME:       ERASE
 ;
-;           DESCRIPTION:    Erase sectors
+;       DESCRIPTION:    Erase sectors
 ;
-;           PARAMETERS:         BX          Disc handle
-;               EDX     Start sector
-;               ECX     Number of sectors
+;       PARAMETERS:     BX      Disc handle
+;           EDX     Start sector
+;           ECX     Number of sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2156,11 +2165,11 @@ erase   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetIdeDisc
+;       NAME:       GetIdeDisc
 ;
-;           description:    Get disc # for a physical disc unit
+;       description:    Get disc # for a physical disc unit
 ;
-;           PARAMETERS:         BL      IDE disc #
+;       PARAMETERS:     BL      IDE disc #
 ;
 ;       RETURNS:    AL      disc #
 ;
@@ -2221,15 +2230,204 @@ get_ide_done:
     retf32
 get_ide_disc    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_ide
+;
+;           DESCRIPTION:    inits adpater
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ide_name       DB 'IDE',0
+
+ide_thread     proc far
+    int 3
+    mov ax,SEG data
+    mov es,ax
+    mov es:ide_pci_count,0
+    mov di,OFFSET ide_pci_arr
+;    
+    xor ax,ax
+    mov bh,1
+    mov bl,1
+    FindPciClassAll
+    jc init_pci_done
+;
+    mov cl,10h
+    ReadPciDword
+    mov cl,al    
+    and ax,0FFFCh
+    mov bp,ax
+;    
+    test cl,1
+    jz init_pci_bar1_done
+;
+    or ax,ax
+    jz init_pci_bar1_done
+;    
+    cmp ax,1F0h
+    je init_pci_bar1_done
+;    
+    push ax
+    push dx
+    mov dx,ax
+    add dx,7
+    in al,dx
+    pop dx
+    and al,7Fh
+    cmp al,7Fh
+    pop ax
+    je init_pci_bar1_done
+;    
+    stosw
+    inc es:ide_pci_count
+
+init_pci_bar1_done:
+    mov cl,18h
+    ReadPciDword
+    mov cl,al    
+    and ax,0FFFCh
+;    
+    test cl,1
+    jz init_pci_bar3_done
+;
+    or ax,ax
+    jz init_pci_bar3_done
+;    
+    cmp ax,170h
+    je init_pci_bar3_done
+;    
+    push ax
+    push dx
+    mov dx,ax
+    add dx,7
+    in al,dx
+    pop dx
+    and al,7Fh
+    cmp al,7Fh
+    pop ax
+    je init_pci_bar3_done
+;    
+    stosw
+    inc es:ide_pci_count
+
+init_pci_bar3_done:       
+    mov dx,1
+
+init_pci_next_device:
+    mov ax,dx
+    mov bh,1
+    mov bl,1
+    FindPciClassAll
+    jc init_pci_done
+;       
+    mov cl,10h
+    ReadPciDword
+    mov cl,al
+    and ax,0FFFCh
+    cmp ax,bp
+    je init_pci_done
+;       
+    test cl,1
+    jz init_pci_next_bar1_done
+;
+    or ax,ax
+    jz init_pci_next_bar1_done
+;    
+    cmp ax,1F0h
+    je init_pci_next_bar1_done
+;    
+    push ax
+    push dx
+    mov dx,ax
+    add dx,7
+    in al,dx
+    pop dx
+    and al,7Fh
+    cmp al,7Fh
+    pop ax
+    je init_pci_next_bar1_done
+;    
+    cmp es:ide_pci_count,MAX_PCI_COUNT
+    je init_pci_done
+;    
+    stosw
+    inc es:ide_pci_count
+
+init_pci_next_bar1_done:
+    mov cl,18h
+    ReadPciDword
+    mov cl,al
+    and ax,0FFFCh
+;       
+    test cl,1
+    jz init_pci_next_bar3_done
+;
+    or ax,ax
+    jz init_pci_next_bar3_done 
+;    
+    cmp ax,170h
+    je init_pci_next_bar3_done
+;    
+    push ax
+    push dx
+    mov dx,ax
+    add dx,7
+    in al,dx
+    pop dx
+    and al,7Fh
+    cmp al,7Fh
+    pop ax
+    je init_pci_next_bar3_done
+;    
+    cmp es:ide_pci_count,MAX_PCI_COUNT
+    je init_pci_done
+;   
+    stosw 
+    inc es:ide_pci_count
+
+init_pci_next_bar3_done:    
+    inc dx
+    jmp init_pci_next_device
+    
+init_pci_done:
+    ret
+ide_thread  Endp
+    
+init_ide  Proc far
+    push ds
+    push es
+    pusha
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET ide_name
+    mov si,OFFSET ide_thread
+    mov ax,4
+    mov cx,100h
+    CreateThread
+;
+    popa
+    pop es
+    pop ds
+    ret
+init_ide    Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT
+;       NAME:       INIT
 ;
-;           DESCRIPTION:    Init device
+;       DESCRIPTION:    Init device
 ;
-;           PARAMETERS:         
+;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2238,16 +2436,21 @@ dct100  DW OFFSET disc_assign1,     SEG code
 dct101  DW OFFSET drive_assign1,    SEG code
 dct102  DW OFFSET drive_assign2,    SEG code
 dct103  DW OFFSET demand_mount,     SEG code
-dct104  DW OFFSET erase,        SEG code
+dct104  DW OFFSET erase,            SEG code
 
 disc_ctrl2:
 dct200  DW OFFSET disc_assign2,     SEG code
 dct201  DW OFFSET drive_assign1,    SEG code
 dct202  DW OFFSET drive_assign2,    SEG code
 dct203  DW OFFSET demand_mount,     SEG code
-dct204  DW OFFSET erase,        SEG code
+dct204  DW OFFSET erase,            SEG code
 
 init    PROC far
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET init_ide
+    HookInitTasking
+;
     xor bp,bp
     mov ax,cs
     mov ds,ax

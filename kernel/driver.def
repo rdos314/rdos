@@ -303,8 +303,9 @@ ppp_code_sel		EQU 7D0h
 ppp_data_sel		EQU 7D8h
 
 ide_code_sel		EQU 7F0h
-ide_data_sel1		EQU 7F8h
-ide_data_sel2		EQU 800h
+ide_data_sel        EQU 7F8h
+ide_data_sel1		EQU 800h
+ide_data_sel2		EQU 808h
 
 ipc_code_sel		EQU 810h
 ipc_data_sel		EQU 818h

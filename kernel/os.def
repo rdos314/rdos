@@ -540,5 +540,7 @@ process_key_scan_nr         EQU 378
 
 get_debug_thread_sel_nr     EQU 379
 
-osgate_entries				EQU 380
+find_pci_class_all_nr       EQU 380
+
+osgate_entries				EQU 381
 
