@@ -818,8 +818,8 @@ trap_6:
     push ebx
     push ds
 ;
-;       mov ax,[bp].vm_err
-;       mov ds:tss_error_code,ax
+    mov ax,[bp].vm_err
+    mov ds:tss_error_code,ax
     test byte ptr [bp+2].vm_eflags,2
     jnz t6_vm
     mov ds,[bp].vm_cs

@@ -3708,7 +3708,7 @@ null_thread0:
 ;
     push OFFSET null_loop
     call SaveCurrentThread
-;
+;    
     xor ax,ax
     xor edi,edi
     jmp BlockCurrentThread
@@ -4032,9 +4032,6 @@ dfDo:
 ;       
     mov ax,gs
     mov ds:tss_gs,ax
-;    
-    movzx dx,byte ptr [bp].vm_err+2
-    mov ds:tss_error_code,dx
 ;
     mov ax,task_sel
     mov ds,ax
@@ -4056,8 +4053,6 @@ debug_normal:
     mov ds,fs:ps_curr_thread 
     mov ds:p_error_code,ax
     mov ds,ds:p_tss_data_sel
-    movzx ax,byte ptr [bp].vm_err+2
-    mov ds:tss_error_code,ax
 ;
     mov eax,[bp].vm_eax
     mov dword ptr ds:tss_eax,eax
@@ -4195,7 +4190,14 @@ double_fault:
     mov ax,task_sel
     mov ds,ax
     call ds:try_lock_proc
+    jc double_fault_lock_ok
 ;    
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jnz double_fatal_thread
+    jmp double_fatal_no_thread
+    
+double_fault_lock_ok:    
     mov ss,fs:ps_ss
     mov sp,fs:ps_sp
 ;
@@ -4205,11 +4207,9 @@ double_fault:
 ;
     mov ax,fs:ps_curr_thread
     or ax,ax
-    jnz double_block
-;
-    mov ds,fs:ps_null_thread 
-    mov es,ds:p_tss_data_sel  
-;    
+    jz double_block
+
+double_fatal_no_thread:
     mov ax,double_tss_data_sel
     mov ds,ax
     mov bx,ds:tss_back_link
@@ -4232,14 +4232,38 @@ double_fault:
     CreateDataSelector16
     mov ds,bx
 ;    
-;    mov esi,dword ptr ds:tss_cs
-;    mov edi,dword ptr ds:tss_eip
-    mov bx,word ptr ds:tss_ebp
-    mov es,word ptr ds:tss_ss
-    mov esi,es:[bx].vm_cs
-    mov edi,es:[bx].vm_eip
+    mov esi,dword ptr ds:tss_cs
+    mov edi,dword ptr ds:tss_eip
+    mov eax,dword ptr ds:tss_ss
+    mov edx,dword ptr ds:tss_esp
     call ShutdownLocal
+
+double_fatal_thread:
+    mov ds,fs:ps_null_thread 
+    mov es,ds:p_tss_data_sel  
 ;
+    mov ax,double_tss_data_sel
+    mov ds,ax
+    mov bx,ds:tss_back_link
+;
+    mov ax,gdt_sel
+    mov ds,ax
+    and bx,0FFF8h
+    xor ecx,ecx
+    mov cl,[bx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[bx]
+    inc ecx
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
+;       
+    AllocateGdt
+    CreateDataSelector16
+    mov ds,bx
+;    
     mov eax,dword ptr ds:tss_eax
     mov dword ptr es:tss_eax,eax
 ;
@@ -4287,12 +4311,19 @@ double_fault:
 ;
     mov eax,dword ptr ds:tss_eflags
     mov dword ptr es:tss_eflags,eax
-;       
+;
     mov es,fs:ps_null_thread 
     mov ax,task_sel
     mov ds,ax
+;       
     mov es:p_error_code,8
+    mov ax,es:tss_ss
+    verw ax
+    jz double_stack_ok
 ;
+    mov es:p_error_code,12
+
+double_stack_ok:
     mov ax,system_data_sel
     mov ds,ax
     mov di,OFFSET debug_list
@@ -4906,6 +4937,43 @@ ShowDebug   Proc near
     pop ds
     ret
 ShowDebug   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ShowDebugStop
+;
+;           DESCRIPTION:    Show debug char, and stop
+;
+;       PARAMETERS:         FS      Processor
+;                           AL      Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShowDebugStop   Proc near
+    push ds
+    push bx
+;
+    mov bx,fs:ps_nesting
+    or bx,bx
+    jz  sdsDone
+;       
+    cli
+    mov bx,__B800
+    mov ds,bx
+    mov bx,fs:ps_id
+    add bx,50
+    add bx,bx
+    mov ah,7
+    mov ds:[bx],ax
+sdsLoop:
+    jmp sdsLoop
+
+sdsDone:
+    pop bx
+    pop ds
+    ret
+ShowDebugStop   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6690,6 +6758,7 @@ wait_until      PROC far
     cli
     LocalStartTimer
     sti
+;
     xor ax,ax    
     mov edi,1
     jmp BlockCurrentThread

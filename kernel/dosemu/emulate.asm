@@ -25,7 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                                 
-                NAME emulate
 
 include ..\os\protseg.def
 include ..\os.def
