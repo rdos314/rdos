@@ -3636,13 +3636,13 @@ start_processor_null_threads    Proc near
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
 
 start_locks_ok:    
-    mov ax,1
     mov ecx,200h
     mov ax,cs
     mov ds,ax
     mov es,ax
     mov si,OFFSET system_thread_pr
     mov di,OFFSET system_thread_name
+    mov ax,1
     CreateThread
 ;    
     mov eax,10

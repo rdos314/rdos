@@ -87,12 +87,8 @@ OsGate32	MACRO gate_nr
     dw 3
 			ENDM
 
-IFNDEF @WordSize
-   @WordSize EQU 2
-ENDIF
-
 OsGate	MACRO gate_nr
-IF @WordSize EQ 2
+IF (size $) EQ 0FF02h
 	OsGate16 gate_nr
 ELSE
 	OsGate32 gate_nr
