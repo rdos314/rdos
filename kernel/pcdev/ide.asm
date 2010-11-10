@@ -31,6 +31,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
+INCLUDE pci.inc
 
 part_struc      STRUC
 
@@ -76,6 +77,9 @@ ide_data    ENDS
 MAX_PCI_COUNT = 16
 
 data    SEGMENT byte public 'DATA'
+
+ide_io_count    DW ?
+ide_io_arr      DW ?,?
 
 ide_pci_count   DW ?
 ide_pci_arr     DW MAX_PCI_COUNT DUP(?)
@@ -2247,155 +2251,11 @@ ide_name       DB 'IDE',0
 
 ide_thread     proc far
     int 3
+;
     mov ax,SEG data
-    mov es,ax
-    mov es:ide_pci_count,0
-    mov di,OFFSET ide_pci_arr
-;    
-    xor ax,ax
-    mov bh,1
-    mov bl,1
-    FindPciClassAll
-    jc init_pci_done
-;
-    mov cl,10h
-    ReadPciDword
-    mov cl,al    
-    and ax,0FFFCh
-    mov bp,ax
-;    
-    test cl,1
-    jz init_pci_bar1_done
-;
-    or ax,ax
-    jz init_pci_bar1_done
-;    
-    cmp ax,1F0h
-    je init_pci_bar1_done
-;    
-    push ax
-    push dx
-    mov dx,ax
-    add dx,7
-    in al,dx
-    pop dx
-    and al,7Fh
-    cmp al,7Fh
-    pop ax
-    je init_pci_bar1_done
-;    
-    stosw
-    inc es:ide_pci_count
-
-init_pci_bar1_done:
-    mov cl,18h
-    ReadPciDword
-    mov cl,al    
-    and ax,0FFFCh
-;    
-    test cl,1
-    jz init_pci_bar3_done
-;
-    or ax,ax
-    jz init_pci_bar3_done
-;    
-    cmp ax,170h
-    je init_pci_bar3_done
-;    
-    push ax
-    push dx
-    mov dx,ax
-    add dx,7
-    in al,dx
-    pop dx
-    and al,7Fh
-    cmp al,7Fh
-    pop ax
-    je init_pci_bar3_done
-;    
-    stosw
-    inc es:ide_pci_count
-
-init_pci_bar3_done:       
-    mov dx,1
-
-init_pci_next_device:
-    mov ax,dx
-    mov bh,1
-    mov bl,1
-    FindPciClassAll
-    jc init_pci_done
-;       
-    mov cl,10h
-    ReadPciDword
-    mov cl,al
-    and ax,0FFFCh
-    cmp ax,bp
-    je init_pci_done
-;       
-    test cl,1
-    jz init_pci_next_bar1_done
-;
-    or ax,ax
-    jz init_pci_next_bar1_done
-;    
-    cmp ax,1F0h
-    je init_pci_next_bar1_done
-;    
-    push ax
-    push dx
-    mov dx,ax
-    add dx,7
-    in al,dx
-    pop dx
-    and al,7Fh
-    cmp al,7Fh
-    pop ax
-    je init_pci_next_bar1_done
-;    
-    cmp es:ide_pci_count,MAX_PCI_COUNT
-    je init_pci_done
-;    
-    stosw
-    inc es:ide_pci_count
-
-init_pci_next_bar1_done:
-    mov cl,18h
-    ReadPciDword
-    mov cl,al
-    and ax,0FFFCh
-;       
-    test cl,1
-    jz init_pci_next_bar3_done
-;
-    or ax,ax
-    jz init_pci_next_bar3_done 
-;    
-    cmp ax,170h
-    je init_pci_next_bar3_done
-;    
-    push ax
-    push dx
-    mov dx,ax
-    add dx,7
-    in al,dx
-    pop dx
-    and al,7Fh
-    cmp al,7Fh
-    pop ax
-    je init_pci_next_bar3_done
-;    
-    cmp es:ide_pci_count,MAX_PCI_COUNT
-    je init_pci_done
-;   
-    stosw 
-    inc es:ide_pci_count
-
-init_pci_next_bar3_done:    
-    inc dx
-    jmp init_pci_next_device
-    
-init_pci_done:
+    mov ds,ax
+    mov cx,ds:ide_pci_count
+    mov si,OFFSET ide_pci_arr
     ret
 ide_thread  Endp
     
@@ -2445,11 +2305,237 @@ dct202  DW OFFSET drive_assign2,    SEG code
 dct203  DW OFFSET demand_mount,     SEG code
 dct204  DW OFFSET erase,            SEG code
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CheckPciBar
+;
+;           DESCRIPTION:    Check single PCI bar for valid IDE drive
+;
+;       PARAMETERS:         AX      IO port
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckPciBar    Proc near
+    or ax,ax
+    stc
+    jz cpbDone
+;    
+    push ax
+    push dx
+    mov dx,ax
+    add dx,7
+    in al,dx
+    pop dx
+    and al,7Fh
+    cmp al,7Fh
+    pop ax
+    stc
+    je cpbDone
+;    
+    stosw
+    inc es:ide_io_count
+    clc
+
+cpbDone:
+    ret
+CheckPciBar Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocatePci
+;
+;           DESCRIPTION:    Allocate resources for a single PCI device
+;
+;       PARAMETERS:         SI      Number of functions
+;                           AL      IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePci    Proc near
+    push es
+    push ax    
+    mov eax,SIZE ide_data
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+    InitSection ds:IdeSection
+    pop ax
+    pop es
+;       
+    mov ds:IdeThread,0
+    mov ds:DriveSelArr,0
+    mov ds:DriveSelArr+2,0
+;
+    push es
+    push bx
+    push di
+;    
+    mov bx,cs
+    mov es,bx
+    mov di,OFFSET ide_int
+    RequestSharedIrqHandler
+;
+    pop di
+    pop bx
+    pop es
+;
+    cmp es:ide_io_count,2
+    je ap2
+
+ap1:
+    mov ax,es:[di-2]
+    mov ds:DriveSelArr,ax
+    jmp apDone
+
+ap2:    
+    mov ax,es:[di-4]
+    mov ds:DriveSelArr,ax
+    mov ax,es:[di-2]
+    mov ds:DriveSelArr+2,ax
+
+apDone:
+    mov di,es:ide_pci_count
+    add di,di
+    mov es:[di].ide_pci_arr,ds
+    inc es:ide_pci_count
+    ret
+AllocatePci    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CheckPciIde
+;
+;           DESCRIPTION:    Check for PCI IDE devices
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckPciIde Proc near
+    mov ax,SEG data
+    mov es,ax
+    mov es:ide_pci_count,0
+;    
+    xor ax,ax
+    mov bh,1
+    mov bl,1
+    FindPciClassAll
+    jc cpiDone
+;
+    mov es:ide_io_count,0
+    mov di,OFFSET ide_io_arr
+;
+    mov cl,10h
+    ReadPciDword
+    mov cl,al    
+    and ax,0FFFCh
+    mov bp,ax
+;    
+    cmp ax,1F0h
+    je cpiBar1Done
+;    
+    test cl,1
+    jz cpiBar1Done
+;
+    call CheckPciBar
+
+cpiBar1Done:
+    mov cl,18h
+    ReadPciDword
+    mov cl,al    
+    and ax,0FFFCh
+;    
+    cmp ax,170h
+    je cpiBar3Done
+;    
+    test cl,1
+    jz cpiBar3Done
+;
+    call CheckPciBar
+
+cpiBar3Done:
+    mov ax,es:ide_io_count
+    or ax,ax
+    jz cpiDetectMore
+;
+    mov cl,PCI_interrupt_line
+    ReadPciByte
+    call AllocatePci
+    
+cpiDetectMore:       
+    mov dx,1
+
+cpiLoop:
+    mov es:ide_io_count,0
+    mov di,OFFSET ide_io_arr
+;
+    mov ax,dx
+    mov bh,1
+    mov bl,1
+    FindPciClassAll
+    jc cpiDone
+;   
+    mov cl,10h
+    ReadPciDword
+    mov cl,al
+    and ax,0FFFCh
+    cmp ax,bp
+    je cpiDone
+;    
+    cmp es:ide_pci_count,MAX_PCI_COUNT
+    je cpiDone
+;    
+    cmp ax,1F0h
+    je cpiNextBar1Done
+;       
+    test cl,1
+    jz cpiNextBar1Done
+;
+    call CheckPciBar    
+
+cpiNextBar1Done:
+    mov cl,18h
+    ReadPciDword
+    mov cl,al
+    and ax,0FFFCh
+;       
+    test cl,1
+    jz cpiNextBar3Done
+;    
+    cmp ax,170h
+    je cpiNextBar3Done
+;
+    call CheckPciBar
+
+cpiNextBar3Done:    
+    mov ax,es:ide_io_count
+    or ax,ax
+    jz cpiNext
+;
+    mov cl,PCI_interrupt_line
+    ReadPciByte
+    call AllocatePci
+        
+cpiNext:
+    inc dx
+    jmp cpiLoop
+    
+cpiDone:
+    ret
+CheckPciIde Endp
+
 init    PROC far
-;    mov ax,cs
-;    mov es,ax
-;    mov di,OFFSET init_ide
-;    HookInitTasking
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET init_ide
+    HookInitTasking
+;
+    call CheckPciIde    
 ;
     xor bp,bp
     mov ax,cs
