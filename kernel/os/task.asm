@@ -4324,6 +4324,14 @@ double_fatal_thread:
     mov es:p_error_code,12
 
 double_stack_ok:
+    mov ax,wd_code_sel
+    verr ax
+    jnz double_stack_do
+;
+    cli
+    CpuReset
+
+double_stack_do:
     mov ax,system_data_sel
     mov ds,ax
     mov di,OFFSET debug_list
