@@ -2446,10 +2446,10 @@ dct203  DW OFFSET demand_mount,     SEG code
 dct204  DW OFFSET erase,            SEG code
 
 init    PROC far
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET init_ide
-    HookInitTasking
+;    mov ax,cs
+;    mov es,ax
+;    mov di,OFFSET init_ide
+;    HookInitTasking
 ;
     xor bp,bp
     mov ax,cs

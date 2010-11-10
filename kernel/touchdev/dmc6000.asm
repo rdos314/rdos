@@ -401,7 +401,11 @@ ttUp:
 
 ttDecodePos:
     mov cx,ds:td_max
-    sub cx,word ptr ds:td_in_buf+1
+    mov ax,word ptr ds:td_in_buf+1
+    cmp ax,cx
+    jae ttLoop
+;    
+    sub cx,ax
     xor dx,dx
     mov ax,7FFFh
     mul cx
@@ -410,7 +414,11 @@ ttDecodePos:
     mov ds:td_x,ax
 ;
     mov cx,ds:td_max
-    sub cx,word ptr ds:td_in_buf+3
+    mov ax,word ptr ds:td_in_buf+3
+    cmp ax,cx
+    jae ttLoop
+;    
+    sub cx,ax
     xor dx,dx
     mov ax,7FFFh
     mul cx

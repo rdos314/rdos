@@ -818,6 +818,9 @@ trap_6:
     push ebx
     push ds
 ;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_tss_data_sel
     mov ax,[bp].vm_err
     mov ds:tss_error_code,ax
     test byte ptr [bp+2].vm_eflags,2
