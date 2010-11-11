@@ -353,8 +353,8 @@ void cdecl main()
 
         RdosWaitMilli(250);
 
-        RdosSetWriteDataBreak(0, 1, &vbe, 4);
-        RdosClearBreak(0, 1);
+/*        RdosSetWriteDataBreak(0, 1, &vbe, 4);
+        RdosClearBreak(0, 1); */
 
         Keyboard = new TKeyboardDevice;
         Keyboard->OnKeyPress = KeyPress;
@@ -412,7 +412,7 @@ void cdecl main()
 
         RdosWaitMilli(5000);
 
-/*        vbe->SetDrawColor(255, 127, 80);
+        vbe->SetDrawColor(255, 127, 80);
         vbe->SetFilledStyle();
         vbe->SetLgopXor();
         vbe->DrawRect(0, 0, vbe->GetWidth(), vbe->GetHeight());
@@ -465,15 +465,12 @@ void cdecl main()
         Pattern3(vbe);
         RdosWaitMilli(5000);
 
-*/
-
         font = new TFont(60);
         vbe->SetFont(font);
 
         for (;;)
         {
-//                RandomLine(vbe);
-/*                count++;
+                count++;
                 switch (RdosGetRandom(4))
                 {
                         case 0:
@@ -491,7 +488,7 @@ void cdecl main()
                         case 3:
                                 RandomText(vbe);
                                 break;
-                } */
+                }
         }
 }
 

@@ -607,7 +607,7 @@ copy	Proc far
 ;
     or cx,cx
     jz copy_done
-;    
+;
 	mov bx,ds:v_lgop
 	cmp bx,LGOP_NONE
 	je copy_none

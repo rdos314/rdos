@@ -390,6 +390,9 @@ void TPlanetThread::Execute()
         for (i = 0; i < FMaxPlanets; i++)
                 PlanetArr[i] = RandomPlanet();
 
+    PlanetArr[0]->Move(543, 477);
+    PlanetArr[0]->Show();
+
     while (FInstalled)
     {
                 UpdatePlanets();

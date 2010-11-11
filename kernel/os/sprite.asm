@@ -484,6 +484,7 @@ hide_done:
 SaveAndShowWholeLine    MACRO
 	local save_whole
 	local save_done
+	local save_whole_width_ok
 
     mov ds,fs:sp_dest_sel
     mov cx,fs:sp_new_x
@@ -494,6 +495,7 @@ SaveAndShowWholeLine    MACRO
     add dx,fs:sp_new_y
     call ds:get_line_proc
     mov bl,al
+    mov ax,ds:v_x_max
 ;
     mov ds,fs:sp_back_sel
     mov cx,fs:sp_new_x
@@ -536,11 +538,19 @@ save_whole:
     add dx,fs:sp_new_y
     call ds:get_line_proc
     mov bl,al
+    mov ax,ds:v_x_max
+    sub ax,cx
+    jc save_done
 ;
+    cmp ax,fs:sp_w
+    jbe save_whole_width_ok
+;
+    mov ax,fs:sp_w
+
+save_whole_width_ok:        
     mov ds,fs:sp_back_sel
     xor cx,cx
     sub dx,fs:sp_new_y
-    mov ax,fs:sp_w
     call ds:set_sprite_row_proc
 ;
     mov ds,fs:sp_bitmap_sel
