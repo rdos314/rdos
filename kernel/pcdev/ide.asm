@@ -75,14 +75,19 @@ IntFlag     DB ?
 ide_data    ENDS
 
 MAX_PCI_COUNT = 16
+PCI_NAME_SIZE = 16
 
 data    SEGMENT byte public 'DATA'
 
-ide_io_count    DW ?
-ide_io_arr      DW ?,?
-
+pci_thread      DW ?
+ide_pci_curr    DW ?
 ide_pci_count   DW ?
+ide_io_arr      DW MAX_PCI_COUNT DUP(?)
 ide_pci_arr     DW MAX_PCI_COUNT DUP(?)
+
+pci_curr_ptr    DW ?
+pci_unit_ptr    DW ?
+pci_name_str    DB PCI_NAME_SIZE DUP(?)
 
 data    ENDS
 
@@ -1825,6 +1830,166 @@ install_unit    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:       INSTALL_PCI_TIMEOUT
+;
+;       DESCRIPTION:    Install unit timeout
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_pci_timeout    Proc far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:pci_thread
+    Signal
+;
+    pop bx
+    pop ax
+    pop ds
+    ret
+install_pci_timeout    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       INSTALL_PCI_UNIT
+;
+;       DESCRIPTION:    Install a PCI unit
+;
+;       PARAMETERS:     AL      UNIT #
+;                       DX      IO BASE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_pci_unit    Proc near
+    mov di,es:pci_unit_ptr
+    push ax
+    add al,'0'
+    mov es:[di],al
+    pop ax
+;    
+    mov ds:IntFlag,0
+    ClearSignal
+    call CheckReady
+    jc install_pci_unit_done
+;
+    push ax
+    push dx
+    GetSystemTime
+    add eax,119300
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,cs
+    mov di,OFFSET install_pci_timeout
+    StartTimer
+    pop dx
+    pop ax
+;
+    push ax
+;
+    push dx
+    add dx,6
+    shl al,4
+    or al,0A0h
+    out dx,al
+    inc dx
+;
+    jmp short $+2
+    mov al,0ECh
+    out dx,al
+    pop dx
+;
+    WaitForSignal
+    StopTimer
+    pop ax
+;
+    push ax
+    mov cx,256
+    
+install_pci_unit_read:
+    in ax,dx
+    loop install_pci_unit_read
+;
+    mov al,ds:IntFlag
+    or al,al
+    stc
+    jz install_pci_unit_check_done
+;       
+    call CheckStatus
+
+install_pci_unit_check_done:
+    pop ax
+    jc install_pci_unit_done
+;
+    push ax
+    mov eax,SIZE drive_data
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov fs,ax
+    pop ax
+;
+    mov fs:disc_sub_unit,al
+    mov fs:disc_io_base,dx
+    call GetDriveParams
+    jnc install_pci_unit_ok
+;
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+    stc
+    jmp install_pci_unit_done
+
+install_pci_unit_ok:
+    movzx bx,al
+    shl bx,1
+    mov ds:[bx].DriveSelArr,fs
+;
+    mov ecx,10000h
+    mov bx,fs
+    InstallDisc
+    mov fs:disc_sel,bx
+    mov fs:disc_nr,al
+    mov fs:disc_ide_sel,ds
+;
+    call CalcParam
+    mov ax,fs:drive_sectors_per_unit
+    mov dx,fs:drive_units
+    mov cx,512
+    mov si,fs:drive_sectors_per_cyl
+    mov di,fs:drive_heads
+    mov bx,fs:disc_sel
+    SetDiscParam
+;
+    push ds
+    mov ax,cs
+    mov ds,ax
+;
+    mov ax,SEG data    
+    mov es,ax
+    mov di,OFFSET pci_name_str
+    mov si,OFFSET discbuf_thread
+    mov ax,2
+    mov cx,100h
+    CreateThread
+    pop ds
+    mov di,es:pci_curr_ptr
+    inc byte ptr es:[di]
+    clc
+
+install_pci_unit_done:
+    ret
+install_pci_unit    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       DISC_ASSIGN1
 ;
 ;       DESCRIPTION:    Assign discs on primary adapter
@@ -1895,6 +2060,68 @@ disc_assign2_done:
     ret
 disc_assign2    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       DISC_ASSIGN_PCI
+;
+;       DESCRIPTION:    Assign PCI discs
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_pci_name   DB 'Ide Pci ',0
+
+disc_assign_pci    Proc far
+    int 3
+    mov ax,SEG data
+    mov es,ax
+    mov es:ide_pci_curr,0
+    mov di,OFFSET pci_name_str
+    mov si,OFFSET disc_pci_name
+
+disc_assign_name_loop:    
+    lods byte ptr cs:[si]
+    stosb
+    or al,al
+    jnz disc_assign_name_loop
+;
+    mov es:pci_curr_ptr,di
+    mov al,'0'
+    stosb
+    mov al,':'
+    stosb
+    mov es:pci_unit_ptr,di
+    mov al,'0'
+    stosb
+;
+    xor bx,bx
+    mov cx,es:ide_pci_count
+    or cx,cx
+    jz disc_assign_pci_done
+
+disc_assign_pci_loop:    
+    mov dx,es:[bx].ide_io_arr
+    mov ds,es:[bx].ide_pci_arr
+;    
+    GetThread
+    mov es:pci_thread,ax
+;       
+    mov al,0
+    call install_pci_unit
+;       
+    mov al,1
+    call install_pci_unit
+    mov es:pci_thread,0
+;
+    add bx,2
+    loop disc_assign_pci_loop
+
+disc_assign_pci_done:
+    ret
+disc_assign_pci    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2305,6 +2532,13 @@ dct202  DW OFFSET drive_assign2,    SEG code
 dct203  DW OFFSET demand_mount,     SEG code
 dct204  DW OFFSET erase,            SEG code
 
+disc_ctrl_pci:
+dcp200  DW OFFSET disc_assign_pci,  SEG code
+dcp201  DW OFFSET drive_assign1,    SEG code
+dcp202  DW OFFSET drive_assign2,    SEG code
+dcp203  DW OFFSET demand_mount,     SEG code
+dcp204  DW OFFSET erase,            SEG code
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2313,20 +2547,21 @@ dct204  DW OFFSET erase,            SEG code
 ;
 ;           DESCRIPTION:    Check single PCI bar for valid IDE drive
 ;
-;       PARAMETERS:         AX      IO port
+;       PARAMETERS:         SI      IO port
+;                           AL      IRQ
 ;
 ;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckPciBar    Proc near
-    or ax,ax
+    or si,si
     stc
     jz cpbDone
 ;    
     push ax
     push dx
-    mov dx,ax
+    mov dx,si
     add dx,7
     in al,dx
     pop dx
@@ -2336,28 +2571,11 @@ CheckPciBar    Proc near
     stc
     je cpbDone
 ;    
-    stosw
-    inc es:ide_io_count
-    clc
-
-cpbDone:
-    ret
-CheckPciBar Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocatePci
-;
-;           DESCRIPTION:    Allocate resources for a single PCI device
-;
-;       PARAMETERS:         SI      Number of functions
-;                           AL      IRQ
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocatePci    Proc near
+    mov di,es:ide_pci_count
+    add di,di
+    mov es:[di].ide_io_arr,si
+;    
+    push ds
     push es
     push ax    
     mov eax,SIZE ide_data
@@ -2371,41 +2589,27 @@ AllocatePci    Proc near
     mov ds:IdeThread,0
     mov ds:DriveSelArr,0
     mov ds:DriveSelArr+2,0
+    mov es:[di].ide_pci_arr,ds
+    pop ds
 ;
     push es
     push bx
-    push di
 ;    
     mov bx,cs
     mov es,bx
     mov di,OFFSET ide_int
     RequestSharedIrqHandler
 ;
-    pop di
     pop bx
     pop es
 ;
-    cmp es:ide_io_count,2
-    je ap2
-
-ap1:
-    mov ax,es:[di-2]
-    mov ds:DriveSelArr,ax
-    jmp apDone
-
-ap2:    
-    mov ax,es:[di-4]
-    mov ds:DriveSelArr,ax
-    mov ax,es:[di-2]
-    mov ds:DriveSelArr+2,ax
-
-apDone:
-    mov di,es:ide_pci_count
-    add di,di
-    mov es:[di].ide_pci_arr,ds
     inc es:ide_pci_count
+    clc
+
+cpbDone:
     ret
-AllocatePci    Endp
+CheckPciBar Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2427,9 +2631,6 @@ CheckPciIde Proc near
     FindPciClassAll
     jc cpiDone
 ;
-    mov es:ide_io_count,0
-    mov di,OFFSET ide_io_arr
-;
     mov cl,10h
     ReadPciDword
     mov cl,al    
@@ -2442,6 +2643,9 @@ CheckPciIde Proc near
     test cl,1
     jz cpiBar1Done
 ;
+    mov si,ax
+    mov cl,PCI_interrupt_line
+    ReadPciByte
     call CheckPciBar
 
 cpiBar1Done:
@@ -2456,24 +2660,15 @@ cpiBar1Done:
     test cl,1
     jz cpiBar3Done
 ;
+    mov si,ax
+    mov cl,PCI_interrupt_line
+    ReadPciByte    
     call CheckPciBar
 
 cpiBar3Done:
-    mov ax,es:ide_io_count
-    or ax,ax
-    jz cpiDetectMore
-;
-    mov cl,PCI_interrupt_line
-    ReadPciByte
-    call AllocatePci
-    
-cpiDetectMore:       
     mov dx,1
 
 cpiLoop:
-    mov es:ide_io_count,0
-    mov di,OFFSET ide_io_arr
-;
     mov ax,dx
     mov bh,1
     mov bl,1
@@ -2496,6 +2691,9 @@ cpiLoop:
     test cl,1
     jz cpiNextBar1Done
 ;
+    mov si,ax
+    mov cl,PCI_interrupt_line
+    ReadPciByte    
     call CheckPciBar    
 
 cpiNextBar1Done:
@@ -2510,18 +2708,12 @@ cpiNextBar1Done:
     cmp ax,170h
     je cpiNextBar3Done
 ;
+    mov si,ax
+    mov cl,PCI_interrupt_line
+    ReadPciByte    
     call CheckPciBar
 
 cpiNextBar3Done:    
-    mov ax,es:ide_io_count
-    or ax,ax
-    jz cpiNext
-;
-    mov cl,PCI_interrupt_line
-    ReadPciByte
-    call AllocatePci
-        
-cpiNext:
     inc dx
     jmp cpiLoop
     
@@ -2534,8 +2726,6 @@ init    PROC far
     mov es,ax
     mov di,OFFSET init_ide
     HookInitTasking
-;
-    call CheckPciIde    
 ;
     xor bp,bp
     mov ax,cs
@@ -2604,7 +2794,7 @@ init_ide_second:
 init_ide_done:
     or bp,bp
     stc
-    jz init_ide_exit
+    jz init_ide_pci
 ;
     mov ax,cs
     mov ds,ax
@@ -2614,9 +2804,23 @@ init_ide_done:
     xor dx,dx
     mov ax,get_ide_disc_nr
     RegisterBimodalUserGate
-    clc
+
+init_ide_pci:
+    call CheckPciIde
+    mov ax,SEG data
+    mov ds,ax
+    mov cx,ds:ide_pci_count
+    or cx,cx
+    jz init_ide_exit
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET disc_ctrl_pci
+    HookInitDisc
 
 init_ide_exit:
+    clc
     ret
 init    ENDP
 
