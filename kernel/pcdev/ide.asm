@@ -68,6 +68,7 @@ drive_data      ENDS
 ide_data    STRUC
 
 IdeThread       DW ?
+IdeIoBase       DW ?
 DriveSelArr     DW 2 DUP(?)
 IdeSection      section_typ <>
 IntFlag     DB ?
@@ -115,6 +116,32 @@ ide_int Proc far
     Signal
     ret
 ide_int Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       IDE_PCI_INT
+;
+;       DESCRIPTION:    PCI IDE INTERRUPT
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ide_pci_int Proc far
+    mov dx,ds:IdeIoBase
+    or dx,dx
+    jz ide_pci_int_base_ok
+;
+    add dx,7
+    in al,dx
+
+ide_pci_int_base_ok:    
+    mov ds:IntFlag,1
+    mov bx,ds:IdeThread
+    Signal
+    ret
+ide_pci_int Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -565,6 +592,8 @@ ReadDrive       Proc near
     EnterSection ds:IdeSection
     GetThread
     mov ds:IdeThread,ax
+    mov ax,fs:disc_io_base
+    mov ds:IdeIoBase,ax
     pop bx
     cmp fs:drive_lba_mode,0
     jz ReadDriveIde
@@ -604,6 +633,7 @@ ReadDriveStart:
 ReadDriveDone:
     pushf
     mov ds:IdeThread,0
+    mov ds:IdeIoBase,0
     LeaveSection ds:IdeSection
     popf
     ret
@@ -630,6 +660,8 @@ WriteDrive      Proc near
     EnterSection ds:IdeSection
     GetThread
     mov ds:IdeThread,ax
+    mov ax,fs:disc_io_base
+    mov ds:IdeIoBase,ax
     pop bx
     cmp fs:drive_lba_mode,0
     jz WriteDriveIde
@@ -668,6 +700,7 @@ WriteDriveStart:
 WriteDriveDone:
     pushf
     mov ds:IdeThread,0
+    mov ds:IdeIoBase,0
     LeaveSection ds:IdeSection
     popf
     ret
@@ -1322,6 +1355,8 @@ read_drive_retry_loop:
     ClearSignal
     GetThread
     mov ds:IdeThread,ax
+    mov ax,fs:disc_io_base
+    mov ds:IdeIoBase,ax
 ;
     cmp fs:drive_lba_mode,0
     jz read_drive_ide
@@ -1450,6 +1485,8 @@ write_drive_retry_loop:
     ClearSignal
     GetThread
     mov ds:IdeThread,ax
+    mov ax,fs:disc_io_base
+    mov ds:IdeIoBase,ax
 ;
     cmp fs:drive_lba_mode,0
     jz write_drive_ide
@@ -1867,6 +1904,9 @@ install_pci_timeout    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 install_pci_unit    Proc near
+    push es
+    pushad
+;    
     mov di,es:pci_unit_ptr
     push ax
     add al,'0'
@@ -1880,6 +1920,11 @@ install_pci_unit    Proc near
 ;
     push ax
     push dx
+;
+    GetThread
+    mov ds:IdeThread,ax
+    mov ds:IdeIoBase,dx
+;    
     GetSystemTime
     add eax,119300
     adc edx,0
@@ -1888,6 +1933,7 @@ install_pci_unit    Proc near
     mov bx,cs
     mov di,OFFSET install_pci_timeout
     StartTimer
+;    
     pop dx
     pop ax
 ;
@@ -1978,11 +2024,13 @@ install_pci_unit_ok:
     mov cx,100h
     CreateThread
     pop ds
-    mov di,es:pci_curr_ptr
-    inc byte ptr es:[di]
     clc
 
 install_pci_unit_done:
+    mov ds:IdeThread,0
+;
+    popad
+    pop es
     ret
 install_pci_unit    Endp
 
@@ -2075,7 +2123,6 @@ disc_assign2    Endp
 disc_pci_name   DB 'Ide Pci ',0
 
 disc_assign_pci    Proc far
-    int 3
     mov ax,SEG data
     mov es,ax
     mov es:ide_pci_curr,0
@@ -2088,6 +2135,7 @@ disc_assign_name_loop:
     or al,al
     jnz disc_assign_name_loop
 ;
+    dec di
     mov es:pci_curr_ptr,di
     mov al,'0'
     stosb
@@ -2095,6 +2143,8 @@ disc_assign_name_loop:
     stosb
     mov es:pci_unit_ptr,di
     mov al,'0'
+    stosb
+    xor al,al
     stosb
 ;
     xor bx,bx
@@ -2115,6 +2165,9 @@ disc_assign_pci_loop:
     mov al,1
     call install_pci_unit
     mov es:pci_thread,0
+;
+    mov di,es:pci_curr_ptr
+    inc byte ptr es:[di]
 ;
     add bx,2
     loop disc_assign_pci_loop
@@ -2433,8 +2486,8 @@ get_ide_disc    Proc far
 
 get_ide_second:
     sub bl,2
-    cmp bl,2
-    jae get_ide_fail
+    cmp bl,4
+    jae get_ide_pci
 ;    
     mov ax,ide_data_sel2
     verr ax
@@ -2452,6 +2505,49 @@ get_ide_second:
     clc
     jmp get_ide_done
 
+get_ide_pci:
+    sub bl,2
+    push cx
+    push si
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov cx,ds:ide_pci_count
+    or cx,cx
+    jz get_ide_pci_fail
+;    
+    mov si,OFFSET ide_pci_arr
+
+get_ide_pci_loop:
+    cmp bl,2
+    jb get_ide_pci_check
+;
+    sub bl,2
+    add si,2
+    sub cx,1
+    jnz get_ide_pci_loop
+
+get_ide_pci_fail:
+    stc
+    jmp get_ide_pci_done
+
+get_ide_pci_check:
+    mov ds,ds:[si]
+    movzx bx,bl
+    add bx,bx
+    mov bx,ds:[bx].DriveSelArr
+    or bx,bx
+    jz get_ide_pci_fail
+;
+    mov ds,bx
+    mov al,ds:disc_nr
+    clc
+        
+get_ide_pci_done:
+    pop si
+    pop cx    
+    jmp get_ide_done
+
 get_ide_fail:
     stc
     
@@ -2460,51 +2556,6 @@ get_ide_done:
     pop ds    
     retf32
 get_ide_disc    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Init_ide
-;
-;           DESCRIPTION:    inits adpater
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ide_name       DB 'IDE',0
-
-ide_thread     proc far
-    int 3
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov cx,ds:ide_pci_count
-    mov si,OFFSET ide_pci_arr
-    ret
-ide_thread  Endp
-    
-init_ide  Proc far
-    push ds
-    push es
-    pusha
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET ide_name
-    mov si,OFFSET ide_thread
-    mov ax,4
-    mov cx,100h
-    CreateThread
-;
-    popa
-    pop es
-    pop ds
-    ret
-init_ide    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2587,21 +2638,22 @@ CheckPciBar    Proc near
     pop es
 ;       
     mov ds:IdeThread,0
+    mov ds:IdeIoBase,0
     mov ds:DriveSelArr,0
     mov ds:DriveSelArr+2,0
     mov es:[di].ide_pci_arr,ds
-    pop ds
 ;
     push es
     push bx
 ;    
     mov bx,cs
     mov es,bx
-    mov di,OFFSET ide_int
-    RequestSharedIrqHandler
+    mov di,OFFSET ide_pci_int
+    RequestPrivateIrqHandler
 ;
     pop bx
     pop es
+    pop ds
 ;
     inc es:ide_pci_count
     clc
@@ -2722,11 +2774,6 @@ cpiDone:
 CheckPciIde Endp
 
 init    PROC far
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET init_ide
-    HookInitTasking
-;
     xor bp,bp
     mov ax,cs
     mov ds,ax
@@ -2751,6 +2798,7 @@ init_ide_primary:
     InitSection ds:IdeSection
 ;       
     mov ds:IdeThread,0
+    mov ds:IdeIoBase,0
     mov ds:DriveSelArr,0
     mov ds:DriveSelArr+2,0
 ;
@@ -2780,6 +2828,7 @@ init_ide_second:
     mov ds,ax
     InitSection ds:IdeSection
     mov ds:IdeThread,0
+    mov ds:IdeIoBase,0
     mov ds:DriveSelArr,0
     mov ds:DriveSelArr+2,0
 ;
@@ -2792,10 +2841,6 @@ init_ide_second:
     RequestPrivateIrqHandler
 
 init_ide_done:
-    or bp,bp
-    stc
-    jz init_ide_pci
-;
     mov ax,cs
     mov ds,ax
     mov es,ax

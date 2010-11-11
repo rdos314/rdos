@@ -260,6 +260,7 @@ int TRemovePartitionCommand::Execute(char *param)
 {
 	int ret;
 	int DiscNr;
+	int d;
 	InitOptions();
 
 	if (!ScanCmdLine(param, 0))
@@ -284,9 +285,21 @@ int TRemovePartitionCommand::Execute(char *param)
 		return 1;
 	}
 
-	FDisc = new TIdeDisc(DiscNr);
-	ret = RemoveDisc();
-	delete FDisc;
+    for (d = 0; d < 16; d++)
+    {
+        FDisc = new TIdeDisc(d);
+        if (FDisc->IsValid())
+            if (FDisc->GetDiscNr() == DiscNr)
+                break; 
+        delete FDisc;
+        FDisc = 0;
+    }
+
+    if (FDisc)
+    {
+  	    ret = RemoveDisc();
+	    delete FDisc;
+	}
 
 	return ret;
 }

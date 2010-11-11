@@ -137,6 +137,7 @@ int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
 int TMakePartitionCommand::Execute(char *param)
 {
 	int DiscNr;
+	int d;
 	TDisc *Disc;
 	long Size;
 	const char *FsName;
@@ -167,8 +168,20 @@ int TMakePartitionCommand::Execute(char *param)
 	}
 
 	ret = 1;
-	Disc = new TIdeDisc(DiscNr);
-	if (Disc->IsValid())
+
+
+    for (d = 0; d < 16; d++)
+    {
+        Disc = new TIdeDisc(d);
+        if (Disc->IsValid())
+            if (Disc->GetDiscNr() == DiscNr)
+                break; 
+        delete Disc;
+        Disc = 0;
+    }
+
+
+	if (Disc && Disc->IsValid())
 		ret = Make(Disc, FsName, Size * 0x800);
 	delete Disc;
 	return ret;

@@ -327,42 +327,52 @@ int TShowPartitionCommand::Show(TDisc *Disc)
 ##########################################################################*/
 int TShowPartitionCommand::Execute(char *param)
 {
-        int DiscNr;
-        TDisc *Disc;
+    int DiscNr;
+    int d;
+    TDisc *Disc;
 
-        InitOptions();
+    InitOptions();
 
-        if (LeadOptions(&param, 0) != E_None)
-                return 1;
+    if (LeadOptions(&param, 0) != E_None)
+        return 1;
 
-        /* if no parameters, show all */
-        if (*param == 0)
+    /* if no parameters, show all */
+    if (*param == 0)
+    {
+        for (DiscNr = 0; DiscNr < 16; DiscNr++)
         {
-                for (DiscNr = 0; DiscNr < 4; DiscNr++)
-                {
-                        Disc = new TIdeDisc(DiscNr);
-                        if (Disc->IsValid())
-                                Show(Disc);
-                        delete Disc;
-                }
-                return 0;
+            Disc = new TIdeDisc(DiscNr);
+            if (Disc->IsValid())
+                Show(Disc);
+            delete Disc;
         }
-
-        if (sscanf(param, "%d", &DiscNr) == 1)
-        {
-                Disc = new TIdeDisc(DiscNr);
-                if (!Show(Disc))
-                {
-                        FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
-                        Write(FMsg.GetData());
-                }
-        }
-        else
-        {
-                ErrorSyntax(0);
-                return 1;
-        }
-
         return 0;
+    }
+
+    if (sscanf(param, "%d", &DiscNr) == 1)
+    {
+        for (d = 0; d < 16; d++)
+        {
+            Disc = new TIdeDisc(d);
+            if (Disc->IsValid())
+                if (Disc->GetDiscNr() == DiscNr)
+                    break; 
+            delete Disc;
+            Disc = 0;
+        }
+
+        if (Disc == 0 || !Show(Disc))
+        {
+            FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
+            Write(FMsg.GetData());
+        }
+    }
+    else
+    {
+        ErrorSyntax(0);
+        return 1;
+    }
+
+    return 0;
 }
 

@@ -53,6 +53,7 @@ irq&nr:
         push fs
         pushad
 ;
+
     EnterInt
         sti
 ;       
