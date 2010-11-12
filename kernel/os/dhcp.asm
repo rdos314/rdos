@@ -999,6 +999,10 @@ ReceiveDiscover	Proc near
     or ax,ax
     jz discover_req_done
 ;    
+    mov eax,ds:dhcp_ip2
+    or eax,eax
+    jz discover_req_done
+;
     mov ax,gs
     mov fs,ax
     mov ax,es
