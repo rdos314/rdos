@@ -409,9 +409,9 @@ ApInit:
 
 ; comment to start AP cores
     
-stopl:
-   cli
-    jmp stopl
+;stopl:
+;   cli
+;    jmp stopl
 
     StartProcessor
 
