@@ -5263,8 +5263,6 @@ tumSwap:
 
 tumWake:
     mov ds:owner_sel,0  
-    mov ds:owner_lock,0
-    sti
     mov al,ds:owner_wait
     or al,al
     jz tumUnlock
@@ -5300,6 +5298,7 @@ tumPreemptDo:
     pop fs
 
 tumUnlockDo:
+    mov ds:owner_lock,0
 
 tumDone:
     mov al,'0'
