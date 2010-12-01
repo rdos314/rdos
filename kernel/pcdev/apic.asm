@@ -2745,7 +2745,7 @@ init_ap_proc:
     jz init_table_next
 ;    
     movzx edx,es:[di].ap_apic_id
-;    call StartCore
+    call StartCore
     jc init_table_next    
 ;    
     cmp bp,1
