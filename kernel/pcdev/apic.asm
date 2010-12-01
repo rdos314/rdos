@@ -38,6 +38,8 @@ INCLUDE ..\os\acpi.def
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 
+INCLUDE pci.inc
+
 ipause   MACRO
     db 0F3h
     db 90h
@@ -72,8 +74,8 @@ aio_base        apic_struc <>
 
 aio_apic_id     DB ?
 aio_resv        DB ?
-aoi_phys        DD ?
-aoi_int_base    DD ?
+aio_phys        DD ?
+aio_int_base    DD ?
 
 apic_ioapic_struc   ENDS
 
@@ -409,9 +411,9 @@ ApInit:
 
 ; comment to start AP cores
     
-;stopl:
-;   cli
-;    jmp stopl
+stopl:
+   cli
+    jmp stopl
 
     StartProcessor
 
@@ -1122,7 +1124,34 @@ reload_apic_msr_timer    Proc far
     pop ds
     ret
 reload_apic_msr_timer  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           GetPciIrq
+;
+;   DESCRIPTION:    Convert PCI int pin to int line
+;
+;   PARAMETERS:     AL      Pin
+;
+;   RETURNS:        AL      Line
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+get_pci_irq_name    DB 'Get Pci IRQ',0
+
+get_pci_irq  Proc far
+    mov cl,PCI_interrupt_pin
+    ReadPciByte
+    add al,10h
+    cmp al,18h
+    jc gpiOk
+;
+    int 3
+
+gpiOk:    
+    ret
+get_pci_irq  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1858,6 +1887,7 @@ enable_irq  Proc far
     push edx
 ;
     movzx edx,al
+    mov dh,0A0h
     cmp al,10h
     jae enable_irq_do
 ;    
@@ -1868,9 +1898,10 @@ enable_irq  Proc far
     mov edx,ds:[bx].isa_redir_arr
     sub dl,40h
     xchg al,dl
-    add dl,40h
-    
+
 enable_irq_do:
+    add dl,40h
+;    
     mov bx,ioapic_mem_sel
     mov ds,bx
 ;       
@@ -2125,158 +2156,35 @@ apic_name       DB 'Apic Test',0
 
 apic_pr:
     int 3
-    mov bx,process_page_sel
-    mov ds,bx
-    xor bx,bx
-    mov eax,[ebx]
 ;    
-    mov bx,sys_page_sel
-    mov ds,bx
-    xor bx,bx
-    mov eax,[ebx]
+    xor ax,ax
+    mov bh,1
+    mov bl,1
+    FindPciClassAll
+    jc apic_pr_done
 ;
-    mov ax,flat_data_sel
-    mov ds,ax
-    xor bx,bx
-    mov ax,ds:[bx]
-;    
-    mov ax,apic_mem_sel
-    mov ds,ax    
-    mov eax,ds:APIC_LINT0
-    mov eax,ds:APIC_LINT1
+    mov cl,10h
+    ReadPciDword
+    mov cl,al    
+    and ax,0FFFCh
+;
+    mov si,ax
+;
+    mov ax,get_pci_irq_nr
+    IsValidOsGate
+    jc apic_pr_dir
+;
+    mov cl,PCI_interrupt_pin
+    ReadPciByte
+    GetPciIrqNr
+    jmp apic_pr_read
 
+apic_pr_dir:
+    mov cl,PCI_interrupt_line
+    ReadPciByte
 
-
-
-;       
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,OFFSET isa_redir_arr
-;    
-    mov ax,task_sel
-    mov ds,ax
-    mov ax,gdt_sel
-    mov es,ax
-    mov di,tss_data_sel
-;       call ds:lock_list_proc
-    str si
-    movs word ptr es:[di],es:[si]
-    movs word ptr es:[di],es:[si]
-    lods word ptr es:[si]
-    mov ah,92h
-    stos word ptr es:[di]
-    movs word ptr es:[di],es:[si]
-    mov ax,tss_data_sel
-    mov es,ax
-    mov ax,es:tss_thread
-;   call ds:unlock_list_proc
-    
-
-
-;    
-    mov al,14
+apic_pr_read:
     call ReadIoApicInt
-;
-
-    mov al,0
-    call ReadIoApicInt
-    mov esi,eax
-    mov edi,edx
-;    
-    mov al,1
-    call ReadIoApicInt
-;    
-    mov al,2
-    call ReadIoApicInt
-;
-    mov al,3
-    call ReadIoApicInt   
-;
-    mov al,4
-    call ReadIoApicInt   
-;
-    mov al,5
-    call ReadIoApicInt   
-;
-    mov al,6
-    call ReadIoApicInt   
-;
-    mov al,7
-    call ReadIoApicInt   
-;
-    mov al,8
-    call ReadIoApicInt
-;    
-    mov al,9
-    call ReadIoApicInt
-;    
-    mov al,10
-    call ReadIoApicInt
-;
-    mov al,11
-    call ReadIoApicInt   
-;
-    mov al,12
-    call ReadIoApicInt   
-;
-    mov al,13
-    call ReadIoApicInt   
-;
-    mov al,14
-    call ReadIoApicInt   
-;
-    mov al,15
-    call ReadIoApicInt   
-;    
-    GetProcessor
-    mov edx,fs:ps_apic
-;
-    ResumeProcessor
-    mov al,82h
-    call SendInt 
-;       
-    PreemptProcessor
-    PreemptProcessor
-    PreemptProcessor
-    int 3
-    
-    mov eax,05F504D5Fh
-;
-    mov ebx,40Eh
-    mov bx,gs:[bx]
-    movzx ebx,bx
-    shl ebx,4
-;    
-;    mov ebx,09FC00h
-    mov cx,40h
-
-find_mp_bda:
-    cmp eax,gs:[ebx]
-    je find_ok
-;
-    add ebx,10h
-    loop find_mp_bda
-;    
-    mov ebx,0E0000h
-    mov cx,2000h
-
-find_mp_bios:
-    cmp eax,gs:[ebx]
-    je find_ok
-;
-    add ebx,10h
-    loop find_mp_bios
-;
-    int 3
-    stc
-    jmp find_fail
-
-find_ok:
-    int 3
-    mov eax,gs:[ebx]
-
-find_fail:
-    int 3
 
 apic_pr_done:
     retf            
@@ -2522,6 +2430,16 @@ init_local_apic_msr:
     call SetupMsrGates
 
 init_local_apic_done:
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov si,OFFSET get_pci_irq
+    mov di,OFFSET get_pci_irq_name
+    xor cl,cl
+    mov ax,get_pci_irq_nr
+    RegisterOsGate
+;
     popad
     pop es
     pop ds
@@ -2915,12 +2833,13 @@ init_table_next:
     ja init_table_loop
 ;
     call SetupIrq    
-
-init_apic_gates_ok:     
+;    
     mov ax,cs
     mov es,ax
     mov di,OFFSET init_apic_thread
     HookInitTasking
+
+init_apic_gates_ok:     
     ret
 init    ENDP
 
