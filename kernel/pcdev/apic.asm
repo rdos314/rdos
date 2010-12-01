@@ -380,6 +380,7 @@ page_struc  ENDS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ApInit:
+
     mov eax,es:ap_cr4
     db 0Fh
     db 22h
@@ -405,15 +406,24 @@ ApInit:
     mov ds:mp_processor_sign,eax
     GetApicId
     mov ds:mp_apic,edx
-;    
-    sti
-    hlt
+    cmp edx,1
+    je ap_wait
+
+
 
 ; comment to start AP cores
     
 stopl:
    cli
     jmp stopl
+
+
+
+    
+
+ap_wait:    
+    sti
+    hlt
 
     StartProcessor
 
@@ -1730,7 +1740,7 @@ StartCore   Proc near
 ;    
     mov al,1
     call SendStartup
-;
+    
     mov cx,250
 
 scLoop1:
@@ -2156,6 +2166,9 @@ apic_name       DB 'Apic Test',0
 
 apic_pr:
     int 3
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:apic_arr
 ;    
     xor ax,ax
     mov bh,1
