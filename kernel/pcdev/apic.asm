@@ -406,8 +406,8 @@ ApInit:
     mov ds:mp_processor_sign,eax
     GetApicId
     mov ds:mp_apic,edx
-    cmp edx,1
-    je ap_wait
+;    cmp edx,1
+;    je ap_wait
 
 
 
@@ -2756,6 +2756,11 @@ init_ap_proc:
     mov eax,es:[di].ap_flags
     test al,1
     jz init_table_next
+;    
+; decomment to start more than 2 cores
+;
+    cmp bp,2
+    je init_table_next
 ;    
     movzx edx,es:[di].ap_apic_id
     call StartCore
