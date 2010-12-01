@@ -858,6 +858,11 @@ DebugBreak	MACRO
 	OsGate debug_break_nr
 					ENDM
 
+; IN  AL        Debug char
+ShowProcDebug	MACRO
+	OsGate show_proc_debug_nr
+					ENDM
+
 ; OUT AX               Thread ID
 GetDebugThreadSel MACRO
 	OsGate get_debug_thread_sel_nr

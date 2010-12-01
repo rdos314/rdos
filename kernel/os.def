@@ -542,7 +542,8 @@ get_debug_thread_sel_nr     EQU 379
 
 find_pci_class_all_nr       EQU 380
 
-get_pci_irq_nr              EQU 381
+show_proc_debug_nr          EQU 381
 
-osgate_entries				EQU 382
+get_pci_irq_nr              EQU 382
 
+osgate_entries				EQU 390

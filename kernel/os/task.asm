@@ -807,6 +807,12 @@ proc_init:
     mov ax,shutdown_nr
     RegisterOsGate
 ;
+    mov si,OFFSET show_proc_debug
+    mov di,OFFSET show_proc_debug_name
+    xor cl,cl
+    mov ax,show_proc_debug_nr
+    RegisterOsGate
+;
     mov si,OFFSET create_processor
     mov di,OFFSET create_processor_name
     xor cl,cl
@@ -4895,6 +4901,9 @@ WakeProcessor   Proc near
 ;
     mov cx,ds:processor_count
     mov bx,OFFSET processor_arr
+;
+    mov al,'o'
+    call ShowDebug
 
 wpLoop:
     mov fs,[bx]
@@ -4903,12 +4912,20 @@ wpLoop:
     or ax,ax
     jz wpNext
 ;
+    push ax
+    mov al,'r'
+    call ShowDebug
+    pop ax
+;
     ResumeProcessor
     jmp wpDone
 
 wpNext:
     add bx,2
     loop wpLoop
+;
+    mov al,'q'
+    call ShowDebug
 
 wpDone:    
     pop cx
@@ -4933,7 +4950,13 @@ WakeProcessor   Endp
 
 ShowDebug   Proc near
     push ds
+    push fs
     push bx
+;
+    mov bx,task_sel
+    mov ds,bx
+    call ds:get_cpu_proc
+;        
     mov bx,__B800
     mov ds,bx
     mov bx,fs:ps_id
@@ -4941,10 +4964,48 @@ ShowDebug   Proc near
     add bx,bx
     mov ah,7
     mov ds:[bx],ax
+;
     pop bx
+    pop fs
     pop ds
     ret
 ShowDebug   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ShowProcDebug
+;
+;           DESCRIPTION:    Show processor debug char
+;
+;       PARAMETERS:         AL      Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+show_proc_debug_name    DB 'Show Processor Debug',0
+
+show_proc_debug   Proc far
+    push ds
+    push fs
+    push bx
+;
+    mov bx,task_sel
+    mov ds,bx
+    call ds:get_cpu_proc
+;        
+    mov bx,__B800
+    mov ds,bx
+    mov bx,fs:ps_id
+    add bx,50
+    add bx,bx
+    mov ah,7
+    mov ds:[bx],ax
+;
+    pop bx
+    pop fs
+    pop ds
+    ret
+show_proc_debug   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5202,6 +5263,8 @@ tumSwap:
 
 tumWake:
     mov ds:owner_sel,0  
+    mov ds:owner_lock,0
+    sti
     mov al,ds:owner_wait
     or al,al
     jz tumUnlock
@@ -5237,7 +5300,6 @@ tumPreemptDo:
     pop fs
 
 tumUnlockDo:
-    mov ds:owner_lock,0
 
 tumDone:
     mov al,'0'
@@ -5310,11 +5372,14 @@ lumOwnerOk:
     call ShowDebug
 
     mov ds:owner_sel,0  
+    mov ds:owner_lock,0
+    sti
+;
     mov al,ds:owner_wait
     or al,al
     jz lumUnlock
 ;
-    mov al,'w'
+    mov al,'p'
     call ShowDebug
 
     dec ds:owner_wait    
@@ -5352,7 +5417,6 @@ lumPreemptDo:
     pop fs
 
 lumUnlockDo:
-    mov ds:owner_lock,0
 
 lumDone:
     mov al,'0'
