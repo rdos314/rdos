@@ -2649,7 +2649,7 @@ CheckPciBar    Proc near
     mov bx,cs
     mov es,bx
     mov di,OFFSET ide_pci_int
-    RequestPrivateIrqHandler
+    RequestSharedIrqHandler
 ;
     pop bx
     pop es
@@ -2696,8 +2696,20 @@ CheckPciIde Proc near
     jz cpiBar1Done
 ;
     mov si,ax
+    mov ax,get_pci_irq_nr
+    IsValidOsGate
+    jc cpiBar1UseLine
+;
+    mov cl,PCI_interrupt_pin
+    ReadPciByte
+    GetPciIrqNr
+    jmp cpiBar1IntOk
+
+cpiBar1UseLine:
     mov cl,PCI_interrupt_line
     ReadPciByte
+
+cpiBar1IntOk:
     call CheckPciBar
 
 cpiBar1Done:
@@ -2713,8 +2725,20 @@ cpiBar1Done:
     jz cpiBar3Done
 ;
     mov si,ax
+    mov ax,get_pci_irq_nr
+    IsValidOsGate
+    jc cpiBar3UseLine
+;
+    mov cl,PCI_interrupt_pin
+    ReadPciByte
+    GetPciIrqNr
+    jmp cpiBar3IntOk
+
+cpiBar3UseLine:
     mov cl,PCI_interrupt_line
-    ReadPciByte    
+    ReadPciByte
+
+cpiBar3IntOk:
     call CheckPciBar
 
 cpiBar3Done:
@@ -2744,8 +2768,20 @@ cpiLoop:
     jz cpiNextBar1Done
 ;
     mov si,ax
+    mov ax,get_pci_irq_nr
+    IsValidOsGate
+    jc cpiNextBar1UseLine
+;
+    mov cl,PCI_interrupt_pin
+    ReadPciByte
+    GetPciIrqNr
+    jmp cpiNextBar1IntOk
+
+cpiNextBar1UseLine:
     mov cl,PCI_interrupt_line
-    ReadPciByte    
+    ReadPciByte
+
+cpiNextBar1IntOk:
     call CheckPciBar    
 
 cpiNextBar1Done:
@@ -2761,8 +2797,20 @@ cpiNextBar1Done:
     je cpiNextBar3Done
 ;
     mov si,ax
+    mov ax,get_pci_irq_nr
+    IsValidOsGate
+    jc cpiNextBar3UseLine
+;
+    mov cl,PCI_interrupt_pin
+    ReadPciByte
+    GetPciIrqNr
+    jmp cpiNextBar3IntOk
+
+cpiNextBar3UseLine:
     mov cl,PCI_interrupt_line
-    ReadPciByte    
+    ReadPciByte
+
+cpiNextBar3IntOk:
     call CheckPciBar
 
 cpiNextBar3Done:    

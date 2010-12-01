@@ -1752,7 +1752,7 @@ request_private_irq_handler     Proc far
     push bx
     push dx
     push si
-;
+;    
     mov dx,ds
     movzx bx,al
     mov ax,irq_sys_sel
@@ -1767,7 +1767,8 @@ request_private_irq_handler     Proc far
 ;
     mov al,bl
     call ds:[si].irq_enable_proc
-;
+
+rpDone:
     pop si
     pop dx
     pop bx

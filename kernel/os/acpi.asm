@@ -269,10 +269,12 @@ GetTable Proc near
     mov es:act_size,ax
     mov di,SIZE acpi_table
 ;    
-    mov eax,ecx
+    movzx eax,bp
+    and ax,0FFFh
+    add eax,ecx
     add eax,1000h
     dec eax
-    and ax,0F00h
+    and ax,0F000h
     add eax,1000h
     AllocateBigLinear
 ;
@@ -428,63 +430,6 @@ get_acpi_table_done:
     pop ds
     ret
 get_acpi_table  Endp
-      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			acpi_pr
-;
-;		DESCRIPTION:	ACPI thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-acpi_name	DB 'Acpi',0
-
-
-acpi_pr:
-    int 3
-    mov ax,acpi_data_sel
-    mov ds,ax
-    mov cx,ds:acpi_table_count
-    mov si,OFFSET acpi_table_arr
-
-acpi_loop:
-    mov es,[si]
-    add si,2
-    loop acpi_loop
-;
-
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			init_acpi_thread
-;
-;		DESCRIPTION:	Init acpi thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_acpi_thread	PROC far
-	push ds
-	push es
-	pusha
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-;	
-	mov si,OFFSET acpi_pr
-	mov di,OFFSET acpi_name
-	mov cx,500
-	mov ax,4
-	CreateThread
-;
-	popa
-	pop es
-	pop ds
-	ret
-init_acpi_thread	ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -535,7 +480,7 @@ acpi_load_loop:
 acpi_load_save:
     stosw
     loop acpi_load_loop
-;
+;    
     mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -545,9 +490,6 @@ acpi_load_save:
 	xor cl,cl
 	mov ax,get_acpi_table_nr
 	RegisterOsGate
-;
-	mov di,OFFSET init_acpi_thread
-	HookInitTasking
 
 acpi_fail:
 	ret

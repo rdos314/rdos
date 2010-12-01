@@ -31,7 +31,6 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
-INCLUDE ..\os\port.def
 
 boot_struc      STRUC
 
@@ -173,12 +172,14 @@ CommandPhaseReqLoop:
     in al,dx
     test al,80h
     jnz CommandPhaseReqSet
+;    
     mov ax,50
     WaitMicroSec
     sub si,1
     jnc CommandPhaseReqLoop
     pop cx
     jmp CommandPhaseDone
+
 CommandPhaseReqSet:
     pop cx
     test al,40h
@@ -189,10 +190,28 @@ CommandPhaseReqSet:
     mov al,[bx]
     inc bx
     out dx,al               ; output data byte
-    loop CommandPhaseLoop
-    mov ax,30
+;    
+    mov ax,5
     WaitMicroSec
+    loop CommandPhaseLoop
+;
+    mov si,2000
+
+CommandPhaseEndLoop:
+    mov ax,5
+    WaitMicroSec
+;
+    mov dx,3F4h
+    in al,dx
+    test al,90h
     clc
+    jnz CommandPhaseDone
+;
+    sub si,1
+    jnc CommandPhaseEndLoop
+;
+    stc    
+
 CommandPhaseDone:
     pop si
     pop dx
@@ -269,23 +288,30 @@ ResultPhaseLoop:
     test al,10h
     clc
     jz ResultPhaseDone      
+;
     test al,80h
     jnz ResultPhaseReqSet
+
+ResultPhaseWait:    
     mov ax,50
     WaitMicroSec
     sub si,1
     jnc ResultPhaseLoop
     jmp ResultPhaseDone
+
 ResultPhaseReqSet:
     test al,40h
-    stc
-    jz ResultPhaseDone
+    jz ResultPhaseWait
+;
     inc cx
     mov dx,3F5h
     in al,dx
     mov [bx],al
     inc bx
+    mov ax,5
+    WaitMicroSec
     jmp ResultPhaseLoop
+    
 ResultPhaseDone:
     pop si
     pop dx
@@ -579,9 +605,10 @@ ResetController Proc near
     mov es,ax
     mov cx,100
     mov ds:cTrack,-1
+
+ResetControllerLoop:
     GetThread
     mov ds:FloppyThread,ax
-ResetControllerLoop:
     ClearSignal
     mov ds:IntFlag,0
     mov al,8
@@ -608,6 +635,16 @@ ResetControllerStart:
 ResetControllerSense:
     call SenseIntCmd
     jc ResetControllerFailed
+;
+    call SenseIntCmd
+    jc ResetControllerFailed
+;
+    call SenseIntCmd
+    jc ResetControllerFailed
+;    
+    call SenseIntCmd
+    jc ResetControllerFailed
+;
     call SpecifyCmd
     jnc ResetControllerDone
 ResetControllerFailed:
@@ -617,10 +654,12 @@ ResetControllerFailed:
     call SenseIntCmd
     mov ax,10
     WaitMilliSec
-    loop ResetControllerLoop
+    sub cx,1
+    jnz ResetControllerLoop
     stc
 ResetControllerDone:
     mov ds:FloppyThread,0
+;    
     pop di
     pop dx
     pop cx
@@ -1942,9 +1981,9 @@ disc_assign     Proc far
     mov cx,1024
     CreateThread
 ;
-    in al,INT0_MASK
-    and al,NOT 40h
-    out INT0_MASK,al
+;    in al,INT0_MASK
+;    and al,NOT 40h
+;    out INT0_MASK,al
 ;
     mov ax,SEG data
     mov ds,ax

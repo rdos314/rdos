@@ -1760,6 +1760,12 @@ FindPciDevice	MACRO
 	OsGate find_pci_device_nr
 					ENDM
 
+; IN  AL    Interrupt pin
+; OUT AL    Interrupt line
+GetPciIrqNr	MACRO
+	OsGate get_pci_irq_nr
+					ENDM
+
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 			
 ;	ES:DI	PROCEDURE THAT INITS DISC
