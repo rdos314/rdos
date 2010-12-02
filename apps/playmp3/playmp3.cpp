@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 
         RdosGetMasterVolume(&L, &R);
         if (L < 0 && R < 0)
-                RdosSetMasterVolume(0, 100);
+                RdosSetMasterVolume(100, 100);
 
         RdosGetLineOutVolume(&L, &R);
         if (L < 0 && R < 0)
