@@ -899,6 +899,10 @@ HookState	MACRO
 	OsGate hook_state_nr
 					ENDM
 
+StartSmpDebug	MACRO
+	OsGate start_smp_debug_nr
+					ENDM
+
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;
 
 SimSti	MACRO

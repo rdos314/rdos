@@ -546,4 +546,6 @@ show_proc_debug_nr          EQU 381
 
 get_pci_irq_nr              EQU 382
 
+start_smp_debug_nr          EQU 383
+
 osgate_entries				EQU 390

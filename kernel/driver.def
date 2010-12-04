@@ -221,6 +221,9 @@ env_code_sel        EQU 570h
 socket_code_sel		EQU 580h
 socket_data_sel		EQU 588h
 
+smp_deb_code_sel    EQU 590h
+smp_deb_data_sel    EQU 598h
+
 ems_process_sel		EQU 5A0h
 
 fs_code_sel			EQU 5B0h

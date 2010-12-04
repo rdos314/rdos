@@ -415,8 +415,7 @@ ApInit:
     
 stopl:
    cli
-    jmp stopl
-
+   jmp stopl
 
 
     
@@ -1138,11 +1137,13 @@ reload_apic_msr_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           GetPciIrq
+;   NAME:       GetPciIrq
 ;
 ;   DESCRIPTION:    Convert PCI int pin to int line
 ;
-;   PARAMETERS:     AL      Pin
+;   PARAMETERS:     BH          Bus
+;                   BL          Device
+;                   CH          Function
 ;
 ;   RETURNS:        AL      Line
 ;
@@ -1151,9 +1152,19 @@ reload_apic_msr_timer  Endp
 get_pci_irq_name    DB 'Get Pci IRQ',0
 
 get_pci_irq  Proc far
+    mov cl,PCI_interrupt_line
+    ReadPciByte
+;    
+    cmp al,10h
+    jnc gpiOk
+;    
     mov cl,PCI_interrupt_pin
     ReadPciByte
+;
     add al,10h
+    mov cl,bh
+    shl cl,2
+    add al,cl
     cmp al,18h
     jc gpiOk
 ;

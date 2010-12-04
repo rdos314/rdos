@@ -4,7 +4,7 @@ dos\kernel\os\fs.rdv D:\rdos\kernel\os\guidev.rdv D:\rdos\kernel\os\audio.rd&
 v D:\rdos\kernel\os\exec.rdv D:\rdos\kernel\os\pe.rdv D:\rdos\kernel\os\net.&
 rdv D:\rdos\kernel\os\ip.rdv D:\rdos\kernel\os\ipc.rdv D:\rdos\kernel\os\kde&
 bug.rdv D:\rdos\kernel\os\com.rdv D:\rdos\kernel\os\fat.rdv D:\rdos\kernel\o&
-s\pcbios.rdv D:\rdos\kernel\os\wd.rdv .SYMBOLIC
+s\pcbios.rdv D:\rdos\kernel\os\wd.rdv D:\rdos\kernel\os\smpdeb.rdv .SYMBOLIC
 
 !include D:\rdos\kernel\os\kernel.mk1
 !include D:\rdos\kernel\os\font.mk1
@@ -24,3 +24,4 @@ s\pcbios.rdv D:\rdos\kernel\os\wd.rdv .SYMBOLIC
 !include D:\rdos\kernel\os\fat.mk1
 !include D:\rdos\kernel\os\pcbios.mk1
 !include D:\rdos\kernel\os\wd.mk1
+!include D:\rdos\kernel\os\smpdeb.mk1
