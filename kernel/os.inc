@@ -1053,6 +1053,11 @@ HookOut	MACRO
 ;;;;;;;;;; IRQ ;;;;;;;;;;;;;;;;;;;
 
 ;	AL			IRQ NR
+SendEoi	MACRO
+	OsGate send_eoi_nr
+					ENDM
+
+;	AL			IRQ NR
 IsIrqFree	MACRO
 	OsGate is_irq_free_nr
 					ENDM

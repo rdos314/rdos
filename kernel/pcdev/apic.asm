@@ -406,8 +406,8 @@ ApInit:
     mov ds:mp_processor_sign,eax
     GetApicId
     mov ds:mp_apic,edx
-;    cmp edx,1
-;    je ap_wait
+    cmp edx,1
+    je ap_debug
 
 
 
@@ -423,8 +423,11 @@ stopl:
 ap_wait:    
     sti
     hlt
-
     StartProcessor
+
+ap_debug:
+    StartSmpDebug
+
 
 apic_tab    DB 'APIC'
    
@@ -617,6 +620,46 @@ get_processor_msr Proc far
     pop ds
     ret
 get_processor_msr Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SendEoi
+;
+;       DESCRIPTION:    Send EOI to APIC (only use for custom ISRs)
+;
+;       PARAMETERS:     AL      Int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_eoi_name    DB 'Send EOI',0
+
+send_eoi_mem  Proc far
+    push ds
+    push eax
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;
+    pop eax
+    pop ds
+    ret
+send_eoi_mem Endp
+
+send_eoi_msr Proc far
+    push eax
+    push ecx
+;
+    xor eax,eax
+    mov ecx,MSR_APIC_EOI
+    wrmsr
+;
+    pop ecx
+    pop eax
+    ret
+send_eoi_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1164,7 +1207,7 @@ get_pci_irq  Proc far
     add al,10h
     mov cl,bh
     shl cl,2
-    add al,cl
+;    add al,cl
     cmp al,18h
     jc gpiOk
 ;
@@ -1295,6 +1338,12 @@ smemgLint1Ok:
     mov di,OFFSET get_id_name
     xor cl,cl
     mov ax,get_apic_id_nr
+    RegisterOsGate
+;
+    mov si,OFFSET send_eoi_mem
+    mov di,OFFSET send_eoi_name
+    xor cl,cl
+    mov ax,send_eoi_nr
     RegisterOsGate
 ;
     mov si,OFFSET start_apic_mem_timer
@@ -1501,6 +1550,12 @@ smsrgLint1Ok:
     mov di,OFFSET get_id_name
     xor cl,cl
     mov ax,get_apic_id_nr
+    RegisterOsGate
+;
+    mov si,OFFSET send_eoi_msr
+    mov di,OFFSET send_eoi_name
+    xor cl,cl
+    mov ax,send_eoi_nr
     RegisterOsGate
 ;
     mov si,OFFSET start_apic_msr_timer
