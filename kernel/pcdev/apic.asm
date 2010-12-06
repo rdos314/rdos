@@ -410,7 +410,6 @@ ApInit:
     je ap_debug
 
 
-
 ; comment to start AP cores
     
 stopl:

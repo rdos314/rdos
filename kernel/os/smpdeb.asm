@@ -37,6 +37,12 @@ INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
 INCLUDE smpdeb.inc
 
+data    SEGMENT byte public 'DATA'
+
+curr_core    DW ?
+
+data    ENDS
+
     .386p
 
 code    SEGMENT byte public use16 'CODE'
@@ -46,6 +52,9 @@ code    SEGMENT byte public use16 'CODE'
     extrn InitKeyboardIrq:near
     extrn UpdateMode:near
     extrn GetKey:near
+
+    extrn InitShow:near
+    extrn ShowCore:near
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -90,6 +99,72 @@ dmLoop:
     pop ds
     ret
 DelayMs Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           SaveCore
+;
+;               DESCRIPTION:    Save core state
+;
+;       PARAMETERS:     GS      Code selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SaveCore Proc near
+    push eax
+;    
+    mov gs:cs_eax,eax
+    mov gs:cs_ecx,ecx
+    mov gs:cs_edx,edx
+    mov gs:cs_ebx,ebx
+    mov gs:cs_esp,esp
+    mov gs:cs_ebp,ebp
+    mov gs:cs_esi,esi
+    mov gs:cs_edi,edi
+;
+    mov gs:cs_es,es
+    mov gs:cs_cs,cs
+    mov gs:cs_ss,ss
+    mov gs:cs_ds,ds
+    mov gs:cs_fs,fs
+    mov gs:cs_gs,gs
+;
+    pushfd
+    pop gs:cs_eflags
+    mov gs:cs_eip, OFFSET SaveCore
+;
+    mov eax,cr0
+    mov gs:cs_cr0,eax
+    mov eax,cr2
+    mov gs:cs_cr2,eax
+    mov eax,cr3
+    mov gs:cs_cr3,eax
+    mov eax,cr4
+    mov gs:cs_cr4,eax
+;
+    mov eax,dr0
+    mov gs:cs_dr0,eax
+    mov eax,dr1
+    mov gs:cs_dr1,eax
+    mov eax,dr2
+    mov gs:cs_dr2,eax
+    mov eax,dr3
+    mov gs:cs_dr3,eax
+    mov eax,dr7
+    mov gs:cs_dr7,eax
+;
+    sldt gs:cs_ldt
+    str gs:cs_tr
+    sgdt fword ptr gs:cs_gdtr
+    sidt fword ptr gs:cs_idtr
+;
+    GetProcessorId
+    mov gs:cs_id,ax    
+;        
+    pop eax
+    ret
+SaveCore Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -109,22 +184,21 @@ start_smp_debug:
     mov ax,250
     call DelayMs
 ;    
+    call InitShow
     call InitKeyboardIrq
-    mov ax,__B800
-    mov es,ax
-    mov di,2*60
     sti
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov gs,ds:curr_core
+    call SaveCore
 
 handle_loop:
     hlt
     call GetKey
     jc handle_next
 ;    
-    test ah,80h
-    jnz handle_next
-;    
-    mov ah,7
-    stosw
+    call ShowCore
 
 handle_next:        
     call UpdateMode
@@ -182,6 +256,14 @@ init    PROC far
 ;
     mov di,OFFSET init_thread
 ;    HookInitTasking
+;
+    mov eax,1000h
+    AllocateGlobalMem
+    mov ax,es
+    mov gs,ax    
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:curr_core,gs
 ;
     ret
 init    ENDP

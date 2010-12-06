@@ -27,8 +27,6 @@
 
 core_struc  STRUC
 
-cs_id           DD ?
-
 cs_cr0          DD ?
 cs_cr2          DD ?
 cs_cr3          DD ?
@@ -58,21 +56,11 @@ cs_ds           DW ?
 cs_fs           DW ?
 cs_gs           DW ?
 
+cs_id           DW ?
+
 cs_ldt          DW ?
 cs_tr           DW ?
 cs_gdtr         DD ?, ?
 cs_idtr         DD ?, ?
-
-cs_m_control	DD ?
-cs_m_status		DD ?
-cs_m_tag		DD ?
-cs_st0		    DT ?
-cs_st1		    DT ?
-cs_st2		    DT ?
-cs_st3		    DT ?
-cs_st4		    DT ?
-cs_st5		    DT ?
-cs_st6		    DT ?
-cs_st7		    DT ?
 
 core_struc  ENDS

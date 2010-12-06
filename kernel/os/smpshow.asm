@@ -61,6 +61,7 @@ code    SEGMENT byte public use16 'CODE'
 ShowChar Proc near
     push ds
     push es
+    push ax
     push di
 ;
     mov di,__B800
@@ -75,6 +76,7 @@ ShowChar Proc near
     mov ds:curr_pos,di
 ;
     pop di
+    pop ax
     pop es
     pop ds    
     ret
@@ -96,6 +98,7 @@ ShowSizeString Proc near
     push ds
     push es
     push fs
+    push ax 
     push cx
     push si
     push di
@@ -126,6 +129,7 @@ sssDone:
     pop di
     pop si
     pop cx
+    pop ax
     pop fs
     pop es
     pop ds    
@@ -147,6 +151,7 @@ ShowAsciiz Proc near
     push ds
     push es
     push fs
+    push ax
     push cx
     push si
     push di
@@ -178,6 +183,7 @@ saDone:
     pop di
     pop si
     pop cx
+    pop ax
     pop fs
     pop es
     pop ds    
@@ -207,8 +213,7 @@ NewLine Proc near
     mov cx,160
     div cx
 ;    
-    xor ax,ax
-    inc dx
+    inc ax
     mul cx
 ;
     mov dx,ax
@@ -529,80 +534,68 @@ WriteEflags     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteCrRegs
+;           NAME:           WriteCore
 ;
-;           DESCRIPTION:    
-;
-;           PARAMETERS:         ES:DI       Offset to table
+;           DESCRIPTION:    Write core ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dword_cr_reg_tab:
-    DB ' CR0='
-    DW OFFSET cs_cr0
-    DB ' CR2='
-    DW OFFSET cs_cr2
-    DB ' CR3='
-    DW OFFSET cs_cr3
-    DB ' CR4='
-    DW OFFSET cs_cr4
+core_tab:
+    DB ' Core=',0
+
+WriteCore   PROC near
+    mov di,OFFSET core_tab
+    call ShowAsciiz
+    mov ax,gs:cs_id
+    call WriteHexWord
+    ret
+WriteCore   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteTable
+;
+;           DESCRIPTION:    Write IDT and GDT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+table_reg_tab:
+    DB ' GDT='
+    DW OFFSET cs_gdtr
+    DB ' IDT='
+    DW OFFSET cs_idtr
     DB 0
 
-WriteCrRegs  PROC near
-cr_write_loop:
+WriteTable   PROC near
+    mov di,OFFSET table_reg_tab
+
+table_write_loop:
     mov al,es:[di]
     or al,al
-    je cr_write_end
+    je table_write_end
+;
     mov cx,5
     call ShowSizeString
     add di,5
     mov bx,es:[di]
-    mov eax,gs:[bx]
+    mov eax,gs:[bx+2]
     call WriteHexDword
+    mov al,' '
+    call ShowChar
+    mov al,'('
+    call ShowChar
+    mov ax,gs:[bx]
+    call WriteHexWord       
+    mov al,')'
+    call ShowChar
+;    
     add di,2
-    jmp cr_write_loop
-cr_write_end:
+    jmp table_write_loop
+
+table_write_end:
     ret
-WriteCrRegs  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WriteDrRegs
-;
-;           DESCRIPTION:    
-;
-;           PARAMETERS:         ES:DI       Offset to table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dword_dr_reg_tab:
-    DB ' DR0='
-    DW OFFSET cs_dr0
-    DB ' DR1='
-    DW OFFSET cs_dr1
-    DB ' DR2='
-    DW OFFSET cs_dr2
-    DB ' DR3='
-    DW OFFSET cs_dr3
-    DB 0
-
-WriteDrRegs  PROC near
-dr_write_loop:
-    mov al,es:[di]
-    or al,al
-    je dr_write_end
-    mov cx,5
-    call ShowSizeString
-    add di,5
-    mov bx,es:[di]
-    mov eax,gs:[bx]
-    call WriteHexDword
-    add di,2
-    jmp dr_write_loop
-dr_write_end:
-    ret
-WriteDrRegs  ENDP
+WriteTable   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -617,10 +610,11 @@ WriteDrRegs  ENDP
 
 word_reg_tab1:
     DB ' TR='
-    DW 0
+    DW OFFSET cs_tr
     DB ' DT='
     DW OFFSET cs_ldt
     DB 0
+
 word_reg_tab2:
     DB ' CS='
     DW OFFSET cs_cs
@@ -671,6 +665,28 @@ WriteWordRegs   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+dword_cr_reg_tab:
+    DB ' CR0='
+    DW OFFSET cs_cr0
+    DB ' CR2='
+    DW OFFSET cs_cr2
+    DB ' CR3='
+    DW OFFSET cs_cr3
+    DB ' CR4='
+    DW OFFSET cs_cr4
+    DB 0
+
+dword_dr_reg_tab:
+    DB ' DR0='
+    DW OFFSET cs_dr0
+    DB ' DR1='
+    DW OFFSET cs_dr1
+    DB ' DR2='
+    DW OFFSET cs_dr2
+    DB ' DR3='
+    DW OFFSET cs_dr3
+    DB 0
+
 dword_reg_tab1:
     DB ' EAX='
     DW OFFSET cs_eax
@@ -714,6 +730,80 @@ dword_write_loop:
 dword_write_end:
     ret
 WriteDwordRegs  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteCpuReg
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCpuReg     Proc near
+    push es
+    mov ax,cs
+    mov es,ax
+;
+    call WriteCore
+    call NewLine    
+;
+    call WriteTable
+    call NewLine    
+;
+    mov di,OFFSET dword_cr_reg_tab
+    call WriteDwordRegs
+    call NewLine
+;
+    mov di,OFFSET dword_dr_reg_tab
+    call WriteDwordRegs
+    call NewLine
+;
+    mov di,OFFSET dword_reg_tab1
+    call WriteDwordRegs
+    call NewLine
+;
+    mov di,OFFSET dword_reg_tab2
+    call WriteDwordRegs
+    call NewLine
+;
+    mov di,OFFSET dword_reg_tab3
+    call WriteDwordRegs
+;
+    mov di,OFFSET word_reg_tab1
+    call WriteWordRegs
+    call NewLine
+;
+    mov di,OFFSET word_reg_tab2
+    call WriteWordRegs
+    call NewLine
+;
+    call WriteEflags
+    call NewLine
+    pop es
+    ret
+WriteCpuReg     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ShowCore
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ShowCore
+    
+ShowCore    Proc near
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:curr_pos,0
+    call WriteCpuReg
+    pop ds
+    ret
+ShowCore    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
