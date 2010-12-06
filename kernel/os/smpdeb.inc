@@ -30,9 +30,9 @@ core_struc  STRUC
 cs_id           DD ?
 
 cs_cr0          DD ?
-cs_cr1          DD ?
 cs_cr2          DD ?
 cs_cr3          DD ?
+cs_cr4          DD ?
 
 cs_dr0          DD ?
 cs_dr1          DD ?

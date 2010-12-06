@@ -1150,7 +1150,7 @@ InitKeyboardIrq Proc near
     mov ds:status,0
     mov ds:shift_states,0
     mov ds:key_code,0
-    mov byte ptr ds:vk_code,'1'
+    mov byte ptr ds:vk_code,0
     mov ds:scan_code,0
 ;
     mov ax,cs
@@ -1225,6 +1225,11 @@ SendCommand     Endp
     public UpdateMode
     
 UpdateMode      PROC near
+    push ds
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
     test ds:status,status_mode_change
     jz umDone
 ;    
@@ -1245,15 +1250,16 @@ caps_off:
     call SendCommand
 
 umDone:
+    pop ds
     ret
 UpdateMode      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           ReadKeyboard
+;           NAME:           GetKey
 ;
-;           DESCRIPTION:    Read key
+;           DESCRIPTION:    Get key
 ;
 ;           RETURNS:        NC
 ;                               AH      Scan code
@@ -1261,9 +1267,9 @@ UpdateMode      ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public ReadKeyboard
+    public GetKey
     
-ReadKeyboard      PROC near
+GetKey      PROC near
     push ds
 ;    
     mov ax,SEG data
@@ -1281,7 +1287,7 @@ ReadKeyboard      PROC near
 rkDone:
     pop ds
     ret
-ReadKeyboard      ENDP
+GetKey      ENDP
 
 code    ENDS
 

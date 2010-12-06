@@ -45,7 +45,7 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn InitKeyboardIrq:near
     extrn UpdateMode:near
-    extrn ReadKeyboard:near
+    extrn GetKey:near
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -117,7 +117,7 @@ start_smp_debug:
 
 handle_loop:
     hlt
-    ReadKeyboard
+    call GetKey
     jc handle_next
 ;    
     test ah,80h
