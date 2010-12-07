@@ -36,9 +36,11 @@ INCLUDE irq.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
 INCLUDE smpdeb.inc
+INCLUDE protseg.def
 
 data    SEGMENT byte public 'DATA'
 
+big_linear  DD ?
 curr_pos    DW ?
 
 data    ENDS
@@ -541,7 +543,7 @@ WriteEflags     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 core_tab:
-    DB ' Core=',0
+    DB 'Core=',0
 
 WriteCore   PROC near
     mov di,OFFSET core_tab
@@ -600,7 +602,7 @@ WriteTable   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteWordRegs
+;           NAME:           WriteSel
 ;
 ;           DESCRIPTION:    
 ;
@@ -608,51 +610,177 @@ WriteTable   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-word_reg_tab1:
+sel_reg_tr:
     DB ' TR='
     DW OFFSET cs_tr
+
+sel_reg_ldt:
     DB ' DT='
     DW OFFSET cs_ldt
-    DB 0
 
-word_reg_tab2:
+sel_reg_cs:
     DB ' CS='
     DW OFFSET cs_cs
+
+sel_reg_ds:
     DB ' DS='
     DW OFFSET cs_ds
+
+sel_reg_es:    
     DB ' ES='
     DW OFFSET cs_es
+
+sel_reg_fs:    
     DB ' FS='
     DW OFFSET cs_fs
+
+sel_reg_gs:
     DB ' GS='
     DW OFFSET cs_gs
+
+sel_reg_ss:    
     DB ' SS='
     DW OFFSET cs_ss
-    DB 0
 
-WriteWordRegs   PROC near
-word_write_loop:
-    mov al,es:[di]
-    or al,al
-    je word_write_end
+sel_reg_us:    
+    DB ' US='
+    DW OFFSET cs_usel
+
+sel_type_tab:
+st00 DB 'Invalid         '
+st01 DB 'TSS 16, avail   '
+st02 DB 'LDT             '
+st03 DB 'TSS 16, busy    '
+st04 DB 'Call gate 16    '
+st05 DB 'Task gate       '
+st06 DB 'Int gate 16     '
+st07 DB 'Trap gate 16    '
+st08 DB 'Invalid         '
+st09 DB 'TSS 32, avail   '
+st0A DB 'Invalid         '
+st0B DB 'TSS 32, busy    '
+st0C DB 'Call gate 32    '
+st0D DB 'Invalid         '
+st0E DB 'Int gate 32     '
+st0F DB 'Trap gate 32    '
+st10 DB 'Read, up        '
+st11 DB 'Read, up        '
+st12 DB 'Read/write, up  '
+st13 DB 'Read/write, up  '
+st14 DB 'Read, down      '
+st15 DB 'Read, down      '
+st16 DB 'Read/write, down'
+st17 DB 'Read/write, down'
+st18 DB 'Code            '
+st19 DB 'Code            '
+st1A DB 'Code/read       '
+st1B DB 'Code/read       '
+st1C DB 'Code conf       '
+st1D DB 'Code conf       '
+st1E DB 'Code/read conf  ' 
+st1F DB 'Code/read conf  ' 
+
+WriteSelReg   PROC near
     mov cx,4
     call ShowSizeString
+;
     add di,4
     mov bx,es:[di]
-    or bx,bx
-    jnz word_write_norm
-    mov ax,gs
+    mov bx,gs:[bx]
+;    
+    mov ax,bx
     call WriteHexWord
-    jmp word_write_cont
-word_write_norm:
-    mov ax,gs:[bx]
-    call WriteHexWord       
-word_write_cont:
-    add di,2
-    jmp word_write_loop
-word_write_end:
+    mov al,' '
+    call ShowChar
+;    
+    and bx,NOT 3
+    or bx,bx
+    jz write_sel_done
+;
+    test bx,4
+    jz write_sel_gdt
+
+write_sel_ldt:
+    mov si,gs:cs_ldt
+    or si,si
+    jz write_sel_done
+;
+    test si,4
+    jnz write_sel_done
+;
+    push bx
+    mov bx,cx
+    GetSelectorBaseSize
+    pop bx        
+    jc write_sel_done
+;
+    dec ecx    
+    jmp write_sel_do
+
+write_sel_gdt:
+    movzx ecx,word ptr gs:cs_gdtr
+    mov edx,dword ptr gs:cs_gdtr+2
+
+write_sel_do:
+    and bx,0FFF8h
+    cmp bx,cx
+    ja write_sel_done
+;
+    mov ax,flat_sel
+    mov ds,ax
+    movzx ebx,bx
+    add ebx,edx
+;
+    mov al,[ebx+5]
+    test al,80h
+    jz write_sel_done
+;
+    xor ecx,ecx
+    mov cl,[ebx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[ebx]
+    test byte ptr [ebx+6],80h
+    jz write_sel_small
+;
+    shl ecx,12
+    or cx,0FFFh
+
+write_sel_small:
+    mov edx,[ebx+2]
+    rol edx,8
+    mov dl,[ebx+7]
+    ror edx,8
+;
+    mov eax,edx
+    call WriteHexDword
+;
+    mov al,' '
+    call ShowChar
+    mov al,'('
+    call ShowChar
+;
+    mov eax,ecx
+    call WriteHexDword
+;
+    mov al,')'
+    call ShowChar    
+    mov al,' '
+    call ShowChar
+;
+    push di
+    mov al,[ebx+5]
+    and al,1Fh
+    movzx di,al
+    shl di,4
+    add di,OFFSET sel_type_tab
+    mov cx,16
+    call ShowSizeString
+    pop di
+
+write_sel_done:
     ret
-WriteWordRegs   ENDP
+WriteSelReg   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -734,6 +862,283 @@ WriteDwordRegs  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetBaseSize
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     GS          Core regs
+;                           BX:EDX      Address
+;
+;           RETURNS:        NC
+;                               EDX     Base
+;                               ECX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBaseSize   PROC near
+    push eax
+    push ebx
+    push esi
+    push edi
+;
+    mov edi,edx 
+;       
+    and bx,NOT 3
+    or bx,bx
+    jz get_info_fail
+;
+    test bx,4
+    jz get_info_gdt
+
+get_info_ldt:
+    mov si,gs:cs_ldt
+    or si,si
+    jz get_info_fail
+;
+    test si,4
+    jnz get_info_fail
+;
+    push bx
+    mov bx,cx
+    GetSelectorBaseSize
+    pop bx        
+    jc get_info_fail
+;
+    dec ecx    
+    jmp get_info_do
+
+get_info_gdt:
+    movzx ecx,word ptr gs:cs_gdtr
+    mov edx,dword ptr gs:cs_gdtr+2
+
+get_info_do:
+    and bx,0FFF8h
+    cmp bx,cx
+    ja get_info_fail
+;
+    mov ax,flat_sel
+    mov ds,ax
+    movzx ebx,bx
+    add ebx,edx
+;
+    mov al,[ebx+5]
+    test al,80h
+    jz get_info_fail
+;
+    xor ecx,ecx
+    mov cl,[ebx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[ebx]
+    test byte ptr [ebx+6],80h
+    jz get_info_small
+;
+    shl ecx,12
+    or cx,0FFFh
+
+get_info_small:
+    mov edx,[ebx+2]
+    rol edx,8
+    mov dl,[ebx+7]
+    ror edx,8
+;
+    sub ecx,edi
+    jc get_info_fail
+;
+    add edx,edi
+    clc
+    jmp get_info_done
+
+get_info_fail:
+    stc
+
+get_info_done:
+    pop edi
+    pop esi
+    pop ebx
+    pop eax
+    ret
+GetBaseSize   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   ReadData
+;
+;               DESCRIPTION:    Read data item
+;
+;               PARAMETERS:             GS              Core regs
+;                                               EDX             Linear address
+;
+;               RETURNS:                NC
+;                           AL  Data
+;                                               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadData        Proc near
+        push ds
+        push es
+        push ebx
+        push edx
+        push si
+        push di
+;
+    mov di,dx
+    and di,0FFFh
+;    
+        and dx,0F000h
+        mov ax,process_dir_sel
+        mov ds,ax
+        mov si,(alias_linear SHR 20) AND 0FFFh
+        mov es,bx
+        mov eax,gs:cs_cr3
+        or ax,803h
+        mov [si],eax
+        mov eax,cr3
+        mov cr3,eax
+;
+        mov eax,alias_linear
+        shr edx,10
+        and dl,0FCh
+        add edx,eax
+        mov ebx,edx
+        shr edx,10
+        and dl,0FCh
+        mov ax,process_page_sel
+        mov ds,ax
+        mov eax,[edx]
+        test al,1
+        stc
+        jz read_data_done
+;       
+    mov ax,flat_sel
+    mov ds,ax
+        mov eax,ds:[ebx]
+;       
+    mov bx,SEG data
+    mov ds,bx
+    mov edx,ds:big_linear
+    SetPhysicalPage
+;
+    movzx edx,di
+    add edx,ds:big_linear
+    mov ax,flat_sel
+    mov ds,ax
+    mov al,ds:[edx]
+    clc
+    
+read_data_done:
+    pop di
+        pop si
+        pop edx
+        pop ebx
+        pop es
+        pop ds
+        ret
+ReadData        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   WriteDataRow
+;
+;               DESCRIPTION:    Write a data row
+;
+;               PARAMETERS:             GS                  Core regs
+;                       BX:EDX      Address
+;                                               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteDataRow    Proc near
+    mov ax,bx
+    call WriteHexWord
+    mov al,':'
+    call ShowChar
+    mov eax,edx
+    call WriteHexDword
+    mov al,' '
+    call ShowChar
+;
+    push bx
+    push edx
+;    
+    mov bp,16
+    call GetBaseSize
+    jc wdrDataInv
+
+wdrDataLoop:
+    call ReadData
+    jc wdrDataUndef
+;
+    call WriteHexByte
+    jmp wdrDataNext
+
+wdrDataUndef:
+    mov al,'%'
+    call ShowChar
+    call ShowChar
+
+wdrDataNext:
+    mov al,' '
+    call ShowChar
+;
+    add edx,1
+    sub ecx,1
+    jc wdrDataInv
+;    
+    sub bp,1
+    jnz wdrDataLoop            
+    jmp wdrChar
+
+wdrDataInv:
+    mov al,'!'
+    call ShowChar
+    call ShowChar
+    mov al,' '
+    call ShowChar
+;
+    sub bp,1
+    jnz wdrDataInv
+
+wdrChar:  
+    pop edx
+    pop bx
+;    
+    mov bp,16
+    call GetBaseSize
+    jc wdrCharInv
+
+wdrCharLoop:
+    call ReadData
+    jnc wdrCharDo
+;
+    mov al,'%'
+
+wdrCharDo:    
+    call ShowChar
+;
+    add edx,1
+    sub ecx,1
+    jc wdrCharInv
+;    
+    sub bp,1
+    jnz wdrCharLoop            
+    jmp wdrDone
+
+wdrCharInv:
+    mov al,'!'
+    call ShowChar
+;
+    sub bp,1
+    jnz wdrCharInv
+
+wdrDone:  
+    ret
+WriteDataRow    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WriteCpuReg
 ;
 ;           DESCRIPTION:    
@@ -769,17 +1174,63 @@ WriteCpuReg     Proc near
 ;
     mov di,OFFSET dword_reg_tab3
     call WriteDwordRegs
-;
-    mov di,OFFSET word_reg_tab1
-    call WriteWordRegs
     call NewLine
 ;
-    mov di,OFFSET word_reg_tab2
-    call WriteWordRegs
+    mov di,OFFSET sel_reg_tr
+    call WriteSelReg
+    call NewLine
+;
+    mov di,OFFSET sel_reg_ldt
+    call WriteSelReg
+    call NewLine
+;
+    mov di,OFFSET sel_reg_cs
+    call WriteSelReg
+    call NewLine
+;
+    mov di,OFFSET sel_reg_ds
+    call WriteSelReg
+    call NewLine
+;
+    mov di,OFFSET sel_reg_es
+    call WriteSelReg
+    call NewLine
+;
+    mov di,OFFSET sel_reg_fs
+    call WriteSelReg
+    call NewLine
+;
+    mov di,OFFSET sel_reg_gs
+    call WriteSelReg
+    call NewLine
+;
+    mov di,OFFSET sel_reg_ss
+    call WriteSelReg
+    call NewLine
+;
+    mov di,OFFSET sel_reg_us
+    call WriteSelReg
     call NewLine
 ;
     call WriteEflags
     call NewLine
+;
+    call Delimiter
+;    
+    mov bx,gs:cs_ss
+    movzx edx,word ptr gs:cs_esp
+    call WriteDataRow
+    call NewLine    
+;    
+    mov bx,gs:cs_cs
+    movzx edx,word ptr gs:cs_eip
+    call WriteDataRow
+    call NewLine    
+;    
+    mov bx,gs:cs_usel
+    mov edx,gs:cs_uoffs
+    call WriteDataRow
+    call NewLine    
     pop es
     ret
 WriteCpuReg     Endp
@@ -818,9 +1269,15 @@ ShowCore    Endp
 
 InitShow    Proc near
     push ds
+;    
     mov ax,SEG data
     mov ds,ax
     mov ds:curr_pos,0
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov ds:big_linear,edx
+;        
     pop ds
     ret
 InitShow    Endp

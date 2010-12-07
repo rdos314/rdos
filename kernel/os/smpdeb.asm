@@ -191,7 +191,7 @@ start_smp_debug:
     mov ax,SEG data
     mov ds,ax
     mov gs,ds:curr_core
-    call SaveCore
+;   call SaveCore
 
 handle_loop:
     hlt
@@ -261,6 +261,10 @@ init    PROC far
     AllocateGlobalMem
     mov ax,es
     mov gs,ax    
+    mov gs:cs_usel,flat_sel
+    mov gs:cs_uoffs,0
+;    
+    call SaveCore
     mov ax,SEG data
     mov ds,ax
     mov ds:curr_core,gs
