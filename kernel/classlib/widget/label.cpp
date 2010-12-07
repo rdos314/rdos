@@ -811,7 +811,9 @@ void TLabelControl::SetFont(int height)
         
     FFont = new TFont(height);
 
+    FSection.Enter();
     ReformatText();
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -832,7 +834,9 @@ void TLabelControl::SetFont(TFont *font)
         
     FFont = new TFont(*font);
 
+    FSection.Enter();
     ReformatText();
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -867,7 +871,9 @@ void TLabelControl::SetSpace(int xstart, int ystart)
     FStartX = xstart;
     FStartY = ystart;
 
+    FSection.Enter();
     ReformatText();
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -1252,6 +1258,8 @@ void TLabelControl::SetText(const char *Text)
         if (!strcmp(Text, FOrgText))
             return;
 
+    FSection.Enter();
+    
     if (FText)
         delete FText;
 
@@ -1265,6 +1273,8 @@ void TLabelControl::SetText(const char *Text)
     strcpy(FOrgText, Text);
 
     ReformatText();
+
+    FSection.Leave();
 
     if (FBackTrans && HasParent())
         RedrawParent();
@@ -1354,7 +1364,9 @@ int TLabelControl::GetMinHeight()
 ##########################################################################*/
 void TLabelControl::NotifyResize()
 {
+    FSection.Enter();
     ReformatText();
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -1387,6 +1399,8 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     ymin += yoffs;
     width -= xdiff;
     height -= ydiff;
+
+    FSection.Enter();
 
     xmax = xmin + width - 1;
     ymax = ymin + height - 1;
@@ -1463,5 +1477,6 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
             }
         }
     }
+    FSection.Leave();
 
 }

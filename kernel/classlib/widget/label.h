@@ -135,12 +135,14 @@ public:
     virtual int GetMinHeight();
     
 protected:
-    void ReformatText();
     virtual void NotifyResize();
   	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
 
+    TSection FSection;
+
 private:
     void Init();
+    void ReformatText();
 
     int FHorAlign;
     int FVerAlign;

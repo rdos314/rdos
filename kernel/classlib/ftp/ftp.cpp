@@ -247,9 +247,9 @@ TFtp::~TFtp()
 
     if (FDataSocket)
     {
-        FCloseData = TRUE;
         FDataSocket->Push();
         FDataSocket->Close();
+        FCloseData = TRUE;
 
         while (FDataSocket)
             RdosWaitMilli(50);
@@ -304,10 +304,10 @@ void TFtp::Disable()
         NotifyMsg("QUIT\r\n");
 
         if (FSocket)
-        {
             FSocket->Write("QUIT\r\n");
+
+        if (FSocket)
             FSocket->Push();
-        }
 
         FEnabled = FALSE;
         FReady = FALSE;
@@ -446,9 +446,13 @@ int TFtp::GetFile(const char *remote, TFile *file)
 
         if (FAborted)
         {
+            if (FDataSocket)
+            {
+                FDataSocket->Push();
+                FDataSocket->Close();
+            }
+
             FCloseData = TRUE;
-            FDataSocket->Push();
-            FDataSocket->Close();
 
             NotifyMsg("Data socket closed\r\n");
 
@@ -512,9 +516,13 @@ int TFtp::CreateFile(const char *remote, TFile *file)
 
         if (FAborted)
         {
+            if (FDataSocket)
+            {
+                FDataSocket->Push();
+                FDataSocket->Close();
+            }
+            
             FCloseData = TRUE;
-            FDataSocket->Push();
-            FDataSocket->Close();
 
             NotifyMsg("Data socket closed\r\n");
 
@@ -614,9 +622,13 @@ void TFtp::CacheDir()
 
         if (FAborted)
         {
+            if (FDataSocket)
+            {
+                FDataSocket->Push();
+                FDataSocket->Close();
+            }
+            
             FCloseData = TRUE;
-            FDataSocket->Push();
-            FDataSocket->Close();
 
             NotifyMsg("Data socket closed\r\n");
 
@@ -1148,9 +1160,9 @@ void TFtp::DecodePasv(const char *param)
 
     if (FDataSocket)
     {
-        FCloseData = TRUE;
         FDataSocket->Push();
         FDataSocket->Close();
+        FCloseData = TRUE;
 
         NotifyMsg("Data socket closed\r\n");
 
@@ -1200,6 +1212,8 @@ void TFtp::DecodePasv(const char *param)
             else
             {
                 NotifyMsg("Data socket failed\r\n");
+
+                RdosWaitMilli(100);
                 delete FDataSocket;
                 FDataSocket = 0;
                 FReady = TRUE;
@@ -1430,6 +1444,8 @@ void TFtp::HandleClosed()
     FReady = FALSE;
     
     ClearEntries();
+
+    RdosWaitMilli(100);
 
     if (FSocket)
         delete FSocket;
@@ -1805,14 +1821,17 @@ void TFtp::HandleDataSocket()
             FFile->SetPos(0);
             count = FFile->Read(buf, 512);
 
-            while (count)
+            while (count && FDataSocket)
             {
                 FDataSocket->Write(buf, count);
                 count = FFile->Read(buf, 512);
             }
 
-            FDataSocket->Push();
-            FDataSocket->Close();
+            if (FDataSocket)
+            {
+                FDataSocket->Push();
+                FDataSocket->Close();
+            }
         }
     }
     else
@@ -1849,6 +1868,7 @@ void TFtp::HandleDataSocket()
 
     if (FDataSocket)
     {
+        RdosWaitMilli(100);
         delete FDataSocket;
         FDataSocket = 0;
     }
@@ -1898,6 +1918,8 @@ void TFtp::Execute()
             {
                 FSocket->Push();
                 FSocket->Close();
+
+                RdosWaitMilli(100);
                 delete FSocket;
                 FSocket = 0;
             }
