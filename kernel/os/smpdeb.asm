@@ -39,6 +39,7 @@ INCLUDE smpdeb.inc
 
 data    SEGMENT byte public 'DATA'
 
+core_list    DW ?
 curr_core    DW ?
 
 data    ENDS
@@ -158,13 +159,55 @@ SaveCore Proc near
     str gs:cs_tr
     sgdt fword ptr gs:cs_gdtr
     sidt fword ptr gs:cs_idtr
-;
-    GetProcessorId
-    mov gs:cs_id,ax    
 ;        
     pop eax
     ret
 SaveCore Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddDebugCore
+;
+;           DESCRIPTION:    Add a new debug core
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_debug_core_name     DB 'Add Debug Core', 0
+
+add_debug_core  Proc far
+    push es
+    push fs
+    push gs
+    pushad
+;    
+    mov eax,1000h
+    AllocateGlobalMem
+    mov ax,es
+    mov gs,ax    
+    mov gs:cs_usel,flat_sel
+    mov gs:cs_uoffs,0
+;
+    GetProcessor
+    mov gs:cs_proc_sel,fs    
+;
+    call SaveCore
+;
+    mov ax,SEG data
+    mov es,ax
+    mov ax,es:core_list
+    mov gs:cs_next,ax
+    mov es:core_list,gs
+    mov es:curr_core,gs
+;
+    popad
+    pop gs
+    pop fs
+    pop es
+    ret
+add_debug_core  Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -190,14 +233,29 @@ start_smp_debug:
 ;
     mov ax,SEG data
     mov ds,ax
-    mov gs,ds:curr_core
-;   call SaveCore
+    mov gs,ds:core_list
 
 handle_loop:
     hlt
     call GetKey
     jc handle_next
 ;    
+    test ah,80h
+    jnz handle_next
+;    
+    cmp al,'N'
+    jne handle_show
+;
+    mov ax,gs:cs_next
+    or ax,ax
+    jnz handle_next_set
+;
+    mov ax,ds:core_list
+
+handle_next_set:
+    mov gs,ax
+
+handle_show:
     call ShowCore
 
 handle_next:        
@@ -254,20 +312,16 @@ init    PROC far
     mov ax,start_smp_debug_nr
     RegisterOsGate
 ;
+    mov si,OFFSET add_debug_core
+    mov di,OFFSET add_debug_core_name
+    xor cl,cl
+    mov ax,add_debug_core_nr
+    RegisterOsGate
+;
     mov di,OFFSET init_thread
 ;    HookInitTasking
 ;
-    mov eax,1000h
-    AllocateGlobalMem
-    mov ax,es
-    mov gs,ax    
-    mov gs:cs_usel,flat_sel
-    mov gs:cs_uoffs,0
-;    
-    call SaveCore
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:curr_core,gs
+    AddDebugCore
 ;
     ret
 init    ENDP

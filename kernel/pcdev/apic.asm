@@ -406,9 +406,13 @@ ApInit:
     mov ds:mp_processor_sign,eax
     GetApicId
     mov ds:mp_apic,edx
-    cmp edx,1
+    cmp edx,3
     je ap_debug
-
+;
+    mov ax,5
+    call DelayMs
+;    
+    AddDebugCore
 
 ; comment to start AP cores
     
@@ -2822,10 +2826,10 @@ init_ap_proc:
     test al,1
     jz init_table_next
 ;    
-; decomment to start more than 2 cores
+; decomment to start more than 3 cores
 ;
-    cmp bp,2
-    je init_table_next
+;    cmp bp,3
+;    je init_table_next
 ;    
     movzx edx,es:[di].ap_apic_id
     call StartCore

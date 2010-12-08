@@ -549,4 +549,6 @@ get_pci_irq_nr              EQU 382
 start_smp_debug_nr          EQU 383
 send_eoi_nr                 EQU 384
 
+add_debug_core_nr           EQU 385
+
 osgate_entries				EQU 390

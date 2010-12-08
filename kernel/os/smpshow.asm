@@ -542,13 +542,12 @@ WriteEflags     ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-core_tab:
-    DB 'Core=',0
+proc_tab    DB 'Processor=',0    
 
 WriteCore   PROC near
-    mov di,OFFSET core_tab
+    mov di,OFFSET proc_tab
     call ShowAsciiz
-    mov ax,gs:cs_id
+    mov ax,gs:cs_proc_sel
     call WriteHexWord
     ret
 WriteCore   ENDP

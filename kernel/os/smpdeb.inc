@@ -27,6 +27,10 @@
 
 core_struc  STRUC
 
+cs_next         DW ?
+
+cs_proc_sel     DW ?
+
 cs_cr0          DD ?
 cs_cr2          DD ?
 cs_cr3          DD ?
@@ -55,8 +59,6 @@ cs_ss           DW ?
 cs_ds           DW ?
 cs_fs           DW ?
 cs_gs           DW ?
-
-cs_id           DW ?
 
 cs_ldt          DW ?
 cs_tr           DW ?

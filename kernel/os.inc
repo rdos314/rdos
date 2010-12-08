@@ -903,6 +903,10 @@ StartSmpDebug	MACRO
 	OsGate start_smp_debug_nr
 					ENDM
 
+AddDebugCore	MACRO
+	OsGate add_debug_core_nr
+					ENDM
+
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;
 
 SimSti	MACRO
