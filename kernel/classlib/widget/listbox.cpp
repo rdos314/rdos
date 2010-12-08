@@ -682,6 +682,22 @@ void TListControl::SetFont(TFont *font)
 
 /*##########################################################################
 #
+#   Name       : TListControl::GetFont
+#
+#   Purpose....: Get font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFont *TListControl::GetFont()
+{
+    return FFont;
+}
+
+/*##########################################################################
+#
 #   Name       : TListControl::SetSpace
 #
 #   Purpose....: Set unused space

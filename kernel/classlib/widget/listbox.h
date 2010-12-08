@@ -95,6 +95,9 @@ public:
 
     void SetFont(int height);
     void SetFont(TFont *font);
+
+    TFont *GetFont();
+
     void SetSpace(int xspace, int yspace);
     
     void SetDrawColor(int r, int g, int b);
