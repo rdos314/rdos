@@ -1252,36 +1252,43 @@ void TLabelControl::ReformatText()
 ##########################################################################*/
 void TLabelControl::SetText(const char *Text)
 {
+    int same = FALSE;
     int len = strlen(Text);
+
+    FSection.Enter();
 
     if (FOrgText && len > 0)
         if (!strcmp(Text, FOrgText))
-            return;
+            same = TRUE;
 
-    FSection.Enter();
-    
-    if (FText)
-        delete FText;
+    if (!same)
+    {    
+        if (FText)
+            delete FText;
 
-    FText = new char[len + 1];
-    strcpy(FText, Text);
+        FText = new char[len + 1];
+        strcpy(FText, Text);
 
-    if (FOrgText)
-        delete FOrgText;
+        if (FOrgText)
+            delete FOrgText;
 
-    FOrgText = new char[len + 1];
-    strcpy(FOrgText, Text);
+        FOrgText = new char[len + 1];
+        strcpy(FOrgText, Text);
 
-    ReformatText();
+        ReformatText();
+    }
 
     FSection.Leave();
 
-    if (FBackTrans && HasParent())
-        RedrawParent();
-    else
+    if (!same)
     {
-        FRedrawBack = TRUE;
-        Redraw(1);
+        if (FBackTrans && HasParent())
+            RedrawParent();
+        else
+        {
+            FRedrawBack = TRUE;
+            Redraw(1);
+        }
     }
 }
 
