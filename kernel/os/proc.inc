@@ -28,6 +28,7 @@
 PS_FLAG_PREEMPT     = 1
 PS_FLAG_PRIO_CHANGE = 2
 PS_FLAG_TIMER       = 4
+PS_FLAG_NMI         = 8
 
 timer_struc	STRUC
 

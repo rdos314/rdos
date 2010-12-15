@@ -35,6 +35,7 @@ INCLUDE system.inc
 INCLUDE irq.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
+INCLUDE proc.inc
 INCLUDE smpdeb.inc
 
 data    SEGMENT byte public 'DATA'
@@ -56,6 +57,113 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn InitShow:near
     extrn ShowCore:near
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           Nmi
+;
+;               DESCRIPTION:    NMI handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+nmi_gs  EQU 48
+nmi_fs  EQU 44
+nmi_ds  EQU 40
+nmi_es  EQU 36
+nmi_ss  EQU 32
+nmi_esp EQU 28
+nmi_efl EQU 24
+nmi_cs  EQU 20
+nmi_eip EQU 16
+nmi_sfs EQU 14
+nmi_sgs EQU 12
+nmi_eax EQU 8
+nmi_ebx EQU 4
+nmi_ebp EQU 0
+
+nmi_handler:
+    push fs
+    push gs
+    push eax
+    push ebx
+    push ebp
+    mov bp,sp
+;    
+    GetProcessor
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz nmi_ret
+;
+    or fs:ps_flags,PS_FLAG_NMI    
+    mov ax,fs
+    mov bx,SEG data    
+    mov fs,bx
+    mov bx,OFFSET core_list
+    mov bx,fs:[bx]
+nmi_core_loop:
+    mov gs,bx
+    cmp ax,gs:cs_proc_sel
+    je nmi_core_found
+;
+    mov bx,fs:[bx].cs_next
+    jmp nmi_core_loop    
+
+nmi_core_found:
+    call SaveCore
+    mov eax,[bp].nmi_ebp
+    mov gs:cs_ebp,eax
+    mov eax,[bp].nmi_ebx
+    mov gs:cs_ebx,eax
+    mov eax,[bp].nmi_eax
+    mov gs:cs_eax,eax
+    mov eax,[bp].nmi_eip
+    mov gs:cs_eip,eax
+    mov ax,[bp].nmi_cs
+    mov gs:cs_cs,ax
+    mov ebx,[bp].nmi_efl
+    mov gs:cs_eflags,ebx
+    test ebx,20000h
+    jnz nmi_v86
+;    
+    mov bx,[bp].nmi_sfs
+    mov gs:cs_fs,bx
+    mov bx,[bp].nmi_sgs
+    mov gs:cs_gs,bx
+;    
+    and al,3
+    or al,al
+    jz nmi_block
+;
+    mov eax,[bp].nmi_esp
+    mov gs:cs_esp,eax
+    mov ax,[bp].nmi_ss
+    mov gs:cs_ss,ax
+    jmp nmi_block
+
+nmi_v86:
+    mov eax,[bp].nmi_esp
+    mov gs:cs_esp,eax
+    mov ax,[bp].nmi_ss
+    mov gs:cs_ss,ax
+    mov ax,[bp].nmi_ds
+    mov gs:cs_ds,ax
+    mov ax,[bp].nmi_es
+    mov gs:cs_es,ax
+    mov ax,[bp].nmi_fs
+    mov gs:cs_fs,ax
+    mov ax,[bp].nmi_gs
+    mov gs:cs_gs,ax
+
+nmi_block:
+    jmp nmi_block
+
+nmi_ret:
+    pop ebp
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    iretd
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -320,6 +428,11 @@ init    PROC far
 ;
     mov di,OFFSET init_thread
 ;    HookInitTasking
+;
+    mov al,2
+    xor bl,bl
+    mov esi,OFFSET nmi_handler
+    CreateIntGateSelector
 ;
     AddDebugCore
 ;
