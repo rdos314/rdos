@@ -396,6 +396,9 @@ ioapic_mem_sel      EQU 0A60h
 util_code_sel       EQU 0A70h
 util_data_sel       EQU 0A78h
 
+usb_print_code_sel  EQU 0A80h
+usb_print_data_sel  EQU 0A88h
+
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h
 video_page2_sel		EQU 0F10h
