@@ -32,12 +32,13 @@ include ..\user.inc
 include ..\driver.def
 include usb.inc
 
+MAX_OUT_SIZE = 260
+
 data    SEGMENT byte public 'DATA'
 
 kr_controller   DW ?
 kr_device       DW ?
 
-kr_max_out      DW ?
 kr_max_in       DW ?
 
 kr_in_buffer    DW ?
@@ -105,7 +106,6 @@ hdCheckWrite:
 hdDone:
     xor ax,ax
     mov es,ax
-    pop ds
     ret
 HandleDevice    Endp
 
@@ -123,7 +123,7 @@ OpenPipes   Proc near
     AllocateSmallGlobalMem
     mov ds:kr_in_buffer,es
 ;
-    movzx eax,ds:kr_max_out
+    mov eax,MAX_OUT_SIZE
     AllocateSmallGlobalMem
     mov ds:kr_out_buffer,es
 ;
@@ -147,7 +147,7 @@ OpenPipes   Proc near
 ;
     CreateUsbReq
     mov ds:kr_out_req,bx
-    mov cx,ds:kr_max_out
+    mov cx,MAX_OUT_SIZE
     mov es,ds:kr_out_buffer
     AddWriteUsbDataReq
 ;
@@ -202,7 +202,6 @@ OpenPrinter Proc near
     mov ds:kr_controller,bx
     mov ds:kr_device,ax
     mov ds:kr_out_pipe,0
-    mov ds:kr_max_out,0
     mov ds:kr_in_pipe,0
     mov ds:kr_max_in,0
 ;
@@ -226,8 +225,6 @@ opDescrLoop:
 opDescrBulkOut:
     and cl,0Fh
     mov ds:kr_out_pipe,cl
-    mov ax,es:[di].ued_maxsize
-    mov ds:kr_max_out,ax
     jmp opDescrNext
 
 opBulkIn:
