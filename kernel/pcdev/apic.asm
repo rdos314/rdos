@@ -730,6 +730,64 @@ SendInitMsr Proc near
     pop eax
     ret
 SendInitMsr Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SendNmiMem
+;
+;       DESCRIPTION:    Send NMI request using shared memory
+;
+;       PARAMETERS:     FS      Destination processor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_nmi_name   DB 'Send NMI', 0
+
+send_nmi_mem Proc far
+    push ds
+    push eax
+    push edx
+;    
+    mov edx,fs:ps_apic
+    shl edx,24
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov ds:APIC_ICR+10h,edx
+;
+    mov eax,4400h
+    mov ds:APIC_ICR,eax
+;
+    pop edx
+    pop eax
+    pop ds
+    ret
+send_nmi_mem Endp
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SendNmiMsr
+;
+;       DESCRIPTION:    Send NMI request using MSRs
+;
+;       PARAMETERS:     FS      Destination processor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_nmi_msr Proc far
+    push eax
+    push ecx
+;
+    mov edx,fs:ps_apic
+    mov eax,4400h
+    mov ecx,MSR_APIC_ICR
+    wrmsr
+;
+    pop ecx
+    pop eax
+    ret
+send_nmi_msr Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1349,6 +1407,12 @@ smemgLint1Ok:
     mov ax,send_eoi_nr
     RegisterOsGate
 ;
+    mov si,OFFSET send_nmi_mem
+    mov di,OFFSET send_nmi_name
+    xor cl,cl
+    mov ax,send_nmi_nr
+    RegisterOsGate
+;
     mov si,OFFSET start_apic_mem_timer
     mov di,OFFSET start_apic_timer_name
     xor cl,cl
@@ -1559,6 +1623,12 @@ smsrgLint1Ok:
     mov di,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
+    RegisterOsGate
+;
+    mov si,OFFSET send_nmi_msr
+    mov di,OFFSET send_nmi_name
+    xor cl,cl
+    mov ax,send_nmi_nr
     RegisterOsGate
 ;
     mov si,OFFSET start_apic_msr_timer

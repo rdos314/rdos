@@ -90,6 +90,8 @@ nmi_handler:
     push ebp
     mov bp,sp
 ;    
+    jmp nmi_block
+    
     GetProcessor
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
@@ -350,6 +352,9 @@ handle_loop:
 ;    
     test ah,80h
     jnz handle_next
+;
+    cmp al,'A'
+    je handle_abort
 ;    
     cmp al,'N'
     jne handle_show
@@ -365,6 +370,21 @@ handle_next_set:
 
 handle_show:
     call ShowCore
+    jmp handle_next
+
+handle_abort:
+    mov ax,ds:core_list
+
+handle_abort_loop:    
+    or ax,ax
+    jz handle_show
+;
+    mov gs,ax
+    mov fs,gs:cs_proc_sel
+    SendNmi
+;
+    mov ax,gs:cs_next
+    jmp handle_abort_loop
 
 handle_next:        
     call UpdateMode

@@ -627,6 +627,11 @@ DoPreemptProcessor    MACRO
 	OsGate do_preempt_processor_nr
 						ENDM
 
+;   IN  FS      Processor selector
+SendNmi    MACRO
+	OsGate send_nmi_nr
+	                    ENDM
+
 ;   OUT EAX      Update tics
 StartSysTimer    MACRO
 	OsGate start_sys_timer_nr
