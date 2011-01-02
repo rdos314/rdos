@@ -1123,7 +1123,7 @@ void TQuiz5::ExportExcelCase(const char *filename, int PcaType)
                                         if (i == 112)
                                         {
                                                 ival = 100 * (Row.Quiz[i] - 3) / 9;
-                                                sprintf(str, "\"%d.%02d\"", ival / 100, ival % 100);
+                                                sprintf(str, "%d.%02d", ival / 100, ival % 100);
                                                 file.Write(str);
                                         }
                                         else
@@ -1135,7 +1135,7 @@ void TQuiz5::ExportExcelCase(const char *filename, int PcaType)
                                                 if (ival > 2)
                                                         ival = 0;
 
-                                                sprintf(str, "\"%d\"", ival);
+                                                sprintf(str, "%d", ival);
                                                 file.Write(str);
                                                 if (i != N - 1)
                                                         file.Write(", ");
@@ -1203,7 +1203,7 @@ void TQuiz5::ExportExcelAspie(const char *filename)
                         if (ival > 2)
                                 ival = 0;
 
-                        sprintf(str, "\"%d\"", ival);
+                        sprintf(str, "%d", ival);
                         file.Write(str);
                         if (i != N - 1)
                                 file.Write(", ");

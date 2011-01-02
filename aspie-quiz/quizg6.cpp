@@ -592,7 +592,7 @@ void TQuizG6::ExportExcelCase(const char *filename, int PcaType)
 					if (ival > 2)
 						ival = 0;
                     
-					sprintf(str, "\"%d\"", ival);
+					sprintf(str, "%d", ival);
 					file.Write(str);
 					if (i != GetQuizN() - 1)
 						file.Write(", ");
@@ -661,7 +661,7 @@ void TQuizG6::ExportExcelAspie(const char *filename)
 				if (ival >= GetCatCount(i))
 					ival = 0;
 
-				sprintf(str, "\"%d\"", ival);
+				sprintf(str, "%d", ival);
 				file.Write(str);
 				if (i != N - 1)
 					file.Write(", ");

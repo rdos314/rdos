@@ -47,16 +47,16 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32SwapShort
+	public Win32SwapShort
 
-_Win32SwapShort	Proc
+Win32SwapShort	Proc
 	push ebp
 	mov ebp,esp
 	mov ax,[ebp+8]
 	xchg al,ah
 	pop ebp
 	ret 4
-_Win32SwapShort	Endp
+Win32SwapShort	Endp
 
 PAGE
 
@@ -71,9 +71,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32SwapLong
+	public Win32SwapLong
 
-_Win32SwapLong	Proc
+Win32SwapLong	Proc
 	push ebp
 	mov ebp,esp
 ;	
@@ -84,7 +84,7 @@ _Win32SwapLong	Proc
 ;
 	pop ebp
 	ret 4
-_Win32SwapLong	Endp
+Win32SwapLong	Endp
 
 PAGE
 
@@ -431,7 +431,7 @@ binary_to_time	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32TicsToRecord
+	public Win32TicsToRecord
 
 ctMSB		EQU 8
 ctLSB		EQU 12
@@ -443,7 +443,7 @@ ctMin		EQU 32
 ctSec		EQU 36
 ctMilli		EQU 40
 
-_Win32TicsToRecord	Proc
+Win32TicsToRecord	Proc
 	push ebp
 	mov ebp,esp
 	pushad
@@ -500,7 +500,7 @@ rttrSaveMs:
 	popad
 	pop ebp
 	ret 36
-_Win32TicsToRecord	Endp
+Win32TicsToRecord	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -521,7 +521,7 @@ _Win32TicsToRecord	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32RecordToTics
+	public Win32RecordToTics
 
 rtMSB		EQU 8
 rtLSB		EQU 12
@@ -533,7 +533,7 @@ rtMin		EQU 32
 rtSec		EQU 36
 rtMilli		EQU 40
 
-_Win32RecordToTics	Proc
+Win32RecordToTics	Proc
 	push ebp
 	mov ebp,esp
 	pushad
@@ -562,7 +562,7 @@ _Win32RecordToTics	Proc
 	popad
 	pop ebp
 	ret 36
-_Win32RecordToTics	Endp
+Win32RecordToTics	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -577,13 +577,13 @@ _Win32RecordToTics	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32GetTics
+	public Win32GetTics
 
 rgtTick EQU 8
 rgtMSB	EQU 12
 rgtLSB	EQU 16
 
-_Win32GetTics	Proc
+Win32GetTics	Proc
 	push ebp
 	mov ebp,esp
 	push edx
@@ -601,7 +601,7 @@ _Win32GetTics	Proc
 	pop edx
 	pop ebp
 	ret 12
-_Win32GetTics	Endp
+Win32GetTics	Endp
 
 PAGE
 
@@ -618,9 +618,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32AddTics
+	public Win32AddTics
 
-_Win32AddTics	Proc
+Win32AddTics	Proc
 	push ebp
 	mov ebp,esp
 	push ebx
@@ -634,7 +634,7 @@ _Win32AddTics	Proc
 	pop ebx
 	pop ebp
 	ret 12
-_Win32AddTics	Endp
+Win32AddTics	Endp
 
 PAGE
 
@@ -651,9 +651,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32AddMilli
+	public Win32AddMilli
 
-_Win32AddMilli	Proc
+Win32AddMilli	Proc
 	push ebp
 	mov ebp,esp
 	push ebx
@@ -669,7 +669,7 @@ _Win32AddMilli	Proc
 	pop ebx
 	pop ebp
 	ret 12
-_Win32AddMilli	Endp
+Win32AddMilli	Endp
 
 PAGE
 
@@ -686,9 +686,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32AddSec
+	public Win32AddSec
 
-_Win32AddSec	Proc
+Win32AddSec	Proc
 	push ebp
 	mov ebp,esp
 	push ebx
@@ -704,7 +704,7 @@ _Win32AddSec	Proc
 	pop ebx
 	pop ebp
 	ret 12
-_Win32AddSec	Endp
+Win32AddSec	Endp
 
 PAGE
 
@@ -721,9 +721,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32AddMin
+	public Win32AddMin
 
-_Win32AddMin	Proc
+Win32AddMin	Proc
 	push ebp
 	mov ebp,esp
 	push ebx
@@ -739,7 +739,7 @@ _Win32AddMin	Proc
 	pop ebx
 	pop ebp
 	ret 12
-_Win32AddMin	Endp
+Win32AddMin	Endp
 
 PAGE
 
@@ -756,9 +756,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32AddHour
+	public Win32AddHour
 
-_Win32AddHour	Proc
+Win32AddHour	Proc
 	push ebp
 	mov ebp,esp
 	push ebx
@@ -770,7 +770,7 @@ _Win32AddHour	Proc
 	pop ebx
 	pop ebp
 	ret 12
-_Win32AddHour	Endp
+Win32AddHour	Endp
 
 PAGE
 
@@ -787,9 +787,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _Win32AddDay
+	public Win32AddDay
 
-_Win32AddDay	Proc
+Win32AddDay	Proc
 	push ebp
 	mov ebp,esp
 	push ebx
@@ -803,7 +803,7 @@ _Win32AddDay	Proc
 	pop ebx
 	pop ebp
 	ret 12
-_Win32AddDay	Endp
+Win32AddDay	Endp
 
 
 	END

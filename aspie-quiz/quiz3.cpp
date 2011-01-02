@@ -989,7 +989,7 @@ void TQuizIII::ExportExcelCase(const char *filename, int PcaType)
 	{
 		if (IsPca(&Row, PcaType))
 		{
-			sprintf(str, "\%d\", ", Row.AsResult);
+			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);
 
 			sprintf(str, "\"%d\", ", Row.Diagnos);
@@ -1006,7 +1006,7 @@ void TQuizIII::ExportExcelCase(const char *filename, int PcaType)
 					if (ival > 2)
 						ival = 0;
 
-					sprintf(str, "\"%d\"", ival);
+					sprintf(str, "%d", ival);
 					file.Write(str);
 					if (i != N - 1)
 						file.Write(", ");
@@ -1073,7 +1073,7 @@ void TQuizIII::ExportExcelAspie(const char *filename)
 			if (ival > 2)
 				ival = 0;
 
-			sprintf(str, "\"%d\"", ival);
+			sprintf(str, "%d", ival);
 			file.Write(str);
 			if (i != N - 1)
 				file.Write(", ");
