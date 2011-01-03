@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; Lowtimeb.ASM
-; Low-level time & date manipulation, TASM-version
+; Lowtime.ASM
+; Low-level time & date manipulation
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						

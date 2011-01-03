@@ -30,7 +30,7 @@
 #include <ctype.h>
 #include <math.h>
 
-// #define EXPORT	1
+#define EXPORT	1
 // #define ALL		1
 // #define CONV		1
 
@@ -42,8 +42,6 @@
 
 //#define SWEDISH     1
 #define ENGLISH       1
-
-//#define EXPORT
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -62,7 +60,11 @@ int main(int argc, char **argv)
 	char str[80];
 	int g;
 
+	printf("read data\r\n");
+
 	Quiz[0] = new TQuizFinal("final.bin");
+
+	printf("write no answer\r\n");
 
 	Quiz[0]->WriteNoAnswerStats("final\\noans.txt");
 

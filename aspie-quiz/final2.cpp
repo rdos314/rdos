@@ -30,7 +30,7 @@
 #include <ctype.h>
 #include <math.h>
 
-// #define EXPORT	1
+#define EXPORT	1
 // #define ALL		1
 // #define CONV		1
 
@@ -42,8 +42,6 @@
 
 //#define SWEDISH     1
 #define ENGLISH       1
-
-//#define EXPORT
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -62,14 +60,18 @@ int main(int argc, char **argv)
 	char str[80];
 	int g;
 
+	printf("read data\r\n");
 	Quiz[0] = new TQuizFinal2("final2.bin");
 
+	printf("write no answer\r\n");
 	Quiz[0]->WriteNoAnswerStats("final2\\noans.txt");
 
 	printf("all\r\n");
 	Quiz[0]->ExportExcelCase("pca\\allfin2.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("pca\\malefin2.dat", PCA_TYPE_MALE);
 	Quiz[0]->ExportExcelCase("pca\\femfin2.dat", PCA_TYPE_FEMALE);
+	Quiz[0]->ExportExcelCase("pca\\yfin2.dat", PCA_TYPE_YOUNG);
+	Quiz[0]->ExportExcelCase("pca\\oldfin2.dat", PCA_TYPE_OLD);
 
 	printf("aspie\r\n");
 
@@ -84,7 +86,8 @@ int main(int argc, char **argv)
 	 Quiz[0]->ImportMvsp("pca\\allfin2.txt", PCA_TYPE_ALL);
 	 Quiz[0]->ImportMvsp("pca\\malefin2.txt", PCA_TYPE_MALE);
 	 Quiz[0]->ImportMvsp("pca\\femfin2.txt", PCA_TYPE_FEMALE);
-
+	 Quiz[0]->ImportMvsp("pca\\oldfin2.txt", PCA_TYPE_OLD);
+	 Quiz[0]->ImportMvsp("pca\\yfin2.txt", PCA_TYPE_YOUNG);
 
 	printf("import aspie\r\n");
 

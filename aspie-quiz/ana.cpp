@@ -1146,7 +1146,12 @@ int main(int argc, char **argv)
 
 		  Quiz[36]->WritePartner("eval\\partner.htm");
 
-//      ExportFinal("final.bin");
+		  printf("Export final\r\n");
+  
+          ExportFinal("final.bin");
+
+		  printf("Export final 2\r\n");
+
 		  ExportFinal2("final2.bin");
 
 #ifdef ANCESTRY
