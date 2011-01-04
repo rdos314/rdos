@@ -1590,6 +1590,8 @@ int main(int argc, char **argv)
         Quiz[50]->ExportExcelCase("pca\\oldge3.dat", PCA_TYPE_OLD);
 
 
+#endif
+
         printf("allg1\r\n");
          Quiz[51]->ExportExcelCase("pca\\allg1.dat", PCA_TYPE_ALL);
          Quiz[51]->ExportExcelCase("pca\\maleg1.dat", PCA_TYPE_MALE);
@@ -1646,8 +1648,6 @@ int main(int argc, char **argv)
         Quiz[58]->ExportExcelCase("pca\\youngg8.dat", PCA_TYPE_YOUNG);
         Quiz[58]->ExportExcelCase("pca\\oldg8.dat", PCA_TYPE_OLD);
 
-#endif
-
         printf("aspie\r\n");
 
 #ifdef EXPORT
@@ -1702,6 +1702,9 @@ int main(int argc, char **argv)
 			Quiz[48]->ExportExcelAspie("pca\\aspiege.dat");
          Quiz[49]->ExportExcelAspie("pca\\aspiege2.dat");
          Quiz[50]->ExportExcelAspie("pca\\aspiege3.dat");
+
+#endif
+
          Quiz[51]->ExportExcelAspie("pca\\aspieg1.dat");
          Quiz[52]->ExportExcelAspie("pca\\aspieg2.dat");
          Quiz[53]->ExportExcelAspie("pca\\aspieg3.dat");
@@ -1710,7 +1713,6 @@ int main(int argc, char **argv)
          Quiz[56]->ExportExcelAspie("pca\\aspieg6.dat");
          Quiz[57]->ExportExcelAspie("pca\\aspieg7.dat");
          Quiz[58]->ExportExcelAspie("pca\\aspieg8.dat");
-#endif
 
 
         printf("import\r\n");
