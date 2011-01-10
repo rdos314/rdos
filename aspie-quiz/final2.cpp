@@ -91,7 +91,9 @@ int main(int argc, char **argv)
 
 	printf("import aspie\r\n");
 
-	 Quiz[0]->ImportMvspAspie("pca\\aspfin2.txt");
+    Quiz[0]->ImportFinalMvsp("pca\\allfin.txt");
+
+	Quiz[0]->ImportMvspAspie("pca\\aspfin2.txt");
 
 	printf("congruence\r\n");
 
@@ -113,6 +115,8 @@ int main(int argc, char **argv)
 	 printf("race\r\n");
 
 	 Quiz[0]->WriteRace("final2\\race.htm");
+
+     Quiz[0]->ExportFinalCongruence("final2.txt", Quiz[0]);
 
 	printf("type histograms\r\n");
 	 Quiz[0]->ExportDiffHistogram("final2\\all.csv", POP_TYPE_ALL, TRUE);
