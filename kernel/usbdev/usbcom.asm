@@ -3980,6 +3980,7 @@ ftA8	DW 0403h,	0C991h	; ASK_RDR400
 ftA9	DW 0C26h,	00004h	; ICOM_ID1
 ftAA	DW 5050h,	00400h	; PAPOUCH
 ftAB	DW 0403h,	0DD20h	; ACG_HFDUAL
+ftAC	DW 0856h,	0AC27h	; 232USB9M
 
 AttachFTDI  Proc near
     push es
@@ -3999,7 +4000,7 @@ AttachFTDI  Proc near
     mov si,es:udd_vendor
     mov di,es:udd_prod
 
-    mov cx,0ACh
+    mov cx,0ADh
     mov bp,OFFSET ftTab
 
 aftLoop:
