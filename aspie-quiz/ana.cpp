@@ -162,161 +162,161 @@ TQuiz *Quiz[70];
 *##########################################################################*/
 void ExportAncestry(const char *filename, int Ancestry)
 {
-        TQuizAncestryRow Row;
-        int i;
-        int v;
-        int ival;
-        char str[80];
-        int use;
-        TFile *infile;
-        TFile outfile(filename, 0);
+		  TQuizAncestryRow Row;
+		  int i;
+		  int v;
+		  int ival;
+		  char str[80];
+		  int use;
+		  TFile *infile;
+		  TFile outfile(filename, 0);
 
-        outfile.Write("\"\", ");
-        outfile.Write("\"\", ");
+		  outfile.Write("\"\", ");
+		  outfile.Write("\"\", ");
 
-        for (i = 0; i < 150; i++)
-        {
-                outfile.Write("\"");
+		  for (i = 0; i < 150; i++)
+		  {
+					 outfile.Write("\"");
 
 					 sprintf(str, "#%d", i + 1);
-                outfile.Write(str);
+					 outfile.Write(str);
 
-                outfile.Write("\"");
-                if (i != 149)
-                        outfile.Write(", ");
-        }
-        outfile.Write("\n");
+					 outfile.Write("\"");
+					 if (i != 149)
+								outfile.Write(", ");
+		  }
+		  outfile.Write("\n");
 
-         for (v = 0; v < 16; v++)
-        {
-                  switch (v)
-                {
-                        case 0:
-                                infile = new TFile("ancf1.bin");
-                                break;
-
-                        case 1:
-                                infile = new TFile("ancf2.bin");
-                                break;
-
-                        case 2:
-                                infile = new TFile("ancf3.bin");
+			for (v = 0; v < 16; v++)
+		  {
+						switch (v)
+					 {
+								case 0:
+										  infile = new TFile("ancf1.bin");
 										  break;
 
-                        case 3:
-                                infile = new TFile("ancf4.bin");
-                                break;
-
-                        case 4:
-                                infile = new TFile("ancf5.bin");
-                                break;
-
-                        case 5:
-                                infile = new TFile("ancf6.bin");
-                                break;
-
-                        case 6:
-                                infile = new TFile("ancf7.bin");
-                                break;
-
-                        case 7:
-                                infile = new TFile("ancf8.bin");
-                                break;
-
-                        case 8:
-                                infile = new TFile("ancf9.bin");
+								case 1:
+										  infile = new TFile("ancf2.bin");
 										  break;
 
-                        case 9:
-                                infile = new TFile("ancf10.bin");
-                                break;
-
-                        case 10:
-                                infile = new TFile("ancf11.bin");
-                                break;
-
-                        case 11:
-                                infile = new TFile("ancf12.bin");
-                                break;
-
-                        case 12:
-                                infile = new TFile("ancf13.bin");
-                                break;
-
-                        case 13:
-                                infile = new TFile("ancf14.bin");
-                                break;
-
-                        case 14:
-                                infile = new TFile("ancf15.bin");
+								case 2:
+										  infile = new TFile("ancf3.bin");
 										  break;
 
-                        case 15:
-                                infile = new TFile("ancfi.bin");
-                                break;
-                  }
+								case 3:
+										  infile = new TFile("ancf4.bin");
+										  break;
 
-                while (infile->Read(&Row, sizeof(Row)))
-                {
-                         use = FALSE;
-                         switch (Ancestry)
-                         {
-                                case ANCESTRY_ALL:
-                                    use = TRUE;
-                                    break;
-                            
-                                        case ANCESTRY_CAUCASIAN:
-                                            if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
-                                                    use = TRUE;
-                                                 break;
+								case 4:
+										  infile = new TFile("ancf5.bin");
+										  break;
 
-                                        case ANCESTRY_ASIAN:
-                                                if (Row.Ancestry >= 4000)
-                                                                use = TRUE;
+								case 5:
+										  infile = new TFile("ancf6.bin");
+										  break;
+
+								case 6:
+										  infile = new TFile("ancf7.bin");
+										  break;
+
+								case 7:
+										  infile = new TFile("ancf8.bin");
+										  break;
+
+								case 8:
+										  infile = new TFile("ancf9.bin");
+										  break;
+
+								case 9:
+										  infile = new TFile("ancf10.bin");
+										  break;
+
+								case 10:
+										  infile = new TFile("ancf11.bin");
+										  break;
+
+								case 11:
+										  infile = new TFile("ancf12.bin");
+										  break;
+
+								case 12:
+										  infile = new TFile("ancf13.bin");
+										  break;
+
+								case 13:
+										  infile = new TFile("ancf14.bin");
+										  break;
+
+								case 14:
+										  infile = new TFile("ancf15.bin");
+										  break;
+
+								case 15:
+										  infile = new TFile("ancfi.bin");
+										  break;
+						}
+
+					 while (infile->Read(&Row, sizeof(Row)))
+					 {
+								 use = FALSE;
+								 switch (Ancestry)
+								 {
+										  case ANCESTRY_ALL:
+												use = TRUE;
+												break;
+
+													 case ANCESTRY_CAUCASIAN:
+														  if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
+																	 use = TRUE;
+																 break;
+
+													 case ANCESTRY_ASIAN:
+																if (Row.Ancestry >= 4000)
+																					 use = TRUE;
 																  break;
 
-                                        case ANCESTRY_AMERIND:
-                                                if (Row.Ancestry == 3 || Row.Ancestry == 4)
-                                                                use = TRUE;
-                                                  break;
+													 case ANCESTRY_AMERIND:
+																if (Row.Ancestry == 3 || Row.Ancestry == 4)
+																					 use = TRUE;
+																  break;
 
-                                        case ANCESTRY_AFRICAN:
-                                                if ((Row.Ancestry >= 1000 && Row.Ancestry < 2000) || Row.Ancestry == 5)
-                                                                use = TRUE;
-                                                  break;
+													 case ANCESTRY_AFRICAN:
+																if ((Row.Ancestry >= 1000 && Row.Ancestry < 2000) || Row.Ancestry == 5)
+																					 use = TRUE;
+																  break;
 
-                                        case ANCESTRY_ARAB:
-                                                if (Row.Ancestry >= 3000 && Row.Ancestry < 4000 && Row.Ancestry != 3205)
-                                                        use = TRUE;
-                                                        break;
+													 case ANCESTRY_ARAB:
+																if (Row.Ancestry >= 3000 && Row.Ancestry < 4000 && Row.Ancestry != 3205)
+																		  use = TRUE;
+																		  break;
 
-                                        case ANCESTRY_AUSTRALIAN:
-                                                if (Row.Ancestry == 1)
-                                                        use = TRUE;
-                                                        break;
+													 case ANCESTRY_AUSTRALIAN:
+																if (Row.Ancestry == 1)
+																		  use = TRUE;
+																		  break;
 
-                                        case ANCESTRY_ENGLAND:
-                                                if (Row.Lang == 0)
+													 case ANCESTRY_ENGLAND:
+																if (Row.Lang == 0)
 																		  use = TRUE;
 																break;
 
-                                        case ANCESTRY_SWEDEN:
-                                                if (Row.Lang == 1)
-                                                        use = TRUE;
-                                                break;
+													 case ANCESTRY_SWEDEN:
+																if (Row.Lang == 1)
+																		  use = TRUE;
+																break;
 
-                                        case ANCESTRY_NORWAY:
-                                                if (Row.Lang == 2)
-                                                        use = TRUE;
-                                                break;
+													 case ANCESTRY_NORWAY:
+																if (Row.Lang == 2)
+																		  use = TRUE;
+																break;
 
-                                        case ANCESTRY_PORTUGAL:
-                                                if (Row.Lang == 3)
-                                                        use = TRUE;
-                                                break;
+													 case ANCESTRY_PORTUGAL:
+																if (Row.Lang == 3)
+																		  use = TRUE;
+																break;
 
-                                        case ANCESTRY_GERMANY:
-                                                if (Row.Lang == 4)
+													 case ANCESTRY_GERMANY:
+																if (Row.Lang == 4)
                                                         use = TRUE;
                                                 break;
 
@@ -353,7 +353,7 @@ void ExportAncestry(const char *filename, int Ancestry)
                                   case COUNTRY_N_ASIA:
                                          if (Row.Lang == 0 && Row.Country >= 4100 && Row.Country < 4300)
                                                  use = TRUE;
-                                                 break;
+																 break;
 
                                   case COUNTRY_N_EUROPE:
                                          if (Row.Lang == 0 && Row.Country >= 2100 && Row.Country < 2400)
@@ -390,7 +390,7 @@ void ExportAncestry(const char *filename, int Ancestry)
                                                  use = TRUE;
                                                  break;
 
-                  case US_INDIAN:
+						case US_INDIAN:
                          if (Row.Ancestry == 3 && Row.Country == 7302)
                             use = TRUE;
 													  break;
@@ -427,7 +427,7 @@ void ExportAncestry(const char *filename, int Ancestry)
 
                                   case ALL_CAUC:
                                          if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
-                                                use = TRUE;
+																use = TRUE;
                                          break;
 
                                   case ALL_ASIA:
@@ -453,14 +453,14 @@ void ExportAncestry(const char *filename, int Ancestry)
                                         if (ival > 2)
                                                 ival = 0;
 
-                                        sprintf(str, "\"%d\"", ival);
-                                        outfile.Write(str);
-                                         if (i != 149)
-                                                 outfile.Write(", ");
-                                }
-                                outfile.Write("\n");
-                        }
-                }
+													 sprintf(str, "%d", ival);
+													 outfile.Write(str);
+													  if (i != 149)
+																 outfile.Write(", ");
+										  }
+										  outfile.Write("\n");
+								}
+					 }
                 delete infile;
         }
 }
@@ -497,20 +497,20 @@ void ExportAncestry2(const char *filename, int Ancestry)
                 outfile.Write("\"");
                 if (i != 149)
                         outfile.Write(", ");
-        }
+		  }
         outfile.Write("\n");
 
          for (v = 0; v < 8; v++)
-        {
-                  switch (v)
-                {
-                        case 0:
-                                infile = new TFile("ancg1.bin");
-                                break;
+		  {
+						switch (v)
+					 {
+								case 0:
+										  infile = new TFile("ancg1.bin");
+										  break;
 
-                        case 1:
-                                infile = new TFile("ancg2.bin");
-                                break;
+								case 1:
+										  infile = new TFile("ancg2.bin");
+										  break;
 
                         case 2:
 										  infile = new TFile("ancg3.bin");
@@ -534,7 +534,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
 
                         case 7:
                                 infile = new TFile("ancg8.bin");
-                                break;
+										  break;
 
                   }
 
@@ -548,7 +548,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
                                                         break;
 
                                         case ANCESTRY_CAUCASIAN:
-                                                 if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
+																 if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
                                                                  use = TRUE;
                                                  break;
 
@@ -608,7 +608,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
                                                 break;
 
                                         case ANCESTRY_HOLLAND:
-                                                if (Row.Lang == 6)
+																if (Row.Lang == 6)
 																		  use = TRUE;
 																break;
 
@@ -622,7 +622,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
                                                  use = TRUE;
                                                  break;
 
-                                  case COUNTRY_S_ASIA:
+											 case COUNTRY_S_ASIA:
                                          if (Row.Lang == 0 && Row.Country >= 4400 && Row.Country < 4600)
                                                  use = TRUE;
                                                  break;
@@ -645,7 +645,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
                                   case COUNTRY_S_EUROPE:
                                          if (Row.Lang == 0 && Row.Country >= 2400 && Row.Country < 2600)
                                                  use = TRUE;
-                                                 break;
+																 break;
 
                                   case COUNTRY_E_EUROPE:
                                          if (Row.Lang == 0 && Row.Country >= 2600 && Row.Country < 2800)
@@ -659,7 +659,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
 
 											 case REGION_US:
 													  if (Row.Lang == 0 && Row.Country == 7302 && Row.Ancestry > 6)
-                                                 use = TRUE;
+																 use = TRUE;
                                                  break;
 
                                   case REGION_AUSTRALIA:
@@ -719,7 +719,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
                                 }
 
                                 if (use)
-                                {
+										  {
                                         sprintf(str, "\"%d\", ", Row.AsResult);
                                 outfile.Write(str);
 
@@ -733,18 +733,18 @@ void ExportAncestry2(const char *filename, int Ancestry)
 																ival--;
 
                                         if (ival > 2)
-                                                ival = 0;
+																ival = 0;
 
-                                        sprintf(str, "\"%d\"", ival);
-                                        outfile.Write(str);
-                                         if (i != 149)
-                                                 outfile.Write(", ");
-                                }
-                                outfile.Write("\n");
-                        }
-                }
-                delete infile;
-        }
+													 sprintf(str, "%d", ival);
+													 outfile.Write(str);
+													  if (i != 149)
+																 outfile.Write(", ");
+										  }
+										  outfile.Write("\n");
+								}
+					 }
+					 delete infile;
+		  }
 }
 
 /*##################  ExportFinal ##########################
@@ -756,7 +756,7 @@ void ExportAncestry2(const char *filename, int Ancestry)
 *##########################################################################*/
 void ExportFinal(const char *filename)
 {
-        TQuizAncestryRow ARow;
+		  TQuizAncestryRow ARow;
         TQuizRow QRow;
         int i;
         int v;
@@ -770,7 +770,7 @@ void ExportFinal(const char *filename)
         for (v = 0; v < 16; v++)
         {
                 switch (v)
-                {
+					 {
                         case 0:
                                 infile = new TFile("ancf1.bin");
                                 break;
@@ -807,7 +807,7 @@ void ExportFinal(const char *filename)
                                 infile = new TFile("ancf9.bin");
                                 break;
 
-                        case 9:
+								case 9:
                                 infile = new TFile("ancf10.bin");
                                 break;
 
@@ -844,7 +844,7 @@ void ExportFinal(const char *filename)
                                 QRow.BirthMonth = ARow.BirthMonth;
                                 QRow.Gender = ARow.Gender;
                                 QRow.Country = ARow.Country;
-                                QRow.Ancestry = ARow.Ancestry;
+										  QRow.Ancestry = ARow.Ancestry;
                                 QRow.Aspie = ARow.Aspie;
                                 QRow.ADHD = ARow.ADHD;
                                 QRow.OCD = ARow.OCD;
@@ -881,7 +881,7 @@ void ExportFinal2(const char *filename)
         char str[80];
         int use;
         TFile *infile;
-        TFile outfile(filename, 0);
+		  TFile outfile(filename, 0);
 
 
         for (v = 0; v < 8; v++)
@@ -918,7 +918,7 @@ void ExportFinal2(const char *filename)
 
                         case 7:
                                 infile = new TFile("ancg8.bin");
-                                break;
+										  break;
                 }
 
 					 while (infile->Read(&ARow, sizeof(ARow)))
@@ -992,7 +992,7 @@ int main(int argc, char **argv)
         Quiz[9] = new TQuizR1("quizr1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8]);
 
         printf("R2\r\n");
-        Quiz[10] = new TQuizR2("quizr2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9]);
+		  Quiz[10] = new TQuizR2("quizr2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9]);
 
 		  printf("R3\r\n");
         Quiz[11] = new TQuizR3("quizr3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10]);
@@ -1103,7 +1103,7 @@ int main(int argc, char **argv)
         Quiz[46] = new TQuizF14("quizf14.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45]);
 
         printf("F15\r\n");
-        Quiz[47] = new TQuizF15("quizf15.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46]);
+		  Quiz[47] = new TQuizF15("quizf15.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46]);
 
         printf("GE\r\n");
         Quiz[48] = new TQuizExp2("quizge.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26], Quiz[27], Quiz[28], Quiz[29], Quiz[30], Quiz[31], Quiz[32], Quiz[33], Quiz[34], Quiz[35], Quiz[36], Quiz[37], Quiz[38], Quiz[39], Quiz[40], Quiz[41], Quiz[42], Quiz[43], Quiz[44], Quiz[45], Quiz[46], Quiz[47]);
@@ -1183,16 +1183,16 @@ int main(int argc, char **argv)
 			ExportAncestry("pca\\raustral.dat", REGION_AUSTRALIA);
 			ExportAncestry("pca\\rafrous.dat", REGION_AFRO_US);
 
-			ExportAncestry("pca\\usind.dat", US_INDIAN);
-			ExportAncestry("pca\\usafro.dat", US_AFRO);
-			ExportAncestry("pca\\ushisp.dat", US_HISPANIC);
-			ExportAncestry("pca\\uscauc.dat", US_CAUC);
-			ExportAncestry("pca\\usasia.dat", US_ASIA);
+			ExportAncestry2("pca\\usind.dat", US_INDIAN);
+			ExportAncestry2("pca\\usafro.dat", US_AFRO);
+			ExportAncestry2("pca\\ushisp.dat", US_HISPANIC);
+			ExportAncestry2("pca\\uscauc.dat", US_CAUC);
+			ExportAncestry2("pca\\usasia.dat", US_ASIA);
 
-			ExportAncestry("pca\\allind.dat", ALL_INDIAN);
-			ExportAncestry("pca\\allafro.dat", ALL_AFRO);
-			ExportAncestry("pca\\allcauc.dat", ALL_CAUC);
-			ExportAncestry("pca\\allasia.dat", ALL_ASIA);
+			ExportAncestry2("pca\\allind.dat", ALL_INDIAN);
+			ExportAncestry2("pca\\allafro.dat", ALL_AFRO);
+			ExportAncestry2("pca\\allcauc.dat", ALL_CAUC);
+			ExportAncestry2("pca\\allasia.dat", ALL_ASIA);
 
 #endif
 
@@ -1267,7 +1267,7 @@ int main(int argc, char **argv)
         Quiz[4]->ExportExcelCase("pca\\young5.dat", PCA_TYPE_YOUNG);
 		  Quiz[4]->ExportExcelCase("pca\\old5.dat", PCA_TYPE_OLD);
 
-        printf("all6\r\n");
+		  printf("all6\r\n");
          Quiz[5]->ExportExcelCase("pca\\all6.dat", PCA_TYPE_ALL);
          Quiz[5]->ExportExcelCase("pca\\male6.dat", PCA_TYPE_MALE);
          Quiz[5]->ExportExcelCase("pca\\female6.dat", PCA_TYPE_FEMALE);
@@ -1304,7 +1304,7 @@ int main(int argc, char **argv)
 
         printf("allr2\r\n");
          Quiz[10]->ExportExcelCase("pca\\allr2.dat", PCA_TYPE_ALL);
-         Quiz[10]->ExportExcelCase("pca\\maler2.dat", PCA_TYPE_MALE);
+			Quiz[10]->ExportExcelCase("pca\\maler2.dat", PCA_TYPE_MALE);
          Quiz[10]->ExportExcelCase("pca\\femaler2.dat", PCA_TYPE_FEMALE);
         Quiz[10]->ExportExcelCase("pca\\youngr2.dat", PCA_TYPE_YOUNG);
         Quiz[10]->ExportExcelCase("pca\\oldr2.dat", PCA_TYPE_OLD);
@@ -1341,7 +1341,7 @@ int main(int argc, char **argv)
          Quiz[15]->ExportExcelCase("pca\\allr7.dat", PCA_TYPE_ALL);
          Quiz[15]->ExportExcelCase("pca\\maler7.dat", PCA_TYPE_MALE);
          Quiz[15]->ExportExcelCase("pca\\femaler7.dat", PCA_TYPE_FEMALE);
-        Quiz[15]->ExportExcelCase("pca\\youngr7.dat", PCA_TYPE_YOUNG);
+		  Quiz[15]->ExportExcelCase("pca\\youngr7.dat", PCA_TYPE_YOUNG);
         Quiz[15]->ExportExcelCase("pca\\oldr7.dat", PCA_TYPE_OLD);
 
         printf("alls1\r\n");
@@ -1415,7 +1415,7 @@ int main(int argc, char **argv)
         Quiz[25]->ExportExcelCase("pca\\olds10.dat", PCA_TYPE_OLD);
 
         printf("alls11\r\n");
-         Quiz[26]->ExportExcelCase("pca\\alls11.dat", PCA_TYPE_ALL);
+			Quiz[26]->ExportExcelCase("pca\\alls11.dat", PCA_TYPE_ALL);
          Quiz[26]->ExportExcelCase("pca\\males11.dat", PCA_TYPE_MALE);
          Quiz[26]->ExportExcelCase("pca\\fems11.dat", PCA_TYPE_FEMALE);
         Quiz[26]->ExportExcelCase("pca\\youngs11.dat", PCA_TYPE_YOUNG);
@@ -1452,7 +1452,7 @@ int main(int argc, char **argv)
         printf("alln4\r\n");
          Quiz[31]->ExportExcelCase("pca\\alln4.dat", PCA_TYPE_ALL);
          Quiz[31]->ExportExcelCase("pca\\malen4.dat", PCA_TYPE_MALE);
-         Quiz[31]->ExportExcelCase("pca\\femalen4.dat", PCA_TYPE_FEMALE);
+			Quiz[31]->ExportExcelCase("pca\\femalen4.dat", PCA_TYPE_FEMALE);
         Quiz[31]->ExportExcelCase("pca\\youngn4.dat", PCA_TYPE_YOUNG);
         Quiz[31]->ExportExcelCase("pca\\oldn4.dat", PCA_TYPE_OLD);
 
@@ -1489,7 +1489,7 @@ int main(int argc, char **argv)
          Quiz[37]->ExportExcelCase("pca\\malef5.dat", PCA_TYPE_MALE);
          Quiz[37]->ExportExcelCase("pca\\femalef5.dat", PCA_TYPE_FEMALE);
         Quiz[37]->ExportExcelCase("pca\\youngf5.dat", PCA_TYPE_YOUNG);
-        Quiz[37]->ExportExcelCase("pca\\oldf5.dat", PCA_TYPE_OLD);
+		  Quiz[37]->ExportExcelCase("pca\\oldf5.dat", PCA_TYPE_OLD);
 
         printf("allf6\r\n");
          Quiz[38]->ExportExcelCase("pca\\allf6.dat", PCA_TYPE_ALL);
@@ -1526,7 +1526,7 @@ int main(int argc, char **argv)
         Quiz[42]->ExportExcelCase("pca\\youngf10.dat", PCA_TYPE_YOUNG);
         Quiz[42]->ExportExcelCase("pca\\oldf10.dat", PCA_TYPE_OLD);
 
-        printf("allf11\r\n");
+		  printf("allf11\r\n");
 			Quiz[43]->ExportExcelCase("pca\\allf11.dat", PCA_TYPE_ALL);
          Quiz[43]->ExportExcelCase("pca\\malef11.dat", PCA_TYPE_MALE);
 			Quiz[43]->ExportExcelCase("pca\\femf11.dat", PCA_TYPE_FEMALE);
@@ -1563,7 +1563,7 @@ int main(int argc, char **argv)
 
         printf("allfi\r\n");
          Quiz[32]->ExportExcelCase("pca\\allfi.dat", PCA_TYPE_ALL);
-         Quiz[32]->ExportExcelCase("pca\\malefi.dat", PCA_TYPE_MALE);
+			Quiz[32]->ExportExcelCase("pca\\malefi.dat", PCA_TYPE_MALE);
          Quiz[32]->ExportExcelCase("pca\\femalefi.dat", PCA_TYPE_FEMALE);
         Quiz[32]->ExportExcelCase("pca\\youngfi.dat", PCA_TYPE_YOUNG);
         Quiz[32]->ExportExcelCase("pca\\oldfi.dat", PCA_TYPE_OLD);
@@ -1600,7 +1600,7 @@ int main(int argc, char **argv)
         Quiz[51]->ExportExcelCase("pca\\oldg1.dat", PCA_TYPE_OLD);
 
         printf("allg2\r\n");
-         Quiz[52]->ExportExcelCase("pca\\allg2.dat", PCA_TYPE_ALL);
+			Quiz[52]->ExportExcelCase("pca\\allg2.dat", PCA_TYPE_ALL);
 			Quiz[52]->ExportExcelCase("pca\\maleg2.dat", PCA_TYPE_MALE);
          Quiz[52]->ExportExcelCase("pca\\femaleg2.dat", PCA_TYPE_FEMALE);
 		  Quiz[52]->ExportExcelCase("pca\\youngg2.dat", PCA_TYPE_YOUNG);
@@ -1622,97 +1622,97 @@ int main(int argc, char **argv)
 
         printf("allg5\r\n");
          Quiz[55]->ExportExcelCase("pca\\allg5.dat", PCA_TYPE_ALL);
-         Quiz[55]->ExportExcelCase("pca\\maleg5.dat", PCA_TYPE_MALE);
-         Quiz[55]->ExportExcelCase("pca\\femaleg5.dat", PCA_TYPE_FEMALE);
-        Quiz[55]->ExportExcelCase("pca\\youngg5.dat", PCA_TYPE_YOUNG);
+			Quiz[55]->ExportExcelCase("pca\\maleg5.dat", PCA_TYPE_MALE);
+			Quiz[55]->ExportExcelCase("pca\\femaleg5.dat", PCA_TYPE_FEMALE);
+		  Quiz[55]->ExportExcelCase("pca\\youngg5.dat", PCA_TYPE_YOUNG);
 		  Quiz[55]->ExportExcelCase("pca\\oldg5.dat", PCA_TYPE_OLD);
 
 		  printf("allg6\r\n");
-         Quiz[56]->ExportExcelCase("pca\\allg6.dat", PCA_TYPE_ALL);
-         Quiz[56]->ExportExcelCase("pca\\maleg6.dat", PCA_TYPE_MALE);
-         Quiz[56]->ExportExcelCase("pca\\femaleg6.dat", PCA_TYPE_FEMALE);
-        Quiz[56]->ExportExcelCase("pca\\youngg6.dat", PCA_TYPE_YOUNG);
-        Quiz[56]->ExportExcelCase("pca\\oldg6.dat", PCA_TYPE_OLD);
+			Quiz[56]->ExportExcelCase("pca\\allg6.dat", PCA_TYPE_ALL);
+			Quiz[56]->ExportExcelCase("pca\\maleg6.dat", PCA_TYPE_MALE);
+			Quiz[56]->ExportExcelCase("pca\\femaleg6.dat", PCA_TYPE_FEMALE);
+		  Quiz[56]->ExportExcelCase("pca\\youngg6.dat", PCA_TYPE_YOUNG);
+		  Quiz[56]->ExportExcelCase("pca\\oldg6.dat", PCA_TYPE_OLD);
 
-        printf("allg7\r\n");
-         Quiz[57]->ExportExcelCase("pca\\allg7.dat", PCA_TYPE_ALL);
-         Quiz[57]->ExportExcelCase("pca\\maleg7.dat", PCA_TYPE_MALE);
-         Quiz[57]->ExportExcelCase("pca\\femaleg7.dat", PCA_TYPE_FEMALE);
-        Quiz[57]->ExportExcelCase("pca\\youngg7.dat", PCA_TYPE_YOUNG);
-        Quiz[57]->ExportExcelCase("pca\\oldg7.dat", PCA_TYPE_OLD);
+		  printf("allg7\r\n");
+			Quiz[57]->ExportExcelCase("pca\\allg7.dat", PCA_TYPE_ALL);
+			Quiz[57]->ExportExcelCase("pca\\maleg7.dat", PCA_TYPE_MALE);
+			Quiz[57]->ExportExcelCase("pca\\femaleg7.dat", PCA_TYPE_FEMALE);
+		  Quiz[57]->ExportExcelCase("pca\\youngg7.dat", PCA_TYPE_YOUNG);
+		  Quiz[57]->ExportExcelCase("pca\\oldg7.dat", PCA_TYPE_OLD);
 
-        printf("allg8\r\n");
-         Quiz[58]->ExportExcelCase("pca\\allg8.dat", PCA_TYPE_ALL);
-         Quiz[58]->ExportExcelCase("pca\\maleg8.dat", PCA_TYPE_MALE);
-         Quiz[58]->ExportExcelCase("pca\\femaleg8.dat", PCA_TYPE_FEMALE);
-        Quiz[58]->ExportExcelCase("pca\\youngg8.dat", PCA_TYPE_YOUNG);
-        Quiz[58]->ExportExcelCase("pca\\oldg8.dat", PCA_TYPE_OLD);
+		  printf("allg8\r\n");
+			Quiz[58]->ExportExcelCase("pca\\allg8.dat", PCA_TYPE_ALL);
+			Quiz[58]->ExportExcelCase("pca\\maleg8.dat", PCA_TYPE_MALE);
+			Quiz[58]->ExportExcelCase("pca\\femaleg8.dat", PCA_TYPE_FEMALE);
+		  Quiz[58]->ExportExcelCase("pca\\youngg8.dat", PCA_TYPE_YOUNG);
+		  Quiz[58]->ExportExcelCase("pca\\oldg8.dat", PCA_TYPE_OLD);
 
-        printf("aspie\r\n");
+		  printf("aspie\r\n");
 
 #ifdef EXPORT
-         Quiz[0]->ExportExcelAspie("pca\\aspie1.dat");
-         Quiz[1]->ExportExcelAspie("pca\\aspie2.dat");
-         Quiz[2]->ExportExcelAspie("pca\\aspie3.dat");
-         Quiz[3]->ExportExcelAspie("pca\\aspie4.dat");
-         Quiz[4]->ExportExcelAspie("pca\\aspie5.dat");
-         Quiz[5]->ExportExcelAspie("pca\\aspie6.dat");
-         Quiz[6]->ExportExcelAspie("pca\\aspie7.dat");
-         Quiz[7]->ExportExcelAspie("pca\\aspie8.dat");
-         Quiz[8]->ExportExcelAspie("pca\\aspie9.dat");
-         Quiz[9]->ExportExcelAspie("pca\\aspier1.dat");
-         Quiz[10]->ExportExcelAspie("pca\\aspier2.dat");
-         Quiz[11]->ExportExcelAspie("pca\\aspier3.dat");
-         Quiz[12]->ExportExcelAspie("pca\\aspier4.dat");
-         Quiz[13]->ExportExcelAspie("pca\\aspier5.dat");
-         Quiz[14]->ExportExcelAspie("pca\\aspier6.dat");
-         Quiz[15]->ExportExcelAspie("pca\\aspier7.dat");
-         Quiz[16]->ExportExcelAspie("pca\\aspies1.dat");
-         Quiz[17]->ExportExcelAspie("pca\\aspies2.dat");
-         Quiz[18]->ExportExcelAspie("pca\\aspies3.dat");
-         Quiz[19]->ExportExcelAspie("pca\\aspies4.dat");
+			Quiz[0]->ExportExcelAspie("pca\\aspie1.dat");
+			Quiz[1]->ExportExcelAspie("pca\\aspie2.dat");
+			Quiz[2]->ExportExcelAspie("pca\\aspie3.dat");
+			Quiz[3]->ExportExcelAspie("pca\\aspie4.dat");
+			Quiz[4]->ExportExcelAspie("pca\\aspie5.dat");
+			Quiz[5]->ExportExcelAspie("pca\\aspie6.dat");
+			Quiz[6]->ExportExcelAspie("pca\\aspie7.dat");
+			Quiz[7]->ExportExcelAspie("pca\\aspie8.dat");
+			Quiz[8]->ExportExcelAspie("pca\\aspie9.dat");
+			Quiz[9]->ExportExcelAspie("pca\\aspier1.dat");
+			Quiz[10]->ExportExcelAspie("pca\\aspier2.dat");
+			Quiz[11]->ExportExcelAspie("pca\\aspier3.dat");
+			Quiz[12]->ExportExcelAspie("pca\\aspier4.dat");
+			Quiz[13]->ExportExcelAspie("pca\\aspier5.dat");
+			Quiz[14]->ExportExcelAspie("pca\\aspier6.dat");
+			Quiz[15]->ExportExcelAspie("pca\\aspier7.dat");
+			Quiz[16]->ExportExcelAspie("pca\\aspies1.dat");
+			Quiz[17]->ExportExcelAspie("pca\\aspies2.dat");
+			Quiz[18]->ExportExcelAspie("pca\\aspies3.dat");
+			Quiz[19]->ExportExcelAspie("pca\\aspies4.dat");
 			Quiz[20]->ExportExcelAspie("pca\\aspies5.dat");
-         Quiz[21]->ExportExcelAspie("pca\\aspies6.dat");
+			Quiz[21]->ExportExcelAspie("pca\\aspies6.dat");
 			Quiz[22]->ExportExcelAspie("pca\\aspies7.dat");
 			Quiz[23]->ExportExcelAspie("pca\\aspies8.dat");
 			Quiz[24]->ExportExcelAspie("pca\\aspies9.dat");
-         Quiz[25]->ExportExcelAspie("pca\\aspies10.dat");
-         Quiz[26]->ExportExcelAspie("pca\\aspies11.dat");
-         Quiz[27]->ExportExcelAspie("pca\\aspies12.dat");
-         Quiz[28]->ExportExcelAspie("pca\\aspien1.dat");
-         Quiz[29]->ExportExcelAspie("pca\\aspien2.dat");
-         Quiz[30]->ExportExcelAspie("pca\\aspien3.dat");
-         Quiz[31]->ExportExcelAspie("pca\\aspien4.dat");
-         Quiz[33]->ExportExcelAspie("pca\\aspief1.dat");
-         Quiz[34]->ExportExcelAspie("pca\\aspief2.dat");
-         Quiz[35]->ExportExcelAspie("pca\\aspief3.dat");
-         Quiz[36]->ExportExcelAspie("pca\\aspief4.dat");
-         Quiz[37]->ExportExcelAspie("pca\\aspief5.dat");
-         Quiz[38]->ExportExcelAspie("pca\\aspief6.dat");
-         Quiz[39]->ExportExcelAspie("pca\\aspief7.dat");
-         Quiz[40]->ExportExcelAspie("pca\\aspief8.dat");
-         Quiz[41]->ExportExcelAspie("pca\\aspief9.dat");
-         Quiz[42]->ExportExcelAspie("pca\\aspief10.dat");
-         Quiz[43]->ExportExcelAspie("pca\\aspief11.dat");
-         Quiz[44]->ExportExcelAspie("pca\\aspief12.dat");
+			Quiz[25]->ExportExcelAspie("pca\\aspies10.dat");
+			Quiz[26]->ExportExcelAspie("pca\\aspies11.dat");
+			Quiz[27]->ExportExcelAspie("pca\\aspies12.dat");
+			Quiz[28]->ExportExcelAspie("pca\\aspien1.dat");
+			Quiz[29]->ExportExcelAspie("pca\\aspien2.dat");
+			Quiz[30]->ExportExcelAspie("pca\\aspien3.dat");
+			Quiz[31]->ExportExcelAspie("pca\\aspien4.dat");
+			Quiz[33]->ExportExcelAspie("pca\\aspief1.dat");
+			Quiz[34]->ExportExcelAspie("pca\\aspief2.dat");
+			Quiz[35]->ExportExcelAspie("pca\\aspief3.dat");
+			Quiz[36]->ExportExcelAspie("pca\\aspief4.dat");
+			Quiz[37]->ExportExcelAspie("pca\\aspief5.dat");
+			Quiz[38]->ExportExcelAspie("pca\\aspief6.dat");
+			Quiz[39]->ExportExcelAspie("pca\\aspief7.dat");
+			Quiz[40]->ExportExcelAspie("pca\\aspief8.dat");
+			Quiz[41]->ExportExcelAspie("pca\\aspief9.dat");
+			Quiz[42]->ExportExcelAspie("pca\\aspief10.dat");
+			Quiz[43]->ExportExcelAspie("pca\\aspief11.dat");
+			Quiz[44]->ExportExcelAspie("pca\\aspief12.dat");
 			Quiz[45]->ExportExcelAspie("pca\\aspief13.dat");
-         Quiz[46]->ExportExcelAspie("pca\\aspief14.dat");
-         Quiz[47]->ExportExcelAspie("pca\\aspief15.dat");
-         Quiz[32]->ExportExcelAspie("pca\\aspiefi.dat");
+			Quiz[46]->ExportExcelAspie("pca\\aspief14.dat");
+			Quiz[47]->ExportExcelAspie("pca\\aspief15.dat");
+			Quiz[32]->ExportExcelAspie("pca\\aspiefi.dat");
 			Quiz[48]->ExportExcelAspie("pca\\aspiege.dat");
-         Quiz[49]->ExportExcelAspie("pca\\aspiege2.dat");
-         Quiz[50]->ExportExcelAspie("pca\\aspiege3.dat");
+			Quiz[49]->ExportExcelAspie("pca\\aspiege2.dat");
+			Quiz[50]->ExportExcelAspie("pca\\aspiege3.dat");
 
 #endif
 
          Quiz[51]->ExportExcelAspie("pca\\aspieg1.dat");
          Quiz[52]->ExportExcelAspie("pca\\aspieg2.dat");
          Quiz[53]->ExportExcelAspie("pca\\aspieg3.dat");
-         Quiz[54]->ExportExcelAspie("pca\\aspieg4.dat");
-         Quiz[55]->ExportExcelAspie("pca\\aspieg5.dat");
-         Quiz[56]->ExportExcelAspie("pca\\aspieg6.dat");
-         Quiz[57]->ExportExcelAspie("pca\\aspieg7.dat");
-         Quiz[58]->ExportExcelAspie("pca\\aspieg8.dat");
+			Quiz[54]->ExportExcelAspie("pca\\aspieg4.dat");
+			Quiz[55]->ExportExcelAspie("pca\\aspieg5.dat");
+			Quiz[56]->ExportExcelAspie("pca\\aspieg6.dat");
+			Quiz[57]->ExportExcelAspie("pca\\aspieg7.dat");
+			Quiz[58]->ExportExcelAspie("pca\\aspieg8.dat");
 
 
         printf("import\r\n");
@@ -2163,71 +2163,73 @@ int main(int argc, char **argv)
         printf("import final pca\r\n");
 
         Quiz[32]->ImportFinalMvsp("pca\\allfin.txt");
+		  Quiz[51]->ImportFinalMvsp("pca\\allfin2.txt");
 
-        printf("import pop pca\r\n");
+		  printf("import pop pca\r\n");
 
-         TQuiz::ImportPopPca("pca\\uk.txt", &TQuiz::UkPca);
-         TQuiz::ImportPopPca("pca\\sw.txt", &TQuiz::SePca);
-         TQuiz::ImportPopPca("pca\\no.txt", &TQuiz::NoPca);
-         TQuiz::ImportPopPca("pca\\br.txt", &TQuiz::BrPca);
-         TQuiz::ImportPopPca("pca\\de.txt", &TQuiz::DePca);
-         TQuiz::ImportPopPca("pca\\cz.txt", &TQuiz::CzPca);
-         TQuiz::ImportPopPca("pca\\nl.txt", &TQuiz::NlPca);
+			TQuiz::ImportPopPca("pca\\uk.txt", &TQuiz::UkPca);
+			TQuiz::ImportPopPca("pca\\sw.txt", &TQuiz::SePca);
+			TQuiz::ImportPopPca("pca\\no.txt", &TQuiz::NoPca);
+			TQuiz::ImportPopPca("pca\\br.txt", &TQuiz::BrPca);
+			TQuiz::ImportPopPca("pca\\de.txt", &TQuiz::DePca);
+			TQuiz::ImportPopPca("pca\\cz.txt", &TQuiz::CzPca);
+			TQuiz::ImportPopPca("pca\\nl.txt", &TQuiz::NlPca);
 
-         TQuiz::ImportPopPca("pca\\cauc.txt", &TQuiz::CaucasianPca);
-         TQuiz::ImportPopPca("pca\\asian.txt", &TQuiz::AsianPca);
-         TQuiz::ImportPopPca("pca\\amerind.txt", &TQuiz::AmerindPca);
+			TQuiz::ImportPopPca("pca\\cauc.txt", &TQuiz::CaucasianPca);
+			TQuiz::ImportPopPca("pca\\asian.txt", &TQuiz::AsianPca);
+			TQuiz::ImportPopPca("pca\\amerind.txt", &TQuiz::AmerindPca);
 			TQuiz::ImportPopPca("pca\\african.txt", &TQuiz::AfricanPca);
-         TQuiz::ImportPopPca("pca\\arab.txt", &TQuiz::ArabPca);
-         TQuiz::ImportPopPca("pca\\austral.txt", &TQuiz::AustralPca);
+			TQuiz::ImportPopPca("pca\\arab.txt", &TQuiz::ArabPca);
+			TQuiz::ImportPopPca("pca\\austral.txt", &TQuiz::AustralPca);
 
-         TQuiz::ImportPopPca("pca\\cssa.txt", &TQuiz::RegionSsaPca);
+			TQuiz::ImportPopPca("pca\\cssa.txt", &TQuiz::RegionSsaPca);
 			TQuiz::ImportPopPca("pca\\carab.txt", &TQuiz::RegionArabPca);
-         TQuiz::ImportPopPca("pca\\csasia.txt", &TQuiz::RegionSouthAsiaPca);
-         TQuiz::ImportPopPca("pca\\ceasia.txt", &TQuiz::RegionEastAsiaPca);
-         TQuiz::ImportPopPca("pca\\cnasia.txt", &TQuiz::RegionNorthAsiaPca);
-         TQuiz::ImportPopPca("pca\\cneuro.txt", &TQuiz::RegionNorthEuropePca);
-         TQuiz::ImportPopPca("pca\\cseuro.txt", &TQuiz::RegionSouthEuropePca);
-         TQuiz::ImportPopPca("pca\\ceeuro.txt", &TQuiz::RegionEastEuropePca);
+			TQuiz::ImportPopPca("pca\\csasia.txt", &TQuiz::RegionSouthAsiaPca);
+			TQuiz::ImportPopPca("pca\\ceasia.txt", &TQuiz::RegionEastAsiaPca);
+			TQuiz::ImportPopPca("pca\\cnasia.txt", &TQuiz::RegionNorthAsiaPca);
+			TQuiz::ImportPopPca("pca\\cneuro.txt", &TQuiz::RegionNorthEuropePca);
+			TQuiz::ImportPopPca("pca\\cseuro.txt", &TQuiz::RegionSouthEuropePca);
+			TQuiz::ImportPopPca("pca\\ceeuro.txt", &TQuiz::RegionEastEuropePca);
 
-         TQuiz::ImportPopPca("pca\\reuro.txt", &TQuiz::RegionEuropePca);
-         TQuiz::ImportPopPca("pca\\rus.txt", &TQuiz::RegionUsPca);
-         TQuiz::ImportPopPca("pca\\raustral.txt", &TQuiz::RegionAustraliaPca);
-         TQuiz::ImportPopPca("pca\\rafrous.txt", &TQuiz::RegionAfroUsPca);
+			TQuiz::ImportPopPca("pca\\reuro.txt", &TQuiz::RegionEuropePca);
+			TQuiz::ImportPopPca("pca\\rus.txt", &TQuiz::RegionUsPca);
+			TQuiz::ImportPopPca("pca\\raustral.txt", &TQuiz::RegionAustraliaPca);
+			TQuiz::ImportPopPca("pca\\rafrous.txt", &TQuiz::RegionAfroUsPca);
 
-         TQuiz::ImportPopPca("pca\\usind.txt", &TQuiz::UsIndianPca);
-         TQuiz::ImportPopPca("pca\\usafro.txt", &TQuiz::UsAfricanPca);
-         TQuiz::ImportPopPca("pca\\ushisp.txt", &TQuiz::UsHispanicPca);
-         TQuiz::ImportPopPca("pca\\uscauc.txt", &TQuiz::UsCaucasianPca);
-         TQuiz::ImportPopPca("pca\\usasia.txt", &TQuiz::UsAsianPca);
+			TQuiz::ImportPopPca("pca\\usind.txt", &TQuiz::UsIndianPca);
+			TQuiz::ImportPopPca("pca\\usafro.txt", &TQuiz::UsAfricanPca);
+			TQuiz::ImportPopPca("pca\\ushisp.txt", &TQuiz::UsHispanicPca);
+			TQuiz::ImportPopPca("pca\\uscauc.txt", &TQuiz::UsCaucasianPca);
+			TQuiz::ImportPopPca("pca\\usasia.txt", &TQuiz::UsAsianPca);
 
 			TQuiz::ImportPopPca("pca\\allind.txt", &TQuiz::AllIndianPca);
-         TQuiz::ImportPopPca("pca\\allafro.txt", &TQuiz::AllAfricanPca);
-         TQuiz::ImportPopPca("pca\\allcauc.txt", &TQuiz::AllCaucasianPca);
-         TQuiz::ImportPopPca("pca\\allasia.txt", &TQuiz::AllAsianPca);
+			TQuiz::ImportPopPca("pca\\allafro.txt", &TQuiz::AllAfricanPca);
+			TQuiz::ImportPopPca("pca\\allcauc.txt", &TQuiz::AllCaucasianPca);
+			TQuiz::ImportPopPca("pca\\allasia.txt", &TQuiz::AllAsianPca);
 
 			TQuiz::ExportPopPcaCongruence("lang.txt");
-         TQuiz::ExportFinalPopCongruence("financ.txt", Quiz[32]);
+			TQuiz::ExportFinalPopCongruence("financ.txt", Quiz[32]);
+			TQuiz::ExportFinalPopCongruence("financ2.txt", Quiz[51]);
 
-         printf("Cutoff\r\n");
-          Quiz[58]->DsmCutoff("eval\\cutoff.htm", TRUE);
+			printf("Cutoff\r\n");
+			 Quiz[58]->DsmCutoff("eval\\cutoff.htm", TRUE);
 
-          Quiz[0]->DsmCutoff("eval\\cut1.htm", FALSE);
-          Quiz[1]->DsmCutoff("eval\\cut2.htm", FALSE);
-          Quiz[2]->DsmCutoff("eval\\cut3.htm", FALSE);
-          Quiz[3]->DsmCutoff("eval\\cutnd.htm", FALSE);
-          Quiz[4]->DsmCutoff("eval\\cut5.htm", FALSE);
-          Quiz[5]->DsmCutoff("eval\\cut6.htm", FALSE);
-          Quiz[6]->DsmCutoff("eval\\cut7.htm", FALSE);
-          Quiz[7]->DsmCutoff("eval\\cut8.htm", FALSE);
-          Quiz[8]->DsmCutoff("eval\\cut9.htm", FALSE);
-          Quiz[9]->DsmCutoff("eval\\cutr1.htm", FALSE);
-          Quiz[10]->DsmCutoff("eval\\cutr2.htm", FALSE);
-          Quiz[11]->DsmCutoff("eval\\cutr3.htm", FALSE);
-          Quiz[12]->DsmCutoff("eval\\cutr4.htm", FALSE);
+			 Quiz[0]->DsmCutoff("eval\\cut1.htm", FALSE);
+			 Quiz[1]->DsmCutoff("eval\\cut2.htm", FALSE);
+			 Quiz[2]->DsmCutoff("eval\\cut3.htm", FALSE);
+			 Quiz[3]->DsmCutoff("eval\\cutnd.htm", FALSE);
+			 Quiz[4]->DsmCutoff("eval\\cut5.htm", FALSE);
+			 Quiz[5]->DsmCutoff("eval\\cut6.htm", FALSE);
+			 Quiz[6]->DsmCutoff("eval\\cut7.htm", FALSE);
+			 Quiz[7]->DsmCutoff("eval\\cut8.htm", FALSE);
+			 Quiz[8]->DsmCutoff("eval\\cut9.htm", FALSE);
+			 Quiz[9]->DsmCutoff("eval\\cutr1.htm", FALSE);
+			 Quiz[10]->DsmCutoff("eval\\cutr2.htm", FALSE);
+			 Quiz[11]->DsmCutoff("eval\\cutr3.htm", FALSE);
+			 Quiz[12]->DsmCutoff("eval\\cutr4.htm", FALSE);
 			 Quiz[13]->DsmCutoff("eval\\cutr5.htm", FALSE);
-          Quiz[14]->DsmCutoff("eval\\cutr6.htm", FALSE);
-          Quiz[15]->DsmCutoff("eval\\cutr7.htm", FALSE);
+			 Quiz[14]->DsmCutoff("eval\\cutr6.htm", FALSE);
+			 Quiz[15]->DsmCutoff("eval\\cutr7.htm", FALSE);
           Quiz[16]->DsmCutoff("eval\\cuts1.htm", FALSE);
           Quiz[17]->DsmCutoff("eval\\cuts2.htm", FALSE);
 			 Quiz[18]->DsmCutoff("eval\\cuts3.htm", FALSE);
