@@ -40,8 +40,8 @@
 #define LIST_ID         0x2CDA
 #define LIST_SECTORS    20000
 
-#define FALSE		    0
-#define TRUE		    !FALSE
+#define FALSE               0
+#define TRUE                !FALSE
 
 /*##########################################################################
 #
@@ -58,7 +58,7 @@ TDataStore::TDataStore()
 {
     int i;
     
-	FStorList = 0;
+        FStorList = 0;
     FWs = 0;
     FCirc = 0;
     FVp = 0;
@@ -170,15 +170,15 @@ void TDataStore::Add(TVp *vp)
 void TDataStore::GetCurrRad(TRad *rad, TRadData *data)
 {
     if (rad->IsOnline())
-	{
-	    data->HasData = TRUE;
-	    data->Address = rad->GetAddress();
-	    data->Ref = (long double)rad->GetRef() / 10.0;
-	    data->Temp = (long double)rad->GetTemp() / 10.0;
-	    data->Motor = (long double)rad->GetMotor() / 10.0;
-	    data->Light = (long double)rad->GetLight() / 10.0;
-	    data->AuxTemp = (long double)rad->GetAuxTemp() / 10.0;
-	}
+        {
+            data->HasData = TRUE;
+            data->Address = rad->GetAddress();
+            data->Ref = (long double)rad->GetRef() / 10.0;
+            data->Temp = (long double)rad->GetTemp() / 10.0;
+            data->Motor = (long double)rad->GetMotor() / 10.0;
+            data->Light = (long double)rad->GetLight() / 10.0;
+            data->AuxTemp = (long double)rad->GetAuxTemp() / 10.0;
+        }
 }
 
 /*##########################################################################
@@ -194,84 +194,84 @@ void TDataStore::GetCurrRad(TRad *rad, TRadData *data)
 ##########################################################################*/
 void TDataStore::GetCurrData(THeatData *data)
 {
-	int i;
+        int i;
 
-	data->Msb = RdosCodeMsbTics(FYear, FMonth, FDay, FHour);
-	data->Lsb = RdosCodeLsbTics(FMin, 0, 0, 0);
+        data->Msb = RdosCodeMsbTics(FYear, FMonth, FDay, FHour);
+        data->Lsb = RdosCodeLsbTics(FMin, 0, 0, 0);
 
-	data->HasWs = FALSE;
-	data->HasRain = FALSE;
-	data->HasCirc = FALSE;
-	data->HasVp = FALSE;
-	data->HasTankTemp = FALSE;
-	data->HasTankP = FALSE;
-	data->HasHeatTemp = FALSE;
-	data->HasHeatP = FALSE;
+        data->HasWs = FALSE;
+        data->HasRain = FALSE;
+        data->HasCirc = FALSE;
+        data->HasVp = FALSE;
+        data->HasTankTemp = FALSE;
+        data->HasTankP = FALSE;
+        data->HasHeatTemp = FALSE;
+        data->HasHeatP = FALSE;
 
-	if (FWs)
-	{
-		 data->HasWs = TRUE;
-		 data->IndoorTemp = FWs->GetIndoorTemp();
-		 data->IndoorHumidity = FWs->GetIndoorHumidity();
-		 data->OutdoorTemp = FWs->GetOutdoorTemp();
-		 data->OutdoorHumidity = FWs->GetOutdoorHumidity();
-		 data->DewPoint = FWs->GetDewPoint();
-		 data->WindChill = FWs->GetWindChill();
-		 data->WindSpeed = FWs->GetWindSpeed();
-		 data->WindDir = FWs->GetWindDir();
-		 data->AirPressure = FWs->GetAirPressure();
+        if (FWs)
+        {
+                 data->HasWs = TRUE;
+                 data->IndoorTemp = FWs->GetIndoorTemp();
+                 data->IndoorHumidity = FWs->GetIndoorHumidity();
+                 data->OutdoorTemp = FWs->GetOutdoorTemp();
+                 data->OutdoorHumidity = FWs->GetOutdoorHumidity();
+                 data->DewPoint = FWs->GetDewPoint();
+                 data->WindChill = FWs->GetWindChill();
+                 data->WindSpeed = FWs->GetWindSpeed();
+                 data->WindDir = FWs->GetWindDir();
+                 data->AirPressure = FWs->GetAirPressure();
 
-		 if (FHour == 0)
-		 {
-			  data->HasRain = TRUE;
-			  data->Rain1h = FWs->GetRain1h();
-		 }
-	}
+                 if (FHour == 0)
+                 {
+                          data->HasRain = TRUE;
+                          data->Rain1h = FWs->GetRain1h();
+                 }
+        }
 
-	if (FCirc)
-	{
-		 data->HasCirc = TRUE;
-		 data->CircSpeed = FCirc->GetSpeed();
-	}
+        if (FCirc)
+        {
+                 data->HasCirc = TRUE;
+                 data->CircSpeed = FCirc->GetSpeed();
+        }
 
-	 if (FVp)
-	 {
-		  data->HasVp = TRUE;
-		  data->VpOn = FVp->IsVpOn();
-		  data->EpOn = FVp->IsEpOn();
+         if (FVp)
+         {
+                  data->HasVp = TRUE;
+                  data->VpOn = FALSE;
+                  data->EpOn = FALSE;
 
-		  if (FVp->HasValidTankTemp())
-		  {
-				data->HasTankTemp = TRUE;
-				data->TankTemp = (long double)FVp->GetTankTemp() / 10.0;
+                  if (FVp->HasValidTankTemp())
+                  {
+                                data->HasTankTemp = TRUE;
+                                data->TankTemp = (long double)FVp->GetTankTemp() / 10.0;
 
-				if (FVp->HasValidTankP())
-				{
-					 data->HasTankP = TRUE;
-					 data->TankP = (long double)FVp->GetTankP() / 100.0;
-				}
-		  }
+                                if (FVp->HasValidTankP())
+                                {
+                                         data->HasTankP = TRUE;
+                                         data->TankP = (long double)FVp->GetTankP() / 100.0;
+                                }
+                  }
 
-		  if (FVp->HasValidHeatTemp())
-		  {
-				data->HasHeatTemp = TRUE;
-				data->HeatTemp = (long double)FVp->GetHeatTemp() / 10.0;
+                  if (FVp->HasValidHeatTemp())
+                  {
+                                data->HasHeatTemp = TRUE;
+                                data->HeatTemp = (long double)FVp->GetHeatTemp() / 10.0;
 
-				if (FVp->HasValidHeatP())
-				{
-					 data->HasHeatP = TRUE;
-					 data->HeatP = (long double)FVp->GetHeatP() / 100.0;
-				}
-		  }
-	 }
+                                if (FVp->HasValidHeatP())
+                                {
+                                         data->HasHeatP = TRUE;
+                                         data->HeatP = (long double)FVp->GetHeatP() / 100.0;
+                                }
+                  }
+         }
 
-	 for (i = 0; i < RAD_COUNT; i++)
-	 {
-		  data->Rad[i].HasData = FALSE;
+         for (i = 0; i < RAD_COUNT; i++)
+         {
+                  data->Rad[i].HasData = FALSE;
 
-		  if (FRadArr[i])
-				GetCurrRad(FRadArr[i], &data->Rad[i]);
-	 }
+                  if (FRadArr[i])
+                                GetCurrRad(FRadArr[i], &data->Rad[i]);
+         }
 }
 
 /*##########################################################################
@@ -302,38 +302,38 @@ void TDataStore::SendRealtime(TRealtimeSocketServerFactory *fact, TRadData *data
 ##########################################################################*/
 void TDataStore::Execute()
 {
-	int year, month, day;
-	int hour, min, sec;
-	int ms, us;
-	int i;
-	int ival;
-	unsigned long msb;
-	unsigned long lsb;
-	THeatData CurrData;
-	TDisc *Disc;
-	long StartSector;
-	TDiscStorage *DiscStore[4];
-	TRedundanceStorageList *redu;
-	TStorageSocketServerFactory *storfact;
-	TRealtimeSocketServerFactory *realfact;
+        int year, month, day;
+        int hour, min, sec;
+        int ms, us;
+        int i;
+        int ival;
+        unsigned long msb;
+        unsigned long lsb;
+        THeatData CurrData;
+        TDisc *Disc;
+        long StartSector;
+        TDiscStorage *DiscStore[4];
+        TRedundanceStorageList *redu;
+        TStorageSocketServerFactory *storfact;
+        TRealtimeSocketServerFactory *realfact;
 
-	RdosGetTime(&msb, &lsb);
-	RdosDecodeMsbTics(msb, &FYear, &FMonth, &FDay, &FHour);
-	RdosDecodeLsbTics(lsb, &FMin, &sec, &ms, &us);
+        RdosGetTime(&msb, &lsb);
+        RdosDecodeMsbTics(msb, &FYear, &FMonth, &FDay, &FHour);
+        RdosDecodeLsbTics(lsb, &FMin, &sec, &ms, &us);
 
-	Disc = new TDisc(0);
-	StartSector = Disc->GetTotalSectors() - 4 * LIST_SECTORS;
+        Disc = new TDisc(0);
+        StartSector = Disc->GetTotalSectors() - 4 * LIST_SECTORS;
 
-	for (i = 0; i < 4; i++)
-		 DiscStore[i] = new TDiscStorage(Disc, StartSector + LIST_SECTORS * i, LIST_SECTORS);
+        for (i = 0; i < 4; i++)
+                 DiscStore[i] = new TDiscStorage(Disc, StartSector + LIST_SECTORS * i, LIST_SECTORS);
 
-	redu = new TRedundanceStorageList(sizeof(THeatData), LIST_ID);
+        redu = new TRedundanceStorageList(sizeof(THeatData), LIST_ID);
 
-	for (i = 0; i < 4; i++)
+        for (i = 0; i < 4; i++)
         redu->Add(DiscStore[i]);
 
-	redu->Recover();
-	FStorList = redu;
+        redu->Recover();
+        FStorList = redu;
 
     storfact = new TStorageSocketServerFactory(redu, 600, 10, 2048);
     storfact->StartHandler("Storage Server", 0x4000);
@@ -341,22 +341,22 @@ void TDataStore::Execute()
     realfact = new TRealtimeSocketServerFactory(601, 10, 2048);
     realfact->StartHandler("Realtime Server", 0x4000);
      
-	while (FInstalled)
-	{
-		RdosGetTime(&msb, &lsb);
-		RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-		RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+        while (FInstalled)
+        {
+                RdosGetTime(&msb, &lsb);
+                RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+                RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
 
-		if (hour != FHour || min != FMin)
-		{
-		    FYear = year;
-		    FMonth = month;
-		    FDay = day;
-			FHour = hour;
-			FMin = min;
+                if (hour != FHour || min != FMin)
+                {
+                    FYear = year;
+                    FMonth = month;
+                    FDay = day;
+                        FHour = hour;
+                        FMin = min;
 
-			GetCurrData(&CurrData);
-			FStorList->AddLast(&CurrData);
+                        GetCurrData(&CurrData);
+                        FStorList->AddLast(&CurrData);
             realfact->SendData(&CurrData);
 
         }

@@ -4,9 +4,9 @@ projectIdent
 VpeMain
 1
 WRect
-833
-468
-8001
+928
+0
+8000
 9216
 2
 MProject
@@ -31,7 +31,7 @@ WRect
 0
 0
 5712
-4320
+4314
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 8
 heat.tgt
 0
-10
+0
 7

@@ -148,36 +148,6 @@ void TVp::DeviceName(char *Name, int Size) const
 
 /*##########################################################################
 #
-#   Name       : TVp::IsVpOn
-#
-#   Purpose....: Is VP on?
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TVp::IsVpOn()
-{
-    return FVpOn;
-}
-
-/*##########################################################################
-#
-#   Name       : TVp::IsEpOn
-#
-#   Purpose....: Is EP on?
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TVp::IsEpOn()
-{
-    return FEpOn;
-}
-
-/*##########################################################################
-#
 #   Name       : TVp::HasValidTankTemp
 #
 #   Purpose....: Check for valid tank temperature
@@ -465,24 +435,6 @@ void TVp::Execute()
 
     ValArr[1] = 0.5;
 
-	while (!RdosReadSerialLines(1, &diostat))
-		RdosWaitMilli(250);
-
-	if (diostat & 0x20)
-		FVpOn = TRUE;
-	else
-		FVpOn = FALSE;
-
-	if (diostat & 0x40)
-		FEpOn = TRUE;
-	else
-		FEpOn = FALSE;
-
-	if (FVpOn)
-		FLevel = 9.9;
-	else
-		FLevel = 0.0;
-
 	FTankSum = 0;
 	FTankCount = 0;
 
@@ -678,78 +630,6 @@ void TVp::Execute()
 			AmbientCount = 0;
 
 			FSection.Leave();
-
-			val = Calc(ValArr);
-			FLevel += val;
-
-			if (FLevel < 0.0)
-				FLevel = 0.0;
-
-			if (FLevel > 9.9)
-				FLevel = 9.9;
-			
-			if (FLevel < 2.5 && FVpOn)
-				FVpOn = FALSE;
-
-			if (FLevel > 7.5 && !FVpOn)
-				FVpOn = TRUE;
-
-			if (FTankTemp > 400 && FVpOn)
-				FVpOn = FALSE;
-
-			if (FValidPHeat && FValidHeat)
-			{
-				 if (FMaxHeatTemp < 750)
-					  EpLimit = 750;
-			    else
-			        EpLimit = 500;
-			    
-    			if (PHeat < -0.6)
-	    			FEpOn = FALSE;
-
-			    if (FHeatTemp > EpLimit)
-			        FEpOn = FALSE;
-			    else
-			    {
-    		    	if (PHeat > -0.2)
-	    		    	FEpOn = TRUE;
-	    		}
-			}
-
-			if (RdosReadSerialLines(1, &diostat))
-			{
-				if (diostat & 0x20)
-				{
-					if (!FVpOn)
-					{
-					    FLevel = 0.0;
-						RdosToggleSerialLine(1, 5);
-                    }						
-				}
-				else
-				{
-					if (FVpOn)
-					{
-					    FLevel = 9.9;
-						RdosToggleSerialLine(1, 5);
-					}
-				}
-
-				if (diostat & 0x40)
-				{
-					if (!FEpOn)
-						RdosToggleSerialLine(1, 6);
-				}
-				else
-				{
-					if (FEpOn)
-						RdosToggleSerialLine(1, 6);
-				}
-
-			}
-
-			sprintf(str, "%4.1Lf", FLevel);
-            Table->SetText(4, 1, str);
 		}
 
 		RdosWaitMilli(1000);

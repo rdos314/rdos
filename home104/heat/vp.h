@@ -39,9 +39,6 @@ public:
 
 	void DeviceName(char *Name, int Size) const;
 
-	int IsVpOn();
-	int IsEpOn();
-
 	int GetTankTemp();
 	int GetHeatTemp();
 
@@ -68,11 +65,6 @@ protected:
 	 int TempCount;
 	 long double AmbientSum;
 	 int AmbientCount;
-
-	 int FVpOn;
-	 int FEpOn;
-
-	 long double FLevel;
 
 	int FValidTank;
 	int FValidHeat;
