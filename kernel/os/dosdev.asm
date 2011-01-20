@@ -630,7 +630,7 @@ prn_write	PROC far
 	push cx
 	xor cx,cx
 prn_loop:
-	CheckPrinter
+;	CheckPrinter
 	test al,80h
 	jz prn_output
 	loop prn_loop
@@ -638,7 +638,7 @@ prn_output:
 	pop cx
 prn_write_loop:
 	mov al,es:[edi]
-	WritePrinter
+;	WritePrinter
 	jc prn_fail
 	inc edi
 	sub ecx,1

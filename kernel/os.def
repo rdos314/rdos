@@ -553,4 +553,6 @@ add_debug_core_nr           EQU 385
 
 send_nmi_nr                 EQU 386
 
+add_printer_nr              EQU 387
+
 osgate_entries				EQU 390

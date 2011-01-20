@@ -273,6 +273,10 @@ int RDOSAPI RdosGetReceiveBufferSpace(int Handle);
 int RDOSAPI RdosGetSendBufferSpace(int Handle);
 void RDOSAPI RdosWaitForSendCompletedCom(int Handle);
 
+int RDOSAPI RdosGetMaxPrinters();
+int RDOSAPI RdosOpenPrinter(char ID);
+void RDOSAPI RdosClosePrinter(int Handle);
+
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
 void RDOSAPI RdosCloseFile(int Handle);
@@ -1000,6 +1004,21 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosWaitForSendCompletedCom = \
     CallGate_wait_for_send_completed_com  \
+    parm [ebx];
+
+#pragma aux RdosGetMaxPrinters = \
+    CallGate_get_max_printer  \
+    "movzx eax,al"  \
+    value [eax];
+
+#pragma aux RdosOpenPrinter = \
+    CallGate_open_printer  \
+    ValidateHandle  \
+    parm [al]  \
+    value [ebx];
+
+#pragma aux RdosClosePrinter = \
+    CallGate_close_printer  \
     parm [ebx];
 
 #pragma aux RdosOpenFile = \
@@ -3119,6 +3138,21 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosWaitForSendCompletedCom = \
     CallGate_wait_for_send_completed_com  \
+    parm [ebx];
+
+#pragma aux RdosGetMaxPrinters = \
+    CallGate_get_max_printer  \
+    "movzx eax,al"  \
+    value [eax];
+
+#pragma aux RdosOpenPrinter = \
+    CallGate_open_printer  \
+    ValidateHandle  \
+    parm [al]  \
+    value [ebx];
+
+#pragma aux RdosClosePrinter = \
+    CallGate_close_printer  \
     parm [ebx];
 
 #pragma aux RdosOpenFile = \

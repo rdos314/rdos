@@ -30,6 +30,7 @@ include ..\os.inc
 include ..\user.def
 include ..\user.inc
 include ..\driver.def
+include ..\os\printer.inc
 include usb.inc
 
 MAX_OUT_SIZE = 260
@@ -59,6 +60,13 @@ cs_reply_buf    DW ?
 cs_wait         DW ?
 
 cmd_session_struc   ENDS
+
+usb_printer_struc       STRUC
+
+ups_base_struc  printer_struc <>
+
+usb_printer_struc       ENDS
+
 
 data    SEGMENT byte public 'DATA'
 
@@ -930,7 +938,7 @@ StatusTimeout  Proc far
     mov bx,cs
     mov es,bx
     mov di,OFFSET StatusTimeout
-	mov bx,ds:kr_session_thread
+        mov bx,ds:kr_session_thread
     StartTimer
     ret
 StatusTimeout  Endp
@@ -952,15 +960,27 @@ kr203_thread:
     GetThread
     mov ds:kr_session_thread,ax
 ;
+    mov eax,SIZE usb_printer_struc
+    AllocateSmallGlobalMem
+    mov es:printer_device,0
+;    
+    mov ax,ds:kr_controller
+    mov dx,ds:kr_device
+    push ds
+    mov bx,es
+    mov ds,bx
+    AddPrinter
+    pop ds
+;
     GetSystemTime
     add eax,1193000 * 2  ; 2s
     adc edx,0
     mov bx,cs
     mov es,bx
     mov di,OFFSET StatusTimeout
-	mov bx,ds:kr_session_thread
-	mov cx,ds	
-	StartTimer
+        mov bx,ds:kr_session_thread
+        mov cx,ds       
+        StartTimer
 ;
     push ds
     mov ax,cs
@@ -990,7 +1010,7 @@ krLoop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           OpenPrinter
+;       NAME:           OpenPrinterPipes
 ;
 ;       description:    Create printer pipes
 ;
@@ -1001,7 +1021,7 @@ krLoop:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OpenPrinter Proc near
+OpenPrinterPipes Proc near
     push ds
     push es
     pushad
@@ -1073,7 +1093,7 @@ opDone:
     pop es
     pop ds
     ret
-OpenPrinter Endp    
+OpenPrinterPipes Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1148,7 +1168,7 @@ aDescrLoop:
     cmp cl,4
     jne aDescrNext
 ; 
-    call OpenPrinter
+    call OpenPrinterPipes
     jmp aDone
 
 aDescrNext:    

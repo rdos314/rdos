@@ -40,6 +40,8 @@ printer_handle_seg  STRUC
 
 printer_handle_base  handle_header <>
 
+printer_sel     DW ?
+
 printer_handle_seg  ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -91,6 +93,148 @@ delete_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetMaxPrinter
+;
+;       description:    Get max usable printer #
+;
+;       RETURNS:        AL      Max port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_max_printer_name DB 'Get Max Printers',0
+
+get_max_printer        Proc far
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:p_port_count
+    pop ds
+    retf32
+get_max_printer    Endp    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           OpenPrinter
+;
+;       description:    Open printer
+;
+;       PARAMETERS:     AL              Port #
+;
+;       RETURNS:        BX              Printer handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_printer_name DB 'Open Printer',0
+
+open_printer       Proc far
+    push ds
+    push es
+    push ax
+    push cx
+    push dx
+;
+    mov dx,SEG data
+    mov ds,dx
+    movzx dx,al
+    cmp dx,ds:p_port_count
+    jae open_printer_fail
+;    
+    mov bx,dx
+    add bx,bx
+    mov es,ds:[bx].p_port_arr
+;
+    mov ax,PRINTER_HANDLE
+    mov cx,SIZE printer_handle_seg
+    AllocateHandle
+    mov [bx].printer_sel,es
+    mov [bx].hh_sign,PRINTER_HANDLE
+    mov bx,[bx].hh_handle
+    clc
+    jmp open_printer_done
+    
+open_printer_fail:
+    xor bx,bx
+    stc
+
+open_printer_done:
+    pop dx
+    pop cx
+    pop ax
+    pop es
+    pop ds
+    retf32 
+open_printer        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ClosePrinter
+;
+;       description:    Close printer
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_printer_name DB 'Close Printer',0
+
+close_printer       Proc far
+    push ds
+    push ax
+    push dx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc close_printer_done
+;
+    FreeHandle
+
+close_printer_done:
+    pop dx
+    pop ax
+    pop ds
+    retf32
+close_printer       Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddPrinter
+;
+;       DESCRIPTION:    Add a printer port
+;
+;       PARAMETERS:     AX      Controller #
+;                       DX      Device #
+;                       DS      Printer device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_printer_name       DB 'Add Printer',0
+
+add_printer    Proc far
+    push ds
+    push bx
+    push dx
+;
+    mov dx,ds
+    mov bx,SEG data
+    mov ds,bx
+;
+    mov bx,ds:p_port_count
+    add bx,bx
+    mov ds:[bx].p_port_arr,dx
+    inc ds:p_port_count
+;
+    pop dx
+    pop bx
+    pop ds    
+    ret
+add_printer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           init
 ;
 ;       description:    Init device
@@ -105,6 +249,30 @@ init    Proc far
     mov di,OFFSET delete_handle
     mov ax,PRINTER_HANDLE
     RegisterHandle
+;
+    mov si,OFFSET add_printer
+    mov di,OFFSET add_printer_name
+    xor cl,cl
+    mov ax,add_printer_nr
+    RegisterOsGate
+;
+    mov si,OFFSET get_max_printer
+    mov di,OFFSET get_max_printer_name
+    xor dx,dx
+    mov ax,get_max_printer_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET open_printer
+    mov di,OFFSET open_printer_name
+    xor dx,dx
+    mov ax,open_printer_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET close_printer
+    mov di,OFFSET close_printer_name
+    xor dx,dx
+    mov ax,close_printer_nr
+    RegisterBimodalUserGate
 ;
     mov bx,SEG data
     mov es,bx

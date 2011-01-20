@@ -193,10 +193,6 @@
 #define CallGate_set_dtr 0x9a 177 0 0 0 2 0
 #define CallGate_reset_dtr 0x9a 178 0 0 0 2 0
 
-#define CallGate_init_printer 0x9a 179 0 0 0 2 0
-#define CallGate_check_printer 0x9a 180 0 0 0 2 0
-#define CallGate_write_printer 0x9a 181 0 0 0 2 0
-
 #define CallGate_set_cursor_position 0x9a 182 0 0 0 2 0
 #define CallGate_get_cursor_position 0x9a 183 0 0 0 2 0
 #define CallGate_write_char 0x9a 184 0 0 0 2 0
@@ -504,4 +500,8 @@
 #define CallGate_set_read_data_break 0x9a 153 1 0 0 2 0
 #define CallGate_set_write_data_break 0x9a 154 1 0 0 2 0
 #define CallGate_clear_break 0x9a 155 1 0 0 2 0
+
+#define CallGate_get_max_printer 0x9a 156 1 0 0 2 0
+#define CallGate_open_printer 0x9a 157 1 0 0 2 0
+#define CallGate_close_printer 0x9a 158 1 0 0 2 0
 

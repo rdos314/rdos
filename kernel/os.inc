@@ -2445,3 +2445,14 @@ IsAudioOutCompleted      MACRO
 	OsGate is_audio_out_completed_nr
 						ENDM
 
+
+;
+; Printer device related
+;
+
+;   AX      Controller #
+;   DX      Device #
+;   DS      Printer device selector
+AddPrinter	MACRO
+	OsGate add_printer_nr
+					ENDM

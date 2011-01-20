@@ -193,10 +193,6 @@ write_com_nr				= 176
 set_dtr_nr					= 177
 reset_dtr_nr				= 178
 
-init_printer_nr				= 179
-check_printer_nr			= 180
-write_printer_nr			= 181
-
 set_cursor_position_nr		= 182
 get_cursor_position_nr		= 183
 write_char_nr				= 184
@@ -504,5 +500,9 @@ set_code_break_nr           = 408
 set_read_data_break_nr      = 409
 set_write_data_break_nr     = 410
 clear_break_nr              = 411
+
+get_max_printer_nr          = 412
+open_printer_nr             = 413
+close_printer_nr            = 414
 
 usergate_entries			= 420

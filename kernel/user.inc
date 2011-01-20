@@ -1947,21 +1947,20 @@ GetComSendSpace       MACRO
 
 ;;;;;;;;;;;;;; PRINTER ;;;;;;;;;;;;
 
-;	IN  DX		PRINTER #
-InitPrinter       MACRO
-	UserGate init_printer_nr
+;   OUT AL      Printer #
+GetMaxPrinters       MACRO
+	UserGate get_max_printer_nr
 						ENDM
 
-;	IN  DX		PRINTER #
-;   OUT AL		PRINTER STATUS
-CheckPrinter       MACRO
-	UserGate check_printer_nr
+;	IN  AL		Printer #
+;	OUT BX		Printer handle
+OpenPrinter       MACRO
+	UserGate open_printer_nr
 						ENDM
 
-;	IN  DX		PRINTER #
-;	IN  AL		CHARACTER
-WritePrinter       MACRO
-	UserGate write_printer_nr
+;	IN  BX		Printer handle
+ClosePrinter       MACRO
+	UserGate close_printer_nr
 						ENDM
 
 ;;;;;;;;;; SCREEN, TEXT MODE ;;;;;;;;;;
