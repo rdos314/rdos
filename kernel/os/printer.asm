@@ -196,6 +196,240 @@ close_printer_done:
     pop ds
     retf32
 close_printer       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsPrinterJammed
+;
+;       description:    Is printer jammed
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;       RETURNS:        CY              Jammed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_printer_jammed_name DB 'Is Printer Jammed?',0
+
+is_printer_jammed       Proc far
+    push ds
+    push eax
+    push bx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc is_printer_jammed_done
+;
+    mov ds,[bx].printer_sel
+    mov eax,ds:pr_jammed_proc
+    or eax,eax
+    clc
+    jz is_printer_jammed_done
+;       
+    call ds:pr_jammed_proc
+
+is_printer_jammed_done:
+    pop bx
+    pop eax
+    pop ds
+    retf32
+is_printer_jammed       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsPrinterPaperLow
+;
+;       description:    Is printer paper low
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;       RETURNS:        CY              Low
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_printer_paper_low_name DB 'Is Printer Paper Low?',0
+
+is_printer_paper_low       Proc far
+    push ds
+    push eax
+    push bx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc is_printer_paper_low_done
+;
+    mov ds,[bx].printer_sel
+    mov eax,ds:pr_paper_low_proc
+    or eax,eax
+    clc
+    jz is_printer_paper_low_done
+;       
+    call ds:pr_paper_low_proc
+
+is_printer_paper_low_done:
+    pop bx
+    pop eax
+    pop ds
+    retf32
+is_printer_paper_low       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsPrinterPaperEnd
+;
+;       description:    Is printer paper end
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;       RETURNS:        CY              End
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_printer_paper_end_name DB 'Is Printer Paper End?',0
+
+is_printer_paper_end       Proc far
+    push ds
+    push eax
+    push bx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc is_printer_paper_end_done
+;
+    mov ds,[bx].printer_sel
+    mov eax,ds:pr_paper_end_proc
+    or eax,eax
+    clc
+    jz is_printer_paper_end_done
+;       
+    call ds:pr_paper_end_proc
+
+is_printer_paper_end_done:
+    pop bx
+    pop eax
+    pop ds
+    retf32
+is_printer_paper_end       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsPrinterOk
+;
+;       description:    Is printer OK
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;       RETURNS:        NC              OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_printer_ok_name DB 'Is Printer Ok?',0
+
+is_printer_ok       Proc far
+    push ds
+    push eax
+    push bx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc is_printer_ok_done
+;
+    mov ds,[bx].printer_sel
+    mov eax,ds:pr_ok_proc
+    or eax,eax
+    stc
+    jz is_printer_ok_done
+;       
+    call ds:pr_ok_proc
+
+is_printer_ok_done:
+    pop bx
+    pop eax
+    pop ds
+    retf32
+is_printer_ok       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsPrinterHeadLifted
+;
+;       description:    Is printer head lifted
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;       RETURNS:        CY              Lifted
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_printer_head_lifted_name DB 'Is Printer Head Lifted?',0
+
+is_printer_head_lifted       Proc far
+    push ds
+    push eax
+    push bx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc is_printer_head_lifted_done
+;
+    mov ds,[bx].printer_sel
+    mov eax,ds:pr_head_lifted_proc
+    or eax,eax
+    clc
+    jz is_printer_head_lifted_done
+;       
+    call ds:pr_head_lifted_proc
+
+is_printer_head_lifted_done:
+    pop bx
+    pop eax
+    pop ds
+    retf32
+is_printer_head_lifted       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HasPrinterPaperInPresenter
+;
+;       description:    Has printer paper in presenter
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;       RETURNS:        CY              Paper
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_printer_paper_in_presenter_name DB 'Has Printer Paper In Presenter?',0
+
+has_printer_paper_in_presenter       Proc far
+    push ds
+    push eax
+    push bx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc has_printer_paper_in_presenter_done
+;
+    mov ds,[bx].printer_sel
+    mov eax,ds:pr_paper_in_presenter_proc
+    or eax,eax
+    clc
+    jz has_printer_paper_in_presenter_done
+;       
+    call ds:pr_paper_in_presenter_proc
+
+has_printer_paper_in_presenter_done:
+    pop bx
+    pop eax
+    pop ds
+    retf32
+has_printer_paper_in_presenter       Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -216,6 +450,13 @@ add_printer    Proc far
     push ds
     push bx
     push dx
+;
+    mov ds:pr_jammed_proc,0
+    mov ds:pr_paper_low_proc,0
+    mov ds:pr_paper_end_proc,0
+    mov ds:pr_ok_proc,0
+    mov ds:pr_head_lifted_proc,0
+    mov ds:pr_paper_in_presenter_proc,0
 ;
     mov dx,ds
     mov bx,SEG data
@@ -272,6 +513,42 @@ init    Proc far
     mov di,OFFSET close_printer_name
     xor dx,dx
     mov ax,close_printer_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET is_printer_jammed
+    mov di,OFFSET is_printer_jammed_name
+    xor dx,dx
+    mov ax,is_printer_jammed_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET is_printer_paper_low
+    mov di,OFFSET is_printer_paper_low_name
+    xor dx,dx
+    mov ax,is_printer_paper_low_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET is_printer_paper_end
+    mov di,OFFSET is_printer_paper_end_name
+    xor dx,dx
+    mov ax,is_printer_paper_end_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET is_printer_ok
+    mov di,OFFSET is_printer_ok_name
+    xor dx,dx
+    mov ax,is_printer_ok_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET is_printer_head_lifted
+    mov di,OFFSET is_printer_head_lifted_name
+    xor dx,dx
+    mov ax,is_printer_head_lifted_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET has_printer_paper_in_presenter
+    mov di,OFFSET has_printer_paper_in_presenter_name
+    xor dx,dx
+    mov ax,has_printer_paper_in_presenter_nr
     RegisterBimodalUserGate
 ;
     mov bx,SEG data

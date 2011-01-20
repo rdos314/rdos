@@ -1963,6 +1963,47 @@ ClosePrinter       MACRO
 	UserGate close_printer_nr
 						ENDM
 
+;	IN  BX		Printer handle
+;   OUT CY      Jammed
+IsPrinterJammed       MACRO
+	UserGate is_printer_jammed_nr
+						ENDM
+
+;	IN  BX		Printer handle
+;   OUT CY      Low
+IsPrinterPaperLow       MACRO
+	UserGate is_printer_paper_low_nr
+						ENDM
+
+;	IN  BX		Printer handle
+;   OUT CY      End
+IsPrinterPaperEnd       MACRO
+	UserGate is_printer_paper_end_nr
+						ENDM
+
+;	IN  BX		Printer handle
+;   OUT NC      OK
+IsPrinterOk       MACRO
+	UserGate is_printer_ok_nr
+						ENDM
+
+;	IN  BX		Printer handle
+;   OUT CY      Lifted
+IsPrinterHeadLifted       MACRO
+	UserGate is_printer_head_lifted_nr
+						ENDM
+
+;	IN  BX		Printer handle
+;   OUT CY      Paper in presenter
+HasPrinterPaperInPresenter      MACRO
+	UserGate has_printer_paper_in_presenter_nr
+						ENDM
+
+;	IN  BX		Printer handle
+PrintTest       MACRO
+	UserGate print_test_nr
+						ENDM
+
 ;;;;;;;;;; SCREEN, TEXT MODE ;;;;;;;;;;
 
 ;	IN  CX              Column number (x)

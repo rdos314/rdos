@@ -276,6 +276,13 @@ void RDOSAPI RdosWaitForSendCompletedCom(int Handle);
 int RDOSAPI RdosGetMaxPrinters();
 int RDOSAPI RdosOpenPrinter(char ID);
 void RDOSAPI RdosClosePrinter(int Handle);
+int RDOSAPI RdosIsPrinterJammed(int Handle);
+int RDOSAPI RdosIsPrinterPaperLow(int Handle);
+int RDOSAPI RdosIsPrinterPaperEnd(int Handle);
+int RDOSAPI RdosIsPrinterOk(int Handle);
+int RDOSAPI RdosIsPrinterHeadLifted(int Handle);
+int RDOSAPI RdosHasPrinterPaperInPresenter(int Handle);
+void RDOSAPI RdosPrintTest(int Handle);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
@@ -1019,6 +1026,51 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosClosePrinter = \
     CallGate_close_printer  \
+    parm [ebx];
+
+#pragma aux RdosIsPrinterJammed = \
+    CallGate_is_printer_jammed  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosIsPrinterPaperLow = \
+    CallGate_is_printer_paper_low  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosIsPrinterPaperEnd = \
+    CallGate_is_printer_paper_end  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosIsPrinterOk = \
+    CallGate_is_printer_ok  \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosIsPrinterHeadLifted = \
+    CallGate_is_printer_head_lifted  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosHasPrinterPaperInPresenter = \
+    CallGate_has_printer_paper_in_presenter  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosPrintTest = \
+    CallGate_print_test  \
     parm [ebx];
 
 #pragma aux RdosOpenFile = \
@@ -3153,6 +3205,51 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosClosePrinter = \
     CallGate_close_printer  \
+    parm [ebx];
+
+#pragma aux RdosIsPrinterJammed = \
+    CallGate_is_printer_jammed  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosIsPrinterPaperLow = \
+    CallGate_is_printer_paper_low  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosIsPrinterPaperEnd = \
+    CallGate_is_printer_paper_end  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosIsPrinterOk = \
+    CallGate_is_printer_ok  \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosIsPrinterHeadLifted = \
+    CallGate_is_printer_head_lifted  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosHasPrinterPaperInPresenter = \
+    CallGate_has_printer_paper_in_presenter  \
+    "cmc" \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosPrintTest = \
+    CallGate_print_test  \
     parm [ebx];
 
 #pragma aux RdosOpenFile = \

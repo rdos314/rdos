@@ -505,3 +505,12 @@
 #define CallGate_open_printer 0x9a 157 1 0 0 2 0
 #define CallGate_close_printer 0x9a 158 1 0 0 2 0
 
+#define CallGate_is_printer_jammed 0x9a 159 1 0 0 2 0
+#define CallGate_is_printer_paper_low 0x9a 160 1 0 0 2 0
+#define CallGate_is_printer_paper_end 0x9a 161 1 0 0 2 0
+#define CallGate_is_printer_ok 0x9a 162 1 0 0 2 0
+#define CallGate_is_printer_head_lifted 0x9a 163 1 0 0 2 0
+#define CallGate_has_printer_paper_in_presenter 0x9a 164 1 0 0 2 0
+
+#define CallGate_print_test 0x9a 165 1 0 0 2 0
+

@@ -505,4 +505,13 @@ get_max_printer_nr          = 412
 open_printer_nr             = 413
 close_printer_nr            = 414
 
-usergate_entries			= 420
+is_printer_jammed_nr                = 415
+is_printer_paper_low_nr             = 416
+is_printer_paper_end_nr             = 417
+is_printer_ok_nr                    = 418
+is_printer_head_lifted_nr           = 419
+has_printer_paper_in_presenter_nr   = 420
+
+print_test_nr               = 421
+
+usergate_entries			= 430

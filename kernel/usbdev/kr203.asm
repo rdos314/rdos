@@ -920,6 +920,228 @@ OpenPipes   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           IsJammed
+;
+;       DESCRIPTION:    Check if printer is jammed
+;
+;       PARAMETERS:     DS          Printer sel
+;
+;       RETURNS:        CY          Jammed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_jammed   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    clc
+    jz ijDone
+;
+    mov ax,ds:kr_status
+    test ax,STATUS_PAPER_JAM OR STATUS_CUTTER_JAM
+    clc
+    jz ijDone
+;
+    stc
+    
+ijDone:
+    pop ax
+    pop ds
+    ret
+is_jammed   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsPaperLow
+;
+;       DESCRIPTION:    Check if paper is low
+;
+;       PARAMETERS:     DS          Printer sel
+;
+;       RETURNS:        CY          Low
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_paper_low   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    clc
+    jz iplDone
+;
+    mov ax,ds:kr_status
+    test ax,STATUS_PAPER_LOW
+    clc
+    jz iplDone
+;
+    stc
+    
+iplDone:
+    pop ax
+    pop ds
+    ret
+is_paper_low   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsPaperEnd
+;
+;       DESCRIPTION:    Check if paper is end
+;
+;       PARAMETERS:     DS          Printer sel
+;
+;       RETURNS:        CY          End
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_paper_end   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    clc
+    jz ipeDone
+;
+    mov ax,ds:kr_status
+    test ax,STATUS_NO_PAPER
+    clc
+    jz ipeDone
+;
+    stc
+    
+ipeDone:
+    pop ax
+    pop ds
+    ret
+is_paper_end   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsOk
+;
+;       DESCRIPTION:    Check if printer is ok (functional)
+;
+;       PARAMETERS:     DS          Printer sel
+;
+;       RETURNS:        NC          OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_ok   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    stc
+    jz ioDone
+;
+    mov ax,ds:kr_status
+    test ax,STATUS_FEED_ERROR OR STATUS_TEMP_ERROR
+    clc
+    jz ioDone
+;
+    stc
+    
+ioDone:
+    pop ax
+    pop ds
+    ret
+is_ok   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsHeadLifted
+;
+;       DESCRIPTION:    Check if printer head is lifted
+;
+;       PARAMETERS:     DS          Printer sel
+;
+;       RETURNS:        CY          Head lifted
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_head_lifted   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    clc
+    jz ihlDone
+;
+    mov ax,ds:kr_status
+    test ax,STATUS_HEAD_LIFTED
+    clc
+    jz ihlDone
+;
+    stc
+    
+ihlDone:
+    pop ax
+    pop ds
+    ret
+is_head_lifted   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HasPaperInPresenter
+;
+;       DESCRIPTION:    Check if printer has paper in presenter
+;
+;       PARAMETERS:     DS          Printer sel
+;
+;       RETURNS:        CY          Paper in presenter
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_paper_in_presenter   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:kr_session_thread
+    or ax,ax
+    clc
+    jz hppDone
+;
+    mov ax,ds:kr_status
+    test ax,STATUS_PAPER_PRESENTER
+    clc
+    jz hppDone
+;
+    stc
+    
+hppDone:
+    pop ax
+    pop ds
+    ret
+has_paper_in_presenter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           StatusTimeout
 ;
 ;       DESCRIPTION:    Timer that signals control thread in order to read status
@@ -938,7 +1160,7 @@ StatusTimeout  Proc far
     mov bx,cs
     mov es,bx
     mov di,OFFSET StatusTimeout
-        mov bx,ds:kr_session_thread
+    mov bx,ds:kr_session_thread
     StartTimer
     ret
 StatusTimeout  Endp
@@ -972,6 +1194,24 @@ kr203_thread:
     AddPrinter
     pop ds
 ;
+    mov word ptr es:pr_jammed_proc,OFFSET is_jammed
+    mov word ptr es:pr_jammed_proc+2,cs
+;    
+    mov word ptr es:pr_paper_low_proc,OFFSET is_paper_low
+    mov word ptr es:pr_paper_low_proc+2,cs
+;    
+    mov word ptr es:pr_paper_end_proc,OFFSET is_paper_end
+    mov word ptr es:pr_paper_end_proc+2,cs
+;    
+    mov word ptr es:pr_ok_proc,OFFSET is_ok
+    mov word ptr es:pr_ok_proc+2,cs
+;    
+    mov word ptr es:pr_head_lifted_proc,OFFSET is_head_lifted
+    mov word ptr es:pr_head_lifted_proc+2,cs
+;    
+    mov word ptr es:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
+    mov word ptr es:pr_paper_in_presenter_proc+2,cs
+;    
     GetSystemTime
     add eax,1193000 * 2  ; 2s
     adc edx,0
