@@ -514,4 +514,6 @@ has_printer_paper_in_presenter_nr   = 420
 
 print_test_nr               = 421
 
+create_printer_bitmap_nr    = 422
+
 usergate_entries			= 430

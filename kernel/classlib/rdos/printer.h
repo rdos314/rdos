@@ -29,6 +29,7 @@
 #define _PRINTER_H
 
 #include "waitdev.h"
+#include "bitdev.h"
 
 class TPrinterDevice : public TWaitDevice
 {
@@ -48,6 +49,8 @@ public:
     virtual int HasPaperInPresenter();
 
     virtual void PrintTest();
+
+    TBitmapGraphicDevice *CreateBitmap(int Height);
 
 protected:
     TPrinterDevice(const char *IniSection);

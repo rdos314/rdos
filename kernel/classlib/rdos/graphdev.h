@@ -36,6 +36,7 @@ class TGraphicDevice
 friend class TSprite;
 
 public:
+	TGraphicDevice(int handle);
 	TGraphicDevice(int bpp, int width, int height);
 	TGraphicDevice(const TGraphicDevice &dev);
 	TGraphicDevice &operator=(const TGraphicDevice &src);

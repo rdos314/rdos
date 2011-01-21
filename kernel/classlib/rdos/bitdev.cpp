@@ -34,6 +34,24 @@
 #
 #   Purpose....: Constructor for TBitmapGraphicDevice
 #
+#   In params..: height
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBitmapGraphicDevice::TBitmapGraphicDevice(int handle)
+  : TGraphicDevice(handle)
+{
+    if (FBitmapHandle)
+    	RdosGetBitmapInfo(FBitmapHandle, &FBpp, &FWidth, &FHeight, &FRowSize, &FLinear);
+}
+
+/*##########################################################################
+#
+#   Name       : TBitmapGraphicDevice::TBitmapGraphicDevice
+#
+#   Purpose....: Constructor for TBitmapGraphicDevice
+#
 #   In params..: bpp		bits per pixel
 #				 width
 #				 height

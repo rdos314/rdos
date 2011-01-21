@@ -37,6 +37,31 @@
 #
 #   Purpose....: Constructor for TGraphicDevice		                          
 #
+#   In params..: handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TGraphicDevice::TGraphicDevice(int handle)
+{
+	FBpp = 0;
+	FWidth = 0;
+	FHeight = 0;
+	FBitmapHandle = handle;
+    FColor = 0;
+	FLgop = LGOP_NONE;
+	FFilledStyle = FALSE;
+    FFontHandle = 0;
+
+	InitDevice();
+}
+
+/*##########################################################################
+#
+#   Name       : TGraphicDevice::TGraphicDevice
+#
+#   Purpose....: Constructor for TGraphicDevice		                          
+#
 #   In params..: bpp		bits per pixel
 #				 width
 #				 height

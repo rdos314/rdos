@@ -514,3 +514,5 @@
 
 #define CallGate_print_test 0x9a 165 1 0 0 2 0
 
+#define CallGate_create_printer_bitmap 0x9a 166 1 0 0 2 0
+

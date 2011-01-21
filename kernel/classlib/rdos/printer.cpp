@@ -264,6 +264,36 @@ void TPrinterDevice::PrintTest()
 
 /*##########################################################################
 #
+#   Name       : TPrinterDevice::CreateBitmap
+#
+#   Purpose....: Create bitmap of printing
+#
+#   Parameters.: Height in pixels
+#
+##########################################################################*/
+TBitmapGraphicDevice *TPrinterDevice::CreateBitmap(int Height)
+{
+    int handle = 0;
+    int Width;
+    TBitmapGraphicDevice *dev;
+
+    if (FHandle)
+        handle = RdosCreatePrinterBitmap(FHandle, Height);
+
+    if (handle)
+    {
+        dev = new TBitmapGraphicDevice(handle);
+        Width = dev->GetWidth();
+        dev->SetDrawColor(255, 255, 255);
+        dev->SetFilledStyle();
+        dev->DrawRect(0, 0, Width - 1, Height - 1);
+        return dev;
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TPrinterDevice::SignalNewData
 #
 #   Purpose....: Signal new data is available

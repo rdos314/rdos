@@ -32,11 +32,15 @@
 
 class TBitmapGraphicDevice : public TGraphicDevice
 {
+friend class TPrinterDevice;
 public:
 	TBitmapGraphicDevice(int bpp, int width, int height);
 	TBitmapGraphicDevice(const TBitmapGraphicDevice &dev);
 	TBitmapGraphicDevice(const TGraphicDevice &dev);
 	TBitmapGraphicDevice(TFont *font, const char *str);
+
+protected:
+	TBitmapGraphicDevice(int Handle);
 };
 
 #endif
