@@ -39,6 +39,8 @@ pr_head_lifted_proc         DD ?
 
 pr_paper_in_presenter_proc  DD ?
 
+pr_print_test_proc          DD ?
+
 printer_device              DW ?
 
 printer_struc	ENDS

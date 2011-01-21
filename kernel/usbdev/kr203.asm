@@ -781,33 +781,6 @@ DoSession   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           Test thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_thread_name  DB 'KR test', 0
-
-test_thread:
-    int 3
-    mov ax,SEG data
-    mov ds,ax
-
-test_loop:
-    mov bl,67
-    call GetByteParameter  
-;
-    mov bl,65
-    call GetByteParameter  
-;
-    mov bl,84
-    call GetWordParameter  
-    jmp test_loop
-;
-    int 3      
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           NotifyUsbData
 ;
 ;       DESCRIPTION:    Handle incoming data
@@ -1142,6 +1115,50 @@ has_paper_in_presenter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           print_test
+;
+;       DESCRIPTION:    Print test page
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+print_test   Proc far
+    push ds
+    push es
+    push ax
+    push cx
+    push di
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov cx,3
+    call CreateWaitSessionSel
+;    
+    mov di,SIZE cmd_session_struc
+    mov al,ESC
+    stosb
+;
+    mov al,'P'
+    stosb
+;
+    mov al,0
+    stosb
+;
+    call InsertSessionSel
+;    
+    pop di
+    pop cx
+    pop ax
+    pop es
+    pop ds
+    ret
+print_test    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           StatusTimeout
 ;
 ;       DESCRIPTION:    Timer that signals control thread in order to read status
@@ -1212,26 +1229,18 @@ kr203_thread:
     mov word ptr es:pr_paper_in_presenter_proc,OFFSET has_paper_in_presenter
     mov word ptr es:pr_paper_in_presenter_proc+2,cs
 ;    
+    mov word ptr es:pr_print_test_proc,OFFSET print_test
+    mov word ptr es:pr_print_test_proc+2,cs
+;    
     GetSystemTime
     add eax,1193000 * 2  ; 2s
     adc edx,0
     mov bx,cs
     mov es,bx
     mov di,OFFSET StatusTimeout
-        mov bx,ds:kr_session_thread
-        mov cx,ds       
-        StartTimer
-;
-    push ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET test_thread_name
-    mov si,OFFSET test_thread
-    mov ax,2
-    mov cx,100h
-    CreateThread
-    pop ds
+    mov bx,ds:kr_session_thread
+    mov cx,ds       
+    StartTimer
 ;
     call OpenPipes
     call ClearReceiver

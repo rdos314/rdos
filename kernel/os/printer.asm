@@ -430,6 +430,42 @@ has_printer_paper_in_presenter_done:
     pop ds
     retf32
 has_printer_paper_in_presenter       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintTest
+;
+;       description:    Print a test page
+;
+;       PARAMETERS:     BX              Printer handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+print_test_name DB 'Print Test',0
+
+print_test       Proc far
+    push ds
+    push eax
+    push bx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc print_test_done
+;
+    mov ds,[bx].printer_sel
+    mov eax,ds:pr_print_test_proc
+    or eax,eax
+    jz print_test_done
+;       
+    call ds:pr_print_test_proc
+
+print_test_done:
+    pop bx
+    pop eax
+    pop ds
+    retf32
+print_test       Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -457,6 +493,7 @@ add_printer    Proc far
     mov ds:pr_ok_proc,0
     mov ds:pr_head_lifted_proc,0
     mov ds:pr_paper_in_presenter_proc,0
+    mov ds:pr_print_test_proc,0
 ;
     mov dx,ds
     mov bx,SEG data
@@ -549,6 +586,12 @@ init    Proc far
     mov di,OFFSET has_printer_paper_in_presenter_name
     xor dx,dx
     mov ax,has_printer_paper_in_presenter_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET print_test
+    mov di,OFFSET print_test_name
+    xor dx,dx
+    mov ax,print_test_nr
     RegisterBimodalUserGate
 ;
     mov bx,SEG data
