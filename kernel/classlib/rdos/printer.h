@@ -51,6 +51,7 @@ public:
     virtual void PrintTest();
 
     TBitmapGraphicDevice *CreateBitmap(int Height);
+    void PrintBitmap(TBitmapGraphicDevice *bitmap);
 
 protected:
     TPrinterDevice(const char *IniSection);

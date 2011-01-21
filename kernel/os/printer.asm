@@ -466,6 +466,85 @@ print_test_done:
     pop ds
     retf32
 print_test       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateBitmap
+;
+;       description:    Create printer bitmap
+;
+;       PARAMETERS:     BX              Printer handle
+;                       DX              Height
+;
+;       RETURNS:        AX              Bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_bitmap_name DB 'Create Printer Bitmap',0
+
+create_bitmap       Proc far
+    push ds
+    push bx
+;
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    jc create_bitmap_done
+;
+    mov ds,[bx].printer_sel
+    mov eax,ds:pr_create_bitmap_proc
+    or eax,eax
+    stc
+    jz create_bitmap_done
+;       
+    call ds:pr_create_bitmap_proc
+    mov ax,bx
+
+create_bitmap_done:
+    pop bx
+    pop ds
+    retf32
+create_bitmap      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintBitmap
+;
+;       description:    Print bitmap
+;
+;       PARAMETERS:     BX              Printer handle
+;                       AX              Bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+print_bitmap_name DB 'Print Bitmap',0
+
+print_bitmap       Proc far
+    push ds
+    push eax
+    push bx
+;
+    push ax
+    mov ax,PRINTER_HANDLE
+    DerefHandle
+    pop ax
+    jc print_bitmap_done
+;
+    mov ds,[bx].printer_sel
+    mov bx,ax
+    mov eax,ds:pr_print_bitmap_proc
+    or eax,eax
+    jz print_bitmap_done
+;       
+    call ds:pr_print_bitmap_proc
+
+print_bitmap_done:
+    pop bx
+    pop eax
+    pop ds
+    retf32
+print_bitmap      Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -494,6 +573,8 @@ add_printer    Proc far
     mov ds:pr_head_lifted_proc,0
     mov ds:pr_paper_in_presenter_proc,0
     mov ds:pr_print_test_proc,0
+    mov ds:pr_create_bitmap_proc,0
+    mov ds:pr_print_bitmap_proc,0
 ;
     mov dx,ds
     mov bx,SEG data
@@ -592,6 +673,18 @@ init    Proc far
     mov di,OFFSET print_test_name
     xor dx,dx
     mov ax,print_test_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET create_bitmap
+    mov di,OFFSET create_bitmap_name
+    xor dx,dx
+    mov ax,create_printer_bitmap_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET print_bitmap
+    mov di,OFFSET print_bitmap_name
+    xor dx,dx
+    mov ax,print_bitmap_nr
     RegisterBimodalUserGate
 ;
     mov bx,SEG data

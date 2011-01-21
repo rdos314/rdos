@@ -34,6 +34,7 @@
 class TGraphicDevice
 {
 friend class TSprite;
+friend class TPrinterDevice;
 
 public:
 	TGraphicDevice(int handle);

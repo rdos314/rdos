@@ -41,6 +41,13 @@ pr_paper_in_presenter_proc  DD ?
 
 pr_print_test_proc          DD ?
 
+; IN  DX    Height
+; OUT BX    Bitmap
+pr_create_bitmap_proc       DD ?
+
+; IN  BX    Bitmap
+pr_print_bitmap_proc       DD ?
+
 printer_device              DW ?
 
 printer_struc	ENDS

@@ -284,6 +284,7 @@ int RDOSAPI RdosIsPrinterHeadLifted(int Handle);
 int RDOSAPI RdosHasPrinterPaperInPresenter(int Handle);
 void RDOSAPI RdosPrintTest(int Handle);
 int RDOSAPI RdosCreatePrinterBitmap(int Handle, int Height);
+void RDOSAPI RdosPrintBitmap(int Handle, int Bitmap);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
@@ -1076,9 +1077,14 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosCreatePrinterBitmap = \
     CallGate_create_printer_bitmap  \
-    CarryToBool \
+    "mov ebx,eax" \
+    ValidateHandle \
     parm [ebx] [edx] \
-    value [eax];
+    value [ebx];
+
+#pragma aux RdosPrintBitmap = \
+    CallGate_print_bitmap  \
+    parm [ebx] [eax];
 
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \
@@ -3261,9 +3267,14 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 #pragma aux RdosCreatePrinterBitmap = \
     CallGate_create_printer_bitmap  \
-    CarryToBool \
+    "mov ebx,eax" \
+    ValidateHandle \
     parm [ebx] [edx] \
-    value [eax];
+    value [ebx];
+
+#pragma aux RdosPrintBitmap = \
+    CallGate_print_bitmap  \
+    parm [ebx] [eax];
 
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \

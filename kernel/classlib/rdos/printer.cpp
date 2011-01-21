@@ -294,6 +294,21 @@ TBitmapGraphicDevice *TPrinterDevice::CreateBitmap(int Height)
 
 /*##########################################################################
 #
+#   Name       : TPrinterDevice::PrintBitmap
+#
+#   Purpose....: Print bitmap
+#
+#   Parameters.: Bitmap
+#
+##########################################################################*/
+void TPrinterDevice::PrintBitmap(TBitmapGraphicDevice *bitmap)
+{
+    RdosPrintBitmap(FHandle, bitmap->FBitmapHandle);
+    delete bitmap;
+}
+
+/*##########################################################################
+#
 #   Name       : TPrinterDevice::SignalNewData
 #
 #   Purpose....: Signal new data is available

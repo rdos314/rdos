@@ -46,6 +46,7 @@ STATUS_PAPER_PRESENTER = 80h
 
 ENQ = 5
 ESC = 1Bh
+RS = 1Eh
 
 cmd_session_struc   STRUC
 
@@ -1159,6 +1160,177 @@ print_test    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           create_bitmap
+;
+;       DESCRIPTION:    Create printer bitmap
+;
+;       PARAMETERS:     DS      Data
+;                       DX      Height
+;
+;       RETURNS:        BX      Bitmap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_bitmap   Proc far
+    push ds
+    push ax
+    push cx
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov bl,69
+    call GetByteParameter    
+    jc create_bitmap_done
+;
+    mov cl,8
+    mul cl
+    mov cx,ax
+    mov ax,1
+    CreateBitmap
+    clc
+
+create_bitmap_done:    
+    pop cx
+    pop ax
+    pop ds
+    ret
+create_bitmap    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintOneLine
+;
+;       DESCRIPTION:    Print a single line
+;
+;       PARAMETERS:     DS      Data
+;                       FS:ESI  Bitmap data
+;                       CX      Width in bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrintOneLine   Proc near
+    push ds
+    push es
+    pushad
+;    
+    push cx
+    add cx,3
+    call CreateSessionSel
+    pop cx
+;
+    mov edi,SIZE cmd_session_struc
+    mov al,ESC
+    stosb
+;    
+    mov al,'s'
+    stosb
+;    
+    mov al,cl
+    stosb
+;
+    rep movs byte ptr es:[edi],fs:[esi]
+    call InsertSessionSel
+;
+    popad
+    pop es
+    pop ds    
+    ret
+PrintOneLine    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendCut
+;
+;       DESCRIPTION:    Send cut command
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCut   Proc near
+    push es
+    push ax
+    push cx
+    push di
+;
+    push cx
+    add cx,2
+    call CreateSessionSel
+    pop cx
+;
+    mov di,SIZE cmd_session_struc
+    mov al,ESC
+    stosb
+;    
+    mov al,RS
+    stosb
+;    
+    call InsertSessionSel
+;
+    pop di
+    pop cx
+    pop ax
+    pop es
+    ret
+SendCut    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           print_bitmap
+;
+;       DESCRIPTION:    Print bitmap
+;
+;       PARAMETERS:     DS      Data
+;                       BX      Bitmap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+print_bitmap   Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    GetBitmapInfo
+    jc print_bitmap_done
+;
+    cmp al,1
+    jne print_bitmap_done
+;
+    or dx,dx
+    jz print_bitmap_done    
+;    
+    mov ax,es
+    mov fs,ax
+    movzx ecx,si
+    mov esi,edi
+
+print_bitmap_loop:
+    call PrintOneLine
+    add esi,ecx
+    sub dx,1
+    jnz print_bitmap_loop
+;
+    call SendCut
+        
+print_bitmap_done:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+print_bitmap    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           StatusTimeout
 ;
 ;       DESCRIPTION:    Timer that signals control thread in order to read status
@@ -1231,6 +1403,12 @@ kr203_thread:
 ;    
     mov word ptr es:pr_print_test_proc,OFFSET print_test
     mov word ptr es:pr_print_test_proc+2,cs
+;    
+    mov word ptr es:pr_create_bitmap_proc,OFFSET create_bitmap
+    mov word ptr es:pr_create_bitmap_proc+2,cs
+;    
+    mov word ptr es:pr_print_bitmap_proc,OFFSET print_bitmap
+    mov word ptr es:pr_print_bitmap_proc+2,cs
 ;    
     GetSystemTime
     add eax,1193000 * 2  ; 2s

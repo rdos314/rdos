@@ -2011,6 +2011,12 @@ CreatePrinterBitmap       MACRO
 	UserGate create_printer_bitmap_nr
 						ENDM
 
+;	IN  BX		Printer handle
+;   IN  AX      Bitmap handle
+PrintBitmap       MACRO
+	UserGate print_bitmap_nr
+						ENDM
+
 ;;;;;;;;;; SCREEN, TEXT MODE ;;;;;;;;;;
 
 ;	IN  CX              Column number (x)
