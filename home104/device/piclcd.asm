@@ -24,8 +24,8 @@
 ; PIC LCD driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-						
-		NAME piclcd
+                                                
+                NAME piclcd
 
 GateSize = 16
 
@@ -35,8 +35,6 @@ INCLUDE ..\..\kernel\os.def
 INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\os.inc
 INCLUDE ..\..\kernel\video.inc
-
-	.386p
 
 IO_BASE = 3A0h
 
@@ -66,7 +64,8 @@ dqe_thread      DW ?
 
 digio_queue_entry   ENDS
 
-data_seg    STRUC
+
+data SEGMENT byte public 'DATA'
 
 DcfThread   DW ?
 DcfVal      DB ?
@@ -99,20 +98,21 @@ AsyncList0  DB 256 DUP(?)
 
 NodeArr     DB NODE_CNT DUP(?)
 
-data_seg    ENDS
+data    ENDS
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        .386p
 
-PAGE
+        assume cs:code
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			pic_int
+;               NAME:                   pic_int
 ;
-;		DESCRIPTION:	PIC interrupt
+;               DESCRIPTION:    PIC interrupt
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -136,7 +136,7 @@ pic_int_power_ok:
     out dx,al
 ;
     mov dx,IO_BASE + 8
-    and al,NOT 80h
+    and al,7Fh
     out dx,al
     mov ds:PicOut,al
     jmp pic_int_power_done
@@ -187,58 +187,56 @@ pic_int_not_req2:
     ret
 pic_int Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			DioInsert
+;               NAME:                   DioInsert
 ;
-;		DESCRIPTION:	Insert entry into digital-io queue
+;               DESCRIPTION:    Insert entry into digital-io queue
 ;
 ;       PARAMETERS:     DS:DI       Queue
 ;                       ES          Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DioInsert	Proc near
-	push di
-	mov di,[di]
-	or di,di
-	je ins_empty
-;	
-	push ds
-	push si
-	mov ds,di
-	mov si,ds:dqe_prev
-	mov ds:dqe_prev,es
-	mov ds,si
-	mov ds:dqe_next,es
-	mov es:dqe_next,di
-	mov es:dqe_prev,si
-	pop si
-	pop ds
-	pop di
-	jmp ins_done
-	
+DioInsert       Proc near
+        push di
+        mov di,[di]
+        or di,di
+        je ins_empty
+;       
+        push ds
+        push si
+        mov ds,di
+        mov si,ds:dqe_prev
+        mov ds:dqe_prev,es
+        mov ds,si
+        mov ds:dqe_next,es
+        mov es:dqe_next,di
+        mov es:dqe_prev,si
+        pop si
+        pop ds
+        pop di
+        jmp ins_done
+        
 ins_empty:
-	mov es:dqe_next,es
-	mov es:dqe_prev,es
-	pop di
-	mov [di],es
+        mov es:dqe_next,es
+        mov es:dqe_prev,es
+        pop di
+        mov [di],es
 
 ins_done:
     ret
 DioInsert   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			DioRemove
+;               NAME:                   DioRemove
 ;
-;		DESCRIPTION:	Remove head entry from digital-io queue
+;               DESCRIPTION:    Remove head entry from digital-io queue
 ;
 ;       PARAMETERS:     DS:SI       Queue
 ;
@@ -246,38 +244,37 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DioRemove	Proc near
-	push si
-	mov es,[si]
-	push di
-	push ds
-	mov di,es:dqe_next
-	cmp di,[si]
-	mov [si],di
-	mov si,es:dqe_prev
-	mov ds,di
-	mov ds:dqe_prev,si
-	mov ds,si
-	mov ds:dqe_next,di
-	pop ds
-	pop di
-	pop si
-	jne rem_done
-	
-	mov word ptr [si],0
+DioRemove       Proc near
+        push si
+        mov es,[si]
+        push di
+        push ds
+        mov di,es:dqe_next
+        cmp di,[si]
+        mov [si],di
+        mov si,es:dqe_prev
+        mov ds,di
+        mov ds:dqe_prev,si
+        mov ds,si
+        mov ds:dqe_next,di
+        pop ds
+        pop di
+        pop si
+        jne rem_done
+        
+        mov word ptr [si],0
 
 rem_done:
     ret
 DioRemove   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioCheckReady1
+;               NAME:               DioCheckReady1
 ;
-;		description:	Check current reqs for ready state
+;               description:    Check current reqs for ready state
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -349,14 +346,13 @@ dcrDone1:
     ret
 DioCheckReady1 Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioCheckReady2
+;               NAME:               DioCheckReady2
 ;
-;		description:	Check current reqs for ready state
+;               description:    Check current reqs for ready state
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -435,14 +431,13 @@ dcrDone2:
     ret
 DioCheckReady2 Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioCheckIdle1
+;               NAME:               DioCheckIdle1
 ;
-;		description:	Dio check idle channels
+;               description:    Dio check idle channels
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -546,14 +541,13 @@ dciDone1:
     ret
 DioCheckIdle1  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioCheckIdle2
+;               NAME:               DioCheckIdle2
 ;
-;		description:	Dio check idle channels
+;               description:    Dio check idle channels
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -631,14 +625,13 @@ dciDone2:
     ret
 DioCheckIdle2   Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    CreateDirectReq
+;               NAME:               CreateDirectReq
 ;
-;		description:	Create dio req, specified queue
+;               description:    Create dio req, specified queue
 ;
 ;       PARAMETERS:     AL      Device # (bit 1) + Line # (bit 0)
 ;                       BL      Cmd #
@@ -702,14 +695,13 @@ cdrDone:
     ret
 CreateDirectReq    Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    CreateBroadcastReq
+;               NAME:               CreateBroadcastReq
 ;
-;		description:	Create dio req, broadcast mode
+;               description:    Create dio req, broadcast mode
 ;
 ;       PARAMETERS:     AL      Device # (bit 1)
 ;                       BL      Cmd #
@@ -763,14 +755,13 @@ cdbDone:
     ret
 CreateBroadcastReq    Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    CreateAdcReq
+;               NAME:               CreateAdcReq
 ;
-;		description:	Create ADC dio req
+;               description:    Create ADC dio req
 ;
 ;       PARAMETERS:     DL      Line #
 ;                       DH      Node #
@@ -796,14 +787,13 @@ CreateAdcReq   Proc near
     ret
 CreateAdcReq    Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    CreateIrReq
+;               NAME:               CreateIrReq
 ;
-;		description:	Create IR request
+;               description:    Create IR request
 ;
 ;       RETURNS:        ES      Cmd block
 ;
@@ -819,14 +809,13 @@ CreateIrReq   Proc near
     ret
 CreateIrReq    Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    QueueReq
+;               NAME:               QueueReq
 ;
-;		description:	Queue dio req
+;               description:    Queue dio req
 ;
 ;       PARAMETERS:     ES      Cmd block
 ;
@@ -838,7 +827,7 @@ QueueReq   Proc near
     push bx
     push di
 ;   
-    mov ax,piclcd_data_sel
+    mov ax,SEG data
     mov ds,ax    
     ClearSignal
     GetThread
@@ -868,14 +857,13 @@ QueueReq   Proc near
     ret
 QueueReq    Endp    
        
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioReq
+;               NAME:               DioReq
 ;
-;		description:    Dio req
+;               description:    Dio req
 ;
 ;       PARAMETERS:     BL      Cmd #
 ;                       DL      Line #
@@ -895,7 +883,7 @@ DioReq  Proc near
     push ds
     push ax
 ;    
-    mov ax,piclcd_data_sel
+    mov ax,SEG data
     mov ds,ax
     push bx
     movzx bx,dh
@@ -1011,14 +999,13 @@ drDone:
     ret
 DioReq  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    AdcReq
+;               NAME:               AdcReq
 ;
-;		description:    Adc req
+;               description:    Adc req
 ;
 ;       PARAMETERS:     DL      Line #
 ;                       DH      Node #
@@ -1054,14 +1041,13 @@ adcDone:
     ret
 AdcReq  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    IrReq
+;               NAME:               IrReq
 ;
-;		description:    Ir req
+;               description:    Ir req
 ;
 ;       Returns:        ES      Cmd block
 ;
@@ -1090,42 +1076,40 @@ irDone:
     ret
 IrReq  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PicTimeout1
+;               NAME:                   PicTimeout1
 ;
-;		description:	Supervises PIC chip
+;               description:    Supervises PIC chip
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PicTimeout1	Proc far
-    mov ax,piclcd_data_sel
+PicTimeout1     Proc far
+    mov ax,SEG data
     mov ds,ax    
     or ds:ResetFlag,1
     mov bx,ds:PicThread0
-	Signal
-	ret
-PicTimeout1	Endp
+        Signal
+        ret
+PicTimeout1     Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			PIC thread 1
+;               NAME:                   PIC thread 1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-pic1_name	DB 'DIO 1',0
+pic1_name       DB 'DIO 1',0
 
 pic_thread1:
-    mov ax,piclcd_data_sel
+    mov ax,SEG data
     mov ds,ax    
     or ds:ResetFlag,1
 ;        
-    mov ax,piclcd_data_sel
+    mov ax,SEG data
     mov ds,ax    
     GetThread
     mov ds:PicThread0,ax    
@@ -1179,53 +1163,52 @@ ptNoReset1:
     call DioCheckIdle1
     LeaveSection ds:ListSection
 ;
-	GetSystemTime
-	add eax,5 * 1193000
-	adc edx,0
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET PicTimeout1
-	mov bx,ds:PicThread0
-	StopTimer
-	StartTimer
+        GetSystemTime
+        add eax,5 * 1193000
+        adc edx,0
+        mov bx,cs
+        mov es,bx
+        mov di,OFFSET PicTimeout1
+        mov bx,ds:PicThread0
+        StopTimer
+        StartTimer
 ;
-	WaitForSignal
+        WaitForSignal
     jmp ptLoop1
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PicTimeout2
+;               NAME:                   PicTimeout2
 ;
-;		description:	Supervises PIC chip
+;               description:    Supervises PIC chip
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PicTimeout2	Proc far
-    mov ax,piclcd_data_sel
+PicTimeout2     Proc far
+    mov ax,SEG data
     mov ds,ax    
     or ds:ResetFlag,2
     mov bx,ds:PicThread1
-	Signal
-	ret
-PicTimeout2	Endp
+        Signal
+        ret
+PicTimeout2     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			PIC thread 2
+;               NAME:                   PIC thread 2
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-pic2_name	DB 'DIO 2',0
+pic2_name       DB 'DIO 2',0
 
 pic_thread2:
-    mov ax,piclcd_data_sel
+    mov ax,SEG data
     mov ds,ax    
     or ds:ResetFlag,2
 ;        
-    mov ax,piclcd_data_sel
+    mov ax,SEG data
     mov ds,ax    
     GetThread
     mov ds:PicThread1,ax    
@@ -1279,31 +1262,30 @@ ptNoReset2:
     call DioCheckIdle2
     LeaveSection ds:ListSection
 ;
-	GetSystemTime
-	add eax,5 * 1193000
-	adc edx,0
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET PicTimeout2
-	mov bx,ds:PicThread1
-	StopTimer
-	StartTimer
+        GetSystemTime
+        add eax,5 * 1193000
+        adc edx,0
+        mov bx,cs
+        mov es,bx
+        mov di,OFFSET PicTimeout2
+        mov bx,ds:PicThread1
+        StopTimer
+        StartTimer
 ;    
-	WaitForSignal
+        WaitForSignal
     jmp ptLoop2
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			IR thread
+;               NAME:                   IR thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ir_name	DB 'PIC IR',0
+ir_name DB 'PIC IR',0
 
 ir_thread:
-    mov ax,piclcd_data_sel
+    mov ax,SEG data
     mov ds,ax    
 
 ir_loop:
@@ -1320,22 +1302,21 @@ ir_loop:
     FreeMem
     jmp ir_loop    
 
-PAGE
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			OpenICSP
+;               NAME:                   OpenICSP
 ;
-;		DESCRIPTION:	Open ICSP handle
+;               DESCRIPTION:    Open ICSP handle
 ;
-;		PARAMETERS:		AL		Device #
+;               PARAMETERS:             AL              Device #
 ;
 ;       RETURNS:        BX      Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_icsp_name	DB 'Open ICSP', 0
+open_icsp_name  DB 'Open ICSP', 0
 
 open_icsp    Proc far
     push ds
@@ -1349,9 +1330,9 @@ open_icsp    Proc far
     jmp oicspFail
 
 oicsp1:
-	mov bx,piclcd_data_sel
-	mov ds,bx
-;	
+        mov bx,SEG data
+        mov ds,bx
+;       
     ClearSignal
     GetThread
     mov ds:IcspThread0,ax
@@ -1366,14 +1347,14 @@ oicsp1:
     WaitForSignal
 ;    
     int 3
-	mov dx,IO_BASE + 8
-;	
+        mov dx,IO_BASE + 8
+;       
     cli
-	mov al,ds:PicOut
-	and al,NOT (OUT_MCLR_0 OR OUT_PGM_0 OR OUT_PGC OR OUT_PGD)
+        mov al,ds:PicOut
+        and al,NOT (OUT_MCLR_0 OR OUT_PGM_0 OR OUT_PGC OR OUT_PGD)
     out dx,al
-	mov ds:PicOut,al
-	sti
+        mov ds:PicOut,al
+        sti
 ;
     mov ax,25
     WaitMilliSec
@@ -1409,9 +1390,9 @@ oicsp1:
     jmp oicspDone
 
 oicsp2:
-	mov bx,piclcd_data_sel
-	mov ds,bx
-;	
+        mov bx,SEG data
+        mov ds,bx
+;       
     ClearSignal
     GetThread
     mov ds:IcspThread1,ax
@@ -1420,14 +1401,14 @@ oicsp2:
     Signal
     WaitForSignal
 ;    
-	mov dx,IO_BASE + 8
-;	
+        mov dx,IO_BASE + 8
+;       
     cli
-	mov al,ds:PicOut
-	and al,NOT (OUT_MCLR_1 OR OUT_PGM_1 OR OUT_PGC OR OUT_PGD)
+        mov al,ds:PicOut
+        and al,NOT (OUT_MCLR_1 OR OUT_PGM_1 OR OUT_PGC OR OUT_PGD)
     out dx,al
-	mov ds:PicOut,al
-	sti
+        mov ds:PicOut,al
+        sti
 ;
     mov ax,25
     WaitMilliSec
@@ -1463,20 +1444,19 @@ oicspDone:
     retf32
 open_icsp   Endp
 
-PAGE
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			CloseICSP
+;               NAME:                   CloseICSP
 ;
-;		DESCRIPTION:	Close ICSP handle
+;               DESCRIPTION:    Close ICSP handle
 ;
-;		PARAMETERS:		BX      Handle
+;               PARAMETERS:             BX      Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_icsp_name	DB 'Close ICSP', 0
+close_icsp_name DB 'Close ICSP', 0
 
 close_icsp    Proc far
     push ds
@@ -1494,16 +1474,16 @@ close_icsp    Proc far
     je ci2
 
 ci1:
-	mov bx,piclcd_data_sel
-	mov ds,bx
-	mov dx,IO_BASE + 8
-;	
+        mov bx,SEG data
+        mov ds,bx
+        mov dx,IO_BASE + 8
+;       
     cli
-	mov al,ds:PicOut
-	and al,NOT (OUT_MCLR_0 OR OUT_PGM_0 OR OUT_PGC OR OUT_PGD)
+        mov al,ds:PicOut
+        and al,NOT (OUT_MCLR_0 OR OUT_PGM_0 OR OUT_PGC OR OUT_PGD)
     out dx,al
-	mov ds:PicOut,al
-	sti
+        mov ds:PicOut,al
+        sti
 ;
     mov ax,10
     WaitMilliSec
@@ -1533,21 +1513,21 @@ ci1:
     mov ds:IcspThread0,0
     mov bx,ds:PicThread0
     Signal
-;	
-    clc    	
+;       
+    clc         
     jmp ciDone
 
 ci2:
-	mov bx,piclcd_data_sel
-	mov ds,bx
-	mov dx,IO_BASE + 8
-;	
+        mov bx,SEG data
+        mov ds,bx
+        mov dx,IO_BASE + 8
+;       
     cli
-	mov al,ds:PicOut
-	and al,NOT (OUT_MCLR_1 OR OUT_PGM_1 OR OUT_PGC OR OUT_PGD)
+        mov al,ds:PicOut
+        and al,NOT (OUT_MCLR_1 OR OUT_PGM_1 OR OUT_PGC OR OUT_PGD)
     out dx,al
-	mov ds:PicOut,al
-	sti
+        mov ds:PicOut,al
+        sti
 ;
     mov ax,10
     WaitMilliSec
@@ -1557,7 +1537,7 @@ ci2:
     or al,OUT_MCLR_1
     out dx,al
     mov ds:PicOut,al
-    sti    	
+    sti         
 ;
     and ds:IcspFlag,NOT 2
     mov ds:IcspThread1,0
@@ -1578,21 +1558,20 @@ ciDone:
 close_icsp   Endp
 
 
-PAGE
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			WriteICSPCommand
+;               NAME:                   WriteICSPCommand
 ;
-;		DESCRIPTION:	Write ICSP command
+;               DESCRIPTION:    Write ICSP command
 ;
-;		PARAMETERS:		BX      Handle
+;               PARAMETERS:             BX      Handle
 ;                       EAX     Command
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_icsp_cmd_name	DB 'Write ICSP Cmd', 0
+write_icsp_cmd_name     DB 'Write ICSP Cmd', 0
 
 write_icsp_cmd    Proc far
     push ds
@@ -1605,9 +1584,9 @@ write_icsp_cmd    Proc far
     cmp bx,6DA0h
     jne wicFail
 ;    
-	mov bx,piclcd_data_sel
-	mov ds,bx
-	mov dx,IO_BASE + 8
+        mov bx,SEG data
+        mov ds,bx
+        mov dx,IO_BASE + 8
 ;
     mov ah,al
     mov cx,6
@@ -1639,21 +1618,20 @@ wicDone:
     retf32
 write_icsp_cmd   Endp
 
-PAGE
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			WriteICSPData
+;               NAME:                   WriteICSPData
 ;
-;		DESCRIPTION:	Write ICSP data
+;               DESCRIPTION:    Write ICSP data
 ;
-;		PARAMETERS:		BX      Handle
+;               PARAMETERS:             BX      Handle
 ;                       EAX     Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_icsp_data_name	DB 'Write ICSP Data', 0
+write_icsp_data_name    DB 'Write ICSP Data', 0
 
 write_icsp_data    Proc far
     push ds
@@ -1665,9 +1643,9 @@ write_icsp_data    Proc far
     cmp bx,6DA0h
     jne widFail
 ;    
-	mov bx,piclcd_data_sel
-	mov ds,bx
-	mov dx,IO_BASE + 8
+        mov bx,SEG data
+        mov ds,bx
+        mov dx,IO_BASE + 8
 ;
     mov bx,ax
     shl bx,1
@@ -1702,22 +1680,21 @@ widDone:
 write_icsp_data   Endp
 
 
-PAGE
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ReadICSPData
+;               NAME:                   ReadICSPData
 ;
-;		DESCRIPTION:	Read ICSP data
+;               DESCRIPTION:    Read ICSP data
 ;
-;		PARAMETERS:		BX      Handle
+;               PARAMETERS:             BX      Handle
 ;                       
 ;       RETURNS:        EAX     Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_icsp_data_name	DB 'Read ICSP Data', 0
+read_icsp_data_name     DB 'Read ICSP Data', 0
 
 read_icsp_data    Proc far
     stc
@@ -1725,23 +1702,22 @@ read_icsp_data    Proc far
 read_icsp_data   Endp
 
 
-PAGE
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ToggleSerialLine
+;               NAME:                   ToggleSerialLine
 ;
-;		DESCRIPTION:	Toggle serial input line
+;               DESCRIPTION:    Toggle serial input line
 ;
-;		PARAMETERS:		DL		Line #
-;						DH		Device #
+;               PARAMETERS:             DL              Line #
+;                                               DH              Device #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-toggle_serial_line_name	DB 'Toggle Serial Line', 0
+toggle_serial_line_name DB 'Toggle Serial Line', 0
 
-toggle_serial_line	Proc far
+toggle_serial_line      Proc far
     push es
     push bx
     push cx
@@ -1761,31 +1737,30 @@ tslDone:
     pop cx
     pop bx 
     pop es   
-	retf32
+        retf32
 toggle_serial_line  Endp
 
-PAGE
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ReadSerialLines
+;               NAME:                   ReadSerialLines
 ;
-;		DESCRIPTION:	Read serial lines
+;               DESCRIPTION:    Read serial lines
 ;
-;		PARAMETERS:		DH		Device #
+;               PARAMETERS:             DH              Device #
 ;
-;		RETURNS:		AL		State
+;               RETURNS:                AL              State
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_serial_lines_name	DB 'Read Serial Lines', 0
+read_serial_lines_name  DB 'Read Serial Lines', 0
 
-read_serial_lines	Proc far
+read_serial_lines       Proc far
     push es
-	push bx
-	push cx
-	push dx
+        push bx
+        push cx
+        push dx
 ;
     mov bl,5
     xor dl,dl
@@ -1802,30 +1777,29 @@ read_serial_lines	Proc far
 
 rslDone:    
     pop dx
-	pop cx
-	pop bx
-	pop es
-	retf32
-read_serial_lines	Endp
+        pop cx
+        pop bx
+        pop es
+        retf32
+read_serial_lines       Endp
 
-PAGE
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			WriteSerialVal
+;               NAME:                   WriteSerialVal
 ;
-;		DESCRIPTION:	Write serial value
+;               DESCRIPTION:    Write serial value
 ;
-;		PARAMETERS:		DL		Line #
-;						DH		Device #
-;						EAX		Value
+;               PARAMETERS:             DL              Line #
+;                                               DH              Device #
+;                                               EAX             Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_serial_val_name	DB 'Write Serial Value', 0
+write_serial_val_name   DB 'Write Serial Value', 0
 
-write_serial_val	Proc far
+write_serial_val        Proc far
     push bp
     sub sp,4
     mov bp,sp
@@ -1879,32 +1853,31 @@ wsvDone:
     pop es
     add sp,4
     pop bp    
-	retf32
-write_serial_val	Endp
+        retf32
+write_serial_val        Endp
 
-PAGE
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ReadSerialVal
+;               NAME:                   ReadSerialVal
 ;
-;		DESCRIPTION:	Read serial val
+;               DESCRIPTION:    Read serial val
 ;
-;		PARAMETERS:		DL		Line #
-;						DH		Device #
+;               PARAMETERS:             DL              Line #
+;                                               DH              Device #
 ;
-;		RETURNS:		EAX		Value
+;               RETURNS:                EAX             Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_serial_val_name	DB 'Read Serial Value', 0
+read_serial_val_name    DB 'Read Serial Value', 0
 
-read_serial_val	Proc far
+read_serial_val Proc far
     push es
-	push bx
-	push cx
-	push dx
+        push bx
+        push cx
+        push dx
 ;
     test dh,0C0h
     jz rsvSerial
@@ -1961,46 +1934,44 @@ rsvSerial:
 
 rsvDone:    
     pop dx
-	pop cx
-	pop bx
-	pop es
-	retf32
-read_serial_val	Endp
+        pop cx
+        pop bx
+        pop es
+        retf32
+read_serial_val Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			DCF thread
+;               NAME:                   DCF thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dcf_name	DB 'DCF',0
+dcf_name        DB 'DCF',0
 
 dcf_thread:
-	mov ax,43h
-	EnableFocus
+        mov ax,43h
+        EnableFocus
 ;
-    mov ax,piclcd_data_sel
+    mov ax,SEG data
     mov ds,ax    
     GetThread
     mov ds:DcfThread,ax    
     ClearSignal
 
 dcf_thread_loop: 
-	WaitForSignal
-	mov al,ds:DcfVal
-	WriteChar
+        WaitForSignal
+        mov al,ds:DcfVal
+        WriteChar
     jmp dcf_thread_loop
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			InitDriver
+;               NAME:                   InitDriver
 ;
-;		DESCRIPTION:	Init Driver
+;               DESCRIPTION:    Init Driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2009,13 +1980,13 @@ InitDriver  Proc far
     push es
     pushad
 ;    
-	mov al,10
-	mov bx,piclcd_data_sel
-	mov ds,bx
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET pic_int
-	RequestPrivateIrqHandler
+        mov al,10
+        mov bx,SEG data
+        mov ds,bx
+        mov bx,cs
+        mov es,bx
+        mov di,OFFSET pic_int
+        RequestPrivateIrqHandler
 ;
     cli
     mov dx,IO_BASE + 8
@@ -2025,41 +1996,41 @@ InitDriver  Proc far
     mov ds:PicOut,al
     sti
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET pic1_name
-	mov si,OFFSET pic_thread1
-	mov ax,4
-	mov cx,100h
-	CreateThread
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET pic1_name
+        mov si,OFFSET pic_thread1
+        mov ax,4
+        mov cx,100h
+        CreateThread
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET pic2_name
-	mov si,OFFSET pic_thread2
-	mov ax,4
-	mov cx,100h
-	CreateThread
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET pic2_name
+        mov si,OFFSET pic_thread2
+        mov ax,4
+        mov cx,100h
+        CreateThread
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET ir_name
-	mov si,OFFSET ir_thread
-	mov ax,4
-	mov cx,100h
-	CreateThread
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET ir_name
+        mov si,OFFSET ir_thread
+        mov ax,4
+        mov cx,100h
+        CreateThread
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET dcf_name
-	mov si,OFFSET dcf_thread
-	mov ax,4
-	mov cx,100h
-;	CreateProcess
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET dcf_name
+        mov si,OFFSET dcf_thread
+        mov ax,4
+        mov cx,100h
+;       CreateProcess
 ;
     popad
     pop es
@@ -2067,61 +2038,55 @@ InitDriver  Proc far
     ret
 InitDriver  Endp
 
-PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			INIT
+;               NAME:                   INIT
 ;
-;		DESCRIPTION:	Init device
+;               DESCRIPTION:    Init device
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			
-init	PROC far
-	push ds
-	pusha
-;
-	mov bx,piclcd_code_sel
-	InitDevice
-;
-	mov eax,SIZE data_seg
-	mov bx,piclcd_data_sel
-	AllocateFixedSystemMem
-;	
+                        
+init    PROC far
+        push ds
+        pusha
+;       
+    mov ax,SEG data
+    mov es,ax
     mov es:DcfThread,0
-	mov es:PicThread0,0
-	mov es:PicThread1,0
-	mov es:DioQueue0,0
-	mov es:DioQueue1,0
-	mov es:DioCurr0,0
-	mov es:DioCurr1,0
-	mov es:IntFlag,0
-	mov es:ResetFlag,0
-	mov es:IcspFlag,0
-	mov es:IcspThread0,0
-	mov es:IcspThread1,0	
+        mov es:PicThread0,0
+        mov es:PicThread1,0
+        mov es:DioQueue0,0
+        mov es:DioQueue1,0
+        mov es:DioCurr0,0
+        mov es:DioCurr1,0
+        mov es:IntFlag,0
+        mov es:ResetFlag,0
+        mov es:IcspFlag,0
+        mov es:IcspThread0,0
+        mov es:IcspThread1,0    
     xor al,al
-	mov es:PicOut,al
-	mov dx,IO_BASE + 8
-	out dx,al
-	InitSection es:ListSection
+        mov es:PicOut,al
+        mov dx,IO_BASE + 8
+        out dx,al
+        InitSection es:ListSection
 ;
-    mov di,NodeArr
+    mov di,OFFSET NodeArr
     mov cx,NODE_CNT
     mov al,-1
     rep stosb
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-;	mov dx,IO_BASE + 3
-;	xor al,al
-;	out dx,al
-;	
+;       mov dx,IO_BASE + 3
+;       xor al,al
+;       out dx,al
+;       
 ;    mov dx,IO_BASE + 6
 ;    out dx,al
 ;    
@@ -2129,63 +2094,64 @@ init	PROC far
 ;    mov dx,IO_BASE + 2
 ;    out dx,al
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET InitDriver
-	HookInitTasking
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET InitDriver
+        HookInitTasking
 ;
-	mov si,OFFSET open_icsp
-	mov di,OFFSET open_icsp_name
-	mov ax,open_icsp_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET open_icsp
+        mov di,OFFSET open_icsp_name
+        mov ax,open_icsp_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET close_icsp
-	mov di,OFFSET close_icsp_name
-	mov ax,close_icsp_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET close_icsp
+        mov di,OFFSET close_icsp_name
+        mov ax,close_icsp_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET write_icsp_cmd
-	mov di,OFFSET write_icsp_cmd_name
-	mov ax,write_icsp_cmd_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET write_icsp_cmd
+        mov di,OFFSET write_icsp_cmd_name
+        mov ax,write_icsp_cmd_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET write_icsp_data
-	mov di,OFFSET write_icsp_data_name
-	mov ax,write_icsp_data_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET write_icsp_data
+        mov di,OFFSET write_icsp_data_name
+        mov ax,write_icsp_data_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET read_icsp_data
-	mov di,OFFSET read_icsp_data_name
-	mov ax,read_icsp_data_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET read_icsp_data
+        mov di,OFFSET read_icsp_data_name
+        mov ax,read_icsp_data_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET read_serial_lines
-	mov di,OFFSET read_serial_lines_name
-	mov ax,read_serial_lines_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET read_serial_lines
+        mov di,OFFSET read_serial_lines_name
+        mov ax,read_serial_lines_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET toggle_serial_line
-	mov di,OFFSET toggle_serial_line_name
-	mov ax,toggle_serial_line_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET toggle_serial_line
+        mov di,OFFSET toggle_serial_line_name
+        mov ax,toggle_serial_line_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET write_serial_val
-	mov di,OFFSET write_serial_val_name
-	mov ax,write_serial_val_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET write_serial_val
+        mov di,OFFSET write_serial_val_name
+        mov ax,write_serial_val_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET read_serial_val
-	mov di,OFFSET read_serial_val_name
-	mov ax,read_serial_val_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET read_serial_val
+        mov di,OFFSET read_serial_val_name
+        mov ax,read_serial_val_nr
+        RegisterBimodalUserGate
 ;
-	popa
-	pop ds
-	ret
-init	ENDP
+    clc
+        popa
+        pop ds
+        ret
+init    ENDP
 
-code	ENDS
+code    ENDS
 
-	END init
+        END init
 
