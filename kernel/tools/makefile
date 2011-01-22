@@ -34,10 +34,6 @@ dll_opt = /l/s/3/Twd
 
 # DEFINE GROUPS OF MODULES
 
-cfg2bin_srcs = CFG2BIN.ASM
-cfg2bin_objs = $(cfg2bin_srcs:.ASM=.OBJ)
-cfg2bin_exes = CFG2BIN.EXE
-
 boot2bin_srcs = BOOT2BIN.ASM
 boot2bin_objs = $(boot2bin_srcs:.ASM=.OBJ)
 boot2bin_exes = BOOT2BIN.EXE
@@ -126,7 +122,7 @@ remdebug_srcs = REMDEBUG.ASM
 remdebug_objs = $(remdebug_srcs:.ASM=.OBJ)
 remdebug_exes = REMDEBUG.EXE
 
-srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
+srcs =      $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
 			$(bootprom_srcs) $(elanboot_srcs) $(acrprom_srcs) $(aliboot_srcs)	\
 			$(rdfsboot_srcs) $(grubload_srcs) $(hdboot_srcs) $(fdboot_srcs) \
 			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
@@ -136,7 +132,7 @@ srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
 
 objs =      $(srcs:.ASM=.OBJ)
 
-exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
+exes =      $(boot2bin_exes) $(acrprom_exes)  \
 			$(load_exes) $(bootprom_exes) $(elanboot_exes) $(aliboot_exes)	\
 			$(rdfsboot_exes) $(grubload_exes) $(hdboot_exes) $(fdboot_exes) \
 			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
@@ -164,16 +160,8 @@ kit_modules =   $(maps) $(bats) $(bins)  LOAD.EXE GRUBLOAD.EXE
 # TARGET
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-MAIN:   BOOT2BIN.EXE CFG2BIN.EXE $(exes) $(bins) GRUBLOAD.BIN HDBOOT.BIN \
+MAIN:   BOOT2BIN.EXE $(exes) $(bins) GRUBLOAD.BIN HDBOOT.BIN \
         FDBOOT.BIN
-
-CFG2BIN.EXE : $(cfg2bin_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(cfg2bin_objs)
-	CFG2BIN
-	CFG2BIN;
-!
 
 BOOT2BIN.EXE : $(boot2bin_objs)
     tlink @&&!
