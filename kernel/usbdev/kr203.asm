@@ -33,7 +33,7 @@ include ..\driver.def
 include ..\os\printer.inc
 include usb.inc
 
-MAX_OUT_SIZE = 260
+MAX_OUT_SIZE = 260 * 16
 
 STATUS_PAPER_JAM       = 1h
 STATUS_CUTTER_JAM      = 2h
@@ -97,6 +97,7 @@ kr_status_section   section_typ <>
 kr_session_thread   DW ?
 
 kr_session_list     DW ?
+kr_session_count    DW ?
 
 data    ENDS
 
@@ -205,6 +206,7 @@ InsertSessionSel   Proc near
     push bx
     EnterSection ds:kr_section
 ;    
+    inc ds:kr_session_count
     mov bx,ds:kr_session_list
     or bx,bx
     jz issEmpty
@@ -629,6 +631,7 @@ dsLoop:
     mov es,ds:kr_session_list
     mov ax,es:cs_next
     mov ds:kr_session_list,ax
+    dec ds:kr_session_count
     LeaveSection ds:kr_section
 ;
     push ds
@@ -636,6 +639,18 @@ dsLoop:
     pusha
 ;    
     mov bx,ds:kr_out_req
+    IsUsbReqStarted
+    jc dsWriteDo
+
+dsWriteWait:    
+    IsUsbReqReady
+    jnc dsWriteDo
+;
+    mov ax,5
+    WaitMilliSec
+    loop dsWriteWait
+
+dsWriteDo:
     mov ax,es
     mov es,ds:kr_out_buffer
     mov ds,ax
@@ -879,6 +894,7 @@ OpenPipes   Proc near
     AddWriteUsbDataReq
 ;
     mov ds:kr_session_list,0
+    mov ds:kr_session_count,0
 ;
     mov bl,65
     mov al,0
@@ -1214,9 +1230,19 @@ PrintOneLine   Proc near
     push ds
     push es
     pushad
-;    
+
+poWait: 
+    mov ax,ds:kr_session_count
+    cmp ax,16
+    jb poDo
+;
+    mov ax,5
+    WaitMilliSec
+    jmp poWait
+
+poDo:
     push cx
-    add cx,3
+    add cx,5
     call CreateSessionSel
     pop cx
 ;
@@ -1224,13 +1250,43 @@ PrintOneLine   Proc near
     mov al,ESC
     stosb
 ;    
-    mov al,'s'
+    mov al,'S'
     stosb
 ;    
     mov al,cl
+    add al,2
     stosb
 ;
-    rep movs byte ptr es:[edi],fs:[esi]
+    mov al,0
+    stosb
+;
+    mov al,80h
+    stosb
+
+poCopy:
+    lods byte ptr fs:[esi]
+    not al
+    mov ah,al
+    xor al,al
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    stosb
+    loop poCopy
+;        
     call InsertSessionSel
 ;
     popad
@@ -1238,6 +1294,99 @@ PrintOneLine   Proc near
     pop ds    
     ret
 PrintOneLine    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PrintLine16
+;
+;       DESCRIPTION:    Print 16 lines
+;
+;       PARAMETERS:     DS      Data
+;                       FS:ESI  Bitmap data
+;                       CX      Width in bytes (of single line)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrintLine16   Proc near
+    push ds
+    push es
+    pushad
+
+p16Wait: 
+    mov ax,ds:kr_session_count
+    cmp ax,16
+    jb p16Do
+;
+    mov ax,1
+    WaitMilliSec
+    jmp p16Wait
+
+p16Do:
+    push cx
+    add cx,5
+    shl cx,4
+    call CreateSessionSel
+    pop cx
+;
+    mov edi,SIZE cmd_session_struc
+    mov dx,16
+
+p16YCopy:    
+    mov al,ESC
+    stosb
+;    
+    mov al,'S'
+    stosb
+;    
+    mov al,cl
+    add al,2
+    stosb
+;
+    mov al,0
+    stosb
+;
+    mov al,80h
+    stosb
+;
+    push cx    
+
+p16Copy:
+    lods byte ptr fs:[esi]
+    not al
+    mov ah,al
+    xor al,al
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    stosb
+    loop p16Copy
+;
+    pop cx    
+;      
+    sub dx,1
+    jnz p16YCopy
+;
+    call InsertSessionSel
+;
+    popad
+    pop es
+    pop ds    
+    ret
+PrintLine16    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1313,11 +1462,25 @@ print_bitmap   Proc far
     mov esi,edi
 
 print_bitmap_loop:
+    cmp dx,16
+    jb print_bitmap_one
+;
+    call PrintLine16
+    mov eax,ecx
+    shl eax,4
+    add esi,eax
+    sub dx,16
+    jnz print_bitmap_loop    
+;
+    jmp print_bitmap_cut
+
+print_bitmap_one:
     call PrintOneLine
     add esi,ecx
     sub dx,1
     jnz print_bitmap_loop
-;
+
+print_bitmap_cut:
     call SendCut
         
 print_bitmap_done:
