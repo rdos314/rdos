@@ -1582,6 +1582,9 @@ pretask16:
     mov al,16
     ShutDownPreTask
 
+default_debug:
+    iretd
+
 pretask_int_tab:
 ;
 ;               int #   Entry                   Selector        Dpl
@@ -1618,6 +1621,7 @@ ri13    DW      3Bh,    OFFSET default_int2,    kernel_code,    0
 ri14    DW      3Ch,    OFFSET default_int2,    kernel_code,    0
 ri15    DW      3Dh,    OFFSET default_int2,    kernel_code,    0
 ri17    DW      3Fh,    OFFSET default_int2,    kernel_code,    0
+shd     DW      82h,    OFFSET default_debug,   kernel_code,    0
 pg7_end DW      0FFFFh
 
     public init_pretask_traps

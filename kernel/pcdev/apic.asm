@@ -412,16 +412,14 @@ ApInit:
     mov ax,5
     call DelayMs
 ;    
-    AddDebugCore
 
 ; comment to start AP cores
     
-stopl:
-   cli
-   jmp stopl
+;stopl:
+;   cli
+;   jmp stopl
 
-
-    
+    AddDebugCore    
 
 ap_wait:    
     sti
@@ -2305,6 +2303,12 @@ apic_name       DB 'Apic Test',0
 
 apic_pr:
     int 3
+    mov ax,idt_sel
+    mov ds,ax
+    mov bx,2 * 8
+    mov eax,[bx]
+    mov edx,[bx+4]    
+;
     mov ax,SEG data
     mov ds,ax
     mov ax,ds:apic_arr
@@ -2622,25 +2626,6 @@ resume_int:
     pop ds
     iretd
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   ShutdownInt
-;
-;               DESCRIPTION:    Shutdown IPI int
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-shutdown_int:
-    mov di,apic_mem_sel
-    mov es,di    
-    mov edi,es:APIC_CURR_COUNT
-    Shutdown
-    
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2685,7 +2670,6 @@ ipi_tab:
 ;
 ipi80   DW      80h,    OFFSET resume_int
 ipi81   DW      81h,    OFFSET preempt_int
-ipi82   DW      82h,    OFFSET shutdown_int
     DW      0FFFFh
 
 ;

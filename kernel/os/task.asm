@@ -3988,6 +3988,8 @@ debug_exception:
     jc debug_normal
 
 debug_fault:
+    ShutDownDebug
+;    
     push ax
     mov ax,wd_code_sel
     verr ax
@@ -4141,6 +4143,8 @@ debug_save_ok:
     cmp ax,fs:ps_null_thread
     jne debug_block
 ;
+    ShutDownDebug
+;    
     mov es,ax
     mov ax,wd_code_sel
     verr ax
@@ -4197,6 +4201,8 @@ double_fault:
     mov ds,ax
     call ds:try_lock_proc
     jc double_fault_lock_ok
+;    
+    ShutDownDebug
 ;    
     mov ax,fs:ps_curr_thread
     or ax,ax
@@ -4330,6 +4336,8 @@ double_fatal_thread:
     mov es:p_error_code,12
 
 double_stack_ok:
+    ShutDownDebug
+;    
     mov ax,wd_code_sel
     verr ax
     jnz double_stack_do
@@ -4802,6 +4810,7 @@ LockSingle      Proc near
     add fs:ps_nesting,1
     jc lsDone
 ;
+    ShutDownDebug
     call ShutdownLocal
 
 lsDone:     
@@ -4873,6 +4882,7 @@ LoadUnlockSingle    Proc near
     sub fs:ps_nesting,1
     jc lulsDone
 ;
+    ShutDownDebug
     mov cx,fs:ps_nesting
     call ShutdownLocal
 
@@ -5351,6 +5361,8 @@ lumGet:
     sub fs:ps_nesting,1
     jc lumNestingOk
 ;
+    ShutDownDebug
+;    
     mov cx,fs:ps_nesting
     pop eax
     pop dx
@@ -5364,6 +5376,7 @@ lumNestingOk:
     cmp ax,ds:owner_sel
     je lumOwnerOk
 ;
+    ShutDownDebug
     call ShutdownLocal
 
 lumOwnerOk:    

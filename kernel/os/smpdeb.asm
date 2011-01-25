@@ -90,8 +90,6 @@ nmi_handler:
     push ebp
     mov bp,sp
 ;    
-    jmp nmi_block
-    
     GetProcessor
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
@@ -166,6 +164,124 @@ nmi_ret:
     pop gs
     pop fs
     iretd
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           int 82
+;
+;       DESCRIPTION:    Shutdown interrupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int_gs  EQU 48
+int_fs  EQU 44
+int_ds  EQU 40
+int_es  EQU 36
+int_ss  EQU 32
+int_esp EQU 28
+int_efl EQU 24
+int_cs  EQU 20
+int_eip EQU 16
+int_sfs EQU 14
+int_sgs EQU 12
+int_eax EQU 8
+int_ebx EQU 4
+int_ebp EQU 0
+
+shutdown_handler:
+    push fs
+    push gs
+    push eax
+    push ebx
+    push ebp
+    mov bp,sp
+;    
+    GetProcessor
+    mov ax,fs
+    mov bx,SEG data    
+    mov fs,bx
+    mov bx,OFFSET core_list
+    mov bx,fs:[bx]
+
+int_core_loop:
+    mov gs,bx
+    cmp ax,gs:cs_proc_sel
+    je int_core_found
+;
+    mov bx,fs:[bx].cs_next
+    jmp int_core_loop    
+
+int_core_found:
+    call SaveCore
+    mov eax,[bp].int_ebp
+    mov gs:cs_ebp,eax
+    mov eax,[bp].int_ebx
+    mov gs:cs_ebx,eax
+    mov eax,[bp].int_eax
+    mov gs:cs_eax,eax
+    mov eax,[bp].int_eip
+    mov gs:cs_eip,eax
+    mov ax,[bp].int_cs
+    mov gs:cs_cs,ax
+    mov ebx,[bp].int_efl
+    mov gs:cs_eflags,ebx
+    test ebx,20000h
+    jnz int_v86
+;    
+    mov bx,[bp].int_sfs
+    mov gs:cs_fs,bx
+    mov bx,[bp].int_sgs
+    mov gs:cs_gs,bx
+;    
+    and al,3
+    or al,al
+    jz int_abort
+;
+    mov eax,[bp].int_esp
+    mov gs:cs_esp,eax
+    mov ax,[bp].int_ss
+    mov gs:cs_ss,ax
+    jmp int_abort
+
+int_v86:
+    mov eax,[bp].int_esp
+    mov gs:cs_esp,eax
+    mov ax,[bp].int_ss
+    mov gs:cs_ss,ax
+    mov ax,[bp].int_ds
+    mov gs:cs_ds,ax
+    mov ax,[bp].int_es
+    mov gs:cs_es,ax
+    mov ax,[bp].int_fs
+    mov gs:cs_fs,ax
+    mov ax,[bp].int_gs
+    mov gs:cs_gs,ax
+
+int_abort:
+    GetProcessor
+    mov dx,fs
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:core_list
+
+int_abort_loop:    
+    or ax,ax
+    jz nmi_block
+;
+    mov gs,ax
+    mov ax,gs:cs_proc_sel
+    cmp ax,dx
+    jz int_abort_next
+;    
+    mov fs,ax
+    SendNmi
+
+int_abort_next:
+    mov ax,gs:cs_next
+    jmp int_abort_loop
+
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -382,6 +498,9 @@ handle_abort_loop:
     mov gs,ax
     mov fs,gs:cs_proc_sel
     SendNmi
+;    
+    mov ax,10
+    call DelayMs
 ;
     mov ax,gs:cs_next
     jmp handle_abort_loop
@@ -393,15 +512,15 @@ handle_next:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Init_thread
+;           NAME:           Init_task
 ;
-;           DESCRIPTION:    Create thread
+;           DESCRIPTION:    Init task
 ;
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_thread     Proc far
+init_task     Proc far
     push ds
     push es
     pushad
@@ -409,16 +528,27 @@ init_thread     Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov si,OFFSET start_smp_debug
-    mov di,OFFSET smp_deb_thread_name
-    mov ax,1
-    mov cx,256
-    CreateThread
+;
+    mov al,2
+    xor bl,bl
+    mov esi,OFFSET nmi_handler
+    CreateIntGateSelector
+;
+    mov al,82h
+    mov esi,OFFSET shutdown_handler
+    CreateIntGateSelector
+;
+;    mov si,OFFSET start_smp_debug
+;    mov di,OFFSET smp_deb_thread_name
+;    mov ax,1
+;    mov cx,256
+;    CreateThread
 ;
     popad
     pop es
     pop ds
-init_thread     Endp
+    ret
+init_task     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -446,13 +576,8 @@ init    PROC far
     mov ax,add_debug_core_nr
     RegisterOsGate
 ;
-    mov di,OFFSET init_thread
-;    HookInitTasking
-;
-    mov al,2
-    xor bl,bl
-    mov esi,OFFSET nmi_handler
-    CreateIntGateSelector
+    mov di,OFFSET init_task
+    HookInitTasking
 ;
     AddDebugCore
 ;
