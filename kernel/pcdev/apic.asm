@@ -412,6 +412,7 @@ ApInit:
     mov ax,5
     call DelayMs
 ;    
+    AddDebugCore    
 
 ; comment to start AP cores
     
@@ -419,7 +420,6 @@ ApInit:
 ;   cli
 ;   jmp stopl
 
-    AddDebugCore    
 
 ap_wait:    
     sti

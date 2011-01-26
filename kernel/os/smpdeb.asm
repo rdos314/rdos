@@ -98,14 +98,14 @@ nmi_handler:
     mov ax,fs
     mov bx,SEG data    
     mov fs,bx
-    mov bx,OFFSET core_list
-    mov bx,fs:[bx]
+    mov bx,fs:core_list
+
 nmi_core_loop:
     mov gs,bx
     cmp ax,gs:cs_proc_sel
     je nmi_core_found
 ;
-    mov bx,fs:[bx].cs_next
+    mov bx,gs:cs_next
     jmp nmi_core_loop    
 
 nmi_core_found:
@@ -201,15 +201,14 @@ shutdown_handler:
     mov ax,fs
     mov bx,SEG data    
     mov fs,bx
-    mov bx,OFFSET core_list
-    mov bx,fs:[bx]
+    mov bx,fs:core_list
 
 int_core_loop:
     mov gs,bx
     cmp ax,gs:cs_proc_sel
     je int_core_found
 ;
-    mov bx,fs:[bx].cs_next
+    mov bx,gs:cs_next
     jmp int_core_loop    
 
 int_core_found:
@@ -438,15 +437,14 @@ add_debug_core  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Smp_deb_thread
+;           NAME:           SmpDebug
 ;
-;           DESCRIPTION:    SMP debug thread (for test purposes)
+;           DESCRIPTION:    SMP debug procedure
 ;
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-smp_deb_thread_name     DB 'SMP debug', 0
 start_smp_debug_name    DB 'Start SMP Debug', 0
 
 start_smp_debug:
@@ -498,9 +496,6 @@ handle_abort_loop:
     mov gs,ax
     mov fs,gs:cs_proc_sel
     SendNmi
-;    
-    mov ax,10
-    call DelayMs
 ;
     mov ax,gs:cs_next
     jmp handle_abort_loop
@@ -508,6 +503,40 @@ handle_abort_loop:
 handle_next:        
     call UpdateMode
     jmp handle_loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SmpDebThread
+;
+;           DESCRIPTION:    SMP debug thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+smp_deb_thread_name     DB 'SMP debug', 0
+
+smp_deb_thread:
+    int 3
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:core_list
+
+smp_abort_loop:    
+    or ax,ax
+    jz smp_abort_done
+;
+    mov gs,ax
+    mov fs,gs:cs_proc_sel
+    SendNmi
+;
+    mov ax,gs:cs_next
+    jmp smp_abort_loop
+
+smp_abort_done:
+    int 3 
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -538,11 +567,11 @@ init_task     Proc far
     mov esi,OFFSET shutdown_handler
     CreateIntGateSelector
 ;
-;    mov si,OFFSET start_smp_debug
-;    mov di,OFFSET smp_deb_thread_name
-;    mov ax,1
-;    mov cx,256
-;    CreateThread
+    mov si,OFFSET smp_deb_thread
+    mov di,OFFSET smp_deb_thread_name
+    mov ax,1
+    mov cx,256
+    CreateThread
 ;
     popad
     pop es
