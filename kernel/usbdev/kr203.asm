@@ -1460,11 +1460,33 @@ print_bitmap   Proc far
     mov fs,ax
     movzx ecx,si
     mov esi,edi
+    xor bp,bp
 
 print_bitmap_loop:
     cmp dx,16
     jb print_bitmap_one
 ;
+    inc bp
+    cmp bp,16
+    jne print_bitmap16
+;
+    mov bl,8
+    call GetByteParameter    
+    jnc print_bitmap_wait
+;
+    mov al,50    
+
+print_bitmap_wait:
+    push cx
+    mov cl,al
+    mov ax,32000
+    div cl
+    pop cx
+    movzx ax,al
+    WaitMilliSec
+    xor bp,bp
+
+print_bitmap16:
     call PrintLine16
     mov eax,ecx
     shl eax,4

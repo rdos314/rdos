@@ -27,7 +27,7 @@ void main()
     if (prn->IsPaperEnd())
         printf("out of paper\r\n");
         
-    pg = prn->CreateBitmap(1000);
+    pg = prn->CreateBitmap(2000);
     font = new TFont(70);
 
     if (pg)
@@ -49,6 +49,17 @@ void main()
         pg->DrawString(5, 705, "MNOP");
         pg->DrawString(5, 805, "QPRS");
         pg->DrawString(5, 905, "TUVX");
+
+        pg->DrawString(5, 1005, "Test");
+        pg->DrawString(5, 1105, "of");
+        pg->DrawString(5, 1205, "RDOS");
+        pg->DrawString(5, 1305, "Printer");
+        pg->DrawString(5, 1405, "ABCD");
+        pg->DrawString(5, 1505, "EFGH");
+        pg->DrawString(5, 1605, "IJKL");
+        pg->DrawString(5, 1705, "MNOP");
+        pg->DrawString(5, 1805, "QPRS");
+        pg->DrawString(5, 1905, "TUVX");
 
         prn->PrintBitmap(pg);
     }
