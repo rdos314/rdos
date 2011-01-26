@@ -132,12 +132,18 @@ nmi_core_found:
 ;    
     and al,3
     or al,al
-    jz nmi_block
+    jz nmi_kernel
 ;
     mov eax,[bp].nmi_esp
     mov gs:cs_esp,eax
     mov ax,[bp].nmi_ss
     mov gs:cs_ss,ax
+    jmp nmi_block
+
+nmi_kernel:
+    movzx eax,bp
+    add ax,nmi_esp
+    mov gs:cs_esp,eax
     jmp nmi_block
 
 nmi_v86:
