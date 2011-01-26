@@ -1310,7 +1310,6 @@ idt_trap_tab:
 ;
 tg0         DW      0,          OFFSET trap_0,          kernel_code,    0
 tg1         DW      1,          OFFSET trap_1,          kernel_code,    0
-tg2         DW      2,          OFFSET trap_2,          kernel_code,    0
 tg3         DW      3,          OFFSET trap_3,          kernel_code,    0
 tg4         DW      4,          OFFSET trap_4,          kernel_code,    0
 tg5         DW      5,          OFFSET trap_5,          kernel_code,    0

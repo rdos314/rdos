@@ -170,6 +170,42 @@ nmi_ret:
     pop gs
     pop fs
     iretd
+
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           abort_cores
+;
+;       DESCRIPTION:    Stop all cores except self
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+abort_cores:
+    GetProcessor
+    or fs:ps_flags,PS_FLAG_NMI    
+    mov dx,fs
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:core_list
+
+abort_loop:    
+    or ax,ax
+    jz nmi_block
+;
+    mov gs,ax
+    mov ax,gs:cs_proc_sel
+    cmp ax,dx
+    jz abort_next
+;    
+    mov fs,ax
+    SendNmi
+
+abort_next:
+    mov ax,gs:cs_next
+    jmp abort_loop
+
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -241,14 +277,20 @@ int_core_found:
 ;    
     and al,3
     or al,al
-    jz int_abort
+    jz int_kernel
 ;
     mov eax,[bp].int_esp
     mov gs:cs_esp,eax
     mov ax,[bp].int_ss
     mov gs:cs_ss,ax
-    jmp int_abort
+    jmp abort_cores
 
+int_kernel:
+    movzx eax,bp
+    add ax,int_esp
+    mov gs:cs_esp,eax
+    jmp abort_cores
+    
 int_v86:
     mov eax,[bp].int_esp
     mov gs:cs_esp,eax
@@ -262,31 +304,7 @@ int_v86:
     mov gs:cs_fs,ax
     mov ax,[bp].int_gs
     mov gs:cs_gs,ax
-
-int_abort:
-    GetProcessor
-    mov dx,fs
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:core_list
-
-int_abort_loop:    
-    or ax,ax
-    jz nmi_block
-;
-    mov gs,ax
-    mov ax,gs:cs_proc_sel
-    cmp ax,dx
-    jz int_abort_next
-;    
-    mov fs,ax
-    SendNmi
-
-int_abort_next:
-    mov ax,gs:cs_next
-    jmp int_abort_loop
-
+    jmp abort_cores
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -598,6 +616,15 @@ init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov al,2
+    xor bl,bl
+    mov esi,OFFSET nmi_handler
+    CreateIntGateSelector
+;
+    mov al,82h
+    mov esi,OFFSET shutdown_handler
+    CreateIntGateSelector
 ;
     mov si,OFFSET start_smp_debug
     mov di,OFFSET start_smp_debug_name
