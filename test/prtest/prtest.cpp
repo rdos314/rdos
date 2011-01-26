@@ -24,6 +24,8 @@ void main()
 
     prn = new TPrinterDevice(1);
 
+    prn->EjectMedia();
+
     if (prn->IsPaperEnd())
         printf("out of paper\r\n");
         
@@ -62,6 +64,8 @@ void main()
         pg->DrawString(5, 1905, "TUVX");
 
         prn->PrintBitmap(pg);
+
+        prn->PresentMedia(25);
     }
 }
 

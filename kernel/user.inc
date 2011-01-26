@@ -2017,6 +2017,17 @@ PrintBitmap       MACRO
 	UserGate print_bitmap_nr
 						ENDM
 
+;	IN  BX		Printer handle
+;   IN  AX      Length in mm
+PresentPrinterMedia       MACRO
+	UserGate present_printer_media_nr
+						ENDM
+
+;	IN  BX		Printer handle
+EjectPrinterMedia       MACRO
+	UserGate eject_printer_media_nr
+						ENDM
+
 ;;;;;;;;;; SCREEN, TEXT MODE ;;;;;;;;;;
 
 ;	IN  CX              Column number (x)

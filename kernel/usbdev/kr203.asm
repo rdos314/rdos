@@ -47,6 +47,7 @@ STATUS_PAPER_PRESENTER = 80h
 ENQ = 5
 ESC = 1Bh
 RS = 1Eh
+FF = 0Ch
 
 cmd_session_struc   STRUC
 
@@ -1391,6 +1392,42 @@ PrintLine16    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ForcePrint
+;
+;       DESCRIPTION:    Force printout
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ForcePrint   Proc near
+    push es
+    push ax
+    push cx
+    push di
+;
+    add cx,2
+    call CreateSessionSel
+;
+    mov di,SIZE cmd_session_struc
+    mov al,ESC
+    stosb
+;    
+    mov al,'p'
+    stosb
+;    
+    call InsertSessionSel
+;
+    pop di
+    pop cx
+    pop ax
+    pop es
+    ret
+ForcePrint    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SendCut
 ;
 ;       DESCRIPTION:    Send cut command
@@ -1405,10 +1442,8 @@ SendCut   Proc near
     push cx
     push di
 ;
-    push cx
     add cx,2
     call CreateSessionSel
-    pop cx
 ;
     mov di,SIZE cmd_session_struc
     mov al,ESC
@@ -1477,6 +1512,7 @@ print_bitmap_loop:
     mov al,50    
 
 print_bitmap_wait:
+    call ForcePrint
     push cx
     mov cl,al
     mov ax,32000
@@ -1503,6 +1539,24 @@ print_bitmap_one:
     jnz print_bitmap_loop
 
 print_bitmap_cut:
+    call ForcePrint
+;
+    mov bl,8
+    call GetByteParameter    
+    jnc print_bitmap_fwait
+;
+    mov al,50    
+
+print_bitmap_fwait:
+    call ForcePrint
+    push cx
+    mov cl,al
+    mov ax,32000
+    div cl
+    pop cx
+    movzx ax,al
+    WaitMilliSec
+;
     call SendCut
         
 print_bitmap_done:
@@ -1512,6 +1566,92 @@ print_bitmap_done:
     pop ds
     ret
 print_bitmap    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PresentMedia
+;
+;       DESCRIPTION:    Present media
+;
+;       PARAMETERS:     DS      Data
+;                       AX      Amount in mm to present
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+present_media   Proc far
+    push ds
+    push es
+    push ax
+    push bx
+    push cx
+    push di
+;
+    mov bl,al
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov cx,3
+    call CreateWaitSessionSel
+;    
+    mov di,SIZE cmd_session_struc
+    mov al,ESC
+    stosb
+;
+    mov al,FF
+    stosb
+;
+    mov al,bl
+    stosb
+;
+    call InsertSessionSel
+;    
+    pop di
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+present_media    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           EjectMedia
+;
+;       DESCRIPTION:    Eject media
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+eject_media   Proc far
+    push ds
+    push es
+    push ax
+    push cx
+    push di
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov cx,1
+    call CreateWaitSessionSel
+;    
+    mov di,SIZE cmd_session_struc
+    mov al,ENQ
+    stosb
+;
+    call InsertSessionSel
+;    
+    pop di
+    pop cx
+    pop ax
+    pop es
+    pop ds
+    ret
+eject_media    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1594,6 +1734,12 @@ kr203_thread:
 ;    
     mov word ptr es:pr_print_bitmap_proc,OFFSET print_bitmap
     mov word ptr es:pr_print_bitmap_proc+2,cs
+;    
+    mov word ptr es:pr_present_media_proc,OFFSET present_media
+    mov word ptr es:pr_present_media_proc+2,cs
+;    
+    mov word ptr es:pr_eject_media_proc,OFFSET eject_media
+    mov word ptr es:pr_eject_media_proc+2,cs
 ;    
     GetSystemTime
     add eax,1193000 * 2  ; 2s

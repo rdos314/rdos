@@ -53,6 +53,9 @@ public:
     TBitmapGraphicDevice *CreateBitmap(int Height);
     void PrintBitmap(TBitmapGraphicDevice *bitmap);
 
+    virtual void PresentMedia(int mm);
+    virtual void EjectMedia();
+
 protected:
     TPrinterDevice(const char *IniSection);
     TPrinterDevice();

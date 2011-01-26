@@ -517,3 +517,6 @@
 #define CallGate_create_printer_bitmap 0x9a 166 1 0 0 2 0
 #define CallGate_print_bitmap 0x9a 167 1 0 0 2 0
 
+#define CallGate_present_printer_media 0x9a 168 1 0 0 2 0
+#define CallGate_eject_printer_media 0x9a 169 1 0 0 2 0
+

@@ -309,6 +309,34 @@ void TPrinterDevice::PrintBitmap(TBitmapGraphicDevice *bitmap)
 
 /*##########################################################################
 #
+#   Name       : TPrinterDevice::PresentMedia
+#
+#   Purpose....: Present media to customer
+#
+#   Parameters.: mm to present
+#
+##########################################################################*/
+void TPrinterDevice::PresentMedia(int mm)
+{
+    RdosPresentPrinterMedia(FHandle, mm);
+}
+
+/*##########################################################################
+#
+#   Name       : TPrinterDevice::EjectMedia
+#
+#   Purpose....: Eject media from printer
+#
+#   Parameters.:
+#
+##########################################################################*/
+void TPrinterDevice::EjectMedia()
+{
+    RdosEjectPrinterMedia(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TPrinterDevice::SignalNewData
 #
 #   Purpose....: Signal new data is available

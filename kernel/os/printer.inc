@@ -46,7 +46,12 @@ pr_print_test_proc          DD ?
 pr_create_bitmap_proc       DD ?
 
 ; IN  BX    Bitmap
-pr_print_bitmap_proc       DD ?
+pr_print_bitmap_proc        DD ?
+
+; IN  AX    Amount in mm
+pr_present_media_proc       DD ?
+
+pr_eject_media_proc         DD ?
 
 printer_device              DW ?
 

@@ -517,4 +517,7 @@ print_test_nr               = 421
 create_printer_bitmap_nr    = 422
 print_bitmap_nr             = 423
 
+present_printer_media_nr    = 424
+eject_printer_media_nr      = 425
+
 usergate_entries			= 430
