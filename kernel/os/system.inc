@@ -198,3 +198,7 @@ ShutDownTask	MACRO
 ShutDownDebug	MACRO
     int 82h
 			ENDM
+
+ShutDownGateDebug	MACRO
+    int 83h
+			ENDM

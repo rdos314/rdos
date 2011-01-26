@@ -309,6 +309,83 @@ int_v86:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           int 83
+;
+;       DESCRIPTION:    Shutdown gate interrupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+gt_fs  EQU 28
+gt_efl EQU 24
+gt_cs  EQU 20
+gt_eip EQU 16
+gt_sgs EQU 12
+gt_eax EQU 8
+gt_ebx EQU 4
+gt_ebp EQU 0
+
+shutdown_gate_handler:
+    push fs
+    push gs
+    push eax
+    push ebx
+    push ebp
+    mov bp,sp
+;    
+    GetProcessor
+    mov ax,fs
+    mov bx,SEG data    
+    mov fs,bx
+    mov bx,fs:core_list
+
+gate_core_loop:
+    mov gs,bx
+    cmp ax,gs:cs_proc_sel
+    je gate_core_found
+;
+    mov bx,gs:cs_next
+    jmp gate_core_loop    
+
+gate_core_found:
+    call SaveCore
+    mov bx,[bp].gt_ebp
+;
+    mov eax,ss:[bx].vm_eax
+    mov gs:cs_eax,eax
+    mov eax,ss:[bx].vm_ebx
+    mov gs:cs_ebx,eax
+;
+    mov eax,ebp
+    mov ax,ss:[bx]
+    mov gs:cs_ebp,eax
+;       
+    mov eax,ss:[bx].vm_eflags
+    mov gs:cs_eflags,eax
+;    
+    mov ax,ss:[bx].vm_cs
+    mov gs:cs_cs,ax
+;
+    mov eax,ss:[bx].vm_eip
+    mov gs:cs_eip,eax
+;
+    mov ax,bx
+    add ax,vm_esp
+    movzx eax,ax
+    mov gs:cs_esp,eax
+;       
+    mov ax,ss:[bx].pm_ds
+    mov gs:cs_ds,ax
+;    
+    mov bx,[bp].gt_fs
+    mov gs:cs_fs,bx
+;
+    mov bx,[bp].gt_sgs
+    mov gs:cs_gs,bx
+    jmp abort_cores
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           DelayMs
 ;
 ;               DESCRIPTION:    Delay that does not use multitasking functions
@@ -582,15 +659,6 @@ init_task     Proc far
     mov ds,ax
     mov es,ax
 ;
-    mov al,2
-    xor bl,bl
-    mov esi,OFFSET nmi_handler
-    CreateIntGateSelector
-;
-    mov al,82h
-    mov esi,OFFSET shutdown_handler
-    CreateIntGateSelector
-;
     mov si,OFFSET smp_deb_thread
     mov di,OFFSET smp_deb_thread_name
     mov ax,1
@@ -624,6 +692,10 @@ init    PROC far
 ;
     mov al,82h
     mov esi,OFFSET shutdown_handler
+    CreateIntGateSelector
+;
+    mov al,83h
+    mov esi,OFFSET shutdown_gate_handler
     CreateIntGateSelector
 ;
     mov si,OFFSET start_smp_debug

@@ -3982,7 +3982,7 @@ debug_exception:
     jc debug_normal
 
 debug_fault:
-    ShutDownDebug
+    ShutDownGateDebug
 ;    
     push ax
     mov ax,wd_code_sel
