@@ -37,27 +37,27 @@ MAX_USB_DEVICES = 16
 
 hc_reg  STRUC
 
-HcRevision          DD ?
-HcControl           DD ?
+HcRevision      DD ?
+HcControl       DD ?
 HcCommandStatus     DD ?
 HcInterruptStatus   DD ?
 HcInterruptEnable   DD ?
 HcInterruptDisable  DD ?
-HcHCCA              DD ?
+HcHCCA          DD ?
 HcPeriodCurrentED   DD ?
 HcControlHeadED     DD ?
 HcControlCurrentED  DD ?
-HcBulkHeadED        DD ?
+HcBulkHeadED    DD ?
 HcBulkCurrentED     DD ?
-HcDoneHeadED        DD ?
-HcFmInterval        DD ?
-HcFmRemain          DD ?
-HcFmNumber          DD ?
+HcDoneHeadED    DD ?
+HcFmInterval    DD ?
+HcFmRemain      DD ?
+HcFmNumber      DD ?
 HcPeriodicStart     DD ?
 HcLSThreshold       DD ?
 HcRhDescriptorA     DD ?
 HcRhDescriptorB     DD ?    
-HcRhStatus          DD ?
+HcRhStatus      DD ?
 HcRhPortStatus      DD ?
 
 hc_reg  ENDS
@@ -69,7 +69,7 @@ ohc_es_struc    STRUC
 ;HC part
 
 oes_fa_en       DW ?
-oes_mps         DW ?
+oes_mps     DW ?
 oes_tailp       DD ?
 oes_headp       DD ?
 oes_nexted      DD ?
@@ -90,11 +90,11 @@ ohc_td_struc    STRUC
 
 ;HC part
 
-otd_resv        DW ?
+otd_resv    DW ?
 otd_flags       DW ?
-otd_cbp         DD ?
+otd_cbp     DD ?
 otd_next_td     DD ?
-otd_be          DD ?
+otd_be      DD ?
 
 ;driver part
 
@@ -107,22 +107,22 @@ otd_pipe_sel    DW ?
 ohc_td_struc    ENDS
 
 OSP_FLAG_TRANSFER_PENDING   = 1
-OSP_FLAG_TRANSFER_OK        = 2
+OSP_FLAG_TRANSFER_OK    = 2
 
 ohci_pipe   STRUC
 
 osp_pipe_base       usb_pipe_struc <>
-osp_ed              DD ?
-osp_prev            DW ?
-osp_next            DW ?
+osp_ed          DD ?
+osp_prev        DW ?
+osp_next        DW ?
 osp_data_list       DD ?
-osp_signal          DW ?
+osp_signal      DW ?
 osp_sync_linear     DD ?
 osp_intr_list       DW ?
 osp_intr_count      DW ?
 osp_data_size       DW ?
 osp_setup_linear    DD ?
-osp_flags           DB ?
+osp_flags       DB ?
 
 ohci_pipe   ENDS
 
@@ -130,27 +130,27 @@ ohci_func_sel   STRUC
 
 usb_dev_base    usb_dev_struc <>
 
-ohc_reg_sel         DW ?
-ohc_map_sel         DW ?
+ohc_reg_sel     DW ?
+ohc_map_sel     DW ?
 ohc_map_linear      DD ?
 ohc_int_status      DD ?
-ohc_linear          DD ?
-ohc_phys            DD ?
+ohc_linear      DD ?
+ohc_phys        DD ?
 ohc_control_linear  DD ?
 ohc_bulk_linear     DD ?
 ohc_pipe_list       DW ?
 ohc_reclaim_list    DD ?
 
-ohc_section         section_typ <>
+ohc_section     section_typ <>
 
-ohc_32_cnt          DB 32 DUP(?)
-ohc_16_cnt          DB 16 DUP(?)
-ohc_8_cnt           DB 8 DUP(?)
-ohc_4_cnt           DB 4 DUP(?)
-ohc_2_cnt           DB 2 DUP(?)
-ohc_1_cnt           DB ?
+ohc_32_cnt      DB 32 DUP(?)
+ohc_16_cnt      DB 16 DUP(?)
+ohc_8_cnt       DB 8 DUP(?)
+ohc_4_cnt       DB 4 DUP(?)
+ohc_2_cnt       DB 2 DUP(?)
+ohc_1_cnt       DB ?
 
-ohc_curr_cnt        DB 32 DUP(?)
+ohc_curr_cnt    DB 32 DUP(?)
 
 ohci_func_sel    ENDS
 
@@ -161,13 +161,13 @@ ohc_int_base   = 700h
 
 ohc_int_struc   STRUC
 
-ohc_32_es           DB 32 * 32 DUP(?)
-ohc_16_es           DB 16 * 32 DUP(?)
-ohc_8_es            DB 8 * 32 DUP(?)
-ohc_4_es            DB 4 * 32 DUP(?)
-ohc_2_es            DB 2 * 32 DUP(?)
-ohc_1_es            DB 1 * 32 DUP(?)
-ohc_iso_es          DB 1 * 32 DUP(?)
+ohc_32_es       DB 32 * 32 DUP(?)
+ohc_16_es       DB 16 * 32 DUP(?)
+ohc_8_es        DB 8 * 32 DUP(?)
+ohc_4_es        DB 4 * 32 DUP(?)
+ohc_2_es        DB 2 * 32 DUP(?)
+ohc_1_es        DB 1 * 32 DUP(?)
+ohc_iso_es      DB 1 * 32 DUP(?)
 
 ohc_int_struc   ENDS
 
@@ -177,7 +177,7 @@ hcca_struc  STRUC
 
 hcca_int_table      DD 32 DUP(?)
 hcca_frame_number   DW ?
-hcca_pad1           DW ?
+hcca_pad1       DW ?
 hcca_done_head      DD ?
 
 hcca_struc  ENDS
@@ -195,7 +195,7 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
 
-        assume cs:code
+    assume cs:code
 
 .386p
 
@@ -203,20 +203,20 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OhciInt
+;           NAME:           OhciInt
 ;
-;               DESCRIPTION:    OHCI interrupt
+;           DESCRIPTION:    OHCI interrupt
 ;
 ;       PARAMETERS:     DS      Register selector
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OhciInt Proc far
     mov ax,SEG data
     mov es,ax
-        mov bx,es:OhciThread
+    mov bx,es:OhciThread
 ;
     mov cx,es:OhciFuncCount
     mov si,OFFSET OhciFuncArr
@@ -232,7 +232,7 @@ oiSignalLoop:
     and eax,52h
     jz oiNext
 ;    
-        Signal
+    Signal
 
 oiNext:
     pop es
@@ -246,13 +246,13 @@ OhciInt  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AllocateBlock32
+;           NAME:           AllocateBlock32
 ;
-;               DESCRIPTION:    Allocate 32-byte block with page-alignment
+;           DESCRIPTION:    Allocate 32-byte block with page-alignment
 ;
 ;       PARAMETERS:     ES      Flat sel
 ;
-;               RETURNS:                EDX             Data address
+;           RETURNS:        EDX         Data address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -264,143 +264,143 @@ AllocateBlock32 PROC near
     mov ds,ax
     EnterSection ds:OhciSection
     mov edx,ds:OhciList32
-        or edx,edx
-        jnz allocate_block32_done
+    or edx,edx
+    jnz allocate_block32_done
 ;
     push ecx    
-        mov eax,1000h
-        AllocateBigLinear
-        mov ecx,32
-        mov ds:OhciList32,edx
-        
+    mov eax,1000h
+    AllocateBigLinear
+    mov ecx,32
+    mov ds:OhciList32,edx
+    
 allocate_block32_loop:
-        mov eax,edx
-        add eax,ecx
-        mov es:[edx],eax
-        mov edx,eax
-        test dx,0FFFh
-        jnz allocate_block32_loop
+    mov eax,edx
+    add eax,ecx
+    mov es:[edx],eax
+    mov edx,eax
+    test dx,0FFFh
+    jnz allocate_block32_loop
 ;
-        sub edx,ecx
-        mov dword ptr es:[edx],0
-        mov edx,ds:OhciList32
-        pop ecx
+    sub edx,ecx
+    mov dword ptr es:[edx],0
+    mov edx,ds:OhciList32
+    pop ecx
 
 allocate_block32_done:
-        mov eax,es:[edx]
-        mov ds:OhciList32,eax
+    mov eax,es:[edx]
+    mov ds:OhciList32,eax
     LeaveSection ds:OhciSection
 ;
-        pop eax
-        pop ds
-        ret
+    pop eax
+    pop ds
+    ret
 AllocateBlock32 ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FreeBlock32
+;           NAME:           FreeBlock32
 ;
-;               DESCRIPTION:    Free 32-byte block
+;           DESCRIPTION:    Free 32-byte block
 ;
 ;       PARAMETERS:     ES      Flat sel
 ;
-;               PARAMETERS:             EDX             Data address
+;           PARAMETERS:         EDX         Data address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeBlock32     PROC near
     push ds
-        push eax
+    push eax
 ;
     mov ax,SEG data
     mov ds,ax
 ;    
     EnterSection ds:OhciSection
-        mov eax,ds:OhciList32
-        mov es:[edx],eax
-        mov ds:OhciList32,edx
+    mov eax,ds:OhciList32
+    mov es:[edx],eax
+    mov ds:OhciList32,edx
     LeaveSection ds:OhciSection
 ;       
-        pop eax
-        pop ds
-        ret
+    pop eax
+    pop ds
+    ret
 FreeBlock32     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InsertPipe
+;           NAME:           InsertPipe
 ;
-;               DESCRIPTION:    Insert pipe into function pipe-list
+;           DESCRIPTION:    Insert pipe into function pipe-list
 ;
 ;       PARAMETERS:     DS      Function
-;                       FS      Pipe
+;               FS      Pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InsertPipe  Proc near
-        push di
-        mov di,ds:ohc_pipe_list
-        or di,di
-        je ipEmpty
+    push di
+    mov di,ds:ohc_pipe_list
+    or di,di
+    je ipEmpty
 ;       
-        push ds
-        push si
-        mov ds,di
-        cli
-        mov si,ds:osp_prev
-        mov ds:osp_prev,fs
-        mov ds,si
-        mov ds:osp_next,fs
-        mov fs:osp_next,di
-        mov fs:osp_prev,si
-        sti
-        pop si
-        pop ds
-        pop di
-        jmp ipDone
-        
+    push ds
+    push si
+    mov ds,di
+    cli
+    mov si,ds:osp_prev
+    mov ds:osp_prev,fs
+    mov ds,si
+    mov ds:osp_next,fs
+    mov fs:osp_next,di
+    mov fs:osp_prev,si
+    sti
+    pop si
+    pop ds
+    pop di
+    jmp ipDone
+    
 ipEmpty:
-        mov fs:osp_next,fs
-        mov fs:osp_prev,fs
-        pop di
-        mov ds:ohc_pipe_list,fs
+    mov fs:osp_next,fs
+    mov fs:osp_prev,fs
+    pop di
+    mov ds:ohc_pipe_list,fs
 
 ipDone:
     mov fs:osp_data_list,0
     mov fs:osp_signal,0
     mov fs:osp_flags,0
-        ret
+    ret
 InsertPipe  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   RemovePipe
+;           NAME:           RemovePipe
 ;
-;               DESCRIPTION:    Remove pipe from function pipe-list
+;           DESCRIPTION:    Remove pipe from function pipe-list
 ;
 ;       PARAMETERS:     DS      Function
-;                       FS      Pipe
+;               FS      Pipe
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemovePipe  Proc near
-        push si
-        push di
+    push si
+    push di
 ;       
     push ds
-        mov si,fs:osp_prev
-        mov di,fs:osp_next
-        mov ds,di
-        mov ds:osp_prev,si
-        mov ds,si
-        mov ds:osp_next,di
-        pop ds
+    mov si,fs:osp_prev
+    mov di,fs:osp_next
+    mov ds,di
+    mov ds:osp_prev,si
+    mov ds,si
+    mov ds:osp_next,di
+    pop ds
 ;
     mov si,fs
     cmp si,ds:ohc_pipe_list
@@ -416,8 +416,8 @@ rpEmpty:
     mov ds:ohc_pipe_list,0    
 
 rpDone:
-        pop di
-        pop si
+    pop di
+    pop si
     ret
 RemovePipe  Endp
 
@@ -425,13 +425,13 @@ RemovePipe  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               InitEd
+;           NAME:           InitEd
 ;
-;               DESCRIPTION:    Initialize an already allocated ED
+;           DESCRIPTION:    Initialize an already allocated ED
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       EDX     ED
+;               ES      Flat sel
+;               EDX     ED
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -452,13 +452,13 @@ InitEd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               InitTd
+;           NAME:           InitTd
 ;
-;               DESCRIPTION:    Initialize an already allocated TD
+;           DESCRIPTION:    Initialize an already allocated TD
 ;
 ;       PARAMETERS:     ES      Flat sel
-;                       FS      Pipe sel
-;                       EDX     TD
+;               FS      Pipe sel
+;               EDX     TD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -478,15 +478,15 @@ InitTd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AllocateEd
+;           NAME:           AllocateEd
 ;
-;               DESCRIPTION:    Allocate & initialize an endpoint descriptor
+;           DESCRIPTION:    Allocate & initialize an endpoint descriptor
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       ES      Flat sel
+;               ES      Flat sel
 ;
-;               RETURNS:                EDX             Linear address of ED
-;                       EAX     Physical address of ED
+;           RETURNS:        EDX         Linear address of ED
+;               EAX     Physical address of ED
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -508,15 +508,15 @@ AllocateEd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AllocateTd
+;           NAME:           AllocateTd
 ;
-;               DESCRIPTION:    Allocate & initialize transfer descriptor
+;           DESCRIPTION:    Allocate & initialize transfer descriptor
 ;
 ;       PARAMETERS:     ES      Flat sel
-;                       FS      Pipe sel
+;               FS      Pipe sel
 ;
-;               RETURNS:                EDX             Linear address of TD
-;                       EAX     Physical address of TD
+;           RETURNS:        EDX         Linear address of TD
+;               EAX     Physical address of TD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -538,9 +538,9 @@ AllocateTd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               CreateSyncBlock
+;           NAME:           CreateSyncBlock
 ;
-;               DESCRIPTION:    Allocate sync block
+;           DESCRIPTION:    Allocate sync block
 ;
 ;       PARAMETERS:     FS      Pipe sel
 ;
@@ -565,13 +565,13 @@ CreateSyncBlock Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               SyncHead
+;           NAME:           SyncHead
 ;
-;               DESCRIPTION:    Sync head ptr in pipe
+;           DESCRIPTION:    Sync head ptr in pipe
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       FS      Pipe sel
+;               ES      Flat sel
+;               FS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -586,7 +586,7 @@ SyncHead    Proc near
     movzx ebx,ax
     and bx,0FF0h
     and ax,0F000h
-        or ax,803h
+    or ax,803h
     SetPhysicalPage
     mov edx,es:[ebx+edx].otd_my_va
     mov ebx,fs:osp_ed
@@ -602,16 +602,16 @@ SyncHead    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddControlEd
+;           NAME:           AddControlEd
 ;
-;               DESCRIPTION:    Add control ED 
+;           DESCRIPTION:    Add control ED 
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       FS      Pipe sel
+;               ES      Flat sel
+;               FS      Pipe sel
 ;
-;       RETURNS:        EDX     Linear address of ED added
-;                       EAX     Physical address of ED added
+;       RETURNS:    EDX     Linear address of ED added
+;               EAX     Physical address of ED added
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -653,16 +653,16 @@ AddControlEd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddBulkEd
+;           NAME:           AddBulkEd
 ;
-;               DESCRIPTION:    Add bulk ED 
+;           DESCRIPTION:    Add bulk ED 
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       FS      Pipe sel
+;               ES      Flat sel
+;               FS      Pipe sel
 ;
-;       RETURNS:        EDX     Linear address of ED added
-;                       EAX     Physical address of ED added
+;       RETURNS:    EDX     Linear address of ED added
+;               EAX     Physical address of ED added
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -704,17 +704,17 @@ AddBulkEd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               GetIntrEd
+;           NAME:           GetIntrEd
 ;
-;               DESCRIPTION:    Get interrupt ED
+;           DESCRIPTION:    Get interrupt ED
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       FS      Pipe sel
-;                       CL      Interval
+;               ES      Flat sel
+;               FS      Pipe sel
+;               CL      Interval
 ;
-;       RETURNS:        DI      Offset to ED list entry to use
-;                       SI      Offset to count array
+;       RETURNS:    DI      Offset to ED list entry to use
+;               SI      Offset to count array
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -856,19 +856,19 @@ GetIntrEd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddIntrEd
+;           NAME:           AddIntrEd
 ;
-;               DESCRIPTION:    Add interrupt ED 
+;           DESCRIPTION:    Add interrupt ED 
 ;
 ;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       FS      Pipe sel
-;                       CL      Interval
+;               ES      Flat sel
+;               FS      Pipe sel
+;               CL      Interval
 ;
-;       RETURNS:        EDX     Linear address of ED added
-;                       EAX     Physical address of ED added
-;                       SI      Interrupt count array entry
-;                       DI      Interrupt ED used
+;       RETURNS:    EDX     Linear address of ED added
+;               EAX     Physical address of ED added
+;               SI      Interrupt count array entry
+;               DI      Interrupt ED used
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -909,14 +909,14 @@ AddIntrEd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               InitPipeEd
+;           NAME:           InitPipeEd
 ;
-;               DESCRIPTION:    Init endpoint descriptor from pipe
+;           DESCRIPTION:    Init endpoint descriptor from pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       ES      Flat sel
-;                       EDX     ED linear address
+;               FS      Pipe selector
+;               ES      Flat sel
+;               EDX     ED linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -956,16 +956,16 @@ InitPipeEd  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddPipeTd
+;           NAME:           AddPipeTd
 ;
-;               DESCRIPTION:    Add TD to pipe
+;           DESCRIPTION:    Add TD to pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       ES      Flat sel
-;                       FS      Pipe
-;                       EDI     Data buffer
-;                       CX      Size of data
-;                       AX      Flags field of TD
+;               ES      Flat sel
+;               FS      Pipe
+;               EDI     Data buffer
+;               CX      Size of data
+;               AX      Flags field of TD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1032,9 +1032,9 @@ AddPipeTd   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               CreateInterrupt
+;           NAME:           CreateInterrupt
 ;
-;               DESCRIPTION:    Create interrupt queues
+;           DESCRIPTION:    Create interrupt queues
 ;
 ;       PARAMETERS:     DS  Function selector
 ;
@@ -1213,13 +1213,13 @@ CreateInterrupt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               CreateControl
+;           NAME:           CreateControl
 ;
-;               DESCRIPTION:    Create control pipe
+;           DESCRIPTION:    Create control pipe
 ;
 ;       PARAMETERS:     DS      Function selector
 ;
-;       RETURNS:        FS      Pipe selector
+;       RETURNS:    FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1255,13 +1255,13 @@ CreateControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               CreateBulk
+;           NAME:           CreateBulk
 ;
-;               DESCRIPTION:    Create bulk pipe
+;           DESCRIPTION:    Create bulk pipe
 ;
 ;       PARAMETERS:     DS      Function selector
 ;
-;       RETURNS:        FS      Pipe selector
+;       RETURNS:    FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1293,14 +1293,14 @@ CreateBulk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               CreateIntr
+;           NAME:           CreateIntr
 ;
-;               DESCRIPTION:    Create interrupt pipe
+;           DESCRIPTION:    Create interrupt pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       AL      Interval
+;               AL      Interval
 ;
-;       RETURNS:        FS      Pipe selector
+;       RETURNS:    FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1338,17 +1338,17 @@ CreateIntr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddBuffer
+;           NAME:           AddBuffer
 ;
-;               DESCRIPTION:    Allocate input/output buffer
+;           DESCRIPTION:    Allocate input/output buffer
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       CX      Size
-;                       ES:EDI  Buffer
-;                       AX      Flags field of TD
+;               FS      Pipe selector
+;               CX      Size
+;               ES:EDI  Buffer
+;               AX      Flags field of TD
 
-;                     
+;             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddBuffer    Proc near
@@ -1427,14 +1427,14 @@ AddBuffer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddSetup
+;           NAME:           AddSetup
 ;
-;               DESCRIPTION:    Add setup transaction to queue
+;           DESCRIPTION:    Add setup transaction to queue
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       CX      Buffer size
-;                       ES:EDI  Buffer
+;               FS      Pipe selector
+;               CX      Buffer size
+;               ES:EDI  Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1479,14 +1479,14 @@ AddSetup    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddOut
+;           NAME:           AddOut
 ;
-;               DESCRIPTION:    Add out transaction to queue
+;           DESCRIPTION:    Add out transaction to queue
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       CX      Buffer size
-;                       ES:EDI  Buffer
+;               FS      Pipe selector
+;               CX      Buffer size
+;               ES:EDI  Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1507,14 +1507,14 @@ AddOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddIn
+;           NAME:           AddIn
 ;
-;               DESCRIPTION:    Add in transaction to queue
+;           DESCRIPTION:    Add in transaction to queue
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       CX      Buffer size
-;                       ES:EDI  Buffer
+;               FS      Pipe selector
+;               CX      Buffer size
+;               ES:EDI  Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1535,12 +1535,12 @@ AddIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddStatusOut
+;           NAME:           AddStatusOut
 ;
-;               DESCRIPTION:    Add status OUT transaction to queue
+;           DESCRIPTION:    Add status OUT transaction to queue
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;               FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1567,12 +1567,12 @@ AddStatusOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddStatusIn
+;           NAME:           AddStatusIn
 ;
-;               DESCRIPTION:    Add status IN transaction to queue
+;           DESCRIPTION:    Add status IN transaction to queue
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;               FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1599,13 +1599,13 @@ AddStatusIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               IssueTransfer
+;           NAME:           IssueTransfer
 ;
-;               DESCRIPTION:    Issue transfer
+;           DESCRIPTION:    Issue transfer
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;                       EDX     Queue handle
+;               FS      Pipe selector
+;               EDX     Queue handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1664,12 +1664,12 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               IsTransferDone
+;           NAME:           IsTransferDone
 ;
-;               DESCRIPTION:    Check if transfer is done
+;           DESCRIPTION:    Check if transfer is done
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;               FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1719,12 +1719,12 @@ IsTransferDone   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               WaitForCompletion
+;           NAME:           WaitForCompletion
 ;
-;               DESCRIPTION:    Wait for transfer to complete
+;           DESCRIPTION:    Wait for transfer to complete
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;               FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1751,14 +1751,14 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               WasTransferOk
+;           NAME:           WasTransferOk
 ;
-;               DESCRIPTION:    Check if transfer was ok
+;           DESCRIPTION:    Check if transfer was ok
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;               FS      Pipe selector
 ;
-;       RETURNS:        NC      Transfer ok
+;       RETURNS:    NC      Transfer ok
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1785,12 +1785,12 @@ WasTransferOk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               EndTransfer
+;           NAME:           EndTransfer
 ;
-;               DESCRIPTION:    End transfer
+;           DESCRIPTION:    End transfer
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;               FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1873,14 +1873,14 @@ EndTransfer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               GetDataSize
+;           NAME:           GetDataSize
 ;
-;               DESCRIPTION:    Get data size
+;           DESCRIPTION:    Get data size
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;               FS      Pipe selector
 ;
-;       RETURNS:        CX      Bytes read
+;       RETURNS:    CX      Bytes read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1898,19 +1898,19 @@ GetDataSize   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               ClosePipe
+;           NAME:           ClosePipe
 ;
-;               DESCRIPTION:    Close pipe
+;           DESCRIPTION:    Close pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;               FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePipe   Proc far
     push es
     pushad
-;        
+;    
     call RemovePipe
 ;
     EnterSection ds:ohc_section
@@ -1963,7 +1963,7 @@ cpControlHead:
     mov ds:ohc_control_linear,esi
     mov gs:HcControlHeadEd,edi
     pop gs
-    jmp cpFreeEdList        
+    jmp cpFreeEdList    
 
 cpBulk:
     mov ax,flat_sel
@@ -2072,7 +2072,7 @@ cpTdListLoop:
 cpTdListOk:    
     mov edx,fs:osp_ed
     call FreeBlock32
-        
+    
 dpDone:
     mov edx,fs:osp_setup_linear
     or edx,edx
@@ -2107,12 +2107,12 @@ ClosePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               ChangeAddress
+;           NAME:           ChangeAddress
 ;
-;               DESCRIPTION:    Change address for pipe
+;           DESCRIPTION:    Change address for pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;               FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2134,12 +2134,12 @@ ChangeAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               IsConnected
+;           NAME:           IsConnected
 ;
-;               DESCRIPTION:    Check if pipe is connected
+;           DESCRIPTION:    Check if pipe is connected
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
+;               FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2172,9 +2172,9 @@ IsConnected Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               UpdateQueue
+;           NAME:           UpdateQueue
 ;
-;               DESCRIPTION:    Update done queue
+;           DESCRIPTION:    Update done queue
 ;
 ;       PARAMETERS:     DS      Function selector
 ;
@@ -2203,9 +2203,9 @@ update_reverse_loop:
     mov bx,ax
     and ax,0F000h
     and bx,0FFFh
-        or ax,803h
-        mov edx,ds:ohc_map_linear
-        SetPhysicalPage
+    or ax,803h
+    mov edx,ds:ohc_map_linear
+    SetPhysicalPage
     mov edx,fs:[bx].otd_my_va
 ;
     mov ax,es:[edx].otd_pipe_sel
@@ -2250,12 +2250,12 @@ UpdateQueue   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               UpdatePort
+;           NAME:           UpdatePort
 ;
-;               DESCRIPTION:    Update root-hub port status
+;           DESCRIPTION:    Update root-hub port status
 ;
 ;       PARAMETERS:     DS      Function selector
-;                       CL      Port # (0,1)
+;               CL      Port # (0,1)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2337,7 +2337,7 @@ upResetLoop:
     mov eax,es:[si].HcRhPortStatus
     test al,1
     jz upDone
-;        
+;    
     test al,10h
     jnz upResetLoop
 ; 
@@ -2362,7 +2362,7 @@ upDetach:
 ;    
     mov al,cl
     NotifyUsbDetach
-                    
+            
 upDone:    
     pop di
     pop si    
@@ -2377,13 +2377,13 @@ UpdatePort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UpdateUsb
+;           NAME:           UpdateUsb
 ;
-;               DESCRIPTION:    Update USB status
+;           DESCRIPTION:    Update USB status
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2423,13 +2423,13 @@ UpdateUsb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ohci_timer
+;           NAME:           ohci_timer
 ;
-;               DESCRIPTION:    Timer that scans for status change in controller
+;           DESCRIPTION:    Timer that scans for status change in controller
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2439,7 +2439,7 @@ ohci_timer  Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
-        mov bx,ds:OhciThread
+    mov bx,ds:OhciThread
 ;
     mov cx,ds:OhciFuncCount
     or cx,cx
@@ -2468,7 +2468,7 @@ otQueueDone:
     and eax,52h
     jz otNext
 ;    
-        Signal
+    Signal
 
 otNext:
     pop si
@@ -2482,45 +2482,45 @@ otDone:
     pop eax   
     pop edx
 ;    
-        add eax,1193
-        adc edx,0
-        mov bx,cs
-        mov es,bx
-        mov bx,cs
-        mov di,OFFSET ohci_timer
-        StartTimer
+    add eax,1193
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,cs
+    mov di,OFFSET ohci_timer
+    StartTimer
     ret
 ohci_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               InitFunction
+;           NAME:           InitFunction
 ;
-;               DESCRIPTION:    Init OHCI function
+;           DESCRIPTION:    Init OHCI function
 ;
 ;       PARAMETERS:     DS      Function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ohci_tab:
-ot00 DW OFFSET CreateControl,           SEG code
-ot01 DW OFFSET CreateBulk,              SEG code
-ot02 DW OFFSET CreateIntr,              SEG code
-ot03 DW OFFSET AddSetup,            SEG code
-ot04 DW OFFSET AddOut,              SEG code
-ot05 DW OFFSET AddIn,               SEG code
-ot06 DW OFFSET AddStatusOut,        SEG code
-ot07 DW OFFSET AddStatusIn,             SEG code
+ot00 DW OFFSET CreateControl,       SEG code
+ot01 DW OFFSET CreateBulk,          SEG code
+ot02 DW OFFSET CreateIntr,          SEG code
+ot03 DW OFFSET AddSetup,        SEG code
+ot04 DW OFFSET AddOut,          SEG code
+ot05 DW OFFSET AddIn,           SEG code
+ot06 DW OFFSET AddStatusOut,    SEG code
+ot07 DW OFFSET AddStatusIn,         SEG code
 ot08 DW OFFSET IssueTransfer,       SEG code
 ot09 DW OFFSET IsTransferDone,      SEG code
-ot10 DW OFFSET EndTransfer,         SEG code
+ot10 DW OFFSET EndTransfer,     SEG code
 ot11 DW OFFSET WasTransferOk,       SEG code
-ot12 DW OFFSET GetDataSize,         SEG code
-ot13 DW OFFSET ClosePipe,           SEG code
+ot12 DW OFFSET GetDataSize,     SEG code
+ot13 DW OFFSET ClosePipe,       SEG code
 ot14 DW OFFSET WaitForCompletion,   SEG code
 ot15 DW OFFSET ChangeAddress,       SEG code
-ot16 DW OFFSET IsConnected,         SEG code
+ot16 DW OFFSET IsConnected,     SEG code
 
 InitFunction    Proc near
     push es
@@ -2584,13 +2584,13 @@ InitFunction    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               AddFunction
+;           NAME:           AddFunction
 ;
-;               DESCRIPTION:    Add OHCI function
+;           DESCRIPTION:    Add OHCI function
 ;
 ;       PARAMETERS:     BX      Bus/device
-;                       CH      Function
-;                       EAX     Register base
+;               CH      Function
+;               EAX     Register base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2608,7 +2608,7 @@ AddFunction  Proc near
     AllocateBigLinear
     pop eax
 ;
-        or ax,803h
+    or ax,803h
     SetPhysicalPage
 ;
     push ecx
@@ -2617,18 +2617,18 @@ AddFunction  Proc near
     CreateDataSelector16
     pop ecx
     mov bp,bx
-;         
+;     
     mov eax,1000h
-        AllocateBigLinear
-        mov ecx,eax
-        AllocateGdt
-        CreateDataSelector16
-        mov ds,bx
-        mov es,bx
-        xor di,di
-        xor eax,eax
-        mov cx,400h
-        rep stosd
+    AllocateBigLinear
+    mov ecx,eax
+    AllocateGdt
+    CreateDataSelector16
+    mov ds,bx
+    mov es,bx
+    xor di,di
+    xor eax,eax
+    mov cx,400h
+    rep stosd
 ;
     mov ds:ohc_pipe_list,0
     mov ds:ohc_reclaim_list,0
@@ -2639,14 +2639,14 @@ AddFunction  Proc near
     and ax,0F000h
     mov ds:ohc_phys,eax
     mov bp,bx
-;         
+;     
     mov eax,1000h
-        AllocateBigLinear
-        mov ecx,eax
-        AllocateGdt
-        CreateDataSelector16
-        mov ds:ohc_map_linear,edx
-        mov ds:ohc_map_sel,bx
+    AllocateBigLinear
+    mov ecx,eax
+    AllocateGdt
+    CreateDataSelector16
+    mov ds:ohc_map_linear,edx
+    mov ds:ohc_map_sel,bx
 ;
     mov ax,SEG data
     mov ds,ax
@@ -2668,13 +2668,13 @@ AddFunction Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitPciAdapter
+;           NAME:           InitPciAdapter
 ;
-;               DESCRIPTION:    Init PCI adapter if found
+;           DESCRIPTION:    Init PCI adapter if found
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                NC              Adapter found
+;           RETURNS:        NC          Adapter found
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2692,7 +2692,7 @@ InitPciAdapter  Proc near
     mov ebp,eax
     call AddFunction
 ;       
-        mov dx,1
+    mov dx,1
 
 init_pci_next_device:
     mov ax,dx
@@ -2700,32 +2700,32 @@ init_pci_next_device:
     mov bl,3
     mov ch,10h
     FindPciClass
-        jc init_pci_done
+    jc init_pci_done
 ;       
-        mov cl,10h
-        ReadPciDword
+    mov cl,10h
+    ReadPciDword
     and ax,0F000h
-        cmp eax,ebp
-        je init_pci_done
+    cmp eax,ebp
+    je init_pci_done
 ;       
-        call AddFunction
-        inc dx
+    call AddFunction
+    inc dx
     jmp init_pci_next_device
     
 init_pci_done:
-        ret
+    ret
 InitPciAdapter  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Init_net
+;           NAME:           Init_net
 ;
-;               DESCRIPTION:    inits adpater
+;           DESCRIPTION:    inits adpater
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2738,10 +2738,10 @@ ohci_thread     proc far
     mov ds:OhciThread,ax
     mov ds:OhciFuncCount,0
 ;    
-        call InitPciAdapter
+    call InitPciAdapter
     mov cx,ds:OhciFuncCount
     or cx,cx    
-        jz ohci_thread_exit
+    jz ohci_thread_exit
 ;
     mov si,OFFSET OhciFuncArr
 
@@ -2761,14 +2761,14 @@ otInitLoop:
     add si,2
     loop otInitLoop
 ;    
-        GetSystemTime
-        add eax,11930
-        adc edx,0
-        mov bx,cs
-        mov es,bx
-        mov bx,cs
-        mov di,OFFSET ohci_timer
-        StartTimer
+    GetSystemTime
+    add eax,11930
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov bx,cs
+    mov di,OFFSET ohci_timer
+    StartTimer
 ;       
     call UpdateUsb
 
@@ -2778,61 +2778,61 @@ ohci_thread_loop:
     jmp ohci_thread_loop
 
 ohci_thread_exit:
-        ret
+    ret
 ohci_thread     endp
-        
-init_usb        Proc far
-        push ds
-        push es
-        pusha
+    
+init_usb    Proc far
+    push ds
+    push es
+    pusha
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov di,OFFSET ohci_name
-        mov si,OFFSET ohci_thread
-        mov ax,4
-        mov cx,100h
-        CreateThread
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET ohci_name
+    mov si,OFFSET ohci_thread
+    mov ax,4
+    mov cx,100h
+    CreateThread
 
 init_usb_done:
-        popa
-        pop es
-        pop ds
-        ret
-init_usb        Endp
+    popa
+    pop es
+    pop ds
+    ret
+init_usb    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Init
+;           NAME:           Init
 ;
-;               DESCRIPTION:    init device
+;           DESCRIPTION:    init device
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Init    Proc far
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov bx,SEG data
-        mov ds,bx       
-        InitSection ds:OhciSection
+    mov bx,SEG data
+    mov ds,bx       
+    InitSection ds:OhciSection
 ;
-        mov ax,cs
-        mov es,ax
-        mov di,OFFSET init_usb
-        HookInitTasking
-        clc
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET init_usb
+    HookInitTasking
+    clc
 ;
-        ret
+    ret
 Init    Endp
 
 code ENDS
 
-        END init
+    END init
