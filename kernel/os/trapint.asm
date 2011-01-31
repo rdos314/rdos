@@ -2187,44 +2187,44 @@ init_irq_loop:
     mov al,3
     HookProt32Int
 ;
-    mov si,OFFSET segment_not_present
-    mov di,OFFSET segment_not_present_name
+    mov esi,OFFSET segment_not_present
+    mov edi,OFFSET segment_not_present_name
     xor cl,cl
     mov ax,segment_not_present_nr
     RegisterOsGate
 ;
-    mov si,OFFSET is_irq_free
-    mov di,OFFSET is_irq_free_name
+    mov esi,OFFSET is_irq_free
+    mov edi,OFFSET is_irq_free_name
     xor cl,cl
     mov ax,is_irq_free_nr
     RegisterOsGate
 ;
-    mov si,OFFSET request_private_irq_handler
-    mov di,OFFSET request_private_irq_handler_name
+    mov esi,OFFSET request_private_irq_handler
+    mov edi,OFFSET request_private_irq_handler_name
     xor cl,cl
     mov ax,request_private_irq_handler_nr
     RegisterOsGate
 ;
-    mov si,OFFSET request_shared_irq_handler
-    mov di,OFFSET request_shared_irq_handler_name
+    mov esi,OFFSET request_shared_irq_handler
+    mov edi,OFFSET request_shared_irq_handler_name
     xor cl,cl
     mov ax,request_shared_irq_handler_nr
     RegisterOsGate
 ;
-    mov si,OFFSET release_private_irq_handler
-    mov di,OFFSET release_private_irq_handler_name
+    mov esi,OFFSET release_private_irq_handler
+    mov edi,OFFSET release_private_irq_handler_name
     xor cl,cl
     mov ax,release_private_irq_handler_nr
     RegisterOsGate
 ;
-    mov si,OFFSET setup_irq_detect
-    mov di,OFFSET setup_irq_detect_name
+    mov esi,OFFSET setup_irq_detect
+    mov edi,OFFSET setup_irq_detect_name
     xor cl,cl
     mov ax,setup_irq_detect_nr
     RegisterOsGate
 ;
-    mov si,OFFSET poll_irq_detect
-    mov di,OFFSET poll_irq_detect_name
+    mov esi,OFFSET poll_irq_detect
+    mov edi,OFFSET poll_irq_detect_name
     xor cl,cl
     mov ax,poll_irq_detect_nr
     RegisterOsGate

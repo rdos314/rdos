@@ -40,19 +40,19 @@ acpi_table_arr          DD ?
 
 acpi_data_seg ENDS
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        assume cs:code
 
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			CheckRsdp
+;               NAME:                   CheckRsdp
 ;
-;		DESCRIPTION:    Check for an RSDP
+;               DESCRIPTION:    Check for an RSDP
 ;
 ;       PARAMETERS:     DS:SI       Base address to check
 ;
@@ -102,11 +102,11 @@ check_rsdp_done:
 CheckRsdp   Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			GetRsdp
+;               NAME:                   GetRsdp
 ;
-;		DESCRIPTION:    Get the RSDP
+;               DESCRIPTION:    Get the RSDP
 ;
 ;       RETURNS:        NC          OK
 ;                       EAX         Physical address
@@ -187,7 +187,7 @@ get_rsdp_bios_page:
 get_rsdp_ok:
     clc
 
-get_rsdp_done:	
+get_rsdp_done:  
     push eax
     pushf
     xor eax,eax
@@ -212,11 +212,11 @@ GetRsdp Endp
 
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			GetTable
+;               NAME:                   GetTable
 ;
-;		DESCRIPTION:    Get a table
+;               DESCRIPTION:    Get a table
 ;
 ;       PARAMETERS:     EAX     Physical address
 ;
@@ -383,11 +383,11 @@ get_table_done:
 GetTable    Endp    
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			GetAcpiTable
+;               NAME:                   GetAcpiTable
 ;
-;		DESCRIPTION:	Get ACPI table
+;               DESCRIPTION:    Get ACPI table
 ;
 ;       PARAMETERS:     EAX     Table ID
 ;
@@ -434,15 +434,15 @@ get_acpi_table  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Init
+;               NAME:                   Init
 ;
-;		DESCRIPTION:	Initialize module
+;               DESCRIPTION:    Initialize module
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	Proc far
+init    Proc far
     call GetRsdp
     jc acpi_fail
 ;    
@@ -454,12 +454,12 @@ init	Proc far
     mov cx,ds:act_size
     shr cx,1
 ;    
-	mov ax,OFFSET acpi_table_arr
-	add ax,cx
-	movzx eax,ax
-	mov bx,acpi_data_sel
-	AllocateFixedSystemMem
-	mov es,bx
+        mov ax,OFFSET acpi_table_arr
+        add ax,cx
+        movzx eax,ax
+        mov bx,acpi_data_sel
+        AllocateFixedSystemMem
+        mov es,bx
 ;
     shr cx,1
     mov es:acpi_table_count,cx
@@ -482,19 +482,19 @@ acpi_load_save:
     loop acpi_load_loop
 ;    
     mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ds,ax
+        mov es,ax
 ;
-	mov si,OFFSET get_acpi_table
-	mov di,OFFSET get_acpi_table_name
-	xor cl,cl
-	mov ax,get_acpi_table_nr
-	RegisterOsGate
+        mov esi,OFFSET get_acpi_table
+        mov edi,OFFSET get_acpi_table_name
+        xor cl,cl
+        mov ax,get_acpi_table_nr
+        RegisterOsGate
 
 acpi_fail:
-	ret
-init	Endp
+        ret
+init    Endp
 
-code	ENDS
+code    ENDS
 
-	END init
+        END init

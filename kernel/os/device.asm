@@ -820,8 +820,8 @@ init_device     PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov si,OFFSET init_device_pr
-    mov di,OFFSET init_device_name
+    mov esi,OFFSET init_device_pr
+    mov edi,OFFSET init_device_name
     xor cl,cl
     mov ax,init_device_nr
     RegisterOsGate

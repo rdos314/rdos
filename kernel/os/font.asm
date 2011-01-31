@@ -939,8 +939,8 @@ init_font_loop:
     mov di,OFFSET delete_handle
     RegisterHandle
 ;
-    mov si,OFFSET get_char_mask
-    mov di,OFFSET get_char_mask_name
+    mov esi,OFFSET get_char_mask
+    mov edi,OFFSET get_char_mask_name
     xor cl,cl
     mov ax,get_char_mask_nr
     RegisterOsGate

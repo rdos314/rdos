@@ -955,68 +955,68 @@ init    Proc far
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET bios_pci_int
-    mov di,OFFSET bios_pci_int_name
+    mov esi,OFFSET bios_pci_int
+    mov edi,OFFSET bios_pci_int_name
     xor cl,cl
     mov ax,bios_pci_int_nr
     RegisterOsGate
 ;
-    mov si,OFFSET read_pci_byte
-    mov di,OFFSET read_pci_byte_name
+    mov esi,OFFSET read_pci_byte
+    mov edi,OFFSET read_pci_byte_name
     xor cl,cl
     mov ax,read_pci_byte_nr
     RegisterOsGate
 ;
-    mov si,OFFSET read_pci_word
-    mov di,OFFSET read_pci_word_name
+    mov esi,OFFSET read_pci_word
+    mov edi,OFFSET read_pci_word_name
     xor cl,cl
     mov ax,read_pci_word_nr
     RegisterOsGate
 ;
-    mov si,OFFSET read_pci_dword
-    mov di,OFFSET read_pci_dword_name
+    mov esi,OFFSET read_pci_dword
+    mov edi,OFFSET read_pci_dword_name
     xor cl,cl
     mov ax,read_pci_dword_nr
     RegisterOsGate
 ;
-    mov si,OFFSET write_pci_byte
-    mov di,OFFSET write_pci_byte_name
+    mov esi,OFFSET write_pci_byte
+    mov edi,OFFSET write_pci_byte_name
     xor cl,cl
     mov ax,write_pci_byte_nr
     RegisterOsGate
 ;
-    mov si,OFFSET write_pci_word
-    mov di,OFFSET write_pci_word_name
+    mov esi,OFFSET write_pci_word
+    mov edi,OFFSET write_pci_word_name
     xor cl,cl
     mov ax,write_pci_word_nr
     RegisterOsGate
 ;
-    mov si,OFFSET write_pci_dword
-    mov di,OFFSET write_pci_dword_name
+    mov esi,OFFSET write_pci_dword
+    mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
     RegisterOsGate
 ;
-    mov si,OFFSET find_pci_class
-    mov di,OFFSET find_pci_class_name
+    mov esi,OFFSET find_pci_class
+    mov edi,OFFSET find_pci_class_name
     xor cl,cl
     mov ax,find_pci_class_nr
     RegisterOsGate
 ;
-    mov si,OFFSET find_pci_class_all
-    mov di,OFFSET find_pci_class_all_name
+    mov esi,OFFSET find_pci_class_all
+    mov edi,OFFSET find_pci_class_all_name
     xor cl,cl
     mov ax,find_pci_class_all_nr
     RegisterOsGate
 ;
-    mov si,OFFSET find_pci_device
-    mov di,OFFSET find_pci_device_name
+    mov esi,OFFSET find_pci_device
+    mov edi,OFFSET find_pci_device_name
     xor cl,cl
     mov ax,find_pci_device_nr
     RegisterOsGate
 ;
-    mov si,OFFSET find_pci_cap
-    mov di,OFFSET find_pci_cap_name
+    mov esi,OFFSET find_pci_cap
+    mov edi,OFFSET find_pci_cap_name
     xor cl,cl
     mov ax,find_pci_cap_nr
     RegisterOsGate
@@ -1025,8 +1025,8 @@ init    Proc far
     IsValidOsGate
     jnc init_pci_done
 ;
-    mov si,OFFSET get_pci_irq
-    mov di,OFFSET get_pci_irq_name
+    mov esi,OFFSET get_pci_irq
+    mov edi,OFFSET get_pci_irq_name
     xor cl,cl
     mov ax,get_pci_irq_nr
     RegisterOsGate

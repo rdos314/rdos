@@ -663,8 +663,8 @@ init_v86_bios   PROC near
     mov di,OFFSET init_process
     HookInitTasking
 ;
-    mov si,OFFSET v86_bios_int
-    mov di,OFFSET v86_bios_int_name
+    mov esi,OFFSET v86_bios_int
+    mov edi,OFFSET v86_bios_int_name
     mov cl,1
     mov ax,v86_bios_int_nr
     RegisterOsGate

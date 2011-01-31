@@ -570,8 +570,8 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET process_key_scan
-    mov di,OFFSET process_key_scan_name
+    mov esi,OFFSET process_key_scan
+    mov edi,OFFSET process_key_scan_name
     xor cl,cl
     mov ax,process_key_scan_nr
     RegisterOsGate

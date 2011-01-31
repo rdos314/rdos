@@ -1156,13 +1156,13 @@ init_wait       PROC near
         mov di,OFFSET delete_signal_handle
         RegisterHandle
 ;
-        mov si,OFFSET add_wait
-        mov di,OFFSET add_wait_name
+        mov esi,OFFSET add_wait
+        mov edi,OFFSET add_wait_name
         mov ax,add_wait_nr
         RegisterOsGate
 ;
-        mov si,OFFSET signal_wait
-        mov di,OFFSET signal_wait_name
+        mov esi,OFFSET signal_wait
+        mov edi,OFFSET signal_wait_name
         mov ax,signal_wait_nr
         RegisterOsGate
 ;

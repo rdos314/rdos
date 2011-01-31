@@ -1393,32 +1393,32 @@ smemgLint1Ok:
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET get_id_mem
-    mov di,OFFSET get_id_name
+    mov esi,OFFSET get_id_mem
+    mov edi,OFFSET get_id_name
     xor cl,cl
     mov ax,get_apic_id_nr
     RegisterOsGate
 ;
-    mov si,OFFSET send_eoi_mem
-    mov di,OFFSET send_eoi_name
+    mov esi,OFFSET send_eoi_mem
+    mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
     RegisterOsGate
 ;
-    mov si,OFFSET send_nmi_mem
-    mov di,OFFSET send_nmi_name
+    mov esi,OFFSET send_nmi_mem
+    mov edi,OFFSET send_nmi_name
     xor cl,cl
     mov ax,send_nmi_nr
     RegisterOsGate
 ;
-    mov si,OFFSET start_apic_mem_timer
-    mov di,OFFSET start_apic_timer_name
+    mov esi,OFFSET start_apic_mem_timer
+    mov edi,OFFSET start_apic_timer_name
     xor cl,cl
     mov ax,start_sys_timer_nr
     RegisterOsGate
 ;
-    mov si,OFFSET reload_apic_mem_timer
-    mov di,OFFSET reload_apic_timer_name
+    mov esi,OFFSET reload_apic_mem_timer
+    mov edi,OFFSET reload_apic_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
     RegisterOsGate
@@ -1611,32 +1611,32 @@ smsrgLint1Ok:
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET get_id_msr
-    mov di,OFFSET get_id_name
+    mov esi,OFFSET get_id_msr
+    mov edi,OFFSET get_id_name
     xor cl,cl
     mov ax,get_apic_id_nr
     RegisterOsGate
 ;
-    mov si,OFFSET send_eoi_msr
-    mov di,OFFSET send_eoi_name
+    mov esi,OFFSET send_eoi_msr
+    mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
     RegisterOsGate
 ;
-    mov si,OFFSET send_nmi_msr
-    mov di,OFFSET send_nmi_name
+    mov esi,OFFSET send_nmi_msr
+    mov edi,OFFSET send_nmi_name
     xor cl,cl
     mov ax,send_nmi_nr
     RegisterOsGate
 ;
-    mov si,OFFSET start_apic_msr_timer
-    mov di,OFFSET start_apic_timer_name
+    mov esi,OFFSET start_apic_msr_timer
+    mov edi,OFFSET start_apic_timer_name
     xor cl,cl
     mov ax,start_sys_timer_nr
     RegisterOsGate
 ;
-    mov si,OFFSET reload_apic_msr_timer
-    mov di,OFFSET reload_apic_timer_name
+    mov esi,OFFSET reload_apic_msr_timer
+    mov edi,OFFSET reload_apic_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
     RegisterOsGate
@@ -2590,8 +2590,8 @@ init_local_apic_done:
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET get_pci_irq
-    mov di,OFFSET get_pci_irq_name
+    mov esi,OFFSET get_pci_irq
+    mov edi,OFFSET get_pci_irq_name
     xor cl,cl
     mov ax,get_pci_irq_nr
     RegisterOsGate
@@ -2740,14 +2740,14 @@ init_smp_done:
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET resume_processor
-    mov di,OFFSET resume_processor_name
+    mov esi,OFFSET resume_processor
+    mov edi,OFFSET resume_processor_name
     xor cl,cl
     mov ax,resume_processor_nr
     RegisterOsGate
 ;
-    mov si,OFFSET preempt_processor
-    mov di,OFFSET preempt_processor_name
+    mov esi,OFFSET preempt_processor
+    mov edi,OFFSET preempt_processor_name
     xor cl,cl
     mov ax,preempt_processor_nr
     RegisterOsGate

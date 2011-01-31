@@ -350,26 +350,26 @@ init    PROC far
         mov ds,ax
         mov es,ax
 ;
-        mov si,OFFSET get_dac_rate
-        mov di,OFFSET get_dac_rate_name
+        mov esi,OFFSET get_dac_rate
+        mov edi,OFFSET get_dac_rate_name
         xor cl,cl
         mov ax,get_audio_dac_rate_nr
         RegisterOsGate
 ;
-        mov si,OFFSET set_dac_rate
-        mov di,OFFSET set_dac_rate_name
+        mov esi,OFFSET set_dac_rate
+        mov edi,OFFSET set_dac_rate_name
         xor cl,cl
         mov ax,set_audio_dac_rate_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_adc_rate
-        mov di,OFFSET get_adc_rate_name
+        mov esi,OFFSET get_adc_rate
+        mov edi,OFFSET get_adc_rate_name
         xor cl,cl
         mov ax,get_audio_adc_rate_nr
         RegisterOsGate
 ;
-        mov si,OFFSET set_adc_rate
-        mov di,OFFSET set_adc_rate_name
+        mov esi,OFFSET set_adc_rate
+        mov edi,OFFSET set_adc_rate_name
         xor cl,cl
         mov ax,set_audio_adc_rate_nr
         RegisterOsGate

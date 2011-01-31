@@ -2656,26 +2656,26 @@ init_file       PROC near
     mov di,OFFSET swap_proc
         RegisterSwapProc
 ;
-        mov si,OFFSET get_file_list_entry
-        mov di,OFFSET get_file_list_entry_name
+        mov esi,OFFSET get_file_list_entry
+        mov edi,OFFSET get_file_list_entry_name
         xor cl,cl
         mov ax,get_file_list_entry_nr
         RegisterOsGate
 ;
-        mov si,OFFSET free_file_list_entry
-        mov di,OFFSET free_file_list_entry_name
+        mov esi,OFFSET free_file_list_entry
+        mov edi,OFFSET free_file_list_entry_name
         xor cl,cl
         mov ax,free_file_list_entry_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_file_info
-        mov di,OFFSET get_file_info_name
+        mov esi,OFFSET get_file_info
+        mov edi,OFFSET get_file_info_name
         xor cl,cl
         mov ax,get_file_info_nr
         RegisterOsGate
 ;
-        mov si,OFFSET dupl_file_info
-        mov di,OFFSET dupl_file_info_name
+        mov esi,OFFSET dupl_file_info
+        mov edi,OFFSET dupl_file_info_name
         xor cl,cl
         mov ax,dupl_file_info_nr
         RegisterOsGate

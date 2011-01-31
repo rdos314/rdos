@@ -42,258 +42,258 @@ DRIVE_WAIT_NUM = 32
 POLL_TIMEOUT EQU 119200
 MIN_TIMEOUT EQU 1192000
 
-drive_wait_struc	STRUC
+drive_wait_struc        STRUC
 
-dws_link			DW ?
-dws_thread			DW ?
+dws_link                        DW ?
+dws_thread                      DW ?
 
-drive_wait_struc	ENDS
+drive_wait_struc        ENDS
 
-disc_def_struc		STRUC
+disc_def_struc          STRUC
 
-disc_nr					DB ?
-disc_units				DW ?
-disc_bytes_per_sector	DW ?
-disc_sectors_per_unit	DW ?
-disc_sectors_per_cyl	DW ?
-disc_heads				DW ?
+disc_nr                                 DB ?
+disc_units                              DW ?
+disc_bytes_per_sector   DW ?
+disc_sectors_per_unit   DW ?
+disc_sectors_per_cyl    DW ?
+disc_heads                              DW ?
 disc_cached_sectors     DD ?
 disc_cache_limit        DD ?
-disc_thread				DW ?
-disc_timer_id			DW ?
-disc_data_list			DD ?
-disc_handle_list		DD ?
-disc_readahead			DD ?
-disc_free				DD ?
-disc_section			section_typ <>
-disc_pend_list			DD ?
-disc_pend_first			DD ?
-disc_awrite_list		DD ?
-disc_awrite_timer		DW ?
-disc_awrite_timeout		DD ?,?
-disc_seq_list			DW ?
-disc_param				DD ?
-disc_handle				DW ?
+disc_thread                             DW ?
+disc_timer_id                   DW ?
+disc_data_list                  DD ?
+disc_handle_list                DD ?
+disc_readahead                  DD ?
+disc_free                               DD ?
+disc_section                    section_typ <>
+disc_pend_list                  DD ?
+disc_pend_first                 DD ?
+disc_awrite_list                DD ?
+disc_awrite_timer               DW ?
+disc_awrite_timeout             DD ?,?
+disc_seq_list                   DW ?
+disc_param                              DD ?
+disc_handle                             DW ?
 
 disc_pend_count         DW ?
 disc_io_count           DW ?
 
-disc_change_proc		DD ?
-disc_unit_arr			DD ?
+disc_change_proc                DD ?
+disc_unit_arr                   DD ?
 
-disc_def_struc		ENDS
+disc_def_struc          ENDS
 
-disc_unit_struc	STRUC
+disc_unit_struc STRUC
 
-disc_sectors			DW ?
-disc_sector_arr			DD ?
+disc_sectors                    DW ?
+disc_sector_arr                 DD ?
 
-disc_unit_struc	ENDS
+disc_unit_struc ENDS
 
-drive_def_struc	STRUC
+drive_def_struc STRUC
 
-drive_disc				DW ?
-drive_start_sector		DD ?
-drive_sectors			DD ?
+drive_disc                              DW ?
+drive_start_sector              DD ?
+drive_sectors                   DD ?
 
-drive_def_struc	ENDS
+drive_def_struc ENDS
 
-disc_seq_struc	STRUC
+disc_seq_struc  STRUC
 
-dss_prev			DW ?
-dss_next			DW ?
-dss_buf_sel			DW ?
-dss_insert_index	DW ?
-dss_perform_index	DW ?
+dss_prev                        DW ?
+dss_next                        DW ?
+dss_buf_sel                     DW ?
+dss_insert_index        DW ?
+dss_perform_index       DW ?
 
-dss_arr				DD ?
+dss_arr                         DD ?
 
-disc_seq_struc	ENDS
+disc_seq_struc  ENDS
 
-boot_media_struc	STRUC
+boot_media_struc        STRUC
 
-boot_bytes_per_sector		DW 512
-boot_resv1					DB 0
-boot_mapping_sectors		DW 1
-boot_resv3					DB 0
-boot_resv4					DW 0
-boot_small_sectors			DW 0
-boot_media					DB 0F8h
-boot_resv6					DW 0
-boot_sectors_per_cyl		DW 1
-boot_heads					DW 1
-boot_hidden_sectors			DD 1
-boot_sectors				DD 0
-boot_drive_nr				DB 0,0
-boot_signature				DB 0 
-boot_serial					DD 0
-boot_volume					DB 11 DUP(0)
-boot_fs						DB 8 DUP(0)
+boot_bytes_per_sector           DW 512
+boot_resv1                                      DB 0
+boot_mapping_sectors            DW 1
+boot_resv3                                      DB 0
+boot_resv4                                      DW 0
+boot_small_sectors                      DW 0
+boot_media                                      DB 0F8h
+boot_resv6                                      DW 0
+boot_sectors_per_cyl            DW 1
+boot_heads                                      DW 1
+boot_hidden_sectors                     DD 1
+boot_sectors                            DD 0
+boot_drive_nr                           DB 0,0
+boot_signature                          DB 0 
+boot_serial                                     DD 0
+boot_volume                                     DB 11 DUP(0)
+boot_fs                                         DB 8 DUP(0)
 
-boot_media_struc		ENDS
+boot_media_struc                ENDS
 
-boot_struc	STRUC
+boot_struc      STRUC
 
-boot_jmp					DB ?,?,?
-boot_name					DB 8 DUP(?)
+boot_jmp                                        DB ?,?,?
+boot_name                                       DB 8 DUP(?)
 boot_param                  boot_media_struc <>
 
-boot_struc		ENDS
+boot_struc              ENDS
 
 data    SEGMENT byte public 'DATA'
 
-disc_params			DB ?
-disc_curr_param		DW ?
-disc_param_arr		DD MAX_DRIVES DUP(?)
-disc_def_arr		DW MAX_DRIVES DUP(?)
-drive_def_arr		DW MAX_DRIVES DUP(?)
-drive_wait_arr		DB 4*DRIVE_WAIT_NUM DUP(?)
-drive_wait_free		DW ?
+disc_params                     DB ?
+disc_curr_param         DW ?
+disc_param_arr          DD MAX_DRIVES DUP(?)
+disc_def_arr            DW MAX_DRIVES DUP(?)
+drive_def_arr           DW MAX_DRIVES DUP(?)
+drive_wait_arr          DB 4*DRIVE_WAIT_NUM DUP(?)
+drive_wait_free         DW ?
 drive_wait_count    DW ?
 
 data    ENDS
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code,ds:data
+        assume cs:code,ds:data
 
-	extrn init_ramdrive:near
-	extrn init_filedisc:near
-	extrn init_dosdev:near
+        extrn init_ramdrive:near
+        extrn init_filedisc:near
+        extrn init_dosdev:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			Boot sector. DO NOT MOVE THIS CODE!!!
+;               NAME:                   Boot sector. DO NOT MOVE THIS CODE!!!
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     db 0EBh
     db SIZE boot_struc - 2      ; jmp StartBoot
-	db 90h
-	db 'Rdos    '
+        db 90h
+        db 'Rdos    '
 
-BootMedia	boot_media_struc	<>
+BootMedia       boot_media_struc        <>
 
 StartBoot:
-	db 0EAh
-	dw OFFSET JmpBootCode
-	dw 07C0h
+        db 0EAh
+        dw OFFSET JmpBootCode
+        dw 07C0h
 JmpBootCode:
-	cli
-	mov bx,800h
-	mov ss,bx
-	mov sp,100h
-	sti
-	mov bx,70h
-	mov es,bx
-	xor bx,bx
-	mov cx,8
-	xor dx,dx
-	mov ax,1
+        cli
+        mov bx,800h
+        mov ss,bx
+        mov sp,100h
+        sti
+        mov bx,70h
+        mov es,bx
+        xor bx,bx
+        mov cx,8
+        xor dx,dx
+        mov ax,1
 LoadBootNext:
-	push cx
-	mov cx,3
+        push cx
+        mov cx,3
 LoadBootRetry:
-	call ReadSector
-	jnc BootSectorOk
-	push ax
-	mov ax,0
-	int 13h
-	pop ax
-	loop LoadBootRetry	
-	stc
+        call ReadSector
+        jnc BootSectorOk
+        push ax
+        mov ax,0
+        int 13h
+        pop ax
+        loop LoadBootRetry      
+        stc
 BootSectorOk:
-	pop cx
-	jc BootFail
-	add ax,1
-	adc dx,0
-	add bx,512
-	loop LoadBootNext
+        pop cx
+        jc BootFail
+        add ax,1
+        adc dx,0
+        add bx,512
+        loop LoadBootNext
 ;
-	mov ax,cs
-	mov es,ax
-	db 0EAh
+        mov ax,cs
+        mov es,ax
+        db 0EAh
 
-	public BootLoadOffset
+        public BootLoadOffset
 
 BootLoadOffset:
 
-	dw 0
-	dw 70h
+        dw 0
+        dw 70h
 
 BootFail:
-	mov si,OFFSET DiskError
-	call BootWriteAsciiz
+        mov si,OFFSET DiskError
+        call BootWriteAsciiz
 BootStop:
-	jmp BootStop
+        jmp BootStop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			BootWriteAsciiz
+;               NAME:                   BootWriteAsciiz
 ;
-;		DESCRIPTION:	Write a message
+;               DESCRIPTION:    Write a message
 ;
-;		PARAMETERS:		CS:SI	Message to write
+;               PARAMETERS:             CS:SI   Message to write
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-BootWriteAsciiz	Proc near
-	lods byte ptr cs:[si]
-	or al,al
-	jz WriteAsciizDone
-	mov ah,0Eh
-	mov bx,7
-	int 10h
-	jmp BootWriteAsciiz
+BootWriteAsciiz Proc near
+        lods byte ptr cs:[si]
+        or al,al
+        jz WriteAsciizDone
+        mov ah,0Eh
+        mov bx,7
+        int 10h
+        jmp BootWriteAsciiz
 WriteAsciizDone:
-	ret
-BootWriteAsciiz	Endp
+        ret
+BootWriteAsciiz Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ReadSector
+;               NAME:                   ReadSector
 ;
-;		DESCRIPTION:	Read a sector
+;               DESCRIPTION:    Read a sector
 ;
-;		PARAMETERS:		DX:AX	Sector #
-;						ES:BX	Buffer
+;               PARAMETERS:             DX:AX   Sector #
+;                                               ES:BX   Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadSector	Proc near
-	push ax
-	push cx
-	push dx
-	push bx
-	div cs:BootMedia.boot_sectors_per_cyl
-	inc dl
-	mov bl,dl
-	xor dx,dx
-	div cs:BootMedia.boot_heads
-	mov bh,dl
-	mov dx,ax
-	mov ax,201h
-	mov cl,6
-	shl dh,cl
-	or dh,bl
-	mov cx,dx
-	xchg ch,cl
-	mov dl,cs:BootMedia.boot_drive_nr
-	mov dh,bh
-	pop bx
-	int 13h
-	pop dx
-	pop cx
-	pop ax
-	ret
-ReadSector	Endp
+ReadSector      Proc near
+        push ax
+        push cx
+        push dx
+        push bx
+        div cs:BootMedia.boot_sectors_per_cyl
+        inc dl
+        mov bl,dl
+        xor dx,dx
+        div cs:BootMedia.boot_heads
+        mov bh,dl
+        mov dx,ax
+        mov ax,201h
+        mov cl,6
+        shl dh,cl
+        or dh,bl
+        mov cx,dx
+        xchg ch,cl
+        mov dl,cs:BootMedia.boot_drive_nr
+        mov dh,bh
+        pop bx
+        int 13h
+        pop dx
+        pop cx
+        pop ax
+        ret
+ReadSector      Endp
 
 DiskError:
-		db 'Disk error',0Dh,0Ah,0
+                db 'Disk error',0Dh,0Ah,0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -301,42 +301,42 @@ DiskError:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CheckPending
+;               NAME:                   CheckPending
 ;
-;		DESCRIPTION:	Check pending test
+;               DESCRIPTION:    Check pending test
 ;
-;		PARAMETERS:		DX:AX	Sector #
-;						ES:BX	Buffer
+;               PARAMETERS:             DX:AX   Sector #
+;                                               ES:BX   Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckPending	Proc near
-	xor cx,cx
-	mov edi,ds:disc_pend_first
-	mov ebp,edi
-	or edi,edi
-	jz cpdone
+CheckPending    Proc near
+        xor cx,cx
+        mov edi,ds:disc_pend_first
+        mov ebp,edi
+        or edi,edi
+        jz cpdone
 ;
     mov dx,es:[edi].dh_unit
-    mov ax,es:[edi].dh_sector	
+    mov ax,es:[edi].dh_sector   
 
 cploop:
     test es:[edi].dh_flags, FLAG_IO_PENDING
     jz cpfail
 ;
-	cmp es:[edi].dh_state,STATE_DIRTY
-	je cpvalid
+        cmp es:[edi].dh_state,STATE_DIRTY
+        je cpvalid
 ;
-	cmp es:[edi].dh_state,STATE_EMPTY
-	jne cpfail
+        cmp es:[edi].dh_state,STATE_EMPTY
+        jne cpfail
 
 cpvalid:
-	test es:[edi].dh_flags, FLAG_ASYNC_WRITE
-	jnz cpfail
+        test es:[edi].dh_flags, FLAG_ASYNC_WRITE
+        jnz cpfail
 ;
     cmp dx,es:[edi].dh_unit
     je cpunit
@@ -352,220 +352,220 @@ cpunit:
     int 3
         
 cpfail:
-	int 3	
-	mov al,es:[edi].dh_state        ; STATE_DIRTY
-	mov ah,es:[edi].dh_flags        ; FLAG_ASYNC_WRITE | FLAG_EXT_DATA
-	jmp cpdone
+        int 3   
+        mov al,es:[edi].dh_state        ; STATE_DIRTY
+        mov ah,es:[edi].dh_flags        ; FLAG_ASYNC_WRITE | FLAG_EXT_DATA
+        jmp cpdone
 
 cpnext:
     mov dx,es:[edi].dh_unit
-    mov ax,es:[edi].dh_sector	
+    mov ax,es:[edi].dh_sector   
 ;    
-	mov edi,es:[edi].dh_next
-	cmp edi,ebp
-	jz cpdone
+        mov edi,es:[edi].dh_next
+        cmp edi,ebp
+        jz cpdone
 ;
-	loop cploop
+        loop cploop
 ;
-	int 3
+        int 3
 
 cpdone:
-	ret
-CheckPending	Endp
+        ret
+CheckPending    Endp
 
-CheckAsyncWrite	Proc near
-	xor cx,cx
-	mov edi,ds:disc_awrite_list
-	mov eax,edi
-	or edi,edi
-	jz cawdone
+CheckAsyncWrite Proc near
+        xor cx,cx
+        mov edi,ds:disc_awrite_list
+        mov eax,edi
+        or edi,edi
+        jz cawdone
 
 cawloop:
-	test es:[edi].dh_flags, FLAG_ASYNC_WRITE
-	jz cawfail
+        test es:[edi].dh_flags, FLAG_ASYNC_WRITE
+        jz cawfail
 ;
-	cmp es:[edi].dh_state,STATE_DIRTY
-	je cawnext
+        cmp es:[edi].dh_state,STATE_DIRTY
+        je cawnext
 
 cawfail:
-	int 3	
-	mov al,es:[edi].dh_state
-	mov ah,es:[edi].dh_flags
-	jmp cawdone
+        int 3   
+        mov al,es:[edi].dh_state
+        mov ah,es:[edi].dh_flags
+        jmp cawdone
 
 cawnext:
-	mov edi,es:[edi].dh_next
-	cmp edi,eax
-	jz cawdone
+        mov edi,es:[edi].dh_next
+        cmp edi,eax
+        jz cawdone
 ;
-	loop cawloop
+        loop cawloop
 ;
-	int 3
+        int 3
 
 cawdone:
-	ret
-CheckAsyncWrite	Endp
+        ret
+CheckAsyncWrite Endp
 
-CheckAll	Proc near
-	push es
-	pushad
+CheckAll        Proc near
+        push es
+        pushad
 ;
-	mov ax,flat_sel
-	mov es,ax
-	call CheckPending
-	call CheckAsyncWrite
+        mov ax,flat_sel
+        mov es,ax
+        call CheckPending
+        call CheckAsyncWrite
 ;
-	popad
-	pop es
-	ret
-CheckAll	Endp
-	
+        popad
+        pop es
+        ret
+CheckAll        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    IsPending
+;               NAME:               IsPending
 ;
-;		DESCRIPTION:	Is block in pending list?
+;               DESCRIPTION:    Is block in pending list?
 ;
-;		PARAMETERS:	    EDI
+;               PARAMETERS:         EDI
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IsPending	Proc near
+IsPending       Proc near
     push es
     pushad
 ;    
     mov ax,flat_sel
     mov es,ax
 ;
-	xor cx,cx
-	mov esi,ds:disc_pend_first
-	mov ebp,esi
-	or esi,esi
-	jz ipdone
+        xor cx,cx
+        mov esi,ds:disc_pend_first
+        mov ebp,esi
+        or esi,esi
+        jz ipdone
 
 iploop:
     cmp esi,edi
     je ipfound
 ;
-	mov esi,es:[esi].dh_next
-	cmp esi,ebp
-	jz ipdone
+        mov esi,es:[esi].dh_next
+        cmp esi,ebp
+        jz ipdone
 ;
-	loop iploop
+        loop iploop
 
 ipfound:
-	int 3
+        int 3
 
 ipdone:
     popad
     pop es
-	ret
-IsPending	Endp
-	
+        ret
+IsPending       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    CheckDeleted
+;               NAME:               CheckDeleted
 ;
-;		DESCRIPTION:	Check if block is deleted
+;               DESCRIPTION:    Check if block is deleted
 ;
-;		PARAMETERS:	    EDI
+;               PARAMETERS:         EDI
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckDeleted	Proc near
+CheckDeleted    Proc near
     push es
     pushad
 ;    
     mov ax,flat_sel
     mov es,ax
 ;
-	xor cx,cx
-	mov esi,ds:disc_handle_list
-	mov ebp,esi
-	or esi,esi
-	jz cddone
+        xor cx,cx
+        mov esi,ds:disc_handle_list
+        mov ebp,esi
+        or esi,esi
+        jz cddone
 
 cdloop:
     cmp esi,edi
     je cdfound
 ;
-	mov esi,es:[esi].dh_next
-	or esi,esi
-	jz cddone
+        mov esi,es:[esi].dh_next
+        or esi,esi
+        jz cddone
 ;
-	loop cdloop
+        loop cdloop
 
 cdfound:
-	int 3
+        int 3
 
 cddone:
     popad
     pop es
-	ret
-CheckDeleted	Endp
+        ret
+CheckDeleted    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CheckBuffered
+;               NAME:                   CheckBuffered
 ;
-;		DESCRIPTION:	Make sure sector is buffered
+;               DESCRIPTION:    Make sure sector is buffered
 ;
-;		PARAMETERS:		DS		Disc selector
-;						ES		Flat_sel
-;		        		EDI		DiscBlock handle
+;               PARAMETERS:             DS              Disc selector
+;                                               ES              Flat_sel
+;                                       EDI             DiscBlock handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckBuffered	PROC near
+CheckBuffered   PROC near
     push es
     pushad
 ;    
     mov ax,flat_sel
     mov es,ax
 ;    
-	movzx esi,es:[edi].dh_unit
-	mov eax,ds:[4*esi].disc_unit_arr
-	or eax,eax
-	jz cbFail
+        movzx esi,es:[edi].dh_unit
+        mov eax,ds:[4*esi].disc_unit_arr
+        or eax,eax
+        jz cbFail
 ;
-	movzx esi,es:[edi].dh_sector
-	mov eax,es:[4*esi+eax].disc_sector_arr
+        movzx esi,es:[edi].dh_sector
+        mov eax,es:[4*esi+eax].disc_sector_arr
 ;
     or eax,eax
     jnz cbDone
-	
+        
 cbFail:
     int 3
 
 cbDone:
-	popad
-	pop es
-	ret
-CheckBuffered	ENDP
+        popad
+        pop es
+        ret
+CheckBuffered   ENDP
 
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    CheckDriveWait
+;               NAME:               CheckDriveWait
 ;
-;		DESCRIPTION:	Check consistency of drive-wait list
+;               DESCRIPTION:    Check consistency of drive-wait list
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckDriveWait	Proc near
+CheckDriveWait  Proc near
     push ds
     pushad
 ;
-	mov ax,SEG data
-	mov ds,ax
+        mov ax,SEG data
+        mov ds,ax
     xor cx,cx
-	mov bx,ds:drive_wait_free
+        mov bx,ds:drive_wait_free
 
 cdwLoop:
     or bx,bx
@@ -591,130 +591,130 @@ cdwSizeOk:
 cdwNotEmpty:    
     popad
     pop ds
-	ret
-CheckDriveWait	Endp
+        ret
+CheckDriveWait  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ALLOCATE_DATA
+;               NAME:                   ALLOCATE_DATA
 ;
-;		DESCRIPTION:	Allocate data
+;               DESCRIPTION:    Allocate data
 ;
-;		PARAMETERS:		DS		Disc selector
+;               PARAMETERS:             DS              Disc selector
 ;
-;		RETURNS:		EDX		Data address
+;               RETURNS:                EDX             Data address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_data	PROC near
-	push eax
-	push ecx
+allocate_data   PROC near
+        push eax
+        push ecx
 ;
-	mov edx,ds:disc_data_list
-	or edx,edx
-	jnz allocate_data_done
+        mov edx,ds:disc_data_list
+        or edx,edx
+        jnz allocate_data_done
 ;
-	mov eax,1000h
-	AllocateBigLinear
-	movzx ecx,ds:disc_bytes_per_sector
-	mov ds:disc_data_list,edx
+        mov eax,1000h
+        AllocateBigLinear
+        movzx ecx,ds:disc_bytes_per_sector
+        mov ds:disc_data_list,edx
 allocate_init_data_loop:
-	mov eax,edx
-	add eax,ecx
-	mov es:[edx],eax
-	mov edx,eax
-	test dx,0FFFh
-	jnz allocate_init_data_loop
+        mov eax,edx
+        add eax,ecx
+        mov es:[edx],eax
+        mov edx,eax
+        test dx,0FFFh
+        jnz allocate_init_data_loop
 ;
-	sub edx,ecx
-	mov dword ptr es:[edx],0
-	mov edx,ds:disc_data_list
+        sub edx,ecx
+        mov dword ptr es:[edx],0
+        mov edx,ds:disc_data_list
 
 allocate_data_done:
-	mov eax,es:[edx]
-	mov ds:disc_data_list,eax
+        mov eax,es:[edx]
+        mov ds:disc_data_list,eax
 ;
-	pop ecx
-	pop eax
-	ret
-allocate_data	ENDP
+        pop ecx
+        pop eax
+        ret
+allocate_data   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FREE_DATA
+;               NAME:                   FREE_DATA
 ;
-;		DESCRIPTION:	Free data
+;               DESCRIPTION:    Free data
 ;
-;		PARAMETERS:		DS		Disc selector
-;						EDX		Data address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_data	PROC near
-	push eax
-	mov eax,ds:disc_data_list
-	mov es:[edx],eax
-	mov ds:disc_data_list,edx
-	pop eax
-	ret
-free_data	ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			FREE_HANDLE
-;
-;		DESCRIPTION:	Free handle
-;
-;		PARAMETERS:		DS		Disc selector
-;						EDI		Disc buf handle
+;               PARAMETERS:             DS              Disc selector
+;                                               EDX             Data address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_handle	PROC near
+free_data       PROC near
+        push eax
+        mov eax,ds:disc_data_list
+        mov es:[edx],eax
+        mov ds:disc_data_list,edx
+        pop eax
+        ret
+free_data       ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   FREE_HANDLE
+;
+;               DESCRIPTION:    Free handle
+;
+;               PARAMETERS:             DS              Disc selector
+;                                               EDI             Disc buf handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_handle     PROC near
 
 ifdef DEBUG
     call CheckDeleted
     call IsPending
 endif
     
-	push eax
-	test es:[edi].dh_flags, FLAG_EXT_DATA
-	jnz free_handle_do
+        push eax
+        test es:[edi].dh_flags, FLAG_EXT_DATA
+        jnz free_handle_do
 ;
-	push edx
-	mov edx,es:[edi].dh_data
-	call free_data
-	pop edx
+        push edx
+        mov edx,es:[edi].dh_data
+        call free_data
+        pop edx
 
 free_handle_do:
     mov es:[edi].dh_flags,0
-	mov eax,ds:disc_handle_list
-	mov es:[edi],eax
-	mov ds:disc_handle_list,edi
+        mov eax,ds:disc_handle_list
+        mov es:[edi],eax
+        mov ds:disc_handle_list,edi
     dec ds:disc_cached_sectors
-	pop eax
+        pop eax
 
 ifdef DEBUG
-	call CheckAll
+        call CheckAll
 endif
-	ret
-free_handle	ENDP
+        ret
+free_handle     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			swap_block
+;               NAME:                   swap_block
 ;
-;		DESCRIPTION:	Free physical memory, disc block
+;               DESCRIPTION:    Free physical memory, disc block
 ;
-;		PARAMETERS:		ES      Flat sel
+;               PARAMETERS:             ES      Flat sel
 ;                       EDX     Disc block
 ;                       EDI     Unit block entry
 ;
@@ -723,9 +723,9 @@ free_handle	ENDP
 swap_block   Proc near
     inc ebp
     mov edi,edx
-	test es:[edi].dh_flags,FLAG_EXT_DATA OR BUSY_FLAGS
-	jnz swap_block_done
-;	
+        test es:[edi].dh_flags,FLAG_EXT_DATA OR BUSY_FLAGS
+        jnz swap_block_done
+;       
     mov al,es:[edi].dh_lock_count
     or al,al
     jnz swap_block_done
@@ -751,11 +751,11 @@ swap_block   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			swap_unit
+;               NAME:                   swap_unit
 ;
-;		DESCRIPTION:	Free disc buffers on a disc unit
+;               DESCRIPTION:    Free disc buffers on a disc unit
 ;
-;		PARAMETERS:		DS      Disc sel
+;               PARAMETERS:             DS      Disc sel
 ;                       EDX     Unit block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -799,11 +799,11 @@ swap_unit   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			swap_disc
+;               NAME:                   swap_disc
 ;
-;		DESCRIPTION:	Free disc buffers on a disc
+;               DESCRIPTION:    Free disc buffers on a disc
 ;
-;		PARAMETERS:		DS      Disc sel
+;               PARAMETERS:             DS      Disc sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -854,19 +854,19 @@ swap_disc   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ALLOCATE_HANDLE
+;               NAME:                   ALLOCATE_HANDLE
 ;
-;		DESCRIPTION:	Allocate handle
+;               DESCRIPTION:    Allocate handle
 ;
-;		PARAMETERS:		DS		Disc selector
-;						
-;		RETURNS:		EDI		Discbuf handle
+;               PARAMETERS:             DS              Disc selector
+;                                               
+;               RETURNS:                EDI             Discbuf handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_handle	PROC near
-	push eax
-	push edx
+allocate_handle PROC near
+        push eax
+        push edx
 ;    
     mov eax,ds:disc_cached_sectors
     cmp eax,ds:disc_cache_limit
@@ -888,58 +888,58 @@ allocate_handle	PROC near
 
 alloc_handle_no_swap:      
     inc ds:disc_cached_sectors
-	mov edi,ds:disc_handle_list
-	or edi,edi
-	jnz allocate_handle_done
+        mov edi,ds:disc_handle_list
+        or edi,edi
+        jnz allocate_handle_done
 ;
-	push cx
-	mov eax,1000h
-	AllocateBigLinear
-	mov ds:disc_handle_list,edx
-	pop cx
+        push cx
+        mov eax,1000h
+        AllocateBigLinear
+        mov ds:disc_handle_list,edx
+        pop cx
 
 allocate_init_handle_loop:
-	add edx,DISC_HANDLE_SIZE
-	mov es:[edx-DISC_HANDLE_SIZE].dh_next,edx
-	test dx,0FFFh
-	jnz allocate_init_handle_loop
+        add edx,DISC_HANDLE_SIZE
+        mov es:[edx-DISC_HANDLE_SIZE].dh_next,edx
+        test dx,0FFFh
+        jnz allocate_init_handle_loop
 ;
-	mov es:[edx-DISC_HANDLE_SIZE].dh_next,0
-	mov edi,ds:disc_handle_list
+        mov es:[edx-DISC_HANDLE_SIZE].dh_next,0
+        mov edi,ds:disc_handle_list
 
 allocate_handle_done:
-	mov eax,es:[edi].dh_next
-	mov ds:disc_handle_list,eax
+        mov eax,es:[edi].dh_next
+        mov ds:disc_handle_list,eax
 
 ifdef DEBUG
     call IsPending
     call CheckDeleted
 endif    
 
-	pop edx
-	pop eax
-	ret
-allocate_handle	ENDP
+        pop edx
+        pop eax
+        ret
+allocate_handle ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INSERT_PENDING
+;               NAME:                   INSERT_PENDING
 ;
-;		DESCRIPTION:	Insert block into pending request list
+;               DESCRIPTION:    Insert block into pending request list
 ;
-;		PARAMETERS:		DS		DiscBuf handle
-;						ES		Flat_sel
-;						EDI		DiscBlock handle
+;               PARAMETERS:             DS              DiscBuf handle
+;                                               ES              Flat_sel
+;                                               EDI             DiscBlock handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-insert_pending	PROC near
-	push eax
-	push ebx
-	push cx
-	push dx
+insert_pending  PROC near
+        push eax
+        push ebx
+        push cx
+        push dx
 
 ifdef DEBUG
     call CheckDeleted
@@ -954,80 +954,80 @@ endif
 
 insert_noaw:
 
-	test es:[edi].dh_flags,FLAG_IO_PENDING
-	jz insert_pend_do
+        test es:[edi].dh_flags,FLAG_IO_PENDING
+        jz insert_pend_do
 ;
-	int 3
-	call CheckAll
-;	
-	mov eax,ds:disc_pend_first
-	or eax,eax
-	jz insert_pend_do
+        int 3
+        call CheckAll
+;       
+        mov eax,ds:disc_pend_first
+        or eax,eax
+        jz insert_pend_do
 ;
-	mov ebx,eax
-	cmp eax,edi
-	je insert_pend_err
+        mov ebx,eax
+        cmp eax,edi
+        je insert_pend_err
 
 insert_pend_check:
-	mov eax,es:[eax].dh_next
-	cmp eax,edi
-	je insert_pend_err
+        mov eax,es:[eax].dh_next
+        cmp eax,edi
+        je insert_pend_err
 ;
-	cmp eax,ebx
-	jnz insert_pend_check
-	jmp insert_pend_do
+        cmp eax,ebx
+        jnz insert_pend_check
+        jmp insert_pend_do
 
 insert_pend_err:
-	int 3
-	jmp insert_pend_done
+        int 3
+        jmp insert_pend_done
 
 insert_pend_do:
-	or es:[edi].dh_flags,FLAG_IO_PENDING
+        or es:[edi].dh_flags,FLAG_IO_PENDING
 ;
-	mov eax,ds:disc_pend_first
-	or eax,eax
-	jne insert_pend_used
+        mov eax,ds:disc_pend_first
+        or eax,eax
+        jne insert_pend_used
 
 insert_pend_empty:
-	mov es:[edi].dh_prev,edi
-	mov es:[edi].dh_next,edi
-	mov ds:disc_pend_list,edi
-	mov ds:disc_pend_first,edi
-	jmp insert_pend_done
+        mov es:[edi].dh_prev,edi
+        mov es:[edi].dh_next,edi
+        mov ds:disc_pend_list,edi
+        mov ds:disc_pend_first,edi
+        jmp insert_pend_done
 
 insert_pend_used:
-	mov cx,es:[edi].dh_unit
-	mov dx,es:[edi].dh_sector
-	cmp cx,es:[eax].dh_unit
-	jc insert_pend_first
+        mov cx,es:[edi].dh_unit
+        mov dx,es:[edi].dh_sector
+        cmp cx,es:[eax].dh_unit
+        jc insert_pend_first
 ;
-	jnz insert_pend_search_loop
-	cmp dx,es:[eax].dh_sector
-	jnc insert_pend_search_loop
+        jnz insert_pend_search_loop
+        cmp dx,es:[eax].dh_sector
+        jnc insert_pend_search_loop
 
 insert_pend_first:
-	mov ds:disc_pend_first,edi
-	jmp insert_pend_link
+        mov ds:disc_pend_first,edi
+        jmp insert_pend_link
 
 insert_pend_search_loop:
-	mov eax,es:[eax].dh_next
-	cmp eax,ds:disc_pend_first
-	je insert_pend_link
+        mov eax,es:[eax].dh_next
+        cmp eax,ds:disc_pend_first
+        je insert_pend_link
 ;
-	cmp cx,es:[eax].dh_unit
-	jc insert_pend_link
+        cmp cx,es:[eax].dh_unit
+        jc insert_pend_link
 ;
-	jnz insert_pend_search_loop
+        jnz insert_pend_search_loop
 ;
-	cmp dx,es:[eax].dh_sector
-	jnc insert_pend_search_loop
+        cmp dx,es:[eax].dh_sector
+        jnc insert_pend_search_loop
 
-insert_pend_link:	
-	mov ebx,es:[eax].dh_prev
-	mov es:[eax].dh_prev,edi
-	mov es:[ebx].dh_next,edi
-	mov es:[edi].dh_prev,ebx
-	mov es:[edi].dh_next,eax	
+insert_pend_link:       
+        mov ebx,es:[eax].dh_prev
+        mov es:[eax].dh_prev,edi
+        mov es:[ebx].dh_next,edi
+        mov es:[edi].dh_prev,ebx
+        mov es:[edi].dh_next,eax        
 
 insert_pend_done:
     inc ds:disc_pend_count    
@@ -1036,398 +1036,398 @@ ifdef DEBUG
     call CheckAll
 endif
     
-	pop dx
-	pop cx
-	pop ebx
-	pop eax
-	ret
-insert_pending	ENDP
+        pop dx
+        pop cx
+        pop ebx
+        pop eax
+        ret
+insert_pending  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GET_PENDING
+;               NAME:                   GET_PENDING
 ;
-;		DESCRIPTION:	Get next pending request
+;               DESCRIPTION:    Get next pending request
 ;
-;		PARAMETERS:		DS		Disc selector
-;						ES		Flat_sel
+;               PARAMETERS:             DS              Disc selector
+;                                               ES              Flat_sel
 ;
-;		RETURNS:		EDI		DiscBlock handle
+;               RETURNS:                EDI             DiscBlock handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_pending	PROC near
-	mov edi,ds:disc_pend_list
-	or edi,edi
-	stc
-	jz get_pend_done
+get_pending     PROC near
+        mov edi,ds:disc_pend_list
+        or edi,edi
+        stc
+        jz get_pend_done
 
 ifdef DEBUG
     call CheckDeleted
 endif
     
-	mov eax,es:[edi].dh_next
-	mov ebx,es:[edi].dh_prev
-	mov es:[ebx].dh_next,eax
-	mov es:[eax].dh_prev,ebx
-	cmp eax,edi
-	jne get_pend_unlink
+        mov eax,es:[edi].dh_next
+        mov ebx,es:[edi].dh_prev
+        mov es:[ebx].dh_next,eax
+        mov es:[eax].dh_prev,ebx
+        cmp eax,edi
+        jne get_pend_unlink
 ;
-	mov ds:disc_pend_list,0
-	mov ds:disc_pend_first,0
-	clc
-	jmp get_pend_done
+        mov ds:disc_pend_list,0
+        mov ds:disc_pend_first,0
+        clc
+        jmp get_pend_done
 
 get_pend_unlink:
-	mov ds:disc_pend_list,eax
-	cmp edi,ds:disc_pend_first
-	jne get_pend_first_ok
+        mov ds:disc_pend_list,eax
+        cmp edi,ds:disc_pend_first
+        jne get_pend_first_ok
 ;
-	mov ds:disc_pend_first,eax
+        mov ds:disc_pend_first,eax
 
 get_pend_first_ok:
-	clc
+        clc
 
 get_pend_done:
-	ret
-get_pending	ENDP
+        ret
+get_pending     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INSERT_ASYNC_WRITE
+;               NAME:                   INSERT_ASYNC_WRITE
 ;
-;		DESCRIPTION:	Insert block into async write request list
+;               DESCRIPTION:    Insert block into async write request list
 ;
-;		PARAMETERS:		DS		DiscBuf handle
-;						ES		Flat_sel
-;						EDI		DiscBlock handle
+;               PARAMETERS:             DS              DiscBuf handle
+;                                               ES              Flat_sel
+;                                               EDI             DiscBlock handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-insert_async_write	PROC near
-	push eax
-	push ebx
+insert_async_write      PROC near
+        push eax
+        push ebx
 
-ifdef DEBUG	
+ifdef DEBUG     
     call CheckDeleted
 endif
     
     test es:[edi].dh_flags, FLAG_IO_PENDING
     jnz insert_awrite_end
 ;
-	test es:[edi].dh_flags, FLAG_ASYNC_WRITE
-	jnz insert_awrite_done
+        test es:[edi].dh_flags, FLAG_ASYNC_WRITE
+        jnz insert_awrite_done
 
 insert_awrite_do:
-	or es:[edi].dh_flags, FLAG_ASYNC_WRITE
+        or es:[edi].dh_flags, FLAG_ASYNC_WRITE
 ;
-	mov eax,ds:disc_awrite_list
-	or eax,eax
-	jne insert_awrite_used
+        mov eax,ds:disc_awrite_list
+        or eax,eax
+        jne insert_awrite_used
 
 insert_awrite_empty:
-	mov es:[edi].dh_prev,edi
-	mov es:[edi].dh_next,edi
-	jmp insert_awrite_done
+        mov es:[edi].dh_prev,edi
+        mov es:[edi].dh_next,edi
+        jmp insert_awrite_done
 
 insert_awrite_used:
-	mov ebx,es:[eax].dh_prev
-	mov es:[eax].dh_prev,edi
-	mov es:[ebx].dh_next,edi
-	mov es:[edi].dh_prev,ebx
-	mov es:[edi].dh_next,eax	
+        mov ebx,es:[eax].dh_prev
+        mov es:[eax].dh_prev,edi
+        mov es:[ebx].dh_next,edi
+        mov es:[edi].dh_prev,ebx
+        mov es:[edi].dh_next,eax        
 
 insert_awrite_done:
-	mov ds:disc_awrite_list,edi
+        mov ds:disc_awrite_list,edi
 
 insert_awrite_end:
-	pop ebx
-	pop eax
-	ret
-insert_async_write	ENDP
+        pop ebx
+        pop eax
+        ret
+insert_async_write      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UPDATE_ASYNC_WRITE
+;               NAME:                   UPDATE_ASYNC_WRITE
 ;
-;		DESCRIPTION:	Update async write list
+;               DESCRIPTION:    Update async write list
 ;
-;		PARAMETERS:		DS		Disc selector
-;						ES		Flat sel
+;               PARAMETERS:             DS              Disc selector
+;                                               ES              Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-update_async_write	PROC near
-	GetSystemTime
-	sub eax,ds:disc_awrite_timeout
-	sbb edx,ds:disc_awrite_timeout+4
-	jc update_async_done
+update_async_write      PROC near
+        GetSystemTime
+        sub eax,ds:disc_awrite_timeout
+        sbb edx,ds:disc_awrite_timeout+4
+        jc update_async_done
 
 update_async_loop:
-	mov edi,ds:disc_awrite_list
-	or edi,edi
-	jz update_async_done
+        mov edi,ds:disc_awrite_list
+        or edi,edi
+        jz update_async_done
 ;
-	GetSystemTime
-	sub eax,MIN_TIMEOUT
-	sbb edx,0
+        GetSystemTime
+        sub eax,MIN_TIMEOUT
+        sbb edx,0
 ;
-	mov edi,es:[edi].dh_prev
-	sub eax,es:[edi].dh_time_lsb
-	sbb dx,es:[edi].dh_time_msb
-	jc update_async_done
+        mov edi,es:[edi].dh_prev
+        sub eax,es:[edi].dh_time_lsb
+        sbb dx,es:[edi].dh_time_msb
+        jc update_async_done
 ;
-	mov eax,es:[edi].dh_next
-	mov ebx,es:[edi].dh_prev
-	mov es:[ebx].dh_next,eax
-	mov es:[eax].dh_prev,ebx
-	cmp eax,edi
-	jne update_async_insert
+        mov eax,es:[edi].dh_next
+        mov ebx,es:[edi].dh_prev
+        mov es:[ebx].dh_next,eax
+        mov es:[eax].dh_prev,ebx
+        cmp eax,edi
+        jne update_async_insert
 ;
-	mov dword ptr ds:disc_awrite_list,0
+        mov dword ptr ds:disc_awrite_list,0
 
 update_async_insert:
-	and es:[edi].dh_flags, NOT FLAG_ASYNC_WRITE
-	call insert_pending
-	jmp update_async_loop
+        and es:[edi].dh_flags, NOT FLAG_ASYNC_WRITE
+        call insert_pending
+        jmp update_async_loop
 
 update_async_done:
-	ret
-update_async_write	ENDP
+        ret
+update_async_write      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FLUSH_ASYNC_WRITE
+;               NAME:                   FLUSH_ASYNC_WRITE
 ;
-;		DESCRIPTION:	Flush async write list
+;               DESCRIPTION:    Flush async write list
 ;
-;		PARAMETERS:		DS		Disc selector
-;						ES		Flat sel
+;               PARAMETERS:             DS              Disc selector
+;                                               ES              Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-flush_async_write	PROC near
-	mov edi,ds:disc_awrite_list
-	or edi,edi
-	jz flush_async_done
+flush_async_write       PROC near
+        mov edi,ds:disc_awrite_list
+        or edi,edi
+        jz flush_async_done
 ;
-	mov edi,es:[edi].dh_prev
-	mov eax,es:[edi].dh_next
-	mov ebx,es:[edi].dh_prev
-	mov es:[ebx].dh_next,eax
-	mov es:[eax].dh_prev,ebx
-	cmp eax,edi
-	jne flush_async_insert
+        mov edi,es:[edi].dh_prev
+        mov eax,es:[edi].dh_next
+        mov ebx,es:[edi].dh_prev
+        mov es:[ebx].dh_next,eax
+        mov es:[eax].dh_prev,ebx
+        cmp eax,edi
+        jne flush_async_insert
 ;
-	mov dword ptr ds:disc_awrite_list,0
+        mov dword ptr ds:disc_awrite_list,0
 
 flush_async_insert:
-	and es:[edi].dh_flags, NOT FLAG_ASYNC_WRITE
-	call insert_pending
-	jmp flush_async_write
+        and es:[edi].dh_flags, NOT FLAG_ASYNC_WRITE
+        call insert_pending
+        jmp flush_async_write
 
 flush_async_done:
-	ret
-flush_async_write	ENDP
+        ret
+flush_async_write       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ASYNC_WRITE_TIMEOUT
+;               NAME:                   ASYNC_WRITE_TIMEOUT
 ;
-;		DESCRIPTION:	Async write timeout
+;               DESCRIPTION:    Async write timeout
 ;
-;		PARAMETERS:		CX		Disc thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-async_write_timeout	Proc far
-	mov ds,cx
-	mov ds:disc_awrite_timer,0
-	mov bx,ds:disc_thread
-	Signal
-	ret
-async_write_timeout	Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			UPDATE_ASYNC_TIMER
-;
-;		DESCRIPTION:	Update async write timer
-;
-;		PARAMETERS:		DS		Disc selector
+;               PARAMETERS:             CX              Disc thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-update_async_timer	Proc near
-	cli
-	mov ax,ds:disc_awrite_timer
-	or ax,ax
-	jnz update_async_timer_done
+async_write_timeout     Proc far
+        mov ds,cx
+        mov ds:disc_awrite_timer,0
+        mov bx,ds:disc_thread
+        Signal
+        ret
+async_write_timeout     Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	sti
-	mov edi,ds:disc_awrite_list
-	or edi,edi
-	jz update_async_timer_done
 ;
-	mov ds:disc_awrite_timer,1
-	GetSystemTime
-	add eax,POLL_TIMEOUT
-	adc edx,0
-	mov ds:disc_awrite_timeout,eax
-	mov ds:disc_awrite_timeout+4,edx
-	push es
-	mov bx,cs
-	mov es,bx
-	mov cx,ds
-	mov di,OFFSET async_write_timeout
-	StartTimer
-	pop es
+;               NAME:                   UPDATE_ASYNC_TIMER
+;
+;               DESCRIPTION:    Update async write timer
+;
+;               PARAMETERS:             DS              Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_async_timer      Proc near
+        cli
+        mov ax,ds:disc_awrite_timer
+        or ax,ax
+        jnz update_async_timer_done
+;
+        sti
+        mov edi,ds:disc_awrite_list
+        or edi,edi
+        jz update_async_timer_done
+;
+        mov ds:disc_awrite_timer,1
+        GetSystemTime
+        add eax,POLL_TIMEOUT
+        adc edx,0
+        mov ds:disc_awrite_timeout,eax
+        mov ds:disc_awrite_timeout+4,edx
+        push es
+        mov bx,cs
+        mov es,bx
+        mov cx,ds
+        mov di,OFFSET async_write_timeout
+        StartTimer
+        pop es
 
 update_async_timer_done:
-	sti
-	ret
-update_async_timer	Endp
+        sti
+        ret
+update_async_timer      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UPDATE_DISC_SEQ
+;               NAME:                   UPDATE_DISC_SEQ
 ;
-;		DESCRIPTION:	Update seq write lists
+;               DESCRIPTION:    Update seq write lists
 ;
-;		PARAMETERS:		DS		Disc selector
-;						ES		Flat sel
+;               PARAMETERS:             DS              Disc selector
+;                                               ES              Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-update_disc_seq	PROC far
-	mov ax,ds:disc_seq_list
-	or ax,ax
-	jz update_seq_done
+update_disc_seq PROC far
+        mov ax,ds:disc_seq_list
+        or ax,ax
+        jz update_seq_done
 ;
-	push fs
-	pushad
+        push fs
+        pushad
 ;
-	mov bp,ax
+        mov bp,ax
 
 update_seq_loop:
-	mov fs,ax
-	movzx ebx,fs:dss_perform_index
+        mov fs,ax
+        movzx ebx,fs:dss_perform_index
 
 update_seq_discard_loop:
-	mov edi,fs:[4*ebx].dss_arr
-	cmp es:[edi].dh_state,STATE_SEQ
-	je update_seq_move_loop
+        mov edi,fs:[4*ebx].dss_arr
+        cmp es:[edi].dh_state,STATE_SEQ
+        je update_seq_move_loop
 ;
-	mov fs:[4*ebx].dss_arr,0
-	inc bx
-	mov fs:dss_perform_index,bx
-	cmp bx,fs:dss_insert_index
-	jne update_seq_discard_loop	
+        mov fs:[4*ebx].dss_arr,0
+        inc bx
+        mov fs:dss_perform_index,bx
+        cmp bx,fs:dss_insert_index
+        jne update_seq_discard_loop     
 ;
-	push es
-	mov ax,fs
-	mov es,ax
-	xor ax,ax
-	mov fs,ax
-	mov ds:disc_seq_list,es
-	push ds
-	mov di,es:dss_next
-	cmp di,ds:disc_seq_list
-	mov ds:disc_seq_list,di
-	mov si,es:dss_prev
-	mov ds,di
-	mov ds:dss_prev,si
-	mov ds,si
-	mov ds:dss_next,di
-	pop ds
-	jne update_seq_free
+        push es
+        mov ax,fs
+        mov es,ax
+        xor ax,ax
+        mov fs,ax
+        mov ds:disc_seq_list,es
+        push ds
+        mov di,es:dss_next
+        cmp di,ds:disc_seq_list
+        mov ds:disc_seq_list,di
+        mov si,es:dss_prev
+        mov ds,di
+        mov ds:dss_prev,si
+        mov ds,si
+        mov ds:dss_next,di
+        pop ds
+        jne update_seq_free
 ;
-	mov ds:disc_seq_list,0
+        mov ds:disc_seq_list,0
 
 update_seq_free:
-	FreeMem
-	pop es
-	mov ax,ds:disc_seq_list
-	or ax,ax
-	jz update_seq_pop_done
+        FreeMem
+        pop es
+        mov ax,ds:disc_seq_list
+        or ax,ax
+        jz update_seq_pop_done
 ;
-	mov bp,ax
-	jmp update_seq_loop
+        mov bp,ax
+        jmp update_seq_loop
 
 update_seq_move_loop:
-	mov dx,es:[edi].dh_sector
-	mov ax,es:[edi].dh_unit
-	test es:[edi].dh_flags,FLAG_IO_PENDING
-	jnz update_seq_moved
+        mov dx,es:[edi].dh_sector
+        mov ax,es:[edi].dh_unit
+        test es:[edi].dh_flags,FLAG_IO_PENDING
+        jnz update_seq_moved
 ;
-	call insert_pending
+        call insert_pending
 
 update_seq_moved:
-	inc bx
-	inc dx
-	cmp bx,fs:dss_insert_index
-	je update_seq_pop_done	
+        inc bx
+        inc dx
+        cmp bx,fs:dss_insert_index
+        je update_seq_pop_done  
 ;
-	mov edi,fs:[4*ebx].dss_arr
-	cmp ax,es:[edi].dh_unit
-	jne update_seq_next
+        mov edi,fs:[4*ebx].dss_arr
+        cmp ax,es:[edi].dh_unit
+        jne update_seq_next
 ;
-	cmp dx,es:[edi].dh_sector
-	je update_seq_move_loop
+        cmp dx,es:[edi].dh_sector
+        je update_seq_move_loop
 
 update_seq_next:
-	mov ax,fs:dss_next
-	cmp ax,bp
-	jne update_seq_loop
+        mov ax,fs:dss_next
+        cmp ax,bp
+        jne update_seq_loop
 
 update_seq_pop_done:
-	popad
-	pop fs
+        popad
+        pop fs
 
 update_seq_done:
-	ret
-update_disc_seq	ENDP
+        ret
+update_disc_seq ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CHECK_BUF
+;               NAME:                   CHECK_BUF
 ;
-;		DESCRIPTION:	Check if sector is in buffer cache
+;               DESCRIPTION:    Check if sector is in buffer cache
 ;
-;		PARAMETERS:		DS		Disc selector
-;						ES		Flat_sel
-;						CX		Unit #
-;						DX		Sector #
+;               PARAMETERS:             DS              Disc selector
+;                                               ES              Flat_sel
+;                                               CX              Unit #
+;                                               DX              Sector #
 ;
-;		RETURNS:		EDI		DiscBlock handle
+;               RETURNS:                EDI             DiscBlock handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-check_buf	PROC near
-	push esi
-	movzx esi,cx
-	mov edi,ds:[4*esi].disc_unit_arr
-	or edi,edi
-	jz check_buf_fail
+check_buf       PROC near
+        push esi
+        movzx esi,cx
+        mov edi,ds:[4*esi].disc_unit_arr
+        or edi,edi
+        jz check_buf_fail
 ;
-	movzx esi,dx
-	mov edi,es:[4*esi+edi].disc_sector_arr
+        movzx esi,dx
+        mov edi,es:[4*esi+edi].disc_sector_arr
 
 ifdef DEBUG
 
@@ -1437,185 +1437,185 @@ ifdef DEBUG
 check_no_del:
 
 endif
-    	
-	or edi,edi
-	clc
-	jnz check_buf_done
-	
+        
+        or edi,edi
+        clc
+        jnz check_buf_done
+        
 check_buf_fail:
-	stc
+        stc
 
 check_buf_done:
-	pop esi
-	ret
-check_buf	ENDP
+        pop esi
+        ret
+check_buf       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INSERT_BUF
+;               NAME:                   INSERT_BUF
 ;
-;		DESCRIPTION:	Insert block in buffer list
+;               DESCRIPTION:    Insert block in buffer list
 ;
-;		PARAMETERS:		DS		DiscBuf handle
-;						ES		Flat_sel
-;						EDI		DiscBlock handle
+;               PARAMETERS:             DS              DiscBuf handle
+;                                               ES              Flat_sel
+;                                               EDI             DiscBlock handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-insert_buf	PROC near
-	push eax
-	push ecx
-	push edx
-	push esi
+insert_buf      PROC near
+        push eax
+        push ecx
+        push edx
+        push esi
 
 ifdef DEBUG
     call CheckDeleted
 endif
     
-	movzx esi,es:[edi].dh_unit
-	mov edx,ds:[4*esi].disc_unit_arr
-	or edx,edx
-	jne insert_buf_used
+        movzx esi,es:[edi].dh_unit
+        mov edx,ds:[4*esi].disc_unit_arr
+        or edx,edx
+        jne insert_buf_used
 ;
-	push edi
-	mov edi,OFFSET disc_sector_arr
-	movzx ecx,ds:disc_sectors_per_unit
-	mov eax,ecx
-	shl eax,2
-	add eax,edi
-	AllocateSmallLinear
-	mov ds:[4*esi].disc_unit_arr,edx
-	mov es:[edx].disc_sectors,0
-	add edi,edx
-	xor eax,eax
-	rep stos dword ptr es:[edi]
-	pop edi
+        push edi
+        mov edi,OFFSET disc_sector_arr
+        movzx ecx,ds:disc_sectors_per_unit
+        mov eax,ecx
+        shl eax,2
+        add eax,edi
+        AllocateSmallLinear
+        mov ds:[4*esi].disc_unit_arr,edx
+        mov es:[edx].disc_sectors,0
+        add edi,edx
+        xor eax,eax
+        rep stos dword ptr es:[edi]
+        pop edi
 
 insert_buf_used:
-	mov ax,es:[edi].dh_unit
-	inc es:[edx].disc_sectors
-	movzx esi,es:[edi].dh_sector
-	mov es:[4*esi+edx].disc_sector_arr,edi
+        mov ax,es:[edi].dh_unit
+        inc es:[edx].disc_sectors
+        movzx esi,es:[edi].dh_sector
+        mov es:[4*esi+edx].disc_sector_arr,edi
 ;
-	pop esi
-	pop edx
-	pop ecx
-	pop eax
-	ret
-insert_buf	ENDP
+        pop esi
+        pop edx
+        pop ecx
+        pop eax
+        ret
+insert_buf      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			REMOVE_BUF
+;               NAME:                   REMOVE_BUF
 ;
-;		DESCRIPTION:	Remove block from buffer list
+;               DESCRIPTION:    Remove block from buffer list
 ;
-;		PARAMETERS:		DS		Disc selector
-;						ES		Flat_sel
-;						EDI		DiscBlock handle
-;						
+;               PARAMETERS:             DS              Disc selector
+;                                               ES              Flat_sel
+;                                               EDI             DiscBlock handle
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-remove_buf	PROC near
-	push ecx
-	push edx
-	push esi
+remove_buf      PROC near
+        push ecx
+        push edx
+        push esi
 
 ifdef DEBUG
     call CheckDeleted
     call CheckBuffered
 endif
     
-	movzx esi,es:[edi].dh_unit
-	mov edx,ds:[4*esi].disc_unit_arr
-	or edx,edx
-	jz remove_buf_done
+        movzx esi,es:[edi].dh_unit
+        mov edx,ds:[4*esi].disc_unit_arr
+        or edx,edx
+        jz remove_buf_done
 ;
-	movzx ecx,es:[edi].dh_sector
-	mov es:[4*ecx+edx].disc_sector_arr,0
-	sub es:[edx].disc_sectors,1
-	jnz remove_buf_done
+        movzx ecx,es:[edi].dh_sector
+        mov es:[4*ecx+edx].disc_sector_arr,0
+        sub es:[edx].disc_sectors,1
+        jnz remove_buf_done
 ;
-	mov ds:[4*esi].disc_unit_arr,0
-	movzx ecx,ds:disc_sectors_per_unit
-	shl ecx,2
-	add ecx,OFFSET disc_sector_arr
-	FreeLinear
+        mov ds:[4*esi].disc_unit_arr,0
+        movzx ecx,ds:disc_sectors_per_unit
+        shl ecx,2
+        add ecx,OFFSET disc_sector_arr
+        FreeLinear
 
 remove_buf_done:
-	pop esi
-	pop edx
-	pop ecx
-	ret
-remove_buf	ENDP
+        pop esi
+        pop edx
+        pop ecx
+        ret
+remove_buf      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Block
+;               NAME:                   Block
 ;
-;		DESCRIPTION:	Block until IO complete
+;               DESCRIPTION:    Block until IO complete
 ;
-;		PARAMETERS:		DS		Disc selector
-;						ES		Flat_sel
-;						EDI		DiscBlock handle
-;						
+;               PARAMETERS:             DS              Disc selector
+;                                               ES              Flat_sel
+;                                               EDI             DiscBlock handle
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-block	Proc near
-	push ax
-	push bx
-	push dx
-	mov ax,es:[edi].dh_thread
-	or ax,ax
-	jnz block_no_signal
+block   Proc near
+        push ax
+        push bx
+        push dx
+        mov ax,es:[edi].dh_thread
+        or ax,ax
+        jnz block_no_signal
 ;
-	GetThread
-	mov es:[edi].dh_thread,ax
-	mov bx,ds:disc_thread
-	Signal
-	jmp block_do
+        GetThread
+        mov es:[edi].dh_thread,ax
+        mov bx,ds:disc_thread
+        Signal
+        jmp block_do
 
 block_no_signal:
-	push ds
+        push ds
 
-ifdef DEBUG	
-	call CheckDriveWait
+ifdef DEBUG     
+        call CheckDriveWait
 endif
-	
-	mov ax,SEG data
-	mov ds,ax
-	mov bx,ds:drive_wait_free
-	mov ax,[bx]
-	mov ds:drive_wait_free,ax
-	GetThread
-	mov ds:[bx].dws_thread,ax
-	mov ax,es:[edi].dh_wait
-	mov ds:[bx].dws_link,ax
-	mov es:[edi].dh_wait,bx
+        
+        mov ax,SEG data
+        mov ds,ax
+        mov bx,ds:drive_wait_free
+        mov ax,[bx]
+        mov ds:drive_wait_free,ax
+        GetThread
+        mov ds:[bx].dws_thread,ax
+        mov ax,es:[edi].dh_wait
+        mov ds:[bx].dws_link,ax
+        mov es:[edi].dh_wait,bx
 
-ifdef DEBUG	
-	dec ds:drive_wait_count
-	call CheckDriveWait
+ifdef DEBUG     
+        dec ds:drive_wait_count
+        call CheckDriveWait
 endif
-	
-	pop ds
+        
+        pop ds
 
 block_do:
-	LeaveSection ds:disc_section
- 	WaitForSignal
-	EnterSection ds:disc_section
-;	
+        LeaveSection ds:disc_section
+        WaitForSignal
+        EnterSection ds:disc_section
+;       
     mov bx,es:[edi].dh_thread
     cmp ax,bx
     je block_do
 ;    
-	push ds
+        push ds
     mov bx,SEG data
     mov ds,bx
 ;    
@@ -1640,150 +1640,150 @@ block_exit_pop:
     pop ds
     
 block_exit:
-	pop dx
-	pop bx
-	pop ax
-	ret
-block	Endp
+        pop dx
+        pop bx
+        pop ax
+        ret
+block   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			START_DISC
+;               NAME:                   START_DISC
 ;
-;		DESCRIPTION:	Start disc
+;               DESCRIPTION:    Start disc
 ;
-;		PARAMETERS:		BX		Disc sel
-;						
+;               PARAMETERS:             BX              Disc sel
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_disc_name	DB 'Start Disc',0
+start_disc_name DB 'Start Disc',0
 
-start_disc	Proc far
-	push ds
-	push es
-	pusha
+start_disc      Proc far
+        push ds
+        push es
+        pusha
 ;
-	mov ax,SEG data
-	mov ds,ax
-	mov cx,MAX_DRIVES
-	mov si,OFFSET drive_def_arr
+        mov ax,SEG data
+        mov ds,ax
+        mov cx,MAX_DRIVES
+        mov si,OFFSET drive_def_arr
 
 start_drives_loop:
-	mov ax,[si]
-	or ax,ax
-	jz start_drives_next
+        mov ax,[si]
+        or ax,ax
+        jz start_drives_next
 ;
-	cmp ax,-1
-	je start_drives_next
+        cmp ax,-1
+        je start_drives_next
 ;
-	mov es,ax
-	cmp bx,es:drive_disc
-	jne start_drives_next
+        mov es,ax
+        cmp bx,es:drive_disc
+        jne start_drives_next
 ;
-	push ecx
-	mov ecx,es:drive_sectors
-	mov ax,si
-	sub ax,OFFSET drive_def_arr
-	shr ax,1
-	StartFileSystem
-	pop ecx
+        push ecx
+        mov ecx,es:drive_sectors
+        mov ax,si
+        sub ax,OFFSET drive_def_arr
+        shr ax,1
+        StartFileSystem
+        pop ecx
 
 start_drives_next:
-	add si,2
-	loop start_drives_loop	
+        add si,2
+        loop start_drives_loop  
 ;
-	popa
-	pop es
-	pop ds
-	ret
-start_disc	Endp
+        popa
+        pop es
+        pop ds
+        ret
+start_disc      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			STOP_DISC
+;               NAME:                   STOP_DISC
 ;
-;		DESCRIPTION:	Stop disc
+;               DESCRIPTION:    Stop disc
 ;
-;		PARAMETERS:		BX		Disc sel
-;						
+;               PARAMETERS:             BX              Disc sel
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-stop_disc_name	DB 'Stop Disc',0
+stop_disc_name  DB 'Stop Disc',0
 
-stop_disc	Proc far
-	push ds
-	push es
-	pusha
+stop_disc       Proc far
+        push ds
+        push es
+        pusha
 ;
-	mov ax,SEG data
-	mov ds,ax
-	mov cx,MAX_DRIVES
-	mov si,OFFSET drive_def_arr
+        mov ax,SEG data
+        mov ds,ax
+        mov cx,MAX_DRIVES
+        mov si,OFFSET drive_def_arr
 
 stop_drives_loop:
-	mov ax,[si]
-	or ax,ax
-	jz stop_drives_next
+        mov ax,[si]
+        or ax,ax
+        jz stop_drives_next
 ;
-	cmp ax,-1
-	je stop_drives_next
+        cmp ax,-1
+        je stop_drives_next
 ;
-	mov es,ax
-	cmp bx,es:drive_disc
-	jne stop_drives_next
+        mov es,ax
+        cmp bx,es:drive_disc
+        jne stop_drives_next
 ;
-	mov ax,si
-	sub ax,OFFSET drive_def_arr
-	shr ax,1
-	StopFileSystem
+        mov ax,si
+        sub ax,OFFSET drive_def_arr
+        shr ax,1
+        StopFileSystem
 
 stop_drives_next:
-	add si,2
-	loop stop_drives_loop	
+        add si,2
+        loop stop_drives_loop   
 ;
-	popa
-	pop es
-	pop ds
-	ret
-stop_disc	Endp
+        popa
+        pop es
+        pop ds
+        ret
+stop_disc       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SET_DISC_PARAM
+;               NAME:                   SET_DISC_PARAM
 ;
-;		DESCRIPTION:	Set disc parameters
+;               DESCRIPTION:    Set disc parameters
 ;
-;		PARAMETERS:		AX		Sectors per unit
-;						BX		Disc sel
-;						CX		Bytes per sector
-;						DX		Units
-;						SI		BIOS sectors / cylinder
-;						DI		BIOS heads
+;               PARAMETERS:             AX              Sectors per unit
+;                                               BX              Disc sel
+;                                               CX              Bytes per sector
+;                                               DX              Units
+;                                               SI              BIOS sectors / cylinder
+;                                               DI              BIOS heads
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_disc_param_name	DB 'Set Disc Param',0
+set_disc_param_name     DB 'Set Disc Param',0
 
-set_disc_param	Proc far
-	push ds
-	push es
-	push eax
-	push ecx
-	push si
-	push edi
+set_disc_param  Proc far
+        push ds
+        push es
+        push eax
+        push ecx
+        push si
+        push edi
 ;
-	mov ds,bx
-	mov ds:disc_sectors_per_unit,ax
-	mov ds:disc_bytes_per_sector,cx
-	mov ds:disc_units,dx
-	mov ds:disc_sectors_per_cyl,si
-	mov ds:disc_heads,di
+        mov ds,bx
+        mov ds:disc_sectors_per_unit,ax
+        mov ds:disc_bytes_per_sector,cx
+        mov ds:disc_units,dx
+        mov ds:disc_sectors_per_cyl,si
+        mov ds:disc_heads,di
 ;
     GetFreePhysical
     shr eax,5               ; use 1/32 of physical memory per disc
@@ -1795,676 +1795,676 @@ set_disc_param	Proc far
 set_param_max:
     shr eax,9
     mov ds:disc_cache_limit,eax
-	mov ds:disc_cached_sectors,0
+        mov ds:disc_cached_sectors,0
 ;
-	mov ecx,OFFSET disc_unit_arr
-	movzx eax,dx
-	shl eax,2
-	add eax,ecx
-	AllocateSmallGlobalMem
-	xor di,di
-	xor si,si
-	rep movsb
+        mov ecx,OFFSET disc_unit_arr
+        movzx eax,dx
+        shl eax,2
+        add eax,ecx
+        AllocateSmallGlobalMem
+        xor di,di
+        xor si,si
+        rep movsb
 ;
-	xor eax,eax
-	movzx edi,di
-	movzx ecx,dx
-	rep stos dword ptr es:[edi]
+        xor eax,eax
+        movzx edi,di
+        movzx ecx,dx
+        rep stos dword ptr es:[edi]
 ;
-	mov si,ds
-	mov di,es
-	mov ax,gdt_sel
-	mov ds,ax
-	cli
-	mov eax,[si]
-	xchg eax,[di]
-	mov [si],eax
-	mov eax,[si+4]
-	xchg eax,[di+4]
-	mov [si+4],eax
-	sti
-	jmp short $+2
-	mov ds,si
-	mov es,di
-	FreeMem
+        mov si,ds
+        mov di,es
+        mov ax,gdt_sel
+        mov ds,ax
+        cli
+        mov eax,[si]
+        xchg eax,[di]
+        mov [si],eax
+        mov eax,[si+4]
+        xchg eax,[di+4]
+        mov [si+4],eax
+        sti
+        jmp short $+2
+        mov ds,si
+        mov es,di
+        FreeMem
 ;
-	pop edi
-	pop si
-	pop ecx
-	pop eax
-	pop es
-	pop ds
-	ret
-set_disc_param	Endp
+        pop edi
+        pop si
+        pop ecx
+        pop eax
+        pop es
+        pop ds
+        ret
+set_disc_param  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			REGISTER_DISC_CHANGE
+;               NAME:                   REGISTER_DISC_CHANGE
 ;
-;		DESCRIPTION:	Register disc-change procedure
+;               DESCRIPTION:    Register disc-change procedure
 ;
-;		PARAMETERS:		BX		Disc sel
-;						ES:DI	Disc change proc
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-register_disc_change_name	DB 'Register Disc Change',0
-
-register_disc_change	Proc far
-	push ds
-	push bx
-;
-	mov ds,bx
-	mov word ptr ds:disc_change_proc,di
-	mov word ptr ds:disc_change_proc+2,es
-;
-	pop bx
-	pop ds
-	ret
-register_disc_change	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			wait_for_disc_request
-;
-;		DESCRIPTION:	wait for a new disc request
-;
-;		PARAMETERS:		BX		Disc selector
+;               PARAMETERS:             BX              Disc sel
+;                                               ES:DI   Disc change proc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-wait_for_disc_request_name	DB 'Wait For Disc Request', 0
+register_disc_change_name       DB 'Register Disc Change',0
 
-wait_for_disc_request	Proc far
-	push ds
-	push es
-	pushad
+register_disc_change    Proc far
+        push ds
+        push bx
 ;
-	mov ds,bx
-	mov ax,flat_sel
-	mov es,ax
+        mov ds,bx
+        mov word ptr ds:disc_change_proc,di
+        mov word ptr ds:disc_change_proc+2,es
 ;
-	ClearSignal
+        pop bx
+        pop ds
+        ret
+register_disc_change    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   wait_for_disc_request
+;
+;               DESCRIPTION:    wait for a new disc request
+;
+;               PARAMETERS:             BX              Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_disc_request_name      DB 'Wait For Disc Request', 0
+
+wait_for_disc_request   Proc far
+        push ds
+        push es
+        pushad
+;
+        mov ds,bx
+        mov ax,flat_sel
+        mov es,ax
+;
+        ClearSignal
 
 wait_for_disc_req_loop:
-	EnterSection ds:disc_section
-	GetThread
-	mov ds:disc_thread,ax
-	call update_async_write
-	call update_async_timer
-	LeaveSection ds:disc_section
+        EnterSection ds:disc_section
+        GetThread
+        mov ds:disc_thread,ax
+        call update_async_write
+        call update_async_timer
+        LeaveSection ds:disc_section
 ;
-	cli
-	mov ebx,ds:disc_pend_list
-	or ebx,ebx
-	jnz wait_for_disc_req_done
+        cli
+        mov ebx,ds:disc_pend_list
+        or ebx,ebx
+        jnz wait_for_disc_req_done
 ;
-	sti
-	WaitForSignal
-	mov ds:disc_thread,0
-	jmp wait_for_disc_req_loop
-		
+        sti
+        WaitForSignal
+        mov ds:disc_thread,0
+        jmp wait_for_disc_req_loop
+                
 wait_for_disc_req_done:
-	mov ds:disc_thread,0
-	sti
+        mov ds:disc_thread,0
+        sti
 ;
-	popad
-	pop es
-	pop ds
-	ret
-wait_for_disc_request	Endp
-	
+        popad
+        pop es
+        pop ds
+        ret
+wait_for_disc_request   Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			poll_disc_request
+;               NAME:                   poll_disc_request
 ;
-;		DESCRIPTION:	poll for a new disc request
+;               DESCRIPTION:    poll for a new disc request
 ;
-;		PARAMETERS:		BX		Disc selector
+;               PARAMETERS:             BX              Disc selector
 ;
-;		RETURNS:		EDI		Disc handle
+;               RETURNS:                EDI             Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-poll_disc_request_name	DB 'Poll Disc Request', 0
+poll_disc_request_name  DB 'Poll Disc Request', 0
 
-poll_disc_request	Proc far
-	push ds
+poll_disc_request       Proc far
+        push ds
 ;
-	mov ds,bx
-	mov edi,ds:disc_pend_list
-	or edi,edi
-	stc
-	jz poll_disc_req_done
+        mov ds,bx
+        mov edi,ds:disc_pend_list
+        or edi,edi
+        stc
+        jz poll_disc_req_done
 ;
-	clc
+        clc
 
 poll_disc_req_done:
-	pop ds
-	ret
-poll_disc_request	Endp
-	
+        pop ds
+        ret
+poll_disc_request       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			get_disc_request
+;               NAME:                   get_disc_request
 ;
-;		DESCRIPTION:	get a disc request
+;               DESCRIPTION:    get a disc request
 ;
-;		PARAMETERS:		BX		Disc selector
+;               PARAMETERS:             BX              Disc selector
 ;
-;		RETURNS:		EDI		Disc handle
+;               RETURNS:                EDI             Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_disc_request_name	DB 'Get Disc Request', 0
+get_disc_request_name   DB 'Get Disc Request', 0
 
-get_disc_request	Proc far
-	push ds
-	push es
-	push eax
-	push ebx
-	push ecx
-	push edx
-	push esi
+get_disc_request        Proc far
+        push ds
+        push es
+        push eax
+        push ebx
+        push ecx
+        push edx
+        push esi
 ;
-	mov ax,flat_sel
-	mov es,ax
-	mov ds,bx
-	EnterSection ds:disc_section
-	call update_async_write
-	call update_async_timer
-	call update_disc_seq
-	call get_pending
-	jnc get_disc_req_ok
+        mov ax,flat_sel
+        mov es,ax
+        mov ds,bx
+        EnterSection ds:disc_section
+        call update_async_write
+        call update_async_timer
+        call update_disc_seq
+        call get_pending
+        jnc get_disc_req_ok
 
 get_disc_req_fail:
-	LeaveSection ds:disc_section
-	stc
-	jmp get_disc_req_done
+        LeaveSection ds:disc_section
+        stc
+        jmp get_disc_req_done
 
 get_disc_req_ok:
-	or es:[edi].dh_flags,FLAG_IO_BUSY
-	LeaveSection ds:disc_section
-	clc
-	
+        or es:[edi].dh_flags,FLAG_IO_BUSY
+        LeaveSection ds:disc_section
+        clc
+        
 get_disc_req_done:
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	pop es
-	pop ds
-	ret
-get_disc_request	Endp
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        pop eax
+        pop es
+        pop ds
+        ret
+get_disc_request        Endp
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			new_disc_request
+;               NAME:                   new_disc_request
 ;
-;		DESCRIPTION:	Create a new disc request and return the handle
+;               DESCRIPTION:    Create a new disc request and return the handle
 ;
-;		PARAMETERS:		BX		Disc selector
-;						AX		Sector
-;						DX		Unit
+;               PARAMETERS:             BX              Disc selector
+;                                               AX              Sector
+;                                               DX              Unit
 ;
-;		RETURNS:		EDI		Disc handle
+;               RETURNS:                EDI             Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-new_disc_request_name	DB 'New Disc Request', 0
+new_disc_request_name   DB 'New Disc Request', 0
 
-new_disc_request	Proc far
-	push ds
-	push es
-	push cx
-	push dx
+new_disc_request        Proc far
+        push ds
+        push es
+        push cx
+        push dx
 ;
-	mov ds,bx
-	mov cx,flat_sel
-	mov es,cx
-	mov cx,dx
-	mov dx,ax
-	EnterSection ds:disc_section
+        mov ds,bx
+        mov cx,flat_sel
+        mov es,cx
+        mov cx,dx
+        mov dx,ax
+        EnterSection ds:disc_section
 ;
-	call check_buf
-	jnc new_disc_req_fail
+        call check_buf
+        jnc new_disc_req_fail
 ;
-	cmp dx,ds:disc_sectors_per_unit
-	jae new_disc_req_fail
+        cmp dx,ds:disc_sectors_per_unit
+        jae new_disc_req_fail
 ;
-	cmp cx,ds:disc_units
-	jae new_disc_req_fail
+        cmp cx,ds:disc_units
+        jae new_disc_req_fail
 ;
-	call allocate_handle
-	push edx
-	call allocate_data
-	mov es:[edi].dh_data,edx
-	pop edx
-	mov es:[edi].dh_buf_sel,ds
-	mov es:[edi].dh_sector,dx
-	mov es:[edi].dh_unit,cx
-	mov es:[edi].dh_wait,0
-	mov es:[edi].dh_thread,0
-	mov es:[edi].dh_lock_count,0
-	mov es:[edi].dh_state,STATE_EMPTY
-	mov es:[edi].dh_usage,0
-	mov es:[edi].dh_flags,0
-	mov es:[edi].dh_time_lsb,0
-	mov es:[edi].dh_time_msb,0
-	call insert_buf
-	inc es:[edi].dh_lock_count
-	LeaveSection ds:disc_section
-	clc
-	jmp new_disc_req_done
+        call allocate_handle
+        push edx
+        call allocate_data
+        mov es:[edi].dh_data,edx
+        pop edx
+        mov es:[edi].dh_buf_sel,ds
+        mov es:[edi].dh_sector,dx
+        mov es:[edi].dh_unit,cx
+        mov es:[edi].dh_wait,0
+        mov es:[edi].dh_thread,0
+        mov es:[edi].dh_lock_count,0
+        mov es:[edi].dh_state,STATE_EMPTY
+        mov es:[edi].dh_usage,0
+        mov es:[edi].dh_flags,0
+        mov es:[edi].dh_time_lsb,0
+        mov es:[edi].dh_time_msb,0
+        call insert_buf
+        inc es:[edi].dh_lock_count
+        LeaveSection ds:disc_section
+        clc
+        jmp new_disc_req_done
 
 new_disc_req_fail:
-	LeaveSection ds:disc_section
-	stc
+        LeaveSection ds:disc_section
+        stc
 
 new_disc_req_done:
-	pop dx
-	pop cx
-	pop es
-	pop ds
-	ret
-new_disc_request	Endp
+        pop dx
+        pop cx
+        pop es
+        pop ds
+        ret
+new_disc_request        Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LOCK_DISC_REQUEST
+;               NAME:                   LOCK_DISC_REQUEST
 ;
-;		DESCRIPTION:	Lock disc sector and return handle
+;               DESCRIPTION:    Lock disc sector and return handle
 ;
-;		PARAMETERS:		BX		Disc selector
-;						AX		Sector
-;						DX		Unit
+;               PARAMETERS:             BX              Disc selector
+;                                               AX              Sector
+;                                               DX              Unit
 ;
-;		RETURNS:		EDI		Disc handle
+;               RETURNS:                EDI             Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-lock_disc_request_name	DB 'Lock Disc Request',0
+lock_disc_request_name  DB 'Lock Disc Request',0
 
-lock_disc_request	PROC far
-	push ds
-	push es
-	push ax
-	push ebx
-	push cx
-	push edx
+lock_disc_request       PROC far
+        push ds
+        push es
+        push ax
+        push ebx
+        push cx
+        push edx
 ;
-	mov ds,bx
-	mov cx,flat_sel
-	mov es,cx
-	mov cx,dx
-	mov dx,ax
-	EnterSection ds:disc_section
+        mov ds,bx
+        mov cx,flat_sel
+        mov es,cx
+        mov cx,dx
+        mov dx,ax
+        EnterSection ds:disc_section
 
 lock_disc_loop:
-	call check_buf
-	jnc lock_disc_ok
+        call check_buf
+        jnc lock_disc_ok
 ;
-	call allocate_handle
-	push edx
-	call allocate_data
-	mov es:[edi].dh_data,edx
-	pop edx
-	mov es:[edi].dh_buf_sel,ds
-	mov es:[edi].dh_sector,dx
-	mov es:[edi].dh_unit,cx
-	mov es:[edi].dh_wait,0
-	mov es:[edi].dh_thread,0
-	mov es:[edi].dh_lock_count,0
-	mov es:[edi].dh_state,STATE_EMPTY
-	mov es:[edi].dh_usage,0
-	mov es:[edi].dh_flags,0
-	mov es:[edi].dh_time_lsb,0
-	mov es:[edi].dh_time_msb,0
-	mov es:[edi].dh_flags,0
-	call insert_buf
-	inc es:[edi].dh_lock_count
+        call allocate_handle
+        push edx
+        call allocate_data
+        mov es:[edi].dh_data,edx
+        pop edx
+        mov es:[edi].dh_buf_sel,ds
+        mov es:[edi].dh_sector,dx
+        mov es:[edi].dh_unit,cx
+        mov es:[edi].dh_wait,0
+        mov es:[edi].dh_thread,0
+        mov es:[edi].dh_lock_count,0
+        mov es:[edi].dh_state,STATE_EMPTY
+        mov es:[edi].dh_usage,0
+        mov es:[edi].dh_flags,0
+        mov es:[edi].dh_time_lsb,0
+        mov es:[edi].dh_time_msb,0
+        mov es:[edi].dh_flags,0
+        call insert_buf
+        inc es:[edi].dh_lock_count
 
 lock_disc_ok:
     clc
 
 lock_disc_done:
-	pop edx
-	pop cx
-	pop ebx
-	pop ax
-	pop es
-	pop ds
-	ret
-lock_disc_request	ENDP
+        pop edx
+        pop cx
+        pop ebx
+        pop ax
+        pop es
+        pop ds
+        ret
+lock_disc_request       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			MODIFY_DISC_REQUEST
+;               NAME:                   MODIFY_DISC_REQUEST
 ;
-;		DESCRIPTION:	Modify disc request
+;               DESCRIPTION:    Modify disc request
 ;
-;		PARAMETERS:		EDI		Handle
+;               PARAMETERS:             EDI             Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-modify_disc_request_name	DB 'Modify Disc Request',0
+modify_disc_request_name        DB 'Modify Disc Request',0
 
-modify_disc_request	PROC far
-	push ds
-	push es
-	pushad
+modify_disc_request     PROC far
+        push ds
+        push es
+        pushad
 ;
-	mov ax,flat_sel
-	mov es,ax
-	mov ds,es:[edi].dh_buf_sel
-;	
-	mov al,es:[edi].dh_state
-	cmp al,STATE_USED
-	jne modify_disc_done
-;	
-	mov es:[edi].dh_state,STATE_DIRTY
-;	
-	test es:[edi].dh_flags, FLAG_IO_PENDING
-	jnz modify_disc_done
-;	
-	GetSystemTime
-	mov es:[edi].dh_time_lsb,eax
-	mov es:[edi].dh_time_msb,dx
-	call insert_async_write
-	call update_async_timer
+        mov ax,flat_sel
+        mov es,ax
+        mov ds,es:[edi].dh_buf_sel
+;       
+        mov al,es:[edi].dh_state
+        cmp al,STATE_USED
+        jne modify_disc_done
+;       
+        mov es:[edi].dh_state,STATE_DIRTY
+;       
+        test es:[edi].dh_flags, FLAG_IO_PENDING
+        jnz modify_disc_done
+;       
+        GetSystemTime
+        mov es:[edi].dh_time_lsb,eax
+        mov es:[edi].dh_time_msb,dx
+        call insert_async_write
+        call update_async_timer
 
 modify_disc_done:
-	clc
+        clc
 ;
-	popad
-	pop es
-	pop ds
-	ret
-modify_disc_request	ENDP
+        popad
+        pop es
+        pop ds
+        ret
+modify_disc_request     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UNLOCK_DISC_REQUEST
+;               NAME:                   UNLOCK_DISC_REQUEST
 ;
-;		DESCRIPTION:	UNlock disc request
+;               DESCRIPTION:    UNlock disc request
 ;
-;		PARAMETERS:		EDI		Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unlock_disc_request_name	DB 'Unlock Disc Request',0
-
-unlock_disc_request	PROC far
-	push ds
-;
-	mov ds,es:[edi].dh_buf_sel
-	LeaveSection ds:disc_section
-;
-	pop ds
-	clc
-	ret
-unlock_disc_request	ENDP
-
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			disc_request_completed
-;
-;		DESCRIPTION:	Disc request completed
-;
-;		PARAMETERS:		BX		Disc selector
-;						EDI		Disc handle
+;               PARAMETERS:             EDI             Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disc_request_completed_name	DB 'Disc Request Completed', 0
+unlock_disc_request_name        DB 'Unlock Disc Request',0
 
-disc_request_completed	Proc far
-	push ds
-	push es
-	push eax
-	push bx
-	push dx
+unlock_disc_request     PROC far
+        push ds
 ;
-	mov ax,flat_sel
-	mov es,ax
-	mov ds,bx
-	EnterSection ds:disc_section
+        mov ds,es:[edi].dh_buf_sel
+        LeaveSection ds:disc_section
+;
+        pop ds
+        clc
+        ret
+unlock_disc_request     ENDP
 
-ifdef DEBUG	
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   disc_request_completed
+;
+;               DESCRIPTION:    Disc request completed
+;
+;               PARAMETERS:             BX              Disc selector
+;                                               EDI             Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_request_completed_name     DB 'Disc Request Completed', 0
+
+disc_request_completed  Proc far
+        push ds
+        push es
+        push eax
+        push bx
+        push dx
+;
+        mov ax,flat_sel
+        mov es,ax
+        mov ds,bx
+        EnterSection ds:disc_section
+
+ifdef DEBUG     
     call CheckDeleted
     call CheckBuffered
 endif
     
-	dec ds:disc_io_count
-;	
-	and es:[edi].dh_flags, NOT (FLAG_IO_PENDING OR FLAG_IO_BUSY)
-	xor bx,bx
-	xchg bx,es:[edi].dh_thread
-	Signal
-	mov bx,es:[edi].dh_wait
-	or bx,bx
-	jz completed_wakeup_done
+        dec ds:disc_io_count
+;       
+        and es:[edi].dh_flags, NOT (FLAG_IO_PENDING OR FLAG_IO_BUSY)
+        xor bx,bx
+        xchg bx,es:[edi].dh_thread
+        Signal
+        mov bx,es:[edi].dh_wait
+        or bx,bx
+        jz completed_wakeup_done
 ;
-	push ds
-	mov ax,SEG data
-	mov ds,ax
+        push ds
+        mov ax,SEG data
+        mov ds,ax
 
 completed_wakeup_loop:
-	push bx
-	mov bx,ds:[bx].dws_thread
-	Signal
-	pop bx
+        push bx
+        mov bx,ds:[bx].dws_thread
+        Signal
+        pop bx
 
 ifdef DEBUG
-	call CheckDriveWait
+        call CheckDriveWait
 endif
-	
-	mov dx,ds:[bx].dws_link
-	mov ax,ds:drive_wait_free
-	mov [bx],ax
-	mov ds:drive_wait_free,bx
+        
+        mov dx,ds:[bx].dws_link
+        mov ax,ds:drive_wait_free
+        mov [bx],ax
+        mov ds:drive_wait_free,bx
 
 ifdef DEBUG
     inc ds:drive_wait_count
-	call CheckDriveWait
-endif	
-	
-	mov bx,dx
-	or bx,bx
-	jnz completed_wakeup_loop
+        call CheckDriveWait
+endif   
+        
+        mov bx,dx
+        or bx,bx
+        jnz completed_wakeup_loop
 ;
-	pop ds
+        pop ds
 
 completed_wakeup_done:
-	mov es:[edi].dh_wait,0
+        mov es:[edi].dh_wait,0
 ;
-	test es:[edi].dh_flags, FLAG_EXT_DATA
-	jz completed_done
+        test es:[edi].dh_flags, FLAG_EXT_DATA
+        jz completed_done
 ;
-	cmp es:[edi].dh_lock_count,0
-	jnz completed_done
+        cmp es:[edi].dh_lock_count,0
+        jnz completed_done
 
 ifdef DEBUG
-	call IsPending
+        call IsPending
 endif
-	
-	call remove_buf
-	mov es:[edi].dh_state, STATE_EMPTY
-	mov eax,ds:disc_handle_list
-	mov es:[edi],eax
-	mov ds:disc_handle_list,edi
-	dec ds:disc_cached_sectors
+        
+        call remove_buf
+        mov es:[edi].dh_state, STATE_EMPTY
+        mov eax,ds:disc_handle_list
+        mov es:[edi],eax
+        mov ds:disc_handle_list,edi
+        dec ds:disc_cached_sectors
 
 ifdef DEBUG
-	call CheckAll
+        call CheckAll
 endif
 
 completed_done:
-	LeaveSection ds:disc_section
-	xor edi,edi
+        LeaveSection ds:disc_section
+        xor edi,edi
 ;
-	pop dx
-	pop bx
-	pop eax
-	pop es
-	pop ds
-	ret
-disc_request_completed	Endp
+        pop dx
+        pop bx
+        pop eax
+        pop es
+        pop ds
+        ret
+disc_request_completed  Endp
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			get_disc_request_array
+;               NAME:                   get_disc_request_array
 ;
-;		DESCRIPTION:	get a disc request array
+;               DESCRIPTION:    get a disc request array
 ;
-;		PARAMETERS:		BX		Disc selector
-;						ECX		Max number of entries
+;               PARAMETERS:             BX              Disc selector
+;                                               ECX             Max number of entries
 ;
-;		RETURNS:		ESI		Disc array
-;						ECX		Number of entries
+;               RETURNS:                ESI             Disc array
+;                                               ECX             Number of entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_disc_request_array_name	DB 'Get Disc Request Array', 0
+get_disc_request_array_name     DB 'Get Disc Request Array', 0
 
-get_disc_request_array	Proc far
-	push ds
-	push es
-	push eax
-	push ebx
-	push edx
-	push edi
-	push ebp
+get_disc_request_array  Proc far
+        push ds
+        push es
+        push eax
+        push ebx
+        push edx
+        push edi
+        push ebp
 ;
-	mov ebp,ecx
-	mov ax,flat_sel
-	mov es,ax
-	mov ds,bx
-	EnterSection ds:disc_section
+        mov ebp,ecx
+        mov ax,flat_sel
+        mov es,ax
+        mov ds,bx
+        EnterSection ds:disc_section
     mov ax,ds:disc_io_count
     or ax,ax
     jz get_disc_req_arr_io_ok
 ;
     int 3
 
-get_disc_req_arr_io_ok:	
+get_disc_req_arr_io_ok: 
 
 ifdef DEBUG
-	call CheckAll
+        call CheckAll
 endif
-	
-	call update_async_write
-	call update_async_timer
-	call update_disc_seq
-	xor ecx,ecx
-	mov edi,ds:disc_pend_list
-	or edi,edi
-	jz get_disc_req_arr_done
+        
+        call update_async_write
+        call update_async_timer
+        call update_disc_seq
+        xor ecx,ecx
+        mov edi,ds:disc_pend_list
+        or edi,edi
+        jz get_disc_req_arr_done
 ;
-	movzx edx,es:[edi].dh_sector
-	movzx esi,es:[edi].dh_unit
-	mov esi,ds:[4*esi].disc_unit_arr
-	lea ebx,[4*edx+esi].disc_sector_arr
-	mov edi,es:[4*edx+esi].disc_sector_arr
-	or edi,edi
-	jz get_disc_req_arr_done
+        movzx edx,es:[edi].dh_sector
+        movzx esi,es:[edi].dh_unit
+        mov esi,ds:[4*esi].disc_unit_arr
+        lea ebx,[4*edx+esi].disc_sector_arr
+        mov edi,es:[4*edx+esi].disc_sector_arr
+        or edi,edi
+        jz get_disc_req_arr_done
 ;
-	or es:[edi].dh_flags,FLAG_IO_BUSY
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	je get_disc_req_arr_read
+        or es:[edi].dh_flags,FLAG_IO_BUSY
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        je get_disc_req_arr_read
 
 get_disc_req_arr_write:
-	inc edx
-	inc ecx
-	cmp ecx,ebp
-	jnc get_disc_req_arr_unlink
+        inc edx
+        inc ecx
+        cmp ecx,ebp
+        jnc get_disc_req_arr_unlink
 ;
-	cmp dx,ds:disc_sectors_per_unit
-	jae get_disc_req_arr_unlink
+        cmp dx,ds:disc_sectors_per_unit
+        jae get_disc_req_arr_unlink
 ;
-	mov edi,es:[4*edx+esi].disc_sector_arr
-	or edi,edi
-	jz get_disc_req_arr_unlink
+        mov edi,es:[4*edx+esi].disc_sector_arr
+        or edi,edi
+        jz get_disc_req_arr_unlink
 ;
-	mov al,es:[edi].dh_flags
-	test al,FLAG_IO_PENDING
-	jz get_disc_req_arr_unlink
+        mov al,es:[edi].dh_flags
+        test al,FLAG_IO_PENDING
+        jz get_disc_req_arr_unlink
 ;
-	test al,FLAG_IO_BUSY
-	jnz get_disc_req_arr_unlink
+        test al,FLAG_IO_BUSY
+        jnz get_disc_req_arr_unlink
 ;
-	mov al,es:[edi].dh_state
-	cmp al,STATE_DIRTY
-	jne get_disc_req_arr_check_seq
+        mov al,es:[edi].dh_state
+        cmp al,STATE_DIRTY
+        jne get_disc_req_arr_check_seq
 ;
-	or es:[edi].dh_flags,FLAG_IO_BUSY
-	jmp get_disc_req_arr_write
+        or es:[edi].dh_flags,FLAG_IO_BUSY
+        jmp get_disc_req_arr_write
 
 get_disc_req_arr_check_seq:
-	cmp al,STATE_SEQ
-	jne get_disc_req_arr_unlink
-;	
-	or es:[edi].dh_flags,FLAG_IO_BUSY
-	jmp get_disc_req_arr_write
+        cmp al,STATE_SEQ
+        jne get_disc_req_arr_unlink
+;       
+        or es:[edi].dh_flags,FLAG_IO_BUSY
+        jmp get_disc_req_arr_write
 
 get_disc_req_arr_read:
-	inc edx
-	inc ecx
-	cmp ecx,ebp
-	jnc get_disc_req_arr_unlink
+        inc edx
+        inc ecx
+        cmp ecx,ebp
+        jnc get_disc_req_arr_unlink
 ;
-	cmp dx,ds:disc_sectors_per_unit
-	jae get_disc_req_arr_unlink
+        cmp dx,ds:disc_sectors_per_unit
+        jae get_disc_req_arr_unlink
 ;
-	mov edi,es:[4*edx+esi].disc_sector_arr
-	or edi,edi
-	jz get_disc_req_arr_unlink
+        mov edi,es:[4*edx+esi].disc_sector_arr
+        or edi,edi
+        jz get_disc_req_arr_unlink
 ;
-	mov al,es:[edi].dh_flags
-	test al,FLAG_IO_PENDING
-	jz get_disc_req_arr_unlink
+        mov al,es:[edi].dh_flags
+        test al,FLAG_IO_PENDING
+        jz get_disc_req_arr_unlink
 ;
-	test al,FLAG_IO_BUSY
-	jnz get_disc_req_arr_unlink
+        test al,FLAG_IO_BUSY
+        jnz get_disc_req_arr_unlink
 ;
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	jne get_disc_req_arr_unlink
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        jne get_disc_req_arr_unlink
 ;
-	or es:[edi].dh_flags,FLAG_IO_BUSY
-	jmp get_disc_req_arr_read
+        or es:[edi].dh_flags,FLAG_IO_BUSY
+        jmp get_disc_req_arr_read
 
 get_disc_req_arr_unlink:
     add ds:disc_io_count,cx
     sub ds:disc_pend_count,cx
 ;    
-	mov esi,ebx
-	mov edx,es:[esi]
-	mov edi,es:[esi+4*ecx-4]
-	mov eax,es:[edi].dh_next
-	mov ebx,es:[edx].dh_prev
-	mov es:[ebx].dh_next,eax
-	mov es:[eax].dh_prev,ebx
-	cmp eax,edx
-	jne get_disc_req_arr_unlinked
+        mov esi,ebx
+        mov edx,es:[esi]
+        mov edi,es:[esi+4*ecx-4]
+        mov eax,es:[edi].dh_next
+        mov ebx,es:[edx].dh_prev
+        mov es:[ebx].dh_next,eax
+        mov es:[eax].dh_prev,ebx
+        cmp eax,edx
+        jne get_disc_req_arr_unlinked
 ;
     mov ax,ds:disc_pend_count
     or ax,ax
@@ -2473,17 +2473,17 @@ get_disc_req_arr_unlink:
     int 3
 
 get_disc_req_arr_pend_ok:
-	mov ds:disc_pend_list,0
-	mov ds:disc_pend_first,0
-	clc
-	jmp get_disc_req_arr_done
+        mov ds:disc_pend_list,0
+        mov ds:disc_pend_first,0
+        clc
+        jmp get_disc_req_arr_done
 
 get_disc_req_arr_unlinked:
-	mov ds:disc_pend_list,eax
-	cmp edx,ds:disc_pend_first
-	jne get_disc_req_arr_done
+        mov ds:disc_pend_list,eax
+        cmp edx,ds:disc_pend_first
+        jne get_disc_req_arr_done
 ;
-	mov ds:disc_pend_first,eax
+        mov ds:disc_pend_first,eax
 
 get_disc_req_arr_done:
 
@@ -2491,1457 +2491,1457 @@ ifdef DEBUG
     call CheckAll
 endif
     
-	LeaveSection ds:disc_section
-	or ecx,ecx
-	stc
-	jz get_disc_req_arr_end
+        LeaveSection ds:disc_section
+        or ecx,ecx
+        stc
+        jz get_disc_req_arr_end
 ;
-	clc
+        clc
 
 get_disc_req_arr_end:
-	pop ebp
-	pop edi
-	pop edx
-	pop ebx
-	pop eax
-	pop es
-	pop ds
-	ret
-get_disc_request_array	Endp
+        pop ebp
+        pop edi
+        pop edx
+        pop ebx
+        pop eax
+        pop es
+        pop ds
+        ret
+get_disc_request_array  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INSTALL_DISC
+;               NAME:                   INSTALL_DISC
 ;
-;		DESCRIPTION:	Install disc unit
+;               DESCRIPTION:    Install disc unit
 ;
-;		PARAMETERS:		BX		Handle
-;						ECX		Readahead
+;               PARAMETERS:             BX              Handle
+;                                               ECX             Readahead
 ;
-;		RETURNS:		AL		Disc #
-;						BX		Disc sel
+;               RETURNS:                AL              Disc #
+;                                               BX              Disc sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-install_disc_name	DB 'Install Disc',0
+install_disc_name       DB 'Install Disc',0
 
-install_disc	Proc far
-	push ds
-	push es
-	push cx
-	push si
-	push di
+install_disc    Proc far
+        push ds
+        push es
+        push cx
+        push si
+        push di
 ;
-	push cx
-	mov ax,SEG data
-	mov ds,ax
-	mov si,OFFSET disc_def_arr
-	mov cx,MAX_DRIVES
+        push cx
+        mov ax,SEG data
+        mov ds,ax
+        mov si,OFFSET disc_def_arr
+        mov cx,MAX_DRIVES
 install_disc_loop:
-	mov ax,[si]
-	or ax,ax
-	jnz install_disc_next
+        mov ax,[si]
+        or ax,ax
+        jnz install_disc_next
 ;
-	push bx
-	mov bx,ds:disc_curr_param
-	push dword ptr [bx]
-	mov eax,SIZE disc_def_struc
-	AllocateSmallGlobalMem
-	xor di,di
-	mov cx,ax
-	xor al,al
-	rep stosb
-	mov [si],es
-	mov ax,es
-	mov ds,ax
-	mov ax,si
-	sub ax,OFFSET disc_def_arr
-	shr ax,1
-	mov ds:disc_nr,al
-	mov ds:disc_handle_list,0
-	mov ds:disc_data_list,0
-	mov ds:disc_pend_list,0
-	mov ds:disc_pend_first,0
-	mov ds:disc_awrite_list,0
-	mov ds:disc_awrite_timer,0
-	mov ds:disc_awrite_timeout,0
-	mov ds:disc_awrite_timeout+4,0
-	mov ds:disc_seq_list,0
-	mov ds:disc_free,0
-	mov ds:disc_timer_id,0
-	mov ds:disc_thread,0
-	mov ds:disc_change_proc,0
-	mov ds:disc_cached_sectors,0
-	pop ds:disc_param
-	pop ds:disc_handle
-	pop cx
-	mov ds:disc_readahead,ecx
-	InitSection ds:disc_section
-	mov ds:disc_pend_count,0
-	mov ds:disc_io_count,0
-	mov bx,ds
-	mov al,ds:disc_nr
-	clc
-	jmp install_disc_done
+        push bx
+        mov bx,ds:disc_curr_param
+        push dword ptr [bx]
+        mov eax,SIZE disc_def_struc
+        AllocateSmallGlobalMem
+        xor di,di
+        mov cx,ax
+        xor al,al
+        rep stosb
+        mov [si],es
+        mov ax,es
+        mov ds,ax
+        mov ax,si
+        sub ax,OFFSET disc_def_arr
+        shr ax,1
+        mov ds:disc_nr,al
+        mov ds:disc_handle_list,0
+        mov ds:disc_data_list,0
+        mov ds:disc_pend_list,0
+        mov ds:disc_pend_first,0
+        mov ds:disc_awrite_list,0
+        mov ds:disc_awrite_timer,0
+        mov ds:disc_awrite_timeout,0
+        mov ds:disc_awrite_timeout+4,0
+        mov ds:disc_seq_list,0
+        mov ds:disc_free,0
+        mov ds:disc_timer_id,0
+        mov ds:disc_thread,0
+        mov ds:disc_change_proc,0
+        mov ds:disc_cached_sectors,0
+        pop ds:disc_param
+        pop ds:disc_handle
+        pop cx
+        mov ds:disc_readahead,ecx
+        InitSection ds:disc_section
+        mov ds:disc_pend_count,0
+        mov ds:disc_io_count,0
+        mov bx,ds
+        mov al,ds:disc_nr
+        clc
+        jmp install_disc_done
 
 install_disc_next:
-	add si,2
-	sub cx,1
-	jnz install_disc_loop
-	add sp,2
-	stc
+        add si,2
+        sub cx,1
+        jnz install_disc_loop
+        add sp,2
+        stc
 
 install_disc_done:
-	pop di
-	pop si
-	pop cx
-	pop es
-	pop ds
-	ret
-install_disc	Endp
+        pop di
+        pop si
+        pop cx
+        pop es
+        pop ds
+        ret
+install_disc    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ALLOCATE_FIXED_DRIVE
+;               NAME:                   ALLOCATE_FIXED_DRIVE
 ;
-;		DESCRIPTION:	Allocate fixed drive
+;               DESCRIPTION:    Allocate fixed drive
 ;
-;		PARAMETERS:		AL		Drive #
+;               PARAMETERS:             AL              Drive #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_fixed_drive_name	DB 'Allocate Fixed Drive',0
+allocate_fixed_drive_name       DB 'Allocate Fixed Drive',0
 
-allocate_fixed_drive	Proc far
-	push ds
-	push ax
-	push bx
+allocate_fixed_drive    Proc far
+        push ds
+        push ax
+        push bx
 ;
-	mov bx,SEG data
-	mov ds,bx
-	movzx bx,al
-	shl bx,1
-	mov ax,[bx].drive_def_arr
-	or ax,ax
-	stc
-	jnz afdDone
-;	
-	mov word ptr [bx].drive_def_arr,-1
-	clc
+        mov bx,SEG data
+        mov ds,bx
+        movzx bx,al
+        shl bx,1
+        mov ax,[bx].drive_def_arr
+        or ax,ax
+        stc
+        jnz afdDone
+;       
+        mov word ptr [bx].drive_def_arr,-1
+        clc
 
 afdDone:
-	pop bx
-	pop ax
-	pop ds
-	retf32
-allocate_fixed_drive	Endp
+        pop bx
+        pop ax
+        pop ds
+        retf32
+allocate_fixed_drive    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ALLOCATE_STATIC_DRIVE
+;               NAME:                   ALLOCATE_STATIC_DRIVE
 ;
-;		DESCRIPTION:	Allocate static drive (first)
+;               DESCRIPTION:    Allocate static drive (first)
 ;
-;		RETURNS:		AL		Drive #
+;               RETURNS:                AL              Drive #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_static_drive_name	DB 'Allocate Static Drive',0
+allocate_static_drive_name      DB 'Allocate Static Drive',0
 
-allocate_static_drive	Proc far
-	push ds
-	push cx
-	push si
+allocate_static_drive   Proc far
+        push ds
+        push cx
+        push si
 ;
     push ax
-	mov ax,SEG data
-	mov ds,ax
-	mov si,OFFSET drive_def_arr
-	mov cx,MAX_DRIVES
+        mov ax,SEG data
+        mov ds,ax
+        mov si,OFFSET drive_def_arr
+        mov cx,MAX_DRIVES
 allocate_static_drive_loop:
-	mov ax,[si]
-	or ax,ax
-	jnz allocate_static_drive_next
-	mov word ptr [si],-1
-	mov cx,si
-	sub cx,OFFSET drive_def_arr
-	shr cx,1
-	pop ax
-	mov al,cl
-	clc
-	jmp allocate_static_drive_done
-	
+        mov ax,[si]
+        or ax,ax
+        jnz allocate_static_drive_next
+        mov word ptr [si],-1
+        mov cx,si
+        sub cx,OFFSET drive_def_arr
+        shr cx,1
+        pop ax
+        mov al,cl
+        clc
+        jmp allocate_static_drive_done
+        
 allocate_static_drive_next:
-	add si,2
-	loop allocate_static_drive_loop
-	pop ax
-	stc
+        add si,2
+        loop allocate_static_drive_loop
+        pop ax
+        stc
 
 allocate_static_drive_done:
-	pop si
-	pop cx
-	pop ds
-	retf32
-allocate_static_drive	Endp
+        pop si
+        pop cx
+        pop ds
+        retf32
+allocate_static_drive   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ALLOCATE_DYNAMIC_DRIVE
+;               NAME:                   ALLOCATE_DYNAMIC_DRIVE
 ;
-;		DESCRIPTION:	Allocate dynamic drive (last)
+;               DESCRIPTION:    Allocate dynamic drive (last)
 ;
-;		RETURNS:		AL		Drive #
+;               RETURNS:                AL              Drive #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_dynamic_drive_name	DB 'Allocate Dynamic Drive',0
+allocate_dynamic_drive_name     DB 'Allocate Dynamic Drive',0
 
-allocate_dynamic_drive	Proc far
-	push ds
-	push cx
-	push si
+allocate_dynamic_drive  Proc far
+        push ds
+        push cx
+        push si
 ;
     push ax
-	mov ax,SEG data
-	mov ds,ax
-	mov si,OFFSET drive_def_arr + 2 * (MAX_DRIVES - 1)
-	mov cx,MAX_DRIVES
+        mov ax,SEG data
+        mov ds,ax
+        mov si,OFFSET drive_def_arr + 2 * (MAX_DRIVES - 1)
+        mov cx,MAX_DRIVES
 allocate_dynamic_drive_loop:
-	mov ax,[si]
-	or ax,ax
-	jnz allocate_dynamic_drive_next
-	mov word ptr [si],-1
-	mov cx,si
-	sub cx,OFFSET drive_def_arr
-	shr cx,1
-	pop ax
-	mov al,cl
-	clc
-	jmp allocate_dynamic_drive_done
-	
+        mov ax,[si]
+        or ax,ax
+        jnz allocate_dynamic_drive_next
+        mov word ptr [si],-1
+        mov cx,si
+        sub cx,OFFSET drive_def_arr
+        shr cx,1
+        pop ax
+        mov al,cl
+        clc
+        jmp allocate_dynamic_drive_done
+        
 allocate_dynamic_drive_next:
-	sub si,2
-	loop allocate_dynamic_drive_loop
-	pop ax
-	stc
-	
+        sub si,2
+        loop allocate_dynamic_drive_loop
+        pop ax
+        stc
+        
 allocate_dynamic_drive_done:
-	pop si
-	pop cx
-	pop ds
-	retf32
-allocate_dynamic_drive	Endp
+        pop si
+        pop cx
+        pop ds
+        retf32
+allocate_dynamic_drive  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OPEN_DRIVE
+;               NAME:                   OPEN_DRIVE
 ;
-;		DESCRIPTION:	Open drive
+;               DESCRIPTION:    Open drive
 ;
-;		PARAMETERS:		AL		Drive #
-;						AH		Disc #
-;						EDX		Start sector
-;						ECX		Sectors
+;               PARAMETERS:             AL              Drive #
+;                                               AH              Disc #
+;                                               EDX             Start sector
+;                                               ECX             Sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_drive_name	DB 'Open Drive',0
+open_drive_name DB 'Open Drive',0
 
-open_drive	Proc far
-	push ds
-	push es
-	push bx
-	push si
-	push di
+open_drive      Proc far
+        push ds
+        push es
+        push bx
+        push si
+        push di
 ;
-	push ax
-	mov ax,SEG data
-	mov ds,ax
+        push ax
+        mov ax,SEG data
+        mov ds,ax
 ;
-	mov eax,SIZE drive_def_struc
-	AllocateSmallGlobalMem
-	mov es:drive_start_sector,edx
-	mov es:drive_sectors,ecx
-	pop ax
-	movzx bx,ah
-	shl bx,1
-	mov bx,ds:[bx].disc_def_arr
-	mov es:drive_disc,bx
+        mov eax,SIZE drive_def_struc
+        AllocateSmallGlobalMem
+        mov es:drive_start_sector,edx
+        mov es:drive_sectors,ecx
+        pop ax
+        movzx bx,ah
+        shl bx,1
+        mov bx,ds:[bx].disc_def_arr
+        mov es:drive_disc,bx
 ;
-	movzx si,al
-	shl si,1
-	mov [si].drive_def_arr,es
+        movzx si,al
+        shl si,1
+        mov [si].drive_def_arr,es
 ;
-	mov ds,bx
-	mov di,word ptr ds:disc_change_proc+2
-	or di,di
-	jz open_drive_done
+        mov ds,bx
+        mov di,word ptr ds:disc_change_proc+2
+        or di,di
+        jz open_drive_done
 ;
-	mov es,di
-	mov di,word ptr ds:disc_change_proc
-	mov bx,ds:disc_handle
-	DefineMediaCheck
+        mov es,di
+        mov di,word ptr ds:disc_change_proc
+        mov bx,ds:disc_handle
+        DefineMediaCheck
 
 open_drive_done:
-	clc
+        clc
 ;
-	pop di
-	pop si
-	pop bx
-	pop es
-	pop ds
-	ret
-open_drive	Endp
+        pop di
+        pop si
+        pop bx
+        pop es
+        pop ds
+        ret
+open_drive      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CLOSE_DRIVE
+;               NAME:                   CLOSE_DRIVE
 ;
-;		DESCRIPTION:	Close drive
+;               DESCRIPTION:    Close drive
 ;
-;		PARAMETERS:		AL		Drive #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_drive_name	DB 'Close Drive',0
-
-close_drive	Proc far
-	int 3
-	FlushDrive
-	ret
-close_drive	Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			FlushDrive
-;
-;		DESCRIPTION:	Flush drive
-;
-;		PARAMETERS:		AL		Drive #
+;               PARAMETERS:             AL              Drive #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-flush_drive_name	DB 'Flush Drive',0
+close_drive_name        DB 'Close Drive',0
 
-flush_drive	Proc far
-	push ds
-	push es
-	pushad
+close_drive     Proc far
+        int 3
+        FlushDrive
+        ret
+close_drive     Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	movzx bx,al
-	shl bx,1
-	mov ax,SEG data
-	mov ds,ax
-	mov ds,ds:[bx].drive_def_arr
-	mov ax,flat_sel
-	mov es,ax
-	mov edx,ds:drive_start_sector
-	mov ecx,ds:drive_sectors
-	mov ds,ds:drive_disc
 ;
-	EnterSection ds:disc_section
-	movzx ebp,ds:disc_sectors_per_unit
-	push edx
-	pop ax
-	pop dx
-	div bp
-	movzx esi,ax
-	movzx ebx,dx
+;               NAME:                   FlushDrive
+;
+;               DESCRIPTION:    Flush drive
+;
+;               PARAMETERS:             AL              Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+flush_drive_name        DB 'Flush Drive',0
+
+flush_drive     Proc far
+        push ds
+        push es
+        pushad
+;
+        movzx bx,al
+        shl bx,1
+        mov ax,SEG data
+        mov ds,ax
+        mov ds,ds:[bx].drive_def_arr
+        mov ax,flat_sel
+        mov es,ax
+        mov edx,ds:drive_start_sector
+        mov ecx,ds:drive_sectors
+        mov ds,ds:drive_disc
+;
+        EnterSection ds:disc_section
+        movzx ebp,ds:disc_sectors_per_unit
+        push edx
+        pop ax
+        pop dx
+        div bp
+        movzx esi,ax
+        movzx ebx,dx
 
 flush_loop:
-	mov edx,ds:[4*esi].disc_unit_arr
-	or edx,edx
-	jz flush_next_unit
+        mov edx,ds:[4*esi].disc_unit_arr
+        or edx,edx
+        jz flush_next_unit
 ;
-	push ecx
-	lea edi,[4*ebx+edx].disc_sector_arr
-	mov eax,ebp
-	sub eax,ebx
-	cmp eax,ecx
-	ja flush_sector_loop
+        push ecx
+        lea edi,[4*ebx+edx].disc_sector_arr
+        mov eax,ebp
+        sub eax,ebx
+        cmp eax,ecx
+        ja flush_sector_loop
 ;
-	mov ecx,eax
+        mov ecx,eax
 
 flush_sector_loop:
-	xor eax,eax
-	repe scas dword ptr es:[edi]
-	sub edi,4
-	xchg eax,es:[edi]
-	or eax,eax
-	jz flush_unit_done
+        xor eax,eax
+        repe scas dword ptr es:[edi]
+        sub edi,4
+        xchg eax,es:[edi]
+        or eax,eax
+        jz flush_unit_done
 ;
-	push edi
-	mov edi,eax
-	call free_handle
-	pop edi
-	sub es:[edx].disc_sectors,1
-	jnz flush_sector_loop
+        push edi
+        mov edi,eax
+        call free_handle
+        pop edi
+        sub es:[edx].disc_sectors,1
+        jnz flush_sector_loop
 ;
-	mov ds:[4*esi].disc_unit_arr,0
-	movzx ecx,ds:disc_sectors_per_unit
-	shl ecx,2
-	add ecx,OFFSET disc_sector_arr
-	FreeLinear
-	xor ecx,ecx
+        mov ds:[4*esi].disc_unit_arr,0
+        movzx ecx,ds:disc_sectors_per_unit
+        shl ecx,2
+        add ecx,OFFSET disc_sector_arr
+        FreeLinear
+        xor ecx,ecx
 
 flush_unit_done:
-	mov eax,ebp
-	sub eax,ebx
-	sub eax,ecx
-	pop ecx
-	sub ecx,eax
-	jz flush_leave
+        mov eax,ebp
+        sub eax,ebx
+        sub eax,ecx
+        pop ecx
+        sub ecx,eax
+        jz flush_leave
 ;
-	xor ebx,ebx
-	inc esi
-	movzx eax,ds:disc_units
-	cmp esi,eax
-	jb flush_loop
-	jmp flush_leave
+        xor ebx,ebx
+        inc esi
+        movzx eax,ds:disc_units
+        cmp esi,eax
+        jb flush_loop
+        jmp flush_leave
 
 flush_next_unit:
-	mov edx,ebp
-	sub edx,ebx
-	sub ecx,edx
-	jbe flush_leave
+        mov edx,ebp
+        sub edx,ebx
+        sub ecx,edx
+        jbe flush_leave
 ;
-	xor ebx,ebx
-	inc esi
-	movzx eax,ds:disc_units
-	cmp esi,eax
-	jb flush_loop
-	jmp flush_leave
+        xor ebx,ebx
+        inc esi
+        movzx eax,ds:disc_units
+        cmp esi,eax
+        jb flush_loop
+        jmp flush_leave
 
 flush_leave:
-	LeaveSection ds:disc_section
+        LeaveSection ds:disc_section
 ;
-	popad
-	pop es
-	pop ds
-	ret
-flush_drive	Endp
+        popad
+        pop es
+        pop ds
+        ret
+flush_drive     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDriveParam
+;               NAME:                   GetDriveParam
 ;
-;		DESCRIPTION:	Get drive param
+;               DESCRIPTION:    Get drive param
 ;
-;		PARAMETERS:		AL		Drive #
+;               PARAMETERS:             AL              Drive #
 ;
-;		RETURNS:		EAX		Readahead
-;						ECX		Size
-;						SI		Sectors per unit
-;						DI		Units
+;               RETURNS:                EAX             Readahead
+;                                               ECX             Size
+;                                               SI              Sectors per unit
+;                                               DI              Units
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_drive_param_name	DB 'Get Drive Param',0
+get_drive_param_name    DB 'Get Drive Param',0
 
-get_drive_param	PROC far
-	push ds
-	push bx
-	push edx
+get_drive_param PROC far
+        push ds
+        push bx
+        push edx
 ;
-	cmp al,MAX_DRIVES
-	jnc get_drive_param_fail
+        cmp al,MAX_DRIVES
+        jnc get_drive_param_fail
 ;
-	movzx bx,al
-	shl bx,1
-	mov ax,SEG data
-	mov ds,ax
-	mov ax,ds:[bx].drive_def_arr
-	cmp ax,-1
-	je get_drive_param_fail
+        movzx bx,al
+        shl bx,1
+        mov ax,SEG data
+        mov ds,ax
+        mov ax,ds:[bx].drive_def_arr
+        cmp ax,-1
+        je get_drive_param_fail
 ;
-	mov ds,ax
-	mov ax,ds:drive_disc
-	or ax,ax
-	jz get_drive_param_fail
+        mov ds,ax
+        mov ax,ds:drive_disc
+        or ax,ax
+        jz get_drive_param_fail
 ;
-	mov ds,ax
-	mov ax,ds:disc_bytes_per_sector
-	mov dx,ds:disc_sectors_per_unit
-	mul dx
-	push dx
-	push ax
-	pop eax
-	movzx edx,ds:disc_units
-	mul edx
-	or edx,edx
-	jz get_param_size_ok
+        mov ds,ax
+        mov ax,ds:disc_bytes_per_sector
+        mov dx,ds:disc_sectors_per_unit
+        mul dx
+        push dx
+        push ax
+        pop eax
+        movzx edx,ds:disc_units
+        mul edx
+        or edx,edx
+        jz get_param_size_ok
 ;
-	mov eax,-1
+        mov eax,-1
 
 get_param_size_ok:
-	mov ecx,eax
-	mov eax,ds:disc_readahead
-	mov si,ds:disc_sectors_per_unit
-	mov di,ds:disc_units
-	clc
-	jmp get_drive_param_done
+        mov ecx,eax
+        mov eax,ds:disc_readahead
+        mov si,ds:disc_sectors_per_unit
+        mov di,ds:disc_units
+        clc
+        jmp get_drive_param_done
 
 get_drive_param_fail:
-	xor eax,eax
-	xor ecx,ecx
-	xor si,si
-	xor di,di
-	stc
+        xor eax,eax
+        xor ecx,ecx
+        xor si,si
+        xor di,di
+        stc
 
 get_drive_param_done:
-	pop edx
-	pop bx
-	pop ds
-	ret
-get_drive_param	ENDP
+        pop edx
+        pop bx
+        pop ds
+        ret
+get_drive_param ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			NEW_SECTOR
+;               NAME:                   NEW_SECTOR
 ;
-;		DESCRIPTION:	Create a new sector cache entry without reading
+;               DESCRIPTION:    Create a new sector cache entry without reading
 ;
-;		PARAMETERS:		AL		Drive #
-;						EDX		Sector #
+;               PARAMETERS:             AL              Drive #
+;                                               EDX             Sector #
 ;
-;		RETURNS:		EBX		Handle
-;						ESI		Logical address of buffer
+;               RETURNS:                EBX             Handle
+;                                               ESI             Logical address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-new_sector_name	DB 'New Sector',0
+new_sector_name DB 'New Sector',0
 
-new_sector	PROC far
-	push ds
-	push es
-	push ax
-	push cx
-	push edx
-	push edi
+new_sector      PROC far
+        push ds
+        push es
+        push ax
+        push cx
+        push edx
+        push edi
 ;
-	movzx bx,al
-	shl bx,1
-	mov ax,SEG data
-	mov ds,ax
-	mov ds,ds:[bx].drive_def_arr
-	mov ax,flat_sel
-	mov es,ax
-	cmp edx,ds:drive_sectors
-	jc new_inrange
+        movzx bx,al
+        shl bx,1
+        mov ax,SEG data
+        mov ds,ax
+        mov ds,ds:[bx].drive_def_arr
+        mov ax,flat_sel
+        mov es,ax
+        cmp edx,ds:drive_sectors
+        jc new_inrange
 ;
-	stc
-	jmp new_leave
+        stc
+        jmp new_leave
 
 new_inrange:
-	add edx,ds:drive_start_sector
-	mov ds,ds:drive_disc
-	push edx
-	pop ax
-	pop dx
-	div ds:disc_sectors_per_unit
-	mov cx,ax
-	EnterSection ds:disc_section
+        add edx,ds:drive_start_sector
+        mov ds,ds:drive_disc
+        push edx
+        pop ax
+        pop dx
+        div ds:disc_sectors_per_unit
+        mov cx,ax
+        EnterSection ds:disc_section
 
 new_loop:
-	call check_buf
-	jnc new_done
+        call check_buf
+        jnc new_done
 ;
-	call allocate_handle
-	push edx
-	call allocate_data
-	mov es:[edi].dh_data,edx
-	pop edx
-	mov es:[edi].dh_buf_sel,ds
-	mov es:[edi].dh_sector,dx
-	mov es:[edi].dh_unit,cx
-	mov es:[edi].dh_wait,0
-	mov es:[edi].dh_thread,0
-	mov es:[edi].dh_lock_count,0
-	mov es:[edi].dh_state,STATE_USED
-	mov es:[edi].dh_usage,0
-	mov es:[edi].dh_flags,0
-	mov es:[edi].dh_time_lsb,0
-	mov es:[edi].dh_time_msb,0
-	call insert_buf
+        call allocate_handle
+        push edx
+        call allocate_data
+        mov es:[edi].dh_data,edx
+        pop edx
+        mov es:[edi].dh_buf_sel,ds
+        mov es:[edi].dh_sector,dx
+        mov es:[edi].dh_unit,cx
+        mov es:[edi].dh_wait,0
+        mov es:[edi].dh_thread,0
+        mov es:[edi].dh_lock_count,0
+        mov es:[edi].dh_state,STATE_USED
+        mov es:[edi].dh_usage,0
+        mov es:[edi].dh_flags,0
+        mov es:[edi].dh_time_lsb,0
+        mov es:[edi].dh_time_msb,0
+        call insert_buf
 
 new_done:
-	inc es:[edi].dh_lock_count
-	LeaveSection ds:disc_section
-	mov esi,es:[edi].dh_data
-	mov ebx,edi
+        inc es:[edi].dh_lock_count
+        LeaveSection ds:disc_section
+        mov esi,es:[edi].dh_data
+        mov ebx,edi
 
 new_leave:
-	pop edi
-	pop edx
-	pop cx
-	pop ax
-	pop es
-	pop ds
-	ret
-new_sector	ENDP
+        pop edi
+        pop edx
+        pop cx
+        pop ax
+        pop es
+        pop ds
+        ret
+new_sector      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LOCK_SECTOR
+;               NAME:                   LOCK_SECTOR
 ;
-;		DESCRIPTION:	Lock sector and return address
+;               DESCRIPTION:    Lock sector and return address
 ;
-;		PARAMETERS:		AL		Drive #
-;						EDX		Sector #
+;               PARAMETERS:             AL              Drive #
+;                                               EDX             Sector #
 ;
-;		RETURNS:		EBX		Handle
-;						ESI		Logical address of buffer
+;               RETURNS:                EBX             Handle
+;                                               ESI             Logical address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-lock_sector_name	DB 'Lock Sector',0
+lock_sector_name        DB 'Lock Sector',0
 
-lock_sector	PROC far
-	push ds
-	push es
-	push eax
-	push ecx
-	push edx
-	push edi
+lock_sector     PROC far
+        push ds
+        push es
+        push eax
+        push ecx
+        push edx
+        push edi
 ;
-	movzx bx,al
-	shl bx,1
-	mov ax,SEG data
-	mov ds,ax
-	mov ds,ds:[bx].drive_def_arr
-	mov ax,flat_sel
-	mov es,ax
-	cmp edx,ds:drive_sectors
-	jc lock_inrange
+        movzx bx,al
+        shl bx,1
+        mov ax,SEG data
+        mov ds,ax
+        mov ds,ds:[bx].drive_def_arr
+        mov ax,flat_sel
+        mov es,ax
+        cmp edx,ds:drive_sectors
+        jc lock_inrange
 ;
-	stc
-	jmp lock_done
+        stc
+        jmp lock_done
 
 lock_inrange:
-	add edx,ds:drive_start_sector
-	mov ds,ds:drive_disc
-	push edx
-	pop ax
-	pop dx
-	div ds:disc_sectors_per_unit
-	mov cx,ax
-	EnterSection ds:disc_section
+        add edx,ds:drive_start_sector
+        mov ds,ds:drive_disc
+        push edx
+        pop ax
+        pop dx
+        div ds:disc_sectors_per_unit
+        mov cx,ax
+        EnterSection ds:disc_section
 
 lock_loop:
-	call check_buf
-	jnc lock_found
+        call check_buf
+        jnc lock_found
 ;
-	ClearSignal
-	call allocate_handle
-	push edx
-	call allocate_data
-	mov es:[edi].dh_data,edx
-	pop edx
-	mov es:[edi].dh_buf_sel,ds
-	mov es:[edi].dh_sector,dx
-	mov es:[edi].dh_unit,cx
-	mov es:[edi].dh_wait,0
-	mov es:[edi].dh_thread,0
-	mov es:[edi].dh_lock_count,0
-	mov es:[edi].dh_state,STATE_EMPTY
-	mov es:[edi].dh_usage,0
-	mov es:[edi].dh_flags,0
-	mov es:[edi].dh_time_lsb,0
-	mov es:[edi].dh_time_msb,0
-	mov es:[edi].dh_flags,0
-	call insert_buf
-	call insert_pending
+        ClearSignal
+        call allocate_handle
+        push edx
+        call allocate_data
+        mov es:[edi].dh_data,edx
+        pop edx
+        mov es:[edi].dh_buf_sel,ds
+        mov es:[edi].dh_sector,dx
+        mov es:[edi].dh_unit,cx
+        mov es:[edi].dh_wait,0
+        mov es:[edi].dh_thread,0
+        mov es:[edi].dh_lock_count,0
+        mov es:[edi].dh_state,STATE_EMPTY
+        mov es:[edi].dh_usage,0
+        mov es:[edi].dh_flags,0
+        mov es:[edi].dh_time_lsb,0
+        mov es:[edi].dh_time_msb,0
+        mov es:[edi].dh_flags,0
+        call insert_buf
+        call insert_pending
 
 lock_read_ahead:
-	push dx
-	push edi
-	inc dx
-	cmp dx,ds:disc_sectors_per_unit
-	je lock_read_ahead_done
+        push dx
+        push edi
+        inc dx
+        cmp dx,ds:disc_sectors_per_unit
+        je lock_read_ahead_done
 ;
-	call check_buf
-	jnc lock_read_ahead_done
-	jmp lock_read_ahead_done
+        call check_buf
+        jnc lock_read_ahead_done
+        jmp lock_read_ahead_done
 ;
-	call allocate_handle
-	push edx
-	call allocate_data
-	mov es:[edi].dh_data,edx
-	pop edx
-	mov es:[edi].dh_buf_sel,ds
-	mov es:[edi].dh_sector,dx
-	mov es:[edi].dh_unit,cx
-	mov es:[edi].dh_wait,0
-	mov es:[edi].dh_thread,0
-	mov es:[edi].dh_lock_count,0
-	mov es:[edi].dh_state,STATE_EMPTY
-	mov es:[edi].dh_usage,0
-	mov es:[edi].dh_flags,FLAGS_READ_AHEAD
-	mov es:[edi].dh_time_lsb,0
-	mov es:[edi].dh_time_msb,0
-	call insert_buf
-	call insert_pending
-	
+        call allocate_handle
+        push edx
+        call allocate_data
+        mov es:[edi].dh_data,edx
+        pop edx
+        mov es:[edi].dh_buf_sel,ds
+        mov es:[edi].dh_sector,dx
+        mov es:[edi].dh_unit,cx
+        mov es:[edi].dh_wait,0
+        mov es:[edi].dh_thread,0
+        mov es:[edi].dh_lock_count,0
+        mov es:[edi].dh_state,STATE_EMPTY
+        mov es:[edi].dh_usage,0
+        mov es:[edi].dh_flags,FLAGS_READ_AHEAD
+        mov es:[edi].dh_time_lsb,0
+        mov es:[edi].dh_time_msb,0
+        call insert_buf
+        call insert_pending
+        
 lock_read_ahead_done:
-	pop edi
-	pop dx
+        pop edi
+        pop dx
 
 lock_read_signal:
-	test es:[edi].dh_flags,FLAGS_READ_AHEAD
-	jz lock_read_check_empty
+        test es:[edi].dh_flags,FLAGS_READ_AHEAD
+        jz lock_read_check_empty
 ;
-	and es:[edi].dh_flags, NOT FLAGS_READ_AHEAD
-	jmp lock_read_ahead
+        and es:[edi].dh_flags, NOT FLAGS_READ_AHEAD
+        jmp lock_read_ahead
 
 lock_read_check_empty:
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	clc
-	jne lock_found
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        clc
+        jne lock_found
 
 lock_read_block:
-	call block
-	jmp lock_loop
+        call block
+        jmp lock_loop
 
 lock_found:
-	test es:[edi].dh_flags, FLAG_IO_BUSY
-	jnz lock_read_block
+        test es:[edi].dh_flags, FLAG_IO_BUSY
+        jnz lock_read_block
 ;
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	je lock_read_signal
-;	
-	inc es:[edi].dh_lock_count
-	inc es:[edi].dh_usage
-	LeaveSection ds:disc_section
-	mov al,es:[edi].dh_state
-	cmp al,STATE_USED
-	je lock_get_adds
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        je lock_read_signal
+;       
+        inc es:[edi].dh_lock_count
+        inc es:[edi].dh_usage
+        LeaveSection ds:disc_section
+        mov al,es:[edi].dh_state
+        cmp al,STATE_USED
+        je lock_get_adds
 ;
-	cmp al,STATE_DIRTY
-	je lock_get_adds
+        cmp al,STATE_DIRTY
+        je lock_get_adds
 ;
-	cmp al,STATE_SEQ
-	je lock_get_adds
+        cmp al,STATE_SEQ
+        je lock_get_adds
 ;
-	stc
-	jmp lock_done
+        stc
+        jmp lock_done
 
 lock_get_adds:
-	mov esi,es:[edi].dh_data
-	mov ebx,edi
+        mov esi,es:[edi].dh_data
+        mov ebx,edi
 
 lock_done:
-	pop edi
-	pop edx
-	pop ecx
-	pop eax
-	pop es
-	pop ds
-	ret
-lock_sector	ENDP
+        pop edi
+        pop edx
+        pop ecx
+        pop eax
+        pop es
+        pop ds
+        ret
+lock_sector     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			MODIFY_SECTOR
+;               NAME:                   MODIFY_SECTOR
 ;
-;		DESCRIPTION:	Modify sector contents
+;               DESCRIPTION:    Modify sector contents
 ;
-;		PARAMETERS:		EBX		Handle
+;               PARAMETERS:             EBX             Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-modify_sector_name	DB 'Modify Sector',0
+modify_sector_name      DB 'Modify Sector',0
 
-modify_sector	PROC far
-	push ds
-	push es
-	pushad
+modify_sector   PROC far
+        push ds
+        push es
+        pushad
 ;
-	mov ax,flat_sel
-	mov es,ax
-	mov edi,ebx
-	mov ds,es:[edi].dh_buf_sel
-	ClearSignal
-	EnterSection ds:disc_section
+        mov ax,flat_sel
+        mov es,ax
+        mov edi,ebx
+        mov ds,es:[edi].dh_buf_sel
+        ClearSignal
+        EnterSection ds:disc_section
 
-ifdef DEBUG	
+ifdef DEBUG     
     call CheckBuffered
 endif
 
 modify_try_again:
-	test es:[edi].dh_flags, FLAG_IO_BUSY
-	jz modify_not_busy
+        test es:[edi].dh_flags, FLAG_IO_BUSY
+        jz modify_not_busy
 ;
-	call block
-	jmp modify_try_again
+        call block
+        jmp modify_try_again
 
 modify_not_busy:
-	mov al,es:[edi].dh_state
-	cmp al,STATE_USED
-	jne modify_done
+        mov al,es:[edi].dh_state
+        cmp al,STATE_USED
+        jne modify_done
 
 modify_clean:
-	mov es:[edi].dh_state,STATE_DIRTY
-;	
+        mov es:[edi].dh_state,STATE_DIRTY
+;       
     test es:[edi].dh_flags, FLAG_IO_PENDING
     jnz modify_done
 ;    
-	GetSystemTime
-	mov es:[edi].dh_time_lsb,eax
-	mov es:[edi].dh_time_msb,dx
-	call insert_async_write
-	call update_async_timer
+        GetSystemTime
+        mov es:[edi].dh_time_lsb,eax
+        mov es:[edi].dh_time_msb,dx
+        call insert_async_write
+        call update_async_timer
 
 modify_done:
-	LeaveSection ds:disc_section
-	clc
+        LeaveSection ds:disc_section
+        clc
 ;
-	popad
-	pop es
-	pop ds
-	ret
-modify_sector	ENDP
+        popad
+        pop es
+        pop ds
+        ret
+modify_sector   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FLUSH_SECTOR
+;               NAME:                   FLUSH_SECTOR
 ;
-;		DESCRIPTION:	Flush sector contents
+;               DESCRIPTION:    Flush sector contents
 ;
-;		PARAMETERS:		EBX		Handle
+;               PARAMETERS:             EBX             Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-flush_sector_name	DB 'Flush Sector',0
+flush_sector_name       DB 'Flush Sector',0
 
-flush_sector	PROC far
-	push ds
-	push es
-	pushad
+flush_sector    PROC far
+        push ds
+        push es
+        pushad
 ;
-	mov ax,flat_sel
-	mov es,ax
-	mov edi,ebx
-	mov ds,es:[edi].dh_buf_sel
-	ClearSignal
-	EnterSection ds:disc_section
+        mov ax,flat_sel
+        mov es,ax
+        mov edi,ebx
+        mov ds,es:[edi].dh_buf_sel
+        ClearSignal
+        EnterSection ds:disc_section
 
 ifdef DEBUG
     call CheckBuffered
 endif
 
 flush_try_again:
-	test es:[edi].dh_flags, FLAG_IO_BUSY
-	jz flush_not_busy
+        test es:[edi].dh_flags, FLAG_IO_BUSY
+        jz flush_not_busy
 
 flush_block:
-	call block
-	jmp flush_try_again
+        call block
+        jmp flush_try_again
 
 flush_not_busy:
-	mov al,es:[edi].dh_state
-	cmp al,STATE_DIRTY
-	jne flush_done
+        mov al,es:[edi].dh_state
+        cmp al,STATE_DIRTY
+        jne flush_done
 
 flush_dirty:
-	call flush_async_write
-	mov bx,ds:disc_thread
-	Signal
+        call flush_async_write
+        mov bx,ds:disc_thread
+        Signal
 
 flush_done:
-	LeaveSection ds:disc_section
-	clc
+        LeaveSection ds:disc_section
+        clc
 ;
-	popad
-	pop es
-	pop ds
-	ret
-flush_sector	ENDP
+        popad
+        pop es
+        pop ds
+        ret
+flush_sector    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CREATE_DISC_SEQ
+;               NAME:                   CREATE_DISC_SEQ
 ;
-;		DESCRIPTION:	Create a sequence
+;               DESCRIPTION:    Create a sequence
 ;
-;		PARAMETERS:		CX		Max number of sectors in sequence
+;               PARAMETERS:             CX              Max number of sectors in sequence
 ;
-;		RETURNS:		AX		Sequence handle
+;               RETURNS:                AX              Sequence handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_disc_seq_name	DB 'Create Disc Seq',0
+create_disc_seq_name    DB 'Create Disc Seq',0
 
-create_disc_seq	PROC far
-	push es
-	push ecx
-	push edi
+create_disc_seq PROC far
+        push es
+        push ecx
+        push edi
 ;
     movzx ecx,cx
-	movzx eax,cx
-	lea eax,[4*eax].dss_arr
-	AllocateSmallGlobalMem
-	mov edi,OFFSET dss_arr
-	xor eax,eax
-	rep stos dword ptr es:[edi]
-	mov es:dss_buf_sel,0
-	mov es:dss_insert_index,0
-	mov es:dss_perform_index,0
-	mov ax,es
+        movzx eax,cx
+        lea eax,[4*eax].dss_arr
+        AllocateSmallGlobalMem
+        mov edi,OFFSET dss_arr
+        xor eax,eax
+        rep stos dword ptr es:[edi]
+        mov es:dss_buf_sel,0
+        mov es:dss_insert_index,0
+        mov es:dss_perform_index,0
+        mov ax,es
 ;
-	pop edi
-	pop ecx
-	pop es
-	ret
-create_disc_seq	ENDP
+        pop edi
+        pop ecx
+        pop es
+        ret
+create_disc_seq ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			MODIFY_SEQ_SECTOR
+;               NAME:                   MODIFY_SEQ_SECTOR
 ;
-;		DESCRIPTION:	Modify sequential sector contents
+;               DESCRIPTION:    Modify sequential sector contents
 ;
-;		PARAMETERS:		AX			Seq handle
-;						EBX			Handle
+;               PARAMETERS:             AX                      Seq handle
+;                                               EBX                     Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-modify_seq_sector_name	DB 'Modify Seq Sector',0
+modify_seq_sector_name  DB 'Modify Seq Sector',0
 
-modify_seq_sector	PROC far
-	push ds
-	push es
-	push fs
-	pushad
+modify_seq_sector       PROC far
+        push ds
+        push es
+        push fs
+        pushad
 ;
-	mov fs,ax
-	mov ax,flat_sel
-	mov es,ax
-	mov edi,ebx
-	mov ds,es:[edi].dh_buf_sel
-	ClearSignal
-	EnterSection ds:disc_section
+        mov fs,ax
+        mov ax,flat_sel
+        mov es,ax
+        mov edi,ebx
+        mov ds,es:[edi].dh_buf_sel
+        ClearSignal
+        EnterSection ds:disc_section
 
-ifdef DEBUG	
+ifdef DEBUG     
     call CheckBuffered
 endif
 
 modify_seq_try_again:
-	test es:[edi].dh_flags, FLAG_IO_BUSY
-	jz modify_seq_not_busy
+        test es:[edi].dh_flags, FLAG_IO_BUSY
+        jz modify_seq_not_busy
 
 modify_seq_block:
-	call block
-	jmp modify_seq_try_again
+        call block
+        jmp modify_seq_try_again
 
 modify_seq_not_busy:
-	mov al,es:[edi].dh_state
-	cmp al,STATE_USED
-	jne modify_seq_block
+        mov al,es:[edi].dh_state
+        cmp al,STATE_USED
+        jne modify_seq_block
 
 modify_seq_clean:
-	mov es:[edi].dh_state,STATE_SEQ
-	mov bx,fs:dss_insert_index
-	shl bx,2
-	mov fs:[bx].dss_arr,edi
-	inc fs:dss_insert_index
-	mov fs:dss_buf_sel,ds
+        mov es:[edi].dh_state,STATE_SEQ
+        mov bx,fs:dss_insert_index
+        shl bx,2
+        mov fs:[bx].dss_arr,edi
+        inc fs:dss_insert_index
+        mov fs:dss_buf_sel,ds
 
 modify_seq_done:
-	LeaveSection ds:disc_section
-	clc
+        LeaveSection ds:disc_section
+        clc
 ;
-	popad
-	pop fs
-	pop es
-	pop ds
-	ret
-modify_seq_sector	ENDP
+        popad
+        pop fs
+        pop es
+        pop ds
+        ret
+modify_seq_sector       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PERFORM_DISC_SEQ
+;               NAME:                   PERFORM_DISC_SEQ
 ;
-;		DESCRIPTION:	Perform a sequence
+;               DESCRIPTION:    Perform a sequence
 ;
-;		PARAMETERS:		AX			Sequence handle
+;               PARAMETERS:             AX                      Sequence handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-perform_disc_seq_name	DB 'Perform Disc Seq',0
+perform_disc_seq_name   DB 'Perform Disc Seq',0
 
-perform_disc_seq	PROC far
-	push ds
-	push es
-	push eax
-	push ebx
+perform_disc_seq        PROC far
+        push ds
+        push es
+        push eax
+        push ebx
 ;
-	mov es,ax
-	mov ax,es:dss_buf_sel
-	or ax,ax
-	jz perform_disc_fail
+        mov es,ax
+        mov ax,es:dss_buf_sel
+        or ax,ax
+        jz perform_disc_fail
 ;
-	mov ds,ax
-	EnterSection ds:disc_section
+        mov ds,ax
+        EnterSection ds:disc_section
 ;
-	mov bx,ds:disc_seq_list
-	or bx,bx
-	je perform_disc_empty
+        mov bx,ds:disc_seq_list
+        or bx,bx
+        je perform_disc_empty
 ;
-	push ds
-	push si
-	mov ds,bx
-	mov si,ds:dss_prev
-	mov ds:dss_prev,es
-	mov ds,si
-	mov ds:dss_next,es
-	mov es:dss_next,bx
-	mov es:dss_prev,si
-	pop si
-	pop ds
-	jmp perform_disc_do
+        push ds
+        push si
+        mov ds,bx
+        mov si,ds:dss_prev
+        mov ds:dss_prev,es
+        mov ds,si
+        mov ds:dss_next,es
+        mov es:dss_next,bx
+        mov es:dss_prev,si
+        pop si
+        pop ds
+        jmp perform_disc_do
 
 perform_disc_empty:
-	mov es:dss_next,es
-	mov es:dss_prev,es
-	mov ds:disc_seq_list,es
+        mov es:dss_next,es
+        mov es:dss_prev,es
+        mov ds:disc_seq_list,es
 
 perform_disc_do:
-	mov ax,flat_sel
-	mov es,ax
-	call update_disc_seq
-	jmp perform_disc_leave
+        mov ax,flat_sel
+        mov es,ax
+        call update_disc_seq
+        jmp perform_disc_leave
 
 perform_disc_fail:
-	FreeMem
-	stc
-	jmp perform_disc_done
+        FreeMem
+        stc
+        jmp perform_disc_done
 
 perform_disc_leave:
-	LeaveSection ds:disc_section
-	mov bx,ds:disc_thread
-	Signal
-	clc
+        LeaveSection ds:disc_section
+        mov bx,ds:disc_thread
+        Signal
+        clc
 
 perform_disc_done:
-	pop ebx
-	pop eax
-	pop es
-	pop ds
-	ret
-perform_disc_seq	ENDP
+        pop ebx
+        pop eax
+        pop es
+        pop ds
+        ret
+perform_disc_seq        ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UNLOCK_SECTOR
+;               NAME:                   UNLOCK_SECTOR
 ;
-;		DESCRIPTION:	UNlock sector
+;               DESCRIPTION:    UNlock sector
 ;
-;		PARAMETERS:		EBX		Handle
+;               PARAMETERS:             EBX             Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-unlock_sector_name	DB 'Unlock Sector',0
+unlock_sector_name      DB 'Unlock Sector',0
 
-unlock_sector	PROC far
-	push ds
-	push es
-	push eax
-	push edi
+unlock_sector   PROC far
+        push ds
+        push es
+        push eax
+        push edi
 ;
-	mov ax,flat_sel
-	mov es,ax
-	mov edi,ebx
-	mov ds,es:[edi].dh_buf_sel
-	EnterSection ds:disc_section
+        mov ax,flat_sel
+        mov es,ax
+        mov edi,ebx
+        mov ds,es:[edi].dh_buf_sel
+        EnterSection ds:disc_section
 
-ifdef DEBUG	
+ifdef DEBUG     
     call CheckBuffered
 endif
 
-	sub es:[edi].dh_lock_count,1
-	jnz unlock_done
+        sub es:[edi].dh_lock_count,1
+        jnz unlock_done
 ;
-	test es:[edi].dh_flags, FLAG_EXT_DATA
-	jz unlock_done
+        test es:[edi].dh_flags, FLAG_EXT_DATA
+        jz unlock_done
 ;
-	test es:[edi].dh_flags, BUSY_FLAGS
-	jnz unlock_done
+        test es:[edi].dh_flags, BUSY_FLAGS
+        jnz unlock_done
 ;
-	cmp es:[edi].dh_state, STATE_USED
-	jne unlock_done
+        cmp es:[edi].dh_state, STATE_USED
+        jne unlock_done
 
 ifdef DEBUG
     call IsPending
 endif
     
-	call remove_buf
-	mov es:[edi].dh_state, STATE_EMPTY
-	mov eax,ds:disc_handle_list
-	mov es:[edi],eax
-	mov ds:disc_handle_list,edi
-	dec ds:disc_cached_sectors
+        call remove_buf
+        mov es:[edi].dh_state, STATE_EMPTY
+        mov eax,ds:disc_handle_list
+        mov es:[edi],eax
+        mov ds:disc_handle_list,edi
+        dec ds:disc_cached_sectors
 
-ifdef DEBUG	
-	call CheckAll
+ifdef DEBUG     
+        call CheckAll
 endif
 
 unlock_done:
-	LeaveSection ds:disc_section
-	xor ebx,ebx
+        LeaveSection ds:disc_section
+        xor ebx,ebx
 ;
-	pop edi
-	pop eax
-	pop es
-	pop ds
-	clc
-	ret
-unlock_sector	ENDP
+        pop edi
+        pop eax
+        pop es
+        pop ds
+        clc
+        ret
+unlock_sector   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ReqSector
+;               NAME:                   ReqSector
 ;
-;		DESCRIPTION:	Request a sector, but don't block
+;               DESCRIPTION:    Request a sector, but don't block
 ;
-;		PARAMETERS:		AL		Drive #
-;						EDX		Sector #
-;						ESI		Logical address of buffer
+;               PARAMETERS:             AL              Drive #
+;                                               EDX             Sector #
+;                                               ESI             Logical address of buffer
 ;
-;		RETURNS:		EBX		Handle
+;               RETURNS:                EBX             Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-req_sector_name	DB 'Req Sector',0
+req_sector_name DB 'Req Sector',0
 
-req_sector	PROC far
-	push ds
-	push es
-	push ax
-	push ecx
-	push edx
-	push edi
+req_sector      PROC far
+        push ds
+        push es
+        push ax
+        push ecx
+        push edx
+        push edi
 ;
-	movzx bx,al
-	shl bx,1
-	mov ax,SEG data
-	mov ds,ax
-	mov ds,ds:[bx].drive_def_arr
-	mov ax,flat_sel
-	mov es,ax
-	cmp edx,ds:drive_sectors
-	jc req_inrange
+        movzx bx,al
+        shl bx,1
+        mov ax,SEG data
+        mov ds,ax
+        mov ds,ds:[bx].drive_def_arr
+        mov ax,flat_sel
+        mov es,ax
+        cmp edx,ds:drive_sectors
+        jc req_inrange
 ;
-	stc
-	jmp req_done
+        stc
+        jmp req_done
 
 req_inrange:
-	add edx,ds:drive_start_sector
-	mov ds,ds:drive_disc
-	push edx
-	pop ax
-	pop dx
-	div ds:disc_sectors_per_unit
-	mov cx,ax
-	EnterSection ds:disc_section
+        add edx,ds:drive_start_sector
+        mov ds,ds:drive_disc
+        push edx
+        pop ax
+        pop dx
+        div ds:disc_sectors_per_unit
+        mov cx,ax
+        EnterSection ds:disc_section
 
 req_loop:
-	call check_buf
-	jnc req_found
+        call check_buf
+        jnc req_found
 ;
-	call allocate_handle
-	mov es:[edi].dh_data,esi
-	mov es:[edi].dh_buf_sel,ds
-	mov es:[edi].dh_sector,dx
-	mov es:[edi].dh_unit,cx
-	mov es:[edi].dh_wait,0
-	mov es:[edi].dh_thread,0
-	mov es:[edi].dh_lock_count,0
-	mov es:[edi].dh_state,STATE_EMPTY
-	mov es:[edi].dh_usage,0
-	mov es:[edi].dh_time_lsb,0
-	mov es:[edi].dh_time_msb,0
-	mov es:[edi].dh_flags,FLAG_EXT_DATA
-	call insert_buf
-	call insert_pending
-	jmp req_ok
+        call allocate_handle
+        mov es:[edi].dh_data,esi
+        mov es:[edi].dh_buf_sel,ds
+        mov es:[edi].dh_sector,dx
+        mov es:[edi].dh_unit,cx
+        mov es:[edi].dh_wait,0
+        mov es:[edi].dh_thread,0
+        mov es:[edi].dh_lock_count,0
+        mov es:[edi].dh_state,STATE_EMPTY
+        mov es:[edi].dh_usage,0
+        mov es:[edi].dh_time_lsb,0
+        mov es:[edi].dh_time_msb,0
+        mov es:[edi].dh_flags,FLAG_EXT_DATA
+        call insert_buf
+        call insert_pending
+        jmp req_ok
 
 req_read_signal:
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	clc
-	jne req_found
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        clc
+        jne req_found
 
 req_read_block:
-	call block
-	jmp req_loop
+        call block
+        jmp req_loop
 
 req_found:
-	test es:[edi].dh_flags, FLAG_IO_BUSY
-	jnz req_read_block
+        test es:[edi].dh_flags, FLAG_IO_BUSY
+        jnz req_read_block
 ;
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	je req_read_signal
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        je req_read_signal
 ;
-	mov edx,es:[edi].dh_data
-	cmp edx,esi
-	je req_ok
+        mov edx,es:[edi].dh_data
+        cmp edx,esi
+        je req_ok
 ;
-	or edx,edx
-	jz req_new_save
+        or edx,edx
+        jz req_new_save
 ;
-	movzx ecx,ds:disc_bytes_per_sector
-	shr ecx,2
-	push esi
-	push edi
-	mov edi,esi
-	mov esi,edx
-	rep movs dword ptr es:[edi],es:[esi]
-	pop edi
-	pop esi
+        movzx ecx,ds:disc_bytes_per_sector
+        shr ecx,2
+        push esi
+        push edi
+        mov edi,esi
+        mov esi,edx
+        rep movs dword ptr es:[edi],es:[esi]
+        pop edi
+        pop esi
 ;
-	test es:[edi].dh_flags, FLAG_EXT_DATA
-	jnz req_new_save
+        test es:[edi].dh_flags, FLAG_EXT_DATA
+        jnz req_new_save
 ;
-	call free_data
+        call free_data
 
 req_new_save:
-	mov es:[edi].dh_data,esi
-	or es:[edi].dh_flags,FLAG_EXT_DATA
-	
+        mov es:[edi].dh_data,esi
+        or es:[edi].dh_flags,FLAG_EXT_DATA
+        
 req_ok:
-	inc es:[edi].dh_lock_count
-	inc es:[edi].dh_usage
-	LeaveSection ds:disc_section
+        inc es:[edi].dh_lock_count
+        inc es:[edi].dh_usage
+        LeaveSection ds:disc_section
 ;
-	mov bx,ds:disc_thread
-	Signal
-	clc
-	mov ebx,edi
+        mov bx,ds:disc_thread
+        Signal
+        clc
+        mov ebx,edi
 
 req_done:
-	pop edi
-	pop edx
-	pop ecx
-	pop ax
-	pop es
-	pop ds
-	ret
-req_sector	ENDP
+        pop edi
+        pop edx
+        pop ecx
+        pop ax
+        pop es
+        pop ds
+        ret
+req_sector      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DefineSector
+;               NAME:                   DefineSector
 ;
-;		DESCRIPTION:	Define sector contents, don't block or read
+;               DESCRIPTION:    Define sector contents, don't block or read
 ;
-;		PARAMETERS:		AL		Drive #
-;						EDX		Sector #
-;						ESI		Logical address of buffer
+;               PARAMETERS:             AL              Drive #
+;                                               EDX             Sector #
+;                                               ESI             Logical address of buffer
 ;
-;		RETURNS:		EBX		Handle
+;               RETURNS:                EBX             Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-define_sector_name	DB 'Define Sector',0
+define_sector_name      DB 'Define Sector',0
 
-define_sector	PROC far
-	push ds
-	push es
-	push ax
-	push ecx
-	push edx
-	push edi
+define_sector   PROC far
+        push ds
+        push es
+        push ax
+        push ecx
+        push edx
+        push edi
 ;
-	movzx bx,al
-	shl bx,1
-	mov ax,SEG data
-	mov ds,ax
-	mov ds,ds:[bx].drive_def_arr
-	mov ax,flat_sel
-	mov es,ax
-	cmp edx,ds:drive_sectors
-	jc define_inrange
+        movzx bx,al
+        shl bx,1
+        mov ax,SEG data
+        mov ds,ax
+        mov ds,ds:[bx].drive_def_arr
+        mov ax,flat_sel
+        mov es,ax
+        cmp edx,ds:drive_sectors
+        jc define_inrange
 ;
-	stc
-	jmp define_done
+        stc
+        jmp define_done
 
 define_inrange:
-	add edx,ds:drive_start_sector
-	mov ds,ds:drive_disc
-	push edx
-	pop ax
-	pop dx
-	div ds:disc_sectors_per_unit
-	mov cx,ax
-	EnterSection ds:disc_section
+        add edx,ds:drive_start_sector
+        mov ds,ds:drive_disc
+        push edx
+        pop ax
+        pop dx
+        div ds:disc_sectors_per_unit
+        mov cx,ax
+        EnterSection ds:disc_section
 
 define_loop:
-	call check_buf
-	jnc define_found
+        call check_buf
+        jnc define_found
 ;
-	ClearSignal
-	call allocate_handle
-	mov es:[edi].dh_data,esi
-	mov es:[edi].dh_buf_sel,ds
-	mov es:[edi].dh_sector,dx
-	mov es:[edi].dh_unit,cx
-	mov es:[edi].dh_wait,0
-	mov es:[edi].dh_thread,0
-	mov es:[edi].dh_lock_count,0
-	mov es:[edi].dh_state,STATE_USED
-	mov es:[edi].dh_usage,0
-	mov es:[edi].dh_time_lsb,0
-	mov es:[edi].dh_time_msb,0
-	mov es:[edi].dh_flags,FLAG_EXT_DATA
-	call insert_buf
-	jmp define_found
+        ClearSignal
+        call allocate_handle
+        mov es:[edi].dh_data,esi
+        mov es:[edi].dh_buf_sel,ds
+        mov es:[edi].dh_sector,dx
+        mov es:[edi].dh_unit,cx
+        mov es:[edi].dh_wait,0
+        mov es:[edi].dh_thread,0
+        mov es:[edi].dh_lock_count,0
+        mov es:[edi].dh_state,STATE_USED
+        mov es:[edi].dh_usage,0
+        mov es:[edi].dh_time_lsb,0
+        mov es:[edi].dh_time_msb,0
+        mov es:[edi].dh_flags,FLAG_EXT_DATA
+        call insert_buf
+        jmp define_found
 
 define_read_signal:
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	clc
-	jne define_found
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        clc
+        jne define_found
 
 define_read_block:
-	call block
-	jmp define_loop
+        call block
+        jmp define_loop
 
 define_found:
-	test es:[edi].dh_flags, FLAG_IO_BUSY
-	jnz define_read_block
+        test es:[edi].dh_flags, FLAG_IO_BUSY
+        jnz define_read_block
 ;
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	je define_read_signal
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        je define_read_signal
 ;
-	mov edx,es:[edi].dh_data
-	cmp edx,esi
-	je define_ok
+        mov edx,es:[edi].dh_data
+        cmp edx,esi
+        je define_ok
 ;
-	or edx,edx
-	jz define_new_save
+        or edx,edx
+        jz define_new_save
 ;
-	movzx ecx,ds:disc_bytes_per_sector
-	shr ecx,2
-	push esi
-	push edi
-	mov edi,esi
-	mov esi,edx
-	rep movs dword ptr es:[edi],es:[esi]
-	pop edi
-	pop esi
+        movzx ecx,ds:disc_bytes_per_sector
+        shr ecx,2
+        push esi
+        push edi
+        mov edi,esi
+        mov esi,edx
+        rep movs dword ptr es:[edi],es:[esi]
+        pop edi
+        pop esi
 ;
-	test es:[edi].dh_flags, FLAG_EXT_DATA
-	jnz define_new_save
+        test es:[edi].dh_flags, FLAG_EXT_DATA
+        jnz define_new_save
 ;
-	call free_data
+        call free_data
 
 define_new_save:
-	mov es:[edi].dh_data,esi
-	or es:[edi].dh_flags,FLAG_EXT_DATA
-	
+        mov es:[edi].dh_data,esi
+        or es:[edi].dh_flags,FLAG_EXT_DATA
+        
 define_ok:
-	inc es:[edi].dh_lock_count
-	inc es:[edi].dh_usage
-	LeaveSection ds:disc_section
-	mov al,es:[edi].dh_state
-	cmp al,STATE_USED
-	je define_valid
+        inc es:[edi].dh_lock_count
+        inc es:[edi].dh_usage
+        LeaveSection ds:disc_section
+        mov al,es:[edi].dh_state
+        cmp al,STATE_USED
+        je define_valid
 ;
-	cmp al,STATE_DIRTY
-	je define_valid
+        cmp al,STATE_DIRTY
+        je define_valid
 ;
-	cmp al,STATE_SEQ
-	je define_valid
+        cmp al,STATE_SEQ
+        je define_valid
 ;
-	stc
-	jmp define_done
+        stc
+        jmp define_done
 
 define_valid:
-	mov ebx,edi
-	clc
+        mov ebx,edi
+        clc
 
 define_done:
-	pop edi
-	pop edx
-	pop ecx
-	pop ax
-	pop es
-	pop ds
-	ret
-define_sector	ENDP
+        pop edi
+        pop edx
+        pop ecx
+        pop ax
+        pop es
+        pop ds
+        ret
+define_sector   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EraseSectors
+;               NAME:                   EraseSectors
 ;
-;		DESCRIPTION:	Erase a number of sectors
+;               DESCRIPTION:    Erase a number of sectors
 ;
-;		PARAMETERS:		AL		Drive #
+;               PARAMETERS:             AL              Drive #
 ;                       ECX     Number of sectors
-;						EDX		Start sector
+;                                               EDX             Start sector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-erase_sectors_name	DB 'Erase Sectors',0
+erase_sectors_name      DB 'Erase Sectors',0
 
 erase_sectors   Proc far
-	push ds
-	push es
-	pushad
+        push ds
+        push es
+        pushad
 ;
-	mov bx,SEG data
-	mov ds,bx
-	movzx bx,al
-	add bx,bx
-	mov bx,[bx].drive_def_arr
-	or bx,bx
-	jz erase_sectors_fail
+        mov bx,SEG data
+        mov ds,bx
+        movzx bx,al
+        add bx,bx
+        mov bx,[bx].drive_def_arr
+        or bx,bx
+        jz erase_sectors_fail
 ;
-	cmp bx,-1
-	je erase_sectors_fail
+        cmp bx,-1
+        je erase_sectors_fail
 ;
-	mov ds,bx
-	mov ds,ds:drive_disc
-	mov bx,ds:disc_handle
-	lds si,ds:disc_param
-	call [si].erase_proc
-	jnc erase_sectors_done
+        mov ds,bx
+        mov ds,ds:drive_disc
+        mov bx,ds:disc_handle
+        lds si,ds:disc_param
+        call [si].erase_proc
+        jnc erase_sectors_done
 ;
     mov bx,flat_sel
     mov es,bx
@@ -3963,15 +3963,15 @@ erase_loop:
     loop erase_loop
 ;
     clc
-	jmp erase_sectors_done
+        jmp erase_sectors_done
 
 erase_sectors_fail:
-	stc
+        stc
 
 erase_sectors_done:
-	popad
-	pop es  
-	pop ds
+        popad
+        pop es  
+        pop ds
     ret
 erase_sectors   Endp
 
@@ -3979,42 +3979,42 @@ erase_sectors   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EraseDiscSectors
+;               NAME:                   EraseDiscSectors
 ;
-;		DESCRIPTION:	Erase a number of sectors on a disc
+;               DESCRIPTION:    Erase a number of sectors on a disc
 ;
-;		PARAMETERS:		AL		Disc #
+;               PARAMETERS:             AL              Disc #
 ;                       ECX     Number of sectors
-;						EDX		Start sector
+;                                               EDX             Start sector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-erase_disc_sectors_name	DB 'Erase Disc Sectors',0
+erase_disc_sectors_name DB 'Erase Disc Sectors',0
 
 erase_disc_sectors   Proc near
-	push ds
-	push es
-	pushad
+        push ds
+        push es
+        pushad
 ;
-	cmp al,MAX_DRIVES
-	jae erase_disc_sectors_fail
+        cmp al,MAX_DRIVES
+        jae erase_disc_sectors_fail
 ;
-	mov bx,SEG data
-	mov ds,bx
-	movzx bx,al
-	add bx,bx
-	mov bx,[bx].disc_def_arr
-	or bx,bx
-	jz erase_disc_sectors_fail
+        mov bx,SEG data
+        mov ds,bx
+        movzx bx,al
+        add bx,bx
+        mov bx,[bx].disc_def_arr
+        or bx,bx
+        jz erase_disc_sectors_fail
 ;
-	cmp bx,-1
-	je erase_disc_sectors_fail
+        cmp bx,-1
+        je erase_disc_sectors_fail
 ;
-	mov ds,bx
-	mov bx,ds:disc_handle
-	lds si,ds:disc_param
-	call [si].erase_proc
-	jnc erase_disc_sectors_done
+        mov ds,bx
+        mov bx,ds:disc_handle
+        lds si,ds:disc_param
+        call [si].erase_proc
+        jnc erase_disc_sectors_done
 ;
     mov bx,flat_sel
     mov es,bx
@@ -4036,223 +4036,223 @@ erase_disc_loop:
     loop erase_disc_loop
 ;
     clc
-	jmp erase_disc_sectors_done
+        jmp erase_disc_sectors_done
 
 erase_disc_sectors_fail:
-	stc
+        stc
 
 erase_disc_sectors_done:
-	popad
-	pop es  
-	pop ds
+        popad
+        pop es  
+        pop ds
     ret
 erase_disc_sectors   Endp
 
-erase_disc_sectors32	Proc far
-	call erase_disc_sectors
-	retf32
-erase_disc_sectors32	Endp
+erase_disc_sectors32    Proc far
+        call erase_disc_sectors
+        retf32
+erase_disc_sectors32    Endp
 
-erase_disc_sectors16	Proc far
-	push ecx
+erase_disc_sectors16    Proc far
+        push ecx
 ;
-	movzx ecx,cx
-	call erase_disc_sectors
+        movzx ecx,cx
+        call erase_disc_sectors
 ;
-	pop ecx
-	ret
-erase_disc_sectors16	Endp
+        pop ecx
+        ret
+erase_disc_sectors16    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WaitForSector
+;               NAME:                   WaitForSector
 ;
-;		DESCRIPTION:	Wait until sector is idle
+;               DESCRIPTION:    Wait until sector is idle
 ;
-;		PARAMETERS:		AL		Drive #
-;						EBX		Handle
+;               PARAMETERS:             AL              Drive #
+;                                               EBX             Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-wait_for_sector_name	DB 'Wait For Sector',0
+wait_for_sector_name    DB 'Wait For Sector',0
 
-wait_for_sector	PROC far
-	push ds
-	push es
-	push ax
-	push edi
+wait_for_sector PROC far
+        push ds
+        push es
+        push ax
+        push edi
 ;
-	mov ax,flat_sel
-	mov es,ax
-	mov edi,ebx
-	mov ds,es:[edi].dh_buf_sel
-	EnterSection ds:disc_section
+        mov ax,flat_sel
+        mov es,ax
+        mov edi,ebx
+        mov ds,es:[edi].dh_buf_sel
+        EnterSection ds:disc_section
 
-ifdef DEBUG	
+ifdef DEBUG     
     call CheckBuffered
 endif
 
 wait_sector_loop:
-	cmp es:[edi].dh_state,STATE_EMPTY
-	je wait_sector_block
+        cmp es:[edi].dh_state,STATE_EMPTY
+        je wait_sector_block
 ;
-	cmp es:[edi].dh_state,STATE_SEQ
-	je wait_sector_block
+        cmp es:[edi].dh_state,STATE_SEQ
+        je wait_sector_block
 ;
-	cmp es:[edi].dh_state,STATE_DIRTY
-	clc
-	jne wait_sector_found
+        cmp es:[edi].dh_state,STATE_DIRTY
+        clc
+        jne wait_sector_found
 
 wait_sector_block:
-	call block
-	jmp wait_sector_loop
+        call block
+        jmp wait_sector_loop
 
 wait_sector_found:
-	LeaveSection ds:disc_section
-	clc
+        LeaveSection ds:disc_section
+        clc
 ;
-	pop edi
-	pop ax
-	pop es
-	pop ds
-	ret
-wait_for_sector	ENDP
+        pop edi
+        pop ax
+        pop es
+        pop ds
+        ret
+wait_for_sector ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ResetDrive
+;               NAME:                   ResetDrive
 ;
-;		DESCRIPTION:	Try to reset drive
+;               DESCRIPTION:    Try to reset drive
 ;
-;		PARAMETERS:		AL		Drive #
+;               PARAMETERS:             AL              Drive #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_drive_name	DB 'Reset Disc',0
+reset_drive_name        DB 'Reset Disc',0
 
-reset_drive	PROC far
-	push ds
-	push ax
-	push bx
+reset_drive     PROC far
+        push ds
+        push ax
+        push bx
 ;
-	movzx bx,al
-	shl bx,1
-	mov ax,SEG data
-	mov ds,ax
-	mov ax,ds:[bx].drive_def_arr
-	or ax,ax
-	jz reset_drive_done
+        movzx bx,al
+        shl bx,1
+        mov ax,SEG data
+        mov ds,ax
+        mov ax,ds:[bx].drive_def_arr
+        or ax,ax
+        jz reset_drive_done
 ;
-	mov ds,ax
-	mov bx,ds:disc_thread
-	Signal
+        mov ds,ax
+        mov bx,ds:disc_thread
+        Signal
 
 reset_drive_done:
-	pop bx
-	pop ax
-	pop ds
-	ret
-reset_drive	ENDP
+        pop bx
+        pop ax
+        pop ds
+        ret
+reset_drive     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GET_DISC_INFO
+;               NAME:                   GET_DISC_INFO
 ;
-;		DESCRIPTION:	Get disc info
+;               DESCRIPTION:    Get disc info
 ;
-;		PARAMETERS:		AL			Disc #
+;               PARAMETERS:             AL                      Disc #
 ;
-;		RETURNS;		CX			Bytes / sector
-;						EDX			Total sectors
-;						SI			BIOS sectors / cylinder
-;						DI			BIOS heads
+;               RETURNS;                CX                      Bytes / sector
+;                                               EDX                     Total sectors
+;                                               SI                      BIOS sectors / cylinder
+;                                               DI                      BIOS heads
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_disc_info_name	DB 'Get Disc Info',0
+get_disc_info_name      DB 'Get Disc Info',0
 
-get_disc_info	PROC far
-	push ds
-	push ax
-	push bx
+get_disc_info   PROC far
+        push ds
+        push ax
+        push bx
 ;
-	cmp al,MAX_DRIVES
-	jae get_disc_info_fail
+        cmp al,MAX_DRIVES
+        jae get_disc_info_fail
 ;
-	mov bx,SEG data
-	mov ds,bx
-	movzx bx,al
-	add bx,bx
-	mov bx,ds:[bx].disc_def_arr
-	or bx,bx
-	jz get_disc_info_fail
+        mov bx,SEG data
+        mov ds,bx
+        movzx bx,al
+        add bx,bx
+        mov bx,ds:[bx].disc_def_arr
+        or bx,bx
+        jz get_disc_info_fail
 ;
-	mov ds,bx
-	mov ax,ds:disc_units
-	mul ds:disc_sectors_per_unit
-	push dx
-	push ax
-	pop edx
-	mov cx,ds:disc_bytes_per_sector
-	mov si,ds:disc_sectors_per_cyl
-	mov di,ds:disc_heads
-	clc
-	jmp get_disc_info_done
+        mov ds,bx
+        mov ax,ds:disc_units
+        mul ds:disc_sectors_per_unit
+        push dx
+        push ax
+        pop edx
+        mov cx,ds:disc_bytes_per_sector
+        mov si,ds:disc_sectors_per_cyl
+        mov di,ds:disc_heads
+        clc
+        jmp get_disc_info_done
 
 get_disc_info_fail:
-	xor cx,cx
-	xor edx,edx
-	xor si,si
-	xor di,di
-	stc
+        xor cx,cx
+        xor edx,edx
+        xor si,si
+        xor di,di
+        stc
 
 get_disc_info_done:
-	pop bx
-	pop ax
-	pop ds	
-	retf32
-get_disc_info	Endp
+        pop bx
+        pop ax
+        pop ds  
+        retf32
+get_disc_info   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SET_DISC_INFO
+;               NAME:                   SET_DISC_INFO
 ;
-;		DESCRIPTION:	Set disc info
+;               DESCRIPTION:    Set disc info
 ;
-;		PARAMETERS:		AL			Disc #
-;                   	CX			Bytes / sector
-;						EDX			Total sectors
-;						SI			BIOS sectors / cylinder
-;						DI			BIOS heads
+;               PARAMETERS:             AL                      Disc #
+;                       CX                      Bytes / sector
+;                                               EDX                     Total sectors
+;                                               SI                      BIOS sectors / cylinder
+;                                               DI                      BIOS heads
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_disc_info_name	DB 'Set Disc Info',0
+set_disc_info_name      DB 'Set Disc Info',0
 
-set_disc_info	PROC far
-	push ds
-	push eax
-	push ebx
-	push edx
+set_disc_info   PROC far
+        push ds
+        push eax
+        push ebx
+        push edx
 ;
-	cmp al,MAX_DRIVES
-	jae set_disc_info_fail
+        cmp al,MAX_DRIVES
+        jae set_disc_info_fail
 ;
-	mov bx,SEG data
-	mov ds,bx
-	movzx bx,al
-	add bx,bx
-	mov bx,ds:[bx].disc_def_arr
-	or bx,bx
-	jz set_disc_info_fail
+        mov bx,SEG data
+        mov ds,bx
+        movzx bx,al
+        add bx,bx
+        mov bx,ds:[bx].disc_def_arr
+        or bx,bx
+        jz set_disc_info_fail
 ;
     push bx
     mov ax,si
@@ -4266,302 +4266,302 @@ set_disc_info	PROC far
     pop bx
     xchg ax,dx
     SetDiscParam
-	clc
-	jmp set_disc_info_done
+        clc
+        jmp set_disc_info_done
 
 set_disc_info_fail:
-	stc
+        stc
 
 set_disc_info_done:
     pop edx
-	pop ebx
-	pop eax
-	pop ds	
-	retf32
-set_disc_info	Endp
+        pop ebx
+        pop eax
+        pop ds  
+        retf32
+set_disc_info   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			READ_DISC
+;               NAME:                   READ_DISC
 ;
-;		DESCRIPTION:	Read disc
+;               DESCRIPTION:    Read disc
 ;
-;		PARAMETERS:		AL			Disc #
-;						EDX			Sector #
-;						(E)CX		Size
-;						ES:(E)DI	Buffer
+;               PARAMETERS:             AL                      Disc #
+;                                               EDX                     Sector #
+;                                               (E)CX           Size
+;                                               ES:(E)DI        Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_disc_name	DB 'Read Disc',0
+read_disc_name  DB 'Read Disc',0
 
-read_disc	PROC near
-	push ds
-	push es
-	pushad
+read_disc       PROC near
+        push ds
+        push es
+        pushad
 ;
-	cmp al,MAX_DRIVES
-	jae read_disc_fail
+        cmp al,MAX_DRIVES
+        jae read_disc_fail
 ;
-	mov bx,SEG data
-	mov ds,bx
-	movzx bx,al
-	add bx,bx
-	mov bx,ds:[bx].disc_def_arr
-	or bx,bx
-	jz read_disc_fail
+        mov bx,SEG data
+        mov ds,bx
+        movzx bx,al
+        add bx,bx
+        mov bx,ds:[bx].disc_def_arr
+        or bx,bx
+        jz read_disc_fail
 ;
-	mov ds,bx
-	push ds
-	push es
-	push ecx
-	push edi
+        mov ds,bx
+        push ds
+        push es
+        push ecx
+        push edi
 ;
-	mov ax,flat_sel
-	mov es,ax
-	push edx
-	pop ax
-	pop dx
-	div ds:disc_sectors_per_unit
-	mov cx,ax
-	EnterSection ds:disc_section
+        mov ax,flat_sel
+        mov es,ax
+        push edx
+        pop ax
+        pop dx
+        div ds:disc_sectors_per_unit
+        mov cx,ax
+        EnterSection ds:disc_section
 
 read_disc_loop:
-	call check_buf
-	jnc read_disc_found
+        call check_buf
+        jnc read_disc_found
 ;
-	ClearSignal
-	call allocate_handle
-	push edx
-	call allocate_data
-	mov es:[edi].dh_data,edx
-	pop edx
-	mov es:[edi].dh_buf_sel,ds
-	mov es:[edi].dh_sector,dx
-	mov es:[edi].dh_unit,cx
-	mov es:[edi].dh_wait,0
-	mov es:[edi].dh_thread,0
-	mov es:[edi].dh_lock_count,0
-	mov es:[edi].dh_state,STATE_EMPTY
-	mov es:[edi].dh_usage,0
-	mov es:[edi].dh_flags,0
-	mov es:[edi].dh_time_lsb,0
-	mov es:[edi].dh_time_msb,0
-	mov es:[edi].dh_flags,0
-	call insert_buf
-	call insert_pending
+        ClearSignal
+        call allocate_handle
+        push edx
+        call allocate_data
+        mov es:[edi].dh_data,edx
+        pop edx
+        mov es:[edi].dh_buf_sel,ds
+        mov es:[edi].dh_sector,dx
+        mov es:[edi].dh_unit,cx
+        mov es:[edi].dh_wait,0
+        mov es:[edi].dh_thread,0
+        mov es:[edi].dh_lock_count,0
+        mov es:[edi].dh_state,STATE_EMPTY
+        mov es:[edi].dh_usage,0
+        mov es:[edi].dh_flags,0
+        mov es:[edi].dh_time_lsb,0
+        mov es:[edi].dh_time_msb,0
+        mov es:[edi].dh_flags,0
+        call insert_buf
+        call insert_pending
 
 read_disc_signal:
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	clc
-	jne read_disc_found
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        clc
+        jne read_disc_found
 
 read_disc_block:
-	call block
-	jmp read_disc_loop
+        call block
+        jmp read_disc_loop
 
 read_disc_found:
-	test es:[edi].dh_flags, FLAG_IO_BUSY
-	jnz read_disc_block
+        test es:[edi].dh_flags, FLAG_IO_BUSY
+        jnz read_disc_block
 ;
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	je read_disc_signal
-;	
-	mov esi,es:[edi].dh_data
-	mov ax,es
-	mov ds,ax
-	pop edi
-	pop ecx
-	pop es
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        je read_disc_signal
+;       
+        mov esi,es:[edi].dh_data
+        mov ax,es
+        mov ds,ax
+        pop edi
+        pop ecx
+        pop es
 ;
-	shr ecx,2
-	rep movs dword ptr es:[edi],ds:[esi]
-	pop ds
-	LeaveSection ds:disc_section
-	clc
-	jmp read_disc_done
+        shr ecx,2
+        rep movs dword ptr es:[edi],ds:[esi]
+        pop ds
+        LeaveSection ds:disc_section
+        clc
+        jmp read_disc_done
 
 read_disc_fail:
-	stc
+        stc
 
 read_disc_done:
-	popad
-	pop es
-	pop ds
-	ret
-read_disc	ENDP
+        popad
+        pop es
+        pop ds
+        ret
+read_disc       ENDP
 
-read_disc32	Proc far
-	call read_disc
-	retf32
-read_disc32	Endp
+read_disc32     Proc far
+        call read_disc
+        retf32
+read_disc32     Endp
 
-read_disc16	Proc far
-	push ecx
-	push edi
+read_disc16     Proc far
+        push ecx
+        push edi
 ;
-	movzx ecx,cx
-	movzx edi,di
-	call read_disc
+        movzx ecx,cx
+        movzx edi,di
+        call read_disc
 ;
-	pop edi
-	pop ecx
-	ret
-read_disc16	Endp
+        pop edi
+        pop ecx
+        ret
+read_disc16     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WRITE_DISC
+;               NAME:                   WRITE_DISC
 ;
-;		DESCRIPTION:	Write disc
+;               DESCRIPTION:    Write disc
 ;
-;		PARAMETERS:		AL			Disc #
-;						EDX			Sector #
-;						(E)CX		Size
-;						ES:(E)DI	Buffer
+;               PARAMETERS:             AL                      Disc #
+;                                               EDX                     Sector #
+;                                               (E)CX           Size
+;                                               ES:(E)DI        Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_disc_name	DB 'Write Disc',0
+write_disc_name DB 'Write Disc',0
 
-write_disc	PROC near
-	push ds
-	push es
-	pushad
+write_disc      PROC near
+        push ds
+        push es
+        pushad
 ;
-	cmp al,MAX_DRIVES
-	jae write_disc_fail
+        cmp al,MAX_DRIVES
+        jae write_disc_fail
 ;
-	mov bx,SEG data
-	mov ds,bx
-	movzx bx,al
-	add bx,bx
-	mov bx,ds:[bx].disc_def_arr
-	or bx,bx
-	jz write_disc_fail
+        mov bx,SEG data
+        mov ds,bx
+        movzx bx,al
+        add bx,bx
+        mov bx,ds:[bx].disc_def_arr
+        or bx,bx
+        jz write_disc_fail
 ;
-	mov ds,bx
-	push ds
-	push es
-	push ecx
-	push edi
+        mov ds,bx
+        push ds
+        push es
+        push ecx
+        push edi
 ;
-	mov ax,flat_sel
-	mov es,ax
-	push edx
-	pop ax
-	pop dx
-	div ds:disc_sectors_per_unit
-	mov cx,ax
-	EnterSection ds:disc_section
+        mov ax,flat_sel
+        mov es,ax
+        push edx
+        pop ax
+        pop dx
+        div ds:disc_sectors_per_unit
+        mov cx,ax
+        EnterSection ds:disc_section
 
 write_disc_loop:
-	call check_buf
-	jnc write_disc_found
+        call check_buf
+        jnc write_disc_found
 ;
-	ClearSignal
-	call allocate_handle
-	push edx
-	call allocate_data
-	mov es:[edi].dh_data,edx
-	pop edx
-	mov es:[edi].dh_buf_sel,ds
-	mov es:[edi].dh_sector,dx
-	mov es:[edi].dh_unit,cx
-	mov es:[edi].dh_wait,0
-	mov es:[edi].dh_thread,0
-	mov es:[edi].dh_lock_count,0
-	mov es:[edi].dh_state,STATE_EMPTY
-	mov es:[edi].dh_usage,0
-	mov es:[edi].dh_flags,0
-	mov es:[edi].dh_time_lsb,0
-	mov es:[edi].dh_time_msb,0
-	mov es:[edi].dh_flags,0
-	call insert_buf
-	call insert_pending
+        ClearSignal
+        call allocate_handle
+        push edx
+        call allocate_data
+        mov es:[edi].dh_data,edx
+        pop edx
+        mov es:[edi].dh_buf_sel,ds
+        mov es:[edi].dh_sector,dx
+        mov es:[edi].dh_unit,cx
+        mov es:[edi].dh_wait,0
+        mov es:[edi].dh_thread,0
+        mov es:[edi].dh_lock_count,0
+        mov es:[edi].dh_state,STATE_EMPTY
+        mov es:[edi].dh_usage,0
+        mov es:[edi].dh_flags,0
+        mov es:[edi].dh_time_lsb,0
+        mov es:[edi].dh_time_msb,0
+        mov es:[edi].dh_flags,0
+        call insert_buf
+        call insert_pending
 
 write_disc_signal:
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	clc
-	jne write_disc_found
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        clc
+        jne write_disc_found
 
 write_disc_block:
-	call block
-	jmp write_disc_loop
+        call block
+        jmp write_disc_loop
 
 write_disc_found:
-	test es:[edi].dh_flags, FLAG_IO_BUSY
-	jnz write_disc_block
+        test es:[edi].dh_flags, FLAG_IO_BUSY
+        jnz write_disc_block
 ;
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	je write_disc_signal
-;	
-	mov ebx,edi
-	mov edi,es:[edi].dh_data
-	pop esi
-	pop ecx
-	pop ds
+        mov al,es:[edi].dh_state
+        cmp al,STATE_EMPTY
+        je write_disc_signal
+;       
+        mov ebx,edi
+        mov edi,es:[edi].dh_data
+        pop esi
+        pop ecx
+        pop ds
 ;
-	shr ecx,2
-	rep movs dword ptr es:[edi],ds:[esi]
+        shr ecx,2
+        rep movs dword ptr es:[edi],ds:[esi]
 ;
-	mov edi,ebx
-	pop ds
-	GetSystemTime
-	mov es:[edi].dh_time_lsb,eax
-	mov es:[edi].dh_time_msb,dx
-	mov es:[edi].dh_state,STATE_DIRTY
-	call insert_async_write
-	call update_async_timer
-	LeaveSection ds:disc_section
-	clc
-	jmp write_disc_done
+        mov edi,ebx
+        pop ds
+        GetSystemTime
+        mov es:[edi].dh_time_lsb,eax
+        mov es:[edi].dh_time_msb,dx
+        mov es:[edi].dh_state,STATE_DIRTY
+        call insert_async_write
+        call update_async_timer
+        LeaveSection ds:disc_section
+        clc
+        jmp write_disc_done
 
 write_disc_fail:
-	stc
+        stc
 
 write_disc_done:
-	popad
-	pop es
-	pop ds
-	ret
-write_disc	ENDP
+        popad
+        pop es
+        pop ds
+        ret
+write_disc      ENDP
 
-write_disc32	Proc far
-	call write_disc
-	retf32
-write_disc32	Endp
+write_disc32    Proc far
+        call write_disc
+        retf32
+write_disc32    Endp
 
-write_disc16	Proc far
-	push ecx
-	push edi
+write_disc16    Proc far
+        push ecx
+        push edi
 ;
-	movzx ecx,cx
-	movzx edi,di
-	call write_disc
+        movzx ecx,cx
+        movzx edi,di
+        call write_disc
 ;
-	pop edi
-	pop ecx
-	ret
-write_disc16	Endp
+        pop edi
+        pop ecx
+        ret
+write_disc16    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDriveDiscParam
+;               NAME:                   GetDriveDiscParam
 ;
-;		DESCRIPTION:	Get disc parameters for drive
+;               DESCRIPTION:    Get disc parameters for drive
 ;
-;		PARAMETERS:		AL			Drive #
+;               PARAMETERS:             AL                      Drive #
 ;
 ;       RETURNS:        AL          Disc #
 ;                       ECX         Total number of sectors
@@ -4569,35 +4569,35 @@ write_disc16	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_drive_disc_param_name	DB 'Get Drive Disc Param',0
+get_drive_disc_param_name       DB 'Get Drive Disc Param',0
 
-get_drive_disc_param	Proc far
+get_drive_disc_param    Proc far
     push ds
     push bx
 ;
-	movzx bx,al
-	shl bx,1
-	mov ax,SEG data
-	mov ds,ax
-	mov ax,ds:[bx].drive_def_arr
-	or ax,ax
-	stc
-	jz get_drive_disc_param_done
+        movzx bx,al
+        shl bx,1
+        mov ax,SEG data
+        mov ds,ax
+        mov ax,ds:[bx].drive_def_arr
+        or ax,ax
+        stc
+        jz get_drive_disc_param_done
 ;
     cmp ax,-1
     stc
     je get_drive_disc_param_done
 ;
-    mov ds,ax	
-	mov ecx,ds:drive_sectors
-	mov edx,ds:drive_start_sector
-	mov ds,ds:drive_disc
-	mov al,ds:disc_nr
-	clc
+    mov ds,ax   
+        mov ecx,ds:drive_sectors
+        mov edx,ds:drive_start_sector
+        mov ds,ds:drive_disc
+        mov al,ds:disc_nr
+        clc
 
 get_drive_disc_param_done:
     pop bx
-    pop ds	
+    pop ds      
     retf32
 get_drive_disc_param    Endp
 
@@ -4605,107 +4605,107 @@ get_drive_disc_param    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FormatDrive
+;               NAME:                   FormatDrive
 ;
-;		DESCRIPTION:	Format a drive
+;               DESCRIPTION:    Format a drive
 ;
-;		PARAMETERS:		AL			Disc #
-;						EDX			Start sector
-;						ECX			Number of sectors
-;						ES:(E)DI	FS name
+;               PARAMETERS:             AL                      Disc #
+;                                               EDX                     Start sector
+;                                               ECX                     Number of sectors
+;                                               ES:(E)DI        FS name
 ;
 ;       RETURNS:        AL          Drive #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-format_drive_name	DB 'Format Drive',0
+format_drive_name       DB 'Format Drive',0
 
-format_drive	Proc near
-	push ds
-	push es
-	push fs
-	push ebx
-	push ecx
-	push edx
-	push esi
-	push edi
-	push ebp
+format_drive    Proc near
+        push ds
+        push es
+        push fs
+        push ebx
+        push ecx
+        push edx
+        push esi
+        push edi
+        push ebp
 ;
-	push ax
-	mov ax,es
-	mov ds,ax
-	mov esi,edi
-	mov eax,10h
-	AllocateSmallGlobalMem
-	xor edi,edi
-	movs dword ptr es:[edi],ds:[esi]
-	movs dword ptr es:[edi],ds:[esi]
-	movs dword ptr es:[edi],ds:[esi]
-	movs dword ptr es:[edi],ds:[esi]
-	pop ax
-	xor di,di
-	IsFileSystemAvailable
-	jc format_fail
+        push ax
+        mov ax,es
+        mov ds,ax
+        mov esi,edi
+        mov eax,10h
+        AllocateSmallGlobalMem
+        xor edi,edi
+        movs dword ptr es:[edi],ds:[esi]
+        movs dword ptr es:[edi],ds:[esi]
+        movs dword ptr es:[edi],ds:[esi]
+        movs dword ptr es:[edi],ds:[esi]
+        pop ax
+        xor di,di
+        IsFileSystemAvailable
+        jc format_fail
 ;
-	mov bx,SEG data
-	mov ds,bx
-	movzx di,al
-	shl di,1
-	mov di,ds:[di].disc_def_arr
-	mov si,OFFSET drive_def_arr
-	mov bp,MAX_DRIVES
+        mov bx,SEG data
+        mov ds,bx
+        movzx di,al
+        shl di,1
+        mov di,ds:[di].disc_def_arr
+        mov si,OFFSET drive_def_arr
+        mov bp,MAX_DRIVES
 
 format_find_drive_loop:
-	mov bx,[si]
-	or bx,bx
-	je format_find_drive_next
+        mov bx,[si]
+        or bx,bx
+        je format_find_drive_next
 ;
-	cmp bx,-1
-	je format_find_drive_next
+        cmp bx,-1
+        je format_find_drive_next
 ;
-	mov fs,bx
-	cmp di,fs:drive_disc
-	jne format_find_drive_next
+        mov fs,bx
+        cmp di,fs:drive_disc
+        jne format_find_drive_next
 ;
-	mov ebx,edx
-	sub ebx,fs:drive_start_sector
-	jz format_drive_found
-	ja format_find_drive_above
+        mov ebx,edx
+        sub ebx,fs:drive_start_sector
+        jz format_drive_found
+        ja format_find_drive_above
 
 format_find_drive_below:
-	add ebx,fs:drive_sectors
-	jc format_fail
-	jmp format_find_drive_next
+        add ebx,fs:drive_sectors
+        jc format_fail
+        jmp format_find_drive_next
 
 format_find_drive_above:
-	sub ebx,fs:drive_sectors
-	jc format_fail
+        sub ebx,fs:drive_sectors
+        jc format_fail
 
 format_find_drive_next:
-	add si,2
-	sub bp,1
-	jnz format_find_drive_loop
+        add si,2
+        sub bp,1
+        jnz format_find_drive_loop
 ;
-	mov ah,al
-	AllocateStaticDrive
-	OpenDrive
-	jmp format_perf
+        mov ah,al
+        AllocateStaticDrive
+        OpenDrive
+        jmp format_perf
 
 format_drive_found:
     push dx
     mov dl,al
-	sub si,OFFSET drive_def_arr
-	mov ax,si
-	shr al,1
-	mov ah,dl
-	pop dx
-	FlushDrive
+        sub si,OFFSET drive_def_arr
+        mov ax,si
+        shr al,1
+        mov ah,dl
+        pop dx
+        FlushDrive
 
 format_do:
-	cmp ecx,fs:drive_sectors
-	jbe format_perf
+        cmp ecx,fs:drive_sectors
+        jbe format_perf
 ;
-	mov ecx,fs:drive_sectors
+        mov ecx,fs:drive_sectors
 
 format_perf:
     dec ecx
@@ -4715,30 +4715,30 @@ format_perf:
     mov es,dx
     mov dx,cs
     mov ds,dx
-	xor edx,edx
-	LockSector
+        xor edx,edx
+        LockSector
 ;
     mov edx,1
     mov es:[esi].boot_param.boot_mapping_sectors,dx
     sub ecx,edx
     mov edx,ecx
-	mov es:[esi].boot_param.boot_sectors,edx
-	cmp edx,10000h
-	jae format_no_small
+        mov es:[esi].boot_param.boot_sectors,edx
+        cmp edx,10000h
+        jae format_no_small
 ;
-    mov es:[esi].boot_param.boot_small_sectors,dx	
+    mov es:[esi].boot_param.boot_small_sectors,dx       
 
 format_no_small:
-	pop es
-;	
-	push cx
-	push esi
-;	
-	mov dx,flat_sel
-	mov ds,dx
-	xor di,di
-	mov cx,8
-	lea esi,[esi].boot_param.boot_fs
+        pop es
+;       
+        push cx
+        push esi
+;       
+        mov dx,flat_sel
+        mov ds,dx
+        xor di,di
+        mov cx,8
+        lea esi,[esi].boot_param.boot_fs
 
 format_name_loop:
     mov dl,es:[di]
@@ -4759,592 +4759,592 @@ format_name_next:
     loop format_name_loop
 ;
     pop esi    
-	pop cx
-;	
-	ModifySector
-	UnlockSector
-	pop edx
+        pop cx
+;       
+        ModifySector
+        UnlockSector
+        pop edx
 ;
-	xor di,di
-	FormatFileSystem
-	jc format_fail
+        xor di,di
+        FormatFileSystem
+        jc format_fail
 ;
-	FreeMem
-	clc
-	jmp format_done
+        FreeMem
+        clc
+        jmp format_done
 
 format_fail:
-	FreeMem
-	stc
+        FreeMem
+        stc
 
 format_done:
-	pop ebp
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop fs
-	pop es
-	pop ds
-	ret
-format_drive	Endp
+        pop ebp
+        pop edi
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        pop fs
+        pop es
+        pop ds
+        ret
+format_drive    Endp
 
-format_drive32	Proc far
-	call format_drive
-	retf32
-format_drive32	Endp
+format_drive32  Proc far
+        call format_drive
+        retf32
+format_drive32  Endp
 
-format_drive16	Proc far
-	push edi
-	movzx edi,di
-	call format_drive
-	pop edi
-	ret
-format_drive16	Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			HOOK_INIT_DISC
-;
-;		DESCRIPTION:	Add an InitDisc hook
-;
-;		PARAMETERS:		ES:DI		Parameter block
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_init_disc_name	DB 'Hook Init Disc',0
-
-hook_init_disc	Proc far
-	push ds
-	push ax
-	push bx
-	push cx
-	mov ax,SEG data
-	mov ds,ax
-	mov al,ds:disc_params
-	mov bl,al
-	xor bh,bh
-	shl bx,2
-	add bx,OFFSET disc_param_arr
-	mov [bx],di
-	mov [bx+2],es
-	inc al
-	mov ds:disc_params,al
-	pop cx
-	pop bx
-	pop ax
-	pop ds
-	ret
-hook_init_disc	Endp
+format_drive16  Proc far
+        push edi
+        movzx edi,di
+        call format_drive
+        pop edi
+        ret
+format_drive16  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RUN_DISC_ASSIGN
+;               NAME:                   HOOK_INIT_DISC
 ;
-;		DESCRIPTION:	Run all disc-assign hooks
+;               DESCRIPTION:    Add an InitDisc hook
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             ES:DI           Parameter block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-run_disc_assign	Proc near
-	push ds
-	push ax
-	push bx
-	push cx
+hook_init_disc_name     DB 'Hook Init Disc',0
+
+hook_init_disc  Proc far
+        push ds
+        push ax
+        push bx
+        push cx
+        mov ax,SEG data
+        mov ds,ax
+        mov al,ds:disc_params
+        mov bl,al
+        xor bh,bh
+        shl bx,2
+        add bx,OFFSET disc_param_arr
+        mov [bx],di
+        mov [bx+2],es
+        inc al
+        mov ds:disc_params,al
+        pop cx
+        pop bx
+        pop ax
+        pop ds
+        ret
+hook_init_disc  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	mov ax,SEG data
-	mov ds,ax
-	movzx cx,ds:disc_params
-	mov bx,OFFSET disc_param_arr
-	jcxz run_disc_assign_done
+;
+;               NAME:                   RUN_DISC_ASSIGN
+;
+;               DESCRIPTION:    Run all disc-assign hooks
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+run_disc_assign Proc near
+        push ds
+        push ax
+        push bx
+        push cx
+;
+        mov ax,SEG data
+        mov ds,ax
+        movzx cx,ds:disc_params
+        mov bx,OFFSET disc_param_arr
+        jcxz run_disc_assign_done
 
 run_disc_assign_loop:
-	push ds
-	push bx
-	push cx
-	mov ds:disc_curr_param,bx
-	lds bx,[bx]
-	call [bx].disc_assign_proc
-	pop cx
-	pop bx
-	pop ds
-	add bx,4
-	loop run_disc_assign_loop	
+        push ds
+        push bx
+        push cx
+        mov ds:disc_curr_param,bx
+        lds bx,[bx]
+        call [bx].disc_assign_proc
+        pop cx
+        pop bx
+        pop ds
+        add bx,4
+        loop run_disc_assign_loop       
 
 run_disc_assign_done:
-	pop cx
-	pop bx
-	pop ax
-	pop ds	
-	ret
-run_disc_assign	Endp
+        pop cx
+        pop bx
+        pop ax
+        pop ds  
+        ret
+run_disc_assign Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RUN_DRIVE_ASSIGN1
+;               NAME:                   RUN_DRIVE_ASSIGN1
 ;
-;		DESCRIPTION:	Run drive assign pass 1 for all discs
+;               DESCRIPTION:    Run drive assign pass 1 for all discs
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-run_drive_assign1	Proc near
-	push ds
-	push ax
-	push bx
-	push cx
-	push si
+run_drive_assign1       Proc near
+        push ds
+        push ax
+        push bx
+        push cx
+        push si
 ;
-	mov ax,SEG data
-	mov ds,ax
-	xor si,si
-	mov cx,MAX_DRIVES
+        mov ax,SEG data
+        mov ds,ax
+        xor si,si
+        mov cx,MAX_DRIVES
 
 run_drive_assign1_loop:
-	mov bx,[si].disc_def_arr
-	or bx,bx
-	jz run_drive_assign1_next
+        mov bx,[si].disc_def_arr
+        or bx,bx
+        jz run_drive_assign1_next
 ;
-	push ds
-	push bx
-	push cx
-	push si
+        push ds
+        push bx
+        push cx
+        push si
 ;
-	mov ds,bx
-	mov bx,ds:disc_handle
-	lds si,ds:disc_param
-	call [si].drive_assign1_proc
+        mov ds,bx
+        mov bx,ds:disc_handle
+        lds si,ds:disc_param
+        call [si].drive_assign1_proc
 ;
-	pop si
-	pop cx
-	pop bx
-	pop ds
+        pop si
+        pop cx
+        pop bx
+        pop ds
 
 run_drive_assign1_next:
-	add si,2
-	sub cx,1
-	jnz run_drive_assign1_loop
+        add si,2
+        sub cx,1
+        jnz run_drive_assign1_loop
 ;
-	pop si
-	pop cx
-	pop bx
-	pop ax
-	pop ds
-	ret
-run_drive_assign1	Endp
+        pop si
+        pop cx
+        pop bx
+        pop ax
+        pop ds
+        ret
+run_drive_assign1       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RUN_DRIVE_ASSIGN2
+;               NAME:                   RUN_DRIVE_ASSIGN2
 ;
-;		DESCRIPTION:	Run drive assign pass 2 for all discs
+;               DESCRIPTION:    Run drive assign pass 2 for all discs
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-run_drive_assign2	Proc near
-	push ds
-	push ax
-	push bx
-	push cx
-	push si
+run_drive_assign2       Proc near
+        push ds
+        push ax
+        push bx
+        push cx
+        push si
 ;
-	mov ax,SEG data
-	mov ds,ax
-	xor si,si
-	mov cx,MAX_DRIVES
+        mov ax,SEG data
+        mov ds,ax
+        xor si,si
+        mov cx,MAX_DRIVES
 
 run_drive_assign2_loop:
-	mov bx,[si].disc_def_arr
-	or bx,bx
-	jz run_drive_assign2_next
+        mov bx,[si].disc_def_arr
+        or bx,bx
+        jz run_drive_assign2_next
 ;
-	push ds
-	push bx
-	push cx
-	push si
+        push ds
+        push bx
+        push cx
+        push si
 ;
-	mov ds,bx
-	mov bx,ds:disc_handle
-	lds si,ds:disc_param
-	call [si].drive_assign2_proc
+        mov ds,bx
+        mov bx,ds:disc_handle
+        lds si,ds:disc_param
+        call [si].drive_assign2_proc
 ;
-	pop si
-	pop cx
-	pop bx
-	pop ds
+        pop si
+        pop cx
+        pop bx
+        pop ds
 
 run_drive_assign2_next:
-	add si,2
-	sub cx,1
-	jnz run_drive_assign2_loop
+        add si,2
+        sub cx,1
+        jnz run_drive_assign2_loop
 ;
-	pop si
-	pop cx
-	pop bx
-	pop ax
-	pop ds
-	ret
-run_drive_assign2	Endp
+        pop si
+        pop cx
+        pop bx
+        pop ax
+        pop ds
+        ret
+run_drive_assign2       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DEMAND_LOAD_DRIVE
+;               NAME:                   DEMAND_LOAD_DRIVE
 ;
-;		DESCRIPTION:	Run demand-load for disc exporting drive
+;               DESCRIPTION:    Run demand-load for disc exporting drive
 ;
-;		PARAMETERS:		AL		Drive #
+;               PARAMETERS:             AL              Drive #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-demand_load_drive_name	DB 'Demand Load Drive', 0
+demand_load_drive_name  DB 'Demand Load Drive', 0
 
-demand_load_drive	Proc far
-	push ds
-	pushad
+demand_load_drive       Proc far
+        push ds
+        pushad
 ;
-	mov bx,SEG data
-	mov ds,bx
-	movzx bx,al
-	add bx,bx
-	mov ax,[bx].drive_def_arr
-	or ax,ax
-	jz demand_load_drive_fail
+        mov bx,SEG data
+        mov ds,bx
+        movzx bx,al
+        add bx,bx
+        mov ax,[bx].drive_def_arr
+        or ax,ax
+        jz demand_load_drive_fail
 ;
-	cmp ax,-1
-	je demand_load_drive_fail
+        cmp ax,-1
+        je demand_load_drive_fail
 ;
-	mov ds,ax
-	mov ds,ds:drive_disc
-	mov bx,ds:disc_handle
-	lds si,ds:disc_param
-	call [si].demand_mount_proc
-	jmp demand_load_drive_done
+        mov ds,ax
+        mov ds,ds:drive_disc
+        mov bx,ds:disc_handle
+        lds si,ds:disc_param
+        call [si].demand_mount_proc
+        jmp demand_load_drive_done
 
 demand_load_drive_fail:
-	stc
+        stc
 
 demand_load_drive_done:
-	popad
-	pop ds
-	retf32
-demand_load_drive	Endp
+        popad
+        pop ds
+        retf32
+demand_load_drive       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INIT_DISC
+;               NAME:                   INIT_DISC
 ;
-;		DESCRIPTION:	Init discs
+;               DESCRIPTION:    Init discs
 ;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_disc	Proc far
-	call run_disc_assign
-	call run_drive_assign1
-	call run_drive_assign2
-	ret
-init_disc	Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			INIT
-;
-;		DESCRIPTION:	Init drive
-;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+init_disc       Proc far
+        call run_disc_assign
+        call run_drive_assign1
+        call run_drive_assign2
+        ret
+init_disc       Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	mov si,OFFSET hook_init_disc
-	mov di,OFFSET hook_init_disc_name
-	mov ax,hook_init_disc_nr
-	RegisterOsGate
 ;
-	mov si,OFFSET install_disc
-	mov di,OFFSET install_disc_name
-	mov ax,install_disc_nr
-	RegisterOsGate
+;               NAME:                   INIT
 ;
-	mov si,OFFSET set_disc_param
-	mov di,OFFSET set_disc_param_name
-	mov ax,set_disc_param_nr
-	RegisterOsGate
+;               DESCRIPTION:    Init drive
 ;
-	mov si,OFFSET register_disc_change
-	mov di,OFFSET register_disc_change_name
-	mov ax,register_disc_change_nr
-	RegisterOsGate
+;               PARAMETERS:             
 ;
-	mov si,OFFSET start_disc
-	mov di,OFFSET start_disc_name
-	mov ax,start_disc_nr
-	RegisterOsGate
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init    PROC far
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov si,OFFSET stop_disc
-	mov di,OFFSET stop_disc_name
-	mov ax,stop_disc_nr
-	RegisterOsGate
+        mov esi,OFFSET hook_init_disc
+        mov edi,OFFSET hook_init_disc_name
+        mov ax,hook_init_disc_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET wait_for_disc_request
-	mov di,OFFSET wait_for_disc_request_name
-	mov ax,wait_for_disc_request_nr
-	RegisterOsGate
+        mov esi,OFFSET install_disc
+        mov edi,OFFSET install_disc_name
+        mov ax,install_disc_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET poll_disc_request
-	mov di,OFFSET poll_disc_request_name
-	mov ax,poll_disc_request_nr
-	RegisterOsGate
+        mov esi,OFFSET set_disc_param
+        mov edi,OFFSET set_disc_param_name
+        mov ax,set_disc_param_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET get_disc_request
-	mov di,OFFSET get_disc_request_name
-	mov ax,get_disc_request_nr
-	RegisterOsGate
+        mov esi,OFFSET register_disc_change
+        mov edi,OFFSET register_disc_change_name
+        mov ax,register_disc_change_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET new_disc_request
-	mov di,OFFSET new_disc_request_name
-	mov ax,new_disc_request_nr
-	RegisterOsGate
+        mov esi,OFFSET start_disc
+        mov edi,OFFSET start_disc_name
+        mov ax,start_disc_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET lock_disc_request
-	mov di,OFFSET lock_disc_request_name
-	mov ax,lock_disc_request_nr
-	RegisterOsGate
+        mov esi,OFFSET stop_disc
+        mov edi,OFFSET stop_disc_name
+        mov ax,stop_disc_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET modify_disc_request
-	mov di,OFFSET modify_disc_request_name
-	mov ax,modify_disc_request_nr
-	RegisterOsGate
+        mov esi,OFFSET wait_for_disc_request
+        mov edi,OFFSET wait_for_disc_request_name
+        mov ax,wait_for_disc_request_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET unlock_disc_request
-	mov di,OFFSET unlock_disc_request_name
-	mov ax,unlock_disc_request_nr
-	RegisterOsGate
+        mov esi,OFFSET poll_disc_request
+        mov edi,OFFSET poll_disc_request_name
+        mov ax,poll_disc_request_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET disc_request_completed
-	mov di,OFFSET disc_request_completed_name
-	mov ax,disc_request_completed_nr
-	RegisterOsGate
+        mov esi,OFFSET get_disc_request
+        mov edi,OFFSET get_disc_request_name
+        mov ax,get_disc_request_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET get_disc_request_array
-	mov di,OFFSET get_disc_request_array_name
-	mov ax,get_disc_request_array_nr
-	RegisterOsGate
+        mov esi,OFFSET new_disc_request
+        mov edi,OFFSET new_disc_request_name
+        mov ax,new_disc_request_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET open_drive
-	mov di,OFFSET open_drive_name
-	mov ax,open_drive_nr
-	RegisterOsGate
+        mov esi,OFFSET lock_disc_request
+        mov edi,OFFSET lock_disc_request_name
+        mov ax,lock_disc_request_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET close_drive
-	mov di,OFFSET close_drive_name
-	mov ax,close_drive_nr
-	RegisterOsGate
+        mov esi,OFFSET modify_disc_request
+        mov edi,OFFSET modify_disc_request_name
+        mov ax,modify_disc_request_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET flush_drive
-	mov di,OFFSET flush_drive_name
-	mov ax,flush_drive_nr
-	RegisterOsGate
+        mov esi,OFFSET unlock_disc_request
+        mov edi,OFFSET unlock_disc_request_name
+        mov ax,unlock_disc_request_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET new_sector
-	mov di,OFFSET new_sector_name
-	mov ax,new_sector_nr
-	RegisterOsGate
+        mov esi,OFFSET disc_request_completed
+        mov edi,OFFSET disc_request_completed_name
+        mov ax,disc_request_completed_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET get_drive_param
-	mov di,OFFSET get_drive_param_name
-	mov ax,get_drive_param_nr
-	RegisterOsGate
+        mov esi,OFFSET get_disc_request_array
+        mov edi,OFFSET get_disc_request_array_name
+        mov ax,get_disc_request_array_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET lock_sector
-	mov di,OFFSET lock_sector_name
-	mov ax,lock_sector_nr
-	RegisterOsGate
+        mov esi,OFFSET open_drive
+        mov edi,OFFSET open_drive_name
+        mov ax,open_drive_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET unlock_sector
-	mov di,OFFSET unlock_sector_name
-	mov ax,unlock_sector_nr
-	RegisterOsGate
+        mov esi,OFFSET close_drive
+        mov edi,OFFSET close_drive_name
+        mov ax,close_drive_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET modify_sector
-	mov di,OFFSET modify_sector_name
-	mov ax,modify_sector_nr
-	RegisterOsGate
+        mov esi,OFFSET flush_drive
+        mov edi,OFFSET flush_drive_name
+        mov ax,flush_drive_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET flush_sector
-	mov di,OFFSET flush_sector_name
-	mov ax,flush_sector_nr
-	RegisterOsGate
+        mov esi,OFFSET new_sector
+        mov edi,OFFSET new_sector_name
+        mov ax,new_sector_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET create_disc_seq
-	mov di,OFFSET create_disc_seq_name
-	mov ax,create_disc_seq_nr
-	RegisterOsGate
+        mov esi,OFFSET get_drive_param
+        mov edi,OFFSET get_drive_param_name
+        mov ax,get_drive_param_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET modify_seq_sector
-	mov di,OFFSET modify_seq_sector_name
-	mov ax,modify_seq_sector_nr
-	RegisterOsGate
+        mov esi,OFFSET lock_sector
+        mov edi,OFFSET lock_sector_name
+        mov ax,lock_sector_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET perform_disc_seq
-	mov di,OFFSET perform_disc_seq_name
-	mov ax,perform_disc_seq_nr
-	RegisterOsGate
+        mov esi,OFFSET unlock_sector
+        mov edi,OFFSET unlock_sector_name
+        mov ax,unlock_sector_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET req_sector
-	mov di,OFFSET req_sector_name
-	mov ax,req_sector_nr
-	RegisterOsGate
+        mov esi,OFFSET modify_sector
+        mov edi,OFFSET modify_sector_name
+        mov ax,modify_sector_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET define_sector
-	mov di,OFFSET define_sector_name
-	mov ax,define_sector_nr
-	RegisterOsGate
+        mov esi,OFFSET flush_sector
+        mov edi,OFFSET flush_sector_name
+        mov ax,flush_sector_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET erase_sectors
-	mov di,OFFSET erase_sectors_name
-	mov ax,erase_sectors_nr
-	RegisterOsGate
+        mov esi,OFFSET create_disc_seq
+        mov edi,OFFSET create_disc_seq_name
+        mov ax,create_disc_seq_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET wait_for_sector
-	mov di,OFFSET wait_for_sector_name
-	mov ax,wait_for_sector_nr
-	RegisterOsGate
+        mov esi,OFFSET modify_seq_sector
+        mov edi,OFFSET modify_seq_sector_name
+        mov ax,modify_seq_sector_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET reset_drive
-	mov di,OFFSET reset_drive_name
-	mov ax,reset_drive_nr
-	RegisterOsGate
+        mov esi,OFFSET perform_disc_seq
+        mov edi,OFFSET perform_disc_seq_name
+        mov ax,perform_disc_seq_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET get_disc_info
-	mov di,OFFSET get_disc_info_name
-	xor dx,dx
-	mov ax,get_disc_info_nr
-	RegisterBimodalUserGate
+        mov esi,OFFSET req_sector
+        mov edi,OFFSET req_sector_name
+        mov ax,req_sector_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET set_disc_info
-	mov di,OFFSET set_disc_info_name
-	xor dx,dx
-	mov ax,set_disc_info_nr
-	RegisterBimodalUserGate
+        mov esi,OFFSET define_sector
+        mov edi,OFFSET define_sector_name
+        mov ax,define_sector_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET allocate_fixed_drive
-	mov di,OFFSET allocate_fixed_drive_name
-	xor dx,dx
-	mov ax,allocate_fixed_drive_nr
-	RegisterBimodalUserGate
+        mov esi,OFFSET erase_sectors
+        mov edi,OFFSET erase_sectors_name
+        mov ax,erase_sectors_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET allocate_static_drive
-	mov di,OFFSET allocate_static_drive_name
-	xor dx,dx
-	mov ax,allocate_static_drive_nr
-	RegisterBimodalUserGate
+        mov esi,OFFSET wait_for_sector
+        mov edi,OFFSET wait_for_sector_name
+        mov ax,wait_for_sector_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET allocate_dynamic_drive
-	mov di,OFFSET allocate_dynamic_drive_name
-	xor dx,dx
-	mov ax,allocate_dynamic_drive_nr
-	RegisterBimodalUserGate
+        mov esi,OFFSET reset_drive
+        mov edi,OFFSET reset_drive_name
+        mov ax,reset_drive_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET get_drive_disc_param
-	mov di,OFFSET get_drive_disc_param_name
-	xor dx,dx
-	mov ax,get_drive_disc_param_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET get_disc_info
+        mov di,OFFSET get_disc_info_name
+        xor dx,dx
+        mov ax,get_disc_info_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET demand_load_drive
-	mov di,OFFSET demand_load_drive_name
-	mov ax,demand_load_drive_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET set_disc_info
+        mov di,OFFSET set_disc_info_name
+        xor dx,dx
+        mov ax,set_disc_info_nr
+        RegisterBimodalUserGate
 ;
-	mov bx,OFFSET format_drive16
-	mov si,OFFSET format_drive32
-	mov di,OFFSET format_drive_name
-	mov dx,virt_es_in
-	mov ax,format_drive_nr
-	RegisterUserGate
+        mov si,OFFSET allocate_fixed_drive
+        mov di,OFFSET allocate_fixed_drive_name
+        xor dx,dx
+        mov ax,allocate_fixed_drive_nr
+        RegisterBimodalUserGate
 ;
-	mov bx,OFFSET read_disc16
-	mov si,OFFSET read_disc32
-	mov di,OFFSET read_disc_name
-	mov dx,virt_es_in
-	mov ax,read_disc_nr
-	RegisterUserGate
+        mov si,OFFSET allocate_static_drive
+        mov di,OFFSET allocate_static_drive_name
+        xor dx,dx
+        mov ax,allocate_static_drive_nr
+        RegisterBimodalUserGate
 ;
-	mov bx,OFFSET write_disc16
-	mov si,OFFSET write_disc32
-	mov di,OFFSET write_disc_name
-	mov dx,virt_es_in
-	mov ax,write_disc_nr
-	RegisterUserGate
+        mov si,OFFSET allocate_dynamic_drive
+        mov di,OFFSET allocate_dynamic_drive_name
+        xor dx,dx
+        mov ax,allocate_dynamic_drive_nr
+        RegisterBimodalUserGate
 ;
-	mov bx,OFFSET erase_disc_sectors16
-	mov si,OFFSET erase_disc_sectors32
-	mov di,OFFSET erase_disc_sectors_name
-	xor dx,dx
-	mov ax,erase_disc_sectors_nr
-	RegisterUserGate
+        mov si,OFFSET get_drive_disc_param
+        mov di,OFFSET get_drive_disc_param_name
+        xor dx,dx
+        mov ax,get_drive_disc_param_nr
+        RegisterBimodalUserGate
 ;
-	mov di,OFFSET init_disc
-	HookInitFileSystem
+        mov si,OFFSET demand_load_drive
+        mov di,OFFSET demand_load_drive_name
+        mov ax,demand_load_drive_nr
+        RegisterBimodalUserGate
 ;
-	mov bx,SEG data
-	mov es,bx
-	mov es:disc_params,0
+        mov bx,OFFSET format_drive16
+        mov si,OFFSET format_drive32
+        mov di,OFFSET format_drive_name
+        mov dx,virt_es_in
+        mov ax,format_drive_nr
+        RegisterUserGate
 ;
-	mov cx,MAX_DRIVES
-	mov di,OFFSET disc_def_arr
-	xor ax,ax
-	rep stosw
+        mov bx,OFFSET read_disc16
+        mov si,OFFSET read_disc32
+        mov di,OFFSET read_disc_name
+        mov dx,virt_es_in
+        mov ax,read_disc_nr
+        RegisterUserGate
 ;
-	mov cx,MAX_DRIVES
-	mov di,OFFSET drive_def_arr
-	xor ax,ax
-	rep stosw
+        mov bx,OFFSET write_disc16
+        mov si,OFFSET write_disc32
+        mov di,OFFSET write_disc_name
+        mov dx,virt_es_in
+        mov ax,write_disc_nr
+        RegisterUserGate
 ;
-	mov cx,DRIVE_WAIT_NUM
-	mov di,4*DRIVE_WAIT_NUM + OFFSET drive_wait_arr
-	xor ax,ax
+        mov bx,OFFSET erase_disc_sectors16
+        mov si,OFFSET erase_disc_sectors32
+        mov di,OFFSET erase_disc_sectors_name
+        xor dx,dx
+        mov ax,erase_disc_sectors_nr
+        RegisterUserGate
+;
+        mov di,OFFSET init_disc
+        HookInitFileSystem
+;
+        mov bx,SEG data
+        mov es,bx
+        mov es:disc_params,0
+;
+        mov cx,MAX_DRIVES
+        mov di,OFFSET disc_def_arr
+        xor ax,ax
+        rep stosw
+;
+        mov cx,MAX_DRIVES
+        mov di,OFFSET drive_def_arr
+        xor ax,ax
+        rep stosw
+;
+        mov cx,DRIVE_WAIT_NUM
+        mov di,4*DRIVE_WAIT_NUM + OFFSET drive_wait_arr
+        xor ax,ax
 
 init_drive_wait_loop:
-	sub di,4
-	mov es:[di],ax
-	mov ax,di
-	loop init_drive_wait_loop
-	mov es:drive_wait_free,di
-	mov es:drive_wait_count,DRIVE_WAIT_NUM
+        sub di,4
+        mov es:[di],ax
+        mov ax,di
+        loop init_drive_wait_loop
+        mov es:drive_wait_free,di
+        mov es:drive_wait_count,DRIVE_WAIT_NUM
 ;
-    call init_ramdrive	
+    call init_ramdrive  
     call init_filedisc
     call init_dosdev
-	ret
-init	ENDP
+        ret
+init    ENDP
 
-code	ENDS
+code    ENDS
 
-	END init
+        END init
 

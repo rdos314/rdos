@@ -1295,14 +1295,14 @@ init    PROC far
         mov ds,ax
         mov es,ax
 ;
-        mov si,OFFSET get_psp_gate
-        mov di,OFFSET get_psp_name
+        mov esi,OFFSET get_psp_gate
+        mov edi,OFFSET get_psp_name
         xor cl,cl
         mov ax,get_psp_nr
         RegisterOsGate
 ;
-        mov si,OFFSET set_psp_gate
-        mov di,OFFSET set_psp_name
+        mov esi,OFFSET set_psp_gate
+        mov edi,OFFSET set_psp_name
         xor cl,cl
         mov ax,set_psp_nr
         RegisterOsGate

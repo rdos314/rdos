@@ -1329,38 +1329,38 @@ init    Proc far
         mov ax,SERIAL_HANDLE
         RegisterHandle
 ;
-        mov si,OFFSET add_com_port
-        mov di,OFFSET add_com_port_name
+        mov esi,OFFSET add_com_port
+        mov edi,OFFSET add_com_port_name
         xor cl,cl
         mov ax,add_com_port_nr
         RegisterOsGate
 ;
-        mov si,OFFSET reserve_com_line
-        mov di,OFFSET reserve_com_line_name
+        mov esi,OFFSET reserve_com_line
+        mov edi,OFFSET reserve_com_line_name
         xor cl,cl
         mov ax,reserve_com_line_nr
         RegisterOsGate
 ;
-        mov si,OFFSET device_set_dtr
-        mov di,OFFSET device_set_dtr_name
+        mov esi,OFFSET device_set_dtr
+        mov edi,OFFSET device_set_dtr_name
         xor cl,cl
         mov ax,device_set_dtr_nr
         RegisterOsGate
 ;
-        mov si,OFFSET device_reset_dtr
-        mov di,OFFSET device_reset_dtr_name
+        mov esi,OFFSET device_reset_dtr
+        mov edi,OFFSET device_reset_dtr_name
         xor cl,cl
         mov ax,device_reset_dtr_nr
         RegisterOsGate
 ;
-        mov si,OFFSET wait_for_line_state_change
-        mov di,OFFSET wait_for_line_state_change_name
+        mov esi,OFFSET wait_for_line_state_change
+        mov edi,OFFSET wait_for_line_state_change_name
         xor cl,cl
         mov ax,wait_for_line_state_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_line_state
-        mov di,OFFSET get_line_state_name
+        mov esi,OFFSET get_line_state
+        mov edi,OFFSET get_line_state_name
         xor cl,cl
         mov ax,get_line_state_nr
         RegisterOsGate

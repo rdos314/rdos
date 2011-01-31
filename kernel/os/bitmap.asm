@@ -784,8 +784,8 @@ init_bitmap     PROC near
         mov di,OFFSET delete_handle
         RegisterHandle
 ;
-        mov si,OFFSET init_video_bitmap
-        mov di,OFFSET init_video_bitmap_name
+        mov esi,OFFSET init_video_bitmap
+        mov edi,OFFSET init_video_bitmap_name
         xor cl,cl
         mov ax,init_video_bitmap_nr
         RegisterOsGate

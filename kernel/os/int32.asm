@@ -116,20 +116,20 @@ init_int32      PROC near
         mov ds,ax
         mov es,ax
 ;
-        mov si,OFFSET hook_pm_int
-        mov di,OFFSET hook_pm_int_name
+        mov esi,OFFSET hook_pm_int
+        mov edi,OFFSET hook_pm_int_name
         xor cl,cl
         mov ax,hook_pm32_int_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_get_pm_int
-        mov di,OFFSET hook_get_pm_int_name
+        mov esi,OFFSET hook_get_pm_int
+        mov edi,OFFSET hook_get_pm_int_name
         xor cl,cl
         mov ax,hook_get_pm32_int_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_set_pm_int
-        mov di,OFFSET hook_set_pm_int_name
+        mov esi,OFFSET hook_set_pm_int
+        mov edi,OFFSET hook_set_pm_int_name
         xor cl,cl
         mov ax,hook_set_pm32_int_nr
         RegisterOsGate

@@ -755,20 +755,20 @@ init_dos_mem    PROC near
         mov ds,ax
         mov es,ax
 ;
-        mov si,OFFSET allocate_dos_linear
-        mov di,OFFSET allocate_dos_linear_name
+        mov esi,OFFSET allocate_dos_linear
+        mov edi,OFFSET allocate_dos_linear_name
         xor cl,cl
         mov ax,allocate_dos_linear_nr
         RegisterOsGate
 ;
-        mov si,OFFSET resize_dos_linear
-        mov di,OFFSET resize_dos_linear_name
+        mov esi,OFFSET resize_dos_linear
+        mov edi,OFFSET resize_dos_linear_name
         xor cl,cl
         mov ax,resize_dos_linear_nr
         RegisterOsGate
 ;
-        mov si,OFFSET free_dos_linear
-        mov di,OFFSET free_dos_linear_name
+        mov esi,OFFSET free_dos_linear
+        mov edi,OFFSET free_dos_linear_name
         xor cl,cl
         mov ax,free_dos_linear_nr
         RegisterOsGate
@@ -780,8 +780,8 @@ init_dos_mem    PROC near
         mov ax,allocate_dos_mem_nr
         RegisterUserGate
 ;
-        mov si,OFFSET available_dos_linear
-        mov di,OFFSET available_dos_linear_name
+        mov esi,OFFSET available_dos_linear
+        mov edi,OFFSET available_dos_linear_name
         xor cl,cl
         mov ax,available_dos_linear_nr
         RegisterOsGate

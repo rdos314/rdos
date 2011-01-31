@@ -34,148 +34,148 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			INIT_IO
+;               NAME:                   INIT_IO
 ;
-;		DESCRIPTION:	Init module
+;               DESCRIPTION:    Init module
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public init_io
+        public init_io
 
-init_io	PROC near
-	pusha
-	push ds
-	mov bx,io_bitmap_sel
-	mov eax,80h
-	AllocateFixedSystemMem
-	mov cx,ax
-	xor al,al
-	xor di,di
-	rep stosb
+init_io PROC near
+        pusha
+        push ds
+        mov bx,io_bitmap_sel
+        mov eax,80h
+        AllocateFixedSystemMem
+        mov cx,ax
+        xor al,al
+        xor di,di
+        rep stosb
 ;
-	mov bx,hook_in_sel
-	mov eax,1000h
-	AllocateFixedSystemMem
-	xor di,di
-	mov cx,400h
-	xor eax,eax
+        mov bx,hook_in_sel
+        mov eax,1000h
+        AllocateFixedSystemMem
+        xor di,di
+        mov cx,400h
+        xor eax,eax
 init_in_hooks:
-	mov es:[di],eax
-	add di,4
-	loop init_in_hooks
+        mov es:[di],eax
+        add di,4
+        loop init_in_hooks
 ;
-	mov bx,hook_out_sel
-	mov eax,1000h
-	AllocateFixedSystemMem
-	xor di,di
-	mov cx,400h
-	xor eax,eax
+        mov bx,hook_out_sel
+        mov eax,1000h
+        AllocateFixedSystemMem
+        xor di,di
+        mov cx,400h
+        xor eax,eax
 init_out_hooks:
-	mov es:[di],eax
-	add di,4
-	loop init_out_hooks
+        mov es:[di],eax
+        add di,4
+        loop init_out_hooks
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET hook_in
-	mov di,OFFSET hook_in_name
-	xor cl,cl
-	mov ax,hook_in_nr
-	RegisterOsGate
-	mov si,OFFSET hook_out
-	mov di,OFFSET hook_out_name
-	xor cl,cl
-	mov ax,hook_out_nr
-	RegisterOsGate
-	pop ds
-	popa
-	ret
-init_io	ENDP
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov esi,OFFSET hook_in
+        mov edi,OFFSET hook_in_name
+        xor cl,cl
+        mov ax,hook_in_nr
+        RegisterOsGate
+        mov esi,OFFSET hook_out
+        mov edi,OFFSET hook_out_name
+        xor cl,cl
+        mov ax,hook_out_nr
+        RegisterOsGate
+        pop ds
+        popa
+        ret
+init_io ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			HOOK_IN
+;               NAME:                   HOOK_IN
 ;
-;		DESCRIPTION:	Add hook for IN
+;               DESCRIPTION:    Add hook for IN
 ;
-;		PARAMETERS:		DX		Port number
-;						ES:DI	Callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_in_name	DB 'Hook In',0
-
-hook_in	PROC far
-	push ds
-	push ax
-	push bx
-	mov ax,hook_in_sel
-	mov ds,ax
-	mov bx,dx
-	shl bx,2
-	mov [bx],di
-	mov [bx+2],es
-	mov ax,io_bitmap_sel
-	mov ds,ax
-	xor bx,bx
-	bts [bx],dx
-	pop bx
-	pop ax
-	pop ds
-	ret
-hook_in	ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			HOOK_OUT
-;
-;		DESCRIPTION:	Add hook for OUT
-;
-;		PARAMETERS:		DX		Port number
-;						ES:DI	Callback
+;               PARAMETERS:             DX              Port number
+;                                               ES:DI   Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hook_out_name	DB 'Hook Out',0
+hook_in_name    DB 'Hook In',0
 
-hook_out	PROC far
-	push ds
-	push ax
-	push bx
-	mov ax,hook_out_sel
-	mov ds,ax
-	mov bx,dx
-	shl bx,2
-	mov [bx],di
-	mov [bx+2],es
-	mov ax,io_bitmap_sel
-	mov ds,ax
-	xor bx,bx
-	bts [bx],dx
-	pop bx
-	pop ax
-	pop ds
-	ret
-hook_out	ENDP
+hook_in PROC far
+        push ds
+        push ax
+        push bx
+        mov ax,hook_in_sel
+        mov ds,ax
+        mov bx,dx
+        shl bx,2
+        mov [bx],di
+        mov [bx+2],es
+        mov ax,io_bitmap_sel
+        mov ds,ax
+        xor bx,bx
+        bts [bx],dx
+        pop bx
+        pop ax
+        pop ds
+        ret
+hook_in ENDP
 
-code	ENDS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   HOOK_OUT
+;
+;               DESCRIPTION:    Add hook for OUT
+;
+;               PARAMETERS:             DX              Port number
+;                                               ES:DI   Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_out_name   DB 'Hook Out',0
+
+hook_out        PROC far
+        push ds
+        push ax
+        push bx
+        mov ax,hook_out_sel
+        mov ds,ax
+        mov bx,dx
+        shl bx,2
+        mov [bx],di
+        mov [bx+2],es
+        mov ax,io_bitmap_sel
+        mov ds,ax
+        xor bx,bx
+        bts [bx],dx
+        pop bx
+        pop ax
+        pop ds
+        ret
+hook_out        ENDP
+
+code    ENDS
 
 .186
 

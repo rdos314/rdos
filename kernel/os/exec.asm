@@ -2153,8 +2153,8 @@ init    PROC far
     mov di,OFFSET init_sys
     HookInitTasking
 ;
-    mov si,OFFSET hook_load_exe
-    mov di,OFFSET hook_load_exe_name
+    mov esi,OFFSET hook_load_exe
+    mov edi,OFFSET hook_load_exe_name
     xor cl,cl
     mov ax,hook_load_exe_nr
     RegisterOsGate

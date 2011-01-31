@@ -2866,25 +2866,25 @@ init_dir        PROC near
         mov ax,DIR_HANDLE
         RegisterHandle
 ;
-        mov si,OFFSET stop_file_system
-        mov di,OFFSET stop_file_system_name
+        mov esi,OFFSET stop_file_system
+        mov edi,OFFSET stop_file_system_name
         mov ax,stop_file_system_nr
         RegisterOsGate
 ;
-        mov si,OFFSET cache_dir
-        mov di,OFFSET cache_dir_name
+        mov esi,OFFSET cache_dir
+        mov edi,OFFSET cache_dir_name
         xor cl,cl
         mov ax,cache_dir_nr
         RegisterOsGate
 ;
-        mov si,OFFSET insert_dir_entry
-        mov di,OFFSET insert_dir_entry_name
+        mov esi,OFFSET insert_dir_entry
+        mov edi,OFFSET insert_dir_entry_name
         xor cl,cl
         mov ax,insert_dir_entry_nr
         RegisterOsGate
 ;
-        mov si,OFFSET insert_file_entry
-        mov di,OFFSET insert_file_entry_name
+        mov esi,OFFSET insert_file_entry
+        mov edi,OFFSET insert_file_entry_name
         xor cl,cl
         mov ax,insert_file_entry_nr
         RegisterOsGate

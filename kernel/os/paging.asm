@@ -1802,26 +1802,26 @@ init_paging_gates       PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET hook_page
-    mov di,OFFSET hook_page_name
+    mov esi,OFFSET hook_page
+    mov edi,OFFSET hook_page_name
     xor cl,cl
     mov ax,hook_page_nr
     RegisterOsGate
 ;
-    mov si,OFFSET unhook_page
-    mov di,OFFSET unhook_page_name
+    mov esi,OFFSET unhook_page
+    mov edi,OFFSET unhook_page_name
     xor cl,cl
     mov ax,unhook_page_nr
     RegisterOsGate
 ;
-    mov si,OFFSET set_page_emulate
-    mov di,OFFSET set_page_emulate_name
+    mov esi,OFFSET set_page_emulate
+    mov edi,OFFSET set_page_emulate_name
     xor cl,cl
     mov ax,set_page_emulate_nr
     RegisterOsGate
 ;
-    mov si,OFFSET set_page_kernel
-    mov di,OFFSET set_page_kernel_name
+    mov esi,OFFSET set_page_kernel
+    mov edi,OFFSET set_page_kernel_name
     xor cl,cl
     mov ax,set_page_kernel_nr
     RegisterOsGate

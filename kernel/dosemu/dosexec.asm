@@ -876,14 +876,14 @@ init_dos_exec   PROC near
         mov ds,ax
         mov es,ax
 ;
-        mov si,OFFSET hook_load_dos_exe
-        mov di,OFFSET hook_load_dos_exe_name
+        mov esi,OFFSET hook_load_dos_exe
+        mov edi,OFFSET hook_load_dos_exe_name
         xor cl,cl
         mov ax,hook_load_dos_exe_nr
         RegisterOsGate
 ;
-        mov si,OFFSET load_dos_ext_exe
-        mov di,OFFSET load_dos_ext_exe_name
+        mov esi,OFFSET load_dos_ext_exe
+        mov edi,OFFSET load_dos_ext_exe_name
         xor cl,cl
         mov ax,load_dos_exe_nr
         RegisterOsGate

@@ -1134,8 +1134,8 @@ init_dos32      PROC near
         mov di,OFFSET int21
         HookProt32Int
 ;
-        mov si,OFFSET enter_dos32
-        mov di,OFFSET enter_dos32_name
+        mov esi,OFFSET enter_dos32
+        mov edi,OFFSET enter_dos32_name
         xor cl,cl
         mov ax,enter_dos32_nr
         RegisterOsGate

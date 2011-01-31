@@ -767,44 +767,44 @@ init_focus      PROC near
         mov ax,enable_focus_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET hook_enable_focus
-        mov di,OFFSET hook_enable_focus_name
+        mov esi,OFFSET hook_enable_focus
+        mov edi,OFFSET hook_enable_focus_name
         xor cl,cl
         mov ax,hook_enable_focus_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_lost_focus
-        mov di,OFFSET hook_lost_focus_name
+        mov esi,OFFSET hook_lost_focus
+        mov edi,OFFSET hook_lost_focus_name
         xor cl,cl
         mov ax,hook_lost_focus_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_got_focus
-        mov di,OFFSET hook_got_focus_name
+        mov esi,OFFSET hook_got_focus
+        mov edi,OFFSET hook_got_focus_name
         xor cl,cl
         mov ax,hook_got_focus_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_focus_thread
-        mov di,OFFSET get_focus_thread_name
+        mov esi,OFFSET get_focus_thread
+        mov edi,OFFSET get_focus_thread_name
         xor cl,cl
         mov ax,get_focus_thread_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_thread_focus_key
-        mov di,OFFSET get_thread_focus_key_name
+        mov esi,OFFSET get_thread_focus_key
+        mov edi,OFFSET get_thread_focus_key_name
         xor cl,cl
         mov ax,get_thread_focus_key_nr
         RegisterOsGate
 ;
-        mov si,OFFSET allocate_focus_linear
-        mov di,OFFSET allocate_focus_linear_name
+        mov esi,OFFSET allocate_focus_linear
+        mov edi,OFFSET allocate_focus_linear_name
         xor cl,cl
         mov ax,allocate_focus_linear_nr
         RegisterOsGate
 ;
-        mov si,OFFSET allocate_fixed_focus_mem
-        mov di,OFFSET allocate_fixed_focus_mem_name
+        mov esi,OFFSET allocate_fixed_focus_mem
+        mov edi,OFFSET allocate_fixed_focus_mem_name
         xor cl,cl
         mov ax,allocate_fixed_focus_mem_nr
         RegisterOsGate

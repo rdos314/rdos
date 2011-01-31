@@ -1357,26 +1357,26 @@ init_keyboard   PROC near
         mov ax,put_keyboard_code_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET hook_shift_keys
-        mov di,OFFSET hook_shift_keys_name
+        mov esi,OFFSET hook_shift_keys
+        mov edi,OFFSET hook_shift_keys_name
         xor cl,cl
         mov ax,hook_shift_keys_nr
         RegisterOsGate
 ;
-        mov si,OFFSET read_keyboard_serial
-        mov di,OFFSET read_keyboard_serial_name
+        mov esi,OFFSET read_keyboard_serial
+        mov edi,OFFSET read_keyboard_serial_name
         xor cl,cl
         mov ax,read_keyboard_serial_nr
         RegisterOsGate
 ;
-        mov si,OFFSET poll_keyboard_serial
-        mov di,OFFSET poll_keyboard_serial_name
+        mov esi,OFFSET poll_keyboard_serial
+        mov edi,OFFSET poll_keyboard_serial_name
         xor cl,cl
         mov ax,poll_keyboard_serial_nr
         RegisterOsGate
 ;
-        mov si,OFFSET set_keyboard_state
-        mov di,OFFSET set_keyboard_state_name
+        mov esi,OFFSET set_keyboard_state
+        mov edi,OFFSET set_keyboard_state_name
         xor cl,cl
         mov ax,set_keyboard_state_nr
         RegisterOsGate

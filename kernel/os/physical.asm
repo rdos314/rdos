@@ -210,43 +210,43 @@ init_physical_gates     PROC near
         mov ax,get_free_physical_nr
         RegisterBimodalUserGate
 ;       
-        mov si,OFFSET free_physical
-        mov di,OFFSET free_physical_name
+        mov esi,OFFSET free_physical
+        mov edi,OFFSET free_physical_name
         xor cl,cl
         mov ax,free_physical_nr
         RegisterOsGate
-        mov si,OFFSET allocate_physical
-        mov di,OFFSET allocate_physical_name
+        mov esi,OFFSET allocate_physical
+        mov edi,OFFSET allocate_physical_name
         xor cl,cl
         mov ax,allocate_physical_nr
         RegisterOsGate
-        mov si,OFFSET allocate_dma_physical
-        mov di,OFFSET allocate_dma_physical_name
+        mov esi,OFFSET allocate_dma_physical
+        mov edi,OFFSET allocate_dma_physical_name
         xor cl,cl
         mov ax,allocate_dma_physical_nr
         RegisterOsGate
-        mov si,OFFSET allocate_multiple_physical
-        mov di,OFFSET allocate_multiple_physical_name
+        mov esi,OFFSET allocate_multiple_physical
+        mov edi,OFFSET allocate_multiple_physical_name
         xor cl,cl
         mov ax,allocate_multiple_physical_nr
         RegisterOsGate
-        mov si,OFFSET get_physical_page
-        mov di,OFFSET get_physical_page_name
+        mov esi,OFFSET get_physical_page
+        mov edi,OFFSET get_physical_page_name
         xor cl,cl
         mov ax,get_physical_page_nr
         RegisterOsGate
-        mov si,OFFSET set_physical_page
-        mov di,OFFSET set_physical_page_name
+        mov esi,OFFSET set_physical_page
+        mov edi,OFFSET set_physical_page_name
         xor cl,cl
         mov ax,set_physical_page_nr
         RegisterOsGate
-        mov si,OFFSET get_thread_physical_page
-        mov di,OFFSET get_thread_physical_page_name
+        mov esi,OFFSET get_thread_physical_page
+        mov edi,OFFSET get_thread_physical_page_name
         xor cl,cl
         mov ax,get_thread_physical_page_nr
         RegisterOsGate
-        mov si,OFFSET set_thread_physical_page
-        mov di,OFFSET set_thread_physical_page_name
+        mov esi,OFFSET set_thread_physical_page
+        mov edi,OFFSET set_thread_physical_page_name
         xor cl,cl
         mov ax,set_thread_physical_page_nr
         RegisterOsGate

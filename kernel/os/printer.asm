@@ -688,8 +688,8 @@ init    Proc far
     mov ax,PRINTER_HANDLE
     RegisterHandle
 ;
-    mov si,OFFSET add_printer
-    mov di,OFFSET add_printer_name
+    mov esi,OFFSET add_printer
+    mov edi,OFFSET add_printer_name
     xor cl,cl
     mov ax,add_printer_nr
     RegisterOsGate

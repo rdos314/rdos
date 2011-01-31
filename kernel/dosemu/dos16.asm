@@ -1235,8 +1235,8 @@ init_dos16      PROC near
         mov di,OFFSET int21
         HookProt16Int
 ;
-        mov si,OFFSET enter_dos16
-        mov di,OFFSET enter_dos16_name
+        mov esi,OFFSET enter_dos16
+        mov edi,OFFSET enter_dos16_name
         xor cl,cl
         mov ax,enter_dos16_nr
         RegisterOsGate

@@ -1218,26 +1218,26 @@ init_device_loop:
     mov ax,ENV_HANDLE
     RegisterHandle
 ;
-    mov si,OFFSET lock_sys_env
-    mov di,OFFSET lock_sys_env_name
+    mov esi,OFFSET lock_sys_env
+    mov edi,OFFSET lock_sys_env_name
     xor cl,cl
     mov ax,lock_sys_env_nr
     RegisterOsGate
 ;
-    mov si,OFFSET unlock_sys_env
-    mov di,OFFSET unlock_sys_env_name
+    mov esi,OFFSET unlock_sys_env
+    mov edi,OFFSET unlock_sys_env_name
     xor cl,cl
     mov ax,unlock_sys_env_nr
     RegisterOsGate
 ;
-    mov si,OFFSET lock_proc_env
-    mov di,OFFSET lock_proc_env_name
+    mov esi,OFFSET lock_proc_env
+    mov edi,OFFSET lock_proc_env_name
     xor cl,cl
     mov ax,lock_proc_env_nr
     RegisterOsGate
 ;
-    mov si,OFFSET unlock_proc_env
-    mov di,OFFSET unlock_proc_env_name
+    mov esi,OFFSET unlock_proc_env
+    mov edi,OFFSET unlock_proc_env_name
     xor cl,cl
     mov ax,unlock_proc_env_nr
     RegisterOsGate

@@ -520,50 +520,50 @@ init_thread     PROC near
         mov ax,terminate_thread_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET create_process
-        mov di,OFFSET create_process_name
+        mov esi,OFFSET create_process
+        mov edi,OFFSET create_process_name
         xor cl,cl
         mov ax,create_process_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_create_thread
-        mov di,OFFSET hook_create_thread_name
+        mov esi,OFFSET hook_create_thread
+        mov edi,OFFSET hook_create_thread_name
         xor cl,cl
         mov ax,hook_create_thread_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_terminate_thread
-        mov di,OFFSET hook_terminate_thread_name
+        mov esi,OFFSET hook_terminate_thread
+        mov edi,OFFSET hook_terminate_thread_name
         xor cl,cl
         mov ax,hook_terminate_thread_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_create_process
-        mov di,OFFSET hook_create_process_name
+        mov esi,OFFSET hook_create_process
+        mov edi,OFFSET hook_create_process_name
         xor cl,cl
         mov ax,hook_create_process_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_terminate_process
-        mov di,OFFSET hook_terminate_process_name
+        mov esi,OFFSET hook_terminate_process
+        mov edi,OFFSET hook_terminate_process_name
         xor cl,cl
         mov ax,hook_terminate_process_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_init_tasking
-        mov di,OFFSET hook_init_tasking_name
+        mov esi,OFFSET hook_init_tasking
+        mov edi,OFFSET hook_init_tasking_name
         xor cl,cl
         mov ax,hook_init_tasking_nr
         RegisterOsGate
 ;
-        mov si,OFFSET create_proc_handle
-        mov di,OFFSET create_proc_handle_name
+        mov esi,OFFSET create_proc_handle
+        mov edi,OFFSET create_proc_handle_name
         xor cl,cl
         mov ax,create_proc_handle_nr
         RegisterOsGate
 ;
-        mov si,OFFSET deref_proc_handle
-        mov di,OFFSET deref_proc_handle_name
+        mov esi,OFFSET deref_proc_handle
+        mov edi,OFFSET deref_proc_handle_name
         xor cl,cl
         mov ax,deref_proc_handle_nr
         RegisterOsGate

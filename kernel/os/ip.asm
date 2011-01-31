@@ -33,436 +33,436 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE exec.def
 INCLUDE system.inc
-INCLUDE	ip.inc
+INCLUDE ip.inc
 INCLUDE udp.inc
 
-	extrn init_dns:near
-	extrn init_icmp:near
-	extrn init_cache:near
-	extrn init_udp:near
-	extrn init_dhcp:near
-	extrn init_ntp:near
-	extrn init_tcp:near
-	extrn IsDhcpDone:near
+        extrn init_dns:near
+        extrn init_icmp:near
+        extrn init_cache:near
+        extrn init_udp:near
+        extrn init_dhcp:near
+        extrn init_ntp:near
+        extrn init_tcp:near
+        extrn IsDhcpDone:near
 
-Reverse	MACRO
-	xchg al,ah
-	rol eax,16
-	xchg al,ah
-		ENDM
+Reverse MACRO
+        xchg al,ah
+        rol eax,16
+        xchg al,ah
+                ENDM
 
 data    SEGMENT byte public 'DATA'
 
-my_ip				DD ?
-ip_mask				DD ?
-gateway				DD ?
-ip_handle			DW ?
-curr_id				DW ?
-protocol_count		DW ?
-protocol_arr		DW 16 DUP(?)
+my_ip                           DD ?
+ip_mask                         DD ?
+gateway                         DD ?
+ip_handle                       DW ?
+curr_id                         DW ?
+protocol_count          DW ?
+protocol_arr            DW 16 DUP(?)
 
 data    ENDS
 
-code	SEGMENT byte public 'CODE'
+code    SEGMENT byte public 'CODE'
 
 .386p
-	
-	assume cs:code
+        
+        assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ConvertOne
+;               NAME:                   ConvertOne
 ;
-;		description:	Convert one digit
+;               description:    Convert one digit
 ;
-;		RETURNS:		AL		Digit
-;						SS:BP	Result buffer
+;               RETURNS:                AL              Digit
+;                                               SS:BP   Result buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConvertOne	Proc near
-	push ax
-	push cx
+ConvertOne      Proc near
+        push ax
+        push cx
 ;
-	cmp al,100
-	jb conv_10_cond
+        cmp al,100
+        jb conv_10_cond
 ;
-	xor ah,ah
-	mov cl,100
-	div cl
-	add al,'0'
-	mov [bp],al
-	inc bp
-	mov al,ah
-	jmp conv_10
+        xor ah,ah
+        mov cl,100
+        div cl
+        add al,'0'
+        mov [bp],al
+        inc bp
+        mov al,ah
+        jmp conv_10
 
-conv_10_cond:	
-	cmp al,10
-	jb conv_1
+conv_10_cond:   
+        cmp al,10
+        jb conv_1
 
 conv_10:
-	xor ah,ah
-	mov cl,10
-	div cl
-	add al,'0'
-	mov [bp],al
-	inc bp
-	mov al,ah
+        xor ah,ah
+        mov cl,10
+        div cl
+        add al,'0'
+        mov [bp],al
+        inc bp
+        mov al,ah
 
 conv_1:
-	add al,'0'
-	mov [bp],al
-	inc bp
+        add al,'0'
+        mov [bp],al
+        inc bp
 ;
-	pop cx
-	pop ax
-	ret
-ConvertOne	Endp
+        pop cx
+        pop ax
+        ret
+ConvertOne      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WriteIpEnv
+;               NAME:                   WriteIpEnv
 ;
-;		description:	Write IP address to sys-env
+;               description:    Write IP address to sys-env
 ;
-;		RETURNS:		EDX		IP address
-;						ES:EDI	Variabel name
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public WriteIpEnv
-
-WriteIpEnv	Proc near
-	push ds
-	push es
-	pushad
-	sub sp,20
-	mov bp,sp
-;
-	mov al,dl
-	call ConvertOne
-	mov al,'.'
-	mov [bp],al
-	inc bp
-	shr edx,8
-;
-	mov al,dl
-	call ConvertOne
-	mov al,'.'
-	mov [bp],al
-	inc bp
-	shr edx,8
-;
-	mov al,dl
-	call ConvertOne
-	mov al,'.'
-	mov [bp],al
-	inc bp
-	shr edx,8
-;
-	mov al,dl
-	call ConvertOne
-	xor al,al
-	mov [bp],al
-;
-	OpenSysEnv
-;
-	mov ax,es
-	mov ds,ax
-	mov si,di
-	mov ax,ss
-	mov es,ax
-	mov di,sp
-	AddEnvVar
-	CloseEnv
-;
-	add sp,20
-	popad
-	pop es
-	pop ds
-	ret
-WriteIpEnv	Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetPppIP
-;
-;		description:	Get PPP IP address
-;
-;		RETURNS:		NC		Valid
-;						EDX		My Internet IP address
+;               RETURNS:                EDX             IP address
+;                                               ES:EDI  Variabel name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_ppp_ip_name	DB 'Get PPP IP',0
+        public WriteIpEnv
 
-get_ppp_ip	Proc far
-	push ds
-	mov dx,SEG data
-	mov ds,dx
-	mov edx,ds:my_ip
-	clc
-	pop ds
-	ret
-get_ppp_ip	Endp
+WriteIpEnv      Proc near
+        push ds
+        push es
+        pushad
+        sub sp,20
+        mov bp,sp
+;
+        mov al,dl
+        call ConvertOne
+        mov al,'.'
+        mov [bp],al
+        inc bp
+        shr edx,8
+;
+        mov al,dl
+        call ConvertOne
+        mov al,'.'
+        mov [bp],al
+        inc bp
+        shr edx,8
+;
+        mov al,dl
+        call ConvertOne
+        mov al,'.'
+        mov [bp],al
+        inc bp
+        shr edx,8
+;
+        mov al,dl
+        call ConvertOne
+        xor al,al
+        mov [bp],al
+;
+        OpenSysEnv
+;
+        mov ax,es
+        mov ds,ax
+        mov si,di
+        mov ax,ss
+        mov es,ax
+        mov di,sp
+        AddEnvVar
+        CloseEnv
+;
+        add sp,20
+        popad
+        pop es
+        pop ds
+        ret
+WriteIpEnv      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetPppDns
+;               NAME:                   GetPppIP
 ;
-;		description:	Get PPP DNS IP address
+;               description:    Get PPP IP address
 ;
-;		RETURNS:		EAX		Primary DNS IP address
-;						EDX		Secondary DNS IP address
+;               RETURNS:                NC              Valid
+;                                               EDX             My Internet IP address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_ppp_dns_name	DB 'Get PPP DNS IP',0
+get_ppp_ip_name DB 'Get PPP IP',0
 
-get_ppp_dns	Proc far
-	xor eax,eax
-	xor edx,edx
-	retf32
-get_ppp_dns	Endp
+get_ppp_ip      Proc far
+        push ds
+        mov dx,SEG data
+        mov ds,dx
+        mov edx,ds:my_ip
+        clc
+        pop ds
+        ret
+get_ppp_ip      Endp
 
-	    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   GetPppDns
+;
+;               description:    Get PPP DNS IP address
+;
+;               RETURNS:                EAX             Primary DNS IP address
+;                                               EDX             Secondary DNS IP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ppp_dns_name        DB 'Get PPP DNS IP',0
+
+get_ppp_dns     Proc far
+        xor eax,eax
+        xor edx,edx
+        retf32
+get_ppp_dns     Endp
+
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			hook_ip
+;       Name:                   hook_ip
 ;
-;	Purpose:		register IP receiver callback
+;       Purpose:                register IP receiver callback
 ;
-;	Parameters:		AL		Protocol
-;					ES:DI	Receiver callback
-;						AX		Size of options
-;						BX		Id
-;						CX		Size of data
-;						EDX		Source IP address
-;						DS:ESI	Options
-;						ES:EDI	Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_ip_name	DB 'Hook IP',0
-
-hook_ip	Proc far
-	push ds
-	push es
-	push eax
-	push bx
-;
-	push ax
-	mov bx,es
-	mov eax,SIZE ip_protocol_data
-	AllocateSmallGlobalMem
-	mov word ptr es:prot_callback,di
-	mov word ptr es:prot_callback+2,bx
-	pop ax
-	mov es:prot_id,al
-;
-	mov ax,SEG data
-	mov ds,ax
-	mov bx,ds:protocol_count
-	inc ds:protocol_count
-	add bx,bx
-	mov ds:[bx].protocol_arr,es
-;
-	pop bx
-	pop eax
-	pop es
-	pop ds
-	ret
-hook_ip	Endp
-
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			get_ip_address
-;
-;	Purpose:		Get IP address of my node
-;
-;	Returns:		EDX		IP address
+;       Parameters:             AL              Protocol
+;                                       ES:DI   Receiver callback
+;                                               AX              Size of options
+;                                               BX              Id
+;                                               CX              Size of data
+;                                               EDX             Source IP address
+;                                               DS:ESI  Options
+;                                               ES:EDI  Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_ip_address_name	DB 'Get IP Address',0
+hook_ip_name    DB 'Hook IP',0
 
-get_ip_address	Proc far
-	push ds
+hook_ip Proc far
+        push ds
+        push es
+        push eax
+        push bx
 ;
-	mov dx,SEG data
-	mov ds,dx
-	mov edx,ds:my_ip
+        push ax
+        mov bx,es
+        mov eax,SIZE ip_protocol_data
+        AllocateSmallGlobalMem
+        mov word ptr es:prot_callback,di
+        mov word ptr es:prot_callback+2,bx
+        pop ax
+        mov es:prot_id,al
 ;
-	pop ds
-	retf32
-get_ip_address	Endp
+        mov ax,SEG data
+        mov ds,ax
+        mov bx,ds:protocol_count
+        inc ds:protocol_count
+        add bx,bx
+        mov ds:[bx].protocol_arr,es
+;
+        pop bx
+        pop eax
+        pop es
+        pop ds
+        ret
+hook_ip Endp
 
-	    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			get_gateway
+;       Name:                   get_ip_address
 ;
-;	Purpose:		Get IP address of gateway
+;       Purpose:                Get IP address of my node
 ;
-;	Returns:		EDX		IP address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_gateway_name	DB 'Get Gateway',0
-
-get_gateway	Proc far
-	push ds
-;
-	mov dx,SEG data
-	mov ds,dx
-	mov edx,ds:gateway
-;
-	pop ds
-	retf32
-get_gateway	Endp
-
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			get_ip_mask
-;
-;	Purpose:		Get IP mask
-;
-;	Returns:		EDX		IP mask
+;       Returns:                EDX             IP address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_ip_mask_name	DB 'Get IP Mask',0
+get_ip_address_name     DB 'Get IP Address',0
 
-get_ip_mask	Proc far
-	push ds
+get_ip_address  Proc far
+        push ds
 ;
-	mov dx,SEG data
-	mov ds,dx
-	mov edx,ds:ip_mask
+        mov dx,SEG data
+        mov ds,dx
+        mov edx,ds:my_ip
 ;
-	pop ds
-	retf32
-get_ip_mask	Endp
+        pop ds
+        retf32
+get_ip_address  Endp
 
-	    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			create_ip_header
+;       Name:                   get_gateway
 ;
-;	Purpose:		create an IP header, and allocate space for data
+;       Purpose:                Get IP address of gateway
 ;
-;	Parameters:		AL		Protocol
-;					AH		Time to live
-;					ECX		Size of data
-;					EDX		Destination IP
-;					DS:ESI	Options
-;
-;	Returns:		ES:EDI	Ip data
+;       Returns:                EDX             IP address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_ip_header_name	DB 'Create IP Header',0
+get_gateway_name        DB 'Get Gateway',0
 
-create_ip_header	Proc far
-	push ds
-	push fs
-	push eax
-	push bx
-	push ecx
-	push esi
-	push ebp
+get_gateway     Proc far
+        push ds
+;
+        mov dx,SEG data
+        mov ds,dx
+        mov edx,ds:gateway
+;
+        pop ds
+        retf32
+get_gateway     Endp
+
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:                   get_ip_mask
+;
+;       Purpose:                Get IP mask
+;
+;       Returns:                EDX             IP mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ip_mask_name        DB 'Get IP Mask',0
+
+get_ip_mask     Proc far
+        push ds
+;
+        mov dx,SEG data
+        mov ds,dx
+        mov edx,ds:ip_mask
+;
+        pop ds
+        retf32
+get_ip_mask     Endp
+
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:                   create_ip_header
+;
+;       Purpose:                create an IP header, and allocate space for data
+;
+;       Parameters:             AL              Protocol
+;                                       AH              Time to live
+;                                       ECX             Size of data
+;                                       EDX             Destination IP
+;                                       DS:ESI  Options
+;
+;       Returns:                ES:EDI  Ip data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_ip_header_name   DB 'Create IP Header',0
+
+create_ip_header        Proc far
+        push ds
+        push fs
+        push eax
+        push bx
+        push ecx
+        push esi
+        push ebp
 
 create_header_dhcp_loop:
-	call IsDhcpDone
-	jnc create_header_dhcp_done
+        call IsDhcpDone
+        jnc create_header_dhcp_done
 ;
-	push ax
-	mov ax,10
-	WaitMilliSec
-	pop ax
-	jmp create_header_dhcp_loop
+        push ax
+        mov ax,10
+        WaitMilliSec
+        pop ax
+        jmp create_header_dhcp_loop
 
 create_header_dhcp_done:
-	push ds
-	push ax
-	push cx
-	mov cx,SIZE ip_header
-	push esi
+        push ds
+        push ax
+        push cx
+        mov cx,SIZE ip_header
+        push esi
 create_header_opt_loop:
-	mov al,[esi]
-	or al,al
-	jz create_header_alloc
-	inc esi
-	inc cx
-	cmp al,1
-	jz create_header_opt_loop
+        mov al,[esi]
+        or al,al
+        jz create_header_alloc
+        inc esi
+        inc cx
+        cmp al,1
+        jz create_header_opt_loop
 ;
-	movzx eax,byte ptr [esi]
-	dec al
-	add cx,ax
-	add esi,eax
-	jmp create_header_opt_loop
+        movzx eax,byte ptr [esi]
+        dec al
+        add cx,ax
+        add esi,eax
+        jmp create_header_opt_loop
 
-create_header_alloc:	
-	pop esi
-	mov bx,cx
-	dec cx
-	and cx,NOT 3
-	add cx,4
-	movzx eax,cx
-	pop cx
-	add ax,cx
+create_header_alloc:    
+        pop esi
+        mov bx,cx
+        dec cx
+        and cx,NOT 3
+        add cx,4
+        movzx eax,cx
+        pop cx
+        add ax,cx
 ;
-	push ax
-	push bx
-	mov cx,ax
-	mov bx,SEG data
-	mov fs,bx
-	mov bx,fs:ip_handle
+        push ax
+        push bx
+        mov cx,ax
+        mov bx,SEG data
+        mov fs,bx
+        mov bx,fs:ip_handle
 ;
-	push edx
-	and edx,fs:ip_mask
-	mov eax,fs:my_ip
-	and eax,fs:ip_mask
-	cmp eax,edx
-	pop edx
-	je create_header_not_ppp
+        push edx
+        and edx,fs:ip_mask
+        mov eax,fs:my_ip
+        and eax,fs:ip_mask
+        cmp eax,edx
+        pop edx
+        je create_header_not_ppp
 ;
-	cmp dl,127
-	je create_header_local
+        cmp dl,127
+        je create_header_local
 ;
-	mov eax,fs:gateway
-	or eax,eax
-	jz create_header_ppp
+        mov eax,fs:gateway
+        or eax,eax
+        jz create_header_ppp
 ;
-	push ds
-	push esi
-	push eax
-	mov ax,ss
-	mov ds,ax
-	movzx esi,sp
-	GetNetBuffer
-	jc create_header_gw_pop
-;	
-	mov eax,fs:my_ip
-	mov es:[di].ip_source,eax
+        push ds
+        push esi
+        push eax
+        mov ax,ss
+        mov ds,ax
+        movzx esi,sp
+        GetNetBuffer
+        jc create_header_gw_pop
+;       
+        mov eax,fs:my_ip
+        mov es:[di].ip_source,eax
 
 create_header_gw_pop:
-	pop eax
-	pop esi
-	pop ds
-	jnc create_header_fill
-	jmp create_header_fail_pop
+        pop eax
+        pop esi
+        pop ds
+        jnc create_header_fill
+        jmp create_header_fail_pop
 
 create_header_local:
     mov di,6
@@ -473,119 +473,119 @@ create_header_local:
     jmp create_header_fill
 
 create_header_ppp:
-	GetPppBuffer
-;	
-	push edx
-	GetPppIp
-	mov es:[di].ip_source,edx
-	pop edx
-	jmp create_header_fill
+        GetPppBuffer
+;       
+        push edx
+        GetPppIp
+        mov es:[di].ip_source,edx
+        pop edx
+        jmp create_header_fill
 
 create_header_not_ppp:
-	push ds
-	push esi
-	push edx
-	mov ax,ss
-	mov ds,ax
-	movzx esi,sp
-	GetNetBuffer
-	jc create_header_local_pop
-;	
-	mov eax,fs:my_ip
-	mov es:[di].ip_source,eax
+        push ds
+        push esi
+        push edx
+        mov ax,ss
+        mov ds,ax
+        movzx esi,sp
+        GetNetBuffer
+        jc create_header_local_pop
+;       
+        mov eax,fs:my_ip
+        mov es:[di].ip_source,eax
 
 create_header_local_pop:
-	pop edx
-	pop esi
-	pop ds
-	jnc create_header_fill
-	jmp create_header_fail_pop
+        pop edx
+        pop esi
+        pop ds
+        jnc create_header_fill
+        jmp create_header_fail_pop
 
 create_header_fill:
-	mov bp,di
-	mov es:[0],di
-	pop ax
-	dec ax
-	shr ax,2
-	inc ax
-	or al,40h
-	mov es:[di].ip_hdr_ver,al
-	mov es:[di].ip_tos,0
-	pop ax
-	xchg al,ah
-	mov es:[di].ip_size,ax
-	mov es:[di].ip_frags,40h
-	pop ax
-	mov es:[di].ip_ttl,ah
-	mov es:[di].ip_proto,al
-	mov es:[di].ip_checksum,0
-	mov ax,SEG data
-	mov ds,ax
-	mov ax,ds:curr_id
-	inc ds:curr_id
-	xchg al,ah
-	mov es:[di].ip_id,ax
-	mov es:[di].ip_dest,edx
+        mov bp,di
+        mov es:[0],di
+        pop ax
+        dec ax
+        shr ax,2
+        inc ax
+        or al,40h
+        mov es:[di].ip_hdr_ver,al
+        mov es:[di].ip_tos,0
+        pop ax
+        xchg al,ah
+        mov es:[di].ip_size,ax
+        mov es:[di].ip_frags,40h
+        pop ax
+        mov es:[di].ip_ttl,ah
+        mov es:[di].ip_proto,al
+        mov es:[di].ip_checksum,0
+        mov ax,SEG data
+        mov ds,ax
+        mov ax,ds:curr_id
+        inc ds:curr_id
+        xchg al,ah
+        mov es:[di].ip_id,ax
+        mov es:[di].ip_dest,edx
 
 create_header_ip_done:
-	pop ds
+        pop ds
 ;
-	add edi,SIZE ip_header
+        add edi,SIZE ip_header
 create_header_copy_opt:
-	mov al,[esi]
-	or al,al
-	jz create_header_pad
-	movs byte ptr es:[edi],ds:[esi]
-	cmp al,1
-	je create_header_copy_opt
-	movzx ecx,byte ptr [esi]
-	rep movs byte ptr es:[edi],ds:[esi]
-	jmp create_header_copy_opt
+        mov al,[esi]
+        or al,al
+        jz create_header_pad
+        movs byte ptr es:[edi],ds:[esi]
+        cmp al,1
+        je create_header_copy_opt
+        movzx ecx,byte ptr [esi]
+        rep movs byte ptr es:[edi],ds:[esi]
+        jmp create_header_copy_opt
 
 create_header_pad:
-	mov si,di
-	sub si,bp
-	xor al,al
+        mov si,di
+        sub si,bp
+        xor al,al
 create_header_pad_loop:
-	test si,3
-	jz create_header_ok
-	stos byte ptr es:[edi]
-	inc si
-	jmp create_header_pad_loop		
+        test si,3
+        jz create_header_ok
+        stos byte ptr es:[edi]
+        inc si
+        jmp create_header_pad_loop              
 
 create_header_fail_pop:
-	xor ax,ax
-	mov es,ax
-	xor edi,edi
-	pop ax
-	pop ax
-	pop ax
-	pop ds
-	stc
-	jmp create_header_done
+        xor ax,ax
+        mov es,ax
+        xor edi,edi
+        pop ax
+        pop ax
+        pop ax
+        pop ds
+        stc
+        jmp create_header_done
 
 create_header_ok:
-	clc
+        clc
 
 create_header_done:
-	pop ebp
-	pop esi
-	pop ecx
-	pop bx
-	pop eax
-	pop fs
-	pop ds	
-	ret
-create_ip_header	Endp
+        pop ebp
+        pop esi
+        pop ecx
+        pop bx
+        pop eax
+        pop fs
+        pop ds  
+        ret
+create_ip_header        Endp
 
-	    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:		    CalcChecksum
+;       Name:               CalcChecksum
 ;
-;	Purpose:		Calculate checksum for IP header
+;       Purpose:                Calculate checksum for IP header
 ;
-;	Parameters:		DS:DI   IP header
+;       Parameters:             DS:DI   IP header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -595,358 +595,358 @@ CalcChecksum    Proc near
     push dx
     push si
 ;    
-	mov ds:[di].ip_checksum,0
-	movzx cx,ds:[di].ip_hdr_ver
-	and cl,0Fh
-	shl cl,1
-	mov si,di
-	xor	dx,dx
-	clc
-	
+        mov ds:[di].ip_checksum,0
+        movzx cx,ds:[di].ip_hdr_ver
+        and cl,0Fh
+        shl cl,1
+        mov si,di
+        xor     dx,dx
+        clc
+        
 calc_checksum_loop:
-	lodsw
-	adc	dx,ax
-	loop calc_checksum_loop
-;	
+        lodsw
+        adc     dx,ax
+        loop calc_checksum_loop
+;       
     adc dx,0
     adc dx,0
-	not dx
-	mov ds:[di].ip_checksum,dx
+        not dx
+        mov ds:[di].ip_checksum,dx
 ;
     pop si
     pop dx
     pop cx
-    pop ax	
-	ret
-CalcChecksum    Endp	
+    pop ax      
+        ret
+CalcChecksum    Endp    
 
-	    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			send_ip_data
+;       Name:                   send_ip_data
 ;
-;	Purpose:		send IP data
+;       Purpose:                send IP data
 ;
-;	Parameters:		ES		Data selector, IP datagram
+;       Parameters:             ES              Data selector, IP datagram
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-send_ip_data_name	DB 'Send IP Data',0
+send_ip_data_name       DB 'Send IP Data',0
 
-send_ip_data	Proc far
+send_ip_data    Proc far
     push ds
-	push fs
-	push eax
-	push bx
-	push dx
-	push ecx
-	push esi
-	push edi
+        push fs
+        push eax
+        push bx
+        push dx
+        push ecx
+        push esi
+        push edi
 ;
-	mov ax,es
-	mov ds,ax
-	mov di,ds:[0]
+        mov ax,es
+        mov ds,ax
+        mov di,ds:[0]
     call CalcChecksum
 ;
-	movzx ecx,ds:[di].ip_size
-	xchg cl,ch
+        movzx ecx,ds:[di].ip_size
+        xchg cl,ch
 ;
-	mov ax,SEG data
-	mov fs,ax
-	mov bx,fs:ip_handle
-	mov eax,ds:[di].ip_dest
-	cmp eax,fs:my_ip
-	je send_self
+        mov ax,SEG data
+        mov fs,ax
+        mov bx,fs:ip_handle
+        mov eax,ds:[di].ip_dest
+        cmp eax,fs:my_ip
+        je send_self
 ;
-	cmp al,127
-	je send_self
+        cmp al,127
+        je send_self
 ;
-	and eax,fs:ip_mask
-	mov esi,fs:my_ip
-	and esi,fs:ip_mask
-	cmp eax,esi
-	je send_local_net
+        and eax,fs:ip_mask
+        mov esi,fs:my_ip
+        and esi,fs:ip_mask
+        cmp eax,esi
+        je send_local_net
 ;
-	mov eax,fs:gateway
-	or eax,eax
-	jnz send_gateway
+        mov eax,fs:gateway
+        or eax,eax
+        jnz send_gateway
 
-send_ppp:	
-	SendPpp
-	jmp send_done
+send_ppp:       
+        SendPpp
+        jmp send_done
 
 send_gateway:
     mov ax,fs
     mov ds,ax
-	mov esi,OFFSET gateway
-	SendNet
-	jmp send_done
+        mov esi,OFFSET gateway
+        SendNet
+        jmp send_done
 
 send_self:
-	xor ax,ax
-	mov ds,ax
-	push cs
-	call near ptr Receive
-	jmp send_done
+        xor ax,ax
+        mov ds,ax
+        push cs
+        call near ptr Receive
+        jmp send_done
 
 send_local_net:
     push ds:[di].ip_dest
     mov ax,ss
     mov ds,ax
-	movzx esi,sp
-	SendNet
-	pop eax
+        movzx esi,sp
+        SendNet
+        pop eax
 
 send_done:
-	pop edi
-	pop esi
-	pop ecx
-	pop dx
-	pop bx
-	pop eax
-	pop fs
-	pop ds
-	ret
-send_ip_data	Endp
+        pop edi
+        pop esi
+        pop ecx
+        pop dx
+        pop bx
+        pop eax
+        pop fs
+        pop ds
+        ret
+send_ip_data    Endp
 
-	    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			create_broadcast_ip
+;       Name:                   create_broadcast_ip
 ;
-;	Purpose:		create a broadcast IP header, and allocate space for data
+;       Purpose:                create a broadcast IP header, and allocate space for data
 ;
-;	Parameters:		AL		Protocol
-;					AH		Time to live
-;					ECX		Size of data
-;					DS:ESI	Options
-;					FS		Driver handle
+;       Parameters:             AL              Protocol
+;                                       AH              Time to live
+;                                       ECX             Size of data
+;                                       DS:ESI  Options
+;                                       FS              Driver handle
 ;
-;	Returns:		ES:EDI	Ip data
+;       Returns:                ES:EDI  Ip data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_broadcast_ip_name	DB 'Create Broadcast IP',0
+create_broadcast_ip_name        DB 'Create Broadcast IP',0
 
-create_broadcast_ip	Proc far
-	push eax
-	push bx
-	push ecx
-	push esi
-	push ebp
+create_broadcast_ip     Proc far
+        push eax
+        push bx
+        push ecx
+        push esi
+        push ebp
 ;
-	push ds
-	push ax
-	push cx
-	mov cx,SIZE ip_header
-	push esi
+        push ds
+        push ax
+        push cx
+        mov cx,SIZE ip_header
+        push esi
 create_broad_opt_loop:
-	mov al,[esi]
-	or al,al
-	jz create_broad_alloc
-	inc esi
-	inc cx
-	cmp al,1
-	jz create_broad_opt_loop
+        mov al,[esi]
+        or al,al
+        jz create_broad_alloc
+        inc esi
+        inc cx
+        cmp al,1
+        jz create_broad_opt_loop
 ;
-	movzx eax,byte ptr [esi]
-	dec al
-	add cx,ax
-	add esi,eax
-	jmp create_broad_opt_loop
+        movzx eax,byte ptr [esi]
+        dec al
+        add cx,ax
+        add esi,eax
+        jmp create_broad_opt_loop
 
-create_broad_alloc:	
-	pop esi
-	mov bx,cx
-	dec cx
-	and cx,NOT 3
-	add cx,4
-	movzx eax,cx
-	pop cx
-	add ax,cx
+create_broad_alloc:     
+        pop esi
+        mov bx,cx
+        dec cx
+        and cx,NOT 3
+        add cx,4
+        movzx eax,cx
+        pop cx
+        add ax,cx
 ;
-	push ax
-	push bx
-	mov cx,ax
-	mov bx,SEG data
-	mov ds,bx
-	mov bx,ds:ip_handle
-	GetBroadcastBuffer
-	pop ax
-	pop cx
-	pop dx
-	pop ds
-	jc create_broad_fail
+        push ax
+        push bx
+        mov cx,ax
+        mov bx,SEG data
+        mov ds,bx
+        mov bx,ds:ip_handle
+        GetBroadcastBuffer
+        pop ax
+        pop cx
+        pop dx
+        pop ds
+        jc create_broad_fail
 
 create_broad_fill:
-	mov bp,di
-	mov es:[0],di
-	dec ax
-	shr ax,2
-	inc ax
-	or al,40h
-	mov es:[di].ip_hdr_ver,al
-	mov es:[di].ip_tos,0
-	xchg cl,ch
-	mov es:[di].ip_size,cx
-	mov es:[di].ip_frags,40h
-	mov es:[di].ip_ttl,dh
-	mov es:[di].ip_proto,dl
-	mov es:[di].ip_checksum,0
+        mov bp,di
+        mov es:[0],di
+        dec ax
+        shr ax,2
+        inc ax
+        or al,40h
+        mov es:[di].ip_hdr_ver,al
+        mov es:[di].ip_tos,0
+        xchg cl,ch
+        mov es:[di].ip_size,cx
+        mov es:[di].ip_frags,40h
+        mov es:[di].ip_ttl,dh
+        mov es:[di].ip_proto,dl
+        mov es:[di].ip_checksum,0
 ;
-	push ds
-	mov ax,SEG data
-	mov ds,ax
-	mov ax,ds:curr_id
-	inc ds:curr_id
-	xchg al,ah
-	mov es:[di].ip_id,ax
-	mov es:[di].ip_source,0
-	mov es:[di].ip_dest,-1
-	pop ds
+        push ds
+        mov ax,SEG data
+        mov ds,ax
+        mov ax,ds:curr_id
+        inc ds:curr_id
+        xchg al,ah
+        mov es:[di].ip_id,ax
+        mov es:[di].ip_source,0
+        mov es:[di].ip_dest,-1
+        pop ds
 ;
-	add edi,SIZE ip_header
+        add edi,SIZE ip_header
 create_broad_copy_opt:
-	mov al,[esi]
-	or al,al
-	jz create_broad_pad
-	movs byte ptr es:[edi],ds:[esi]
-	cmp al,1
-	je create_broad_copy_opt
-	movzx ecx,byte ptr [esi]
-	rep movs byte ptr es:[edi],ds:[esi]
-	jmp create_broad_copy_opt
+        mov al,[esi]
+        or al,al
+        jz create_broad_pad
+        movs byte ptr es:[edi],ds:[esi]
+        cmp al,1
+        je create_broad_copy_opt
+        movzx ecx,byte ptr [esi]
+        rep movs byte ptr es:[edi],ds:[esi]
+        jmp create_broad_copy_opt
 
 create_broad_pad:
-	mov si,di
-	sub si,bp
-	xor al,al
+        mov si,di
+        sub si,bp
+        xor al,al
 create_broad_pad_loop:
-	test si,3
-	jz create_broad_ok
-	stos byte ptr es:[edi]
-	inc si
-	jmp create_broad_pad_loop		
+        test si,3
+        jz create_broad_ok
+        stos byte ptr es:[edi]
+        inc si
+        jmp create_broad_pad_loop               
 
 create_broad_fail:
-	xor ax,ax
-	mov es,ax
-	xor edi,edi
-	stc
-	jmp create_broad_done
+        xor ax,ax
+        mov es,ax
+        xor edi,edi
+        stc
+        jmp create_broad_done
 
 create_broad_ok:
-	clc
+        clc
 
 create_broad_done:
-	pop ebp
-	pop esi
-	pop ecx
-	pop bx
-	pop eax
-	ret
-create_broadcast_ip	Endp
+        pop ebp
+        pop esi
+        pop ecx
+        pop bx
+        pop eax
+        ret
+create_broadcast_ip     Endp
 
-	    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			send_broadcast_ip
+;       Name:                   send_broadcast_ip
 ;
-;	Purpose:		send broadcast IP data
+;       Purpose:                send broadcast IP data
 ;
-;	Parameters:		ES		Data selector, IP datagram
-;					FS		Driver selector
+;       Parameters:             ES              Data selector, IP datagram
+;                                       FS              Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-send_broadcast_ip_name	DB 'Send Broadcast IP',0
+send_broadcast_ip_name  DB 'Send Broadcast IP',0
 
-send_broadcast_ip	Proc far
+send_broadcast_ip       Proc far
     push ds
-	push eax
-	push bx
-	push ecx
-	push edi
+        push eax
+        push bx
+        push ecx
+        push edi
 ;
-	mov ax,es
-	mov ds,ax
-	mov di,ds:[0]
+        mov ax,es
+        mov ds,ax
+        mov di,ds:[0]
     call CalcChecksum
 ;
-	movzx ecx,ds:[di].ip_size
-	xchg cl,ch
+        movzx ecx,ds:[di].ip_size
+        xchg cl,ch
 ;
-	mov ax,SEG data
-	mov ds,ax
-	mov bx,ds:ip_handle
-	SendBroadcast
+        mov ax,SEG data
+        mov ds,ax
+        mov bx,ds:ip_handle
+        SendBroadcast
 ;
-	pop edi
-	pop ecx
-	pop bx
-	pop eax
-	pop ds
-	ret
-send_broadcast_ip	Endp
+        pop edi
+        pop ecx
+        pop bx
+        pop eax
+        pop ds
+        ret
+send_broadcast_ip       Endp
 
-	    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			receive
+;       Name:                   receive
 ;
-;	Purpose:		received IP data
+;       Purpose:                received IP data
 ;
-;	Parameters:		ECX		size
-;					DX		packet type
-;					DS:SI	source address
-;					ES:EDI	data selector, IP datagram
-;					FS		driver sel
+;       Parameters:             ECX             size
+;                                       DX              packet type
+;                                       DS:SI   source address
+;                                       ES:EDI  data selector, IP datagram
+;                                       FS              driver sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-no_options	DB 0
+no_options      DB 0
 
-receive	Proc far
-	push ds
-	push fs
-	push gs
-	push eax
-	push bx
-	push ecx
-	push esi
-	push bp
+receive Proc far
+        push ds
+        push fs
+        push gs
+        push eax
+        push bx
+        push ecx
+        push esi
+        push bp
 ;
     mov ax,fs
     mov gs,ax
 ;    
-	mov bp,di
-	mov ax,es:[di].ip_size
-	xchg al,ah
-	cmp ax,cx
-	ja receive_done
+        mov bp,di
+        mov ax,es:[di].ip_size
+        xchg al,ah
+        cmp ax,cx
+        ja receive_done
 ;
-	movzx cx,es:[di].ip_hdr_ver
-	and cl,0Fh
-	cmp cl,5
-	jc receive_done
+        movzx cx,es:[di].ip_hdr_ver
+        and cl,0Fh
+        cmp cl,5
+        jc receive_done
 ;
-	shl cl,1
-	xor bx,bx
-	mov si,di
-	clc
+        shl cl,1
+        xor bx,bx
+        mov si,di
+        clc
 receive_checksum_loop:
-	lods word ptr es:[si]
-	adc bx,ax
-	loop receive_checksum_loop
-	adc bx,0
-	adc bx,0
-	not bx
-	or bl,bh
-	jnz receive_done
+        lods word ptr es:[si]
+        adc bx,ax
+        loop receive_checksum_loop
+        adc bx,0
+        adc bx,0
+        not bx
+        or bl,bh
+        jnz receive_done
 
 receive_check_ok:
-	mov ax,SEG data
-	mov ds,ax
+        mov ax,SEG data
+        mov ds,ax
 ;
     mov eax,es:[di].ip_source
     cmp al,127
@@ -955,46 +955,46 @@ receive_check_ok:
     or eax,eax
     jz receive_net_add_ok
 ;    
-	mov bx,ds:ip_handle
-	push edi
-	lea edi,[di].ip_source
-	AddNetSourceAddress
-	pop edi
+        mov bx,ds:ip_handle
+        push edi
+        lea edi,[di].ip_source
+        AddNetSourceAddress
+        pop edi
 
 receive_net_add_ok:
-	call IsDhcpDone
-	jnc receive_dhcp_done
+        call IsDhcpDone
+        jnc receive_dhcp_done
 ;
-	mov al,es:[di].ip_proto
-	cmp al,17
-	jne receive_fail
+        mov al,es:[di].ip_proto
+        cmp al,17
+        jne receive_fail
 ;
-	mov al,es:[di].ip_hdr_ver
-	and al,0Fh
-	shl al,2
-	xor ah,ah
-	mov si,di
-	add si,ax	
+        mov al,es:[di].ip_hdr_ver
+        and al,0Fh
+        shl al,2
+        xor ah,ah
+        mov si,di
+        add si,ax       
 ;
-	mov ax,es:[si].udp_source
-	xchg al,ah
-	cmp ax,67
-	jne receive_fail
+        mov ax,es:[si].udp_source
+        xchg al,ah
+        cmp ax,67
+        jne receive_fail
 ;
-	mov ax,es:[si].udp_dest
-	xchg al,ah
-	cmp ax,68
-	jne receive_fail
-	jmp receive_this_node
+        mov ax,es:[si].udp_dest
+        xchg al,ah
+        cmp ax,68
+        jne receive_fail
+        jmp receive_this_node
 
 receive_dhcp_done:
-	mov eax,es:[di].ip_dest
-	cmp eax,ds:my_ip
-	je receive_this_node
-	cmp eax,-1
-	je receive_this_node
-	cmp al,127
-	je receive_this_node
+        mov eax,es:[di].ip_dest
+        cmp eax,ds:my_ip
+        je receive_this_node
+        cmp eax,-1
+        je receive_this_node
+        cmp al,127
+        je receive_this_node
 ;
     rol eax,8
     cmp al,255
@@ -1007,23 +1007,23 @@ receive_dhcp_done:
     mov ax,es
     mov gs,ax
     mov si,di
-   	mov cx,gs:[si].ip_size
-	xchg cl,ch
-	sub cx,SIZE ip_header
-	mov ah,gs:[si].ip_ttl
-	mov al,gs:[si].ip_proto
-	mov edx,gs:[si].ip_dest
-	push si
-	mov si,cs
-	mov ds,si	
-	mov esi,OFFSET no_options
-	CreateIpHeader
-	pop si
-	jc receive_forward_fail
+        mov cx,gs:[si].ip_size
+        xchg cl,ch
+        sub cx,SIZE ip_header
+        mov ah,gs:[si].ip_ttl
+        mov al,gs:[si].ip_proto
+        mov edx,gs:[si].ip_dest
+        push si
+        mov si,cs
+        mov ds,si       
+        mov esi,OFFSET no_options
+        CreateIpHeader
+        pop si
+        jc receive_forward_fail
 ;
     sub di,SIZE ip_header
-   	mov cx,gs:[si].ip_size
-	xchg cl,ch
+        mov cx,gs:[si].ip_size
+        xchg cl,ch
     rep movs byte ptr es:[di],gs:[si]
     SendIp
 
@@ -1032,111 +1032,111 @@ receive_forward_fail:
     pop gs
     pop es
     jmp receive_fail
-	
+        
 receive_this_node:
-	mov es:[0],bp
-	mov cx,ds:protocol_count
-	or cx,cx
-	jz receive_fail
-	mov bx,OFFSET protocol_arr
+        mov es:[0],bp
+        mov cx,ds:protocol_count
+        or cx,cx
+        jz receive_fail
+        mov bx,OFFSET protocol_arr
 receive_prot_loop:
-	mov fs,[bx]
-	mov al,fs:prot_id
-	cmp al,es:[di].ip_proto
-	jne receive_prot_next
+        mov fs,[bx]
+        mov al,fs:prot_id
+        cmp al,es:[di].ip_proto
+        jne receive_prot_next
 ;
-   	mov ax,es
-	mov ds,ax
-	mov bx,ds:[di].ip_id
-	xchg bl,bh
-	mov cx,ds:[di].ip_size
-	xchg cl,ch
-	mov al,ds:[di].ip_hdr_ver
-	and al,0Fh
-	shl al,2
-	xor ah,ah
-	sub cx,ax
-	mov edx,ds:[di].ip_source
-	add edi,SIZE ip_header
-	mov esi,edi
-	sub ax,SIZE ip_header
-	add di,ax
-	call fs:prot_callback
-	jmp receive_done
+        mov ax,es
+        mov ds,ax
+        mov bx,ds:[di].ip_id
+        xchg bl,bh
+        mov cx,ds:[di].ip_size
+        xchg cl,ch
+        mov al,ds:[di].ip_hdr_ver
+        and al,0Fh
+        shl al,2
+        xor ah,ah
+        sub cx,ax
+        mov edx,ds:[di].ip_source
+        add edi,SIZE ip_header
+        mov esi,edi
+        sub ax,SIZE ip_header
+        add di,ax
+        call fs:prot_callback
+        jmp receive_done
 
 receive_prot_next:
-	add bx,2
-	loop receive_prot_loop
-	jmp receive_fail
+        add bx,2
+        loop receive_prot_loop
+        jmp receive_fail
 
 receive_pop_fail:
-	pop edx
+        pop edx
 
 receive_fail:
-	xor ax,ax
-	mov ds,ax
-	FreeMem
-	
+        xor ax,ax
+        mov ds,ax
+        FreeMem
+        
 receive_done:
-	pop bp
-	pop esi
-	pop ecx
-	pop bx
-	pop eax
-	pop gs
-	pop fs
-	pop ds
-	ret
-receive	Endp
+        pop bp
+        pop esi
+        pop ecx
+        pop bx
+        pop eax
+        pop gs
+        pop fs
+        pop ds
+        ret
+receive Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			get_gateway_driver
+;               NAME:                   get_gateway_driver
 ;
-;		description:	Get driver handle for gateway
+;               description:    Get driver handle for gateway
 ;
-;		RETURNS:		BX      Handle
+;               RETURNS:                BX      Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public get_gateway_driver
+        public get_gateway_driver
 
-get_gateway_driver	Proc near
+get_gateway_driver      Proc near
     push fs
     push ax
     push esi
 ;    
-	mov ax,SEG data
-	mov fs,ax
-	mov bx,fs:ip_handle
-	mov esi,OFFSET gateway
-	GetNetDriver
+        mov ax,SEG data
+        mov fs,ax
+        mov bx,fs:ip_handle
+        mov esi,OFFSET gateway
+        GetNetDriver
 ;
     pop esi
     pop ax
     pop fs
     ret
-get_gateway_driver  Endp	
+get_gateway_driver  Endp        
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ping_gateway
+;               NAME:                   ping_gateway
 ;
-;		description:	Ping gateway
+;               description:    Ping gateway
 ;
 ;       Parameters:     EAX     Timeout
 ;
-;		RETURNS:		NC      OK
+;               RETURNS:                NC      OK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ping_gateway
+        public ping_gateway
 
-ping_gateway	Proc near
+ping_gateway    Proc near
     push ds
     push edx
 ;    
@@ -1148,33 +1148,33 @@ ping_gateway	Proc near
     pop edx
     pop ds
     ret
-ping_gateway  Endp	
+ping_gateway  Endp      
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			is_ip_in_use
+;               NAME:                   is_ip_in_use
 ;
-;		description:	Check if IP is already in use
+;               description:    Check if IP is already in use
 ;
 ;       PARAMETERS:     EDX     IP
 ;
-;		RETURNS:		NC      In use
+;               RETURNS:                NC      In use
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public is_ip_in_use
+        public is_ip_in_use
 
-is_ip_in_use	Proc near
+is_ip_in_use    Proc near
     push ds
     push ax
     push bx
     push esi
 ;    
-	mov ax,SEG data
-	mov ds,ax
-	mov bx,ds:ip_handle
+        mov ax,SEG data
+        mov ds,ax
+        mov bx,ds:ip_handle
 ;
     push edx
     mov ax,ss
@@ -1182,451 +1182,451 @@ is_ip_in_use	Proc near
     mov si,sp
     movzx esi,si
 ;    
-	IsNetAddressValid
-	pop edx
+        IsNetAddressValid
+        pop edx
 ;
     pop esi
     pop bx
     pop ax
     pop ds
     ret
-is_ip_in_use  Endp	
+is_ip_in_use  Endp      
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			define_ip
+;               NAME:                   define_ip
 ;
-;		description:	Define IP
+;               description:    Define IP
 ;
-;		RETURNS:		EAX		IP address
+;               RETURNS:                EAX             IP address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public define_ip
+        public define_ip
 
-define_ip	Proc near
-	push es
-	push ax
-	push bx
-	push edx
-	push esi
-	push di
+define_ip       Proc near
+        push es
+        push ax
+        push bx
+        push edx
+        push esi
+        push di
 ;
     push ds
-	mov dx,SEG data
-	mov ds,dx
-	mov ds:my_ip,eax
-	mov esi,OFFSET my_ip
-	mov bx,ds:ip_handle
-	DefineProtocolAddress
-	pop ds
+        mov dx,SEG data
+        mov ds,dx
+        mov ds:my_ip,eax
+        mov esi,OFFSET my_ip
+        mov bx,ds:ip_handle
+        DefineProtocolAddress
+        pop ds
 ;
-	mov edx,eax
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET ip_name
-	call WriteIpEnv
+        mov edx,eax
+        mov ax,cs
+        mov es,ax
+        mov di,OFFSET ip_name
+        call WriteIpEnv
 ;
-	pop di
-	pop esi
-	pop edx
-	pop bx
-	pop ax
-	pop es
-	ret
-define_ip	Endp
+        pop di
+        pop esi
+        pop edx
+        pop bx
+        pop ax
+        pop es
+        ret
+define_ip       Endp
 
-	    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			define_mask
+;       Name:                   define_mask
 ;
-;	Purpose:		Define IP mask
+;       Purpose:                Define IP mask
 ;
-;	Parameters:		CX			Size of msg
-;					ES:DI		mask
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-define_mask	Proc far
-	push ds
-	push es
-	push ax
-	push edx
-	push di
-;
-	mov ax,SEG data
-	mov ds,ax
-	mov edx,es:[di]
-	mov ds:ip_mask,edx
-;
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET mask_name
-	call WriteIpEnv
-;
-	pop di
-	pop edx
-	pop ax
-	pop es
-	pop ds
-	ret
-define_mask	Endp
-
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			define_gateway
-;
-;	Purpose:		Define gateway
-;
-;	Parameters:		CX			Size of msg
-;					ES:DI		gateway
+;       Parameters:             CX                      Size of msg
+;                                       ES:DI           mask
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-define_gateway	Proc far
-	push ds
-	push es
-	push ax
-	push edx
-	push di
+define_mask     Proc far
+        push ds
+        push es
+        push ax
+        push edx
+        push di
 ;
-	mov ax,SEG data
-	mov ds,ax
-	mov edx,es:[di]
-	mov ds:gateway,edx
+        mov ax,SEG data
+        mov ds,ax
+        mov edx,es:[di]
+        mov ds:ip_mask,edx
 ;
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET gateway_name
-	call WriteIpEnv
+        mov ax,cs
+        mov es,ax
+        mov di,OFFSET mask_name
+        call WriteIpEnv
 ;
-	pop di
-	pop edx
-	pop ax
-	pop es
-	pop ds
-	ret
-define_gateway	Endp
-	    
-	    
+        pop di
+        pop edx
+        pop ax
+        pop es
+        pop ds
+        ret
+define_mask     Endp
+
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			GetIPNumber
+;       Name:                   define_gateway
 ;
-;	Purpose:		received IP data
+;       Purpose:                Define gateway
 ;
-;	Parameters:		ES:DI	Name
+;       Parameters:             CX                      Size of msg
+;                                       ES:DI           gateway
 ;
-;	Returns:		NC		Found
-;					EAX		IP number
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+define_gateway  Proc far
+        push ds
+        push es
+        push ax
+        push edx
+        push di
+;
+        mov ax,SEG data
+        mov ds,ax
+        mov edx,es:[di]
+        mov ds:gateway,edx
+;
+        mov ax,cs
+        mov es,ax
+        mov di,OFFSET gateway_name
+        call WriteIpEnv
+;
+        pop di
+        pop edx
+        pop ax
+        pop es
+        pop ds
+        ret
+define_gateway  Endp
+            
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:                   GetIPNumber
+;
+;       Purpose:                received IP data
+;
+;       Parameters:             ES:DI   Name
+;
+;       Returns:                NC              Found
+;                                       EAX             IP number
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public GetIPNumber
     
-GetIPNumber	Proc near
-	push ds
-	push ebx
-	push cx
-	push si
+GetIPNumber     Proc near
+        push ds
+        push ebx
+        push cx
+        push si
 ;
     LockSysEnv
-	mov ds,bx
-	xor si,si
+        mov ds,bx
+        xor si,si
 find_ip:
-	push di
+        push di
 find_ip_loop:
-	cmpsb
-	jnz find_ip_next
-	mov al,es:[di]
-	or al,al
-	jnz find_ip_loop
-	mov al,[si]
-	cmp al,'='
-	je find_ip_found
+        cmpsb
+        jnz find_ip_next
+        mov al,es:[di]
+        or al,al
+        jnz find_ip_loop
+        mov al,[si]
+        cmp al,'='
+        je find_ip_found
 
 find_ip_next:
-	pop di
+        pop di
 
 find_ip_next_bp:
-	lodsb
-	or al,al
-	jnz find_ip_next_bp
-	mov al,[si]
-	or al,al
-	jne find_ip
-	xor eax,eax
-	stc
-	jmp find_ip_done
+        lodsb
+        or al,al
+        jnz find_ip_next_bp
+        mov al,[si]
+        or al,al
+        jne find_ip
+        xor eax,eax
+        stc
+        jmp find_ip_done
 
 find_ip_found:
-	pop di
-	xor ebx,ebx
-	inc si
-	mov cx,4
+        pop di
+        xor ebx,ebx
+        inc si
+        mov cx,4
 find_ip_decode:
-	xor al,al
+        xor al,al
 find_ip_digit:
-	mov dl,[si]
-	inc si
-	sub dl,'0'
-	jc find_ip_save
-	cmp dl,10
-	jnc find_ip_save
-	mov ah,10
-	mul ah
-	add al,dl
-	jmp find_ip_digit
+        mov dl,[si]
+        inc si
+        sub dl,'0'
+        jc find_ip_save
+        cmp dl,10
+        jnc find_ip_save
+        mov ah,10
+        mul ah
+        add al,dl
+        jmp find_ip_digit
 
 find_ip_save:
-	mov bl,al
-	ror ebx,8
-	loop find_ip_decode		
+        mov bl,al
+        ror ebx,8
+        loop find_ip_decode             
 ;
-	mov eax,ebx
-	clc
+        mov eax,ebx
+        clc
 
 find_ip_done:
     pushf
     UnlockSysEnv
     popf
 ;
-	pop si
-	pop cx
-	pop ebx
-	pop ds
-	ret
-GetIPNumber	Endp
+        pop si
+        pop cx
+        pop ebx
+        pop ds
+        ret
+GetIPNumber     Endp
 
-	    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			GetValue
+;       Name:                   GetValue
 ;
-;	Purpose:		Get value from environment
+;       Purpose:                Get value from environment
 ;
-;	Parameters:		ES:DI	Name
+;       Parameters:             ES:DI   Name
 ;
-;	Returns:		NC		Found
-;			        AX      Value
+;       Returns:                NC              Found
+;                               AX      Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public GetValue
     
-GetValue	Proc near
-	push ds
-	push bx
-	push cx
-	push si
+GetValue        Proc near
+        push ds
+        push bx
+        push cx
+        push si
 ;
     LockSysEnv
-	mov ds,bx
-	xor si,si
-	
+        mov ds,bx
+        xor si,si
+        
 find_val:
-	push di
+        push di
 
 find_val_loop:
-	cmpsb
-	jnz find_val_next
-;	
-	mov al,es:[di]
-	or al,al
-	jnz find_val_loop
-	mov al,[si]
-	cmp al,'='
-	je find_val_found
+        cmpsb
+        jnz find_val_next
+;       
+        mov al,es:[di]
+        or al,al
+        jnz find_val_loop
+        mov al,[si]
+        cmp al,'='
+        je find_val_found
 
 find_val_next:
-	pop di
+        pop di
 
 find_val_next_bp:
-	lodsb
-	or al,al
-	jnz find_val_next_bp
+        lodsb
+        or al,al
+        jnz find_val_next_bp
 ;
-	mov al,[si]
-	or al,al
-	jne find_val
+        mov al,[si]
+        or al,al
+        jne find_val
 ;
-	xor ax,ax
-	stc
-	jmp find_val_done
+        xor ax,ax
+        stc
+        jmp find_val_done
 
 find_val_found:
-	pop di
-	inc si	
-	xor ax,ax
+        pop di
+        inc si  
+        xor ax,ax
 
 find_val_digit:
-	mov bl,[si]
-	inc si
-	sub bl,'0'
-	jc find_val_save
+        mov bl,[si]
+        inc si
+        sub bl,'0'
+        jc find_val_save
 ;
-	cmp bl,10
-	jnc find_val_save
-;	
+        cmp bl,10
+        jnc find_val_save
+;       
     mov cx,10
-	mul cx
-	add al,bl
-	adc ah,0
-	jmp find_val_digit
+        mul cx
+        add al,bl
+        adc ah,0
+        jmp find_val_digit
 
 find_val_save:
-	clc
+        clc
 
 find_val_done:
     pushf
     UnlockSysEnv
     popf
 ;
-	pop si
-	pop cx
-	pop bx
-	pop ds
-	ret
-GetValue	Endp
+        pop si
+        pop cx
+        pop bx
+        pop ds
+        ret
+GetValue        Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			init
+;               NAME:                   init
 ;
-;		DESCRIPTION:    Init net driver
+;               DESCRIPTION:    Init net driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ip_name			DB 'IP',0
-mask_name		DB 'NETMASK',0
-gateway_name	DB 'GATEWAY',0
+ip_name                 DB 'IP',0
+mask_name               DB 'NETMASK',0
+gateway_name    DB 'GATEWAY',0
 
-init	PROC far
-	mov bx,SEG data
-	mov es,bx
-	mov ds,bx
-	mov ds:protocol_count,0
-	mov ds:curr_id,1
+init    PROC far
+        mov bx,SEG data
+        mov es,bx
+        mov ds,bx
+        mov ds:protocol_count,0
+        mov ds:curr_id,1
 ;
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET ip_name
-	call GetIPNumber
-	mov ds:my_ip,eax
+        mov ax,cs
+        mov es,ax
+        mov di,OFFSET ip_name
+        call GetIPNumber
+        mov ds:my_ip,eax
 ;
-	mov di,OFFSET mask_name
-	call GetIpNumber
-	mov ds:ip_mask,eax
+        mov di,OFFSET mask_name
+        call GetIpNumber
+        mov ds:ip_mask,eax
 ;
-	mov di,OFFSET gateway_name
-	call GetIPNumber
-	mov ds:gateway,eax
+        mov di,OFFSET gateway_name
+        call GetIPNumber
+        mov ds:gateway,eax
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov si,OFFSET hook_ip
-	mov di,OFFSET hook_ip_name
-	xor cl,cl
-	mov ax,hook_ip_nr
-	RegisterOsGate
+        mov esi,OFFSET hook_ip
+        mov edi,OFFSET hook_ip_name
+        xor cl,cl
+        mov ax,hook_ip_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET get_ppp_ip
-	mov di,OFFSET get_ppp_ip_name
-	xor cl,cl
-	mov ax,get_ppp_ip_nr
-	RegisterOsGate
+        mov esi,OFFSET get_ppp_ip
+        mov edi,OFFSET get_ppp_ip_name
+        xor cl,cl
+        mov ax,get_ppp_ip_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET get_ppp_dns
-	mov di,OFFSET get_ppp_dns_name
-	xor dx,dx
-	mov ax,get_ppp_dns_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET get_ppp_dns
+        mov di,OFFSET get_ppp_dns_name
+        xor dx,dx
+        mov ax,get_ppp_dns_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET create_ip_header
-	mov di,OFFSET create_ip_header_name
-	xor cl,cl
-	mov ax,create_ip_header_nr
-	RegisterOsGate
+        mov esi,OFFSET create_ip_header
+        mov edi,OFFSET create_ip_header_name
+        xor cl,cl
+        mov ax,create_ip_header_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET send_ip_data
-	mov di,OFFSET send_ip_data_name
-	xor cl,cl
-	mov ax,send_ip_data_nr
-	RegisterOsGate
+        mov esi,OFFSET send_ip_data
+        mov edi,OFFSET send_ip_data_name
+        xor cl,cl
+        mov ax,send_ip_data_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET create_broadcast_ip
-	mov di,OFFSET create_broadcast_ip_name
-	xor cl,cl
-	mov ax,create_broadcast_ip_nr
-	RegisterOsGate
+        mov esi,OFFSET create_broadcast_ip
+        mov edi,OFFSET create_broadcast_ip_name
+        xor cl,cl
+        mov ax,create_broadcast_ip_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET send_broadcast_ip
-	mov di,OFFSET send_broadcast_ip_name
-	xor cl,cl
-	mov ax,send_broadcast_ip_nr
-	RegisterOsGate
+        mov esi,OFFSET send_broadcast_ip
+        mov edi,OFFSET send_broadcast_ip_name
+        xor cl,cl
+        mov ax,send_broadcast_ip_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET get_ip_address
-	mov di,OFFSET get_ip_address_name
-	xor dx,dx
-	mov ax,get_ip_address_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET get_ip_address
+        mov di,OFFSET get_ip_address_name
+        xor dx,dx
+        mov ax,get_ip_address_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET get_gateway
-	mov di,OFFSET get_gateway_name
-	xor dx,dx
-	mov ax,get_gateway_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET get_gateway
+        mov di,OFFSET get_gateway_name
+        xor dx,dx
+        mov ax,get_gateway_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET get_ip_mask
-	mov di,OFFSET get_ip_mask_name
-	xor dx,dx
-	mov ax,get_ip_mask_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET get_ip_mask
+        mov di,OFFSET get_ip_mask_name
+        xor dx,dx
+        mov ax,get_ip_mask_nr
+        RegisterBimodalUserGate
 ;
-	mov cx,4
-	mov dx,800h
-	mov ax,SEG data
-	mov ds,ax
-	push ds:my_ip
-	mov ds:my_ip,0
-	mov si,OFFSET my_ip
-	mov di,OFFSET receive
-	RegisterNetProtocol
-	mov ds:ip_handle,bx
-	pop ds:my_ip
+        mov cx,4
+        mov dx,800h
+        mov ax,SEG data
+        mov ds,ax
+        push ds:my_ip
+        mov ds:my_ip,0
+        mov si,OFFSET my_ip
+        mov di,OFFSET receive
+        RegisterNetProtocol
+        mov ds:ip_handle,bx
+        pop ds:my_ip
 ;
-	call init_dhcp
+        call init_dhcp
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov al,1
-	mov di,OFFSET define_mask
-	AddDhcpOption
+        mov al,1
+        mov di,OFFSET define_mask
+        AddDhcpOption
 ;
-	mov al,3
-	mov di,OFFSET define_gateway
-	AddDhcpOption
+        mov al,3
+        mov di,OFFSET define_gateway
+        AddDhcpOption
 ;
-	call init_cache
-	call init_dns
-	call init_icmp
-	call init_udp
-	call init_ntp
-	call init_tcp
-	clc
-	ret
-init	ENDP
+        call init_cache
+        call init_dns
+        call init_icmp
+        call init_udp
+        call init_ntp
+        call init_tcp
+        clc
+        ret
+init    ENDP
 
 code    ENDS
 

@@ -698,14 +698,14 @@ init    PROC far
     mov esi,OFFSET shutdown_gate_handler
     CreateIntGateSelector
 ;
-    mov si,OFFSET start_smp_debug
-    mov di,OFFSET start_smp_debug_name
+    mov esi,OFFSET start_smp_debug
+    mov edi,OFFSET start_smp_debug_name
     xor cl,cl
     mov ax,start_smp_debug_nr
     RegisterOsGate
 ;
-    mov si,OFFSET add_debug_core
-    mov di,OFFSET add_debug_core_name
+    mov esi,OFFSET add_debug_core
+    mov edi,OFFSET add_debug_core_name
     xor cl,cl
     mov ax,add_debug_core_nr
     RegisterOsGate

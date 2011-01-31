@@ -488,8 +488,8 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET send_eoi
-    mov di,OFFSET send_eoi_name
+    mov esi,OFFSET send_eoi
+    mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
     RegisterOsGate

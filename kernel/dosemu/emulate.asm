@@ -1241,8 +1241,8 @@ init_start:
         mov ax,cs
         mov ds,ax
         mov es,ax
-        mov si,OFFSET emulate
-        mov di,OFFSET emulate_name
+        mov esi,OFFSET emulate
+        mov edi,OFFSET emulate_name
         xor cl,cl
         mov ax,emulate_opcode_nr
         RegisterOsGate

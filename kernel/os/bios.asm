@@ -1147,26 +1147,26 @@ init_bios       PROC near
         mov di,OFFSET int2F_pm
         HookProt16Int
 ;
-        mov si,OFFSET get_bios_data
-        mov di,OFFSET get_bios_data_name
+        mov esi,OFFSET get_bios_data
+        mov edi,OFFSET get_bios_data_name
         xor cl,cl
         mov ax,get_bios_data_nr
         RegisterOsGate
 ;
-        mov si,OFFSET set_bios_data
-        mov di,OFFSET set_bios_data_name
+        mov esi,OFFSET set_bios_data
+        mov edi,OFFSET set_bios_data_name
         xor cl,cl
         mov ax,set_bios_data_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_get_bios_data
-        mov di,OFFSET hook_get_bios_data_name
+        mov esi,OFFSET hook_get_bios_data
+        mov edi,OFFSET hook_get_bios_data_name
         xor cl,cl
         mov ax,hook_get_bios_data_nr
         RegisterOsGate
 ;
-        mov si,OFFSET hook_set_bios_data
-        mov di,OFFSET hook_set_bios_data_name
+        mov esi,OFFSET hook_set_bios_data
+        mov edi,OFFSET hook_set_bios_data_name
         xor cl,cl
         mov ax,hook_set_bios_data_nr
         RegisterOsGate

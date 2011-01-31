@@ -665,8 +665,8 @@ init_xms        PROC near
         mov dx,virt_ds_in
         RegisterUserGateV86
 ;
-        mov si,OFFSET query_xms
-        mov di,OFFSET query_xms_name
+        mov esi,OFFSET query_xms
+        mov edi,OFFSET query_xms_name
         xor cl,cl
         mov ax,query_xms_nr
         RegisterOsGate

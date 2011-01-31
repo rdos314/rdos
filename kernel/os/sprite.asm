@@ -2269,14 +2269,14 @@ init_sprite     PROC near
         mov ax,close_sprite_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET hide_sprite_line
-        mov di,OFFSET hide_sprite_line_name
+        mov esi,OFFSET hide_sprite_line
+        mov edi,OFFSET hide_sprite_line_name
         xor cl,cl
         mov ax,hide_sprite_line_nr
         RegisterOsGate
 ;
-        mov si,OFFSET show_sprite_line
-        mov di,OFFSET show_sprite_line_name
+        mov esi,OFFSET show_sprite_line
+        mov edi,OFFSET show_sprite_line_name
         xor cl,cl
         mov ax,show_sprite_line_nr
         RegisterOsGate

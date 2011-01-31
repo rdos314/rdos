@@ -3095,14 +3095,14 @@ init_video      PROC near
         mov di,OFFSET got_focus_hook
         HookGotFocus
 ;
-        mov si,OFFSET register_video_mode
-        mov di,OFFSET register_video_mode_name
+        mov esi,OFFSET register_video_mode
+        mov edi,OFFSET register_video_mode_name
         xor cl,cl
         mov ax,register_video_mode_nr
         RegisterOsGate
 ;
-        mov si,OFFSET invert_mouse
-        mov di,OFFSET invert_mouse_name
+        mov esi,OFFSET invert_mouse
+        mov edi,OFFSET invert_mouse_name
         xor cl,cl
         mov ax,invert_mouse_nr
         RegisterOsGate
@@ -3260,8 +3260,8 @@ init_video      PROC near
         mov ax,draw_ellipse_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET write_dos_string
-        mov di,OFFSET write_dos_string_name
+        mov esi,OFFSET write_dos_string
+        mov edi,OFFSET write_dos_string_name
         xor cl,cl
         mov ax,write_dos_string_nr
         RegisterOsGate

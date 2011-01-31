@@ -261,20 +261,20 @@ dpmi_handler_move:
         mov ax,cs
         mov ds,ax
         mov es,ax
-        mov si,OFFSET enter_dpmi
-        mov di,OFFSET enter_dpmi_name
+        mov esi,OFFSET enter_dpmi
+        mov edi,OFFSET enter_dpmi_name
         xor cl,cl
         mov ax,enter_dpmi_nr
         RegisterOsGate
 ;
-        mov si,OFFSET query_dpmi
-        mov di,OFFSET query_dpmi_name
+        mov esi,OFFSET query_dpmi
+        mov edi,OFFSET query_dpmi_name
         xor cl,cl
         mov ax,query_dpmi_nr
         RegisterOsGate
 ;
-        mov si,OFFSET query_dpmi16
-        mov di,OFFSET query_dpmi16_name
+        mov esi,OFFSET query_dpmi16
+        mov edi,OFFSET query_dpmi16_name
         xor cl,cl
         mov ax,query_dpmi16_nr
         RegisterOsGate
