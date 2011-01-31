@@ -27,10 +27,10 @@
 
 INCLUDE ..\user.def
 INCLUDE ..\os.def
+INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE ..\user.inc
-INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc
@@ -72,12 +72,12 @@ aos_inr_buf_sel     DW ?
 
 audio_out_sel   ENDS
 
-audio_out_struc	STRUC
+audio_out_struc STRUC
 
-ao_base		handle_header <>
-ao_sel		DW ?
+ao_base         handle_header <>
+ao_sel          DW ?
 
-audio_out_struc	ENDS
+audio_out_struc ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -89,23 +89,23 @@ data    ENDS
 
     extrn init_fm:near
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
     
-	.386
+        .386
 
-	assume cs:code
+        assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			CreateMixer
+;               NAME:                   CreateMixer
 ;
-;		DESCRIPTION:	Create mixer
+;               DESCRIPTION:    Create mixer
 ;
 ;       PARAMETERS:     CX  Sample rate
 ;
-;		RETURNS:	    AX  Mixer sel
+;               RETURNS:            AX  Mixer sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -138,11 +138,11 @@ CreateMixer Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			DeleteMixer
+;               NAME:                   DeleteMixer
 ;
-;		DESCRIPTION:	Delete mixer
+;               DESCRIPTION:    Delete mixer
 ;
 ;       PARAMETERS:     DS  Mixer sel
 ;
@@ -186,39 +186,39 @@ DeleteMixer Endp
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			CreateAudioOutChannel
+;               NAME:                   CreateAudioOutChannel
 ;
-;		DESCRIPTION:	Create audio out channel
+;               DESCRIPTION:    Create audio out channel
 ;
-;		PARAMETERS:	    AX      Sample rate
+;               PARAMETERS:         AX      Sample rate
 ;                       CL      Bits (0..32)
 ;                       DX      Volume (0..65535)
 ;
-;		RETURNS:		BX		Audio out handle
+;               RETURNS:                BX              Audio out handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_audio_out_channel_name	DB 'Create Audio Out Channel', 0
+create_audio_out_channel_name   DB 'Create Audio Out Channel', 0
 
-create_audio_out_channel	Proc far
+create_audio_out_channel        Proc far
     push es
     push ds
     push cx
     push edx
 ;
     push cx
-	mov cx,SIZE audio_out_struc
-	AllocateHandle
-	mov ds:[bx].hh_sign,AUDIO_OUT_HANDLE
-	pop cx
+        mov cx,SIZE audio_out_struc
+        AllocateHandle
+        mov ds:[bx].hh_sign,AUDIO_OUT_HANDLE
+        pop cx
 ;
     push eax
     mov eax,SIZE audio_out_sel
     AllocateSmallGlobalMem
     pop eax
-    mov es:aos_sample_rate,ax	
+    mov es:aos_sample_rate,ax   
     shr ax,4
     mov es:aos_buffer_size,ax
     mov es:aos_bits,cl
@@ -288,29 +288,29 @@ caocHasMixer:
     LeaveSection ds:ads_section
     pop bx    
     pop ds
-;	
-	mov bx,[bx].hh_handle
-	pop edx
-	pop cx
-	pop ds
-	pop es
-	clc
-	retf32
-create_audio_out_channel	Endp
+;       
+        mov bx,[bx].hh_handle
+        pop edx
+        pop cx
+        pop ds
+        pop es
+        clc
+        retf32
+create_audio_out_channel        Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			FreeMixerChannel
+;               NAME:                   FreeMixerChannel
 ;
-;		DESCRIPTION:	Free a mixer channel
+;               DESCRIPTION:    Free a mixer channel
 ;
-;		PARAMETERS:	    DS      Channel sel
+;               PARAMETERS:         DS      Channel sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeMixerChannel	Proc near
+FreeMixerChannel        Proc near
     push ds
     push es
     push fs
@@ -322,9 +322,9 @@ FreeMixerChannel	Proc near
     mov fs,ds:aos_mixer
     mov dx,ds
 ;    
-	mov ax,SEG data
-	mov ds,ax
-	EnterSection ds:ads_section
+        mov ax,SEG data
+        mov ds,ax
+        EnterSection ds:ads_section
 ;    
     mov cx,fs:ams_count
     mov bx,OFFSET ams_sel_arr
@@ -350,8 +350,8 @@ fmcCopy:
 fmcDone:        
     xor ax,ax
     mov fs,ax
-	LeaveSection ds:ads_section
-;	
+        LeaveSection ds:ads_section
+;       
     pop dx
     pop cx
     pop bx
@@ -364,13 +364,13 @@ FreeMixerChannel    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			FlushChannel
+;               NAME:                   FlushChannel
 ;
-;		DESCRIPTION:	Flush channel
+;               DESCRIPTION:    Flush channel
 ;
-;		PARAMETERS:	    DS      Channel sel
+;               PARAMETERS:         DS      Channel sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -407,7 +407,7 @@ fcWait:
 ;
     mov ax,SEG data
     mov ds,ax
-	mov bx,ds:ads_thread
+        mov bx,ds:ads_thread
     Signal        
 ;
     GetSystemTime
@@ -424,17 +424,17 @@ FlushChannel    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			delete_out_channel
+;               NAME:                   delete_out_channel
 ;
-;		DESCRIPTION:	Delete out channel
+;               DESCRIPTION:    Delete out channel
 ;
-;		PARAMETERS:		DS:BX		Bitmap handle
+;               PARAMETERS:             DS:BX           Bitmap handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_out_channel	Proc near
+delete_out_channel      Proc near
     push es
 ;
     push ds
@@ -450,54 +450,54 @@ delete_out_channel	Proc near
     pop ds
 ;    
     FreeMem
-	FreeHandle
+        FreeHandle
 ;
-	clc
+        clc
     pop es
-	ret
-delete_out_channel	Endp
+        ret
+delete_out_channel      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			CloseAudioOutChannel
+;               NAME:                   CloseAudioOutChannel
 ;
-;		DESCRIPTION:	Close audio out channel
+;               DESCRIPTION:    Close audio out channel
 ;
-;		PARAMETERS:		BX		Handle
+;               PARAMETERS:             BX              Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_audio_out_channel_name	DB 'Close Audio Out Channel', 0
+close_audio_out_channel_name    DB 'Close Audio Out Channel', 0
 
-close_audio_out_channel	Proc far
-	push ds
-	push ax
-	push bx
+close_audio_out_channel Proc far
+        push ds
+        push ax
+        push bx
 ;
-	mov ax,AUDIO_OUT_HANDLE
-	DerefHandle
-	jc caicDone
+        mov ax,AUDIO_OUT_HANDLE
+        DerefHandle
+        jc caicDone
 ;
-	call delete_out_channel
+        call delete_out_channel
 
 caicDone:
-	pop bx
-	pop ax
-	pop ds
-	retf32
-close_audio_out_channel	Endp
+        pop bx
+        pop ax
+        pop ds
+        retf32
+close_audio_out_channel Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			AddAudio
+;               NAME:                   AddAudio
 ;
-;		DESCRIPTION:	Add audio data to channel
+;               DESCRIPTION:    Add audio data to channel
 ;
-;		PARAMETERS:		DS          Channel sel
+;               PARAMETERS:             DS          Channel sel
 ;                       ECX         Size
 ;                       ES:ESI      Left
 ;                       FS:EDI      Right
@@ -535,8 +535,8 @@ aaWhole:
     push ds
     mov ax,SEG data
     mov ds,ax
-	mov bx,ds:ads_thread
-	pop ds
+        mov bx,ds:ads_thread
+        pop ds
     Signal    
 ;    
     WaitForSignal
@@ -624,36 +624,36 @@ add_audio   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			WriteAudio
+;               NAME:                   WriteAudio
 ;
-;		DESCRIPTION:	Write audio data
+;               DESCRIPTION:    Write audio data
 ;
-;		PARAMETERS:		BX		    Handle
+;               PARAMETERS:             BX                  Handle
 ;                       (E)CX       Size
 ;                       DS:(E)SI    Left
 ;                       ES:(E)DI    Right
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_audio_name	DB 'Write Audio', 0
+write_audio_name        DB 'Write Audio', 0
 
-write_audio	Proc near
-	push ds
-	push es
-	push fs
-	push ax
-	push bx
+write_audio     Proc near
+        push ds
+        push es
+        push fs
+        push ax
+        push bx
 ;
     mov ax,es
     mov fs,ax
     mov ax,ds
     mov es,ax
 ;    
-	mov ax,AUDIO_OUT_HANDLE
-	DerefHandle
-	jc waDone
+        mov ax,AUDIO_OUT_HANDLE
+        DerefHandle
+        jc waDone
 ;
     mov ds,[bx].ao_sel
     call add_audio
@@ -667,33 +667,33 @@ waDone:
     ret
 write_audio Endp
 
-write_audio32	Proc far
-	call write_audio
-	retf32
-write_audio32	Endp
+write_audio32   Proc far
+        call write_audio
+        retf32
+write_audio32   Endp
 
-write_audio16	Proc far
+write_audio16   Proc far
     push esi
-	push edi
+        push edi
 ;
     movzx esi,si
-	movzx edi,di
-	call write_audio
-;	
-	pop edi
-	pop esi
-	ret
-write_audio16	Endp	
+        movzx edi,di
+        call write_audio
+;       
+        pop edi
+        pop esi
+        ret
+write_audio16   Endp    
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			GetAudioOutBuffers
+;               NAME:                   GetAudioOutBuffers
 ;
-;		DESCRIPTION:	Get audio out buffer selectors
+;               DESCRIPTION:    Get audio out buffer selectors
 ;
-;		PARAMETERS:		BX          Handle
+;               PARAMETERS:             BX          Handle
 ;
 ;       RETURNS:        CX          Buffer size
 ;                       SI          Left channel sel
@@ -701,7 +701,7 @@ write_audio16	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_audio_out_buf_name	DB 'Get Audio Out Buffers', 0
+get_audio_out_buf_name  DB 'Get Audio Out Buffers', 0
 
 get_audio_out_buf   Proc far
     push ds
@@ -711,9 +711,9 @@ get_audio_out_buf   Proc far
     xor si,si
     xor di,di
 ;    
-	mov ax,AUDIO_OUT_HANDLE
-	DerefHandle
-	jc gaobDone
+        mov ax,AUDIO_OUT_HANDLE
+        DerefHandle
+        jc gaobDone
 ;
     mov ds,[bx].ao_sel
     mov si,ds:aos_inl_buf_sel
@@ -732,26 +732,26 @@ get_audio_out_buf   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			PostAudioOutBuffers
+;               NAME:                   PostAudioOutBuffers
 ;
-;		DESCRIPTION:	Post audio out buffers
+;               DESCRIPTION:    Post audio out buffers
 ;
-;		PARAMETERS:		BX          Handle
+;               PARAMETERS:             BX          Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-post_audio_out_buf_name	DB 'Post Audio Out Buffers', 0
+post_audio_out_buf_name DB 'Post Audio Out Buffers', 0
 
 post_audio_out_buf   Proc far
     push ds
     push ax
     push bx
 ;    
-	mov ax,AUDIO_OUT_HANDLE
-	DerefHandle
-	jc paobDone
+        mov ax,AUDIO_OUT_HANDLE
+        DerefHandle
+        jc paobDone
 ;
     mov ds,[bx].ao_sel
     mov ax,ds:aos_buffer_size
@@ -759,7 +759,7 @@ post_audio_out_buf   Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
-	mov bx,ds:ads_thread
+        mov bx,ds:ads_thread
     Signal
 
 paobDone:
@@ -771,28 +771,28 @@ post_audio_out_buf   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			IsAudioOutCompleted
+;               NAME:                   IsAudioOutCompleted
 ;
-;		DESCRIPTION:	Check if audio out buffers are free
+;               DESCRIPTION:    Check if audio out buffers are free
 ;
-;		PARAMETERS:		BX          Handle
+;               PARAMETERS:             BX          Handle
 ;
 ;       RETURNS:        NC          Completed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-is_audio_out_completed_name	DB 'Is Audio Out Completed', 0
+is_audio_out_completed_name     DB 'Is Audio Out Completed', 0
 
 is_audio_out_completed   Proc far
     push ds
     push ax
     push bx
 ;    
-	mov ax,AUDIO_OUT_HANDLE
-	DerefHandle
-	jc iaocDone
+        mov ax,AUDIO_OUT_HANDLE
+        DerefHandle
+        jc iaocDone
 ;
     mov ds,[bx].ao_sel
     mov ax,ds:aos_in_buf_pos
@@ -810,39 +810,39 @@ iaocDone:
 is_audio_out_completed   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			delete_out_handle
+;               NAME:                   delete_out_handle
 ;
-;		DESCRIPTION:	BX			Bitmap handle
+;               DESCRIPTION:    BX                      Bitmap handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_out_handle	Proc far
-	push ds
-	push ax
-	push bx
+delete_out_handle       Proc far
+        push ds
+        push ax
+        push bx
 ;
-	mov ax,AUDIO_OUT_HANDLE
-	DerefHandle
-	jc delete_out_handle_done
+        mov ax,AUDIO_OUT_HANDLE
+        DerefHandle
+        jc delete_out_handle_done
 ;
-	call delete_out_channel
+        call delete_out_channel
 
 delete_out_handle_done:
-	pop bx
-	pop ax
-	pop ds
-	ret
-delete_out_handle	Endp
+        pop bx
+        pop ax
+        pop ds
+        ret
+delete_out_handle       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			MixChannel
+;               NAME:                   MixChannel
 ;
-;		DESCRIPTION:    Mix channel
+;               DESCRIPTION:    Mix channel
 ;
 ;       PARAMETERS:     SI  In sample rate / size of buffer * 16
 ;                       DI  Out sample rate / size of buffer * 16
@@ -969,9 +969,9 @@ MixChannel  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UpdateMixer
+;               NAME:                   UpdateMixer
 ;
-;		DESCRIPTION:    Update mixer
+;               DESCRIPTION:    Update mixer
 ;
 ;       PARAMETERS:     AX      Mixer selector
 ;
@@ -1093,30 +1093,30 @@ UpdateMixer Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			audio_thread
+;               NAME:                   audio_thread
 ;
-;		DESCRIPTION:    Audio thread
+;               DESCRIPTION:    Audio thread
 ;
 ;       PARAMETERS:     
 ;
-;		RETURNS:		
+;               RETURNS:                
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-audio_name	DB 'Audio',0
+audio_name      DB 'Audio',0
 
 audio_thread:
-	mov ax,SEG data
-	mov ds,ax
-	GetThread
-	mov ds:ads_thread,ax
+        mov ax,SEG data
+        mov ds,ax
+        GetThread
+        mov ds:ads_thread,ax
 
 atWait:
     mov ax,ds:ads_out_mixer
     or ax,ax
     jne atActive
 ;    
-    WaitForSignal	
+    WaitForSignal       
     jmp atWait
 
 atActive:
@@ -1148,7 +1148,7 @@ atActiveWait:
     jmp atActive
 ;
 
-atActiveLeave:	
+atActiveLeave:  
     LeaveSection ds:ads_section
     jmp atWait
 
@@ -1156,101 +1156,101 @@ atActiveLeave:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Init_audio
+;               NAME:                   Init_audio
 ;
-;		DESCRIPTION:    init audio module
+;               DESCRIPTION:    init audio module
 ;
 ;       PARAMETERS:     
 ;
-;		RETURNS:		
+;               RETURNS:                
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
-init_audio	Proc far
-	push ds
-	push es
-	pusha
+        
+init_audio      Proc far
+        push ds
+        push es
+        pusha
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET audio_name
-	mov si,OFFSET audio_thread
-	mov ax,4
-	mov cx,100h
-	CreateThread
-;	
-	popa
-	pop es
-	pop ds
-	ret
-init_audio	Endp
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET audio_name
+        mov si,OFFSET audio_thread
+        mov ax,4
+        mov cx,100h
+        CreateThread
+;       
+        popa
+        pop es
+        pop ds
+        ret
+init_audio      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			Init
+;               NAME:                   Init
 ;
-;		DESCRIPTION:	Init module
+;               DESCRIPTION:    Init module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
+init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;    
-	mov ax,AUDIO_OUT_HANDLE
-	mov di,OFFSET delete_out_handle
-	RegisterHandle
+        mov ax,AUDIO_OUT_HANDLE
+        mov di,OFFSET delete_out_handle
+        RegisterHandle
 ;
-	mov di,OFFSET init_audio
-	HookInitTasking
+        mov di,OFFSET init_audio
+        HookInitTasking
 ;
-	mov si,OFFSET create_audio_out_channel
-	mov di,OFFSET create_audio_out_channel_name
-	xor dx,dx
-	mov ax,create_audio_out_channel_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET create_audio_out_channel
+        mov di,OFFSET create_audio_out_channel_name
+        xor dx,dx
+        mov ax,create_audio_out_channel_nr
+        RegisterBimodalUserGate
 ;
-	mov si,OFFSET close_audio_out_channel
-	mov di,OFFSET close_audio_out_channel_name
-	xor dx,dx
-	mov ax,close_audio_out_channel_nr
-	RegisterBimodalUserGate
+        mov si,OFFSET close_audio_out_channel
+        mov di,OFFSET close_audio_out_channel_name
+        xor dx,dx
+        mov ax,close_audio_out_channel_nr
+        RegisterBimodalUserGate
 ;
-	mov bx,OFFSET write_audio16
-	mov si,OFFSET write_audio32
-	mov di,OFFSET write_audio_name
-	mov dx,virt_es_in OR virt_ds_in
-	mov ax,write_audio_nr
-	RegisterUserGate
+        mov bx,OFFSET write_audio16
+        mov si,OFFSET write_audio32
+        mov di,OFFSET write_audio_name
+        mov dx,virt_es_in OR virt_ds_in
+        mov ax,write_audio_nr
+        RegisterUserGate
 ;
-	mov si,OFFSET get_audio_out_buf
-	mov di,OFFSET get_audio_out_buf_name
-	mov ax,get_audio_out_buf_nr
-	RegisterOsGate
+        mov si,OFFSET get_audio_out_buf
+        mov di,OFFSET get_audio_out_buf_name
+        mov ax,get_audio_out_buf_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET post_audio_out_buf
-	mov di,OFFSET post_audio_out_buf_name
-	mov ax,post_audio_out_buf_nr
-	RegisterOsGate
+        mov si,OFFSET post_audio_out_buf
+        mov di,OFFSET post_audio_out_buf_name
+        mov ax,post_audio_out_buf_nr
+        RegisterOsGate
 ;
-	mov si,OFFSET is_audio_out_completed
-	mov di,OFFSET is_audio_out_completed_name
-	mov ax,is_audio_out_completed_nr
-	RegisterOsGate
+        mov si,OFFSET is_audio_out_completed
+        mov di,OFFSET is_audio_out_completed_name
+        mov ax,is_audio_out_completed_nr
+        RegisterOsGate
 ;
-	mov bx,SEG data
-	mov ds,bx
-	mov ds:ads_out_mixer,0
-	InitSection ds:ads_section
+        mov bx,SEG data
+        mov ds,bx
+        mov ds:ads_out_mixer,0
+        InitSection ds:ads_section
 ;
     call init_fm
-	ret
-init	ENDP
+        ret
+init    ENDP
 
-code	ENDS
+code    ENDS
 
-	END init
+        END init

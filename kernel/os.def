@@ -1,558 +1,458 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; RDOS operating system
-; Copyright (C) 1988-2000, Leif Ekblad
-;
-; This program is free software; you can redistribute it and/or modify
-; it under the terms of the GNU General Public License as published by
-; the Free Software Foundation; either version 2 of the License, or
-; (at your option) any later version. The only exception to this rule
-; is for commercial usage in embedded systems. For information on
-; usage in commercial embedded systems, contact embedded@rdos.net
-;
-; This program is distributed in the hope that it will be useful,
-; but WITHOUT ANY WARRANTY; without even the implied warranty of
-; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.
-;
-; You should have received a copy of the GNU General Public License
-; along with this program; if not, write to the Free Software
-; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-;
-; The author of this program may be contacted at leif@rdos.net
-;
-; OS.DEF
-; OS gate numbers. "Osgate_entries" must be one larger than the
-; highest entry number. Numbers should be packed as much as possible.
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;
-; offsets in trapgate, vmode
-;
-vm_gs		EQU 38
-vm_fs		EQU 34
-vm_ds		EQU 30
-vm_es		EQU 26
-vm_ss		EQU 22
-vm_esp		EQU 18
-vm_eflags	EQU 14
-vm_cs		EQU 10
-vm_eip		EQU 6
-vm_err		EQU 2
-vm_bp		EQU 0
-vm_eax		EQU -4
-vm_ebx		EQU -8
-pm_ds		EQU -10
-pm_call		EQU -12
-
-section_typ	STRUC
-cs_value	DW ?
-cs_list		DW ?
-section_typ	ENDS
-
-read_write_section_typ	STRUC
-ssync_value		DW ?
-ssync_list		DW ?
-sread_value		DW ?
-swrite_value	DW ?
-swrite_list		DW ?
-read_write_section_typ	ENDS
-
-; registration / hooks
-
-register_osgate_nr			EQU 0
-is_valid_osgate_nr			EQU 1
-register_usergate_nr		EQU 2
-register_bimodal_usergate_nr	EQU 3
-register_usergate16_nr		EQU 4
-register_usergate32_nr		EQU 5
-register_usergate_v86_nr	EQU 6
-init_device_nr				EQU 7
-alias_code32_nr				EQU 8
-emulate_opcode_nr			EQU 9
-
-; descriptors
-
-allocate_gdt_nr				EQU 10
-free_gdt_nr					EQU 11
-allocate_ldt_nr				EQU 12
-free_ldt_nr					EQU 13
-allocate_multiple_ldt_nr	EQU 14
-get_selector_base_size_nr	EQU 15
-create_data_sel16_nr		EQU 16
-create_data_sel32_nr		EQU 17
-create_code_sel16_nr		EQU 18
-create_code_sel32_nr		EQU 19
-create_conform_sel16_nr		EQU 20
-create_conform_sel32_nr		EQU 21
-create_ldt_sel_nr			EQU 22
-create_tss_sel_nr			EQU 23
-create_call_gate_sel16_nr	EQU 24
-create_call_gate_sel32_nr	EQU 25
-create_task_gate_sel_nr		EQU 26
-create_int_gate_sel_nr		EQU 27
-create_trap_gate_sel_nr		EQU 28
-selector_to_segment_nr		EQU 29
-segment_to_selector_nr		EQU 30
-free_selector_nr			EQU 31
-segment_not_present_nr		EQU 32
-
-; paging
-
-get_physical_page_nr		EQU 33
-set_physical_page_nr		EQU 34
-get_thread_physical_page_nr EQU 35
-set_thread_physical_page_nr	EQU 36
-read_thread_selector_nr		EQU 37
-write_thread_selector_nr	EQU 38
-read_thread_segment_nr		EQU 39
-write_thread_segment_nr		EQU 40
-allocate_page_nr			EQU 41
-free_page_nr				EQU 42
-set_page_emulate_nr			EQU 43
-set_page_kernel_nr			EQU 44
-hook_page_nr				EQU 45
-unhook_page_nr				EQU 46
-
-; linear memory management
-
-allocate_global_mem_nr		EQU 47
-allocate_small_global_mem_nr	EQU 48
-allocate_small_mem_nr		EQU 49
-allocate_big_mem_nr			EQU 50
-allocate_big_linear_nr		EQU 51
-allocate_small_linear_nr	EQU 52
-allocate_local_linear_nr	EQU 53
-reserve_local_linear_nr		EQU 54
-allocate_vm_linear_nr		EQU 55
-free_linear_nr				EQU 56
-resize_linear_nr			EQU 57
-used_big_linear_nr			EQU 60
-used_small_linear_nr		EQU 61
-used_local_linear_thread_nr	EQU 62
-allocate_fixed_process_mem_nr	EQU 64
-allocate_fixed_system_mem_nr	EQU 65
-allocate_process_linear_nr	EQU 67
-allocate_system_linear_nr	EQU 68
-allocate_fixed_vm_linear_nr	EQU 69
-
-; physical memory management
-
-allocate_physical_nr		EQU 70
-allocate_dma_physical_nr	EQU 71
-free_physical_nr			EQU 72
-
-; multitasking
-
-create_process_nr			EQU 74
-wake_thread_nr				EQU 79
-sleep_thread_nr				EQU 80
-clear_signal_nr				EQU 83
-signal_nr					EQU 84
-wait_for_signal_nr			EQU 85
-enter_section_nr			EQU 86
-leave_section_nr			EQU 87
-start_timer_nr				EQU 89
-stop_timer_nr				EQU 90
-debug_break_nr				EQU 92
-hook_create_thread_nr		EQU 93
-hook_create_process_nr		EQU 94
-hook_terminate_thread_nr	EQU 95
-hook_terminate_process_nr	EQU 96
-hook_init_tasking_nr		EQU 97
-hook_state_nr				EQU 98
-
-; interrupts & exceptions
-sim_sti_nr					EQU 99
-sim_cli_nr					EQU 100
-sim_set_flags_nr			EQU 101
-sim_get_flags_nr			EQU 102
-save_context_nr				EQU 103
-restore_context_nr			EQU 104
-call_vm_nr					EQU 105
-call_pm16_nr				EQU 106
-call_pm32_nr				EQU 107
-hook_vm_int_nr				EQU 108
-hook_pm16_int_nr			EQU 109
-hook_pm32_int_nr			EQU 110
-hook_exception_nr			EQU 111
-hook_get_vm_int_nr			EQU 112
-hook_set_vm_int_nr			EQU 113
-hook_get_pm16_int_nr		EQU 114
-hook_set_pm16_int_nr		EQU 115
-hook_get_pm32_int_nr		EQU 116
-hook_set_pm32_int_nr		EQU 117
-reflect_exception_nr		EQU 118
-reflect_pm_to_vm_nr			EQU 119
-v86_bios_int_nr				EQU 120
-set_bitness_nr				EQU 121
-
-; IO
-
-hook_in_nr					EQU 122
-hook_out_nr					EQU 123
-
-; IRQ
-
-request_private_irq_handler_nr	EQU 124
-release_private_irq_handler_nr	EQU 125
-
-; time & date
-
-set_system_time_nr			EQU 128
-
-; Handles
-
-register_handle_nr			EQU 129
-allocate_handle_nr			EQU 130
-free_handle_nr				EQU 131
-deref_handle_nr				EQU 132
-
-; Network
-
-register_net_class_nr		EQU 133
-register_net_protocol_nr	EQU 134
-register_net_driver_nr		EQU 135
-register_ppp_driver_nr		EQU 136
-send_net_nr					EQU 137
-send_ppp_nr					EQU 138
-net_received_nr				EQU 139
-hook_ip_nr					EQU 140
-create_ip_header_nr			EQU 141
-send_ip_data_nr				EQU 142
-hook_ip_cache_nr			EQU 143
-allocate_ip_cache_mem_nr	EQU 144
-lookup_ip_cache_nr			EQU 145
-get_host_timeout_nr			EQU 146
-update_round_trip_time_nr	EQU 147
-get_ppp_ip_nr				EQU 148
-open_ppp_nr					EQU 149
-close_ppp_nr				EQU 150
-query_udp_nr				EQU 151
-listen_udp_port_nr			EQU 152
-
-; DOS
-
-allocate_dos_linear_nr		EQU 153
-free_dos_linear_nr			EQU 154
-resize_dos_linear_nr		EQU 155
-available_dos_linear_nr		EQU 156
-query_xms_nr				EQU 157
-query_dpmi_nr				EQU 158
-query_dpmi16_nr				EQU 159
-get_bios_data_nr			EQU 160
-set_bios_data_nr			EQU 161
-hook_get_bios_data_nr		EQU 162
-hook_set_bios_data_nr		EQU 163
-hook_load_dos_exe_nr		EQU 164
-read_keyboard_serial_nr		EQU 165
-poll_keyboard_serial_nr		EQU 166
-write_dos_string_nr			EQU 167
-get_psp_nr					EQU 168
-set_psp_nr					EQU 169
-enter_dpmi_nr				EQU 170
-enter_dos16_nr				EQU 171
-enter_dos32_nr				EQU 172
-register_device_nr			EQU 173
-check_device_nr				EQU 174
-
-; app
-
-hook_open_app_nr			EQU 177
-hook_close_app_nr			EQU 178
-hook_load_exe_nr			EQU 179
-open_app_nr					EQU 180
-close_app_nr				EQU 181
-
-; focus
-
-hook_enable_focus_nr		EQU 182
-hook_lost_focus_nr			EQU 183
-hook_got_focus_nr			EQU 184
-get_focus_thread_nr			EQU 185
-get_thread_focus_key_nr		EQU 186
-allocate_focus_linear_nr	EQU 187
-allocate_fixed_focus_mem_nr	EQU 188
-
-; PCI
-
-bios_pci_int_nr				EQU 189
-read_pci_byte_nr			EQU 190
-read_pci_word_nr			EQU 191
-read_pci_dword_nr			EQU 192
-write_pci_byte_nr			EQU 193
-write_pci_word_nr			EQU 194
-write_pci_dword_nr			EQU 195
-find_pci_class_nr			EQU 196
-find_pci_device_nr			EQU 197
-
-; drive
-
-hook_init_disc_nr			EQU 198
-install_disc_nr				EQU 199
-register_disc_change_nr		EQU 200
-start_disc_nr				EQU 201
-stop_disc_nr				EQU 202
-set_disc_param_nr			EQU 203
-wait_for_disc_request_nr	EQU 204
-get_disc_request_nr			EQU 205
-poll_disc_request_nr		EQU 206
-disc_request_completed_nr	EQU 207
-new_disc_request_nr			EQU 208
-get_disc_request_array_nr	EQU 209
-open_drive_nr				EQU 214
-close_drive_nr				EQU 215
-flush_drive_nr				EQU 216
-get_drive_param_nr			EQU 217
-lock_sector_nr				EQU 218
-unlock_sector_nr			EQU 219
-modify_sector_nr			EQU 220
-new_sector_nr				EQU 221
-create_disc_seq_nr			EQU 222
-modify_seq_sector_nr		EQU 223
-perform_disc_seq_nr			EQU 224
-req_sector_nr				EQU 225
-define_sector_nr			EQU 226
-wait_for_sector_nr			EQU 227
-reset_drive_nr				EQU 228
-
-; File system
-
-hook_init_file_system_nr	EQU 229
-register_file_system_nr		EQU 230
-define_media_check_nr		EQU 231
-demand_load_file_system_nr	EQU 232
-is_file_system_available_nr	EQU 233
-install_file_system_nr		EQU 234
-format_file_system_nr		EQU 235
-start_file_system_nr		EQU 236
-stop_file_system_nr			EQU 237
-get_file_list_entry_nr		EQU 238
-free_file_list_entry_nr		EQU 239
-cache_dir_nr				EQU 240
-insert_dir_entry_nr			EQU 241
-insert_file_entry_nr		EQU 242
-
-; file 
-
-get_file_info_nr			EQU 247
-dupl_file_info_nr			EQU 248
-
-; video
-
-get_char_mask_nr			EQU 250
-register_video_mode_nr		EQU 251
-
-; mouse
-
-init_mouse_nr				EQU 252
-update_mouse_nr				EQU 253
-
-init_video_bitmap_nr		EQU 254
-
-allocate_small_kernel_mem_nr EQU 255
-
-hide_sprite_line_nr         EQU 256
-show_sprite_line_nr         EQU 257
-
-start_com_port_nr           EQU 258
-stop_com_port_nr            EQU 259
-
-start_keyboard_nr			EQU 260
-stop_keyboard_nr			EQU 261
-
-start_floppy_nr				EQU 262
-stop_floppy_nr				EQU 263
-
-set_keyboard_state_nr       EQU 264
-
-add_wait_nr                 EQU 266
-signal_wait_nr              EQU 267
-
-invert_mouse_nr             EQU 268
-
-load_dos_exe_nr				EQU 269
-
-get_exception_stack16_nr	EQU 270
-get_exception_stack32_nr	EQU 271
-
-lock_sys_env_nr             EQU 272
-unlock_sys_env_nr           EQU 273
-
-lock_proc_env_nr            EQU 274
-unlock_proc_env_nr          EQU 275
-
-erase_sectors_nr            EQU 276
-flush_sector_nr				EQU 277
-
-lock_disc_request_nr        EQU 278
-modify_disc_request_nr      EQU 279
-unlock_disc_request_nr      EQU 280
-
-get_net_buffer_nr			EQU 281
-get_ppp_buffer_nr			EQU 282
-
-allocate_multiple_physical_nr	EQU 283
-
-create_alias_sel16_nr		EQU 284
-create_alias_sel32_nr		EQU 285
-
-add_net_source_address_nr	EQU 286
-
-get_broadcast_buffer_nr		EQU 287
-send_broadcast_nr			EQU 288
-
-create_broadcast_ip_nr		EQU 289
-send_broadcast_ip_nr		EQU 290
-
-net_broadcast_nr			EQU 291
-add_dhcp_option_nr			EQU 292
-
-define_protocol_addr_nr     EQU 293
-
-register_swap_proc_nr       EQU 294
-
-is_irq_free_nr              EQU 295
-
-setup_irq_detect_nr         EQU 296
-poll_irq_detect_nr          EQU 297
-
-find_pci_cap_nr             EQU 298
-
-wait_for_signal_timeout_nr  EQU 299
-
-notify_ethernet_packet_nr   EQU 300
-
-init_usb_device_nr          EQU 301
-notify_usb_attach_nr        EQU 302
-
-request_shared_irq_handler_nr   EQU 303
-
-notify_usb_detach_nr        EQU 304
-
-add_com_port_nr             EQU 305
-
-hook_usb_attach_nr          EQU 306
-hook_usb_detach_nr          EQU 307
-
-set_mouse_nr                EQU 308
-set_mouse_limit_nr          EQU 309
-
-get_net_driver_nr           EQU 310
-
-create_usb_req_nr           EQU 311
-add_write_usb_control_req_nr EQU 312
-add_write_usb_data_req_nr   EQU 313
-add_read_usb_data_req_nr    EQU 314
-add_usb_status_in_req_nr    EQU 315
-add_usb_status_out_req_nr   EQU 316
-start_usb_req_nr            EQU 317
-is_usb_req_started_nr       EQU 318
-is_usb_req_ready_nr         EQU 319
-get_usb_req_data_nr         EQU 320
-usb_req_done_nr             EQU 321
-close_usb_req_nr            EQU 322
-
-notify_ir_data_nr           EQU 323
-
-read_codec_nr               EQU 324
-write_codec_nr              EQU 325
-
-get_audio_dac_rate_nr       EQU 326
-set_audio_dac_rate_nr       EQU 327
-get_audio_adc_rate_nr       EQU 328
-set_audio_adc_rate_nr       EQU 329
-
-open_audio_out_nr           EQU 330
-close_audio_out_nr          EQU 331
-send_audio_out_nr           EQU 332
-
-get_audio_out_buf_nr        EQU 333
-post_audio_out_buf_nr       EQU 334
-is_audio_out_completed_nr   EQU 335
-
-set_module_nr               EQU 336
-create_module_nr            EQU 337
-free_module_nr              EQU 338
-reset_module_nr             EQU 339
-deref_module_handle_nr      EQU 340
-alias_module_handle_nr      EQU 341
-
-thread_to_sel_nr            EQU 342
-
-hook_shift_keys_nr          EQU 343
-
-stop_usb_req_nr             EQU 344
-
-get_usb_info_nr             EQU 345
-
-reserve_com_line_nr         EQU 346
-
-device_set_dtr_nr           EQU 347
-device_reset_dtr_nr         EQU 348
-
-wait_for_line_state_nr      EQU 349
-get_line_state_nr           EQU 350
-
-create_proc_handle_nr       EQU 351
-deref_proc_handle_nr        EQU 352
-
-notify_time_drift_nr        EQU 353
-set_options_nr              EQU 354
-
-clone_handle_mem_nr         EQU 355
-clone_app_nr                EQU 356
-
-get_apic_id_nr              EQU 357
-
-enter_int_nr                EQU 358
-leave_int_nr                EQU 359
-
-debug_exception_nr          EQU 360
-
-create_processor_nr         EQU 362
-
-shutdown_nr                 EQU 363
-
-locked_debug_exception_nr   EQU 364
-
-lock_task_nr                EQU 365
-unlock_task_nr              EQU 366
-
-get_processor_nr            EQU 368
-
-resume_processor_nr         EQU 369
-start_processor_nr          EQU 370
-
-preempt_processor_nr        EQU 371
-do_preempt_processor_nr     EQU 372
-
-reload_sys_timer_nr         EQU 373
-start_sys_timer_nr          EQU 374
-
-is_net_address_valid_nr     EQU 375
-
-get_acpi_table_nr           EQU 376
-
-allocate_debug_local_linear_nr  EQU 377
-
-process_key_scan_nr         EQU 378
-
-get_debug_thread_sel_nr     EQU 379
-
-find_pci_class_all_nr       EQU 380
-
-show_proc_debug_nr          EQU 381
-
-get_pci_irq_nr              EQU 382
-
-start_smp_debug_nr          EQU 383
-send_eoi_nr                 EQU 384
-
-add_debug_core_nr           EQU 385
-
-send_nmi_nr                 EQU 386
-
-add_printer_nr              EQU 387
-
-osgate_entries				EQU 390
+
+register_osgate_nr			    = 0
+is_valid_osgate_nr		    	= 1
+register_usergate_nr		    = 2
+register_bimodal_usergate_nr	= 3
+register_usergate16_nr		    = 4
+register_usergate32_nr		    = 5
+register_usergate_v86_nr	    = 6
+init_device_nr				    = 7
+alias_code32_nr				    = 8
+emulate_opcode_nr			    = 9
+
+allocate_gdt_nr				= 10
+free_gdt_nr					= 11
+allocate_ldt_nr				= 12
+free_ldt_nr					= 13
+allocate_multiple_ldt_nr	= 14
+get_selector_base_size_nr	= 15
+create_data_sel16_nr		= 16
+create_data_sel32_nr		= 17
+create_code_sel16_nr		= 18
+create_code_sel32_nr		= 19
+create_conform_sel16_nr		= 20
+create_conform_sel32_nr		= 21
+create_ldt_sel_nr			= 22
+create_tss_sel_nr			= 23
+create_call_gate_sel16_nr	= 24
+create_call_gate_sel32_nr	= 25
+create_task_gate_sel_nr		= 26
+create_int_gate_sel_nr		= 27
+create_trap_gate_sel_nr		= 28
+selector_to_segment_nr		= 29
+segment_to_selector_nr		= 30
+free_selector_nr			= 31
+segment_not_present_nr		= 32
+
+get_physical_page_nr		= 33
+set_physical_page_nr		= 34
+get_thread_physical_page_nr = 35
+set_thread_physical_page_nr	= 36
+read_thread_selector_nr		= 37
+write_thread_selector_nr	= 38
+read_thread_segment_nr		= 39
+write_thread_segment_nr		= 40
+allocate_page_nr			= 41
+free_page_nr				= 42
+set_page_emulate_nr			= 43
+set_page_kernel_nr			= 44
+hook_page_nr				= 45
+unhook_page_nr				= 46
+
+allocate_global_mem_nr		= 47
+allocate_small_global_mem_nr	= 48
+allocate_small_mem_nr		= 49
+allocate_big_mem_nr			= 50
+allocate_big_linear_nr		= 51
+allocate_small_linear_nr	= 52
+allocate_local_linear_nr	= 53
+reserve_local_linear_nr		= 54
+allocate_vm_linear_nr		= 55
+free_linear_nr				= 56
+resize_linear_nr			= 57
+used_big_linear_nr			= 60
+used_small_linear_nr		= 61
+used_local_linear_thread_nr	= 62
+allocate_fixed_process_mem_nr	= 64
+allocate_fixed_system_mem_nr	= 65
+allocate_process_linear_nr	= 67
+allocate_system_linear_nr	= 68
+allocate_fixed_vm_linear_nr	= 69
+
+allocate_physical_nr		= 70
+allocate_dma_physical_nr	= 71
+free_physical_nr			= 72
+
+create_process_nr			= 74
+wake_thread_nr				= 79
+sleep_thread_nr				= 80
+clear_signal_nr				= 83
+signal_nr					= 84
+wait_for_signal_nr			= 85
+enter_section_nr			= 86
+leave_section_nr			= 87
+start_timer_nr				= 89
+stop_timer_nr				= 90
+debug_break_nr				= 92
+hook_create_thread_nr		= 93
+hook_create_process_nr		= 94
+hook_terminate_thread_nr	= 95
+hook_terminate_process_nr	= 96
+hook_init_tasking_nr		= 97
+hook_state_nr				= 98
+
+sim_sti_nr					= 99
+sim_cli_nr					= 100
+sim_set_flags_nr			= 101
+sim_get_flags_nr			= 102
+save_context_nr				= 103
+restore_context_nr			= 104
+call_vm_nr					= 105
+call_pm16_nr				= 106
+call_pm32_nr				= 107
+hook_vm_int_nr				= 108
+hook_pm16_int_nr			= 109
+hook_pm32_int_nr			= 110
+hook_exception_nr			= 111
+hook_get_vm_int_nr			= 112
+hook_set_vm_int_nr			= 113
+hook_get_pm16_int_nr		= 114
+hook_set_pm16_int_nr		= 115
+hook_get_pm32_int_nr		= 116
+hook_set_pm32_int_nr		= 117
+reflect_exception_nr		= 118
+reflect_pm_to_vm_nr			= 119
+v86_bios_int_nr				= 120
+set_bitness_nr				= 121
+
+hook_in_nr					= 122
+hook_out_nr					= 123
+
+request_private_irq_handler_nr	= 124
+release_private_irq_handler_nr	= 125
+
+set_system_time_nr			= 128
+
+register_handle_nr			= 129
+allocate_handle_nr			= 130
+free_handle_nr				= 131
+deref_handle_nr				= 132
+
+register_net_class_nr		= 133
+register_net_protocol_nr	= 134
+register_net_driver_nr		= 135
+register_ppp_driver_nr		= 136
+send_net_nr					= 137
+send_ppp_nr					= 138
+net_received_nr				= 139
+hook_ip_nr					= 140
+create_ip_header_nr			= 141
+send_ip_data_nr				= 142
+hook_ip_cache_nr			= 143
+allocate_ip_cache_mem_nr	= 144
+lookup_ip_cache_nr			= 145
+get_host_timeout_nr			= 146
+update_round_trip_time_nr	= 147
+get_ppp_ip_nr				= 148
+open_ppp_nr					= 149
+close_ppp_nr				= 150
+query_udp_nr				= 151
+listen_udp_port_nr			= 152
+
+allocate_dos_linear_nr		= 153
+free_dos_linear_nr			= 154
+resize_dos_linear_nr		= 155
+available_dos_linear_nr		= 156
+query_xms_nr				= 157
+query_dpmi_nr				= 158
+query_dpmi16_nr				= 159
+get_bios_data_nr			= 160
+set_bios_data_nr			= 161
+hook_get_bios_data_nr		= 162
+hook_set_bios_data_nr		= 163
+hook_load_dos_exe_nr		= 164
+read_keyboard_serial_nr		= 165
+poll_keyboard_serial_nr		= 166
+write_dos_string_nr			= 167
+get_psp_nr					= 168
+set_psp_nr					= 169
+enter_dpmi_nr				= 170
+enter_dos16_nr				= 171
+enter_dos32_nr				= 172
+register_device_nr			= 173
+check_device_nr				= 174
+
+hook_open_app_nr			= 177
+hook_close_app_nr			= 178
+hook_load_exe_nr			= 179
+open_app_nr					= 180
+close_app_nr				= 181
+
+hook_enable_focus_nr		= 182
+hook_lost_focus_nr			= 183
+hook_got_focus_nr			= 184
+get_focus_thread_nr			= 185
+get_thread_focus_key_nr		= 186
+allocate_focus_linear_nr	= 187
+allocate_fixed_focus_mem_nr	= 188
+
+bios_pci_int_nr				= 189
+read_pci_byte_nr			= 190
+read_pci_word_nr			= 191
+read_pci_dword_nr			= 192
+write_pci_byte_nr			= 193
+write_pci_word_nr			= 194
+write_pci_dword_nr			= 195
+find_pci_class_nr			= 196
+find_pci_device_nr			= 197
+
+hook_init_disc_nr			= 198
+install_disc_nr				= 199
+register_disc_change_nr		= 200
+start_disc_nr				= 201
+stop_disc_nr				= 202
+set_disc_param_nr			= 203
+wait_for_disc_request_nr	= 204
+get_disc_request_nr			= 205
+poll_disc_request_nr		= 206
+disc_request_completed_nr	= 207
+new_disc_request_nr			= 208
+get_disc_request_array_nr	= 209
+open_drive_nr				= 214
+close_drive_nr				= 215
+flush_drive_nr				= 216
+get_drive_param_nr			= 217
+lock_sector_nr				= 218
+unlock_sector_nr			= 219
+modify_sector_nr			= 220
+new_sector_nr				= 221
+create_disc_seq_nr			= 222
+modify_seq_sector_nr		= 223
+perform_disc_seq_nr			= 224
+req_sector_nr				= 225
+define_sector_nr			= 226
+wait_for_sector_nr			= 227
+reset_drive_nr				= 228
+
+hook_init_file_system_nr	= 229
+register_file_system_nr		= 230
+define_media_check_nr		= 231
+demand_load_file_system_nr	= 232
+is_file_system_available_nr	= 233
+install_file_system_nr		= 234
+format_file_system_nr		= 235
+start_file_system_nr		= 236
+stop_file_system_nr			= 237
+get_file_list_entry_nr		= 238
+free_file_list_entry_nr		= 239
+cache_dir_nr				= 240
+insert_dir_entry_nr			= 241
+insert_file_entry_nr		= 242
+
+get_file_info_nr			= 247
+dupl_file_info_nr			= 248
+
+get_char_mask_nr			= 250
+register_video_mode_nr		= 251
+
+init_mouse_nr				= 252
+update_mouse_nr				= 253
+
+init_video_bitmap_nr		= 254
+
+allocate_small_kernel_mem_nr = 255
+
+hide_sprite_line_nr         = 256
+show_sprite_line_nr         = 257
+
+start_com_port_nr           = 258
+stop_com_port_nr            = 259
+
+start_keyboard_nr			= 260
+stop_keyboard_nr			= 261
+
+start_floppy_nr				= 262
+stop_floppy_nr				= 263
+
+set_keyboard_state_nr       = 264
+
+add_wait_nr                 = 266
+signal_wait_nr              = 267
+
+invert_mouse_nr             = 268
+
+load_dos_exe_nr				= 269
+
+get_exception_stack16_nr	= 270
+get_exception_stack32_nr	= 271
+
+lock_sys_env_nr             = 272
+unlock_sys_env_nr           = 273
+
+lock_proc_env_nr            = 274
+unlock_proc_env_nr          = 275
+
+erase_sectors_nr            = 276
+flush_sector_nr				= 277
+
+lock_disc_request_nr        = 278
+modify_disc_request_nr      = 279
+unlock_disc_request_nr      = 280
+
+get_net_buffer_nr			= 281
+get_ppp_buffer_nr			= 282
+
+allocate_multiple_physical_nr	= 283
+
+create_alias_sel16_nr		= 284
+create_alias_sel32_nr		= 285
+
+add_net_source_address_nr	= 286
+
+get_broadcast_buffer_nr		= 287
+send_broadcast_nr			= 288
+
+create_broadcast_ip_nr		= 289
+send_broadcast_ip_nr		= 290
+
+net_broadcast_nr			= 291
+add_dhcp_option_nr			= 292
+
+define_protocol_addr_nr     = 293
+
+register_swap_proc_nr       = 294
+
+is_irq_free_nr              = 295
+
+setup_irq_detect_nr         = 296
+poll_irq_detect_nr          = 297
+
+find_pci_cap_nr             = 298
+
+wait_for_signal_timeout_nr  = 299
+
+notify_ethernet_packet_nr   = 300
+
+init_usb_device_nr          = 301
+notify_usb_attach_nr        = 302
+
+request_shared_irq_handler_nr   = 303
+
+notify_usb_detach_nr        = 304
+
+add_com_port_nr             = 305
+
+hook_usb_attach_nr          = 306
+hook_usb_detach_nr          = 307
+
+set_mouse_nr                = 308
+set_mouse_limit_nr          = 309
+
+get_net_driver_nr           = 310
+
+create_usb_req_nr           = 311
+add_write_usb_control_req_nr = 312
+add_write_usb_data_req_nr   = 313
+add_read_usb_data_req_nr    = 314
+add_usb_status_in_req_nr    = 315
+add_usb_status_out_req_nr   = 316
+start_usb_req_nr            = 317
+is_usb_req_started_nr       = 318
+is_usb_req_ready_nr         = 319
+get_usb_req_data_nr         = 320
+usb_req_done_nr             = 321
+close_usb_req_nr            = 322
+
+notify_ir_data_nr           = 323
+
+read_codec_nr               = 324
+write_codec_nr              = 325
+
+get_audio_dac_rate_nr       = 326
+set_audio_dac_rate_nr       = 327
+get_audio_adc_rate_nr       = 328
+set_audio_adc_rate_nr       = 329
+
+open_audio_out_nr           = 330
+close_audio_out_nr          = 331
+send_audio_out_nr           = 332
+
+get_audio_out_buf_nr        = 333
+post_audio_out_buf_nr       = 334
+is_audio_out_completed_nr   = 335
+
+set_module_nr               = 336
+create_module_nr            = 337
+free_module_nr              = 338
+reset_module_nr             = 339
+deref_module_handle_nr      = 340
+alias_module_handle_nr      = 341
+
+thread_to_sel_nr            = 342
+
+hook_shift_keys_nr          = 343
+
+stop_usb_req_nr             = 344
+
+get_usb_info_nr             = 345
+
+reserve_com_line_nr         = 346
+
+device_set_dtr_nr           = 347
+device_reset_dtr_nr         = 348
+
+wait_for_line_state_nr      = 349
+get_line_state_nr           = 350
+
+create_proc_handle_nr       = 351
+deref_proc_handle_nr        = 352
+
+notify_time_drift_nr        = 353
+set_options_nr              = 354
+
+clone_handle_mem_nr         = 355
+clone_app_nr                = 356
+
+get_apic_id_nr              = 357
+
+enter_int_nr                = 358
+leave_int_nr                = 359
+
+debug_exception_nr          = 360
+
+create_processor_nr         = 362
+
+shutdown_nr                 = 363
+
+locked_debug_exception_nr   = 364
+
+lock_task_nr                = 365
+unlock_task_nr              = 366
+
+get_processor_nr            = 368
+
+resume_processor_nr         = 369
+start_processor_nr          = 370
+
+preempt_processor_nr        = 371
+do_preempt_processor_nr     = 372
+
+reload_sys_timer_nr         = 373
+start_sys_timer_nr          = 374
+
+is_net_address_valid_nr     = 375
+
+get_acpi_table_nr           = 376
+
+allocate_debug_local_linear_nr  = 377
+
+process_key_scan_nr         = 378
+
+get_debug_thread_sel_nr     = 379
+
+find_pci_class_all_nr       = 380
+
+show_proc_debug_nr          = 381
+
+get_pci_irq_nr              = 382
+
+start_smp_debug_nr          = 383
+send_eoi_nr                 = 384
+
+add_debug_core_nr           = 385
+
+send_nmi_nr                 = 386
+
+add_printer_nr              = 387
+
+osgate_entries				= 390

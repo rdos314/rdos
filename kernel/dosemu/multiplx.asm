@@ -26,12 +26,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 INCLUDE ..\os.def
+INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\protseg.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.inc
-INCLUDE ..\os.inc
 INCLUDE ..\os\system.inc
 
         .386p

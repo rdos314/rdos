@@ -28,11 +28,11 @@
 INCLUDE ..\os\protseg.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
+INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
-INCLUDE ..\os.inc
 INCLUDE dos.inc
 
 DOS_HANDLER_START = 100h

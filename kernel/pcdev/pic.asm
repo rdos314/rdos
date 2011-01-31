@@ -30,11 +30,11 @@ INCLUDE ..\driver.def
 INCLUDE ..\os\port.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
+INCLUDE ..\os.inc
 INCLUDE ..\os\int.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
-INCLUDE ..\os.inc
 INCLUDE ..\os\irq.inc
         
     .386p

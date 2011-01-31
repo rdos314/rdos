@@ -27,10 +27,10 @@
 
 INCLUDE ..\user.def
 INCLUDE ..\os.def
+INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE ..\user.inc
-INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc

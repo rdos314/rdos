@@ -28,10 +28,10 @@
         .386p
 
 include ..\os.def
+include ..\os.inc
 include ..\user.def
 include ..\os\protseg.def
 include ..\os\system.def
-include ..\os.inc
 
 
 include emulate.inc
