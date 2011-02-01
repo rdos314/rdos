@@ -34,16 +34,16 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 
 gate_entry      STRUC
+gate_name_offset                DD ?
 gate_name_sel                   DW ?
-gate_name_offset                DW ?
-gate_entry_offset16             DW ?
+gate_entry_offset16             DD ?
 gate_entry_sel16                DW ?
-gate_entry_offset32             DW ?
+gate_entry_offset32             DD ?
 gate_entry_sel32                DW ?
-gate_entry_offset_v86   DW ?    
+gate_entry_offset_v86           DD ?    
 gate_entry_sel_v86              DW ?
-gate_sel16                              DW ?
-gate_sel32                              DW ?
+gate_sel16                      DW ?
+gate_sel32                      DW ?
 gate_transfer                   DW ?
 gate_entry      ENDS
 
@@ -237,17 +237,17 @@ register_usergate       PROC far
         mov fs,bx
         mov bx,ax
         shl bx,5
-        mov fs:[bx].gate_name_offset,di
+        mov word ptr fs:[bx].gate_name_offset,di
         mov fs:[bx].gate_name_sel,es
-        mov fs:[bx].gate_entry_offset16,cx
+        mov word ptr fs:[bx].gate_entry_offset16,cx
         mov fs:[bx].gate_entry_sel16,ds
-        mov fs:[bx].gate_entry_offset32,si
+        mov word ptr fs:[bx].gate_entry_offset32,si
         mov fs:[bx].gate_entry_sel32,ds
         xchg dx,fs:[bx].gate_transfer
         or dx,dx
         jnz register_user_nov86
 ;
-        mov fs:[bx].gate_entry_offset_v86,cx
+        mov word ptr fs:[bx].gate_entry_offset_v86,cx
         mov fs:[bx].gate_entry_sel_v86,ds
         jmp register_user_done
 
@@ -288,17 +288,17 @@ register_bimodal_usergate       PROC far
         mov fs,bx
         mov bx,ax
         shl bx,5
-        mov fs:[bx].gate_name_offset,di
+        mov word ptr fs:[bx].gate_name_offset,di
         mov fs:[bx].gate_name_sel,es
-        mov fs:[bx].gate_entry_offset16,si
+        mov word ptr fs:[bx].gate_entry_offset16,si
         mov fs:[bx].gate_entry_sel16,ds
-        mov fs:[bx].gate_entry_offset32,si
+        mov word ptr fs:[bx].gate_entry_offset32,si
         mov fs:[bx].gate_entry_sel32,ds
         xchg dx,fs:[bx].gate_transfer
         or dx,dx
         jnz register_bimodal_user_nov86
 ;
-        mov fs:[bx].gate_entry_offset_v86,si
+        mov word ptr fs:[bx].gate_entry_offset_v86,si
         mov fs:[bx].gate_entry_sel_v86,ds
         jmp register_bimodal_user_done
 
@@ -340,15 +340,15 @@ register_usergate16     PROC far
         mov fs,bx
         mov bx,ax
         shl bx,5
-        mov fs:[bx].gate_name_offset,di
+        mov word ptr fs:[bx].gate_name_offset,di
         mov fs:[bx].gate_name_sel,es
-        mov fs:[bx].gate_entry_offset16,si
+        mov word ptr fs:[bx].gate_entry_offset16,si
         mov fs:[bx].gate_entry_sel16,ds
         xchg dx,fs:[bx].gate_transfer
         or dx,dx
         jnz register_user16_nov86
 ;
-        mov fs:[bx].gate_entry_offset_v86,si
+        mov word ptr fs:[bx].gate_entry_offset_v86,si
         mov fs:[bx].gate_entry_sel_v86,ds
         jmp register_user16_done
 
@@ -386,9 +386,9 @@ register_usergate32     PROC far
         mov fs,bx
         mov bx,ax
         shl bx,5
-        mov fs:[bx].gate_name_offset,di
+        mov word ptr fs:[bx].gate_name_offset,di
         mov fs:[bx].gate_name_sel,es
-        mov fs:[bx].gate_entry_offset32,si
+        mov word ptr fs:[bx].gate_entry_offset32,si
         mov fs:[bx].gate_entry_sel32,ds
 ;
         pop bx
@@ -421,9 +421,9 @@ register_usergate_v86   PROC far
         mov fs,bx
         mov bx,ax
         shl bx,5
-        mov fs:[bx].gate_name_offset,di
+        mov word ptr fs:[bx].gate_name_offset,di
         mov fs:[bx].gate_name_sel,es
-        mov fs:[bx].gate_entry_offset_v86,si
+        mov word ptr fs:[bx].gate_entry_offset_v86,si
         mov fs:[bx].gate_entry_sel_v86,ds
         mov fs:[bx].gate_transfer,dx
 ;
@@ -666,7 +666,7 @@ do_usercall16   PROC near
 ;
         mov ds:[ebx+3],ax
         mov [bp+10],ax
-        mov ax,es:[edi].gate_entry_offset16
+        mov eax,es:[edi].gate_entry_offset16
         mov ds:[ebx+1],ax
         mov [bp+8],ax
         mov byte ptr ds:[ebx],9Ah
@@ -676,7 +676,7 @@ do_usercall16   PROC near
 
 do_call16_direct_cs16:
         mov [bp+10],ax
-        mov ax,es:[edi].gate_entry_offset16
+        mov eax,es:[edi].gate_entry_offset16
         mov [bp+8],ax
         sub ax,[bp+14]
         add ax,4
@@ -714,7 +714,7 @@ do_call16_direct_to32:
 ;
         mov ds:[ebx+6],ax
         mov [bp+6],ax
-        movzx eax,es:[edi].gate_entry_offset32
+        mov eax,es:[edi].gate_entry_offset32
         mov ds:[ebx+2],eax
         mov [bp+4],ax
         mov word ptr ds:[ebx],9A66h
@@ -722,7 +722,7 @@ do_call16_direct_to32:
 
 do_call16_direct_cs32:
         mov [bp+6],ax
-        movzx eax,es:[edi].gate_entry_offset32
+        mov eax,es:[edi].gate_entry_offset32
         mov [bp+4],ax
         sub eax,[bp+10]
         mov ds:[ebx+4],eax
@@ -776,7 +776,7 @@ do16_call_to16:
         AllocateGdt
         or bx,3
         mov es:[edi].gate_sel16,bx
-        movzx esi,es:[edi].gate_entry_offset16
+        mov esi,es:[edi].gate_entry_offset16
         mov ds,es:[edi].gate_entry_sel16
         xor cl,cl
         CreateCallGateSelector16
@@ -797,7 +797,7 @@ do16_call_to32:
         AllocateGdt
         or bx,3
         mov es:[edi].gate_sel32,bx
-        movzx esi,es:[edi].gate_entry_offset32
+        mov esi,es:[edi].gate_entry_offset32
         mov ds,es:[edi].gate_entry_sel32
         xor cl,cl
         CreateCallGateSelector32
@@ -888,14 +888,14 @@ do_kernel_ov_ok32:
     cmp al,66h
     jne do_call32_intra32       
 ;
-        movzx eax,es:[edi].gate_entry_offset32
+        mov eax,es:[edi].gate_entry_offset32
         mov ds:[ebx+2],eax
         mov [bp+4],ax
         mov word ptr ds:[ebx],9A66h
         jmp do_call32_direct_do32
 
 do_call32_intra32:
-        movzx eax,es:[edi].gate_entry_offset32
+        mov eax,es:[edi].gate_entry_offset32
         mov ds:[ebx+1],eax
         mov [bp+4],ax
         mov byte ptr ds:[ebx],9Ah
@@ -908,7 +908,7 @@ do_call32_direct_cs32:
     cmp al,66h
     jne do_call32_direct32      
 ;    
-        movzx eax,es:[edi].gate_entry_offset32
+        mov eax,es:[edi].gate_entry_offset32
         mov [bp+4],ax
         sub eax,[bp+10]
         mov ds:[ebx+4],eax
@@ -916,7 +916,7 @@ do_call32_direct_cs32:
         jmp do_call32_direct_do32
 
 do_call32_direct32:
-        movzx eax,es:[edi].gate_entry_offset32
+        mov eax,es:[edi].gate_entry_offset32
         mov [bp+4],ax
         sub eax,[bp+10]
         mov ds:[ebx+2],eax
@@ -977,7 +977,7 @@ do_ov_ok32:
         AllocateGdt
         or bx,3
         mov es:[edi].gate_sel32,bx
-        movzx esi,es:[edi].gate_entry_offset32
+        mov esi,es:[edi].gate_entry_offset32
         mov ds,es:[edi].gate_entry_sel32
         xor cl,cl
         CreateCallGateSelector32

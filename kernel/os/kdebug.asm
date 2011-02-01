@@ -47,16 +47,16 @@ og_flags        DW ?
 osgate_entry    ENDS
 
 usergate_entry  STRUC
+ug_name_offset          DD ?
 ug_name_sel             DW ?
-ug_name_offset      DW ?
-ug_entry_offset16       DW ?
-ug_entry_sel16      DW ?
-ug_entry_offset32       DW ?
-ug_entry_sel32      DW ?
-ug_entry_offset_v86     DW ?    
-ug_entry_sel_v86    DW ?
-ug_sel16            DW ?
-ug_sel32            DW ?
+ug_entry_offset16       DD ?
+ug_entry_sel16          DW ?
+ug_entry_offset32       DD ?
+ug_entry_sel32          DW ?
+ug_entry_offset_v86     DD ?    
+ug_entry_sel_v86        DW ?
+ug_sel16                DW ?
+ug_sel32                DW ?
 ug_transfer             DW ?
 usergate_entry  ENDS
 
@@ -161,14 +161,14 @@ GetIllegalUserGate      PROC near
     mov ax,usergate_sel
     mov ds,ax
     mov fs,[bx].ug_name_sel
-    mov si,[bx].ug_name_offset
+    mov esi,[bx].ug_name_offset
     xor bx,bx
 illegal_out_user_loop:
-    mov al,fs:[si]
+    mov al,fs:[esi]
     or al,al
     je illegal_out_user_ok
     stosb
-    inc si
+    inc esi
     inc bx
     loop illegal_out_user_loop
 illegal_out_user_ok:
@@ -290,14 +290,14 @@ get_usercall_scan_loop:
     cmp dx,ds:[si].ug_entry_sel16
     jne get_usercall_not_entry16
 ;
-    cmp bx,ds:[si].ug_entry_offset16
+    cmp bx,word ptr ds:[si].ug_entry_offset16
     je get_usercall_found
 
 get_usercall_not_entry16:
     cmp dx,ds:[si].ug_entry_sel32
     jne get_usercall_not_entry32
 ;
-    cmp bx,ds:[si].ug_entry_offset32
+    cmp bx,word ptr ds:[si].ug_entry_offset32
     je get_usercall_found
 
 get_usercall_not_entry32:
@@ -316,16 +316,16 @@ get_usercall_not_entry32:
 get_usercall_found:
     pop cx
     mov fs,[si].ug_name_sel
-    mov si,[si].ug_name_offset
+    mov esi,[si].ug_name_offset
     xor bx,bx
 
 get_usercall_out_loop:
-    mov al,fs:[si]
+    mov al,fs:[esi]
     or al,al
     je get_usercall_out_ok
 ;
     stosb
-    inc si
+    inc esi
     inc bx
     loop get_usercall_out_loop
 
