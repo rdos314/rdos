@@ -324,20 +324,20 @@ init_crc        PROC near
         mov edi,OFFSET create_crc_name
         xor dx,dx
         mov ax,create_crc_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET close_crc
         mov edi,OFFSET close_crc_name
         xor dx,dx
         mov ax,close_crc_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET calc_crc16
         mov esi,OFFSET calc_crc32
         mov edi,OFFSET calc_crc_name
         mov dx,virt_es_in
         mov ax,calc_crc_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
     popa
     pop es

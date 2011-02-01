@@ -682,33 +682,33 @@ init_state      PROC near
         mov edi,OFFSET get_thread_state_name
         mov dx,virt_es_in
         mov ax,get_thread_state_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ebx,OFFSET get_thread_tss16
         mov esi,OFFSET get_thread_tss32
         mov edi,OFFSET get_thread_tss_name
         mov dx,virt_es_in
         mov ax,get_thread_tss_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ebx,OFFSET set_thread_tss16
         mov esi,OFFSET set_thread_tss32
         mov edi,OFFSET set_thread_tss_name
         mov dx,virt_es_in
         mov ax,set_thread_tss_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov esi,OFFSET suspend_thread
         mov edi,OFFSET suspend_thread_name
         xor dx,dx
         mov ax,suspend_thread_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET suspend_and_signal_thread
         mov edi,OFFSET suspend_and_signal_thread_name
         xor dx,dx
         mov ax,suspend_and_signal_thread_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov eax,OFFSET state_data_size
         mov bx,state_data_sel

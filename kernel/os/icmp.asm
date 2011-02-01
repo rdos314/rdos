@@ -411,7 +411,7 @@ init_icmp       PROC near
         mov edi,OFFSET ping_name
         xor dx,dx
         mov ax,ping_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
         ret
 init_icmp       ENDP
 

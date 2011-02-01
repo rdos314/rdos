@@ -546,51 +546,51 @@ init    Proc far
         mov edi,OFFSET start_watchdog_name
         xor dx,dx
         mov ax,start_watchdog_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET kick_watchdog
         mov edi,OFFSET kick_watchdog_name
         xor dx,dx
         mov ax,kick_watchdog_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET stop_watchdog
         mov edi,OFFSET stop_watchdog_name
         xor dx,dx
         mov ax,stop_watchdog_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_watchdog_tics
         mov edi,OFFSET get_watchdog_tics_name
         xor dx,dx
         mov ax,get_watchdog_tics_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET define_fault_save
         mov edi,OFFSET define_fault_save_name
         xor dx,dx
         mov ax,define_fault_save_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET clear_fault_save
         mov edi,OFFSET clear_fault_save_name
         xor dx,dx
         mov ax,clear_fault_save_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET get_fault_thread_state16
         mov esi,OFFSET get_fault_thread_state32
         mov edi,OFFSET get_fault_thread_state_name
         mov dx,virt_es_in
         mov ax,get_fault_thread_state_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ebx,OFFSET get_fault_thread_tss16
         mov esi,OFFSET get_fault_thread_tss32
         mov edi,OFFSET get_fault_thread_tss_name
         mov dx,virt_es_in
         mov ax,get_fault_thread_tss_nr
-        RegisterUserGateNew
+        RegisterUserGate
         ret
 init    Endp
 

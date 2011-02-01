@@ -269,7 +269,7 @@ init_ntp        PROC near
         mov edi,OFFSET sync_time_name
         xor dx,dx
         mov ax,sync_time_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov al,42
         mov di,OFFSET define_ntp_server

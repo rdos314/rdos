@@ -1263,7 +1263,7 @@ init_user_protseg       PROC near
     mov edi,OFFSET get_selector_info_name
     xor dx,dx
     mov ax,get_selector_info_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;
         ret
 init_user_protseg       ENDP

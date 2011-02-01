@@ -1847,55 +1847,55 @@ init_fm Proc near
         mov edi,OFFSET open_fm_name
         xor dx,dx
         mov ax,open_fm_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET close_fm
         mov edi,OFFSET close_fm_name
         xor dx,dx
         mov ax,close_fm_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET fm_wait
         mov edi,OFFSET fm_wait_name
         xor dx,dx
         mov ax,fm_wait_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET create_fm_instrument
         mov edi,OFFSET create_fm_instrument_name
         xor dx,dx
         mov ax,create_fm_instrument_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET free_fm_instrument
         mov edi,OFFSET free_fm_instrument_name
         xor dx,dx
         mov ax,free_fm_instrument_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_fm_attack
         mov edi,OFFSET set_fm_attack_name
         xor dx,dx
         mov ax,set_fm_attack_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_fm_sustain
         mov edi,OFFSET set_fm_sustain_name
         xor dx,dx
         mov ax,set_fm_sustain_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_fm_release
         mov edi,OFFSET set_fm_release_name
         xor dx,dx
         mov ax,set_fm_release_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET play_fm_note
         mov edi,OFFSET play_fm_note_name
         xor dx,dx
         mov ax,play_fm_note_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov bx,SEG data
         mov es,bx

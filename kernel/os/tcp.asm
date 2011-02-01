@@ -5569,117 +5569,117 @@ init_tcp        PROC near
         mov edi,OFFSET open_tcp_connection_name
         xor dx,dx
         mov ax,open_tcp_connection_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET create_tcp_listen
         mov edi,OFFSET create_tcp_listen_name
         xor dx,dx
         mov ax,create_tcp_listen_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_tcp_listen
         mov edi,OFFSET get_tcp_listen_name
         xor dx,dx
         mov ax,get_tcp_listen_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET close_tcp_listen
         mov edi,OFFSET close_tcp_listen_name
         xor dx,dx
         mov ax,close_tcp_listen_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET wait_for_tcp_connection
         mov edi,OFFSET wait_for_tcp_connection_name
         xor dx,dx
         mov ax,wait_for_tcp_connection_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET close_tcp_connection
         mov edi,OFFSET close_tcp_connection_name
         xor dx,dx
         mov ax,close_tcp_connection_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET delete_tcp_connection
         mov edi,OFFSET delete_tcp_connection_name
         xor dx,dx
         mov ax,delete_tcp_connection_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET is_tcp_connection_closed
         mov edi,OFFSET is_tcp_connection_closed_name
         xor dx,dx
         mov ax,is_tcp_connection_closed_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET is_tcp_connection_idle
         mov edi,OFFSET is_tcp_connection_idle_name
         xor dx,dx
         mov ax,is_tcp_connection_idle_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_remote_tcp_connection_ip
         mov edi,OFFSET get_remote_tcp_connection_ip_name
         xor dx,dx
         mov ax,get_remote_tcp_connection_ip_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_remote_tcp_connection_port
         mov edi,OFFSET get_remote_tcp_connection_port_name
         xor dx,dx
         mov ax,get_remote_tcp_connection_port_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_local_tcp_connection_port
         mov edi,OFFSET get_local_tcp_connection_port_name
         xor dx,dx
         mov ax,get_local_tcp_connection_port_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET abort_tcp_connection
         mov edi,OFFSET abort_tcp_connection_name
         xor dx,dx
         mov ax,abort_tcp_connection_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET read_tcp_connection16
         mov esi,OFFSET read_tcp_connection32
         mov edi,OFFSET read_tcp_connection_name
         mov dx,virt_es_in
         mov ax,read_tcp_connection_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ebx,OFFSET write_tcp_connection16
         mov esi,OFFSET write_tcp_connection32
         mov edi,OFFSET write_tcp_connection_name
         mov dx,virt_es_in
         mov ax,write_tcp_connection_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov esi,OFFSET push_tcp_connection
         mov edi,OFFSET push_tcp_connection_name
         xor dx,dx
         mov ax,push_tcp_connection_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET poll_tcp_connection
         mov edi,OFFSET poll_tcp_connection_name
         xor dx,dx
         mov ax,poll_tcp_connection_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET add_wait_for_tcp_connection
         mov edi,OFFSET add_wait_for_tcp_connection_name
         xor dx,dx
         mov ax,add_wait_for_tcp_connection_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET add_wait_for_tcp_listen
         mov edi,OFFSET add_wait_for_tcp_listen_name
         xor dx,dx
         mov ax,add_wait_for_tcp_listen_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov al,6
         mov di,OFFSET Receive

@@ -1212,20 +1212,20 @@ init    PROC far
         mov edi,OFFSET create_audio_out_channel_name
         xor dx,dx
         mov ax,create_audio_out_channel_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET close_audio_out_channel
         mov edi,OFFSET close_audio_out_channel_name
         xor dx,dx
         mov ax,close_audio_out_channel_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET write_audio16
         mov esi,OFFSET write_audio32
         mov edi,OFFSET write_audio_name
         mov dx,virt_es_in OR virt_ds_in
         mov ax,write_audio_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov esi,OFFSET get_audio_out_buf
         mov edi,OFFSET get_audio_out_buf_name

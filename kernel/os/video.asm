@@ -3111,154 +3111,154 @@ init_video      PROC near
         mov edi,OFFSET get_video_mode_name
         xor dx,dx
         mov ax,get_video_mode_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_video_mode
         mov edi,OFFSET set_video_mode_name
         xor dx,dx
         mov ax,set_video_mode_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_cursor_position
         mov edi,OFFSET set_cursor_pos_name
         xor dx,dx
         mov ax,set_cursor_position_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_cursor_position
         mov edi,OFFSET get_cursor_pos_name
         xor dx,dx
         mov ax,get_cursor_position_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_forecolor
         mov edi,OFFSET set_forecolor_name
         xor dx,dx
         mov ax,set_forecolor_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_backcolor
         mov edi,OFFSET set_backcolor_name
         xor dx,dx
         mov ax,set_backcolor_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_char_attrib
         mov edi,OFFSET get_char_attrib_name
         xor dx,dx
         mov ax,get_char_attrib_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET write_char
         mov edi,OFFSET write_char_name
         xor dx,dx
         mov ax,write_char_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET write_asciiz16
         mov esi,OFFSET write_asciiz32
         mov edi,OFFSET write_asciiz_name
         mov dx,virt_es_in
         mov ax,write_asciiz_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ebx,OFFSET write_size_string16
         mov esi,OFFSET write_size_string32
         mov edi,OFFSET write_size_string_name
         mov dx,virt_es_in
         mov ax,write_size_string_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov esi,OFFSET set_clip_rect
         mov edi,OFFSET set_clip_rect_name
         xor dx,dx
         mov ax,set_clip_rect_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET clear_clip_rect
         mov edi,OFFSET clear_clip_rect_name
         xor dx,dx
         mov ax,clear_clip_rect_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_draw_color
         mov edi,OFFSET set_draw_color_name
         xor dx,dx
         mov ax,set_drawcolor_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_lgop
         mov edi,OFFSET set_lgop_name
         xor dx,dx
         mov ax,set_lgop_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_hollow_style
         mov edi,OFFSET set_hollow_style_name
         xor dx,dx
         mov ax,set_hollow_style_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_filled_style
         mov edi,OFFSET set_filled_style_name
         xor dx,dx
         mov ax,set_filled_style_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_font
         mov edi,OFFSET set_font_name
         xor dx,dx
         mov ax,set_font_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_pixel
         mov edi,OFFSET get_pixel_name
         xor dx,dx
         mov ax,get_pixel_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_pixel
         mov edi,OFFSET set_pixel_name
         xor dx,dx
         mov ax,set_pixel_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET blit_pr
         mov edi,OFFSET blit_name
         xor dx,dx
         mov ax,blit_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET draw_mask
         mov edi,OFFSET draw_mask_name
         xor dx,dx
         mov ax,draw_mask_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET draw_string16
         mov esi,OFFSET draw_string32
         mov edi,OFFSET draw_string_name
         mov dx,virt_es_in
         mov ax,draw_string_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov esi,OFFSET draw_line
         mov edi,OFFSET draw_line_name
         xor dx,dx
         mov ax,draw_line_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET draw_rect
         mov edi,OFFSET draw_rect_name
         xor dx,dx
         mov ax,draw_rect_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET draw_ellipse
         mov edi,OFFSET draw_ellipse_name
         xor dx,dx
         mov ax,draw_ellipse_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET write_dos_string
         mov edi,OFFSET write_dos_string_name

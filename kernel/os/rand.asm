@@ -260,7 +260,7 @@ init_random     PROC near
         mov edi,OFFSET get_random_name
         xor dx,dx
         mov ax,get_random_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         popa
         pop es

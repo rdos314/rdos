@@ -1369,109 +1369,109 @@ init    Proc far
         mov edi,OFFSET add_wait_for_com_name
         xor dx,dx
         mov ax,add_wait_for_com_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_max_com_port
         mov edi,OFFSET get_max_com_port_name
         xor dx,dx
         mov ax,get_max_com_port_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET open_com
         mov edi,OFFSET open_com_name
         xor dx,dx
         mov ax,open_com_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET close_com
         mov edi,OFFSET close_com_name
         xor dx,dx
         mov ax,close_com_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET flush_com
         mov edi,OFFSET flush_com_name
         xor dx,dx
         mov ax,flush_com_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET read_com
         mov edi,OFFSET read_com_name
         xor dx,dx
         mov ax,read_com_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET write_com
         mov edi,OFFSET write_com_name
         xor dx,dx
         mov ax,write_com_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET wait_for_send_completed_com
         mov edi,OFFSET wait_for_send_completed_com_name
         xor dx,dx
         mov ax,wait_for_send_completed_com_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET enable_cts
         mov edi,OFFSET enable_cts_name
         xor dx,dx
         mov ax,enable_cts_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET disable_cts
         mov edi,OFFSET disable_cts_name
         xor dx,dx
         mov ax,disable_cts_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET enable_auto_rts
         mov edi,OFFSET enable_auto_rts_name
         xor dx,dx
         mov ax,enable_auto_rts_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET disable_auto_rts
         mov edi,OFFSET disable_auto_rts_name
         xor dx,dx
         mov ax,disable_auto_rts_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_dtr
         mov edi,OFFSET set_dtr_name
         xor dx,dx
         mov ax,set_dtr_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET reset_dtr
         mov edi,OFFSET reset_dtr_name
         xor dx,dx
         mov ax,reset_dtr_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_rts
         mov edi,OFFSET set_rts_name
         xor dx,dx
         mov ax,set_rts_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET reset_rts
         mov edi,OFFSET reset_rts_name
         xor dx,dx
         mov ax,reset_rts_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_com_receive_space
         mov edi,OFFSET get_com_receive_space_name
         xor dx,dx
         mov ax,get_com_receive_space_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_com_send_space
         mov edi,OFFSET get_com_send_space_name
         xor dx,dx
         mov ax,get_com_send_space_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov bx,SEG data
         mov es,bx

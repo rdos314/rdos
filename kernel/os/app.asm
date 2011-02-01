@@ -40,352 +40,355 @@ include ..\wait.inc
 
 app_data_seg    STRUC
 
-open_app_hooks          DB ?
-close_app_hooks         DB ?
+open_app_hooks      DB ?
+close_app_hooks     DB ?
 
-open_app_arr            DW 2*8 DUP(?)
-close_app_arr           DW 2*8 DUP(?)
+open_app_arr        DW 2*8 DUP(?)
+close_app_arr       DW 2*8 DUP(?)
 
 app_data_seg    ENDS
 
 
-module_handle_seg               STRUC
+module_handle_seg           STRUC
 
 mh_base handle_header <>
 
-mh_sel            DW ?
+mh_sel        DW ?
 
-module_handle_seg               ENDS
+module_handle_seg           ENDS
 
 debug_event_wait_header STRUC
 
-dew_obj                 wait_obj_header <>
-dew_lib_sel             DW ?
+dew_obj         wait_obj_header <>
+dew_lib_sel         DW ?
 
 debug_event_wait_header ENDS
 
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        extrn create_ldt:near
-        extrn destroy_ldt:near
+    extrn create_ldt:near
+    extrn destroy_ldt:near
 
-        assume cs:code
+    assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitApp
+;           NAME:           InitApp
 ;
-;               DESCRIPTION:    Init module
+;           DESCRIPTION:    Init module
 ;
-;               PARAMETERS:     
-;                                               
-;                                               
+;           PARAMETERS:     
+;                           
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_app
+    public init_app
 
-init_app        PROC near
-        push ds
-        push es
-        pusha
+init_app    PROC near
+    push ds
+    push es
+    pusha
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    xor ebx,ebx
+    xor esi,esi
+    xor edi,edi
 ;
-        mov esi,OFFSET open_app
-        mov edi,OFFSET open_app_name
-        xor cl,cl
-        mov ax,open_app_nr
-        RegisterOsGate
+    mov si,OFFSET open_app
+    mov di,OFFSET open_app_name
+    xor cl,cl
+    mov ax,open_app_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET close_app
-        mov edi,OFFSET close_app_name
-        xor cl,cl
-        mov ax,close_app_nr
-        RegisterOsGate
+    mov si,OFFSET close_app
+    mov di,OFFSET close_app_name
+    xor cl,cl
+    mov ax,close_app_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET clone_app
-        mov edi,OFFSET clone_app_name
-        xor cl,cl
-        mov ax,clone_app_nr
-        RegisterOsGate
+    mov si,OFFSET clone_app
+    mov di,OFFSET clone_app_name
+    xor cl,cl
+    mov ax,clone_app_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET hook_open_app
-        mov edi,OFFSET hook_open_app_name
-        xor cl,cl
-        mov ax,hook_open_app_nr
-        RegisterOsGate
+    mov si,OFFSET hook_open_app
+    mov di,OFFSET hook_open_app_name
+    xor cl,cl
+    mov ax,hook_open_app_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET hook_close_app
-        mov edi,OFFSET hook_close_app_name
-        xor cl,cl
-        mov ax,hook_close_app_nr
-        RegisterOsGate
+    mov si,OFFSET hook_close_app
+    mov di,OFFSET hook_close_app_name
+    xor cl,cl
+    mov ax,hook_close_app_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET set_module
-        mov edi,OFFSET set_module_name
-        xor cl,cl
-        mov ax,set_module_nr
-        RegisterOsGate
+    mov si,OFFSET set_module
+    mov di,OFFSET set_module_name
+    xor cl,cl
+    mov ax,set_module_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET reset_module
-        mov edi,OFFSET reset_module_name
-        xor cl,cl
-        mov ax,reset_module_nr
-        RegisterOsGate
+    mov si,OFFSET reset_module
+    mov di,OFFSET reset_module_name
+    xor cl,cl
+    mov ax,reset_module_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET create_module
-        mov edi,OFFSET create_module_name
-        xor cl,cl
-        mov ax,create_module_nr
-        RegisterOsGate
+    mov si,OFFSET create_module
+    mov di,OFFSET create_module_name
+    xor cl,cl
+    mov ax,create_module_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET free_module
-        mov edi,OFFSET free_module_name
-        xor cl,cl
-        mov ax,free_module_nr
-        RegisterOsGate
+    mov si,OFFSET free_module
+    mov di,OFFSET free_module_name
+    xor cl,cl
+    mov ax,free_module_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET deref_module_handle
-        mov edi,OFFSET deref_module_handle_name
-        xor cl,cl
-        mov ax,deref_module_handle_nr
-        RegisterOsGate
+    mov si,OFFSET deref_module_handle
+    mov di,OFFSET deref_module_handle_name
+    xor cl,cl
+    mov ax,deref_module_handle_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET alias_module_handle
-        mov edi,OFFSET alias_module_handle_name
-        xor cl,cl
-        mov ax,alias_module_handle_nr
-        RegisterOsGate
+    mov si,OFFSET alias_module_handle
+    mov di,OFFSET alias_module_handle_name
+    xor cl,cl
+    mov ax,alias_module_handle_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET set_options
-        mov edi,OFFSET set_options_name
-        xor cl,cl
-        mov ax,set_options_nr
-        RegisterOsGate
+    mov si,OFFSET set_options
+    mov di,OFFSET set_options_name
+    xor cl,cl
+    mov ax,set_options_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET get_exe_name
-        mov edi,OFFSET get_exe_name_name
-        mov dx,virt_es_in
-        mov ax,get_exe_name_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET get_exe_name
+    mov di,OFFSET get_exe_name_name
+    mov dx,virt_es_in
+    mov ax,get_exe_name_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_cmd_line
-        mov edi,OFFSET get_cmd_line_name
-        mov dx,virt_es_in
-        mov ax,get_cmd_line_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET get_cmd_line
+    mov di,OFFSET get_cmd_line_name
+    mov dx,virt_es_in
+    mov ax,get_cmd_line_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_env
-        mov edi,OFFSET get_env_name
-        mov dx,virt_es_in
-        mov ax,get_env_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET get_env
+    mov di,OFFSET get_env_name
+    mov dx,virt_es_in
+    mov ax,get_env_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_options
-        mov edi,OFFSET get_options_name
-        mov dx,virt_es_in
-        mov ax,get_options_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET get_options
+    mov di,OFFSET get_options_name
+    mov dx,virt_es_in
+    mov ax,get_options_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET allocate_app_mem
-        mov edi,OFFSET allocate_app_mem_name
-        mov dx,virt_es_out
-        mov ax,allocate_app_mem_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET allocate_app_mem
+    mov di,OFFSET allocate_app_mem_name
+    mov dx,virt_es_out
+    mov ax,allocate_app_mem_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET free_app_mem
-        mov edi,OFFSET free_app_mem_name
-        mov dx,virt_es_in
-        mov ax,free_app_mem_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET free_app_mem
+    mov di,OFFSET free_app_mem_name
+    mov dx,virt_es_in
+    mov ax,free_app_mem_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET allocate_debug_app_mem
-        mov edi,OFFSET allocate_debug_app_mem_name
-        mov dx,virt_es_out
-        mov ax,allocate_debug_app_mem_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET allocate_debug_app_mem
+    mov di,OFFSET allocate_debug_app_mem_name
+    mov dx,virt_es_out
+    mov ax,allocate_debug_app_mem_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET free_debug_app_mem
-        mov edi,OFFSET free_debug_app_mem_name
-        mov dx,virt_es_in
-        mov ax,free_debug_app_mem_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET free_debug_app_mem
+    mov di,OFFSET free_debug_app_mem_name
+    mov dx,virt_es_in
+    mov ax,free_debug_app_mem_nr
+    RegisterBimodalUserGate
 ;
-        mov ebx,OFFSET load_dll16
-        mov esi,OFFSET load_dll32
-        mov edi,OFFSET load_dll_name
-        mov dx,virt_es_in
-        mov ax,load_dll_nr
-        RegisterUserGateNew
+    mov bx,OFFSET load_dll16
+    mov si,OFFSET load_dll32
+    mov di,OFFSET load_dll_name
+    mov dx,virt_es_in
+    mov ax,load_dll_nr
+    RegisterUserGate
 ;
-        mov esi,OFFSET free_dll
-        mov edi,OFFSET free_dll_name
-        xor dx,dx
-        mov ax,free_dll_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET free_dll
+    mov di,OFFSET free_dll_name
+    xor dx,dx
+    mov ax,free_dll_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_module_focus_key
-        mov edi,OFFSET get_module_focus_key_name
-        xor dx,dx
-        mov ax,get_module_focus_key_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET get_module_focus_key
+    mov di,OFFSET get_module_focus_key_name
+    xor dx,dx
+    mov ax,get_module_focus_key_nr
+    RegisterBimodalUserGate
 ;
-        mov ebx,OFFSET get_module_proc16
-        mov esi,OFFSET get_module_proc32
-        mov edi,OFFSET get_module_proc_name
-        mov dx,virt_ds_out OR virt_es_in
-        mov ax,get_module_proc_nr
-        RegisterUserGateNew
+    mov bx,OFFSET get_module_proc16
+    mov si,OFFSET get_module_proc32
+    mov di,OFFSET get_module_proc_name
+    mov dx,virt_ds_out OR virt_es_in
+    mov ax,get_module_proc_nr
+    RegisterUserGate
 ;
-        mov esi,OFFSET get_module_resource
-        mov edi,OFFSET get_module_resource_name
-        xor dx,dx
-        mov ax,get_module_resource_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET get_module_resource
+    mov di,OFFSET get_module_resource_name
+    xor dx,dx
+    mov ax,get_module_resource_nr
+    RegisterBimodalUserGate
 ;
-        mov ebx,OFFSET get_module_name16
-        mov esi,OFFSET get_module_name32
-        mov edi,OFFSET get_module_name_name
-        mov dx,virt_es_in
-        mov ax,get_module_name_nr
-        RegisterUserGateNew
+    mov bx,OFFSET get_module_name16
+    mov si,OFFSET get_module_name32
+    mov di,OFFSET get_module_name_name
+    mov dx,virt_es_in
+    mov ax,get_module_name_nr
+    RegisterUserGate
 ;
-        mov esi,OFFSET add_wait_for_debug_event
-        mov edi,OFFSET add_wait_for_debug_event_name
-        xor dx,dx
-        mov ax,add_wait_for_debug_event_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET add_wait_for_debug_event
+    mov di,OFFSET add_wait_for_debug_event_name
+    xor dx,dx
+    mov ax,add_wait_for_debug_event_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_debug_event
-        mov edi,OFFSET get_debug_event_name
-        xor dx,dx
-        mov ax,get_debug_event_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET get_debug_event
+    mov di,OFFSET get_debug_event_name
+    xor dx,dx
+    mov ax,get_debug_event_nr
+    RegisterBimodalUserGate
 ;
-        mov ebx,OFFSET get_debug_event_data16
-        mov esi,OFFSET get_debug_event_data32
-        mov edi,OFFSET get_debug_event_data_name
-        mov dx,virt_es_in
-        mov ax,get_debug_event_data_nr
-        RegisterUserGateNew
+    mov bx,OFFSET get_debug_event_data16
+    mov si,OFFSET get_debug_event_data32
+    mov di,OFFSET get_debug_event_data_name
+    mov dx,virt_es_in
+    mov ax,get_debug_event_data_nr
+    RegisterUserGate
 ;
-        mov esi,OFFSET clear_debug_event
-        mov edi,OFFSET clear_debug_event_name
-        xor dx,dx
-        mov ax,clear_debug_event_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET clear_debug_event
+    mov di,OFFSET clear_debug_event_name
+    xor dx,dx
+    mov ax,clear_debug_event_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET continue_debug_event
-        mov edi,OFFSET continue_debug_event_name
-        xor dx,dx
-        mov ax,continue_debug_event_nr
-        RegisterBimodalUserGateNew
+    mov si,OFFSET continue_debug_event
+    mov di,OFFSET continue_debug_event_name
+    xor dx,dx
+    mov ax,continue_debug_event_nr
+    RegisterBimodalUserGate
 ;
-        mov bx,app_data_sel
-        mov eax,SIZE app_data_seg
-        AllocateFixedSystemMem
-        mov ds,bx
-        xor ax,ax
-        mov ds:open_app_hooks,al
-        mov ds:close_app_hooks,al
+    mov bx,app_data_sel
+    mov eax,SIZE app_data_seg
+    AllocateFixedSystemMem
+    mov ds,bx
+    xor ax,ax
+    mov ds:open_app_hooks,al
+    mov ds:close_app_hooks,al
 ;
-        popa
-        pop es
-        pop ds
-        ret
-init_app        ENDP
+    popa
+    pop es
+    pop ds
+    ret
+init_app    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   HookOpenApp
+;           NAME:           HookOpenApp
 ;
-;               DESCRIPTION:    Register callback for open app
+;           DESCRIPTION:    Register callback for open app
 ;
-;               PARAMETERS:             ES:DI           CALLBACK ADDRESS
+;           PARAMETERS:         ES:DI       CALLBACK ADDRESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hook_open_app_name      DB 'Hook Open App',0
 
 hook_open_app   PROC far
-        push ds
-        push ax
-        push bx
-        mov ax,app_data_sel
-        mov ds,ax
-        mov al,ds:open_app_hooks
-        mov bl,al
-        xor bh,bh
-        shl bx,2
-        add bx,OFFSET open_app_arr
-        mov [bx],di
-        mov [bx+2],es
-        inc al
-        mov ds:open_app_hooks,al
-        pop bx
-        pop ax
-        pop ds
-        ret
+    push ds
+    push ax
+    push bx
+    mov ax,app_data_sel
+    mov ds,ax
+    mov al,ds:open_app_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,2
+    add bx,OFFSET open_app_arr
+    mov [bx],di
+    mov [bx+2],es
+    inc al
+    mov ds:open_app_hooks,al
+    pop bx
+    pop ax
+    pop ds
+    ret
 hook_open_app   ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   HookCloseApp
+;           NAME:           HookCloseApp
 ;
-;               DESCRIPTION:    Register callback for close app
+;           DESCRIPTION:    Register callback for close app
 ;
-;               PARAMETERS:             ES:DI           CALLBACK ADDRESS
+;           PARAMETERS:         ES:DI       CALLBACK ADDRESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hook_close_app_name     DB 'Hook Close App',0
 
 hook_close_app  PROC far
-        push ds
-        push ax
-        push bx
-        mov ax,app_data_sel
-        mov ds,ax
-        mov al,ds:close_app_hooks
-        mov bl,al
-        xor bh,bh
-        shl bx,2
-        add bx,OFFSET close_app_arr
-        mov [bx],di
-        mov [bx+2],es
-        inc al
-        mov ds:close_app_hooks,al
-        pop bx
-        pop ax
-        pop ds
-        ret
+    push ds
+    push ax
+    push bx
+    mov ax,app_data_sel
+    mov ds,ax
+    mov al,ds:close_app_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,2
+    add bx,OFFSET close_app_arr
+    mov [bx],di
+    mov [bx+2],es
+    inc al
+    mov ds:close_app_hooks,al
+    pop bx
+    pop ax
+    pop ds
+    ret
 hook_close_app  ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   run_open_hooks
+;           NAME:           run_open_hooks
 ;
-;               DESCRIPTION:    Run open app hooks
+;           DESCRIPTION:    Run open app hooks
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 run_open_hooks  Proc near
-        push ds
-        push ax
-        push cx
+    push ds
+    push ax
+    push cx
 ;
     GetThread
     mov ds,ax
@@ -393,130 +396,130 @@ run_open_hooks  Proc near
 ;       
     mov ds:app_fork_id,0
     mov ds:app_handle,0
-        mov ds:app_get_exe_proc,0
-        mov ds:app_get_cmd_line_proc,0
-        mov ds:app_get_env_proc,0
-        mov ds:app_get_options_proc,0
-        mov ds:app_set_options_proc,0
-        mov ds:app_allocate_mem_proc,0
-        mov ds:app_free_mem_proc,0
-        mov ds:app_debug_allocate_mem_proc,0
-        mov ds:app_debug_free_mem_proc,0
-        mov ds:app_init_thread_proc,0
-        mov ds:app_free_thread_proc,0
-        mov ds:app_spawn_proc,0
-        mov ds:app_clone_proc,0
-        mov ds:app_close_proc,0
-        mov ds:app_load_dll_proc,0
+    mov ds:app_get_exe_proc,0
+    mov ds:app_get_cmd_line_proc,0
+    mov ds:app_get_env_proc,0
+    mov ds:app_get_options_proc,0
+    mov ds:app_set_options_proc,0
+    mov ds:app_allocate_mem_proc,0
+    mov ds:app_free_mem_proc,0
+    mov ds:app_debug_allocate_mem_proc,0
+    mov ds:app_debug_free_mem_proc,0
+    mov ds:app_init_thread_proc,0
+    mov ds:app_free_thread_proc,0
+    mov ds:app_spawn_proc,0
+    mov ds:app_clone_proc,0
+    mov ds:app_close_proc,0
+    mov ds:app_load_dll_proc,0
 ;
     InitSection ds:app_lib_section
-        mov ds:app_env,0
-        mov ds:app_name,0
-        mov ds:app_cmd_line,0
-        mov ds:app_options,0
-        mov ds:app_mem_blocks,0
+    mov ds:app_env,0
+    mov ds:app_name,0
+    mov ds:app_cmd_line,0
+    mov ds:app_options,0
+    mov ds:app_mem_blocks,0
 ;
-        mov ds:app_vm_psp_seg,0
-        mov ds:app_pm_psp_sel,0
-        mov ds:app_vm_mem_strat,0
-        mov ds:app_vm_dta_seg,0
-        mov ds:app_pm_dta_sel,0
-        mov ds:app_find_sel,0
-        mov ds:app_psp_mode,0
-        mov ds:app_dta_mode,0
+    mov ds:app_vm_psp_seg,0
+    mov ds:app_pm_psp_sel,0
+    mov ds:app_vm_mem_strat,0
+    mov ds:app_vm_dta_seg,0
+    mov ds:app_pm_dta_sel,0
+    mov ds:app_find_sel,0
+    mov ds:app_psp_mode,0
+    mov ds:app_dta_mode,0
 ;
-        mov ax,app_data_sel
-        mov ds,ax
-        mov cl,ds:open_app_hooks
-        or cl,cl
-        je trap_open_app_done
+    mov ax,app_data_sel
+    mov ds,ax
+    mov cl,ds:open_app_hooks
+    or cl,cl
+    je trap_open_app_done
 ;
-        mov bx,OFFSET open_app_arr
+    mov bx,OFFSET open_app_arr
 
 trap_open_app_loop:
-        push ds
-        push bx
-        push cx
-        call dword ptr [bx]
-        pop cx
-        pop bx
-        pop ds
-        add bx,4
-        dec cl
-        jnz trap_open_app_loop
+    push ds
+    push bx
+    push cx
+    call dword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,4
+    dec cl
+    jnz trap_open_app_loop
 
 trap_open_app_done:
-        pop cx
-        pop ax
-        pop ds
-        ret
+    pop cx
+    pop ax
+    pop ds
+    ret
 run_open_hooks  Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   init_process_app
+;           NAME:           init_process_app
 ;
-;               DESCRIPTION:    Init per-process data
+;           DESCRIPTION:    Init per-process data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_process_app
+    public init_process_app
 
-init_process_app        PROC near
-        call create_ldt
-        mov al,16
-        SetBitness
-        call run_open_hooks
-        ret
-init_process_app        ENDP
+init_process_app    PROC near
+    call create_ldt
+    mov al,16
+    SetBitness
+    call run_open_hooks
+    ret
+init_process_app    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   OpenApp
+;           NAME:           OpenApp
 ;
-;               DESCRIPTION:    Open app
+;           DESCRIPTION:    Open app
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_app_name   DB 'Open App',0
 
-open_app        PROC far
-        push ds
-        push es
-        push fs
-        pushad
+open_app    PROC far
+    push ds
+    push es
+    push fs
+    pushad
 ;
-        GetThread
-        mov ds,ax
+    GetThread
+    mov ds,ax
 ;
     mov eax,SIZE app_seg
     AllocateSmallGlobalMem
     mov bx,es
-        mov ax,ds:p_app_sel
-        mov es:app_next,ax
-        mov ds:p_app_sel,bx
+    mov ax,ds:p_app_sel
+    mov es:app_next,ax
+    mov ds:p_app_sel,bx
 ;
-        call create_ldt
-        call run_open_hooks
+    call create_ldt
+    call run_open_hooks
 ;
-        popad
-        pop fs
-        pop es
-        pop ds
-        ret
-open_app        ENDP
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+open_app    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CloseApp
+;           NAME:           CloseApp
 ;
-;               DESCRIPTION:    Close app
+;           DESCRIPTION:    Close app
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -526,87 +529,87 @@ close_app       PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_close_proc
-        or eax,eax
-        jz close_proc_handled
+    mov eax,ds:app_close_proc
+    or eax,eax
+    jz close_proc_handled
 ;
-        call ds:app_close_proc
+    call ds:app_close_proc
 
 close_proc_handled:
-        mov ax,app_data_sel
-        mov ds,ax
-        mov cl,ds:close_app_hooks
-        or cl,cl
-        je trap_close_app_done
+    mov ax,app_data_sel
+    mov ds,ax
+    mov cl,ds:close_app_hooks
+    or cl,cl
+    je trap_close_app_done
 ;
-        mov bx,OFFSET close_app_arr
+    mov bx,OFFSET close_app_arr
 
 trap_close_app_loop:
-        push ds
-        push bx
-        push cx
-        call dword ptr [bx]
-        pop cx
-        pop bx
-        pop ds
-        add bx,4
-        dec cl
-        jnz trap_close_app_loop
+    push ds
+    push bx
+    push cx
+    call dword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,4
+    dec cl
+    jnz trap_close_app_loop
 
 trap_close_app_done:
-        xor ax,ax
-        mov ds,ax
-        mov es,ax
-        mov fs,ax
-        mov gs,ax
-        call destroy_ldt
-;
-        GetThread
-        mov ds,ax
-        mov es,ds:p_app_sel
-        movzx eax,es:app_next
-        or ax,ax
-        jz close_app_last
-;
-        mov fs,ax
-        mov ds:p_app_sel,ax
-
-close_app_last:
-        FreeMem
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    call destroy_ldt
 ;
     GetThread
-        mov es,ax
-    mov es,es:p_tss_data_sel
-        cli
-        mov bx,fs
-        or bx,bx
-        jz close_app_ldt_data
+    mov ds,ax
+    mov es,ds:p_app_sel
+    movzx eax,es:app_next
+    or ax,ax
+    jz close_app_last
 ;
-        mov bx,fs:app_ldt_data_sel
+    mov fs,ax
+    mov ds:p_app_sel,ax
+
+close_app_last:
+    FreeMem
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_tss_data_sel
+    cli
+    mov bx,fs
+    or bx,bx
+    jz close_app_ldt_data
+;
+    mov bx,fs:app_ldt_data_sel
 
 close_app_ldt_data:
-        mov ds:p_ldt_sel,bx
+    mov ds:p_ldt_sel,bx
 ;
-        mov bx,fs
-        or bx,bx
-        jz close_app_ldt
+    mov bx,fs
+    or bx,bx
+    jz close_app_ldt
 ;
-        mov bx,fs:app_ldt_sel
+    mov bx,fs:app_ldt_sel
 
 close_app_ldt:
-        mov es:tss_ldt,bx
-        lldt bx
-        sti
-        ret
+    mov es:tss_ldt,bx
+    lldt bx
+    sti
+    ret
 close_app       ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetModule
+;           NAME:           SetModule
 ;
-;               DESCRIPTION:    Set module for active process
+;           DESCRIPTION:    Set module for active process
 ;
 ;       PARAMETERS:     ES  Module sel
 ;
@@ -621,11 +624,11 @@ set_module      PROC far
     push dx
 ;
     mov dx,es
-        mov cx,SIZE module_handle_seg
-        AllocateHandle
-        mov [bx].mh_sel,dx
-        mov [bx].hh_sign,MODULE_HANDLE
-        mov bx,[bx].hh_handle
+    mov cx,SIZE module_handle_seg
+    AllocateHandle
+    mov [bx].mh_sel,dx
+    mov [bx].hh_sign,MODULE_HANDLE
+    mov bx,[bx].hh_handle
 ;
     mov ds,dx
     InitSection ds:mod_section
@@ -644,16 +647,16 @@ set_module      PROC far
     pop bx
     pop ax
     pop ds
-        ret
+    ret
 set_module      ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ResetModule
+;           NAME:           ResetModule
 ;
-;               DESCRIPTION:    Reset module for active process
+;           DESCRIPTION:    Reset module for active process
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -670,9 +673,9 @@ reset_module    PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc reset_mod_handle_ok
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc reset_mod_handle_ok
 ;
     mov ax,[bx].mh_sel
     or ax,ax
@@ -692,7 +695,7 @@ reset_mod_loop:
     jmp reset_mod_loop
 
 reset_mod_free_mod:
-        FreeHandle
+    FreeHandle
 
 reset_mod_handle_ok:    
     pop dx
@@ -700,16 +703,16 @@ reset_mod_handle_ok:
     pop ax
     pop es
     pop ds
-        ret
+    ret
 reset_module    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CreateModule
+;           NAME:           CreateModule
 ;
-;               DESCRIPTION:    Create new module for active process
+;           DESCRIPTION:    Create new module for active process
 ;
 ;       PARAMETERS:     ES  Module sel
 ;
@@ -728,11 +731,11 @@ create_module   PROC far
     mov ds,ax
     InitSection ds:mod_section
 ;    
-        mov cx,SIZE module_handle_seg
-        AllocateHandle
-        mov [bx].mh_sel,es
-        mov [bx].hh_sign,MODULE_HANDLE
-        mov bx,[bx].hh_handle
+    mov cx,SIZE module_handle_seg
+    AllocateHandle
+    mov [bx].mh_sel,es
+    mov [bx].hh_sign,MODULE_HANDLE
+    mov bx,[bx].hh_handle
 ;
     mov es:mod_handle,bx
     mov es:mod_list,0
@@ -742,9 +745,9 @@ create_module   PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc create_module_done
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc create_module_done
 ;
     mov ax,[bx].mh_sel
     or ax,ax
@@ -756,29 +759,29 @@ create_module   PROC far
     mov ds:mod_list,es
     mov es:mod_next,ax
     LeaveSection ds:mod_section
-        
+    
 create_module_done:    
     pop dx
     pop bx
     pop ax
     pop es
     pop ds
-        ret
+    ret
 create_module   ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   FreeModule
+;           NAME:           FreeModule
 ;
-;               DESCRIPTION:    Free module for active process
+;           DESCRIPTION:    Free module for active process
 ;
 ;       PARAMETERS:     ES      Module sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_module_name        DB 'Free Module',0
+free_module_name    DB 'Free Module',0
 
 free_module     PROC far
     push ds
@@ -793,9 +796,9 @@ free_module     PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc free_module_done
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc free_module_done
 ;
     mov si,[bx].mh_sel
     or si,si
@@ -834,16 +837,16 @@ free_mod_in_list:
     mov bx,ds:mod_handle
 
 free_mod_handle:
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc free_module_leave
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc free_module_leave
 ;
-        FreeHandle
+    FreeHandle
 
 free_module_leave:      
     mov ds,si
     LeaveSection ds:mod_section
-            
+        
 free_module_done:
     pop si
     pop dx
@@ -851,408 +854,408 @@ free_module_done:
     pop ax
     pop es
     pop ds
-        ret
+    ret
 free_module     ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetExeName
+;           NAME:           GetExeName
 ;
-;               DESCRIPTION:    Get name of executable file
+;           DESCRIPTION:    Get name of executable file
 ;
-;               RETURNS:                ES:(E)DI                Name
+;           RETURNS:        ES:(E)DI        Name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_exe_name_name       DB 'Get Exe Name',0
 
 get_exe_name    PROC far
-        push ds
+    push ds
 ;
-        push eax
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_get_exe_proc
-        or eax,eax
-        pop eax
-        stc
-        jz get_exe_name_done
+    mov eax,ds:app_get_exe_proc
+    or eax,eax
+    pop eax
+    stc
+    jz get_exe_name_done
 ;
-        call ds:app_get_exe_proc
+    call ds:app_get_exe_proc
 
 get_exe_name_done:
-        pop ds
-        retf32
+    pop ds
+    retf32
 get_exe_name    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetCmdLine
+;           NAME:           GetCmdLine
 ;
-;               DESCRIPTION:    Get command line
+;           DESCRIPTION:    Get command line
 ;
-;               RETURNS:                ES:(E)DI                Command line
+;           RETURNS:        ES:(E)DI        Command line
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_cmd_line_name       DB 'Get Cmd Line',0
 
 get_cmd_line    PROC far
-        push ds
+    push ds
 ;
-        push eax
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_get_cmd_line_proc
-        or eax,eax
-        pop eax
-        stc
-        jz get_cmd_line_done
+    mov eax,ds:app_get_cmd_line_proc
+    or eax,eax
+    pop eax
+    stc
+    jz get_cmd_line_done
 ;
-        call ds:app_get_cmd_line_proc
+    call ds:app_get_cmd_line_proc
 
 get_cmd_line_done:
-        pop ds
-        retf32
+    pop ds
+    retf32
 get_cmd_line    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetEnvironment
+;           NAME:           GetEnvironment
 ;
-;               DESCRIPTION:    Get environment
+;           DESCRIPTION:    Get environment
 ;
-;               RETURNS:                ES:(E)DI                Name
+;           RETURNS:        ES:(E)DI        Name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_env_name    DB 'Get Environment',0
 
 get_env PROC far
-        push ds
+    push ds
 ;
-        push eax
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_get_env_proc
-        or eax,eax
-        pop eax
-        stc
-        jz get_env_done
+    mov eax,ds:app_get_env_proc
+    or eax,eax
+    pop eax
+    stc
+    jz get_env_done
 ;
-        call ds:app_get_env_proc
+    call ds:app_get_env_proc
 
 get_env_done:
-        pop ds
-        retf32
+    pop ds
+    retf32
 get_env ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetOptions
+;           NAME:           SetOptions
 ;
-;               DESCRIPTION:    Set options
+;           DESCRIPTION:    Set options
 ;
-;               RETURNS:                ES  option selector or 0
+;           RETURNS:        ES  option selector or 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_options_name        DB 'Set Options',0
+set_options_name    DB 'Set Options',0
 
 set_options     PROC far
-        push ds
+    push ds
 ;
-        push eax
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_set_options_proc
-        or eax,eax
-        pop eax
-        stc
-        jz set_options_done
+    mov eax,ds:app_set_options_proc
+    or eax,eax
+    pop eax
+    stc
+    jz set_options_done
 ;
-        call ds:app_set_options_proc
+    call ds:app_set_options_proc
 
 set_options_done:
-        pop ds
-        ret
+    pop ds
+    ret
 set_options     ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetOptions
+;           NAME:           GetOptions
 ;
-;               DESCRIPTION:    Get options
+;           DESCRIPTION:    Get options
 ;
-;               RETURNS:                ES:(E)DI                Options
+;           RETURNS:        ES:(E)DI        Options
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_options_name        DB 'Get Options',0
+get_options_name    DB 'Get Options',0
 
 get_options     PROC far
-        push ds
+    push ds
 ;
-        push eax
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_get_options_proc
-        or eax,eax
-        pop eax
-        stc
-        jz get_options_done
+    mov eax,ds:app_get_options_proc
+    or eax,eax
+    pop eax
+    stc
+    jz get_options_done
 ;
-        call ds:app_get_options_proc
+    call ds:app_get_options_proc
 
 get_options_done:
-        pop ds
-        retf32
+    pop ds
+    retf32
 get_options     ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   AllocateAppMem
+;           NAME:           AllocateAppMem
 ;
-;               DESCRIPTION:    Allocate application memory
+;           DESCRIPTION:    Allocate application memory
 ;
-;               PARAMETERS:             EAX                     Size
+;           PARAMETERS:         EAX             Size
 ;
-;               RETURNS:                ES / (E)DX      Memory block
+;           RETURNS:        ES / (E)DX      Memory block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_app_mem_name   DB 'Allocate App Mem',0
 
-allocate_app_mem        PROC far
-        push ds
+allocate_app_mem    PROC far
+    push ds
 ;
-        push eax
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_allocate_mem_proc
-        or eax,eax
-        pop eax
-        jz allocate_mem_default
+    mov eax,ds:app_allocate_mem_proc
+    or eax,eax
+    pop eax
+    jz allocate_mem_default
 ;
-        call ds:app_allocate_mem_proc
-        jmp allocate_mem_done
+    call ds:app_allocate_mem_proc
+    jmp allocate_mem_done
 
 allocate_mem_default:
-        AllocateLocalMem
+    AllocateLocalMem
 
 allocate_mem_done:
-        pop ds
-        retf32
-allocate_app_mem        ENDP
+    pop ds
+    retf32
+allocate_app_mem    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   FreeAppMem
+;           NAME:           FreeAppMem
 ;
-;               DESCRIPTION:    Free application memory
+;           DESCRIPTION:    Free application memory
 ;
-;               PARAMETERS:             ES / (E)DX      Memory block
+;           PARAMETERS:         ES / (E)DX      Memory block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_app_mem_name       DB 'Free App Mem',0
 
 free_app_mem    PROC far
-        push ds
+    push ds
 ;
-        push eax
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_free_mem_proc
-        or eax,eax
-        pop eax
-        jz free_mem_default
+    mov eax,ds:app_free_mem_proc
+    or eax,eax
+    pop eax
+    jz free_mem_default
 ;
-        call ds:app_free_mem_proc
-        jmp free_mem_done
+    call ds:app_free_mem_proc
+    jmp free_mem_done
 
 free_mem_default:
-        FreeMem
+    FreeMem
 
 free_mem_done:
-        pop ds
-        retf32
+    pop ds
+    retf32
 free_app_mem    ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   AllocateDebugAppMem
+;           NAME:           AllocateDebugAppMem
 ;
-;               DESCRIPTION:    Allocate application memory, debug mode
+;           DESCRIPTION:    Allocate application memory, debug mode
 ;
-;               PARAMETERS:             EAX                     Size
+;           PARAMETERS:         EAX             Size
 ;
-;               RETURNS:                ES / (E)DX      Memory block
+;           RETURNS:        ES / (E)DX      Memory block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_debug_app_mem_name     DB 'Allocate Debug App Mem',0
 
 allocate_debug_app_mem  PROC far
-        push ds
+    push ds
 ;
-        push eax
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_debug_allocate_mem_proc
-        or eax,eax
-        pop eax
-        jz allocate_debug_mem_norm
+    mov eax,ds:app_debug_allocate_mem_proc
+    or eax,eax
+    pop eax
+    jz allocate_debug_mem_norm
 ;
-        call ds:app_debug_allocate_mem_proc
-        jmp allocate_debug_mem_done
+    call ds:app_debug_allocate_mem_proc
+    jmp allocate_debug_mem_done
 
 allocate_debug_mem_norm:
     push eax
-        mov eax,ds:app_allocate_mem_proc
-        or eax,eax
-        pop eax
-        jz allocate_debug_mem_default
+    mov eax,ds:app_allocate_mem_proc
+    or eax,eax
+    pop eax
+    jz allocate_debug_mem_default
 ;
-        call ds:app_allocate_mem_proc
-        jmp allocate_debug_mem_done
+    call ds:app_allocate_mem_proc
+    jmp allocate_debug_mem_done
 
 allocate_debug_mem_default:
-        AllocateLocalMem
+    AllocateLocalMem
 
 allocate_debug_mem_done:
-        pop ds
-        retf32
+    pop ds
+    retf32
 allocate_debug_app_mem  ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   FreeDebugAppMem
+;           NAME:           FreeDebugAppMem
 ;
-;               DESCRIPTION:    Free application memory, debug mode
+;           DESCRIPTION:    Free application memory, debug mode
 ;
-;               PARAMETERS:             ES / (E)DX      Memory block
+;           PARAMETERS:         ES / (E)DX      Memory block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_debug_app_mem_name DB 'Free Debug App Mem',0
 
 free_debug_app_mem      PROC far
-        push ds
+    push ds
 ;
-        push eax
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_debug_free_mem_proc
-        or eax,eax
-        pop eax
-        jz free_debug_mem_norm
+    mov eax,ds:app_debug_free_mem_proc
+    or eax,eax
+    pop eax
+    jz free_debug_mem_norm
 ;
-        call ds:app_debug_free_mem_proc
-        jmp free_debug_mem_done
+    call ds:app_debug_free_mem_proc
+    jmp free_debug_mem_done
 
 free_debug_mem_norm:
     push eax
-        mov eax,ds:app_free_mem_proc
-        or eax,eax
-        pop eax
-        jz free_debug_mem_default
+    mov eax,ds:app_free_mem_proc
+    or eax,eax
+    pop eax
+    jz free_debug_mem_default
 ;
-        call ds:app_free_mem_proc
-        jmp free_debug_mem_done
+    call ds:app_free_mem_proc
+    jmp free_debug_mem_done
 
 free_debug_mem_default:
-        FreeMem
+    FreeMem
 
 free_debug_mem_done:
-        pop ds
-        retf32
+    pop ds
+    retf32
 free_debug_app_mem      ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:               CloneApp
+;           NAME:           CloneApp
 ;
-;               DESCRIPTION:    Clone running application (fork)
+;           DESCRIPTION:    Clone running application (fork)
 ;
-;       RETURNS:        ES      Clone page arr
+;       RETURNS:    ES      Clone page arr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clone_app_name  DB 'Clone App',0
 
 clone_app       PROC far
-        push ds
-        push eax
+    push ds
+    push eax
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_clone_proc
-        or eax,eax
-        stc
-        jz caDone
+    mov eax,ds:app_clone_proc
+    or eax,eax
+    stc
+    jz caDone
 ;
     call ds:app_clone_proc
 
 caDone:
     pop eax
-        pop ds
-        ret
+    pop ds
+    ret
 clone_app       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DerefModuleHandle
+;           NAME:           DerefModuleHandle
 ;
-;               DESCRIPTION:    Dereference module handle
+;           DESCRIPTION:    Dereference module handle
 ;
-;       PARAMETERS:             BX      Module handle
+;       PARAMETERS:         BX      Module handle
 ;
-;               RETURNS:                BX              Lib sel
+;           RETURNS:        BX          Lib sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-deref_module_handle_name        DB 'Deref Module Handle',0
+deref_module_handle_name    DB 'Deref Module Handle',0
 
 deref_module_handle  Proc far
     push ds
     push ax
 ;
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc deref_module_done
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc deref_module_done
 ;
     mov bx,[bx].mh_sel
     or bx,bx
@@ -1270,17 +1273,17 @@ deref_module_handle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AliasModuleHandle
+;           NAME:           AliasModuleHandle
 ;
-;               DESCRIPTION:    Create an alias handle for module
+;           DESCRIPTION:    Create an alias handle for module
 ;
-;       PARAMETERS:             BX      Lib sel
+;       PARAMETERS:         BX      Lib sel
 ;
-;               RETURNS:                BX          Module handle
+;           RETURNS:        BX      Module handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-alias_module_handle_name        DB 'Alias Module Handle',0
+alias_module_handle_name    DB 'Alias Module Handle',0
 
 alias_module_handle  Proc far
     push ds
@@ -1289,12 +1292,12 @@ alias_module_handle  Proc far
     push dx
 ;
     mov dx,bx
-        mov cx,SIZE module_handle_seg
-        AllocateHandle
-        mov [bx].mh_sel,dx
-        mov [bx].hh_sign,MODULE_HANDLE
-        mov bx,[bx].hh_handle
-;        
+    mov cx,SIZE module_handle_seg
+    AllocateHandle
+    mov [bx].mh_sel,dx
+    mov [bx].hh_sign,MODULE_HANDLE
+    mov bx,[bx].hh_handle
+;    
     pop dx
     pop cx
     pop ax
@@ -1305,13 +1308,13 @@ alias_module_handle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   load_dll
+;           NAME:           load_dll
 ;
-;               DESCRIPTION:    Load DLL
+;           DESCRIPTION:    Load DLL
 ;
-;       PARAMETERS:             ES:(E)DI        Name of dll to load
+;       PARAMETERS:         ES:(E)DI    Name of dll to load
 ;
-;               RETURNS:                BX                  Module handle
+;           RETURNS:        BX          Module handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1324,13 +1327,13 @@ load_dll32  Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_load_dll_proc
-        or eax,eax
-        stc
-        jz load_dll32_done
+    mov eax,ds:app_load_dll_proc
+    or eax,eax
+    stc
+    jz load_dll32_done
 ;
-        call ds:app_load_dll_proc
-        jc load_dll32_done
+    call ds:app_load_dll_proc
+    jc load_dll32_done
 ;
     push es
     mov es,bx
@@ -1352,13 +1355,13 @@ load_dll16  Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-        mov eax,ds:app_load_dll_proc
-        or eax,eax
-        stc
-        jz load_dll16_done
+    mov eax,ds:app_load_dll_proc
+    or eax,eax
+    stc
+    jz load_dll16_done
 ;
-        call ds:app_load_dll_proc
-        jc load_dll16_done
+    call ds:app_load_dll_proc
+    jc load_dll16_done
 ;
     push es
     mov es,bx
@@ -1375,11 +1378,11 @@ load_dll16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   free_dll
+;           NAME:           free_dll
 ;
-;               DESCRIPTION:    Free DLL
+;           DESCRIPTION:    Free DLL
 ;
-;       PARAMETERS:             BX              Module handle
+;       PARAMETERS:         BX          Module handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1391,9 +1394,9 @@ free_dll  Proc far
     push eax
     push bx
 ;    
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc free_dll_done
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc free_dll_done
 ;
     mov bx,[bx].mh_sel
     or bx,bx
@@ -1419,13 +1422,13 @@ free_dll  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetModuleFocusKey
+;           NAME:           GetModuleFocusKey
 ;
-;               DESCRIPTION:    Get module focus key
+;           DESCRIPTION:    Get module focus key
 ;
-;       PARAMETERS:             BX              Module handle
+;       PARAMETERS:         BX          Module handle
 ;
-;       RETURNS:        AL      Key
+;       RETURNS:    AL      Key
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1435,9 +1438,9 @@ get_module_focus_key  Proc far
     push ds
     push bx
 ;    
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc get_module_focus_done
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc get_module_focus_done
 ;
     mov bx,[bx].mh_sel
     or bx,bx
@@ -1457,14 +1460,14 @@ get_module_focus_key  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetModuleProc
+;           NAME:           GetModuleProc
 ;
-;               DESCRIPTION:    Get module procedure
+;           DESCRIPTION:    Get module procedure
 ;
-;       PARAMETERS:             BX              Module handle
-;                       ES:(E)DI        Proc name
+;       PARAMETERS:         BX          Module handle
+;               ES:(E)DI    Proc name
 ;
-;       RETURNS:        DS:(E)SI        Proc address
+;       RETURNS:    DS:(E)SI    Proc address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1474,9 +1477,9 @@ get_module_proc32  Proc far
     push eax
     push bx
 ;    
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc get_module_proc_done32
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc get_module_proc_done32
 ;
     mov bx,[bx].mh_sel
     or bx,bx
@@ -1503,9 +1506,9 @@ get_module_proc16  Proc far
     push edi
 ;    
     movzx edi,di
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc get_module_proc_done16
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc get_module_proc_done16
 ;
     mov bx,[bx].mh_sel
     or bx,bx
@@ -1530,29 +1533,29 @@ get_module_proc16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               GetModuleResource
+;           NAME:           GetModuleResource
 ;
-;               DESCRIPTION:    Get module resource
+;           DESCRIPTION:    Get module resource
 ;
-;       PARAMETERS:             BX                  Module handle
-;                       (E)AX           Resource handle
-;                       (E)DX           Resource type
+;       PARAMETERS:         BX          Module handle
+;               (E)AX       Resource handle
+;               (E)DX       Resource type
 ;
-;       RETURNS:        DS:(E)SI        Resource address
-;                       (E)CX       Resource size   
+;       RETURNS:    DS:(E)SI    Resource address
+;               (E)CX       Resource size   
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_module_resource_name        DB 'Get Module Resource',0
+get_module_resource_name    DB 'Get Module Resource',0
 
 get_module_resource  Proc far
     push bx
 ;    
     push ax
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        pop ax
-        jc get_resource_done
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    pop ax
+    jc get_resource_done
 ;
     mov bx,[bx].mh_sel
     or bx,bx
@@ -1575,15 +1578,15 @@ get_module_resource  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetModuleName
+;           NAME:           GetModuleName
 ;
-;               DESCRIPTION:    Get module name
+;           DESCRIPTION:    Get module name
 ;
-;       PARAMETERS:             BX                  Handle
-;                                               (E)CX       Max name size
-;                                               ES:(E)DI        Name buffer
-;                                               
-;               RETURNS:                (E)AX       Bytes copied
+;       PARAMETERS:         BX          Handle
+;                           (E)CX       Max name size
+;                           ES:(E)DI    Name buffer
+;                           
+;           RETURNS:        (E)AX       Bytes copied
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1593,9 +1596,9 @@ get_module_name32  Proc far
     push ds
     push bx
 ;    
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc get_module_name_done32
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc get_module_name_done32
 ;
     mov bx,[bx].mh_sel
     or bx,bx
@@ -1621,9 +1624,9 @@ get_module_name16  Proc far
     push edi
 ;    
     movzx edi,di
-        mov ax,MODULE_HANDLE
-        DerefHandle
-        jc get_module_name_done16
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc get_module_name_done16
 ;
     mov bx,[bx].mh_sel
     or bx,bx
@@ -1645,15 +1648,15 @@ get_module_name_done16:
     ret
 get_module_name16  Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   StartWaitForDebugEvent
+;           NAME:           StartWaitForDebugEvent
 ;
-;               DESCRIPTION:    Start a wait for debug event
+;           DESCRIPTION:    Start a wait for debug event
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1677,15 +1680,15 @@ start_wait_for_done:
     pop ds
     ret
 start_wait_for_debug_event Endp
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   StopWaitForDebugEvent
+;           NAME:           StopWaitForDebugEvent
 ;
-;               DESCRIPTION:    Stop a wait for debug event
+;           DESCRIPTION:    Stop a wait for debug event
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1710,15 +1713,15 @@ stop_wait_for_done:
     ret
 stop_wait_for_debug_event Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DummyClearDebugEvent
+;           NAME:           DummyClearDebugEvent
 ;
-;               DESCRIPTION:    Clear debug event
+;           DESCRIPTION:    Clear debug event
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1726,15 +1729,15 @@ dummy_clear_debug_event PROC far
     ret
 dummy_clear_debug_event Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   IsDebugEventIdle
+;           NAME:           IsDebugEventIdle
 ;
-;               DESCRIPTION:    Check if debug event is idle
+;           DESCRIPTION:    Check if debug event is idle
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1758,51 +1761,51 @@ is_idle_done:
     pop ds
     ret
 is_debug_event_idle Endp
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   AddWaitForDebugEvent
+;           NAME:           AddWaitForDebugEvent
 ;
-;               DESCRIPTION:    Add a wait for debug event
+;           DESCRIPTION:    Add a wait for debug event
 ;
-;               PARAMETERS:             AX      Process handle
-;                       BX      Wait handle
-;                       ECX     Signalled ID
+;           PARAMETERS:         AX      Process handle
+;               BX      Wait handle
+;               ECX     Signalled ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 add_wait_for_debug_event_name   DB 'Add Wait For Debug Event',0
 
 add_wait_tab:
-aw0     DW OFFSET start_wait_for_debug_event,           kernel_code
-aw1 DW OFFSET stop_wait_for_debug_event,                kernel_code
-aw2     DW OFFSET dummy_clear_debug_event,                      kernel_code
-aw3     DW OFFSET is_debug_event_idle,                  kernel_code
+aw0     DW OFFSET start_wait_for_debug_event,       kernel_code
+aw1 DW OFFSET stop_wait_for_debug_event,        kernel_code
+aw2     DW OFFSET dummy_clear_debug_event,              kernel_code
+aw3     DW OFFSET is_debug_event_idle,          kernel_code
 
-add_wait_for_debug_event        PROC far
-        push ds
-        push es
-        push eax
-        push dx
-        push di
+add_wait_for_debug_event    PROC far
+    push ds
+    push es
+    push eax
+    push dx
+    push di
 ;
     push bx
     mov bx,ax
     DerefProcHandle
-        pop bx
+    pop bx
     jc add_wait_done
 ;
     push ax
     mov ax,cs
     mov es,ax
-        mov ax,SIZE debug_event_wait_header - SIZE wait_obj_header
+    mov ax,SIZE debug_event_wait_header - SIZE wait_obj_header
     mov di,OFFSET add_wait_tab
     AddWait
     pop ax
     jc add_wait_done
 ;    
-        mov es:dew_lib_sel,ax
+    mov es:dew_lib_sel,ax
 
 add_wait_done:
     pop di
@@ -1810,21 +1813,21 @@ add_wait_done:
     pop eax
     pop es
     pop ds
-        retf32
-add_wait_for_debug_event        ENDP
+    retf32
+add_wait_for_debug_event    ENDP
 
-                                           
+                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetDebugEvent
+;           NAME:           GetDebugEvent
 ;
-;               DESCRIPTION:    Get current debug event
+;           DESCRIPTION:    Get current debug event
 ;
-;               PARAMETERS:             BX      Process handle
+;           PARAMETERS:         BX      Process handle
 ;
-;       RETURNS:        AX      Thread ID
-;                       BL      Event type  
+;       RETURNS:    AX      Thread ID
+;               BL      Event type  
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1836,7 +1839,7 @@ get_debug_event  Proc far
     push dx
 ;    
     DerefProcHandle
-        jc get_debug_event_done
+    jc get_debug_event_done
 ;
     mov bx,ax
     mov ds,ax
@@ -1857,12 +1860,12 @@ get_debug_event  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetDebugEventData
+;           NAME:           GetDebugEventData
 ;
-;               DESCRIPTION:    Get debug event data
+;           DESCRIPTION:    Get debug event data
 ;
-;       PARAMETERS:             BX                  Handle
-;                       ES:(E)DI        Event buffer
+;       PARAMETERS:         BX          Handle
+;               ES:(E)DI    Event buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1875,7 +1878,7 @@ get_debug_event_data32  Proc far
     push dx
 ;    
     DerefProcHandle
-        jc get_debug_event_data_done32
+    jc get_debug_event_data_done32
 ;
     mov ds,ax
     mov bx,ax
@@ -1900,9 +1903,9 @@ get_debug_event_data16  Proc far
     push bx
     push dx
     push edi
-;        
+;    
     DerefProcHandle
-        jc get_debug_event_data_done16
+    jc get_debug_event_data_done16
 ;
     mov bx,ax
     mov ds,ax
@@ -1925,11 +1928,11 @@ get_debug_event_data16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               ClearDebugEvent
+;           NAME:           ClearDebugEvent
 ;
-;               DESCRIPTION:    Clear debug event
+;           DESCRIPTION:    Clear debug event
 ;
-;       PARAMETERS:             BX              Module handle
+;       PARAMETERS:         BX          Module handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1941,9 +1944,9 @@ clear_debug_event  Proc far
     push bx
     push ecx
     push dx
-;        
+;    
     DerefProcHandle
-        jc clear_debug_event_done
+    jc clear_debug_event_done
 ;
     mov bx,ax
     mov ds,ax
@@ -1966,12 +1969,12 @@ clear_debug_event  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               ContinueDebugEvent
+;           NAME:           ContinueDebugEvent
 ;
-;               DESCRIPTION:    Continue debug event
+;           DESCRIPTION:    Continue debug event
 ;
-;       PARAMETERS:             BX              Module handle
-;                       EAX         Thread ID
+;       PARAMETERS:         BX          Module handle
+;               EAX     Thread ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1983,10 +1986,10 @@ continue_debug_event  Proc far
     push ecx
     push dx
     push esi
-;        
+;    
     mov esi,eax
     DerefProcHandle
-        jc continue_debug_event_done
+    jc continue_debug_event_done
 ;
     mov bx,ax
     mov ds,ax

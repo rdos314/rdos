@@ -1427,7 +1427,7 @@ smemgLint1Ok:
     mov edi,OFFSET get_processor_id_name
     xor dx,dx
     mov ax,get_processor_id_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;
     mov ax,cs
     mov ds,ax
@@ -1645,7 +1645,7 @@ smsrgLint1Ok:
     mov edi,OFFSET get_processor_id_name
     xor dx,dx
     mov ax,get_processor_id_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;
     mov ax,cs
     mov ds,ax

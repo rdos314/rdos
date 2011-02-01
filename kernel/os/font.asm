@@ -949,20 +949,20 @@ init_font_loop:
     mov edi,OFFSET open_font_name
     xor dx,dx
     mov ax,open_font_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET close_font
     mov edi,OFFSET close_font_name
     xor dx,dx
     mov ax,close_font_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_string_metrics16
     mov esi,OFFSET get_string_metrics32
     mov edi,OFFSET get_string_metrics_name
     mov dx,virt_es_in
     mov ax,get_string_metrics_nr
-    RegisterUserGateNew
+    RegisterUserGate
     ret
 init    ENDP
         

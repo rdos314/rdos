@@ -378,31 +378,31 @@ init    PROC far
         mov edi,OFFSET get_master_volume_name
         xor dx,dx
         mov ax,get_master_volume_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_master_volume
         mov edi,OFFSET set_master_volume_name
         xor dx,dx
         mov ax,set_master_volume_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_line_out_volume
         mov edi,OFFSET get_line_out_volume_name
         xor dx,dx
         mov ax,get_line_out_volume_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_line_out_volume
         mov edi,OFFSET set_line_out_volume_name
         xor dx,dx
         mov ax,set_line_out_volume_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_codec_gpio0
         mov edi,OFFSET set_codec_gpio0_name
         xor dx,dx
         mov ax,set_codec_gpio0_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         ret
 init    ENDP

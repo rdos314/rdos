@@ -208,7 +208,7 @@ init_physical_gates     PROC near
         mov edi,OFFSET get_free_physical_name
         xor dx,dx
         mov ax,get_free_physical_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;       
         mov esi,OFFSET free_physical
         mov edi,OFFSET free_physical_name

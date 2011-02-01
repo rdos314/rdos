@@ -794,32 +794,32 @@ init_bitmap     PROC near
         mov edi,OFFSET create_bitmap_name
         xor dx,dx
         mov ax,create_bitmap_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET dup_bitmap_handle
         mov edi,OFFSET dup_bitmap_handle_name
         xor dx,dx
         mov ax,dup_bitmap_handle_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET close_bitmap
         mov edi,OFFSET close_bitmap_name
         xor dx,dx
         mov ax,close_bitmap_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET create_string_bitmap16
         mov esi,OFFSET create_string_bitmap32
         mov edi,OFFSET create_string_bitmap_name
         mov dx,virt_es_in
         mov ax,create_string_bitmap_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov esi,OFFSET get_bitmap_info
         mov edi,OFFSET get_bitmap_info_name
         xor dx,dx
         mov ax,get_bitmap_info_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         ret
 init_bitmap     ENDP

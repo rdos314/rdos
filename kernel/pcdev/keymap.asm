@@ -581,14 +581,14 @@ init    PROC far
     mov edi,OFFSET get_key_layout_name
     mov dx,virt_es_in
     mov ax,get_key_layout_nr
-    RegisterUserGateNew
+    RegisterUserGate
 ;
     mov ebx,OFFSET set_key_layout16
     mov esi,OFFSET set_key_layout32
     mov edi,OFFSET set_key_layout_name
     mov dx,virt_es_in
     mov ax,set_key_layout_nr
-    RegisterUserGateNew    
+    RegisterUserGate
 ;
     pop edi
     pop es

@@ -702,7 +702,7 @@ prot_init:
     mov edi,OFFSET get_version_name
     xor dx,dx
     mov ax,get_version_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;
     call init_mem
     call init_gdt

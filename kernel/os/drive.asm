@@ -5244,70 +5244,70 @@ init    PROC far
         mov edi,OFFSET get_disc_info_name
         xor dx,dx
         mov ax,get_disc_info_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_disc_info
         mov edi,OFFSET set_disc_info_name
         xor dx,dx
         mov ax,set_disc_info_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET allocate_fixed_drive
         mov edi,OFFSET allocate_fixed_drive_name
         xor dx,dx
         mov ax,allocate_fixed_drive_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET allocate_static_drive
         mov edi,OFFSET allocate_static_drive_name
         xor dx,dx
         mov ax,allocate_static_drive_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET allocate_dynamic_drive
         mov edi,OFFSET allocate_dynamic_drive_name
         xor dx,dx
         mov ax,allocate_dynamic_drive_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_drive_disc_param
         mov edi,OFFSET get_drive_disc_param_name
         xor dx,dx
         mov ax,get_drive_disc_param_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET demand_load_drive
         mov edi,OFFSET demand_load_drive_name
         mov ax,demand_load_drive_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET format_drive16
         mov esi,OFFSET format_drive32
         mov edi,OFFSET format_drive_name
         mov dx,virt_es_in
         mov ax,format_drive_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ebx,OFFSET read_disc16
         mov esi,OFFSET read_disc32
         mov edi,OFFSET read_disc_name
         mov dx,virt_es_in
         mov ax,read_disc_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ebx,OFFSET write_disc16
         mov esi,OFFSET write_disc32
         mov edi,OFFSET write_disc_name
         mov dx,virt_es_in
         mov ax,write_disc_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ebx,OFFSET erase_disc_sectors16
         mov esi,OFFSET erase_disc_sectors32
         mov edi,OFFSET erase_disc_sectors_name
         xor dx,dx
         mov ax,erase_disc_sectors_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov di,OFFSET init_disc
         HookInitFileSystem

@@ -690,7 +690,7 @@ init    Proc far
         mov edi,OFFSET update_rtc_name
     xor dx,dx
         mov ax,update_rtc_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;
         mov al,1Ah
         mov di,OFFSET rtc_io

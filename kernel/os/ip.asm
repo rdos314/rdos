@@ -1548,7 +1548,7 @@ init    PROC far
         mov edi,OFFSET get_ppp_dns_name
         xor dx,dx
         mov ax,get_ppp_dns_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET create_ip_header
         mov edi,OFFSET create_ip_header_name
@@ -1578,19 +1578,19 @@ init    PROC far
         mov edi,OFFSET get_ip_address_name
         xor dx,dx
         mov ax,get_ip_address_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_gateway
         mov edi,OFFSET get_gateway_name
         xor dx,dx
         mov ax,get_gateway_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_ip_mask
         mov edi,OFFSET get_ip_mask_name
         xor dx,dx
         mov ax,get_ip_mask_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov cx,4
         mov dx,800h

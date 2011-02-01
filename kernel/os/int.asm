@@ -297,117 +297,120 @@ init_exc_loop:
         mov ax,cs
         mov ds,ax
         mov es,ax
+        xor ebx,ebx
+        xor esi,esi
+        xor edi,edi
 ;
-        mov esi,OFFSET set_bitness
-        mov edi,OFFSET set_bitness_name
+        mov si,OFFSET set_bitness
+        mov di,OFFSET set_bitness_name
         xor cl,cl
         mov ax,set_bitness_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET hook_vm_int
-        mov edi,OFFSET hook_vm_int_name
+        mov si,OFFSET hook_vm_int
+        mov di,OFFSET hook_vm_int_name
         xor cl,cl
         mov ax,hook_vm_int_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET hook_exception
-        mov edi,OFFSET hook_exception_name
+        mov si,OFFSET hook_exception
+        mov di,OFFSET hook_exception_name
         xor cl,cl
         mov ax,hook_exception_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET reflect_pm_to_vm
-        mov edi,OFFSET reflect_pm_to_vm_name
+        mov si,OFFSET reflect_pm_to_vm
+        mov di,OFFSET reflect_pm_to_vm_name
         xor cl,cl
         mov ax,reflect_pm_to_vm_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET get_vm_int
-        mov edi,OFFSET get_vm_int_name
+        mov si,OFFSET get_vm_int
+        mov di,OFFSET get_vm_int_name
         xor dx,dx
         mov ax,get_vm_int_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_vm_int
-        mov edi,OFFSET set_vm_int_name
+        mov si,OFFSET set_vm_int
+        mov di,OFFSET set_vm_int_name
         xor dx,dx
         mov ax,set_vm_int_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_exception_stack16
-        mov edi,OFFSET get_exception_stack16_name
+        mov si,OFFSET get_exception_stack16
+        mov di,OFFSET get_exception_stack16_name
         xor cl,cl
         mov ax,get_exception_stack16_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET get_exception_stack32
-        mov edi,OFFSET get_exception_stack32_name
+        mov si,OFFSET get_exception_stack32
+        mov di,OFFSET get_exception_stack32_name
         xor cl,cl
         mov ax,get_exception_stack32_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET hook_get_vm_int
-        mov edi,OFFSET hook_get_vm_int_name
+        mov si,OFFSET hook_get_vm_int
+        mov di,OFFSET hook_get_vm_int_name
         xor cl,cl
         mov ax,hook_get_vm_int_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET hook_set_vm_int
-        mov edi,OFFSET hook_set_vm_int_name
+        mov si,OFFSET hook_set_vm_int
+        mov di,OFFSET hook_set_vm_int_name
         xor cl,cl
         mov ax,hook_set_vm_int_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET reflect_exception
-        mov edi,OFFSET reflect_exception_name
+        mov si,OFFSET reflect_exception
+        mov di,OFFSET reflect_exception_name
         xor cl,cl
         mov ax,reflect_exception_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET raw_switch16
-        mov edi,OFFSET raw_switch_name
+        mov si,OFFSET raw_switch16
+        mov di,OFFSET raw_switch_name
         xor dx,dx
         mov ax,raw_switch_nr
-        RegisterUserGate16New
+        RegisterUserGate16
 ;
-        mov esi,OFFSET raw_switch_v86
-        mov edi,OFFSET raw_switch_name
+        mov si,OFFSET raw_switch_v86
+        mov di,OFFSET raw_switch_name
         xor dx,dx
         mov ax,raw_switch_nr
-        RegisterUserGateV86New
+        RegisterUserGateV86
 ;
-        mov esi,OFFSET get_raw_switch_ads
-        mov edi,OFFSET get_raw_switch_name
+        mov si,OFFSET get_raw_switch_ads
+        mov di,OFFSET get_raw_switch_name
         xor dx,dx
         mov ax,get_raw_switch_ads_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
-        mov esi,OFFSET save_context
-        mov edi,OFFSET save_context_name
+        mov si,OFFSET save_context
+        mov di,OFFSET save_context_name
         xor cl,cl
         mov ax,save_context_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET restore_context
-        mov edi,OFFSET restore_context_name
+        mov si,OFFSET restore_context
+        mov di,OFFSET restore_context_name
         xor cl,cl
         mov ax,restore_context_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET call_vm
-        mov edi,OFFSET call_vm_name
+        mov si,OFFSET call_vm
+        mov di,OFFSET call_vm_name
         xor cl,cl
         mov ax,call_vm_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET call_pm16
-        mov edi,OFFSET call_pm16_name
+        mov si,OFFSET call_pm16
+        mov di,OFFSET call_pm16_name
         xor cl,cl
         mov ax,call_pm16_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET call_pm32
-        mov edi,OFFSET call_pm32_name
+        mov si,OFFSET call_pm32
+        mov di,OFFSET call_pm32_name
         xor cl,cl
         mov ax,call_pm32_nr
         RegisterOsGate

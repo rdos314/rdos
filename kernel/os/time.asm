@@ -383,31 +383,31 @@ init_time       PROC near
         mov edi,OFFSET days_in_month_name
         xor dx,dx
         mov ax,days_in_month_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET adjust_time
         mov edi,OFFSET adjust_time_name
         xor dx,dx
         mov ax,adjust_time_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET passed_days
         mov edi,OFFSET passed_days_name
         xor dx,dx
         mov ax,passed_days_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET time_to_binary
         mov edi,OFFSET time_to_binary_name
         xor dx,dx
         mov ax,time_to_binary_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET binary_to_time
         mov edi,OFFSET binary_to_time_name
         xor dx,dx
         mov ax,binary_to_time_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         ret
 init_time       ENDP

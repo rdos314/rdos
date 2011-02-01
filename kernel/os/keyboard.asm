@@ -1313,49 +1313,49 @@ init_keyboard   PROC near
         mov edi,OFFSET add_wait_for_keyboard_name
         xor dx,dx
         mov ax,add_wait_for_keyboard_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET read_keyboard
         mov edi,OFFSET read_keyboard_name
         xor dx,dx
         mov ax,read_keyboard_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET poll_keyboard
         mov edi,OFFSET poll_keyboard_name
         xor dx,dx
         mov ax,poll_keyboard_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET flush_keyboard
         mov edi,OFFSET flush_keyboard_name
         xor dx,dx
         mov ax,flush_keyboard_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_keyboard_state
         mov edi,OFFSET get_keyboard_state_name
         xor dx,dx
         mov ax,get_keyboard_state_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET peek_key_event
         mov edi,OFFSET peek_key_event_name
         xor dx,dx
         mov ax,peek_key_event_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET read_key_event
         mov edi,OFFSET read_key_event_name
         xor dx,dx
         mov ax,read_key_event_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET put_keyboard_code
         mov edi,OFFSET put_keyboard_code_name
         xor cl,cl
         mov ax,put_keyboard_code_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET hook_shift_keys
         mov edi,OFFSET hook_shift_keys_name

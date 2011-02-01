@@ -2243,31 +2243,31 @@ init_sprite     PROC near
         mov edi,OFFSET create_sprite_name
         xor dx,dx
         mov ax,create_sprite_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET show_sprite
         mov edi,OFFSET show_sprite_name
         xor dx,dx
         mov ax,show_sprite_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET hide_sprite
         mov edi,OFFSET hide_sprite_name
         xor dx,dx
         mov ax,hide_sprite_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET move_sprite
         mov edi,OFFSET move_sprite_name
         xor dx,dx
         mov ax,move_sprite_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET close_sprite
         mov edi,OFFSET close_sprite_name
         xor dx,dx
         mov ax,close_sprite_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET hide_sprite_line
         mov edi,OFFSET hide_sprite_line_name

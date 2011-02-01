@@ -961,13 +961,13 @@ init_handle     PROC near
         mov edi,OFFSET get_free_handles_name
         xor dx,dx
         mov ax,get_free_handles_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_free_handle_mem
         mov edi,OFFSET get_free_handle_mem_name
         xor dx,dx
         mov ax,get_free_handle_mem_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         popa
         pop es

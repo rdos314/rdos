@@ -2844,7 +2844,7 @@ init_ide_done:
     mov edi,OFFSET get_ide_disc_name
     xor dx,dx
     mov ax,get_ide_disc_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 
 init_ide_pci:
     call CheckPciIde

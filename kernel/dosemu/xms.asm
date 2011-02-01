@@ -663,7 +663,7 @@ init_xms        PROC near
         mov edi,OFFSET xms_name
         mov ax,xms_handler_nr
         mov dx,virt_ds_in
-        RegisterUserGateV86New
+        RegisterUserGateV86
 ;
         mov esi,OFFSET query_xms
         mov edi,OFFSET query_xms_name

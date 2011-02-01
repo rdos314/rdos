@@ -1600,7 +1600,7 @@ init_mouse      PROC near
         mov edi,OFFSET add_wait_for_mouse_name
         xor dx,dx
         mov ax,add_wait_for_mouse_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_mouse_limit
         mov edi,OFFSET set_mouse_limit_name
@@ -1624,86 +1624,86 @@ init_mouse      PROC near
         mov edi,OFFSET show_mouse_name
         xor dx,dx
         mov ax,show_mouse_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET hide_mouse
         mov edi,OFFSET hide_mouse_name
         xor dx,dx
         mov ax,hide_mouse_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_mouse_position
         mov edi,OFFSET get_mouse_position_name
         xor dx,dx
         mov ax,get_mouse_position_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_mouse_position
         mov edi,OFFSET set_mouse_position_name
         xor dx,dx
         mov ax,set_mouse_position_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_mouse_window
         mov edi,OFFSET set_mouse_window_name
         xor dx,dx
         mov ax,set_mouse_window_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_mouse_mickey
         mov edi,OFFSET set_mouse_mickey_name
         xor dx,dx
         mov ax,set_mouse_mickey_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_left_button
         mov edi,OFFSET get_left_button_name
         xor dx,dx
         mov ax,get_left_button_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_right_button
         mov edi,OFFSET get_right_button_name
         xor dx,dx
         mov ax,get_right_button_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_left_button_press_position
         mov edi,OFFSET get_left_button_press_position_name
         xor dx,dx
         mov ax,get_left_button_press_position_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_right_button_press_position
         mov edi,OFFSET get_right_button_press_position_name
         xor dx,dx
         mov ax,get_right_button_press_position_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_left_button_release_position
         mov edi,OFFSET get_left_button_release_position_name
         xor dx,dx
         mov ax,get_left_button_release_position_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_right_button_release_position
         mov edi,OFFSET get_right_button_release_position_name
         xor dx,dx
         mov ax,get_right_button_release_position_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET hook_mouse16
         mov esi,OFFSET hook_mouse32
         mov edi,OFFSET hook_mouse_name
         xor dx,dx
         mov ax,hook_mouse_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov esi,OFFSET unhook_mouse
         mov edi,OFFSET unhook_mouse_name
         xor dx,dx
         mov ax,unhook_mouse_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
         ret
 init_mouse      ENDP
 

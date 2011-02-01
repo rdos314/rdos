@@ -1476,7 +1476,7 @@ init_dosdev     PROC near
         mov edi,OFFSET read_con_name
         mov dx,virt_es_in
         mov ax,read_con_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ax,OFFSET device_process_size
         mov bx,dosdev_process_sel

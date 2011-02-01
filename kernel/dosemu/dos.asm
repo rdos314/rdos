@@ -1311,7 +1311,7 @@ init    PROC far
         mov edi,OFFSET get_psp_sel_name
         xor dx,dx
         mov ax,get_psp_sel_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov di,OFFSET open_app
         HookOpenApp

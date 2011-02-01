@@ -1483,59 +1483,59 @@ init_memmap     PROC near
         mov edi,OFFSET create_mapping_name
         xor dx,dx
         mov ax,create_mapping_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET create_named_mapping16
         mov esi,OFFSET create_named_mapping32
         mov edi,OFFSET create_named_mapping_name
         mov dx,virt_es_in
         mov ax,create_named_mapping_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov esi,OFFSET create_file_mapping
         mov edi,OFFSET create_file_mapping_name
         xor dx,dx
         mov ax,create_file_mapping_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET create_named_file_mapping16
         mov esi,OFFSET create_named_file_mapping32
         mov edi,OFFSET create_named_file_mapping_name
         mov dx,virt_es_in
         mov ax,create_named_file_mapping_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ebx,OFFSET open_named_mapping16
         mov esi,OFFSET open_named_mapping32
         mov edi,OFFSET open_named_mapping_name
         mov dx,virt_es_in
         mov ax,open_named_mapping_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov esi,OFFSET sync_mapping
         mov edi,OFFSET sync_mapping_name
         xor dx,dx
         mov ax,sync_mapping_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET close_mapping
         mov edi,OFFSET close_mapping_name
         xor dx,dx
         mov ax,close_mapping_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET map_view16
         mov esi,OFFSET map_view32
         mov edi,OFFSET map_view_name
         mov dx,virt_es_in
         mov ax,map_view_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov esi,OFFSET unmap_view
         mov edi,OFFSET unmap_view_name
         xor dx,dx
         mov ax,unmap_view_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ax,SEG data
         mov ds,ax

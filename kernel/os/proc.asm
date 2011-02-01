@@ -506,85 +506,88 @@ init_thread     PROC near
         mov ax,cs
         mov ds,ax
         mov es,ax
+        xor ebx,ebx
+        xor esi,esi
+        xor edi,edi
 ;
-        mov ebx,OFFSET create_thread16
-        mov esi,OFFSET create_thread32
-        mov edi,OFFSET create_thread_name
+        mov bx,OFFSET create_thread16
+        mov si,OFFSET create_thread32
+        mov di,OFFSET create_thread_name
         mov dx,virt_seg_in
         mov ax,create_thread_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
-        mov esi,OFFSET terminate_thread
-        mov edi,OFFSET terminate_thread_name
+        mov si,OFFSET terminate_thread
+        mov di,OFFSET terminate_thread_name
         xor dx,dx
         mov ax,terminate_thread_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
-        mov esi,OFFSET create_process
-        mov edi,OFFSET create_process_name
+        mov si,OFFSET create_process
+        mov di,OFFSET create_process_name
         xor cl,cl
         mov ax,create_process_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET hook_create_thread
-        mov edi,OFFSET hook_create_thread_name
+        mov si,OFFSET hook_create_thread
+        mov di,OFFSET hook_create_thread_name
         xor cl,cl
         mov ax,hook_create_thread_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET hook_terminate_thread
-        mov edi,OFFSET hook_terminate_thread_name
+        mov si,OFFSET hook_terminate_thread
+        mov di,OFFSET hook_terminate_thread_name
         xor cl,cl
         mov ax,hook_terminate_thread_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET hook_create_process
-        mov edi,OFFSET hook_create_process_name
+        mov si,OFFSET hook_create_process
+        mov di,OFFSET hook_create_process_name
         xor cl,cl
         mov ax,hook_create_process_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET hook_terminate_process
-        mov edi,OFFSET hook_terminate_process_name
+        mov si,OFFSET hook_terminate_process
+        mov di,OFFSET hook_terminate_process_name
         xor cl,cl
         mov ax,hook_terminate_process_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET hook_init_tasking
-        mov edi,OFFSET hook_init_tasking_name
+        mov si,OFFSET hook_init_tasking
+        mov di,OFFSET hook_init_tasking_name
         xor cl,cl
         mov ax,hook_init_tasking_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET create_proc_handle
-        mov edi,OFFSET create_proc_handle_name
+        mov si,OFFSET create_proc_handle
+        mov di,OFFSET create_proc_handle_name
         xor cl,cl
         mov ax,create_proc_handle_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET deref_proc_handle
-        mov edi,OFFSET deref_proc_handle_name
+        mov si,OFFSET deref_proc_handle
+        mov di,OFFSET deref_proc_handle_name
         xor cl,cl
         mov ax,deref_proc_handle_nr
         RegisterOsGate
 ;
-        mov esi,OFFSET free_proc_handle
-        mov edi,OFFSET free_proc_handle_name
+        mov si,OFFSET free_proc_handle
+        mov di,OFFSET free_proc_handle_name
         xor dx,dx
         mov ax,free_proc_handle_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_proc_exit_code
-        mov edi,OFFSET get_proc_exit_code_name
+        mov si,OFFSET get_proc_exit_code
+        mov di,OFFSET get_proc_exit_code_name
         xor dx,dx
         mov ax,get_proc_exit_code_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
-        mov esi,OFFSET add_wait_for_proc_end
-        mov edi,OFFSET add_wait_for_proc_end_name
+        mov si,OFFSET add_wait_for_proc_end
+        mov di,OFFSET add_wait_for_proc_end_name
         xor dx,dx
         mov ax,add_wait_for_proc_end_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         pop ds
         popa

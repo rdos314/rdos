@@ -2684,69 +2684,69 @@ init_file       PROC near
         mov edi,OFFSET close_file_name
         xor dx,dx
         mov ax,close_file_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET dupl_file
         mov edi,OFFSET dupl_file_name
         xor dx,dx
         mov ax,dupl_file_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_ioctl_data
         mov edi,OFFSET get_ioctl_data_name
         xor dx,dx
         mov ax,get_ioctl_data_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_file_size
         mov edi,OFFSET get_file_size_name
         xor dx,dx
         mov ax,get_file_size_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_file_size
         mov edi,OFFSET set_file_size_name
         xor dx,dx
         mov ax,set_file_size_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_file_pos
         mov edi,OFFSET get_file_pos_name
         xor dx,dx
         mov ax,get_file_pos_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_file_pos
         mov edi,OFFSET set_file_pos_name
         xor dx,dx
         mov ax,set_file_pos_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_file_time
         mov edi,OFFSET get_file_time_name
         xor dx,dx
         mov ax,get_file_time_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET set_file_time
         mov edi,OFFSET set_file_time_name
         xor dx,dx
         mov ax,set_file_time_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov ebx,OFFSET read_file16
         mov esi,OFFSET read_file32
         mov edi,OFFSET read_file_name
         mov dx,virt_es_in
         mov ax,read_file_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
         mov ebx,OFFSET write_file16
         mov esi,OFFSET write_file32
         mov edi,OFFSET write_file_name
         mov dx,virt_es_in
         mov ax,write_file_nr
-        RegisterUserGateNew
+        RegisterUserGate
 ;
     mov ax,SEG data
     mov ds,ax   

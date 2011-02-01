@@ -2097,7 +2097,7 @@ open_floppy_started:
     mov edi,OFFSET get_floppy_disc_name
     xor dx,dx
     mov ax,get_floppy_disc_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;
     mov di,OFFSET disc_ctrl
     HookInitDisc

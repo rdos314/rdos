@@ -2688,13 +2688,13 @@ init    PROC far
         mov edi,OFFSET start_net_capture_name
         xor dx,dx
         mov ax,start_net_capture_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET stop_net_capture
         mov edi,OFFSET stop_net_capture_name
         xor dx,dx
         mov ax,stop_net_capture_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
         clc
         ret
 init    ENDP

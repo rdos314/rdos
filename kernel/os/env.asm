@@ -1246,60 +1246,60 @@ init_device_loop:
     mov edi,OFFSET open_sys_env_name
     xor dx,dx
     mov ax,open_sys_env_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET open_proc_env
     mov edi,OFFSET open_proc_env_name
     xor dx,dx
     mov ax,open_proc_env_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET close_env
     mov edi,OFFSET close_env_name
     xor dx,dx
     mov ax,close_env_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;    
     mov ebx,OFFSET add_env_var16
     mov esi,OFFSET add_env_var32
     mov edi,OFFSET add_env_var_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,add_env_var_nr
-    RegisterUserGateNew
+    RegisterUserGate
 ;    
     mov ebx,OFFSET delete_env_var16
     mov esi,OFFSET delete_env_var32
     mov edi,OFFSET delete_env_var_name
     mov dx,virt_ds_in
     mov ax,delete_env_var_nr
-    RegisterUserGateNew
+    RegisterUserGate
 ;    
     mov ebx,OFFSET find_env_var16
     mov esi,OFFSET find_env_var32
     mov edi,OFFSET find_env_var_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,find_env_var_nr
-    RegisterUserGateNew
+    RegisterUserGate
 ;
     mov esi,OFFSET get_env_size
     mov edi,OFFSET get_env_size_name
     xor dx,dx
     mov ax,get_env_size_nr
-    RegisterBimodalUserGateNew
+    RegisterBimodalUserGate
 ;    
     mov ebx,OFFSET get_env_data16
     mov esi,OFFSET get_env_data32
     mov edi,OFFSET get_env_data_name
     mov dx,virt_es_in
     mov ax,get_env_data_nr
-    RegisterUserGateNew
+    RegisterUserGate
 ;    
     mov ebx,OFFSET set_env_data16
     mov esi,OFFSET set_env_data32
     mov edi,OFFSET set_env_data_name
     mov dx,virt_es_in
     mov ax,set_env_data_nr
-    RegisterUserGateNew
+    RegisterUserGate
 ;   
     ret
 init_env    ENDP

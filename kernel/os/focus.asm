@@ -753,19 +753,19 @@ init_focus      PROC near
         mov edi,OFFSET set_focus_name
         xor dx,dx
         mov ax,set_focus_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET get_focus
         mov edi,OFFSET get_focus_name
         xor dx,dx
         mov ax,get_focus_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET enable_focus
         mov edi,OFFSET enable_focus_name
         xor dx,dx
         mov ax,enable_focus_nr
-        RegisterBimodalUserGateNew
+        RegisterBimodalUserGate
 ;
         mov esi,OFFSET hook_enable_focus
         mov edi,OFFSET hook_enable_focus_name
