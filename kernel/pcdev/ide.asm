@@ -2840,11 +2840,11 @@ init_ide_done:
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov si,OFFSET get_ide_disc
-    mov di,OFFSET get_ide_disc_name
+    mov esi,OFFSET get_ide_disc
+    mov edi,OFFSET get_ide_disc_name
     xor dx,dx
     mov ax,get_ide_disc_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 
 init_ide_pci:
     call CheckPciIde

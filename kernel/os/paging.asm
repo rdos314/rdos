@@ -1826,35 +1826,35 @@ init_paging_gates       PROC near
     mov ax,set_page_kernel_nr
     RegisterOsGate
 ;
-    mov si,OFFSET free_v86
-    mov di,OFFSET free_v86_name
+    mov esi,OFFSET free_v86
+    mov edi,OFFSET free_v86_name
     xor dx,dx
     mov ax,free_v86_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET set_flat_linear_invalid
-    mov di,OFFSET set_flat_linear_invalid_name
+    mov esi,OFFSET set_flat_linear_invalid
+    mov edi,OFFSET set_flat_linear_invalid_name
     xor dx,dx
     mov ax,set_flat_linear_invalid_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET set_flat_linear_valid
-    mov di,OFFSET set_flat_linear_valid_name
+    mov esi,OFFSET set_flat_linear_valid
+    mov edi,OFFSET set_flat_linear_valid_name
     xor dx,dx
     mov ax,set_flat_linear_valid_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET set_flat_linear_read
-    mov di,OFFSET set_flat_linear_read_name
+    mov esi,OFFSET set_flat_linear_read
+    mov edi,OFFSET set_flat_linear_read_name
     xor dx,dx
     mov ax,set_flat_linear_read_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET set_flat_linear_readwrite
-    mov di,OFFSET set_flat_linear_readwrite_name
+    mov esi,OFFSET set_flat_linear_readwrite
+    mov edi,OFFSET set_flat_linear_readwrite_name
     xor dx,dx
     mov ax,set_flat_linear_readwrite_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
     ret
 init_paging_gates       ENDP

@@ -945,24 +945,24 @@ init_font_loop:
     mov ax,get_char_mask_nr
     RegisterOsGate
 ;
-    mov si,OFFSET open_font
-    mov di,OFFSET open_font_name
+    mov esi,OFFSET open_font
+    mov edi,OFFSET open_font_name
     xor dx,dx
     mov ax,open_font_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET close_font
-    mov di,OFFSET close_font_name
+    mov esi,OFFSET close_font
+    mov edi,OFFSET close_font_name
     xor dx,dx
     mov ax,close_font_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov bx,OFFSET get_string_metrics16
-    mov si,OFFSET get_string_metrics32
-    mov di,OFFSET get_string_metrics_name
+    mov ebx,OFFSET get_string_metrics16
+    mov esi,OFFSET get_string_metrics32
+    mov edi,OFFSET get_string_metrics_name
     mov dx,virt_es_in
     mov ax,get_string_metrics_nr
-    RegisterUserGate
+    RegisterUserGateNew
     ret
 init    ENDP
         

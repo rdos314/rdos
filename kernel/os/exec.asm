@@ -2159,44 +2159,44 @@ init    PROC far
     mov ax,hook_load_exe_nr
     RegisterOsGate
 ;
-    mov bx,OFFSET load_program16
-    mov si,OFFSET load_program32
-    mov di,OFFSET load_exe_name
+    mov ebx,OFFSET load_program16
+    mov esi,OFFSET load_program32
+    mov edi,OFFSET load_exe_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,load_exe_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
-    mov si,OFFSET dos_ext_exec16
-    mov di,OFFSET dos_ext_exec_name
+    mov esi,OFFSET dos_ext_exec16
+    mov edi,OFFSET dos_ext_exec_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,dos_ext_exec_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET unload_exe
-    mov di,OFFSET unload_exe_name
+    mov esi,OFFSET unload_exe
+    mov edi,OFFSET unload_exe_name
     xor dx,dx
     mov ax,unload_exe_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov bx,OFFSET spawn_program16
-    mov si,OFFSET spawn_program32
-    mov di,OFFSET spawn_exe_name
+    mov ebx,OFFSET spawn_program16
+    mov esi,OFFSET spawn_program32
+    mov edi,OFFSET spawn_exe_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,spawn_exe_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
-    mov bx,OFFSET fork16
-    mov si,OFFSET fork32
-    mov di,OFFSET fork_name
+    mov ebx,OFFSET fork16
+    mov esi,OFFSET fork32
+    mov edi,OFFSET fork_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,fork_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
-    mov si,OFFSET get_exit_code
-    mov di,OFFSET get_exit_code_name
+    mov esi,OFFSET get_exit_code
+    mov edi,OFFSET get_exit_code_name
     xor dx,dx
     mov ax,get_exit_code_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
     ret
 init    ENDP
 

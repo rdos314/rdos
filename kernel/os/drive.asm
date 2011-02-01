@@ -5240,74 +5240,74 @@ init    PROC far
         mov ax,reset_drive_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_disc_info
-        mov di,OFFSET get_disc_info_name
+        mov esi,OFFSET get_disc_info
+        mov edi,OFFSET get_disc_info_name
         xor dx,dx
         mov ax,get_disc_info_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET set_disc_info
-        mov di,OFFSET set_disc_info_name
+        mov esi,OFFSET set_disc_info
+        mov edi,OFFSET set_disc_info_name
         xor dx,dx
         mov ax,set_disc_info_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET allocate_fixed_drive
-        mov di,OFFSET allocate_fixed_drive_name
+        mov esi,OFFSET allocate_fixed_drive
+        mov edi,OFFSET allocate_fixed_drive_name
         xor dx,dx
         mov ax,allocate_fixed_drive_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET allocate_static_drive
-        mov di,OFFSET allocate_static_drive_name
+        mov esi,OFFSET allocate_static_drive
+        mov edi,OFFSET allocate_static_drive_name
         xor dx,dx
         mov ax,allocate_static_drive_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET allocate_dynamic_drive
-        mov di,OFFSET allocate_dynamic_drive_name
+        mov esi,OFFSET allocate_dynamic_drive
+        mov edi,OFFSET allocate_dynamic_drive_name
         xor dx,dx
         mov ax,allocate_dynamic_drive_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET get_drive_disc_param
-        mov di,OFFSET get_drive_disc_param_name
+        mov esi,OFFSET get_drive_disc_param
+        mov edi,OFFSET get_drive_disc_param_name
         xor dx,dx
         mov ax,get_drive_disc_param_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET demand_load_drive
-        mov di,OFFSET demand_load_drive_name
+        mov esi,OFFSET demand_load_drive
+        mov edi,OFFSET demand_load_drive_name
         mov ax,demand_load_drive_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET format_drive16
-        mov si,OFFSET format_drive32
-        mov di,OFFSET format_drive_name
+        mov ebx,OFFSET format_drive16
+        mov esi,OFFSET format_drive32
+        mov edi,OFFSET format_drive_name
         mov dx,virt_es_in
         mov ax,format_drive_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET read_disc16
-        mov si,OFFSET read_disc32
-        mov di,OFFSET read_disc_name
+        mov ebx,OFFSET read_disc16
+        mov esi,OFFSET read_disc32
+        mov edi,OFFSET read_disc_name
         mov dx,virt_es_in
         mov ax,read_disc_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET write_disc16
-        mov si,OFFSET write_disc32
-        mov di,OFFSET write_disc_name
+        mov ebx,OFFSET write_disc16
+        mov esi,OFFSET write_disc32
+        mov edi,OFFSET write_disc_name
         mov dx,virt_es_in
         mov ax,write_disc_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET erase_disc_sectors16
-        mov si,OFFSET erase_disc_sectors32
-        mov di,OFFSET erase_disc_sectors_name
+        mov ebx,OFFSET erase_disc_sectors16
+        mov esi,OFFSET erase_disc_sectors32
+        mov edi,OFFSET erase_disc_sectors_name
         xor dx,dx
         mov ax,erase_disc_sectors_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
         mov di,OFFSET init_disc
         HookInitFileSystem

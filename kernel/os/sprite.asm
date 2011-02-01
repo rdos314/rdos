@@ -2239,35 +2239,35 @@ init_sprite     PROC near
         mov di,OFFSET delete_handle
         RegisterHandle
 ;
-        mov si,OFFSET create_sprite
-        mov di,OFFSET create_sprite_name
+        mov esi,OFFSET create_sprite
+        mov edi,OFFSET create_sprite_name
         xor dx,dx
         mov ax,create_sprite_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET show_sprite
-        mov di,OFFSET show_sprite_name
+        mov esi,OFFSET show_sprite
+        mov edi,OFFSET show_sprite_name
         xor dx,dx
         mov ax,show_sprite_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET hide_sprite
-        mov di,OFFSET hide_sprite_name
+        mov esi,OFFSET hide_sprite
+        mov edi,OFFSET hide_sprite_name
         xor dx,dx
         mov ax,hide_sprite_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET move_sprite
-        mov di,OFFSET move_sprite_name
+        mov esi,OFFSET move_sprite
+        mov edi,OFFSET move_sprite_name
         xor dx,dx
         mov ax,move_sprite_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET close_sprite
-        mov di,OFFSET close_sprite_name
+        mov esi,OFFSET close_sprite
+        mov edi,OFFSET close_sprite_name
         xor dx,dx
         mov ax,close_sprite_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov esi,OFFSET hide_sprite_line
         mov edi,OFFSET hide_sprite_line_name

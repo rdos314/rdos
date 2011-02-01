@@ -749,23 +749,23 @@ init_focus      PROC near
         mov di,OFFSET free_thread
         HookTerminateThread
 ;
-        mov si,OFFSET set_focus
-        mov di,OFFSET set_focus_name
+        mov esi,OFFSET set_focus
+        mov edi,OFFSET set_focus_name
         xor dx,dx
         mov ax,set_focus_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET get_focus
-        mov di,OFFSET get_focus_name
+        mov esi,OFFSET get_focus
+        mov edi,OFFSET get_focus_name
         xor dx,dx
         mov ax,get_focus_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET enable_focus
-        mov di,OFFSET enable_focus_name
+        mov esi,OFFSET enable_focus
+        mov edi,OFFSET enable_focus_name
         xor dx,dx
         mov ax,enable_focus_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov esi,OFFSET hook_enable_focus
         mov edi,OFFSET hook_enable_focus_name

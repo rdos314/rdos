@@ -33,53 +33,53 @@ INCLUDE ..\driver.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        assume cs:code
 
-crc_handle_seg		STRUC
+crc_handle_seg          STRUC
 
 crc_handle_base     handle_header <>
 
 crc_handle_sel      DW ?
 
-crc_handle_seg		ENDS
+crc_handle_seg          ENDS
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			CreateCrc
+;               NAME:                   CreateCrc
 ;
-;		DESCRIPTION:	Creates CRC handle
+;               DESCRIPTION:    Creates CRC handle
 ;
-;		PARAMETERS:	    AX          CRC polynom
+;               PARAMETERS:         AX          CRC polynom
 ;
-;		RETURNS:		BX			Handle
+;               RETURNS:                BX                      Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_crc_name DB 'Create CRC', 0
 
-create_crc	Proc far
-	push ds
-	push es
-	push cx
-	push dx
-	push si
+create_crc      Proc far
+        push ds
+        push es
+        push cx
+        push dx
+        push si
 ;
     push eax
     mov eax,200h
     AllocateSmallGlobalMem    
-	pop eax
+        pop eax
 ;
-	mov cx,SIZE crc_handle_seg
-	AllocateHandle
-	mov [bx].crc_handle_sel,es
-	mov [bx].hh_sign,CRC_HANDLE
-	mov bx,[bx].hh_handle
+        mov cx,SIZE crc_handle_seg
+        AllocateHandle
+        mov [bx].crc_handle_sel,es
+        mov [bx].hh_sign,CRC_HANDLE
+        mov bx,[bx].hh_handle
 ;
     push bx
     xor cl,cl
@@ -142,84 +142,84 @@ no_xor7:
     or cl,cl
     jnz create_crc_loop
 ; 
-    pop bx    	
-	clc
+    pop bx      
+        clc
 ;
-	pop si
-	pop dx
-	pop cx
-	pop es
-	pop ds
-	retf32
-create_crc	Endp
+        pop si
+        pop dx
+        pop cx
+        pop es
+        pop ds
+        retf32
+create_crc      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			CloseCrc
+;               NAME:                   CloseCrc
 ;
-;		DESCRIPTION:	Close CRC handle
+;               DESCRIPTION:    Close CRC handle
 ;
-;		PARAMETERS:	    BX			Handle
+;               PARAMETERS:         BX                  Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_crc_name DB 'Close CRC', 0
 
-close_crc	Proc far
-	push ds
-	push es
-	push bx
+close_crc       Proc far
+        push ds
+        push es
+        push bx
 ;
-	mov ax,CRC_HANDLE
-	DerefHandle
-	jc close_crc_done
+        mov ax,CRC_HANDLE
+        DerefHandle
+        jc close_crc_done
 ;
-	mov es,[bx].crc_handle_sel
+        mov es,[bx].crc_handle_sel
     FreeMem    
-	FreeHandle
-	clc
+        FreeHandle
+        clc
 
 close_crc_done:
-	pop bx
-	pop es
-	pop ds
-	retf32
-close_crc	Endp
+        pop bx
+        pop es
+        pop ds
+        retf32
+close_crc       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CalcCrc
+;               NAME:                   CalcCrc
 ;
-;		DESCRIPTION:	Calculate CRC
+;               DESCRIPTION:    Calculate CRC
 ;
-;		PARAMETERS:		BX			Handle
+;               PARAMETERS:             BX                      Handle
 ;                       AX          CRC in
-;						ES:(E)DI	Data
-;						(E)CX		Size
+;                                               ES:(E)DI        Data
+;                                               (E)CX           Size
 ;
-;		RETURNS:		AX          CRC out
+;               RETURNS:                AX          CRC out
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-calc_crc_name	DB 'Calc CRC',0
+calc_crc_name   DB 'Calc CRC',0
 
 calc_crc Proc near
-	push ds
-	push es
-	push ebx
-	push ecx
-	push edi
+        push ds
+        push es
+        push ebx
+        push ecx
+        push edi
 ;
     push ax
-	mov ax,CRC_HANDLE
-	DerefHandle
-	pop ax
-	jc calc_crc_done
+        mov ax,CRC_HANDLE
+        DerefHandle
+        pop ax
+        jc calc_crc_done
 ;
-	mov ds,[bx].crc_handle_sel
+        mov ds,[bx].crc_handle_sel
     or ecx,ecx
     jz calc_crc_done
 ;
@@ -238,9 +238,9 @@ calc_crc_loop:
 calc_crc_done:
     pop edi
     pop ecx
-	pop ebx
-	pop es
-	pop ds
+        pop ebx
+        pop es
+        pop ds
     ret
 calc_crc    Endp
 
@@ -261,90 +261,90 @@ calc_crc16  Proc far
     pop ecx
     ret
 calc_crc16  Endp
-    	
+        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Delete_handle
+;               NAME:                   Delete_handle
 ;
-;		DESCRIPTION:	Delete handle (called from handle module)
+;               DESCRIPTION:    Delete handle (called from handle module)
 ;
-;		PARAMETERS:		BX		    CRC HANDLE
-;						
+;               PARAMETERS:             BX                  CRC HANDLE
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_handle	Proc far
-	push ds
-	push es
-	push bx
+delete_handle   Proc far
+        push ds
+        push es
+        push bx
 ;
-	mov ax,CRC_HANDLE
-	DerefHandle
-	jc delete_handle_done
+        mov ax,CRC_HANDLE
+        DerefHandle
+        jc delete_handle_done
 ;
     mov es,bx
     FreeMem
-	FreeHandle
-	clc
+        FreeHandle
+        clc
 
 delete_handle_done:
-	pop bx
-	pop es
-	pop ds
-	ret
-delete_handle	Endp
+        pop bx
+        pop es
+        pop ds
+        ret
+delete_handle   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			Init
+;               NAME:                   Init
 ;
-;		DESCRIPTION:	Init module
+;               DESCRIPTION:    Init module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public init_crc
     
-init_crc	PROC near
+init_crc        PROC near
     push ds
     push es
     pusha
 ;    
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov di,OFFSET delete_handle
-	mov ax,CRC_HANDLE
-	RegisterHandle
+        mov di,OFFSET delete_handle
+        mov ax,CRC_HANDLE
+        RegisterHandle
 ;
-	mov si,OFFSET create_crc
-	mov di,OFFSET create_crc_name
-	xor dx,dx
-	mov ax,create_crc_nr
-	RegisterBimodalUserGate
+        mov esi,OFFSET create_crc
+        mov edi,OFFSET create_crc_name
+        xor dx,dx
+        mov ax,create_crc_nr
+        RegisterBimodalUserGateNew
 ;
-	mov si,OFFSET close_crc
-	mov di,OFFSET close_crc_name
-	xor dx,dx
-	mov ax,close_crc_nr
-	RegisterBimodalUserGate
+        mov esi,OFFSET close_crc
+        mov edi,OFFSET close_crc_name
+        xor dx,dx
+        mov ax,close_crc_nr
+        RegisterBimodalUserGateNew
 ;
-	mov bx,OFFSET calc_crc16
-	mov si,OFFSET calc_crc32
-	mov di,OFFSET calc_crc_name
-	mov dx,virt_es_in
-	mov ax,calc_crc_nr
-	RegisterUserGate
+        mov ebx,OFFSET calc_crc16
+        mov esi,OFFSET calc_crc32
+        mov edi,OFFSET calc_crc_name
+        mov dx,virt_es_in
+        mov ax,calc_crc_nr
+        RegisterUserGateNew
 ;
     popa
     pop es
-    pop ds	
-	ret
-init_crc	ENDP
+    pop ds      
+        ret
+init_crc        ENDP
 
-code	ENDS
+code    ENDS
 
-	END
+        END

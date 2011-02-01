@@ -677,38 +677,38 @@ init_state      PROC near
         mov ax,thread_to_sel_nr
         RegisterOsGate
 ;
-        mov bx,OFFSET get_thread_state16
-        mov si,OFFSET get_thread_state32
-        mov di,OFFSET get_thread_state_name
+        mov ebx,OFFSET get_thread_state16
+        mov esi,OFFSET get_thread_state32
+        mov edi,OFFSET get_thread_state_name
         mov dx,virt_es_in
         mov ax,get_thread_state_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET get_thread_tss16
-        mov si,OFFSET get_thread_tss32
-        mov di,OFFSET get_thread_tss_name
+        mov ebx,OFFSET get_thread_tss16
+        mov esi,OFFSET get_thread_tss32
+        mov edi,OFFSET get_thread_tss_name
         mov dx,virt_es_in
         mov ax,get_thread_tss_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET set_thread_tss16
-        mov si,OFFSET set_thread_tss32
-        mov di,OFFSET set_thread_tss_name
+        mov ebx,OFFSET set_thread_tss16
+        mov esi,OFFSET set_thread_tss32
+        mov edi,OFFSET set_thread_tss_name
         mov dx,virt_es_in
         mov ax,set_thread_tss_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov si,OFFSET suspend_thread
-        mov di,OFFSET suspend_thread_name
+        mov esi,OFFSET suspend_thread
+        mov edi,OFFSET suspend_thread_name
         xor dx,dx
         mov ax,suspend_thread_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET suspend_and_signal_thread
-        mov di,OFFSET suspend_and_signal_thread_name
+        mov esi,OFFSET suspend_and_signal_thread
+        mov edi,OFFSET suspend_and_signal_thread_name
         xor dx,dx
         mov ax,suspend_and_signal_thread_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov eax,OFFSET state_data_size
         mov bx,state_data_sel

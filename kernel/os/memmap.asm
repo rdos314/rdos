@@ -1479,63 +1479,63 @@ init_memmap     PROC near
         mov di,OFFSET delete_handle
         RegisterHandle
 ;
-        mov si,OFFSET create_mapping
-        mov di,OFFSET create_mapping_name
+        mov esi,OFFSET create_mapping
+        mov edi,OFFSET create_mapping_name
         xor dx,dx
         mov ax,create_mapping_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET create_named_mapping16
-        mov si,OFFSET create_named_mapping32
-        mov di,OFFSET create_named_mapping_name
+        mov ebx,OFFSET create_named_mapping16
+        mov esi,OFFSET create_named_mapping32
+        mov edi,OFFSET create_named_mapping_name
         mov dx,virt_es_in
         mov ax,create_named_mapping_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov si,OFFSET create_file_mapping
-        mov di,OFFSET create_file_mapping_name
+        mov esi,OFFSET create_file_mapping
+        mov edi,OFFSET create_file_mapping_name
         xor dx,dx
         mov ax,create_file_mapping_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET create_named_file_mapping16
-        mov si,OFFSET create_named_file_mapping32
-        mov di,OFFSET create_named_file_mapping_name
+        mov ebx,OFFSET create_named_file_mapping16
+        mov esi,OFFSET create_named_file_mapping32
+        mov edi,OFFSET create_named_file_mapping_name
         mov dx,virt_es_in
         mov ax,create_named_file_mapping_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET open_named_mapping16
-        mov si,OFFSET open_named_mapping32
-        mov di,OFFSET open_named_mapping_name
+        mov ebx,OFFSET open_named_mapping16
+        mov esi,OFFSET open_named_mapping32
+        mov edi,OFFSET open_named_mapping_name
         mov dx,virt_es_in
         mov ax,open_named_mapping_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov si,OFFSET sync_mapping
-        mov di,OFFSET sync_mapping_name
+        mov esi,OFFSET sync_mapping
+        mov edi,OFFSET sync_mapping_name
         xor dx,dx
         mov ax,sync_mapping_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET close_mapping
-        mov di,OFFSET close_mapping_name
+        mov esi,OFFSET close_mapping
+        mov edi,OFFSET close_mapping_name
         xor dx,dx
         mov ax,close_mapping_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET map_view16
-        mov si,OFFSET map_view32
-        mov di,OFFSET map_view_name
+        mov ebx,OFFSET map_view16
+        mov esi,OFFSET map_view32
+        mov edi,OFFSET map_view_name
         mov dx,virt_es_in
         mov ax,map_view_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov si,OFFSET unmap_view
-        mov di,OFFSET unmap_view_name
+        mov esi,OFFSET unmap_view
+        mov edi,OFFSET unmap_view_name
         xor dx,dx
         mov ax,unmap_view_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov ax,SEG data
         mov ds,ax

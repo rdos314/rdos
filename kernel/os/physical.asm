@@ -204,11 +204,11 @@ init_physical_gates     PROC near
         mov ax,cs
         mov ds,ax
         mov es,ax
-        mov si,OFFSET get_free_physical_mem
-        mov di,OFFSET get_free_physical_name
+        mov esi,OFFSET get_free_physical_mem
+        mov edi,OFFSET get_free_physical_name
         xor dx,dx
         mov ax,get_free_physical_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;       
         mov esi,OFFSET free_physical
         mov edi,OFFSET free_physical_name

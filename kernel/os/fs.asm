@@ -715,12 +715,12 @@ init    PROC far
         mov ax,stop_file_system_nr
         RegisterOsGate
 ;
-        mov bx,OFFSET rename_file16
-        mov si,OFFSET rename_file32
-        mov di,OFFSET rename_file_name
+        mov ebx,OFFSET rename_file16
+        mov esi,OFFSET rename_file32
+        mov edi,OFFSET rename_file_name
         mov dx,virt_ds_in OR virt_es_in
         mov ax,rename_file_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
         mov di,OFFSET init_hook_thread
         HookInitTasking

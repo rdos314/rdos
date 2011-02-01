@@ -322,17 +322,17 @@ init_exc_loop:
         mov ax,reflect_pm_to_vm_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_vm_int
-        mov di,OFFSET get_vm_int_name
+        mov esi,OFFSET get_vm_int
+        mov edi,OFFSET get_vm_int_name
         xor dx,dx
         mov ax,get_vm_int_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET set_vm_int
-        mov di,OFFSET set_vm_int_name
+        mov esi,OFFSET set_vm_int
+        mov edi,OFFSET set_vm_int_name
         xor dx,dx
         mov ax,set_vm_int_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov esi,OFFSET get_exception_stack16
         mov edi,OFFSET get_exception_stack16_name
@@ -364,23 +364,23 @@ init_exc_loop:
         mov ax,reflect_exception_nr
         RegisterOsGate
 ;
-        mov si,OFFSET raw_switch16
-        mov di,OFFSET raw_switch_name
+        mov esi,OFFSET raw_switch16
+        mov edi,OFFSET raw_switch_name
         xor dx,dx
         mov ax,raw_switch_nr
-        RegisterUserGate16
+        RegisterUserGate16New
 ;
-        mov si,OFFSET raw_switch_v86
-        mov di,OFFSET raw_switch_name
+        mov esi,OFFSET raw_switch_v86
+        mov edi,OFFSET raw_switch_name
         xor dx,dx
         mov ax,raw_switch_nr
-        RegisterUserGateV86
+        RegisterUserGateV86New
 ;
-        mov si,OFFSET get_raw_switch_ads
-        mov di,OFFSET get_raw_switch_name
+        mov esi,OFFSET get_raw_switch_ads
+        mov edi,OFFSET get_raw_switch_name
         xor dx,dx
         mov ax,get_raw_switch_ads_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov esi,OFFSET save_context
         mov edi,OFFSET save_context_name

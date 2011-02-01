@@ -154,11 +154,11 @@ init_gdt        PROC near
         mov ax,free_gdt_nr
         RegisterOsGate
 ;       
-        mov si,OFFSET get_free_gdt
-        mov di,OFFSET get_free_gdt_name
+        mov esi,OFFSET get_free_gdt
+        mov edi,OFFSET get_free_gdt_name
         xor dx,dx
         mov ax,get_free_gdt_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         xor edx,edx
         mov bx,__0000

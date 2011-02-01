@@ -2889,106 +2889,106 @@ init_dir        PROC near
         mov ax,insert_file_entry_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_drive_info
-        mov di,OFFSET get_drive_info_name
+        mov esi,OFFSET get_drive_info
+        mov edi,OFFSET get_drive_info_name
         xor dx,dx
         mov ax,get_drive_info_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET set_cur_drive
-        mov di,OFFSET set_cur_drive_name
+        mov esi,OFFSET set_cur_drive
+        mov edi,OFFSET set_cur_drive_name
         xor dx,dx
         mov ax,set_cur_drive_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET get_cur_drive
-        mov di,OFFSET get_cur_drive_name
+        mov esi,OFFSET get_cur_drive
+        mov edi,OFFSET get_cur_drive_name
         xor dx,dx
         mov ax,get_cur_drive_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET set_cur_dir16
-        mov si,OFFSET set_cur_dir32
-        mov di,OFFSET set_cur_dir_name
+        mov ebx,OFFSET set_cur_dir16
+        mov esi,OFFSET set_cur_dir32
+        mov edi,OFFSET set_cur_dir_name
         mov dx,virt_es_in
         mov ax,set_cur_dir_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET get_cur_dir16
-        mov si,OFFSET get_cur_dir32
-        mov di,OFFSET get_cur_dir_name
+        mov ebx,OFFSET get_cur_dir16
+        mov esi,OFFSET get_cur_dir32
+        mov edi,OFFSET get_cur_dir_name
         mov dx,virt_es_in
         mov ax,get_cur_dir_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET make_dir16
-        mov si,OFFSET make_dir32
-        mov di,OFFSET make_dir_name
+        mov ebx,OFFSET make_dir16
+        mov esi,OFFSET make_dir32
+        mov edi,OFFSET make_dir_name
         mov dx,virt_es_in
         mov ax,make_dir_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET remove_dir16
-        mov si,OFFSET remove_dir32
-        mov di,OFFSET remove_dir_name
+        mov ebx,OFFSET remove_dir16
+        mov esi,OFFSET remove_dir32
+        mov edi,OFFSET remove_dir_name
         mov dx,virt_es_in
         mov ax,remove_dir_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET get_file_attrib16
-        mov si,OFFSET get_file_attrib32
-        mov di,OFFSET get_file_attribute_name
+        mov ebx,OFFSET get_file_attrib16
+        mov esi,OFFSET get_file_attrib32
+        mov edi,OFFSET get_file_attribute_name
         mov dx,virt_es_in
         mov ax,get_file_attribute_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET set_file_attrib16
-        mov si,OFFSET set_file_attrib32
-        mov di,OFFSET set_file_attribute_name
+        mov ebx,OFFSET set_file_attrib16
+        mov esi,OFFSET set_file_attrib32
+        mov edi,OFFSET set_file_attribute_name
         mov dx,virt_es_in
         mov ax,set_file_attribute_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET delete_file16
-        mov si,OFFSET delete_file32
-        mov di,OFFSET delete_file_name
+        mov ebx,OFFSET delete_file16
+        mov esi,OFFSET delete_file32
+        mov edi,OFFSET delete_file_name
         mov dx,virt_es_in
         mov ax,delete_file_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET open_dir16
-        mov si,OFFSET open_dir32
-        mov di,OFFSET open_dir_name
+        mov ebx,OFFSET open_dir16
+        mov esi,OFFSET open_dir32
+        mov edi,OFFSET open_dir_name
         mov dx,virt_es_in
         mov ax,open_dir_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET read_dir16
-        mov si,OFFSET read_dir32
-        mov di,OFFSET read_dir_name
+        mov ebx,OFFSET read_dir16
+        mov esi,OFFSET read_dir32
+        mov edi,OFFSET read_dir_name
         mov dx,virt_es_in
         mov ax,read_dir_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov si,OFFSET close_dir
-        mov di,OFFSET close_dir_name
+        mov esi,OFFSET close_dir
+        mov edi,OFFSET close_dir_name
         xor dx,dx
         mov ax,close_dir_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET open_file16
-        mov si,OFFSET open_file32
-        mov di,OFFSET open_file_name
+        mov ebx,OFFSET open_file16
+        mov esi,OFFSET open_file32
+        mov edi,OFFSET open_file_name
         mov dx,virt_es_in
         mov ax,open_file_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET create_file16
-        mov si,OFFSET create_file32
-        mov di,OFFSET create_file_name
+        mov ebx,OFFSET create_file16
+        mov esi,OFFSET create_file32
+        mov edi,OFFSET create_file_name
         mov dx,virt_es_in
         mov ax,create_file_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
         ret
 init_dir        ENDP

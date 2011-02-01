@@ -1307,11 +1307,11 @@ init    PROC far
         mov ax,set_psp_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_psp_sel
-        mov di,OFFSET get_psp_sel_name
+        mov esi,OFFSET get_psp_sel
+        mov edi,OFFSET get_psp_sel_name
         xor dx,dx
         mov ax,get_psp_sel_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov di,OFFSET open_app
         HookOpenApp

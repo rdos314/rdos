@@ -694,89 +694,89 @@ init    Proc far
     mov ax,add_printer_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_max_printer
-    mov di,OFFSET get_max_printer_name
+    mov esi,OFFSET get_max_printer
+    mov edi,OFFSET get_max_printer_name
     xor dx,dx
     mov ax,get_max_printer_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET open_printer
-    mov di,OFFSET open_printer_name
+    mov esi,OFFSET open_printer
+    mov edi,OFFSET open_printer_name
     xor dx,dx
     mov ax,open_printer_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET close_printer
-    mov di,OFFSET close_printer_name
+    mov esi,OFFSET close_printer
+    mov edi,OFFSET close_printer_name
     xor dx,dx
     mov ax,close_printer_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET is_printer_jammed
-    mov di,OFFSET is_printer_jammed_name
+    mov esi,OFFSET is_printer_jammed
+    mov edi,OFFSET is_printer_jammed_name
     xor dx,dx
     mov ax,is_printer_jammed_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET is_printer_paper_low
-    mov di,OFFSET is_printer_paper_low_name
+    mov esi,OFFSET is_printer_paper_low
+    mov edi,OFFSET is_printer_paper_low_name
     xor dx,dx
     mov ax,is_printer_paper_low_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET is_printer_paper_end
-    mov di,OFFSET is_printer_paper_end_name
+    mov esi,OFFSET is_printer_paper_end
+    mov edi,OFFSET is_printer_paper_end_name
     xor dx,dx
     mov ax,is_printer_paper_end_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET is_printer_ok
-    mov di,OFFSET is_printer_ok_name
+    mov esi,OFFSET is_printer_ok
+    mov edi,OFFSET is_printer_ok_name
     xor dx,dx
     mov ax,is_printer_ok_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET is_printer_head_lifted
-    mov di,OFFSET is_printer_head_lifted_name
+    mov esi,OFFSET is_printer_head_lifted
+    mov edi,OFFSET is_printer_head_lifted_name
     xor dx,dx
     mov ax,is_printer_head_lifted_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET has_printer_paper_in_presenter
-    mov di,OFFSET has_printer_paper_in_presenter_name
+    mov esi,OFFSET has_printer_paper_in_presenter
+    mov edi,OFFSET has_printer_paper_in_presenter_name
     xor dx,dx
     mov ax,has_printer_paper_in_presenter_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET print_test
-    mov di,OFFSET print_test_name
+    mov esi,OFFSET print_test
+    mov edi,OFFSET print_test_name
     xor dx,dx
     mov ax,print_test_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET create_bitmap
-    mov di,OFFSET create_bitmap_name
+    mov esi,OFFSET create_bitmap
+    mov edi,OFFSET create_bitmap_name
     xor dx,dx
     mov ax,create_printer_bitmap_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET print_bitmap
-    mov di,OFFSET print_bitmap_name
+    mov esi,OFFSET print_bitmap
+    mov edi,OFFSET print_bitmap_name
     xor dx,dx
     mov ax,print_bitmap_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET present_media
-    mov di,OFFSET present_media_name
+    mov esi,OFFSET present_media
+    mov edi,OFFSET present_media_name
     xor dx,dx
     mov ax,present_printer_media_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET eject_media
-    mov di,OFFSET eject_media_name
+    mov esi,OFFSET eject_media
+    mov edi,OFFSET eject_media_name
     xor dx,dx
     mov ax,eject_printer_media_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
     mov bx,SEG data
     mov es,bx

@@ -659,11 +659,11 @@ init_xms        PROC near
         mov di,OFFSET init_xms_process
         HookCreateProcess
 ;
-        mov si,OFFSET xms_handler
-        mov di,OFFSET xms_name
+        mov esi,OFFSET xms_handler
+        mov edi,OFFSET xms_name
         mov ax,xms_handler_nr
         mov dx,virt_ds_in
-        RegisterUserGateV86
+        RegisterUserGateV86New
 ;
         mov esi,OFFSET query_xms
         mov edi,OFFSET query_xms_name

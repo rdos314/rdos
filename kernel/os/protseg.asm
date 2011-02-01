@@ -1259,11 +1259,11 @@ init_user_protseg       PROC near
         mov ds,ax
         mov es,ax
 ;
-    mov si,OFFSET get_selector_info
-    mov di,OFFSET get_selector_info_name
+    mov esi,OFFSET get_selector_info
+    mov edi,OFFSET get_selector_info_name
     xor dx,dx
     mov ax,get_selector_info_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
         ret
 init_user_protseg       ENDP

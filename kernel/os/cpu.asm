@@ -32,22 +32,22 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        assume cs:code
 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			GetCpuVersion
+;               NAME:                   GetCpuVersion
 ;
-;		DESCRIPTION:	Get CPU version
+;               DESCRIPTION:    Get CPU version
 ;
-;		PARAMETERS:	    ES:(E)DI)     CPU vendor string buffer
+;               PARAMETERS:         ES:(E)DI)     CPU vendor string buffer
 ;
 ;       RETURNS:        AL            CPU version
 ;                       EBX           CPU frequency
@@ -57,7 +57,7 @@ code	SEGMENT byte public use16 'CODE'
 
 get_cpu_version_name DB 'Get Cpu Version', 0
 
-get_cpu_version	Proc near
+get_cpu_version Proc near
     push ds
     push ecx
     push esi
@@ -124,39 +124,39 @@ get_cpu_version32   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			InitCpuGates
+;               NAME:                   InitCpuGates
 ;
-;		DESCRIPTION:	Init cpu module call-gates
+;               DESCRIPTION:    Init cpu module call-gates
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public init_cpu_gates
     
-init_cpu_gates	PROC near
+init_cpu_gates  PROC near
     push ds
     push es
     pusha
 ;    
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov bx,OFFSET get_cpu_version16
-	mov si,OFFSET get_cpu_version32
-	mov di,OFFSET get_cpu_version_name
-	mov dx,virt_es_in
-	mov ax,get_cpu_version_nr
-	RegisterUserGate
+        mov ebx,OFFSET get_cpu_version16
+        mov esi,OFFSET get_cpu_version32
+        mov edi,OFFSET get_cpu_version_name
+        mov dx,virt_es_in
+        mov ax,get_cpu_version_nr
+        RegisterUserGateNew
 ;
     popa
     pop es
-    pop ds	
-	ret
-init_cpu_gates	ENDP
+    pop ds      
+        ret
+init_cpu_gates  ENDP
 
 
-code	ENDS
+code    ENDS
 
-	END
+        END

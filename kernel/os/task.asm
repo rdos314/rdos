@@ -927,59 +927,59 @@ proc_init:
     mov ax,wait_for_signal_timeout_nr
     RegisterOsGate
 ;
-    mov si,OFFSET cpu_reset
-    mov di,OFFSET cpu_reset_name
+    mov esi,OFFSET cpu_reset
+    mov edi,OFFSET cpu_reset_name
     xor dx,dx
     mov ax,cpu_reset_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET power_failure
-    mov di,OFFSET power_failure_name
+    mov esi,OFFSET power_failure
+    mov edi,OFFSET power_failure_name
     xor dx,dx
     mov ax,power_failure_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET get_thread_pr
-    mov di,OFFSET get_thread_name
+    mov esi,OFFSET get_thread_pr
+    mov edi,OFFSET get_thread_name
     xor dx,dx
     mov ax,get_thread_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET get_processor_id
-    mov di,OFFSET get_processor_id_name
+    mov esi,OFFSET get_processor_id
+    mov edi,OFFSET get_processor_id_name
     xor dx,dx
     mov ax,get_processor_id_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET get_cpu_time
-    mov di,OFFSET get_cpu_time_name
+    mov esi,OFFSET get_cpu_time
+    mov edi,OFFSET get_cpu_time_name
     xor dx,dx
     mov ax,get_cpu_time_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET swap_out
-    mov di,OFFSET swap_name
+    mov esi,OFFSET swap_out
+    mov edi,OFFSET swap_name
     xor dx,dx
     mov ax,swap_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET wait_milli_sec
-    mov di,OFFSET wait_milli_name
+    mov esi,OFFSET wait_milli_sec
+    mov edi,OFFSET wait_milli_name
     xor dx,dx
     mov ax,wait_milli_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET wait_micro_sec
-    mov di,OFFSET wait_micro_name
+    mov esi,OFFSET wait_micro_sec
+    mov edi,OFFSET wait_micro_name
     xor dx,dx
     mov ax,wait_micro_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET wait_until
-    mov di,OFFSET wait_until_name
+    mov esi,OFFSET wait_until
+    mov edi,OFFSET wait_until_name
     xor dx,dx
     mov ax,wait_until_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
     mov esi,OFFSET notify_time_drift
     mov edi,OFFSET notify_time_drift_name
@@ -987,29 +987,29 @@ proc_init:
     mov ax,notify_time_drift_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_system_time
-    mov di,OFFSET get_system_time_name
+    mov esi,OFFSET get_system_time
+    mov edi,OFFSET get_system_time_name
     xor dx,dx
     mov ax,get_system_time_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET get_time
-    mov di,OFFSET get_time_name
+    mov esi,OFFSET get_time
+    mov edi,OFFSET get_time_name
     xor dx,dx
     mov ax,get_time_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET time_to_system_time
-    mov di,OFFSET time_to_system_time_name
+    mov esi,OFFSET time_to_system_time
+    mov edi,OFFSET time_to_system_time_name
     xor dx,dx
     mov ax,time_to_system_time_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET system_time_to_time
-    mov di,OFFSET system_time_to_time_name
+    mov esi,OFFSET system_time_to_time
+    mov edi,OFFSET system_time_to_time_name
     xor dx,dx
     mov ax,system_time_to_time_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
     mov esi,OFFSET set_system_time
     mov edi,OFFSET set_system_time_name
@@ -1065,105 +1065,105 @@ proc_init:
     mov ax,get_debug_thread_sel_nr
     RegisterOsGate
 ;
-    mov si,OFFSET create_user_section
-    mov di,OFFSET create_user_section_name
+    mov esi,OFFSET create_user_section
+    mov edi,OFFSET create_user_section_name
     xor dx,dx
     mov ax,create_user_section_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET create_blocked_user_section
-    mov di,OFFSET create_blocked_user_section_name
+    mov esi,OFFSET create_blocked_user_section
+    mov edi,OFFSET create_blocked_user_section_name
     xor dx,dx
     mov ax,create_blocked_user_section_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET delete_user_section
-    mov di,OFFSET delete_user_section_name
+    mov esi,OFFSET delete_user_section
+    mov edi,OFFSET delete_user_section_name
     xor dx,dx
     mov ax,delete_user_section_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET enter_user_section
-    mov di,OFFSET enter_user_section_name
+    mov esi,OFFSET enter_user_section
+    mov edi,OFFSET enter_user_section_name
     xor dx,dx
     mov ax,enter_user_section_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET leave_user_section
-    mov di,OFFSET leave_user_section_name
+    mov esi,OFFSET leave_user_section
+    mov edi,OFFSET leave_user_section_name
     xor dx,dx
     mov ax,leave_user_section_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET get_debug_thread
-    mov di,OFFSET get_debug_thread_name
+    mov esi,OFFSET get_debug_thread
+    mov edi,OFFSET get_debug_thread_name
     xor dx,dx
     mov ax,get_debug_thread_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov bx,OFFSET get_debug_tss16
-    mov si,OFFSET get_debug_tss32
-    mov di,OFFSET get_debug_tss_name
+    mov ebx,OFFSET get_debug_tss16
+    mov esi,OFFSET get_debug_tss32
+    mov edi,OFFSET get_debug_tss_name
     mov dx,virt_es_in
     mov ax,get_debug_tss_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
-    mov si,OFFSET debug_trace
-    mov di,OFFSET debug_trace_name
+    mov esi,OFFSET debug_trace
+    mov edi,OFFSET debug_trace_name
     xor dx,dx
     mov ax,debug_trace_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET debug_pace
-    mov di,OFFSET debug_pace_name
+    mov esi,OFFSET debug_pace
+    mov edi,OFFSET debug_pace_name
     xor dx,dx
     mov ax,debug_pace_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET debug_go
-    mov di,OFFSET debug_go_name
+    mov esi,OFFSET debug_go
+    mov edi,OFFSET debug_go_name
     xor dx,dx
     mov ax,debug_go_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET debug_next
-    mov di,OFFSET debug_next_name
+    mov esi,OFFSET debug_next
+    mov edi,OFFSET debug_next_name
     xor dx,dx
     mov ax,debug_next_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov bx,OFFSET set_code_break16
-    mov si,OFFSET set_code_break32
-    mov di,OFFSET set_code_break_name
+    mov ebx,OFFSET set_code_break16
+    mov esi,OFFSET set_code_break32
+    mov edi,OFFSET set_code_break_name
     mov dx,virt_es_in
     mov ax,set_code_break_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
-    mov bx,OFFSET set_read_data_break16
-    mov si,OFFSET set_read_data_break32
-    mov di,OFFSET set_read_data_break_name
+    mov ebx,OFFSET set_read_data_break16
+    mov esi,OFFSET set_read_data_break32
+    mov edi,OFFSET set_read_data_break_name
     mov dx,virt_es_in
     mov ax,set_read_data_break_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
-    mov bx,OFFSET set_write_data_break16
-    mov si,OFFSET set_write_data_break32
-    mov di,OFFSET set_write_data_break_name
+    mov ebx,OFFSET set_write_data_break16
+    mov esi,OFFSET set_write_data_break32
+    mov edi,OFFSET set_write_data_break_name
     mov dx,virt_es_in
     mov ax,set_write_data_break_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
-    mov si,OFFSET clear_break
-    mov di,OFFSET clear_break_name
+    mov esi,OFFSET clear_break
+    mov edi,OFFSET clear_break_name
     xor dx,dx
     mov ax,clear_break_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
-    mov si,OFFSET update_time
-    mov di,OFFSET update_time_name
+    mov esi,OFFSET update_time
+    mov edi,OFFSET update_time_name
     xor cl,cl
     mov ax,update_time_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
     mov di,OFFSET check_list
     HookState

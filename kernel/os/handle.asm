@@ -957,17 +957,17 @@ init_handle     PROC near
         mov ax,clone_handle_mem_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_free_handles
-        mov di,OFFSET get_free_handles_name
+        mov esi,OFFSET get_free_handles
+        mov edi,OFFSET get_free_handles_name
         xor dx,dx
         mov ax,get_free_handles_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET get_free_handle_mem
-        mov di,OFFSET get_free_handle_mem_name
+        mov esi,OFFSET get_free_handle_mem
+        mov edi,OFFSET get_free_handle_mem_name
         xor dx,dx
         mov ax,get_free_handle_mem_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         popa
         pop es

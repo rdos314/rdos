@@ -1843,59 +1843,59 @@ init_fm Proc near
         mov di,OFFSET init_fm_thread
         HookInitTasking
 ;
-        mov si,OFFSET open_fm
-        mov di,OFFSET open_fm_name
+        mov esi,OFFSET open_fm
+        mov edi,OFFSET open_fm_name
         xor dx,dx
         mov ax,open_fm_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET close_fm
-        mov di,OFFSET close_fm_name
+        mov esi,OFFSET close_fm
+        mov edi,OFFSET close_fm_name
         xor dx,dx
         mov ax,close_fm_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET fm_wait
-        mov di,OFFSET fm_wait_name
+        mov esi,OFFSET fm_wait
+        mov edi,OFFSET fm_wait_name
         xor dx,dx
         mov ax,fm_wait_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET create_fm_instrument
-        mov di,OFFSET create_fm_instrument_name
+        mov esi,OFFSET create_fm_instrument
+        mov edi,OFFSET create_fm_instrument_name
         xor dx,dx
         mov ax,create_fm_instrument_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET free_fm_instrument
-        mov di,OFFSET free_fm_instrument_name
+        mov esi,OFFSET free_fm_instrument
+        mov edi,OFFSET free_fm_instrument_name
         xor dx,dx
         mov ax,free_fm_instrument_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET set_fm_attack
-        mov di,OFFSET set_fm_attack_name
+        mov esi,OFFSET set_fm_attack
+        mov edi,OFFSET set_fm_attack_name
         xor dx,dx
         mov ax,set_fm_attack_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET set_fm_sustain
-        mov di,OFFSET set_fm_sustain_name
+        mov esi,OFFSET set_fm_sustain
+        mov edi,OFFSET set_fm_sustain_name
         xor dx,dx
         mov ax,set_fm_sustain_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET set_fm_release
-        mov di,OFFSET set_fm_release_name
+        mov esi,OFFSET set_fm_release
+        mov edi,OFFSET set_fm_release_name
         xor dx,dx
         mov ax,set_fm_release_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET play_fm_note
-        mov di,OFFSET play_fm_note_name
+        mov esi,OFFSET play_fm_note
+        mov edi,OFFSET play_fm_note_name
         xor dx,dx
         mov ax,play_fm_note_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov bx,SEG data
         mov es,bx

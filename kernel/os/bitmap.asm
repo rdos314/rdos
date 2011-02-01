@@ -790,36 +790,36 @@ init_bitmap     PROC near
         mov ax,init_video_bitmap_nr
         RegisterOsGate
 ;
-        mov si,OFFSET create_bitmap
-        mov di,OFFSET create_bitmap_name
+        mov esi,OFFSET create_bitmap
+        mov edi,OFFSET create_bitmap_name
         xor dx,dx
         mov ax,create_bitmap_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET dup_bitmap_handle
-        mov di,OFFSET dup_bitmap_handle_name
+        mov esi,OFFSET dup_bitmap_handle
+        mov edi,OFFSET dup_bitmap_handle_name
         xor dx,dx
         mov ax,dup_bitmap_handle_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET close_bitmap
-        mov di,OFFSET close_bitmap_name
+        mov esi,OFFSET close_bitmap
+        mov edi,OFFSET close_bitmap_name
         xor dx,dx
         mov ax,close_bitmap_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET create_string_bitmap16
-        mov si,OFFSET create_string_bitmap32
-        mov di,OFFSET create_string_bitmap_name
+        mov ebx,OFFSET create_string_bitmap16
+        mov esi,OFFSET create_string_bitmap32
+        mov edi,OFFSET create_string_bitmap_name
         mov dx,virt_es_in
         mov ax,create_string_bitmap_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov si,OFFSET get_bitmap_info
-        mov di,OFFSET get_bitmap_info_name
+        mov esi,OFFSET get_bitmap_info
+        mov edi,OFFSET get_bitmap_info_name
         xor dx,dx
         mov ax,get_bitmap_info_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         ret
 init_bitmap     ENDP

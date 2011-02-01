@@ -41,73 +41,73 @@ INCLUDE ..\debevent.inc
 
 SYS_BASE EQU 0DE000000h
 
-code	SEGMENT byte public 'CODE'
+code    SEGMENT byte public 'CODE'
 
 .386p
-	
-	assume cs:code
+        
+        assume cs:code
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SendEvent
+;               NAME:                   SendEvent
 ;
-;		DESCRIPTION:    Sent event to debugger
+;               DESCRIPTION:    Sent event to debugger
 ;
-;		PARAMETERS:     DS		Lib
-;						ES		Event
+;               PARAMETERS:     DS              Lib
+;                                               ES              Event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendEvent Proc near
-	push ds
-	push eax
-	push bx
-	ClearSignal
+        push ds
+        push eax
+        push bx
+        ClearSignal
 ;
-	GetThread
-	push es
-	mov es,ax
-	mov ax,es:p_id
-	pop es	
-	mov es:event_thread_id,ax
+        GetThread
+        push es
+        mov es,ax
+        mov ax,es:p_id
+        pop es  
+        mov es:event_thread_id,ax
 ;
-	mov ax,ds:lib_debug_lib
-	or ax,ax
-	jz seDone
+        mov ax,ds:lib_debug_lib
+        or ax,ax
+        jz seDone
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_mod_sel
-	LockTask
+        mov ds,ds:app_mod_sel
+        LockTask
 ;
-	mov ax,ds:lib_events
-	or ax,ax
-	je seEmpty
+        mov ax,ds:lib_events
+        or ax,ax
+        je seEmpty
 ;
-	push ds
-	push si
-	mov ds,ax
-	mov si,ds:event_prev
-	mov ds:event_prev,es
-	mov ds,si
-	mov ds:event_next,es
-	mov es:event_next,ax
-	mov es:event_prev,si
-	pop si
-	pop ds
-	jmp seInsDone
+        push ds
+        push si
+        mov ds,ax
+        mov si,ds:event_prev
+        mov ds:event_prev,es
+        mov ds,si
+        mov ds:event_next,es
+        mov es:event_next,ax
+        mov es:event_prev,si
+        pop si
+        pop ds
+        jmp seInsDone
 
 seEmpty:
-	mov es:event_next,es
-	mov es:event_prev,es
+        mov es:event_next,es
+        mov es:event_prev,es
 
 seInsDone:
-	mov ds:lib_events,es
-	xor ax,ax
-	mov es,ax
-	UnlockTask
+        mov ds:lib_events,es
+        xor ax,ax
+        mov es,ax
+        UnlockTask
 ;
     push es
 
@@ -121,24 +121,24 @@ seSignalLoop:
     jmp seSignalLoop
 
 seSignalDo:
-	mov es,ax
-	SignalWait
-	pop es
-	
+        mov es,ax
+        SignalWait
+        pop es
+        
 seDone:
-	WaitForSignal
-	pop bx
-	pop eax
-	pop ds
-	ret
+        WaitForSignal
+        pop bx
+        pop eax
+        pop ds
+        ret
 SendEvent Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			AllocateKernelEvent
+;               NAME:                   AllocateKernelEvent
 ;
-;		DESCRIPTION:    Pre-allocate kernel event
+;               DESCRIPTION:    Pre-allocate kernel event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -148,18 +148,18 @@ AllocateKernelEvent   Proc far
     push eax
     push di
 ;
-	mov eax,SIZE kernel_exception_event_struc
-	mov di,SIZE event_struc
-	add ax,di
-	AllocateSmallGlobalMem
-	sub ax,di
-	mov es:event_size,ax
-	mov es:event_code,EVENT_KERNEL
+        mov eax,SIZE kernel_exception_event_struc
+        mov di,SIZE event_struc
+        add ax,di
+        AllocateSmallGlobalMem
+        sub ax,di
+        mov es:event_size,ax
+        mov es:event_code,EVENT_KERNEL
 ;
     GetThread
     mov ds,ax
-	mov ax,ds:p_id
-	mov es:event_thread_id,ax
+        mov ax,ds:p_id
+        mov es:event_thread_id,ax
     mov ds:p_debug_event,es
 ;
     pop di
@@ -172,9 +172,9 @@ AllocateKernelEvent   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			NotifyKernelDebug
+;               NAME:                   NotifyKernelDebug
 ;
-;		DESCRIPTION:    Notify kernel debug event. Called on scheduler locked stack
+;               DESCRIPTION:    Notify kernel debug event. Called on scheduler locked stack
 ;
 ;       PARAMETERS:     ES      Thread sel
 ;
@@ -189,52 +189,52 @@ NotifyKernelDebug   Proc far
 ;    
     mov dx,es:p_error_code
     mov ds,es:p_app_sel
-	mov ds,ds:app_mod_sel
+        mov ds,ds:app_mod_sel
 ;
     mov ax,es:p_debug_event
     or ax,ax
     jz nkeDone
 ;
     mov es,ax    
-	mov di,SIZE event_struc
-	mov es:[di].kexcVector,dx
+        mov di,SIZE event_struc
+        mov es:[di].kexcVector,dx
     xor ax,ax
     xchg ax,ds:lib_suppress
     or ax,ax
     jnz nkeDone
 ;    
-	mov ax,ds:lib_events
-	or ax,ax
-	je nkeEmpty
+        mov ax,ds:lib_events
+        or ax,ax
+        je nkeEmpty
 ;
-	push ds
-	push si
-	mov ds,ax
-	mov si,ds:event_prev
-	mov ds:event_prev,es
-	mov ds,si
-	mov ds:event_next,es
-	mov es:event_next,ax
-	mov es:event_prev,si
-	pop si
-	pop ds
-	jmp nkeInsDone
+        push ds
+        push si
+        mov ds,ax
+        mov si,ds:event_prev
+        mov ds:event_prev,es
+        mov ds,si
+        mov ds:event_next,es
+        mov es:event_next,ax
+        mov es:event_prev,si
+        pop si
+        pop ds
+        jmp nkeInsDone
 
 nkeEmpty:
-	mov es:event_next,es
-	mov es:event_prev,es
+        mov es:event_next,es
+        mov es:event_prev,es
 
 nkeInsDone:
-	mov ds:lib_events,es
-	xor ax,ax
-	mov es,ax
+        mov ds:lib_events,es
+        xor ax,ax
+        mov es,ax
 ;
-	mov ax,ds:lib_debug_obj
-	or ax,ax
-	jz nkeDone
-;	
+        mov ax,ds:lib_debug_obj
+        or ax,ax
+        jz nkeDone
+;       
     mov es,ax
-	SignalWait
+        SignalWait
 
 nkeDone:
     pop di
@@ -248,363 +248,363 @@ NotifyKernelDebug   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ExceptionEvent
+;               NAME:                   ExceptionEvent
 ;
-;		DESCRIPTION:    Exception event
+;               DESCRIPTION:    Exception event
 ;
-;		PARAMETERS:     DS		Lib
-;						EBP		Exception frame
-;						EAX		Exception code
+;               PARAMETERS:     DS              Lib
+;                                               EBP             Exception frame
+;                                               EAX             Exception code
 ;
-;		RETURNS:		ES		Event
+;               RETURNS:                ES              Event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExceptionEvent Proc near
-	push bp
-	mov bp,[bp]
-	push eax
-	push di
+        push bp
+        mov bp,[bp]
+        push eax
+        push di
 ;
-	push eax
-	mov eax,SIZE exception_event_struc
-	mov di,SIZE event_struc
-	add ax,di
-	AllocateSmallGlobalMem
-	sub ax,di
-	mov es:event_size,ax
-	mov es:event_code,EVENT_EXCEPTION
-	pop eax
-	mov es:[di].excCode,eax
+        push eax
+        mov eax,SIZE exception_event_struc
+        mov di,SIZE event_struc
+        add ax,di
+        AllocateSmallGlobalMem
+        sub ax,di
+        mov es:event_size,ax
+        mov es:event_code,EVENT_EXCEPTION
+        pop eax
+        mov es:[di].excCode,eax
 ;
-	lea eax,[ebp+8]
-	mov es:[di].excPtr,eax
+        lea eax,[ebp+8]
+        mov es:[di].excPtr,eax
 ;
-	push ds
-	mov ax,flat_data_sel
-	mov ds,ax
-	mov eax,ds:[ebp+20]
-	pop ds
-	mov es:[di].excEip,eax
-	mov es:[di].excCs,flat_code_sel
+        push ds
+        mov ax,flat_data_sel
+        mov ds,ax
+        mov eax,ds:[ebp+20]
+        pop ds
+        mov es:[di].excEip,eax
+        mov es:[di].excCs,flat_code_sel
 ;
     pop di
-	pop eax
-	pop bp
-	ret
+        pop eax
+        pop bp
+        ret
 ExceptionEvent Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CreateProcessEvent
+;               NAME:                   CreateProcessEvent
 ;
-;		DESCRIPTION:    Create process debug event
+;               DESCRIPTION:    Create process debug event
 ;
-;		PARAMETERS:     DS		Lib
-;						FS		TIB
-;						BP		Startup info
+;               PARAMETERS:     DS              Lib
+;                                               FS              TIB
+;                                               BP              Startup info
 ;
-;		RETURNS:		ES		Event
+;               RETURNS:                ES              Event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateProcessEvent Proc near
-	push eax
-	push ebx
-	push di
+        push eax
+        push ebx
+        push di
 ;
-	mov eax,SIZE create_process_event_struc
-	mov di,SIZE event_struc
-	add ax,di
-	AllocateSmallGlobalMem
-	sub ax,di
-	mov es:event_size,ax
-	mov es:event_code,EVENT_CREATE_PROCESS
+        mov eax,SIZE create_process_event_struc
+        mov di,SIZE event_struc
+        add ax,di
+        AllocateSmallGlobalMem
+        sub ax,di
+        mov es:event_size,ax
+        mov es:event_code,EVENT_CREATE_PROCESS
 ;
-	mov bx,ds:lib_file_handle
-	GetFileInfo
-	mov word ptr es:[di].cpeFile,ax
-	mov word ptr es:[di].cpeFile+2,cx
-;	
+        mov bx,ds:lib_file_handle
+        GetFileInfo
+        mov word ptr es:[di].cpeFile,ax
+        mov word ptr es:[di].cpeFile+2,cx
+;       
     movzx ebx,ds:mod_handle
     DerefModuleHandle
     mov es:[di].cpeHandle,ebx
 ;
-	mov eax,fs:pvProcessHandle
-	mov es:[di].cpeProcess,eax
-	mov eax,fs:pvThreadHandle
-	mov es:[di].cpeThread,eax	
-	mov eax,ds:lib_base
-	mov es:[di].cpeImageBase,eax
-	mov eax,ds:lib_size
-	mov es:[di].cpeImageSize,eax
+        mov eax,fs:pvProcessHandle
+        mov es:[di].cpeProcess,eax
+        mov eax,fs:pvThreadHandle
+        mov es:[di].cpeThread,eax       
+        mov eax,ds:lib_base
+        mov es:[di].cpeImageBase,eax
+        mov eax,ds:lib_size
+        mov es:[di].cpeImageSize,eax
 ;
-	push es
-	mov ax,flat_data_sel
-	mov es,ax
-	mov eax,ds:lib_objects
-	mov eax,es:[eax].o_va
-	pop es
-	mov es:[di].cpeObjectRva,eax
-;	
-	mov eax,fs:pvBase
-	mov es:[di].cpeFsLinear,eax
-	mov es:[di].cpeStartCs,flat_code_sel
-	mov eax,[bp].load_eip
-	mov es:[di].cpeStartEip,eax
+        push es
+        mov ax,flat_data_sel
+        mov es,ax
+        mov eax,ds:lib_objects
+        mov eax,es:[eax].o_va
+        pop es
+        mov es:[di].cpeObjectRva,eax
+;       
+        mov eax,fs:pvBase
+        mov es:[di].cpeFsLinear,eax
+        mov es:[di].cpeStartCs,flat_code_sel
+        mov eax,[bp].load_eip
+        mov es:[di].cpeStartEip,eax
 ;
     pop di
-	pop ebx
-	pop eax
-	ret
+        pop ebx
+        pop eax
+        ret
 CreateProcessEvent Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TerminateProcessEvent
+;               NAME:                   TerminateProcessEvent
 ;
-;		DESCRIPTION:    Terminate process debug event
+;               DESCRIPTION:    Terminate process debug event
 ;
-;		PARAMETERS:		EAX		Exit code
+;               PARAMETERS:             EAX             Exit code
 ;
-;		RETURNS:		ES		Event
+;               RETURNS:                ES              Event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TerminateProcessEvent Proc near
-	push ebx
-	push di
+        push ebx
+        push di
 ;
-	push eax
-	mov eax,SIZE terminate_process_event_struc
-	mov di,SIZE event_struc
-	add ax,di
-	AllocateSmallGlobalMem
-	sub ax,di
-	mov es:event_size,ax
-	mov es:event_code,EVENT_TERMINATE_PROCESS
-	pop eax
+        push eax
+        mov eax,SIZE terminate_process_event_struc
+        mov di,SIZE event_struc
+        add ax,di
+        AllocateSmallGlobalMem
+        sub ax,di
+        mov es:event_size,ax
+        mov es:event_code,EVENT_TERMINATE_PROCESS
+        pop eax
 ;
-	mov es:[di].tpeExitCode,eax
+        mov es:[di].tpeExitCode,eax
 ;
     pop di
-	pop ebx
-	ret
+        pop ebx
+        ret
 TerminateProcessEvent Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CreateThreadEvent
+;               NAME:                   CreateThreadEvent
 ;
-;		DESCRIPTION:    Create thread debug event
+;               DESCRIPTION:    Create thread debug event
 ;
-;		PARAMETERS:     DS		Lib
-;						FS		TIB
-;						EDX		EIP
+;               PARAMETERS:     DS              Lib
+;                                               FS              TIB
+;                                               EDX             EIP
 ;
-;		RETURNS:		ES		Event
+;               RETURNS:                ES              Event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateThreadEvent Proc near
-	push eax
-	push ebx
-	push di
+        push eax
+        push ebx
+        push di
 ;
-	mov eax,SIZE create_thread_event_struc
-	mov di,SIZE event_struc
-	add ax,di
-	AllocateSmallGlobalMem
-	sub ax,di
-	mov es:event_size,ax
-	mov es:event_code,EVENT_CREATE_THREAD
+        mov eax,SIZE create_thread_event_struc
+        mov di,SIZE event_struc
+        add ax,di
+        AllocateSmallGlobalMem
+        sub ax,di
+        mov es:event_size,ax
+        mov es:event_code,EVENT_CREATE_THREAD
 ;
-	mov eax,fs:pvThreadHandle
-	mov es:[di].cteThread,eax
-	mov eax,fs:pvBase
-	mov es:[di].cteFsLinear,eax
-	mov es:[di].cteStartEip,edx
-	mov es:[di].cteStartCs,flat_code_sel
+        mov eax,fs:pvThreadHandle
+        mov es:[di].cteThread,eax
+        mov eax,fs:pvBase
+        mov es:[di].cteFsLinear,eax
+        mov es:[di].cteStartEip,edx
+        mov es:[di].cteStartCs,flat_code_sel
 ;
     pop di
-	pop ebx
-	pop eax
-	ret
+        pop ebx
+        pop eax
+        ret
 CreateThreadEvent Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TerminateThreadEvent
+;               NAME:                   TerminateThreadEvent
 ;
-;		DESCRIPTION:    Terminate thread debug event
+;               DESCRIPTION:    Terminate thread debug event
 ;
-;		PARAMETERS:     DS		Lib
-;						FS		TIB
+;               PARAMETERS:     DS              Lib
+;                                               FS              TIB
 ;
-;		RETURNS:		ES		Event
+;               RETURNS:                ES              Event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TerminateThreadEvent Proc near
-	push eax
-	push ebx
+        push eax
+        push ebx
 ;
-	mov eax,SIZE event_struc
-	AllocateSmallGlobalMem
-	mov es:event_size,0
-	mov es:event_code,EVENT_TERMINATE_THREAD
+        mov eax,SIZE event_struc
+        AllocateSmallGlobalMem
+        mov es:event_size,0
+        mov es:event_code,EVENT_TERMINATE_THREAD
 ;
-	pop ebx
-	pop eax
-	ret
+        pop ebx
+        pop eax
+        ret
 TerminateThreadEvent Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadDllEvent
+;               NAME:                   LoadDllEvent
 ;
-;		DESCRIPTION:    Load Dll debug event
+;               DESCRIPTION:    Load Dll debug event
 ;
-;		PARAMETERS:     DS		Lib
+;               PARAMETERS:     DS              Lib
 ;
-;		RETURNS:		ES		Event
+;               RETURNS:                ES              Event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadDllEvent Proc near
-	push eax
-	push di
+        push eax
+        push di
 ;
-	mov eax,SIZE load_dll_event_struc
-	mov di,SIZE event_struc
-	add ax,di
-	AllocateSmallGlobalMem
-	sub ax,di
-	mov es:event_size,ax
-	mov es:event_code,EVENT_LOAD_DLL
+        mov eax,SIZE load_dll_event_struc
+        mov di,SIZE event_struc
+        add ax,di
+        AllocateSmallGlobalMem
+        sub ax,di
+        mov es:event_size,ax
+        mov es:event_code,EVENT_LOAD_DLL
 ;
-	mov bx,ds:lib_file_handle
-	GetFileInfo
-	mov word ptr es:[di].ldeFile,ax
-	mov word ptr es:[di].ldeFile+2,cx
-;	
+        mov bx,ds:lib_file_handle
+        GetFileInfo
+        mov word ptr es:[di].ldeFile,ax
+        mov word ptr es:[di].ldeFile+2,cx
+;       
     movzx ebx,ds:mod_handle
     DerefModuleHandle
     mov es:[di].ldeHandle,ebx    
 ;
-	mov eax,ds:lib_base
-	mov es:[di].ldeImageBase,eax
+        mov eax,ds:lib_base
+        mov es:[di].ldeImageBase,eax
 ;
-	push es
-	mov ax,flat_data_sel
-	mov es,ax
-	mov eax,ds:lib_objects
-	mov eax,es:[eax].o_va
-	pop es
-	mov es:[di].ldeObjectRva,eax
-;	
-	mov eax,ds:lib_size
-	mov es:[di].ldeImageSize,eax
+        push es
+        mov ax,flat_data_sel
+        mov es,ax
+        mov eax,ds:lib_objects
+        mov eax,es:[eax].o_va
+        pop es
+        mov es:[di].ldeObjectRva,eax
+;       
+        mov eax,ds:lib_size
+        mov es:[di].ldeImageSize,eax
 ;
     pop di
-	pop eax
-	ret
-LoadDllEvent	Endp
+        pop eax
+        ret
+LoadDllEvent    Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FreeDllEvent
+;               NAME:                   FreeDllEvent
 ;
-;		DESCRIPTION:    Free DLL debug event
+;               DESCRIPTION:    Free DLL debug event
 ;
-;		PARAMETERS:     DS		Lib
+;               PARAMETERS:     DS              Lib
 ;
-;		RETURNS:		ES		Event
+;               RETURNS:                ES              Event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDllEvent Proc near
-	push eax
-	push ebx
+        push eax
+        push ebx
 ;
-	mov eax,SIZE free_dll_event_struc
-	mov di,SIZE event_struc
-	add ax,di
-	AllocateSmallGlobalMem
-	sub ax,di
-	mov es:event_size,ax
-	mov es:event_code,EVENT_FREE_DLL
-;	
+        mov eax,SIZE free_dll_event_struc
+        mov di,SIZE event_struc
+        add ax,di
+        AllocateSmallGlobalMem
+        sub ax,di
+        mov es:event_size,ax
+        mov es:event_code,EVENT_FREE_DLL
+;       
     movzx ebx,ds:mod_handle
     DerefModuleHandle
     mov es:[di].fdeHandle,ebx    
 ;
-	pop ebx
-	pop eax
-	ret
+        pop ebx
+        pop eax
+        ret
 FreeDllEvent Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CreateLib
+;               NAME:                   CreateLib
 ;
-;		DESCRIPTION:    Create lib
+;               DESCRIPTION:    Create lib
 ;
-;		PARAMETERS:     FS:ESI	Image name
-;						BX		File handle
+;               PARAMETERS:     FS:ESI  Image name
+;                                               BX              File handle
 ;
-;		RETURNS:		ES		Lib handle
+;               RETURNS:                ES              Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateLib	Proc near
-	push eax
-	push ecx
-	push esi
-	push edi
+CreateLib       Proc near
+        push eax
+        push ecx
+        push esi
+        push edi
 ;
-	xor cx,cx
-	push esi
+        xor cx,cx
+        push esi
 create_lib_size_loop:
-	mov al,fs:[esi]
-	or al,al
-	jz create_lib_size_ok
+        mov al,fs:[esi]
+        or al,al
+        jz create_lib_size_ok
 ;
-	cmp al,'.'
-	jz create_lib_size_ok
-	inc cx
-	inc esi
-	jmp create_lib_size_loop
+        cmp al,'.'
+        jz create_lib_size_ok
+        inc cx
+        inc esi
+        jmp create_lib_size_loop
 
 create_lib_size_ok:
-	pop esi
-	movzx eax,cx
-	mov edi,OFFSET lib_name
-	add eax,edi
-	inc eax
-	AllocateSmallGlobalMem
+        pop esi
+        movzx eax,cx
+        mov edi,OFFSET lib_name
+        add eax,edi
+        inc eax
+        AllocateSmallGlobalMem
 ;
-	rep movs byte ptr es:[edi],fs:[esi]
-	mov byte ptr es:[edi],0
-	mov es:lib_usage_count,1
-;	
-	mov es:lib_base,0
-	mov es:lib_process,0
-	mov es:lib_size,0
-	mov es:lib_debug_lib,0
-	mov es:lib_debug_obj,0
-	mov es:lib_events,0
-	mov es:lib_suppress,0
-	mov es:lib_file_handle,bx
-	mov es:lib_run_now,0
-	mov es:lib_init_param,0
+        rep movs byte ptr es:[edi],fs:[esi]
+        mov byte ptr es:[edi],0
+        mov es:lib_usage_count,1
+;       
+        mov es:lib_base,0
+        mov es:lib_process,0
+        mov es:lib_size,0
+        mov es:lib_debug_lib,0
+        mov es:lib_debug_obj,0
+        mov es:lib_events,0
+        mov es:lib_suppress,0
+        mov es:lib_file_handle,bx
+        mov es:lib_run_now,0
+        mov es:lib_init_param,0
 ;
     mov es:mod_free_dll_proc,0
 ;
@@ -638,98 +638,98 @@ create_lib_size_ok:
     mov word ptr es:mod_continue_debug_event_proc,OFFSET continue_debug_event
     mov word ptr es:mod_continue_debug_event_proc+2,cs
 ;
-	pop edi
-	pop esi
-	pop ecx
-	pop eax
-	ret
-CreateLib	Endp
+        pop edi
+        pop esi
+        pop ecx
+        pop eax
+        ret
+CreateLib       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InsertApp
+;               NAME:                   InsertApp
 ;
-;		DESCRIPTION:    Insert App image into module list
+;               DESCRIPTION:    Insert App image into module list
 ;
-;		PARAMETERS:     ES		Lib handle
+;               PARAMETERS:     ES              Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-pe_loader_name	DB 'PE',0
+pe_loader_name  DB 'PE',0
 
-InsertApp	Proc near
-	push ds
-	push ax
+InsertApp       Proc near
+        push ds
+        push ax
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov word ptr ds:app_get_env_proc,OFFSET get_env
-	mov word ptr ds:app_get_env_proc+2,cs 
-	mov word ptr ds:app_get_exe_proc,OFFSET get_exe_name
-	mov word ptr ds:app_get_exe_proc+2,cs 
-	mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
-	mov word ptr ds:app_get_cmd_line_proc+2,cs 
-	mov word ptr ds:app_get_options_proc,OFFSET get_options
-	mov word ptr ds:app_get_options_proc+2,cs 
-	mov word ptr ds:app_set_options_proc,OFFSET set_options
-	mov word ptr ds:app_set_options_proc+2,cs 
-	mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
-	mov word ptr ds:app_allocate_mem_proc+2,cs 
-	mov word ptr ds:app_free_mem_proc,OFFSET free_mem
-	mov word ptr ds:app_free_mem_proc+2,cs 
-	mov word ptr ds:app_debug_allocate_mem_proc,OFFSET debug_allocate_mem
-	mov word ptr ds:app_debug_allocate_mem_proc+2,cs 
-	mov word ptr ds:app_debug_free_mem_proc,OFFSET debug_free_mem
-	mov word ptr ds:app_debug_free_mem_proc+2,cs 
-	mov word ptr ds:app_init_thread_proc,OFFSET init_thread
-	mov word ptr ds:app_init_thread_proc+2,cs
-	mov word ptr ds:app_free_thread_proc,OFFSET free_thread
-	mov word ptr ds:app_free_thread_proc+2,cs
-	mov word ptr ds:app_spawn_proc,OFFSET spawn_proc
-	mov word ptr ds:app_spawn_proc+2,cs
-	mov word ptr ds:app_clone_proc,OFFSET clone_proc
-	mov word ptr ds:app_clone_proc+2,cs
-	mov word ptr ds:app_close_proc,OFFSET close_proc
-	mov word ptr ds:app_close_proc+2,cs
-	mov word ptr ds:app_load_dll_proc,OFFSET load_dll
-	mov word ptr ds:app_load_dll_proc+2,cs
-	mov word ptr ds:app_loader_name,OFFSET pe_loader_name
-	mov word ptr ds:app_loader_name+2,cs
+        mov word ptr ds:app_get_env_proc,OFFSET get_env
+        mov word ptr ds:app_get_env_proc+2,cs 
+        mov word ptr ds:app_get_exe_proc,OFFSET get_exe_name
+        mov word ptr ds:app_get_exe_proc+2,cs 
+        mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
+        mov word ptr ds:app_get_cmd_line_proc+2,cs 
+        mov word ptr ds:app_get_options_proc,OFFSET get_options
+        mov word ptr ds:app_get_options_proc+2,cs 
+        mov word ptr ds:app_set_options_proc,OFFSET set_options
+        mov word ptr ds:app_set_options_proc+2,cs 
+        mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
+        mov word ptr ds:app_allocate_mem_proc+2,cs 
+        mov word ptr ds:app_free_mem_proc,OFFSET free_mem
+        mov word ptr ds:app_free_mem_proc+2,cs 
+        mov word ptr ds:app_debug_allocate_mem_proc,OFFSET debug_allocate_mem
+        mov word ptr ds:app_debug_allocate_mem_proc+2,cs 
+        mov word ptr ds:app_debug_free_mem_proc,OFFSET debug_free_mem
+        mov word ptr ds:app_debug_free_mem_proc+2,cs 
+        mov word ptr ds:app_init_thread_proc,OFFSET init_thread
+        mov word ptr ds:app_init_thread_proc+2,cs
+        mov word ptr ds:app_free_thread_proc,OFFSET free_thread
+        mov word ptr ds:app_free_thread_proc+2,cs
+        mov word ptr ds:app_spawn_proc,OFFSET spawn_proc
+        mov word ptr ds:app_spawn_proc+2,cs
+        mov word ptr ds:app_clone_proc,OFFSET clone_proc
+        mov word ptr ds:app_clone_proc+2,cs
+        mov word ptr ds:app_close_proc,OFFSET close_proc
+        mov word ptr ds:app_close_proc+2,cs
+        mov word ptr ds:app_load_dll_proc,OFFSET load_dll
+        mov word ptr ds:app_load_dll_proc+2,cs
+        mov word ptr ds:app_loader_name,OFFSET pe_loader_name
+        mov word ptr ds:app_loader_name+2,cs
 ;
-	pop ax
-	pop ds
-	ret
-InsertApp	Endp
+        pop ax
+        pop ds
+        ret
+InsertApp       Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FindLib
+;               NAME:                   FindLib
 ;
-;		DESCRIPTION:    Search for a DLL or app module
+;               DESCRIPTION:    Search for a DLL or app module
 ;
-;		PARAMETERS:     EDX		Virtual adress
+;               PARAMETERS:     EDX             Virtual adress
 ;
-;		RETURNS:		EDI		Image base
-;						ES		Lib
+;               RETURNS:                EDI             Image base
+;                                               ES              Lib
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindLib	Proc near
-	push ds
-	push eax
-	push bx
-	push ecx
-	push si
+FindLib Proc near
+        push ds
+        push eax
+        push bx
+        push ecx
+        push si
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     DerefModuleHandle
-	jc find_lib_done
+        jc find_lib_done
 ;    
     mov ds,bx
     EnterSection ds:mod_section
@@ -739,12 +739,12 @@ FindLib	Proc near
 
 find_lib_dll_loop:
     mov es,ax
-	mov ecx,edx
-	sub ecx,es:lib_base
-	jc find_lib_dll_next
-;	
-	cmp ecx,es:lib_size
-	jc find_lib_ok
+        mov ecx,edx
+        sub ecx,es:lib_base
+        jc find_lib_dll_next
+;       
+        cmp ecx,es:lib_size
+        jc find_lib_ok
 
 find_lib_dll_next:
     mov ax,es:mod_next
@@ -754,92 +754,92 @@ find_lib_dll_next:
 find_lib_try_app:
     mov ax,ds
     mov es,ax
-	mov ecx,edx
-	sub ecx,es:lib_base
-	jc find_lib_fail
-;	
-	cmp ecx,es:lib_size
-	jc find_lib_ok
+        mov ecx,edx
+        sub ecx,es:lib_base
+        jc find_lib_fail
+;       
+        cmp ecx,es:lib_size
+        jc find_lib_ok
 
 find_lib_fail:
     LeaveSection ds:mod_section
-	stc
-	jmp find_lib_done
+        stc
+        jmp find_lib_done
 
 find_lib_ok:
     mov edi,es:lib_base
     LeaveSection ds:mod_section
-	clc
+        clc
 
 find_lib_done:
-	pop si
-	pop ecx
-	pop bx
-	pop eax
-	pop ds
-	ret
-FindLib	Endp
+        pop si
+        pop ecx
+        pop bx
+        pop eax
+        pop ds
+        ret
+FindLib Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FindDll / FindApp
+;               NAME:                   FindDll / FindApp
 ;
-;		DESCRIPTION:    get DLL or app from name
+;               DESCRIPTION:    get DLL or app from name
 ;
-;		PARAMETERS:    	FS:ESI	DLL NAME
+;               PARAMETERS:     FS:ESI  DLL NAME
 ;
-;		RETURNS:		ES		Lib handle
-;						EDI		Image base
+;               RETURNS:                ES              Lib handle
+;                                               EDI             Image base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UCaseTab:
-ct00 DB	0,		0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ct08 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ct10 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ct18 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ct20 DB ' ',	'!',	0FFh,	'#',	'$',	'%',	'&',	27h
-ct28 DB '(',	')',	0FFh,	0FFh,	0FFh,	'-',	0,		'/'
-ct30 DB '0',	'1',	'2',	'3',	'4',	'5',	'6',	'7'
-ct38 DB '8',	'9',	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ct40 DB '@',	'A',	'B',	'C',	'D',	'E',	'F',	'G'
-ct48 DB 'H',	'I',	'J',	'K',	'L',	'M',	'N',	'O'
-ct50 DB 'P',	'Q',	'R',	'S',	'T',	'U',	'V',	'W'
-ct58 DB	'X',	'Y',	'Z',	0FFh,	'\',	0FFh,	'^',	'_'
-ct60 DB 60h,	'A',	'B',	'C',	'D',	'E',	'F',	'G'
-ct68 DB 'H',	'I',	'J',	'K',	'L',	'M',	'N',	'O'
-ct70 DB 'P',	'Q',	'R',	'S',	'T',	'U',	'V',	'W'
-ct78 DB 'X',	'Y',	'Z',	'{',	0FFh,	'}',	'~',	0FFh
-ct80 DB	0FFh,	0FFh,	0FFh,	0FFh,	'é',	0FFh,	'è',	0FFh
-ct88 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	'é',	'è'
-ct90 DB	0FFh,	0FFh,	0FFh,	0FFh,	'ô',	0FFh,	0FFh,	0FFh
-ct98 DB	0FFh,	'ô',	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctA0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctA8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctB0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctB8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctC0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctC8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctD0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctD8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctE0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctE8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctF0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
-ctF8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ct00 DB 0,              0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct08 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct10 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct18 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct20 DB ' ',    '!',    0FFh,   '#',    '$',    '%',    '&',    27h
+ct28 DB '(',    ')',    0FFh,   0FFh,   0FFh,   '-',    0,              '/'
+ct30 DB '0',    '1',    '2',    '3',    '4',    '5',    '6',    '7'
+ct38 DB '8',    '9',    0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct40 DB '@',    'A',    'B',    'C',    'D',    'E',    'F',    'G'
+ct48 DB 'H',    'I',    'J',    'K',    'L',    'M',    'N',    'O'
+ct50 DB 'P',    'Q',    'R',    'S',    'T',    'U',    'V',    'W'
+ct58 DB 'X',    'Y',    'Z',    0FFh,   '\',    0FFh,   '^',    '_'
+ct60 DB 60h,    'A',    'B',    'C',    'D',    'E',    'F',    'G'
+ct68 DB 'H',    'I',    'J',    'K',    'L',    'M',    'N',    'O'
+ct70 DB 'P',    'Q',    'R',    'S',    'T',    'U',    'V',    'W'
+ct78 DB 'X',    'Y',    'Z',    '{',    0FFh,   '}',    '~',    0FFh
+ct80 DB 0FFh,   0FFh,   0FFh,   0FFh,   'é',    0FFh,   'è',    0FFh
+ct88 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   'é',    'è'
+ct90 DB 0FFh,   0FFh,   0FFh,   0FFh,   'ô',    0FFh,   0FFh,   0FFh
+ct98 DB 0FFh,   'ô',    0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctA0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctA8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctB0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctB8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctC0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctC8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctD0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctD8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctE0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctE8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctF0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctF8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 
-FindDll	Proc near
-	push ds
-	push ax
-	push bx
-	push dx
+FindDll Proc near
+        push ds
+        push ax
+        push bx
+        push dx
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     DerefModuleHandle
-	jc find_dll_end
+        jc find_dll_end
 ;    
     mov ds,bx
     EnterSection ds:mod_section
@@ -848,177 +848,177 @@ FindDll	Proc near
     jz find_dll_fail
 
 find_dll_check_dll:
-	mov es,ax
-	mov di,OFFSET lib_name
-	push esi
+        mov es,ax
+        mov di,OFFSET lib_name
+        push esi
 find_dll_check_name:
-	mov al,es:[di]
-	movzx bx,al
-	mov al,byte ptr cs:[bx].UCaseTab
-	mov ah,fs:[esi]
-	movzx bx,ah
-	mov ah,byte ptr cs:[bx].UCaseTab
-	cmp al,ah
-	jne find_dll_next
-;	
-	or al,al
-	je find_dll_ok
+        mov al,es:[di]
+        movzx bx,al
+        mov al,byte ptr cs:[bx].UCaseTab
+        mov ah,fs:[esi]
+        movzx bx,ah
+        mov ah,byte ptr cs:[bx].UCaseTab
+        cmp al,ah
+        jne find_dll_next
+;       
+        or al,al
+        je find_dll_ok
 ;
-	inc esi
-	inc di
-	jmp find_dll_check_name
+        inc esi
+        inc di
+        jmp find_dll_check_name
 
 find_dll_next:
-	pop esi
+        pop esi
     mov ax,es:mod_next
     or ax,ax
-	jne find_dll_check_dll
+        jne find_dll_check_dll
 
 find_dll_fail:
     LeaveSection ds:mod_section
-	stc
-	jmp find_dll_end
+        stc
+        jmp find_dll_end
 
 find_dll_ok:
-	pop esi
-	mov edi,es:lib_base
+        pop esi
+        mov edi,es:lib_base
     LeaveSection ds:mod_section
-	clc
+        clc
 
 find_dll_end:
-	pop dx
-	pop bx
-	pop ax
-	pop ds
-	ret
-FindDll	Endp
+        pop dx
+        pop bx
+        pop ax
+        pop ds
+        ret
+FindDll Endp
 
-FindApp	Proc near
-	push ds
-	push ax
-	push bx
-	push dx
+FindApp Proc near
+        push ds
+        push ax
+        push bx
+        push dx
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     DerefModuleHandle
-	jc find_app_fail
+        jc find_app_fail
 ;
     mov es,bx
-	mov di,OFFSET lib_name
-	push esi
+        mov di,OFFSET lib_name
+        push esi
 
 find_app_check_name:
-	mov al,es:[di]
-	inc di
-	movzx bx,al
-	mov al,byte ptr cs:[bx].UCaseTab
-	mov ah,fs:[esi]
-	movzx bx,ah
-	mov ah,byte ptr cs:[bx].UCaseTab
-	cmp al,ah
-	jne find_app_pop
-	or al,al
-	je find_app_ok
-	inc esi
-	inc di
-	jmp find_app_check_name
+        mov al,es:[di]
+        inc di
+        movzx bx,al
+        mov al,byte ptr cs:[bx].UCaseTab
+        mov ah,fs:[esi]
+        movzx bx,ah
+        mov ah,byte ptr cs:[bx].UCaseTab
+        cmp al,ah
+        jne find_app_pop
+        or al,al
+        je find_app_ok
+        inc esi
+        inc di
+        jmp find_app_check_name
 
 find_app_pop:
-	pop esi
+        pop esi
 
 find_app_fail:
-	stc
-	jmp find_app_end
+        stc
+        jmp find_app_end
 
 find_app_ok:
-	pop esi
-	mov edi,es:lib_base
-	clc
+        pop esi
+        mov edi,es:lib_base
+        clc
 
 find_app_end:
-	pop dx
-	pop bx
-	pop ax
-	pop ds
-	ret
-FindApp	Endp
+        pop dx
+        pop bx
+        pop ax
+        pop ds
+        ret
+FindApp Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OpenDll
+;               NAME:                   OpenDll
 ;
-;		DESCRIPTION:    Open DLL file
+;               DESCRIPTION:    Open DLL file
 ;
-;		PARAMETERS:     FS:ESI	DLL name
+;               PARAMETERS:     FS:ESI  DLL name
 ;
-;		RETURNS:		BX		File handle
-;						
+;               RETURNS:                BX              File handle
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnknownDllMsg	DB 'Can', 27h, 't find ',0
-PathName		DB 'PATH',0
+UnknownDllMsg   DB 'Can', 27h, 't find ',0
+PathName                DB 'PATH',0
 
-OpenDll	Proc near	
-	push ds
-	push es
-	push ax
-	push cx
-	push esi
-	push edi
+OpenDll Proc near       
+        push ds
+        push es
+        push ax
+        push cx
+        push esi
+        push edi
 ;
-	mov di,fs
-	mov es,di
-	mov edi,esi
+        mov di,fs
+        mov es,di
+        mov edi,esi
 ;
-	xor cl,cl
-	UserGateForce32 open_file_nr
-	jnc open_dll_done
+        xor cl,cl
+        UserGateForce32 open_file_nr
+        jnc open_dll_done
 ;
     LockProcEnv
     mov ds,bx
-	mov ebx,esi
-	xor si,si
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET PathName
+        mov ebx,esi
+        xor si,si
+        mov ax,cs
+        mov es,ax
+        mov di,OFFSET PathName
 find_path_loop:
-	cmpsb
-	jnz find_path_next
-	mov al,es:[di]
-	or al,al
-	jnz find_path_loop
-	mov al,[si]
-	cmp al,'='
-	je find_path_found
+        cmpsb
+        jnz find_path_next
+        mov al,es:[di]
+        or al,al
+        jnz find_path_loop
+        mov al,[si]
+        cmp al,'='
+        je find_path_found
 
 find_path_next:
-	lodsb
-	or al,al
-	jnz find_path_next
-	mov al,[si]
-	or al,al
-	mov di,OFFSET PathName
-	jne find_path_loop
-	jmp find_path_failed
+        lodsb
+        or al,al
+        jnz find_path_next
+        mov al,[si]
+        or al,al
+        mov di,OFFSET PathName
+        jne find_path_loop
+        jmp find_path_failed
 
 find_path_found:
-	mov eax,1000h
-	AllocateBigMem
+        mov eax,1000h
+        AllocateBigMem
 ;
-	xor di,di
-	inc si
+        xor di,di
+        inc si
 find_path_move_loop:
-	lodsb
-	or al,al
-	jz find_path_move_ok
-	cmp al,';'
-	je find_path_move_ok
-	stosb
-	jmp find_path_move_loop	
+        lodsb
+        or al,al
+        jz find_path_move_ok
+        cmp al,';'
+        je find_path_move_ok
+        stosb
+        jmp find_path_move_loop 
 
 find_path_move_ok:
     or di,di
@@ -1038,319 +1038,319 @@ find_path_move_ok:
     stosb
     
 find_path_add_file:    
-	push ebx
+        push ebx
 find_path_name_loop:
-	mov al,fs:[ebx]
-	inc ebx
-	stosb
-	or al,al
-	jnz find_path_name_loop
-	pop ebx
+        mov al,fs:[ebx]
+        inc ebx
+        stosb
+        or al,al
+        jnz find_path_name_loop
+        pop ebx
 ;
     push bx
-	xor di,di
-	xor cl,cl
-	OpenFile
-	jnc find_path_file_ok
+        xor di,di
+        xor cl,cl
+        OpenFile
+        jnc find_path_file_ok
 ;
     pop bx
-	mov al,[si-1]
-	or al,al
-	jnz find_path_move_loop
+        mov al,[si-1]
+        or al,al
+        jnz find_path_move_loop
 ;
-	FreeMem
+        FreeMem
 
 find_path_failed:
-	stc
-	jmp open_dll_unlock
+        stc
+        jmp open_dll_unlock
 
 find_path_file_ok:
     add sp,2
-	FreeMem
-	clc
-	
+        FreeMem
+        clc
+        
 open_dll_unlock:
     pushf
     UnlockProcEnv
     popf
 
 open_dll_done:
-	pop edi
-	pop esi
-	pop cx
-	pop ax
-	pop es
-	pop ds
-	ret
+        pop edi
+        pop esi
+        pop cx
+        pop ax
+        pop es
+        pop ds
+        ret
 OpenDll Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FindObject
+;               NAME:                   FindObject
 ;
-;		DESCRIPTION:    Search for a object
+;               DESCRIPTION:    Search for a object
 ;
-;		PARAMETERS:     ES		Lib handle
-;						EDI		Image base
-;						EDX		Virtual adress
+;               PARAMETERS:     ES              Lib handle
+;                                               EDI             Image base
+;                                               EDX             Virtual adress
 ;
-;		RETURNS:		ESI		Object
+;               RETURNS:                ESI             Object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindObject	Proc near
-	push eax
-	push cx
+FindObject      Proc near
+        push eax
+        push cx
 ;
-	mov esi,es:lib_header
-	mov cx,[esi].peh_objects
-	mov esi,es:lib_objects
+        mov esi,es:lib_header
+        mov cx,[esi].peh_objects
+        mov esi,es:lib_objects
 find_object_loop:
-	mov eax,edx
-	sub eax,edi
-	sub eax,[esi].o_va
-	jc find_object_fail
-	cmp eax,[esi].o_virt_size
-	jc find_object_ok
-	add esi,SIZE object_struc
-	loop find_object_loop
+        mov eax,edx
+        sub eax,edi
+        sub eax,[esi].o_va
+        jc find_object_fail
+        cmp eax,[esi].o_virt_size
+        jc find_object_ok
+        add esi,SIZE object_struc
+        loop find_object_loop
 
 find_object_fail:
-	stc
-	jmp find_object_done
+        stc
+        jmp find_object_done
 
 find_object_ok:
-	clc
+        clc
 
 find_object_done:
-	pop cx
-	pop eax
-	ret
-FindObject	Endp
+        pop cx
+        pop eax
+        ret
+FindObject      Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RelocPage
+;               NAME:                   RelocPage
 ;
-;		DESCRIPTION:    Relocate a single page
+;               DESCRIPTION:    Relocate a single page
 ;
-;		PARAMETERS:     ES		Lib handle
-;						EDI		Image base
-;						EDX		Allocate buffer
-;						EBP		Real address
+;               PARAMETERS:     ES              Lib handle
+;                                               EDI             Image base
+;                                               EDX             Allocate buffer
+;                                               EBP             Real address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reloc_nop	Proc near
-	ret
-reloc_nop	Endp
+reloc_nop       Proc near
+        ret
+reloc_nop       Endp
 
-reloc_high	Proc near
-	push ecx
-	mov ecx,edi
-	shr ecx,16
-	and ax,0FFFh
-	movzx eax,ax
-	add eax,edx
-	add [eax],cx
-	pop ecx
-	ret
-reloc_high	Endp
+reloc_high      Proc near
+        push ecx
+        mov ecx,edi
+        shr ecx,16
+        and ax,0FFFh
+        movzx eax,ax
+        add eax,edx
+        add [eax],cx
+        pop ecx
+        ret
+reloc_high      Endp
 
-reloc_low	Proc near
-	and ax,0FFFh
-	movzx eax,ax
-	add eax,edx
-	add [eax],di
-	ret
-reloc_low	Endp
+reloc_low       Proc near
+        and ax,0FFFh
+        movzx eax,ax
+        add eax,edx
+        add [eax],di
+        ret
+reloc_low       Endp
 
-reloc_highlow	Proc near
-	and ax,0FFFh
-	movzx eax,ax
-	add eax,edx
-	add [eax],edi
-	ret
-reloc_highlow	Endp
+reloc_highlow   Proc near
+        and ax,0FFFh
+        movzx eax,ax
+        add eax,edx
+        add [eax],edi
+        ret
+reloc_highlow   Endp
 
-reloc_highadj	Proc near
-	int 3
-	ret
-reloc_highadj	Endp
+reloc_highadj   Proc near
+        int 3
+        ret
+reloc_highadj   Endp
 
 reloc_tab:
-rt0	DW OFFSET reloc_nop
-rt1	DW OFFSET reloc_high
-rt2	DW OFFSET reloc_low
-rt3	DW OFFSET reloc_highlow
-rt4	DW OFFSET reloc_highadj
-rt5	DW OFFSET reloc_nop
-rt6	DW OFFSET reloc_nop
-rt7	DW OFFSET reloc_nop
-rt8	DW OFFSET reloc_nop
-rt9	DW OFFSET reloc_nop
-rtA	DW OFFSET reloc_nop
-rtB	DW OFFSET reloc_nop
-rtC	DW OFFSET reloc_nop
-rtD	DW OFFSET reloc_nop
-rtE	DW OFFSET reloc_nop
-rtF	DW OFFSET reloc_nop
+rt0     DW OFFSET reloc_nop
+rt1     DW OFFSET reloc_high
+rt2     DW OFFSET reloc_low
+rt3     DW OFFSET reloc_highlow
+rt4     DW OFFSET reloc_highadj
+rt5     DW OFFSET reloc_nop
+rt6     DW OFFSET reloc_nop
+rt7     DW OFFSET reloc_nop
+rt8     DW OFFSET reloc_nop
+rt9     DW OFFSET reloc_nop
+rtA     DW OFFSET reloc_nop
+rtB     DW OFFSET reloc_nop
+rtC     DW OFFSET reloc_nop
+rtD     DW OFFSET reloc_nop
+rtE     DW OFFSET reloc_nop
+rtF     DW OFFSET reloc_nop
 
-RelocPage	Proc near
-	push eax
-	push ebx
-	push ecx
-	push esi
-	push edi
+RelocPage       Proc near
+        push eax
+        push ebx
+        push ecx
+        push esi
+        push edi
 ;
-	mov ebx,es:lib_header
-	mov ecx,[ebx].peh_fixup_size
-	mov esi,[ebx].peh_fixup_va	
+        mov ebx,es:lib_header
+        mov ecx,[ebx].peh_fixup_size
+        mov esi,[ebx].peh_fixup_va      
 ;
     or ecx,ecx
     jz reloc_object_done
-;    	
-	or esi,esi
-	jz reloc_object_done
+;       
+        or esi,esi
+        jz reloc_object_done
 ;
-	add esi,edi
+        add esi,edi
 reloc_object_fixup_search:
-	or esi,esi
-	jz reloc_object_done
-	mov eax,[esi].fixup_va
-	or eax,eax
-	je reloc_object_done
+        or esi,esi
+        jz reloc_object_done
+        mov eax,[esi].fixup_va
+        or eax,eax
+        je reloc_object_done
 ;
-	add eax,edi
-	cmp eax,ebp
-	je reloc_object_fixup_found
-;	
-	mov eax,[esi].fixup_size
-	add esi,eax
-	sub ecx,eax
-	jz reloc_object_done
-	jnc reloc_object_fixup_search
-	jmp reloc_object_done
+        add eax,edi
+        cmp eax,ebp
+        je reloc_object_fixup_found
+;       
+        mov eax,[esi].fixup_size
+        add esi,eax
+        sub ecx,eax
+        jz reloc_object_done
+        jnc reloc_object_fixup_search
+        jmp reloc_object_done
 
 reloc_object_fixup_found:
-	sub edi,[ebx].peh_image_base
-	mov ecx,[esi].fixup_size
-	add esi,OFFSET fixup_data
-	sub ecx,OFFSET fixup_data
+        sub edi,[ebx].peh_image_base
+        mov ecx,[esi].fixup_size
+        add esi,OFFSET fixup_data
+        sub ecx,OFFSET fixup_data
 reloc_object_reloc_loop:
-	lods word ptr [esi]
-	sub ecx,2
-	movzx bx,ah
-	shr bx,4
-	shl bx,1
-	call word ptr cs:[bx].reloc_tab
-	or ecx,ecx
-	jnz reloc_object_reloc_loop
+        lods word ptr [esi]
+        sub ecx,2
+        movzx bx,ah
+        shr bx,4
+        shl bx,1
+        call word ptr cs:[bx].reloc_tab
+        or ecx,ecx
+        jnz reloc_object_reloc_loop
 
 reloc_object_done:
-	pop edi
-	pop esi
-	pop ecx
-	pop ebx
-	pop eax
-	ret
-RelocPage	Endp
+        pop edi
+        pop esi
+        pop ecx
+        pop ebx
+        pop eax
+        ret
+RelocPage       Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CheckReloc
+;               NAME:                   CheckReloc
 ;
-;		DESCRIPTION:    Check if any relocation span pages
+;               DESCRIPTION:    Check if any relocation span pages
 ;
-;		PARAMETERS:     ES		Lib handle
-;						EDI		Image base
-;						EBP		Real address
+;               PARAMETERS:     ES              Lib handle
+;                                               EDI             Image base
+;                                               EBP             Real address
 ;
 ;       RETURNS:        CY      Relocation spans pages
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reloc_size_tab:
-rs0	DB 0
-rs1	DB 2
-rs2	DB 2
-rs3	DB 4
-rs4	DB 0
-rs5	DB 0
-rs6	DB 0
-rs7	DB 0
-rs8	DB 0
-rs9	DB 0
-rsA	DB 0
-rsB	DB 0
-rsC	DB 0
-rsD	DB 0
-rsE	DB 0
-rsF	DB 0
+rs0     DB 0
+rs1     DB 2
+rs2     DB 2
+rs3     DB 4
+rs4     DB 0
+rs5     DB 0
+rs6     DB 0
+rs7     DB 0
+rs8     DB 0
+rs9     DB 0
+rsA     DB 0
+rsB     DB 0
+rsC     DB 0
+rsD     DB 0
+rsE     DB 0
+rsF     DB 0
 
-CheckReloc	Proc near
-	push eax
-	push ebx
-	push ecx
-	push esi
+CheckReloc      Proc near
+        push eax
+        push ebx
+        push ecx
+        push esi
 ;
-	mov ebx,es:lib_header
-	mov ecx,[ebx].peh_fixup_size
-	mov esi,[ebx].peh_fixup_va	
+        mov ebx,es:lib_header
+        mov ecx,[ebx].peh_fixup_size
+        mov esi,[ebx].peh_fixup_va      
 ;
     or ecx,ecx
     jz check_reloc_ok
-;    	
-	or esi,esi
-	jz check_reloc_ok
+;       
+        or esi,esi
+        jz check_reloc_ok
 ;
-	add esi,edi
+        add esi,edi
 
 check_reloc_fixup_search:
-	or esi,esi
-	jz check_reloc_ok
-	
-	mov eax,[esi].fixup_va
-	or eax,eax
-	je check_reloc_ok
+        or esi,esi
+        jz check_reloc_ok
+        
+        mov eax,[esi].fixup_va
+        or eax,eax
+        je check_reloc_ok
 ;
-	add eax,edi
-	cmp eax,ebp
-	je check_reloc_fixup_found
-;	
-	mov eax,[esi].fixup_size
-	add esi,eax
-	sub ecx,eax
-	jz check_reloc_ok
-	jnc check_reloc_fixup_search
-	jmp check_reloc_ok
+        add eax,edi
+        cmp eax,ebp
+        je check_reloc_fixup_found
+;       
+        mov eax,[esi].fixup_size
+        add esi,eax
+        sub ecx,eax
+        jz check_reloc_ok
+        jnc check_reloc_fixup_search
+        jmp check_reloc_ok
 
 check_reloc_fixup_found:
-	mov ecx,[esi].fixup_size
-	add esi,OFFSET fixup_data
-	sub ecx,OFFSET fixup_data
+        mov ecx,[esi].fixup_size
+        add esi,OFFSET fixup_data
+        sub ecx,OFFSET fixup_data
 
 check_reloc_loop:
-	lods word ptr [esi]
-	sub ecx,2
-	movzx bx,ah
-	shr bx,4
-	movzx bx,byte ptr cs:[bx].reloc_size_tab
-	or bx,bx
-	jz check_reloc_next
-;	
-	and ax,0FFFh
-	add ax,bx
-	dec ax
+        lods word ptr [esi]
+        sub ecx,2
+        movzx bx,ah
+        shr bx,4
+        movzx bx,byte ptr cs:[bx].reloc_size_tab
+        or bx,bx
+        jz check_reloc_next
+;       
+        and ax,0FFFh
+        add ax,bx
+        dec ax
     test ax,1000h
     jnz check_reloc_failed
 
-check_reloc_next:    	
-	or ecx,ecx
-	jnz check_reloc_loop
+check_reloc_next:       
+        or ecx,ecx
+        jnz check_reloc_loop
 
 check_reloc_ok:
     clc
@@ -1360,761 +1360,761 @@ check_reloc_failed:
     stc
 
 check_reloc_done:
-	pop esi
-	pop ecx
-	pop ebx
-	pop eax
-	ret
-CheckReloc	Endp
+        pop esi
+        pop ecx
+        pop ebx
+        pop eax
+        ret
+CheckReloc      Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RunDll
+;               NAME:                   RunDll
 ;
-;		DESCRIPTION:    Init DLL
+;               DESCRIPTION:    Init DLL
 ;
-;		PARAMETERS:     DS:EDI	Image base
-;						ES		Lib handle
+;               PARAMETERS:     DS:EDI  Image base
+;                                               ES              Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RunDll	Proc near
-	push ds
-	push es
-	push fs
-	push gs
-	pushad
+RunDll  Proc near
+        push ds
+        push es
+        push fs
+        push gs
+        pushad
 ;
     mov fs,es:lib_fs
-	mov eax,es:lib_header
-	mov eax,[eax].peh_entry_point
-	or eax,eax
-	jz rdDone
-;	
-	add eax,edi
-	push eax
-	movzx eax,es:lib_init_param
+        mov eax,es:lib_header
+        mov eax,[eax].peh_entry_point
+        or eax,eax
+        jz rdDone
+;       
+        add eax,edi
+        push eax
+        movzx eax,es:lib_init_param
     movzx ebx,es:mod_handle
     mov edx,1
-	CallPM32
+        CallPM32
 
 rdDone:
-	popad
-	pop gs
-	pop fs
-	pop es
-	pop ds
-	ret
-RunDll	Endp
+        popad
+        pop gs
+        pop fs
+        pop es
+        pop ds
+        ret
+RunDll  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ImportObject
+;               NAME:                   ImportObject
 ;
-;		DESCRIPTION:    Import an object
+;               DESCRIPTION:    Import an object
 ;
-;		PARAMETERS:     EBX		Address of import ordinal + name		
-;						ESI		Image base of export DLL
-;						GS		Lib handle of export DLL
-;						EDI		Image base of import DLL/APP
-;						ES		Lib handle of import DLL/APP
-;						
-;		RETURNS:		EAX		Virtual address
+;               PARAMETERS:     EBX             Address of import ordinal + name                
+;                                               ESI             Image base of export DLL
+;                                               GS              Lib handle of export DLL
+;                                               EDI             Image base of import DLL/APP
+;                                               ES              Lib handle of import DLL/APP
+;                                               
+;               RETURNS:                EAX             Virtual address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnresolvedMsg DB 'Cannot find imported function ',0
 
-ImportObject	Proc near
-	push ebx
-	push ecx
-	push edx
-	push esi
-	push edi
+ImportObject    Proc near
+        push ebx
+        push ecx
+        push edx
+        push esi
+        push edi
 ;
-	mov edi,esi
-	mov esi,gs:lib_header
-	mov esi,[esi].peh_export_va
-	add esi,edi
+        mov edi,esi
+        mov esi,gs:lib_header
+        mov esi,[esi].peh_export_va
+        add esi,edi
 ;
-	mov ax,[ebx]
-	or ax,ax
-	jz import_by_name
+        mov ax,[ebx]
+        or ax,ax
+        jz import_by_name
 ;
-	movzx eax,ax
-	sub eax,[esi].exp_ordinal_base
-	jc import_by_name
+        movzx eax,ax
+        sub eax,[esi].exp_ordinal_base
+        jc import_by_name
 ;
-	cmp eax,[esi].exp_name_count
-	jnc import_by_name
-	jmp import_by_name
+        cmp eax,[esi].exp_name_count
+        jnc import_by_name
+        jmp import_by_name
 
 import_by_ordinal:
-	int 3
-	mov ecx,[esi].exp_name_count
-	mov edx,[esi].exp_ordinal_base
+        int 3
+        mov ecx,[esi].exp_name_count
+        mov edx,[esi].exp_ordinal_base
 import_by_ordinal_loop:
-	cmp ax,[edx]
-	je import_by_ordinal_found
-	add edx,2
-	sub ecx,1
-	jnz import_by_ordinal_loop
-	int 3
-	jmp import_object_done
-	
+        cmp ax,[edx]
+        je import_by_ordinal_found
+        add edx,2
+        sub ecx,1
+        jnz import_by_ordinal_loop
+        int 3
+        jmp import_object_done
+        
 import_by_ordinal_found:
 
 import_by_name:
-	add ebx,2
-	mov ecx,[esi].exp_name_count
-	mov edx,[esi].exp_name_va
-	add edx,edi
+        add ebx,2
+        mov ecx,[esi].exp_name_count
+        mov edx,[esi].exp_name_va
+        add edx,edi
 
 import_by_name_loop:
-	push ebx
-	push esi
-	mov esi,[edx]
-	add esi,edi
+        push ebx
+        push esi
+        mov esi,[edx]
+        add esi,edi
 
 import_by_name_search:
-	mov al,[esi]
-	mov ah,[ebx]
-	cmp al,ah
-	jne import_by_name_next
+        mov al,[esi]
+        mov ah,[ebx]
+        cmp al,ah
+        jne import_by_name_next
 ;
-	or al,ah
-	jz import_by_name_ok
+        or al,ah
+        jz import_by_name_ok
 ;
-	inc ebx
-	inc esi
-	jmp import_by_name_search
+        inc ebx
+        inc esi
+        jmp import_by_name_search
 
 import_by_name_next:
-	pop esi
-	pop ebx
-	add edx,4
-	loop import_by_name_loop
-	jmp import_object_done
+        pop esi
+        pop ebx
+        add edx,4
+        loop import_by_name_loop
+        jmp import_object_done
 
 import_by_name_ok:
-	pop esi
-	pop ebx
-	sub edx,[esi].exp_name_va
-	add edx,[esi].exp_entry_point_va
-	mov eax,[esi].exp_ordinal_va
-	mov eax,[edx]
-	add eax,edi
+        pop esi
+        pop ebx
+        sub edx,[esi].exp_name_va
+        add edx,[esi].exp_entry_point_va
+        mov eax,[esi].exp_ordinal_va
+        mov eax,[edx]
+        add eax,edi
 
 import_object_done:
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	ret
-ImportObject	Endp
+        pop edi
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        ret
+ImportObject    Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			BindImport
+;               NAME:                   BindImport
 ;
-;		DESCRIPTION:    Bind imported functions
+;               DESCRIPTION:    Bind imported functions
 ;
-;		PARAMETERS:     EDX		Import descr
-;						ESI		Export image base
-;						GS		Export Lib handle
-;						EDI		Import Image base
-;						ES		Import Lib handle
+;               PARAMETERS:     EDX             Import descr
+;                                               ESI             Export image base
+;                                               GS              Export Lib handle
+;                                               EDI             Import Image base
+;                                               ES              Import Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-BindImport	Proc near
-	push eax
-	push edx
-	push esi
-	push edi
+BindImport      Proc near
+        push eax
+        push edx
+        push esi
+        push edi
 ;
-	mov eax,gs:lib_header
-	mov eax,[eax].peh_export_va
-	or eax,eax
-	je bind_import_done
+        mov eax,gs:lib_header
+        mov eax,[eax].peh_export_va
+        or eax,eax
+        je bind_import_done
 ;
-	add eax,esi
-	mov edx,[edx].imp_first_thunk_va
-	add edx,edi
+        add eax,esi
+        mov edx,[edx].imp_first_thunk_va
+        add edx,edi
 
 bind_import_loop:
-	mov ebx,[edx]
-	or ebx,ebx
-	jz bind_import_done
+        mov ebx,[edx]
+        or ebx,ebx
+        jz bind_import_done
 ;
-	add ebx,edi
-	call ImportObject
-	mov [edx],eax
-	add edx,4
-	jmp bind_import_loop
+        add ebx,edi
+        call ImportObject
+        mov [edx],eax
+        add edx,4
+        jmp bind_import_loop
 
 bind_import_done:
-	pop edi
-	pop esi
-	pop edx
-	pop eax
-	ret
-BindImport	Endp
+        pop edi
+        pop esi
+        pop edx
+        pop eax
+        ret
+BindImport      Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadImportedDlls
+;               NAME:                   LoadImportedDlls
 ;
-;		DESCRIPTION:    Load imported DLLs
+;               DESCRIPTION:    Load imported DLLs
 ;
-;		PARAMETERS:     EDI		Image base
-;						ES		Lib
+;               PARAMETERS:     EDI             Image base
+;                                               ES              Lib
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadImportedDlls	Proc near
-	push fs
-	push gs
-	push eax
-	push edx
-	push esi
+LoadImportedDlls        Proc near
+        push fs
+        push gs
+        push eax
+        push edx
+        push esi
 ;
-	mov ax,flat_data_sel
-	mov fs,ax
+        mov ax,flat_data_sel
+        mov fs,ax
 ;
-	mov edx,es:lib_header
-	mov edx,[edx].peh_import_va
-	or edx,edx
-	jz load_import_dlls_done
+        mov edx,es:lib_header
+        mov edx,[edx].peh_import_va
+        or edx,edx
+        jz load_import_dlls_done
 ;
-	add edx,edi
+        add edx,edi
 load_import_dlls_loop:
-	mov esi,[edx].imp_dll_name_va
-	or esi,esi
-	jz load_import_dlls_done
+        mov esi,[edx].imp_dll_name_va
+        or esi,esi
+        jz load_import_dlls_done
 ;
-	push es
-	push edi
-	add esi,edi
-	call LoadPeDll
-	mov esi,edi
-	mov ax,es
-	mov gs,ax
-	pop edi
-	pop es
-	jc load_import_dlls_loop
-;	
-	call BindImport
+        push es
+        push edi
+        add esi,edi
+        call LoadPeDll
+        mov esi,edi
+        mov ax,es
+        mov gs,ax
+        pop edi
+        pop es
+        jc load_import_dlls_loop
+;       
+        call BindImport
 ;
-	add edx,SIZE import_descr
-	jmp load_import_dlls_loop
+        add edx,SIZE import_descr
+        jmp load_import_dlls_loop
 
 load_import_dlls_done:
-	pop esi
-	pop edx
-	pop eax
-	pop gs
-	pop fs
-	ret
-LoadImportedDlls	Endp
+        pop esi
+        pop edx
+        pop eax
+        pop gs
+        pop fs
+        ret
+LoadImportedDlls        Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FreeImportDlls
+;               NAME:                   FreeImportDlls
 ;
-;		DESCRIPTION:    Free imported DLLs
+;               DESCRIPTION:    Free imported DLLs
 ;
-;		PARAMETERS:     ES		Lib handle
-;						EDI		Image base
+;               PARAMETERS:     ES              Lib handle
+;                                               EDI             Image base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeImportedDlls	Proc near
-	push eax
-	push edx
-	push esi
+FreeImportedDlls        Proc near
+        push eax
+        push edx
+        push esi
 ;
-	mov edx,es:lib_header
-	mov edx,[edx].peh_import_va
-	or edx,edx
-	jz free_import_dlls_done
+        mov edx,es:lib_header
+        mov edx,[edx].peh_import_va
+        or edx,edx
+        jz free_import_dlls_done
 ;
-	add edx,edi
+        add edx,edi
 
 free_import_dlls_loop:
-	mov esi,[edx].imp_dll_name_va
-	or esi,esi
-	jz free_import_dlls_done
+        mov esi,[edx].imp_dll_name_va
+        or esi,esi
+        jz free_import_dlls_done
 ;
-	push es
-	push fs
-	push edi
-	mov ax,ds
-	mov fs,ax
-	add esi,edi
+        push es
+        push fs
+        push edi
+        mov ax,ds
+        mov fs,ax
+        add esi,edi
 ;
-	call FindDll
-	jc fidf
+        call FindDll
+        jc fidf
 
 free_do:
-	call FreePeDll
+        call FreePeDll
 
 fidf:
-	pop edi
-	pop fs
-	pop es
+        pop edi
+        pop fs
+        pop es
 ;
-	add edx,SIZE import_descr
-	jmp free_import_dlls_loop
+        add edx,SIZE import_descr
+        jmp free_import_dlls_loop
 
 free_import_dlls_done:
-	pop esi
-	pop edx
-	pop eax
-	ret
-FreeImportedDlls	Endp
+        pop esi
+        pop edx
+        pop eax
+        ret
+FreeImportedDlls        Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			NotifyDll
+;               NAME:                   NotifyDll
 ;
-;		DESCRIPTION:   	Notify one DLL
+;               DESCRIPTION:    Notify one DLL
 ;
-;		PARAMETERS:     EDI		Image base
-;						ES		Lib
-;						ESI		DLL name
+;               PARAMETERS:     EDI             Image base
+;                                               ES              Lib
+;                                               ESI             DLL name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-NotifyDll	Proc near
-	push es
-	push edx
-	push edi
+NotifyDll       Proc near
+        push es
+        push edx
+        push edi
 ;
-	mov dx,es:lib_debug_lib
-	call FindDll
-	jc notify_dll_done
+        mov dx,es:lib_debug_lib
+        call FindDll
+        jc notify_dll_done
 
 notify_check_debug:
-	mov edi,es:lib_base
-	xchg dx,es:lib_debug_lib
-	or dx,dx
-	jnz notify_dll_done
+        mov edi,es:lib_base
+        xchg dx,es:lib_debug_lib
+        or dx,dx
+        jnz notify_dll_done
 ;
-	call Preload
-	push ds
-	push es
-	mov ax,es
-	mov ds,ax
-	call LoadDllEvent
-	call SendEvent
-	pop es
-	pop ds
+        call Preload
+        push ds
+        push es
+        mov ax,es
+        mov ds,ax
+        call LoadDllEvent
+        call SendEvent
+        pop es
+        pop ds
 ;
-	mov edx,es:lib_header
-	mov edx,[edx].peh_import_va
-	or edx,edx
-	jz notify_dll_done
+        mov edx,es:lib_header
+        mov edx,[edx].peh_import_va
+        or edx,edx
+        jz notify_dll_done
 ;
-	add edx,edi
+        add edx,edi
 notify_dll_loop:
-	mov esi,[edx].imp_dll_name_va
-	or esi,esi
-	jz notify_dll_done
+        mov esi,[edx].imp_dll_name_va
+        or esi,esi
+        jz notify_dll_done
 ;
-	add esi,edi
-	call NotifyDll
+        add esi,edi
+        call NotifyDll
 ;
-	add edx,SIZE import_descr
-	jmp notify_dll_loop
+        add edx,SIZE import_descr
+        jmp notify_dll_loop
 
 notify_dll_done:
-	pop edi
-	pop edx
-	pop es
-	ret
-NotifyDll	Endp
+        pop edi
+        pop edx
+        pop es
+        ret
+NotifyDll       Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			NotifyImportedDlls
+;               NAME:                   NotifyImportedDlls
 ;
-;		DESCRIPTION:   	Notify imported DLLs
+;               DESCRIPTION:    Notify imported DLLs
 ;
-;		PARAMETERS:     EDI		Image base
-;						ES		Lib
+;               PARAMETERS:     EDI             Image base
+;                                               ES              Lib
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-NotifyImportedDlls	Proc near
-	push fs
-	push gs
-	push eax
-	push edx
-	push esi
+NotifyImportedDlls      Proc near
+        push fs
+        push gs
+        push eax
+        push edx
+        push esi
 ;
-	mov ax,flat_data_sel
-	mov ds,ax
-	mov fs,ax
+        mov ax,flat_data_sel
+        mov ds,ax
+        mov fs,ax
 ;
-	mov edx,es:lib_header
-	mov edx,[edx].peh_import_va
-	or edx,edx
-	jz notify_import_dlls_done
+        mov edx,es:lib_header
+        mov edx,[edx].peh_import_va
+        or edx,edx
+        jz notify_import_dlls_done
 ;
-	add edx,edi
+        add edx,edi
 notify_import_dlls_loop:
-	mov esi,[edx].imp_dll_name_va
-	or esi,esi
-	jz notify_import_dlls_done
+        mov esi,[edx].imp_dll_name_va
+        or esi,esi
+        jz notify_import_dlls_done
 ;
-	add esi,edi
-	call NotifyDll
+        add esi,edi
+        call NotifyDll
 ;
-	add edx,SIZE import_descr
-	jmp notify_import_dlls_loop
+        add edx,SIZE import_descr
+        jmp notify_import_dlls_loop
 
 notify_import_dlls_done:
-	pop esi
-	pop edx
-	pop eax
-	pop gs
-	pop fs
-	ret
-NotifyImportedDlls	Endp
+        pop esi
+        pop edx
+        pop eax
+        pop gs
+        pop fs
+        ret
+NotifyImportedDlls      Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			StartDll
+;               NAME:                   StartDll
 ;
-;		DESCRIPTION:   	Start one DLL
+;               DESCRIPTION:    Start one DLL
 ;
-;		PARAMETERS:     EDI		Image base
-;						ES		Lib
-;						ESI		DLL name
+;               PARAMETERS:     EDI             Image base
+;                                               ES              Lib
+;                                               ESI             DLL name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartDll	Proc near
-	push es
-	push edx
-	push edi
+StartDll        Proc near
+        push es
+        push edx
+        push edi
 ;
-	mov dx,es:lib_init_param
-	call FindDll
-	jc start_dll_done
+        mov dx,es:lib_init_param
+        call FindDll
+        jc start_dll_done
 
 start_dll_found:
-	mov ax,1
-	xchg ax,es:lib_run_now
-	or ax,ax
-	jnz start_dll_done
+        mov ax,1
+        xchg ax,es:lib_run_now
+        or ax,ax
+        jnz start_dll_done
 ;
-	mov es:lib_init_param,dx
-	mov edi,es:lib_base
-	call RunDll
+        mov es:lib_init_param,dx
+        mov edi,es:lib_base
+        call RunDll
 ;
-	mov edx,es:lib_header
-	mov edx,[edx].peh_import_va
-	or edx,edx
-	jz start_dll_done
+        mov edx,es:lib_header
+        mov edx,[edx].peh_import_va
+        or edx,edx
+        jz start_dll_done
 ;
-	add edx,edi
+        add edx,edi
 start_dll_loop:
-	mov esi,[edx].imp_dll_name_va
-	or esi,esi
-	jz start_dll_done
+        mov esi,[edx].imp_dll_name_va
+        or esi,esi
+        jz start_dll_done
 ;
-	add esi,edi
-	call StartDll
+        add esi,edi
+        call StartDll
 ;
-	add edx,SIZE import_descr
-	jmp start_dll_loop
+        add edx,SIZE import_descr
+        jmp start_dll_loop
 
 start_dll_done:
-	pop edi
-	pop edx
-	pop es
-	ret
-StartDll	Endp
+        pop edi
+        pop edx
+        pop es
+        ret
+StartDll        Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			StartImportedDlls
+;               NAME:                   StartImportedDlls
 ;
-;		DESCRIPTION:   	Start imported DLLs
+;               DESCRIPTION:    Start imported DLLs
 ;
-;		PARAMETERS:     EDI		Image base
-;						ES		Lib
+;               PARAMETERS:     EDI             Image base
+;                                               ES              Lib
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartImportedDlls	Proc near
-	push fs
-	push gs
-	push eax
-	push edx
-	push esi
+StartImportedDlls       Proc near
+        push fs
+        push gs
+        push eax
+        push edx
+        push esi
 ;
-	mov ax,flat_data_sel
-	mov ds,ax
-	mov fs,ax
+        mov ax,flat_data_sel
+        mov ds,ax
+        mov fs,ax
 ;
-	mov edx,es:lib_header
-	mov edx,[edx].peh_import_va
-	or edx,edx
-	jz start_import_dlls_done
+        mov edx,es:lib_header
+        mov edx,[edx].peh_import_va
+        or edx,edx
+        jz start_import_dlls_done
 ;
-	add edx,edi
+        add edx,edi
 start_import_dlls_loop:
-	mov esi,[edx].imp_dll_name_va
-	or esi,esi
-	jz start_import_dlls_done
+        mov esi,[edx].imp_dll_name_va
+        or esi,esi
+        jz start_import_dlls_done
 ;
-	add esi,edi
-	call StartDll
+        add esi,edi
+        call StartDll
 ;
-	add edx,SIZE import_descr
-	jmp start_import_dlls_loop
+        add edx,SIZE import_descr
+        jmp start_import_dlls_loop
 
 start_import_dlls_done:
-	pop esi
-	pop edx
-	pop eax
-	pop gs
-	pop fs
-	ret
-StartImportedDlls	Endp
+        pop esi
+        pop edx
+        pop eax
+        pop gs
+        pop fs
+        ret
+StartImportedDlls       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadPeDll
+;               NAME:                   LoadPeDll
 ;
-;		DESCRIPTION:    Load a PE Dll
+;               DESCRIPTION:    Load a PE Dll
 ;
-;		PARAMETERS:     FS:ESI	DLL name
-;						ES		Owner lib
+;               PARAMETERS:     FS:ESI  DLL name
+;                                               ES              Owner lib
 ;
-;		RETURNS:		EDI		Image base of Dll
-;						ES		Lib handle
-;						
+;               RETURNS:                EDI             Image base of Dll
+;                                               ES              Lib handle
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadPeDll	PROC near
+LoadPeDll       PROC near
     push gs
-	push eax
-	push ebx
-	push ecx
-	push edx
-	push esi
-	push bp
+        push eax
+        push ebx
+        push ecx
+        push edx
+        push esi
+        push bp
 ;
     mov ax,es
     mov gs,ax
-	call FindDll
-	jc load_dll_do
+        call FindDll
+        jc load_dll_do
 
 load_dll_usage:
-	inc es:lib_usage_count
-	mov edi,es:lib_base
-	jmp load_dll_done
+        inc es:lib_usage_count
+        mov edi,es:lib_base
+        jmp load_dll_done
 
 load_dll_do:
-	mov dx,gs:lib_debug_lib
-	mov bp,gs:lib_run_now
-	call OpenDll
-	jc load_dll_fail_nofree
+        mov dx,gs:lib_debug_lib
+        mov bp,gs:lib_run_now
+        call OpenDll
+        jc load_dll_fail_nofree
 ;
-	mov eax,40h
-	AllocateSmallGlobalMem
-	mov cx,ax
-	xor di,di
-	ReadFile
-	jc load_dll_fail
-	cmp ax,40h
-	jne load_dll_fail
-	mov ax,es:exeh_signature
-	cmp ax,5A4Dh
-	jne load_dll_fail
-	mov ax,es:exeh_reloc_offs
-	cmp ax,40h
-	jne load_dll_fail
-	mov ax,es:[3Ch]
-	movzx eax,ax
-	SetFilePos
-	mov cx,40h
-	ReadFile   
-	jc load_dll_fail
-	mov ax,es:[0]
-	cmp ax,'EP'
-	jne load_dll_fail
+        mov eax,40h
+        AllocateSmallGlobalMem
+        mov cx,ax
+        xor di,di
+        ReadFile
+        jc load_dll_fail
+        cmp ax,40h
+        jne load_dll_fail
+        mov ax,es:exeh_signature
+        cmp ax,5A4Dh
+        jne load_dll_fail
+        mov ax,es:exeh_reloc_offs
+        cmp ax,40h
+        jne load_dll_fail
+        mov ax,es:[3Ch]
+        movzx eax,ax
+        SetFilePos
+        mov cx,40h
+        ReadFile   
+        jc load_dll_fail
+        mov ax,es:[0]
+        cmp ax,'EP'
+        jne load_dll_fail
 ;
-	GetFilePos
-	movzx ecx,cx
-	sub eax,ecx
-	SetFilePos
+        GetFilePos
+        movzx ecx,cx
+        sub eax,ecx
+        SetFilePos
 ;
-	FreeMem
-	call CreateLib
-    mov word ptr es:mod_free_dll_proc,OFFSET free_dll	
+        FreeMem
+        call CreateLib
+    mov word ptr es:mod_free_dll_proc,OFFSET free_dll   
     mov word ptr es:mod_free_dll_proc+2,cs
-	CreateModule
-;	
-	call CreateImage
-	mov edi,es:lib_base
+        CreateModule
+;       
+        call CreateImage
+        mov edi,es:lib_base
 ;
-	mov es:lib_debug_lib,dx
-	mov ax,gs:lib_fs
-	mov es:lib_fs,ax
-	mov es:lib_run_now,bp
-	mov ecx,es:lib_size
-	call LoadImportedDlls
+        mov es:lib_debug_lib,dx
+        mov ax,gs:lib_fs
+        mov es:lib_fs,ax
+        mov es:lib_run_now,bp
+        mov ecx,es:lib_size
+        call LoadImportedDlls
 ;
-	or dx,dx
-	jz load_dll_nodeb
+        or dx,dx
+        jz load_dll_nodeb
 ;
-	call Preload
-	push ds
-	push es
-	mov ax,es
-	mov ds,ax
-	call LoadDllEvent
-	call SendEvent
-	pop es
-	pop ds
+        call Preload
+        push ds
+        push es
+        mov ax,es
+        mov ds,ax
+        call LoadDllEvent
+        call SendEvent
+        pop es
+        pop ds
 
 load_dll_nodeb:
-	call RunDll
-	clc
-	jmp load_dll_done
+        call RunDll
+        clc
+        jmp load_dll_done
 
 load_dll_fail:
-	FreeMem
+        FreeMem
 load_dll_fail_nofree:
-	xor edi,edi
-	stc
+        xor edi,edi
+        stc
 
 load_dll_done:
-	pop bp
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	pop gs
-	ret
-LoadPeDll	ENDP
+        pop bp
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        pop eax
+        pop gs
+        ret
+LoadPeDll       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FreePeDll
+;               NAME:                   FreePeDll
 ;
-;		DESCRIPTION:    Free PE DLL
+;               DESCRIPTION:    Free PE DLL
 ;
-;       PARAMETERS:		ES		Lib handle
+;       PARAMETERS:             ES              Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreePeDll	Proc near
-	sub es:lib_usage_count,1
-	jnz free_pe_dll_done
+FreePeDll       Proc near
+        sub es:lib_usage_count,1
+        jnz free_pe_dll_done
 ;
-	push ds
-	push eax
-	push ebx
-	push ecx
-	push edx
-	push si
-	push edi
+        push ds
+        push eax
+        push ebx
+        push ecx
+        push edx
+        push si
+        push edi
 ;
-	mov dx,es:lib_debug_lib
-	or dx,dx
-	jz fdNotifyDone
+        mov dx,es:lib_debug_lib
+        or dx,dx
+        jz fdNotifyDone
 ;
-	push es
-	mov ax,es
-	mov ds,ax
-	call FreeDllEvent
-	call SendEvent
-	pop es
+        push es
+        mov ax,es
+        mov ds,ax
+        call FreeDllEvent
+        call SendEvent
+        pop es
 
 fdNotifyDone:
-	mov ax,flat_data_sel
-	mov ds,ax
-	mov eax,es:lib_header
-	mov eax,[eax].peh_entry_point
-	or eax,eax
-	jz fdMod
-;	
+        mov ax,flat_data_sel
+        mov ds,ax
+        mov eax,es:lib_header
+        mov eax,[eax].peh_entry_point
+        or eax,eax
+        jz fdMod
+;       
     push ds
     push es
     push fs
     pushad
 ;        
-	add eax,es:lib_base
-	push eax
-	movzx eax,es:lib_init_param
+        add eax,es:lib_base
+        push eax
+        movzx eax,es:lib_init_param
     movzx ebx,es:mod_handle
     mov edx,0
-	CallPM32
+        CallPM32
 ;
     popad
     pop fs
     pop es
-    pop ds	
+    pop ds      
 
 fdMod:
     FreeModule
 ;
-	mov ax,flat_data_sel
-	mov ds,ax
-	mov edi,es:lib_base
-	call FreeImportedDlls
-	mov edx,es:lib_base
-	mov ecx,es:lib_size
-	mov bx,es:lib_file_handle
-	CloseFile
+        mov ax,flat_data_sel
+        mov ds,ax
+        mov edi,es:lib_base
+        call FreeImportedDlls
+        mov edx,es:lib_base
+        mov ecx,es:lib_size
+        mov bx,es:lib_file_handle
+        CloseFile
 ;
-	mov ax,system_data_sel
-	mov ds,ax
-	add edx,ds:flat_base
-	FreeLinear
-	FreeMem
+        mov ax,system_data_sel
+        mov ds,ax
+        add edx,ds:flat_base
+        FreeLinear
+        FreeMem
 ;
-	pop edi
-	pop si
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	pop ds
+        pop edi
+        pop si
+        pop edx
+        pop ecx
+        pop ebx
+        pop eax
+        pop ds
 
 free_pe_dll_done:
-	ret
+        ret
 FreePeDll Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadPage
+;               NAME:                   LoadPage
 ;
-;		DESCRIPTION:    Load a single page in the image file
+;               DESCRIPTION:    Load a single page in the image file
 ;
-;		PARAMETERS:     ECX     Flat base
-;                       EDX		Allocate address
-;		                ESI		Image object
+;               PARAMETERS:     ECX     Flat base
+;                       EDX             Allocate address
+;                               ESI             Image object
 ;                       EDI     Image base
 ;                       EBP     Image address
 ;                       DS      Flat data sel
@@ -2128,69 +2128,69 @@ LoadPage    Proc near
     pushad
 ;
     push ds
-	mov ax,process_page_sel
-	mov ds,ax
-	mov eax,ebp
+        mov ax,process_page_sel
+        mov ds,ax
+        mov eax,ebp
     add eax,ecx
-	shr eax,10
-	mov eax,[eax]
-	pop ds
-	test al,1
-	stc
-	jnz load_page_done
-;	
-	test [esi].o_flags,80h
-	jz load_page_from_file
+        shr eax,10
+        mov eax,[eax]
+        pop ds
+        test al,1
+        stc
+        jnz load_page_done
+;       
+        test [esi].o_flags,80h
+        jz load_page_from_file
 
 load_page_zero:
-	push es
-	push edi
-	mov ax,ds
-	mov es,ax
-	mov edi,edx
-	mov ecx,400h
-	xor eax,eax
-	rep stos dword ptr es:[edi]
-	pop edi
-	pop es
-	clc
-	jmp load_page_done
+        push es
+        push edi
+        mov ax,ds
+        mov es,ax
+        mov edi,edx
+        mov ecx,400h
+        xor eax,eax
+        rep stos dword ptr es:[edi]
+        pop edi
+        pop es
+        clc
+        jmp load_page_done
 
 load_page_from_file:
-	mov bx,es:lib_file_handle
-	mov eax,ebp
-	sub eax,edi
-	sub eax,[esi].o_va
-	mov ecx,[esi].o_phys_size
-	sub ecx,eax
-	jnc load_page_file
+        mov bx,es:lib_file_handle
+        mov eax,ebp
+        sub eax,edi
+        sub eax,[esi].o_va
+        mov ecx,[esi].o_phys_size
+        sub ecx,eax
+        jnc load_page_file
 ;
-    xor ecx,ecx	
+    xor ecx,ecx 
     jmp load_page_size_ok
-	
+        
 load_page_file:
-	cmp ecx,1000h
-	jc load_page_size_ok
-	mov ecx,1000h
+        cmp ecx,1000h
+        jc load_page_size_ok
+        mov ecx,1000h
 
 load_page_size_ok:
-	add eax,[esi].o_phys_offset
-	SetFilePos	
+        add eax,[esi].o_phys_offset
+        SetFilePos      
 ;
-	push es
-	push edi
-	mov ax,ds
-	mov es,ax
-	mov edi,edx
-	UserGateForce32 read_file_nr
-	add edi,eax
-	mov ecx,1000h
-	sub ecx,eax
-	shr ecx,2
-	xor eax,eax
-	rep stos dword ptr es:[edi]
-	pop edi
-	pop es
+        push es
+        push edi
+        mov ax,ds
+        mov es,ax
+        mov edi,edx
+        UserGateForce32 read_file_nr
+        add edi,eax
+        mov ecx,1000h
+        sub ecx,eax
+        shr ecx,2
+        xor eax,eax
+        rep stos dword ptr es:[edi]
+        pop edi
+        pop es
     clc
 
 load_page_done:
@@ -2201,14 +2201,14 @@ LoadPage    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			MapFromImage
+;               NAME:                   MapFromImage
 ;
-;		DESCRIPTION:    Map image file to the allocate buffer
+;               DESCRIPTION:    Map image file to the allocate buffer
 ;
-;		PARAMETERS:     EAX     Size to map
+;               PARAMETERS:     EAX     Size to map
 ;                       ECX     Flat base
-;                       EDX		Allocated address
-;		                ESI		Image object
+;                       EDX             Allocated address
+;                               ESI             Image object
 ;                       EDI     Image base
 ;                       EBP     Image address
 ;                       DS      Flat data sel
@@ -2228,18 +2228,18 @@ MapFromImage    Proc near
 ;    
     mov ecx,eax
     shr ecx,12
-	mov ax,process_page_sel
-	mov ds,ax
-	shr edx,10
-	shr ebp,10
+        mov ax,process_page_sel
+        mov ds,ax
+        shr edx,10
+        shr ebp,10
 
 map_from_image_loop:
     mov eax,ds:[ebp]
     mov ds:[edx],eax
 ;
-	add edx,4
-	add ebp,4
-	loop map_from_image_loop
+        add edx,4
+        add ebp,4
+        loop map_from_image_loop
 
 map_from_image_done:
     popad
@@ -2250,15 +2250,15 @@ MapFromImage  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			MapToImage
+;               NAME:                   MapToImage
 ;
-;		DESCRIPTION:    Map allocate buffer to the image file
+;               DESCRIPTION:    Map allocate buffer to the image file
 ;
-;		PARAMETERS:     EAX     Size to map
+;               PARAMETERS:     EAX     Size to map
 ;                       EBX     Size of buffer
 ;                       ECX     Flat base
-;                       EDX		Allocated address
-;		                ESI		Image object
+;                       EDX             Allocated address
+;                               ESI             Image object
 ;                       EDI     Image base
 ;                       EBP     Image address
 ;                       DS      Flat data sel
@@ -2274,37 +2274,37 @@ MapToImage    Proc near
     shr ebx,12
     push ebx
 ;    
-	mov ebx,[esi].o_flags
+        mov ebx,[esi].o_flags
     add edx,ecx
     add ebp,ecx
 ;
     mov ecx,eax
     shr ecx,12
-	mov ax,process_page_sel
-	mov ds,ax
-	shr edx,10
-	shr ebp,10
+        mov ax,process_page_sel
+        mov ds,ax
+        shr edx,10
+        shr ebp,10
 
 map_to_image_loop:
     xor eax,eax
-	xchg eax,[edx]
-	test al,1
-	jnz map_to_image_valid
+        xchg eax,[edx]
+        test al,1
+        jnz map_to_image_valid
 ;
     xor eax,eax
-    jmp map_to_image_save	
+    jmp map_to_image_save       
 
 map_to_image_valid:
-	test ebx,80000000h
-	jnz map_to_image_save
+        test ebx,80000000h
+        jnz map_to_image_save
 
-	and al,NOT 2
+        and al,NOT 2
 
 map_to_image_save:
-	mov ds:[ebp],eax
-	add edx,4
-	add ebp,4
-	loop map_to_image_loop
+        mov ds:[ebp],eax
+        add edx,4
+        add ebp,4
+        loop map_to_image_loop
 ;
     pop ecx
     or ecx,ecx
@@ -2326,32 +2326,32 @@ MapToImage  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			load_object
+;               NAME:                   load_object
 ;
-;		DESCRIPTION:    Demand load object
+;               DESCRIPTION:    Demand load object
 ;
-;		PARAMETERS:     EDX		LINEAR ADDRESS
+;               PARAMETERS:     EDX             LINEAR ADDRESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_object	Proc far
-	push ds
-	push es
-	pushad
-;	
+load_object     Proc far
+        push ds
+        push es
+        pushad
+;       
     mov ax,system_data_sel
     mov ds,ax
     mov ecx,ds:flat_base
-	sub edx,ecx
-	mov ax,flat_data_sel
-	mov ds,ax
-	and dx,0F000h
+        sub edx,ecx
+        mov ax,flat_data_sel
+        mov ds,ax
+        and dx,0F000h
 ;
-	call FindLib
-	jc load_object_done
+        call FindLib
+        jc load_object_done
 ;
-	call FindObject
-	jc load_object_done
+        call FindObject
+        jc load_object_done
 ;
     push ds
     mov ax,es
@@ -2362,8 +2362,8 @@ load_object	Proc far
     xor eax,eax
     mov ebp,edx
 ;    
-	mov ebx,es:lib_header
-	cmp edi,[ebx].peh_image_base
+        mov ebx,es:lib_header
+        cmp edi,[ebx].peh_image_base
     je load_object_size_ok
 
 load_object_get_size:
@@ -2412,8 +2412,8 @@ load_object_load_done:
     push edx
     push ebp    
 ;
-	mov ebx,es:lib_header
-	cmp edi,[ebx].peh_image_base
+        mov ebx,es:lib_header
+        cmp edi,[ebx].peh_image_base
     je load_object_map
 
 load_object_reloc_loop:
@@ -2444,33 +2444,33 @@ load_object_leave:
     LeaveSection ds:mod_section
     
 load_object_done:
-	popad
-	pop es
-	pop ds
-	ret
-load_object	Endp 
+        popad
+        pop es
+        pop ds
+        ret
+load_object     Endp 
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CreateImage
+;               NAME:                   CreateImage
 ;
-;		DESCRIPTION:    Create memory image of header
+;               DESCRIPTION:    Create memory image of header
 ;
-;		PARAMETERS:     FS:ESI	Image name
-;						ES		Lib handle
+;               PARAMETERS:     FS:ESI  Image name
+;                                               ES              Lib handle
 ;
-;		RETURNS:		EDI		Image base
+;               RETURNS:                EDI             Image base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateImage	Proc near
-	push eax
-	push bx
-	push ecx
-	push edx
-	push esi
-	push ebp
+CreateImage     Proc near
+        push eax
+        push bx
+        push ecx
+        push edx
+        push esi
+        push ebp
 ;
     mov bx,system_data_sel
     mov ds,bx
@@ -2479,281 +2479,281 @@ CreateImage	Proc near
     mov bx,flat_data_sel
     mov ds,bx
 ;
-	mov bx,es:lib_file_handle
-	GetFilePos
-	push eax
-	push es
-	mov eax,SIZE pe_header
-	AllocateLocalMem
-	mov cx,ax
-	xor di,di
-	ReadFile   
-	mov ecx,es:peh_image_size
-	mov edx,es:peh_image_base
-	mov si,es:peh_nthdr_size
-	mov di,es:peh_objects
-	FreeMem
-	pop es
+        mov bx,es:lib_file_handle
+        GetFilePos
+        push eax
+        push es
+        mov eax,SIZE pe_header
+        AllocateLocalMem
+        mov cx,ax
+        xor di,di
+        ReadFile   
+        mov ecx,es:peh_image_size
+        mov edx,es:peh_image_base
+        mov si,es:peh_nthdr_size
+        mov di,es:peh_objects
+        FreeMem
+        pop es
 ;
-	pop eax
-	mov es:lib_header,eax
-	mov es:lib_base,edx
-	mov es:lib_size,ecx
+        pop eax
+        mov es:lib_header,eax
+        mov es:lib_base,edx
+        mov es:lib_size,ecx
 ;
-	movzx ecx,si
-	add ecx,eax
-	add ecx,24
-	mov es:lib_objects,ecx
+        movzx ecx,si
+        add ecx,eax
+        add ecx,24
+        mov es:lib_objects,ecx
 ;
-	mov ax,SIZE object_struc
-	mul di
-	push dx
-	push ax
+        mov ax,SIZE object_struc
+        mul di
+        push dx
+        push ax
 ;
-	mov edx,es:lib_base
-	mov eax,es:lib_size
+        mov edx,es:lib_base
+        mov eax,es:lib_size
     add edx,ebp
-	ReserveLocalLinear
-	jnc create_image_alloced
+        ReserveLocalLinear
+        jnc create_image_alloced
 ;
-	AllocateLocalLinear
+        AllocateLocalLinear
 
 create_image_alloced:
-	sub edx,ebp
-	SetFlatLinearInvalid
+        sub edx,ebp
+        SetFlatLinearInvalid
 ;
-	pop eax
-	add eax,es:lib_objects
-	mov ecx,eax
-	SetFlatLinearValid
+        pop eax
+        add eax,es:lib_objects
+        mov ecx,eax
+        SetFlatLinearValid
 ;
-	add es:lib_header,edx
-	add es:lib_objects,edx
-	mov es:lib_base,edx
+        add es:lib_header,edx
+        add es:lib_objects,edx
+        mov es:lib_base,edx
 ;
-	xor eax,eax
-	SetFilePos
+        xor eax,eax
+        SetFilePos
 ;
-	push es
-	mov ax,ds
-	mov es,ax
-	mov edi,edx
-	UserGateForce32 read_file_nr
-	pop es
+        push es
+        mov ax,ds
+        mov es,ax
+        mov edi,edx
+        UserGateForce32 read_file_nr
+        pop es
 ;
-	mov esi,es:lib_header
-	mov cx,[esi].peh_objects
-	mov esi,es:lib_objects
+        mov esi,es:lib_header
+        mov cx,[esi].peh_objects
+        mov esi,es:lib_objects
 ;
-	push es
-	mov ax,cs
-	mov es,ax
+        push es
+        mov ax,cs
+        mov es,ax
 hook_object_loop:
-	mov edx,[esi].o_va
-	add edx,edi
-	add edx,ebp
-	mov eax,[esi].o_virt_size
-	cmp eax,[esi].o_phys_size
-	jae hook_object_do
-	mov eax,[esi].o_phys_size
-	mov [esi].o_virt_size,eax
+        mov edx,[esi].o_va
+        add edx,edi
+        add edx,ebp
+        mov eax,[esi].o_virt_size
+        cmp eax,[esi].o_phys_size
+        jae hook_object_do
+        mov eax,[esi].o_phys_size
+        mov [esi].o_virt_size,eax
 hook_object_do:
-	push di
-	mov di,OFFSET load_object
-	HookPage
-	pop di
-	add esi,SIZE object_struc
-	loop hook_object_loop
-	pop es
+        push di
+        mov di,OFFSET load_object
+        HookPage
+        pop di
+        add esi,SIZE object_struc
+        loop hook_object_loop
+        pop es
 ;
-	mov esi,es:lib_header
-	mov eax,[esi].peh_fixup_size
-	mov edx,[esi].peh_fixup_va	
-	or edx,edx
-	jz fixup_done
+        mov esi,es:lib_header
+        mov eax,[esi].peh_fixup_size
+        mov edx,[esi].peh_fixup_va      
+        or edx,edx
+        jz fixup_done
 ;
-	add edx,edi
-	call FindObject
-	jc fixup_done
+        add edx,edi
+        call FindObject
+        jc fixup_done
 ;
-	mov ecx,eax
-	mov eax,[esi].o_phys_offset
-	SetFilePos
+        mov ecx,eax
+        mov eax,[esi].o_phys_offset
+        SetFilePos
 ;
-	push es
-	push edi
-	mov edi,edx
-	add edx,ebp
-	mov eax,ecx
-	UnhookPage
-	mov ax,ds
-	mov es,ax
-	UserGateForce32 read_file_nr
-	pop edi
-	pop es
+        push es
+        push edi
+        mov edi,edx
+        add edx,ebp
+        mov eax,ecx
+        UnhookPage
+        mov ax,ds
+        mov es,ax
+        UserGateForce32 read_file_nr
+        pop edi
+        pop es
 
 fixup_done:
     pop ebp
-	pop esi
-	pop edx
-	pop ecx
-	pop bx
-	pop eax
-	ret
-CreateImage	Endp
+        pop esi
+        pop edx
+        pop ecx
+        pop bx
+        pop eax
+        ret
+CreateImage     Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Preload
+;               NAME:                   Preload
 ;
-;		DESCRIPTION:    Preload image
+;               DESCRIPTION:    Preload image
 ;
-;		PARAMETERS:     EDI		Image base
-;						ES		Lib handle
+;               PARAMETERS:     EDI             Image base
+;                                               ES              Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Preload	Proc near
-	push eax
-	push ecx
-	push edx
-	push esi
+Preload Proc near
+        push eax
+        push ecx
+        push edx
+        push esi
 ;
-	mov esi,es:lib_header
-	mov cx,[esi].peh_objects
-	mov esi,es:lib_objects
+        mov esi,es:lib_header
+        mov cx,[esi].peh_objects
+        mov esi,es:lib_objects
 PreloadAllLoop:
-	mov edx,[esi].o_va
-	add edx,edi
-	mov eax,[esi].o_virt_size
+        mov edx,[esi].o_va
+        add edx,edi
+        mov eax,[esi].o_virt_size
 PreloadOneLoop:
-	mov al,[edx]
-	xor al,al
-	add edx,1000h
-	sub eax,1000h
-	ja PreloadOneLoop
+        mov al,[edx]
+        xor al,al
+        add edx,1000h
+        sub eax,1000h
+        ja PreloadOneLoop
 ;
-	add esi,SIZE object_struc
-	loop PreloadAllLoop
+        add esi,SIZE object_struc
+        loop PreloadAllLoop
 ;
-	pop esi
-	pop edx
-	pop ecx
-	pop eax
-	ret
-Preload	Endp
+        pop esi
+        pop edx
+        pop ecx
+        pop eax
+        ret
+Preload Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitStack
+;               NAME:                   InitStack
 ;
-;		DESCRIPTION:    Init stack and TIB
+;               DESCRIPTION:    Init stack and TIB
 ;
-;		PARAMETERS:     EDI	Image base
-;						ES	Lib handle
+;               PARAMETERS:     EDI     Image base
+;                                               ES      Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitStack	Proc near
-	push fs
-	push eax
-	push ebx
-	push ecx
-	push edx
-	push esi
+InitStack       Proc near
+        push fs
+        push eax
+        push ebx
+        push ecx
+        push edx
+        push esi
 ;
-	push ds
-	mov ax,system_data_sel
-	mov ds,ax
-	mov ebx,ds:flat_base
-	push bx
+        push ds
+        mov ax,system_data_sel
+        mov ds,ax
+        mov ebx,ds:flat_base
+        push bx
 ;
-	mov eax,1000h
-	AllocateLocalLinear
-	AllocateLdt
-	or bx,7
-	mov ecx,eax	
-	CreateDataSelector32
-	mov [bp].load_fs,bx
-	mov es:lib_fs,bx
-	mov fs,bx
-	pop bx
-	pop ds
-	sub edx,ebx
-	mov fs:pvBase,edx
+        mov eax,1000h
+        AllocateLocalLinear
+        AllocateLdt
+        or bx,7
+        mov ecx,eax     
+        CreateDataSelector32
+        mov [bp].load_fs,bx
+        mov es:lib_fs,bx
+        mov fs,bx
+        pop bx
+        pop ds
+        sub edx,ebx
+        mov fs:pvBase,edx
 ;
-	mov dword ptr [bp].load_ss,flat_data_sel
-	mov esi,es:lib_header
-	mov eax,[esi].peh_stack_reserve_size
-	AllocateLocalLinear
-	sub edx,ebx
-	mov [bp].load_ebx,edx
-	mov fs:pvFirstExcept,-1
-	mov fs:pvStackUserBottom,edx
-	mov fs:pvStackUserSize,eax
-	add edx,eax
-	sub edx,88h
-	mov fs:pvTEB,edx
-	GetThread
-	push es
-	mov es,ax
-	movzx eax,es:p_id
-	pop es
-	mov fs:pvThreadHandle,eax
-	mov fs:pvProcessHandle,eax
-	mov [edx+24h],eax
-	mov [bp].load_ebp,edx
-	sub edx,10h
-	mov [bp].load_ecx,edx
-	sub edx,100h
-	mov fs:pvTLSArray,edx
+        mov dword ptr [bp].load_ss,flat_data_sel
+        mov esi,es:lib_header
+        mov eax,[esi].peh_stack_reserve_size
+        AllocateLocalLinear
+        sub edx,ebx
+        mov [bp].load_ebx,edx
+        mov fs:pvFirstExcept,-1
+        mov fs:pvStackUserBottom,edx
+        mov fs:pvStackUserSize,eax
+        add edx,eax
+        sub edx,88h
+        mov fs:pvTEB,edx
+        GetThread
+        push es
+        mov es,ax
+        movzx eax,es:p_id
+        pop es
+        mov fs:pvThreadHandle,eax
+        mov fs:pvProcessHandle,eax
+        mov [edx+24h],eax
+        mov [bp].load_ebp,edx
+        sub edx,10h
+        mov [bp].load_ecx,edx
+        sub edx,100h
+        mov fs:pvTLSArray,edx
 ;
-	sub edx,8
-	mov fs:pvTLSBitmap,edx
-	mov dword ptr [edx],-1
-	mov dword ptr [edx+4],-1
+        sub edx,8
+        mov fs:pvTLSBitmap,edx
+        mov dword ptr [edx],-1
+        mov dword ptr [edx+4],-1
 ;
-	mov eax,[esi].peh_tls_va
-	or eax,eax
-	jz init_stack_no_tls
+        mov eax,[esi].peh_tls_va
+        or eax,eax
+        jz init_stack_no_tls
 ;
-	push es
-	push ecx
-	push edx
+        push es
+        push ecx
+        push edx
 ;
-	mov eax,[esi].peh_tls_va
-	add eax,edi
-	mov esi,[eax].tls_start_data_va
-	mov ecx,[eax].tls_end_data_va
-	push eax
-	sub ecx,esi
-	mov eax,ecx
-	and ax,0F000h
-	add eax,1000h
-	AllocateLocalLinear
-	sub edx,ebx
-	push edi
-	mov edi,edx
-	mov bx,ds
-	mov es,bx
-	rep movs byte ptr es:[edi],ds:[esi]
-	pop edi
-	pop eax
-	int 3
-	mov eax,[eax].tls_index_va
-	mov eax,[eax]
-;	
-	mov esi,fs:pvTLSArray
-	mov [esi+4*eax],edx
-	mov esi,fs:pvTLSBitmap
-	btr [esi],eax
+        mov eax,[esi].peh_tls_va
+        add eax,edi
+        mov esi,[eax].tls_start_data_va
+        mov ecx,[eax].tls_end_data_va
+        push eax
+        sub ecx,esi
+        mov eax,ecx
+        and ax,0F000h
+        add eax,1000h
+        AllocateLocalLinear
+        sub edx,ebx
+        push edi
+        mov edi,edx
+        mov bx,ds
+        mov es,bx
+        rep movs byte ptr es:[edi],ds:[esi]
+        pop edi
+        pop eax
+        int 3
+        mov eax,[eax].tls_index_va
+        mov eax,[eax]
+;       
+        mov esi,fs:pvTLSArray
+        mov [esi+4*eax],edx
+        mov esi,fs:pvTLSBitmap
+        btr [esi],eax
 
 init_tls_skipped:
-	pop edx
-	pop ecx
-	pop es
+        pop edx
+        pop ecx
+        pop es
 
 init_stack_no_tls:
     mov eax,-1
@@ -2768,401 +2768,401 @@ init_stack_no_tls:
     sub edx,4
     mov [edx],eax
 ;
-	xor eax,eax
-	mov fs:pvStackUserTop,edx
-	mov [edx],eax						; reserved
-	sub edx,4
-	mov [edx],eax						; reason
-	sub edx,4
-	movzx eax,es:mod_handle
-	mov dword ptr [edx],eax				; module handle
-	mov fs:pvModuleHandle,eax
-	sub edx,4
-	xor eax,eax
-	mov [edx],eax						; return address
-	sub edx,4
-	mov [edx],edx
-	mov [bp].load_esp,edx
+        xor eax,eax
+        mov fs:pvStackUserTop,edx
+        mov [edx],eax                                           ; reserved
+        sub edx,4
+        mov [edx],eax                                           ; reason
+        sub edx,4
+        movzx eax,es:mod_handle
+        mov dword ptr [edx],eax                         ; module handle
+        mov fs:pvModuleHandle,eax
+        sub edx,4
+        xor eax,eax
+        mov [edx],eax                                           ; return address
+        sub edx,4
+        mov [edx],edx
+        mov [bp].load_esp,edx
 ;
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	pop fs
-	ret
-InitStack	Endp
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        pop eax
+        pop fs
+        ret
+InitStack       Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RunImage
+;               NAME:                   RunImage
 ;
-;		DESCRIPTION:    Setup registers to run image
+;               DESCRIPTION:    Setup registers to run image
 ;
-;		PARAMETERS:     EDI		Image base
-;						ES		Lib handle
+;               PARAMETERS:     EDI             Image base
+;                                               ES              Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RunImage	Proc near
-	push eax
-	push ebx
-	push edx
+RunImage        Proc near
+        push eax
+        push ebx
+        push edx
 ;
-	mov dword ptr [bp].load_cs,flat_code_sel
-	mov eax,es:lib_header
-	mov eax,[eax].peh_entry_point
-	add eax,edi
-	mov [bp].load_eip,eax
-	mov [bp].load_eax,eax
-	mov dword ptr [bp].load_edi,0
-	mov word ptr [bp+2].load_eflags,0
-	mov ax,7202h
-	SetFlags
-	mov [bp].load_eflags,ax
-	mov dword ptr [bp].load_ds,flat_data_sel
-	mov dword ptr [bp].load_es,flat_data_sel
+        mov dword ptr [bp].load_cs,flat_code_sel
+        mov eax,es:lib_header
+        mov eax,[eax].peh_entry_point
+        add eax,edi
+        mov [bp].load_eip,eax
+        mov [bp].load_eax,eax
+        mov dword ptr [bp].load_edi,0
+        mov word ptr [bp+2].load_eflags,0
+        mov ax,7202h
+        SetFlags
+        mov [bp].load_eflags,ax
+        mov dword ptr [bp].load_ds,flat_data_sel
+        mov dword ptr [bp].load_es,flat_data_sel
 ;
-	pop edx
-	pop ebx
-	pop eax
-	ret
-RunImage	Endp
+        pop edx
+        pop ebx
+        pop eax
+        ret
+RunImage        Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			load_pe
+;               NAME:                   load_pe
 ;
-;		DESCRIPTION:    Load portable executable file
+;               DESCRIPTION:    Load portable executable file
 ;
-;		PARAMETERS:     BX		file handle
-;						DS:ESI	File name
-;						ES:EDI	Command line
+;               PARAMETERS:     BX              file handle
+;                                               DS:ESI  File name
+;                                               ES:EDI  Command line
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_pe	Proc far
-	push ds
-	push es
-	push fs
-	push esi
-	push edi
+load_pe Proc far
+        push ds
+        push es
+        push fs
+        push esi
+        push edi
 ;
-	push ax
-	mov ax,ds
-	mov fs,ax
-	mov ax,flat_data_sel
-	mov ds,ax
+        push ax
+        mov ax,ds
+        mov fs,ax
+        mov ax,flat_data_sel
+        mov ds,ax
 ;
-	xor eax,eax
-	SetFilePos
-	mov eax,40h
-	AllocateSmallGlobalMem
-	mov cx,ax
-	xor di,di
-	ReadFile
-	jc load_pe_fail
-	cmp ax,40h
-	jne load_pe_fail
-	mov ax,es:exeh_signature
-	cmp ax,5A4Dh
-	jne load_pe_fail
-	mov ax,es:exeh_reloc_offs
-	cmp ax,40h
-	jne load_pe_fail
-	mov ax,es:[3Ch]
-	movzx eax,ax
-	SetFilePos
-	mov cx,40h
-	ReadFile   
-	jc load_pe_fail
-	mov ax,es:[0]
-	cmp ax,'EP'
-	jne load_pe_fail
+        xor eax,eax
+        SetFilePos
+        mov eax,40h
+        AllocateSmallGlobalMem
+        mov cx,ax
+        xor di,di
+        ReadFile
+        jc load_pe_fail
+        cmp ax,40h
+        jne load_pe_fail
+        mov ax,es:exeh_signature
+        cmp ax,5A4Dh
+        jne load_pe_fail
+        mov ax,es:exeh_reloc_offs
+        cmp ax,40h
+        jne load_pe_fail
+        mov ax,es:[3Ch]
+        movzx eax,ax
+        SetFilePos
+        mov cx,40h
+        ReadFile   
+        jc load_pe_fail
+        mov ax,es:[0]
+        cmp ax,'EP'
+        jne load_pe_fail
 ;
-	GetFilePos
-	movzx ecx,cx
-	sub eax,ecx
-	SetFilePos
+        GetFilePos
+        movzx ecx,cx
+        sub eax,ecx
+        SetFilePos
 ;
-	FreeMem
-	call CreateLib
-	SetModule
-;	
-	xor ax,ax
-	mov fs,ax
+        FreeMem
+        call CreateLib
+        SetModule
+;       
+        xor ax,ax
+        mov fs,ax
 ;
-	mov al,32
-	SetBitness
+        mov al,32
+        SetBitness
 ;
-	call CreateImage
-	call InsertApp
-	call InitStack
-	call LoadImportedDlls
-	pop ax
-	call RunImage
-	pop edi
-	pop esi
-	pop fs
-	pop es
-	pop ds
+        call CreateImage
+        call InsertApp
+        call InitStack
+        call LoadImportedDlls
+        pop ax
+        call RunImage
+        pop edi
+        pop esi
+        pop fs
+        pop es
+        pop ds
 ;
-	push ds
-	push es
-	push fs
-	push esi
-	push edi
+        push ds
+        push es
+        push fs
+        push esi
+        push edi
 ;
     GetThread
     mov fs,ax
     mov fs,fs:p_app_sel
 ;
-	xor ecx,ecx
-	push edi
+        xor ecx,ecx
+        push edi
 
 load_pe_cmd_size:
-	mov al,es:[edi]
-	inc edi
-	inc ecx
-	or al,al
-	jnz load_pe_cmd_size
+        mov al,es:[edi]
+        inc edi
+        inc ecx
+        or al,al
+        jnz load_pe_cmd_size
 ;
-	pop edi
-	xor ebx,ebx
-	push esi
+        pop edi
+        xor ebx,ebx
+        push esi
 
 load_pe_name_size:
-	mov al,[esi]
-	inc esi
-	inc ebx
-	or al,al
-	jnz load_pe_name_size
+        mov al,[esi]
+        inc esi
+        inc ebx
+        or al,al
+        jnz load_pe_name_size
 ;
-	pop esi
+        pop esi
 ;
-	mov eax,ecx
-	add eax,ebx
-	UserGateForce32 allocate_app_mem_nr	
-	mov fs:app_cmd_line,edx
-	mov fs:app_options,0
+        mov eax,ecx
+        add eax,ebx
+        UserGateForce32 allocate_app_mem_nr     
+        mov fs:app_cmd_line,edx
+        mov fs:app_options,0
 ;
-	push es
-	push ecx
-	push edi
-	mov ax,flat_data_sel
-	mov es,ax
-	mov edi,edx
-	mov ecx,ebx
-	rep movs byte ptr es:[edi],ds:[esi]
-	mov edx,edi
-	pop edi
-	pop ecx
-	pop es	
+        push es
+        push ecx
+        push edi
+        mov ax,flat_data_sel
+        mov es,ax
+        mov edi,edx
+        mov ecx,ebx
+        rep movs byte ptr es:[edi],ds:[esi]
+        mov edx,edi
+        pop edi
+        pop ecx
+        pop es  
 ;
-	mov esi,edi
-	mov edi,edx
-	mov ax,es
-	mov ds,ax
-	mov ax,flat_data_sel
-	mov es,ax
-	mov byte ptr es:[edi-1],' '
-	rep movs byte ptr es:[edi],ds:[esi]
-	clc
-	jmp load_pe_done
+        mov esi,edi
+        mov edi,edx
+        mov ax,es
+        mov ds,ax
+        mov ax,flat_data_sel
+        mov es,ax
+        mov byte ptr es:[edi-1],' '
+        rep movs byte ptr es:[edi],ds:[esi]
+        clc
+        jmp load_pe_done
 
 load_pe_fail:
-	pop ax
-	FreeMem
-	stc
+        pop ax
+        FreeMem
+        stc
 
 load_pe_done:
-	pop edi
-	pop esi
-	pop fs
-	pop es
-	pop ds
-	ret
-load_pe	Endp
+        pop edi
+        pop esi
+        pop fs
+        pop es
+        pop ds
+        ret
+load_pe Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitThread
+;               NAME:                   InitThread
 ;
-;		DESCRIPTION:    Init thread
+;               DESCRIPTION:    Init thread
 ;
-;		PARAMETERS:     DS		TSS selector of new thread
-;						EAX		Stack size
+;               PARAMETERS:     DS              TSS selector of new thread
+;                                               EAX             Stack size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_thread	PROC far
-	push es
-	push fs
-	push eax
-	push ebx
-	push edx
-	push esi
-	push edi
-	push ebp
+init_thread     PROC far
+        push es
+        push fs
+        push eax
+        push ebx
+        push edx
+        push esi
+        push edi
+        push ebp
 ;
-	push eax
-	mov ax,system_data_sel
-	mov fs,ax
-	mov ebp,fs:flat_base
-	mov ax,flat_data_sel
-	mov fs,ax
-	mov es,ds:tss_ebx
-	mov ebx,es:pvModuleHandle
-	mov edx,es:pvProcessHandle
-	push es
-	push bx
-	DerefModuleHandle
-	mov es,bx
-	mov esi,es:lib_header
-	mov edi,es:lib_base
-	pop bx
-	pop es
-;	
-	mov ecx,es:pvArbitrary
-	push ds
-	push bx
-	push ecx
-	push edx
-	mov eax,1000h
-	AllocateLocalLinear
-	AllocateLdt
-	or bx,7
-	mov ecx,eax	
-	CreateDataSelector32
-	mov es,bx
-	sub edx,ebp
-	mov es:pvBase,edx
-	pop edx
-	pop ecx
-	pop bx
-	pop ds
+        push eax
+        mov ax,system_data_sel
+        mov fs,ax
+        mov ebp,fs:flat_base
+        mov ax,flat_data_sel
+        mov fs,ax
+        mov es,ds:tss_ebx
+        mov ebx,es:pvModuleHandle
+        mov edx,es:pvProcessHandle
+        push es
+        push bx
+        DerefModuleHandle
+        mov es,bx
+        mov esi,es:lib_header
+        mov edi,es:lib_base
+        pop bx
+        pop es
+;       
+        mov ecx,es:pvArbitrary
+        push ds
+        push bx
+        push ecx
+        push edx
+        mov eax,1000h
+        AllocateLocalLinear
+        AllocateLdt
+        or bx,7
+        mov ecx,eax     
+        CreateDataSelector32
+        mov es,bx
+        sub edx,ebp
+        mov es:pvBase,edx
+        pop edx
+        pop ecx
+        pop bx
+        pop ds
 ;
-	mov es:pvArbitrary,ecx
-	mov es:pvModuleHandle,ebx
-	mov es:pvProcessHandle,edx
-	mov ds:tss_fs,es
-	mov ds:tss_ds,fs
-	mov ds:tss_ss,fs
-	mov ds:tss_es,fs
-	mov ds:tss_cs,flat_code_sel
-	mov ds:tss_gs,0
-	pop eax
-	add eax,200h
-	and ax,0F000h
-	add eax,1000h
-	AllocateLocalLinear
-	sub edx,ebp
-	mov dword ptr ds:tss_ebx,edx
-	mov es:pvFirstExcept,-1
-	mov es:pvStackUserBottom,edx
-	mov es:pvStackUserSize,eax
-	add edx,eax
-	sub edx,88h
-	mov es:pvTEB,edx
-	mov ax,ds:tss_thread
-	push es
-	mov es,ax
-	movzx eax,es:p_id
-	pop es
-	mov es:pvThreadHandle,eax
-	mov fs:[edx+24h],eax
-	mov dword ptr ds:tss_ebp,edx
-	sub edx,10h
-	mov dword ptr ds:tss_ecx,edx
-	sub edx,100h
-	mov es:pvTLSArray,edx
-	sub edx,8
+        mov es:pvArbitrary,ecx
+        mov es:pvModuleHandle,ebx
+        mov es:pvProcessHandle,edx
+        mov ds:tss_fs,es
+        mov ds:tss_ds,fs
+        mov ds:tss_ss,fs
+        mov ds:tss_es,fs
+        mov ds:tss_cs,flat_code_sel
+        mov ds:tss_gs,0
+        pop eax
+        add eax,200h
+        and ax,0F000h
+        add eax,1000h
+        AllocateLocalLinear
+        sub edx,ebp
+        mov dword ptr ds:tss_ebx,edx
+        mov es:pvFirstExcept,-1
+        mov es:pvStackUserBottom,edx
+        mov es:pvStackUserSize,eax
+        add edx,eax
+        sub edx,88h
+        mov es:pvTEB,edx
+        mov ax,ds:tss_thread
+        push es
+        mov es,ax
+        movzx eax,es:p_id
+        pop es
+        mov es:pvThreadHandle,eax
+        mov fs:[edx+24h],eax
+        mov dword ptr ds:tss_ebp,edx
+        sub edx,10h
+        mov dword ptr ds:tss_ecx,edx
+        sub edx,100h
+        mov es:pvTLSArray,edx
+        sub edx,8
 ;
-	mov es:pvTLSBitmap,edx
-	mov dword ptr fs:[edx],-1
-	mov dword ptr fs:[edx+4],-1
+        mov es:pvTLSBitmap,edx
+        mov dword ptr fs:[edx],-1
+        mov dword ptr fs:[edx+4],-1
 ;
-	mov eax,fs:[esi].peh_tls_va
-	or eax,eax
-	jz init_thread_no_tls
+        mov eax,fs:[esi].peh_tls_va
+        or eax,eax
+        jz init_thread_no_tls
 ;
-	push ecx
-	push edx
+        push ecx
+        push edx
 ;
-	mov eax,fs:[esi].peh_tls_va
-	add eax,edi
-	mov esi,fs:[eax].tls_start_data_va
-	mov ecx,fs:[eax].tls_end_data_va
-	push eax
-	sub ecx,esi
-	mov eax,ecx
-	and ax,0F000h
-	add eax,1000h
-	AllocateLocalLinear
-	sub edx,ebp
-	push es
-	push edi
-	mov edi,edx
-	mov bx,fs
-	mov es,bx
-	rep movs byte ptr es:[edi],fs:[esi]
-	pop edi
-	pop es
-	pop eax
-	mov eax,fs:[eax].tls_index_va
-	mov eax,fs:[eax]
-	mov esi,es:pvTLSArray
-	mov fs:[esi+4*eax],edx
-	mov esi,es:pvTLSBitmap
-	btr fs:[esi],eax
+        mov eax,fs:[esi].peh_tls_va
+        add eax,edi
+        mov esi,fs:[eax].tls_start_data_va
+        mov ecx,fs:[eax].tls_end_data_va
+        push eax
+        sub ecx,esi
+        mov eax,ecx
+        and ax,0F000h
+        add eax,1000h
+        AllocateLocalLinear
+        sub edx,ebp
+        push es
+        push edi
+        mov edi,edx
+        mov bx,fs
+        mov es,bx
+        rep movs byte ptr es:[edi],fs:[esi]
+        pop edi
+        pop es
+        pop eax
+        mov eax,fs:[eax].tls_index_va
+        mov eax,fs:[eax]
+        mov esi,es:pvTLSArray
+        mov fs:[esi+4*eax],edx
+        mov esi,es:pvTLSBitmap
+        btr fs:[esi],eax
 ;
-	pop edx
-	pop ecx
+        pop edx
+        pop ecx
 
 init_thread_no_tls:
-	sub edx,14h
-	xor eax,eax
-	mov es:pvStackUserTop,edx
-	mov fs:[edx],eax						; reserved
-	sub edx,4
-	mov fs:[edx],eax						; reason
-	sub edx,4
-	mov eax,es:pvModuleHandle
-	mov dword ptr fs:[edx],eax				; module handle
-	sub edx,4
-	xor eax,eax
-	mov fs:[edx],eax						; return address
-	sub edx,4
-	mov dword ptr ds:tss_esp,edx
+        sub edx,14h
+        xor eax,eax
+        mov es:pvStackUserTop,edx
+        mov fs:[edx],eax                                                ; reserved
+        sub edx,4
+        mov fs:[edx],eax                                                ; reason
+        sub edx,4
+        mov eax,es:pvModuleHandle
+        mov dword ptr fs:[edx],eax                              ; module handle
+        sub edx,4
+        xor eax,eax
+        mov fs:[edx],eax                                                ; return address
+        sub edx,4
+        mov dword ptr ds:tss_esp,edx
 ;
     pop ebp
-	pop edi
-	pop esi
-	pop edx
-	pop ebx
-	pop eax
-	pop fs
-	pop es
-	ret
-init_thread	Endp
+        pop edi
+        pop esi
+        pop edx
+        pop ebx
+        pop eax
+        pop fs
+        pop es
+        ret
+init_thread     Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			start_thread
+;               NAME:                   start_thread
 ;
-;		DESCRIPTION:    Start thread
+;               DESCRIPTION:    Start thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_thread	PROC far
-	push ds
-	push es
-	pushad
+start_thread    PROC far
+        push ds
+        push es
+        pushad
 ;
     or bp,bp
     je start_thread_done
@@ -3170,126 +3170,126 @@ start_thread	PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ax,word ptr ds:app_loader_name
-	cmp ax,OFFSET pe_loader_name
-	jne start_thread_done
+        mov ax,word ptr ds:app_loader_name
+        cmp ax,OFFSET pe_loader_name
+        jne start_thread_done
 ;
-	mov ax,cs
-	cmp ax,word ptr ds:app_loader_name+2
-	jne start_thread_done
+        mov ax,cs
+        cmp ax,word ptr ds:app_loader_name+2
+        jne start_thread_done
 ;
-	mov ax,[bp].vm_cs
-	cmp ax,flat_code_sel
-	jnz start_thread_done
+        mov ax,[bp].vm_cs
+        cmp ax,flat_code_sel
+        jnz start_thread_done
 ;
-	mov edx,[bp].vm_eip
+        mov edx,[bp].vm_eip
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_mod_sel
-	mov ax,ds:lib_debug_lib
-	or ax,ax
-	jz start_thread_done
+        mov ds,ds:app_mod_sel
+        mov ax,ds:lib_debug_lib
+        or ax,ax
+        jz start_thread_done
 ;
     call AllocateKernelEvent
-	call CreateThreadEvent
-	call SendEvent
+        call CreateThreadEvent
+        call SendEvent
 
 start_thread_done:
-	popad
-	pop es
-	pop ds
-	ret
-start_thread	Endp
+        popad
+        pop es
+        pop ds
+        ret
+start_thread    Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FreeThread
+;               NAME:                   FreeThread
 ;
-;		DESCRIPTION:    Free stack
+;               DESCRIPTION:    Free stack
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_thread	Proc far
+free_thread     Proc far
     mov ax,system_data_sel
     mov ds,ax
     mov ebp,ds:flat_base
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ax,word ptr ds:app_loader_name
-	cmp ax,OFFSET pe_loader_name
-	jne free_thread_no_debug
+        mov ax,word ptr ds:app_loader_name
+        cmp ax,OFFSET pe_loader_name
+        jne free_thread_no_debug
 ;
-	mov ax,cs
-	cmp ax,word ptr ds:app_loader_name+2
-	jne free_thread_no_debug
+        mov ax,cs
+        cmp ax,word ptr ds:app_loader_name+2
+        jne free_thread_no_debug
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_mod_sel	
-	mov ax,ds:lib_debug_lib
-	or ax,ax
-	jz free_thread_no_debug
+        mov ds,ds:app_mod_sel   
+        mov ax,ds:lib_debug_lib
+        or ax,ax
+        jz free_thread_no_debug
 ;
-	call TerminateThreadEvent
-	call SendEvent
-	
+        call TerminateThreadEvent
+        call SendEvent
+        
 free_thread_no_debug:
-	mov ebx,fs:pvModuleHandle
-	DerefModuleHandle
-	mov es,bx
-	mov ax,flat_data_sel
-	mov ds,ax
-	mov esi,es:lib_header
-	mov edi,es:lib_base
-	mov eax,[esi].peh_tls_va
-	or eax,eax
-	jz free_thread_no_tls
+        mov ebx,fs:pvModuleHandle
+        DerefModuleHandle
+        mov es,bx
+        mov ax,flat_data_sel
+        mov ds,ax
+        mov esi,es:lib_header
+        mov edi,es:lib_base
+        mov eax,[esi].peh_tls_va
+        or eax,eax
+        jz free_thread_no_tls
 ;
-	add eax,edi
-	mov edx,[eax].tls_index_va
-	mov edx,[edx]
-	mov esi,fs:pvTLSArray
-	mov edx,[esi+4*edx]
-	add edx,ebp
+        add eax,edi
+        mov edx,[eax].tls_index_va
+        mov edx,[edx]
+        mov esi,fs:pvTLSArray
+        mov edx,[esi+4*edx]
+        add edx,ebp
 ;
-	mov ecx,[eax].tls_end_data_va
-	sub ecx,[eax].tls_start_data_va
-	FreeLinear
+        mov ecx,[eax].tls_end_data_va
+        sub ecx,[eax].tls_start_data_va
+        FreeLinear
 
 free_thread_no_tls:
-	mov edx,fs:pvStackUserBottom
-	add edx,ebp
-	mov ecx,fs:pvStackUserSize
-	FreeLinear	
-	mov ax,fs
-	mov es,ax
-	xor ax,ax
-	mov fs,ax
-	FreeMem
-	ret
-free_thread	Endp
+        mov edx,fs:pvStackUserBottom
+        add edx,ebp
+        mov ecx,fs:pvStackUserSize
+        FreeLinear      
+        mov ax,fs
+        mov es,ax
+        xor ax,ax
+        mov fs,ax
+        FreeMem
+        ret
+free_thread     Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			spawn_proc
+;               NAME:                   spawn_proc
 ;
-;		DESCRIPTION:    Spawn callback
+;               DESCRIPTION:    Spawn callback
 ;
-;		PARAMETERS:		GS		spawn selector
+;               PARAMETERS:             GS              spawn selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-kernel_dll		DB 'kernel32.dll',0
-debug_startup	DB 'DebugStartup',0
+kernel_dll              DB 'kernel32.dll',0
+debug_startup   DB 'DebugStartup',0
 
-spawn_proc	Proc far
+spawn_proc      Proc far
     GetThread
     mov ds,ax
     mov dx,gs:s_param
@@ -3302,64 +3302,64 @@ spawn_proc	Proc far
 
 spawn_debug_hook_ok:    
     mov ds,ds:p_app_sel
-	mov es,ds:app_mod_sel
-	mov ax,flat_data_sel
-	mov ds,ax
-	mov fs,[bp].load_fs
+        mov es,ds:app_mod_sel
+        mov ax,flat_data_sel
+        mov ds,ax
+        mov fs,[bp].load_fs
 ;
-	xor edx,edx
-	mov ax,word ptr gs:s_loader_name
-	cmp ax,OFFSET pe_loader_name
-	jne spawn_param_ok
+        xor edx,edx
+        mov ax,word ptr gs:s_loader_name
+        cmp ax,OFFSET pe_loader_name
+        jne spawn_param_ok
 ;
-	mov ax,cs
-	cmp ax,word ptr gs:s_loader_name+2
-	jne spawn_param_ok
-;	
-	mov dx,gs:s_param
-    	
+        mov ax,cs
+        cmp ax,word ptr gs:s_loader_name+2
+        jne spawn_param_ok
+;       
+        mov dx,gs:s_param
+        
 spawn_param_ok:
-	mov es:lib_debug_lib,dx
-	mov es:lib_suppress,1
-	mov es:lib_init_param,dx
-	mov edi,es:lib_base
-	mov es:lib_run_now,1
-	call StartImportedDlls
+        mov es:lib_debug_lib,dx
+        mov es:lib_suppress,1
+        mov es:lib_init_param,dx
+        mov edi,es:lib_base
+        mov es:lib_run_now,1
+        call StartImportedDlls
 ;
-	mov dx,es:lib_debug_lib
-	or dx,dx
-	jz spawn_no_debug
+        mov dx,es:lib_debug_lib
+        or dx,dx
+        jz spawn_no_debug
 ;
-	call Preload
-	push ds
-	push es
-	mov ax,es
-	mov ds,ax
-	call CreateProcessEvent
-	call SendEvent
-	pop es
-	pop ds
-	call NotifyImportedDlls
+        call Preload
+        push ds
+        push es
+        mov ax,es
+        mov ds,ax
+        call CreateProcessEvent
+        call SendEvent
+        pop es
+        pop ds
+        call NotifyImportedDlls
 ;
-	mov ax,cs
-	mov es,ax
-	mov edi,OFFSET kernel_dll
-	UserGateForce32 get_module_nr
-	jc spawn_wd_debug
+        mov ax,cs
+        mov es,ax
+        mov edi,OFFSET kernel_dll
+        UserGateForce32 get_module_nr
+        jc spawn_wd_debug
 ;
-	mov edi,OFFSET debug_startup
-	UserGateForce32 get_module_proc_nr
-	jc spawn_wd_debug
+        mov edi,OFFSET debug_startup
+        UserGateForce32 get_module_proc_nr
+        jc spawn_wd_debug
 ;
-	xchg esi,[bp].load_eip
-	mov eax,[bp].load_esp
-	mov ds,[bp].load_ss
-	sub eax,4
-	mov [eax],esi
-	mov [bp].load_esp,eax
-	ret
+        xchg esi,[bp].load_eip
+        mov eax,[bp].load_esp
+        mov ds,[bp].load_ss
+        sub eax,4
+        mov [eax],esi
+        mov [bp].load_esp,eax
+        ret
 
-spawn_wd_debug:	
+spawn_wd_debug: 
     push es
     mov ax,flat_data_sel
     mov es,ax
@@ -3369,22 +3369,22 @@ spawn_wd_debug:
     pop es
 
 spawn_no_debug:
-	ret
-spawn_proc	Endp
+        ret
+spawn_proc      Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			clone_proc
+;               NAME:                   clone_proc
 ;
-;		DESCRIPTION:    Request to clone environment
+;               DESCRIPTION:    Request to clone environment
 ;
 ;       RETURNS:        ES      Clone selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-clone_proc	Proc far
+clone_proc      Proc far
     push ds
     pushad
 ;    
@@ -3395,7 +3395,7 @@ clone_proc	Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_mod_sel
+        mov ds,ds:app_mod_sel
     mov ax,ds:lib_file_handle
     mov es:pcs_file_handle,ax
 ;
@@ -3408,138 +3408,138 @@ clone_proc  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			close_proc
+;               NAME:                   close_proc
 ;
-;		DESCRIPTION:    Close app callback
+;               DESCRIPTION:    Close app callback
 ;
-;		PARAMETERS:
+;               PARAMETERS:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_proc	Proc far
+close_proc      Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ax,word ptr ds:app_loader_name
-	cmp ax,OFFSET pe_loader_name
-	jne free_process_no_debug
+        mov ax,word ptr ds:app_loader_name
+        cmp ax,OFFSET pe_loader_name
+        jne free_process_no_debug
 ;
-	mov ax,cs
-	cmp ax,word ptr ds:app_loader_name+2
-	jne free_process_no_debug
+        mov ax,cs
+        cmp ax,word ptr ds:app_loader_name+2
+        jne free_process_no_debug
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_mod_sel	
-	mov ax,ds:lib_debug_lib
-	or ax,ax
-	jz free_process_no_debug
+        mov ds,ds:app_mod_sel   
+        mov ax,ds:lib_debug_lib
+        or ax,ax
+        jz free_process_no_debug
 ;
-	call TerminateProcessEvent
-	call SendEvent
+        call TerminateProcessEvent
+        call SendEvent
 
 free_process_no_debug:
-	ret
-close_proc	Endp
+        ret
+close_proc      Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			StartWaitForDebugEvent
+;               NAME:                   StartWaitForDebugEvent
 ;
-;		DESCRIPTION:    Start wait for an debug event from process
+;               DESCRIPTION:    Start wait for an debug event from process
 ;
-;		PARAMETERS:		BX        Debugged lib_sel
+;               PARAMETERS:             BX        Debugged lib_sel
 ;                       ES        Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_wait_for_debug_event Proc far
-	push ds
-	push ax
+        push ds
+        push ax
 ;
     mov ds,bx
-	ClearSignal
-	mov ds:lib_debug_obj,es
+        ClearSignal
+        mov ds:lib_debug_obj,es
 
-	mov ax,ds:lib_events
-	or ax,ax
+        mov ax,ds:lib_events
+        or ax,ax
     jz start_wait_done
 ;
-	mov ds:lib_debug_obj,0
+        mov ds:lib_debug_obj,0
     SignalWait
 
 start_wait_done:    
     pop ax
-	pop ds	
-	ret
+        pop ds  
+        ret
 start_wait_for_debug_event Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			StopWaitForDebugEvent
+;               NAME:                   StopWaitForDebugEvent
 ;
-;		DESCRIPTION:    Stop wait for an debug event from process
+;               DESCRIPTION:    Stop wait for an debug event from process
 ;
-;		PARAMETERS:		BX      Debugged lib_sel
+;               PARAMETERS:             BX      Debugged lib_sel
 ;                       ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_wait_for_debug_event Proc far
-	push ds
+        push ds
 ;
     mov ds,bx
-	mov ds:lib_debug_obj,0
-;	
-	pop ds	
-	ret
+        mov ds:lib_debug_obj,0
+;       
+        pop ds  
+        ret
 stop_wait_for_debug_event Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			IsDebugEventIdle
+;               NAME:                   IsDebugEventIdle
 ;
-;		DESCRIPTION:    Check if debug event is idle
+;               DESCRIPTION:    Check if debug event is idle
 ;
-;		PARAMETERS:		BX      Debugged lib_sel
+;               PARAMETERS:             BX      Debugged lib_sel
 ;                       ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_debug_event_idle Proc far
-	push ds
-	push ax
+        push ds
+        push ax
 ;
     mov ds,bx
-	mov ax,ds:lib_events
-	or ax,ax
-	clc
-	je is_idle_done
+        mov ax,ds:lib_events
+        or ax,ax
+        clc
+        je is_idle_done
 ;
-	stc
+        stc
 
 is_idle_done:
-	pop ax
-	pop ds	
-	ret
+        pop ax
+        pop ds  
+        ret
 is_debug_event_idle Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDebugEvent
+;               NAME:                   GetDebugEvent
 ;
-;		DESCRIPTION:    Get debug event from process
+;               DESCRIPTION:    Get debug event from process
 ;
-;		PARAMETERS:		BX        Debugged lib_sel
+;               PARAMETERS:             BX        Debugged lib_sel
 ;
 ;       RETURNS:        AX        Thread ID
 ;                       BL        Event type  
@@ -3547,33 +3547,33 @@ is_debug_event_idle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_debug_event Proc far
-	push ds
-	push es
-	push si
+        push ds
+        push es
+        push si
 ;
     mov ds,bx
-	LockTask
-	mov ax,ds:lib_events
-	or ax,ax
-	jz gdeLeaveFail
-;	
-	mov es,ax
-	mov ax,es:event_prev
-	cmp ax,ds:lib_events
-	push ds
-	mov ds:lib_events,ax
-	mov si,es:event_next
-	mov ds,ax
-	mov ds:event_next,si
-	mov ds,si
-	mov ds:event_prev,ax
-	pop ds
-	jne gdeRemoved
+        LockTask
+        mov ax,ds:lib_events
+        or ax,ax
+        jz gdeLeaveFail
+;       
+        mov es,ax
+        mov ax,es:event_prev
+        cmp ax,ds:lib_events
+        push ds
+        mov ds:lib_events,ax
+        mov si,es:event_next
+        mov ds,ax
+        mov ds:event_next,si
+        mov ds,si
+        mov ds:event_prev,ax
+        pop ds
+        jne gdeRemoved
 ;
-	mov ds:lib_events,0
+        mov ds:lib_events,0
 
 gdeRemoved:
-	UnlockTask
+        UnlockTask
 ;
     mov ds:lib_curr_event,es
     mov bl,es:event_code
@@ -3582,68 +3582,68 @@ gdeRemoved:
     jmp gdeDone
 
 gdeLeaveFail:
-	UnlockTask
-	xor bl,bl
-	xor ax,ax
+        UnlockTask
+        xor bl,bl
+        xor ax,ax
     stc
 
 gdeDone:
-	pop si
-	pop es
-	pop ds	
-	ret
+        pop si
+        pop es
+        pop ds  
+        ret
 get_debug_event Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDebugEventData
+;               NAME:                   GetDebugEventData
 ;
-;		DESCRIPTION:    Get event data
+;               DESCRIPTION:    Get event data
 ;
-;		PARAMETERS:		BX        Debugged lib_sel
+;               PARAMETERS:             BX        Debugged lib_sel
 ;                       ES:EDI     Event buffer
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_debug_event_data Proc far
-	push ds
-	push eax
-	push ebx
-	push ecx
-	push esi
-;	
-	mov ds,bx
-	mov ds,ds:lib_curr_event
-;	
-	mov esi,SIZE event_struc
-	movzx ecx,ds:event_size
-	push edi
-	rep movs byte ptr es:[edi],ds:[esi]
-	pop edi
+        push ds
+        push eax
+        push ebx
+        push ecx
+        push esi
+;       
+        mov ds,bx
+        mov ds,ds:lib_curr_event
+;       
+        mov esi,SIZE event_struc
+        movzx ecx,ds:event_size
+        push edi
+        rep movs byte ptr es:[edi],ds:[esi]
+        pop edi
 ;
     mov al,ds:event_code
     cmp al,EVENT_FREE_DLL
     je gdedFreeDll
 ;    
-	cmp al,EVENT_CREATE_PROCESS
-	je gdedDuplFile
-	cmp al,EVENT_LOAD_DLL
-	jne gdedDone
+        cmp al,EVENT_CREATE_PROCESS
+        je gdedDuplFile
+        cmp al,EVENT_LOAD_DLL
+        jne gdedDone
 
 gdedDuplFile:
     mov bx,es:[edi+4]
     mov ds,bx
     AliasModuleHandle
-    mov es:[edi+4],bx	
+    mov es:[edi+4],bx   
     mov ds:lib_local_handle,bx
 ;
-	mov ax,es:[edi]
-	mov cx,es:[edi+2]
-	DuplFileInfo
-	movzx eax,bx
-	mov es:[edi],eax
+        mov ax,es:[edi]
+        mov cx,es:[edi+2]
+        DuplFileInfo
+        movzx eax,bx
+        mov es:[edi],eax
 ;
     jmp gdedDone
 
@@ -3651,462 +3651,462 @@ gdedFreeDll:
     mov bx,es:[edi]
     mov ds,bx
     mov bx,ds:lib_local_handle
-    mov es:[edi],bx	
+    mov es:[edi],bx     
 
 gdedDone:
-	pop esi
-	pop ecx
-	pop ebx
-	pop eax
-	pop ds	
-	ret
+        pop esi
+        pop ecx
+        pop ebx
+        pop eax
+        pop ds  
+        ret
 get_debug_event_data Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ClearDebugEvent
+;               NAME:                   ClearDebugEvent
 ;
-;		DESCRIPTION:    Clear debug event
+;               DESCRIPTION:    Clear debug event
 ;
-;		PARAMETERS:		BX      Debugged lib_sel
+;               PARAMETERS:             BX      Debugged lib_sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clear_debug_event Proc far
-	push ds
-	push es
-	push bx
+        push ds
+        push es
+        push bx
 ;
-	mov ds,bx
-	mov bx,ds:lib_curr_event
-	or bx,bx
-	jz clear_debug_done
+        mov ds,bx
+        mov bx,ds:lib_curr_event
+        or bx,bx
+        jz clear_debug_done
 ;
-    mov es,bx	
+    mov es,bx   
     mov al,es:event_code
     cmp al,EVENT_KERNEL
     je clear_debug_done
 ;    
-	FreeMem
+        FreeMem
 
 clear_debug_done:
-	mov ds:lib_curr_event,0
-;	
-	pop bx
-	pop es
-	pop ds
-	ret
+        mov ds:lib_curr_event,0
+;       
+        pop bx
+        pop es
+        pop ds
+        ret
 clear_debug_event Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ContinueDebugEvent
+;               NAME:                   ContinueDebugEvent
 ;
-;		DESCRIPTION:    Continue debugged thread
+;               DESCRIPTION:    Continue debugged thread
 ;
-;		PARAMETERS:		EAX		Thread
+;               PARAMETERS:             EAX             Thread
 ;                       BX      Debugged lib_sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 continue_debug_event Proc far
-	push es
-	push bx
-	push cx
-	push dx
-	push si
+        push es
+        push bx
+        push cx
+        push dx
+        push si
 ;
-	mov bx,ax
-	mov ax,system_data_sel
-	mov ds,ax
-	mov si,OFFSET debug_list
-	mov ax,[si]
-	or ax,ax
-	jz continue_debug_signal
+        mov bx,ax
+        mov ax,system_data_sel
+        mov ds,ax
+        mov si,OFFSET debug_list
+        mov ax,[si]
+        or ax,ax
+        jz continue_debug_signal
 ;
-	mov dx,ax
+        mov dx,ax
 
 continue_debug_loop:
-	mov ds,ax
-	cmp bx,ds:p_id
-	je continue_debug_found
+        mov ds,ax
+        cmp bx,ds:p_id
+        je continue_debug_found
 ;
-	mov ax,ds:p_next
-	cmp ax,dx
-	jne continue_debug_loop
-	jmp continue_debug_signal
+        mov ax,ds:p_next
+        cmp ax,dx
+        jne continue_debug_loop
+        jmp continue_debug_signal
 
 continue_debug_found:
     mov bx,ds
-	mov ax,system_data_sel
-	mov ds,ax
-	mov si,OFFSET debug_list
-	mov [si],bx
-	Wake
-	jmp continue_debug_done
-	
+        mov ax,system_data_sel
+        mov ds,ax
+        mov si,OFFSET debug_list
+        mov [si],bx
+        Wake
+        jmp continue_debug_done
+        
 continue_debug_signal:
     ThreadToSel
     jc continue_debug_done
 ;    
-	Signal
+        Signal
 
 continue_debug_done:
     xor ax,ax
     mov ds,ax
 ;    
-	pop si
-	pop dx
-	pop cx
-	pop bx
-	pop es
-	ret
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        pop es
+        ret
 continue_debug_event Endp
 
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			NotifyPeException
+;               NAME:                   NotifyPeException
 ;
-;		DESCRIPTION:    Notify of a exception
+;               DESCRIPTION:    Notify of a exception
 ;
-;		PARAMETERS:		EBP		Exception frame
-;						EAX		Exception code
+;               PARAMETERS:             EBP             Exception frame
+;                                               EAX             Exception code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_pe_exception_name DB 'Notify Pe Exception',0
 
-notify_pe_exception	Proc far
-	push ds
-	push dx
+notify_pe_exception     Proc far
+        push ds
+        push dx
 ;
     push ebx
-	mov ebx,fs:pvModuleHandle
-	DerefModuleHandle
-	mov ds,bx
-	pop ebx
-;	
-	mov dx,ds:lib_debug_lib
-	or dx,dx
-	jz neDone
-;	
-	pop dx
-	pop ds
+        mov ebx,fs:pvModuleHandle
+        DerefModuleHandle
+        mov ds,bx
+        pop ebx
+;       
+        mov dx,ds:lib_debug_lib
+        or dx,dx
+        jz neDone
+;       
+        pop dx
+        pop ds
 ;
-	sub sp,8
-	push bp
-	mov bp,sp
-	push eax
-	push ebx
-	push ds
-	push es
+        sub sp,8
+        push bp
+        mov bp,sp
+        push eax
+        push ebx
+        push ds
+        push es
 ;
-	mov ebx,fs:pvModuleHandle
-	DerefModuleHandle
-	mov ds,bx
-	call ExceptionEvent
+        mov ebx,fs:pvModuleHandle
+        DerefModuleHandle
+        mov ds,bx
+        call ExceptionEvent
 ;
-	mov ds,[bp].vm_ss
-	mov ebx,[bp].vm_esp
+        mov ds,[bp].vm_ss
+        mov ebx,[bp].vm_esp
 ;
-	mov eax,[ebx]
-	mov [bp].vm_eax,eax
-	add ebx,4
+        mov eax,[ebx]
+        mov [bp].vm_eax,eax
+        add ebx,4
 ;
-	mov ax,[ebx]
-	mov [bp].pm_ds,ax
-	add ebx,4
+        mov ax,[ebx]
+        mov [bp].pm_ds,ax
+        add ebx,4
 ;
-	push bp
-	mov ebp,[ebx]
-	pop bp
-	mov ax,[ebx]
-	mov [bp].vm_bp,ax
-	add ebx,4
+        push bp
+        mov ebp,[ebx]
+        pop bp
+        mov ax,[ebx]
+        mov [bp].vm_bp,ax
+        add ebx,4
 ;
-	mov ax,[ebx]
-	push ax
-	add ebx,4
+        mov ax,[ebx]
+        push ax
+        add ebx,4
 ;
-	add ebx,12
-	mov eax,[ebx]
-	mov [bp].vm_eip,eax
-	add ebx,4
+        add ebx,12
+        mov eax,[ebx]
+        mov [bp].vm_eip,eax
+        add ebx,4
 ;
-	mov ax,[ebx]
-	mov [bp].vm_cs,ax
-	add ebx,4
+        mov ax,[ebx]
+        mov [bp].vm_cs,ax
+        add ebx,4
 ;
-	mov eax,[ebx]
-	SetFlags
-	mov [bp].vm_eflags,eax	
-	add ebx,4
+        mov eax,[ebx]
+        SetFlags
+        mov [bp].vm_eflags,eax  
+        add ebx,4
 ;
-	add ebx,8
-	mov [bp].vm_esp,ebx
+        add ebx,8
+        mov [bp].vm_esp,ebx
 ;
-	GetThread
-	push es
-	mov es,ax
-	mov ax,es:p_id
-	pop es
-	mov es:event_thread_id,ax
+        GetThread
+        push es
+        mov es,ax
+        mov ax,es:p_id
+        pop es
+        mov es:event_thread_id,ax
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds,ds:app_mod_sel
-	LockTask
+        mov ds,ds:app_mod_sel
+        LockTask
 ;
-	mov ax,ds:lib_events
-	or ax,ax
-	je neEmpty
+        mov ax,ds:lib_events
+        or ax,ax
+        je neEmpty
 ;
-	push ds
-	push si
-	mov ds,ax
-	mov si,ds:event_prev
-	mov ds:event_prev,es
-	mov ds,si
-	mov ds:event_next,es
-	mov es:event_next,ax
-	mov es:event_prev,si
-	pop si
-	pop ds
-	jmp neInsDone
+        push ds
+        push si
+        mov ds,ax
+        mov si,ds:event_prev
+        mov ds:event_prev,es
+        mov ds,si
+        mov ds:event_next,es
+        mov es:event_next,ax
+        mov es:event_prev,si
+        pop si
+        pop ds
+        jmp neInsDone
 
 neEmpty:
-	mov es:event_next,es
-	mov es:event_prev,es
+        mov es:event_next,es
+        mov es:event_prev,es
 
 neInsDone:
-	mov ds:lib_events,es
-	xor ax,ax
-	mov es,ax
+        mov ds:lib_events,es
+        xor ax,ax
+        mov es,ax
 ;
-	mov ax,ds:lib_debug_obj
-	or ax,ax
-	jz neSignalDone
-;	
+        mov ax,ds:lib_debug_obj
+        or ax,ax
+        jz neSignalDone
+;       
     mov es,ax
-	SignalWait
+        SignalWait
 
 neSignalDone:
     mov ds:lib_suppress,1
-	pop ax
-	pop es
-	LockedDebugException
+        pop ax
+        pop es
+        LockedDebugException
 
 neDone:
-	pop dx
-	pop ds
-	retf32
+        pop dx
+        pop ds
+        retf32
 notify_pe_exception Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			AllocateMem
+;               NAME:                   AllocateMem
 ;
-;		DESCRIPTION:	Allocate memory
+;               DESCRIPTION:    Allocate memory
 ;
-;		PARAMETERS:		EAX	Number of bytes
+;               PARAMETERS:             EAX     Number of bytes
 ;
-;		RETURNS:		EDX Offset within flat selector
+;               RETURNS:                EDX Offset within flat selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_mem	PROC far
-	push ds
-	push es
-	push eax
-	push ecx
+allocate_mem    PROC far
+        push ds
+        push es
+        push eax
+        push ecx
 ;
-	dec eax
-	and ax,0F000h
-	add eax,1000h
-	mov ecx,eax
-	push ecx
-	AllocateLocalLinear
-	mov ax,system_data_sel
-	mov ds,ax
-	sub edx,ds:flat_base
+        dec eax
+        and ax,0F000h
+        add eax,1000h
+        mov ecx,eax
+        push ecx
+        AllocateLocalLinear
+        mov ax,system_data_sel
+        mov ds,ax
+        sub edx,ds:flat_base
 ;
-	mov eax,SIZE pe_mem_struc
-	AllocateLocalMem
-	pop ecx
-	mov es:mem_base,edx
-	mov es:mem_size,ecx
+        mov eax,SIZE pe_mem_struc
+        AllocateLocalMem
+        pop ecx
+        mov es:mem_base,edx
+        mov es:mem_size,ecx
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section	
+    EnterSection ds:app_lib_section     
 ;
-	mov ax,ds:app_mem_blocks
-	or ax,ax
-	je alloc_ins_empty
+        mov ax,ds:app_mem_blocks
+        or ax,ax
+        je alloc_ins_empty
 ;
-	push ds
-	push si
-	mov ds,ax
-	mov si,ds:mem_prev
-	mov ds:mem_prev,es
-	mov ds,si
-	mov ds:mem_next,es
-	mov es:mem_next,ax
-	mov es:mem_prev,si
-	pop si
-	pop ds
-	jmp alloc_ins_done
+        push ds
+        push si
+        mov ds,ax
+        mov si,ds:mem_prev
+        mov ds:mem_prev,es
+        mov ds,si
+        mov ds:mem_next,es
+        mov es:mem_next,ax
+        mov es:mem_prev,si
+        pop si
+        pop ds
+        jmp alloc_ins_done
 
 alloc_ins_empty:
-	mov es:mem_next,es
-	mov es:mem_prev,es
+        mov es:mem_next,es
+        mov es:mem_prev,es
 
 alloc_ins_done:
-	mov ds:app_mem_blocks,es
-    LeaveSection ds:app_lib_section	
+        mov ds:app_mem_blocks,es
+    LeaveSection ds:app_lib_section     
 ;
-	pop ecx
-	pop eax
-	pop es
-	pop ds
-	ret
-allocate_mem	ENDP
+        pop ecx
+        pop eax
+        pop es
+        pop ds
+        ret
+allocate_mem    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			FreeMem
+;               NAME:                   FreeMem
 ;
-;		DESCRIPTION:	Free memory
+;               DESCRIPTION:    Free memory
 ;
-;		PARAMETERS:		EDX Offset within flat selector
+;               PARAMETERS:             EDX Offset within flat selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_mem	PROC far
-	push ds
-	push es
-	push eax
-	push ecx
-	push edx
-	push si
-	push edi
+free_mem        PROC far
+        push ds
+        push es
+        push eax
+        push ecx
+        push edx
+        push si
+        push edi
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section	
+    EnterSection ds:app_lib_section     
 
 free_mem_more:
-	mov ax,ds:app_mem_blocks
-	or ax,ax
-	jz free_mem_failed
-	mov si,ax
+        mov ax,ds:app_mem_blocks
+        or ax,ax
+        jz free_mem_failed
+        mov si,ax
 free_mem_loop:
-	mov es,ax
+        mov es,ax
 
     cmp edx,es:mem_base
     je free_mem_ok
 
 free_mem_next:
-	mov ax,es:mem_next
-	cmp ax,si
-	jne free_mem_loop
+        mov ax,es:mem_next
+        cmp ax,si
+        jne free_mem_loop
 
 free_mem_failed:
-	jmp free_mem_done
+        jmp free_mem_done
 
 free_mem_ok:
     push ds
     mov ax,system_data_sel
     mov ds,ax
-	mov edx,es:mem_base
-	add edx,ds:flat_base
-	pop ds
+        mov edx,es:mem_base
+        add edx,ds:flat_base
+        pop ds
 ;
-	mov ecx,es:mem_size
-	FreeLinear
-	mov ds:app_mem_blocks,es
-	mov ax,es:mem_prev
-	cmp ax,ds:app_mem_blocks
-	pushf
-	push ds
-	mov ds:app_mem_blocks,ax
-	mov si,es:mem_next
-	mov ds,ax
-	mov ds:mem_next,si
-	mov ds,si
-	mov ds:mem_prev,ax
-	pop ds
-	FreeMem
-	popf
-	jne free_mem_done
+        mov ecx,es:mem_size
+        FreeLinear
+        mov ds:app_mem_blocks,es
+        mov ax,es:mem_prev
+        cmp ax,ds:app_mem_blocks
+        pushf
+        push ds
+        mov ds:app_mem_blocks,ax
+        mov si,es:mem_next
+        mov ds,ax
+        mov ds:mem_next,si
+        mov ds,si
+        mov ds:mem_prev,ax
+        pop ds
+        FreeMem
+        popf
+        jne free_mem_done
 
 free_mem_last_block:
-	mov ds:app_mem_blocks,0
+        mov ds:app_mem_blocks,0
 
 free_mem_done:
-    LeaveSection ds:app_lib_section	
+    LeaveSection ds:app_lib_section     
 ;
-	pop edi
-	pop si
-	pop edx
-	pop ecx
-	pop eax
-	pop es
-	pop ds
-	ret
-free_mem	ENDP
+        pop edi
+        pop si
+        pop edx
+        pop ecx
+        pop eax
+        pop es
+        pop ds
+        ret
+free_mem        ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			DebugAllocateMem
+;               NAME:                   DebugAllocateMem
 ;
-;		DESCRIPTION:	Allocate memory, debug mode
+;               DESCRIPTION:    Allocate memory, debug mode
 ;
-;		PARAMETERS:		EAX	Number of bytes
+;               PARAMETERS:             EAX     Number of bytes
 ;
-;		RETURNS:		EDX Offset within flat selector
+;               RETURNS:                EDX Offset within flat selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-debug_allocate_mem	PROC far
-	push ds
-	push es
-	push eax
-	push ecx
+debug_allocate_mem      PROC far
+        push ds
+        push es
+        push eax
+        push ecx
 ;
     push eax
-	dec eax
-	and ax,0F000h
-	add eax,1000h
-	mov ecx,eax
-	push ecx
-	AllocateDebugLocalLinear
+        dec eax
+        and ax,0F000h
+        add eax,1000h
+        mov ecx,eax
+        push ecx
+        AllocateDebugLocalLinear
     mov ax,system_data_sel
     mov ds,ax
-	sub edx,ds:flat_base
+        sub edx,ds:flat_base
 ;
-	mov eax,SIZE pe_mem_struc
-	AllocateLocalMem
-	pop ecx
-	mov es:mem_base,edx
-	mov es:mem_size,ecx
-	pop eax
-	mov es:mem_alloc,eax
+        mov eax,SIZE pe_mem_struc
+        AllocateLocalMem
+        pop ecx
+        mov es:mem_base,edx
+        mov es:mem_size,ecx
+        pop eax
+        mov es:mem_alloc,eax
 ;
     cmp eax,ecx
     je debug_alloc_fill_ok
@@ -4130,84 +4130,84 @@ debug_alloc_fill_ok:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section	
+    EnterSection ds:app_lib_section     
 ;
-	mov ax,ds:app_mem_blocks
-	or ax,ax
-	je debug_alloc_ins_empty
+        mov ax,ds:app_mem_blocks
+        or ax,ax
+        je debug_alloc_ins_empty
 ;
-	push ds
-	push si
-	mov ds,ax
-	mov si,ds:mem_prev
-	mov ds:mem_prev,es
-	mov ds,si
-	mov ds:mem_next,es
-	mov es:mem_next,ax
-	mov es:mem_prev,si
-	pop si
-	pop ds
-	jmp debug_alloc_ins_done
+        push ds
+        push si
+        mov ds,ax
+        mov si,ds:mem_prev
+        mov ds:mem_prev,es
+        mov ds,si
+        mov ds:mem_next,es
+        mov es:mem_next,ax
+        mov es:mem_prev,si
+        pop si
+        pop ds
+        jmp debug_alloc_ins_done
 
 debug_alloc_ins_empty:
-	mov es:mem_next,es
-	mov es:mem_prev,es
+        mov es:mem_next,es
+        mov es:mem_prev,es
 
 debug_alloc_ins_done:
-	mov ds:app_mem_blocks,es
-    LeaveSection ds:app_lib_section	
+        mov ds:app_mem_blocks,es
+    LeaveSection ds:app_lib_section     
 ;
-	pop ecx
-	pop eax
-	pop es
-	pop ds
-	ret
-debug_allocate_mem	ENDP
+        pop ecx
+        pop eax
+        pop es
+        pop ds
+        ret
+debug_allocate_mem      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			DebugFreeMem
+;               NAME:                   DebugFreeMem
 ;
-;		DESCRIPTION:	Free memory, debug mode
+;               DESCRIPTION:    Free memory, debug mode
 ;
-;		PARAMETERS:		EDX Offset within flat selector
+;               PARAMETERS:             EDX Offset within flat selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-debug_free_mem	PROC far
-	push ds
-	push es
-	push eax
-	push ecx
-	push edx
-	push si
-	push edi
+debug_free_mem  PROC far
+        push ds
+        push es
+        push eax
+        push ecx
+        push edx
+        push si
+        push edi
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section	
+    EnterSection ds:app_lib_section     
 
 debug_free_mem_more:
-	mov ax,ds:app_mem_blocks
-	or ax,ax
-	jz debug_free_mem_failed
-	mov si,ax
+        mov ax,ds:app_mem_blocks
+        or ax,ax
+        jz debug_free_mem_failed
+        mov si,ax
 debug_free_mem_loop:
-	mov es,ax
+        mov es,ax
     cmp edx,es:mem_base
     je debug_free_mem_ok
 
 debug_free_mem_next:
-	mov ax,es:mem_next
-	cmp ax,si
-	jne debug_free_mem_loop
+        mov ax,es:mem_next
+        cmp ax,si
+        jne debug_free_mem_loop
 
 debug_free_mem_failed:
     int 3
-	jmp free_mem_done
+        jmp free_mem_done
 
 debug_free_mem_ok:
     mov edx,es:mem_base
@@ -4239,113 +4239,113 @@ debug_free_mem_check_done:
     push ds
     mov ax,system_data_sel
     mov ds,ax
-	mov edx,es:mem_base
-	add edx,ds:flat_base
-	pop ds
-	mov ecx,es:mem_size
-	FreeLinear
+        mov edx,es:mem_base
+        add edx,ds:flat_base
+        pop ds
+        mov ecx,es:mem_size
+        FreeLinear
 ;
-	mov ds:app_mem_blocks,es
-	mov ax,es:mem_prev
-	cmp ax,ds:app_mem_blocks
-	pushf
-	push ds
-	mov ds:app_mem_blocks,ax
-	mov si,es:mem_next
-	mov ds,ax
-	mov ds:mem_next,si
-	mov ds,si
-	mov ds:mem_prev,ax
-	pop ds
-	FreeMem
-	popf
-	jne debug_free_mem_done
+        mov ds:app_mem_blocks,es
+        mov ax,es:mem_prev
+        cmp ax,ds:app_mem_blocks
+        pushf
+        push ds
+        mov ds:app_mem_blocks,ax
+        mov si,es:mem_next
+        mov ds,ax
+        mov ds:mem_next,si
+        mov ds,si
+        mov ds:mem_prev,ax
+        pop ds
+        FreeMem
+        popf
+        jne debug_free_mem_done
 
 debug_free_mem_last_block:
-	mov ds:app_mem_blocks,0
+        mov ds:app_mem_blocks,0
 
 debug_free_mem_done:
-    LeaveSection ds:app_lib_section	
+    LeaveSection ds:app_lib_section     
 ;
-	pop edi
-	pop si
-	pop edx
-	pop ecx
-	pop eax
-	pop es
-	pop ds
-	ret
-debug_free_mem	ENDP
+        pop edi
+        pop si
+        pop edx
+        pop ecx
+        pop eax
+        pop es
+        pop ds
+        ret
+debug_free_mem  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ReservePEMem
+;               NAME:                   ReservePEMem
 ;
-;		DESCRIPTION:	Reserve PE memory
+;               DESCRIPTION:    Reserve PE memory
 ;
-;		PARAMETERS:		EAX	Number of bytes
-;						BX  Handle of owner
-;						EDX Offset within flat selector
+;               PARAMETERS:             EAX     Number of bytes
+;                                               BX  Handle of owner
+;                                               EDX Offset within flat selector
 ;
-;		RETURNS:		NC	SUCCESS
+;               RETURNS:                NC      SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reserve_pe_mem_name	DB 'Reserve PE Mem',0
+reserve_pe_mem_name     DB 'Reserve PE Mem',0
 
-reserve_pe_mem	PROC far
-	push eax
-	push edx
-;	
+reserve_pe_mem  PROC far
+        push eax
+        push edx
+;       
     push ds
-	push bx
-	mov bx,system_data_sel
-	mov ds,bx
+        push bx
+        mov bx,system_data_sel
+        mov ds,bx
     add edx,ds:flat_base
     pop bx
     pop ds
 ;
-	cmp edx,flat_size
-	jnc reserve_pe_mem_done
+        cmp edx,flat_size
+        jnc reserve_pe_mem_done
 ;
-	dec eax
-	and ax,0F000h
-	add eax,1000h
-	ReserveLocalLinear
+        dec eax
+        and ax,0F000h
+        add eax,1000h
+        ReserveLocalLinear
 
 reserve_pe_mem_done:
-	pop edx
-	pop eax
-	retf32
-reserve_pe_mem	ENDP
+        pop edx
+        pop eax
+        retf32
+reserve_pe_mem  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ShowExceptionText
+;               NAME:                   ShowExceptionText
 ;
-;		DESCRIPTION:	Decide whether app should show exception text and
+;               DESCRIPTION:    Decide whether app should show exception text and
 ;                       exit or stop execution on exception.
 ;
-;		RETURNS:		EAX  0 stop execution
+;               RETURNS:                EAX  0 stop execution
 ;                            1 show exception text and exit
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-show_exception_text_name	DB 'Show Exception Text',0
+show_exception_text_name        DB 'Show Exception Text',0
 
-show_exception_text	PROC far
+show_exception_text     PROC far
     push es
     push ebx
 ;    
     mov ebx,fs:pvModuleHandle
-	DerefModuleHandle
-	mov es,bx
-	mov ax,es:lib_debug_lib
-	or ax,ax
-	jnz setStop
+        DerefModuleHandle
+        mov es,bx
+        mov ax,es:lib_debug_lib
+        or ax,ax
+        jnz setStop
 ;
     GetWatchdogTics
     or eax,eax
@@ -4356,335 +4356,335 @@ setCont:
     jmp setDone
 
 setStop:
-    xor eax,eax	
+    xor eax,eax 
 
 setDone:
     pop ebx
     pop es    
-	retf32
-show_exception_text	ENDP
+        retf32
+show_exception_text     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			load_dll
+;               NAME:                   load_dll
 ;
-;		DESCRIPTION:    Load DLL
+;               DESCRIPTION:    Load DLL
 ;
-;       PARAMETERS:		ES:EDI	name of dll to load
+;       PARAMETERS:             ES:EDI  name of dll to load
 ;
-;		RETURNS:		BX      Lib sel
+;               RETURNS:                BX      Lib sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_dll	Proc far
-	push ds
-	push es
-	push fs
-	push gs
-	push eax
-	push ecx
-	push edx
-	push esi
-	push edi
+load_dll        Proc far
+        push ds
+        push es
+        push fs
+        push gs
+        push eax
+        push ecx
+        push edx
+        push esi
+        push edi
 ;
-	mov al,es:[edi]
-	mov esi,edi
-	mov bx,word ptr fs:pvModuleHandle
+        mov al,es:[edi]
+        mov esi,edi
+        mov bx,word ptr fs:pvModuleHandle
     DerefModuleHandle
-	jc load_dll_pr_done
+        jc load_dll_pr_done
 ;
     mov di,fs
-	mov ax,es
-	mov fs,ax
+        mov ax,es
+        mov fs,ax
     mov es,bx
     mov es:lib_fs,di
-	mov ax,flat_data_sel
-	mov ds,ax
-	call LoadPeDll
-	mov bx,es
+        mov ax,flat_data_sel
+        mov ds,ax
+        call LoadPeDll
+        mov bx,es
 
-load_dll_pr_done:	
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop eax
-	pop gs
-	pop fs
-	pop es
-	pop ds
-	ret
-load_dll	Endp
+load_dll_pr_done:       
+        pop edi
+        pop esi
+        pop edx
+        pop ecx
+        pop eax
+        pop gs
+        pop fs
+        pop es
+        pop ds
+        ret
+load_dll        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			free_dll
+;               NAME:                   free_dll
 ;
-;		DESCRIPTION:    Free DLL
+;               DESCRIPTION:    Free DLL
 ;
-;       PARAMETERS:		ES		Lib sel
+;       PARAMETERS:             ES              Lib sel
 ;                       BX      Lib sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_dll	Proc far
-	call FreePeDll
-	ret
-free_dll	Endp
+free_dll        Proc far
+        call FreePeDll
+        ret
+free_dll        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetModuleProc
+;               NAME:                   GetModuleProc
 ;
-;		DESCRIPTION:    Get module procedure
+;               DESCRIPTION:    Get module procedure
 ;
-;       PARAMETERS:		BX		Lib sel
-;						ES:EDI	Proc name
-;						
-;		RETURNS:		DS:ESI	Proc address
+;       PARAMETERS:             BX              Lib sel
+;                                               ES:EDI  Proc name
+;                                               
+;               RETURNS:                DS:ESI  Proc address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_module_proc	Proc far
-	push eax
-	push ebx
-	push ecx
-	push edx
+get_module_proc Proc far
+        push eax
+        push ebx
+        push ecx
+        push edx
 ;
-	push es
-	mov es,bx
-	mov edx,es:lib_base
-	mov ax,flat_data_sel
-	mov ds,ax
-	mov esi,es:lib_header
-	mov esi,[esi].peh_export_va
-	pop es
-;	
-	or esi,esi
-	jz get_proc_fail
+        push es
+        mov es,bx
+        mov edx,es:lib_base
+        mov ax,flat_data_sel
+        mov ds,ax
+        mov esi,es:lib_header
+        mov esi,[esi].peh_export_va
+        pop es
+;       
+        or esi,esi
+        jz get_proc_fail
 ;
-	add esi,edx
-	mov ecx,[esi].exp_name_count
-	mov ebx,[esi].exp_name_va
-	add ebx,edx
-	or ecx,ecx
-	jz get_proc_fail
+        add esi,edx
+        mov ecx,[esi].exp_name_count
+        mov ebx,[esi].exp_name_va
+        add ebx,edx
+        or ecx,ecx
+        jz get_proc_fail
 
 get_proc_loop:
-	push esi
-	push edi
-	mov esi,[ebx]
-	add esi,edx
+        push esi
+        push edi
+        mov esi,[ebx]
+        add esi,edx
 
 get_proc_search:
-	mov al,[esi]
-	mov ah,es:[edi]
-	cmp al,ah
-	jne get_proc_next
+        mov al,[esi]
+        mov ah,es:[edi]
+        cmp al,ah
+        jne get_proc_next
 ;
-	or al,ah
-	jz get_proc_ok
+        or al,ah
+        jz get_proc_ok
 ;
-	inc esi
-	inc edi
-	jmp get_proc_search
+        inc esi
+        inc edi
+        jmp get_proc_search
 
 get_proc_next:
-	pop edi
-	pop esi
-	jz get_proc_ok
+        pop edi
+        pop esi
+        jz get_proc_ok
 ;
-	add ebx,4
-	loop get_proc_loop
+        add ebx,4
+        loop get_proc_loop
 
 get_proc_fail:
-	xor esi,esi
-	stc
-	jmp get_proc_done
+        xor esi,esi
+        stc
+        jmp get_proc_done
 
 get_proc_ok:
-	pop edi
-	pop esi
-	sub ebx,[esi].exp_name_va
-	sub ebx,edx
-	shr ebx,1
-	mov eax,[esi].exp_ordinal_va
-	add eax,edx
-	movzx ebx,word ptr [eax+ebx]
-    shl ebx,2	
+        pop edi
+        pop esi
+        sub ebx,[esi].exp_name_va
+        sub ebx,edx
+        shr ebx,1
+        mov eax,[esi].exp_ordinal_va
+        add eax,edx
+        movzx ebx,word ptr [eax+ebx]
+    shl ebx,2   
     add ebx,[esi].exp_entry_point_va
     add ebx,edx
-	mov esi,[ebx]
-	add esi,edx
-	clc
+        mov esi,[ebx]
+        add esi,edx
+        clc
 
 get_proc_done:
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	ret
-get_module_proc	Endp
+        pop edx
+        pop ecx
+        pop ebx
+        pop eax
+        ret
+get_module_proc Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetModuleName
+;               NAME:                   GetModuleName
 ;
-;		DESCRIPTION:    Get module name
+;               DESCRIPTION:    Get module name
 ;
-;       PARAMETERS:		BX		Handle
-;						ECX		Max name size
-;						ES:EDI	Name buffer
-;						
-;		RETURNS:		EAX		Bytes copied
+;       PARAMETERS:             BX              Handle
+;                                               ECX             Max name size
+;                                               ES:EDI  Name buffer
+;                                               
+;               RETURNS:                EAX             Bytes copied
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_module_name	Proc far
-	or ecx,ecx
-	clc
-	jz get_name_done
+get_module_name Proc far
+        or ecx,ecx
+        clc
+        jz get_name_done
 ;
-	push ds
-	push ebx
-	push ecx
-	push si
-	push edi
+        push ds
+        push ebx
+        push ecx
+        push si
+        push edi
 ;
-	xor eax,eax
-	mov ds,bx
-	xor ebx,ebx
-	mov si,OFFSET lib_name
+        xor eax,eax
+        mov ds,bx
+        xor ebx,ebx
+        mov si,OFFSET lib_name
 get_name_loop:
-	lodsb
-	stos byte ptr es:[edi]
-	or al,al
-	jz get_name_ok
-	inc ebx
-	sub ecx,1
-	jnz get_name_loop
+        lodsb
+        stos byte ptr es:[edi]
+        or al,al
+        jz get_name_ok
+        inc ebx
+        sub ecx,1
+        jnz get_name_loop
 ;
-	mov byte ptr es:[edi-1],0
+        mov byte ptr es:[edi-1],0
 
 get_name_ok:
-	mov eax,ebx
-;	
-	pop edi
-	pop si
-	pop ecx
-	pop ebx
-	pop ds
-	clc
+        mov eax,ebx
+;       
+        pop edi
+        pop si
+        pop ecx
+        pop ebx
+        pop ds
+        clc
 
 get_name_done:
-	ret
-get_module_name	Endp
+        ret
+get_module_name Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDll
+;               NAME:                   GetDll
 ;
-;		DESCRIPTION:    Get DLL handle
+;               DESCRIPTION:    Get DLL handle
 ;
-;       PARAMETERS:		ES:EDI	DLL name
-;						
-;		RETURNS:		EBX		DLL handle
+;       PARAMETERS:             ES:EDI  DLL name
+;                                               
+;               RETURNS:                EBX             DLL handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_dll_handle_name	DB 'Get DLL',0
+get_dll_handle_name     DB 'Get DLL',0
 
-get_dll_handle	Proc far
-	push es
-	push fs
-	push esi
+get_dll_handle  Proc far
+        push es
+        push fs
+        push esi
 ;
-	mov si,es
-	mov fs,si
-	mov esi,edi
+        mov si,es
+        mov fs,si
+        mov esi,edi
 ;
-	call FindDll
-	jnc get_dll_handle_ok
+        call FindDll
+        jnc get_dll_handle_ok
 ;
-	call FindApp
-	jc get_dll_handle_done
+        call FindApp
+        jc get_dll_handle_done
 
 get_dll_handle_ok:
-	movzx ebx,es:mod_handle
+        movzx ebx,es:mod_handle
 
 get_dll_handle_done:
-	pop esi
-	pop fs
-	pop es
-	retf32
-get_dll_handle	Endp
+        pop esi
+        pop fs
+        pop es
+        retf32
+get_dll_handle  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDllResource
+;               NAME:                   GetDllResource
 ;
-;		DESCRIPTION:    Get DLL resource
+;               DESCRIPTION:    Get DLL resource
 ;
-;       PARAMETERS:		BX      Lib sel
-;						EAX		Resource id
-;						EDX		Resource type
-;						
-;		RETURNS:		DS:ESI	Resource VA
-;						ECX		Resource size
+;       PARAMETERS:             BX      Lib sel
+;                                               EAX             Resource id
+;                                               EDX             Resource type
+;                                               
+;               RETURNS:                DS:ESI  Resource VA
+;                                               ECX             Resource size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_resource	Proc far
-	push eax
-	push ebx
-	push edx
-	push edi
-	push ebp
+get_resource    Proc far
+        push eax
+        push ebx
+        push edx
+        push edi
+        push ebp
 ;
-	mov edi,eax
-	mov ebp,edx
+        mov edi,eax
+        mov ebp,edx
 ;
-	push es
-	mov es,bx
-	mov edx,es:lib_base
-	mov esi,es:lib_header
-	mov cx,flat_data_sel
-	mov ds,cx
-	mov ecx,[esi].peh_resource_size
-	mov esi,[esi].peh_resource_va
-	add esi,edx
-	mov edx,esi
-	movzx ecx,[esi].res_ids
-	add esi,OFFSET res_data
-	or ecx,ecx
-	jz get_resource_fail_pop
+        push es
+        mov es,bx
+        mov edx,es:lib_base
+        mov esi,es:lib_header
+        mov cx,flat_data_sel
+        mov ds,cx
+        mov ecx,[esi].peh_resource_size
+        mov esi,[esi].peh_resource_va
+        add esi,edx
+        mov edx,esi
+        movzx ecx,[esi].res_ids
+        add esi,OFFSET res_data
+        or ecx,ecx
+        jz get_resource_fail_pop
 
 get_resource_type_loop:
-	cmp ebp,[esi]
-	je get_resource_type_found
+        cmp ebp,[esi]
+        je get_resource_type_found
 ;
-	add esi,8
-	loop get_resource_type_loop
-	jmp get_resource_fail_pop
+        add esi,8
+        loop get_resource_type_loop
+        jmp get_resource_fail_pop
 
 get_resource_type_found:
-	mov eax,[esi+4]
-	test eax,80000000h
-	jz get_resource_fail_pop
+        mov eax,[esi+4]
+        test eax,80000000h
+        jz get_resource_fail_pop
 ;
-	and eax,7FFFFFFFh
-	mov esi,eax
-	add esi,edx
-	movzx ecx,[esi].res_ids
-	add esi,OFFSET res_data
-	or ecx,ecx
-	jz get_resource_fail_pop
+        and eax,7FFFFFFFh
+        mov esi,eax
+        add esi,edx
+        movzx ecx,[esi].res_ids
+        add esi,OFFSET res_data
+        or ecx,ecx
+        jz get_resource_fail_pop
 ;
     mov eax,edi
     cmp ebp,6
@@ -4694,35 +4694,35 @@ get_resource_type_found:
     inc eax
 
 get_resource_id_loop:
-	cmp eax,[esi]
-	je get_resource_id_found
+        cmp eax,[esi]
+        je get_resource_id_found
 ;
-	add esi,8
-	loop get_resource_id_loop
-	jmp get_resource_fail_pop
+        add esi,8
+        loop get_resource_id_loop
+        jmp get_resource_fail_pop
 
 get_resource_id_found:
     and edi,0Fh
-	mov eax,[esi+4]
-	test eax,80000000h
-	jz get_resource_found
+        mov eax,[esi+4]
+        test eax,80000000h
+        jz get_resource_found
 ;
-	and eax,7FFFFFFFh
-	mov esi,eax
-	add esi,edx
-	movzx ecx,[esi].res_ids
-	add esi,OFFSET res_data
-	or ecx,ecx
-	jnz get_resource_id_found
-	jmp get_resource_fail_pop
+        and eax,7FFFFFFFh
+        mov esi,eax
+        add esi,edx
+        movzx ecx,[esi].res_ids
+        add esi,OFFSET res_data
+        or ecx,ecx
+        jnz get_resource_id_found
+        jmp get_resource_fail_pop
 
 get_resource_found:
-	add eax,edx
-	mov ecx,[eax+4]
-	mov esi,[eax]
-	add esi,es:lib_base
-	cmp ebp,6
-	jne get_resource_ok_pop
+        add eax,edx
+        mov ecx,[eax+4]
+        mov esi,[eax]
+        add esi,es:lib_base
+        cmp ebp,6
+        jne get_resource_ok_pop
 
 get_resource_entry_loop:
     movzx ecx,word ptr [esi]
@@ -4739,56 +4739,56 @@ get_resource_ok:
     add esi,2
 
 get_resource_ok_pop:
-	pop es
-	clc
-	jmp get_resource_done
+        pop es
+        clc
+        jmp get_resource_done
 
 get_resource_fail_pop:
-	pop es
+        pop es
 
 get_resource_fail:
-	xor esi,esi
-	stc
-	jmp get_resource_done
+        xor esi,esi
+        stc
+        jmp get_resource_done
 
 get_resource_done:
     pop ebp
-	pop edi
-	pop edx
-	pop ebx
-	pop eax
-	ret
-get_resource	Endp
+        pop edi
+        pop edx
+        pop ebx
+        pop eax
+        ret
+get_resource    Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OpenApp
+;               NAME:                   OpenApp
 ;
-;		DESCRIPTION:    open app callback
+;               DESCRIPTION:    open app callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_app	Proc far
+open_app        Proc far
     push ds
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds:app_mem_blocks,0
-	pop ds
-	ret
-open_app	Endp
+        pop ds
+        ret
+open_app        Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			close_app
+;               NAME:                   close_app
 ;
-;		DESCRIPTION:    Close app
+;               DESCRIPTION:    Close app
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_app	Proc far
+close_app       Proc far
     mov ax,system_data_sel
     mov ds,ax
     mov ebp,ds:flat_base
@@ -4796,217 +4796,217 @@ close_app	Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ax,ds:app_mod_sel
-	or ax,ax
-	jz close_app_done
-;	
+        mov ax,ds:app_mod_sel
+        or ax,ax
+        jz close_app_done
+;       
     mov es,ax
     ResetModule
 ;
-	mov ax,flat_data_sel
-	mov ds,ax
-	xor edx,edx
-	mov eax,-1
-	mov bx,es
-	UserGateForce32 free_app_mem_nr
-	mov edi,es:lib_base
-	push es
-	call FreeImportedDlls
-	pop es
+        mov ax,flat_data_sel
+        mov ds,ax
+        xor edx,edx
+        mov eax,-1
+        mov bx,es
+        UserGateForce32 free_app_mem_nr
+        mov edi,es:lib_base
+        push es
+        call FreeImportedDlls
+        pop es
 ;
-	mov esi,es:lib_header
-	mov eax,[esi].peh_tls_va
-	or eax,eax
-	jz unload_no_tls
+        mov esi,es:lib_header
+        mov eax,[esi].peh_tls_va
+        or eax,eax
+        jz unload_no_tls
 ;
-	add eax,edi
-	mov edx,[eax].tls_index_va
-	mov edx,[edx]
-	mov esi,fs:pvTLSArray
-	mov edx,[esi+4*edx]
-	add edx,ebp
+        add eax,edi
+        mov edx,[eax].tls_index_va
+        mov edx,[edx]
+        mov esi,fs:pvTLSArray
+        mov edx,[esi+4*edx]
+        add edx,ebp
 ;
-	mov ecx,[eax].tls_end_data_va
-	sub ecx,[eax].tls_start_data_va
-	FreeLinear
+        mov ecx,[eax].tls_end_data_va
+        sub ecx,[eax].tls_start_data_va
+        FreeLinear
 
 unload_no_tls:
-	mov edx,es:lib_base
-	mov ecx,es:lib_size
-	mov bx,es:lib_file_handle
-	CloseFile
-	add edx,ebp
-	FreeLinear
-	FreeMem
+        mov edx,es:lib_base
+        mov ecx,es:lib_size
+        mov bx,es:lib_file_handle
+        CloseFile
+        add edx,ebp
+        FreeLinear
+        FreeMem
 ;
-	mov edx,fs:pvStackUserBottom
-	add edx,ebp
-	mov ecx,fs:pvStackUserSize
-	FreeLinear	
-	mov ax,fs
-	mov es,ax
-	xor ax,ax
-	mov fs,ax
-	FreeMem
+        mov edx,fs:pvStackUserBottom
+        add edx,ebp
+        mov ecx,fs:pvStackUserSize
+        FreeLinear      
+        mov ax,fs
+        mov es,ax
+        xor ax,ax
+        mov fs,ax
+        FreeMem
 
 close_app_done:
-	ret
-close_app	Endp
+        ret
+close_app       Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetExeName
+;               NAME:                   GetExeName
 ;
-;		DESCRIPTION:    Get exe-file name
+;               DESCRIPTION:    Get exe-file name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_exe_name	Proc far
-	push ds
-	push eax
-	push ebx
-	push ecx
-	push edx
-	push esi
+get_exe_name    Proc far
+        push ds
+        push eax
+        push ebx
+        push ecx
+        push edx
+        push esi
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
 ;
-	mov edi,ds:app_name
-	or edi,edi
-	jnz get_exe_done
-;	
-	mov si,OFFSET app_exe_name
+        mov edi,ds:app_name
+        or edi,edi
+        jnz get_exe_done
+;       
+        mov si,OFFSET app_exe_name
 
 get_exe_size_loop:
-	lodsb
-	or al,al
-	jnz get_exe_size_loop
+        lodsb
+        or al,al
+        jnz get_exe_size_loop
 ;
-	mov ax,si
-	sub ax,OFFSET app_exe_name
-	movzx eax,ax
-	mov ecx,eax
-	UserGateForce32 allocate_app_mem_nr
-	mov edi,edx
-	mov esi,OFFSET app_exe_name
-	rep movs byte ptr es:[edi],ds:[esi]
+        mov ax,si
+        sub ax,OFFSET app_exe_name
+        movzx eax,ax
+        mov ecx,eax
+        UserGateForce32 allocate_app_mem_nr
+        mov edi,edx
+        mov esi,OFFSET app_exe_name
+        rep movs byte ptr es:[edi],ds:[esi]
 ;
-	mov ds:app_name,edx
-	mov edi,edx
+        mov ds:app_name,edx
+        mov edi,edx
 
 get_exe_done:
     clc
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	pop ds
-	ret
-get_exe_name	Endp
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        pop eax
+        pop ds
+        ret
+get_exe_name    Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetEnv
+;               NAME:                   GetEnv
 ;
-;		DESCRIPTION:    Get environment block
+;               DESCRIPTION:    Get environment block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_env	Proc far
-	push ds
-	push eax
-	push ebx
-	push ecx
-	push edx
-	push esi
+get_env Proc far
+        push ds
+        push eax
+        push ebx
+        push ecx
+        push edx
+        push esi
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov edi,ds:app_env
-	or edi,edi
-	jnz get_env_done
-;	
+        mov edi,ds:app_env
+        or edi,edi
+        jnz get_env_done
+;       
     LockProcEnv
-	mov ds,bx
-	xor si,si
+        mov ds,bx
+        xor si,si
 
 get_env_size_loop:
-	lodsb
-	or al,al
-	jnz get_env_size_loop
+        lodsb
+        or al,al
+        jnz get_env_size_loop
 ;
-	lodsb
-	or al,al
-	jnz get_env_size_loop
+        lodsb
+        or al,al
+        jnz get_env_size_loop
 ;
-	movzx ecx,si
-	mov eax,ecx
-	UserGateForce32 allocate_app_mem_nr
-	mov edi,edx
-	xor esi,esi
-	rep movs byte ptr es:[edi],ds:[esi]
+        movzx ecx,si
+        mov eax,ecx
+        UserGateForce32 allocate_app_mem_nr
+        mov edi,edx
+        xor esi,esi
+        rep movs byte ptr es:[edi],ds:[esi]
 ;
-	mov ds:app_env,edx
-	mov edi,edx
+        mov ds:app_env,edx
+        mov edi,edx
 ;
     UnlockProcEnv
 
 get_env_done:
     clc
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	pop ds
-	ret
-get_env	Endp
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        pop eax
+        pop ds
+        ret
+get_env Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetCmdLine
+;               NAME:                   GetCmdLine
 ;
-;		DESCRIPTION:    Get command line
+;               DESCRIPTION:    Get command line
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_cmd_line	Proc far
-	push ds
-	push ax
-;	
-	GetThread
-	mov ds,ax
-	mov ds,ds:p_app_sel
-	mov edi,ds:app_cmd_line
-;	
-	clc
-	pop ax
-	pop ds
-	ret
-get_cmd_line	Endp
+get_cmd_line    Proc far
+        push ds
+        push ax
+;       
+        GetThread
+        mov ds,ax
+        mov ds,ds:p_app_sel
+        mov edi,ds:app_cmd_line
+;       
+        clc
+        pop ax
+        pop ds
+        ret
+get_cmd_line    Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SetOptions
+;               NAME:                   SetOptions
 ;
-;		DESCRIPTION:    Set options
+;               DESCRIPTION:    Set options
 ;
 ;       PARAMETERS:     ES  Option selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_options	Proc far
-	push ds
-	push es
-	pusha
+set_options     Proc far
+        push ds
+        push es
+        pusha
 ;
     mov ax,es
     mov ds,ax
@@ -5024,102 +5024,102 @@ set_opt_size:
     or al,al
     jnz set_opt_size
 ;
-	mov eax,ecx
-	UserGateForce32 allocate_app_mem_nr
-	mov edi,edx
-	xor esi,esi
-	mov ax,flat_data_sel
-	mov es,ax
-	rep movs byte ptr es:[edi],ds:[esi]
+        mov eax,ecx
+        UserGateForce32 allocate_app_mem_nr
+        mov edi,edx
+        xor esi,esi
+        mov ax,flat_data_sel
+        mov es,ax
+        rep movs byte ptr es:[edi],ds:[esi]
 ;        
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov ds:app_options,edx
+        mov ds:app_options,edx
 ;
-	clc
-	popa
-	pop es
-	pop ds
-	ret
-set_options	Endp
+        clc
+        popa
+        pop es
+        pop ds
+        ret
+set_options     Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetOptions
+;               NAME:                   GetOptions
 ;
-;		DESCRIPTION:    Get options
+;               DESCRIPTION:    Get options
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_options	Proc far
-	push ds
-	push ax
+get_options     Proc far
+        push ds
+        push ax
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel	
-	mov edi,ds:app_options
-	clc
+    mov ds,ds:p_app_sel 
+        mov edi,ds:app_options
+        clc
 ;
-    pop ax	
-	pop ds
-	ret
-get_options	Endp
+    pop ax      
+        pop ds
+        ret
+get_options     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			init
+;               NAME:                   init
 ;
-;		DESCRIPTION:    Init pe loader module
+;               DESCRIPTION:    Init pe loader module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+init    PROC far
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov di,OFFSET start_thread
-	HookCreateThread
+        mov di,OFFSET start_thread
+        HookCreateThread
 ;
-	mov di,OFFSET load_pe
-	HookLoadExe
+        mov di,OFFSET load_pe
+        HookLoadExe
 ;
-	mov di,OFFSET open_app
-	HookOpenApp
+        mov di,OFFSET open_app
+        HookOpenApp
 ;
-	mov di,OFFSET close_app
-	HookCloseApp
+        mov di,OFFSET close_app
+        HookCloseApp
 ;
-	mov si,OFFSET notify_pe_exception
-	mov di,OFFSET notify_pe_exception_name
-	xor dx,dx
-	mov ax,notify_pe_exception_nr
-	RegisterUserGate32
+        mov esi,OFFSET notify_pe_exception
+        mov edi,OFFSET notify_pe_exception_name
+        xor dx,dx
+        mov ax,notify_pe_exception_nr
+        RegisterUserGate32New
 ;
-	mov si,OFFSET get_dll_handle
-	mov di,OFFSET get_dll_handle_name
-	xor dx,dx
-	mov ax,get_module_nr
-	RegisterUserGate32
+        mov esi,OFFSET get_dll_handle
+        mov edi,OFFSET get_dll_handle_name
+        xor dx,dx
+        mov ax,get_module_nr
+        RegisterUserGate32New
 ;
-	mov si,OFFSET reserve_pe_mem
-	mov di,OFFSET reserve_pe_mem_name
-	xor dx,dx
-	mov ax,reserve_pe_mem_nr
-	RegisterUserGate32
+        mov esi,OFFSET reserve_pe_mem
+        mov edi,OFFSET reserve_pe_mem_name
+        xor dx,dx
+        mov ax,reserve_pe_mem_nr
+        RegisterUserGate32New
 ;
-	mov si,OFFSET show_exception_text
-	mov di,OFFSET show_exception_text_name
-	xor dx,dx
-	mov ax,show_exception_text_nr
-	RegisterUserGate32
-	clc
-	ret
-init	ENDP
+        mov esi,OFFSET show_exception_text
+        mov edi,OFFSET show_exception_text_name
+        xor dx,dx
+        mov ax,show_exception_text_nr
+        RegisterUserGate32New
+        clc
+        ret
+init    ENDP
 
 code    ENDS
 

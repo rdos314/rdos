@@ -2684,17 +2684,17 @@ init    PROC far
         mov al,0
         RegisterNetClass
 ;
-        mov si,OFFSET start_net_capture
-        mov di,OFFSET start_net_capture_name
+        mov esi,OFFSET start_net_capture
+        mov edi,OFFSET start_net_capture_name
         xor dx,dx
         mov ax,start_net_capture_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET stop_net_capture
-        mov di,OFFSET stop_net_capture_name
+        mov esi,OFFSET stop_net_capture
+        mov edi,OFFSET stop_net_capture_name
         xor dx,dx
         mov ax,stop_net_capture_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
         clc
         ret
 init    ENDP

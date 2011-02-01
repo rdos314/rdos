@@ -73,7 +73,6 @@ ENDIF
     extrn init_mem_sels:near
     extrn init_osgate:near
     extrn init_usergate:near
-    extrn init_cpu_gates:near
     extrn init_io:near
     extrn init_int:near
     extrn init_app:near
@@ -81,8 +80,6 @@ ENDIF
     extrn move_adapters:near
     extrn init_device:near
     extrn init_swap:near
-    extrn init_random:near
-    extrn init_crc:near
 
     extrn init_first_process:near
     extrn init_first_thread:near
@@ -701,18 +698,17 @@ prot_init:
     call init_usergate
     call init_user_protseg
 ;
-    mov si,OFFSET get_version
-    mov di,OFFSET get_version_name
+    mov esi,OFFSET get_version
+    mov edi,OFFSET get_version_name
     xor dx,dx
     mov ax,get_version_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
     call init_mem
     call init_gdt
     call init_idt
     call init_system
     call init_physical_gates
-    call init_cpu_gates
     call move_adapters
     call init_paging_gates
     call init_physical_gates
@@ -728,8 +724,6 @@ prot_init:
     call init_int
     call init_trap_vectors
     call init_swap
-    call init_random
-    call init_crc
     call init_device    
 ;
     mov bx,system_data_sel

@@ -1309,53 +1309,53 @@ init_keyboard   PROC near
         mov di,OFFSET check_list
         HookState
 ;
-        mov si,OFFSET add_wait_for_keyboard
-        mov di,OFFSET add_wait_for_keyboard_name
+        mov esi,OFFSET add_wait_for_keyboard
+        mov edi,OFFSET add_wait_for_keyboard_name
         xor dx,dx
         mov ax,add_wait_for_keyboard_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET read_keyboard
-        mov di,OFFSET read_keyboard_name
+        mov esi,OFFSET read_keyboard
+        mov edi,OFFSET read_keyboard_name
         xor dx,dx
         mov ax,read_keyboard_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET poll_keyboard
-        mov di,OFFSET poll_keyboard_name
+        mov esi,OFFSET poll_keyboard
+        mov edi,OFFSET poll_keyboard_name
         xor dx,dx
         mov ax,poll_keyboard_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET flush_keyboard
-        mov di,OFFSET flush_keyboard_name
+        mov esi,OFFSET flush_keyboard
+        mov edi,OFFSET flush_keyboard_name
         xor dx,dx
         mov ax,flush_keyboard_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET get_keyboard_state
-        mov di,OFFSET get_keyboard_state_name
+        mov esi,OFFSET get_keyboard_state
+        mov edi,OFFSET get_keyboard_state_name
         xor dx,dx
         mov ax,get_keyboard_state_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET peek_key_event
-        mov di,OFFSET peek_key_event_name
+        mov esi,OFFSET peek_key_event
+        mov edi,OFFSET peek_key_event_name
         xor dx,dx
         mov ax,peek_key_event_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET read_key_event
-        mov di,OFFSET read_key_event_name
+        mov esi,OFFSET read_key_event
+        mov edi,OFFSET read_key_event_name
         xor dx,dx
         mov ax,read_key_event_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET put_keyboard_code
-        mov di,OFFSET put_keyboard_code_name
+        mov esi,OFFSET put_keyboard_code
+        mov edi,OFFSET put_keyboard_code_name
         xor cl,cl
         mov ax,put_keyboard_code_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov esi,OFFSET hook_shift_keys
         mov edi,OFFSET hook_shift_keys_name

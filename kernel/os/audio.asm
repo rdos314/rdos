@@ -1208,24 +1208,24 @@ init    PROC far
         mov di,OFFSET init_audio
         HookInitTasking
 ;
-        mov si,OFFSET create_audio_out_channel
-        mov di,OFFSET create_audio_out_channel_name
+        mov esi,OFFSET create_audio_out_channel
+        mov edi,OFFSET create_audio_out_channel_name
         xor dx,dx
         mov ax,create_audio_out_channel_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET close_audio_out_channel
-        mov di,OFFSET close_audio_out_channel_name
+        mov esi,OFFSET close_audio_out_channel
+        mov edi,OFFSET close_audio_out_channel_name
         xor dx,dx
         mov ax,close_audio_out_channel_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET write_audio16
-        mov si,OFFSET write_audio32
-        mov di,OFFSET write_audio_name
+        mov ebx,OFFSET write_audio16
+        mov esi,OFFSET write_audio32
+        mov edi,OFFSET write_audio_name
         mov dx,virt_es_in OR virt_ds_in
         mov ax,write_audio_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
         mov esi,OFFSET get_audio_out_buf
         mov edi,OFFSET get_audio_out_buf_name

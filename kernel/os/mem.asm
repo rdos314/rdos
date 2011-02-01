@@ -216,11 +216,11 @@ init_mem        PROC near
         mov ax,allocate_big_mem_nr
         RegisterOsGate
 ;
-        mov si,OFFSET free_mem
-        mov di,OFFSET free_name
+        mov esi,OFFSET free_mem
+        mov edi,OFFSET free_name
         mov dx,virt_es_in
         mov ax,free_mem_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov esi,OFFSET allocate_big_linear
         mov edi,OFFSET allocate_big_linear_name
@@ -252,17 +252,17 @@ init_mem        PROC near
         mov ax,resize_linear_nr
         RegisterOsGate
 ;
-        mov si,OFFSET available_big_linear
-        mov di,OFFSET available_big_linear_name
+        mov esi,OFFSET available_big_linear
+        mov edi,OFFSET available_big_linear_name
         xor dx,dx
         mov ax,available_big_linear_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET available_small_linear
-        mov di,OFFSET available_small_linear_name
+        mov esi,OFFSET available_small_linear
+        mov edi,OFFSET available_small_linear_name
         xor dx,dx
         mov ax,available_small_linear_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov esi,OFFSET used_big_linear
         mov edi,OFFSET used_big_linear_name
@@ -360,25 +360,25 @@ init_mem        PROC near
         mov ax,free_page_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_thread_linear
-        mov di,OFFSET get_thread_linear_name
+        mov esi,OFFSET get_thread_linear
+        mov edi,OFFSET get_thread_linear_name
         xor dx,dx
         mov ax,get_thread_linear_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET read_thread_mem16
-        mov si,OFFSET read_thread_mem32
-        mov di,OFFSET read_thread_mem_name
+        mov ebx,OFFSET read_thread_mem16
+        mov esi,OFFSET read_thread_mem32
+        mov edi,OFFSET read_thread_mem_name
         mov dx,virt_es_in
         mov ax,read_thread_mem_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET write_thread_mem16
-        mov si,OFFSET write_thread_mem32
-        mov di,OFFSET write_thread_mem_name
+        mov ebx,OFFSET write_thread_mem16
+        mov esi,OFFSET write_thread_mem32
+        mov edi,OFFSET write_thread_mem_name
         mov dx,virt_es_in
         mov ax,write_thread_mem_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
         mov esi,OFFSET allocate_local_linear
         mov edi,OFFSET allocate_local_linear_name
@@ -398,17 +398,17 @@ init_mem        PROC near
         mov ax,reserve_local_linear_nr
         RegisterOsGate
 ;
-        mov si,OFFSET available_local_linear
-        mov di,OFFSET available_local_linear_name
+        mov esi,OFFSET available_local_linear
+        mov edi,OFFSET available_local_linear_name
         xor dx,dx
         mov ax,available_local_linear_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET used_local_linear
-        mov di,OFFSET used_local_linear_name
+        mov esi,OFFSET used_local_linear
+        mov edi,OFFSET used_local_linear_name
         xor dx,dx
         mov ax,used_local_linear_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov esi,OFFSET allocate_vm_linear
         mov edi,OFFSET allocate_vm_linear_name
@@ -416,17 +416,17 @@ init_mem        PROC near
         mov ax,allocate_vm_linear_nr
         RegisterOsGate
 ;
-        mov si,OFFSET available_vm_linear
-        mov di,OFFSET available_vm_linear_name
+        mov esi,OFFSET available_vm_linear
+        mov edi,OFFSET available_vm_linear_name
         xor dx,dx
         mov ax,available_vm_linear_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET used_vm_linear
-        mov di,OFFSET used_vm_linear_name
+        mov esi,OFFSET used_vm_linear
+        mov edi,OFFSET used_vm_linear_name
         xor dx,dx
         mov ax,used_vm_linear_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         mov esi,OFFSET used_local_linear_thread
         mov edi,OFFSET used_local_linear_thread_name
@@ -434,18 +434,18 @@ init_mem        PROC near
         mov ax,used_local_linear_thread_nr
         RegisterOsGate
 ;
-        mov bx,OFFSET allocate_local_mem16
-        mov si,OFFSET allocate_local_mem32
-        mov di,OFFSET allocate_local_mem_name
+        mov ebx,OFFSET allocate_local_mem16
+        mov esi,OFFSET allocate_local_mem32
+        mov edi,OFFSET allocate_local_mem_name
         mov dx,virt_es_out
         mov ax,allocate_local_mem_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET resize_flat_linear
-        mov di,OFFSET resize_flat_linear_name
+        mov esi,OFFSET resize_flat_linear
+        mov edi,OFFSET resize_flat_linear_name
         xor dx,dx
         mov ax,resize_flat_linear_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
         pop ds
         popa

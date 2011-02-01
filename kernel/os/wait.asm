@@ -1166,83 +1166,83 @@ init_wait       PROC near
         mov ax,signal_wait_nr
         RegisterOsGate
 ;
-        mov si,OFFSET create_wait
-        mov di,OFFSET create_wait_name
+        mov esi,OFFSET create_wait
+        mov edi,OFFSET create_wait_name
         xor dx,dx
         mov ax,create_wait_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET close_wait
-        mov di,OFFSET close_wait_name
+        mov esi,OFFSET close_wait
+        mov edi,OFFSET close_wait_name
         xor dx,dx
         mov ax,close_wait_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET is_wait_idle
-        mov di,OFFSET is_wait_idle_name
+        mov esi,OFFSET is_wait_idle
+        mov edi,OFFSET is_wait_idle_name
         xor dx,dx
         mov ax,is_wait_idle_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET wait_no_timeout
-        mov di,OFFSET wait_no_timeout_name
+        mov esi,OFFSET wait_no_timeout
+        mov edi,OFFSET wait_no_timeout_name
         xor dx,dx
         mov ax,wait_no_timeout_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET wait_timeout
-        mov di,OFFSET wait_timeout_name
+        mov esi,OFFSET wait_timeout
+        mov edi,OFFSET wait_timeout_name
         xor dx,dx
         mov ax,wait_timeout_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET stop_wait
-        mov di,OFFSET stop_wait_name
+        mov esi,OFFSET stop_wait
+        mov edi,OFFSET stop_wait_name
         xor dx,dx
         mov ax,stop_wait_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET remove_wait
-        mov di,OFFSET remove_wait_name
+        mov esi,OFFSET remove_wait
+        mov edi,OFFSET remove_wait_name
         xor dx,dx
         mov ax,remove_wait_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET create_signal
-        mov di,OFFSET create_signal_name
+        mov esi,OFFSET create_signal
+        mov edi,OFFSET create_signal_name
         xor dx,dx
         mov ax,create_signal_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET reset_signal
-        mov di,OFFSET reset_signal_name
+        mov esi,OFFSET reset_signal
+        mov edi,OFFSET reset_signal_name
         xor dx,dx
         mov ax,reset_signal_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET is_signalled
-        mov di,OFFSET is_signalled_name
+        mov esi,OFFSET is_signalled
+        mov edi,OFFSET is_signalled_name
         xor dx,dx
         mov ax,is_signalled_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET set_signal
-        mov di,OFFSET set_signal_name
+        mov esi,OFFSET set_signal
+        mov edi,OFFSET set_signal_name
         xor dx,dx
         mov ax,set_signal_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET free_signal
-        mov di,OFFSET free_signal_name
+        mov esi,OFFSET free_signal
+        mov edi,OFFSET free_signal_name
         xor dx,dx
         mov ax,free_signal_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET add_wait_for_signal
-        mov di,OFFSET add_wait_for_signal_name
+        mov esi,OFFSET add_wait_for_signal
+        mov edi,OFFSET add_wait_for_signal_name
         xor dx,dx
         mov ax,add_wait_for_signal_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
         ret
 init_wait       ENDP
 

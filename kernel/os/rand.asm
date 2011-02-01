@@ -36,7 +36,7 @@ INCLUDE ..\driver.def
 N = 624
 M = 397
 
-random_proc_seg	STRUC
+random_proc_seg STRUC
 
 mtsect   section_typ <>
 mt      DD N DUP(?)
@@ -44,23 +44,23 @@ mti     DW ?
     
 random_proc_seg ENDS
 
-code	SEGMENT byte public 'CODE'
+code    SEGMENT byte public 'CODE'
 
-	.386p
+        .386p
 
-	assume cs:code
+        assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GenArr
+;               NAME:                   GenArr
 ;
-;		DESCRIPTION:	Generate array
-;						
+;               DESCRIPTION:    Generate array
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-gen_arr	PROC near
+gen_arr PROC near
     push eax
     push bx
     push cx
@@ -117,25 +117,25 @@ gen_arr Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetRandom
+;               NAME:                   GetRandom
 ;
-;		DESCRIPTION:	Get random number
+;               DESCRIPTION:    Get random number
 ;
 ;       RETURNS:        EAX     Number
 ;
-;						
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_random_name    DB 'Get Random Number', 0
 
-get_random	PROC far
+get_random      PROC far
     push ds
     push bx
     push edx
 ;    
     mov bx,random_proc_sel
     mov ds,bx
-	EnterSection ds:mtsect
+        EnterSection ds:mtsect
 ;
     mov bx,ds:mti
     cmp bx,4 * N
@@ -167,7 +167,7 @@ get_random_do:
     shr edx,18
     xor eax,edx
 ;
-	LeaveSection ds:mtsect
+        LeaveSection ds:mtsect
     pop edx
     pop bx
     pop ds    
@@ -178,16 +178,16 @@ get_random    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INIT_PROCESS
+;               NAME:                   INIT_PROCESS
 ;
-;		DESCRIPTION:	Init random process
+;               DESCRIPTION:    Init random process
 ;
-;						
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public init_process
+        public init_process
 
-init_process	PROC far
+init_process    PROC far
     push ds
     pushad
 ;
@@ -220,7 +220,7 @@ init_genrand_loop:
 ;
     shl ecx,2
     mov ds:mti,cx
-	InitSection ds:mtsect
+        InitSection ds:mtsect
 ;
     popad
     pop ds
@@ -231,44 +231,44 @@ init_process    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INIT_RANDOM
+;               NAME:                   INIT_RANDOM
 ;
-;		DESCRIPTION:	Init random module
+;               DESCRIPTION:    Init random module
 ;
-;						
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public init_random
+        public init_random
 
-init_random	PROC near
-	push ds
-	push es
-	pusha
+init_random     PROC near
+        push ds
+        push es
+        pusha
 ;
-	mov bx,random_proc_sel
-	mov eax,SIZE random_proc_seg
-	AllocateFixedProcessMem
+        mov bx,random_proc_sel
+        mov eax,SIZE random_proc_seg
+        AllocateFixedProcessMem
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
 ;
-	mov di,OFFSET init_process
-	HookCreateProcess
+        mov di,OFFSET init_process
+        HookCreateProcess
 ;
-	mov si,OFFSET get_random
-	mov di,OFFSET get_random_name
-	xor dx,dx
-	mov ax,get_random_nr
-	RegisterBimodalUserGate
+        mov esi,OFFSET get_random
+        mov edi,OFFSET get_random_name
+        xor dx,dx
+        mov ax,get_random_nr
+        RegisterBimodalUserGateNew
 ;
-	popa
-	pop es
-	pop ds
-	ret
-init_random	ENDP
+        popa
+        pop es
+        pop ds
+        ret
+init_random     ENDP
 
-code	ENDS
+code    ENDS
 
-	END
+        END
 

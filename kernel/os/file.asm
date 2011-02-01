@@ -2680,73 +2680,73 @@ init_file       PROC near
         mov ax,dupl_file_info_nr
         RegisterOsGate
 ;
-        mov si,OFFSET close_file
-        mov di,OFFSET close_file_name
+        mov esi,OFFSET close_file
+        mov edi,OFFSET close_file_name
         xor dx,dx
         mov ax,close_file_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET dupl_file
-        mov di,OFFSET dupl_file_name
+        mov esi,OFFSET dupl_file
+        mov edi,OFFSET dupl_file_name
         xor dx,dx
         mov ax,dupl_file_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET get_ioctl_data
-        mov di,OFFSET get_ioctl_data_name
+        mov esi,OFFSET get_ioctl_data
+        mov edi,OFFSET get_ioctl_data_name
         xor dx,dx
         mov ax,get_ioctl_data_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET get_file_size
-        mov di,OFFSET get_file_size_name
+        mov esi,OFFSET get_file_size
+        mov edi,OFFSET get_file_size_name
         xor dx,dx
         mov ax,get_file_size_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET set_file_size
-        mov di,OFFSET set_file_size_name
+        mov esi,OFFSET set_file_size
+        mov edi,OFFSET set_file_size_name
         xor dx,dx
         mov ax,set_file_size_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET get_file_pos
-        mov di,OFFSET get_file_pos_name
+        mov esi,OFFSET get_file_pos
+        mov edi,OFFSET get_file_pos_name
         xor dx,dx
         mov ax,get_file_pos_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET set_file_pos
-        mov di,OFFSET set_file_pos_name
+        mov esi,OFFSET set_file_pos
+        mov edi,OFFSET set_file_pos_name
         xor dx,dx
         mov ax,set_file_pos_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET get_file_time
-        mov di,OFFSET get_file_time_name
+        mov esi,OFFSET get_file_time
+        mov edi,OFFSET get_file_time_name
         xor dx,dx
         mov ax,get_file_time_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET set_file_time
-        mov di,OFFSET set_file_time_name
+        mov esi,OFFSET set_file_time
+        mov edi,OFFSET set_file_time_name
         xor dx,dx
         mov ax,set_file_time_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET read_file16
-        mov si,OFFSET read_file32
-        mov di,OFFSET read_file_name
+        mov ebx,OFFSET read_file16
+        mov esi,OFFSET read_file32
+        mov edi,OFFSET read_file_name
         mov dx,virt_es_in
         mov ax,read_file_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET write_file16
-        mov si,OFFSET write_file32
-        mov di,OFFSET write_file_name
+        mov ebx,OFFSET write_file16
+        mov esi,OFFSET write_file32
+        mov edi,OFFSET write_file_name
         mov dx,virt_es_in
         mov ax,write_file_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
     mov ax,SEG data
     mov ds,ax   

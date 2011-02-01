@@ -2093,11 +2093,11 @@ open_floppy_started:
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET get_floppy_disc
-    mov di,OFFSET get_floppy_disc_name
+    mov esi,OFFSET get_floppy_disc
+    mov edi,OFFSET get_floppy_disc_name
     xor dx,dx
     mov ax,get_floppy_disc_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
     mov di,OFFSET disc_ctrl
     HookInitDisc

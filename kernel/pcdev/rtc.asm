@@ -686,11 +686,11 @@ init    Proc far
         mov ds,ax
         mov es,ax
 ;
-        mov si,OFFSET update_rtc
-        mov di,OFFSET update_rtc_name
+        mov esi,OFFSET update_rtc
+        mov edi,OFFSET update_rtc_name
     xor dx,dx
         mov ax,update_rtc_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
         mov al,1Ah
         mov di,OFFSET rtc_io

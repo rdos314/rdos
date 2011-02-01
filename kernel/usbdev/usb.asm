@@ -3088,112 +3088,112 @@ init    Proc far
         mov ax,get_usb_info_nr
         RegisterOsGate
 ;
-        mov bx,OFFSET get_usb_device16
-        mov si,OFFSET get_usb_device32
-        mov di,OFFSET get_usb_device_name
+        mov ebx,OFFSET get_usb_device16
+        mov esi,OFFSET get_usb_device32
+        mov edi,OFFSET get_usb_device_name
         mov dx,virt_es_in
         mov ax,get_usb_device_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET get_usb_config16
-        mov si,OFFSET get_usb_config32
-        mov di,OFFSET get_usb_config_name
+        mov ebx,OFFSET get_usb_config16
+        mov esi,OFFSET get_usb_config32
+        mov edi,OFFSET get_usb_config_name
         mov dx,virt_es_in
         mov ax,get_usb_config_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov si,OFFSET config_usb_device
-        mov di,OFFSET config_usb_device_name
+        mov esi,OFFSET config_usb_device
+        mov edi,OFFSET config_usb_device_name
         xor dx,dx
         mov ax,config_usb_device_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET open_usb_pipe
-        mov di,OFFSET open_usb_pipe_name
+        mov esi,OFFSET open_usb_pipe
+        mov edi,OFFSET open_usb_pipe_name
         xor dx,dx
         mov ax,open_usb_pipe_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET close_usb_pipe
-        mov di,OFFSET close_usb_pipe_name
+        mov esi,OFFSET close_usb_pipe
+        mov edi,OFFSET close_usb_pipe_name
         xor dx,dx
         mov ax,close_usb_pipe_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET add_wait_for_pipe
-        mov di,OFFSET add_wait_for_pipe_name
+        mov esi,OFFSET add_wait_for_pipe
+        mov edi,OFFSET add_wait_for_pipe_name
         xor dx,dx
         mov ax,add_wait_for_usb_pipe_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET lock_usb_pipe
-        mov di,OFFSET lock_usb_pipe_name
+        mov esi,OFFSET lock_usb_pipe
+        mov edi,OFFSET lock_usb_pipe_name
         xor dx,dx
         mov ax,lock_usb_pipe_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET unlock_usb_pipe
-        mov di,OFFSET unlock_usb_pipe_name
+        mov esi,OFFSET unlock_usb_pipe
+        mov edi,OFFSET unlock_usb_pipe_name
         xor dx,dx
         mov ax,unlock_usb_pipe_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET write_usb_control16
-        mov si,OFFSET write_usb_control32
-        mov di,OFFSET write_usb_control_name
+        mov ebx,OFFSET write_usb_control16
+        mov esi,OFFSET write_usb_control32
+        mov edi,OFFSET write_usb_control_name
         mov dx,virt_es_in
         mov ax,write_usb_control_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov si,OFFSET req_usb_data
-        mov di,OFFSET req_usb_data_name
+        mov esi,OFFSET req_usb_data
+        mov edi,OFFSET req_usb_data_name
         xor dx,dx
         mov ax,req_usb_data_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov bx,OFFSET get_usb_data_size16
-        mov si,OFFSET get_usb_data_size32
-        mov di,OFFSET get_usb_data_size_name
+        mov ebx,OFFSET get_usb_data_size16
+        mov esi,OFFSET get_usb_data_size32
+        mov edi,OFFSET get_usb_data_size_name
         mov dx,virt_es_in
         mov ax,get_usb_data_size_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov bx,OFFSET write_usb_data16
-        mov si,OFFSET write_usb_data32
-        mov di,OFFSET write_usb_data_name
+        mov ebx,OFFSET write_usb_data16
+        mov esi,OFFSET write_usb_data32
+        mov edi,OFFSET write_usb_data_name
         mov dx,virt_es_in
         mov ax,write_usb_data_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
-        mov si,OFFSET req_usb_status
-        mov di,OFFSET req_usb_status_name
+        mov esi,OFFSET req_usb_status
+        mov edi,OFFSET req_usb_status_name
         xor dx,dx
         mov ax,req_usb_status_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET write_usb_status
-        mov di,OFFSET write_usb_status_name
+        mov esi,OFFSET write_usb_status
+        mov edi,OFFSET write_usb_status_name
         xor dx,dx
         mov ax,write_usb_status_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET start_usb_trans
-        mov di,OFFSET start_usb_trans_name
+        mov esi,OFFSET start_usb_trans
+        mov edi,OFFSET start_usb_trans_name
         xor dx,dx
         mov ax,start_usb_transaction_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET is_usb_trans_done
-        mov di,OFFSET is_usb_trans_done_name
+        mov esi,OFFSET is_usb_trans_done
+        mov edi,OFFSET is_usb_trans_done_name
         xor dx,dx
         mov ax,is_usb_trans_done_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
 ;
-        mov si,OFFSET was_usb_trans_ok
-        mov di,OFFSET was_usb_trans_ok_name
+        mov esi,OFFSET was_usb_trans_ok
+        mov edi,OFFSET was_usb_trans_ok_name
         xor dx,dx
         mov ax,was_usb_trans_ok_nr
-        RegisterBimodalUserGate
+        RegisterBimodalUserGateNew
         clc
         ret
 init    Endp

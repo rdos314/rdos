@@ -576,19 +576,19 @@ init    PROC far
     mov ax,process_key_scan_nr
     RegisterOsGate
 ;
-    mov bx,OFFSET get_key_layout16
-    mov si,OFFSET get_key_layout32
-    mov di,OFFSET get_key_layout_name
+    mov ebx,OFFSET get_key_layout16
+    mov esi,OFFSET get_key_layout32
+    mov edi,OFFSET get_key_layout_name
     mov dx,virt_es_in
     mov ax,get_key_layout_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
-    mov bx,OFFSET set_key_layout16
-    mov si,OFFSET set_key_layout32
-    mov di,OFFSET set_key_layout_name
+    mov ebx,OFFSET set_key_layout16
+    mov esi,OFFSET set_key_layout32
+    mov edi,OFFSET set_key_layout_name
     mov dx,virt_es_in
     mov ax,set_key_layout_nr
-    RegisterUserGate    
+    RegisterUserGateNew    
 ;
     pop edi
     pop es

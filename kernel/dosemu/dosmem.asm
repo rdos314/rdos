@@ -773,12 +773,12 @@ init_dos_mem    PROC near
         mov ax,free_dos_linear_nr
         RegisterOsGate
 ;
-        mov bx,OFFSET allocate_dos_mem16
-        mov si,OFFSET allocate_dos_mem32
-        mov di,OFFSET allocate_dos_mem_name
+        mov ebx,OFFSET allocate_dos_mem16
+        mov esi,OFFSET allocate_dos_mem32
+        mov edi,OFFSET allocate_dos_mem_name
         mov dx,virt_es_out
         mov ax,allocate_dos_mem_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
         mov esi,OFFSET available_dos_linear
         mov edi,OFFSET available_dos_linear_name

@@ -466,11 +466,11 @@ init_ems        PROC near
         mov ax,cs
         mov ds,ax
         mov es,ax
-        mov si,OFFSET ems_handler
-        mov di,OFFSET ems_name
+        mov esi,OFFSET ems_handler
+        mov edi,OFFSET ems_name
         mov ax,ems_handler_nr
         mov dx,virt_ds_in OR virt_es_in
-        RegisterUserGateV86
+        RegisterUserGateV86New
 ;
         mov di,OFFSET init_process
         HookCreateProcess

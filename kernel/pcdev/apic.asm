@@ -1423,11 +1423,11 @@ smemgLint1Ok:
     mov ax,reload_sys_timer_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_processor_id_mem
-    mov di,OFFSET get_processor_id_name
+    mov esi,OFFSET get_processor_id_mem
+    mov edi,OFFSET get_processor_id_name
     xor dx,dx
     mov ax,get_processor_id_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
     mov ax,cs
     mov ds,ax
@@ -1641,11 +1641,11 @@ smsrgLint1Ok:
     mov ax,reload_sys_timer_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_processor_id_msr
-    mov di,OFFSET get_processor_id_name
+    mov esi,OFFSET get_processor_id_msr
+    mov edi,OFFSET get_processor_id_name
     xor dx,dx
     mov ax,get_processor_id_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGateNew
 ;
     mov ax,cs
     mov ds,ax

@@ -826,26 +826,26 @@ init_device     PROC near
     mov ax,init_device_nr
     RegisterOsGate
 ;
-    mov bx,OFFSET get_image_header16
-    mov si,OFFSET get_image_header32
-    mov di,OFFSET get_image_header_name
+    mov ebx,OFFSET get_image_header16
+    mov esi,OFFSET get_image_header32
+    mov edi,OFFSET get_image_header_name
     mov dx,virt_es_in
     mov ax,get_image_header_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
-    mov bx,OFFSET get_image_data16
-    mov si,OFFSET get_image_data32
-    mov di,OFFSET get_image_data_name
+    mov ebx,OFFSET get_image_data16
+    mov esi,OFFSET get_image_data32
+    mov edi,OFFSET get_image_data_name
     mov dx,virt_es_in
     mov ax,get_image_data_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
-    mov bx,OFFSET get_device_info16
-    mov si,OFFSET get_device_info32
-    mov di,OFFSET get_device_info_name
+    mov ebx,OFFSET get_device_info16
+    mov esi,OFFSET get_device_info32
+    mov edi,OFFSET get_device_info_name
     mov dx,virt_es_in
     mov ax,get_device_info_nr
-    RegisterUserGate
+    RegisterUserGateNew
 ;
     mov ax,system_data_sel
     mov ds,ax

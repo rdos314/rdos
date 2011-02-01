@@ -144,42 +144,42 @@ IsValidOsGate	MACRO
 
 ;	AX		GATE NUMBER
 ;	DX		SEGMENT TRANSFER
-;	DS:BX	16-BIT GATE CALL ADDRESS
-;	DS:SI	32-BIT GATE CALL ADDRESS
-;	ES:DI	GATE NAME ADDRESS
-RegisterUserGate	MACRO
-	OsGate register_usergate_nr
+;	DS:EBX	16-BIT GATE CALL ADDRESS
+;	DS:ESI	32-BIT GATE CALL ADDRESS
+;	ES:EDI	GATE NAME ADDRESS
+RegisterUserGateNew	MACRO
+	OsGate register_usergate_new_nr
 						ENDM
 
 ;	AX		GATE NUMBER
 ;	DX		SEGMENT TRANSFER
-;	DS:SI	GATE CALL ADDRESS
-;	ES:DI	GATE NAME ADDRESS
-RegisterBimodalUserGate	MACRO
-	OsGate register_bimodal_usergate_nr
+;	DS:ESI	GATE CALL ADDRESS
+;	ES:EDI	GATE NAME ADDRESS
+RegisterBimodalUserGateNew	MACRO
+	OsGate register_bimodal_usergate_new_nr
 						ENDM
 
 ;	AX		GATE NUMBER
 ;	DX		SEGMENT TRANSFER
-;	DS:SI	16-BIT GATE CALL ADDRESS
-;	ES:DI	GATE NAME ADDRESS
-RegisterUserGate16	MACRO
-	OsGate register_usergate16_nr
+;	DS:ESI	16-BIT GATE CALL ADDRESS
+;	ES:EDI	GATE NAME ADDRESS
+RegisterUserGate16New	MACRO
+	OsGate register_usergate16_new_nr
 						ENDM
 
 ;	AX		GATE NUMBER
 ;	DX		SEGMENT TRANSFER
-;	DS:SI	32-BIT GATE CALL ADDRESS
-;	ES:DI	GATE NAME ADDRESS
-RegisterUserGate32	MACRO
-	OsGate register_usergate32_nr
+;	DS:ESI	32-BIT GATE CALL ADDRESS
+;	ES:EDI	GATE NAME ADDRESS
+RegisterUserGate32New	MACRO
+	OsGate register_usergate32_new_nr
 						ENDM
 
 ;	AX		GATE NUMBER
-;	DS:SI	V86 GATE CALL ADDRESS
-;	ES:DI	GATE NAME ADDRESS
-RegisterUserGateV86	MACRO
-	OsGate register_usergate_v86_nr
+;	DS:ESI	V86 GATE CALL ADDRESS
+;	ES:EDI	GATE NAME ADDRESS
+RegisterUserGateV86New	MACRO
+	OsGate register_usergate_v86_new_nr
 						ENDM
 
 ;	BX		CODE SELECTOR

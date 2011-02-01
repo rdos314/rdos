@@ -1471,12 +1471,12 @@ init_dosdev     PROC near
         mov ax,check_device_nr
         RegisterOsGate
 ;
-        mov bx,OFFSET read_con16
-        mov si,OFFSET read_con32
-        mov di,OFFSET read_con_name
+        mov ebx,OFFSET read_con16
+        mov esi,OFFSET read_con32
+        mov edi,OFFSET read_con_name
         mov dx,virt_es_in
         mov ax,read_con_nr
-        RegisterUserGate
+        RegisterUserGateNew
 ;
         mov ax,OFFSET device_process_size
         mov bx,dosdev_process_sel

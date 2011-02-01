@@ -134,59 +134,59 @@ init_int32      PROC near
         mov ax,hook_set_pm32_int_nr
         RegisterOsGate
 ;
-        mov si,OFFSET get_exception_vector
-        mov di,OFFSET get_exception_vector_name
+        mov esi,OFFSET get_exception_vector
+        mov edi,OFFSET get_exception_vector_name
         xor dx,dx
         mov ax,get_exception_nr
-        RegisterUserGate32
+        RegisterUserGate32New
 ;
-        mov si,OFFSET set_exception_vector
-        mov di,OFFSET set_exception_vector_name
+        mov esi,OFFSET set_exception_vector
+        mov edi,OFFSET set_exception_vector_name
         xor dx,dx
         mov ax,set_exception_nr
-        RegisterUserGate32
+        RegisterUserGate32New
 ;
-        mov si,OFFSET get_pm_int
-        mov di,OFFSET get_pm_int_name
+        mov esi,OFFSET get_pm_int
+        mov edi,OFFSET get_pm_int_name
         xor dx,dx
         mov ax,get_pm_int_nr
-        RegisterUserGate32
+        RegisterUserGate32New
 ;
-        mov si,OFFSET set_pm_int
-        mov di,OFFSET set_pm_int_name
+        mov esi,OFFSET set_pm_int
+        mov edi,OFFSET set_pm_int_name
         xor dx,dx
         mov ax,set_pm_int_nr
-        RegisterUserGate32
+        RegisterUserGate32New
 ;
-        mov si,OFFSET dpmi_int
-        mov di,OFFSET dpmi_int_name
+        mov esi,OFFSET dpmi_int
+        mov edi,OFFSET dpmi_int_name
         xor dx,dx
         mov ax,dpmi_int_nr
-        RegisterUserGate32
+        RegisterUserGate32New
 ;
-        mov si,OFFSET dpmi_call_int
-        mov di,OFFSET dpmi_call_int_name
+        mov esi,OFFSET dpmi_call_int
+        mov edi,OFFSET dpmi_call_int_name
         xor dx,dx
         mov ax,dpmi_call_int_nr
-        RegisterUserGate32
+        RegisterUserGate32New
 ;
-        mov si,OFFSET dpmi_call
-        mov di,OFFSET dpmi_call_name
+        mov esi,OFFSET dpmi_call
+        mov edi,OFFSET dpmi_call_name
         xor dx,dx
         mov ax,dpmi_call_nr
-        RegisterUserGate32
+        RegisterUserGate32New
 ;
-        mov si,OFFSET allocate_vm_callback
-        mov di,OFFSET allocate_vm_callback_name
+        mov esi,OFFSET allocate_vm_callback
+        mov edi,OFFSET allocate_vm_callback_name
         xor dx,dx
         mov ax,allocate_vm_callback_nr
-        RegisterUserGate32
+        RegisterUserGate32New
 ;
-        mov si,OFFSET free_vm_callback
-        mov di,OFFSET free_vm_callback_name
+        mov esi,OFFSET free_vm_callback
+        mov edi,OFFSET free_vm_callback_name
         xor dx,dx
         mov ax,free_vm_callback_nr
-        RegisterUserGate32
+        RegisterUserGate32New
 ;
 ; create default reflection
 ;
