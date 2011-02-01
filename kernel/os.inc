@@ -212,7 +212,6 @@ FreeGdt	MACRO
 					ENDM
 
 ;	BX		LDT DESCRIPTOR
-;	DS		LDT SELECTOR
 AllocateLdt	MACRO
 	OsGate allocate_ldt_nr
 					ENDM

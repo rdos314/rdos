@@ -2100,48 +2100,48 @@ init    PROC far
         mov di,OFFSET InitDriver
         HookInitTasking
 ;
-        mov si,OFFSET open_icsp
-        mov di,OFFSET open_icsp_name
+        mov esi,OFFSET open_icsp
+        mov edi,OFFSET open_icsp_name
         mov ax,open_icsp_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET close_icsp
-        mov di,OFFSET close_icsp_name
+        mov esi,OFFSET close_icsp
+        mov edi,OFFSET close_icsp_name
         mov ax,close_icsp_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET write_icsp_cmd
-        mov di,OFFSET write_icsp_cmd_name
+        mov esi,OFFSET write_icsp_cmd
+        mov edi,OFFSET write_icsp_cmd_name
         mov ax,write_icsp_cmd_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET write_icsp_data
-        mov di,OFFSET write_icsp_data_name
+        mov esi,OFFSET write_icsp_data
+        mov edi,OFFSET write_icsp_data_name
         mov ax,write_icsp_data_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET read_icsp_data
-        mov di,OFFSET read_icsp_data_name
+        mov esi,OFFSET read_icsp_data
+        mov edi,OFFSET read_icsp_data_name
         mov ax,read_icsp_data_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET read_serial_lines
-        mov di,OFFSET read_serial_lines_name
+        mov esi,OFFSET read_serial_lines
+        mov edi,OFFSET read_serial_lines_name
         mov ax,read_serial_lines_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET toggle_serial_line
-        mov di,OFFSET toggle_serial_line_name
+        mov esi,OFFSET toggle_serial_line
+        mov edi,OFFSET toggle_serial_line_name
         mov ax,toggle_serial_line_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET write_serial_val
-        mov di,OFFSET write_serial_val_name
+        mov esi,OFFSET write_serial_val
+        mov edi,OFFSET write_serial_val_name
         mov ax,write_serial_val_nr
         RegisterBimodalUserGate
 ;
-        mov si,OFFSET read_serial_val
-        mov di,OFFSET read_serial_val_name
+        mov esi,OFFSET read_serial_val
+        mov edi,OFFSET read_serial_val_name
         mov ax,read_serial_val_nr
         RegisterBimodalUserGate
 ;
