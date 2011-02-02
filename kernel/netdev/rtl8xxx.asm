@@ -554,7 +554,7 @@ preview_loop:
     mov ds:RxRingPtr,bx
     mov ax,bx
     sub ax,16
-    mov ds,ds:IoBase
+    mov dx,ds:IoBase
     add dx,RxBufPtr
     out dx,ax
     jmp preview_loop
