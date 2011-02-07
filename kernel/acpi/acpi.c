@@ -27,8 +27,20 @@
 
 #include "rdos.h"
 #include "rdosdev.h"
+#include "string.h"
+
+#pragma aux TestThread = \
+      parm [gs ebx];
+
+void TestThread(void *param)
+{
+    for (;;)
+        ;
+}
 
 int main()
 {
+    RdosCreateKernelThread(5, 0x1000, &TestThread, "Test Thread", 0); 
     return 0;
 }
+
