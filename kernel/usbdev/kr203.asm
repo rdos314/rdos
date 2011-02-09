@@ -897,14 +897,6 @@ OpenPipes   Proc near
     mov ds:kr_session_list,0
     mov ds:kr_session_count,0
 ;
-    mov bl,65
-    mov al,0
-    call SetByteParameter
-;
-    mov bl,66
-    mov al,0
-    call SetByteParameter
-;
     ret
 OpenPipes   Endp    
 
@@ -1682,6 +1674,49 @@ StatusTimeout  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           InitKrThread
+;
+;               DESCRIPTION:    Init KR203 printer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_thread_name  DB 'Init KR203', 0
+
+init_thread Proc far
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov ax,100
+    WaitMilliSec
+;    
+    mov bl,65
+    mov al,0
+    call SetByteParameter
+;
+    mov bl,66
+    mov al,0
+    call SetByteParameter
+;
+    mov bl,65
+    call GetByteParameter
+    jc init_thread    
+;
+    or al,al
+    jnz init_thread
+;
+    mov bl,66
+    call GetByteParameter
+    jc init_thread
+;
+    or al,al
+    jnz init_thread
+;
+    ret
+init_thread Endp                
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           Kr203Thread
 ;
 ;               DESCRIPTION:    Printer handler thread
@@ -1753,7 +1788,19 @@ kr203_thread:
 ;
     call OpenPipes
     call ClearReceiver
-
+;    
+    mov dx,cs
+    mov ds,dx
+    mov es,dx
+    mov di,OFFSET init_thread_name
+    mov si,OFFSET init_thread
+    mov ax,2
+    mov cx,100h
+    CreateThread
+;
+    mov ax,SEG data
+    mov ds,ax
+    
 krLoop:
     call DoSession
     call UpdateStatus
