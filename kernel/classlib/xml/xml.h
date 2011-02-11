@@ -55,24 +55,6 @@
 #include <ctype.h>
 #include <assert.h>
 
-#ifdef _WIN32
-#ifndef __SYMBIAN32__
-
-
-#include <windows.h>
-#include <wincrypt.h>
-#include <commctrl.h>
-#include <wininet.h>
-#include <tchar.h>
-
-#if WINVER >= 0x601
-#define CRYPT_OID_INFO_HAS_EXTRA_FIELDS
-#include <cryptxml.h>
-#endif
-
-#endif
-#endif
-
 #ifdef __SYMBIAN32__
 #define _USERENTRY
 #define strcmpi strcmp
@@ -233,25 +215,6 @@ typedef struct
 	} XML_VERSION_INFO;
 
 
-#ifdef _WIN32
-struct IMPORTDBTABLEDATA
-	{
-	char name[256];
-	char itemname[100];
-	int nVariables;
-	char** Variables;
-	char** ReplaceVariables;
-	};
-
-struct IMPORTDBPARAMS
-	{
-	char* dbname;
-	char* provstr;
-	int nTables;
-	IMPORTDBTABLEDATA* Tables;
-	};
-#endif
-
 struct XMLEXPORTFORMAT
 	{
 	bool UseSpace;
@@ -259,17 +222,6 @@ struct XMLEXPORTFORMAT
 	bool ElementsNoBreak;
 	bool ContentsNoBreak;
 	};
-
-#ifdef _WIN32
-struct IMPORTRKEYDATA
-	{
-	HKEY pK;
-	int StorageType; // 0 - Native
-	// 1 - Registry key from native XML
-	// 2 - Registry key from registry XML
-	};
-#endif
-
 
 
 // UNLOAD elements
@@ -446,17 +398,6 @@ class XMLElement
 		bool EncryptElement(unsigned int i,char* pwd);
 		bool DecryptElement(unsigned int i,char* pwd);
 
-#ifdef _WIN32
-#ifndef WINCE
-		bool SignElement(unsigned int i,PCCERT_CONTEXT pCert);
-		XMLVariable* GetSignature(unsigned int i);
-		bool RemoveSignature(unsigned int i);
-		bool VerifyDigitalSignature(unsigned int i,PCCERT_CONTEXT* ppCert);
-		XMLElement* EncryptElement(unsigned int i,PCCERT_CONTEXT* pCert,int nCert);
-		XMLElement* DecryptElement(unsigned int i,PCCERT_CONTEXT* ppCert);
-#endif
-#endif
-
 		int RemoveElement(XMLElement*);
 		int RemoveAllElements();
 		int RemoveTemporalElements(bool Deep = false);
@@ -492,7 +433,6 @@ class XMLElement
 		XMLElement* Duplicate(XMLElement* = 0);
 		XMLElement* Encrypt(const char* pwd);
 		XMLElement* Decrypt(const char* pwd);
-		void Copy();
 #ifdef XML_USE_STL
 		string GetString();
 #endif
@@ -977,7 +917,6 @@ class XML
 #endif
 
 		bool SOnClose;
-		// For Windows
 
 
 	};
@@ -987,10 +926,6 @@ class XML
 size_t XMLGetString(const char* section,const char* Tattr,const char* defv,char*out,const size_t maxlen,const char* xml,XML* af = 0);
 int     XMLGetInt(const char* item,const char* attr,const int defv,const char* xml,XML* af = 0);
 unsigned int XMLGetUInt(const char* item,const char* attr,const unsigned int defv,const char* xml,XML* af = 0);
-#ifdef _WIN32
-long long XMLGetInt64(const char* item,const char* attr,const long long defv,const char* xml,XML* af = 0);
-unsigned long long XMLGetUInt64(const char* item,const char* attr,const unsigned long long defv,const char* xml,XML* af = 0);
-#endif
 float   XMLGetFloat(const char* item,const char* attr,const float defv,const char* xml,XML* af = 0);
 size_t     XMLGetBinaryData(const char* item,const char* attr,const char* defv,char*out,const size_t maxlen,const char* xml,XML* af = 0);
 

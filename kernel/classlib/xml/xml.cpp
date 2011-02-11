@@ -35,10 +35,6 @@
 #endif
 
 
-#ifdef _WIN32
-#pragma comment(lib,"Crypt32.lib")
-#endif
-
 
 #ifdef XML_USE_STL
 #else
@@ -77,15 +73,6 @@
 #define NEGATE_CLASS
 #define OPTIMIZE_JUST_STAR
 #undef MATCH_TAR_PATTERN
-
-// OPTI
-
-/* Extra definitions
-
-XML_OPTIONAL_WIN32
-XML_OPTIONAL_IMPORTDB
-XML_OPTIONAL_IMPORTRKEY
-*/
 
 // MIME Code
 // Code from Yonat
@@ -1118,11 +1105,6 @@ size_t XML :: XMLDecode(const char* src,char* trg)
 
                         // Convert result to UTF-8
                         char d1[100] = {0};
-#ifdef _WIN32
-                        wchar_t d2[100] = {0};
-                        swprintf(d2,L"%c",(wchar_t)N);
-                        WideCharToMultiByte(CP_UTF8,0,d2,-1,d1,100,0,0);
-#endif
                         strcat(trg + x,d1);
                         x += strlen(d1);
                         i++;
@@ -1149,11 +1131,6 @@ size_t XML :: XMLDecode(const char* src,char* trg)
 
                         // Convert result to UTF-8
                         char d1[100] = {0};
-#ifdef _WIN32
-                        wchar_t d2[100] = {0};
-                        swprintf(d2,L"%c",(wchar_t)N);
-                        WideCharToMultiByte(CP_UTF8,0,d2,-1,d1,100,0,0);
-#endif
                         strcat(trg + x,d1);
                         x += strlen(d1);
                         i++;
@@ -2558,10 +2535,6 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
         if (TargetMode == 1)
                 sp += strlen(sp);
         unsigned int spi = 0;
-#ifdef _WIN32
-        HKEY pKey = (HKEY)fp;
-        HKEY pKey2 = 0;
-#endif
 
 
         /*
@@ -2569,8 +2542,6 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
 
         0       - Export to a FILE*
         1       - Export to memory
-        2  - Export to a registry key (Win32)
-        3  - Export to a FILE* , utf-16
 
         */
 
@@ -2602,25 +2573,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                 sp += spi;
                 }
         else
-                if (TargetMode == 2)
-                        {
-#ifdef _WIN32
-#ifndef WINCE
-                        XMLElement* par = root->GetParent();
-                        int bP = 0;
-                        if (par)
-                                {
-                                bP = par->FindElement(root);
-                                }
-                        sprintf(b,"E%u",bP);
-                        root->GetElementName(b.operator char *() + strlen(b),SaveMode);
-                        DWORD dw = 0;
-                        RegCreateKeyExA(pKey,b,0,0,REG_OPTION_NON_VOLATILE,KEY_ALL_ACCESS,0,&pKey2,&dw);
-#endif
-#endif
-                        }
-                else
-                        fprintf(fp,"%s",b.operator char*());
+                fprintf(fp,"%s",b.operator char*());
 
         int iY = root->GetVariableNum();
         int iC = root->GetChildrenNum();
@@ -2657,23 +2610,11 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                                  sp += spi;
                                  }
                          else
-                                 if (TargetMode == 2)
-                                         {
-#ifdef _WIN32
-#ifndef WINCE
-                                         // create a value
-                                         Z<char> VName(strlen(Name) + 10);
-                                         sprintf(VName,"V%s",Name.operator char*());
-                                         RegSetValueExA(pKey2,VName,0,REG_SZ,(const BYTE*)Value.operator char *(),(int)(strlen(Value) + 1));
-#endif
-#endif
-                                         }
-                                 else
-                                        // TM == 0
-                                         {
-                                         fprintf(fp," %s=",Name.operator char*());
-                                         fprintf(fp,"\"%s\"",Value.operator char*());
-                                         }
+                                 // TM == 0
+                                 {
+                                 fprintf(fp," %s=",Name.operator char*());
+                                 fprintf(fp,"\"%s\"",Value.operator char*());
+                                 }
                          }
                  }
                 }
@@ -2774,19 +2715,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                                          sp += spi;
                                          }
                                  else
-                                         if (TargetMode == 2)
-                                                 {
-#ifdef _WIN32
-#ifndef WINCE
-                                                 // Create a comment
-                                                 Z<char> VName(20);
-                                                 sprintf(VName,"C%u",NextComment);
-                                                 RegSetValueExA(pKey2,VName,0,REG_SZ,(const BYTE*)t,(int)(strlen(t) + 1));
-#endif
-#endif
-                                                 }
-                                         else
-                                                 fprintf(fp,"%s",b.operator char*());
+                                         fprintf(fp,"%s",b.operator char*());
 
                                  NextComment++;
                                  }
@@ -2830,24 +2759,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                                          sp += spi;
                                          }
                                  else
-                                 if (TargetMode == 2)
-                                         {
-#ifdef _WIN32
-#ifndef WINCE
-                                                 // Create a content
-                                                 Z<char> VName(20);
-                                                 sprintf(VName,"D%u",NextContent);
-#ifdef XML_USE_STL
-                                                 root->GetContents()[NextContent].GetValue(b,SaveMode);
-#else
-                                                 root->GetContents()[NextContent]->GetValue(b,SaveMode);
-#endif
-                                                 RegSetValueExA(pKey2,VName,0,REG_SZ,(const BYTE*)b.operator char *(),(int)(strlen(b) + 1));
-#endif
-#endif
-                                                 }
-                                         else
-                                                 fprintf(fp,"%s",b.operator char*());
+                                         fprintf(fp,"%s",b.operator char*());
 
                                  NextContent++;
                                  }
@@ -2879,19 +2791,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                                                  sp += spi;
                                                  }
                                          else
-                                                 if (TargetMode == 2)
-                                                         {
-#ifdef _WIN32
-#ifndef WINCE
-                                                         // Create a cdata
-                                                         Z<char> VName(20);
-                                                         sprintf(VName,"D%u",NextCData);
-                                                         RegSetValueExA(pKey2,VName,0,REG_SZ,(const BYTE*)t,(int)(strlen(t) + 1));
-#endif
-#endif
-                                                         }
-                                                 else
-                                                         fprintf(fp,"%s",b.operator char*());
+                                                 fprintf(fp,"%s",b.operator char*());
 
                                          NextCData++;
                                          }
@@ -2899,16 +2799,6 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                          }
 
 
-#ifdef _WIN32
-                 if (TargetMode == 2)
-#ifdef XML_USE_STL
-                         printc((FILE*)pKey2,&root->GetChildren()[i],deep + 1,ShowAll,SaveMode,TargetMode);
-#else
-                         printc((FILE*)pKey2,root->GetChildren()[i],deep + 1,ShowAll,SaveMode,TargetMode);
-#endif
-                 else
-#endif                  
-                         {
 #ifdef XML_USE_STL
                          printc(fp,&root->GetChildren()[i],deep + 1,ShowAll,SaveMode,TargetMode);
 #else
@@ -2916,7 +2806,6 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
 #endif
                          if (TargetMode == 1)
                                  sp = (char*)fp + strlen((char*)fp);
-                         }
                  }
                 }
 
@@ -2945,19 +2834,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                          sp += spi;
                          }
                  else
-                         if (TargetMode == 2)
-                                 {
-#ifdef _WIN32
-#ifndef WINCE
-                                 // Create a comment
-                                 Z<char> VName(20);
-                                 sprintf(VName,"C%u",NextComment);
-                                 RegSetValueExA(pKey2,VName,0,REG_SZ,(const BYTE*)t,(int)(strlen(t) + 1));
-#endif
-#endif
-                                 }
-                         else
-                                 fprintf(fp,"%s",b.operator char*());
+                         fprintf(fp,"%s",b.operator char*());
 
                  NextComment++;
                  }
@@ -2989,19 +2866,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                          sp += spi;
                          }
                  else
-                         if (TargetMode == 2)
-                                 {
-#ifdef _WIN32
-#ifndef WINCE
-                                 // Create a cdata
-                                 Z<char> VName(20);
-                                 sprintf(VName,"D%u",NextCData);
-                                 RegSetValueExA(pKey2,VName,0,REG_SZ,(const BYTE*)t,(int)(strlen(t) + 1));
-#endif
-#endif
-                                 }
-                         else
-                                 fprintf(fp,"%s",b.operator char*());
+                         fprintf(fp,"%s",b.operator char*());
 
                  NextCData++;
                  }
@@ -3043,24 +2908,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                          sp += spi;
                          }
                  else
-                         if (TargetMode == 2)
-                                 {
-#ifdef _WIN32
-#ifndef WINCE
-                                 // Create a content
-                                 Z<char> VName(20);
-                                 sprintf(VName,"D%u",NextContent);
-#ifdef XML_USE_STL
-                                 root->GetContents()[NextContent].GetValue(b,SaveMode);
-#else
-                                 root->GetContents()[NextContent]->GetValue(b,SaveMode);
-#endif
-                                 RegSetValueExA(pKey2,VName,0,REG_SZ,(const BYTE*)b.operator char *(),(int)(strlen(b) + 1));
-#endif
-#endif
-                                 }
-                         else
-                                 fprintf(fp,"%s",b.operator char*());
+                         fprintf(fp,"%s",b.operator char*());
 
                  NextContent++;
                  }
@@ -3084,15 +2932,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                 sp += spi;
                 }
         else
-                if (TargetMode == 2)
-                        {
-                        // Nothing
-#ifdef _WIN32
-                        RegCloseKey(pKey2);
-#endif
-                        }
-                else
-                        fprintf(fp,"%s",b.operator char*());
+                fprintf(fp,"%s",b.operator char*());
         }
 
 void XMLElement :: SetExportFormatting(XMLEXPORTFORMAT* xf)
@@ -3379,26 +3219,10 @@ bool XMLHeader :: IntegrityTest()
 #else
         if (!hdr)
                 return false;
-#ifdef _WIN32
-#ifndef WINCE
-        if (IsBadStringPtrA(hdr,-1))
-                return false;
-
-        // Comments pointer
-        if (IsBadReadPtr(comments,sizeof(XMLComment*)*commentsnum))
-                return false;
-#endif
-#endif
 
         // Check comment
         for(unsigned int i = 0 ; i < commentsnum ; i++)
                 {
-#ifdef _WIN32
-#ifndef WINCE
-                if (IsBadReadPtr(GetComments()[i],sizeof(XMLComment*)))
-                        return false;
-#endif
-#endif
                 if (!GetComments()[i]->IntegrityTest())
                         return false;
                 }
@@ -3487,23 +3311,6 @@ bool XMLComment :: IntegrityTest()
 
         if (!c)
                 return false;
-#ifdef _WIN32
-#ifndef WINCE
-        if (IsBadStringPtrA(c,-1))
-                return false;
-#endif
-#endif
-
-        if (parent)
-                {
-                // Check pointer
-#ifdef _WIN32
-#ifndef WINCE
-                if (IsBadReadPtr(parent,sizeof(XMLElement*)))
-                        return false;
-#endif
-#endif
-                }
 
         return true;
 #endif
@@ -3583,27 +3390,11 @@ bool XMLContent :: IntegrityTest()
 #else
         // check parent,c
 
-if (BinaryMode == false)
+        if (BinaryMode == false)
         {
         if (!c)
                 return false;
-#ifdef _WIN32
-#ifndef WINCE
-        if (IsBadStringPtrA(c,-1))
-                return false;
-#endif
-#endif
         }
-
-        if (parent)
-                {
-#ifdef _WIN32
-#ifndef WINCE
-                if (IsBadReadPtr(parent,sizeof(XMLElement*)))
-                        return false;
-#endif
-#endif
-                }
 
         return true;
 #endif
@@ -3687,23 +3478,6 @@ bool XMLCData :: IntegrityTest()
 
         if (!c)
                 return false;
-#ifdef _WIN32
-#ifndef WINCE
-        if (IsBadStringPtrA(c,-1))
-                return false;
-#endif
-#endif
-
-        if (parent)
-                {
-                // Check pointer
-#ifdef _WIN32
-#ifndef WINCE
-                if (IsBadReadPtr(parent,sizeof(XMLElement*)))
-                        return false;
-#endif
-#endif
-                }
 
         return true;
 #endif
@@ -3767,23 +3541,7 @@ bool XMLVariable :: IntegrityTest()
         // check vv,vn,owner
         if (!vn || !vv)
                 return false;
-#ifdef _WIN32
-#ifndef WINCE
-        if (IsBadStringPtrA(vn,-1))
-                return false;
-        if (IsBadStringPtrA(vv,-1))
-                return false;
-#endif
-#endif
-        if (owner)
-                {
-#ifdef _WIN32
-#ifndef WINCE
-                if (IsBadReadPtr(owner,sizeof(XMLElement*)))
-                        return false;
-#endif
-#endif
-                }
+
         return true;
 #endif
         }
@@ -4016,98 +3774,32 @@ bool XMLElement :: IntegrityTest()
 
         */
 
-#ifdef _WIN32
-#ifndef WINCE
-        // parent pointer
-        if (parent && IsBadReadPtr(parent,sizeof(XMLElement*)))
-                return false;
-        if (IsBadStringPtrA(el,-1))
-                return false;
-#endif
-#endif
-
-
-#ifdef _WIN32
-#ifndef WINCE
-        // Comments pointer
-        if (IsBadReadPtr(comments,sizeof(XMLComment*)*commentsnum))
-                return false;
-#endif
-#endif
 
         // Check comment
         for(unsigned int i = 0 ; i < commentsnum ; i++)
                 {
-#ifdef _WIN32
-#ifndef WINCE
-                if (IsBadReadPtr(GetComments()[i],sizeof(XMLComment*)))
-                        return false;
-#endif
-#endif
                 if (!GetComments()[i]->IntegrityTest())
                         return false;
                 }
 
-#ifdef _WIN32
-#ifndef WINCE
-        // Contents pointer
-        if (IsBadReadPtr(contents,sizeof(XMLContent*)*contentsnum))
-                return false;
-#endif
-#endif
-
         // Check content
         for(unsigned int i = 0 ; i < contentsnum ; i++)
                 {
-#ifdef _WIN32
-#ifndef WINCE
-                if (IsBadReadPtr(GetContents()[i],sizeof(XMLContent*)))
-                        return false;
-#endif
-#endif
                 if (!GetContents()[i]->IntegrityTest())
                         return false;
                 }
 
 
-#ifdef _WIN32
-#ifndef WINCE
-        // Variables pointer
-        if (IsBadReadPtr(variables,sizeof(XMLVariable*)*variablesnum))
-                return false;
-#endif
-#endif
-
         // Check comment
         for(unsigned int i = 0 ; i < variablesnum ; i++)
                 {
-#ifdef _WIN32
-#ifndef WINCE
-                if (IsBadReadPtr(GetVariables()[i],sizeof(XMLVariable*)))
-                        return false;
-#endif
-#endif
                 if (!GetVariables()[i]->IntegrityTest())
                         return false;
                 }
 
-#ifdef _WIN32
-#ifndef WINCE
-        // Children pointer
-        if (IsBadReadPtr(children,sizeof(XMLElement*)*childrennum))
-                return false;
-#endif
-#endif
-
         // Check children
         for(unsigned int i = 0 ; i < childrennum ; i++)
                 {
-#ifdef _WIN32
-#ifndef WINCE
-                if (IsBadReadPtr(GetChildren()[i],sizeof(XMLElement*)))
-                        return false;
-#endif
-#endif
                 if (!GetChildren()[i]->IntegrityTest())
                         return false;
                 }
@@ -4310,28 +4002,6 @@ string XMLElement :: GetString()
         }
 #endif
 
-void XMLElement :: Copy()
-        {
-        // Copies this element to clipboard as a text
-#ifdef _WIN32
-        size_t M = MemoryUsage();
-        Z<char> d(M);
-        Export((FILE*)d.operator char *(),1,XML_SAVE_MODE_DEFAULT,XML_TARGET_MODE_MEMORY);
-        size_t S = strlen(d);
-
-        OpenClipboard(0);
-        EmptyClipboard();
-
-        HGLOBAL hG =
-                GlobalAlloc(GMEM_MOVEABLE, S + 10);
-        void *pp = GlobalLock(hG);
-        //lstrcpyA((char *)pp, d.operator char *());
-        strcpy((char*)pp,d.operator char *());
-        GlobalUnlock(hG);
-        SetClipboardData(CF_TEXT, hG);
-        CloseClipboard();
-#endif
-        }
 
 XMLElement* XML :: Paste(char* txt)
         {
@@ -4361,45 +4031,7 @@ XMLElement* XML :: Paste(char* txt)
                 return r;
                 }
 
-#ifdef _WIN32
-        OpenClipboard(0);
-
-        HGLOBAL hG =
-                GetClipboardData(CF_TEXT);
-        if (!hG)
-                {
-                CloseClipboard();
-                return 0;
-                }
-
-
-        void *pp = GlobalLock(hG);
-        size_t S = strlen((char*)pp);
-        Z<char> d(S + 100);
-        strcpy(d,(char*)pp);
-
-        GlobalUnlock(hG);
-        CloseClipboard();
-
-        // d has the data, size S
-        XML* xm = new XML();
-        xm->Load(d,XML_LOAD_MODE_MEMORY_BUFFER,0,0);
-        int K = xm->ParseStatus();
-        if (K == 2) // Fatal error
-                {
-                delete xm;
-                return 0;
-                }
-#ifdef XML_USE_STL
-        XMLElement* r = xm->GetRootElement().Duplicate(0);
-#else
-        XMLElement* r = xm->GetRootElement()->Duplicate(0);
-#endif
-        delete xm;
-        return r;
-#else
         return 0;
-#endif
         }
 
 XMLElement* XMLElement :: Duplicate(XMLElement* par)
@@ -5053,81 +4685,6 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
 #ifdef XML_USE_STL
 #else
                                         f = 0;
-#endif
-#ifdef _WIN32
-#ifndef __SYMBIAN32__
-#ifdef XML_OPTIONAL_WIN32
-                                        HINTERNET hI = 0,hRead = 0;
-                                        hI = InternetOpen(_T("XML Library"),INTERNET_OPEN_TYPE_PRECONFIG,0,0,0);
-                                        Z<char> fx(1000);
-                                        GetTempFileNameA(".","xml",0,fx);
-                                        if (hI)
-                                                {
-                                                hRead = InternetOpenUrlA(hI,file,0,0,0,0);
-                                                if (hRead)
-                                                        {
-                                                        // Get this file
-                                                        Z<char> Buff(1010);
-
-                                                        int err = 0;
-                                                        unsigned int TotalTransferred = 0;
-
-                                                        for(;;)
-                                                                {
-                                                                DWORD n;
-
-                                                                BOOL F = InternetReadFile(hRead,Buff,1000,&n);
-                                                                if (F == false)
-                                                                        {
-                                                                        err = 2;
-                                                                        break;
-                                                                        }
-                                                                if (n == 0)
-                                                                        {
-                                                                        // End of file !
-                                                                        err = 0;
-                                                                        break;
-                                                                        }
-                                                                TotalTransferred += n;
-
-                                                                HANDLE hF = CreateFileA(fx,GENERIC_WRITE,0,0,OPEN_ALWAYS,0,0);
-                                                                SetFilePointer(hF,0,0,FILE_END);
-                                                                DWORD Actual = 0;
-                                                                WriteFile(hF,Buff,n,&Actual,0);
-                                                                FlushFileBuffers(hF);
-                                                                CloseHandle(hF);
-                                                                }
-                                                        if (err == 0)
-                                                                {
-                                                                // read that file now
-#ifdef XML_USE_STL
-                                                                f = fx;
-#else
-                                                                f = new char[strlen(fx) + 1];
-                                                                strcpy(f,fx);
-#endif
-                                                                // parse this file
-                                                                y = ReadToZ(fx,eclass,edata);
-                                                                }
-                                                        InternetCloseHandle(hRead);
-                                                        }
-                                                InternetCloseHandle(hI);
-                                                remove(fx);
-                                                if (!y)
-                                                        {
-                                                        //It is an empty XML file.
-                                                        // Create the initial data/header
-#ifdef XML_USE_STL
-                                                        hdr.GetHeader() = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>";
-#else
-                                                        hdr = new XMLHeader("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>");
-                                                        root = new XMLElement(0,"root",0);
-#endif
-                                                        return 1;
-                                                        }
-                                                }
-#endif
-#endif
 #endif
                                         }
 
@@ -7207,105 +6764,6 @@ size_t XMLVariable :: GetBinaryValue(char* data)
 
 #endif
 
-#ifdef _WIN32
-#include <wincrypt.h>
-bool XMLEncryptDecryptData(bool Decrypt,const char*pwd,int pwdlen,const char* d,int sz,char** oo,int* oolen)
-        {
-        // AES-based encryption
-        if (!d || !sz || !oo || !oolen)
-                return 0;
-
-        // Acquire context
-        HCRYPTPROV hCryptProv = 0;
-//  New Key Set 
-//      if(!CryptAcquireContext(&hCryptProv,NULL,MS_ENH_RSA_AES_PROV,PROV_RSA_AES,CRYPT_NEWKEYSET))
-//              return 0;
-        if(!CryptAcquireContext(&hCryptProv,NULL,MS_ENH_RSA_AES_PROV,PROV_RSA_AES,0))
-                return 0;
-
-        // Generate hash
-        HCRYPTHASH hCryptHash = 0;
-        if (!CryptCreateHash(hCryptProv,CALG_SHA1,0,0,&hCryptHash))
-                {
-                CryptReleaseContext(hCryptProv,0);
-                return 0;
-                }
-
-        // Add the key
-        if (!CryptHashData(hCryptHash,(const BYTE*)pwd,pwdlen,0))
-                {
-                CryptDestroyHash(hCryptHash);
-                CryptReleaseContext(hCryptProv,0);
-                return 0;
-                }
-
-        // Generate the key
-        HCRYPTKEY hCryptKey = 0;
-        if (!CryptDeriveKey(hCryptProv,CALG_AES_256,hCryptHash,0,&hCryptKey))
-                {
-                CryptDestroyHash(hCryptHash);
-                CryptReleaseContext(hCryptProv,0);
-                return 0;
-                }
-
-        // Calculate needed data
-        if (Decrypt)
-                {
-                DWORD dl = sz;
-                char* out = new char[dl];
-                memcpy(out,d,sz);
-                if (!CryptDecrypt(hCryptKey,0,TRUE,0,(BYTE*)out,&dl))
-                        {
-                        delete[] out;
-                        CryptDestroyKey(hCryptKey);
-                        CryptDestroyHash(hCryptHash);
-                        CryptReleaseContext(hCryptProv,0);
-                        return 0;
-                        }
-
-                CryptDestroyKey(hCryptKey);
-                CryptDestroyHash(hCryptHash);
-                CryptReleaseContext(hCryptProv,0);
-                out[dl] = 0;
-                *oo = out;
-                *oolen = dl;
-                return 1;
-                }
-        else
-                {
-                DWORD dl = sz;
-                CryptEncrypt(hCryptKey,0,TRUE,0,0,&dl,sz);
-        
-                // dl must have now the buffer
-                if (!dl)
-                        {
-                        CryptDestroyKey(hCryptKey);
-                        CryptDestroyHash(hCryptHash);
-                        CryptReleaseContext(hCryptProv,0);
-                        return 0;
-                        }
-                char* out = new char[dl + 1];
-                memcpy(out,d,sz);
-                DWORD dl2 = sz;
-                if (!CryptEncrypt(hCryptKey,0,TRUE,0,(BYTE*)out,&dl2,dl))
-                        {
-                        delete[] out;
-                        CryptDestroyKey(hCryptKey);
-                        CryptDestroyHash(hCryptHash);
-                        CryptReleaseContext(hCryptProv,0);
-                        return 0;
-                        }
-
-                CryptDestroyKey(hCryptKey);
-                CryptDestroyHash(hCryptHash);
-                CryptReleaseContext(hCryptProv,0);
-                *oo = out;
-                *oolen = dl;
-                return 1;
-                }
-        }
-#endif
-
 
 bool XMLElement :: EncryptElement(unsigned int i,char* pwd)
         {
@@ -7354,69 +6812,11 @@ bool XMLElement :: DecryptElement(unsigned int i,char* pwd)
 
 XMLElement* XMLElement :: Encrypt(const char* pwd)
         {
-#ifndef _WIN32
         return false;
-#else
-
-        // Get this element as item
-        // Encrypt into new element and return
-        size_t M = MemoryUsage();
-        Z<char> d(M);
-        Export((FILE*)d.operator char *(),1,XML_SAVE_MODE_DEFAULT,XML_TARGET_MODE_MEMORY);
-        size_t S = strlen(d);
-
-        char* encrdata = 0;
-        int encrln = 0;
-        XMLEncryptDecryptData(0,pwd,(int)strlen(pwd),d.operator char*(),(int)S,&encrdata,&encrln);
-        if (!encrdata)
-                return 0;
-
-        XMLElement* ne = new XMLElement(0,"<el />",0,0);
-#ifdef XML_USE_STL
-        ne->SetElementName(el.c_str());
-#else
-        ne->SetElementName(el);
-#endif
-
-        ne->AddContent(encrdata,0,encrln);
-        delete[] encrdata;
-        return ne;
-#endif
         }
 XMLElement* XMLElement :: Decrypt(const char* pwd)
         {
-#ifndef _WIN32
         return false;
-#else
-        // Get this element's binary data
-        char* bd = 0;
-        unsigned int bdl = 0;
-        if (GetContentsNum() != 1)
-                return 0; // duh
-
-#ifdef XML_USE_STL
-        XMLContent& ch = GetContents()[0];
-        XMLContent* c = &ch;
-#else
-        XMLContent* c = GetContents()[0];
-#endif
-        c->GetBinaryValue(&bd,&bdl);
-        if (!bd)
-                return 0;
-
-        char* decrdata = 0;
-        int decrln = 0;
-        XMLEncryptDecryptData(1,pwd,(int)strlen(pwd),bd,bdl,&decrdata,&decrln);
-        if (!decrdata)
-                {
-                delete[] bd;
-                return 0;
-                }
-
-        XMLElement* ne = XML::Paste(decrdata);
-        delete[] decrdata;
-        return ne;
-#endif
         }
 
 
@@ -7671,22 +7071,6 @@ Z<char>* XML :: ReadToZ(const char* file,XMLTransform* eclass,class XMLTransform
                 eclass->Decrypt(yy.operator char *(),S,0,(*y).operator char *(),S,0);
                 }
 
-        // Check if this XML we loaded is a unicode XML
-        // In such case, we must convert to UTF-8
-#ifdef _WIN32
-        unsigned char* yy = (unsigned char*)(*y).operator char *();
-        if (yy[0] == 0xFF && yy[1] == 0xFE)
-                {
-                // Whops, unicode XML file loaded
-                wchar_t* wd = (wchar_t*)(*y).operator char *();
-
-
-                Z<char>* nyy = new Z<char>(S*4 + 32);
-                WideCharToMultiByte(CP_UTF8,0,wd,-1,(*nyy),S*4 + 32,0,0);
-                delete y;
-                y = nyy;
-                }
-#endif
 
         return y;
         }
@@ -8785,26 +8169,6 @@ int XMLGetInt(const char* item,const char* attr,const int defv,const char* xml,X
         return atoi(i);
         }
 
-#ifdef _WIN32
-long long  XMLGetInt64(const char* item,const char* attr,const long long defv,const char* xml,XML* af)
-        {
-        Z<char> i(100);
-        Z<char> id(100);
-        sprintf(id,"%I64i",defv);
-        XMLGetString(item,attr,id,i,100,xml,af);
-        return _atoi64(i);
-        }
-unsigned long long  XMLGetUInt64(const char* item,const char* attr,const unsigned long long defv,const char* xml,XML* af)
-        {
-        Z<char> i(100);
-        Z<char> id(100);
-        sprintf(id,"%I64u",defv);
-        XMLGetString(item,attr,id,i,100,xml,af);
-        unsigned long long x = 0;
-        sscanf(i,"%I64u",&x);
-        return x;
-        }
-#endif
 
 float XMLGetFloat(const char* item,const char* attr,const float defv,const char* xml,XML* af)
         {
@@ -8874,20 +8238,6 @@ int XMLSetInt(const char* section,const char* attr,int v,const char* xml,XML* af
         return XMLSetString(section,attr,a,xml,af);
         }
 
-#ifdef _WIN32
-int    XMLSetUInt64(const char* section,const char* attr,unsigned long long v,const char* xml,XML* af)
-        {
-        char a[40] = {0};
-        sprintf(a,"%I64u",v);
-        return XMLSetString(section,attr,a,xml,af);
-        }
-int    XMLSetInt64(const char* section,const char* attr,long long v,const char* xml,XML* af)
-        {
-        char a[40] = {0};
-        sprintf(a,"%I64i",v);
-        return XMLSetString(section,attr,a,xml,af);
-        }
-#endif
 
 int    XMLSetFloat(const char* section,const char* attr,float v,const char* xml,XML* af)
         {
@@ -9065,324 +8415,6 @@ int XMLGetAllItems(const char* section,char** vnames,const char*xml)
 #endif
 #endif
 
-
-#ifndef WINCE
-#ifdef _WIN32
-// Signature Functions
-#ifdef XML_USE_STL
-#else
-XMLVariable* XMLElement :: GetSignature(unsigned int i)
-        {
-        if (i == (unsigned int)-1)
-                {
-                // Self
-                return FindVariableZ("__signature__");
-                }
-
-        if (GetChildrenNum() <= i)
-                return 0;
-        XMLElement* e = GetChildren()[i];
-        XMLVariable* s = e->FindVariableZ("__signature__");
-        return s;
-        }
-
-bool XMLElement :: RemoveSignature(unsigned int i)
-        {
-        if (i == (unsigned int)-1)
-                {
-                for(;;)
-                        {
-                        XMLVariable* s = FindVariableZ("__signature__");
-                        if (!s)
-                                break;
-                        RemoveVariable(s);
-                        }
-                return true;
-                }
-        if (GetChildrenNum() <= i)
-                return false;
-        XMLElement* e = GetChildren()[i];
-        for(;;)
-                {
-                XMLVariable* s = e->FindVariableZ("__signature__");
-                if (!s)
-                        break;
-                e->RemoveVariable(s);
-                }
-        return true;
-        }
-
-bool XMLElement :: SignElement(unsigned int ij,PCCERT_CONTEXT pCert)
-        {
-        XMLElement* e = 0;
-
-        if (ij == (unsigned int)-1)
-                e = this;
-        else
-                {
-                if (GetChildrenNum() <= ij)
-                        return false;
-                e = GetChildren()[ij];
-                }
-
-        HRESULT hr = 0;
-        bool Status = false;
-        if (!pCert)
-                return Status;
-
-        // Check if this element already has an __signature__ variable
-        // If yes, fail
-        if (e->FindVariableZ("__signature__"))
-                return Status;
-
-        // Take element text 
-        size_t mu = e->MemoryUsage();
-        Z<char> mut(mu*2 + 1000);
-        const BYTE* pbContent = (const BYTE*)mut.operator char*();
-        e->Export((FILE*)pbContent,1,XML_SAVE_MODE_DEFAULT,XML_TARGET_MODE_MEMORY);
-        CRYPT_DATA_BLOB blob = {(DWORD)strlen(mut),(BYTE*)pbContent};
-
-        // Parameters
-        #define MY_ENCODING_TYPE  (PKCS_7_ASN_ENCODING | X509_ASN_ENCODING)
-        CRYPT_SIGN_MESSAGE_PARA SignMessagePara = {0};
-        SignMessagePara.cbSize = sizeof(CRYPT_SIGN_MESSAGE_PARA);
-        SignMessagePara.HashAlgorithm.pszObjId = szOID_RSA_SHA1RSA;
-        SignMessagePara.pSigningCert = pCert;
-        SignMessagePara.dwMsgEncodingType = MY_ENCODING_TYPE;
-        SignMessagePara.cMsgCert = 1;
-        SignMessagePara.rgpMsgCert = &pCert;
-
-        const BYTE *rgpbToBeSigned[1];
-    DWORD rgcbToBeSigned[1];
-    rgpbToBeSigned[0] = pbContent;
-    rgcbToBeSigned[0] = (DWORD)strlen(mut);
-
-
-        // Get bytes
-        if(CryptSignMessage(
-                &SignMessagePara,
-                TRUE,
-                1,
-                rgpbToBeSigned,
-                rgcbToBeSigned,
-                NULL,
-                &blob.cbData))
-                {
-                Z<char> enc(blob.cbData + 100);
-
-                if( CryptSignMessage(
-                        &SignMessagePara,
-                        TRUE,
-                        1,
-                        rgpbToBeSigned,
-                        rgcbToBeSigned,
-                        (BYTE*)enc.operator char*(),
-                        &blob.cbData))
-                        {
-                        // Signing done, save
-                        e->AddBinaryVariable("__signature__",enc.operator char*(),blob.cbData);
-                        Status = true;
-                        }
-                }
-        return Status;
-        }
-
-
-bool XMLElement :: VerifyDigitalSignature(unsigned int ij,PCCERT_CONTEXT* ppCert)
-        {
-        XMLElement* e = 0;
-        if (ij == (unsigned int)-1)
-                e = this;
-        else
-                {
-                if (GetChildrenNum() <= ij)
-                        return false;
-                e = GetChildren()[ij];
-                }
-
-        HRESULT hr = 0;
-        bool Status = false;
-
-        XMLVariable* s = e->FindVariableZ("__signature__");
-        if (!s)
-                return Status;
-
-
-        size_t SignatureSize = s->GetBinaryValue(0);
-        Z<char> Signature(SignatureSize + 100);
-        s->GetBinaryValue(Signature);
-
-        // Remove Signature
-        XMLVariable* ds = s->Duplicate();
-        e->RemoveVariable(s);
-        
-
-        // Take element text 
-        size_t mu = e->MemoryUsage();
-        Z<char> mut(mu*2 + 1000);
-        BYTE* pbContent = (BYTE*)mut.operator char*();
-        e->Export((FILE*)pbContent,1,XML_SAVE_MODE_DEFAULT,XML_TARGET_MODE_MEMORY);
-        DWORD cbContent = (DWORD)strlen((char*)pbContent);
-
-        CRYPT_DATA_BLOB blob = {cbContent,pbContent};
-
-        // Readd signature
-        e->AddVariable(ds);
-        s = e->FindVariableZ("__signature__");
-        if (!s)
-                return Status;
-
-
-        // Try it
-        CRYPT_VERIFY_MESSAGE_PARA VerifyParams = {0};
-    VerifyParams.cbSize = sizeof(CRYPT_VERIFY_MESSAGE_PARA);
-    VerifyParams.dwMsgAndCertEncodingType = MY_ENCODING_TYPE;
-    VerifyParams.hCryptProv = 0;
-    VerifyParams.pfnGetSignerCertificate = NULL;
-    VerifyParams.pvGetArg = NULL;
-        const BYTE* bu[1];
-        bu[0] = pbContent;
-
-/*
-        DWORD pbbc = 0;
-        if (CryptVerifyMessageSignature(&VerifyParams,0,(BYTE*)Signature.operator char*(),SignatureSize,0,&pbbc,0))
-                {
-                
-                Status = true;
-                }
-        else
-                {
-                DWORD err = GetLastError();
-                Status = false;
-                }
-*/
-        if (CryptVerifyDetachedMessageSignature(&VerifyParams,0,(BYTE*)Signature.operator char*(),(DWORD)SignatureSize,1,bu,&cbContent,ppCert))
-                {
-                Status = true;
-                }
-        else
-                {
-                int err = GetLastError();
-                Status = false;
-                }
-        return Status;
-        }
-
-
-XMLElement* XMLElement :: EncryptElement(unsigned int ij,PCCERT_CONTEXT* pCert,int nCert)
-        {
-        XMLElement* e = 0;
-        if (ij == (unsigned int)-1)
-                e = this;
-        else
-                {
-                if (GetChildrenNum() <= ij)
-                        return 0;
-                e = GetChildren()[ij];
-                }
-
-        HRESULT hr = 0;
-        if (!pCert || nCert <= 0)
-                return 0;
-
-        // Take element text 
-        size_t mu = e->MemoryUsage();
-        Z<char> mut(mu*2 + 1000);
-        BYTE* pbContent = (BYTE*)mut.operator char*();
-        e->Export((FILE*)pbContent,1,XML_SAVE_MODE_DEFAULT,XML_TARGET_MODE_MEMORY);
-        DWORD cbContent = (DWORD)strlen((char*)pbContent);
-
-
-        CRYPT_ENCRYPT_MESSAGE_PARA cp = {0};
-        cp.cbSize = sizeof(cp);
-        cp.dwMsgEncodingType = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
-        cp.ContentEncryptionAlgorithm.pszObjId = szOID_RSA_RC4;
-
-        DWORD rs = 0;
-        if (CryptEncryptMessage(&cp,nCert,pCert,pbContent,cbContent,0,&rs))
-                {
-                Z<char> enc(rs + 100);
-                rs += 100;
-                if (CryptEncryptMessage(&cp,nCert,pCert,pbContent,cbContent,(BYTE*)enc.operator char*(),&rs))
-                        {
-                        Z<char> fn(10000);
-                        e->GetElementName(fn);
-                        XMLElement* x = new XMLElement(0,"<e />");
-                        x->SetElementName(fn);
-                        x->AddBinaryVariable("v",enc.operator char*(),rs);
-                        return x;
-                        }
-                }
-        return 0; // Fail
-        }
-
-
-XMLElement* XMLElement :: DecryptElement(unsigned int ij,PCCERT_CONTEXT* ppCert)
-        {
-        XMLElement* e = 0;
-        if (ij == (unsigned int)-1)
-                e = this;
-        else
-                {
-                if (GetChildrenNum() <= ij)
-                        return 0;
-                e = GetChildren()[ij];
-                }
-
-        HRESULT hr = 0;
-
-        // Take encrypted message
-        if (!e->FindVariableZ("v"))
-                return 0;
-        size_t cbContent = e->FindVariableZ("v")->GetBinaryValue(0);
-        Z<char> mut(cbContent*2 + 1000);
-        e->FindVariableZ("v")->GetBinaryValue(mut);
-        BYTE* pbContent = (BYTE*)mut.operator char*();
-
-        CRYPT_DECRYPT_MESSAGE_PARA cp = {0};
-        cp.cbSize = sizeof(cp);
-        cp.dwMsgAndCertEncodingType = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
-        HCERTSTORE hStore = CertOpenStore(
-                CERT_STORE_PROV_SYSTEM_W,
-                X509_ASN_ENCODING,
-                NULL,
-                CERT_SYSTEM_STORE_CURRENT_USER | CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG,
-                L"MY"
-                );
-        cp.cCertStore = 1;
-        cp.rghCertStore = &hStore;
-
-        DWORD rs = 0;
-        if (CryptDecryptMessage(&cp,pbContent,(DWORD)cbContent,0,&rs,0))
-                {
-                Z<char> dec(rs + 100);
-                rs += 100;
-                if (CryptDecryptMessage(&cp,pbContent,(DWORD)cbContent,(BYTE*)dec.operator char*(),&rs,ppCert))
-                        {
-                        if (hStore)
-                                CertCloseStore(hStore,0);
-                        hStore = 0;
-                        XMLElement* x = XML::Paste(dec);
-                        return x;
-                        }
-                else
-                        {
-                        if (hStore)
-                                CertCloseStore(hStore,0);
-                        hStore = 0;
-                        int Le = GetLastError();
-                        return 0;
-                        }
-                }
-        if (hStore)
-                CertCloseStore(hStore,0);
-        hStore = 0;
-        return 0;
-        }
-
-#endif // Non STL
-#endif // WIN323
-#endif // WINCE
 
 
 #ifdef XML_USE_NAMESPACE
