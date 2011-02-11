@@ -781,23 +781,9 @@ XML :: XML(const char* file,XML_LOAD_MODE LoadMode,class XMLTransform* eclass,cl
         Load(file,LoadMode,eclass,edata);
         }
 
-#ifndef LINUX
-XML :: XML(const wchar_t* file,XML_LOAD_MODE,class XMLTransform* eclass,class XMLTransformData* edata)
-        {
-        Init();
-        Load((char*)file,XML_LOAD_MODE_LOCAL_FILE_U,eclass,edata);
-        }
-#endif
-
-
 size_t XML :: LoadText(const char* txt)
         {
         return Load(txt,XML_LOAD_MODE_MEMORY_BUFFER,0,0);
-        }
-
-size_t XML :: LoadText(const wchar_t* txt)
-        {
-        return 0;
         }
 
 void XML :: Init()
@@ -5441,7 +5427,7 @@ XMLElement :: XMLElement(const XMLElement* e)
         }
 #endif
 
-XMLElement :: XMLElement(XMLElement* par,const char* elm,int Type,bool Temp,const wchar_t* welm)
+XMLElement :: XMLElement(XMLElement* par,const char* elm,int Type,bool Temp)
         {
 
         // parent
@@ -5744,9 +5730,9 @@ XMLElement& XMLElement :: AddElement(const XMLElement& child,int p)
         children.insert(children.begin() + p,child);
         return children[p];
         }
-XMLElement& XMLElement :: AddElement(const char* t,int p,bool Temp,const wchar_t* wt)
+XMLElement& XMLElement :: AddElement(const char* t,int p,bool Temp)
         {
-        XMLElement x(0,t,0,Temp,wt);
+        XMLElement x(0,t,0,Temp);
         return AddElement(x,p);
         }
 #else
@@ -5757,9 +5743,9 @@ XMLElement* XMLElement :: AddElement(XMLElement* child)
         child->SetParent(this);
         return child;
         }
-XMLElement* XMLElement :: AddElement(const char* t,const wchar_t* wt)
+XMLElement* XMLElement :: AddElement(const char* t)
         {
-        XMLElement* x = new XMLElement(this,t,0,0,wt);
+        XMLElement* x = new XMLElement(this,t,0,0);
         return AddElement(x);
         }
 #endif
@@ -5772,9 +5758,9 @@ XMLVariable& XMLElement :: AddVariable(const XMLVariable& v,int p)
         variables.insert(variables.begin() + p,v);
         return variables[p];
         }
-XMLVariable& XMLElement :: AddVariable(const char* vn,const char* vv,int p,bool Temp,const wchar_t* w1,const wchar_t* w2)
+XMLVariable& XMLElement :: AddVariable(const char* vn,const char* vv,int p,bool Temp)
         {
-        XMLVariable x(vn,vv,0,Temp,w1,w2);
+        XMLVariable x(vn,vv,0,Temp);
         return AddVariable(x,p);
         }
 #else
@@ -5785,9 +5771,9 @@ int XMLElement :: AddVariable(XMLVariable* v)
         v->SetOwnerElement(this);
         return variablesnum;
         }
-int XMLElement :: AddVariable(const char* vn,const char* vv,const wchar_t* w1,const wchar_t* w2)
+int XMLElement :: AddVariable(const char* vn,const char* vv)
         {
-        XMLVariable* x = new XMLVariable(vn,vv,0,0,w1,w2);
+        XMLVariable* x = new XMLVariable(vn,vv,0,0);
         return AddVariable(x);
         }
 #endif
@@ -5815,9 +5801,9 @@ int XMLElement :: AddBinaryVariable(const char* vn,const char* vv,int S)
 #endif
 
 #ifdef XML_USE_STL
-XMLComment& XMLElement :: AddComment(const char*t,int InsertBeforeElement,const wchar_t* wt)
+XMLComment& XMLElement :: AddComment(const char*t,int InsertBeforeElement)
         {
-        XMLComment x(this,InsertBeforeElement,t,wt);
+        XMLComment x(this,InsertBeforeElement,t);
         comments.push_back(x);
         return comments[comments.size() - 1];
         }
@@ -5854,9 +5840,9 @@ int XMLElement :: AddComment(XMLComment* v,int InsertBeforeElement)
         v->SetParent(this,InsertBeforeElement);
         return commentsnum;
         }
-int XMLElement :: AddComment(const char*t,int InsertBeforeElement,const wchar_t* wt)
+int XMLElement :: AddComment(const char*t,int InsertBeforeElement)
         {
-        XMLComment* x = new XMLComment(this,InsertBeforeElement,t,wt);
+        XMLComment* x = new XMLComment(this,InsertBeforeElement,t);
         return AddComment(x,InsertBeforeElement);
         }
 unsigned int XMLElement :: GetCommentsNum()
@@ -5900,9 +5886,9 @@ int XMLElement :: RemoveComment(unsigned int i)
 #endif
 
 #ifdef XML_USE_STL
-XMLCData& XMLElement :: AddCData(const char*t,int InsertBeforeElement,const wchar_t* wt)
+XMLCData& XMLElement :: AddCData(const char*t,int InsertBeforeElement)
         {
-        XMLCData x(this,InsertBeforeElement,t,wt);
+        XMLCData x(this,InsertBeforeElement,t);
         cdatas.push_back(x);
         return cdatas[cdatas.size() - 1];
         }
@@ -5939,9 +5925,9 @@ int XMLElement :: AddCData(XMLCData* v,int InsertBeforeElement)
         v->SetParent(this,InsertBeforeElement);
         return cdatasnum;
         }
-int XMLElement :: AddCData(const char*t,int InsertBeforeElement,const wchar_t* wt)
+int XMLElement :: AddCData(const char*t,int InsertBeforeElement)
         {
-        XMLCData* x = new XMLCData(this,InsertBeforeElement,t,wt);
+        XMLCData* x = new XMLCData(this,InsertBeforeElement,t);
         return AddCData(x,InsertBeforeElement);
         }
 unsigned int XMLElement :: GetCDatasNum()
@@ -5981,9 +5967,9 @@ int XMLElement :: RemoveCData(unsigned int i)
 
 // Content class
 #ifdef XML_USE_STL
-XMLContent& XMLElement :: AddContent(const char* t,int InsertBeforeElement,int BinarySize,const wchar_t* wt)
+XMLContent& XMLElement :: AddContent(const char* t,int InsertBeforeElement,int BinarySize)
         {
-        XMLContent x(this,InsertBeforeElement,t,0,BinarySize,wt);
+        XMLContent x(this,InsertBeforeElement,t,0,BinarySize);
         contents.push_back(x);
         return contents[contents.size() - 1];
         }
@@ -6022,9 +6008,9 @@ int XMLElement :: AddContent(XMLContent* v,int InsertBeforeElement)
         return contentsnum;
         }
 
-int XMLElement :: AddContent(const char* t,int InsertBeforeElement,int BinarySize,const wchar_t* wt)
+int XMLElement :: AddContent(const char* t,int InsertBeforeElement,int BinarySize)
         {
-        XMLContent* x = new XMLContent(this,InsertBeforeElement,t,0,BinarySize,wt);
+        XMLContent* x = new XMLContent(this,InsertBeforeElement,t,0,BinarySize);
         return AddContent(x,InsertBeforeElement);
         }
 
@@ -6109,7 +6095,7 @@ unsigned int XMLElement :: GetAllChildrenNum(unsigned int deep)
 
 
 // XMLComment class
-XMLComment :: XMLComment(XMLElement* p,int ElementPosition,const char* ht,const wchar_t* wht)
+XMLComment :: XMLComment(XMLElement* p,int ElementPosition,const char* ht)
         {
         parent = p;
         ep = ElementPosition;
@@ -6200,7 +6186,7 @@ int XMLComment :: GetEP() const
 
 
 // XMLCData class
-XMLCData :: XMLCData(XMLElement* p,int ElementPosition,const char* ht,const wchar_t* wht)
+XMLCData :: XMLCData(XMLElement* p,int ElementPosition, const char* ht)
         {
         parent = p;
         ep = ElementPosition;
@@ -6290,7 +6276,7 @@ int XMLCData :: GetEP() const
 
 
 // XMLContent class
-XMLContent :: XMLContent(XMLElement* p,int ElementPosition,const char* ht,int NoDecode,int BinarySize,const wchar_t* wt)
+XMLContent :: XMLContent(XMLElement* p,int ElementPosition,const char* ht,int NoDecode,int BinarySize)
         {
         parent = p;
         ep = ElementPosition;
@@ -6523,7 +6509,7 @@ int XMLContent :: GetEP() const
 
 
 // XMLHeader class
-XMLHeader :: XMLHeader(const char* ht,const wchar_t* wht)
+XMLHeader :: XMLHeader(const char* ht)
         {
 #ifdef XML_USE_STL
         hdr.clear();
@@ -6803,7 +6789,7 @@ void XMLHeader :: Export(FILE* fp,int HeaderMode,XML_TARGET_MODE TargetMode,clas
 
 
 // XMLVariable class
-void XMLVariable :: SetName(const char* VN,int NoDecode,const wchar_t *WVN)
+void XMLVariable :: SetName(const char* VN,int NoDecode)
         {
 #ifdef XML_USE_STL
         vn.clear();
@@ -6838,7 +6824,7 @@ void XMLVariable :: SetName(const char* VN,int NoDecode,const wchar_t *WVN)
 #endif
         }
 
-void XMLVariable :: SetValue(const char* VV,int NoDecode,const wchar_t* WVV)
+void XMLVariable :: SetValue(const char* VV,int NoDecode)
         {
 #ifdef XML_USE_STL
         vv.clear();
@@ -6866,7 +6852,7 @@ void XMLVariable :: SetValue(const char* VV,int NoDecode,const wchar_t* WVV)
 #endif
         }
 
-XMLVariable :: XMLVariable(const char* VN,const char* VV,int NoDecode,bool Temp,const wchar_t* WVN,const wchar_t* WVV)
+XMLVariable :: XMLVariable(const char* VN,const char* VV,int NoDecode,bool Temp)
         {
 #ifdef XML_USE_STL
         vn.clear();

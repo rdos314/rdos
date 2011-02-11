@@ -55,10 +55,6 @@
 #include <ctype.h>
 #include <assert.h>
 
-#ifdef LINUX
-#include <wchar.h>
-#endif
-
 #ifdef _WIN32
 #ifndef __SYMBIAN32__
 
@@ -323,7 +319,7 @@ class XMLHeader
 	public:
 
 		// constructors/destructor
-		XMLHeader(const char* ht = 0,const wchar_t* wht = 0);
+		XMLHeader(const char* ht = 0);
 		operator const char*();
 		size_t MemoryUsage();
 		void CompressMemory();
@@ -345,7 +341,7 @@ class XMLHeader
 #ifdef XML_USE_STL
 		vector<XMLComment>& GetComments();
 		unsigned int GetCommentsNum();
-		XMLComment& AddComment(const char*,int pos = -1,const wchar_t* wt = 0);
+		XMLComment& AddComment(const char*,int pos = -1);
 		XMLComment& AddComment(const XMLComment&);
 		int RemoveComment(unsigned int i);
 		int RemoveAllComments();
@@ -401,7 +397,7 @@ class XMLElement
 	public:
 
 		// constructors/destructor
-		XMLElement(XMLElement* par = 0,const char* el = 0,int Type = 0,bool Temp = false,const wchar_t* wel = 0);
+		XMLElement(XMLElement* par = 0,const char* el = 0,int Type = 0,bool Temp = false);
 
 		//XMLElement& operator =(XMLElement&);
 		~XMLElement();
@@ -412,14 +408,14 @@ class XMLElement
 #ifdef XML_USE_STL
 		// STL Functions
 		XMLElement& operator[](int);
-		XMLElement& AddElement(const char*,int p = -1,bool Temp = false,const wchar_t* = 0);
+		XMLElement& AddElement(const char*,int p = -1,bool Temp = false);
 		XMLElement& AddElement(const XMLElement&,int p = -1);
 		XMLElement& InsertElement(unsigned int y,XMLElement* x);
 #else
 		// No STL Functions
 		XMLElement* operator[](int);
 		XMLElement* AddElement(XMLElement*);
-		XMLElement* AddElement(const char*,const wchar_t* = 0);
+		XMLElement* AddElement(const char*);
 		XMLElement* InsertElement(unsigned int,XMLElement*);
 #endif
 
@@ -512,12 +508,12 @@ class XMLElement
 		// XMLComment
 #ifdef XML_USE_STL
 		vector<XMLComment>& GetComments();
-		XMLComment& AddComment(const char*,int,const wchar_t* = 0);
+		XMLComment& AddComment(const char*,int);
 		XMLComment& AddComment(const XMLComment&);
 #else
 		XMLComment** GetComments();
 		int AddComment(XMLComment*,int InsertBeforeElement);
-		int AddComment(const char*,int,const wchar_t* = 0);
+		int AddComment(const char*,int);
 #endif
 		unsigned int GetCommentsNum();
 		int RemoveComment(unsigned int i);
@@ -526,12 +522,12 @@ class XMLElement
 		// XMLCData
 #ifdef XML_USE_STL
 		vector<XMLCData>& GetCDatas();
-		XMLCData& AddCData(const char*,int,const wchar_t* wt = 0);
+		XMLCData& AddCData(const char*,int);
 		XMLCData& AddCData(const XMLCData&);
 #else
 		XMLCData** GetCDatas();
 		int AddCData(XMLCData*,int InsertBeforeElement);
-		int AddCData(const char*,int,const wchar_t* wt = 0);
+		int AddCData(const char*,int);
 #endif
 		unsigned int GetCDatasNum();
 		int RemoveCData(unsigned int i);
@@ -540,12 +536,12 @@ class XMLElement
 		// Content Stuff
 #ifdef XML_USE_STL
 		vector<XMLContent>& GetContents();
-		XMLContent& AddContent(const char*,int,int BinarySize = 0,const wchar_t* = 0);
+		XMLContent& AddContent(const char*,int,int BinarySize = 0);
 		XMLContent& AddContent(const XMLContent&);
 #else
 		XMLContent** GetContents();
 		int AddContent(XMLContent* v,int InsertBeforeElement);
-		int AddContent(const char*,int,int BinarySize = 0,const wchar_t* = 0);
+		int AddContent(const char*,int,int BinarySize = 0);
 #endif
 		int RemoveContent(unsigned int i);
 		void RemoveAllContents();
@@ -567,7 +563,7 @@ class XMLElement
 		int RemoveVariableAndKeep(unsigned int i,XMLVariable* vr);
 		vector<XMLVariable>& GetVariables();
 		XMLVariable& AddVariable(const XMLVariable&,int p = -1);
-		XMLVariable& AddVariable(const char*,const char*,int p = -1,bool Temp = false,const wchar_t* = 0,const wchar_t* = 0);
+		XMLVariable& AddVariable(const char*,const char*,int p = -1,bool Temp = false);
 #ifdef XML_OPTIONAL_MIME
 		XMLVariable& AddBinaryVariable(const char*,const char*,int);
 #endif
@@ -575,7 +571,7 @@ class XMLElement
 		int AddVariable(XMLVariable*);
 		int RemoveVariableAndKeep(unsigned int i,XMLVariable** vr);
 		XMLVariable** GetVariables();
-		int AddVariable(const char*,const char*,const wchar_t* = 0,const wchar_t* = 0);
+		int AddVariable(const char*,const char*);
 #ifdef XML_OPTIONAL_MIME
 		int AddBinaryVariable(const char*,const char*,int);
 #endif
@@ -678,7 +674,7 @@ class XMLVariable
 	{
 	public:
 
-		XMLVariable(const char* = 0,const char* = 0,int NoDecode = 0,bool Temp = false,const wchar_t* = 0,const wchar_t* = 0);
+		XMLVariable(const char* = 0,const char* = 0,int NoDecode = 0,bool Temp = false);
 		~XMLVariable();
 		XMLVariable(const XMLVariable&);
 		XMLVariable& operator =(const XMLVariable&);
@@ -702,8 +698,8 @@ class XMLVariable
 		long long GetValueInt64();
 		unsigned long long GetValueUInt64();
 		float GetValueFloat();
-		void SetName(const char*,int NoDecode = 0,const wchar_t* = 0);
-		void SetValue(const char*,int NoDecode = 0,const wchar_t* = 0);
+		void SetName(const char*,int NoDecode = 0);
+		void SetValue(const char*,int NoDecode = 0);
 		void SetValueUInt(unsigned int);
 		void SetValueInt(int);
 		void SetValueInt64(long long);
@@ -759,7 +755,7 @@ class XMLComment
 	public:
 
 		// constructors/destructor
-		XMLComment(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0,const wchar_t* wt = 0);
+		XMLComment(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0);
 		operator const char*() const;
 		void SetComment(const char* ht);
 		size_t MemoryUsage();
@@ -799,7 +795,7 @@ class XMLContent
 	public:
 
 		// constructors/destructor
-		XMLContent(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0,int NoDecode = 0,int BinarySize = 0,const wchar_t* wt = 0);
+		XMLContent(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0,int NoDecode = 0,int BinarySize = 0);
 //		operator const char*();
 		size_t GetValue(char*,int NoDecode = 0) const; 
 		bool GetBinaryValue(char**o,unsigned int* len);
@@ -845,7 +841,7 @@ class XMLCData
 	public:
 
 		// constructors/destructor
-		XMLCData(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0,const wchar_t* wt = 0);
+		XMLCData(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0);
 		operator const char*() const;
 		void SetCData(const char* ht);
 		size_t MemoryUsage();
@@ -889,9 +885,6 @@ class XML
 
 		XML();
 		XML(const char* file,XML_LOAD_MODE LoadMode = XML_LOAD_MODE_LOCAL_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
-#ifndef LINUX
-		XML(const wchar_t* file,XML_LOAD_MODE LoadMode = XML_LOAD_MODE_LOCAL_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
-#endif
 		void Version(XML_VERSION_INFO*);
 		size_t MemoryUsage();
 		void CompressMemory();
@@ -922,7 +915,6 @@ class XML
 		void SaveOnClose(bool);
 		int Load(const char* data,XML_LOAD_MODE LoadMode = XML_LOAD_MODE_LOCAL_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
 		size_t LoadText(const char*);
-		size_t LoadText(const wchar_t*);
 		static int PartialLoad(const char* file,const char* map);
 		static XMLElement * PartialElement(const char* file,const char* map);
 		int Save(const char* file = 0,XML_SAVE_MODE SaveMode = XML_SAVE_MODE_DEFAULT,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0); // Default, do not encode already encoded
