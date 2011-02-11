@@ -221,90 +221,6 @@ namespace XMLPP
 #endif
 
 
-// XMLU Class, converts utf input to wide char and vice versa
-class XMLU
-	{
-	public:
-		char* bs;
-		wchar_t* ws;
-		bool n;
-		XMLU(const char* x)
-			{
-			bs = 0;
-			ws = 0;
-			n = false;
-			if (!x || !strlen(x))
-				{
-				bs = "";
-				ws = L"";
-				}
-			else
-				{
-				n = true;
-				size_t si = strlen(x)*2 + 1000;
-				ws = new wchar_t[si];
-				bs = new char[si];
-				memset((void*)ws,0,si*sizeof(wchar_t));
-				memset((void*)bs,0,si*sizeof(char));
-#ifdef _WIN32
-				lstrcpyA(bs,x);
-				MultiByteToWideChar(CP_UTF8,0,x,-1,ws,(int)si);
-#endif
-				}
-			}
-		XMLU(const wchar_t* x)
-			{
-			bs = 0;
-			ws = 0;
-			n = false;
-			if (!x || !wcslen(x))
-				{
-				bs = "";
-				ws = L"";
-				}
-			else
-				{
-				n = true;
-				size_t si = wcslen(x)*2 + 1000;
-				ws = new wchar_t[si];
-				bs = new char[si];
-				memset((void*)ws,0,si*sizeof(wchar_t));
-				memset((void*)bs,0,si*sizeof(char));
-#ifdef _WIN32
-				lstrcpyW(ws,x);
-				WideCharToMultiByte(CP_UTF8,0,x,-1,bs,(int)si,0,0);
-#endif
-				}
-			}
-		wchar_t* wc()
-			{
-			return ws;
-			}
-		char* bc()
-			{
-			return bs;
-			}
-		operator wchar_t*() 
-			{
-			return ws;
-			}
-		operator char*() 
-			{
-			return bs;
-			}
-		~XMLU()
-			{
-			if (n)
-				{
-				if (ws)
-					delete[] ws;
-				if (bs)
-					delete[] bs;
-				}
-			}
-	};
-
-
 class XMLHeader;
 class XMLElement;
 class XMLVariable;
@@ -682,14 +598,13 @@ class XMLElement
 		XMLElement* GetParent();
 		void Export(FILE* fp,int ShowAll,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,XMLHeader* hdr = 0,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
 		void SetExportFormatting(XMLEXPORTFORMAT* xf);
-		void SetElementName(const char*,const wchar_t* = 0);
+		void SetElementName(const char*);
 		size_t GetElementName(char*,int NoDecode = 0);
 		size_t GetElementFullName(char*,int NoDecode = 0);
 		size_t GetElementUniqueString(char*);
 		void SetTemporal(bool);
 		bool IsTemporal();
 		int   GetType();
-		static void Write16String(FILE* fp,const char* s);
 		int ReserveSpaceForElements(unsigned int);
 #ifdef XML_USE_STL
 		XMLElement(const XMLElement&);
@@ -1090,11 +1005,6 @@ size_t     XMLGetBinaryData(const char* item,const char* attr,const char* defv,c
 int    XMLSetString(const char* section,const char* Tattr,char*out,const char* xml,XML* af = 0);
 int    XMLSetInt(const char* section,const char* attr,int v,const char* xml,XML* af = 0);
 int    XMLSetUInt(const char* section,const char* attr,unsigned int v,const char* xml,XML* af = 0);
-#ifdef _WIN32
-int    XMLSetString(const char* section,const char* Tattr,wchar_t*out,const char* xml,XML* af = 0);
-int    XMLSetInt64(const char* section,const char* attr,long long v,const char* xml,XML* af = 0);
-int    XMLSetUInt64(const char* section,const char* attr,unsigned long long v,const char* xml,XML* af = 0);
-#endif
 int    XMLSetFloat(const char* section,const char* attr,float v,const char* xml,XML* af = 0);
 int    XMLSetBinaryData(const char* section,const char* attr,char* data,int len,const char* xml,XML* af = 0);
 
