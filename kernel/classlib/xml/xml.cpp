@@ -17,12 +17,6 @@
 
 #pragma warning (disable:4996)
 
-#ifdef WINCE
-#define strcmpi(a,b) strcmp(a,b)
-#endif
-
-
-
 #ifndef XML_MAX_INIT_CHILDREN
 #define XML_MAX_INIT_CHILDREN 20
 #endif
@@ -881,90 +875,6 @@ size_t XML :: XMLEncode(const char* src,char* trg)
         return x;
         }
 
-#ifdef XML_OPTIONAL_IMPORTRKEY
-
-XMLElement* XML :: ImportRKey(IMPORTRKEYDATA* d)
-        {
-        HKEY pK = d->pK;
-        int mode = d->StorageType;
-
-        XMLElement* x = new XMLElement(0,"<root />");
-
-        // Reads pK (Assumes it is open) and imports ALL children !
-
-        // if mode == 0 , native backup
-        // no name prefix, variable B,I,Y,E,Z,N,Q,S
-        //
-
-        // Reads Values of pK and writes it to myself
-        for(int i = 0 ; ; i++)
-                {
-                Z<char> tmp1(300);
-                DWORD ts = 20000;
-                DWORD ty = 0;
-                DWORD si = 0;
-                RegEnumValueA(pK,i,tmp1,&ts,0,&ty,0,&si);
-                Z<char> tmp2(si + 10);
-
-                ts = 20000;
-                if (RegEnumValueA(pK,i,tmp1,&ts,0,&ty,(LPBYTE)tmp2.operator char *() + 2,&si) != ERROR_SUCCESS)
-                        break; // end of values
-
-                // write
-                if (ty == REG_BINARY)
-                        tmp2[0] = 'B';
-                if (ty == REG_DWORD)
-                        tmp2[0] = 'I';
-                if (ty == REG_DWORD_BIG_ENDIAN)
-                        tmp2[0] = 'Y';
-                if (ty == REG_EXPAND_SZ)
-                        tmp2[0] = 'E';
-                if (ty == REG_MULTI_SZ)
-                        tmp2[0] = 'Z';
-                if (ty == REG_NONE)
-                        tmp2[0] = 'N';
-                if (ty == REG_QWORD)
-                        tmp2[0] = 'Q';
-                if (ty == REG_SZ)
-                        tmp2[0] = 'S';
-
-                if (mode == 0)
-                        tmp2[1] = '_';
-
-                XMLVariable* v = new XMLVariable(tmp1,tmp2);
-                x->AddVariable(v);
-                }
-
-        // Now enum children keys and do the same
-        for(int i = 0 ; ; i++)
-                {
-                Z<char> tmp1(300);
-                Z<char> tmp2(300);
-                DWORD si = 300;
-
-                if (RegEnumKeyExA(pK,i,tmp1,&si,0,0,0,0) != ERROR_SUCCESS)
-                        break; // end of values
-
-                sprintf(tmp2,"<%s />",tmp1.operator char*());
-                XMLElement* child = new XMLElement(x,tmp2);
-
-
-                HKEY NewPK = 0;
-                RegOpenKeyExA(pK,tmp1,0,KEY_ALL_ACCESS,&NewPK);
-                if (NewPK)
-                        {
-                        IMPORTRKEYDATA d2 = {0};
-                        d2.pK = NewPK;
-                        d2.StorageType = mode;
-                        ImportRKey(&d2);
-                        x->AddElement(child);
-                        RegCloseKey(NewPK);
-                        }
-                }
-
-        return x;
-        }
-#endif
 
 int XMLHelper :: pow(int P,int z)
         {
@@ -4159,7 +4069,6 @@ int XMLElement :: AddVariable(const char* vn,const char* vv)
         return AddVariable(x);
         }
 
-#ifdef XML_OPTIONAL_MIME
 int XMLElement :: AddBinaryVariable(const char* vn,const char* vv,int S)
         {
         XMLVariable* x = new XMLVariable(vn,"");
@@ -4168,7 +4077,6 @@ int XMLElement :: AddBinaryVariable(const char* vn,const char* vv,int S)
         x->SetBinaryValue(tmp,S);
         return AddVariable(x);
         }
-#endif
 
 int XMLElement :: AddComment(XMLComment* v,int InsertBeforeElement)
         {
@@ -4543,7 +4451,6 @@ bool XMLContent :: GetBinaryValue(char**o,unsigned int* len)
                 *len = (unsigned int)bdc.size();
                 return true;
                 }
-#ifdef XML_OPTIONAL_MIME
         if (!o || !len)
                 return false;
 
@@ -4569,9 +4476,6 @@ bool XMLContent :: GetBinaryValue(char**o,unsigned int* len)
         int newlen = (int)(oo - a);
         *len = newlen;
         return true;
-#else
-        return false;
-#endif
         }
 
 size_t XMLContent :: GetValue(char* x,int NoDecode) const
@@ -4610,7 +4514,6 @@ void XMLContent :: SetValue(const char* VV,int NoDecode,int BinarySize)
                 return;
                 }
 
-#ifdef XML_OPTIONAL_MIME
         if (BinarySize)
                 {
                 // Add binary data, do base64
@@ -4632,7 +4535,6 @@ void XMLContent :: SetValue(const char* VV,int NoDecode,int BinarySize)
                 delete[] a;
                 return;
                 }
-#endif
 
         if (c)
                 delete[] c;
@@ -5107,7 +5009,6 @@ XMLVariable* XMLVariable :: Duplicate()
         }
 
 
-#ifdef XML_OPTIONAL_MIME
 size_t XMLVariable :: SetBinaryValue(char* data,int len)
         {
         // Sets value using MIME
@@ -5184,8 +5085,6 @@ size_t XMLVariable :: GetBinaryValue(char* data)
                 return S;
                 }
         }
-
-#endif
 
 
 bool XMLElement :: EncryptElement(unsigned int i,char* pwd)
@@ -6410,7 +6309,6 @@ float XMLGetFloat(const char* item,const char* attr,const float defv,const char*
         return (float)atof(a2);
         }
 
-#ifdef XML_OPTIONAL_MIME
 size_t XMLGetBinaryData(const char* item,const char* attr,const char* defv,char*out,const size_t maxlen,const char* xml,XML* af)
         {
         Z<char> bdata(maxlen*5 + 5000);
@@ -6452,7 +6350,6 @@ size_t XMLGetBinaryData(const char* item,const char* attr,const char* defv,char*
                 return S;
                 }
         }
-#endif
 
 int XMLSetUInt(const char* section,const char* attr,unsigned int v,const char* xml,XML* af)
         {
@@ -6475,7 +6372,6 @@ int    XMLSetFloat(const char* section,const char* attr,float v,const char* xml,
         return XMLSetString(section,attr,a,xml,af);
         }
 
-#ifdef XML_OPTIONAL_MIME
 int    XMLSetBinaryData(const char* section,const char* attr,char* data,int len,const char* xml,XML* af)
         {
         char* a = new char[len*5 + 1000];
@@ -6503,7 +6399,6 @@ int    XMLSetBinaryData(const char* section,const char* attr,char* data,int len,
         delete[] a;
         return I;
         }
-#endif
 
 // vector based things
 #ifndef __SYMBIAN32__

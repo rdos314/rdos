@@ -379,9 +379,7 @@ class XMLElement
 		int RemoveVariableAndKeep(unsigned int i,XMLVariable** vr);
 		XMLVariable** GetVariables();
 		int AddVariable(const char*,const char*);
-#ifdef XML_OPTIONAL_MIME
 		int AddBinaryVariable(const char*,const char*,int);
-#endif
 
 		int FindVariable(XMLVariable*);
 		int FindVariable(const char*  x);
@@ -502,10 +500,8 @@ class XMLVariable
 		void SetTemporal(bool);
 		bool IsTemporal();
 
-#ifdef XML_OPTIONAL_MIME
 		size_t GetBinaryValue(char*);
 		size_t SetBinaryValue(char*,int);
-#endif
 
 		BDC ExportToBinary();
 		bool ImportFromBinary(const BDC&);
@@ -664,12 +660,6 @@ class XML
 
 		void Lock(bool);
 		int RemoveTemporalElements();
-#ifdef XML_OPTIONAL_IMPORTDB
-		static XMLElement* ImportDB(IMPORTDBPARAMS* );
-#endif
-#ifdef XML_OPTIONAL_IMPORTRKEY
-		static XMLElement* ImportRKey(IMPORTRKEYDATA*);
-#endif
 
 		void SetRootElement(XMLElement*);
 		XMLElement* RemoveRootElementAndKeep();
