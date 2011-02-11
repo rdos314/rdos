@@ -21,23 +21,6 @@
 // #define ALLOW_SINGLE_QUOTE_VARIABLES
 // Define the above tow allow var='x' instead of var="x"
 
-#ifdef __unix
-#define LINUX
-#endif
-
-
-#ifdef __BORLANDC__
-#pragma warn -pck
-#endif
-
-#ifdef _MSC_VER
-#define _USERENTRY __cdecl
-#endif
-
-#ifdef LINUX
-#define _USERENTRY
-#define __cdecl
-#endif
 
 #ifdef __WATCOMC__
 #define _USERENTRY
@@ -55,15 +38,7 @@
 #include <ctype.h>
 #include <assert.h>
 
-#ifdef __SYMBIAN32__
-#define _USERENTRY
-#define strcmpi strcmp
-#include <unistd.h>
-#endif
 
-
-#ifndef _Z_H
-#define _Z_H
 // Z template class
 template <class T>class Z
 	{
@@ -139,7 +114,6 @@ template <class T>class Z
 			}
 
 	};
-#endif // Z_H
 
 // Binary Data Container 
 class BDC
@@ -298,10 +272,6 @@ class XMLHeader
 	};
 
 
-
-#ifdef LINUX
-typedef int (*fcmp) (const void *, const void *);
-#endif
 
 struct XMLBORROWELEMENT
 	{
@@ -675,14 +645,6 @@ class XML
 		XML& operator =(XML&);
 		~XML();
 
-		//      static void Kill(char* tf);
-#ifdef LINUX
-		int PhantomLoad(const char* file);
-#else
-		int PhantomLoad(const char* file,bool IsUnicode = false,bool UseMap = false);
-#endif
-		int PhantomElement(FILE*fp,class XMLElement* r,unsigned long long StartP,unsigned long long EndP);
-
 		static int DoMatch(const char *text, char *p, bool IsCaseSensitive = false);
 		static bool VMatching(const char *text, char *p, bool IsCaseSensitive = false);
 		static bool TestMatch(const char* item1,const char* comp,const char* item2);
@@ -691,7 +653,6 @@ class XML
 		static XMLElement* Paste(char* txt = 0);
 
 		XML_PARSE_STATUS ParseStatus(int* = 0);
-		void SetUnicode(bool x);
 		void SaveOnClose(bool);
 		int Load(const char* data,XML_LOAD_MODE LoadMode = XML_LOAD_MODE_LOCAL_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
 		size_t LoadText(const char*);
@@ -734,9 +695,6 @@ class XML
 
 		XML_PARSE_STATUS iParseStatus; // 0 Valid , 1 Error but recovered, 2 fatal error
 		int iParseStatusPos;
-#ifndef LINUX
-		bool IsFileU; // unicode file
-#endif
 
 		char* f;          // filename
 		XMLHeader* hdr;   // header (one)

@@ -9,26 +9,13 @@
 #
 ########################################################################*/
 
-#ifdef USE_EXTERNAL_Z
-#include "z.h"
-#endif
-
 #include "xml.h"
 #include "rdos.h"
 
-#ifdef __WATCOMC__
 #define _atoi64(x) atoll(x)
-#endif
 
 
-//#pragma warning (disable:4244)
-//#pragma warning (disable:4267)
-//#pragma warning (disable:4800)
 #pragma warning (disable:4996)
-
-#ifdef LINUX
-#define strcmpi(a,b) strcmp(a,b)
-#endif
 
 #ifdef WINCE
 #define strcmpi(a,b) strcmp(a,b)
@@ -745,16 +732,6 @@ void XML :: Version(XML_VERSION_INFO* x)
 XML :: XML()
         {
         Init();
-#ifndef LINUX
-        IsFileU = false;
-#endif
-        }
-
-void XML :: SetUnicode(bool x)
-        {
-#ifndef LINUX
-        IsFileU = x;
-#endif
         }
 
 XML :: XML(const char* file,XML_LOAD_MODE LoadMode,class XMLTransform* eclass,class XMLTransformData* edata)
@@ -3636,18 +3613,12 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
         Clear();
         Z<char>* y = 0;
         iParseStatus = XML_PARSE_OK;
-#ifndef LINUX
-        IsFileU = false;
-#endif
 
         if (LoadMode == XML_LOAD_MODE_LOCAL_FILE) // local xml file
                 {
                 f = new char[strlen(file) + 1];
                 strcpy(f,file);
                 // parse this file
-#ifndef LINUX
-                IsFileU = false;
-#endif
                 y = ReadToZ(file,eclass,edata);
                 if (!y)
                         {
