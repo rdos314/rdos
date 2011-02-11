@@ -36,9 +36,6 @@
 
 
 
-#ifdef XML_USE_STL
-#else
-
 #ifndef XML_MAX_INIT_CHILDREN
 #define XML_MAX_INIT_CHILDREN 20
 #endif
@@ -61,8 +58,6 @@
 
 #ifndef XML_MAX_INIT_COMMENTS_HEADER
 #define XML_MAX_INIT_COMMENTS_HEADER 5
-#endif
-
 #endif
 
 // Help functions    
@@ -776,18 +771,15 @@ size_t XML :: LoadText(const char* txt)
 void XML :: Init()
         {
         SOnClose = 0;
-#ifndef XML_USE_STL
         hdr = 0;
         root = 0;
         f = 0;
-#endif
         }
 
 void XML :: Clear()
         {
         if (SOnClose)
                 Save();
-#ifndef XML_USE_STL     // root
         if (root)
                 {
                 root->RemoveAllElements();
@@ -802,7 +794,6 @@ void XML :: Clear()
         if (f)
                 delete[] f;
         f = 0;
-#endif
         }
 
 
@@ -812,18 +803,6 @@ void XML :: Lock(bool)
 
         }
 
-
-#ifdef XML_USE_STL
-XMLElement& XML :: GetRootElement()
-        {
-        return _root;
-        }
-void XML :: SetRootElement(XMLElement& newroot)
-        {
-        _root = newroot;
-        return;
-        }
-#else
 XMLElement* XML :: GetRootElement() const
         {
         return root;
@@ -835,28 +814,16 @@ void XML :: SetRootElement(XMLElement* newroot)
         root = newroot;
         return;
         }
-#endif
-#ifdef XML_USE_STL
-XMLElement XML :: RemoveRootElementAndKeep()
-        {
-        XMLElement x = _root;
-        _root.Clear();
-        return x;
-        }
-#else
+
 XMLElement* XML :: RemoveRootElementAndKeep()
         {
         XMLElement* x = root;
         root = new XMLElement(0,"<root/>");
         return x;
         }
-#endif
 
 int XML :: RemoveTemporalElements()
         {
-#ifdef XML_USE_STL
-        XMLElement* root = &_root;
-#endif
         if (!root)
                 return 0;
         int iN = 0;
@@ -869,17 +836,6 @@ int XML :: RemoveTemporalElements()
 
 
 
-
-#ifdef XML_USE_STL
-XMLHeader& XML :: GetHeader()
-        {
-        return hdr;
-        }
-void XML :: SetHeader(XMLHeader& h)
-        {
-        hdr = h;
-        }
-#else
 XMLHeader* XML :: GetHeader()
         {
         return hdr;
@@ -892,13 +848,12 @@ void XML :: SetHeader(XMLHeader* h)
         hdr = 0;
         hdr = h;
         }
-#endif
 
 size_t XML :: XMLEncode(const char* src,char* trg)
         {
         if (!src)
                 return 0;
-        //*...
+
         size_t Y = strlen(src);
 
         size_t x = 0;
@@ -1000,11 +955,7 @@ XMLElement* XML :: ImportRKey(IMPORTRKEYDATA* d)
                         tmp2[1] = '_';
 
                 XMLVariable* v = new XMLVariable(tmp1,tmp2);
-#ifdef XML_USE_STL
-                x->AddVariable(*v);
-#else
                 x->AddVariable(v);
-#endif
                 }
 
         // Now enum children keys and do the same
@@ -1191,9 +1142,6 @@ size_t XML :: XMLDecode(const char* src,char* trg)
 
 size_t XML :: XMLGetValue(const char* section2,const char* attr2,char* put2,size_t maxlen)
         {
-#ifdef XML_USE_STL
-        XMLElement* root = &_root;
-#endif
 
         size_t y1 = XMLEncode(section2,0);
         size_t y2 = XMLEncode(attr2,0);
@@ -1210,11 +1158,7 @@ size_t XML :: XMLGetValue(const char* section2,const char* attr2,char* put2,size
                 if (k == -1)
                         return 0;
 
-#ifdef XML_USE_STL
-                XMLVariable* v = &root->GetVariables()[k];
-#else
                 XMLVariable* v = root->GetVariables()[k];
-#endif
 
                 size_t Sug = v->GetValue(0);
                 Z<char> value(Sug + 10);
@@ -1247,11 +1191,7 @@ size_t XML :: XMLGetValue(const char* section2,const char* attr2,char* put2,size
                         return 0;
                         }
 
-#ifdef XML_USE_STL
-                r = &r->GetChildren()[y];
-#else
                 r = r->GetChildren()[y];
-#endif
                 if (!a1) // was last
                         break;
 
@@ -1264,11 +1204,7 @@ size_t XML :: XMLGetValue(const char* section2,const char* attr2,char* put2,size
         if (k == -1)
                 return 0;
 
-#ifdef XML_USE_STL
-        XMLVariable* v = &r->GetVariables()[k];
-#else
         XMLVariable* v = r->GetVariables()[k];
-#endif
 
         size_t Sug = v->GetValue(0);
         Z<char> value(Sug + 10);
@@ -1283,9 +1219,6 @@ size_t XML :: XMLGetValue(const char* section2,const char* attr2,char* put2,size
 
 void XML :: XMLSetValue(const char* section2,const char* attr,char* put)
         {
-#ifdef XML_USE_STL
-        XMLElement* root = &_root;
-#endif
         // section is a\b\c\d...
         XMLElement* r = root;
         XMLElement* rr = root;
@@ -1313,11 +1246,7 @@ void XML :: XMLSetValue(const char* section2,const char* attr,char* put)
                         }
                 else
                         {
-#ifdef XML_USE_STL
-                        root->GetVariables()[k].SetValue(put);
-#else
                         root->GetVariables()[k]->SetValue(put);
-#endif
                         }
                 return;
                 }
@@ -1338,11 +1267,7 @@ void XML :: XMLSetValue(const char* section2,const char* attr,char* put)
                         }
 
                 rr = r;
-#ifdef XML_USE_STL
-                r = &rr->GetChildren()[y];
-#else
                 r = rr->GetChildren()[y];
-#endif
                 if (!a1) // was last
                         break;
 
@@ -1374,11 +1299,7 @@ void XML :: XMLSetValue(const char* section2,const char* attr,char* put)
                 }
         else
                 {
-#ifdef XML_USE_STL
-                r->GetVariables()[k].SetValue(put);
-#else
                 r->GetVariables()[k]->SetValue(put);
-#endif
                 }
         }
 
@@ -1541,13 +1462,8 @@ void XMLHelper :: AddBlankVariable(XMLElement* parent,char *a2,int Pos)
         a1[PZ] = 0;
 
         // Add this vrb
-#ifdef XML_USE_STL
-        XMLContent x(parent,Pos,a1,true);
-        parent->AddContent(x);
-#else
         XMLContent* x = new XMLContent(parent,Pos,a1,true);
         parent->AddContent(x,Pos);
-#endif
         a1[PZ] = CC;
         }
 
@@ -1613,13 +1529,8 @@ XMLElement* XMLHelper :: ParseElementTree(XMLHeader* hdr,XMLElement* parent,char
                                 int Pos = parent->GetChildrenNum();
                                 Z<char> com(strlen(a3) + 100);
                                 strncpy(com,a3 + 4,strlen(a3 + 4) - 2);
-#ifdef XML_USE_STL
-                                XMLComment c(parent,Pos,com);
-                                parent->AddComment(c,Pos);
-#else
                                 XMLComment* c = new XMLComment(parent,Pos,com);
                                 parent->AddComment(c,Pos);
-#endif
                                 }
                         else // It is a root comment
                                 {
@@ -1627,12 +1538,8 @@ XMLElement* XMLHelper :: ParseElementTree(XMLHeader* hdr,XMLElement* parent,char
                                 Z<char> com(strlen(a3) + 100);
                                 if (strlen(a3 + 4) > 1)
                                         strncpy(com,a3 + 4,strlen(a3 + 4) - 2);
-#ifdef XML_USE_STL
-                                hdr->AddComment(com,Pos);
-#else
                                 XMLComment* c = new XMLComment(0,Pos,com);
                                 hdr->AddComment(c,Pos);
-#endif
                                 }
                         *a4 = c2;
                         a2 = a4 + 1;
@@ -1647,13 +1554,8 @@ XMLElement* XMLHelper :: ParseElementTree(XMLHeader* hdr,XMLElement* parent,char
                         int Pos = parent->GetChildrenNum();
                         Z<char> com(strlen(a3) + 100);
                         strncpy(com,a3 + 9,strlen(a3 + 9) - 2);
-#ifdef XML_USE_STL
-                        XMLCData c(parent,Pos,com);
-                        parent->AddCData(c,Pos);
-#else
                         XMLCData* c = new XMLCData(parent,Pos,com);
                         parent->AddCData(c,Pos);
-#endif
 
                         *a4 = c2;
                         a2 = a4 + 1;
@@ -1665,11 +1567,7 @@ XMLElement* XMLHelper :: ParseElementTree(XMLHeader* hdr,XMLElement* parent,char
                         {
                         if (parent && root && parent->FindElement(root) == -1)
                                 {
-#ifdef XML_USE_STL
-                                parent->AddElement(*root);
-#else
                                 parent->AddElement(root);
-#endif
                                 }
                         a2 = a4 + 1;
                         continue;
@@ -1688,30 +1586,16 @@ XMLElement* XMLHelper :: ParseElementTree(XMLHeader* hdr,XMLElement* parent,char
                         *a4 = 0;
                         if (parent)
                                 {
-#ifdef XML_USE_STL
-                                XMLElement* c = new XMLElement(parent,a3 + 1,0);
-                                XMLElement& cc = parent->AddElement(*c);
-                                if (!root)
-                                        root = &cc;
-                                delete c;
-#else
                                 XMLElement* c = new XMLElement(parent,a3 + 1,0);
                                 parent->AddElement(c);
                                 if (!root)
                                         root = c;
-#endif
                                 }
                         else
                                 {
-#ifdef XML_USE_STL
-                                // Invalid? 
-                                if (!root)
-                                        root = new XMLElement(0,a3 + 1,0);
-#else
                                 XMLElement* c = new XMLElement(0,a3 + 1);
                                 if (!root)
                                         root = c;
-#endif
                                 }
 
                         *a4 = c2;
@@ -1763,9 +1647,6 @@ XMLElement* XMLHelper :: ParseElementTree(XMLHeader* hdr,XMLElement* parent,char
 
 int XMLElement :: RemoveAllElements()
         {
-#ifdef XML_USE_STL
-        children.clear();
-#else
         for(int i = childrennum - 1 ; i >= 0 ; i--)
                 {
                 if (children[i] == 0)
@@ -1792,7 +1673,6 @@ int XMLElement :: RemoveAllElements()
                 children[i] = 0;
                 }
         childrennum = 0;
-#endif
         return 0;
         }
 
@@ -1826,23 +1706,6 @@ int XMLElement :: DeleteUnloadedElementFile(int i)
     return RdosDeleteFile(us);
         }
 
-#ifdef XML_USE_STL
-bool XMLElement :: ReplaceElement(unsigned int i,XMLElement* ne,XMLElement** prev)
-        {
-        if (children.size() <= i)
-                return false;
-        XMLElement* xu = 0;
-        RemoveElementAndKeep(i,&xu);
-        if (!xu)
-                return false;
-        if (prev)
-                *prev = xu;
-        else
-                delete xu;
-        InsertElement(i,ne);
-        return true;
-        }
-#else
 bool XMLElement :: ReplaceElement(unsigned int i,XMLElement* ne,XMLElement** prev)
         {
         if (childrennum <= i)
@@ -1858,25 +1721,15 @@ bool XMLElement :: ReplaceElement(unsigned int i,XMLElement* ne,XMLElement** pre
         InsertElement(i,ne);
         return true;
         }
-#endif
 
 int XMLElement :: GetElementIndex(XMLElement* e)
         {
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < children.size() ; i++)
-                {
-                if (&children[i] == e)
-                        return i;
-                }
-        return -1;
-#else
         for(unsigned int i = 0 ; i < childrennum ; i++)
                 {
                 if (children[i] == e)
                         return i;
                 }
         return -1;
-#endif
         }
 
 int XMLElement :: GetDeepLevel()
@@ -1889,17 +1742,6 @@ int XMLElement :: GetDeepLevel()
 int XMLElement :: RemoveElement(XMLElement* e)
         {
         int X = -1;
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < children.size() ; i++)
-                {
-                if (&children[i] == e)
-                        {
-                        X = RemoveElement(i);
-                        break;
-                        }
-                }
-        return X;
-#else
         for(unsigned int i = 0 ; i < childrennum ; i++)
                 {
                 if (children[i] == e)
@@ -1909,17 +1751,10 @@ int XMLElement :: RemoveElement(XMLElement* e)
                         }
                 }
         return X;
-#endif
         }
 
 int XMLElement :: RemoveElement(unsigned int i)
         {
-#ifdef XML_USE_STL
-        if (i >= children.size())
-                return (int)children.size();
-        children.erase(children.begin() + i);
-        return (int)children.size();
-#else
         if (i >= childrennum)
                 return childrennum;
 
@@ -1954,20 +1789,8 @@ int XMLElement :: RemoveElement(unsigned int i)
 
         children[childrennum - 1] = 0;
         return --childrennum;
-#endif
         }
 
-#ifdef XML_USE_STL
-int XMLElement :: RemoveElementAndKeep(unsigned int i,XMLElement** el)
-        {
-        if (i >= children.size())
-                return (int)children.size();
-        if (el)
-                *el = children[i].Duplicate();
-        RemoveElement(i);
-        return (int)children.size();
-        }
-#else
 int XMLElement :: RemoveElementAndKeep(unsigned int i,XMLElement** el)
         {
         if (el) 
@@ -1976,11 +1799,8 @@ int XMLElement :: RemoveElementAndKeep(unsigned int i,XMLElement** el)
         if (i >= childrennum)
                 return childrennum;
 
-#ifdef XML_USE_STL
-#else
         if (children[i] == 0) // unloaded
                 ReloadElement(i);
-#endif
 
         //delete children[i];
         if (el) 
@@ -1993,10 +1813,7 @@ int XMLElement :: RemoveElementAndKeep(unsigned int i,XMLElement** el)
         children[childrennum - 1] = 0;
         return --childrennum;
         }
-#endif
 
-#ifdef XML_USE_STL
-#else
 int XMLElement :: UnloadElement(unsigned int i)
         {
         XMLElement* e = children[i];
@@ -2096,19 +1913,10 @@ int XMLElement :: ReloadAllElements()
                 }
         return 0;
         }
-#endif
 
 
 XMLElement* XMLElement :: MoveElement(unsigned int i,unsigned int y)
         {
-#ifdef XML_USE_STL
-        if (i >= children.size() || y >= children.size())
-                return 0;
-        XMLElement x = children[i];
-        children.erase(children.begin() + i);
-        children.insert(children.begin() + y,x);
-        return &children[y];
-#else
         if (i >= childrennum || y >= childrennum)
                 return 0;
 
@@ -2120,18 +1928,8 @@ XMLElement* XMLElement :: MoveElement(unsigned int i,unsigned int y)
 
         childrennum--;
         return InsertElement(y,x);
-#endif
         }
 
-#ifdef XML_USE_STL
-XMLElement& XMLElement :: InsertElement(unsigned int y,XMLElement* x)
-        {
-        if (y >= children.size())
-                return AddElement(x);
-        children.insert(children.begin() + y,*x);
-        return children[y];
-        }
-#else
 XMLElement* XMLElement :: InsertElement(unsigned int y,XMLElement* x)
         {
         // leave from 0 to y
@@ -2149,10 +1947,7 @@ XMLElement* XMLElement :: InsertElement(unsigned int y,XMLElement* x)
         childrennum++;
         return x;
         }
-#endif
 
-#ifdef XML_USE_STL
-#else
 int XMLElement :: BorrowElement(XMLElement*x,unsigned int y)
         {
         // Same as Insert or Add, but no SetParent
@@ -2200,7 +1995,6 @@ int XMLElement :: ReleaseBorrowedElements()
         NumBorrowedElements = 0;
         return R;
         }
-#endif
 
 int XMLElement :: UpdateElement(XMLElement* e,bool UpdateVariableValues)
         {
@@ -2221,11 +2015,7 @@ int XMLElement :: UpdateElement(XMLElement* e,bool UpdateVariableValues)
         Z<char> vn(1000);
         for(unsigned int i = 0 ; i < e->GetVariableNum() ; i++)
                 {
-#ifdef XML_USE_STL
-                XMLVariable* v = &e->GetVariables()[i];
-#else
                 XMLVariable* v = e->GetVariables()[i];
-#endif
                 if (v->GetName(0) > 1000)
                         vn.Resize(v->GetName(0) + 1000);
                 v->GetName(vn);
@@ -2234,11 +2024,7 @@ int XMLElement :: UpdateElement(XMLElement* e,bool UpdateVariableValues)
                 if (tv == 0)
                         {
                         // Create
-#ifdef XML_USE_STL
-                        AddVariable(*v);
-#else
                         AddVariable(v);
-#endif
                         }
                 else
                         {
@@ -2255,11 +2041,7 @@ int XMLElement :: UpdateElement(XMLElement* e,bool UpdateVariableValues)
         // Test the elements
         for(unsigned int i = 0 ; i < e->GetChildrenNum() ; i++)
                 {
-#ifdef XML_USE_STL
-                XMLElement* c = &e->GetChildren()[i];
-#else
                 XMLElement* c = e->GetChildren()[i];
-#endif
                 if (c->GetElementName(0) > 1000)
                         vn.Resize(c->GetElementName(0) + 1000);
                 c->GetElementName(vn);
@@ -2268,11 +2050,7 @@ int XMLElement :: UpdateElement(XMLElement* e,bool UpdateVariableValues)
                 if (tc == 0)
                         {
                         // Copy
-#ifdef XML_USE_STL
-                        AddElement(*c);
-#else
                         AddElement(c->Duplicate());
-#endif
                         }
                 else
                         {
@@ -2289,17 +2067,9 @@ int XMLElement :: UpdateElement(XMLElement* e,bool UpdateVariableValues)
 int XMLElement :: RemoveTemporalVariables(bool Deep)
         {
         int iNum = 0;
-#ifdef XML_USE_STL
-        for(int i = (int)variables.size() - 1 ; i >= 0 ; i--)
-#else
         for(int i = variablesnum - 1 ; i >= 0 ; i--)
-#endif
                 {
-#ifdef XML_USE_STL
-                if (variables[i].IsTemporal())
-#else
                 if (variables[i]->IsTemporal())
-#endif
                         {
                         RemoveVariable(i);
                         iNum++;
@@ -2307,17 +2077,9 @@ int XMLElement :: RemoveTemporalVariables(bool Deep)
                 }
         if (Deep)
                 {
-#ifdef XML_USE_STL
-                for(unsigned int i = 0 ; i < children.size() ; i++)
-#else
                 for(unsigned int i = 0 ; i < childrennum ; i++)
-#endif
                         {
-#ifdef XML_USE_STL
-                        iNum += children[i].RemoveTemporalVariables();
-#else
                         iNum += children[i]->RemoveTemporalVariables();
-#endif
                         }
                 }
         return iNum;
@@ -2326,17 +2088,9 @@ int XMLElement :: RemoveTemporalVariables(bool Deep)
 int XMLElement :: RemoveTemporalElements(bool Deep)
         {
         int iNum = 0;
-#ifdef XML_USE_STL
-        for(int i = (int)children.size() ; i >= 0 ; i--)
-#else
         for(int i = childrennum - 1 ; i >= 0 ; i--)
-#endif
                 {
-#ifdef XML_USE_STL
-                if (children[i].IsTemporal())
-#else
                 if (children[i]->IsTemporal())
-#endif
                         {
                         RemoveElement(i);
                         iNum++;
@@ -2344,17 +2098,9 @@ int XMLElement :: RemoveTemporalElements(bool Deep)
                 }
         if (Deep)
                 {
-#ifdef XML_USE_STL
-                for(unsigned int i = 0 ; i < children.size() ; i++)
-#else
                 for(unsigned int i = 0 ; i < childrennum ; i++)
-#endif
                         {
-#ifdef XML_USE_STL
-                        iNum += children[i].RemoveTemporalElements();
-#else
                         iNum += children[i]->RemoveTemporalElements();
-#endif
                         }       
                 }
         return iNum;
@@ -2362,16 +2108,12 @@ int XMLElement :: RemoveTemporalElements(bool Deep)
 
 int XMLElement :: RemoveAllVariables()
         {
-#ifdef XML_USE_STL
-        variables.clear();
-#else
         for(int i = variablesnum - 1 ; i >= 0 ; i--)
                 {
                 delete variables[i];
                 variables[i] = 0;
                 }
         variablesnum = 0;
-#endif
         return 0;
         }
 
@@ -2379,17 +2121,6 @@ int XMLElement :: RemoveAllVariables()
 int XMLElement :: RemoveVariable(XMLVariable* e)
         {
         int X = -1;
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < variables.size() ; i++)
-                {
-                if (&variables[i] == e)
-                        {
-                        X = RemoveVariable(i);
-                        break;
-                        }
-                }
-        return X;
-#else
         for(unsigned int i = 0 ; i < variablesnum ; i++)
                 {
                 if (variables[i] == e)
@@ -2399,17 +2130,10 @@ int XMLElement :: RemoveVariable(XMLVariable* e)
                         }
                 }
         return X;
-#endif
         }
 
 int XMLElement :: RemoveVariable(unsigned int i)
         {
-#ifdef XML_USE_STL
-        if (i >= variables.size())
-                return (int)variables.size();
-        variables.erase(variables.begin() + i);
-        return (int)variables.size();
-#else
         if (i >= variablesnum)
                 return variablesnum;
 
@@ -2421,22 +2145,8 @@ int XMLElement :: RemoveVariable(unsigned int i)
 
         variables[variablesnum - 1] = 0;
         return --variablesnum;
-#endif
         }
 
-#ifdef XML_USE_STL
-int XMLElement :: RemoveVariableAndKeep(unsigned int i,XMLVariable* vr)
-        {
-        if (i >= variables.size())
-                return (int)variables.size();
-        if (vr) 
-                {
-                *vr = variables[i];   
-                }
-        variables.erase(variables.begin() + i);
-        return (int)variables.size();
-        }
-#else
 int XMLElement :: RemoveVariableAndKeep(unsigned int i,XMLVariable** vr)
         {
         if (vr) 
@@ -2459,22 +2169,15 @@ int XMLElement :: RemoveVariableAndKeep(unsigned int i,XMLVariable** vr)
         variables[variablesnum - 1] = 0;
         return --variablesnum;
         }
-#endif
 
 void XML :: Export(FILE* fp,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMode,XMLHeader *hdr,class XMLTransform* eclass,class XMLTransformData* edata)
         {
         // Export all elements
-#ifdef XML_USE_STL
-        XMLElement* root = &_root;
-#endif
         root->Export(fp,1,SaveMode,TargetMode,hdr,eclass,edata);
         }
 
 void XML :: SetExportFormatting(XMLEXPORTFORMAT* xf)
         {
-#ifdef XML_USE_STL
-        XMLElement* root = &_root;
-#endif
         root->SetExportFormatting(xf);
         }
 
@@ -2504,11 +2207,7 @@ XMLElement* XMLElement :: GetElementInSection(const char* section2)
                         return 0;
                         }
 
-#ifdef XML_USE_STL
-                r = &r->GetChildren()[y];
-#else
                 r = r->GetChildren()[y];
-#endif
                 if (!a1) // was last
                         break;
 
@@ -2526,10 +2225,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
         if (!root)
                 return;
 
-#ifdef XML_USE_STL
-#else
         root->ReloadAllElements();
-#endif
 
         char* sp = (char*)fp;
         if (TargetMode == 1)
@@ -2556,7 +2252,6 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                 for(int i = 0 ; i < root->xfformat.nId ; i++)
                         strcat(DelimiterChar,"\t");
                 }
-        //* Use it later
 
 
         size_t Sug = root->GetElementName(0,SaveMode);
@@ -2584,11 +2279,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                 {
                 for(int i = 0 ; i < iY ; i++)
                  {
-#ifdef XML_USE_STL
-                 XMLVariable* v = &root->GetVariables()[i];
-#else
                  XMLVariable* v = root->GetVariables()[i];
-#endif
                  size_t s1 = v->GetName(0,SaveMode);
                  size_t s2 = v->GetValue(0,SaveMode);
 
@@ -2689,18 +2380,10 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                  {
                  if (TotalComments && (NextComment < TotalComments))
                          {
-#ifdef XML_USE_STL
-                         while ((NextComment < TotalComments) && root->GetComments()[NextComment].GetEP() <= i)
-#else
                          while ((NextComment < TotalComments) && root->GetComments()[NextComment]->GetEP() <= i)
-#endif
                                  {
                                  // print that comment now
-#ifdef XML_USE_STL
-                                 const char* t = root->GetComments()[NextComment].operator const char *();
-#else
                                  const char* t = root->GetComments()[NextComment]->operator const char *();
-#endif
                                  Z<char> b(strlen(t) + deep + 200);
                                  for(int i = 0 ; i < (deep + 1) ; i++)
                                          //                               strcat(b,"\t");
@@ -2723,19 +2406,11 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
 
                  if (TotalContents && (NextContent < TotalContents))
                          {
-#ifdef XML_USE_STL
-                         while ((NextContent < TotalContents) && root->GetContents()[NextContent].GetEP() <= i)
-#else
                          while ((NextContent < TotalContents) && root->GetContents()[NextContent]->GetEP() <= i)
-#endif
                                  {
                                  // print that content now
                                  //char* t = root->GetContents()[NextContent]->operator char *();
-#ifdef XML_USE_STL
-                                 size_t vx = root->GetContents()[NextContent].GetValue(0);
-#else
                                  size_t vx = root->GetContents()[NextContent]->GetValue(0);
-#endif
 
                                  Z<char> b(vx + deep + 200);
                                  if (root->xfformat.ElementsNoBreak == false)
@@ -2745,11 +2420,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                                                  strcat(b,DelimiterChar);
                                          //strcat(b,t);
                                          }
-#ifdef XML_USE_STL
-                                 root->GetContents()[NextContent].GetValue(b.operator char*() + strlen(b),SaveMode);
-#else
                                  root->GetContents()[NextContent]->GetValue(b.operator char*() + strlen(b),SaveMode);
-#endif
                                  if (root->xfformat.ElementsNoBreak == false && root->xfformat.ContentsNoBreak == false)
                                          strcat(b,"\r\n");
 
@@ -2765,18 +2436,10 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                                  }
                          if (TotalCDatas && (NextCData < TotalCDatas))
                                  {
-#ifdef XML_USE_STL
-                                 while ((NextCData < TotalCDatas) && root->GetCDatas()[NextCData].GetEP() <= i)
-#else
                                  while ((NextCData < TotalCDatas) && root->GetCDatas()[NextCData]->GetEP() <= i)
-#endif
                                          {
                                          // print that CData now
-#ifdef XML_USE_STL
-                                         const char* t = root->GetCDatas()[NextCData].operator const char *();
-#else
                                          const char* t = root->GetCDatas()[NextCData]->operator const char *();
-#endif
                                          Z<char> b(strlen(t) + deep + 200);
                                          for(int i = 0 ; i < (deep + 1) ; i++)
                                                  //                               strcat(b,"\t");
@@ -2799,11 +2462,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                          }
 
 
-#ifdef XML_USE_STL
-                         printc(fp,&root->GetChildren()[i],deep + 1,ShowAll,SaveMode,TargetMode);
-#else
                          printc(fp,root->GetChildren()[i],deep + 1,ShowAll,SaveMode,TargetMode);
-#endif
                          if (TargetMode == 1)
                                  sp = (char*)fp + strlen((char*)fp);
                  }
@@ -2815,11 +2474,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                 while (NextComment < TotalComments)
                  {
                  // print that comment now
-#ifdef XML_USE_STL
-                 const char* t = root->GetComments()[NextComment].operator const char *();
-#else
                  const char* t = root->GetComments()[NextComment]->operator const char *();
-#endif
                  Z<char> b(strlen(t) + deep + 200);
                  for(int i = 0 ; i < (deep + 1) ; i++)
                          //strcat(b,"\t");
@@ -2846,11 +2501,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                 while (NextCData < TotalCDatas)
                  {
                  // print that CData now
-#ifdef XML_USE_STL
-                 const char* t = root->GetCDatas()[NextCData].operator const char *();
-#else
                  const char* t = root->GetCDatas()[NextCData]->operator const char *();
-#endif
 //               size_t ix = strlen(t);
                  Z<char> b(strlen(t) + deep + 200);
                  for(int i = 0 ; i < (deep + 1) ; i++)
@@ -2880,11 +2531,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                  {
                  // print that content now
                  //char* t = root->GetContents()[NextContent]->operator char *();
-#ifdef XML_USE_STL
-                 size_t vx = root->GetContents()[NextContent].GetValue(0);
-#else
                  size_t vx = root->GetContents()[NextContent]->GetValue(0);
-#endif
 
                  Z<char> b(vx + deep + 200);
                  if (root->xfformat.ElementsNoBreak == false  && root->xfformat.ContentsNoBreak == false)
@@ -2894,11 +2541,7 @@ void XMLElement :: printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAV
                                  strcat(b,DelimiterChar);
                          }
                  //strcat(b,t);
-#ifdef XML_USE_STL
-                 root->GetContents()[NextContent].GetValue(b.operator char*() + strlen(b),SaveMode);
-#else
                  root->GetContents()[NextContent]->GetValue(b.operator char*() + strlen(b),SaveMode);
-#endif
                  if (root->xfformat.ElementsNoBreak == false && root->xfformat.ContentsNoBreak == false)
                          strcat(b,"\r\n");
 
@@ -2942,20 +2585,13 @@ void XMLElement :: SetExportFormatting(XMLEXPORTFORMAT* xf)
         if (xfformat.nId > 50)
                 xfformat.nId = 50;
         for(unsigned int i = 0 ; i < GetChildrenNum() ; i++)
-#ifdef XML_USE_STL
-                GetChildren()[i].SetExportFormatting(xf);
-#else
                 GetChildren()[i]->SetExportFormatting(xf);
-#endif
         }
 
 void XMLElement :: Export(FILE* fp,int ShowAll,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMode,XMLHeader* hdr,class XMLTransform* eclass,class XMLTransformData* edata)
         {
         // Export this element
-#ifdef XML_USE_STL
-#else
         ReloadAllElements();
-#endif
 
         if (eclass == 0)
                 {
@@ -3025,23 +2661,6 @@ void XMLElement :: Export(FILE* fp,int ShowAll,XML_SAVE_MODE SaveMode,XML_TARGET
         }
 
 
-#ifdef XML_USE_STL
-bool XMLElement :: operator <(const XMLElement& x)
-        {
-        // Compare names
-        if (el > x.el)
-                return false;
-        return true;
-        }
-bool XMLVariable :: operator <(const XMLVariable& x)
-        {
-        // Compare names
-        if (vn > x.vn)
-                return false;
-        return true;
-        }
-
-#else
 int _USERENTRY  XMLElementfcmp(const void * a, const void * b)
         {
         XMLElement* x1 = *(XMLElement**)a;
@@ -3074,22 +2693,7 @@ int _USERENTRY  XMLVariablefcmp(const void * a, const void * b)
 
         return strcmpi(s1,s2);
         }
-#endif
 
-#ifdef XML_USE_STL
-void XMLElement :: SortElements()
-        {
-#ifndef LINUX
-        std::sort(children.begin(),children.end());
-#endif
-        }
-void XMLElement :: SortVariables()
-        {
-#ifndef LINUX
-        std::sort(variables.begin(),variables.end());
-#endif
-        }
-#else
 void XMLElement :: SortElements(int (_USERENTRY *fcmp)(const void *, const void *))
         {
         // to all elements
@@ -3111,50 +2715,31 @@ void XMLElement :: SortVariables(int (_USERENTRY *fcmp)(const void *, const void
         else
                 qsort(x,y,sizeof(XMLVariable*),fcmp);
         }
-#endif
 
 // Memory usage funcs
 size_t XML :: MemoryUsage()
         {
-#ifdef XML_USE_STL
-        return GetRootElement().MemoryUsage() + GetHeader().MemoryUsage();
-#else
         return GetRootElement()->MemoryUsage() + GetHeader() ? GetHeader()->MemoryUsage() : 0;
-#endif
         }
 
 void XML :: CompressMemory()
         {
-#ifdef XML_USE_STL
-        GetRootElement().CompressMemory();
-        GetHeader().CompressMemory();
-#else
         GetRootElement()->CompressMemory();
         GetHeader()->CompressMemory();
-#endif
         }
 
 bool XML :: IntegrityTest()
         {
-#ifdef XML_USE_STL
-        return (GetHeader().IntegrityTest() && GetRootElement().IntegrityTest());
-#else
         if (!GetHeader() || !GetRootElement())
                 return false;
         return (GetHeader()->IntegrityTest() && root && GetRootElement()->IntegrityTest());
-#endif
         }
 
 int XML :: Compare(XML*x)
         {
         // 2 XML = equals if headers & root elements compare ok
-#ifdef XML_USE_STL
-        int a1 = (GetRootElement().Compare(x->GetRootElement()));
-        int a2 = (GetHeader().Compare(x->GetHeader()));
-#else
         int a1 = (GetRootElement()->Compare(x->GetRootElement()));
         int a2 = (GetHeader()->Compare(x->GetHeader()));
-#endif
         return !(a1 == 0 && a2 == 0);
         }
 
@@ -3166,29 +2751,17 @@ size_t XMLHeader :: MemoryUsage()
         m += sizeof(*this);
 
         // Comments
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < comments.size() ; i++)
-                {
-                m += comments[i].MemoryUsage();
-                }
-        m += sizeof(comments);
-#else
         for(unsigned int i = 0 ; i < commentsnum ; i++)
                 {
                 m += GetComments()[i]->MemoryUsage();
                 }
         // number of comment pointers
         m += TotalCommentPointersAvailable*4;
-#endif
 
 
         // Text
-#ifdef XML_USE_STL
-        m += hdr.length();
-#else
         if (hdr)
                 m += strlen(hdr);
-#endif
 
         return m;
         }
@@ -3196,9 +2769,6 @@ size_t XMLHeader :: MemoryUsage()
 void XMLHeader :: CompressMemory()
         {
         // Remove wasted space by comments
-#ifdef XML_USE_STL
-        comments.resize(comments.size());
-#else
         int P = commentsnum;
         if (P == 0)
                 P = 1;
@@ -3209,14 +2779,10 @@ void XMLHeader :: CompressMemory()
         TotalCommentPointersAvailable = P;
         delete[] comments;
         comments = oldp;
-#endif
         }
 
 bool XMLHeader :: IntegrityTest()
         {
-#ifdef XML_USE_STL
-        return true;
-#else
         if (!hdr)
                 return false;
 
@@ -3227,39 +2793,8 @@ bool XMLHeader :: IntegrityTest()
                         return false;
                 }
         return true;
-#endif
         }
 
-
-#ifdef XML_USE_STL
-int XMLHeader :: Compare(XMLHeader& x)
-        {
-        // 2 Headers compare ok <=> Same text, same # comments, comments compare ok
-#ifdef XML_USE_STL
-        if (hdr != x.hdr)
-                return 1;
-#else
-        if (strcmp(hdr,x.hdr) != 0)
-                return 1; // fail header
-#endif
-
-        unsigned int Y = GetCommentsNum();
-        if (Y != x.GetCommentsNum())
-                return 1;// differnet comment num
-
-        for(unsigned int i = 0 ; i < Y ; i++)
-                {
-#ifdef XML_USE_STL
-                if (GetComments()[i].Compare(x.GetComments()[i]) == 1)
-                        return 1; // different comment
-#else
-                if (GetComments()[i]->Compare(x.GetComments()[i]) == 1)
-                        return 1; // different comment
-#endif
-                }
-        return 0; // OK!
-        }
-#else
 int XMLHeader :: Compare(XMLHeader* x)
         {
         // 2 Headers compare ok <=> Same text, same # comments, comments compare ok
@@ -3277,7 +2812,6 @@ int XMLHeader :: Compare(XMLHeader* x)
                 }
         return 0; // OK!
         }
-#endif
 
 size_t XMLComment :: MemoryUsage()
         {
@@ -3287,13 +2821,8 @@ size_t XMLComment :: MemoryUsage()
         m += sizeof(*this);
 
         // Comment size
-#ifdef XML_USE_STL
-        m += c.length();
-        m += sizeof(c);
-#else
         if (c)
                 m += strlen(c);
-#endif
 
         return m;
         }
@@ -3304,32 +2833,14 @@ void XMLComment :: CompressMemory()
 
 bool XMLComment :: IntegrityTest()
         {
-#ifdef XML_USE_STL
-        return true;
-#else
         // check parent,c
 
         if (!c)
                 return false;
 
         return true;
-#endif
         }
 
-#ifdef XML_USE_STL
-int XMLComment :: Compare(XMLComment& x)
-        {
-        // Compare OK <=> Same Text
-#ifdef XML_USE_STL
-        if (c == x.c)
-                return 1;
-#else
-        if (strcmp(c,x.c) != 0)
-                return 1;
-#endif
-        return 0;
-        }
-#else
 int XMLComment :: Compare(XMLComment* x)
         {
         // Compare OK <=> Same Text
@@ -3339,17 +2850,12 @@ int XMLComment :: Compare(XMLComment* x)
 
         return 0;
         }
-#endif
 
 
 XMLComment* XMLComment :: Duplicate()
         {
         // returns a copy of myself
-#ifdef XML_USE_STL
-        return new XMLComment(parent,ep,c.c_str());
-#else
         return new XMLComment(parent,ep,c);
-#endif
         }
 
 
@@ -3367,13 +2873,8 @@ size_t XMLContent :: MemoryUsage()
         else
                 {
                 // Comment size
-#ifdef XML_USE_STL
-                m += c.length();
-                m += sizeof(c);
-#else
                 if (c)
                         m += strlen(c);
-#endif
                 }
 
         return m;
@@ -3385,9 +2886,6 @@ void XMLContent :: CompressMemory()
 
 bool XMLContent :: IntegrityTest()
         {
-#ifdef XML_USE_STL
-        return true;
-#else
         // check parent,c
 
         if (BinaryMode == false)
@@ -3397,33 +2895,19 @@ bool XMLContent :: IntegrityTest()
         }
 
         return true;
-#endif
         }
 
-#ifdef XML_USE_STL
-int XMLContent :: Compare(XMLContent& x)
-#else
 int XMLContent :: Compare(XMLContent* x)
-#endif
         {
         // Contents OK <=> Same text
         if (BinaryMode)
                 {
-#ifdef XML_USE_STL
-                if (bdc == x.bdc)
-#else
                 if (bdc == x->bdc)
-#endif
                         return 0;
                 return 1;
                 }
-#ifdef XML_USE_STL
-        if (c == x.c)
-                return 1;
-#else
         if (strcmp(c,x->c) != 0)
                 return 1;
-#endif
         return 0;
         }
 
@@ -3454,13 +2938,8 @@ size_t XMLCData :: MemoryUsage()
         m += sizeof(*this);
 
         // CData size
-#ifdef XML_USE_STL
-        m += c.length();
-        m += sizeof(c);
-#else
         if (c)
                 m += strlen(c);
-#endif
 
         return m;
         }
@@ -3471,32 +2950,19 @@ void XMLCData :: CompressMemory()
 
 bool XMLCData :: IntegrityTest()
         {
-#ifdef XML_USE_STL
-        return true;
-#else
         // check parent,c
 
         if (!c)
                 return false;
 
         return true;
-#endif
         }
 
-#ifdef XML_USE_STL
-int XMLCData :: Compare(XMLCData& x)
-#else
 int XMLCData :: Compare(XMLCData* x)
-#endif
         {
         // Compare OK <=> Same Text
-#ifdef XML_USE_STL
-        if (c == x.c)
-                return 1;
-#else
         if (strcmp(c,x->c) != 0)
                 return 1;
-#endif
         return 0;
         }
 
@@ -3504,11 +2970,7 @@ int XMLCData :: Compare(XMLCData* x)
 XMLCData* XMLCData :: Duplicate()
         {
         // returns a copy of myself
-#ifdef XML_USE_STL
-        return new XMLCData(parent,ep,c.c_str());
-#else
         return new XMLCData(parent,ep,c);
-#endif
         }
 
 
@@ -3535,28 +2997,13 @@ void XMLVariable :: CompressMemory()
 
 bool XMLVariable :: IntegrityTest()
         {
-#ifdef XML_USE_STL
-        return true;
-#else
         // check vv,vn,owner
         if (!vn || !vv)
                 return false;
 
         return true;
-#endif
         }
 
-#ifdef XML_USE_STL
-int XMLVariable :: Compare(XMLVariable& x)
-        {
-        // Contents OK <=> Same value & nam
-        if (vn != x.vn)
-                return 1;
-        if (vv != x.vv)
-                return 1;
-        return 0;
-        }
-#else
 int XMLVariable :: Compare(XMLVariable* x)
         {
         // Contents OK <=> Same value & name
@@ -3570,7 +3017,6 @@ int XMLVariable :: Compare(XMLVariable* x)
                 return 1;
         return 0;
         }
-#endif
 
 size_t XMLElement :: MemoryUsage()
         {
@@ -3580,23 +3026,6 @@ size_t XMLElement :: MemoryUsage()
         // Our size
         m += sizeof(*this);
 
-#ifdef XML_USE_STL
-        m += sizeof(variables);
-        for(unsigned int i = 0 ; i < variables.size() ; i++)
-                m += variables[i].MemoryUsage();
-        m += sizeof(comments);
-        for(unsigned int i = 0 ; i < comments.size() ; i++)
-                m += comments[i].MemoryUsage();
-        m += sizeof(contents);
-        for(unsigned int i = 0 ; i < contents.size() ; i++)
-                m += contents[i].MemoryUsage();
-        m += sizeof(cdatas);
-        for(unsigned int i = 0 ; i < cdatas.size() ; i++)
-                m += cdatas[i].MemoryUsage();
-        m += sizeof(children);
-        for(unsigned int i = 0 ; i < children.size() ; i++)
-                m += children[i].MemoryUsage();
-#else
         // Variables of this
         for(unsigned int i = 0 ; i < variablesnum ; i++)
                 {
@@ -3642,7 +3071,6 @@ size_t XMLElement :: MemoryUsage()
 
         // number of cdata pointers
         m += TotalCDataPointersAvailable*4;
-#endif
 
         // Element name
         m += GetElementName(0);
@@ -3651,23 +3079,6 @@ size_t XMLElement :: MemoryUsage()
 
 void XMLElement :: CompressMemory()
         {
-#ifdef XML_USE_STL
-        comments.resize(comments.size());
-        variables.resize(variables.size());
-        contents.resize(contents.size());
-        cdatas.resize(cdatas.size());
-        children.resize(children.size());
-        for(unsigned int i = 0 ; i < comments.size() ; i++)
-                comments[i].CompressMemory();
-        for(unsigned int i = 0 ; i < contents.size() ; i++)
-                contents[i].CompressMemory();
-        for(unsigned int i = 0 ; i < cdatas.size() ; i++)
-                cdatas[i].CompressMemory();
-        for(unsigned int i = 0 ; i < variables.size() ; i++)
-                variables[i].CompressMemory();
-        for(unsigned int i = 0 ; i < children.size() ; i++)
-                children[i].CompressMemory();
-#else
                 {
                 // Remove wasted space by comments
                 int PC = commentsnum;
@@ -3743,14 +3154,10 @@ void XMLElement :: CompressMemory()
                         if (children[i])
                                 children[i]->CompressMemory();
                         }
-#endif
         }
 
 bool XMLElement :: IntegrityTest()
         {
-#ifdef XML_USE_STL
-        return true;
-#else
 
         // The main meat IntegrityTest
 
@@ -3807,114 +3214,9 @@ bool XMLElement :: IntegrityTest()
 
 
         return true;
-#endif
         }
 
 
-#ifdef XML_USE_STL
-int XMLElement :: Compare(XMLElement& x)
-        {
-        /*
-        XMLElements match if
-
-        Have same element name
-
-        Have same # of variables,and they match
-        Have same # of comments, and they match
-        Have same # of contents, and they match
-        Have same # of children, and they match
-        */
-
-        // Test element name
-#ifdef XML_USE_STL
-        if (el != x.el)
-                return 1;
-#else
-        if (strcmp(el,x.el) != 0)
-                return 1;
-#endif
-
-        // Test Variables
-        unsigned int nV = GetVariableNum();
-        if (nV != x.GetVariableNum())
-                return 1;
-        for(unsigned int i = 0 ; i < nV ; i++)
-                {
-#ifdef XML_USE_STL
-                if (GetVariables()[i].Compare(x.GetVariables()[i]) != 0)
-                        return 1;
-#else
-                if (GetVariables()[i]->Compare(x.GetVariables()[i]) != 0)
-                        return 1;
-#endif
-                }
-
-        // Test Comments
-        unsigned int nC = GetCommentsNum();
-        if (nC != x.GetCommentsNum())
-                return 1;
-        for(unsigned int i = 0 ; i < nC ; i++)
-                {
-#ifdef XML_USE_STL
-                if (GetComments()[i].Compare(x.GetComments()[i]) != 0)
-                        return 1;
-#else
-                if (GetComments()[i]->Compare(x.GetComments()[i]) != 0)
-                        return 1;
-#endif
-                }
-
-        // Test CDatas
-        unsigned int nD = GetCDatasNum();
-        if (nD != x.GetCDatasNum())
-                return 1;
-        for(unsigned int i = 0 ; i < nD ; i++)
-                {
-#ifdef XML_USE_STL
-                if (GetCDatas()[i].Compare(x.GetCDatas()[i]) != 0)
-                        return 1;
-#else
-                if (GetCDatas()[i]->Compare(x.GetCDatas()[i]) != 0)
-                        return 1;
-#endif
-                }
-
-        // Test Contents
-        unsigned int nT = GetContentsNum();
-        if (nT != x.GetContentsNum())
-                return 1;
-        for(unsigned int i = 0 ; i < nT ; i++)
-                {
-#ifdef XML_USE_STL
-                if (GetContents()[i].Compare(x.GetContents()[i]) != 0)
-                        return 1;
-#else
-                if (GetContents()[i]->Compare(x.GetContents()[i]) != 0)
-                        return 1;
-#endif
-                }
-
-        // Test Children Elements
-        unsigned int nE = GetChildrenNum();
-        if (nE != x.GetChildrenNum())
-                return 1;
-        for(unsigned int i = 0 ; i < nE ; i++)
-                {
-//              if (!GetChildren()[i] || !x->GetChildren()[i])
-//                      continue;
-#ifdef XML_USE_STL
-                if (GetChildren()[i].Compare(x.GetChildren()[i]) != 0)
-                        return 1;
-#else
-                if (GetChildren()[i]->Compare(x.GetChildren()[i]) != 0)
-                        return 1;
-#endif
-                }
-
-        return 0; // MATCH!
-        }
-
-#else
 int XMLElement :: Compare(XMLElement* x)
         {
         /*
@@ -3986,21 +3288,6 @@ int XMLElement :: Compare(XMLElement* x)
 
         return 0; // MATCH!
         }
-#endif
-
-#ifdef XML_USE_STL
-string XMLElement :: GetString()
-        {
-        string s;
-
-        size_t M = MemoryUsage();
-        Z<char> d(M);
-        Export((FILE*)d.operator char *(),1,XML_SAVE_MODE_DEFAULT,XML_TARGET_MODE_MEMORY);
-        s = d;
-
-        return s;
-        }
-#endif
 
 
 XMLElement* XML :: Paste(char* txt)
@@ -4015,18 +3302,12 @@ XMLElement* XML :: Paste(char* txt)
                         delete xm;
                         return 0;
                         }
-#ifndef XML_USE_STL
                 if (xm->GetRootElement() == 0)
                         {
                         delete xm;
                         return 0;
                         }
-#endif
-#ifdef XML_USE_STL
-                XMLElement* r = xm->GetRootElement().Duplicate(0);
-#else
                 XMLElement* r = xm->GetRootElement()->Duplicate(0);
-#endif
                 delete xm;
                 return r;
                 }
@@ -4047,10 +3328,6 @@ XMLElement* XMLElement :: Duplicate(XMLElement* par)
 
         */
 
-#ifdef XML_USE_STL
-        XMLElement* nX = new XMLElement(*this);
-        return nX;
-#else
         ReloadAllElements();
 
         size_t z1 = GetElementName(0);
@@ -4095,7 +3372,6 @@ XMLElement* XMLElement :: Duplicate(XMLElement* par)
                 }
 
         return nX;
-#endif
         }
 
 void XML :: SaveOnClose(bool S)
@@ -4111,11 +3387,7 @@ int XML :: Save(const char* file,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMo
                         return 0;
 
                 // TargetMode == 1, save to memory buffer
-#ifdef XML_USE_STL
-                Export((FILE*)file,SaveMode,XML_TARGET_MODE_MEMORY,&hdr,eclass,edata);
-#else
                 Export((FILE*)file,SaveMode,XML_TARGET_MODE_MEMORY,hdr,eclass,edata);
-#endif
                 return 1;
                 }
         if (TargetMode == 2)
@@ -4126,11 +3398,8 @@ int XML :: Save(const char* file,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMo
 
 
         if (!file)
-#ifdef XML_USE_STL
-                file = f.c_str();
-#else
                 file = f;
-#endif
+
         if (!file)
                 return 0;
 
@@ -4148,30 +3417,18 @@ int XML :: Save(const char* file,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMo
                 fwrite("\xFF\xFE",1,2,fp); 
 
                 // Hdr utf-16
-#ifdef XML_USE_STL
-                hdr.SetEncoding("UTF-16");
-#else
                 if (hdr)
                         hdr->SetEncoding("UTF-16");
-#endif
                 }
         if (TargetMode == 0)
                 {
-#ifdef XML_USE_STL
-                hdr.SetEncoding("UTF-8");
-#else
                 if (hdr)
                         hdr->SetEncoding("UTF-8");
-#endif
                 }
 
 
         // Show
-#ifdef XML_USE_STL
-        Export(fp,SaveMode,TargetMode,&hdr,eclass,edata);
-#else
         Export(fp,SaveMode,TargetMode,hdr,eclass,edata);
-#endif
 
         fclose(fp);
         return 1;
@@ -4180,13 +3437,6 @@ int XML :: Save(const char* file,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMo
 void XMLElement :: SetElementName(const char* x)
         {
 
-#ifdef XML_USE_STL
-        el.clear();
-        size_t Sug = XML :: XMLEncode(x,0);
-        Z<char> tmp(Sug + 10);
-        XML :: XMLEncode(x,tmp);
-        el = tmp;
-#else
         if (el)
                 delete[] el;
         el = 0;
@@ -4194,26 +3444,10 @@ void XMLElement :: SetElementName(const char* x)
         el = new char[Sug +10];
         memset(el,0,Sug + 10);
         XML :: XMLEncode(x,el);
-#endif
         }
 
 size_t XMLElement :: GetElementName(char* x,int NoDecode)
         {
-#ifdef XML_USE_STL
-        if (!x)
-                {
-                if (NoDecode)
-                        return el.length();
-                else
-                        return XML :: XMLDecode(el.c_str(),0);
-                }
-
-        if (NoDecode)
-                strcpy(x,el.c_str());
-        else
-                XML :: XMLDecode(el.c_str(),x);
-        return strlen(x);
-#else
         if (!x)
                 {
                 if (NoDecode)
@@ -4227,7 +3461,6 @@ size_t XMLElement :: GetElementName(char* x,int NoDecode)
         else
                 XML :: XMLDecode(el,x);
         return strlen(x);
-#endif
         }
 
 size_t XMLElement :: GetElementFullName(char* x,int NoDecode)
@@ -4242,11 +3475,7 @@ size_t XMLElement :: GetElementFullName(char* x,int NoDecode)
                 parent->GetElementFullName(fel,NoDecode);
                 if (strlen(fel))
                         strcat(fel,"\\");
-#ifdef XML_USE_STL
-                strcat(fel,el.c_str());
-#else
                 strcat(fel,el);
-#endif
                 }
 
         if (!x)
@@ -4289,37 +3518,21 @@ int XMLElement :: GetType()
 
 int XMLElement :: FindElement(XMLElement* x)
         {
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < children.size() ; i++)
-                {
-                if (&children[i] == x)
-                        return i;
-                }
-#else
         for(unsigned int i = 0 ; i < childrennum ; i++)
                 {
                 if (children[i] == x)
                         return i;
                 }
-#endif
         return -1;
         }
 
 int XMLElement :: FindElement(const char* n)
         {
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < children.size() ; i++)
-#else
         for(unsigned int i = 0 ; i < childrennum ; i++)
-#endif
                 {
-#ifdef XML_USE_STL
-                XMLElement* cc = &children[i];
-#else
                 if (!children[i])
                         continue;
                 XMLElement* cc = children[i];
-#endif
                 size_t Sug = cc->GetElementName(0);
                 Z<char> Name(Sug + 10);
                 cc->GetElementName(Name);
@@ -4331,38 +3544,21 @@ int XMLElement :: FindElement(const char* n)
 
 XMLElement* XMLElement:: FindElementZ(XMLElement* x)
         {
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < children.size() ; i++)
-                {
-                if (&children[i] == x)
-                        return &children[i];
-                }
-        return 0;
-#else
         for(unsigned int i = 0 ; i < childrennum ; i++)
                 {
                 if (children[i] == x)
                         return children[i];
                 }
         return 0;
-#endif
         }
 
 XMLElement* XMLElement:: FindElementZ(const char* n,bool ForceCreate,char* el,bool Temp)
         {
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < children.size() ; i++)
-#else
         for(unsigned int i = 0 ; i < childrennum ; i++)
-#endif
                 {
-#ifdef XML_USE_STL
-                XMLElement* cc = &children[i];
-#else
                 if (!children[i])
                         continue;
                 XMLElement* cc = children[i];
-#endif
                 size_t Sug = cc->GetElementName(0);
                 Z<char> Name(Sug + 10);
                 cc->GetElementName(Name);
@@ -4374,65 +3570,36 @@ XMLElement* XMLElement:: FindElementZ(const char* n,bool ForceCreate,char* el,bo
 
         // Create New Element and add
         // Force to create a new element
-#ifdef XML_USE_STL
-        XMLElement& vv = AddElement(el ? el : n,-1,Temp);
-        return FindElementZ(&vv);
-#else
         XMLElement* vv = new XMLElement(this,el ? el : n,0,Temp);
         AddElement(vv);
         return FindElementZ(vv);
-#endif
         }
 
 int XMLElement :: FindVariable(XMLVariable* x)
         {
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < variables.size() ; i++)
-                {
-                if (&variables[i] == x)
-                        return i;
-                }
-#else
         for(unsigned int i = 0 ; i < variablesnum ; i++)
                 {
                 if (variables[i] == x)
                         return i;
                 }
-#endif
         return -1;
         }
 
 XMLVariable* XMLElement :: FindVariableZ(XMLVariable* x)
         {
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < variables.size() ; i++)
-                {
-                if (&variables[i] == x)
-                        return &variables[i];
-                }
-#else
         for(unsigned int i = 0 ; i < variablesnum ; i++)
                 {
                 if (variables[i] == x)
                         return variables[i];
                 }
-#endif
         return 0;
         }
 
 int XMLElement :: FindVariable(const char*  x)
         {
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < variables.size() ; i++)
-#else
         for(unsigned int i = 0 ; i < variablesnum ; i++)
-#endif
                 {
-#ifdef XML_USE_STL
-                XMLVariable* V = &variables[i];
-#else
                 XMLVariable* V = variables[i];
-#endif
 
                 size_t Sug = V->GetName(0);
                 Z<char> Name(Sug + 10);
@@ -4445,15 +3612,9 @@ int XMLElement :: FindVariable(const char*  x)
 
 XMLVariable* XMLElement :: FindVariableZ(const char*  x,bool ForceCreate,char* defnew,bool Temp)
         {
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < variables.size() ; i++)
-                {
-                XMLVariable* V = &variables[i];
-#else
         for(unsigned int i = 0 ; i < variablesnum ; i++)
                 {
                 XMLVariable* V = variables[i];
-#endif
                 size_t Sug = V->GetName(0);
                 Z<char> Name(Sug + 10);
                 V->GetName(Name);
@@ -4464,155 +3625,11 @@ XMLVariable* XMLElement :: FindVariableZ(const char*  x,bool ForceCreate,char* d
                 return 0;
 
         // Force to create a new variable
-#ifdef XML_USE_STL
-        XMLVariable vv(x,defnew,0,Temp);
-        AddVariable(vv);
-        return FindVariableZ(x,0);
-#else
         XMLVariable* vv = new XMLVariable(x,defnew,0,Temp);
         AddVariable(vv);
         return FindVariableZ(x,0);
-#endif
         }
 
-/*
-int XML :: PhantomElement(FILE* fp,XMLElement* r,unsigned long long StartP,unsigned long long EndP)
-        {
-        return 0;
-        }
-*/
-/*
-
-#ifdef LINUX
-int XML ::      PhantomLoad(const char* file)
-#else
-int XML ::      PhantomLoad(const char* file,bool IsUnicode,bool UseMap)
-#endif
-        {
-        return 1;
-        }
-
-*/
-/*
-int XML :: PartialLoad(const char* file,const char* map)
-        {
-        if (!map)
-                return 0;
-
-                FILE* fp = fopen(file,"rb");
-        if (!fp)
-        return 0;
-
-        // Read 1MB portions of the file
-        Z<char> bx(1048580);
-        char* b = bx;
-        int CurrentDeep = 0;
-
-        unsigned long PositionStarting = -1;
-        unsigned long PositionEnding = -1;
-
-        for(;;)
-        {
-        int Y = fread(b,1,1048576,fp);
-        if (Y == 0)
-        break;
-
-        bool IsQuote = false;
-        bool IsHdr = false;
-        bool IsClosingWithSlash = false;
-
-        // Find < and /> or >
-        for(int i = 0 ; i < Y ; i++)
-        {
-        if (b[i] == '<' && IsQuote == false)
-        {
-        if (b[i + 1] == '?')
-        IsHdr = true;
-        else
-        if (b[i + 1] == '/')
-        {
-        IsClosingWithSlash = true;
-        continue;
-        }
-        else
-        {
-        CurrentDeep++;
-        if (CurrentDeep == d->deep && PositionStarting  == -1)
-        PositionStarting = i;
-        IsHdr = false;
-        }
-        }
-
-        if (b[i] == '\"')
-        IsQuote = !IsQuote;
-
-        if (b[i] == '>' && b[i - 1] == '/')
-        {
-        CurrentDeep--;
-        if (CurrentDeep < d->deep && PositionEnding == -1)
-        {
-        PositionEnding = i;
-        break; // found positions !
-        }
-        }
-
-        if (b[i] == '>' && IsClosingWithSlash)
-        {
-        CurrentDeep--;
-        if (CurrentDeep < d->deep && PositionEnding == -1)
-        {
-        PositionEnding = i;
-        break;
-        }
-        IsClosingWithSlash = false;
-        }
-
-        if (b[i] == '>' && IsHdr)
-        {
-        IsHdr = false;
-        }
-
-        if (CurrentDeep < 0)
-        CurrentDeep = 0;
-
-        }
-        }
-
-        // PositionStarting,PositionEnding are found (else error)
-        if (PositionStarting == -1 || PositionEnding == -1)
-        return 0; // Load failed
-
-
-        // Time to parse "map"
-        // Which is something like "el1\\el2\\el3" ...
-        // Named elements to search
-
-
-
-
-
-
-
-
-
-        // fclose(fp);
-        return 0;// 
-        }
-*/
-/*
-XMLElement * XML :: PartialElement(const char* file,const char* map)
-        {
-        XML x;
-#ifdef XML_USE_STL
-        if (x.PartialLoad(file,map) == 1)
-                return x.GetRootElement().Duplicate();
-#else
-        if (x.PartialLoad(file,map) == 1)
-                return x.GetRootElement()->Duplicate();
-#endif
-        return 0;
-        }
-*/
 
 int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,class XMLTransformData* edata)
         {
@@ -4625,12 +3642,8 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
 
         if (LoadMode == XML_LOAD_MODE_LOCAL_FILE) // local xml file
                 {
-#ifdef XML_USE_STL
-                f = file;
-#else
                 f = new char[strlen(file) + 1];
                 strcpy(f,file);
-#endif
                 // parse this file
 #ifndef LINUX
                 IsFileU = false;
@@ -4641,12 +3654,8 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
                         // It is an empty XML file.
                         // Create the initial data/header
 
-#ifdef XML_USE_STL
-                        hdr.GetHeader() = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>";
-#else
                         hdr = new XMLHeader("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>");
                         root = new XMLElement(0,"root",0);
-#endif
 
                         return 1;
                         }
@@ -4654,21 +3663,14 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
                 else
                         if (LoadMode == XML_LOAD_MODE_MEMORY_BUFFER) // memory buffer
                                 {
-#ifdef XML_USE_STL
-#else
                                 f = 0;
-#endif
                                 if (!file || strlen(file) == 0)
                                         {
                                         // It is an empty XML file.
                                         // Create the initial data/header
 
-#ifdef XML_USE_STL
-                                        hdr.GetHeader() = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>";
-#else
                                         hdr = new XMLHeader("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>");
                                         root = new XMLElement(0,"root",0);
-#endif
 
                                         return 1;
                                         }
@@ -4682,10 +3684,7 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
                         else
                                 if (LoadMode == XML_LOAD_MODE_URL) // url
                                         {
-#ifdef XML_USE_STL
-#else
                                         f = 0;
-#endif
                                         }
 
                                 // Read file in y and create all XML data
@@ -4697,19 +3696,11 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
                                 char* a1 = strstr(d,"?>");
                                 if (!a1)
                                         {
-#ifdef XML_USE_STL
-                                        f.clear();
-#else
                                         if (f)
                                                 delete[] f;
                                         f = 0;
-#endif
                                         iParseStatus = XML_PARSE_NO_HEADER;
-#ifdef XML_USE_STL
-                                        hdr.GetHeader() = "\xEF\xBB\xBF<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>";
-#else
                                         hdr = new XMLHeader("\xEF\xBB\xBF<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>");
-#endif
                                         //      root = new XMLElement(0,"root",0);
                                         //      delete y;
                                         //      return 1;
@@ -4721,11 +3712,7 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
                                         a1 += 2;
                                         c1 = *a1;
                                         *a1 = 0;
-#ifdef XML_USE_STL
-                                        hdr.GetHeader() = d;
-#else
                                         hdr = new XMLHeader(d);
-#endif
                                         *a1 = c1;
                                         a2 = a1;
                                         }
@@ -4733,13 +3720,9 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
                                 if (eclass)
                                         {
                                         // Delete f if was an encrypted opening
-#ifdef XML_USE_STL
-                                        f.clear();
-#else
                                         if (f)
                                                 delete[] f;
                                         f = 0;
-#endif
                                         }
 
                                 /*
@@ -4756,19 +3739,6 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
 
                                 a1 = strchr(a2,'<');
 
-#ifdef XML_USE_STL
-                                if (a1)
-                                        {
-                                        XMLElement* rr = XMLHelper :: ParseElementTree(&hdr,0,a1,0,iParseStatus);
-                                        _root = *rr;
-                                        delete rr;
-                                        }
-                                else
-                                        {
-                                        f.clear();
-                                        iParseStatus = XML_PARSE_NO_HEADER;
-                                        }
-#else
                                 if (a1)
                                         root = XMLHelper :: ParseElementTree(hdr,0,a1,0,iParseStatus);
                                 else
@@ -4779,7 +3749,6 @@ int XML :: Load(const char* file,XML_LOAD_MODE LoadMode,XMLTransform* eclass,cla
                                         iParseStatus = XML_PARSE_NO_HEADER;
                                         root = new XMLElement(0,"<root>");
                                         }
-#endif
                                 // Print all elements of this
 
                                 delete y;
@@ -4809,15 +3778,9 @@ XML& XML :: operator =(XML& xml)
         {
         Clear();
         Init();
-#ifdef XML_USE_STL
-        hdr = xml.GetHeader();
-        _root = xml.GetRootElement();
-        f.clear();
-#else
         hdr = xml.GetHeader()->Duplicate();
         root = xml.GetRootElement()->Duplicate();
         f = 0;
-#endif
         iParseStatus = XML_PARSE_OK;
         SOnClose = false;
         return *this;
@@ -4838,12 +3801,8 @@ void XMLElement :: Reparse(const char* elm2,int Type)
 
         if (Type == 1)
                 {
-#ifdef XML_USE_STL
-                el = elm;
-#else
                 el = new char[strlen(elm) + 1];
                 strcpy(el,elm);
-#endif
                 return;
                 }
 
@@ -4874,10 +3833,6 @@ void XMLElement :: Reparse(const char* elm2,int Type)
 
         delete[] xel;
         el = ael;
-#ifdef XML_USE_STL
-        delete[] ael;
-#endif
-
 
         // must be variable ?
         char* a1 = (char*)elm.operator char *() + i;
@@ -4928,11 +3883,7 @@ void XMLElement :: Reparse(const char* elm2,int Type)
                         return;
                 *a3 = 0;
 
-#ifdef XML_USE_STL
-                XMLVariable v(vvn,a1,true);
-#else
                 XMLVariable* v = new XMLVariable(vvn,a1,true);
-#endif
                 *a2 = '=';
                 *a3 = VF;
                 AddVariable(v);
@@ -4952,38 +3903,6 @@ int XMLElement :: GetDeep()
         return d;
         }
 
-#ifdef XML_USE_STL
-XMLElement& XMLElement :: operator =(const XMLElement& e)
-        {
-        el = e.el;
-        Temporal = e.Temporal;
-        type = e.type;
-        cdatas = e.cdatas;
-        children = e.children;
-        comments = e.comments;
-        contents = e.contents;
-        param = e.param;
-        variables = e.variables;
-        xfformat = e.xfformat;
-        parent = e.parent;
-
-        return *this;
-        }
-XMLElement& XMLElement :: operator =(const XMLElement* e)
-        {
-        return operator=(*e);
-        }
-
-XMLElement :: XMLElement(const XMLElement& e)
-        {
-        operator =(e);
-        }
-XMLElement :: XMLElement(const XMLElement* e)
-        {
-        operator =(*e);
-        }
-#endif
-
 XMLElement :: XMLElement(XMLElement* par,const char* elm,int Type,bool Temp)
         {
 
@@ -4996,8 +3915,6 @@ XMLElement :: XMLElement(XMLElement* par,const char* elm,int Type,bool Temp)
         // type
         type = Type;
 
-#ifdef XML_USE_STL
-#else
         // children
         children = new XMLElement*[XML_MAX_INIT_CHILDREN];
         memset(children,0,sizeof(XMLElement*)*XML_MAX_INIT_CHILDREN);
@@ -5031,7 +3948,6 @@ XMLElement :: XMLElement(XMLElement* par,const char* elm,int Type,bool Temp)
 
         // Borrowed Elements
         NumBorrowedElements = 0;
-#endif
 
         // Set default format
         xfformat.nId = 1;
@@ -5066,21 +3982,15 @@ void XMLElement :: Clear()
         RemoveAllContents();
         RemoveAllCDatas();
         // element
-#ifdef XML_USE_STL
-        el.clear();
-#else
         if (el)
                 delete[] el;
         el = 0;
-#endif
         }
 
 XMLElement :: ~XMLElement()
         {
         Clear();
 
-#ifdef XML_USE_STL
-#else
         if (variables)
                 delete[] variables;
         variables = 0;
@@ -5105,7 +4015,6 @@ XMLElement :: ~XMLElement()
                 delete[] cdatas;
         cdatas = 0;
         cdatasnum = 0;
-#endif
         }
 
 
@@ -5120,23 +4029,12 @@ void XMLElement :: SetParent(XMLElement* Parent)
         parent = Parent;
         }
 
-#ifdef XML_USE_STL
-vector<XMLElement>& XMLElement :: GetChildren()
-        {
-        return children;
-        }
-#else
 XMLElement** XMLElement :: GetChildren()
         {
         return children;
         }
-#endif
 
-#ifdef XML_USE_STL
-XMLElement& XMLElement :: operator [](int i)
-#else
 XMLElement* XMLElement :: operator [](int i)
-#endif
         {
         return GetChildren()[i];
         }
@@ -5144,33 +4042,19 @@ XMLElement* XMLElement :: operator [](int i)
 
 unsigned int XMLElement :: GetChildrenNum()
         {
-#ifdef XML_USE_STL
-        return (unsigned int)children.size();
-#else
         return childrennum;
-#endif
         }
 
-#ifdef XML_USE_STL
-vector<XMLVariable>& XMLElement :: GetVariables()
-#else
 XMLVariable** XMLElement :: GetVariables()
-#endif
         {
         return variables;
         }
 
 unsigned int XMLElement :: GetVariableNum()
         {
-#ifdef XML_USE_STL
-        return (unsigned int)variables.size();
-#else
         return variablesnum;
-#endif
         }
 
-#ifdef XML_USE_STL
-#else
 
 int XMLElement :: ReserveSpaceForElements(unsigned int i)
         {
@@ -5276,23 +4160,8 @@ int XMLElement :: SpaceForContent(unsigned int i)
         memcpy(contents,oldp,contentsnum*sizeof(XMLContent*));
         return (TotalContentPointersAvailable - contentsnum);
         }
-#endif
 
 
-#ifdef XML_USE_STL
-XMLElement& XMLElement :: AddElement(const XMLElement& child,int p)
-        {
-        if (p == -1)
-                p = (int)children.size();
-        children.insert(children.begin() + p,child);
-        return children[p];
-        }
-XMLElement& XMLElement :: AddElement(const char* t,int p,bool Temp)
-        {
-        XMLElement x(0,t,0,Temp);
-        return AddElement(x,p);
-        }
-#else
 XMLElement* XMLElement :: AddElement(XMLElement* child)
         {
         SpaceForElement(1);
@@ -5305,22 +4174,7 @@ XMLElement* XMLElement :: AddElement(const char* t)
         XMLElement* x = new XMLElement(this,t,0,0);
         return AddElement(x);
         }
-#endif
 
-#ifdef XML_USE_STL
-XMLVariable& XMLElement :: AddVariable(const XMLVariable& v,int p)
-        {
-        if (p == -1)
-                p = (int)variables.size();
-        variables.insert(variables.begin() + p,v);
-        return variables[p];
-        }
-XMLVariable& XMLElement :: AddVariable(const char* vn,const char* vv,int p,bool Temp)
-        {
-        XMLVariable x(vn,vv,0,Temp);
-        return AddVariable(x,p);
-        }
-#else
 int XMLElement :: AddVariable(XMLVariable* v)
         {
         SpaceForVariable(1);
@@ -5333,19 +4187,8 @@ int XMLElement :: AddVariable(const char* vn,const char* vv)
         XMLVariable* x = new XMLVariable(vn,vv,0,0);
         return AddVariable(x);
         }
-#endif
 
 #ifdef XML_OPTIONAL_MIME
-#ifdef XML_USE_STL
-XMLVariable& XMLElement :: AddBinaryVariable(const char* vn,const char* vv,int S)
-        {
-        XMLVariable x(vn,0,0,0);
-        Z<char> tmp(S + 1);
-        memcpy(tmp,vv,S);
-        x.SetBinaryValue(tmp,S);
-        return AddVariable(x);
-        }
-#else
 int XMLElement :: AddBinaryVariable(const char* vn,const char* vv,int S)
         {
         XMLVariable* x = new XMLVariable(vn,"");
@@ -5355,41 +4198,7 @@ int XMLElement :: AddBinaryVariable(const char* vn,const char* vv,int S)
         return AddVariable(x);
         }
 #endif
-#endif
 
-#ifdef XML_USE_STL
-XMLComment& XMLElement :: AddComment(const char*t,int InsertBeforeElement)
-        {
-        XMLComment x(this,InsertBeforeElement,t);
-        comments.push_back(x);
-        return comments[comments.size() - 1];
-        }
-XMLComment& XMLElement :: AddComment(const XMLComment& co)
-        {
-        comments.push_back(co);
-        return comments[comments.size() - 1];
-        }
-unsigned int XMLElement :: GetCommentsNum()
-        {
-        return (unsigned int)comments.size();
-        }
-vector<XMLComment>& XMLElement :: GetComments()
-        {
-        return comments;
-        }
-int XMLElement :: RemoveAllComments()
-        {
-        comments.clear();
-        return 0;
-        }
-int XMLElement :: RemoveComment(unsigned int i)
-        {
-        if (i >= comments.size())
-                return (int)comments.size();
-        comments.erase(comments.begin() + i);
-        return (int)comments.size();
-        }
-#else
 int XMLElement :: AddComment(XMLComment* v,int InsertBeforeElement)
         {
         SpaceForComment(1);
@@ -5440,41 +4249,7 @@ int XMLElement :: RemoveComment(unsigned int i)
         return --commentsnum;
         }
 
-#endif
 
-#ifdef XML_USE_STL
-XMLCData& XMLElement :: AddCData(const char*t,int InsertBeforeElement)
-        {
-        XMLCData x(this,InsertBeforeElement,t);
-        cdatas.push_back(x);
-        return cdatas[cdatas.size() - 1];
-        }
-XMLCData& XMLElement :: AddCData(const XMLCData& c)
-        {
-        cdatas.push_back(c);
-        return cdatas[cdatas.size() - 1];
-        }
-unsigned int XMLElement :: GetCDatasNum()
-        {
-        return (unsigned int)cdatas.size();
-        }
-vector<XMLCData>& XMLElement :: GetCDatas()
-        {
-        return cdatas;
-        }
-int XMLElement :: RemoveAllCDatas()
-        {
-        cdatas.clear();
-        return 0;
-        }
-int XMLElement :: RemoveCData(unsigned int i)
-        {
-        if (i >= cdatas.size())
-                return (unsigned int)cdatas.size();
-        cdatas.erase(cdatas.begin() + i);
-        return (unsigned int)cdatas.size();
-        }
-#else
 int XMLElement :: AddCData(XMLCData* v,int InsertBeforeElement)
         {
         SpaceForCData(1);
@@ -5519,44 +4294,9 @@ int XMLElement :: RemoveCData(unsigned int i)
         cdatas[cdatasnum - 1] = 0;
         return --cdatasnum;
         }
-#endif
 
 
 // Content class
-#ifdef XML_USE_STL
-XMLContent& XMLElement :: AddContent(const char* t,int InsertBeforeElement,int BinarySize)
-        {
-        XMLContent x(this,InsertBeforeElement,t,0,BinarySize);
-        contents.push_back(x);
-        return contents[contents.size() - 1];
-        }
-XMLContent& XMLElement :: AddContent(const XMLContent& c)
-        {
-        contents.push_back(c);
-        return contents[contents.size() - 1];
-        }
-int XMLElement :: RemoveContent(unsigned int i)
-        {
-        if (i >= contents.size())
-                return (unsigned int)contents.size();
-        contents.erase(contents.begin() + i);
-        return (unsigned int)contents.size();
-        }
-
-void XMLElement :: RemoveAllContents()
-        {
-        contents.clear();
-        }
-
-vector<XMLContent>& XMLElement :: GetContents()
-        {
-        return contents;
-        }
-unsigned int XMLElement :: GetContentsNum()
-        {
-        return (unsigned int)contents.size();
-        }
-#else
 int XMLElement :: AddContent(XMLContent* v,int InsertBeforeElement)
         {
         SpaceForContent(1);
@@ -5605,23 +4345,16 @@ unsigned int XMLElement :: GetContentsNum()
         {
         return contentsnum;
         }
-#endif
 
 
 unsigned int XMLElement :: GetAllChildren(XMLElement** x,unsigned int deep)
         {
         int C = 0;
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < children.size() && deep != 0 ; i++)
-                {
-                XMLElement* ch = &children[i];
-#else
         for(unsigned int i = 0 ; i < childrennum && deep != 0 ; i++)
                 {
                 if (!children[i])
                         continue;
                 XMLElement* ch = children[i];
-#endif
                 C += ch->GetAllChildren(x + C,deep == 0xFFFFFFFF ? deep : (deep - 1));
                 x[C++] = ch;
                 }
@@ -5632,13 +4365,6 @@ unsigned int XMLElement :: GetAllChildren(XMLElement** x,unsigned int deep)
 unsigned int XMLElement :: GetAllChildrenNum(unsigned int deep)
         {
         int C = 0;
-#ifdef XML_USE_STL
-        for(unsigned int i = 0 ; i < children.size() && deep != 0 ; i++)
-                {
-                C += children[i].GetAllChildrenNum(deep == 0xFFFFFFFF ? deep : (deep - 1));
-                }
-        C += (int)children.size();
-#else
         for(unsigned int i = 0 ; i < childrennum && deep != 0 ; i++)
                 {
                 if (!children[i])
@@ -5646,7 +4372,6 @@ unsigned int XMLElement :: GetAllChildrenNum(unsigned int deep)
                 C += children[i]->GetAllChildrenNum(deep == 0xFFFFFFFF ? deep : (deep - 1));
                 }
         C += childrennum;
-#endif
         return C;
         }
 
@@ -5656,15 +4381,10 @@ XMLComment :: XMLComment(XMLElement* p,int ElementPosition,const char* ht)
         {
         parent = p;
         ep = ElementPosition;
-#ifdef XML_USE_STL
-        if (ht)
-                c = ht;
-#else
         if (!ht)
                 ht = " ";
         c = new char[strlen(ht) + 1];
         strcpy(c,ht);
-#endif
         }
 
 XMLComment :: XMLComment(const XMLComment& h)
@@ -5674,60 +4394,38 @@ XMLComment :: XMLComment(const XMLComment& h)
 
 XMLComment& XMLComment :: operator =(const XMLComment& h)
         {
-#ifdef XML_USE_STL
-        c.clear();
-#else
         if (c)
                 delete[] c;
         c = 0;
-#endif
 
         parent = h.parent;
         ep = h.GetEP();
-#ifdef XML_USE_STL
-        c = h.c;
-#else
         const char* ht = h.operator const char*();
         c = new char[strlen(ht) + 1];
         strcpy(c,ht);
-#endif
         return *this;
         }
 
 
 XMLComment :: ~XMLComment()
         {
-#ifdef XML_USE_STL
-        c.clear();
-#else
         if (c)
                 delete[] c;
         c = 0;
-#endif
         }
 
 XMLComment :: operator const char*() const
         {
-#ifdef XML_USE_STL
-        return c.c_str();
-#else
         return c;
-#endif
         }
 
 
 void XMLComment :: SetComment(const char* ht)
         {
-#ifdef XML_USE_STL
-        c.clear();
-        if (ht)
-                c = ht;
-#else
         if (c)
                 delete[] c;
         c = new char[strlen(ht) + 1];
         strcpy(c,ht);
-#endif
         }
 
 void XMLComment :: SetParent(XMLElement* p,int epp)
@@ -5747,14 +4445,8 @@ XMLCData :: XMLCData(XMLElement* p,int ElementPosition, const char* ht)
         {
         parent = p;
         ep = ElementPosition;
-#ifdef XML_USE_STL
-        c.clear();
-        if (ht)
-                c = ht;
-#else
         c = new char[strlen(ht) + 1];
         strcpy(c,ht);
-#endif
         }
 
 XMLCData :: XMLCData(const XMLCData& h)
@@ -5764,60 +4456,38 @@ XMLCData :: XMLCData(const XMLCData& h)
 
 XMLCData& XMLCData :: operator =(const XMLCData& h)
         {
-#ifdef XML_USE_STL
-        c.clear();
-#else
         if (c)
                 delete[] c;
         c = 0;
-#endif
         parent = h.parent;
         ep = h.GetEP();
-#ifdef XML_USE_STL
-        c = h.c;
-#else
         const char* ht = h.operator const char*();
         c = new char[strlen(ht) + 1];
         strcpy(c,ht);
-#endif
         return *this;
         }
 
 
 XMLCData :: ~XMLCData()
         {
-#ifdef XML_USE_STL
-        c.clear();
-#else
         if (c)
                 delete[] c;
         c = 0;
-#endif
         }
 
 XMLCData :: operator const char*() const
         {
-#ifdef XML_USE_STL
-        return c.c_str();
-#else
         return c;
-#endif
         }
 
 
 void XMLCData :: SetCData(const char* ht)
         {
-#ifdef XML_USE_STL
-        c.clear();
-        if (ht)
-                c = ht;
-#else
         if (c)
                 delete[] c;
         size_t nht = strlen(ht);
         c = new char[nht + 1];
         strcpy(c,ht);
-#endif
         }
 
 void XMLCData :: SetParent(XMLElement* p,int epp)
@@ -5837,11 +4507,7 @@ XMLContent :: XMLContent(XMLElement* p,int ElementPosition,const char* ht,int No
         {
         parent = p;
         ep = ElementPosition;
-#ifdef XML_USE_STL
-        c.clear();
-#else
         c = 0;
-#endif
         BinaryMode = 0;
         if (ht)
                 SetValue(ht,NoDecode,BinarySize);
@@ -5864,13 +4530,9 @@ XMLContent :: XMLContent(const XMLContent& h)
 
 XMLContent& XMLContent :: operator =(const XMLContent& h)
         {
-#ifdef XML_USE_STL
-        c.clear();
-#else
         if (c)
                 delete[] c;
         c = 0;
-#endif
         bdc.clear();
         BinaryMode = false;
 
@@ -5893,13 +4555,9 @@ XMLContent& XMLContent :: operator =(const XMLContent& h)
 
 XMLContent :: ~XMLContent()
         {
-#ifdef XML_USE_STL
-        c.clear();
-#else
         if (c)
                 delete[] c;
         c = 0;
-#endif
         bdc.clear();
         }
 
@@ -5920,11 +4578,7 @@ bool XMLContent :: GetBinaryValue(char**o,unsigned int* len)
 
         const char* d = 0;
         int ll = 0;
-#ifdef XML_USE_STL
-        d = c.c_str();
-#else
         d = c;
-#endif
         if (!d)
                 return false;
         ll = (int)strlen(d);
@@ -5956,30 +4610,16 @@ size_t XMLContent :: GetValue(char* x,int NoDecode) const
 
         if (!x)
                 {
-#ifdef XML_USE_STL
-                if (NoDecode)
-                        return c.length();
-                else
-                        return XML :: XMLDecode(c.c_str(),0);
-#else
                 if (NoDecode)
                         return strlen(c);
                 else
                         return XML :: XMLDecode(c,0);
-#endif
                 }
 
-#ifdef XML_USE_STL
-        if (NoDecode)
-                strcpy(x,c.c_str());
-        else
-                XML :: XMLDecode(c.c_str(),x);
-#else
         if (NoDecode)
                 strcpy(x,c);
         else
                 XML :: XMLDecode(c,x);
-#endif
         return strlen(x);
         }
 
@@ -6023,20 +4663,6 @@ void XMLContent :: SetValue(const char* VV,int NoDecode,int BinarySize)
                 }
 #endif
 
-#ifdef XML_USE_STL
-        c.clear();
-        if (!VV)
-                return;
-        if (NoDecode)
-                c = VV;
-        else
-                {
-                size_t Sug = XML :: XMLEncode(VV,0);
-                Z<char> tmp(Sug + 10);
-                XML :: XMLEncode(VV,tmp);
-                c = tmp;
-                }
-#else
         if (c)
                 delete[] c;
         size_t Sug = XML :: XMLEncode(VV,0);
@@ -6048,7 +4674,6 @@ void XMLContent :: SetValue(const char* VV,int NoDecode,int BinarySize)
                 strcpy(c,VV);
         else
                 XML :: XMLEncode(VV,c);
-#endif
 
         }
 
@@ -6068,11 +4693,6 @@ int XMLContent :: GetEP() const
 // XMLHeader class
 XMLHeader :: XMLHeader(const char* ht)
         {
-#ifdef XML_USE_STL
-        hdr.clear();
-        if (ht)
-                hdr = ht;
-#else
         if (ht)
                 {
                 hdr = new char[strlen(ht) + 1];
@@ -6083,16 +4703,12 @@ XMLHeader :: XMLHeader(const char* ht)
                 hdr = new char[100];
                 memset(hdr,0,100);
                 }
-#endif
 
         // comments
-#ifdef XML_USE_STL
-#else
         comments = new XMLComment*[XML_MAX_INIT_COMMENTS_HEADER];
         memset(comments,0,sizeof(XMLComment*)*XML_MAX_INIT_COMMENTS_HEADER);
         TotalCommentPointersAvailable = XML_MAX_INIT_COMMENTS_HEADER;
         commentsnum = 0;
-#endif
         }
 
 XMLHeader :: XMLHeader(XMLHeader& h)
@@ -6102,40 +4718,26 @@ XMLHeader :: XMLHeader(XMLHeader& h)
 
 void XMLHeader :: Clear()
         {
-#ifdef XML_USE_STL
-        hdr.clear();
-#else
-if (hdr)
+        if (hdr)
                 delete[] hdr;
         hdr = 0;
-#endif
 
         RemoveAllComments();
-#ifdef XML_USE_STL
-#else
         if (comments)
                 delete[] comments;
         comments = 0;
         commentsnum = 0;
-#endif
         }
 
 XMLHeader& XMLHeader :: operator =(XMLHeader& h)
         {
         Clear();
 
-#ifdef XML_USE_STL
-        hdr = h.hdr;
-#else
         const char*ht = h.operator const char*();
         hdr = new char[strlen(ht) + 1];
         strcpy(hdr,ht);
-#endif
 
         // comments
-#ifdef XML_USE_STL
-        comments = h.GetComments();
-#else
         comments = new XMLComment*[XML_MAX_INIT_COMMENTS_HEADER];
         memset(comments,0,sizeof(XMLComment*)*XML_MAX_INIT_COMMENTS_HEADER);
         TotalCommentPointersAvailable = XML_MAX_INIT_COMMENTS_HEADER;
@@ -6146,7 +4748,6 @@ XMLHeader& XMLHeader :: operator =(XMLHeader& h)
                 {
                 AddComment(h.GetComments()[i]->Duplicate(),h.GetComments()[i]->GetEP());
                 }
-#endif
 
         return *this;
         }
@@ -6157,17 +4758,10 @@ XMLHeader :: ~XMLHeader()
         Clear();
         }
 
-#ifdef XML_USE_STL
-XMLHeader :: operator const char*()
-        {
-        return hdr.c_str();
-        }   
-#else
 XMLHeader :: operator const char*()
         {
         return hdr;
         }   
-#endif
 
 void XMLHeader :: SetEncoding(const char* e)
         {
@@ -6175,22 +4769,14 @@ void XMLHeader :: SetEncoding(const char* e)
         Z<char> nt(1000);
         sprintf(nt,"<?xml version=\"1.0\" encoding=\"%s\" standalone=\"yes\" ?>",e);
         size_t sl = strlen(nt) + 1;
-#ifdef XML_USE_STL
-        hdr = nt;
-#else
         delete[] hdr;
         hdr = new char[sl];
         memset(hdr,0,sl);
         strcpy(hdr,nt);
-#endif
         }
 
 XMLHeader* XMLHeader :: Duplicate()
         {
-#ifdef XML_USE_STL
-        XMLHeader* hz = new XMLHeader(hdr.c_str());
-        hz->comments = comments;
-#else
         XMLHeader* hz = new XMLHeader(hdr);
         // Add All Comments
         int y = GetCommentsNum();
@@ -6199,27 +4785,10 @@ XMLHeader* XMLHeader :: Duplicate()
                 hz->AddComment(GetComments()[i]->Duplicate(),GetComments()[i]->GetEP());
                 }
 
-#endif
 
         return hz;
         }
 
-#ifdef XML_USE_STL
-XMLComment& XMLHeader :: AddComment(const char* v,int pos,const wchar_t* wt)
-        {
-        if (pos == -1)
-                pos = (int)comments.size();
-        XMLComment c(0,pos,v,wt);
-        comments.insert(comments.begin() + pos,c);
-        return comments[pos];
-        }
-XMLComment& XMLHeader :: AddComment(const XMLComment& c)
-        {
-        comments.push_back(c);
-        return comments[comments.size() - 1];
-        }
-
-#else
 int XMLHeader :: AddComment(XMLComment* v,int pos)
         {
         SpaceForComment(1);
@@ -6227,55 +4796,33 @@ int XMLHeader :: AddComment(XMLComment* v,int pos)
         v->SetParent(0,pos);
         return commentsnum;
         }
-#endif
 
 
 unsigned int XMLHeader :: GetCommentsNum()
         {
-#ifdef XML_USE_STL
-        return (unsigned int)comments.size();
-#else
         return commentsnum;
-#endif
         }
 
-#ifdef XML_USE_STL
-vector<XMLComment>& XMLHeader :: GetComments()
-        {
-        return comments;
-        }
-#else
 XMLComment** XMLHeader :: GetComments()
         {
         return comments;
         }
-#endif
 
 
 int XMLHeader :: RemoveAllComments()
         {
-#ifdef XML_USE_STL
-        comments.clear();
-#else
         for(int i = commentsnum - 1 ; i >= 0 ; i--)
                 {
                 delete comments[i];
                 comments[i] = 0;
                 }
         commentsnum = 0;
-#endif
         return 0;
         }
 
 
 int XMLHeader :: RemoveComment(unsigned int i)
         {
-#ifdef XML_USE_STL
-        if (i >= comments.size())
-                return (unsigned int)comments.size();
-        comments.erase(comments.begin() + i);
-        return (unsigned int)comments.size();
-#else
         if (i >= commentsnum)
                 return commentsnum;
 
@@ -6287,7 +4834,6 @@ int XMLHeader :: RemoveComment(unsigned int i)
 
         comments[commentsnum - 1] = 0;
         return --commentsnum;
-#endif
         }
 
 
@@ -6295,15 +4841,6 @@ void XMLHeader :: Export(FILE* fp,int HeaderMode,XML_TARGET_MODE TargetMode,clas
         {
         if (TargetMode == 1)
                 {
-#ifdef XML_USE_STL
-                if (HeaderMode == 0)
-                        sprintf((char*)fp,"%s\r\n",hdr.c_str());
-                for(unsigned int i = 0 ; i < comments.size() ; i++)
-                        {
-                        if (comments[i].GetEP() == HeaderMode)
-                                sprintf((char*)fp,"<!--%s-->\r\n",comments[i].operator const char *());
-                        }
-#else
                 if (HeaderMode == 0)
                         sprintf((char*)fp,"%s\r\n",hdr);
                 for(unsigned int i = 0 ; i < commentsnum ; i++)
@@ -6311,27 +4848,17 @@ void XMLHeader :: Export(FILE* fp,int HeaderMode,XML_TARGET_MODE TargetMode,clas
                         if (comments[i]->GetEP() == HeaderMode)
                                 sprintf((char*)fp,"<!--%s-->\r\n",comments[i]->operator const char *());
                         }
-#endif
                 return;
                 }
 
         if (TargetMode == 2)
                 {
-                return; //*
+                return;
 
                 }
 
         if (TargetMode == 0) // UTF-8
                 {
-#ifdef XML_USE_STL
-                if (HeaderMode == 0)
-                        fprintf(fp,"%s\r\n",hdr.c_str());
-                for(unsigned int i = 0 ; i < comments.size() ; i++)
-                        {
-                        if (comments[i].GetEP() == HeaderMode)
-                                fprintf(fp,"<!--%s-->\r\n",comments[i].operator const char *());
-                        }
-#else
                 if (HeaderMode == 0)
                         fprintf(fp,"%s\r\n",hdr);
                 for(unsigned int i = 0 ; i < commentsnum ; i++)
@@ -6339,7 +4866,6 @@ void XMLHeader :: Export(FILE* fp,int HeaderMode,XML_TARGET_MODE TargetMode,clas
                         if (comments[i]->GetEP() == HeaderMode)
                                 fprintf(fp,"<!--%s-->\r\n",comments[i]->operator const char *());
                         }
-#endif
                 }
         }
 
@@ -6348,23 +4874,6 @@ void XMLHeader :: Export(FILE* fp,int HeaderMode,XML_TARGET_MODE TargetMode,clas
 // XMLVariable class
 void XMLVariable :: SetName(const char* VN,int NoDecode)
         {
-#ifdef XML_USE_STL
-        vn.clear();
-        if (!VN)
-                return;
-        if (NoDecode)
-                vn = VN;
-        else
-                {
-                size_t Sug = XML :: XMLEncode(VN,0);
-                Z<char> tmp(Sug + 10);
-                XML :: XMLEncode(VN,tmp);
-                vn = tmp;
-                }
-
-        while(vn.length() && vn[vn.length() - 1] == ' ')
-                vn.erase(vn.end() - 1);
-#else
         if (vn)
                 delete[] vn;
         size_t Sug = XML :: XMLEncode(VN,0);
@@ -6378,25 +4887,10 @@ void XMLVariable :: SetName(const char* VN,int NoDecode)
         // 0x132 fix for white space at the end of the variable
         while(vn[strlen(vn) - 1] == ' ')
                 vn[strlen(vn) - 1] = 0;
-#endif
         }
 
 void XMLVariable :: SetValue(const char* VV,int NoDecode)
         {
-#ifdef XML_USE_STL
-        vv.clear();
-        if (!VV)
-                return;
-        if (NoDecode)
-                vv = VV;
-        else
-                {
-                size_t Sug = XML :: XMLEncode(VV,0);
-                Z<char> tmp(Sug + 10);
-                XML :: XMLEncode(VV,tmp);
-                vv = tmp;
-                }
-#else
         if (vv)
                 delete[] vv;
         size_t Sug = XML :: XMLEncode(VV,0);
@@ -6406,18 +4900,12 @@ void XMLVariable :: SetValue(const char* VV,int NoDecode)
                 strcpy(vv,VV);
         else
                 XML :: XMLEncode(VV,vv);
-#endif
         }
 
 XMLVariable :: XMLVariable(const char* VN,const char* VV,int NoDecode,bool Temp)
         {
-#ifdef XML_USE_STL
-        vn.clear();
-        vv.clear();
-#else
         vn = 0;
         vv = 0;
-#endif
         owner = 0;
         Temporal = Temp;
         SetName(VN,NoDecode);
@@ -6448,10 +4936,6 @@ XMLElement* XMLVariable :: GetOwnerElement()
 
 void XMLVariable :: Clear()
         {
-#ifdef XML_USE_STL
-        vn.clear();
-        vv.clear();
-#else
         if (vn)
                 delete[] vn;
         vn = 0;
@@ -6459,7 +4943,6 @@ void XMLVariable :: Clear()
         if (vv)
                 delete[] vv;
         vv = 0;
-#endif
         }
 
 XMLVariable :: ~XMLVariable()
@@ -6494,21 +4977,6 @@ XMLVariable& XMLVariable :: operator =(const XMLVariable& h)
 
 size_t XMLVariable :: GetName(char* x,int NoDecode) const
         {
-#ifdef XML_USE_STL
-        if (!x)
-                {
-                if (NoDecode)
-                        return vn.length();
-                else
-                        return XML :: XMLDecode(vn.c_str(),0);
-                }
-
-        if (NoDecode)
-                strcpy(x,vn.c_str());
-        else
-                XML :: XMLDecode(vn.c_str(),x);
-        return strlen(x);
-#else
         if (!x)
                 {
                 if (NoDecode)
@@ -6522,25 +4990,10 @@ size_t XMLVariable :: GetName(char* x,int NoDecode) const
         else
                 XML :: XMLDecode(vn,x);
         return strlen(x);
-#endif
         }
 
 size_t XMLVariable :: GetValue(char* x,int NoDecode) const
         {
-#ifdef XML_USE_STL
-        if (!x)
-                {
-                if (NoDecode)
-                        return vv.length();
-                else
-                        return XML :: XMLDecode(vv.c_str(),0);
-                }
-        if (NoDecode)
-                strcpy(x,vv.c_str());
-        else
-                XML :: XMLDecode(vv.c_str(),x);
-        return strlen(x);
-#else
         if (!x)
                 {
                 if (NoDecode)
@@ -6553,7 +5006,6 @@ size_t XMLVariable :: GetValue(char* x,int NoDecode) const
         else
                 XML :: XMLDecode(vv,x);
         return strlen(x);
-#endif
         }
 
 int XMLVariable :: GetValueInt()
@@ -6769,44 +5221,24 @@ bool XMLElement :: EncryptElement(unsigned int i,char* pwd)
         {
         if (i >= GetChildrenNum())
                 return false;
-#ifdef XML_USE_STL
-        XMLElement& j = children[i];
-        XMLElement* nj = j.Encrypt(pwd);
-#else
         XMLElement* j = children[i];
         XMLElement* nj = j->Encrypt(pwd);
-#endif
         if (!nj)
                 return false;
         RemoveElement(i);
-#ifdef XML_USE_STL
-        AddElement(*nj,i);
-        delete nj;
-#else
         InsertElement(0,nj);
-#endif
         return true;
         }
 bool XMLElement :: DecryptElement(unsigned int i,char* pwd)
         {
         if (i >= GetChildrenNum())
                 return false;
-#ifdef XML_USE_STL
-        XMLElement& j = children[i];
-        XMLElement* nj = j.Decrypt(pwd);
-#else
         XMLElement* j = children[i];
         XMLElement* nj = j->Decrypt(pwd);
-#endif
         if (!nj)
                 return false;
         RemoveElement(i);
-#ifdef XML_USE_STL
-        AddElement(*nj,i);
-        delete nj;
-#else
         InsertElement(0,nj);
-#endif
         return true;
         }
 
@@ -6868,11 +5300,7 @@ bool XML :: TestMatch(const char* item1,const char* comp,const char* item2)
 
 int XML :: XMLQuery(const char* rootsection,const char* expression,XMLElement** rv,unsigned int deep)
         {
-#ifdef XML_USE_STL
-        XMLElement* r = _root.GetElementInSection(rootsection);
-#else
         XMLElement* r = root->GetElementInSection(rootsection);
-#endif
         if (!r)
                 return 0;
         return r->XMLQuery(expression,rv,deep);
@@ -6994,11 +5422,7 @@ int XMLElement :: XMLQuery(const char* expression2,XMLElement** rv,unsigned int 
                                 {
                                 unsigned int iC = atoi(item1.operator char*() + 1);
                                 if (allelements[y]->GetContentsNum() > iC)
-#ifdef XML_USE_STL
-                                        allelements[y]->GetContents()[iC].GetValue(ItemToMatch);
-#else
                                         allelements[y]->GetContents()[iC]->GetValue(ItemToMatch);
-#endif
 
                                 if (XML :: TestMatch(ItemToMatch,comp,item2) == 0)
                                         positives[y] = 0;
@@ -7009,11 +5433,7 @@ int XMLElement :: XMLQuery(const char* expression2,XMLElement** rv,unsigned int 
                                 if (V == -1)
                                         strcpy(ItemToMatch,"");
                                 else
-#ifdef XML_USE_STL
-                                        allelements[y]->GetVariables()[V].GetValue(ItemToMatch,0);
-#else
                                         allelements[y]->GetVariables()[V]->GetValue(ItemToMatch,0);
-#endif
                                 if (XML :: TestMatch(ItemToMatch,comp,item2) == 0)
                                         positives[y] = 0;
                                 }
@@ -7152,12 +5572,8 @@ BDC XMLContent :: ExportToBinary()
                 ds = (unsigned int)bdc.size();
         else
                 {
-#ifdef XML_USE_STL
-                ds = (unsigned int)c.length();
-#else
                 if (c)
                         ds = (unsigned int)strlen(c);
-#endif
                 }
 
         bs += ds;
@@ -7191,12 +5607,8 @@ BDC XMLContent :: ExportToBinary()
                 memcpy(ptr,bdc.p(),ds);
         else
                 {
-#ifdef XML_USE_STL
-                memcpy(ptr,c.c_str(),ds);
-#else
                 if (c)
                         memcpy(ptr,c,ds);
-#endif
                 }
         ptr += ds;
 
@@ -7263,12 +5675,8 @@ BDC XMLComment :: ExportToBinary()
 
         unsigned int bs = sizeof(XMLBINARYHEADER) + 4 + 4;
         unsigned int ds = 0;
-#ifdef XML_USE_STL
-        ds = (unsigned int)c.length();
-#else
         if (c)
                 ds = (unsigned int)strlen(c);
-#endif
 
         bs += ds;
         b.Resize(bs);
@@ -7292,12 +5700,8 @@ BDC XMLComment :: ExportToBinary()
         *pds = ds;
         ptr += 4;
 
-#ifdef XML_USE_STL
-        memcpy(ptr,c.c_str(),ds);
-#else
         if (c)
                 memcpy(ptr,c,ds);
-#endif
         ptr += ds;
 
         return b;
@@ -7363,12 +5767,8 @@ BDC XMLCData :: ExportToBinary()
 
         unsigned int bs = sizeof(XMLBINARYHEADER) + 4 + 4;
         unsigned int ds = 0;
-#ifdef XML_USE_STL
-        ds = (unsigned int)c.length();
-#else
         if (c)
                 ds = (unsigned int)strlen(c);
-#endif
 
         bs += ds;
         b.Resize(bs);
@@ -7392,12 +5792,8 @@ BDC XMLCData :: ExportToBinary()
         *pds = ds;
         ptr += 4;
 
-#ifdef XML_USE_STL
-        memcpy(ptr,c.c_str(),ds);
-#else
         if (c)
                 memcpy(ptr,c,ds);
-#endif
         ptr += ds;
 
         return b;
@@ -7474,15 +5870,10 @@ BDC XMLVariable :: ExportToBinary()
         unsigned int bs = sizeof(XMLBINARYHEADER) + 4 + 4;
         unsigned int ds1 = 0;
         unsigned int ds2 = 0;
-#ifdef XML_USE_STL
-        ds1 = (unsigned int)vn.length();
-        ds2 = (unsigned int)vv.length();
-#else
         if (vn)
                 ds1 = (unsigned int)strlen(vn);
         if (vv)
                 ds2 = (unsigned int)strlen(vv);
-#endif
 
         bs += ds1;
         bs += ds2;
@@ -7502,12 +5893,8 @@ BDC XMLVariable :: ExportToBinary()
         *pds1 = ds1;
         ptr += 4;
 
-#ifdef XML_USE_STL
-        memcpy(ptr,vn.c_str(),ds1);
-#else
         if (vn)
                 memcpy(ptr,vn,ds1);
-#endif
         ptr += ds1;
 
         // Value
@@ -7515,12 +5902,8 @@ BDC XMLVariable :: ExportToBinary()
         *pds2 = ds2;
         ptr += 4;
 
-#ifdef XML_USE_STL
-        memcpy(ptr,vv.c_str(),ds2);
-#else
         if (vn)
                 memcpy(ptr,vv,ds2);
-#endif
         ptr += ds2;
 
 
@@ -7562,15 +5945,11 @@ bool XMLHeader :: ImportFromBinary(const BDC& b)
 
         Clear();
 
-#ifdef XML_USE_STL
-        hdr = txt;
-#else
         if (hdr)
                 delete[] hdr;
         hdr = 0;
         hdr = new char[DataSize + 1];
         strcpy(hdr,txt);
-#endif
         RemainingSize -= DataSize;
         ptr += DataSize;
 
@@ -7585,17 +5964,11 @@ bool XMLHeader :: ImportFromBinary(const BDC& b)
                 BDC co;
                 co.Resize(ds);
                 memcpy(co.p(),ptr,ds);
-#ifdef XML_USE_STL
-                XMLComment nc;
-                if (nc.ImportFromBinary(co))
-                        AddComment(nc);
-#else
                 XMLComment* nc = new XMLComment();
                 if (nc->ImportFromBinary(co))
                         AddComment(nc,-1);
                 else
                         delete nc;
-#endif
 
                 ptr += ds;
                 RemainingSize -= ds;
@@ -7618,26 +5991,13 @@ BDC XMLHeader :: ExportToBinary()
 
         unsigned int bs = sizeof(XMLBINARYHEADER) + 4;
         unsigned int ds = 0;
-#ifdef XML_USE_STL
-        ds = (unsigned int)hdr.length();
-#else
         if (hdr)
                 ds = (unsigned int)strlen(hdr);
-#endif
 
         bs += ds;
 
         // All comments
         unsigned int numComments = 0;
-#ifdef XML_USE_STL
-        numComments = (unsigned int)comments.size();
-        Z<BDC> CommentsData(comments.size());
-        for(unsigned int i = 0 ; i < comments.size() ; i++)
-                {
-                CommentsData[i] = comments[i].ExportToBinary();
-                bs += (unsigned int)CommentsData[i].size();
-                }
-#else
         numComments = commentsnum;
         Z<BDC> CommentsData(commentsnum);
         for(unsigned int i = 0 ; i < commentsnum ; i++)
@@ -7645,7 +6005,6 @@ BDC XMLHeader :: ExportToBinary()
                 CommentsData[i] = comments[i]->ExportToBinary();
                 bs += (unsigned int)CommentsData[i].size();
                 }
-#endif
 
 
 
@@ -7665,12 +6024,8 @@ BDC XMLHeader :: ExportToBinary()
         *pds = ds;
         ptr += 4;
 
-#ifdef XML_USE_STL
-        memcpy(ptr,hdr.c_str(),ds);
-#else
         if (hdr)
                 memcpy(ptr,hdr,ds);
-#endif
         ptr += ds;
 
         // All comments
@@ -7742,77 +6097,47 @@ bool XMLElement :: ImportFromBinary(const BDC& b)
                 //Children, Variables, Contents, Cdatas, Comments
                 if (x->t == 2) //Element
                         {
-#ifdef XML_USE_STL
-                        XMLElement h;
-                        if (h.ImportFromBinary(co))
-                                AddElement(h);
-#else
                         XMLElement* h = new XMLElement();
                         if (h->ImportFromBinary(co))
                                 AddElement(h);
                         else
                                 delete h;
-#endif
                         }
 
                 if (x->t == 3) // Variable
                         {
-#ifdef XML_USE_STL
-                        XMLVariable h;
-                        if (h.ImportFromBinary(co))
-                                AddVariable(h);
-#else
                         XMLVariable* h = new XMLVariable();
                         if (h->ImportFromBinary(co))
                                 AddVariable(h);
                         else
                                 delete h;
-#endif
                         }
 
                 if (x->t == 4) // Comment
                         {
-#ifdef XML_USE_STL
-                        XMLComment h;
-                        if (h.ImportFromBinary(co))
-                                AddComment(h,-1);
-#else
                         XMLComment* h = new XMLComment();
                         if (h->ImportFromBinary(co))
                                 AddComment(h,-1);
                         else
                                 delete h;
-#endif
                         }
 
                 if (x->t == 5) // CData
                         {
-#ifdef XML_USE_STL
-                        XMLCData h;
-                        if (h.ImportFromBinary(co))
-                                AddCData(h,-1);
-#else
                         XMLCData* h = new XMLCData();
                         if (h->ImportFromBinary(co))
                                 AddCData(h,-1);
                         else
                                 delete h;
-#endif
                         }
 
                 if (x->t == 6) // Content
                         {
-#ifdef XML_USE_STL
-                        XMLContent h;
-                        if (h.ImportFromBinary(co))
-                                AddContent(h);
-#else
                         XMLContent* h = new XMLContent();
                         if (h->ImportFromBinary(co))
                                 AddContent(h,-1);
                         else
                                 delete h;
-#endif
                         }
 
                 ptr += ds;
@@ -7844,47 +6169,15 @@ BDC XMLElement :: ExportToBinary()
 
         // All data (V,CH,CT,CO,CD)
         int pI = 0;
-#ifdef XML_USE_STL
-        unsigned int iMoreData = (unsigned int)(comments.size() + contents.size() + variables.size() + cdatas.size() + children.size());
-        bs += (unsigned int)el.length();
-#else
         unsigned int iMoreData = commentsnum + contentsnum + variablesnum + cdatasnum + childrennum;
         if (el)
                 bs += (unsigned int)strlen(el);
-#endif
 
 
 
 
         Z<BDC> MoreData(iMoreData);
 
-#ifdef XML_USE_STL
-        // Variables
-        for(unsigned int i = 0 ; i < variables.size() ; i++)
-                {
-                MoreData[pI++] = variables[i].ExportToBinary();
-                }
-        // Children
-        for(unsigned int i = 0 ; i < children.size() ; i++)
-                {
-                MoreData[pI++] = children[i].ExportToBinary();
-                }
-        // Contents
-        for(unsigned int i = 0 ; i < contents.size() ; i++)
-                {
-                MoreData[pI++] = contents[i].ExportToBinary();
-                }
-        // Comments
-        for(unsigned int i = 0 ; i < comments.size() ; i++)
-                {
-                MoreData[pI++] = comments[i].ExportToBinary();
-                }
-        // CDATAs
-        for(unsigned int i = 0 ; i < cdatas.size() ; i++)
-                {
-                MoreData[pI++] = cdatas[i].ExportToBinary();
-                }
-#else
         // Variables
         for(unsigned int i = 0 ; i < variablesnum ; i++)
                 {
@@ -7910,7 +6203,6 @@ BDC XMLElement :: ExportToBinary()
                 {
                 MoreData[pI++] = cdatas[i]->ExportToBinary();
                 }
-#endif
 
         // Get the sizes
         for(unsigned int i = 0 ; i < iMoreData ; i++)
@@ -7932,24 +6224,15 @@ BDC XMLElement :: ExportToBinary()
 
         // Name size
         int*pns = (int*)ptr;
-#ifdef XML_USE_STL
-        *pns = (unsigned int)el.length();
-#else
         if (el)
                 *pns = (unsigned int)strlen(el);
-#endif
         ptr += 4;
 
-#ifdef XML_USE_STL
-        memcpy(ptr,el.c_str(),el.length());
-        ptr += el.length();
-#else
         if (el)
                 {
                 memcpy(ptr,el,strlen(el));
                 ptr += strlen(el);
                 }
-#endif
 
         // All data
         for(unsigned int i = 0 ; i < iMoreData ; i++)
@@ -8000,32 +6283,20 @@ bool XML :: ImportFromBinary(const BDC& b)
 
                 if (x->t == 1) // header
                         {
-#ifdef XML_USE_STL
-                        XMLHeader h;
-                        if (h.ImportFromBinary(co))
-                                SetHeader(h);
-#else
                         XMLHeader* h = new XMLHeader();
                         if (h->ImportFromBinary(co))
                                 SetHeader(h);
                         else
                                 delete h;
-#endif
                         }
 
                 if (x->t == 2) // root element
                         {
-#ifdef XML_USE_STL
-                        XMLElement h;
-                        if (h.ImportFromBinary(co))
-                                SetRootElement(h);
-#else
                         XMLElement* h = new XMLElement();
                         if (h->ImportFromBinary(co))
                                 SetRootElement(h);
                         else
                                 delete h;
-#endif
                         }
                 }
 
@@ -8046,20 +6317,12 @@ BDC XML :: ExportToBinary()
         unsigned int bs = sizeof(XMLBINARYHEADER);
 
         BDC h;
-#ifdef XML_USE_STL
-        h = GetHeader().ExportToBinary();
-#else
         if (GetHeader())
                 h = GetHeader()->ExportToBinary();
-#endif
 
         BDC r;
-#ifdef XML_USE_STL
-        r = GetRootElement().ExportToBinary();
-#else
         if (GetRootElement())
                 r = GetRootElement()->ExportToBinary();
-#endif
 
         bs += (unsigned int)h.size();
         bs += (unsigned int)r.size();
@@ -8128,13 +6391,8 @@ int XMLRenameElement(const char* section,const char* newname,const char* xml,XML
                 af = new XML(xml);
                 }
 
-#ifdef XML_USE_STL
-        XMLElement& r = af->GetRootElement();
-        XMLElement* e = r.GetElementInSection(section);
-#else
         XMLElement* r = af->GetRootElement();
         XMLElement* e = r->GetElementInSection(section);
-#endif
         if (!e)
                 return 0; // no items under this one
 
@@ -8279,89 +6537,6 @@ int    XMLSetBinaryData(const char* section,const char* attr,char* data,int len,
 // vector based things
 #ifndef __SYMBIAN32__
 
-#ifdef XML_USE_STL
-int XMLGetAllVariables(const char* section,vector<char*>* vnames,vector<char*>* vvalues,const char*xml)
-        {
-        XML f(xml);
-
-#ifdef XML_USE_STL
-        XMLElement& r = f.GetRootElement();
-        XMLElement* e = r.GetElementInSection(section);
-#else
-        XMLElement* r = f.GetRootElement();
-        XMLElement* e = r->GetElementInSection(section);
-#endif
-        if (!e)
-                return 0; // no items under this one
-
-        int Y = e->GetVariableNum();
-        for(int i = 0 ; i < Y ; i++)
-                {
-#ifdef XML_USE_STL
-                int yS = (int)e->GetVariables()[i].GetName(0);
-#else
-                int yS = e->GetVariables()[i]->GetName(0);
-#endif
-                char* d = new char[yS + 10];
-                memset(d,0,yS + 10);
-#ifdef XML_USE_STL
-                e->GetVariables()[i].GetName(d);
-#else
-                e->GetVariables()[i]->GetName(d);
-#endif
-                vnames->insert(vnames->end(),d);
-
-#ifdef XML_USE_STL
-                yS = (int)e->GetVariables()[i].GetValue(0);
-#else
-                yS = e->GetVariables()[i]->GetValue(0);
-#endif
-                char* d2 = new char[yS + 10];
-                memset(d2,0,yS + 10);
-#ifdef XML_USE_STL
-                e->GetVariables()[i].GetValue(d2);
-#else
-                e->GetVariables()[i]->GetValue(d2);
-#endif
-                vvalues->insert(vvalues->end(),d2);
-                }
-        return Y;
-        }
-
-int XMLGetAllItems(const char* section,vector<char*>* vnames,const char*xml)
-        {
-        XML f(xml);
-
-#ifdef XML_USE_STL
-        XMLElement& r = f.GetRootElement();
-        XMLElement* e = r.GetElementInSection(section);
-#else
-        XMLElement* r = f.GetRootElement();
-        XMLElement* e = r->GetElementInSection(section);
-#endif
-        if (!e)
-                return 0; // no items under this one
-
-        int Y = e->GetChildrenNum();
-        for(int i = 0 ; i < Y ; i++)
-                {
-#ifdef XML_USE_STL
-                int yS = (int)e->GetChildren()[i].GetElementName(0);
-#else
-                int yS =  e->GetChildren()[i]->GetElementName(0);
-#endif
-                char* d = new char[yS + 10];
-                memset(d,0,yS + 10);
-#ifdef XML_USE_STL
-                e->GetChildren()[i].GetElementName(d);
-#else
-                e->GetChildren()[i]->GetElementName(d);
-#endif
-                vnames->insert(vnames->end(),d);
-                }
-        return Y;
-        }
-#else // NO VECTOR
 
 int XMLGetAllVariables(const char* section,char** vnames,char** vvalues,const char*xml)
         {
@@ -8412,7 +6587,6 @@ int XMLGetAllItems(const char* section,char** vnames,const char*xml)
         }
 
 
-#endif
 #endif
 
 

@@ -62,13 +62,6 @@
 #endif
 
 
-#ifdef XML_USE_STL
-#include <vector>
-#include <string>
-#include <algorithm>
-using namespace std;
-#endif
-
 #ifndef _Z_H
 #define _Z_H
 // Z template class
@@ -225,14 +218,11 @@ struct XMLEXPORTFORMAT
 
 
 // UNLOAD elements
-#ifdef XML_USE_STL
-#else
 struct XMLUNLOADELEMENT
 	{
 	int i;
 	char* fn[300];
 	};
-#endif
 
 // Enumerations
 enum XML_LOAD_MODE
@@ -276,11 +266,7 @@ class XMLHeader
 		size_t MemoryUsage();
 		void CompressMemory();
 		bool IntegrityTest();
-#ifdef XML_USE_STL
-		int Compare(XMLHeader&);
-#else
 		int Compare(XMLHeader*);
-#endif
 		void SetEncoding(const char*);
 		XMLHeader* Duplicate();
 
@@ -290,26 +276,13 @@ class XMLHeader
 		~XMLHeader();
 
 		// XMLComment
-#ifdef XML_USE_STL
-		vector<XMLComment>& GetComments();
-		unsigned int GetCommentsNum();
-		XMLComment& AddComment(const char*,int pos = -1);
-		XMLComment& AddComment(const XMLComment&);
-		int RemoveComment(unsigned int i);
-		int RemoveAllComments();
-#else
 		XMLComment** GetComments();
 		unsigned int GetCommentsNum();
 		int AddComment(XMLComment*,int pos);
 		int RemoveComment(unsigned int i);
 		int RemoveAllComments();
 		int SpaceForComment(unsigned int);
-#endif
 		void Export(FILE* fp,int HeaderMode,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
-
-#ifdef XML_USE_STL
-		string& GetHeader() {return hdr;}
-#endif
 
 		BDC ExportToBinary();
 		bool ImportFromBinary(const BDC&);
@@ -318,15 +291,10 @@ class XMLHeader
 	private:
 
 		void Clear();
-#ifdef XML_USE_STL
-		string hdr;
-		vector<XMLComment> comments;
-#else
 		int TotalCommentPointersAvailable;
 		char* hdr;
 		unsigned int commentsnum;
 		XMLComment** comments;
-#endif
 	};
 
 
@@ -335,14 +303,11 @@ class XMLHeader
 typedef int (*fcmp) (const void *, const void *);
 #endif
 
-#ifdef XML_USE_STL
-#else
 struct XMLBORROWELEMENT
 	{
 	bool Active;
 	class XMLElement* x;
 	};
-#endif
 
 class XMLElement
 	{
@@ -357,33 +322,19 @@ class XMLElement
 		void Clear();
 
 
-#ifdef XML_USE_STL
-		// STL Functions
-		XMLElement& operator[](int);
-		XMLElement& AddElement(const char*,int p = -1,bool Temp = false);
-		XMLElement& AddElement(const XMLElement&,int p = -1);
-		XMLElement& InsertElement(unsigned int y,XMLElement* x);
-#else
-		// No STL Functions
 		XMLElement* operator[](int);
 		XMLElement* AddElement(XMLElement*);
 		XMLElement* AddElement(const char*);
 		XMLElement* InsertElement(unsigned int,XMLElement*);
-#endif
-
 
 		void SetElementParam(unsigned long long p);
 		unsigned long long GetElementParam();
 		void Reparse(const char*el,int Type = 0);
 		int GetDeep();
 
-#ifdef XML_USE_STL
-		int RemoveElementAndKeep(unsigned int i,XMLElement** el);
-#else
 		int BorrowElement(XMLElement*,unsigned int = (unsigned)-1);
 		int ReleaseBorrowedElements();
 		int RemoveElementAndKeep(unsigned int i,XMLElement** el);
-#endif
 
 		bool ReplaceElement(unsigned int i,XMLElement* ne,XMLElement** prev = 0);
 		int UpdateElement(XMLElement*,bool UpdateVariableValues = false);
@@ -403,118 +354,63 @@ class XMLElement
 		int RemoveTemporalElements(bool Deep = false);
 		int DeleteUnloadedElementFile(int i);
 
-#ifdef XML_USE_STL
-#else
 		int UnloadElement(unsigned int i);
 		int ReloadElement(unsigned int i);
 		int ReloadAllElements();
-#endif
 		XMLElement* MoveElement(unsigned int i,unsigned int y);
 
 
-#ifdef XML_USE_STL
-		void SortElements();
-		void SortVariables();
-		bool operator <(const XMLElement&);
-#else
-#ifdef LINUX
-		void SortElements(fcmp);
-		void SortVariables(fcmp);
-		friend int XMLElementfcmp(const void *, const void *);
-		friend int XMLVariablefcmp(const void *, const void *);
-#else
 		void SortElements(int (_USERENTRY *fcmp)(const void *, const void *));
 		void SortVariables(int (_USERENTRY *fcmp)(const void *, const void *));
 		friend int _USERENTRY XMLElementfcmp(const void *, const void *);
 		friend int _USERENTRY XMLVariablefcmp(const void *, const void *);
-#endif
-#endif
 
 		XMLElement* Duplicate(XMLElement* = 0);
 		XMLElement* Encrypt(const char* pwd);
 		XMLElement* Decrypt(const char* pwd);
-#ifdef XML_USE_STL
-		string GetString();
-#endif
 		size_t MemoryUsage();
 		void CompressMemory();
 		bool IntegrityTest();
-#ifdef XML_USE_STL
-		int Compare(XMLElement&);
-#else
 		int Compare(XMLElement*);
-#endif
 
 		// XMLComment
-#ifdef XML_USE_STL
-		vector<XMLComment>& GetComments();
-		XMLComment& AddComment(const char*,int);
-		XMLComment& AddComment(const XMLComment&);
-#else
 		XMLComment** GetComments();
 		int AddComment(XMLComment*,int InsertBeforeElement);
 		int AddComment(const char*,int);
-#endif
 		unsigned int GetCommentsNum();
 		int RemoveComment(unsigned int i);
 		int RemoveAllComments();
 
 		// XMLCData
-#ifdef XML_USE_STL
-		vector<XMLCData>& GetCDatas();
-		XMLCData& AddCData(const char*,int);
-		XMLCData& AddCData(const XMLCData&);
-#else
 		XMLCData** GetCDatas();
 		int AddCData(XMLCData*,int InsertBeforeElement);
 		int AddCData(const char*,int);
-#endif
 		unsigned int GetCDatasNum();
 		int RemoveCData(unsigned int i);
 		int RemoveAllCDatas();
 
 		// Content Stuff
-#ifdef XML_USE_STL
-		vector<XMLContent>& GetContents();
-		XMLContent& AddContent(const char*,int,int BinarySize = 0);
-		XMLContent& AddContent(const XMLContent&);
-#else
 		XMLContent** GetContents();
 		int AddContent(XMLContent* v,int InsertBeforeElement);
 		int AddContent(const char*,int,int BinarySize = 0);
-#endif
 		int RemoveContent(unsigned int i);
 		void RemoveAllContents();
 		unsigned int GetContentsNum();
 
 		// Children Stuff
-#ifdef XML_USE_STL
-		vector<XMLElement>& GetChildren();
-#else
 		XMLElement** GetChildren();
-#endif
 		unsigned int GetChildrenNum();
 		unsigned int GetAllChildren(XMLElement**,unsigned int deep = 0xFFFFFFFF);
 		unsigned int GetAllChildrenNum(unsigned int deep = 0xFFFFFFFF);
 
 
 		// Variable Stuff
-#ifdef XML_USE_STL
-		int RemoveVariableAndKeep(unsigned int i,XMLVariable* vr);
-		vector<XMLVariable>& GetVariables();
-		XMLVariable& AddVariable(const XMLVariable&,int p = -1);
-		XMLVariable& AddVariable(const char*,const char*,int p = -1,bool Temp = false);
-#ifdef XML_OPTIONAL_MIME
-		XMLVariable& AddBinaryVariable(const char*,const char*,int);
-#endif
-#else
 		int AddVariable(XMLVariable*);
 		int RemoveVariableAndKeep(unsigned int i,XMLVariable** vr);
 		XMLVariable** GetVariables();
 		int AddVariable(const char*,const char*);
 #ifdef XML_OPTIONAL_MIME
 		int AddBinaryVariable(const char*,const char*,int);
-#endif
 #endif
 
 		int FindVariable(XMLVariable*);
@@ -542,12 +438,6 @@ class XMLElement
 		bool IsTemporal();
 		int   GetType();
 		int ReserveSpaceForElements(unsigned int);
-#ifdef XML_USE_STL
-		XMLElement(const XMLElement&);
-		XMLElement(const XMLElement*);
-		XMLElement& operator =(const XMLElement&);
-		XMLElement& operator =(const XMLElement*);
-#endif
 
 		BDC ExportToBinary();
 		bool ImportFromBinary(const BDC&);
@@ -555,22 +445,10 @@ class XMLElement
 
 	private:
 
-#ifndef XML_USE_STL
-		XMLElement(const XMLElement&);
-#endif
-
 		unsigned long long param;
 		int type; // type, 0 element
 		XMLElement* parent; // one
 
-#ifdef XML_USE_STL
-		string el; // element name
-		vector<XMLElement> children; // many
-		vector<XMLVariable> variables; // many
-		vector<XMLComment> comments; // many
-		vector<XMLContent> contents; // many;
-		vector<XMLCData> cdatas; // many
-#else
 		char* el; // element name
 		XMLElement** children; // many
 		XMLVariable** variables; // many
@@ -592,15 +470,11 @@ class XMLElement
 		int TotalCommentPointersAvailable;
 		int TotalContentPointersAvailable;
 		int TotalCDataPointersAvailable;
-#endif
 
 
 		bool Temporal;
-#ifdef XML_USE_STL
-#else
 		Z<XMLBORROWELEMENT> BorrowedElements;
 		unsigned int NumBorrowedElements;
-#endif
 
 		XMLEXPORTFORMAT xfformat;
 		static void printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMode);
@@ -623,12 +497,7 @@ class XMLVariable
 		size_t MemoryUsage();
 		void CompressMemory();
 		bool IntegrityTest();
-#ifdef XML_USE_STL
-		bool operator <(const XMLVariable&);
-		int Compare(XMLVariable&);
-#else
 		int Compare(XMLVariable*);
-#endif
 
 		XMLElement* SetOwnerElement(XMLElement*);
 		size_t GetName(char*,int NoDecode = 0) const;
@@ -675,13 +544,8 @@ class XMLVariable
 	private:
 
 		void Clear();
-#ifdef XML_USE_STL
-		string vn;
-		string vv;
-#else
 		char* vn;
 		char* vv;
-#endif
 		XMLElement* owner;
 		bool Temporal;
 
@@ -701,11 +565,7 @@ class XMLComment
 		size_t MemoryUsage();
 		void CompressMemory();
 		bool IntegrityTest();
-#ifdef XML_USE_STL
-		int Compare(XMLComment&);
-#else
 		int Compare(XMLComment*);
-#endif
 
 		XMLComment(const XMLComment&);
 		XMLComment& operator =(const XMLComment&);
@@ -721,11 +581,7 @@ class XMLComment
 	private:
 
 		XMLElement* parent;
-#ifdef XML_USE_STL
-		string c;
-#else
 		char* c;
-#endif
 		int ep; // Element Position (Before)
 	};
 
@@ -743,11 +599,7 @@ class XMLContent
 		size_t MemoryUsage();
 		void CompressMemory();
 		bool IntegrityTest();
-#ifdef XML_USE_STL
-		int Compare(XMLContent&);
-#else
 		int Compare(XMLContent*);
-#endif
 
 		XMLContent(const XMLContent&);
 		XMLContent& operator =(const XMLContent&);
@@ -768,11 +620,7 @@ class XMLContent
 		BDC bdc; // Binary Data Container
 		bool BinaryMode;
 
-#ifdef XML_USE_STL
-		string c;
-#else
 		char* c;
-#endif
 		int ep; // Element Position (Before)
 	};
 
@@ -787,11 +635,7 @@ class XMLCData
 		size_t MemoryUsage();
 		void CompressMemory();
 		bool IntegrityTest();
-#ifdef XML_USE_STL
-		int Compare(XMLCData&);
-#else
 		int Compare(XMLCData*);
-#endif
 
 		XMLCData(const XMLCData&);
 		XMLCData& operator =(const XMLCData&);
@@ -809,11 +653,7 @@ class XMLCData
 	private:
 
 		XMLElement* parent;
-#ifdef XML_USE_STL
-		string c;
-#else
 		char* c;
-#endif
 		int ep; // Element Position (Before)
 	};
 
@@ -870,19 +710,11 @@ class XML
 		static XMLElement* ImportRKey(IMPORTRKEYDATA*);
 #endif
 
-#ifdef XML_USE_STL
-		void SetRootElement(XMLElement&);
-		XMLElement RemoveRootElementAndKeep();
-		XMLElement& GetRootElement();
-		XMLHeader& GetHeader();
-		void SetHeader(XMLHeader& h);
-#else
 		void SetRootElement(XMLElement*);
 		XMLElement* RemoveRootElementAndKeep();
 		XMLElement* GetRootElement() const;
 		XMLHeader* GetHeader();
 		void SetHeader(XMLHeader* h);
-#endif
 
 		static size_t XMLEncode(const char* src,char* trg);
 		static size_t XMLDecode(const char* src,char* trg);
@@ -906,15 +738,9 @@ class XML
 		bool IsFileU; // unicode file
 #endif
 
-#ifdef XML_USE_STL
-		string f;          // filename
-		XMLHeader hdr;
-		XMLElement _root;
-#else
 		char* f;          // filename
 		XMLHeader* hdr;   // header (one)
 		XMLElement* root; // root element (one)
-#endif
 
 		bool SOnClose;
 
@@ -938,13 +764,8 @@ int    XMLSetBinaryData(const char* section,const char* attr,char* data,int len,
 int XMLRenameElement(const char* section,const char* newname,const char* xml,XML* af = 0);
 
 #ifndef __SYMBIAN32__
-#ifdef XML_USE_STL
-int    XMLGetAllVariables(const char* section,vector<char*>* vnames,vector<char*>* vvalues,const char*xml);
-int    XMLGetAllItems(const char* section,vector<char*>* vnames,const char*xml);
-#else
 int    XMLGetAllVariables(const char* section,char** vnames,char** vvalues,const char*xml);
 int    XMLGetAllItems(const char* section,char** vnames,const char*xml);
-#endif
 #endif
 
 
