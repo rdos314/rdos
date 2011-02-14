@@ -40,8 +40,8 @@ INCLUDE crashdeb.inc
 
 data    SEGMENT byte public 'DATA'
 
-core_list    DW ?
-curr_core    DW ?
+core_list       DW ?
+curr_core       DW ?
 
 data    ENDS
 

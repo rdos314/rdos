@@ -40,8 +40,12 @@ INCLUDE protseg.def
 
 data    SEGMENT byte public 'DATA'
 
-big_linear  DD ?
-curr_pos    DW ?
+op_in_text      DB 100 DUP(?)
+op_text_end     DW ?
+op_size         DW ?
+
+big_linear      DD ?
+curr_pos        DW ?
 
 data    ENDS
 
@@ -50,6 +54,9 @@ data    ENDS
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+
+    extrn SetIpAds:near
+    extrn GetOpBuf:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -962,57 +969,57 @@ GetBaseSize   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadData
+;       NAME:           ReadData
 ;
-;               DESCRIPTION:    Read data item
+;       DESCRIPTION:    Read data item
 ;
-;               PARAMETERS:             GS              Core regs
-;                                               EDX             Linear address
+;       PARAMETERS:     GS              Core regs
+;                       EDX             Linear address
 ;
-;               RETURNS:                NC
+;       RETURNS:        NC
 ;                           AL  Data
 ;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadData        Proc near
-        push ds
-        push es
-        push ebx
-        push edx
-        push si
-        push di
+    push ds
+    push es
+    push ebx
+    push edx
+    push si
+    push di
 ;
     mov di,dx
     and di,0FFFh
 ;    
-        and dx,0F000h
-        mov ax,process_dir_sel
-        mov ds,ax
-        mov si,(alias_linear SHR 20) AND 0FFFh
-        mov es,bx
-        mov eax,gs:cs_cr3
-        or ax,803h
-        mov [si],eax
-        mov eax,cr3
-        mov cr3,eax
+    and dx,0F000h
+    mov ax,process_dir_sel
+    mov ds,ax
+    mov si,(alias_linear SHR 20) AND 0FFFh
+    mov es,bx
+    mov eax,gs:cs_cr3
+    or ax,803h
+    mov [si],eax
+    mov eax,cr3
+    mov cr3,eax
 ;
-        mov eax,alias_linear
-        shr edx,10
-        and dl,0FCh
-        add edx,eax
-        mov ebx,edx
-        shr edx,10
-        and dl,0FCh
-        mov ax,process_page_sel
-        mov ds,ax
-        mov eax,[edx]
-        test al,1
-        stc
-        jz read_data_done
+    mov eax,alias_linear
+    shr edx,10
+    and dl,0FCh
+    add edx,eax
+    mov ebx,edx
+    shr edx,10
+    and dl,0FCh
+    mov ax,process_page_sel
+    mov ds,ax
+    mov eax,[edx]
+    test al,1
+    stc
+    jz read_data_done
 ;       
     mov ax,flat_sel
     mov ds,ax
-        mov eax,ds:[ebx]
+    mov eax,ds:[ebx]
 ;       
     mov bx,SEG data
     mov ds,bx
@@ -1028,22 +1035,22 @@ ReadData        Proc near
     
 read_data_done:
     pop di
-        pop si
-        pop edx
-        pop ebx
-        pop es
-        pop ds
-        ret
+    pop si
+    pop edx
+    pop ebx
+    pop es
+    pop ds
+    ret
 ReadData        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteDataRow
+;       NAME:           WriteDataRow
 ;
-;               DESCRIPTION:    Write a data row
+;       DESCRIPTION:    Write a data row
 ;
-;               PARAMETERS:             GS                  Core regs
+;       PARAMETERS:     GS          Core regs
 ;                       BX:EDX      Address
 ;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1134,6 +1141,48 @@ wdrCharInv:
 wdrDone:  
     ret
 WriteDataRow    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetInstr
+;
+;       DESCRIPTION:    Fill instruction buffer
+;
+;       PARAMETERS:     GS          Core regs
+;                                               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadInstr    Proc near
+    mov dx,gs:cs_cs
+    mov ebx,dword ptr gs:cs_eip
+    call SetIpAds
+    call GetOpBuf
+;
+    call GetBaseSize
+    jc read_instr_done
+;
+    add ecx,1
+    jc read_instr_full
+;
+    cmp ecx,16
+    jb read_instr_loop
+
+read_instr_full:
+    mov cx,16
+
+read_instr_loop:
+    call ReadData
+    mov [si],al
+    inc ebx
+    inc si
+    loop read_instr_loop
+;
+    clc
+
+read_instr_done:
+    ret
+ReadInstr    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1230,6 +1279,8 @@ WriteCpuReg     Proc near
     mov edx,gs:cs_uoffs
     call WriteDataRow
     call NewLine    
+;
+    call ReadInstr
     pop es
     ret
 WriteCpuReg     Endp
