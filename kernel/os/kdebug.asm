@@ -64,6 +64,7 @@ code    SEGMENT byte use16 public 'CODE'
 
     extrn init_local:near
     extrn init_ipc_debug:near
+    extrn init_smpdeb:near
 
     extrn SetDataSel:near
     
@@ -1003,6 +1004,7 @@ esp_adr ENDP
 
 init    Proc far
     call init_local
+    call init_smpdeb
     call init_ipc_debug
     ret
 init    Endp

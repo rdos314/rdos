@@ -674,13 +674,15 @@ init_task     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           Init
+;           NAME:           Init_smpdeb
 ;
 ;           DESCRIPTION:    Module initialization
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init    PROC far
+    public init_smpdeb
+    
+init_smpdeb    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -716,8 +718,8 @@ init    PROC far
     AddDebugCore
 ;
     ret
-init    ENDP
+init_smpdeb    ENDP
 
 code    ENDS
 
-    END init
+    END
