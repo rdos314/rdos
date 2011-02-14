@@ -905,7 +905,7 @@ get_info_ldt:
     jnz get_info_fail
 ;
     push bx
-    mov bx,cx
+    mov bx,si
     GetSelectorBaseSize
     pop bx        
     jc get_info_fail
@@ -965,6 +965,84 @@ get_info_done:
     pop eax
     ret
 GetBaseSize   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetBitness
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     GS          Core regs
+;                           BX          Selector
+;
+;           RETURNS:        NC
+;                               DL      Bitness (0 = 16, 1 = 32)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBitness   PROC near
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;       
+    and bx,NOT 3
+    or bx,bx
+    jz get_bitness_fail
+;
+    test bx,4
+    jz get_bitness_gdt
+
+get_bitness_ldt:
+    mov si,gs:cs_ldt
+    or si,si
+    jz get_bitness_fail
+;
+    test si,4
+    jnz get_bitness_fail
+;
+    push bx
+    mov bx,si
+    GetSelectorBaseSize
+    pop bx        
+    jc get_bitness_fail
+;
+    dec ecx    
+    jmp get_bitness_do
+
+get_bitness_gdt:
+    movzx ecx,word ptr gs:cs_gdtr
+    mov edx,dword ptr gs:cs_gdtr+2
+
+get_bitness_do:
+    and bx,0FFF8h
+    cmp bx,cx
+    ja get_bitness_fail
+;
+    mov ax,flat_sel
+    mov ds,ax
+    movzx ebx,bx
+    add ebx,edx
+;
+    mov dl,es:[ebx+6]
+    shr dl,6
+    and dl,1
+    clc
+    jmp get_bitness_done
+    
+get_bitness_fail:
+    stc
+
+get_bitness_done:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+GetBitness   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1145,6 +1223,45 @@ WriteDataRow    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetMne
+;
+;       DESCRIPTION:    Get instruction text
+;
+;       PARAMETERS:     GS          Core regs
+;                                               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+bit16   DB '16-bit', 0
+bit32   DB '32-bit', 0
+
+bit_tab:
+    DW OFFSET bit16
+    DW OFFSET bit32
+
+GetMne  PROC near
+    mov bx,gs:cs_cs
+    call GetBitness
+    jc get_mne_done
+;
+    push es
+    push di
+    movzx bx,dl
+    add bx,bx
+    mov di,word ptr cs:[bx].bit_tab
+    mov dx,cs
+    mov es,dx
+    call ShowAsciiz
+    pop di
+    pop es
+        
+get_mne_done:
+    ret
+GetMne  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetInstr
 ;
 ;       DESCRIPTION:    Fill instruction buffer
@@ -1222,6 +1339,12 @@ WriteCpuReg     Proc near
 ;
     mov di,OFFSET dword_reg_tab3
     call WriteDwordRegs
+    call ReadInstr
+    jc write_instr_done
+;
+    call GetMne    
+
+write_instr_done:
     call NewLine
 ;
     mov di,OFFSET sel_reg_tr
@@ -1279,8 +1402,6 @@ WriteCpuReg     Proc near
     mov edx,gs:cs_uoffs
     call WriteDataRow
     call NewLine    
-;
-    call ReadInstr
     pop es
     ret
 WriteCpuReg     Endp
