@@ -179,8 +179,8 @@ WVList
 0
 44
 MItem
-11
-debugio.asm
+12
+crashdeb.asm
 45
 WString
 6
@@ -198,7 +198,7 @@ WVList
 48
 MItem
 10
-disasm.asm
+crkeyb.asm
 49
 WString
 6
@@ -216,7 +216,7 @@ WVList
 52
 MItem
 10
-disnew.asm
+crshow.asm
 53
 WString
 6
@@ -233,8 +233,8 @@ WVList
 0
 56
 MItem
-12
-ipcdebug.asm
+11
+debugio.asm
 57
 WString
 6
@@ -252,7 +252,7 @@ WVList
 60
 MItem
 10
-kdebug.asm
+disasm.asm
 61
 WString
 6
@@ -269,8 +269,8 @@ WVList
 0
 64
 MItem
-8
-math.asm
+10
+disnew.asm
 65
 WString
 6
@@ -287,8 +287,8 @@ WVList
 0
 68
 MItem
-10
-smpdeb.asm
+12
+ipcdebug.asm
 69
 WString
 6
@@ -305,8 +305,8 @@ WVList
 0
 72
 MItem
-11
-smpkeyb.asm
+10
+kdebug.asm
 73
 WString
 6
@@ -323,8 +323,8 @@ WVList
 0
 76
 MItem
-11
-smpshow.asm
+8
+math.asm
 77
 WString
 6

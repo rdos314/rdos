@@ -35,7 +35,7 @@ INCLUDE system.inc
 INCLUDE irq.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
-INCLUDE smpdeb.inc
+INCLUDE crashdeb.inc
 INCLUDE protseg.def
 
 data    SEGMENT byte public 'DATA'
@@ -1237,15 +1237,15 @@ WriteCpuReg     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ShowCore
+;           NAME:           ShowCrashCore
 ;
 ;           DESCRIPTION:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public ShowCore
+    public ShowCrashCore
     
-ShowCore    Proc near
+ShowCrashCore    Proc near
     push ds
     mov ax,SEG data
     mov ds,ax
@@ -1253,20 +1253,20 @@ ShowCore    Proc near
     call WriteCpuReg
     pop ds
     ret
-ShowCore    Endp
+ShowCrashCore    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitShow
+;           NAME:           InitCrashShow
 ;
 ;           DESCRIPTION:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public InitShow
+    public InitCrashShow
 
-InitShow    Proc near
+InitCrashShow    Proc near
     push ds
 ;    
     mov ax,SEG data
@@ -1279,7 +1279,7 @@ InitShow    Proc near
 ;        
     pop ds
     ret
-InitShow    Endp
+InitCrashShow    Endp
 
 code    ENDS
 

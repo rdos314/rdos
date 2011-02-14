@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; SMPDEB.ASM
-; SMP debugger/monitor module
+; CRASHDEB.ASM
+; Crash debugger/monitor module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -36,7 +36,7 @@ INCLUDE irq.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
 INCLUDE proc.inc
-INCLUDE smpdeb.inc
+INCLUDE crashdeb.inc
 
 data    SEGMENT byte public 'DATA'
 
@@ -51,12 +51,12 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
-    extrn InitKeyboardIrq:near
-    extrn UpdateMode:near
-    extrn GetKey:near
+    extrn InitCrashKeyboardIrq:near
+    extrn UpdateCrashKeyboardMode:near
+    extrn GetCrashKey:near
 
-    extrn InitShow:near
-    extrn ShowCore:near
+    extrn InitCrashShow:near
+    extrn ShowCrashCore:near
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -552,8 +552,8 @@ start_smp_debug:
     mov ax,250
     call DelayMs
 ;    
-    call InitShow
-    call InitKeyboardIrq
+    call InitCrashShow
+    call InitCrashKeyboardIrq
     sti
 ;
     mov ax,SEG data
@@ -562,7 +562,7 @@ start_smp_debug:
 
 handle_loop:
     hlt
-    call GetKey
+    call GetCrashKey
     jc handle_next
 ;    
     test ah,80h
@@ -584,7 +584,7 @@ handle_next_set:
     mov gs,ax
 
 handle_show:
-    call ShowCore
+    call ShowCrashCore
     jmp handle_next
 
 handle_abort:
@@ -602,7 +602,7 @@ handle_abort_loop:
     jmp handle_abort_loop
 
 handle_next:        
-    call UpdateMode
+    call UpdateCrashKeyboardMode
     jmp handle_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -674,15 +674,15 @@ init_task     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           Init_smpdeb
+;           NAME:           Init_crashdeb
 ;
 ;           DESCRIPTION:    Module initialization
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_smpdeb
+    public init_crashdeb
     
-init_smpdeb    PROC near
+init_crashdeb    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -718,7 +718,7 @@ init_smpdeb    PROC near
     AddDebugCore
 ;
     ret
-init_smpdeb    ENDP
+init_crashdeb    ENDP
 
 code    ENDS
 

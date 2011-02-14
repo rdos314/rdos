@@ -1139,9 +1139,9 @@ keyb_int_done:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public InitKeyboardIrq
+    public InitCrashKeyboardIrq
     
-InitKeyboardIrq Proc near
+InitCrashKeyboardIrq Proc near
     push ds
     push esi
 ;
@@ -1173,7 +1173,7 @@ InitKeyboardIrq Proc near
     pop esi
     pop ds
     ret
-InitKeyboardIrq Endp
+InitCrashKeyboardIrq Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1216,15 +1216,15 @@ SendCommand     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           UpdateMode
+;           NAME:           UpdateCrashKeyboardMode
 ;
 ;           DESCRIPTION:    Update mode indicators
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public UpdateMode
+    public UpdateCrashKeyboardMode
     
-UpdateMode      PROC near
+UpdateCrashKeyboardMode      PROC near
     push ds
 ;
     mov ax,SEG data
@@ -1252,12 +1252,12 @@ caps_off:
 umDone:
     pop ds
     ret
-UpdateMode      ENDP
+UpdateCrashKeyboardMode      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           GetKey
+;           NAME:           GetCrashKey
 ;
 ;           DESCRIPTION:    Get key
 ;
@@ -1267,9 +1267,9 @@ UpdateMode      ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public GetKey
+    public GetCrashKey
     
-GetKey      PROC near
+GetCrashKey      PROC near
     push ds
 ;    
     mov ax,SEG data
@@ -1287,7 +1287,7 @@ GetKey      PROC near
 rkDone:
     pop ds
     ret
-GetKey      ENDP
+GetCrashKey      ENDP
 
 code    ENDS
 
