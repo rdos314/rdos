@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; SMPSHOW.ASM
-; SMP register dump
+; CRSHOW.ASM
+; Crash register dump
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -55,8 +55,14 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+    extrn dis_ass_one:near
+    
     extrn SetIpAds:near
     extrn GetOpBuf:near
+    extrn GetIllegalOsGate:near
+    extrn GetIllegalUserGate:near
+    extrn GetOsCall:near
+    extrn GetUserCall:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -982,12 +988,13 @@ GetBaseSize   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetBitness   PROC near
+    push ds
     push eax
     push ebx
     push ecx
     push esi
     push edi
-;       
+;
     and bx,NOT 3
     or bx,bx
     jz get_bitness_fail
@@ -1026,7 +1033,7 @@ get_bitness_do:
     movzx ebx,bx
     add ebx,edx
 ;
-    mov dl,es:[ebx+6]
+    mov dl,ds:[ebx+6]
     shr dl,6
     and dl,1
     clc
@@ -1041,6 +1048,7 @@ get_bitness_done:
     pop ecx
     pop ebx
     pop eax
+    pop ds
     ret
 GetBitness   ENDP
 
@@ -1232,30 +1240,242 @@ WriteDataRow    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-bit16   DB '16-bit', 0
-bit32   DB '32-bit', 0
-
-bit_tab:
-    DW OFFSET bit16
-    DW OFFSET bit32
-
 GetMne  PROC near
+    push si
+    push di
+;    
+    mov ax,SEG data
+    mov ds,ax
+    xor dh,dh
+;
     mov bx,gs:cs_cs
     call GetBitness
     jc get_mne_done
+;   
+    mov di,OFFSET op_in_text
+    call GetOpBuf
 ;
-    push es
-    push di
-    movzx bx,dl
-    add bx,bx
-    mov di,word ptr cs:[bx].bit_tab
-    mov dx,cs
-    mov es,dx
-    call ShowAsciiz
-    pop di
-    pop es
+    mov bp,si
+    mov al,[si]
+    cmp al,66h
+    jne write_op_override_done
+;
+    inc dh
+    inc si
+    xor dl,1
+
+write_op_override_done:
+    mov ax,[si]
+    cmp ax,0B0Fh
+    jne not_illegal_op
+
+write_illegal16:
+    mov al,[si+2]
+    cmp al,0CAh
+    je write_illegal_osgate
+;
+    cmp al,0CBh
+    je write_illegal_osgate
+;
+    cmp al,0D6h
+    je write_illegal_usergate
+;
+    cmp al,0D7h
+    je write_illegal_usergate
+    jmp write_special_end
+
+write_illegal_osgate:
+    mov ax,[si+3]
+    cmp ax,osgate_entries
+    jnc write_special_fail
+;
+    shl ax,4
+    mov bx,ax
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetIllegalOsGate
+    mov ds:op_size,bx
+    clc
+    jmp write_special_end
+
+write_illegal_usergate:
+    mov eax,[si+3]
+    cmp eax,usergate_entries
+    jnc write_special_fail
+;
+    shl eax,5
+    mov ebx,eax
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetIllegalUserGate
+    mov ds:op_size,bx
+    clc
+    jmp write_special_end
+
+not_illegal_op:
+    cmp al,9Ah
+    jne not_call_far
+;
+    test dl,1
+    jz write_call_far16
+;
+    mov dx,[si+5]
+    cmp dx,3
+    je oscall
+;        
+    cmp dx,2
+    je usercall_32
+;
+    cmp dx,1
+    jne not_call32
+
+usercall_32:
+    mov eax,[si+1]
+    cmp eax,usergate_entries
+    jnc write_special_fail
+;
+    shl eax,5
+    mov ebx,eax
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetIllegalUserGate
+    mov ds:op_size,bx
+    clc
+    jmp write_special_end
+
+oscall:
+    mov eax,[si+1]
+    cmp eax,osgate_entries
+    jnc write_special_fail
+;
+    shl eax,4
+    mov ebx,eax
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetIllegalOsGate
+    mov ds:op_size,bx
+    clc
+    jmp write_special_end
+    
+not_call32:
+    mov bx,[si+1]
+    mov dx,[si+5]
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetOsCall
+    mov ds:op_size,bx
+    jnc write_special_end
+;
+    mov bx,[si+1]
+    mov dx,[si+5]
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetUserCall
+    mov ds:op_size,bx
+    jmp write_special_end
+
+write_call_far16:
+    mov bx,[si+1]
+    mov dx,[si+3]
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetOsCall
+    mov ds:op_size,bx
+    jnc write_special_end
+;
+    mov bx,[si+1]
+    mov dx,[si+3]
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetUserCall
+    mov ds:op_size,bx
+    jmp write_special_end
+
+not_call_far:
+    cmp al,0E8h
+    jne write_special_fail
+;
+    test dl,1
+    jz write_call_near16
+;
+    inc si
+    inc dh    
+    movzx ebx,dh
+    add ebx,[si]
+    add ebx,dword ptr gs:cs_eip
+    add ebx,4
+;
+    push ebx
+    mov dx,gs:cs_cs
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetOsCall
+    mov ds:op_size,bx
+    pop ebx
+    jnc write_special_end
+;
+    mov dx,gs:cs_cs
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetUserCall
+    mov ds:op_size,bx
+    jmp write_special_end
+    
+write_call_near16:
+    inc si
+    inc dh
+    movzx bx,dh
+    add bx,[si]
+    add bx,word ptr gs:cs_eip
+    add bx,2
+    push bx
+    mov dx,gs:cs_cs
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetOsCall
+    mov ds:op_size,bx
+    pop bx
+    jnc write_special_end
+;
+    mov dx,gs:cs_cs
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET op_in_text
+    mov cx,40
+    call GetUserCall
+    mov ds:op_size,bx
+    jmp write_special_end
+
+write_special_fail:
+    stc
+
+write_special_end:
         
 get_mne_done:
+    pop di
+    pop si
     ret
 GetMne  ENDP
 
@@ -1271,14 +1491,16 @@ GetMne  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadInstr    Proc near
-    mov dx,gs:cs_cs
     mov ebx,dword ptr gs:cs_eip
     call SetIpAds
     call GetOpBuf
 ;
+    mov bx,gs:cs_cs
+    mov edx,dword ptr gs:cs_eip
+;    
     call GetBaseSize
     jc read_instr_done
-;
+;    
     add ecx,1
     jc read_instr_full
 ;
@@ -1286,20 +1508,74 @@ ReadInstr    Proc near
     jb read_instr_loop
 
 read_instr_full:
+    mov ax,SEG data
+    mov ds,ax
+;    
     mov cx,16
 
 read_instr_loop:
     call ReadData
-    mov [si],al
-    inc ebx
+    mov [si],al    
+    inc edx
     inc si
     loop read_instr_loop
-;
     clc
 
 read_instr_done:
     ret
 ReadInstr    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteInstr
+;
+;       DESCRIPTION:    Write instruction
+;
+;       PARAMETERS:     GS          Core regs
+;                                               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteInstr  Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov al,' '
+    call ShowChar
+;
+    call ReadInstr
+    jc write_instr_done
+;
+    call GetMne    
+    jnc write_instr_do
+;    
+    mov bx,gs:cs_cs
+    call GetBitness
+    jc write_instr_done
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov di,OFFSET op_in_text    
+    call dis_ass_one
+;
+    mov ds:op_size,80
+
+write_instr_do:
+    mov ax,SEG data
+    mov es,ax
+    mov cx,40
+    mov di,OFFSET op_in_text
+    call ShowSizeString
+
+write_instr_done:
+    popad
+    pop fs
+    pop es
+    pop ds 
+    ret   
+WriteInstr  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1339,12 +1615,7 @@ WriteCpuReg     Proc near
 ;
     mov di,OFFSET dword_reg_tab3
     call WriteDwordRegs
-    call ReadInstr
-    jc write_instr_done
-;
-    call GetMne    
-
-write_instr_done:
+    call WriteInstr
     call NewLine
 ;
     mov di,OFFSET sel_reg_tr
