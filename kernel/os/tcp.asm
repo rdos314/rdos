@@ -169,7 +169,7 @@ allocate_port_loop:
         jnc allocate_port_loop
 ;
         mov si,800h
-        add si,ax
+        add si,dx
         clc
 ;
         pop edx

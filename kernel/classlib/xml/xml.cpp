@@ -2548,7 +2548,7 @@ void XMLElement :: Export(FILE* fp,int ShowAll,XML_SAVE_MODE SaveMode,XML_TARGET
         }
 
 
-int _USERENTRY  XMLElementfcmp(const void * a, const void * b)
+int XMLElementfcmp(const void * a, const void * b)
         {
         XMLElement* x1 = *(XMLElement**)a;
         XMLElement* x2 = *(XMLElement**)b;
@@ -2564,7 +2564,7 @@ int _USERENTRY  XMLElementfcmp(const void * a, const void * b)
 
         return strcmpi(s1,s2);
         }
-int _USERENTRY  XMLVariablefcmp(const void * a, const void * b)
+int XMLVariablefcmp(const void * a, const void * b)
         {
         XMLVariable* x1 = *(XMLVariable**)a;
         XMLVariable* x2 = *(XMLVariable**)b;
@@ -2581,7 +2581,7 @@ int _USERENTRY  XMLVariablefcmp(const void * a, const void * b)
         return strcmpi(s1,s2);
         }
 
-void XMLElement :: SortElements(int (_USERENTRY *fcmp)(const void *, const void *))
+void XMLElement :: SortElements(int (*fcmp)(const void *, const void *))
         {
         // to all elements
         XMLElement** x =  GetChildren();
@@ -2592,7 +2592,7 @@ void XMLElement :: SortElements(int (_USERENTRY *fcmp)(const void *, const void 
                 qsort(x,y,sizeof(XMLElement*),fcmp);
         }
 
-void XMLElement :: SortVariables(int (_USERENTRY *fcmp)(const void *, const void *))
+void XMLElement :: SortVariables(int (*fcmp)(const void *, const void *))
         {
         // to all Variables
         XMLVariable** x =  GetVariables();

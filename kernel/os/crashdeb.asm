@@ -712,8 +712,8 @@ init_crashdeb    PROC near
     mov ax,add_debug_core_nr
     RegisterOsGate
 ;
-    mov di,OFFSET init_task
-    HookInitTasking
+;    mov di,OFFSET init_task
+;    HookInitTasking
 ;
     AddDebugCore
 ;

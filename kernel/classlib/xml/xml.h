@@ -21,11 +21,6 @@
 // #define ALLOW_SINGLE_QUOTE_VARIABLES
 // Define the above tow allow var='x' instead of var="x"
 
-
-#ifdef __WATCOMC__
-#define _USERENTRY
-#endif
-
 #define CRYPT_OID_INFO_HAS_EXTRA_FIELDS
 #define XML_OPTIONAL_MIME
 
@@ -330,10 +325,10 @@ class XMLElement
 		XMLElement* MoveElement(unsigned int i,unsigned int y);
 
 
-		void SortElements(int (_USERENTRY *fcmp)(const void *, const void *));
-		void SortVariables(int (_USERENTRY *fcmp)(const void *, const void *));
-		friend int _USERENTRY XMLElementfcmp(const void *, const void *);
-		friend int _USERENTRY XMLVariablefcmp(const void *, const void *);
+		void SortElements(int (*fcmp)(const void *, const void *));
+		void SortVariables(int (*fcmp)(const void *, const void *));
+		friend int XMLElementfcmp(const void *, const void *);
+		friend int XMLVariablefcmp(const void *, const void *);
 
 		XMLElement* Duplicate(XMLElement* = 0);
 		XMLElement* Encrypt(const char* pwd);
