@@ -32,8 +32,8 @@
 
 #define     STACK_SIZE  0x1000
 
-#define     FALSE	0
-#define     TRUE	!FALSE
+#define     FALSE       0
+#define     TRUE        !FALSE
 
 static int CurrId = 0;
 static TSection IdSection;
@@ -51,7 +51,7 @@ static TSection IdSection;
 ##########################################################################*/
 void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
-    TControlThread *dev = (TControlThread *)Keyboard->Owner;
+    TDisplayControlThread *dev = (TDisplayControlThread *)Keyboard->Owner;
 
     dev->NotifyKeyPressed(ExtKey, KeyState, VirtualKey, ScanCode);
 }
@@ -69,7 +69,7 @@ void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKe
 ##########################################################################*/
 void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
-    TControlThread *dev = (TControlThread *)Keyboard->Owner;
+    TDisplayControlThread *dev = (TDisplayControlThread *)Keyboard->Owner;
 
     dev->NotifyKeyReleased(ExtKey, KeyState, VirtualKey, ScanCode);
 }
@@ -87,7 +87,7 @@ void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int Virtual
 ##########################################################################*/
 void MouseMove(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
-    TControlThread *dev = (TControlThread *)Mouse->Owner;
+    TDisplayControlThread *dev = (TDisplayControlThread *)Mouse->Owner;
 
     dev->NotifyMouseMove(x, y, MouseButton, KeyState);
 }
@@ -105,7 +105,7 @@ void MouseMove(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 ##########################################################################*/
 void LeftUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
-    TControlThread *dev = (TControlThread *)Mouse->Owner;
+    TDisplayControlThread *dev = (TDisplayControlThread *)Mouse->Owner;
 
     dev->NotifyLeftUp(x, y, MouseButton, KeyState);
 }
@@ -123,7 +123,7 @@ void LeftUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 ##########################################################################*/
 void LeftDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
-    TControlThread *dev = (TControlThread *)Mouse->Owner;
+    TDisplayControlThread *dev = (TDisplayControlThread *)Mouse->Owner;
 
     dev->NotifyLeftDown(x, y, MouseButton, KeyState);
 }
@@ -141,7 +141,7 @@ void LeftDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 ##########################################################################*/
 void RightUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
-    TControlThread *dev = (TControlThread *)Mouse->Owner;
+    TDisplayControlThread *dev = (TDisplayControlThread *)Mouse->Owner;
 
     dev->NotifyRightUp(x, y, MouseButton, KeyState);
 }
@@ -159,7 +159,7 @@ void RightUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 ##########################################################################*/
 void RightDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
-    TControlThread *dev = (TControlThread *)Mouse->Owner;
+    TDisplayControlThread *dev = (TDisplayControlThread *)Mouse->Owner;
 
     dev->NotifyRightDown(x, y, MouseButton, KeyState);
 }
@@ -300,22 +300,22 @@ TControl::~TControl()
         FControlList = control->FNext;
         delete control;
 
-		  control = FControlList;
-	 }
+                  control = FControlList;
+         }
 
-	 if (FDelay)
-	 {
-		  delete FDelay;
-		  FDelay = 0;
-	 }
+         if (FDelay)
+         {
+                  delete FDelay;
+                  FDelay = 0;
+         }
 
-	 Unprotect();
+         Unprotect();
 
-	 if (FParent)
-		  FParent->Delete(this);
+         if (FParent)
+                  FParent->Delete(this);
 
-	 if (FDev)
-		  FDev->Delete(this);
+         if (FDev)
+                  FDev->Delete(this);
 }
 
 /*##########################################################################
@@ -331,17 +331,17 @@ TControl::~TControl()
 ##########################################################################*/
 void TControl::Init()
 {
-	 OnChanged = 0;
-	 Owner = 0;
+         OnChanged = 0;
+         Owner = 0;
 
-	 FControlList = 0;
-	 FDelay = 0;
-	 FDirty = TRUE;
+         FControlList = 0;
+         FDelay = 0;
+         FDirty = TRUE;
 
-	 IdSection.Enter();
-	 ControlId = CurrId;
-	 CurrId++;
-	 IdSection.Leave();
+         IdSection.Enter();
+         ControlId = CurrId;
+         CurrId++;
+         IdSection.Leave();
 }
 
 /*##########################################################################
@@ -528,7 +528,7 @@ void TControl::NotifyChildChange()
 ##########################################################################*/
 void TControl::Add(TControl *control)
 {
-	TControl *curr;
+        TControl *curr;
     TControl *prev;
 
     control->FDev = FDev;
@@ -662,7 +662,7 @@ void TControl::Set(const char *IniName, const char *IniSection)
         Resize(SizeX, SizeY);
 
     if (PosChanged)
-    	Move(StartX, StartY);
+        Move(StartX, StartY);
 
 
     if (Ini.ReadVar("Visible", str, 255))
@@ -786,12 +786,12 @@ int TControl::IsEnabled() const
     int enabled;
 
     parent = FParent;
-	enabled = FEnabled;
+        enabled = FEnabled;
 
-	while (parent && enabled)
-	{
-	    enabled = parent->IsEnabled();
-		parent = parent->FParent;
+        while (parent && enabled)
+        {
+            enabled = parent->IsEnabled();
+                parent = parent->FParent;
     }
 
     return enabled;
@@ -1186,29 +1186,29 @@ void TControl::Redraw(int millisec)
 
     SetDirty();
 
-	if (millisec)
-	{
-	    time.AddMilli(millisec);
+        if (millisec)
+        {
+            time.AddMilli(millisec);
 
-		if (FDelay)
-		    *FDelay = time;
-		else
-			FDelay = new TDateTime(time);
-	}
-	else
-	{
+                if (FDelay)
+                    *FDelay = time;
+                else
+                        FDelay = new TDateTime(time);
+        }
+        else
+        {
         if (FDelay)
-		{
-			delete FDelay;
-			FDelay = 0;
-		}
-		Update();
+                {
+                        delete FDelay;
+                        FDelay = 0;
+                }
+                Update();
     }
 
     Unprotect();
 
     if (FDev)
-    	FDev->Signal();
+        FDev->Signal();
 }
 
 /*##########################################################################
@@ -1227,7 +1227,7 @@ void TControl::RedrawChild(TControl *control, int level)
     if (FParent)
         FParent->RedrawChild(control, level + 1);
     else
-    	FDev->DefaultRedraw(control);
+        FDev->DefaultRedraw(control);
 }
 
 /*##########################################################################
@@ -1250,7 +1250,7 @@ void TControl::Redraw()
     if (FParent)
         FParent->RedrawChild(this, 1);
     else
-    	FDev->DefaultRedraw(this);
+        FDev->DefaultRedraw(this);
 
     Unprotect();
 }
@@ -1360,12 +1360,12 @@ void TControl::HandleUpdate()
 
         while (control)
         {
-				if (control->IsVisible())
-					if (currtime > control->GetRedrawTime())
-						 control->HandleUpdate();
+                                if (control->IsVisible())
+                                        if (currtime > control->GetRedrawTime())
+                                                 control->HandleUpdate();
 
-				control = control->FNext;
-		  }
+                                control = control->FNext;
+                  }
     }
 
     Unprotect();
@@ -1440,8 +1440,8 @@ void TControl::SetClipRect(TGraphicDevice *dev, int xstart, int ystart)
     SetClipRect(    dev,
                     xstart, 
                     ystart,
-        		    xstart + FWidth - 1,
-        			ystart + FHeight - 1);
+                            xstart + FWidth - 1,
+                                ystart + FHeight - 1);
 }
 
 /*##########################################################################
@@ -1489,9 +1489,9 @@ void TControl::RedrawChildren(TGraphicDevice *dev, int xmin, int ymin, int width
                 xstart = xmin + control->FXMin;
                 ystart = ymin + control->FYMin;
             
-            	SetClipRect(    dev, xstart, ystart,
-            					xstart + control->FWidth - 1,
-        	    				ystart + control->FHeight - 1);
+                SetClipRect(    dev, xstart, ystart,
+                                                xstart + control->FWidth - 1,
+                                                ystart + control->FHeight - 1);
 
                 control->ResetDirty();
                 control->Paint(dev, xstart, ystart, control->FWidth, control->FHeight);
@@ -1535,9 +1535,9 @@ void TControl::UpdateChildren(TGraphicDevice *dev, int xmin, int ymin, int width
                 xstart = xmin + control->FXMin;
                 ystart = ymin + control->FYMin;
             
-            	SetClipRect(    dev, xstart, ystart,
-            				    xstart + control->FWidth - 1,
-        	    				ystart + control->FHeight - 1);
+                SetClipRect(    dev, xstart, ystart,
+                                            xstart + control->FWidth - 1,
+                                                ystart + control->FHeight - 1);
 
                 if (control->IsDirty())
                 {
@@ -1801,28 +1801,27 @@ int TControl::OnRightDown(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-TControlThread::TControlThread(const char *name, TGraphicDevice *dev)
+TControlThread::TControlThread()
+{
+    FGraphic = 0;
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::TControlThread
+#
+#   Purpose....: Constructor for control-thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TControlThread::TControlThread(TGraphicDevice *dev)
 {
     FGraphic = new TGraphicDevice(*dev);
-    FMouseSprite = 0;
-    FKeyboard = 0;
-    FMouse = 0;
-
-    FControlList = 0;
-
-	DefaultRedrawTimeout = 25;
-	Enabled = TRUE;
-    EnableDelay = 0;
-
-    OnKeyPressed = 0;
-    OnKeyReleased = 0;
-    OnMouseMove = 0;
-    OnLeftUp = 0;
-    OnLeftDown = 0;
-    OnRightUp = 0;
-    OnRightDown = 0;
-
-	Start(name, STACK_SIZE);    
+    Init();
 }
 
 /*##########################################################################
@@ -1854,13 +1853,24 @@ TControlThread::~TControlThread()
 
     Unprotect();
 
-    if (FMouseSprite)
-    {
-        FMouseSprite->Hide();
-        delete FMouseSprite;
-    }
+    if (FGraphic)
+        delete FGraphic;
+}
 
-    delete FGraphic;
+/*##########################################################################
+#
+#   Name       : TControlThread::Init
+#
+#   Purpose....: Init for control-thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::Init()
+{
+    FControlList = 0;
 }
 
 /*##########################################################################
@@ -1876,48 +1886,7 @@ TControlThread::~TControlThread()
 ##########################################################################*/
 int TControlThread::IsRedrawEnabled()
 {
-   if (Enabled)
-   {
-        if (EnableDelay)
-            return FALSE;
-        else
-            return TRUE;
-    }
-    else
-        return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TControlThread::EnableRedraw
-#
-#   Purpose....: Enable redraws
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TControlThread::EnableRedraw(int Delay)
-{
-    EnableDelay = Delay;
-    Enabled = TRUE;
-}
-
-/*##########################################################################
-#
-#   Name       : TControlThread::DisableRedraw
-#
-#   Purpose....: Disable redraws
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TControlThread::DisableRedraw()
-{
-    Enabled = FALSE;
+    return TRUE;
 }
 
 /*##########################################################################
@@ -1954,95 +1923,6 @@ void TControlThread::Unprotect()
 
 /*##########################################################################
 #
-#   Name       : TControlThread::SetDefaultRedrawTimeout
-#
-#   Purpose....: Set default redraw timeout
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TControlThread::SetDefaultRedrawTimeout(int milli)
-{
-    DefaultRedrawTimeout = milli;
-}
-
-/*##########################################################################
-#
-#   Name       : TControlThread::Add
-#
-#   Purpose....: Add keyboard
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TControlThread::Add(TKeyboardDevice *Keyboard)
-{
-    FKeyboard = Keyboard;
-    
-    Keyboard->Owner = this;
-    Keyboard->OnKeyPress = KeyPress;
-	Keyboard->OnKeyRelease = KeyRelease;
-    FWait.Add(Keyboard);
-}
-
-/*##########################################################################
-#
-#   Name       : TControlThread::Add
-#
-#   Purpose....: Add mouse
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TControlThread::Add(TMouseDevice *Mouse)
-{
-    FMouse = Mouse;
-
-    Mouse->Owner = this;
-    Mouse->OnMove = MouseMove;
-	Mouse->OnLeftUp = LeftUp;
-    Mouse->OnLeftDown = LeftDown;
-	Mouse->OnRightUp = RightUp;
-    Mouse->OnRightDown = RightDown;
-
-	Mouse->SetWindow(0, 0, FGraphic->GetWidth(), FGraphic->GetHeight());
-	Mouse->SetMickey(1, 1);
-	Mouse->SetPosition(FGraphic->GetWidth() / 2, FGraphic->GetHeight() / 2);
-    
-    FWait.Add(FMouse);
-}
-
-/*##########################################################################
-#
-#   Name       : TControlThread::SetMouseMarker
-#
-#   Purpose....: Set mouse marker
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TControlThread::SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY)
-{
-    if (FMouseSprite)
-    {
-        FMouseSprite->Hide();
-        delete FMouseSprite;
-    }
-
-	FMouseSprite = FGraphic->CreateSprite(MouseBitmap, MouseMask, HotX, HotY);
-	FMouseSprite->Show();
-}
-
-/*##########################################################################
-#
 #   Name       : TControlThread::Add
 #
 #   Purpose....: Add new control last into list
@@ -2054,7 +1934,7 @@ void TControlThread::SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice 
 ##########################################################################*/
 void TControlThread::Add(TControl *control)
 {
-	TControl *curr;
+        TControl *curr;
     TControl *prev;
 
     control->FNext = 0;
@@ -2136,8 +2016,16 @@ void TControlThread::Delete(TControl *control)
 ##########################################################################*/
 void TControlThread::GetSize(int *x, int *y) const
 {
-    *x = FGraphic->GetWidth();
-    *y = FGraphic->GetHeight();
+    if (FGraphic)
+    {
+        *x = FGraphic->GetWidth();
+        *y = FGraphic->GetHeight();
+    }
+    else
+    {
+        *x = 0;
+        *y = 0;
+    }
 }
 
 /*##########################################################################
@@ -2161,37 +2049,37 @@ void TControlThread::Update(TControl *control)
     xmin = control->FXMin;
     ymin = control->FYMin;
 
-	parent = control->FParent;
+        parent = control->FParent;
 
-	visible = control->IsVisible();
+        visible = control->IsVisible();
 
-	while (parent && visible)
-	{
-	    visible = parent->IsVisible();
-	    
-	    xmin += parent->FXMin;
-		ymin += parent->FYMin;
+        while (parent && visible)
+        {
+            visible = parent->IsVisible();
+            
+            xmin += parent->FXMin;
+                ymin += parent->FYMin;
 
-		parent = parent->FParent;
+                parent = parent->FParent;
     }
 
-    if (visible && IsRedrawEnabled())
+    if (FGraphic && visible && IsRedrawEnabled())
     {
         control->ClearRedraw();
     
         FPaintSection.Enter();
-	    FGraphic->SetClipRect(   xmin, ymin,
-                			    xmin + control->FWidth - 1,
-            	    		    ymin + control->FHeight - 1);
+            FGraphic->SetClipRect(   xmin, ymin,
+                                            xmin + control->FWidth - 1,
+                                    ymin + control->FHeight - 1);
 
         if (control->IsDirty())
         {
             control->ResetDirty();
             control->Paint(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
-			control->RedrawChildren(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
+                        control->RedrawChildren(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
         }            
         else
-			control->UpdateChildren(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
+                        control->UpdateChildren(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
 
         FPaintSection.Leave();
     }
@@ -2210,7 +2098,7 @@ void TControlThread::Update(TControl *control)
 ##########################################################################*/
 void TControlThread::DefaultRedraw(TControl *control)
 {
-    control->Redraw(DefaultRedrawTimeout);
+    control->Redraw();
 }
 
 /*##########################################################################
@@ -2280,7 +2168,253 @@ TControl *TControlThread::GetControl(int Id)
 
 /*##########################################################################
 #
-#   Name       : TControlThread::NotifyKeyPressed
+#   Name       : TControlThread::PutKey
+#
+#   Purpose....: Put key into buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::PutKey(char ch)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::Signal
+#
+#   Purpose....: Signal wakeup to thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::Signal()
+{
+    FSignal.Signal();
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::TDisplayControlThread
+#
+#   Purpose....: Constructor for display control-thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDisplayControlThread::TDisplayControlThread(const char *name, TGraphicDevice *dev)
+  : TControlThread(dev)
+{
+    Init(name);
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::~TDisplayControlThread
+#
+#   Purpose....: Destructor for display control-thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDisplayControlThread::~TDisplayControlThread()
+{
+    if (FMouseSprite)
+    {
+        FMouseSprite->Hide();
+        delete FMouseSprite;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::Init
+#
+#   Purpose....: Init display control-thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::Init(const char *name)
+{
+    FMouseSprite = 0;
+    FKeyboard = 0;
+    FMouse = 0;
+
+        DefaultRedrawTimeout = 25;
+        Enabled = TRUE;
+    EnableDelay = 0;
+
+    OnKeyPressed = 0;
+    OnKeyReleased = 0;
+    OnMouseMove = 0;
+    OnLeftUp = 0;
+    OnLeftDown = 0;
+    OnRightUp = 0;
+    OnRightDown = 0;
+
+        Start(name, STACK_SIZE);    
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::IsRedrawEnabled
+#
+#   Purpose....: Check if redraw is enabled
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDisplayControlThread::IsRedrawEnabled()
+{
+   if (Enabled)
+   {
+        if (EnableDelay)
+            return FALSE;
+        else
+            return TRUE;
+    }
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::EnableRedraw
+#
+#   Purpose....: Enable redraws
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::EnableRedraw(int Delay)
+{
+    EnableDelay = Delay;
+    Enabled = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::DisableRedraw
+#
+#   Purpose....: Disable redraws
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::DisableRedraw()
+{
+    Enabled = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::SetDefaultRedrawTimeout
+#
+#   Purpose....: Set default redraw timeout
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::SetDefaultRedrawTimeout(int milli)
+{
+    DefaultRedrawTimeout = milli;
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::Add
+#
+#   Purpose....: Add keyboard
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::Add(TKeyboardDevice *Keyboard)
+{
+    FKeyboard = Keyboard;
+    
+    Keyboard->Owner = this;
+    Keyboard->OnKeyPress = KeyPress;
+        Keyboard->OnKeyRelease = KeyRelease;
+    FWait.Add(Keyboard);
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::Add
+#
+#   Purpose....: Add mouse
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::Add(TMouseDevice *Mouse)
+{
+    FMouse = Mouse;
+
+    Mouse->Owner = this;
+    Mouse->OnMove = MouseMove;
+        Mouse->OnLeftUp = LeftUp;
+    Mouse->OnLeftDown = LeftDown;
+        Mouse->OnRightUp = RightUp;
+    Mouse->OnRightDown = RightDown;
+
+        Mouse->SetWindow(0, 0, FGraphic->GetWidth(), FGraphic->GetHeight());
+        Mouse->SetMickey(1, 1);
+        Mouse->SetPosition(FGraphic->GetWidth() / 2, FGraphic->GetHeight() / 2);
+    
+    FWait.Add(FMouse);
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::SetMouseMarker
+#
+#   Purpose....: Set mouse marker
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY)
+{
+    if (FMouseSprite)
+    {
+        FMouseSprite->Hide();
+        delete FMouseSprite;
+    }
+
+        FMouseSprite = FGraphic->CreateSprite(MouseBitmap, MouseMask, HotX, HotY);
+        FMouseSprite->Show();
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::NotifyKeyPressed
 #
 #   Purpose....: Key pressed callback
 #
@@ -2289,7 +2423,7 @@ TControl *TControlThread::GetControl(int Id)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+void TDisplayControlThread::NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
     TControl *control;
 
@@ -2314,7 +2448,7 @@ void TControlThread::NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, 
 
 /*##########################################################################
 #
-#   Name       : TControlThread::NotifyKeyReleased
+#   Name       : TDisplayControlThread::NotifyKeyReleased
 #
 #   Purpose....: Key released callback
 #
@@ -2323,7 +2457,7 @@ void TControlThread::NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, 
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+void TDisplayControlThread::NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
     TControl *control;
 
@@ -2348,7 +2482,7 @@ void TControlThread::NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey,
 
 /*##########################################################################
 #
-#   Name       : TControlThread::NotifyMouseMove
+#   Name       : TDisplayControlThread::NotifyMouseMove
 #
 #   Purpose....: Mouse move callback
 #
@@ -2357,7 +2491,7 @@ void TControlThread::NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey,
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::NotifyMouseMove(int x, int y, int ButtonState, int KeyState)
+void TDisplayControlThread::NotifyMouseMove(int x, int y, int ButtonState, int KeyState)
 {
     TControl *control;
 
@@ -2385,7 +2519,7 @@ void TControlThread::NotifyMouseMove(int x, int y, int ButtonState, int KeyState
 
 /*##########################################################################
 #
-#   Name       : TControlThread::NotifyLeftDown
+#   Name       : TDisplayControlThread::NotifyLeftDown
 #
 #   Purpose....: Left button down callback
 #
@@ -2394,7 +2528,7 @@ void TControlThread::NotifyMouseMove(int x, int y, int ButtonState, int KeyState
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::NotifyLeftDown(int x, int y, int ButtonState, int KeyState)
+void TDisplayControlThread::NotifyLeftDown(int x, int y, int ButtonState, int KeyState)
 {
     TControl *control;
 
@@ -2419,7 +2553,7 @@ void TControlThread::NotifyLeftDown(int x, int y, int ButtonState, int KeyState)
 
 /*##########################################################################
 #
-#   Name       : TControlThread::NotifyLeftUp
+#   Name       : TDisplayControlThread::NotifyLeftUp
 #
 #   Purpose....: Left button up callback
 #
@@ -2428,9 +2562,9 @@ void TControlThread::NotifyLeftDown(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::NotifyLeftUp(int x, int y, int ButtonState, int KeyState)
+void TDisplayControlThread::NotifyLeftUp(int x, int y, int ButtonState, int KeyState)
 {
-	 TControl *control;
+         TControl *control;
 
     if (OnLeftUp)
         (*OnLeftUp)(this, x, y, ButtonState, KeyState);
@@ -2450,7 +2584,7 @@ void TControlThread::NotifyLeftUp(int x, int y, int ButtonState, int KeyState)
 
 /*##########################################################################
 #
-#   Name       : TControlThread::NotifyRightDown
+#   Name       : TDisplayControlThread::NotifyRightDown
 #
 #   Purpose....: Right button down callback
 #
@@ -2459,7 +2593,7 @@ void TControlThread::NotifyLeftUp(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::NotifyRightDown(int x, int y, int ButtonState, int KeyState)
+void TDisplayControlThread::NotifyRightDown(int x, int y, int ButtonState, int KeyState)
 {
     TControl *control;
 
@@ -2484,7 +2618,7 @@ void TControlThread::NotifyRightDown(int x, int y, int ButtonState, int KeyState
 
 /*##########################################################################
 #
-#   Name       : TControlThread::NotifyRightUp
+#   Name       : TDisplayControlThread::NotifyRightUp
 #
 #   Purpose....: Left button up callback
 #
@@ -2493,11 +2627,11 @@ void TControlThread::NotifyRightDown(int x, int y, int ButtonState, int KeyState
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::NotifyRightUp(int x, int y, int ButtonState, int KeyState)
+void TDisplayControlThread::NotifyRightUp(int x, int y, int ButtonState, int KeyState)
 {
     TControl *control;
 
-	 if (OnRightUp)
+         if (OnRightUp)
         (*OnRightUp)(this, x, y, ButtonState, KeyState);
 
     Protect();
@@ -2518,7 +2652,7 @@ void TControlThread::NotifyRightUp(int x, int y, int ButtonState, int KeyState)
 
 /*##########################################################################
 #
-#   Name       : TControlThread::NotifyClick
+#   Name       : TDisplayControlThread::NotifyClick
 #
 #   Purpose....: Notify button clicked
 #
@@ -2527,7 +2661,7 @@ void TControlThread::NotifyRightUp(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::NotifyClick(TControl *control, int x, int y)
+void TDisplayControlThread::NotifyClick(TControl *control, int x, int y)
 {
     if (control->IsEnabled())
     {
@@ -2538,7 +2672,7 @@ void TControlThread::NotifyClick(TControl *control, int x, int y)
 
 /*##########################################################################
 #
-#   Name       : TControlThread::PutKey
+#   Name       : TDisplayControlThread::PutKey
 #
 #   Purpose....: Put key into buffer
 #
@@ -2547,17 +2681,17 @@ void TControlThread::NotifyClick(TControl *control, int x, int y)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::PutKey(char ch)
+void TDisplayControlThread::PutKey(char ch)
 {
     if (FKeyboard)
         FKeyboard->Put(ch);
     else
-		NotifyKeyPressed(ch, ch, ch, ch);
+                NotifyKeyPressed(ch, ch, ch, ch);
 }
 
 /*##########################################################################
 #
-#   Name       : TControlThread::GetRedrawTime
+#   Name       : TDisplayControlThread::GetRedrawTime
 #
 #   Purpose....: Get next redraw time
 #
@@ -2566,7 +2700,7 @@ void TControlThread::PutKey(char ch)
 #   Returns....: *
 #
 ##########################################################################*/
-TDateTime TControlThread::GetRedrawTime()
+TDateTime TDisplayControlThread::GetRedrawTime()
 {
     TDateTime LowTime;
     TDateTime RedrawTime;
@@ -2597,7 +2731,23 @@ TDateTime TControlThread::GetRedrawTime()
 
 /*##########################################################################
 #
-#   Name       : TControlThread::HandleUpdate
+#   Name       : TDisplayControlThread::DefaultRedraw
+#
+#   Purpose....: Setup a default redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisplayControlThread::DefaultRedraw(TControl *control)
+{
+    control->Redraw(DefaultRedrawTimeout);
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayControlThread::HandleUpdate
 #
 #   Purpose....: Handle control update
 #
@@ -2606,7 +2756,7 @@ TDateTime TControlThread::GetRedrawTime()
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::HandleUpdate()
+void TDisplayControlThread::HandleUpdate()
 {
     TControl *control;
     TControl *dcontrol;
@@ -2618,35 +2768,19 @@ void TControlThread::HandleUpdate()
 
     while (control)
     {
-		  if (control->IsVisible())
-				if (currtime > control->GetRedrawTime())
-					 control->HandleUpdate();
+                  if (control->IsVisible())
+                                if (currtime > control->GetRedrawTime())
+                                         control->HandleUpdate();
 
-		  control = control->FNext;
-	 }
+                  control = control->FNext;
+         }
 
     Unprotect();
 }
 
 /*##########################################################################
 #
-#   Name       : TControlThread::Signal
-#
-#   Purpose....: Signal wakeup to thread
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TControlThread::Signal()
-{
-    FSignal.Signal();
-}
-
-/*##########################################################################
-#
-#   Name       : TControlThread::Execute
+#   Name       : TDisplayControlThread::Execute
 #
 #   Purpose....: Execute
 #
@@ -2655,7 +2789,7 @@ void TControlThread::Signal()
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::Execute()
+void TDisplayControlThread::Execute()
 {
     TDateTime time;
 

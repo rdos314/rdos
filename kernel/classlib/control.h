@@ -41,6 +41,7 @@ class TControlThread;
 class TControl
 {
 friend class TControlThread;
+friend class TDisplayControlThread;
 public:
 	TControl(TControlThread *dev);
 	TControl(TControlThread *dev, int xmin, int ymin, int width, int height);
@@ -149,8 +150,47 @@ class TControlThread : public TThread
 {
 friend class TControl;
 public:
-	TControlThread(const char *name, TGraphicDevice *dev);
+	TControlThread();
+	TControlThread(TGraphicDevice *dev);
     virtual ~TControlThread();
+
+    void Define(TGraphicDevice *dev);
+
+    void GetSize(int *x, int *y) const;
+
+    void EnumerateControls(void *Data, void (*CallBack)(void *Data, TControl *Control));
+    TControl *GetControl(int ControlId);
+
+protected:
+	void Protect();
+	void Unprotect();
+
+    void Signal();
+    void Add(TControl *control);
+    void Delete(TControl *control);
+    void Update(TControl *control);
+
+	virtual void DefaultRedraw(TControl *control);
+    virtual int IsRedrawEnabled();
+    virtual void PutKey(char ch);
+
+    TGraphicDevice *FGraphic;
+
+    TWait FWait;
+    TSignalDevice FSignal;
+    TSection FListSection;       
+    TSection FPaintSection;
+    TControl *FControlList;
+
+private:
+    void Init();
+};
+
+class TDisplayControlThread : public TControlThread
+{
+public:
+	TDisplayControlThread(const char *name, TGraphicDevice *dev);
+    virtual ~TDisplayControlThread();
 
     void Add(TKeyboardDevice *Keyboard);
     void Add(TMouseDevice *Mouse);
@@ -160,10 +200,6 @@ public:
     void DisableRedraw();
     void EnableRedraw(int Delay);
 
-    void GetSize(int *x, int *y) const;
-
-    void EnumerateControls(void *Data, void (*CallBack)(void *Data, TControl *Control));
-    TControl *GetControl(int ControlId);
     void NotifyClick(TControl *Control, int x, int y);
 
 	void NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
@@ -183,22 +219,14 @@ public:
 	void (*OnRightDown)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
 
 protected:
-    int IsRedrawEnabled();
-	void Protect();
-	void Unprotect();
-
-    void Signal();
-    void Add(TControl *control);
-    void Delete(TControl *control);
-    void Update(TControl *control);
-	void DefaultRedraw(TControl *control);
     TDateTime GetRedrawTime();
     void HandleUpdate();
 	virtual void Execute();
 
-    void PutKey(char ch);
+	virtual void DefaultRedraw(TControl *control);
+    virtual int IsRedrawEnabled();
+    virtual void PutKey(char ch);
 
-    TGraphicDevice *FGraphic;
     TKeyboardDevice *FKeyboard;
     TMouseDevice *FMouse; 
     TSprite *FMouseSprite;
@@ -207,11 +235,8 @@ protected:
     int Enabled;
     int EnableDelay;
 
-    TWait FWait;
-    TSignalDevice FSignal;
-    TSection FListSection;       
-    TSection FPaintSection;
-    TControl *FControlList;
+private:
+    void Init(const char *name);
 };
 
 #endif
