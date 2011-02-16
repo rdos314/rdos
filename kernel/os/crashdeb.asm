@@ -270,7 +270,7 @@ ExecFunc    Proc near
 
 d_c_loop:
     mov cx,cs:[bx].debug_row
-    cmp cx,0FFh
+    cmp cx,0FFFFh
     je d_c_end
 ;    
     cmp cx,ds:curr_row
