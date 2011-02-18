@@ -451,6 +451,43 @@ void TControl::Unprotect()
 
 /*##########################################################################
 #
+#   Name       : TControl::Apply
+#
+#   Purpose....: Apply bitmap to control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Apply(TGraphicDevice *dev)
+{
+    if (FDev)
+        FDev->Apply(dev);
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::DeleteDev
+#
+#   Purpose....: Delete control-device (used for auto-creation with new in constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::DeleteDev()
+{
+    if (FDev)
+    {
+        delete FDev;
+        FDev = 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::HasParent
 #
 #   Purpose....: Check if control has parent
@@ -2098,7 +2135,7 @@ void TControlThread::Update(TControl *control)
 ##########################################################################*/
 void TControlThread::DefaultRedraw(TControl *control)
 {
-    control->Redraw();
+    control->Redraw(1);
 }
 
 /*##########################################################################
@@ -2164,6 +2201,42 @@ TControl *TControlThread::GetControl(int Id)
     Unprotect();
 
     return c;
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::Apply
+#
+#   Purpose....: Apply control-settings to bitmap
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::Apply(TGraphicDevice *dev)
+{
+    TControl *control;
+    TGraphicDevice *olddev;
+
+    Protect();
+
+    olddev = FGraphic;
+    FGraphic = dev;
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsVisible())
+            control->HandleUpdate();
+
+        control = control->FNext;
+    }
+
+    FGraphic = olddev;
+
+    Unprotect();
 }
 
 /*##########################################################################

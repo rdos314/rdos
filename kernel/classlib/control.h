@@ -101,6 +101,9 @@ protected:
     virtual void UpdateChild(TControl *control, int level);
     virtual void RedrawChild(TControl *control, int level);
 
+    void Apply(TGraphicDevice *dev);
+    void DeleteDev();
+
     void NotifyChanged();
     void NotifyChildChange();
 
@@ -154,7 +157,7 @@ public:
 	TControlThread(TGraphicDevice *dev);
     virtual ~TControlThread();
 
-    void Define(TGraphicDevice *dev);
+    void Apply(TGraphicDevice *dev);
 
     void GetSize(int *x, int *y) const;
 
