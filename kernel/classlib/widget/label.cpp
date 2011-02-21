@@ -678,6 +678,8 @@ void TLabelControl::Init()
     FText = 0;
     FFont = 0;
 
+    FForceSingle = FALSE;
+
     FHorAlign = HOR_CENTER;
     FVerAlign = VER_CENTER;
     
@@ -735,6 +737,14 @@ void TLabelControl::Set(const char *IniName, const char *IniSection)
 
         if (size)
             SetFont(size);
+    }
+
+    if (Ini.ReadVar("Single", str, 255))
+    {    
+        if (str[0] == '0')
+            AllowMultiple();
+        else
+            ForceSingle();
     }
     
     if (Ini.ReadVar("Align", str, 255))
@@ -910,6 +920,38 @@ void TLabelControl::GetDrawColor(int *r, int *g, int *b)
     *r = FDrawR;
     *g = FDrawG;
     *b = FDrawB;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::ForceSingle
+#
+#   Purpose....: Force single-line use
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::ForceSingle()
+{
+    FForceSingle = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AllowMultiple
+#
+#   Purpose....: Allow breakup into multiple rows
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AllowMultiple()
+{
+    FForceSingle = FALSE;
 }
 
 /*##########################################################################
@@ -1134,6 +1176,9 @@ void TLabelControl::ReformatText()
 
     FTextRow[row] = start;
     ptr = start;
+
+    if (FForceSingle)
+        return;
 
     while (*ptr != 0)
     {

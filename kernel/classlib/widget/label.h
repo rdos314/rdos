@@ -106,6 +106,9 @@ public:
 
     virtual void Set(const char *IniName, const char *IniSection);
 
+    void ForceSingle();
+    void AllowMultiple();
+    
     void SetFont(int height);
     void SetFont(TFont *font);
     TFont *GetFont();
@@ -143,6 +146,8 @@ protected:
 private:
     void Init();
     void ReformatText();
+
+    int FForceSingle;
 
     int FHorAlign;
     int FVerAlign;
