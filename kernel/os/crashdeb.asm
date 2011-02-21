@@ -344,6 +344,16 @@ debp  exec_s <5,  44, 8, OFFSET cs_ebp,  OFFSET inc_reg_byte,   OFFSET dec_reg_b
 meip  exec_s <6,  1,  3, OFFSET cs_eip,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
 deip  exec_s <6,  5,  8, OFFSET cs_eip,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 dtr   exec_s <7,  4,  4, OFFSET cs_tr,   OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dldt  exec_s <8,  4,  4, OFFSET cs_ldt,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dcs   exec_s <9,  4,  4, OFFSET cs_cs,   OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dds   exec_s <10, 4,  4, OFFSET cs_ds,   OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+des   exec_s <11, 4,  4, OFFSET cs_es,   OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dfs   exec_s <12, 4,  4, OFFSET cs_fs,   OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dgs   exec_s <13, 4,  4, OFFSET cs_gs,   OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dss   exec_s <14, 4,  4, OFFSET cs_ss,   OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dus   exec_s <15, 4,  4, OFFSET cs_usel, OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+duss  exec_s <20, 0,  4, OFFSET cs_usel, OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+duso  exec_s <20, 5,  8, OFFSET cs_uoffs,OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 dend DW     0FFFFh, 0FFFFh
 
 ExecFunc    Proc near
