@@ -46,8 +46,6 @@ curr_core       DW ?
 curr_row        DW ?
 curr_col        DW ?
 
-set_val         DB ?
-
 data    ENDS
 
     .386p
@@ -145,93 +143,173 @@ HideMarker Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;   exec table structure
 ;
-;           NAME:           do_inc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+exec_s  STRUC
+
+exec_row    DW ?
+exec_col    DW ?
+exec_size   DW ?
+exec_reg    DW ?
+exec_inc    DW ?
+exec_dec    DW ?
+exec_set    DW ?
+
+exec_s  ENDS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;           DESCRIPTION:    Perform inc
+;
+;           NAME:           ignore
+;
+;           DESCRIPTION:    Ignore
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ignore  Proc near
+    ret
+ignore  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           inc_reg_byte
+;
+;           DESCRIPTION:    Perform inc on byte in core reg
 ;
 ;           PARAMETERS:     GS      Core state
+;                           SI      Register offset
+;                           BX      Table entry
+;                           CX      Digit #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-do_inc    Proc near
+inc_reg_byte    Proc near
+    mov ax,cs:[bx].exec_size
+    sub ax,cx
+    dec ax
+    mov cl,al
+    shl cl,2
+    mov edx,0Fh
+    shl edx,cl
+;    
+    mov eax,gs:[si]
+    and eax,edx
+    shr eax,cl
+    inc al
+    and al,0Fh
+    shl eax,cl
+    not edx
+    and edx,gs:[si]
+    or eax,edx
+    mov gs:[si],eax
     ret
-do_inc  Endp
+inc_reg_byte  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           do_dec
+;           NAME:           dec_reg_byte
 ;
-;           DESCRIPTION:    Perform dec
+;           DESCRIPTION:    Perform dec on byte in core reg
 ;
 ;           PARAMETERS:     GS      Core state
+;                           SI      Register offset
+;                           BX      Table entry
+;                           CX      Digit #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-do_dec    Proc near
+dec_reg_byte    Proc near
+    mov ax,cs:[bx].exec_size
+    sub ax,cx
+    dec ax
+    mov cl,al
+    shl cl,2
+    mov edx,0Fh
+    shl edx,cl
+;    
+    mov eax,gs:[si]
+    and eax,edx
+    shr eax,cl
+    dec al
+    and al,0Fh
+    shl eax,cl
+    not edx
+    and edx,gs:[si]
+    or eax,edx
+    mov gs:[si],eax
     ret
-do_dec  Endp
+dec_reg_byte  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           do_set
+;           NAME:           inc_reg4
 ;
-;           DESCRIPTION:    Perform set
+;           DESCRIPTION:    Perform dword inc on core reg
 ;
 ;           PARAMETERS:     GS      Core state
+;                           SI      Register offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-do_set    Proc near
+inc_reg4    Proc near
+    inc dword ptr gs:[si]
     ret
-do_set  Endp
+inc_reg4  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           funcs
+;           NAME:           dec_reg4
 ;
-;           DESCRIPTION:    Register operators
+;           DESCRIPTION:    Perform dword dec on core reg
 ;
-;           PARAMETERS:     DI      Function callback
-;                           CX      Offset within field
-;                           GS      Core state
+;           PARAMETERS:     GS      Core state
+;                           SI      Register offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-incdec_eax  Proc near
+dec_reg4    Proc near
+    dec dword ptr gs:[si]
     ret
-incdec_eax  Endp
+dec_reg4  Endp
 
-change_eax  Proc near
-    ret
-change_eax  Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           set_reg_byte
+;
+;           DESCRIPTION:    Perform set on core reg
+;
+;           PARAMETERS:     GS      Core state
+;                           SI      Register offset
+;                           BX      Table entry
+;                           AL      Value to set
+;                           CX      Digit number
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-incdec_ebx  Proc near
+set_reg_byte    Proc near
+    mov dx,cs:[bx].exec_size
+    sub dx,cx
+    dec dx
+    mov cl,dl
+    shl cl,2
+    mov edx,0Fh
+    shl edx,cl
+    not edx
+    and edx,gs:[si]
+    movzx eax,al
+    shl eax,cl
+    or eax,edx
+    mov gs:[si],eax
+    inc ds:curr_col
     ret
-incdec_ebx  Endp
-
-change_ebx  Proc near
-    ret
-change_ebx  Endp
-
-incdec_ecx  Proc near
-    ret
-incdec_ecx  Endp
-
-change_ecx  Proc near
-    ret
-change_ecx  Endp
-
-incdec_edx  Proc near
-    ret
-incdec_edx  Endp
-
-change_edx  Proc near
-    ret
-change_edx  Endp
+set_reg_byte  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -241,35 +319,38 @@ change_edx  Endp
 ;           DESCRIPTION:    Execute function
 ;
 ;           PARAMETERS:     DI      Function callback
+;                           AL      Param
 ;                           GS      Core state
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-debug_row       EQU 0
-debug_col       EQU 2
-debug_ant       EQU 4
-debug_call      EQU 6
-debug_size      EQU 8
     
-;
-;           row     col         size        action
-;
 exec_table:
-meax DW     4,      1,          3,          OFFSET incdec_eax
-deax DW     4,      5,          8,          OFFSET change_eax
-mebx DW     4,      14,         3,          OFFSET incdec_ebx
-debx DW     4,      18,         8,          OFFSET change_ebx
-mecx DW     4,      27,         3,          OFFSET incdec_ecx
-decx DW     4,      31,         8,          OFFSET change_ecx
-medx DW     4,      40,         3,          OFFSET incdec_edx
-dedx DW     4,      44,         8,          OFFSET change_edx
+meax  exec_s <4,  1,  3, OFFSET cs_eax,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+deax  exec_s <4,  5,  8, OFFSET cs_eax,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mebx  exec_s <4,  14, 3, OFFSET cs_ebx,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+debx  exec_s <4,  18, 8, OFFSET cs_ebx,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mecx  exec_s <4,  27, 3, OFFSET cs_ecx,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+decx  exec_s <4,  31, 8, OFFSET cs_ecx,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+medx  exec_s <4,  40, 3, OFFSET cs_edx,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+dedx  exec_s <4,  44, 8, OFFSET cs_edx,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mesi  exec_s <5,  1,  3, OFFSET cs_esi,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+desi  exec_s <5,  5,  8, OFFSET cs_esi,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+medi  exec_s <5,  14, 3, OFFSET cs_edi,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+dedi  exec_s <5,  18, 8, OFFSET cs_edi,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mesp  exec_s <5,  27, 3, OFFSET cs_esp,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+desp  exec_s <5,  31, 8, OFFSET cs_esp,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mebp  exec_s <5,  40, 3, OFFSET cs_ebp,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+debp  exec_s <5,  44, 8, OFFSET cs_ebp,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+meip  exec_s <6,  1,  3, OFFSET cs_eip,  OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+deip  exec_s <6,  5,  8, OFFSET cs_eip,  OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dtr   exec_s <7,  4,  4, OFFSET cs_tr,   OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 dend DW     0FFFFh, 0FFFFh
 
 ExecFunc    Proc near
     mov bx,OFFSET exec_table
 
 d_c_loop:
-    mov cx,cs:[bx].debug_row
+    mov cx,cs:[bx].exec_row
     cmp cx,0FFFFh
     je d_c_end
 ;    
@@ -277,18 +358,18 @@ d_c_loop:
     jne not_this_entry
 ;
     mov cx,ds:curr_col
-    sub cx,cs:[bx].debug_col
+    sub cx,cs:[bx].exec_col
     jc not_this_entry
 ;    
-    cmp cx,cs:[bx].debug_ant
+    cmp cx,cs:[bx].exec_size
     jnc not_this_entry
 ;    
-    and cx,7
-    call word ptr cs:[bx].debug_call
+    mov si,cs:[bx].exec_reg
+    call word ptr cs:[bx+di]
     jmp d_c_end
     
 not_this_entry:
-    add bx,debug_size
+    add bx,SIZE exec_s
     jmp d_c_loop
     
 d_c_end:
@@ -308,7 +389,7 @@ ExecFunc  Endp
 
 inc_func    Proc near
     pushad
-    mov di,OFFSET do_inc
+    mov di,OFFSET exec_inc
     call ExecFunc
     popad
     ret
@@ -327,7 +408,7 @@ inc_func    Endp
 
 dec_func    Proc near
     pushad
-    mov di,OFFSET do_dec
+    mov di,OFFSET exec_dec
     call ExecFunc
     popad
     ret
@@ -347,8 +428,7 @@ dec_func    Endp
 
 set_func    Proc near
     pushad
-    mov ds:set_val,al
-    mov di,OFFSET do_set
+    mov di,OFFSET exec_set
     call ExecFunc
     popad
     ret
@@ -533,9 +613,9 @@ ft27   DW OFFSET no_func
 ft28   DW OFFSET no_func
 ft29   DW OFFSET no_func
 ft2A   DW OFFSET no_func
-ft2B   DW OFFSET inc_func
+ft2B   DW OFFSET no_func
 ft2C   DW OFFSET no_func
-ft2D   DW OFFSET dec_func
+ft2D   DW OFFSET no_func
 ft2E   DW OFFSET no_func
 ft2F   DW OFFSET no_func
 ft30   DW OFFSET set0_func
@@ -597,9 +677,9 @@ ft67   DW OFFSET go_func
 ft68   DW OFFSET no_func
 ft69   DW OFFSET no_func
 ft6A   DW OFFSET no_func
-ft6B   DW OFFSET no_func
+ft6B   DW OFFSET inc_func
 ft6C   DW OFFSET no_func
-ft6D   DW OFFSET no_func
+ft6D   DW OFFSET dec_func
 ft6E   DW OFFSET no_func
 ft6F   DW OFFSET no_func
 ft70   DW OFFSET pace_func
