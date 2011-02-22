@@ -46,14 +46,6 @@ curr_core       DW ?
 curr_row        DW ?
 curr_col        DW ?
 
-gpf_offset      DD ?
-gpf_sel         DW ?
-
-chain_ds        DW ?
-chain_ebx       DD ?
-chain_eax       DD ?
-chain_bp        DW ?
-
 data    ENDS
 
     .386p
@@ -68,6 +60,9 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn InitCrashShow:near
     extrn ShowCrashCore:near
+
+    extrn LocalOsGate:near
+    extrn LocalUserGate:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -855,34 +850,6 @@ DoFunc   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ChainOrgGpf
-;
-;           DESCRIPTION:    Chain to original GPF handler
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ChainOrgGpf:
-    mov ax,SEG data
-    mov ds,ax
-    pop ds:chain_ds
-    pop ds:chain_ebx
-    pop ds:chain_eax
-    pop ds:chain_bp
-    movzx eax,ds:gpf_sel
-    push eax
-    mov eax,ds:gpf_offset
-    push eax
-    mov eax,ds:chain_eax
-    mov ebx,ds:chain_ebx
-    mov bp,ds:chain_bp
-    mov ds,ds:chain_ds
-    retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SetupFaultHandlers
 ;
 ;           DESCRIPTION:    Crash debugger fault handlers
@@ -988,6 +955,16 @@ cint12:
     mov al,12
     ShutDownPreTask
 
+usercall_tab16:
+suct00   DW 0
+suct01   DW OFFSET LocalUserGate
+suct02   DW 0
+suct03   DW OFFSET LocalOsGate
+suct04   DW 0
+suct05   DW 0
+suct06   DW 0
+suct07   DW 0
+
 cint13:
     push bp
     mov bp,sp
@@ -995,9 +972,52 @@ cint13:
     push ebx
     push ds
 ;
-;        
+;
+    test byte ptr [bp+2].vm_eflags,2
+    jnz c13_default
+;
+    mov ds,[bp].vm_cs
+    mov ebx,[bp].vm_eip
+    mov al,[ebx]
+;    
+    cmp al,66h
+    jne c13_default
+;
+    mov al,[ebx+1]
+    cmp al,9Ah
+    jne c13_default
+;
+    mov ax,[ebx+6]        
+    cmp ax,8
+    jae c13_default
+;    
+    push bx
+    mov bx,ax
+    add bx,bx
+    mov ax, word ptr cs:[bx].usercall_tab16
+    pop bx
+    or ax,ax
+    jz c13_default
+;
+    push OFFSET c13_check
+    push ax
+    retn        
+
+c13_check:      
+    jnc c13_retry
+
+c13_default:
     mov al,13
     ShutDownPreTask
+
+c13_retry:
+    pop ds
+    pop ebx
+    pop eax
+    and byte ptr [bp+2].vm_eflags, NOT 1
+    pop bp
+    add sp,4
+    iretd
 
 cint16:
     push bp
@@ -1029,19 +1049,6 @@ ci_end  DW      0FFFFh
 SetupFaultHandlers      PROC near
     push ds
     pushad
-;    
-    mov ax,idt_sel
-    mov ds,ax
-    mov bx,68h ; GPF vector
-    mov si,ds:[bx+6]
-    shl esi,16
-    mov si,ds:[bx]
-    mov dx,ds:[bx+2]
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:gpf_offset,esi
-    mov ds:gpf_sel,dx    
 ;
     mov ax,cs
     mov ds,ax
@@ -1190,8 +1197,6 @@ nmi_ret:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 abort_cores:
-    call SetupFaultHandlers
-;    
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI    
     mov dx,fs
@@ -1562,8 +1567,8 @@ add_debug_core  Proc far
     AllocateGlobalMem
     mov ax,es
     mov gs,ax    
-    mov gs:cs_usel,SEG data
-    mov gs:cs_uoffs,OFFSET gpf_offset
+    mov gs:cs_usel,flat_sel
+    mov gs:cs_uoffs,0
 ;
     GetProcessor
     mov gs:cs_proc_sel,fs    

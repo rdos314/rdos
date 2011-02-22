@@ -65,6 +65,7 @@ code    SEGMENT byte public use16 'CODE'
     extrn GetUserCall:near
 
     extrn LocalSetPhysicalPage:near
+    extrn LocalGetSelectorBaseSize:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -724,7 +725,7 @@ write_sel_ldt:
 ;
     push bx
     mov bx,cx
-    GetSelectorBaseSize
+    call LocalGetSelectorBaseSize
     pop bx        
     jc write_sel_done
 ;
@@ -914,7 +915,7 @@ get_info_ldt:
 ;
     push bx
     mov bx,si
-    GetSelectorBaseSize
+    call LocalGetSelectorBaseSize
     pop bx        
     jc get_info_fail
 ;
@@ -1014,7 +1015,7 @@ get_bitness_ldt:
 ;
     push bx
     mov bx,si
-    GetSelectorBaseSize
+    call LocalGetSelectorBaseSize
     pop bx        
     jc get_bitness_fail
 ;
@@ -1071,7 +1072,6 @@ GetBitness   ENDP
 
 ReadData        Proc near
     push ds
-    push es
     push ebx
     push edx
     push si
@@ -1084,7 +1084,6 @@ ReadData        Proc near
     mov ax,process_dir_sel
     mov ds,ax
     mov si,(alias_linear SHR 20) AND 0FFFh
-    mov es,bx
     mov eax,gs:cs_cr3
     or ax,803h
     mov [si],eax
@@ -1126,7 +1125,6 @@ read_data_done:
     pop si
     pop edx
     pop ebx
-    pop es
     pop ds
     ret
 ReadData        Endp

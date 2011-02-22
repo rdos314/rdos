@@ -60,6 +60,8 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+    extrn LocalCpuReset:near
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -694,7 +696,7 @@ del_scan    PROC near
     cmp cx,alt_pressed OR ctrl_pressed
     jne num_scan
 ;
-    CpuReset
+    call LocalCpuReset
     ret
 del_scan    Endp
 
