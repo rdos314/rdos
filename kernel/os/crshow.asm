@@ -64,6 +64,8 @@ code    SEGMENT byte public use16 'CODE'
     extrn GetOsCall:near
     extrn GetUserCall:near
 
+    extrn LocalSetPhysicalPage:near
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1110,7 +1112,7 @@ ReadData        Proc near
     mov bx,SEG data
     mov ds,bx
     mov edx,ds:big_linear
-    SetPhysicalPage
+    call LocalSetPhysicalPage
 ;
     movzx edx,di
     add edx,ds:big_linear

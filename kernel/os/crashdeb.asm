@@ -46,6 +46,14 @@ curr_core       DW ?
 curr_row        DW ?
 curr_col        DW ?
 
+gpf_offset      DD ?
+gpf_sel         DW ?
+
+chain_ds        DW ?
+chain_ebx       DD ?
+chain_eax       DD ?
+chain_bp        DW ?
+
 data    ENDS
 
     .386p
@@ -843,6 +851,218 @@ DoFunc   PROC near
     call word ptr cs:[bx].func_tab
     ret
 DoFunc   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ChainOrgGpf
+;
+;           DESCRIPTION:    Chain to original GPF handler
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ChainOrgGpf:
+    mov ax,SEG data
+    mov ds,ax
+    pop ds:chain_ds
+    pop ds:chain_ebx
+    pop ds:chain_eax
+    pop ds:chain_bp
+    movzx eax,ds:gpf_sel
+    push eax
+    mov eax,ds:gpf_offset
+    push eax
+    mov eax,ds:chain_eax
+    mov ebx,ds:chain_ebx
+    mov bp,ds:chain_bp
+    mov ds,ds:chain_ds
+    retf32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupFaultHandlers
+;
+;           DESCRIPTION:    Crash debugger fault handlers
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cint0:
+    sub sp,4
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,0
+    ShutDownPreTask
+
+cint4:
+    sub sp,4
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,4
+    ShutDownPreTask
+
+cint5:
+    sub sp,4
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,5
+    ShutDownPreTask
+
+cint6:
+    push dword ptr 0
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,6
+    ShutDownPreTask
+
+cint7:
+    sub sp,4
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,7
+    ShutDownPreTask
+
+cint8:
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,8
+    ShutDownPreTask
+
+cint9:
+    sub sp,4
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,9
+    ShutDownPreTask
+
+cint10:
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,10
+    ShutDownPreTask
+
+cint11:
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,11
+    ShutDownPreTask
+
+cint12:
+    sub sp,4
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,12
+    ShutDownPreTask
+
+cint13:
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+;
+;        
+    mov al,13
+    ShutDownPreTask
+
+cint16:
+    push bp
+    mov bp,sp
+    push eax
+    push ebx
+    push ds
+    mov al,16
+    ShutDownPreTask
+
+crash_int_tab:
+;
+;               int #       Entry          
+;
+ci0     DW      0,          OFFSET cint0
+ci4     DW      4,          OFFSET cint4
+ci5     DW      5,          OFFSET cint5
+ci6     DW      6,          OFFSET cint6
+ci7     DW      7,          OFFSET cint7
+ci8     DW      8,          OFFSET cint8
+ci9     DW      9,          OFFSET cint9
+ci10    DW      10,         OFFSET cint10
+ci11    DW      11,         OFFSET cint11
+ci12    DW      12,         OFFSET cint12
+ci13    DW      13,         OFFSET cint13
+ci16    DW      16,         OFFSET cint16
+ci_end  DW      0FFFFh
+
+SetupFaultHandlers      PROC near
+    push ds
+    pushad
+;    
+    mov ax,idt_sel
+    mov ds,ax
+    mov bx,68h ; GPF vector
+    mov si,ds:[bx+6]
+    shl esi,16
+    mov si,ds:[bx]
+    mov dx,ds:[bx+2]
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:gpf_offset,esi
+    mov ds:gpf_sel,dx    
+;
+    mov ax,cs
+    mov ds,ax
+    mov di,OFFSET crash_int_tab
+
+init_fault_next:
+    mov ax,[di]
+    cmp ax,0FFFFh
+    jz init_fault_done
+;
+    xor bl,bl
+    movzx esi,word ptr [di+2]
+    CreateIntGateSelector
+    add di,4
+    jmp init_fault_next
+
+init_fault_done:
+    popad
+    pop ds
+    ret
+SetupFaultHandlers      ENDP
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -875,6 +1095,8 @@ nmi_handler:
     push ebx
     push ebp
     mov bp,sp
+;    
+    call SetupFaultHandlers
 ;    
     GetProcessor
     test fs:ps_flags,PS_FLAG_NMI
@@ -968,6 +1190,8 @@ nmi_ret:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 abort_cores:
+    call SetupFaultHandlers
+;    
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI    
     mov dx,fs
@@ -1338,8 +1562,8 @@ add_debug_core  Proc far
     AllocateGlobalMem
     mov ax,es
     mov gs,ax    
-    mov gs:cs_usel,flat_sel
-    mov gs:cs_uoffs,0
+    mov gs:cs_usel,SEG data
+    mov gs:cs_uoffs,OFFSET gpf_offset
 ;
     GetProcessor
     mov gs:cs_proc_sel,fs    
