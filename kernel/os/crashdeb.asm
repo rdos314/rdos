@@ -1279,6 +1279,45 @@ SaveCore Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupDebugInts
+;
+;           DESCRIPTION:    Setup debug interrupts for SMP processors (modified later)
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupDebugInts Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov al,2
+    xor bl,bl
+    mov esi,OFFSET nmi_handler
+    CreateIntGateSelector
+;
+    mov al,82h
+    mov esi,OFFSET shutdown_handler
+    CreateIntGateSelector
+;
+    mov al,83h
+    mov esi,OFFSET shutdown_gate_handler
+    CreateIntGateSelector
+;
+    popad
+    pop es
+    pop ds    
+    ret
+SetupDebugInts Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddDebugCore
 ;
 ;           DESCRIPTION:    Add a new debug core
@@ -1314,6 +1353,12 @@ add_debug_core  Proc far
     mov es:core_list,gs
     mov es:curr_core,gs
 ;
+    or ax,ax
+    jz add_core_done
+;
+    call SetupDebugInts
+            
+add_core_done:
     popad
     pop gs
     pop fs
@@ -1465,6 +1510,8 @@ smp_deb_thread_name     DB 'SMP debug', 0
 
 smp_deb_thread:
     int 3
+    ShutDownDebug
+    
     mov ax,SEG data
     mov ds,ax
     mov ax,ds:core_list
@@ -1531,19 +1578,6 @@ init_crashdeb    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov al,2
-    xor bl,bl
-    mov esi,OFFSET nmi_handler
-    CreateIntGateSelector
-;
-    mov al,82h
-    mov esi,OFFSET shutdown_handler
-    CreateIntGateSelector
-;
-    mov al,83h
-    mov esi,OFFSET shutdown_gate_handler
-    CreateIntGateSelector
 ;
     mov esi,OFFSET start_smp_debug
     mov edi,OFFSET start_smp_debug_name
