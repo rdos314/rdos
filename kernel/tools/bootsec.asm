@@ -72,6 +72,7 @@ StartBoot:
 	dw OFFSET JmpBootCode
 	dw 07C0h
 JmpBootCode:
+    mov cs:BootMedia.boot_drive_nr,dl
 	cli
 	mov bx,5000h
 	mov ss,bx
