@@ -1097,6 +1097,10 @@ IsIrqFree	MACRO
 	OsGate is_irq_free_nr
 					ENDM
 
+DisableAllIrq	MACRO
+	OsGate disable_all_irq_nr
+					ENDM
+
 ;	AL			IRQ NR
 ;	DS			DATA PASSED TO HANDLER
 ;	ES:DI		HANDLER ADDRESS

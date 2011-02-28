@@ -1423,6 +1423,12 @@ smemgLint1Ok:
     mov ax,reload_sys_timer_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET disable_all_irq
+    mov edi,OFFSET disable_all_irq_name
+    xor cl,cl
+    mov ax,disable_all_irq_nr
+    RegisterOsGate
+;
     mov esi,OFFSET get_processor_id_mem
     mov edi,OFFSET get_processor_id_name
     xor dx,dx
@@ -2078,7 +2084,7 @@ enable_irq  Endp
 ;
 ;               NAME:                   DisableIrq
 ;
-;               description:    Disable IRQ in PIC controller
+;               description:    Disable IRQ in APIC controller
 ;
 ;               PARAMETERS:             AL                      irq nr
 ;
@@ -2110,6 +2116,50 @@ disable_irq  Proc far
     pop ds
     ret
 disable_irq Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           DisableAllIrq
+;
+;               description:    Disable all IRQs in APIC controller
+;
+;               PARAMETERS:             AL                      irq nr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disable_all_irq_name    DB 'Disable All IRQs', 0
+
+disable_all_irq  Proc far
+    push ds
+    push eax
+    push bx
+    push cx
+;    
+    mov cx,24
+    mov bx,ioapic_mem_sel
+    mov ds,bx
+;       
+    mov bl,10h
+
+daiLoop:   
+    mov ds:ioapic_regsel,bl
+    mov eax,10000h
+    mov ds:ioapic_window,eax
+;
+    inc bl
+    mov ds:ioapic_regsel,bl
+    xor eax,eax
+    mov ds:ioapic_window,eax
+    inc bl
+    loop daiLoop
+;
+    pop cx
+    pop bx
+    pop eax
+    pop ds
+    ret
+disable_all_irq Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

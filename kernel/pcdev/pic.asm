@@ -412,6 +412,30 @@ disable_irq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DisableAllIrq
+;
+;           description:    Disable all IRQs in PIC controller
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disable_all_irq_name    DB 'Disable All IRQs', 0
+
+disable_all_irq  Proc far
+    push ax
+;
+    mov al,0FFh
+    out 21h,al
+    jmp short $+2
+    out 0A1h,al
+;
+    pop ax
+    ret
+disable_all_irq Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           EnableIrqDetect
 ;
 ;           description:    Enable IRQ detect in PIC controller
@@ -492,6 +516,12 @@ init    PROC far
     mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET disable_all_irq
+    mov edi,OFFSET disable_all_irq_name
+    xor cl,cl
+    mov ax,disable_all_irq_nr
     RegisterOsGate
 ;
     mov di,OFFSET init_process

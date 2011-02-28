@@ -1640,6 +1640,7 @@ start_smp_debug:
     mov ds:curr_core,gs
 
 start_do:
+    DisableAllIrq
     call InitCrashShow
     call InitCrashKeyboardIrq
     sti

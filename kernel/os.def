@@ -121,6 +121,8 @@ hook_out_nr					= 123
 request_private_irq_handler_nr	= 124
 release_private_irq_handler_nr	= 125
 
+disable_all_irq_nr          = 126
+
 set_system_time_nr			= 128
 
 register_handle_nr			= 129
