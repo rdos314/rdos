@@ -43,6 +43,9 @@ data    SEGMENT byte public 'DATA'
 core_list       DW ?
 curr_core       DW ?
 
+debug_core      DW ?
+debug_active    DW ?
+
 curr_row        DW ?
 curr_col        DW ?
 
@@ -1208,8 +1211,11 @@ abort_cores:
 abort_loop:    
     or ax,ax
     jz nmi_block
-;
+;    
     mov gs,ax
+    cmp ax,ds:debug_core
+    je abort_next
+;
     mov ax,gs:cs_proc_sel
     cmp ax,dx
     jz abort_next
@@ -1611,7 +1617,29 @@ start_smp_debug_name    DB 'Start SMP Debug', 0
 start_smp_debug:
     mov ax,250
     call DelayMs
-;    
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov gs,ds:debug_core
+;
+    GetProcessor
+    or fs:ps_flags,PS_FLAG_NMI    
+    mov gs:cs_proc_sel,fs
+;
+    call SaveCore
+    pop ax
+    movzx eax,ax
+    mov gs:cs_eip,eax
+;
+    pop ax
+    mov gs:cs_cs,ax
+;
+    mov ax,ds:core_list
+    mov gs:cs_next,ax
+    mov ds:core_list,gs
+    mov ds:curr_core,gs
+
+start_do:
     call InitCrashShow
     call InitCrashKeyboardIrq
     sti
@@ -1673,9 +1701,13 @@ handle_abort_loop:
     jz handle_func
 ;
     mov gs,ax
+    cmp ax,ds:debug_core
+    je handle_abort_next
+;    
     mov fs,gs:cs_proc_sel
     SendNmi
-;
+
+handle_abort_next:
     mov ax,gs:cs_next
     jmp handle_abort_loop
 
@@ -1723,74 +1755,6 @@ right_arrow:
     inc ds:curr_col
     call ShowMarker
     jmp handle_loop
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SmpDebThread
-;
-;           DESCRIPTION:    SMP debug thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-smp_deb_thread_name     DB 'SMP debug', 0
-
-smp_deb_thread:
-    int 3
-    ShutDownDebug
-    
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:core_list
-
-smp_abort_loop:    
-    or ax,ax
-    jz smp_abort_done
-;
-    mov gs,ax
-    mov fs,gs:cs_proc_sel
-    SendNmi
-;
-    mov ax,gs:cs_next
-    jmp smp_abort_loop
-
-smp_abort_done:
-    int 3 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Init_task
-;
-;           DESCRIPTION:    Init task
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_task     Proc far
-    push ds
-    push es
-    pushad
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-;
-    mov si,OFFSET smp_deb_thread
-    mov di,OFFSET smp_deb_thread_name
-    mov ax,1
-    mov cx,256
-    CreateThread
-;
-    popad
-    pop es
-    pop ds
-    ret
-init_task     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1804,6 +1768,15 @@ init_task     Endp
     public init_crashdeb
     
 init_crashdeb    PROC near
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:debug_active,0
+    mov ds:core_list,0
+;    
+    mov eax,1000h
+    AllocateGlobalMem
+    mov ds:debug_core,es
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -1819,9 +1792,6 @@ init_crashdeb    PROC near
     xor cl,cl
     mov ax,add_debug_core_nr
     RegisterOsGate
-;
-;    mov di,OFFSET init_task
-;    HookInitTasking
 ;
     AddDebugCore
 ;
