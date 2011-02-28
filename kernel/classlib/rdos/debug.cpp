@@ -2277,6 +2277,8 @@ void TDebug::Execute()
     RdosWaitMilli(250);
 
     FHandle = RdosSpawnDebug(FProgram.GetData(), FParam.GetData(), FStartDir.GetData(), 0, 0, &thread);
+        
+    RdosWaitMilli(250);
 
     if (!FHandle)
         FInstalled = FALSE;

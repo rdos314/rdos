@@ -66,7 +66,7 @@ TStorageListNode::TStorageListNode()
 TStorageListNode::TStorageListNode(const void *x, int size)
   : TListBaseNode(x, size)
 {
-	FID = -1;
+        FID = -1;
 }
 
 /*##########################################################################
@@ -114,7 +114,7 @@ TStorageListNode::~TStorageListNode()
 ##########################################################################*/
 int TStorageListNode::Compare(const TStorageListNode &n2) const
 {
-	return FData->Compare(*n2.FData);
+        return FData->Compare(*n2.FData);
 }
 
 /*##########################################################################
@@ -164,8 +164,8 @@ void TStorageListNode::Load(const TStorageListNode &src)
 ##########################################################################*/
 void TStorageListNode::Load(const TListBaseNode &src)
 {
-	TStorageListNode *p = (TStorageListNode *)&src;
-	Load(*p);
+        TStorageListNode *p = (TStorageListNode *)&src;
+        Load(*p);
 }
 
 /*##########################################################################
@@ -181,8 +181,8 @@ void TStorageListNode::Load(const TListBaseNode &src)
 ##########################################################################*/
 const TStorageListNode &TStorageListNode::operator=(const TStorageListNode &src)
 {
-	Load(src);
-	return *this;
+        Load(src);
+        return *this;
 }
 
 /*##########################################################################
@@ -198,10 +198,10 @@ const TStorageListNode &TStorageListNode::operator=(const TStorageListNode &src)
 ##########################################################################*/
 int TStorageListNode::operator==(const TStorageListNode &ln) const
 {
-	if (Compare(ln) == 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(ln) == 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -217,10 +217,10 @@ int TStorageListNode::operator==(const TStorageListNode &ln) const
 ##########################################################################*/
 int TStorageListNode::operator!=(const TStorageListNode &ln) const
 {
-	if (Compare(ln) == 0)
-		return FALSE;
-	else
-		return TRUE;
+        if (Compare(ln) == 0)
+                return FALSE;
+        else
+                return TRUE;
 }
 
 /*##########################################################################
@@ -236,10 +236,10 @@ int TStorageListNode::operator!=(const TStorageListNode &ln) const
 ##########################################################################*/
 int TStorageListNode::operator>(const TStorageListNode &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) > 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -255,10 +255,10 @@ int TStorageListNode::operator>(const TStorageListNode &dest) const
 ##########################################################################*/
 int TStorageListNode::operator<(const TStorageListNode &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) < 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -274,10 +274,10 @@ int TStorageListNode::operator<(const TStorageListNode &dest) const
 ##########################################################################*/
 int TStorageListNode::operator>=(const TStorageListNode &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) >= 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -293,10 +293,10 @@ int TStorageListNode::operator>=(const TStorageListNode &dest) const
 ##########################################################################*/
 int TStorageListNode::operator<=(const TStorageListNode &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) <= 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -392,7 +392,7 @@ void TStorageList::Init(int DataSize, unsigned short int ListID)
     FAvailable = 0;
     FDeleted = 0;
     FCacheCount = 0;
-	FErrors = 0;
+        FErrors = 0;
 }
 
 /*##########################################################################
@@ -446,10 +446,10 @@ int TStorageList::operator!= (const TStorageList &l) const
 ##########################################################################*/
 int TStorageList::operator>(const TStorageList &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) > 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -465,10 +465,10 @@ int TStorageList::operator>(const TStorageList &dest) const
 ##########################################################################*/
 int TStorageList::operator<(const TStorageList &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) < 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -484,10 +484,10 @@ int TStorageList::operator<(const TStorageList &dest) const
 ##########################################################################*/
 int TStorageList::operator>=(const TStorageList &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) >= 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -503,10 +503,10 @@ int TStorageList::operator>=(const TStorageList &dest) const
 ##########################################################################*/
 int TStorageList::operator<=(const TStorageList &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) <= 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -522,8 +522,8 @@ int TStorageList::operator<=(const TStorageList &dest) const
 ##########################################################################*/
 TStorageList &TStorageList::operator=(const TStorageList &src)
 {
-	Load(src);
-	return *this;
+        Load(src);
+        return *this;
 }
 
 /*##########################################################################
@@ -539,7 +539,7 @@ TStorageList &TStorageList::operator=(const TStorageList &src)
 ##########################################################################*/
 TStorageListNode *TStorageList::Clone(const TStorageListNode *ln) const
 {
-	return new TStorageListNode(*ln);
+        return new TStorageListNode(*ln);
 }
 
 /*##########################################################################
@@ -556,7 +556,7 @@ TStorageListNode *TStorageList::Clone(const TStorageListNode *ln) const
 TListBaseNode *TStorageList::Clone(const TListBaseNode *ln) const
 {
     TStorageListNode *p = (TStorageListNode *)ln;
-	return new TStorageListNode(*p);
+        return new TStorageListNode(*p);
 }
 
 /*##########################################################################
@@ -572,8 +572,8 @@ TListBaseNode *TStorageList::Clone(const TListBaseNode *ln) const
 ##########################################################################*/
 void TStorageList::Add(TListBaseNode *ln)
 {
-	TStorageListNode *p = (TStorageListNode *)ln;
-	Add(p);
+        TStorageListNode *p = (TStorageListNode *)ln;
+        Add(p);
 }
 
 /*##########################################################################
@@ -589,8 +589,8 @@ void TStorageList::Add(TListBaseNode *ln)
 ##########################################################################*/
 void TStorageList::Remove(TListBaseNode *ln)
 {
-	TStorageListNode *p = (TStorageListNode *)ln;
-	Remove(p);
+        TStorageListNode *p = (TStorageListNode *)ln;
+        Remove(p);
 }
 
 /*##########################################################################
@@ -607,7 +607,7 @@ void TStorageList::Remove(TListBaseNode *ln)
 void TStorageList::Update(TListBaseNode *ln)
 {
     TStorageListNode *p = (TStorageListNode *)ln;
-	Update(p);
+        Update(p);
 }
 
 /*##########################################################################
@@ -623,8 +623,8 @@ void TStorageList::Update(TListBaseNode *ln)
 ##########################################################################*/
 int TStorageList::Find(const void *data)
 {
-	TStorageListNode n = TStorageListNode(data, FDataSize);
-	return TListBase::Find(&n);
+        TStorageListNode n = TStorageListNode(data, FDataSize);
+        return TListBase::Find(&n);
 }
 
 /*##########################################################################
@@ -640,8 +640,8 @@ int TStorageList::Find(const void *data)
 ##########################################################################*/
 void TStorageList::AddFirst(const void *data)
 {
-	TStorageListNode *p = new TStorageListNode(data, FDataSize);
-	TListBase::AddFirst(p);
+        TStorageListNode *p = new TStorageListNode(data, FDataSize);
+        TListBase::AddFirst(p);
 }
 
 /*##########################################################################
@@ -657,8 +657,8 @@ void TStorageList::AddFirst(const void *data)
 ##########################################################################*/
 void TStorageList::AddLast(const void *data)
 {
-	TStorageListNode *p = new TStorageListNode(data, FDataSize);
-	TListBase::AddLast(p);
+        TStorageListNode *p = new TStorageListNode(data, FDataSize);
+        TListBase::AddLast(p);
 }
 
 /*##########################################################################
@@ -674,8 +674,8 @@ void TStorageList::AddLast(const void *data)
 ##########################################################################*/
 void TStorageList::AddAt(int n, const void *data)
 {
-	TStorageListNode *p = new TStorageListNode(data, FDataSize);
-	TListBase::AddAt(n, p);
+        TStorageListNode *p = new TStorageListNode(data, FDataSize);
+        TListBase::AddAt(n, p);
 }
 
 /*##########################################################################
@@ -691,12 +691,12 @@ void TStorageList::AddAt(int n, const void *data)
 ##########################################################################*/
 int TStorageList::Replace(int pos, const void *data)
 {
-	TStorageListNode n = TStorageListNode(data, FDataSize);
-	return TListBase::Replace(pos, &n);
+        TStorageListNode n = TStorageListNode(data, FDataSize);
+        return TListBase::Replace(pos, &n);
 }
 
 /*##################  TStorageList::CalcCrc ############
-*   Purpose....: Calculate CRC	                    #
+*   Purpose....: Calculate CRC                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -704,28 +704,28 @@ int TStorageList::Replace(int pos, const void *data)
 *##########################################################################*/
 unsigned short int TStorageList::CalcCrc(const char *Data, int Size)
 {
-	unsigned short int Crc = 0;
-	int i;
-	unsigned short int Temp1, Temp2;
-	char ch;
+        unsigned short int Crc = 0;
+        int i;
+        unsigned short int Temp1, Temp2;
+        char ch;
 
-	while (Size)
-	{
-		ch = *Data;
-		for (i = 0; i != 8; i++)
-		{
-			Temp1 = (ch & 0x80) << 8;
-			Temp2 = Crc & 0x8000;
-			Crc = Crc << 1;
-			if ((Temp1 ^ Temp2) != 0)
-				Crc = Crc ^ 0x8005;
-			ch = ch << 1;
-		}
-		Size--;
-		Data++;
-	}
-	Crc += FListID;
-	return Crc ^ 0x5C4A;
+        while (Size)
+        {
+                ch = *Data;
+                for (i = 0; i != 8; i++)
+                {
+                        Temp1 = (ch & 0x80) << 8;
+                        Temp2 = Crc & 0x8000;
+                        Crc = Crc << 1;
+                        if ((Temp1 ^ Temp2) != 0)
+                                Crc = Crc ^ 0x8005;
+                        ch = ch << 1;
+                }
+                Size--;
+                Data++;
+        }
+        Crc += FListID;
+        return Crc ^ 0x5C4A;
 }
 
 /*##########################################################################
@@ -775,68 +775,68 @@ void TStorageList::Recover()
 {
     int Entry;
     int i;
-    char andsum;
-    char orsum;
+    unsigned char andsum;
+    unsigned char orsum;
     unsigned short int crc;
     char *buf;
     char *ptr;
-	TStorageListNode *listnode;
+        TStorageListNode *listnode;
 
     buf = new char[FEntrySize];
 
-	FCacheSize = FMaxEntries / 16;
-	if (FCacheSize < 16)
+        FCacheSize = FMaxEntries / 16;
+        if (FCacheSize < 16)
         FCacheSize = 16;
 
     FCache = new int[FCacheSize];
 
     for (Entry = 0; Entry < FMaxEntries; Entry++)
     {
-		if (Read(Entry, buf))
-		{
-			crc = CalcCrc(buf, FDataSize);
-			if (crc == *(unsigned short int *)(buf + FDataSize))
-			{
-				listnode = new TStorageListNode(buf, FDataSize);
-				listnode->FID = Entry;
-				if (FMaxEntries > 1000)
-    				TListBase::AddFirst(listnode);
-    			else
-    				TListBase::AddLast(listnode);
-			}
-			else
-			{
-			    orsum = 0;
-				andsum = -1;
-				ptr = buf;
+                if (Read(Entry, buf))
+                {
+                        crc = CalcCrc(buf, FDataSize);
+                        if (crc == *(unsigned short int *)(buf + FDataSize))
+                        {
+                                listnode = new TStorageListNode(buf, FDataSize);
+                                listnode->FID = Entry;
+                                if (FMaxEntries > 1000)
+                                TListBase::AddFirst(listnode);
+                        else
+                                TListBase::AddLast(listnode);
+                        }
+                        else
+                        {
+                            orsum = 0;
+                                andsum = -1;
+                                ptr = buf;
 
-				for (i = 0; i < FEntrySize; i++)
-				{
-				    orsum |= *ptr;
-					andsum &= *ptr;
-					ptr++;
-				}
+                                for (i = 0; i < FEntrySize; i++)
+                                {
+                                    orsum |= *ptr;
+                                        andsum &= *ptr;
+                                        ptr++;
+                                }
 
-				if (orsum == 0)
-				    FDeleted++;
+                                if (orsum == 0)
+                                    FDeleted++;
 
-				if (andsum == -1)
-				{
-					if (FCacheCount < FCacheSize)
-					{
-						FCache[FCacheCount] = Entry;
-						FCacheCount++;
-				    }
-					FAvailable++;
-				}
+                                if (andsum == 0xFF)
+                                {
+                                        if (FCacheCount < FCacheSize)
+                                        {
+                                                FCache[FCacheCount] = Entry;
+                                                FCacheCount++;
+                                    }
+                                        FAvailable++;
+                                }
 
-				if (andsum != -1 && orsum != 0)
-				{
-					FErrors++;
-					FDeleted++;
-					memset(buf, 0, FEntrySize);
-					Write(Entry, buf);
-				}
+                                if (andsum != 0xFF && orsum != 0)
+                                {
+                                        FErrors++;
+                                        FDeleted++;
+                                        memset(buf, 0, FEntrySize);
+                                        Write(Entry, buf);
+                                }
             }                 
         }
     }
@@ -858,31 +858,31 @@ void TStorageList::Recover()
 void TStorageList::FreeDeleted()
 {
     int Entry;
-	char *buf;
+        char *buf;
     unsigned short int crc;
 
-	FAvailable = 0;
-	FDeleted = 0;
-	FCacheCount = 0;
+        FAvailable = 0;
+        FDeleted = 0;
+        FCacheCount = 0;
 
-	buf = new char[FEntrySize];
+        buf = new char[FEntrySize];
 
-	for (Entry = 0; Entry < FMaxEntries; Entry++)
-	{
-		if (Read(Entry, buf))
-		{
-			crc = CalcCrc(buf, FDataSize);
-			if (crc != *(unsigned short int *)(buf + FDataSize))
-			{
-				memset(buf, 0xFF, FEntrySize);
-				Write(Entry, buf);
+        for (Entry = 0; Entry < FMaxEntries; Entry++)
+        {
+                if (Read(Entry, buf))
+                {
+                        crc = CalcCrc(buf, FDataSize);
+                        if (crc != *(unsigned short int *)(buf + FDataSize))
+                        {
+                                memset(buf, 0xFF, FEntrySize);
+                                Write(Entry, buf);
 
-				if (FCacheCount < FCacheSize)
-				{
-					FCache[FCacheCount] = Entry;
-					FCacheCount++;
-				}
-				FAvailable++;
+                                if (FCacheCount < FCacheSize)
+                                {
+                                        FCache[FCacheCount] = Entry;
+                                        FCacheCount++;
+                                }
+                                FAvailable++;
             }                 
         }
     }
@@ -904,33 +904,33 @@ void TStorageList::RefillCache()
 {
     int Entry;
     int i;
-	char *buf;
-	char *ptr;
-	char sum;
+        char *buf;
+        char *ptr;
+    unsigned char sum;
 
-	FCacheCount = 0;
+        FCacheCount = 0;
 
-	buf = new char[FEntrySize];
+        buf = new char[FEntrySize];
 
-	for (Entry = 0; Entry < FMaxEntries; Entry++)
-	{
-		if (Read(Entry, buf))
-		{
-		    sum = -1;
-			ptr = buf;
+        for (Entry = 0; Entry < FMaxEntries; Entry++)
+        {
+                if (Read(Entry, buf))
+                {
+                    sum = 0xFF;
+                        ptr = buf;
 
-			for (i = 0; i < FEntrySize; i++)
-			{
-				sum &= *ptr;
-				ptr++;
-			}
+                        for (i = 0; i < FEntrySize; i++)
+                        {
+                                sum &= *ptr;
+                                ptr++;
+                        }
 
-            if (sum == -1)
+            if (sum == 0xFF)
             {
-				FCache[FCacheCount] = Entry;
-				FCacheCount++;
-				if (FCacheCount == FCacheSize || FAvailable == FCacheCount)
-			        break;
+                                FCache[FCacheCount] = Entry;
+                                FCacheCount++;
+                                if (FCacheCount == FCacheSize || FAvailable == FCacheCount)
+                                break;
             }                 
         }
     }
@@ -951,37 +951,37 @@ void TStorageList::RefillCache()
 ##########################################################################*/
 void TStorageList::Add(TStorageListNode *ln)
 {
-	char *buf;
-	unsigned short int crc;
+        char *buf;
+        unsigned short int crc;
 
-	if (ln && ln->FID == -1)
-	{
-		if (!FAvailable && FDeleted)
-			FreeDeleted();
+        if (ln && ln->FID == -1)
+        {
+                if (!FAvailable && FDeleted)
+                        FreeDeleted();
 
-		if (!FAvailable)
-		{
-			RemoveOldest();
-			FreeDeleted();
-	    }
+                if (!FAvailable)
+                {
+                        RemoveOldest();
+                        FreeDeleted();
+            }
 
-	    if (!FCacheCount && FAvailable)
-	        RefillCache();
+            if (!FCacheCount && FAvailable)
+                RefillCache();
 
-		if (FCacheCount)
-		{
-		    FAvailable--;
-			FCacheCount--;
-			ln->FID = FCache[FCacheCount];
+                if (FCacheCount)
+                {
+                    FAvailable--;
+                        FCacheCount--;
+                        ln->FID = FCache[FCacheCount];
 
-			buf = new char[FEntrySize];
-			memcpy(buf, ln->GetData(), FDataSize);
-			crc = CalcCrc(buf, FDataSize);
-			*(unsigned short int *)(buf + FDataSize) = crc;
-			Write(ln->FID, buf);
-			delete buf;
-		}
-	}
+                        buf = new char[FEntrySize];
+                        memcpy(buf, ln->GetData(), FDataSize);
+                        crc = CalcCrc(buf, FDataSize);
+                        *(unsigned short int *)(buf + FDataSize) = crc;
+                        Write(ln->FID, buf);
+                        delete buf;
+                }
+        }
 }
 
 /*##########################################################################
@@ -997,16 +997,16 @@ void TStorageList::Add(TStorageListNode *ln)
 ##########################################################################*/
 void TStorageList::Remove(TStorageListNode *ln)
 {
-	char *buf;
-	
+        char *buf;
+        
     if (ln && ln->FID >= 0 && ln->FID < FMaxEntries)
     {
         FDeleted++;
-		buf = new char[FEntrySize];
-		memset(buf, 0, FEntrySize);
-		Write(ln->FID, buf);
-		delete buf;
-	}
+                buf = new char[FEntrySize];
+                memset(buf, 0, FEntrySize);
+                Write(ln->FID, buf);
+                delete buf;
+        }
 }
 
 /*##########################################################################
@@ -1022,37 +1022,37 @@ void TStorageList::Remove(TStorageListNode *ln)
 ##########################################################################*/
 void TStorageList::Update(TStorageListNode *ln)
 {
-	char *buf;
-	unsigned short int crc;
+        char *buf;
+        unsigned short int crc;
 
-	if (ln && ln->FID >= 0 && ln->FID < FMaxEntries)
-	{
-		buf = new char[FEntrySize];
-		
+        if (ln && ln->FID >= 0 && ln->FID < FMaxEntries)
+        {
+                buf = new char[FEntrySize];
+                
         FDeleted++;
-		memset(buf, 0, FEntrySize);
-		Write(ln->FID, buf);
+                memset(buf, 0, FEntrySize);
+                Write(ln->FID, buf);
 
-		if (!FAvailable && FDeleted)
-			FreeDeleted();
+                if (!FAvailable && FDeleted)
+                        FreeDeleted();
 
-	    if (!FCacheCount && FAvailable)
-	        RefillCache();
+            if (!FCacheCount && FAvailable)
+                RefillCache();
 
-		if (FCacheCount)
-		{
-		    FAvailable--;
-			FCacheCount--;
-			ln->FID = FCache[FCacheCount];
+                if (FCacheCount)
+                {
+                    FAvailable--;
+                        FCacheCount--;
+                        ln->FID = FCache[FCacheCount];
 
-    		memcpy(buf, ln->GetData(), FDataSize);
-    		crc = CalcCrc(buf, FDataSize);
-	    	*(unsigned short int *)(buf + FDataSize) = crc;
-		    Write(ln->FID, buf);
-		}
+                memcpy(buf, ln->GetData(), FDataSize);
+                crc = CalcCrc(buf, FDataSize);
+                *(unsigned short int *)(buf + FDataSize) = crc;
+                    Write(ln->FID, buf);
+                }
 
-		delete buf;
-	}
+                delete buf;
+        }
 }
 
 /*##########################################################################
@@ -1068,7 +1068,7 @@ void TStorageList::Update(TStorageListNode *ln)
 ##########################################################################*/
 int TStorageList::GetFree()
 {
-	return FAvailable + FDeleted;
+        return FAvailable + FDeleted;
 }
 
 /*##########################################################################
@@ -1085,7 +1085,7 @@ int TStorageList::GetFree()
 const void *TStorageList::Get()
 {
     if (FCurrPos)
-		return FCurrPos->GetData();
+                return FCurrPos->GetData();
     else
         return 0;
 }
@@ -1103,7 +1103,7 @@ const void *TStorageList::Get()
 ##########################################################################*/
 int TStorageList::GetErrorCount()
 {
-	return FErrors;
+        return FErrors;
 }
 
 /*##########################################################################
@@ -1119,5 +1119,5 @@ int TStorageList::GetErrorCount()
 ##########################################################################*/
 int TStorageList::GetMaxSize()
 {
-	return FMaxEntries;
+        return FMaxEntries;
 }
