@@ -39,6 +39,7 @@ NUM_KEY = 4
 DEL_KEY = 5
 CAPS_LOCK = 6
 NUM_LOCK = 7
+ESC_KEY = 8
 
 trans_struc STRUC
 
@@ -1081,9 +1082,9 @@ DelKey   Proc near
     GetKeyboardState
     mov cx,ax
 ;
-        and cx,alt_pressed OR ctrl_pressed
-        cmp cx,alt_pressed OR ctrl_pressed
-        jne dkNum
+    and cx,alt_pressed OR ctrl_pressed
+    cmp cx,alt_pressed OR ctrl_pressed
+    jne dkNum
 ;
     CpuReset
 
@@ -1092,6 +1093,42 @@ dkNum:
     call NumKey
     ret
 DelKey  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EscKey
+;
+;               DESCRIPTION:    Handle ESC key
+;
+;       PARAMETERS:     AL      USB key
+;                       DL      Virtual key code
+;                       DH      Scan code
+;                       CL      Action code
+;                       CS:SI   Table entry
+;
+;       RETURNS:        AX      Key code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EscKey   Proc near
+    push cx
+    GetKeyboardState
+    mov cx,ax
+;
+    and cx,alt_pressed OR ctrl_pressed
+    cmp cx,alt_pressed OR ctrl_pressed
+    jne escStd
+;
+    StartSmpDebug
+;    CpuReset
+
+escStd:
+    pop cx
+    call StdKey
+    ret
+EscKey  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1180,6 +1217,14 @@ at4 DW OFFSET NumKey
 at5 DW OFFSET DelKey
 at6 DW OFFSET IgnoreKey
 at7 DW OFFSET IgnoreKey
+at8 DW OFFSET EscKey
+at9 DW OFFSET IgnoreKey
+atA DW OFFSET IgnoreKey
+atB DW OFFSET IgnoreKey
+atC DW OFFSET IgnoreKey
+atD DW OFFSET IgnoreKey
+atE DW OFFSET IgnoreKey
+atF DW OFFSET IgnoreKey
 
 TranslateTab:
 ;           Ext     VK      Scan     Normal Shift   Alt     Ctrl    Action   Key descr
@@ -1224,7 +1269,7 @@ tk25    DB  7Fh,    '8',    09h,     '8',       '(',    '[',    -1,             
 tk26    DB  80h,    '9',    0Ah,     '9',       ')',    ']',    -1,             STD_KEY  ; VK_9
 tk27    DB  81h,    '0',    0Bh,     '0',       '=',    '}',    -1,             STD_KEY  ; VK_0
 tk28    DB  -1,     0Dh,    1Ch,     0Dh,       0Dh,    0Dh,    0Ah,    STD_KEY  ; VK_RETURN
-tk29    DB  -1 ,    1Bh,    01h,     1Bh,       1Bh,    1Bh,    1Bh,    STD_KEY  ; VK_ESCAPE
+tk29    DB  -1 ,    1Bh,    01h,     1Bh,       1Bh,    1Bh,    1Bh,    ESC_KEY  ; VK_ESCAPE
 tk2A    DB  -1,     08h,    0Eh,     08h,       08h,    08h,    08h,    STD_KEY  ; VK_BACK
 tk2B    DB  0Fh,    09h,    0Fh,     09h,       0,      09h,    09h,    STD_KEY  ; VK_TAB
 tk2C    DB  -1,     ' ',    39h,     ' ',   ' ',    ' ',    ' ',    STD_KEY      ; VK_SPACE
@@ -1450,7 +1495,7 @@ TranslateKey    Proc near
     mov dl,cs:[si].ts_vk
     mov dh,cs:[si].ts_scan
     mov cl,cs:[si].ts_action
-    and cl,7
+    and cl,0Fh
     movzx bx,cl
     add bx,bx
     call word ptr cs:[bx].ActionTab

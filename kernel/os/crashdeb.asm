@@ -1615,17 +1615,25 @@ add_debug_core  Endp
 start_smp_debug_name    DB 'Start SMP Debug', 0
 
 start_smp_debug:
-    mov ax,250
-    call DelayMs
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov gs,ds:debug_core
-;
+    cli
+    DisableAllIrq
+;    
     GetProcessor
-    or fs:ps_flags,PS_FLAG_NMI    
-    mov gs:cs_proc_sel,fs
+    or fs:ps_flags,PS_FLAG_NMI
+    mov ax,fs
+    mov bx,SEG data    
+    mov ds,bx
+    mov bx,ds:core_list
+
+start_smp_loop:
+    mov gs,bx
+    cmp ax,gs:cs_proc_sel
+    je start_smp_found
 ;
+    mov bx,gs:cs_next
+    jmp start_smp_loop    
+
+start_smp_found:
     call SaveCore
     pop ax
     movzx eax,ax
@@ -1633,23 +1641,41 @@ start_smp_debug:
 ;
     pop ax
     mov gs:cs_cs,ax
-;
-    mov ax,ds:core_list
-    mov gs:cs_next,ax
-    mov ds:core_list,gs
     mov ds:curr_core,gs
-
-start_do:
-    DisableAllIrq
+    mov ds:debug_core,gs
+;
     call InitCrashShow
     call InitCrashKeyboardIrq
-    sti
 ;
     mov ax,SEG data
     mov ds,ax
     mov ds:curr_row,0
     mov ds:curr_col,0
+;    
+    mov ax,ds:core_list
+
+start_abort_loop:    
+    or ax,ax
+    jz start_do
+;
+    mov gs,ax
+    cmp ax,ds:debug_core
+    je start_abort_next
+;    
+    mov fs,gs:cs_proc_sel
+    SendNmi
+
+start_abort_next:
+    mov ax,gs:cs_next
+    jmp start_abort_loop
+
+start_do:
+    sti
+    GetProcessor
+;
     mov gs,ds:core_list
+    mov al,'R'
+    jmp handle_func
 
 handle_loop:
     hlt
@@ -1659,8 +1685,8 @@ handle_loop:
     test ah,80h
     jnz handle_next
 ;
-    cmp al,1Bh
-    je handle_abort
+;    cmp al,1Bh
+;    je handle_abort
 ;    
     cmp al,25h
     je left_arrow
@@ -1693,24 +1719,6 @@ handle_func:
     call ShowCrashCore
     call ShowMarker
     jmp handle_next
-
-handle_abort:
-    mov ax,ds:core_list
-
-handle_abort_loop:    
-    or ax,ax
-    jz handle_func
-;
-    mov gs,ax
-    cmp ax,ds:debug_core
-    je handle_abort_next
-;    
-    mov fs,gs:cs_proc_sel
-    SendNmi
-
-handle_abort_next:
-    mov ax,gs:cs_next
-    jmp handle_abort_loop
 
 handle_next:        
     call UpdateCrashKeyboardMode

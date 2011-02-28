@@ -406,8 +406,8 @@ ApInit:
     mov ds:mp_processor_sign,eax
     GetApicId
     mov ds:mp_apic,edx
-    cmp edx,3
-    je ap_debug
+;    cmp edx,3
+;    je ap_debug
 ;
     mov ax,5
     call DelayMs
@@ -426,8 +426,8 @@ ap_wait:
     hlt
     StartProcessor
 
-ap_debug:
-    StartSmpDebug
+;ap_debug:
+;    StartSmpDebug
 
 
 apic_tab    DB 'APIC'
