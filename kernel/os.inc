@@ -930,8 +930,8 @@ HookState	MACRO
 	OsGate hook_state_nr
 					ENDM
 
-StartSmpDebug	MACRO
-	OsGate start_smp_debug_nr
+CrashGate	MACRO
+	OsGate crash_gate_nr
 					ENDM
 
 AddDebugCore	MACRO

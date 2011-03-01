@@ -1121,8 +1121,7 @@ EscKey   Proc near
     cmp cx,alt_pressed OR ctrl_pressed
     jne escStd
 ;
-    StartSmpDebug
-;    CpuReset
+    CrashGate
 
 escStd:
     pop cx

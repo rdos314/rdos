@@ -1602,43 +1602,17 @@ add_debug_core  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SmpDebug
+;           NAME:           CrashHandler
 ;
-;           DESCRIPTION:    SMP debug procedure
+;           DESCRIPTION:    Crash handler
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     GS      Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_smp_debug_name    DB 'Start SMP Debug', 0
-
-start_smp_debug:
-    cli
-    DisableAllIrq    
-;    
-    GetProcessor
-    or fs:ps_flags,PS_FLAG_NMI
-    mov ax,fs
+CrashHandler:
     mov bx,SEG data    
     mov ds,bx
-    mov bx,ds:core_list
-
-start_smp_loop:
-    mov gs,bx
-    cmp ax,gs:cs_proc_sel
-    je start_smp_found
-;
-    mov bx,gs:cs_next
-    jmp start_smp_loop    
-
-start_smp_found:
-    call SaveCore
-    pop ax
-    movzx eax,ax
-    mov gs:cs_eip,eax
-;
-    pop ax
-    mov gs:cs_cs,ax
     mov ds:curr_core,gs
     mov ds:debug_core,gs
 ;
@@ -1664,7 +1638,7 @@ start_abort_loop:
     mov fs,gs:cs_proc_sel
     SendNmi
 ;
-    mov ax,25
+    mov ax,2
     call DelayMs    
 
 start_abort_next:
@@ -1768,6 +1742,62 @@ right_arrow:
     jmp handle_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CrashGate
+;
+;           DESCRIPTION:    Crash with a gate
+;
+;           PARAMETERS:     CS:IP on stack
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crash_gate_name    DB 'Start SMP Debug', 0
+
+crash_gate:
+    cli    
+    push gs
+;
+    push ds
+    push fs
+    push ax
+    push bx
+;    
+    DisableAllIrq    
+    GetProcessor
+    or fs:ps_flags,PS_FLAG_NMI
+    mov ax,fs
+    mov bx,SEG data    
+    mov ds,bx
+    mov bx,ds:core_list
+
+crash_core_loop:
+    mov gs,bx
+    cmp ax,gs:cs_proc_sel
+    je crash_core_found
+;
+    mov bx,gs:cs_next
+    jmp crash_core_loop    
+
+crash_core_found:
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    call SaveCore
+;    
+    pop ax
+    mov gs:cs_gs,ax
+;    
+    pop ax
+    movzx eax,ax
+    mov gs:cs_eip,eax
+;
+    pop ax
+    mov gs:cs_cs,ax
+    jmp CrashHandler
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           Init_crashdeb
@@ -1792,10 +1822,10 @@ init_crashdeb    PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET start_smp_debug
-    mov edi,OFFSET start_smp_debug_name
+    mov esi,OFFSET crash_gate
+    mov edi,OFFSET crash_gate_name
     xor cl,cl
-    mov ax,start_smp_debug_nr
+    mov ax,crash_gate_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_debug_core

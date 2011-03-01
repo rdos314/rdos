@@ -448,7 +448,6 @@ show_proc_debug_nr          = 381
 
 get_pci_irq_nr              = 382
 
-start_smp_debug_nr          = 383
 send_eoi_nr                 = 384
 
 add_debug_core_nr           = 385
@@ -456,5 +455,7 @@ add_debug_core_nr           = 385
 send_nmi_nr                 = 386
 
 add_printer_nr              = 387
+
+crash_gate_nr               = 388
 
 osgate_entries				= 390
