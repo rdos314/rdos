@@ -32,6 +32,7 @@ STATE_KEY   = 3
 NUM_KEY     = 4
 DEL_KEY     = 5
 FUNC_KEY    = 6
+ESC_KEY     = 7
 
 
 ; offset in scan-code table

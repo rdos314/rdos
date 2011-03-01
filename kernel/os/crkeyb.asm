@@ -1170,7 +1170,8 @@ InitCrashKeyboardIrq Proc near
     mov dword ptr ds:[si].user_handler,0
 ;
     mov al,1
-    call ds:[si].irq_enable_proc    
+    call ds:[si].irq_enable_proc
+    int 41h
 ;
     pop esi
     pop ds

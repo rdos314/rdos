@@ -42,7 +42,7 @@ scan_tab_sw:
 ;		normal	shift	alt		ctrl	extend  vk      vk-num  type
 ;
 c00	DB	-1,		-1,		-1,		-1,		-1,     0,  	0,      NO_KEY
-c01	DB	1Bh,	1Bh,	1Bh,	1Bh,	-1,     1Bh,	1Bh,    SIMPLE_KEY
+c01	DB	1Bh,	1Bh,	1Bh,	1Bh,	-1,     1Bh,	1Bh,    ESC_KEY
 c02	DB	'1',	'!',	-1,		-1,		78h,    '1',	'1',    SIMPLE_KEY
 c03	DB	'2',	'"',	'@',	-1,		79h,    '2',	'2',    SIMPLE_KEY
 c04	DB	'3',	'#',	'œ',	-1,		7Ah,    '3',	'3',    SIMPLE_KEY

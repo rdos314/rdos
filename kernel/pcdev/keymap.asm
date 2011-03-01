@@ -118,6 +118,34 @@ del_scan        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;               NAME:           esc_scan
+;
+;               DESCRIPTION:    Handle ESC key
+;
+;               PARAMETERS:     AL              scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+esc_scan        PROC near
+    push ax
+    GetKeyboardState
+    mov cx,ax
+    pop ax
+;
+    and cx,alt_pressed OR ctrl_pressed
+    cmp cx,alt_pressed OR ctrl_pressed
+    jne simple_scan
+;
+    mov al,61h
+    out INT0_CONTROL,al
+;
+    CrashGate
+    ret
+esc_scan        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:                   handle_scan
 ;
 ;               DESCRIPTION:    Handle a scan
@@ -291,6 +319,7 @@ kt03    DW OFFSET state_scan
 kt04    DW OFFSET num_scan
 kt05    DW OFFSET del_scan
 kt06    DW OFFSET f_key_scan
+kt07    DW OFFSET esc_scan
 
 process_key_scan_name   DB 'Process Key Scan', 0
 
