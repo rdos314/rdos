@@ -1106,8 +1106,6 @@ nmi_handler:
     push ebp
     mov bp,sp
 ;    
-    call SetupFaultHandlers
-;    
     GetProcessor
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
@@ -1616,7 +1614,7 @@ start_smp_debug_name    DB 'Start SMP Debug', 0
 
 start_smp_debug:
     cli
-    DisableAllIrq
+    DisableAllIrq    
 ;    
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI
@@ -1644,6 +1642,7 @@ start_smp_found:
     mov ds:curr_core,gs
     mov ds:debug_core,gs
 ;
+    call SetupFaultHandlers
     call InitCrashShow
     call InitCrashKeyboardIrq
 ;
