@@ -49,9 +49,16 @@ debug_active    DW ?
 curr_row        DW ?
 curr_col        DW ?
 
+spin_lock       DW ?
+
 data    ENDS
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -1613,6 +1620,25 @@ add_debug_core  Endp
 CrashHandler:
     mov bx,SEG data    
     mov ds,bx
+
+crash_try_lock:
+    mov ax,1
+    xchg ax,ds:spin_lock
+    or ax,ax
+    jz crash_locked
+;
+    pause    
+    jmp crash_try_lock
+
+crash_locked:    
+    mov ax,ds:debug_core
+    or ax,ax
+    jz crash_first
+;
+    mov ds:spin_lock,0
+    jmp nmi_block
+
+crash_first:    
     mov ds:curr_core,gs
     mov ds:debug_core,gs
 ;
@@ -1624,6 +1650,10 @@ CrashHandler:
     mov ds,ax
     mov ds:curr_row,0
     mov ds:curr_col,0
+    mov ds:spin_lock,0
+;
+    mov ax,2
+    call DelayMs
 ;    
     mov ax,ds:core_list
 
@@ -1813,10 +1843,8 @@ init_crashdeb    PROC near
     mov ds,ax
     mov ds:debug_active,0
     mov ds:core_list,0
-;    
-    mov eax,1000h
-    AllocateGlobalMem
-    mov ds:debug_core,es
+    mov ds:spin_lock,0
+    mov ds:debug_core,0
 ;    
     mov ax,cs
     mov ds,ax
