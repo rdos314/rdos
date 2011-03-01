@@ -117,6 +117,7 @@ mp_init_proc        DW ?
 mp_startup_proc     DW ?
 mp_int_proc         DW ?
 mp_eoi_proc         DW ?
+mp_stop_proc        DW ?
 
 mp_thread           DW ?
 
@@ -1169,6 +1170,42 @@ start_apic_msr_timer    Proc far
     ret
 start_apic_msr_timer  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StopApicTimer
+;
+;       DESCRIPTION:    Stop APIC timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopApicTimerMem    Proc near
+    push ds
+    push eax
+;
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov eax,10000h
+    mov ds:APIC_TIMER,eax
+;
+    pop eax
+    pop ds
+    ret
+StopApicTimerMem  Endp
+
+StopApicTimerMsr    Proc near
+    push eax
+    push ecx
+;
+    mov eax,10000h
+    mov ecx,MSR_APIC_TIMER
+    wrmsr
+;
+    pop ecx
+    pop eax
+    ret
+StopApicTimerMsr  Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1388,6 +1425,7 @@ smemgLint1Ok:
     mov ds:mp_startup_proc, OFFSET SendStartupMem
     mov ds:mp_int_proc, OFFSET SendIntMem
     mov ds:mp_eoi_proc, OFFSET SendEoiMem
+    mov ds:mp_stop_proc, OFFSET StopApicTimerMem
 ;
     mov ax,cs
     mov ds,ax
@@ -1612,6 +1650,7 @@ smsrgLint1Ok:
     mov ds:mp_startup_proc, OFFSET SendStartupMsr
     mov ds:mp_int_proc, OFFSET SendIntMsr
     mov ds:mp_eoi_proc, OFFSET SendEoiMsr
+    mov ds:mp_stop_proc, OFFSET StopApicTimerMsr
 ;
     mov ax,cs
     mov ds,ax
@@ -2135,6 +2174,10 @@ disable_all_irq  Proc far
     push eax
     push bx
     push cx
+; 
+    mov bx,SEG data
+    mov ds,bx
+    call ds:mp_stop_proc   
 ;    
     mov cx,24
     mov bx,ioapic_mem_sel
