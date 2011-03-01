@@ -1663,6 +1663,9 @@ start_abort_loop:
 ;    
     mov fs,gs:cs_proc_sel
     SendNmi
+;
+    mov ax,25
+    call DelayMs    
 
 start_abort_next:
     mov ax,gs:cs_next
