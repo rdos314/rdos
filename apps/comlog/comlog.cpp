@@ -53,8 +53,8 @@ void cdecl main()
         TWait Wait;
         TKeyboardDevice Keyboard;
 
-        TSerialDevice Port1(1, 9600, 'O', 8, 1);
-        TSerialDevice Port2(2, 9600, 'O', 8, 1);
+        TSerialDevice Port1(1, 9600, 'N', 8, 1);
+        TSerialDevice Port2(2, 9600, 'N', 8, 1);
 
         Port1.Open();
         Port2.Open();
@@ -64,7 +64,7 @@ void cdecl main()
         Wait.Add(&Port2);
         Wait.Add(&Keyboard);
 
-//      TFile *File = GetFile();
+//        TFile *File = GetFile();
         TFile *File = new TFile("raw.dat", 0);
 
         for (;;)
