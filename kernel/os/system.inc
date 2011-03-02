@@ -194,11 +194,3 @@ ShutDownTask	MACRO
 	dw 0
 	dw shutdown_task_gate
 			ENDM
-
-ShutDownDebug	MACRO
-    int 82h
-			ENDM
-
-ShutDownGateDebug	MACRO
-    int 83h
-			ENDM

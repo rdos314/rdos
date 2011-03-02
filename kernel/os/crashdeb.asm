@@ -1198,220 +1198,6 @@ nmi_ret:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           abort_cores
-;
-;       DESCRIPTION:    Stop all cores except self
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-abort_cores:
-    GetProcessor
-    or fs:ps_flags,PS_FLAG_NMI    
-    mov dx,fs
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:core_list
-
-abort_loop:    
-    or ax,ax
-    jz nmi_block
-;    
-    mov gs,ax
-    cmp ax,ds:debug_core
-    je abort_next
-;
-    mov ax,gs:cs_proc_sel
-    cmp ax,dx
-    jz abort_next
-;    
-    mov fs,ax
-    SendNmi
-
-abort_next:
-    mov ax,gs:cs_next
-    jmp abort_loop
-
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           int 82
-;
-;       DESCRIPTION:    Shutdown interrupt
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-int_gs  EQU 48
-int_fs  EQU 44
-int_ds  EQU 40
-int_es  EQU 36
-int_ss  EQU 32
-int_esp EQU 28
-int_efl EQU 24
-int_cs  EQU 20
-int_eip EQU 16
-int_sfs EQU 14
-int_sgs EQU 12
-int_eax EQU 8
-int_ebx EQU 4
-int_ebp EQU 0
-
-shutdown_handler:
-    push fs
-    push gs
-    push eax
-    push ebx
-    push ebp
-    mov bp,sp
-;    
-    GetProcessor
-    mov ax,fs
-    mov bx,SEG data    
-    mov fs,bx
-    mov bx,fs:core_list
-
-int_core_loop:
-    mov gs,bx
-    cmp ax,gs:cs_proc_sel
-    je int_core_found
-;
-    mov bx,gs:cs_next
-    jmp int_core_loop    
-
-int_core_found:
-    call SaveCore
-    mov eax,[bp].int_ebp
-    mov gs:cs_ebp,eax
-    mov eax,[bp].int_ebx
-    mov gs:cs_ebx,eax
-    mov eax,[bp].int_eax
-    mov gs:cs_eax,eax
-    mov eax,[bp].int_eip
-    mov gs:cs_eip,eax
-    mov ax,[bp].int_cs
-    mov gs:cs_cs,ax
-    mov ebx,[bp].int_efl
-    mov gs:cs_eflags,ebx
-    test ebx,20000h
-    jnz int_v86
-;    
-    mov bx,[bp].int_sfs
-    mov gs:cs_fs,bx
-    mov bx,[bp].int_sgs
-    mov gs:cs_gs,bx
-;    
-    and al,3
-    or al,al
-    jz int_kernel
-;
-    mov eax,[bp].int_esp
-    mov gs:cs_esp,eax
-    mov ax,[bp].int_ss
-    mov gs:cs_ss,ax
-    jmp abort_cores
-
-int_kernel:
-    movzx eax,bp
-    add ax,int_esp
-    mov gs:cs_esp,eax
-    jmp abort_cores
-    
-int_v86:
-    mov eax,[bp].int_esp
-    mov gs:cs_esp,eax
-    mov ax,[bp].int_ss
-    mov gs:cs_ss,ax
-    mov ax,[bp].int_ds
-    mov gs:cs_ds,ax
-    mov ax,[bp].int_es
-    mov gs:cs_es,ax
-    mov ax,[bp].int_fs
-    mov gs:cs_fs,ax
-    mov ax,[bp].int_gs
-    mov gs:cs_gs,ax
-    jmp abort_cores
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           int 83
-;
-;       DESCRIPTION:    Shutdown gate interrupt
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-gt_fs  EQU 28
-gt_efl EQU 24
-gt_cs  EQU 20
-gt_eip EQU 16
-gt_sgs EQU 12
-gt_eax EQU 8
-gt_ebx EQU 4
-gt_ebp EQU 0
-
-shutdown_gate_handler:
-    push fs
-    push gs
-    push eax
-    push ebx
-    push ebp
-    mov bp,sp
-;    
-    GetProcessor
-    mov ax,fs
-    mov bx,SEG data    
-    mov fs,bx
-    mov bx,fs:core_list
-
-gate_core_loop:
-    mov gs,bx
-    cmp ax,gs:cs_proc_sel
-    je gate_core_found
-;
-    mov bx,gs:cs_next
-    jmp gate_core_loop    
-
-gate_core_found:
-    call SaveCore
-    mov bx,[bp].gt_ebp
-;
-    mov eax,ss:[bx].vm_eax
-    mov gs:cs_eax,eax
-    mov eax,ss:[bx].vm_ebx
-    mov gs:cs_ebx,eax
-;
-    mov eax,ebp
-    mov ax,ss:[bx]
-    mov gs:cs_ebp,eax
-;       
-    mov eax,ss:[bx].vm_eflags
-    mov gs:cs_eflags,eax
-;    
-    mov ax,ss:[bx].vm_cs
-    mov gs:cs_cs,ax
-;
-    mov eax,ss:[bx].vm_eip
-    mov gs:cs_eip,eax
-;
-    mov ax,bx
-    add ax,vm_esp
-    movzx eax,ax
-    mov gs:cs_esp,eax
-;       
-    mov ax,ss:[bx].pm_ds
-    mov gs:cs_ds,ax
-;    
-    mov bx,[bp].gt_fs
-    mov gs:cs_fs,bx
-;
-    mov bx,[bp].gt_sgs
-    mov gs:cs_gs,bx
-    jmp abort_cores
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;               NAME:           DelayMs
 ;
 ;               DESCRIPTION:    Delay that does not use multitasking functions
@@ -1523,45 +1309,6 @@ SaveCore Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupDebugInts
-;
-;           DESCRIPTION:    Setup debug interrupts for SMP processors (modified later)
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupDebugInts Proc near
-    push ds
-    push es
-    pushad
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-;
-    mov al,2
-    xor bl,bl
-    mov esi,OFFSET nmi_handler
-    CreateIntGateSelector
-;
-    mov al,82h
-    mov esi,OFFSET shutdown_handler
-    CreateIntGateSelector
-;
-    mov al,83h
-    mov esi,OFFSET shutdown_gate_handler
-    CreateIntGateSelector
-;
-    popad
-    pop es
-    pop ds    
-    ret
-SetupDebugInts Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           AddDebugCore
 ;
 ;           DESCRIPTION:    Add a new debug core
@@ -1596,13 +1343,7 @@ add_debug_core  Proc far
     mov gs:cs_next,ax
     mov es:core_list,gs
     mov es:curr_core,gs
-;
-    or ax,ax
-    jz add_core_done
-;
-    call SetupDebugInts
-            
-add_core_done:
+;    
     popad
     pop gs
     pop fs
@@ -2109,6 +1850,11 @@ init_crashdeb    PROC near
     xor cl,cl
     mov ax,add_debug_core_nr
     RegisterOsGate
+;
+    mov al,2
+    xor bl,bl
+    mov esi,OFFSET nmi_handler
+    CreateIntGateSelector
 ;
     AddDebugCore
 ;

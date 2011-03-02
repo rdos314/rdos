@@ -396,11 +396,6 @@ ApInit:
     mov ss,dx
     mov sp,200h    
 ;
-    mov ax,flat_sel
-    mov ds,ax    
-;    
-    call InitApic
-;
     mov ax,SEG data
     mov ds,ax
     mov eax,12345678h
@@ -422,9 +417,11 @@ ApInit:
 ;   jmp stopl
 
 
-ap_wait:    
+ap_wait: 
     sti
     hlt
+;    
+    call InitApic
     StartProcessor
 
 ;ap_debug:
