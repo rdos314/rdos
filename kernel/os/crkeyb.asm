@@ -49,7 +49,7 @@ status      DB ?
 command     DB ?
 shift_states    DW ?
 key_code    DW ?
-vk_code     DB ?
+c_vk_code     DB ?
 scan_code       DB ?
 
 data    ENDS
@@ -84,7 +84,7 @@ SaveKeyboardCode    PROC near
     mov ds,bx
 ;
     mov ds:key_code,ax
-    mov ds:vk_code,dl
+    mov ds:c_vk_code,dl
     mov ds:scan_code,dh
 ;
     pop bx
@@ -1056,6 +1056,14 @@ keyb_int_loop:
     test al,1
     jz keyb_int_done
 ;
+    test al,20h
+    jz keyb_int_keyboard
+
+keyb_int_mouse:
+    in al,60h
+    jmp keyb_int_loop
+
+keyb_int_keyboard:
     in al,60h
     or al,al
     je keyb_int_loop
@@ -1123,6 +1131,7 @@ keyb_int_numpad_handled:
     call DecodeScanCode
 
 keyb_int_done:
+    mov al,1
     SendEoi
 ;
     popad
@@ -1152,7 +1161,7 @@ InitCrashKeyboardIrq Proc near
     mov ds:status,0
     mov ds:shift_states,0
     mov ds:key_code,0
-    mov byte ptr ds:vk_code,0
+    mov ds:c_vk_code,0
     mov ds:scan_code,0
 ;
     mov ax,cs
@@ -1284,7 +1293,7 @@ GetCrashKey      PROC near
 ;
     mov ds:scan_code,0
     xor al,al
-    xchg al,ds:vk_code
+    xchg al,ds:c_vk_code
     clc
         
 rkDone:

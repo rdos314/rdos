@@ -34,7 +34,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE irq.inc
 INCLUDE ..\pcdev\key.inc
-INCLUDE ..\pcdev\apic.inc
+INCLUDE port.def
 INCLUDE proc.inc
 INCLUDE crashdeb.inc
 
@@ -1421,35 +1421,39 @@ gate_core_found:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DelayMs Proc near
-    push ds
-    push es
     pushad
 ;
-    mov dx,system_data_sel
-    mov ds,dx
     movzx eax,ax
     mov ecx,1193
     mul ecx
-;        
-    mov ecx,ds:apic_tics
-    shl ecx,16
-    mov cx,ds:apic_rest
-    shl eax,16
-    mul ecx
-    inc edx
+    mov ebx,eax
+    or ebx,ebx
+    jz dmDone
 ;
-    mov ax,apic_mem_sel
-    mov es,ax    
-    mov es:APIC_INIT_COUNT,edx
+    mov ax,10h
+    out TIMER_CONTROL,al
+    jmp short $+2
+;
+    mov al,0FFh
+    out TIMER0,al
+    jmp short $+2
+;    
+    in al,TIMER0
+    mov cl,al
+    jmp short $+2
+;
+    xor edx,edx
 
-dmLoop:
-    mov eax,es:APIC_CURR_COUNT
-    or eax,eax
-    jnz dmLoop
-;       
+dmLoop:    
+    in al,TIMER0
+    mov dl,cl
+    mov cl,al
+    sub dl,al
+    sub ebx,edx
+    jnc dmLoop    
+
+dmDone:       
     popad
-    pop es
-    pop ds
     ret
 DelayMs Endp
    
@@ -1654,7 +1658,7 @@ crash_first:
 ;
     mov ax,2
     call DelayMs
-;    
+;
     mov ax,ds:core_list
 
 start_abort_loop:    
@@ -1664,7 +1668,7 @@ start_abort_loop:
     mov gs,ax
     cmp ax,ds:debug_core
     je start_abort_next
-;    
+;        
     mov fs,gs:cs_proc_sel
     SendNmi
 ;
