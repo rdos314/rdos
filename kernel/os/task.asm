@@ -804,12 +804,6 @@ proc_init:
     xor esi,esi
     xor edi,edi
 ;
-    mov si,OFFSET shutdown_pr
-    mov di,OFFSET shutdown_name
-    xor cl,cl
-    mov ax,shutdown_nr
-    RegisterOsGate
-;
     mov si,OFFSET create_processor
     mov di,OFFSET create_processor_name
     xor cl,cl
@@ -3794,161 +3788,6 @@ wtUnlock:
     ret
 WakeThread      ENDP
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ShutdownLocal
-;
-;           DESCRIPTION:    Shutdown
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ShutdownLocal proc near
-    push ds
-    push fs
-;
-    mov ax,wd_code_sel
-    verr ax
-    jnz slDo
-;
-    cli
-    CpuReset
-
-slDo:
-    mov ax,task_sel
-    mov ds,ax
-    call ds:get_cpu_proc
-    mov ds,fs:ps_null_thread 
-    mov ds,ds:p_tss_data_sel  
-;    
-    mov dword ptr ds:tss_ebx,ebx
-    mov dword ptr ds:tss_ecx,ecx
-    mov dword ptr ds:tss_edx,edx
-    mov dword ptr ds:tss_esi,esi
-    mov dword ptr ds:tss_edi,edi
-    mov dword ptr ds:tss_ebp,ebp
-;
-    pop ax
-    mov ds:tss_fs,ax
-;
-    pop ax      
-    mov ds:tss_ds,ax
-;
-    mov ax,es
-    mov ds:tss_es,ax
-    mov ax,gs
-    mov ds:tss_gs,ax
-;
-    pushfd
-    pop dword ptr ds:tss_eflags
-;       
-    mov ax,cs
-    mov ds:tss_cs,ax
-    pop ax
-    movzx eax,ax
-    mov dword ptr ds:tss_eip,eax
-;
-;   pop ax
-;       mov dword ptr ds:tss_eax,eax
-;
-    mov ax,ss
-    mov ds:tss_ss,ax
-;    
-    mov ax,sp
-    movzx eax,ax
-    mov dword ptr ds:tss_esp,eax
-;       
-    mov es,fs:ps_null_thread 
-    mov ax,task_sel
-    mov ds,ax
-    mov es:p_error_code,3
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov di,OFFSET debug_list
-    InsertBlock
-    ShutDownTask
-ShutdownLocal    Endp    
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Shutdown
-;
-;           DESCRIPTION:    Shutdown
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-shutdown_name   DB 'Shutdown', 0
-
-shutdown_pr proc far
-    push ds
-    push fs
-;
-    push eax
-;
-    mov ax,wd_code_sel
-    verr ax
-    jnz spDo
-;
-    cli
-    CpuReset
-
-spDo:
-    mov ax,task_sel
-    mov ds,ax
-    mov ecx,ds:processor_preempt
-    call ds:get_cpu_proc
-    mov ds,fs:ps_null_thread 
-    mov ds,ds:p_tss_data_sel  
-    pop dword ptr ds:tss_eax
-;    
-    mov dword ptr ds:tss_ebx,ebx
-    mov dword ptr ds:tss_ecx,ecx
-    mov dword ptr ds:tss_edx,edx
-    mov dword ptr ds:tss_esi,esi
-    mov dword ptr ds:tss_edi,edi
-    mov dword ptr ds:tss_ebp,ebp
-;
-    pop ax
-    mov ds:tss_fs,ax
-;
-    pop ax      
-    mov ds:tss_ds,ax
-;
-    mov ax,es
-    mov ds:tss_es,ax
-    mov ax,gs
-    mov ds:tss_gs,ax
-;
-    add sp,4
-    pop dword ptr ds:tss_eip
-    pop eax
-    mov word ptr ds:tss_cs,ax
-    pop dword ptr ds:tss_eflags
-;
-    mov ax,ss
-    mov ds:tss_ss,ax
-;    
-    mov ax,sp
-    movzx eax,ax
-    mov dword ptr ds:tss_esp,eax
-;       
-    mov es,fs:ps_null_thread 
-    mov ax,task_sel
-    mov ds,ax
-    mov es:p_error_code,3
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov di,OFFSET debug_list
-    InsertBlock
-    ShutDownTask
-shutdown_pr    Endp    
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3985,68 +3824,7 @@ debug_exception:
     jc debug_normal
 
 debug_fault:
-    ShutDownGateDebug
-;    
-    push ax
-    mov ax,wd_code_sel
-    verr ax
-    pop ax
-    jnz dfDo
-;
-    cli
-    CpuReset
-
-dfDo:
-    mov ds,fs:ps_null_thread 
-    mov ds:p_error_code,ax
-    mov ds,ds:p_tss_data_sel  
-;    
-    mov eax,[bp].vm_eax
-    mov dword ptr ds:tss_eax,eax
-    mov eax,[bp].vm_ebx
-    mov dword ptr ds:tss_ebx,eax
-    mov dword ptr ds:tss_ecx,ecx
-    mov dword ptr ds:tss_edx,edx
-    mov dword ptr ds:tss_esi,esi
-    mov dword ptr ds:tss_edi,edi
-    mov eax,ebp
-    mov ax,[bp]
-    mov dword ptr ds:tss_ebp,eax
-;       
-    mov eax,[bp].vm_eflags
-    mov dword ptr ds:tss_eflags,eax
-    mov ax,[bp].vm_cs
-    mov ds:tss_cs,ax
-    mov eax,[bp].vm_eip
-    mov dword ptr ds:tss_eip,eax
-;
-    mov ax,ss
-    mov ds:tss_ss,ax
-    mov ax,bp
-    add ax,vm_esp
-    movzx eax,ax
-    mov dword ptr ds:tss_esp,eax
-;       
-    mov ax,[bp].pm_ds
-    mov ds:tss_ds,ax
-    mov ax,es
-    mov ds:tss_es,ax
-;
-    pop ax      
-    mov ds:tss_fs,ax
-;       
-    mov ax,gs
-    mov ds:tss_gs,ax
-;
-    mov ax,task_sel
-    mov ds,ax
-    mov es,fs:ps_null_thread
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov di,OFFSET debug_list
-    InsertBlock
-    ShutDownTask
+    CrashFault
    
 debug_normal:       
     push ax
@@ -4138,24 +3916,7 @@ debug_save_ok:
 ;
     mov ax,fs:ps_curr_thread
     cmp ax,fs:ps_null_thread
-    jne debug_block
-;
-    ShutDownDebug
-;    
-    mov es,ax
-    mov ax,wd_code_sel
-    verr ax
-    jnz dbDo
-;
-    cli
-    CpuReset
-
-dbDo:
-    mov ax,system_data_sel
-    mov ds,ax
-    mov di,OFFSET debug_list
-    InsertBlock
-    ShutDownTask
+    je debug_fault
     
 debug_block:
     mov es,fs:ps_curr_thread
@@ -4199,12 +3960,7 @@ double_fault:
     call ds:try_lock_proc
     jc double_fault_lock_ok
 ;    
-    ShutDownDebug
-;    
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jnz double_fatal_thread
-    jmp double_fatal_no_thread
+    CrashGate
     
 double_fault_lock_ok:    
     mov ss,fs:ps_ss
@@ -4240,114 +3996,7 @@ double_fatal_no_thread:
     AllocateGdt
     CreateDataSelector16
     mov ds,bx
-;    
-    mov esi,dword ptr ds:tss_cs
-    mov edi,dword ptr ds:tss_eip
-    mov eax,dword ptr ds:tss_ss
-    mov edx,dword ptr ds:tss_esp
-    call ShutdownLocal
-
-double_fatal_thread:
-    mov ds,fs:ps_null_thread 
-    mov es,ds:p_tss_data_sel  
-;
-    mov ax,double_tss_data_sel
-    mov ds,ax
-    mov bx,ds:tss_back_link
-;
-    mov ax,gdt_sel
-    mov ds,ax
-    and bx,0FFF8h
-    xor ecx,ecx
-    mov cl,[bx+6]
-    and cl,0Fh
-    shl ecx,16
-    mov cx,[bx]
-    inc ecx
-    mov edx,[bx+2]
-    rol edx,8
-    mov dl,[bx+7]
-    ror edx,8
-;       
-    AllocateGdt
-    CreateDataSelector16
-    mov ds,bx
-;    
-    mov eax,dword ptr ds:tss_eax
-    mov dword ptr es:tss_eax,eax
-;
-    mov eax,dword ptr ds:tss_ebx
-    mov dword ptr es:tss_ebx,eax
-;
-    mov eax,dword ptr ds:tss_ecx
-    mov dword ptr es:tss_ecx,eax
-;
-    mov eax,dword ptr ds:tss_edx
-    mov dword ptr es:tss_edx,eax
-;
-    mov eax,dword ptr ds:tss_esi
-    mov dword ptr es:tss_esi,eax
-;
-    mov eax,dword ptr ds:tss_edi
-    mov dword ptr es:tss_edi,eax
-;
-    mov eax,dword ptr ds:tss_ebp
-    mov dword ptr es:tss_ebp,eax
-;
-    mov ax,ds:tss_ds
-    mov es:tss_ds,ax
-;
-    mov ax,ds:tss_es
-    mov es:tss_es,ax
-;
-    mov ax,ds:tss_fs
-    mov es:tss_fs,ax
-;
-    mov ax,ds:tss_gs
-    mov es:tss_gs,ax
-;
-    mov ax,ds:tss_ss
-    mov es:tss_ss,ax
-;
-    mov eax,dword ptr ds:tss_esp
-    mov dword ptr ds:tss_esp,eax
-;
-    mov ax,ds:tss_cs
-    mov es:tss_cs,ax
-;
-    mov eax,dword ptr ds:tss_eip           
-    mov dword ptr es:tss_eip,eax
-;
-    mov eax,dword ptr ds:tss_eflags
-    mov dword ptr es:tss_eflags,eax
-;
-    mov es,fs:ps_null_thread 
-    mov ax,task_sel
-    mov ds,ax
-;       
-    mov es:p_error_code,8
-    mov ax,es:tss_ss
-    verw ax
-    jz double_stack_ok
-;
-    mov es:p_error_code,12
-
-double_stack_ok:
-    ShutDownDebug
-;    
-    mov ax,wd_code_sel
-    verr ax
-    jnz double_stack_do
-;
-    cli
-    CpuReset
-
-double_stack_do:
-    mov ax,system_data_sel
-    mov ds,ax
-    mov di,OFFSET debug_list
-    InsertBlock
-    ShutDownTask
+    CrashTss
     
 double_block:
     mov es,ax    
@@ -4658,7 +4307,6 @@ llSpinLock:
     je llGet
 ;
     pause
-;    call ShutdownLocal
     jmp llSpinLock
 
 llGet:
@@ -4668,7 +4316,6 @@ llGet:
     or ax,ax
     je llDone
 ;
-;    call ShutdownLocal
     jmp llSpinLock
 
 llDone:
@@ -4807,8 +4454,7 @@ LockSingle      Proc near
     add fs:ps_nesting,1
     jc lsDone
 ;
-    ShutDownDebug
-    call ShutdownLocal
+    CrashGate
 
 lsDone:     
     ret
@@ -4879,9 +4525,7 @@ LoadUnlockSingle    Proc near
     sub fs:ps_nesting,1
     jc lulsDone
 ;
-    ShutDownDebug
-    mov cx,fs:ps_nesting
-    call ShutdownLocal
+    CrashGate
 
 lulsDone:       
     ret
@@ -5197,23 +4841,14 @@ lumGet:
     sub fs:ps_nesting,1
     jc lumNestingOk
 ;
-    ShutDownDebug
-;    
-    mov cx,fs:ps_nesting
-    pop eax
-    pop dx
-    mov si,fs
-    call ds:get_cpu_proc
-    mov di,fs
-    call ShutdownLocal
+    CrashGate
 
 lumNestingOk:
     mov ax,fs
     cmp ax,ds:owner_sel
     je lumOwnerOk
 ;
-    ShutDownDebug
-    call ShutdownLocal
+    CrashGate
 
 lumOwnerOk:    
     mov ds:owner_sel,0  

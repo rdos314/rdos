@@ -934,6 +934,16 @@ CrashGate	MACRO
 	OsGate crash_gate_nr
 					ENDM
 
+;   SS:BP       Fault stack
+CrashFault	MACRO
+	OsGate crash_fault_nr
+					ENDM
+
+;   DS      TSS alias
+CrashTss	MACRO
+	OsGate crash_tss_nr
+					ENDM
+
 AddDebugCore	MACRO
 	OsGate add_debug_core_nr
 					ENDM
@@ -1127,10 +1137,6 @@ SetupIrqDetect	MACRO
 ;   AX      Detected IRQs
 PollIrqDetect	MACRO
 	OsGate poll_irq_detect_nr
-					ENDM
-
-Shutdown	MACRO
-	OsGate shutdown_nr
 					ENDM
 
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;

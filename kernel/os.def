@@ -414,8 +414,6 @@ debug_exception_nr          = 360
 
 create_processor_nr         = 362
 
-shutdown_nr                 = 363
-
 locked_debug_exception_nr   = 364
 
 lock_task_nr                = 365
@@ -457,5 +455,7 @@ send_nmi_nr                 = 386
 add_printer_nr              = 387
 
 crash_gate_nr               = 388
+crash_tss_nr                = 389
+crash_fault_nr              = 390
 
-osgate_entries				= 390
+osgate_entries				= 400

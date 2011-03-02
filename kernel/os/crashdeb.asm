@@ -1786,7 +1786,7 @@ right_arrow:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-crash_gate_name    DB 'Start SMP Debug', 0
+crash_gate_name    DB 'Crash Gate', 0
 
 crash_gate:
     cli    
@@ -1797,6 +1797,13 @@ crash_gate:
     push ax
     push bx
 ;    
+    mov ax,wd_code_sel
+    verr ax
+    jnz crash_do
+;
+    CpuReset
+
+crash_do:
     DisableAllIrq    
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI
@@ -1832,6 +1839,231 @@ crash_core_found:
     jmp CrashHandler
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CrashFault
+;
+;           DESCRIPTION:    Crash with a fault stack
+;
+;           PARAMETERS:     SS:BP       Fault context
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crash_fault_name    DB 'Crash Fault', 0
+
+crash_fault:
+    cli    
+    push gs
+;
+    push fs
+;    
+    mov ax,wd_code_sel
+    verr ax
+    jnz crash_fault_do
+;
+    CpuReset
+
+crash_fault_do:
+    DisableAllIrq    
+    GetProcessor
+    or fs:ps_flags,PS_FLAG_NMI
+    mov ax,fs
+    mov bx,SEG data    
+    mov ds,bx
+    mov bx,ds:core_list
+
+crash_fault_core_loop:
+    mov gs,bx
+    cmp ax,gs:cs_proc_sel
+    je crash_fault_core_found
+;
+    mov bx,gs:cs_next
+    jmp crash_fault_core_loop    
+
+crash_fault_core_found:
+    pop fs
+    call SaveCore
+;
+    pop ax
+    mov gs:cs_gs,ax
+;    
+    mov ax,[bp].pm_ds
+    mov gs:cs_ds,ax
+;    
+    mov eax,[bp].vm_eax
+    mov gs:cs_eax,eax
+;    
+    mov eax,[bp].vm_ebx
+    mov gs:cs_ebx,eax
+;
+    mov eax,ebp
+    mov ax,[bp]
+    mov gs:cs_ebp,eax
+;    
+    mov eax,[bp].vm_eflags
+    mov gs:cs_eflags,eax
+;
+    mov ax,[bp].vm_cs
+    mov gs:cs_cs,ax
+;    
+    mov eax,[bp].vm_eip
+    mov gs:cs_eip,eax
+;
+    test dword ptr [bp].vm_eflags,20000h
+    jnz crash_fault_vm
+
+crash_fault_pm:
+    mov al,[bp].vm_cs
+    test al,3
+    jz crash_fault_kernel
+;
+    mov ax,[bp].vm_ss
+    mov gs:cs_ss,ax
+;    
+    mov eax,[bp].vm_esp
+    mov gs:cs_esp,eax
+    jmp CrashHandler
+    
+crash_fault_kernel:
+    mov ax,bp
+    add ax,vm_esp
+    movzx eax,ax
+    mov gs:cs_esp,eax
+    jmp CrashHandler
+
+crash_fault_vm:
+    mov ax,[bp].vm_gs
+    mov gs:cs_gs,ax
+;
+    mov ax,[bp].vm_fs
+    mov gs:cs_fs,ax
+;
+    mov ax,[bp].vm_ds
+    mov gs:cs_ds,ax
+;    
+    mov ax,[bp].vm_es
+    mov gs:cs_es,ax
+;    
+    mov ax,[bp].vm_ss
+    mov gs:cs_ss,ax
+;    
+    mov eax,[bp].vm_esp
+    mov gs:cs_esp,eax
+    jmp CrashHandler
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CrashTss
+;
+;           DESCRIPTION:    Crash with a TSS
+;
+;           PARAMETERS:     DS      Readable TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crash_tss_name    DB 'Crash Tss', 0
+
+crash_tss:
+    cli    
+    mov ax,wd_code_sel
+    verr ax
+    jnz crash_tss_do
+;
+    CpuReset
+
+crash_tss_do:
+    DisableAllIrq    
+    GetProcessor
+    or fs:ps_flags,PS_FLAG_NMI
+    mov ax,fs
+    push ds
+    mov bx,SEG data    
+    mov ds,bx
+    mov bx,ds:core_list
+
+crash_tss_core_loop:
+    mov gs,bx
+    cmp ax,gs:cs_proc_sel
+    je crash_tss_core_found
+;
+    mov bx,gs:cs_next
+    jmp crash_tss_core_loop    
+
+crash_tss_core_found:
+    pop ds
+    mov eax,dword ptr ds:tss_eax
+    mov gs:cs_eax,eax
+;    
+    mov eax,dword ptr ds:tss_ecx
+    mov gs:cs_ecx,eax
+;
+    mov eax,dword ptr ds:tss_edx
+    mov gs:cs_edx,eax
+;
+    mov eax,dword ptr ds:tss_ebx
+    mov gs:cs_ebx,eax
+;
+    mov eax,dword ptr ds:tss_esp    
+    mov gs:cs_esp,eax
+;
+    mov eax,dword ptr ds:tss_ebp    
+    mov gs:cs_ebp,eax
+;    
+    mov eax,dword ptr ds:tss_esi
+    mov gs:cs_esi,eax
+;
+    mov eax,dword ptr ds:tss_edi    
+    mov gs:cs_edi,eax
+;    
+    mov ax,ds:tss_es
+    mov gs:cs_es,ax
+;
+    mov ax,ds:tss_cs    
+    mov gs:cs_cs,ax
+;    
+    mov ax,ds:tss_ss
+    mov gs:cs_ss,ax
+;
+    mov ax,ds:tss_ds    
+    mov gs:cs_ds,ax
+;
+    mov ax,ds:tss_fs    
+    mov gs:cs_fs,ax
+;
+    mov ax,ds:tss_gs    
+    mov gs:cs_gs,ax    
+;
+    mov eax,dword ptr ds:tss_eflags
+    mov gs:cs_eflags,eax
+;
+    mov eax,cr0
+    mov gs:cs_cr0,eax
+    mov eax,cr2
+    mov gs:cs_cr2,eax
+    mov eax,cr3
+    mov gs:cs_cr3,eax
+    mov eax,cr4
+    mov gs:cs_cr4,eax
+;
+    mov eax,dr0
+    mov gs:cs_dr0,eax
+    mov eax,dr1
+    mov gs:cs_dr1,eax
+    mov eax,dr2
+    mov gs:cs_dr2,eax
+    mov eax,dr3
+    mov gs:cs_dr3,eax
+    mov eax,dr7
+    mov gs:cs_dr7,eax
+;
+    sldt gs:cs_ldt
+    str gs:cs_tr
+    sgdt fword ptr gs:cs_gdtr
+    sidt fword ptr gs:cs_idtr
+    jmp CrashHandler
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           Init_crashdeb
@@ -1858,6 +2090,18 @@ init_crashdeb    PROC near
     mov edi,OFFSET crash_gate_name
     xor cl,cl
     mov ax,crash_gate_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET crash_fault
+    mov edi,OFFSET crash_fault_name
+    xor cl,cl
+    mov ax,crash_fault_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET crash_tss
+    mov edi,OFFSET crash_tss_name
+    xor cl,cl
+    mov ax,crash_tss_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_debug_core

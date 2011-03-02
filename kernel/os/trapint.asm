@@ -1091,13 +1091,7 @@ trap_12:
     or ax,ax
     jnz t12_thread
 ;
-    pop ds
-    pop ebx
-    pop eax    
-    pop bp
-    add sp,4
-;
-    Shutdown
+    CrashFault
 
 t12_thread:
     mov ds,ax
