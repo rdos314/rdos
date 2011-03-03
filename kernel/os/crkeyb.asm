@@ -1191,6 +1191,104 @@ InitCrashKeyboardIrq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           UpdateKeyboard
+;
+;           DESCRIPTION:    Update keyboard state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateKeyboard  Proc near
+    push ds
+    push ax
+    push bx
+    push cx
+    mov ax,SEG data
+    mov ds,ax
+    
+crash_key_loop:
+    in al,64h
+    test al,1
+    jz crash_key_done
+;
+    in al,60h
+    or al,al
+    je crash_key_loop
+;
+    test ds:status,status_key_req
+    jz crash_key_not_resend
+;
+    cmp al,0FAh
+    jnz crash_key_not_ack
+;
+    mov al,ds:status
+    or al,status_key_ack
+    and al,NOT status_key_req
+    mov ds:status,al
+    jmp crash_key_loop
+
+crash_key_not_ack:
+    cmp al,0FEh
+    jnz crash_key_not_resend
+;
+    mov al,ds:command
+    out 60h,al
+    jmp crash_key_loop
+
+crash_key_not_resend:
+    cmp al,0FFh
+    je crash_key_loop
+;
+    cmp al,0E0h
+    jnz crash_key_not_numpad
+;
+    push ax
+    mov ax,ds:shift_states
+    or ax,ext_numpad_active
+    and ax, NOT ext_numpad_handled
+    mov ds:shift_states,ax
+    pop ax
+    jmp crash_key_loop       
+
+crash_key_not_numpad:
+    push ax
+    mov ax,ds:shift_states
+    mov cx,ax
+    pop ax
+    test cx,ext_numpad_active
+    jz crash_key_numpad_handled
+;
+    test cx, ext_numpad_handled
+    jz crash_key_numpad_mark_handled
+;
+    and cx, NOT ext_numpad_active
+    mov ds:shift_states,cx
+    jmp crash_key_numpad_handled
+
+crash_key_numpad_mark_handled:
+    or cx, ext_numpad_handled
+    mov ds:shift_states,cx
+
+crash_key_numpad_handled:
+    movzx bx,al
+    add bx,bx
+    call word ptr cs:[bx].handle_scan_code_tab
+    jc crash_key_done
+;
+    call DecodeScanCode
+
+crash_key_done:
+    pop cx
+    pop bx
+    pop ax
+    pop ds
+    ret
+UpdateKeyboard  Endp
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           SendCommand
 ;
 ;           DESCRIPTION:    Send a command to keyboard port
@@ -1210,17 +1308,17 @@ send_check_ready:
     jmp send_check_ready
 
 send_command_do:
-    cli
     mov al,ds:status
     or al,status_key_req
     and al,NOT status_key_ack
     mov ds:status,al
-    sti
 ;
     mov al,ds:command
     out 60h,al
 
 send_command_wait:
+    call UpdateKeyboard
+;    
     test ds:status, status_key_ack
     jz send_command_wait
     ret
@@ -1229,15 +1327,13 @@ SendCommand     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           UpdateCrashKeyboardMode
+;           NAME:           UpdateMode
 ;
 ;           DESCRIPTION:    Update mode indicators
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public UpdateCrashKeyboardMode
     
-UpdateCrashKeyboardMode      PROC near
+UpdateMode      PROC near
     push ds
 ;
     mov ax,SEG data
@@ -1265,7 +1361,7 @@ caps_off:
 umDone:
     pop ds
     ret
-UpdateCrashKeyboardMode      ENDP
+UpdateMode      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1285,20 +1381,22 @@ UpdateCrashKeyboardMode      ENDP
 GetCrashKey      PROC near
     push ds
 ;    
-    int 41h
     mov ax,SEG data
     mov ds,ax
+    call UpdateKeyboard
+    call UpdateMode
+;
     mov ah,ds:scan_code
     or ah,ah
     stc
-    jz rkDone
+    jz get_key_done
 ;
     mov ds:scan_code,0
     xor al,al
     xchg al,ds:c_vk_code
     clc
         
-rkDone:
+get_key_done:
     pop ds
     ret
 GetCrashKey      ENDP

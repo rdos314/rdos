@@ -65,7 +65,6 @@ code    SEGMENT byte public use16 'CODE'
     assume cs:code
 
     extrn InitCrashKeyboardIrq:near
-    extrn UpdateCrashKeyboardMode:near
     extrn GetCrashKey:near
 
     extrn InitCrashShow:near
@@ -1470,7 +1469,6 @@ handle_func:
     jmp handle_next
 
 handle_next:        
-    call UpdateCrashKeyboardMode
     jmp handle_loop
 
 
