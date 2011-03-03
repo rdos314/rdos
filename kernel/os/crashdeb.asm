@@ -1132,6 +1132,9 @@ nmi_core_loop:
 
 nmi_core_found:
     call SaveCore
+    mov gs:cs_fault,-1
+    mov gs:cs_irq,0
+;    
     mov eax,[bp].nmi_ebp
     mov gs:cs_ebp,eax
     mov eax,[bp].nmi_ebx
@@ -1300,7 +1303,7 @@ SaveCore Proc near
     str gs:cs_tr
     sgdt fword ptr gs:cs_gdtr
     sidt fword ptr gs:cs_idtr
-;        
+;
     pop eax
     ret
 SaveCore Endp
@@ -1333,6 +1336,8 @@ add_debug_core  Proc far
 ;
     GetProcessor
     mov gs:cs_proc_sel,fs    
+    mov gs:cs_fault,-1
+    mov gs:cs_irq,0
 ;
     call SaveCore
 ;
@@ -1543,6 +1548,7 @@ crash_gate:
 crash_do:
     call SetupFaultHandlers
     DisableAllIrq    
+    push eax
 ;
     sti
     GetProcessor
@@ -1561,6 +1567,10 @@ crash_core_loop:
     jmp crash_core_loop    
 
 crash_core_found:
+    pop eax
+    mov gs:cs_irq,eax
+    mov gs:cs_fault,-1
+;    
     pop bx
     pop eax
     pop fs
@@ -1586,6 +1596,7 @@ crash_core_found:
 ;           DESCRIPTION:    Crash with a fault stack
 ;
 ;           PARAMETERS:     SS:BP       Fault context
+;                           EAX         Fault ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1596,6 +1607,7 @@ crash_fault:
     push gs
 ;
     push fs
+    push eax
 ;    
     mov ax,wd_code_sel
     verr ax
@@ -1606,6 +1618,7 @@ crash_fault:
 crash_fault_do:
     call SetupFaultHandlers
     DisableAllIrq    
+    push eax
     sti
 ;    
     GetProcessor
@@ -1624,6 +1637,11 @@ crash_fault_core_loop:
     jmp crash_fault_core_loop    
 
 crash_fault_core_found:
+    pop eax
+    mov gs:cs_irq,eax
+    pop eax
+    mov gs:cs_fault,eax
+;    
     pop fs
     call SaveCore
 ;
@@ -1718,6 +1736,7 @@ crash_tss:
 crash_tss_do:
     call SetupFaultHandlers
     DisableAllIrq    
+    push eax
 ;
     sti    
     GetProcessor
@@ -1802,6 +1821,10 @@ crash_tss_core_found:
 ;
     mov ax,ds:tss_ldt
     mov gs:cs_ldt,ax
+;
+    mov gs:cs_fault,8
+    pop eax
+    mov gs:cs_irq,eax    
 ;
     mov eax,dword ptr ds:tss_eflags
     mov gs:cs_eflags,eax

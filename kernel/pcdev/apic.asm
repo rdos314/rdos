@@ -118,6 +118,7 @@ mp_startup_proc     DW ?
 mp_int_proc         DW ?
 mp_eoi_proc         DW ?
 mp_stop_proc        DW ?
+mp_isr_proc         DW ?
 
 mp_thread           DW ?
 
@@ -1203,6 +1204,38 @@ StopApicTimerMsr    Proc near
     ret
 StopApicTimerMsr  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetIsr
+;
+;       DESCRIPTION:    Get ISR
+;
+;       RETURNS:        EAX     ISR
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetIsrMem    Proc near
+    push ds
+;
+    mov ax,apic_mem_sel
+    mov ds,ax
+    mov eax,ds:APIC_ISR + 20h
+;
+    pop ds
+    ret
+GetIsrMem  Endp
+
+GetIsrMsr    Proc near
+    push ecx
+;
+    mov ecx,MSR_APIC_ISR + 2
+    rdmsr
+;
+    pop ecx
+    ret
+GetIsrMsr  Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1423,6 +1456,7 @@ smemgLint1Ok:
     mov ds:mp_int_proc, OFFSET SendIntMem
     mov ds:mp_eoi_proc, OFFSET SendEoiMem
     mov ds:mp_stop_proc, OFFSET StopApicTimerMem
+    mov ds:mp_isr_proc, OFFSET GetIsrMem
 ;
     mov ax,cs
     mov ds,ax
@@ -1648,6 +1682,7 @@ smsrgLint1Ok:
     mov ds:mp_int_proc, OFFSET SendIntMsr
     mov ds:mp_eoi_proc, OFFSET SendEoiMsr
     mov ds:mp_stop_proc, OFFSET StopApicTimerMsr
+    mov ds:mp_isr_proc, OFFSET GetIsrMsr
 ;
     mov ax,cs
     mov ds,ax
@@ -2160,7 +2195,7 @@ disable_irq Endp
 ;
 ;               description:    Disable all IRQs in APIC controller
 ;
-;               PARAMETERS:             AL                      irq nr
+;               RETURNS:        EAX     Active IRQs
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2168,7 +2203,6 @@ disable_all_irq_name    DB 'Disable All IRQs', 0
 
 disable_all_irq  Proc far
     push ds
-    push eax
     push bx
     push cx
 ; 
@@ -2194,9 +2228,13 @@ daiLoop:
     inc bl
     loop daiLoop
 ;
+    call InitApic
+    mov bx,SEG data
+    mov ds,bx
+    call ds:mp_isr_proc
+;
     pop cx
     pop bx
-    pop eax
     pop ds
     ret
 disable_all_irq Endp

@@ -3824,6 +3824,7 @@ debug_exception:
     jc debug_normal
 
 debug_fault:
+    movzx eax,al
     CrashFault
    
 debug_normal:       
