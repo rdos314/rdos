@@ -1387,7 +1387,6 @@ crash_first:
     mov ds:curr_core,gs
     mov ds:debug_core,gs
 ;
-    call SetupFaultHandlers
     call InitCrashShow
     call InitCrashKeyboardIrq
 ;
@@ -1429,7 +1428,6 @@ start_do:
     jmp handle_func
 
 handle_loop:
-    hlt
     call GetCrashKey
     jc handle_next
 ;    
@@ -1535,7 +1533,7 @@ crash_gate:
 ;
     push ds
     push fs
-    push ax
+    push eax
     push bx
 ;    
     mov ax,wd_code_sel
@@ -1545,7 +1543,10 @@ crash_gate:
     CpuReset
 
 crash_do:
+    call SetupFaultHandlers
     DisableAllIrq    
+;
+    sti
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI
     mov ax,fs
@@ -1563,7 +1564,7 @@ crash_core_loop:
 
 crash_core_found:
     pop bx
-    pop ax
+    pop eax
     pop fs
     pop ds
     call SaveCore
@@ -1605,7 +1606,10 @@ crash_fault:
     CpuReset
 
 crash_fault_do:
+    call SetupFaultHandlers
     DisableAllIrq    
+    sti
+;    
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI
     mov ax,fs
@@ -1714,7 +1718,10 @@ crash_tss:
     CpuReset
 
 crash_tss_do:
+    call SetupFaultHandlers
     DisableAllIrq    
+;
+    sti    
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI
     mov ax,fs

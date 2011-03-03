@@ -136,9 +136,6 @@ esc_scan        PROC near
     cmp cx,alt_pressed OR ctrl_pressed
     jne simple_scan
 ;
-    mov al,61h
-    out INT0_CONTROL,al
-;
     CrashGate
     ret
 esc_scan        Endp

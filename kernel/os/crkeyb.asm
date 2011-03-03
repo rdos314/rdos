@@ -1056,8 +1056,9 @@ keyb_int_loop:
     test al,1
     jz keyb_int_done
 ;
-    test al,20h
-    jz keyb_int_keyboard
+;    test al,20h
+;    jz keyb_int_keyboard
+    jmp keyb_int_keyboard
 
 keyb_int_mouse:
     in al,60h
@@ -1284,6 +1285,7 @@ UpdateCrashKeyboardMode      ENDP
 GetCrashKey      PROC near
     push ds
 ;    
+    int 41h
     mov ax,SEG data
     mov ds,ax
     mov ah,ds:scan_code

@@ -1107,6 +1107,7 @@ IsIrqFree	MACRO
 	OsGate is_irq_free_nr
 					ENDM
 
+; OUT EAX         Active IRQ lines
 DisableAllIrq	MACRO
 	OsGate disable_all_irq_nr
 					ENDM
