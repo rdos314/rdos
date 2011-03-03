@@ -40,7 +40,7 @@ thread_tss_offs		EQU 400h
 ;
 thread_size			EQU 800h
 
-stack0_size			EQU 200h
+stack0_size			EQU 1000h
 
 
 ;

@@ -3960,7 +3960,7 @@ double_fault:
     call ds:try_lock_proc
     jc double_fault_lock_ok
 ;    
-    CrashGate
+    CrashTss
     
 double_fault_lock_ok:    
     mov ss,fs:ps_ss
@@ -3975,27 +3975,6 @@ double_fault_lock_ok:
     jz double_block
 
 double_fatal_no_thread:
-    mov ax,double_tss_data_sel
-    mov ds,ax
-    mov bx,ds:tss_back_link
-;
-    mov ax,gdt_sel
-    mov ds,ax
-    and bx,0FFF8h
-    xor ecx,ecx
-    mov cl,[bx+6]
-    and cl,0Fh
-    shl ecx,16
-    mov cx,[bx]
-    inc ecx
-    mov edx,[bx+2]
-    rol edx,8
-    mov dl,[bx+7]
-    ror edx,8
-;       
-    AllocateGdt
-    CreateDataSelector16
-    mov ds,bx
     CrashTss
     
 double_block:

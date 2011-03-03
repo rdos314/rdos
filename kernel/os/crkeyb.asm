@@ -1034,128 +1034,18 @@ DecodeScanCode    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       KeyboardInt
+;       NAME:       InitKeyboard
 ;
-;       DESCRIPTION:    Keyboard int
-;
-;       PARAMETERS:     
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-KeyboardInt:
-    push ds
-    push es
-    pushad
-;
-    cld
-    mov ax,SEG data
-    mov ds,ax
-
-keyb_int_loop:
-    in al,64h
-    test al,1
-    jz keyb_int_done
-;
-;    test al,20h
-;    jz keyb_int_keyboard
-    jmp keyb_int_keyboard
-
-keyb_int_mouse:
-    in al,60h
-    jmp keyb_int_loop
-
-keyb_int_keyboard:
-    in al,60h
-    or al,al
-    je keyb_int_loop
-;
-    test ds:status,status_key_req
-    jz keyb_int_not_resend
-;
-    cmp al,0FAh
-    jnz keyb_int_not_ack
-;
-    mov al,ds:status
-    or al,status_key_ack
-    and al,NOT status_key_req
-    mov ds:status,al
-    jmp keyb_int_loop
-
-keyb_int_not_ack:
-    cmp al,0FEh
-    jnz keyb_int_not_resend
-;
-    mov al,ds:command
-    out 60h,al
-    jmp keyb_int_loop
-
-keyb_int_not_resend:
-    cmp al,0FFh
-    je keyb_int_loop
-;
-    cmp al,0E0h
-    jnz keyb_int_not_numpad
-;
-    push ax
-    mov ax,ds:shift_states
-    or ax,ext_numpad_active
-    and ax, NOT ext_numpad_handled
-    mov ds:shift_states,ax
-    pop ax
-    jmp keyb_int_loop       
-
-keyb_int_not_numpad:
-    push ax
-    mov ax,ds:shift_states
-    mov cx,ax
-    pop ax
-    test cx,ext_numpad_active
-    jz keyb_int_numpad_handled
-;
-    test cx, ext_numpad_handled
-    jz keyb_int_numpad_mark_handled
-;
-    and cx, NOT ext_numpad_active
-    mov ds:shift_states,cx
-    jmp keyb_int_numpad_handled
-
-keyb_int_numpad_mark_handled:
-    or cx, ext_numpad_handled
-    mov ds:shift_states,cx
-
-keyb_int_numpad_handled:
-    movzx bx,al
-    add bx,bx
-    call word ptr cs:[bx].handle_scan_code_tab
-    jc keyb_int_done
-;
-    call DecodeScanCode
-
-keyb_int_done:
-    mov al,1
-    SendEoi
-;
-    popad
-    pop es
-    pop ds    
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       InitKeyboardIrq
-;
-;       DESCRIPTION:    Init keyboard IRQ
+;       DESCRIPTION:    Init keyboard
 ;
 ;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public InitCrashKeyboardIrq
+    public InitCrashKeyboard
     
-InitCrashKeyboardIrq Proc near
+InitCrashKeyboard Proc near
     push ds
-    push esi
 ;
     mov ax,SEG data
     mov ds,ax
@@ -1165,28 +1055,9 @@ InitCrashKeyboardIrq Proc near
     mov ds:c_vk_code,0
     mov ds:scan_code,0
 ;
-    mov ax,cs
-    mov ds,ax
-    mov esi,OFFSET KeyboardInt
-    mov al,41h
-    xor bl,bl
-    CreateIntGateSelector
-;    
-    mov ax,irq_sys_sel
-    mov ds,ax
-    mov si,OFFSET irq_arr + SIZE irq_struc
-;    EnterSection ds:[si].usage_section
-    mov word ptr ds:[si].user_data,0
-    mov dword ptr ds:[si].user_handler,0
-;
-    mov al,1
-    call ds:[si].irq_enable_proc
-    int 41h
-;
-    pop esi
     pop ds
     ret
-InitCrashKeyboardIrq Endp
+InitCrashKeyboard Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1283,8 +1154,6 @@ crash_key_done:
     pop ds
     ret
 UpdateKeyboard  Endp
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

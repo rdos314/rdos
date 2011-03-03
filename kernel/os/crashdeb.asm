@@ -64,7 +64,7 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
-    extrn InitCrashKeyboardIrq:near
+    extrn InitCrashKeyboard:near
     extrn GetCrashKey:near
 
     extrn InitCrashShow:near
@@ -1387,7 +1387,7 @@ crash_first:
     mov ds:debug_core,gs
 ;
     call InitCrashShow
-    call InitCrashKeyboardIrq
+    call InitCrashKeyboard
 ;
     mov ax,SEG data
     mov ds,ax
@@ -1723,7 +1723,6 @@ crash_tss_do:
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI
     mov ax,fs
-    push ds
     mov bx,SEG data    
     mov ds,bx
     mov bx,ds:core_list
@@ -1737,7 +1736,28 @@ crash_tss_core_loop:
     jmp crash_tss_core_loop    
 
 crash_tss_core_found:
-    pop ds
+    mov ax,double_tss_data_sel
+    mov ds,ax
+    mov bx,ds:tss_back_link
+    mov gs:cs_tr,bx
+;
+    mov ax,gdt_sel
+    mov ds,ax
+    and bx,0FFF8h
+    xor ecx,ecx
+    mov cl,[bx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[bx]
+    inc ecx
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
+;       
+    AllocateGdt
+    CreateDataSelector16
+    mov ds,bx
     mov eax,dword ptr ds:tss_eax
     mov gs:cs_eax,eax
 ;    
@@ -1780,6 +1800,9 @@ crash_tss_core_found:
     mov ax,ds:tss_gs    
     mov gs:cs_gs,ax    
 ;
+    mov ax,ds:tss_ldt
+    mov gs:cs_ldt,ax
+;
     mov eax,dword ptr ds:tss_eflags
     mov gs:cs_eflags,eax
 ;
@@ -1803,8 +1826,6 @@ crash_tss_core_found:
     mov eax,dr7
     mov gs:cs_dr7,eax
 ;
-    sldt gs:cs_ldt
-    str gs:cs_tr
     sgdt fword ptr gs:cs_gdtr
     sidt fword ptr gs:cs_idtr
     jmp CrashHandler
