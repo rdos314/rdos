@@ -32,199 +32,223 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 
 gate_entry      STRUC
-gate_offset                     DD ?
-gate_sel                        DW ?
-gate_name_offset        DD ?
-gate_name_sel           DW ?
-gate_flags          DW ?
+gate_offset             DD ?
+gate_sel            DW ?
+gate_name_offset    DD ?
+gate_name_sel       DW ?
+gate_flags      DW ?
 gate_entry      ENDS
 
 code    SEGMENT byte public 'CODE'
 
-        .386p
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
 
-        extrn get_selector_base_size:near
-        extrn create_data_sel16:near
-        extrn create_call_gate_sel16:near
-        extrn create_int_gate_sel:near
-        extrn create_tss_sel:near
+    extrn get_selector_base_size:near
+    extrn create_data_sel16:near
+    extrn create_call_gate_sel16:near
+    extrn create_int_gate_sel:near
+    extrn create_tss_sel:near
 
-        extrn allocate_fixed_system_mem:near
+    extrn allocate_fixed_system_mem:near
 
-        assume cs:code
+    assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   INIT_OSGATE
+;           NAME:           INIT_OSGATE
 ;
-;               DESCRIPTION:    Init module
+;           DESCRIPTION:    Init module
 ;
-;                                               
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_osgate
+    public init_osgate
 
 init_osgate     PROC near
-        push ds
-        push es
-        pusha
+    push ds
+    push es
+    pusha
 ;
-        mov ax,cs
-        mov ds,ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:osgate_spinlock,0
+;    
+    mov ax,cs
+    mov ds,ax
 ;       mov si,OFFSET register_gate
 ;       mov bx,os_begin_sel
 ;       xor cl,cl
 ;       push cs
 ;       call create_call_gate_sel16
 ;
-        mov bx,osgate_sel
-        mov eax,osgate_entries SHL 4
-        push cs
-        call allocate_fixed_system_mem
-        mov cx,osgate_entries SHL 4
-        xor al,al
-        xor di,di
-        rep stosb
-        xor di,di
-        mov es:[di].gate_offset,OFFSET register_gate
-        mov es:[di].gate_sel,cs
-        mov es:[di].gate_name_offset,OFFSET register_gate_name
-        mov es:[di].gate_name_sel,cs
-        mov cx,osgate_entries-1
-        mov di,16
+    mov bx,osgate_sel
+    mov eax,osgate_entries SHL 4
+    push cs
+    call allocate_fixed_system_mem
+    mov cx,osgate_entries SHL 4
+    xor al,al
+    xor di,di
+    rep stosb
+    xor di,di
+    mov es:[di].gate_offset,OFFSET register_gate
+    mov es:[di].gate_sel,cs
+    mov es:[di].gate_name_offset,OFFSET register_gate_name
+    mov es:[di].gate_name_sel,cs
+    mov cx,osgate_entries-1
+    mov di,16
 init_osgate_loop:
-        mov es:[di].gate_sel,0
-        mov es:[di].gate_offset,0
-        mov es:[di].gate_name_offset,OFFSET illegal_gate_name
-        mov es:[di].gate_name_sel,cs
-        mov es:[di].gate_flags,0
-        add di,16
-        loop init_osgate_loop
+    mov es:[di].gate_sel,0
+    mov es:[di].gate_offset,0
+    mov es:[di].gate_name_offset,OFFSET illegal_gate_name
+    mov es:[di].gate_name_sel,cs
+    mov es:[di].gate_flags,0
+    add di,16
+    loop init_osgate_loop
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov esi,OFFSET is_valid_osgate
-        mov edi,OFFSET is_valid_osgate_name
-        mov ax,is_valid_osgate_nr
-        xor cl,cl
-        RegisterOsGate
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET is_valid_osgate
+    mov edi,OFFSET is_valid_osgate_name
+    mov ax,is_valid_osgate_nr
+    xor cl,cl
+    RegisterOsGate
 ;
-        popa
-        pop es
-        pop ds
-        ret
+    popa
+    pop es
+    pop ds
+    ret
 init_osgate     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   REGISTER_GATE
+;           NAME:           REGISTER_GATE
 ;
-;               DESCRIPTION:    Register an OS gate
+;           DESCRIPTION:    Register an OS gate
 ;
-;               PARAMETERS:             AX              GATE NUMBER
-;                                               CL              NUMBER OF 16-BIT PARAMETERS
-;                                               DS:ESI  GATE CALL ADDRESS
-;                                               ES:EDI  GATE NAME ADDRESS
-;                                               
+;           PARAMETERS:         AX          GATE NUMBER
+;                           CL          NUMBER OF 16-BIT PARAMETERS
+;                           DS:ESI  GATE CALL ADDRESS
+;                           ES:EDI  GATE NAME ADDRESS
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 illegal_gate_name       DB 'Undefined Gate',0
 
 illegal_gate    PROC far
-        mov ax,1231h
-        mov es,ax
-        int 3
-        ret
+    mov ax,1231h
+    mov es,ax
+    int 3
+    ret
 illegal_gate    ENDP
 
 register_gate_name      DB 'Register Kernel Gate',0
 
 register_gate   PROC far
-        push ds
-        push fs
-        push gs
-        push bx
+    push ds
+    push fs
+    push gs
+    push bx
 ;
-        push ds
-        mov bx,ax
-        mov ax,osgate_sel
-        mov ds,ax
-        pop ax
-        shl bx,4
-        mov [bx].gate_sel,ax
-        mov [bx].gate_offset,esi
-        mov [bx].gate_name_sel,es
-        mov [bx].gate_name_offset,edi
+    push ds
+    mov bx,ax
+    mov ax,osgate_sel
+    mov ds,ax
+    pop ax
+    shl bx,4
+    mov [bx].gate_sel,ax
+    mov [bx].gate_offset,esi
+    mov [bx].gate_name_sel,es
+    mov [bx].gate_name_offset,edi
 ;
-        pop bx
-        pop gs
-        pop fs
-        pop ds
-        ret
+    pop bx
+    pop gs
+    pop fs
+    pop ds
+    ret
 register_gate   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   IS_VALID_OSGATE
+;           NAME:           IS_VALID_OSGATE
 ;
-;               DESCRIPTION:    Check if a gate number is registered
+;           DESCRIPTION:    Check if a gate number is registered
 ;
-;               PARAMETERS:             AX              GATE NUMBER
-;                                               
+;           PARAMETERS:         AX          GATE NUMBER
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_valid_osgate_name    DB 'Is Valid Kernel Gate',0
 
 is_valid_osgate PROC far
-        push ds
-        push ax
-        push bx
+    push ds
+    push ax
+    push bx
 ;
-        mov bx,ax
-        mov ax,osgate_sel
-        mov ds,ax
-        shl bx,4
-        mov ax,[bx].gate_sel
-        or ax,ax
-        clc
-        jnz is_valid_gate_done
+    mov bx,ax
+    mov ax,osgate_sel
+    mov ds,ax
+    shl bx,4
+    mov ax,[bx].gate_sel
+    or ax,ax
+    clc
+    jnz is_valid_gate_done
 ;
-        stc
+    stc
 
 is_valid_gate_done:
-        pop bx
-        pop ax
-        pop ds
-        ret
+    pop bx
+    pop ax
+    pop ds
+    ret
 is_valid_osgate ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DO_OSCALL16
+;           NAME:           DO_OSCALL16
 ;
-;               DESCRIPTION:    Translate a 16-bit gate
+;           DESCRIPTION:    Translate a 16-bit gate
 ;
-;               PARAMETERS:             DS:EBX          Fault address
-;                                               
+;           PARAMETERS:         DS:EBX      Fault address
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public do_oscall16
+    public do_oscall16
 
 do_oscall16     PROC near
-        push es
-        push ecx
-        push edx
-        push di
+    push es
+    push ecx
+    push edx
+    push di
 ;
+    mov ax,system_data_sel
+    mov es,ax
+    pushf
+    cli
+
+do16_lock_loop:
+    mov ax,1
+    xchg ax,es:osgate_spinlock
+    or ax,ax
+    jz do16_locked
+;
+    pause
+    jmp do16_lock_loop
+
+do16_locked: 
     mov al,ds:[ebx]
     cmp al,66h
     je do16_has_ov
@@ -236,67 +260,72 @@ do16_has_ov:
     mov di,ds:[ebx+2]
 
 do16_ov_done:    
-        shl di,4
-        mov ax,osgate_sel
-        mov es,ax
+    shl di,4
+    mov ax,osgate_sel
+    mov es,ax
 ;
-        push ebx
-        mov bx,ds
-        push cs
-        call get_selector_base_size
-        pop ebx
-        add     ebx,edx
-        mov ax,flat_sel
-        mov ds,ax
+    push ebx
+    mov bx,ds
+    push cs
+    call get_selector_base_size
+    pop ebx
+    add     ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
 ;
-        mov ax,[bp].vm_eflags
-        mov [bp+12],ax
-        mov ax,[bp].vm_cs
-        mov [bp+16],ax
-        mov ax,[bp].vm_eip
-        add ax,8
-        mov [bp+14],ax  
+    mov ax,[bp].vm_eflags
+    mov [bp+12],ax
+    mov ax,[bp].vm_cs
+    mov [bp+16],ax
+    mov ax,[bp].vm_eip
+    add ax,8
+    mov [bp+14],ax  
 ;
-        mov ax,es:[di].gate_sel
-        cmp ax,[bp+16]
-        je do16_direct
+    mov ax,es:[di].gate_sel
+    cmp ax,[bp+16]
+    je do16_direct
 ;
-        mov ds:[ebx+3],ax
-        mov [bp+10],ax
-        mov eax,es:[di].gate_offset
-        mov ds:[ebx+1],ax
-        mov [bp+8],ax
-        mov byte ptr ds:[ebx],9Ah
-        mov byte ptr ds:[ebx+5],90h
-        mov word ptr ds:[ebx+6],9090h
-        jmp do16_direct_do
+    mov ds:[ebx+3],ax
+    mov [bp+10],ax
+    mov eax,es:[di].gate_offset
+    mov ds:[ebx+1],ax
+    mov [bp+8],ax
+    mov byte ptr ds:[ebx],9Ah
+    mov byte ptr ds:[ebx+5],90h
+    mov word ptr ds:[ebx+6],9090h
+    jmp do16_direct_do
 
 do16_direct:
-        mov [bp+10],ax
-        mov eax,es:[di].gate_offset
-        mov [bp+8],ax
-        sub ax,[bp+14]
-        add ax,4
-        mov ds:[ebx+2],ax
-        mov word ptr ds:[ebx],0E80Eh
-        mov dword ptr ds:[ebx+4],90909090h
+    mov [bp+10],ax
+    mov eax,es:[di].gate_offset
+    mov [bp+8],ax
+    sub ax,[bp+14]
+    add ax,4
+    mov ds:[ebx+2],ax
+    mov word ptr ds:[ebx],0E80Eh
+    mov dword ptr ds:[ebx+4],90909090h
 
 do16_direct_do:
-        pop di
-        pop edx
-        pop ecx
-        pop es
+    mov ax,system_data_sel
+    mov es,ax
+    mov es:osgate_spinlock,0
+    popf
 ;
-        mov ds,[bp].pm_ds
-        mov eax,[bp].vm_eax
-        mov ebx,[bp].vm_ebx
-        mov sp,bp
-        pop bp
-        add sp,6
-        iret
+    pop di
+    pop edx
+    pop ecx
+    pop es
+;
+    mov ds,[bp].pm_ds
+    mov eax,[bp].vm_eax
+    mov ebx,[bp].vm_ebx
+    mov sp,bp
+    pop bp
+    add sp,6
+    iret
 do_oscall16     ENDP
 
 code    ENDS
 
-        END
+    END
 

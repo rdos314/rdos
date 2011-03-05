@@ -147,6 +147,9 @@ apic_rest           DW ?
 ; ECX   Pages
 tlb_flush_proc      DD ?
 
+osgate_spinlock     DW ?
+usergate_spinlock   DW ?
+
 system_size			DB ?
 
 system_seg	ENDS
