@@ -49,7 +49,12 @@ gate_entry      ENDS
 
 code    SEGMENT byte public 'CODE'
 
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
     .386p
+ENDIF
 
     extrn get_selector_base_size:near
     extrn create_data_sel16:near
@@ -83,6 +88,10 @@ init_usergate   PROC near
     push es
     pusha
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:usergate_spinlock,0
+;    
     mov bx,usergate_sel
     mov eax,usergate_entries SHL 5
     push cs
@@ -635,6 +644,21 @@ do_usercall16   PROC near
     push edx
     push edi
 ;
+    mov ax,system_data_sel
+    mov es,ax
+    pushf
+    cli
+
+do_call16_lock_loop:
+    mov ax,1
+    xchg ax,es:usergate_spinlock
+    or ax,ax
+    jz do_call16_locked
+;
+    pause
+    jmp do_call16_lock_loop
+
+do_call16_locked:     
     mov edi,ds:[ebx+2]
     shl edi,5
     mov ax,usergate_sel
@@ -686,6 +710,11 @@ do_call16_direct_cs16:
     mov word ptr ds:[ebx+6],9090h
 
 do_call16_direct_do16:
+    mov ax,system_data_sel
+    mov es,ax
+    mov es:usergate_spinlock,0
+    popf
+;    
     pop edi
     pop edx
     pop ecx
@@ -729,6 +758,11 @@ do_call16_direct_cs32:
     mov dword ptr ds:[ebx],0E8660E66h
 
 do_call16_direct_do32:
+    mov ax,system_data_sel
+    mov es,ax
+    mov es:usergate_spinlock,0
+    popf
+;    
     pop edi
     pop edx
     pop ecx
@@ -748,6 +782,21 @@ do_usercall16_gate:
     push edx
     push edi
 ;
+    mov ax,system_data_sel
+    mov es,ax
+    pushf
+    cli
+
+do16_lock_loop:
+    mov ax,1
+    xchg ax,es:usergate_spinlock
+    or ax,ax
+    jz do16_locked
+;
+    pause
+    jmp do16_lock_loop
+
+do16_locked:     
     mov edi,ds:[ebx+2]
     shl edi,5
     mov ax,usergate_sel
@@ -812,6 +861,11 @@ do16_call_defined:
     mov ds:[ebx+3],ax
     mov byte ptr ds:[ebx+5],90h
     mov word ptr ds:[ebx+6],9090h
+;
+    mov ax,system_data_sel
+    mov es,ax
+    mov es:usergate_spinlock,0
+    popf
 ;
     pop edi
     pop edx
