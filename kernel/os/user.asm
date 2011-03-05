@@ -899,6 +899,21 @@ do_usercall32   PROC near
     push edx
     push edi
 ;
+    mov ax,system_data_sel
+    mov es,ax
+    pushf
+    cli
+
+do_call32_lock_loop:
+    mov ax,1
+    xchg ax,es:usergate_spinlock
+    or ax,ax
+    jz do_call32_locked
+;
+    pause
+    jmp do_call32_lock_loop
+
+do_call32_locked:     
     mov al,ds:[ebx]
     cmp al,66h
     jne do_kernel_no_ov32
@@ -978,6 +993,11 @@ do_call32_direct32:
     mov byte ptr ds:[ebx+6],90h
 
 do_call32_direct_do32:
+    mov ax,system_data_sel
+    mov es,ax
+    mov es:usergate_spinlock,0
+    popf
+;
     pop edi
     pop edx
     pop ecx
@@ -997,6 +1017,21 @@ do_usercall32_gate:
     push edx
     push edi
 ;
+    mov ax,system_data_sel
+    mov es,ax
+    pushf
+    cli
+
+do32_lock_loop:
+    mov ax,1
+    xchg ax,es:usergate_spinlock
+    or ax,ax
+    jz do32_locked
+;
+    pause
+    jmp do32_lock_loop
+
+do32_locked:     
     mov al,ds:[ebx]
     cmp al,66h
     jne do_no_ov32
@@ -1055,6 +1090,11 @@ do32_gate16:
     mov ds:[ebx+6],ax
 
 do32_done:
+    mov ax,system_data_sel
+    mov es,ax
+    mov es:usergate_spinlock,0
+    popf
+;
     pop edi
     pop edx
     pop ecx
