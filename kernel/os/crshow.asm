@@ -563,11 +563,7 @@ proc_tab    DB 'Processor=',0
 WriteCore   PROC near
     mov di,OFFSET proc_tab
     call ShowAsciiz
-    mov ax,gs:cs_proc_sel
-    push es
-    mov es,ax
-    mov ax,es:ps_id  
-    pop es  
+    mov ax,gs:ps_id
     call WriteHexWord
 ;
     mov al,' '
@@ -575,7 +571,7 @@ WriteCore   PROC near
     mov al,'('
     call ShowChar
 ;
-    mov ax,gs:cs_proc_sel
+    mov ax,gs
     call WriteHexWord
 ;
     mov al,')'

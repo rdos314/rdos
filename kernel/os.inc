@@ -639,6 +639,12 @@ GetProcessor    MACRO
 	OsGate get_processor_nr
 						ENDM
 
+;   IN  AX      Processor #
+;   OUT FS      Processor selector
+GetProcessorNumber    MACRO
+	OsGate get_processor_num_nr
+						ENDM
+
 ;   IN  FS      Processor selector
 ResumeProcessor    MACRO
 	OsGate resume_processor_nr

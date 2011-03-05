@@ -816,6 +816,12 @@ proc_init:
     mov ax,get_processor_nr
     RegisterOsGate
 ;
+    mov si,OFFSET get_processor_num
+    mov di,OFFSET get_processor_num_name
+    xor cl,cl
+    mov ax,get_processor_num_nr
+    RegisterOsGate
+;
     mov si,OFFSET start_processor
     mov di,OFFSET start_processor_name
     xor cl,cl
@@ -4123,6 +4129,51 @@ get_processor   Proc far
     pop ds
     ret
 get_processor   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetProcessorNumber
+;
+;       DESCRIPTION:    Get processor selector for specified processor #
+;
+;       PARAMETERS:     AX      Processor #
+;
+;       RETURNS:        FS      Processor sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_processor_num_name      DB 'Get Processor Number',0
+
+get_processor_num   Proc far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,task_sel
+    mov ds,bx
+    cmp ax,ds:processor_count
+    jae gpnFail
+;
+    mov bx,ax
+    add bx,bx
+    mov ax,ds:[bx].processor_arr
+    mov fs,ax
+    clc
+    jmp gpnDone
+
+gpnFail:
+    xor ax,ax
+    mov fs,ax
+    stc
+
+gpnDone:
+    pop bx
+    pop ax
+    pop ds
+    ret
+get_processor_num   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

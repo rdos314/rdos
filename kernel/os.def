@@ -416,6 +416,8 @@ start_ap_cores_nr           = 361
 
 create_processor_nr         = 362
 
+get_processor_num_nr        = 363
+
 locked_debug_exception_nr   = 364
 
 lock_task_nr                = 365

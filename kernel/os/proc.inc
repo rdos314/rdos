@@ -68,10 +68,6 @@ ps_timer_head		DW ?
 ps_timer_free		DW ?
 ps_timer_entries    DB 256 * SIZE timer_struc DUP(?)
 
-cs_next             DW ?
-
-cs_proc_sel         DW ?
-
 cs_irq              DD ?
 cs_fault            DD ?
 

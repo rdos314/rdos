@@ -39,8 +39,7 @@ INCLUDE proc.inc
 
 data    SEGMENT byte public 'DATA'
 
-core_list       DW ?
-curr_core       DW ?
+curr_num        DW ?
 
 debug_core      DW ?
 debug_active    DW ?
@@ -1123,19 +1122,8 @@ nmi_handler:
 ;
     or fs:ps_flags,PS_FLAG_NMI    
     mov ax,fs
-    mov bx,SEG data    
-    mov fs,bx
-    mov bx,fs:core_list
-
-nmi_core_loop:
-    mov gs,bx
-    cmp ax,gs:cs_proc_sel
-    je nmi_core_found
-;
-    mov bx,gs:cs_next
-    jmp nmi_core_loop    
-
-nmi_core_found:
+    mov gs,ax
+;    
     call SaveCore
     mov gs:cs_fault,-1
     mov gs:cs_irq,0
@@ -1333,19 +1321,6 @@ add_debug_core  Proc far
     push gs
     pushad
 ;
-    mov ax,SEG data
-    mov ds,ax
-
-add_core_lock_loop:
-    mov ax,1
-    xchg ax,ds:spin_lock
-    or ax,ax
-    jz add_core_locked
-;
-    pause    
-    jmp add_core_lock_loop
-
-add_core_locked:    
     GetProcessor
     mov ax,fs
     mov gs,ax
@@ -1353,19 +1328,13 @@ add_core_locked:
     mov gs:cs_usel,flat_sel
     mov gs:cs_uoffs,0
 ;
-    mov gs:cs_proc_sel,fs    
     mov gs:cs_fault,-1
     mov gs:cs_irq,0
 ;
-    call SaveCore
+    call SaveCore    
 ;
     mov ax,SEG data
-    mov es,ax
-    mov ax,es:core_list
-    mov gs:cs_next,ax
-    mov es:core_list,gs
-    mov es:curr_core,gs
-;
+    mov ds,ax
     mov ds:spin_lock,0
 ;    
     popad
@@ -1409,7 +1378,8 @@ crash_locked:
     jmp nmi_block
 
 crash_first:    
-    mov ds:curr_core,gs
+    mov ax,gs:ps_id
+    mov ds:curr_num,ax
     mov ds:debug_core,gs
 ;
     call InitCrashShow
@@ -1424,31 +1394,35 @@ crash_first:
     mov ax,2
     call DelayMs
 ;
-    mov ax,ds:core_list
+    xor ax,ax
 
 start_abort_loop:    
-    or ax,ax
-    jz start_do
+    GetProcessorNumber
+    jc start_do
 ;
-    mov gs,ax
+    mov ax,fs
     cmp ax,ds:debug_core
     je start_abort_next
 ;        
-    mov fs,gs:cs_proc_sel
+    push ax
     SendNmi
 ;
     mov ax,2
     call DelayMs    
+    pop ax
 
 start_abort_next:
-    mov ax,gs:cs_next
+    inc ax
     jmp start_abort_loop
 
 start_do:
     sti
+    mov ax,ds:curr_num
+    GetProcessorNumber
+    mov ax,fs
+    mov gs,ax
     GetProcessor
-;
-    mov gs,ds:core_list
+;    
     mov al,'R'
     jmp handle_func
 
@@ -1477,13 +1451,18 @@ handle_loop:
     cmp al,'N'
     jne handle_func
 ;
-    mov ax,gs:cs_next
-    or ax,ax
-    jnz handle_next_set
+    mov ax,ds:curr_num
+    inc ax
+    GetProcessorNumber
+    jnc handle_next_set
 ;
-    mov ax,ds:core_list
+    xor ax,ax
+    GetProcessorNumber
+        
 
 handle_next_set:
+    mov ds:curr_num,ax
+    mov ax,fs
     mov gs,ax
     xor ax,ax
 
@@ -1854,7 +1833,7 @@ init_crashdeb    PROC near
     mov ax,SEG data
     mov ds,ax
     mov ds:debug_active,0
-    mov ds:core_list,0
+    mov ds:curr_num,0
     mov ds:spin_lock,0
     mov ds:debug_core,0
 ;    
