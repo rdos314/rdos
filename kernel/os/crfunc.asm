@@ -36,7 +36,6 @@ INCLUDE irq.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
 INCLUDE proc.inc
-INCLUDE crashdeb.inc
 
     .386p
 

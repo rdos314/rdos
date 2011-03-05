@@ -68,4 +68,48 @@ ps_timer_head		DW ?
 ps_timer_free		DW ?
 ps_timer_entries    DB 256 * SIZE timer_struc DUP(?)
 
+cs_next             DW ?
+
+cs_proc_sel         DW ?
+
+cs_irq              DD ?
+cs_fault            DD ?
+
+cs_cr0              DD ?
+cs_cr2              DD ?
+cs_cr3              DD ?
+cs_cr4              DD ?
+
+cs_dr0              DD ?
+cs_dr1              DD ?
+cs_dr2              DD ?
+cs_dr3              DD ?
+cs_dr7              DD ?
+
+cs_eip              DD ?
+cs_eflags           DD ?
+cs_eax              DD ?
+cs_ecx              DD ?
+cs_edx              DD ?
+cs_ebx              DD ?
+cs_esp              DD ?
+cs_ebp              DD ?
+cs_esi              DD ?
+cs_edi              DD ?
+
+cs_es               DW ?
+cs_cs               DW ?
+cs_ss               DW ?
+cs_ds               DW ?
+cs_fs               DW ?
+cs_gs               DW ?
+
+cs_ldt              DW ?
+cs_tr               DW ?
+cs_gdtr             DD ?, ?
+cs_idtr             DD ?, ?
+
+cs_usel             DW ?
+cs_uoffs            DD ?
+
 processor_seg   ENDS

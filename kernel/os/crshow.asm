@@ -36,7 +36,6 @@ INCLUDE irq.inc
 INCLUDE proc.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
-INCLUDE crashdeb.inc
 INCLUDE protseg.def
 
 data    SEGMENT byte public 'DATA'

@@ -36,7 +36,6 @@ INCLUDE irq.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE port.def
 INCLUDE proc.inc
-INCLUDE crashdeb.inc
 
 data    SEGMENT byte public 'DATA'
 
@@ -1347,14 +1346,13 @@ add_core_lock_loop:
     jmp add_core_lock_loop
 
 add_core_locked:    
-    mov eax,1000h
-    AllocateGlobalMem
-    mov ax,es
-    mov gs,ax    
+    GetProcessor
+    mov ax,fs
+    mov gs,ax
+;
     mov gs:cs_usel,flat_sel
     mov gs:cs_uoffs,0
 ;
-    GetProcessor
     mov gs:cs_proc_sel,fs    
     mov gs:cs_fault,-1
     mov gs:cs_irq,0
@@ -1577,19 +1575,7 @@ crash_do:
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI
     mov ax,fs
-    mov bx,SEG data    
-    mov ds,bx
-    mov bx,ds:core_list
-
-crash_core_loop:
-    mov gs,bx
-    cmp ax,gs:cs_proc_sel
-    je crash_core_found
-;
-    mov bx,gs:cs_next
-    jmp crash_core_loop    
-
-crash_core_found:
+    mov gs,ax
     pop eax
     mov gs:cs_irq,eax
     mov gs:cs_fault,-1
@@ -1647,22 +1633,7 @@ crash_fault_do:
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI
     mov ax,fs
-    mov bx,SEG data    
-    mov ds,bx
-    mov bx,ds:core_list
-
-crash_fault_core_loop:
-    or bx,bx
-    jz nmi_block
-;    
-    mov gs,bx
-    cmp ax,gs:cs_proc_sel
-    je crash_fault_core_found
-;
-    mov bx,gs:cs_next
-    jmp crash_fault_core_loop    
-
-crash_fault_core_found:
+    mov gs,ax
     pop eax
     mov gs:cs_irq,eax
     pop eax
@@ -1768,19 +1739,8 @@ crash_tss_do:
     GetProcessor
     or fs:ps_flags,PS_FLAG_NMI
     mov ax,fs
-    mov bx,SEG data    
-    mov ds,bx
-    mov bx,ds:core_list
-
-crash_tss_core_loop:
-    mov gs,bx
-    cmp ax,gs:cs_proc_sel
-    je crash_tss_core_found
-;
-    mov bx,gs:cs_next
-    jmp crash_tss_core_loop    
-
-crash_tss_core_found:
+    mov gs,ax
+;    
     mov ax,double_tss_data_sel
     mov ds,ax
     mov bx,ds:tss_back_link
