@@ -1304,50 +1304,6 @@ SaveCore Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddDebugCore
-;
-;           DESCRIPTION:    Add a new debug core
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_debug_core_name     DB 'Add Debug Core', 0
-
-add_debug_core  Proc far
-    push ds
-    push es
-    push fs
-    push gs
-    pushad
-;
-    GetProcessor
-    mov ax,fs
-    mov gs,ax
-;
-    mov gs:cs_usel,flat_sel
-    mov gs:cs_uoffs,0
-;
-    mov gs:cs_fault,-1
-    mov gs:cs_irq,0
-;
-    call SaveCore    
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:spin_lock,0
-;    
-    popad
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    ret
-add_debug_core  Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           CrashHandler
 ;
 ;           DESCRIPTION:    Crash handler
@@ -1400,8 +1356,8 @@ start_abort_loop:
     GetProcessorNumber
     jc start_do
 ;
-    mov ax,fs
-    cmp ax,ds:debug_core
+    mov dx,fs
+    cmp dx,ds:debug_core
     je start_abort_next
 ;        
     push ax
@@ -1859,18 +1815,10 @@ init_crashdeb    PROC near
     mov ax,crash_tss_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET add_debug_core
-    mov edi,OFFSET add_debug_core_name
-    xor cl,cl
-    mov ax,add_debug_core_nr
-    RegisterOsGate
-;
     mov al,2
     xor bl,bl
     mov esi,OFFSET nmi_handler
     CreateIntGateSelector
-;
-    AddDebugCore
 ;
     ret
 init_crashdeb    ENDP

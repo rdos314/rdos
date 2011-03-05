@@ -47,8 +47,7 @@ ipause   MACRO
 
 MP_FLAG_MEM = 1
 MP_FLAG_MSR = 2
-MP_FLAG_PROC = 4
-MP_FLAG_TASK = 8
+MP_FLAG_TASK = 4
 
 
 ; PIC IRQs active low, edge triggered
@@ -405,13 +404,6 @@ ApInit:
     GetApicId
     mov ds:mp_apic,edx
     cli
-
-ap_proc_wait:
-    mov ax,ds:mp_flags
-    test ax,MP_FLAG_PROC
-    jz ap_proc_wait
-;
-    AddDebugCore    
 
 ap_task_wait: 
     mov ax,ds:mp_flags
@@ -3123,10 +3115,6 @@ init_table_next:
     ja init_table_loop
 ;
     call SetupIrq    
-;    
-    mov ax,SEG data
-    mov ds,ax
-    or ds:mp_flags,MP_FLAG_PROC
 ;    
     mov ax,cs
     mov es,ax

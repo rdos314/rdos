@@ -452,8 +452,6 @@ get_pci_irq_nr              = 382
 
 send_eoi_nr                 = 384
 
-add_debug_core_nr           = 385
-
 send_nmi_nr                 = 386
 
 add_printer_nr              = 387

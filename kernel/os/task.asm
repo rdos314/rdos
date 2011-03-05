@@ -4000,6 +4000,15 @@ create_processor    Proc far
     mov eax,SIZE processor_seg
     AllocateSmallGlobalMem
 ;
+    push cx
+    push di
+    mov cx,ax
+    xor di,di
+    xor al,al
+    rep stosb
+    pop di
+    pop cx
+;
     push es
     mov eax,200h    
     AllocateSmallGlobalMem
@@ -4030,6 +4039,11 @@ create_processor    Proc far
     mov es:ps_apic,-1
     mov es:ps_wait,0
     mov es:ps_last_lsb,0
+;    
+    mov es:cs_usel,flat_sel
+    mov es:cs_uoffs,0
+    mov es:cs_fault,-1
+    mov es:cs_irq,0
 ;
     mov bx,OFFSET ps_timer_entries
     mov es:[bx].ps_timer_next,0
