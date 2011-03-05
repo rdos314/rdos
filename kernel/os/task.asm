@@ -3675,7 +3675,13 @@ null_thread0:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
+    mov ax,start_ap_cores_nr
+    IsValidOsGate
+    jc null_ap_ok
 ;
+    StartApCores    
+
+null_ap_ok:    
     push OFFSET null_loop
     call SaveCurrentThread
 ;    

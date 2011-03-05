@@ -412,6 +412,8 @@ leave_int_nr                = 359
 
 debug_exception_nr          = 360
 
+start_ap_cores_nr           = 361
+
 create_processor_nr         = 362
 
 locked_debug_exception_nr   = 364

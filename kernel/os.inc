@@ -948,6 +948,10 @@ AddDebugCore	MACRO
 	OsGate add_debug_core_nr
 					ENDM
 
+StartApCores	MACRO
+	OsGate start_ap_cores_nr
+					ENDM
+
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;
 
 SimSti	MACRO

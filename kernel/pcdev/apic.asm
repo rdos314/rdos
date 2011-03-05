@@ -47,6 +47,7 @@ ipause   MACRO
 
 MP_FLAG_MEM = 1
 MP_FLAG_MSR = 2
+MP_FLAG_TASK = 4
 
 
 ; PIC IRQs active low, edge triggered
@@ -382,7 +383,6 @@ page_struc  ENDS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ApInit:
-
     mov eax,es:ap_cr4
     db 0Fh
     db 22h
@@ -403,25 +403,14 @@ ApInit:
     mov ds:mp_processor_sign,eax
     GetApicId
     mov ds:mp_apic,edx
-;    cmp edx,3
-;    je ap_debug
-;
-    mov ax,5
-    call DelayMs
-;    
-    AddDebugCore    
-
-; comment to start AP cores
-    
-;stopl:
-;   cli
-;   jmp stopl
-
+    cli
 
 ap_wait: 
-    sti
-    hlt
+    mov ax,ds:mp_flags
+    test ax,MP_FLAG_TASK
+    jz ap_wait
 ;    
+    AddDebugCore    
     call InitApic
     StartProcessor
 
@@ -1342,6 +1331,30 @@ get_pci_irq  Proc far
 gpiOk:    
     ret
 get_pci_irq  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartApCores
+;
+;       DESCRIPTION:    Start application cores
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_ap_cores_name    DB 'Start Ap Cores',0
+
+start_ap_cores  Proc far
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    or ds:mp_flags,MP_FLAG_TASK
+;
+    pop ax
+    pop ds
+    ret
+start_ap_cores  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2867,6 +2880,12 @@ init_smp_done:
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET start_ap_cores
+    mov edi,OFFSET start_ap_cores_name
+    xor cl,cl
+    mov ax,start_ap_cores_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET resume_processor
     mov edi,OFFSET resume_processor_name
