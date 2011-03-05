@@ -3074,10 +3074,6 @@ SaveCurrentThread       Proc near
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
 ;    
-    mov ax,ds
-    cmp ax,fs:ps_skip_thread
-    je save_thread_skip
-;    
     mov ds,ds:p_tss_data_sel
     pushfd
     pop dword ptr ds:tss_eflags
@@ -3103,16 +3099,7 @@ SaveCurrentThread       Proc near
     mov dword ptr ds:tss_eip,edx
     mov dword ptr ds:tss_esp,esp
     mov edx,dword ptr ds:tss_edx
-    jmp save_thread_setup
-
-save_thread_skip:
-    pop edx
-    pop eax
-    add sp,4
-    pop bp
-    add sp,2
-
-save_thread_setup:
+;    
     push ax
     mov ax,task_sel
     mov ds,ax
@@ -3161,10 +3148,6 @@ SaveLockedThread    Proc near
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0
-;    
-    mov ax,fs:ps_curr_thread
-    cmp ax,fs:ps_skip_thread
-    je save_locked_thread_skip
 ;
     mov ds,ds:p_tss_data_sel
     pushfd
@@ -3191,16 +3174,7 @@ SaveLockedThread    Proc near
     mov dword ptr ds:tss_eip,edx
     mov dword ptr ds:tss_esp,esp
     mov edx,dword ptr ds:tss_edx
-    jmp save_locked_thread_setup
-
-save_locked_thread_skip:
-    pop edx
-    pop eax
-    add sp,4
-    pop bp
-    add sp,2
-
-save_locked_thread_setup:
+;    
     push ax
     mov ax,task_sel
     mov ds,ax
@@ -3701,7 +3675,6 @@ null_thread0:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
-;    mov fs:ps_skip_thread,ax
 ;
     push OFFSET null_loop
     call SaveCurrentThread
@@ -3720,9 +3693,7 @@ null_thread:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
-;    mov fs:ps_skip_thread,ax
 ;
-    ResumeProcessor
     push OFFSET null_loop
     call SaveCurrentThread
 ;
@@ -4044,7 +4015,6 @@ create_processor    Proc far
     mov es:ps_last_thread,-1
     mov es:ps_flags,0
     mov es:ps_null_thread,0
-    mov es:ps_skip_thread,-1
     mov es:ps_apic,-1
     mov es:ps_wait,0
     mov es:ps_last_lsb,0

@@ -33,6 +33,7 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE irq.inc
+INCLUDE proc.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
 INCLUDE crashdeb.inc
@@ -564,10 +565,91 @@ WriteCore   PROC near
     mov di,OFFSET proc_tab
     call ShowAsciiz
     mov ax,gs:cs_proc_sel
+    push es
+    mov es,ax
+    mov ax,es:ps_id  
+    pop es  
     call WriteHexWord
+;
+    mov al,' '
+    call ShowChar
+    mov al,'('
+    call ShowChar
+;
+    mov ax,gs:cs_proc_sel
+    call WriteHexWord
+;
+    mov al,')'
+    call ShowChar
+    mov al,' '
+    call ShowChar
     ret
 WriteCore   ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteThread
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NoName DB 'No thread                       ', 0
+
+WriteThread   PROC near
+    push es
+    push di
+;    
+    mov bx,gs:cs_tr    
+    and bx,NOT 3
+    or bx,bx
+    jz wtNoThread
+;
+    test bx,4
+    jnz wtNoThread
+;
+    movzx ecx,word ptr gs:cs_gdtr
+    mov edx,dword ptr gs:cs_gdtr+2
+    cmp bx,cx
+    ja wtNoThread
+;
+    mov ax,flat_sel
+    mov es,ax
+    movzx ebx,bx
+    add ebx,edx
+;
+    mov al,es:[ebx+5]
+    test al,80h
+    jz wtNoThread
+;    
+    mov edx,es:[ebx+2]
+    rol edx,8
+    mov dl,es:[ebx+7]
+    ror edx,8
+;
+    mov ax,es:[edx].tss_thread
+    verr ax
+    jnz wtNoThread
+;
+    mov es,ax
+    mov di,OFFSET thread_name
+    mov cx,32
+    call ShowSizeString
+    jmp wtDone
+
+wtNoThread:
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET NoName
+    call ShowAsciiz
+
+wtDone:
+    pop di
+    pop es
+    ret
+WriteThread Endp
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -807,6 +889,11 @@ WriteSelReg   ENDP
 ;           PARAMETERS:         ES:DI       Offset to table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dword_irq_tab:
+    DB ' IRQ='
+    DW OFFSET cs_irq
+    DW 0
 
 dword_cr_reg_tab:
     DB ' CR0='
@@ -1592,9 +1679,12 @@ WriteCpuReg     Proc near
     mov es,ax
 ;
     call WriteCore
+    call WriteThread
     call NewLine    
 ;
     call WriteTable
+    mov di,OFFSET dword_irq_tab
+    call WriteDwordRegs
     call NewLine    
 ;
     mov di,OFFSET dword_cr_reg_tab
