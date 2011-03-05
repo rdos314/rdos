@@ -70,7 +70,12 @@ CheckIt MACRO
 trap_no_stop:
         ENDM
 
-.386p
+IFDEF __WASM__
+    .686p
+    .xmm2
+ELSE
+    .386p
+ENDIF
 
 code    SEGMENT byte use16 public 'CODE'
 
@@ -122,6 +127,67 @@ em_vm:
     call virt_exception
     ret
 emulate ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EnterCodePatch
+;
+;           DESCRIPTION:    Take code-patching spinlock
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public enter_code_patch
+
+enter_code_patch    Proc near
+    push ds
+    push ax
+;
+    mov ax,system_data_sel
+    mov ds,ax
+
+enter_lock_loop:
+    mov ax,1
+    xchg ax,ds:patch_spinlock
+    or ax,ax
+    jz enter_locked
+;
+    pause
+    jmp enter_lock_loop
+
+enter_locked:     
+    pop ax
+    pop ds
+    ret
+enter_code_patch    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LeaveCodePatch
+;
+;           DESCRIPTION:    Release code-patching spinlock
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public leave_code_patch
+
+leave_code_patch    Proc near
+    push ds
+    push ax
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:patch_spinlock,0
+;
+    pop ax
+    pop ds
+    ret
+leave_code_patch    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1138,19 +1204,25 @@ trap_13:
     push ebx
     push ds
 ;
+    call enter_code_patch
+;
     test byte ptr [bp+2].vm_eflags,2
     jnz t13_default
-;
+;    
     mov ds,[bp].vm_cs
     mov ebx,[bp].vm_eip
     mov al,[ebx]
+;
+    cmp al,90h
+    je t13_retry
+;        
     cmp al,9Ah
     jne t13_not32
 ;
     mov ax,[ebx+5]
     cmp ax,8
     jae t13_default
-;    
+;        
     push bx
     mov bx,ax
     add bx,bx
@@ -1159,6 +1231,7 @@ trap_13:
     or ax,ax
     jz t13_default
 ;
+    call leave_code_patch
     push OFFSET t13_check
     push ax
     retn
@@ -1183,16 +1256,24 @@ t13_not32:
     or ax,ax
     jz t13_default
 ;
+    call leave_code_patch
     push OFFSET t13_check
     push ax
     retn
 
 t13_check:    
     jnc t13_end
+;
+    call enter_code_patch
 
 t13_default:
+    call leave_code_patch
     mov al,13
     call emulate
+    jmp t13_end
+
+t13_retry:
+    call leave_code_patch
 
 t13_end:
     pop ds
@@ -1492,12 +1573,18 @@ pretask13:
     push ebx
     push ds
 ;
+    call enter_code_patch
+;    
     test byte ptr [bp+2].vm_eflags,2
     jnz pretask_gpf_default
 ;
     mov ds,[bp].vm_cs
     mov ebx,[bp].vm_eip
     mov al,[ebx]
+;
+    cmp al,90h
+    je pretask_gpf_reexec
+;        
     cmp al,9Ah
     jne pretask_gpf_not32
 ;
@@ -1513,6 +1600,7 @@ pretask13:
     or ax,ax
     jz pretask_gpf_default
 ;
+    call leave_code_patch
     push OFFSET pretask_gpf_check
     push ax
     retn  
@@ -1537,16 +1625,23 @@ pretask_gpf_not32:
     or ax,ax
     jz pretask_gpf_default
 ;
+    call leave_code_patch
     push OFFSET pretask_gpf_check
     push ax
     retn        
 
 pretask_gpf_check:      
     jnc pretask_gpf_retry
+;
+    call enter_code_patch    
 
 pretask_gpf_default:
+    call leave_code_patch
     mov al,13
     ShutDownPreTask
+
+pretask_gpf_reexec:
+    call leave_code_patch
 
 pretask_gpf_retry:
     pop ds

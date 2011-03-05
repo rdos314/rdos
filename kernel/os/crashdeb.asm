@@ -1059,6 +1059,12 @@ SetupFaultHandlers      PROC near
     push ds
     pushad
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:osgate_spinlock,0
+    mov ds:usergate_spinlock,0
+    mov ds:patch_spinlock,0
+;    
     mov ax,cs
     mov ds,ax
     mov di,OFFSET crash_int_tab
@@ -1322,11 +1328,25 @@ SaveCore Endp
 add_debug_core_name     DB 'Add Debug Core', 0
 
 add_debug_core  Proc far
+    push ds
     push es
     push fs
     push gs
     pushad
-;    
+;
+    mov ax,SEG data
+    mov ds,ax
+
+add_core_lock_loop:
+    mov ax,1
+    xchg ax,ds:spin_lock
+    or ax,ax
+    jz add_core_locked
+;
+    pause    
+    jmp add_core_lock_loop
+
+add_core_locked:    
     mov eax,1000h
     AllocateGlobalMem
     mov ax,es
@@ -1347,11 +1367,14 @@ add_debug_core  Proc far
     mov gs:cs_next,ax
     mov es:core_list,gs
     mov es:curr_core,gs
+;
+    mov ds:spin_lock,0
 ;    
     popad
     pop gs
     pop fs
     pop es
+    pop ds
     ret
 add_debug_core  Endp    
 
@@ -1629,6 +1652,9 @@ crash_fault_do:
     mov bx,ds:core_list
 
 crash_fault_core_loop:
+    or bx,bx
+    jz nmi_block
+;    
     mov gs,bx
     cmp ax,gs:cs_proc_sel
     je crash_fault_core_found

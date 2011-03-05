@@ -56,6 +56,9 @@ ENDIF
 
     extrn allocate_fixed_system_mem:near
 
+    extrn enter_code_patch:near
+    extrn leave_code_patch:near
+
     assume cs:code
 
 
@@ -253,10 +256,18 @@ do16_locked:
     cmp al,66h
     je do16_has_ov
 ;
+    mov ax,ds:[ebx+5]
+    cmp ax,3
+    jne do16_retry
+;    
     mov di,ds:[ebx+1]
     jmp do16_ov_done
 
 do16_has_ov:
+    mov ax,ds:[ebx+6]
+    cmp ax,3
+    jne do16_retry
+;
     mov di,ds:[ebx+2]
 
 do16_ov_done:    
@@ -285,27 +296,48 @@ do16_ov_done:
     cmp ax,[bp+16]
     je do16_direct
 ;
-    mov ds:[ebx+3],ax
     mov [bp+10],ax
     mov eax,es:[di].gate_offset
-    mov ds:[ebx+1],ax
     mov [bp+8],ax
-    mov byte ptr ds:[ebx],9Ah
-    mov byte ptr ds:[ebx+5],90h
-    mov word ptr ds:[ebx+6],9090h
-    jmp do16_direct_do
+
+    call enter_code_patch
+    mov ax,0F5F5h
+    shl eax,16
+    mov ax,es:[di].gate_sel
+    mov ds:[ebx+4],eax
+;    
+    mov eax,es:[di].gate_offset
+    shl eax,16
+    mov ax,9A90h
+    mov ds:[ebx],eax    
+;
+    mov ax,9090h
+    mov ds:[ebx+6],ax
+    call leave_code_patch
+    jmp do16_retry
 
 do16_direct:
     mov [bp+10],ax
     mov eax,es:[di].gate_offset
     mov [bp+8],ax
     sub ax,[bp+14]
-    add ax,4
-    mov ds:[ebx+2],ax
-    mov word ptr ds:[ebx],0E80Eh
-    mov dword ptr ds:[ebx+4],90909090h
+;    add ax,4
+    add ax,2
+    call enter_code_patch
+;    mov ds:[ebx+2],ax
+;    mov word ptr ds:[ebx],0E80Eh
+;    mov dword ptr ds:[ebx+4],90909090h
+    movzx eax,ax
+    or eax,0F5F50000h
+    mov ds:[ebx+4],eax
+;
+    mov eax,0E80E9090h
+    mov ds:[ebx],eax
+;
+    mov ds:[ebx+6],ax
+    call leave_code_patch
 
-do16_direct_do:
+do16_retry:
     mov ax,system_data_sel
     mov es,ax
     mov es:osgate_spinlock,0
