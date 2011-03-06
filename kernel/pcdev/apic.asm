@@ -411,6 +411,11 @@ ap_task_wait:
     jz ap_task_wait
 ;        
     call InitApic
+    sti
+
+stopl:
+    jmp stopl
+        
     StartProcessor
 
 apic_tab    DB 'APIC'
@@ -1410,6 +1415,35 @@ preempt_processor  Proc far
     pop ds
     ret
 preempt_processor  Endp
+
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SendInt
+;
+;       DESCRIPTION:    Send int to processor
+;
+;       PARAMETERS:     FS      Processor selector
+;                       AL      Int #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_int_name    DB 'Send Int',0
+
+send_int  Proc far
+    push ds
+    push edx
+;
+    mov dx,SEG data
+    mov ds,dx
+    mov edx,fs:ps_apic
+    call ds:mp_int_proc
+;
+    pop edx
+    pop ds
+    ret
+send_int  Endp
 
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2892,6 +2926,12 @@ init_smp_done:
     mov edi,OFFSET preempt_processor_name
     xor cl,cl
     mov ax,preempt_processor_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_int
+    mov edi,OFFSET send_int_name
+    xor cl,cl
+    mov ax,send_int_nr
     RegisterOsGate
 ;
     popad       

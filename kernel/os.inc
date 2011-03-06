@@ -668,6 +668,12 @@ SendNmi    MACRO
 	OsGate send_nmi_nr
 	                    ENDM
 
+;   IN  AL      Int #
+;   IN  FS      Processor selector
+SendInt    MACRO
+	OsGate send_int_nr
+	                    ENDM
+
 ;   OUT EAX      Update tics
 StartSysTimer    MACRO
 	OsGate start_sys_timer_nr

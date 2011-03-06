@@ -1502,27 +1502,53 @@ enter_first:
 ;
     xor ax,ax
 
-handle_abort_loop:    
+handle_int_loop:    
     GetProcessorNumber
-    jc handle_abort_done
+    jc handle_int_done
 ;
     test fs:ps_flags,PS_FLAG_NMI
-    jnz handle_abort_next
+    jnz handle_int_next
+;        
+    push ax
+    mov al,2
+    Sendint
+    pop ax
+    xor cx,cx    
+
+handle_wait_int_loop:
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz handle_int_next
+;
+    loop handle_wait_int_loop
+        
+handle_int_next:
+    inc ax
+    jmp handle_int_loop
+
+handle_int_done:
+    xor ax,ax
+
+handle_nmi_loop:    
+    GetProcessorNumber
+    jc handle_nmi_done
+;
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz handle_nmi_next
 ;        
     SendNmi
     xor cx,cx    
 
 handle_wait_nmi_loop:
     test fs:ps_flags,PS_FLAG_NMI
-    jnz handle_abort_next
+    jnz handle_nmi_next
 ;
     loop handle_wait_nmi_loop
         
-handle_abort_next:
+handle_nmi_next:
     inc ax
-    jmp handle_abort_loop
+    jmp handle_nmi_loop
 
-handle_abort_done:
+handle_nmi_done:
     call SetupFaultHandlers
     GetProcessor
     clc
