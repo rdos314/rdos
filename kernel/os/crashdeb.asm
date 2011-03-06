@@ -1482,7 +1482,6 @@ enter_locked:
     jmp enter_done
 
 enter_first:    
-    call SetupFaultHandlers
     DisableAllIrq    
     push eax
     sti
@@ -1495,6 +1494,11 @@ enter_first:
     mov ax,fs:ps_id
     mov ds:curr_num,ax
     mov ds:debug_core,fs
+;
+    mov al,2
+    xor bl,bl
+    mov esi,OFFSET nmi_handler
+    CreateIntGateSelector
 ;
     xor ax,ax
 
@@ -1519,6 +1523,7 @@ handle_abort_next:
     jmp handle_abort_loop
 
 handle_abort_done:
+    call SetupFaultHandlers
     GetProcessor
     clc
 
@@ -1805,11 +1810,6 @@ init_crashdeb    PROC near
     xor cl,cl
     mov ax,crash_tss_nr
     RegisterOsGate
-;
-    mov al,2
-    xor bl,bl
-    mov esi,OFFSET nmi_handler
-    CreateIntGateSelector
 ;
     ret
 init_crashdeb    ENDP
