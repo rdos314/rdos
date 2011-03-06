@@ -412,6 +412,8 @@ ap_task_wait:
 ;        
     call InitApic
 
+    OsGate test_gate_nr
+
 stopl:
     jmp stopl
     

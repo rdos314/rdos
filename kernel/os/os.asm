@@ -123,6 +123,12 @@ init_osgate_loop:
     mov ax,is_valid_osgate_nr
     xor cl,cl
     RegisterOsGate
+;    
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    mov ax,test_gate_nr
+    xor cl,cl
+    RegisterOsGate
 ;
     popa
     pop es
@@ -130,6 +136,23 @@ init_osgate_loop:
     ret
 init_osgate     ENDP
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TestGate
+;
+;           DESCRIPTION:    Test gate
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name       DB 'Test Gate',0
+
+test_gate    PROC far
+    mov ax,7A56h    
+    ret
+test_gate    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -258,7 +281,7 @@ do16_locked:
 ;
     mov ax,ds:[ebx+5]
     cmp ax,3
-    jne do16_retry
+    jne do16_patched
 ;    
     mov di,ds:[ebx+1]
     jmp do16_ov_done
@@ -266,7 +289,7 @@ do16_locked:
 do16_has_ov:
     mov ax,ds:[ebx+6]
     cmp ax,3
-    jne do16_retry
+    jne do16_patched
 ;
     mov di,ds:[ebx+2]
 
@@ -336,7 +359,34 @@ do16_direct:
 ;
     mov ds:[ebx+6],ax
     call leave_code_patch
+    jmp do16_retry
 
+do16_patched:
+    mov ax,[bp].vm_eflags
+    mov [bp+12],ax
+    mov ax,[bp].vm_cs
+    mov [bp+16],ax
+    mov ax,[bp].vm_eip
+    add ax,8
+    mov [bp+14],ax  
+;
+    mov ax,ds:[ebx]
+    cmp ax,9A90h
+    je do16_patch_far
+
+do16_patch_near:
+    mov ax,[bp].vm_cs
+    mov [bp+10],ax
+    mov ax,ds:[ebx+4]
+    mov [bp+8],ax
+    jmp do16_retry
+
+do16_patch_far:
+    mov ax,ds:[ebx+4]
+    mov [bp+10],ax
+    mov ax,ds:[ebx+6]
+    mov [bp+8],ax
+    
 do16_retry:
     mov ax,system_data_sel
     mov es,ax

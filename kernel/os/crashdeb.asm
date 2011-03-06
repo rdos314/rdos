@@ -1059,10 +1059,14 @@ SetupFaultHandlers      PROC near
 ;
     mov ax,system_data_sel
     mov ds,ax
-    mov ds:osgate_spinlock,0
-    mov ds:usergate_spinlock,0
-    mov ds:patch_spinlock,0
-;    
+    mov ax,1
+    xchg ax,ds:shut_spinlock
+    or ax,ax
+    jz init_fault_do
+;
+    jmp nmi_block
+
+init_fault_do:
     mov ax,cs
     mov ds,ax
     mov di,OFFSET crash_int_tab
@@ -1245,57 +1249,57 @@ DelayMs Endp
 ;
 ;               DESCRIPTION:    Save core state
 ;
-;       PARAMETERS:     GS      Code selector
+;       PARAMETERS:     FS      Code selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SaveCore Proc near
     push eax
 ;    
-    mov gs:cs_eax,eax
-    mov gs:cs_ecx,ecx
-    mov gs:cs_edx,edx
-    mov gs:cs_ebx,ebx
-    mov gs:cs_esp,esp
-    mov gs:cs_ebp,ebp
-    mov gs:cs_esi,esi
-    mov gs:cs_edi,edi
+    mov fs:cs_eax,eax
+    mov fs:cs_ecx,ecx
+    mov fs:cs_edx,edx
+    mov fs:cs_ebx,ebx
+    mov fs:cs_esp,esp
+    mov fs:cs_ebp,ebp
+    mov fs:cs_esi,esi
+    mov fs:cs_edi,edi
 ;
-    mov gs:cs_es,es
-    mov gs:cs_cs,cs
-    mov gs:cs_ss,ss
-    mov gs:cs_ds,ds
-    mov gs:cs_fs,fs
-    mov gs:cs_gs,gs
+    mov fs:cs_es,es
+    mov fs:cs_cs,cs
+    mov fs:cs_ss,ss
+    mov fs:cs_ds,ds
+    mov fs:cs_fs,fs
+    mov fs:cs_gs,gs
 ;
     pushfd
-    pop gs:cs_eflags
-    mov gs:cs_eip, OFFSET SaveCore
+    pop fs:cs_eflags
+    mov fs:cs_eip, OFFSET SaveCore
 ;
     mov eax,cr0
-    mov gs:cs_cr0,eax
+    mov fs:cs_cr0,eax
     mov eax,cr2
-    mov gs:cs_cr2,eax
+    mov fs:cs_cr2,eax
     mov eax,cr3
-    mov gs:cs_cr3,eax
+    mov fs:cs_cr3,eax
     mov eax,cr4
-    mov gs:cs_cr4,eax
+    mov fs:cs_cr4,eax
 ;
     mov eax,dr0
-    mov gs:cs_dr0,eax
+    mov fs:cs_dr0,eax
     mov eax,dr1
-    mov gs:cs_dr1,eax
+    mov fs:cs_dr1,eax
     mov eax,dr2
-    mov gs:cs_dr2,eax
+    mov fs:cs_dr2,eax
     mov eax,dr3
-    mov gs:cs_dr3,eax
+    mov fs:cs_dr3,eax
     mov eax,dr7
-    mov gs:cs_dr7,eax
+    mov fs:cs_dr7,eax
 ;
-    sldt gs:cs_ldt
-    str gs:cs_tr
-    sgdt fword ptr gs:cs_gdtr
-    sidt fword ptr gs:cs_idtr
+    sldt fs:cs_ldt
+    str fs:cs_tr
+    sgdt fword ptr fs:cs_gdtr
+    sidt fword ptr fs:cs_idtr
 ;
     pop eax
     ret
@@ -1313,31 +1317,6 @@ SaveCore Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CrashHandler:
-    mov bx,SEG data    
-    mov ds,bx
-
-crash_try_lock:
-    mov ax,1
-    xchg ax,ds:spin_lock
-    or ax,ax
-    jz crash_locked
-;
-    pause    
-    jmp crash_try_lock
-
-crash_locked:    
-    mov ax,ds:debug_core
-    or ax,ax
-    jz crash_first
-;
-    mov ds:spin_lock,0
-    jmp nmi_block
-
-crash_first:    
-    mov ax,gs:ps_id
-    mov ds:curr_num,ax
-    mov ds:debug_core,gs
-;
     call InitCrashShow
     call InitCrashKeyboard
 ;
@@ -1356,9 +1335,8 @@ start_abort_loop:
     GetProcessorNumber
     jc start_do
 ;
-    mov dx,fs
-    cmp dx,ds:debug_core
-    je start_abort_next
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz start_abort_next
 ;        
     push ax
     SendNmi
@@ -1476,6 +1454,74 @@ right_arrow:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           EnterHandler
+;
+;           DESCRIPTION:    Enter crash handler
+;
+;           RETURNS:        CY      Chain to NMI
+;                           NC
+;                               FS  Current processor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnterHandler    Proc near 
+    push ds
+    push ax
+;       
+    cli
+    mov ax,wd_code_sel
+    verr ax
+    jnz enter_do
+;
+    CpuReset
+
+enter_do:
+    mov ax,SEG data    
+    mov ds,ax
+
+enter_lock_loop:
+    mov ax,1
+    xchg ax,ds:spin_lock
+    or ax,ax
+    jz enter_locked
+;
+    pause    
+    jmp enter_lock_loop
+
+enter_locked:    
+    mov ax,ds:debug_core
+    or ax,ax
+    jz enter_first
+;
+    mov ds:spin_lock,0
+    stc
+    jmp enter_done
+
+enter_first:    
+    call SetupFaultHandlers
+    DisableAllIrq    
+    push eax
+    sti
+    GetProcessor
+    or fs:ps_flags,PS_FLAG_NMI
+    pop eax
+    mov fs:cs_irq,eax
+    mov fs:cs_fault,-1
+;    
+    mov ax,fs:ps_id
+    mov ds:curr_num,ax
+    mov ds:debug_core,fs
+    clc
+
+enter_done:
+    pop ax
+    pop ds
+    ret
+EnterHandler    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CrashGate
 ;
 ;           DESCRIPTION:    Crash with a gate
@@ -1488,48 +1534,20 @@ crash_gate_name    DB 'Crash Gate', 0
 
 crash_gate:
     cli    
-    push gs
-;
-    push ds
     push fs
-    push eax
-    push bx
-;    
-    mov ax,wd_code_sel
-    verr ax
-    jnz crash_do
+    call EnterHandler
+    jc nmi_block
 ;
-    CpuReset
-
-crash_do:
-    call SetupFaultHandlers
-    DisableAllIrq    
-    push eax
-;
-    sti
-    GetProcessor
-    or fs:ps_flags,PS_FLAG_NMI
-    mov ax,fs
-    mov gs,ax
-    pop eax
-    mov gs:cs_irq,eax
-    mov gs:cs_fault,-1
-;    
-    pop bx
-    pop eax
-    pop fs
-    pop ds
-    call SaveCore
-;    
+    call SaveCore    
     pop ax
-    mov gs:cs_gs,ax
+    mov fs:cs_fs,ax
 ;    
     pop ax
     movzx eax,ax
-    mov gs:cs_eip,eax
+    mov fs:cs_eip,eax
 ;
     pop ax
-    mov gs:cs_cs,ax
+    mov fs:cs_cs,ax
     jmp CrashHandler
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1548,59 +1566,39 @@ crash_fault_name    DB 'Crash Fault', 0
 
 crash_fault:
     cli    
-    push gs
-;
+    push eax
     push fs
-    push eax
-;    
-    mov ax,wd_code_sel
-    verr ax
-    jnz crash_fault_do
+    call EnterHandler
+    jc nmi_block
 ;
-    CpuReset
-
-crash_fault_do:
-    call SetupFaultHandlers
-    DisableAllIrq    
-    push eax
-    sti
-;    
-    GetProcessor
-    or fs:ps_flags,PS_FLAG_NMI
-    mov ax,fs
-    mov gs,ax
-    pop eax
-    mov gs:cs_irq,eax
-    pop eax
-    mov gs:cs_fault,eax
-;    
-    pop fs
-    call SaveCore
-;
+    call SaveCore    
     pop ax
-    mov gs:cs_gs,ax
-;    
+    mov fs:cs_fs,ax
+;
+    pop eax    
+    mov fs:cs_fault,eax
+;
     mov ax,[bp].pm_ds
-    mov gs:cs_ds,ax
+    mov fs:cs_ds,ax
 ;    
     mov eax,[bp].vm_eax
-    mov gs:cs_eax,eax
+    mov fs:cs_eax,eax
 ;    
     mov eax,[bp].vm_ebx
-    mov gs:cs_ebx,eax
+    mov fs:cs_ebx,eax
 ;
     mov eax,ebp
     mov ax,[bp]
-    mov gs:cs_ebp,eax
+    mov fs:cs_ebp,eax
 ;    
     mov eax,[bp].vm_eflags
-    mov gs:cs_eflags,eax
+    mov fs:cs_eflags,eax
 ;
     mov ax,[bp].vm_cs
-    mov gs:cs_cs,ax
+    mov fs:cs_cs,ax
 ;    
     mov eax,[bp].vm_eip
-    mov gs:cs_eip,eax
+    mov fs:cs_eip,eax
 ;
     test dword ptr [bp].vm_eflags,20000h
     jnz crash_fault_vm
@@ -1611,38 +1609,39 @@ crash_fault_pm:
     jz crash_fault_kernel
 ;
     mov ax,[bp].vm_ss
-    mov gs:cs_ss,ax
+    mov fs:cs_ss,ax
 ;    
     mov eax,[bp].vm_esp
-    mov gs:cs_esp,eax
+    mov fs:cs_esp,eax
     jmp CrashHandler
     
 crash_fault_kernel:
     mov ax,bp
     add ax,vm_esp
     movzx eax,ax
-    mov gs:cs_esp,eax
+    mov fs:cs_esp,eax
     jmp CrashHandler
 
 crash_fault_vm:
     mov ax,[bp].vm_gs
-    mov gs:cs_gs,ax
+    mov fs:cs_gs,ax
 ;
     mov ax,[bp].vm_fs
-    mov gs:cs_fs,ax
+    mov fs:cs_fs,ax
 ;
     mov ax,[bp].vm_ds
-    mov gs:cs_ds,ax
+    mov fs:cs_ds,ax
 ;    
     mov ax,[bp].vm_es
-    mov gs:cs_es,ax
+    mov fs:cs_es,ax
 ;    
     mov ax,[bp].vm_ss
-    mov gs:cs_ss,ax
+    mov fs:cs_ss,ax
 ;    
     mov eax,[bp].vm_esp
-    mov gs:cs_esp,eax
+    mov fs:cs_esp,eax
     jmp CrashHandler
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1658,28 +1657,13 @@ crash_fault_vm:
 crash_tss_name    DB 'Crash Tss', 0
 
 crash_tss:
-    cli    
-    mov ax,wd_code_sel
-    verr ax
-    jnz crash_tss_do
-;
-    CpuReset
-
-crash_tss_do:
-    call SetupFaultHandlers
-    DisableAllIrq    
-    push eax
-;
-    sti    
-    GetProcessor
-    or fs:ps_flags,PS_FLAG_NMI
-    mov ax,fs
-    mov gs,ax
+    call EnterHandler
+    jc nmi_block
 ;    
     mov ax,double_tss_data_sel
     mov ds,ax
     mov bx,ds:tss_back_link
-    mov gs:cs_tr,bx
+    mov fs:cs_tr,bx
 ;
     mov ax,gdt_sel
     mov ds,ax
@@ -1699,79 +1683,77 @@ crash_tss_do:
     CreateDataSelector16
     mov ds,bx
     mov eax,dword ptr ds:tss_eax
-    mov gs:cs_eax,eax
+    mov fs:cs_eax,eax
 ;    
     mov eax,dword ptr ds:tss_ecx
-    mov gs:cs_ecx,eax
+    mov fs:cs_ecx,eax
 ;
     mov eax,dword ptr ds:tss_edx
-    mov gs:cs_edx,eax
+    mov fs:cs_edx,eax
 ;
     mov eax,dword ptr ds:tss_ebx
-    mov gs:cs_ebx,eax
+    mov fs:cs_ebx,eax
 ;
     mov eax,dword ptr ds:tss_esp    
-    mov gs:cs_esp,eax
+    mov fs:cs_esp,eax
 ;
     mov eax,dword ptr ds:tss_ebp    
-    mov gs:cs_ebp,eax
+    mov fs:cs_ebp,eax
 ;    
     mov eax,dword ptr ds:tss_esi
-    mov gs:cs_esi,eax
+    mov fs:cs_esi,eax
 ;
     mov eax,dword ptr ds:tss_edi    
-    mov gs:cs_edi,eax
+    mov fs:cs_edi,eax
 ;    
     mov ax,ds:tss_es
-    mov gs:cs_es,ax
+    mov fs:cs_es,ax
 ;
     mov ax,ds:tss_cs    
-    mov gs:cs_cs,ax
+    mov fs:cs_cs,ax
 ;    
     mov ax,ds:tss_ss
-    mov gs:cs_ss,ax
+    mov fs:cs_ss,ax
 ;
     mov ax,ds:tss_ds    
-    mov gs:cs_ds,ax
+    mov fs:cs_ds,ax
 ;
     mov ax,ds:tss_fs    
-    mov gs:cs_fs,ax
+    mov fs:cs_fs,ax
 ;
     mov ax,ds:tss_gs    
-    mov gs:cs_gs,ax    
+    mov fs:cs_gs,ax    
 ;
     mov ax,ds:tss_ldt
-    mov gs:cs_ldt,ax
+    mov fs:cs_ldt,ax
 ;
-    mov gs:cs_fault,8
-    pop eax
-    mov gs:cs_irq,eax    
+    mov fs:cs_fault,8
 ;
     mov eax,dword ptr ds:tss_eflags
-    mov gs:cs_eflags,eax
+    mov fs:cs_eflags,eax
 ;
     mov eax,cr0
-    mov gs:cs_cr0,eax
+    mov fs:cs_cr0,eax
     mov eax,cr2
-    mov gs:cs_cr2,eax
+    mov fs:cs_cr2,eax
     mov eax,cr3
-    mov gs:cs_cr3,eax
+    mov fs:cs_cr3,eax
     mov eax,cr4
-    mov gs:cs_cr4,eax
+    mov fs:cs_cr4,eax
 ;
     mov eax,dr0
-    mov gs:cs_dr0,eax
+    mov fs:cs_dr0,eax
     mov eax,dr1
-    mov gs:cs_dr1,eax
+    mov fs:cs_dr1,eax
     mov eax,dr2
-    mov gs:cs_dr2,eax
+    mov fs:cs_dr2,eax
     mov eax,dr3
-    mov gs:cs_dr3,eax
+    mov fs:cs_dr3,eax
     mov eax,dr7
-    mov gs:cs_dr7,eax
+    mov fs:cs_dr7,eax
 ;
-    sgdt fword ptr gs:cs_gdtr
-    sidt fword ptr gs:cs_idtr
+    sgdt fword ptr fs:cs_gdtr
+    sidt fword ptr fs:cs_idtr
     jmp CrashHandler
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
