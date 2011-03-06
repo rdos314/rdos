@@ -1057,16 +1057,6 @@ SetupFaultHandlers      PROC near
     push ds
     pushad
 ;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ax,1
-    xchg ax,ds:shut_spinlock
-    or ax,ax
-    jz init_fault_do
-;
-    jmp nmi_block
-
-init_fault_do:
     mov ax,cs
     mov ds,ax
     mov di,OFFSET crash_int_tab
@@ -1320,36 +1310,20 @@ CrashHandler:
     call InitCrashShow
     call InitCrashKeyboard
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+;
     mov ax,SEG data
     mov ds,ax
     mov ds:curr_row,0
     mov ds:curr_col,0
-    mov ds:spin_lock,0
 ;
-    mov ax,2
-    call DelayMs
+    GetProcessor
+    mov ax,fs
+    mov gs,ax
+    call ShowCrashCore
 ;
-    xor ax,ax
-
-start_abort_loop:    
-    GetProcessorNumber
-    jc start_do
-;
-    test fs:ps_flags,PS_FLAG_NMI
-    jnz start_abort_next
-;        
-    push ax
-    SendNmi
-;
-    mov ax,2
-    call DelayMs    
-    pop ax
-
-start_abort_next:
-    inc ax
-    jmp start_abort_loop
-
-start_do:
     sti
     mov ax,ds:curr_num
     GetProcessorNumber
@@ -1393,7 +1367,6 @@ handle_loop:
     xor ax,ax
     GetProcessorNumber
         
-
 handle_next_set:
     mov ds:curr_num,ax
     mov ax,fs
@@ -1476,6 +1449,17 @@ EnterHandler    Proc near
     CpuReset
 
 enter_do:
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ax,1
+    xchg ax,ds:shut_spinlock
+    or ax,ax
+    jz enter_fault_do
+;
+    stc
+    jmp enter_done
+
+enter_fault_do:
     mov ax,SEG data    
     mov ds,ax
 
@@ -1511,6 +1495,31 @@ enter_first:
     mov ax,fs:ps_id
     mov ds:curr_num,ax
     mov ds:debug_core,fs
+;
+    xor ax,ax
+
+handle_abort_loop:    
+    GetProcessorNumber
+    jc handle_abort_done
+;
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz handle_abort_next
+;        
+    SendNmi
+    xor cx,cx    
+
+handle_wait_nmi_loop:
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz handle_abort_next
+;
+    loop handle_wait_nmi_loop
+        
+handle_abort_next:
+    inc ax
+    jmp handle_abort_loop
+
+handle_abort_done:
+    GetProcessor
     clc
 
 enter_done:
