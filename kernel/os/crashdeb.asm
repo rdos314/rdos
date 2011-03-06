@@ -1110,7 +1110,6 @@ nmi_handler:
     push ebp
     mov bp,sp
 ;    
-    call ShowHere
     GetProcessor
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
@@ -1525,10 +1524,23 @@ enter_first:
     mov ds:curr_num,ax
     mov ds:debug_core,fs
 ;
+    push ds
+    push es
+    push bx
+    push esi
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
     mov al,2
     xor bl,bl
     mov esi,OFFSET nmi_handler
     CreateIntGateSelector
+;
+    pop esi
+    pop bx
+    pop es
+    pop ds    
 ;
     xor ax,ax
 
