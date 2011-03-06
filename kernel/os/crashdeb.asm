@@ -1110,6 +1110,7 @@ nmi_handler:
     push ebp
     mov bp,sp
 ;    
+    call ShowHere
     GetProcessor
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
@@ -1423,6 +1424,35 @@ right_arrow:
     inc ds:curr_col
     call ShowMarker
     jmp handle_loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ShowHere
+;
+;           DESCRIPTION:    Show here
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShowHere    Proc near
+    push es
+    push ax
+    push di
+;    
+    mov di,__B800
+    mov es,di
+;
+    mov di,2 * 80 * 23    
+    mov ax,0731h
+    stosw
+    mov ax,0F32h
+    stosw
+;    
+    pop di
+    pop ax
+    pop es
+    ret
+ShowHere    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
