@@ -78,10 +78,6 @@ init_osgate     PROC near
     push ds
     push es
     pusha
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ds:osgate_spinlock,0
 ;    
     mov ax,cs
     mov ds,ax

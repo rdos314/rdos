@@ -87,10 +87,6 @@ init_usergate   PROC near
     push ds
     push es
     pusha
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ds:usergate_spinlock,0
 ;    
     mov bx,usergate_sel
     mov eax,usergate_entries SHL 5
