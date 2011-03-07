@@ -1273,8 +1273,6 @@ t13_default:
     jmp t13_end
 
 t13_retry:
-    xor eax,eax
-    cpuid
     call leave_code_patch
 
 t13_end:
@@ -1643,8 +1641,6 @@ pretask_gpf_default:
     ShutDownPreTask
 
 pretask_gpf_reexec:
-    xor eax,eax
-    cpuid
     call leave_code_patch
 
 pretask_gpf_retry:
