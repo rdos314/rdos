@@ -119,12 +119,6 @@ init_osgate_loop:
     mov ax,is_valid_osgate_nr
     xor cl,cl
     RegisterOsGate
-;    
-    mov esi,OFFSET test_gate
-    mov edi,OFFSET test_gate_name
-    mov ax,test_gate_nr
-    xor cl,cl
-    RegisterOsGate
 ;
     popa
     pop es
@@ -132,23 +126,6 @@ init_osgate_loop:
     ret
 init_osgate     ENDP
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TestGate
-;
-;           DESCRIPTION:    Test gate
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name       DB 'Test Gate',0
-
-test_gate    PROC far
-    mov ax,7A56h    
-    ret
-test_gate    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -340,12 +317,8 @@ do16_direct:
     mov eax,es:[di].gate_offset
     mov [bp+8],ax
     sub ax,[bp+14]
-;    add ax,4
     add ax,2
     call enter_code_patch
-;    mov ds:[ebx+2],ax
-;    mov word ptr ds:[ebx],0E80Eh
-;    mov dword ptr ds:[ebx+4],90909090h
     movzx eax,ax
     or eax,0F5F50000h
     mov ds:[ebx+4],eax
@@ -374,13 +347,15 @@ do16_patch_near:
     mov ax,[bp].vm_cs
     mov [bp+10],ax
     mov ax,ds:[ebx+4]
+    add ax,[bp+14]
+    sub ax,2
     mov [bp+8],ax
     jmp do16_retry
 
 do16_patch_far:
     mov ax,ds:[ebx+4]
     mov [bp+10],ax
-    mov ax,ds:[ebx+6]
+    mov ax,ds:[ebx+2]
     mov [bp+8],ax
     
 do16_retry:

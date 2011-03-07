@@ -413,6 +413,10 @@ ap_task_wait:
     call InitApic
     sti
     OsGate test_gate_nr
+    OsGate test_gate_nr
+    OsGate test_gate_nr
+    OsGate test_gate_nr
+    OsGate test_gate_nr
 
 stopl:
     jmp stopl
@@ -2875,6 +2879,23 @@ ipiDone:
     ret
 InitIpi Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TestGate
+;
+;           DESCRIPTION:    Test gate
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name       DB 'Test Gate',0
+
+test_gate    PROC far
+    mov ax,7A56h    
+    ret
+test_gate    ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2910,6 +2931,12 @@ init_smp_done:
     mov ax,cs
     mov ds,ax
     mov es,ax
+;    
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    mov ax,test_gate_nr
+    xor cl,cl
+    RegisterOsGate
 ;
     mov esi,OFFSET start_ap_cores
     mov edi,OFFSET start_ap_cores_name

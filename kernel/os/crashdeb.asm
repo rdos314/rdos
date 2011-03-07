@@ -1652,9 +1652,9 @@ SaveCore Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CrashHandler:
-    call SetupBiosPic
-    call SetupBiosPit
-    call InitVideo
+;    call SetupBiosPic
+;    call SetupBiosPit
+;    call InitVideo
     call InitCrashShow
     call InitCrashKeyboard
 ;
