@@ -111,9 +111,22 @@ prot_enter_start:
     db 66h
     lidt fword ptr ds:[bx]
 ;
+    mov ax,8
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    mov ss,ax
+    mov ax,0F00h
+    mov sp,ax
+;
+    mov eax,cr0
+    and eax,NOT 1
+    mov cr0,eax
+;
     db 0EAh         ; jmp to real-mode selector
     dw 0
-    dw 10h
+    dw 0A0h
               
 prot_enter_end:
     
@@ -168,15 +181,31 @@ prot_exit_end:
 ; this code is loaded at 0A00. It should contain no near jumps!
     
 real_start:
-    mov ax,8
+    mov ax,0A0h
     mov ds,ax
     mov es,ax
     mov fs,ax
     mov gs,ax
     mov ss,ax
-    mov ax,0F00h
-    mov sp,ax
+    mov sp,500h
+;        
+    mov ax,3
+    int 10h
+    cli
 ;
+    mov al,-1
+    out 21h,al
+    jmp short $+2
+;
+    xor ax,ax
+    mov ds,ax
+    mov bx,0F00h
+    lgdt fword ptr ds:[bx]    
+;
+    mov eax,cr0
+    or eax,1
+    mov cr0,eax
+;    
     db 0EAh         ; jmp to protected mode
     dw 0
     dw 18h
@@ -244,6 +273,85 @@ pmode_struc  ENDS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupBiosPic
+;
+;           DESCRIPTION:    Setup PIC to operate in BIOS-compatible mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupBiosPic    Proc near
+    mov al,11h
+    out 20h,al
+    jmp short $+2
+;
+    mov al,8
+    out 21h,al
+    jmp short $+2
+;
+    mov al,04h
+    out 21h,al
+    jmp short $+2
+;
+    mov al,0C1h
+    out 20h,AL
+    jmp short $+2
+;
+    mov al,1
+    out 21h,al
+    jmp short $+2
+;
+    mov al,11h
+    out 0A0h,al
+    jmp short $+2
+;
+    mov al,70h
+    out 0A1h,al
+    jmp short $+2
+;
+    mov al,2
+    out 0A1h,al
+    jmp short $+2
+;
+    mov al,1
+    out 0A1h,al
+    jmp short $+2
+;
+    mov al,-1
+    out 21h,al
+;
+    mov al,-1
+    out 0A1h,al
+    jmp short $+2
+    ret
+SetupBiosPic    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupBiosPit
+;
+;           DESCRIPTION:    Setup PIT to operate in BIOS-compatible mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupBiosPit    Proc near
+    mov al,30h
+    out 43h,al
+    jmp short $+2
+;
+    mov al,-1
+    out 40h,al
+    jmp short $+2
+;
+    mov al,-1
+    out 40h,al
+    jmp short $+2    
+    ret
+SetupBiosPit    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitVideo
 ;
 ;           DESCRIPTION:    Init video adapter
@@ -293,7 +401,7 @@ InitVideo Proc near
 ;
     mov bx,temp_sel
     mov edx,800h
-    mov ecx,700h
+    mov ecx,10000h
     CreateCodeSelector16
 ;
     db 9Ah          ; call far temp_sel:0
@@ -1544,6 +1652,8 @@ SaveCore Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CrashHandler:
+    call SetupBiosPic
+    call SetupBiosPit
     call InitVideo
     call InitCrashShow
     call InitCrashKeyboard
