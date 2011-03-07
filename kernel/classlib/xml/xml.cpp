@@ -3429,6 +3429,22 @@ int XMLElement :: FindElement(const char* n)
         return -1;
         }
 
+XMLElement *XMLElement :: GetElement(const char* n)
+        {
+        for(unsigned int i = 0 ; i < childrennum ; i++)
+                {
+                if (!children[i])
+                        continue;
+                XMLElement* cc = children[i];
+                size_t Sug = cc->GetElementName(0);
+                Z<char> Name(Sug + 10);
+                cc->GetElementName(Name);
+                if (strcmp(Name,n) == 0)
+                        return cc;
+                }
+        return 0;
+        }
+
 XMLElement* XMLElement:: FindElementZ(XMLElement* x)
         {
         for(unsigned int i = 0 ; i < childrennum ; i++)
@@ -3496,6 +3512,41 @@ int XMLElement :: FindVariable(const char*  x)
                 }
         return -1;
         }
+
+XMLVariable* XMLElement :: GetVariable(const char*  x)
+        {
+        for(unsigned int i = 0 ; i < variablesnum ; i++)
+                {
+                XMLVariable* V = variables[i];
+
+                size_t Sug = V->GetName(0);
+                Z<char> Name(Sug + 10);
+                V->GetName(Name);
+                if (strcmp(Name,x) == 0)
+                        return V;
+                }
+        return 0;
+        }
+
+int XMLElement :: GetVariableInt(const char*  x, int def)
+{
+        XMLVariable* V = GetVariable(x);
+
+        if (V)
+            return V->GetValueInt();
+        else
+            return def;
+}
+
+unsigned int XMLElement :: GetVariableUInt(const char*  x, unsigned int def)
+{
+        XMLVariable* V = GetVariable(x);
+
+        if (V)
+            return V->GetValueUInt();
+        else
+            return def;
+}
 
 XMLVariable* XMLElement :: FindVariableZ(const char*  x,bool ForceCreate,char* defnew,bool Temp)
         {
@@ -4067,6 +4118,22 @@ int XMLElement :: AddVariable(const char* vn,const char* vv)
         {
         XMLVariable* x = new XMLVariable(vn,vv,0,0);
         return AddVariable(x);
+        }
+
+int XMLElement :: AddVariableInt(const char* vn,int val)
+        {
+        char str[40];
+
+        sprintf(str, "%d", val);
+        return AddVariable(vn, str);
+        }
+
+int XMLElement :: AddVariableUInt(const char* vn,unsigned int val)
+        {
+        char str[40];
+
+        sprintf(str, "%u", val);
+        return AddVariable(vn, str);
         }
 
 int XMLElement :: AddBinaryVariable(const char* vn,const char* vv,int S)

@@ -36,128 +36,128 @@
 
 // Z template class
 template <class T>class Z
-	{
-	private:
+        {
+        private:
 
-		T* d;
-		size_t ss;
+                T* d;
+                size_t ss;
 
-	public:
+        public:
 
-		Z(size_t s = 0)
-			{
-			if (s == 0)
-				s = 1;
-			d = new T[s];
-			memset(d,0,s*sizeof(T));
-			ss = s;
-			}
-		~Z()
-			{
-			delete[] d;
-			}
+                Z(size_t s = 0)
+                        {
+                        if (s == 0)
+                                s = 1;
+                        d = new T[s];
+                        memset(d,0,s*sizeof(T));
+                        ss = s;
+                        }
+                ~Z()
+                        {
+                        delete[] d;
+                        }
 
-		operator T*()
-			{
-			return d;
-			}
+                operator T*()
+                        {
+                        return d;
+                        }
 
-		T* p()
-			{
-			return d;
-			}
+                T* p()
+                        {
+                        return d;
+                        }
 
-		size_t bs()
-			{
-			return ss*sizeof(T);
-			}
+                size_t bs()
+                        {
+                        return ss*sizeof(T);
+                        }
 
-		size_t is()
-			{
-			return ss;
-			}
+                size_t is()
+                        {
+                        return ss;
+                        }
 
-		void _clear()
-			{
-			memset(d,0,ss*sizeof(T));
-			}
+                void _clear()
+                        {
+                        memset(d,0,ss*sizeof(T));
+                        }
 
-		void Resize(size_t news)
-			{
-			if (news == ss)
-				return; // same size
+                void Resize(size_t news)
+                        {
+                        if (news == ss)
+                                return; // same size
 
-			// Create buffer to store existing data
-			T* newd = new T[news];
-			size_t newbs = news*sizeof(T);
-			memset((void*)newd,0, newbs);
+                        // Create buffer to store existing data
+                        T* newd = new T[news];
+                        size_t newbs = news*sizeof(T);
+                        memset((void*)newd,0, newbs);
 
-			if (ss < news)
-				// we created a larger data structure
-				memcpy((void*)newd,d,ss*sizeof(T));
-			else
-				// we created a smaller data structure
-				memcpy((void*)newd,d,news*sizeof(T));
-			delete[] d;
-			d = newd;
-			ss = news;
-			}
+                        if (ss < news)
+                                // we created a larger data structure
+                                memcpy((void*)newd,d,ss*sizeof(T));
+                        else
+                                // we created a smaller data structure
+                                memcpy((void*)newd,d,news*sizeof(T));
+                        delete[] d;
+                        d = newd;
+                        ss = news;
+                        }
 
-		void AddResize(size_t More)
-			{
-			Resize(ss + More);
-			}
+                void AddResize(size_t More)
+                        {
+                        Resize(ss + More);
+                        }
 
-	};
+        };
 
 // Binary Data Container 
 class BDC
-	{
-	public:
-		char* d;
-		unsigned long long ss;
+        {
+        public:
+                char* d;
+                unsigned long long ss;
 
-		BDC(unsigned long long s);
-		BDC();
-		~BDC();
-		BDC(const BDC& d2);
-		void operator =(const BDC& d2);
-		bool operator ==(const BDC& b2);
-		operator char*() const;
-		operator const char*() const;
-		char* p() const;
-		unsigned long long size() const;
-		void clear();
-		void reset();
-		void Ensure(unsigned long long news);
-		void Resize(unsigned long long news);
-		void AddResize(unsigned long long More);
-	};
+                BDC(unsigned long long s);
+                BDC();
+                ~BDC();
+                BDC(const BDC& d2);
+                void operator =(const BDC& d2);
+                bool operator ==(const BDC& b2);
+                operator char*() const;
+                operator const char*() const;
+                char* p() const;
+                unsigned long long size() const;
+                void clear();
+                void reset();
+                void Ensure(unsigned long long news);
+                void Resize(unsigned long long news);
+                void AddResize(unsigned long long More);
+        };
 
 /*
-	Binary Exporting Stuff
+        Binary Exporting Stuff
 
-	int (4)		: Version of the exporter, currently 0
-	int (4)		: Type (0 xml,1 header, 2 element, 3 variable, 4 comment, 5 cdata, 6 content)
-	int (4)		: Version of the specific type exporter, currently 0
-	int (4)		: Total size of the binary data following
-	<...>		: Data
+        int (4)         : Version of the exporter, currently 0
+        int (4)         : Type (0 xml,1 header, 2 element, 3 variable, 4 comment, 5 cdata, 6 content)
+        int (4)         : Version of the specific type exporter, currently 0
+        int (4)         : Total size of the binary data following
+        <...>           : Data
 
 */
 
 #pragma pack(push,8)
 struct XMLBINARYHEADER
-	{
-	int v;
-	int t;
-	int tv; 
-	int s;
-	};
+        {
+        int v;
+        int t;
+        int tv; 
+        int s;
+        };
 #pragma pack(pop)
 
 #ifdef XML_USE_NAMESPACE
 namespace XMLPP
-	{
+        {
 #endif
 
 
@@ -170,525 +170,531 @@ class XMLCData;
 class XML;
 
 typedef struct
-	{
-	int VersionHigh;
-	int VersionLow;
-	char RDate[20];
-	} XML_VERSION_INFO;
+        {
+        int VersionHigh;
+        int VersionLow;
+        char RDate[20];
+        } XML_VERSION_INFO;
 
 
 struct XMLEXPORTFORMAT
-	{
-	bool UseSpace;
-	int nId;
-	bool ElementsNoBreak;
-	bool ContentsNoBreak;
-	};
+        {
+        bool UseSpace;
+        int nId;
+        bool ElementsNoBreak;
+        bool ContentsNoBreak;
+        };
 
 
 // UNLOAD elements
 struct XMLUNLOADELEMENT
-	{
-	int i;
-	char* fn[300];
-	};
+        {
+        int i;
+        char* fn[300];
+        };
 
 // Enumerations
 enum XML_LOAD_MODE
-	{
-	XML_LOAD_MODE_LOCAL_FILE = 0,
-	XML_LOAD_MODE_MEMORY_BUFFER = 1,
-	XML_LOAD_MODE_URL = 2,
-	XML_LOAD_MODE_LOCAL_FILE_U = 7,
-	};
+        {
+        XML_LOAD_MODE_LOCAL_FILE = 0,
+        XML_LOAD_MODE_MEMORY_BUFFER = 1,
+        XML_LOAD_MODE_URL = 2,
+        XML_LOAD_MODE_LOCAL_FILE_U = 7,
+        };
 
 enum XML_PARSE_STATUS
-	{
-	XML_PARSE_OK = 0,
-	XML_PARSE_NO_HEADER = 1,
-	XML_PARSE_ERROR = 2,
-	};
+        {
+        XML_PARSE_OK = 0,
+        XML_PARSE_NO_HEADER = 1,
+        XML_PARSE_ERROR = 2,
+        };
 
 enum XML_SAVE_MODE
-	{
-	XML_SAVE_MODE_ZERO = 0,
-	XML_SAVE_MODE_DEFAULT = 1,
-	};
+        {
+        XML_SAVE_MODE_ZERO = 0,
+        XML_SAVE_MODE_DEFAULT = 1,
+        };
 
 enum XML_TARGET_MODE
-	{
-	XML_TARGET_MODE_FILE = 0,
-	XML_TARGET_MODE_MEMORY = 1,
-	XML_TARGET_MODE_REGISTRYKEY = 2,
-	XML_TARGET_MODE_UTF16FILE = 3,
-	};
+        {
+        XML_TARGET_MODE_FILE = 0,
+        XML_TARGET_MODE_MEMORY = 1,
+        XML_TARGET_MODE_REGISTRYKEY = 2,
+        XML_TARGET_MODE_UTF16FILE = 3,
+        };
 
 // Global functions
 
 class XMLHeader
-	{
-	public:
+        {
+        public:
 
-		// constructors/destructor
-		XMLHeader(const char* ht = 0);
-		operator const char*();
-		size_t MemoryUsage();
-		void CompressMemory();
-		bool IntegrityTest();
-		int Compare(XMLHeader*);
-		void SetEncoding(const char*);
-		XMLHeader* Duplicate();
-
-
-		XMLHeader(XMLHeader&);
-		XMLHeader& operator =(XMLHeader&);
-		~XMLHeader();
-
-		// XMLComment
-		XMLComment** GetComments();
-		unsigned int GetCommentsNum();
-		int AddComment(XMLComment*,int pos);
-		int RemoveComment(unsigned int i);
-		int RemoveAllComments();
-		int SpaceForComment(unsigned int);
-		void Export(FILE* fp,int HeaderMode,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
-
-		BDC ExportToBinary();
-		bool ImportFromBinary(const BDC&);
+                // constructors/destructor
+                XMLHeader(const char* ht = 0);
+                operator const char*();
+                size_t MemoryUsage();
+                void CompressMemory();
+                bool IntegrityTest();
+                int Compare(XMLHeader*);
+                void SetEncoding(const char*);
+                XMLHeader* Duplicate();
 
 
-	private:
+                XMLHeader(XMLHeader&);
+                XMLHeader& operator =(XMLHeader&);
+                ~XMLHeader();
 
-		void Clear();
-		int TotalCommentPointersAvailable;
-		char* hdr;
-		unsigned int commentsnum;
-		XMLComment** comments;
-	};
+                // XMLComment
+                XMLComment** GetComments();
+                unsigned int GetCommentsNum();
+                int AddComment(XMLComment*,int pos);
+                int RemoveComment(unsigned int i);
+                int RemoveAllComments();
+                int SpaceForComment(unsigned int);
+                void Export(FILE* fp,int HeaderMode,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
+
+                BDC ExportToBinary();
+                bool ImportFromBinary(const BDC&);
+
+
+        private:
+
+                void Clear();
+                int TotalCommentPointersAvailable;
+                char* hdr;
+                unsigned int commentsnum;
+                XMLComment** comments;
+        };
 
 
 
 struct XMLBORROWELEMENT
-	{
-	bool Active;
-	class XMLElement* x;
-	};
+        {
+        bool Active;
+        class XMLElement* x;
+        };
 
 class XMLElement
-	{
-	public:
+        {
+        public:
 
-		// constructors/destructor
-		XMLElement(XMLElement* par = 0,const char* el = 0,int Type = 0,bool Temp = false);
+                // constructors/destructor
+                XMLElement(XMLElement* par = 0,const char* el = 0,int Type = 0,bool Temp = false);
 
-		//XMLElement& operator =(XMLElement&);
-		~XMLElement();
+                //XMLElement& operator =(XMLElement&);
+                ~XMLElement();
 
-		void Clear();
-
-
-		XMLElement* operator[](int);
-		XMLElement* AddElement(XMLElement*);
-		XMLElement* AddElement(const char*);
-		XMLElement* InsertElement(unsigned int,XMLElement*);
-
-		void SetElementParam(unsigned long long p);
-		unsigned long long GetElementParam();
-		void Reparse(const char*el,int Type = 0);
-		int GetDeep();
-
-		int BorrowElement(XMLElement*,unsigned int = (unsigned)-1);
-		int ReleaseBorrowedElements();
-		int RemoveElementAndKeep(unsigned int i,XMLElement** el);
-
-		bool ReplaceElement(unsigned int i,XMLElement* ne,XMLElement** prev = 0);
-		int UpdateElement(XMLElement*,bool UpdateVariableValues = false);
-		int FindElement(XMLElement*);
-		int FindElement(const char* n);
-		XMLElement* FindElementZ(XMLElement*);
-		XMLElement* FindElementZ(const char* n,bool ForceCreate = false,char* el = 0,bool Temp = false);
-		int RemoveElement(unsigned int i);
-		int GetElementIndex(XMLElement*);
-		int GetDeepLevel();
-
-		bool EncryptElement(unsigned int i,char* pwd);
-		bool DecryptElement(unsigned int i,char* pwd);
-
-		int RemoveElement(XMLElement*);
-		int RemoveAllElements();
-		int RemoveTemporalElements(bool Deep = false);
-		int DeleteUnloadedElementFile(int i);
-
-		int UnloadElement(unsigned int i);
-		int ReloadElement(unsigned int i);
-		int ReloadAllElements();
-		XMLElement* MoveElement(unsigned int i,unsigned int y);
+                void Clear();
 
 
-		void SortElements(int (*fcmp)(const void *, const void *));
-		void SortVariables(int (*fcmp)(const void *, const void *));
-		friend int XMLElementfcmp(const void *, const void *);
-		friend int XMLVariablefcmp(const void *, const void *);
+                XMLElement* operator[](int);
+                XMLElement* AddElement(XMLElement*);
+                XMLElement* AddElement(const char*);
+                XMLElement* InsertElement(unsigned int,XMLElement*);
 
-		XMLElement* Duplicate(XMLElement* = 0);
-		XMLElement* Encrypt(const char* pwd);
-		XMLElement* Decrypt(const char* pwd);
-		size_t MemoryUsage();
-		void CompressMemory();
-		bool IntegrityTest();
-		int Compare(XMLElement*);
+                void SetElementParam(unsigned long long p);
+                unsigned long long GetElementParam();
+                void Reparse(const char*el,int Type = 0);
+                int GetDeep();
 
-		// XMLComment
-		XMLComment** GetComments();
-		int AddComment(XMLComment*,int InsertBeforeElement);
-		int AddComment(const char*,int);
-		unsigned int GetCommentsNum();
-		int RemoveComment(unsigned int i);
-		int RemoveAllComments();
+                int BorrowElement(XMLElement*,unsigned int = (unsigned)-1);
+                int ReleaseBorrowedElements();
+                int RemoveElementAndKeep(unsigned int i,XMLElement** el);
 
-		// XMLCData
-		XMLCData** GetCDatas();
-		int AddCData(XMLCData*,int InsertBeforeElement);
-		int AddCData(const char*,int);
-		unsigned int GetCDatasNum();
-		int RemoveCData(unsigned int i);
-		int RemoveAllCDatas();
+                bool ReplaceElement(unsigned int i,XMLElement* ne,XMLElement** prev = 0);
+                int UpdateElement(XMLElement*,bool UpdateVariableValues = false);
+                int FindElement(XMLElement*);
+                int FindElement(const char* n);
+                XMLElement* FindElementZ(XMLElement*);
+                XMLElement* FindElementZ(const char* n,bool ForceCreate = false,char* el = 0,bool Temp = false);
+                int RemoveElement(unsigned int i);
+                int GetElementIndex(XMLElement*);
+                int GetDeepLevel();
 
-		// Content Stuff
-		XMLContent** GetContents();
-		int AddContent(XMLContent* v,int InsertBeforeElement);
-		int AddContent(const char*,int,int BinarySize = 0);
-		int RemoveContent(unsigned int i);
-		void RemoveAllContents();
-		unsigned int GetContentsNum();
+                XMLElement * GetElement(const char* n);
 
-		// Children Stuff
-		XMLElement** GetChildren();
-		unsigned int GetChildrenNum();
-		unsigned int GetAllChildren(XMLElement**,unsigned int deep = 0xFFFFFFFF);
-		unsigned int GetAllChildrenNum(unsigned int deep = 0xFFFFFFFF);
+                bool EncryptElement(unsigned int i,char* pwd);
+                bool DecryptElement(unsigned int i,char* pwd);
+
+                int RemoveElement(XMLElement*);
+                int RemoveAllElements();
+                int RemoveTemporalElements(bool Deep = false);
+                int DeleteUnloadedElementFile(int i);
+
+                int UnloadElement(unsigned int i);
+                int ReloadElement(unsigned int i);
+                int ReloadAllElements();
+                XMLElement* MoveElement(unsigned int i,unsigned int y);
 
 
-		// Variable Stuff
-		int AddVariable(XMLVariable*);
-		int RemoveVariableAndKeep(unsigned int i,XMLVariable** vr);
-		XMLVariable** GetVariables();
-		int AddVariable(const char*,const char*);
-		int AddBinaryVariable(const char*,const char*,int);
+                void SortElements(int (*fcmp)(const void *, const void *));
+                void SortVariables(int (*fcmp)(const void *, const void *));
+                friend int XMLElementfcmp(const void *, const void *);
+                friend int XMLVariablefcmp(const void *, const void *);
 
-		int FindVariable(XMLVariable*);
-		int FindVariable(const char*  x);
-		XMLVariable* FindVariableZ(XMLVariable*);
-		XMLVariable* FindVariableZ(const char* x,bool ForceCreate = false,char* defnew = 0,bool Temp = false);
-		int RemoveVariable(unsigned int i);
-		int RemoveVariable(XMLVariable*);
-		int RemoveAllVariables();
-		int RemoveTemporalVariables(bool Deep = false);
-		unsigned int GetVariableNum();
+                XMLElement* Duplicate(XMLElement* = 0);
+                XMLElement* Encrypt(const char* pwd);
+                XMLElement* Decrypt(const char* pwd);
+                size_t MemoryUsage();
+                void CompressMemory();
+                bool IntegrityTest();
+                int Compare(XMLElement*);
 
+                // XMLComment
+                XMLComment** GetComments();
+                int AddComment(XMLComment*,int InsertBeforeElement);
+                int AddComment(const char*,int);
+                unsigned int GetCommentsNum();
+                int RemoveComment(unsigned int i);
+                int RemoveAllComments();
 
+                // XMLCData
+                XMLCData** GetCDatas();
+                int AddCData(XMLCData*,int InsertBeforeElement);
+                int AddCData(const char*,int);
+                unsigned int GetCDatasNum();
+                int RemoveCData(unsigned int i);
+                int RemoveAllCDatas();
 
-		XMLElement* GetElementInSection(const char*);
-		int XMLQuery(const char* expression,XMLElement** rv,unsigned int deep = 0xFFFFFFFF);
-		XMLElement* GetParent();
-		void Export(FILE* fp,int ShowAll,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,XMLHeader* hdr = 0,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
-		void SetExportFormatting(XMLEXPORTFORMAT* xf);
-		void SetElementName(const char*);
-		size_t GetElementName(char*,int NoDecode = 0);
-		size_t GetElementFullName(char*,int NoDecode = 0);
-		size_t GetElementUniqueString(char*);
-		void SetTemporal(bool);
-		bool IsTemporal();
-		int   GetType();
-		int ReserveSpaceForElements(unsigned int);
+                // Content Stuff
+                XMLContent** GetContents();
+                int AddContent(XMLContent* v,int InsertBeforeElement);
+                int AddContent(const char*,int,int BinarySize = 0);
+                int RemoveContent(unsigned int i);
+                void RemoveAllContents();
+                unsigned int GetContentsNum();
 
-		BDC ExportToBinary();
-		bool ImportFromBinary(const BDC&);
-
-
-	private:
-
-		unsigned long long param;
-		int type; // type, 0 element
-		XMLElement* parent; // one
-
-		char* el; // element name
-		XMLElement** children; // many
-		XMLVariable** variables; // many
-		XMLComment** comments; // many
-		XMLContent** contents; // many;
-		XMLCData** cdatas;
-		unsigned int childrennum;
-		unsigned int variablesnum;
-		unsigned int commentsnum;
-		unsigned int contentsnum;
-		unsigned int cdatasnum;
-		int SpaceForElement(unsigned int);
-		int SpaceForVariable(unsigned int);
-		int SpaceForComment(unsigned int);
-		int SpaceForContent(unsigned int);
-		int SpaceForCData(unsigned int);
-		int TotalChildPointersAvailable;
-		int TotalVariablePointersAvailable;
-		int TotalCommentPointersAvailable;
-		int TotalContentPointersAvailable;
-		int TotalCDataPointersAvailable;
+                // Children Stuff
+                XMLElement** GetChildren();
+                unsigned int GetChildrenNum();
+                unsigned int GetAllChildren(XMLElement**,unsigned int deep = 0xFFFFFFFF);
+                unsigned int GetAllChildrenNum(unsigned int deep = 0xFFFFFFFF);
 
 
-		bool Temporal;
-		Z<XMLBORROWELEMENT> BorrowedElements;
-		unsigned int NumBorrowedElements;
+                // Variable Stuff
+                int AddVariable(XMLVariable*);
+                int RemoveVariableAndKeep(unsigned int i,XMLVariable** vr);
+                XMLVariable** GetVariables();
+                int AddVariable(const char*,const char*);
+                int AddVariableInt(const char*, int);
+                int AddVariableUInt(const char*, unsigned int);
+                int AddBinaryVariable(const char*,const char*,int);
 
-		XMLEXPORTFORMAT xfformat;
-		static void printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMode);
-		void SetParent(XMLElement*);
+                int FindVariable(XMLVariable*);
+                int FindVariable(const char*  x);
+                XMLVariable* FindVariableZ(XMLVariable*);
+                XMLVariable* FindVariableZ(const char* x,bool ForceCreate = false,char* defnew = 0,bool Temp = false);
+                int RemoveVariable(unsigned int i);
+                int RemoveVariable(XMLVariable*);
+                int RemoveAllVariables();
+                int RemoveTemporalVariables(bool Deep = false);
+                unsigned int GetVariableNum();
+
+                XMLVariable * GetVariable(const char*  x);
+                int GetVariableInt(const char*  x, int def);
+                unsigned int GetVariableUInt(const char*  x, unsigned int def);
+                             
+                XMLElement* GetElementInSection(const char*);
+                int XMLQuery(const char* expression,XMLElement** rv,unsigned int deep = 0xFFFFFFFF);
+                XMLElement* GetParent();
+                void Export(FILE* fp,int ShowAll,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,XMLHeader* hdr = 0,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
+                void SetExportFormatting(XMLEXPORTFORMAT* xf);
+                void SetElementName(const char*);
+                size_t GetElementName(char*,int NoDecode = 0);
+                size_t GetElementFullName(char*,int NoDecode = 0);
+                size_t GetElementUniqueString(char*);
+                void SetTemporal(bool);
+                bool IsTemporal();
+                int   GetType();
+                int ReserveSpaceForElements(unsigned int);
+
+                BDC ExportToBinary();
+                bool ImportFromBinary(const BDC&);
 
 
-	};
+        private:
+
+                unsigned long long param;
+                int type; // type, 0 element
+                XMLElement* parent; // one
+
+                char* el; // element name
+                XMLElement** children; // many
+                XMLVariable** variables; // many
+                XMLComment** comments; // many
+                XMLContent** contents; // many;
+                XMLCData** cdatas;
+                unsigned int childrennum;
+                unsigned int variablesnum;
+                unsigned int commentsnum;
+                unsigned int contentsnum;
+                unsigned int cdatasnum;
+                int SpaceForElement(unsigned int);
+                int SpaceForVariable(unsigned int);
+                int SpaceForComment(unsigned int);
+                int SpaceForContent(unsigned int);
+                int SpaceForCData(unsigned int);
+                int TotalChildPointersAvailable;
+                int TotalVariablePointersAvailable;
+                int TotalCommentPointersAvailable;
+                int TotalContentPointersAvailable;
+                int TotalCDataPointersAvailable;
+
+
+                bool Temporal;
+                Z<XMLBORROWELEMENT> BorrowedElements;
+                unsigned int NumBorrowedElements;
+
+                XMLEXPORTFORMAT xfformat;
+                static void printc(FILE* fp,XMLElement* root,int deep,int ShowAll,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMode);
+                void SetParent(XMLElement*);
+
+
+        };
 
 
 class XMLVariable
-	{
-	public:
+        {
+        public:
 
-		XMLVariable(const char* = 0,const char* = 0,int NoDecode = 0,bool Temp = false);
-		~XMLVariable();
-		XMLVariable(const XMLVariable&);
-		XMLVariable& operator =(const XMLVariable&);
-
-
-		size_t MemoryUsage();
-		void CompressMemory();
-		bool IntegrityTest();
-		int Compare(XMLVariable*);
-
-		XMLElement* SetOwnerElement(XMLElement*);
-		size_t GetName(char*,int NoDecode = 0) const;
-		size_t GetValue(char*,int NoDecode = 0) const;
-		int GetValueInt();
-		unsigned int GetValueUInt();
-		long long GetValueInt64();
-		unsigned long long GetValueUInt64();
-		float GetValueFloat();
-		void SetName(const char*,int NoDecode = 0);
-		void SetValue(const char*,int NoDecode = 0);
-		void SetValueUInt(unsigned int);
-		void SetValueInt(int);
-		void SetValueInt64(long long);
-		void SetValueUInt64(unsigned long long);
-		void SetValueFloat(float);
-		void SetFormattedValue(const char* fmt,...);
-		template <typename T> T GetFormattedValue(const char* fmt)
-			{
-			size_t p = GetValue(0);
-			Z<char> d(p + 10);
-			GetValue(d);
-			T x = 0;
-			sscanf_s(d,fmt,&x);
-			return x;
-			}
-		template <typename T> void SetValueX(T t,const char* fmt);
-		template <typename T> T GetValueX(const char* fmt);
-		XMLVariable* Duplicate();
-		void Copy();
-		XMLElement* GetOwnerElement();
-		void SetTemporal(bool);
-		bool IsTemporal();
-
-		size_t GetBinaryValue(char*);
-		size_t SetBinaryValue(char*,int);
-
-		BDC ExportToBinary();
-		bool ImportFromBinary(const BDC&);
+                XMLVariable(const char* = 0,const char* = 0,int NoDecode = 0,bool Temp = false);
+                ~XMLVariable();
+                XMLVariable(const XMLVariable&);
+                XMLVariable& operator =(const XMLVariable&);
 
 
-	private:
+                size_t MemoryUsage();
+                void CompressMemory();
+                bool IntegrityTest();
+                int Compare(XMLVariable*);
 
-		void Clear();
-		char* vn;
-		char* vv;
-		XMLElement* owner;
-		bool Temporal;
+                XMLElement* SetOwnerElement(XMLElement*);
+                size_t GetName(char*,int NoDecode = 0) const;
+                size_t GetValue(char*,int NoDecode = 0) const;
+                int GetValueInt();
+                unsigned int GetValueUInt();
+                long long GetValueInt64();
+                unsigned long long GetValueUInt64();
+                float GetValueFloat();
+                void SetName(const char*,int NoDecode = 0);
+                void SetValue(const char*,int NoDecode = 0);
+                void SetValueUInt(unsigned int);
+                void SetValueInt(int);
+                void SetValueInt64(long long);
+                void SetValueUInt64(unsigned long long);
+                void SetValueFloat(float);
+                void SetFormattedValue(const char* fmt,...);
+                template <typename T> T GetFormattedValue(const char* fmt)
+                        {
+                        size_t p = GetValue(0);
+                        Z<char> d(p + 10);
+                        GetValue(d);
+                        T x = 0;
+                        sscanf_s(d,fmt,&x);
+                        return x;
+                        }
+                template <typename T> void SetValueX(T t,const char* fmt);
+                template <typename T> T GetValueX(const char* fmt);
+                XMLVariable* Duplicate();
+                void Copy();
+                XMLElement* GetOwnerElement();
+                void SetTemporal(bool);
+                bool IsTemporal();
+
+                size_t GetBinaryValue(char*);
+                size_t SetBinaryValue(char*,int);
+
+                BDC ExportToBinary();
+                bool ImportFromBinary(const BDC&);
 
 
-	};
+        private:
+
+                void Clear();
+                char* vn;
+                char* vv;
+                XMLElement* owner;
+                bool Temporal;
+
+
+        };
 
 
 
 class XMLComment
-	{
-	public:
+        {
+        public:
 
-		// constructors/destructor
-		XMLComment(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0);
-		operator const char*() const;
-		void SetComment(const char* ht);
-		size_t MemoryUsage();
-		void CompressMemory();
-		bool IntegrityTest();
-		int Compare(XMLComment*);
+                // constructors/destructor
+                XMLComment(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0);
+                operator const char*() const;
+                void SetComment(const char* ht);
+                size_t MemoryUsage();
+                void CompressMemory();
+                bool IntegrityTest();
+                int Compare(XMLComment*);
 
-		XMLComment(const XMLComment&);
-		XMLComment& operator =(const XMLComment&);
-		~XMLComment();
+                XMLComment(const XMLComment&);
+                XMLComment& operator =(const XMLComment&);
+                ~XMLComment();
 
-		XMLComment* Duplicate();
-		void SetParent(XMLElement* p,int ep);
-		int GetEP() const;
+                XMLComment* Duplicate();
+                void SetParent(XMLElement* p,int ep);
+                int GetEP() const;
 
-		BDC ExportToBinary();
-		bool ImportFromBinary(const BDC&);
+                BDC ExportToBinary();
+                bool ImportFromBinary(const BDC&);
 
-	private:
+        private:
 
-		XMLElement* parent;
-		char* c;
-		int ep; // Element Position (Before)
-	};
+                XMLElement* parent;
+                char* c;
+                int ep; // Element Position (Before)
+        };
 
 
 class XMLContent
-	{
-	public:
+        {
+        public:
 
-		// constructors/destructor
-		XMLContent(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0,int NoDecode = 0,int BinarySize = 0);
-//		operator const char*();
-		size_t GetValue(char*,int NoDecode = 0) const; 
-		bool GetBinaryValue(char**o,unsigned int* len);
-		void SetValue(const char*,int NoDecode = 0,int BinarySize = 0);
-		size_t MemoryUsage();
-		void CompressMemory();
-		bool IntegrityTest();
-		int Compare(XMLContent*);
+                // constructors/destructor
+                XMLContent(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0,int NoDecode = 0,int BinarySize = 0);
+//              operator const char*();
+                size_t GetValue(char*,int NoDecode = 0) const; 
+                bool GetBinaryValue(char**o,unsigned int* len);
+                void SetValue(const char*,int NoDecode = 0,int BinarySize = 0);
+                size_t MemoryUsage();
+                void CompressMemory();
+                bool IntegrityTest();
+                int Compare(XMLContent*);
 
-		XMLContent(const XMLContent&);
-		XMLContent& operator =(const XMLContent&);
-		~XMLContent();
+                XMLContent(const XMLContent&);
+                XMLContent& operator =(const XMLContent&);
+                ~XMLContent();
 
-		XMLContent* Duplicate();
-		void SetParent(XMLElement* p,int ep);
-		int GetEP() const;
-		void SetBinaryMode(bool bm);
-		bool IsInBinaryMode() const;
+                XMLContent* Duplicate();
+                void SetParent(XMLElement* p,int ep);
+                int GetEP() const;
+                void SetBinaryMode(bool bm);
+                bool IsInBinaryMode() const;
 
-		BDC ExportToBinary();
-		bool ImportFromBinary(const BDC&);
+                BDC ExportToBinary();
+                bool ImportFromBinary(const BDC&);
 
-	private:
+        private:
 
-		XMLElement* parent;
-		BDC bdc; // Binary Data Container
-		bool BinaryMode;
+                XMLElement* parent;
+                BDC bdc; // Binary Data Container
+                bool BinaryMode;
 
-		char* c;
-		int ep; // Element Position (Before)
-	};
+                char* c;
+                int ep; // Element Position (Before)
+        };
 
 class XMLCData
-	{
-	public:
+        {
+        public:
 
-		// constructors/destructor
-		XMLCData(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0);
-		operator const char*() const;
-		void SetCData(const char* ht);
-		size_t MemoryUsage();
-		void CompressMemory();
-		bool IntegrityTest();
-		int Compare(XMLCData*);
+                // constructors/destructor
+                XMLCData(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0);
+                operator const char*() const;
+                void SetCData(const char* ht);
+                size_t MemoryUsage();
+                void CompressMemory();
+                bool IntegrityTest();
+                int Compare(XMLCData*);
 
-		XMLCData(const XMLCData&);
-		XMLCData& operator =(const XMLCData&);
-		~XMLCData();
+                XMLCData(const XMLCData&);
+                XMLCData& operator =(const XMLCData&);
+                ~XMLCData();
 
-		XMLCData* Duplicate();
-		void SetParent(XMLElement* p,int ep);
-		int GetEP() const;
+                XMLCData* Duplicate();
+                void SetParent(XMLElement* p,int ep);
+                int GetEP() const;
 
-		BDC ExportToBinary();
-		bool ImportFromBinary(const BDC&);
+                BDC ExportToBinary();
+                bool ImportFromBinary(const BDC&);
 
 
 
-	private:
+        private:
 
-		XMLElement* parent;
-		char* c;
-		int ep; // Element Position (Before)
-	};
+                XMLElement* parent;
+                char* c;
+                int ep; // Element Position (Before)
+        };
 
 class XML
-	{
-	public:
+        {
+        public:
 
-		// constructors/destructor
+                // constructors/destructor
 
-		XML();
-		XML(const char* file,XML_LOAD_MODE LoadMode = XML_LOAD_MODE_LOCAL_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
-		void Version(XML_VERSION_INFO*);
-		size_t MemoryUsage();
-		void CompressMemory();
-		bool IntegrityTest();
-		int Compare(XML*);
+                XML();
+                XML(const char* file,XML_LOAD_MODE LoadMode = XML_LOAD_MODE_LOCAL_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
+                void Version(XML_VERSION_INFO*);
+                size_t MemoryUsage();
+                void CompressMemory();
+                bool IntegrityTest();
+                int Compare(XML*);
 
-		XML(XML& x);
-		XML& operator =(XML&);
-		~XML();
+                XML(XML& x);
+                XML& operator =(XML&);
+                ~XML();
 
-		static int DoMatch(const char *text, char *p, bool IsCaseSensitive = false);
-		static bool VMatching(const char *text, char *p, bool IsCaseSensitive = false);
-		static bool TestMatch(const char* item1,const char* comp,const char* item2);
-		static Z<char>* ReadToZ(const char*,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0,bool IsU = 0);
-		static int Convert2HexCharsToNumber(int c1, int c2);
-		static XMLElement* Paste(char* txt = 0);
+                static int DoMatch(const char *text, char *p, bool IsCaseSensitive = false);
+                static bool VMatching(const char *text, char *p, bool IsCaseSensitive = false);
+                static bool TestMatch(const char* item1,const char* comp,const char* item2);
+                static Z<char>* ReadToZ(const char*,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0,bool IsU = 0);
+                static int Convert2HexCharsToNumber(int c1, int c2);
+                static XMLElement* Paste(char* txt = 0);
 
-		XML_PARSE_STATUS ParseStatus(int* = 0);
-		void SaveOnClose(bool);
-		int Load(const char* data,XML_LOAD_MODE LoadMode = XML_LOAD_MODE_LOCAL_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
-		size_t LoadText(const char*);
-		static int PartialLoad(const char* file,const char* map);
-		static XMLElement * PartialElement(const char* file,const char* map);
-		int Save(const char* file = 0,XML_SAVE_MODE SaveMode = XML_SAVE_MODE_DEFAULT,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0); // Default, do not encode already encoded
-		void Export(FILE* fp,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,XMLHeader *hdr = 0,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
-		void SetExportFormatting(XMLEXPORTFORMAT* xf);
+                XML_PARSE_STATUS ParseStatus(int* = 0);
+                void SaveOnClose(bool);
+                int Load(const char* data,XML_LOAD_MODE LoadMode = XML_LOAD_MODE_LOCAL_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
+                size_t LoadText(const char*);
+                static int PartialLoad(const char* file,const char* map);
+                static XMLElement * PartialElement(const char* file,const char* map);
+                int Save(const char* file = 0,XML_SAVE_MODE SaveMode = XML_SAVE_MODE_DEFAULT,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0); // Default, do not encode already encoded
+                void Export(FILE* fp,XML_SAVE_MODE SaveMode,XML_TARGET_MODE TargetMode = XML_TARGET_MODE_FILE,XMLHeader *hdr = 0,class XMLTransform* eclass = 0,class XMLTransformData* edata = 0);
+                void SetExportFormatting(XMLEXPORTFORMAT* xf);
 
-		void Lock(bool);
-		int RemoveTemporalElements();
+                void Lock(bool);
+                int RemoveTemporalElements();
 
-		void SetRootElement(XMLElement*);
-		XMLElement* RemoveRootElementAndKeep();
-		XMLElement* GetRootElement() const;
-		XMLHeader* GetHeader();
-		void SetHeader(XMLHeader* h);
+                void SetRootElement(XMLElement*);
+                XMLElement* RemoveRootElementAndKeep();
+                XMLElement* GetRootElement() const;
+                XMLHeader* GetHeader();
+                void SetHeader(XMLHeader* h);
 
-		static size_t XMLEncode(const char* src,char* trg);
-		static size_t XMLDecode(const char* src,char* trg);
-		size_t XMLGetValue(const char* section,const char* attr,char* put,size_t maxlen);
-		void XMLSetValue(const char* section,const char* attr,char* put);
+                static size_t XMLEncode(const char* src,char* trg);
+                static size_t XMLDecode(const char* src,char* trg);
+                size_t XMLGetValue(const char* section,const char* attr,char* put,size_t maxlen);
+                void XMLSetValue(const char* section,const char* attr,char* put);
 
-		BDC ExportToBinary();
-		bool ImportFromBinary(const BDC&);
+                BDC ExportToBinary();
+                bool ImportFromBinary(const BDC&);
 
-		// Query functions
-		int XMLQuery(const char* rootsection,const char* expression,XMLElement** rv,unsigned int deep = 0xFFFFFFFF);
+                // Query functions
+                int XMLQuery(const char* rootsection,const char* expression,XMLElement** rv,unsigned int deep = 0xFFFFFFFF);
 
-	private:
+        private:
 
-		void Init();
-		void Clear();
+                void Init();
+                void Clear();
 
-		XML_PARSE_STATUS iParseStatus; // 0 Valid , 1 Error but recovered, 2 fatal error
-		int iParseStatusPos;
+                XML_PARSE_STATUS iParseStatus; // 0 Valid , 1 Error but recovered, 2 fatal error
+                int iParseStatusPos;
 
-		char* f;          // filename
-		XMLHeader* hdr;   // header (one)
-		XMLElement* root; // root element (one)
+                char* f;          // filename
+                XMLHeader* hdr;   // header (one)
+                XMLElement* root; // root element (one)
 
-		bool SOnClose;
+                bool SOnClose;
 
 
-	};
+        };
 
 
 // public functions
@@ -716,35 +722,35 @@ int    XMLGetAllItems(const char* section,char** vnames,const char*xml);
 // XMLTransform class
 
 class XMLTransformData
-	{
-	public:
-		XMLTransformData() {}
-	};
+        {
+        public:
+                XMLTransformData() {}
+        };
 
 class XMLTransform
-	{
-	public:
+        {
+        public:
 
-		XMLTransform(XMLTransformData*) { }
-		virtual ~XMLTransform() {}
-		virtual size_t Encrypt(const char*src,size_t srclen,int srctype,char* dst,size_t dstlen,XMLTransformData* data = 0) = 0;
-		virtual size_t Decrypt(const char*src,size_t srclen,int srctype,char* dst,size_t dstlen,XMLTransformData* data = 0) = 0;
+                XMLTransform(XMLTransformData*) { }
+                virtual ~XMLTransform() {}
+                virtual size_t Encrypt(const char*src,size_t srclen,int srctype,char* dst,size_t dstlen,XMLTransformData* data = 0) = 0;
+                virtual size_t Decrypt(const char*src,size_t srclen,int srctype,char* dst,size_t dstlen,XMLTransformData* data = 0) = 0;
 
-	};
+        };
 
 class XMLHelper
-	{
-	public:
+        {
+        public:
 
-		// static functions
-		static char* FindXMLClose(char* s);
-		static XMLElement* ParseElementTree(XMLHeader* hdr,XMLElement* parent,char* tree,char** EndValue,XML_PARSE_STATUS& iParseStatus);
-		static void AddBlankVariable(XMLElement* parent,char *a2,int Pos);
-		static int pow(int P,int z);
+                // static functions
+                static char* FindXMLClose(char* s);
+                static XMLElement* ParseElementTree(XMLHeader* hdr,XMLElement* parent,char* tree,char** EndValue,XML_PARSE_STATUS& iParseStatus);
+                static void AddBlankVariable(XMLElement* parent,char *a2,int Pos);
+                static int pow(int P,int z);
 
 
 
-	};
+        };
 
 #ifdef XML_USE_NAMESPACE
 };
