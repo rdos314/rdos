@@ -211,6 +211,41 @@ ShowAsciiz Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Clear
+;
+;           DESCRIPTION:    Clear screen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Clear Proc near
+    push ds
+    push es
+    push ax
+    push cx
+    push di
+;    
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov ds:curr_pos,0
+    xor di,di
+    mov ax,__B800
+    mov es,ax
+    mov ax,0720h
+    mov cx,80 * 24
+    rep stosw
+;      
+    pop di
+    pop cx
+    pop ax
+    pop es
+    pop ds    
+    ret
+Clear Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           NewLine
 ;
 ;           DESCRIPTION:    
@@ -959,6 +994,129 @@ WriteDwordRegs  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WriteFault
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+error_code_tab:
+ke00    DB 'Divide error            '
+ke01    DB 'Single step             '
+ke02    DB 'NMI                     '
+ke03    DB 'Breakpoint              '
+ke04    DB 'Overflow                '
+ke05    DB 'Array bounds error      '
+ke06    DB 'Invalid OP-code         '
+ke07    DB '80387 not present       '
+ke08    DB 'Double fault            '
+ke09    DB '80387 overrun           '
+ke0A    DB 'Invalid TSS             '
+ke0B    DB 'Segment not present     '
+ke0C    DB 'Stack fault             '
+ke0D    DB 'Protection fault        '
+ke0E    DB 'Page fault              '
+ke0F    DB '                        '
+ke10    DB '80387 error             '
+ke11    DB 'Cannot emulate          '
+ke12    DB 'Cannot emulate 80387    '
+ke13    DB 'Now in real mode        '
+ke14    DB '----------------------- '
+ke15    DB 'Illegal int request     '
+ke16    DB 'Undefined method        '
+ke17    DB 'Invalid handle          '
+ke18    DB 'Invalid selector        '
+
+WriteFault    Proc near
+    mov al,' '
+    call ShowChar
+;    
+    mov edx,gs:cs_fault
+    cmp dx,18h
+    jbe wfDo
+;
+    mov dx,14h    
+
+wfDo:
+    mov bx,dx
+    add bx,bx
+    add bx,bx
+    add bx,bx
+    mov cx,bx
+    add cx,cx
+    add bx,cx
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET error_code_tab
+    add di,bx
+    mov cx,24
+    call ShowSizeString
+    ret
+WriteFault    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteProcFlags
+;
+;           DESCRIPTION:    Write processor flag registers
+;
+;           PARAMETERS:     GS      Core sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+nest_text       DB 'Nesting=',0
+flag_preempt    DB 'Preempt ',0
+flag_prio       DB 'Prio ',0
+flag_timer      DB 'Timer ',0
+flag_wait       DB 'Wait ',0
+
+WriteProcFlags     PROC near
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET nest_text
+    call ShowAsciiz
+    mov ax,gs:ps_nesting
+    call WriteHexWord
+;
+    mov al,' '
+    call ShowChar
+;
+    test gs:ps_flags,PS_FLAG_PREEMPT
+    jz wpfNoPreempt
+;
+    mov di, OFFSET flag_preempt
+    call ShowAsciiz
+
+wpfNoPreempt:    
+    test gs:ps_flags,PS_FLAG_PRIO_CHANGE
+    jz wpfNoPrio
+;
+    mov di, OFFSET flag_prio
+    call ShowAsciiz
+
+wpfNoPrio:
+    test gs:ps_flags,PS_FLAG_TIMER
+    jz wpfNoTimer
+;
+    mov di, OFFSET flag_timer
+    call ShowAsciiz
+
+wpfNoTimer:
+    mov ax,gs:ps_wait
+    or ax,ax
+    jz wpfNoWait
+;
+    mov di, OFFSET flag_wait
+    call ShowAsciiz
+
+wpfNoWait:
+    ret
+WriteProcFlags     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetBaseSize
 ;
 ;           DESCRIPTION:    
@@ -1700,6 +1858,7 @@ WriteCpuReg     Proc near
 ;
     mov di,OFFSET dword_reg_tab3
     call WriteDwordRegs
+    call WriteFault
     call WriteInstr
     call NewLine
 ;
@@ -1742,6 +1901,9 @@ WriteCpuReg     Proc near
     call WriteEflags
     call NewLine
 ;
+    call WriteProcFlags
+    call NewLine
+;
     call Delimiter
 ;    
     mov bx,gs:cs_ss
@@ -1777,7 +1939,7 @@ ShowCrashCore    Proc near
     push ds
     mov ax,SEG data
     mov ds,ax
-    mov ds:curr_pos,0
+    call Clear
     call WriteCpuReg
     pop ds
     ret
