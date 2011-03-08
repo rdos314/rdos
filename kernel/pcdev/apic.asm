@@ -1394,17 +1394,17 @@ resume_processor  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   PreemptProcessor
+;               NAME:           UnblockProcessor
 ;
-;               DESCRIPTION:    Send a preempt req
+;               DESCRIPTION:    Send an unblock req
 ;
 ;       PARAMETERS:     FS      Processor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-preempt_processor_name    DB 'Preempt Processor',0
+unblock_processor_name    DB 'Unblock Processor',0
 
-preempt_processor  Proc far
+unblock_processor  Proc far
     push ds
     push ax
     push edx
@@ -1419,7 +1419,7 @@ preempt_processor  Proc far
     pop ax
     pop ds
     ret
-preempt_processor  Endp
+unblock_processor  Endp
 
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2804,15 +2804,15 @@ resume_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PreemptInt
+;               NAME:           UnblockInt
 ;
-;               DESCRIPTION:    Preempt IPI int
+;               DESCRIPTION:    Unblock IPI int
 ;
 ;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-preempt_int:
+unblock_int:
     push ds
     push es
     push fs
@@ -2821,7 +2821,7 @@ preempt_int:
     mov ax,SEG data
     mov ds,ax
     call ds:mp_eoi_proc
-    DoPreemptProcessor
+    DoUnblockProcessor
 ;
     popad
     pop fs
@@ -2844,7 +2844,7 @@ ipi_tab:
 ;                       int #   Entry                   
 ;
 ipi80   DW      80h,    OFFSET resume_int
-ipi81   DW      81h,    OFFSET preempt_int
+ipi81   DW      81h,    OFFSET unblock_int
     DW      0FFFFh
 
 ;
@@ -2950,10 +2950,10 @@ init_smp_done:
     mov ax,resume_processor_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET preempt_processor
-    mov edi,OFFSET preempt_processor_name
+    mov esi,OFFSET unblock_processor
+    mov edi,OFFSET unblock_processor_name
     xor cl,cl
-    mov ax,preempt_processor_nr
+    mov ax,unblock_processor_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_int

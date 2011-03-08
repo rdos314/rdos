@@ -1070,8 +1070,11 @@ flag_preempt    DB 'Preempt ',0
 flag_prio       DB 'Prio ',0
 flag_timer      DB 'Timer ',0
 flag_wait       DB 'Wait ',0
+flag_blocked    DB 'Blocked ',0
 
 WriteProcFlags     PROC near
+    push fs
+;    
     mov ax,cs
     mov es,ax
     mov di,OFFSET nest_text
@@ -1111,6 +1114,16 @@ wpfNoTimer:
     call ShowAsciiz
 
 wpfNoWait:
+    mov ax,gs
+    mov fs,ax
+    IsProcessorBlocked
+    jnc wpfNoBlocked
+;
+    mov di, OFFSET flag_blocked
+    call ShowAsciiz
+
+wpfNoBlocked:
+    pop fs
     ret
 WriteProcFlags     ENDP
 

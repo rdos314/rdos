@@ -655,12 +655,17 @@ StartProcessor    MACRO
 						ENDM
 
 ;   IN  FS      Processor selector
-PreemptProcessor    MACRO
-	OsGate preempt_processor_nr
+IsProcessorBlocked    MACRO
+	OsGate is_processor_blocked_nr
 						ENDM
 
-DoPreemptProcessor    MACRO
-	OsGate do_preempt_processor_nr
+;   IN  FS      Processor selector
+UnblockProcessor    MACRO
+	OsGate unblock_processor_nr
+						ENDM
+
+DoUnblockProcessor    MACRO
+	OsGate do_unblock_processor_nr
 						ENDM
 
 ;   IN  FS      Processor selector

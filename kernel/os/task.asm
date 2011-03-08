@@ -828,10 +828,16 @@ proc_init:
     mov ax,start_processor_nr
     RegisterOsGate
 ;
-    mov si,OFFSET do_preempt_processor
-    mov di,OFFSET do_preempt_processor_name
+    mov si,OFFSET is_processor_blocked
+    mov di,OFFSET is_processor_blocked_name
     xor cl,cl
-    mov ax,do_preempt_processor_nr
+    mov ax,is_processor_blocked_nr
+    RegisterOsGate
+;
+    mov si,OFFSET do_unblock_processor
+    mov di,OFFSET do_unblock_processor_name
+    xor cl,cl
+    mov ax,do_unblock_processor_nr
     RegisterOsGate
 ;
     mov si,OFFSET start_pit_timer
@@ -4821,7 +4827,7 @@ tumPreemptLoop:
 
 tumPreemptDo: 
     mov fs,ds:[bx]
-    PreemptProcessor
+    UnblockProcessor
     pop bx
     pop fs
 
@@ -4910,7 +4916,7 @@ lumPreemptLoop:
 
 lumPreemptDo: 
     mov fs,ds:[bx]
-    PreemptProcessor
+    UnblockProcessor
     pop bx
     pop fs
 
@@ -4921,6 +4927,40 @@ lumDone:
     ret
 LoadUnlockMultiple      Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsProcessorBlocked
+;
+;       DESCRIPTION:    Check if processor is blocked
+;
+;       PARAMETERS:     FS      Processor selector
+;
+;       RETURNS:        CY      Blocked
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_processor_blocked_name    DB 'Is Processor Blocked',0
+
+is_processor_blocked    Proc far
+    push eax
+;    
+    mov eax,fs:ps_mask
+    and eax,ds:processor_preempt
+    jz ipbNo
+
+ippYes:
+    stc
+    jmp ipbDone
+
+ipbNo:
+    clc
+
+ipbDone:
+    pop eax
+    ret
+is_processor_blocked    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5053,7 +5093,7 @@ timer_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DoPreemptProcessor
+;           NAME:           DoUnblockProcessor
 ;
 ;           DESCRIPTION:    Preempt processor from running thread
 ;
@@ -5061,15 +5101,15 @@ timer_int:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-do_preempt_processor_name   DB 'Do Preempt Processor', 0
+do_unblock_processor_name   DB 'Do Unblock Processor', 0
 
-do_preempt_processor    Proc far
+do_unblock_processor    Proc far
     mov ax,task_sel
     mov ds,ax
     call ds:try_lock_proc
     call ReloadTimer
     ret
-do_preempt_processor    Endp
+do_unblock_processor    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
