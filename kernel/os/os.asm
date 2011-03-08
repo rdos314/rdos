@@ -300,15 +300,15 @@ do16_ov_done:
     mov ax,0F5F5h
     shl eax,16
     mov ax,es:[di].gate_sel
-    mov ds:[ebx+4],eax
+    xchg eax,ds:[ebx+4]
 ;    
     mov eax,es:[di].gate_offset
     shl eax,16
     mov ax,9A90h
-    mov ds:[ebx],eax    
+    xchg eax,ds:[ebx]
 ;
     mov ax,9090h
-    mov ds:[ebx+6],ax
+    xchg ax,ds:[ebx+6]
     call leave_code_patch
     jmp do16_retry
 
@@ -321,12 +321,13 @@ do16_direct:
     call enter_code_patch
     movzx eax,ax
     or eax,0F5F50000h
-    mov ds:[ebx+4],eax
+    xchg eax,ds:[ebx+4]
 ;
     mov eax,0E80E9090h
-    mov ds:[ebx],eax
+    xchg eax,ds:[ebx]
 ;
-    mov ds:[ebx+6],ax
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
     call leave_code_patch
     jmp do16_retry
 
