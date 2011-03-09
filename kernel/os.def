@@ -462,6 +462,4 @@ crash_gate_nr               = 388
 crash_tss_nr                = 389
 crash_fault_nr              = 390
 
-test_gate_nr                = 391
-
 osgate_entries				= 400

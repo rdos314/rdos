@@ -249,21 +249,16 @@ do16_lock_loop:
 
 do16_locked: 
     mov al,ds:[ebx]
+    cmp al,90h
+    je do16_patched
+;    
     cmp al,66h
     je do16_has_ov
-;
-    mov ax,ds:[ebx+5]
-    cmp ax,3
-    jne do16_patched
 ;    
     mov di,ds:[ebx+1]
     jmp do16_ov_done
 
 do16_has_ov:
-    mov ax,ds:[ebx+6]
-    cmp ax,3
-    jne do16_patched
-;
     mov di,ds:[ebx+2]
 
 do16_ov_done:    
@@ -276,7 +271,7 @@ do16_ov_done:
     push cs
     call get_selector_base_size
     pop ebx
-    add     ebx,edx
+    add ebx,edx
     mov ax,flat_sel
     mov ds,ax
 ;

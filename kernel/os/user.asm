@@ -68,6 +68,8 @@ ENDIF
     extrn translate_segment:near
     extrn translate_selector:near
 
+    extrn enter_code_patch:near
+    extrn leave_code_patch:near
     assume cs:code
 
 
@@ -147,6 +149,14 @@ init_usergate_loop:
     xor dx,dx
     mov ax,is_valid_usergate_nr
     RegisterBimodalUserGate
+;    
+    mov ebx,OFFSET test_gate16
+    mov esi,OFFSET test_gate32
+    mov edi,OFFSET test_gate_name
+    mov ax,test_gate_nr
+    xor dx,dx
+    xor cl,cl
+    RegisterUserGate
 ;
     popa
     pop es
@@ -154,6 +164,28 @@ init_usergate_loop:
     ret
 init_usergate   ENDP
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TestGate
+;
+;           DESCRIPTION:    Test gate
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name       DB 'Test Gate',0
+
+test_gate16    PROC far
+    mov ax,7A56h    
+    ret
+test_gate16   ENDP
+
+test_gate32    PROC far
+    mov ax,7A52h    
+    retf32
+test_gate32   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -655,6 +687,10 @@ do_call16_lock_loop:
     jmp do_call16_lock_loop
 
 do_call16_locked:     
+    mov al,ds:[ebx]
+    cmp al,90h
+    je do16_patched
+;    
     mov edi,ds:[ebx+2]
     shl edi,5
     mov ax,usergate_sel
@@ -684,45 +720,45 @@ do_call16_locked:
     cmp ax,[bp+16]
     je do_call16_direct_cs16
 ;
-    mov ds:[ebx+3],ax
     mov [bp+10],ax
     mov eax,es:[edi].gate_entry_offset16
-    mov ds:[ebx+1],ax
     mov [bp+8],ax
-    mov byte ptr ds:[ebx],9Ah
-    mov word ptr ds:[ebx+5],9090h
-    mov byte ptr ds:[ebx+7],90h
-    jmp do_call16_direct_do16
+;
+    call enter_code_patch
+    mov ax,0F5F5h
+    shl eax,16
+    mov ax,es:[edi].gate_entry_sel16
+    xchg eax,ds:[ebx+4]
+;    
+    mov eax,es:[edi].gate_entry_offset16
+    shl eax,16
+    mov ax,9A90h
+    xchg eax,ds:[ebx]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+    call leave_code_patch
+    jmp do16_retry16
 
 do_call16_direct_cs16:
     mov [bp+10],ax
     mov eax,es:[edi].gate_entry_offset16
     mov [bp+8],ax
     sub ax,[bp+14]
-    add ax,4
-    mov ds:[ebx+2],ax
-    mov word ptr ds:[ebx],0E80Eh
-    mov word ptr ds:[ebx+4],9090h
-    mov word ptr ds:[ebx+6],9090h
-
-do_call16_direct_do16:
-    mov ax,system_data_sel
-    mov es,ax
-    mov es:usergate_spinlock,0
-    popf
-;    
-    pop edi
-    pop edx
-    pop ecx
-    pop es
+    add ax,2
 ;
-    mov ds,[bp].pm_ds
-    mov eax,[bp].vm_eax
-    mov ebx,[bp].vm_ebx
-    mov sp,bp
-    pop bp
-    add sp,6
-    iret
+    call enter_code_patch
+    movzx eax,ax
+    or eax,0F5F50000h
+    xchg eax,ds:[ebx+4]
+;
+    mov eax,0E80E9090h
+    xchg eax,ds:[ebx]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+    call leave_code_patch
+    jmp do16_retry16
 
 do_call16_direct_to32:
     mov ax,[bp].vm_eflags
@@ -743,7 +779,7 @@ do_call16_direct_to32:
     mov ds:[ebx+2],eax
     mov [bp+4],ax
     mov word ptr ds:[ebx],9A66h
-    jmp do_call16_direct_do32
+    jmp do16_retry32
 
 do_call16_direct_cs32:
     mov [bp+6],ax
@@ -752,8 +788,63 @@ do_call16_direct_cs32:
     sub eax,[bp+10]
     mov ds:[ebx+4],eax
     mov dword ptr ds:[ebx],0E8660E66h
+    jmp do16_retry32
 
-do_call16_direct_do32:
+do16_patched:
+    mov ax,ds:[ebx]
+    cmp ax,9A90h
+    jne do16_patch_near
+
+do16_patch_far:
+    mov ax,[bp].vm_eflags
+    mov [bp+12],ax
+    mov ax,[bp].vm_cs
+    mov [bp+16],ax
+    mov ax,[bp].vm_eip
+    add ax,6
+    mov [bp+14],ax  
+;    
+    mov ax,ds:[ebx+4]
+    mov [bp+10],ax
+    mov ax,ds:[ebx+2]
+    mov [bp+8],ax
+    jmp do16_retry16
+
+do16_patch_near:
+    mov ax,[bp].vm_eflags
+    mov [bp+12],ax
+    mov ax,[bp].vm_cs
+    mov [bp+16],ax
+    mov ax,[bp].vm_eip
+    add ax,6
+    mov [bp+14],ax  
+;    
+    mov ax,[bp].vm_cs
+    mov [bp+10],ax
+    mov ax,ds:[ebx+4]
+    add ax,[bp+14]
+    mov [bp+8],ax
+
+do16_retry16:
+    mov ax,system_data_sel
+    mov es,ax
+    mov es:usergate_spinlock,0
+    popf
+;    
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+;
+    mov ds,[bp].pm_ds
+    mov eax,[bp].vm_eax
+    mov ebx,[bp].vm_ebx
+    mov sp,bp
+    pop bp
+    add sp,6
+    iret
+
+do16_retry32:
     mov ax,system_data_sel
     mov es,ax
     mov es:usergate_spinlock,0
