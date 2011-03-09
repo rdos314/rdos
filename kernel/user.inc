@@ -72,12 +72,17 @@ UserGate16	MACRO gate_nr
     db 9Ah
     dd gate_nr
     dw 1
+    db 90h
+    db 90h
 			ENDM
 
 UserGate32	MACRO gate_nr
     db 9Ah
     dd gate_nr
     dw 2
+    db 90h
+    db 90h
+    db 90h
 			ENDM
 
 UserGateForce32 MACRO gate_nr
@@ -85,6 +90,8 @@ UserGateForce32 MACRO gate_nr
     db 9Ah
     dd gate_nr
     dw 2
+    db 90h
+    db 90h
 			ENDM
 
 UserGate        MACRO gate_nr

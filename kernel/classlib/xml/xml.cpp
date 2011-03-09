@@ -4120,6 +4120,18 @@ int XMLElement :: AddVariable(const char* vn,const char* vv)
         return AddVariable(x);
         }
 
+int XMLElement :: AddVariableBool(const char* vn,int val)
+        {
+        char str[40];
+
+        if (val)
+            strcpy(str, "true");
+        else
+            strcpy(str, "false");
+
+        return AddVariable(vn, str);
+        }
+
 int XMLElement :: AddVariableInt(const char* vn,int val)
         {
         char str[40];

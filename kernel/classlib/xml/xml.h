@@ -376,6 +376,7 @@ class XMLElement
                 int RemoveVariableAndKeep(unsigned int i,XMLVariable** vr);
                 XMLVariable** GetVariables();
                 int AddVariable(const char*,const char*);
+                int AddVariableBool(const char*, int);
                 int AddVariableInt(const char*, int);
                 int AddVariableUInt(const char*, unsigned int);
                 int AddBinaryVariable(const char*,const char*,int);
