@@ -62,6 +62,13 @@ ENDIF
     assume cs:code
 
 
+test_gate_name  DB 'Test', 0
+
+test_gate   Proc far
+    mov ax,3456h
+    retf32
+test_gate   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -125,6 +132,12 @@ init_osgate_loop:
     mov ax,is_valid_osgate_nr
     xor cl,cl
     RegisterOldOsGate
+;
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    xor cl,cl
+    mov ax,test_gate_nr
+    RegisterOsGate
 ;
     popa
     pop es
@@ -409,52 +422,70 @@ do_old_oscall16     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DO_OSCALL16
+;           NAME:           DO_OSCALL32
 ;
-;           DESCRIPTION:    Translate a 16-bit gate
+;           DESCRIPTION:    Translate an osgate
 ;
-;           PARAMETERS:         DS:EBX      Fault address
+;           PARAMETERS:     DS:EBX      Fault address
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public do_oscall16
+    public do_oscall32
 
-do_oscall16     PROC near
+do_oscall32:
+    sub sp,8
+;
     push es
     push ecx
     push edx
-    push di
+    push edi
 ;
     mov ax,system_data_sel
     mov es,ax
     pushf
     cli
 
-do16_lock_loop:
+do32_lock_loop:
     mov ax,1
     xchg ax,es:osgate_spinlock
     or ax,ax
-    jz do16_locked
+    jz do32_locked
 ;
     pause
-    jmp do16_lock_loop
+    jmp do32_lock_loop
 
-do16_locked: 
+do32_locked: 
+    mov ax,[bp].vm_bp
+    mov [bp-12],ax          ; save org bp to pm_call
+;
+    mov eax,[bp].vm_eax
+    mov [bp-16],eax         ; save org eax
+;    
+    mov eax,[bp].vm_eflags
+    push eax
+    mov eax,[bp].vm_cs
+    mov [bp+14],eax         ; old eflags
+    mov eax,[bp].vm_eip
+    add eax,10
+    mov [bp+10],eax         ; old cs
+    pop eax
+    mov [bp+6],eax          ; old eip
+;
     mov al,ds:[ebx]
     cmp al,90h
-    je do16_patched
+    je do32_patched
 ;    
     cmp al,66h
-    je do16_has_ov
+    je do32_has_ov
 ;    
-    mov di,ds:[ebx+1]
-    jmp do16_ov_done
+    mov edi,ds:[ebx+1]
+    jmp do32_ov_done
 
-do16_has_ov:
-    mov di,ds:[ebx+2]
+do32_has_ov:
+    mov edi,ds:[ebx+2]
 
-do16_ov_done:    
-    shl di,4
+do32_ov_done:    
+    shl edi,4
     mov ax,osgate_sel
     mov es,ax
 ;
@@ -467,104 +498,84 @@ do16_ov_done:
     mov ax,flat_sel
     mov ds,ax
 ;
-    mov ax,[bp].vm_eflags
-    mov [bp+12],ax
-    mov ax,[bp].vm_cs
-    mov [bp+16],ax
-    mov ax,[bp].vm_eip
-    add ax,8
-    mov [bp+14],ax  
+    mov ax,es:[edi].gate_sel
+    cmp ax,[bp+14]
+    je do32_direct
 ;
-    mov ax,es:[di].gate_sel
-    cmp ax,[bp+16]
-    je do16_direct
+    mov [bp+2],ax           ; old err
+    mov eax,es:[edi].gate_offset
+    mov [bp-2],eax
 ;
-    mov [bp+10],ax
-    mov eax,es:[di].gate_offset
-    mov [bp+8],ax
-
     call enter_code_patch
-    mov ax,0F5F5h
-    shl eax,16
-    mov ax,es:[di].gate_sel
-    xchg eax,ds:[ebx+4]
-;    
-    mov eax,es:[di].gate_offset
-    shl eax,16
-    mov ax,9A90h
+    mov eax,0F5F5F5F5h
+    xchg eax,ds:[ebx+6]
+    mov eax,9A66673Eh
     xchg eax,ds:[ebx]
-;
+    mov eax,es:[edi].gate_offset
+    xchg eax,ds:[ebx+4]
+    mov ax,es:[edi].gate_sel
+    xchg ax,ds:[ebx+8]
     mov ax,9090h
-    xchg ax,ds:[ebx+6]
+    xchg ax,ds:[ebx]        
     call leave_code_patch
-    jmp do16_retry
+    jmp do32_retry
 
-do16_direct:
-    mov [bp+10],ax
-    mov eax,es:[di].gate_offset
-    mov [bp+8],ax
-    sub ax,[bp+14]
-    add ax,2
+do32_direct:
+    mov [bp+2],ax
+    mov eax,es:[edi].gate_offset
+    mov [bp-2],eax
+;
+    sub eax,[bp+10]
+    push eax
     call enter_code_patch
-    movzx eax,ax
-    or eax,0F5F50000h
-    xchg eax,ds:[ebx+4]
-;
-    mov eax,0E80E9090h
-    xchg eax,ds:[ebx]
-;
+    mov eax,0E8660E66h
+    xchg eax,ds:[ebx+2]
+    pop eax
+    xchg eax,ds:[ebx+6]
     mov ax,9090h
-    xchg ax,ds:[ebx+6]
+    xchg ax,ds:[ebx]
     call leave_code_patch
-    jmp do16_retry
+    jmp do32_retry
 
-do16_patched:
-    mov ax,[bp].vm_eflags
-    mov [bp+12],ax
-    mov ax,[bp].vm_cs
-    mov [bp+16],ax
-    mov ax,[bp].vm_eip
-    add ax,8
-    mov [bp+14],ax  
-;
+do32_patched:
     mov ax,ds:[ebx]
     cmp ax,9A90h
-    je do16_patch_far
+    je do32_patch_far
 
-do16_patch_near:
-    mov ax,[bp].vm_cs
-    mov [bp+10],ax
-    mov ax,ds:[ebx+4]
-    add ax,[bp+14]
-    sub ax,2
-    mov [bp+8],ax
-    jmp do16_retry
+do32_patch_near:
+    mov ax,[bp+14]
+    mov [bp+2],ax
+    mov eax,ds:[ebx+6]
+    add eax,[bp+10]
+    sub eax,2
+    mov [bp-2],eax
+    jmp do32_retry
 
-do16_patch_far:
+do32_patch_far:
+    mov ax,ds:[ebx+8]
+    mov [bp+2],ax
     mov ax,ds:[ebx+4]
-    mov [bp+10],ax
-    mov ax,ds:[ebx+2]
-    mov [bp+8],ax
+    mov [bp-2],ax
     
-do16_retry:
+do32_retry:
     mov ax,system_data_sel
     mov es,ax
     mov es:osgate_spinlock,0
     popf
 ;
-    pop di
+    pop edi
     pop edx
     pop ecx
     pop es
 ;
     mov ds,[bp].pm_ds
-    mov eax,[bp].vm_eax
+    mov eax,[bp-16]
     mov ebx,[bp].vm_ebx
+    sub bp,12
     mov sp,bp
     pop bp
-    add sp,6
-    iret
-do_oscall16     ENDP
+    add sp,8
+    iretd
 
 code    ENDS
 

@@ -149,43 +149,12 @@ init_usergate_loop:
     xor dx,dx
     mov ax,is_valid_usergate_nr
     RegisterBimodalUserGate
-;    
-    mov ebx,OFFSET test_gate16
-    mov esi,OFFSET test_gate32
-    mov edi,OFFSET test_gate_name
-    mov ax,test_gate_nr
-    xor dx,dx
-    xor cl,cl
-    RegisterUserGate
 ;
     popa
     pop es
     pop ds
     ret
 init_usergate   ENDP
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TestGate
-;
-;           DESCRIPTION:    Test gate
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name       DB 'Test Gate',0
-
-test_gate16    PROC far
-    mov ax,7A56h    
-    ret
-test_gate16   ENDP
-
-test_gate32    PROC far
-    mov ax,7A52h    
-    retf32
-test_gate32   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

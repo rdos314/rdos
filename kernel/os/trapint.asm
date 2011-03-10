@@ -92,7 +92,7 @@ code    SEGMENT byte use16 public 'CODE'
     extrn prot_exception:near
     extrn virt_exception:near
 
-    extrn do_oscall16:near
+    extrn do_oscall32:near
     extrn do_usercall16:near
     extrn do_usercall32:near
 
@@ -202,7 +202,7 @@ usercall_tab16:
 suct00   DW 0
 suct01   DW OFFSET do_usercall16
 suct02   DW OFFSET do_usercall32
-suct03   DW OFFSET do_oscall16
+suct03   DW OFFSET do_oscall32
 suct04   DW OFFSET do_old_oscall16
 suct05   DW 0
 suct06   DW 0

@@ -163,6 +163,13 @@ RegisterOldOsGate	MACRO
 					ENDM
 
 ;	AX		GATE NUMBER
+;	DS:ESI	GATE CALL ADDRESS
+;	ES:EDI	GATE NAME ADDRESS
+RegisterOsGate	MACRO
+	OldOsGate register_old_osgate_nr
+					ENDM
+
+;	AX		GATE NUMBER
 IsValidOsGate	MACRO
 	OldOsGate is_valid_osgate_nr
 					ENDM
