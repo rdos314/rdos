@@ -222,28 +222,28 @@ EmulateOpcode	MACRO
 
 ;	BX		GDT DESCRIPTOR
 AllocateGdt	MACRO
-	OldOsGate allocate_gdt_nr
+	OsGate allocate_gdt_nr
 					ENDM
 
 ;	BX		GDT DESCRIPTOR
 FreeGdt	MACRO
-	OldOsGate free_gdt_nr
+	OsGate free_gdt_nr
 					ENDM
 
 ;	BX		LDT DESCRIPTOR
 AllocateLdt	MACRO
-	OldOsGate allocate_ldt_nr
+	OsGate allocate_ldt_nr
 					ENDM
 
 ;	BX		LDT DESCRIPTOR
 FreeLdt	MACRO
-	OldOsGate free_ldt_nr
+	OsGate free_ldt_nr
 					ENDM
 
 ;	CX		ANTAL
 ;	BX		LDT DESCRIPTOR
 AllocateMultipleLdt	MACRO
-	OldOsGate allocate_multiple_ldt_nr
+	OsGate allocate_multiple_ldt_nr
 					ENDM
 
 ;	BX		DESCRIPTOR

@@ -34,342 +34,340 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
-        extrn create_data_sel16:near
+    extrn create_data_sel16:near
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CREATE_GDT
+;           NAME:           CREATE_GDT
 ;
-;               DESCRIPTION:    Create GDT descriptor
+;           DESCRIPTION:    Create GDT descriptor
 ;
-;               PARAMETERS:     
+;           PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public create_gdt
+    public create_gdt
 
 create_gdt      PROC near
-        push ds
-        push es
-        pusha
+    push ds
+    push es
+    pusha
 ;
-        mov bx,gdt_sel
-        mov ds,bx
-        mov bx,temp_sel
-        mov ecx,10000h
-        mov edx,gdt_linear
-        push cs
-        call create_data_sel16
-        mov es,bx
+    mov bx,gdt_sel
+    mov ds,bx
+    mov bx,temp_sel
+    mov ecx,10000h
+    mov edx,gdt_linear
+    push cs
+    call create_data_sel16
+    mov es,bx
 ;
-        xor si,si
-        xor di,di
-        mov cx,1000h
-        rep movsb
-        xor al,al
-        mov cx,0E000h
-        rep stosb
-        mov ds,bx
-        mov word ptr [bx],0EFFFh ; initial size = F000
-        mov si,bx
-        mov di,gdt_sel
-        movsd
-        movsd
+    xor si,si
+    xor di,di
+    mov cx,1000h
+    rep movsb
+    xor al,al
+    mov cx,0E000h
+    rep stosb
+    mov ds,bx
+    mov word ptr [bx],0EFFFh ; initial size = F000
+    mov si,bx
+    mov di,gdt_sel
+    movsd
+    movsd
 ;
-        mov eax,[bx+2]
-        mov cl,[bx+7]
-        mov [bx+4],eax
-        mov [bx+7],cl
-        mov ax,[bx]
-        mov [bx+2],ax
-        db 66h
-        lgdt fword ptr [bx+2]
+    mov eax,[bx+2]
+    mov cl,[bx+7]
+    mov [bx+4],eax
+    mov [bx+7],cl
+    mov ax,[bx]
+    mov [bx+2],ax
+    db 66h
+    lgdt fword ptr [bx+2]
 ;
-        mov ax,gdt_sel
-        mov ds,ax
-        mov cx,0D000h
-        shr cx,3
-        mov si,2000h
-        xor bx,bx
+    mov ax,gdt_sel
+    mov ds,ax
+    mov cx,0D000h
+    shr cx,3
+    mov si,2000h
+    xor bx,bx
 
 init_free_dt_loop:
-        mov [si],bx
-        mov bx,si
-        add si,8
-        loop init_free_dt_loop
+    mov [si],bx
+    mov bx,si
+    add si,8
+    loop init_free_dt_loop
 ;
-        mov si,bx
-        xor bx,bx
-        mov [bx],si
+    mov si,bx
+    xor bx,bx
+    mov [bx],si
 ;
-        mov ax,system_data_sel
-        mov ds,ax
-        InitSection ds:gdt_section
+    mov ax,system_data_sel
+    mov ds,ax
+    InitSection ds:gdt_section
 ;
-        popa
-        pop es
-        pop ds
-        ret
+    popa
+    pop es
+    pop ds
+    ret
 create_gdt      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   INIT_GDT
+;           NAME:           INIT_GDT
 ;
-;               DESCRIPTION:    Init module
+;           DESCRIPTION:    Init module
 ;
-;               PARAMETERS:             
-;                                               
-;                                               
+;           PARAMETERS:         
+;                           
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_gdt
+    public init_gdt
 
-init_gdt        PROC near
-        pusha
-        push ds
+init_gdt    PROC near
+    pusha
+    push ds
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov esi,OFFSET allocate_gdt
-        mov edi,OFFSET allocate_name
-        xor cl,cl
-        mov ax,allocate_gdt_nr
-        RegisterOldOsGate
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET allocate_gdt
+    mov edi,OFFSET allocate_name
+    xor cl,cl
+    mov ax,allocate_gdt_nr
+    RegisterOsGate
 ;       
-        mov esi,OFFSET free_gdt
-        mov edi,OFFSET free_name
-        xor cl,cl
-        mov ax,free_gdt_nr
-        RegisterOldOsGate
+    mov esi,OFFSET free_gdt
+    mov edi,OFFSET free_name
+    xor cl,cl
+    mov ax,free_gdt_nr
+    RegisterOsGate
 ;       
-        mov esi,OFFSET get_free_gdt
-        mov edi,OFFSET get_free_gdt_name
-        xor dx,dx
-        mov ax,get_free_gdt_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET get_free_gdt
+    mov edi,OFFSET get_free_gdt_name
+    xor dx,dx
+    mov ax,get_free_gdt_nr
+    RegisterBimodalUserGate
 ;
-        xor edx,edx
-        mov bx,__0000
-        mov ecx,1000h
-        CreateDataSelector16
+    xor edx,edx
+    mov bx,__0000
+    mov ecx,1000h
+    CreateDataSelector16
 ;
-        mov edx,400h
-        mov bx,__0040
-        mov ecx,300h
-        CreateDataSelector16
+    mov edx,400h
+    mov bx,__0040
+    mov ecx,300h
+    CreateDataSelector16
 ;
-        mov edx,0A0000h
-        mov bx,__A000
-        mov ecx,10000h
-        CreateDataSelector16
+    mov edx,0A0000h
+    mov bx,__A000
+    mov ecx,10000h
+    CreateDataSelector16
 ;
-        mov edx,0B0000h
-        mov bx,__B000
-        mov ecx,8000h
-        CreateDataSelector16
+    mov edx,0B0000h
+    mov bx,__B000
+    mov ecx,8000h
+    CreateDataSelector16
 ;
-        mov edx,0B8000h
-        mov bx,__B800
-        mov ecx,8000h
-        CreateDataSelector16
+    mov edx,0B8000h
+    mov bx,__B800
+    mov ecx,8000h
+    CreateDataSelector16
 ;
-        mov edx,0C0000h
-        mov bx,__C000
-        mov ecx,10000h
-        CreateDataSelector16
+    mov edx,0C0000h
+    mov bx,__C000
+    mov ecx,10000h
+    CreateDataSelector16
 ;
-        mov edx,0F0000h
-        mov bx,__F000
-        mov ecx,10000h
-        CreateDataSelector16
+    mov edx,0F0000h
+    mov bx,__F000
+    mov ecx,10000h
+    CreateDataSelector16
 ;
-        pop ds
-        popa
-        ret
-init_gdt        ENDP
+    pop ds
+    popa
+    ret
+init_gdt    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ALLOCATE_GDT
+;           NAME:           ALLOCATE_GDT
 ;
-;               DESCRIPTION:    Allocate GDT selector
+;           DESCRIPTION:    Allocate GDT selector
 ;
-;               RETURNS:                BX              GDT entry / selector
-;                                                                                               
+;           RETURNS:        BX          GDT entry / selector
+;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_name   DB 'Allocate Gdt',0
 
-        public allocate_gdt
-
 allocate_gdt    PROC far
-        push ds
-        push es
-        push si
-        push di
+    push ds
+    push es
+    push si
+    push di
 ;
-        mov si,system_data_sel
-        mov ds,si
-        mov si,gdt_sel
-        mov es,si
-        EnterSection ds:gdt_section
-        xor di,di
-        mov si,es:[di]
-        or si,si
-        jnz alloc_gdt_room
+    mov si,system_data_sel
+    mov ds,si
+    mov si,gdt_sel
+    mov es,si
+    EnterSection ds:gdt_section
+    xor di,di
+    mov si,es:[di]
+    or si,si
+    jnz alloc_gdt_room
 ;
     int 3
-        push ds
-        push cx
-        mov si,gdt_sel
-        mov cx,es:[si]
-        inc cx
-        or cx,cx
-        jnz alloc_gdt_not_full
+    push ds
+    push cx
+    mov si,gdt_sel
+    mov cx,es:[si]
+    inc cx
+    or cx,cx
+    jnz alloc_gdt_not_full
 ;
-        int 3
+    int 3
 
 alloc_gdt_not_full:
-        add word ptr es:[si],1000h
+    add word ptr es:[si],1000h
 ;
-        xor bx,bx
-        mov eax,es:[si+2]
-        mov cl,es:[si+7]
-        mov es:[bx+4],eax
-        mov es:[bx+7],cl
-        mov ax,es:[si]
-        mov es:[bx+2],ax
-        db 66h
-        lgdt fword ptr es:[bx+2]
-        mov bx,gdt_sel
-        mov ds,bx
+    xor bx,bx
+    mov eax,es:[si+2]
+    mov cl,es:[si+7]
+    mov es:[bx+4],eax
+    mov es:[bx+7],cl
+    mov ax,es:[si]
+    mov es:[bx+2],ax
+    db 66h
+    lgdt fword ptr es:[bx+2]
+    mov bx,gdt_sel
+    mov ds,bx
 ;
-        mov si,es:[bx]
-        inc si
-        sub si,1000h
-        mov cx,1000h SHR 3
-        xor bx,bx
+    mov si,es:[bx]
+    inc si
+    sub si,1000h
+    mov cx,1000h SHR 3
+    xor bx,bx
 
 extend_gdt_loop:
-        mov es:[si],bx
-        mov bx,si
-        add si,8
-        loop extend_gdt_loop
+    mov es:[si],bx
+    mov bx,si
+    add si,8
+    loop extend_gdt_loop
 ;
-        mov si,bx
-        xor bx,bx
-        mov es:[bx],si
-        pop cx
-        pop ds
+    mov si,bx
+    xor bx,bx
+    mov es:[bx],si
+    pop cx
+    pop ds
 
 alloc_gdt_room:
-        mov bx,si
-        mov si,es:[si]
-        mov es:[di],si
-        LeaveSection ds:gdt_section
+    mov bx,si
+    mov si,es:[si]
+    mov es:[di],si
+    LeaveSection ds:gdt_section
 ;
-        pop di
-        pop si
-        pop es
-        pop ds
-        ret
+    pop di
+    pop si
+    pop es
+    pop ds
+    retf32
 allocate_gdt    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FREE_GDT
+;           NAME:           FREE_GDT
 ;
-;               DESCRIPTION:    Free GDT selector
+;           DESCRIPTION:    Free GDT selector
 ;
-;               PARAMETERS:             BX              GDT entry / selector
-;                                                                                               
+;           PARAMETERS:         BX          GDT entry / selector
+;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_name       DB 'Free Gdt',0
 
-free_gdt        PROC far
-        push ds
-        push es
-        push si
+free_gdt    PROC far
+    push ds
+    push es
+    push si
 ;
-        mov si,system_data_sel
-        mov ds,si
-        mov si,gdt_sel
-        mov es,si
+    mov si,system_data_sel
+    mov ds,si
+    mov si,gdt_sel
+    mov es,si
 ;
-        EnterSection ds:gdt_section
-        mov byte ptr es:[bx+5],0
-        xor si,si
-        mov si,es:[si]
-        mov es:[bx],si
-        xor si,si
-        mov es:[si],bx
-        LeaveSection ds:gdt_section
+    EnterSection ds:gdt_section
+    mov byte ptr es:[bx+5],0
+    xor si,si
+    mov si,es:[si]
+    mov es:[bx],si
+    xor si,si
+    mov es:[si],bx
+    LeaveSection ds:gdt_section
 ;
-        pop si
-        pop es
-        pop ds
-        ret
-free_gdt        ENDP
+    pop si
+    pop es
+    pop ds
+    retf32
+free_gdt    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetFreeGdtEntries
+;           NAME:           GetFreeGdtEntries
 ;
-;               DESCRIPTION:    Get Free GDT entries
+;           DESCRIPTION:    Get Free GDT entries
 ;
-;               RETURNS:                AX      Number of free entries
-;                                                                                               
+;           RETURNS:        AX      Number of free entries
+;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_free_gdt_name       DB 'Get Free Gdt Entries',0
 
 get_free_gdt    PROC far
-        push ds
-        push es
-        push si
-        push di
+    push ds
+    push es
+    push si
+    push di
 ;
     xor ax,ax
-        mov si,system_data_sel
-        mov ds,si
-        mov si,gdt_sel
-        mov es,si
-        EnterSection ds:gdt_section
-        xor di,di
-        mov si,es:[di]
+    mov si,system_data_sel
+    mov ds,si
+    mov si,gdt_sel
+    mov es,si
+    EnterSection ds:gdt_section
+    xor di,di
+    mov si,es:[di]
 
 gfgLoop:
-        or si,si
-        jz gfgDone
+    or si,si
+    jz gfgDone
 ;
     inc ax
     or ax,ax
     jz gfgDone
 ;
-        mov si,es:[si]
+    mov si,es:[si]
     jmp gfgLoop
 
 gfgDone:
-        LeaveSection ds:gdt_section
+    LeaveSection ds:gdt_section
 ;
     pop di
     pop si

@@ -63,7 +63,6 @@ ENDIF
     extrn create_tss_sel:near
 
     extrn allocate_fixed_system_mem:near
-    extrn allocate_gdt:near
 
     extrn translate_segment:near
     extrn translate_selector:near
