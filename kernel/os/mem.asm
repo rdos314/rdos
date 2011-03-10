@@ -345,12 +345,6 @@ init_mem        PROC near
         mov ax,write_thread_segment_nr
         RegisterOldOsGate
 ;
-        mov si,OFFSET alias_code32
-        mov di,OFFSET alias_code32_name
-        xor cl,cl
-        mov ax,alias_code32_nr
-        RegisterOldOsGate
-;
         mov si,OFFSET allocate_page
         mov di,OFFSET allocate_page_name
         xor cl,cl
@@ -3909,47 +3903,6 @@ write_thread_segment_do:
         ret
 write_thread_segment    ENDP
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   ALIAS_CODE32
-;
-;               DESCRIPTION:    Create a 32-bit segment within a 16-bit device-driver
-;
-;               PARAMETERS:             AX              16-bit code selector
-;                                               BX              32-bit code selector
-;                                               SI              Offset of 32-bit init code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-alias_code32_name       DB 'Alias Code32',0
-
-alias_code32    PROC far
-        push ds
-        push eax
-        push si
-        mov si,ax
-        mov ax,gdt_sel
-        mov ds,ax
-        mov eax,[si]
-        mov [bx],eax
-        mov eax,[si+4]
-        mov [bx+4],eax
-        or byte ptr [bx+6],40h
-        pop si
-        push 0
-        push cs
-        push 0
-        push OFFSET alias_ret32
-        push bx
-        push si
-        ret
-alias_ret32:
-        pop eax
-        pop ds  
-        ret
-alias_code32    ENDP
 
 code    ENDS
 

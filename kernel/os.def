@@ -6,8 +6,8 @@ register_bimodal_usergate_nr	= 3
 register_usergate16_nr		    = 4
 register_usergate32_nr		    = 5
 register_usergate_v86_nr	    = 6
-init_device_nr				    = 7
-alias_code32_nr				    = 8
+; init_device_nr				    = 7
+; alias_code32_nr				    = 8
 emulate_opcode_nr			    = 9
 
 allocate_gdt_nr				= 10

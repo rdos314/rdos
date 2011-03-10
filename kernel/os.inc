@@ -213,18 +213,6 @@ RegisterUserGateV86	MACRO
 	OsGate register_usergate_v86_nr
 						ENDM
 
-;	BX		CODE SELECTOR
-InitDevice	MACRO
-	OldOsGate init_device_nr
-					ENDM
-
-;	AX		CODE16 SEL
-;	BX		CODE32 SEL
-;	SI		OFFSET TO INIT PROC
-AliasCode32	MACRO
-	OldOsGate alias_code32_nr
-					ENDM
-
 ;	AL		Exception #
 EmulateOpcode	MACRO
 	OldOsGate emulate_opcode_nr

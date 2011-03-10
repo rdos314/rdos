@@ -247,41 +247,6 @@ move_not_shutdown_adapter:
     ret
 move_adapters   ENDP
 
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           INIT_DEVICE_PR
-;
-;           DESCRIPTION:    Init device code selector
-;
-;           PARAMETERS:         BX                  CODE SELECTOR
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_device_name    DB 'Init Device',0
-
-init_device_pr  PROC far
-    push bp
-    mov bp,sp
-    push ds
-    push eax
-    push si
-    mov ax,gdt_sel
-    mov ds,ax
-    mov si,[bp+4]
-    mov eax,[si]
-    mov [bx],eax
-    mov eax,[si+4]
-    mov [bx+4],eax
-    mov [bp+4],bx
-    pop si
-    pop eax
-    pop ds
-    pop bp
-    ret
-init_device_pr  ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -820,11 +785,6 @@ init_device     PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET init_device_pr
-    mov edi,OFFSET init_device_name
-    xor cl,cl
-    mov ax,init_device_nr
-    RegisterOldOsGate
 ;
     mov ebx,OFFSET get_image_header16
     mov esi,OFFSET get_image_header32
