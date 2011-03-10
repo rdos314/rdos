@@ -96,6 +96,8 @@ code    SEGMENT byte use16 public 'CODE'
     extrn do_usercall16:near
     extrn do_usercall32:near
 
+    extrn do_old_oscall16:near
+
     assume cs:code
 
 emulate PROC near
@@ -201,7 +203,7 @@ suct00   DW 0
 suct01   DW OFFSET do_usercall16
 suct02   DW OFFSET do_usercall32
 suct03   DW OFFSET do_oscall16
-suct04   DW 0
+suct04   DW OFFSET do_old_oscall16
 suct05   DW 0
 suct06   DW 0
 suct07   DW 0

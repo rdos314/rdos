@@ -109,13 +109,13 @@ OldOsGate16	MACRO gate_nr
     db 66h
     db 9Ah
     dd gate_nr
-    dw 3
+    dw 4
 			ENDM
 
 OldOsGate32	MACRO gate_nr
     db 9Ah
     dd gate_nr
-    dw 3
+    dw 4
 			ENDM
 
 OldOsGate	MACRO gate_nr
@@ -123,6 +123,32 @@ IF (size $) EQ 0FF02h
 	OldOsGate16 gate_nr
 ELSE
 	OldOsGate32 gate_nr
+ENDIF
+			ENDM
+
+OsGate16	MACRO gate_nr
+    db 66h
+    db 9Ah
+    dd gate_nr
+    dw 3
+    db 90h
+    db 90h
+			ENDM
+
+OsGate32	MACRO gate_nr
+    db 9Ah
+    dd gate_nr
+    dw 3
+    db 90h
+    db 90h
+    db 90h
+			ENDM
+
+OsGate	MACRO gate_nr
+IF (size $) EQ 0FF02h
+	OsGate16 gate_nr
+ELSE
+	OsGate32 gate_nr
 ENDIF
 			ENDM
 

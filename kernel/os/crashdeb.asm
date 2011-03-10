@@ -69,6 +69,7 @@ code    SEGMENT byte public use16 'CODE'
     extrn ShowCrashCore:near
 
     extrn LocalOsGate:near
+    extrn LocalOldOsGate:near
     extrn LocalUserGate:near
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1312,7 +1313,7 @@ suct00   DW 0
 suct01   DW OFFSET LocalUserGate
 suct02   DW 0
 suct03   DW OFFSET LocalOsGate
-suct04   DW 0
+suct04   DW OFFSET LocalOldOsGate
 suct05   DW 0
 suct06   DW 0
 suct07   DW 0
