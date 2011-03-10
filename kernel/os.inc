@@ -179,7 +179,7 @@ IsValidOsGate	MACRO
 ;	DS:ESI	32-BIT GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterUserGate	MACRO
-	OldOsGate register_usergate_nr
+	OsGate register_usergate_nr
 						ENDM
 
 ;	AX		GATE NUMBER
@@ -187,7 +187,7 @@ RegisterUserGate	MACRO
 ;	DS:ESI	GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterBimodalUserGate	MACRO
-	OldOsGate register_bimodal_usergate_nr
+	OsGate register_bimodal_usergate_nr
 						ENDM
 
 ;	AX		GATE NUMBER
@@ -195,7 +195,7 @@ RegisterBimodalUserGate	MACRO
 ;	DS:ESI	16-BIT GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterUserGate16	MACRO
-	OldOsGate register_usergate16_nr
+	OsGate register_usergate16_nr
 						ENDM
 
 ;	AX		GATE NUMBER
@@ -203,14 +203,14 @@ RegisterUserGate16	MACRO
 ;	DS:ESI	32-BIT GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterUserGate32	MACRO
-	OldOsGate register_usergate32_nr
+	OsGate register_usergate32_nr
 						ENDM
 
 ;	AX		GATE NUMBER
 ;	DS:ESI	V86 GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterUserGateV86	MACRO
-	OldOsGate register_usergate_v86_nr
+	OsGate register_usergate_v86_nr
 						ENDM
 
 ;	BX		CODE SELECTOR

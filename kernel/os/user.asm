@@ -118,31 +118,31 @@ init_usergate_loop:
     mov edi,OFFSET register_usergate_name
     xor cl,cl
     mov ax,register_usergate_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET register_bimodal_usergate
     mov edi,OFFSET register_bimodal_usergate_name
     xor cl,cl
     mov ax,register_bimodal_usergate_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET register_usergate16
     mov edi,OFFSET register_usergate16_name
     xor cl,cl
     mov ax,register_usergate16_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET register_usergate32
     mov edi,OFFSET register_usergate32_name
     xor cl,cl
     mov ax,register_usergate32_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET register_usergate_v86
     mov edi,OFFSET register_usergate_v86_name
     xor cl,cl
     mov ax,register_usergate_v86_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET is_valid_usergate
     mov edi,OFFSET is_valid_usergate_name
@@ -265,7 +265,7 @@ register_user_done:
     pop ecx
     pop bx
     pop fs
-    ret
+    retf32
 register_usergate       ENDP
 
 
@@ -317,7 +317,7 @@ register_bimodal_user_done:
     pop dx
     pop bx
     pop fs
-    ret
+    retf32
 register_bimodal_usergate       ENDP
 
 
@@ -365,7 +365,7 @@ register_user16_done:
     pop dx
     pop bx
     pop fs
-    ret
+    retf32
 register_usergate16     ENDP
 
 
@@ -399,7 +399,7 @@ register_usergate32     PROC far
 ;
     pop bx
     pop fs
-    ret
+    retf32
 register_usergate32     ENDP
 
 
@@ -435,7 +435,7 @@ register_usergate_v86   PROC far
 ;
     pop bx
     pop fs
-    ret
+    retf32
 register_usergate_v86   ENDP
 
 
