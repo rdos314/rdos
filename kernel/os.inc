@@ -105,24 +105,24 @@ Callf32	MACRO	sel,offs
 	dw sel
 		ENDM
 
-OsGate16	MACRO gate_nr
+OldOsGate16	MACRO gate_nr
     db 66h
     db 9Ah
     dd gate_nr
     dw 3
 			ENDM
 
-OsGate32	MACRO gate_nr
+OldOsGate32	MACRO gate_nr
     db 9Ah
     dd gate_nr
     dw 3
 			ENDM
 
-OsGate	MACRO gate_nr
+OldOsGate	MACRO gate_nr
 IF (size $) EQ 0FF02h
-	OsGate16 gate_nr
+	OldOsGate16 gate_nr
 ELSE
-	OsGate32 gate_nr
+	OldOsGate32 gate_nr
 ENDIF
 			ENDM
 
@@ -132,14 +132,13 @@ ENDIF
 ;	DS:ESI	GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterOsGate	MACRO
-	OsGate register_osgate_nr
+	OldOsGate register_osgate_nr
 
 					ENDM
 
 ;	AX		GATE NUMBER
 IsValidOsGate	MACRO
-	OsGate is_valid_osgate_nr
-
+	OldOsGate is_valid_osgate_nr
 					ENDM
 
 ;	AX		GATE NUMBER
@@ -148,7 +147,7 @@ IsValidOsGate	MACRO
 ;	DS:ESI	32-BIT GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterUserGate	MACRO
-	OsGate register_usergate_nr
+	OldOsGate register_usergate_nr
 						ENDM
 
 ;	AX		GATE NUMBER
@@ -156,7 +155,7 @@ RegisterUserGate	MACRO
 ;	DS:ESI	GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterBimodalUserGate	MACRO
-	OsGate register_bimodal_usergate_nr
+	OldOsGate register_bimodal_usergate_nr
 						ENDM
 
 ;	AX		GATE NUMBER
@@ -164,7 +163,7 @@ RegisterBimodalUserGate	MACRO
 ;	DS:ESI	16-BIT GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterUserGate16	MACRO
-	OsGate register_usergate16_nr
+	OldOsGate register_usergate16_nr
 						ENDM
 
 ;	AX		GATE NUMBER
@@ -172,192 +171,192 @@ RegisterUserGate16	MACRO
 ;	DS:ESI	32-BIT GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterUserGate32	MACRO
-	OsGate register_usergate32_nr
+	OldOsGate register_usergate32_nr
 						ENDM
 
 ;	AX		GATE NUMBER
 ;	DS:ESI	V86 GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
 RegisterUserGateV86	MACRO
-	OsGate register_usergate_v86_nr
+	OldOsGate register_usergate_v86_nr
 						ENDM
 
 ;	BX		CODE SELECTOR
 InitDevice	MACRO
-	OsGate init_device_nr
+	OldOsGate init_device_nr
 					ENDM
 
 ;	AX		CODE16 SEL
 ;	BX		CODE32 SEL
 ;	SI		OFFSET TO INIT PROC
 AliasCode32	MACRO
-	OsGate alias_code32_nr
+	OldOsGate alias_code32_nr
 					ENDM
 
 ;	AL		Exception #
 EmulateOpcode	MACRO
-	OsGate emulate_opcode_nr
+	OldOsGate emulate_opcode_nr
 					ENDM
 
 ;;;;;;;; DESCRIPTORS ;;;;;;;;;;;;
 
 ;	BX		GDT DESCRIPTOR
 AllocateGdt	MACRO
-	OsGate allocate_gdt_nr
+	OldOsGate allocate_gdt_nr
 					ENDM
 
 ;	BX		GDT DESCRIPTOR
 FreeGdt	MACRO
-	OsGate free_gdt_nr
+	OldOsGate free_gdt_nr
 					ENDM
 
 ;	BX		LDT DESCRIPTOR
 AllocateLdt	MACRO
-	OsGate allocate_ldt_nr
+	OldOsGate allocate_ldt_nr
 					ENDM
 
 ;	BX		LDT DESCRIPTOR
 FreeLdt	MACRO
-	OsGate free_ldt_nr
+	OldOsGate free_ldt_nr
 					ENDM
 
 ;	CX		ANTAL
 ;	BX		LDT DESCRIPTOR
 AllocateMultipleLdt	MACRO
-	OsGate allocate_multiple_ldt_nr
+	OldOsGate allocate_multiple_ldt_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 GetSelectorBaseSize	MACRO
-	OsGate get_selector_base_size_nr
+	OldOsGate get_selector_base_size_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateDataSelector16	MACRO
-	OsGate create_data_sel16_nr
+	OldOsGate create_data_sel16_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateDataSelector32	MACRO
-	OsGate create_data_sel32_nr
+	OldOsGate create_data_sel32_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateAliasSelector16	MACRO
-	OsGate create_alias_sel16_nr
+	OldOsGate create_alias_sel16_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateAliasSelector32	MACRO
-	OsGate create_alias_sel32_nr
+	OldOsGate create_alias_sel32_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateCodeSelector16	MACRO
-	OsGate create_code_sel16_nr
+	OldOsGate create_code_sel16_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateCodeSelector32	MACRO
-	OsGate create_code_sel32_nr
+	OldOsGate create_code_sel32_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateConformSelector16	MACRO
-	OsGate create_conform_sel16_nr
+	OldOsGate create_conform_sel16_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateConformSelector32	MACRO
-	OsGate create_conform_sel32_nr
+	OldOsGate create_conform_sel32_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	CX		LIMIT
 CreateLdtSelector	MACRO
-	OsGate create_ldt_sel_nr
+	OldOsGate create_ldt_sel_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateTssSelector	MACRO
-	OsGate create_tss_sel_nr
+	OldOsGate create_tss_sel_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	DS:SI	ENTRY POINT
 ;	CL		16-BIT WORDS TO MOVE
 CreateCallGateSelector16	MACRO
-	OsGate create_call_gate_sel16_nr
+	OldOsGate create_call_gate_sel16_nr
 							ENDM
 
 ;	BX		DESCRIPTOR
 ;	DS:ESI	ENTRY POINT
 ;	CL		32-BIT WORDS TO MOVE
 CreateCallGateSelector32	MACRO
-	OsGate create_call_gate_sel32_nr
+	OldOsGate create_call_gate_sel32_nr
 							ENDM
 
 ;	BX		DESCRIPTOR
 ;	DX		TSS SELECTOR
 CreateTaskGateSelector	MACRO
-	OsGate create_task_gate_sel_nr
+	OldOsGate create_task_gate_sel_nr
 							ENDM
 
 ;	AL		INT #
 ;	BL		DPL
 ;	DS:ESI	ENTRY POINT
 CreateIntGateSelector	MACRO
-	OsGate create_int_gate_sel_nr
+	OldOsGate create_int_gate_sel_nr
 							ENDM
 
 ;	AL		INT #
 ;	BL		DPL
 ;	DS:ESI	ENTRY POINT
 CreateTrapGateSelector	MACRO
-	OsGate create_trap_gate_sel_nr
+	OldOsGate create_trap_gate_sel_nr
 							ENDM
 
 ;	AX	SELECTOR
 ;	NC	EAX	SEGEMENT
 ;	CY	EAX = F000
 SelectorToSegment	MACRO
-	OsGate selector_to_segment_nr
+	OldOsGate selector_to_segment_nr
 					ENDM
 
 ;	BX	SEGMENT / SELECTOR
 SegmentToSelector	MACRO
-	OsGate segment_to_selector_nr
+	OldOsGate segment_to_selector_nr
 					ENDM
 
 ;	ES		SELECTOR
 FreeSelector	MACRO
-	OsGate free_selector_nr
+	OldOsGate free_selector_nr
 						ENDM
 
 ;	BP		STACK WITH EXCEPTION INFO
 SegmentNotPresent	MACRO
-	OsGate segment_not_present_nr
+	OldOsGate segment_not_present_nr
 					ENDM
 
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;
@@ -365,33 +364,33 @@ SegmentNotPresent	MACRO
 ;	ES:DI   Swap callback
 ;       AL  Swap level (0 = highest priority, 15 = lowest priority)
 RegisterSwapProc	MACRO
-	OsGate register_swap_proc_nr
+	OldOsGate register_swap_proc_nr
 					ENDM
 
 ;	EDX		LINEAR ADDRESS
 ;	EAX		PAGE ENTRY
 GetPhysicalPage	MACRO
-	OsGate get_physical_page_nr
+	OldOsGate get_physical_page_nr
 					ENDM
 
 ;	EDX		LINEAR ADDRESS
 ;	EAX		PAGE ENTRY
 SetPhysicalPage	MACRO
-	OsGate set_physical_page_nr
+	OldOsGate set_physical_page_nr
 					ENDM
 
 ;	BX		TRèD
 ;	EDX		LINEAR ADDRESS
 ;	EAX		PAGE ENTRY
 GetThreadPhysicalPage	MACRO
-	OsGate get_thread_physical_page_nr
+	OldOsGate get_thread_physical_page_nr
 					ENDM
 
 ;	BX		TRèD
 ;	EDX		LINEAR ADDRESS
 ;	EAX		PAGE ENTRY
 SetThreadPhysicalPage	MACRO
-	OsGate set_thread_physical_page_nr
+	OldOsGate set_thread_physical_page_nr
 					ENDM
 
 ;	DX:ESI	ADDRESS TO READ
@@ -399,7 +398,7 @@ SetThreadPhysicalPage	MACRO
 ;	NC		VALID
 ;	AL		DATA OR ERROR REASON
 ReadThreadSelector	MACRO
-	OsGate read_thread_selector_nr
+	OldOsGate read_thread_selector_nr
 					ENDM
 
 ;	DX:ESI	ADDRESS TO WRITE
@@ -407,7 +406,7 @@ ReadThreadSelector	MACRO
 ;	NC		VALID
 ;	AL		DATA TO WRITE
 WriteThreadSelector	MACRO
-	OsGate write_thread_selector_nr
+	OldOsGate write_thread_selector_nr
 					ENDM
 
 ;	DX:ESI	ADDRESS TO READ
@@ -415,7 +414,7 @@ WriteThreadSelector	MACRO
 ;	NC		VALID
 ;	AL		DATA OR ERROR REASON
 ReadThreadSegment	MACRO
-	OsGate read_thread_segment_nr
+	OldOsGate read_thread_segment_nr
 					ENDM
 
 ;	DX:ESI	ADDRESS TO WRITE
@@ -423,43 +422,43 @@ ReadThreadSegment	MACRO
 ;	NC		VALID
 ;	AL		DATA TO WRITE
 WriteThreadSegment	MACRO
-	OsGate write_thread_segment_nr
+	OldOsGate write_thread_segment_nr
 					ENDM
 
 ;	ES		SELECTOR
 AllocatePage	MACRO
-	OsGate allocate_page_nr
+	OldOsGate allocate_page_nr
 					ENDM
 
 ;	ES		SELECTOR
 ;	EAX		PHYSICAL ADDRESS
 FreePage	MACRO
-	OsGate free_page_nr
+	OldOsGate free_page_nr
 					ENDM
 
 ;	EAX		ANTAL BYTE
 ;	EDX		LINEAR BASE ADDRESS
 SetPageEmulate	MACRO
-	OsGate set_page_emulate_nr
+	OldOsGate set_page_emulate_nr
 					ENDM
 
 ;	EAX		ANTAL BYTE
 ;	EDX		LINEAR BASE ADDRESS
 SetPageKernel	MACRO
-	OsGate set_page_kernel_nr
+	OldOsGate set_page_kernel_nr
 					ENDM
 
 ;	EAX		ANTAL BYTE
 ;	EDX		LINEAR BASE ADDRESS
 ;	ES:DI	CALLBACK ROUTINE
 HookPage	MACRO
-	OsGate hook_page_nr
+	OldOsGate hook_page_nr
 					ENDM
 
 ;	EAX		ANTAL BYTE
 ;	EDX		LINEAR BASE ADDRESS
 UnhookPage	MACRO
-	OsGate unhook_page_nr
+	OldOsGate unhook_page_nr
 					ENDM
 
 ;;;;;;;;;;; LINEAR MEMORY MANAGEMENT ;;;;;;;;
@@ -467,252 +466,252 @@ UnhookPage	MACRO
 ;	EAX		ANTAL BYTES
 ;	ES		SELECTOR
 AllocateGlobalMem	MACRO
-	OsGate allocate_global_mem_nr
+	OldOsGate allocate_global_mem_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	ES		SELECTOR
 AllocateSmallGlobalMem	MACRO
-	OsGate allocate_small_global_mem_nr
+	OldOsGate allocate_small_global_mem_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	ES	LINEAR BASE ADDRESS
 AllocateSmallMem	MACRO
-	OsGate allocate_small_mem_nr
+	OldOsGate allocate_small_mem_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	ES	LDT SELECTOR WITH KERNEL ONLY ACCESS
 AllocateSmallKernelMem	MACRO
-	OsGate allocate_small_kernel_mem_nr
+	OldOsGate allocate_small_kernel_mem_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	ES	LINEAR BASE ADDRESS
 AllocateBigMem	MACRO
-	OsGate allocate_big_mem_nr
+	OldOsGate allocate_big_mem_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	EDX	LINEAR BASE ADDRESS
 ;	CX	ANTAL SIDOR
 AllocateBigLinear	MACRO
-	OsGate allocate_big_linear_nr
+	OldOsGate allocate_big_linear_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	EDX	LINEAR BASE ADDRESS
 AllocateSmallLinear	MACRO
-	OsGate allocate_small_linear_nr
+	OldOsGate allocate_small_linear_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	EDX	LINEAR BASE ADDRESS
 AllocateLocalLinear	MACRO
-	OsGate allocate_local_linear_nr
+	OldOsGate allocate_local_linear_nr
 					ENDM
 
 ;	EAX	Bytes
 ;	EDX	LINEAR BASE ADDRESS
 AllocateDebugLocalLinear	MACRO
-	OsGate allocate_debug_local_linear_nr
+	OldOsGate allocate_debug_local_linear_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	EDX	LINEAR BASE ADDRESS
 ReserveLocalLinear	MACRO
-	OsGate reserve_local_linear_nr
+	OldOsGate reserve_local_linear_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	EDX	LINEAR BASE ADDRESS
 AllocateVMLinear	MACRO
-	OsGate allocate_vm_linear_nr
+	OldOsGate allocate_vm_linear_nr
 					ENDM
 
 ;	ECX		SIZE
 ;	EDX		LINEAR BASE ADDRESS
 FreeLinear	MACRO
-	OsGate free_linear_nr
+	OldOsGate free_linear_nr
 					ENDM
 
 ;	EAX		NEW SIZE
 ;	ECX		OLD SIZE
 ;	EDX		LINEAR BASE ADDRESS
 ResizeLinear	MACRO
-	OsGate resize_linear_nr
+	OldOsGate resize_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 UsedBigLinear	MACRO
-	OsGate used_big_linear_nr
+	OldOsGate used_big_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 UsedSmallLinear	MACRO
-	OsGate used_small_linear_nr
+	OldOsGate used_small_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 UsedLocalLinearThread	MACRO
-	OsGate used_local_linear_thread_nr
+	OldOsGate used_local_linear_thread_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	BX		SELECTOR IN
 ;	ES		SELECTOR UT
 AllocateFixedProcessMem	MACRO
-	OsGate allocate_fixed_process_mem_nr
+	OldOsGate allocate_fixed_process_mem_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	BX		SELECTOR IN
 ;	ES		SELECTOR UT
 AllocateFixedSystemMem	MACRO
-	OsGate allocate_fixed_system_mem_nr
+	OldOsGate allocate_fixed_system_mem_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	EDX		LINJéR ADDRESS
 AllocateProcessLinear	MACRO
-	OsGate allocate_process_linear_nr
+	OldOsGate allocate_process_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	EDX		LINJéR ADDRESS
 AllocateSystemLinear	MACRO
-	OsGate allocate_system_linear_nr
+	OldOsGate allocate_system_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	EDX		LINJéR ADDRESS
 AllocateFixedVMLinear	MACRO
-	OsGate allocate_fixed_vm_linear_nr
+	OldOsGate allocate_fixed_vm_linear_nr
 					ENDM
 
 ;;;;;;;;;;;;; PHYSICAL MEMORY MANAGEMENT ;;;;;;;;;;
 
 ;	EAX		FYSISK ADDRESS
 AllocatePhysical	MACRO
-	OsGate allocate_physical_nr
+	OldOsGate allocate_physical_nr
 					ENDM
 
 ;	EAX		FYSISK ADDRESS
 AllocateDmaPhysical	MACRO
-	OsGate allocate_dma_physical_nr
+	OldOsGate allocate_dma_physical_nr
 					ENDM
 
 ;	EAX		FYSISK ADDRESS
 FreePhysical	MACRO
-	OsGate free_physical_nr
+	OldOsGate free_physical_nr
 					ENDM
 
 ;	IN  ECX		Number of pages
 ;	OUT EAX		Physical base address
 AllocateMultiplePhysical	MACRO
-	OsGate allocate_multiple_physical_nr
+	OldOsGate allocate_multiple_physical_nr
 					ENDM
 
 ;	IN  EAX     Table name
 ;	OUT ES      Table selector
 GetAcpiTable	MACRO
-	OsGate get_acpi_table_nr
+	OldOsGate get_acpi_table_nr
 					ENDM
 
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 ;   OUT EDX     APIC ID
 GetApicId    MACRO
-	OsGate get_apic_id_nr
+	OldOsGate get_apic_id_nr
 						ENDM
 
 ;   IN  ES:DI   Callback for get processor
 ;   OUT AX      Processor #
 ;   OUT ES      Processor selector
 CreateProcessor    MACRO
-	OsGate create_processor_nr
+	OldOsGate create_processor_nr
 						ENDM
 
 ;   OUT FS      Processor selector
 GetProcessor    MACRO
-	OsGate get_processor_nr
+	OldOsGate get_processor_nr
 						ENDM
 
 ;   IN  AX      Processor #
 ;   OUT FS      Processor selector
 GetProcessorNumber    MACRO
-	OsGate get_processor_num_nr
+	OldOsGate get_processor_num_nr
 						ENDM
 
 ;   IN  FS      Processor selector
 ResumeProcessor    MACRO
-	OsGate resume_processor_nr
+	OldOsGate resume_processor_nr
 						ENDM
 
 StartProcessor    MACRO
-	OsGate start_processor_nr
+	OldOsGate start_processor_nr
 						ENDM
 
 ;   IN  FS      Processor selector
 IsProcessorBlocked    MACRO
-	OsGate is_processor_blocked_nr
+	OldOsGate is_processor_blocked_nr
 						ENDM
 
 ;   IN  FS      Processor selector
 UnblockProcessor    MACRO
-	OsGate unblock_processor_nr
+	OldOsGate unblock_processor_nr
 						ENDM
 
 DoUnblockProcessor    MACRO
-	OsGate do_unblock_processor_nr
+	OldOsGate do_unblock_processor_nr
 						ENDM
 
 ;   IN  FS      Processor selector
 SendNmi    MACRO
-	OsGate send_nmi_nr
+	OldOsGate send_nmi_nr
 	                    ENDM
 
 ;   IN  AL      Int #
 ;   IN  FS      Processor selector
 SendInt    MACRO
-	OsGate send_int_nr
+	OldOsGate send_int_nr
 	                    ENDM
 
 ;   OUT EAX      Update tics
 StartSysTimer    MACRO
-	OsGate start_sys_timer_nr
+	OldOsGate start_sys_timer_nr
 						ENDM
 
 ;   IN  AX      Tic count
 ReloadSysTimer    MACRO
-	OsGate reload_sys_timer_nr
+	OldOsGate reload_sys_timer_nr
 						ENDM
 
 EnterInt    MACRO
-	OsGate enter_int_nr
+	OldOsGate enter_int_nr
 						ENDM
 
 LeaveInt    MACRO
-	OsGate leave_int_nr
+	OldOsGate leave_int_nr
 						ENDM
 
 LockTask    MACRO
-	OsGate lock_task_nr
+	OldOsGate lock_task_nr
 						ENDM
 
 UnlockTask    MACRO
-	OsGate unlock_task_nr
+	OldOsGate unlock_task_nr
 						ENDM
 
 ;   SS:BP     Exception stack
 DebugException    MACRO
-	OsGate debug_exception_nr
+	OldOsGate debug_exception_nr
 						ENDM
 
 ;   SS:BP     Exception stack
 LockedDebugException    MACRO
-	OsGate locked_debug_exception_nr
+	OldOsGate locked_debug_exception_nr
 						ENDM
 
 ;       AL              PRIORITET
@@ -721,36 +720,36 @@ LockedDebugException    MACRO
 ;       DS:ESI          ADDRESS TO START AT
 ;       ES:EDI          PROCESS NAME
 CreateProcess    MACRO
-	OsGate create_process_nr
+	OldOsGate create_process_nr
 						ENDM
 
 ;	DS:SI		TRèD
 ;	AX			STATUS TILL TRèD
 Wake	MACRO
-	OsGate wake_thread_nr
+	OldOsGate wake_thread_nr
 					ENDM
 
 ;	DS:DI	SOVLISTA
 ;	AX		DATA
 Sleep	MACRO
-	OsGate sleep_thread_nr
+	OldOsGate sleep_thread_nr
 					ENDM
 
 ClearSignal	MACRO
-	OsGate clear_signal_nr
+	OldOsGate clear_signal_nr
 					ENDM
 
 ;	BX			THREAD TO SIGNAL
 Signal	MACRO
-	OsGate signal_nr
+	OldOsGate signal_nr
 					ENDM
 
 WaitForSignal	MACRO
-	OsGate wait_for_signal_nr
+	OldOsGate wait_for_signal_nr
 					ENDM
 
 WaitForSignalWithTimeout	MACRO
-	OsGate wait_for_signal_timeout_nr
+	OldOsGate wait_for_signal_timeout_nr
 					ENDM
 
 ; IN  AX      Extra bytes needed in wait object
@@ -758,12 +757,12 @@ WaitForSignalWithTimeout	MACRO
 ; IN  ES:DI   Method table (init, abort, peek)
 ; OUT ES      Wait object
 AddWait	MACRO
-	OsGate add_wait_nr
+	OldOsGate add_wait_nr
 					ENDM
 
 ; IN  ES      Wait object
 SignalWait	MACRO
-	OsGate signal_wait_nr
+	OldOsGate signal_wait_nr
 					ENDM
 
 InitSection     MACRO section
@@ -778,7 +777,7 @@ EnterSection    MACRO section
 	jc enter_section_donep
 	push esi
 	lea esi,section
-	OsGate enter_section_nr
+	OldOsGate enter_section_nr
 	pop esi
 enter_section_donep:
 	popf
@@ -791,7 +790,7 @@ LeaveSection    MACRO section
 	jc leave_section_donep
 	push esi
 	lea esi,section
-	OsGate leave_section_nr
+	OldOsGate leave_section_nr
 	pop esi
 leave_section_donep:
 	popf
@@ -813,7 +812,7 @@ EnterReadSection        MACRO section
 	jc enter_sync_ok
 	push esi
 	mov esi,OFFSET section.ssync_value
-	OsGate enter_section_nr
+	OldOsGate enter_section_nr
 	pop esi
 enter_sync_ok:
 	lock sub section.sread_value,1
@@ -822,14 +821,14 @@ enter_sync_ok:
 	jc enter_read_ok
 	push esi
 	mov esi,OFFSET section.swrite_value
-	OsGate enter_section_nr
+	OldOsGate enter_section_nr
 	pop esi
 enter_read_ok:
 	lock add section.ssync_value,1
 	jc enter_read_done
 	push esi
 	mov esi,OFFSET section.ssync_value
-	OsGate leave_section_nr
+	OldOsGate leave_section_nr
 	pop esi
 enter_read_done:
 	popf
@@ -843,7 +842,7 @@ LeaveReadSection        MACRO section
 	jc leave_sync_ok
 	push esi
 	mov esi,OFFSET section.ssync_value
-	OsGate enter_section_nr
+	OldOsGate enter_section_nr
 	pop esi
 leave_sync_ok:
 	lock add section.sread_value,1
@@ -852,14 +851,14 @@ leave_sync_ok:
 	jc leave_read_ok
 	push esi
 	mov esi,OFFSET section.swrite_value
-	OsGate leave_section_nr
+	OldOsGate leave_section_nr
 	pop esi
 leave_read_ok:
 	lock add section.ssync_value,1
 	jc leave_read_done
 	push esi
 	mov esi,OFFSET section.ssync_value
-	OsGate leave_section_nr
+	OldOsGate leave_section_nr
 	pop esi
 leave_read_done:
 	popf
@@ -873,7 +872,7 @@ EnterWriteSection       MACRO section
 	jc enter_section_done
 	push esi
 	mov esi,OFFSET section.swrite_value
-	OsGate enter_section_nr
+	OldOsGate enter_section_nr
 	pop esi
 enter_section_done:
 	popf
@@ -887,7 +886,7 @@ LeaveWriteSection       MACRO section
 	jc leave_section_done
 	push esi
 	mov esi,OFFSET section.swrite_value
-	OsGate leave_section_nr
+	OldOsGate leave_section_nr
 	pop esi
 leave_section_done:
 	popf
@@ -898,204 +897,204 @@ leave_section_done:
 ;	BX			TIMER THREAD (OWNER)
 ;	CX			DATA
 StartTimer	MACRO
-	OsGate start_timer_nr
+	OldOsGate start_timer_nr
 					ENDM
 
 ;	BX			TIMER THREAD (OWNER)
 StopTimer	MACRO
-	OsGate stop_timer_nr
+	OldOsGate stop_timer_nr
 					ENDM
 
 DebugBreak	MACRO
-	OsGate debug_break_nr
+	OldOsGate debug_break_nr
 					ENDM
 					ENDM
 
 ; OUT AX               Thread ID
 GetDebugThreadSel MACRO
-	OsGate get_debug_thread_sel_nr
+	OldOsGate get_debug_thread_sel_nr
 						ENDM
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 HookCreateThread	MACRO
-	OsGate hook_create_thread_nr
+	OldOsGate hook_create_thread_nr
 					ENDM
 
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 HookCreateProcess	MACRO
-	OsGate hook_create_process_nr
+	OldOsGate hook_create_process_nr
 					ENDM
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 HookTerminateThread	MACRO
-	OsGate hook_terminate_thread_nr
+	OldOsGate hook_terminate_thread_nr
 					ENDM
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 HookTerminateProcess	MACRO
-	OsGate hook_terminate_process_nr
+	OldOsGate hook_terminate_process_nr
 					ENDM
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 HookInitTasking	MACRO
-	OsGate hook_init_tasking_nr
+	OldOsGate hook_init_tasking_nr
 					ENDM
 
 ;	ES:DI		PROCEDURE TO CALL
 HookState	MACRO
-	OsGate hook_state_nr
+	OldOsGate hook_state_nr
 					ENDM
 
 CrashGate	MACRO
-	OsGate crash_gate_nr
+	OldOsGate crash_gate_nr
 					ENDM
 
 ;   SS:BP       Fault stack
 CrashFault	MACRO
-	OsGate crash_fault_nr
+	OldOsGate crash_fault_nr
 					ENDM
 
 ;   DS      TSS alias
 CrashTss	MACRO
-	OsGate crash_tss_nr
+	OldOsGate crash_tss_nr
 					ENDM
 
 StartApCores	MACRO
-	OsGate start_ap_cores_nr
+	OldOsGate start_ap_cores_nr
 					ENDM
 
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;
 
 SimSti	MACRO
-	OsGate sim_sti_nr
+	OldOsGate sim_sti_nr
 					ENDM
 
 SimCli	MACRO
-	OsGate sim_cli_nr
+	OldOsGate sim_cli_nr
 					ENDM
 
 ;	AX		FLAGS
 GetFlags	MACRO
-	OsGate sim_get_flags_nr
+	OldOsGate sim_get_flags_nr
 					ENDM
 
 ;	AX		FLAGS
 SetFlags	MACRO
-	OsGate sim_set_flags_nr
+	OldOsGate sim_set_flags_nr
 					ENDM
 
 ;	BX			Stack selector
 GetExceptionStack16	MACRO
-	OsGate get_exception_stack16_nr
+	OldOsGate get_exception_stack16_nr
 					ENDM
 
 ;	BX			Stack selector
 GetExceptionStack32	MACRO
-	OsGate get_exception_stack32_nr
+	OldOsGate get_exception_stack32_nr
 					ENDM
 
 ;	BX			Offset to context on locked stack
 SaveContext	MACRO
-	OsGate save_context_nr
+	OldOsGate save_context_nr
 					ENDM
 
 ;	BX			Offset to context on locked stack
 RestoreContext	MACRO
-	OsGate restore_context_nr
+	OldOsGate restore_context_nr
 					ENDM
 
 ;	Stack		Address of real mode code to call
 CallVM	MACRO
-	OsGate call_vm_nr
+	OldOsGate call_vm_nr
 					ENDM
 
 ;	Stack		Address of protected mode ring 3 code to call
 CallPM16	MACRO
-	OsGate call_pm16_nr
+	OldOsGate call_pm16_nr
 					ENDM
 
 ;	Stack		Address of protected mode ring 3 code to call
 CallPM32	MACRO
-	OsGate call_pm32_nr
+	OldOsGate call_pm32_nr
 					ENDM
 
 ;	AL			INT NUMMER
 ;	DS:DI		ADDRESS TILL CALLBACK
 HookVMInt	MACRO
-	OsGate hook_vm_int_nr
+	OldOsGate hook_vm_int_nr
 					ENDM
 
 ;	AL			INT NUMMER
 ;	DS:DI		ADDRESS TILL CALLBACK
 HookProt16Int	MACRO
-	OsGate hook_pm16_int_nr
+	OldOsGate hook_pm16_int_nr
 					ENDM
 
 ;	AL			INT NUMMER
 ;	DS:EDI		ADDRESS TILL CALLBACK
 HookProt32Int	MACRO
-	OsGate hook_pm32_int_nr
+	OldOsGate hook_pm32_int_nr
 					ENDM
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 ;	AL			INT NUMMER
 HookException	MACRO
-	OsGate hook_exception_nr
+	OldOsGate hook_exception_nr
 					ENDM
 
 ;	ES:DI		HANDLER ADDRESS
 ;	AL			INT NUMMER
 HookGetVMInt	MACRO
-	OsGate hook_get_vm_int_nr
+	OldOsGate hook_get_vm_int_nr
 					ENDM
 
 ;	ES:DI		HANDLER ADDRESS
 ;	AL			INT NUMMER
 HookSetVMInt	MACRO
-	OsGate hook_set_vm_int_nr
+	OldOsGate hook_set_vm_int_nr
 					ENDM
 
 ;	ES:DI		HANDLER ADDRESS
 ;	AL			INT NUMMER
 HookGetProt16Int	MACRO
-	OsGate hook_get_pm16_int_nr
+	OldOsGate hook_get_pm16_int_nr
 					ENDM
 
 ;	ES:DI		HANDLER ADDRESS
 ;	AL			INT NUMMER
 HookSetProt16Int	MACRO
-	OsGate hook_set_pm16_int_nr
+	OldOsGate hook_set_pm16_int_nr
 					ENDM
 
 ;	ES:EDI		HANDLER ADDRESS
 ;	AL			INT NUMMER
 HookGetProt32Int	MACRO
-	OsGate hook_get_pm32_int_nr
+	OldOsGate hook_get_pm32_int_nr
 					ENDM
 
 ;	ES:EDI		HANDLER ADDRESS
 ;	AL			INT NUMMER
 HookSetProt32Int	MACRO
-	OsGate hook_set_pm32_int_nr
+	OldOsGate hook_set_pm32_int_nr
 					ENDM
 
 ReflectException	MACRO
-	OsGate reflect_exception_nr
+	OldOsGate reflect_exception_nr
 					ENDM
 
 ReflectPMToVM	MACRO
-	OsGate reflect_pm_to_vm_nr
+	OldOsGate reflect_pm_to_vm_nr
 					ENDM
 
 ;	Stack	Int #
 V86BiosInt	MACRO
-	OsGate v86_bios_int_nr
+	OldOsGate v86_bios_int_nr
 					ENDM
 
 ;	AL			16 or 32 bit app
 SetBitness	MACRO
-	OsGate set_bitness_nr
+	OldOsGate set_bitness_nr
 					ENDM
 
 ;;;;;;;;;;;;; IO ;;;;;;;;;;;;;;;;;;;;
@@ -1103,69 +1102,69 @@ SetBitness	MACRO
 ;	ES:DI		ADDRESS TILL CALLBACK
 ;	DX			PORT NUMMER
 HookIn	MACRO
-	OsGate hook_in_nr
+	OldOsGate hook_in_nr
 					ENDM
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 ;	DX			PORT NUMMER
 HookOut	MACRO
-	OsGate hook_out_nr
+	OldOsGate hook_out_nr
 					ENDM
 
 ;;;;;;;;;; IRQ ;;;;;;;;;;;;;;;;;;;
 
 ;	AL			IRQ NR
 SendEoi	MACRO
-	OsGate send_eoi_nr
+	OldOsGate send_eoi_nr
 					ENDM
 
 ;	AL			IRQ NR
 IsIrqFree	MACRO
-	OsGate is_irq_free_nr
+	OldOsGate is_irq_free_nr
 					ENDM
 
 ; OUT EAX         Active IRQ lines
 DisableAllIrq	MACRO
-	OsGate disable_all_irq_nr
+	OldOsGate disable_all_irq_nr
 					ENDM
 
 ;	AL			IRQ NR
 ;	DS			DATA PASSED TO HANDLER
 ;	ES:DI		HANDLER ADDRESS
 RequestPrivateIrqHandler	MACRO
-	OsGate request_private_irq_handler_nr
+	OldOsGate request_private_irq_handler_nr
 					ENDM
 
 ;	AL			IRQ NR
 ReleasePrivateIrqHandler	MACRO
-	OsGate release_private_irq_handler_nr
+	OldOsGate release_private_irq_handler_nr
 					ENDM
 
 ;	AL			IRQ NR
 ;	DS			DATA PASSED TO HANDLER
 ;	ES:DI		HANDLER ADDRESS
 RequestSharedIrqHandler	MACRO
-	OsGate request_shared_irq_handler_nr
+	OldOsGate request_shared_irq_handler_nr
 					ENDM
 
 SetupIrqDetect	MACRO
-	OsGate setup_irq_detect_nr
+	OldOsGate setup_irq_detect_nr
 					ENDM
 
 ;   AX      Detected IRQs
 PollIrqDetect	MACRO
-	OsGate poll_irq_detect_nr
+	OldOsGate poll_irq_detect_nr
 					ENDM
 
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
 ;	EDX:EAX		SYSTEM TIME
 SetSystemTime	MACRO
-	OsGate set_system_time_nr
+	OldOsGate set_system_time_nr
 					ENDM
 
 NotifyTimeDrift	MACRO
-	OsGate notify_time_drift_nr
+	OldOsGate notify_time_drift_nr
 					ENDM
 
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;
@@ -1173,32 +1172,32 @@ NotifyTimeDrift	MACRO
 ; IN  AX		Signature
 ; IN  ES:DI		Delete handle callback
 RegisterHandle	MACRO
-	OsGate register_handle_nr
+	OldOsGate register_handle_nr
 					ENDM
 
 ; IN  AX		Signature
 ; IN  CX		Size of data
 ; OUT DS:BX		Handle data
 AllocateHandle	MACRO
-	OsGate allocate_handle_nr
+	OldOsGate allocate_handle_nr
 					ENDM
 
 ; IN  BX		Handle data
 FreeHandle	MACRO
-	OsGate free_handle_nr
+	OldOsGate free_handle_nr
 					ENDM
 
 ; IN  AX		Signature
 ; IN  BX  		Handle
 ; OUT DS:BX		Handle data
 DerefHandle	MACRO
-	OsGate deref_handle_nr
+	OldOsGate deref_handle_nr
 					ENDM
 
 ; OUT DS        Cloned handle sel
 ; OUT ES        Cloned handle mem sel
 CloneHandleMem	MACRO
-	OsGate clone_handle_mem_nr
+	OldOsGate clone_handle_mem_nr
 					ENDM
 
 ;;;;;;;;;; NETWORK ;;;;;;;;;;;;;
@@ -1207,7 +1206,7 @@ CloneHandleMem	MACRO
 ;	CX		Size of address
 ;	DS:SI	Broadcast address
 RegisterNetClass	MACRO
-	OsGate register_net_class_nr
+	OldOsGate register_net_class_nr
 					ENDM
 
 ;	CX		Size of address
@@ -1220,7 +1219,7 @@ RegisterNetClass	MACRO
 ;				ES		data selector
 ;	BX		Protocol handle
 RegisterNetProtocol	MACRO
-	OsGate register_net_protocol_nr
+	OldOsGate register_net_protocol_nr
 						ENDM
 
 ;	AL		CLASS
@@ -1229,13 +1228,13 @@ RegisterNetProtocol	MACRO
 ;	ES:DI	DRIVER NAME
 ;	BX		HANDLE
 RegisterNetDriver	MACRO
-	OsGate register_net_driver_nr
+	OldOsGate register_net_driver_nr
 						ENDM
 
 ;	DS:SI	DISPATCH TABLE
 ;	BX		HANDLE
 RegisterPppDriver	MACRO
-	OsGate register_ppp_driver_nr
+	OldOsGate register_ppp_driver_nr
 						ENDM
 
 ; IN  BX		PROTOCOL HANDLE
@@ -1243,7 +1242,7 @@ RegisterPppDriver	MACRO
 ; OUT NC		SUCCESS
 ; OUT BX        DRIVER HANDLE
 GetNetDriver	MACRO
-	OsGate get_net_driver_nr
+	OldOsGate get_net_driver_nr
 						ENDM
 
 ; IN  BX		PROTOCOL HANDLE
@@ -1252,14 +1251,14 @@ GetNetDriver	MACRO
 ; OUT ES:EDI	DATA BUFFER TO USE
 ; OUT NC		SUCCESS
 GetNetBuffer	MACRO
-	OsGate get_net_buffer_nr
+	OldOsGate get_net_buffer_nr
 						ENDM
 
 ; IN  BX		PROTOCOL HANDLE
 ; IN  DS:ESI	DEST ADDRESS
 ; OUT NC		SUCCESS
 IsNetAddressValid	MACRO
-	OsGate is_net_address_valid_nr
+	OldOsGate is_net_address_valid_nr
 						ENDM
 
 ; IN  BX		PROTOCOL HANDLE
@@ -1268,13 +1267,13 @@ IsNetAddressValid	MACRO
 ; IN  ES		DATA
 ; OUT NC		SUCCESS
 SendNet	MACRO
-	OsGate send_net_nr
+	OldOsGate send_net_nr
 						ENDM
 
 ; IN  BX		PROTOCOL HANDLE
 ; IN  DS:ESI	ADDRESS
 DefineProtocolAddress	MACRO
-	OsGate define_protocol_addr_nr
+	OldOsGate define_protocol_addr_nr
 						ENDM
 
 ; IN  FS		Driver handle
@@ -1282,7 +1281,7 @@ DefineProtocolAddress	MACRO
 ; OUT ES:EDI	Data buffer to use
 ; OUT NC		Success
 GetBroadcastBuffer	MACRO
-	OsGate get_broadcast_buffer_nr
+	OldOsGate get_broadcast_buffer_nr
 						ENDM
 
 ; IN  BX		Protocol handle
@@ -1291,7 +1290,7 @@ GetBroadcastBuffer	MACRO
 ; IN  ES		Data buffer
 ; OUT NC		Success
 SendBroadcast	MACRO
-	OsGate send_broadcast_nr
+	OldOsGate send_broadcast_nr
 						ENDM
 
 ; IN  ES:DI		Callback for each driver
@@ -1302,26 +1301,26 @@ SendBroadcast	MACRO
 ;						ESI		passed unchanged
 ;						EBP		passed unchanged
 NetBroadcast	MACRO
-	OsGate net_broadcast_nr
+	OldOsGate net_broadcast_nr
 				ENDM
 
 ; IN  ECX		SIZE
 ; OUT ES:EDI	DATA BUFFER TO USE
 ; OUT NC		SUCCESS
 GetPppBuffer	MACRO
-	OsGate get_ppp_buffer_nr
+	OldOsGate get_ppp_buffer_nr
 						ENDM
 
 ; IN  ECX		SIZE
 ; IN  ES		DATA
 ; OUT NC		SUCCESS
 SendPpp	MACRO
-	OsGate send_ppp_nr
+	OldOsGate send_ppp_nr
 						ENDM
 
 ;	BX		HANDLE
 NetReceived	MACRO
-	OsGate net_received_nr
+	OldOsGate net_received_nr
 						ENDM
 
 ;	IN	BX		protocol handle
@@ -1330,7 +1329,7 @@ NetReceived	MACRO
 ;	IN  EDI		source address offset
 ;	BX		HANDLE
 AddNetSourceAddress	MACRO
-	OsGate add_net_source_address_nr
+	OldOsGate add_net_source_address_nr
 						ENDM
 
 ;	AL		Protocol
@@ -1341,7 +1340,7 @@ AddNetSourceAddress	MACRO
 ;		DS:ESI	Options
 ;		ES:EDI	IP Data
 HookIp	MACRO
-	OsGate hook_ip_nr
+	OldOsGate hook_ip_nr
 						ENDM
 
 ;	AL		Protocol
@@ -1351,12 +1350,12 @@ HookIp	MACRO
 ;	DS:ESI	Options
 ;	ES:EDI	IP Data
 CreateIpHeader	MACRO
-	OsGate create_ip_header_nr
+	OldOsGate create_ip_header_nr
 						ENDM
 
 ;	ES		Datagram to send
 SendIp	MACRO
-	OsGate send_ip_data_nr
+	OldOsGate send_ip_data_nr
 						ENDM
 
 ; IN  AL		Protocol
@@ -1366,64 +1365,64 @@ SendIp	MACRO
 ; IN  DS:ESI	Options
 ; OUT ES:EDI	IP Data
 CreateBroadcastIp	MACRO
-	OsGate create_broadcast_ip_nr
+	OldOsGate create_broadcast_ip_nr
 						ENDM
 
 ; IN  ES		Datagram to send
 ; IN  FS		Driver selector
 SendBroadcastIp	MACRO
-	OsGate send_broadcast_ip_nr
+	OldOsGate send_broadcast_ip_nr
 						ENDM
 
 ; IN  AL		Option code
 ; IN  ES:DI		Callback for option data
 ;					ES:DI		Receive option data
 AddDhcpOption	MACRO
-	OsGate add_dhcp_option_nr
+	OldOsGate add_dhcp_option_nr
 						ENDM
 
 ;	ES:DI	New IP cache entry callback
 ;		ES	IP cache selector
 HookIpCache	MACRO
-	OsGate hook_ip_cache_nr
+	OldOsGate hook_ip_cache_nr
 						ENDM
 
 ;	AX		Size of IP cache data
 ;	BX		Offset within IP cache data for
 AllocateIpCacheMem	MACRO
-	OsGate allocate_ip_cache_mem_nr
+	OldOsGate allocate_ip_cache_mem_nr
 						ENDM
 
 ;	EDX		IP address
 ;	ES		IP cache entry
 ;	DI		Host name offset
 LookupIpCache	MACRO
-	OsGate lookup_ip_cache_nr
+	OldOsGate lookup_ip_cache_nr
 						ENDM
 
 ;	DS		IP cache entry
 ;	EAX		Timeout in system tics
 GetHostTimeout	MACRO
-	OsGate get_host_timeout_nr
+	OldOsGate get_host_timeout_nr
 						ENDM
 
 ;	DS		IP cache entry
 ;	EAX		Round trip time in system tics
 UpdateRoundTripTime	MACRO
-	OsGate update_round_trip_time_nr
+	OldOsGate update_round_trip_time_nr
 						ENDM
 
 ;	EDX		My PPP IP address
 GetPppIp	MACRO
-	OsGate get_ppp_ip_nr
+	OldOsGate get_ppp_ip_nr
 				ENDM
 
 OpenPpp	MACRO
-	OsGate open_ppp_nr
+	OldOsGate open_ppp_nr
 			ENDM
 
 ClosePpp	MACRO
-	OsGate close_ppp_nr
+	OldOsGate close_ppp_nr
 			ENDM
 
 ; IN  EAX		timeout in ms
@@ -1434,7 +1433,7 @@ ClosePpp	MACRO
 ; OUT ES:DI 	Answer buffer
 ; OUT CX		Number of bytes received
 QueryUdp	MACRO
-	OsGate query_udp_nr
+	OldOsGate query_udp_nr
 			ENDM
 
 ; IN  SI		local port
@@ -1444,7 +1443,7 @@ QueryUdp	MACRO
 ; OUT	CX		UDP reply size
 ; OUT	ES		UDP reply data
 ListenUdpPort	MACRO
-	OsGate listen_udp_port_nr
+	OldOsGate listen_udp_port_nr
 			ENDM
 
 ;;;;;;;;;;;;; DOS ;;;;;;;;;;;;;;;;;;;
@@ -1453,127 +1452,127 @@ ListenUdpPort	MACRO
 ;	NC	EDX	LINEAR BASE ADDRESS
 ;	CY	AL FELORSAK
 AllocateDosLinear	MACRO
-	OsGate allocate_dos_linear_nr
+	OldOsGate allocate_dos_linear_nr
 					ENDM
 
 ;	EDX	LINEAR BASE ADDRESS
 ;	CY	AL FELORSAK
 FreeDosLinear	MACRO
-	OsGate free_dos_linear_nr
+	OldOsGate free_dos_linear_nr
 					ENDM
 
 ;	EAX	NEW SIZE
 ;	EDX	LINEAR BASE ADDRESS
 ;	CY	AL FELORSAK
 ResizeDosLinear	MACRO
-	OsGate resize_dos_linear_nr
+	OldOsGate resize_dos_linear_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	EDX STôRSTA BLOCK
 AvailableDosLinear	MACRO
-	OsGate available_dos_linear_nr
+	OldOsGate available_dos_linear_nr
 					ENDM
 
 QueryXms	MACRO
-	OsGate query_xms_nr
+	OldOsGate query_xms_nr
 					ENDM
 
 QueryDpmi	MACRO
-	OsGate query_dpmi_nr
+	OldOsGate query_dpmi_nr
 					ENDM
 
 QueryDpmi16	MACRO
-	OsGate query_dpmi16_nr
+	OldOsGate query_dpmi16_nr
 					ENDM
 
 ;	BX			OFFSET I BIOS SEGMENT
 ;	AL			DATA
 GetBiosData	MACRO
-	OsGate get_bios_data_nr
+	OldOsGate get_bios_data_nr
 					ENDM
 
 ;	BX			OFFSET I BIOS SEGMENT
 ;	AL			DATA
 SetBiosData	MACRO
-	OsGate set_bios_data_nr
+	OldOsGate set_bios_data_nr
 					ENDM
 
 ;	BX			OFFSET I BIOS SEGMENT
 ;	ES:DI		HANDLER ADDRESS
 HookGetBiosData	MACRO
-	OsGate hook_get_bios_data_nr
+	OldOsGate hook_get_bios_data_nr
 					ENDM
 
 ;	BX			OFFSET I BIOS SEGMENT
 ;	ES:DI		HANDLER ADDRESS
 HookSetBiosData	MACRO
-	OsGate hook_set_bios_data_nr
+	OldOsGate hook_set_bios_data_nr
 					ENDM
 
 ; IN  BX		File handle
 ; IN  DS:(E)SI	Program name
 ; IN  ES:(E)DI	Command line
 LoadDosExe	MACRO
-	OsGate load_dos_exe_nr
+	OldOsGate load_dos_exe_nr
 					ENDM
 
 ;	ES:DI		HANDLER ADDRESS
 HookLoadDosExe	MACRO
-	OsGate hook_load_dos_exe_nr
+	OldOsGate hook_load_dos_exe_nr
 					ENDM
 
 ;	ES:DI       Handle address
 HookShiftKeys	MACRO
-	OsGate hook_shift_keys_nr
+	OldOsGate hook_shift_keys_nr
 					ENDM
 
 ;	AL          Scan code
 ProcessKeyScan	MACRO
-	OsGate process_key_scan_nr
+	OldOsGate process_key_scan_nr
 					ENDM
 
 ;	AX          Keyboard state
 SetKeyboardState	MACRO
-	OsGate set_keyboard_state_nr
+	OldOsGate set_keyboard_state_nr
 					ENDM
 
 ;	AL = CHAR OR EXTENDED CHAR
 ReadKeyboardSerial	MACRO
-	OsGate read_keyboard_serial_nr
+	OldOsGate read_keyboard_serial_nr
 					ENDM
 
 ;	NC		CHAR IN BUFFER
 ;	CY		BUFFER EMPTY
 PollKeyboardSerial	MACRO
-	OsGate poll_keyboard_serial_nr
+	OldOsGate poll_keyboard_serial_nr
 					ENDM
 
 ;	ES:EDI		ADDRESS TILL '$' TERMINERAD STRéNG
 WriteDosString	MACRO
-	OsGate write_dos_string_nr
+	OldOsGate write_dos_string_nr
 					ENDM
 
 ;	BX			PSP SEGMENT
 GetPsp	MACRO
-	OsGate get_psp_nr
+	OldOsGate get_psp_nr
 					ENDM
 
 ;	BX			PSP SEGMENT
 SetPsp	MACRO
-	OsGate set_psp_nr
+	OldOsGate set_psp_nr
 					ENDM
 
 EnterDpmi	MACRO
-	OsGate enter_dpmi_nr
+	OldOsGate enter_dpmi_nr
 					ENDM
 
 EnterDos16	MACRO
-	OsGate enter_dos16_nr
+	OldOsGate enter_dos16_nr
 					ENDM
 
 EnterDos32	MACRO
-	OsGate enter_dos32_nr
+	OldOsGate enter_dos32_nr
 					ENDM
 
 ;	DS:BX		DEVICE HEADER
@@ -1582,13 +1581,13 @@ EnterDos32	MACRO
 ;	DS:DI		DEVICE WRITE
 ;	DX			DEVICE SEGMENT
 RegisterDevice	MACRO
-	OsGate register_device_nr
+	OldOsGate register_device_nr
 					ENDM
 
 ;	ES:EDI		FILENAME
 ;	AL			DRIVE IN / OUT
 CheckDevice	MACRO
-	OsGate check_device_nr
+	OldOsGate check_device_nr
 					ENDM
 
 ;;;;;;;;;;;;;; APP ;;;;;;;;;;;;;;;;;;
@@ -1596,140 +1595,140 @@ CheckDevice	MACRO
 ; IN  BX        Thread #
 ; OUT BX        Thread sel
 ThreadToSel	    MACRO
-	OsGate thread_to_sel_nr
+	OldOsGate thread_to_sel_nr
 			ENDM
 
 ; OUT BX        Env sys sel
 LockSysEnv	    MACRO
-	OsGate lock_sys_env_nr
+	OldOsGate lock_sys_env_nr
 			ENDM
 
 UnlockSysEnv	MACRO
-	OsGate unlock_sys_env_nr
+	OldOsGate unlock_sys_env_nr
 			ENDM
 
 ; OUT BX        Env process sel
 LockProcEnv	    MACRO
-	OsGate lock_proc_env_nr
+	OldOsGate lock_proc_env_nr
 			ENDM
 
 UnlockProcEnv	MACRO
-	OsGate unlock_proc_env_nr
+	OldOsGate unlock_proc_env_nr
 			ENDM
 
 ;	ES:DI		ADDRESS TO CALLBACK
 HookOpenApp	MACRO
-	OsGate hook_open_app_nr
+	OldOsGate hook_open_app_nr
 					ENDM
 
 ;	ES:DI		ADDRESS TO CALLBACK
 HookCloseApp	MACRO
-	OsGate hook_close_app_nr
+	OldOsGate hook_close_app_nr
 					ENDM
 
 ;	ES:DI		HANDLER ADDRESS
 HookLoadExe	MACRO
-	OsGate hook_load_exe_nr
+	OldOsGate hook_load_exe_nr
 					ENDM
 
 OpenApp	MACRO
-	OsGate open_app_nr
+	OldOsGate open_app_nr
 					ENDM
 
 ChainApp	MACRO
-	OsGate chain_app_nr
+	OldOsGate chain_app_nr
 					ENDM
 
 CloseApp	MACRO
-	OsGate close_app_nr
+	OldOsGate close_app_nr
 					ENDM
 
 ;    ES     Clone selector
 CloneApp	MACRO
-	OsGate clone_app_nr
+	OldOsGate clone_app_nr
 					ENDM
 
 ; IN  ES        Module selector
 SetModule	MACRO
-	OsGate set_module_nr
+	OldOsGate set_module_nr
 					ENDM
 
 ResetModule	MACRO
-	OsGate reset_module_nr
+	OldOsGate reset_module_nr
 					ENDM
 
 ; IN  ES        Module selector
 CreateModule	MACRO
-	OsGate create_module_nr
+	OldOsGate create_module_nr
 					ENDM
 
 ; IN  ES        Module selector
 FreeModule	MACRO
-	OsGate free_module_nr
+	OldOsGate free_module_nr
 					ENDM
 ; IN  BX        Module handle
 ; OUT BX        Lib sel
 DerefModuleHandle	MACRO
-	OsGate deref_module_handle_nr
+	OldOsGate deref_module_handle_nr
 					ENDM
 
 ; IN  BX        Lib sel
 ; OUT BX        Module handle
 AliasModuleHandle	MACRO
-	OsGate alias_module_handle_nr
+	OldOsGate alias_module_handle_nr
 					ENDM
 
 ; IN  ES        Options selector
 SetOptions	MACRO
-	OsGate set_options_nr
+	OldOsGate set_options_nr
 					ENDM
 
 ; IN  AX        Lib sel
 ; IN  DX        Process descriptor
 ; OUT BX        Process handle
 CreateProcHandle	MACRO
-	OsGate create_proc_handle_nr
+	OldOsGate create_proc_handle_nr
 					ENDM
 
 ; IN  BX        Process handle
 ; OUT AX        Lib sel
 ; OUT DX        Process descriptor
 DerefProcHandle	MACRO
-	OsGate deref_proc_handle_nr
+	OldOsGate deref_proc_handle_nr
 					ENDM
 
 ;;;;;;;;;;;; FOCUS ;;;;;;;;;;;;;
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 HookEnableFocus	MACRO
-	OsGate hook_enable_focus_nr
+	OldOsGate hook_enable_focus_nr
 					ENDM
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 HookLostFocus	MACRO
-	OsGate hook_lost_focus_nr
+	OldOsGate hook_lost_focus_nr
 					ENDM
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 HookGotFocus	MACRO
-	OsGate hook_got_focus_nr
+	OldOsGate hook_got_focus_nr
 					ENDM
 
 ;	AX		Focus thread
 GetFocusThread	MACRO
-	OsGate get_focus_thread_nr
+	OldOsGate get_focus_thread_nr
 					ENDM
 
 ;	BX		Thread
 ;   AL      Switch key
 GetThreadFocusKey     MACRO
-	OsGate get_thread_focus_key_nr
+	OldOsGate get_thread_focus_key_nr
 						ENDM
 
 ;	EAX		ANTAL BYTES
 ;	EDX		BAS ADDRESS
 AllocateFocusLinear	MACRO
-	OsGate allocate_focus_linear_nr
+	OldOsGate allocate_focus_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
@@ -1737,13 +1736,13 @@ AllocateFocusLinear	MACRO
 ;	DX		FOCUS SELECTOR IN
 ;	ES		LOCAL SELECTOR UT
 AllocateFixedFocusMem	MACRO
-	OsGate allocate_fixed_focus_mem_nr
+	OldOsGate allocate_fixed_focus_mem_nr
 					ENDM
 
 ;;;;;;;;;;;;; PCI ;;;;;;;;;;;;;;
 
 BiosPciInt	MACRO
-	OsGate bios_pci_int_nr
+	OldOsGate bios_pci_int_nr
 					ENDM
 
 ; IN  BH	Bus
@@ -1752,7 +1751,7 @@ BiosPciInt	MACRO
 ; IN  CL	Register
 ; OUT AL	Data
 ReadPciByte	MACRO
-	OsGate read_pci_byte_nr
+	OldOsGate read_pci_byte_nr
 					ENDM
 
 ; IN  BH	Bus
@@ -1761,7 +1760,7 @@ ReadPciByte	MACRO
 ; IN  CL	Register
 ; OUT AX	Data
 ReadPciWord	MACRO
-	OsGate read_pci_word_nr
+	OldOsGate read_pci_word_nr
 					ENDM
 
 ; IN  BH	Bus
@@ -1770,7 +1769,7 @@ ReadPciWord	MACRO
 ; IN  CL	Register
 ; OUT EAX	Data
 ReadPciDword	MACRO
-	OsGate read_pci_dword_nr
+	OldOsGate read_pci_dword_nr
 					ENDM
 
 ; IN  BH	Bus
@@ -1779,7 +1778,7 @@ ReadPciDword	MACRO
 ; IN  CL	Register
 ; IN  AL	Data
 WritePciByte	MACRO
-	OsGate write_pci_byte_nr
+	OldOsGate write_pci_byte_nr
 					ENDM
 
 ; IN  BH	Bus
@@ -1788,7 +1787,7 @@ WritePciByte	MACRO
 ; IN  CL	Register
 ; IN  AX	Data
 WritePciWord	MACRO
-	OsGate write_pci_word_nr
+	OldOsGate write_pci_word_nr
 					ENDM
 
 ; IN  BH	Bus
@@ -1797,7 +1796,7 @@ WritePciWord	MACRO
 ; IN  CL	Register
 ; IN  EAX	Data
 WritePciDword	MACRO
-	OsGate write_pci_dword_nr
+	OldOsGate write_pci_dword_nr
 					ENDM
 
 ; IN  BH	Bus
@@ -1806,7 +1805,7 @@ WritePciDword	MACRO
 ; IN  AL        Capability
 ; OUT AL        Index
 FindPciCapability	MACRO
-	OsGate find_pci_cap_nr
+	OldOsGate find_pci_cap_nr
 					ENDM
 
 ; IN  BH	Class
@@ -1816,7 +1815,7 @@ FindPciCapability	MACRO
 ; OUT BH	Bus
 ; OUT BL 	Device
 FindPciClass	MACRO
-	OsGate find_pci_class_nr
+	OldOsGate find_pci_class_nr
 					ENDM
 
 ; IN  BH	Class
@@ -1825,7 +1824,7 @@ FindPciClass	MACRO
 ; OUT BH	Bus
 ; OUT BL 	Device
 FindPciClassAll	MACRO
-	OsGate find_pci_class_all_nr
+	OldOsGate find_pci_class_all_nr
 					ENDM
 
 ; IN  CX	Device ID
@@ -1834,20 +1833,20 @@ FindPciClassAll	MACRO
 ; OUT BH	Bus
 ; OUT BL 	Device
 FindPciDevice	MACRO
-	OsGate find_pci_device_nr
+	OldOsGate find_pci_device_nr
 					ENDM
 
 ; IN  AL    Interrupt pin
 ; OUT AL    Interrupt line
 GetPciIrqNr	MACRO
-	OsGate get_pci_irq_nr
+	OldOsGate get_pci_irq_nr
 					ENDM
 
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 			
 ;	ES:DI	PROCEDURE THAT INITS DISC
 HookInitDisc	MACRO
-	OsGate hook_init_disc_nr
+	OldOsGate hook_init_disc_nr
 					ENDM
 
 ;	IN	BX		Handle
@@ -1855,23 +1854,23 @@ HookInitDisc	MACRO
 ;	OUT	AL		Disc #
 ;	OUT	BX		Disc sel
 InstallDisc	MACRO
-	OsGate install_disc_nr
+	OldOsGate install_disc_nr
 					ENDM
 
 ;	IN  BX		Disc sel
 ;	IN	ES:DI	Disc change procedure
 RegisterDiscChange	MACRO
-	OsGate register_disc_change_nr
+	OldOsGate register_disc_change_nr
 					ENDM
 
 ;	IN  BX		Disc sel
 StartDisc	MACRO
-	OsGate start_disc_nr
+	OldOsGate start_disc_nr
 					ENDM
 
 ;	IN  BX		Disc sel
 StopDisc	MACRO
-	OsGate stop_disc_nr
+	OldOsGate stop_disc_nr
 					ENDM
 
 ;	IN  AX		Sectors per unit
@@ -1881,30 +1880,30 @@ StopDisc	MACRO
 ;	IN  SI		BIOS sectors / cylinder
 ;	IN  DI		BIOS heads
 SetDiscParam	MACRO
-	OsGate set_disc_param_nr
+	OldOsGate set_disc_param_nr
 					ENDM
 
 ;	IN  BX		Disc sel
 WaitForDiscRequest	MACRO
-	OsGate wait_for_disc_request_nr
+	OldOsGate wait_for_disc_request_nr
 					ENDM
 
 ;	IN  BX		Disc sel
 ;	OUT	EDI		Disc handle
 GetDiscRequest	MACRO
-	OsGate get_disc_request_nr
+	OldOsGate get_disc_request_nr
 					ENDM
 
 ;	IN  BX		Disc sel
 ;	OUT	EDI		Disc handle
 PollDiscRequest	MACRO
-	OsGate poll_disc_request_nr
+	OldOsGate poll_disc_request_nr
 					ENDM
 
 ;	IN  BX		Disc sel
 ;	IN	EDI		Disc handle
 DiscRequestCompleted	MACRO
-	OsGate disc_request_completed_nr
+	OldOsGate disc_request_completed_nr
 					ENDM
 
 ;	IN  BX		Disc sel
@@ -1912,7 +1911,7 @@ DiscRequestCompleted	MACRO
 ;	IN	DX		Unit
 ;	OUT EDI		Disc handle
 NewDiscRequest	MACRO
-	OsGate new_disc_request_nr
+	OldOsGate new_disc_request_nr
 					ENDM
 
 ;	IN  BX		Disc sel
@@ -1920,17 +1919,17 @@ NewDiscRequest	MACRO
 ;	IN	DX		Unit
 ;	OUT EDI		Disc handle
 LockDiscRequest	MACRO
-	OsGate lock_disc_request_nr
+	OldOsGate lock_disc_request_nr
 					ENDM
 
 ;	IN  EDI		Disc handle
 ModifyDiscRequest	MACRO
-	OsGate modify_disc_request_nr
+	OldOsGate modify_disc_request_nr
 					ENDM
 
 ;	IN  EDI		Disc handle
 UnlockDiscRequest	MACRO
-	OsGate unlock_disc_request_nr
+	OldOsGate unlock_disc_request_nr
 					ENDM
 
 ;	IN  BX		Disc sel
@@ -1938,7 +1937,7 @@ UnlockDiscRequest	MACRO
 ;	OUT	ESI		Disc handle array
 ;	OUT ECX		Number of entries
 GetDiscRequestArray	MACRO
-	OsGate get_disc_request_array_nr
+	OldOsGate get_disc_request_array_nr
 					ENDM
 
 ;	IN	AL		Drive #
@@ -1946,17 +1945,17 @@ GetDiscRequestArray	MACRO
 ;	IN	EDX		Start sector
 ;	IN	ECX		Number of sectors
 OpenDrive	MACRO
-	OsGate open_drive_nr
+	OldOsGate open_drive_nr
 					ENDM
 
 ;	IN	AL		Drive #
 CloseDrive	MACRO
-	OsGate close_drive_nr
+	OldOsGate close_drive_nr
 					ENDM
 
 ;	IN	AL		Drive #
 FlushDrive	MACRO
-	OsGate flush_drive_nr
+	OldOsGate flush_drive_nr
 					ENDM
 
 ;	IN	AL		Drive #
@@ -1965,7 +1964,7 @@ FlushDrive	MACRO
 ;	OUT SI		Sectors per unit
 ;	OUT DI		Units
 GetDriveParam	MACRO
-	OsGate get_drive_param_nr
+	OldOsGate get_drive_param_nr
 					ENDM
 
 ;	AL		DRIVE #
@@ -1973,22 +1972,22 @@ GetDriveParam	MACRO
 ;	EDX		SECTOR
 ;	ESI		Logical address of data
 LockSector	MACRO
-	OsGate lock_sector_nr
+	OldOsGate lock_sector_nr
 					ENDM
 
 ;	EBX		Handle
 UnlockSector	MACRO
-	OsGate unlock_sector_nr
+	OldOsGate unlock_sector_nr
 					ENDM
 
 ;	EBX		Handle
 ModifySector	MACRO
-	OsGate modify_sector_nr
+	OldOsGate modify_sector_nr
 					ENDM
 
 ;	EBX		Handle
 FlushSector	MACRO
-	OsGate flush_sector_nr
+	OldOsGate flush_sector_nr
 					ENDM
 
 ;	AL		Drive #
@@ -1996,24 +1995,24 @@ FlushSector	MACRO
 ;	EDX		Sector
 ;	ESI		Logical address of data
 NewSector	MACRO
-	OsGate new_sector_nr
+	OldOsGate new_sector_nr
 					ENDM
 
 ;	CX		Max number of entries
 ;	AX		Seq handle
 CreateDiscSeq	MACRO
-	OsGate create_disc_seq_nr
+	OldOsGate create_disc_seq_nr
 					ENDM
 
 ;	AX		Seq handle
 ;	EBX		Handle
 ModifySeqSector	MACRO
-	OsGate modify_seq_sector_nr
+	OldOsGate modify_seq_sector_nr
 					ENDM
 
 ;	AX		Seq handle
 PerformDiscSeq	MACRO
-	OsGate perform_disc_seq_nr
+	OldOsGate perform_disc_seq_nr
 					ENDM
 
 ;	AL		DRIVE #
@@ -2021,7 +2020,7 @@ PerformDiscSeq	MACRO
 ;	EDX		SECTOR
 ;	ESI		Logical address of data
 ReqSector	MACRO
-	OsGate req_sector_nr
+	OldOsGate req_sector_nr
 					ENDM
 
 ;	AL		DRIVE #
@@ -2029,109 +2028,109 @@ ReqSector	MACRO
 ;	EDX		SECTOR
 ;	ESI		Logical address of data
 DefineSector	MACRO
-	OsGate define_sector_nr
+	OldOsGate define_sector_nr
 					ENDM
 
 ;	AL		Drive #
 ;	ECX		Number of sectors
 ;	EDX		Start sector
 EraseSectors	MACRO
-	OsGate erase_sectors_nr
+	OldOsGate erase_sectors_nr
 					ENDM
 
 ;	EBX		Handle
 WaitForSector	MACRO
-	OsGate wait_for_sector_nr
+	OldOsGate wait_for_sector_nr
 					ENDM
 
 ;	AL		Drive #
 ResetDrive	MACRO
-	OsGate reset_drive_nr
+	OldOsGate reset_drive_nr
 					ENDM
 
 ;;;;;;;;;;;; FILE SYSTEM ;;;;;;;;;;;;
 
 ;	ES:DI		INIT CALLBACK
 HookInitFileSystem	MACRO
-	OsGate hook_init_file_system_nr
+	OldOsGate hook_init_file_system_nr
 					ENDM
 
 ;	DS:SI		FILE SYSTEM NAME
 ;	ES:DI		FILE SYSTEM STRUC
 RegisterFileSystem	MACRO
-	OsGate register_file_system_nr
+	OldOsGate register_file_system_nr
 					ENDM
 
 ;	AL			DRIVE #
 ;	BX			HANDLE
 ;	ES:DI		MEDIA CHECK PROCEDURE
 DefineMediaCheck	MACRO
-	OsGate define_media_check_nr
+	OldOsGate define_media_check_nr
 					ENDM
 
 ;	AL			DRIVE #
 DemandLoadFileSystem	MACRO
-	OsGate demand_load_file_system_nr
+	OldOsGate demand_load_file_system_nr
 					ENDM
 
 ;	ES:DI		FILE SYSTEM NAME
 IsFileSystemAvailable	MACRO
-	OsGate is_file_system_available_nr
+	OldOsGate is_file_system_available_nr
 					ENDM
 
 ;	AL			DRIVE #
 ;	ES:DI		FILE SYSTEM NAME
 InstallFileSystem	MACRO
-	OsGate install_file_system_nr
+	OldOsGate install_file_system_nr
 					ENDM
 
 ;	AL			Drive #
 ;	ES:DI		File system name
 ;   FS:EDX      Format data
 FormatFileSystem	MACRO
-	OsGate format_file_system_nr
+	OldOsGate format_file_system_nr
 					ENDM
 
 ;	AL			Drive #
 ;	ECX			Number of sectors
 ;   FS:EDX      Mount data
 StartFileSystem	MACRO
-	OsGate start_file_system_nr
+	OldOsGate start_file_system_nr
 					ENDM
 
 ;	AL			DRIVE #
 StopFileSystem	MACRO
-	OsGate stop_file_system_nr
+	OldOsGate stop_file_system_nr
 					ENDM
 
 ;	BX			File selector
 ;	EDX			Position
 GetFileListEntry	MACRO
-	OsGate get_file_list_entry_nr
+	OldOsGate get_file_list_entry_nr
 					ENDM
 
 ;	BX			File selector
 ;	EDI			File list entry
 FreeFileListEntry	MACRO
-	OsGate free_file_list_entry_nr
+	OldOsGate free_file_list_entry_nr
 					ENDM
 
 ;	BX			DIR SELECTOR
 ;	EDX			DIR ENTRY
 CacheDir	MACRO
-	OsGate cache_dir_nr
+	OldOsGate cache_dir_nr
 					ENDM
 
 ;	BX			DIR SELECTOR
 ;	EDX			DIR ENTRY
 InsertDirEntry	MACRO
-	OsGate insert_dir_entry_nr
+	OldOsGate insert_dir_entry_nr
 					ENDM
 
 ;	BX			DIR SELECTOR
 ;	EDX			FILE ENTRY
 InsertFileEntry	MACRO
-	OsGate insert_file_entry_nr
+	OldOsGate insert_file_entry_nr
 					ENDM
 
 ;;;;;;;;;;;; FILE ;;;;;;;;;;;
@@ -2140,14 +2139,14 @@ InsertFileEntry	MACRO
 ;	CL		ACCESS
 ;	AX		FILE SELECTOR
 GetFileInfo	MACRO
-	OsGate get_file_info_nr
+	OldOsGate get_file_info_nr
 					ENDM
 
 ;	CL		ACCESS
 ;	AX		FILE SELECTOR
 ;	BX		FILE HANDLE
 DuplFileInfo	MACRO
-	OsGate dupl_file_info_nr
+	OldOsGate dupl_file_info_nr
 					ENDM
 
 ;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
@@ -2159,7 +2158,7 @@ DuplFileInfo	MACRO
 ;	SI			row size
 ;	ES:EDI		1-bit string bitmap
 GetCharMask	MACRO
-	OsGate get_char_mask_nr
+	OldOsGate get_char_mask_nr
 					ENDM
 
 ;	IN  AX		Mode nr
@@ -2168,7 +2167,7 @@ GetCharMask	MACRO
 ;	IN  DX		y-resolution
 ;	ES:DI	Mode constructor
 RegisterVideoMode	MACRO
-	OsGate register_video_mode_nr
+	OldOsGate register_video_mode_nr
 					ENDM
 
 ;	IN  AL		Bits per pixel
@@ -2177,7 +2176,7 @@ RegisterVideoMode	MACRO
 ;	IN	ES		Video / bitmap selector
 ;	OUT BX		Bitmap handle
 InitVideoBitmap	MACRO
-	OsGate init_video_bitmap_nr
+	OldOsGate init_video_bitmap_nr
 					ENDM
 
 ;   IN  AX      size
@@ -2186,31 +2185,31 @@ InitVideoBitmap	MACRO
 ;   IN  ES:EDI  buffer
 ;   IN  DS      bitmap
 HideSpriteLine	MACRO
-	OsGate hide_sprite_line_nr
+	OldOsGate hide_sprite_line_nr
 					ENDM
 
 ;   IN  DS      bitmap
 ShowSpriteLine	MACRO
-	OsGate show_sprite_line_nr
+	OldOsGate show_sprite_line_nr
 					ENDM
 
 ;;;;;;;;;; MOUSE ;;;;;;;;;
 
 InitMouse	MACRO
-	OsGate init_mouse_nr
+	OldOsGate init_mouse_nr
 					ENDM
 
 ;	AX		Button status
 ;	CX		Delta X
 ;	DX		Delta Y
 UpdateMouse	MACRO
-	OsGate update_mouse_nr
+	OldOsGate update_mouse_nr
 					ENDM
 
 ;	CX		Delta X
 ;	DX		Delta Y
 InvertMouse	MACRO
-	OsGate invert_mouse_nr
+	OldOsGate invert_mouse_nr
 					ENDM
 
 
@@ -2218,13 +2217,13 @@ InvertMouse	MACRO
 ;	CX		Abs X (0..32767)
 ;	DX		Abs Y (0..32767)
 SetMouse	MACRO
-	OsGate set_mouse_nr
+	OldOsGate set_mouse_nr
 					ENDM
 
 ;	CX		Max x-position
 ;	DX		Max y-position
 SetMouseLimit	MACRO
-	OsGate set_mouse_limit_nr
+	OldOsGate set_mouse_limit_nr
 					ENDM
 
 ;;;;;;;;;; POWER MANAGEMENT ;;;;;;;;;
@@ -2232,184 +2231,184 @@ SetMouseLimit	MACRO
 ;   AX      Port number
 ;   DX      Base address
 StartComPort	MACRO
-	OsGate start_com_port_nr
+	OldOsGate start_com_port_nr
 					ENDM
 
 ;   AX      Port number
 ;   DX      Base address
 StopComPort	MACRO
-	OsGate stop_com_port_nr
+	OldOsGate stop_com_port_nr
 					ENDM
 
 StartKeyboard	MACRO
-	OsGate start_keyboard_nr
+	OldOsGate start_keyboard_nr
 					ENDM
 
 StopKeyboard	MACRO
-	OsGate stop_keyboard_nr
+	OldOsGate stop_keyboard_nr
 					ENDM
 
 StartFloppy	MACRO
-	OsGate start_floppy_nr
+	OldOsGate start_floppy_nr
 					ENDM
 
 StopFloppy	MACRO
-	OsGate stop_floppy_nr
+	OldOsGate stop_floppy_nr
 					ENDM
 
 ;   ES:EDI  Pointer to data
 ;   ECX     Size of data
 NotifyEthernetPacket	MACRO
-	OsGate notify_ethernet_packet_nr
+	OldOsGate notify_ethernet_packet_nr
 					ENDM
 
 ;   DS      Usb device selector
 InitUsbDevice	MACRO
-	OsGate init_usb_device_nr
+	OldOsGate init_usb_device_nr
 					ENDM
 
 ;   AL      Port #
 ;   AH      Low speed = 1, high speed / full speed = 0
 ;   DS      Usb device selector
 NotifyUsbAttach	MACRO
-	OsGate notify_usb_attach_nr
+	OldOsGate notify_usb_attach_nr
 					ENDM
 
 ;   AL      Port #
 ;   DS      Usb device selector
 NotifyUsbDetach	MACRO
-	OsGate notify_usb_detach_nr
+	OldOsGate notify_usb_detach_nr
 					ENDM
 
 ;   ES:DI   Callback
 ;     BX    Controller #
 ;     AL    Device address
 HookUsbAttach	MACRO
-	OsGate hook_usb_attach_nr
+	OldOsGate hook_usb_attach_nr
 					ENDM
 
 ;   ES:DI   Callback
 ;     BX    Controller #
 ;     AL    Device address
 HookUsbDetach	MACRO
-	OsGate hook_usb_detach_nr
+	OldOsGate hook_usb_detach_nr
 					ENDM
 
 ;   AX      Controller #
 ;   DX      Device #
 ;   DS      Com device selector
 AddComPort	MACRO
-	OsGate add_com_port_nr
+	OldOsGate add_com_port_nr
 					ENDM
 
 ;   AL      Port #
 ReserveComLine	MACRO
-	OsGate reserve_com_line_nr
+	OldOsGate reserve_com_line_nr
 					ENDM
 
 ;   AL      Port #
 DeviceSetDtr	MACRO
-	OsGate device_set_dtr_nr
+	OldOsGate device_set_dtr_nr
 					ENDM
 
 ;   AL      Port #
 DeviceResetDtr	MACRO
-	OsGate device_reset_dtr_nr
+	OldOsGate device_reset_dtr_nr
 					ENDM
 
 ;   AL      Port #
 ;   NC AL   Line state
 WaitForLineStateChange	MACRO
-	OsGate wait_for_line_state_nr
+	OldOsGate wait_for_line_state_nr
 					ENDM
 
 ;   AL      Port #
 ;   NC AL   Line state
 GetLineState	MACRO
-	OsGate get_line_state_nr
+	OldOsGate get_line_state_nr
 					ENDM
 
 ; IN  BX        Pipe handle
 ; OUT BX        Req handle
 CreateUsbReq      MACRO
-	OsGate create_usb_req_nr
+	OldOsGate create_usb_req_nr
 						ENDM
 						
 ; IN  BX        Req handle
 ; IN  CX        Size of data
 ; IN  ES        Selector (do not free)
 AddWriteUsbContolReq      MACRO
-	OsGate add_write_usb_control_req_nr
+	OldOsGate add_write_usb_control_req_nr
 						ENDM
 						
 ; IN  BX        Req handle
 ; IN  CX        Size of data
 ; IN  ES        Selector (do not free)
 AddWriteUsbDataReq      MACRO
-	OsGate add_write_usb_data_req_nr
+	OldOsGate add_write_usb_data_req_nr
 						ENDM
 
 ; IN  BX        Req handle
 ; IN  CX        Size of data
 ; IN  ES        Selector (do not free)
 AddReadUsbDataReq      MACRO
-	OsGate add_read_usb_data_req_nr
+	OldOsGate add_read_usb_data_req_nr
 						ENDM
 
 ; IN  BX        Req handle
 AddUsbStatusInReq      MACRO
-	OsGate add_usb_status_in_req_nr
+	OldOsGate add_usb_status_in_req_nr
 						ENDM
 
 ; IN  BX        Req handle
 AddUsbStatusOutReq      MACRO
-	OsGate add_usb_status_out_req_nr
+	OldOsGate add_usb_status_out_req_nr
 						ENDM
 
 ; IN  AX        Thread to signal on completion
 ; IN  BX        Req handle
 ; IN  CX        Size of out buffer
 StartUsbReq      MACRO
-	OsGate start_usb_req_nr
+	OldOsGate start_usb_req_nr
 						ENDM
 
 ; IN  BX        Req handle
 StopUsbReq      MACRO
-	OsGate stop_usb_req_nr
+	OldOsGate stop_usb_req_nr
 						ENDM
 
 ; IN  BX        Req handle
 ; OUT NC        Req is started
 IsUsbReqStarted      MACRO
-	OsGate is_usb_req_started_nr
+	OldOsGate is_usb_req_started_nr
 						ENDM
 
 ; IN  BX        Req handle
 ; OUT NC        Req is done
 IsUsbReqReady      MACRO
-	OsGate is_usb_req_ready_nr
+	OldOsGate is_usb_req_ready_nr
 						ENDM
 
 ; IN  BX        Req handle
 ; OUT CX        Bytes transfered
 GetUsbReqData      MACRO
-	OsGate get_usb_req_data_nr
+	OldOsGate get_usb_req_data_nr
 						ENDM
 
 ; IN  BX        Req handle
 CloseUsbReq      MACRO
-	OsGate close_usb_req_nr
+	OldOsGate close_usb_req_nr
 						ENDM
 
 ; IN  BX        Handle
 GetUsbInfo      MACRO
-	OsGate get_usb_info_nr
+	OldOsGate get_usb_info_nr
 						ENDM
 
 ; IN  ES:DI         Data buffer
 ; IN  CX            Size
 NotifyIrData      MACRO
-	OsGate notify_ir_data_nr
+	OldOsGate notify_ir_data_nr
 						ENDM
 
 
@@ -2420,13 +2419,13 @@ NotifyIrData      MACRO
 ; IN    BX Register
 ; OUT   AX Value
 ReadCodec      MACRO
-	OsGate read_codec_nr
+	OldOsGate read_codec_nr
 						ENDM
 
 ; IN    BX Register
 ; IN    AX Value
 WriteCodec      MACRO
-	OsGate write_codec_nr
+	OldOsGate write_codec_nr
 						ENDM
 
 ;
@@ -2435,25 +2434,25 @@ WriteCodec      MACRO
 
 ; OUT   AX Sample rate
 GetAudioDacRate      MACRO
-	OsGate get_audio_dac_rate_nr
+	OldOsGate get_audio_dac_rate_nr
 						ENDM
 
 
 ; IN    AX Sample rate
 SetAudioDacRate      MACRO
-	OsGate set_audio_dac_rate_nr
+	OldOsGate set_audio_dac_rate_nr
 						ENDM
 
 
 ; OUT   AX Sample rate
 GetAudioAdcRate      MACRO
-	OsGate get_audio_adc_rate_nr
+	OldOsGate get_audio_adc_rate_nr
 						ENDM
 
 
 ; IN    AX Sample rate
 SetAudioAdcRate      MACRO
-	OsGate set_audio_adc_rate_nr
+	OldOsGate set_audio_adc_rate_nr
 						ENDM
 
 
@@ -2463,12 +2462,12 @@ SetAudioAdcRate      MACRO
 
 ; IN    AX Sample rate
 OpenAudioOut      MACRO
-	OsGate open_audio_out_nr
+	OldOsGate open_audio_out_nr
 						ENDM
 
 
 CloseAudioOut      MACRO
-	OsGate close_audio_out_nr
+	OldOsGate close_audio_out_nr
 						ENDM
 
 
@@ -2476,7 +2475,7 @@ CloseAudioOut      MACRO
 ; IN    ES Right channel
 ; IN    CX Samples
 SendAudioOut      MACRO
-	OsGate send_audio_out_nr
+	OldOsGate send_audio_out_nr
 						ENDM
 
 
@@ -2485,18 +2484,18 @@ SendAudioOut      MACRO
 ; OUT   SI  Left channel sel
 ; OUT   DI  Right channel sel
 GetAudioOutBuffers      MACRO
-	OsGate get_audio_out_buf_nr
+	OldOsGate get_audio_out_buf_nr
 						ENDM
 
 ; IN    BX  Handle
 PostAudioOutBuffers      MACRO
-	OsGate post_audio_out_buf_nr
+	OldOsGate post_audio_out_buf_nr
 						ENDM
 
 ; IN    BX  Handle
 ; OUT   NC  Completed
 IsAudioOutCompleted      MACRO
-	OsGate is_audio_out_completed_nr
+	OldOsGate is_audio_out_completed_nr
 						ENDM
 
 
@@ -2508,5 +2507,5 @@ IsAudioOutCompleted      MACRO
 ;   DX      Device #
 ;   DS      Printer device selector
 AddPrinter	MACRO
-	OsGate add_printer_nr
+	OldOsGate add_printer_nr
 					ENDM
