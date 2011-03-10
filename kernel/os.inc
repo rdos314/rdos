@@ -264,56 +264,49 @@ CreateDataSelector16	MACRO
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateDataSelector32	MACRO
-	OldOsGate create_data_sel32_nr
+	OsGate create_data_sel32_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateAliasSelector16	MACRO
-	OldOsGate create_alias_sel16_nr
-					ENDM
-
-;	BX		DESCRIPTOR
-;	EDX		BASE
-;	ECX		LIMIT
-CreateAliasSelector32	MACRO
-	OldOsGate create_alias_sel32_nr
+	OsGate create_alias_sel16_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateCodeSelector16	MACRO
-	OldOsGate create_code_sel16_nr
+	OsGate create_code_sel16_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateCodeSelector32	MACRO
-	OldOsGate create_code_sel32_nr
+	OsGate create_code_sel32_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateConformSelector16	MACRO
-	OldOsGate create_conform_sel16_nr
+	OsGate create_conform_sel16_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateConformSelector32	MACRO
-	OldOsGate create_conform_sel32_nr
+	OsGate create_conform_sel32_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	CX		LIMIT
 CreateLdtSelector	MACRO
-	OldOsGate create_ldt_sel_nr
+	OsGate create_ldt_sel_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
@@ -327,20 +320,20 @@ CreateTssSelector	MACRO
 ;	DS:SI	ENTRY POINT
 ;	CL		16-BIT WORDS TO MOVE
 CreateCallGateSelector16	MACRO
-	OldOsGate create_call_gate_sel16_nr
+	OsGate create_call_gate_sel16_nr
 							ENDM
 
 ;	BX		DESCRIPTOR
 ;	DS:ESI	ENTRY POINT
 ;	CL		32-BIT WORDS TO MOVE
 CreateCallGateSelector32	MACRO
-	OldOsGate create_call_gate_sel32_nr
+	OsGate create_call_gate_sel32_nr
 							ENDM
 
 ;	BX		DESCRIPTOR
 ;	DX		TSS SELECTOR
 CreateTaskGateSelector	MACRO
-	OldOsGate create_task_gate_sel_nr
+	OsGate create_task_gate_sel_nr
 							ENDM
 
 ;	AL		INT #
@@ -354,7 +347,7 @@ CreateIntGateSelector	MACRO
 ;	BL		DPL
 ;	DS:ESI	ENTRY POINT
 CreateTrapGateSelector	MACRO
-	OldOsGate create_trap_gate_sel_nr
+	OsGate create_trap_gate_sel_nr
 							ENDM
 
 ;	AX	SELECTOR

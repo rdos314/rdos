@@ -299,7 +299,7 @@ create_data32_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 create_data_sel32       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -373,82 +373,8 @@ create_alias16_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 create_alias_sel16      ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateAliasSelector32
-;
-;           DESCRIPTION:    Create a 32-bit alias selector
-;
-;           PARAMETERS:         BX              DESCRIPTOR
-;                           EDX             BASE
-;                           ECX             LIMIT
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_alias_sel32_name DB 'Create 32-bit Alias Selector',0
-
-create_alias_sel32      PROC far
-    push ds
-    push ax
-    push bx
-    push ecx
-;
-    test bx,4
-    jz create_alias32_gdt
-
-create_alias32_ldt:
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_ldt_sel
-    jmp create_alias32_dt_ok
-
-create_alias32_gdt:
-    mov ax,gdt_sel
-    mov ds,ax
-
-create_alias32_dt_ok:
-    mov al,bl
-    and bx,0FFF8h
-    dec ecx
-    cmp ecx,100000h
-    jae create_alias32_big
-;
-    mov [bx],cx
-    mov [bx+2],edx
-    shl al,5
-    or al,92h
-    xchg al,[bx+5]
-    shr ecx,16
-    and cx,0Fh
-    or ch,al
-    or cl,50h
-    mov [bx+6],cx
-    jmp create_alias32_done
-
-create_alias32_big:
-    shr ecx,12
-    mov [bx],cx
-    mov [bx+2],edx
-    shl al,5
-    or al,92h
-    xchg al,[bx+5]
-    shr ecx,16
-    and cx,0Fh
-    or ch,al
-    or cl,0D0h
-    mov [bx+6],cx
-
-create_alias32_done:
-    pop ecx
-    pop bx
-    pop ax
-    pop ds
-    ret
-create_alias_sel32      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -520,7 +446,7 @@ create_code16_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 create_code_sel16       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -594,7 +520,7 @@ create_code32_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 create_code_sel32       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -667,7 +593,7 @@ create_conform16_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 create_conform_sel16    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -741,7 +667,7 @@ create_conform32_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 create_conform_sel32    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -788,7 +714,7 @@ create_ldt_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 create_ldt_sel  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -925,7 +851,7 @@ create_call_gate16_dt_ok:
     pop bx
     pop ax
     pop es
-    ret
+    retf32
 create_call_gate_sel16  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -977,7 +903,7 @@ create_call_gate32_dt_ok:
     pop bx
     pop ax
     pop es
-    ret
+    retf32
 create_call_gate_sel32  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1027,7 +953,7 @@ create_task_gate_dt_ok:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 create_task_gate_sel    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1133,7 +1059,7 @@ create_trap_gate_sel    PROC far
     pop bx
     pop ax
     pop es
-    ret
+    retf32
 create_trap_gate_sel    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1236,53 +1162,47 @@ init_os_protseg PROC near
     mov ax,create_data_sel16_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET create_data_sel32
-    mov edi,OFFSET create_data_sel32_name
-    xor cl,cl
-    mov ax,create_data_sel32_nr
-    RegisterOldOsGate
-;
     mov esi,OFFSET create_alias_sel16
     mov edi,OFFSET create_alias_sel16_name
     xor cl,cl
     mov ax,create_alias_sel16_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
-    mov esi,OFFSET create_alias_sel32
-    mov edi,OFFSET create_alias_sel32_name
+    mov esi,OFFSET create_data_sel32
+    mov edi,OFFSET create_data_sel32_name
     xor cl,cl
-    mov ax,create_alias_sel32_nr
-    RegisterOldOsGate
+    mov ax,create_data_sel32_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET create_code_sel16
     mov edi,OFFSET create_code_sel16_name
     xor cl,cl
     mov ax,create_code_sel16_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_code_sel32
     mov edi,OFFSET create_code_sel32_name
     xor cl,cl
     mov ax,create_code_sel32_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_conform_sel16
     mov edi,OFFSET create_conform_sel16_name
     xor cl,cl
     mov ax,create_conform_sel16_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_conform_sel32
     mov edi,OFFSET create_conform_sel32_name
     xor cl,cl
     mov ax,create_conform_sel32_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_ldt_sel
     mov edi,OFFSET create_ldt_sel_name
     xor cl,cl
     mov ax,create_ldt_sel_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_tss_sel
     mov edi,OFFSET create_tss_sel_name
@@ -1294,19 +1214,19 @@ init_os_protseg PROC near
     mov edi,OFFSET create_call_gate_sel16_name
     xor cl,cl
     mov ax,create_call_gate_sel16_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_call_gate_sel32
     mov edi,OFFSET create_call_gate_sel32_name
     xor cl,cl
     mov ax,create_call_gate_sel32_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_task_gate_sel
     mov edi,OFFSET create_task_gate_sel_name
     xor cl,cl
     mov ax,create_task_gate_sel_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_int_gate_sel
     mov edi,OFFSET create_int_gate_sel_name
@@ -1318,7 +1238,7 @@ init_os_protseg PROC near
     mov edi,OFFSET create_trap_gate_sel_name
     xor cl,cl
     mov ax,create_trap_gate_sel_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     ret
 init_os_protseg ENDP
