@@ -1071,7 +1071,7 @@ emulate_pm:
         ReflectException
 
 emulate_pm_done:
-        ret
+        retf32
 
 emulate_kernel:
         push gs
@@ -1159,7 +1159,7 @@ emulate_kernel_stack_ok:
         ReflectException
 
 emulate_kernel_done:
-        ret
+        retf32
 
 emulate_vm:
         push word ptr [bp].vm_gs
@@ -1223,7 +1223,7 @@ emulate_vm:
         ReflectException
 
 emulate_vm_done:
-        ret
+        retf32
 emulate ENDP
 
 init    PROC far
@@ -1245,7 +1245,7 @@ init_start:
         mov edi,OFFSET emulate_name
         xor cl,cl
         mov ax,emulate_opcode_nr
-        RegisterOldOsGate
+        RegisterOsGate
 ;    
         call init_common
         ret

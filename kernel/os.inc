@@ -215,7 +215,7 @@ RegisterUserGateV86	MACRO
 
 ;	AL		Exception #
 EmulateOpcode	MACRO
-	OldOsGate emulate_opcode_nr
+	OsGate emulate_opcode_nr
 					ENDM
 
 ;;;;;;;; DESCRIPTORS ;;;;;;;;;;;;
