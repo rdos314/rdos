@@ -250,14 +250,14 @@ AllocateMultipleLdt	MACRO
 ;	EDX		BASE
 ;	ECX		LIMIT
 GetSelectorBaseSize	MACRO
-	OldOsGate get_selector_base_size_nr
+	OsGate get_selector_base_size_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateDataSelector16	MACRO
-	OldOsGate create_data_sel16_nr
+	OsGate create_data_sel16_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
@@ -320,7 +320,7 @@ CreateLdtSelector	MACRO
 ;	EDX		BASE
 ;	ECX		LIMIT
 CreateTssSelector	MACRO
-	OldOsGate create_tss_sel_nr
+	OsGate create_tss_sel_nr
 					ENDM
 
 ;	BX		DESCRIPTOR
@@ -347,7 +347,7 @@ CreateTaskGateSelector	MACRO
 ;	BL		DPL
 ;	DS:ESI	ENTRY POINT
 CreateIntGateSelector	MACRO
-	OldOsGate create_int_gate_sel_nr
+	OsGate create_int_gate_sel_nr
 							ENDM
 
 ;	AL		INT #

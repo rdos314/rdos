@@ -85,10 +85,7 @@ local_mem_seg   ENDS
 
         .386p
 
-        extrn create_data_sel16:near
-        extrn create_call_gate_sel16:near
-        extrn create_int_gate_sel:near
-        extrn create_tss_sel:near
+        extrn local_create_data_sel16:near
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -117,8 +114,7 @@ create_mem      PROC near
         mov edx,system_linear
         mov ecx,SIZE mem_seg
         mov bx,mem_sel
-        push cs
-        call create_data_sel16
+        call local_create_data_sel16
 ;
         mov ds,bx
         add edx,SIZE mem_seg
@@ -3231,8 +3227,7 @@ allocate_fixed_system_mem       PROC far
         push cs
         call allocate_system_linear
         mov ecx,eax
-        push cs
-        call create_data_sel16
+        call local_create_data_sel16
         mov es,bx
 ;
         pop edx

@@ -44,10 +44,8 @@ ELSE
     .386p
 ENDIF
 
-    extrn create_data_sel16:near
-    extrn create_call_gate_sel16:near
-    extrn create_int_gate_sel:near
-    extrn create_tss_sel:near
+    extrn local_create_data_sel16:near
+    extrn local_create_tss_sel:near
 
     extrn create_gdt:near
     extrn create_mem:near
@@ -340,8 +338,7 @@ init_pre_tasking    PROC near
     mov bx,virt_thread_sel
     mov ecx,1000h
     mov edx,esi
-    push cs
-    call create_data_sel16
+    call local_create_data_sel16
     mov es,bx
 ;
     call AllocateRam
@@ -641,21 +638,18 @@ init_cpu_done:
     mov edx,esi
     mov bx,kernel_stack
     mov ecx,800h
-    push cs
-    call create_data_sel16
+    call local_create_data_sel16
 ;
     add edx,800h
     mov bx,virt_tss
     mov ecx,400h
-    push cs
-    call create_tss_sel
+    call local_create_tss_sel
     ltr bx
 ;
     add edx,400h
     mov bx,kernel_tss
     mov ecx,400h
-    push cs
-    call create_data_sel16
+    call local_create_data_sel16
 ;
     mov ds,bx
     mov ds:tss_cs,cs
@@ -673,8 +667,7 @@ init_cpu_done:
     mov ds:tss_bitmap,800h
     xor ax,ax
     mov ds,ax
-    push cs
-    call create_tss_sel
+    call local_create_tss_sel
 ;
     xor ax,ax
     mov ds,ax

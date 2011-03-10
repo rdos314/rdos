@@ -40,7 +40,7 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
-    extrn create_data_sel16:near
+    extrn local_create_data_sel16:near
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -66,8 +66,7 @@ create_gdt      PROC near
     mov bx,temp_sel
     mov ecx,10000h
     mov edx,gdt_linear
-    push cs
-    call create_data_sel16
+    call local_create_data_sel16
     mov es,bx
 ;
     xor si,si

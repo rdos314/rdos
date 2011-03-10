@@ -36,10 +36,7 @@ INCLUDE ..\driver.def
 
         .386p
 
-        extrn create_data_sel16:near
-        extrn create_call_gate_sel16:near
-        extrn create_int_gate_sel:near
-        extrn create_tss_sel:near
+        extrn local_create_data_sel16:near
         extrn AllocateRam:near
 
 code    SEGMENT byte public use16 'CODE'
@@ -172,15 +169,13 @@ init_physical   PROC near
         mov edx,phys_page_linear
         mov ecx,ds:phys_free_pages
         shl ecx,2
-        push cs
-        call create_data_sel16
+        call local_create_data_sel16
 ;
         mov bx,phys_list_sel
         mov ecx,ds:phys_free_pages
         shl ecx,2
         mov edx,phys_list_linear
-        push cs
-        call create_data_sel16
+        call local_create_data_sel16
         ret
 init_physical   ENDP
 

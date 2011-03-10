@@ -48,11 +48,7 @@ ELSE
     .386p
 ENDIF
 
-    extrn get_selector_base_size:near
-    extrn create_data_sel16:near
-    extrn create_call_gate_sel16:near
-    extrn create_int_gate_sel:near
-    extrn create_tss_sel:near
+    extrn local_get_selector_base_size:near
 
     extrn allocate_fixed_system_mem:near
 
@@ -88,11 +84,6 @@ init_osgate     PROC near
 ;    
     mov ax,cs
     mov ds,ax
-;       mov si,OFFSET register_gate
-;       mov bx,os_begin_sel
-;       xor cl,cl
-;       push cs
-;       call create_call_gate_sel16
 ;
     mov bx,osgate_sel
     mov eax,osgate_entries SHL 4
@@ -313,8 +304,7 @@ odo16_ov_done:
 ;
     push ebx
     mov bx,ds
-    push cs
-    call get_selector_base_size
+    call local_get_selector_base_size
     pop ebx
     add ebx,edx
     mov ax,flat_sel
@@ -491,8 +481,7 @@ do32_ov_done:
 ;
     push ebx
     mov bx,ds
-    push cs
-    call get_selector_base_size
+    call local_get_selector_base_size
     pop ebx
     add ebx,edx
     mov ax,flat_sel

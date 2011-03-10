@@ -34,10 +34,8 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
 
-    extrn create_data_sel16:near
-    extrn create_call_gate_sel16:near
-    extrn create_int_gate_sel:near
-    extrn create_tss_sel:near
+    extrn local_create_data_sel16:near
+    extrn local_create_int_gate_sel:near
 
     extrn allocate_physical:near
     extrn free_physical:near
@@ -73,8 +71,7 @@ init_flat_dir   Proc near
     mov ecx,1000h
     mov edx,cr3
     and dx,0F000h
-    push cs
-    call create_data_sel16
+    call local_create_data_sel16
 ;
     mov ds,bx
     xor eax,eax
@@ -397,28 +394,24 @@ start_paging_global_done:
     mov edx,sys_page_linear
     shr edx,10
     add edx,sys_page_linear
-    push cs
-    call create_data_sel16
+    call local_create_data_sel16
 ;
     mov bx,sys_page_sel
     mov edx,sys_page_linear
     mov ecx,400000h
-    push cs
-    call create_data_sel16
+    call local_create_data_sel16
 ;
     mov bx,process_dir_sel
     mov ecx,1000h
     mov edx,process_page_linear
     shr edx,10
     add edx,process_page_linear
-    push cs
-    call create_data_sel16
+    call local_create_data_sel16
 ;
     mov bx,process_page_sel
     mov edx,process_page_linear
     mov ecx,400000h
-    push cs
-    call create_data_sel16
+    call local_create_data_sel16
     ret
 start_paging    Endp
 
@@ -1881,8 +1874,7 @@ init_paging_trap    PROC near
     mov esi,OFFSET pagefault_trap
     xor bl,bl
     mov al,14
-    push cs
-    call create_int_gate_sel
+    call local_create_int_gate_sel
     ret
 init_paging_trap    ENDP
     

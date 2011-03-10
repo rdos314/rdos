@@ -80,10 +80,7 @@ ENDIF
 code    SEGMENT byte use16 public 'CODE'
 
 
-    extrn create_data_sel16:near
-    extrn create_call_gate_sel16:near
-    extrn create_int_gate_sel:near
-    extrn create_tss_sel:near
+    extrn local_create_int_gate_sel:near
 
     extrn timer_int:near
 
@@ -1733,8 +1730,7 @@ init_pretask_next:
     mov al,cs:[di].ig_nr
     mov bl,cs:[di].ig_dpl
     movzx esi,word ptr cs:[di].ig_entry
-    push cs
-    call create_int_gate_sel
+    call local_create_int_gate_sel
     add di,8
     jmp init_pretask_next
 init_pretask_end:

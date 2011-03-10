@@ -56,11 +56,7 @@ ELSE
     .386p
 ENDIF
 
-    extrn get_selector_base_size:near
-    extrn create_data_sel16:near
-    extrn create_call_gate_sel16:near
-    extrn create_int_gate_sel:near
-    extrn create_tss_sel:near
+    extrn local_get_selector_base_size:near
 
     extrn allocate_fixed_system_mem:near
 
@@ -666,8 +662,7 @@ do_call16_locked:
 ;
     push ebx
     mov bx,ds
-    push cs
-    call get_selector_base_size
+    call local_get_selector_base_size
     pop ebx
     add     ebx,edx
     mov ax,flat_sel
@@ -859,8 +854,7 @@ do16_locked:
 ;
     push ebx
     mov bx,ds
-    push cs
-    call get_selector_base_size
+    call local_get_selector_base_size
     pop ebx
     add     ebx,edx
     mov ax,flat_sel
@@ -986,8 +980,7 @@ do_kernel_ov_ok32:
 ;
     push ebx
     mov bx,ds
-    push cs
-    call get_selector_base_size
+    call local_get_selector_base_size
     pop ebx
     add     ebx,edx
     mov ax,flat_sel
@@ -1104,8 +1097,7 @@ do_ov_ok32:
 ;
     push ebx
     mov bx,ds
-    push cs
-    call get_selector_base_size
+    call local_get_selector_base_size
     pop ebx
     add     ebx,edx
     mov ax,flat_sel

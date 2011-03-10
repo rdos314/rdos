@@ -42,22 +42,20 @@ code    SEGMENT byte use16 public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetSelectorBaseSize
+;           NAME:           local_get_selector_base_size
 ;
 ;           DESCRIPTION:    Get selector base + size
 ;
-;           PARAMETERS:         BX              Selector
+;           PARAMETERS:     BX              Selector
 ;
 ;           RETURNS:        EDX             Base
 ;                           ECX             Limit
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_selector_base_size_name DB 'Get selector base & size',0
+    public local_get_selector_base_size
 
-    public get_selector_base_size
-
-get_selector_base_size  PROC far
+local_get_selector_base_size  PROC near
     push ds
     push ax
     push bx
@@ -114,26 +112,45 @@ get_selector_done:
     pop ax
     pop ds
     ret
+local_get_selector_base_size  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetSelectorBaseSize
+;
+;           DESCRIPTION:    Get selector base + size
+;
+;           PARAMETERS:         BX              Selector
+;
+;           RETURNS:        EDX             Base
+;                           ECX             Limit
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_selector_base_size_name DB 'Get selector base & size',0
+
+get_selector_base_size  PROC far
+    call local_get_selector_base_size
+    retf32
 get_selector_base_size  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateDataSelector16
+;           NAME:           local_create_data_sel16
 ;
 ;           DESCRIPTION:    Create 16-bit data selector
 ;
-;           PARAMETERS:         BX              DESCRIPTOR
+;           PARAMETERS:     BX              DESCRIPTOR
 ;                           EDX             BASE
 ;                           ECX             LIMIT
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_data_sel16_name DB 'Create 16-bit Data Selector',0
+    public local_create_data_sel16
 
-    public create_data_sel16
-
-create_data_sel16       PROC far
+local_create_data_sel16       PROC near
     push ds
     push ax
     push bx
@@ -189,6 +206,26 @@ create_data16_done:
     pop ax
     pop ds
     ret
+local_create_data_sel16       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateDataSelector16
+;
+;           DESCRIPTION:    Create 16-bit data selector
+;
+;           PARAMETERS:         BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             LIMIT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_data_sel16_name DB 'Create 16-bit Data Selector',0
+
+create_data_sel16       PROC far
+    call local_create_data_sel16
+    retf32
 create_data_sel16       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -757,7 +794,7 @@ create_ldt_sel  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateTssSelector
+;           NAME:           local_create_tss_sel
 ;
 ;           DESCRIPTION:    Create TSS selector
 ;
@@ -767,11 +804,9 @@ create_ldt_sel  ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_tss_sel_name DB 'Create TSS Selector',0
+    public local_create_tss_sel
 
-    public create_tss_sel
-
-create_tss_sel  PROC far
+local_create_tss_sel  PROC near
     push ds
     push ax
     push bx
@@ -819,6 +854,26 @@ create_tss_done:
     pop ax
     pop ds
     ret
+local_create_tss_sel  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateTssSelector
+;
+;           DESCRIPTION:    Create TSS selector
+;
+;           PARAMETERS:         BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             LIMIT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_tss_sel_name DB 'Create TSS Selector',0
+
+create_tss_sel  PROC far
+    call local_create_tss_sel
+    retf32
 create_tss_sel  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -835,8 +890,6 @@ create_tss_sel  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_call_gate_sel16_name DB 'Create 16-bit Call Gate Selector',0
-
-    public create_call_gate_sel16
 
 create_call_gate_sel16  PROC far
     push es
@@ -980,7 +1033,7 @@ create_task_gate_sel    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateIntGate
+;           NAME:           local_create_int_gate_sel
 ;
 ;           DESCRIPTION:    Create int gate selector
 ;
@@ -990,11 +1043,9 @@ create_task_gate_sel    ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_int_gate_sel_name DB 'Create Interrupt Gate Selector',0
+    public local_create_int_gate_sel
 
-    public create_int_gate_sel
-
-create_int_gate_sel     PROC far
+local_create_int_gate_sel     PROC near
     push es
     push ax
     push bx
@@ -1020,6 +1071,26 @@ create_int_gate_sel     PROC far
     pop ax
     pop es
     ret
+local_create_int_gate_sel     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateIntGate
+;
+;           DESCRIPTION:    Create int gate selector
+;
+;           PARAMETERS:         AL              INT #
+;                           BL              DPL
+;                           DS:ESI      ENTRY POINT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_int_gate_sel_name DB 'Create Interrupt Gate Selector',0
+
+create_int_gate_sel     PROC far
+    call local_create_int_gate_sel
+    retf32
 create_int_gate_sel     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1157,13 +1228,13 @@ init_os_protseg PROC near
     mov edi,OFFSET get_selector_base_size_name
     xor cl,cl
     mov ax,get_selector_base_size_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_data_sel16
     mov edi,OFFSET create_data_sel16_name
     xor cl,cl
     mov ax,create_data_sel16_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_data_sel32
     mov edi,OFFSET create_data_sel32_name
@@ -1217,7 +1288,7 @@ init_os_protseg PROC near
     mov edi,OFFSET create_tss_sel_name
     xor cl,cl
     mov ax,create_tss_sel_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_call_gate_sel16
     mov edi,OFFSET create_call_gate_sel16_name
@@ -1241,7 +1312,7 @@ init_os_protseg PROC near
     mov edi,OFFSET create_int_gate_sel_name
     xor cl,cl
     mov ax,create_int_gate_sel_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_trap_gate_sel
     mov edi,OFFSET create_trap_gate_sel_name
