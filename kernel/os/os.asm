@@ -131,7 +131,7 @@ init_osgate_loop:
     mov edi,OFFSET is_valid_osgate_name
     mov ax,is_valid_osgate_nr
     xor cl,cl
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET test_gate
     mov edi,OFFSET test_gate_name
@@ -192,7 +192,7 @@ register_gate   PROC far
     pop gs
     pop fs
     pop ds
-    ret
+    retf32
 register_gate   ENDP
 
 register_old_gate_name      DB 'Register Old Kernel Gate',0
@@ -218,7 +218,7 @@ register_old_gate   PROC far
     pop gs
     pop fs
     pop ds
-    ret
+    retf32
 register_old_gate   ENDP
 
 
@@ -255,7 +255,7 @@ is_valid_gate_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 is_valid_osgate ENDP
 
 
