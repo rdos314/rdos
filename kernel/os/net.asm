@@ -2571,103 +2571,103 @@ init    PROC far
         mov edi,OFFSET is_net_address_valid_name
         xor cl,cl
         mov ax,is_net_address_valid_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_net_driver
         mov edi,OFFSET get_net_driver_name
         xor cl,cl
         mov ax,get_net_driver_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET register_net_class
         mov edi,OFFSET register_net_class_name
         xor cl,cl
         mov ax,register_net_class_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET register_net_protocol
         mov edi,OFFSET register_net_protocol_name
         xor cl,cl
         mov ax,register_net_protocol_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET register_net_driver
         mov edi,OFFSET register_net_driver_name
         xor cl,cl
         mov ax,register_net_driver_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET register_ppp_driver
         mov edi,OFFSET register_ppp_driver_name
         xor cl,cl
         mov ax,register_ppp_driver_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET define_protocol_address
         mov edi,OFFSET define_protocol_address_name
         xor cl,cl
         mov ax,define_protocol_addr_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_net_buffer
         mov edi,OFFSET get_net_buffer_name
         xor cl,cl
         mov ax,get_net_buffer_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET send_net
         mov edi,OFFSET send_net_name
         xor cl,cl
         mov ax,send_net_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_broadcast_buffer
         mov edi,OFFSET get_broadcast_buffer_name
         xor cl,cl
         mov ax,get_broadcast_buffer_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET send_broadcast
         mov edi,OFFSET send_broadcast_name
         xor cl,cl
         mov ax,send_broadcast_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET net_broadcast
         mov edi,OFFSET net_broadcast_name
         xor cl,cl
         mov ax,net_broadcast_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_ppp_buffer
         mov edi,OFFSET get_ppp_buffer_name
         xor cl,cl
         mov ax,get_ppp_buffer_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET send_ppp
         mov edi,OFFSET send_ppp_name
         xor cl,cl
         mov ax,send_ppp_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET net_received
         mov edi,OFFSET net_received_name
         xor cl,cl
         mov ax,net_received_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET add_net_source_address
         mov edi,OFFSET add_net_source_address_name
         xor cl,cl
         mov ax,add_net_source_address_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET notify_ethernet_packet
         mov edi,OFFSET notify_ethernet_packet_name
         xor cl,cl
         mov ax,notify_ethernet_packet_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET ether_broadcast
         mov cx,6

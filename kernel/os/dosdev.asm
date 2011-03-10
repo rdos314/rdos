@@ -1464,12 +1464,12 @@ init_dosdev     PROC near
         mov esi,OFFSET register_device
         mov edi,OFFSET register_device_name
         mov ax,register_device_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET check_device
         mov edi,OFFSET check_device_name
         mov ax,check_device_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov ebx,OFFSET read_con16
         mov esi,OFFSET read_con32

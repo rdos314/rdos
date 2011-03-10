@@ -808,133 +808,133 @@ proc_init:
     mov di,OFFSET create_processor_name
     xor cl,cl
     mov ax,create_processor_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET get_processor
     mov di,OFFSET get_processor_name
     xor cl,cl
     mov ax,get_processor_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET get_processor_num
     mov di,OFFSET get_processor_num_name
     xor cl,cl
     mov ax,get_processor_num_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET start_processor
     mov di,OFFSET start_processor_name
     xor cl,cl
     mov ax,start_processor_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET is_processor_blocked
     mov di,OFFSET is_processor_blocked_name
     xor cl,cl
     mov ax,is_processor_blocked_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET do_unblock_processor
     mov di,OFFSET do_unblock_processor_name
     xor cl,cl
     mov ax,do_unblock_processor_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET start_pit_timer
     mov di,OFFSET start_pit_timer_name
     xor cl,cl
     mov ax,start_sys_timer_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET reload_pit_timer
     mov di,OFFSET reload_pit_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET enter_int
     mov di,OFFSET enter_int_name
     xor cl,cl
     mov ax,enter_int_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET leave_int
     mov di,OFFSET leave_int_name
     xor cl,cl
     mov ax,leave_int_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET lock_task
     mov di,OFFSET lock_task_name
     xor cl,cl
     mov ax,lock_task_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET unlock_task
     mov di,OFFSET unlock_task_name
     xor cl,cl
     mov ax,unlock_task_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET debug_exception
     mov di,OFFSET debug_exception_name
     xor cl,cl
     mov ax,debug_exception_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET locked_debug_exception
     mov di,OFFSET locked_debug_exception_name
     xor cl,cl
     mov ax,locked_debug_exception_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET start_timer
     mov di,OFFSET start_timer_name
     xor cl,cl
     mov ax,start_timer_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET stop_timer
     mov di,OFFSET stop_timer_name
     xor cl,cl
     mov ax,stop_timer_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET wake_thread
     mov di,OFFSET wake_thread_name
     xor cl,cl
     mov ax,wake_thread_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET sleep_thread
     mov di,OFFSET sleep_thread_name
     xor cl,cl
     mov ax,sleep_thread_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET clear_signal
     mov di,OFFSET clear_signal_name
     xor cl,cl
     mov ax,clear_signal_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET signal_thread
     mov di,OFFSET signal_thread_name
     xor cl,cl
     mov ax,signal_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET wait_for_signal
     mov di,OFFSET wait_for_signal_name
     xor cl,cl
     mov ax,wait_for_signal_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET wait_for_signal_timeout
     mov di,OFFSET wait_for_signal_timeout_name
     xor cl,cl
     mov ax,wait_for_signal_timeout_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET cpu_reset
     mov di,OFFSET cpu_reset_name
@@ -994,7 +994,7 @@ proc_init:
     mov di,OFFSET notify_time_drift_name
     xor cl,cl
     mov ax,notify_time_drift_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET get_system_time
     mov di,OFFSET get_system_time_name
@@ -1024,55 +1024,55 @@ proc_init:
     mov di,OFFSET set_system_time_name
     xor cl,cl
     mov ax,set_system_time_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET sim_sti
     mov di,OFFSET sim_sti_name
     xor cl,cl
     mov ax,sim_sti_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET sim_cli
     mov di,OFFSET sim_cli_name
     xor cl,cl
     mov ax,sim_cli_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET sim_set_flags
     mov di,OFFSET sim_set_flags_name
     xor cl,cl
     mov ax,sim_set_flags_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET sim_get_flags
     mov di,OFFSET sim_get_flags_name
     xor cl,cl
     mov ax,sim_get_flags_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET debug_break
     mov di,OFFSET debug_break_name
     xor cl,cl
     mov ax,debug_break_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET enter_section
     mov di,OFFSET enter_section_name
     xor cl,cl
     mov ax,enter_section_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET leave_section
     mov di,OFFSET leave_section_name
     xor cl,cl
     mov ax,leave_section_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET get_debug_thread_sel
     mov di,OFFSET get_debug_thread_sel_name
     xor cl,cl
     mov ax,get_debug_thread_sel_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET create_user_section
     mov di,OFFSET create_user_section_name

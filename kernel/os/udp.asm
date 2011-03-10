@@ -783,13 +783,13 @@ query_list_create:
         mov edi,OFFSET query_udp_name
         xor cl,cl
         mov ax,query_udp_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET listen_udp_port
         mov edi,OFFSET listen_udp_port_name
         xor cl,cl
         mov ax,listen_udp_port_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov al,17
         mov di,OFFSET Receive

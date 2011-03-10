@@ -673,47 +673,47 @@ init    PROC far
         mov esi,OFFSET hook_init_file_system
         mov edi,OFFSET hook_init_file_system_name
         mov ax,hook_init_file_system_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET register_file_system
         mov edi,OFFSET register_file_system_name
         mov ax,register_file_system_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET define_media_check
         mov edi,OFFSET define_media_check_name
         mov ax,define_media_check_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET demand_load_file_system
         mov edi,OFFSET demand_load_file_system_name
         mov ax,demand_load_file_system_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET format_file_system
         mov edi,OFFSET format_file_system_name
         mov ax,format_file_system_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET is_file_system_available
         mov edi,OFFSET is_file_system_available_name
         mov ax,is_file_system_available_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET install_file_system
         mov edi,OFFSET install_file_system_name
         mov ax,install_file_system_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET start_file_system
         mov edi,OFFSET start_file_system_name
         mov ax,start_file_system_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET stop_file_system
         mov edi,OFFSET stop_file_system_name
         mov ax,stop_file_system_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov ebx,OFFSET rename_file16
         mov esi,OFFSET rename_file32

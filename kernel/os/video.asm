@@ -3099,13 +3099,13 @@ init_video      PROC near
         mov edi,OFFSET register_video_mode_name
         xor cl,cl
         mov ax,register_video_mode_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET invert_mouse
         mov edi,OFFSET invert_mouse_name
         xor cl,cl
         mov ax,invert_mouse_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_video_mode
         mov edi,OFFSET get_video_mode_name
@@ -3264,7 +3264,7 @@ init_video      PROC near
         mov edi,OFFSET write_dos_string_name
         xor cl,cl
         mov ax,write_dos_string_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov ax,cs
         mov ds,ax

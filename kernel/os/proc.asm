@@ -527,49 +527,49 @@ init_thread     PROC near
         mov di,OFFSET create_process_name
         xor cl,cl
         mov ax,create_process_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_create_thread
         mov di,OFFSET hook_create_thread_name
         xor cl,cl
         mov ax,hook_create_thread_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_terminate_thread
         mov di,OFFSET hook_terminate_thread_name
         xor cl,cl
         mov ax,hook_terminate_thread_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_create_process
         mov di,OFFSET hook_create_process_name
         xor cl,cl
         mov ax,hook_create_process_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_terminate_process
         mov di,OFFSET hook_terminate_process_name
         xor cl,cl
         mov ax,hook_terminate_process_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_init_tasking
         mov di,OFFSET hook_init_tasking_name
         xor cl,cl
         mov ax,hook_init_tasking_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET create_proc_handle
         mov di,OFFSET create_proc_handle_name
         xor cl,cl
         mov ax,create_proc_handle_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET deref_proc_handle
         mov di,OFFSET deref_proc_handle_name
         xor cl,cl
         mov ax,deref_proc_handle_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET free_proc_handle
         mov di,OFFSET free_proc_handle_name

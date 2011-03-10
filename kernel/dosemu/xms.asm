@@ -669,7 +669,7 @@ init_xms        PROC near
         mov edi,OFFSET query_xms_name
         xor cl,cl
         mov ax,query_xms_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov di,OFFSET delete_handle
         mov ax,XMS_HANDLE

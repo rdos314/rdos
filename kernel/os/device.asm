@@ -824,7 +824,7 @@ init_device     PROC near
     mov edi,OFFSET init_device_name
     xor cl,cl
     mov ax,init_device_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov ebx,OFFSET get_image_header16
     mov esi,OFFSET get_image_header32

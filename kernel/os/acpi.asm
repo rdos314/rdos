@@ -33,31 +33,31 @@ INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
 INCLUDE acpi.def
 
-acpi_data_seg STRUC        
+acpi_data_seg STRUC    
 
-acpi_table_count        DW ?
-acpi_table_arr          DD ?
+acpi_table_count    DW ?
+acpi_table_arr      DD ?
 
 acpi_data_seg ENDS
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CheckRsdp
+;           NAME:           CheckRsdp
 ;
-;               DESCRIPTION:    Check for an RSDP
+;           DESCRIPTION:    Check for an RSDP
 ;
 ;       PARAMETERS:     DS:SI       Base address to check
 ;
-;       RETURNS:        NC          OK
-;                       EAX         Physical address
+;       RETURNS:    NC      OK
+;               EAX     Physical address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -76,7 +76,7 @@ CheckRsdp   Proc near
     push cx
     push si
 ;    
-    xor al,al        
+    xor al,al    
     mov cx,20
 
 check_rsdp_loop:
@@ -104,12 +104,12 @@ CheckRsdp   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetRsdp
+;           NAME:           GetRsdp
 ;
-;               DESCRIPTION:    Get the RSDP
+;           DESCRIPTION:    Get the RSDP
 ;
-;       RETURNS:        NC          OK
-;                       EAX         Physical address
+;       RETURNS:    NC      OK
+;               EAX     Physical address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -144,7 +144,7 @@ GetRsdp Proc near
     and si,0FFFh
     mov eax,cr3
     mov cr3,eax
-;        
+;    
     mov cx,40h
 
 get_rsdp_bda:
@@ -214,14 +214,14 @@ GetRsdp Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetTable
+;           NAME:           GetTable
 ;
-;               DESCRIPTION:    Get a table
+;           DESCRIPTION:    Get a table
 ;
 ;       PARAMETERS:     EAX     Physical address
 ;
-;       RETURNS:        NC      OK
-;                       ES      Table
+;       RETURNS:    NC      OK
+;               ES      Table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -241,7 +241,7 @@ GetTable Proc near
 ;    
     push edx
     add edx,ebx
-    AllocateGdt        
+    AllocateGdt    
     mov ecx,1000h
     CreateDataSelector16
     mov ds,bx    
@@ -281,7 +281,7 @@ GetTable Proc near
     mov ecx,eax
     shr ecx,12
     push ecx
-;        
+;    
     mov eax,ebp
     movzx ebx,ax
     and bx,0FFFh
@@ -289,7 +289,7 @@ GetTable Proc near
     push ecx
     push edx
     add edx,ebx
-    AllocateGdt        
+    AllocateGdt    
     shl ecx,12
     CreateDataSelector16
     mov ds,bx    
@@ -385,14 +385,14 @@ GetTable    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetAcpiTable
+;           NAME:           GetAcpiTable
 ;
-;               DESCRIPTION:    Get ACPI table
+;           DESCRIPTION:    Get ACPI table
 ;
 ;       PARAMETERS:     EAX     Table ID
 ;
-;       RETURNS:        NC      Ok
-;                           ES  Table selector
+;       RETURNS:    NC      Ok
+;               ES  Table selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -430,15 +430,60 @@ get_acpi_table_done:
     pop ds
     ret
 get_acpi_table  Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           acpi_pr
+;
+;               DESCRIPTION:    ACPI test thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+acpi_name       DB 'Acpi Test',0
+
+acpi_pr:
+    int 3
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           init_acpi_thread
+;
+;               DESCRIPTION:    Init acpi threads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_acpi_thread        PROC far
+    push ds
+    push es
+    pusha
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;       
+    mov si,OFFSET acpi_pr
+    mov di,OFFSET acpi_name
+    mov cx,500
+    mov ax,4
+    CreateThread
+
+init_thread_done:
+    popa
+    pop es
+    pop ds
+    ret
+init_acpi_thread        ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Init
+;           NAME:           Init
 ;
-;               DESCRIPTION:    Initialize module
+;           DESCRIPTION:    Initialize module
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -454,12 +499,12 @@ init    Proc far
     mov cx,ds:act_size
     shr cx,1
 ;    
-        mov ax,OFFSET acpi_table_arr
-        add ax,cx
-        movzx eax,ax
-        mov bx,acpi_data_sel
-        AllocateFixedSystemMem
-        mov es,bx
+    mov ax,OFFSET acpi_table_arr
+    add ax,cx
+    movzx eax,ax
+    mov bx,acpi_data_sel
+    AllocateFixedSystemMem
+    mov es,bx
 ;
     shr cx,1
     mov es:acpi_table_count,cx
@@ -474,7 +519,7 @@ acpi_load_loop:
     mov ax,es
     pop es
     jnc acpi_load_save
-;        
+;    
     xor ax,ax
 
 acpi_load_save:
@@ -482,19 +527,24 @@ acpi_load_save:
     loop acpi_load_loop
 ;    
     mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ds,ax
+    mov es,ax
 ;
-        mov esi,OFFSET get_acpi_table
-        mov edi,OFFSET get_acpi_table_name
-        xor cl,cl
-        mov ax,get_acpi_table_nr
-        RegisterOsGate
+    mov esi,OFFSET get_acpi_table
+    mov edi,OFFSET get_acpi_table_name
+    xor cl,cl
+    mov ax,get_acpi_table_nr
+    RegisterOldOsGate
+;    
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET init_acpi_thread
+    HookInitTasking
 
 acpi_fail:
-        ret
+    ret
 init    Endp
 
 code    ENDS
 
-        END init
+    END init

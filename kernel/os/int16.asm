@@ -123,19 +123,19 @@ init_int16      PROC near
         mov di,OFFSET hook_pm_int_name
         xor cl,cl
         mov ax,hook_pm16_int_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_get_pm_int
         mov di,OFFSET hook_get_pm_int_name
         xor cl,cl
         mov ax,hook_get_pm16_int_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_set_pm_int
         mov di,OFFSET hook_set_pm_int_name
         xor cl,cl
         mov ax,hook_set_pm16_int_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET get_exception_vector
         mov di,OFFSET get_exception_vector_name

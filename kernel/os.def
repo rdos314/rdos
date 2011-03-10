@@ -1,5 +1,4 @@
 
-register_osgate_nr			    = 0
 is_valid_osgate_nr		    	= 1
 register_usergate_nr		    = 2
 register_bimodal_usergate_nr	= 3
@@ -461,5 +460,7 @@ add_printer_nr              = 387
 crash_gate_nr               = 388
 crash_tss_nr                = 389
 crash_fault_nr              = 390
+
+register_old_osgate_nr	    = 391
 
 osgate_entries				= 400

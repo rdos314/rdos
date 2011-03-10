@@ -2869,25 +2869,25 @@ init_dir        PROC near
         mov esi,OFFSET stop_file_system
         mov edi,OFFSET stop_file_system_name
         mov ax,stop_file_system_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET cache_dir
         mov edi,OFFSET cache_dir_name
         xor cl,cl
         mov ax,cache_dir_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET insert_dir_entry
         mov edi,OFFSET insert_dir_entry_name
         xor cl,cl
         mov ax,insert_dir_entry_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET insert_file_entry
         mov edi,OFFSET insert_file_entry_name
         xor cl,cl
         mov ax,insert_file_entry_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_drive_info
         mov edi,OFFSET get_drive_info_name

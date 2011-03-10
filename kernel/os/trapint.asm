@@ -2277,43 +2277,43 @@ init_irq_loop:
     mov edi,OFFSET segment_not_present_name
     xor cl,cl
     mov ax,segment_not_present_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET is_irq_free
     mov edi,OFFSET is_irq_free_name
     xor cl,cl
     mov ax,is_irq_free_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET request_private_irq_handler
     mov edi,OFFSET request_private_irq_handler_name
     xor cl,cl
     mov ax,request_private_irq_handler_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET request_shared_irq_handler
     mov edi,OFFSET request_shared_irq_handler_name
     xor cl,cl
     mov ax,request_shared_irq_handler_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET release_private_irq_handler
     mov edi,OFFSET release_private_irq_handler_name
     xor cl,cl
     mov ax,release_private_irq_handler_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET setup_irq_detect
     mov edi,OFFSET setup_irq_detect_name
     xor cl,cl
     mov ax,setup_irq_detect_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET poll_irq_detect
     mov edi,OFFSET poll_irq_detect_name
     xor cl,cl
     mov ax,poll_irq_detect_nr
-    RegisterOsGate
+    RegisterOldOsGate
     ret
 init_trap_vectors       ENDP
 

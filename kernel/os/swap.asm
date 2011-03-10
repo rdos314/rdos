@@ -205,7 +205,7 @@ init_swap       PROC near
         mov edi,OFFSET register_swap_proc_name
         xor cl,cl
         mov ax,register_swap_proc_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov bx,swap_data_sel
         mov eax,SIZE swap_data_seg

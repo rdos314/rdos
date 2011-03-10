@@ -959,67 +959,67 @@ init    Proc far
     mov edi,OFFSET bios_pci_int_name
     xor cl,cl
     mov ax,bios_pci_int_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET read_pci_byte
     mov edi,OFFSET read_pci_byte_name
     xor cl,cl
     mov ax,read_pci_byte_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET read_pci_word
     mov edi,OFFSET read_pci_word_name
     xor cl,cl
     mov ax,read_pci_word_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET read_pci_dword
     mov edi,OFFSET read_pci_dword_name
     xor cl,cl
     mov ax,read_pci_dword_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET write_pci_byte
     mov edi,OFFSET write_pci_byte_name
     xor cl,cl
     mov ax,write_pci_byte_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET write_pci_word
     mov edi,OFFSET write_pci_word_name
     xor cl,cl
     mov ax,write_pci_word_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET write_pci_dword
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET find_pci_class
     mov edi,OFFSET find_pci_class_name
     xor cl,cl
     mov ax,find_pci_class_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET find_pci_class_all
     mov edi,OFFSET find_pci_class_all_name
     xor cl,cl
     mov ax,find_pci_class_all_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET find_pci_device
     mov edi,OFFSET find_pci_device_name
     xor cl,cl
     mov ax,find_pci_device_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET find_pci_cap
     mov edi,OFFSET find_pci_cap_name
     xor cl,cl
     mov ax,find_pci_cap_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov ax,get_pci_irq_nr
     IsValidOsGate
@@ -1029,7 +1029,7 @@ init    Proc far
     mov edi,OFFSET get_pci_irq_name
     xor cl,cl
     mov ax,get_pci_irq_nr
-    RegisterOsGate
+    RegisterOldOsGate
 
 init_pci_done:
     clc

@@ -669,13 +669,13 @@ init_state      PROC near
         mov edi,OFFSET hook_state_name
         xor cl,cl
         mov ax,hook_state_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET thread_to_sel
         mov edi,OFFSET thread_to_sel_name
         xor cl,cl
         mov ax,thread_to_sel_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov ebx,OFFSET get_thread_state16
         mov esi,OFFSET get_thread_state32

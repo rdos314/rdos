@@ -943,7 +943,7 @@ init_font_loop:
     mov edi,OFFSET get_char_mask_name
     xor cl,cl
     mov ax,get_char_mask_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET open_font
     mov edi,OFFSET open_font_name

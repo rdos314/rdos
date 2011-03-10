@@ -2518,7 +2518,7 @@ init_dhcp_enabled_ok:
         mov edi,OFFSET add_dhcp_option_name
         xor cl,cl
         mov ax,add_dhcp_option_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         ret
 init_dhcp       ENDP

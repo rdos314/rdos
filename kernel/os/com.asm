@@ -1333,37 +1333,37 @@ init    Proc far
         mov edi,OFFSET add_com_port_name
         xor cl,cl
         mov ax,add_com_port_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET reserve_com_line
         mov edi,OFFSET reserve_com_line_name
         xor cl,cl
         mov ax,reserve_com_line_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET device_set_dtr
         mov edi,OFFSET device_set_dtr_name
         xor cl,cl
         mov ax,device_set_dtr_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET device_reset_dtr
         mov edi,OFFSET device_reset_dtr_name
         xor cl,cl
         mov ax,device_reset_dtr_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET wait_for_line_state_change
         mov edi,OFFSET wait_for_line_state_change_name
         xor cl,cl
         mov ax,wait_for_line_state_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_line_state
         mov edi,OFFSET get_line_state_name
         xor cl,cl
         mov ax,get_line_state_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET add_wait_for_com
         mov edi,OFFSET add_wait_for_com_name

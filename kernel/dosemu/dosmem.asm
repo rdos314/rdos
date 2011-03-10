@@ -759,19 +759,19 @@ init_dos_mem    PROC near
         mov edi,OFFSET allocate_dos_linear_name
         xor cl,cl
         mov ax,allocate_dos_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET resize_dos_linear
         mov edi,OFFSET resize_dos_linear_name
         xor cl,cl
         mov ax,resize_dos_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET free_dos_linear
         mov edi,OFFSET free_dos_linear_name
         xor cl,cl
         mov ax,free_dos_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov ebx,OFFSET allocate_dos_mem16
         mov esi,OFFSET allocate_dos_mem32
@@ -784,7 +784,7 @@ init_dos_mem    PROC near
         mov edi,OFFSET available_dos_linear_name
         xor cl,cl
         mov ax,available_dos_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         pop ds
         popa

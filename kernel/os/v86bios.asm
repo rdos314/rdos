@@ -667,7 +667,7 @@ init_v86_bios   PROC near
     mov edi,OFFSET v86_bios_int_name
     mov cl,1
     mov ax,v86_bios_int_nr
-    RegisterOsGate
+    RegisterOldOsGate
     ret
 init_v86_bios   ENDP
 

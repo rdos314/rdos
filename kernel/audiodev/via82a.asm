@@ -753,31 +753,31 @@ init    PROC far
         mov edi,OFFSET read_codec_name
         xor cl,cl
         mov ax,read_codec_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET write_codec
         mov edi,OFFSET write_codec_name
         xor cl,cl
         mov ax,write_codec_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET open_audio_out
         mov edi,OFFSET open_audio_out_name
         xor cl,cl
         mov ax,open_audio_out_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET close_audio_out
         mov edi,OFFSET close_audio_out_name
         xor cl,cl
         mov ax,close_audio_out_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET send_audio_out
         mov edi,OFFSET send_audio_out_name
         xor cl,cl
         mov ax,send_audio_out_nr
-        RegisterOsGate
+        RegisterOldOsGate
         clc
         ret
 init    ENDP

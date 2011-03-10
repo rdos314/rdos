@@ -560,13 +560,13 @@ init    PROC far
     mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET disable_all_irq
     mov edi,OFFSET disable_all_irq_name
     xor cl,cl
     mov ax,disable_all_irq_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov di,OFFSET init_process
     HookCreateProcess

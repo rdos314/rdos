@@ -747,31 +747,31 @@ init_cache      PROC near
         mov edi,OFFSET hook_ip_cache_name
         xor cl,cl
         mov ax,hook_ip_cache_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET allocate_ip_cache_mem
         mov edi,OFFSET allocate_ip_cache_mem_name
         xor cl,cl
         mov ax,allocate_ip_cache_mem_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET lookup_ip_cache
         mov edi,OFFSET lookup_ip_cache_name
         xor cl,cl
         mov ax,lookup_ip_cache_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_host_timeout
         mov edi,OFFSET get_host_timeout_name
         xor cl,cl
         mov ax,get_host_timeout_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET update_round_trip_time
         mov edi,OFFSET update_round_trip_time_name
         xor cl,cl
         mov ax,update_round_trip_time_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov di,OFFSET init_cache_entries
         HookInitTasking

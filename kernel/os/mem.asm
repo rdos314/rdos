@@ -193,31 +193,31 @@ init_mem        PROC near
         mov di,OFFSET allocate_global_name
         xor cl,cl
         mov ax,allocate_global_mem_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_small_global_mem
         mov di,OFFSET allocate_small_global_name
         xor cl,cl
         mov ax,allocate_small_global_mem_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_small_mem
         mov di,OFFSET allocate_small_mem_name
         xor cl,cl
         mov ax,allocate_small_mem_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_small_kernel_mem
         mov di,OFFSET allocate_small_kernel_mem_name
         xor cl,cl
         mov ax,allocate_small_kernel_mem_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_big_mem
         mov di,OFFSET allocate_big_mem_name
         xor cl,cl
         mov ax,allocate_big_mem_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET free_mem
         mov di,OFFSET free_name
@@ -229,31 +229,31 @@ init_mem        PROC near
         mov di,OFFSET allocate_big_linear_name
         xor cl,cl
         mov ax,allocate_big_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_small_linear
         mov di,OFFSET allocate_small_linear_name
         xor cl,cl
         mov ax,allocate_small_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_fixed_vm_linear
         mov di,OFFSET allocate_fixed_vm_linear_name
         xor cl,cl
         mov ax,allocate_fixed_vm_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET free_linear
         mov di,OFFSET free_linear_name
         xor cl,cl
         mov ax,free_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET resize_linear
         mov di,OFFSET resize_linear_name
         xor cl,cl
         mov ax,resize_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET available_big_linear
         mov di,OFFSET available_big_linear_name
@@ -271,97 +271,97 @@ init_mem        PROC near
         mov di,OFFSET used_big_linear_name
         xor cl,cl
         mov ax,used_big_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET used_small_linear
         mov di,OFFSET used_small_linear_name
         xor cl,cl
         mov ax,used_small_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET selector_to_segment
         mov di,OFFSET selector_to_segment_name
         xor cl,cl
         mov ax,selector_to_segment_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET segment_to_selector
         mov di,OFFSET segment_to_selector_name
         xor cl,cl
         mov ax,segment_to_selector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET free_selector
         mov di,OFFSET free_selector_name
         xor cl,cl
         mov ax,free_selector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_process_linear
         mov di,OFFSET allocate_process_linear_name
         xor cl,cl
         mov ax,allocate_process_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_system_linear
         mov di,OFFSET allocate_system_linear_name
         xor cl,cl
         mov ax,allocate_system_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_fixed_process_mem
         mov di,OFFSET allocate_fixed_process_mem_name
         xor cl,cl
         mov ax,allocate_fixed_process_mem_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_fixed_system_mem
         mov di,OFFSET allocate_fixed_system_mem_name
         xor cl,cl
         mov ax,allocate_fixed_system_mem_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET read_thread_selector
         mov di,OFFSET read_thread_selector_name
         xor cl,cl
         mov ax,read_thread_selector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET write_thread_selector
         mov di,OFFSET write_thread_selector_name
         xor cl,cl
         mov ax,write_thread_selector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET read_thread_segment
         mov di,OFFSET read_thread_segment_name
         xor cl,cl
         mov ax,read_thread_segment_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET write_thread_segment
         mov di,OFFSET write_thread_segment_name
         xor cl,cl
         mov ax,write_thread_segment_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET alias_code32
         mov di,OFFSET alias_code32_name
         xor cl,cl
         mov ax,alias_code32_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_page
         mov di,OFFSET allocate_page_name
         xor cl,cl
         mov ax,allocate_page_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET free_page
         mov di,OFFSET free_page_name
         xor cl,cl
         mov ax,free_page_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET get_thread_linear
         mov di,OFFSET get_thread_linear_name
@@ -387,19 +387,19 @@ init_mem        PROC near
         mov di,OFFSET allocate_local_linear_name
         xor cl,cl
         mov ax,allocate_local_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET allocate_debug_local_linear
         mov di,OFFSET allocate_debug_local_linear_name
         xor cl,cl
         mov ax,allocate_debug_local_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET reserve_local_linear
         mov di,OFFSET reserve_local_linear_name
         xor cl,cl
         mov ax,reserve_local_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET available_local_linear
         mov di,OFFSET available_local_linear_name
@@ -417,7 +417,7 @@ init_mem        PROC near
         mov di,OFFSET allocate_vm_linear_name
         xor cl,cl
         mov ax,allocate_vm_linear_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET available_vm_linear
         mov di,OFFSET available_vm_linear_name
@@ -435,7 +435,7 @@ init_mem        PROC near
         mov di,OFFSET used_local_linear_thread_name
         xor cl,cl
         mov ax,used_local_linear_thread_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov bx,OFFSET allocate_local_mem16
         mov si,OFFSET allocate_local_mem32

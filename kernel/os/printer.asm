@@ -692,7 +692,7 @@ init    Proc far
     mov edi,OFFSET add_printer_name
     xor cl,cl
     mov ax,add_printer_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET get_max_printer
     mov edi,OFFSET get_max_printer_name

@@ -1509,37 +1509,37 @@ smemgLint1Ok:
     mov edi,OFFSET get_id_name
     xor cl,cl
     mov ax,get_apic_id_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET send_eoi_mem
     mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET send_nmi_mem
     mov edi,OFFSET send_nmi_name
     xor cl,cl
     mov ax,send_nmi_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET start_apic_mem_timer
     mov edi,OFFSET start_apic_timer_name
     xor cl,cl
     mov ax,start_sys_timer_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET reload_apic_mem_timer
     mov edi,OFFSET reload_apic_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET disable_all_irq
     mov edi,OFFSET disable_all_irq_name
     xor cl,cl
     mov ax,disable_all_irq_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET get_processor_id_mem
     mov edi,OFFSET get_processor_id_name
@@ -1735,31 +1735,31 @@ smsrgLint1Ok:
     mov edi,OFFSET get_id_name
     xor cl,cl
     mov ax,get_apic_id_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET send_eoi_msr
     mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET send_nmi_msr
     mov edi,OFFSET send_nmi_name
     xor cl,cl
     mov ax,send_nmi_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET start_apic_msr_timer
     mov edi,OFFSET start_apic_timer_name
     xor cl,cl
     mov ax,start_sys_timer_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET reload_apic_msr_timer
     mov edi,OFFSET reload_apic_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET get_processor_id_msr
     mov edi,OFFSET get_processor_id_name
@@ -2765,7 +2765,7 @@ init_local_apic_done:
     mov edi,OFFSET get_pci_irq_name
     xor cl,cl
     mov ax,get_pci_irq_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     popad
     pop es
@@ -2915,25 +2915,25 @@ init_smp_done:
     mov edi,OFFSET start_ap_cores_name
     xor cl,cl
     mov ax,start_ap_cores_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET resume_processor
     mov edi,OFFSET resume_processor_name
     xor cl,cl
     mov ax,resume_processor_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET unblock_processor
     mov edi,OFFSET unblock_processor_name
     xor cl,cl
     mov ax,unblock_processor_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET send_int
     mov edi,OFFSET send_int_name
     xor cl,cl
     mov ax,send_int_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     popad       
     pop es

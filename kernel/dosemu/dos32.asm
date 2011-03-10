@@ -1138,7 +1138,7 @@ init_dos32      PROC near
         mov edi,OFFSET enter_dos32_name
         xor cl,cl
         mov ax,enter_dos32_nr
-        RegisterOsGate
+        RegisterOldOsGate
         ret
 init_dos32      ENDP
 

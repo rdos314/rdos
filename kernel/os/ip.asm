@@ -1536,13 +1536,13 @@ init    PROC far
         mov edi,OFFSET hook_ip_name
         xor cl,cl
         mov ax,hook_ip_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_ppp_ip
         mov edi,OFFSET get_ppp_ip_name
         xor cl,cl
         mov ax,get_ppp_ip_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_ppp_dns
         mov edi,OFFSET get_ppp_dns_name
@@ -1554,25 +1554,25 @@ init    PROC far
         mov edi,OFFSET create_ip_header_name
         xor cl,cl
         mov ax,create_ip_header_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET send_ip_data
         mov edi,OFFSET send_ip_data_name
         xor cl,cl
         mov ax,send_ip_data_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_broadcast_ip
         mov edi,OFFSET create_broadcast_ip_name
         xor cl,cl
         mov ax,create_broadcast_ip_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET send_broadcast_ip
         mov edi,OFFSET send_broadcast_ip_name
         xor cl,cl
         mov ax,send_broadcast_ip_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_ip_address
         mov edi,OFFSET get_ip_address_name

@@ -94,12 +94,12 @@ init_out_hooks:
         mov edi,OFFSET hook_in_name
         xor cl,cl
         mov ax,hook_in_nr
-        RegisterOsGate
+        RegisterOldOsGate
         mov esi,OFFSET hook_out
         mov edi,OFFSET hook_out_name
         xor cl,cl
         mov ax,hook_out_nr
-        RegisterOsGate
+        RegisterOldOsGate
         pop ds
         popa
         ret

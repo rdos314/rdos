@@ -1809,25 +1809,25 @@ init_paging_gates       PROC near
     mov di,OFFSET hook_page_name
     xor cl,cl
     mov ax,hook_page_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET unhook_page
     mov di,OFFSET unhook_page_name
     xor cl,cl
     mov ax,unhook_page_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET set_page_emulate
     mov di,OFFSET set_page_emulate_name
     xor cl,cl
     mov ax,set_page_emulate_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET set_page_kernel
     mov di,OFFSET set_page_kernel_name
     xor cl,cl
     mov ax,set_page_kernel_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET free_v86
     mov di,OFFSET free_v86_name

@@ -1230,17 +1230,17 @@ init    PROC far
         mov esi,OFFSET get_audio_out_buf
         mov edi,OFFSET get_audio_out_buf_name
         mov ax,get_audio_out_buf_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET post_audio_out_buf
         mov edi,OFFSET post_audio_out_buf_name
         mov ax,post_audio_out_buf_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET is_audio_out_completed
         mov edi,OFFSET is_audio_out_completed_name
         mov ax,is_audio_out_completed_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov bx,SEG data
         mov ds,bx

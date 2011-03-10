@@ -354,25 +354,25 @@ init    PROC far
         mov edi,OFFSET get_dac_rate_name
         xor cl,cl
         mov ax,get_audio_dac_rate_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET set_dac_rate
         mov edi,OFFSET set_dac_rate_name
         xor cl,cl
         mov ax,set_audio_dac_rate_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_adc_rate
         mov edi,OFFSET get_adc_rate_name
         xor cl,cl
         mov ax,get_audio_adc_rate_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET set_adc_rate
         mov edi,OFFSET set_adc_rate_name
         xor cl,cl
         mov ax,set_audio_adc_rate_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_master_volume
         mov edi,OFFSET get_master_volume_name

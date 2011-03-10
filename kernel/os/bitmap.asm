@@ -788,7 +788,7 @@ init_bitmap     PROC near
         mov edi,OFFSET init_video_bitmap_name
         xor cl,cl
         mov ax,init_video_bitmap_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_bitmap
         mov edi,OFFSET create_bitmap_name

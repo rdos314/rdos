@@ -157,8 +157,8 @@ ENDIF
 ;	AX		GATE NUMBER
 ;	DS:ESI	GATE CALL ADDRESS
 ;	ES:EDI	GATE NAME ADDRESS
-RegisterOsGate	MACRO
-	OldOsGate register_osgate_nr
+RegisterOldOsGate	MACRO
+	OldOsGate register_old_osgate_nr
 
 					ENDM
 

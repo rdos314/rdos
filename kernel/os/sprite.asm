@@ -2273,13 +2273,13 @@ init_sprite     PROC near
         mov edi,OFFSET hide_sprite_line_name
         xor cl,cl
         mov ax,hide_sprite_line_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET show_sprite_line
         mov edi,OFFSET show_sprite_line_name
         xor cl,cl
         mov ax,show_sprite_line_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         ret
 init_sprite     ENDP

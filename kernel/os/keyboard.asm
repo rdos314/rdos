@@ -1361,25 +1361,25 @@ init_keyboard   PROC near
         mov edi,OFFSET hook_shift_keys_name
         xor cl,cl
         mov ax,hook_shift_keys_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET read_keyboard_serial
         mov edi,OFFSET read_keyboard_serial_name
         xor cl,cl
         mov ax,read_keyboard_serial_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET poll_keyboard_serial
         mov edi,OFFSET poll_keyboard_serial_name
         xor cl,cl
         mov ax,poll_keyboard_serial_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET set_keyboard_state
         mov edi,OFFSET set_keyboard_state_name
         xor cl,cl
         mov ax,set_keyboard_state_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov ax,SEG data
         mov ds,ax

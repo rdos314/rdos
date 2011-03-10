@@ -1239,7 +1239,7 @@ init_dos16      PROC near
         mov edi,OFFSET enter_dos16_name
         xor cl,cl
         mov ax,enter_dos16_nr
-        RegisterOsGate
+        RegisterOldOsGate
         ret
 init_dos16      ENDP
 

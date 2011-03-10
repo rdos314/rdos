@@ -2211,19 +2211,19 @@ init_crashdeb    PROC near
     mov edi,OFFSET crash_gate_name
     xor cl,cl
     mov ax,crash_gate_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET crash_fault
     mov edi,OFFSET crash_fault_name
     xor cl,cl
     mov ax,crash_fault_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov esi,OFFSET crash_tss
     mov edi,OFFSET crash_tss_name
     xor cl,cl
     mov ax,crash_tss_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     ret
 init_crashdeb    ENDP

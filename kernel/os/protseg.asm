@@ -1157,97 +1157,97 @@ init_os_protseg PROC near
         mov edi,OFFSET get_selector_base_size_name
         xor cl,cl
         mov ax,get_selector_base_size_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_data_sel16
         mov edi,OFFSET create_data_sel16_name
         xor cl,cl
         mov ax,create_data_sel16_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_data_sel32
         mov edi,OFFSET create_data_sel32_name
         xor cl,cl
         mov ax,create_data_sel32_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_alias_sel16
         mov edi,OFFSET create_alias_sel16_name
         xor cl,cl
         mov ax,create_alias_sel16_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_alias_sel32
         mov edi,OFFSET create_alias_sel32_name
         xor cl,cl
         mov ax,create_alias_sel32_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_code_sel16
         mov edi,OFFSET create_code_sel16_name
         xor cl,cl
         mov ax,create_code_sel16_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_code_sel32
         mov edi,OFFSET create_code_sel32_name
         xor cl,cl
         mov ax,create_code_sel32_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_conform_sel16
         mov edi,OFFSET create_conform_sel16_name
         xor cl,cl
         mov ax,create_conform_sel16_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_conform_sel32
         mov edi,OFFSET create_conform_sel32_name
         xor cl,cl
         mov ax,create_conform_sel32_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_ldt_sel
         mov edi,OFFSET create_ldt_sel_name
         xor cl,cl
         mov ax,create_ldt_sel_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_tss_sel
         mov edi,OFFSET create_tss_sel_name
         xor cl,cl
         mov ax,create_tss_sel_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_call_gate_sel16
         mov edi,OFFSET create_call_gate_sel16_name
         xor cl,cl
         mov ax,create_call_gate_sel16_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_call_gate_sel32
         mov edi,OFFSET create_call_gate_sel32_name
         xor cl,cl
         mov ax,create_call_gate_sel32_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_task_gate_sel
         mov edi,OFFSET create_task_gate_sel_name
         xor cl,cl
         mov ax,create_task_gate_sel_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_int_gate_sel
         mov edi,OFFSET create_int_gate_sel_name
         xor cl,cl
         mov ax,create_int_gate_sel_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_trap_gate_sel
         mov edi,OFFSET create_trap_gate_sel_name
         xor cl,cl
         mov ax,create_trap_gate_sel_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         ret
 init_os_protseg ENDP

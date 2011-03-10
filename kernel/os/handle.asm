@@ -931,31 +931,31 @@ init_handle     PROC near
         mov edi,OFFSET register_handle_name
         xor cl,cl
         mov ax,register_handle_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET allocate_handle
         mov edi,OFFSET allocate_handle_name
         xor cl,cl
         mov ax,allocate_handle_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET free_handle
         mov edi,OFFSET free_handle_name
         xor cl,cl
         mov ax,free_handle_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET deref_handle
         mov edi,OFFSET deref_handle_name
         xor cl,cl
         mov ax,deref_handle_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET clone_handle_mem
         mov edi,OFFSET clone_handle_mem_name
         xor cl,cl
         mov ax,clone_handle_mem_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_free_handles
         mov edi,OFFSET get_free_handles_name

@@ -105,73 +105,73 @@ init_app    PROC near
     mov di,OFFSET open_app_name
     xor cl,cl
     mov ax,open_app_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET close_app
     mov di,OFFSET close_app_name
     xor cl,cl
     mov ax,close_app_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET clone_app
     mov di,OFFSET clone_app_name
     xor cl,cl
     mov ax,clone_app_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET hook_open_app
     mov di,OFFSET hook_open_app_name
     xor cl,cl
     mov ax,hook_open_app_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET hook_close_app
     mov di,OFFSET hook_close_app_name
     xor cl,cl
     mov ax,hook_close_app_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET set_module
     mov di,OFFSET set_module_name
     xor cl,cl
     mov ax,set_module_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET reset_module
     mov di,OFFSET reset_module_name
     xor cl,cl
     mov ax,reset_module_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET create_module
     mov di,OFFSET create_module_name
     xor cl,cl
     mov ax,create_module_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET free_module
     mov di,OFFSET free_module_name
     xor cl,cl
     mov ax,free_module_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET deref_module_handle
     mov di,OFFSET deref_module_handle_name
     xor cl,cl
     mov ax,deref_module_handle_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET alias_module_handle
     mov di,OFFSET alias_module_handle_name
     xor cl,cl
     mov ax,alias_module_handle_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET set_options
     mov di,OFFSET set_options_name
     xor cl,cl
     mov ax,set_options_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov si,OFFSET get_exe_name
     mov di,OFFSET get_exe_name_name

@@ -1299,13 +1299,13 @@ init    PROC far
         mov edi,OFFSET get_psp_name
         xor cl,cl
         mov ax,get_psp_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET set_psp_gate
         mov edi,OFFSET set_psp_name
         xor cl,cl
         mov ax,set_psp_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_psp_sel
         mov edi,OFFSET get_psp_sel_name

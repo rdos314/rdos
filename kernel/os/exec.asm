@@ -2157,7 +2157,7 @@ init    PROC far
     mov edi,OFFSET hook_load_exe_name
     xor cl,cl
     mov ax,hook_load_exe_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov ebx,OFFSET load_program16
     mov esi,OFFSET load_program32

@@ -600,7 +600,7 @@ init    PROC far
     mov edi,OFFSET process_key_scan_name
     xor cl,cl
     mov ax,process_key_scan_nr
-    RegisterOsGate
+    RegisterOldOsGate
 ;
     mov ebx,OFFSET get_key_layout16
     mov esi,OFFSET get_key_layout32

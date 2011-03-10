@@ -1401,7 +1401,7 @@ init    PROC far
         mov edi,OFFSET init_mouse_name
         xor cl,cl
         mov ax,init_mouse_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov ax,SEG data
         mov ds,ax

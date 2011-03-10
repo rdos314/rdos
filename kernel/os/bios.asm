@@ -1151,25 +1151,25 @@ init_bios       PROC near
         mov edi,OFFSET get_bios_data_name
         xor cl,cl
         mov ax,get_bios_data_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET set_bios_data
         mov edi,OFFSET set_bios_data_name
         xor cl,cl
         mov ax,set_bios_data_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET hook_get_bios_data
         mov edi,OFFSET hook_get_bios_data_name
         xor cl,cl
         mov ax,hook_get_bios_data_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET hook_set_bios_data
         mov edi,OFFSET hook_set_bios_data_name
         xor cl,cl
         mov ax,hook_set_bios_data_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov bx,SEG data
         mov ds,bx

@@ -1245,7 +1245,7 @@ init_start:
         mov edi,OFFSET emulate_name
         xor cl,cl
         mov ax,emulate_opcode_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;    
         call init_common
         ret

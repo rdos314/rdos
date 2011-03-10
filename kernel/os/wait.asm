@@ -1159,12 +1159,12 @@ init_wait       PROC near
         mov esi,OFFSET add_wait
         mov edi,OFFSET add_wait_name
         mov ax,add_wait_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET signal_wait
         mov edi,OFFSET signal_wait_name
         mov ax,signal_wait_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_wait
         mov edi,OFFSET create_wait_name

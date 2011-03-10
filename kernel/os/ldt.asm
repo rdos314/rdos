@@ -66,17 +66,17 @@ init_ldt        PROC near
         mov edi,OFFSET allocate_name
         xor cl,cl
         mov ax,allocate_ldt_nr
-        RegisterOsGate
+        RegisterOldOsGate
         mov esi,OFFSET free_ldt
         mov edi,OFFSET free_name
         xor cl,cl
         mov ax,free_ldt_nr
-        RegisterOsGate
+        RegisterOldOsGate
         mov esi,OFFSET allocate_multiple_ldt
         mov edi,OFFSET allocate_multiple_name
         xor cl,cl
         mov ax,allocate_multiple_ldt_nr
-        RegisterOsGate
+        RegisterOldOsGate
         pop ds
         popa
         ret

@@ -146,13 +146,13 @@ init_gdt        PROC near
         mov edi,OFFSET allocate_name
         xor cl,cl
         mov ax,allocate_gdt_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;       
         mov esi,OFFSET free_gdt
         mov edi,OFFSET free_name
         xor cl,cl
         mov ax,free_gdt_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;       
         mov esi,OFFSET get_free_gdt
         mov edi,OFFSET get_free_gdt_name

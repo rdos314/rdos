@@ -5083,162 +5083,162 @@ init    PROC far
         mov esi,OFFSET hook_init_disc
         mov edi,OFFSET hook_init_disc_name
         mov ax,hook_init_disc_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET install_disc
         mov edi,OFFSET install_disc_name
         mov ax,install_disc_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET set_disc_param
         mov edi,OFFSET set_disc_param_name
         mov ax,set_disc_param_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET register_disc_change
         mov edi,OFFSET register_disc_change_name
         mov ax,register_disc_change_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET start_disc
         mov edi,OFFSET start_disc_name
         mov ax,start_disc_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET stop_disc
         mov edi,OFFSET stop_disc_name
         mov ax,stop_disc_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET wait_for_disc_request
         mov edi,OFFSET wait_for_disc_request_name
         mov ax,wait_for_disc_request_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET poll_disc_request
         mov edi,OFFSET poll_disc_request_name
         mov ax,poll_disc_request_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_disc_request
         mov edi,OFFSET get_disc_request_name
         mov ax,get_disc_request_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET new_disc_request
         mov edi,OFFSET new_disc_request_name
         mov ax,new_disc_request_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET lock_disc_request
         mov edi,OFFSET lock_disc_request_name
         mov ax,lock_disc_request_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET modify_disc_request
         mov edi,OFFSET modify_disc_request_name
         mov ax,modify_disc_request_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET unlock_disc_request
         mov edi,OFFSET unlock_disc_request_name
         mov ax,unlock_disc_request_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET disc_request_completed
         mov edi,OFFSET disc_request_completed_name
         mov ax,disc_request_completed_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_disc_request_array
         mov edi,OFFSET get_disc_request_array_name
         mov ax,get_disc_request_array_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET open_drive
         mov edi,OFFSET open_drive_name
         mov ax,open_drive_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET close_drive
         mov edi,OFFSET close_drive_name
         mov ax,close_drive_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET flush_drive
         mov edi,OFFSET flush_drive_name
         mov ax,flush_drive_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET new_sector
         mov edi,OFFSET new_sector_name
         mov ax,new_sector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_drive_param
         mov edi,OFFSET get_drive_param_name
         mov ax,get_drive_param_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET lock_sector
         mov edi,OFFSET lock_sector_name
         mov ax,lock_sector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET unlock_sector
         mov edi,OFFSET unlock_sector_name
         mov ax,unlock_sector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET modify_sector
         mov edi,OFFSET modify_sector_name
         mov ax,modify_sector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET flush_sector
         mov edi,OFFSET flush_sector_name
         mov ax,flush_sector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET create_disc_seq
         mov edi,OFFSET create_disc_seq_name
         mov ax,create_disc_seq_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET modify_seq_sector
         mov edi,OFFSET modify_seq_sector_name
         mov ax,modify_seq_sector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET perform_disc_seq
         mov edi,OFFSET perform_disc_seq_name
         mov ax,perform_disc_seq_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET req_sector
         mov edi,OFFSET req_sector_name
         mov ax,req_sector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET define_sector
         mov edi,OFFSET define_sector_name
         mov ax,define_sector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET erase_sectors
         mov edi,OFFSET erase_sectors_name
         mov ax,erase_sectors_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET wait_for_sector
         mov edi,OFFSET wait_for_sector_name
         mov ax,wait_for_sector_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET reset_drive
         mov edi,OFFSET reset_drive_name
         mov ax,reset_drive_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET get_disc_info
         mov edi,OFFSET get_disc_info_name

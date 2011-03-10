@@ -305,25 +305,25 @@ init_exc_loop:
         mov di,OFFSET set_bitness_name
         xor cl,cl
         mov ax,set_bitness_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_vm_int
         mov di,OFFSET hook_vm_int_name
         xor cl,cl
         mov ax,hook_vm_int_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_exception
         mov di,OFFSET hook_exception_name
         xor cl,cl
         mov ax,hook_exception_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET reflect_pm_to_vm
         mov di,OFFSET reflect_pm_to_vm_name
         xor cl,cl
         mov ax,reflect_pm_to_vm_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET get_vm_int
         mov di,OFFSET get_vm_int_name
@@ -341,31 +341,31 @@ init_exc_loop:
         mov di,OFFSET get_exception_stack16_name
         xor cl,cl
         mov ax,get_exception_stack16_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET get_exception_stack32
         mov di,OFFSET get_exception_stack32_name
         xor cl,cl
         mov ax,get_exception_stack32_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_get_vm_int
         mov di,OFFSET hook_get_vm_int_name
         xor cl,cl
         mov ax,hook_get_vm_int_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET hook_set_vm_int
         mov di,OFFSET hook_set_vm_int_name
         xor cl,cl
         mov ax,hook_set_vm_int_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET reflect_exception
         mov di,OFFSET reflect_exception_name
         xor cl,cl
         mov ax,reflect_exception_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET raw_switch16
         mov di,OFFSET raw_switch_name
@@ -389,31 +389,31 @@ init_exc_loop:
         mov di,OFFSET save_context_name
         xor cl,cl
         mov ax,save_context_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET restore_context
         mov di,OFFSET restore_context_name
         xor cl,cl
         mov ax,restore_context_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET call_vm
         mov di,OFFSET call_vm_name
         xor cl,cl
         mov ax,call_vm_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET call_pm16
         mov di,OFFSET call_pm16_name
         xor cl,cl
         mov ax,call_pm16_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov si,OFFSET call_pm32
         mov di,OFFSET call_pm32_name
         xor cl,cl
         mov ax,call_pm32_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov di,OFFSET init_thread_int
         HookCreateThread

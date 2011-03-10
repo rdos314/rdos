@@ -1606,19 +1606,19 @@ init_mouse      PROC near
         mov edi,OFFSET set_mouse_limit_name
         xor cl,cl
         mov ax,set_mouse_limit_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET update_mouse
         mov edi,OFFSET update_mouse_name
         xor cl,cl
         mov ax,update_mouse_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET set_mouse
         mov edi,OFFSET set_mouse_name
         xor cl,cl
         mov ax,set_mouse_nr
-        RegisterOsGate
+        RegisterOldOsGate
 ;
         mov esi,OFFSET show_mouse
         mov edi,OFFSET show_mouse_name
