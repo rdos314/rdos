@@ -445,6 +445,9 @@ acpi_name       DB 'Acpi Test',0
 acpi_pr:
     int 3
     NewOsGate16 test_gate_nr
+    mov ax,0ABCh
+    mov edx,12345678h
+    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

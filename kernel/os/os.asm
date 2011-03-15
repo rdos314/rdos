@@ -613,7 +613,7 @@ do_locked:
     mov eax,[bp].vm_cs
     mov [bp+14],eax         ; old eflags
     mov eax,[bp].vm_eip
-    add eax,10
+    add eax,9
     mov [bp+10],eax         ; old cs
     pop eax
     mov [bp+6],eax          ; old eip

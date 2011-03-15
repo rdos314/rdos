@@ -1597,6 +1597,21 @@ pretask13:
     mov ebx,[bp].vm_eip
     mov al,[ebx]
 ;
+    cmp al,67h
+    jne pretask_gpf_not_oscall
+;
+    mov al,[ebx+2]
+    cmp al,9Ah
+    jne pretask_gpf_default
+;
+    mov ax,[ebx+7]
+    cmp ax,2
+    jne pretask_gpf_default
+;
+    call leave_code_patch
+    jmp do_new_oscall
+
+pretask_gpf_not_oscall:    
     cmp al,90h
     je pretask_gpf_reexec
 ;        

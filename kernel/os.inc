@@ -154,7 +154,7 @@ NewOsGate16	MACRO gate_nr
 
 OsGate	MACRO gate_nr
 IF (size $) EQ 0FF02h
-	OsGate16 gate_nr
+	NewOsGate16 gate_nr
 ELSE
 	OsGate32 gate_nr
 ENDIF
