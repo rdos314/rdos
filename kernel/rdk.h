@@ -6,8 +6,7 @@
 #define OsGate_register_usergate16 0x9a 4 0 0 0 3 0
 #define OsGate_register_usergate32 0x9a 5 0 0 0 3 0
 #define OsGate_register_usergate_v86 0x9a 6 0 0 0 3 0
-#define OsGate_init_device 0x9a 7 0 0 0 3 0
-#define OsGate_alias_code32 0x9a 8 0 0 0 3 0
+#define OsGate_create_alias_sel16 0x9a 7 0 0 0 3 0
 #define OsGate_emulate_opcode 0x9a 9 0 0 0 3 0
 
 #define OsGate_allocate_gdt 0x9a 10 0 0 0 3 0
@@ -120,6 +119,8 @@
 
 #define OsGate_request_private_irq_handler 0x9a 124 0 0 0 3 0
 #define OsGate_release_private_irq_handler 0x9a 125 0 0 0 3 0
+
+#define OsGate_disable_all_irq 0x9a 126 0 0 0 3 0
 
 #define OsGate_set_system_time 0x9a 128 0 0 0 3 0
 
@@ -294,9 +295,6 @@
 
 #define OsGate_allocate_multiple_physical 0x9a 27 1 0 0 3 0
 
-#define OsGate_create_alias_sel16 0x9a 28 1 0 0 3 0
-#define OsGate_create_alias_sel32 0x9a 29 1 0 0 3 0
-
 #define OsGate_add_net_source_address 0x9a 30 1 0 0 3 0
 
 #define OsGate_get_broadcast_buffer 0x9a 31 1 0 0 3 0
@@ -410,22 +408,26 @@
 
 #define OsGate_debug_exception 0x9a 104 1 0 0 3 0
 
+#define OsGate_start_ap_cores 0x9a 105 1 0 0 3 0
+
 #define OsGate_create_processor 0x9a 106 1 0 0 3 0
 
-#define OsGate_shutdown 0x9a 107 1 0 0 3 0
+#define OsGate_get_processor_num 0x9a 107 1 0 0 3 0
 
 #define OsGate_locked_debug_exception 0x9a 108 1 0 0 3 0
 
 #define OsGate_lock_task 0x9a 109 1 0 0 3 0
 #define OsGate_unlock_task 0x9a 110 1 0 0 3 0
 
+#define OsGate_is_processor_blocked 0x9a 111 1 0 0 3 0
+
 #define OsGate_get_processor 0x9a 112 1 0 0 3 0
 
 #define OsGate_resume_processor 0x9a 113 1 0 0 3 0
 #define OsGate_start_processor 0x9a 114 1 0 0 3 0
 
-#define OsGate_preempt_processor 0x9a 115 1 0 0 3 0
-#define OsGate_do_preempt_processor 0x9a 116 1 0 0 3 0
+#define OsGate_unblock_processor 0x9a 115 1 0 0 3 0
+#define OsGate_do_unblock_processor 0x9a 116 1 0 0 3 0
 
 #define OsGate_reload_sys_timer 0x9a 117 1 0 0 3 0
 #define OsGate_start_sys_timer 0x9a 118 1 0 0 3 0
@@ -446,12 +448,17 @@
 
 #define OsGate_get_pci_irq 0x9a 126 1 0 0 3 0
 
-#define OsGate_start_smp_debug 0x9a 127 1 0 0 3 0
 #define OsGate_send_eoi 0x9a 128 1 0 0 3 0
-
-#define OsGate_add_debug_core 0x9a 129 1 0 0 3 0
-
+#define OsGate_send_int 0x9a 129 1 0 0 3 0
 #define OsGate_send_nmi 0x9a 130 1 0 0 3 0
 
 #define OsGate_add_printer 0x9a 131 1 0 0 3 0
+
+#define OsGate_crash_gate 0x9a 132 1 0 0 3 0
+#define OsGate_crash_tss 0x9a 133 1 0 0 3 0
+#define OsGate_crash_fault 0x9a 134 1 0 0 3 0
+
+#define OsGate_register_old_osgate 0x9a 135 1 0 0 3 0
+
+#define OsGate_test_gate 0x9a 136 1 0 0 3 0
 
