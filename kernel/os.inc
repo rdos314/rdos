@@ -144,6 +144,14 @@ OsGate32	MACRO gate_nr
     db 90h
 			ENDM
 
+NewOsGate16	MACRO gate_nr
+    db 67h
+    db 66h
+    db 9Ah
+    dd gate_nr
+    dw 2
+			ENDM
+
 OsGate	MACRO gate_nr
 IF (size $) EQ 0FF02h
 	OsGate16 gate_nr

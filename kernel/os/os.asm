@@ -566,6 +566,116 @@ do32_retry:
     add sp,8
     iretd
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DO_NEW_OSCALL
+;
+;           DESCRIPTION:    Translate an osgate
+;
+;           PARAMETERS:     DS:EBX      Fault address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public do_new_oscall
+
+do_new_oscall:
+    sub sp,8
+;
+    push es
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,system_data_sel
+    mov es,ax
+    pushf
+    cli
+
+do_lock_loop:
+    mov ax,1
+    xchg ax,es:osgate_spinlock
+    or ax,ax
+    jz do_locked
+;
+    pause
+    jmp do_lock_loop
+
+do_locked: 
+    mov ax,[bp].vm_bp
+    mov [bp-12],ax          ; save org bp to pm_call
+;
+    mov eax,[bp].vm_eax
+    mov [bp-16],eax         ; save org eax
+;    
+    mov eax,[bp].vm_eflags
+    push eax
+    mov eax,[bp].vm_cs
+    mov [bp+14],eax         ; old eflags
+    mov eax,[bp].vm_eip
+    add eax,10
+    mov [bp+10],eax         ; old cs
+    pop eax
+    mov [bp+6],eax          ; old eip
+;
+    mov al,ds:[ebx]
+    cmp al,90h
+    je do_patched
+;    
+    mov edi,ds:[ebx+3]
+    shl edi,4
+    mov ax,osgate_sel
+    mov es,ax
+;
+    push ebx
+    mov bx,ds
+    call local_get_selector_base_size
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov ax,es:[edi].gate_sel
+    mov [bp+2],ax           ; old err
+    mov eax,es:[edi].gate_offset
+    mov [bp-2],eax
+;
+    call enter_code_patch
+    mov eax,es:[edi].gate_offset
+    xchg eax,ds:[ebx+3]
+    mov ax,es:[edi].gate_sel
+    xchg ax,ds:[ebx+7]
+    mov al,90h
+    xchg al,ds:[ebx]        
+    call leave_code_patch
+    jmp do_retry
+
+do_patched:
+    mov ax,ds:[ebx+7]
+    mov [bp+2],ax
+    mov ax,ds:[ebx+3]
+    mov [bp-2],ax
+    
+do_retry:
+    mov ax,system_data_sel
+    mov es,ax
+    mov es:osgate_spinlock,0
+    popf
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+;
+    mov ds,[bp].pm_ds
+    mov eax,[bp-16]
+    mov ebx,[bp].vm_ebx
+    sub bp,12
+    mov sp,bp
+    pop bp
+    add sp,8
+    iretd
+
 code    ENDS
 
     END

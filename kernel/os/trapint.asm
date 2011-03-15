@@ -94,6 +94,7 @@ code    SEGMENT byte use16 public 'CODE'
     extrn do_usercall32:near
 
     extrn do_old_oscall16:near
+    extrn do_new_oscall:near
 
     assume cs:code
 
@@ -1212,6 +1213,21 @@ trap_13:
     mov ebx,[bp].vm_eip
     mov al,[ebx]
 ;
+    cmp al,67h
+    jne t13_not_oscall
+;
+    mov al,[ebx+2]
+    cmp al,9Ah
+    jne t13_retry
+;
+    mov ax,[ebx+7]
+    cmp ax,2
+    jne t13_retry    
+;
+    call leave_code_patch
+    jmp do_new_oscall
+
+t13_not_oscall:    
     cmp al,90h
     je t13_retry
 ;        

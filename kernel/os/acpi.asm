@@ -444,7 +444,7 @@ acpi_name       DB 'Acpi Test',0
 
 acpi_pr:
     int 3
-    OsGate test_gate_nr
+    NewOsGate16 test_gate_nr
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
