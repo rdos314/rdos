@@ -89,12 +89,11 @@ code    SEGMENT byte use16 public 'CODE'
     extrn prot_exception:near
     extrn virt_exception:near
 
-    extrn do_oscall32:near
     extrn do_usercall16:near
     extrn do_usercall32:near
 
     extrn do_old_oscall16:near
-    extrn do_new_oscall:near
+    extrn do_oscall:near
 
     assume cs:code
 
@@ -200,7 +199,7 @@ usercall_tab16:
 suct00   DW 0
 suct01   DW OFFSET do_usercall16
 suct02   DW OFFSET do_usercall32
-suct03   DW OFFSET do_oscall32
+suct03   DW 0
 suct04   DW OFFSET do_old_oscall16
 suct05   DW 0
 suct06   DW 0
@@ -1225,7 +1224,7 @@ trap_13:
     jne t13_retry    
 ;
     call leave_code_patch
-    jmp do_new_oscall
+    jmp do_oscall
 
 t13_not_oscall:    
     cmp al,90h
@@ -1609,7 +1608,7 @@ pretask13:
     jne pretask_gpf_default
 ;
     call leave_code_patch
-    jmp do_new_oscall
+    jmp do_oscall
 
 pretask_gpf_not_oscall:    
     cmp al,90h

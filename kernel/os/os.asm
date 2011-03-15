@@ -412,7 +412,7 @@ do_old_oscall16     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DO_OSCALL32
+;           NAME:           DO_OSCALL
 ;
 ;           DESCRIPTION:    Translate an osgate
 ;
@@ -420,166 +420,9 @@ do_old_oscall16     ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public do_oscall32
+    public do_oscall
 
-do_oscall32:
-    sub sp,8
-;
-    push es
-    push ecx
-    push edx
-    push edi
-;
-    mov ax,system_data_sel
-    mov es,ax
-    pushf
-    cli
-
-do32_lock_loop:
-    mov ax,1
-    xchg ax,es:osgate_spinlock
-    or ax,ax
-    jz do32_locked
-;
-    pause
-    jmp do32_lock_loop
-
-do32_locked: 
-    mov ax,[bp].vm_bp
-    mov [bp-12],ax          ; save org bp to pm_call
-;
-    mov eax,[bp].vm_eax
-    mov [bp-16],eax         ; save org eax
-;    
-    mov eax,[bp].vm_eflags
-    push eax
-    mov eax,[bp].vm_cs
-    mov [bp+14],eax         ; old eflags
-    mov eax,[bp].vm_eip
-    add eax,10
-    mov [bp+10],eax         ; old cs
-    pop eax
-    mov [bp+6],eax          ; old eip
-;
-    mov al,ds:[ebx]
-    cmp al,90h
-    je do32_patched
-;    
-    cmp al,66h
-    je do32_has_ov
-;    
-    mov edi,ds:[ebx+1]
-    jmp do32_ov_done
-
-do32_has_ov:
-    mov edi,ds:[ebx+2]
-
-do32_ov_done:    
-    shl edi,4
-    mov ax,osgate_sel
-    mov es,ax
-;
-    push ebx
-    mov bx,ds
-    call local_get_selector_base_size
-    pop ebx
-    add ebx,edx
-    mov ax,flat_sel
-    mov ds,ax
-;
-    mov ax,es:[edi].gate_sel
-    cmp ax,[bp+14]
-    je do32_direct
-;
-    mov [bp+2],ax           ; old err
-    mov eax,es:[edi].gate_offset
-    mov [bp-2],eax
-;
-    call enter_code_patch
-    mov eax,0F5F5F5F5h
-    xchg eax,ds:[ebx+6]
-    mov eax,9A66673Eh
-    xchg eax,ds:[ebx]
-    mov eax,es:[edi].gate_offset
-    xchg eax,ds:[ebx+4]
-    mov ax,es:[edi].gate_sel
-    xchg ax,ds:[ebx+8]
-    mov ax,9090h
-    xchg ax,ds:[ebx]        
-    call leave_code_patch
-    jmp do32_retry
-
-do32_direct:
-    mov [bp+2],ax
-    mov eax,es:[edi].gate_offset
-    mov [bp-2],eax
-;
-    sub eax,[bp+10]
-    push eax
-    call enter_code_patch
-    mov eax,0E8660E66h
-    xchg eax,ds:[ebx+2]
-    pop eax
-    xchg eax,ds:[ebx+6]
-    mov ax,9090h
-    xchg ax,ds:[ebx]
-    call leave_code_patch
-    jmp do32_retry
-
-do32_patched:
-    mov ax,ds:[ebx]
-    cmp ax,9A90h
-    je do32_patch_far
-
-do32_patch_near:
-    mov ax,[bp+14]
-    mov [bp+2],ax
-    mov eax,ds:[ebx+6]
-    add eax,[bp+10]
-    sub eax,2
-    mov [bp-2],eax
-    jmp do32_retry
-
-do32_patch_far:
-    mov ax,ds:[ebx+8]
-    mov [bp+2],ax
-    mov ax,ds:[ebx+4]
-    mov [bp-2],ax
-    
-do32_retry:
-    mov ax,system_data_sel
-    mov es,ax
-    mov es:osgate_spinlock,0
-    popf
-;
-    pop edi
-    pop edx
-    pop ecx
-    pop es
-;
-    mov ds,[bp].pm_ds
-    mov eax,[bp-16]
-    mov ebx,[bp].vm_ebx
-    sub bp,12
-    mov sp,bp
-    pop bp
-    add sp,8
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DO_NEW_OSCALL
-;
-;           DESCRIPTION:    Translate an osgate
-;
-;           PARAMETERS:     DS:EBX      Fault address
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public do_new_oscall
-
-do_new_oscall:
+do_oscall:
     sub sp,8
 ;
     push es
