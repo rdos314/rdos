@@ -109,13 +109,13 @@ OldOsGate16	MACRO gate_nr
     db 66h
     db 9Ah
     dd gate_nr
-    dw 4
+    dw 3
 			ENDM
 
 OldOsGate32	MACRO gate_nr
     db 9Ah
     dd gate_nr
-    dw 4
+    dw 3
 			ENDM
 
 OldOsGate	MACRO gate_nr

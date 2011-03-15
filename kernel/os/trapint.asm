@@ -199,8 +199,8 @@ usercall_tab16:
 suct00   DW 0
 suct01   DW OFFSET do_usercall16
 suct02   DW OFFSET do_usercall32
-suct03   DW 0
-suct04   DW OFFSET do_old_oscall16
+suct03   DW OFFSET do_old_oscall16
+suct04   DW 0
 suct05   DW 0
 suct06   DW 0
 suct07   DW 0
