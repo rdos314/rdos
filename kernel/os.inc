@@ -127,24 +127,6 @@ ENDIF
 			ENDM
 
 OsGate16	MACRO gate_nr
-    db 66h
-    db 9Ah
-    dd gate_nr
-    dw 3
-    db 90h
-    db 90h
-			ENDM
-
-OsGate32	MACRO gate_nr
-    db 9Ah
-    dd gate_nr
-    dw 3
-    db 90h
-    db 90h
-    db 90h
-			ENDM
-
-NewOsGate16	MACRO gate_nr
     db 67h
     db 66h
     db 9Ah
@@ -152,9 +134,17 @@ NewOsGate16	MACRO gate_nr
     dw 2
 			ENDM
 
+OsGate32	MACRO gate_nr
+    db 67h
+    db 3Eh
+    db 9Ah
+    dd gate_nr
+    dw 2
+			ENDM
+
 OsGate	MACRO gate_nr
 IF (size $) EQ 0FF02h
-	NewOsGate16 gate_nr
+	OsGate16 gate_nr
 ELSE
 	OsGate32 gate_nr
 ENDIF

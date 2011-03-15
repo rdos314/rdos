@@ -412,7 +412,7 @@ ap_task_wait:
 ;        
     call InitApic
     sti
-    UserGate test_gate_nr
+    OsGate test_gate_nr
 
 stopl:
     jmp stopl
