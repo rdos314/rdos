@@ -539,17 +539,17 @@ ResizeLinear	MACRO
 
 ;	EAX		ANTAL BYTES
 UsedBigLinear	MACRO
-	OldOsGate used_big_linear_nr
+	OsGate used_big_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 UsedSmallLinear	MACRO
-	OldOsGate used_small_linear_nr
+	OsGate used_small_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 UsedLocalLinearThread	MACRO
-	OldOsGate used_local_linear_thread_nr
+	OsGate used_local_linear_thread_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES

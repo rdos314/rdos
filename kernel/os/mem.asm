@@ -267,13 +267,13 @@ init_mem    PROC near
     mov di,OFFSET used_big_linear_name
     xor cl,cl
     mov ax,used_big_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET used_small_linear
     mov di,OFFSET used_small_linear_name
     xor cl,cl
     mov ax,used_small_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET selector_to_segment
     mov di,OFFSET selector_to_segment_name
@@ -413,7 +413,7 @@ init_mem    PROC near
     mov di,OFFSET used_local_linear_thread_name
     xor cl,cl
     mov ax,used_local_linear_thread_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov bx,OFFSET allocate_local_mem16
     mov si,OFFSET allocate_local_mem32
@@ -1628,7 +1628,7 @@ used_big_linear PROC far
     mov ds,ax
     mov eax,ds:big_used_mem
     pop ds
-    ret
+    retf32
 used_big_linear ENDP
 
 
@@ -1651,7 +1651,7 @@ used_small_linear       PROC far
     mov ds,ax
     mov eax,ds:small_used_mem
     pop ds
-    ret
+    retf32
 used_small_linear       ENDP
 
 
@@ -1747,7 +1747,7 @@ used_local_linear_thread    PROC far
     pop cx
     pop es
     pop ds
-    ret
+    retf32
 used_local_linear_thread    ENDP
 
 

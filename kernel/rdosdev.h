@@ -92,6 +92,9 @@ int RdosReserveLocalLinear(long linear, long size);
 
 void RdosFreeLinear(long linear, long size);
 
+long RdosUsedSmallGlobalMem();
+long RdosUsedBigGlobalMem();
+
 void *RdosAllocateFixedSystemMem(int sel, long size);
 void *RdosAllocateFixedProcessMem(int sel, long size);
 
@@ -405,6 +408,14 @@ void RdosCreateKernelProcess(
 #pragma aux RdosFreeLinear = \
     OsGate_free_linear  \
     parm [edx] [ecx];
+
+#pragma aux RdosUsedBigGlobalMem = \
+    OsGate_used_big_linear  \
+    value [eax];
+
+#pragma aux RdosUsedSmallGlobalMem = \
+    OsGate_used_small_linear  \
+    value [eax];
 
 #pragma aux RdosAllocateFixedSystemMem = \
     "push es" \
