@@ -372,12 +372,6 @@ SegmentNotPresent	MACRO
 
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;
 
-;	ES:DI   Swap callback
-;       AL  Swap level (0 = highest priority, 15 = lowest priority)
-RegisterSwapProc	MACRO
-	OldOsGate register_swap_proc_nr
-					ENDM
-
 ;	EDX		LINEAR ADDRESS
 ;	EAX		PAGE ENTRY
 GetPhysicalPage	MACRO
@@ -593,7 +587,7 @@ AllocatePhysical	MACRO
 
 ;	EAX		FYSISK ADDRESS
 AllocateDmaPhysical	MACRO
-	OldOsGate allocate_dma_physical_nr
+	OsGate allocate_dma_physical_nr
 					ENDM
 
 ;	EAX		FYSISK ADDRESS
@@ -604,7 +598,15 @@ FreePhysical	MACRO
 ;	IN  ECX		Number of pages
 ;	OUT EAX		Physical base address
 AllocateMultiplePhysical	MACRO
-	OldOsGate allocate_multiple_physical_nr
+	OsGate allocate_multiple_physical_nr
+					ENDM
+
+;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
+
+;	ES:DI   Swap callback
+;       AL  Swap level (0 = highest priority, 15 = lowest priority)
+RegisterSwapProc	MACRO
+	OldOsGate register_swap_proc_nr
 					ENDM
 
 ;	IN  EAX     Table name
@@ -612,8 +614,6 @@ AllocateMultiplePhysical	MACRO
 GetAcpiTable	MACRO
 	OldOsGate get_acpi_table_nr
 					ENDM
-
-;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 ;   OUT EDX     APIC ID
 GetApicId    MACRO

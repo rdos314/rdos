@@ -219,12 +219,12 @@ init_physical_gates     PROC near
     mov edi,OFFSET allocate_dma_physical_name
     xor cl,cl
     mov ax,allocate_dma_physical_nr
-    RegisterOldOsGate
+    RegisterOsGate
     mov esi,OFFSET allocate_multiple_physical
     mov edi,OFFSET allocate_multiple_physical_name
     xor cl,cl
     mov ax,allocate_multiple_physical_nr
-    RegisterOldOsGate
+    RegisterOsGate
     mov esi,OFFSET get_physical_page
     mov edi,OFFSET get_physical_page_name
     xor cl,cl
@@ -368,7 +368,7 @@ allocate_dma_physical   PROC far
     pop ebx
     pop es
     pop ds
-    ret
+    retf32
 allocate_dma_physical   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -664,7 +664,7 @@ allocate_multi_done:
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 allocate_multiple_physical      ENDP
 
 
