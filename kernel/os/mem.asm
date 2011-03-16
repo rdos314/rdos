@@ -341,18 +341,6 @@ init_mem    PROC near
     mov ax,write_thread_segment_nr
     RegisterOsGate
 ;
-    mov si,OFFSET allocate_page
-    mov di,OFFSET allocate_page_name
-    xor cl,cl
-    mov ax,allocate_page_nr
-    RegisterOldOsGate
-;
-    mov si,OFFSET free_page
-    mov di,OFFSET free_page_name
-    xor cl,cl
-    mov ax,free_page_nr
-    RegisterOldOsGate
-;
     mov si,OFFSET get_thread_linear
     mov di,OFFSET get_thread_linear_name
     xor dx,dx
@@ -1796,80 +1784,6 @@ allocate_global_mem     PROC far
     pop ds
     ret
 allocate_global_mem     ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ALLOCATE_PAGE
-;
-;           DESCRIPTION:    Allocate a page in kernel memory
-;
-;           RETURNS:        ES          Selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_page_name      DB 'Allocate Page',0
-
-allocate_page   PROC far
-    push ds
-    push bx
-    push ecx
-    push edx
-;
-    mov eax,1000h
-    AllocateBigLinear
-    AllocateGdt
-    mov ecx,eax
-    CreateDataSelector32
-    mov es,bx
-;
-    pop edx
-    pop ecx
-    pop bx
-    pop ds
-    ret
-allocate_page   ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           FREE_PAGE
-;
-;           DESCRIPTION:    Free page and return physical address
-;
-;           PARAMETERS:         ES          Selector
-;                           
-;           RETURNS:        EAX         Physical address
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_page_name  DB 'Free Page',0
-
-free_page       PROC far
-    push ds
-    push bx
-    push edx
-    mov ax,gdt_sel
-    mov ds,ax
-    mov bx,es
-    mov edx,[bx+2]
-    rol edx,8
-    mov dl,[bx+7]
-    ror edx,8
-    mov ax,sys_page_sel
-    mov ds,ax
-    shr edx,10
-    xor eax,eax
-    xchg eax,[edx]
-    FreeMem
-    pop edx
-    pop bx
-    pop ds
-    ret
-free_page       Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

@@ -436,17 +436,6 @@ WriteThreadSegment	MACRO
 	OsGate write_thread_segment_nr
 					ENDM
 
-;	ES		SELECTOR
-AllocatePage	MACRO
-	OldOsGate allocate_page_nr
-					ENDM
-
-;	ES		SELECTOR
-;	EAX		PHYSICAL ADDRESS
-FreePage	MACRO
-	OldOsGate free_page_nr
-					ENDM
-
 ;	EAX		ANTAL BYTE
 ;	EDX		LINEAR BASE ADDRESS
 SetPageEmulate	MACRO
