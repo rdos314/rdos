@@ -381,27 +381,27 @@ RegisterSwapProc	MACRO
 ;	EDX		LINEAR ADDRESS
 ;	EAX		PAGE ENTRY
 GetPhysicalPage	MACRO
-	OldOsGate get_physical_page_nr
+	OsGate get_physical_page_nr
 					ENDM
 
 ;	EDX		LINEAR ADDRESS
 ;	EAX		PAGE ENTRY
 SetPhysicalPage	MACRO
-	OldOsGate set_physical_page_nr
+	OsGate set_physical_page_nr
 					ENDM
 
 ;	BX		TRèD
 ;	EDX		LINEAR ADDRESS
 ;	EAX		PAGE ENTRY
 GetThreadPhysicalPage	MACRO
-	OldOsGate get_thread_physical_page_nr
+	OsGate get_thread_physical_page_nr
 					ENDM
 
 ;	BX		TRèD
 ;	EDX		LINEAR ADDRESS
 ;	EAX		PAGE ENTRY
 SetThreadPhysicalPage	MACRO
-	OldOsGate set_thread_physical_page_nr
+	OsGate set_thread_physical_page_nr
 					ENDM
 
 ;	DX:ESI	ADDRESS TO READ
@@ -409,7 +409,7 @@ SetThreadPhysicalPage	MACRO
 ;	NC		VALID
 ;	AL		DATA OR ERROR REASON
 ReadThreadSelector	MACRO
-	OldOsGate read_thread_selector_nr
+	OsGate read_thread_selector_nr
 					ENDM
 
 ;	DX:ESI	ADDRESS TO WRITE
@@ -417,7 +417,7 @@ ReadThreadSelector	MACRO
 ;	NC		VALID
 ;	AL		DATA TO WRITE
 WriteThreadSelector	MACRO
-	OldOsGate write_thread_selector_nr
+	OsGate write_thread_selector_nr
 					ENDM
 
 ;	DX:ESI	ADDRESS TO READ
@@ -425,7 +425,7 @@ WriteThreadSelector	MACRO
 ;	NC		VALID
 ;	AL		DATA OR ERROR REASON
 ReadThreadSegment	MACRO
-	OldOsGate read_thread_segment_nr
+	OsGate read_thread_segment_nr
 					ENDM
 
 ;	DX:ESI	ADDRESS TO WRITE
@@ -433,7 +433,7 @@ ReadThreadSegment	MACRO
 ;	NC		VALID
 ;	AL		DATA TO WRITE
 WriteThreadSegment	MACRO
-	OldOsGate write_thread_segment_nr
+	OsGate write_thread_segment_nr
 					ENDM
 
 ;	ES		SELECTOR

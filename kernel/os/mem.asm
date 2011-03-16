@@ -321,25 +321,25 @@ init_mem    PROC near
     mov di,OFFSET read_thread_selector_name
     xor cl,cl
     mov ax,read_thread_selector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET write_thread_selector
     mov di,OFFSET write_thread_selector_name
     xor cl,cl
     mov ax,write_thread_selector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET read_thread_segment
     mov di,OFFSET read_thread_segment_name
     xor cl,cl
     mov ax,read_thread_segment_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET write_thread_segment
     mov di,OFFSET write_thread_segment_name
     xor cl,cl
     mov ax,write_thread_segment_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_page
     mov di,OFFSET allocate_page_name
@@ -3502,7 +3502,7 @@ read_thread_selector_done:
     pop ecx
     pop es
     pop ds
-    ret
+    retf32
 read_thread_selector    ENDP
 
 
@@ -3578,7 +3578,7 @@ write_thread_selector_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 write_thread_selector   ENDP
 
 
@@ -3817,7 +3817,7 @@ read_thread_segment_done:
     pop ecx
     pop es
     pop ds
-    ret
+    retf32
 read_thread_segment     ENDP
 
 
@@ -3895,7 +3895,7 @@ write_thread_segment_do:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 write_thread_segment    ENDP
 
 
