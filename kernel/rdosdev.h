@@ -80,10 +80,16 @@ void *RdosAllocateBigLocalMem(long size);
 void *RdosAllocateSmallLocalMem(long size);
 void *RdosAllocateSmallKernelMem(long size);
 
+void RdosFreeMem(int sel);
+
 long RdosAllocateBigGlobalLinear(long size);
 long RdosAllocateSmallGlobalLinear(long size);
+long RdosAllocateLocalLinear(long size);
+long RdosAllocateDebugLocalLinear(long size);
+long RdosAllocateVmLinear(long size);
 
-void RdosFreeMem(int sel);
+int RdosReserveLocalLinear(long linear, long size);
+
 void RdosFreeLinear(long linear, long size);
 
 void *RdosAllocateFixedSystemMem(int sel, long size);
@@ -358,6 +364,13 @@ void RdosCreateKernelProcess(
     parm [eax]  \
     value [dx eax];
 
+#pragma aux RdosFreeMem = \
+    "push es" \
+    "mov es,bx" \
+    UserGate_free_mem  \
+    "pop es" \
+    parm [ebx];
+
 #pragma aux RdosAllocateBigGlobalLinear = \
     OsGate_allocate_big_linear  \
     parm [eax]  \
@@ -368,12 +381,26 @@ void RdosCreateKernelProcess(
     parm [eax]  \
     value [edx];
 
-#pragma aux RdosFreeMem = \
-    "push es" \
-    "mov es,bx" \
-    UserGate_free_mem  \
-    "pop es" \
-    parm [ebx];
+#pragma aux RdosAllocateLocalLinear = \
+    OsGate_allocate_local_linear  \
+    parm [eax]  \
+    value [edx];
+
+#pragma aux RdosAllocateDebugLocalLinear = \
+    OsGate_allocate_debug_local_linear  \
+    parm [eax]  \
+    value [edx];
+
+#pragma aux RdosAllocateVmLinear = \
+    OsGate_allocate_debug_vm_linear  \
+    parm [eax]  \
+    value [edx];
+
+#pragma aux RdosReserveLocalLinear = \
+    OsGate_reserve_local_linear  \
+    CarryToBool \
+    parm [edx] [eax] \
+    value [eax];
 
 #pragma aux RdosFreeLinear = \
     OsGate_free_linear  \

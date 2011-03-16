@@ -491,50 +491,50 @@ AllocateBigMem	MACRO
 ;	EDX	LINEAR BASE ADDRESS
 ;	CX	ANTAL SIDOR
 AllocateBigLinear	MACRO
-	OldOsGate allocate_big_linear_nr
+	OsGate allocate_big_linear_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	EDX	LINEAR BASE ADDRESS
 AllocateSmallLinear	MACRO
-	OldOsGate allocate_small_linear_nr
+	OsGate allocate_small_linear_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	EDX	LINEAR BASE ADDRESS
 AllocateLocalLinear	MACRO
-	OldOsGate allocate_local_linear_nr
+	OsGate allocate_local_linear_nr
 					ENDM
 
 ;	EAX	Bytes
 ;	EDX	LINEAR BASE ADDRESS
 AllocateDebugLocalLinear	MACRO
-	OldOsGate allocate_debug_local_linear_nr
+	OsGate allocate_debug_local_linear_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	EDX	LINEAR BASE ADDRESS
 ReserveLocalLinear	MACRO
-	OldOsGate reserve_local_linear_nr
+	OsGate reserve_local_linear_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	EDX	LINEAR BASE ADDRESS
 AllocateVMLinear	MACRO
-	OldOsGate allocate_vm_linear_nr
+	OsGate allocate_vm_linear_nr
 					ENDM
 
 ;	ECX		SIZE
 ;	EDX		LINEAR BASE ADDRESS
 FreeLinear	MACRO
-	OldOsGate free_linear_nr
+	OsGate free_linear_nr
 					ENDM
 
 ;	EAX		NEW SIZE
 ;	ECX		OLD SIZE
 ;	EDX		LINEAR BASE ADDRESS
 ResizeLinear	MACRO
-	OldOsGate resize_linear_nr
+	OsGate resize_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES

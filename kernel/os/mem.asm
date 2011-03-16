@@ -225,13 +225,13 @@ init_mem    PROC near
     mov di,OFFSET allocate_big_linear_name
     xor cl,cl
     mov ax,allocate_big_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_small_linear
     mov di,OFFSET allocate_small_linear_name
     xor cl,cl
     mov ax,allocate_small_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_fixed_vm_linear
     mov di,OFFSET allocate_fixed_vm_linear_name
@@ -243,13 +243,13 @@ init_mem    PROC near
     mov di,OFFSET free_linear_name
     xor cl,cl
     mov ax,free_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET resize_linear
     mov di,OFFSET resize_linear_name
     xor cl,cl
     mov ax,resize_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET available_big_linear
     mov di,OFFSET available_big_linear_name
@@ -365,19 +365,19 @@ init_mem    PROC near
     mov di,OFFSET allocate_local_linear_name
     xor cl,cl
     mov ax,allocate_local_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_debug_local_linear
     mov di,OFFSET allocate_debug_local_linear_name
     xor cl,cl
     mov ax,allocate_debug_local_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET reserve_local_linear
     mov di,OFFSET reserve_local_linear_name
     xor cl,cl
     mov ax,reserve_local_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET available_local_linear
     mov di,OFFSET available_local_linear_name
@@ -395,7 +395,7 @@ init_mem    PROC near
     mov di,OFFSET allocate_vm_linear_name
     xor cl,cl
     mov ax,allocate_vm_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET available_vm_linear
     mov di,OFFSET available_vm_linear_name
@@ -642,7 +642,7 @@ allocate_global_mark:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 allocate_big_linear     ENDP
 
 
@@ -757,7 +757,7 @@ no_small_biggest_block:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 allocate_small_linear   ENDP
 
 
@@ -875,7 +875,7 @@ no_local_biggest_block:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 allocate_page_local_linear:
     dec eax
     and ax,0F000h
@@ -936,7 +936,7 @@ allocate_blocal_mark:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 allocate_local_linear   ENDP
 
 
@@ -1055,7 +1055,7 @@ no_debug_local_biggest_block:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 allocate_debug_page_local_linear:
     dec eax
     and ax,0F000h
@@ -1120,7 +1120,7 @@ allocate_debug_blocal_mark:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 allocate_debug_local_linear     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1204,7 +1204,7 @@ reserve_local_linear_done:
     pop ebx
     pop eax
     pop ds
-    ret
+    retf32
 reserve_local_linear    Endp
 
 
@@ -1513,7 +1513,7 @@ no_vm_biggest_block:
     pop bx
     pop es
     pop ds
-    ret
+    retf32
 allocate_vm_linear      ENDP
 
 
@@ -2491,7 +2491,7 @@ free_linear_clear:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 free_linear     ENDP
 
 
@@ -2548,7 +2548,7 @@ resize_mem_error:
 resize_mem_done:
     pop esi
     pop ds
-    ret
+    retf32
 resize_linear   ENDP
 
 
