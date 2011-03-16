@@ -556,32 +556,32 @@ UsedLocalLinearThread	MACRO
 ;	BX		SELECTOR IN
 ;	ES		SELECTOR UT
 AllocateFixedProcessMem	MACRO
-	OldOsGate allocate_fixed_process_mem_nr
+	OsGate allocate_fixed_process_mem_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	BX		SELECTOR IN
 ;	ES		SELECTOR UT
 AllocateFixedSystemMem	MACRO
-	OldOsGate allocate_fixed_system_mem_nr
+	OsGate allocate_fixed_system_mem_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	EDX		LINJŽR ADDRESS
 AllocateProcessLinear	MACRO
-	OldOsGate allocate_process_linear_nr
+	OsGate allocate_process_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	EDX		LINJŽR ADDRESS
 AllocateSystemLinear	MACRO
-	OldOsGate allocate_system_linear_nr
+	OsGate allocate_system_linear_nr
 					ENDM
 
 ;	EAX		ANTAL BYTES
 ;	EDX		LINJŽR ADDRESS
 AllocateFixedVMLinear	MACRO
-	OldOsGate allocate_fixed_vm_linear_nr
+	OsGate allocate_fixed_vm_linear_nr
 					ENDM
 
 ;;;;;;;;;;;;; PHYSICAL MEMORY MANAGEMENT ;;;;;;;;;;

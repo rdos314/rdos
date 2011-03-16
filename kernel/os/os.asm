@@ -50,7 +50,7 @@ ENDIF
 
     extrn local_get_selector_base_size:near
 
-    extrn allocate_fixed_system_mem:near
+    extrn local_allocate_fixed_system_mem:near
 
     extrn enter_code_patch:near
     extrn leave_code_patch:near
@@ -87,8 +87,7 @@ init_osgate     PROC near
 ;
     mov bx,osgate_sel
     mov eax,osgate_entries SHL 4
-    push cs
-    call allocate_fixed_system_mem
+    call local_allocate_fixed_system_mem
     mov cx,osgate_entries SHL 4
     xor al,al
     xor di,di

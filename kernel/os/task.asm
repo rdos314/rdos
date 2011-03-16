@@ -730,8 +730,7 @@ ENDIF
 
     public init_task
 
-    extrn allocate_fixed_system_mem:near
-    extrn allocate_fixed_process_mem:near
+    extrn local_allocate_fixed_system_mem:near
 
 init_task       PROC near
     pusha
@@ -750,8 +749,7 @@ init_task       PROC near
 init_tlb_done:
     mov bx,task_sel
     mov eax,OFFSET task_seg_size
-    push cs
-    call allocate_fixed_system_mem
+    call local_allocate_fixed_system_mem
 ;
     mov ax,task_sel
     mov ds,ax

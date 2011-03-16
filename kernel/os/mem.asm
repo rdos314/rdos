@@ -237,7 +237,7 @@ init_mem    PROC near
     mov di,OFFSET allocate_fixed_vm_linear_name
     xor cl,cl
     mov ax,allocate_fixed_vm_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET free_linear
     mov di,OFFSET free_linear_name
@@ -297,25 +297,25 @@ init_mem    PROC near
     mov di,OFFSET allocate_process_linear_name
     xor cl,cl
     mov ax,allocate_process_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_system_linear
     mov di,OFFSET allocate_system_linear_name
     xor cl,cl
     mov ax,allocate_system_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_fixed_process_mem
     mov di,OFFSET allocate_fixed_process_mem_name
     xor cl,cl
     mov ax,allocate_fixed_process_mem_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_fixed_system_mem
     mov di,OFFSET allocate_fixed_system_mem_name
     xor cl,cl
     mov ax,allocate_fixed_system_mem_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET read_thread_selector
     mov di,OFFSET read_thread_selector_name
@@ -3019,7 +3019,7 @@ allocate_process_linear PROC far
     mov edx,ds:process_alloc_base
     add ds:process_alloc_base,eax
     pop ds
-    ret
+    retf32
 allocate_process_linear ENDP
 
 
@@ -3038,14 +3038,14 @@ allocate_process_linear ENDP
 
 allocate_system_linear_name     DB 'Allocate System Linear',0
 
-allocate_system_linear  PROC near
+allocate_system_linear  PROC far
     push ds
     mov dx,mem_sel
     mov ds,dx
     mov edx,ds:system_alloc_base
     add ds:system_alloc_base,eax
     pop ds
-    retf
+    retf32
 allocate_system_linear  ENDP
 
 
@@ -3076,9 +3076,78 @@ allocate_fixed_vm_linear    PROC near
     add ds:fixed_vm_base,eax
     pop eax
     pop ds
-    retf
+    retf32
 allocate_fixed_vm_linear    ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           Local_ALLOCATE_FIXED_PROCESS_MEM
+;
+;           DESCRIPTION:    Allocate fixed process memory
+;
+;           PARAMETERS:         EAX         Number of bytes
+;                           BX          Selector
+;                           
+;           RETURNS:        ES          Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public local_allocate_fixed_process_mem
+
+local_allocate_fixed_process_mem      PROC near
+    push ds
+    push ecx
+    push edx
+;
+    AllocateProcessLinear
+    mov ecx,eax
+    CreateDataSelector16
+    mov es,bx
+;
+    pop edx
+    pop ecx
+    pop ds
+    ret
+local_allocate_fixed_process_mem      ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LOCAL_ALLOCATE_FIXED_SYSTEM_MEM
+;
+;           DESCRIPTION:    Allocate fixed system memory
+;
+;           PARAMETERS:         EAX         Number of bytes
+;                           BX          Selector
+;
+;           RETURNS:        ES          Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public local_allocate_fixed_system_mem
+
+local_allocate_fixed_system_mem       PROC near
+    push ds
+    push ecx
+    push edx
+;
+    mov dx,mem_sel
+    mov ds,dx
+    mov edx,ds:system_alloc_base
+    add ds:system_alloc_base,eax
+;
+    mov ecx,eax
+    call local_create_data_sel16
+    mov es,bx
+;
+    pop edx
+    pop ecx
+    pop ds
+    ret
+local_allocate_fixed_system_mem       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3096,8 +3165,6 @@ allocate_fixed_vm_linear    ENDP
 
 allocate_fixed_process_mem_name DB 'Allocate Fixed Process Mem',0
 
-    public allocate_fixed_process_mem
-
 allocate_fixed_process_mem      PROC far
     push ds
     push ecx
@@ -3111,7 +3178,7 @@ allocate_fixed_process_mem      PROC far
     pop edx
     pop ecx
     pop ds
-    ret
+    retf32
 allocate_fixed_process_mem      ENDP
 
 
@@ -3131,15 +3198,16 @@ allocate_fixed_process_mem      ENDP
 
 allocate_fixed_system_mem_name  DB 'Allocate Fixed System Mem',0
 
-    public allocate_fixed_system_mem
-
 allocate_fixed_system_mem       PROC far
     push ds
     push ecx
     push edx
 ;
-    push cs
-    call allocate_system_linear
+    mov dx,mem_sel
+    mov ds,dx
+    mov edx,ds:system_alloc_base
+    add ds:system_alloc_base,eax
+;
     mov ecx,eax
     call local_create_data_sel16
     mov es,bx
@@ -3147,7 +3215,7 @@ allocate_fixed_system_mem       PROC far
     pop edx
     pop ecx
     pop ds
-    ret
+    retf32
 allocate_fixed_system_mem       ENDP
 
 

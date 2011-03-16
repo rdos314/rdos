@@ -58,7 +58,7 @@ ENDIF
 
     extrn local_get_selector_base_size:near
 
-    extrn allocate_fixed_system_mem:near
+    extrn local_allocate_fixed_system_mem:near
 
     extrn translate_segment:near
     extrn translate_selector:near
@@ -87,8 +87,7 @@ init_usergate   PROC near
 ;    
     mov bx,usergate_sel
     mov eax,usergate_entries SHL 5
-    push cs
-    call allocate_fixed_system_mem
+    call local_allocate_fixed_system_mem
     xor al,al
     xor di,di
     mov cx,usergate_entries SHL 5
