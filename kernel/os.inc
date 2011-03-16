@@ -588,7 +588,7 @@ AllocateFixedVMLinear	MACRO
 
 ;	EAX		FYSISK ADDRESS
 AllocatePhysical	MACRO
-	OldOsGate allocate_physical_nr
+	OsGate allocate_physical_nr
 					ENDM
 
 ;	EAX		FYSISK ADDRESS
@@ -598,7 +598,7 @@ AllocateDmaPhysical	MACRO
 
 ;	EAX		FYSISK ADDRESS
 FreePhysical	MACRO
-	OldOsGate free_physical_nr
+	OsGate free_physical_nr
 					ENDM
 
 ;	IN  ECX		Number of pages

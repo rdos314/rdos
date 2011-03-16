@@ -209,12 +209,12 @@ init_physical_gates     PROC near
     mov edi,OFFSET free_physical_name
     xor cl,cl
     mov ax,free_physical_nr
-    RegisterOldOsGate
+    RegisterOsGate
     mov esi,OFFSET allocate_physical
     mov edi,OFFSET allocate_physical_name
     xor cl,cl
     mov ax,allocate_physical_nr
-    RegisterOldOsGate
+    RegisterOsGate
     mov esi,OFFSET allocate_dma_physical
     mov edi,OFFSET allocate_dma_physical_name
     xor cl,cl
@@ -254,7 +254,7 @@ init_physical_gates     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocatePhysical
+;           NAME:           LocalAllocatePhysical
 ;
 ;           DESCRIPTION:    Allocate physical page
 ;
@@ -262,11 +262,9 @@ init_physical_gates     ENDP
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_physical_name  DB 'Allocate Physical Memory',0
+    public local_allocate_physical
 
-    public allocate_physical
-
-allocate_physical       PROC far
+local_allocate_physical       PROC near
     push ds
     push es
     push ebx
@@ -307,6 +305,24 @@ allocate_mark:
     pop es
     pop ds
     ret
+local_allocate_physical       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocatePhysical
+;
+;           DESCRIPTION:    Allocate physical page
+;
+;           PARAMETERS:         EAX         Address
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_physical_name  DB 'Allocate Physical Memory',0
+
+allocate_physical       PROC far
+    call local_allocate_physical
+    retf32
 allocate_physical       ENDP
 
 
@@ -358,7 +374,7 @@ allocate_dma_physical   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreePhysical
+;           NAME:           LocalFreePhysical
 ;
 ;           DESCRIPTION:    Free physical page
 ;
@@ -367,11 +383,9 @@ allocate_dma_physical   ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_physical_name      DB 'Free Physical Memory',0
+    public local_free_physical
 
-    public free_physical
-
-free_physical   PROC far
+local_free_physical   PROC near
     push ds
     push es
     push ebx
@@ -412,6 +426,25 @@ free_link_page:
     pop es
     pop ds  
     ret
+local_free_physical   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreePhysical
+;
+;           DESCRIPTION:    Free physical page
+;
+;           PARAMETERS:         EAX         Address
+;                           
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_physical_name      DB 'Free Physical Memory',0
+
+free_physical   PROC far
+    call local_free_physical
+    retf32
 free_physical   ENDP
 
 

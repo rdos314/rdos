@@ -37,8 +37,8 @@ INCLUDE system.inc
     extrn local_create_data_sel16:near
     extrn local_create_int_gate_sel:near
 
-    extrn allocate_physical:near
-    extrn free_physical:near
+    extrn local_allocate_physical:near
+    extrn local_free_physical:near
     extrn AllocateRam:near
     extrn prot_exception:near
     
@@ -640,8 +640,7 @@ sys_dir_fault_user      Proc near
     shr eax,20
     and ax,0FFCh
     mov bx,ax
-    push cs
-    call allocate_physical
+    call local_allocate_physical
     mov al,7
     mov [bx],eax    
     pop eax
@@ -678,8 +677,7 @@ sys_dir_fault_system    Proc near
     shr eax,20
     and ax,0FFCh
     mov bx,ax
-    push cs
-    call allocate_physical
+    call local_allocate_physical
     mov al,3
     mov [bx],eax    
     pop eax
@@ -773,8 +771,7 @@ process_dir_fault_local Proc near
     shr eax,20
     and ax,0FFCh
     mov bx,ax
-    push cs
-    call allocate_physical
+    call local_allocate_physical
     mov al,7
     mov [bx],eax    
     pop eax
@@ -930,8 +927,7 @@ page_fault_user_invalid:
     jmp page_fault_error
 
 page_fault_user_normal:
-    push cs
-    call allocate_physical
+    call local_allocate_physical
     mov al,7
     mov [ebx],eax
 page_fault_user_retry:
@@ -967,8 +963,7 @@ page_fault_global       PROC near
     jnz page_fault_global_retry
 ;
     push eax
-    push cs
-    call allocate_physical
+    call local_allocate_physical
     or ax,107h
     mov [ebx],eax
     pop eax
@@ -1006,8 +1001,7 @@ page_fault_system       PROC near
     jnz page_fault_system_retry
 ;
     push eax
-    push cs
-    call allocate_physical
+    call local_allocate_physical
     mov al,07h
     mov [ebx],eax
     pop eax
@@ -1203,8 +1197,7 @@ hook_pagef_mark:
     test al,1
     jz hook_pagef_do
 ;
-    push cs
-    call free_physical
+    call local_free_physical
     mov eax,cr3
     mov cr3,eax
     mov eax,2
@@ -1501,8 +1494,7 @@ set_inv_mark:
     jz set_inv_free
 ;
     push ax
-    push cs
-    call free_physical
+    call local_free_physical
     pop ax
     not al
     and al,2
