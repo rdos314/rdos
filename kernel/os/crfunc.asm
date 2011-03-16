@@ -225,7 +225,7 @@ LocalSetPhysicalPage Endp
 ;
 ;       NAME:           LocalOsGate
 ;
-;       DESCRIPTION:    Translate a 16-bit gate
+;       DESCRIPTION:    Translate an os gate
 ;
 ;       PARAMETERS:     DS:EBX          Fault address
 ;                                               
@@ -233,24 +233,32 @@ LocalSetPhysicalPage Endp
 
     public LocalOsGate
 
-LocalOsGate PROC near
+LocalOsGate:
+    sub sp,8
+;
     push es
     push ecx
     push edx
-    push di
+    push edi
 ;
-    mov al,ds:[ebx]
-    cmp al,66h
-    je do16_has_ov
+    mov ax,[bp].vm_bp
+    mov [bp-12],ax          ; save org bp to pm_call
 ;
-    mov di,ds:[ebx+1]
-    jmp do16_ov_done
-
-do16_has_ov:
-    mov di,ds:[ebx+2]
-
-do16_ov_done:    
-    shl di,4
+    mov eax,[bp].vm_eax
+    mov [bp-16],eax         ; save org eax
+;    
+    mov eax,[bp].vm_eflags
+    push eax
+    mov eax,[bp].vm_cs
+    mov [bp+14],eax         ; old eflags
+    mov eax,[bp].vm_eip
+    add eax,9
+    mov [bp+10],eax         ; old cs
+    pop eax
+    mov [bp+6],eax          ; old eip
+;    
+    mov edi,ds:[ebx+3]
+    shl edi,4
     mov ax,osgate_sel
     mov es,ax
 ;
@@ -258,56 +266,35 @@ do16_ov_done:
     mov bx,ds
     call LocalGetSelectorBaseSize
     pop ebx
-    add     ebx,edx
+    add ebx,edx
     mov ax,flat_sel
     mov ds,ax
 ;
-    mov ax,[bp].vm_eflags
-    mov [bp+12],ax
-    mov ax,[bp].vm_cs
-    mov [bp+16],ax
-    mov ax,[bp].vm_eip
-    add ax,8
-    mov [bp+14],ax  
+    mov ax,es:[edi].ogate_sel
+    mov [bp+2],ax           ; old err
+    mov eax,es:[edi].ogate_offset
+    mov [bp-2],eax
 ;
-    mov ax,es:[di].ogate_sel
-    cmp ax,[bp+16]
-    je do16_direct
+    mov eax,es:[edi].ogate_offset
+    xchg eax,ds:[ebx+3]
+    mov ax,es:[edi].ogate_sel
+    xchg ax,ds:[ebx+7]
+    mov al,90h
+    xchg al,ds:[ebx]        
 ;
-    mov ds:[ebx+3],ax
-    mov [bp+10],ax
-    mov eax,es:[di].ogate_offset
-    mov ds:[ebx+1],ax
-    mov [bp+8],ax
-    mov byte ptr ds:[ebx],9Ah
-    mov byte ptr ds:[ebx+5],90h
-    mov word ptr ds:[ebx+6],9090h
-    jmp do16_direct_do
-
-do16_direct:
-    mov [bp+10],ax
-    mov eax,es:[di].ogate_offset
-    mov [bp+8],ax
-    sub ax,[bp+14]
-    add ax,4
-    mov ds:[ebx+2],ax
-    mov word ptr ds:[ebx],0E80Eh
-    mov dword ptr ds:[ebx+4],90909090h
-
-do16_direct_do:
-    pop di
+    pop edi
     pop edx
     pop ecx
     pop es
 ;
     mov ds,[bp].pm_ds
-    mov eax,[bp].vm_eax
+    mov eax,[bp-16]
     mov ebx,[bp].vm_ebx
+    sub bp,12
     mov sp,bp
     pop bp
-    add sp,6
-    iret
-LocalOsGate ENDP
+    add sp,8
+    iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

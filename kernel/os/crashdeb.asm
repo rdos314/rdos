@@ -1312,8 +1312,8 @@ usercall_tab16:
 suct00   DW 0
 suct01   DW OFFSET LocalUserGate
 suct02   DW 0
-suct03   DW OFFSET LocalOsGate
-suct04   DW OFFSET LocalOldOsGate
+suct03   DW OFFSET LocalOldOsGate
+suct04   DW 0
 suct05   DW 0
 suct06   DW 0
 suct07   DW 0
@@ -1332,7 +1332,21 @@ cint13:
     mov ds,[bp].vm_cs
     mov ebx,[bp].vm_eip
     mov al,[ebx]
-;    
+;
+    cmp al,67h
+    jne c13_not_oscall
+;
+    mov al,[ebx+2]
+    cmp al,9Ah
+    jne c13_default
+;
+    mov ax,[ebx+7]
+    cmp ax,2
+    jne c13_default
+;
+    jmp LocalOsGate
+
+c13_not_oscall:        
     cmp al,66h
     jne c13_default
 ;

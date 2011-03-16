@@ -352,22 +352,22 @@ CreateTrapGateSelector	MACRO
 ;	NC	EAX	SEGEMENT
 ;	CY	EAX = F000
 SelectorToSegment	MACRO
-	OldOsGate selector_to_segment_nr
+	OsGate selector_to_segment_nr
 					ENDM
 
 ;	BX	SEGMENT / SELECTOR
 SegmentToSelector	MACRO
-	OldOsGate segment_to_selector_nr
+	OsGate segment_to_selector_nr
 					ENDM
 
 ;	ES		SELECTOR
 FreeSelector	MACRO
-	OldOsGate free_selector_nr
+	OsGate free_selector_nr
 						ENDM
 
 ;	BP		STACK WITH EXCEPTION INFO
 SegmentNotPresent	MACRO
-	OldOsGate segment_not_present_nr
+	OsGate segment_not_present_nr
 					ENDM
 
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;

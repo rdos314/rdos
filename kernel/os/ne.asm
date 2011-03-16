@@ -597,7 +597,7 @@ demand_load_end:
 	pop fs
 	pop es
 	pop ds
-	ret
+	retf32
 demand_load	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
