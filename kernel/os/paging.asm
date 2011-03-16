@@ -1227,7 +1227,7 @@ hook_page_done:
     pop ecx
     pop eax
     pop ds
-    ret
+    retf32
 hook_page       ENDP
 
 
@@ -1287,7 +1287,7 @@ unhook_pagef_done:
     pop ecx
     pop eax
     pop ds
-    ret
+    retf32
 unhook_page     ENDP
 
 
@@ -1331,70 +1331,8 @@ set_emul_mark:
     pop ecx
     pop eax
     pop ds
-    ret
+    retf32
 set_page_emulate    ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SET_PAGE_KERNEL 
-;
-;           DESCRIPTION:    Set page access to kernel only
-;
-;           PARAMETERS:         EAX         Size
-;                           EDX         Linear base
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_page_kernel_name    DB 'Set Page Kernel',0
-
-set_page_kernel PROC far
-    push ds
-    push eax
-    push ecx
-    push edx
-;
-    mov cx,process_page_sel
-    mov ds,cx
-;
-    or eax,eax
-    jz set_kernel_done
-;
-    mov ecx,eax
-    add ecx,edx
-    and dx,0F000h
-    dec ecx
-    and cx,0F000h
-    add ecx,1000h
-    sub ecx,edx
-    shr edx,10
-    shr ecx,12
-
-set_kernel_mark:
-    mov eax,[edx]
-    test al,1
-    jnz set_kernel_allocated
-    push cs
-    call allocate_physical
-    and ax,0F000h
-    or ax,803h
-    mov [edx],eax
-set_kernel_allocated:
-    mov eax,[edx]
-    and al,NOT 4
-    mov [edx],eax
-    add edx,4
-    loop set_kernel_mark
-
-set_kernel_done:
-    pop edx
-    pop ecx
-    pop eax
-    pop ds
-    ret
-set_page_kernel ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1814,13 +1752,7 @@ init_paging_gates       PROC near
     mov di,OFFSET set_page_emulate_name
     xor cl,cl
     mov ax,set_page_emulate_nr
-    RegisterOldOsGate
-;
-    mov si,OFFSET set_page_kernel
-    mov di,OFFSET set_page_kernel_name
-    xor cl,cl
-    mov ax,set_page_kernel_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET free_v86
     mov di,OFFSET free_v86_name

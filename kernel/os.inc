@@ -439,58 +439,52 @@ WriteThreadSegment	MACRO
 ;	EAX		ANTAL BYTE
 ;	EDX		LINEAR BASE ADDRESS
 SetPageEmulate	MACRO
-	OldOsGate set_page_emulate_nr
-					ENDM
-
-;	EAX		ANTAL BYTE
-;	EDX		LINEAR BASE ADDRESS
-SetPageKernel	MACRO
-	OldOsGate set_page_kernel_nr
+	OsGate set_page_emulate_nr
 					ENDM
 
 ;	EAX		ANTAL BYTE
 ;	EDX		LINEAR BASE ADDRESS
 ;	ES:DI	CALLBACK ROUTINE
 HookPage	MACRO
-	OldOsGate hook_page_nr
+	OsGate hook_page_nr
 					ENDM
 
 ;	EAX		ANTAL BYTE
 ;	EDX		LINEAR BASE ADDRESS
 UnhookPage	MACRO
-	OldOsGate unhook_page_nr
+	OsGate unhook_page_nr
 					ENDM
 
 ;;;;;;;;;;; LINEAR MEMORY MANAGEMENT ;;;;;;;;
 
-;	EAX		ANTAL BYTES
+;	EAX		Byte count
 ;	ES		SELECTOR
 AllocateGlobalMem	MACRO
-	OldOsGate allocate_global_mem_nr
+	OsGate allocate_global_mem_nr
 					ENDM
 
-;	EAX		ANTAL BYTES
+;	EAX		Byte count
 ;	ES		SELECTOR
 AllocateSmallGlobalMem	MACRO
-	OldOsGate allocate_small_global_mem_nr
+	OsGate allocate_small_global_mem_nr
 					ENDM
 
-;	EAX	ANTAL BYTE
+;	EAX	Byte count
 ;	ES	LINEAR BASE ADDRESS
 AllocateSmallMem	MACRO
-	OldOsGate allocate_small_mem_nr
+	OsGate allocate_small_mem_nr
 					ENDM
 
-;	EAX	ANTAL BYTE
+;	EAX	Byte count
 ;	ES	LDT SELECTOR WITH KERNEL ONLY ACCESS
 AllocateSmallKernelMem	MACRO
-	OldOsGate allocate_small_kernel_mem_nr
+	OsGate allocate_small_kernel_mem_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE
 ;	ES	LINEAR BASE ADDRESS
 AllocateBigMem	MACRO
-	OldOsGate allocate_big_mem_nr
+	OsGate allocate_big_mem_nr
 					ENDM
 
 ;	EAX	ANTAL BYTE

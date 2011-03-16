@@ -69,8 +69,16 @@ void RdosSetThreadPhysicalPage(int thread, long linear, long page);
 int RdosAllocateBigGlobalSelector(long size);
 int RdosAllocateSmallGlobalSelector(long size);
 
+int RdosAllocateBigLocalSelector(long size);
+int RdosAllocateSmallLocalSelector(long size);
+int RdosAllocateSmallKernelSelector(long size);
+
 void *RdosAllocateBigGlobalMem(long size);
 void *RdosAllocateSmallGlobalMem(long size);
+
+void *RdosAllocateBigLocalMem(long size);
+void *RdosAllocateSmallLocalMem(long size);
+void *RdosAllocateSmallKernelMem(long size);
 
 long RdosAllocateBigGlobalLinear(long size);
 long RdosAllocateSmallGlobalLinear(long size);
@@ -281,6 +289,30 @@ void RdosCreateKernelProcess(
     parm [eax]  \
     value [ebx];
 
+#pragma aux RdosAllocateBigLocalSelector = \
+    "push es" \
+    OsGate_allocate_big_mem  \
+    "mov ebx,es" \
+    "pop es" \
+    parm [eax]  \
+    value [ebx];
+
+#pragma aux RdosAllocateSmallLocalSelector = \
+    "push es" \
+    OsGate_allocate_small_mem  \
+    "mov ebx,es" \
+    "pop es" \
+    parm [eax]  \
+    value [ebx];
+
+#pragma aux RdosAllocateSmallKernelSelector = \
+    "push es" \
+    OsGate_allocate_small_kernel_mem  \
+    "mov ebx,es" \
+    "pop es" \
+    parm [eax]  \
+    value [ebx];
+
 #pragma aux RdosAllocateBigGlobalMem = \
     "push es" \
     OsGate_allocate_global_mem  \
@@ -293,6 +325,33 @@ void RdosCreateKernelProcess(
 #pragma aux RdosAllocateSmallGlobalMem = \
     "push es" \
     OsGate_allocate_small_global_mem  \
+    "mov dx,es" \
+    "xor eax,eax" \
+    "pop es" \
+    parm [eax]  \
+    value [dx eax];
+
+#pragma aux RdosAllocateBigLocalMem = \
+    "push es" \
+    OsGate_allocate_big_mem  \
+    "mov dx,es" \
+    "xor eax,eax" \
+    "pop es" \
+    parm [eax]  \
+    value [dx eax];
+
+#pragma aux RdosAllocateSmallLocalMem = \
+    "push es" \
+    OsGate_allocate_small_mem  \
+    "mov dx,es" \
+    "xor eax,eax" \
+    "pop es" \
+    parm [eax]  \
+    value [dx eax];
+
+#pragma aux RdosAllocateSmallKernelMem = \
+    "push es" \
+    OsGate_allocate_small_kernel_mem  \
     "mov dx,es" \
     "xor eax,eax" \
     "pop es" \

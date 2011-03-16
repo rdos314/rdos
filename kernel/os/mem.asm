@@ -189,31 +189,31 @@ init_mem    PROC near
     mov di,OFFSET allocate_global_name
     xor cl,cl
     mov ax,allocate_global_mem_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_small_global_mem
     mov di,OFFSET allocate_small_global_name
     xor cl,cl
     mov ax,allocate_small_global_mem_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_small_mem
     mov di,OFFSET allocate_small_mem_name
     xor cl,cl
     mov ax,allocate_small_mem_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_small_kernel_mem
     mov di,OFFSET allocate_small_kernel_mem_name
     xor cl,cl
     mov ax,allocate_small_kernel_mem_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET allocate_big_mem
     mov di,OFFSET allocate_big_mem_name
     xor cl,cl
     mov ax,allocate_big_mem_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET free_mem
     mov di,OFFSET free_name
@@ -1782,7 +1782,7 @@ allocate_global_mem     PROC far
     pop ecx
     pop bx
     pop ds
-    ret
+    retf32
 allocate_global_mem     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1824,7 +1824,7 @@ alloc_small_g_not_page:
     pop bx
     pop eax
     pop ds
-    ret
+    retf32
 allocate_small_global_mem       ENDP
 
 
@@ -2610,7 +2610,7 @@ alloc_small_big_seg_ok:
     pop bx
     pop eax
     pop ds
-    ret
+    retf32
 allocate_small_mem      ENDP
 
 
@@ -2648,7 +2648,7 @@ allocate_small_kernel_mem       PROC far
     pop bx
     pop eax
     pop ds
-    ret
+    retf32
 allocate_small_kernel_mem       ENDP
 
 
@@ -2703,7 +2703,7 @@ alloc_big_big_seg_ok:
     pop bx
     pop eax
     pop ds
-    ret
+    retf32
 allocate_big_mem    ENDP
 
 

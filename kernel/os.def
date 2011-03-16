@@ -42,7 +42,6 @@ write_thread_selector_nr	= 38
 read_thread_segment_nr		= 39
 write_thread_segment_nr		= 40
 set_page_emulate_nr			= 43
-set_page_kernel_nr			= 44
 hook_page_nr				= 45
 unhook_page_nr				= 46
 
