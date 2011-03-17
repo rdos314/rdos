@@ -1066,13 +1066,13 @@ proc_init:
     mov di,OFFSET enter_section_name
     xor cl,cl
     mov ax,enter_section_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET leave_section
     mov di,OFFSET leave_section_name
     xor cl,cl
     mov ax,leave_section_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET get_debug_thread_sel
     mov di,OFFSET get_debug_thread_sel_name
@@ -5715,7 +5715,7 @@ ecsDs:
 ;
     pop dx
     pop ax
-    ret
+    retf32
 enter_section   ENDP
 
     
@@ -5804,7 +5804,7 @@ lcsDs:
 ;
     pop dx
     pop ax
-    ret
+    retf32
 leave_section   ENDP
 
     

@@ -711,6 +711,135 @@ SignalWait	MACRO
 	OsGate signal_wait_nr
 					ENDM
 
+;;;;;;;;;;; Critical section ;;;;;;;;;;;;;;;;
+
+InitSection     MACRO section
+	mov section.cs_value,0
+	mov section.cs_list,0
+						ENDM
+
+EnterSection    MACRO section
+	LOCAL enter_section_donep
+	pushf
+	lock sub section.cs_value,1
+	jc enter_section_donep
+	push esi
+	lea esi,section
+	OsGate enter_section_nr
+	pop esi
+enter_section_donep:
+	popf
+						ENDM
+
+LeaveSection    MACRO section
+	LOCAL leave_section_donep
+	pushf
+	lock add section.cs_value,1
+	jc leave_section_donep
+	push esi
+	lea esi,section
+	OsGate leave_section_nr
+	pop esi
+leave_section_donep:
+	popf
+						ENDM
+
+InitReadWriteSection    MACRO section
+	mov section.ssync_value,0
+	mov section.ssync_list,0
+	mov section.sread_value,0
+	mov section.swrite_value,0
+	mov section.swrite_list,0
+						ENDM
+
+EnterReadSection        MACRO section
+	LOCAL enter_sync_ok,enter_read_ok,enter_read_done
+	pushf
+	cli
+	lock sub section.ssync_value,1
+	jc enter_sync_ok
+	push esi
+	mov esi,OFFSET section.ssync_value
+	OsGate enter_section_nr
+	pop esi
+enter_sync_ok:
+	lock sub section.sread_value,1
+	jnc enter_read_ok
+	lock sub section.swrite_value,1
+	jc enter_read_ok
+	push esi
+	mov esi,OFFSET section.swrite_value
+	OsGate enter_section_nr
+	pop esi
+enter_read_ok:
+	lock add section.ssync_value,1
+	jc enter_read_done
+	push esi
+	mov esi,OFFSET section.ssync_value
+	OsGate leave_section_nr
+	pop esi
+enter_read_done:
+	popf
+						ENDM
+
+LeaveReadSection        MACRO section
+	LOCAL leave_sync_ok,leave_read_ok,leave_read_done
+	pushf
+	cli
+	lock sub section.ssync_value,1
+	jc leave_sync_ok
+	push esi
+	mov esi,OFFSET section.ssync_value
+	OsGate enter_section_nr
+	pop esi
+leave_sync_ok:
+	lock add section.sread_value,1
+	jnc leave_read_ok
+	lock add section.swrite_value,1
+	jc leave_read_ok
+	push esi
+	mov esi,OFFSET section.swrite_value
+	OsGate leave_section_nr
+	pop esi
+leave_read_ok:
+	lock add section.ssync_value,1
+	jc leave_read_done
+	push esi
+	mov esi,OFFSET section.ssync_value
+	OsGate leave_section_nr
+	pop esi
+leave_read_done:
+	popf
+						ENDM
+
+EnterWriteSection       MACRO section
+	LOCAL enter_section_done
+	pushf
+	cli
+	lock sub section.swrite_value,1
+	jc enter_section_done
+	push esi
+	mov esi,OFFSET section.swrite_value
+	OsGate enter_section_nr
+	pop esi
+enter_section_done:
+	popf
+						ENDM
+
+LeaveWriteSection       MACRO section
+	LOCAL leave_section_done
+	pushf
+	cli
+	lock add section.swrite_value,1
+	jc leave_section_done
+	push esi
+	mov esi,OFFSET section.swrite_value
+	OsGate leave_section_nr
+	pop esi
+leave_section_done:
+	popf
+						ENDM
+
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 ;	ES:DI   Swap callback
@@ -781,133 +910,6 @@ Wake	MACRO
 Sleep	MACRO
 	OldOsGate sleep_thread_nr
 					ENDM
-
-InitSection     MACRO section
-	mov section.cs_value,0
-	mov section.cs_list,0
-						ENDM
-
-EnterSection    MACRO section
-	LOCAL enter_section_donep
-	pushf
-	lock sub section.cs_value,1
-	jc enter_section_donep
-	push esi
-	lea esi,section
-	OldOsGate enter_section_nr
-	pop esi
-enter_section_donep:
-	popf
-						ENDM
-
-LeaveSection    MACRO section
-	LOCAL leave_section_donep
-	pushf
-	lock add section.cs_value,1
-	jc leave_section_donep
-	push esi
-	lea esi,section
-	OldOsGate leave_section_nr
-	pop esi
-leave_section_donep:
-	popf
-						ENDM
-
-InitReadWriteSection    MACRO section
-	mov section.ssync_value,0
-	mov section.ssync_list,0
-	mov section.sread_value,0
-	mov section.swrite_value,0
-	mov section.swrite_list,0
-						ENDM
-
-EnterReadSection        MACRO section
-	LOCAL enter_sync_ok,enter_read_ok,enter_read_done
-	pushf
-	cli
-	lock sub section.ssync_value,1
-	jc enter_sync_ok
-	push esi
-	mov esi,OFFSET section.ssync_value
-	OldOsGate enter_section_nr
-	pop esi
-enter_sync_ok:
-	lock sub section.sread_value,1
-	jnc enter_read_ok
-	lock sub section.swrite_value,1
-	jc enter_read_ok
-	push esi
-	mov esi,OFFSET section.swrite_value
-	OldOsGate enter_section_nr
-	pop esi
-enter_read_ok:
-	lock add section.ssync_value,1
-	jc enter_read_done
-	push esi
-	mov esi,OFFSET section.ssync_value
-	OldOsGate leave_section_nr
-	pop esi
-enter_read_done:
-	popf
-						ENDM
-
-LeaveReadSection        MACRO section
-	LOCAL leave_sync_ok,leave_read_ok,leave_read_done
-	pushf
-	cli
-	lock sub section.ssync_value,1
-	jc leave_sync_ok
-	push esi
-	mov esi,OFFSET section.ssync_value
-	OldOsGate enter_section_nr
-	pop esi
-leave_sync_ok:
-	lock add section.sread_value,1
-	jnc leave_read_ok
-	lock add section.swrite_value,1
-	jc leave_read_ok
-	push esi
-	mov esi,OFFSET section.swrite_value
-	OldOsGate leave_section_nr
-	pop esi
-leave_read_ok:
-	lock add section.ssync_value,1
-	jc leave_read_done
-	push esi
-	mov esi,OFFSET section.ssync_value
-	OldOsGate leave_section_nr
-	pop esi
-leave_read_done:
-	popf
-						ENDM
-
-EnterWriteSection       MACRO section
-	LOCAL enter_section_done
-	pushf
-	cli
-	lock sub section.swrite_value,1
-	jc enter_section_done
-	push esi
-	mov esi,OFFSET section.swrite_value
-	OldOsGate enter_section_nr
-	pop esi
-enter_section_done:
-	popf
-						ENDM
-
-LeaveWriteSection       MACRO section
-	LOCAL leave_section_done
-	pushf
-	cli
-	lock add section.swrite_value,1
-	jc leave_section_done
-	push esi
-	mov esi,OFFSET section.swrite_value
-	OldOsGate leave_section_nr
-	pop esi
-leave_section_done:
-	popf
-						ENDM
 
 DebugBreak	MACRO
 	OldOsGate debug_break_nr
