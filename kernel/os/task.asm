@@ -143,7 +143,7 @@ LocalRemoveTimer    MACRO
     push eax
     push fs:[bx].ps_timer_offset
 ;    
-    mov cx,fs:[bx].ps_timer_id
+    mov ecx,fs:[bx].ps_timer_id
     mov eax,fs:[bx].ps_timer_lsb
     mov edx,fs:[bx].ps_timer_msb    
 ;    
@@ -174,7 +174,7 @@ LocalStartTimer MACRO
     mov fs:ps_timer_free,bx
     mov fs:[si].ps_timer_lsb,eax
     mov fs:[si].ps_timer_msb,edx
-    mov fs:[si].ps_timer_id,cx
+    mov fs:[si].ps_timer_id,ecx
     mov fs:[si].ps_timer_offset,edi
     mov fs:[si].ps_timer_sel,es
     mov bx,OFFSET ps_timer_head
@@ -5128,7 +5128,7 @@ do_unblock_processor    Endp
 ;           PARAMETERS:     EDX:EAX         Timeout time
 ;                           ES:EDI          Callback
 ;                           BX              Owner (selector ID)
-;                           CX              ID
+;                           ECX             ID passed to callback
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

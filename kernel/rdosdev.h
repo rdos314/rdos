@@ -33,10 +33,10 @@ typedef void (__rdos_thread_callback)(void *);
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
-typedef void (__rdos_timer_callback)(int sel);
+typedef void (__rdos_timer_callback)(int sel, unsigned long expire_msb, unsigned long expire_lsb);
 
 #pragma aux __rdos_timer_callback "*" \
-                    parm caller [ecx] \
+                    parm caller [ecx] [edx] [eax] \
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
