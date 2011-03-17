@@ -118,9 +118,9 @@ void RdosStopTimer(     int sel_id);
 
 long RdosGetApicId();
 int RdosGetProcessor();
-void RdosResumeProcessor(int processor);
-void RdosPreemptProcessor(int processor);
+int RdosGetProcessorNum(int num);
 void RdosSendNmi(int processor);
+void RdosSendInt(int processor, int int_num);
 
 void RdosLockScheduler();
 void RdosUnlockScheduler();
@@ -481,26 +481,27 @@ void RdosCreateKernelProcess(
     "pop fs" \
     value [eax];
 
-#pragma aux RdosResumeProcessor = \
+#pragma aux RdosGetProcessorNum = \
     "push fs" \
-    "mov fs,ax" \
-    OsGate_resume_processor  \
+    OsGate_get_processor_num  \
+    "mov eax,fs" \
     "pop fs" \
-    parm [eax];
-
-#pragma aux RdosPreemptProcessor = \
-    "push fs" \
-    "mov fs,ax" \
-    OsGate_preempt_processor  \
-    "pop fs" \
-    parm [eax];
+    parm [eax] \
+    value [eax];
 
 #pragma aux RdosSendNmi = \
     "push fs" \
-    "mov fs,ax" \
+    "mov fs,bx" \
     OsGate_send_nmi  \
     "pop fs" \
-    parm [eax];
+    parm [ebx];
+
+#pragma aux RdosSendInt = \
+    "push fs" \
+    "mov fs,bx" \
+    OsGate_send_int  \
+    "pop fs" \
+    parm [ebx] [eax];
 
 #pragma aux RdosLockScheduler = \
     OsGate_lock_task; 

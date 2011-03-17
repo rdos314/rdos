@@ -616,6 +616,69 @@ StopTimer	MACRO
 	OsGate stop_timer_nr
 					ENDM
 
+;;;;;;;;;;; Processor ;;;;;;;;;;;;;;;;
+
+;   OUT EDX     APIC ID
+GetApicId    MACRO
+	OsGate get_apic_id_nr
+						ENDM
+
+;   IN  ES:DI   Callback for get processor
+;   OUT AX      Processor #
+;   OUT ES      Processor selector
+CreateProcessor    MACRO
+	OsGate create_processor_nr
+						ENDM
+
+;   OUT FS      Processor selector
+GetProcessor    MACRO
+	OsGate get_processor_nr
+						ENDM
+
+;   IN  AX      Processor #
+;   OUT FS      Processor selector
+GetProcessorNumber    MACRO
+	OsGate get_processor_num_nr
+						ENDM
+
+StartProcessor    MACRO
+	OsGate start_processor_nr
+						ENDM
+
+;   IN  FS      Processor selector
+ResumeProcessor    MACRO
+	OsGate resume_processor_nr
+						ENDM
+
+;   IN  FS      Processor selector
+IsProcessorBlocked    MACRO
+	OsGate is_processor_blocked_nr
+						ENDM
+
+;   IN  FS      Processor selector
+UnblockProcessor    MACRO
+	OsGate unblock_processor_nr
+						ENDM
+
+DoUnblockProcessor    MACRO
+	OsGate do_unblock_processor_nr
+						ENDM
+
+;   IN  FS      Processor selector
+SendNmi    MACRO
+	OsGate send_nmi_nr
+	                    ENDM
+
+;   IN  AL      Int #
+;   IN  FS      Processor selector
+SendInt    MACRO
+	OsGate send_int_nr
+	                    ENDM
+
+StartApCores	MACRO
+	OsGate start_ap_cores_nr
+					ENDM
+
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 ;	ES:DI   Swap callback
@@ -629,63 +692,6 @@ RegisterSwapProc	MACRO
 GetAcpiTable	MACRO
 	OldOsGate get_acpi_table_nr
 					ENDM
-
-;   OUT EDX     APIC ID
-GetApicId    MACRO
-	OldOsGate get_apic_id_nr
-						ENDM
-
-;   IN  ES:DI   Callback for get processor
-;   OUT AX      Processor #
-;   OUT ES      Processor selector
-CreateProcessor    MACRO
-	OldOsGate create_processor_nr
-						ENDM
-
-;   OUT FS      Processor selector
-GetProcessor    MACRO
-	OldOsGate get_processor_nr
-						ENDM
-
-;   IN  AX      Processor #
-;   OUT FS      Processor selector
-GetProcessorNumber    MACRO
-	OldOsGate get_processor_num_nr
-						ENDM
-
-;   IN  FS      Processor selector
-ResumeProcessor    MACRO
-	OldOsGate resume_processor_nr
-						ENDM
-
-StartProcessor    MACRO
-	OldOsGate start_processor_nr
-						ENDM
-
-;   IN  FS      Processor selector
-IsProcessorBlocked    MACRO
-	OldOsGate is_processor_blocked_nr
-						ENDM
-
-;   IN  FS      Processor selector
-UnblockProcessor    MACRO
-	OldOsGate unblock_processor_nr
-						ENDM
-
-DoUnblockProcessor    MACRO
-	OldOsGate do_unblock_processor_nr
-						ENDM
-
-;   IN  FS      Processor selector
-SendNmi    MACRO
-	OldOsGate send_nmi_nr
-	                    ENDM
-
-;   IN  AL      Int #
-;   IN  FS      Processor selector
-SendInt    MACRO
-	OldOsGate send_int_nr
-	                    ENDM
 
 ;   OUT EAX      Update tics
 StartSysTimer    MACRO
@@ -954,10 +960,6 @@ CrashFault	MACRO
 ;   DS      TSS alias
 CrashTss	MACRO
 	OldOsGate crash_tss_nr
-					ENDM
-
-StartApCores	MACRO
-	OldOsGate start_ap_cores_nr
 					ENDM
 
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;

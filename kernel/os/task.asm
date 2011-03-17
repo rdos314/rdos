@@ -814,37 +814,37 @@ proc_init:
     mov di,OFFSET create_processor_name
     xor cl,cl
     mov ax,create_processor_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET get_processor
     mov di,OFFSET get_processor_name
     xor cl,cl
     mov ax,get_processor_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET get_processor_num
     mov di,OFFSET get_processor_num_name
     xor cl,cl
     mov ax,get_processor_num_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET start_processor
     mov di,OFFSET start_processor_name
     xor cl,cl
     mov ax,start_processor_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET is_processor_blocked
     mov di,OFFSET is_processor_blocked_name
     xor cl,cl
     mov ax,is_processor_blocked_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET do_unblock_processor
     mov di,OFFSET do_unblock_processor_name
     xor cl,cl
     mov ax,do_unblock_processor_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET start_pit_timer
     mov di,OFFSET start_pit_timer_name
@@ -4086,7 +4086,7 @@ timer_free_list_create:
     pop cx
     pop bx
     pop ds      
-    ret
+    retf32
 create_processor    Endp
 
 
@@ -4160,7 +4160,7 @@ get_processor   Proc far
 ;
     pop ax
     pop ds
-    ret
+    retf32
 get_processor   Endp
 
 
@@ -4205,7 +4205,7 @@ gpnDone:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 get_processor_num   Endp
 
 
@@ -4965,7 +4965,7 @@ ipbNo:
 
 ipbDone:
     pop eax
-    ret
+    retf32
 is_processor_blocked    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5114,7 +5114,7 @@ do_unblock_processor    Proc far
     mov ds,ax
     call ds:try_lock_proc
     call ReloadTimer
-    ret
+    retf32
 do_unblock_processor    Endp
 
 

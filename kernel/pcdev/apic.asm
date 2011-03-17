@@ -489,7 +489,7 @@ get_id_mem  Proc far
 ;
     pop ax
     pop ds
-    ret
+    retf32
 get_id_mem Endp
 
 get_id_msr Proc far
@@ -502,7 +502,7 @@ get_id_msr Proc far
 ;
     pop ecx
     pop eax
-    ret
+    retf32
 get_id_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -748,7 +748,7 @@ send_nmi_mem Proc far
     pop edx
     pop eax
     pop ds
-    ret
+    retf32
 send_nmi_mem Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -773,7 +773,7 @@ send_nmi_msr Proc far
 ;
     pop ecx
     pop eax
-    ret
+    retf32
 send_nmi_msr Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1354,7 +1354,7 @@ start_ap_cores  Proc far
 ;
     pop ax
     pop ds
-    ret
+    retf32
 start_ap_cores  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1384,7 +1384,7 @@ resume_processor  Proc far
     pop edx
     pop ax
     pop ds
-    ret
+    retf32
 resume_processor  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1414,7 +1414,7 @@ unblock_processor  Proc far
     pop edx
     pop ax
     pop ds
-    ret
+    retf32
 unblock_processor  Endp
 
    
@@ -1443,7 +1443,7 @@ send_int  Proc far
 ;
     pop edx
     pop ds
-    ret
+    retf32
 send_int  Endp
 
        
@@ -1509,7 +1509,7 @@ smemgLint1Ok:
     mov edi,OFFSET get_id_name
     xor cl,cl
     mov ax,get_apic_id_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_eoi_mem
     mov edi,OFFSET send_eoi_name
@@ -1521,7 +1521,7 @@ smemgLint1Ok:
     mov edi,OFFSET send_nmi_name
     xor cl,cl
     mov ax,send_nmi_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET start_apic_mem_timer
     mov edi,OFFSET start_apic_timer_name
@@ -1735,7 +1735,7 @@ smsrgLint1Ok:
     mov edi,OFFSET get_id_name
     xor cl,cl
     mov ax,get_apic_id_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_eoi_msr
     mov edi,OFFSET send_eoi_name
@@ -1747,7 +1747,7 @@ smsrgLint1Ok:
     mov edi,OFFSET send_nmi_name
     xor cl,cl
     mov ax,send_nmi_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET start_apic_msr_timer
     mov edi,OFFSET start_apic_timer_name
@@ -2915,25 +2915,25 @@ init_smp_done:
     mov edi,OFFSET start_ap_cores_name
     xor cl,cl
     mov ax,start_ap_cores_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET resume_processor
     mov edi,OFFSET resume_processor_name
     xor cl,cl
     mov ax,resume_processor_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET unblock_processor
     mov edi,OFFSET unblock_processor_name
     xor cl,cl
     mov ax,unblock_processor_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_int
     mov edi,OFFSET send_int_name
     xor cl,cl
     mov ax,send_int_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     popad       
     pop es
