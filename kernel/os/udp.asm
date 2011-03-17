@@ -284,7 +284,7 @@ StartTimeout    Proc near
     mov edi,OFFSET Timeout
     mov cx,ds:[bx].udp_query_port
     mov bx,ds:[bx].udp_query_thread
-    NewStartTimer
+    StartTimer
 ;
     pop edi
     pop edx
@@ -589,7 +589,7 @@ receive_not_dhcp:
     mov bx,ds:[bx].udp_query_thread
     xor ax,ax
     mov es,ax
-    NewStopTimer
+    StopTimer
     Signal
     jmp receive_done
 

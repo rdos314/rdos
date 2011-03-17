@@ -238,7 +238,7 @@ rts_off PROC far
     mov es,bx
     mov edi,OFFSET rts_off
     mov bx,cx
-    NewStartTimer
+    StartTimer
     jmp rts_off_done
     
 rts_off_dis:
@@ -287,8 +287,8 @@ trans_end:
     mov edi,OFFSET rts_off
     mov bx,ds
     mov cx,bx
-    NewStopTimer
-    NewStartTimer
+    StopTimer
+    StartTimer
     mov es,ds:send_buf
         
 trans_signal_wait:
@@ -738,7 +738,7 @@ com_send_enable:
     jz com_send_start
 ;
     mov bx,ds
-    NewStopTimer
+    StopTimer
 ;   
     mov dx,ds:base
     add dx,4

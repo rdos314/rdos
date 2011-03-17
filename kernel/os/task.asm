@@ -898,13 +898,13 @@ proc_init:
     mov di,OFFSET start_timer_name
     xor cl,cl
     mov ax,start_timer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET stop_timer
     mov di,OFFSET stop_timer_name
     xor cl,cl
     mov ax,stop_timer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET wake_thread
     mov di,OFFSET wake_thread_name
@@ -5612,7 +5612,7 @@ wait_for_signal_timeout PROC far
     mov edi,OFFSET signal_timeout    
     mov bx,fs:ps_curr_thread
     mov cx,bx
-    NewStartTimer
+    StartTimer
 ;    
     mov es,bx
     xor al,al
@@ -5636,7 +5636,7 @@ wait_for_signal_timeout_clear:
     
 wait_for_signal_timeout_unlock:
     mov bx,fs:ps_curr_thread
-    NewStopTimer
+    StopTimer
     call ds:unlock_proc
 ;
     pop edi

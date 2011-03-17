@@ -205,7 +205,7 @@ StartSendTimer Proc near
 	mov edi,OFFSET SendSignal
 	mov bx,ds
 	mov cx,bx
-	NewStartTimer
+	StartTimer
 
 sstDone:
     popad
@@ -880,7 +880,7 @@ close_com_ftdi	Proc far
     jz ccfTimerClosed
 ;
     mov bx,ds
-    NewStopTimer
+    StopTimer
     mov ds:ups_timer_active,0
     
 ccfTimerClosed:   
@@ -1805,7 +1805,7 @@ close_com_pl	Proc far
     jz ccpTimerClosed
 ;
     mov bx,ds
-    NewStopTimer
+    StopTimer
     mov ds:ups_timer_active,0
     
 ccpTimerClosed:   

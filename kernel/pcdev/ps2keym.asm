@@ -750,7 +750,7 @@ timeout_command_retry:
     adc edx,0
     mov bx,ds:mode_thread
     mov edi,OFFSET TimeoutCommand
-    NewStartTimer
+    StartTimer
 
 timeout_command_done:
     retf32
@@ -780,8 +780,8 @@ send_command_do:
     adc edx,0
     mov bx,ds:mode_thread
     mov edi,OFFSET TimeoutCommand
-    NewStopTimer
-    NewStartTimer
+    StopTimer
+    StartTimer
     mov al,ds:command
     out 60h,al
 send_command_wait:
@@ -790,7 +790,7 @@ send_command_wait:
     jz send_command_wait
 ;
     mov bx,ds:mode_thread
-    NewStopTimer
+    StopTimer
     ret
 SendCommand     Endp
 
@@ -842,7 +842,7 @@ SendMouseCommand    proc near
     add eax,1193*30
     adc edx,0
     mov di,OFFSET SendMouseTimeout
-    NewStartTimer
+    StartTimer
     popad
 ;
     mov ds:command,al
@@ -895,7 +895,7 @@ send_mouse_cmd_done:
     pushf
     push bx
     mov bx,ds:mouse_thread
-    NewStopTimer
+    StopTimer
     pop bx
     popf
     ret

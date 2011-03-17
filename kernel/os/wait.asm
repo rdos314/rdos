@@ -442,7 +442,7 @@ wait_timeout_start_timer:
     push bx
     mov bx,cx
     mov edi,OFFSET timeout_wait
-    NewStartTimer
+    StartTimer
     pop bx
 ;
     inc ds:[bx].wh_running
@@ -453,7 +453,7 @@ wait_timeout_do:
 ;
     push bx
     mov bx,cx
-    NewStopTimer
+    StopTimer
     pop bx
 ;
     xor ecx,ecx

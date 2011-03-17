@@ -1667,7 +1667,7 @@ StatusTimeout  Proc far
     mov es,bx
     mov edi,OFFSET StatusTimeout
     mov bx,ds:kr_session_thread
-    NewStartTimer
+    StartTimer
     retf32
 StatusTimeout  Endp
 
@@ -1784,7 +1784,7 @@ kr203_thread:
     mov edi,OFFSET StatusTimeout
     mov bx,ds:kr_session_thread
     mov cx,ds       
-    NewStartTimer
+    StartTimer
 ;
     call OpenPipes
     call ClearReceiver

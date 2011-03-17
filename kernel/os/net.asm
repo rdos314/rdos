@@ -2004,7 +2004,7 @@ capture_done:
 arp_thread_loop:
     WaitForSignal
     mov bx,ds:arp_thread
-    NewStopTimer
+    StopTimer
 
 arp_rec_loop:
     mov ax,SEG data
@@ -2100,7 +2100,7 @@ arp_send_next:
     add eax,1193 * 250
     adc edx,0
     mov bx,ds:arp_thread
-    NewStartTimer
+    StartTimer
     
 arp_send_done:
     mov ax,ds:arp_answ_list

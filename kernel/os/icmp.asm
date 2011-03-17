@@ -349,9 +349,9 @@ ping_node Proc far
     add eax,ecx
     adc edx,0
     mov bx,ds:ping_thread
-    NewStartTimer
+    StartTimer
     WaitForSignal
-    NewStopTimer
+    StopTimer
     mov ds:ping_thread,0
     mov al,ds:ping_status
     LeaveSection ds:ping_section

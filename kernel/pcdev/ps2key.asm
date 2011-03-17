@@ -741,7 +741,7 @@ timeout_command_retry:
 	adc edx,0
 	mov bx,ds:mode_thread
 	mov edi,OFFSET TimeoutCommand
-	NewStartTimer
+	StartTimer
 
 timeout_command_done:
 	retf32
@@ -771,8 +771,8 @@ send_command_do:
 	adc edx,0
 	mov bx,ds:mode_thread
 	mov edi,OFFSET TimeoutCommand
-	NewStopTimer
-	NewStartTimer
+	StopTimer
+	StartTimer
 	mov al,ds:command
 	out 60h,al
 send_command_wait:
@@ -781,7 +781,7 @@ send_command_wait:
 	jz send_command_wait
 ;
 	mov bx,ds:mode_thread
-	NewStopTimer
+	StopTimer
 	ret
 SendCommand	Endp
 

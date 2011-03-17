@@ -33,6 +33,12 @@ typedef void (__rdos_thread_callback)(void *);
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void (__rdos_timer_callback)(int sel);
+
+#pragma aux __rdos_timer_callback "*" \
+                    parm caller [ecx] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
 
 // function definitions
 
@@ -101,6 +107,14 @@ void *RdosAllocateFixedProcessMem(int sel, long size);
 long RdosAllocatePhysical();
 long RdosAllocateMultiplePhysical(int pages);
 void RdosFreePhysical(long ads);
+
+void RdosStartTimer(    int sel_id, 
+                        unsigned long expire_msb, 
+                        unsigned long expire_lsb,
+                        __rdos_timer_callback *callb_proc,
+                        int callb_sel);
+
+void RdosStopTimer(     int sel_id);
 
 long RdosGetApicId();
 int RdosGetProcessor();
@@ -447,6 +461,14 @@ void RdosCreateKernelProcess(
 #pragma aux RdosFreePhysical = \
     OsGate_allocate_physical  \
     parm [eax];
+
+#pragma aux RdosStartTimer = \
+    OsGate_start_timer  \
+    parm [ebx] [edx] [eax] [es edi] [ecx];
+
+#pragma aux RdosStopTimer = \
+    OsGate_stop_timer  \
+    parm [ebx];
 
 #pragma aux RdosGetApicId = \
     OsGate_get_apic_id  \

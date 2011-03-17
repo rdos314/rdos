@@ -606,13 +606,13 @@ AllocateMultiplePhysical	MACRO
 ;	ES:EDI		Callback
 ;	EDX:EAX		Expire time
 ;	BX			Selector ID (OWNER)
-;	CX			Data to callback
-NewStartTimer	MACRO
+;	ECX			Data to callback
+StartTimer	MACRO
 	OsGate start_timer_nr
 					ENDM
 
 ;	BX			Selector ID (OWNER)
-NewStopTimer	MACRO
+StopTimer	MACRO
 	OsGate stop_timer_nr
 					ENDM
 

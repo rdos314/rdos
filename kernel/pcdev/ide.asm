@@ -1756,7 +1756,7 @@ inst_timeout_start:
     mov bx,cs
     mov es,bx
     mov bx,cs
-    NewStartTimer
+    StartTimer
     pop dx
     pop ax
 ;
@@ -1775,7 +1775,7 @@ inst_timeout_start:
     pop dx
 ;
     WaitForSignal
-    NewStopTimer
+    StopTimer
     pop ax
 ;
     push ax
@@ -1932,7 +1932,7 @@ install_pci_unit    Proc near
     mov es,bx
     mov bx,cs
     mov edi,OFFSET install_pci_timeout
-    NewStartTimer
+    StartTimer
 ;    
     pop dx
     pop ax
@@ -1952,7 +1952,7 @@ install_pci_unit    Proc near
     pop dx
 ;
     WaitForSignal
-    NewStopTimer
+    StopTimer
     pop ax
 ;
     push ax

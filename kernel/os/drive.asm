@@ -1292,7 +1292,7 @@ update_async_timer      Proc near
     mov es,bx
     mov cx,ds
     mov edi,OFFSET async_write_timeout
-    NewStartTimer
+    StartTimer
     pop es
 
 update_async_timer_done:

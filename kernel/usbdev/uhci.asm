@@ -2711,7 +2711,7 @@ timer_no_action:
     mov es,bx
     mov bx,cs
     mov edi,OFFSET port_timer
-    NewStartTimer
+    StartTimer
     retf32
 port_timer  Endp
 
@@ -2762,7 +2762,7 @@ uhci_func_loop:
     mov es,bx
     mov bx,cs
     mov edi,OFFSET port_timer
-    NewStartTimer
+    StartTimer
 
 uhci_handle_loop:
     WaitForSignal    

@@ -104,7 +104,7 @@ start_watchdog   Proc far
     mov es,bx
     mov di,OFFSET WdTimeout
     mov bx,SEG data
-    NewStartTimer
+    StartTimer
 ;
     popad
     pop es      
@@ -210,8 +210,8 @@ kw_kick:
     mov es,bx
     mov di,OFFSET WdTimeout
     mov bx,SEG data
-    NewStopTimer
-    NewStartTimer
+    StopTimer
+    StartTimer
 
 kw_done:
     popad       
@@ -238,7 +238,7 @@ stop_watchdog   Proc far
 ;    
     mov bx,SEG data
     mov es,bx
-    NewStopTimer
+    StopTimer
     mov es:wd_tics,0    
 ;
     pop bx
