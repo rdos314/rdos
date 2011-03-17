@@ -645,7 +645,7 @@ add_wait_done:
     pop eax
     pop fs
     pop ds
-    ret
+    retf32
 add_wait    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -737,7 +737,7 @@ signal_wait Proc far
     mov bx,es:wo_thread
     Signal
     pop bx
-    ret
+    retf32
 signal_wait Endp
 
 
@@ -1159,12 +1159,12 @@ init_wait       PROC near
     mov esi,OFFSET add_wait
     mov edi,OFFSET add_wait_name
     mov ax,add_wait_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET signal_wait
     mov edi,OFFSET signal_wait_name
     mov ax,signal_wait_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_wait
     mov edi,OFFSET create_wait_name

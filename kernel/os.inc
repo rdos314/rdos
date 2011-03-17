@@ -679,6 +679,38 @@ StartApCores	MACRO
 	OsGate start_ap_cores_nr
 					ENDM
 
+;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
+
+ClearSignal	MACRO
+	OsGate clear_signal_nr
+					ENDM
+
+;	BX			THREAD TO SIGNAL
+Signal	MACRO
+	OsGate signal_nr
+					ENDM
+
+WaitForSignal	MACRO
+	OsGate wait_for_signal_nr
+					ENDM
+
+WaitForSignalWithTimeout	MACRO
+	OldOsGate wait_for_signal_timeout_nr
+					ENDM
+
+; IN  AX      Extra bytes needed in wait object
+; IN  BX      Wait handle
+; IN  ES:DI   Method table (init, abort, peek)
+; OUT ES      Wait object
+AddWait	MACRO
+	OsGate add_wait_nr
+					ENDM
+
+; IN  ES      Wait object
+SignalWait	MACRO
+	OsGate signal_wait_nr
+					ENDM
+
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 ;	ES:DI   Swap callback
@@ -748,36 +780,6 @@ Wake	MACRO
 ;	AX		DATA
 Sleep	MACRO
 	OldOsGate sleep_thread_nr
-					ENDM
-
-ClearSignal	MACRO
-	OldOsGate clear_signal_nr
-					ENDM
-
-;	BX			THREAD TO SIGNAL
-Signal	MACRO
-	OldOsGate signal_nr
-					ENDM
-
-WaitForSignal	MACRO
-	OldOsGate wait_for_signal_nr
-					ENDM
-
-WaitForSignalWithTimeout	MACRO
-	OldOsGate wait_for_signal_timeout_nr
-					ENDM
-
-; IN  AX      Extra bytes needed in wait object
-; IN  BX      Wait handle
-; IN  ES:DI   Method table (init, abort, peek)
-; OUT ES      Wait object
-AddWait	MACRO
-	OldOsGate add_wait_nr
-					ENDM
-
-; IN  ES      Wait object
-SignalWait	MACRO
-	OldOsGate signal_wait_nr
 					ENDM
 
 InitSection     MACRO section

@@ -922,25 +922,25 @@ proc_init:
     mov di,OFFSET clear_signal_name
     xor cl,cl
     mov ax,clear_signal_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET signal_thread
     mov di,OFFSET signal_thread_name
     xor cl,cl
     mov ax,signal_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET wait_for_signal
     mov di,OFFSET wait_for_signal_name
     xor cl,cl
     mov ax,wait_for_signal_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET wait_for_signal_timeout
     mov di,OFFSET wait_for_signal_timeout_name
     xor cl,cl
     mov ax,wait_for_signal_timeout_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET cpu_reset
     mov di,OFFSET cpu_reset_name
@@ -5442,7 +5442,7 @@ clear_signal    PROC far
 ;
     pop ax
     pop ds
-    ret
+    retf32
 clear_signal    ENDP
 
 
@@ -5506,7 +5506,7 @@ signal_es_ok:
 signal_ds_ok:
     mov ds,ax
     pop ax
-    ret
+    retf32
 signal_thread   ENDP
 
 
@@ -5560,7 +5560,7 @@ wait_for_signal_unlock:
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 wait_for_signal ENDP
 
 
@@ -5646,7 +5646,7 @@ wait_for_signal_timeout_unlock:
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 wait_for_signal_timeout ENDP
 
     
