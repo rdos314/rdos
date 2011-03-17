@@ -2487,9 +2487,9 @@ otDone:
     mov bx,cs
     mov es,bx
     mov bx,cs
-    mov di,OFFSET ohci_timer
-    StartTimer
-    ret
+    mov edi,OFFSET ohci_timer
+    NewStartTimer
+    retf32
 ohci_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2767,8 +2767,8 @@ otInitLoop:
     mov bx,cs
     mov es,bx
     mov bx,cs
-    mov di,OFFSET ohci_timer
-    StartTimer
+    mov edi,OFFSET ohci_timer
+    NewStartTimer
 ;       
     call UpdateUsb
 

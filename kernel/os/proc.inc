@@ -36,7 +36,7 @@ ps_timer_next		DW ?
 ps_timer_id		    DW ?
 ps_timer_lsb		DD ?
 ps_timer_msb		DD ?
-ps_timer_offset	    DW ?
+ps_timer_offset	    DD ?
 ps_timer_sel		DW ?
 ps_timer_owner		DW ?
 

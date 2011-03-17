@@ -130,19 +130,27 @@ LocalRemoveTimer    MACRO
     mov ax,fs:[bx].ps_timer_next
     mov fs:ps_timer_head,ax
     sti
-    mov cx,fs:[bx].ps_timer_id
-    mov eax,fs:[bx].ps_timer_lsb
-    mov edx,fs:[bx].ps_timer_msb    
     push es
     push fs
     push bx
-    push cs
-    push OFFSET timer_return    
-    push dword ptr fs:[bx].ps_timer_offset
+;    
+    xor eax,eax
+    mov ax,cs
+    push eax
+    mov ax,OFFSET timer_return
+    push eax
+    mov ax,fs:[bx].ps_timer_sel
+    push eax
+    push fs:[bx].ps_timer_offset
+;    
+    mov cx,fs:[bx].ps_timer_id
+    mov eax,fs:[bx].ps_timer_lsb
+    mov edx,fs:[bx].ps_timer_msb    
+;    
     xor bx,bx
     mov ds,bx
     mov es,bx
-    retf
+    retf32
 
 timer_return:
     pop bx
@@ -167,7 +175,7 @@ LocalStartTimer MACRO
     mov fs:[si].ps_timer_lsb,eax
     mov fs:[si].ps_timer_msb,edx
     mov fs:[si].ps_timer_id,cx
-    mov fs:[si].ps_timer_offset,di
+    mov fs:[si].ps_timer_offset,edi
     mov fs:[si].ps_timer_sel,es
     mov bx,OFFSET ps_timer_head
     push si
@@ -5117,9 +5125,9 @@ do_unblock_processor    Endp
 ;
 ;           DESCRIPTION:    Start a timer
 ;
-;           PARAMETERS:         EDX:EAX     Timeout time
-;                           ES:DI       Callback
-;                           BX              Owner
+;           PARAMETERS:     EDX:EAX         Timeout time
+;                           ES:EDI          Callback
+;                           BX              Owner (selector ID)
 ;                           CX              ID
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5146,7 +5154,7 @@ start_timer     PROC far
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 start_timer     ENDP
 
 
@@ -5183,7 +5191,7 @@ stop_timer      PROC far
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 stop_timer      ENDP
 
 
@@ -5569,7 +5577,7 @@ wait_for_signal ENDP
 signal_timeout  PROC far
     mov bx,cx
     Signal
-    ret
+    retf32
 signal_timeout  Endp
     
 
@@ -5593,7 +5601,7 @@ wait_for_signal_timeout PROC far
     push ax
     push bx
     push cx
-    push di
+    push edi
 ;
     mov ax,task_sel
     mov ds,ax
@@ -5601,10 +5609,10 @@ wait_for_signal_timeout PROC far
 ;
     mov cx,cs
     mov es,cx
-    mov di,OFFSET signal_timeout    
+    mov edi,OFFSET signal_timeout    
     mov bx,fs:ps_curr_thread
     mov cx,bx
-    StartTimer
+    NewStartTimer
 ;    
     mov es,bx
     xor al,al
@@ -5628,10 +5636,10 @@ wait_for_signal_timeout_clear:
     
 wait_for_signal_timeout_unlock:
     mov bx,fs:ps_curr_thread
-    StopTimer
+    NewStopTimer
     call ds:unlock_proc
 ;
-    pop di
+    pop edi
     pop cx
     pop bx
     pop ax
@@ -6333,7 +6341,7 @@ wake_until      PROC far
     InsertBlock
     mov ds:has_list,1
     call ds:unlock_list_proc
-    ret
+    retf32
 wake_until      ENDP
 
     
@@ -6358,7 +6366,7 @@ wait_until      PROC far
     mov cx,fs:ps_curr_thread
     mov bx,cs
     mov es,bx
-    mov di,OFFSET wake_until
+    mov edi,OFFSET wake_until
     xor bx,bx
     cli
     LocalStartTimer
@@ -6409,7 +6417,7 @@ wait_milli_sec  PROC far
     mov cx,es
     mov bx,cs
     mov es,bx
-    mov di,OFFSET wake_until
+    mov edi,OFFSET wake_until
     xor bx,bx
     cli
     LocalStartTimer
@@ -6461,7 +6469,7 @@ wait_micro_sec  PROC far
     mov cx,es
     mov bx,cs
     mov es,bx
-    mov di,OFFSET wake_until
+    mov edi,OFFSET wake_until
     xor bx,bx
     cli
     LocalStartTimer

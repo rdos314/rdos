@@ -1339,9 +1339,9 @@ etDone:
 	mov bx,cs
 	mov es,bx
 	mov bx,cs
-	mov di,OFFSET ehci_timer
-	StartTimer
-    ret
+	mov edi,OFFSET ehci_timer
+	NewStartTimer
+    retf32
 ehci_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1669,8 +1669,8 @@ etInitLoop:
 	mov bx,cs
 	mov es,bx
 	mov bx,cs
-	mov di,OFFSET ehci_timer
-	StartTimer
+	mov edi,OFFSET ehci_timer
+	NewStartTimer
 ;
     mov ax,20
     WaitMilliSec

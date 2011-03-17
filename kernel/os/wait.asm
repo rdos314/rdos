@@ -48,33 +48,33 @@ wait_handle_seg ENDS
 
 signal_wait_header      STRUC
 
-sig_obj                 wait_obj_header <>
-sig_handle              DW ?
+sig_obj         wait_obj_header <>
+sig_handle          DW ?
 
 signal_wait_header      ENDS
 
-signal_handle_seg               STRUC
+signal_handle_seg           STRUC
 
 sig_handle_base handle_header <>
 
-sig_wait_obj            DW ?
-sig_state               DB ?
+sig_wait_obj        DW ?
+sig_state           DB ?
 
-signal_handle_seg               ENDS
+signal_handle_seg           ENDS
 
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   delete_wait
+;           NAME:           delete_wait
 ;
-;               DESCRIPTION:    Delete contents in wait handle
+;           DESCRIPTION:    Delete contents in wait handle
 ;
 ;       PARAMETERS:     DS:BX       Wait struct
 ;
@@ -104,41 +104,41 @@ delete_wait Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CreateWait
+;           NAME:           CreateWait
 ;
-;               DESCRIPTION:    Create a wait handle
+;           DESCRIPTION:    Create a wait handle
 ;
-;       RETURNS:        BX      Wait handle
+;       RETURNS:    BX      Wait handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_wait_name    DB 'Create Wait', 0
 
 create_wait Proc far
-        push ds
-        push cx
+    push ds
+    push cx
 ;
-        mov cx,SIZE wait_handle_seg
-        AllocateHandle
-        mov [bx].hh_sign,WAIT_HANDLE
-        mov [bx].wh_obj_list,0
-        mov [bx].wh_running,0
-        mov [bx].wh_thread,0
-        InitSection ds:[bx].wh_section 
-        mov bx,[bx].hh_handle
-        clc
+    mov cx,SIZE wait_handle_seg
+    AllocateHandle
+    mov [bx].hh_sign,WAIT_HANDLE
+    mov [bx].wh_obj_list,0
+    mov [bx].wh_running,0
+    mov [bx].wh_thread,0
+    InitSection ds:[bx].wh_section 
+    mov bx,[bx].hh_handle
+    clc
 ;
     pop cx
-        pop ds
-        retf32
+    pop ds
+    retf32
 create_wait ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CloseWait
+;           NAME:           CloseWait
 ;
-;               DESCRIPTION:    Close a wait handle
+;           DESCRIPTION:    Close a wait handle
 ;
 ;       PARAMETERS:     BX      Wait handle
 ;
@@ -147,79 +147,79 @@ create_wait ENDP
 close_wait_name    DB 'Close Wait', 0
 
 close_wait Proc far
-        push ds
-        push ax
+    push ds
+    push ax
 ;
-        mov ax,WAIT_HANDLE
-        DerefHandle
-        jc close_wait_done
+    mov ax,WAIT_HANDLE
+    DerefHandle
+    jc close_wait_done
 ;
     call delete_wait
 ;
-        FreeHandle
-        clc
+    FreeHandle
+    clc
 
 close_wait_done:
     pop ax
-        pop ds
-        retf32
+    pop ds
+    retf32
 close_wait ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   delete_handle
+;           NAME:           delete_handle
 ;
-;               DESCRIPTION:    BX                      Wait handle
+;           DESCRIPTION:    BX              Wait handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_handle   Proc far
-        push ds
-        push ax
-        push bx
+    push ds
+    push ax
+    push bx
 ;
-        mov ax,WAIT_HANDLE
-        DerefHandle
-        jc delete_handle_done
+    mov ax,WAIT_HANDLE
+    DerefHandle
+    jc delete_handle_done
 ;
-        call delete_wait
+    call delete_wait
 
 delete_handle_done:
-        pop bx
-        pop ax
-        pop ds
-        ret
+    pop bx
+    pop ax
+    pop ds
+    ret
 delete_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   IsWaitIdle
+;           NAME:           IsWaitIdle
 ;
-;               DESCRIPTION:    Check if wait is idle
+;           DESCRIPTION:    Check if wait is idle
 ;
 ;       PARAMETERS:     BX      Wait handle
 ;
-;       RETURNS:        NC
-;                                                       ECX     Non-idle ID
-;                       
+;       RETURNS:    NC
+;                               ECX     Non-idle ID
+;               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_wait_idle_name    DB 'Is Wait Idle', 0
 
 is_wait_idle Proc far
-        push ds
-        push es
-        push eax
-        push ebx
-        push dx
+    push ds
+    push es
+    push eax
+    push ebx
+    push dx
 ;
     xor ecx,ecx
-        mov ax,WAIT_HANDLE
-        DerefHandle
-        jc is_wait_idle_done
+    mov ax,WAIT_HANDLE
+    DerefHandle
+    jc is_wait_idle_done
 ;
     movzx ebx,bx
     EnterSection ds:[ebx].wh_section
@@ -230,7 +230,7 @@ is_wait_idle Proc far
 is_wait_idle_loop:
     mov es,dx
     call es:wo_idle_proc
-        jc is_wait_idle_fail_leave
+    jc is_wait_idle_fail_leave
 ;
     mov dx,es:wo_next
     or dx,dx
@@ -238,13 +238,13 @@ is_wait_idle_loop:
 
 is_wait_idle_ok_leave:
     LeaveSection ds:[ebx].wh_section
-        clc
-        jmp is_wait_idle_done
+    clc
+    jmp is_wait_idle_done
 
 is_wait_idle_fail_leave:
-        mov ecx,es:wo_id
+    mov ecx,es:wo_id
     LeaveSection ds:[ebx].wh_section
-        stc
+    stc
 
 is_wait_idle_done:
     pop dx
@@ -258,29 +258,29 @@ is_wait_idle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WaitWithoutTimeout
+;           NAME:           WaitWithoutTimeout
 ;
-;               DESCRIPTION:    Wait without timeout
+;           DESCRIPTION:    Wait without timeout
 ;
 ;       PARAMETERS:     BX      Wait handle
 ;
-;       RETURNS:        ECX     Signalled ID
-;                       
+;       RETURNS:    ECX     Signalled ID
+;               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wait_no_timeout_name    DB 'Wait Without Timeout', 0
 
 wait_no_timeout Proc far
-        push ds
-        push es
-        push eax
-        push ebx
-        push dx
+    push ds
+    push es
+    push eax
+    push ebx
+    push dx
 ;
     xor ecx,ecx
-        mov ax,WAIT_HANDLE
-        DerefHandle
-        jc wait_no_timeout_done
+    mov ax,WAIT_HANDLE
+    DerefHandle
+    jc wait_no_timeout_done
 ;
     movzx ebx,bx
     EnterSection ds:[ebx].wh_section
@@ -328,11 +328,11 @@ wait_no_timeout_stop_loop:
     jnz wait_no_timeout_stop_signalled
 ;
     call es:wo_abort_proc
-        jmp wait_no_timeout_stop_next
+    jmp wait_no_timeout_stop_next
 
 wait_no_timeout_stop_signalled:
-        or ecx,ecx
-        jnz wait_no_timeout_stop_next
+    or ecx,ecx
+    jnz wait_no_timeout_stop_next
 ;
     mov ecx,es:wo_id
     call es:wo_clear_proc
@@ -358,61 +358,61 @@ wait_no_timeout  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   timeout_wait
+;           NAME:           timeout_wait
 ;
-;               DESCRIPTION:    Timeout on wait 
+;           DESCRIPTION:    Timeout on wait 
 ;
 ;       PARAMETERS:     CX       thread to signal
-;                       
+;               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 timeout_wait Proc far
-        mov bx,cx
+    mov bx,cx
     Signal
-    ret
+    retf32
 timeout_wait  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WaitWithTimeout
+;           NAME:           WaitWithTimeout
 ;
-;               DESCRIPTION:    Wait with timeout
+;           DESCRIPTION:    Wait with timeout
 ;
 ;       PARAMETERS:     BX      Wait handle
-;                                               EDX:EAX Timeout time
+;                           EDX:EAX Timeout time
 ;
-;       RETURNS:        ECX     Signalled ID
-;                       
+;       RETURNS:    ECX     Signalled ID
+;               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wait_timeout_name    DB 'Wait With Timeout', 0
 
 wait_timeout Proc far
-        push ds
-        push es
-        push eax
-        push ebx
-        push dx
-        push di
+    push ds
+    push es
+    push eax
+    push ebx
+    push dx
+    push edi
 ;
-        push ax
+    push ax
     xor ecx,ecx
-        mov ax,WAIT_HANDLE
-        DerefHandle
-        pop ax
-        jc wait_timeout_done
+    mov ax,WAIT_HANDLE
+    DerefHandle
+    pop ax
+    jc wait_timeout_done
 ;
     movzx ebx,bx
     EnterSection ds:[ebx].wh_section
-        push ax
+    push ax
     mov al,ds:[bx].wh_running
     or al,al
-        pop ax
+    pop ax
     jnz wait_timeout_stopped_leave
 ;
-        push eax
-        push edx
+    push eax
+    push edx
     GetThread
     mov ds:[bx].wh_thread,ax
     ClearSignal
@@ -432,18 +432,18 @@ wait_timeout_start_loop:
     jnz wait_timeout_start_loop
 
 wait_timeout_start_timer:
-        GetThread
-        mov cx,ax
+    GetThread
+    mov cx,ax
     mov ax,cs
     mov es,ax
-        pop edx
-        pop eax
+    pop edx
+    pop eax
 ;
-        push bx
-        mov bx,cx
-    mov di,OFFSET timeout_wait
-    StartTimer
-        pop bx
+    push bx
+    mov bx,cx
+    mov edi,OFFSET timeout_wait
+    NewStartTimer
+    pop bx
 ;
     inc ds:[bx].wh_running
     LeaveSection ds:[ebx].wh_section
@@ -451,10 +451,10 @@ wait_timeout_start_timer:
 wait_timeout_do:
     WaitForSignal
 ;
-        push bx
-        mov bx,cx
-        StopTimer
-        pop bx
+    push bx
+    mov bx,cx
+    NewStopTimer
+    pop bx
 ;
     xor ecx,ecx
     EnterSection ds:[ebx].wh_section
@@ -474,11 +474,11 @@ wait_timeout_stop_loop:
     jnz wait_timeout_stop_signalled
 ;
     call es:wo_abort_proc
-        jmp wait_timeout_stop_next
+    jmp wait_timeout_stop_next
 
 wait_timeout_stop_signalled:
-        or ecx,ecx
-        jnz wait_timeout_stop_next
+    or ecx,ecx
+    jnz wait_timeout_stop_next
 ;
     mov ecx,es:wo_id
     call es:wo_clear_proc
@@ -493,7 +493,7 @@ wait_timeout_stopped_leave:
     clc
 
 wait_timeout_done:
-        pop di
+    pop edi
     pop dx
     pop ebx
     pop eax
@@ -505,25 +505,25 @@ wait_timeout  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   StopWait
+;           NAME:           StopWait
 ;
-;               DESCRIPTION:    Stop a wait
+;           DESCRIPTION:    Stop a wait
 ;
 ;       PARAMETERS:     BX      Wait handle
-;                       
+;               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_wait_name    DB 'Stop Wait', 0
 
 stop_wait Proc far
-        push ds
-        push es
-        push eax
-        push ebx
+    push ds
+    push es
+    push eax
+    push ebx
 ;
-        mov ax,WAIT_HANDLE
-        DerefHandle
-        jc stop_wait_done
+    mov ax,WAIT_HANDLE
+    DerefHandle
+    jc stop_wait_done
 ;
     movzx ebx,bx
     EnterSection ds:[ebx].wh_section
@@ -570,39 +570,39 @@ stop_wait  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   AddWait
+;           NAME:           AddWait
 ;
-;               DESCRIPTION:    Add a generic wait object
+;           DESCRIPTION:    Add a generic wait object
 ;
 ;       PARAMETERS:     AX      Extra bytes needed in wait object
-;                       BX      Wait handle
-;                       ECX     Signalled ID
-;                       ES:DI   Method table
+;               BX      Wait handle
+;               ECX     Signalled ID
+;               ES:DI   Method table
 ;
-;       RETURNS:        ES      Wait object
+;       RETURNS:    ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 add_wait_name   DB 'Add Wait', 0
 
 add_wait    Proc far
-        push ds
-        push fs
-        push eax
-        push ebx
-        push cx
-        push si
-        push di
+    push ds
+    push fs
+    push eax
+    push ebx
+    push cx
+    push si
+    push di
 ;
-        mov si,es
-        mov fs,si
-        mov si,di
+    mov si,es
+    mov fs,si
+    mov si,di
 ;
     push ax
-        mov ax,WAIT_HANDLE
-        DerefHandle
-        pop ax
-        jc add_wait_done
+    mov ax,WAIT_HANDLE
+    DerefHandle
+    pop ax
+    jc add_wait_done
 ;
     movzx ebx,bx
     EnterSection ds:[ebx].wh_section
@@ -612,9 +612,9 @@ add_wait    Proc far
     AllocateSmallGlobalMem
 ;
     mov es:wo_id,ecx
-        mov di,OFFSET wo_init_proc
-        mov cx,4
-        rep movs dword ptr es:[di],fs:[si]
+    mov di,OFFSET wo_init_proc
+    mov cx,4
+    rep movs dword ptr es:[di],fs:[si]
 ;
     mov ax,ds:[bx].wh_obj_list
     mov es:wo_next,ax
@@ -635,43 +635,43 @@ add_wait    Proc far
 
 awLeave:
     LeaveSection ds:[ebx].wh_section
-        clc
+    clc
 
 add_wait_done:
-        pop di
-        pop si
+    pop di
+    pop si
     pop cx
     pop ebx
     pop eax
-        pop fs
-        pop ds
+    pop fs
+    pop ds
     ret
 add_wait    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   RemoveWait
+;           NAME:           RemoveWait
 ;
-;               DESCRIPTION:    Remove a wait object
+;           DESCRIPTION:    Remove a wait object
 ;
 ;       PARAMETERS:     BX      Wait handle
-;                       ECX     Signal ID
+;               ECX     Signal ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 remove_wait_name   DB 'Remove Wait', 0
 
 remove_wait    Proc far
-        push ds
-        push es
-        push ax
-        push ebx
-        push dx
+    push ds
+    push es
+    push ax
+    push ebx
+    push dx
 ;
-        mov ax,WAIT_HANDLE
-        DerefHandle
-        jc remove_wait_done
+    mov ax,WAIT_HANDLE
+    DerefHandle
+    jc remove_wait_done
 ;
     movzx ebx,bx
     EnterSection ds:[ebx].wh_section
@@ -707,26 +707,26 @@ remove_wait_head:
 
 remove_wait_leave:
     LeaveSection ds:[ebx].wh_section
-        clc
+    clc
 
 remove_wait_done:
     pop dx
     pop ebx
     pop ax
     pop es
-        pop ds
+    pop ds
     retf32
 remove_wait    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SignalWait
+;           NAME:           SignalWait
 ;
-;               DESCRIPTION:    Signal object
+;           DESCRIPTION:    Signal object
 ;
 ;       PARAMETERS:     ES      object
-;                       
+;               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 signal_wait_name    DB 'Signal Wait',0
@@ -734,7 +734,7 @@ signal_wait_name    DB 'Signal Wait',0
 signal_wait Proc far
     push bx
     inc es:wo_signalled
-        mov bx,es:wo_thread
+    mov bx,es:wo_thread
     Signal
     pop bx
     ret
@@ -744,19 +744,19 @@ signal_wait Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Delete_signal_handle
+;           NAME:           Delete_signal_handle
 ;
-;               DESCRIPTION:    Delete signal handle (called from handle module)
+;           DESCRIPTION:    Delete signal handle (called from handle module)
 ;
-;               PARAMETERS:             BX              Signal handle
-;                                               
+;           PARAMETERS:         BX          Signal handle
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_signal_handle    Proc far
-        push ds
-        push es
-        push ax
-        push dx
+    push ds
+    push es
+    push ax
+    push dx
 ;
     mov ax,SIGNAL_HANDLE
     DerefHandle
@@ -765,23 +765,23 @@ delete_signal_handle    Proc far
     FreeHandle
 
 delete_signal_handle_done:
-        pop dx
-        pop ax
-        pop es
-        pop ds
-        ret
+    pop dx
+    pop ax
+    pop es
+    pop ds
+    ret
 delete_signal_handle    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateSignal
+;           NAME:           CreateSignal
 ;
-;               DESCRIPTION:    Create a new signal handle
+;           DESCRIPTION:    Create a new signal handle
 ;
-;               RETURNS:                BX              Signal handle
-;                                               
+;           RETURNS:        BX          Signal handle
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_signal_name DB 'Create Signal',0
@@ -792,12 +792,12 @@ create_signal   Proc far
     push cx
 ;    
     mov ax,SIGNAL_HANDLE
-        mov cx,SIZE signal_handle_seg
-        AllocateHandle
-        mov [bx].sig_wait_obj,0
-        mov [bx].sig_state,0
-        mov [bx].hh_sign,SIGNAL_HANDLE
-        mov bx,[bx].hh_handle
+    mov cx,SIZE signal_handle_seg
+    AllocateHandle
+    mov [bx].sig_wait_obj,0
+    mov [bx].sig_state,0
+    mov [bx].hh_sign,SIGNAL_HANDLE
+    mov bx,[bx].hh_handle
 ;
     pop cx
     pop ax
@@ -809,12 +809,12 @@ create_signal   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ResetSignal
+;           NAME:           ResetSignal
 ;
-;               DESCRIPTION:    Reset signal (to inactive)
+;           DESCRIPTION:    Reset signal (to inactive)
 ;
-;               PARAMETERS:             BX              Signal handle
-;                                               
+;           PARAMETERS:         BX          Signal handle
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_signal_name DB 'Reset Signal',0
@@ -842,12 +842,12 @@ reset_signal Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   IsSignalled
+;           NAME:           IsSignalled
 ;
-;               DESCRIPTION:    Is signal active (CLC)
+;           DESCRIPTION:    Is signal active (CLC)
 ;
-;               PARAMETERS:             BX              Signal handle
-;                                               
+;           PARAMETERS:         BX          Signal handle
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_signalled_name DB 'Is Signalled',0
@@ -879,12 +879,12 @@ is_signalled Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SetSignal
+;           NAME:           SetSignal
 ;
-;               DESCRIPTION:    Set signal (to active)
+;           DESCRIPTION:    Set signal (to active)
 ;
-;               PARAMETERS:             BX              Signal handle
-;                                               
+;           PARAMETERS:         BX          Signal handle
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_signal_name DB 'Set Signal',0
@@ -907,7 +907,7 @@ set_signal   Proc far
 ;
     mov es,ax
     SignalWait
-        mov ds:[bx].sig_wait_obj,0
+    mov ds:[bx].sig_wait_obj,0
 
 set_sig_done:
     sti
@@ -922,12 +922,12 @@ set_signal Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FreeSignal
+;           NAME:           FreeSignal
 ;
-;               DESCRIPTION:    Free a signal handle
+;           DESCRIPTION:    Free a signal handle
 ;
-;               PARAMETERS:             BX              Signal handle
-;                                               
+;           PARAMETERS:         BX          Signal handle
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_signal_name DB 'Free Signal',0
@@ -948,15 +948,15 @@ free_sig_done:
     retf32
 free_signal Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   StartWaitForSignal
+;           NAME:           StartWaitForSignal
 ;
-;               DESCRIPTION:    Start a wait for signal
+;           DESCRIPTION:    Start a wait for signal
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -971,14 +971,14 @@ start_wait_for_signal   PROC far
     jc start_wait_for_done
 ;
     cli
-        mov ds:[bx].sig_wait_obj,es
-        mov al,ds:[bx].sig_state
-        or al,al
-        je start_wait_for_done
+    mov ds:[bx].sig_wait_obj,es
+    mov al,ds:[bx].sig_state
+    or al,al
+    je start_wait_for_done
 ;
     mov ds:[bx].sig_state,0
-        mov ds:[bx].sig_wait_obj,0
-        sti
+    mov ds:[bx].sig_wait_obj,0
+    sti
     SignalWait
 
 start_wait_for_done:
@@ -988,15 +988,15 @@ start_wait_for_done:
     pop ds
     ret
 start_wait_for_signal Endp
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   StopWaitForSignal
+;           NAME:           StopWaitForSignal
 ;
-;               DESCRIPTION:    Stop a wait for signal
+;           DESCRIPTION:    Stop a wait for signal
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1010,7 +1010,7 @@ stop_wait_for_signal    PROC far
     DerefHandle
     jc stop_wait_signal_done
 ;
-        mov ds:[bx].sig_wait_obj,0
+    mov ds:[bx].sig_wait_obj,0
 
 stop_wait_signal_done:
     pop bx
@@ -1019,15 +1019,15 @@ stop_wait_signal_done:
     ret
 stop_wait_for_signal Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ClearSignal
+;           NAME:           ClearSignal
 ;
-;               DESCRIPTION:    Clear signal
+;           DESCRIPTION:    Clear signal
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1041,7 +1041,7 @@ clear_signal    PROC far
     DerefHandle
     jc clear_signal_done
 ;
-        mov ds:[bx].sig_state,0
+    mov ds:[bx].sig_state,0
 
 clear_signal_done:
     pop bx
@@ -1050,15 +1050,15 @@ clear_signal_done:
     ret
 clear_signal Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   IsSignalIdle
+;           NAME:           IsSignalIdle
 ;
-;               DESCRIPTION:    Check if signal is idle
+;           DESCRIPTION:    Check if signal is idle
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1072,12 +1072,12 @@ is_signal_idle  PROC far
     DerefHandle
     jc is_idle_done
 ;
-        mov al,ds:[bx].sig_state
-        or al,al
-        clc
-        je is_idle_done
+    mov al,ds:[bx].sig_state
+    or al,al
+    clc
+    je is_idle_done
 ;
-        stc
+    stc
 
 is_idle_done:
     pop bx
@@ -1085,167 +1085,167 @@ is_idle_done:
     pop ds
     ret
 is_signal_idle Endp
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   AddWaitForSignal
+;           NAME:           AddWaitForSignal
 ;
-;               DESCRIPTION:    Add a wait for a signal object
+;           DESCRIPTION:    Add a wait for a signal object
 ;
-;               PARAMETERS:             AX      Signal handle
-;                       BX      Wait handle
-;                       ECX     Signalled ID
+;           PARAMETERS:         AX      Signal handle
+;               BX      Wait handle
+;               ECX     Signalled ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-add_wait_for_signal_name        DB 'Add Wait For Signal',0
+add_wait_for_signal_name    DB 'Add Wait For Signal',0
 
 add_wait_tab:
-aw0     DW OFFSET start_wait_for_signal,        SEG code
-aw1 DW OFFSET stop_wait_for_signal,             SEG code
-aw2     DW OFFSET clear_signal,                         SEG code
-aw3     DW OFFSET is_signal_idle,                       SEG code
+aw0     DW OFFSET start_wait_for_signal,    SEG code
+aw1 DW OFFSET stop_wait_for_signal,         SEG code
+aw2     DW OFFSET clear_signal,             SEG code
+aw3     DW OFFSET is_signal_idle,               SEG code
 
 add_wait_for_signal     PROC far
-        push ds
-        push es
-        push eax
-        push di
+    push ds
+    push es
+    push eax
+    push di
 ;
     push ax
     mov ax,cs
     mov es,ax
-        mov ax,SIZE signal_wait_header - SIZE wait_obj_header
+    mov ax,SIZE signal_wait_header - SIZE wait_obj_header
     mov di,OFFSET add_wait_tab
     AddWait
     pop ax
     jc add_wait_signal_done
 ;
-        mov es:sig_handle,ax
+    mov es:sig_handle,ax
 
 add_wait_signal_done:
     pop di
     pop eax
     pop es
     pop ds
-        retf32
+    retf32
 add_wait_for_signal     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   init
+;           NAME:           init
 ;
-;               DESCRIPTION:    Init device-driver
+;           DESCRIPTION:    Init device-driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public init_wait
 
 init_wait       PROC near
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov ax,WAIT_HANDLE
-        mov di,OFFSET delete_handle
-        RegisterHandle
+    mov ax,WAIT_HANDLE
+    mov di,OFFSET delete_handle
+    RegisterHandle
 ;
-        mov ax,SIGNAL_HANDLE
-        mov di,OFFSET delete_signal_handle
-        RegisterHandle
+    mov ax,SIGNAL_HANDLE
+    mov di,OFFSET delete_signal_handle
+    RegisterHandle
 ;
-        mov esi,OFFSET add_wait
-        mov edi,OFFSET add_wait_name
-        mov ax,add_wait_nr
-        RegisterOldOsGate
+    mov esi,OFFSET add_wait
+    mov edi,OFFSET add_wait_name
+    mov ax,add_wait_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET signal_wait
-        mov edi,OFFSET signal_wait_name
-        mov ax,signal_wait_nr
-        RegisterOldOsGate
+    mov esi,OFFSET signal_wait
+    mov edi,OFFSET signal_wait_name
+    mov ax,signal_wait_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET create_wait
-        mov edi,OFFSET create_wait_name
-        xor dx,dx
-        mov ax,create_wait_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET create_wait
+    mov edi,OFFSET create_wait_name
+    xor dx,dx
+    mov ax,create_wait_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET close_wait
-        mov edi,OFFSET close_wait_name
-        xor dx,dx
-        mov ax,close_wait_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET close_wait
+    mov edi,OFFSET close_wait_name
+    xor dx,dx
+    mov ax,close_wait_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET is_wait_idle
-        mov edi,OFFSET is_wait_idle_name
-        xor dx,dx
-        mov ax,is_wait_idle_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET is_wait_idle
+    mov edi,OFFSET is_wait_idle_name
+    xor dx,dx
+    mov ax,is_wait_idle_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET wait_no_timeout
-        mov edi,OFFSET wait_no_timeout_name
-        xor dx,dx
-        mov ax,wait_no_timeout_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET wait_no_timeout
+    mov edi,OFFSET wait_no_timeout_name
+    xor dx,dx
+    mov ax,wait_no_timeout_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET wait_timeout
-        mov edi,OFFSET wait_timeout_name
-        xor dx,dx
-        mov ax,wait_timeout_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET wait_timeout
+    mov edi,OFFSET wait_timeout_name
+    xor dx,dx
+    mov ax,wait_timeout_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET stop_wait
-        mov edi,OFFSET stop_wait_name
-        xor dx,dx
-        mov ax,stop_wait_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET stop_wait
+    mov edi,OFFSET stop_wait_name
+    xor dx,dx
+    mov ax,stop_wait_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET remove_wait
-        mov edi,OFFSET remove_wait_name
-        xor dx,dx
-        mov ax,remove_wait_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET remove_wait
+    mov edi,OFFSET remove_wait_name
+    xor dx,dx
+    mov ax,remove_wait_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET create_signal
-        mov edi,OFFSET create_signal_name
-        xor dx,dx
-        mov ax,create_signal_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET create_signal
+    mov edi,OFFSET create_signal_name
+    xor dx,dx
+    mov ax,create_signal_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET reset_signal
-        mov edi,OFFSET reset_signal_name
-        xor dx,dx
-        mov ax,reset_signal_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET reset_signal
+    mov edi,OFFSET reset_signal_name
+    xor dx,dx
+    mov ax,reset_signal_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET is_signalled
-        mov edi,OFFSET is_signalled_name
-        xor dx,dx
-        mov ax,is_signalled_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET is_signalled
+    mov edi,OFFSET is_signalled_name
+    xor dx,dx
+    mov ax,is_signalled_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_signal
-        mov edi,OFFSET set_signal_name
-        xor dx,dx
-        mov ax,set_signal_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_signal
+    mov edi,OFFSET set_signal_name
+    xor dx,dx
+    mov ax,set_signal_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET free_signal
-        mov edi,OFFSET free_signal_name
-        xor dx,dx
-        mov ax,free_signal_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET free_signal
+    mov edi,OFFSET free_signal_name
+    xor dx,dx
+    mov ax,free_signal_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET add_wait_for_signal
-        mov edi,OFFSET add_wait_for_signal_name
-        xor dx,dx
-        mov ax,add_wait_for_signal_nr
-        RegisterBimodalUserGate
-        ret
+    mov esi,OFFSET add_wait_for_signal
+    mov edi,OFFSET add_wait_for_signal_name
+    xor dx,dx
+    mov ax,add_wait_for_signal_nr
+    RegisterBimodalUserGate
+    ret
 init_wait       ENDP
 
 code    ENDS
 
-        END
+    END

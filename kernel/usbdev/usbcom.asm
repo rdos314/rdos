@@ -172,7 +172,7 @@ ssiDone:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 SendSignal  Endp
 
 
@@ -202,10 +202,10 @@ StartSendTimer Proc near
 ;	
 	mov bx,cs
 	mov es,bx
-	mov di,OFFSET SendSignal
+	mov edi,OFFSET SendSignal
 	mov bx,ds
 	mov cx,bx
-	StartTimer
+	NewStartTimer
 
 sstDone:
     popad
@@ -880,7 +880,7 @@ close_com_ftdi	Proc far
     jz ccfTimerClosed
 ;
     mov bx,ds
-    StopTimer
+    NewStopTimer
     mov ds:ups_timer_active,0
     
 ccfTimerClosed:   
@@ -1805,7 +1805,7 @@ close_com_pl	Proc far
     jz ccpTimerClosed
 ;
     mov bx,ds
-    StopTimer
+    NewStopTimer
     mov ds:ups_timer_active,0
     
 ccpTimerClosed:   

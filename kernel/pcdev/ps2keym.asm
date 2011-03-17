@@ -39,55 +39,55 @@ INCLUDE key.inc
 ;
 ; ctrl_func data types
 ;
-ctrl_F1         EQU 0
-ctrl_F2         EQU 1
-ctrl_F3         EQU 2
-ctrl_F4         EQU 3
-ctrl_F5         EQU 4
-ctrl_F6         EQU 5
-ctrl_F7         EQU 6
-ctrl_F8         EQU 7
-ctrl_F9         EQU 8
-ctrl_F10        EQU 9
+ctrl_F1     EQU 0
+ctrl_F2     EQU 1
+ctrl_F3     EQU 2
+ctrl_F4     EQU 3
+ctrl_F5     EQU 4
+ctrl_F6     EQU 5
+ctrl_F7     EQU 6
+ctrl_F8     EQU 7
+ctrl_F9     EQU 8
+ctrl_F10    EQU 9
 
 ;
 ; status
 ;
-status_key_req          EQU 1
-status_mouse_req        EQU 2
-status_key_ack          EQU 4
-status_mouse_ack        EQU 8
+status_key_req      EQU 1
+status_mouse_req    EQU 2
+status_key_ack      EQU 4
+status_mouse_ack    EQU 8
 
 data    SEGMENT byte public 'DATA'
 
-mode_thread             DW ?
+mode_thread         DW ?
 mouse_thread    DW ?
-command                 DB ?
-status                  DB ?
+command         DB ?
+status          DB ?
 focus_req       DB ?
 
 mouse_timeout   DB ?
 mouse_counter   DB ?
 mouse_buttons   DB ?
-mouse_dx                DB ?
-mouse_dy                DB ?
+mouse_dx        DB ?
+mouse_dy        DB ?
 
 data    ENDS
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   normal_scan
+;           NAME:           normal_scan
 ;
-;               DESCRIPTION:    Handle normal key  pressed / release
+;           DESCRIPTION:    Handle normal key  pressed / release
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -99,312 +99,312 @@ normal_scan  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   shift_press_scan
+;           NAME:           shift_press_scan
 ;
-;               DESCRIPTION:    Handle Shift pressed
+;           DESCRIPTION:    Handle Shift pressed
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-shift_press_scan        PROC near
+shift_press_scan    PROC near
     push ax
     GetKeyboardState
-        or ax,shift_pressed
-        SetKeyboardState
-        pop ax
+    or ax,shift_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
-shift_press_scan        ENDP
+    ret
+shift_press_scan    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   shift_rel_scan
+;           NAME:           shift_rel_scan
 ;
-;               DESCRIPTION:    Handle Shift released
+;           DESCRIPTION:    Handle Shift released
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 shift_rel_scan  PROC near
     push ax
     GetKeyboardState
-        and ax,NOT shift_pressed
-        SetKeyboardState
-        pop ax
+    and ax,NOT shift_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
+    ret
 shift_rel_scan  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   alt_press_scan
+;           NAME:           alt_press_scan
 ;
-;               DESCRIPTION:    Handle Alt pressed
+;           DESCRIPTION:    Handle Alt pressed
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 alt_press_scan  PROC near
     push ax
     GetKeyboardState
-        or ax,alt_pressed
-        SetKeyboardState
-        pop ax
+    or ax,alt_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
+    ret
 alt_press_scan  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   alt_rel_scan
+;           NAME:           alt_rel_scan
 ;
-;               DESCRIPTION:    Handle Alt released
+;           DESCRIPTION:    Handle Alt released
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 alt_rel_scan    PROC near
     push ax
     GetKeyboardState
-        and ax,NOT alt_pressed
-        SetKeyboardState
-        pop ax
+    and ax,NOT alt_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
+    ret
 alt_rel_scan    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ctrl_press_scan
+;           NAME:           ctrl_press_scan
 ;
-;               DESCRIPTION:    Handle Ctrl pressed
+;           DESCRIPTION:    Handle Ctrl pressed
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ctrl_press_scan PROC near
     push ax
     GetKeyboardState
-        or ax,ctrl_pressed
-        SetKeyboardState
-        pop ax
+    or ax,ctrl_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
+    ret
 ctrl_press_scan ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ctrl_rel_scan
+;           NAME:           ctrl_rel_scan
 ;
-;               DESCRIPTION:    Handle Ctrl released
+;           DESCRIPTION:    Handle Ctrl released
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ctrl_rel_scan   PROC near
     push ax
     GetKeyboardState
-        and ax,NOT ctrl_pressed
-        SetKeyboardState
-        pop ax
+    and ax,NOT ctrl_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
+    ret
 ctrl_rel_scan   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   caps_press_scan
+;           NAME:           caps_press_scan
 ;
-;               DESCRIPTION:    Handle Caps Lock
+;           DESCRIPTION:    Handle Caps Lock
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 caps_press_scan PROC near
     push ax
     GetKeyboardState
-        xor ax,caps_active
-        SetKeyboardState
-        pop ax
+    xor ax,caps_active
+    SetKeyboardState
+    pop ax
 ;
-        mov bx,ds:mode_thread
-        Signal
+    mov bx,ds:mode_thread
+    Signal
     clc
-        ret
+    ret
 caps_press_scan ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   num_press_scan
+;           NAME:           num_press_scan
 ;
-;               DESCRIPTION:    Handle Num Lock
+;           DESCRIPTION:    Handle Num Lock
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 num_press_scan  PROC near
     push ax
     GetKeyboardState
-        xor ax,num_active
-        SetKeyboardState
-        pop ax
+    xor ax,num_active
+    SetKeyboardState
+    pop ax
 ;
-        mov bx,ds:mode_thread
-        Signal
+    mov bx,ds:mode_thread
+    Signal
     clc
-        ret
+    ret
 num_press_scan  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   print_press_scan
+;           NAME:           print_press_scan
 ;
-;               DESCRIPTION:    Handle print press
+;           DESCRIPTION:    Handle print press
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-print_press_scan        PROC near
+print_press_scan    PROC near
     push ax
     GetKeyboardState
-        or ax,print_pressed
-        SetKeyboardState
-        pop ax
+    or ax,print_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
-print_press_scan        ENDP
+    ret
+print_press_scan    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   print_rel_scan
+;           NAME:           print_rel_scan
 ;
-;               DESCRIPTION:    Handle print released
+;           DESCRIPTION:    Handle print released
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 print_rel_scan  PROC near
     push ax
     GetKeyboardState
-        and ax,NOT print_pressed
-        SetKeyboardState
-        pop ax
+    and ax,NOT print_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
+    ret
 print_rel_scan  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   scroll_press_scan
+;           NAME:           scroll_press_scan
 ;
-;               DESCRIPTION:    Handle scroll press
+;           DESCRIPTION:    Handle scroll press
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 scroll_press_scan       PROC near
     push ax
     GetKeyboardState
-        or ax,scroll_pressed
-        SetKeyboardState
-        pop ax
+    or ax,scroll_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
+    ret
 scroll_press_scan       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   scroll_rel_scan
+;           NAME:           scroll_rel_scan
 ;
-;               DESCRIPTION:    Handle scroll release
+;           DESCRIPTION:    Handle scroll release
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 scroll_rel_scan PROC near
     push ax
     GetKeyboardState
-        and ax,NOT scroll_pressed
-        SetKeyboardState
-        pop ax
+    and ax,NOT scroll_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
+    ret
 scroll_rel_scan ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   pause_break_press_scan
+;           NAME:           pause_break_press_scan
 ;
-;               DESCRIPTION:    Pause / break press
+;           DESCRIPTION:    Pause / break press
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pause_break_press_scan  PROC near
     push ax
     GetKeyboardState
-        or ax,pause_pressed
-        SetKeyboardState
-        pop ax
+    or ax,pause_pressed
+    SetKeyboardState
+    pop ax
     clc
-        ret
+    ret
 pause_break_press_scan  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   pause_break_rel_scan
+;           NAME:           pause_break_rel_scan
 ;
-;               DESCRIPTION:    Pause / break rel
+;           DESCRIPTION:    Pause / break rel
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pause_break_rel_scan    PROC near
     push ax
     GetKeyboardState
-        and ax,NOT pause_pressed
-        SetKeyboardState
-        pop ax
-        int 4Ah
+    and ax,NOT pause_pressed
+    SetKeyboardState
+    pop ax
+    int 4Ah
     clc
-        ret
+    ret
 pause_break_rel_scan    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   f_press_scan
+;           NAME:           f_press_scan
 ;
-;               DESCRIPTION:    Function key press scan
+;           DESCRIPTION:    Function key press scan
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -414,13 +414,13 @@ f_press_scan    PROC near
     mov cx,ax
     pop ax
 ;
-        test cx,ctrl_pressed
-        jz f_press_norm
+    test cx,ctrl_pressed
+    jz f_press_norm
 ;
     mov ds:focus_req,al
-        mov bx,ds:mode_thread
-        Signal
-        stc
+    mov bx,ds:mode_thread
+    Signal
+    stc
     ret
 
 f_press_norm:
@@ -431,11 +431,11 @@ f_press_scan    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   f_rel_scan
+;           NAME:           f_rel_scan
 ;
-;               DESCRIPTION:    Function key release scan
+;           DESCRIPTION:    Function key release scan
 ;
-;               PARAMETERS:             AL              scan code
+;           PARAMETERS:         AL          scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -445,8 +445,8 @@ f_rel_scan      PROC near
     mov cx,ax
     pop ax
 ;
-        test cx,ctrl_pressed
-        jz f_rel_norm
+    test cx,ctrl_pressed
+    jz f_rel_norm
 ;
     stc
     ret
@@ -459,7 +459,7 @@ f_rel_scan    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   handle_scan_code_tab
+;           NAME:           handle_scan_code_tab
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -724,635 +724,635 @@ pFF     DW      OFFSET normal_scan
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SendCommand
+;           NAME:           SendCommand
 ;
-;               DESCRIPTION:    Send a command to keyboard port
+;           DESCRIPTION:    Send a command to keyboard port
 ;
-;               PARAMETERS:             AL              command
+;           PARAMETERS:         AL          command
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TimeoutCommand  Proc far
-        mov ax,SEG data
-        mov ds,ax
-        in al,64h
-        test al,2
-        jnz timeout_command_retry
-        mov al,ds:command
-        out 60h,al
-        jmp timeout_command_done
+    mov ax,SEG data
+    mov ds,ax
+    in al,64h
+    test al,2
+    jnz timeout_command_retry
+    mov al,ds:command
+    out 60h,al
+    jmp timeout_command_done
 
 timeout_command_retry:
-        mov ax,cs
-        mov es,ax
-        GetSystemTime
-        add eax,1193*30
-        adc edx,0
-        mov bx,ds:mode_thread
-        mov di,OFFSET TimeoutCommand
-        StartTimer
+    mov ax,cs
+    mov es,ax
+    GetSystemTime
+    add eax,1193*30
+    adc edx,0
+    mov bx,ds:mode_thread
+    mov edi,OFFSET TimeoutCommand
+    NewStartTimer
 
 timeout_command_done:
-        ret
+    retf32
 TimeoutCommand  Endp
 
 SendCommand     proc near
-        mov ds:command,al
+    mov ds:command,al
 send_check_ready:
-        in al,64h
-        test al,2
-        jz send_command_do
-        mov eax,10
-        WaitMilliSec
-        jmp send_check_ready
+    in al,64h
+    test al,2
+    jz send_command_do
+    mov eax,10
+    WaitMilliSec
+    jmp send_check_ready
 
 send_command_do:
-        cli
-        mov al,ds:status
-        or al,status_key_req
-        and al,NOT status_key_ack
-        mov ds:status,al
-        sti
-        mov ax,cs
-        mov es,ax
-        GetSystemTime
-        add eax,1193*30
-        adc edx,0
-        mov bx,ds:mode_thread
-        mov di,OFFSET TimeoutCommand
-        StopTimer
-        StartTimer
-        mov al,ds:command
-        out 60h,al
+    cli
+    mov al,ds:status
+    or al,status_key_req
+    and al,NOT status_key_ack
+    mov ds:status,al
+    sti
+    mov ax,cs
+    mov es,ax
+    GetSystemTime
+    add eax,1193*30
+    adc edx,0
+    mov bx,ds:mode_thread
+    mov edi,OFFSET TimeoutCommand
+    NewStopTimer
+    NewStartTimer
+    mov al,ds:command
+    out 60h,al
 send_command_wait:
-        WaitForSignal
-        test ds:status, status_key_ack
-        jz send_command_wait
+    WaitForSignal
+    test ds:status, status_key_ack
+    jz send_command_wait
 ;
-        mov bx,ds:mode_thread
-        StopTimer
-        ret
+    mov bx,ds:mode_thread
+    NewStopTimer
+    ret
 SendCommand     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SendMouseTimeout
+;           NAME:           SendMouseTimeout
 ;
-;               DESCRIPTION:    Send a command timeout
+;           DESCRIPTION:    Send a command timeout
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SendMouseTimeout        Proc far
-        push ds
-        push ax
-        push bx
+SendMouseTimeout    Proc far
+    push ds
+    push ax
+    push bx
 ;
-        mov ax,SEG data
-        mov ds,ax
-        inc ds:mouse_timeout
-        mov bx,ds:mouse_thread
-        Signal
+    mov ax,SEG data
+    mov ds,ax
+    inc ds:mouse_timeout
+    mov bx,ds:mouse_thread
+    Signal
 ;
-        pop bx
-        pop ax
-        pop ds
-        ret
-SendMouseTimeout        Endp
+    pop bx
+    pop ax
+    pop ds
+    ret
+SendMouseTimeout    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SendMouseCommand
+;           NAME:           SendMouseCommand
 ;
-;               DESCRIPTION:    Send a command to mouse port
+;           DESCRIPTION:    Send a command to mouse port
 ;
-;               PARAMETERS:             AL              command
+;           PARAMETERS:         AL          command
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SendMouseCommand        proc near
-        ClearSignal
-        pushad
-        mov ds:mouse_timeout,0
-        mov bx,ds:mouse_thread
-        mov ax,cs
-        mov es,ax
-        GetSystemTime
-        add eax,1193*30
-        adc edx,0
-        mov di,OFFSET SendMouseTimeout
-        StartTimer
-        popad
+SendMouseCommand    proc near
+    ClearSignal
+    pushad
+    mov ds:mouse_timeout,0
+    mov bx,ds:mouse_thread
+    mov ax,cs
+    mov es,ax
+    GetSystemTime
+    add eax,1193*30
+    adc edx,0
+    mov di,OFFSET SendMouseTimeout
+    NewStartTimer
+    popad
 ;
-        mov ds:command,al
+    mov ds:command,al
 send_mouse_check_ready:
-        in al,64h
-        test al,2
-        jz send_mouse_prefix
-        mov eax,10
-        WaitMilliSec
-        jmp send_mouse_check_ready
+    in al,64h
+    test al,2
+    jz send_mouse_prefix
+    mov eax,10
+    WaitMilliSec
+    jmp send_mouse_check_ready
 
 send_mouse_prefix:
-        mov al,0D4h
-        out 64h,al
+    mov al,0D4h
+    out 64h,al
 
 send_mouse_check_prefix:
-        in al,64h
-        test al,2
-        jz send_mouse_command_do
-        mov eax,10
-        WaitMilliSec
-        jmp send_mouse_check_prefix
+    in al,64h
+    test al,2
+    jz send_mouse_command_do
+    mov eax,10
+    WaitMilliSec
+    jmp send_mouse_check_prefix
 
 send_mouse_command_do:
-        cli
-        mov al,ds:status
-        or al,status_mouse_req
-        and al,NOT status_mouse_ack
-        mov ds:status,al
-        sti
-        mov al,ds:command
-        out 60h,al
+    cli
+    mov al,ds:status
+    or al,status_mouse_req
+    and al,NOT status_mouse_ack
+    mov ds:status,al
+    sti
+    mov al,ds:command
+    out 60h,al
 
 send_mouse_command_wait:
-        WaitForSignal
-        mov al,ds:mouse_timeout
-        or al,al
-        jnz send_mouse_cmd_fail
+    WaitForSignal
+    mov al,ds:mouse_timeout
+    or al,al
+    jnz send_mouse_cmd_fail
 ;
-        test ds:status, status_mouse_ack
-        jz send_mouse_command_wait
+    test ds:status, status_mouse_ack
+    jz send_mouse_command_wait
 ;
-        clc
-        jmp send_mouse_cmd_done
+    clc
+    jmp send_mouse_cmd_done
 
 send_mouse_cmd_fail:
-        stc
+    stc
 
 send_mouse_cmd_done:
-        pushf
-        push bx
-        mov bx,ds:mouse_thread
-        StopTimer
-        pop bx
-        popf
-        ret
-SendMouseCommand        Endp
+    pushf
+    push bx
+    mov bx,ds:mouse_thread
+    NewStopTimer
+    pop bx
+    popf
+    ret
+SendMouseCommand    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CheckAux
+;           NAME:           CheckAux
 ;
-;               DESCRIPTION:    Check for AUX (mouse) port
+;           DESCRIPTION:    Check for AUX (mouse) port
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckAux        Proc near
-        mov cx,100
+CheckAux    Proc near
+    mov cx,100
 check_aux_wait1:
-        in al,64h
-        test al,2
-        jz check_aux_prefix
+    in al,64h
+    test al,2
+    jz check_aux_prefix
 ;
-        mov eax,10
-        WaitMilliSec
-        loop check_aux_wait1
-        jmp check_aux_fail
+    mov eax,10
+    WaitMilliSec
+    loop check_aux_wait1
+    jmp check_aux_fail
 
 check_aux_prefix:
-        mov al,0D3h
-        out 64h,al
+    mov al,0D3h
+    out 64h,al
 
 check_aux_wait2:
-        in al,64h
-        test al,2
-        jz check_aux_command
+    in al,64h
+    test al,2
+    jz check_aux_command
 ;
-        mov eax,10
-        WaitMilliSec
-        jmp check_aux_wait2
+    mov eax,10
+    WaitMilliSec
+    jmp check_aux_wait2
 
 check_aux_command:
-        mov al,0F4h
-        out 60h,al
+    mov al,0F4h
+    out 60h,al
 ;
-        mov cx,10
+    mov cx,10
 check_aux_wait3:
-        in al,64h
-        test al,1
-        jz check_aux_delay
+    in al,64h
+    test al,1
+    jz check_aux_delay
 ;
-        mov ah,al
-        in al,60h
-        test ah,20h
-        jz check_aux_fail
+    mov ah,al
+    in al,60h
+    test ah,20h
+    jz check_aux_fail
 ;
-        cmp al,0F4h
-        jne check_aux_fail
+    cmp al,0F4h
+    jne check_aux_fail
 ;
-        clc
-        jmp check_aux_done
+    clc
+    jmp check_aux_done
 
 check_aux_delay:
-        mov eax,10
-        WaitMilliSec
-        loop check_aux_wait3
+    mov eax,10
+    WaitMilliSec
+    loop check_aux_wait3
 
 check_aux_fail:
-        stc
+    stc
 
 check_aux_done:
-        ret
-CheckAux        Endp
+    ret
+CheckAux    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   init_mouse
+;           NAME:           init_mouse
 ;
-;               DESCRIPTION:    Init mouse hardware
+;           DESCRIPTION:    Init mouse hardware
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_mouse_name DB 'Init Mouse', 0
 
 init_mouse      Proc far
-        push ds
-        push es
-        push ax
-        push bx
-        push di
+    push ds
+    push es
+    push ax
+    push bx
+    push di
 ;
-        mov bx,SEG data
-        mov ds,bx
-        mov ds:mouse_counter,0
-        GetThread
-        mov ds:mouse_thread,ax
+    mov bx,SEG data
+    mov ds,bx
+    mov ds:mouse_counter,0
+    GetThread
+    mov ds:mouse_thread,ax
 ;
-        stc
-        call CheckAux
-        jc init_mouse_done
+    stc
+    call CheckAux
+    jc init_mouse_done
 ;
     mov al,12
-        IsIrqFree
-        jc init_mouse_done
+    IsIrqFree
+    jc init_mouse_done
     
 init_check_aux_loop:
-        in al,64h
-        test al,2
-        jz init_check_aux_do
-        mov eax,10
-        WaitMilliSec
-        jmp init_check_aux_loop
+    in al,64h
+    test al,2
+    jz init_check_aux_do
+    mov eax,10
+    WaitMilliSec
+    jmp init_check_aux_loop
 
 init_check_aux_do:
-        mov al,0A9h
-        out 64h,al
+    mov al,0A9h
+    out 64h,al
 
 init_check_loop1:
-        in al,64h
-        test al,2
-        jz init_check_read
+    in al,64h
+    test al,2
+    jz init_check_read
 ;
-        mov eax,10
-        WaitMilliSec
-        jmp init_check_loop1
+    mov eax,10
+    WaitMilliSec
+    jmp init_check_loop1
 
 init_check_read:
     in al,60h
 ;
-        mov al,12
-        mov bx,cs
-        mov es,bx
-        mov di,OFFSET keyb_int
-        RequestPrivateIrqHandler
+    mov al,12
+    mov bx,cs
+    mov es,bx
+    mov di,OFFSET keyb_int
+    RequestPrivateIrqHandler
     
 init_enable_aux_loop:
-        in al,64h
-        test al,2
-        jz init_enable_aux_do
-        mov eax,10
-        WaitMilliSec
-        jmp init_enable_aux_loop
+    in al,64h
+    test al,2
+    jz init_enable_aux_do
+    mov eax,10
+    WaitMilliSec
+    jmp init_enable_aux_loop
 
 init_enable_aux_do:
-        mov al,0A8h
-        out 64h,al
+    mov al,0A8h
+    out 64h,al
 
 init_enable_loop1:
-        in al,64h
-        test al,2
-        jz init_enable_prefix
-        mov eax,10
-        WaitMilliSec
-        jmp init_enable_loop1
+    in al,64h
+    test al,2
+    jz init_enable_prefix
+    mov eax,10
+    WaitMilliSec
+    jmp init_enable_loop1
 
 init_enable_prefix:
-        mov al,60h
-        out 64h,al
+    mov al,60h
+    out 64h,al
 
 init_enable_loop2:
-        in al,64h
-        test al,2
-        jz init_enable_do
-        mov eax,10
-        WaitMilliSec
-        jmp init_enable_loop2
+    in al,64h
+    test al,2
+    jz init_enable_do
+    mov eax,10
+    WaitMilliSec
+    jmp init_enable_loop2
 
 init_enable_do:
-        mov al,47h
-        out 60h,al
+    mov al,47h
+    out 60h,al
 ;
-        mov al,0F3h
-        call SendMouseCommand
-        jc init_mouse_revoke
+    mov al,0F3h
+    call SendMouseCommand
+    jc init_mouse_revoke
 ;
-        mov al,100
-        call SendMouseCommand
-        jc init_mouse_revoke
+    mov al,100
+    call SendMouseCommand
+    jc init_mouse_revoke
 ;
-        mov al,0E8h
-        call SendMouseCommand
-        jc init_mouse_revoke
+    mov al,0E8h
+    call SendMouseCommand
+    jc init_mouse_revoke
 ;
-        mov al,3
-        call SendMouseCommand
-        jc init_mouse_revoke
+    mov al,3
+    call SendMouseCommand
+    jc init_mouse_revoke
 ;
-        mov al,0E6h
-        call SendMouseCommand
-        jc init_mouse_revoke
+    mov al,0E6h
+    call SendMouseCommand
+    jc init_mouse_revoke
 ;
-        mov al,0F4h
-        call SendMouseCommand
-        jc init_mouse_revoke
-        jmp init_mouse_done
+    mov al,0F4h
+    call SendMouseCommand
+    jc init_mouse_revoke
+    jmp init_mouse_done
 
 init_mouse_revoke:
-        mov al,60h
-        out 64h,al
+    mov al,60h
+    out 64h,al
 
 init_disable_loop2:
-        in al,64h
-        test al,2
-        jz init_disable_do
-        mov eax,10
-        WaitMilliSec
-        jmp init_disable_loop2
+    in al,64h
+    test al,2
+    jz init_disable_do
+    mov eax,10
+    WaitMilliSec
+    jmp init_disable_loop2
 
 init_disable_do:
-        mov al,65h
-        out 60h,al
+    mov al,65h
+    out 60h,al
 ;
-        mov al,12
-        ReleasePrivateIrqHandler
+    mov al,12
+    ReleasePrivateIrqHandler
 
 init_mouse_done:
-        pop di
-        pop bx
-        pop ax
-        pop es
-        pop ds
-        ret
+    pop di
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
 init_mouse      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   UpdateMode
+;           NAME:           UpdateMode
 ;
-;               DESCRIPTION:    Update mode indicators
+;           DESCRIPTION:    Update mode indicators
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateMode      PROC near
-        mov al,0EDh
-        call SendCommand
+    mov al,0EDh
+    call SendCommand
 ;
     GetKeyboardState
     mov dx,ax
-        xor al,al
-        test dx,num_active
-        jz num_off
-        or al,2
+    xor al,al
+    test dx,num_active
+    jz num_off
+    or al,2
 num_off:
-        test dx,caps_active
-        jz caps_off
-        or al,4
+    test dx,caps_active
+    jz caps_off
+    or al,4
 caps_off:
-        call SendCommand
-        ret
+    call SendCommand
+    ret
 UpdateMode      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   mode_pr
+;           NAME:           mode_pr
 ;
-;               DESCRIPTION:    Keyboard LED thread
+;           DESCRIPTION:    Keyboard LED thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mode_name       DB 'Keyboard LEDs',0
 
 mode_pr:
-        sti
-        mov ax,SEG data
-        mov ds,ax
-        GetThread
-        mov ds:mode_thread,ax
-        in al,60h
+    sti
+    mov ax,SEG data
+    mov ds,ax
+    GetThread
+    mov ds:mode_thread,ax
+    in al,60h
 
 mode_thread_loop:
-        WaitForSignal
-        mov al,ds:focus_req
-        or al,al
-        jz mode_thread_mode
+    WaitForSignal
+    mov al,ds:focus_req
+    or al,al
+    jz mode_thread_mode
 ;
     mov ds:focus_req,0
     SetFocus
     jmp mode_thread_loop
 
 mode_thread_mode:
-        call UpdateMode
-        jmp mode_thread_loop
+    call UpdateMode
+    jmp mode_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   keyb_int
+;           NAME:           keyb_int
 ;
-;               DESCRIPTION:    Keyboard and PS/2 mouse hardware int
+;           DESCRIPTION:    Keyboard and PS/2 mouse hardware int
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-keyb_int        Proc far
-        cld
+keyb_int    Proc far
+    cld
 keyb_int_loop:
-        cli
-        in al,64h
-        test al,1
-        jz keyb_int_done
+    cli
+    in al,64h
+    test al,1
+    jz keyb_int_done
 ;
-        test al,20h
-        jz keyb_int_keyboard
+    test al,20h
+    jz keyb_int_keyboard
 
 keyb_int_mouse:
-        in al,60h
-        sti
+    in al,60h
+    sti
 ;
-        test ds:status,status_mouse_req
-        jz mouse_int_not_resend
+    test ds:status,status_mouse_req
+    jz mouse_int_not_resend
 ;
-        cmp al,0FAh
-        jnz mouse_int_not_ack
+    cmp al,0FAh
+    jnz mouse_int_not_ack
 ;
-        cli
-        mov al,ds:status
-        or al,status_mouse_ack
-        and al,NOT status_mouse_req
-        mov ds:status,al
-        mov bx,ds:mouse_thread
-        Signal
-        jmp keyb_int_loop
+    cli
+    mov al,ds:status
+    or al,status_mouse_ack
+    and al,NOT status_mouse_req
+    mov ds:status,al
+    mov bx,ds:mouse_thread
+    Signal
+    jmp keyb_int_loop
 
 mouse_int_not_ack:
-        cmp al,0FEh
-        jnz mouse_int_not_resend
+    cmp al,0FEh
+    jnz mouse_int_not_resend
 ;
-        mov al,ds:command
-        out 60h,al
-        jmp keyb_int_loop
+    mov al,ds:command
+    out 60h,al
+    jmp keyb_int_loop
 
 mouse_int_not_resend:
-        movzx bx,ds:mouse_counter
-        mov ds:[bx].mouse_buttons,al
-        inc bl
-        mov ds:mouse_counter,bl
-        cmp bl,3
-        jne keyb_int_loop
+    movzx bx,ds:mouse_counter
+    mov ds:[bx].mouse_buttons,al
+    inc bl
+    mov ds:mouse_counter,bl
+    cmp bl,3
+    jne keyb_int_loop
 ;
-        movzx ax,ds:mouse_buttons
-        movzx cx,ds:mouse_dx
-        movzx dx,ds:mouse_dy
+    movzx ax,ds:mouse_buttons
+    movzx cx,ds:mouse_dx
+    movzx dx,ds:mouse_dy
 ;
-        test al,10h
-        clc
-        jz mouse_xpos
-        stc
+    test al,10h
+    clc
+    jz mouse_xpos
+    stc
 mouse_xpos:
-        sbb ch,ch
-        test al,20h
-        clc
-        jz mouse_ypos
-        stc
+    sbb ch,ch
+    test al,20h
+    clc
+    jz mouse_ypos
+    stc
 mouse_ypos:
-        sbb dh,dh
-        and al,3
-        UpdateMouse
-        mov ds:mouse_counter,0
-        jmp keyb_int_loop
+    sbb dh,dh
+    and al,3
+    UpdateMouse
+    mov ds:mouse_counter,0
+    jmp keyb_int_loop
 
 keyb_int_keyboard:
-        in al,60h
-        sti
-        or al,al
-        je keyb_int_loop
+    in al,60h
+    sti
+    or al,al
+    je keyb_int_loop
 ;
-        test ds:status,status_key_req
-        jz keyb_int_not_resend
+    test ds:status,status_key_req
+    jz keyb_int_not_resend
 ;
-        cmp al,0FAh
-        jnz keyb_int_not_ack
+    cmp al,0FAh
+    jnz keyb_int_not_ack
 ;
-        cli
-        mov al,ds:status
-        or al,status_key_ack
-        and al,NOT status_key_req
-        mov ds:status,al
-        mov bx,ds:mode_thread
-        Signal
-        jmp keyb_int_loop
+    cli
+    mov al,ds:status
+    or al,status_key_ack
+    and al,NOT status_key_req
+    mov ds:status,al
+    mov bx,ds:mode_thread
+    Signal
+    jmp keyb_int_loop
 
 keyb_int_not_ack:
-        cmp al,0FEh
-        jnz keyb_int_not_resend
+    cmp al,0FEh
+    jnz keyb_int_not_resend
 ;
-        mov al,ds:command
-        out 60h,al
-        jmp keyb_int_loop
+    mov al,ds:command
+    out 60h,al
+    jmp keyb_int_loop
 
 keyb_int_not_resend:
-        cmp al,0FFh
-        je keyb_int_loop
+    cmp al,0FFh
+    je keyb_int_loop
 ;
-        cmp al,0E0h
-        jnz keyb_int_not_numpad
+    cmp al,0E0h
+    jnz keyb_int_not_numpad
 ;
-        push ax
-        GetKeyboardState
-        or ax,ext_numpad_active
-        and ax, NOT ext_numpad_handled
-        SetKeyboardState
-        pop ax
-        jmp keyb_int_loop       
+    push ax
+    GetKeyboardState
+    or ax,ext_numpad_active
+    and ax, NOT ext_numpad_handled
+    SetKeyboardState
+    pop ax
+    jmp keyb_int_loop       
 
 keyb_int_not_numpad:
-        push ax
-        GetKeyboardState
-        mov cx,ax
-        pop ax
-        test cx,ext_numpad_active
-        jz keyb_int_numpad_handled
+    push ax
+    GetKeyboardState
+    mov cx,ax
+    pop ax
+    test cx,ext_numpad_active
+    jz keyb_int_numpad_handled
 ;
-        test cx, ext_numpad_handled
-        jz keyb_int_numpad_mark_handled
+    test cx, ext_numpad_handled
+    jz keyb_int_numpad_mark_handled
 ;
-        and cx, NOT ext_numpad_active
-        push ax
-        mov ax,cx
-        SetKeyboardState
-        pop ax
-        jmp keyb_int_numpad_handled
+    and cx, NOT ext_numpad_active
+    push ax
+    mov ax,cx
+    SetKeyboardState
+    pop ax
+    jmp keyb_int_numpad_handled
 
 keyb_int_numpad_mark_handled:
-        or cx, ext_numpad_handled
-        push ax
-        mov ax,cx
-        SetKeyboardState
-        pop ax
+    or cx, ext_numpad_handled
+    push ax
+    mov ax,cx
+    SetKeyboardState
+    pop ax
 
 keyb_int_numpad_handled:
-        movzx bx,al
-        add bx,bx
-        call word ptr cs:[bx].handle_scan_code_tab
-        jc keyb_int_done
+    movzx bx,al
+    add bx,bx
+    call word ptr cs:[bx].handle_scan_code_tab
+    jc keyb_int_done
 ;
     ProcessKeyScan
 
 keyb_int_done:
-        ret
-keyb_int        Endp
+    ret
+keyb_int    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   init_keyb_thread
+;           NAME:           init_keyb_thread
 ;
-;               DESCRIPTION:    Init keyboard threads
+;           DESCRIPTION:    Init keyboard threads
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_keyb_thread        PROC far
-        push ds
-        push es
-        pusha
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+init_keyb_thread    PROC far
+    push ds
+    push es
+    pusha
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
     mov ax,start_keyboard_nr
     IsValidOsGate
@@ -1361,58 +1361,58 @@ init_keyb_thread        PROC far
     StartKeyboard
 
 keyb_started:    
-        mov si,OFFSET mode_pr
-        mov di,OFFSET mode_name
-        mov cx,500
-        mov ax,4
-        CreateThread
+    mov si,OFFSET mode_pr
+    mov di,OFFSET mode_name
+    mov cx,500
+    mov ax,4
+    CreateThread
 ;
-        mov bx,SEG data
-        mov ds,bx
-        mov al,1
-        mov bx,cs
-        mov es,bx
-        mov di,OFFSET keyb_int
-        RequestPrivateIrqHandler
+    mov bx,SEG data
+    mov ds,bx
+    mov al,1
+    mov bx,cs
+    mov es,bx
+    mov di,OFFSET keyb_int
+    RequestPrivateIrqHandler
 ;
-        popa
-        pop es
-        pop ds
-        ret
-init_keyb_thread        ENDP
+    popa
+    pop es
+    pop ds
+    ret
+init_keyb_thread    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   init
+;           NAME:           init
 ;
-;               DESCRIPTION:    Init device-driver
+;           DESCRIPTION:    Init device-driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov di,OFFSET init_keyb_thread
-        HookInitTasking
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET init_keyb_thread
+    HookInitTasking
 ;
-        mov esi,OFFSET init_mouse
-        mov edi,OFFSET init_mouse_name
-        xor cl,cl
-        mov ax,init_mouse_nr
-        RegisterOldOsGate
+    mov esi,OFFSET init_mouse
+    mov edi,OFFSET init_mouse_name
+    xor cl,cl
+    mov ax,init_mouse_nr
+    RegisterOldOsGate
 ;
-        mov ax,SEG data
-        mov ds,ax
-        xor ax,ax
-        mov ds:mode_thread,ax
-        mov ds:mouse_thread,ax
-        mov ds:status,0
-        mov ds:focus_req,0
-        ret
+    mov ax,SEG data
+    mov ds,ax
+    xor ax,ax
+    mov ds:mode_thread,ax
+    mov ds:mouse_thread,ax
+    mov ds:status,0
+    mov ds:focus_req,0
+    ret
 init    ENDP
 
 code    ENDS
 
-        END init
+    END init

@@ -34,36 +34,36 @@ include ..\pcdev\pci.inc
 include ..\os\com.inc
 
 MAX_PORTS       = 16
-MAX_IRQS        = 16
+MAX_IRQS    = 16
 MAX_IRQ_SHARE   = 4
 
-IER_BITS        = 8
+IER_BITS    = 8
 
 FLG_ENABLE_CTS  = 1
 FLG_ENABLE_AUTO_RTS  = 2
 
-pccom_port_struc        STRUC
+pccom_port_struc    STRUC
 
 pps_base_struc  com_port_struc <>
 
 char_time       DD ?
-flgs            DB ?
-base                    DW ?
+flgs        DB ?
+base            DW ?
 dev_handle      DW ?
 baud_base       DD ?
 
-pccom_port_struc        ENDS
+pccom_port_struc    ENDS
 
 pccom_device_struc   STRUC
 
 pds_base_struc    com_device_struc <>
 
-pds_base          DW ?
-pds_handle        DW ?
+pds_base      DW ?
+pds_handle    DW ?
 pds_baud_base     DD ?
 pds_line_thread   DW ?
-pds_line          DB ?
-pds_irq           DB ?
+pds_line      DB ?
+pds_irq       DB ?
 
 pccom_device_struc   ENDS
 
@@ -79,46 +79,46 @@ data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
-        assume cs:code
+    assume cs:code
 
-        .386p
+    .386p
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   MODEM
+;           NAME:           MODEM
 ;
-;               DESCRIPTION:    Modem signals changed
+;           DESCRIPTION:    Modem signals changed
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 modem   Proc near
-        mov dx,ds:base
-        add dx,6
-        in al,dx
-        mov ah,al
+    mov dx,ds:base
+    add dx,6
+    in al,dx
+    mov ah,al
 ;       
-        test al,10h
-        jz modem_no_cts
+    test al,10h
+    jz modem_no_cts
 ;
     test ds:flgs, FLG_ENABLE_CTS
     jz modem_no_cts
 ;    
-        mov cx,ds:send_count
-        or cx,cx
-        jz modem_no_cts
+    mov cx,ds:send_count
+    or cx,cx
+    jz modem_no_cts
 ;
-        mov dx,ds:base
-        inc dx
-        mov al,IER_BITS + 3
-        out dx,al
+    mov dx,ds:base
+    inc dx
+    mov al,IER_BITS + 3
+    out dx,al
 
 modem_no_cts:   
     push ds
     mov ds,ds:dev_handle
-        mov ds:pds_line,ah
+    mov ds:pds_line,ah
     mov bx,ds:pds_line_thread
     pop ds
     or bx,bx
@@ -127,43 +127,43 @@ modem_no_cts:
     Signal
 
 modem_no_signal:    
-        ret
+    ret
 modem   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LINE_ERR
+;           NAME:           LINE_ERR
 ;
-;               DESCRIPTION:    Line error occured
+;           DESCRIPTION:    Line error occured
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-line_err        PROC near
-        mov dx,ds:base
-        add dx,5
-        in al,dx
-        ret
-line_err        ENDP
+line_err    PROC near
+    mov dx,ds:base
+    add dx,5
+    in al,dx
+    ret
+line_err    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   REC_PR
+;           NAME:           REC_PR
 ;
-;               DESCRIPTION:    Received data
+;           DESCRIPTION:    Received data
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 rec_pr  PROC near
-        mov es,ds:rec_buf
-        mov dx,ds:base
-        cli
-        in al,dx
+    mov es,ds:rec_buf
+    mov dx,ds:base
+    cli
+    in al,dx
 ;    test ds:flgs, FLG_ENABLE_AUTO_RTS
 ;    jz rec_pr_save
 ;
@@ -176,21 +176,21 @@ rec_pr  PROC near
 ;       jnz rec_exit
 
 rec_pr_save:
-        mov cx,ds:rec_count
-        cmp cx,ds:rec_size
-        je rec_exit
-        inc cx
-        mov ds:rec_count,cx
-        mov bx,ds:rec_tail              ; get tail pointer
-        mov es:[bx],al                          ; store char
-        inc bx
-        cmp bx,ds:rec_size
-        jnz rec_no_wrap
+    mov cx,ds:rec_count
+    cmp cx,ds:rec_size
+    je rec_exit
+    inc cx
+    mov ds:rec_count,cx
+    mov bx,ds:rec_tail          ; get tail pointer
+    mov es:[bx],al              ; store char
+    inc bx
+    cmp bx,ds:rec_size
+    jnz rec_no_wrap
 ;
-        xor bx,bx
-        
+    xor bx,bx
+    
 rec_no_wrap:
-        mov ds:rec_tail,bx
+    mov ds:rec_tail,bx
 ;
     mov bx,ds:avail_obj
     or bx,bx
@@ -198,20 +198,20 @@ rec_no_wrap:
 ;
     mov es,bx
     SignalWait
-        mov ds:avail_obj,0
-        
+    mov ds:avail_obj,0
+    
 rec_exit:
-        sti
-        ret
+    sti
+    ret
 rec_pr  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   RTS_OFF
+;           NAME:           RTS_OFF
 ;
-;               DESCRIPTION:    Delayed RTS off
+;           DESCRIPTION:    Delayed RTS off
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -232,105 +232,105 @@ rts_off PROC far
     pop ax
     jnz rts_off_dis
 ;
-        add eax,ds:char_time
-        adc edx,0
-        mov bx,cs
-        mov es,bx
-        mov di,OFFSET rts_off
-        mov bx,cx
-        StartTimer
-        jmp rts_off_done
-        
+    add eax,ds:char_time
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET rts_off
+    mov bx,cx
+    NewStartTimer
+    jmp rts_off_done
+    
 rts_off_dis:
-        mov dx,ds:base
-        add dx,4
-        in al,dx
-        and al,NOT 2
-        out dx,al
+    mov dx,ds:base
+    add dx,4
+    in al,dx
+    and al,NOT 2
+    out dx,al
 
 rts_off_done:
-        ret
+    retf32
 rts_off Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   TRANS_PR
+;           NAME:           TRANS_PR
 ;
-;               DESCRIPTION:    Send data
+;           DESCRIPTION:    Send data
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-trans_pr        PROC near
-        mov es,ds:send_buf
-        mov dx,ds:base
-        cli
-        mov cx,ds:send_count
-        or cx,cx                                        ;  buffer empty ?
-        jnz trans_not_empty
+trans_pr    PROC near
+    mov es,ds:send_buf
+    mov dx,ds:base
+    cli
+    mov cx,ds:send_count
+    or cx,cx                    ;  buffer empty ?
+    jnz trans_not_empty
 
 trans_end:      
-        mov al,IER_BITS + 1
-        inc dx
-        out dx,al
+    mov al,IER_BITS + 1
+    inc dx
+    out dx,al
 ;
     test ds:flgs, FLG_ENABLE_AUTO_RTS
     jz trans_signal_wait
 ;
-        GetSystemTime
-        add eax,ds:char_time
-        adc edx,0
-        mov bx,cs
-        mov es,bx
-        mov di,OFFSET rts_off
-        mov bx,ds
-        mov cx,bx
-        StopTimer
-        StartTimer
-        mov es,ds:send_buf
-                
+    GetSystemTime
+    add eax,ds:char_time
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET rts_off
+    mov bx,ds
+    mov cx,bx
+    NewStopTimer
+    NewStartTimer
+    mov es,ds:send_buf
+        
 trans_signal_wait:
     mov bx,ds:send_wait
     or bx,bx
     jz trans_exit
 ;
     Signal
-        jmp trans_exit
-        
-trans_not_empty:        
+    jmp trans_exit
+    
+trans_not_empty:    
     test ds:flgs, FLG_ENABLE_CTS
     jz trans_send
 ;
-        add dx,6
-        in al,dx
-        sub dx,6
-        test al,10h
-        jz trans_end
+    add dx,6
+    in al,dx
+    sub dx,6
+    test al,10h
+    jz trans_end
 
 trans_send:
-        dec cx
-        mov ds:send_count,cx
-        mov bx,ds:send_head                             ; get head pointer
-        mov al,es:[bx]                                          ; get char
-        out dx,al                                               ; transmitt char
-        inc bx
-        cmp bx,ds:send_size
-        jnz trans_not_wrap
-        xor bx,bx
+    dec cx
+    mov ds:send_count,cx
+    mov bx,ds:send_head                 ; get head pointer
+    mov al,es:[bx]                      ; get char
+    out dx,al                           ; transmitt char
+    inc bx
+    cmp bx,ds:send_size
+    jnz trans_not_wrap
+    xor bx,bx
 trans_not_wrap:
-        mov ds:send_head,bx
+    mov ds:send_head,bx
 trans_exit:
-        sti
-        ret
-trans_pr        ENDP
+    sti
+    ret
+trans_pr    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   COM_INT
+;           NAME:           COM_INT
 ;
 ;       DESCRIPTION:    Serial interrupt
 ;
@@ -400,16 +400,16 @@ com_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           open_com
+;       NAME:       open_com
 ;
 ;       description:    Open a serial port
 ;
 ;       PARAMETERS:     DS      Port selector
-;                       ES      Device selector
-;                       AH      # of data bits
-;                       BL      # of stop bits
-;                       BH      parity
-;                       ECX     baudrate
+;               ES      Device selector
+;               AH      # of data bits
+;               BL      # of stop bits
+;               BH      parity
+;               ECX     baudrate
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -474,14 +474,14 @@ open_parity_done:
     xor edx,edx
     div ecx
     mov si,ax
-;        
+;    
     mov eax,1193000
     xor edx,edx
-    div ecx             ; eax = 1193000 / baudrate
+    div ecx         ; eax = 1193000 / baudrate
     pop dx
 ;
     movzx edx,dl
-    mul edx             ; eax = char tics
+    mul edx         ; eax = char tics
     mov ds:char_time,eax
 ;
     pop edx
@@ -491,27 +491,27 @@ open_parity_done:
     or al,80h
     mov dx,ds:base
     add dx,3
-    out dx,al               ; set line control to divisor access
+    out dx,al           ; set line control to divisor access
 ;
     sub dx,3
     mov ax,si
-    out dx,al               ; output LSB divisor latch
+    out dx,al           ; output LSB divisor latch
 ;
     inc dx
     mov al,ah
-    out dx,al               ; output MSB divisor latch
+    out dx,al           ; output MSB divisor latch
 ;
     inc dx
     mov al,1
-    out dx,al               ; enable FIFOs if present
+    out dx,al           ; enable FIFOs if present
 ;
     pop ax
     inc dx
-    out dx,al               ; set line control 
+    out dx,al           ; set line control 
 ;
     sub dx,2
     mov al,IER_BITS + 1
-    out dx,al               ; enable rx ints and delta ints, disable tx, line ints
+    out dx,al           ; enable rx ints and delta ints, disable tx, line ints
 ;
     add dx,3
     in al,dx
@@ -523,7 +523,7 @@ open_parity_done:
     or al,1
 
 open_set_dtr:
-    out dx,al               ; modem control, DTR = high, RTS = high
+    out dx,al           ; modem control, DTR = high, RTS = high
 ;
     mov dx,ds:base
     in al,dx
@@ -542,7 +542,7 @@ open_com    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           close_com
+;       NAME:       close_com
 ;
 ;       description:    Close serial port
 ;
@@ -573,7 +573,7 @@ close_com_stopped:
     or al,IER_BITS
 
 close_com_not_reserved:
-    out dx,al               ; disable rx, tx, line and modem ints
+    out dx,al           ; disable rx, tx, line and modem ints
 ;   
     mov es,ds:dev_handle
     mov es:pds_handle,0
@@ -588,7 +588,7 @@ close_com   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:           EnableCts
+;       NAME:       EnableCts
 ;
 ;       DESCRIPTION:    Enable CTS signal
 ;
@@ -610,7 +610,7 @@ enable_cts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:           DisableCts
+;       NAME:       DisableCts
 ;
 ;       DESCRIPTION:    Disable CTS signal
 ;
@@ -627,7 +627,7 @@ disable_cts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:           EnableAutoRts
+;       NAME:       EnableAutoRts
 ;
 ;       DESCRIPTION:    Enable automatic RTS on send
 ;
@@ -655,7 +655,7 @@ enable_auto_rts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:           DisableAutoRts
+;       NAME:       DisableAutoRts
 ;
 ;       DESCRIPTION:    Disable automatic RTS on send
 ;
@@ -683,7 +683,7 @@ disable_auto_rts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:           FlushCom
+;       NAME:       FlushCom
 ;
 ;       DESCRIPTION:    Flush com
 ;
@@ -711,7 +711,7 @@ flush_com Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           start_send
+;       NAME:       start_send
 ;
 ;       description:    Start send
 ;
@@ -738,7 +738,7 @@ com_send_enable:
     jz com_send_start
 ;
     mov bx,ds
-    StopTimer
+    NewStopTimer
 ;   
     mov dx,ds:base
     add dx,4
@@ -763,7 +763,7 @@ start_send  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           set_dtr
+;       NAME:       set_dtr
 ;
 ;       description:    Set DTR signal
 ;
@@ -790,7 +790,7 @@ set_dtr Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           reset_dtr
+;       NAME:       reset_dtr
 ;
 ;       description:    Reset DTR signal
 ;
@@ -817,7 +817,7 @@ reset_dtr   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           set_rts
+;       NAME:       set_rts
 ;
 ;       description:    Set RTS signal
 ;
@@ -844,7 +844,7 @@ set_rts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           reset_rts
+;       NAME:       reset_rts
 ;
 ;       description:    Reset RTS signal
 ;
@@ -871,27 +871,27 @@ reset_rts   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           create_port
+;       NAME:       create_port
 ;
 ;       description:    Create port selector
 ;
-;       RETURNS:        ES      Port selector
+;       RETURNS:    ES      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 port_tab:
-pt00 DW OFFSET open_com,            SEG code
-pt01 DW OFFSET close_com,           SEG code
-pt02 DW OFFSET enable_cts,          SEG code
-pt03 DW OFFSET disable_cts,         SEG code
-pt04 DW OFFSET set_dtr,             SEG code
-pt05 DW OFFSET reset_dtr,           SEG code
-pt06 DW OFFSET set_rts,             SEG code
-pt07 DW OFFSET reset_rts,           SEG code
+pt00 DW OFFSET open_com,        SEG code
+pt01 DW OFFSET close_com,       SEG code
+pt02 DW OFFSET enable_cts,      SEG code
+pt03 DW OFFSET disable_cts,     SEG code
+pt04 DW OFFSET set_dtr,         SEG code
+pt05 DW OFFSET reset_dtr,       SEG code
+pt06 DW OFFSET set_rts,         SEG code
+pt07 DW OFFSET reset_rts,       SEG code
 pt08 DW OFFSET enable_auto_rts,     SEG code
 pt09 DW OFFSET disable_auto_rts,    SEG code
-pt10 DW OFFSET flush_com,           SEG code
-pt11 DW OFFSET start_send,          SEG code
+pt10 DW OFFSET flush_com,       SEG code
+pt11 DW OFFSET start_send,      SEG code
 
 create_port Proc far
     push eax
@@ -915,7 +915,7 @@ create_port Proc far
     mov es:base,ax
     mov eax,ds:pds_baud_base
     mov es:baud_base,eax
-;        
+;    
     pop di
     pop si
     pop cx
@@ -927,7 +927,7 @@ create_port Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           reserve_line_state
+;       NAME:       reserve_line_state
 ;
 ;       description:    Reserve line-state signals
 ;
@@ -966,7 +966,7 @@ reserve_line_state  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           device_set_dtr
+;       NAME:       device_set_dtr
 ;
 ;       description:    Device set DTR signal
 ;
@@ -993,7 +993,7 @@ device_set_dtr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           device_reset_dtr
+;       NAME:       device_reset_dtr
 ;
 ;       description:    Device reset DTR signal
 ;
@@ -1020,13 +1020,13 @@ device_reset_dtr    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           get_line_state
+;       NAME:       get_line_state
 ;
 ;       description:    Get current line-state change
 ;
 ;       PARAMETERS:     DS      Com device selector
 ;
-;       RETURNS:        AL      Line-state
+;       RETURNS:    AL      Line-state
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1041,13 +1041,13 @@ get_line_state  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           wait_for_line_state
+;       NAME:       wait_for_line_state
 ;
 ;       description:    Wait for line-state change
 ;
 ;       PARAMETERS:     DS      Com device selector
 ;
-;       RETURNS:        AL      Line-state
+;       RETURNS:    AL      Line-state
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1067,7 +1067,7 @@ wait_for_line_state Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           InitDetect
+;       NAME:       InitDetect
 ;
 ;       DESCRIPTION:    Init detect
 ;
@@ -1079,31 +1079,31 @@ InitDetect  Proc near
     push dx
     mov al,83h
     add dx,3
-    out dx,al               ; set line control to divisor access
+    out dx,al           ; set line control to divisor access
 ;
     sub dx,3
     mov al,12
-    out dx,al               ; output LSB divisor latch
+    out dx,al           ; output LSB divisor latch
 ;
     inc dx
     mov al,0
-    out dx,al               ; output MSB divisor latch
+    out dx,al           ; output MSB divisor latch
 ;
     inc dx
     mov al,1
-    out dx,al               ; enable FIFOs if present
+    out dx,al           ; enable FIFOs if present
 ;
     mov al,3
     inc dx
-    out dx,al               ; set line control 
+    out dx,al           ; set line control 
 ;
     sub dx,2
     mov al,0
-    out dx,al               ; enable rx ints and delta ints, disable tx, line ints
+    out dx,al           ; enable rx ints and delta ints, disable tx, line ints
 ;
     add dx,3
     mov al,0Bh
-    out dx,al               ; modem control, DTR = high, RTS = high
+    out dx,al           ; modem control, DTR = high, RTS = high
     pop dx
 ;
     push dx
@@ -1121,13 +1121,13 @@ InitDetect  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           DetectIrq
+;       NAME:       DetectIrq
 ;
 ;       DESCRIPTION:    Detect IRQ for a serial base address
 ;
 ;       PARAMETERS:     DX      Base
 ;
-;       RETURNS:        AL      IRQ
+;       RETURNS:    AL      IRQ
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1141,11 +1141,11 @@ DetectIrq   Proc near
     push dx
     inc dx
     mov al,IER_BITS + 2
-    out dx,al               ; enable tx ints and delta ints, line ints
+    out dx,al           ; enable tx ints and delta ints, line ints
 ;
     add dx,3
     mov al,0Bh
-    out dx,al               ; modem control, DTR = high, RTS = high
+    out dx,al           ; modem control, DTR = high, RTS = high
     pop dx
 ;   
     push dx
@@ -1235,13 +1235,13 @@ DetectIrq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddPort
+;       NAME:       AddPort
 ;
 ;       DESCRIPTION:    Add port to list of available ports
 ;
 ;       PARAMETERS:     DX      Base
-;                       AL      IRQ
-;                       ECX     Baud base
+;               AL      IRQ
+;               ECX     Baud base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1303,7 +1303,7 @@ AddPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RequestIRQs
+;       NAME:       RequestIRQs
 ;
 ;       DESCRIPTION:    Request IRQs for all ports
 ;
@@ -1352,13 +1352,13 @@ RequestIRQs Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           InitPciAdapter
+;       NAME:       InitPciAdapter
 ;
 ;       DESCRIPTION:    Init PCI adapter if found
 ;
 ;       PARAMETERS:     
 ;
-;       RETURNS:        NC      Adapter found
+;       RETURNS:    NC      Adapter found
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1416,13 +1416,13 @@ InitPciAdapter  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           Init_pci
+;       NAME:       Init_pci
 ;
 ;       DESCRIPTION:    inits adpater
 ;
 ;       PARAMETERS:     
 ;
-;       RETURNS:        
+;       RETURNS:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1512,7 +1512,7 @@ init_pci    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           init
+;       NAME:       init
 ;
 ;       description:    Init device
 ;

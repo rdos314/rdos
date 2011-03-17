@@ -601,6 +601,21 @@ AllocateMultiplePhysical	MACRO
 	OsGate allocate_multiple_physical_nr
 					ENDM
 
+;;;;;;;;;;; Timers ;;;;;;;;;;;;;;;;
+
+;	ES:EDI		Callback
+;	EDX:EAX		Expire time
+;	BX			Selector ID (OWNER)
+;	CX			Data to callback
+NewStartTimer	MACRO
+	OsGate start_timer_nr
+					ENDM
+
+;	BX			Selector ID (OWNER)
+NewStopTimer	MACRO
+	OsGate stop_timer_nr
+					ENDM
+
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 ;	ES:DI   Swap callback
@@ -885,19 +900,6 @@ LeaveWriteSection       MACRO section
 leave_section_done:
 	popf
 						ENDM
-
-;	ES:DI		PROCEDURE
-;	EDX:EAX		TID F™R ANROP
-;	BX			TIMER THREAD (OWNER)
-;	CX			DATA
-StartTimer	MACRO
-	OldOsGate start_timer_nr
-					ENDM
-
-;	BX			TIMER THREAD (OWNER)
-StopTimer	MACRO
-	OldOsGate stop_timer_nr
-					ENDM
 
 DebugBreak	MACRO
 	OldOsGate debug_break_nr

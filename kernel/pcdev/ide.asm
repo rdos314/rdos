@@ -1676,7 +1676,7 @@ install_timeout1    Proc far
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 install_timeout1    Endp
 
 
@@ -1703,7 +1703,7 @@ install_timeout2    Proc far
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 install_timeout2    Endp
 
 
@@ -1741,11 +1741,11 @@ install_unit    Proc near
     cmp dx,1F0h
     je inst_timeout_primary
 ;       
-    mov di,OFFSET install_timeout2
+    mov edi,OFFSET install_timeout2
     jmp inst_timeout_start
 
 inst_timeout_primary:   
-    mov di,OFFSET install_timeout1
+    mov edi,OFFSET install_timeout1
 
 inst_timeout_start:
     push ax
@@ -1756,7 +1756,7 @@ inst_timeout_start:
     mov bx,cs
     mov es,bx
     mov bx,cs
-    StartTimer
+    NewStartTimer
     pop dx
     pop ax
 ;
@@ -1775,7 +1775,7 @@ inst_timeout_start:
     pop dx
 ;
     WaitForSignal
-    StopTimer
+    NewStopTimer
     pop ax
 ;
     push ax
@@ -1887,7 +1887,7 @@ install_pci_timeout    Proc far
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 install_pci_timeout    Endp
 
 
@@ -1931,8 +1931,8 @@ install_pci_unit    Proc near
     mov bx,cs
     mov es,bx
     mov bx,cs
-    mov di,OFFSET install_pci_timeout
-    StartTimer
+    mov edi,OFFSET install_pci_timeout
+    NewStartTimer
 ;    
     pop dx
     pop ax
@@ -1952,7 +1952,7 @@ install_pci_unit    Proc near
     pop dx
 ;
     WaitForSignal
-    StopTimer
+    NewStopTimer
     pop ax
 ;
     push ax
