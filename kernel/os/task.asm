@@ -881,13 +881,13 @@ proc_init:
     mov di,OFFSET wake_thread_name
     xor cl,cl
     mov ax,wake_thread_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET sleep_thread
     mov di,OFFSET sleep_thread_name
     xor cl,cl
     mov ax,sleep_thread_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET clear_signal
     mov di,OFFSET clear_signal_name
@@ -5352,7 +5352,7 @@ wake_thread     PROC far
 ;
     pop esi
     pop dx
-    ret
+    retf32
 wake_thread     ENDP
 
 
@@ -5388,7 +5388,7 @@ sleep_thread_done:
     mov eax,ds:p_data
     popf
     pop ds
-    ret
+    retf32
 sleep_thread    ENDP
 
 
