@@ -147,12 +147,12 @@ void RdosWaitForSignalWithTimeout(long msb, long lsb);
 int RdosAddWait(int space_needed, int wait_handle, struct TWaitHeader *wait_table);
 void RdosSignalWait(int wait_obj);
 
-void RdosLockScheduler();
-void RdosUnlockScheduler();
-
 void RdosInitKernelSection(struct TKernelSection *section);
 void RdosEnterKernelSection(struct TKernelSection *section);
 void RdosLeaveKernelSection(struct TKernelSection *section);
+
+void RdosLockScheduler();
+void RdosUnlockScheduler();
 
 void RdosCreateKernelThread(
             int prio, 
@@ -535,6 +535,35 @@ void RdosCreateKernelProcess(
 #pragma aux RdosUnlockScheduler = \
     OsGate_unlock_task; 
 
+#pragma aux RdosClearSignal = \
+    OsGate_clear_signal; 
+
+#pragma aux RdosSignal = \
+    OsGate_signal \
+    parm [ebx]; 
+
+#pragma aux RdosWaitForSignal = \
+    OsGate_wait_for_signal; 
+
+#pragma aux RdosWaitForSignalWithTimeout = \
+    OsGate_wait_for_signal_timeout \
+    parm [edx] [eax]; 
+
+#pragma aux RdosAddWait = \
+    "push es" \
+    OsGate_add_wait \
+    "mov eax,es" \
+    "pop es" \
+    parm [eax] [ebx] [es edi] \
+    value [eax];
+
+#pragma aux RdosSignalWait = \
+    "push es" \
+    "mov es,eax" \
+    OsGate_signal_wait \
+    "pop es" \
+    parm [eax];
+
 #pragma aux RdosInitKernelSection = \
     "mov dword ptr es:[edi],0" \
     "mov word ptr es:[edi+4],0" \
@@ -569,35 +598,6 @@ void RdosCreateKernelProcess(
     " pop ds" \
     "leave_done: " \
     parm [es edi]; 
-
-#pragma aux RdosClearSignal = \
-    OsGate_clear_signal; 
-
-#pragma aux RdosSignal = \
-    OsGate_signal \
-    parm [ebx]; 
-
-#pragma aux RdosWaitForSignal = \
-    OsGate_wait_for_signal; 
-
-#pragma aux RdosWaitForSignalWithTimeout = \
-    OsGate_wait_for_signal_timeout \
-    parm [edx] [eax]; 
-
-#pragma aux RdosAddWait = \
-    "push es" \
-    OsGate_add_wait \
-    "mov eax,es" \
-    "pop es" \
-    parm [eax] [ebx] [es edi] \
-    value [eax];
-
-#pragma aux RdosSignalWait = \
-    "push es" \
-    "mov es,eax" \
-    OsGate_signal_wait \
-    "pop es" \
-    parm [eax];
 
 #pragma aux RdosCreateKernelThread = \
     "push ds" \
