@@ -54,31 +54,31 @@ SYNC_FRAME = 12
 
 pipe_handle_struc       STRUC
 
-up_base                 handle_header <>
+up_base         handle_header <>
 up_func_sel     DW ?
-up_pipe_sel             DW ?
-up_pipe         DB ?
+up_pipe_sel         DW ?
+up_pipe     DB ?
 
 pipe_handle_struc       ENDS
 
-pipe_wait_header        STRUC
+pipe_wait_header    STRUC
 
-pw_obj                  wait_obj_header <>
-pw_func_sel             DW ?
+pw_obj          wait_obj_header <>
+pw_func_sel         DW ?
 pw_pipe_sel     DW ?
 
-pipe_wait_header        ENDS
+pipe_wait_header    ENDS
 
-req_handle_struc        STRUC
+req_handle_struc    STRUC
 
-rh_base                 handle_header <>
+rh_base         handle_header <>
 rh_func_sel     DW ?
-rh_pipe_sel             DW ?
+rh_pipe_sel         DW ?
 rh_signal       DW ?
-rh_list         DW ?
-rh_flags        DB ?
+rh_list     DW ?
+rh_flags    DB ?
 
-req_handle_struc        ENDS
+req_handle_struc    ENDS
 
 REQ_TYPE_WRITE_CONTROL   = 1
 REQ_TYPE_WRITE_DATA = 2
@@ -92,39 +92,39 @@ REQ_FLAG_ACTIVE  = 4
 
 req_entry_struc STRUC
 
-re_next         DW ?
-re_size         DW ?
+re_next     DW ?
+re_size     DW ?
 re_buf_sel      DW ?
-re_type         DB ?
+re_type     DB ?
 
 req_entry_struc ENDS
 
 data    SEGMENT byte public 'DATA'
 
 usb_dev_count       DW ?
-usb_dev_arr         DW 256 DUP(?)
+usb_dev_arr     DW 256 DUP(?)
 
-usb_attach_hooks        DW ?
-usb_attach_arr          DW 2 * MAX_ATTACH_HOOKS DUP(?)
+usb_attach_hooks    DW ?
+usb_attach_arr      DW 2 * MAX_ATTACH_HOOKS DUP(?)
 
-usb_detach_hooks        DW ?
-usb_detach_arr          DW 2 * MAX_DETACH_HOOKS DUP(?)
+usb_detach_hooks    DW ?
+usb_detach_arr      DW 2 * MAX_DETACH_HOOKS DUP(?)
 
 data    ENDS
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitUsbDevice
+;           NAME:           InitUsbDevice
 ;
-;               description:    Init USB device selector
+;           description:    Init USB device selector
 ;
 ;       parameters:     DS      USB device selector
 ;
@@ -173,15 +173,15 @@ init_usb_device   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateDefaultControl
+;           NAME:           CreateDefaultControl
 ;
-;               description:    Create default control-pipe
+;           description:    Create default control-pipe
 ;
 ;       parameters:     AL      Future device address
-;                       DS      USB device selector
-;                       ES      Function selector
+;               DS      USB device selector
+;               ES      Function selector
 ;
-;       RETURNS:        FS      Pipe control selector
+;       RETURNS:    FS      Pipe control selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -246,15 +246,15 @@ CreateDefaultControl    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateBulk
+;           NAME:           CreateBulk
 ;
-;               description:    Create bulk-pipe
+;           description:    Create bulk-pipe
 ;
 ;       parameters:     DS      USB device selector
-;                       CX      Max data size
-;                       DL      Pipe # (bit 7 is direction)
+;               CX      Max data size
+;               DL      Pipe # (bit 7 is direction)
 ;
-;       RETURNS:        FS      Pipe selector
+;       RETURNS:    FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -296,7 +296,7 @@ cbEndpointOk:
     mov ax,fs
     mov ds,ax
     InitSection ds:usbp_section
-    pop ds        
+    pop ds    
 ;
     pop dx
     pop bx
@@ -309,16 +309,16 @@ CreateBulk    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateInterrupt
+;           NAME:           CreateInterrupt
 ;
-;               description:    Create interrupt-pipe
+;           description:    Create interrupt-pipe
 ;
 ;       parameters:     DS      USB device selector
-;                       CX      Max data size
-;                       DL      Pipe #
-;                       DH      Interval
+;               CX      Max data size
+;               DL      Pipe #
+;               DH      Interval
 ;
-;       RETURNS:        FS      Pipe selector
+;       RETURNS:    FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -352,7 +352,7 @@ CreateInterrupt    Proc near
     mov ax,fs
     mov ds,ax
     InitSection ds:usbp_section
-    pop ds        
+    pop ds    
 ;
     pop dx
     pop bx
@@ -365,14 +365,14 @@ CreateInterrupt    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetDescr
+;           NAME:           GetDescr
 ;
-;               description:    Get descriptor
+;           description:    Get descriptor
 ;
 ;       parameters:     FS      Pipe control selector
-;                       AX      Config code
-;                       CX      Size of requested data
-;                       ES:EDI  Data buffer
+;               AX      Config code
+;               CX      Size of requested data
+;               ES:EDI  Data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -425,9 +425,9 @@ GetDescr    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               ClosePipe
+;           NAME:           ClosePipe
 ;
-;               description:    Close pipe
+;           description:    Close pipe
 ;
 ;       parameters:     FS      Pipe
 ;
@@ -460,7 +460,7 @@ cpConfLoop:
 
 cpConfNext:
     add bx,2
-    loop cpConfLoop        
+    loop cpConfLoop    
 ;
     call ds:close_pipe_proc
 ;
@@ -475,12 +475,12 @@ ClosePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               CloseEndpoint
+;           NAME:           CloseEndpoint
 ;
-;               description:    Close endpoint
+;           description:    Close endpoint
 ;
 ;       parameters:     ES      Device
-;                       AL      Endpoint # (bit 7 is direction)
+;               AL      Endpoint # (bit 7 is direction)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -510,7 +510,7 @@ cEndpointOk:
 ceClose:
     push fs
     mov fs,ax
-        sub fs:usbp_usage,1
+    sub fs:usbp_usage,1
     jnz ceCloseDone
 ;    
     call ClosePipe    
@@ -528,9 +528,9 @@ CloseEndpoint   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               CloseDevice
+;           NAME:           CloseDevice
 ;
-;               description:    Close device and cleanup resources
+;           description:    Close device and cleanup resources
 ;
 ;       parameters:     ES      Device
 ;
@@ -553,7 +553,7 @@ cdCloseHubLoop:
     push es
     mov es,ax
     call CloseDevice
-    pop es            
+    pop es        
 
 cdCloseHubNext:
     add bx,2
@@ -577,7 +577,7 @@ cdCloseOutEndpointLoop:
 cdCloseOutEndpointNext:
     inc al
     add bx,2
-    loop cdCloseOutEndpointLoop           
+    loop cdCloseOutEndpointLoop       
 ;
     mov cx,15
     mov bx,OFFSET usbf_in_endpoint_arr
@@ -594,7 +594,7 @@ cdCloseInEndpointLoop:
 cdCloseInEndpointNext:
     inc al
     add bx,2
-    loop cdCloseInEndpointLoop           
+    loop cdCloseInEndpointLoop       
 ;
     FreeMem
 ;
@@ -609,103 +609,103 @@ CloseDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   TrapUsbAttach
+;           NAME:           TrapUsbAttach
 ;
-;               DESCRIPTION:    Run notification handlers for attach
+;           DESCRIPTION:    Run notification handlers for attach
 ;
-;               PARAMETERS:             BX          Controller #
-;                       AL          Device address (1..128)
-;                                               
+;           PARAMETERS:         BX      Controller #
+;               AL      Device address (1..128)
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 trap_usb_attach PROC near
     push ds
-        push cx
-        push si
+    push cx
+    push si
 ;       
-        mov cx,SEG data
-        mov ds,cx
-        mov cx,ds:usb_attach_hooks
-        or cx,cx
-        je trap_attach_done
-        
-        mov si,OFFSET usb_attach_arr
+    mov cx,SEG data
+    mov ds,cx
+    mov cx,ds:usb_attach_hooks
+    or cx,cx
+    je trap_attach_done
+    
+    mov si,OFFSET usb_attach_arr
 
 trap_attach_loop:
-        push ds
-        push si
-        push cx
-        call dword ptr [si]
-        pop cx
-        pop si
-        pop ds
+    push ds
+    push si
+    push cx
+    call dword ptr [si]
+    pop cx
+    pop si
+    pop ds
 ;       
-        add si,4
-        loop trap_attach_loop
+    add si,4
+    loop trap_attach_loop
 
 trap_attach_done:
     pop si
     pop cx
     pop ds
-        ret
+    ret
 trap_usb_attach ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   TrapUsbDetach
+;           NAME:           TrapUsbDetach
 ;
-;               DESCRIPTION:    Run notification handlers for detach
+;           DESCRIPTION:    Run notification handlers for detach
 ;
-;               PARAMETERS:             BX          Controller #
-;                       AL          Device address (1..128)
-;                                               
+;           PARAMETERS:         BX      Controller #
+;               AL      Device address (1..128)
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 trap_usb_detach PROC near
     push ds
-        push cx
-        push si
+    push cx
+    push si
 ;       
-        mov cx,SEG data
-        mov ds,cx
-        mov cx,ds:usb_detach_hooks
-        or cx,cx
-        je trap_detach_done
-        
-        mov si,OFFSET usb_detach_arr
+    mov cx,SEG data
+    mov ds,cx
+    mov cx,ds:usb_detach_hooks
+    or cx,cx
+    je trap_detach_done
+    
+    mov si,OFFSET usb_detach_arr
 
 trap_detach_loop:
-        push ds
-        push si
-        push cx
-        call dword ptr [si]
-        pop cx
-        pop si
-        pop ds
+    push ds
+    push si
+    push cx
+    call dword ptr [si]
+    pop cx
+    pop si
+    pop ds
 ;       
-        add si,4
-        loop trap_detach_loop
+    add si,4
+    loop trap_detach_loop
 
 trap_detach_done:
     pop si
     pop cx
     pop ds
-        ret
+    ret
 trap_usb_detach ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   NotifyUsbAttach
+;           NAME:           NotifyUsbAttach
 ;
-;               description:    Notify USB attach event
+;           description:    Notify USB attach event
 ;
 ;       parameters:     AL      Usb port
-;                       AH      Speed, 0 = low speed
-;                       DS      USB device selector
+;               AH      Speed, 0 = low speed
+;               DS      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -850,12 +850,12 @@ notify_usb_attach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   NotifyUsbDetach
+;           NAME:           NotifyUsbDetach
 ;
-;               description:    Notify USB detach event
+;           description:    Notify USB detach event
 ;
 ;       parameters:     AL      Usb port
-;                       DS      USB device selector
+;               DS      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -888,13 +888,13 @@ notify_usb_detach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AddReqBlock
+;           NAME:           AddReqBlock
 ;
-;               description:    Add an request block
+;           description:    Add an request block
 ;
 ;       parameters:     DS:BX   Req handle struc
-;                       
-;       Returns:        ES      Req block
+;               
+;       Returns:    ES      Req block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -906,9 +906,9 @@ AddReqBlock     Proc near
     mov es:re_type,0
     mov es:re_next,0
 ;
-        mov ax,ds:[bx].rh_list
-        or ax,ax
-        je arbEmpty
+    mov ax,ds:[bx].rh_list
+    or ax,ax
+    je arbEmpty
 ;       
     push ds
 
@@ -920,10 +920,10 @@ arbLoop:
 ;
     mov ds:re_next,es
     pop ds
-        jmp arbDone
-        
+    jmp arbDone
+    
 arbEmpty:
-        mov ds:[bx].rh_list,es
+    mov ds:[bx].rh_list,es
 
 arbDone:
     pop eax    
@@ -934,13 +934,13 @@ AddReqBlock Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateUsbReq
+;           NAME:           CreateUsbReq
 ;
-;               description:    Create an asynchronous USB req handle
+;           description:    Create an asynchronous USB req handle
 ;
 ;       parameters:     BX      Pipe handle
-;                       
-;       Returns:        BX      Req handle
+;               
+;       Returns:    BX      Req handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -952,23 +952,23 @@ create_usb_req  Proc far
     push ax
     push cx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc curDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc curDone
 ;       
-        mov fs,ds:[bx].up_pipe_sel
-        mov ax,ds:[bx].up_func_sel
+    mov fs,ds:[bx].up_pipe_sel
+    mov ax,ds:[bx].up_func_sel
 ;       
-        mov cx,SIZE req_handle_struc
-        AllocateHandle
-        mov [bx].rh_func_sel,ax
-        mov [bx].rh_pipe_sel,fs
-        mov [bx].rh_list,0
-        mov [bx].rh_signal,0
-        mov [bx].rh_flags,0
-        mov [bx].hh_sign,USB_REQ_HANDLE
-        mov bx,[bx].hh_handle
-        clc
+    mov cx,SIZE req_handle_struc
+    AllocateHandle
+    mov [bx].rh_func_sel,ax
+    mov [bx].rh_pipe_sel,fs
+    mov [bx].rh_list,0
+    mov [bx].rh_signal,0
+    mov [bx].rh_flags,0
+    mov [bx].hh_sign,USB_REQ_HANDLE
+    mov bx,[bx].hh_handle
+    clc
 
 curDone:
     pop cx
@@ -982,13 +982,13 @@ create_usb_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AddWriteUsbControlReq
+;           NAME:           AddWriteUsbControlReq
 ;
-;               description:    Add write control req
+;           description:    Add write control req
 ;
 ;       parameters:     BX      Req handle
-;                       CX      Size of data
-;                       ES      Data selector (do not free)
+;               CX      Size of data
+;               ES      Data selector (do not free)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1000,9 +1000,9 @@ add_write_usb_control_req       Proc far
     push ax
     push bx
 ;
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc awucDone
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc awucDone
 ;
     mov ax,es
     call AddReqBlock
@@ -1023,13 +1023,13 @@ add_write_usb_control_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AddWriteUsbDataReq
+;           NAME:           AddWriteUsbDataReq
 ;
-;               description:    Add write data req
+;           description:    Add write data req
 ;
 ;       parameters:     BX      Req handle
-;                       CX      Size of data
-;                       ES      Data selector (do not free)
+;               CX      Size of data
+;               ES      Data selector (do not free)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1041,9 +1041,9 @@ add_write_usb_data_req  Proc far
     push ax
     push bx
 ;
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc awudDone
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc awudDone
 ;
     mov ax,es
     call AddReqBlock
@@ -1064,13 +1064,13 @@ add_write_usb_data_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AddReadUsbDataReq
+;           NAME:           AddReadUsbDataReq
 ;
-;               description:    Add read data req
+;           description:    Add read data req
 ;
 ;       parameters:     BX      Req handle
-;                       CX      Size of data
-;                       ES      Data selector (do not free)
+;               CX      Size of data
+;               ES      Data selector (do not free)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1082,9 +1082,9 @@ add_read_usb_data_req   Proc far
     push ax
     push bx
 ;
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc arudDone
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc arudDone
 ;
     mov ax,es
     call AddReqBlock
@@ -1105,9 +1105,9 @@ add_read_usb_data_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AddUsbStatusInReq
+;           NAME:           AddUsbStatusInReq
 ;
-;               description:    Add status in req
+;           description:    Add status in req
 ;
 ;       parameters:     BX      Req handle
 ;
@@ -1121,9 +1121,9 @@ add_usb_status_in_req   Proc far
     push ax
     push bx
 ;
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc ausiDone
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc ausiDone
 ;
     call AddReqBlock
     mov es:re_type,REQ_TYPE_STATUS_IN
@@ -1143,9 +1143,9 @@ add_usb_status_in_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AddUsbStatusOutReq
+;           NAME:           AddUsbStatusOutReq
 ;
-;               description:    Add status out req
+;           description:    Add status out req
 ;
 ;       parameters:     BX      Req handle
 ;
@@ -1159,9 +1159,9 @@ add_usb_status_out_req  Proc far
     push ax
     push bx
 ;
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc ausoDone
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc ausoDone
 ;
     call AddReqBlock
     mov es:re_type,REQ_TYPE_STATUS_OUT
@@ -1181,24 +1181,24 @@ add_usb_status_out_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReqWriteControl
+;           NAME:           ReqWriteControl
 ;
-;               description:    Do Write control req
+;           description:    Do Write control req
 ;
 ;       parameters:     DS      Function sel
-;                       ES      Req sel
-;                       FS      Pipe sel
-;                       CX      Size
+;               ES      Req sel
+;               FS      Pipe sel
+;               CX      Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqWriteControl Proc near
-        push es
-        push edi
+    push es
+    push edi
 ;       
     mov es,es:re_buf_sel
     xor edi,edi
-        call ds:add_setup_proc
+    call ds:add_setup_proc
 ;       
     pop edi
     pop es      
@@ -1209,24 +1209,24 @@ ReqWriteControl Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReqWriteData
+;           NAME:           ReqWriteData
 ;
-;               description:    Do Write data req
+;           description:    Do Write data req
 ;
 ;       parameters:     DS      Function sel
-;                       ES      Req sel
-;                       FS      Pipe sel
-;                       CX      Size
+;               ES      Req sel
+;               FS      Pipe sel
+;               CX      Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqWriteData    Proc near
-        push es
-        push edi
+    push es
+    push edi
 ;       
     mov es,es:re_buf_sel
     xor edi,edi
-        call ds:add_out_proc
+    call ds:add_out_proc
 ;       
     pop edi
     pop es      
@@ -1237,29 +1237,29 @@ ReqWriteData Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReqReadData
+;           NAME:           ReqReadData
 ;
-;               description:    Do read data req
+;           description:    Do read data req
 ;
 ;       parameters:     DS      Function sel
-;                       ES      Req sel
-;                       FS      Pipe sel
+;               ES      Req sel
+;               FS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqReadData     Proc near
-        push es
-        push cx
-        push edi
+    push es
+    push cx
+    push edi
 ;       
     xor edi,edi
     mov cx,es:re_size
     mov es,es:re_buf_sel
-        call ds:add_in_proc
+    call ds:add_in_proc
 ;       
     pop edi
-        pop cx
-        pop es
+    pop cx
+    pop es
     ret
 ReqReadData Endp
 
@@ -1267,18 +1267,18 @@ ReqReadData Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReqStatusIn
+;           NAME:           ReqStatusIn
 ;
-;               description:    Do status in
+;           description:    Do status in
 ;
 ;       parameters:     DS      Function sel
-;                       ES      Req sel
-;                       FS      Pipe sel
+;               ES      Req sel
+;               FS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqStatusIn     Proc near
-        call ds:add_status_in_proc
+    call ds:add_status_in_proc
     ret
 ReqStatusIn Endp
 
@@ -1286,18 +1286,18 @@ ReqStatusIn Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReqStatusOut
+;           NAME:           ReqStatusOut
 ;
-;               description:    Do status out
+;           description:    Do status out
 ;
 ;       parameters:     DS      Function sel
-;                       ES      Req sel
-;                       FS      Pipe sel
+;               ES      Req sel
+;               FS      Pipe sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqStatusOut    Proc near
-        call ds:add_status_out_proc
+    call ds:add_status_out_proc
     ret
 ReqStatusOut Endp
 
@@ -1305,13 +1305,13 @@ ReqStatusOut Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   StartUsbReq
+;           NAME:           StartUsbReq
 ;
-;               description:    Start req
+;           description:    Start req
 ;
 ;       parameters:     AX      Thread to signal
-;                       BX      Req handle
-;                       CX      Size of out buffer
+;               BX      Req handle
+;               CX      Size of out buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1325,20 +1325,20 @@ rt04 DW OFFSET ReqStatusIn
 rt05 DW OFFSET ReqStatusOut   
 
 start_usb_req   Proc far
-        push ds
-        push fs
-        push ax
-        push bx
+    push ds
+    push fs
+    push ax
+    push bx
 ;
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc surDone
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc surDone
 ;
     test ds:[bx].rh_flags,REQ_FLAG_LOCKED
     jnz surStart
 ;
     push ds
-        mov ds,[bx].rh_pipe_sel
+    mov ds,[bx].rh_pipe_sel
     EnterSection ds:usbp_section
     pop ds
     or ds:[bx].rh_flags,REQ_FLAG_LOCKED
@@ -1346,8 +1346,8 @@ start_usb_req   Proc far
 surStart:    
     or ds:[bx].rh_flags,REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE
     mov ax,ds:[bx].rh_list
-        mov fs,ds:[bx].rh_pipe_sel
-        mov ds,ds:[bx].rh_func_sel
+    mov fs,ds:[bx].rh_pipe_sel
+    mov ds,ds:[bx].rh_func_sel
 
 surReqLoop:
     or ax,ax
@@ -1372,10 +1372,10 @@ surIssue:
     call ds:issue_transfer_proc
 
 surDone:    
-        pop bx
-        pop ax
-        pop fs
-        pop ds
+    pop bx
+    pop ax
+    pop fs
+    pop ds
     ret
 start_usb_req   Endp
 
@@ -1383,29 +1383,29 @@ start_usb_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   StopUsbReq
+;           NAME:           StopUsbReq
 ;
-;               description:    Stop req
+;           description:    Stop req
 ;
 ;       parameters:     BX      Req handle
-;                       
+;               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_usb_req_name DB 'Stop USB req', 0
 
 stop_usb_req    Proc far
-        push ds
-        push fs
-        push ax
-        push bx
+    push ds
+    push fs
+    push ax
+    push bx
 ;
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc sturEnd
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc sturEnd
 ;
     push ds
-        mov fs,ds:[bx].rh_pipe_sel
-        mov ds,ds:[bx].rh_func_sel
+    mov fs,ds:[bx].rh_pipe_sel
+    mov ds,ds:[bx].rh_func_sel
     call ds:end_transfer_proc
     pop ds
 ;
@@ -1416,7 +1416,7 @@ stop_usb_req    Proc far
     jz sturDone
 ;
     push ds
-        mov ds,[bx].rh_pipe_sel
+    mov ds,[bx].rh_pipe_sel
     LeaveSection ds:usbp_section
     pop ds
     and ds:[bx].rh_flags,NOT REQ_FLAG_LOCKED
@@ -1425,10 +1425,10 @@ sturDone:
     and ds:[bx].rh_flags,NOT (REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE)
 
 sturEnd:
-        pop bx
-        pop ax
-        pop fs
-        pop ds
+    pop bx
+    pop ax
+    pop fs
+    pop ds
     ret
 stop_usb_req   Endp
 
@@ -1436,26 +1436,26 @@ stop_usb_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   IsUsbReqStarted
+;           NAME:           IsUsbReqStarted
 ;
-;               description:    Check if request is started
+;           description:    Check if request is started
 ;
 ;       parameters:     BX      Req handle
 ;
-;       Returns:        NC      Req is started
+;       Returns:    NC      Req is started
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_usb_req_started_name DB 'Is USB Req Started', 0
 
 is_usb_req_started      Proc far
-        push ds
-        push ax
-        push bx
+    push ds
+    push ax
+    push bx
 ;
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc iursDone
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc iursDone
 ;
     test ds:[bx].rh_flags,REQ_FLAG_STARTED
     stc
@@ -1474,42 +1474,42 @@ is_usb_req_started   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   IsUsbReqReady
+;           NAME:           IsUsbReqReady
 ;
-;               description:    Check if request is ready
+;           description:    Check if request is ready
 ;
 ;       parameters:     BX      Req handle
 ;
-;       Returns:        NC      Req is done
+;       Returns:    NC      Req is done
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_usb_req_ready_name DB 'Is USB Req Ready', 0
 
-is_usb_req_ready        Proc far
-        push ds
-        push fs
-        push ax
-        push bx
+is_usb_req_ready    Proc far
+    push ds
+    push fs
+    push ax
+    push bx
 ;
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc iurrDone
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc iurrDone
 ;
     test ds:[bx].rh_flags,REQ_FLAG_ACTIVE
     stc
     jz iurrDone
 ;
     push ds
-        mov fs,ds:[bx].rh_pipe_sel
-        mov ds,ds:[bx].rh_func_sel
-        call ds:is_transfer_done_proc
-        pop ds
-        jc iurrDone
+    mov fs,ds:[bx].rh_pipe_sel
+    mov ds,ds:[bx].rh_func_sel
+    call ds:is_transfer_done_proc
+    pop ds
+    jc iurrDone
 ;
     and ds:[bx].rh_flags,NOT REQ_FLAG_STARTED
     clc
-        
+    
 iurrDone:       
     pop bx
     pop ax
@@ -1522,39 +1522,39 @@ is_usb_req_ready   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetUsbReqData
+;           NAME:           GetUsbReqData
 ;
-;               description:    Get req data
+;           description:    Get req data
 ;
 ;       parameters:     BX      Req handle
 ;
-;       Returns:        NC      Req is done
-;                       CX      Bytes transfered to buffer
+;       Returns:    NC      Req is done
+;               CX      Bytes transfered to buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_usb_req_data_name DB 'Get USB Req Data', 0
 
-get_usb_req_data        Proc far
-        push ds
-        push fs
-        push ax
-        push bx
+get_usb_req_data    Proc far
+    push ds
+    push fs
+    push ax
+    push bx
 ;
     xor cx,cx
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc gurdDone
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc gurdDone
 ;
     test ds:[bx].rh_flags,REQ_FLAG_ACTIVE
     stc
     jz gurdDone
 ;
-        mov fs,ds:[bx].rh_pipe_sel
+    mov fs,ds:[bx].rh_pipe_sel
     mov ax,ds:[bx].rh_list
-        mov ds,ds:[bx].rh_func_sel
-        call ds:was_transfer_ok_proc
-        jc gurdDone
+    mov ds,ds:[bx].rh_func_sel
+    call ds:was_transfer_ok_proc
+    jc gurdDone
 
 gurdReqLoop:
     or ax,ax
@@ -1585,9 +1585,9 @@ get_usb_req_data   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CloseUsbReq
+;           NAME:           CloseUsbReq
 ;
-;               description:    Close USB req
+;           description:    Close USB req
 ;
 ;       parameters:     BX      Req handle
 ;
@@ -1596,21 +1596,21 @@ get_usb_req_data   Endp
 close_usb_req_name DB 'Close USB req', 0
 
 close_usb_req   Proc far
-        push ds
-        push es
-        push fs
-        push ax
+    push ds
+    push es
+    push fs
+    push ax
 ;
-        mov ax,USB_REQ_HANDLE
-        DerefHandle
-        jc crDone
+    mov ax,USB_REQ_HANDLE
+    DerefHandle
+    jc crDone
 ;
     test ds:[bx].rh_flags,REQ_FLAG_STARTED
     jz crFreeList
 ;
     push ds
-        mov fs,ds:[bx].rh_pipe_sel
-        mov ds,ds:[bx].rh_func_sel
+    mov fs,ds:[bx].rh_pipe_sel
+    mov ds,ds:[bx].rh_func_sel
     call ds:end_transfer_proc
     pop ds
 ;    
@@ -1637,12 +1637,12 @@ crFreeHandle:
     jz crLockOk
 ;
     push ds
-        mov ds,[bx].rh_pipe_sel
+    mov ds,[bx].rh_pipe_sel
     LeaveSection ds:usbp_section
     pop ds
 
 crLockOk:
-        FreeHandle
+    FreeHandle
 
 crDone: 
     pop ax
@@ -1656,16 +1656,16 @@ close_usb_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetUsbDevice
+;           NAME:           GetUsbDevice
 ;
-;               description:    Get USB device descriptor
+;           description:    Get USB device descriptor
 ;
-;       parameters:     BX          Controller #
-;                       AL          Device address (1..128)
-;                       (E)CX       Buffer size
-;                       ES:(E)DI    Buffer
+;       parameters:     BX      Controller #
+;               AL      Device address (1..128)
+;               (E)CX       Buffer size
+;               ES:(E)DI    Buffer
 ;
-;       Returns:        (E)AX       Size of descriptor
+;       Returns:    (E)AX       Size of descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1721,7 +1721,7 @@ get_usb_device  Proc near
 gudCopy:
     movzx ecx,cx
     mov eax,ecx
-    rep movs byte ptr es:[edi],ds:[esi]        
+    rep movs byte ptr es:[edi],ds:[esi]    
 ;
     pop edi
     pop ecx
@@ -1732,7 +1732,7 @@ gudFail:
     xor eax,eax    
     stc
 
-gudDone:                
+gudDone:        
     pop esi
     pop ds
     ret
@@ -1753,23 +1753,23 @@ get_usb_device16    Proc far
     pop edi
     pop ecx
     ret
-get_usb_device16    Endp        
+get_usb_device16    Endp    
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetUsbConfig
+;           NAME:           GetUsbConfig
 ;
-;               description:    Get USB config descriptor
+;           description:    Get USB config descriptor
 ;
-;       parameters:     BX          Controller #
-;                       AL          Device address (1..128)
-;                       DL          Config #
-;                       (E)CX       Buffer size
-;                       ES:(E)DI    Buffer
+;       parameters:     BX      Controller #
+;               AL      Device address (1..128)
+;               DL      Config #
+;               (E)CX       Buffer size
+;               ES:(E)DI    Buffer
 ;
-;       Returns:        (E)AX       Size of descriptor
+;       Returns:    (E)AX       Size of descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1830,7 +1830,7 @@ get_usb_config  Proc near
 gucCopy:
     movzx ecx,cx
     mov eax,ecx
-    rep movs byte ptr es:[edi],ds:[esi]        
+    rep movs byte ptr es:[edi],ds:[esi]    
 ;
     pop edi
     pop ecx
@@ -1841,7 +1841,7 @@ gucFail:
     xor eax,eax    
     stc
 
-gucDone:                
+gucDone:        
     pop esi
     pop ds
     ret
@@ -1862,19 +1862,19 @@ get_usb_config16    Proc far
     pop edi
     pop ecx
     ret
-get_usb_config16    Endp        
+get_usb_config16    Endp    
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ConfigUsbDevice
+;           NAME:           ConfigUsbDevice
 ;
-;               description:    Configure USB device
+;           description:    Configure USB device
 ;
-;       parameters:     BX          Controller #
-;                       AL          Device address (1..128)
-;                       DL          Config #
+;       parameters:     BX      Controller #
+;               AL      Device address (1..128)
+;               DL      Config #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1989,7 +1989,7 @@ cudNextDescr:
     cmp di,gs:ucd_size
     jb cudDescrLoop    
 ;
-    clc        
+    clc    
     jmp cudDone
 
 cudFail:
@@ -2005,21 +2005,21 @@ cudDone:
     pop es
     pop ds
     retf32
-config_usb_device    Endp        
+config_usb_device    Endp    
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OpenUsbPipe
+;           NAME:           OpenUsbPipe
 ;
-;               description:    Open USB pipe
+;           description:    Open USB pipe
 ;
 ;       parameters:     BX      Controller #
-;                       AL      Device address (1..128)
-;                       DL      Pipe # (bit 7 is direction)
+;               AL      Device address (1..128)
+;               DL      Pipe # (bit 7 is direction)
 ;
-;       RETURNS:        BX      Pipe handle
+;       RETURNS:    BX      Pipe handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2085,18 +2085,18 @@ oupOut:
     jmp oupFail
 
 oupCreateHandle:    
-        mov cx,SIZE pipe_handle_struc
-        AllocateHandle
-        mov [bx].up_func_sel,es
-        mov [bx].up_pipe_sel,di
-        mov [bx].up_pipe,dl
-        mov [bx].hh_sign,USB_PIPE_HANDLE
-        mov bx,[bx].hh_handle
+    mov cx,SIZE pipe_handle_struc
+    AllocateHandle
+    mov [bx].up_func_sel,es
+    mov [bx].up_pipe_sel,di
+    mov [bx].up_pipe,dl
+    mov [bx].hh_sign,USB_PIPE_HANDLE
+    mov bx,[bx].hh_handle
 ;
     mov fs,di
     inc fs:usbp_usage
-        clc
-        jmp oupDone
+    clc
+    jmp oupDone
 
 oupFail:
     stc
@@ -2117,36 +2117,36 @@ open_usb_pipe    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CloseUsbPipe
+;           NAME:           CloseUsbPipe
 ;
-;               DESCRIPTION:    Close a USB pipe handle
+;           DESCRIPTION:    Close a USB pipe handle
 ;
-;               PARAMETERS:             BX              Pipe handle
+;           PARAMETERS:         BX          Pipe handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_usb_pipe_name     DB 'Close USB Pipe',0
 
 close_usb_pipe  Proc far
-        push ds
-        push es
-        push fs
-        push ax
-        push bx
-        push dx
+    push ds
+    push es
+    push fs
+    push ax
+    push bx
+    push dx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc cupDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc cupDone
 ;
     push ds
     push bx
     mov dl,ds:[bx].up_pipe
-        mov fs,ds:[bx].up_pipe_sel
-        sub fs:usbp_usage,1
+    mov fs,ds:[bx].up_pipe_sel
+    sub fs:usbp_usage,1
     jnz cupCloseDone
 ;       
-        mov ds,ds:[bx].up_func_sel
+    mov ds,ds:[bx].up_func_sel
     mov ax,fs:usbp_device_sel
     or ax,ax
     jz cupCloseDone
@@ -2167,76 +2167,76 @@ cupOut:
     mov es:[bx].usbf_out_endpoint_arr,0
 
 cupClose:    
-        call ClosePipe
+    call ClosePipe
 
 cupCloseDone:
-        pop bx
-        pop ds
-        FreeHandle
-        clc
+    pop bx
+    pop ds
+    FreeHandle
+    clc
 
 cupDone:
     pop dx
-        pop bx
-        pop ax
-        pop fs
-        pop es
-        pop ds
-        retf32
+    pop bx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    retf32
 close_usb_pipe  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   delete_handle
+;           NAME:           delete_handle
 ;
-;               DESCRIPTION:    BX                      USB pipe handle
+;           DESCRIPTION:    BX              USB pipe handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_handle   Proc far
-        push ds
-        push fs
-        push ax
-        push bx
+    push ds
+    push fs
+    push ax
+    push bx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc delete_handle_done
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc delete_handle_done
 ;
     push ds
     push bx
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        sub fs:usbp_usage,1
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    sub fs:usbp_usage,1
     jnz delete_handle_pipe_ok
 ;       
-        call ClosePipe
+    call ClosePipe
 
 delete_handle_pipe_ok:
-        pop bx
-        pop ds
-        FreeHandle
-        clc
+    pop bx
+    pop ds
+    FreeHandle
+    clc
 
 delete_handle_done:
-        pop bx
-        pop ax
-        pop fs
-        pop ds
-        ret
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    ret
 delete_handle   Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   StartWaitForPipe
+;           NAME:           StartWaitForPipe
 ;
-;               DESCRIPTION:    Start a wait for pipe
+;           DESCRIPTION:    Start a wait for pipe
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2246,21 +2246,21 @@ start_wait_for_pipe     PROC far
 ;    
     mov fs,es:pw_pipe_sel
     mov ds,es:pw_func_sel
-        call ds:issue_transfer_proc
+    call ds:issue_transfer_proc
 ;       
     pop fs
-    pop ds        
-    ret
+    pop ds    
+    retf32
 start_wait_for_pipe Endp
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   StopWaitForPipe
+;           NAME:           StopWaitForPipe
 ;
-;               DESCRIPTION:    Stop a wait for pipe
+;           DESCRIPTION:    Stop a wait for pipe
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2274,35 +2274,35 @@ stop_wait_for_pipe      PROC far
     call ds:end_transfer_proc
 ;       
     pop fs
-    pop ds        
-    ret
+    pop ds    
+    retf32
 stop_wait_for_pipe Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ClearWaitForPipe
+;           NAME:           ClearWaitForPipe
 ;
-;               DESCRIPTION:    Clear wait for pipe
+;           DESCRIPTION:    Clear wait for pipe
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clear_wait_for_pipe     PROC far
-    ret
+    retf32
 clear_wait_for_pipe Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   IsPipeIdle
+;           NAME:           IsPipeIdle
 ;
-;               DESCRIPTION:    Check if pipe is idle
+;           DESCRIPTION:    Check if pipe is idle
 ;
-;               PARAMETERS:             ES      Wait object
+;           PARAMETERS:         ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2316,96 +2316,96 @@ is_pipe_idle    PROC far
     cmc
 ;
     pop fs
-    pop ds        
-    ret
+    pop ds    
+    retf32
 is_pipe_idle Endp
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   AddWaitForPipe
+;           NAME:           AddWaitForPipe
 ;
-;               DESCRIPTION:    Add a wait for pipe
+;           DESCRIPTION:    Add a wait for pipe
 ;
-;               PARAMETERS:             BX      Wait handle
-;                       AX      Pipe handle
-;                       ECX     Signalled ID
+;           PARAMETERS:         BX      Wait handle
+;               AX      Pipe handle
+;               ECX     Signalled ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 add_wait_for_pipe_name  DB 'Add Wait For Pipe',0
 
 add_wait_tab:
-aw0     DW OFFSET start_wait_for_pipe,      SEG code
-aw1 DW OFFSET stop_wait_for_pipe,               SEG code
-aw2     DW OFFSET clear_wait_for_pipe,      SEG code
-aw3     DW OFFSET is_pipe_idle,                         SEG code
+aw0 DD OFFSET start_wait_for_pipe,      SEG code
+aw1 DD OFFSET stop_wait_for_pipe,       SEG code
+aw2 DD OFFSET clear_wait_for_pipe,      SEG code
+aw3 DD OFFSET is_pipe_idle,             SEG code
 
 add_wait_for_pipe       PROC far
-        push ds
-        push es
-        push fs
-        push eax
-        push bx
-        push di
+    push ds
+    push es
+    push fs
+    push eax
+    push bx
+    push edi
 ;
     push bx
     mov bx,ax
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc add_wait_pop_done
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc add_wait_pop_done
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
     pop bx
 ;
     mov ax,cs
     mov es,ax
-        mov ax,SIZE pipe_wait_header - SIZE wait_obj_header
-    mov di,OFFSET add_wait_tab
+    mov ax,SIZE pipe_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_tab
     AddWait
     jc add_wait_done
 ;
     mov es:pw_func_sel,ds
-        mov es:pw_pipe_sel,fs
-        clc
-        jmp add_wait_done
+    mov es:pw_pipe_sel,fs
+    clc
+    jmp add_wait_done
 
 add_wait_pop_done:
     pop bx
     
 add_wait_done:
-    pop di
+    pop edi
     pop bx
     pop eax
     pop fs
     pop es
     pop ds
-        retf32
+    retf32
 add_wait_for_pipe       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   LockUsbPipe
+;           NAME:           LockUsbPipe
 ;
-;               DESCRIPTION:    Lock USB pipe
+;           DESCRIPTION:    Lock USB pipe
 ;
-;               PARAMETERS:             BX                  Pipe handle
+;           PARAMETERS:         BX          Pipe handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lock_usb_pipe_name      DB 'Lock USB Pipe',0
 
 lock_usb_pipe   Proc far
-        push ds
-        push ax
-        push bx
+    push ds
+    push ax
+    push bx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc lupDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc lupDone
 ;
     push ds
     mov ds,ds:[bx].up_pipe_sel
@@ -2413,9 +2413,9 @@ lock_usb_pipe   Proc far
     pop ds
 
 lupDone:
-        pop bx
-        pop ax
-        pop ds
+    pop bx
+    pop ax
+    pop ds
     retf32
 lock_usb_pipe   Endp
 
@@ -2423,24 +2423,24 @@ lock_usb_pipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   UnlockUsbPipe
+;           NAME:           UnlockUsbPipe
 ;
-;               DESCRIPTION:    Unlock USB pipe
+;           DESCRIPTION:    Unlock USB pipe
 ;
-;               PARAMETERS:             BX                  Pipe handle
+;           PARAMETERS:         BX          Pipe handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 unlock_usb_pipe_name    DB 'Unlock USB Pipe',0
 
 unlock_usb_pipe   Proc far
-        push ds
-        push ax
-        push bx
+    push ds
+    push ax
+    push bx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc uupDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc uupDone
 ;       
     push ds
     mov ds,ds:[bx].up_pipe_sel
@@ -2448,9 +2448,9 @@ unlock_usb_pipe   Proc far
     pop ds
 
 uupDone:
-        pop bx
-        pop ax
-        pop ds
+    pop bx
+    pop ax
+    pop ds
     retf32
 unlock_usb_pipe   Endp
 
@@ -2458,451 +2458,451 @@ unlock_usb_pipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WriteUsbControl
+;           NAME:           WriteUsbControl
 ;
-;               DESCRIPTION:    Write USB control
+;           DESCRIPTION:    Write USB control
 ;
-;               PARAMETERS:             BX                  Pipe handle
-;                       CX          Size of data to request
-;                       ES:(E)DI    Buffer
+;           PARAMETERS:         BX          Pipe handle
+;               CX      Size of data to request
+;               ES:(E)DI    Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_usb_control_name  DB 'Write USB Control',0
 
 write_usb_control16     Proc far
-        push ds
-        push fs
-        push ax
-        push bx
-        push cx
+    push ds
+    push fs
+    push ax
+    push bx
+    push cx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc wucDone16
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc wucDone16
 ;
     movzx edi,di
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:add_setup_proc
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:add_setup_proc
 
 wucDone16:
     pop cx
-        pop bx
-        pop ax
-        pop fs
-        pop ds
-        ret
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    ret
 write_usb_control16     Endp
 
 write_usb_control32     Proc far
-        push ds
-        push fs
-        push ax
-        push bx
-        push cx
+    push ds
+    push fs
+    push ax
+    push bx
+    push cx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc wucDone32
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc wucDone32
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:add_setup_proc
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:add_setup_proc
 
 wucDone32:
     pop cx
-        pop bx
-        pop ax
-        pop fs
-        pop ds
-        retf32
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    retf32
 write_usb_control32     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ReqUsbData
+;           NAME:           ReqUsbData
 ;
-;               DESCRIPTION:    Setup request for input data on pipe
+;           DESCRIPTION:    Setup request for input data on pipe
 ;
-;               PARAMETERS:             BX                  Pipe handle
-;                       CX          Size of buffer
-;                       ES:(E)DI    Buffer
+;           PARAMETERS:         BX          Pipe handle
+;               CX      Size of buffer
+;               ES:(E)DI    Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 req_usb_data_name       DB 'Request USB Data',0
 
 req_usb_data    Proc far
-        push ds
-        push fs
-        push ax
-        push bx
+    push ds
+    push fs
+    push ax
+    push bx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc rudDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc rudDone
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:add_in_proc
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:add_in_proc
 
 rudDone:
-        pop bx
-        pop ax
-        pop fs
-        pop ds
-        retf32
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    retf32
 req_usb_data    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetUsbDataSize
+;           NAME:           GetUsbDataSize
 ;
-;               DESCRIPTION:    Get data size from previous input req
+;           DESCRIPTION:    Get data size from previous input req
 ;
-;               PARAMETERS:             BX                  Pipe handle
+;           PARAMETERS:         BX          Pipe handle
 ;
-;       RETURNS:        (E)AX       Actual size
+;       RETURNS:    (E)AX       Actual size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_usb_data_size_name  DB 'Get USB Data Size',0
 
 get_usb_data_size16     Proc far
-        push ds
-        push fs
-        push bx
-        push cx
+    push ds
+    push fs
+    push bx
+    push cx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc gudDone16
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc gudDone16
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:get_data_size_proc
-        mov ax,cx
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:get_data_size_proc
+    mov ax,cx
 
 gudDone16:
     pop cx
-        pop bx
-        pop fs
-        pop ds
-        ret
+    pop bx
+    pop fs
+    pop ds
+    ret
 get_usb_data_size16     Endp
 
 get_usb_data_size32     Proc far
-        push ds
-        push fs
-        push bx
-        push cx
+    push ds
+    push fs
+    push bx
+    push cx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc gudDone32
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc gudDone32
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:get_data_size_proc
-        movzx eax,cx
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:get_data_size_proc
+    movzx eax,cx
 
 gudDone32:
     pop cx
-        pop bx
-        pop fs
-        pop ds
-        retf32
+    pop bx
+    pop fs
+    pop ds
+    retf32
 get_usb_data_size32     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WriteUsbData
+;           NAME:           WriteUsbData
 ;
-;               DESCRIPTION:    Write USB data
+;           DESCRIPTION:    Write USB data
 ;
-;               PARAMETERS:             BX                  Pipe handle
-;                       CX          Size of data to request
-;                       ES:(E)DI    Buffer
+;           PARAMETERS:         BX          Pipe handle
+;               CX      Size of data to request
+;               ES:(E)DI    Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_usb_data_name     DB 'Write USB Data',0
 
-write_usb_data16        Proc far
-        push ds
-        push fs
-        push ax
-        push bx
-        push cx
+write_usb_data16    Proc far
+    push ds
+    push fs
+    push ax
+    push bx
+    push cx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc wudDone16
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc wudDone16
 ;
     movzx edi,di
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:add_out_proc
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:add_out_proc
 
 wudDone16:
     pop cx
-        pop bx
-        pop ax
-        pop fs
-        pop ds
-        ret
-write_usb_data16        Endp
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    ret
+write_usb_data16    Endp
 
-write_usb_data32        Proc far
-        push ds
-        push fs
-        push ax
-        push bx
-        push cx
+write_usb_data32    Proc far
+    push ds
+    push fs
+    push ax
+    push bx
+    push cx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc wudDone32
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc wudDone32
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:add_out_proc
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:add_out_proc
 
 wudDone32:
     pop cx
-        pop bx
-        pop ax
-        pop fs
-        pop ds
-        retf32
-write_usb_data32        Endp
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    retf32
+write_usb_data32    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ReqUsbStatus
+;           NAME:           ReqUsbStatus
 ;
-;               DESCRIPTION:    Request status input
+;           DESCRIPTION:    Request status input
 ;
-;               PARAMETERS:             BX                  Pipe handle
+;           PARAMETERS:         BX          Pipe handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 req_usb_status_name     DB 'Request USB Status',0
 
 req_usb_status  Proc far
-        push ds
-        push fs
-        push bx
-        push cx
+    push ds
+    push fs
+    push bx
+    push cx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc rusDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc rusDone
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:add_status_in_proc
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:add_status_in_proc
 
 rusDone:
     pop cx
-        pop bx
-        pop fs
-        pop ds
-        retf32
+    pop bx
+    pop fs
+    pop ds
+    retf32
 req_usb_status  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WriteUsbStatus
+;           NAME:           WriteUsbStatus
 ;
-;               DESCRIPTION:    Write status output
+;           DESCRIPTION:    Write status output
 ;
-;               PARAMETERS:             BX                  Pipe handle
+;           PARAMETERS:         BX          Pipe handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_usb_status_name   DB 'Write USB Status',0
 
-write_usb_status        Proc far
-        push ds
-        push fs
-        push bx
-        push cx
+write_usb_status    Proc far
+    push ds
+    push fs
+    push bx
+    push cx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc wusDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc wusDone
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:add_status_out_proc
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:add_status_out_proc
 
 wusDone:
     pop cx
-        pop bx
-        pop fs
-        pop ds
-        retf32
-write_usb_status        Endp
+    pop bx
+    pop fs
+    pop ds
+    retf32
+write_usb_status    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   StartUsbTransaction
+;           NAME:           StartUsbTransaction
 ;
-;               DESCRIPTION:    Start USB transaction
+;           DESCRIPTION:    Start USB transaction
 ;
-;               PARAMETERS:             BX                  Pipe handle
+;           PARAMETERS:         BX          Pipe handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_usb_trans_name    DB 'Start USB Transaction',0
 
 start_usb_trans Proc far
-        push ds
-        push fs
-        push bx
+    push ds
+    push fs
+    push bx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc sutDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc sutDone
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:issue_transfer_proc
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:issue_transfer_proc
 
 sutDone:
-        pop bx
-        pop fs
-        pop ds
-        retf32
+    pop bx
+    pop fs
+    pop ds
+    retf32
 start_usb_trans Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   IsUsbTransactionDone
+;           NAME:           IsUsbTransactionDone
 ;
-;               DESCRIPTION:    Check if transaction is done
+;           DESCRIPTION:    Check if transaction is done
 ;
-;               PARAMETERS:             BX                  Pipe handle
+;           PARAMETERS:         BX          Pipe handle
 ;
-;       RETURNS:        NC          Done
+;       RETURNS:    NC      Done
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_usb_trans_done_name  DB 'Is USB Transaction Done',0
 
 is_usb_trans_done       Proc far
-        push ds
-        push fs
-        push bx
+    push ds
+    push fs
+    push bx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc iutdDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc iutdDone
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:is_transfer_done_proc
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:is_transfer_done_proc
 
 iutdDone:
-        pop bx
-        pop fs
-        pop ds
-        retf32
+    pop bx
+    pop fs
+    pop ds
+    retf32
 is_usb_trans_done       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WasUsbTransactionOk
+;           NAME:           WasUsbTransactionOk
 ;
-;               DESCRIPTION:    Check if transaction was performed ok
+;           DESCRIPTION:    Check if transaction was performed ok
 ;
-;               PARAMETERS:             BX                  Pipe handle
+;           PARAMETERS:         BX          Pipe handle
 ;
-;       RETURNS:        NC          Done
+;       RETURNS:    NC      Done
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 was_usb_trans_ok_name   DB 'Was USB Transaction Ok',0
 
-was_usb_trans_ok        Proc far
-        push ds
-        push fs
-        push bx
+was_usb_trans_ok    Proc far
+    push ds
+    push fs
+    push bx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc wutoDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc wutoDone
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
-        call ds:was_transfer_ok_proc
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
+    call ds:was_transfer_ok_proc
 
 wutoDone:
-        pop bx
-        pop fs
-        pop ds
-        retf32
-was_usb_trans_ok        Endp
+    pop bx
+    pop fs
+    pop ds
+    retf32
+was_usb_trans_ok    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetUsbInfo
+;           NAME:           GetUsbInfo
 ;
-;               DESCRIPTION:    Get pipe info
+;           DESCRIPTION:    Get pipe info
 ;
-;               PARAMETERS:             BX                  Pipe handle
+;           PARAMETERS:         BX          Pipe handle
 ;
-;       RETURNS:        FS          Pipe sel
-;                       DS          Function sel
+;       RETURNS:    FS      Pipe sel
+;               DS      Function sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_usb_info_name       DB 'Get USB Info',0
 
 get_usb_info    Proc far
-        push bx
-        push cx
+    push bx
+    push cx
 ;
-        mov ax,USB_PIPE_HANDLE
-        DerefHandle
-        jc guiDone
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc guiDone
 ;
-        mov fs,ds:[bx].up_pipe_sel
-        mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[bx].up_pipe_sel
+    mov ds,ds:[bx].up_func_sel
 
 guiDone:
     pop cx
-        pop bx
-        ret
+    pop bx
+    ret
 get_usb_info    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   HookUsbAttach
+;           NAME:           HookUsbAttach
 ;
-;               description:    Hook USB attach event
+;           description:    Hook USB attach event
 ;
 ;       parameters:     ES:DI       Callback 
 ;
@@ -2911,20 +2911,20 @@ get_usb_info    Endp
 hook_usb_attach_name DB 'Hook USB Attach', 0
 
 hook_usb_attach Proc far
-        push ds
-        push bx
+    push ds
+    push bx
 ;       
-        mov bx,SEG data
-        mov ds,bx
-        mov bx,ds:usb_attach_hooks
-        shl bx,2
-        add bx,OFFSET usb_attach_arr
-        mov [bx],di
-        mov [bx+2],es
-        inc ds:usb_attach_hooks
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:usb_attach_hooks
+    shl bx,2
+    add bx,OFFSET usb_attach_arr
+    mov [bx],di
+    mov [bx+2],es
+    inc ds:usb_attach_hooks
 ;
-        pop bx
-        pop ds
+    pop bx
+    pop ds
     ret
 hook_usb_attach   Endp
 
@@ -2932,9 +2932,9 @@ hook_usb_attach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   HookUsbDetach
+;           NAME:           HookUsbDetach
 ;
-;               description:    Hook USB detach event
+;           description:    Hook USB detach event
 ;
 ;       parameters:     ES:DI       Callback
 ;
@@ -2943,261 +2943,261 @@ hook_usb_attach   Endp
 hook_usb_detach_name DB 'Hook USB Detach', 0
 
 hook_usb_detach Proc far
-        push ds
-        push bx
+    push ds
+    push bx
 ;       
-        mov bx,SEG data
-        mov ds,bx
-        mov bx,ds:usb_detach_hooks
-        shl bx,2
-        add bx,OFFSET usb_detach_arr
-        mov [bx],di
-        mov [bx+2],es
-        inc ds:usb_detach_hooks
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:usb_detach_hooks
+    shl bx,2
+    add bx,OFFSET usb_detach_arr
+    mov [bx],di
+    mov [bx+2],es
+    inc ds:usb_detach_hooks
 ;
-        pop bx
-        pop ds
+    pop bx
+    pop ds
     ret
 hook_usb_detach   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   init
+;           NAME:           init
 ;
-;               DESCRIPTION:    INIT PCI DEVICE
+;           DESCRIPTION:    INIT PCI DEVICE
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov ax,USB_PIPE_HANDLE
-        mov di,OFFSET delete_handle
-        RegisterHandle
+    mov ax,USB_PIPE_HANDLE
+    mov di,OFFSET delete_handle
+    RegisterHandle
 ;
-        mov esi,OFFSET init_usb_device
-        mov edi,OFFSET init_usb_device_name
-        xor cl,cl
-        mov ax,init_usb_device_nr
-        RegisterOldOsGate
+    mov esi,OFFSET init_usb_device
+    mov edi,OFFSET init_usb_device_name
+    xor cl,cl
+    mov ax,init_usb_device_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET notify_usb_attach
-        mov edi,OFFSET notify_usb_attach_name
-        xor cl,cl
-        mov ax,notify_usb_attach_nr
-        RegisterOldOsGate
+    mov esi,OFFSET notify_usb_attach
+    mov edi,OFFSET notify_usb_attach_name
+    xor cl,cl
+    mov ax,notify_usb_attach_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET notify_usb_detach
-        mov edi,OFFSET notify_usb_detach_name
-        xor cl,cl
-        mov ax,notify_usb_detach_nr
-        RegisterOldOsGate
+    mov esi,OFFSET notify_usb_detach
+    mov edi,OFFSET notify_usb_detach_name
+    xor cl,cl
+    mov ax,notify_usb_detach_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET hook_usb_attach
-        mov edi,OFFSET hook_usb_attach_name
-        xor cl,cl
-        mov ax,hook_usb_attach_nr
-        RegisterOldOsGate
+    mov esi,OFFSET hook_usb_attach
+    mov edi,OFFSET hook_usb_attach_name
+    xor cl,cl
+    mov ax,hook_usb_attach_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET hook_usb_detach
-        mov edi,OFFSET hook_usb_detach_name
-        xor cl,cl
-        mov ax,hook_usb_detach_nr
-        RegisterOldOsGate
+    mov esi,OFFSET hook_usb_detach
+    mov edi,OFFSET hook_usb_detach_name
+    xor cl,cl
+    mov ax,hook_usb_detach_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET create_usb_req
-        mov edi,OFFSET create_usb_req_name
-        xor cl,cl
-        mov ax,create_usb_req_nr
-        RegisterOldOsGate
+    mov esi,OFFSET create_usb_req
+    mov edi,OFFSET create_usb_req_name
+    xor cl,cl
+    mov ax,create_usb_req_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET add_write_usb_control_req
-        mov edi,OFFSET add_write_usb_control_req_name
-        xor cl,cl
-        mov ax,add_write_usb_control_req_nr
-        RegisterOldOsGate
+    mov esi,OFFSET add_write_usb_control_req
+    mov edi,OFFSET add_write_usb_control_req_name
+    xor cl,cl
+    mov ax,add_write_usb_control_req_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET add_write_usb_data_req
-        mov edi,OFFSET add_write_usb_data_req_name
-        xor cl,cl
-        mov ax,add_write_usb_data_req_nr
-        RegisterOldOsGate
+    mov esi,OFFSET add_write_usb_data_req
+    mov edi,OFFSET add_write_usb_data_req_name
+    xor cl,cl
+    mov ax,add_write_usb_data_req_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET add_read_usb_data_req
-        mov edi,OFFSET add_read_usb_data_req_name
-        xor cl,cl
-        mov ax,add_read_usb_data_req_nr
-        RegisterOldOsGate
+    mov esi,OFFSET add_read_usb_data_req
+    mov edi,OFFSET add_read_usb_data_req_name
+    xor cl,cl
+    mov ax,add_read_usb_data_req_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET add_usb_status_in_req
-        mov edi,OFFSET add_usb_status_in_req_name
-        xor cl,cl
-        mov ax,add_usb_status_in_req_nr
-        RegisterOldOsGate
+    mov esi,OFFSET add_usb_status_in_req
+    mov edi,OFFSET add_usb_status_in_req_name
+    xor cl,cl
+    mov ax,add_usb_status_in_req_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET add_usb_status_out_req
-        mov edi,OFFSET add_usb_status_out_req_name
-        xor cl,cl
-        mov ax,add_usb_status_out_req_nr
-        RegisterOldOsGate
+    mov esi,OFFSET add_usb_status_out_req
+    mov edi,OFFSET add_usb_status_out_req_name
+    xor cl,cl
+    mov ax,add_usb_status_out_req_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET start_usb_req
-        mov edi,OFFSET start_usb_req_name
-        xor cl,cl
-        mov ax,start_usb_req_nr
-        RegisterOldOsGate
+    mov esi,OFFSET start_usb_req
+    mov edi,OFFSET start_usb_req_name
+    xor cl,cl
+    mov ax,start_usb_req_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET stop_usb_req
-        mov edi,OFFSET stop_usb_req_name
-        xor cl,cl
-        mov ax,stop_usb_req_nr
-        RegisterOldOsGate
+    mov esi,OFFSET stop_usb_req
+    mov edi,OFFSET stop_usb_req_name
+    xor cl,cl
+    mov ax,stop_usb_req_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET is_usb_req_started
-        mov edi,OFFSET is_usb_req_started_name
-        xor cl,cl
-        mov ax,is_usb_req_started_nr
-        RegisterOldOsGate
+    mov esi,OFFSET is_usb_req_started
+    mov edi,OFFSET is_usb_req_started_name
+    xor cl,cl
+    mov ax,is_usb_req_started_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET is_usb_req_ready
-        mov edi,OFFSET is_usb_req_ready_name
-        xor cl,cl
-        mov ax,is_usb_req_ready_nr
-        RegisterOldOsGate
+    mov esi,OFFSET is_usb_req_ready
+    mov edi,OFFSET is_usb_req_ready_name
+    xor cl,cl
+    mov ax,is_usb_req_ready_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET get_usb_req_data
-        mov edi,OFFSET get_usb_req_data_name
-        xor cl,cl
-        mov ax,get_usb_req_data_nr
-        RegisterOldOsGate
+    mov esi,OFFSET get_usb_req_data
+    mov edi,OFFSET get_usb_req_data_name
+    xor cl,cl
+    mov ax,get_usb_req_data_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET close_usb_req
-        mov edi,OFFSET close_usb_req_name
-        xor cl,cl
-        mov ax,close_usb_req_nr
-        RegisterOldOsGate
+    mov esi,OFFSET close_usb_req
+    mov edi,OFFSET close_usb_req_name
+    xor cl,cl
+    mov ax,close_usb_req_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET get_usb_info
-        mov edi,OFFSET get_usb_info_name
-        xor cl,cl
-        mov ax,get_usb_info_nr
-        RegisterOldOsGate
+    mov esi,OFFSET get_usb_info
+    mov edi,OFFSET get_usb_info_name
+    xor cl,cl
+    mov ax,get_usb_info_nr
+    RegisterOldOsGate
 ;
-        mov ebx,OFFSET get_usb_device16
-        mov esi,OFFSET get_usb_device32
-        mov edi,OFFSET get_usb_device_name
-        mov dx,virt_es_in
-        mov ax,get_usb_device_nr
-        RegisterUserGate
+    mov ebx,OFFSET get_usb_device16
+    mov esi,OFFSET get_usb_device32
+    mov edi,OFFSET get_usb_device_name
+    mov dx,virt_es_in
+    mov ax,get_usb_device_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET get_usb_config16
-        mov esi,OFFSET get_usb_config32
-        mov edi,OFFSET get_usb_config_name
-        mov dx,virt_es_in
-        mov ax,get_usb_config_nr
-        RegisterUserGate
+    mov ebx,OFFSET get_usb_config16
+    mov esi,OFFSET get_usb_config32
+    mov edi,OFFSET get_usb_config_name
+    mov dx,virt_es_in
+    mov ax,get_usb_config_nr
+    RegisterUserGate
 ;
-        mov esi,OFFSET config_usb_device
-        mov edi,OFFSET config_usb_device_name
-        xor dx,dx
-        mov ax,config_usb_device_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET config_usb_device
+    mov edi,OFFSET config_usb_device_name
+    xor dx,dx
+    mov ax,config_usb_device_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET open_usb_pipe
-        mov edi,OFFSET open_usb_pipe_name
-        xor dx,dx
-        mov ax,open_usb_pipe_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET open_usb_pipe
+    mov edi,OFFSET open_usb_pipe_name
+    xor dx,dx
+    mov ax,open_usb_pipe_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET close_usb_pipe
-        mov edi,OFFSET close_usb_pipe_name
-        xor dx,dx
-        mov ax,close_usb_pipe_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET close_usb_pipe
+    mov edi,OFFSET close_usb_pipe_name
+    xor dx,dx
+    mov ax,close_usb_pipe_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET add_wait_for_pipe
-        mov edi,OFFSET add_wait_for_pipe_name
-        xor dx,dx
-        mov ax,add_wait_for_usb_pipe_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET add_wait_for_pipe
+    mov edi,OFFSET add_wait_for_pipe_name
+    xor dx,dx
+    mov ax,add_wait_for_usb_pipe_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET lock_usb_pipe
-        mov edi,OFFSET lock_usb_pipe_name
-        xor dx,dx
-        mov ax,lock_usb_pipe_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET lock_usb_pipe
+    mov edi,OFFSET lock_usb_pipe_name
+    xor dx,dx
+    mov ax,lock_usb_pipe_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET unlock_usb_pipe
-        mov edi,OFFSET unlock_usb_pipe_name
-        xor dx,dx
-        mov ax,unlock_usb_pipe_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET unlock_usb_pipe
+    mov edi,OFFSET unlock_usb_pipe_name
+    xor dx,dx
+    mov ax,unlock_usb_pipe_nr
+    RegisterBimodalUserGate
 ;
-        mov ebx,OFFSET write_usb_control16
-        mov esi,OFFSET write_usb_control32
-        mov edi,OFFSET write_usb_control_name
-        mov dx,virt_es_in
-        mov ax,write_usb_control_nr
-        RegisterUserGate
+    mov ebx,OFFSET write_usb_control16
+    mov esi,OFFSET write_usb_control32
+    mov edi,OFFSET write_usb_control_name
+    mov dx,virt_es_in
+    mov ax,write_usb_control_nr
+    RegisterUserGate
 ;
-        mov esi,OFFSET req_usb_data
-        mov edi,OFFSET req_usb_data_name
-        xor dx,dx
-        mov ax,req_usb_data_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET req_usb_data
+    mov edi,OFFSET req_usb_data_name
+    xor dx,dx
+    mov ax,req_usb_data_nr
+    RegisterBimodalUserGate
 ;
-        mov ebx,OFFSET get_usb_data_size16
-        mov esi,OFFSET get_usb_data_size32
-        mov edi,OFFSET get_usb_data_size_name
-        mov dx,virt_es_in
-        mov ax,get_usb_data_size_nr
-        RegisterUserGate
+    mov ebx,OFFSET get_usb_data_size16
+    mov esi,OFFSET get_usb_data_size32
+    mov edi,OFFSET get_usb_data_size_name
+    mov dx,virt_es_in
+    mov ax,get_usb_data_size_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET write_usb_data16
-        mov esi,OFFSET write_usb_data32
-        mov edi,OFFSET write_usb_data_name
-        mov dx,virt_es_in
-        mov ax,write_usb_data_nr
-        RegisterUserGate
+    mov ebx,OFFSET write_usb_data16
+    mov esi,OFFSET write_usb_data32
+    mov edi,OFFSET write_usb_data_name
+    mov dx,virt_es_in
+    mov ax,write_usb_data_nr
+    RegisterUserGate
 ;
-        mov esi,OFFSET req_usb_status
-        mov edi,OFFSET req_usb_status_name
-        xor dx,dx
-        mov ax,req_usb_status_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET req_usb_status
+    mov edi,OFFSET req_usb_status_name
+    xor dx,dx
+    mov ax,req_usb_status_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET write_usb_status
-        mov edi,OFFSET write_usb_status_name
-        xor dx,dx
-        mov ax,write_usb_status_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET write_usb_status
+    mov edi,OFFSET write_usb_status_name
+    xor dx,dx
+    mov ax,write_usb_status_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET start_usb_trans
-        mov edi,OFFSET start_usb_trans_name
-        xor dx,dx
-        mov ax,start_usb_transaction_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET start_usb_trans
+    mov edi,OFFSET start_usb_trans_name
+    xor dx,dx
+    mov ax,start_usb_transaction_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET is_usb_trans_done
-        mov edi,OFFSET is_usb_trans_done_name
-        xor dx,dx
-        mov ax,is_usb_trans_done_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET is_usb_trans_done
+    mov edi,OFFSET is_usb_trans_done_name
+    xor dx,dx
+    mov ax,is_usb_trans_done_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET was_usb_trans_ok
-        mov edi,OFFSET was_usb_trans_ok_name
-        xor dx,dx
-        mov ax,was_usb_trans_ok_nr
-        RegisterBimodalUserGate
-        clc
-        ret
+    mov esi,OFFSET was_usb_trans_ok
+    mov edi,OFFSET was_usb_trans_ok_name
+    xor dx,dx
+    mov ax,was_usb_trans_ok_nr
+    RegisterBimodalUserGate
+    clc
+    ret
 init    Endp
 
 code    ENDS
 
-        END init
+    END init

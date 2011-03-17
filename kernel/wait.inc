@@ -27,10 +27,10 @@
 
 wait_obj_header STRUC
 
-wo_init_proc    DD ?
-wo_abort_proc   DD ?
-wo_clear_proc	DD ?
-wo_idle_proc	DD ?
+wo_init_proc    DD ?,?
+wo_abort_proc   DD ?,?
+wo_clear_proc	DD ?,?
+wo_idle_proc	DD ?,?
 wo_id           DD ?
 wo_thread       DW ?
 wo_next         DW ?

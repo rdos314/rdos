@@ -15,6 +15,29 @@ extern "C" {
 #define UserGate_free_mem 0x9a 2 0 0 0 2 0
 #define UserGate_create_thread 0x9a 28 0 0 0 2 0
 
+// callback pragmas
+
+typedef void __far (__rdos_thread_callback)(void *);
+
+#pragma aux __rdos_thread_callback "*" \
+                    parm caller [gs ebx] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_timer_callback)(int sel, unsigned long expire_msb, unsigned long expire_lsb);
+
+#pragma aux __rdos_timer_callback "*" \
+                    parm caller [ecx] [edx] [eax] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_wait_callback)(int wait_obj);
+
+#pragma aux __rdos_wait_callback "*" \
+                    parm caller [es] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 // structures
 
 struct TKernelSection
@@ -23,26 +46,20 @@ struct TKernelSection
     short int list;
 };
 
-
-// callback pragmas
-
-typedef void (__rdos_thread_callback)(void *);
-
-#pragma aux __rdos_thread_callback "*" \
-                    parm caller [gs ebx] \
-                    value struct routine [eax] \
-                    modify [eax ebx ecx edx esi edi]
-
-typedef void (__rdos_timer_callback)(int sel, unsigned long expire_msb, unsigned long expire_lsb);
-
-#pragma aux __rdos_timer_callback "*" \
-                    parm caller [ecx] [edx] [eax] \
-                    value struct routine [eax] \
-                    modify [eax ebx ecx edx esi edi]
+struct TWaitHeader
+{
+    __rdos_wait_callback *init_proc;
+    __rdos_wait_callback *abort_proc;
+    __rdos_wait_callback *clear_proc;
+    __rdos_wait_callback *idle_proc;
+};
 
 // function definitions
 
 int RdosIsValidOsGate(int gate);
+
+void RdosReturnOk();
+void RdosReturnFail();
 
 void *RdosSelectorToPointer(int sel);
 void *RdosSelectorOffsetToPointer(int sel, long offset);
@@ -122,17 +139,20 @@ int RdosGetProcessorNum(int num);
 void RdosSendNmi(int processor);
 void RdosSendInt(int processor, int int_num);
 
+void RdosClearSignal();
+void RdosSignal(int thread);
+void RdosWaitForSignal();
+void RdosWaitForSignalWithTimeout(long msb, long lsb);
+
+int RdosAddWait(int space_needed, int wait_handle, struct TWaitHeader *wait_table);
+void RdosSignalWait(int wait_obj);
+
 void RdosLockScheduler();
 void RdosUnlockScheduler();
 
 void RdosInitKernelSection(struct TKernelSection *section);
 void RdosEnterKernelSection(struct TKernelSection *section);
 void RdosLeaveKernelSection(struct TKernelSection *section);
-
-void RdosClearSignal();
-void RdosSignal(int thread);
-void RdosWaitForSignal();
-void RdosWaitForSignalWithTimeout(long msb, long lsb);
 
 void RdosCreateKernelThread(
             int prio, 
@@ -177,6 +197,12 @@ void RdosCreateKernelProcess(
     CarryToBool \
     parm [eax] \
     value [eax];
+
+#pragma aux RdosReturnOk = \
+    "clc" ;
+
+#pragma aux RdosReturnFail = \
+    "stc" ;
 
 #pragma aux RdosSelectorToPointer = \
     "mov dx,bx" \
@@ -557,6 +583,21 @@ void RdosCreateKernelProcess(
 #pragma aux RdosWaitForSignalWithTimeout = \
     OsGate_wait_for_signal_timeout \
     parm [edx] [eax]; 
+
+#pragma aux RdosAddWait = \
+    "push es" \
+    OsGate_add_wait \
+    "mov eax,es" \
+    "pop es" \
+    parm [eax] [ebx] [es edi] \
+    value [eax];
+
+#pragma aux RdosSignalWait = \
+    "push es" \
+    "mov es,eax" \
+    OsGate_signal_wait \
+    "pop es" \
+    parm [eax];
 
 #pragma aux RdosCreateKernelThread = \
     "push ds" \

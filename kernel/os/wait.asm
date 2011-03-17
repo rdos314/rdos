@@ -229,7 +229,7 @@ is_wait_idle Proc far
 
 is_wait_idle_loop:
     mov es,dx
-    call es:wo_idle_proc
+    call fword ptr es:wo_idle_proc
     jc is_wait_idle_fail_leave
 ;
     mov dx,es:wo_next
@@ -299,7 +299,7 @@ wait_no_timeout_start_loop:
     mov es,dx
     mov es:wo_thread,ax
     mov es:wo_signalled,0
-    call es:wo_init_proc
+    call fword ptr es:wo_init_proc
     mov dx,es:wo_next
     or dx,dx
     jnz wait_no_timeout_start_loop
@@ -327,7 +327,7 @@ wait_no_timeout_stop_loop:
     or ax,ax
     jnz wait_no_timeout_stop_signalled
 ;
-    call es:wo_abort_proc
+    call fword ptr es:wo_abort_proc
     jmp wait_no_timeout_stop_next
 
 wait_no_timeout_stop_signalled:
@@ -335,7 +335,7 @@ wait_no_timeout_stop_signalled:
     jnz wait_no_timeout_stop_next
 ;
     mov ecx,es:wo_id
-    call es:wo_clear_proc
+    call fword ptr es:wo_clear_proc
 
 wait_no_timeout_stop_next:
     mov ax,es:wo_next
@@ -425,7 +425,7 @@ wait_timeout_start_loop:
     mov es:wo_thread,ax
     mov es:wo_signalled,0
     push ax
-    call es:wo_init_proc
+    call fword ptr es:wo_init_proc
     pop ax
     mov dx,es:wo_next
     or dx,dx
@@ -473,7 +473,7 @@ wait_timeout_stop_loop:
     or ax,ax
     jnz wait_timeout_stop_signalled
 ;
-    call es:wo_abort_proc
+    call fword ptr es:wo_abort_proc
     jmp wait_timeout_stop_next
 
 wait_timeout_stop_signalled:
@@ -481,7 +481,7 @@ wait_timeout_stop_signalled:
     jnz wait_timeout_stop_next
 ;
     mov ecx,es:wo_id
-    call es:wo_clear_proc
+    call fword ptr es:wo_clear_proc
 
 wait_timeout_stop_next:
     mov ax,es:wo_next
@@ -542,7 +542,7 @@ stop_wait_loop:
     or ax,ax
     jnz stop_wait_next
 ;
-    call es:wo_abort_proc
+    call fword ptr es:wo_abort_proc
 
 stop_wait_next:
     mov ax,es:wo_next
@@ -575,11 +575,11 @@ stop_wait  Endp
 ;           DESCRIPTION:    Add a generic wait object
 ;
 ;       PARAMETERS:     AX      Extra bytes needed in wait object
-;               BX      Wait handle
-;               ECX     Signalled ID
-;               ES:DI   Method table
+;                       BX      Wait handle
+;                       ECX     Signalled ID
+;                       ES:EDI   Method table
 ;
-;       RETURNS:    ES      Wait object
+;       RETURNS:        ES      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -588,15 +588,11 @@ add_wait_name   DB 'Add Wait', 0
 add_wait    Proc far
     push ds
     push fs
-    push eax
-    push ebx
-    push cx
-    push si
-    push di
+    pushad
 ;
     mov si,es
     mov fs,si
-    mov si,di
+    mov esi,edi
 ;
     push ax
     mov ax,WAIT_HANDLE
@@ -612,9 +608,9 @@ add_wait    Proc far
     AllocateSmallGlobalMem
 ;
     mov es:wo_id,ecx
-    mov di,OFFSET wo_init_proc
-    mov cx,4
-    rep movs dword ptr es:[di],fs:[si]
+    mov edi,OFFSET wo_init_proc
+    mov ecx,8
+    rep movs dword ptr es:[edi],fs:[esi]
 ;
     mov ax,ds:[bx].wh_obj_list
     mov es:wo_next,ax
@@ -638,11 +634,7 @@ awLeave:
     clc
 
 add_wait_done:
-    pop di
-    pop si
-    pop cx
-    pop ebx
-    pop eax
+    popad
     pop fs
     pop ds
     retf32
@@ -986,7 +978,7 @@ start_wait_for_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 start_wait_for_signal Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1016,7 +1008,7 @@ stop_wait_signal_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 stop_wait_for_signal Endp
 
     
@@ -1047,7 +1039,7 @@ clear_signal_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 clear_signal Endp
 
     
@@ -1083,7 +1075,7 @@ is_idle_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 is_signal_idle Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1102,22 +1094,22 @@ is_signal_idle Endp
 add_wait_for_signal_name    DB 'Add Wait For Signal',0
 
 add_wait_tab:
-aw0     DW OFFSET start_wait_for_signal,    SEG code
-aw1 DW OFFSET stop_wait_for_signal,         SEG code
-aw2     DW OFFSET clear_signal,             SEG code
-aw3     DW OFFSET is_signal_idle,               SEG code
+aw0 DD OFFSET start_wait_for_signal,    SEG code
+aw1 DD OFFSET stop_wait_for_signal,     SEG code
+aw2 DD OFFSET clear_signal,             SEG code
+aw3 DD OFFSET is_signal_idle,           SEG code
 
 add_wait_for_signal     PROC far
     push ds
     push es
     push eax
-    push di
+    push edi
 ;
     push ax
     mov ax,cs
     mov es,ax
     mov ax,SIZE signal_wait_header - SIZE wait_obj_header
-    mov di,OFFSET add_wait_tab
+    mov edi,OFFSET add_wait_tab
     AddWait
     pop ax
     jc add_wait_signal_done
@@ -1125,7 +1117,7 @@ add_wait_for_signal     PROC far
     mov es:sig_handle,ax
 
 add_wait_signal_done:
-    pop di
+    pop edi
     pop eax
     pop es
     pop ds

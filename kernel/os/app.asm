@@ -1647,7 +1647,6 @@ get_module_name_done16:
     pop ds
     ret
 get_module_name16  Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1678,7 +1677,7 @@ start_wait_for_done:
     pop bx
     pop eax
     pop ds
-    ret
+    retf32
 start_wait_for_debug_event Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1710,7 +1709,7 @@ stop_wait_for_done:
     pop bx
     pop eax
     pop ds
-    ret
+    retf32
 stop_wait_for_debug_event Endp
 
     
@@ -1726,7 +1725,7 @@ stop_wait_for_debug_event Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dummy_clear_debug_event PROC far
-    ret
+    retf32
 dummy_clear_debug_event Endp
 
     
@@ -1759,7 +1758,7 @@ is_idle_done:
     pop bx
     pop eax
     pop ds
-    ret
+    retf32
 is_debug_event_idle Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1778,17 +1777,17 @@ is_debug_event_idle Endp
 add_wait_for_debug_event_name   DB 'Add Wait For Debug Event',0
 
 add_wait_tab:
-aw0     DW OFFSET start_wait_for_debug_event,       kernel_code
-aw1 DW OFFSET stop_wait_for_debug_event,        kernel_code
-aw2     DW OFFSET dummy_clear_debug_event,              kernel_code
-aw3     DW OFFSET is_debug_event_idle,          kernel_code
+aw0 DD OFFSET start_wait_for_debug_event,   kernel_code
+aw1 DD OFFSET stop_wait_for_debug_event,    kernel_code
+aw2 DD OFFSET dummy_clear_debug_event,      kernel_code
+aw3 DD OFFSET is_debug_event_idle,          kernel_code
 
 add_wait_for_debug_event    PROC far
     push ds
     push es
     push eax
     push dx
-    push di
+    push edi
 ;
     push bx
     mov bx,ax
@@ -1800,7 +1799,7 @@ add_wait_for_debug_event    PROC far
     mov ax,cs
     mov es,ax
     mov ax,SIZE debug_event_wait_header - SIZE wait_obj_header
-    mov di,OFFSET add_wait_tab
+    mov edi,OFFSET add_wait_tab
     AddWait
     pop ax
     jc add_wait_done
@@ -1808,7 +1807,7 @@ add_wait_for_debug_event    PROC far
     mov es:dew_lib_sel,ax
 
 add_wait_done:
-    pop di
+    pop edi
     pop dx
     pop eax
     pop es
