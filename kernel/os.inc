@@ -842,6 +842,34 @@ leave_section_done:
 
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
+;   OUT EAX      Update tics
+StartSysTimer    MACRO
+	OsGate start_sys_timer_nr
+						ENDM
+
+;   IN  AX      Tic count
+ReloadSysTimer    MACRO
+	OsGate reload_sys_timer_nr
+						ENDM
+
+EnterInt    MACRO
+	OsGate enter_int_nr
+						ENDM
+
+LeaveInt    MACRO
+	OsGate leave_int_nr
+						ENDM
+
+LockTask    MACRO
+	OsGate lock_task_nr
+						ENDM
+
+UnlockTask    MACRO
+	OsGate unlock_task_nr
+						ENDM
+
+
+
 ;	ES:DI   Swap callback
 ;       AL  Swap level (0 = highest priority, 15 = lowest priority)
 RegisterSwapProc	MACRO
@@ -853,32 +881,6 @@ RegisterSwapProc	MACRO
 GetAcpiTable	MACRO
 	OldOsGate get_acpi_table_nr
 					ENDM
-
-;   OUT EAX      Update tics
-StartSysTimer    MACRO
-	OldOsGate start_sys_timer_nr
-						ENDM
-
-;   IN  AX      Tic count
-ReloadSysTimer    MACRO
-	OldOsGate reload_sys_timer_nr
-						ENDM
-
-EnterInt    MACRO
-	OldOsGate enter_int_nr
-						ENDM
-
-LeaveInt    MACRO
-	OldOsGate leave_int_nr
-						ENDM
-
-LockTask    MACRO
-	OldOsGate lock_task_nr
-						ENDM
-
-UnlockTask    MACRO
-	OldOsGate unlock_task_nr
-						ENDM
 
 ;   SS:BP     Exception stack
 DebugException    MACRO

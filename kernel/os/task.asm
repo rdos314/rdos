@@ -542,7 +542,7 @@ start_pit_timer    Proc far
     pop eax
 ;       
     pop es
-    ret
+    retf32
 start_pit_timer    Endp
 
 
@@ -568,37 +568,8 @@ reload_pit_timer    Proc far
     in al,INT0_MASK
     and al,NOT 1
     out INT0_MASK,al
-    ret
+    retf32
 reload_pit_timer  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ReloadApicTimer
-;
-;           DESCRIPTION:    Reload APIC timer
-;
-;           PARAMETERS:         DS      Task sel
-;               AX      Reload count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReloadApicTimer Proc near
-    push es
-    mov ecx,ds:apic_mul_tics
-    shl ecx,16
-    mov cx,ds:apic_mul_rest
-    shl eax,16
-    mul ecx
-    inc edx
-    mov ax,apic_mem_sel
-    mov es,ax    
-    mov es:APIC_INIT_COUNT,edx
-    pop es
-    ret
-ReloadApicTimer  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -850,37 +821,37 @@ proc_init:
     mov di,OFFSET start_pit_timer_name
     xor cl,cl
     mov ax,start_sys_timer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET reload_pit_timer
     mov di,OFFSET reload_pit_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET enter_int
     mov di,OFFSET enter_int_name
     xor cl,cl
     mov ax,enter_int_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET leave_int
     mov di,OFFSET leave_int_name
     xor cl,cl
     mov ax,leave_int_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET lock_task
     mov di,OFFSET lock_task_name
     xor cl,cl
     mov ax,lock_task_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET unlock_task
     mov di,OFFSET unlock_task_name
     xor cl,cl
     mov ax,unlock_task_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET debug_exception
     mov di,OFFSET debug_exception_name
@@ -4983,7 +4954,7 @@ enter_int       Proc far
     mov ax,task_sel
     mov ds,ax
     call ds:try_lock_proc
-    ret
+    retf32
 enter_int       Endp
 
 
@@ -5002,7 +4973,7 @@ leave_int       Proc far
     mov ax,task_sel
     mov ds,ax
     call ds:unlock_proc
-    ret
+    retf32
 leave_int       Endp
 
 
@@ -5029,7 +5000,7 @@ lock_task       Proc far
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 lock_task       Endp
 
 
@@ -5057,7 +5028,7 @@ unlock_task     Proc far
     pop ax
     pop fs
     pop ds      
-    ret
+    retf32
 unlock_task     Endp
 
 

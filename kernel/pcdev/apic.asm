@@ -1111,7 +1111,7 @@ start_apic_mem_timer    Proc far
     pop ecx
     pop es
     pop ds
-    ret
+    retf32
 start_apic_mem_timer  Endp
 
 start_apic_msr_timer    Proc far
@@ -1155,7 +1155,7 @@ start_apic_msr_timer    Proc far
     pop edx
     pop ecx
     pop ds
-    ret
+    retf32
 start_apic_msr_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1263,7 +1263,7 @@ reload_apic_mem_timer    Proc far
     pop ecx
     pop eax
     pop ds
-    ret
+    retf32
 reload_apic_mem_timer  Endp
 
 reload_apic_msr_timer    Proc far
@@ -1290,7 +1290,7 @@ reload_apic_msr_timer    Proc far
     pop ecx
     pop eax
     pop ds
-    ret
+    retf32
 reload_apic_msr_timer  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1527,13 +1527,13 @@ smemgLint1Ok:
     mov edi,OFFSET start_apic_timer_name
     xor cl,cl
     mov ax,start_sys_timer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET reload_apic_mem_timer
     mov edi,OFFSET reload_apic_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET disable_all_irq
     mov edi,OFFSET disable_all_irq_name
@@ -1753,13 +1753,13 @@ smsrgLint1Ok:
     mov edi,OFFSET start_apic_timer_name
     xor cl,cl
     mov ax,start_sys_timer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET reload_apic_msr_timer
     mov edi,OFFSET reload_apic_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_processor_id_msr
     mov edi,OFFSET get_processor_id_name
