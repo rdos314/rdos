@@ -998,12 +998,12 @@ GetExceptionStack32     MACRO
 
 ;       BX              Offset to context on locked stack
 SaveContext     MACRO
-    OldOsGate save_context_nr
+    OsGate save_context_nr
                     ENDM
 
 ;       BX              Offset to context on locked stack
 RestoreContext  MACRO
-    OldOsGate restore_context_nr
+    OsGate restore_context_nr
                     ENDM
 
 ;       Stack       Address of real mode code to call

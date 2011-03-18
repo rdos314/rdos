@@ -389,13 +389,13 @@ init_exc_loop:
     mov di,OFFSET save_context_name
     xor cl,cl
     mov ax,save_context_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET restore_context
     mov di,OFFSET restore_context_name
     xor cl,cl
     mov ax,restore_context_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET call_vm
     mov di,OFFSET call_vm_name
@@ -757,8 +757,8 @@ save_context_start:
     pop fs
     pop es
     pop ds
-    pop ax
-    pop dx
+    pop eax
+    pop edx
     mov sp,stack0_size
     push dword ptr 0
     push dword ptr 0
@@ -779,9 +779,9 @@ save_context_start:
     mov bx,[bx]
     pop ax
     pop ds
-    push dx
-    push ax
-    ret
+    push edx
+    push eax
+    retf32
 save_context    ENDP
 
 
@@ -805,8 +805,8 @@ restore_context PROC far
     mov si,bx
     lodsw
     mov cx,ax
-    pop ax
-    pop dx
+    pop eax
+    pop edx
     mov sp,stack0_size
     sub sp,cx
     mov bx,ss
@@ -817,8 +817,8 @@ restore_context PROC far
     xor bx,bx
     mov [bx],si
     mov bp,sp
-    mov [bp+42],ax
-    mov [bp+44],dx
+    mov [bp+42],eax
+    mov [bp+46],edx
     popad
     popf
 ;
@@ -857,7 +857,7 @@ restore_zero_es:
 restore_zero_ds:
     mov ds,ax
     popf
-    ret
+    retf32
 restore_context ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
