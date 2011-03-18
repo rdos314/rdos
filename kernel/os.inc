@@ -880,6 +880,17 @@ Sleep    MACRO
     OsGate sleep_thread_nr
                     ENDM
 
+;       AL          PRIORITET
+;       AH          MODE, 0=PM, 1=VM
+;       ECX         STACK SIZE
+;       DS:ESI      ADDRESS TO START AT
+;       ES:EDI      PROCESS NAME
+CreateProcess    MACRO
+    OsGate create_process_nr
+                        ENDM
+
+;;;;;;;;;;; Hooks ;;;;;;;;;;;;;;;;
+
 ;       ES:DI   Swap callback
 ;       AL  Swap level (0 = highest priority, 15 = lowest priority)
 RegisterSwapProc    MACRO
@@ -902,18 +913,8 @@ LockedDebugException    MACRO
     OldOsGate locked_debug_exception_nr
                         ENDM
 
-;       AL          PRIORITET
-;       AH          MODE, 0=PM, 1=VM
-;       ECX         STACK SIZE
-;       DS:ESI      ADDRESS TO START AT
-;       ES:EDI      PROCESS NAME
-CreateProcess    MACRO
-    OldOsGate create_process_nr
-                        ENDM
-
 DebugBreak      MACRO
     OldOsGate debug_break_nr
-                    ENDM
                     ENDM
 
 ; OUT AX           Thread ID

@@ -527,7 +527,7 @@ init_thread     PROC near
     mov di,OFFSET create_process_name
     xor cl,cl
     mov ax,create_process_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_create_thread
     mov di,OFFSET hook_create_thread_name
@@ -2020,7 +2020,7 @@ crm_zero_ds:
     popf
     pop bp
     add sp,30
-    ret
+    retf32
 create_process  ENDP
 
 
