@@ -656,7 +656,7 @@ init_handle_loop:
         popad
         pop es
         pop ds
-        ret
+        retf32
 init_process    Endp
 
 
@@ -924,8 +924,8 @@ init_handle     PROC near
         mov ds,ax
         mov es,ax
 ;
-        mov di,OFFSET init_process
-        HookCreateProcess
+        mov edi,OFFSET init_process
+        NewHookCreateProcess
 ;
         mov esi,OFFSET register_handle
         mov edi,OFFSET register_handle_name

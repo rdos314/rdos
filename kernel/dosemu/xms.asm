@@ -83,7 +83,7 @@ init_xms_process        PROC far
         GetFreePhysical
         sub eax,100000h
         mov ds:xms_free_mem,eax
-        ret
+        retf32
 init_xms_process        ENDP
 
 
@@ -656,8 +656,8 @@ init_xms        PROC near
         mov ax,cs
         mov ds,ax
         mov es,ax
-        mov di,OFFSET init_xms_process
-        HookCreateProcess
+        mov edi,OFFSET init_xms_process
+        NewHookCreateProcess
 ;
         mov esi,OFFSET xms_handler
         mov edi,OFFSET xms_name

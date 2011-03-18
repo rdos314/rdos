@@ -1559,7 +1559,7 @@ init_mouse_done:
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_mouse_thread       ENDP
 
 
@@ -1589,8 +1589,8 @@ init_mouse      PROC near
     mov di,OFFSET init_focus
     HookEnableFocus
 ;
-    mov di,OFFSET init_mouse_thread
-    HookInitTasking
+    mov edi,OFFSET init_mouse_thread
+    NewHookInitTasking
 ;
     mov al,33h
     mov di,OFFSET int33

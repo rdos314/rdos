@@ -5517,7 +5517,7 @@ init_tcp_thread Proc far
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_tcp_thread Endp
 
 
@@ -5554,8 +5554,8 @@ init_tcp    PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov di,OFFSET init_tcp_thread
-    HookInitTasking
+    mov edi,OFFSET init_tcp_thread
+    NewHookInitTasking
 ;
     mov di,OFFSET delete_socket_handle
     mov ax,TCP_SOCKET_HANDLE

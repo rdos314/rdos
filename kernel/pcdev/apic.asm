@@ -2556,7 +2556,7 @@ init_thread_done:
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_apic_thread        ENDP
 
 
@@ -3155,8 +3155,8 @@ init_table_next:
 ;    
     mov ax,cs
     mov es,ax
-    mov di,OFFSET init_apic_thread
-    HookInitTasking
+    mov edi,OFFSET init_apic_thread
+    NewHookInitTasking
 
 init_apic_gates_ok:     
     ret

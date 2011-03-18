@@ -1382,7 +1382,7 @@ init_device_process     PROC far
 ;
         popa
         pop ds
-        ret
+        retf32
 init_device_process     ENDP
 
 
@@ -1458,8 +1458,8 @@ init_dosdev     PROC near
         mov ds,ax
         mov es,ax
 ;
-        mov di,OFFSET init_device_process
-        HookCreateProcess
+        mov edi,OFFSET init_device_process
+        NewHookCreateProcess
 ;
         mov esi,OFFSET register_device
         mov edi,OFFSET register_device_name

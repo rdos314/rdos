@@ -543,7 +543,7 @@ init_process    PROC far
         popad
         pop es
         pop ds
-        ret
+        retf32
 init_process    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -613,6 +613,7 @@ init_hook_thread        Proc far
         popad
         pop es
         pop ds
+        retf32
 init_hook_thread        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -722,11 +723,11 @@ init    PROC far
         mov ax,rename_file_nr
         RegisterUserGate
 ;
-        mov di,OFFSET init_hook_thread
-        HookInitTasking
+        mov edi,OFFSET init_hook_thread
+        NewHookInitTasking
 ;
-        mov di,OFFSET init_process
-        HookCreateProcess
+        mov edi,OFFSET init_process
+        NewHookCreateProcess
 ;
         mov eax,SIZE fs_process_seg
         mov bx,fs_process_sel

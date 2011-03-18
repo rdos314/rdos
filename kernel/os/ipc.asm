@@ -985,7 +985,7 @@ init_thread     PROC far
     GetThread
     mov ds,ax
     mov ds:p_mailslot_sel,0
-    ret
+    retf32
 init_thread     ENDP
 
 
@@ -1011,7 +1011,7 @@ free_thread     PROC far
     FreeMem
 
 free_thread_done:
-    ret
+    retf32
 free_thread     ENDP
 
 
@@ -1080,11 +1080,11 @@ init    PROC far
     mov ax,reply_mailslot_nr
     RegisterUserGate
 ;
-    mov di,OFFSET init_thread
-    HookCreateThread
+    mov edi,OFFSET init_thread
+    NewHookCreateThread
 ;
-    mov di,OFFSET free_thread
-    HookTerminateThread
+    mov edi,OFFSET free_thread
+    NewHookTerminateThread
 ;
     call init_smp
     clc

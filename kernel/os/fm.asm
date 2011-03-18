@@ -1811,7 +1811,7 @@ init_fm_thread  Proc far
         popa
         pop es
         pop ds
-        ret
+        retf32
 init_fm_thread  Endp
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1840,8 +1840,8 @@ init_fm Proc near
         mov di,OFFSET delete_fm_handle
         RegisterHandle
 ;
-        mov di,OFFSET init_fm_thread
-        HookInitTasking
+        mov edi,OFFSET init_fm_thread
+        NewHookInitTasking
 ;
         mov esi,OFFSET open_fm
         mov edi,OFFSET open_fm_name

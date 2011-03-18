@@ -818,7 +818,7 @@ init_dev        Proc far
         popa
         pop es
         pop ds
-        ret
+        retf32
 init_dev        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -836,8 +836,8 @@ init    PROC far
         mov ax,cs
         mov ds,ax
         mov es,ax
-        mov di,OFFSET init_dev
-        HookInitTasking
+        mov edi,OFFSET init_dev
+        NewHookInitTasking
 ;
         mov esi,OFFSET read_codec
         mov edi,OFFSET read_codec_name

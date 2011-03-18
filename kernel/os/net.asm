@@ -2526,7 +2526,7 @@ init_net    Proc far
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_net    Endp
 
 
@@ -2564,8 +2564,8 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
-    mov di,OFFSET init_net
-    HookInitTasking
+    mov edi,OFFSET init_net
+    NewHookInitTasking
 ;
     mov esi,OFFSET is_net_address_valid
     mov edi,OFFSET is_net_address_valid_name

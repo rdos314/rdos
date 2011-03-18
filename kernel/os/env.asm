@@ -1161,7 +1161,7 @@ init_proc_var_loop:
     popad
     pop es
     pop ds
-    ret
+    retf32
 init_process    Endp
 
 
@@ -1211,8 +1211,8 @@ init_device_loop:
     mov ds,ax
     mov es,ax
 ;
-    mov di,OFFSET init_process
-    HookCreateProcess
+    mov edi,OFFSET init_process
+    NewHookCreateProcess
 ;
     mov di,OFFSET delete_handle
     mov ax,ENV_HANDLE

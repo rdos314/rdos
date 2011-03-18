@@ -1233,7 +1233,7 @@ set_allocation_strat    Endp
 
 init_process    Proc far
         call init_process_mem
-        ret
+        retf32
 init_process    Endp
 
 
@@ -1319,8 +1319,8 @@ init    PROC far
         mov di,OFFSET close_app
         HookCloseApp
 ;
-        mov di,OFFSET init_process
-        HookCreateProcess
+        mov edi,OFFSET init_process
+        NewHookCreateProcess
 ;
         mov eax,SIZE dos_process_seg
         mov bx,dos_process_sel

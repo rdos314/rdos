@@ -174,7 +174,7 @@ init_swap_thread        PROC far
         popa
         pop es
         pop ds
-        ret
+        retf32
 init_swap_thread        ENDP
 
 
@@ -198,8 +198,8 @@ init_swap       PROC near
         mov ds,ax
         mov es,ax
 ;
-        mov di,OFFSET init_swap_thread
-        HookInitTasking
+        mov edi,OFFSET init_swap_thread
+        NewHookInitTasking
 ;
         mov esi,OFFSET register_swap_proc
         mov edi,OFFSET register_swap_proc_name

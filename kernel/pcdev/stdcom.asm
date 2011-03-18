@@ -1505,7 +1505,7 @@ init_pci    Proc far
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_pci    Endp
 
 
@@ -1522,8 +1522,8 @@ init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov di,OFFSET init_pci
-    HookInitTasking
+    mov edi,OFFSET init_pci
+    NewHookInitTasking
     clc
     ret
 init    Endp

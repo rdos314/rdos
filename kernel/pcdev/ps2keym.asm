@@ -1378,7 +1378,7 @@ keyb_started:
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_keyb_thread    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1394,8 +1394,8 @@ init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov di,OFFSET init_keyb_thread
-    HookInitTasking
+    mov edi,OFFSET init_keyb_thread
+    NewHookInitTasking
 ;
     mov esi,OFFSET init_mouse
     mov edi,OFFSET init_mouse_name

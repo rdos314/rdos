@@ -415,14 +415,14 @@ init_exc_loop:
         mov ax,call_pm32_nr
         RegisterOldOsGate
 ;
-        mov di,OFFSET init_thread_int
-        HookCreateThread
+        mov edi,OFFSET init_thread_int
+        NewHookCreateThread
 ;
-        mov di,OFFSET free_thread_int
-        HookTerminateThread
+        mov edi,OFFSET free_thread_int
+        NewHookTerminateThread
 ;
-        mov di,OFFSET init_process_int
-        HookCreateProcess
+        mov edi,OFFSET init_process_int
+        NewHookCreateProcess
         pop ds
         popa
         ret
@@ -454,7 +454,7 @@ init_thread_int PROC far
         pop ax
         pop bx
         pop ds
-        ret
+        retf32
 init_thread_int ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -514,7 +514,7 @@ free_real_ok:
         pop ax
         pop es
         pop ds
-        ret
+        retf32
 free_thread_int ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -545,7 +545,7 @@ init_int_loop:
         popa
         pop es
         pop ds
-        ret
+        retf32
 init_process_int        ENDP
 
             

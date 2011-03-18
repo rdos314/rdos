@@ -224,7 +224,7 @@ init_genrand_loop:
 ;
     popad
     pop ds
-    ret
+    retf32
 init_process    Endp
 
 
@@ -253,8 +253,8 @@ init_random     PROC near
         mov ds,ax
         mov es,ax
 ;
-        mov di,OFFSET init_process
-        HookCreateProcess
+        mov edi,OFFSET init_process
+        NewHookCreateProcess
 ;
         mov esi,OFFSET get_random
         mov edi,OFFSET get_random_name

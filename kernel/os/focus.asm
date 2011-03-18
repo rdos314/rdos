@@ -247,7 +247,7 @@ free_thread_next:
         loop free_thread_loop
 
 free_thread_done:
-        ret
+        retf32
 free_thread     Endp
 
 
@@ -287,7 +287,7 @@ init_local_loop:
         pop ebx
         pop eax
         pop ds
-        ret
+        retf32
 init_focus_process      Endp
 
 
@@ -328,7 +328,7 @@ free_local_next:
         pop ebx
         pop eax
         pop ds
-        ret
+        retf32
 free_focus_process      Endp
 
 
@@ -740,14 +740,14 @@ init_focus      PROC near
         mov ds,ax
         mov es,ax
 ;
-        mov di,OFFSET init_focus_process
-        HookCreateProcess
+        mov edi,OFFSET init_focus_process
+        NewHookCreateProcess
 ;
-        mov di,OFFSET free_focus_process
-        HookTerminateProcess
+        mov edi,OFFSET free_focus_process
+        NewHookTerminateProcess
 ;
-        mov di,OFFSET free_thread
-        HookTerminateThread
+        mov edi,OFFSET free_thread
+        NewHookTerminateThread
 ;
         mov esi,OFFSET set_focus
         mov edi,OFFSET set_focus_name

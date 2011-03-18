@@ -2455,7 +2455,7 @@ init_dhcp_thread        Proc far
         popa
         pop es
         pop ds
-        ret
+        retf32
 init_dhcp_thread        Endp
 
 
@@ -2511,8 +2511,8 @@ init_dhcp_enabled_ok:
         mov ds,ax
         mov es,ax
 ;
-        mov di,OFFSET init_dhcp_thread
-        HookInitTasking
+        mov edi,OFFSET init_dhcp_thread
+        NewHookInitTasking
 ;
         mov esi,OFFSET add_dhcp_option
         mov edi,OFFSET add_dhcp_option_name

@@ -635,7 +635,7 @@ init_process    PROC far
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_process    ENDP
 
     public init_v86_bios
@@ -660,8 +660,8 @@ init_v86_bios   PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov di,OFFSET init_process
-    HookInitTasking
+    mov edi,OFFSET init_process
+    NewHookInitTasking
 ;
     mov esi,OFFSET v86_bios_int
     mov edi,OFFSET v86_bios_int_name

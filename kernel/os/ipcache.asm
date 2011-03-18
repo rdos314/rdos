@@ -724,7 +724,7 @@ init_cache_entries      Proc far
 ;
         popad
         pop es
-        ret
+        retf32
 init_cache_entries      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -773,8 +773,8 @@ init_cache      PROC near
         mov ax,update_round_trip_time_nr
         RegisterOldOsGate
 ;
-        mov di,OFFSET init_cache_entries
-        HookInitTasking
+        mov edi,OFFSET init_cache_entries
+        NewHookInitTasking
 ;
         mov ax,SEG data
         mov ds,ax

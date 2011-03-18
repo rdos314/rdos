@@ -477,7 +477,7 @@ init_thread_done:
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_acpi_thread        ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -542,8 +542,8 @@ acpi_load_save:
 ;    
     mov ax,cs
     mov es,ax
-    mov di,OFFSET init_acpi_thread
-    HookInitTasking
+    mov edi,OFFSET init_acpi_thread
+    NewHookInitTasking
 
 acpi_fail:
     ret

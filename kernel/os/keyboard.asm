@@ -1110,7 +1110,7 @@ check_done:
     pop si
     pop ax
     pop fs
-    ret
+    retf32
 check_list      Endp
 
     
@@ -1257,7 +1257,7 @@ init_keyb_thread    PROC far
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_keyb_thread    ENDP
 
     
@@ -1275,8 +1275,8 @@ init_keyb_thread    ENDP
 init_keyboard   PROC near
     mov ax,cs
     mov es,ax
-    mov di,OFFSET init_keyb_thread
-    HookInitTasking
+    mov edi,OFFSET init_keyb_thread
+    NewHookInitTasking
 ;
     mov di,OFFSET init_local_sel
     HookEnableFocus
@@ -1306,8 +1306,8 @@ init_keyboard   PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov di,OFFSET check_list
-    HookState
+    mov edi,OFFSET check_list
+    NewHookState
 ;
     mov esi,OFFSET add_wait_for_keyboard
     mov edi,OFFSET add_wait_for_keyboard_name

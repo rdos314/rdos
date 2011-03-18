@@ -2041,21 +2041,6 @@ debug_thread_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           free_thread
-;
-;           DESCRIPTION:    Free thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_thread     Proc far
-    ret
-free_thread     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           init_system
 ;
 ;           DESCRIPTION:    Init system
@@ -2079,7 +2064,7 @@ init_system     PROC far
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_system     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2098,11 +2083,8 @@ init_system     ENDP
 init_ipc_debug  PROC near
     mov ax,cs
     mov es,ax
-    mov di,OFFSET init_system
-    HookInitTasking
-;
-    mov di,OFFSET free_thread
-    HookTerminateThread
+    mov edi,OFFSET init_system
+    NewHookInitTasking
     ret
 init_ipc_debug    ENDP
 

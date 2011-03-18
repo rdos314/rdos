@@ -2599,23 +2599,19 @@ init_debug_process      PROC far
     popa
     pop es
     pop ds
-    ret
+    retf32
 init_debug_process      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           free_thread
+;           NAME:           init_local
 ;
-;           DESCRIPTION:    Free thread
+;           DESCRIPTION:    Init local
 ;
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_thread     Proc far
-    ret
-free_thread     Endp
 
     public init_local
     
@@ -2623,11 +2619,8 @@ init_local      PROC near
     mov ax,cs
     mov es,ax
 ;
-    mov di,OFFSET init_debug_process
-    HookInitTasking
-;
-    mov di,OFFSET free_thread
-    HookTerminateThread
+    mov edi,OFFSET init_debug_process
+    NewHookInitTasking
 ;
     mov bx,SEG data
     mov es,bx

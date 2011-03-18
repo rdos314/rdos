@@ -2127,7 +2127,7 @@ init_sys    PROC far
     popad
     pop es
     pop ds
-    ret
+    retf32
 init_sys    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2150,8 +2150,8 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
-    mov di,OFFSET init_sys
-    HookInitTasking
+    mov edi,OFFSET init_sys
+    NewHookInitTasking
 ;
     mov esi,OFFSET hook_load_exe
     mov edi,OFFSET hook_load_exe_name

@@ -842,6 +842,37 @@ leave_section_done:
 
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
+;       ES:EDI       ADDRESS TILL CALLBACK
+NewHookCreateThread    MACRO
+    OsGate hook_create_thread_nr
+                    ENDM
+
+
+;       ES:EDI       ADDRESS TILL CALLBACK
+NewHookCreateProcess       MACRO
+    OsGate hook_create_process_nr
+                    ENDM
+
+;       ES:EDI       ADDRESS TILL CALLBACK
+NewHookTerminateThread     MACRO
+    OsGate hook_terminate_thread_nr
+                    ENDM
+
+;       ES:EDI       ADDRESS TILL CALLBACK
+NewHookTerminateProcess    MACRO
+    OsGate hook_terminate_process_nr
+                    ENDM
+
+;       ES:EDI       ADDRESS TILL CALLBACK
+NewHookInitTasking MACRO
+    OsGate hook_init_tasking_nr
+                    ENDM
+
+;       ES:EDI       PROCEDURE TO CALL
+NewHookState       MACRO
+    OsGate hook_state_nr
+                    ENDM
+
 ;   OUT EAX      Update tics
 StartSysTimer    MACRO
     OsGate start_sys_timer_nr
@@ -921,37 +952,6 @@ DebugBreak      MACRO
 GetDebugThreadSel MACRO
     OldOsGate get_debug_thread_sel_nr
                         ENDM
-
-;       ES:DI       ADDRESS TILL CALLBACK
-HookCreateThread    MACRO
-    OldOsGate hook_create_thread_nr
-                    ENDM
-
-
-;       ES:DI       ADDRESS TILL CALLBACK
-HookCreateProcess       MACRO
-    OldOsGate hook_create_process_nr
-                    ENDM
-
-;       ES:DI       ADDRESS TILL CALLBACK
-HookTerminateThread     MACRO
-    OldOsGate hook_terminate_thread_nr
-                    ENDM
-
-;       ES:DI       ADDRESS TILL CALLBACK
-HookTerminateProcess    MACRO
-    OldOsGate hook_terminate_process_nr
-                    ENDM
-
-;       ES:DI       ADDRESS TILL CALLBACK
-HookInitTasking MACRO
-    OldOsGate hook_init_tasking_nr
-                    ENDM
-
-;       ES:DI       PROCEDURE TO CALL
-HookState       MACRO
-    OldOsGate hook_state_nr
-                    ENDM
 
 CrashGate       MACRO
     OldOsGate crash_gate_nr

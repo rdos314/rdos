@@ -1119,7 +1119,7 @@ init_net_done:
         popa
         pop es
         pop ds
-        ret
+        retf32
 init_net        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1168,8 +1168,8 @@ Init    Proc far
 ;
         mov ax,cs
         mov es,ax
-        mov di,OFFSET init_net
-        HookInitTasking
+        mov edi,OFFSET init_net
+        NewHookInitTasking
         clc
         ret
 Init    Endp

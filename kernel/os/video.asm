@@ -3000,7 +3000,7 @@ init_thread     PROC far
 ;
         pop ax
         pop ds
-        ret
+        retf32
 init_thread     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3030,7 +3030,7 @@ free_process    Proc far
 free_process_done:
         pop bx
         pop ds
-        ret
+        retf32
 free_process    Endp
 
 
@@ -3080,11 +3080,11 @@ init_video      PROC near
         mov ds,ax
         mov es,ax
 ;
-        mov di,OFFSET init_thread
-        HookCreateThread
+        mov edi,OFFSET init_thread
+        NewHookCreateThread
 ;
-        mov di,OFFSET init_thread
-        HookTerminateProcess
+        mov edi,OFFSET init_thread
+        NewHookTerminateProcess
 ;
         mov di,OFFSET init_focus
         HookEnableFocus

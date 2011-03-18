@@ -281,7 +281,7 @@ init_process    PROC far
     mov ds:mask1,0FFh
     pop ax
     pop ds
-    ret
+    retf32
 init_process    ENDP
 
 
@@ -568,8 +568,8 @@ init    PROC far
     mov ax,disable_all_irq_nr
     RegisterOldOsGate
 ;
-    mov di,OFFSET init_process
-    HookCreateProcess
+    mov edi,OFFSET init_process
+    NewHookCreateProcess
 ;
     mov di,OFFSET in_control0
     mov dx,20h

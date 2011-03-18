@@ -524,7 +524,7 @@ init_system     Proc far
         popa
         pop es
         pop ds
-        ret
+        retf32
 init_system     Endp
 
 
@@ -554,8 +554,8 @@ init_smp        PROC near
         mov ds,ax
         mov es,ax
 ;
-        mov di,OFFSET init_system
-        HookInitTasking
+        mov edi,OFFSET init_system
+        NewHookInitTasking
 ;
         mov al,79h
         mov di,OFFSET Receive

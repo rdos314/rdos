@@ -322,7 +322,7 @@ init_touch      Proc far
 ;
         pop es
         pop ds
-        ret
+        retf32
 init_touch      Endp
 
 
@@ -340,8 +340,8 @@ init_touch      Endp
 init    PROC far
         mov ax,cs
         mov es,ax
-        mov di,OFFSET init_touch
-        HookInitTasking
+        mov edi,OFFSET init_touch
+        NewHookInitTasking
         clc
         ret
 init    ENDP

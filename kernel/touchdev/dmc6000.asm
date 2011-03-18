@@ -31,7 +31,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 
-touch_data_seg	STRUC
+touch_data_seg  STRUC
 
 td_wait         DW ?
 td_port         DW ?
@@ -45,20 +45,20 @@ td_state        DB ?
 td_out_buf      DB 6 DUP(?)
 td_in_buf       DB 6 DUP(?)
 
-touch_data_seg	ENDS
+touch_data_seg  ENDS
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ClearPort
+;               NAME:                   ClearPort
 ;
-;		DESCRIPTION:    Clear comport before sending command
+;               DESCRIPTION:    Clear comport before sending command
 ;
 ;       PARAMETERS:     
 ;
@@ -106,9 +106,9 @@ ClearPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SendCmd
+;               NAME:                   SendCmd
 ;
-;		DESCRIPTION:    Send t_out_buf
+;               DESCRIPTION:    Send t_out_buf
 ;
 ;       PARAMETERS:     
 ;
@@ -144,9 +144,9 @@ SendCmd Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetResponse
+;               NAME:                   GetResponse
 ;
-;		DESCRIPTION:    Receive response
+;               DESCRIPTION:    Receive response
 ;
 ;       PARAMETERS:     
 ;
@@ -211,13 +211,13 @@ GetResponse Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CheckVersion
+;               NAME:                   CheckVersion
 ;
-;		DESCRIPTION:    Check touch version
+;               DESCRIPTION:    Check touch version
 ;
 ;       PARAMETERS:     
 ;
-;		RETURNS:		NC  Version ok
+;               RETURNS:                NC  Version ok
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -254,9 +254,9 @@ CheckVersion    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetScaling
+;               NAME:                   GetScaling
 ;
-;		DESCRIPTION:    Get scaling
+;               DESCRIPTION:    Get scaling
 ;
 ;       PARAMETERS:     
 ;
@@ -290,9 +290,9 @@ GetScaling    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EnableController
+;               NAME:                   EnableController
 ;
-;		DESCRIPTION:    Enable controller
+;               DESCRIPTION:    Enable controller
 ;
 ;       PARAMETERS:     
 ;
@@ -322,13 +322,13 @@ EnableController    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Touch_thread
+;               NAME:                   Touch_thread
 ;
-;		DESCRIPTION:    Touch-screen thread
+;               DESCRIPTION:    Touch-screen thread
 ;
 ;       PARAMETERS:     BL      Com port 
 ;
-;		RETURNS:		
+;               RETURNS:                
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -456,93 +456,93 @@ ttEnd:
 touch_thread    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			INIT_TOUCH
+;               NAME:                   INIT_TOUCH
 ;
-;		DESCRIPTION:	Init touch
+;               DESCRIPTION:    Init touch
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_touch_name	DB 'Init Touch', 0
+init_touch_name DB 'Init Touch', 0
 
-touch_name1	DB 'PenMount COM1',0
-touch_name2	DB 'PenMount COM2',0
-touch_name3	DB 'PenMount COM3',0
-touch_name4	DB 'PenMount COM4',0
+touch_name1     DB 'PenMount COM1',0
+touch_name2     DB 'PenMount COM2',0
+touch_name3     DB 'PenMount COM3',0
+touch_name4     DB 'PenMount COM4',0
 
-init_touch	Proc far
-	push ds
-	push es
+init_touch      Proc far
+        push ds
+        push es
 ;
     mov bx,0
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET touch_name1
-	mov si,OFFSET touch_thread
-	mov ax,4
-	mov cx,100h
-	CreateThread
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET touch_name1
+        mov si,OFFSET touch_thread
+        mov ax,4
+        mov cx,100h
+        CreateThread
 ;
     mov bx,1
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET touch_name2
-	mov si,OFFSET touch_thread
-	mov ax,4
-	mov cx,100h
-	CreateThread
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET touch_name2
+        mov si,OFFSET touch_thread
+        mov ax,4
+        mov cx,100h
+        CreateThread
 ;
     mov bx,2
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET touch_name3
-	mov si,OFFSET touch_thread
-	mov ax,4
-	mov cx,100h
-	CreateThread
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET touch_name3
+        mov si,OFFSET touch_thread
+        mov ax,4
+        mov cx,100h
+        CreateThread
 ;
     mov bx,3
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET touch_name4
-	mov si,OFFSET touch_thread
-	mov ax,4
-	mov cx,100h
-	CreateThread
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+        mov di,OFFSET touch_name4
+        mov si,OFFSET touch_thread
+        mov ax,4
+        mov cx,100h
+        CreateThread
 ;
-	pop es
-	pop ds
-	ret
-init_touch	Endp
+        pop es
+        pop ds
+        retf32
+init_touch      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			INIT
+;               NAME:                   INIT
 ;
-;		DESCRIPTION:	Init touch-screen
+;               DESCRIPTION:    Init touch-screen
 ;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET init_touch
-	HookInitTasking
-	clc
-	ret
-init	ENDP
+init    PROC far
+        mov ax,cs
+        mov es,ax
+        mov edi,OFFSET init_touch
+        NewHookInitTasking
+        clc
+        ret
+init    ENDP
 
-code	ENDS
+code    ENDS
 
-	END init
+        END init

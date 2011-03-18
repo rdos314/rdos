@@ -430,7 +430,7 @@ init_process    PROC far
         popa
         pop es
         pop ds
-        ret
+        retf32
 init_process    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -472,8 +472,8 @@ init_ems        PROC near
         mov dx,virt_ds_in OR virt_es_in
         RegisterUserGateV86
 ;
-        mov di,OFFSET init_process
-        HookCreateProcess
+        mov edi,OFFSET init_process
+        NewHookCreateProcess
         ret
 init_ems        ENDP
 

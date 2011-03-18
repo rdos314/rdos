@@ -3199,7 +3199,7 @@ start_thread_done:
         popad
         pop es
         pop ds
-        ret
+        retf32
 start_thread    Endp
 
                                            
@@ -5082,8 +5082,8 @@ init    PROC far
         mov ds,ax
         mov es,ax
 ;
-        mov di,OFFSET start_thread
-        HookCreateThread
+        mov edi,OFFSET start_thread
+        NewHookCreateThread
 ;
         mov di,OFFSET load_pe
         HookLoadExe

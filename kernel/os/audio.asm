@@ -1183,7 +1183,7 @@ init_audio      Proc far
         popa
         pop es
         pop ds
-        ret
+        retf32
 init_audio      Endp
 
 
@@ -1205,8 +1205,8 @@ init    PROC far
         mov di,OFFSET delete_out_handle
         RegisterHandle
 ;
-        mov di,OFFSET init_audio
-        HookInitTasking
+        mov edi,OFFSET init_audio
+        NewHookInitTasking
 ;
         mov esi,OFFSET create_audio_out_channel
         mov edi,OFFSET create_audio_out_channel_name

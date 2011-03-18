@@ -1151,8 +1151,8 @@ proc_init:
     mov ax,update_time_nr
     RegisterBimodalUserGate
 ;
-    mov di,OFFSET check_list
-    HookState
+    mov edi,OFFSET check_list
+    NewHookState
 ;
     mov di,OFFSET get_processor_single
     CreateProcessor
@@ -6610,7 +6610,7 @@ check_done:
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 check_list      Endp
 
     

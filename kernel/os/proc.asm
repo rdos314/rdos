@@ -45,11 +45,11 @@ create_process_hooks    DB ?
 terminate_process_hooks DB ?
 init_tasking_hooks          DB ?
 
-create_process_arr          DW 2*32 DUP(?)
-terminate_process_arr   DW 2*32 DUP(?)
-create_thread_arr           DW 2*8 DUP(?)
-terminate_thread_arr    DW 2*8 DUP(?)
-init_tasking_arr        DW 2*32 DUP(?)
+create_process_arr      DD 2*32 DUP(?)
+terminate_process_arr   DD 2*32 DUP(?)
+create_thread_arr       DD 2*8 DUP(?)
+terminate_thread_arr    DD 2*8 DUP(?)
+init_tasking_arr        DD 2*64 DUP(?)
 
 thread_data_seg ENDS
 
@@ -533,31 +533,31 @@ init_thread     PROC near
     mov di,OFFSET hook_create_thread_name
     xor cl,cl
     mov ax,hook_create_thread_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_terminate_thread
     mov di,OFFSET hook_terminate_thread_name
     xor cl,cl
     mov ax,hook_terminate_thread_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_create_process
     mov di,OFFSET hook_create_process_name
     xor cl,cl
     mov ax,hook_create_process_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_terminate_process
     mov di,OFFSET hook_terminate_process_name
     xor cl,cl
     mov ax,hook_terminate_process_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_init_tasking
     mov di,OFFSET hook_init_tasking_name
     xor cl,cl
     mov ax,hook_init_tasking_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET create_proc_handle
     mov di,OFFSET create_proc_handle_name
@@ -651,11 +651,11 @@ trap_create_thread_loop:
     push ds
     push bx
     push cx
-    call dword ptr [bx]
+    call fword ptr [bx]
     pop cx
     pop bx
     pop ds
-    add bx,4
+    add bx,8
     dec cl
     jnz trap_create_thread_loop
 trap_create_thread_done:
@@ -687,11 +687,11 @@ trap_terminate_thread_loop:
     push ds
     push bx
     push cx
-    call dword ptr [bx]
+    call fword ptr [bx]
     pop cx
     pop bx
     pop ds
-    add bx,4
+    add bx,8
     dec cl
     jnz trap_terminate_thread_loop
 trap_terminate_thread_done:
@@ -739,11 +739,11 @@ trap_create_process_loop:
     push ds
     push bx
     push cx
-    call dword ptr [bx]
+    call fword ptr [bx]
     pop cx
     pop bx
     pop ds
-    add bx,4
+    add bx,8
     dec cl
     jnz trap_create_process_loop
 trap_create_process_done:
@@ -780,11 +780,11 @@ trap_terminate_process_loop:
     push ds
     push bx
     push cx
-    call dword ptr [bx]
+    call fword ptr [bx]
     pop cx
     pop bx
     pop ds
-    add bx,4
+    add bx,8
     dec cl
     jnz trap_terminate_process_loop
 trap_terminate_process_done:
@@ -819,11 +819,11 @@ trap_init_tasking_loop:
     push ds
     push bx
     push cx
-    call dword ptr [bx]
+    call fword ptr [bx]
     pop cx
     pop bx
     pop ds
-    add bx,4
+    add bx,8
     dec cl
     jnz trap_init_tasking_loop
 trap_init_tasking_done:
@@ -839,7 +839,7 @@ trap_init_tasking       ENDP
 ;
 ;           DESCRIPTION:    Add CreateThread hook
 ;
-;           PARAMETERS:         ES:DI       Callback
+;           PARAMETERS:         ES:EDI       Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -854,16 +854,16 @@ hook_create_thread      PROC far
     mov al,ds:create_thread_hooks
     mov bl,al
     xor bh,bh
-    shl bx,2
+    shl bx,3
     add bx,OFFSET create_thread_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc al
     mov ds:create_thread_hooks,al
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_create_thread      ENDP
 
     
@@ -874,7 +874,7 @@ hook_create_thread      ENDP
 ;
 ;           DESCRIPTION:    Add TerminateThread hook
 ;
-;           PARAMETERS:         ES:DI       Callback
+;           PARAMETERS:     ES:EDI       Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -889,16 +889,16 @@ hook_terminate_thread   PROC far
     mov al,ds:terminate_thread_hooks
     mov bl,al
     xor bh,bh
-    shl bx,2
+    shl bx,3
     add bx,OFFSET terminate_thread_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc al
     mov ds:terminate_thread_hooks,al
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_terminate_thread   ENDP
 
     
@@ -909,13 +909,11 @@ hook_terminate_thread   ENDP
 ;
 ;           DESCRIPTION:    Add CreateProcess hook
 ;
-;           PARAMETERS:         ES:DI       Callback
+;           PARAMETERS:     ES:EDI       Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hook_create_process_name    DB 'Hook Create Process',0
-
-    public hook_create_process
 
 hook_create_process     PROC far
     push ds
@@ -926,16 +924,16 @@ hook_create_process     PROC far
     mov al,ds:create_process_hooks
     mov bl,al
     xor bh,bh
-    shl bx,2
+    shl bx,3
     add bx,OFFSET create_process_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc al
     mov ds:create_process_hooks,al
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_create_process     ENDP
 
     
@@ -961,16 +959,16 @@ hook_terminate_process  PROC far
     mov al,ds:terminate_process_hooks
     mov bl,al
     xor bh,bh
-    shl bx,2
+    shl bx,3
     add bx,OFFSET terminate_process_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc al
     mov ds:terminate_process_hooks,al
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_terminate_process  ENDP
 
     
@@ -981,7 +979,7 @@ hook_terminate_process  ENDP
 ;
 ;           DESCRIPTION:    Add init-tasking hook
 ;
-;           PARAMETERS:         ES:DI       Callback
+;           PARAMETERS:         ES:EDI       Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -996,16 +994,16 @@ hook_init_tasking       PROC far
     mov al,ds:init_tasking_hooks
     mov bl,al
     xor bh,bh
-    shl bx,2
+    shl bx,3
     add bx,OFFSET init_tasking_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc al
     mov ds:init_tasking_hooks,al
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_init_tasking       ENDP
 
 
