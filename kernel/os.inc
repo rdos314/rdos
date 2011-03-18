@@ -969,31 +969,31 @@ CrashTss    MACRO
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;
 
 SimSti  MACRO
-    OldOsGate sim_sti_nr
+    OsGate sim_sti_nr
                     ENDM
 
 SimCli  MACRO
-    OldOsGate sim_cli_nr
+    OsGate sim_cli_nr
                     ENDM
 
 ;       AX          FLAGS
 GetFlags    MACRO
-    OldOsGate sim_get_flags_nr
+    OsGate sim_get_flags_nr
                     ENDM
 
 ;       AX          FLAGS
 SetFlags    MACRO
-    OldOsGate sim_set_flags_nr
+    OsGate sim_set_flags_nr
                     ENDM
 
 ;       BX              Stack selector
 GetExceptionStack16     MACRO
-    OldOsGate get_exception_stack16_nr
+    OsGate get_exception_stack16_nr
                     ENDM
 
 ;       BX              Stack selector
 GetExceptionStack32     MACRO
-    OldOsGate get_exception_stack32_nr
+    OsGate get_exception_stack32_nr
                     ENDM
 
 ;       BX              Offset to context on locked stack

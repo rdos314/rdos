@@ -1007,25 +1007,25 @@ proc_init:
     mov di,OFFSET sim_sti_name
     xor cl,cl
     mov ax,sim_sti_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET sim_cli
     mov di,OFFSET sim_cli_name
     xor cl,cl
     mov ax,sim_cli_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET sim_set_flags
     mov di,OFFSET sim_set_flags_name
     xor cl,cl
     mov ax,sim_set_flags_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET sim_get_flags
     mov di,OFFSET sim_get_flags_name
     xor cl,cl
     mov ax,sim_get_flags_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET debug_break
     mov di,OFFSET debug_break_name
@@ -2192,7 +2192,7 @@ sim_sti_test_wake:
 sim_sti_nowake:
     pop ax
     pop ds
-    ret
+    retf32
 sim_sti ENDP
 
     
@@ -2249,7 +2249,7 @@ sim_cli PROC far
     sti
     pop ax
     pop ds
-    ret
+    retf32
 sim_cli ENDP
 
     
@@ -2316,7 +2316,7 @@ sim_set_flags   PROC far
     call set_flags
     pop bx
     pop ds
-    ret
+    retf32
 sim_set_flags   ENDP
 
     
@@ -2367,7 +2367,7 @@ sim_get_flags   PROC far
     call get_flags
     pop bx
     pop ds
-    ret
+    retf32
 sim_get_flags   ENDP
 
     
