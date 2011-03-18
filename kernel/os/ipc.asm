@@ -1081,10 +1081,10 @@ init    PROC far
     RegisterUserGate
 ;
     mov edi,OFFSET init_thread
-    NewHookCreateThread
+    HookCreateThread
 ;
     mov edi,OFFSET free_thread
-    NewHookTerminateThread
+    HookTerminateThread
 ;
     call init_smp
     clc

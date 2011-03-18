@@ -3156,7 +3156,7 @@ init_table_next:
     mov ax,cs
     mov es,ax
     mov edi,OFFSET init_apic_thread
-    NewHookInitTasking
+    HookInitTasking
 
 init_apic_gates_ok:     
     ret

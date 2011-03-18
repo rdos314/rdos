@@ -843,33 +843,32 @@ leave_section_done:
 ;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;;;;;
 
 ;       ES:EDI       ADDRESS TILL CALLBACK
-NewHookCreateThread    MACRO
-    OsGate hook_create_thread_nr
+HookInitTasking MACRO
+    OsGate hook_init_tasking_nr
                     ENDM
 
-
 ;       ES:EDI       ADDRESS TILL CALLBACK
-NewHookCreateProcess       MACRO
+HookCreateProcess       MACRO
     OsGate hook_create_process_nr
                     ENDM
 
 ;       ES:EDI       ADDRESS TILL CALLBACK
-NewHookTerminateThread     MACRO
-    OsGate hook_terminate_thread_nr
-                    ENDM
-
-;       ES:EDI       ADDRESS TILL CALLBACK
-NewHookTerminateProcess    MACRO
+HookTerminateProcess    MACRO
     OsGate hook_terminate_process_nr
                     ENDM
 
 ;       ES:EDI       ADDRESS TILL CALLBACK
-NewHookInitTasking MACRO
-    OsGate hook_init_tasking_nr
+HookCreateThread    MACRO
+    OsGate hook_create_thread_nr
+                    ENDM
+
+;       ES:EDI       ADDRESS TILL CALLBACK
+HookTerminateThread     MACRO
+    OsGate hook_terminate_thread_nr
                     ENDM
 
 ;       ES:EDI       PROCEDURE TO CALL
-NewHookState       MACRO
+HookState       MACRO
     OsGate hook_state_nr
                     ENDM
 

@@ -648,7 +648,7 @@ init_timer      PROC near
         mov ds,ax
         mov es,ax
         mov edi,OFFSET init_timer_process
-        NewHookCreateProcess
+        HookCreateProcess
 ;
         mov di,OFFSET in_timer0
         mov dx,40h

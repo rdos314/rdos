@@ -1590,7 +1590,7 @@ init_mouse      PROC near
     HookEnableFocus
 ;
     mov edi,OFFSET init_mouse_thread
-    NewHookInitTasking
+    HookInitTasking
 ;
     mov al,33h
     mov di,OFFSET int33

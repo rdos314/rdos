@@ -2620,7 +2620,7 @@ init_local      PROC near
     mov es,ax
 ;
     mov edi,OFFSET init_debug_process
-    NewHookInitTasking
+    HookInitTasking
 ;
     mov bx,SEG data
     mov es,bx

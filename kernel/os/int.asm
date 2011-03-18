@@ -416,13 +416,13 @@ init_exc_loop:
         RegisterOldOsGate
 ;
         mov edi,OFFSET init_thread_int
-        NewHookCreateThread
+        HookCreateThread
 ;
         mov edi,OFFSET free_thread_int
-        NewHookTerminateThread
+        HookTerminateThread
 ;
         mov edi,OFFSET init_process_int
-        NewHookCreateProcess
+        HookCreateProcess
         pop ds
         popa
         ret

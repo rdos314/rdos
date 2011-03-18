@@ -2151,7 +2151,7 @@ init    PROC far
     mov es,ax
 ;
     mov edi,OFFSET init_sys
-    NewHookInitTasking
+    HookInitTasking
 ;
     mov esi,OFFSET hook_load_exe
     mov edi,OFFSET hook_load_exe_name

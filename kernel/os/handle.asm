@@ -925,7 +925,7 @@ init_handle     PROC near
         mov es,ax
 ;
         mov edi,OFFSET init_process
-        NewHookCreateProcess
+        HookCreateProcess
 ;
         mov esi,OFFSET register_handle
         mov edi,OFFSET register_handle_name

@@ -199,7 +199,7 @@ init_swap       PROC near
         mov es,ax
 ;
         mov edi,OFFSET init_swap_thread
-        NewHookInitTasking
+        HookInitTasking
 ;
         mov esi,OFFSET register_swap_proc
         mov edi,OFFSET register_swap_proc_name

@@ -1152,7 +1152,7 @@ proc_init:
     RegisterBimodalUserGate
 ;
     mov edi,OFFSET check_list
-    NewHookState
+    HookState
 ;
     mov di,OFFSET get_processor_single
     CreateProcessor

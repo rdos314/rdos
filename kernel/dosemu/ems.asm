@@ -473,7 +473,7 @@ init_ems        PROC near
         RegisterUserGateV86
 ;
         mov edi,OFFSET init_process
-        NewHookCreateProcess
+        HookCreateProcess
         ret
 init_ems        ENDP
 

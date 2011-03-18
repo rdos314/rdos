@@ -2565,7 +2565,7 @@ init    PROC far
     mov es,ax
 ;
     mov edi,OFFSET init_net
-    NewHookInitTasking
+    HookInitTasking
 ;
     mov esi,OFFSET is_net_address_valid
     mov edi,OFFSET is_net_address_valid_name

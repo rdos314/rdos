@@ -555,7 +555,7 @@ init_smp        PROC near
         mov es,ax
 ;
         mov edi,OFFSET init_system
-        NewHookInitTasking
+        HookInitTasking
 ;
         mov al,79h
         mov di,OFFSET Receive

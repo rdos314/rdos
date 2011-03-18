@@ -1320,7 +1320,7 @@ init    PROC far
         HookCloseApp
 ;
         mov edi,OFFSET init_process
-        NewHookCreateProcess
+        HookCreateProcess
 ;
         mov eax,SIZE dos_process_seg
         mov bx,dos_process_sel

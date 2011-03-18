@@ -724,10 +724,10 @@ init    PROC far
         RegisterUserGate
 ;
         mov edi,OFFSET init_hook_thread
-        NewHookInitTasking
+        HookInitTasking
 ;
         mov edi,OFFSET init_process
-        NewHookCreateProcess
+        HookCreateProcess
 ;
         mov eax,SIZE fs_process_seg
         mov bx,fs_process_sel

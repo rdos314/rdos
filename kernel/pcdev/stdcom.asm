@@ -1523,7 +1523,7 @@ init    Proc far
     mov ds,ax
     mov es,ax
     mov edi,OFFSET init_pci
-    NewHookInitTasking
+    HookInitTasking
     clc
     ret
 init    Endp

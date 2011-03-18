@@ -1395,7 +1395,7 @@ init    PROC far
     mov ds,ax
     mov es,ax
     mov edi,OFFSET init_keyb_thread
-    NewHookInitTasking
+    HookInitTasking
 ;
     mov esi,OFFSET init_mouse
     mov edi,OFFSET init_mouse_name

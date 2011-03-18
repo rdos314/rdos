@@ -747,7 +747,7 @@ init    PROC far
         mov ds,ax
         mov es,ax
         mov edi,OFFSET init_dev
-        NewHookInitTasking
+        HookInitTasking
 ;
         mov esi,OFFSET read_codec
         mov edi,OFFSET read_codec_name

@@ -5555,7 +5555,7 @@ init_tcp    PROC near
     mov es,ax
 ;
     mov edi,OFFSET init_tcp_thread
-    NewHookInitTasking
+    HookInitTasking
 ;
     mov di,OFFSET delete_socket_handle
     mov ax,TCP_SOCKET_HANDLE

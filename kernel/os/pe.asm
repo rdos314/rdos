@@ -5083,7 +5083,7 @@ init    PROC far
         mov es,ax
 ;
         mov edi,OFFSET start_thread
-        NewHookCreateThread
+        HookCreateThread
 ;
         mov di,OFFSET load_pe
         HookLoadExe

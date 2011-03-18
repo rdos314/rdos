@@ -2512,7 +2512,7 @@ init_dhcp_enabled_ok:
         mov es,ax
 ;
         mov edi,OFFSET init_dhcp_thread
-        NewHookInitTasking
+        HookInitTasking
 ;
         mov esi,OFFSET add_dhcp_option
         mov edi,OFFSET add_dhcp_option_name

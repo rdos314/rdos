@@ -1459,7 +1459,7 @@ init_dosdev     PROC near
         mov es,ax
 ;
         mov edi,OFFSET init_device_process
-        NewHookCreateProcess
+        HookCreateProcess
 ;
         mov esi,OFFSET register_device
         mov edi,OFFSET register_device_name

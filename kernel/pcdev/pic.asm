@@ -569,7 +569,7 @@ init    PROC far
     RegisterOldOsGate
 ;
     mov edi,OFFSET init_process
-    NewHookCreateProcess
+    HookCreateProcess
 ;
     mov di,OFFSET in_control0
     mov dx,20h

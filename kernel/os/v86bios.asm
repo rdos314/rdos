@@ -661,7 +661,7 @@ init_v86_bios   PROC near
     mov ds,ax
     mov es,ax
     mov edi,OFFSET init_process
-    NewHookInitTasking
+    HookInitTasking
 ;
     mov esi,OFFSET v86_bios_int
     mov edi,OFFSET v86_bios_int_name

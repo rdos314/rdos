@@ -1169,7 +1169,7 @@ Init    Proc far
         mov ax,cs
         mov es,ax
         mov edi,OFFSET init_net
-        NewHookInitTasking
+        HookInitTasking
         clc
         ret
 Init    Endp

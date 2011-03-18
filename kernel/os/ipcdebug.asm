@@ -2084,7 +2084,7 @@ init_ipc_debug  PROC near
     mov ax,cs
     mov es,ax
     mov edi,OFFSET init_system
-    NewHookInitTasking
+    HookInitTasking
     ret
 init_ipc_debug    ENDP
 

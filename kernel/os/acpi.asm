@@ -543,7 +543,7 @@ acpi_load_save:
     mov ax,cs
     mov es,ax
     mov edi,OFFSET init_acpi_thread
-    NewHookInitTasking
+    HookInitTasking
 
 acpi_fail:
     ret

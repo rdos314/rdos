@@ -1001,7 +1001,7 @@ init    PROC far
         mov ds,ax
         mov es,ax
         mov edi,OFFSET init_keyb_thread
-        NewHookInitTasking
+        HookInitTasking
 ;
         mov ax,SEG data
         mov ds,ax

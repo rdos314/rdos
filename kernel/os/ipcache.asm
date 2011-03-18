@@ -774,7 +774,7 @@ init_cache      PROC near
         RegisterOldOsGate
 ;
         mov edi,OFFSET init_cache_entries
-        NewHookInitTasking
+        HookInitTasking
 ;
         mov ax,SEG data
         mov ds,ax

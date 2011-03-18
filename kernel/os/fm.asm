@@ -1841,7 +1841,7 @@ init_fm Proc near
         RegisterHandle
 ;
         mov edi,OFFSET init_fm_thread
-        NewHookInitTasking
+        HookInitTasking
 ;
         mov esi,OFFSET open_fm
         mov edi,OFFSET open_fm_name

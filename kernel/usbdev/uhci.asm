@@ -2826,7 +2826,7 @@ Init    Proc far
     mov ax,cs
     mov es,ax
     mov edi,OFFSET init_usb
-    NewHookInitTasking
+    HookInitTasking
     clc
     ret
 Init    Endp

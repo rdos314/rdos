@@ -1206,7 +1206,7 @@ init    PROC far
         RegisterHandle
 ;
         mov edi,OFFSET init_audio
-        NewHookInitTasking
+        HookInitTasking
 ;
         mov esi,OFFSET create_audio_out_channel
         mov edi,OFFSET create_audio_out_channel_name

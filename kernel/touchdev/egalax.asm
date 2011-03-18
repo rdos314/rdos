@@ -341,7 +341,7 @@ init    PROC far
         mov ax,cs
         mov es,ax
         mov edi,OFFSET init_touch
-        NewHookInitTasking
+        HookInitTasking
         clc
         ret
 init    ENDP

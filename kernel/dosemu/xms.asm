@@ -657,7 +657,7 @@ init_xms        PROC near
         mov ds,ax
         mov es,ax
         mov edi,OFFSET init_xms_process
-        NewHookCreateProcess
+        HookCreateProcess
 ;
         mov esi,OFFSET xms_handler
         mov edi,OFFSET xms_name

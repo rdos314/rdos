@@ -3081,10 +3081,10 @@ init_video      PROC near
         mov es,ax
 ;
         mov edi,OFFSET init_thread
-        NewHookCreateThread
+        HookCreateThread
 ;
         mov edi,OFFSET init_thread
-        NewHookTerminateProcess
+        HookTerminateProcess
 ;
         mov di,OFFSET init_focus
         HookEnableFocus

@@ -1276,7 +1276,7 @@ init_keyboard   PROC near
     mov ax,cs
     mov es,ax
     mov edi,OFFSET init_keyb_thread
-    NewHookInitTasking
+    HookInitTasking
 ;
     mov di,OFFSET init_local_sel
     HookEnableFocus
@@ -1307,7 +1307,7 @@ init_keyboard   PROC near
     mov es,ax
 ;
     mov edi,OFFSET check_list
-    NewHookState
+    HookState
 ;
     mov esi,OFFSET add_wait_for_keyboard
     mov edi,OFFSET add_wait_for_keyboard_name

@@ -741,13 +741,13 @@ init_focus      PROC near
         mov es,ax
 ;
         mov edi,OFFSET init_focus_process
-        NewHookCreateProcess
+        HookCreateProcess
 ;
         mov edi,OFFSET free_focus_process
-        NewHookTerminateProcess
+        HookTerminateProcess
 ;
         mov edi,OFFSET free_thread
-        NewHookTerminateThread
+        HookTerminateThread
 ;
         mov esi,OFFSET set_focus
         mov edi,OFFSET set_focus_name

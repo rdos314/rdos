@@ -254,7 +254,7 @@ init_random     PROC near
         mov es,ax
 ;
         mov edi,OFFSET init_process
-        NewHookCreateProcess
+        HookCreateProcess
 ;
         mov esi,OFFSET get_random
         mov edi,OFFSET get_random_name

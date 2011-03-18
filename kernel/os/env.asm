@@ -1212,7 +1212,7 @@ init_device_loop:
     mov es,ax
 ;
     mov edi,OFFSET init_process
-    NewHookCreateProcess
+    HookCreateProcess
 ;
     mov di,OFFSET delete_handle
     mov ax,ENV_HANDLE

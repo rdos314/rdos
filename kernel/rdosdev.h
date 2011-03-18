@@ -38,6 +38,20 @@ typedef void __far (__rdos_wait_callback)(int wait_obj);
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_hook_callback)();
+
+#pragma aux __rdos_hook_callback "*" \
+                    parm caller \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_hook_state_callback)(int thread, char *buf);
+
+#pragma aux __rdos_hook_state_callback "*" \
+                    parm caller [ebx] [es edi] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 // structures
 
 struct TKernelSection
@@ -168,6 +182,13 @@ void RdosCreateKernelProcess(
             const char *name,
             void *parm);
 
+void RdosHookInitTasking(__rdos_hook_callback *callb_proc);
+void RdosHookCreateProcess(__rdos_hook_callback *callb_proc);
+void RdosHookTerminateProcess(__rdos_hook_callback *callb_proc);
+void RdosHookCreateThread(__rdos_hook_callback *callb_proc);
+void RdosHookTerminateThread(__rdos_hook_callback *callb_proc);
+
+void RdosHookState(__rdos_hook_state_callback *callb_proc);
  
 /* 32-bit compact memory model (device-drivers) */
 
@@ -618,6 +639,30 @@ void RdosCreateKernelProcess(
     "pop ds" \
     parm [eax] [ecx] [fs esi] [es edi] [gs ebx] \
     modify [edx];
+
+#pragma aux RdosHookInitTasking = \
+    OsGate_hook_init_tasking \
+    parm [es edi];
+
+#pragma aux RdosHookCreateProcess = \
+    OsGate_hook_create_process \
+    parm [es edi];
+
+#pragma aux RdosHookTerminateProcess = \
+    OsGate_hook_terminate_process \
+    parm [es edi];
+
+#pragma aux RdosHookCreateThread = \
+    OsGate_hook_create_thread \
+    parm [es edi];
+
+#pragma aux RdosHookTerminateThread = \
+    OsGate_hook_terminate_thread \
+    parm [es edi];
+
+#pragma aux RdosHookState = \
+    OsGate_hook_state \
+    parm [es edi];
 
 #ifdef __cplusplus
 }
