@@ -115,24 +115,9 @@ init_osgate_loop:
     mov es:[di].gate_name_offset,OFFSET register_old_gate_name
     mov es:[di].gate_name_sel,cs
 ;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ds:systime_proc,0
-    mov ds:osgate_list,0
-;
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov al,66h
-    mov bl,3
-    mov esi,OFFSET int66
-    call local_create_trap_gate_sel
-;
-    mov al,67h
-    mov bl,3
-    mov esi,OFFSET int67
-    call local_create_trap_gate_sel
 ;
     mov esi,OFFSET is_valid_osgate
     mov edi,OFFSET is_valid_osgate_name
@@ -428,29 +413,18 @@ do_old_oscall16     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           int66, int67
+;           NAME:           do_oscall
 ;
-;           DESCRIPTION:    Trap handlers for int 66 and 67
+;           DESCRIPTION:    do oscall
+;
+;           PARAMETERS:     DS:EBX      Instruction
+;                           SS:BP       Stack frame
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-int66:
-int67:
-    sub sp,8
-    push ebp
-    mov bp,sp
-    push ds
-    push es
-    pushad
-;
-    call enter_code_patch
-    mov ds,[bp+16]
-    mov ebx,[bp+12]
-    sub ebx,2
-    mov al,ds:[ebx]
-    cmp al,0CDh
-    jne int_retry    
-;
+    public do_oscall
+
+do_oscall   Proc near
     push dword ptr [bp+20]
     mov [bp+20],ds    
     mov eax,ebx
@@ -484,25 +458,8 @@ int67:
 ;    
     mov al,90h
     xchg al,ds:[ebx]
-;
-    call leave_code_patch
-;        
-    popad
-    pop es
-    pop ds     
-    pop ebp
-    iretd
-
-int_retry:
-    call leave_code_patch
-    mov [bp+12],ebx
-;    
-    popad
-    pop es
-    pop ds
-    pop ebp
-    add sp,8
-    iretd
+    ret
+do_oscall   Endp
 
 code    ENDS
 

@@ -93,6 +93,7 @@ code    SEGMENT byte use16 public 'CODE'
     extrn do_usercall32:near
 
     extrn do_old_oscall16:near
+    extrn do_oscall:near
 
     assume cs:code
 
@@ -186,6 +187,72 @@ leave_code_patch    Proc near
     pop ds
     ret
 leave_code_patch    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           int66, int67
+;
+;           DESCRIPTION:    Trap handlers for int 66 and 67
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dummy_gate  Proc near
+    mov al,0CCh
+    mov ds:[ebx],al
+    ret
+dummy_gate  Endp
+
+int_call_tab:
+ict00   DW OFFSET dummy_gate
+ict01   DW OFFSET dummy_gate
+ict02   DW OFFSET do_oscall
+ict03   DW OFFSET dummy_gate
+
+int66:
+int67:
+    sub sp,8
+    push ebp
+    mov bp,sp
+    push ds
+    push es
+    pushad
+;
+    call enter_code_patch
+    mov ds,[bp+16]
+    mov ebx,[bp+12]
+    sub ebx,2
+    mov al,ds:[ebx]
+    cmp al,0CDh
+    jne int_retry    
+;
+    mov si,ds:[ebx+7]
+    cmp si,4
+    jb int_call
+;
+    xor si,si
+
+int_call:    
+    add si,si
+    call word ptr cs:[si].int_call_tab    
+    call leave_code_patch
+;        
+    popad
+    pop es
+    pop ds     
+    pop ebp
+    iretd
+
+int_retry:
+    call leave_code_patch
+    mov [bp+12],ebx
+;    
+    popad
+    pop es
+    pop ds
+    pop ebp
+    add sp,8
+    iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1790,6 +1857,8 @@ ri13    DW      3Bh,    OFFSET default_int2,    kernel_code,    0
 ri14    DW      3Ch,    OFFSET default_int2,    kernel_code,    0
 ri15    DW      3Dh,    OFFSET default_int2,    kernel_code,    0
 ri17    DW      3Fh,    OFFSET default_int2,    kernel_code,    0
+rg66    DW      66h,    OFFSET int66,          kernel_code,    3
+rg67    DW      67h,    OFFSET int67,          kernel_code,    3
 pg7_end DW      0FFFFh
 
     public init_pretask_traps

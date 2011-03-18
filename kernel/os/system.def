@@ -152,9 +152,6 @@ usergate_spinlock   DW ?
 patch_spinlock      DW ?
 shut_spinlock       DW ?
 
-systime_proc        DD ?,?
-osgate_list         DD ?
-
 system_size			DB ?
 
 system_seg	ENDS
