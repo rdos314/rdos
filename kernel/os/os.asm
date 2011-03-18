@@ -32,11 +32,11 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 
 gate_entry      STRUC
-gate_offset             DD ?
+gate_offset         DD ?
 gate_sel            DW ?
 gate_name_offset    DD ?
 gate_name_sel       DW ?
-gate_flags      DW ?
+gate_flags          DW ?
 gate_entry      ENDS
 
 code    SEGMENT byte public 'CODE'
@@ -49,6 +49,7 @@ ELSE
 ENDIF
 
     extrn local_get_selector_base_size:near
+    extrn local_create_trap_gate_sel:near
 
     extrn local_allocate_fixed_system_mem:near
 
@@ -114,9 +115,25 @@ init_osgate_loop:
     mov es:[di].gate_name_offset,OFFSET register_old_gate_name
     mov es:[di].gate_name_sel,cs
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:systime_proc,0
+    mov ds:osgate_list,0
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov al,66h
+    mov bl,3
+    mov esi,OFFSET int66
+    call local_create_trap_gate_sel
+;
+    mov al,67h
+    mov bl,3
+    mov esi,OFFSET int67
+    call local_create_trap_gate_sel
+;
     mov esi,OFFSET is_valid_osgate
     mov edi,OFFSET is_valid_osgate_name
     mov ax,is_valid_osgate_nr
@@ -411,63 +428,45 @@ do_old_oscall16     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DO_OSCALL
+;           NAME:           int66, int67
 ;
-;           DESCRIPTION:    Translate an osgate
-;
-;           PARAMETERS:     DS:EBX      Fault address
+;           DESCRIPTION:    Trap handlers for int 66 and 67
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public do_oscall
-
-do_oscall:
+int66:
+int67:
     sub sp,8
-;
+    push ebp
+    mov bp,sp
+    push ds
     push es
-    push ecx
-    push edx
-    push edi
+    pushad
 ;
-    mov ax,system_data_sel
-    mov es,ax
-    pushf
-    cli
-
-do_lock_loop:
-    mov ax,1
-    xchg ax,es:osgate_spinlock
-    or ax,ax
-    jz do_locked
-;
-    pause
-    jmp do_lock_loop
-
-do_locked: 
-    mov ax,[bp].vm_bp
-    mov [bp-12],ax          ; save org bp to pm_call
-;
-    mov eax,[bp].vm_eax
-    mov [bp-16],eax         ; save org eax
-;    
-    mov eax,[bp].vm_eflags
-    push eax
-    mov eax,[bp].vm_cs
-    mov [bp+14],eax         ; old eflags
-    mov eax,[bp].vm_eip
-    add eax,9
-    mov [bp+10],eax         ; old cs
-    pop eax
-    mov [bp+6],eax          ; old eip
-;
+    call enter_code_patch
+    mov ds,[bp+16]
+    mov ebx,[bp+12]
+    sub ebx,2
     mov al,ds:[ebx]
-    cmp al,90h
-    je do_patched
-;    
+    cmp al,0CDh
+    jne int_retry    
+;
+    push dword ptr [bp+20]
+    mov [bp+20],ds    
+    mov eax,ebx
+    add eax,9
+    mov [bp+16],eax
+    pop dword ptr [bp+12]
+;   
     mov edi,ds:[ebx+3]
     shl edi,4
     mov ax,osgate_sel
     mov es,ax
+;
+    mov eax,es:[edi].gate_offset
+    mov [bp+4],eax
+    movzx eax,es:[edi].gate_sel
+    mov [bp+8],eax
 ;
     push ebx
     mov bx,ds
@@ -477,44 +476,31 @@ do_locked:
     mov ax,flat_sel
     mov ds,ax
 ;
-    mov ax,es:[edi].gate_sel
-    mov [bp+2],ax           ; old err
-    mov eax,es:[edi].gate_offset
-    mov [bp-2],eax
-;
-    call enter_code_patch
     mov eax,es:[edi].gate_offset
     xchg eax,ds:[ebx+3]
+;
     mov ax,es:[edi].gate_sel
     xchg ax,ds:[ebx+7]
+;    
     mov al,90h
-    xchg al,ds:[ebx]        
+    xchg al,ds:[ebx]
+;
     call leave_code_patch
-    jmp do_retry
-
-do_patched:
-    mov ax,ds:[ebx+7]
-    mov [bp+2],ax
-    mov ax,ds:[ebx+3]
-    mov [bp-2],ax
-    
-do_retry:
-    mov ax,system_data_sel
-    mov es,ax
-    mov es:osgate_spinlock,0
-    popf
-;
-    pop edi
-    pop edx
-    pop ecx
+;        
+    popad
     pop es
-;
-    mov ds,[bp].pm_ds
-    mov eax,[bp-16]
-    mov ebx,[bp].vm_ebx
-    sub bp,12
-    mov sp,bp
-    pop bp
+    pop ds     
+    pop ebp
+    iretd
+
+int_retry:
+    call leave_code_patch
+    mov [bp+12],ebx
+;    
+    popad
+    pop es
+    pop ds
+    pop ebp
     add sp,8
     iretd
 

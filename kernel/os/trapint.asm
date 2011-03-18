@@ -81,6 +81,7 @@ code    SEGMENT byte use16 public 'CODE'
 
 
     extrn local_create_int_gate_sel:near
+    extrn local_get_selector_base_size:near
 
     extrn timer_int:near
 
@@ -92,7 +93,6 @@ code    SEGMENT byte use16 public 'CODE'
     extrn do_usercall32:near
 
     extrn do_old_oscall16:near
-    extrn do_oscall:near
 
     assume cs:code
 
@@ -1211,6 +1211,19 @@ trap_13:
     mov ebx,[bp].vm_eip
     mov al,[ebx]
 ;
+    cmp al,0CDh
+    jne t13_not_int
+;
+    mov al,[ebx+1]
+    cmp al,66h
+    je t13_retry
+;
+    cmp al,67h
+    je t13_retry
+;
+    jmp t13_default        
+        
+t13_not_int:
     cmp al,67h
     jne t13_not_oscall
 ;
@@ -1223,7 +1236,22 @@ trap_13:
     jne t13_retry    
 ;
     call leave_code_patch
-    jmp do_oscall
+    push ecx
+    push edx
+;    
+    push ebx
+    mov bx,ds
+    call local_get_selector_base_size
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov al,0CDh
+    xchg al,ds:[ebx]
+    pop edx
+    pop ecx
+    jmp t13_end
 
 t13_not_oscall:    
     cmp al,90h
@@ -1595,6 +1623,19 @@ pretask13:
     mov ebx,[bp].vm_eip
     mov al,[ebx]
 ;
+    cmp al,0CDh
+    jne pretask_gpf_not_int
+;
+    mov al,[ebx+1]
+    cmp al,66h
+    je pretask_gpf_reexec
+;
+    cmp al,67h
+    je pretask_gpf_reexec
+;
+    jmp pretask_gpf_default
+        
+pretask_gpf_not_int:
     cmp al,67h
     jne pretask_gpf_not_oscall
 ;
@@ -1607,7 +1648,22 @@ pretask13:
     jne pretask_gpf_default
 ;
     call leave_code_patch
-    jmp do_oscall
+    push ecx
+    push edx
+;    
+    push ebx
+    mov bx,ds
+    call local_get_selector_base_size
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov al,0CDh
+    xchg al,ds:[ebx]
+    pop edx
+    pop ecx
+    jmp pretask_gpf_retry
 
 pretask_gpf_not_oscall:    
     cmp al,90h

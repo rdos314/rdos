@@ -3656,6 +3656,12 @@ null_base   DB 'Null'
     public null_thread0
 
 null_thread0:
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,OFFSET get_system_time
+    mov ds:systime_proc,eax
+    mov ds:systime_proc+4,cs
+;
     mov ax,task_sel
     mov ds,ax
     call ds:get_cpu_proc

@@ -1022,7 +1022,7 @@ create_int_gate_sel     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateTrapGate
+;           NAME:           local_create_trap_gate_sel
 ;
 ;           DESCRIPTION:    Create trap gate selector
 ;
@@ -1032,9 +1032,9 @@ create_int_gate_sel     ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_trap_gate_sel_name DB 'Create Trap Gate Selector',0
-
-create_trap_gate_sel    PROC far
+    public local_create_trap_gate_sel
+    
+local_create_trap_gate_sel    PROC near
     push es
     push ax
     push bx
@@ -1059,6 +1059,26 @@ create_trap_gate_sel    PROC far
     pop bx
     pop ax
     pop es
+    ret
+local_create_trap_gate_sel    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateTrapGate
+;
+;           DESCRIPTION:    Create trap gate selector
+;
+;           PARAMETERS:         AL              INTERRUPT #
+;                           BL              DPL
+;                           DS:ESI      ENTRY POINT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_trap_gate_sel_name DB 'Create Trap Gate Selector',0
+
+create_trap_gate_sel    PROC far
+    call local_create_trap_gate_sel
     retf32
 create_trap_gate_sel    ENDP
 
