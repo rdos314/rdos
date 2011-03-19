@@ -305,7 +305,7 @@ init_exc_loop:
     mov di,OFFSET set_bitness_name
     xor cl,cl
     mov ax,set_bitness_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_vm_int
     mov di,OFFSET hook_vm_int_name
@@ -365,7 +365,7 @@ init_exc_loop:
     mov di,OFFSET reflect_exception_name
     xor cl,cl
     mov ax,reflect_exception_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET raw_switch16
     mov di,OFFSET raw_switch_name
@@ -706,7 +706,7 @@ set_bitness16:
 set_bitness_done:
     pop bx
     pop ds
-    ret
+    retf32
 set_bitness     ENDP
 
 

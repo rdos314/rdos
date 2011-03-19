@@ -572,7 +572,7 @@ V86_bios_int    Proc far
     mov es:list_edi,edi
     mov es:list_ebp,ebp
     mov bp,sp
-    mov al,[bp+4]
+    mov al,[bp+8]
     mov es:list_int,al      
 ;
     GetThread
@@ -606,7 +606,7 @@ V86_bios_int    Proc far
 ;
     pop es
     pop ds
-    ret 2
+    Retf32Pop 2
 v86_bios_int    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -667,7 +667,7 @@ init_v86_bios   PROC near
     mov edi,OFFSET v86_bios_int_name
     mov cl,1
     mov ax,v86_bios_int_nr
-    RegisterOldOsGate
+    RegisterOsGate
     ret
 init_v86_bios   ENDP
 

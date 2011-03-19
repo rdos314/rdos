@@ -1084,21 +1084,21 @@ HookSetProt32Int    MACRO
                     ENDM
 
 ReflectException    MACRO
-    OldOsGate reflect_exception_nr
+    OsGate reflect_exception_nr
                     ENDM
 
 ReflectPMToVM   MACRO
-    OldOsGate reflect_pm_to_vm_nr
+    OsGate reflect_pm_to_vm_nr
                     ENDM
 
 ;       Stack   Int #
 V86BiosInt      MACRO
-    OldOsGate v86_bios_int_nr
+    OsGate v86_bios_int_nr
                     ENDM
 
 ;       AL              16 or 32 bit app
 SetBitness      MACRO
-    OldOsGate set_bitness_nr
+    OsGate set_bitness_nr
                     ENDM
 
 ;;;;;;;;;;;;; IO ;;;;;;;;;;;;;;;;;;;;
