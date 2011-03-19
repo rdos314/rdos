@@ -1164,11 +1164,11 @@ PollIrqDetect   MACRO
 
 ;       EDX:EAX     SYSTEM TIME
 SetSystemTime   MACRO
-    OldOsGate set_system_time_nr
+    OsGate set_system_time_nr
                     ENDM
 
 NotifyTimeDrift MACRO
-    OldOsGate notify_time_drift_nr
+    OsGate notify_time_drift_nr
                     ENDM
 
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;

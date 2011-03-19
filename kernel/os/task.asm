@@ -578,8 +578,8 @@ reload_pit_timer  Endp
 ;
 ;           DESCRIPTION:    Notification of time drift
 ;
-;           PARAMETERS:         DS      System data sel
-;               EAX     Drift in tics
+;           PARAMETERS:     DS      System data sel
+;                           EAX     Drift in tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -633,7 +633,7 @@ ntdDone:
     pop ecx
     pop eax
     pop es
-    ret
+    retf32
 notify_time_drift  Endp
 
 
@@ -971,7 +971,7 @@ proc_init:
     mov di,OFFSET notify_time_drift_name
     xor cl,cl
     mov ax,notify_time_drift_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET get_system_time
     mov di,OFFSET get_system_time_name
@@ -1001,7 +1001,7 @@ proc_init:
     mov di,OFFSET set_system_time_name
     xor cl,cl
     mov ax,set_system_time_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET sim_sti
     mov di,OFFSET sim_sti_name
@@ -6794,7 +6794,7 @@ set_system_time PROC far
     mov ds:system_time+4,edx
     pop bx
     pop ds
-    ret
+    retf32
 set_system_time ENDP
 
     
