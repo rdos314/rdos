@@ -1152,12 +1152,12 @@ RequestSharedIrqHandler MACRO
                     ENDM
 
 SetupIrqDetect  MACRO
-    OldOsGate setup_irq_detect_nr
+    OsGate setup_irq_detect_nr
                     ENDM
 
 ;   AX      Detected IRQs
 PollIrqDetect   MACRO
-    OldOsGate poll_irq_detect_nr
+    OsGate poll_irq_detect_nr
                     ENDM
 
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;

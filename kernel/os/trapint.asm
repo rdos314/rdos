@@ -2245,7 +2245,7 @@ setup_irq_detect    Proc far
 ;
     pop ax
     pop ds
-    ret
+    retf32
 setup_irq_detect    Endp
 
 
@@ -2270,7 +2270,7 @@ poll_irq_detect Proc far
     mov eax,ds:bad_irqs
 ;
     pop ds
-    ret
+    retf32
 poll_irq_detect Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2443,31 +2443,31 @@ init_irq_loop:
     mov edi,OFFSET request_private_irq_handler_name
     xor cl,cl
     mov ax,request_private_irq_handler_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET request_shared_irq_handler
     mov edi,OFFSET request_shared_irq_handler_name
     xor cl,cl
     mov ax,request_shared_irq_handler_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET release_private_irq_handler
     mov edi,OFFSET release_private_irq_handler_name
     xor cl,cl
     mov ax,release_private_irq_handler_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET setup_irq_detect
     mov edi,OFFSET setup_irq_detect_name
     xor cl,cl
     mov ax,setup_irq_detect_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET poll_irq_detect
     mov edi,OFFSET poll_irq_detect_name
     xor cl,cl
     mov ax,poll_irq_detect_nr
-    RegisterOldOsGate
+    RegisterOsGate
     ret
 init_trap_vectors       ENDP
 

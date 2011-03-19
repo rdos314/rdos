@@ -203,6 +203,9 @@ int RdosIsIrqFree(int irq);
 void RdosRequestPrivateIrqHandler(int irq, __rdos_irq_callback *irq_proc);
 void RdosReleasePrivateIrqHandler(int irq);
 void RdosRequestSharedIrqHandler(int irq, __rdos_irq_callback *irq_proc);
+
+void RdosSetupIrqDetect();
+int RdosPollIrqDetect();
  
 /* 32-bit compact memory model (device-drivers) */
 
@@ -699,6 +702,13 @@ void RdosRequestSharedIrqHandler(int irq, __rdos_irq_callback *irq_proc);
 #pragma aux RdosRequestSharedIrqHandler = \
     OsGate_request_shared_irq_handler \
     parm [eax] [es edi];
+
+#pragma aux RdosSetupIrqDetect = \
+    OsGate_setup_irq_detect;
+
+#pragma aux RdosPollIrqDetect = \
+    OsGate_setup_irq_detect \
+    value [eax];
 
 #ifdef __cplusplus
 }
