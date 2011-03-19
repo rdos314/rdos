@@ -1968,7 +1968,7 @@ EnterHandler    Endp
 ;
 ;           DESCRIPTION:    Crash with a gate
 ;
-;           PARAMETERS:     CS:IP on stack
+;           PARAMETERS:     CS:EIP on stack
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1984,11 +1984,10 @@ crash_gate:
     pop ax
     mov fs:cs_fs,ax
 ;    
-    pop ax
-    movzx eax,ax
+    pop eax
     mov fs:cs_eip,eax
 ;
-    pop ax
+    pop eax
     mov fs:cs_cs,ax
     jmp CrashHandler
 
@@ -2225,19 +2224,19 @@ init_crashdeb    PROC near
     mov edi,OFFSET crash_gate_name
     xor cl,cl
     mov ax,crash_gate_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET crash_fault
     mov edi,OFFSET crash_fault_name
     xor cl,cl
     mov ax,crash_fault_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET crash_tss
     mov edi,OFFSET crash_tss_name
     xor cl,cl
     mov ax,crash_tss_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     ret
 init_crashdeb    ENDP

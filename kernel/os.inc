@@ -919,6 +919,22 @@ CreateProcess    MACRO
     OsGate create_process_nr
                         ENDM
 
+;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
+
+CrashGate       MACRO
+    OsGate crash_gate_nr
+                    ENDM
+
+;   SS:BP       Fault stack
+CrashFault      MACRO
+    OsGate crash_fault_nr
+                    ENDM
+
+;   DS      TSS alias
+CrashTss    MACRO
+    OsGate crash_tss_nr
+                    ENDM
+
 ;;;;;;;;;;; Hooks ;;;;;;;;;;;;;;;;
 
 ;       ES:DI   Swap callback
@@ -951,20 +967,6 @@ DebugBreak      MACRO
 GetDebugThreadSel MACRO
     OldOsGate get_debug_thread_sel_nr
                         ENDM
-
-CrashGate       MACRO
-    OldOsGate crash_gate_nr
-                    ENDM
-
-;   SS:BP       Fault stack
-CrashFault      MACRO
-    OldOsGate crash_fault_nr
-                    ENDM
-
-;   DS      TSS alias
-CrashTss    MACRO
-    OldOsGate crash_tss_nr
-                    ENDM
 
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;
 
