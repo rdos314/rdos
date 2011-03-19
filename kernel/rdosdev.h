@@ -189,6 +189,9 @@ void RdosHookCreateThread(__rdos_hook_callback *callb_proc);
 void RdosHookTerminateThread(__rdos_hook_callback *callb_proc);
 
 void RdosHookState(__rdos_hook_state_callback *callb_proc);
+
+void RdosSendEoi(int irq);
+int RdosIsIrqFree(int irq);
  
 /* 32-bit compact memory model (device-drivers) */
 
@@ -663,6 +666,16 @@ void RdosHookState(__rdos_hook_state_callback *callb_proc);
 #pragma aux RdosHookState = \
     OsGate_hook_state \
     parm [es edi];
+
+#pragma aux RdosSendEoi = \
+    OsGate_send_eoi \
+    parm [eax];
+
+#pragma aux RdosIsIrqFree = \
+    OsGate_is_irq_fee \
+    CarryToBool \    
+    parm [eax] \
+    value [eax];
 
 #ifdef __cplusplus
 }

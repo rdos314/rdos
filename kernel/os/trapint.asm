@@ -2174,7 +2174,7 @@ is_irq_free_done:
     pop si
     pop ax
     pop ds
-    ret
+    retf32
 is_irq_free     Endp
 
 
@@ -2433,7 +2433,7 @@ init_irq_loop:
     mov edi,OFFSET is_irq_free_name
     xor cl,cl
     mov ax,is_irq_free_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET request_private_irq_handler
     mov edi,OFFSET request_private_irq_handler_name

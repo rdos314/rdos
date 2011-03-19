@@ -635,7 +635,7 @@ send_eoi_mem  Proc far
 ;
     pop eax
     pop ds
-    ret
+    retf32
 send_eoi_mem Endp
 
 send_eoi_msr Proc far
@@ -648,7 +648,7 @@ send_eoi_msr Proc far
 ;
     pop ecx
     pop eax
-    ret
+    retf32
 send_eoi_msr Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1515,7 +1515,7 @@ smemgLint1Ok:
     mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_nmi_mem
     mov edi,OFFSET send_nmi_name
@@ -1539,7 +1539,7 @@ smemgLint1Ok:
     mov edi,OFFSET disable_all_irq_name
     xor cl,cl
     mov ax,disable_all_irq_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_processor_id_mem
     mov edi,OFFSET get_processor_id_name
@@ -1741,7 +1741,7 @@ smsrgLint1Ok:
     mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_nmi_msr
     mov edi,OFFSET send_nmi_name
@@ -2279,7 +2279,7 @@ daiLoop:
     pop cx
     pop bx
     pop ds
-    ret
+    retf32
 disable_all_irq Endp
 
 

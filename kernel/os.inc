@@ -1117,31 +1117,19 @@ HookOut MACRO
 
 ;;;;;;;;;; IRQ ;;;;;;;;;;;;;;;;;;;
 
-;       ES:DI   Swap callback
-;       AL  Swap level (0 = highest priority, 15 = lowest priority)
-RegisterSwapProc    MACRO
-    OldOsGate register_swap_proc_nr
-                    ENDM
-
-;       IN  EAX     Table name
-;       OUT ES      Table selector
-GetAcpiTable    MACRO
-    OldOsGate get_acpi_table_nr
-                    ENDM
-
 ;       AL              IRQ NR
 SendEoi MACRO
-    OldOsGate send_eoi_nr
+    OsGate send_eoi_nr
                     ENDM
 
 ;       AL              IRQ NR
 IsIrqFree       MACRO
-    OldOsGate is_irq_free_nr
+    OsGate is_irq_free_nr
                     ENDM
 
 ; OUT EAX     Active IRQ lines
 DisableAllIrq   MACRO
-    OldOsGate disable_all_irq_nr
+    OsGate disable_all_irq_nr
                     ENDM
 
 ;       AL              IRQ NR
@@ -1184,6 +1172,18 @@ NotifyTimeDrift MACRO
                     ENDM
 
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;
+
+;       ES:DI   Swap callback
+;       AL  Swap level (0 = highest priority, 15 = lowest priority)
+RegisterSwapProc    MACRO
+    OldOsGate register_swap_proc_nr
+                    ENDM
+
+;       IN  EAX     Table name
+;       OUT ES      Table selector
+GetAcpiTable    MACRO
+    OldOsGate get_acpi_table_nr
+                    ENDM
 
 ; IN  AX        Signature
 ; IN  ES:DI         Delete handle callback

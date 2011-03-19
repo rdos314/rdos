@@ -474,7 +474,7 @@ daiMasterLoop:
 daiMasterOk:
     mov eax,edx
     pop edx
-    ret
+    retf32
 disable_all_irq Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -537,7 +537,7 @@ sePic1:
 
 seDone:
     pop ax
-    ret
+    retf32
 send_eoi    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -560,13 +560,13 @@ init    PROC far
     mov edi,OFFSET send_eoi_name
     xor cl,cl
     mov ax,send_eoi_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET disable_all_irq
     mov edi,OFFSET disable_all_irq_name
     xor cl,cl
     mov ax,disable_all_irq_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov edi,OFFSET init_process
     HookCreateProcess
