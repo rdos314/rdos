@@ -1023,22 +1023,22 @@ CallPM32    MACRO
     OsGate call_pm32_nr
                     ENDM
 
-;       AL              INT NUMMER
-;       DS:DI       ADDRESS TILL CALLBACK
+;       AL           INT NUMMER
+;       DS:EDI       ADDRESS TILL CALLBACK
 HookVMInt       MACRO
-    OldOsGate hook_vm_int_nr
+    OsGate hook_vm_int_nr
                     ENDM
 
-;       AL              INT NUMMER
-;       DS:DI       ADDRESS TILL CALLBACK
+;       AL           INT NUMMER
+;       DS:EDI       ADDRESS TILL CALLBACK
 HookProt16Int   MACRO
-    OldOsGate hook_pm16_int_nr
+    OsGate hook_pm16_int_nr
                     ENDM
 
-;       AL              INT NUMMER
+;       AL          INT NUMMER
 ;       DS:EDI      ADDRESS TILL CALLBACK
 HookProt32Int   MACRO
-    OldOsGate hook_pm32_int_nr
+    OsGate hook_pm32_int_nr
                     ENDM
 
 ;       ES:DI       ADDRESS TILL CALLBACK

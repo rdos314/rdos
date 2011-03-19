@@ -271,7 +271,7 @@ kr_no_circ_buff:
     LeaveSection ds:key_section
     mov bx,[bp].vm_ebx
     mov ds,[bp].pm_ds
-    ret
+    retf32
 keyb_io_read    ENDP
 
 keyb_io_poll    PROC far
@@ -286,20 +286,20 @@ keyb_io_poll    PROC far
     LeaveSection ds:key_section
     mov bx,[bp].vm_ebx
     mov ds,[bp].pm_ds
-    ret
+    retf32
     
 keyb_p_empty:
     LeaveSection ds:key_section
     or word ptr [bp].vm_eflags,40h
     mov bx,[bp].vm_ebx
     mov ds,[bp].pm_ds
-    ret
+    retf32
 keyb_io_poll    ENDP
 
 keyb_io_state   PROC far
     xor ax,ax
     mov ds,[bp].pm_ds
-    ret
+    retf32
 keyb_io_state   ENDP
 
 keyb_error:
@@ -310,7 +310,7 @@ keyb_error:
 keyb_write      PROC far
     mov al,1
     mov ds,[bp].pm_ds
-    ret
+    retf32
 keyb_write      ENDP
 
 keyb_io_tab:
@@ -1390,11 +1390,11 @@ init_keyboard   PROC near
     mov ax,cs
     mov ds,ax
     mov al,16h
-    mov di,OFFSET int16
+    mov edi,OFFSET int16
     HookVMInt
 ;
     mov al,16h
-    mov di,OFFSET int16
+    mov edi,OFFSET int16
     HookProt16Int
     ret
 init_keyboard   ENDP

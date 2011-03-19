@@ -78,7 +78,7 @@ dpmi_create_done:
 	mov ebx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 allocate_descr	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -130,7 +130,7 @@ free_ds:
 	and byte ptr [bp].vm_eflags,NOT 1
 	mov eax,[bp].vm_eax
 	mov bx,[bp].vm_ebx
-	retf16
+	retf
 free_descr_fail:
 	or byte ptr [bp].vm_eflags,1
 	mov ax,[bp].vm_eax
@@ -139,7 +139,7 @@ free_descr_fail:
 	pop fs
 	pop es
 	pop ds
-	retf16
+	retf
 free_descr	ENDP
 
 
@@ -157,7 +157,7 @@ free_descr	ENDP
 get_descr_dist	PROC far
 	mov ax,8
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_descr_dist	ENDP
 
 page
@@ -190,10 +190,10 @@ get_descr_base	PROC far
 	mov bx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_descr_base_fail:
 	or byte ptr [bp].vm_eflags,1
-	retf16
+	retf
 get_descr_base	ENDP
 
 page
@@ -235,13 +235,13 @@ set_descr_base	PROC far
 	pop gs
 	pop fs
 	pop es
-	retf16
+	retf
 set_descr_base_fail:
 	or byte ptr [bp].vm_eflags,1
 	pop gs
 	pop fs
 	pop es
-	retf16
+	retf
 set_descr_base	ENDP
 
 page
@@ -295,13 +295,13 @@ set_descr_lim_do:
 	pop gs
 	pop fs
 	pop es
-	retf16
+	retf
 set_descr_limit_fail:
 	or byte ptr [bp].vm_eflags,1
 	pop gs
 	pop fs
 	pop es
-	retf16
+	retf
 set_descr_limit	ENDP
 
 page
@@ -346,13 +346,13 @@ create_code_descr_alias	PROC far
 	mov bx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 create_code_alias_fail:
 	mov ax,[bp].vm_eax
 	mov bx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
 	or byte ptr [bp].vm_eflags,1
-	retf16
+	retf
 create_code_descr_alias	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -383,7 +383,7 @@ segment_to_descr	PROC far
 	mov ebx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 segment_to_descr	ENDP
 
 page
@@ -439,14 +439,14 @@ set_descr_access_ok:
 	pop gs
 	pop fs
 	pop es
-	retf16
+	retf
 set_descr_access_fail:
 	mov ax,[bp].vm_eax
 	or byte ptr [bp].vm_eflags,1
 	pop gs
 	pop fs
 	pop es
-	retf16
+	retf
 set_descr_access	ENDP
 
 page
@@ -481,10 +481,10 @@ get_descr	PROC far
 	mov bx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_descr_fail:
 	or byte ptr [bp].vm_eflags,1
-	retf16
+	retf
 get_descr	ENDP
 
 page
@@ -540,14 +540,14 @@ set_descr_ok:
 	pop gs
 	pop fs
 	pop es
-	retf16
+	retf
 set_descr_fail:
 	mov ax,[bp].vm_eax
 	or byte ptr [bp].vm_eflags,1
 	pop gs
 	pop fs
 	pop es
-	retf16
+	retf
 set_descr	ENDP
 
 
@@ -585,11 +585,11 @@ allocate_specific_descr	PROC far
 	mov ebx,[bp].vm_ebx
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 alloc_spec_descr_fail:
 	mov ax,[bp].vm_eax
 	or byte ptr [bp].vm_eflags,1
-	retf16
+	retf
 allocate_specific_descr	ENDP
 
 PAGE
@@ -627,7 +627,7 @@ allocate_dos_mem	PROC far
 	pop bx
 	pop es
 	pop ds
-	retf16
+	retf
 
 allocate_dos_mem_fail:
 	pop bx
@@ -641,7 +641,7 @@ allocate_dos_mem_fail:
 	pop edx
 	pop eax
 	or byte ptr [bp].vm_eflags,1
-	retf16
+	retf
 allocate_dos_mem	ENDP
 
 PAGE
@@ -668,13 +668,13 @@ free_dos_mem	PROC far
 	FreeMem
 	and byte ptr [bp].vm_eflags,NOT 1
 	pop es
-	retf16
+	retf
 
 free_dos_mem_fail:
 	or byte ptr [bp].vm_eflags,1
 	mov ax,8022h
 	pop es
-	retf16
+	retf
 free_dos_mem	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -696,7 +696,7 @@ get_real_int	PROC far
 	mov ax,[bp].vm_eax
 	mov bx,[bp].vm_ebx
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_real_int	ENDP
 
 
@@ -719,7 +719,7 @@ set_real_int	PROC far
 	mov ax,[bp].vm_eax
 	mov bx,[bp].vm_ebx
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 set_real_int	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -744,7 +744,7 @@ get_exception	PROC far
 	pop es
 	mov ax,[bp].vm_eax
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_exception	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -780,7 +780,7 @@ set_exc_ignore:
 	pop es
 	mov ax,[bp].vm_eax
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 set_exception	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -805,7 +805,7 @@ get_vector	PROC far
 	pop es
 	mov ax,[bp].vm_eax
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_vector	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -830,7 +830,7 @@ set_vector	PROC far
 	pop es
 	mov ax,[bp].vm_eax
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 set_vector	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -854,7 +854,7 @@ sim_real_int	PROC far
 	mov ds,[bp].pm_ds
 	mov eax,[bp].vm_eax
 	and byte ptr [bp].vm_eflags, NOT 1
-	retf16
+	retf
 sim_real_int	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -876,7 +876,7 @@ sim_real_call	PROC far
 	pop esi
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags, NOT 1
-	retf16
+	retf
 sim_real_call	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -898,7 +898,7 @@ sim_real_call_int	PROC far
 	pop esi
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags, NOT 1
-	retf16
+	retf
 sim_real_call_int	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -919,7 +919,7 @@ allocate_vm_callback	PROC far
 	mov ax,[bp].vm_eax
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags, NOT 1
-	retf16
+	retf
 allocate_vm_callback	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -942,7 +942,7 @@ free_vm_callback	PROC far
 	pop dx
 	pop cx
 	and byte ptr [bp].vm_eflags, NOT 1
-	retf16
+	retf
 free_vm_callback	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -959,7 +959,7 @@ free_vm_callback	ENDP
 dpmi_get_save_restore_addr	PROC far
 	xor ax,ax
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 dpmi_get_save_restore_addr	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -977,7 +977,7 @@ dpmi_get_raw_switch_addr	PROC far
 	GetRawSwitchAds
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 dpmi_get_raw_switch_addr	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -997,7 +997,7 @@ get_version	PROC far
 	mov cl,3
 	mov dx,2838h
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_version	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1034,7 +1034,7 @@ get_free_mem	PROC far
 	pop edx		
 	pop eax
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_free_mem	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1074,7 +1074,7 @@ allocate_mem	PROC far
 	mov eax,[bp].vm_eax
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 allocate_mem	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1104,7 +1104,7 @@ free_mem	PROC far
 	mov eax,[bp].vm_eax
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 free_mem	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1158,7 +1158,7 @@ resize_mem_fail:
 resize_mem_done:
 	pop edx
 	mov ds,[bp].pm_ds
-	retf16
+	retf
 resize_mem	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1232,7 +1232,7 @@ set_page_attrib_next:
 	mov eax,[bp].vm_eax
 	mov ds,[bp].pm_ds
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 
 set_page_range_fail:
 	mov ax,8025h
@@ -1243,7 +1243,7 @@ set_page_range_fail:
 	pop ecx
 	xor ecx,ecx
 	mov ds,[bp].pm_ds
-	retf16
+	retf
 set_page_attrib	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1261,7 +1261,7 @@ dpmi_page_size	PROC far
 	xor bx,bx
 	mov cx,1000h
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 dpmi_page_size	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1283,7 +1283,7 @@ get_int	PROC far
 	and al,1
 	mov ah,9
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_int	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1305,7 +1305,7 @@ get_disable_int	PROC far
 	and al,1
 	mov ah,9
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_disable_int	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1327,7 +1327,7 @@ get_enable_int	PROC near
 	and al,1
 	mov ah,9
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 get_enable_int	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1343,7 +1343,7 @@ get_enable_int	ENDP
 
 set_fpu_emulation	PROC near
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 set_fpu_emulation	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1359,13 +1359,13 @@ set_fpu_emulation	ENDP
 
 dpmi_dummy	PROC far
 	and byte ptr [bp].vm_eflags,NOT 1
-	retf16
+	retf
 dpmi_dummy	ENDP
 
 dpmi_error	PROC far
 	int 3
 	or byte ptr [bp].vm_eflags,1
-	retf16
+	retf
 dpmi_error	ENDP
 
 dpmi_descriptor:

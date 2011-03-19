@@ -579,7 +579,7 @@ init_param      PROC far
     call reset
     mov ax,0FFFFh
     mov bx,2
-    ret
+    retf32
 init_param      ENDP
 
 show    PROC far
@@ -590,7 +590,7 @@ show    PROC far
     call show_marker
     mov ax,[bp].vm_eax
     mov ds,[bp].pm_ds
-    ret
+    retf32
 show    ENDP
 
 hide    PROC far
@@ -601,7 +601,7 @@ hide    PROC far
     call show_marker
     mov ax,[bp].vm_eax
     mov ds,[bp].pm_ds
-    ret
+    retf32
 hide    ENDP
 
 get_position    PROC far
@@ -612,7 +612,7 @@ get_position    PROC far
     mov dx,ds:m_vert_pos    
     mov ax,[bp].vm_eax
     mov ds,[bp].pm_ds
-    ret
+    retf32
 get_position    ENDP
 
 set_position    PROC far
@@ -626,7 +626,7 @@ set_position    PROC far
     call show_marker
     mov ax,[bp].vm_eax
     mov ds,[bp].pm_ds
-    ret
+    retf32
 set_position    ENDP
 
 get_press_info  PROC far
@@ -640,13 +640,13 @@ get_press1:
     mov cx,ds:m_horiz_press1
     mov dx,ds:m_vert_press1
     mov ds,[bp].pm_ds
-    ret
+    retf32
 get_press0:
     mov bx,ds:m_count_press0
     mov cx,ds:m_horiz_press0
     mov dx,ds:m_vert_press0
     mov ds,[bp].pm_ds
-    ret
+    retf32
 get_press_info  ENDP
 
 get_rel_info    PROC far
@@ -660,13 +660,13 @@ get_rel1:
     mov cx,ds:m_horiz_rel1
     mov dx,ds:m_vert_rel1
     mov ds,[bp].pm_ds
-    ret
+    retf32
 get_rel0:
     mov bx,ds:m_count_rel0
     mov cx,ds:m_horiz_rel0
     mov dx,ds:m_vert_rel0
     mov ds,[bp].pm_ds
-    ret
+    retf32
 get_rel_info    ENDP
 
 set_horiz_area  PROC far
@@ -686,7 +686,7 @@ set_horiz_test_pos:
     call show_marker
     mov ax,[bp].vm_eax
     mov ds,[bp].pm_ds
-    ret
+    retf32
 set_horiz_area  ENDP
 
 set_vert_area   PROC far
@@ -706,11 +706,11 @@ set_vert_test_pos:
     call show_marker
     mov ax,[bp].vm_eax
     mov ds,[bp].pm_ds
-    ret
+    retf32
 set_vert_area   ENDP
 
 dummy   PROC far
-    ret
+    retf32
 dummy   ENDP
 
 set_cursor_type PROC far
@@ -727,7 +727,7 @@ set_cursor_not_supported:
     call show_marker
     mov ax,[bp].vm_eax
     mov ds,[bp].pm_ds
-    ret
+    retf32
 set_cursor_type ENDP
 
 read_motion_counter     PROC far
@@ -739,7 +739,7 @@ read_motion_counter     PROC far
     xchg dx,ds:m_vert_motion
     mov ax,[bp].vm_eax
     mov ds,[bp].pm_ds
-    ret
+    retf32
 read_motion_counter     ENDP
 
 set_mickey      PROC far
@@ -749,7 +749,7 @@ set_mickey      PROC far
     mov ds:m_vert_mickey,dx
     mov ax,[bp].vm_eax
     mov ds,[bp].pm_ds
-    ret
+    retf32
 set_mickey      ENDP
 
 mouse_tab:
@@ -1593,7 +1593,7 @@ init_mouse      PROC near
     HookInitTasking
 ;
     mov al,33h
-    mov di,OFFSET int33
+    mov edi,OFFSET int33
     HookVMInt
 ;
     mov esi,OFFSET add_wait_for_mouse

@@ -35,1006 +35,1006 @@ INCLUDE ..\os\int.def
 INCLUDE ..\os\system.def
 INCLUDE dos.inc
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
-        extrn get_virt_psp:near
-        extrn set_virt_psp:near
-        extrn get_prot_psp:near
-        extrn set_prot_psp:near
-        extrn get_prot_dta:near
-        extrn set_prot_dta:near
+    extrn get_virt_psp:near
+    extrn set_virt_psp:near
+    extrn get_prot_psp:near
+    extrn set_prot_psp:near
+    extrn get_prot_dta:near
+    extrn set_prot_dta:near
 
-        extrn get_system_date:near
-        extrn set_system_date:near
-        extrn get_system_time:near
-        extrn set_system_time:near
-        extrn strategy:near
-        extrn exit_code:near
-        extrn dos_version:near
-        extrn control_c_check:near
-        extrn switch_char:near
-        extrn dos_write_char:near
-        extrn dos_read_key:near
-        extrn dos_read_key_echo:near
-        extrn dos_con_io:near
-        extrn dos_key_state:near
-        extrn ioctl:near
-        extrn close_handle:near
-        extrn move_pointer:near
-        extrn dupl_handle:near
-        extrn force_dupl_handle:near
-        extrn get_drive_allocation:near
-        extrn select_drive:near
-        extrn get_drive:near
-        extrn find_first_file:near
-        extrn find_next:near
-        extrn date_time_handle:near
+    extrn get_system_date:near
+    extrn set_system_date:near
+    extrn get_system_time:near
+    extrn set_system_time:near
+    extrn strategy:near
+    extrn exit_code:near
+    extrn dos_version:near
+    extrn control_c_check:near
+    extrn switch_char:near
+    extrn dos_write_char:near
+    extrn dos_read_key:near
+    extrn dos_read_key_echo:near
+    extrn dos_con_io:near
+    extrn dos_key_state:near
+    extrn ioctl:near
+    extrn close_handle:near
+    extrn move_pointer:near
+    extrn dupl_handle:near
+    extrn force_dupl_handle:near
+    extrn get_drive_allocation:near
+    extrn select_drive:near
+    extrn get_drive:near
+    extrn find_first_file:near
+    extrn find_next:near
+    extrn date_time_handle:near
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   KEY_IO
+;           NAME:           KEY_IO
 ;
-;               DESCRIPTION:    DOS function 0A
+;           DESCRIPTION:    DOS function 0A
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 key_io  PROC far
-        push cx
-        push es
-        push di
-        mov es,[bp].pm_ds
-        mov di,dx
-        movzx cx,byte ptr es:[di]
-        add di,2
-        ReadConsole
-        dec ax
-        dec di
-        mov es:[di],al
-        pop di
-        pop es
-        pop cx
-        mov ax,[bp].vm_eax
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    push cx
+    push es
+    push di
+    mov es,[bp].pm_ds
+    mov di,dx
+    movzx cx,byte ptr es:[di]
+    add di,2
+    ReadConsole
+    dec ax
+    dec di
+    mov es:[di],al
+    pop di
+    pop es
+    pop cx
+    mov ax,[bp].vm_eax
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 key_io  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DOS_IO_FLUSH
+;           NAME:           DOS_IO_FLUSH
 ;
-;               DESCRIPTION:    DOS function 0C
+;           DESCRIPTION:    DOS function 0C
 ;
-;               PARAMETERS:             AL                      KEY FUNCTION
-;                                               
+;           PARAMETERS:         AL              KEY FUNCTION
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dos_io_flush    PROC far
-        FlushKeyboard
-        mov ax,[bp].vm_eax
-        mov bl,al
-        xor bh,bh
-        mov byte ptr [bp].vm_eax,bh
-        add bx,bx
-        cmp bx,20h
-        jnc dos_flush_end
-        jmp word ptr cs:[bx].dos_tab
+    FlushKeyboard
+    mov ax,[bp].vm_eax
+    mov bl,al
+    xor bh,bh
+    mov byte ptr [bp].vm_eax,bh
+    add bx,bx
+    cmp bx,20h
+    jnc dos_flush_end
+    jmp word ptr cs:[bx].dos_tab
 dos_flush_end:
-        mov ax,[bp].vm_eax
-        mov bx,[bp].vm_ebx
-        ret
+    mov ax,[bp].vm_eax
+    mov bx,[bp].vm_ebx
+    retf32
 dos_io_flush    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ALLOCATE_MEM
+;           NAME:           ALLOCATE_MEM
 ;
-;               DESCRIPTION:    DOS function 48
+;           DESCRIPTION:    DOS function 48
 ;
-;               PARAMETERS:             BX                      NUMBER OF PARAGRAPH
-;                                               
+;           PARAMETERS:         BX              NUMBER OF PARAGRAPH
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_mem    PROC far
-        push ds
-        push bx
-        push ecx
-        push edx
-        push eax
-        movzx eax,bx
-        shl eax,4
-        AllocateLocalLinear
-        cmp eax,10000h
-        jz allocate_mem_single
-        jc allocate_mem_single
+    push ds
+    push bx
+    push ecx
+    push edx
+    push eax
+    movzx eax,bx
+    shl eax,4
+    AllocateLocalLinear
+    cmp eax,10000h
+    jz allocate_mem_single
+    jc allocate_mem_single
 allocate_mem_multiple:
-        mov ecx,eax
-        dec ecx
-        shr ecx,16
-        inc cx
-        AllocateMultipleLdt
-        jmp allocate_mem_setup_ldt
+    mov ecx,eax
+    dec ecx
+    shr ecx,16
+    inc cx
+    AllocateMultipleLdt
+    jmp allocate_mem_setup_ldt
 allocate_mem_single:
-        mov cx,1
-        AllocateLdt
+    mov cx,1
+    AllocateLdt
 allocate_mem_setup_ldt:
-        push ax
-        GetThread
-        mov ds,ax
-        mov ds,ds:p_ldt_sel
-        pop ax
-        push bx
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_ldt_sel
+    pop ax
+    push bx
 allocate_mem_ldt_loop:
-        cmp cx,1
-        je allocate_mem_final_ldt
-        mov word ptr [bx],0FFFFh
-        mov [bx+2],edx
-        push ax
-        mov al,0F2h
-        xchg al,[bx+5]
-        mov byte ptr [bx+6],0
-        mov [bx+7],al
-        pop ax
-        add edx,10000h
-        jmp allocate_mem_next_ldt
+    cmp cx,1
+    je allocate_mem_final_ldt
+    mov word ptr [bx],0FFFFh
+    mov [bx+2],edx
+    push ax
+    mov al,0F2h
+    xchg al,[bx+5]
+    mov byte ptr [bx+6],0
+    mov [bx+7],al
+    pop ax
+    add edx,10000h
+    jmp allocate_mem_next_ldt
 allocate_mem_final_ldt:
-        dec ax
-        mov [bx],ax
-        mov [bx+2],edx
-        mov al,0F2h
-        xchg al,[bx+5]
-        mov byte ptr [bx+6],0
-        mov [bx+7],al
+    dec ax
+    mov [bx],ax
+    mov [bx+2],edx
+    mov al,0F2h
+    xchg al,[bx+5]
+    mov byte ptr [bx+6],0
+    mov [bx+7],al
 allocate_mem_next_ldt:
-        add bx,8
-        loop allocate_mem_ldt_loop
-        pop bx
-        or bx,7
-        pop eax
-        mov ax,bx
-        pop edx
-        pop ecx
-        pop bx
-        pop ds
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    add bx,8
+    loop allocate_mem_ldt_loop
+    pop bx
+    or bx,7
+    pop eax
+    mov ax,bx
+    pop edx
+    pop ecx
+    pop bx
+    pop ds
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 allocate_mem    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   RESIZE_MEM
+;           NAME:           RESIZE_MEM
 ;
-;               DESCRIPTION:    DOS function 4A
+;           DESCRIPTION:    DOS function 4A
 ;
-;               PARAMETERS:             BX                      NUMBER OF PARAGRAPH
-;                                               
+;           PARAMETERS:         BX              NUMBER OF PARAGRAPH
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 resize_mem      PROC far
-        int 3
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    int 3
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 resize_mem      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GET_PSP
+;           NAME:           GET_PSP
 ;
-;               DESCRIPTION:    DOS function 51,62
+;           DESCRIPTION:    DOS function 51,62
 ;
-;               PARAMETERS:             BX                      PSP
-;                                               
+;           PARAMETERS:         BX              PSP
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_psp PROC far
-        call get_prot_psp
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    call get_prot_psp
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 get_psp ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SET_PSP
+;           NAME:           SET_PSP
 ;
-;               DESCRIPTION:    DOS function 50
+;           DESCRIPTION:    DOS function 50
 ;
-;               PARAMETERS:             BX                      PSP
-;                                               
+;           PARAMETERS:         BX              PSP
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_psp PROC far
-        call set_prot_psp
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    call set_prot_psp
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 set_psp ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GET_DTA
+;           NAME:           GET_DTA
 ;
-;               DESCRIPTION:    DOS function 2F
+;           DESCRIPTION:    DOS function 2F
 ;
-;               PARAMETERS:             ES:BX                   DTA
-;                                               
+;           PARAMETERS:         ES:BX           DTA
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_dta PROC far
-        push dx
-        call get_prot_dta
-        mov es,dx
-        pop dx
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    push dx
+    call get_prot_dta
+    mov es,dx
+    pop dx
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 get_dta ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SET_DTA
+;           NAME:           SET_DTA
 ;
-;               DESCRIPTION:    DOS function 1A
+;           DESCRIPTION:    DOS function 1A
 ;
-;               PARAMETERS:             DS:DX                   DTA
-;                                               
+;           PARAMETERS:         DS:DX           DTA
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_dta PROC far
-        push ebx
-        push dx
-        movzx ebx,dx
-        mov dx,[bp].pm_ds
-        call set_prot_dta
-        pop dx
-        pop ebx
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    push ebx
+    push dx
+    movzx ebx,dx
+    mov dx,[bp].pm_ds
+    call set_prot_dta
+    pop dx
+    pop ebx
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 set_dta ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   PARSE_FILE
+;           NAME:           PARSE_FILE
 ;
-;               DESCRIPTION:    DOS function 29
+;           DESCRIPTION:    DOS function 29
 ;
-;               PARAMETERS:             
-;                                               
+;           PARAMETERS:         
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 parse_file      PROC far
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 parse_file      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   LOAD_PROGRAM
+;           NAME:           LOAD_PROGRAM
 ;
-;               DESCRIPTION:    DOS function 4B
+;           DESCRIPTION:    DOS function 4B
 ;
-;               PARAMETERS:             
-;                                               
+;           PARAMETERS:         
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_program    PROC far
-        push si
-        push di
-        SimSti
-        mov si,dx
-        mov di,[bp].vm_ebx
-        les di,es:[di+2]
-        push es
-        push di
+    push si
+    push di
+    SimSti
+    mov si,dx
+    mov di,[bp].vm_ebx
+    les di,es:[di+2]
+    push es
+    push di
 ;
-        push ds
-        push cx
-        push si
-        mov ax,es
-        mov ds,ax
-        mov si,di
-        movzx cx,byte ptr [si]
-        movzx eax,cx
-        inc eax
-        AllocateLocalMem
-        xor di,di
-        inc si
-        rep movsb
-        xor al,al
-        stosb
-        xor di,di
-        pop si
-        pop cx
-        pop ds
-        DosExtExec
+    push ds
+    push cx
+    push si
+    mov ax,es
+    mov ds,ax
+    mov si,di
+    movzx cx,byte ptr [si]
+    movzx eax,cx
+    inc eax
+    AllocateLocalMem
+    xor di,di
+    inc si
+    rep movsb
+    xor al,al
+    stosb
+    xor di,di
+    pop si
+    pop cx
+    pop ds
+    DosExtExec
 ;       LoadExe
 ;
-        pushf
-        FreeMem
-        popf
-        pop di
-        pop es
-        jc load_fail
+    pushf
+    FreeMem
+    popf
+    pop di
+    pop es
+    jc load_fail
 ;
-        and byte ptr [bp].vm_eflags,1
-        jmp load_done
+    and byte ptr [bp].vm_eflags,1
+    jmp load_done
 
 load_fail:
-        or byte ptr [bp].vm_eflags,1
+    or byte ptr [bp].vm_eflags,1
 
 load_done:
-        pop di
-        pop si
-        ret
+    pop di
+    pop si
+    retf32
 load_program    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   END_PROGRAM
+;           NAME:           END_PROGRAM
 ;
-;               DESCRIPTION:    DOS function 4C
+;           DESCRIPTION:    DOS function 4C
 ;
-;               PARAMETERS:             
-;                                               
+;           PARAMETERS:         
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 end_program:
-        UnloadExe
+    UnloadExe
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GET_INDOS_FLAG
+;           NAME:           GET_INDOS_FLAG
 ;
-;               DESCRIPTION:    DOS function 34
+;           DESCRIPTION:    DOS function 34
 ;
-;               PARAMETERS:             ES:BX                   Address to indos flag
-;                                               
+;           PARAMETERS:         ES:BX           Address to indos flag
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_indos_flag  PROC far
-        mov bx,dos_vm_sel
-        mov es,bx
-        mov bx,OFFSET indos_flag
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    mov bx,dos_vm_sel
+    mov es,bx
+    mov bx,OFFSET indos_flag
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 get_indos_flag  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DOS5D
+;           NAME:           DOS5D
 ;
-;               DESCRIPTION:    DOS function 5D
+;           DESCRIPTION:    DOS function 5D
 ;
-;               PARAMETERS:             
-;                                               
+;           PARAMETERS:         
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dos5d   PROC far
-        cmp al,6
-        je crit
+    cmp al,6
+    je crit
 crit:
-        mov si,dos_vm_sel
-        mov ds,si
-        mov si,OFFSET critical_flag
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    mov si,dos_vm_sel
+    mov ds,si
+    mov si,OFFSET critical_flag
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 dos5d   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GET_INT
+;           NAME:           GET_INT
 ;
-;               DESCRIPTION:    DOS function 35
+;           DESCRIPTION:    DOS function 35
 ;
-;               PARAMETERS:             ES:BX           ADDRESS
-;                                               AL                      VECTOR NR
-;                                               
+;           PARAMETERS:         ES:BX       ADDRESS
+;                           AL              VECTOR NR
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_int PROC far
-        push di
-        GetPMInt
-        mov bx,di
-        pop di
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    push di
+    GetPMInt
+    mov bx,di
+    pop di
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 get_int ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SET_INT
+;           NAME:           SET_INT
 ;
-;               DESCRIPTION:    DOS function 25
+;           DESCRIPTION:    DOS function 25
 ;
-;               PARAMETERS:             DS:DX           ADDRESS
-;                                               AL                      VECTOR NR
+;           PARAMETERS:         DS:DX       ADDRESS
+;                           AL              VECTOR NR
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        
+    
 set_int PROC far
-        push es
-        push di
-        mov di,ds
-        mov es,di
-        mov di,dx
-        SetPMInt
-        pop di
-        pop es
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    push es
+    push di
+    mov di,ds
+    mov es,di
+    mov di,dx
+    SetPMInt
+    pop di
+    pop es
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 set_int ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DISPLAY_STRING
+;           NAME:           DISPLAY_STRING
 ;
-;               DESCRIPTION:    DOS function 9
+;           DESCRIPTION:    DOS function 9
 ;
-;               PARAMETERS:             DS:DX           $ - TERMINATED STRING
+;           PARAMETERS:         DS:DX       $ - TERMINATED STRING
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 display_string  PROC far
-        push es
-        push di
-        mov es,[bp].pm_ds
-        movzx edi,dx
-        WriteDosString
-        pop di
-        pop es
-        and byte ptr [bp].vm_eflags, NOT 1
-        ret
+    push es
+    push di
+    mov es,[bp].pm_ds
+    movzx edi,dx
+    WriteDosString
+    pop di
+    pop es
+    and byte ptr [bp].vm_eflags, NOT 1
+    retf32
 display_string  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   FILE_ATTRIBUTE
+;           NAME:           FILE_ATTRIBUTE
 ;
-;               DESCRIPTION:    DOS function 43
+;           DESCRIPTION:    DOS function 43
 ;
-;               PARAMETERS:             DS:DX           PATH NAME
-;                                               CX                      ATTRIBUTE
-;                                               
+;           PARAMETERS:         DS:DX       PATH NAME
+;                           CX              ATTRIBUTE
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 file_attribute  PROC far
-        or al,al
-        jz get_file_attrib
-        cmp al,1
-        je set_file_attrib
-        mov ax,1
-        or byte ptr [bp].vm_eflags,1
-        ret
+    or al,al
+    jz get_file_attrib
+    cmp al,1
+    je set_file_attrib
+    mov ax,1
+    or byte ptr [bp].vm_eflags,1
+    retf32
 get_file_attrib:
-        push es
-        push di
-        mov bx,ds
-        mov es,bx
-        mov di,dx
-        GetFileAttribute
-        pop di
-        pop es
-        jnc file_attrib_ok
-        mov ax,2
-        mov bx,[bp].vm_ebx
-        or byte ptr [bp].vm_eflags,1
-        ret
+    push es
+    push di
+    mov bx,ds
+    mov es,bx
+    mov di,dx
+    GetFileAttribute
+    pop di
+    pop es
+    jnc file_attrib_ok
+    mov ax,2
+    mov bx,[bp].vm_ebx
+    or byte ptr [bp].vm_eflags,1
+    retf32
 set_file_attrib:
-        int 3
-        mov ax,1
-        or byte ptr [bp].vm_eflags,1
-        ret
+    int 3
+    mov ax,1
+    or byte ptr [bp].vm_eflags,1
+    retf32
 file_attrib_ok:
-        mov ax,[bp].vm_eax
-        mov bx,[bp].vm_ebx
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    mov ax,[bp].vm_eax
+    mov bx,[bp].vm_ebx
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 file_attribute  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CREATE_HANDLE
+;           NAME:           CREATE_HANDLE
 ;
-;               DESCRIPTION:    DOS function 3C
+;           DESCRIPTION:    DOS function 3C
 ;
-;               PARAMETERS:             DS:DX                   FILENAME
-;                                               CX                              FILE ATTRIBUTE
+;           PARAMETERS:         DS:DX           FILENAME
+;                           CX                  FILE ATTRIBUTE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_handle   PROC far
-        push es
-        push di
-        call get_prot_psp
-        mov es,bx
-        push cx
-        mov di,es:psp_handleads
-        mov cx,es:psp_handlesize
-        mov al,0FFh
-        repne scasb
-        pop cx
-        jz create_handle_found
-        or byte ptr [bp].vm_eflags,1
-        mov ax,4 
-        jmp create_handle_done
+    push es
+    push di
+    call get_prot_psp
+    mov es,bx
+    push cx
+    mov di,es:psp_handleads
+    mov cx,es:psp_handlesize
+    mov al,0FFh
+    repne scasb
+    pop cx
+    jz create_handle_found
+    or byte ptr [bp].vm_eflags,1
+    mov ax,4 
+    jmp create_handle_done
 create_handle_found:
-        dec di
-        push es
-        push di
-        mov es,[bp].pm_ds
-        mov di,dx
-        CreateFile
-        pop di
-        pop es
-        jnc create_handle_ok
-        or byte ptr [bp].vm_eflags,1
-        mov ax,2
-        jmp create_handle_done
+    dec di
+    push es
+    push di
+    mov es,[bp].pm_ds
+    mov di,dx
+    CreateFile
+    pop di
+    pop es
+    jnc create_handle_ok
+    or byte ptr [bp].vm_eflags,1
+    mov ax,2
+    jmp create_handle_done
 create_handle_ok:
-        mov es:[di],bl
-        sub di,es:psp_handleads
-        mov ax,di
-        and byte ptr [bp].vm_eflags,NOT 1
+    mov es:[di],bl
+    sub di,es:psp_handleads
+    mov ax,di
+    and byte ptr [bp].vm_eflags,NOT 1
 create_handle_done:
-        mov bx,[bp].vm_ebx
-        pop di
-        pop es
-        ret
+    mov bx,[bp].vm_ebx
+    pop di
+    pop es
+    retf32
 create_handle   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   OPEN_HANDLE
+;           NAME:           OPEN_HANDLE
 ;
-;               DESCRIPTION:    DOS function 3D
+;           DESCRIPTION:    DOS function 3D
 ;
-;               PARAMETERS:             DS:DX                   FILENAME
-;                                               AL                              ACCESS CODE
+;           PARAMETERS:         DS:DX           FILENAME
+;                           AL                  ACCESS CODE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_handle     PROC far
-        push es
-        push cx
-        push di
-        call get_prot_psp
-        mov es,bx
-        mov di,es:psp_handleads
-        mov cx,es:psp_handlesize
-        mov al,0FFh
-        repne scasb
-        jz open_handle_found
-        or byte ptr [bp].vm_eflags,1
-        mov ax,4 
-        jmp open_handle_done
+    push es
+    push cx
+    push di
+    call get_prot_psp
+    mov es,bx
+    mov di,es:psp_handleads
+    mov cx,es:psp_handlesize
+    mov al,0FFh
+    repne scasb
+    jz open_handle_found
+    or byte ptr [bp].vm_eflags,1
+    mov ax,4 
+    jmp open_handle_done
 open_handle_found:
-        dec di
-        push es
-        push di
-        mov bx,ds
-        mov es,bx
-        mov di,dx
-        mov cl,[bp].vm_eax
-        OpenFile
-        pop di
-        pop es
-        jnc open_handle_ok
-        or byte ptr [bp].vm_eflags,1
-        mov ax,2
-        jmp open_handle_done
+    dec di
+    push es
+    push di
+    mov bx,ds
+    mov es,bx
+    mov di,dx
+    mov cl,[bp].vm_eax
+    OpenFile
+    pop di
+    pop es
+    jnc open_handle_ok
+    or byte ptr [bp].vm_eflags,1
+    mov ax,2
+    jmp open_handle_done
 open_handle_ok:
-        mov es:[di],bl
-        sub di,es:psp_handleads
-        mov ax,di
-        and byte ptr [bp].vm_eflags,NOT 1
+    mov es:[di],bl
+    sub di,es:psp_handleads
+    mov ax,di
+    and byte ptr [bp].vm_eflags,NOT 1
 open_handle_done:
-        mov bx,[bp].vm_eflags
-        pop di
-        pop cx
-        pop es
-        ret
+    mov bx,[bp].vm_eflags
+    pop di
+    pop cx
+    pop es
+    retf32
 open_handle     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   READ_HANLE
+;           NAME:           READ_HANLE
 ;
-;               DESCRIPTION:    DOS function 3F
+;           DESCRIPTION:    DOS function 3F
 ;
-;               PARAMETERS:             DS:DX                   BUFFER
-;                                               BX                              FILE HANDLE
-;                                               CX                              BYTES
+;           PARAMETERS:         DS:DX           BUFFER
+;                           BX                  FILE HANDLE
+;                           CX                  BYTES
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_handle     PROC far
-        push es
-        call get_prot_psp
-        mov es,bx
-        mov ax,[bp].vm_ebx
-        cmp ax,es:psp_handlesize
-        jc read_handle_inrange
-        mov ax,6
-        or byte ptr [bp].vm_eflags, 1
-        jmp read_handle_done
+    push es
+    call get_prot_psp
+    mov es,bx
+    mov ax,[bp].vm_ebx
+    cmp ax,es:psp_handlesize
+    jc read_handle_inrange
+    mov ax,6
+    or byte ptr [bp].vm_eflags, 1
+    jmp read_handle_done
 read_handle_inrange:
-        mov bx,es:psp_handleads
-        add bx,ax
-        movzx bx,byte ptr es:[bx]
-        cmp bx,0FFh
-        jne read_handle_read
-        mov ax,6
-        or byte ptr [bp].vm_eflags, 1
-        jmp read_handle_done
+    mov bx,es:psp_handleads
+    add bx,ax
+    movzx bx,byte ptr es:[bx]
+    cmp bx,0FFh
+    jne read_handle_read
+    mov ax,6
+    or byte ptr [bp].vm_eflags, 1
+    jmp read_handle_done
 read_handle_read:
-        push di
-        push bx
-        mov bx,ds
-        mov es,bx
-        pop bx
-        mov di,dx
-        ReadFile
-        pop di
-        jnc read_handle_ok
-        mov ax,5
-        or byte ptr [bp].vm_eflags, 1
-        jmp read_handle_done
+    push di
+    push bx
+    mov bx,ds
+    mov es,bx
+    pop bx
+    mov di,dx
+    ReadFile
+    pop di
+    jnc read_handle_ok
+    mov ax,5
+    or byte ptr [bp].vm_eflags, 1
+    jmp read_handle_done
 read_handle_ok:
-        and byte ptr [bp].vm_eflags,NOT 1
+    and byte ptr [bp].vm_eflags,NOT 1
 read_handle_done:
-        mov ebx,[bp].vm_ebx
-        pop es
-        ret
+    mov ebx,[bp].vm_ebx
+    pop es
+    retf32
 read_handle     ENDP    
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   WRITE_HANLE
+;           NAME:           WRITE_HANLE
 ;
-;               DESCRIPTION:    DOS function 40
+;           DESCRIPTION:    DOS function 40
 ;
-;               PARAMETERS:             DS:DX                   BUFFER
-;                                               BX                              FILE HANDLE
-;                                               CX                              BYTES
-;                                               
+;           PARAMETERS:         DS:DX           BUFFER
+;                           BX                  FILE HANDLE
+;                           CX                  BYTES
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_handle    PROC far
-        push es
-        call get_prot_psp
-        mov es,bx
-        mov ax,[bp].vm_ebx
-        cmp ax,es:psp_handlesize
-        jc write_handle_inrange
-        mov ax,6
-        or byte ptr [bp].vm_eflags, 1
-        jmp write_handle_done
+    push es
+    call get_prot_psp
+    mov es,bx
+    mov ax,[bp].vm_ebx
+    cmp ax,es:psp_handlesize
+    jc write_handle_inrange
+    mov ax,6
+    or byte ptr [bp].vm_eflags, 1
+    jmp write_handle_done
 write_handle_inrange:
-        mov bx,es:psp_handleads
-        add bx,ax
-        movzx bx,byte ptr es:[bx]
-        cmp bx,0FFh
-        jne write_handle_write
-        mov ax,6
-        or byte ptr [bp].vm_eflags, 1
-        jmp write_handle_done
+    mov bx,es:psp_handleads
+    add bx,ax
+    movzx bx,byte ptr es:[bx]
+    cmp bx,0FFh
+    jne write_handle_write
+    mov ax,6
+    or byte ptr [bp].vm_eflags, 1
+    jmp write_handle_done
 write_handle_write:
-        or cx,cx
-        jz set_file_size
-        push di
-        mov es,[bp].pm_ds
-        mov di,dx
-        WriteFile
-        pop di
-        jnc write_handle_ok
-        mov ax,5
-        or byte ptr [bp].vm_eflags, 1
-        jmp write_handle_done
+    or cx,cx
+    jz set_file_size
+    push di
+    mov es,[bp].pm_ds
+    mov di,dx
+    WriteFile
+    pop di
+    jnc write_handle_ok
+    mov ax,5
+    or byte ptr [bp].vm_eflags, 1
+    jmp write_handle_done
 set_file_size:
-        GetFilePos
-        SetFileSize
-        mov eax,[bp].vm_eax
-        xor ax,ax
+    GetFilePos
+    SetFileSize
+    mov eax,[bp].vm_eax
+    xor ax,ax
 write_handle_ok:
-        and byte ptr [bp].vm_eflags,NOT 1
+    and byte ptr [bp].vm_eflags,NOT 1
 write_handle_done:
-        mov ebx,[bp].vm_ebx
-        pop es
-        ret
+    mov ebx,[bp].vm_ebx
+    pop es
+    retf32
 write_handle    ENDP    
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DELETE_FILE
+;           NAME:           DELETE_FILE
 ;
-;               DESCRIPTION:    DOS function 41
+;           DESCRIPTION:    DOS function 41
 ;
-;               PARAMETERS:             DS:DX                   FILENAME
+;           PARAMETERS:         DS:DX           FILENAME
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_file     PROC far
-        push es
-        push di
-        mov es,[bp].pm_ds
-        mov di,dx
-        DeleteFile
-        pop di
-        pop es
-        jc delete_file_fail
-        and byte ptr [bp].vm_eflags,NOT 1
-        jmp delete_file_done
+    push es
+    push di
+    mov es,[bp].pm_ds
+    mov di,dx
+    DeleteFile
+    pop di
+    pop es
+    jc delete_file_fail
+    and byte ptr [bp].vm_eflags,NOT 1
+    jmp delete_file_done
 delete_file_fail:
-        or byte ptr [bp].vm_eflags,1
+    or byte ptr [bp].vm_eflags,1
 delete_file_done:
-        ret
+    retf32
 delete_file     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SET_CUR_DIR
+;           NAME:           SET_CUR_DIR
 ;
-;               DESCRIPTION:    DOS function 3B
+;           DESCRIPTION:    DOS function 3B
 ;
-;               PARAMETERS:             DS:DX           PATH NAME
-;                                               
+;           PARAMETERS:         DS:DX       PATH NAME
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_cur_dir     PROC far
-        push di
-        push es
-        mov es,[bp].pm_ds
-        mov di,dx
-        SetCurDir
-        pop es
-        pop di
-        jnc setup_cur_do
-        mov ax,3
-        mov bx,[bp].vm_ebx
-        or byte ptr [bp].vm_eflags,1
-        ret
+    push di
+    push es
+    mov es,[bp].pm_ds
+    mov di,dx
+    SetCurDir
+    pop es
+    pop di
+    jnc setup_cur_do
+    mov ax,3
+    mov bx,[bp].vm_ebx
+    or byte ptr [bp].vm_eflags,1
+    retf32
 setup_cur_do:
-        mov ax,[bp].vm_eax
-        mov bx,[bp].vm_ebx
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    mov ax,[bp].vm_eax
+    mov bx,[bp].vm_ebx
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 set_cur_dir     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GET_CUR_DIR
+;           NAME:           GET_CUR_DIR
 ;
-;               DESCRIPTION:    DOS function 47
+;           DESCRIPTION:    DOS function 47
 ;
-;               PARAMETERS:             DS:DX           PATH NAME
-;                                               DL                      DRIVE
+;           PARAMETERS:         DS:DX       PATH NAME
+;                           DL              DRIVE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_cur_dir     PROC far
-        push di
-        push es
-        mov es,[bp].pm_ds
-        mov di,si
-        mov al,dl
-        sub al,1
-        jnc get_cur_not_default
-        GetCurDrive
+    push di
+    push es
+    mov es,[bp].pm_ds
+    mov di,si
+    mov al,dl
+    sub al,1
+    jnc get_cur_not_default
+    GetCurDrive
 get_cur_not_default:
-        GetCurDir
-        pop es
-        pop di
-        jc get_cur_dir_fail
-        mov ax,[bp].vm_eax
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    GetCurDir
+    pop es
+    pop di
+    jc get_cur_dir_fail
+    mov ax,[bp].vm_eax
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 get_cur_dir_fail:
-        mov ax,15
-        or byte ptr [bp].vm_eflags,1
-        ret
+    mov ax,15
+    or byte ptr [bp].vm_eflags,1
+    retf32
 get_cur_dir     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   MAKE_DIR
+;           NAME:           MAKE_DIR
 ;
-;               DESCRIPTION:    DOS function 39
+;           DESCRIPTION:    DOS function 39
 ;
-;               PARAMETERS:             DS:DX           PATH NAME
-;                                               
+;           PARAMETERS:         DS:DX       PATH NAME
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-make_dir        PROC far
-        push di
-        push es
-        mov es,[bp].pm_ds
-        mov di,dx
-        MakeDir
-        pop es
-        pop di
-        jnc make_dir_done
-        mov ax,3
-        mov bx,[bp].vm_ebx
-        or byte ptr [bp].vm_eflags,1
-        ret
+make_dir    PROC far
+    push di
+    push es
+    mov es,[bp].pm_ds
+    mov di,dx
+    MakeDir
+    pop es
+    pop di
+    jnc make_dir_done
+    mov ax,3
+    mov bx,[bp].vm_ebx
+    or byte ptr [bp].vm_eflags,1
+    retf32
 make_dir_done:
-        mov ax,[bp].vm_eax
-        mov bx,[bp].vm_ebx
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
-make_dir        ENDP
+    mov ax,[bp].vm_eax
+    mov bx,[bp].vm_ebx
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
+make_dir    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   REMOVE_DIR
+;           NAME:           REMOVE_DIR
 ;
-;               DESCRIPTION:    DOS function 3A
+;           DESCRIPTION:    DOS function 3A
 ;
-;               PARAMETERS:             DS:DX           PATH NAME
-;                                               
+;           PARAMETERS:         DS:DX       PATH NAME
+;                           
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 remove_dir      PROC far
-        push di
-        push es
-        mov es,[bp].pm_ds
-        mov di,dx
-        RemoveDir
-        pop di
-        pop es
-        jnc remove_dir_done
-        mov ax,3
-        mov bx,[bp].vm_ebx
-        or byte ptr [bp].vm_eflags,1
-        ret
+    push di
+    push es
+    mov es,[bp].pm_ds
+    mov di,dx
+    RemoveDir
+    pop di
+    pop es
+    jnc remove_dir_done
+    mov ax,3
+    mov bx,[bp].vm_ebx
+    or byte ptr [bp].vm_eflags,1
+    retf32
 remove_dir_done:
-        mov ax,[bp].vm_eax
-        mov bx,[bp].vm_ebx
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    mov ax,[bp].vm_eax
+    mov bx,[bp].vm_ebx
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 remove_dir      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   FIND_FIRST
+;           NAME:           FIND_FIRST
 ;
-;               DESCRIPTION:    DOS function 4E
+;           DESCRIPTION:    DOS function 4E
 ;
-;               PARAMETERS:             DS:DX           PATHNAME
-;                                               CX                      ATTRIBUTE
+;           PARAMETERS:         DS:DX       PATHNAME
+;                           CX              ATTRIBUTE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 find_first      PROC far
-        push esi
-        push edi
-        push dx
-        call get_prot_dta
-        mov es,dx
-        mov edi,ebx
-        pop dx
-        mov ds,[bp].pm_ds
-        movzx esi,dx
-        call find_first_file
-        pop edi
-        pop esi
-        mov bx,[bp].vm_ebx
-        jnc find_first_done
-        mov ax,18
-        or byte ptr [bp].vm_eflags,1
-        ret
+    push esi
+    push edi
+    push dx
+    call get_prot_dta
+    mov es,dx
+    mov edi,ebx
+    pop dx
+    mov ds,[bp].pm_ds
+    movzx esi,dx
+    call find_first_file
+    pop edi
+    pop esi
+    mov bx,[bp].vm_ebx
+    jnc find_first_done
+    mov ax,18
+    or byte ptr [bp].vm_eflags,1
+    retf32
 find_first_done:
-        mov ax,[bp].vm_eax
-        and byte ptr [bp].vm_eflags,NOT 1
-        ret
+    mov ax,[bp].vm_eax
+    and byte ptr [bp].vm_eflags,NOT 1
+    retf32
 find_first      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   RENAME_FILE
+;           NAME:           RENAME_FILE
 ;
-;               DESCRIPTION:    DOS function 56
+;           DESCRIPTION:    DOS function 56
 ;
-;               PARAMETERS:             DS:DX                   OLD FILENAME
-;                                               ES:DI                   NEW FILENAME
+;           PARAMETERS:         DS:DX           OLD FILENAME
+;                           ES:DI           NEW FILENAME
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 rename_file     PROC far
-        push si
-        mov ds,[bp].pm_ds
-        mov si,dx
-        RenameFile
-        jc rename_file_fail
-        and byte ptr [bp].vm_eflags,NOT 1
-        jmp rename_file_done
+    push si
+    mov ds,[bp].pm_ds
+    mov si,dx
+    RenameFile
+    jc rename_file_fail
+    and byte ptr [bp].vm_eflags,NOT 1
+    jmp rename_file_done
 rename_file_fail:
-        or byte ptr [bp].vm_eflags,1
+    or byte ptr [bp].vm_eflags,1
 rename_file_done:
-        pop si
-        ret
+    pop si
+    retf32
 rename_file     ENDP
 
 
 error_dos       PROC far
-        int 3
-        mov bx,[bp].vm_ebx
-        or byte ptr [bp].vm_eflags,1
-        ret
+    int 3
+    mov bx,[bp].vm_ebx
+    or byte ptr [bp].vm_eflags,1
+    retf32
 error_dos       ENDP
 
 dos_tab:
@@ -1153,97 +1153,97 @@ do6F    DW OFFSET error_dos
 doend   DW OFFSET error_dos
 
 int21:
-        mov bl,ah
-        xor bh,bh
-        add bx,bx
-        cmp bx,0E0h
-        jc dos_call_do
-        mov bx,0E0h
+    mov bl,ah
+    xor bh,bh
+    add bx,bx
+    cmp bx,0E0h
+    jc dos_call_do
+    mov bx,0E0h
 dos_call_do:
-        push word ptr cs:[bx].dos_tab
-        mov bx,[bp].vm_ebx
-        mov ds,[bp].pm_ds
-        retn
+    push word ptr cs:[bx].dos_tab
+    mov bx,[bp].vm_ebx
+    mov ds,[bp].pm_ds
+    retn
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ENTER_DOS16
+;           NAME:           ENTER_DOS16
 ;
-;               DESCRIPTION:    Enter 16-bit protected mode DOS
+;           DESCRIPTION:    Enter 16-bit protected mode DOS
 ;
-;               PARAMETERS:             ES              PSP segment
+;           PARAMETERS:         ES          PSP segment
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enter_dos16_name        DB 'Enter Dos16',0
+enter_dos16_name    DB 'Enter Dos16',0
 
 enter_dos16     PROC far
-        push ds
-        push es
-        push ax
-        push bx
-        push edx
+    push ds
+    push es
+    push ax
+    push bx
+    push edx
     GetThread
     mov ds,ax
-        mov ds,ds:p_ldt_sel
-        call get_prot_psp
-        or bx,bx
-        jnz enter_psp_ok
-        call get_virt_psp
-        call set_virt_psp
-        call get_prot_psp
+    mov ds,ds:p_ldt_sel
+    call get_prot_psp
+    or bx,bx
+    jnz enter_psp_ok
+    call get_virt_psp
+    call set_virt_psp
+    call get_prot_psp
 enter_psp_ok:
-        mov es,bx
-        movzx edx,word ptr es:psp_enviro
-        shl edx,4
-        AllocateLdt
-        mov word ptr [bx],0FFFFh
-        mov [bx+2],edx
-        mov byte ptr [bx+5],0F2h
-        mov word ptr [bx+6],0
-        or bx,7
-        mov es:psp_enviro,bx
-        pop edx
-        pop bx
-        pop ax
-        pop es
-        pop ds
-        ret
+    mov es,bx
+    movzx edx,word ptr es:psp_enviro
+    shl edx,4
+    AllocateLdt
+    mov word ptr [bx],0FFFFh
+    mov [bx+2],edx
+    mov byte ptr [bx+5],0F2h
+    mov word ptr [bx+6],0
+    or bx,7
+    mov es:psp_enviro,bx
+    pop edx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
 enter_dos16     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   INIT_DOS16
+;           NAME:           INIT_DOS16
 ;
-;               DESCRIPTION:    Init module
+;           DESCRIPTION:    Init module
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_dos16
+    public init_dos16
 
 init_dos16      PROC near
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov al,21h
-        mov di,OFFSET int21
-        HookProt16Int
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov al,21h
+    mov edi,OFFSET int21
+    HookProt16Int
 ;
-        mov esi,OFFSET enter_dos16
-        mov edi,OFFSET enter_dos16_name
-        xor cl,cl
-        mov ax,enter_dos16_nr
-        RegisterOldOsGate
-        ret
+    mov esi,OFFSET enter_dos16
+    mov edi,OFFSET enter_dos16_name
+    xor cl,cl
+    mov ax,enter_dos16_nr
+    RegisterOldOsGate
+    ret
 init_dos16      ENDP
 
 code    ENDS
 
-        END
+    END
 

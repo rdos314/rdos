@@ -39,55 +39,55 @@ bios_vect    DW 400h DUP(?)
 
 data    ENDS
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code,ds:data
+    assume cs:code,ds:data
 
 real_int15:
-        ReflectPmToVm
+    ReflectPmToVm
 
 bios_error      PROC far
-        or byte ptr [bp].vm_eflags,1
-        ret
+    or byte ptr [bp].vm_eflags,1
+    retf32
 bios_error      ENDP
 
 device_busy     PROC far
-        or al,al
-        jne not_disc_busy
-        mov ax,flat_sel
-        mov ds,ax
-        mov bx,048Eh
-        cli
-        mov al,[bx]
-        cmp al,0FFh
-        je disc_busy_ok
+    or al,al
+    jne not_disc_busy
+    mov ax,flat_sel
+    mov ds,ax
+    mov bx,048Eh
+    cli
+    mov al,[bx]
+    cmp al,0FFh
+    je disc_busy_ok
 disc_wait_loop:
-        sti
-        mov ax,4
-        WaitMilliSec
-        cli
-        mov al,[bx]
-        cmp al,0FFh
-        jnz disc_wait_loop
+    sti
+    mov ax,4
+    WaitMilliSec
+    cli
+    mov al,[bx]
+    cmp al,0FFh
+    jnz disc_wait_loop
 disc_busy_ok:
-        sti
-        mov al,90h
-        mov [bp].vm_eax,al
-        and byte ptr [bp].vm_eflags,NOT 1
-        mov ax,[bp].vm_eax
-        mov bx,[bp].vm_ebx
-        mov ds,[bp].pm_ds
-        ret
+    sti
+    mov al,90h
+    mov [bp].vm_eax,al
+    and byte ptr [bp].vm_eflags,NOT 1
+    mov ax,[bp].vm_eax
+    mov bx,[bp].vm_ebx
+    mov ds,[bp].pm_ds
+    retf32
 not_disc_busy:
-        jmp real_int15
+    jmp real_int15
 device_busy     ENDP
 
-mem_size        PROC far
-        xor ax,ax
-        ret
-mem_size        ENDP
+mem_size    PROC far
+    xor ax,ax
+    retf32
+mem_size    ENDP
 
 int15_tab:
 bio00   DW OFFSET real_int15
@@ -348,238 +348,238 @@ bioFE   DW OFFSET real_int15
 bioFF   DW OFFSET real_int15
 
 int15:
-        SimSti
-        mov bl,ah
-        xor bh,bh
-        add bx,bx
-        push word ptr cs:[bx].int15_tab
-        mov bx,[bp].vm_ebx
-        retn
+    SimSti
+    mov bl,ah
+    xor bh,bh
+    add bx,bx
+    push word ptr cs:[bx].int15_tab
+    mov bx,[bp].vm_ebx
+    retn
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DEFAULT_GET_BIOS_DATA
+;           NAME:           DEFAULT_GET_BIOS_DATA
 ;
-;               DESCRIPTION:    Default for GetBiosData
+;           DESCRIPTION:    Default for GetBiosData
 ;
-;               PARAMETERS:             AL              Value
-;                                               BX              Offset in BDA
+;           PARAMETERS:         AL          Value
+;                           BX          Offset in BDA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 default_get_bios_data   PROC far
-        push ds
-        push dx
-        mov dx,flat_sel
-        mov ds,dx
-        movzx ebx,bx
-        mov al,[ebx+400h].page0_linear
-        pop dx
-        pop ds
-        ret
+    push ds
+    push dx
+    mov dx,flat_sel
+    mov ds,dx
+    movzx ebx,bx
+    mov al,[ebx+400h].page0_linear
+    pop dx
+    pop ds
+    ret
 default_get_bios_data   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DEFAULT_SET_BIOS_DATA
+;           NAME:           DEFAULT_SET_BIOS_DATA
 ;
-;               DESCRIPTION:    Default for SetBiosData
+;           DESCRIPTION:    Default for SetBiosData
 ;
-;               PARAMETERS:             AL              Value
-;                                               BX              Offset in BDA
+;           PARAMETERS:         AL          Value
+;                           BX          Offset in BDA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 default_set_bios_data   PROC far
-        push ds
-        push dx
-        mov dx,flat_sel
-        mov ds,dx
-        movzx ebx,bx
-        mov [ebx+400h].page0_linear,al
-        pop dx
-        pop ds
-        ret
+    push ds
+    push dx
+    mov dx,flat_sel
+    mov ds,dx
+    movzx ebx,bx
+    mov [ebx+400h].page0_linear,al
+    pop dx
+    pop ds
+    ret
 default_set_bios_data   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GET_BIOS_DATA
+;           NAME:           GET_BIOS_DATA
 ;
-;               DESCRIPTION:    Get BIOS data
+;           DESCRIPTION:    Get BIOS data
 ;
-;               PARAMETERS:             AL              Value
-;                                               BX              Offset in BDA
+;           PARAMETERS:         AL          Value
+;                           BX          Offset in BDA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_bios_data_name      DB 'Get BIOS Data',0
 
 get_bios_data   PROC far
-        push SEG data
-        pop ds
-        shl bx,3
-        push word ptr [bx+2].bios_vect
-        push word ptr [bx].bios_vect
-        shr bx,3
-        ret
+    push SEG data
+    pop ds
+    shl bx,3
+    push word ptr [bx+2].bios_vect
+    push word ptr [bx].bios_vect
+    shr bx,3
+    ret
 get_bios_data   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SET_BIOS_DATA
+;           NAME:           SET_BIOS_DATA
 ;
-;               DESCRIPTION:    Set BIOS data
+;           DESCRIPTION:    Set BIOS data
 ;
-;               PARAMETERS:             AL              Value
-;                                               BX              Offset in BDA
+;           PARAMETERS:         AL          Value
+;                           BX          Offset in BDA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_bios_data_name      DB 'Set BIOS Data',0
 
 set_bios_data   PROC far
-        push SEG data
-        pop ds
-        shl bx,3
-        push word ptr [bx+6].bios_vect
-        push word ptr [bx+4].bios_vect
-        shr bx,3
-        ret
+    push SEG data
+    pop ds
+    shl bx,3
+    push word ptr [bx+6].bios_vect
+    push word ptr [bx+4].bios_vect
+    shr bx,3
+    ret
 set_bios_data   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   HOOK_GET_BIOS_DATA
+;           NAME:           HOOK_GET_BIOS_DATA
 ;
-;               DESCRIPTION:    Add hook for GetBiosData
+;           DESCRIPTION:    Add hook for GetBiosData
 ;
-;               PARAMETERS:             BX              Offset in BDA
-;                                               ES:DI   Callback
+;           PARAMETERS:         BX          Offset in BDA
+;                           ES:DI   Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hook_get_bios_data_name DB 'Hook Get BIOS Data',0
 
 hook_get_bios_data      PROC far
-        push ds
-        push ax
-        push bx
-        mov ax,SEG data
-        mov ds,ax
-        shl bx,3        
-        mov [bx].bios_vect,di
-        mov [bx+2].bios_vect,es
-        pop bx
-        pop ax
-        pop ds
-        ret
+    push ds
+    push ax
+    push bx
+    mov ax,SEG data
+    mov ds,ax
+    shl bx,3    
+    mov [bx].bios_vect,di
+    mov [bx+2].bios_vect,es
+    pop bx
+    pop ax
+    pop ds
+    ret
 hook_get_bios_data      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   HOOK_SET_BIOS_DATA
+;           NAME:           HOOK_SET_BIOS_DATA
 ;
-;               DESCRIPTION:    Add hook for SetBiosData
+;           DESCRIPTION:    Add hook for SetBiosData
 ;
-;               PARAMETERS:             BX              Offset in BDA
-;                                               ES:DI   Callback
+;           PARAMETERS:         BX          Offset in BDA
+;                           ES:DI   Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hook_set_bios_data_name DB 'Hook Set BIOS Data',0
 
 hook_set_bios_data      PROC far
-        push ds
-        push ax
-        push bx
-        mov ax,SEG data
-        mov ds,ax
-        shl bx,3
-        mov [bx+4].bios_vect,di
-        mov [bx+6].bios_vect,es
-        pop bx
-        pop ax
-        pop ds
-        ret
+    push ds
+    push ax
+    push bx
+    mov ax,SEG data
+    mov ds,ax
+    shl bx,3
+    mov [bx+4].bios_vect,di
+    mov [bx+6].bios_vect,es
+    pop bx
+    pop ax
+    pop ds
+    ret
 hook_set_bios_data      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   EmulateBios
+;           NAME:           EmulateBios
 ;
-;               DESCRIPTION:    Emulate BIOS (F000:0 F000:FFFF)
+;           DESCRIPTION:    Emulate BIOS (F000:0 F000:FFFF)
 ;
-;               PARAMETERS:             EBX             Linear address
-;                                               AL              Data
-;                                               CY              Write access
+;           PARAMETERS:         EBX         Linear address
+;                           AL          Data
+;                           CY          Write access
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 emulate_bios    PROC far
-        jc write_bios
+    jc write_bios
 
 read_bios:
-        mov al,-1
-        jmp em_bios_done
+    mov al,-1
+    jmp em_bios_done
 
 write_bios:
 
 em_bios_done:
-        ret
+    retf32
 emulate_bios    ENDP
 
 
 multiplx_error  PROC far
-        ret
+    retf32
 multiplx_error  ENDP
 
 dpmi_server     PROC far
-        push ax
-        mov ax,query_dpmi_nr
-        IsValidOsGate
-        pop ax
-        jc dpmi_server_done
-        QueryDpmi
+    push ax
+    mov ax,query_dpmi_nr
+    IsValidOsGate
+    pop ax
+    jc dpmi_server_done
+    QueryDpmi
 
 dpmi_server_done:
-        ret
+    retf32
 dpmi_server     ENDP
 
-pm16_dpmi_server        PROC far
-        push ax
-        mov ax,query_dpmi16_nr
-        IsValidOsGate
-        pop ax
-        jc pm16_server_done
-        QueryDpmi16
+pm16_dpmi_server    PROC far
+    push ax
+    mov ax,query_dpmi16_nr
+    IsValidOsGate
+    pop ax
+    jc pm16_server_done
+    QueryDpmi16
 pm16_server_done:
-        ret
-pm16_dpmi_server        ENDP
+    retf32
+pm16_dpmi_server    ENDP
 
 xms_server      PROC far
-        push ax
-        mov ax,query_xms_nr
-        IsValidOsGate
-        pop ax
-        jc xms_server_done
-        QueryXms
+    push ax
+    mov ax,query_xms_nr
+    IsValidOsGate
+    pop ax
+    jc xms_server_done
+    QueryXms
 xms_server_done:
-        ret
+    retf32
 xms_server      ENDP
 
 vm_int2F_tab:
@@ -841,13 +841,13 @@ vmltFE  DW OFFSET multiplx_error
 vmltFF  DW OFFSET multiplx_error
 
 int2F_vm:
-        SimSti
-        mov bl,ah
-        xor bh,bh
-        add bx,bx
-        push word ptr cs:[bx].vm_int2F_tab
-        mov bx,[bp].vm_ebx
-        retn
+    SimSti
+    mov bl,ah
+    xor bh,bh
+    add bx,bx
+    push word ptr cs:[bx].vm_int2F_tab
+    mov bx,[bp].vm_ebx
+    retn
 
 pm_int2F_tab:
 pmlt00  DW OFFSET multiplx_error
@@ -1108,92 +1108,92 @@ pmltFE  DW OFFSET multiplx_error
 pmltFF  DW OFFSET multiplx_error
 
 int2F_pm:
-        mov bl,ah
-        xor bh,bh
-        add bx,bx
-        push word ptr cs:[bx].pm_int2F_tab
-        mov bx,[bp].vm_ebx
-        retn
+    mov bl,ah
+    xor bh,bh
+    add bx,bx
+    push word ptr cs:[bx].pm_int2F_tab
+    mov bx,[bp].vm_ebx
+    retn
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   INIT
+;           NAME:           INIT
 ;
-;               DESCRIPTION:    Init driver
+;           DESCRIPTION:    Init driver
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public init_bios
     
 init_bios       PROC near
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov al,15h
-        mov di,OFFSET int15
-        HookVMInt
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov al,15h
+    mov edi,OFFSET int15
+    HookVMInt
 ;
-        mov ax,cs
-        mov ds,ax
-        mov al,2Fh
-        mov di,OFFSET int2F_vm
-        HookVMInt
+    mov ax,cs
+    mov ds,ax
+    mov al,2Fh
+    mov edi,OFFSET int2F_vm
+    HookVMInt
 ;
-        mov al,2Fh
-        mov di,OFFSET int2F_pm
-        HookProt16Int
+    mov al,2Fh
+    mov edi,OFFSET int2F_pm
+    HookProt16Int
 ;
-        mov esi,OFFSET get_bios_data
-        mov edi,OFFSET get_bios_data_name
-        xor cl,cl
-        mov ax,get_bios_data_nr
-        RegisterOldOsGate
+    mov esi,OFFSET get_bios_data
+    mov edi,OFFSET get_bios_data_name
+    xor cl,cl
+    mov ax,get_bios_data_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET set_bios_data
-        mov edi,OFFSET set_bios_data_name
-        xor cl,cl
-        mov ax,set_bios_data_nr
-        RegisterOldOsGate
+    mov esi,OFFSET set_bios_data
+    mov edi,OFFSET set_bios_data_name
+    xor cl,cl
+    mov ax,set_bios_data_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET hook_get_bios_data
-        mov edi,OFFSET hook_get_bios_data_name
-        xor cl,cl
-        mov ax,hook_get_bios_data_nr
-        RegisterOldOsGate
+    mov esi,OFFSET hook_get_bios_data
+    mov edi,OFFSET hook_get_bios_data_name
+    xor cl,cl
+    mov ax,hook_get_bios_data_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET hook_set_bios_data
-        mov edi,OFFSET hook_set_bios_data_name
-        xor cl,cl
-        mov ax,hook_set_bios_data_nr
-        RegisterOldOsGate
+    mov esi,OFFSET hook_set_bios_data
+    mov edi,OFFSET hook_set_bios_data_name
+    xor cl,cl
+    mov ax,hook_set_bios_data_nr
+    RegisterOldOsGate
 ;
-        mov bx,SEG data
-        mov ds,bx
-        mov bx,OFFSET bios_vect
-        mov cx,100h
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,OFFSET bios_vect
+    mov cx,100h
 init_bios_data_loop:
-        mov word ptr [bx],OFFSET default_get_bios_data
-        mov [bx+2],cs
-        mov word ptr [bx+4],OFFSET default_set_bios_data
-        mov [bx+6],cs
-        add bx,8
-        loop init_bios_data_loop
+    mov word ptr [bx],OFFSET default_get_bios_data
+    mov [bx+2],cs
+    mov word ptr [bx+4],OFFSET default_set_bios_data
+    mov [bx+6],cs
+    add bx,8
+    loop init_bios_data_loop
 ;
-        mov ax,cs
-        mov es,ax
+    mov ax,cs
+    mov es,ax
 ;
-        mov di,OFFSET emulate_bios
-        mov eax,010000h
-        mov edx,0F0000h
-        SetPageEmulate
-        ret
+    mov di,OFFSET emulate_bios
+    mov eax,010000h
+    mov edx,0F0000h
+    SetPageEmulate
+    ret
 init_bios       ENDP
 
 code    ENDS
 
-        END
+    END
 

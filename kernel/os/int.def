@@ -27,10 +27,10 @@
 
 int_seg	STRUC
 
-vm_int_handlers		DW 100h DUP(?,?)
+vm_int_handlers		DD 100h DUP(?,?)
 
-pm16_int_handlers	DW 100h DUP(?,?)
-pm32_int_handlers	DW 100h DUP(?,?)
+pm16_int_handlers	DD 100h DUP(?,?)
+pm32_int_handlers	DD 100h DUP(?,?)
 
 get_vm_int_handlers	DW 100h DUP(?,?)
 set_vm_int_handlers	DW 100h DUP(?,?)

@@ -34,48 +34,48 @@ INCLUDE ..\driver.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\system.inc
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 multiplx_error  PROC far
-        ret
+    retf32
 multiplx_error  ENDP
 
 dpmi_server     PROC far
-        push ax
-        mov ax,query_dpmi_nr
-        IsValidOsGate
-        pop ax
-        jc dpmi_server_done
-        QueryDpmi
+    push ax
+    mov ax,query_dpmi_nr
+    IsValidOsGate
+    pop ax
+    jc dpmi_server_done
+    QueryDpmi
 
 dpmi_server_done:
-        ret
+    retf32
 dpmi_server     ENDP
 
-pm16_dpmi_server        PROC far
-        push ax
-        mov ax,query_dpmi16_nr
-        IsValidOsGate
-        pop ax
-        jc pm16_server_done
-        QueryDpmi16
+pm16_dpmi_server    PROC far
+    push ax
+    mov ax,query_dpmi16_nr
+    IsValidOsGate
+    pop ax
+    jc pm16_server_done
+    QueryDpmi16
 pm16_server_done:
-        ret
-pm16_dpmi_server        ENDP
+    retf32
+pm16_dpmi_server    ENDP
 
 xms_server      PROC far
-        push ax
-        mov ax,query_xms_nr
-        IsValidOsGate
-        pop ax
-        jc xms_server_done
-        QueryXms
+    push ax
+    mov ax,query_xms_nr
+    IsValidOsGate
+    pop ax
+    jc xms_server_done
+    QueryXms
 xms_server_done:
-        ret
+    retf32
 xms_server      ENDP
 
 vm_int2F_tab:
@@ -337,13 +337,13 @@ vmltFE  DW OFFSET multiplx_error
 vmltFF  DW OFFSET multiplx_error
 
 int2F_vm:
-        SimSti
-        mov bl,ah
-        xor bh,bh
-        add bx,bx
-        push word ptr cs:[bx].vm_int2F_tab
-        mov bx,[bp].vm_ebx
-        retn
+    SimSti
+    mov bl,ah
+    xor bh,bh
+    add bx,bx
+    push word ptr cs:[bx].vm_int2F_tab
+    mov bx,[bp].vm_ebx
+    retn
 
 pm_int2F_tab:
 pmlt00  DW OFFSET multiplx_error
@@ -604,41 +604,41 @@ pmltFE  DW OFFSET multiplx_error
 pmltFF  DW OFFSET multiplx_error
 
 int2F_pm:
-        mov bl,ah
-        xor bh,bh
-        add bx,bx
-        push word ptr cs:[bx].pm_int2F_tab
-        mov bx,[bp].vm_ebx
-        retn
+    mov bl,ah
+    xor bh,bh
+    add bx,bx
+    push word ptr cs:[bx].pm_int2F_tab
+    mov bx,[bp].vm_ebx
+    retn
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   INIT
+;           NAME:           INIT
 ;
-;               DESCRIPTION:    Init driver
+;           DESCRIPTION:    Init driver
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public init_multiplx
     
 init_multiplx   PROC near
-        mov ax,cs
-        mov ds,ax
-        mov al,2Fh
-        mov di,OFFSET int2F_vm
-        HookVMInt
+    mov ax,cs
+    mov ds,ax
+    mov al,2Fh
+    mov edi,OFFSET int2F_vm
+    HookVMInt
 ;
-        mov al,2Fh
-        mov di,OFFSET int2F_pm
-        HookProt16Int
-        ret
+    mov al,2Fh
+    mov edi,OFFSET int2F_pm
+    HookProt16Int
+    ret
 init_multiplx   ENDP
 
 code    ENDS
 
-        END
+    END
 

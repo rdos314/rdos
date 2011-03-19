@@ -2391,7 +2391,7 @@ init_irq_loop:
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov di,OFFSET vm_exception_handler
+    mov edi,OFFSET vm_exception_handler
     mov al,0
     HookVMInt
     mov al,1
@@ -2415,11 +2415,11 @@ init_irq_loop:
     mov al,13
     HookVMInt
 ;
-    mov di,OFFSET pm_exception_handler
+    mov edi,OFFSET pm_exception_handler
     mov al,3
     HookProt16Int
 ;
-    mov di,OFFSET pm_exception_handler
+    mov edi,OFFSET pm_exception_handler
     mov al,3
     HookProt32Int
 ;

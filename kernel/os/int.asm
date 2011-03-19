@@ -193,33 +193,33 @@ init_reflect_vm_to_pm_loop:
     mov ds,ax
     mov cx,100h
     mov bx,OFFSET vm_int_handlers
-    mov ax,OFFSET reflect_pm_to_vm  
+    mov eax,OFFSET reflect_pm_to_vm  
 init_vm_handlers_loop:
-    mov [bx],ax
-    mov [bx+2],cs
-    add bx,4
+    mov [bx],eax
+    mov [bx+4],cs
+    add bx,8
     loop init_vm_handlers_loop
 ;
     mov ax,int_data_sel
     mov ds,ax
     mov cx,100h
     mov bx,OFFSET pm16_int_handlers
-    mov ax,OFFSET reflect_pm_to_vm  
+    mov eax,OFFSET reflect_pm_to_vm  
 init_pm16_handlers_loop:
-    mov [bx],ax
-    mov [bx+2],cs
-    add bx,4
+    mov [bx],eax
+    mov [bx+4],cs
+    add bx,8
     loop init_pm16_handlers_loop
 ;
     mov ax,int_data_sel
     mov ds,ax
     mov cx,100h
     mov bx,OFFSET pm32_int_handlers
-    mov ax,OFFSET reflect_pm_to_vm  
+    mov eax,OFFSET reflect_pm_to_vm  
 init_pm32_handlers_loop:
-    mov [bx],ax
-    mov [bx+2],cs
-    add bx,4
+    mov [bx],eax
+    mov [bx+4],cs
+    add bx,8
     loop init_pm32_handlers_loop
 ;
     mov ax,int_data_sel
@@ -323,7 +323,7 @@ init_exc_loop:
     mov di,OFFSET reflect_pm_to_vm_name
     xor cl,cl
     mov ax,reflect_pm_to_vm_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET get_vm_int
     mov di,OFFSET get_vm_int_name
@@ -908,7 +908,7 @@ vm_exception_handler    PROC far
 
 vm_except_do:
     DebugException
-    ret
+    retf32
 vm_exception_handler    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1616,16 +1616,22 @@ reflect_to_pm:
     mov bx,int_data_sel
     mov ds,bx
     movzx bx,al
-    shl bx,2
-    push cs
-    push OFFSET reflect_to_pm_done
+    shl bx,3
+    xor eax,eax
+    mov ax,cs
+    push eax
+    mov eax,OFFSET reflect_to_pm_done
+    push eax
+    push dword ptr ds:[bx+4].vm_int_handlers
     push dword ptr ds:[bx].vm_int_handlers
     xor ax,ax
     mov ds,ax
+
 reflect_do:
     mov eax,[bp].vm_eax
     mov ebx,[bp].vm_ebx
-    retf
+    retf32
+
 reflect_to_pm_done:
     mov [bp].vm_eax,eax
     mov [bp].vm_ebx,ebx
@@ -1649,9 +1655,9 @@ reflect_leave:
     mov ax,[ebx+2]
     mov [bp].vm_cs,ax
     add word ptr [bp].vm_esp,6
-    ret
+    retf32
 no_sim_iret:
-    ret
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1830,6 +1836,7 @@ refl_pm_to_vm_stack_ok:
     mov bp,ss:[si]
     mov si,ss:[si+4]
     iretd
+
 reflect_from_vm:
     mov [bp].vm_eax,eax
     mov [bp].vm_ebx,ebx
@@ -1930,7 +1937,7 @@ reflect_pm_to_vm_done   PROC far
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 reflect_pm_to_vm_done   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2263,7 +2270,7 @@ get_raw_switch_ads      ENDP
 ;           DESCRIPTION:    Add V86 mode int hook
 ;
 ;           PARAMETERS:         AL          Int #
-;                           DS:DI   Callback
+;                               DS:EDI   Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2276,13 +2283,13 @@ hook_vm_int     PROC far
     mov bx,int_data_sel
     mov es,bx
     movzx bx,al
-    shl bx,2
-    mov es:[bx].vm_int_handlers,di
-    mov es:[bx+2].vm_int_handlers,ds
+    shl bx,3
+    mov es:[bx].vm_int_handlers,edi
+    mov es:[bx+4].vm_int_handlers,ds
     pop bx
     pop es
     pop ds
-    ret
+    retf32
 hook_vm_int     ENDP
 
 
