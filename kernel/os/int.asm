@@ -401,19 +401,19 @@ init_exc_loop:
     mov di,OFFSET call_vm_name
     xor cl,cl
     mov ax,call_vm_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET call_pm16
     mov di,OFFSET call_pm16_name
     xor cl,cl
     mov ax,call_pm16_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET call_pm32
     mov di,OFFSET call_pm32_name
     xor cl,cl
     mov ax,call_pm32_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov edi,OFFSET init_thread_int
     HookCreateThread
@@ -1032,7 +1032,7 @@ call_vm Proc far
     push gs
     push bp
     mov bp,sp
-    push dword ptr [bp+14]
+    push dword ptr [bp+18]
 ;
     push ds
     push es
@@ -1238,7 +1238,7 @@ call_vm_es_done:
     pop bp
     pop bx
     pop eax
-    ret 4
+    Retf32Pop 4
 call_vm Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1308,8 +1308,8 @@ call_pm16_save_context:
     cli
     mov bp,sp
     mov sp,stack0_size
-    push word ptr [bp+8]
-    push word ptr [bp+6]
+    push word ptr [bp+12]
+    push word ptr [bp+10]
     push word ptr [bp]
     sti
     push ds
@@ -1411,7 +1411,7 @@ call_pm16_ret:
     pop es
     pop ds
     pop bp
-    ret 4
+    Retf32Pop 4
 call_pm16       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1478,7 +1478,7 @@ call_pm32_save_context:
     cli
     mov bp,sp
     mov sp,stack0_size
-    push dword ptr [bp+6]
+    push dword ptr [bp+10]
     push word ptr [bp]
     sti
     push eax
@@ -1597,7 +1597,7 @@ call_pm32_ret:
     pop es
     pop ds
     pop bp
-    ret 4
+    Retf32Pop 4
 call_pm32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

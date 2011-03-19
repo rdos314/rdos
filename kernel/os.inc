@@ -90,6 +90,18 @@ Retf32  MACRO
     db 66h
     db 0CBh
         ENDM
+    
+Retf16Pop  MACRO count
+    db 66h
+    db 0CAh
+    dw count
+        ENDM
+
+Retf32Pop  MACRO count
+    db 66h
+    db 0CAh
+    dw count
+        ENDM
 
 Callf16 MACRO   sel,offs
     db 66h
@@ -998,17 +1010,17 @@ RestoreContext  MACRO
 
 ;       Stack       Address of real mode code to call
 CallVM  MACRO
-    OldOsGate call_vm_nr
+    OsGate call_vm_nr
                     ENDM
 
 ;       Stack       Address of protected mode ring 3 code to call
 CallPM16    MACRO
-    OldOsGate call_pm16_nr
+    OsGate call_pm16_nr
                     ENDM
 
 ;       Stack       Address of protected mode ring 3 code to call
 CallPM32    MACRO
-    OldOsGate call_pm32_nr
+    OsGate call_pm32_nr
                     ENDM
 
 ;       AL              INT NUMMER
