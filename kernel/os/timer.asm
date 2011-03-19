@@ -131,7 +131,7 @@ in_timer0       PROC far
     mov ds,bx
     mov bx,OFFSET timer0
     call get_period
-    ret
+    retf32
 in_timer0       ENDP
 
 out_timer0      PROC far
@@ -139,41 +139,41 @@ out_timer0      PROC far
     mov ds,bx
     mov bx,OFFSET timer0
     call set_period
-    ret
+    retf32
 out_timer0_not_msb:
-    ret
+    retf32
 out_timer0      ENDP
 
 in_timer1       PROC far
     in al,41h
-    ret
+    retf32
 in_timer1       ENDP
 
 out_timer1      PROC far
-    ret
+    retf32
 out_timer1      ENDP
 
 in_timer2       PROC far
     xor al,al
-    ret
+    retf32
 in_timer2       ENDP
 
 out_timer2      PROC far
-    ret
+    retf32
 out_timer2      ENDP
 
 in_speaker_control      PROC far
     in al,61h
-    ret
+    retf32
 in_speaker_control      Endp
 
 out_speaker_control     Proc far
-    ret
+    retf32
 out_speaker_control     Endp
 
 in_control      PROC far
     int 3
-    ret
+    retf32
 in_control      ENDP
 
 out_control     PROC far
@@ -190,12 +190,12 @@ out_control     PROC far
     test al,10h
     jz control_msb
     mov [bx].timer_transfer,timer_lsb
-    ret
+    retf32
 control_msb:
     mov [bx].timer_transfer,timer_lsb
-    ret
+    retf32
 out_control_done:
-    ret
+    retf32
 out_control     ENDP
 
 get_tics0       PROC far
@@ -650,43 +650,43 @@ init_timer      PROC near
     mov edi,OFFSET init_timer_process
     HookCreateProcess
 ;
-    mov di,OFFSET in_timer0
+    mov edi,OFFSET in_timer0
     mov dx,40h
     HookIn
 ;
-    mov di,OFFSET out_timer0
+    mov edi,OFFSET out_timer0
     mov dx,40h
     HookOut
 ;
-    mov di,OFFSET in_timer1
+    mov edi,OFFSET in_timer1
     mov dx,41h
     HookIn
 ;
-    mov di,OFFSET out_timer1
+    mov edi,OFFSET out_timer1
     mov dx,41h
     HookOut
 ;
-    mov di,OFFSET in_timer2
+    mov edi,OFFSET in_timer2
     mov dx,42h
     HookIn
 ;
-    mov di,OFFSET out_timer2
+    mov edi,OFFSET out_timer2
     mov dx,42h
     HookOut
 ;
-    mov di,OFFSET in_control
+    mov edi,OFFSET in_control
     mov dx,43h
     HookIn
 ;
-    mov di,OFFSET out_control
+    mov edi,OFFSET out_control
     mov dx,43h
     HookOut
 ;
-    mov di,OFFSET in_speaker_control
+    mov edi,OFFSET in_speaker_control
     mov dx,61h
     HookIn
 ;
-    mov di,OFFSET out_speaker_control
+    mov edi,OFFSET out_speaker_control
     mov dx,61h
     HookOut
 ;

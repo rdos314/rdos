@@ -120,7 +120,7 @@ irq_unmask_done&nr:
 
 in_control0     PROC far
     in al,20h
-    ret
+    retf32
 in_control0     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -139,7 +139,7 @@ out_control0    PROC far
     jne out_control0_done
     out dx,al
 out_control0_done:
-    ret
+    retf32
 out_control0    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -157,7 +157,7 @@ in_mask0    PROC far
     mov bx,irq_proc_sel
     mov ds,bx
     mov al,ds:mask0
-    ret
+    retf32
 in_mask0    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -181,7 +181,7 @@ out_mask0       PROC far
     out 21h,al
     pop ax
     mov ds:mask0,al
-    ret
+    retf32
 out_mask0       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -197,7 +197,7 @@ out_mask0       ENDP
 
 in_control1     PROC far
     in al,0A0h
-    ret
+    retf32
 in_control1     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -216,7 +216,7 @@ out_control1    PROC far
     jne out_control1_done
     out dx,al
 out_control1_done:
-    ret
+    retf32
 out_control1    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -234,7 +234,7 @@ in_mask1    PROC far
     mov bx,irq_proc_sel
     mov ds,bx
     mov al,ds:mask1
-    ret
+    retf32
 in_mask1    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -258,7 +258,7 @@ out_mask1       PROC far
     out 0A1h,al
     pop ax
     mov ds:mask1,al
-    ret
+    retf32
 out_mask1       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -571,35 +571,35 @@ init    PROC far
     mov edi,OFFSET init_process
     HookCreateProcess
 ;
-    mov di,OFFSET in_control0
+    mov edi,OFFSET in_control0
     mov dx,20h
     HookIn
 ;
-    mov di,OFFSET out_control0
+    mov edi,OFFSET out_control0
     mov dx,20h
     HookOut
 ;
-    mov di,OFFSET in_mask0
+    mov edi,OFFSET in_mask0
     mov dx,21h
     HookIn
 ;
-    mov di,OFFSET out_mask0
+    mov edi,OFFSET out_mask0
     mov dx,21h
     HookOut
 ;
-    mov di,OFFSET in_control1
+    mov edi,OFFSET in_control1
     mov dx,0A0h
     HookIn
 ;
-    mov di,OFFSET out_control1
+    mov edi,OFFSET out_control1
     mov dx,0A0h
     HookOut
 ;
-    mov di,OFFSET in_mask1
+    mov edi,OFFSET in_mask1
     mov dx,0A1h
     HookIn
 ;
-    mov di,OFFSET out_mask1
+    mov edi,OFFSET out_mask1
     mov dx,0A1h
     HookOut
 ;

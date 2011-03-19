@@ -1103,6 +1103,20 @@ SetBitness      MACRO
 
 ;;;;;;;;;;;;; IO ;;;;;;;;;;;;;;;;;;;;
 
+;       ES:EDI       ADDRESS TILL CALLBACK
+;       DX              PORT NUMMER
+HookIn  MACRO
+    OsGate hook_in_nr
+                    ENDM
+
+;       ES:EDI       ADDRESS TILL CALLBACK
+;       DX              PORT NUMMER
+HookOut MACRO
+    OsGate hook_out_nr
+                    ENDM
+
+;;;;;;;;;; IRQ ;;;;;;;;;;;;;;;;;;;
+
 ;       ES:DI   Swap callback
 ;       AL  Swap level (0 = highest priority, 15 = lowest priority)
 RegisterSwapProc    MACRO
@@ -1114,20 +1128,6 @@ RegisterSwapProc    MACRO
 GetAcpiTable    MACRO
     OldOsGate get_acpi_table_nr
                     ENDM
-
-;       ES:DI       ADDRESS TILL CALLBACK
-;       DX              PORT NUMMER
-HookIn  MACRO
-    OldOsGate hook_in_nr
-                    ENDM
-
-;       ES:DI       ADDRESS TILL CALLBACK
-;       DX              PORT NUMMER
-HookOut MACRO
-    OldOsGate hook_out_nr
-                    ENDM
-
-;;;;;;;;;; IRQ ;;;;;;;;;;;;;;;;;;;
 
 ;       AL              IRQ NR
 SendEoi MACRO

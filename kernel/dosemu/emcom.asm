@@ -34,2476 +34,2476 @@ include ..\driver.def
 include ..\os\system.def
 include ..\os\int.def
 
-        .386p
+    .386p
 
 include emulate.inc
 include emseg.inc
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetCsBitness
+;           NAME:           GetCsBitness
 ;
-;               DESCRIPTION:    Get bitness of code segment
+;           DESCRIPTION:    Get bitness of code segment
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public GetCsBitness
-        
+    public GetCsBitness
+    
 GetCsBitness    PROC near
-        mov bx,[bp].reg_cs
-        test byte ptr [bp+2].reg_eflags,2
-        clc
-        jnz get_cs_bitness_done
+    mov bx,[bp].reg_cs
+    test byte ptr [bp+2].reg_eflags,2
+    clc
+    jnz get_cs_bitness_done
 
 get_cs_bitness_pm:
-        test bx,4
-        jz get_cs_bitness_gdt
+    test bx,4
+    jz get_cs_bitness_gdt
 
 get_cs_bitness_ldt:
-        GetThread
-        mov ds,ax
-        mov ds,ds:p_ldt_sel
-        jmp get_cs_bitness_test
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_ldt_sel
+    jmp get_cs_bitness_test
 
 get_cs_bitness_gdt:
-        mov ax,gdt_sel
-        mov ds,ax
+    mov ax,gdt_sel
+    mov ds,ax
 
 get_cs_bitness_test:
-        and bx,0FFF8h
-        mov bl,[bx+6]
-        test bl,40h
-        jz get_cs_bitness_done
-        or byte ptr [bp].em_flags,cs32 OR d32 OR a32
+    and bx,0FFF8h
+    mov bl,[bx+6]
+    test bl,40h
+    jz get_cs_bitness_done
+    or byte ptr [bp].em_flags,cs32 OR d32 OR a32
 
 get_cs_bitness_done:
-        ret     
+    ret     
 GetCsBitness    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetSsBitness
+;           NAME:           GetSsBitness
 ;
-;               DESCRIPTION:    Get bitness of stack segment
+;           DESCRIPTION:    Get bitness of stack segment
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public GetSsBitness
-        
+    public GetSsBitness
+    
 GetSsBitness    PROC near
-        mov bx,[bp].reg_ss
-        test byte ptr [bp+2].reg_eflags,2
-        clc
-        jnz get_ss_bitness_done
+    mov bx,[bp].reg_ss
+    test byte ptr [bp+2].reg_eflags,2
+    clc
+    jnz get_ss_bitness_done
 
 get_ss_bitness_pm:
-        test bx,4
-        jz get_ss_bitness_gdt
+    test bx,4
+    jz get_ss_bitness_gdt
 
 get_ss_bitness_ldt:
-        GetThread
-        mov ds,ax
-        mov ds,ds:p_ldt_sel
-        jmp get_ss_bitness_test
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_ldt_sel
+    jmp get_ss_bitness_test
 
 get_ss_bitness_gdt:
-        mov ax,gdt_sel
-        mov ds,ax
+    mov ax,gdt_sel
+    mov ds,ax
 
 get_ss_bitness_test:
-        and bx,0FFF8h
-        mov bl,[bx+6]
-        test bl,40h
-        jz get_ss_bitness_done
-        or byte ptr [bp].em_flags,ss32
+    and bx,0FFF8h
+    mov bl,[bx+6]
+    test bl,40h
+    jz get_ss_bitness_done
+    or byte ptr [bp].em_flags,ss32
 
 get_ss_bitness_done:
-        ret     
+    ret     
 GetSsBitness    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadSegmentToLinear
+;           NAME:           ReadSegmentToLinear
 ;
-;               DESCRIPTION:    Convert segment:offset pair into linear address & size
+;           DESCRIPTION:    Convert segment:offset pair into linear address & size
 ;
-;               PARAMETERS:             SI:EBX          ADDRESS
+;           PARAMETERS:         SI:EBX      ADDRESS
 ;
-;               RETURNS:                EBX             LINEAR ADDRESS
-;                                               ECX             # OF VALID BYTES FROM LINEAR ADDRESS
+;           RETURNS:        EBX         LINEAR ADDRESS
+;                           ECX         # OF VALID BYTES FROM LINEAR ADDRESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadSegmentToLinear
+    public ReadSegmentToLinear
 
 ReadSegmentToLinear     PROC near
-        mov si,[bp+si]
-        test byte ptr [bp+2].reg_eflags,2
-        jnz read_segment_to_linear_vm
+    mov si,[bp+si]
+    test byte ptr [bp+2].reg_eflags,2
+    jnz read_segment_to_linear_vm
 
 read_segment_to_linear_pm:
-        test si,4
-        jz read_segment_to_linear_gdt
+    test si,4
+    jz read_segment_to_linear_gdt
 
 read_segment_to_linear_ldt:
-        GetThread
-        mov ds,ax
-        mov ds,ds:p_ldt_sel
-        jmp read_segment_to_linear_check_selector
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_ldt_sel
+    jmp read_segment_to_linear_check_selector
 
 read_segment_to_linear_gdt:
-        mov ax,gdt_sel
-        mov ds,ax
+    mov ax,gdt_sel
+    mov ds,ax
 
 read_segment_to_linear_check_selector:
-        movzx esi,si
-        and si,0FFF8h
-        mov al,[si+5]
-        test al,80h
-        jz EmulateError
+    movzx esi,si
+    and si,0FFF8h
+    mov al,[si+5]
+    test al,80h
+    jz EmulateError
 ;
-        test al,10h
-        jz EmulateError
+    test al,10h
+    jz EmulateError
 ;
-        shr al,5
-        and al,3
-        mov ah,byte ptr [bp].reg_cs
-        and ah,3
-        cmp al,ah
-        jc EmulateError
+    shr al,5
+    and al,3
+    mov ah,byte ptr [bp].reg_cs
+    and ah,3
+    cmp al,ah
+    jc EmulateError
 ;
-        xor ch,ch
-        mov cl,[si+6]
-        and cl,0Fh
-        shl ecx,16
-        mov cx,[si]
-        test byte ptr [si+6],80h
-        jz read_segment_to_linear_small
+    xor ch,ch
+    mov cl,[si+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[si]
+    test byte ptr [si+6],80h
+    jz read_segment_to_linear_small
 ;
-        shl ecx,12
-        or cx,0FFFh
+    shl ecx,12
+    or cx,0FFFh
 
 read_segment_to_linear_small:
-        sub ecx,ebx
-        jc EmulateError
+    sub ecx,ebx
+    jc EmulateError
 ;
-        inc ecx
-        mov edx,[si+2]
-        rol edx,8
-        mov dl,[si+7]
-        ror edx,8
-        add ebx,edx
-        jmp read_segment_to_linear_done 
+    inc ecx
+    mov edx,[si+2]
+    rol edx,8
+    mov dl,[si+7]
+    ror edx,8
+    add ebx,edx
+    jmp read_segment_to_linear_done 
 
 read_segment_to_linear_vm:
-        mov ecx,0FFFFh
-        sub ecx,ebx
-        jc EmulateError
+    mov ecx,0FFFFh
+    sub ecx,ebx
+    jc EmulateError
 ;
-        inc ecx
-        movzx edx,si
-        shl edx,4
-        add ebx,edx
+    inc ecx
+    movzx edx,si
+    shl edx,4
+    add ebx,edx
 
 read_segment_to_linear_done:
-        ret
+    ret
 ReadSegmentToLinear     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteSegmentToLinear
+;           NAME:           WriteSegmentToLinear
 ;
-;               DESCRIPTION:    Convert segment:offset pair into linear address & size
+;           DESCRIPTION:    Convert segment:offset pair into linear address & size
 ;
-;               PARAMETERS:             SI:EBX          ADDRESS
+;           PARAMETERS:         SI:EBX      ADDRESS
 ;
-;               RETURNS:                EBX             LINEAR ADDRESS
-;                                               ECX             # OF VALID BYTES FROM LINEAR ADDRESS
+;           RETURNS:        EBX         LINEAR ADDRESS
+;                           ECX         # OF VALID BYTES FROM LINEAR ADDRESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteSegmentToLinear
+    public WriteSegmentToLinear
 
 WriteSegmentToLinear    PROC near
-        mov si,[bp+si]
-        test byte ptr [bp+2].reg_eflags,2
-        jnz write_segment_to_linear_vm
+    mov si,[bp+si]
+    test byte ptr [bp+2].reg_eflags,2
+    jnz write_segment_to_linear_vm
 
 write_segment_to_linear_pm:
-        test si,4
-        jz write_segment_to_linear_gdt
+    test si,4
+    jz write_segment_to_linear_gdt
 
 write_segment_to_linear_ldt:
-        GetThread
-        mov ds,ax
-        mov ds,ds:p_ldt_sel
-        jmp write_segment_to_linear_check_selector
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_ldt_sel
+    jmp write_segment_to_linear_check_selector
 
 write_segment_to_linear_gdt:
-        mov ax,gdt_sel
-        mov ds,ax
+    mov ax,gdt_sel
+    mov ds,ax
 
 write_segment_to_linear_check_selector:
-        movzx esi,si
-        and si,0FFF8h
-        mov al,[si+5]
-        test al,80h
-        jz EmulateError
+    movzx esi,si
+    and si,0FFF8h
+    mov al,[si+5]
+    test al,80h
+    jz EmulateError
 ;
-        test al,10h
-        jz EmulateError
+    test al,10h
+    jz EmulateError
 ;
-        test al,8
-        jnz EmulateError
+    test al,8
+    jnz EmulateError
 ;
-        test al,2
-        jz EmulateError
+    test al,2
+    jz EmulateError
 ;
-        shr al,5
-        and al,3
-        mov ah,byte ptr [bp].reg_cs
-        and ah,3
-        cmp al,ah
-        jc EmulateError
+    shr al,5
+    and al,3
+    mov ah,byte ptr [bp].reg_cs
+    and ah,3
+    cmp al,ah
+    jc EmulateError
 ;
-        xor ch,ch
-        mov cl,[si+6]
-        and cl,0Fh
-        shl ecx,16
-        mov cx,[si]
-        test byte ptr [si+6],80h
-        jz write_segment_to_linear_small
+    xor ch,ch
+    mov cl,[si+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[si]
+    test byte ptr [si+6],80h
+    jz write_segment_to_linear_small
 ;
-        shl ecx,12
-        or cx,0FFFh
+    shl ecx,12
+    or cx,0FFFh
 
 write_segment_to_linear_small:
-        sub ecx,ebx
-        jc EmulateError
+    sub ecx,ebx
+    jc EmulateError
 ;
-        inc ecx
-        mov edx,[si+2]
-        rol edx,8
-        mov dl,[si+7]
-        ror edx,8
-        add ebx,edx
-        jmp write_segment_to_linear_done        
+    inc ecx
+    mov edx,[si+2]
+    rol edx,8
+    mov dl,[si+7]
+    ror edx,8
+    add ebx,edx
+    jmp write_segment_to_linear_done    
 
 write_segment_to_linear_vm:
-        mov ecx,0FFFFh
-        sub ecx,ebx
-        jc EmulateError
+    mov ecx,0FFFFh
+    sub ecx,ebx
+    jc EmulateError
 ;
-        inc ecx
-        movzx edx,si
-        shl edx,4
-        add ebx,edx
+    inc ecx
+    movzx edx,si
+    shl edx,4
+    add ebx,edx
 
 write_segment_to_linear_done:
-        ret
+    ret
 WriteSegmentToLinear    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CheckReadPage
+;           NAME:           CheckReadPage
 ;
-;               DESCRIPTION:    Check if # of bytes can be read from page
+;           DESCRIPTION:    Check if # of bytes can be read from page
 ;
-;               PARAMETERS:             CX              Number of bytes to check
-;                                               EBX             Linear base address
+;           PARAMETERS:         CX          Number of bytes to check
+;                           EBX         Linear base address
 ;
-;               RETURNS:                NC              Can be read, no trapping
+;           RETURNS:        NC          Can be read, no trapping
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckReadPage   Proc near
-        push ebx
+    push ebx
 ;
-        mov eax,ebx
+    mov eax,ebx
 
 check_read_page_loop:
-        mov dx,process_page_sel
-        mov ds,dx
-        shr ebx,10
-        and bx,0FFFCh
-        mov edx,[ebx]
+    mov dx,process_page_sel
+    mov ds,dx
+    shr ebx,10
+    and bx,0FFFCh
+    mov edx,[ebx]
 ;
-        and dl,7
-        cmp dl,6
-        je check_read_page_hooks
+    and dl,7
+    cmp dl,6
+    je check_read_page_hooks
 ;
-        test dl,1
-        jz check_read_page_check_dir
+    test dl,1
+    jz check_read_page_check_dir
 ;
-        test dl,4
-        jnz check_read_page_check_dir
+    test dl,4
+    jnz check_read_page_check_dir
 ;
-        mov dl,byte ptr [bp].reg_cs
-        and dl,3
-        cmp dl,3
-        je EmulateError
+    mov dl,byte ptr [bp].reg_cs
+    and dl,3
+    cmp dl,3
+    je EmulateError
 
 check_read_page_check_dir:
-        mov ebx,eax
-        mov dx,process_dir_sel
-        mov ds,dx
-        shr ebx,20
-        and bx,0FFCh
-        mov dl,[bx]
-        test dl,4
-        jnz check_read_page_next
+    mov ebx,eax
+    mov dx,process_dir_sel
+    mov ds,dx
+    shr ebx,20
+    and bx,0FFCh
+    mov dl,[bx]
+    test dl,4
+    jnz check_read_page_next
 ;
-        mov dl,byte ptr [bp].reg_cs
-        and dl,3
-        cmp dl,3
-        je EmulateError
-        jmp check_read_page_next
+    mov dl,byte ptr [bp].reg_cs
+    and dl,3
+    cmp dl,3
+    je EmulateError
+    jmp check_read_page_next
 
 check_read_page_hooks:
-        test dh,80h
-        jz check_read_page_next
+    test dh,80h
+    jz check_read_page_next
 ;
-        mov dx,[ebx+2]  
-        or dx,dx
-        jz EmulateError
-        stc
-        jmp check_read_page_done
+    mov dx,[ebx+2]  
+    or dx,dx
+    jz EmulateError
+    stc
+    jmp check_read_page_done
 
 check_read_page_next:
-        mov dx,ax
-        and ax,0FFFh
-        mov bx,1000h
-        sub bx,ax
-        sub cx,bx
-        cmc
-        jnc check_read_page_done
+    mov dx,ax
+    and ax,0FFFh
+    mov bx,1000h
+    sub bx,ax
+    sub cx,bx
+    cmc
+    jnc check_read_page_done
 ;
-        mov ax,dx
-        and ax,0F000h
-        add eax,1000h
-        mov ebx,eax
-        jmp check_read_page_loop
+    mov ax,dx
+    and ax,0F000h
+    add eax,1000h
+    mov ebx,eax
+    jmp check_read_page_loop
 
 check_read_page_done:
-        pop ebx
-        ret
+    pop ebx
+    ret
 CheckReadPage   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CheckWritePage
+;           NAME:           CheckWritePage
 ;
-;               DESCRIPTION:    Check if # of bytes can be written from page
+;           DESCRIPTION:    Check if # of bytes can be written from page
 ;
-;               PARAMETERS:             CX              Number of bytes to check
-;                                               EBX             Linear base address
+;           PARAMETERS:         CX          Number of bytes to check
+;                           EBX         Linear base address
 ;
-;               RETURNS:                NC              Can be written, no trapping
+;           RETURNS:        NC          Can be written, no trapping
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckWritePage  Proc near
-        push ebx
+    push ebx
 ;
-        mov eax,ebx
+    mov eax,ebx
 
 check_write_page_loop:
-        mov dx,process_page_sel
-        mov ds,dx
-        shr ebx,10
-        and bx,0FFFCh
-        mov edx,[ebx]
+    mov dx,process_page_sel
+    mov ds,dx
+    shr ebx,10
+    and bx,0FFFCh
+    mov edx,[ebx]
 ;
-        and dl,7
-        cmp dl,6
-        je check_write_page_hooks
+    and dl,7
+    cmp dl,6
+    je check_write_page_hooks
 ;
-        test dl,1
-        jz check_write_page_check_dir
+    test dl,1
+    jz check_write_page_check_dir
 ;
-        test dl,2
-        jz EmulateError
+    test dl,2
+    jz EmulateError
 ;
-        test dl,4
-        jnz check_write_page_check_dir
+    test dl,4
+    jnz check_write_page_check_dir
 ;
-        mov dl,byte ptr [bp].reg_cs
-        and dl,3
-        cmp dl,3
-        je EmulateError
+    mov dl,byte ptr [bp].reg_cs
+    and dl,3
+    cmp dl,3
+    je EmulateError
 
 check_write_page_check_dir:
-        mov ebx,eax
-        mov dx,process_dir_sel
-        mov ds,dx
-        shr ebx,20
-        and bx,0FFCh
-        mov dl,[bx]
+    mov ebx,eax
+    mov dx,process_dir_sel
+    mov ds,dx
+    shr ebx,20
+    and bx,0FFCh
+    mov dl,[bx]
 ;
-        test dl,2
-        jz EmulateError
+    test dl,2
+    jz EmulateError
 ;
-        test dl,4
-        jnz check_write_page_next
+    test dl,4
+    jnz check_write_page_next
 ;
-        mov dl,byte ptr [bp].reg_cs
-        and dl,3
-        cmp dl,3
-        je EmulateError
-        jmp check_write_page_next
+    mov dl,byte ptr [bp].reg_cs
+    and dl,3
+    cmp dl,3
+    je EmulateError
+    jmp check_write_page_next
 
 check_write_page_hooks:
-        test dh,80h
-        jz check_write_page_next
+    test dh,80h
+    jz check_write_page_next
 ;
-        mov dx,[ebx+2]  
-        or dx,dx
-        jz EmulateError
-        stc
-        jmp check_write_page_done
+    mov dx,[ebx+2]  
+    or dx,dx
+    jz EmulateError
+    stc
+    jmp check_write_page_done
 
 check_write_page_next:
-        mov dx,ax
-        and ax,0FFFh
-        mov bx,1000h
-        sub bx,ax
-        sub cx,bx
-        cmc
-        jnc check_write_page_done
+    mov dx,ax
+    and ax,0FFFh
+    mov bx,1000h
+    sub bx,ax
+    sub cx,bx
+    cmc
+    jnc check_write_page_done
 ;
-        mov ax,dx
-        and ax,0F000h
-        add eax,1000h
-        mov ebx,eax
-        jmp check_write_page_loop
+    mov ax,dx
+    and ax,0F000h
+    add eax,1000h
+    mov ebx,eax
+    jmp check_write_page_loop
 
 check_write_page_done:
-        pop ebx
-        ret
+    pop ebx
+    ret
 CheckWritePage  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadTrappedByte
+;           NAME:           ReadTrappedByte
 ;
-;               DESCRIPTION:    Read trapped byte
+;           DESCRIPTION:    Read trapped byte
 ;
-;               PARAMETERS:             EBX             Linear base address
+;           PARAMETERS:         EBX         Linear base address
 ;
-;               RETURNS:                AL              Data read
+;           RETURNS:        AL          Data read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadTrappedByte Proc near
-        push ebx
+    push ebx
 ;
-        mov cx,process_page_sel
-        mov ds,cx
-        mov ecx,ebx
-        shr ebx,10
-        and bx,0FFFCh
-        mov edx,[ebx]
+    mov cx,process_page_sel
+    mov ds,cx
+    mov ecx,ebx
+    shr ebx,10
+    and bx,0FFFCh
+    mov edx,[ebx]
 ;
-        and dl,7
-        cmp dl,6
-        jne read_trapped_byte_normal
+    and dl,7
+    cmp dl,6
+    jne read_trapped_byte_normal
 ;
-        test dh,80h
-        jz read_trapped_byte_normal
+    test dh,80h
+    jz read_trapped_byte_normal
 ;
-        push cs
-        push OFFSET read_trapped_byte_done
-        mov dx,[ebx]
-        and dx,7FF8h
-        push dx
-        push word ptr [ebx+2]
-        mov ebx,ecx
-        clc
-        retf
+    push cs
+    push OFFSET read_trapped_byte_done
+    mov dx,[ebx]
+    and dx,7FF8h
+    push dx
+    push word ptr [ebx+2]
+    mov ebx,ecx
+    clc
+    retf
 
 read_trapped_byte_normal:
-        mov bx,flat_sel
-        mov ds,bx
-        mov al,[ecx]
+    mov bx,flat_sel
+    mov ds,bx
+    mov al,[ecx]
 
 read_trapped_byte_done:
-        pop ebx
-        ret
+    pop ebx
+    ret
 ReadTrappedByte Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteTrappedByte
+;           NAME:           WriteTrappedByte
 ;
-;               DESCRIPTION:    Write trapped byte
+;           DESCRIPTION:    Write trapped byte
 ;
-;               PARAMETERS:             EBX             Linear base address
-;                                               AL              Data to write
+;           PARAMETERS:         EBX         Linear base address
+;                           AL          Data to write
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteTrappedByte        Proc near
-        push ebx
+WriteTrappedByte    Proc near
+    push ebx
 ;
-        mov cx,process_page_sel
-        mov ds,cx
-        mov ecx,ebx
-        shr ebx,10
-        and bx,0FFFCh
-        mov edx,[ebx]
+    mov cx,process_page_sel
+    mov ds,cx
+    mov ecx,ebx
+    shr ebx,10
+    and bx,0FFFCh
+    mov edx,[ebx]
 ;
-        and dl,7
-        cmp dl,6
-        jne write_trapped_byte_normal
+    and dl,7
+    cmp dl,6
+    jne write_trapped_byte_normal
 ;
-        test dh,80h
-        jz write_trapped_byte_normal
+    test dh,80h
+    jz write_trapped_byte_normal
 ;
-        push cs
-        push OFFSET write_trapped_byte_done
-        mov dx,[ebx]
-        and dx,7FF8h
-        push dx
-        push word ptr [ebx+2]
-        mov ebx,ecx
-        stc
-        retf
+    push cs
+    push OFFSET write_trapped_byte_done
+    mov dx,[ebx]
+    and dx,7FF8h
+    push dx
+    push word ptr [ebx+2]
+    mov ebx,ecx
+    stc
+    retf
 
 write_trapped_byte_normal:
-        mov bx,flat_sel
-        mov ds,bx
-        mov [ecx],al
+    mov bx,flat_sel
+    mov ds,bx
+    mov [ecx],al
 
 write_trapped_byte_done:
-        pop ebx
-        ret
-WriteTrappedByte        Endp
+    pop ebx
+    ret
+WriteTrappedByte    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadByte
+;           NAME:           ReadByte
 ;
-;               DESCRIPTION:    Read one byte of data
+;           DESCRIPTION:    Read one byte of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
 ;
-;               RETURNS:                AL              DATA
+;           RETURNS:        AL          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadByte
+    public ReadByte
 
-ReadByte        Proc near
-        push ebx
-        push ecx
-        push si
+ReadByte    Proc near
+    push ebx
+    push ecx
+    push si
 ;
-        call ReadSegmentToLinear
+    call ReadSegmentToLinear
 ;
-        mov ecx,1
-        call CheckReadPage
-        jc read_byte_trapped
+    mov ecx,1
+    call CheckReadPage
+    jc read_byte_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        mov al,[ebx]
-        jmp read_byte_done
+    mov ax,flat_sel
+    mov ds,ax
+    mov al,[ebx]
+    jmp read_byte_done
 
 read_byte_trapped:
-        call ReadTrappedByte
+    call ReadTrappedByte
 
 read_byte_done:
-        pop si
-        pop ecx
-        pop ebx
-        ret
-ReadByte        Endp
+    pop si
+    pop ecx
+    pop ebx
+    ret
+ReadByte    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadWord
+;           NAME:           ReadWord
 ;
-;               DESCRIPTION:    Read one word of data
+;           DESCRIPTION:    Read one word of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
 ;
-;               RETURNS:                AX              DATA
+;           RETURNS:        AX          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadWord
+    public ReadWord
 
-ReadWord        Proc near
-        push ebx
-        push ecx
-        push si
+ReadWord    Proc near
+    push ebx
+    push ecx
+    push si
 ;
-        call ReadSegmentToLinear
-        cmp ecx,2
-        jc EmulateError
+    call ReadSegmentToLinear
+    cmp ecx,2
+    jc EmulateError
 ;
-        mov ecx,2
-        call CheckReadPage
-        jc read_word_trapped
+    mov ecx,2
+    call CheckReadPage
+    jc read_word_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        mov ax,[ebx]
-        jmp read_word_done
+    mov ax,flat_sel
+    mov ds,ax
+    mov ax,[ebx]
+    jmp read_word_done
 
 read_word_trapped:
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        mov bl,al
-        pop ax
-        mov ah,bl
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    mov bl,al
+    pop ax
+    mov ah,bl
 
 read_word_done:
-        pop si
-        pop ecx
-        pop ebx
-        ret
-ReadWord        Endp
+    pop si
+    pop ecx
+    pop ebx
+    ret
+ReadWord    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadDword
+;           NAME:           ReadDword
 ;
-;               DESCRIPTION:    Read one dword of data
+;           DESCRIPTION:    Read one dword of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
 ;
-;               RETURNS:                EAX             DATA
+;           RETURNS:        EAX         DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadDword
+    public ReadDword
 
 ReadDword       Proc near
-        push ebx
-        push ecx
-        push si
+    push ebx
+    push ecx
+    push si
 ;
-        call ReadSegmentToLinear
-        cmp ecx,4
-        jc EmulateError
+    call ReadSegmentToLinear
+    cmp ecx,4
+    jc EmulateError
 ;
-        mov ecx,4
-        call CheckReadPage
-        jc read_dword_trapped
+    mov ecx,4
+    call CheckReadPage
+    jc read_dword_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        mov eax,[ebx]
-        jmp read_dword_done
+    mov ax,flat_sel
+    mov ds,ax
+    mov eax,[ebx]
+    jmp read_dword_done
 
 read_dword_trapped:
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        mov ah,al
-        pop bx
-        mov al,bl
-        pop bx
-        shl eax,8
-        mov al,bl
-        pop bx
-        shl eax,8
-        mov al,bl
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    mov ah,al
+    pop bx
+    mov al,bl
+    pop bx
+    shl eax,8
+    mov al,bl
+    pop bx
+    shl eax,8
+    mov al,bl
 
 read_dword_done:
-        pop si
-        pop ecx
-        pop ebx
-        ret
+    pop si
+    pop ecx
+    pop ebx
+    ret
 ReadDword       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadFword
+;           NAME:           ReadFword
 ;
-;               DESCRIPTION:    Read one 48-bit word of data
+;           DESCRIPTION:    Read one 48-bit word of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
 ;
-;               RETURNS:                DX:EAX          DATA
+;           RETURNS:        DX:EAX      DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadFword
+    public ReadFword
 
 ReadFword       Proc near
-        push ebx
-        push ecx
-        push si
+    push ebx
+    push ecx
+    push si
 ;
-        call ReadSegmentToLinear
-        cmp ecx,6
-        jc EmulateError
+    call ReadSegmentToLinear
+    cmp ecx,6
+    jc EmulateError
 ;
-        mov ecx,6
-        call CheckReadPage
-        jc read_fword_trapped
+    mov ecx,6
+    call CheckReadPage
+    jc read_fword_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        mov eax,[ebx]
-        mov dx,[ebx+4]
-        jmp read_fword_done
+    mov ax,flat_sel
+    mov ds,ax
+    mov eax,[ebx]
+    mov dx,[ebx+4]
+    jmp read_fword_done
 
 read_fword_trapped:
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        mov dh,al
-        pop bx
-        mov dl,bl
-        pop bx
-        mov ah,bl
-        pop bx
-        mov al,bl
-        pop bx
-        shl eax,8
-        mov al,bl
-        pop bx
-        shl eax,8
-        mov al,bl
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    mov dh,al
+    pop bx
+    mov dl,bl
+    pop bx
+    mov ah,bl
+    pop bx
+    mov al,bl
+    pop bx
+    shl eax,8
+    mov al,bl
+    pop bx
+    shl eax,8
+    mov al,bl
 
 read_fword_done:
-        pop si
-        pop ecx
-        pop ebx
-        ret
+    pop si
+    pop ecx
+    pop ebx
+    ret
 ReadFword       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadQword
+;           NAME:           ReadQword
 ;
-;               DESCRIPTION:    Read one qword of data
+;           DESCRIPTION:    Read one qword of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
 ;
-;               RETURNS:                EDX:EAX         DATA
+;           RETURNS:        EDX:EAX     DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadQword
+    public ReadQword
 
 ReadQword       Proc near
-        push ebx
-        push ecx
-        push si
+    push ebx
+    push ecx
+    push si
 ;
-        call ReadSegmentToLinear
-        cmp ecx,8
-        jc EmulateError
+    call ReadSegmentToLinear
+    cmp ecx,8
+    jc EmulateError
 ;
-        mov ecx,8
-        call CheckReadPage
-        jc read_qword_trapped
+    mov ecx,8
+    call CheckReadPage
+    jc read_qword_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        mov eax,[ebx]
-        mov edx,[ebx+4]
-        jmp read_qword_done
+    mov ax,flat_sel
+    mov ds,ax
+    mov eax,[ebx]
+    mov edx,[ebx+4]
+    jmp read_qword_done
 
 read_qword_trapped:
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        mov dh,al
-        pop bx
-        mov dl,bl
-        pop bx
-        shl edx,8
-        mov dl,bl
-        pop bx
-        shl edx,8
-        mov dl,bl
-        pop bx
-        mov ah,bl
-        pop bx
-        mov al,bl
-        pop bx
-        shl eax,8
-        mov al,bl
-        pop bx
-        shl eax,8
-        mov al,bl
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    mov dh,al
+    pop bx
+    mov dl,bl
+    pop bx
+    shl edx,8
+    mov dl,bl
+    pop bx
+    shl edx,8
+    mov dl,bl
+    pop bx
+    mov ah,bl
+    pop bx
+    mov al,bl
+    pop bx
+    shl eax,8
+    mov al,bl
+    pop bx
+    shl eax,8
+    mov al,bl
 
 read_qword_done:
-        pop si
-        pop ecx
-        pop ebx
-        ret
+    pop si
+    pop ecx
+    pop ebx
+    ret
 ReadQword       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadTbyte
+;           NAME:           ReadTbyte
 ;
-;               DESCRIPTION:    Read one tbyte of data
+;           DESCRIPTION:    Read one tbyte of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
 ;
-;               RETURNS:                CX:EDX:EAX              DATA
+;           RETURNS:        CX:EDX:EAX          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadTbyte
+    public ReadTbyte
 
 ReadTbyte       Proc near
-        push ebx
-        push si
+    push ebx
+    push si
 ;
-        call ReadSegmentToLinear
-        cmp ecx,10
-        jc EmulateError
+    call ReadSegmentToLinear
+    cmp ecx,10
+    jc EmulateError
 ;
-        mov ecx,10
-        call CheckReadPage
-        jc read_tbyte_trapped
+    mov ecx,10
+    call CheckReadPage
+    jc read_tbyte_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        mov eax,[ebx]
-        mov edx,[ebx+4]
-        mov cx,[ebx+8]
-        jmp read_tbyte_done
+    mov ax,flat_sel
+    mov ds,ax
+    mov eax,[ebx]
+    mov edx,[ebx+4]
+    mov cx,[ebx+8]
+    jmp read_tbyte_done
 
 read_tbyte_trapped:
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        push ax
-        inc ebx
-        call ReadTrappedByte
-        mov ch,al
-        pop bx
-        mov cl,bl
-        pop bx
-        mov dh,bl
-        pop bx
-        mov dl,bl
-        pop bx
-        shl edx,8
-        mov dl,bl
-        pop bx
-        shl edx,8
-        mov dl,bl
-        pop bx
-        mov ah,bl
-        pop bx
-        mov al,bl
-        pop bx
-        shl eax,8
-        mov al,bl
-        pop bx
-        shl eax,8
-        mov al,bl
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    push ax
+    inc ebx
+    call ReadTrappedByte
+    mov ch,al
+    pop bx
+    mov cl,bl
+    pop bx
+    mov dh,bl
+    pop bx
+    mov dl,bl
+    pop bx
+    shl edx,8
+    mov dl,bl
+    pop bx
+    shl edx,8
+    mov dl,bl
+    pop bx
+    mov ah,bl
+    pop bx
+    mov al,bl
+    pop bx
+    shl eax,8
+    mov al,bl
+    pop bx
+    shl eax,8
+    mov al,bl
 
 read_tbyte_done:
-        pop si
-        pop ebx
-        ret
+    pop si
+    pop ebx
+    ret
 ReadTbyte       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteByte
+;           NAME:           WriteByte
 ;
-;               DESCRIPTION:    Write one byte of data
+;           DESCRIPTION:    Write one byte of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
-;                                               AL              DATA
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
+;                           AL          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteByte
+    public WriteByte
 
 WriteByte       Proc near
-        push ebx
-        push ecx
-        push si
+    push ebx
+    push ecx
+    push si
 ;
-        push ax
-        call WriteSegmentToLinear
+    push ax
+    call WriteSegmentToLinear
 ;
-        mov ecx,1
-        call CheckWritePage
-        jc write_byte_trapped
+    mov ecx,1
+    call CheckWritePage
+    jc write_byte_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        pop ax
-        mov [ebx],al
-        jmp write_byte_done
+    mov ax,flat_sel
+    mov ds,ax
+    pop ax
+    mov [ebx],al
+    jmp write_byte_done
 
 write_byte_trapped:
-        pop ax
-        call WriteTrappedByte
+    pop ax
+    call WriteTrappedByte
 
 write_byte_done:
-        pop si
-        pop ecx
-        pop ebx
-        ret
+    pop si
+    pop ecx
+    pop ebx
+    ret
 WriteByte       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteWord
+;           NAME:           WriteWord
 ;
-;               DESCRIPTION:    Write one word of data
+;           DESCRIPTION:    Write one word of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
-;                                               AX              DATA
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
+;                           AX          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteWord
+    public WriteWord
 
 WriteWord       Proc near
-        push ebx
-        push ecx
-        push si
+    push ebx
+    push ecx
+    push si
 ;
-        push ax
-        call WriteSegmentToLinear
-        cmp ecx,2
-        jc EmulateError
+    push ax
+    call WriteSegmentToLinear
+    cmp ecx,2
+    jc EmulateError
 ;
-        mov ecx,2
-        call CheckWritePage
-        jc write_word_trapped
+    mov ecx,2
+    call CheckWritePage
+    jc write_word_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        pop ax
-        mov [ebx],ax
-        jmp write_word_done
+    mov ax,flat_sel
+    mov ds,ax
+    pop ax
+    mov [ebx],ax
+    jmp write_word_done
 
 write_word_trapped:
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
 
 write_word_done:
-        pop si
-        pop ecx
-        pop ebx
-        ret
+    pop si
+    pop ecx
+    pop ebx
+    ret
 WriteWord       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteDword
+;           NAME:           WriteDword
 ;
-;               DESCRIPTION:    Write one dword of data
+;           DESCRIPTION:    Write one dword of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
-;                                               EAX             DATA
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
+;                           EAX         DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteDword
+    public WriteDword
 
 WriteDword      Proc near
-        push ebx
-        push ecx
-        push si
+    push ebx
+    push ecx
+    push si
 ;
-        push eax
-        call WriteSegmentToLinear
-        cmp ecx,4
-        jc EmulateError
+    push eax
+    call WriteSegmentToLinear
+    cmp ecx,4
+    jc EmulateError
 ;
-        mov ecx,4
-        call CheckWritePage
-        jc write_dword_trapped
+    mov ecx,4
+    call CheckWritePage
+    jc write_dword_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        pop eax
-        mov [ebx],eax
-        jmp write_dword_done
+    mov ax,flat_sel
+    mov ds,ax
+    pop eax
+    mov [ebx],eax
+    jmp write_dword_done
 
 write_dword_trapped:
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
 
 write_dword_done:
-        pop si
-        pop ecx
-        pop ebx
-        ret
+    pop si
+    pop ecx
+    pop ebx
+    ret
 WriteDword      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteFword
+;           NAME:           WriteFword
 ;
-;               DESCRIPTION:    Write one fword of data
+;           DESCRIPTION:    Write one fword of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
-;                                               DX:EAX          DATA
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
+;                           DX:EAX      DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteFword
+    public WriteFword
 
 WriteFword      Proc near
-        push ebx
-        push ecx
-        push si
+    push ebx
+    push ecx
+    push si
 ;
-        push dx
-        push eax
-        call WriteSegmentToLinear
-        cmp ecx,6
-        jc EmulateError
+    push dx
+    push eax
+    call WriteSegmentToLinear
+    cmp ecx,6
+    jc EmulateError
 ;
-        mov ecx,6
-        call CheckWritePage
-        jc write_fword_trapped
+    mov ecx,6
+    call CheckWritePage
+    jc write_fword_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        pop eax
-        mov [ebx],eax
-        pop dx
-        mov [ebx+4],dx
-        jmp write_fword_done
+    mov ax,flat_sel
+    mov ds,ax
+    pop eax
+    mov [ebx],eax
+    pop dx
+    mov [ebx+4],dx
+    jmp write_fword_done
 
 write_fword_trapped:
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
 
 write_fword_done:
-        pop si
-        pop ecx
-        pop ebx
-        ret
+    pop si
+    pop ecx
+    pop ebx
+    ret
 WriteFword      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteQword
+;           NAME:           WriteQword
 ;
-;               DESCRIPTION:    Write one qword of data
+;           DESCRIPTION:    Write one qword of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
-;                                               EDX:EAX         DATA
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
+;                           EDX:EAX     DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteQword
+    public WriteQword
 
 WriteQword      Proc near
-        push ebx
-        push ecx
-        push si
+    push ebx
+    push ecx
+    push si
 ;
-        push edx
-        push eax
-        call WriteSegmentToLinear
-        cmp ecx,8
-        jc EmulateError
+    push edx
+    push eax
+    call WriteSegmentToLinear
+    cmp ecx,8
+    jc EmulateError
 ;
-        mov ecx,8
-        call CheckWritePage
-        jc write_qword_trapped
+    mov ecx,8
+    call CheckWritePage
+    jc write_qword_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        pop eax
-        mov [ebx],eax
-        pop edx
-        mov [ebx+4],edx
-        jmp write_qword_done
+    mov ax,flat_sel
+    mov ds,ax
+    pop eax
+    mov [ebx],eax
+    pop edx
+    mov [ebx+4],edx
+    jmp write_qword_done
 
 write_qword_trapped:
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
 
 write_qword_done:
-        pop si
-        pop ecx
-        pop ebx
-        ret
+    pop si
+    pop ecx
+    pop ebx
+    ret
 WriteQword      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteTbyte
+;           NAME:           WriteTbyte
 ;
-;               DESCRIPTION:    Write one tbyte of data
+;           DESCRIPTION:    Write one tbyte of data
 ;
-;               PARAMETERS:             SI:EBX  SEGMENT:OFFSET ADDRESS
-;                                               CX:EDX:EAX              DATA
+;           PARAMETERS:         SI:EBX  SEGMENT:OFFSET ADDRESS
+;                           CX:EDX:EAX          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteTbyte
+    public WriteTbyte
 
 WriteTbyte      Proc near
-        push ebx
-        push si
+    push ebx
+    push si
 ;
-        push cx
-        push edx
-        push eax
-        call WriteSegmentToLinear
-        cmp ecx,10
-        jc EmulateError
+    push cx
+    push edx
+    push eax
+    call WriteSegmentToLinear
+    cmp ecx,10
+    jc EmulateError
 ;
-        mov ecx,10
-        call CheckWritePage
-        jc write_tbyte_trapped
+    mov ecx,10
+    call CheckWritePage
+    jc write_tbyte_trapped
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        pop eax
-        mov [ebx],eax
-        pop edx
-        mov [ebx+4],edx
-        pop cx
-        mov [ebx+8],cx
-        jmp write_tbyte_done
+    mov ax,flat_sel
+    mov ds,ax
+    pop eax
+    mov [ebx],eax
+    pop edx
+    mov [ebx+4],edx
+    pop cx
+    mov [ebx+8],cx
+    jmp write_tbyte_done
 
 write_tbyte_trapped:
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        push ax
-        call WriteTrappedByte
-        inc ebx
-        pop ax
-        mov al,ah
-        call WriteTrappedByte
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    push ax
+    call WriteTrappedByte
+    inc ebx
+    pop ax
+    mov al,ah
+    call WriteTrappedByte
 
 write_tbyte_done:
-        pop si
-        pop ebx
-        ret
+    pop si
+    pop ebx
+    ret
 WriteTbyte      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PushWord
+;           NAME:           PushWord
 ;
-;               DESCRIPTION:    push word onto stack
+;           DESCRIPTION:    push word onto stack
 ;
-;               PARAMETERS:             AX              data to push
+;           PARAMETERS:         AX          data to push
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public PushWord
+    public PushWord
 
-PushWord        Proc near
-        test byte ptr [bp].reg_eflags+2,2
-        jnz push_word_normal
+PushWord    Proc near
+    test byte ptr [bp].reg_eflags+2,2
+    jnz push_word_normal
 ;
-        test byte ptr [bp].reg_cs,3
-        jnz push_word_normal
+    test byte ptr [bp].reg_cs,3
+    jnz push_word_normal
 
 push_word_kernel:
-        cld
-        push cx
-        push si
-        push di
-        mov cx,ss
-        mov es,cx
-        mov si,sp
-        sub sp,2
-        mov     di,sp
-        mov cx,word ptr [bp].reg_esp
-        add cx,18
-        sub cx,si
-        shr cx,1
-        rep movs word ptr es:[di],es:[si]
-        stosw
-        pop di
-        pop si
-        pop cx
-        sub bp,2
-        sub word ptr [bp].reg_esp,2
-        ret
+    cld
+    push cx
+    push si
+    push di
+    mov cx,ss
+    mov es,cx
+    mov si,sp
+    sub sp,2
+    mov     di,sp
+    mov cx,word ptr [bp].reg_esp
+    add cx,18
+    sub cx,si
+    shr cx,1
+    rep movs word ptr es:[di],es:[si]
+    stosw
+    pop di
+    pop si
+    pop cx
+    sub bp,2
+    sub word ptr [bp].reg_esp,2
+    ret
 
 push_word_normal:
-        push si
-        push ebx
-        mov si,OFFSET reg_ss
-        test byte ptr [bp].em_flags,ss32
-        jz push_word16
+    push si
+    push ebx
+    mov si,OFFSET reg_ss
+    test byte ptr [bp].em_flags,ss32
+    jz push_word16
 
 push_word32:
-        sub dword ptr [bp].reg_esp,2
-        mov ebx,[bp].reg_esp
-        call WriteWord
-        pop ebx
-        pop si
-        ret
+    sub dword ptr [bp].reg_esp,2
+    mov ebx,[bp].reg_esp
+    call WriteWord
+    pop ebx
+    pop si
+    ret
 
 push_word16:
-        sub word ptr [bp].reg_esp,2
-        movzx ebx,word ptr [bp].reg_esp
-        call WriteWord
-        pop ebx
-        pop si
-        ret
-PushWord        Endp
+    sub word ptr [bp].reg_esp,2
+    movzx ebx,word ptr [bp].reg_esp
+    call WriteWord
+    pop ebx
+    pop si
+    ret
+PushWord    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PushDword
+;           NAME:           PushDword
 ;
-;               DESCRIPTION:    push dword onto stack
+;           DESCRIPTION:    push dword onto stack
 ;
-;               PARAMETERS:             EAX             data to push
+;           PARAMETERS:         EAX         data to push
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public PushDword
+    public PushDword
 
 PushDword       Proc near
-        test byte ptr [bp].reg_eflags+2,2
-        jnz push_dword_normal
-        test byte ptr [bp].reg_cs,3
-        jnz push_dword_normal
+    test byte ptr [bp].reg_eflags+2,2
+    jnz push_dword_normal
+    test byte ptr [bp].reg_cs,3
+    jnz push_dword_normal
 
 push_dword_kernel:
-        cld
-        push cx
-        push si
-        push di
-        mov cx,ss
-        mov es,cx
-        mov si,sp
-        sub sp,4
-        mov     di,sp
-        mov cx,word ptr [bp].reg_esp
-        add cx,18
-        sub cx,si
-        shr cx,1
-        rep movs word ptr es:[di],es:[si]
-        stosd
-        pop di
-        pop si
-        pop cx
-        sub bp,4
-        sub word ptr [bp].reg_esp,4
+    cld
+    push cx
+    push si
+    push di
+    mov cx,ss
+    mov es,cx
+    mov si,sp
+    sub sp,4
+    mov     di,sp
+    mov cx,word ptr [bp].reg_esp
+    add cx,18
+    sub cx,si
+    shr cx,1
+    rep movs word ptr es:[di],es:[si]
+    stosd
+    pop di
+    pop si
+    pop cx
+    sub bp,4
+    sub word ptr [bp].reg_esp,4
 
 push_dword_normal:
-        push si
-        push ebx
-        mov si,OFFSET reg_ss
-        test byte ptr [bp].em_flags,ss32
-        jz push_dword16
+    push si
+    push ebx
+    mov si,OFFSET reg_ss
+    test byte ptr [bp].em_flags,ss32
+    jz push_dword16
 
 push_dword32:
-        sub dword ptr [bp].reg_esp,4
-        mov ebx,[bp].reg_esp
-        call WriteDword
-        pop ebx
-        pop si
-        ret
+    sub dword ptr [bp].reg_esp,4
+    mov ebx,[bp].reg_esp
+    call WriteDword
+    pop ebx
+    pop si
+    ret
 
 push_dword16:
-        sub word ptr [bp].reg_esp,4
-        movzx ebx,word ptr [bp].reg_esp
-        call WriteDword
-        pop ebx
-        pop si
-        ret
+    sub word ptr [bp].reg_esp,4
+    movzx ebx,word ptr [bp].reg_esp
+    call WriteDword
+    pop ebx
+    pop si
+    ret
 PushDword       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PopWord
+;           NAME:           PopWord
 ;
-;               DESCRIPTION:    pop word from stack
+;           DESCRIPTION:    pop word from stack
 ;
-;               RETURNS:                AX              data popped
+;           RETURNS:        AX          data popped
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public PopWord
+    public PopWord
 
 PopWord Proc near
-        test byte ptr [bp].reg_eflags+2,2
-        jnz pop_word_normal
-        test byte ptr [bp].reg_cs,3
-        jnz pop_word_normal
+    test byte ptr [bp].reg_eflags+2,2
+    jnz pop_word_normal
+    test byte ptr [bp].reg_cs,3
+    jnz pop_word_normal
 
 pop_word_kernel:
-        push bx
-        mov bx,word ptr [bp].reg_esp
-        mov ax,ss:[bx+18]
-        add word ptr [bp].reg_esp,2
-        pop bx
-        ret
+    push bx
+    mov bx,word ptr [bp].reg_esp
+    mov ax,ss:[bx+18]
+    add word ptr [bp].reg_esp,2
+    pop bx
+    ret
 
 pop_word_normal:
-        push si
-        push ebx
-        mov si,OFFSET reg_ss
-        test byte ptr [bp].em_flags,ss32
-        jz pop_word16
+    push si
+    push ebx
+    mov si,OFFSET reg_ss
+    test byte ptr [bp].em_flags,ss32
+    jz pop_word16
 
 pop_word32:
-        mov ebx,[bp].reg_esp
-        call ReadWord
-        add dword ptr [bp].reg_esp,2
-        pop ebx
-        pop si
-        ret
+    mov ebx,[bp].reg_esp
+    call ReadWord
+    add dword ptr [bp].reg_esp,2
+    pop ebx
+    pop si
+    ret
 
 pop_word16:
-        movzx ebx,word ptr [bp].reg_esp
-        call ReadWord
-        add word ptr [bp].reg_esp,2
-        pop ebx
-        pop si
-        ret
+    movzx ebx,word ptr [bp].reg_esp
+    call ReadWord
+    add word ptr [bp].reg_esp,2
+    pop ebx
+    pop si
+    ret
 PopWord Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PopDword
+;           NAME:           PopDword
 ;
-;               DESCRIPTION:    pop dword from stack
+;           DESCRIPTION:    pop dword from stack
 ;
-;               RETURNS:                EAX             data popped
+;           RETURNS:        EAX         data popped
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public PopDword
+    public PopDword
 
-PopDword        Proc near
-        test byte ptr [bp].reg_eflags+2,2
-        jnz pop_dword_normal
-        test byte ptr [bp].reg_cs,3
-        jnz pop_dword_normal
+PopDword    Proc near
+    test byte ptr [bp].reg_eflags+2,2
+    jnz pop_dword_normal
+    test byte ptr [bp].reg_cs,3
+    jnz pop_dword_normal
 
 pop_dword_kernel:
-        push bx
-        mov bx,word ptr [bp].reg_esp
-        mov eax,ss:[bx+18]
-        add word ptr [bp].reg_esp,4
-        pop bx
-        ret
+    push bx
+    mov bx,word ptr [bp].reg_esp
+    mov eax,ss:[bx+18]
+    add word ptr [bp].reg_esp,4
+    pop bx
+    ret
 
 pop_dword_normal:
-        push si
-        push ebx
-        mov si,OFFSET reg_ss
-        test byte ptr [bp].em_flags,ss32
-        jz pop_dword16
+    push si
+    push ebx
+    mov si,OFFSET reg_ss
+    test byte ptr [bp].em_flags,ss32
+    jz pop_dword16
 
 pop_dword32:
-        mov ebx,[bp].reg_esp
-        call ReadDword
-        add dword ptr [bp].reg_esp,4
-        pop ebx
-        pop si
-        ret
+    mov ebx,[bp].reg_esp
+    call ReadDword
+    add dword ptr [bp].reg_esp,4
+    pop ebx
+    pop si
+    ret
 
 pop_dword16:
-        movzx ebx,word ptr [bp].reg_esp
-        call ReadDword
-        add word ptr [bp].reg_esp,4
-        pop ebx
-        pop si
-        ret
-PopDword        Endp
+    movzx ebx,word ptr [bp].reg_esp
+    call ReadDword
+    add word ptr [bp].reg_esp,4
+    pop ebx
+    pop si
+    ret
+PopDword    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AddToStack
+;           NAME:           AddToStack
 ;
-;               DESCRIPTION:    add value to stack pointer
+;           DESCRIPTION:    add value to stack pointer
 ;
-;               RETURNS:                EAX             value to add to (e)sp
+;           RETURNS:        EAX         value to add to (e)sp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public AddToStack
+    public AddToStack
 
 AddToStack      Proc near
-        test byte ptr [bp].reg_eflags+2,2
-        jnz add_to_stack_normal
-        test byte ptr [bp].reg_cs,3
-        jnz add_to_stack_normal
+    test byte ptr [bp].reg_eflags+2,2
+    jnz add_to_stack_normal
+    test byte ptr [bp].reg_cs,3
+    jnz add_to_stack_normal
 
 add_to_stack_kernel:
-        add word ptr [bp].reg_esp,ax
-        ret
+    add word ptr [bp].reg_esp,ax
+    ret
 
 add_to_stack_normal:
-        test byte ptr [bp].em_flags,ss32
-        jz add_to_stack16
+    test byte ptr [bp].em_flags,ss32
+    jz add_to_stack16
 
 add_to_stack32:
-        add dword ptr [bp].reg_esp,eax
-        ret
+    add dword ptr [bp].reg_esp,eax
+    ret
 
 add_to_stack16:
-        add word ptr [bp].reg_esp,ax
-        ret
+    add word ptr [bp].reg_esp,ax
+    ret
 AddToStack      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SubFromStack
+;           NAME:           SubFromStack
 ;
-;               DESCRIPTION:    sub value from stack pointer
+;           DESCRIPTION:    sub value from stack pointer
 ;
-;               RETURNS:                EAX             value to sub from (e)sp
+;           RETURNS:        EAX         value to sub from (e)sp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public SubFromStack
+    public SubFromStack
 
 SubFromStack    Proc near
-        test byte ptr [bp].reg_eflags+2,2
-        jnz sub_from_stack_normal
+    test byte ptr [bp].reg_eflags+2,2
+    jnz sub_from_stack_normal
 ;
-        test byte ptr [bp].reg_cs,3
-        jnz sub_from_stack_normal
+    test byte ptr [bp].reg_cs,3
+    jnz sub_from_stack_normal
 
 sub_from_stack_kernel:
-        cld
-        push cx
-        push si
-        push di
-        mov cx,ss
-        mov es,cx
-        mov si,sp
-        sub sp,ax
-        mov     di,sp
-        mov cx,word ptr [bp].reg_esp
-        add cx,18
-        sub cx,si
-        shr cx,1
-        rep movs word ptr es:[di],es:[si]
-        pop di
-        pop si
-        pop cx
-        sub bp,ax
-        sub word ptr [bp].reg_esp,ax
-        ret
+    cld
+    push cx
+    push si
+    push di
+    mov cx,ss
+    mov es,cx
+    mov si,sp
+    sub sp,ax
+    mov     di,sp
+    mov cx,word ptr [bp].reg_esp
+    add cx,18
+    sub cx,si
+    shr cx,1
+    rep movs word ptr es:[di],es:[si]
+    pop di
+    pop si
+    pop cx
+    sub bp,ax
+    sub word ptr [bp].reg_esp,ax
+    ret
 
 sub_from_stack_normal:
-        test byte ptr [bp].em_flags,ss32
-        jz sub_from_stack16
+    test byte ptr [bp].em_flags,ss32
+    jz sub_from_stack16
 
 sub_from_stack32:
-        sub dword ptr [bp].reg_esp,eax
-        ret
+    sub dword ptr [bp].reg_esp,eax
+    ret
 
 sub_from_stack16:
-        sub word ptr [bp].reg_esp,ax
-        ret
+    sub word ptr [bp].reg_esp,ax
+    ret
 SubFromStack    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadCodeByte
+;           NAME:           ReadCodeByte
 ;
-;               DESCRIPTION:    Read byte from cs:eip, update to next position
+;           DESCRIPTION:    Read byte from cs:eip, update to next position
 ;
-;               RETURNS:                AL              data read
+;           RETURNS:        AL          data read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadCodeByte
+    public ReadCodeByte
 
 ReadCodeByte    Proc near
-        mov si,OFFSET reg_cs
-        test word ptr [bp].em_flags,cs32
-        jz read_code_byte16
+    mov si,OFFSET reg_cs
+    test word ptr [bp].em_flags,cs32
+    jz read_code_byte16
 
 read_code_byte32:
-        mov ebx,[bp].reg_eip
-        push ebx
-        call ReadByte
-        pop ebx
-        inc ebx
-        mov [bp].reg_eip,ebx
-        ret
+    mov ebx,[bp].reg_eip
+    push ebx
+    call ReadByte
+    pop ebx
+    inc ebx
+    mov [bp].reg_eip,ebx
+    ret
 
 read_code_byte16:
-        movzx ebx,word ptr [bp].reg_eip
-        push bx
-        call ReadByte
-        pop bx
-        inc bx
-        mov word ptr [bp].reg_eip,bx
-        ret
+    movzx ebx,word ptr [bp].reg_eip
+    push bx
+    call ReadByte
+    pop bx
+    inc bx
+    mov word ptr [bp].reg_eip,bx
+    ret
 ReadCodeByte    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadCodeWord
+;           NAME:           ReadCodeWord
 ;
-;               DESCRIPTION:    Read word from cs:eip, update to next position
+;           DESCRIPTION:    Read word from cs:eip, update to next position
 ;
-;               RETURNS:                AX              data read
+;           RETURNS:        AX          data read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadCodeWord
+    public ReadCodeWord
 
 ReadCodeWord    Proc near
-        mov si,OFFSET reg_cs
-        test word ptr [bp].em_flags,cs32
-        jz read_code_word16
+    mov si,OFFSET reg_cs
+    test word ptr [bp].em_flags,cs32
+    jz read_code_word16
 
 read_code_word32:
-        mov ebx,[bp].reg_eip
-        push ebx
-        call ReadWord
-        pop ebx
-        add ebx,2
-        mov [bp].reg_eip,ebx
-        ret
+    mov ebx,[bp].reg_eip
+    push ebx
+    call ReadWord
+    pop ebx
+    add ebx,2
+    mov [bp].reg_eip,ebx
+    ret
 
 read_code_word16:
-        movzx ebx,word ptr [bp].reg_eip
-        push bx
-        call ReadWord
-        pop bx
-        add bx,2
-        mov word ptr [bp].reg_eip,bx
-        ret
+    movzx ebx,word ptr [bp].reg_eip
+    push bx
+    call ReadWord
+    pop bx
+    add bx,2
+    mov word ptr [bp].reg_eip,bx
+    ret
 ReadCodeWord    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadCodeDword
+;           NAME:           ReadCodeDword
 ;
-;               DESCRIPTION:    Read dword from cs:eip, update to next position
+;           DESCRIPTION:    Read dword from cs:eip, update to next position
 ;
-;               RETURNS:                EAX             data read
+;           RETURNS:        EAX         data read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadCodeDword
+    public ReadCodeDword
 
 ReadCodeDword   Proc near
-        mov si,OFFSET reg_cs
-        test word ptr [bp].em_flags,cs32
-        jz read_code_dword16
+    mov si,OFFSET reg_cs
+    test word ptr [bp].em_flags,cs32
+    jz read_code_dword16
 
 read_code_dword32:
-        mov ebx,[bp].reg_eip
-        push ebx
-        call ReadDword
-        pop ebx
-        add ebx,4
-        mov [bp].reg_eip,ebx
-        ret
+    mov ebx,[bp].reg_eip
+    push ebx
+    call ReadDword
+    pop ebx
+    add ebx,4
+    mov [bp].reg_eip,ebx
+    ret
 
 read_code_dword16:
-        movzx ebx,word ptr [bp].reg_eip
-        push bx
-        call ReadDword
-        pop bx
-        add bx,4
-        mov word ptr [bp].reg_eip,bx
-        ret
+    movzx ebx,word ptr [bp].reg_eip
+    push bx
+    call ReadDword
+    pop bx
+    add bx,4
+    mov word ptr [bp].reg_eip,bx
+    ret
 ReadCodeDword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadCodeFword
+;           NAME:           ReadCodeFword
 ;
-;               DESCRIPTION:    Read fword from cs:eip, update to next position
+;           DESCRIPTION:    Read fword from cs:eip, update to next position
 ;
-;               RETURNS:                DX:EAX          data read
+;           RETURNS:        DX:EAX      data read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadCodeFword
+    public ReadCodeFword
 
 ReadCodeFword   Proc near
-        mov si,OFFSET reg_cs
-        test word ptr [bp].em_flags,cs32
-        jz read_code_fword16
+    mov si,OFFSET reg_cs
+    test word ptr [bp].em_flags,cs32
+    jz read_code_fword16
 
 read_code_fword32:
-        mov ebx,[bp].reg_eip
-        push ebx
-        call ReadFword
-        pop ebx
-        add ebx,6
-        mov [bp].reg_eip,ebx
-        ret
+    mov ebx,[bp].reg_eip
+    push ebx
+    call ReadFword
+    pop ebx
+    add ebx,6
+    mov [bp].reg_eip,ebx
+    ret
 
 read_code_fword16:
-        movzx ebx,word ptr [bp].reg_eip
-        push bx
-        call ReadFword
-        pop bx
-        add bx,6
-        mov word ptr [bp].reg_eip,bx
-        ret
+    movzx ebx,word ptr [bp].reg_eip
+    push bx
+    call ReadFword
+    pop bx
+    add bx,6
+    mov word ptr [bp].reg_eip,bx
+    ret
 ReadCodeFword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Inbyte
+;           NAME:           Inbyte
 ;
-;               description:    read a byte from I/O port
+;           description:    read a byte from I/O port
 ;
-;               PARAMETERS:             SS:BP           CPU
-;                                               DX                      IO PORT
+;           PARAMETERS:         SS:BP       CPU
+;                           DX              IO PORT
 ;
-;               RETURNS:                AL                      DATA
+;           RETURNS:        AL              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public InByte
+    public InByte
 
 InByte Proc near
-        push bx
-        push cx
-        push si
+    push bx
+    push cx
+    push si
 ;
-        mov ax,hook_in_sel
-        mov ds,ax
-        cmp dx,400h
-        jnc in_byte_real
+    mov ax,hook_in_sel
+    mov ds,ax
+    cmp dx,400h
+    jnc in_byte_real
 ;
-        mov bx,dx
-        shl bx,2
-        mov ax,[bx+2]
-        or ax,ax
-        jz in_byte_real
+    mov bx,dx
+    shl bx,3
+    mov ax,[bx+4]
+    or ax,ax
+    jz in_byte_real
 ;
-        push ds
-        call dword ptr [bx]
-        pop ds
-        jmp in_byte_done
+    push ds
+    call fword ptr [bx]
+    pop ds
+    jmp in_byte_done
 
 in_byte_real:
-        in al,dx
+    in al,dx
 
 in_byte_done:
-        pop si
-        pop cx
-        pop bx
-        ret
+    pop si
+    pop cx
+    pop bx
+    ret
 InByte  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InWord
+;           NAME:           InWord
 ;
-;               description:    read a word from I/O port
+;           description:    read a word from I/O port
 ;
-;               PARAMETERS:             SS:BP           CPU
-;                                               DX                      IO PORT
+;           PARAMETERS:         SS:BP       CPU
+;                           DX              IO PORT
 ;
-;               RETURNS:                AX                      DATA
+;           RETURNS:        AX              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public InWord
+    public InWord
 
 InWord Proc near
-        push bx
-        push cx
-        push dx
-        push si
+    push bx
+    push cx
+    push dx
+    push si
 ;
-        mov ax,hook_in_sel
-        mov ds,ax
-        cmp dx,400h
-        jnc in_word_real
+    mov ax,hook_in_sel
+    mov ds,ax
+    cmp dx,400h
+    jnc in_word_real
 ;
-        mov bx,dx
-        shl bx,2
-        mov ax,[bx+2]
-        or ax,[bx+6]
-        jz in_word_real
+    mov bx,dx
+    shl bx,3
+    mov ax,[bx+4]
+    or ax,[bx+12]
+    jz in_word_real
 ;
-        mov ax,[bx+2]
-        or ax,ax
-        jz in_word_real1
+    mov ax,[bx+4]
+    or ax,ax
+    jz in_word_real1
 ;
-        push ds
-        push bx
-        call dword ptr [bx]
-        pop bx
-        pop ds
-        jmp in_word_done1
+    push ds
+    push bx
+    call fword ptr [bx]
+    pop bx
+    pop ds
+    jmp in_word_done1
 
 in_word_real1:
-        in al,dx
+    in al,dx
 
 in_word_done1:
-        add bx,4
-        push ax
-        inc dx
-        mov ax,[bx+2]
-        or ax,ax
-        jz in_word_real2
+    add bx,8
+    push ax
+    inc dx
+    mov ax,[bx+4]
+    or ax,ax
+    jz in_word_real2
 ;
-        push ds
-        call dword ptr [bx]
-        pop ds
-        jmp in_word_done2
+    push ds
+    call fword ptr [bx]
+    pop ds
+    jmp in_word_done2
 
 in_word_real2:
-        in al,dx
+    in al,dx
 
 in_word_done2:
-        mov bl,al
-        pop ax
-        mov ah,bl
-        jmp in_word_done
+    mov bl,al
+    pop ax
+    mov ah,bl
+    jmp in_word_done
 
 in_word_real:
-        in ax,dx
+    in ax,dx
 
 in_word_done:
-        pop si
-        pop dx
-        pop cx
-        pop bx
-        ret
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    ret
 InWord  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InDword
+;           NAME:           InDword
 ;
-;               description:    read a dword from I/O port
+;           description:    read a dword from I/O port
 ;
-;               PARAMETERS:             SS:BP           CPU
-;                                               DX                      IO PORT
+;           PARAMETERS:         SS:BP       CPU
+;                           DX              IO PORT
 ;
-;               RETURNS:                EAX                     DATA
+;           RETURNS:        EAX             DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public InDword
+    public InDword
 
 InDword Proc near
-        push bx
-        push cx
-        push dx
-        push si
+    push bx
+    push cx
+    push dx
+    push si
 ;
-        mov ax,hook_in_sel
-        mov ds,ax
-        cmp dx,400h
-        jnc in_dword_real
+    mov ax,hook_in_sel
+    mov ds,ax
+    cmp dx,400h
+    jnc in_dword_real
 ;
-        mov bx,dx
-        shl bx,2
-        mov ax,[bx+2]
-        or ax,[bx+6]
-        or ax,[bx+10]
-        or ax,[bx+14]
-        jz in_dword_real
+    mov bx,dx
+    shl bx,3
+    mov ax,[bx+4]
+    or ax,[bx+12]
+    or ax,[bx+20]
+    or ax,[bx+28]
+    jz in_dword_real
 ;
-        mov ax,[bx+2]
-        or ax,ax
-        jz in_dword_real1
+    mov ax,[bx+4]
+    or ax,ax
+    jz in_dword_real1
 ;
-        push ds
-        push bx
-        call dword ptr [bx]
-        pop bx
-        pop ds
-        jmp in_dword_done1
+    push ds
+    push bx
+    call fword ptr [bx]
+    pop bx
+    pop ds
+    jmp in_dword_done1
 
 in_dword_real1:
-        in al,dx
+    in al,dx
 
 in_dword_done1:
-        add bx,4
-        push ax
-        inc dx
-        mov ax,[bx+2]
-        or ax,ax
-        jz in_dword_real2
+    add bx,8
+    push ax
+    inc dx
+    mov ax,[bx+4]
+    or ax,ax
+    jz in_dword_real2
 ;
-        push ds
-        push bx
-        call dword ptr [bx]
-        pop bx
-        pop ds
-        jmp in_dword_done2
+    push ds
+    push bx
+    call fword ptr [bx]
+    pop bx
+    pop ds
+    jmp in_dword_done2
 
 in_dword_real2:
-        in al,dx
+    in al,dx
 
 in_dword_done2:
-        add bx,4
-        push ax
-        inc dx
-        mov ax,[bx+2]
-        or ax,ax
-        jz in_dword_real3
+    add bx,8
+    push ax
+    inc dx
+    mov ax,[bx+4]
+    or ax,ax
+    jz in_dword_real3
 ;
-        push ds
-        push bx
-        call dword ptr [bx]
-        pop bx
-        pop ds
-        jmp in_dword_done3
+    push ds
+    push bx
+    call fword ptr [bx]
+    pop bx
+    pop ds
+    jmp in_dword_done3
 
 in_dword_real3:
-        in al,dx
+    in al,dx
 
 in_dword_done3:
-        add bx,4
-        push ax
-        inc dx
-        mov ax,[bx+2]
-        or ax,ax
-        jz in_dword_real4
+    add bx,8
+    push ax
+    inc dx
+    mov ax,[bx+4]
+    or ax,ax
+    jz in_dword_real4
 ;
-        push ds
-        call dword ptr [bx]
-        pop ds
-        jmp in_dword_done4
+    push ds
+    call fword ptr [bx]
+    pop ds
+    jmp in_dword_done4
 
 in_dword_real4:
-        in al,dx
+    in al,dx
 
 in_dword_done4:
-        mov ah,al
-        pop bx
-        mov al,bl
-        pop bx
-        shl eax,8
-        mov al,bl
-        pop bx
-        shl eax,8
-        mov al,bl
-        jmp in_dword_done
+    mov ah,al
+    pop bx
+    mov al,bl
+    pop bx
+    shl eax,8
+    mov al,bl
+    pop bx
+    shl eax,8
+    mov al,bl
+    jmp in_dword_done
 
 in_dword_real:
-        in eax,dx
+    in eax,dx
 
 in_dword_done:
-        pop si
-        pop dx
-        pop cx
-        pop bx
-        ret
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    ret
 InDword Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OutByte
+;           NAME:           OutByte
 ;
-;               description:    write a byte to I/O port
+;           description:    write a byte to I/O port
 ;
-;               PARAMETERS:             SS:BP           CPU
-;                                               DX                      IO PORT
-;                                               AL                      DATA
+;           PARAMETERS:         SS:BP       CPU
+;                           DX              IO PORT
+;                           AL              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public OutByte
+    public OutByte
 
 OutByte Proc near
-        push bx
-        push cx
-        push si
+    push bx
+    push cx
+    push si
 ;
-        mov bx,hook_out_sel
-        mov ds,bx
-        cmp dx,400h
-        jnc out_byte_real
+    mov bx,hook_out_sel
+    mov ds,bx
+    cmp dx,400h
+    jnc out_byte_real
 ;
-        mov bx,dx
-        shl bx,2
-        mov cx,[bx+2]
-        or cx,cx
-        jz out_byte_real
+    mov bx,dx
+    shl bx,3
+    mov cx,[bx+4]
+    or cx,cx
+    jz out_byte_real
 ;
-        push ds
-        call dword ptr [bx]
-        pop ds
-        jmp out_byte_done
+    push ds
+    call fword ptr [bx]
+    pop ds
+    jmp out_byte_done
 
 out_byte_real:
-        out dx,al
+    out dx,al
 
 out_byte_done:
-        pop si
-        pop cx
-        pop bx
-        ret
+    pop si
+    pop cx
+    pop bx
+    ret
 OutByte Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OutWord
+;           NAME:           OutWord
 ;
-;               description:    write a word to I/O port
+;           description:    write a word to I/O port
 ;
-;               PARAMETERS:             SS:BP           CPU
-;                                               DX                      IO PORT
-;                                               AX                      DATA
+;           PARAMETERS:         SS:BP       CPU
+;                           DX              IO PORT
+;                           AX              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public OutWord
+    public OutWord
 
 OutWord Proc near
-        push cx
-        push dx
-        push si
+    push cx
+    push dx
+    push si
 ;
-        mov bx,hook_out_sel
-        mov ds,bx
-        cmp dx,400h
-        jnc out_word_real
+    mov bx,hook_out_sel
+    mov ds,bx
+    cmp dx,400h
+    jnc out_word_real
 ;
-        mov bx,dx
-        shl bx,2
-        mov cx,[bx+2]
-        or cx,[bx+6]
-        jz out_word_real
+    mov bx,dx
+    shl bx,3
+    mov cx,[bx+4]
+    or cx,[bx+12]
+    jz out_word_real
 ;
-        mov cx,[bx+2]
-        or cx,cx
-        jz out_word_real1
+    mov cx,[bx+4]
+    or cx,cx
+    jz out_word_real1
 ;
-        push ds
-        push ax
-        push bx
-        call dword ptr [bx]
-        pop bx
-        pop ax
-        pop ds
-        jmp out_word_done1
+    push ds
+    push ax
+    push bx
+    call fword ptr [bx]
+    pop bx
+    pop ax
+    pop ds
+    jmp out_word_done1
 
 out_word_real1:
-        out dx,al
+    out dx,al
 
 out_word_done1:
-        mov al,ah
-        add bx,4
-        inc dx
-        mov cx,[bx+2]
-        or cx,cx
-        jz out_word_real2
+    mov al,ah
+    add bx,8
+    inc dx
+    mov cx,[bx+4]
+    or cx,cx
+    jz out_word_real2
 ;
-        push ds
-        call dword ptr [bx]
-        pop ds
-        jmp out_word_done
+    push ds
+    call fword ptr [bx]
+    pop ds
+    jmp out_word_done
 
 out_word_real2:
-        out dx,al
-        jmp out_word_done
+    out dx,al
+    jmp out_word_done
 
 out_word_real:
-        out dx,ax
+    out dx,ax
 
 out_word_done:
-        pop si
-        pop dx
-        pop cx
-        ret
+    pop si
+    pop dx
+    pop cx
+    ret
 OutWord Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OutDword
+;           NAME:           OutDword
 ;
-;               description:    write a dword to I/O port
+;           description:    write a dword to I/O port
 ;
-;               PARAMETERS:             SS:BP           CPU
-;                                               DX                      IO PORT
-;                                               EAX                     DATA
+;           PARAMETERS:         SS:BP       CPU
+;                           DX              IO PORT
+;                           EAX             DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public OutDword
+    public OutDword
 
 OutDword Proc near
-        push cx
-        push dx
-        push si
+    push cx
+    push dx
+    push si
 ;
-        mov bx,hook_out_sel
-        mov ds,bx
-        cmp dx,400h
-        jnc out_dword_real
+    mov bx,hook_out_sel
+    mov ds,bx
+    cmp dx,400h
+    jnc out_dword_real
 ;
-        mov bx,dx
-        shl bx,2
-        mov cx,[bx+2]
-        or cx,[bx+6]
-        or cx,[bx+10]
-        or cx,[bx+14]
-        jz out_dword_real
+    mov bx,dx
+    shl bx,3
+    mov cx,[bx+4]
+    or cx,[bx+12]
+    or cx,[bx+20]
+    or cx,[bx+28]
+    jz out_dword_real
 ;
-        mov cx,[bx+2]
-        or cx,cx
-        jz out_dword_real1
+    mov cx,[bx+4]
+    or cx,cx
+    jz out_dword_real1
 ;
-        push ds
-        push eax
-        push bx
-        call dword ptr [bx]
-        pop bx
-        pop eax
-        pop ds
-        jmp out_dword_done1
+    push ds
+    push eax
+    push bx
+    call fword ptr [bx]
+    pop bx
+    pop eax
+    pop ds
+    jmp out_dword_done1
 
 out_dword_real1:
-        out dx,al
+    out dx,al
 
 out_dword_done1:
-        shr eax,8
-        add bx,4
-        inc dx
-        mov cx,[bx+2]
-        or cx,cx
-        jz out_dword_real2
+    shr eax,8
+    add bx,8
+    inc dx
+    mov cx,[bx+4]
+    or cx,cx
+    jz out_dword_real2
 ;
-        push ds
-        push eax
-        push bx
-        call dword ptr [bx]
-        pop bx
-        pop eax
-        pop ds
-        jmp out_dword_done2
+    push ds
+    push eax
+    push bx
+    call fword ptr [bx]
+    pop bx
+    pop eax
+    pop ds
+    jmp out_dword_done2
 
 out_dword_real2:
-        out dx,al
+    out dx,al
 
 out_dword_done2:
-        shr eax,8
-        add bx,4
-        inc dx
-        mov cx,[bx+2]
-        or cx,cx
-        jz out_dword_real3
+    shr eax,8
+    add bx,8
+    inc dx
+    mov cx,[bx+4]
+    or cx,cx
+    jz out_dword_real3
 ;
-        push ds
-        push ax
-        push bx
-        call dword ptr [bx]
-        pop bx
-        pop ax
-        pop ds
-        jmp out_dword_done3
+    push ds
+    push ax
+    push bx
+    call fword ptr [bx]
+    pop bx
+    pop ax
+    pop ds
+    jmp out_dword_done3
 
 out_dword_real3:
-        out dx,al
+    out dx,al
 
 out_dword_done3:
-        mov al,ah
-        add bx,4
-        inc dx
-        mov cx,[bx+2]
-        or cx,cx
-        jz out_dword_real4
+    mov al,ah
+    add bx,8
+    inc dx
+    mov cx,[bx+4]
+    or cx,cx
+    jz out_dword_real4
 ;
-        push ds
-        call dword ptr [bx]
-        pop ds
-        jmp out_dword_done
+    push ds
+    call fword ptr [bx]
+    pop ds
+    jmp out_dword_done
 
 out_dword_real4:
-        out dx,al
-        jmp out_dword_done
+    out dx,al
+    jmp out_dword_done
 
 out_dword_real:
-        out dx,eax
+    out dx,eax
 
 out_dword_done:
-        pop si
-        pop dx
-        pop cx
-        ret
-OutDword        Endp
-        
+    pop si
+    pop dx
+    pop cx
+    ret
+OutDword    Endp
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   EMULATE_FIRST_PAGE
+;           NAME:           EMULATE_FIRST_PAGE
 ;
-;               DESCRIPTION:    EMULATE CONTENTS OF FIRST PAGE OF LINEAR ADDRESS SPACE
+;           DESCRIPTION:    EMULATE CONTENTS OF FIRST PAGE OF LINEAR ADDRESS SPACE
 ;
-;               PARAMETERS:             EBX             LINEAR ADDRESS
-;                                               AL              DATA
+;           PARAMETERS:         EBX         LINEAR ADDRESS
+;                           AL          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 emulate_first_page      PROC far
-        jc write_first_page
+    jc write_first_page
 
 read_first_page:
-        cmp bx,400h
-        jc read_int_vect_do
-        cmp bx,500h
-        jc read_bios_data_do
+    cmp bx,400h
+    jc read_int_vect_do
+    cmp bx,500h
+    jc read_bios_data_do
 ;
-        mov ax,flat_sel
-        mov ds,ax
-        movzx ebx,bx
-        mov al,[ebx].page0_linear
-        jmp emulate_first_page_done
+    mov ax,flat_sel
+    mov ds,ax
+    movzx ebx,bx
+    mov al,[ebx].page0_linear
+    jmp emulate_first_page_done
 
 read_int_vect_do:
-        mov cx,bx
-        mov ax,bx
-        shr ax,2
-        GetVMInt
-        and cx,3
-        test cx,2
-        jz read_int_offset
+    mov cx,bx
+    mov ax,bx
+    shr ax,2
+    GetVMInt
+    and cx,3
+    test cx,2
+    jz read_int_offset
 
 read_int_seg:
-        mov ax,dx
-        jmp read_int_vect_shift
+    mov ax,dx
+    jmp read_int_vect_shift
 
 read_int_offset:
-        mov ax,bx
+    mov ax,bx
 read_int_vect_shift:
-        and cx,1
-        shl cx,3
-        shr ax,cl
-        jmp emulate_first_page_done
+    and cx,1
+    shl cx,3
+    shr ax,cl
+    jmp emulate_first_page_done
 
 read_bios_data_do:
-        sub bx,400h
-        GetBiosData
-        jmp emulate_first_page_done
+    sub bx,400h
+    GetBiosData
+    jmp emulate_first_page_done
 
 write_first_page:
-        cmp bx,400h
-        jc write_int_vect_do
-        cmp bx,500h
-        jc write_bios_data_do
-        mov cx,flat_sel
-        mov ds,cx
-        movzx ebx,bx
-        mov [ebx].page0_linear,al
-        jmp emulate_first_page_done
+    cmp bx,400h
+    jc write_int_vect_do
+    cmp bx,500h
+    jc write_bios_data_do
+    mov cx,flat_sel
+    mov ds,cx
+    movzx ebx,bx
+    mov [ebx].page0_linear,al
+    jmp emulate_first_page_done
 
 write_int_vect_do:
-        push ax
-        mov cx,bx
-        mov ax,bx
-        shr ax,2
-        GetVMInt
-        pop ax
-        push cx
-        and cx,3
-        test cx,2
-        jz write_int_offset
+    push ax
+    mov cx,bx
+    mov ax,bx
+    shr ax,2
+    GetVMInt
+    pop ax
+    push cx
+    and cx,3
+    test cx,2
+    jz write_int_offset
 write_int_seg:
-        test cx,1
-        jz write_int_seg_low
+    test cx,1
+    jz write_int_seg_low
 write_int_seg_high:
-        mov dh,al
-        jmp write_int_vect_save
+    mov dh,al
+    jmp write_int_vect_save
 write_int_seg_low:
-        mov dl,al
-        jmp write_int_vect_save
+    mov dl,al
+    jmp write_int_vect_save
 write_int_offset:
-        test cx,1
-        jz write_int_offset_low
+    test cx,1
+    jz write_int_offset_low
 write_int_offset_high:
-        mov bh,al
-        jmp write_int_vect_save
+    mov bh,al
+    jmp write_int_vect_save
 write_int_offset_low:
-        mov bl,al
+    mov bl,al
 write_int_vect_save:
-        pop cx
-        mov ax,cx
-        shr ax,2
-        SetVMInt
-        jmp emulate_first_page_done
+    pop cx
+    mov ax,cx
+    shr ax,2
+    SetVMInt
+    jmp emulate_first_page_done
 
 write_bios_data_do:
-        sub bx,400h
-        SetBiosData
+    sub bx,400h
+    SetBiosData
 
 emulate_first_page_done:
-        ret
+    ret
 emulate_first_page      ENDP
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   EMULATE_SECOND_PAGE
+;           NAME:           EMULATE_SECOND_PAGE
 ;
-;               DESCRIPTION:    EMULATE CONTENTS OF SECOND PAGE OF LINEAR ADDRESS SPACE
+;           DESCRIPTION:    EMULATE CONTENTS OF SECOND PAGE OF LINEAR ADDRESS SPACE
 ;
-;               PARAMETERS:             EBX             LINEAR ADDRESS
-;                                               AL              DATA
+;           PARAMETERS:         EBX         LINEAR ADDRESS
+;                           AL          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 emulate_second_page     PROC far
-        jc write_second_page
+    jc write_second_page
 
 read_second_page:
-        mov cx,flat_sel
-        mov ds,cx
-        add ebx,00F00000h
-        mov al,[ebx]
-        ret
+    mov cx,flat_sel
+    mov ds,cx
+    add ebx,00F00000h
+    mov al,[ebx]
+    ret
 
 write_second_page:
-        mov cx,flat_sel
-        mov ds,cx
-        add ebx,00F00000h
-        mov [ebx],al
-        ret
+    mov cx,flat_sel
+    mov ds,cx
+    add ebx,00F00000h
+    mov [ebx],al
+    ret
 emulate_second_page     ENDP
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   init_common
+;           NAME:           init_common
 ;
-;               DESCRIPTION:    Init common module
+;           DESCRIPTION:    Init common module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_common
+    public init_common
 
 init_common     Proc near
-        mov ax,cs
-        mov es,ax
+    mov ax,cs
+    mov es,ax
 ;
-        mov di,OFFSET emulate_first_page
-        mov eax,1000h
-        xor edx,edx
-        SetPageEmulate
+    mov di,OFFSET emulate_first_page
+    mov eax,1000h
+    xor edx,edx
+    SetPageEmulate
 ;
-        mov di,OFFSET emulate_second_page
-        mov eax,20000h
-        mov edx,80000h
+    mov di,OFFSET emulate_second_page
+    mov eax,20000h
+    mov edx,80000h
 ;       SetPageEmulate
 ;
-        mov cx,sys_page_sel
-        mov ds,cx
-        mov edx,page0_linear
-        shr edx,10
-        mov byte ptr [edx],3
-        ret
+    mov cx,sys_page_sel
+    mov ds,cx
+    mov edx,page0_linear
+    shr edx,10
+    mov byte ptr [edx],3
+    ret
 init_common     Endp
 
 code    ENDS
 
-        END
+    END
