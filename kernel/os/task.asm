@@ -857,13 +857,13 @@ proc_init:
     mov di,OFFSET debug_exception_name
     xor cl,cl
     mov ax,debug_exception_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET locked_debug_exception
     mov di,OFFSET locked_debug_exception_name
     xor cl,cl
     mov ax,locked_debug_exception_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET start_timer
     mov di,OFFSET start_timer_name
@@ -1031,7 +1031,7 @@ proc_init:
     mov di,OFFSET debug_break_name
     xor cl,cl
     mov ax,debug_break_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET enter_section
     mov di,OFFSET enter_section_name
@@ -1049,7 +1049,7 @@ proc_init:
     mov di,OFFSET get_debug_thread_sel_name
     xor cl,cl
     mov ax,get_debug_thread_sel_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET create_user_section
     mov di,OFFSET create_user_section_name
@@ -1251,7 +1251,7 @@ WriteWord       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           GET_DEBUG_THREAD_SEL
+;           NAME:           LOCAL_GET_DEBUG_THREAD_SEL
 ;
 ;           DESCRIPTION:    Get currently debugged thread selector
 ;
@@ -1259,9 +1259,7 @@ WriteWord       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_debug_thread_sel_name   DB 'Get Debug Thread Sel', 0
-
-get_debug_thread_sel    PROC far
+local_get_debug_thread_sel    PROC near
     push ds
     push es
     push cx
@@ -1296,6 +1294,24 @@ get_debug_sel_done:
     pop es
     pop ds
     ret
+local_get_debug_thread_sel    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GET_DEBUG_THREAD_SEL
+;
+;           DESCRIPTION:    Get currently debugged thread selector
+;
+;           PARAMETERS:         AX          DEBUG THREAD OR 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_debug_thread_sel_name   DB 'Get Debug Thread Sel', 0
+
+get_debug_thread_sel    PROC far
+    call local_get_debug_thread_sel
+    retf32
 get_debug_thread_sel    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1313,7 +1329,7 @@ get_debug_thread_name   DB 'Get Debug Thread', 0
 
 get_debug_thread    PROC far
     push es
-    call get_debug_thread_sel
+    call local_get_debug_thread_sel
     or ax,ax
     jz get_debug_done
 ;
@@ -1342,7 +1358,7 @@ get_debug_tss_name      DB 'Get Debug TSS',0
 get_debug_tss16 PROC far
     push ds
     push si
-    call get_debug_thread_sel
+    call local_get_debug_thread_sel
     or ax,ax
     jz get_debug_tss_done16
     mov ds,ax
@@ -1359,7 +1375,7 @@ get_debug_tss16 ENDP
 get_debug_tss32 PROC far
     push ds
     push esi
-    call get_debug_thread_sel
+    call local_get_debug_thread_sel
     or ax,ax
     jz get_debug_tss_done32
     mov ds,ax
@@ -1391,7 +1407,7 @@ debug_trace     PROC far
     push ds
     push es
     pushad
-    call get_debug_thread_sel
+    call local_get_debug_thread_sel
     or ax,ax
     jz debug_trace_done
     mov bx,ax
@@ -1502,7 +1518,7 @@ debug_pace      PROC far
     push ds
     push es
     pushad
-    call get_debug_thread_sel
+    call local_get_debug_thread_sel
     or ax,ax
     jz debug_pace_done
     mov bx,ax
@@ -1650,7 +1666,7 @@ debug_go    PROC far
     push ds
     push es
     pushad
-    call get_debug_thread_sel
+    call local_get_debug_thread_sel
     or ax,ax
     jz debug_go_done
     mov bx,ax

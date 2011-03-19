@@ -935,37 +935,25 @@ CrashTss    MACRO
     OsGate crash_tss_nr
                     ENDM
 
-;;;;;;;;;;; Hooks ;;;;;;;;;;;;;;;;
-
-;       ES:DI   Swap callback
-;       AL  Swap level (0 = highest priority, 15 = lowest priority)
-RegisterSwapProc    MACRO
-    OldOsGate register_swap_proc_nr
-                    ENDM
-
-;       IN  EAX     Table name
-;       OUT ES      Table selector
-GetAcpiTable    MACRO
-    OldOsGate get_acpi_table_nr
-                    ENDM
+;;;;;;;;;;; Debugger ;;;;;;;;;;;;;;;;
 
 ;   SS:BP     Exception stack
 DebugException    MACRO
-    OldOsGate debug_exception_nr
+    OsGate debug_exception_nr
                         ENDM
 
 ;   SS:BP     Exception stack
 LockedDebugException    MACRO
-    OldOsGate locked_debug_exception_nr
+    OsGate locked_debug_exception_nr
                         ENDM
 
 DebugBreak      MACRO
-    OldOsGate debug_break_nr
+    OsGate debug_break_nr
                     ENDM
 
 ; OUT AX           Thread ID
 GetDebugThreadSel MACRO
-    OldOsGate get_debug_thread_sel_nr
+    OsGate get_debug_thread_sel_nr
                         ENDM
 
 ;;;;;;; INTERRUPTS & EXCEPTIONS ;;;;;;;;
@@ -1102,6 +1090,18 @@ SetBitness      MACRO
                     ENDM
 
 ;;;;;;;;;;;;; IO ;;;;;;;;;;;;;;;;;;;;
+
+;       ES:DI   Swap callback
+;       AL  Swap level (0 = highest priority, 15 = lowest priority)
+RegisterSwapProc    MACRO
+    OldOsGate register_swap_proc_nr
+                    ENDM
+
+;       IN  EAX     Table name
+;       OUT ES      Table selector
+GetAcpiTable    MACRO
+    OldOsGate get_acpi_table_nr
+                    ENDM
 
 ;       ES:DI       ADDRESS TILL CALLBACK
 ;       DX              PORT NUMMER
