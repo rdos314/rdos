@@ -1978,9 +1978,9 @@ io17 DW OFFSET irq_arr + 23 * SIZE irq_struc
 ;
 ;           description:    Request for a private irq handler (non sharable)
 ;
-;           PARAMETERS:         ds              data for handler
+;           PARAMETERS:     ds              data for handler
 ;                           al              irq nr
-;                           es:di       handler address
+;                           es:edi          handler address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2002,8 +2002,8 @@ request_private_irq_handler     Proc far
     mov si,word ptr cs:[si].irq_offs_table
     EnterSection ds:[si].usage_section
     mov ds:[si].user_data,dx
-    mov word ptr ds:[si].user_handler,di
-    mov word ptr ds:[si].user_handler+2,es
+    mov ds:[si].user_handler,edi
+    mov word ptr ds:[si+4].user_handler,es
 ;
     mov al,bl
     call ds:[si].irq_enable_proc
@@ -2014,7 +2014,7 @@ rpDone:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 request_private_irq_handler     Endp
 
 
@@ -2040,12 +2040,16 @@ shared_irq_loop:
     push bx
     push cx
 ;
-    mov ax,ds:[bx].sh_user_data
-    push cs
-    push OFFSET shared_irq_next
+    xor eax,eax
+    mov ax,cs
+    push eax
+    mov ax,OFFSET shared_irq_next
+    push eax
+    push ds:[bx+4].sh_user_handler
     push ds:[bx].sh_user_handler
+    mov ax,ds:[bx].sh_user_data
     mov ds,ax
-    retf
+    retf32
 
 shared_irq_next:
     pop cx
@@ -2056,7 +2060,7 @@ shared_irq_next:
     loop shared_irq_loop
 
 shared_irq_done:
-    ret
+    retf32
 shared_irq  Endp
 
 
@@ -2067,9 +2071,9 @@ shared_irq  Endp
 ;
 ;           description:    Request for a shared irq handler
 ;
-;           PARAMETERS:         ds              data for handler
+;           PARAMETERS:     ds              data for handler
 ;                           al              irq nr
-;                           es:di       handler address
+;                           es:edi          handler address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2087,7 +2091,7 @@ request_shared_irq_handler      Proc far
     add si,si
     mov si,word ptr cs:[si].irq_offs_table
     mov ax,cs
-    cmp ax,word ptr ds:[si].user_handler+2
+    cmp ax,word ptr ds:[si+4].user_handler
     jne rsih_req
 ;       
     mov ax,word ptr ds:[si].user_handler
@@ -2111,8 +2115,8 @@ rsih_req:
     mov ax,cs
     mov es,ax
     mov al,bl
-    mov di,OFFSET shared_irq
-    RequestPrivateIrqHandler   
+    mov edi,OFFSET shared_irq
+    NewRequestPrivateIrqHandler   
 ;
     pop di
     pop es
@@ -2128,15 +2132,15 @@ rsih_add:
     pop dx
     mov bx,ax
     add bx,OFFSET share_handler
-    mov word ptr ds:[bx].sh_user_handler,di
-    mov word ptr ds:[bx].sh_user_handler+2,es
+    mov ds:[bx].sh_user_handler,edi
+    mov word ptr ds:[bx+4].sh_user_handler,es
     mov ds:[bx].sh_user_data,dx
     inc cx
     mov ds:share_count,cx
 ;
     popa
     pop ds
-    ret
+    retf32
 request_shared_irq_handler      Endp
 
 
@@ -2209,7 +2213,7 @@ release_private_irq_handler     Proc far
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 release_private_irq_handler     Endp
 
 
@@ -2366,11 +2370,11 @@ init_trap_vectors       PROC near
     xor esi,esi
     mov cx,32
     mov bx,OFFSET irq_arr
-    xor eax,eax
+
 init_irq_loop:
     mov ds:[bx].user_handler,0
+    mov ds:[bx+4].user_handler,0
     mov ds:[bx].user_data,0
-    add ax,4
     InitSection ds:[bx].usage_section
 ;
     mov word ptr ds:[bx].irq_enable_proc,OFFSET dummy_enable

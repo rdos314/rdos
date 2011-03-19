@@ -1027,8 +1027,8 @@ init_check_read:
     mov al,12
     mov bx,cs
     mov es,bx
-    mov di,OFFSET keyb_int
-    RequestPrivateIrqHandler
+    mov edi,OFFSET keyb_int
+    NewRequestPrivateIrqHandler
     
 init_enable_aux_loop:
     in al,64h
@@ -1108,7 +1108,7 @@ init_disable_do:
     out 60h,al
 ;
     mov al,12
-    ReleasePrivateIrqHandler
+    NewReleasePrivateIrqHandler
 
 init_mouse_done:
     pop di
@@ -1334,7 +1334,7 @@ keyb_int_numpad_handled:
     ProcessKeyScan
 
 keyb_int_done:
-    ret
+    retf32
 keyb_int    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1372,8 +1372,8 @@ keyb_started:
     mov al,1
     mov bx,cs
     mov es,bx
-    mov di,OFFSET keyb_int
-    RequestPrivateIrqHandler
+    mov edi,OFFSET keyb_int
+    NewRequestPrivateIrqHandler
 ;
     popa
     pop es

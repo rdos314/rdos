@@ -28,7 +28,7 @@
 irq_struc	STRUC
 
 user_data		    DW ?
-user_handler	    DD ?
+user_handler	    DD ?,?
 
 usage_section	    section_typ <>
 
@@ -56,7 +56,7 @@ irq_sys_seg	ENDS
 
 share_handle_struc  STRUC
 
-sh_user_handler DD ?
+sh_user_handler DD ?,?
 sh_user_data    DW ?
 
 share_handle_struc  ENDS

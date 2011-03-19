@@ -393,7 +393,7 @@ com_int_inactive:
     Signal
 
 com_int_done:   
-    ret
+    retf32
 com_int Endp
 
 
@@ -1319,7 +1319,7 @@ RequestIRQs Proc near
 ;
     mov ax,cs
     mov es,ax
-    mov di,OFFSET com_int
+    mov edi,OFFSET com_int
 ;    
     mov cx,ds:sd_ports
     or cx,cx
@@ -1335,7 +1335,7 @@ riLoop:
     push ds
     mov ds,dx
     mov al,ds:pds_irq
-    RequestSharedIrqHandler
+    NewRequestSharedIrqHandler
     pop ds
 
 riNext:

@@ -155,17 +155,21 @@ msr_irq&nr:
     mov ax,irq_sys_sel
     mov es,ax
     mov bx,OFFSET irq_arr + nr * SIZE irq_struc
-    mov eax,es:[bx].user_handler
-    or eax,eax
+    mov ax,word ptr es:[bx+4].user_handler
+    or ax,ax
     jz msr_irq_default_error&nr
 ;
     mov ds,es:[bx].user_data
-    push cs
-    push OFFSET msr_irq_handle_done&nr
+    xor eax,eax
+    mov ax,cs
+    push eax
+    mov ax,OFFSET msr_irq_handle_done&nr
+    push eax
+    push es:[bx+4].user_handler
     push es:[bx].user_handler
     xor ax,ax
     mov es,ax
-    retf
+    retf32
 
 msr_irq_default_error&nr:
 ;
@@ -198,17 +202,21 @@ mem_irq&nr:
     mov ax,irq_sys_sel
     mov es,ax
     mov bx,OFFSET irq_arr + nr * SIZE irq_struc
-    mov eax,es:[bx].user_handler
-    or eax,eax
+    mov ax,word ptr es:[bx+4].user_handler
+    or ax,ax
     jz mem_irq_default_error&nr
 ;
     mov ds,es:[bx].user_data
-    push cs
-    push OFFSET mem_irq_handle_done&nr
+    xor eax,eax
+    mov ax,cs
+    push eax
+    mov ax,OFFSET mem_irq_handle_done&nr
+    push eax
+    push es:[bx+4].user_handler
     push es:[bx].user_handler
     xor ax,ax
     mov es,ax
-    retf
+    retf32
 
 mem_irq_default_error&nr:
 ;

@@ -114,7 +114,7 @@ ide_int Proc far
     mov ds:IntFlag,1
     mov bx,ds:IdeThread
     Signal
-    ret
+    retf32
 ide_int Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -140,7 +140,7 @@ ide_pci_int_base_ok:
     mov ds:IntFlag,1
     mov bx,ds:IdeThread
     Signal
-    ret
+    retf32
 ide_pci_int Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2648,8 +2648,8 @@ CheckPciBar    Proc near
 ;    
     mov bx,cs
     mov es,bx
-    mov di,OFFSET ide_pci_int
-    RequestSharedIrqHandler
+    mov edi,OFFSET ide_pci_int
+    NewRequestSharedIrqHandler
 ;
     pop bx
     pop es
@@ -2803,8 +2803,8 @@ init_ide_primary:
     mov ds,bx
     mov bx,cs
     mov es,bx
-    mov di,OFFSET ide_int
-    RequestPrivateIrqHandler
+    mov edi,OFFSET ide_int
+    NewRequestPrivateIrqHandler
 
 init_ide_second:
     mov dx,177h
@@ -2833,8 +2833,8 @@ init_ide_second:
     mov ds,bx
     mov bx,cs
     mov es,bx
-    mov di,OFFSET ide_int
-    RequestPrivateIrqHandler
+    mov edi,OFFSET ide_int
+    NewRequestPrivateIrqHandler
 
 init_ide_done:
     mov ax,cs

@@ -52,6 +52,13 @@ typedef void __far (__rdos_hook_state_callback)(int thread, char *buf);
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_irq_callback)();
+
+#pragma aux __rdos_irq_callback "*" \
+                    parm caller \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 // structures
 
 struct TKernelSection
@@ -192,6 +199,10 @@ void RdosHookState(__rdos_hook_state_callback *callb_proc);
 
 void RdosSendEoi(int irq);
 int RdosIsIrqFree(int irq);
+
+void RdosRequestPrivateIrqHandler(int irq, __rdos_irq_callback *irq_proc);
+void RdosReleasePrivateIrqHandler(int irq);
+void RdosRequestSharedIrqHandler(int irq, __rdos_irq_callback *irq_proc);
  
 /* 32-bit compact memory model (device-drivers) */
 
@@ -676,6 +687,18 @@ int RdosIsIrqFree(int irq);
     CarryToBool \    
     parm [eax] \
     value [eax];
+
+#pragma aux RdosRequestPrivateIrqHandler = \
+    OsGate_request_private_irq_handler \
+    parm [eax] [es edi];
+
+#pragma aux RdosReleasePrivateIrqHandler = \
+    OsGate_release_private_irq_handler \
+    parm [eax];
+
+#pragma aux RdosRequestSharedIrqHandler = \
+    OsGate_request_shared_irq_handler \
+    parm [eax] [es edi];
 
 #ifdef __cplusplus
 }

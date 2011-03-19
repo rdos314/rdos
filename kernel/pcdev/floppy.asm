@@ -138,7 +138,7 @@ floppy_int      Proc far
     mov bx,ds:FloppyThread
     Signal
 floppy_int_done:
-    ret
+    retf32
 floppy_int      Endp
 
 
@@ -2107,8 +2107,8 @@ open_floppy_started:
     mov ds,bx
     mov bx,cs
     mov es,bx
-    mov di,OFFSET floppy_int
-    RequestPrivateIrqHandler
+    mov edi,OFFSET floppy_int
+    NewRequestPrivateIrqHandler
     clc
 
 init_floppy_done:

@@ -1134,21 +1134,21 @@ DisableAllIrq   MACRO
 
 ;       AL              IRQ NR
 ;       DS              DATA PASSED TO HANDLER
-;       ES:DI       HANDLER ADDRESS
+;       ES:EDI       HANDLER ADDRESS
 RequestPrivateIrqHandler    MACRO
-    OldOsGate request_private_irq_handler_nr
+    OsGate request_private_irq_handler_nr
                     ENDM
 
 ;       AL              IRQ NR
 ReleasePrivateIrqHandler    MACRO
-    OldOsGate release_private_irq_handler_nr
+    OsGate release_private_irq_handler_nr
                     ENDM
 
 ;       AL              IRQ NR
 ;       DS              DATA PASSED TO HANDLER
-;       ES:DI       HANDLER ADDRESS
+;       ES:EDI       HANDLER ADDRESS
 RequestSharedIrqHandler MACRO
-    OldOsGate request_shared_irq_handler_nr
+    OsGate request_shared_irq_handler_nr
                     ENDM
 
 SetupIrqDetect  MACRO

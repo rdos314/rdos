@@ -32,13 +32,13 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\pcdev\pci.inc
 
-VIA_PCM_STATUS              = 0
-VIA_PCM_CONTROL             = 1
-VIA_PCM_TYPE                = 2
-VIA_PCM_TABLE_ADDR          = 4
-VIA_PCM_BLOCK_COUNT         = 0Ch
+VIA_PCM_STATUS          = 0
+VIA_PCM_CONTROL         = 1
+VIA_PCM_TYPE        = 2
+VIA_PCM_TABLE_ADDR      = 4
+VIA_PCM_BLOCK_COUNT     = 0Ch
 
-VIA_BASE0_AC97_CTRL         = 80h
+VIA_BASE0_AC97_CTRL     = 80h
 VIA_BASE0_SGD_STATUS_SHADOW = 84h
 VIA_BASE0_GPI_INT_ENABLE    = 8Ch
 
@@ -46,8 +46,8 @@ audio_channel_struc STRUC
 
 AcStatusIo      DW ?
 AcControlIo     DW ?
-AcTypeIo        DW ?
-AcSgdIo         DW ?
+AcTypeIo    DW ?
+AcSgdIo     DW ?
 AcSgdPhys       DD ?
 AcSgd1Phys      DD ?
 AcSgd2Phys      DD ?
@@ -55,7 +55,7 @@ AcSgdLinear     DD ?
 AcSgd1Linear    DD ?
 AcSgd2Linear    DD ?
 AcCurrSgd       DD ?
-AcNotify        DW ?
+AcNotify    DW ?
 AcIrqStatus     DB ?
 
 audio_channel_struc ENDS
@@ -64,40 +64,40 @@ data    SEGMENT byte public 'DATA'
 
 IoBase      DW ?
 
-Ac0         audio_channel_struc <>
-Ac1         audio_channel_struc <>
-Ac2         audio_channel_struc <>
+Ac0     audio_channel_struc <>
+Ac1     audio_channel_struc <>
+Ac2     audio_channel_struc <>
 
 data    ENDS
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AudioInt
+;           NAME:           AudioInt
 ;
-;               DESCRIPTION:    Audio controller interrupt
+;           DESCRIPTION:    Audio controller interrupt
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AudioInt        Proc far
+AudioInt    Proc far
 
 aiLoop:
-        mov dx,ds:IoBase
-        add dx,VIA_BASE0_SGD_STATUS_SHADOW
-        in eax,dx
-        and ax,777h
-        jz aiDone
+    mov dx,ds:IoBase
+    add dx,VIA_BASE0_SGD_STATUS_SHADOW
+    in eax,dx
+    and ax,777h
+    jz aiDone
 ;
     test ax,111h
     jz aiNot0
@@ -131,7 +131,7 @@ aiNot0:
 aiNot1:
     test ax,444h
     jz aiDone
-;        
+;    
     mov dx,ds:Ac2.AcStatusIo
     in al,dx
     and al,7
@@ -144,20 +144,20 @@ aiNot1:
     jmp aiLoop
 
 aiDone:
-        ret
-AudioInt        Endp
+    retf32
+AudioInt    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadCodec
+;           NAME:           ReadCodec
 ;
-;               DESCRIPTION:    Read CODEC register
+;           DESCRIPTION:    Read CODEC register
 ;
 ;       PARAMETERS:     BX      Register
 ;
-;               RETURNS:                AX      Value
+;           RETURNS:        AX      Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -172,7 +172,7 @@ read_codec      Proc far
     mov ds,dx
     mov cx,100
 
-rcCheckBusy:        
+rcCheckBusy:    
     mov dx,ds:IoBase
     add dx,VIA_BASE0_AC97_CTRL + 3
     in al,dx
@@ -199,7 +199,7 @@ rcNotBusy:
     WaitMicroSec
     mov cx,100
 
-rcWaitValid:        
+rcWaitValid:    
     mov dx,ds:IoBase
     add dx,VIA_BASE0_AC97_CTRL + 3
     in al,dx
@@ -226,7 +226,7 @@ rcValidOk:
 rcDone:
     pop dx
     pop cx
-    pop ds        
+    pop ds    
     ret
 read_codec  Endp
 
@@ -234,12 +234,12 @@ read_codec  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteCodec
+;           NAME:           WriteCodec
 ;
-;               DESCRIPTION:    Write CODEC register
+;           DESCRIPTION:    Write CODEC register
 ;
 ;       PARAMETERS:     BX      Register
-;                                       AX      Value
+;                       AX      Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -256,7 +256,7 @@ write_codec     Proc far
     mov ds,dx
     mov cx,100
 
-wcCheckBusy:        
+wcCheckBusy:    
     mov dx,ds:IoBase
     add dx,VIA_BASE0_AC97_CTRL + 3
     in al,dx
@@ -284,7 +284,7 @@ wcNotBusy:
     WaitMicroSec
     mov cx,100
 
-wcWaitValid:        
+wcWaitValid:    
     mov dx,ds:IoBase
     add dx,VIA_BASE0_AC97_CTRL + 3
     in al,dx
@@ -305,7 +305,7 @@ wcDone:
     pop si
     pop dx
     pop cx
-    pop ds        
+    pop ds    
     ret
 write_codec  Endp
 
@@ -313,9 +313,9 @@ write_codec  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               CreateSgdTable
+;           NAME:           CreateSgdTable
 ;
-;               DESCRIPTION:    Create a Sgd table
+;           DESCRIPTION:    Create a Sgd table
 ;
 ;       PARAMETERS:     DS:BX       Ac entry
 ;
@@ -328,9 +328,9 @@ CreateSgdTable  Proc near
     push edx
     push edi
 ;    
-        mov ecx,20h
-        AllocateMultiplePhysical
-        jc cstDone
+    mov ecx,20h
+    AllocateMultiplePhysical
+    jc cstDone
 ;
     mov ds:[bx].AcSgd1Phys,eax
     add eax,10000h
@@ -345,27 +345,27 @@ CreateSgdTable  Proc near
     AllocateBigLinear
     mov ds:[bx].AcSgd2Linear,edx
 ;
-        mov eax,ds:[bx].AcSgd1Phys
-        mov edx,ds:[bx].AcSgd1Linear
-        or al,7
+    mov eax,ds:[bx].AcSgd1Phys
+    mov edx,ds:[bx].AcSgd1Linear
+    or al,7
     mov cx,10h
 
 cstSgd1Loop:
-        SetPhysicalPage
-        add eax,1000h
-        add edx,1000h
-        loop cstSgd1Loop
+    SetPhysicalPage
+    add eax,1000h
+    add edx,1000h
+    loop cstSgd1Loop
 ;
-        mov eax,ds:[bx].AcSgd2Phys
-        mov edx,ds:[bx].AcSgd2Linear
-        or al,7
+    mov eax,ds:[bx].AcSgd2Phys
+    mov edx,ds:[bx].AcSgd2Linear
+    or al,7
     mov cx,10h
 
 cstSgd2Loop:
-        SetPhysicalPage
-        add eax,1000h
-        add edx,1000h
-        loop cstSgd2Loop
+    SetPhysicalPage
+    add eax,1000h
+    add edx,1000h
+    loop cstSgd2Loop
 ;
     AllocatePhysical
     mov ds:[bx].AcSgdPhys,eax    
@@ -374,10 +374,10 @@ cstSgd2Loop:
     AllocateBigLinear
     mov ds:[bx].AcSgdLinear,edx
 ;       
-        mov eax,ds:[bx].AcSgdPhys
-        mov edx,ds:[bx].AcSgdLinear
-        or al,7
-        SetPhysicalPage
+    mov eax,ds:[bx].AcSgdPhys
+    mov edx,ds:[bx].AcSgdLinear
+    or al,7
+    SetPhysicalPage
 ;
     mov ax,flat_sel
     mov es,ax
@@ -406,9 +406,9 @@ CreateSgdTable  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               FreeSgdTable
+;           NAME:           FreeSgdTable
 ;
-;               DESCRIPTION:    Free SGD table
+;           DESCRIPTION:    Free SGD table
 ;
 ;       PARAMETERS:     DS:BX       Ac entry
 ;
@@ -450,9 +450,9 @@ FreeSgdTable  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OpenAudioOut
+;           NAME:           OpenAudioOut
 ;
-;               DESCRIPTION:    Open audio out
+;           DESCRIPTION:    Open audio out
 ;
 ;       PARAMETERS:     AX      Sample rate
 ;
@@ -492,9 +492,9 @@ open_audio_out  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CloseAudioOut
+;           NAME:           CloseAudioOut
 ;
-;               DESCRIPTION:    Close audio out
+;           DESCRIPTION:    Close audio out
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -527,13 +527,13 @@ close_audio_out  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SendAudioOut
+;           NAME:           SendAudioOut
 ;
-;               DESCRIPTION:    Send audio out
+;           DESCRIPTION:    Send audio out
 ;
 ;       PARAMETERS:     DS      Left channel 32-bit sample data
-;                       ES      Right channel
-;                       CX      Number of samples
+;               ES      Right channel
+;               CX      Number of samples
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -594,7 +594,7 @@ saoPrd1:
 saoPrdOk:
     GetThread
     mov ds:Ac0.AcNotify,ax
-;        
+;    
     mov dx,ds:Ac0.AcStatusIo
     in al,dx
     test al,80h
@@ -611,8 +611,8 @@ saoRunning:
     jz saoRunning
 ;
     mov ds:Ac0.AcIrqStatus,0
-            
-saoDone:                      
+        
+saoDone:              
     popad
     pop gs
     pop fs
@@ -625,13 +625,13 @@ send_audio_out  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Init_dev
+;           NAME:           Init_dev
 ;
-;               DESCRIPTION:    inits adpater
+;           DESCRIPTION:    inits adpater
 ;
 ;       PARAMETERS:     
 ;
-;               RETURNS:                
+;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -642,41 +642,41 @@ pci01   DW 0,     0
 detect_name     DB 'VT82C-AC97',0
 
 detect_thread   proc far
-        mov ax,SEG data
-        mov ds,ax
-        mov si,OFFSET PciVendorTab
-        xor ax,ax
+    mov ax,SEG data
+    mov ds,ax
+    mov si,OFFSET PciVendorTab
+    xor ax,ax
 init_pci_loop:
-        mov dx,cs:[si]
-        mov cx,cs:[si+2]
-        or dx,dx
-        stc
-        jz init_pci_done
+    mov dx,cs:[si]
+    mov cx,cs:[si+2]
+    or dx,dx
+    stc
+    jz init_pci_done
 ;
-        FindPciDevice
-        jnc init_pci_found
+    FindPciDevice
+    jnc init_pci_found
 ;
-        add si,4
-        jmp init_pci_loop
+    add si,4
+    jmp init_pci_loop
 
 init_pci_found:
-        mov cl,PCI_card_ExCa_base
-        ReadPciDword
-        mov dx,ax
-        and dx,0FFE0h
-        mov ds:IoBase,dx
+    mov cl,PCI_card_ExCa_base
+    ReadPciDword
+    mov dx,ax
+    and dx,0FFE0h
+    mov ds:IoBase,dx
 ;
     mov cl,41h
     ReadPciByte
     mov al,0CCh
     WritePciByte
 ;    
-        mov cl,PCI_interrupt_line
-        ReadPciByte
-        mov bx,cs
-        mov es,bx
-        mov di,OFFSET AudioInt
-        RequestSharedIrqHandler
+    mov cl,PCI_interrupt_line
+    ReadPciByte
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET AudioInt
+    NewRequestSharedIrqHandler
 ;
     mov dx,ds:IoBase
     mov cx,3
@@ -708,80 +708,80 @@ init_ch_loop:
     loop init_ch_loop
 
 init_pci_done:
-        ret
+    ret
 detect_thread   endp
-        
-init_dev        Proc far
-        push ds
-        push es
-        pusha
+    
+init_dev    Proc far
+    push ds
+    push es
+    pusha
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov di,OFFSET detect_name
-        mov si,OFFSET detect_thread
-        mov ax,4
-        mov cx,100h
-        CreateThread
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET detect_name
+    mov si,OFFSET detect_thread
+    mov ax,4
+    mov cx,100h
+    CreateThread
 ;
-        popa
-        pop es
-        pop ds
-        retf32
-init_dev        Endp
+    popa
+    pop es
+    pop ds
+    retf32
+init_dev    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   INIT
+;           NAME:           INIT
 ;
-;               DESCRIPTION:    Init AC97 on chipset
+;           DESCRIPTION:    Init AC97 on chipset
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov edi,OFFSET init_dev
-        HookInitTasking
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET init_dev
+    HookInitTasking
 ;
-        mov esi,OFFSET read_codec
-        mov edi,OFFSET read_codec_name
-        xor cl,cl
-        mov ax,read_codec_nr
-        RegisterOldOsGate
+    mov esi,OFFSET read_codec
+    mov edi,OFFSET read_codec_name
+    xor cl,cl
+    mov ax,read_codec_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET write_codec
-        mov edi,OFFSET write_codec_name
-        xor cl,cl
-        mov ax,write_codec_nr
-        RegisterOldOsGate
+    mov esi,OFFSET write_codec
+    mov edi,OFFSET write_codec_name
+    xor cl,cl
+    mov ax,write_codec_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET open_audio_out
-        mov edi,OFFSET open_audio_out_name
-        xor cl,cl
-        mov ax,open_audio_out_nr
-        RegisterOldOsGate
+    mov esi,OFFSET open_audio_out
+    mov edi,OFFSET open_audio_out_name
+    xor cl,cl
+    mov ax,open_audio_out_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET close_audio_out
-        mov edi,OFFSET close_audio_out_name
-        xor cl,cl
-        mov ax,close_audio_out_nr
-        RegisterOldOsGate
+    mov esi,OFFSET close_audio_out
+    mov edi,OFFSET close_audio_out_name
+    xor cl,cl
+    mov ax,close_audio_out_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET send_audio_out
-        mov edi,OFFSET send_audio_out_name
-        xor cl,cl
-        mov ax,send_audio_out_nr
-        RegisterOldOsGate
-        clc
-        ret
+    mov esi,OFFSET send_audio_out
+    mov edi,OFFSET send_audio_out_name
+    xor cl,cl
+    mov ax,send_audio_out_nr
+    RegisterOldOsGate
+    clc
+    ret
 init    ENDP
 
 code    ENDS
 
-        END init
+    END init
