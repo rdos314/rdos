@@ -1043,7 +1043,7 @@ get_vm_key      PROC far
     mov ds,bx
     mov bx,ds:key_int_offs
     mov dx,ds:key_int_seg
-    ret
+    retf32
 get_vm_key      ENDP
 
 set_vm_key      PROC far
@@ -1054,7 +1054,7 @@ set_vm_key      PROC far
     mov ds:key_int_offs,bx
     mov ds:key_int_seg,dx
     call check_key_state
-    ret
+    retf32
 set_vm_key      ENDP
 
     
@@ -1281,11 +1281,11 @@ init_keyboard   PROC near
     mov di,OFFSET init_local_sel
     HookEnableFocus
 ;
-    mov di,OFFSET get_vm_key
+    mov edi,OFFSET get_vm_key
     mov al,9
     HookGetVMInt
 ;
-    mov di,OFFSET set_vm_key
+    mov edi,OFFSET set_vm_key
     mov al,9
     HookSetVMInt
 ;

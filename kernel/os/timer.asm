@@ -413,7 +413,7 @@ get_vm_timer    PROC far
     mov ds,bx
     mov bx,ds:timer_int_offs
     mov dx,ds:timer_int_seg
-    ret
+    retf32
 get_vm_timer    ENDP
 
 set_vm_timer    PROC far
@@ -424,7 +424,7 @@ set_vm_timer    PROC far
     mov ds:timer_int_offs,bx
     mov ds:timer_int_seg,dx
     call check_timer_state
-    ret
+    retf32
 set_vm_timer    ENDP
 
 get_vm_timer_tick       PROC far
@@ -432,7 +432,7 @@ get_vm_timer_tick       PROC far
     mov ds,bx
     mov bx,ds:timer_tics_offs
     mov dx,ds:timer_tics_seg
-    ret
+    retf32
 get_vm_timer_tick       ENDP
 
 set_vm_timer_tick       PROC far
@@ -443,7 +443,7 @@ set_vm_timer_tick       PROC far
     mov ds:timer_tics_offs,bx
     mov ds:timer_tics_seg,dx
     call check_timer_state
-    ret
+    retf32
 set_vm_timer_tick       ENDP
 
 timer16_pr:
@@ -585,7 +585,7 @@ get_pm_timer    PROC far
     mov ds,bx
     mov bx,ds:timer_int16_offs
     mov dx,ds:timer_int16_sel
-    ret
+    retf32
 get_pm_timer    ENDP
 
 set_pm_timer    PROC far
@@ -596,7 +596,7 @@ set_pm_timer    PROC far
     mov ds:timer_int16_offs,bx
     mov ds:timer_int16_sel,dx
     call check_timer16_state
-    ret
+    retf32
 set_pm_timer    ENDP
 
 get_pm_timer_tick       PROC far
@@ -604,7 +604,7 @@ get_pm_timer_tick       PROC far
     mov ds,bx
     mov di,ds:timer_tics16_offs
     mov es,ds:timer_tics16_sel
-    ret
+    retf32
 get_pm_timer_tick       ENDP
 
 set_pm_timer_tick       PROC far
@@ -615,7 +615,7 @@ set_pm_timer_tick       PROC far
     mov ds:timer_tics16_offs,di
     mov ds:timer_tics16_sel,es
     call check_timer16_state
-    ret
+    retf32
 set_pm_timer_tick       ENDP
 
 init_timer_process      PROC far
@@ -690,35 +690,35 @@ init_timer      PROC near
     mov dx,61h
     HookOut
 ;
-    mov di,OFFSET get_vm_timer
+    mov edi,OFFSET get_vm_timer
     mov al,8
     HookGetVMInt
 ;
-    mov di,OFFSET set_vm_timer
+    mov edi,OFFSET set_vm_timer
     mov al,8
     HookSetVMInt
 ;
-    mov di,OFFSET get_vm_timer_tick
+    mov edi,OFFSET get_vm_timer_tick
     mov al,1Ch
     HookGetVMInt
 ;
-    mov di,OFFSET set_vm_timer_tick
+    mov edi,OFFSET set_vm_timer_tick
     mov al,1Ch
     HookSetVMInt
 ;
-    mov di,OFFSET get_pm_timer
+    mov edi,OFFSET get_pm_timer
     mov al,8
     HookGetProt16Int
 ;
-    mov di,OFFSET set_pm_timer
+    mov edi,OFFSET set_pm_timer
     mov al,8
     HookSetProt16Int
 ;
-    mov di,OFFSET get_pm_timer_tick
+    mov edi,OFFSET get_pm_timer_tick
     mov al,1Ch
     HookGetProt16Int
 ;
-    mov di,OFFSET set_pm_timer_tick
+    mov edi,OFFSET set_pm_timer_tick
     mov al,1Ch
     HookSetProt16Int
 ;

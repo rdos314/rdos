@@ -129,13 +129,13 @@ init_int16      PROC near
     mov di,OFFSET hook_get_pm_int_name
     xor cl,cl
     mov ax,hook_get_pm16_int_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_set_pm_int
     mov di,OFFSET hook_set_pm_int_name
     xor cl,cl
     mov ax,hook_set_pm16_int_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET get_exception_vector
     mov di,OFFSET get_exception_vector_name
@@ -203,22 +203,22 @@ init_int16      PROC near
     mov ds,ax
     mov cx,100h
     mov bx,OFFSET get_pm16_int_handlers
-    mov ax,OFFSET default_get_pm_int
+    mov eax,OFFSET default_get_pm_int
 init_get_pm_int_loop:
-    mov [bx],ax
-    mov [bx+2],cs
-    add bx,4
+    mov [bx],eax
+    mov [bx+4],cs
+    add bx,8
     loop init_get_pm_int_loop
 ;
     mov ax,int_data_sel
     mov ds,ax
     mov cx,100h
     mov bx,OFFSET set_pm16_int_handlers
-    mov ax,OFFSET default_set_pm_int
+    mov eax,OFFSET default_set_pm_int
 init_set_pm_int_loop:
-    mov [bx],ax
-    mov [bx+2],cs
-    add bx,4
+    mov [bx],eax
+    mov [bx+4],cs
+    add bx,8
     loop init_set_pm_int_loop
 ;
     mov cx,100h
@@ -464,7 +464,7 @@ default_get_pm_int      PROC far
     mov es,word ptr ds:[bx+4].app_pm_int
     pop bx
     pop ds
-    ret
+    retf32
 default_get_pm_int      ENDP
 
 
@@ -494,7 +494,7 @@ default_set_pm_int      PROC far
     mov word ptr ds:[bx+4].app_pm_int,es
     pop bx
     pop ds
-    ret
+    retf32
 default_set_pm_int      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -518,8 +518,8 @@ get_pm_int      PROC far
     mov si,int_data_sel
     mov ds,si
     movzx si,al
-    shl si,2
-    call dword ptr ds:[si].get_pm16_int_handlers
+    shl si,3
+    call fword ptr ds:[si].get_pm16_int_handlers
     pop si
     pop ds
     ret
@@ -545,8 +545,8 @@ set_pm_int      PROC far
     mov si,int_data_sel
     mov ds,si
     movzx si,al
-    shl si,2
-    call dword ptr ds:[si].set_pm16_int_handlers
+    shl si,3
+    call fword ptr ds:[si].set_pm16_int_handlers
     pop si
     pop ds
     ret
@@ -559,7 +559,7 @@ set_pm_int      ENDP
 ;
 ;           DESCRIPTION:    Add GetPmInt hook
 ;
-;           PARAMETERS:         ES:DI       Callback
+;           PARAMETERS:     ES:EDI       Callback
 ;                           AL              Int #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -572,12 +572,12 @@ hook_get_pm_int PROC far
     mov si,int_data_sel
     mov ds,si
     movzx si,al
-    shl si,2
-    mov ds:[si].get_pm16_int_handlers,di
-    mov ds:[si+2].get_pm16_int_handlers,es
+    shl si,3
+    mov ds:[si].get_pm16_int_handlers,edi
+    mov ds:[si+4].get_pm16_int_handlers,es
     pop si
     pop ds
-    ret
+    retf32
 hook_get_pm_int ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -587,7 +587,7 @@ hook_get_pm_int ENDP
 ;
 ;           DESCRIPTION:    Add SetPmInt hook
 ;
-;           PARAMETERS:         ES:DI       Callback
+;           PARAMETERS:     ES:EDI       Callback
 ;                           AL              Int #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -600,12 +600,12 @@ hook_set_pm_int PROC far
     mov si,int_data_sel
     mov ds,si
     movzx si,al
-    shl si,2
-    mov ds:[si].set_pm16_int_handlers,di
-    mov ds:[si+2].set_pm16_int_handlers,es
+    shl si,3
+    mov ds:[si].set_pm16_int_handlers,edi
+    mov ds:[si+4].set_pm16_int_handlers,es
     pop si
     pop ds
-    ret
+    retf32
 hook_set_pm_int ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -226,22 +226,22 @@ init_pm32_handlers_loop:
     mov ds,ax
     mov cx,100h
     mov bx,OFFSET get_vm_int_handlers
-    mov ax,OFFSET default_get_vm_int
+    mov eax,OFFSET default_get_vm_int
 init_get_vm_int_loop:
-    mov [bx],ax
-    mov [bx+2],cs
-    add bx,4
+    mov [bx],eax
+    mov [bx+4],cs
+    add bx,8
     loop init_get_vm_int_loop
 ;
     mov ax,int_data_sel
     mov ds,ax
     mov cx,100h
     mov bx,OFFSET set_vm_int_handlers
-    mov ax,OFFSET default_set_vm_int
+    mov eax,OFFSET default_set_vm_int
 init_set_vm_int_loop:
-    mov [bx],ax
-    mov [bx+2],cs
-    add bx,4
+    mov [bx],eax
+    mov [bx+4],cs
+    add bx,8
     loop init_set_vm_int_loop
 ;
     mov cx,20h
@@ -353,13 +353,13 @@ init_exc_loop:
     mov di,OFFSET hook_get_vm_int_name
     xor cl,cl
     mov ax,hook_get_vm_int_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_set_vm_int
     mov di,OFFSET hook_set_vm_int_name
     xor cl,cl
     mov ax,hook_set_vm_int_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET reflect_exception
     mov di,OFFSET reflect_exception_name
@@ -2388,7 +2388,7 @@ default_get_vm_int      PROC far
     shl bx,2
     mov dx,[bx+2]
     mov bx,[bx]
-    ret
+    retf32
 default_get_vm_int      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2415,7 +2415,7 @@ default_set_vm_int      PROC far
     mov [si+2],dx
     pop si
     pop ax
-    ret
+    retf32
 default_set_vm_int      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2439,8 +2439,8 @@ get_vm_int      PROC far
     mov si,int_data_sel
     mov ds,si
     movzx si,al
-    shl si,2
-    call dword ptr ds:[si].get_vm_int_handlers
+    shl si,3
+    call fword ptr ds:[si].get_vm_int_handlers
     pop si
     pop ds
     retf32
@@ -2466,8 +2466,8 @@ set_vm_int      PROC far
     mov si,int_data_sel
     mov ds,si
     movzx si,al
-    shl si,2
-    call dword ptr ds:[si].set_vm_int_handlers
+    shl si,3
+    call fword ptr ds:[si].set_vm_int_handlers
     pop si
     pop ds
     retf32
@@ -2480,7 +2480,7 @@ set_vm_int      ENDP
 ;
 ;           DESCRIPTION:    Add GetVmInt hook
 ;
-;           PARAMETERS:         ES:DI       Callback
+;           PARAMETERS:     ES:EDI       Callback
 ;                           AL              Int #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2493,12 +2493,12 @@ hook_get_vm_int PROC far
     mov si,int_data_sel
     mov ds,si
     movzx si,al
-    shl si,2
-    mov ds:[si].get_vm_int_handlers,di
-    mov ds:[si+2].get_vm_int_handlers,es
+    shl si,3
+    mov ds:[si].get_vm_int_handlers,edi
+    mov ds:[si+4].get_vm_int_handlers,es
     pop si
     pop ds
-    ret
+    retf32
 hook_get_vm_int ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2508,7 +2508,7 @@ hook_get_vm_int ENDP
 ;
 ;           DESCRIPTION:    Add SetVmInt hook
 ;
-;           PARAMETERS:         ES:DI       Callback
+;           PARAMETERS:     ES:EDI       Callback
 ;                           AL              Int #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2521,12 +2521,12 @@ hook_set_vm_int PROC far
     mov si,int_data_sel
     mov ds,si
     movzx si,al
-    shl si,2
-    mov ds:[si].set_vm_int_handlers,di
-    mov ds:[si+2].set_vm_int_handlers,es
+    shl si,3
+    mov ds:[si].set_vm_int_handlers,edi
+    mov ds:[si+4].set_vm_int_handlers,es
     pop si
     pop ds
-    ret
+    retf32
 hook_set_vm_int ENDP
 
 code    ENDS

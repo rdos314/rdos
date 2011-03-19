@@ -1047,40 +1047,40 @@ HookException   MACRO
     OsGate hook_exception_nr
                     ENDM
 
-;       ES:DI       HANDLER ADDRESS
+;       ES:EDI       HANDLER ADDRESS
 ;       AL              INT NUMMER
 HookGetVMInt    MACRO
-    OldOsGate hook_get_vm_int_nr
+    OsGate hook_get_vm_int_nr
                     ENDM
 
-;       ES:DI       HANDLER ADDRESS
+;       ES:EDI       HANDLER ADDRESS
 ;       AL              INT NUMMER
 HookSetVMInt    MACRO
-    OldOsGate hook_set_vm_int_nr
+    OsGate hook_set_vm_int_nr
                     ENDM
 
-;       ES:DI       HANDLER ADDRESS
+;       ES:EDI       HANDLER ADDRESS
 ;       AL              INT NUMMER
 HookGetProt16Int    MACRO
-    OldOsGate hook_get_pm16_int_nr
+    OsGate hook_get_pm16_int_nr
                     ENDM
 
-;       ES:DI       HANDLER ADDRESS
+;       ES:EDI       HANDLER ADDRESS
 ;       AL              INT NUMMER
 HookSetProt16Int    MACRO
-    OldOsGate hook_set_pm16_int_nr
+    OsGate hook_set_pm16_int_nr
                     ENDM
 
 ;       ES:EDI      HANDLER ADDRESS
 ;       AL              INT NUMMER
 HookGetProt32Int    MACRO
-    OldOsGate hook_get_pm32_int_nr
+    OsGate hook_get_pm32_int_nr
                     ENDM
 
 ;       ES:EDI      HANDLER ADDRESS
 ;       AL              INT NUMMER
 HookSetProt32Int    MACRO
-    OldOsGate hook_set_pm32_int_nr
+    OsGate hook_set_pm32_int_nr
                     ENDM
 
 ReflectException    MACRO
