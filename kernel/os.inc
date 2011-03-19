@@ -135,8 +135,8 @@ OsGate16    MACRO gate_nr
             ENDM
 
 OsGate32    MACRO gate_nr
-    db 67h
     db 3Eh
+    db 67h
     db 9Ah
     dd gate_nr
     dw 2
