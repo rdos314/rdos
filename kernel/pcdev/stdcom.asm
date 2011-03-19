@@ -1335,7 +1335,7 @@ riLoop:
     push ds
     mov ds,dx
     mov al,ds:pds_irq
-    NewRequestSharedIrqHandler
+    RequestSharedIrqHandler
     pop ds
 
 riNext:

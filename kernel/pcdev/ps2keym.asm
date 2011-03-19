@@ -1028,7 +1028,7 @@ init_check_read:
     mov bx,cs
     mov es,bx
     mov edi,OFFSET keyb_int
-    NewRequestPrivateIrqHandler
+    RequestPrivateIrqHandler
     
 init_enable_aux_loop:
     in al,64h
@@ -1108,7 +1108,7 @@ init_disable_do:
     out 60h,al
 ;
     mov al,12
-    NewReleasePrivateIrqHandler
+    ReleasePrivateIrqHandler
 
 init_mouse_done:
     pop di
@@ -1373,7 +1373,7 @@ keyb_started:
     mov bx,cs
     mov es,bx
     mov edi,OFFSET keyb_int
-    NewRequestPrivateIrqHandler
+    RequestPrivateIrqHandler
 ;
     popa
     pop es

@@ -676,7 +676,7 @@ init_pci_found:
     mov bx,cs
     mov es,bx
     mov edi,OFFSET AudioInt
-    NewRequestSharedIrqHandler
+    RequestSharedIrqHandler
 ;
     mov dx,ds:IoBase
     mov cx,3

@@ -2649,7 +2649,7 @@ CheckPciBar    Proc near
     mov bx,cs
     mov es,bx
     mov edi,OFFSET ide_pci_int
-    NewRequestSharedIrqHandler
+    RequestSharedIrqHandler
 ;
     pop bx
     pop es
@@ -2804,7 +2804,7 @@ init_ide_primary:
     mov bx,cs
     mov es,bx
     mov edi,OFFSET ide_int
-    NewRequestPrivateIrqHandler
+    RequestPrivateIrqHandler
 
 init_ide_second:
     mov dx,177h
@@ -2834,7 +2834,7 @@ init_ide_second:
     mov bx,cs
     mov es,bx
     mov edi,OFFSET ide_int
-    NewRequestPrivateIrqHandler
+    RequestPrivateIrqHandler
 
 init_ide_done:
     mov ax,cs

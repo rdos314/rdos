@@ -963,7 +963,7 @@ init_keyb_thread    PROC far
     mov bx,cs
     mov es,bx
     mov edi,OFFSET keyb_int
-    NewRequestPrivateIrqHandler
+    RequestPrivateIrqHandler
 ;
     mov ax,start_keyboard_nr
     IsValidOsGate

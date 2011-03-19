@@ -992,7 +992,7 @@ init_pci1_found:
     mov bx,cs
     mov es,bx
     mov edi,OFFSET NetInt    
-    NewRequestSharedIrqHandler
+    RequestSharedIrqHandler
 ;
     call ReadEthernetAddress
     call AllocateRing
@@ -1051,7 +1051,7 @@ init_pci2_found:
     mov bx,cs
     mov es,bx
     mov edi,OFFSET NetInt    
-    NewRequestSharedIrqHandler
+    RequestSharedIrqHandler
 ;
     call ReadEthernetAddress
     call AllocateRing

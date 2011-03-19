@@ -2116,7 +2116,7 @@ rsih_req:
     mov es,ax
     mov al,bl
     mov edi,OFFSET shared_irq
-    NewRequestPrivateIrqHandler   
+    RequestPrivateIrqHandler   
 ;
     pop di
     pop es

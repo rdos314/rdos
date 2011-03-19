@@ -2108,7 +2108,7 @@ open_floppy_started:
     mov bx,cs
     mov es,bx
     mov edi,OFFSET floppy_int
-    NewRequestPrivateIrqHandler
+    RequestPrivateIrqHandler
     clc
 
 init_floppy_done:
