@@ -1227,8 +1227,8 @@ run_default_exception:
     mov bx,def_exception_sel
     mov ds,bx
     movzx bx,al
-    shl bx,2
-    jmp dword ptr [bx]
+    shl bx,3
+    jmp fword ptr [bx]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

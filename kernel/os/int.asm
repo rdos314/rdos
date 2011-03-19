@@ -95,7 +95,7 @@ init_int    PROC near
     mov eax,OFFSET int_seg_size
     AllocateFixedSystemMem
 ;
-    mov eax,80h
+    mov eax,100h
     mov bx,def_exception_sel
     AllocateFixedSystemMem
 ;
@@ -248,11 +248,11 @@ init_set_vm_int_loop:
     mov ax,def_exception_sel
     mov ds,ax
     xor bx,bx
-    mov dx,OFFSET pm_exception_handler
+    mov edx,OFFSET pm_exception_handler
 init_exc_loop:
-    mov [bx],dx
-    mov [bx+2],cs
-    add bx,4
+    mov [bx],edx
+    mov [bx+4],cs
+    add bx,8
     loop init_exc_loop
 ;
     mov eax,OFFSET raw_switch_v86_end - OFFSET raw_switch_v86_begin
@@ -311,13 +311,13 @@ init_exc_loop:
     mov di,OFFSET hook_vm_int_name
     xor cl,cl
     mov ax,hook_vm_int_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_exception
     mov di,OFFSET hook_exception_name
     xor cl,cl
     mov ax,hook_exception_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET reflect_pm_to_vm
     mov di,OFFSET reflect_pm_to_vm_name
@@ -2030,8 +2030,8 @@ prot_exception:
     mov bx,def_exception_sel
     mov ds,bx
     movzx bx,al
-    shl bx,2
-    jmp dword ptr [bx]
+    shl bx,3
+    jmp fword ptr [bx]
 prot_exception_user:
     push ax
     GetThread
@@ -2301,7 +2301,7 @@ hook_vm_int     ENDP
 ;           DESCRIPTION:    Add protected mode exception hook
 ;
 ;           PARAMETERS:         AL          Exception #
-;                           ES:DI   Callback
+;                           ES:EDI   Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2313,12 +2313,12 @@ hook_exception  PROC far
     mov bx,def_exception_sel
     mov ds,bx
     movzx bx,al
-    shl bx,2
-    mov [bx],di
-    mov [bx+2],es
+    shl bx,3
+    mov [bx],edi
+    mov [bx+4],es
     pop bx
     pop ds
-    ret
+    retf32
 hook_exception  ENDP
 
 

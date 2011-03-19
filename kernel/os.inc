@@ -1041,10 +1041,10 @@ HookProt32Int   MACRO
     OsGate hook_pm32_int_nr
                     ENDM
 
-;       ES:DI       ADDRESS TILL CALLBACK
-;       AL              INT NUMMER
+;       ES:EDI       ADDRESS TILL CALLBACK
+;       AL           INT NUMMER
 HookException   MACRO
-    OldOsGate hook_exception_nr
+    OsGate hook_exception_nr
                     ENDM
 
 ;       ES:DI       HANDLER ADDRESS
