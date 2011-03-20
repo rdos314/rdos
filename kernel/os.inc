@@ -1292,6 +1292,31 @@ HookLoadDosExe  MACRO
     OsGate hook_load_dos_exe_nr
                     ENDM
 
+;       BX              PSP SEGMENT
+GetPsp  MACRO
+    OsGate get_psp_nr
+                    ENDM
+
+;       BX              PSP SEGMENT
+SetPsp  MACRO
+    OsGate set_psp_nr
+                    ENDM
+
+;       DS:BX       DEVICE HEADER
+;       CX          DEVICE SIZE
+;       DS:SI       DEVICE READ
+;       DS:DI       DEVICE WRITE
+;       DX          DEVICE SEGMENT
+RegisterDosDevice  MACRO
+    OsGate register_dos_device_nr
+                    ENDM
+
+;       ES:EDI      FILENAME
+;       AL              DRIVE IN / OUT
+CheckDosDevice     MACRO
+    OsGate check_dos_device_nr
+                    ENDM
+
 ;       ES:DI       Handle address
 HookShiftKeys   MACRO
     OldOsGate hook_shift_keys_nr
@@ -1321,31 +1346,6 @@ PollKeyboardSerial      MACRO
 ;       ES:EDI      ADDRESS TILL '$' TERMINERAD STRŽNG
 WriteDosString  MACRO
     OldOsGate write_dos_string_nr
-                    ENDM
-
-;       BX              PSP SEGMENT
-GetPsp  MACRO
-    OldOsGate get_psp_nr
-                    ENDM
-
-;       BX              PSP SEGMENT
-SetPsp  MACRO
-    OldOsGate set_psp_nr
-                    ENDM
-
-;       DS:BX       DEVICE HEADER
-;       CX          DEVICE SIZE
-;       DS:SI       DEVICE READ
-;       DS:DI       DEVICE WRITE
-;       DX          DEVICE SEGMENT
-RegisterDevice  MACRO
-    OldOsGate register_device_nr
-                    ENDM
-
-;       ES:EDI      FILENAME
-;       AL              DRIVE IN / OUT
-CheckDevice     MACRO
-    OldOsGate check_device_nr
                     ENDM
 
 ;;;;;;;;;; Network ;;;;;;;;;;;;;

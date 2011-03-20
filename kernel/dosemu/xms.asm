@@ -645,7 +645,7 @@ init_xms    PROC near
     mov cx,OFFSET xmm_device_end - OFFSET xmm_device_begin
     mov si,OFFSET xmm_read
     mov di,OFFSET xmm_write
-    RegisterDevice
+    RegisterDosDevice
 ;
     mov ax,SEG data
     mov ds,ax

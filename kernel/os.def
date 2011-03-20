@@ -167,8 +167,8 @@ set_psp_nr					= 169
 enter_dpmi_nr				= 170
 enter_dos16_nr				= 171
 enter_dos32_nr				= 172
-register_device_nr			= 173
-check_device_nr				= 174
+register_dos_device_nr		= 173
+check_dos_device_nr		    = 174
 
 hook_open_app_nr			= 177
 hook_close_app_nr			= 178

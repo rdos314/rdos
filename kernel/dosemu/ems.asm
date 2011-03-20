@@ -453,7 +453,7 @@ init_ems        PROC near
         mov cx,OFFSET emm_device_end - OFFSET emm_device_begin
         mov si,OFFSET emm_read
         mov di,OFFSET emm_write
-        RegisterDevice
+        RegisterDosDevice
 ;
         mov bx,SEG data
         mov ds,bx
