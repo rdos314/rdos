@@ -492,7 +492,7 @@ CreateDirHandle Proc near
 ;
     mov si,bx
     mov cx,SIZE dir_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].dir_handle_sel,si
     mov [ebx].hh_sign,DIR_HANDLE
     mov bx,[ebx].hh_handle
@@ -1802,7 +1802,7 @@ ReadDirBase     Proc near
     push esi
 ;
     mov ax,DIR_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc read_dir_fail
 ;
     mov bx,[ebx].dir_handle_sel
@@ -2505,7 +2505,7 @@ close_dir       Proc far
     push esi
 ;
     mov ax,DIR_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc close_dir_done
 ;
     mov esi,ebx
@@ -2516,7 +2516,7 @@ close_dir       Proc far
 ;
     call CloseDirBase
     mov ebx,esi
-    NewFreeHandle
+    FreeHandle
     clc
 
 close_dir_done:
@@ -2799,7 +2799,7 @@ delete_handle   Proc far
     push esi
 ;
     mov ax,DIR_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     mov esi,ebx
@@ -2810,7 +2810,7 @@ delete_handle   Proc far
 ;
     call CloseDirBase
     mov ebx,esi
-    NewFreeHandle
+    FreeHandle
     clc
 
 delete_handle_done:
@@ -2864,7 +2864,7 @@ init_dir    PROC near
 ;
     mov edi,OFFSET delete_handle
     mov ax,DIR_HANDLE
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov esi,OFFSET stop_file_system
     mov edi,OFFSET stop_file_system_name

@@ -299,7 +299,7 @@ open_sys_env    Proc far
     push cx
 ;
     mov cx,SIZE env_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].env_handle_mode,ENV_MODE_GLOBAL
     mov [ebx].hh_sign,ENV_HANDLE
     mov bx,[ebx].hh_handle
@@ -328,7 +328,7 @@ open_proc_env    Proc far
     push cx
 ;
     mov cx,SIZE env_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].env_handle_mode,ENV_MODE_PROCESS
     mov [ebx].hh_sign,ENV_HANDLE
     mov bx,[ebx].hh_handle
@@ -358,10 +358,10 @@ close_env   Proc far
     push ax
 ;
     mov ax,ENV_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc close_env_done
 ;
-    NewFreeHandle
+    FreeHandle
     clc
 
 close_env_done:
@@ -535,7 +535,7 @@ add_env_var    Proc near
 ;
     push ds
     mov ax,ENV_HANDLE
-    NewDerefHandle
+    DerefHandle
     mov al,[ebx].env_handle_mode
     pop ds
     jc add_env_var_done
@@ -679,7 +679,7 @@ delete_env_var    Proc near
 ;
     push ds
     mov ax,ENV_HANDLE
-    NewDerefHandle
+    DerefHandle
     mov al,[ebx].env_handle_mode
     pop ds
     jc del_env_var_done
@@ -805,7 +805,7 @@ find_env_var    Proc near
 ;
     push ds
     mov ax,ENV_HANDLE
-    NewDerefHandle
+    DerefHandle
     mov al,[ebx].env_handle_mode
     pop ds
     jc find_env_var_done
@@ -892,7 +892,7 @@ get_env_size:
     push esi
 ;
     mov ax,ENV_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_env_size_done
 ;
     mov al,ds:[ebx].env_handle_mode
@@ -960,7 +960,7 @@ get_env_data    Proc near
     pushad
 ;
     mov ax,ENV_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_env_data_done
 ;
     mov al,ds:[ebx].env_handle_mode
@@ -1041,7 +1041,7 @@ set_env_data    Proc near
     mov esi,edi
     push es
     mov ax,ENV_HANDLE
-    NewDerefHandle
+    DerefHandle
     mov al,ds:[ebx].env_handle_mode
     pop ds
     jc set_env_data_done
@@ -1102,10 +1102,10 @@ delete_handle   Proc far
     push ebx
 ;
     mov ax,ENV_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
-    NewFreeHandle
+    FreeHandle
     clc
 
 delete_handle_done:
@@ -1216,7 +1216,7 @@ init_device_loop:
 ;
     mov edi,OFFSET delete_handle
     mov ax,ENV_HANDLE
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov esi,OFFSET lock_sys_env
     mov edi,OFFSET lock_sys_env_name

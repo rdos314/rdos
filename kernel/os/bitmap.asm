@@ -210,7 +210,7 @@ init_video_copy:
 
 init_video_done:
     mov cx,SIZE bitmap_struc
-    NewAllocateHandle
+    AllocateHandle
     mov ds:[ebx].bm_sel,es
     mov ds:[ebx].bm_flag,BM_FLAG_VIDEO
     mov ds:[ebx].hh_sign,BITMAP_HANDLE
@@ -396,7 +396,7 @@ cr_bitmap_copy:
     pop es
 ;
     mov cx,SIZE bitmap_struc
-    NewAllocateHandle
+    AllocateHandle
     mov ds:[ebx].bm_sel,es
     mov ds:[ebx].bm_flag,BM_FLAG_BITMAP
     mov ds:[ebx].hh_sign,BITMAP_HANDLE
@@ -451,13 +451,13 @@ dup_bitmap_handle       Proc far
     push cx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc dph_done
 ;
     mov es,[ebx].bm_sel
     mov ax,[ebx].bm_flag
     mov cx,SIZE bitmap_struc
-    NewAllocateHandle
+    AllocateHandle
     mov ds:[ebx].bm_sel,es
     mov ds:[ebx].bm_flag,ax
     mov ds:[ebx].hh_sign,BITMAP_HANDLE
@@ -621,7 +621,7 @@ get_bitmap_info Proc near
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc gbi_done
 ;
     mov ds,[ebx].bm_sel
@@ -697,7 +697,7 @@ delete_bitmap_freed:
     pop es
 
 delete_bitmap_free:
-    NewFreeHandle
+    FreeHandle
     clc
     ret
 delete_bitmap   Endp
@@ -722,7 +722,7 @@ close_bitmap    Proc far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc cl_bitmap_done
 ;
     call delete_bitmap
@@ -750,7 +750,7 @@ delete_handle   Proc far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     call delete_bitmap
@@ -781,7 +781,7 @@ init_bitmap     PROC near
 ;
     mov ax,BITMAP_HANDLE
     mov edi,OFFSET delete_handle
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov esi,OFFSET init_video_bitmap
     mov edi,OFFSET init_video_bitmap_name

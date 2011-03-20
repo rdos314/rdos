@@ -429,7 +429,7 @@ delete_fm_instr Proc near
 ;
     mov es,[ebx].i_sel
     FreeMem
-    NewFreeHandle
+    FreeHandle
     clc
 ;    
     pop es
@@ -460,7 +460,7 @@ open_fm    Proc
     push cx
 ;
     mov cx,SIZE fm_struc
-    NewAllocateHandle
+    AllocateHandle
     mov ds:[ebx].hh_sign,FM_HANDLE
 ;
     push eax
@@ -530,11 +530,11 @@ close_fm    Proc
     push ebx
 ;
     mov ax,FM_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc cfDone
 ;
     call delete_fm
-    NewFreeHandle
+    FreeHandle
 
 cfDone:
     pop ebx
@@ -568,7 +568,7 @@ fm_wait    Proc
 ;
     push ax
     mov ax,FM_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc fwDone
 ;
@@ -654,13 +654,13 @@ create_fm_instrument    Proc
 ;
     push ax
     mov ax,FM_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc cfiFail
 ;
     mov si,[ebx].f_sel    
     mov cx,SIZE instrument_struc
-    NewAllocateHandle
+    AllocateHandle
     mov ds:[ebx].hh_sign,FM_INSTR_HANDLE
 ;
     push eax
@@ -721,7 +721,7 @@ free_fm_instrument    Proc
     push ebx
 ;
     mov ax,FM_INSTR_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc ffiDone
 ;
     call delete_fm_instr
@@ -756,7 +756,7 @@ set_fm_attack    Proc
 ;
     push eax
     mov ax,FM_INSTR_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop eax
     jc sfaDone
 ;
@@ -795,7 +795,7 @@ set_fm_sustain    Proc
 ;
     push eax
     mov ax,FM_INSTR_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop eax
     jc sfsDone
 ;
@@ -878,7 +878,7 @@ set_fm_release    Proc
 ;
     push eax
     mov ax,FM_INSTR_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop eax
     jc sfrDone
 ;
@@ -967,7 +967,7 @@ play_fm_note    Proc
 ;
     push eax
     mov ax,FM_INSTR_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop eax
     jc pfnDone
 ;
@@ -1108,7 +1108,7 @@ delete_fm_handle    Proc far
 ;
     mov si,bx
     mov ax,FM_INSTR_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_fm_not_instr
 ;
     call delete_fm_instr
@@ -1117,7 +1117,7 @@ delete_fm_handle    Proc far
 delete_fm_not_instr:
     mov bx,si
     mov ax,FM_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_fm_handle_done
 ;
     call delete_fm
@@ -1834,11 +1834,11 @@ init_fm Proc near
 ;    
     mov ax,FM_INSTR_HANDLE
     mov edi,OFFSET delete_fm_handle
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov ax,FM_HANDLE
     mov edi,OFFSET delete_fm_handle
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov edi,OFFSET init_fm_thread
     HookInitTasking

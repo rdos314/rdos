@@ -685,7 +685,7 @@ open_font_char_next:
 ;
     mov ax,ds
     mov cx,SIZE font_handle_struc
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].fh_org_sel,ax
     mov [ebx].fh_buf_sel,es
     mov [ebx].hh_sign,FONT_HANDLE
@@ -725,12 +725,12 @@ close_font      Proc far
     push ebx
 ;
     mov ax,FONT_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc cl_font_done
 ;
     mov es,[ebx].fh_buf_sel
     FreeMem
-    NewFreeHandle
+    FreeHandle
     clc
 
 cl_font_done:
@@ -765,7 +765,7 @@ get_string_metrics      Proc near
     push edi
 ;
     mov ax,FONT_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_string_metr_fail
 ;
     mov ds,[ebx].fh_org_sel
@@ -844,7 +844,7 @@ get_char_mask   Proc far
 ;
     push ax
     mov ax,FONT_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc get_char_mask_done
 ;
@@ -882,12 +882,12 @@ delete_handle   Proc far
     push ebx
 ;
     mov ax,FONT_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     mov es,[ebx].fh_buf_sel
     FreeMem
-    NewFreeHandle
+    FreeHandle
     clc
 
 delete_handle_done:
@@ -937,7 +937,7 @@ init_font_loop:
     mov es,ax
     mov ax,FONT_HANDLE
     mov edi,OFFSET delete_handle
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov esi,OFFSET get_char_mask
     mov edi,OFFSET get_char_mask_name

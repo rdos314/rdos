@@ -3386,7 +3386,7 @@ create_tcp_listen       Proc far
 ;
     mov ax,TCP_LISTEN_HANDLE
     mov cx,SIZE listen_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].listen_handle_sel,dx
     mov [ebx].hh_sign,TCP_LISTEN_HANDLE
     mov bx,[ebx].hh_handle
@@ -3423,7 +3423,7 @@ get_tcp_listen  Proc far
     push dx
 ;
     mov ax,TCP_LISTEN_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_listen_done
 ;    
     mov ax,[ebx].listen_handle_sel
@@ -3445,7 +3445,7 @@ get_listen_leave:
 ;
     mov ax,TCP_SOCKET_HANDLE
     mov cx,SIZE tcp_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].tcp_handle_sel,es
     mov [ebx].hh_sign,TCP_SOCKET_HANDLE
     mov ax,[ebx].hh_handle
@@ -3480,7 +3480,7 @@ close_tcp_listen    Proc far
     pushad
 ;
     mov ax,TCP_LISTEN_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc close_tcp_listen_done
 ;    
     mov ax,[ebx].listen_handle_sel
@@ -3522,7 +3522,7 @@ wait_for_tcp_connection Proc far
     pushad
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc wait_tcp_done
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -3570,7 +3570,7 @@ wait_tcp_fail:
     mov ds:tcp_owner,0
     LeaveSection ds:tcp_section
     pop ebx
-    NewFreeHandle
+    FreeHandle
     stc
 
 wait_tcp_done:
@@ -3671,7 +3671,7 @@ open_tcp_handle:
     mov dx,ds
     mov ax,TCP_SOCKET_HANDLE
     mov cx,SIZE tcp_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].tcp_handle_sel,dx
     mov [ebx].hh_sign,TCP_SOCKET_HANDLE
     mov bx,[ebx].hh_handle
@@ -3789,7 +3789,7 @@ close_tcp_connection    Proc far
     pushad
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc close_tcp_done
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -3847,11 +3847,11 @@ delete_socket_handle    Proc far
     push dx
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_socket_handle_done
 ;
     push [ebx].tcp_handle_sel
-    NewFreeHandle
+    FreeHandle
     pop ds
 ;    
     or ax,ax
@@ -3894,11 +3894,11 @@ delete_listen_handle    Proc far
     push dx
 ;
     mov ax,TCP_LISTEN_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_listen_handle_done
 ;
     push [ebx].tcp_handle_sel
-    NewFreeHandle
+    FreeHandle
     pop ds
 ;    
     or ax,ax
@@ -3938,7 +3938,7 @@ delete_tcp_connection   Proc far
     push ebx
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_tcp_done
 ;    
     xor ax,ax
@@ -3963,7 +3963,7 @@ delete_tcp_mark:
     sti
 
 delete_tcp_handle:
-    NewFreeHandle
+    FreeHandle
     clc
 
 delete_tcp_done:
@@ -3995,7 +3995,7 @@ is_tcp_connection_idle  Proc far
     push ebx
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc is_tcp_idle_ok
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -4050,7 +4050,7 @@ is_tcp_connection_closed    Proc far
     push ebx
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc is_tcp_closed_done
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -4106,7 +4106,7 @@ get_remote_tcp_connection_ip    Proc far
     push ebx
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_rem_ip_done
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -4148,7 +4148,7 @@ get_remote_tcp_connection_port  Proc far
     push ebx
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_rem_port_done
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -4190,7 +4190,7 @@ get_local_tcp_connection_port   Proc far
     push ebx
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_local_port_done
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -4283,7 +4283,7 @@ abort_tcp_connection    Proc far
     pushad
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc abort_tcp_done
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -4341,7 +4341,7 @@ start_wait_for_connection       PROC far
 ;
     mov bx,es:tw_handle
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc start_wait_for_done
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -4391,7 +4391,7 @@ stop_wait_for_connection    PROC far
 ;
     mov bx,es:tw_handle
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc stop_wait_done
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -4445,7 +4445,7 @@ is_connection_idle      PROC far
 ;
     mov bx,es:tw_handle
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc is_idle_done
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -4539,7 +4539,7 @@ start_wait_for_listen   PROC far
 ;
     mov bx,es:tw_handle
     mov ax,TCP_LISTEN_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc start_wait_for_listen_done
 ;    
     mov ax,[ebx].listen_handle_sel
@@ -4581,7 +4581,7 @@ stop_wait_for_listen    PROC far
 ;
     mov bx,es:tw_handle
     mov ax,TCP_LISTEN_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc stop_wait_listen_done
 ;    
     mov ax,[ebx].listen_handle_sel
@@ -4635,7 +4635,7 @@ is_listen_idle  PROC far
 ;
     mov bx,es:tw_handle
     mov ax,TCP_LISTEN_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc is_listen_idle_done
 ;    
     mov ax,[ebx].listen_handle_sel
@@ -4845,7 +4845,7 @@ read_tcp_connection16   Proc far
     push ebp
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc read_tcp_done16
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -4889,7 +4889,7 @@ read_tcp_connection32   Proc far
     push ebp
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc read_tcp_done32
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -5052,7 +5052,7 @@ write_tcp_connection16  Proc far
     pushad
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc write_tcp_done16
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -5087,7 +5087,7 @@ write_tcp_connection32  Proc far
     pushad
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc write_tcp_done32
 ;    
     mov ax,[ebx].tcp_handle_sel
@@ -5132,7 +5132,7 @@ push_tcp_connection     Proc far
     pushad
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc push_tcp_done
 ;
     mov ax,[ebx].tcp_handle_sel
@@ -5180,7 +5180,7 @@ poll_tcp_connection     Proc far
     push ebx
 ;
     mov ax,TCP_SOCKET_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc poll_tcp_done
 ;
     mov ax,[ebx].tcp_handle_sel
@@ -5559,11 +5559,11 @@ init_tcp    PROC near
 ;
     mov edi,OFFSET delete_socket_handle
     mov ax,TCP_SOCKET_HANDLE
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov edi,OFFSET delete_listen_handle
     mov ax,TCP_SOCKET_HANDLE
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov esi,OFFSET open_tcp_connection
     mov edi,OFFSET open_tcp_connection_name

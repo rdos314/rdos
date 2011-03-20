@@ -5814,7 +5814,7 @@ create_user_section     PROC far
     push cx
 ;
     mov cx,SIZE section_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov ds:[ebx].us_value,0
     mov ds:[ebx].us_list,0
     mov ds:[ebx].us_owner,0
@@ -5849,7 +5849,7 @@ create_blocked_user_section     PROC far
     push cx
 ;
     mov cx,SIZE section_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov ds:[ebx].us_value,-1
     mov ds:[ebx].us_list,0
     mov ds:[ebx].us_owner,-1
@@ -5883,10 +5883,10 @@ delete_user_section     PROC far
     push ebx
 ;
     mov ax,SECTION_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc free_section_done
 ;
-    NewFreeHandle
+    FreeHandle
     clc
 
 free_section_done:
@@ -5917,7 +5917,7 @@ enter_user_section      PROC far
     push fs
 ;
     mov ax,SECTION_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc eusEnd
 ;
     lock sub ds:[ebx].us_value,1
@@ -6007,7 +6007,7 @@ leave_user_section      PROC far
     push fs
 ;
     mov ax,SECTION_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc lusDone
 ;
     str ax

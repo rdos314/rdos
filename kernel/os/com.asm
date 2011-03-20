@@ -86,11 +86,11 @@ delete_handle   Proc far
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     push [ebx].port_sel
-    NewFreeHandle
+    FreeHandle
     pop ds
 ;
     call ds:close_com_proc
@@ -191,7 +191,7 @@ open_com    Proc far
 ;
     mov ax,SERIAL_HANDLE
     mov cx,SIZE serial_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].port_sel,es
     mov [ebx].hh_sign,SERIAL_HANDLE
     mov bp,[ebx].hh_handle
@@ -271,11 +271,11 @@ close_com       Proc far
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc close_com_done
 ;
     push [ebx].port_sel
-    NewFreeHandle
+    FreeHandle
     pop ds
 ;
     call ds:close_com_proc
@@ -325,7 +325,7 @@ enable_cts      PROC far
     push ebx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc enable_cts_done
 ;
     mov ds,[ebx].port_sel
@@ -358,7 +358,7 @@ disable_cts     PROC far
     push ebx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc disable_cts_done
 ;
     mov ds,[ebx].port_sel
@@ -391,7 +391,7 @@ enable_auto_rts PROC far
     push ebx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc enable_auto_rts_done
 ;
     mov ds,[ebx].port_sel
@@ -424,7 +424,7 @@ disable_auto_rts    PROC far
     push ebx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc disable_auto_rts_done
 ;
     mov ds,[ebx].port_sel
@@ -457,7 +457,7 @@ flush_com       PROC far
     push ebx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc flush_com_done
 ;
     mov ds,[ebx].port_sel
@@ -502,7 +502,7 @@ read_com    PROC far
     push cx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc com_read_done
 ;
     mov ds,[ebx].port_sel
@@ -559,7 +559,7 @@ get_com_receive_space   PROC far
     push ebx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_com_rec_space_done
 ;
     mov ds,[ebx].port_sel
@@ -600,7 +600,7 @@ write_com       PROC far
 ;
     push ax
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc com_send_full
 ;
@@ -671,7 +671,7 @@ wait_for_send_completed_com     PROC far
 ;
     push ax
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc wait_for_send_completed_done
 ;
@@ -715,7 +715,7 @@ get_com_send_space      PROC far
     push ebx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_com_send_space_done
 ;
     mov ds,[ebx].port_sel
@@ -750,7 +750,7 @@ set_dtr Proc far
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc set_dtr_done
 ;
     mov ds,[ebx].port_sel
@@ -788,7 +788,7 @@ reset_dtr       Proc far
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc reset_dtr_done
 ;
     mov ds,[ebx].port_sel
@@ -826,7 +826,7 @@ set_rts Proc far
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc set_rts_done
 ;
     mov ds,[ebx].port_sel
@@ -861,7 +861,7 @@ reset_rts       Proc far
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc reset_rts_done
 ;
     mov ds,[ebx].port_sel
@@ -1118,7 +1118,7 @@ start_wait_for_com      PROC far
 ;
     mov bx,es:sw_handle
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc start_wait_for_done
 ;
     mov ds,[ebx].port_sel
@@ -1155,7 +1155,7 @@ stop_wait_for_com       PROC far
 ;
     mov bx,es:sw_handle
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc stop_wait_done
 ;
     mov ds,[ebx].port_sel
@@ -1203,7 +1203,7 @@ is_com_idle     PROC far
 ;
     mov bx,es:sw_handle
     mov ax,SERIAL_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc is_idle_done
 ;
     mov ds,[ebx].port_sel
@@ -1329,7 +1329,7 @@ init    Proc far
 ;
     mov edi,OFFSET delete_handle
     mov ax,SERIAL_HANDLE
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov esi,OFFSET add_com_port
     mov edi,OFFSET add_com_port_name

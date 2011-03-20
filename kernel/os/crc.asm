@@ -76,7 +76,7 @@ create_crc      Proc far
     pop eax
 ;
     mov cx,SIZE crc_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].crc_handle_sel,es
     mov [ebx].hh_sign,CRC_HANDLE
     mov bx,[ebx].hh_handle
@@ -173,12 +173,12 @@ close_crc       Proc far
     push ebx
 ;
     mov ax,CRC_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc close_crc_done
 ;
     mov es,[ebx].crc_handle_sel
     FreeMem    
-    NewFreeHandle
+    FreeHandle
     clc
 
 close_crc_done:
@@ -215,7 +215,7 @@ calc_crc Proc near
 ;
     push ax
     mov ax,CRC_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc calc_crc_done
 ;
@@ -280,12 +280,12 @@ delete_handle   Proc far
     push ebx
 ;
     mov ax,CRC_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     mov es,bx
     FreeMem
-    NewFreeHandle
+    FreeHandle
     clc
 
 delete_handle_done:
@@ -318,7 +318,7 @@ init_crc    PROC near
 ;
     mov edi,OFFSET delete_handle
     mov ax,CRC_HANDLE
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov esi,OFFSET create_crc
     mov edi,OFFSET create_crc_name

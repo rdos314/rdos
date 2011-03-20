@@ -162,7 +162,7 @@ AllocateIpcHandle       Proc near
 ;
     mov dx,bx
     mov cx,SIZE ipc_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].ipc_handle_sel,dx
     mov [ebx].hh_sign,IPC_HANDLE
     mov bx,[ebx].hh_handle
@@ -348,7 +348,7 @@ free_mailslot   Proc far
     push ax
 ;
     mov ax,IPC_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc free_mailslot_done
 ;
     mov ax,[ebx].ipc_handle_sel
@@ -361,7 +361,7 @@ free_mailslot   Proc far
     clc
     jnz free_mailslot_done
 ;
-    NewFreeHandle
+    FreeHandle
     clc
 
 free_mailslot_done:
@@ -402,7 +402,7 @@ send_mailslot   Proc near
     mov ax,ds
     mov fs,ax
     mov ax,IPC_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc send_mailslot_done
 ;
     mov ax,[ebx].ipc_handle_sel
@@ -947,7 +947,7 @@ delete_handle   Proc far
     push ax
 ;
     mov ax,IPC_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     mov ax,[ebx].ipc_handle_sel
@@ -960,7 +960,7 @@ delete_handle   Proc far
     clc
     jnz delete_handle_done
 ;
-    NewFreeHandle
+    FreeHandle
     clc
 
 delete_handle_done:
@@ -1037,7 +1037,7 @@ init    PROC far
 ;
     mov ax,IPC_HANDLE
     mov edi,OFFSET delete_handle
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov ebx,OFFSET get_local_mailslot16
     mov esi,OFFSET get_local_mailslot32

@@ -210,7 +210,7 @@ create_audio_out_channel    Proc far
 ;
     push cx
     mov cx,SIZE audio_out_struc
-    NewAllocateHandle
+    AllocateHandle
     mov ds:[ebx].hh_sign,AUDIO_OUT_HANDLE
     pop cx
 ;
@@ -450,7 +450,7 @@ delete_out_channel      Proc near
     pop ds
 ;    
     FreeMem
-    NewFreeHandle
+    FreeHandle
 ;
     clc
     pop es
@@ -477,7 +477,7 @@ close_audio_out_channel Proc far
     push ebx
 ;
     mov ax,AUDIO_OUT_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc caicDone
 ;
     call delete_out_channel
@@ -652,7 +652,7 @@ write_audio     Proc near
     mov es,ax
 ;    
     mov ax,AUDIO_OUT_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc waDone
 ;
     mov ds,[ebx].ao_sel
@@ -712,7 +712,7 @@ get_audio_out_buf   Proc far
     xor di,di
 ;    
     mov ax,AUDIO_OUT_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc gaobDone
 ;
     mov ds,[ebx].ao_sel
@@ -750,7 +750,7 @@ post_audio_out_buf   Proc far
     push ebx
 ;    
     mov ax,AUDIO_OUT_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc paobDone
 ;
     mov ds,[ebx].ao_sel
@@ -791,7 +791,7 @@ is_audio_out_completed   Proc far
     push ebx
 ;    
     mov ax,AUDIO_OUT_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc iaocDone
 ;
     mov ds,[ebx].ao_sel
@@ -824,7 +824,7 @@ delete_out_handle       Proc far
     push ebx
 ;
     mov ax,AUDIO_OUT_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_out_handle_done
 ;
     call delete_out_channel
@@ -1203,7 +1203,7 @@ init    PROC far
 ;    
     mov ax,AUDIO_OUT_HANDLE
     mov edi,OFFSET delete_out_handle
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov edi,OFFSET init_audio
     HookInitTasking

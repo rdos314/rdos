@@ -149,7 +149,7 @@ create_proc_handle      PROC far
     push ds
     push cx
     mov cx,SIZE proc_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].ph_lib_sel,ax
     mov [ebx].ph_proc_sel,dx
     mov [ebx].hh_sign,PROCESS_HANDLE
@@ -184,7 +184,7 @@ deref_proc_handle       PROC far
     push ebx
 ;    
     mov ax,PROCESS_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc deref_proc_handle_done
 ;
     mov ax,[ebx].ph_lib_sel
@@ -217,11 +217,11 @@ free_proc_handle    PROC far
     push dx
 ;    
     mov ax,PROCESS_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc free_proc_handle_done
 ;
     mov dx,[ebx].ph_proc_sel
-    NewFreeHandle
+    FreeHandle
 ;       
     mov ds,dx
     sub ds:pd_ref_count,1
@@ -265,7 +265,7 @@ get_proc_exit_code      PROC far
     push ebx
 ;    
     mov ax,PROCESS_HANDLE
-    NewDerefHandle
+    DerefHandle
     mov ax,-1
     jc get_proc_exit_done
 ;

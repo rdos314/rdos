@@ -104,7 +104,7 @@ delete_handle   Proc far
     push si
 ;
     mov ax,XMS_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     mov ecx,ds:[ebx].block_size
@@ -196,7 +196,7 @@ xms_allocate    PROC near
 
 xms_allocate_do:
     mov cx,SIZE xms_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     jnc xms_allocate_handle_ok
 ;
     pop ebx
@@ -227,7 +227,7 @@ xms_free    PROC near
     push ebx
     mov bx,dx
     mov ax,XMS_HANDLE
-    NewDerefHandle
+    DerefHandle
     jnc xms_free_deref_ok
 ;
     pop ebx
@@ -257,7 +257,7 @@ xms_free_lock_ok:
     FreeLinear
 
 xms_free_global:
-    NewFreeHandle
+    FreeHandle
     mov bx,xms_local_sel
     mov ds,bx
     add ds:xms_free_mem,ecx
@@ -293,7 +293,7 @@ xms_source_high:
 ;
     mov bx,dx
     mov ax,XMS_HANDLE
-    NewDerefHandle
+    DerefHandle
     jnc xms_source_ok
 ;
     pop ebx
@@ -333,7 +333,7 @@ xms_dest_high:
 ;
     mov bx,dx
     mov ax,XMS_HANDLE
-    NewDerefHandle
+    DerefHandle
     jnc xms_dest_ok
 ;
     pop ebx
@@ -407,7 +407,7 @@ xms_lock    PROC near
     push ebx
     mov bx,dx
     mov ax,XMS_HANDLE
-    NewDerefHandle
+    DerefHandle
     jnc xms_lock_deref_ok
 ;
     pop ebx
@@ -437,7 +437,7 @@ xms_unlock      PROC near
     push ebx
     mov bx,dx
     mov ax,XMS_HANDLE
-    NewDerefHandle
+    DerefHandle
     jnc xms_unlock_deref_ok
 ;
     pop ebx
@@ -466,7 +466,7 @@ xms_info    PROC near
     push ebx
     mov bx,dx
     mov ax,XMS_HANDLE
-    NewDerefHandle
+    DerefHandle
     jnc xms_info_deref_ok
 ;
     pop ebx
@@ -675,7 +675,7 @@ init_xms    PROC near
 ;
     mov edi,OFFSET delete_handle
     mov ax,XMS_HANDLE
-    NewRegisterHandle
+    RegisterHandle
     ret
 init_xms    ENDP
 

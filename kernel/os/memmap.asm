@@ -766,7 +766,7 @@ CreateHandle    Proc near
     push edi
 ;
     mov cx,SIZE memmap_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].memmap_sel,es
     mov [ebx].view_offset,0
     mov [ebx].view_base,0
@@ -904,7 +904,7 @@ create_file_mapping     Proc near
     push ax
     push ebx
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ebx
     pop ax
     jc create_file_mapping_done
@@ -945,7 +945,7 @@ create_named_file_mapping       Proc near
     push ax
     push ebx
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ebx
     pop ax
     jc create_named_file_done
@@ -1041,7 +1041,7 @@ sync_mapping    Proc far
     push ebx
 ;
     mov ax,MEMMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc sm_done
 ;
     call UpdateView
@@ -1073,7 +1073,7 @@ close_mapping   Proc far
     push edi
 ;
     mov ax,MEMMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc cfm_done
 ;
     call FreeView
@@ -1103,7 +1103,7 @@ close_rem_done:
     clc
 
 cfm_done:
-    NewFreeHandle
+    FreeHandle
     pop edi
     pop esi
     pop ax
@@ -1279,7 +1279,7 @@ map_view    Proc near
 ;
     push ax
     mov ax,MEMMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc mfm_done
 ;
@@ -1371,7 +1371,7 @@ unmap_view      Proc far
     push ebx
 ;
     mov ax,MEMMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc ufm_done
 ;
     call FreeView
@@ -1400,7 +1400,7 @@ delete_handle   Proc far
     push ax
 ;
     mov ax,MEMMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     call FreeView
@@ -1430,7 +1430,7 @@ delete_handle_rem_done:
     clc
 
 delete_handle_done:
-    NewFreeHandle
+    FreeHandle
     pop ax
     pop es
     pop ds
@@ -1477,7 +1477,7 @@ init_memmap     PROC near
 ;
     mov ax,MEMMAP_HANDLE
     mov edi,OFFSET delete_handle
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov esi,OFFSET create_mapping
     mov edi,OFFSET create_mapping_name

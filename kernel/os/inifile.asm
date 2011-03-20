@@ -839,7 +839,7 @@ cihNew:
     push ds
     push bx
     mov cx,SIZE ini_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     pop ax
     mov [ebx].ih_file_handle,ax
     mov [ebx].ih_name_sel,0
@@ -968,7 +968,7 @@ close_ini       Proc far
     push esi
 ;
     mov ax,INI_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc ciDone
 ;
     mov esi,ebx
@@ -987,7 +987,7 @@ ciCloseFile:
     CloseFile
 ;
     mov ebx,esi
-    NewFreeHandle
+    FreeHandle
 
 ciDone:
     pop esi
@@ -1022,7 +1022,7 @@ goto_ini_section    Proc near
     push edi
 ;
     mov ax,INI_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc gisDone
 ;
     mov ax,ds:[ebx].ih_name_sel
@@ -1155,7 +1155,7 @@ remove_ini_section      Proc near
     push edi
 ;
     mov ax,INI_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc rmiFail
 ;
     mov ax,ds:[ebx].ih_name_sel
@@ -1237,7 +1237,7 @@ read_ini    Proc near
     mov fs,ax
 ;
     mov ax,INI_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc riFail
 ;
     mov ax,ds:[ebx].ih_name_sel
@@ -1718,7 +1718,7 @@ write_ini       Proc near
     mov fs,ax
 ;    
     mov ax,INI_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc wiFail
 ;
     mov ax,ds:[ebx].ih_name_sel
@@ -1859,7 +1859,7 @@ delete_handle   Proc far
     push ebx
 ;
     mov ax,INI_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     mov ax,ds:[ebx].ih_name_sel
@@ -1964,7 +1964,7 @@ init_inifile    Proc near
 ;
     mov edi,OFFSET delete_handle
     mov ax,INI_HANDLE
-    NewRegisterHandle
+    RegisterHandle
     ret
 init_inifile    Endp
 

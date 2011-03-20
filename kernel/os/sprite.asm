@@ -199,7 +199,7 @@ create_sprite   Proc far
     mov es:sp_lgop,ax
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc create_sprite_fail
 ;
     mov ax,[ebx].bm_x_min
@@ -273,7 +273,7 @@ create_sprite_sel_ok:
 create_sprite_room:
     mov bx,cx
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc create_sprite_fail
 ;
     mov ax,[ebx].bm_sel
@@ -323,7 +323,7 @@ create_sprite_room:
 ;
     mov es:sp_bitmap_handle,bx
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc create_sprite_fail
 ;
     mov ax,[ebx].bm_sel
@@ -332,7 +332,7 @@ create_sprite_room:
 create_sprite_mask:
     mov bx,dx
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc create_sprite_fail
 ;
     mov ax,[ebx].bm_sel
@@ -360,7 +360,7 @@ create_sprite_mask:
 ;
     mov es:sp_back_handle,bx
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc create_sprite_fail
 ;
     mov ax,[ebx].bm_sel
@@ -393,7 +393,7 @@ create_sprite_mask:
     mov ds:[ebx].spi_y_max,ax
 ;
     mov cx,SIZE sprite_struc
-    NewAllocateHandle
+    AllocateHandle
     mov ds:[ebx].sp_sel,es
     mov [ebx].hh_sign,SPRITE_HANDLE
     mov bx,[ebx].hh_handle
@@ -1209,7 +1209,7 @@ hide_sprite     Proc far
     pushad
 ;
     mov ax,SPRITE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc hide_sprite_done
 ;
     mov fs,ds:[ebx].sp_sel
@@ -1280,7 +1280,7 @@ show_sprite     Proc far
     pushad
 ;
     mov ax,SPRITE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc show_sprite_done
 ;
     mov fs,ds:[ebx].sp_sel
@@ -1577,7 +1577,7 @@ move_sprite     Proc far
     pushad
 ;
     mov ax,SPRITE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc move_sprite_done
 ;
     mov fs,ds:[ebx].sp_sel
@@ -1848,7 +1848,7 @@ delete_sprite_free:
     pop ebx
     pop ds
     FreeMem
-    NewFreeHandle
+    FreeHandle
 ;
     popad
     pop gs
@@ -1879,7 +1879,7 @@ close_sprite    Proc far
     push ebx
 ;
     mov ax,SPRITE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc cl_sprite_done
 ;
     call delete_sprite
@@ -1908,7 +1908,7 @@ delete_handle   Proc far
     push ebx
 ;
     mov ax,SPRITE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     call delete_sprite
@@ -2237,7 +2237,7 @@ init_sprite     PROC near
 ;
     mov ax,SPRITE_HANDLE
     mov edi,OFFSET delete_handle
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov esi,OFFSET create_sprite
     mov edi,OFFSET create_sprite_name

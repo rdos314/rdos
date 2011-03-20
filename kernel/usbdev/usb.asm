@@ -953,14 +953,14 @@ create_usb_req  Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc curDone
 ;       
     mov fs,ds:[ebx].up_pipe_sel
     mov ax,ds:[ebx].up_func_sel
 ;       
     mov cx,SIZE req_handle_struc
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].rh_func_sel,ax
     mov [ebx].rh_pipe_sel,fs
     mov [ebx].rh_list,0
@@ -1001,7 +1001,7 @@ add_write_usb_control_req       Proc far
     push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc awucDone
 ;
     mov ax,es
@@ -1042,7 +1042,7 @@ add_write_usb_data_req  Proc far
     push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc awudDone
 ;
     mov ax,es
@@ -1083,7 +1083,7 @@ add_read_usb_data_req   Proc far
     push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc arudDone
 ;
     mov ax,es
@@ -1122,7 +1122,7 @@ add_usb_status_in_req   Proc far
     push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc ausiDone
 ;
     call AddReqBlock
@@ -1160,7 +1160,7 @@ add_usb_status_out_req  Proc far
     push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc ausoDone
 ;
     call AddReqBlock
@@ -1331,7 +1331,7 @@ start_usb_req   Proc far
     push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc surDone
 ;
     test ds:[ebx].rh_flags,REQ_FLAG_LOCKED
@@ -1400,7 +1400,7 @@ stop_usb_req    Proc far
     push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc sturEnd
 ;
     push ds
@@ -1454,7 +1454,7 @@ is_usb_req_started      Proc far
     push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc iursDone
 ;
     test ds:[ebx].rh_flags,REQ_FLAG_STARTED
@@ -1493,7 +1493,7 @@ is_usb_req_ready    Proc far
     push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc iurrDone
 ;
     test ds:[ebx].rh_flags,REQ_FLAG_ACTIVE
@@ -1543,7 +1543,7 @@ get_usb_req_data    Proc far
 ;
     xor cx,cx
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc gurdDone
 ;
     test ds:[ebx].rh_flags,REQ_FLAG_ACTIVE
@@ -1602,7 +1602,7 @@ close_usb_req   Proc far
     push ax
 ;
     mov ax,USB_REQ_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc crDone
 ;
     test ds:[ebx].rh_flags,REQ_FLAG_STARTED
@@ -1642,7 +1642,7 @@ crFreeHandle:
     pop ds
 
 crLockOk:
-    NewFreeHandle
+   FreeHandle
 
 crDone: 
     pop ax
@@ -2086,7 +2086,7 @@ oupOut:
 
 oupCreateHandle:    
     mov cx,SIZE pipe_handle_struc
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].up_func_sel,es
     mov [ebx].up_pipe_sel,di
     mov [ebx].up_pipe,dl
@@ -2136,7 +2136,7 @@ close_usb_pipe  Proc far
     push dx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc cupDone
 ;
     push ds
@@ -2172,7 +2172,7 @@ cupClose:
 cupCloseDone:
     pop ebx
     pop ds
-    NewFreeHandle
+    FreeHandle
     clc
 
 cupDone:
@@ -2202,7 +2202,7 @@ delete_handle   Proc far
     push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     push ds
@@ -2217,7 +2217,7 @@ delete_handle   Proc far
 delete_handle_pipe_ok:
     pop ebx
     pop ds
-    NewFreeHandle
+    FreeHandle
     clc
 
 delete_handle_done:
@@ -2352,7 +2352,7 @@ add_wait_for_pipe       PROC far
     push bx
     mov bx,ax
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc add_wait_pop_done
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2404,7 +2404,7 @@ lock_usb_pipe   Proc far
     push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc lupDone
 ;
     push ds
@@ -2439,7 +2439,7 @@ unlock_usb_pipe   Proc far
     push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc uupDone
 ;       
     push ds
@@ -2478,7 +2478,7 @@ write_usb_control16     Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc wucDone16
 ;
     movzx edi,di
@@ -2503,7 +2503,7 @@ write_usb_control32     Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc wucDone32
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2542,7 +2542,7 @@ req_usb_data    Proc far
     push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc rudDone
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2580,7 +2580,7 @@ get_usb_data_size16     Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc gudDone16
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2603,7 +2603,7 @@ get_usb_data_size32     Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc gudDone32
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2643,7 +2643,7 @@ write_usb_data16    Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc wudDone16
 ;
     movzx edi,di
@@ -2668,7 +2668,7 @@ write_usb_data32    Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc wudDone32
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2705,7 +2705,7 @@ req_usb_status  Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc rusDone
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2741,7 +2741,7 @@ write_usb_status    Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc wusDone
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2776,7 +2776,7 @@ start_usb_trans Proc far
     push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc sutDone
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2812,7 +2812,7 @@ is_usb_trans_done       Proc far
     push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc iutdDone
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2848,7 +2848,7 @@ was_usb_trans_ok    Proc far
     push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc wutoDone
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2884,7 +2884,7 @@ get_usb_info    Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc guiDone
 ;
     mov fs,ds:[ebx].up_pipe_sel
@@ -2978,7 +2978,7 @@ init    Proc far
 ;
     mov ax,USB_PIPE_HANDLE
     mov edi,OFFSET delete_handle
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov esi,OFFSET init_usb_device
     mov edi,OFFSET init_usb_device_name

@@ -1175,32 +1175,32 @@ NotifyTimeDrift MACRO
 
 ; IN  AX        Signature
 ; IN  ES:EDI    Delete handle callback
-NewRegisterHandle  MACRO
+RegisterHandle  MACRO
     OsGate register_handle_nr
                     ENDM
 
 ; IN  AX        Signature
 ; IN  CX        Size of data
 ; OUT DS:EBX    Handle data
-NewAllocateHandle  MACRO
+AllocateHandle  MACRO
     OsGate allocate_handle_nr
                     ENDM
 
 ; IN  DS:EBX    Handle data
-NewFreeHandle      MACRO
+FreeHandle      MACRO
     OsGate free_handle_nr
                     ENDM
 
 ; IN  AX        Signature
 ; IN  BX        Handle
 ; OUT DS:EBX    Handle data
-NewDerefHandle     MACRO
+DerefHandle     MACRO
     OsGate deref_handle_nr
                     ENDM
 
 ; OUT DS    Cloned handle sel
 ; OUT ES    Cloned handle mem sel
-NewCloneHandleMem  MACRO
+CloneHandleMem  MACRO
     OsGate clone_handle_mem_nr
                     ENDM
 

@@ -59,6 +59,13 @@ typedef void __far (__rdos_irq_callback)();
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_handle_delete_callback)(int handle);
+
+#pragma aux __rdos_handle_delete_callback "*" \
+                    parm caller [ebx] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 // structures
 
 struct TKernelSection
@@ -73,6 +80,12 @@ struct TWaitHeader
     __rdos_wait_callback *abort_proc;
     __rdos_wait_callback *clear_proc;
     __rdos_wait_callback *idle_proc;
+};
+
+struct THandleHeader
+{
+    short int sign;
+    short int handle;
 };
 
 // function definitions
@@ -206,6 +219,11 @@ void RdosRequestSharedIrqHandler(int irq, __rdos_irq_callback *irq_proc);
 
 void RdosSetupIrqDetect();
 int RdosPollIrqDetect();
+
+THandleHeader *RdosAllocateHandle(short int signature, int size);
+void RdosFreeHandle(THandleHeader *handle_data);
+THandleHeader *RdosDerefHandle(short int signature, int handle);
+void RdosRegisterHandle(short int signature, __rdos_handle_delete_callback *delete_proc);
  
 /* 32-bit compact memory model (device-drivers) */
 
@@ -709,6 +727,33 @@ int RdosPollIrqDetect();
 #pragma aux RdosPollIrqDetect = \
     OsGate_setup_irq_detect \
     value [eax];
+
+#pragma aux RdosAllocateHandle = \
+    "push ds" \
+    OsGate_allocate_handle \
+    "mov dx,ds" \
+    "pop ds" \
+    parm [ax] [ecx] \
+    value [dx ebx];
+
+#pragma aux RdosFreeHandle = \
+    "push ds" \
+    "mov ds,dx" \
+    OsGate_free_handle \
+    "pop ds" \
+    parm [dx ebx];
+
+#pragma aux RdosDerefHandle = \
+    "push ds" \
+    OsGate_allocate_handle \
+    "mov dx,ds" \
+    "pop ds" \
+    parm [ax] [ebx] \
+    value [dx ebx];
+
+#pragma aux RdosRegisterHandle = \
+    OsGate_register_handle \
+    parm [ax] [es edi];
 
 #ifdef __cplusplus
 }

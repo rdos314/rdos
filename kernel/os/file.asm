@@ -232,7 +232,7 @@ CreateFileHandle    Proc near
     inc es:file_usage
     push cx
     mov cx,SIZE file_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     pop cx
     mov [ebx].file_handle_pos,0
     mov [ebx].file_handle_sel,es
@@ -1546,7 +1546,7 @@ get_file_info   PROC far
     push ds
     push ebx
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_file_info_done
 ;
     mov ax,[ebx].file_handle_sel
@@ -1586,7 +1586,7 @@ dupl_file_info  PROC far
     pop ax
     push cx
     mov cx,SIZE file_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     pop cx
     mov [ebx].file_handle_pos,0
     mov [ebx].file_handle_sel,ax
@@ -1620,7 +1620,7 @@ close_file:
     push esi
 ;
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc close_file_done
 ;
     mov esi,ebx
@@ -1638,7 +1638,7 @@ close_file:
 
 close_file_handle:
     mov ebx,esi
-    NewFreeHandle
+    FreeHandle
     clc
 
 close_file_done:
@@ -1671,7 +1671,7 @@ dupl_file:
 ;
     mov bx,ax
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc dupl_file_done
 ;
     mov esi,ebx
@@ -1684,7 +1684,7 @@ dupl_file:
     inc ds:file_usage
 ;
     mov cx,SIZE file_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov eax,[esi].file_handle_pos
     mov [ebx].file_handle_pos,eax
     mov ax,[esi].file_handle_sel
@@ -1726,7 +1726,7 @@ get_ioctl_data:
     push ebx
 ;
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_ioctl_data_done
 ;
     mov al,[ebx].file_handle_drive
@@ -1763,7 +1763,7 @@ get_file_size:
     push edx
 ;
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_file_size_done
 ;
     mov bx,[ebx].file_handle_sel
@@ -1805,7 +1805,7 @@ set_file_size:
 ;
     mov edx,eax
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc set_file_size_done
 ;
     mov al,[ebx].file_handle_drive
@@ -1846,7 +1846,7 @@ get_file_pos:
     push ebx
 ;
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_file_pos_done
 ;
     mov ax,[ebx].file_handle_sel
@@ -1884,7 +1884,7 @@ set_file_pos:
 ;
     mov edx,eax
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc set_file_pos_done
 ;
     mov [ebx].file_handle_pos,edx
@@ -1919,7 +1919,7 @@ get_file_time:
     push ecx
 ;
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_file_time_done
 ;
     mov dx,flat_sel
@@ -1971,7 +1971,7 @@ set_file_time:
     mov es,cx
     mov ecx,eax
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc set_file_time_done
 ;
     mov al,[ebx].file_handle_drive
@@ -2024,7 +2024,7 @@ read_file32:
     push esi
 ;
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc read_file32_done
 ;
     mov esi,ebx
@@ -2075,7 +2075,7 @@ read_file16     PROC far
     movzx ecx,cx
     movzx edi,di
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc read_file16_done
 ;
     mov esi,ebx
@@ -2143,7 +2143,7 @@ write_file32:
     push esi
 ;
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc write_file32_done
 ;
     mov esi,ebx
@@ -2209,7 +2209,7 @@ write_file16    PROC far
     movzx ecx,cx
     movzx edi,di
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc write_file16_done
 ;
     mov esi,ebx
@@ -2291,7 +2291,7 @@ map_to_file     Proc near
     mov edi,edx
     mov edx,eax
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc map_to_file_done
 ;
     mov esi,ebx
@@ -2423,7 +2423,7 @@ sync_memmap     Proc near
 ;
     mov ebp,eax
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc sync_memmap_done
 ;
     mov esi,ebx
@@ -2502,7 +2502,7 @@ free_memmap     Proc near
     mov edi,edx
     mov edx,eax
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc free_memmap_done
 ;
     mov esi,ebx
@@ -2567,7 +2567,7 @@ delete_handle   Proc far
     push esi
 ;
     mov ax,FILE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc delete_handle_done
 ;
     mov esi,ebx
@@ -2585,7 +2585,7 @@ delete_handle   Proc far
 
 delete_handle_handle:
     mov ebx,esi
-    NewFreeHandle
+    FreeHandle
     clc
 
 delete_handle_done:
@@ -2651,7 +2651,7 @@ init_file       PROC near
 ;
     mov edi,OFFSET delete_handle
     mov ax,FILE_HANDLE
-    NewRegisterHandle
+    RegisterHandle
 ;
     mov di,OFFSET swap_proc
     RegisterSwapProc

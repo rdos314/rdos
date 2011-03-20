@@ -1072,7 +1072,7 @@ set_clip_rect   PROC far
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc set_clip_rect_done
 ;
@@ -1171,7 +1171,7 @@ clear_clip_rect PROC far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc clear_clip_rect_done
 ;
     mov es,[ebx].bm_sel
@@ -1214,7 +1214,7 @@ set_draw_color  PROC far
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc set_draw_color_done
 ;
@@ -1256,7 +1256,7 @@ set_lgop_ok:
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc set_lgop_done
 ;
@@ -1288,7 +1288,7 @@ set_hollow_style    PROC far
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc set_hollow_done
 ;
@@ -1320,7 +1320,7 @@ set_filled_style    PROC far
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc set_filled_done
 ;
@@ -1353,7 +1353,7 @@ set_font    PROC far
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc set_font_done
 ;
@@ -1389,7 +1389,7 @@ get_pixel       PROC far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_pixel_fail
 ;
     mov ds,[ebx].bm_sel
@@ -1430,7 +1430,7 @@ set_pixel       PROC far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc set_pixel_fail
 ;
     mov eax,[bx].bm_color
@@ -1513,7 +1513,7 @@ blit_pr PROC far
     push ax
     mov bx,ax
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc blit_failed
 ;
@@ -1523,7 +1523,7 @@ blit_pr PROC far
     push ax
     mov bx,cx
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc blit_failed
 ;
@@ -1817,7 +1817,7 @@ draw_mask       PROC far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc draw_mask_fail
 ;
     mov eax,[ebx].bm_color
@@ -1895,7 +1895,7 @@ draw_string16   PROC far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc draw_string16_fail
 ;
     mov eax,[ebx].bm_color
@@ -1937,7 +1937,7 @@ draw_string32   PROC far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc draw_string32_fail
 ;
     mov eax,[bx].bm_color
@@ -1994,7 +1994,7 @@ draw_line       PROC far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc draw_line_fail
 ;
     mov eax,[bx].bm_color
@@ -2049,7 +2049,7 @@ draw_rect       PROC far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc draw_rect_fail
 ;
     push [ebx].bm_color
@@ -2106,7 +2106,7 @@ draw_ellipse    PROC far
     push ebx
 ;
     mov ax,BITMAP_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc draw_ellipse_fail
 ;
     push [ebx].bm_color

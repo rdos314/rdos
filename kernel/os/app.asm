@@ -625,7 +625,7 @@ set_module      PROC far
 ;
     mov dx,es
     mov cx,SIZE module_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].mh_sel,dx
     mov [ebx].hh_sign,MODULE_HANDLE
     mov bx,[ebx].hh_handle
@@ -674,7 +674,7 @@ reset_module    PROC far
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc reset_mod_handle_ok
 ;
     mov ax,[ebx].mh_sel
@@ -695,7 +695,7 @@ reset_mod_loop:
     jmp reset_mod_loop
 
 reset_mod_free_mod:
-    NewFreeHandle
+    FreeHandle
 
 reset_mod_handle_ok:    
     pop dx
@@ -732,7 +732,7 @@ create_module   PROC far
     InitSection ds:mod_section
 ;    
     mov cx,SIZE module_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].mh_sel,es
     mov [ebx].hh_sign,MODULE_HANDLE
     mov bx,[ebx].hh_handle
@@ -746,7 +746,7 @@ create_module   PROC far
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc create_module_done
 ;
     mov ax,[ebx].mh_sel
@@ -797,7 +797,7 @@ free_module     PROC far
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc free_module_done
 ;
     mov si,[ebx].mh_sel
@@ -838,10 +838,10 @@ free_mod_in_list:
 
 free_mod_handle:
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc free_module_leave
 ;
-    NewFreeHandle
+    FreeHandle
 
 free_module_leave:      
     mov ds,si
@@ -1254,7 +1254,7 @@ deref_module_handle  Proc far
     push ax
 ;
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc deref_module_done
 ;
     mov bx,[ebx].mh_sel
@@ -1293,7 +1293,7 @@ alias_module_handle  Proc far
 ;
     mov dx,bx
     mov cx,SIZE module_handle_seg
-    NewAllocateHandle
+    AllocateHandle
     mov [ebx].mh_sel,dx
     mov [ebx].hh_sign,MODULE_HANDLE
     mov bx,[ebx].hh_handle
@@ -1395,7 +1395,7 @@ free_dll  Proc far
     push ebx
 ;    
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc free_dll_done
 ;
     mov bx,[ebx].mh_sel
@@ -1439,7 +1439,7 @@ get_module_focus_key  Proc far
     push ebx
 ;    
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_module_focus_done
 ;
     mov bx,[ebx].mh_sel
@@ -1478,7 +1478,7 @@ get_module_proc32  Proc far
     push ebx
 ;    
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_module_proc_done32
 ;
     mov bx,[ebx].mh_sel
@@ -1507,7 +1507,7 @@ get_module_proc16  Proc far
 ;    
     movzx edi,di
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_module_proc_done16
 ;
     mov bx,[ebx].mh_sel
@@ -1553,7 +1553,7 @@ get_module_resource  Proc far
 ;    
     push ax
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     pop ax
     jc get_resource_done
 ;
@@ -1597,7 +1597,7 @@ get_module_name32  Proc far
     push ebx
 ;    
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_module_name_done32
 ;
     mov bx,[ebx].mh_sel
@@ -1625,7 +1625,7 @@ get_module_name16  Proc far
 ;    
     movzx edi,di
     mov ax,MODULE_HANDLE
-    NewDerefHandle
+    DerefHandle
     jc get_module_name_done16
 ;
     mov bx,[ebx].mh_sel
