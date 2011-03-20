@@ -830,12 +830,17 @@ GetDeviceRoot   Proc near
     push si
     push ebp
 ;
+    int 3
     mov al,80h
     mov bx,fs_sys_data_sel
     mov ds,bx
     movzx si,al
     add si,si
-    mov ds,ds:[si].fs_sel
+    mov bx,ds:[si].fs_sel
+    or bx,bx
+    stc
+    jz get_device_root_end
+;    
     EnterReadSection ds:fs_access_section
     EnterSection ds:fs_list_section
     mov bx,ds:fs_root_dir_sel
@@ -857,7 +862,9 @@ GetDeviceRoot   Proc near
 get_device_root_done:
     LeaveSection ds:fs_list_section
     mov ds,bx
-;
+    clc
+
+get_device_root_end:
     pop ebp
     pop si
     pop edx
@@ -2010,6 +2017,8 @@ OpenFileBase    Proc near
 ;
     push edi
     call GetDeviceRoot
+    jc open_file_normal
+;
     call ParseFile
     pop edi
     jc open_file_normal
@@ -2083,6 +2092,8 @@ CreateFileBase  Proc near
 ;
     push edi
     call GetDeviceRoot
+    jc create_file_normal
+;    
     call ParseFile
     pop edi
     jc create_file_normal

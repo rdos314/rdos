@@ -49,6 +49,7 @@ code    SEGMENT byte public use16 'CODE'
     extrn init_multiplx:near
     extrn init_xms:near
 
+    extrn init_dosdev:near
     extrn init_dos_mem:near
     extrn init_dosvm:near
     extrn init_dos16:near
@@ -1366,6 +1367,7 @@ init    PROC far
     mov ds,ax
     mov ds:flat_base,local_page_linear
 ;    
+    call init_dosdev
     call init_ems
     call init_multiplx
     call init_xms
