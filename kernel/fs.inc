@@ -64,7 +64,7 @@ fs_process_seg	STRUC
 
 cur_dir_sel			DW 256 DUP(?)
 curr_drive			DB ?
-memmap_list			DW ?
+memmap_list			DD ?
 
 fs_process_seg	ENDS
 

@@ -36,58 +36,58 @@ INCLUDE system.inc
 INCLUDE ..\fs.inc
 INCLUDE ..\handle.inc
 
-file_handle_seg         STRUC
+file_handle_seg     STRUC
 
-file_handle_base        handle_header <>
+file_handle_base    handle_header <>
 
-file_handle_pos         DD ?
-file_handle_sel         DW ?
+file_handle_pos     DD ?
+file_handle_sel     DW ?
 file_handle_access      DB ?
 file_handle_drive       DB ?
 
-file_handle_seg         ENDS
+file_handle_seg     ENDS
 
 CallFileSystem  MACRO   call_proc
-        push ds
-        push gs
-        push bp
-        push si
-        mov si,fs_sys_data_sel
-        mov ds,si
-        movzx si,al
-        add si,si
-        mov ds,ds:[si].fs_sel
-        lgs bp,ds:fs_sys_arr
-        lds si,ds:fs_sys_arr+4
-        call gs:[bp].&call_proc
-        pop si
-        pop bp
-        pop gs
-        pop ds
-                                ENDM
+    push ds
+    push gs
+    push bp
+    push si
+    mov si,fs_sys_data_sel
+    mov ds,si
+    movzx si,al
+    add si,si
+    mov ds,ds:[si].fs_sel
+    lgs bp,ds:fs_sys_arr
+    lds si,ds:fs_sys_arr+4
+    call gs:[bp].&call_proc
+    pop si
+    pop bp
+    pop gs
+    pop ds
+                ENDM
 
 data    SEGMENT byte public 'DATA'
 
-fs_file_list        DW ?
+fs_file_list    DW ?
 fs_file_section     section_typ <>
 
 data    ENDS
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   InsertFileSel
+;           NAME:           InsertFileSel
 ;
-;               DESCRIPTION:    Insert a file selector
+;           DESCRIPTION:    Insert a file selector
 ;
-;               PARAMETERS:     BX      File selector
+;           PARAMETERS:     BX      File selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -96,34 +96,34 @@ InsertFileSel   Proc near
     push es
     push eax
     push ebx
-        push di
+    push di
 ;
     mov ax,SEG data
     mov ds,ax
     EnterSection ds:fs_file_section
 ;
     mov es,bx
-        mov di,ds:fs_file_list
-        or di,di
-        je ins_file_sel_empty
+    mov di,ds:fs_file_list
+    or di,di
+    je ins_file_sel_empty
 ;
-        push ds
-        push si
-        mov ds,di
-        mov si,ds:file_prev
-        mov ds:file_prev,es
-        mov ds,si
-        mov ds:file_next,es
-        mov es:file_next,di
-        mov es:file_prev,si
-        pop si
-        pop ds
-        jmp ins_file_sel_leave
-        
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:file_prev
+    mov ds:file_prev,es
+    mov ds,si
+    mov ds:file_next,es
+    mov es:file_next,di
+    mov es:file_prev,si
+    pop si
+    pop ds
+    jmp ins_file_sel_leave
+    
 ins_file_sel_empty:
-        mov es:file_next,es
-        mov es:file_prev,es
-        mov ds:fs_file_list,es
+    mov es:file_next,es
+    mov es:file_prev,es
+    mov ds:fs_file_list,es
 
 ins_file_sel_leave:
     LeaveSection ds:fs_file_section
@@ -140,11 +140,11 @@ InsertFileSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   RemoveFileSel
+;           NAME:           RemoveFileSel
 ;
-;               DESCRIPTION:    Remove a file selector
+;           DESCRIPTION:    Remove a file selector
 ;
-;               PARAMETERS:         BX      File selector
+;           PARAMETERS:     BX      File selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -152,7 +152,7 @@ RemoveFileSel   Proc near
     push ds
     push eax
     push ebx
-        push si
+    push si
 ;
     mov ax,SEG data
     mov ds,ax
@@ -178,27 +178,27 @@ rem_file_sel_check:
 rem_file_sel_ok:
     mov es,bx
     cmp bx,es:file_next
-        je rem_file_sel_empty
+    je rem_file_sel_empty
 ;       
-        push di
-        push ds
-        mov di,es:file_next
-        mov ds:fs_file_list,di
-        mov si,es:file_prev
-        mov ds,di
-        mov ds:file_prev,si
-        mov ds,si
-        mov ds:file_next,di
-        pop ds
-        pop di
-        jmp rem_file_sel_leave
+    push di
+    push ds
+    mov di,es:file_next
+    mov ds:fs_file_list,di
+    mov si,es:file_prev
+    mov ds,di
+    mov ds:file_prev,si
+    mov ds,si
+    mov ds:file_next,di
+    pop ds
+    pop di
+    jmp rem_file_sel_leave
 
 rem_file_sel_empty:     
-        mov ds:fs_file_list,0
+    mov ds:fs_file_list,0
 
 rem_file_sel_leave:
     LeaveSection ds:fs_file_section
-        pop si
+    pop si
     pop ebx
     pop eax
     pop ds 
@@ -209,404 +209,404 @@ RemoveFileSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CreateFileHandle
+;           NAME:           CreateFileHandle
 ;
-;               DESCRIPTION:    Creates a file handle
+;           DESCRIPTION:    Creates a file handle
 ;
-;               PARAMETERS:             AL                      Drive
-;                                               BX                      File selector
-;                                               CL                      Access
+;           PARAMETERS:         AL              Drive
+;                           BX              File selector
+;                           CL              Access
 ;
-;               RETURNS:                BX                      Handle
+;           RETURNS:        BX              Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public CreateFileHandle
+    public CreateFileHandle
 
-CreateFileHandle        Proc near
-        push ds
-        push es
-        push si
+CreateFileHandle    Proc near
+    push ds
+    push es
+    push si
 ;
-        mov es,bx
-        inc es:file_usage
-        push cx
-        mov cx,SIZE file_handle_seg
-        AllocateHandle
-        pop cx
-        mov [bx].file_handle_pos,0
-        mov [bx].file_handle_sel,es
-        mov [bx].file_handle_access,cl
-        mov [bx].file_handle_drive,al
-        mov [bx].hh_sign,FILE_HANDLE
-        mov bx,[bx].hh_handle
-        clc
+    mov es,bx
+    inc es:file_usage
+    push cx
+    mov cx,SIZE file_handle_seg
+    NewAllocateHandle
+    pop cx
+    mov [ebx].file_handle_pos,0
+    mov [ebx].file_handle_sel,es
+    mov [ebx].file_handle_access,cl
+    mov [ebx].file_handle_drive,al
+    mov [ebx].hh_sign,FILE_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
 ;
-        pop si
-        pop es
-        pop ds
-        ret
-CreateFileHandle        Endp
+    pop si
+    pop es
+    pop ds
+    ret
+CreateFileHandle    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CreateListEntry
+;           NAME:           CreateListEntry
 ;
-;               DESCRIPTION:    Create a new list entry
+;           DESCRIPTION:    Create a new list entry
 ;
-;               PARAMETERS:             DS                      File selector
-;                                               EAX                     Position entry
+;           PARAMETERS:         DS              File selector
+;                           EAX             Position entry
 ;
-;               RETURNS:                EAX                     Base address
+;           RETURNS:        EAX             Base address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateListEntry Proc near
-        push bx
-        push ecx
-        push edx
-        push esi
-        push edi
+    push bx
+    push ecx
+    push edx
+    push esi
+    push edi
 ;
-        mov esi,eax
-        mov al,ds:file_drive
-        mov bx,ds
-        CallFileSystem allocate_file_list_proc
+    mov esi,eax
+    mov al,ds:file_drive
+    mov bx,ds
+    CallFileSystem allocate_file_list_proc
 ;
-        mov es:[edi].fl_usage,0
-        mov es:[edi].fl_ref_count,1
-        mov es:[edi].fl_size,eax
-        mov es:[edi].fl_base,0
-        mov es:[edi].fl_sel,ds
-        mov es:[edi].fl_state, FILE_LIST_STATE_EMPTY
-        mov es:[edi].fl_flags,0
-        mov es:[edi].fl_prev_small,0
-        mov es:[edi].fl_next_small,0
-        mov es:[edi].fl_pos,esi
-        mov eax,edi
+    mov es:[edi].fl_usage,0
+    mov es:[edi].fl_ref_count,1
+    mov es:[edi].fl_size,eax
+    mov es:[edi].fl_base,0
+    mov es:[edi].fl_sel,ds
+    mov es:[edi].fl_state, FILE_LIST_STATE_EMPTY
+    mov es:[edi].fl_flags,0
+    mov es:[edi].fl_prev_small,0
+    mov es:[edi].fl_next_small,0
+    mov es:[edi].fl_pos,esi
+    mov eax,edi
 ;
-        pop edi
-        pop esi
-        pop edx
-        pop ecx
-        pop bx
-        ret
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop bx
+    ret
 CreateListEntry Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   FreeListEntry
+;           NAME:           FreeListEntry
 ;
-;               DESCRIPTION:    Free a list entry
+;           DESCRIPTION:    Free a list entry
 ;
-;               PARAMETERS:             DS                      File selector
-;                                               EAX                     Base address
+;           PARAMETERS:         DS              File selector
+;                           EAX             Base address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeListEntry   Proc near
-        push eax
-        push bx
-        push ecx
-        push edx
-        push edi
+    push eax
+    push bx
+    push ecx
+    push edx
+    push edi
 ;
-        mov edi,eax
+    mov edi,eax
 ;
-        mov eax,es:[edi].fl_pos
-        mov dword ptr es:[eax],0
-        mov edx,es:[edi].fl_base
-        or edx,edx
-        jz free_list_done
+    mov eax,es:[edi].fl_pos
+    mov dword ptr es:[eax],0
+    mov edx,es:[edi].fl_base
+    or edx,edx
+    jz free_list_done
 ;
-        mov es:[edi].fl_state, FILE_LIST_STATE_EMPTY
-        mov ecx,ds:file_block_size
-        cmp ecx,1000h
-        jc free_small_list
+    mov es:[edi].fl_state, FILE_LIST_STATE_EMPTY
+    mov ecx,ds:file_block_size
+    cmp ecx,1000h
+    jc free_small_list
 ;
-        mov al,ds:file_drive
-        mov bx,ds
-        CallFileSystem free_file_list_proc
-        FreeLinear
-        jmp free_list_done
+    mov al,ds:file_drive
+    mov bx,ds
+    CallFileSystem free_file_list_proc
+    FreeLinear
+    jmp free_list_done
 
 free_small_list:
     push edi
-        push esi
+    push esi
 
 free_small_start_loop:
-        mov esi,edi
-        test dx,0FFFh
-        jz free_small_start_found
+    mov esi,edi
+    test dx,0FFFh
+    jz free_small_start_found
 ;
-        mov eax,es:[edi].fl_prev_small
-        or eax,eax
-        jz free_small_fail
+    mov eax,es:[edi].fl_prev_small
+    or eax,eax
+    jz free_small_fail
 ;
-        mov edi,eax
-        mov edx,es:[edi].fl_base
-        test es:[edi].fl_state, FILE_LIST_STATE_EMPTY
-        je free_small_start_loop
-        jmp free_small_fail
+    mov edi,eax
+    mov edx,es:[edi].fl_base
+    test es:[edi].fl_state, FILE_LIST_STATE_EMPTY
+    je free_small_start_loop
+    jmp free_small_fail
 
 free_small_start_found:
-        xchg esi,edi
+    xchg esi,edi
 
 free_small_end_loop:
-        mov eax,es:[edi].fl_next_small
-        or eax,eax
-        jz free_small_do
+    mov eax,es:[edi].fl_next_small
+    or eax,eax
+    jz free_small_do
 ;
-        mov edi,eax
-        mov eax,es:[edi].fl_base
-        test ax,0FFFh
-        jz free_small_do
+    mov edi,eax
+    mov eax,es:[edi].fl_base
+    test ax,0FFFh
+    jz free_small_do
 ;
-        test es:[edi].fl_state, FILE_LIST_STATE_EMPTY
-        jne free_small_fail
-        jmp free_small_end_loop
+    test es:[edi].fl_state, FILE_LIST_STATE_EMPTY
+    jne free_small_fail
+    jmp free_small_end_loop
 
 free_small_do:
-        mov edi,esi
+    mov edi,esi
 
 free_small_unlink_loop:
-        mov es:[edi].fl_base,0
-        mov es:[edi].fl_prev_small,0
-        xor eax,eax
-        xchg eax,es:[edi].fl_next_small
-        or eax,eax
-        jz free_small_unlink_done
+    mov es:[edi].fl_base,0
+    mov es:[edi].fl_prev_small,0
+    xor eax,eax
+    xchg eax,es:[edi].fl_next_small
+    or eax,eax
+    jz free_small_unlink_done
 ;
-        mov edi,eax
-        mov eax,es:[edi].fl_base
-        test ax,0FFFh
-        jnz free_small_unlink_loop
+    mov edi,eax
+    mov eax,es:[edi].fl_base
+    test ax,0FFFh
+    jnz free_small_unlink_loop
 
 free_small_unlink_done:
-        mov ecx,1000h
-        FreeLinear
+    mov ecx,1000h
+    FreeLinear
 
 free_small_fail:
-        pop esi
-        pop edi
-        mov al,ds:file_drive
-        mov bx,ds
-        CallFileSystem free_file_list_proc
+    pop esi
+    pop edi
+    mov al,ds:file_drive
+    mov bx,ds
+    CallFileSystem free_file_list_proc
 
 free_list_done:
-        pop edi
-        pop edx
-        pop ecx
-        pop bx
-        pop eax
-        ret
+    pop edi
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    ret
 FreeListEntry   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   CreateListDir
+;           NAME:           CreateListDir
 ;
-;               DESCRIPTION:    Create a new list directory
+;           DESCRIPTION:    Create a new list directory
 ;
-;               PARAMETERS:             DS                      File selector
+;           PARAMETERS:         DS              File selector
 ;
-;               RETURNS:                EBX                     Base address
+;           RETURNS:        EBX             Base address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateListDir   Proc near
-        push ecx
-        push edx
-        push edi
+    push ecx
+    push edx
+    push edi
 ;
-        mov eax,1000h
-        AllocateBigLinear
-        mov edi,edx
-        mov ecx,400h
-        xor eax,eax
-        rep stos dword ptr es:[edi]
-        mov ebx,edx
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    mov ebx,edx
 ;
-        pop edi
-        pop edx
-        pop ecx
-        ret
+    pop edi
+    pop edx
+    pop ecx
+    ret
 CreateListDir   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   FreeListDir
+;           NAME:           FreeListDir
 ;
-;               DESCRIPTION:    Free a list directory
+;           DESCRIPTION:    Free a list directory
 ;
-;               PARAMETERS:             DS                      File selector
-;                                               EBX                     Base address
+;           PARAMETERS:         DS              File selector
+;                           EBX             Base address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeListDir     Proc near
-        push es
-        push ax
-        push ebx
-        push ecx
-        push edx
-        push edi
+    push es
+    push ax
+    push ebx
+    push ecx
+    push edx
+    push edi
 ;
-        mov ax,flat_sel
-        mov es,ax
+    mov ax,flat_sel
+    mov es,ax
 ;
-        mov edx,ebx
-        mov cx,400h
+    mov edx,ebx
+    mov cx,400h
 
 free_list_dir_loop:
-        mov eax,es:[ebx]
-        or eax,eax
-        jz free_list_dir_next
+    mov eax,es:[ebx]
+    or eax,eax
+    jz free_list_dir_next
 ;
-        call FreeListEntry
+    call FreeListEntry
 
 free_list_dir_next:
-        add ebx,4
-        loop free_list_dir_loop
+    add ebx,4
+    loop free_list_dir_loop
 ;
-        mov ecx,1000h
-        FreeLinear
+    mov ecx,1000h
+    FreeLinear
 ;
-        pop edi
-        pop edx
-        pop ecx
-        pop ebx
-        pop ax
-        pop es
-        ret
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ax
+    pop es
+    ret
 FreeListDir     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateFileSelector
+;           NAME:           CreateFileSelector
 ;
-;               DESCRIPTION:    Open a file handle
+;           DESCRIPTION:    Open a file handle
 ;
-;               PARAMETERS:             AL                      Drive
-;                                               AH                      Attribute
-;                                               ECX                     File size
-;                                               EDX                     File dir entry
+;           PARAMETERS:         AL              Drive
+;                           AH              Attribute
+;                           ECX             File size
+;                           EDX             File dir entry
 ;
-;               RETURNS:                BX                      File selector
+;           RETURNS:        BX              File selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public CreateFileSel
+    public CreateFileSel
 
 CreateFileSel   PROC near
-        push ds
-        push es
-        push eax
-        push di
+    push ds
+    push es
+    push eax
+    push di
 ;
-        push ecx
-        push edx
+    push ecx
+    push edx
 ;
-        mov bx,ax
-        test ah,80h
-        jnz crfs_skip_lists
+    mov bx,ax
+    test ah,80h
+    jnz crfs_skip_lists
 ;
-        mov al,bl
-        push si
-        push di
-        GetDriveParam
-        pop di
-        pop si
-        jnc crfs_ok_params
+    mov al,bl
+    push si
+    push di
+    GetDriveParam
+    pop di
+    pop si
+    jnc crfs_ok_params
 ;
-        mov eax,1000h
-        mov ecx,1000h
+    mov eax,1000h
+    mov ecx,1000h
 
 crfs_ok_params:
-        mov edx,ecx
-        dec eax
-        xor cl,cl
+    mov edx,ecx
+    dec eax
+    xor cl,cl
 
 crfs_block_loop:
-        inc cl
-        shr eax,1
-        jnz crfs_block_loop
+    inc cl
+    shr eax,1
+    jnz crfs_block_loop
 ;
-        mov eax,1
-        shl eax,cl
-        dec edx
-        add cl,10
-        shr edx,cl
-        inc edx
+    mov eax,1
+    shl eax,cl
+    dec edx
+    add cl,10
+    shr edx,cl
+    inc edx
 ;
-        push eax
-        mov eax,edx
-        shl eax,2
-        add eax,SIZE file_data_struc - 4
-        AllocateSmallGlobalMem
-        mov ax,es
-        mov ds,ax
-        pop eax
+    push eax
+    mov eax,edx
+    shl eax,2
+    add eax,SIZE file_data_struc - 4
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+    pop eax
 ;
-        mov ds:file_block_size,eax
-        mov ds:file_dir_entries,dx
-        mov ds:file_dir_shift,cl
-        sub cl,10
-        mov ds:file_entry_shift,cl
+    mov ds:file_block_size,eax
+    mov ds:file_dir_entries,dx
+    mov ds:file_dir_shift,cl
+    sub cl,10
+    mov ds:file_entry_shift,cl
 ;
-        mov cx,dx
-        mov di,OFFSET file_entries
-        xor eax,eax
-        rep stosd
-        jmp crfs_init
+    mov cx,dx
+    mov di,OFFSET file_entries
+    xor eax,eax
+    rep stosd
+    jmp crfs_init
 
 crfs_skip_lists:
-        mov eax,SIZE file_data_struc - 4
-        AllocateSmallGlobalMem
-        mov ax,es
-        mov ds,ax
-        mov ds:file_block_size,0
-        mov ds:file_dir_entries,0
+    mov eax,SIZE file_data_struc - 4
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+    mov ds:file_block_size,0
+    mov ds:file_dir_entries,0
 
 crfs_init:
-        pop edx
-        pop ecx
-        InitReadWriteSection ds:file_size_section
-        InitSection ds:file_list_section
-        mov ds:file_usage,0
-        mov ds:file_drive,bl
-        mov ds:file_attrib,bh
-        mov ds:file_size,ecx
-        mov ds:file_dir_entry,edx
-        mov bx,ds
-        call InsertFileSel
+    pop edx
+    pop ecx
+    InitReadWriteSection ds:file_size_section
+    InitSection ds:file_list_section
+    mov ds:file_usage,0
+    mov ds:file_drive,bl
+    mov ds:file_attrib,bh
+    mov ds:file_size,ecx
+    mov ds:file_dir_entry,edx
+    mov bx,ds
+    call InsertFileSel
 ;
-        pop di
-        pop eax
-        pop es
-        pop ds
-        ret
+    pop di
+    pop eax
+    pop es
+    pop ds
+    ret
 CreateFileSel   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GrowFileSel
+;           NAME:           GrowFileSel
 ;
-;               DESCRIPTION:    Grow file selector
+;           DESCRIPTION:    Grow file selector
 ;
-;               PARAMETERS:     BX          File selector to grow
+;           PARAMETERS:     BX      File selector to grow
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -628,10 +628,10 @@ GrowFileSel     PROC near
     mov bx,si
     movzx eax,ds:file_dir_entries
     shl eax,2
-        add eax,SIZE file_data_struc
+    add eax,SIZE file_data_struc
     AllocateSmallLinear
-        mov ecx,eax
-        CreateDataSelector16
+    mov ecx,eax
+    CreateDataSelector16
     mov es,bx
 ;
     xor di,di
@@ -661,322 +661,322 @@ GrowFileSel ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FreeFileSel
+;           NAME:           FreeFileSel
 ;
-;               DESCRIPTION:    Free file selector
+;           DESCRIPTION:    Free file selector
 ;
-;               PARAMETERS:             DS                      File selector
+;           PARAMETERS:         DS              File selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public FreeFileSel
+    public FreeFileSel
 
 FreeFileSel     PROC near
-        push es
-        push ax
-        push ebx
-        push ecx
-        push si
-        push edi
+    push es
+    push ax
+    push ebx
+    push ecx
+    push si
+    push edi
 ;       
     mov bx,ds
     call RemoveFileSel
 ;    
-        mov ax,flat_sel
-        mov es,ax
-        mov edi,ds:file_dir_entry
-        mov cx,es:[edi].de_usage
-        or cx,cx
-        jnz free_file_sel_done
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,ds:file_dir_entry
+    mov cx,es:[edi].de_usage
+    or cx,cx
+    jnz free_file_sel_done
 ;
-        mov ecx,ds:file_block_size
-        or ecx,ecx
-        jz free_file_sel
+    mov ecx,ds:file_block_size
+    or ecx,ecx
+    jz free_file_sel
 ;
-        mov cx,ds:file_dir_entries
-        mov si,OFFSET file_entries
+    mov cx,ds:file_dir_entries
+    mov si,OFFSET file_entries
 
 free_file_dir_loop:
-        mov ebx,[si]
-        or ebx,ebx
-        jz free_file_dir_next
+    mov ebx,[si]
+    or ebx,ebx
+    jz free_file_dir_next
 ;
-        call FreeListDir
+    call FreeListDir
 
 free_file_dir_next:
-        add si,4
-        loop free_file_dir_loop
+    add si,4
+    loop free_file_dir_loop
 
 free_file_sel:
-        mov ecx,ds:file_dir_entry
-        mov ax,ds
-        mov es,ax
-        mov ax,flat_sel
-        mov ds,ax
-        mov ds:[ecx].dfe_file_sel,0
-        FreeMem
+    mov ecx,ds:file_dir_entry
+    mov ax,ds
+    mov es,ax
+    mov ax,flat_sel
+    mov ds,ax
+    mov ds:[ecx].dfe_file_sel,0
+    FreeMem
 
 free_file_sel_done:
-        xor ax,ax
-        mov ds,ax
+    xor ax,ax
+    mov ds,ax
 ;
-        pop edi
-        pop si
-        pop ecx
-        pop ebx
-        pop ax
-        pop es
-        ret
+    pop edi
+    pop si
+    pop ecx
+    pop ebx
+    pop ax
+    pop es
+    ret
 FreeFileSel     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FreeFile
+;           NAME:           FreeFile
 ;
-;               DESCRIPTION:    Free file selector
+;           DESCRIPTION:    Free file selector
 ;
-;               PARAMETERS:             BX              File selector
+;           PARAMETERS:         BX          File selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public FreeFile
+    public FreeFile
 
-FreeFile        PROC near
-        push ds
-        push ax
+FreeFile    PROC near
+    push ds
+    push ax
 ;
-        mov ds,bx
-        mov ax,ds:file_usage
-        or ax,ax
-        stc
-        jnz free_file_done
+    mov ds,bx
+    mov ax,ds:file_usage
+    or ax,ax
+    stc
+    jnz free_file_done
 ;
-        call FreeFileSel
+    call FreeFileSel
 
 free_file_done:
-        pop ax
-        pop ds
-        ret
-FreeFile        Endp
+    pop ax
+    pop ds
+    ret
+FreeFile    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetFileListEntry
+;           NAME:           GetFileListEntry
 ;
-;               DESCRIPTION:    Get list entry
+;           DESCRIPTION:    Get list entry
 ;
-;               PARAMETERS:             BX                      File selector
-;                                               EDX                     Position
+;           PARAMETERS:         BX              File selector
+;                           EDX             Position
 ;
-;               RETURNS:                EAX                     List selector
+;           RETURNS:        EAX             List selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_file_list_entry_name        DB 'Get File List Entry',0
+get_file_list_entry_name    DB 'Get File List Entry',0
 
 get_file_list_entry     Proc far
-        push ds
-        push es
-        push ebx
-        push cx
-        push esi
+    push ds
+    push es
+    push ebx
+    push cx
+    push esi
 ;
-        mov ds,bx
-        mov ax,flat_sel
-        mov es,ax
+    mov ds,bx
+    mov ax,flat_sel
+    mov es,ax
 ;
-        mov eax,ds:file_size
-        dec eax
-        and ax,0F000h
-        add eax,1000h
-        cmp edx,eax
-        jnc get_list_fail
+    mov eax,ds:file_size
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    cmp edx,eax
+    jnc get_list_fail
 ;
-        mov esi,edx
-        mov cl,ds:file_dir_shift
-        shr esi,cl
-        shl si,2
-        mov ebx,ds:[si].file_entries
-        or ebx,ebx
-        jnz get_list_check_mid
+    mov esi,edx
+    mov cl,ds:file_dir_shift
+    shr esi,cl
+    shl si,2
+    mov ebx,ds:[si].file_entries
+    or ebx,ebx
+    jnz get_list_check_mid
 ;
-        call CreateListDir
-        mov ds:[si].file_entries,ebx
+    call CreateListDir
+    mov ds:[si].file_entries,ebx
 
 get_list_check_mid:
-        mov esi,edx
-        mov cl,ds:file_entry_shift
-        shr esi,cl
-        shl si,2
-        and esi,0FFCh
-        mov eax,es:[ebx+esi]
-        or eax,eax
-        clc
-        jnz get_list_done
+    mov esi,edx
+    mov cl,ds:file_entry_shift
+    shr esi,cl
+    shl si,2
+    and esi,0FFCh
+    mov eax,es:[ebx+esi]
+    or eax,eax
+    clc
+    jnz get_list_done
 ;
-        lea eax,[ebx+esi]
-        call CreateListEntry
-        mov es:[ebx+esi],eax
-        clc
-        jmp get_list_done
+    lea eax,[ebx+esi]
+    call CreateListEntry
+    mov es:[ebx+esi],eax
+    clc
+    jmp get_list_done
 
 get_list_fail:
-        stc
+    stc
 
 get_list_done:
-        pop esi
-        pop cx
-        pop ebx
-        pop es
-        pop ds
-        ret
+    pop esi
+    pop cx
+    pop ebx
+    pop es
+    pop ds
+    ret
 get_file_list_entry     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   FreeFileListEntry
+;           NAME:           FreeFileListEntry
 ;
-;               DESCRIPTION:    Free a file list entry
+;           DESCRIPTION:    Free a file list entry
 ;
-;               PARAMETERS:             BX                      File selector
-;                                               EDI                     File list entry
+;           PARAMETERS:         BX              File selector
+;                           EDI             File list entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_file_list_entry_name       DB 'Free File List Entry',0
 
 free_file_list_entry    Proc far
-        push ds
-        push eax
+    push ds
+    push eax
 ;
-        mov ds,bx
-        mov eax,edi
-        call FreeListEntry
+    mov ds,bx
+    mov eax,edi
+    call FreeListEntry
 ;
-        pop eax
-        pop ds
-        ret
+    pop eax
+    pop ds
+    ret
 free_file_list_entry    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   ReadFileListEntry
+;           NAME:           ReadFileListEntry
 ;
-;               DESCRIPTION:    Read a file list entry
+;           DESCRIPTION:    Read a file list entry
 ;
-;               PARAMETERS:             DS                      File selector
-;                                               EDI                     File list entry
-;                                               EDX                     File position                                           
+;           PARAMETERS:         DS              File selector
+;                           EDI             File list entry
+;                           EDX             File position                       
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadFileListEntry       Proc near
-        mov eax,es:[edi].fl_base
-        or eax,eax
-        jnz read_file_list_do
+    mov eax,es:[edi].fl_base
+    or eax,eax
+    jnz read_file_list_do
 ;
-        mov eax,ds:file_block_size
-        cmp eax,1000h
-        jc read_alloc_small
+    mov eax,ds:file_block_size
+    cmp eax,1000h
+    jc read_alloc_small
 ;
-        push ecx
-        push edx
-        AllocateBigLinear
-        mov es:[edi].fl_base,edx
-        pop edx
-        pop ecx
-        jmp read_file_list_do
+    push ecx
+    push edx
+    AllocateBigLinear
+    mov es:[edi].fl_base,edx
+    pop edx
+    pop ecx
+    jmp read_file_list_do
 
 read_alloc_small:
-        push bx
-        push edx
-        push esi
-        push edi
+    push bx
+    push edx
+    push esi
+    push edi
 ;
-        push ecx
-        push edx
-        mov eax,1000h
-        AllocateBigLinear
-        mov esi,edx
-        pop edx
-        pop ecx
+    push ecx
+    push edx
+    mov eax,1000h
+    AllocateBigLinear
+    mov esi,edx
+    pop edx
+    pop ecx
 ;
-        mov bx,ds
-        mov eax,ds:file_block_size
-        neg eax
-        and edx,eax
+    mov bx,ds
+    mov eax,ds:file_block_size
+    neg eax
+    and edx,eax
 
 read_small_start_loop:
-        test dx,0FFFh
-        jz read_small_start_found
+    test dx,0FFFh
+    jz read_small_start_found
 ;
-        sub edx,ds:file_block_size
-        GetFileListEntry
-        mov edi,eax
-        jmp read_small_start_loop
+    sub edx,ds:file_block_size
+    GetFileListEntry
+    mov edi,eax
+    jmp read_small_start_loop
 
 read_small_start_found:
-        mov es:[edi].fl_prev_small,0
+    mov es:[edi].fl_prev_small,0
 
 read_small_loop:
-        mov es:[edi].fl_next_small,0
-        mov es:[edi].fl_base,esi
-        add esi,ds:file_block_size
-        add edx,ds:file_block_size
-        test dx,0FFFh
-        jz read_small_done
+    mov es:[edi].fl_next_small,0
+    mov es:[edi].fl_base,esi
+    add esi,ds:file_block_size
+    add edx,ds:file_block_size
+    test dx,0FFFh
+    jz read_small_done
 ;
-        GetFileListEntry
-        jc read_small_done
+    GetFileListEntry
+    jc read_small_done
 ;
-        mov es:[edi].fl_next_small,eax
-        mov es:[eax].fl_prev_small,edi
-        mov edi,eax
-        jmp read_small_loop
+    mov es:[edi].fl_next_small,eax
+    mov es:[eax].fl_prev_small,edi
+    mov edi,eax
+    jmp read_small_loop
 
 read_small_done:
-        pop edi
-        pop esi
-        pop edx
-        pop bx
-        
+    pop edi
+    pop esi
+    pop edx
+    pop bx
+    
 read_file_list_do:
-        mov es:[edi].fl_state, FILE_LIST_STATE_USED
-        push edx
-        push ecx
-        mov eax,ds:file_block_size
-        mov ecx,eax
-        neg eax
-        and edx,eax
-        push bx
-        mov al,ds:file_drive
-        mov bx,ds
-        CallFileSystem read_file_block_proc
-        pop bx
-        pop ecx
-        pop edx
-        ret
+    mov es:[edi].fl_state, FILE_LIST_STATE_USED
+    push edx
+    push ecx
+    mov eax,ds:file_block_size
+    mov ecx,eax
+    neg eax
+    and edx,eax
+    push bx
+    mov al,ds:file_drive
+    mov bx,ds
+    CallFileSystem read_file_block_proc
+    pop bx
+    pop ecx
+    pop edx
+    ret
 ReadFileListEntry       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   swap_file_list
+;           NAME:           swap_file_list
 ;
-;               DESCRIPTION:    Free file list entry, if possible
+;           DESCRIPTION:    Free file list entry, if possible
 ;
-;               PARAMETERS:             DS      File selector
-;                       ES:EDI  Dir array
-;                       EAX     File list entry
+;           PARAMETERS:         DS      File selector
+;               ES:EDI  Dir array
+;               EAX     File list entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1009,14 +1009,14 @@ swap_file_list  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   swap_dir
+;           NAME:           swap_dir
 ;
-;               DESCRIPTION:    Free physical memory in file directory
+;           DESCRIPTION:    Free physical memory in file directory
 ;
-;               PARAMETERS:             DS      File selector
-;                       ES:EDI     Dir array
+;           PARAMETERS:         DS      File selector
+;               ES:EDI     Dir array
 ;
-;       RETURNS:        EBP     Entry count
+;       RETURNS:    EBP     Entry count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1045,11 +1045,11 @@ swap_dir    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   swap_file
+;           NAME:           swap_file
 ;
-;               DESCRIPTION:    Free physical memory in file
+;           DESCRIPTION:    Free physical memory in file
 ;
-;               PARAMETERS:             DS      File selector
+;           PARAMETERS:         DS      File selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1059,16 +1059,16 @@ swap_file   Proc near
 ;    
     mov ax,flat_sel
     mov es,ax
-        test ds:file_attrib, FILE_ATTRIB_NOBUFFER
-        jnz swap_file_done
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jnz swap_file_done
 ;
     mov cx,ds:file_dir_entries
     mov si,OFFSET file_entries
 
 swap_file_loop:    
-        mov edi,ds:[si]
-        or edi,edi
-        jz swap_file_next
+    mov edi,ds:[si]
+    or edi,edi
+    jz swap_file_next
 ;
     push cx
     push si
@@ -1087,8 +1087,8 @@ swap_file_loop:
     pop ecx
     
 swap_file_next:
-        add si,4
-        loop swap_file_loop
+    add si,4
+    loop swap_file_loop
 ;
 
 swap_file_done:
@@ -1101,9 +1101,9 @@ swap_file   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   swap_all
+;           NAME:           swap_all
 ;
-;               DESCRIPTION:    Free physical memory in all files
+;           DESCRIPTION:    Free physical memory in all files
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1122,10 +1122,10 @@ swap_all    Proc near
 swap_all_loop:  
     push ds
     mov ds,bx
-        EnterWriteSection ds:file_size_section
+    EnterWriteSection ds:file_size_section
     call swap_file
-        LeaveWriteSection ds:file_size_section
-        pop ds
+    LeaveWriteSection ds:file_size_section
+    pop ds
 ;
     mov es,bx
     mov bx,es:file_next
@@ -1147,35 +1147,35 @@ swap_all    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   read file
+;           NAME:           read file
 ;
-;               DESCRIPTION:    Reads from a file
+;           DESCRIPTION:    Reads from a file
 ;
-;               PARAMETERS:             AL                      Drive
-;                                               DS                      File selector
-;                                               ECX                     Size
-;                                               EDX                     Position
-;                                               ES:EDI          Data buffer
+;           PARAMETERS:         AL              Drive
+;                           DS              File selector
+;                           ECX             Size
+;                           EDX             Position
+;                           ES:EDI      Data buffer
 ;
-;               RETURNS:                EAX                     Bytes read
+;           RETURNS:        EAX             Bytes read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_file       Proc near
-        push es
-        push fs
-        push ebx
-        push ecx
-        push edx
-        push esi
-        push edi
-        push ebp
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
 ;
-        xor ebp,ebp
-        mov ax,es
-        mov fs,ax
-        mov ax,flat_sel
-        mov es,ax
+    xor ebp,ebp
+    mov ax,es
+    mov fs,ax
+    mov ax,flat_sel
+    mov es,ax
 ;    
     GetFreePhysical
     cmp eax,100000h
@@ -1184,20 +1184,20 @@ read_file       Proc near
     call swap_all 
 
 read_file_mem_all_ok:   
-        EnterReadSection ds:file_size_section
-        cmp edx,ds:file_size
-        jnc read_file_done
+    EnterReadSection ds:file_size_section
+    cmp edx,ds:file_size
+    jnc read_file_done
 ;
-        mov eax,edx
-        add eax,ecx
-        sub eax,ds:file_size
-        jc read_file_size_ok
+    mov eax,edx
+    add eax,ecx
+    sub eax,ds:file_size
+    jc read_file_size_ok
 ;
-        sub ecx,eax
+    sub ecx,eax
 
 read_file_size_ok:
-        or ecx,ecx
-        jz read_file_done
+    or ecx,ecx
+    jz read_file_done
 
 read_file_loop:
     GetFreePhysical
@@ -1207,150 +1207,150 @@ read_file_loop:
     call swap_file
 
 read_file_mem_ok:
-        push cx
-        mov esi,edx
-        mov cl,ds:file_dir_shift
-        shr esi,cl
-        shl si,2
-        mov ebx,ds:[si].file_entries
-        EnterSection ds:file_list_section
-        or ebx,ebx
-        jnz read_file_check_mid
+    push cx
+    mov esi,edx
+    mov cl,ds:file_dir_shift
+    shr esi,cl
+    shl si,2
+    mov ebx,ds:[si].file_entries
+    EnterSection ds:file_list_section
+    or ebx,ebx
+    jnz read_file_check_mid
 ;
-        call CreateListDir
-        mov ds:[si].file_entries,ebx
+    call CreateListDir
+    mov ds:[si].file_entries,ebx
 
 read_file_check_mid:
-        mov esi,edx
-        mov cl,ds:file_entry_shift
-        shr esi,cl
-        shl si,2
-        and esi,0FFCh
-        pop cx
-        mov eax,es:[ebx+esi]
-        or eax,eax
-        jnz read_file_check_base
+    mov esi,edx
+    mov cl,ds:file_entry_shift
+    shr esi,cl
+    shl si,2
+    and esi,0FFCh
+    pop cx
+    mov eax,es:[ebx+esi]
+    or eax,eax
+    jnz read_file_check_base
 ;
-        lea eax,[ebx+esi]
-        call CreateListEntry
-        mov es:[ebx+esi],eax
+    lea eax,[ebx+esi]
+    call CreateListEntry
+    mov es:[ebx+esi],eax
 
 read_file_check_base:
-        cmp es:[eax].fl_state, FILE_LIST_STATE_EMPTY
-        jne read_file_do_first
+    cmp es:[eax].fl_state, FILE_LIST_STATE_EMPTY
+    jne read_file_do_first
 ;
-        push edi
-        mov edi,eax
-        call ReadFileListEntry
-        pop edi
-        jnc read_file_do_first
+    push edi
+    mov edi,eax
+    call ReadFileListEntry
+    pop edi
+    jnc read_file_do_first
 ;
-        mov dword ptr es:[ebx+esi],0
-        LeaveSection ds:file_list_section
-        jmp read_file_done
+    mov dword ptr es:[ebx+esi],0
+    LeaveSection ds:file_list_section
+    jmp read_file_done
 
 read_file_do_first:
-        mov esi,es:[ebx+esi]
-        inc es:[esi].fl_usage
-        inc es:[esi].fl_ref_count
-        LeaveSection ds:file_list_section
+    mov esi,es:[ebx+esi]
+    inc es:[esi].fl_usage
+    inc es:[esi].fl_ref_count
+    LeaveSection ds:file_list_section
 ;
-        push ds
-        push es
-        push edx
-        push esi
+    push ds
+    push es
+    push edx
+    push esi
 ;
-        mov ebx,ds:file_block_size
-        mov esi,es:[esi].fl_base
-        mov ax,fs
-        mov es,ax
-        mov ax,flat_sel
-        mov ds,ax
+    mov ebx,ds:file_block_size
+    mov esi,es:[esi].fl_base
+    mov ax,fs
+    mov es,ax
+    mov ax,flat_sel
+    mov ds,ax
 ;
-        mov eax,ebx
-        dec eax
-        and edx,eax
-        add esi,edx
+    mov eax,ebx
+    dec eax
+    and edx,eax
+    add esi,edx
 ;
-        sub ebx,edx
-        cmp ecx,ebx
-        jnc read_file_do
+    sub ebx,edx
+    cmp ecx,ebx
+    jnc read_file_do
 ;
-        mov ebx,ecx
+    mov ebx,ecx
 
 read_file_do:
-        push ecx
-        mov ecx,ebx
-        shr ecx,2
-        rep movs dword ptr es:[edi],ds:[esi]
-        mov ecx,ebx
-        and ecx,3
-        rep movs byte ptr es:[edi],ds:[esi]
-        pop ecx
+    push ecx
+    mov ecx,ebx
+    shr ecx,2
+    rep movs dword ptr es:[edi],ds:[esi]
+    mov ecx,ebx
+    and ecx,3
+    rep movs byte ptr es:[edi],ds:[esi]
+    pop ecx
 ;
-        pop esi
-        pop edx
-        pop es
-        pop ds
-        dec es:[esi].fl_usage
+    pop esi
+    pop edx
+    pop es
+    pop ds
+    dec es:[esi].fl_usage
 ;
-        add edx,ebx
-        add ebp,ebx
-        sub ecx,ebx
-        jnz read_file_loop
+    add edx,ebx
+    add ebp,ebx
+    sub ecx,ebx
+    jnz read_file_loop
 ;
-        clc
+    clc
 
 read_file_done:
-        pushf
-        LeaveReadSection ds:file_size_section
-        popf
-        mov eax,ebp
+    pushf
+    LeaveReadSection ds:file_size_section
+    popf
+    mov eax,ebp
 ;
-        pop ebp
-        pop edi
-        pop esi
-        pop edx
-        pop ecx
-        pop ebx
-        pop fs
-        pop es
-        ret
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+    ret
 read_file       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   write file
+;           NAME:           write file
 ;
-;               DESCRIPTION:    Write to a file
+;           DESCRIPTION:    Write to a file
 ;
-;               PARAMETERS:             AL                      Drive
-;                                               DS                      File selector
-;                                               ECX                     Size
-;                                               EDX                     Position
-;                                               ES:EDI          Data buffer
+;           PARAMETERS:         AL              Drive
+;                           DS              File selector
+;                           ECX             Size
+;                           EDX             Position
+;                           ES:EDI      Data buffer
 ;
-;               RETURNS:                EAX                     Bytes written
+;           RETURNS:        EAX             Bytes written
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_file      Proc near
-        push es
-        push fs
-        push ebx
-        push ecx
-        push edx
-        push esi
-        push edi
-        push ebp
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
 ;
-        xor ebp,ebp
-        mov ax,es
-        mov fs,ax
-        mov ax,flat_sel
-        mov es,ax
+    xor ebp,ebp
+    mov ax,es
+    mov fs,ax
+    mov ax,flat_sel
+    mov es,ax
 ;    
     GetFreePhysical
     cmp eax,100000h
@@ -1359,26 +1359,26 @@ write_file      Proc near
     call swap_all 
 
 write_file_mem_all_ok:  
-        EnterWriteSection ds:file_size_section
-        cmp edx,ds:file_size
-        jnc write_file_extend
+    EnterWriteSection ds:file_size_section
+    cmp edx,ds:file_size
+    jnc write_file_extend
 ;
-        mov eax,edx
-        add eax,ecx
-        sub eax,ds:file_size
-        jc write_file_size_ok
+    mov eax,edx
+    add eax,ecx
+    sub eax,ds:file_size
+    jc write_file_size_ok
 
 write_file_extend:
-        push edx
-        add edx,ecx
-        mov bx,ds
-        mov al,ds:file_drive
-        CallFileSystem set_file_size_proc
-        pop edx
+    push edx
+    add edx,ecx
+    mov bx,ds
+    mov al,ds:file_drive
+    CallFileSystem set_file_size_proc
+    pop edx
 
 write_file_size_ok:
-        or ecx,ecx
-        jz write_file_done
+    or ecx,ecx
+    jz write_file_done
 
 write_file_loop:
     GetFreePhysical
@@ -1388,10 +1388,10 @@ write_file_loop:
     call swap_file
 
 write_file_mem_ok:
-        push cx
-        mov esi,edx
-        mov cl,ds:file_dir_shift
-        shr esi,cl
+    push cx
+    mov esi,edx
+    mov cl,ds:file_dir_shift
+    shr esi,cl
 
 write_file_retry_entry:
     cmp si,ds:file_dir_entries
@@ -1403,759 +1403,759 @@ write_file_retry_entry:
     jmp write_file_retry_entry
 
 write_file_entries_ok:  
-        shl si,2
-        mov ebx,ds:[si].file_entries
-        or ebx,ebx
-        jnz write_file_check_mid
+    shl si,2
+    mov ebx,ds:[si].file_entries
+    or ebx,ebx
+    jnz write_file_check_mid
 ;
-        call CreateListDir
-        mov ds:[si].file_entries,ebx
+    call CreateListDir
+    mov ds:[si].file_entries,ebx
 
 write_file_check_mid:
-        mov esi,edx
-        mov cl,ds:file_entry_shift
-        shr esi,cl
-        shl si,2
-        and esi,0FFCh
-        pop cx
-        mov eax,es:[ebx+esi]
-        or eax,eax
-        jnz write_file_check_base
+    mov esi,edx
+    mov cl,ds:file_entry_shift
+    shr esi,cl
+    shl si,2
+    and esi,0FFCh
+    pop cx
+    mov eax,es:[ebx+esi]
+    or eax,eax
+    jnz write_file_check_base
 ;
-        lea eax,[ebx+esi]
-        call CreateListEntry
-        mov es:[ebx+esi],eax
+    lea eax,[ebx+esi]
+    call CreateListEntry
+    mov es:[ebx+esi],eax
 
 write_file_check_base:
-        cmp es:[eax].fl_state, FILE_LIST_STATE_EMPTY
-        jne write_file_do_first
+    cmp es:[eax].fl_state, FILE_LIST_STATE_EMPTY
+    jne write_file_do_first
 ;
-        push edi
-        mov edi,eax
-        call ReadFileListEntry
-        pop edi
-        jnc write_file_do_first
+    push edi
+    mov edi,eax
+    call ReadFileListEntry
+    pop edi
+    jnc write_file_do_first
 ;
-        mov dword ptr es:[ebx+esi],0
-        LeaveSection ds:file_list_section
-        jmp write_file_done
+    mov dword ptr es:[ebx+esi],0
+    LeaveSection ds:file_list_section
+    jmp write_file_done
 
 write_file_do_first:
-        mov esi,es:[ebx+esi]
-        inc es:[esi].fl_usage
-        inc es:[esi].fl_ref_count
-        push ds
-        push es
-        push edx
-        push esi
-        push edi
+    mov esi,es:[ebx+esi]
+    inc es:[esi].fl_usage
+    inc es:[esi].fl_ref_count
+    push ds
+    push es
+    push edx
+    push esi
+    push edi
 ;
-        mov ebx,ds:file_block_size
-        mov esi,es:[esi].fl_base
-        xchg esi,edi
-        mov ax,fs
-        mov ds,ax
-        mov ax,flat_sel
-        mov es,ax
+    mov ebx,ds:file_block_size
+    mov esi,es:[esi].fl_base
+    xchg esi,edi
+    mov ax,fs
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
 ;
-        mov eax,ebx
-        dec eax
-        and edx,eax
-        add edi,edx
+    mov eax,ebx
+    dec eax
+    and edx,eax
+    add edi,edx
 ;
-        sub ebx,edx
-        cmp ecx,ebx
-        jnc write_file_do
+    sub ebx,edx
+    cmp ecx,ebx
+    jnc write_file_do
 ;
-        mov ebx,ecx
+    mov ebx,ecx
 
 write_file_do:
-        push ecx
-        mov ecx,ebx
-        shr ecx,2
-        rep movs dword ptr es:[edi],ds:[esi]
-        mov ecx,ebx
-        and ecx,3
-        rep movs byte ptr es:[edi],ds:[esi]
-        pop ecx
+    push ecx
+    mov ecx,ebx
+    shr ecx,2
+    rep movs dword ptr es:[edi],ds:[esi]
+    mov ecx,ebx
+    and ecx,3
+    rep movs byte ptr es:[edi],ds:[esi]
+    pop ecx
 ;
-        pop edi
-        pop esi
-        pop edx
-        pop es
-        pop ds
+    pop edi
+    pop esi
+    pop edx
+    pop es
+    pop ds
 ;
-        push bx
-        push ecx
-        push edi
-        mov edi,esi
-        mov ecx,ebx
-        mov al,ds:file_drive
-        mov bx,ds
-        CallFileSystem write_file_block_proc
-        pop edi
-        pop ecx
-        pop bx  
+    push bx
+    push ecx
+    push edi
+    mov edi,esi
+    mov ecx,ebx
+    mov al,ds:file_drive
+    mov bx,ds
+    CallFileSystem write_file_block_proc
+    pop edi
+    pop ecx
+    pop bx  
 ;
-        dec es:[esi].fl_usage
-        add edx,ebx
-        add ebp,ebx
-        add edi,ebx
-        sub ecx,ebx
-        jnz write_file_loop
+    dec es:[esi].fl_usage
+    add edx,ebx
+    add ebp,ebx
+    add edi,ebx
+    sub ecx,ebx
+    jnz write_file_loop
 ;
-        clc
+    clc
 
 write_file_done:
-        pushf
-        LeaveWriteSection ds:file_size_section
-        popf
-        mov eax,ebp
+    pushf
+    LeaveWriteSection ds:file_size_section
+    popf
+    mov eax,ebp
 ;
-        pop ebp
-        pop edi
-        pop esi
-        pop edx
-        pop ecx
-        pop ebx
-        pop fs
-        pop es
-        ret
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+    ret
 write_file      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetFileInfo
+;           NAME:           GetFileInfo
 ;
-;               DESCRIPTION:    Get file info
+;           DESCRIPTION:    Get file info
 ;
-;               PARAMETERS:             BX                      FILE HANDLE
+;           PARAMETERS:         BX              FILE HANDLE
 ;
-;               RETURNS:                AX                      FILE SYSTEM HANDLE
-;                                               CL                      ACCESS
-;                                               CH                      DRIVE
-;                                               NC                      SUCCESS
-;                                               
+;           RETURNS:        AX              FILE SYSTEM HANDLE
+;                           CL              ACCESS
+;                           CH              DRIVE
+;                           NC              SUCCESS
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_file_info_name      DB 'Get File info',0
 
 get_file_info   PROC far
-        push ds
-        push bx
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc get_file_info_done
+    push ds
+    push ebx
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc get_file_info_done
 ;
-        mov ax,[bx].file_handle_sel
-        mov cl,[bx].file_handle_access
-        mov ch,[bx].file_handle_drive
-        clc
+    mov ax,[ebx].file_handle_sel
+    mov cl,[ebx].file_handle_access
+    mov ch,[ebx].file_handle_drive
+    clc
 
 get_file_info_done:
-        pop bx
-        pop ds
-        ret
+    pop ebx
+    pop ds
+    ret
 get_file_info   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DuplFileInfo
+;           NAME:           DuplFileInfo
 ;
-;               DESCRIPTION:    Duplicate handle using file-info
+;           DESCRIPTION:    Duplicate handle using file-info
 ;
-;               PARAMETERS:             AX                      FILE SYSTEM HANDLE
-;                                               CL                      ACCESS
-;                                               CH                      DRIVE
+;           PARAMETERS:         AX              FILE SYSTEM HANDLE
+;                           CL              ACCESS
+;                           CH              DRIVE
 ;
-;               RETURNS:                BX                      FILE HANDLE
-;                                               NC                      SUCCESS
-;                                               
+;           RETURNS:        BX              FILE HANDLE
+;                           NC              SUCCESS
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dupl_file_info_name     DB 'Duplicate File info',0
 
 dupl_file_info  PROC far
-        push ds
-        push ax
-        mov ds,ax
-        inc ds:file_usage
-        pop ax
-        push cx
-        mov cx,SIZE file_handle_seg
-        AllocateHandle
-        pop cx
-        mov [bx].file_handle_pos,0
-        mov [bx].file_handle_sel,ax
-        mov [bx].file_handle_access,cl
-        mov [bx].file_handle_drive,ch
-        mov [bx].hh_sign,FILE_HANDLE
-        mov bx,[bx].hh_handle
-        clc
-        pop ds
-        ret
+    push ds
+    push ax
+    mov ds,ax
+    inc ds:file_usage
+    pop ax
+    push cx
+    mov cx,SIZE file_handle_seg
+    NewAllocateHandle
+    pop cx
+    mov [ebx].file_handle_pos,0
+    mov [ebx].file_handle_sel,ax
+    mov [ebx].file_handle_access,cl
+    mov [ebx].file_handle_drive,ch
+    mov [ebx].hh_sign,FILE_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+    pop ds
+    ret
 dupl_file_info  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CLOSE_FILE
+;           NAME:           CLOSE_FILE
 ;
-;               DESCRIPTION:    Close file
+;           DESCRIPTION:    Close file
 ;
-;               PARAMETERS:             BX                      FILE HANDLE
-;                                               NC                      SUCCESS
-;                                               
+;           PARAMETERS:         BX              FILE HANDLE
+;                           NC              SUCCESS
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_file_name DB 'Close File',0
 
 close_file:     
-        push ds
-        push bx
-        push si
+    push ds
+    push ebx
+    push esi
 ;
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc close_file_done
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc close_file_done
 ;
-        mov si,bx
-        mov al,[bx].file_handle_drive
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz close_file_done
+    mov esi,ebx
+    mov al,[ebx].file_handle_drive
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz close_file_done
 ;
-        mov ds,bx
-        sub ds:file_usage,1
-        jnz close_file_handle
+    mov ds,bx
+    sub ds:file_usage,1
+    jnz close_file_handle
 ;
-        call FreeFileSel
+    call FreeFileSel
 
 close_file_handle:
-        mov bx,si
-        FreeHandle
-        clc
+    mov ebx,esi
+    NewFreeHandle
+    clc
 
 close_file_done:
-        pop si
-        pop bx
-        pop ds
-        retf32
+    pop esi
+    pop ebx
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DUPL_FILE
+;           NAME:           DUPL_FILE
 ;
-;               DESCRIPTION:    Duplicate file handle
+;           DESCRIPTION:    Duplicate file handle
 ;
-;               PARAMETERS:             AX                      OLD FILE HANDLE
+;           PARAMETERS:         AX              OLD FILE HANDLE
 ;
-;               RETURNS:                BX                      NEW FILE HANDLE
+;           RETURNS:        BX              NEW FILE HANDLE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dupl_file_name  DB 'Duplicate File Handle',0
 
 dupl_file:
-        push ds
-        push es
-        push eax
-        push cx
-        push si
+    push ds
+    push es
+    push eax
+    push cx
+    push esi
 ;
-        mov bx,ax
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc dupl_file_done
+    mov bx,ax
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc dupl_file_done
 ;
-        mov si,bx
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz dupl_file_done
+    mov esi,ebx
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz dupl_file_done
 ;
-        mov ds,bx
-        inc ds:file_usage
+    mov ds,bx
+    inc ds:file_usage
 ;
-        mov cx,SIZE file_handle_seg
-        AllocateHandle
-        mov eax,[si].file_handle_pos
-        mov [bx].file_handle_pos,eax
-        mov ax,[si].file_handle_sel
-        mov [bx].file_handle_sel,ax
-        mov al,[si].file_handle_access
-        mov [bx].file_handle_access,al
-        mov al,[si].file_handle_drive
-        mov [bx].file_handle_drive,al
-        mov [bx].hh_sign,FILE_HANDLE
-        mov bx,[bx].hh_handle
-        clc
+    mov cx,SIZE file_handle_seg
+    NewAllocateHandle
+    mov eax,[esi].file_handle_pos
+    mov [ebx].file_handle_pos,eax
+    mov ax,[esi].file_handle_sel
+    mov [ebx].file_handle_sel,ax
+    mov al,[esi].file_handle_access
+    mov [ebx].file_handle_access,al
+    mov al,[esi].file_handle_drive
+    mov [ebx].file_handle_drive,al
+    mov [ebx].hh_sign,FILE_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
 
 dupl_file_done:
-        pop si
-        pop cx
-        pop eax
-        pop es
-        pop ds
-        retf32
+    pop esi
+    pop cx
+    pop eax
+    pop es
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GET_IOCTL_DATA
+;           NAME:           GET_IOCTL_DATA
 ;
-;               DESCRIPTION:    Get IOCTL data
+;           DESCRIPTION:    Get IOCTL data
 ;
-;               PARAMETERS:             BX                      FILE HANDLE
+;           PARAMETERS:         BX              FILE HANDLE
 ;
-;               RETURNS:                DX                      DEVICE ATTRIBUTE
-;                                               
+;           RETURNS:        DX              DEVICE ATTRIBUTE
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_ioctl_data_name     DB 'Get IOCTL Data',0
 
 get_ioctl_data:
-        push ds
-        push ax
-        push bx
+    push ds
+    push ax
+    push ebx
 ;
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc get_ioctl_data_done
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc get_ioctl_data_done
 ;
-        mov al,[bx].file_handle_drive
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz get_ioctl_data_done
+    mov al,[ebx].file_handle_drive
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz get_ioctl_data_done
 ;
-        CallFileSystem get_ioctl_data_proc
+    CallFileSystem get_ioctl_data_proc
 get_ioctl_data_done:
-        pop bx
-        pop ax
-        pop ds
-        retf32
+    pop ebx
+    pop ax
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GET_FILE_SIZE
+;           NAME:           GET_FILE_SIZE
 ;
-;               DESCRIPTION:    Get file size
+;           DESCRIPTION:    Get file size
 ;
-;               PARAMETERS:             BX                      FILE HANDLE
-;                               
-;               RETURNS:                EAX                     SIZE OF FILE
-;                                               
+;           PARAMETERS:         BX              FILE HANDLE
+;                   
+;           RETURNS:        EAX             SIZE OF FILE
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_file_size_name      DB 'Get File Size',0
 
 get_file_size:
-        push ds
-        push bx
-        push edx
+    push ds
+    push ebx
+    push edx
 ;
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc get_file_size_done
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc get_file_size_done
 ;
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz get_file_size_done
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz get_file_size_done
 ;
-        mov ds,bx
-        EnterReadSection ds:file_size_section
-        mov eax,ds:file_size
-        LeaveReadSection ds:file_size_section
-        clc
+    mov ds,bx
+    EnterReadSection ds:file_size_section
+    mov eax,ds:file_size
+    LeaveReadSection ds:file_size_section
+    clc
 
 get_file_size_done:
-        pop edx
-        pop bx
-        pop ds
-        retf32
+    pop edx
+    pop ebx
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SET_FILE_SIZE
+;           NAME:           SET_FILE_SIZE
 ;
-;               DESCRIPTION:    Set file size
+;           DESCRIPTION:    Set file size
 ;
-;               PARAMETERS:             BX                      FILE HANDLE
-;                                               EAX                     SIZE OF FILE
-;                                               
+;           PARAMETERS:         BX              FILE HANDLE
+;                           EAX             SIZE OF FILE
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_file_size_name      DB 'Set File Size',0
 
 set_file_size:
-        push ds
-        push eax
-        push bx
-        push edx
+    push ds
+    push eax
+    push ebx
+    push edx
 ;
-        mov edx,eax
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc set_file_size_done
+    mov edx,eax
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc set_file_size_done
 ;
-        mov al,[bx].file_handle_drive
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz set_file_size_done
+    mov al,[ebx].file_handle_drive
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz set_file_size_done
 ;
-        mov ds,bx
-        EnterWriteSection ds:file_size_section
-        CallFileSystem set_file_size_proc
-        LeaveWriteSection ds:file_size_section
+    mov ds,bx
+    EnterWriteSection ds:file_size_section
+    CallFileSystem set_file_size_proc
+    LeaveWriteSection ds:file_size_section
 
 set_file_size_done:
-        pop edx
-        pop bx
-        pop eax
-        pop ds
-        retf32
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GET_FILE_POS
+;           NAME:           GET_FILE_POS
 ;
-;               DESCRIPTION:    Get file position
+;           DESCRIPTION:    Get file position
 ;
-;               PARAMETERS:             BX                      FILE HANDLE
-;                       
-;               RETURNS:                EAX                     FILE POSITION
-;                                               
+;           PARAMETERS:         BX              FILE HANDLE
+;               
+;           RETURNS:        EAX             FILE POSITION
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_file_pos_name       DB 'Get File Position',0
 
 get_file_pos:
-        push ds
-        push bx
+    push ds
+    push ebx
 ;
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc get_file_pos_done
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc get_file_pos_done
 ;
-        mov ax,[bx].file_handle_sel
-        or ax,ax
-        stc
-        jz get_file_pos_done
+    mov ax,[ebx].file_handle_sel
+    or ax,ax
+    stc
+    jz get_file_pos_done
 ;
-        mov eax,[bx].file_handle_pos
-        clc
+    mov eax,[ebx].file_handle_pos
+    clc
 
 get_file_pos_done:
-        pop bx
-        pop ds
-        retf32
+    pop ebx
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SET_FILE_POS
+;           NAME:           SET_FILE_POS
 ;
-;               DESCRIPTION:    Set file position
+;           DESCRIPTION:    Set file position
 ;
-;               PARAMETERS:             BX                      FILE HANDLE
-;                                               EAX                     FILE POSITION
-;                                               
+;           PARAMETERS:         BX              FILE HANDLE
+;                           EAX             FILE POSITION
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_file_pos_name       DB 'Set File Position',0
 
 set_file_pos:
-        push ds
-        push bx
-        push eax
-        push edx
+    push ds
+    push ebx
+    push eax
+    push edx
 ;
-        mov edx,eax
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc set_file_pos_done
+    mov edx,eax
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc set_file_pos_done
 ;
-        mov [bx].file_handle_pos,edx
-        clc
+    mov [ebx].file_handle_pos,edx
+    clc
 
 set_file_pos_done:
-        pop edx
-        pop eax
-        pop bx
-        pop ds
-        retf32
+    pop edx
+    pop eax
+    pop ebx
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GET_FILE_TIME
+;           NAME:           GET_FILE_TIME
 ;
-;               DESCRIPTION:    Get file time & date
+;           DESCRIPTION:    Get file time & date
 ;
-;               PARAMETERS:             BX                      FILE HANDLE
-;                       
-;               RETURNS:                EDX:EAX         CURRENT FILE TIME
-;                                               
+;           PARAMETERS:         BX              FILE HANDLE
+;               
+;           RETURNS:        EDX:EAX     CURRENT FILE TIME
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_file_time_name      DB 'Get File Time',0
 
 get_file_time:
-        push ds
-        push es
-        push bx
-        push ecx
+    push ds
+    push es
+    push ebx
+    push ecx
 ;
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc get_file_time_done
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc get_file_time_done
 ;
-        mov dx,flat_sel
-        mov es,dx
-        mov al,[bx].file_handle_drive
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz get_file_time_done
+    mov dx,flat_sel
+    mov es,dx
+    mov al,[ebx].file_handle_drive
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz get_file_time_done
 ;
-        mov ds,bx
-        mov edx,ds:file_dir_entry
-        mov eax,es:[edx].de_time
-        mov edx,es:[edx].de_time+4
-        clc
+    mov ds,bx
+    mov edx,ds:file_dir_entry
+    mov eax,es:[edx].de_time
+    mov edx,es:[edx].de_time+4
+    clc
 
 get_file_time_done:
-        pop ecx
-        pop bx
-        pop es
-        pop ds
-        retf32
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SET_FILE_TIME
+;           NAME:           SET_FILE_TIME
 ;
-;               DESCRIPTION:    Set file time & date
+;           DESCRIPTION:    Set file time & date
 ;
-;               PARAMETERS:             BX                      FILE HANDLE
-;                                               EDX:EAX         NEW FILE TIME
-;                                               
+;           PARAMETERS:         BX              FILE HANDLE
+;                           EDX:EAX     NEW FILE TIME
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_file_time_name      DB 'Set File Time',0
 
 set_file_time:
-        push ds
-        push es
-        push fs
-        push ax
-        push bx
-        push ecx
-        push edx
-        push edi
+    push ds
+    push es
+    push fs
+    push ax
+    push ebx
+    push ecx
+    push edx
+    push edi
 ;
-        mov cx,flat_sel
-        mov es,cx
-        mov ecx,eax
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc set_file_time_done
+    mov cx,flat_sel
+    mov es,cx
+    mov ecx,eax
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc set_file_time_done
 ;
-        mov al,[bx].file_handle_drive
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz set_file_time_done
+    mov al,[ebx].file_handle_drive
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz set_file_time_done
 ;
-        mov fs,bx
-        mov edi,fs:file_dir_entry
-        mov es:[edi].de_time,ecx
-        mov es:[edi].de_time+4,edx
-        mov edx,edi
-        CallFileSystem update_file_proc
-        clc
+    mov fs,bx
+    mov edi,fs:file_dir_entry
+    mov es:[edi].de_time,ecx
+    mov es:[edi].de_time+4,edx
+    mov edx,edi
+    CallFileSystem update_file_proc
+    clc
 
 set_file_time_done:
-        pop edi
-        pop edx
-        pop ecx
-        pop bx
-        pop ax
-        pop fs
-        pop es
-        pop ds
-        retf32
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   READ_FILE
+;           NAME:           READ_FILE
 ;
-;               DESCRIPTION:    Read file
+;           DESCRIPTION:    Read file
 ;
-;               PARAMETERS:             ES:(E)DI        BUFFER
-;                                               BX                      HANDLE
-;                                               (E)CX           NUMBER OF BYTES TO READ
+;           PARAMETERS:         ES:(E)DI    BUFFER
+;                           BX              HANDLE
+;                           (E)CX       NUMBER OF BYTES TO READ
 ;
-;               RETURNS:                (E)AX           NUMBER OF BYTES READ
-;                                               NC                      SUCCESS
+;           RETURNS:        (E)AX       NUMBER OF BYTES READ
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_file_name  DB 'Read File',0
 
 read_file32:
-        push ds
-        push bx
-        push edx
-        push si
+    push ds
+    push ebx
+    push edx
+    push esi
 ;
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc read_file32_done
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc read_file32_done
 ;
-        mov si,bx
-        mov al,[bx].file_handle_drive
-        mov edx,[bx].file_handle_pos
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz read_file32_done
+    mov esi,ebx
+    mov al,[ebx].file_handle_drive
+    mov edx,[ebx].file_handle_pos
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz read_file32_done
 ;
-        push ds
-        mov ds,bx
-        test ds:file_attrib, FILE_ATTRIB_NOBUFFER
-        jz read_file32_buf
+    push ds
+    mov ds,bx
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jz read_file32_buf
 ;
-        CallFileSystem read_file_proc
-        jmp read_file32_save
+    CallFileSystem read_file_proc
+    jmp read_file32_save
 
 read_file32_buf:
-        call read_file
+    call read_file
 
 read_file32_save:
-        pop ds
-        pushf
+    pop ds
+    pushf
     jnc read_file32_success
 ;
     xor eax,eax
 
 read_file32_success:    
-        add [si].file_handle_pos,eax
-        popf
+    add [esi].file_handle_pos,eax
+    popf
 
 read_file32_done:
-        pop si
-        pop edx
-        pop bx
-        pop ds
-        retf32
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    retf32
 
 read_file16     PROC far
-        push ds
-        push bx
-        push ecx
-        push edx
-        push si
-        push edi
+    push ds
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
 ;
-        movzx ecx,cx
-        movzx edi,di
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc read_file16_done
+    movzx ecx,cx
+    movzx edi,di
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc read_file16_done
 ;
-        mov si,bx
-        mov al,[bx].file_handle_drive
-        mov edx,[bx].file_handle_pos
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz read_file16_done
+    mov esi,ebx
+    mov al,[ebx].file_handle_drive
+    mov edx,[ebx].file_handle_pos
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz read_file16_done
 ;
-        push ds
-        mov ds,bx
-        test ds:file_attrib, FILE_ATTRIB_NOBUFFER
-        jz read_file16_buf
+    push ds
+    mov ds,bx
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jz read_file16_buf
 ;
-        CallFileSystem read_file_proc
-        jmp read_file16_save
+    CallFileSystem read_file_proc
+    jmp read_file16_save
 
 read_file16_buf:
-        call read_file
+    call read_file
 
 read_file16_save:
-        pop ds
-        pushf
+    pop ds
+    pushf
     jnc read_file16_success
 ;
     xor eax,eax
 
 read_file16_success:
-        add [si].file_handle_pos,eax
-        popf
+    add [esi].file_handle_pos,eax
+    popf
 
 read_file16_done:
-        pop edi
-        pop si
-        pop edx
-        pop ecx
-        pop bx
-        pop ds
-        ret
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ds
+    ret
 read_file16     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WRITE_FILE
+;           NAME:           WRITE_FILE
 ;
-;               DESCRIPTION:    Write file
+;           DESCRIPTION:    Write file
 ;
-;               PARAMETERS:             ES:(E)DI        BUFFER
-;                                               BX                      HANDLE
-;                                               (E)CX           NUMBER OF BYTES TO WRITE
-;               
-;               RETURNS:                (E)AX           NUMBER OF BYTES WRITTEN
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:(E)DI    BUFFER
+;                           BX              HANDLE
+;                           (E)CX       NUMBER OF BYTES TO WRITE
+;           
+;           RETURNS:        (E)AX       NUMBER OF BYTES WRITTEN
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_file_name DB 'Write File',0
 
 write_file32:
-        push ds
-        push bx
-        push edx
-        push si
+    push ds
+    push ebx
+    push edx
+    push esi
 ;
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc write_file32_done
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc write_file32_done
 ;
-        mov si,bx
-        mov al,[bx].file_handle_drive
-        mov edx,[bx].file_handle_pos
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz write_file32_done
+    mov esi,ebx
+    mov al,[ebx].file_handle_drive
+    mov edx,[ebx].file_handle_pos
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz write_file32_done
 ;
-        push ds
-        mov ds,bx
+    push ds
+    mov ds,bx
 ;
     push es
     push edx
@@ -2164,64 +2164,64 @@ write_file32:
     push esi
     mov ax,flat_sel
     mov es,ax
-        mov esi,ds:file_dir_entry
-        GetSystemTime
-        mov es:[esi].de_time,eax
-        mov es:[esi].de_time+4,edx
-        mov edx,esi
-        pop esi
-        pop eax
-        CallFileSystem update_file_proc
+    mov esi,ds:file_dir_entry
+    GetSystemTime
+    mov es:[esi].de_time,eax
+    mov es:[esi].de_time+4,edx
+    mov edx,esi
+    pop esi
+    pop eax
+    CallFileSystem update_file_proc
 ;       
-        pop edx
-        pop es
+    pop edx
+    pop es
 ;       
-        test ds:file_attrib, FILE_ATTRIB_NOBUFFER
-        jz write_file32_buf
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jz write_file32_buf
 ;
-        CallFileSystem write_file_proc
-        jmp write_file32_save
+    CallFileSystem write_file_proc
+    jmp write_file32_save
 
 write_file32_buf:
-        call write_file
+    call write_file
 
 write_file32_save:
-        pop ds
-        pushf
-        add [si].file_handle_pos,eax
-        popf
+    pop ds
+    pushf
+    add [esi].file_handle_pos,eax
+    popf
 
 write_file32_done:
-        pop si
-        pop edx
-        pop bx
-        pop ds
-        retf32
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    retf32
 
 write_file16    PROC far
-        push ds
-        push bx
-        push ecx
-        push edx
-        push si
-        push edi
+    push ds
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
 ;
-        movzx ecx,cx
-        movzx edi,di
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc write_file16_done
+    movzx ecx,cx
+    movzx edi,di
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc write_file16_done
 ;
-        mov si,bx
-        mov al,[bx].file_handle_drive
-        mov edx,[bx].file_handle_pos
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz write_file16_done
+    mov esi,ebx
+    mov al,[ebx].file_handle_drive
+    mov edx,[ebx].file_handle_pos
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz write_file16_done
 ;
-        push ds
-        mov ds,bx
+    push ds
+    mov ds,bx
 ;
     push es
     push edx
@@ -2230,245 +2230,245 @@ write_file16    PROC far
     push esi
     mov ax,flat_sel
     mov es,ax
-        mov esi,ds:file_dir_entry
-        GetSystemTime
-        mov es:[esi].de_time,eax
-        mov es:[esi].de_time+4,edx
-        mov edx,esi
-        pop esi
-        pop eax
-        CallFileSystem update_file_proc
+    mov esi,ds:file_dir_entry
+    GetSystemTime
+    mov es:[esi].de_time,eax
+    mov es:[esi].de_time+4,edx
+    mov edx,esi
+    pop esi
+    pop eax
+    CallFileSystem update_file_proc
 ;       
-        pop edx
-        pop es
+    pop edx
+    pop es
 ;       
-        test ds:file_attrib, FILE_ATTRIB_NOBUFFER
-        jz write_file16_buf
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jz write_file16_buf
 ;
-        CallFileSystem write_file_proc
-        jmp write_file16_save
+    CallFileSystem write_file_proc
+    jmp write_file16_save
 
 write_file16_buf:
-        call write_file
+    call write_file
 
 write_file16_save:
-        pop ds
-        pushf
-        add [si].file_handle_pos,eax
-        popf
+    pop ds
+    pushf
+    add [esi].file_handle_pos,eax
+    popf
 
 write_file16_done:
-        pop edi
-        pop si
-        pop edx
-        pop ecx
-        pop bx
-        pop ds
-        ret
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ds
+    ret
 write_file16    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   map_to_file
+;           NAME:           map_to_file
 ;
-;               DESCRIPTION:    Map page from file to memory object
+;           DESCRIPTION:    Map page from file to memory object
 ;
-;               PARAMETERS:             EAX                     Offset within object
-;                                               BX                      File handle
-;                                               EDX                     Pagefault base address
+;           PARAMETERS:         EAX             Offset within object
+;                           BX              File handle
+;                           EDX             Pagefault base address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public map_to_file
+    public map_to_file
 
 map_to_file     Proc near
-        push ds
-        push es
-        pushad
+    push ds
+    push es
+    pushad
 ;
-        mov edi,edx
-        mov edx,eax
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc map_to_file_done
+    mov edi,edx
+    mov edx,eax
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc map_to_file_done
 ;
-        mov si,bx
-        mov al,[bx].file_handle_drive
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz map_to_file_done
+    mov esi,ebx
+    mov al,[ebx].file_handle_drive
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz map_to_file_done
 ;
-        mov ds,bx
-        test ds:file_attrib, FILE_ATTRIB_NOBUFFER
-        jnz map_to_file_read
+    mov ds,bx
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jnz map_to_file_read
 ;
-        mov ax,flat_sel
-        mov es,ax
+    mov ax,flat_sel
+    mov es,ax
 ;
-        EnterReadSection ds:file_size_section
-        cmp edx,ds:file_size
-        jnc map_to_file_leave
+    EnterReadSection ds:file_size_section
+    cmp edx,ds:file_size
+    jnc map_to_file_leave
 ;
-        mov esi,edx
-        mov cl,ds:file_dir_shift
-        shr esi,cl
-        shl si,2
-        mov ebx,ds:[si].file_entries
-        EnterSection ds:file_list_section
-        or ebx,ebx
-        jnz map_to_file_check_mid
+    mov esi,edx
+    mov cl,ds:file_dir_shift
+    shr esi,cl
+    shl si,2
+    mov ebx,ds:[si].file_entries
+    EnterSection ds:file_list_section
+    or ebx,ebx
+    jnz map_to_file_check_mid
 ;
-        call CreateListDir
-        mov ds:[si].file_entries,ebx
+    call CreateListDir
+    mov ds:[si].file_entries,ebx
 
 map_to_file_check_mid:
-        mov esi,edx
-        mov cl,ds:file_entry_shift
-        shr esi,cl
-        shl si,2
-        and esi,0FFCh
-        mov eax,es:[ebx+esi]
-        or eax,eax
-        jnz map_to_file_check_base
+    mov esi,edx
+    mov cl,ds:file_entry_shift
+    shr esi,cl
+    shl si,2
+    and esi,0FFCh
+    mov eax,es:[ebx+esi]
+    or eax,eax
+    jnz map_to_file_check_base
 ;
-        lea eax,[ebx+esi]
-        call CreateListEntry
-        mov es:[ebx+esi],eax
+    lea eax,[ebx+esi]
+    call CreateListEntry
+    mov es:[ebx+esi],eax
 
 map_to_file_check_base:
-        cmp es:[eax].fl_state, FILE_LIST_STATE_EMPTY
-        jne map_to_file_do_first
+    cmp es:[eax].fl_state, FILE_LIST_STATE_EMPTY
+    jne map_to_file_do_first
 ;
-        push edi
-        mov edi,eax
-        call ReadFileListEntry
-        pop edi
-        jnc map_to_file_do_first
+    push edi
+    mov edi,eax
+    call ReadFileListEntry
+    pop edi
+    jnc map_to_file_do_first
 ;
     xor eax,eax
     xchg eax,es:[ebx+esi]
     call FreeListEntry
-        LeaveSection ds:file_list_section
-        stc
-        jmp map_to_file_leave
+    LeaveSection ds:file_list_section
+    stc
+    jmp map_to_file_leave
 
 map_to_file_do_first:
-        mov esi,es:[ebx+esi]
-        inc es:[esi].fl_ref_count
-        inc es:[esi].fl_usage
-        mov ebx,ds:file_block_size
-        mov esi,es:[esi].fl_base
-        mov eax,ebx
-        dec eax
-        and edx,eax
-        add esi,edx
+    mov esi,es:[ebx+esi]
+    inc es:[esi].fl_ref_count
+    inc es:[esi].fl_usage
+    mov ebx,ds:file_block_size
+    mov esi,es:[esi].fl_base
+    mov eax,ebx
+    dec eax
+    and edx,eax
+    add esi,edx
 ;
-        mov ax,process_page_sel
-        mov es,ax
-        shr esi,10
-        shr edi,10
-        mov eax,es:[esi]
-        or ax,807h
-        and al,NOT 40h
-        mov es:[edi],eax
+    mov ax,process_page_sel
+    mov es,ax
+    shr esi,10
+    shr edi,10
+    mov eax,es:[esi]
+    or ax,807h
+    and al,NOT 40h
+    mov es:[edi],eax
 ;
-        LeaveSection ds:file_list_section
-        clc
+    LeaveSection ds:file_list_section
+    clc
 
 map_to_file_leave:
-        LeaveReadSection ds:file_size_section
-        jmp map_to_file_done
+    LeaveReadSection ds:file_size_section
+    jmp map_to_file_done
 
 map_to_file_read:
-        push edi
-        mov si,process_page_sel
-        mov es,si
-        shr edi,10
-        mov dword ptr es:[edi],2
-        pop edi
-        mov si,flat_sel
-        mov es,si
-        mov ecx,1000h
-        CallFileSystem read_file_proc
+    push edi
+    mov si,process_page_sel
+    mov es,si
+    shr edi,10
+    mov dword ptr es:[edi],2
+    pop edi
+    mov si,flat_sel
+    mov es,si
+    mov ecx,1000h
+    CallFileSystem read_file_proc
 
 map_to_file_done:
-        popad
-        pop es
-        pop ds
-        ret
+    popad
+    pop es
+    pop ds
+    ret
 map_to_file     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   sync_memmap
+;           NAME:           sync_memmap
 ;
-;               DESCRIPTION:    Sync file region
+;           DESCRIPTION:    Sync file region
 ;
-;               PARAMETERS:             EAX                     Offset within file
-;                                               BX                      File handle
+;           PARAMETERS:         EAX             Offset within file
+;                           BX              File handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public sync_memmap
+    public sync_memmap
 
 sync_memmap     Proc near
-        push ds
-        push es
-        pushad
+    push ds
+    push es
+    pushad
 ;
-        mov ebp,eax
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc sync_memmap_done
+    mov ebp,eax
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc sync_memmap_done
 ;
-        mov si,bx
-        mov al,[bx].file_handle_drive
-        mov edx,[bx].file_handle_pos
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz sync_memmap_done
+    mov esi,ebx
+    mov al,[ebx].file_handle_drive
+    mov edx,[ebx].file_handle_pos
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz sync_memmap_done
 ;
-        mov ds,bx
-        test ds:file_attrib, FILE_ATTRIB_NOBUFFER
-        clc
-        jnz sync_memmap_done
+    mov ds,bx
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    clc
+    jnz sync_memmap_done
 ;
-        mov ax,flat_sel
-        mov es,ax
+    mov ax,flat_sel
+    mov es,ax
 ;
-        mov esi,ebp
-        mov cl,ds:file_dir_shift
-        shr esi,cl
-        shl si,2
-        EnterSection ds:file_list_section
-        mov ebx,ds:[si].file_entries
-        or ebx,ebx
-        clc
-        jz sync_memmap_leave
+    mov esi,ebp
+    mov cl,ds:file_dir_shift
+    shr esi,cl
+    shl si,2
+    EnterSection ds:file_list_section
+    mov ebx,ds:[si].file_entries
+    or ebx,ebx
+    clc
+    jz sync_memmap_leave
 ;
-        mov esi,ebp
-        mov cl,ds:file_entry_shift
-        shr esi,cl
-        shl si,2
-        and esi,0FFCh
-        mov edi,es:[ebx+esi]
-        or edi,edi
-        clc
-        jz sync_memmap_leave
+    mov esi,ebp
+    mov cl,ds:file_entry_shift
+    shr esi,cl
+    shl si,2
+    and esi,0FFCh
+    mov edi,es:[ebx+esi]
+    or edi,edi
+    clc
+    jz sync_memmap_leave
 ;
-        push bx
-        mov ecx,1000h
-        mov edx,ebp
-        mov al,ds:file_drive
-        mov bx,ds
-        CallFileSystem write_file_block_proc
-        pop bx
+    push bx
+    mov ecx,1000h
+    mov edx,ebp
+    mov al,ds:file_drive
+    mov bx,ds
+    CallFileSystem write_file_block_proc
+    pop bx
 
 sync_memmap_leave:
     LeaveSection ds:file_list_section
@@ -2483,127 +2483,127 @@ sync_memmap Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   free_memmap
+;           NAME:           free_memmap
 ;
-;               DESCRIPTION:    Free memmapped file region
+;           DESCRIPTION:    Free memmapped file region
 ;
-;               PARAMETERS:             EAX                     Offset within object
-;                                               BX                      File handle
+;           PARAMETERS:         EAX             Offset within object
+;                           BX              File handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public free_memmap
+    public free_memmap
 
 free_memmap     Proc near
-        push ds
-        push es
-        pushad
+    push ds
+    push es
+    pushad
 ;
-        mov edi,edx
-        mov edx,eax
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc free_memmap_done
+    mov edi,edx
+    mov edx,eax
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc free_memmap_done
 ;
-        mov si,bx
-        mov al,[bx].file_handle_drive
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz free_memmap_done
+    mov esi,ebx
+    mov al,[ebx].file_handle_drive
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz free_memmap_done
 ;
-        mov ds,bx
-        test ds:file_attrib, FILE_ATTRIB_NOBUFFER
-        jnz free_memmap_done
+    mov ds,bx
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jnz free_memmap_done
 ;
-        mov ax,flat_sel
-        mov es,ax
+    mov ax,flat_sel
+    mov es,ax
 ;
-        mov esi,edx
-        mov cl,ds:file_dir_shift
-        shr esi,cl
-        shl si,2
-        EnterSection ds:file_list_section
-        mov ebx,ds:[si].file_entries
-        or ebx,ebx
-        jz free_memmap_leave
+    mov esi,edx
+    mov cl,ds:file_dir_shift
+    shr esi,cl
+    shl si,2
+    EnterSection ds:file_list_section
+    mov ebx,ds:[si].file_entries
+    or ebx,ebx
+    jz free_memmap_leave
 ;
-        mov esi,edx
-        mov cl,ds:file_entry_shift
-        shr esi,cl
-        shl si,2
-        and esi,0FFCh
-        mov esi,es:[ebx+esi]
-        or esi,esi
-        jz free_memmap_leave
+    mov esi,edx
+    mov cl,ds:file_entry_shift
+    shr esi,cl
+    shl si,2
+    and esi,0FFCh
+    mov esi,es:[ebx+esi]
+    or esi,esi
+    jz free_memmap_leave
 ;
     dec es:[esi].fl_usage
 
 free_memmap_leave:
-        LeaveSection ds:file_list_section
-        clc
+    LeaveSection ds:file_list_section
+    clc
 
 free_memmap_done:
-        popad
-        pop es
-        pop ds
-        ret
+    popad
+    pop es
+    pop ds
+    ret
 free_memmap     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Delete_handle
+;           NAME:           Delete_handle
 ;
-;               DESCRIPTION:    Delete handle (called from handle module)
+;           DESCRIPTION:    Delete handle (called from handle module)
 ;
-;               PARAMETERS:             BX                      FILE HANDLE
-;                                               
+;           PARAMETERS:         BX              FILE HANDLE
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_handle   Proc far
-        push ds
-        push bx
-        push si
+    push ds
+    push ebx
+    push esi
 ;
-        mov ax,FILE_HANDLE
-        DerefHandle
-        jc delete_handle_done
+    mov ax,FILE_HANDLE
+    NewDerefHandle
+    jc delete_handle_done
 ;
-        mov si,bx
-        mov al,[bx].file_handle_drive
-        mov bx,[bx].file_handle_sel
-        or bx,bx
-        stc
-        jz delete_handle_done
+    mov esi,ebx
+    mov al,[ebx].file_handle_drive
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz delete_handle_done
 ;
-        mov ds,bx
-        sub ds:file_usage,1
-        jnz delete_handle_handle
+    mov ds,bx
+    sub ds:file_usage,1
+    jnz delete_handle_handle
 ;
-        call FreeFileSel
+    call FreeFileSel
 
 delete_handle_handle:
-        mov bx,si
-        FreeHandle
-        clc
+    mov ebx,esi
+    NewFreeHandle
+    clc
 
 delete_handle_done:
-        pop si
-        pop bx
-        pop ds
-        ret
+    pop esi
+    pop ebx
+    pop ds
+    retf32
 delete_handle   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   swap_proc
+;           NAME:           swap_proc
 ;
-;               DESCRIPTION:    Free physical memory in file buffers
+;           DESCRIPTION:    Free physical memory in file buffers
 ;
-;               PARAMETERS:             AL      Swapper run level (0 = free all, 15 = preventive)
+;           PARAMETERS:         AL      Swapper run level (0 = free all, 15 = preventive)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2617,10 +2617,10 @@ swap_proc       Proc far
 swap_loop:      
     push ds
     mov ds,bx
-        EnterWriteSection ds:file_size_section
+    EnterWriteSection ds:file_size_section
     call swap_file
-        LeaveWriteSection ds:file_size_section
-        pop ds
+    LeaveWriteSection ds:file_size_section
+    pop ds
 ;
     mov es,bx
     mov bx,es:file_next
@@ -2630,131 +2630,131 @@ swap_loop:
     xor ax,ax
     mov es,ax
     LeaveSection ds:fs_file_section
-        ret
+    ret
 swap_proc       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   Init
+;           NAME:           Init
 ;
-;               DESCRIPTION:    Init module
+;           DESCRIPTION:    Init module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_file
+    public init_file
 
 init_file       PROC near
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov di,OFFSET delete_handle
-        mov ax,FILE_HANDLE
-        RegisterHandle
+    mov edi,OFFSET delete_handle
+    mov ax,FILE_HANDLE
+    NewRegisterHandle
 ;
     mov di,OFFSET swap_proc
-        RegisterSwapProc
+    RegisterSwapProc
 ;
-        mov esi,OFFSET get_file_list_entry
-        mov edi,OFFSET get_file_list_entry_name
-        xor cl,cl
-        mov ax,get_file_list_entry_nr
-        RegisterOldOsGate
+    mov esi,OFFSET get_file_list_entry
+    mov edi,OFFSET get_file_list_entry_name
+    xor cl,cl
+    mov ax,get_file_list_entry_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET free_file_list_entry
-        mov edi,OFFSET free_file_list_entry_name
-        xor cl,cl
-        mov ax,free_file_list_entry_nr
-        RegisterOldOsGate
+    mov esi,OFFSET free_file_list_entry
+    mov edi,OFFSET free_file_list_entry_name
+    xor cl,cl
+    mov ax,free_file_list_entry_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET get_file_info
-        mov edi,OFFSET get_file_info_name
-        xor cl,cl
-        mov ax,get_file_info_nr
-        RegisterOldOsGate
+    mov esi,OFFSET get_file_info
+    mov edi,OFFSET get_file_info_name
+    xor cl,cl
+    mov ax,get_file_info_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET dupl_file_info
-        mov edi,OFFSET dupl_file_info_name
-        xor cl,cl
-        mov ax,dupl_file_info_nr
-        RegisterOldOsGate
+    mov esi,OFFSET dupl_file_info
+    mov edi,OFFSET dupl_file_info_name
+    xor cl,cl
+    mov ax,dupl_file_info_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET close_file
-        mov edi,OFFSET close_file_name
-        xor dx,dx
-        mov ax,close_file_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET close_file
+    mov edi,OFFSET close_file_name
+    xor dx,dx
+    mov ax,close_file_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET dupl_file
-        mov edi,OFFSET dupl_file_name
-        xor dx,dx
-        mov ax,dupl_file_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET dupl_file
+    mov edi,OFFSET dupl_file_name
+    xor dx,dx
+    mov ax,dupl_file_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_ioctl_data
-        mov edi,OFFSET get_ioctl_data_name
-        xor dx,dx
-        mov ax,get_ioctl_data_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET get_ioctl_data
+    mov edi,OFFSET get_ioctl_data_name
+    xor dx,dx
+    mov ax,get_ioctl_data_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_file_size
-        mov edi,OFFSET get_file_size_name
-        xor dx,dx
-        mov ax,get_file_size_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET get_file_size
+    mov edi,OFFSET get_file_size_name
+    xor dx,dx
+    mov ax,get_file_size_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_file_size
-        mov edi,OFFSET set_file_size_name
-        xor dx,dx
-        mov ax,set_file_size_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_file_size
+    mov edi,OFFSET set_file_size_name
+    xor dx,dx
+    mov ax,set_file_size_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_file_pos
-        mov edi,OFFSET get_file_pos_name
-        xor dx,dx
-        mov ax,get_file_pos_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET get_file_pos
+    mov edi,OFFSET get_file_pos_name
+    xor dx,dx
+    mov ax,get_file_pos_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_file_pos
-        mov edi,OFFSET set_file_pos_name
-        xor dx,dx
-        mov ax,set_file_pos_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_file_pos
+    mov edi,OFFSET set_file_pos_name
+    xor dx,dx
+    mov ax,set_file_pos_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_file_time
-        mov edi,OFFSET get_file_time_name
-        xor dx,dx
-        mov ax,get_file_time_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET get_file_time
+    mov edi,OFFSET get_file_time_name
+    xor dx,dx
+    mov ax,get_file_time_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_file_time
-        mov edi,OFFSET set_file_time_name
-        xor dx,dx
-        mov ax,set_file_time_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_file_time
+    mov edi,OFFSET set_file_time_name
+    xor dx,dx
+    mov ax,set_file_time_nr
+    RegisterBimodalUserGate
 ;
-        mov ebx,OFFSET read_file16
-        mov esi,OFFSET read_file32
-        mov edi,OFFSET read_file_name
-        mov dx,virt_es_in
-        mov ax,read_file_nr
-        RegisterUserGate
+    mov ebx,OFFSET read_file16
+    mov esi,OFFSET read_file32
+    mov edi,OFFSET read_file_name
+    mov dx,virt_es_in
+    mov ax,read_file_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET write_file16
-        mov esi,OFFSET write_file32
-        mov edi,OFFSET write_file_name
-        mov dx,virt_es_in
-        mov ax,write_file_nr
-        RegisterUserGate
+    mov ebx,OFFSET write_file16
+    mov esi,OFFSET write_file32
+    mov edi,OFFSET write_file_name
+    mov dx,virt_es_in
+    mov ax,write_file_nr
+    RegisterUserGate
 ;
     mov ax,SEG data
     mov ds,ax   
-        mov ds:fs_file_list,0
-        InitSection ds:fs_file_section
-        ret
+    mov ds:fs_file_list,0
+    InitSection ds:fs_file_section
+    ret
 init_file       ENDP
 
 code    ENDS
 
-        END
+    END

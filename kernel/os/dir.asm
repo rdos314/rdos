@@ -45,37 +45,37 @@ dir_handle_sel  DW ?
 dir_handle_seg  ENDS
 
 CallFileSystem  MACRO   call_proc
-        push ds
-        push gs
-        push bp
-        push si
-        mov si,fs_sys_data_sel
-        mov ds,si
-        movzx si,al
-        add si,si
-        mov ds,ds:[si].fs_sel
-        lgs bp,ds:fs_sys_arr
-        lds si,ds:fs_sys_arr+4
-        call gs:[bp].&call_proc
-        pop si
-        pop bp
-        pop gs
-        pop ds
-                                ENDM
+    push ds
+    push gs
+    push bp
+    push si
+    mov si,fs_sys_data_sel
+    mov ds,si
+    movzx si,al
+    add si,si
+    mov ds,ds:[si].fs_sel
+    lgs bp,ds:fs_sys_arr
+    lds si,ds:fs_sys_arr+4
+    call gs:[bp].&call_proc
+    pop si
+    pop bp
+    pop gs
+    pop ds
+                ENDM
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
-        extrn CreateFileHandle:near
-        extrn CreateFileSel:near
-        extrn FreeFileSel:near
-        extrn FreeFile:near
+    extrn CreateFileHandle:near
+    extrn CreateFileSel:near
+    extrn FreeFileSel:near
+    extrn FreeFile:near
 
 char_tab:
-ct00 DB 0,              0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct00 DB 0,          0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 ct08 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 ct10 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 ct18 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
@@ -86,7 +86,7 @@ ct38 DB '8',    '9',    0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 ct40 DB '@',    'A',    'B',    'C',    'D',    'E',    'F',    'G'
 ct48 DB 'H',    'I',    'J',    'K',    'L',    'M',    'N',    'O'
 ct50 DB 'P',    'Q',    'R',    'S',    'T',    'U',    'V',    'W'
-ct58 DB 'X',    'Y',    'Z',    0FFh,   0,              0FFh,   '^',    '_'
+ct58 DB 'X',    'Y',    'Z',    0FFh,   0,          0FFh,   '^',    '_'
 ct60 DB 60h,    'A',    'B',    'C',    'D',    'E',    'F',    'G'
 ct68 DB 'H',    'I',    'J',    'K',    'L',    'M',    'N',    'O'
 ct70 DB 'P',    'Q',    'R',    'S',    'T',    'U',    'V',    'W'
@@ -112,2887 +112,2887 @@ ctF8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ValidateDrive
+;           NAME:           ValidateDrive
 ;
-;               DESCRIPTION:    Validate drive
+;           DESCRIPTION:    Validate drive
 ;
-;               PARAMETERS:             AL                      Drive
+;           PARAMETERS:         AL              Drive
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ValidateDrive   Proc near
-        push ds
-        push bx
-        push si
+    push ds
+    push bx
+    push si
 ;
-        mov si,fs_sys_data_sel
-        mov ds,si
-        movzx si,al
-        add si,si
+    mov si,fs_sys_data_sel
+    mov ds,si
+    movzx si,al
+    add si,si
 
 validate_drive_retry:
-        mov bx,ds:[si].fs_sel
-        or bx,bx
-        jnz validate_drive_defined
+    mov bx,ds:[si].fs_sel
+    or bx,bx
+    jnz validate_drive_defined
 ;
-        mov bl,ds:fs_init_done
-        or bl,bl
-        stc
-        jnz validate_drive_done
+    mov bl,ds:fs_init_done
+    or bl,bl
+    stc
+    jnz validate_drive_done
 ;
-        EnterSection ds:fs_init_section
-        LeaveSection ds:fs_init_section
-        jmp validate_drive_retry
+    EnterSection ds:fs_init_section
+    LeaveSection ds:fs_init_section
+    jmp validate_drive_retry
 
 validate_drive_defined:
-        cmp bx,-1
-        jnz validate_drive_media
+    cmp bx,-1
+    jnz validate_drive_media
 ;
-        DemandLoadDrive
-        jmp validate_drive_retry
+    DemandLoadDrive
+    jmp validate_drive_retry
 
 validate_drive_media:
-        mov bx,ds:[si].media_check_handle
-        or bx,bx
-        clc
-        jz validate_drive_done
+    mov bx,ds:[si].media_check_handle
+    or bx,bx
+    clc
+    jz validate_drive_done
 ;
-        add si,si
-        call ds:[si].media_check_proc
-        clc
+    add si,si
+    call ds:[si].media_check_proc
+    clc
 
 validate_drive_done:
-        pop si
-        pop bx
-        pop ds
-        ret
+    pop si
+    pop bx
+    pop ds
+    ret
 ValidateDrive   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CacheDirEntry
+;           NAME:           CacheDirEntry
 ;
-;               DESCRIPTION:    Cache dir entry structure
+;           DESCRIPTION:    Cache dir entry structure
 ;
-;               PARAMETERS:             BX                      Dir selector
-;                                               EDX                     Dir entry
+;           PARAMETERS:         BX              Dir selector
+;                           EDX             Dir entry
 ;
-;               RETURNS:                BX                      Cached dir selector
-;                                               
+;           RETURNS:        BX              Cached dir selector
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 cache_dir_name DB 'Cache Dir', 0
 
 cache_dir       PROC far
-        push ds
-        push es
-        push fs
-        push ax
-        push si
-        push ebp
+    push ds
+    push es
+    push fs
+    push ax
+    push si
+    push ebp
 ;
-        mov ds,bx
-        mov ax,flat_sel
-        mov es,ax
+    mov ds,bx
+    mov ax,flat_sel
+    mov es,ax
 ;
-        mov bx,es:[edx].de_sel
-        or bx,bx
-        jnz cache_dir_done
+    mov bx,es:[edx].de_sel
+    or bx,bx
+    jnz cache_dir_done
 ;
-        mov al,ds:ds_drive
-        mov bx,ds
+    mov al,ds:ds_drive
+    mov bx,ds
 ;
-        mov si,fs_sys_data_sel
-        mov ds,si
-        movzx si,al
-        add si,si
-        mov si,ds:[si].fs_sel
-        mov ds,si
-        mov ebp,ds:fs_mount_id
+    mov si,fs_sys_data_sel
+    mov ds,si
+    movzx si,al
+    add si,si
+    mov si,ds:[si].fs_sel
+    mov ds,si
+    mov ebp,ds:fs_mount_id
 ;
-        call CreateDirSel
-        CallFileSystem cache_dir_proc
-        mov es:[edx].de_sel,bx
+    call CreateDirSel
+    CallFileSystem cache_dir_proc
+    mov es:[edx].de_sel,bx
 
 cache_dir_done:
-        pop ebp
-        pop si
-        pop ax
-        pop fs
-        pop es
-        pop ds
-        ret
+    pop ebp
+    pop si
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    ret
 cache_dir       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InsertDirEntry
+;           NAME:           InsertDirEntry
 ;
-;               DESCRIPTION:    Insert dir entry structure
+;           DESCRIPTION:    Insert dir entry structure
 ;
-;               PARAMETERS:             BX                      Dir selector
-;                                               EDX                     Dir entry
-;                                               
+;           PARAMETERS:         BX              Dir selector
+;                           EDX             Dir entry
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 insert_dir_entry_name DB 'Insert Dir Entry', 0
 
-insert_dir_entry        PROC far
-        push ds
-        push es
-        push eax
-        push ebx
+insert_dir_entry    PROC far
+    push ds
+    push es
+    push eax
+    push ebx
 ;
-        mov ds,bx
-        mov ax,flat_sel
-        mov es,ax
+    mov ds,bx
+    mov ax,flat_sel
+    mov es,ax
 ;
-        mov es:[edx].de_sel,0
+    mov es:[edx].de_sel,0
 ;
-        mov eax,ds:ds_dir_ptr
-        or eax,eax
-        jne insert_dir_used
+    mov eax,ds:ds_dir_ptr
+    or eax,eax
+    jne insert_dir_used
 
 insert_dir_empty:
-        mov es:[edx].de_prev,edx
-        mov es:[edx].de_next,edx
-        mov ds:ds_dir_ptr,edx
-        jmp insert_dir_done
+    mov es:[edx].de_prev,edx
+    mov es:[edx].de_next,edx
+    mov ds:ds_dir_ptr,edx
+    jmp insert_dir_done
 
 insert_dir_used:
-        mov ebx,es:[eax].de_prev
-        mov es:[eax].de_prev,edx
-        mov es:[ebx].de_next,edx
-        mov es:[edx].de_prev,ebx
-        mov es:[edx].de_next,eax        
+    mov ebx,es:[eax].de_prev
+    mov es:[eax].de_prev,edx
+    mov es:[ebx].de_next,edx
+    mov es:[edx].de_prev,ebx
+    mov es:[edx].de_next,eax    
 
 insert_dir_done:
-        pop ebx
-        pop eax
-        pop es
-        pop ds
-        ret
-insert_dir_entry        ENDP
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+insert_dir_entry    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InsertFileEntry
+;           NAME:           InsertFileEntry
 ;
-;               DESCRIPTION:    Insert file entry structure
+;           DESCRIPTION:    Insert file entry structure
 ;
-;               PARAMETERS:             BX                      Dir selector
-;                                               EDX                     File entry
-;                                               
+;           PARAMETERS:         BX              Dir selector
+;                           EDX             File entry
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 insert_file_entry_name DB 'Insert File Entry', 0
 
 insert_file_entry       PROC far
-        push ds
-        push es
-        push eax
-        push ebx
+    push ds
+    push es
+    push eax
+    push ebx
 ;
-        mov ds,bx
-        mov ax,flat_sel
-        mov es,ax
+    mov ds,bx
+    mov ax,flat_sel
+    mov es,ax
 ;
-        mov eax,ds:ds_file_ptr
-        or eax,eax
-        jne insert_file_used
+    mov eax,ds:ds_file_ptr
+    or eax,eax
+    jne insert_file_used
 
 insert_file_empty:
-        mov es:[edx].de_prev,edx
-        mov es:[edx].de_next,edx
-        mov ds:ds_file_ptr,edx
-        jmp insert_file_done
+    mov es:[edx].de_prev,edx
+    mov es:[edx].de_next,edx
+    mov ds:ds_file_ptr,edx
+    jmp insert_file_done
 
 insert_file_used:
-        mov ebx,es:[eax].de_prev
-        mov es:[eax].de_prev,edx
-        mov es:[ebx].de_next,edx
-        mov es:[edx].de_prev,ebx
-        mov es:[edx].de_next,eax        
+    mov ebx,es:[eax].de_prev
+    mov es:[eax].de_prev,edx
+    mov es:[ebx].de_next,edx
+    mov es:[edx].de_prev,ebx
+    mov es:[edx].de_next,eax    
 
 insert_file_done:
-        pop ebx
-        pop eax
-        pop es
-        pop ds
-        ret
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
 insert_file_entry       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateDirSel
+;           NAME:           CreateDirSel
 ;
-;               DESCRIPTION:    Create a dir selector
+;           DESCRIPTION:    Create a dir selector
 ;
-;               PARAMETERS:             AL                      Drive
-;                                               BX                      Parent dir selector
-;                                               EDX                     Parent dir entry
-;                                               EBP                     Mount id
+;           PARAMETERS:         AL              Drive
+;                           BX              Parent dir selector
+;                           EDX             Parent dir entry
+;                           EBP             Mount id
 ;
-;               RETURNS:                BX                      Dir selector
+;           RETURNS:        BX              Dir selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateDirSel    PROC near
-        push ds
+    push ds
 ;
-        push bx
-        CallFileSystem allocate_dir_sel_proc
-        mov ds,bx
-        pop bx
+    push bx
+    CallFileSystem allocate_dir_sel_proc
+    mov ds,bx
+    pop bx
 ;
-        InitReadWriteSection ds:ds_access_section
-        InitSection ds:ds_list_section
-        mov ds:ds_dir_ptr,0
-        mov ds:ds_file_ptr,0
-        mov ds:ds_usage,0
-        mov ds:ds_drive,al
-        mov ds:ds_parent,bx
-        mov ds:ds_handle,edx
-        mov ds:ds_mount_id,ebp
-        mov bx,ds
+    InitReadWriteSection ds:ds_access_section
+    InitSection ds:ds_list_section
+    mov ds:ds_dir_ptr,0
+    mov ds:ds_file_ptr,0
+    mov ds:ds_usage,0
+    mov ds:ds_drive,al
+    mov ds:ds_parent,bx
+    mov ds:ds_handle,edx
+    mov ds:ds_mount_id,ebp
+    mov bx,ds
 ;
-        pop ds
-        ret
+    pop ds
+    ret
 CreateDirSel    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FreeDirSel
+;           NAME:           FreeDirSel
 ;
-;               DESCRIPTION:    Free dir selector
+;           DESCRIPTION:    Free dir selector
 ;
-;               PARAMETERS:             DS                      Dir selector
+;           PARAMETERS:         DS              Dir selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDirSel      PROC near
-        push eax
-        push bx
-        push ecx
-        push edx
+    push eax
+    push bx
+    push ecx
+    push edx
 ;
-        mov ax,flat_sel
-        mov es,ax
+    mov ax,flat_sel
+    mov es,ax
 ;
-        mov edx,ds:ds_dir_ptr
-        or edx,edx
-        jz free_dir_file
+    mov edx,ds:ds_dir_ptr
+    or edx,edx
+    jz free_dir_file
 
 free_dir_dir_loop:
-        mov eax,es:[edx].de_next
-        mov cx,es:[edx].de_usage
-        or cx,cx
-        jnz free_dir_dir_next
+    mov eax,es:[edx].de_next
+    mov cx,es:[edx].de_usage
+    or cx,cx
+    jnz free_dir_dir_next
 ;
-        xor ecx,ecx
-        FreeLinear
+    xor ecx,ecx
+    FreeLinear
 
 free_dir_dir_next:
-        mov edx,eax
-        cmp edx,ds:ds_dir_ptr
-        jne free_dir_dir_loop
+    mov edx,eax
+    cmp edx,ds:ds_dir_ptr
+    jne free_dir_dir_loop
 
 free_dir_file:
-        mov edx,ds:ds_file_ptr
-        or edx,edx
-        jz free_dir_del
+    mov edx,ds:ds_file_ptr
+    or edx,edx
+    jz free_dir_del
 
 free_dir_file_loop:
-        mov eax,es:[edx].de_next
-        mov cx,es:[edx].de_usage
-        or cx,cx
-        jnz free_dir_file_next
+    mov eax,es:[edx].de_next
+    mov cx,es:[edx].de_usage
+    or cx,cx
+    jnz free_dir_file_next
 ;
-        xor ecx,ecx
-        FreeLinear
+    xor ecx,ecx
+    FreeLinear
 
 free_dir_file_next:
-        mov edx,eax
-        cmp edx,ds:ds_file_ptr
-        jne free_dir_file_loop
+    mov edx,eax
+    cmp edx,ds:ds_file_ptr
+    jne free_dir_file_loop
 
 free_dir_del:
-        mov al,ds:ds_drive
-        mov bx,ds
-        xor dx,dx
-        mov ds,dx
-        CallFileSystem free_dir_sel_proc
+    mov al,ds:ds_drive
+    mov bx,ds
+    xor dx,dx
+    mov ds,dx
+    CallFileSystem free_dir_sel_proc
 ;
-        pop edx
-        pop ecx
-        pop bx
-        pop eax
-        ret
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    ret
 FreeDirSel      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FreeDir
+;           NAME:           FreeDir
 ;
-;               DESCRIPTION:    Free dir if idle
+;           DESCRIPTION:    Free dir if idle
 ;
-;               PARAMETERS:             BX                      Dir selector
+;           PARAMETERS:         BX              Dir selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDir PROC near
-        push ds
-        push ax
+    push ds
+    push ax
 ;
-        mov ds,bx
-        mov ax,ds:ds_usage
-        or ax,ax
-        stc
-        jnz free_dir_done
+    mov ds,bx
+    mov ax,ds:ds_usage
+    or ax,ax
+    stc
+    jnz free_dir_done
 ;
-        call FreeDirSel
-        clc
+    call FreeDirSel
+    clc
 
 free_dir_done:
-        pop ax
-        pop ds
-        ret
+    pop ax
+    pop ds
+    ret
 FreeDir Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateDirHandle
+;           NAME:           CreateDirHandle
 ;
-;               DESCRIPTION:    Create dir handle
+;           DESCRIPTION:    Create dir handle
 ;
-;               PARAMETERS:             BX              Dir search selector
+;           PARAMETERS:         BX          Dir search selector
 ;
-;               RETURNS:                BX              Dir handle
+;           RETURNS:        BX          Dir handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateDirHandle Proc near
-        push ds
-        push cx
-        push si
+    push ds
+    push cx
+    push si
 ;
-        mov si,bx
-        mov cx,SIZE dir_handle_seg
-        AllocateHandle
-        mov [bx].dir_handle_sel,si
-        mov [bx].hh_sign,DIR_HANDLE
-        mov bx,[bx].hh_handle
+    mov si,bx
+    mov cx,SIZE dir_handle_seg
+    NewAllocateHandle
+    mov [ebx].dir_handle_sel,si
+    mov [ebx].hh_sign,DIR_HANDLE
+    mov bx,[ebx].hh_handle
 ;
-        pop si
-        pop cx
-        pop ds
-        ret
+    pop si
+    pop cx
+    pop ds
+    ret
 CreateDirHandle Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ParseDir
+;           NAME:           ParseDir
 ;
-;               DESCRIPTION:    Parse pathname
+;           DESCRIPTION:    Parse pathname
 ;
-;               PARAMETERS:             ES:EDI  Pathname
+;           PARAMETERS:         ES:EDI  Pathname
 ;
-;               RETURNS:                DS              Dir selector
-;                                               ES:EDI  Remaining part
+;           RETURNS:        DS          Dir selector
+;                           ES:EDI  Remaining part
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ParseDir        Proc near
-        push fs
-        push ax
-        push bx
-        push cx
-        push edx
-        push esi
-        push ebp
+ParseDir    Proc near
+    push fs
+    push ax
+    push bx
+    push cx
+    push edx
+    push esi
+    push ebp
 ;
-        mov bx,fs_process_sel
-        mov ds,bx
-        mov al,ds:curr_drive
-        mov bx,es:[edi]
-        or bl,bl
-        je parse_drive_done
+    mov bx,fs_process_sel
+    mov ds,bx
+    mov al,ds:curr_drive
+    mov bx,es:[edi]
+    or bl,bl
+    je parse_drive_done
 ;
-        cmp bh,':'
-        jne parse_drive_done
+    cmp bh,':'
+    jne parse_drive_done
 ;
-        sub bl,'A'
-        jc parse_dir_fail
+    sub bl,'A'
+    jc parse_dir_fail
 ;
-        cmp bl,26
-        jc parse_drive_ok
+    cmp bl,26
+    jc parse_drive_ok
 ;
-        sub bl,20h
-        jc parse_dir_fail
+    sub bl,20h
+    jc parse_dir_fail
 ;
-        cmp bl,26
-        jnc parse_dir_fail
+    cmp bl,26
+    jnc parse_dir_fail
 
 parse_drive_ok:
-        mov al,bl
-        call ValidateDrive
-        jc parse_dir_fail
+    mov al,bl
+    call ValidateDrive
+    jc parse_dir_fail
 ;
-        add edi,2
+    add edi,2
 
 parse_drive_done:
-        mov ah,es:[edi]
-        cmp ah,'\'
-        je parse_dir_abs
+    mov ah,es:[edi]
+    cmp ah,'\'
+    je parse_dir_abs
 ;
-        cmp ah,'/'
-        jne parse_dir_rel
+    cmp ah,'/'
+    jne parse_dir_rel
 
 parse_dir_abs:
-        inc edi
-        jmp parse_dir_root
+    inc edi
+    jmp parse_dir_root
 
 parse_dir_rel:
-        movzx si,al
-        add si,si
-        mov bx,ds:[si].cur_dir_sel
-        or bx,bx
-        jz parse_dir_root
+    movzx si,al
+    add si,si
+    mov bx,ds:[si].cur_dir_sel
+    or bx,bx
+    jz parse_dir_root
 ;
-        mov ds,bx
-        mov ebp,ds:ds_mount_id
-        mov si,fs_sys_data_sel
-        mov ds,si
-        movzx si,al
-        add si,si
-        mov ds,ds:[si].fs_sel
-        cmp ebp,ds:fs_mount_id
-        jne parse_dir_root
+    mov ds,bx
+    mov ebp,ds:ds_mount_id
+    mov si,fs_sys_data_sel
+    mov ds,si
+    movzx si,al
+    add si,si
+    mov ds,ds:[si].fs_sel
+    cmp ebp,ds:fs_mount_id
+    jne parse_dir_root
 ;
-        EnterReadSection ds:fs_access_section
-        jmp parse_dir_start
+    EnterReadSection ds:fs_access_section
+    jmp parse_dir_start
 
 parse_dir_old:
-        int 3
-        mov ds,bx
-        sub ds:ds_usage,1
-        jnz parse_dir_old_zero
+    int 3
+    mov ds,bx
+    sub ds:ds_usage,1
+    jnz parse_dir_old_zero
 ;
-        call FreeDir
+    call FreeDir
 
 parse_dir_old_zero:
-        mov bx,fs_process_sel
-        mov ds,bx
-        movzx si,al
-        add si,si
-        mov ds:[si].cur_dir_sel,0
+    mov bx,fs_process_sel
+    mov ds,bx
+    movzx si,al
+    add si,si
+    mov ds:[si].cur_dir_sel,0
 
 parse_dir_root:
-        mov bx,fs_sys_data_sel
-        mov ds,bx
-        movzx si,al
-        add si,si
-        mov bx,ds:[si].fs_sel
-        or bx,bx
-        jz parse_dir_fail
+    mov bx,fs_sys_data_sel
+    mov ds,bx
+    movzx si,al
+    add si,si
+    mov bx,ds:[si].fs_sel
+    or bx,bx
+    jz parse_dir_fail
 ;
-        mov ds,bx
-        EnterSection ds:fs_list_section
-        mov ebp,ds:fs_mount_id
-        mov bx,ds:fs_root_dir_sel
-        or bx,bx
-        jnz parse_dir_buffered
+    mov ds,bx
+    EnterSection ds:fs_list_section
+    mov ebp,ds:fs_mount_id
+    mov bx,ds:fs_root_dir_sel
+    or bx,bx
+    jnz parse_dir_buffered
 ;
-        xor edx,edx
-        call CreateDirSel
-        CallFileSystem cache_dir_proc
-        mov ds:fs_root_dir_sel,bx
+    xor edx,edx
+    call CreateDirSel
+    CallFileSystem cache_dir_proc
+    mov ds:fs_root_dir_sel,bx
 ;
-        push ds
-        mov ds,bx
-        inc ds:ds_usage
-        mov dx,fs_process_sel
-        mov ds,dx
-        mov ds:[si].cur_dir_sel,bx
-        pop ds
+    push ds
+    mov ds,bx
+    inc ds:ds_usage
+    mov dx,fs_process_sel
+    mov ds,dx
+    mov ds:[si].cur_dir_sel,bx
+    pop ds
 
 parse_dir_buffered:
-        EnterReadSection ds:fs_access_section
-        LeaveSection ds:fs_list_section
+    EnterReadSection ds:fs_access_section
+    LeaveSection ds:fs_list_section
 
 parse_dir_start:
-        mov ds:fs_access_parse,1
-        mov ds,bx
-        mov bx,flat_sel
-        mov fs,bx
-        EnterReadSection ds:ds_access_section
+    mov ds:fs_access_parse,1
+    mov ds,bx
+    mov bx,flat_sel
+    mov fs,bx
+    EnterReadSection ds:ds_access_section
 
 parse_dir_tree_loop:
-        mov bx,OFFSET char_tab
+    mov bx,OFFSET char_tab
 ;
-        mov al,es:[edi]
-        cmp al,'.'
-        je parse_dir_dot
+    mov al,es:[edi]
+    cmp al,'.'
+    je parse_dir_dot
 ;
-        mov esi,ds:ds_dir_ptr
-        or esi,esi
-        jz parse_dir_ok
+    mov esi,ds:ds_dir_ptr
+    or esi,esi
+    jz parse_dir_ok
 
 parse_dir_entry_loop:
-        mov cx,fs:[esi].de_name_size    
-        push esi
-        push edi
-        mov esi,fs:[esi].de_name
+    mov cx,fs:[esi].de_name_size    
+    push esi
+    push edi
+    mov esi,fs:[esi].de_name
 
 parse_dir_name_loop:
-        mov al,es:[edi]
-        xlat byte ptr cs:char_tab
-        mov ah,al
-        mov al,fs:[esi]
-        xlat byte ptr cs:char_tab
-        cmp al,ah
-        jne parse_dir_next
+    mov al,es:[edi]
+    xlat byte ptr cs:char_tab
+    mov ah,al
+    mov al,fs:[esi]
+    xlat byte ptr cs:char_tab
+    cmp al,ah
+    jne parse_dir_next
 ;
-        inc esi
-        inc edi
-        loop parse_dir_name_loop
+    inc esi
+    inc edi
+    loop parse_dir_name_loop
 ;
-        mov al,es:[edi]
-        or al,al
-        jz parse_dir_tree_next
+    mov al,es:[edi]
+    or al,al
+    jz parse_dir_tree_next
 ;
-        inc edi
-        cmp al,'\'
-        je parse_dir_tree_next
+    inc edi
+    cmp al,'\'
+    je parse_dir_tree_next
 ;
-        cmp al,'/'
-        je parse_dir_tree_next
-        jmp parse_dir_next
+    cmp al,'/'
+    je parse_dir_tree_next
+    jmp parse_dir_next
 
 parse_dir_dot:
-        inc edi
+    inc edi
 
 parse_dir_dot_loop:
-        mov al,es:[edi]
-        cmp al,'.'
-        jne parse_dir_dot_ended
+    mov al,es:[edi]
+    cmp al,'.'
+    jne parse_dir_dot_ended
 ;
-        inc edi
-        EnterSection ds:ds_list_section
-        mov bx,ds:ds_parent
-        LeaveSection ds:ds_list_section
-        or bx,bx
-        jz parse_dir_fail
+    inc edi
+    EnterSection ds:ds_list_section
+    mov bx,ds:ds_parent
+    LeaveSection ds:ds_list_section
+    or bx,bx
+    jz parse_dir_fail
 ;
-        mov ax,ds
-        mov ds,bx
-        EnterReadSection ds:ds_access_section
-        mov ds,ax
-        LeaveReadSection ds:ds_access_section
-        mov ds,bx
-        jmp parse_dir_dot_loop
+    mov ax,ds
+    mov ds,bx
+    EnterReadSection ds:ds_access_section
+    mov ds,ax
+    LeaveReadSection ds:ds_access_section
+    mov ds,bx
+    jmp parse_dir_dot_loop
 
 parse_dir_dot_ended:
-        or al,al
-        jz parse_dir_ok
+    or al,al
+    jz parse_dir_ok
 ;
-        inc edi
-        cmp al,'\'
-        je parse_dir_tree_loop
+    inc edi
+    cmp al,'\'
+    je parse_dir_tree_loop
 ;
-        cmp al,'/'
-        je parse_dir_tree_loop
+    cmp al,'/'
+    je parse_dir_tree_loop
 
 parse_dir_dot_fail:
-        LeaveReadSection ds:ds_access_section
-        jmp parse_dir_fail
+    LeaveReadSection ds:ds_access_section
+    jmp parse_dir_fail
 
 parse_dir_next:
-        pop edi
-        pop esi
-        mov esi,fs:[esi].de_next
-        cmp esi,ds:ds_dir_ptr
-        jne parse_dir_entry_loop
-        jmp parse_dir_ok
+    pop edi
+    pop esi
+    mov esi,fs:[esi].de_next
+    cmp esi,ds:ds_dir_ptr
+    jne parse_dir_entry_loop
+    jmp parse_dir_ok
 
 parse_dir_tree_next:
-        pop esi
-        pop esi
-        EnterSection ds:ds_list_section
-        mov bx,fs:[esi].de_sel
-        or bx,bx
-        jnz parse_dir_tree_cached
+    pop esi
+    pop esi
+    EnterSection ds:ds_list_section
+    mov bx,fs:[esi].de_sel
+    or bx,bx
+    jnz parse_dir_tree_cached
 ;
-        mov al,ds:ds_drive
-        mov bx,ds
-        mov edx,esi
-        call CreateDirSel
-        CallFileSystem cache_dir_proc
-        mov fs:[esi].de_sel,bx
+    mov al,ds:ds_drive
+    mov bx,ds
+    mov edx,esi
+    call CreateDirSel
+    CallFileSystem cache_dir_proc
+    mov fs:[esi].de_sel,bx
 
 parse_dir_tree_cached:
-        LeaveSection ds:ds_list_section
-        mov ax,ds
-        mov ds,bx
-        EnterReadSection ds:ds_access_section
-        mov ds,ax
-        LeaveReadSection ds:ds_access_section
-        mov ds,bx
-        mov al,es:[edi]
-        or al,al
-        jnz parse_dir_tree_loop
+    LeaveSection ds:ds_list_section
+    mov ax,ds
+    mov ds,bx
+    EnterReadSection ds:ds_access_section
+    mov ds,ax
+    LeaveReadSection ds:ds_access_section
+    mov ds,bx
+    mov al,es:[edi]
+    or al,al
+    jnz parse_dir_tree_loop
 
 parse_dir_ok:
-        inc ds:ds_usage
-        LeaveReadSection ds:ds_access_section
-        clc
-        jmp parse_dir_done
+    inc ds:ds_usage
+    LeaveReadSection ds:ds_access_section
+    clc
+    jmp parse_dir_done
 
 parse_dir_fail:
-        stc
+    stc
 
 parse_dir_done:
-        pop ebp
-        pop esi
-        pop edx
-        pop cx
-        pop bx
-        pop ax
-        pop fs
-        ret
-ParseDir        Endp
+    pop ebp
+    pop esi
+    pop edx
+    pop cx
+    pop bx
+    pop ax
+    pop fs
+    ret
+ParseDir    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ParseEnd
+;           NAME:           ParseEnd
 ;
-;               DESCRIPTION:    End parsing
+;           DESCRIPTION:    End parsing
 ;
-;               PARAMETERS:             DS              Dir selector
+;           PARAMETERS:         DS          Dir selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ParseEnd        Proc near
-        push ds
-        push ax
-        push si
+ParseEnd    Proc near
+    push ds
+    push ax
+    push si
 ;
-        movzx si,ds:ds_drive
-        add si,si
-        mov ax,fs_sys_data_sel
-        mov ds,ax
-        mov ds,ds:[si].fs_sel
-        cli
-        mov ds:fs_access_parse,0
-        LeaveReadSection ds:fs_access_section
+    movzx si,ds:ds_drive
+    add si,si
+    mov ax,fs_sys_data_sel
+    mov ds,ax
+    mov ds,ds:[si].fs_sel
+    cli
+    mov ds:fs_access_parse,0
+    LeaveReadSection ds:fs_access_section
 ;
-        pop si
-        pop ax
-        pop ds
-        ret
-ParseEnd        Endp
+    pop si
+    pop ax
+    pop ds
+    ret
+ParseEnd    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetDeviceRoot
+;           NAME:           GetDeviceRoot
 ;
-;               DESCRIPTION:    Get device root
+;           DESCRIPTION:    Get device root
 ;
-;               RETURNS:                DS              Dir selector
+;           RETURNS:        DS          Dir selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDeviceRoot   Proc near
-        push ax
-        push bx
-        push cx
-        push edx
-        push si
-        push ebp
+    push ax
+    push bx
+    push cx
+    push edx
+    push si
+    push ebp
 ;
-        mov al,80h
-        mov bx,fs_sys_data_sel
-        mov ds,bx
-        movzx si,al
-        add si,si
-        mov ds,ds:[si].fs_sel
-        EnterReadSection ds:fs_access_section
-        EnterSection ds:fs_list_section
-        mov bx,ds:fs_root_dir_sel
-        or bx,bx
-        jnz get_device_root_done
+    mov al,80h
+    mov bx,fs_sys_data_sel
+    mov ds,bx
+    movzx si,al
+    add si,si
+    mov ds,ds:[si].fs_sel
+    EnterReadSection ds:fs_access_section
+    EnterSection ds:fs_list_section
+    mov bx,ds:fs_root_dir_sel
+    or bx,bx
+    jnz get_device_root_done
 ;
-        xor ebp,ebp
-        xor edx,edx
-        call CreateDirSel
-        CallFileSystem cache_dir_proc
-        mov ds:fs_root_dir_sel,bx
+    xor ebp,ebp
+    xor edx,edx
+    call CreateDirSel
+    CallFileSystem cache_dir_proc
+    mov ds:fs_root_dir_sel,bx
 ;
-        push ds
-        mov dx,fs_process_sel
-        mov ds,dx
-        mov ds:[si].cur_dir_sel,bx
-        pop ds
+    push ds
+    mov dx,fs_process_sel
+    mov ds,dx
+    mov ds:[si].cur_dir_sel,bx
+    pop ds
 
 get_device_root_done:
-        LeaveSection ds:fs_list_section
-        mov ds,bx
+    LeaveSection ds:fs_list_section
+    mov ds,bx
 ;
-        pop ebp
-        pop si
-        pop edx
-        pop cx
-        pop bx
-        pop ax
-        ret
+    pop ebp
+    pop si
+    pop edx
+    pop cx
+    pop bx
+    pop ax
+    ret
 GetDeviceRoot   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ParseFile
+;           NAME:           ParseFile
 ;
-;               DESCRIPTION:    Parse pathname for a valid file
+;           DESCRIPTION:    Parse pathname for a valid file
 ;
-;               PARAMETERS:             DS              Dir selector
-;                                               FS              Flat sel
-;                                               ES:EDI  Pathname
+;           PARAMETERS:         DS          Dir selector
+;                           FS          Flat sel
+;                           ES:EDI  Pathname
 ;
-;               RETURNS:                EDX             File dir entry
-;                                               ES:EDI  Remaining part
+;           RETURNS:        EDX         File dir entry
+;                           ES:EDI  Remaining part
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ParseFile       Proc near
-        push ax
-        push bx
-        push cx
-        push esi
+    push ax
+    push bx
+    push cx
+    push esi
 ;
-        mov bx,OFFSET char_tab
-        mov edx,ds:ds_file_ptr
-        or edx,edx
-        stc
-        jz parse_file_done
+    mov bx,OFFSET char_tab
+    mov edx,ds:ds_file_ptr
+    or edx,edx
+    stc
+    jz parse_file_done
 
 parse_file_entry_loop:
-        mov cx,fs:[edx].de_name_size    
-        mov esi,fs:[edx].de_name
-        push edi
+    mov cx,fs:[edx].de_name_size    
+    mov esi,fs:[edx].de_name
+    push edi
 
 parse_file_name_loop:
-        mov al,es:[edi]
-        xlat byte ptr cs:char_tab
-        mov ah,al
-        mov al,fs:[esi]
-        xlat byte ptr cs:char_tab
-        cmp al,ah
-        jne parse_file_next
+    mov al,es:[edi]
+    xlat byte ptr cs:char_tab
+    mov ah,al
+    mov al,fs:[esi]
+    xlat byte ptr cs:char_tab
+    cmp al,ah
+    jne parse_file_next
 ;
-        inc esi
-        inc edi
-        loop parse_file_name_loop
+    inc esi
+    inc edi
+    loop parse_file_name_loop
 ;
-        mov al,es:[edi]
-        or al,al
-        jz parse_file_ok
+    mov al,es:[edi]
+    or al,al
+    jz parse_file_ok
 
 parse_file_next:
-        pop edi
-        mov edx,fs:[edx].de_next
-        cmp edx,ds:ds_file_ptr
-        jnz parse_file_entry_loop
+    pop edi
+    mov edx,fs:[edx].de_next
+    cmp edx,ds:ds_file_ptr
+    jnz parse_file_entry_loop
 ;
-        xor edx,edx
-        stc
-        jmp parse_file_done     
+    xor edx,edx
+    stc
+    jmp parse_file_done     
 
 parse_file_ok:
-        pop esi
-        clc
+    pop esi
+    clc
 
 parse_file_done:
-        pop esi
-        pop cx
-        pop bx
-        pop ax
-        ret
+    pop esi
+    pop cx
+    pop bx
+    pop ax
+    ret
 ParseFile       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ParseName
+;           NAME:           ParseName
 ;
-;               DESCRIPTION:    Parse pathname for a valid name
+;           DESCRIPTION:    Parse pathname for a valid name
 ;
-;               PARAMETERS:             FS              Flat sel
-;                                               ES:EDI  Pathname
+;           PARAMETERS:         FS          Flat sel
+;                           ES:EDI  Pathname
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ParseName       Proc near
-        push ax
-        push bx
-        push edi
+    push ax
+    push bx
+    push edi
 ;
-        mov bx,OFFSET char_tab
-        mov al,es:[edi]
-        or al,al
-        jz parse_name_fail
+    mov bx,OFFSET char_tab
+    mov al,es:[edi]
+    or al,al
+    jz parse_name_fail
 
 parse_name_loop:
-        mov al,es:[edi]
-        inc edi
-        xlat byte ptr cs:char_tab
-        or al,al
-        jz parse_name_ok
+    mov al,es:[edi]
+    inc edi
+    xlat byte ptr cs:char_tab
+    or al,al
+    jz parse_name_ok
 ;
-        add al,1
-        jnc parse_name_loop
+    add al,1
+    jnc parse_name_loop
 
 parse_name_fail:
-        stc
-        jmp parse_name_done
+    stc
+    jmp parse_name_done
 
 parse_name_ok:
-        clc
+    clc
 
 parse_name_done:
-        pop edi
-        pop bx
-        pop ax
-        ret
+    pop edi
+    pop bx
+    pop ax
+    ret
 ParseName       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SearchDir
+;           NAME:           SearchDir
 ;
-;               DESCRIPTION:    Search dir for files
+;           DESCRIPTION:    Search dir for files
 ;
-;               PARAMETERS:             DS              Dir selector
-;                                               FS              Flat sel
+;           PARAMETERS:         DS          Dir selector
+;                           FS          Flat sel
 ;
-;               RETURNS:                BX              Dir search selector
+;           RETURNS:        BX          Dir search selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SearchDir       Proc near
-        push es
-        push eax
-        push cx
-        push di
+    push es
+    push eax
+    push cx
+    push di
 ;
-        xor cx,cx
-        mov eax,ds:ds_dir_ptr
-        or eax,eax
-        jz search_scan_dir_done
+    xor cx,cx
+    mov eax,ds:ds_dir_ptr
+    or eax,eax
+    jz search_scan_dir_done
 
 search_scan_dir_loop:
-        inc cx
-        mov eax,fs:[eax].de_next
-        cmp eax,ds:ds_dir_ptr
-        jne search_scan_dir_loop
+    inc cx
+    mov eax,fs:[eax].de_next
+    cmp eax,ds:ds_dir_ptr
+    jne search_scan_dir_loop
 
 search_scan_dir_done:   
-        mov eax,ds:ds_file_ptr
-        or eax,eax
-        jz search_scan_file_done
+    mov eax,ds:ds_file_ptr
+    or eax,eax
+    jz search_scan_file_done
 
 search_scan_file_loop:
-        inc cx
-        mov eax,fs:[eax].de_next
-        cmp eax,ds:ds_file_ptr
-        jne search_scan_file_loop
+    inc cx
+    mov eax,fs:[eax].de_next
+    cmp eax,ds:ds_file_ptr
+    jne search_scan_file_loop
 
 search_scan_file_done:  
-        movzx eax,cx
-        shl eax,2
-        add eax,OFFSET dhs_data
-        AllocateGlobalMem
-        mov es:dhs_count,cx
-        mov al,ds:ds_drive
-        mov es:dhs_drive,al
-        mov eax,ds:ds_mount_id
-        mov es:dhs_mount_id,eax
-        mov di,OFFSET dhs_data
+    movzx eax,cx
+    shl eax,2
+    add eax,OFFSET dhs_data
+    AllocateGlobalMem
+    mov es:dhs_count,cx
+    mov al,ds:ds_drive
+    mov es:dhs_drive,al
+    mov eax,ds:ds_mount_id
+    mov es:dhs_mount_id,eax
+    mov di,OFFSET dhs_data
 ;
-        mov eax,ds:ds_dir_ptr
-        or eax,eax
-        jz search_move_dir_done
+    mov eax,ds:ds_dir_ptr
+    or eax,eax
+    jz search_move_dir_done
 
 search_move_dir_loop:
-        inc fs:[eax].de_usage
-        stosd
-        mov eax,fs:[eax].de_next
-        cmp eax,ds:ds_dir_ptr
-        jne search_move_dir_loop
+    inc fs:[eax].de_usage
+    stosd
+    mov eax,fs:[eax].de_next
+    cmp eax,ds:ds_dir_ptr
+    jne search_move_dir_loop
 
 search_move_dir_done:
-        mov eax,ds:ds_file_ptr
-        or eax,eax
-        jz search_move_file_done
+    mov eax,ds:ds_file_ptr
+    or eax,eax
+    jz search_move_file_done
 
 search_move_file_loop:
-        inc fs:[eax].de_usage
-        stosd
-        mov eax,fs:[eax].de_next
-        cmp eax,ds:ds_file_ptr
-        jne search_move_file_loop
+    inc fs:[eax].de_usage
+    stosd
+    mov eax,fs:[eax].de_next
+    cmp eax,ds:ds_file_ptr
+    jne search_move_file_loop
 
 search_move_file_done:  
-        mov bx,es
+    mov bx,es
 ;
-        pop di
-        pop cx
-        pop eax
-        pop es
-        ret
+    pop di
+    pop cx
+    pop eax
+    pop es
+    ret
 SearchDir       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetCurDirBase
+;           NAME:           GetCurDirBase
 ;
-;               DESCRIPTION:    Set current directory
+;           DESCRIPTION:    Set current directory
 ;
-;               PARAMETERS:             AL                      Drive
-;                                               ES:EDI          Pathname
+;           PARAMETERS:         AL              Drive
+;                           ES:EDI      Pathname
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetCurDirBase   Proc near
-        push ds
-        push fs
-        push eax
-        push bx
-        push ecx
-        push edx
-        push esi
+    push ds
+    push fs
+    push eax
+    push bx
+    push ecx
+    push edx
+    push esi
 ;
-        call ValidateDrive
-        jc get_cur_dir_done
+    call ValidateDrive
+    jc get_cur_dir_done
 ;
-        mov bx,fs_sys_data_sel
-        mov ds,bx
-        movzx bx,al
-        add bx,bx
-        mov ds,ds:[bx].fs_sel
-        EnterReadSection ds:fs_access_section
-        mov ds:fs_access_parse,1
-        mov edx,ds:fs_mount_id
+    mov bx,fs_sys_data_sel
+    mov ds,bx
+    movzx bx,al
+    add bx,bx
+    mov ds,ds:[bx].fs_sel
+    EnterReadSection ds:fs_access_section
+    mov ds:fs_access_parse,1
+    mov edx,ds:fs_mount_id
 ;
-        mov si,fs_process_sel
-        mov ds,si
-        mov si,flat_sel
-        mov fs,si
-        mov bx,ds:[bx].cur_dir_sel
-        xor ecx,ecx
-        mov byte ptr es:[edi],0
-        or bx,bx
-        je get_cur_dir_ok
+    mov si,fs_process_sel
+    mov ds,si
+    mov si,flat_sel
+    mov fs,si
+    mov bx,ds:[bx].cur_dir_sel
+    xor ecx,ecx
+    mov byte ptr es:[edi],0
+    or bx,bx
+    je get_cur_dir_ok
 ;
-        mov ds,bx
-        cmp edx,ds:ds_mount_id
-        jne get_cur_dir_ok
+    mov ds,bx
+    cmp edx,ds:ds_mount_id
+    jne get_cur_dir_ok
 ;
-        EnterReadSection ds:ds_access_section
+    EnterReadSection ds:ds_access_section
 
 get_cur_dir_loop:
-        mov bx,ds:ds_parent
-        or bx,bx
-        jz get_cur_dir_leave
+    mov bx,ds:ds_parent
+    or bx,bx
+    jz get_cur_dir_leave
 ;
-        mov si,ds
-        mov ds,bx
-        EnterReadSection ds:ds_access_section
-        mov ds,si
-        LeaveReadSection ds:ds_access_section
-        mov ds,bx
-        mov eax,ds:ds_dir_ptr
+    mov si,ds
+    mov ds,bx
+    EnterReadSection ds:ds_access_section
+    mov ds,si
+    LeaveReadSection ds:ds_access_section
+    mov ds,bx
+    mov eax,ds:ds_dir_ptr
 
 get_cur_dir_node_loop:
-        cmp si,fs:[eax].de_sel
-        je get_cur_dir_node_found
+    cmp si,fs:[eax].de_sel
+    je get_cur_dir_node_found
 ;
-        mov eax,fs:[eax].de_next
-        jmp get_cur_dir_node_loop
+    mov eax,fs:[eax].de_next
+    jmp get_cur_dir_node_loop
 
 get_cur_dir_node_found:
-        push eax
-        push ecx
-        push edi
-        movzx eax,fs:[eax].de_name_size
-        inc eax
-        mov esi,edi
-        add edi,eax
-        add esi,ecx
-        add edi,ecx
-        dec esi
-        dec edi
-        std
-        rep movs byte ptr es:[edi],es:[esi]
-        cld
-        pop edi
-        pop ecx
-        pop esi
-        movzx eax,fs:[esi].de_name_size
-        add ecx,eax
-        inc ecx
+    push eax
+    push ecx
+    push edi
+    movzx eax,fs:[eax].de_name_size
+    inc eax
+    mov esi,edi
+    add edi,eax
+    add esi,ecx
+    add edi,ecx
+    dec esi
+    dec edi
+    std
+    rep movs byte ptr es:[edi],es:[esi]
+    cld
+    pop edi
+    pop ecx
+    pop esi
+    movzx eax,fs:[esi].de_name_size
+    add ecx,eax
+    inc ecx
 ;
-        push ecx
-        push edi
-        mov esi,fs:[esi].de_name
-        mov ecx,eax
-        mov al,es:[edi]
-        rep movs byte ptr es:[edi],fs:[esi]
-        or al,al
-        je get_cur_dir_no_slash
+    push ecx
+    push edi
+    mov esi,fs:[esi].de_name
+    mov ecx,eax
+    mov al,es:[edi]
+    rep movs byte ptr es:[edi],fs:[esi]
+    or al,al
+    je get_cur_dir_no_slash
 ;
-        mov al,'\'
+    mov al,'\'
 
 get_cur_dir_no_slash:
-        stos byte ptr es:[edi]
-        pop edi
-        pop ecx
-        jmp get_cur_dir_loop
+    stos byte ptr es:[edi]
+    pop edi
+    pop ecx
+    jmp get_cur_dir_loop
 
 get_cur_dir_leave:
-        LeaveReadSection ds:ds_access_section
-        mov al,ds:ds_drive
+    LeaveReadSection ds:ds_access_section
+    mov al,ds:ds_drive
 
 get_cur_dir_ok:
-        mov bx,fs_sys_data_sel
-        mov ds,bx
-        movzx bx,al
-        add bx,bx
-        mov ds,ds:[bx].fs_sel
-        cli
-        mov ds:fs_access_parse,0
-        LeaveReadSection ds:fs_access_section
-        clc
+    mov bx,fs_sys_data_sel
+    mov ds,bx
+    movzx bx,al
+    add bx,bx
+    mov ds,ds:[bx].fs_sel
+    cli
+    mov ds:fs_access_parse,0
+    LeaveReadSection ds:fs_access_section
+    clc
 
 get_cur_dir_done:
-        pop esi
-        pop edx
-        pop ecx
-        pop bx
-        pop eax
-        pop fs
-        pop ds
-        ret
+    pop esi
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    pop fs
+    pop ds
+    ret
 GetCurDirBase   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SetCurDirBase
+;           NAME:           SetCurDirBase
 ;
-;               DESCRIPTION:    Set current directory
+;           DESCRIPTION:    Set current directory
 ;
-;               PARAMETERS:             ES:EDI          Pathname
+;           PARAMETERS:         ES:EDI      Pathname
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetCurDirBase   Proc near
-        push ds
-        push ax
-        push edi
+    push ds
+    push ax
+    push edi
 ;
-        call ParseDir
-        jc set_cur_dir_done
+    call ParseDir
+    jc set_cur_dir_done
 ;
-        mov al,es:[edi]
-        or al,al
-        jne set_cur_dir_fail
+    mov al,es:[edi]
+    or al,al
+    jne set_cur_dir_fail
 ;
-        push es
-        push bx
-        push si
+    push es
+    push bx
+    push si
 ;
-        mov bx,fs_process_sel
-        mov es,bx
-        mov bx,ds
-        mov al,ds:ds_drive
-        movzx si,al
-        add si,si
-        xchg bx,es:[si].cur_dir_sel
-        or bx,bx
-        jz set_cur_dir_setup
+    mov bx,fs_process_sel
+    mov es,bx
+    mov bx,ds
+    mov al,ds:ds_drive
+    movzx si,al
+    add si,si
+    xchg bx,es:[si].cur_dir_sel
+    or bx,bx
+    jz set_cur_dir_setup
 ;
-        push ds
-        mov ds,bx
-        dec ds:ds_usage 
-        pop ds
+    push ds
+    mov ds,bx
+    dec ds:ds_usage 
+    pop ds
 
 set_cur_dir_setup:
-        pop si
-        pop bx
-        pop es
-        call ParseEnd
-        clc
-        jmp set_cur_dir_done
+    pop si
+    pop bx
+    pop es
+    call ParseEnd
+    clc
+    jmp set_cur_dir_done
 
 set_cur_dir_fail:
-        call ParseEnd
-        stc
+    call ParseEnd
+    stc
 
 set_cur_dir_done:
-        pop edi
-        pop ax
-        pop ds
-        ret
+    pop edi
+    pop ax
+    pop ds
+    ret
 SetCurDirBase   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateDirBase
+;           NAME:           CreateDirBase
 ;
-;               DESCRIPTION:    Create a new directory
+;           DESCRIPTION:    Create a new directory
 ;
-;               PARAMETERS:             ES:EDI          Pathname
+;           PARAMETERS:         ES:EDI      Pathname
 ;
-;               RETURNS:                CX                      FILE ATTRIBUTE
-;                                               NC                      SUCCESS
+;           RETURNS:        CX              FILE ATTRIBUTE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateDirBase   Proc near
-        push ds
-        push fs
-        push eax
-        push ebx
-        push edx
+    push ds
+    push fs
+    push eax
+    push ebx
+    push edx
 ;
-        mov bx,flat_sel
-        mov fs,bx
+    mov bx,flat_sel
+    mov fs,bx
 ;
-        push edi
-        call ParseDir
-        jc create_dir_pop_failed
+    push edi
+    call ParseDir
+    jc create_dir_pop_failed
 ;
-        EnterWriteSection ds:ds_access_section
-        dec ds:ds_usage
-        call ParseFile
-        jc create_dir_check
+    EnterWriteSection ds:ds_access_section
+    dec ds:ds_usage
+    call ParseFile
+    jc create_dir_check
 
 create_dir_leave_fail:
-        LeaveWriteSection ds:ds_access_section
-        call ParseEnd
-        jmp create_dir_pop_failed
+    LeaveWriteSection ds:ds_access_section
+    call ParseEnd
+    jmp create_dir_pop_failed
 
 create_dir_check:
-        call ParseName
-        jc create_dir_pop_failed
+    call ParseName
+    jc create_dir_pop_failed
 ;
-        mov al,ds:ds_drive
-        mov bx,ds
-        CallFileSystem create_dir_proc
-        jc create_dir_leave_fail
+    mov al,ds:ds_drive
+    mov bx,ds
+    CallFileSystem create_dir_proc
+    jc create_dir_leave_fail
 ;
-        LeaveWriteSection ds:ds_access_section
-        pop edi
-        call ParseEnd
-        clc
-        jmp create_dir_done
+    LeaveWriteSection ds:ds_access_section
+    pop edi
+    call ParseEnd
+    clc
+    jmp create_dir_done
 
 create_dir_pop_failed:
-        pop edi
-        stc
+    pop edi
+    stc
 
 create_dir_done:
-        pop edx
-        pop ebx
-        pop eax
-        pop fs
-        pop ds
-        ret
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
 CreateDirBase   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DeleteDirBase
+;           NAME:           DeleteDirBase
 ;
-;               DESCRIPTION:    Delete a directory
+;           DESCRIPTION:    Delete a directory
 ;
-;               PARAMETERS:             ES:EDI          Pathname
+;           PARAMETERS:         ES:EDI      Pathname
 ;
-;               RETURNS:                NC                      SUCCESS
+;           RETURNS:        NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DeleteDirBase   Proc near
-        push ds
-        push es
-        push fs
-        push eax
-        push ebx
-        push ecx
-        push edx
-        push edi
+    push ds
+    push es
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push edi
 ;
-        mov ax,flat_sel
-        mov fs,ax
+    mov ax,flat_sel
+    mov fs,ax
 ;
-        call ParseDir
-        jc delete_dir_done
+    call ParseDir
+    jc delete_dir_done
 ;
-        EnterWriteSection ds:ds_access_section
-        dec ds:ds_usage
-        mov edx,ds:ds_handle
-        mov bx,ds:ds_parent
-        or bx,bx
-        jz delete_dir_fail
+    EnterWriteSection ds:ds_access_section
+    dec ds:ds_usage
+    mov edx,ds:ds_handle
+    mov bx,ds:ds_parent
+    or bx,bx
+    jz delete_dir_fail
 ;
-        mov ax,ds:ds_usage
-        or ax,ax
-        jnz delete_dir_fail
+    mov ax,ds:ds_usage
+    or ax,ax
+    jnz delete_dir_fail
 ;
-        mov eax,ds:ds_dir_ptr
-        or eax,eax
-        jnz delete_dir_fail
+    mov eax,ds:ds_dir_ptr
+    or eax,eax
+    jnz delete_dir_fail
 ;
-        mov eax,ds:ds_file_ptr
-        or eax,eax
-        jnz delete_dir_fail
+    mov eax,ds:ds_file_ptr
+    or eax,eax
+    jnz delete_dir_fail
 ;
-        push ds
-        mov ds,bx
-        EnterWriteSection ds:ds_access_section
+    push ds
+    mov ds,bx
+    EnterWriteSection ds:ds_access_section
 ;
-        mov ax,fs:[edx].de_usage
-        or ax,ax
-        jnz delete_dir_pop_fail
+    mov ax,fs:[edx].de_usage
+    or ax,ax
+    jnz delete_dir_pop_fail
 ;
-        push ebx
-        mov eax,fs:[edx].de_next
-        mov ebx,fs:[edx].de_prev
-        mov fs:[ebx].de_next,eax
-        mov fs:[eax].de_prev,ebx
-        pop ebx
-        cmp eax,edx
-        jne delete_dir_unlink
+    push ebx
+    mov eax,fs:[edx].de_next
+    mov ebx,fs:[edx].de_prev
+    mov fs:[ebx].de_next,eax
+    mov fs:[eax].de_prev,ebx
+    pop ebx
+    cmp eax,edx
+    jne delete_dir_unlink
 ;
-        mov ds:ds_dir_ptr,0
-        jmp delete_dir_leave
+    mov ds:ds_dir_ptr,0
+    jmp delete_dir_leave
 
 delete_dir_unlink:
-        cmp edx,ds:ds_dir_ptr
-        jne delete_dir_leave
+    cmp edx,ds:ds_dir_ptr
+    jne delete_dir_leave
 ;
-        mov ds:ds_dir_ptr,eax
-        
+    mov ds:ds_dir_ptr,eax
+    
 delete_dir_leave:
-        LeaveWriteSection ds:ds_access_section
-        mov al,ds:ds_drive
-        CallFileSystem delete_dir_proc
-        pop ds
-        call ParseEnd
-        call FreeDirSel
-        clc
-        jmp delete_dir_done
+    LeaveWriteSection ds:ds_access_section
+    mov al,ds:ds_drive
+    CallFileSystem delete_dir_proc
+    pop ds
+    call ParseEnd
+    call FreeDirSel
+    clc
+    jmp delete_dir_done
 
 delete_dir_pop_fail:
-        LeaveWriteSection ds:ds_access_section
-        pop ds
+    LeaveWriteSection ds:ds_access_section
+    pop ds
 
 delete_dir_fail:
-        LeaveWriteSection ds:ds_access_section
-        call ParseEnd
-        stc
+    LeaveWriteSection ds:ds_access_section
+    call ParseEnd
+    stc
 
 delete_dir_done:
-        pop edi
-        pop edx
-        pop ecx
-        pop ebx
-        pop eax
-        pop fs
-        pop es
-        pop ds
-        ret
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
 DeleteDirBase   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetFileAttribBase
+;           NAME:           GetFileAttribBase
 ;
-;               DESCRIPTION:    Get file attribute
+;           DESCRIPTION:    Get file attribute
 ;
-;               PARAMETERS:             ES:EDI          Pathname
+;           PARAMETERS:         ES:EDI      Pathname
 ;
-;               RETURNS:                CX                      FILE ATTRIBUTE
-;                                               NC                      SUCCESS
+;           RETURNS:        CX              FILE ATTRIBUTE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetFileAttribBase       Proc near
-        push ds
-        push es
-        push fs
-        push ax
-        push edx
-        push edi
+    push ds
+    push es
+    push fs
+    push ax
+    push edx
+    push edi
 ;
-        mov ax,flat_sel
-        mov fs,ax
+    mov ax,flat_sel
+    mov fs,ax
 ;
-        call ParseDir
-        jc get_file_attrib_done
+    call ParseDir
+    jc get_file_attrib_done
 ;
-        EnterReadSection ds:ds_access_section
-        dec ds:ds_usage
-        mov al,es:[edi]
-        or al,al
-        je get_file_attrib_dir
+    EnterReadSection ds:ds_access_section
+    dec ds:ds_usage
+    mov al,es:[edi]
+    or al,al
+    je get_file_attrib_dir
 
 get_file_attrib_file:
-        call ParseFile
-        jc get_file_attrib_fail
+    call ParseFile
+    jc get_file_attrib_fail
 ;
-        movzx cx,fs:[edx].de_attrib
-        jmp get_file_attrib_ok
+    movzx cx,fs:[edx].de_attrib
+    jmp get_file_attrib_ok
 
 get_file_attrib_dir:
-        mov edx,ds:ds_handle
-        or edx,edx
-        jz get_file_attrib_root
+    mov edx,ds:ds_handle
+    or edx,edx
+    jz get_file_attrib_root
 ;
-        movzx cx,fs:[edx].de_attrib
-        jmp get_file_attrib_ok
+    movzx cx,fs:[edx].de_attrib
+    jmp get_file_attrib_ok
 
 get_file_attrib_root:
-        mov cx,FILE_ATTRIB_DIR
-        jmp get_file_attrib_ok
+    mov cx,FILE_ATTRIB_DIR
+    jmp get_file_attrib_ok
 
 get_file_attrib_fail:
-        LeaveReadSection ds:ds_access_section
-        call ParseEnd
-        stc
-        jmp get_file_attrib_done
+    LeaveReadSection ds:ds_access_section
+    call ParseEnd
+    stc
+    jmp get_file_attrib_done
 
 get_file_attrib_ok:
-        LeaveReadSection ds:ds_access_section
-        call ParseEnd
-        clc
+    LeaveReadSection ds:ds_access_section
+    call ParseEnd
+    clc
 
 get_file_attrib_done:
-        pop edi
-        pop edx
-        pop ax
-        pop fs
-        pop es
-        pop ds
-        ret
+    pop edi
+    pop edx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    ret
 GetFileAttribBase       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SetFileAttribBase
+;           NAME:           SetFileAttribBase
 ;
-;               DESCRIPTION:    Set file attributes
+;           DESCRIPTION:    Set file attributes
 ;
-;               PARAMETERS:             ES:EDI          FILENAME
-;                                               CX                      FILE ATTRIBUTE
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:EDI      FILENAME
+;                           CX              FILE ATTRIBUTE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetFileAttribBase       Proc near
-        push ds
-        push es
-        push fs
-        push ax
-        push edx
-        push edi
+    push ds
+    push es
+    push fs
+    push ax
+    push edx
+    push edi
 ;
-        mov ax,flat_sel
-        mov fs,ax
+    mov ax,flat_sel
+    mov fs,ax
 ;
-        call ParseDir
-        jc set_file_attrib_done
+    call ParseDir
+    jc set_file_attrib_done
 ;
-        EnterWriteSection ds:ds_access_section
-        dec ds:ds_usage
-        mov al,es:[edi]
-        or al,al
-        je set_file_attrib_dir
+    EnterWriteSection ds:ds_access_section
+    dec ds:ds_usage
+    mov al,es:[edi]
+    or al,al
+    je set_file_attrib_dir
 
 set_file_attrib_file:
-        call ParseFile
-        jc set_file_attrib_fail
+    call ParseFile
+    jc set_file_attrib_fail
 ;
-        test cl,10h
-        jnz set_file_attrib_fail
+    test cl,10h
+    jnz set_file_attrib_fail
 ;
-        mov fs:[edx].de_attrib,cl
-        mov al,ds:ds_drive
-        CallFileSystem update_file_proc
-        jmp set_file_attrib_ok
+    mov fs:[edx].de_attrib,cl
+    mov al,ds:ds_drive
+    CallFileSystem update_file_proc
+    jmp set_file_attrib_ok
 
 set_file_attrib_dir:
-        mov edx,ds:ds_handle
-        test cl,10h
-        jz set_file_attrib_fail
+    mov edx,ds:ds_handle
+    test cl,10h
+    jz set_file_attrib_fail
 ;
-        mov fs:[edx].de_attrib,cl
-        mov al,ds:ds_drive
-        CallFileSystem update_dir_proc
-        jmp set_file_attrib_ok
+    mov fs:[edx].de_attrib,cl
+    mov al,ds:ds_drive
+    CallFileSystem update_dir_proc
+    jmp set_file_attrib_ok
 
 set_file_attrib_fail:
-        LeaveWriteSection ds:ds_access_section
-        call ParseEnd
-        stc
-        jmp set_file_attrib_done
+    LeaveWriteSection ds:ds_access_section
+    call ParseEnd
+    stc
+    jmp set_file_attrib_done
 
 set_file_attrib_ok:
-        LeaveWriteSection ds:ds_access_section
-        call ParseEnd
-        clc
+    LeaveWriteSection ds:ds_access_section
+    call ParseEnd
+    clc
 
 set_file_attrib_done:
-        pop edi
-        pop edx
-        pop ax
-        pop fs
-        pop es
-        pop ds
-        ret
+    pop edi
+    pop edx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    ret
 SetFileAttribBase       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DeleteFilePhysical
+;           NAME:           DeleteFilePhysical
 ;
-;               DESCRIPTION:    Delete file in physical file system
+;           DESCRIPTION:    Delete file in physical file system
 ;
-;               PARAMETERS:             EDX                     Dir entry
-;                                               DS                      Directory selector
-;                                               NC                      SUCCESS
+;           PARAMETERS:         EDX             Dir entry
+;                           DS              Directory selector
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DeleteFilePhysical      Proc near
-        push ds
-        push ax
-        push bx
-        push ecx
+    push ds
+    push ax
+    push bx
+    push ecx
 ;
-        mov al,ds:ds_drive
-        mov bx,fs:[edx].dfe_file_sel
-        or bx,bx
-        jnz delete_file_phys_opened
+    mov al,ds:ds_drive
+    mov bx,fs:[edx].dfe_file_sel
+    or bx,bx
+    jnz delete_file_phys_opened
 ;
-        mov ah,fs:[edx].de_attrib
-        mov ecx,fs:[edx].dfe_data_size
-        call CreateFileSel
-        mov fs:[edx].dfe_file_sel,bx
+    mov ah,fs:[edx].de_attrib
+    mov ecx,fs:[edx].dfe_data_size
+    call CreateFileSel
+    mov fs:[edx].dfe_file_sel,bx
 
 delete_file_phys_opened:
-        push edx
-        xor edx,edx
-        CallFileSystem set_file_size_proc
-        pop edx
+    push edx
+    xor edx,edx
+    CallFileSystem set_file_size_proc
+    pop edx
 ;
-        push bx
-        mov bx,ds
-        CallFileSystem delete_file_proc
-        pop bx
+    push bx
+    mov bx,ds
+    CallFileSystem delete_file_proc
+    pop bx
 ;
-        mov ds,bx
-        call FreeFileSel
+    mov ds,bx
+    call FreeFileSel
 ;
-        pop ecx
-        pop bx
-        pop ax
-        pop ds
-        ret
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    ret
 DeleteFilePhysical      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DeleteFileBase
+;           NAME:           DeleteFileBase
 ;
-;               DESCRIPTION:    Delete file
+;           DESCRIPTION:    Delete file
 ;
-;               PARAMETERS:             ES:EDI          FILE NAME
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:EDI      FILE NAME
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DeleteFileBase  Proc near
-        push ds
-        push es
-        push fs
-        push eax
-        push edx
-        push edi
+    push ds
+    push es
+    push fs
+    push eax
+    push edx
+    push edi
 ;
-        mov ax,flat_sel
-        mov fs,ax
+    mov ax,flat_sel
+    mov fs,ax
 ;
-        call ParseDir
-        jc delete_file_done
+    call ParseDir
+    jc delete_file_done
 ;
-        EnterWriteSection ds:ds_access_section
-        dec ds:ds_usage
-        mov al,es:[edi]
-        or al,al
-        je delete_file_fail
+    EnterWriteSection ds:ds_access_section
+    dec ds:ds_usage
+    mov al,es:[edi]
+    or al,al
+    je delete_file_fail
 ;
-        call ParseFile
-        jc delete_file_fail
+    call ParseFile
+    jc delete_file_fail
 ;
-        mov ax,fs:[edx].de_usage
-        or ax,ax
-        jnz delete_file_fail
+    mov ax,fs:[edx].de_usage
+    or ax,ax
+    jnz delete_file_fail
 ;
-        push ebx
-        mov eax,fs:[edx].de_next
-        mov ebx,fs:[edx].de_prev
-        mov fs:[ebx].de_next,eax
-        mov fs:[eax].de_prev,ebx
-        pop ebx
-        cmp eax,edx
-        jne delete_file_unlink
+    push ebx
+    mov eax,fs:[edx].de_next
+    mov ebx,fs:[edx].de_prev
+    mov fs:[ebx].de_next,eax
+    mov fs:[eax].de_prev,ebx
+    pop ebx
+    cmp eax,edx
+    jne delete_file_unlink
 ;
-        mov ds:ds_file_ptr,0
-        jmp delete_file_leave
+    mov ds:ds_file_ptr,0
+    jmp delete_file_leave
 
 delete_file_unlink:
-        cmp edx,ds:ds_file_ptr
-        jne delete_file_leave
+    cmp edx,ds:ds_file_ptr
+    jne delete_file_leave
 ;
-        mov ds:ds_file_ptr,eax
+    mov ds:ds_file_ptr,eax
 
 delete_file_leave:
-        LeaveWriteSection ds:ds_access_section
-        call ParseEnd
+    LeaveWriteSection ds:ds_access_section
+    call ParseEnd
 ;
-        call DeleteFilePhysical
-        jmp delete_file_done
+    call DeleteFilePhysical
+    jmp delete_file_done
 
 delete_file_fail:
-        LeaveWriteSection ds:ds_access_section
-        call ParseEnd
-        stc
+    LeaveWriteSection ds:ds_access_section
+    call ParseEnd
+    stc
 
 delete_file_done:
-        pop edi
-        pop edx
-        pop eax
-        pop fs
-        pop es
-        pop ds
-        ret
+    pop edi
+    pop edx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
 DeleteFileBase  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OpenDirBase
+;           NAME:           OpenDirBase
 ;
-;               DESCRIPTION:    Open a directory
+;           DESCRIPTION:    Open a directory
 ;
-;               PARAMETERS:             ES:EDI          Pathname
+;           PARAMETERS:         ES:EDI      Pathname
 ;
-;               RETURNS:                BX                      FILE HANDLE
-;                                               NC                      SUCCESS
+;           RETURNS:        BX              FILE HANDLE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenDirBase     Proc near
-        push ds
-        push es
-        push edi
+    push ds
+    push es
+    push edi
 ;
-        call ParseDir
-        jc open_dir_done
+    call ParseDir
+    jc open_dir_done
 ;
-        EnterReadSection ds:ds_access_section
-        dec ds:ds_usage
-        mov al,es:[edi]
-        or al,al
-        je open_dir_do
+    EnterReadSection ds:ds_access_section
+    dec ds:ds_usage
+    mov al,es:[edi]
+    or al,al
+    je open_dir_do
 ;
-        LeaveReadSection ds:ds_access_section
-        call ParseEnd
-        stc
-        jmp open_dir_done
+    LeaveReadSection ds:ds_access_section
+    call ParseEnd
+    stc
+    jmp open_dir_done
 
 open_dir_do:
-        push fs
-        mov ax,flat_sel
-        mov fs,ax
-        call SearchDir
-        mov al,ds:ds_drive
-        call CreateDirHandle
-        LeaveReadSection ds:ds_access_section
-        call ParseEnd
-        pop fs
-        clc
+    push fs
+    mov ax,flat_sel
+    mov fs,ax
+    call SearchDir
+    mov al,ds:ds_drive
+    call CreateDirHandle
+    LeaveReadSection ds:ds_access_section
+    call ParseEnd
+    pop fs
+    clc
 
 open_dir_done:
-        pop edi
-        pop es
-        pop ds
-        ret
+    pop edi
+    pop es
+    pop ds
+    ret
 OpenDirBase     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadDirBase
+;           NAME:           ReadDirBase
 ;
-;               DESCRIPTION:    Retrieves a directory entry
+;           DESCRIPTION:    Retrieves a directory entry
 ;
-;               PARAMETERS:             BX                      HANDLE TO DIR
-;                                               DX                      ENTRY #
-;                                               CX                      MAX SIZE OF FILENAME
-;                                               ES:EDI          BUFFER
+;           PARAMETERS:         BX              HANDLE TO DIR
+;                           DX              ENTRY #
+;                           CX              MAX SIZE OF FILENAME
+;                           ES:EDI      BUFFER
 ;
-;               RETURNS:                ECX                     FILE SIZE
-;                                               BX                      FILE ATTRIBUTE
-;                                               EDX:EAX         FILE TIME/DATE
-;                                               NC                      SUCCESS
+;           RETURNS:        ECX             FILE SIZE
+;                           BX              FILE ATTRIBUTE
+;                           EDX:EAX     FILE TIME/DATE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadDirBase     Proc near
-        push ds
-        push fs
-        push esi
+    push ds
+    push fs
+    push esi
 ;
-        mov ax,DIR_HANDLE
-        DerefHandle
-        jc read_dir_fail
+    mov ax,DIR_HANDLE
+    NewDerefHandle
+    jc read_dir_fail
 ;
-        mov bx,[bx].dir_handle_sel
-        or bx,bx
-        jz read_dir_fail
+    mov bx,[ebx].dir_handle_sel
+    or bx,bx
+    jz read_dir_fail
 ;
-        mov ds,bx
-        mov al,ds:dhs_drive
-        mov si,fs_sys_data_sel
-        mov fs,si
-        movzx si,al
-        add si,si
-        mov si,fs:[si].fs_sel
-        or si,si
-        jz read_dir_fail
+    mov ds,bx
+    mov al,ds:dhs_drive
+    mov si,fs_sys_data_sel
+    mov fs,si
+    movzx si,al
+    add si,si
+    mov si,fs:[si].fs_sel
+    or si,si
+    jz read_dir_fail
 ;
-        mov fs,si
-        mov esi,fs:fs_mount_id
-        cmp esi,ds:dhs_mount_id
-        jne read_dir_fail
+    mov fs,si
+    mov esi,fs:fs_mount_id
+    cmp esi,ds:dhs_mount_id
+    jne read_dir_fail
 ;
-        mov ax,flat_sel
-        mov fs,ax
-        mov bx,dx
-        cmp bx,ds:dhs_count
-        jnc read_dir_fail
+    mov ax,flat_sel
+    mov fs,ax
+    mov bx,dx
+    cmp bx,ds:dhs_count
+    jnc read_dir_fail
 ;
-        shl bx,2
-        add bx,OFFSET dhs_data
-        mov esi,[bx]
-        mov ax,fs:[esi].de_name_size
-        cmp ax,cx
-        jnc read_dir_size_ok
+    shl bx,2
+    add bx,OFFSET dhs_data
+    mov esi,[bx]
+    mov ax,fs:[esi].de_name_size
+    cmp ax,cx
+    jnc read_dir_size_ok
 ;
-        mov cx,ax
+    mov cx,ax
 
 read_dir_size_ok:
-        movzx ecx,cx
-        push esi
-        push edi
-        mov esi,fs:[esi].de_name
-        rep movs byte ptr es:[edi],fs:[esi]
-        xor al,al
-        stos byte ptr es:[edi]
-        pop edi
-        pop esi
-        mov edx,fs:[esi].de_time+4
-        mov eax,fs:[esi].de_time
-        movzx bx,fs:[esi].de_attrib
-        and bx,7Fh
-        test bl,10h
-        jz read_dir_file
+    movzx ecx,cx
+    push esi
+    push edi
+    mov esi,fs:[esi].de_name
+    rep movs byte ptr es:[edi],fs:[esi]
+    xor al,al
+    stos byte ptr es:[edi]
+    pop edi
+    pop esi
+    mov edx,fs:[esi].de_time+4
+    mov eax,fs:[esi].de_time
+    movzx bx,fs:[esi].de_attrib
+    and bx,7Fh
+    test bl,10h
+    jz read_dir_file
 ;
-        xor ecx,ecx
-        clc
-        jmp read_dir_done
+    xor ecx,ecx
+    clc
+    jmp read_dir_done
 
 read_dir_file:
-        mov ecx,fs:[esi].dfe_data_size
-        clc     
-        jmp read_dir_done
+    mov ecx,fs:[esi].dfe_data_size
+    clc     
+    jmp read_dir_done
 
 read_dir_fail:
-        stc
+    stc
 
 read_dir_done:
-        pop esi
-        pop fs
-        pop ds
-        ret
+    pop esi
+    pop fs
+    pop ds
+    ret
 ReadDirBase     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CloseDirBase
+;           NAME:           CloseDirBase
 ;
-;               DESCRIPTION:    Close a directory
+;           DESCRIPTION:    Close a directory
 ;
-;               PARAMETERS:             BX                      Dir search sel
+;           PARAMETERS:         BX              Dir search sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloseDirBase    Proc near
-        push es
-        push fs
-        push ax
-        push bx
-        push cx
-        push edx
-        push ebp
+    push es
+    push fs
+    push ax
+    push bx
+    push cx
+    push edx
+    push ebp
 ;
-        mov ebp,-1
-        mov es,bx
-        mov al,es:dhs_drive
-        mov bx,fs_sys_data_sel
-        mov fs,bx
-        movzx bx,al
-        add bx,bx
-        mov bx,fs:[bx].fs_sel
-        or bx,bx
-        jz close_dir_do
+    mov ebp,-1
+    mov es,bx
+    mov al,es:dhs_drive
+    mov bx,fs_sys_data_sel
+    mov fs,bx
+    movzx bx,al
+    add bx,bx
+    mov bx,fs:[bx].fs_sel
+    or bx,bx
+    jz close_dir_do
 ;
-        mov fs,bx
-        mov ebp,fs:fs_mount_id
+    mov fs,bx
+    mov ebp,fs:fs_mount_id
 
 close_dir_do:
-        mov ax,flat_sel
-        mov fs,ax
-        mov cx,es:dhs_count
-        or cx,cx
-        jz close_dir_unlock_free
+    mov ax,flat_sel
+    mov fs,ax
+    mov cx,es:dhs_count
+    or cx,cx
+    jz close_dir_unlock_free
 ;
-        mov bx,OFFSET dhs_data
+    mov bx,OFFSET dhs_data
 
 close_dir_unlock_loop:
-        mov edx,es:[bx]
-        sub fs:[edx].de_usage,1
-        jnz close_dir_next
+    mov edx,es:[bx]
+    sub fs:[edx].de_usage,1
+    jnz close_dir_next
 ;
-        cmp ebp,es:dhs_mount_id
-        je close_dir_next
+    cmp ebp,es:dhs_mount_id
+    je close_dir_next
 ;
-        int 3
+    int 3
 ;       FreeMem
 
 close_dir_next:
-        add bx,4
-        loop close_dir_unlock_loop
+    add bx,4
+    loop close_dir_unlock_loop
 
 close_dir_unlock_free:
-        FreeMem
+    FreeMem
 ;
-        pop ebp
-        pop edx 
-        pop cx
-        pop bx
-        pop ax
-        pop fs
-        pop es
-        ret
+    pop ebp
+    pop edx 
+    pop cx
+    pop bx
+    pop ax
+    pop fs
+    pop es
+    ret
 CloseDirBase    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SetupFileSel
+;           NAME:           SetupFileSel
 ;
-;               DESCRIPTION:    Setup file selector
+;           DESCRIPTION:    Setup file selector
 ;
-;               PARAMETERS:             DS              Dir
-;                                               EDX             Dir file entry
+;           PARAMETERS:         DS          Dir
+;                           EDX         Dir file entry
 ;
-;               RETURNS:                BX              File sel
-;                                               AL              Drive
+;           RETURNS:        BX          File sel
+;                           AL          Drive
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupFileSel    Proc near
-        push ecx
+    push ecx
 ;
-        mov al,ds:ds_drive
-        EnterSection ds:ds_list_section
-        mov bx,fs:[edx].dfe_file_sel
-        or bx,bx
-        jnz setup_file_sel_leave
+    mov al,ds:ds_drive
+    EnterSection ds:ds_list_section
+    mov bx,fs:[edx].dfe_file_sel
+    or bx,bx
+    jnz setup_file_sel_leave
 ;
-        mov ah,fs:[edx].de_attrib
-        mov ecx,fs:[edx].dfe_data_size
-        call CreateFileSel
-        mov fs:[edx].dfe_file_sel,bx
+    mov ah,fs:[edx].de_attrib
+    mov ecx,fs:[edx].dfe_data_size
+    call CreateFileSel
+    mov fs:[edx].dfe_file_sel,bx
 
 setup_file_sel_leave:
-        LeaveSection ds:ds_list_section
+    LeaveSection ds:ds_list_section
 ;
-        pop ecx
-        ret
+    pop ecx
+    ret
 SetupFileSel    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OpenFileBase
+;           NAME:           OpenFileBase
 ;
-;               DESCRIPTION:    Open a file
+;           DESCRIPTION:    Open a file
 ;
-;               PARAMETERS:             ES:EDI          Pathname
+;           PARAMETERS:         ES:EDI      Pathname
 ;
-;               RETURNS:                BX                      FILE HANDLE
-;                                               NC                      SUCCESS
+;           RETURNS:        BX              FILE HANDLE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenFileBase    Proc near
-        push ds
-        push fs
-        push ax
-        push edx
+    push ds
+    push fs
+    push ax
+    push edx
 ;
-        mov bx,flat_sel
-        mov fs,bx
+    mov bx,flat_sel
+    mov fs,bx
 ;
-        push edi
-        call GetDeviceRoot
-        call ParseFile
-        pop edi
-        jc open_file_normal
+    push edi
+    call GetDeviceRoot
+    call ParseFile
+    pop edi
+    jc open_file_normal
 ;
-        EnterReadSection ds:ds_access_section
-        call SetupFileSel
-        LeaveReadSection ds:ds_access_section
-        jmp open_file_handle
+    EnterReadSection ds:ds_access_section
+    call SetupFileSel
+    LeaveReadSection ds:ds_access_section
+    jmp open_file_handle
 
 open_file_normal:
-        call ParseEnd
-        push edi
-        call ParseDir
-        jc open_file_pop_failed
+    call ParseEnd
+    push edi
+    call ParseDir
+    jc open_file_pop_failed
 ;
-        EnterReadSection ds:ds_access_section
-        dec ds:ds_usage
-        call ParseFile
-        jc open_file_leave_failed
+    EnterReadSection ds:ds_access_section
+    dec ds:ds_usage
+    call ParseFile
+    jc open_file_leave_failed
 ;
-        pop edi
-        call SetupFileSel
-        LeaveReadSection ds:ds_access_section
+    pop edi
+    call SetupFileSel
+    LeaveReadSection ds:ds_access_section
 
 open_file_handle:
-        call CreateFileHandle
-        call ParseEnd
-        clc
-        jmp open_file_done
+    call CreateFileHandle
+    call ParseEnd
+    clc
+    jmp open_file_done
 
 open_file_leave_failed:
-        LeaveReadSection ds:ds_access_section
-        call ParseEnd
+    LeaveReadSection ds:ds_access_section
+    call ParseEnd
 
 open_file_pop_failed:
-        pop edi
-        stc
+    pop edi
+    stc
 
 open_file_done:
-        pop edx
-        pop ax
-        pop fs
-        pop ds
-        ret
+    pop edx
+    pop ax
+    pop fs
+    pop ds
+    ret
 OpenFileBase    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateFileBase
+;           NAME:           CreateFileBase
 ;
-;               DESCRIPTION:    Create a file
+;           DESCRIPTION:    Create a file
 ;
-;               PARAMETERS:             ES:EDI          Pathname
-;                                               CX                      Attribute
+;           PARAMETERS:         ES:EDI      Pathname
+;                           CX              Attribute
 ;
-;               RETURNS:                BX                      FILE HANDLE
-;                                               NC                      SUCCESS
+;           RETURNS:        BX              FILE HANDLE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateFileBase  Proc near
-        push ds
-        push fs
-        push ax
-        push edx
+    push ds
+    push fs
+    push ax
+    push edx
 ;
-        mov bx,flat_sel
-        mov fs,bx
+    mov bx,flat_sel
+    mov fs,bx
 ;
-        push edi
-        call GetDeviceRoot
-        call ParseFile
-        pop edi
-        jc create_file_normal
+    push edi
+    call GetDeviceRoot
+    call ParseFile
+    pop edi
+    jc create_file_normal
 ;
-        EnterReadSection ds:ds_access_section
-        call SetupFileSel
-        LeaveReadSection ds:ds_access_section
-        jmp create_file_handle
+    EnterReadSection ds:ds_access_section
+    call SetupFileSel
+    LeaveReadSection ds:ds_access_section
+    jmp create_file_handle
 
 create_file_normal:
-        call ParseEnd
-        push edi
-        call ParseDir
-        jc create_file_pop_failed
+    call ParseEnd
+    push edi
+    call ParseDir
+    jc create_file_pop_failed
 ;
-        EnterWriteSection ds:ds_access_section
-        dec ds:ds_usage
-        call ParseFile
-        jnc create_file_truncate
+    EnterWriteSection ds:ds_access_section
+    dec ds:ds_usage
+    call ParseFile
+    jnc create_file_truncate
 ;
-        call ParseName
-        jc create_file_leave_failed
+    call ParseName
+    jc create_file_leave_failed
 ;
-        mov al,ds:ds_drive
-        mov bx,ds
-        CallFileSystem create_file_proc
-        call SetupFileSel
-        LeaveWriteSection ds:ds_access_section
-        pop edi
-        jmp create_file_handle
+    mov al,ds:ds_drive
+    mov bx,ds
+    CallFileSystem create_file_proc
+    call SetupFileSel
+    LeaveWriteSection ds:ds_access_section
+    pop edi
+    jmp create_file_handle
 
 create_file_truncate:
-        pop edi
-        call SetupFileSel
-        push edx
-        xor edx,edx
-        CallFileSystem set_file_size_proc
-        pop edx
-        LeaveWriteSection ds:ds_access_section
+    pop edi
+    call SetupFileSel
+    push edx
+    xor edx,edx
+    CallFileSystem set_file_size_proc
+    pop edx
+    LeaveWriteSection ds:ds_access_section
 
 create_file_handle:
-        call CreateFileHandle
-        call ParseEnd
-        clc
-        jmp create_file_done
+    call CreateFileHandle
+    call ParseEnd
+    clc
+    jmp create_file_done
 
 create_file_leave_failed:
-        LeaveWriteSection ds:ds_access_section
-        call ParseEnd
+    LeaveWriteSection ds:ds_access_section
+    call ParseEnd
 
 create_file_pop_failed:
-        pop edi
-        stc
+    pop edi
+    stc
 
 create_file_done:
-        pop edx
-        pop ax
-        pop fs
-        pop ds
-        ret
+    pop edx
+    pop ax
+    pop fs
+    pop ds
+    ret
 CreateFileBase  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GET_DRIVE_INFO
+;           NAME:           GET_DRIVE_INFO
 ;
-;               DESCRIPTION:    Get drive info
+;           DESCRIPTION:    Get drive info
 ;
-;               PARAMETERS:             AL                      DRIVE NR
+;           PARAMETERS:         AL              DRIVE NR
 ;
-;               RETURNS:                EAX                     Free units
-;                                               CX                      Bytes per unit
-;                                               EDX                     Total # of units
-;                                               NC                      SUCCESS
+;           RETURNS:        EAX             Free units
+;                           CX              Bytes per unit
+;                           EDX             Total # of units
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_drive_info_name     DB 'Get Drive Info',0
 
 get_drive_info:
-        call ValidateDrive
-        jc get_drive_info_done
+    call ValidateDrive
+    jc get_drive_info_done
 ;
-        CallFileSystem info_proc
-        jc get_drive_info_done
+    CallFileSystem info_proc
+    jc get_drive_info_done
 ;
 
 get_drive_info_done:
-        retf32
+    retf32
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SET_CUR_DRIVE
+;           NAME:           SET_CUR_DRIVE
 ;
-;               DESCRIPTION:    Set current drive
+;           DESCRIPTION:    Set current drive
 ;
-;               PARAMETERS:             AL                      DRIVE NR
-;                                               NC                      SUCCESS
+;           PARAMETERS:         AL              DRIVE NR
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_cur_drive_name      DB 'Set Current Drive',0
 
 set_cur_drive:
-        push ds
-        push si
-        mov si,fs_process_sel
-        mov ds,si
-        call ValidateDrive
-        jc set_cur_drive_done
+    push ds
+    push si
+    mov si,fs_process_sel
+    mov ds,si
+    call ValidateDrive
+    jc set_cur_drive_done
 ;
-        mov ds:curr_drive,al
+    mov ds:curr_drive,al
 
 set_cur_drive_done:
-        pop si
-        pop ds
-        retf32
+    pop si
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GET_CUR_DRIVE
+;           NAME:           GET_CUR_DRIVE
 ;
-;               DESCRIPTION:    Get current drive
+;           DESCRIPTION:    Get current drive
 ;
-;               PARAMETERS:             AL                      DRIVE NR. 0 = DEFAULT
+;           PARAMETERS:         AL              DRIVE NR. 0 = DEFAULT
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_cur_drive_name      DB 'Get Current Drive',0
 
 get_cur_drive:
-        push ds
-        push si
-        mov si,fs_process_sel
-        mov ds,si
-        mov al,ds:curr_drive
-        clc
-        pop si
-        pop ds
-        retf32
+    push ds
+    push si
+    mov si,fs_process_sel
+    mov ds,si
+    mov al,ds:curr_drive
+    clc
+    pop si
+    pop ds
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SET_CUR_DIR
+;           NAME:           SET_CUR_DIR
 ;
-;               DESCRIPTION:    Set current directory
+;           DESCRIPTION:    Set current directory
 ;
-;               PARAMETERS:             ES:E(DI)        PATH NAME
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:E(DI)    PATH NAME
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_cur_dir_name        DB 'Set Current Directory',0
+set_cur_dir_name    DB 'Set Current Directory',0
 
 set_cur_dir32:
-        call SetCurDirBase
-        retf32
+    call SetCurDirBase
+    retf32
 
 set_cur_dir16   PROC far
-        push edi
-        movzx edi,di
-        call SetCurDirBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call SetCurDirBase
+    pop edi
+    ret
 set_cur_dir16   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GET_CUR_DIR
+;           NAME:           GET_CUR_DIR
 ;
-;               DESCRIPTION:    Get current directory
+;           DESCRIPTION:    Get current directory
 ;
-;               PARAMETERS:             ES:E(DI)        PATH NAME
-;                                               AL                      DRIVE
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:E(DI)    PATH NAME
+;                           AL              DRIVE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_cur_dir_name        DB 'Get Current Directory',0
+get_cur_dir_name    DB 'Get Current Directory',0
 
 get_cur_dir32:
-        call GetCurDirBase
-        retf32
+    call GetCurDirBase
+    retf32
 
 get_cur_dir16   PROC far
-        push edi
-        movzx edi,di
-        call GetCurDirBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call GetCurDirBase
+    pop edi
+    ret
 get_cur_dir16   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   MAKE_DIR
+;           NAME:           MAKE_DIR
 ;
-;               DESCRIPTION:    Create directory
+;           DESCRIPTION:    Create directory
 ;
-;               PARAMETERS:             ES:(E)DI        DIRECTORY NAME
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:(E)DI    DIRECTORY NAME
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 make_dir_name   DB 'Make Directory',0
 
 make_dir32:
-        call CreateDirBase
-        retf32
+    call CreateDirBase
+    retf32
 
 make_dir16      PROC far
-        push edi
-        movzx edi,di
-        call CreateDirBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call CreateDirBase
+    pop edi
+    ret
 make_dir16      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   REMOVE_DIR
+;           NAME:           REMOVE_DIR
 ;
-;               DESCRIPTION:    Remove directory
+;           DESCRIPTION:    Remove directory
 ;
-;               PARAMETERS:             ES:(E)DI        DIRECTORY NAME
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:(E)DI    DIRECTORY NAME
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 remove_dir_name DB 'Remove Directory',0
 
 remove_dir32:
-        call DeleteDirBase
-        retf32
+    call DeleteDirBase
+    retf32
 
 remove_dir16    PROC far
-        push edi
-        movzx edi,di
-        call DeleteDirBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call DeleteDirBase
+    pop edi
+    ret
 remove_dir16    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GET_FILE_ATTRIBUTE
+;           NAME:           GET_FILE_ATTRIBUTE
 ;
-;               DESCRIPTION:    Get file attributes
+;           DESCRIPTION:    Get file attributes
 ;
-;               PARAMETERS:             ES:(E)DI        FILENAME
+;           PARAMETERS:         ES:(E)DI    FILENAME
 ;
-;               RETURNS:                CX                      FILE ATTRIBUTE
-;                                               NC                      SUCCESS
+;           RETURNS:        CX              FILE ATTRIBUTE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        
+    
 get_file_attribute_name DB 'Get File Attribute',0
 
 get_file_attrib32:
-        call GetFileAttribBase
-        retf32
+    call GetFileAttribBase
+    retf32
 
 get_file_attrib16       PROC far
-        push edi
-        movzx edi,di
-        call GetFileAttribBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call GetFileAttribBase
+    pop edi
+    ret
 get_file_attrib16       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SET_FILE_ATTRIBUTE
+;           NAME:           SET_FILE_ATTRIBUTE
 ;
-;               DESCRIPTION:    Set file attributes
+;           DESCRIPTION:    Set file attributes
 ;
-;               PARAMETERS:             ES:(E)DI        FILENAME
-;                                               CX                      FILE ATTRIBUTE
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:(E)DI    FILENAME
+;                           CX              FILE ATTRIBUTE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        
+    
 set_file_attribute_name DB 'Set File Attribute',0
 
 set_file_attrib32:
-        call SetFileAttribBase
-        retf32
+    call SetFileAttribBase
+    retf32
 
 set_file_attrib16       PROC far
-        push edi
-        movzx edi,di
-        call SetFileAttribBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call SetFileAttribBase
+    pop edi
+    ret
 set_file_attrib16       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DELETE_FILE
+;           NAME:           DELETE_FILE
 ;
-;               DESCRIPTION:    Delete file
+;           DESCRIPTION:    Delete file
 ;
-;               PARAMETERS:             ES:(E)DI        FILE NAME
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:(E)DI    FILE NAME
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_file_name        DB 'Delete File',0
+delete_file_name    DB 'Delete File',0
 
 delete_file32:
-        call DeleteFileBase
-        retf32
+    call DeleteFileBase
+    retf32
 
 delete_file16   PROC far
-        push edi
-        movzx edi,di
-        call DeleteFileBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call DeleteFileBase
+    pop edi
+    ret
 delete_file16   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OPEN_DIR
+;           NAME:           OPEN_DIR
 ;
-;               DESCRIPTION:    Opens a directory
+;           DESCRIPTION:    Opens a directory
 ;
-;               PARAMETERS:             ES:(E)DI        PATH NAME
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:(E)DI    PATH NAME
+;                           NC              SUCCESS
 ;
-;               RETURNS:                BX                      HANDLE TO DIR
+;           RETURNS:        BX              HANDLE TO DIR
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_dir_name   DB 'Open Directory',0
 
 open_dir32:
-        call OpenDirBase
-        retf32
+    call OpenDirBase
+    retf32
 
 open_dir16      PROC far
-        push edi
-        movzx edi,di
-        call OpenDirBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call OpenDirBase
+    pop edi
+    ret
 open_dir16      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   READ_DIR
+;           NAME:           READ_DIR
 ;
-;               DESCRIPTION:    Retrieves a directory entry
+;           DESCRIPTION:    Retrieves a directory entry
 ;
-;               PARAMETERS:             BX                      HANDLE TO DIR
-;                                               DX                      ENTRY #
-;                                               CX                      MAX SIZE OF FILENAME
-;                                               ES:(E)DI        BUFFER
+;           PARAMETERS:         BX              HANDLE TO DIR
+;                           DX              ENTRY #
+;                           CX              MAX SIZE OF FILENAME
+;                           ES:(E)DI    BUFFER
 ;
-;               RETURNS:                ECX                     FILE SIZE
-;                                               BX                      FILE ATTRIBUTE
-;                                               EDX:EAX         FILE TIME/DATE
-;                                               NC                      SUCCESS
+;           RETURNS:        ECX             FILE SIZE
+;                           BX              FILE ATTRIBUTE
+;                           EDX:EAX     FILE TIME/DATE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_dir_name   DB 'Read Directory',0
 
 read_dir32:
-        call ReadDirBase
-        retf32
+    call ReadDirBase
+    retf32
 
 read_dir16      PROC far
-        push edi
-        movzx edi,di
-        call ReadDirBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call ReadDirBase
+    pop edi
+    ret
 read_dir16      ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CLOSE_DIR
+;           NAME:           CLOSE_DIR
 ;
-;               DESCRIPTION:    Close a directory
+;           DESCRIPTION:    Close a directory
 ;
-;               PARAMETERS:             BX                      HANDLE TO DIR
-;                                               NC                      SUCCESS
+;           PARAMETERS:         BX              HANDLE TO DIR
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_dir_name  DB 'Close Directory',0
 
 close_dir       Proc far
-        push ds
-        push ax
-        push bx
-        push si
+    push ds
+    push ax
+    push ebx
+    push esi
 ;
-        mov ax,DIR_HANDLE
-        DerefHandle
-        jc close_dir_done
+    mov ax,DIR_HANDLE
+    NewDerefHandle
+    jc close_dir_done
 ;
-        mov si,bx
-        mov bx,[bx].dir_handle_sel
-        or bx,bx
-        stc
-        jz close_dir_done
+    mov esi,ebx
+    mov bx,[ebx].dir_handle_sel
+    or bx,bx
+    stc
+    jz close_dir_done
 ;
-        call CloseDirBase
-        mov bx,si
-        FreeHandle
-        clc
+    call CloseDirBase
+    mov ebx,esi
+    NewFreeHandle
+    clc
 
 close_dir_done:
-        pop si
-        pop bx
-        pop ax
-        pop ds
-        retf32
+    pop esi
+    pop ebx
+    pop ax
+    pop ds
+    retf32
 close_dir       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OPEN_FILE
+;           NAME:           OPEN_FILE
 ;
-;               DESCRIPTION:    Open file
+;           DESCRIPTION:    Open file
 ;
-;               PARAMETERS:             ES:(E)DI        FILENAME
-;                                               CL                      ACCESS CODE
-;                                               
-;               RETURNS:                BX                      FILE HANDLE
-;                                               NC                      SUCCESS
+;           PARAMETERS:         ES:(E)DI    FILENAME
+;                           CL              ACCESS CODE
+;                           
+;           RETURNS:        BX              FILE HANDLE
+;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_file_name  DB 'Open File',0
 
 open_file32:
-        call OpenFileBase
-        retf32
+    call OpenFileBase
+    retf32
 
 open_file16     PROC far
-        push edi
-        movzx edi,di
-        call OpenFileBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call OpenFileBase
+    pop edi
+    ret
 open_file16     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CREATE_FILE
+;           NAME:           CREATE_FILE
 ;
-;               DESCRIPTION:    Create file
+;           DESCRIPTION:    Create file
 ;
-;               PARAMETERS:             ES:(E)DI        FILENAME
-;                                               CX                      ATTRIBUTE
+;           PARAMETERS:         ES:(E)DI    FILENAME
+;                           CX              ATTRIBUTE
 ;
-;               RETURNS:                BX                      FILE HANDLE
-;                                               NC                      SUCCESS
-;                                               
+;           RETURNS:        BX              FILE HANDLE
+;                           NC              SUCCESS
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_file_name        DB 'Create File',0
+create_file_name    DB 'Create File',0
 
 create_file32_done:
-        pop edi
-        pop ds
+    pop edi
+    pop ds
 
 create_file32:
-        call CreateFileBase
-        retf32
+    call CreateFileBase
+    retf32
 
 create_file16   PROC far
-        push edi
-        movzx edi,di
-        call CreateFileBase
-        pop edi
-        ret
+    push edi
+    movzx edi,di
+    call CreateFileBase
+    pop edi
+    ret
 create_file16   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   IsFlushable
+;           NAME:           IsFlushable
 ;
-;               DESCRIPTION:    Check if directory is flushable
+;           DESCRIPTION:    Check if directory is flushable
 ;
-;               PARAMETERS:             BX              Dir handle
+;           PARAMETERS:         BX          Dir handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsFlushable     Proc near
-        mov fs,bx
+    mov fs,bx
 
 isflush_dir_list_loop:
-        mov edi,fs:ds_dir_ptr
-        or edi,edi
-        jz isflush_dir_list_done
+    mov edi,fs:ds_dir_ptr
+    or edi,edi
+    jz isflush_dir_list_done
 
 isflush_dir_list_check:
-        mov bx,es:[edi].de_sel
-        or bx,bx
-        jz isflush_dir_list_next
+    mov bx,es:[edi].de_sel
+    or bx,bx
+    jz isflush_dir_list_next
 ;
-        push fs
-        push edi
-        call IsFlushable
-        pop edi
-        pop fs
-        jc isflush_dir_done
+    push fs
+    push edi
+    call IsFlushable
+    pop edi
+    pop fs
+    jc isflush_dir_done
 
 isflush_dir_list_next:
-        mov edi,es:[edi].de_next
-        cmp edi,fs:ds_dir_ptr
-        jne isflush_dir_list_check
+    mov edi,es:[edi].de_next
+    cmp edi,fs:ds_dir_ptr
+    jne isflush_dir_list_check
 
 isflush_dir_list_done:
-        mov edi,fs:ds_file_ptr
-        or edi,edi
-        jz isflush_file_list_done
+    mov edi,fs:ds_file_ptr
+    or edi,edi
+    jz isflush_file_list_done
 
 isflush_file_list_check:
-        mov bx,es:[edi].dfe_file_sel
-        or bx,bx
-        jz isflush_file_list_next
+    mov bx,es:[edi].dfe_file_sel
+    or bx,bx
+    jz isflush_file_list_next
 ;
-        call FreeFile
-        jc isflush_dir_done
+    call FreeFile
+    jc isflush_dir_done
 ;
-        mov es:[edi].dfe_file_sel,0
+    mov es:[edi].dfe_file_sel,0
 
 isflush_file_list_next:
-        mov edi,es:[edi].de_next
-        cmp edi,fs:ds_file_ptr
-        jne isflush_file_list_check
+    mov edi,es:[edi].de_next
+    cmp edi,fs:ds_file_ptr
+    jne isflush_file_list_check
 
 isflush_file_list_done:
-        clc
+    clc
 
 isflush_dir_done:
-        ret
+    ret
 IsFlushable     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Flush
+;           NAME:           Flush
 ;
-;               DESCRIPTION:    Flush directory
+;           DESCRIPTION:    Flush directory
 ;
-;               PARAMETERS:             BX              Dir handle
+;           PARAMETERS:         BX          Dir handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Flush   Proc near
-        mov fs,bx
+    mov fs,bx
 
 flush_dir_list_loop:
-        mov edi,fs:ds_dir_ptr
-        or edi,edi
-        jz flush_dir_list_done
+    mov edi,fs:ds_dir_ptr
+    or edi,edi
+    jz flush_dir_list_done
 
 flush_dir_list_check:
-        mov bx,es:[edi].de_sel
-        or bx,bx
-        jz flush_dir_list_next
+    mov bx,es:[edi].de_sel
+    or bx,bx
+    jz flush_dir_list_next
 ;
-        push fs
-        push edi
-        call Flush
-        pop edi
-        pop fs
-        mov es:[edi].de_sel,0
+    push fs
+    push edi
+    call Flush
+    pop edi
+    pop fs
+    mov es:[edi].de_sel,0
 
 flush_dir_list_next:
-        mov edi,es:[edi].de_next
-        cmp edi,fs:ds_dir_ptr
-        jne flush_dir_list_check
+    mov edi,es:[edi].de_next
+    cmp edi,fs:ds_dir_ptr
+    jne flush_dir_list_check
 
 flush_dir_list_done:
-        mov bx,fs
-        xor di,di
-        mov fs,di
-        call FreeDir
+    mov bx,fs
+    xor di,di
+    mov fs,di
+    call FreeDir
 
 flush_dir_done:
-        ret
+    ret
 Flush   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   STOP_FILE_SYSTEM
+;           NAME:           STOP_FILE_SYSTEM
 ;
-;               DESCRIPTION:    Stop file system
+;           DESCRIPTION:    Stop file system
 ;
-;               PARAMETERS:             AL                      DRIVE NR
+;           PARAMETERS:         AL              DRIVE NR
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_file_system_name   DB 'Stop File System',0
 
-stop_file_system        Proc far
-        push ds
-        push es
-        push fs
-        pushad
+stop_file_system    Proc far
+    push ds
+    push es
+    push fs
+    pushad
 ;
-        mov bx,fs_sys_data_sel
-        mov ds,bx
-        mov bx,flat_sel
-        mov es,bx
-        cli
-        mov al,ds:fs_access_parse
-        or al,al
-        jz stop_file_enter
+    mov bx,fs_sys_data_sel
+    mov ds,bx
+    mov bx,flat_sel
+    mov es,bx
+    cli
+    mov al,ds:fs_access_parse
+    or al,al
+    jz stop_file_enter
 ;
-        sti
-        stc
-        jmp stop_done
+    sti
+    stc
+    jmp stop_done
 
 stop_file_enter:
-        EnterWriteSection ds:fs_access_section
+    EnterWriteSection ds:fs_access_section
 ;
-        CallFileSystem flush_proc
-        jc stop_leave_done
+    CallFileSystem flush_proc
+    jc stop_leave_done
 ;
-        movzx si,al
-        add si,si
-        mov bx,ds:[si].fs_sel
-        or bx,bx
-        clc
-        jz stop_leave_done
+    movzx si,al
+    add si,si
+    mov bx,ds:[si].fs_sel
+    or bx,bx
+    clc
+    jz stop_leave_done
 ;
-        push ds
-        mov ds,bx
-        mov bx,ds:fs_root_dir_sel
-        or bx,bx
-        clc
-        jz stop_leave_pop_done
+    push ds
+    mov ds,bx
+    mov bx,ds:fs_root_dir_sel
+    or bx,bx
+    clc
+    jz stop_leave_pop_done
 ;
-        int 3
-        push bx
-        call IsFlushable
-        pop bx
-        jc stop_leave_pop_done
+    int 3
+    push bx
+    call IsFlushable
+    pop bx
+    jc stop_leave_pop_done
 ;
-        call Flush
-        mov ds:fs_root_dir_sel,0
-        inc ds:fs_mount_id
-        clc
+    call Flush
+    mov ds:fs_root_dir_sel,0
+    inc ds:fs_mount_id
+    clc
 
 stop_leave_pop_done:
-        pop ds
+    pop ds
 
 stop_leave_done:
-        LeaveWriteSection ds:fs_access_section
-        
+    LeaveWriteSection ds:fs_access_section
+    
 stop_done:
-        popad
-        pop fs
-        pop es
-        pop ds
-        ret
-stop_file_system        Endp
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+stop_file_system    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Delete handle
+;           NAME:           Delete handle
 ;
-;               DESCRIPTION:    Delete a handle (called from handle module)
+;           DESCRIPTION:    Delete a handle (called from handle module)
 ;
-;               PARAMETERS:             BX                      HANDLE TO DIR
+;           PARAMETERS:         BX              HANDLE TO DIR
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_handle   Proc far
-        push ds
-        push ax
-        push bx
-        push si
+    push ds
+    push ax
+    push ebx
+    push esi
 ;
-        mov ax,DIR_HANDLE
-        DerefHandle
-        jc delete_handle_done
+    mov ax,DIR_HANDLE
+    NewDerefHandle
+    jc delete_handle_done
 ;
-        mov si,bx
-        mov bx,[bx].dir_handle_sel
-        or bx,bx
-        stc
-        jz delete_handle_done
+    mov esi,ebx
+    mov bx,[ebx].dir_handle_sel
+    or bx,bx
+    stc
+    jz delete_handle_done
 ;
-        call CloseDirBase
-        mov bx,si
-        FreeHandle
-        clc
+    call CloseDirBase
+    mov ebx,esi
+    NewFreeHandle
+    clc
 
 delete_handle_done:
-        pop si
-        pop bx
-        pop ax
-        pop ds
-        ret
+    pop esi
+    pop ebx
+    pop ax
+    pop ds
+    retf32
 delete_handle   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   Init process
+;           NAME:           Init process
 ;
-;               DESCRIPTION:    Init per-process data
+;           DESCRIPTION:    Init per-process data
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_dir_process
+    public init_dir_process
 
-init_dir_process        PROC near
-        mov ax,fs_process_sel
-        mov es,ax
-        mov di,OFFSET cur_dir_sel
-        mov cx,256
-        xor ax,ax
-        rep stosw
-        ret
-init_dir_process        Endp
+init_dir_process    PROC near
+    mov ax,fs_process_sel
+    mov es,ax
+    mov di,OFFSET cur_dir_sel
+    mov cx,256
+    xor ax,ax
+    rep stosw
+    ret
+init_dir_process    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   Init
+;           NAME:           Init
 ;
-;               DESCRIPTION:    Init module
+;           DESCRIPTION:    Init module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_dir
+    public init_dir
 
-init_dir        PROC near
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+init_dir    PROC near
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov di,OFFSET delete_handle
-        mov ax,DIR_HANDLE
-        RegisterHandle
+    mov edi,OFFSET delete_handle
+    mov ax,DIR_HANDLE
+    NewRegisterHandle
 ;
-        mov esi,OFFSET stop_file_system
-        mov edi,OFFSET stop_file_system_name
-        mov ax,stop_file_system_nr
-        RegisterOldOsGate
+    mov esi,OFFSET stop_file_system
+    mov edi,OFFSET stop_file_system_name
+    mov ax,stop_file_system_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET cache_dir
-        mov edi,OFFSET cache_dir_name
-        xor cl,cl
-        mov ax,cache_dir_nr
-        RegisterOldOsGate
+    mov esi,OFFSET cache_dir
+    mov edi,OFFSET cache_dir_name
+    xor cl,cl
+    mov ax,cache_dir_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET insert_dir_entry
-        mov edi,OFFSET insert_dir_entry_name
-        xor cl,cl
-        mov ax,insert_dir_entry_nr
-        RegisterOldOsGate
+    mov esi,OFFSET insert_dir_entry
+    mov edi,OFFSET insert_dir_entry_name
+    xor cl,cl
+    mov ax,insert_dir_entry_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET insert_file_entry
-        mov edi,OFFSET insert_file_entry_name
-        xor cl,cl
-        mov ax,insert_file_entry_nr
-        RegisterOldOsGate
+    mov esi,OFFSET insert_file_entry
+    mov edi,OFFSET insert_file_entry_name
+    xor cl,cl
+    mov ax,insert_file_entry_nr
+    RegisterOldOsGate
 ;
-        mov esi,OFFSET get_drive_info
-        mov edi,OFFSET get_drive_info_name
-        xor dx,dx
-        mov ax,get_drive_info_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET get_drive_info
+    mov edi,OFFSET get_drive_info_name
+    xor dx,dx
+    mov ax,get_drive_info_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_cur_drive
-        mov edi,OFFSET set_cur_drive_name
-        xor dx,dx
-        mov ax,set_cur_drive_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_cur_drive
+    mov edi,OFFSET set_cur_drive_name
+    xor dx,dx
+    mov ax,set_cur_drive_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_cur_drive
-        mov edi,OFFSET get_cur_drive_name
-        xor dx,dx
-        mov ax,get_cur_drive_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET get_cur_drive
+    mov edi,OFFSET get_cur_drive_name
+    xor dx,dx
+    mov ax,get_cur_drive_nr
+    RegisterBimodalUserGate
 ;
-        mov ebx,OFFSET set_cur_dir16
-        mov esi,OFFSET set_cur_dir32
-        mov edi,OFFSET set_cur_dir_name
-        mov dx,virt_es_in
-        mov ax,set_cur_dir_nr
-        RegisterUserGate
+    mov ebx,OFFSET set_cur_dir16
+    mov esi,OFFSET set_cur_dir32
+    mov edi,OFFSET set_cur_dir_name
+    mov dx,virt_es_in
+    mov ax,set_cur_dir_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET get_cur_dir16
-        mov esi,OFFSET get_cur_dir32
-        mov edi,OFFSET get_cur_dir_name
-        mov dx,virt_es_in
-        mov ax,get_cur_dir_nr
-        RegisterUserGate
+    mov ebx,OFFSET get_cur_dir16
+    mov esi,OFFSET get_cur_dir32
+    mov edi,OFFSET get_cur_dir_name
+    mov dx,virt_es_in
+    mov ax,get_cur_dir_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET make_dir16
-        mov esi,OFFSET make_dir32
-        mov edi,OFFSET make_dir_name
-        mov dx,virt_es_in
-        mov ax,make_dir_nr
-        RegisterUserGate
+    mov ebx,OFFSET make_dir16
+    mov esi,OFFSET make_dir32
+    mov edi,OFFSET make_dir_name
+    mov dx,virt_es_in
+    mov ax,make_dir_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET remove_dir16
-        mov esi,OFFSET remove_dir32
-        mov edi,OFFSET remove_dir_name
-        mov dx,virt_es_in
-        mov ax,remove_dir_nr
-        RegisterUserGate
+    mov ebx,OFFSET remove_dir16
+    mov esi,OFFSET remove_dir32
+    mov edi,OFFSET remove_dir_name
+    mov dx,virt_es_in
+    mov ax,remove_dir_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET get_file_attrib16
-        mov esi,OFFSET get_file_attrib32
-        mov edi,OFFSET get_file_attribute_name
-        mov dx,virt_es_in
-        mov ax,get_file_attribute_nr
-        RegisterUserGate
+    mov ebx,OFFSET get_file_attrib16
+    mov esi,OFFSET get_file_attrib32
+    mov edi,OFFSET get_file_attribute_name
+    mov dx,virt_es_in
+    mov ax,get_file_attribute_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET set_file_attrib16
-        mov esi,OFFSET set_file_attrib32
-        mov edi,OFFSET set_file_attribute_name
-        mov dx,virt_es_in
-        mov ax,set_file_attribute_nr
-        RegisterUserGate
+    mov ebx,OFFSET set_file_attrib16
+    mov esi,OFFSET set_file_attrib32
+    mov edi,OFFSET set_file_attribute_name
+    mov dx,virt_es_in
+    mov ax,set_file_attribute_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET delete_file16
-        mov esi,OFFSET delete_file32
-        mov edi,OFFSET delete_file_name
-        mov dx,virt_es_in
-        mov ax,delete_file_nr
-        RegisterUserGate
+    mov ebx,OFFSET delete_file16
+    mov esi,OFFSET delete_file32
+    mov edi,OFFSET delete_file_name
+    mov dx,virt_es_in
+    mov ax,delete_file_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET open_dir16
-        mov esi,OFFSET open_dir32
-        mov edi,OFFSET open_dir_name
-        mov dx,virt_es_in
-        mov ax,open_dir_nr
-        RegisterUserGate
+    mov ebx,OFFSET open_dir16
+    mov esi,OFFSET open_dir32
+    mov edi,OFFSET open_dir_name
+    mov dx,virt_es_in
+    mov ax,open_dir_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET read_dir16
-        mov esi,OFFSET read_dir32
-        mov edi,OFFSET read_dir_name
-        mov dx,virt_es_in
-        mov ax,read_dir_nr
-        RegisterUserGate
+    mov ebx,OFFSET read_dir16
+    mov esi,OFFSET read_dir32
+    mov edi,OFFSET read_dir_name
+    mov dx,virt_es_in
+    mov ax,read_dir_nr
+    RegisterUserGate
 ;
-        mov esi,OFFSET close_dir
-        mov edi,OFFSET close_dir_name
-        xor dx,dx
-        mov ax,close_dir_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET close_dir
+    mov edi,OFFSET close_dir_name
+    xor dx,dx
+    mov ax,close_dir_nr
+    RegisterBimodalUserGate
 ;
-        mov ebx,OFFSET open_file16
-        mov esi,OFFSET open_file32
-        mov edi,OFFSET open_file_name
-        mov dx,virt_es_in
-        mov ax,open_file_nr
-        RegisterUserGate
+    mov ebx,OFFSET open_file16
+    mov esi,OFFSET open_file32
+    mov edi,OFFSET open_file_name
+    mov dx,virt_es_in
+    mov ax,open_file_nr
+    RegisterUserGate
 ;
-        mov ebx,OFFSET create_file16
-        mov esi,OFFSET create_file32
-        mov edi,OFFSET create_file_name
-        mov dx,virt_es_in
-        mov ax,create_file_nr
-        RegisterUserGate
+    mov ebx,OFFSET create_file16
+    mov esi,OFFSET create_file32
+    mov edi,OFFSET create_file_name
+    mov dx,virt_es_in
+    mov ax,create_file_nr
+    RegisterUserGate
 ;
-        ret
-init_dir        ENDP
+    ret
+init_dir    ENDP
 
 code    ENDS
 
-        END
+    END

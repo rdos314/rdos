@@ -35,8 +35,8 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc
 
-ENV_MODE_GLOBAL         = 1
-ENV_MODE_PROCESS        = 2
+ENV_MODE_GLOBAL     = 1
+ENV_MODE_PROCESS    = 2
 
 env_handle_seg  STRUC
 
@@ -45,12 +45,12 @@ env_handle_base handle_header <>
 env_handle_mode DB ?
 
 env_handle_seg  ENDS
-        
+    
 data    SEGMENT byte public 'DATA'
 
 env_sys_section     section_typ <>
 
-env_sys_raw_sel         DW ?
+env_sys_raw_sel     DW ?
 
 data  ENDS
 
@@ -58,135 +58,135 @@ env_proc_seg  STRUC
 
 env_proc_section     section_typ <>
 
-env_proc_raw_sel         DW ?
+env_proc_raw_sel     DW ?
 
 env_proc_seg  ENDS
-        
+    
 code    SEGMENT byte use16 public 'CODE'
 
-        .386p
+    .386p
 
-        assume cs:code
+    assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   load_set_var
+;           NAME:           load_set_var
 ;
-;               DESCRIPTION:    Load SET variables
+;           DESCRIPTION:    Load SET variables
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_set_var    Proc near
-        push ax
-        push edx
-        push esi
-        add edx,SIZE rdos_header
-        mov esi,edx     
-        
+    push ax
+    push edx
+    push esi
+    add edx,SIZE rdos_header
+    mov esi,edx     
+    
 init_set_var_loop:
-        lods byte ptr [esi]
-        stosb
-        or al,al
-        jne init_set_var_loop
+    lods byte ptr [esi]
+    stosb
+    or al,al
+    jne init_set_var_loop
 ;
-        pop esi
-        pop edx
-        pop ax
-        ret
+    pop esi
+    pop edx
+    pop ax
+    ret
 load_set_var    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   load_path
+;           NAME:           load_path
 ;
-;               DESCRIPTION:    Load PATH variables
+;           DESCRIPTION:    Load PATH variables
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 path_text DB 'PATH'
 
 load_path       Proc near
-        push eax
-        push edx
-        push esi
-        add edx,SIZE rdos_header
-        mov esi,edx
-        mov eax,dword ptr cs:path_text
-        stosd
-        mov al,'='
-        stosb
+    push eax
+    push edx
+    push esi
+    add edx,SIZE rdos_header
+    mov esi,edx
+    mov eax,dword ptr cs:path_text
+    stosd
+    mov al,'='
+    stosb
 init_path_var_loop:
-        lods byte ptr [esi]
-        stosb
-        or al,al
-        jne init_path_var_loop
-        pop esi
-        pop edx
-        pop eax
-        ret
+    lods byte ptr [esi]
+    stosb
+    or al,al
+    jne init_path_var_loop
+    pop esi
+    pop edx
+    pop eax
+    ret
 load_path       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   load_adapter_env
+;           NAME:           load_adapter_env
 ;
-;               DESCRIPTION:    Install all variables from adapter
+;           DESCRIPTION:    Install all variables from adapter
 ;
-;               PARAMETERS:             edx             base address
+;           PARAMETERS:         edx         base address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_adapter_env        Proc near
-        push ds
-        push ax
-        push bx
-        push edx
-        mov ax,flat_sel
-        mov ds,ax
+load_adapter_env    Proc near
+    push ds
+    push ax
+    push bx
+    push edx
+    mov ax,flat_sel
+    mov ds,ax
 load_adapter_env_loop:
-        mov ax,[edx].typ
-        cmp ax,RdosSet
-        jne not_load_set
-        call load_set_var
-        jmp load_adapter_env_next
+    mov ax,[edx].typ
+    cmp ax,RdosSet
+    jne not_load_set
+    call load_set_var
+    jmp load_adapter_env_next
 not_load_set:
-        cmp ax,RdosPath
-        jne not_load_path
-        call load_path
-        jmp load_adapter_env_next
+    cmp ax,RdosPath
+    jne not_load_path
+    call load_path
+    jmp load_adapter_env_next
 not_load_path:
-        cmp ax,RdosEnd
-        je load_adapter_env_done
+    cmp ax,RdosEnd
+    je load_adapter_env_done
 load_adapter_env_next:
-        add edx,[edx].len
-        jmp load_adapter_env_loop
+    add edx,[edx].len
+    jmp load_adapter_env_loop
 load_adapter_env_done:
-        pop edx
-        pop bx
-        pop ax
-        pop ds
-        ret
-load_adapter_env        Endp
+    pop edx
+    pop bx
+    pop ax
+    pop ds
+    ret
+load_adapter_env    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               LockSysEnv
+;           NAME:           LockSysEnv
 ;
-;               DESCRIPTION:    Lock system env and return raw data selector
+;           DESCRIPTION:    Lock system env and return raw data selector
 ;
-;               RETURNS:                BX                      Selector
+;           RETURNS:        BX              Selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -208,9 +208,9 @@ lock_sys_env    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               UnlockSysEnv
+;           NAME:           UnlockSysEnv
 ;
-;               DESCRIPTION:    Unlock system env
+;           DESCRIPTION:    Unlock system env
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -233,11 +233,11 @@ unlock_sys_env    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               LockProcEnv
+;           NAME:           LockProcEnv
 ;
-;               DESCRIPTION:    Lock process env and return raw data selector
+;           DESCRIPTION:    Lock process env and return raw data selector
 ;
-;               RETURNS:                BX                      Selector
+;           RETURNS:        BX              Selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -259,9 +259,9 @@ lock_proc_env    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               UnlockProcEnv
+;           NAME:           UnlockProcEnv
 ;
-;               DESCRIPTION:    Unlock process env
+;           DESCRIPTION:    Unlock process env
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -284,11 +284,11 @@ unlock_proc_env    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               OpenSysEnv
+;           NAME:           OpenSysEnv
 ;
-;               DESCRIPTION:    Open system envvar handle
+;           DESCRIPTION:    Open system envvar handle
 ;
-;               RETURNS:                BX                      Handle
+;           RETURNS:        BX              Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -296,15 +296,15 @@ open_sys_env_name       DB 'Open Sys Env',0
 
 open_sys_env    Proc far
     push ds
-        push cx
+    push cx
 ;
-        mov cx,SIZE env_handle_seg
-        AllocateHandle
-        mov [bx].env_handle_mode,ENV_MODE_GLOBAL
-        mov [bx].hh_sign,ENV_HANDLE
-        mov bx,[bx].hh_handle
+    mov cx,SIZE env_handle_seg
+    NewAllocateHandle
+    mov [ebx].env_handle_mode,ENV_MODE_GLOBAL
+    mov [ebx].hh_sign,ENV_HANDLE
+    mov bx,[ebx].hh_handle
 ;
-        pop cx
+    pop cx
     pop ds
     retf32
 open_sys_env    Endp
@@ -313,11 +313,11 @@ open_sys_env    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           OpenProcEnv
+;       NAME:       OpenProcEnv
 ;
 ;       DESCRIPTION:    Open process envvar handle
 ;
-;       RETURNS:        BX          Handle
+;       RETURNS:    BX      Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -328,10 +328,10 @@ open_proc_env    Proc far
     push cx
 ;
     mov cx,SIZE env_handle_seg
-    AllocateHandle
-    mov [bx].env_handle_mode,ENV_MODE_PROCESS
-    mov [bx].hh_sign,ENV_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].env_handle_mode,ENV_MODE_PROCESS
+    mov [ebx].hh_sign,ENV_HANDLE
+    mov bx,[ebx].hh_handle
 ;
     pop cx
     pop ds
@@ -342,11 +342,11 @@ open_proc_env    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CloseEnv
+;       NAME:       CloseEnv
 ;
 ;       DESCRIPTION:    Close envvar handle
 ;
-;       PARAMETERS:     BX          Handle
+;       PARAMETERS:     BX      Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -358,10 +358,10 @@ close_env   Proc far
     push ax
 ;
     mov ax,ENV_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc close_env_done
 ;
-    FreeHandle
+    NewFreeHandle
     clc
 
 close_env_done:
@@ -374,13 +374,13 @@ close_env   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddEnvVar
+;       NAME:       AddEnvVar
 ;
 ;       DESCRIPTION:    Add a envvar
 ;
-;       PARAMETERS:     BX          Handle
-;                       DS:(E)SI    Env var name buffer
-;                       ES:(E)DI    Env var data buffer
+;       PARAMETERS:     BX      Handle
+;               DS:(E)SI    Env var name buffer
+;               ES:(E)DI    Env var data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -535,8 +535,8 @@ add_env_var    Proc near
 ;
     push ds
     mov ax,ENV_HANDLE
-    DerefHandle
-    mov al,[bx].env_handle_mode
+    NewDerefHandle
+    mov al,[ebx].env_handle_mode
     pop ds
     jc add_env_var_done
 ;
@@ -584,12 +584,12 @@ add_env_var32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           DeleteEnvVar
+;       NAME:       DeleteEnvVar
 ;
 ;       DESCRIPTION:    Delete an envvar
 ;
-;       PARAMETERS:     BX          Handle
-;                       DS:(E)SI    Env var name buffer
+;       PARAMETERS:     BX      Handle
+;               DS:(E)SI    Env var name buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -679,8 +679,8 @@ delete_env_var    Proc near
 ;
     push ds
     mov ax,ENV_HANDLE
-    DerefHandle
-    mov al,[bx].env_handle_mode
+    NewDerefHandle
+    mov al,[ebx].env_handle_mode
     pop ds
     jc del_env_var_done
 ;
@@ -725,13 +725,13 @@ delete_env_var32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           FindEnvVar
+;       NAME:       FindEnvVar
 ;
 ;       DESCRIPTION:    Find a envvar
 ;
-;       PARAMETERS:     BX          Handle
-;                       DS:(E)SI    Env var name buffer
-;                       ES:(E)DI    Env var data buffer
+;       PARAMETERS:     BX      Handle
+;               DS:(E)SI    Env var name buffer
+;               ES:(E)DI    Env var data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -805,8 +805,8 @@ find_env_var    Proc near
 ;
     push ds
     mov ax,ENV_HANDLE
-    DerefHandle
-    mov al,[bx].env_handle_mode
+    NewDerefHandle
+    mov al,[ebx].env_handle_mode
     pop ds
     jc find_env_var_done
 ;
@@ -854,13 +854,13 @@ find_env_var32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetEnvSize
+;       NAME:       GetEnvSize
 ;
 ;       DESCRIPTION:    Get size raw env data 
 ;
-;       PARAMETERS:     BX          Handle
+;       PARAMETERS:     BX      Handle
 ;
-;       RETURNS:        (E)AX       Size
+;       RETURNS:    (E)AX       Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -887,15 +887,15 @@ get_env_size_base   Endp
 get_env_size:
     push ds
     push es
-    push bx
+    push ebx
     push ecx
     push esi
 ;
     mov ax,ENV_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_env_size_done
 ;
-    mov al,ds:[bx].env_handle_mode
+    mov al,ds:[ebx].env_handle_mode
     cmp al,ENV_MODE_GLOBAL
     je get_sys_env_size
 ;
@@ -918,7 +918,7 @@ get_env_size_done:
 ;    
     pop esi
     pop ecx
-    pop bx
+    pop ebx
     pop es
     pop ds
     retf32
@@ -926,12 +926,12 @@ get_env_size_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetEnvData
+;       NAME:       GetEnvData
 ;
 ;       DESCRIPTION:    Get raw env data
 ;
-;       PARAMETERS:     BX          Handle
-;                       ES:(E)DI    Env data buffer
+;       PARAMETERS:     BX      Handle
+;               ES:(E)DI    Env data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -960,10 +960,10 @@ get_env_data    Proc near
     pushad
 ;
     mov ax,ENV_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_env_data_done
 ;
-    mov al,ds:[bx].env_handle_mode
+    mov al,ds:[ebx].env_handle_mode
     cmp al,ENV_MODE_GLOBAL
     je get_sys_env
 ;
@@ -1005,12 +1005,12 @@ get_env_data32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetEnvData
+;       NAME:       SetEnvData
 ;
 ;       DESCRIPTION:    Set raw env data
 ;
-;       PARAMETERS:     BX          Handle
-;                       ES:(E)DI    Env data buffer
+;       PARAMETERS:     BX      Handle
+;               ES:(E)DI    Env data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1041,8 +1041,8 @@ set_env_data    Proc near
     mov esi,edi
     push es
     mov ax,ENV_HANDLE
-    DerefHandle
-    mov al,ds:[bx].env_handle_mode
+    NewDerefHandle
+    mov al,ds:[ebx].env_handle_mode
     pop ds
     jc set_env_data_done
 ;
@@ -1088,38 +1088,38 @@ set_env_data32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           Delete_handle
+;       NAME:       Delete_handle
 ;
 ;       DESCRIPTION:    Delete handle (called from handle module)
 ;
-;       PARAMETERS:     BX          ENV HANDLE
-;                       
+;       PARAMETERS:     BX      ENV HANDLE
+;               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_handle   Proc far
     push ds
     push es
-    push bx
+    push ebx
 ;
     mov ax,ENV_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc delete_handle_done
 ;
-    FreeHandle
+    NewFreeHandle
     clc
 
 delete_handle_done:
-    pop bx
+    pop ebx
     pop es
     pop ds
-    ret
+    retf32
 delete_handle   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:           InitProcess
+;       NAME:       InitProcess
 ;
 ;       DESCRIPTION:    Init process
 ;
@@ -1168,7 +1168,7 @@ init_process    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:           INIT
+;       NAME:       INIT
 ;
 ;       DESCRIPTION:    Init module
 ;
@@ -1214,9 +1214,9 @@ init_device_loop:
     mov edi,OFFSET init_process
     HookCreateProcess
 ;
-    mov di,OFFSET delete_handle
+    mov edi,OFFSET delete_handle
     mov ax,ENV_HANDLE
-    RegisterHandle
+    NewRegisterHandle
 ;
     mov esi,OFFSET lock_sys_env
     mov edi,OFFSET lock_sys_env_name

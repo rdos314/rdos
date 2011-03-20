@@ -5814,13 +5814,13 @@ create_user_section     PROC far
     push cx
 ;
     mov cx,SIZE section_handle_seg
-    AllocateHandle
-    mov ds:[bx].us_value,0
-    mov ds:[bx].us_list,0
-    mov ds:[bx].us_owner,0
-    mov ds:[bx].us_count,0
-    mov [bx].hh_sign,SECTION_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov ds:[ebx].us_value,0
+    mov ds:[ebx].us_list,0
+    mov ds:[ebx].us_owner,0
+    mov ds:[ebx].us_count,0
+    mov [ebx].hh_sign,SECTION_HANDLE
+    mov bx,[ebx].hh_handle
     clc
 ;
     pop cx
@@ -5849,13 +5849,13 @@ create_blocked_user_section     PROC far
     push cx
 ;
     mov cx,SIZE section_handle_seg
-    AllocateHandle
-    mov ds:[bx].us_value,-1
-    mov ds:[bx].us_list,0
-    mov ds:[bx].us_owner,-1
-    mov ds:[bx].us_count,1
-    mov [bx].hh_sign,SECTION_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov ds:[ebx].us_value,-1
+    mov ds:[ebx].us_list,0
+    mov ds:[ebx].us_owner,-1
+    mov ds:[ebx].us_count,1
+    mov [ebx].hh_sign,SECTION_HANDLE
+    mov bx,[ebx].hh_handle
     clc
 ;
     pop cx
@@ -5880,17 +5880,17 @@ delete_user_section_name    DB 'Delete User Section',0
 
 delete_user_section     PROC far
     push ds
-    push bx
+    push ebx
 ;
     mov ax,SECTION_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc free_section_done
 ;
-    FreeHandle
+    NewFreeHandle
     clc
 
 free_section_done:
-    pop bx
+    pop ebx
     pop ds
     retf32
 delete_user_section     ENDP
@@ -5911,20 +5911,20 @@ enter_user_section_name DB 'Enter User Section',0
 
 enter_user_section      PROC far
     push ax
-    push bx
+    push ebx
     push dx
     push ds
     push fs
 ;
     mov ax,SECTION_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc eusEnd
 ;
-    lock sub ds:[bx].us_value,1
+    lock sub ds:[ebx].us_value,1
     jc eusDone
 ;
     str ax
-    cmp ax,ds:[bx].us_owner
+    cmp ax,ds:[ebx].us_owner
     je eusDone
 ;
     push ds
@@ -5933,11 +5933,11 @@ enter_user_section      PROC far
     call ds:lock_proc
     pop ds
 ;    
-    mov ax,ds:[bx].us_list
+    mov ax,ds:[ebx].us_list
     cmp ax,-1
     jne eusBlock
 ;
-    mov ds:[bx].us_list,0
+    mov ds:[ebx].us_list,0
     jmp eusUnlock
 
 eusBlock:
@@ -5945,8 +5945,7 @@ eusBlock:
     push OFFSET eusDone
     call SaveLockedThread
 ;
-    lea di,[bx].us_list     
-    movzx edi,di
+    lea edi,[ebx].us_list     
     jmp BlockCurrentThread
 
 eusUnlock:
@@ -5958,8 +5957,8 @@ eusUnlock:
     
 eusDone:
     str ax
-    mov ds:[bx].us_owner,ax
-    inc ds:[bx].us_count
+    mov ds:[ebx].us_owner,ax
+    inc ds:[ebx].us_count
 
 eusEnd:
     pop ax
@@ -5981,7 +5980,7 @@ eusDs:
     mov ds,ax
 ;
     pop dx
-    pop bx
+    pop ebx
     pop ax
     retf32
 enter_user_section      ENDP
@@ -6002,23 +6001,23 @@ leave_user_section_name DB 'Leave User Section',0
  
 leave_user_section      PROC far
     push ax
-    push bx
+    push ebx
     push dx
     push ds
     push fs
 ;
     mov ax,SECTION_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc lusDone
 ;
     str ax
-    cmp ax,ds:[bx].us_owner
+    cmp ax,ds:[ebx].us_owner
     jne lusDone
 ;
-    sub ds:[bx].us_count,1
+    sub ds:[ebx].us_count,1
     jz lusFreeOwner
 ;       
-    lock add ds:[bx].us_value,1
+    lock add ds:[ebx].us_value,1
     jnc lusNotValueError
 ;
     int 3
@@ -6032,8 +6031,8 @@ lusFreeOwner:
     int 3
 
 lusNotCountError:
-    mov ds:[bx].us_owner,0
-    lock add ds:[bx].us_value,1
+    mov ds:[ebx].us_owner,0
+    lock add ds:[ebx].us_value,1
     jc lusDone
 ;    
     push ds
@@ -6042,11 +6041,11 @@ lusNotCountError:
     call ds:lock_proc
     pop ds
 ;
-    mov ax,ds:[bx].us_list
+    mov ax,ds:[ebx].us_list
     or ax,ax
     jnz lusUnblock
 ;
-    mov ds:[bx].us_list,-1
+    mov ds:[ebx].us_list,-1
     mov ax,task_sel
     mov ds,ax
     jmp lusUnlock
@@ -6056,7 +6055,7 @@ lusUnblock:
     push esi
     push di
 ;    
-    lea esi,ds:[bx].us_list
+    lea esi,ds:[ebx].us_list
     mov dx,ds
 ;    
     mov ax,task_sel
@@ -6102,7 +6101,7 @@ lusDs:
     mov ds,ax
 ;
     pop dx
-    pop bx
+    pop ebx
     pop ax
     retf32
 leave_user_section      ENDP

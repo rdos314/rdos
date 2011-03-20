@@ -55,25 +55,25 @@ f_lbuf_sel      DW ?
 f_rbuf_sel      DW ?
 
 f_buf_pos       DW ?
-f_thread        DW ?
+f_thread    DW ?
 
-f_flags         DB ?
+f_flags     DB ?
 
 fm_sel   ENDS
 
-fm_struc        STRUC
+fm_struc    STRUC
 
-f_base          handle_header <>
-f_sel           DW ?
+f_base      handle_header <>
+f_sel       DW ?
 
-fm_struc        ENDS
+fm_struc    ENDS
 
 instrument_sel   STRUC
 
-i_fm_sel        DW ?
-i_c             DW ?
-i_m             DW ?
-i_beta          DT ?
+i_fm_sel    DW ?
+i_c         DW ?
+i_m         DW ?
+i_beta      DT ?
 i_att_samples   DD ?
 i_sus_vol_fract DW ?
 i_sus_vol_ind   DW ?
@@ -86,19 +86,19 @@ i_rel_mod_ind   DW ?
 
 instrument_sel   ENDS
 
-instrument_struc        STRUC
+instrument_struc    STRUC
 
-i_base          handle_header <>
-i_sel           DW ?
+i_base      handle_header <>
+i_sel       DW ?
 
-instrument_struc        ENDS
+instrument_struc    ENDS
 
 note_struc  STRUC
 
-n_prev          DW ?
-n_next          DW ?
+n_prev      DW ?
+n_next      DW ?
 
-n_callb         DW ?
+n_callb     DW ?
 
 n_carrier_diff  DD ?
 n_carrier_curr  DD ?
@@ -125,7 +125,7 @@ n_beta_fact     DD ?
 n_sus_samples   DD ?
 
 n_buf_pos       DW ?
-n_flags         DB ?
+n_flags     DB ?
 
 note_struc  ENDS
 
@@ -139,27 +139,27 @@ fm_sel_arr      DW MAX_FM_SELS DUP(?)
 
 data    ENDS
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
-        extrn SinTab:dword
-        extrn ExpTab:dword
+    extrn SinTab:dword
+    extrn ExpTab:dword
 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   InterpolateSin
+;           NAME:           InterpolateSin
 ;
-;               DESCRIPTION:    Interpolate sin-value
+;           DESCRIPTION:    Interpolate sin-value
 ;
-;               PARAMETERS:     EAX     Value (12-bit index + 16-bit fract)
+;           PARAMETERS:     EAX     Value (12-bit index + 16-bit fract)
 ;
-;       RETURNS:        EAX     Sin value
+;       RETURNS:    EAX     Sin value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -188,7 +188,7 @@ InterpolateSin  Proc near
     sub eax,edx
     imul edi
     mov eax,edx
-    shl eax,1           
+    shl eax,1       
     add eax,dword ptr cs:[si+4].SinTab
     jmp isCheckSign
 
@@ -198,7 +198,7 @@ isMirrorOk:
     sub eax,edx
     imul edi
     mov eax,edx
-    shl eax,1           
+    shl eax,1       
     add eax,dword ptr cs:[si].SinTab
 
 isCheckSign:
@@ -220,13 +220,13 @@ InterpolateSin Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   InterpolateExp
+;           NAME:           InterpolateExp
 ;
-;               DESCRIPTION:    Interpolate exp(-kt)
+;           DESCRIPTION:    Interpolate exp(-kt)
 ;
-;               PARAMETERS:     EAX     Value (12-bit index + 16-bit fract)
+;           PARAMETERS:     EAX     Value (12-bit index + 16-bit fract)
 ;
-;       RETURNS:        EAX     Exp value
+;       RETURNS:    EAX     Exp value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -247,7 +247,7 @@ InterpolateExp  Proc near
     sub eax,edx
     imul edi
     mov eax,edx
-    shl eax,1           
+    shl eax,1       
     add eax,dword ptr cs:[si].ExpTab
 ;
     pop edi
@@ -261,12 +261,12 @@ InterpolateExp Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   InsertNoteSel
+;           NAME:           InsertNoteSel
 ;
-;               DESCRIPTION:    Insert a note selector
+;           DESCRIPTION:    Insert a note selector
 ;
-;               PARAMETERS:     DS      FM sel
-;                       ES      Note sel
+;           PARAMETERS:     DS      FM sel
+;               ES      Note sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -275,29 +275,29 @@ InsertNoteSel   Proc near
     push es
     push eax
     push ebx
-        push di
+    push di
 ;
-        mov di,ds:f_note_list
-        or di,di
-        je insEmpty
+    mov di,ds:f_note_list
+    or di,di
+    je insEmpty
 ;
-        push ds
-        push si
-        mov ds,di
-        mov si,ds:n_prev
-        mov ds:n_prev,es
-        mov ds,si
-        mov ds:n_next,es
-        mov es:n_next,di
-        mov es:n_prev,si
-        pop si
-        pop ds
-        jmp insLeave
-        
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:n_prev
+    mov ds:n_prev,es
+    mov ds,si
+    mov ds:n_next,es
+    mov es:n_next,di
+    mov es:n_prev,si
+    pop si
+    pop ds
+    jmp insLeave
+    
 insEmpty:
-        mov es:n_next,es
-        mov es:n_prev,es
-        mov ds:f_note_list,es
+    mov es:n_next,es
+    mov es:n_prev,es
+    mov ds:f_note_list,es
 
 insLeave:
     pop di
@@ -313,12 +313,12 @@ InsertNoteSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   RemoveNoteSel
+;           NAME:           RemoveNoteSel
 ;
-;               DESCRIPTION:    Remove a note selector
+;           DESCRIPTION:    Remove a note selector
 ;
-;               PARAMETERS:         DS      FM sel
-;                       ES      Note sel
+;           PARAMETERS:     DS      FM sel
+;               ES      Note sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -326,30 +326,30 @@ RemoveNoteSel   Proc near
     push ds
     push eax
     push ebx
-        push si
+    push si
 ;
-        mov di,es
+    mov di,es
     cmp di,es:n_next
-        je rnsEmpty
+    je rnsEmpty
 ;
-        push di
-        push ds
-        mov di,es:n_next
-        mov ds:f_note_list,di
-        mov si,es:n_prev
-        mov ds,di
-        mov ds:n_prev,si
-        mov ds,si
-        mov ds:n_next,di
-        pop ds
-        pop di
-        jmp rnsLeave
+    push di
+    push ds
+    mov di,es:n_next
+    mov ds:f_note_list,di
+    mov si,es:n_prev
+    mov ds,di
+    mov ds:n_prev,si
+    mov ds,si
+    mov ds:n_next,di
+    pop ds
+    pop di
+    jmp rnsLeave
 
 rnsEmpty:       
-        mov ds:f_note_list,0
+    mov ds:f_note_list,0
 
 rnsLeave:
-        pop si
+    pop si
     pop ebx
     pop eax
     pop ds 
@@ -361,11 +361,11 @@ RemoveNoteSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   delete_fm
+;           NAME:           delete_fm
 ;
-;               DESCRIPTION:    Delete FM selector
+;           DESCRIPTION:    Delete FM selector
 ;
-;               PARAMETERS:             DS:BX           FM handle
+;           PARAMETERS:         DS:EBX       FM handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -374,7 +374,7 @@ delete_fm       Proc near
     push bx
     push cx
 ;
-    mov ds,[bx].f_sel
+    mov ds,[ebx].f_sel
 
 dfLoop:
     mov cx,ds:f_note_list
@@ -408,7 +408,7 @@ dfFree:
     pop cx
     pop bx
     pop ds
-        ret
+    ret
 delete_fm       Endp
 
 
@@ -416,24 +416,24 @@ delete_fm       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   delete_fm_instr
+;           NAME:           delete_fm_instr
 ;
-;               DESCRIPTION:    Delete FM instrument selector
+;           DESCRIPTION:    Delete FM instrument selector
 ;
-;               PARAMETERS:             DS:BX           FM handle
+;           PARAMETERS:         DS:EBX       FM handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_fm_instr Proc near
     push es
 ;
-    mov es,[bx].i_sel
+    mov es,[ebx].i_sel
     FreeMem
-        FreeHandle
+    NewFreeHandle
     clc
 ;    
     pop es
-        ret
+    ret
 delete_fm_instr Endp
 
 
@@ -441,14 +441,14 @@ delete_fm_instr Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   OpenFm
+;           NAME:           OpenFm
 ;
-;               DESCRIPTION:    Open FM handle
+;           DESCRIPTION:    Open FM handle
 ;
 ;       PARAMETERS:     AX      Sample rate
 ;
-;       RETURNS:        BX      FM handle
-;                                               
+;       RETURNS:    BX      FM handle
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_fm_name    DB 'Open FM',0
@@ -459,9 +459,9 @@ open_fm    Proc
     push eax
     push cx
 ;
-        mov cx,SIZE fm_struc
-        AllocateHandle
-        mov ds:[bx].hh_sign,FM_HANDLE
+    mov cx,SIZE fm_struc
+    NewAllocateHandle
+    mov ds:[ebx].hh_sign,FM_HANDLE
 ;
     push eax
     mov eax,SIZE fm_sel
@@ -483,7 +483,7 @@ open_fm    Proc
     pop ds
 ;
     push ds
-    push bx
+    push ebx
     mov ax,SEG data
     mov ds,ax
     EnterSection ds:fm_section
@@ -496,17 +496,17 @@ open_fm    Proc
     inc ds:fm_sel_count
 ;
     LeaveSection ds:fm_section
-    pop bx
+    pop ebx
     pop ds    
 ;
-    mov [bx].f_sel,es
-        mov bx,[bx].hh_handle
+    mov [ebx].f_sel,es
+    mov bx,[ebx].hh_handle
 ;
     pop cx
     pop eax
     pop ds
     pop es    
-        retf32
+    retf32
 open_fm    Endp
 
 
@@ -514,33 +514,33 @@ open_fm    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CloseFm
+;           NAME:           CloseFm
 ;
-;               DESCRIPTION:    Close FM handle
+;           DESCRIPTION:    Close FM handle
 ;
 ;       PARAMETERS:     BX      FM handle
-;                                               
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_fm_name   DB 'Close FM',0
 
-close_fm    Proc        
-        push ds
-        push ax
-        push bx
+close_fm    Proc    
+    push ds
+    push ax
+    push ebx
 ;
-        mov ax,FM_HANDLE
-        DerefHandle
-        jc cfDone
+    mov ax,FM_HANDLE
+    NewDerefHandle
+    jc cfDone
 ;
-        call delete_fm
-        FreeHandle
+    call delete_fm
+    NewFreeHandle
 
 cfDone:
-        pop bx
-        pop ax
-        pop ds
-        retf32
+    pop ebx
+    pop ax
+    pop ds
+    retf32
 close_fm    Endp
 
 
@@ -548,31 +548,31 @@ close_fm    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FmWait
+;           NAME:           FmWait
 ;
-;               DESCRIPTION:    Wait for FM samples to complete
+;           DESCRIPTION:    Wait for FM samples to complete
 ;
 ;       PARAMETERS:     BX      FM handle
-;                       EAX     Samples
-;                                               
+;               EAX     Samples
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fm_wait_name    DB 'FM Wait',0
 
 fm_wait    Proc 
-        push ds
-        push eax
-        push bx
-        push ecx
-        push edx
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
 ;
     push ax
-        mov ax,FM_HANDLE
-        DerefHandle
-        pop ax
-        jc fwDone
+    mov ax,FM_HANDLE
+    NewDerefHandle
+    pop ax
+    jc fwDone
 ;
-    mov ds,[bx].f_sel
+    mov ds,[ebx].f_sel
 
 fwLoop:
     mov cx,ds:f_note_list
@@ -618,10 +618,10 @@ fwDirectWait:
 fwDone:
     pop edx
     pop ecx
-        pop bx
-        pop eax
-        pop ds
-        retf32
+    pop ebx
+    pop eax
+    pop ds
+    retf32
 fm_wait    Endp
 
 
@@ -629,16 +629,16 @@ fm_wait    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CreateFmInstrument
+;           NAME:           CreateFmInstrument
 ;
-;               DESCRIPTION:    Create a new FM instrument
+;           DESCRIPTION:    Create a new FM instrument
 ;
-;               PARAMETERS:             BX          FM handle
-;                       AX:DX       C:M ratio
-;                       ST0         Beta (modulation rate) 
+;           PARAMETERS:         BX      FM handle
+;               AX:DX       C:M ratio
+;               ST0     Beta (modulation rate) 
 ;
-;       RETURNS:        BX          Handle         
-;                                               
+;       RETURNS:    BX      Handle     
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_fm_instrument_name       DB 'Create FM Instrument',0
@@ -653,15 +653,15 @@ create_fm_instrument    Proc
     push si
 ;
     push ax
-        mov ax,FM_HANDLE
-        DerefHandle
-        pop ax
-        jc cfiFail
+    mov ax,FM_HANDLE
+    NewDerefHandle
+    pop ax
+    jc cfiFail
 ;
-    mov si,[bx].f_sel    
-        mov cx,SIZE instrument_struc
-        AllocateHandle
-        mov ds:[bx].hh_sign,FM_INSTR_HANDLE
+    mov si,[ebx].f_sel    
+    mov cx,SIZE instrument_struc
+    NewAllocateHandle
+    mov ds:[ebx].hh_sign,FM_INSTR_HANDLE
 ;
     push eax
     mov eax,SIZE instrument_sel
@@ -682,10 +682,10 @@ create_fm_instrument    Proc
     mov es:i_rel_mod_ind,0
     mov es:i_rel_mod_fract,0
 ;
-    mov [bx].i_sel,es
-        mov bx,[bx].hh_handle
-        clc
-        jmp cfiDone
+    mov [ebx].i_sel,es
+    mov bx,[ebx].hh_handle
+    clc
+    jmp cfiDone
 
 cfiFail:
     xor bx,bx
@@ -693,11 +693,11 @@ cfiFail:
 
 cfiDone:
     pop si
-        pop cx
+    pop cx
     pop eax
     pop ds
     pop es
-        retf32
+    retf32
 create_fm_instrument    Endp
 
 
@@ -705,32 +705,32 @@ create_fm_instrument    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FreeFmInstrument
+;           NAME:           FreeFmInstrument
 ;
-;               DESCRIPTION:    Free FM instrument
+;           DESCRIPTION:    Free FM instrument
 ;
-;               PARAMETERS:             BX          FM handle         
-;                                               
+;           PARAMETERS:         BX      FM handle     
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_fm_instrument_name DB 'Free FM Instrument',0
 
 free_fm_instrument    Proc      
-        push ds
-        push ax
-        push bx
+    push ds
+    push ax
+    push ebx
 ;
-        mov ax,FM_INSTR_HANDLE
-        DerefHandle
-        jc ffiDone
+    mov ax,FM_INSTR_HANDLE
+    NewDerefHandle
+    jc ffiDone
 ;
-        call delete_fm_instr
+    call delete_fm_instr
 
 ffiDone:
-        pop bx
-        pop ax
-        pop ds
-        retf32
+    pop ebx
+    pop ax
+    pop ds
+    retf32
 free_fm_instrument    Endp
 
 
@@ -738,36 +738,36 @@ free_fm_instrument    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SetFmAttack
+;           NAME:           SetFmAttack
 ;
-;               DESCRIPTION:    Set attack
+;           DESCRIPTION:    Set attack
 ;
-;               PARAMETERS:             BX          FM handle         
-;                       EAX         Time in samples until full volume (attack)
-;                                               
+;           PARAMETERS:         BX      FM handle     
+;               EAX     Time in samples until full volume (attack)
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_fm_attack_name      DB 'Set FM Attack',0
 
 set_fm_attack    Proc   
-        push ds
-        push ax
-        push bx
+    push ds
+    push ax
+    push ebx
 ;
     push eax
-        mov ax,FM_INSTR_HANDLE
-        DerefHandle
-        pop eax
-        jc sfaDone
+    mov ax,FM_INSTR_HANDLE
+    NewDerefHandle
+    pop eax
+    jc sfaDone
 ;
-    mov ds,[bx].i_sel
-    mov ds:i_att_samples,eax        
+    mov ds,[ebx].i_sel
+    mov ds:i_att_samples,eax    
 
 sfaDone:
-        pop bx
-        pop ax
-        pop ds
-        retf32
+    pop ebx
+    pop ax
+    pop ds
+    retf32
 set_fm_attack    Endp
 
 
@@ -775,32 +775,32 @@ set_fm_attack    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SetFmSustain
+;           NAME:           SetFmSustain
 ;
-;               DESCRIPTION:    Set sustain params
+;           DESCRIPTION:    Set sustain params
 ;
-;               PARAMETERS:             BX          FM handle         
-;                       EAX         Time in samples until volume is halved
-;                       EDX         Time in samples until modulation index is halved
-;                                               
+;           PARAMETERS:         BX      FM handle     
+;               EAX     Time in samples until volume is halved
+;               EDX     Time in samples until modulation index is halved
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_fm_sustain_name     DB 'Set FM Sustain',0
 
 set_fm_sustain    Proc  
-        push ds
-        push eax
-        push ebx
-        push edx
+    push ds
+    push eax
+    push ebx
+    push edx
 ;
     push eax
-        mov ax,FM_INSTR_HANDLE
-        DerefHandle
-        pop eax
-        jc sfsDone
+    mov ax,FM_INSTR_HANDLE
+    NewDerefHandle
+    pop eax
+    jc sfsDone
 ;
     push edx    
-    mov ds,[bx].i_sel
+    mov ds,[ebx].i_sel
 ;    
     mov ds:i_sus_vol_ind,0FFFFh
     mov ds:i_sus_vol_fract,0
@@ -847,10 +847,10 @@ sfsVolDone:
 
 sfsDone:
     pop edx
-        pop ebx
-        pop eax
-        pop ds
-        retf32
+    pop ebx
+    pop eax
+    pop ds
+    retf32
 set_fm_sustain    Endp
 
 
@@ -858,32 +858,32 @@ set_fm_sustain    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SetFmRelease
+;           NAME:           SetFmRelease
 ;
-;               DESCRIPTION:    Set release params
+;           DESCRIPTION:    Set release params
 ;
-;               PARAMETERS:             BX          FM handle         
-;                       EAX         Time in samples until volume is halved
-;                       EDX         Time in samples until modulation index is halved
-;                                               
+;           PARAMETERS:         BX      FM handle     
+;               EAX     Time in samples until volume is halved
+;               EDX     Time in samples until modulation index is halved
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_fm_release_name     DB 'Set FM Release',0
 
 set_fm_release    Proc  
-        push ds
-        push eax
-        push ebx
-        push edx
+    push ds
+    push eax
+    push ebx
+    push edx
 ;
     push eax
-        mov ax,FM_INSTR_HANDLE
-        DerefHandle
-        pop eax
-        jc sfrDone
+    mov ax,FM_INSTR_HANDLE
+    NewDerefHandle
+    pop eax
+    jc sfrDone
 ;
     push edx    
-    mov ds,[bx].i_sel
+    mov ds,[ebx].i_sel
 ;    
     mov ds:i_rel_vol_ind,0FFFFh
     mov ds:i_rel_vol_fract,0
@@ -930,10 +930,10 @@ sfrVolDone:
 
 sfrDone:
     pop edx
-        pop ebx
-        pop eax
-        pop ds
-        retf32
+    pop ebx
+    pop eax
+    pop ds
+    retf32
 set_fm_release    Endp
 
 
@@ -941,16 +941,16 @@ set_fm_release    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PlayFmNote
+;           NAME:           PlayFmNote
 ;
-;               DESCRIPTION:    Schedule not for playing
+;           DESCRIPTION:    Schedule not for playing
 ;
-;               PARAMETERS:             BX          FM handle         
-;                       ECX         Duration of sustain in samples
-;                       EAX         Left peak volume
-;                       EDX         Right peak volume
-;                       ST0         Frequency (Hz)
-;                                               
+;           PARAMETERS:         BX      FM handle     
+;               ECX     Duration of sustain in samples
+;               EAX     Left peak volume
+;               EDX     Right peak volume
+;               ST0     Frequency (Hz)
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 play_fm_note_name       DB 'Play FM Note',0
@@ -958,20 +958,20 @@ play_fm_note_name       DB 'Play FM Note',0
 SinSize DD 4000h
 
 play_fm_note    Proc    
-        push ds
-        push es
-        push fs
-        push ax
-        push bx
-        push bp
+    push ds
+    push es
+    push fs
+    push ax
+    push ebx
+    push bp
 ;
     push eax
-        mov ax,FM_INSTR_HANDLE
-        DerefHandle
-        pop eax
-        jc pfnDone
+    mov ax,FM_INSTR_HANDLE
+    NewDerefHandle
+    pop eax
+    jc pfnDone
 ;
-    mov fs,[bx].i_sel
+    mov fs,[ebx].i_sel
     mov ds,fs:i_fm_sel
     push eax
     mov eax, SIZE note_struc
@@ -1078,15 +1078,15 @@ pfnAttOk:
     mov ds,ax
     mov bx,ds:fm_thread
     Signal
-            
+        
 pfnDone:
     pop bp
-        pop bx
-        pop ax
-        pop fs
-        pop es
-        pop ds
-        retf32
+    pop ebx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    retf32
 play_fm_note    Endp
 
 
@@ -1094,56 +1094,56 @@ play_fm_note    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   delete_fm_handle
+;           NAME:           delete_fm_handle
 ;
-;               DESCRIPTION:    BX                      Handle
+;           DESCRIPTION:    BX              Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_fm_handle        Proc far
-        push ds
-        push ax
-        push bx
-        push si
+delete_fm_handle    Proc far
+    push ds
+    push ax
+    push ebx
+    push si
 ;
     mov si,bx
-        mov ax,FM_INSTR_HANDLE
-        DerefHandle
-        jc delete_fm_not_instr
+    mov ax,FM_INSTR_HANDLE
+    NewDerefHandle
+    jc delete_fm_not_instr
 ;
-        call delete_fm_instr
-        jmp delete_fm_handle_done
+    call delete_fm_instr
+    jmp delete_fm_handle_done
 
 delete_fm_not_instr:
     mov bx,si
-        mov ax,FM_HANDLE
-        DerefHandle
-        jc delete_fm_handle_done
+    mov ax,FM_HANDLE
+    NewDerefHandle
+    jc delete_fm_handle_done
 ;
     call delete_fm
 
 delete_fm_handle_done:
-        pop bx
-        pop ax
-        pop ds
-        ret
-delete_fm_handle        Endp
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+delete_fm_handle    Endp
 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CalcSin
+;           NAME:           CalcSin
 ;
-;               DESCRIPTION:    Calc current sin value
+;           DESCRIPTION:    Calc current sin value
 ;
-;               PARAMETERS:             DS      FM sel
-;                       ES      Note sel
-;                       EAX     Beta factor
+;           PARAMETERS:         DS      FM sel
+;               ES      Note sel
+;               EAX     Beta factor
 ;
-;       RETURNS:        EAX     Value
-;                                               
+;       RETURNS:    EAX     Value
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CalcSin Proc near
@@ -1159,7 +1159,7 @@ CalcSin Proc near
     call InterpolateSin
 ;
     imul dword ptr [bp]
-    shl edx,1        
+    shl edx,1    
     pop eax
 ;
     mov eax,es:n_carrier_diff
@@ -1179,17 +1179,17 @@ CalcSin Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SetChannels
+;           NAME:           SetChannels
 ;
-;               DESCRIPTION:    Set data to Left and Right channel
+;           DESCRIPTION:    Set data to Left and Right channel
 ;
-;               PARAMETERS:             DS      FM sel
-;                       ES      Note sel
-;                       FS      Left channel
-;                       GS      Right channel
-;                       DI      Offset into buffer
-;                       EAX     Value
-;                                               
+;           PARAMETERS:         DS      FM sel
+;               ES      Note sel
+;               FS      Left channel
+;               GS      Right channel
+;               DI      Offset into buffer
+;               EAX     Value
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetChannels Proc near
@@ -1251,16 +1251,16 @@ SetChannels Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PlayRelease
+;           NAME:           PlayRelease
 ;
-;               DESCRIPTION:    Play release part
+;           DESCRIPTION:    Play release part
 ;
-;               PARAMETERS:             DS      FM sel
-;                       ES      Note sel
-;                       CX      Buffer size
-;                       FS      Left channel buf
-;                       GS      Right channel buf
-;                                               
+;           PARAMETERS:         DS      FM sel
+;               ES      Note sel
+;               CX      Buffer size
+;               FS      Left channel buf
+;               GS      Right channel buf
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PlayRelease  Proc near
@@ -1342,16 +1342,16 @@ PlayRelease Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PlaySustain
+;           NAME:           PlaySustain
 ;
-;               DESCRIPTION:    Play sustain part
+;           DESCRIPTION:    Play sustain part
 ;
-;               PARAMETERS:             DS      FM sel
-;                       ES      Note sel
-;                       CX      Buffer size
-;                       FS      Left channel buf
-;                       GS      Right channel buf
-;                                               
+;           PARAMETERS:         DS      FM sel
+;               ES      Note sel
+;               CX      Buffer size
+;               FS      Left channel buf
+;               GS      Right channel buf
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PlaySustain  Proc near
@@ -1457,16 +1457,16 @@ PlaySustain Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   PlayAttack
+;           NAME:           PlayAttack
 ;
-;               DESCRIPTION:    Play attack part
+;           DESCRIPTION:    Play attack part
 ;
-;               PARAMETERS:             DS      FM sel
-;                       ES      Note sel
-;                       CX      Buffer size
-;                       FS      Left channel buf
-;                       GS      Right channel buf
-;                                               
+;           PARAMETERS:         DS      FM sel
+;               ES      Note sel
+;               CX      Buffer size
+;               FS      Left channel buf
+;               GS      Right channel buf
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PlayAttack  Proc near
@@ -1519,11 +1519,11 @@ PlayAttack  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   UpdateFmSel
+;           NAME:           UpdateFmSel
 ;
-;               DESCRIPTION:    Update FM selector
+;           DESCRIPTION:    Update FM selector
 ;
-;               PARAMETERS:             DS      FM sel
+;           PARAMETERS:         DS      FM sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1541,7 +1541,7 @@ UpdateFmSel Proc near
     mov dx,0FFFFh
     CreateAudioOutChannel
     mov ds:f_audio_handle,bx
-        
+    
 ufsHasHandle:
     mov bx,ds:f_audio_handle
     IsAudioOutCompleted
@@ -1572,7 +1572,7 @@ ufsCheckZero:
     xor di,di
     xor eax,eax
     mov cx,ds:f_buf_size
-    rep stosd            
+    rep stosd        
 ;
     mov ax,ds:f_note_list
     or ax,ax
@@ -1710,7 +1710,7 @@ ufsFreeAudio:
     mov ds:f_lbuf_sel,0
     mov ds:f_rbuf_sel,0
     mov ds:f_buf_size,0
-            
+        
 ufsDone:    
     ret
 UpdateFmSel Endp
@@ -1718,11 +1718,11 @@ UpdateFmSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   init_fm_thread
+;           NAME:           init_fm_thread
 ;
-;               DESCRIPTION:    Init FM thread
+;           DESCRIPTION:    Init FM thread
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1774,7 +1774,7 @@ fm_free_loop:
     or ax,ax
     jnz fm_free_next
 ;    
-    FreeMem        
+    FreeMem    
 
 fm_free_move_loop:    
     mov ax,ds:[bx+2]
@@ -1795,33 +1795,33 @@ fm_leave:
 
 
 init_fm_thread  Proc far
-        push ds
-        push es
-        pusha
+    push ds
+    push es
+    pusha
 ;
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov di,OFFSET fm_name
-        mov si,OFFSET fm_thread_pr
-        mov ax,4
-        mov cx,100h
-        CreateThread
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET fm_name
+    mov si,OFFSET fm_thread_pr
+    mov ax,4
+    mov cx,100h
+    CreateThread
 ;
-        popa
-        pop es
-        pop ds
-        retf32
+    popa
+    pop es
+    pop ds
+    retf32
 init_fm_thread  Endp
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   init
+;           NAME:           init
 ;
-;               DESCRIPTION:    Init FM
+;           DESCRIPTION:    Init FM
 ;
-;               PARAMETERS:             
+;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1832,81 +1832,81 @@ init_fm Proc near
     mov ds,ax
     mov es,ax
 ;    
-        mov ax,FM_INSTR_HANDLE
-        mov di,OFFSET delete_fm_handle
-        RegisterHandle
+    mov ax,FM_INSTR_HANDLE
+    mov edi,OFFSET delete_fm_handle
+    NewRegisterHandle
 ;
-        mov ax,FM_HANDLE
-        mov di,OFFSET delete_fm_handle
-        RegisterHandle
+    mov ax,FM_HANDLE
+    mov edi,OFFSET delete_fm_handle
+    NewRegisterHandle
 ;
-        mov edi,OFFSET init_fm_thread
-        HookInitTasking
+    mov edi,OFFSET init_fm_thread
+    HookInitTasking
 ;
-        mov esi,OFFSET open_fm
-        mov edi,OFFSET open_fm_name
-        xor dx,dx
-        mov ax,open_fm_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET open_fm
+    mov edi,OFFSET open_fm_name
+    xor dx,dx
+    mov ax,open_fm_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET close_fm
-        mov edi,OFFSET close_fm_name
-        xor dx,dx
-        mov ax,close_fm_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET close_fm
+    mov edi,OFFSET close_fm_name
+    xor dx,dx
+    mov ax,close_fm_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET fm_wait
-        mov edi,OFFSET fm_wait_name
-        xor dx,dx
-        mov ax,fm_wait_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET fm_wait
+    mov edi,OFFSET fm_wait_name
+    xor dx,dx
+    mov ax,fm_wait_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET create_fm_instrument
-        mov edi,OFFSET create_fm_instrument_name
-        xor dx,dx
-        mov ax,create_fm_instrument_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET create_fm_instrument
+    mov edi,OFFSET create_fm_instrument_name
+    xor dx,dx
+    mov ax,create_fm_instrument_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET free_fm_instrument
-        mov edi,OFFSET free_fm_instrument_name
-        xor dx,dx
-        mov ax,free_fm_instrument_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET free_fm_instrument
+    mov edi,OFFSET free_fm_instrument_name
+    xor dx,dx
+    mov ax,free_fm_instrument_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_fm_attack
-        mov edi,OFFSET set_fm_attack_name
-        xor dx,dx
-        mov ax,set_fm_attack_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_fm_attack
+    mov edi,OFFSET set_fm_attack_name
+    xor dx,dx
+    mov ax,set_fm_attack_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_fm_sustain
-        mov edi,OFFSET set_fm_sustain_name
-        xor dx,dx
-        mov ax,set_fm_sustain_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_fm_sustain
+    mov edi,OFFSET set_fm_sustain_name
+    xor dx,dx
+    mov ax,set_fm_sustain_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_fm_release
-        mov edi,OFFSET set_fm_release_name
-        xor dx,dx
-        mov ax,set_fm_release_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_fm_release
+    mov edi,OFFSET set_fm_release_name
+    xor dx,dx
+    mov ax,set_fm_release_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET play_fm_note
-        mov edi,OFFSET play_fm_note_name
-        xor dx,dx
-        mov ax,play_fm_note_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET play_fm_note
+    mov edi,OFFSET play_fm_note_name
+    xor dx,dx
+    mov ax,play_fm_note_nr
+    RegisterBimodalUserGate
 ;
-        mov bx,SEG data
-        mov es,bx
-        mov es:fm_thread,0
-        mov es:fm_sel_count,0
-        mov ax,es
-        mov ds,ax
-        InitSection ds:fm_section
-        ret
+    mov bx,SEG data
+    mov es,bx
+    mov es:fm_thread,0
+    mov es:fm_sel_count,0
+    mov ax,es
+    mov ds,ax
+    InitSection ds:fm_section
+    ret
 init_fm Endp
 
 code    ENDS
 
-        END
+    END

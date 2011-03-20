@@ -149,11 +149,11 @@ create_proc_handle      PROC far
     push ds
     push cx
     mov cx,SIZE proc_handle_seg
-    AllocateHandle
-    mov [bx].ph_lib_sel,ax
-    mov [bx].ph_proc_sel,dx
-    mov [bx].hh_sign,PROCESS_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].ph_lib_sel,ax
+    mov [ebx].ph_proc_sel,dx
+    mov [ebx].hh_sign,PROCESS_HANDLE
+    mov bx,[ebx].hh_handle
 ;
     mov ds,dx
     inc ds:pd_ref_count
@@ -181,18 +181,18 @@ deref_proc_handle_name  DB 'Deref Process Handle',0
 
 deref_proc_handle       PROC far
     push ds
-    push bx
+    push ebx
 ;    
     mov ax,PROCESS_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc deref_proc_handle_done
 ;
-    mov ax,[bx].ph_lib_sel
-    mov dx,[bx].ph_proc_sel
+    mov ax,[ebx].ph_lib_sel
+    mov dx,[ebx].ph_proc_sel
     clc
 
 deref_proc_handle_done:
-    pop bx
+    pop ebx
     pop ds
     ret
 deref_proc_handle   Endp
@@ -213,15 +213,15 @@ free_proc_handle_name   DB 'Free Process Handle',0
 free_proc_handle    PROC far
     push ds
     push ax
-    push bx
+    push ebx
     push dx
 ;    
     mov ax,PROCESS_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc free_proc_handle_done
 ;
-    mov dx,[bx].ph_proc_sel
-    FreeHandle
+    mov dx,[ebx].ph_proc_sel
+    NewFreeHandle
 ;       
     mov ds,dx
     sub ds:pd_ref_count,1
@@ -238,7 +238,7 @@ free_proc_handle    PROC far
 
 free_proc_handle_done:
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -262,19 +262,19 @@ get_proc_exit_code_name DB 'Get Process Exit Code',0
 
 get_proc_exit_code      PROC far
     push ds
-    push bx
+    push ebx
 ;    
     mov ax,PROCESS_HANDLE
-    DerefHandle
+    NewDerefHandle
     mov ax,-1
     jc get_proc_exit_done
 ;
-    mov ds,[bx].ph_proc_sel
+    mov ds,[ebx].ph_proc_sel
     mov ax,ds:pd_exit_code
     clc
 
 get_proc_exit_done:
-    pop bx
+    pop ebx
     pop ds
     retf32
 get_proc_exit_code   Endp

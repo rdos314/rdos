@@ -1068,15 +1068,15 @@ set_clip_rect_name      DB 'Set Clip Rect',0
 set_clip_rect   PROC far
     push ds
     push es
-    push bx
+    push ebx
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc set_clip_rect_done
 ;
-    mov es,[bx].bm_sel
+    mov es,[ebx].bm_sel
 ;
     test ch,80h
     jz set_clip_xmin_pos
@@ -1138,13 +1138,13 @@ set_clip_xmax_noov:
     mov di,es:v_height
 
 set_clip_ymax_noov:
-    mov [bx].bm_x_min,cx
-    mov [bx].bm_y_min,dx
-    mov [bx].bm_x_max,si
-    mov [bx].bm_y_max,di
+    mov [ebx].bm_x_min,cx
+    mov [ebx].bm_y_min,dx
+    mov [ebx].bm_x_max,si
+    mov [ebx].bm_y_max,di
     
 set_clip_rect_done:
-    pop bx
+    pop ebx
     pop es
     pop ds
     retf32
@@ -1168,25 +1168,25 @@ clear_clip_rect PROC far
     push ds
     push es
     push ax
-    push bx
+    push ebx
 ;
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc clear_clip_rect_done
 ;
-    mov es,[bx].bm_sel
-    mov [bx].bm_x_min,0
-    mov [bx].bm_y_min,0
+    mov es,[ebx].bm_sel
+    mov [ebx].bm_x_min,0
+    mov [ebx].bm_y_min,0
     mov ax,es:v_width
     dec ax
-    mov [bx].bm_x_max,ax
+    mov [ebx].bm_x_max,ax
     mov ax,es:v_height
     dec ax
-    mov [bx].bm_y_max,ax
+    mov [ebx].bm_y_max,ax
     clc
     
 clear_clip_rect_done:
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -1210,22 +1210,22 @@ set_draw_color_name     DB 'Set Draw Color',0
 
 set_draw_color  PROC far
     push ds
-    push bx
+    push ebx
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc set_draw_color_done
 ;
     push ds
-    mov ds,[bx].bm_sel
+    mov ds,[ebx].bm_sel
     call ds:translate_color_proc
     pop ds
-    mov [bx].bm_color,eax
+    mov [ebx].bm_color,eax
     
 set_draw_color_done:
-    pop bx
+    pop ebx
     pop ds
     retf32
 set_draw_color  ENDP
@@ -1252,18 +1252,18 @@ set_lgop    PROC far
 
 set_lgop_ok:
     push ds
-    push bx
+    push ebx
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc set_lgop_done
 ;
-    mov [bx].bm_lgop,ax
+    mov [ebx].bm_lgop,ax
     
 set_lgop_done:
-    pop bx
+    pop ebx
     pop ds
     retf32
 set_lgop    ENDP
@@ -1284,18 +1284,18 @@ set_hollow_style_name   DB 'Set Hollow Style',0
 
 set_hollow_style    PROC far
     push ds
-    push bx
+    push ebx
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc set_hollow_done
 ;
-    mov [bx].bm_style,STYLE_HOLLOW
+    mov [ebx].bm_style,STYLE_HOLLOW
     
 set_hollow_done:
-    pop bx
+    pop ebx
     pop ds
     retf32
 set_hollow_style    ENDP
@@ -1316,18 +1316,18 @@ set_filled_style_name   DB 'Set Filled Style',0
 
 set_filled_style    PROC far
     push ds
-    push bx
+    push ebx
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc set_filled_done
 ;
-    mov [bx].bm_style,STYLE_FILLED
+    mov [ebx].bm_style,STYLE_FILLED
     
 set_filled_done:
-    pop bx
+    pop ebx
     pop ds
     retf32
 set_filled_style    ENDP
@@ -1349,18 +1349,18 @@ set_font_name   DB 'Set Font',0
 
 set_font    PROC far
     push ds
-    push bx
+    push ebx
 ;
     push ax
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc set_font_done
 ;
-    mov [bx].bm_font,ax
+    mov [ebx].bm_font,ax
     
 set_font_done:
-    pop bx
+    pop ebx
     pop ds
     retf32
 set_font    ENDP
@@ -1386,13 +1386,13 @@ get_pixel_name  DB 'Get Pixel',0
 get_pixel       PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_pixel_fail
 ;
-    mov ds,[bx].bm_sel
+    mov ds,[ebx].bm_sel
     pop bx
     pop ax
     EnterSection ds:v_section
@@ -1402,7 +1402,7 @@ get_pixel       PROC far
     retf32
 
 get_pixel_fail:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -1427,19 +1427,19 @@ set_pixel_name  DB 'Set Pixel',0
 set_pixel       PROC far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc set_pixel_fail
 ;
     mov eax,[bx].bm_color
-    push [bx].bm_lgop
-    push [bx].bm_x_min
-    push [bx].bm_y_min
-    push [bx].bm_x_max
-    push [bx].bm_y_max
-    mov ds,[bx].bm_sel
+    push [ebx].bm_lgop
+    push [ebx].bm_x_min
+    push [ebx].bm_y_min
+    push [ebx].bm_x_max
+    push [ebx].bm_y_max
+    mov ds,[ebx].bm_sel
     EnterSection ds:v_section
     pop ds:v_y_max
     pop ds:v_x_max
@@ -1447,7 +1447,7 @@ set_pixel       PROC far
     pop ds:v_x_min
     pop ds:v_lgop
     mov ds:v_color,eax
-    pop bx
+    pop ebx
     pop eax
     call ds:set_pixel_proc
     LeaveSection ds:v_section
@@ -1455,7 +1455,7 @@ set_pixel       PROC far
     retf32  
 
 set_pixel_fail:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -1513,29 +1513,29 @@ blit_pr PROC far
     push ax
     mov bx,ax
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc blit_failed
 ;
-    mov dx,[bx].bm_sel
+    mov dx,[ebx].bm_sel
     mov [bp].blit_src_sel,dx
 ;
     push ax
     mov bx,cx
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc blit_failed
 ;
-    mov dx,[bx].bm_sel
+    mov dx,[ebx].bm_sel
     mov [bp].blit_dest_sel,dx
 ;
-    push [bx].bm_lgop
-    push [bx].bm_color
-    push [bx].bm_x_min
-    push [bx].bm_y_min
-    push [bx].bm_x_max
-    push [bx].bm_y_max
+    push [ebx].bm_lgop
+    push [ebx].bm_color
+    push [ebx].bm_x_min
+    push [ebx].bm_y_min
+    push [ebx].bm_x_max
+    push [ebx].bm_y_max
 ;
     mov ax,[bp].blit_src_sel
     cmp ax,[bp].blit_dest_sel
@@ -1814,19 +1814,19 @@ draw_mask       PROC far
 ;
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc draw_mask_fail
 ;
-    mov eax,[bx].bm_color
-    push [bx].bm_lgop
-    push [bx].bm_x_min
-    push [bx].bm_y_min
-    push [bx].bm_x_max
-    push [bx].bm_y_max
-    mov ds,[bx].bm_sel
+    mov eax,[ebx].bm_color
+    push [ebx].bm_lgop
+    push [ebx].bm_x_min
+    push [ebx].bm_y_min
+    push [ebx].bm_x_max
+    push [ebx].bm_y_max
+    mov ds,[ebx].bm_sel
     EnterSection ds:v_section
     pop ds:v_y_max
     pop ds:v_x_max
@@ -1834,7 +1834,7 @@ draw_mask       PROC far
     pop ds:v_x_min
     pop ds:v_lgop
     mov ds:v_color,eax
-    pop bx
+    pop ebx
     pop eax
 
     movzx eax,ax
@@ -1857,7 +1857,7 @@ draw_mask_leave:
     jmp draw_mask_done
 
 draw_mask_fail:
-    pop bx
+    pop ebx
     pop eax
     pop ds
 
@@ -1892,20 +1892,20 @@ draw_string16   PROC far
 ;
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc draw_string16_fail
 ;
-    mov eax,[bx].bm_color
-    push [bx].bm_lgop
-    push [bx].bm_font
-    push [bx].bm_x_min
-    push [bx].bm_y_min
-    push [bx].bm_x_max
-    push [bx].bm_y_max
-    mov ds,[bx].bm_sel
+    mov eax,[ebx].bm_color
+    push [ebx].bm_lgop
+    push [ebx].bm_font
+    push [ebx].bm_x_min
+    push [ebx].bm_y_min
+    push [ebx].bm_x_max
+    push [ebx].bm_y_max
+    mov ds,[ebx].bm_sel
     EnterSection ds:v_section
     pop ds:v_y_max
     pop ds:v_x_max
@@ -1914,7 +1914,7 @@ draw_string16   PROC far
     pop ds:v_font
     pop ds:v_lgop
     mov ds:v_color,eax
-    pop bx
+    pop ebx
     pop eax
     call ds:draw_string_proc
     LeaveSection ds:v_section
@@ -1922,7 +1922,7 @@ draw_string16   PROC far
     jmp draw_string16_done
 
 draw_string16_fail:
-    pop bx
+    pop ebx
     pop eax
     pop ds
 
@@ -1934,20 +1934,20 @@ draw_string16   ENDP
 draw_string32   PROC far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc draw_string32_fail
 ;
     mov eax,[bx].bm_color
-    push [bx].bm_lgop
-    push [bx].bm_font
-    push [bx].bm_x_min
-    push [bx].bm_y_min
-    push [bx].bm_x_max
-    push [bx].bm_y_max
-    mov ds,[bx].bm_sel
+    push [ebx].bm_lgop
+    push [ebx].bm_font
+    push [ebx].bm_x_min
+    push [ebx].bm_y_min
+    push [ebx].bm_x_max
+    push [ebx].bm_y_max
+    mov ds,[ebx].bm_sel
     EnterSection ds:v_section
     pop ds:v_y_max
     pop ds:v_x_max
@@ -1956,7 +1956,7 @@ draw_string32   PROC far
     pop ds:v_font
     pop ds:v_lgop
     mov ds:v_color,eax
-    pop bx
+    pop ebx
     pop eax
     call ds:draw_string_proc
     LeaveSection ds:v_section
@@ -1964,7 +1964,7 @@ draw_string32   PROC far
     retf32
 
 draw_string32_fail:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -1991,19 +1991,19 @@ draw_line_name  DB 'Draw Line',0
 draw_line       PROC far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc draw_line_fail
 ;
     mov eax,[bx].bm_color
-    push [bx].bm_lgop
-    push [bx].bm_x_min
-    push [bx].bm_y_min
-    push [bx].bm_x_max
-    push [bx].bm_y_max
-    mov ds,[bx].bm_sel
+    push [ebx].bm_lgop
+    push [ebx].bm_x_min
+    push [ebx].bm_y_min
+    push [ebx].bm_x_max
+    push [ebx].bm_y_max
+    mov ds,[ebx].bm_sel
     EnterSection ds:v_section
     pop ds:v_y_max
     pop ds:v_x_max
@@ -2011,7 +2011,7 @@ draw_line       PROC far
     pop ds:v_x_min
     pop ds:v_lgop
     mov ds:v_color,eax
-    pop bx
+    pop ebx
     pop eax
     call ds:draw_line_proc
     LeaveSection ds:v_section
@@ -2019,7 +2019,7 @@ draw_line       PROC far
     retf32
 
 draw_line_fail:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -2046,20 +2046,20 @@ draw_rect_name  DB 'Draw Rect',0
 draw_rect       PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc draw_rect_fail
 ;
-    push [bx].bm_color
-    push [bx].bm_lgop
-    push [bx].bm_x_min
-    push [bx].bm_y_min
-    push [bx].bm_x_max
-    push [bx].bm_y_max
-    mov al,[bx].bm_style
-    mov ds,[bx].bm_sel
+    push [ebx].bm_color
+    push [ebx].bm_lgop
+    push [ebx].bm_x_min
+    push [ebx].bm_y_min
+    push [ebx].bm_x_max
+    push [ebx].bm_y_max
+    mov al,[ebx].bm_style
+    mov ds,[ebx].bm_sel
     EnterSection ds:v_section
     mov ds:v_style,al
     pop ds:v_y_max
@@ -2068,7 +2068,7 @@ draw_rect       PROC far
     pop ds:v_x_min
     pop ds:v_lgop
     pop ds:v_color
-    pop bx
+    pop ebx
     pop ax
     call ds:draw_rect_proc
     LeaveSection ds:v_section
@@ -2076,7 +2076,7 @@ draw_rect       PROC far
     retf32
 
 draw_rect_fail:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -2103,20 +2103,20 @@ draw_ellipse_name       DB 'Draw Ellipse',0
 draw_ellipse    PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,BITMAP_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc draw_ellipse_fail
 ;
-    push [bx].bm_color
-    push [bx].bm_lgop
-    push [bx].bm_x_min
-    push [bx].bm_y_min
-    push [bx].bm_x_max
-    push [bx].bm_y_max
-    mov al,[bx].bm_style
-    mov ds,[bx].bm_sel
+    push [ebx].bm_color
+    push [ebx].bm_lgop
+    push [ebx].bm_x_min
+    push [ebx].bm_y_min
+    push [ebx].bm_x_max
+    push [ebx].bm_y_max
+    mov al,[ebx].bm_style
+    mov ds,[ebx].bm_sel
     EnterSection ds:v_section
     mov ds:v_style,al
     pop ds:v_y_max
@@ -2125,7 +2125,7 @@ draw_ellipse    PROC far
     pop ds:v_x_min
     pop ds:v_lgop
     pop ds:v_color
-    pop bx
+    pop ebx
     pop ax
     call ds:draw_ellipse_proc
     LeaveSection ds:v_section
@@ -2133,7 +2133,7 @@ draw_ellipse    PROC far
     retf32
 
 draw_ellipse_fail:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32

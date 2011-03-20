@@ -1173,6 +1173,39 @@ NotifyTimeDrift MACRO
 
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;
 
+; IN  AX        Signature
+; IN  ES:EDI    Delete handle callback
+NewRegisterHandle  MACRO
+    OsGate register_handle_nr
+                    ENDM
+
+; IN  AX        Signature
+; IN  CX        Size of data
+; OUT DS:EBX    Handle data
+NewAllocateHandle  MACRO
+    OsGate allocate_handle_nr
+                    ENDM
+
+; IN  DS:EBX    Handle data
+NewFreeHandle      MACRO
+    OsGate free_handle_nr
+                    ENDM
+
+; IN  AX        Signature
+; IN  BX        Handle
+; OUT DS:EBX    Handle data
+NewDerefHandle     MACRO
+    OsGate deref_handle_nr
+                    ENDM
+
+; OUT DS    Cloned handle sel
+; OUT ES    Cloned handle mem sel
+NewCloneHandleMem  MACRO
+    OsGate clone_handle_mem_nr
+                    ENDM
+
+;;;;;;;;;; NETWORK ;;;;;;;;;;;;;
+
 ;       ES:DI   Swap callback
 ;       AL  Swap level (0 = highest priority, 15 = lowest priority)
 RegisterSwapProc    MACRO
@@ -1184,39 +1217,6 @@ RegisterSwapProc    MACRO
 GetAcpiTable    MACRO
     OldOsGate get_acpi_table_nr
                     ENDM
-
-; IN  AX        Signature
-; IN  ES:DI         Delete handle callback
-RegisterHandle  MACRO
-    OldOsGate register_handle_nr
-                    ENDM
-
-; IN  AX        Signature
-; IN  CX        Size of data
-; OUT DS:BX         Handle data
-AllocateHandle  MACRO
-    OldOsGate allocate_handle_nr
-                    ENDM
-
-; IN  BX        Handle data
-FreeHandle      MACRO
-    OldOsGate free_handle_nr
-                    ENDM
-
-; IN  AX        Signature
-; IN  BX        Handle
-; OUT DS:BX         Handle data
-DerefHandle     MACRO
-    OldOsGate deref_handle_nr
-                    ENDM
-
-; OUT DS    Cloned handle sel
-; OUT ES    Cloned handle mem sel
-CloneHandleMem  MACRO
-    OldOsGate clone_handle_mem_nr
-                    ENDM
-
-;;;;;;;;;; NETWORK ;;;;;;;;;;;;;
 
 ;       AL          class id
 ;       CX          Size of address

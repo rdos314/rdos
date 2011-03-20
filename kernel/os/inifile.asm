@@ -202,7 +202,7 @@ OpenPrivIni     Endp
 ;
 ;       DESCRIPTION:    Lock ini file & goto current section
 ;
-;           PARAMETERS:         DS:BX       handle data
+;           PARAMETERS:         DS:EBX       handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -211,16 +211,16 @@ LockIni Proc near
     push es
     pushad
 ;
-    mov si,bx
+    mov esi,ebx
 ;       
     push ds
-    mov ds,[si].ih_sel
+    mov ds,[esi].ih_sel
     EnterSection ds:if_section
     pop ds
 ;
-    mov bx,[si].ih_file_handle
+    mov bx,[esi].ih_file_handle
     GetFileSize
-    mov ds:[si].ih_file_size,eax
+    mov ds:[esi].ih_file_size,eax
     and ax,0F000h
     add eax,1000h
     AllocateLocalLinear
@@ -231,17 +231,17 @@ LockIni Proc near
     sub edx,ds:flat_base
     pop ax
     pop ds
-    mov ds:[si].ih_base,edx
-    mov ds:[si].ih_size,eax 
+    mov ds:[esi].ih_base,edx
+    mov ds:[esi].ih_size,eax 
 ;
     CreateFileMapping
-    mov ds:[si].ih_mmap_handle,bx
+    mov ds:[esi].ih_mmap_handle,bx
 ;
     mov ax,flat_data_sel
     mov es,ax
     xor eax,eax
-    mov edi,ds:[si].ih_base
-    mov ecx,ds:[si].ih_size
+    mov edi,ds:[esi].ih_base
+    mov ecx,ds:[esi].ih_size
     UserGateForce32 map_view_nr
 ;    
     popad
@@ -257,7 +257,7 @@ LockIni Endp
 ;
 ;       DESCRIPTION:    Unlock ini
 ;
-;           PARAMETERS:         DS:BX       handle data
+;           PARAMETERS:         DS:EBX       handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -266,14 +266,14 @@ UnlockIni       Proc near
     push es
     pushad
 ;
-    mov si,bx
+    mov esi,ebx
 ;
-    mov bx,ds:[si].ih_mmap_handle
+    mov bx,ds:[esi].ih_mmap_handle
     UnmapView
     CloseMapping
-    mov ds:[si].ih_mmap_handle,0
+    mov ds:[esi].ih_mmap_handle,0
 ;
-    mov edx,ds:[si].ih_base
+    mov edx,ds:[esi].ih_base
     or edx,edx
     jz uiNoMem
 ;
@@ -282,11 +282,11 @@ UnlockIni       Proc near
     mov ds,ax
     add edx,ds:flat_base
     pop ds
-    mov ecx,ds:[si].ih_size
+    mov ecx,ds:[esi].ih_size
     FreeLinear
 
 uiNoMem:
-    mov ds,[si].ih_sel
+    mov ds,[esi].ih_sel
     LeaveSection ds:if_section
 ;    
     popad
@@ -302,7 +302,7 @@ UnlockIni       Endp
 ;
 ;       DESCRIPTION:    Find current section
 ;
-;           PARAMETERS:         DS:BX       Handle data
+;           PARAMETERS:         DS:EBX       Handle data
 ;
 ;           RETURNS:        EDI     Linear address to section
 ;               ECX     Size of section
@@ -319,9 +319,9 @@ FindIniSection Proc near
 ;
     mov ax,flat_data_sel
     mov es,ax
-    mov edi,ds:[bx].ih_base
-    mov ecx,ds:[bx].ih_file_size
-    mov fs,ds:[bx].ih_name_sel
+    mov edi,ds:[ebx].ih_base
+    mov ecx,ds:[ebx].ih_file_size
+    mov fs,ds:[ebx].ih_name_sel
 ;       
     or ecx,ecx
     stc
@@ -331,7 +331,7 @@ FindIniSection Proc near
     cmp al,'['
     jne FindIniSectionScan
 ;
-    mov ds:[bx].ih_sect_start,edi
+    mov ds:[ebx].ih_sect_start,edi
     inc edi
     dec ecx
     jmp FindIniSectionCheck
@@ -345,7 +345,7 @@ FindIniSectionScan:
 ;       
     mov eax,edi
     dec eax
-    mov ds:[bx].ih_sect_start,eax
+    mov ds:[ebx].ih_sect_start,eax
 ;
     mov al,es:[edi-2]
     cmp al,0Dh
@@ -412,7 +412,7 @@ FindIniSection Endp
 ;
 ;       DESCRIPTION:    Find key in section
 ;
-;           PARAMETERS:         DS:BX       Handle data
+;           PARAMETERS:         DS:EBX       Handle data
 ;               FS:ESI      Key name
 ;               EDI     Start of section
 ;               ECX     Size of section
@@ -448,7 +448,7 @@ FindIniKeyControlPass:
     jmp FindIniKeyDone
     
 FindIniKeyScan:
-    mov ds:[bx].ih_entry_start,edi
+    mov ds:[ebx].ih_entry_start,edi
     push esi
     repe cmps byte ptr fs:[esi],[edi]
     dec esi
@@ -576,7 +576,7 @@ FindKeySize     Endp
 ;
 ;       DESCRIPTION:    Create current ini section
 ;
-;           PARAMETERS:         DS:BX       Handle data
+;           PARAMETERS:         DS:EBX       Handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -588,8 +588,8 @@ CreateIniSection Proc near
     sub sp,4
     mov bp,sp
 ;    
-    mov si,bx
-    mov bx,ds:[si].ih_file_handle
+    mov esi,ebx
+    mov bx,ds:[esi].ih_file_handle
     GetFileSize
     SetFilePos
 ;
@@ -600,8 +600,8 @@ CreateIniSection Proc near
     mov cx,1
     WriteFile
 ;
-    mov es,ds:[si].ih_name_sel
-    mov ecx,ds:[si].ih_name_size
+    mov es,ds:[esi].ih_name_sel
+    mov ecx,ds:[esi].ih_name_size
     dec ecx
     xor edi,edi
     UserGateForce32 write_file_nr
@@ -635,7 +635,7 @@ CreateIniSection Endp
 ;
 ;       DESCRIPTION:    Get free size of ini file
 ;
-;           PARAMETERS:         DS:BX       Handle data
+;           PARAMETERS:         DS:EBX       Handle data
 ;
 ;       RETURNS:    ECX     Free size
 ;
@@ -650,8 +650,8 @@ GetIniFreeSize  Proc near
     mov ax,flat_data_sel
     mov es,ax
 
-    mov edi,ds:[bx].ih_base
-    mov edx,ds:[bx].ih_file_size
+    mov edi,ds:[ebx].ih_base
+    mov edx,ds:[ebx].ih_file_size
 ;
     add edi,edx
 ;       
@@ -685,7 +685,7 @@ GetIniFreeSize  Endp
 ;
 ;       DESCRIPTION:    Grow ini file size
 ;
-;           PARAMETERS:         DS:BX       Handle data
+;           PARAMETERS:         DS:EBX       Handle data
 ;               ECX     Byte to add
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -700,8 +700,8 @@ GrowIni Proc near
     push bx
     call UnlockIni
 ;    
-    mov si,bx
-    mov bx,ds:[si].ih_file_handle
+    mov esi,ebx
+    mov bx,ds:[esi].ih_file_handle
     GetFileSize
     SetFilePos
 ;
@@ -839,14 +839,14 @@ cihNew:
     push ds
     push bx
     mov cx,SIZE ini_handle_seg
-    AllocateHandle
+    NewAllocateHandle
     pop ax
-    mov [bx].ih_file_handle,ax
-    mov [bx].ih_name_sel,0
+    mov [ebx].ih_file_handle,ax
+    mov [ebx].ih_name_sel,0
     pop ax
-    mov [bx].ih_sel,ax
-    mov [bx].hh_sign,INI_HANDLE
-    mov bx,[bx].hh_handle
+    mov [ebx].ih_sel,ax
+    mov [ebx].hh_sign,INI_HANDLE
+    mov bx,[ebx].hh_handle
 ;
     pop cx
     pop ax
@@ -964,15 +964,15 @@ close_ini_name  DB 'Close Ini', 0
 close_ini       Proc far
     push ds
     push es
-    push bx
-    push si
+    push ebx
+    push esi
 ;
     mov ax,INI_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc ciDone
 ;
-    mov si,bx
-    mov ax,ds:[bx].ih_name_sel
+    mov esi,ebx
+    mov ax,ds:[ebx].ih_name_sel
     or ax,ax
     jz ciCloseFile
 ;
@@ -980,18 +980,18 @@ close_ini       Proc far
     FreeMem
 
 ciCloseFile:
-    push ds:[bx].ih_file_handle
-    mov ds,ds:[bx].ih_sel
+    push ds:[ebx].ih_file_handle
+    mov ds,ds:[ebx].ih_sel
     call FreeIniSel
     pop bx
     CloseFile
 ;
-    mov bx,si
-    FreeHandle
+    mov ebx,esi
+    NewFreeHandle
 
 ciDone:
-    pop si
-    pop bx
+    pop esi
+    pop ebx
     pop es
     pop ds
     retf32
@@ -1015,17 +1015,17 @@ goto_ini_section    Proc near
     push ds
     push es
     push eax
-    push bx
+    push ebx
     push ecx
     push edx
     push esi
     push edi
 ;
     mov ax,INI_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc gisDone
 ;
-    mov ax,ds:[bx].ih_name_sel
+    mov ax,ds:[ebx].ih_name_sel
     or ax,ax
     jz gisSectFree
 ;
@@ -1053,8 +1053,8 @@ gisSectSizeOk:
     mov eax,ecx
     push es
     AllocateSmallMem
-    mov ds:[bx].ih_name_sel,es
-    mov ds:[bx].ih_name_size,ecx
+    mov ds:[ebx].ih_name_sel,es
+    mov ds:[ebx].ih_name_size,ecx
     pop ds
     mov esi,edi
     xor edi,edi
@@ -1066,7 +1066,7 @@ gisDone:
     pop esi
     pop edx
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     pop es
     pop ds
@@ -1093,7 +1093,7 @@ goto_ini_section32  Endp
 ;
 ;       DESCRIPTION:    Delete entire section
 ;
-;       PARAMETERS:     DS:BX       Ini handle data
+;       PARAMETERS:     DS:EBX       Ini handle data
 ;               EDI     Start of section
 ;               ECX     Size of section
 ;
@@ -1115,9 +1115,9 @@ DeleteSection   Proc near
     push ecx
     mov esi,edi
     add esi,ecx
-    mov ecx,ds:[bx].ih_file_size
+    mov ecx,ds:[ebx].ih_file_size
     sub ecx,esi
-    add ecx,ds:[bx].ih_base
+    add ecx,ds:[ebx].ih_base
     rep movs byte ptr es:[edi],es:[esi]
     pop ecx
     mov al,' '
@@ -1148,17 +1148,17 @@ remove_ini_section_name DB 'Remove Ini Section', 0
 remove_ini_section      Proc near
     push ds
     push eax
-    push bx
+    push ebx
     push esi
 ;
     push ecx
     push edi
 ;
     mov ax,INI_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc rmiFail
 ;
-    mov ax,ds:[bx].ih_name_sel
+    mov ax,ds:[ebx].ih_name_sel
     or ax,ax
     jz rmiFail
 ;
@@ -1167,7 +1167,7 @@ remove_ini_section      Proc near
     jc rmiDone
 ;
     mov eax,edi
-    sub eax,ds:[bx].ih_sect_start
+    sub eax,ds:[ebx].ih_sect_start
 ;
     sub edi,eax
     add ecx,eax
@@ -1189,7 +1189,7 @@ rmiDone:
 
 rmiEnd:    
     pop esi
-    pop bx
+    pop ebx
     pop eax
     pop ds
     ret
@@ -1228,7 +1228,7 @@ read_ini    Proc near
     push ds
     push fs
     push eax
-    push bx
+    push ebx
     push esi
 ;
     push ecx
@@ -1237,10 +1237,10 @@ read_ini    Proc near
     mov fs,ax
 ;
     mov ax,INI_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc riFail
 ;
-    mov ax,ds:[bx].ih_name_sel
+    mov ax,ds:[ebx].ih_name_sel
     or ax,ax
     stc
     jz riFail
@@ -1291,7 +1291,7 @@ riDone:
 
 riEnd:    
     pop esi
-    pop bx
+    pop ebx
     pop eax
     pop fs
     pop ds
@@ -1428,9 +1428,9 @@ DeleteEntryData Proc near
     push ecx
     mov esi,edi
     add esi,ecx
-    mov ecx,ds:[bx].ih_file_size
+    mov ecx,ds:[ebx].ih_file_size
     sub ecx,esi
-    add ecx,ds:[bx].ih_base
+    add ecx,ds:[ebx].ih_base
     rep movs byte ptr es:[edi],es:[esi]
     pop ecx
     mov al,' '
@@ -1452,7 +1452,7 @@ DeleteEntryData Endp
 ;
 ;       DESCRIPTION:    Move to make space for data
 ;
-;       PARAMETERS:     DS:BX       Ini handle data
+;       PARAMETERS:     DS:EBX       Ini handle data
 ;               FS:ESI      Var name
 ;               ES:EBP      Buffer
 ;               EDI     Insert point
@@ -1467,8 +1467,8 @@ MoveForData     Proc near
     push esi
     push edi
 ;
-    mov esi,ds:[bx].ih_base
-    add esi,ds:[bx].ih_file_size
+    mov esi,ds:[ebx].ih_base
+    add esi,ds:[ebx].ih_file_size
     cmp edi,esi
     je mfeDone
 ;
@@ -1501,7 +1501,7 @@ MoveForData     Endp
 ;
 ;       DESCRIPTION:    Cache entry attributes
 ;
-;       PARAMETERS:     DS:BX       Ini handle data
+;       PARAMETERS:     DS:EBX       Ini handle data
 ;               FS:ESI      Var name
 ;               ES:EBP      Buffer
 ;
@@ -1514,8 +1514,8 @@ CacheEntryAttrib    Proc near
     push edi
 ;
     call GetIniFreeSize
-    mov edi,ds:[bx].ih_base
-    add edi,ds:[bx].ih_file_size
+    mov edi,ds:[ebx].ih_base
+    add edi,ds:[ebx].ih_file_size
     sub edi,ecx
     dec edi
     call GetEntrySize
@@ -1537,8 +1537,8 @@ CacheEntryAttrib    Proc near
 
 ceaDone:
     inc edi
-    mov ds:[bx].ih_entry_base,edi
-    mov ds:[bx].ih_entry_size,ecx
+    mov ds:[ebx].ih_entry_base,edi
+    mov ds:[ebx].ih_entry_size,ecx
 ;
     pop edi
     pop ecx
@@ -1554,7 +1554,7 @@ CacheEntryAttrib    Endp
 ;
 ;       DESCRIPTION:    Move to make space for entry
 ;
-;       PARAMETERS:     DS:BX       Ini handle data
+;       PARAMETERS:     DS:EBX       Ini handle data
 ;               FS:ESI      Var name
 ;               ES:EBP      Buffer
 ;               ECX     Space needed
@@ -1568,10 +1568,10 @@ MoveForEntry    Proc near
     push esi
     push edi
 ;
-    mov edi,ds:[bx].ih_sect_base
-    add edi,ds:[bx].ih_sect_size
-    mov esi,ds:[bx].ih_base
-    add esi,ds:[bx].ih_file_size
+    mov edi,ds:[ebx].ih_sect_base
+    add edi,ds:[ebx].ih_sect_size
+    mov esi,ds:[ebx].ih_base
+    add esi,ds:[ebx].ih_file_size
     cmp edi,esi
     je mfeDone
 ;
@@ -1604,7 +1604,7 @@ MoveForEntry    Endp
 ;
 ;       DESCRIPTION:    Add entry
 ;
-;       PARAMETERS:     DS:BX       Ini handle data
+;       PARAMETERS:     DS:EBX       Ini handle data
 ;               FS:ESI      Var name
 ;               ES:EBP      Buffer
 ;
@@ -1614,7 +1614,7 @@ AddEntry    Proc near
     push ds
     pushad
 ;
-    mov edx,ds:[bx].ih_entry_base
+    mov edx,ds:[ebx].ih_entry_base
     mov ax,flat_data_sel
     mov ds,ax
 ;
@@ -1718,10 +1718,10 @@ write_ini       Proc near
     mov fs,ax
 ;    
     mov ax,INI_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc wiFail
 ;
-    mov ax,ds:[bx].ih_name_sel
+    mov ax,ds:[ebx].ih_name_sel
     or ax,ax
     jz wiFail
 ;
@@ -1738,8 +1738,8 @@ wiFindLoop:
     jc wiDone
 
 wiFindVar:
-    mov ds:[bx].ih_sect_base,edi
-    mov ds:[bx].ih_sect_size,ecx
+    mov ds:[ebx].ih_sect_base,edi
+    mov ds:[ebx].ih_sect_size,ecx
     call FindIniKey
     jc wiAdd
 
@@ -1765,10 +1765,10 @@ wiReplDo:
 wiAdd:
     call CacheEntryAttrib
     call GetIniFreeSize
-    cmp ecx,ds:[bx].ih_entry_size
+    cmp ecx,ds:[ebx].ih_entry_size
     jae wiSizeOk
 ;
-    sub ecx,ds:[bx].ih_entry_size
+    sub ecx,ds:[ebx].ih_entry_size
     neg ecx
     call GrowIni
     jmp wiFindLoop
@@ -1856,13 +1856,13 @@ delete_ini32  Endp
 
 delete_handle   Proc far
     push ds
-    push bx
+    push ebx
 ;
     mov ax,INI_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc delete_handle_done
 ;
-    mov ax,ds:[bx].ih_name_sel
+    mov ax,ds:[ebx].ih_name_sel
     or ax,ax
     jz delete_handle_name_done
 ;
@@ -1877,14 +1877,14 @@ delete_handle_name_done:
     FreeMem
     pop es
     push ds
-    mov ds,ds:[bx].ih_sel
+    mov ds,ds:[ebx].ih_sel
     call FreeIniSel
     pop ds
 
 delete_handle_done:
-    pop bx
+    pop ebx
     pop ds
-    ret
+    retf32
 delete_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1962,9 +1962,9 @@ init_inifile    Proc near
     mov ax,delete_ini_nr
     RegisterUserGate
 ;
-    mov di,OFFSET delete_handle
+    mov edi,OFFSET delete_handle
     mov ax,INI_HANDLE
-    RegisterHandle
+    NewRegisterHandle
     ret
 init_inifile    Endp
 

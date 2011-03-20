@@ -86,11 +86,11 @@ delete_handle   Proc far
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc delete_handle_done
 ;
-    push [bx].port_sel
-    FreeHandle
+    push [ebx].port_sel
+    NewFreeHandle
     pop ds
 ;
     call ds:close_com_proc
@@ -114,7 +114,7 @@ delete_handle_done:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 delete_handle   Endp
 
 
@@ -191,10 +191,10 @@ open_com    Proc far
 ;
     mov ax,SERIAL_HANDLE
     mov cx,SIZE serial_handle_seg
-    AllocateHandle
-    mov [bx].port_sel,es
-    mov [bx].hh_sign,SERIAL_HANDLE
-    mov bp,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].port_sel,es
+    mov [ebx].hh_sign,SERIAL_HANDLE
+    mov bp,[ebx].hh_handle
 ;
     mov ax,es
     mov ds,ax
@@ -271,11 +271,11 @@ close_com       Proc far
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc close_com_done
 ;
-    push [bx].port_sel
-    FreeHandle
+    push [ebx].port_sel
+    NewFreeHandle
     pop ds
 ;
     call ds:close_com_proc
@@ -322,17 +322,17 @@ enable_cts_name DB 'Enable CTS',0
 enable_cts      PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc enable_cts_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     call ds:enable_cts_proc
 
 enable_cts_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -355,17 +355,17 @@ disable_cts_name DB 'Disable CTS',0
 disable_cts     PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc disable_cts_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     call ds:disable_cts_proc
 
 disable_cts_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -388,17 +388,17 @@ enable_auto_rts_name DB 'Enable Auto RTS',0
 enable_auto_rts PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc enable_auto_rts_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     call ds:enable_auto_rts_proc
 
 enable_auto_rts_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -421,17 +421,17 @@ disable_auto_rts_name DB 'Disable Auto RTS',0
 disable_auto_rts    PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc disable_auto_rts_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     call ds:disable_auto_rts_proc
 
 disable_auto_rts_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -454,12 +454,13 @@ flush_com_name DB 'Flush Com',0
 flush_com       PROC far
     push ds
     push ax
+    push ebx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc flush_com_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     call ds:flush_com_proc
 ;       
     cli
@@ -472,6 +473,7 @@ flush_com       PROC far
     sti
 
 flush_com_done:
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -496,14 +498,14 @@ read_com_name DB 'Read Com',0
 read_com    PROC far
     push ds
     push es
-    push bx
+    push ebx
     push cx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc com_read_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     mov es,ds:rec_buf
 ;
     cli
@@ -530,7 +532,7 @@ com_read_no_char:
     mov ax,-1
 com_read_done:
     pop cx
-    pop bx
+    pop ebx
     pop es
     pop ds
     retf32
@@ -554,19 +556,19 @@ get_com_receive_space_name DB 'Get Com Receive Space',0
 
 get_com_receive_space   PROC far
     push ds
-    push bx
+    push ebx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_com_rec_space_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     mov ax,ds:rec_size
     sub ax,ds:rec_count
     movzx eax,ax
 
 get_com_rec_space_done:
-    pop bx
+    pop ebx
     pop ds
     retf32
 get_com_receive_space   ENDP
@@ -592,17 +594,17 @@ write_com_name DB 'Write Com',0
 write_com       PROC far
     push ds
     push es
-    push bx
+    push ebx
     push cx
     push dx
 ;
     push ax
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc com_send_full
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     mov es,ds:send_buf
     cli
     mov cx,ds:send_count
@@ -642,7 +644,7 @@ com_send_full:
 com_send_end:
     pop dx
     pop cx
-    pop bx
+    pop ebx
     pop es
     pop ds
     retf32
@@ -664,12 +666,12 @@ wait_for_send_completed_com_name DB 'Wait For Send Completed Com',0
 
 wait_for_send_completed_com     PROC far
     push ds
-    push bx
+    push ebx
     push cx
 ;
     push ax
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc wait_for_send_completed_done
 ;
@@ -687,7 +689,7 @@ wait_for_send_completed_com     PROC far
 
 wait_for_send_completed_done:
     pop cx
-    pop bx
+    pop ebx
     pop ds
     retf32
 wait_for_send_completed_com     ENDP
@@ -710,19 +712,19 @@ get_com_send_space_name DB 'Get Com Send Space',0
 
 get_com_send_space      PROC far
     push ds
-    push bx
+    push ebx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_com_send_space_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     mov ax,ds:send_size
     sub ax,ds:send_count
     movzx eax,ax
 
 get_com_send_space_done:
-    pop bx
+    pop ebx
     pop ds
     retf32
 get_com_send_space      ENDP
@@ -744,14 +746,14 @@ set_dtr_name DB 'Set Dtr',0
 set_dtr Proc far
     push ds
     push ax
-    push bx
+    push ebx
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc set_dtr_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     cmp ds:line_reserved,0
     jne set_dtr_done
 ;
@@ -759,7 +761,7 @@ set_dtr Proc far
 
 set_dtr_done:
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -782,14 +784,14 @@ reset_dtr_name DB 'Reset Dtr',0
 reset_dtr       Proc far
     push ds
     push ax
-    push bx
+    push ebx
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc reset_dtr_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     cmp ds:line_reserved,0
     jne reset_dtr_done
 ;
@@ -797,7 +799,7 @@ reset_dtr       Proc far
 
 reset_dtr_done:
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -820,19 +822,19 @@ set_rts_name DB 'Set Rts',0
 set_rts Proc far
     push ds
     push ax
-    push bx
+    push ebx
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc set_rts_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     call ds:set_rts_proc
 
 set_rts_done:
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -855,19 +857,19 @@ reset_rts_name DB 'Reset Rts',0
 reset_rts       Proc far
     push ds
     push ax
-    push bx
+    push ebx
     push dx
 ;
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc reset_rts_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     call ds:reset_rts_proc
 
 reset_rts_done:
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -1112,14 +1114,14 @@ get_line_state  Endp
 start_wait_for_com      PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov bx,es:sw_handle
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc start_wait_for_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     mov ds:avail_obj,es
     mov ax,ds:rec_count
     or ax,ax
@@ -1129,7 +1131,7 @@ start_wait_for_com      PROC far
     SignalWait
 
 start_wait_for_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -1149,18 +1151,18 @@ start_wait_for_com Endp
 stop_wait_for_com       PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov bx,es:sw_handle
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc stop_wait_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     mov ds:avail_obj,0
 
 stop_wait_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -1197,14 +1199,14 @@ clear_com Endp
 is_com_idle     PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov bx,es:sw_handle
     mov ax,SERIAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc is_idle_done
 ;
-    mov ds,[bx].port_sel
+    mov ds,[ebx].port_sel
     mov ax,ds:rec_count
     or ax,ax
     clc
@@ -1213,7 +1215,7 @@ is_com_idle     PROC far
     stc
 
 is_idle_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -1325,9 +1327,9 @@ init    Proc far
     mov ds,ax
     mov es,ax
 ;
-    mov di,OFFSET delete_handle
+    mov edi,OFFSET delete_handle
     mov ax,SERIAL_HANDLE
-    RegisterHandle
+    NewRegisterHandle
 ;
     mov esi,OFFSET add_com_port
     mov edi,OFFSET add_com_port_name

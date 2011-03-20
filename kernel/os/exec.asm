@@ -1938,7 +1938,7 @@ fork_pr    Proc near
     call CreateForkOptions
     call CreateForkExeName
 ;    
-    CloneHandleMem
+    NewCloneHandleMem
     mov gs:f_handle,es
 ;
     CloneApp

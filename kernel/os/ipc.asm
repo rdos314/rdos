@@ -162,10 +162,10 @@ AllocateIpcHandle       Proc near
 ;
     mov dx,bx
     mov cx,SIZE ipc_handle_seg
-    AllocateHandle
-    mov [bx].ipc_handle_sel,dx
-    mov [bx].hh_sign,IPC_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].ipc_handle_sel,dx
+    mov [ebx].hh_sign,IPC_HANDLE
+    mov bx,[ebx].hh_handle
 ;
     pop dx
     pop cx
@@ -348,10 +348,10 @@ free_mailslot   Proc far
     push ax
 ;
     mov ax,IPC_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc free_mailslot_done
 ;
-    mov ax,[bx].ipc_handle_sel
+    mov ax,[ebx].ipc_handle_sel
     or ax,ax
     stc
     jz free_mailslot_done
@@ -361,7 +361,7 @@ free_mailslot   Proc far
     clc
     jnz free_mailslot_done
 ;
-    FreeHandle
+    NewFreeHandle
     clc
 
 free_mailslot_done:
@@ -395,17 +395,17 @@ send_mailslot   Proc near
     push fs
     push gs
     push ax
-    push bx
+    push ebx
     push ebp
 ;
     mov ebp,eax
     mov ax,ds
     mov fs,ax
     mov ax,IPC_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc send_mailslot_done
 ;
-    mov ax,[bx].ipc_handle_sel
+    mov ax,[ebx].ipc_handle_sel
     or ax,ax
     stc
     jz send_mailslot_done
@@ -422,7 +422,7 @@ send_mailslot_ok:
 
 send_mailslot_done:
     pop ebp
-    pop bx
+    pop ebx
     pop ax
     pop gs
     pop fs
@@ -947,10 +947,10 @@ delete_handle   Proc far
     push ax
 ;
     mov ax,IPC_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc delete_handle_done
 ;
-    mov ax,[bx].ipc_handle_sel
+    mov ax,[ebx].ipc_handle_sel
     or ax,ax
     stc
     jz delete_handle_done
@@ -960,13 +960,13 @@ delete_handle   Proc far
     clc
     jnz delete_handle_done
 ;
-    FreeHandle
+    NewFreeHandle
     clc
 
 delete_handle_done:
     pop ax
     pop ds
-    ret
+    retf32
 delete_handle   Endp
 
 
@@ -1036,8 +1036,8 @@ init    PROC far
     mov es,ax
 ;
     mov ax,IPC_HANDLE
-    mov di,OFFSET delete_handle
-    RegisterHandle
+    mov edi,OFFSET delete_handle
+    NewRegisterHandle
 ;
     mov ebx,OFFSET get_local_mailslot16
     mov esi,OFFSET get_local_mailslot32

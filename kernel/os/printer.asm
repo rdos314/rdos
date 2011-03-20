@@ -77,17 +77,17 @@ delete_handle   Proc far
     push dx
 ;
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc delete_handle_done
 ;
-    FreeHandle
+    NewFreeHandle
 
 delete_handle_done:
     pop dx
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 delete_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -146,10 +146,10 @@ open_printer       Proc far
 ;
     mov ax,PRINTER_HANDLE
     mov cx,SIZE printer_handle_seg
-    AllocateHandle
-    mov [bx].printer_sel,es
-    mov [bx].hh_sign,PRINTER_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].printer_sel,es
+    mov [ebx].hh_sign,PRINTER_HANDLE
+    mov bx,[ebx].hh_handle
     clc
     jmp open_printer_done
     
@@ -185,10 +185,10 @@ close_printer       Proc far
     push dx
 ;
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc close_printer_done
 ;
-    FreeHandle
+    NewFreeHandle
 
 close_printer_done:
     pop dx
@@ -215,13 +215,13 @@ is_printer_jammed_name DB 'Is Printer Jammed?',0
 is_printer_jammed       Proc far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc is_printer_jammed_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov eax,ds:pr_jammed_proc
     or eax,eax
     clc
@@ -230,7 +230,7 @@ is_printer_jammed       Proc far
     call ds:pr_jammed_proc
 
 is_printer_jammed_done:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -254,13 +254,13 @@ is_printer_paper_low_name DB 'Is Printer Paper Low?',0
 is_printer_paper_low       Proc far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc is_printer_paper_low_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov eax,ds:pr_paper_low_proc
     or eax,eax
     clc
@@ -269,7 +269,7 @@ is_printer_paper_low       Proc far
     call ds:pr_paper_low_proc
 
 is_printer_paper_low_done:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -293,13 +293,13 @@ is_printer_paper_end_name DB 'Is Printer Paper End?',0
 is_printer_paper_end       Proc far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc is_printer_paper_end_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov eax,ds:pr_paper_end_proc
     or eax,eax
     clc
@@ -308,7 +308,7 @@ is_printer_paper_end       Proc far
     call ds:pr_paper_end_proc
 
 is_printer_paper_end_done:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -332,13 +332,13 @@ is_printer_ok_name DB 'Is Printer Ok?',0
 is_printer_ok       Proc far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc is_printer_ok_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov eax,ds:pr_ok_proc
     or eax,eax
     stc
@@ -347,7 +347,7 @@ is_printer_ok       Proc far
     call ds:pr_ok_proc
 
 is_printer_ok_done:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -371,13 +371,13 @@ is_printer_head_lifted_name DB 'Is Printer Head Lifted?',0
 is_printer_head_lifted       Proc far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc is_printer_head_lifted_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov eax,ds:pr_head_lifted_proc
     or eax,eax
     clc
@@ -386,7 +386,7 @@ is_printer_head_lifted       Proc far
     call ds:pr_head_lifted_proc
 
 is_printer_head_lifted_done:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -410,13 +410,13 @@ has_printer_paper_in_presenter_name DB 'Has Printer Paper In Presenter?',0
 has_printer_paper_in_presenter       Proc far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc has_printer_paper_in_presenter_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov eax,ds:pr_paper_in_presenter_proc
     or eax,eax
     clc
@@ -425,7 +425,7 @@ has_printer_paper_in_presenter       Proc far
     call ds:pr_paper_in_presenter_proc
 
 has_printer_paper_in_presenter_done:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -447,13 +447,13 @@ print_test_name DB 'Print Test',0
 print_test       Proc far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc print_test_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov eax,ds:pr_print_test_proc
     or eax,eax
     jz print_test_done
@@ -461,7 +461,7 @@ print_test       Proc far
     call ds:pr_print_test_proc
 
 print_test_done:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -485,13 +485,13 @@ create_bitmap_name DB 'Create Printer Bitmap',0
 
 create_bitmap       Proc far
     push ds
-    push bx
+    push ebx
 ;
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc create_bitmap_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov eax,ds:pr_create_bitmap_proc
     or eax,eax
     stc
@@ -501,7 +501,7 @@ create_bitmap       Proc far
     mov ax,bx
 
 create_bitmap_done:
-    pop bx
+    pop ebx
     pop ds
     retf32
 create_bitmap      Endp
@@ -523,15 +523,15 @@ print_bitmap_name DB 'Print Bitmap',0
 print_bitmap       Proc far
     push ds
     push eax
-    push bx
+    push ebx
 ;
     push ax
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc print_bitmap_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov bx,ax
     mov eax,ds:pr_print_bitmap_proc
     or eax,eax
@@ -540,7 +540,7 @@ print_bitmap       Proc far
     call ds:pr_print_bitmap_proc
 
 print_bitmap_done:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     retf32
@@ -567,11 +567,11 @@ present_media       Proc far
 ;
     push ax
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc present_media_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov ebx,ds:pr_present_media_proc
     or ebx,ebx
     jz present_media_done
@@ -605,11 +605,11 @@ eject_media       Proc far
 ;
     push ax
     mov ax,PRINTER_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc eject_media_done
 ;
-    mov ds,[bx].printer_sel
+    mov ds,[ebx].printer_sel
     mov ebx,ds:pr_eject_media_proc
     or ebx,ebx
     jz eject_media_done
@@ -684,9 +684,9 @@ init    Proc far
     mov ds,ax
     mov es,ax
 ;
-    mov di,OFFSET delete_handle
+    mov edi,OFFSET delete_handle
     mov ax,PRINTER_HANDLE
-    RegisterHandle
+    NewRegisterHandle
 ;
     mov esi,OFFSET add_printer
     mov edi,OFFSET add_printer_name

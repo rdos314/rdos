@@ -620,15 +620,15 @@ set_module_name DB 'Set Module',0
 set_module      PROC far
     push ds
     push ax
-    push bx
+    push ebx
     push dx
 ;
     mov dx,es
     mov cx,SIZE module_handle_seg
-    AllocateHandle
-    mov [bx].mh_sel,dx
-    mov [bx].hh_sign,MODULE_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].mh_sel,dx
+    mov [ebx].hh_sign,MODULE_HANDLE
+    mov bx,[ebx].hh_handle
 ;
     mov ds,dx
     InitSection ds:mod_section
@@ -644,7 +644,7 @@ set_module      PROC far
     mov es:mod_key,al
 ;    
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop ds
     ret
@@ -666,7 +666,7 @@ reset_module    PROC far
     push ds
     push es
     push ax
-    push bx
+    push ebx
     push dx
 ;
     GetThread
@@ -674,10 +674,10 @@ reset_module    PROC far
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc reset_mod_handle_ok
 ;
-    mov ax,[bx].mh_sel
+    mov ax,[ebx].mh_sel
     or ax,ax
     jz reset_mod_free_mod
 ;
@@ -695,11 +695,11 @@ reset_mod_loop:
     jmp reset_mod_loop
 
 reset_mod_free_mod:
-    FreeHandle
+    NewFreeHandle
 
 reset_mod_handle_ok:    
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -724,7 +724,7 @@ create_module   PROC far
     push ds
     push es
     push ax
-    push bx
+    push ebx
     push dx
 ;
     mov ax,es
@@ -732,10 +732,10 @@ create_module   PROC far
     InitSection ds:mod_section
 ;    
     mov cx,SIZE module_handle_seg
-    AllocateHandle
-    mov [bx].mh_sel,es
-    mov [bx].hh_sign,MODULE_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].mh_sel,es
+    mov [ebx].hh_sign,MODULE_HANDLE
+    mov bx,[ebx].hh_handle
 ;
     mov es:mod_handle,bx
     mov es:mod_list,0
@@ -746,10 +746,10 @@ create_module   PROC far
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc create_module_done
 ;
-    mov ax,[bx].mh_sel
+    mov ax,[ebx].mh_sel
     or ax,ax
     jz create_module_done
 ;
@@ -762,7 +762,7 @@ create_module   PROC far
     
 create_module_done:    
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -787,7 +787,7 @@ free_module     PROC far
     push ds
     push es
     push ax
-    push bx
+    push ebx
     push dx
     push si
 ;
@@ -797,10 +797,10 @@ free_module     PROC far
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc free_module_done
 ;
-    mov si,[bx].mh_sel
+    mov si,[ebx].mh_sel
     or si,si
     jz free_module_done
 ;
@@ -838,10 +838,10 @@ free_mod_in_list:
 
 free_mod_handle:
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc free_module_leave
 ;
-    FreeHandle
+    NewFreeHandle
 
 free_module_leave:      
     mov ds,si
@@ -850,7 +850,7 @@ free_module_leave:
 free_module_done:
     pop si
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -1254,10 +1254,10 @@ deref_module_handle  Proc far
     push ax
 ;
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc deref_module_done
 ;
-    mov bx,[bx].mh_sel
+    mov bx,[ebx].mh_sel
     or bx,bx
     stc
     jz deref_module_done
@@ -1293,10 +1293,10 @@ alias_module_handle  Proc far
 ;
     mov dx,bx
     mov cx,SIZE module_handle_seg
-    AllocateHandle
-    mov [bx].mh_sel,dx
-    mov [bx].hh_sign,MODULE_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].mh_sel,dx
+    mov [ebx].hh_sign,MODULE_HANDLE
+    mov bx,[ebx].hh_handle
 ;    
     pop dx
     pop cx
@@ -1392,13 +1392,13 @@ free_dll  Proc far
     push ds
     push es
     push eax
-    push bx
+    push ebx
 ;    
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc free_dll_done
 ;
-    mov bx,[bx].mh_sel
+    mov bx,[ebx].mh_sel
     or bx,bx
     stc
     jz free_dll_done
@@ -1412,7 +1412,7 @@ free_dll  Proc far
     call es:mod_free_dll_proc    
 
 free_dll_done:
-    pop bx
+    pop ebx
     pop eax
     pop es
     pop ds    
@@ -1436,13 +1436,13 @@ get_module_focus_key_name       DB 'Get Module Focus Key',0
 
 get_module_focus_key  Proc far
     push ds
-    push bx
+    push ebx
 ;    
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_module_focus_done
 ;
-    mov bx,[bx].mh_sel
+    mov bx,[ebx].mh_sel
     or bx,bx
     stc
     jz get_module_focus_done
@@ -1452,7 +1452,7 @@ get_module_focus_key  Proc far
     clc
 
 get_module_focus_done:
-    pop bx
+    pop ebx
     pop ds    
     retf32
 get_module_focus_key  Endp
@@ -1475,13 +1475,13 @@ get_module_proc_name    DB 'Get Module Proc',0
 
 get_module_proc32  Proc far
     push eax
-    push bx
+    push ebx
 ;    
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_module_proc_done32
 ;
-    mov bx,[bx].mh_sel
+    mov bx,[ebx].mh_sel
     or bx,bx
     stc
     jz get_module_proc_done32
@@ -1495,22 +1495,22 @@ get_module_proc32  Proc far
     call ds:mod_get_proc_proc
 
 get_module_proc_done32:
-    pop bx
+    pop ebx
     pop eax
     retf32
 get_module_proc32  Endp
 
 get_module_proc16  Proc far
     push eax
-    push bx
+    push ebx
     push edi
 ;    
     movzx edi,di
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_module_proc_done16
 ;
-    mov bx,[bx].mh_sel
+    mov bx,[ebx].mh_sel
     or bx,bx
     stc
     jz get_module_proc_done16
@@ -1525,7 +1525,7 @@ get_module_proc16  Proc far
 
 get_module_proc_done16:
     pop edi
-    pop bx
+    pop ebx
     pop eax
     ret
 get_module_proc16  Endp
@@ -1549,15 +1549,15 @@ get_module_proc16  Endp
 get_module_resource_name    DB 'Get Module Resource',0
 
 get_module_resource  Proc far
-    push bx
+    push ebx
 ;    
     push ax
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc get_resource_done
 ;
-    mov bx,[bx].mh_sel
+    mov bx,[ebx].mh_sel
     or bx,bx
     stc
     jz get_resource_done
@@ -1571,7 +1571,7 @@ get_module_resource  Proc far
     call ds:mod_get_resource_proc
 
 get_resource_done:
-    pop bx
+    pop ebx
     retf32
 get_module_resource  Endp
 
@@ -1594,13 +1594,13 @@ get_module_name_name    DB 'Get Module Name',0
 
 get_module_name32  Proc far
     push ds
-    push bx
+    push ebx
 ;    
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_module_name_done32
 ;
-    mov bx,[bx].mh_sel
+    mov bx,[ebx].mh_sel
     or bx,bx
     stc
     jz get_module_name_done32
@@ -1613,22 +1613,22 @@ get_module_name32  Proc far
     call ds:mod_get_name_proc
 
 get_module_name_done32:
-    pop bx
+    pop ebx
     pop ds
     retf32
 get_module_name32  Endp
 
 get_module_name16  Proc far
     push ds
-    push bx
+    push ebx
     push edi
 ;    
     movzx edi,di
     mov ax,MODULE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_module_name_done16
 ;
-    mov bx,[bx].mh_sel
+    mov bx,[ebx].mh_sel
     or bx,bx
     stc
     jz get_module_name_done16
@@ -1643,7 +1643,7 @@ get_module_name16  Proc far
 
 get_module_name_done16:
     pop edi
-    pop bx
+    pop ebx
     pop ds
     ret
 get_module_name16  Endp

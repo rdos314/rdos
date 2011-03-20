@@ -892,7 +892,7 @@ notify_usb_detach   Endp
 ;
 ;           description:    Add an request block
 ;
-;       parameters:     DS:BX   Req handle struc
+;       parameters:     DS:EBX   Req handle struc
 ;               
 ;       Returns:    ES      Req block
 ;
@@ -906,7 +906,7 @@ AddReqBlock     Proc near
     mov es:re_type,0
     mov es:re_next,0
 ;
-    mov ax,ds:[bx].rh_list
+    mov ax,ds:[ebx].rh_list
     or ax,ax
     je arbEmpty
 ;       
@@ -923,7 +923,7 @@ arbLoop:
     jmp arbDone
     
 arbEmpty:
-    mov ds:[bx].rh_list,es
+    mov ds:[ebx].rh_list,es
 
 arbDone:
     pop eax    
@@ -953,21 +953,21 @@ create_usb_req  Proc far
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc curDone
 ;       
-    mov fs,ds:[bx].up_pipe_sel
-    mov ax,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ax,ds:[ebx].up_func_sel
 ;       
     mov cx,SIZE req_handle_struc
-    AllocateHandle
-    mov [bx].rh_func_sel,ax
-    mov [bx].rh_pipe_sel,fs
-    mov [bx].rh_list,0
-    mov [bx].rh_signal,0
-    mov [bx].rh_flags,0
-    mov [bx].hh_sign,USB_REQ_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].rh_func_sel,ax
+    mov [ebx].rh_pipe_sel,fs
+    mov [ebx].rh_list,0
+    mov [ebx].rh_signal,0
+    mov [ebx].rh_flags,0
+    mov [ebx].hh_sign,USB_REQ_HANDLE
+    mov bx,[ebx].hh_handle
     clc
 
 curDone:
@@ -998,10 +998,10 @@ add_write_usb_control_req       Proc far
     push ds
     push es
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc awucDone
 ;
     mov ax,es
@@ -1012,7 +1012,7 @@ add_write_usb_control_req       Proc far
     clc
     
 awucDone:    
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -1039,10 +1039,10 @@ add_write_usb_data_req  Proc far
     push ds
     push es
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc awudDone
 ;
     mov ax,es
@@ -1053,7 +1053,7 @@ add_write_usb_data_req  Proc far
     clc
     
 awudDone:    
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -1080,10 +1080,10 @@ add_read_usb_data_req   Proc far
     push ds
     push es
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc arudDone
 ;
     mov ax,es
@@ -1094,7 +1094,7 @@ add_read_usb_data_req   Proc far
     clc
     
 arudDone:    
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -1119,10 +1119,10 @@ add_usb_status_in_req   Proc far
     push ds
     push es
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc ausiDone
 ;
     call AddReqBlock
@@ -1132,7 +1132,7 @@ add_usb_status_in_req   Proc far
     clc
     
 ausiDone:    
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -1157,10 +1157,10 @@ add_usb_status_out_req  Proc far
     push ds
     push es
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc ausoDone
 ;
     call AddReqBlock
@@ -1170,7 +1170,7 @@ add_usb_status_out_req  Proc far
     clc
     
 ausoDone:    
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -1328,26 +1328,26 @@ start_usb_req   Proc far
     push ds
     push fs
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc surDone
 ;
-    test ds:[bx].rh_flags,REQ_FLAG_LOCKED
+    test ds:[ebx].rh_flags,REQ_FLAG_LOCKED
     jnz surStart
 ;
     push ds
-    mov ds,[bx].rh_pipe_sel
+    mov ds,[ebx].rh_pipe_sel
     EnterSection ds:usbp_section
     pop ds
-    or ds:[bx].rh_flags,REQ_FLAG_LOCKED
+    or ds:[ebx].rh_flags,REQ_FLAG_LOCKED
 
 surStart:    
-    or ds:[bx].rh_flags,REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE
-    mov ax,ds:[bx].rh_list
-    mov fs,ds:[bx].rh_pipe_sel
-    mov ds,ds:[bx].rh_func_sel
+    or ds:[ebx].rh_flags,REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE
+    mov ax,ds:[ebx].rh_list
+    mov fs,ds:[ebx].rh_pipe_sel
+    mov ds,ds:[ebx].rh_func_sel
 
 surReqLoop:
     or ax,ax
@@ -1372,7 +1372,7 @@ surIssue:
     call ds:issue_transfer_proc
 
 surDone:    
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop ds
@@ -1397,35 +1397,35 @@ stop_usb_req    Proc far
     push ds
     push fs
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc sturEnd
 ;
     push ds
-    mov fs,ds:[bx].rh_pipe_sel
-    mov ds,ds:[bx].rh_func_sel
+    mov fs,ds:[ebx].rh_pipe_sel
+    mov ds,ds:[ebx].rh_func_sel
     call ds:end_transfer_proc
     pop ds
 ;
     mov ax,5
     WaitMilliSec    
 ;    
-    test ds:[bx].rh_flags,REQ_FLAG_LOCKED
+    test ds:[ebx].rh_flags,REQ_FLAG_LOCKED
     jz sturDone
 ;
     push ds
-    mov ds,[bx].rh_pipe_sel
+    mov ds,[ebx].rh_pipe_sel
     LeaveSection ds:usbp_section
     pop ds
-    and ds:[bx].rh_flags,NOT REQ_FLAG_LOCKED
+    and ds:[ebx].rh_flags,NOT REQ_FLAG_LOCKED
 
 sturDone:
-    and ds:[bx].rh_flags,NOT (REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE)
+    and ds:[ebx].rh_flags,NOT (REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE)
 
 sturEnd:
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop ds
@@ -1451,20 +1451,20 @@ is_usb_req_started_name DB 'Is USB Req Started', 0
 is_usb_req_started      Proc far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc iursDone
 ;
-    test ds:[bx].rh_flags,REQ_FLAG_STARTED
+    test ds:[ebx].rh_flags,REQ_FLAG_STARTED
     stc
     jz iursDone
 ;
     clc
 
 iursDone:       
-    pop bx
+    pop ebx
     pop ax
     pop ds
     ret
@@ -1490,28 +1490,28 @@ is_usb_req_ready    Proc far
     push ds
     push fs
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc iurrDone
 ;
-    test ds:[bx].rh_flags,REQ_FLAG_ACTIVE
+    test ds:[ebx].rh_flags,REQ_FLAG_ACTIVE
     stc
     jz iurrDone
 ;
     push ds
-    mov fs,ds:[bx].rh_pipe_sel
-    mov ds,ds:[bx].rh_func_sel
+    mov fs,ds:[ebx].rh_pipe_sel
+    mov ds,ds:[ebx].rh_func_sel
     call ds:is_transfer_done_proc
     pop ds
     jc iurrDone
 ;
-    and ds:[bx].rh_flags,NOT REQ_FLAG_STARTED
+    and ds:[ebx].rh_flags,NOT REQ_FLAG_STARTED
     clc
     
 iurrDone:       
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop ds
@@ -1539,20 +1539,20 @@ get_usb_req_data    Proc far
     push ds
     push fs
     push ax
-    push bx
+    push ebx
 ;
     xor cx,cx
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc gurdDone
 ;
-    test ds:[bx].rh_flags,REQ_FLAG_ACTIVE
+    test ds:[ebx].rh_flags,REQ_FLAG_ACTIVE
     stc
     jz gurdDone
 ;
-    mov fs,ds:[bx].rh_pipe_sel
-    mov ax,ds:[bx].rh_list
-    mov ds,ds:[bx].rh_func_sel
+    mov fs,ds:[ebx].rh_pipe_sel
+    mov ax,ds:[ebx].rh_list
+    mov ds,ds:[ebx].rh_func_sel
     call ds:was_transfer_ok_proc
     jc gurdDone
 
@@ -1574,7 +1574,7 @@ gurdNext:
     jmp gurdReqLoop
 
 gurdDone:       
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop ds
@@ -1602,15 +1602,15 @@ close_usb_req   Proc far
     push ax
 ;
     mov ax,USB_REQ_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc crDone
 ;
-    test ds:[bx].rh_flags,REQ_FLAG_STARTED
+    test ds:[ebx].rh_flags,REQ_FLAG_STARTED
     jz crFreeList
 ;
     push ds
-    mov fs,ds:[bx].rh_pipe_sel
-    mov ds,ds:[bx].rh_func_sel
+    mov fs,ds:[ebx].rh_pipe_sel
+    mov ds,ds:[ebx].rh_func_sel
     call ds:end_transfer_proc
     pop ds
 ;    
@@ -1618,7 +1618,7 @@ close_usb_req   Proc far
     WaitMilliSec    
 
 crFreeList:
-    mov ax,ds:[bx].rh_list
+    mov ax,ds:[ebx].rh_list
 
 crFreeLoop:
     or ax,ax
@@ -1633,16 +1633,16 @@ crFreeLoop:
     jmp crFreeLoop
 
 crFreeHandle:
-    test ds:[bx].rh_flags,REQ_FLAG_LOCKED
+    test ds:[ebx].rh_flags,REQ_FLAG_LOCKED
     jz crLockOk
 ;
     push ds
-    mov ds,[bx].rh_pipe_sel
+    mov ds,[ebx].rh_pipe_sel
     LeaveSection ds:usbp_section
     pop ds
 
 crLockOk:
-    FreeHandle
+    NewFreeHandle
 
 crDone: 
     pop ax
@@ -2086,12 +2086,12 @@ oupOut:
 
 oupCreateHandle:    
     mov cx,SIZE pipe_handle_struc
-    AllocateHandle
-    mov [bx].up_func_sel,es
-    mov [bx].up_pipe_sel,di
-    mov [bx].up_pipe,dl
-    mov [bx].hh_sign,USB_PIPE_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].up_func_sel,es
+    mov [ebx].up_pipe_sel,di
+    mov [ebx].up_pipe,dl
+    mov [ebx].hh_sign,USB_PIPE_HANDLE
+    mov bx,[ebx].hh_handle
 ;
     mov fs,di
     inc fs:usbp_usage
@@ -2132,21 +2132,21 @@ close_usb_pipe  Proc far
     push es
     push fs
     push ax
-    push bx
+    push ebx
     push dx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc cupDone
 ;
     push ds
-    push bx
-    mov dl,ds:[bx].up_pipe
-    mov fs,ds:[bx].up_pipe_sel
+    push ebx
+    mov dl,ds:[ebx].up_pipe
+    mov fs,ds:[ebx].up_pipe_sel
     sub fs:usbp_usage,1
     jnz cupCloseDone
 ;       
-    mov ds,ds:[bx].up_func_sel
+    mov ds,ds:[ebx].up_func_sel
     mov ax,fs:usbp_device_sel
     or ax,ax
     jz cupCloseDone
@@ -2170,14 +2170,14 @@ cupClose:
     call ClosePipe
 
 cupCloseDone:
-    pop bx
+    pop ebx
     pop ds
-    FreeHandle
+    NewFreeHandle
     clc
 
 cupDone:
     pop dx
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop es
@@ -2199,33 +2199,33 @@ delete_handle   Proc far
     push ds
     push fs
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc delete_handle_done
 ;
     push ds
-    push bx
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    push ebx
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     sub fs:usbp_usage,1
     jnz delete_handle_pipe_ok
 ;       
     call ClosePipe
 
 delete_handle_pipe_ok:
-    pop bx
+    pop ebx
     pop ds
-    FreeHandle
+    NewFreeHandle
     clc
 
 delete_handle_done:
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 delete_handle   Endp
 
     
@@ -2346,17 +2346,17 @@ add_wait_for_pipe       PROC far
     push es
     push fs
     push eax
-    push bx
+    push ebx
     push edi
 ;
     push bx
     mov bx,ax
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc add_wait_pop_done
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     pop bx
 ;
     mov ax,cs
@@ -2376,7 +2376,7 @@ add_wait_pop_done:
     
 add_wait_done:
     pop edi
-    pop bx
+    pop ebx
     pop eax
     pop fs
     pop es
@@ -2401,19 +2401,19 @@ lock_usb_pipe_name      DB 'Lock USB Pipe',0
 lock_usb_pipe   Proc far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc lupDone
 ;
     push ds
-    mov ds,ds:[bx].up_pipe_sel
+    mov ds,ds:[ebx].up_pipe_sel
     EnterSection ds:usbp_section
     pop ds
 
 lupDone:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -2436,19 +2436,19 @@ unlock_usb_pipe_name    DB 'Unlock USB Pipe',0
 unlock_usb_pipe   Proc far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc uupDone
 ;       
     push ds
-    mov ds,ds:[bx].up_pipe_sel
+    mov ds,ds:[ebx].up_pipe_sel
     LeaveSection ds:usbp_section
     pop ds
 
 uupDone:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -2474,21 +2474,21 @@ write_usb_control16     Proc far
     push ds
     push fs
     push ax
-    push bx
+    push ebx
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc wucDone16
 ;
     movzx edi,di
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:add_setup_proc
 
 wucDone16:
     pop cx
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop ds
@@ -2499,20 +2499,20 @@ write_usb_control32     Proc far
     push ds
     push fs
     push ax
-    push bx
+    push ebx
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc wucDone32
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:add_setup_proc
 
 wucDone32:
     pop cx
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop ds
@@ -2539,18 +2539,18 @@ req_usb_data    Proc far
     push ds
     push fs
     push ax
-    push bx
+    push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc rudDone
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:add_in_proc
 
 rudDone:
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop ds
@@ -2576,21 +2576,21 @@ get_usb_data_size_name  DB 'Get USB Data Size',0
 get_usb_data_size16     Proc far
     push ds
     push fs
-    push bx
+    push ebx
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc gudDone16
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:get_data_size_proc
     mov ax,cx
 
 gudDone16:
     pop cx
-    pop bx
+    pop ebx
     pop fs
     pop ds
     ret
@@ -2599,21 +2599,21 @@ get_usb_data_size16     Endp
 get_usb_data_size32     Proc far
     push ds
     push fs
-    push bx
+    push ebx
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc gudDone32
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:get_data_size_proc
     movzx eax,cx
 
 gudDone32:
     pop cx
-    pop bx
+    pop ebx
     pop fs
     pop ds
     retf32
@@ -2639,21 +2639,21 @@ write_usb_data16    Proc far
     push ds
     push fs
     push ax
-    push bx
+    push ebx
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc wudDone16
 ;
     movzx edi,di
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:add_out_proc
 
 wudDone16:
     pop cx
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop ds
@@ -2664,20 +2664,20 @@ write_usb_data32    Proc far
     push ds
     push fs
     push ax
-    push bx
+    push ebx
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc wudDone32
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:add_out_proc
 
 wudDone32:
     pop cx
-    pop bx
+    pop ebx
     pop ax
     pop fs
     pop ds
@@ -2701,20 +2701,20 @@ req_usb_status_name     DB 'Request USB Status',0
 req_usb_status  Proc far
     push ds
     push fs
-    push bx
+    push ebx
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc rusDone
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:add_status_in_proc
 
 rusDone:
     pop cx
-    pop bx
+    pop ebx
     pop fs
     pop ds
     retf32
@@ -2737,20 +2737,20 @@ write_usb_status_name   DB 'Write USB Status',0
 write_usb_status    Proc far
     push ds
     push fs
-    push bx
+    push ebx
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc wusDone
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:add_status_out_proc
 
 wusDone:
     pop cx
-    pop bx
+    pop ebx
     pop fs
     pop ds
     retf32
@@ -2773,18 +2773,18 @@ start_usb_trans_name    DB 'Start USB Transaction',0
 start_usb_trans Proc far
     push ds
     push fs
-    push bx
+    push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc sutDone
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:issue_transfer_proc
 
 sutDone:
-    pop bx
+    pop ebx
     pop fs
     pop ds
     retf32
@@ -2809,18 +2809,18 @@ is_usb_trans_done_name  DB 'Is USB Transaction Done',0
 is_usb_trans_done       Proc far
     push ds
     push fs
-    push bx
+    push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc iutdDone
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:is_transfer_done_proc
 
 iutdDone:
-    pop bx
+    pop ebx
     pop fs
     pop ds
     retf32
@@ -2845,18 +2845,18 @@ was_usb_trans_ok_name   DB 'Was USB Transaction Ok',0
 was_usb_trans_ok    Proc far
     push ds
     push fs
-    push bx
+    push ebx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc wutoDone
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
     call ds:was_transfer_ok_proc
 
 wutoDone:
-    pop bx
+    pop ebx
     pop fs
     pop ds
     retf32
@@ -2880,19 +2880,19 @@ was_usb_trans_ok    Endp
 get_usb_info_name       DB 'Get USB Info',0
 
 get_usb_info    Proc far
-    push bx
+    push ebx
     push cx
 ;
     mov ax,USB_PIPE_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc guiDone
 ;
-    mov fs,ds:[bx].up_pipe_sel
-    mov ds,ds:[bx].up_func_sel
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
 
 guiDone:
     pop cx
-    pop bx
+    pop ebx
     ret
 get_usb_info    Endp
 
@@ -2977,8 +2977,8 @@ init    Proc far
     mov es,ax
 ;
     mov ax,USB_PIPE_HANDLE
-    mov di,OFFSET delete_handle
-    RegisterHandle
+    mov edi,OFFSET delete_handle
+    NewRegisterHandle
 ;
     mov esi,OFFSET init_usb_device
     mov edi,OFFSET init_usb_device_name

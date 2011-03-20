@@ -76,7 +76,7 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;           DESCRIPTION:    Delete contents in wait handle
 ;
-;       PARAMETERS:     DS:BX       Wait struct
+;       PARAMETERS:     DS:EBX       Wait struct
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -84,7 +84,7 @@ delete_wait Proc near
     push es
     push dx
 ;    
-    mov dx,ds:[bx].wh_obj_list
+    mov dx,ds:[ebx].wh_obj_list
     or dx,dx
     jz delete_wait_done
 
@@ -119,13 +119,13 @@ create_wait Proc far
     push cx
 ;
     mov cx,SIZE wait_handle_seg
-    AllocateHandle
-    mov [bx].hh_sign,WAIT_HANDLE
-    mov [bx].wh_obj_list,0
-    mov [bx].wh_running,0
-    mov [bx].wh_thread,0
-    InitSection ds:[bx].wh_section 
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].hh_sign,WAIT_HANDLE
+    mov [ebx].wh_obj_list,0
+    mov [ebx].wh_running,0
+    mov [ebx].wh_thread,0
+    InitSection ds:[ebx].wh_section 
+    mov bx,[ebx].hh_handle
     clc
 ;
     pop cx
@@ -151,12 +151,12 @@ close_wait Proc far
     push ax
 ;
     mov ax,WAIT_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc close_wait_done
 ;
     call delete_wait
 ;
-    FreeHandle
+    NewFreeHandle
     clc
 
 close_wait_done:
@@ -178,19 +178,19 @@ close_wait ENDP
 delete_handle   Proc far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,WAIT_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc delete_handle_done
 ;
     call delete_wait
 
 delete_handle_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
-    ret
+    retf32
 delete_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -218,12 +218,11 @@ is_wait_idle Proc far
 ;
     xor ecx,ecx
     mov ax,WAIT_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc is_wait_idle_done
 ;
-    movzx ebx,bx
     EnterSection ds:[ebx].wh_section
-    mov dx,ds:[bx].wh_obj_list
+    mov dx,ds:[ebx].wh_obj_list
     or dx,dx
     jz is_wait_idle_ok_leave
 
@@ -279,19 +278,18 @@ wait_no_timeout Proc far
 ;
     xor ecx,ecx
     mov ax,WAIT_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc wait_no_timeout_done
 ;
-    movzx ebx,bx
     EnterSection ds:[ebx].wh_section
-    mov al,ds:[bx].wh_running
+    mov al,ds:[ebx].wh_running
     or al,al
     jnz wait_no_timeout_stopped_leave
 ;
     GetThread
-    mov ds:[bx].wh_thread,ax
+    mov ds:[ebx].wh_thread,ax
     ClearSignal
-    mov dx,ds:[bx].wh_obj_list
+    mov dx,ds:[ebx].wh_obj_list
     or dx,dx
     jz wait_no_timeout_start_leave
 
@@ -305,19 +303,19 @@ wait_no_timeout_start_loop:
     jnz wait_no_timeout_start_loop
 
 wait_no_timeout_start_leave:
-    inc ds:[bx].wh_running
+    inc ds:[ebx].wh_running
     LeaveSection ds:[ebx].wh_section
 
 wait_no_timeout_do:
     WaitForSignal
 ;
     EnterSection ds:[ebx].wh_section
-    mov al,ds:[bx].wh_running
+    mov al,ds:[ebx].wh_running
     or al,al
     jz wait_no_timeout_stopped_leave
 ;
-    dec ds:[bx].wh_running
-    mov ax,ds:[bx].wh_obj_list
+    dec ds:[ebx].wh_running
+    mov ax,ds:[ebx].wh_obj_list
     or ax,ax
     jz wait_no_timeout_stopped_leave
 
@@ -399,14 +397,13 @@ wait_timeout Proc far
     push ax
     xor ecx,ecx
     mov ax,WAIT_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc wait_timeout_done
 ;
-    movzx ebx,bx
     EnterSection ds:[ebx].wh_section
     push ax
-    mov al,ds:[bx].wh_running
+    mov al,ds:[ebx].wh_running
     or al,al
     pop ax
     jnz wait_timeout_stopped_leave
@@ -414,9 +411,9 @@ wait_timeout Proc far
     push eax
     push edx
     GetThread
-    mov ds:[bx].wh_thread,ax
+    mov ds:[ebx].wh_thread,ax
     ClearSignal
-    mov dx,ds:[bx].wh_obj_list
+    mov dx,ds:[ebx].wh_obj_list
     or dx,dx
     jz wait_timeout_start_timer
 
@@ -445,7 +442,7 @@ wait_timeout_start_timer:
     StartTimer
     pop bx
 ;
-    inc ds:[bx].wh_running
+    inc ds:[ebx].wh_running
     LeaveSection ds:[ebx].wh_section
 
 wait_timeout_do:
@@ -458,12 +455,12 @@ wait_timeout_do:
 ;
     xor ecx,ecx
     EnterSection ds:[ebx].wh_section
-    mov al,ds:[bx].wh_running
+    mov al,ds:[ebx].wh_running
     or al,al
     jz wait_timeout_stopped_leave
 ;
-    dec ds:[bx].wh_running
-    mov ax,ds:[bx].wh_obj_list
+    dec ds:[ebx].wh_running
+    mov ax,ds:[ebx].wh_obj_list
     or ax,ax
     jz wait_timeout_stopped_leave
 
@@ -522,17 +519,16 @@ stop_wait Proc far
     push ebx
 ;
     mov ax,WAIT_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc stop_wait_done
 ;
-    movzx ebx,bx
     EnterSection ds:[ebx].wh_section
-    mov al,ds:[bx].wh_running
+    mov al,ds:[ebx].wh_running
     or al,al
     jz stop_wait_leave
 ;
-    dec ds:[bx].wh_running
-    mov ax,ds:[bx].wh_obj_list
+    dec ds:[ebx].wh_running
+    mov ax,ds:[ebx].wh_obj_list
     or ax,ax
     jz stop_wait_signal
 
@@ -551,7 +547,7 @@ stop_wait_next:
 
 stop_wait_signal:
     push bx
-    mov bx,ds:[bx].wh_thread
+    mov bx,ds:[ebx].wh_thread
     Signal
     pop bx
 
@@ -596,11 +592,10 @@ add_wait    Proc far
 ;
     push ax
     mov ax,WAIT_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc add_wait_done
 ;
-    movzx ebx,bx
     EnterSection ds:[ebx].wh_section
 ;    
     movzx eax,ax
@@ -612,15 +607,15 @@ add_wait    Proc far
     mov ecx,8
     rep movs dword ptr es:[edi],fs:[esi]
 ;
-    mov ax,ds:[bx].wh_obj_list
+    mov ax,ds:[ebx].wh_obj_list
     mov es:wo_next,ax
-    mov ds:[bx].wh_obj_list,es
+    mov ds:[ebx].wh_obj_list,es
 ;
-    mov al,ds:[bx].wh_running
+    mov al,ds:[ebx].wh_running
     or al,al
     jz awLeave
 ;
-    mov ax,ds:[bx].wh_thread
+    mov ax,ds:[ebx].wh_thread
     or ax,ax
     jz awLeave
 ;
@@ -662,14 +657,13 @@ remove_wait    Proc far
     push dx
 ;
     mov ax,WAIT_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc remove_wait_done
 ;
-    movzx ebx,bx
     EnterSection ds:[ebx].wh_section
 ;
     xor dx,dx
-    mov ax,ds:[bx].wh_obj_list
+    mov ax,ds:[ebx].wh_obj_list
     
 remove_wait_loop:
     or ax,ax
@@ -694,7 +688,7 @@ remove_wait_do:
     jmp remove_wait_loop
 
 remove_wait_head:
-    mov ds:[bx].wh_obj_list,ax
+    mov ds:[ebx].wh_obj_list,ax
     jmp remove_wait_loop
 
 remove_wait_leave:
@@ -751,17 +745,17 @@ delete_signal_handle    Proc far
     push dx
 ;
     mov ax,SIGNAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc delete_signal_handle_done
 ;
-    FreeHandle
+    NewFreeHandle
 
 delete_signal_handle_done:
     pop dx
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 delete_signal_handle    Endp
 
 
@@ -785,11 +779,11 @@ create_signal   Proc far
 ;    
     mov ax,SIGNAL_HANDLE
     mov cx,SIZE signal_handle_seg
-    AllocateHandle
-    mov [bx].sig_wait_obj,0
-    mov [bx].sig_state,0
-    mov [bx].hh_sign,SIGNAL_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].sig_wait_obj,0
+    mov [ebx].sig_state,0
+    mov [ebx].hh_sign,SIGNAL_HANDLE
+    mov bx,[ebx].hh_handle
 ;
     pop cx
     pop ax
@@ -814,17 +808,17 @@ reset_signal_name DB 'Reset Signal',0
 reset_signal   Proc far
     push ds
     push ax
-    push bx
+    push ebx
 ;    
     mov ax,SIGNAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc reset_sig_done
 ;
-    mov ds:[bx].sig_state,0
+    mov ds:[ebx].sig_state,0
 
 reset_sig_done:
     sti
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -847,13 +841,13 @@ is_signalled_name DB 'Is Signalled',0
 is_signalled   Proc far
     push ds
     push ax
-    push bx
+    push ebx
 ;    
     mov ax,SIGNAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc is_sig_done
 ;
-    mov al,ds:[bx].sig_state
+    mov al,ds:[ebx].sig_state
     or al,al
     stc
     jz is_sig_done
@@ -861,7 +855,7 @@ is_signalled   Proc far
     clc
 
 is_sig_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -885,25 +879,25 @@ set_signal   Proc far
     push ds
     push es
     push ax
-    push bx
+    push ebx
 ;    
     mov ax,SIGNAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc set_sig_done
 ;
     cli
-    mov ds:[bx].sig_state,1
-    mov ax,ds:[bx].sig_wait_obj
+    mov ds:[ebx].sig_state,1
+    mov ax,ds:[ebx].sig_wait_obj
     or ax,ax
     jz set_sig_done
 ;
     mov es,ax
     SignalWait
-    mov ds:[bx].sig_wait_obj,0
+    mov ds:[ebx].sig_wait_obj,0
 
 set_sig_done:
     sti
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -929,10 +923,10 @@ free_signal   Proc far
     push ax
 ;    
     mov ax,SIGNAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc free_sig_done
 ;
-    FreeHandle
+    NewFreeHandle
 
 free_sig_done:
     pop ax
@@ -955,27 +949,27 @@ free_signal Endp
 start_wait_for_signal   PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov bx,es:sig_handle
     mov ax,SIGNAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc start_wait_for_done
 ;
     cli
-    mov ds:[bx].sig_wait_obj,es
-    mov al,ds:[bx].sig_state
+    mov ds:[ebx].sig_wait_obj,es
+    mov al,ds:[ebx].sig_state
     or al,al
     je start_wait_for_done
 ;
-    mov ds:[bx].sig_state,0
-    mov ds:[bx].sig_wait_obj,0
+    mov ds:[ebx].sig_state,0
+    mov ds:[ebx].sig_wait_obj,0
     sti
     SignalWait
 
 start_wait_for_done:
     sti
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -995,17 +989,17 @@ start_wait_for_signal Endp
 stop_wait_for_signal    PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov bx,es:sig_handle
     mov ax,SIGNAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc stop_wait_signal_done
 ;
-    mov ds:[bx].sig_wait_obj,0
+    mov ds:[ebx].sig_wait_obj,0
 
 stop_wait_signal_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -1026,17 +1020,17 @@ stop_wait_for_signal Endp
 clear_signal    PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov bx,es:sig_handle
     mov ax,SIGNAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc clear_signal_done
 ;
-    mov ds:[bx].sig_state,0
+    mov ds:[ebx].sig_state,0
 
 clear_signal_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -1057,14 +1051,14 @@ clear_signal Endp
 is_signal_idle  PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov bx,es:sig_handle
     mov ax,SIGNAL_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc is_idle_done
 ;
-    mov al,ds:[bx].sig_state
+    mov al,ds:[ebx].sig_state
     or al,al
     clc
     je is_idle_done
@@ -1072,7 +1066,7 @@ is_signal_idle  PROC far
     stc
 
 is_idle_done:
-    pop bx
+    pop ebx
     pop ax
     pop ds
     retf32
@@ -1141,12 +1135,12 @@ init_wait       PROC near
     mov es,ax
 ;
     mov ax,WAIT_HANDLE
-    mov di,OFFSET delete_handle
-    RegisterHandle
+    mov edi,OFFSET delete_handle
+    NewRegisterHandle
 ;
     mov ax,SIGNAL_HANDLE
-    mov di,OFFSET delete_signal_handle
-    RegisterHandle
+    mov edi,OFFSET delete_signal_handle
+    NewRegisterHandle
 ;
     mov esi,OFFSET add_wait
     mov edi,OFFSET add_wait_name

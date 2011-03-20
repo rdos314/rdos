@@ -685,11 +685,11 @@ open_font_char_next:
 ;
     mov ax,ds
     mov cx,SIZE font_handle_struc
-    AllocateHandle
-    mov [bx].fh_org_sel,ax
-    mov [bx].fh_buf_sel,es
-    mov [bx].hh_sign,FONT_HANDLE
-    mov bx,[bx].hh_handle
+    NewAllocateHandle
+    mov [ebx].fh_org_sel,ax
+    mov [ebx].fh_buf_sel,es
+    mov [ebx].hh_sign,FONT_HANDLE
+    mov bx,[ebx].hh_handle
     clc
 
 open_font_end:
@@ -722,19 +722,19 @@ close_font      Proc far
     push ds
     push es
     push ax
-    push bx
+    push ebx
 ;
     mov ax,FONT_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc cl_font_done
 ;
-    mov es,[bx].fh_buf_sel
+    mov es,[ebx].fh_buf_sel
     FreeMem
-    FreeHandle
+    NewFreeHandle
     clc
 
 cl_font_done:
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
@@ -765,10 +765,10 @@ get_string_metrics      Proc near
     push edi
 ;
     mov ax,FONT_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc get_string_metr_fail
 ;
-    mov ds,[bx].fh_org_sel
+    mov ds,[ebx].fh_org_sel
     xor cx,cx
     mov dx,ds:font_fheight
 
@@ -844,11 +844,11 @@ get_char_mask   Proc far
 ;
     push ax
     mov ax,FONT_HANDLE
-    DerefHandle
+    NewDerefHandle
     pop ax
     jc get_char_mask_done
 ;
-    mov es,[bx].fh_buf_sel
+    mov es,[ebx].fh_buf_sel
     movzx ebx,al
     mov dx,es:fh_height
     mov cx,es:[2*ebx].fh_widths
@@ -879,23 +879,23 @@ delete_handle   Proc far
     push ds
     push es
     push ax
-    push bx
+    push ebx
 ;
     mov ax,FONT_HANDLE
-    DerefHandle
+    NewDerefHandle
     jc delete_handle_done
 ;
-    mov es,[bx].fh_buf_sel
+    mov es,[ebx].fh_buf_sel
     FreeMem
-    FreeHandle
+    NewFreeHandle
     clc
 
 delete_handle_done:
-    pop bx
+    pop ebx
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 delete_handle   Endp
 
 
@@ -936,8 +936,8 @@ init_font_loop:
     mov ds,ax
     mov es,ax
     mov ax,FONT_HANDLE
-    mov di,OFFSET delete_handle
-    RegisterHandle
+    mov edi,OFFSET delete_handle
+    NewRegisterHandle
 ;
     mov esi,OFFSET get_char_mask
     mov edi,OFFSET get_char_mask_name
