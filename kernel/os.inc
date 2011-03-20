@@ -1256,28 +1256,28 @@ EnterDos32      MACRO
     OsGate enter_dos32_nr
                     ENDM
 
-;       BX              OFFSET I BIOS SEGMENT
-;       AL              DATA
+;       BX              Offset in BDA
+;       AL              Value
 GetBiosData     MACRO
-    OldOsGate get_bios_data_nr
+    OsGate get_bios_data_nr
                     ENDM
 
-;       BX              OFFSET I BIOS SEGMENT
-;       AL              DATA
+;       BX              Offset in BDA
+;       AL              Value
 SetBiosData     MACRO
-    OldOsGate set_bios_data_nr
+    OsGate set_bios_data_nr
                     ENDM
 
-;       BX          OFFSET I BIOS SEGMENT
-;       ES:DI       HANDLER ADDRESS
+;       BX          Offset in BDA
+;       ES:EDI      Handler callback
 HookGetBiosData MACRO
-    OldOsGate hook_get_bios_data_nr
+    OsGate hook_get_bios_data_nr
                     ENDM
 
-;       BX          OFFSET I BIOS SEGMENT
-;       ES:DI       HANDLER ADDRESS
+;       BX          Offset in BDA
+;       ES:EDI      Handler callback
 HookSetBiosData MACRO
-    OldOsGate hook_set_bios_data_nr
+    OsGate hook_set_bios_data_nr
                     ENDM
 
 ; IN  BX        File handle

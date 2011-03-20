@@ -35,7 +35,7 @@ INCLUDE system.inc
 
 data    SEGMENT byte public 'DATA'
 
-bios_vect    DW 400h DUP(?)
+bios_vect    DD 400h DUP(?)
 
 data    ENDS
 
@@ -364,7 +364,7 @@ int15:
 ;
 ;           DESCRIPTION:    Default for GetBiosData
 ;
-;           PARAMETERS:         AL          Value
+;           PARAMETERS:     AL          Value
 ;                           BX          Offset in BDA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -378,7 +378,7 @@ default_get_bios_data   PROC far
     mov al,[ebx+400h].page0_linear
     pop dx
     pop ds
-    ret
+    retf32
 default_get_bios_data   ENDP
 
 
@@ -389,7 +389,7 @@ default_get_bios_data   ENDP
 ;
 ;           DESCRIPTION:    Default for SetBiosData
 ;
-;           PARAMETERS:         AL          Value
+;           PARAMETERS:     AL          Value
 ;                           BX          Offset in BDA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -403,7 +403,7 @@ default_set_bios_data   PROC far
     mov [ebx+400h].page0_linear,al
     pop dx
     pop ds
-    ret
+    retf32
 default_set_bios_data   ENDP
 
 
@@ -424,11 +424,11 @@ get_bios_data_name      DB 'Get BIOS Data',0
 get_bios_data   PROC far
     push SEG data
     pop ds
-    shl bx,3
-    push word ptr [bx+2].bios_vect
-    push word ptr [bx].bios_vect
-    shr bx,3
-    ret
+    shl bx,4
+    push dword ptr [bx+4].bios_vect
+    push dword ptr [bx].bios_vect
+    shr bx,4
+    retf32
 get_bios_data   ENDP
 
 
@@ -439,7 +439,7 @@ get_bios_data   ENDP
 ;
 ;           DESCRIPTION:    Set BIOS data
 ;
-;           PARAMETERS:         AL          Value
+;           PARAMETERS:     AL          Value
 ;                           BX          Offset in BDA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -449,11 +449,11 @@ set_bios_data_name      DB 'Set BIOS Data',0
 set_bios_data   PROC far
     push SEG data
     pop ds
-    shl bx,3
-    push word ptr [bx+6].bios_vect
-    push word ptr [bx+4].bios_vect
-    shr bx,3
-    ret
+    shl bx,4
+    push dword ptr [bx+12].bios_vect
+    push dword ptr [bx+8].bios_vect
+    shr bx,4
+    retf32
 set_bios_data   ENDP
 
 
@@ -464,8 +464,8 @@ set_bios_data   ENDP
 ;
 ;           DESCRIPTION:    Add hook for GetBiosData
 ;
-;           PARAMETERS:         BX          Offset in BDA
-;                           ES:DI   Callback
+;           PARAMETERS:     BX          Offset in BDA
+;                           ES:EDI   Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -477,13 +477,13 @@ hook_get_bios_data      PROC far
     push bx
     mov ax,SEG data
     mov ds,ax
-    shl bx,3    
-    mov [bx].bios_vect,di
-    mov [bx+2].bios_vect,es
+    shl bx,4    
+    mov [bx].bios_vect,edi
+    mov word ptr [bx+4].bios_vect,es
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_get_bios_data      ENDP
 
 
@@ -494,8 +494,8 @@ hook_get_bios_data      ENDP
 ;
 ;           DESCRIPTION:    Add hook for SetBiosData
 ;
-;           PARAMETERS:         BX          Offset in BDA
-;                           ES:DI   Callback
+;           PARAMETERS:     BX          Offset in BDA
+;                           ES:EDI   Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -507,13 +507,13 @@ hook_set_bios_data      PROC far
     push bx
     mov ax,SEG data
     mov ds,ax
-    shl bx,3
-    mov [bx+4].bios_vect,di
-    mov [bx+6].bios_vect,es
+    shl bx,4
+    mov [bx+8].bios_vect,edi
+    mov word ptr [bx+12].bios_vect,es
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_set_bios_data      ENDP
 
 
@@ -1151,36 +1151,36 @@ init_bios       PROC near
     mov edi,OFFSET get_bios_data_name
     xor cl,cl
     mov ax,get_bios_data_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET set_bios_data
     mov edi,OFFSET set_bios_data_name
     xor cl,cl
     mov ax,set_bios_data_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET hook_get_bios_data
     mov edi,OFFSET hook_get_bios_data_name
     xor cl,cl
     mov ax,hook_get_bios_data_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET hook_set_bios_data
     mov edi,OFFSET hook_set_bios_data_name
     xor cl,cl
     mov ax,hook_set_bios_data_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov bx,SEG data
     mov ds,bx
     mov bx,OFFSET bios_vect
     mov cx,100h
 init_bios_data_loop:
-    mov word ptr [bx],OFFSET default_get_bios_data
-    mov [bx+2],cs
-    mov word ptr [bx+4],OFFSET default_set_bios_data
-    mov [bx+6],cs
-    add bx,8
+    mov dword ptr [bx],OFFSET default_get_bios_data
+    mov [bx+4],cs
+    mov dword ptr [bx+8],OFFSET default_set_bios_data
+    mov [bx+12],cs
+    add bx,16
     loop init_bios_data_loop
 ;
     mov ax,cs
