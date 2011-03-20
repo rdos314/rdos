@@ -1311,12 +1311,6 @@ RegisterDosDevice  MACRO
     OsGate register_dos_device_nr
                     ENDM
 
-;       ES:EDI      FILENAME
-;       AL              DRIVE IN / OUT
-CheckDosDevice     MACRO
-    OsGate check_dos_device_nr
-                    ENDM
-
 ;       ES:DI       Handle address
 HookShiftKeys   MACRO
     OldOsGate hook_shift_keys_nr
@@ -2065,6 +2059,19 @@ ResetDrive      MACRO
                     ENDM
 
 ;;;;;;;;;;;; FILE SYSTEM ;;;;;;;;;;;;
+
+;       DS:ESI       Device read
+;       ES:EDI       Device write
+;       FS:EBX       Device name
+InstallDeviceFile  MACRO
+    OsGate install_device_file_nr
+                    ENDM
+
+;       ES:EDI      FILENAME
+;       AL              DRIVE IN / OUT
+CheckDeviceFile     MACRO
+    OsGate check_device_file_nr
+                    ENDM
 
 ;       ES:DI       INIT CALLBACK
 HookInitFileSystem      MACRO

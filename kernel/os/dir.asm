@@ -830,7 +830,6 @@ GetDeviceRoot   Proc near
     push si
     push ebp
 ;
-    int 3
     mov al,80h
     mov bx,fs_sys_data_sel
     mov ds,bx
@@ -2017,19 +2016,25 @@ OpenFileBase    Proc near
 ;
     push edi
     call GetDeviceRoot
-    jc open_file_normal
+    jnc open_file_device
 ;
+    pop edi
+    jmp open_file_normal
+
+open_file_device:
     call ParseFile
     pop edi
-    jc open_file_normal
+    jc open_file_device_end
 ;
     EnterReadSection ds:ds_access_section
     call SetupFileSel
     LeaveReadSection ds:ds_access_section
     jmp open_file_handle
 
-open_file_normal:
+open_file_device_end:
     call ParseEnd
+
+open_file_normal:
     push edi
     call ParseDir
     jc open_file_pop_failed
@@ -2092,19 +2097,25 @@ CreateFileBase  Proc near
 ;
     push edi
     call GetDeviceRoot
-    jc create_file_normal
+    jnc create_file_device
 ;    
+    pop edi
+    jmp create_file_normal
+
+create_file_device:
     call ParseFile
     pop edi
-    jc create_file_normal
+    jc create_file_device_end
 ;
     EnterReadSection ds:ds_access_section
     call SetupFileSel
     LeaveReadSection ds:ds_access_section
     jmp create_file_handle
 
-create_file_normal:
+create_file_device_end:
     call ParseEnd
+
+create_file_normal:
     push edi
     call ParseDir
     jc create_file_pop_failed

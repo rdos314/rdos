@@ -161,6 +161,7 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn init_ramdrive:near
     extrn init_filedisc:near
+    extrn init_stddev:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5339,6 +5340,7 @@ init_drive_wait_loop:
 ;
     call init_ramdrive  
     call init_filedisc
+    call init_stddev
     ret
 init    ENDP
 
