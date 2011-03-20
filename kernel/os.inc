@@ -1204,19 +1204,151 @@ CloneHandleMem  MACRO
     OsGate clone_handle_mem_nr
                     ENDM
 
-;;;;;;;;;; NETWORK ;;;;;;;;;;;;;
+;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
-;       ES:DI   Swap callback
-;       AL  Swap level (0 = highest priority, 15 = lowest priority)
-RegisterSwapProc    MACRO
-    OldOsGate register_swap_proc_nr
+;       EAX     Bytes
+;       NC      EDX     linear address
+;       CY      AL      Error code
+AllocateDosLinear       MACRO
+    OsGate allocate_dos_linear_nr
                     ENDM
 
-;       IN  EAX     Table name
-;       OUT ES      Table selector
-GetAcpiTable    MACRO
-    OldOsGate get_acpi_table_nr
+;       EDX             LINEAR BASE ADDRESS
+;       CY      AL      Error code
+FreeDosLinear   MACRO
+    OsGate free_dos_linear_nr
                     ENDM
+
+;       EAX             NEW SIZE
+;       EDX             LINEAR BASE ADDRESS
+;       CY      AL      Error code
+ResizeDosLinear MACRO
+    OsGate resize_dos_linear_nr
+                    ENDM
+
+;       EAX         Bytes available
+;       EDX         Largest block
+AvailableDosLinear      MACRO
+    OsGate available_dos_linear_nr
+                    ENDM
+
+QueryXms    MACRO
+    OldOsGate query_xms_nr
+                    ENDM
+
+QueryDpmi       MACRO
+    OldOsGate query_dpmi_nr
+                    ENDM
+
+QueryDpmi16     MACRO
+    OldOsGate query_dpmi16_nr
+                    ENDM
+
+;       BX              OFFSET I BIOS SEGMENT
+;       AL              DATA
+GetBiosData     MACRO
+    OldOsGate get_bios_data_nr
+                    ENDM
+
+;       BX              OFFSET I BIOS SEGMENT
+;       AL              DATA
+SetBiosData     MACRO
+    OldOsGate set_bios_data_nr
+                    ENDM
+
+;       BX          OFFSET I BIOS SEGMENT
+;       ES:DI       HANDLER ADDRESS
+HookGetBiosData MACRO
+    OldOsGate hook_get_bios_data_nr
+                    ENDM
+
+;       BX          OFFSET I BIOS SEGMENT
+;       ES:DI       HANDLER ADDRESS
+HookSetBiosData MACRO
+    OldOsGate hook_set_bios_data_nr
+                    ENDM
+
+; IN  BX        File handle
+; IN  DS:(E)SI  Program name
+; IN  ES:(E)DI  Command line
+LoadDosExe      MACRO
+    OldOsGate load_dos_exe_nr
+                    ENDM
+
+;       ES:DI       HANDLER ADDRESS
+HookLoadDosExe  MACRO
+    OldOsGate hook_load_dos_exe_nr
+                    ENDM
+
+;       ES:DI       Handle address
+HookShiftKeys   MACRO
+    OldOsGate hook_shift_keys_nr
+                    ENDM
+
+;       AL      Scan code
+ProcessKeyScan  MACRO
+    OldOsGate process_key_scan_nr
+                    ENDM
+
+;       AX      Keyboard state
+SetKeyboardState    MACRO
+    OldOsGate set_keyboard_state_nr
+                    ENDM
+
+;       AL = CHAR OR EXTENDED CHAR
+ReadKeyboardSerial      MACRO
+    OldOsGate read_keyboard_serial_nr
+                    ENDM
+
+;       NC          CHAR IN BUFFER
+;       CY          BUFFER EMPTY
+PollKeyboardSerial      MACRO
+    OldOsGate poll_keyboard_serial_nr
+                    ENDM
+
+;       ES:EDI      ADDRESS TILL '$' TERMINERAD STRŽNG
+WriteDosString  MACRO
+    OldOsGate write_dos_string_nr
+                    ENDM
+
+;       BX              PSP SEGMENT
+GetPsp  MACRO
+    OldOsGate get_psp_nr
+                    ENDM
+
+;       BX              PSP SEGMENT
+SetPsp  MACRO
+    OldOsGate set_psp_nr
+                    ENDM
+
+EnterDpmi       MACRO
+    OldOsGate enter_dpmi_nr
+                    ENDM
+
+EnterDos16      MACRO
+    OldOsGate enter_dos16_nr
+                    ENDM
+
+EnterDos32      MACRO
+    OldOsGate enter_dos32_nr
+                    ENDM
+
+;       DS:BX       DEVICE HEADER
+;       CX          DEVICE SIZE
+;       DS:SI       DEVICE READ
+;       DS:DI       DEVICE WRITE
+;       DX          DEVICE SEGMENT
+RegisterDevice  MACRO
+    OldOsGate register_device_nr
+                    ENDM
+
+;       ES:EDI      FILENAME
+;       AL              DRIVE IN / OUT
+CheckDevice     MACRO
+    OldOsGate check_device_nr
+                    ENDM
+
+;;;;;;;;;; Network ;;;;;;;;;;;;;
 
 ;       AL          class id
 ;       CX          Size of address
@@ -1231,7 +1363,7 @@ RegisterNetClass    MACRO
 ;       ES:DI   receiver callback
 ;                   ECX         size
 ;                   DX          packet type
-;                   DS:SI   source address
+;                   DS:SI       source address
 ;                   ES          data selector
 ;       BX          Protocol handle
 RegisterNetProtocol     MACRO
@@ -1256,13 +1388,13 @@ RegisterPppDriver       MACRO
 ; IN  BX        PROTOCOL HANDLE
 ; IN  FS:ESI    LOGICAL ADDRESS
 ; OUT NC        SUCCESS
-; OUT BX    DRIVER HANDLE
+; OUT BX        DRIVER HANDLE
 GetNetDriver    MACRO
     OldOsGate get_net_driver_nr
                         ENDM
 
 ; IN  BX        PROTOCOL HANDLE
-; IN  ECX           SIZE
+; IN  ECX       SIZE
 ; IN  DS:ESI    DEST ADDRESS
 ; OUT ES:EDI    DATA BUFFER TO USE
 ; OUT NC        SUCCESS
@@ -1278,7 +1410,7 @@ IsNetAddressValid       MACRO
                         ENDM
 
 ; IN  BX        PROTOCOL HANDLE
-; IN  ECX           SIZE
+; IN  ECX       SIZE
 ; IN  DS:ESI    DEST ADDRESS
 ; IN  ES        DATA
 ; OUT NC        SUCCESS
@@ -1462,151 +1594,19 @@ ListenUdpPort   MACRO
     OldOsGate listen_udp_port_nr
             ENDM
 
-;;;;;;;;;;;;; DOS ;;;;;;;;;;;;;;;;;;;
-
-;       EAX     ANTAL BYTE
-;       NC      EDX     LINEAR BASE ADDRESS
-;       CY      AL FELORSAK
-AllocateDosLinear       MACRO
-    OldOsGate allocate_dos_linear_nr
-                    ENDM
-
-;       EDX     LINEAR BASE ADDRESS
-;       CY      AL FELORSAK
-FreeDosLinear   MACRO
-    OldOsGate free_dos_linear_nr
-                    ENDM
-
-;       EAX     NEW SIZE
-;       EDX     LINEAR BASE ADDRESS
-;       CY      AL FELORSAK
-ResizeDosLinear MACRO
-    OldOsGate resize_dos_linear_nr
-                    ENDM
-
-;       EAX     ANTAL BYTE
-;       EDX ST™RSTA BLOCK
-AvailableDosLinear      MACRO
-    OldOsGate available_dos_linear_nr
-                    ENDM
-
-QueryXms    MACRO
-    OldOsGate query_xms_nr
-                    ENDM
-
-QueryDpmi       MACRO
-    OldOsGate query_dpmi_nr
-                    ENDM
-
-QueryDpmi16     MACRO
-    OldOsGate query_dpmi16_nr
-                    ENDM
-
-;       BX              OFFSET I BIOS SEGMENT
-;       AL              DATA
-GetBiosData     MACRO
-    OldOsGate get_bios_data_nr
-                    ENDM
-
-;       BX              OFFSET I BIOS SEGMENT
-;       AL              DATA
-SetBiosData     MACRO
-    OldOsGate set_bios_data_nr
-                    ENDM
-
-;       BX              OFFSET I BIOS SEGMENT
-;       ES:DI       HANDLER ADDRESS
-HookGetBiosData MACRO
-    OldOsGate hook_get_bios_data_nr
-                    ENDM
-
-;       BX              OFFSET I BIOS SEGMENT
-;       ES:DI       HANDLER ADDRESS
-HookSetBiosData MACRO
-    OldOsGate hook_set_bios_data_nr
-                    ENDM
-
-; IN  BX        File handle
-; IN  DS:(E)SI  Program name
-; IN  ES:(E)DI  Command line
-LoadDosExe      MACRO
-    OldOsGate load_dos_exe_nr
-                    ENDM
-
-;       ES:DI       HANDLER ADDRESS
-HookLoadDosExe  MACRO
-    OldOsGate hook_load_dos_exe_nr
-                    ENDM
-
-;       ES:DI       Handle address
-HookShiftKeys   MACRO
-    OldOsGate hook_shift_keys_nr
-                    ENDM
-
-;       AL      Scan code
-ProcessKeyScan  MACRO
-    OldOsGate process_key_scan_nr
-                    ENDM
-
-;       AX      Keyboard state
-SetKeyboardState    MACRO
-    OldOsGate set_keyboard_state_nr
-                    ENDM
-
-;       AL = CHAR OR EXTENDED CHAR
-ReadKeyboardSerial      MACRO
-    OldOsGate read_keyboard_serial_nr
-                    ENDM
-
-;       NC          CHAR IN BUFFER
-;       CY          BUFFER EMPTY
-PollKeyboardSerial      MACRO
-    OldOsGate poll_keyboard_serial_nr
-                    ENDM
-
-;       ES:EDI      ADDRESS TILL '$' TERMINERAD STRŽNG
-WriteDosString  MACRO
-    OldOsGate write_dos_string_nr
-                    ENDM
-
-;       BX              PSP SEGMENT
-GetPsp  MACRO
-    OldOsGate get_psp_nr
-                    ENDM
-
-;       BX              PSP SEGMENT
-SetPsp  MACRO
-    OldOsGate set_psp_nr
-                    ENDM
-
-EnterDpmi       MACRO
-    OldOsGate enter_dpmi_nr
-                    ENDM
-
-EnterDos16      MACRO
-    OldOsGate enter_dos16_nr
-                    ENDM
-
-EnterDos32      MACRO
-    OldOsGate enter_dos32_nr
-                    ENDM
-
-;       DS:BX       DEVICE HEADER
-;       CX              DEVICE SIZE
-;       DS:SI       DEVICE READ
-;       DS:DI       DEVICE WRITE
-;       DX              DEVICE SEGMENT
-RegisterDevice  MACRO
-    OldOsGate register_device_nr
-                    ENDM
-
-;       ES:EDI      FILENAME
-;       AL              DRIVE IN / OUT
-CheckDevice     MACRO
-    OldOsGate check_device_nr
-                    ENDM
-
 ;;;;;;;;;;;;;; APP ;;;;;;;;;;;;;;;;;;
+
+;       ES:DI   Swap callback
+;       AL  Swap level (0 = highest priority, 15 = lowest priority)
+RegisterSwapProc    MACRO
+    OldOsGate register_swap_proc_nr
+                    ENDM
+
+;       IN  EAX     Table name
+;       OUT ES      Table selector
+GetAcpiTable    MACRO
+    OldOsGate get_acpi_table_nr
+                    ENDM
 
 ; IN  BX    Thread #
 ; OUT BX    Thread sel
