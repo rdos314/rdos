@@ -1656,7 +1656,7 @@ load_ne_done:
 	pop esi
 	pop es
 	pop ds
-	ret
+	retf32
 load_ne	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1942,7 +1942,7 @@ init	PROC far
 	mov ax,DLL_HANDLE16
 	RegisterHandle
 ;
-	mov di,OFFSET load_ne
+	mov edi,OFFSET load_ne
 	HookLoadDosExe
 ;
 	mov di,OFFSET open_app

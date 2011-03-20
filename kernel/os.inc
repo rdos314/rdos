@@ -1281,15 +1281,15 @@ HookSetBiosData MACRO
                     ENDM
 
 ; IN  BX        File handle
-; IN  DS:(E)SI  Program name
-; IN  ES:(E)DI  Command line
+; IN  DS:ESI    Program name
+; IN  ES:EDI    Command line
 LoadDosExe      MACRO
-    OldOsGate load_dos_exe_nr
+    OsGate load_dos_exe_nr
                     ENDM
 
-;       ES:DI       HANDLER ADDRESS
+;       ES:EDI       HANDLER ADDRESS
 HookLoadDosExe  MACRO
-    OldOsGate hook_load_dos_exe_nr
+    OsGate hook_load_dos_exe_nr
                     ENDM
 
 ;       ES:DI       Handle address
