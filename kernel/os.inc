@@ -1233,15 +1233,27 @@ AvailableDosLinear      MACRO
                     ENDM
 
 QueryXms    MACRO
-    OldOsGate query_xms_nr
+    OsGate query_xms_nr
                     ENDM
 
 QueryDpmi       MACRO
-    OldOsGate query_dpmi_nr
+    OsGate query_dpmi_nr
                     ENDM
 
 QueryDpmi16     MACRO
-    OldOsGate query_dpmi16_nr
+    OsGate query_dpmi16_nr
+                    ENDM
+
+EnterDpmi       MACRO
+    OsGate enter_dpmi_nr
+                    ENDM
+
+EnterDos16      MACRO
+    OsGate enter_dos16_nr
+                    ENDM
+
+EnterDos32      MACRO
+    OsGate enter_dos32_nr
                     ENDM
 
 ;       BX              OFFSET I BIOS SEGMENT
@@ -1319,18 +1331,6 @@ GetPsp  MACRO
 ;       BX              PSP SEGMENT
 SetPsp  MACRO
     OldOsGate set_psp_nr
-                    ENDM
-
-EnterDpmi       MACRO
-    OldOsGate enter_dpmi_nr
-                    ENDM
-
-EnterDos16      MACRO
-    OldOsGate enter_dos16_nr
-                    ENDM
-
-EnterDos32      MACRO
-    OldOsGate enter_dos32_nr
                     ENDM
 
 ;       DS:BX       DEVICE HEADER

@@ -568,7 +568,7 @@ query_xms       PROC far
     or al,al
     jne not_xms_inst
     mov al,80h
-    ret
+    retf32
 not_xms_inst:
     cmp al,10h
     jne not_xms_entry
@@ -577,9 +577,9 @@ not_xms_inst:
     mov bx,ds:xms_handler_seg
     mov [bp].vm_es,bx
     mov bx,OFFSET xmm_handler - OFFSET xmm_device_begin
-    ret
+    retf32
 not_xms_entry:
-    ret
+    retf32
 query_xms       ENDP
 
 
@@ -671,7 +671,7 @@ init_xms    PROC near
     mov edi,OFFSET query_xms_name
     xor cl,cl
     mov ax,query_xms_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov edi,OFFSET delete_handle
     mov ax,XMS_HANDLE

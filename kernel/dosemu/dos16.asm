@@ -1210,7 +1210,7 @@ enter_psp_ok:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 enter_dos16     ENDP
 
 
@@ -1239,7 +1239,7 @@ init_dos16      PROC near
     mov edi,OFFSET enter_dos16_name
     xor cl,cl
     mov ax,enter_dos16_nr
-    RegisterOldOsGate
+    RegisterOsGate
     ret
 init_dos16      ENDP
 
