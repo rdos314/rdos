@@ -76,16 +76,6 @@ ems_int:
         retf
 emm_device_end:
 
-emm_read        PROC far
-        stc
-        ret
-emm_read        ENDP
-
-emm_write       PROC far
-        stc
-        ret
-emm_write       ENDP
-
 ems_name        DB 'Ems Handler',0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -451,8 +441,6 @@ init_ems        PROC near
         mov ds,ax
         mov bx,OFFSET emm_device_begin
         mov cx,OFFSET emm_device_end - OFFSET emm_device_begin
-        mov si,OFFSET emm_read
-        mov di,OFFSET emm_write
         RegisterDosDevice
 ;
         mov bx,SEG data

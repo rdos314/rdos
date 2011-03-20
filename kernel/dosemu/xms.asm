@@ -614,16 +614,6 @@ xmm_int:
     retf
 xmm_device_end:
 
-xmm_read    PROC far
-    stc
-    ret
-xmm_read    ENDP
-
-xmm_write       PROC far
-    stc
-    ret
-xmm_write       ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -643,8 +633,6 @@ init_xms    PROC near
     mov ds,ax
     mov bx,OFFSET xmm_device_begin
     mov cx,OFFSET xmm_device_end - OFFSET xmm_device_begin
-    mov si,OFFSET xmm_read
-    mov di,OFFSET xmm_write
     RegisterDosDevice
 ;
     mov ax,SEG data

@@ -1023,7 +1023,7 @@ con_io  PROC near
     push edi
     mov edx,ecx
     mov esi,edi
-    mov ax,dosdev_process_sel
+    mov ax,std_dev_process_sel
     mov ds,ax
 con_io_loop:
     ReadKeyboard
@@ -1192,11 +1192,6 @@ init_device_process     PROC far
     mov ds,ax
     mov ds:con_buf_start,OFFSET con_buf
     mov ds:con_buf_end,OFFSET con_buf
-;
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET con_device
-;    OpenFile
 ;
     popa
     pop ds
