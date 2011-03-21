@@ -1274,14 +1274,14 @@ SetOptions      MACRO
 ; IN  DX    Process descriptor
 ; OUT BX    Process handle
 CreateProcHandle    MACRO
-    OldOsGate create_proc_handle_nr
+    OsGate create_proc_handle_nr
                     ENDM
 
 ; IN  BX    Process handle
 ; OUT AX    Lib sel
 ; OUT DX    Process descriptor
 DerefProcHandle MACRO
-    OldOsGate deref_proc_handle_nr
+    OsGate deref_proc_handle_nr
                     ENDM
 
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;

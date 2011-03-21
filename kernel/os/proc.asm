@@ -160,7 +160,7 @@ create_proc_handle      PROC far
 ;       
     pop cx
     pop ds
-    ret
+    retf32
 create_proc_handle  Endp    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -194,7 +194,7 @@ deref_proc_handle       PROC far
 deref_proc_handle_done:
     pop ebx
     pop ds
-    ret
+    retf32
 deref_proc_handle   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -563,13 +563,13 @@ init_thread     PROC near
     mov di,OFFSET create_proc_handle_name
     xor cl,cl
     mov ax,create_proc_handle_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET deref_proc_handle
     mov di,OFFSET deref_proc_handle_name
     xor cl,cl
     mov ax,deref_proc_handle_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET free_proc_handle
     mov di,OFFSET free_proc_handle_name
