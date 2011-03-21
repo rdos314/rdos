@@ -208,6 +208,9 @@ void RdosHookTerminateProcess(__rdos_hook_callback *callb_proc);
 void RdosHookCreateThread(__rdos_hook_callback *callb_proc);
 void RdosHookTerminateThread(__rdos_hook_callback *callb_proc);
 
+void RdosHookOpenApp(__rdos_hook_callback *callb_proc);
+void RdosHookCloseApp(__rdos_hook_callback *callb_proc);
+
 void RdosHookState(__rdos_hook_state_callback *callb_proc);
 
 void RdosSendEoi(int irq);
@@ -693,6 +696,14 @@ void RdosRegisterHandle(short int signature, __rdos_handle_delete_callback *dele
 
 #pragma aux RdosHookTerminateThread = \
     OsGate_hook_terminate_thread \
+    parm [es edi];
+
+#pragma aux RdosHookOpenApp = \
+    OsGate_hook_open_app \
+    parm [es edi];
+
+#pragma aux RdosHookCloseApp = \
+    OsGate_hook_close_app \
     parm [es edi];
 
 #pragma aux RdosHookState = \

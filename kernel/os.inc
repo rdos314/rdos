@@ -1236,38 +1236,38 @@ CloneApp    MACRO
 
 ; IN  ES    Module selector
 SetModule       MACRO
-    OldOsGate set_module_nr
+    OsGate set_module_nr
                     ENDM
 
 ResetModule     MACRO
-    OldOsGate reset_module_nr
+    OsGate reset_module_nr
                     ENDM
 
 ; IN  ES    Module selector
 CreateModule    MACRO
-    OldOsGate create_module_nr
+    OsGate create_module_nr
                     ENDM
 
 ; IN  ES    Module selector
 FreeModule      MACRO
-    OldOsGate free_module_nr
+    OsGate free_module_nr
                     ENDM
 
 ; IN  BX    Module handle
 ; OUT BX    Lib sel
 DerefModuleHandle       MACRO
-    OldOsGate deref_module_handle_nr
+    OsGate deref_module_handle_nr
                     ENDM
 
 ; IN  BX    Lib sel
 ; OUT BX    Module handle
 AliasModuleHandle       MACRO
-    OldOsGate alias_module_handle_nr
+    OsGate alias_module_handle_nr
                     ENDM
 
 ; IN  ES    Options selector
 SetOptions      MACRO
-    OldOsGate set_options_nr
+    OsGate set_options_nr
                     ENDM
 
 ; IN  AX    Lib sel

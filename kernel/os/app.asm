@@ -135,43 +135,43 @@ init_app    PROC near
     mov di,OFFSET set_module_name
     xor cl,cl
     mov ax,set_module_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET reset_module
     mov di,OFFSET reset_module_name
     xor cl,cl
     mov ax,reset_module_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET create_module
     mov di,OFFSET create_module_name
     xor cl,cl
     mov ax,create_module_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET free_module
     mov di,OFFSET free_module_name
     xor cl,cl
     mov ax,free_module_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET deref_module_handle
     mov di,OFFSET deref_module_handle_name
     xor cl,cl
     mov ax,deref_module_handle_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET alias_module_handle
     mov di,OFFSET alias_module_handle_name
     xor cl,cl
     mov ax,alias_module_handle_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET set_options
     mov di,OFFSET set_options_name
     xor cl,cl
     mov ax,set_options_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET get_exe_name
     mov di,OFFSET get_exe_name_name
@@ -647,7 +647,7 @@ set_module      PROC far
     pop ebx
     pop ax
     pop ds
-    ret
+    retf32
 set_module      ENDP
 
     
@@ -703,7 +703,7 @@ reset_mod_handle_ok:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 reset_module    ENDP
 
     
@@ -766,7 +766,7 @@ create_module_done:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 create_module   ENDP
 
     
@@ -854,7 +854,7 @@ free_module_done:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 free_module     ENDP
 
     
@@ -990,7 +990,7 @@ set_options     PROC far
 
 set_options_done:
     pop ds
-    ret
+    retf32
 set_options     ENDP
 
     
@@ -1267,7 +1267,7 @@ deref_module_handle  Proc far
 deref_module_done:    
     pop ax
     pop ds    
-    ret
+    retf32
 deref_module_handle  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1302,7 +1302,7 @@ alias_module_handle  Proc far
     pop cx
     pop ax
     pop ds
-    ret
+    retf32
 alias_module_handle  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
