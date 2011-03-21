@@ -1222,20 +1222,16 @@ HookLoadExe     MACRO
                     ENDM
 
 OpenApp MACRO
-    OldOsGate open_app_nr
-                    ENDM
-
-ChainApp    MACRO
-    OldOsGate chain_app_nr
+    OsGate open_app_nr
                     ENDM
 
 CloseApp    MACRO
-    OldOsGate close_app_nr
+    OsGate close_app_nr
                     ENDM
 
 ;    ES     Clone selector
 CloneApp    MACRO
-    OldOsGate clone_app_nr
+    OsGate clone_app_nr
                     ENDM
 
 ; IN  ES    Module selector

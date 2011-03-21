@@ -105,19 +105,19 @@ init_app    PROC near
     mov di,OFFSET open_app_name
     xor cl,cl
     mov ax,open_app_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET close_app
     mov di,OFFSET close_app_name
     xor cl,cl
     mov ax,close_app_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET clone_app
     mov di,OFFSET clone_app_name
     xor cl,cl
     mov ax,clone_app_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_open_app
     mov di,OFFSET hook_open_app_name
@@ -510,7 +510,7 @@ open_app    PROC far
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 open_app    ENDP
 
     
@@ -600,7 +600,7 @@ close_app_ldt:
     mov es:tss_ldt,bx
     lldt bx
     sti
-    ret
+    retf32
 close_app       ENDP
 
     
@@ -1230,7 +1230,7 @@ clone_app       PROC far
 caDone:
     pop eax
     pop ds
-    ret
+    retf32
 clone_app       ENDP
 
 
