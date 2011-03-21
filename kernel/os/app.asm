@@ -43,8 +43,8 @@ app_data_seg    STRUC
 open_app_hooks      DB ?
 close_app_hooks     DB ?
 
-open_app_arr        DW 2*8 DUP(?)
-close_app_arr       DW 2*8 DUP(?)
+open_app_arr        DD 2*8 DUP(?)
+close_app_arr       DD 2*8 DUP(?)
 
 app_data_seg    ENDS
 
@@ -123,13 +123,13 @@ init_app    PROC near
     mov di,OFFSET hook_open_app_name
     xor cl,cl
     mov ax,hook_open_app_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET hook_close_app
     mov di,OFFSET hook_close_app_name
     xor cl,cl
     mov ax,hook_close_app_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov si,OFFSET set_module
     mov di,OFFSET set_module_name
@@ -313,7 +313,7 @@ init_app    ENDP
 ;
 ;           DESCRIPTION:    Register callback for open app
 ;
-;           PARAMETERS:         ES:DI       CALLBACK ADDRESS
+;           PARAMETERS:     ES:EDI       CALLBACK ADDRESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -328,16 +328,16 @@ hook_open_app   PROC far
     mov al,ds:open_app_hooks
     mov bl,al
     xor bh,bh
-    shl bx,2
+    shl bx,3
     add bx,OFFSET open_app_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc al
     mov ds:open_app_hooks,al
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_open_app   ENDP
 
     
@@ -348,7 +348,7 @@ hook_open_app   ENDP
 ;
 ;           DESCRIPTION:    Register callback for close app
 ;
-;           PARAMETERS:         ES:DI       CALLBACK ADDRESS
+;           PARAMETERS:     ES:EDI       CALLBACK ADDRESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -363,16 +363,16 @@ hook_close_app  PROC far
     mov al,ds:close_app_hooks
     mov bl,al
     xor bh,bh
-    shl bx,2
+    shl bx,3
     add bx,OFFSET close_app_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc al
     mov ds:close_app_hooks,al
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_close_app  ENDP
 
     
@@ -440,11 +440,11 @@ trap_open_app_loop:
     push ds
     push bx
     push cx
-    call dword ptr [bx]
+    call fword ptr [bx]
     pop cx
     pop bx
     pop ds
-    add bx,4
+    add bx,8
     dec cl
     jnz trap_open_app_loop
 
@@ -548,11 +548,11 @@ trap_close_app_loop:
     push ds
     push bx
     push cx
-    call dword ptr [bx]
+    call fword ptr [bx]
     pop cx
     pop bx
     pop ds
-    add bx,4
+    add bx,8
     dec cl
     jnz trap_close_app_loop
 

@@ -879,7 +879,7 @@ load_elf_done:
 	pop fs
 	pop es
 	pop ds
-	ret
+	retf32
 load_elf	Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -898,7 +898,7 @@ open_app	Proc far
     mov ds,ds:p_app_sel
     mov ds:app_mem_blocks,0
 	pop ds
-	ret
+	retf32
 open_app	Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -911,7 +911,7 @@ open_app	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_app	Proc far
-	ret
+	retf32
 close_app	Endp
 
 PAGE
@@ -1236,13 +1236,13 @@ init	PROC far
 	mov ds,ax
 	mov es,ax
 ;
-	mov di,OFFSET load_elf
+	mov edi,OFFSET load_elf
 	HookLoadExe
 ;
-	mov di,OFFSET open_app
+	mov edi,OFFSET open_app
 	HookOpenApp
 ;
-	mov di,OFFSET close_app
+	mov edi,OFFSET close_app
 	HookCloseApp
 ;
 	popa

@@ -1259,7 +1259,7 @@ open_app    Proc far
 ;
     pop ax
     pop ds
-    ret
+    retf32
 open_app    Endp
 
 
@@ -1276,7 +1276,7 @@ close_app       Proc far
     call reset_find_sel
     call unload_program
     call free_app_mem
-    ret
+    retf32
 close_app       Endp
 
 
@@ -1314,10 +1314,10 @@ init    PROC far
     mov ax,get_psp_sel_nr
     RegisterBimodalUserGate
 ;
-    mov di,OFFSET open_app
+    mov edi,OFFSET open_app
     HookOpenApp
 ;
-    mov di,OFFSET close_app
+    mov edi,OFFSET close_app
     HookCloseApp
 ;
     mov edi,OFFSET init_process

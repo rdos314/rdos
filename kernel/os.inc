@@ -1204,6 +1204,90 @@ CloneHandleMem  MACRO
     OsGate clone_handle_mem_nr
                     ENDM
 
+;;;;;;;;;;;;;; Application / process  ;;;;;;;;;;;;;;;;;;
+
+;       ES:EDI       ADDRESS TO CALLBACK
+HookOpenApp     MACRO
+    OsGate hook_open_app_nr
+                    ENDM
+
+;       ES:EDI       ADDRESS TO CALLBACK
+HookCloseApp    MACRO
+    OsGate hook_close_app_nr
+                    ENDM
+
+;       ES:EDI       HANDLER ADDRESS
+HookLoadExe     MACRO
+    OsGate hook_load_exe_nr
+                    ENDM
+
+OpenApp MACRO
+    OldOsGate open_app_nr
+                    ENDM
+
+ChainApp    MACRO
+    OldOsGate chain_app_nr
+                    ENDM
+
+CloseApp    MACRO
+    OldOsGate close_app_nr
+                    ENDM
+
+;    ES     Clone selector
+CloneApp    MACRO
+    OldOsGate clone_app_nr
+                    ENDM
+
+; IN  ES    Module selector
+SetModule       MACRO
+    OldOsGate set_module_nr
+                    ENDM
+
+ResetModule     MACRO
+    OldOsGate reset_module_nr
+                    ENDM
+
+; IN  ES    Module selector
+CreateModule    MACRO
+    OldOsGate create_module_nr
+                    ENDM
+
+; IN  ES    Module selector
+FreeModule      MACRO
+    OldOsGate free_module_nr
+                    ENDM
+
+; IN  BX    Module handle
+; OUT BX    Lib sel
+DerefModuleHandle       MACRO
+    OldOsGate deref_module_handle_nr
+                    ENDM
+
+; IN  BX    Lib sel
+; OUT BX    Module handle
+AliasModuleHandle       MACRO
+    OldOsGate alias_module_handle_nr
+                    ENDM
+
+; IN  ES    Options selector
+SetOptions      MACRO
+    OldOsGate set_options_nr
+                    ENDM
+
+; IN  AX    Lib sel
+; IN  DX    Process descriptor
+; OUT BX    Process handle
+CreateProcHandle    MACRO
+    OldOsGate create_proc_handle_nr
+                    ENDM
+
+; IN  BX    Process handle
+; OUT AX    Lib sel
+; OUT DX    Process descriptor
+DerefProcHandle MACRO
+    OldOsGate deref_proc_handle_nr
+                    ENDM
+
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
 ;       EAX     Bytes
@@ -1339,7 +1423,45 @@ PollKeyboardSerial      MACRO
     OsGate poll_keyboard_serial_nr
                     ENDM
 
+;;;;;;;;;; Environment ;;;;;;;;;;;;;
+
+; OUT BX    Env sys sel
+LockSysEnv      MACRO
+    OldOsGate lock_sys_env_nr
+            ENDM
+
+UnlockSysEnv    MACRO
+    OldOsGate unlock_sys_env_nr
+            ENDM
+
+; OUT BX    Env process sel
+LockProcEnv     MACRO
+    OldOsGate lock_proc_env_nr
+            ENDM
+
+UnlockProcEnv   MACRO
+    OldOsGate unlock_proc_env_nr
+            ENDM
+
 ;;;;;;;;;; Network ;;;;;;;;;;;;;
+
+;       ES:DI   Swap callback
+;       AL  Swap level (0 = highest priority, 15 = lowest priority)
+RegisterSwapProc    MACRO
+    OldOsGate register_swap_proc_nr
+                    ENDM
+
+;       IN  EAX     Table name
+;       OUT ES      Table selector
+GetAcpiTable    MACRO
+    OldOsGate get_acpi_table_nr
+                    ENDM
+
+; IN  BX    Thread #
+; OUT BX    Thread sel
+ThreadToSel     MACRO
+    OldOsGate thread_to_sel_nr
+            ENDM
 
 ;       AL          class id
 ;       CX          Size of address
@@ -1584,125 +1706,6 @@ QueryUdp    MACRO
 ListenUdpPort   MACRO
     OldOsGate listen_udp_port_nr
             ENDM
-
-;;;;;;;;;;;;;; APP ;;;;;;;;;;;;;;;;;;
-
-;       ES:DI   Swap callback
-;       AL  Swap level (0 = highest priority, 15 = lowest priority)
-RegisterSwapProc    MACRO
-    OldOsGate register_swap_proc_nr
-                    ENDM
-
-;       IN  EAX     Table name
-;       OUT ES      Table selector
-GetAcpiTable    MACRO
-    OldOsGate get_acpi_table_nr
-                    ENDM
-
-; IN  BX    Thread #
-; OUT BX    Thread sel
-ThreadToSel     MACRO
-    OldOsGate thread_to_sel_nr
-            ENDM
-
-; OUT BX    Env sys sel
-LockSysEnv      MACRO
-    OldOsGate lock_sys_env_nr
-            ENDM
-
-UnlockSysEnv    MACRO
-    OldOsGate unlock_sys_env_nr
-            ENDM
-
-; OUT BX    Env process sel
-LockProcEnv     MACRO
-    OldOsGate lock_proc_env_nr
-            ENDM
-
-UnlockProcEnv   MACRO
-    OldOsGate unlock_proc_env_nr
-            ENDM
-
-;       ES:DI       ADDRESS TO CALLBACK
-HookOpenApp     MACRO
-    OldOsGate hook_open_app_nr
-                    ENDM
-
-;       ES:DI       ADDRESS TO CALLBACK
-HookCloseApp    MACRO
-    OldOsGate hook_close_app_nr
-                    ENDM
-
-;       ES:DI       HANDLER ADDRESS
-HookLoadExe     MACRO
-    OldOsGate hook_load_exe_nr
-                    ENDM
-
-OpenApp MACRO
-    OldOsGate open_app_nr
-                    ENDM
-
-ChainApp    MACRO
-    OldOsGate chain_app_nr
-                    ENDM
-
-CloseApp    MACRO
-    OldOsGate close_app_nr
-                    ENDM
-
-;    ES     Clone selector
-CloneApp    MACRO
-    OldOsGate clone_app_nr
-                    ENDM
-
-; IN  ES    Module selector
-SetModule       MACRO
-    OldOsGate set_module_nr
-                    ENDM
-
-ResetModule     MACRO
-    OldOsGate reset_module_nr
-                    ENDM
-
-; IN  ES    Module selector
-CreateModule    MACRO
-    OldOsGate create_module_nr
-                    ENDM
-
-; IN  ES    Module selector
-FreeModule      MACRO
-    OldOsGate free_module_nr
-                    ENDM
-; IN  BX    Module handle
-; OUT BX    Lib sel
-DerefModuleHandle       MACRO
-    OldOsGate deref_module_handle_nr
-                    ENDM
-
-; IN  BX    Lib sel
-; OUT BX    Module handle
-AliasModuleHandle       MACRO
-    OldOsGate alias_module_handle_nr
-                    ENDM
-
-; IN  ES    Options selector
-SetOptions      MACRO
-    OldOsGate set_options_nr
-                    ENDM
-
-; IN  AX    Lib sel
-; IN  DX    Process descriptor
-; OUT BX    Process handle
-CreateProcHandle    MACRO
-    OldOsGate create_proc_handle_nr
-                    ENDM
-
-; IN  BX    Process handle
-; OUT AX    Lib sel
-; OUT DX    Process descriptor
-DerefProcHandle MACRO
-    OldOsGate deref_proc_handle_nr
-                    ENDM
 
 ;;;;;;;;;;;; FOCUS ;;;;;;;;;;;;;
 

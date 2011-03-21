@@ -39,7 +39,7 @@ INCLUDE system.inc
 data    SEGMENT byte public 'DATA'
 
 load_exe_hooks  DB ?
-load_exe_arr    DW 2*16 DUP(?)
+load_exe_arr    DD 2*16 DUP(?)
 
 data    ENDS
 
@@ -57,7 +57,7 @@ code    SEGMENT byte public 'CODE'
 ;
 ;           DESCRIPTION:    Add hook for LoadExe
 ;
-;           PARAMETERS:         ES:DI       Callback
+;           PARAMETERS:     ES:EDI       Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -72,16 +72,16 @@ hook_load_exe   PROC far
     mov al,ds:load_exe_hooks
     mov bl,al
     xor bh,bh
-    shl bx,2
+    shl bx,3
     add bx,OFFSET load_exe_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc al
     mov ds:load_exe_hooks,al
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_load_exe   ENDP
 
 
@@ -114,15 +114,21 @@ load_exe_file_loop:
     push ax
     push cx
 ;
+    xor ecx,ecx
+    mov cx,cs
+    push ecx
+    mov cx,OFFSET load_exe_file_ret
+    push ecx
+;    
     push bx
     mov bx,ax
     mov eax,fs:[bx]
+    mov ecx,fs:[bx+4]
     pop bx
 ;
-    push cs
-    push OFFSET load_exe_file_ret
+    push ecx
     push eax
-    retf
+    retf32
 
 load_exe_file_ret:
     pop cx

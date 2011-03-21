@@ -581,11 +581,11 @@ load_dos_exe_file_loop:
     push ax
     push cx
 ;
-    xor eax,eax
-    mov ax,cs
-    push eax
-    mov ax,OFFSET load_dos_exe_ret
-    push eax
+    xor ecx,ecx
+    mov cx,cs
+    push ecx
+    mov cx,OFFSET load_dos_exe_ret
+    push ecx
 ;
     push bx
     mov bx,ax
@@ -654,7 +654,7 @@ load_dos_exe_fail:
     stc
 
 load_dos_exe_done:
-    ret
+    retf32
 load_dos_exe    ENDP
 
 
@@ -894,7 +894,7 @@ init_dos_exec   PROC near
     mov ax,load_dos_exe_nr
     RegisterOsGate
 ;
-    mov di,OFFSET load_dos_exe
+    mov edi,OFFSET load_dos_exe
     HookLoadExe
 ;
     pop ds

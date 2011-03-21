@@ -1836,7 +1836,7 @@ get_resource	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_app	Proc far
-	ret
+	retf32
 open_app	Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1879,7 +1879,7 @@ unload_loop:
 	jnz unload_loop
 
 close_app_done:
-	ret
+	retf32
 close_app	Endp
 
 PAGE
@@ -1941,10 +1941,10 @@ init	PROC far
 	mov di,OFFSET load_ne
 	HookLoadDosExe
 ;
-	mov di,OFFSET open_app
+	mov edi,OFFSET open_app
 	HookOpenApp
 ;
-	mov di,OFFSET close_app
+	mov edi,OFFSET close_app
 	HookCloseApp
 ;
 	mov si,OFFSET demand_load
