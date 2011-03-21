@@ -77,9 +77,6 @@ key_code    DW ?
 vk_code     DB ?
 scan_code       DB ?
 
-shift_hooks         DB ?
-shift_hook_arr  DW 2*16 DUP(?)
-
 data    ENDS
 
     .386p
@@ -88,39 +85,6 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;       Name:           HookShiftKeys
-;
-;       Purpose:        Hook change in shift-key state
-;
-;       Parameters:         ES:DI   Change callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_shift_keys_name    DB 'Hook Shift Keys', 0
-
-hook_shift_keys Proc far
-    push ds
-    push ax
-    push bx
-    mov ax,SEG data
-    mov ds,ax
-    mov al,ds:shift_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,2
-    add bx,OFFSET shift_hook_arr
-    mov [bx],di
-    mov [bx+2],es
-    inc al
-    mov ds:shift_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    ret
-hook_shift_keys Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -414,7 +378,7 @@ poll_keyboard_serial    PROC far
 poll_key_serial_end:
     pop ax
     pop ds
-    ret
+    retf32
 poll_keyboard_serial    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -449,7 +413,7 @@ key_serial_wait:
 key_serial_end:
     pop bx
     pop ds
-    ret
+    retf32
 read_keyboard_serial    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -863,29 +827,10 @@ set_keyboard_state      PROC far
     mov ds,bx
     mov ds:shift_states,ax
 ;
-    mov cl,ds:shift_hooks
-    or cl,cl
-    je shift_hook_done
-;
-    mov bx,OFFSET shift_hook_arr
-
-shift_hook_loop:
-    push ds
-    push es
-    pushad
-    call dword ptr [bx]
-    popad
-    pop es
-    pop ds
-    add bx,4
-    dec cl
-    jnz shift_hook_loop
-
-shift_hook_done:
     pop cx
     pop bx
     pop ds
-    ret
+    retf32
 set_keyboard_state      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1357,29 +1302,23 @@ init_keyboard   PROC near
     mov ax,put_keyboard_code_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET hook_shift_keys
-    mov edi,OFFSET hook_shift_keys_name
-    xor cl,cl
-    mov ax,hook_shift_keys_nr
-    RegisterOldOsGate
-;
     mov esi,OFFSET read_keyboard_serial
     mov edi,OFFSET read_keyboard_serial_name
     xor cl,cl
     mov ax,read_keyboard_serial_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET poll_keyboard_serial
     mov edi,OFFSET poll_keyboard_serial_name
     xor cl,cl
     mov ax,poll_keyboard_serial_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET set_keyboard_state
     mov edi,OFFSET set_keyboard_state_name
     xor cl,cl
     mov ax,set_keyboard_state_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov ax,SEG data
     mov ds,ax

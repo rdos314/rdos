@@ -955,7 +955,7 @@ write_dos_string_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 write_dos_string    ENDP
 
     
@@ -3264,7 +3264,7 @@ init_video      PROC near
     mov edi,OFFSET write_dos_string_name
     xor cl,cl
     mov ax,write_dos_string_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov ax,cs
     mov ds,ax

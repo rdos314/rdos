@@ -1311,35 +1311,32 @@ RegisterDosDevice  MACRO
     OsGate register_dos_device_nr
                     ENDM
 
-;       ES:DI       Handle address
-HookShiftKeys   MACRO
-    OldOsGate hook_shift_keys_nr
+;       ES:EDI      Adress to '$' terminated string
+WriteDosString  MACRO
+    OsGate write_dos_string_nr
                     ENDM
+
+;;;;;;;;;;;;; Keyboard ;;;;;;;;;;;;;;;;;;;
 
 ;       AL      Scan code
 ProcessKeyScan  MACRO
-    OldOsGate process_key_scan_nr
+    OsGate process_key_scan_nr
                     ENDM
 
 ;       AX      Keyboard state
 SetKeyboardState    MACRO
-    OldOsGate set_keyboard_state_nr
+    OsGate set_keyboard_state_nr
                     ENDM
 
 ;       AL = CHAR OR EXTENDED CHAR
 ReadKeyboardSerial      MACRO
-    OldOsGate read_keyboard_serial_nr
+    OsGate read_keyboard_serial_nr
                     ENDM
 
 ;       NC          CHAR IN BUFFER
 ;       CY          BUFFER EMPTY
 PollKeyboardSerial      MACRO
-    OldOsGate poll_keyboard_serial_nr
-                    ENDM
-
-;       ES:EDI      ADDRESS TILL '$' TERMINERAD STRŽNG
-WriteDosString  MACRO
-    OldOsGate write_dos_string_nr
+    OsGate poll_keyboard_serial_nr
                     ENDM
 
 ;;;;;;;;;; Network ;;;;;;;;;;;;;
