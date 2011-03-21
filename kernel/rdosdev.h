@@ -227,6 +227,11 @@ THandleHeader *RdosAllocateHandle(short int signature, int size);
 void RdosFreeHandle(THandleHeader *handle_data);
 THandleHeader *RdosDerefHandle(short int signature, int handle);
 void RdosRegisterHandle(short int signature, __rdos_handle_delete_callback *delete_proc);
+
+int RdosLockSysEnv();
+void RdosUnlockSysEnv();
+int RdosLockProcEnv();
+void RdosUnlockProcEnv();
  
 /* 32-bit compact memory model (device-drivers) */
 
@@ -765,6 +770,20 @@ void RdosRegisterHandle(short int signature, __rdos_handle_delete_callback *dele
 #pragma aux RdosRegisterHandle = \
     OsGate_register_handle \
     parm [ax] [es edi];
+
+#pragma aux RdosLockSysEnv = \
+    OsGate_lock_sys_env \
+    value [ebx];
+
+#pragma aux RdosUnlockSysEnv = \
+    OsGate_unlock_sys_env;
+
+#pragma aux RdosLockProcEnv = \
+    OsGate_lock_proc_env \
+    value [ebx];
+
+#pragma aux RdosUnlockProcEnv = \
+    OsGate_unlock_proc_env;
 
 #ifdef __cplusplus
 }

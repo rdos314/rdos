@@ -201,7 +201,7 @@ lock_sys_env    Proc far
     mov bx,ds:env_sys_raw_sel
 ;
     pop ds
-    ret
+    retf32
 lock_sys_env    Endp
    
 
@@ -226,7 +226,7 @@ unlock_sys_env    Proc far
 ;
     pop bx
     pop ds
-    ret
+    retf32
 unlock_sys_env    Endp
    
 
@@ -252,7 +252,7 @@ lock_proc_env    Proc far
     mov bx,ds:env_proc_raw_sel
 ;
     pop ds
-    ret
+    retf32
 lock_proc_env    Endp
    
 
@@ -277,7 +277,7 @@ unlock_proc_env    Proc far
 ;
     pop bx
     pop ds
-    ret
+    retf32
 unlock_proc_env    Endp
    
 

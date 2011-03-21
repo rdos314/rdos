@@ -1423,20 +1423,20 @@ PollKeyboardSerial      MACRO
 
 ; OUT BX    Env sys sel
 LockSysEnv      MACRO
-    OldOsGate lock_sys_env_nr
+    OsGate lock_sys_env_nr
             ENDM
 
 UnlockSysEnv    MACRO
-    OldOsGate unlock_sys_env_nr
+    OsGate unlock_sys_env_nr
             ENDM
 
 ; OUT BX    Env process sel
 LockProcEnv     MACRO
-    OldOsGate lock_proc_env_nr
+    OsGate lock_proc_env_nr
             ENDM
 
 UnlockProcEnv   MACRO
-    OldOsGate unlock_proc_env_nr
+    OsGate unlock_proc_env_nr
             ENDM
 
 ;;;;;;;;;; Network ;;;;;;;;;;;;;
