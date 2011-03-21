@@ -1172,7 +1172,7 @@ init_local_sel  PROC far
     mov ds:key_emul_thread,0
     mov ds:key_int_seg,0E000h
     mov ds:key_int_offs,9*4
-    ret
+    retf32
 init_local_sel  ENDP
 
     
@@ -1223,7 +1223,7 @@ init_keyboard   PROC near
     mov edi,OFFSET init_keyb_thread
     HookInitTasking
 ;
-    mov di,OFFSET init_local_sel
+    mov edi,OFFSET init_local_sel
     HookEnableFocus
 ;
     mov edi,OFFSET get_vm_key

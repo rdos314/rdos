@@ -2777,7 +2777,7 @@ lost_focus_hook PROC far
 
 lost_focus_hook_switched:
     pop ds
-    ret
+    retf32
 lost_focus_hook Endp
 
 
@@ -2807,7 +2807,7 @@ got_focus_hook  PROC far
 
 got_focus_hook_switched:
     pop ds
-    ret
+    retf32
 got_focus_hook  Endp
 
 
@@ -3049,7 +3049,7 @@ init_focus      PROC far
     mov ax,video_local_sel
     mov ds,ax
     mov ds:v_handle,0
-    ret
+    retf32
 init_focus      Endp
 
 
@@ -3086,13 +3086,13 @@ init_video      PROC near
     mov edi,OFFSET init_thread
     HookTerminateProcess
 ;
-    mov di,OFFSET init_focus
+    mov edi,OFFSET init_focus
     HookEnableFocus
 ;
-    mov di,OFFSET lost_focus_hook
+    mov edi,OFFSET lost_focus_hook
     HookLostFocus
 ;
-    mov di,OFFSET got_focus_hook
+    mov edi,OFFSET got_focus_hook
     HookGotFocus
 ;
     mov esi,OFFSET register_video_mode

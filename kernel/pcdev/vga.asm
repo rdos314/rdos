@@ -142,7 +142,7 @@ init_focus	PROC far
 	mov ax,3
 	SetVideoMode
 	pop ax
-	ret
+	retf32
 init_focus	Endp
 
 
@@ -162,7 +162,7 @@ init	PROC far
 	mov ds,ax
 	mov es,ax
 ;
-	mov di,OFFSET init_focus
+	mov edi,OFFSET init_focus
 	HookEnableFocus
 ;
 	call init_text_mode

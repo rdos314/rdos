@@ -1439,6 +1439,48 @@ UnlockProcEnv   MACRO
     OsGate unlock_proc_env_nr
             ENDM
 
+;;;;;;;;;;;; Focus ;;;;;;;;;;;;;
+
+;       ES:EDI       Address to callback
+HookEnableFocus MACRO
+    OsGate hook_enable_focus_nr
+                    ENDM
+
+;       ES:EDI       Address to callback
+HookLostFocus   MACRO
+    OsGate hook_lost_focus_nr
+                    ENDM
+
+;       ES:EDI       Address to callback
+HookGotFocus    MACRO
+    OsGate hook_got_focus_nr
+                    ENDM
+
+;       AX          Focus thread
+GetFocusThread  MACRO
+    OldOsGate get_focus_thread_nr
+                    ENDM
+
+;       BX          Thread
+;   AL      Switch key
+GetThreadFocusKey     MACRO
+    OldOsGate get_thread_focus_key_nr
+                        ENDM
+
+;       EAX         ANTAL BYTES
+;       EDX         BAS ADDRESS
+AllocateFocusLinear     MACRO
+    OldOsGate allocate_focus_linear_nr
+                    ENDM
+
+;       EAX         ANTAL BYTES
+;       BX          LOCAL SELECTOR IN
+;       DX          FOCUS SELECTOR IN
+;       ES          LOCAL SELECTOR UT
+AllocateFixedFocusMem   MACRO
+    OldOsGate allocate_fixed_focus_mem_nr
+                    ENDM
+
 ;;;;;;;;;; Network ;;;;;;;;;;;;;
 
 ;       ES:DI   Swap callback
@@ -1702,48 +1744,6 @@ QueryUdp    MACRO
 ListenUdpPort   MACRO
     OldOsGate listen_udp_port_nr
             ENDM
-
-;;;;;;;;;;;; FOCUS ;;;;;;;;;;;;;
-
-;       ES:DI       ADDRESS TILL CALLBACK
-HookEnableFocus MACRO
-    OldOsGate hook_enable_focus_nr
-                    ENDM
-
-;       ES:DI       ADDRESS TILL CALLBACK
-HookLostFocus   MACRO
-    OldOsGate hook_lost_focus_nr
-                    ENDM
-
-;       ES:DI       ADDRESS TILL CALLBACK
-HookGotFocus    MACRO
-    OldOsGate hook_got_focus_nr
-                    ENDM
-
-;       AX          Focus thread
-GetFocusThread  MACRO
-    OldOsGate get_focus_thread_nr
-                    ENDM
-
-;       BX          Thread
-;   AL      Switch key
-GetThreadFocusKey     MACRO
-    OldOsGate get_thread_focus_key_nr
-                        ENDM
-
-;       EAX         ANTAL BYTES
-;       EDX         BAS ADDRESS
-AllocateFocusLinear     MACRO
-    OldOsGate allocate_focus_linear_nr
-                    ENDM
-
-;       EAX         ANTAL BYTES
-;       BX          LOCAL SELECTOR IN
-;       DX          FOCUS SELECTOR IN
-;       ES          LOCAL SELECTOR UT
-AllocateFixedFocusMem   MACRO
-    OldOsGate allocate_fixed_focus_mem_nr
-                    ENDM
 
 ;;;;;;;;;;;;; PCI ;;;;;;;;;;;;;;
 

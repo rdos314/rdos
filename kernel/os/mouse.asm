@@ -1517,7 +1517,7 @@ init_focus      PROC far
     mov ds,ax
     mov ds:m_counter,0
     mov ds:m_avail_obj,0
-    ret
+    retf32
 init_focus      ENDP
 
 
@@ -1586,7 +1586,7 @@ init_mouse      PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov di,OFFSET init_focus
+    mov edi,OFFSET init_focus
     HookEnableFocus
 ;
     mov edi,OFFSET init_mouse_thread

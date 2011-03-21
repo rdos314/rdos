@@ -211,6 +211,10 @@ void RdosHookTerminateThread(__rdos_hook_callback *callb_proc);
 void RdosHookOpenApp(__rdos_hook_callback *callb_proc);
 void RdosHookCloseApp(__rdos_hook_callback *callb_proc);
 
+void RdosHookEnableFocus(__rdos_hook_callback *callb_proc);
+void RdosHookLostFocus(__rdos_hook_callback *callb_proc);
+void RdosHookGotFocus(__rdos_hook_callback *callb_proc);
+
 void RdosHookState(__rdos_hook_state_callback *callb_proc);
 
 void RdosSendEoi(int irq);
@@ -709,6 +713,18 @@ void RdosUnlockProcEnv();
 
 #pragma aux RdosHookCloseApp = \
     OsGate_hook_close_app \
+    parm [es edi];
+
+#pragma aux RdosHookEnableFocus = \
+    OsGate_hook_enable_focus \
+    parm [es edi];
+
+#pragma aux RdosHookGotFocus = \
+    OsGate_hook_got_focus \
+    parm [es edi];
+
+#pragma aux RdosHookLostFocus = \
+    OsGate_hook_lost_focus \
     parm [es edi];
 
 #pragma aux RdosHookState = \
