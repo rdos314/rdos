@@ -227,9 +227,9 @@ void RdosRequestSharedIrqHandler(int irq, __rdos_irq_callback *irq_proc);
 void RdosSetupIrqDetect();
 int RdosPollIrqDetect();
 
-THandleHeader *RdosAllocateHandle(short int signature, int size);
-void RdosFreeHandle(THandleHeader *handle_data);
-THandleHeader *RdosDerefHandle(short int signature, int handle);
+struct THandleHeader *RdosAllocateHandle(short int signature, int size);
+void RdosFreeHandle(struct THandleHeader *handle_data);
+struct THandleHeader *RdosDerefHandle(short int signature, int handle);
 void RdosRegisterHandle(short int signature, __rdos_handle_delete_callback *delete_proc);
 
 int RdosLockSysEnv();
@@ -741,7 +741,7 @@ void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
     parm [eax];
 
 #pragma aux RdosIsIrqFree = \
-    OsGate_is_irq_fee \
+    OsGate_is_irq_free \
     CarryToBool \    
     parm [eax] \
     value [eax];
@@ -812,18 +812,18 @@ void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
     value [eax];
 
 #pragma aux RdosGetThreadFocusKey = \
-    OsGate_get_thread_focus_key
+    OsGate_get_thread_focus_key \
     parm [ebx] \
     value [al];
 
 #pragma aux RdosAllocateFocusLinear = \
-    OsGate_allocate_focus_linear
+    OsGate_allocate_focus_linear \
     parm [eax] \
     value [edx];
 
 #pragma aux RdosAllocateFixedFocusMem = \
     "push es" \
-    OsGate_allocate_fixed_focus_mem
+    OsGate_allocate_fixed_focus_mem \
     "pop es" \
     parm [eax] [ebx] [edx];
 
