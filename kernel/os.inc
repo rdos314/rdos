@@ -1458,27 +1458,27 @@ HookGotFocus    MACRO
 
 ;       AX          Focus thread
 GetFocusThread  MACRO
-    OldOsGate get_focus_thread_nr
+    OsGate get_focus_thread_nr
                     ENDM
 
 ;       BX          Thread
 ;   AL      Switch key
 GetThreadFocusKey     MACRO
-    OldOsGate get_thread_focus_key_nr
+    OsGate get_thread_focus_key_nr
                         ENDM
 
-;       EAX         ANTAL BYTES
-;       EDX         BAS ADDRESS
+; IN    EAX         Number of bytes
+; OUT   EDX         Base address
 AllocateFocusLinear     MACRO
-    OldOsGate allocate_focus_linear_nr
+    OsGate allocate_focus_linear_nr
                     ENDM
 
-;       EAX         ANTAL BYTES
-;       BX          LOCAL SELECTOR IN
-;       DX          FOCUS SELECTOR IN
-;       ES          LOCAL SELECTOR UT
+; IN    EAX         Number of bytes
+; IN    BX          Local selector
+; IN    DX          Focus selector
+; OUT   ES          Local selector
 AllocateFixedFocusMem   MACRO
-    OldOsGate allocate_fixed_focus_mem_nr
+     OsGate allocate_fixed_focus_mem_nr
                     ENDM
 
 ;;;;;;;;;; Network ;;;;;;;;;;;;;

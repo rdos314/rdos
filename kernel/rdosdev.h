@@ -236,6 +236,11 @@ int RdosLockSysEnv();
 void RdosUnlockSysEnv();
 int RdosLockProcEnv();
 void RdosUnlockProcEnv();
+
+int RdosGetFocusThread();
+char RdosGetThreadFocusKey(int thread);
+long RdosAllocateFocusLinear(int size);
+void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
  
 /* 32-bit compact memory model (device-drivers) */
 
@@ -800,6 +805,27 @@ void RdosUnlockProcEnv();
 
 #pragma aux RdosUnlockProcEnv = \
     OsGate_unlock_proc_env;
+
+#pragma aux RdosGetFocusThread = \
+    OsGate_get_focus_thread \
+    "movzx eax,ax" \
+    value [eax];
+
+#pragma aux RdosGetThreadFocusKey = \
+    OsGate_get_thread_focus_key
+    parm [ebx] \
+    value [al];
+
+#pragma aux RdosAllocateFocusLinear = \
+    OsGate_allocate_focus_linear
+    parm [eax] \
+    value [edx];
+
+#pragma aux RdosAllocateFixedFocusMem = \
+    "push es" \
+    OsGate_allocate_fixed_focus_mem
+    "pop es" \
+    parm [eax] [ebx] [edx];
 
 #ifdef __cplusplus
 }

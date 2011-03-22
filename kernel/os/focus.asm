@@ -86,7 +86,7 @@ get_focus_thread    PROC far
     mov ds,ax
     mov ax,ds:focus_current_thread
     pop ds
-    ret
+    retf32
 get_focus_thread    ENDP
 
 
@@ -136,7 +136,7 @@ get_thread_key_done:
     pop si
     pop cx
     pop ds
-    ret
+    retf32
 get_thread_focus_key    ENDP
 
 
@@ -162,7 +162,7 @@ allocate_focus_linear   PROC far
     mov edx,ds:focus_alloc_rel
     add ds:focus_alloc_rel,eax
     pop ds
-    ret
+    retf32
 allocate_focus_linear   ENDP
 
 
@@ -208,7 +208,7 @@ allocate_fixed_focus_mem    PROC far
     pop ecx
     pop eax
     pop ds
-    ret
+    retf32
 allocate_fixed_focus_mem    ENDP
 
 
@@ -789,25 +789,25 @@ init_focus      PROC near
     mov edi,OFFSET get_focus_thread_name
     xor cl,cl
     mov ax,get_focus_thread_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_thread_focus_key
     mov edi,OFFSET get_thread_focus_key_name
     xor cl,cl
     mov ax,get_thread_focus_key_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET allocate_focus_linear
     mov edi,OFFSET allocate_focus_linear_name
     xor cl,cl
     mov ax,allocate_focus_linear_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET allocate_fixed_focus_mem
     mov edi,OFFSET allocate_fixed_focus_mem_name
     xor cl,cl
     mov ax,allocate_fixed_focus_mem_nr
-    RegisterOldOsGate
+    RegisterOsGate
     ret
 init_focus      ENDP
 
