@@ -1338,7 +1338,7 @@ get_pci_irq  Proc far
     int 3
 
 gpiOk:    
-    ret
+    retf32
 get_pci_irq  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2773,7 +2773,7 @@ init_local_apic_done:
     mov edi,OFFSET get_pci_irq_name
     xor cl,cl
     mov ax,get_pci_irq_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     popad
     pop es
