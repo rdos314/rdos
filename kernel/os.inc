@@ -1745,109 +1745,6 @@ ListenUdpPort   MACRO
     OldOsGate listen_udp_port_nr
             ENDM
 
-;;;;;;;;;;;;; PCI ;;;;;;;;;;;;;;
-
-BiosPciInt      MACRO
-    OldOsGate bios_pci_int_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; OUT AL    Data
-ReadPciByte     MACRO
-    OldOsGate read_pci_byte_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; OUT AX    Data
-ReadPciWord     MACRO
-    OldOsGate read_pci_word_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; OUT EAX       Data
-ReadPciDword    MACRO
-    OldOsGate read_pci_dword_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; IN  AL    Data
-WritePciByte    MACRO
-    OldOsGate write_pci_byte_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; IN  AX    Data
-WritePciWord    MACRO
-    OldOsGate write_pci_word_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; IN  EAX       Data
-WritePciDword   MACRO
-    OldOsGate write_pci_dword_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  AL    Capability
-; OUT AL    Index
-FindPciCapability       MACRO
-    OldOsGate find_pci_cap_nr
-                    ENDM
-
-; IN  BH    Class
-; IN  BL    Sub class
-; IN  CH    Interface
-; IN  AX    Device number
-; OUT BH    Bus
-; OUT BL    Device
-FindPciClass    MACRO
-    OldOsGate find_pci_class_nr
-                    ENDM
-
-; IN  BH    Class
-; IN  BL    Sub class
-; IN  AX    Device number
-; OUT BH    Bus
-; OUT BL    Device
-FindPciClassAll MACRO
-    OldOsGate find_pci_class_all_nr
-                    ENDM
-
-; IN  CX    Device ID
-; IN  DX    Vendor ID
-; IN  AX    Device number
-; OUT BH    Bus
-; OUT BL    Device
-FindPciDevice   MACRO
-    OldOsGate find_pci_device_nr
-                    ENDM
-
-; IN  AL    Interrupt pin
-; OUT AL    Interrupt line
-GetPciIrqNr     MACRO
-    OldOsGate get_pci_irq_nr
-                    ENDM
-
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
             
 ;       ES:DI   PROCEDURE THAT INITS DISC
@@ -2243,6 +2140,109 @@ SetMouse    MACRO
 ;       DX          Max y-position
 SetMouseLimit   MACRO
     OldOsGate set_mouse_limit_nr
+                    ENDM
+
+;;;;;;;;;;;;; PCI ;;;;;;;;;;;;;;
+
+BiosPciInt      MACRO
+    OsGate bios_pci_int_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; IN  CL    Register
+; OUT AL    Data
+ReadPciByte     MACRO
+    OsGate read_pci_byte_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; IN  CL    Register
+; OUT AX    Data
+ReadPciWord     MACRO
+    OsGate read_pci_word_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; IN  CL    Register
+; OUT EAX       Data
+ReadPciDword    MACRO
+    OsGate read_pci_dword_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; IN  CL    Register
+; IN  AL    Data
+WritePciByte    MACRO
+    OsGate write_pci_byte_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; IN  CL    Register
+; IN  AX    Data
+WritePciWord    MACRO
+    OsGate write_pci_word_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; IN  CL    Register
+; IN  EAX       Data
+WritePciDword   MACRO
+    OsGate write_pci_dword_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; IN  AL    Capability
+; OUT AL    Index
+FindPciCapability       MACRO
+    OsGate find_pci_cap_nr
+                    ENDM
+
+; IN  BH    Class
+; IN  BL    Sub class
+; IN  CH    Interface
+; IN  AX    Device number
+; OUT BH    Bus
+; OUT BL    Device
+FindPciClass    MACRO
+    OsGate find_pci_class_nr
+                    ENDM
+
+; IN  BH    Class
+; IN  BL    Sub class
+; IN  AX    Device number
+; OUT BH    Bus
+; OUT BL    Device
+FindPciClassAll MACRO
+    OsGate find_pci_class_all_nr
+                    ENDM
+
+; IN  CX    Device ID
+; IN  DX    Vendor ID
+; IN  AX    Device number
+; OUT BH    Bus
+; OUT BL    Device
+FindPciDevice   MACRO
+    OsGate find_pci_device_nr
+                    ENDM
+
+; IN  AL    Interrupt pin
+; OUT AL    Interrupt line
+GetPciIrqNr     MACRO
+    OsGate get_pci_irq_nr
                     ENDM
 
 ;;;;;;;;;; POWER MANAGEMENT ;;;;;;;;;

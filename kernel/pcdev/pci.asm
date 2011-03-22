@@ -141,7 +141,7 @@ read_pci_byte   Proc far
     pop dx
     pop ecx
     pop bx
-    ret
+    retf32
 read_pci_byte   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -191,7 +191,7 @@ write_pci_byte  Proc far
     pop ecx
     pop bx
     pop eax
-    ret
+    retf32
 write_pci_byte  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -238,7 +238,7 @@ read_pci_word   Proc far
     pop dx
     pop ecx
     pop bx
-    ret
+    retf32
 read_pci_word   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -288,7 +288,7 @@ write_pci_word  Proc far
     pop ecx
     pop bx
     pop eax
-    ret
+    retf32
 write_pci_word  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -332,7 +332,7 @@ read_pci_dword  Proc far
     pop dx
     pop ecx
     pop bx
-    ret
+    retf32
 read_pci_dword  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -379,7 +379,7 @@ write_pci_dword Proc far
     pop ecx
     pop bx
     pop eax
-    ret
+    retf32
 write_pci_dword Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -402,7 +402,7 @@ get_pci_irq_name    DB 'Get Pci IRQ',0
 get_pci_irq  Proc far
     mov cl,PCI_interrupt_line
     ReadPciByte
-    ret
+    retf32
 get_pci_irq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -479,7 +479,7 @@ find_pci_device_done:
     pop dx
     pop eax
     pop ds
-    ret
+    retf32
 find_pci_device Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -560,7 +560,7 @@ find_pci_class_done:
     pop dx
     pop eax
     pop ds
-    ret
+    retf32
 find_pci_class  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -636,7 +636,7 @@ find_pci_class_all_done:
     pop dx
     pop eax
     pop ds
-    ret
+    retf32
 find_pci_class_all      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -699,7 +699,7 @@ fpcOk:
     clc
 
 fpcDone:    
-    ret
+    retf32
 find_pci_cap    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -874,11 +874,11 @@ bios_pci_int    Proc far
 ;
     add bx,bx
     call word ptr cs:[bx].pci_int_tab
-    ret
+    retf32
 
 bios_pci_failed:
     or byte ptr [bp].vm_eflags,1
-    ret
+    retf32
 bios_pci_int    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -959,67 +959,67 @@ init    Proc far
     mov edi,OFFSET bios_pci_int_name
     xor cl,cl
     mov ax,bios_pci_int_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET read_pci_byte
     mov edi,OFFSET read_pci_byte_name
     xor cl,cl
     mov ax,read_pci_byte_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET read_pci_word
     mov edi,OFFSET read_pci_word_name
     xor cl,cl
     mov ax,read_pci_word_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET read_pci_dword
     mov edi,OFFSET read_pci_dword_name
     xor cl,cl
     mov ax,read_pci_dword_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET write_pci_byte
     mov edi,OFFSET write_pci_byte_name
     xor cl,cl
     mov ax,write_pci_byte_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET write_pci_word
     mov edi,OFFSET write_pci_word_name
     xor cl,cl
     mov ax,write_pci_word_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET write_pci_dword
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET find_pci_class
     mov edi,OFFSET find_pci_class_name
     xor cl,cl
     mov ax,find_pci_class_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET find_pci_class_all
     mov edi,OFFSET find_pci_class_all_name
     xor cl,cl
     mov ax,find_pci_class_all_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET find_pci_device
     mov edi,OFFSET find_pci_device_name
     xor cl,cl
     mov ax,find_pci_device_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET find_pci_cap
     mov edi,OFFSET find_pci_cap_name
     xor cl,cl
     mov ax,find_pci_cap_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov ax,get_pci_irq_nr
     IsValidOsGate
@@ -1029,7 +1029,7 @@ init    Proc far
     mov edi,OFFSET get_pci_irq_name
     xor cl,cl
     mov ax,get_pci_irq_nr
-    RegisterOldOsGate
+    RegisterOsGate
 
 init_pci_done:
     clc
