@@ -45,32 +45,32 @@ d_class			DW ?
 ; OUT NC		Data available
 ; OUT ECX		Size (0 means do not preallocate)
 ; OUT EDX		Packet type
-d_preview			DD ?
+d_preview		DD ?,?
 
 ; IN      ECX		Size
 ; IN/OUT  ES:EDI	Data buffer
-d_receive		DD ?
+d_receive		DD ?,?
 
 ; IN  ECX		Size
-d_remove		DD ?
+d_remove		DD ?,?
 
 ; IN  ECX		Size
 ; OUT ES:EDI	Data buffer. EDI must be >= 2!
-d_get_buffer	DD ?
+d_get_buffer	DD ?,?
 
 ; IN  ECX		Size of data
 ; IN  DX		Packet type
 ; IN  DS:ESI	Dest address
 ; IN  ES		Data buffer selector
-d_send			DD ?
+d_send			DD ?,?
 
 ; OUT  DS:ESI	Node address buffer
-d_address		DD ?
+d_address		DD ?,?
 
 ; IN  ES		Data buffer selector
 ; OUT ES:ESI	Source address
 ; OUT ES:EDI	Dest address
-d_get_address	DD ?
+d_get_address	DD ?,?
 
 driver_data	ENDS
 

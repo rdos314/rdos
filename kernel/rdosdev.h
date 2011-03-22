@@ -73,6 +73,55 @@ typedef void __far (__rdos_net_prot_callback)(int size, short int packet_type, v
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_net_preview_callback)();
+
+#pragma aux __rdos_net_preview_callback "*" \
+                    parm caller \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef char* __far (__rdos_net_receive_callback)(int size, char *buf);
+
+#pragma aux __rdos_net_receive_callback "*" \
+                    parm caller [ecx] [es edi] \
+                    value struct routine [es edi] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_net_remove_callback)(int size);
+
+#pragma aux __rdos_net_remove_callback "*" \
+                    parm caller [ecx] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef char* __far (__rdos_net_get_buf_callback)(int size);
+
+#pragma aux __rdos_net_get_buf_callback "*" \
+                    parm caller [ecx] \
+                    value struct routine [es edi] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_net_send_callback)(int size, short int packet_type, void *dest_ads, int buf_sel);
+
+#pragma aux __rdos_net_send_callback "*" \
+                    parm caller [ecx] [dx] [ds esi] [es] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef char* __far (__rdos_net_address_callback)();
+
+#pragma aux __rdos_net_address_callback "*" \
+                    parm caller \
+                    value struct routine [es edi] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_net_get_address_callback)(int buf_sel);
+
+#pragma aux __rdos_net_get_address_callback "*" \
+                    parm caller [es] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 // structures
 
 struct TKernelSection
@@ -93,6 +142,17 @@ struct THandleHeader
 {
     short int sign;
     short int handle;
+};
+
+struct TNetDriverTable
+{
+    __rdos_net_preview_callback *preview_proc;
+    __rdos_net_receive_callback *receive_proc;
+    __rdos_net_remove_callback *remove_proc;
+    __rdos_net_get_buf_callback *get_buf_proc;
+    __rdos_net_send_callback *send_proc;
+    __rdos_net_address_callback *address_proc;
+    __rdos_net_get_address_callback *get_address_proc;
 };
 
 // function definitions
@@ -251,6 +311,7 @@ void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
 
 void RdosRegisterNetClass(char class_id, int ads_size, void *broadcast_ads);
 int RdosRegisterNetProtocol(int ads_size, short int packet_type, void *my_ads, __rdos_net_prot_callback *packet_callb);
+int RdosRegisterNetDriver(char class_id, int max_size, __rdos_net_driver_table *table, const char *name); 
  
 /* 32-bit compact memory model (device-drivers) */
 
@@ -850,6 +911,14 @@ int RdosRegisterNetProtocol(int ads_size, short int packet_type, void *my_ads, _
     OsGate_register_net_protocol \
     "pop ds" \
     parm [ecx] [dx] [bx esi] [es edi] \
+    value [ebx];
+
+#pragma aux RdosRegisterNetDriver = \
+    "push ds" \
+    "mov ds,dx" \
+    OsGate_register_net_protocol \
+    "pop ds" \
+    parm [al] [ecx] [dx esi] [es edi] \
     value [ebx];
 
 #ifdef __cplusplus

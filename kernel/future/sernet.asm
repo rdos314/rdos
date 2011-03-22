@@ -1261,7 +1261,7 @@ Preview	Proc far
 prev_done:
 	pop bx
 	pop ds
-	ret
+	retf32
 Preview	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1298,7 +1298,7 @@ Receive	Proc far
 	pop esi
 	pop ecx
 	pop ds
-	ret
+	retf32
 Receive	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1333,7 +1333,7 @@ remove_save:
 remove_done:
 	pop bx
 	pop ds
-	ret
+	retf32
 Remove	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1420,7 +1420,7 @@ send_done:
 	pop bx
 	pop eax
 	pop ds
-	ret
+	retf32
 Send	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1438,7 +1438,7 @@ GetAddress	Proc far
 	mov si,sernet_data_sel
 	mov ds,si
 	mov esi,OFFSET node	
-	ret
+	retf32
 GetAddress	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1457,11 +1457,11 @@ GetAddress	Endp
 DriverName	DB 'SERNET',0
 
 DispatchTable:
-	DW OFFSET Preview,		 	sernet_code_sel
-	DW OFFSET Receive,			sernet_code_sel
-	DW OFFSET Remove,			sernet_code_sel
-	DW OFFSET Send,				sernet_code_sel
-	DW OFFSET GetAddress,		sernet_code_sel
+	DD OFFSET Preview,		 	sernet_code_sel
+	DD OFFSET Receive,			sernet_code_sel
+	DD OFFSET Remove,			sernet_code_sel
+	DD OFFSET Send,				sernet_code_sel
+	DD OFFSET GetAddress,		sernet_code_sel
 
 init_net	Proc far
 	push ds
@@ -1470,9 +1470,9 @@ init_net	Proc far
 ;
 	mov ax,cs
 	mov ds,ax
-	mov si,OFFSET DispatchTable
+	mov esi,OFFSET DispatchTable
 	mov es,ax
-	mov di,OFFSET DriverName
+	mov edi,OFFSET DriverName
 	mov al,100
 	mov dx,0
 	mov ecx,512

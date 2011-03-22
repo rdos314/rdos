@@ -522,7 +522,7 @@ niNotReceive:
 niNotSend:
 
 niDone:
-	ret
+	retf32
 NetInt	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -818,7 +818,7 @@ pvDone:
 	pop eax
 	pop es
 	pop ds
-	ret
+	retf32
 Preview	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -857,7 +857,7 @@ Receive	Proc far
 ;
 	pop eax
 	pop ds
-	ret
+	retf32
 Receive	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -892,7 +892,7 @@ Remove	Proc far
 	pop eax
 	pop es
 	pop ds
-	ret
+	retf32
 Remove	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -922,7 +922,7 @@ gbSizeOk:
 	AllocateGlobalMem
 	mov edi,14
 	pop eax
-	ret
+	retf32
 GetBuffer	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -994,7 +994,7 @@ send_keep_ds:
 	pop edi
 	pop ecx
 	pop eax
-	ret
+	retf32
 Send	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1012,7 +1012,7 @@ GetAddress	Proc far
 	mov si,ether_data_sel
 	mov ds,si
 	mov esi,OFFSET EthernetAddress	
-	ret
+	retf32
 GetAddress	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1032,7 +1032,7 @@ GetAddress	Endp
 GetPktAddress	Proc far
 	mov esi,6
 	xor edi,edi
-	ret
+	retf32
 GetPktAddress	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1047,13 +1047,13 @@ GetPktAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DispTable:
-	DW OFFSET Preview,	 		ether_code_sel
-	DW OFFSET Receive,			ether_code_sel
-	DW OFFSET Remove,			ether_code_sel
-	DW OFFSET GetBuffer,		ether_code_sel
-	DW OFFSET Send,				ether_code_sel
-	DW OFFSET GetAddress,		ether_code_sel
-	DW OFFSET GetPktAddress,	ether_code_sel
+	DD OFFSET Preview,	 		ether_code_sel
+	DD OFFSET Receive,			ether_code_sel
+	DD OFFSET Remove,			ether_code_sel
+	DD OFFSET GetBuffer,		ether_code_sel
+	DD OFFSET Send,				ether_code_sel
+	DD OFFSET GetAddress,		ether_code_sel
+	DD OFFSET GetPktAddress,	ether_code_sel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1143,8 +1143,8 @@ init_pci_found:
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-	mov si,OFFSET DispTable
-	mov di,OFFSET DriverName
+	mov esi,OFFSET DispTable
+	mov edi,OFFSET DriverName
 	mov al,1
 	mov dx,0
 	mov ecx,1600

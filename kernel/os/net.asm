@@ -437,7 +437,7 @@ send_arp_driver_loop:
     mov ecx,ebp
     push fs
     mov fs,ds:[bx]
-    call fs:d_get_buffer
+    call fword ptr fs:d_get_buffer
     pop fs
 ;
     mov ah,ds:class_id
@@ -460,7 +460,7 @@ send_arp_driver_loop:
     mov fs,ds:[bx]
 ;
     push ds
-    call fs:d_address
+    call fword ptr fs:d_address
     rep movs byte ptr es:[edi],ds:[esi]
     pop ds
 ;       
@@ -486,7 +486,7 @@ send_arp_driver_loop:
     mov ecx,ebp
     xor di,di
     mov dx,806h
-    call fs:d_send
+    call fword ptr fs:d_send
     pop ds
     pop fs
     pop esi
@@ -603,7 +603,7 @@ receive_arp_check_dest:
     mov al,gs:ar_data.arp_prot_len
     add cx,ax
     add cx,ax
-    call fs:d_get_buffer
+    call fword ptr fs:d_get_buffer
 ;
     mov bp,di
     mov cx,SIZE arp_data
@@ -613,7 +613,7 @@ receive_arp_check_dest:
 ;
     movzx ecx,gs:ar_data.arp_hw_len
     push ds
-    call fs:d_address
+    call fword ptr fs:d_address
     rep movs byte ptr es:[edi],ds:[esi]
     pop ds
 ;
@@ -640,7 +640,7 @@ receive_arp_check_dest:
     add cx,ax
     add cx,ax
     mov dx,806h
-    call fs:d_send
+    call fword ptr fs:d_send
     pop es
     jmp receive_arp_done
 
@@ -671,7 +671,7 @@ receive_arp_forward_req:
     mov al,gs:ar_data.arp_prot_len
     add cx,ax
     add cx,ax
-    call fs:d_get_buffer
+    call fword ptr fs:d_get_buffer
 ;
     mov bp,di
     mov cx,SIZE arp_data
@@ -681,7 +681,7 @@ receive_arp_forward_req:
 ;
     movzx ecx,gs:ar_data.arp_hw_len
     push ds
-    call fs:d_address
+    call fword ptr fs:d_address
     rep movs byte ptr es:[edi],ds:[esi]
     pop ds
 ;
@@ -708,7 +708,7 @@ receive_arp_forward_req:
     add cx,ax
     add cx,ax
     mov dx,806h
-    call fs:d_send
+    call fword ptr fs:d_send
     pop es
     jmp receive_arp_done
 
@@ -742,7 +742,7 @@ receive_arp_forward_driver_loop:
     mov al,gs:ar_data.arp_prot_len
     add cx,ax
     add cx,ax
-    call fs:d_get_buffer
+    call fword ptr fs:d_get_buffer
 ;
     mov si,OFFSET ar_data
     mov cx,SIZE arp_data
@@ -752,7 +752,7 @@ receive_arp_forward_driver_loop:
     push ds
     push cx
     push esi
-    call fs:d_address
+    call fword ptr fs:d_address
     rep movs byte ptr es:[edi],ds:[esi]
     pop esi
     pop cx
@@ -779,7 +779,7 @@ receive_arp_forward_driver_loop:
     add cx,ax
     add cx,ax
     mov dx,806h
-    call fs:d_send
+    call fword ptr fs:d_send
     pop es    
 
 receive_arp_forward_driver_next:
@@ -980,7 +980,7 @@ ReceiveData     Proc near
 
 receive_data_loop:
     ClearSignal
-    call fs:d_preview
+    call fword ptr fs:d_preview
     jc receive_data_done
     mov edi,ecx
 ;
@@ -994,13 +994,13 @@ receive_data_loop:
     mov edi,OFFSET ar_data
     add eax,edi
     AllocateSmallGlobalMem
-    call fs:d_receive
-    call fs:d_remove
+    call fword ptr fs:d_receive
+    call fword ptr fs:d_remove
     jmp receive_data_handle_arp
 
 receive_data_arp_rec:
-    call fs:d_receive
-    call fs:d_remove
+    call fword ptr fs:d_receive
+    call fword ptr fs:d_remove
 ;
     push ds
     mov esi,edi
@@ -1068,8 +1068,8 @@ receive_data_prot_loop:
     xor di,di
 
 receive_data_norm_rec:
-    call fs:d_receive
-    call fs:d_remove
+    call fword ptr fs:d_receive
+    call fword ptr fs:d_remove
     call fword ptr gs:p_callback
     xor ax,ax
     mov es,ax
@@ -1084,12 +1084,12 @@ receive_data_remove:
     jz receive_data_norm_remove
 ;
     mov ecx,edi
-    call fs:d_remove
+    call fword ptr fs:d_remove
     jmp receive_data_loop
 
 receive_data_norm_remove:
-    call fs:d_receive
-    call fs:d_remove
+    call fword ptr fs:d_receive
+    call fword ptr fs:d_remove
     FreeMem
     jmp receive_data_loop
 
@@ -1132,10 +1132,10 @@ net_thread_loop:
 ;
 ;       Purpose:        Register net driver
 ;
-;       Parameters:         AL          Class
+;       Parameters:     AL          Class
 ;                       ECX         Max data size
-;                       DS:SI   Dispatch table
-;                       ES:DI   Driver name
+;                       DS:ESI      Dispatch table
+;                       ES:EDI      Driver name
 ;
 ;       Returns:        BX          Driver handle
 ;
@@ -1147,20 +1147,20 @@ register_net_driver     Proc far
     push ds
     push fs
     push ax
-    push cx
-    push si
+    push ecx
+    push esi
 ;
     push es
-    push di
+    push edi
 ;
     push eax
     mov eax,SIZE driver_data
     AllocateSmallGlobalMem
     pop eax
     mov es:d_packet_size,ecx
-    mov di,OFFSET d_preview
-    mov cx,SIZE driver_data - OFFSET d_preview
-    rep movsb
+    mov edi,OFFSET d_preview
+    mov ecx,SIZE driver_data - OFFSET d_preview
+    rep movs byte ptr es:[edi],ds:[esi]
 ;
     mov bx,SEG data
     mov ds,bx
@@ -1187,8 +1187,7 @@ register_driver_insert:
     mov bx,es
 
 register_driver_done:
-;
-    pop di
+    pop edi
     pop es
 ;
     mov ax,cs
@@ -1198,12 +1197,12 @@ register_driver_done:
     mov ax,20
     CreateThread
 ;
-    pop si
-    pop cx
+    pop esi
+    pop ecx
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 register_net_driver     Endp
 
         
@@ -1286,7 +1285,7 @@ add_net_source_address  Proc far
 ;
     mov fs,bp
     push esi
-    call fs:d_get_address
+    call fword ptr fs:d_get_address
     mov edi,esi
     pop esi
     call InsertAddress
@@ -1483,7 +1482,7 @@ get_buf_arp_done:
 get_net_buffer_do:
     mov ds,ax
     mov fs,ds:prot_driver
-    call fs:d_get_buffer
+    call fword ptr fs:d_get_buffer
     clc
 
 get_net_buf_done:
@@ -1588,7 +1587,7 @@ send_start:
     mov esi,OFFSET prot_logical_addr
     add esi,eax
     xor di,di
-    call fs:d_send
+    call fword ptr fs:d_send
     pop esi
     pop dx
 
@@ -1618,7 +1617,7 @@ send_net    Endp
 get_broadcast_buffer_name       DB 'Get Broadcast Buffer',0
 
 get_broadcast_buffer    Proc far
-    call fs:d_get_buffer
+    call fword ptr fs:d_get_buffer
     ret
 get_broadcast_buffer    Endp
 
@@ -1646,7 +1645,7 @@ send_broadcast  Proc far
     mov dx,ds:p_packet_type
     mov ds,fs:d_class
     mov esi,OFFSET broadcast_addr
-    call fs:d_send
+    call fword ptr fs:d_send
 ;
     pop esi
     pop ds
@@ -1764,7 +1763,7 @@ get_ppp_buffer  Proc far
     jz get_ppp_done
 ;
     mov fs,ax
-    call fs:d_get_buffer
+    call fword ptr fs:d_get_buffer
 
 get_ppp_done:
     pop fs
@@ -1801,7 +1800,7 @@ send_ppp    Proc far
 ;
     mov fs,ax
     xor di,di
-    call fs:d_send
+    call fword ptr fs:d_send
 
 send_ppp_done:
     pop di

@@ -372,7 +372,7 @@ NetIntNext:
 	and al,ds:IMR
 	jnz NetIntLoop
 
-	ret
+	retf32
 NetInt	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1421,7 +1421,7 @@ prev_io32_done:
 	pop bx
 	pop eax
 	pop ds
-	ret
+	retf32
 PreviewIo32	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1505,7 +1505,7 @@ prev_io16_done:
 	pop bx
 	pop ax
 	pop ds
-	ret
+	retf32
 PreviewIo16	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1595,7 +1595,7 @@ prev_io8_done:
 	pop si
 	pop bx
 	pop ax
-	ret
+	retf32
 PreviewIo8	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1659,7 +1659,7 @@ prev_mem16_done:
 	pop bx
 	pop ax
 	pop ds
-	ret
+	retf32
 PreviewMem16	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1728,7 +1728,7 @@ prev_mem8_done:
 	pop bx
 	pop ax
 	pop ds
-	ret
+	retf32
 PreviewMem8	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1927,7 +1927,7 @@ receive_io32_done:
 	pop bx
 	pop eax
 	pop ds
-	ret
+	retf32
 ReceiveIo32	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2080,7 +2080,7 @@ receive_io16_done:
 	pop bx
 	pop ax
 	pop ds
-	ret
+	retf32
 ReceiveIo16	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2212,7 +2212,7 @@ receive_io8_done:
 	pop bx
 	pop ax
 	pop ds
-	ret
+	retf32
 ReceiveIo8	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2315,7 +2315,7 @@ receive_mem16_done:
 	pop bx
 	pop ax
 	pop ds
-	ret
+	retf32
 ReceiveMem16	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2403,7 +2403,7 @@ receive_mem8_done:
 	pop bx
 	pop ax
 	pop ds
-	ret
+	retf32
 ReceiveMem8	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2455,7 +2455,7 @@ rem_io32_do:
 	pop bx
 	pop eax
 	pop ds
-	ret
+	retf32
 RemoveIo32	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2507,7 +2507,7 @@ rem_io16_do:
 	pop bx
 	pop ax
 	pop ds
-	ret
+	retf32
 RemoveIo16	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2560,7 +2560,7 @@ rem_io8_do:
 	pop bx
 	pop ax
 	pop ds
-	ret
+	retf32
 RemoveIo8	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2609,7 +2609,7 @@ rem_mem16_done:
 	pop ax
 	pop es
 	pop ds
-	ret
+	retf32
 RemoveMem16	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2658,7 +2658,7 @@ rem_mem8_do:
 	pop ax
 	pop es
 	pop ds
-	ret
+	retf32
 RemoveMem8	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2882,7 +2882,7 @@ send_io32_done:
 	pop eax
 	pop fs
 	pop ds
-	ret
+	retf32
 SendIo32	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2994,7 +2994,7 @@ send_io16_done:
 	pop eax
 	pop fs
 	pop ds
-	ret
+	retf32
 SendIo16	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3108,7 +3108,7 @@ SendIo8	Proc far
 	pop eax
 	pop fs
 	pop ds
-	ret
+	retf32
 SendIo8	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3221,7 +3221,7 @@ send_mem16_sent:
 	pop gs
 	pop fs
 	pop ds
-	ret
+	retf32
 SendMem16	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3349,7 +3349,7 @@ SendMem8	Proc far
 	pop gs
 	pop fs
 	pop ds
-	ret
+	retf32
 SendMem8	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3367,7 +3367,7 @@ GetAddress	Proc far
 	mov si,ether_data_sel
 	mov ds,si
 	mov esi,OFFSET EthernetAddress	
-	ret
+	retf32
 GetAddress	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3387,7 +3387,7 @@ GetAddress	Endp
 GetPktAddress	Proc far
 	mov esi,6
 	xor edi,edi
-	ret
+	retf32
 GetPktAddress	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3402,44 +3402,44 @@ GetPktAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Mem8Table:
-	DW OFFSET PreviewMem8,	 	ether_code_sel
-	DW OFFSET ReceiveMem8,		ether_code_sel
-	DW OFFSET RemoveMem8,		ether_code_sel
-	DW OFFSET SendMem8,			ether_code_sel
-	DW OFFSET GetAddress,		ether_code_sel
-	DW OFFSET GetPktAddress,	ether_code_sel
+	DD OFFSET PreviewMem8,	 	ether_code_sel
+	DD OFFSET ReceiveMem8,		ether_code_sel
+	DD OFFSET RemoveMem8,		ether_code_sel
+	DD OFFSET SendMem8,			ether_code_sel
+	DD OFFSET GetAddress,		ether_code_sel
+	DD OFFSET GetPktAddress,	ether_code_sel
 
 Mem16Table:
-	DW OFFSET PreviewMem16,		ether_code_sel
-	DW OFFSET ReceiveMem16,		ether_code_sel
-	DW OFFSET RemoveMem16,		ether_code_sel
-	DW OFFSET SendMem16,		ether_code_sel
-	DW OFFSET GetAddress,		ether_code_sel
-	DW OFFSET GetPktAddress,	ether_code_sel
+	DD OFFSET PreviewMem16,		ether_code_sel
+	DD OFFSET ReceiveMem16,		ether_code_sel
+	DD OFFSET RemoveMem16,		ether_code_sel
+	DD OFFSET SendMem16,		ether_code_sel
+	DD OFFSET GetAddress,		ether_code_sel
+	DD OFFSET GetPktAddress,	ether_code_sel
 
 Io8Table:
-	DW OFFSET PreviewIo8,	 	ether_code_sel
-	DW OFFSET ReceiveIo8,		ether_code_sel
-	DW OFFSET RemoveIo8,		ether_code_sel
-	DW OFFSET SendIo8,			ether_code_sel
-	DW OFFSET GetAddress,		ether_code_sel
-	DW OFFSET GetPktAddress,	ether_code_sel
+	DD OFFSET PreviewIo8,	 	ether_code_sel
+	DD OFFSET ReceiveIo8,		ether_code_sel
+	DD OFFSET RemoveIo8,		ether_code_sel
+	DD OFFSET SendIo8,			ether_code_sel
+	DD OFFSET GetAddress,		ether_code_sel
+	DD OFFSET GetPktAddress,	ether_code_sel
 
 Io16Table:
-	DW OFFSET PreviewIo16,		ether_code_sel
-	DW OFFSET ReceiveIo16,		ether_code_sel
-	DW OFFSET RemoveIo16,		ether_code_sel
-	DW OFFSET SendIo16,			ether_code_sel
-	DW OFFSET GetAddress,		ether_code_sel
-	DW OFFSET GetPktAddress,	ether_code_sel
+	DD OFFSET PreviewIo16,		ether_code_sel
+	DD OFFSET ReceiveIo16,		ether_code_sel
+	DD OFFSET RemoveIo16,		ether_code_sel
+	DD OFFSET SendIo16,			ether_code_sel
+	DD OFFSET GetAddress,		ether_code_sel
+	DD OFFSET GetPktAddress,	ether_code_sel
 
 Io32Table:
-	DW OFFSET PreviewIo32,	 	ether_code_sel
-	DW OFFSET ReceiveIo32,		ether_code_sel
-	DW OFFSET RemoveIo32,		ether_code_sel
-	DW OFFSET SendIo32,			ether_code_sel
-	DW OFFSET GetAddress,		ether_code_sel
-	DW OFFSET GetPktAddress,	ether_code_sel
+	DD OFFSET PreviewIo32,	 	ether_code_sel
+	DD OFFSET ReceiveIo32,		ether_code_sel
+	DD OFFSET RemoveIo32,		ether_code_sel
+	DD OFFSET SendIo32,			ether_code_sel
+	DD OFFSET GetAddress,		ether_code_sel
+	DD OFFSET GetPktAddress,	ether_code_sel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3487,25 +3487,25 @@ init_net	Proc far
 
 init_net_mem:
 	test ds:Mode,WORD_MODE
-	mov si,OFFSET Mem16Table
+	mov esi,OFFSET Mem16Table
 	jnz init_net_register
-	mov si,OFFSET Mem8Table
+	mov esi,OFFSET Mem8Table
 	jmp init_net_register
 
 init_net_io:
 	test ds:Mode,DWORD_MODE
-	mov si,OFFSET Io32Table
+	mov esi,OFFSET Io32Table
 	jnz init_net_register
 	test ds:Mode,WORD_MODE
-	mov si,OFFSET Io16Table
+	mov esi,OFFSET Io16Table
 	jnz init_net_register
-	mov si,OFFSET Io8Table
+	mov esi,OFFSET Io8Table
 
 init_net_register:
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-	mov di,OFFSET DriverName
+	mov edi,OFFSET DriverName
 	mov al,1
 	mov dx,0
 	mov ecx,1600

@@ -1505,11 +1505,11 @@ RegisterNetProtocol     MACRO
 
 ;       AL          CLASS
 ;       ECX         MAX DATA SIZE
-;       DS:SI       DISPATCH TABLE
-;       ES:DI       DRIVER NAME
+;       DS:ESI      DISPATCH TABLE
+;       ES:EDI      DRIVER NAME
 ;       BX          HANDLE
 RegisterNetDriver       MACRO
-    OldOsGate register_net_driver_nr
+    OsGate register_net_driver_nr
                         ENDM
 
 ;       DS:SI       DISPATCH TABLE

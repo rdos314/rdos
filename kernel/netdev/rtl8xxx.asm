@@ -569,7 +569,7 @@ preview_done:
     pop ebx
     pop fs
     pop ds
-    retf
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -622,7 +622,7 @@ receive_do:
     pop bx
     pop fs
     pop ds
-    retf
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -675,7 +675,7 @@ remove_do:
     pop cx
     pop ebx
     pop ds
-    retf
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -704,7 +704,7 @@ gbSizeOk:
     AllocateGlobalMem
     mov edi,14
     pop eax
-    ret
+    retf32
 GetBuffer       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -851,7 +851,7 @@ ssNoPrev:
     pop bx
     pop eax
     pop ds
-    retf
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -868,14 +868,14 @@ GetAddress1  Proc far
     mov si,ether_data_sel
     mov ds,si
     mov esi,OFFSET EthernetAddress  
-    ret
+    retf32
 GetAddress1     Endp
 
 GetAddress2  Proc far
     mov si,ether_data2_sel
     mov ds,si
     mov esi,OFFSET EthernetAddress  
-    ret
+    retf32
 GetAddress2     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -895,7 +895,7 @@ GetAddress2     Endp
 GetPktAddress   Proc far
     mov esi,6
     xor edi,edi
-    ret
+    retf32
 GetPktAddress   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -910,22 +910,22 @@ GetPktAddress   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DispTable1:
-    DW OFFSET Preview1,             SEG code
-    DW OFFSET Receive1,             SEG code
-    DW OFFSET Remove1,              SEG code
-    DW OFFSET GetBuffer,        SEG code
-    DW OFFSET Send1,            SEG code
-    DW OFFSET GetAddress1,      SEG code
-    DW OFFSET GetPktAddress,    SEG code
+    DD OFFSET Preview1,         SEG code
+    DD OFFSET Receive1,         SEG code
+    DD OFFSET Remove1,          SEG code
+    DD OFFSET GetBuffer,        SEG code
+    DD OFFSET Send1,            SEG code
+    DD OFFSET GetAddress1,      SEG code
+    DD OFFSET GetPktAddress,    SEG code
 
 DispTable2:
-    DW OFFSET Preview2,             SEG code
-    DW OFFSET Receive2,             SEG code
-    DW OFFSET Remove2,              SEG code
-    DW OFFSET GetBuffer,        SEG code
-    DW OFFSET Send2,            SEG code
-    DW OFFSET GetAddress2,      SEG code
-    DW OFFSET GetPktAddress,    SEG code
+    DD OFFSET Preview2,         SEG code
+    DD OFFSET Receive2,         SEG code
+    DD OFFSET Remove2,          SEG code
+    DD OFFSET GetBuffer,        SEG code
+    DD OFFSET Send2,            SEG code
+    DD OFFSET GetAddress2,      SEG code
+    DD OFFSET GetPktAddress,    SEG code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1002,8 +1002,8 @@ init_pci1_found:
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov si,OFFSET DispTable1
-    mov di,OFFSET DriverName1
+    mov esi,OFFSET DispTable1
+    mov edi,OFFSET DriverName1
     mov al,1
     mov dx,0
     mov ecx,1600
@@ -1061,8 +1061,8 @@ init_pci2_found:
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov si,OFFSET DispTable2
-    mov di,OFFSET DriverName2
+    mov esi,OFFSET DispTable2
+    mov edi,OFFSET DriverName2
     mov al,1
     mov dx,0
     mov ecx,1600
