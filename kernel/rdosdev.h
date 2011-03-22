@@ -241,6 +241,8 @@ int RdosGetFocusThread();
 char RdosGetThreadFocusKey(int thread);
 long RdosAllocateFocusLinear(int size);
 void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
+
+void RdosRegisterNetClass(char class_id, int ads_size, void *broadcast_ads);
  
 /* 32-bit compact memory model (device-drivers) */
 
@@ -826,6 +828,13 @@ void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
     OsGate_allocate_fixed_focus_mem \
     "pop es" \
     parm [eax] [ebx] [edx];
+
+#pragma aux RdosRegisterNetClass = \
+    "push ds" \
+    "mov ds,dx" \
+    OsGate_register_net_class \
+    "pop ds" \
+    parm [al] [ecx] [dx esi];
 
 #ifdef __cplusplus
 }

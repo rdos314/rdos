@@ -1483,39 +1483,21 @@ AllocateFixedFocusMem   MACRO
 
 ;;;;;;;;;; Network ;;;;;;;;;;;;;
 
-;       ES:DI   Swap callback
-;       AL  Swap level (0 = highest priority, 15 = lowest priority)
-RegisterSwapProc    MACRO
-    OldOsGate register_swap_proc_nr
-                    ENDM
-
-;       IN  EAX     Table name
-;       OUT ES      Table selector
-GetAcpiTable    MACRO
-    OldOsGate get_acpi_table_nr
-                    ENDM
-
-; IN  BX    Thread #
-; OUT BX    Thread sel
-ThreadToSel     MACRO
-    OldOsGate thread_to_sel_nr
-            ENDM
-
-;       AL          class id
+;       AL          Class id
 ;       CX          Size of address
-;       DS:SI   Broadcast address
+;       DS:ESI      Broadcast address
 RegisterNetClass    MACRO
-    OldOsGate register_net_class_nr
+    OsGate register_net_class_nr
                     ENDM
 
 ;       CX          Size of address
 ;       DX          Packet type
-;       DS:SI   My address
-;       ES:DI   receiver callback
-;                   ECX         size
-;                   DX          packet type
-;                   DS:SI       source address
-;                   ES          data selector
+;       DS:SI       My address
+;       ES:DI       receiver callback
+;                       ECX         size
+;                       DX          packet type
+;                       DS:SI       source address
+;                       ES          data selector
 ;       BX          Protocol handle
 RegisterNetProtocol     MACRO
     OldOsGate register_net_protocol_nr
@@ -1523,14 +1505,14 @@ RegisterNetProtocol     MACRO
 
 ;       AL          CLASS
 ;       ECX         MAX DATA SIZE
-;       DS:SI   DISPATCH TABLE
-;       ES:DI   DRIVER NAME
+;       DS:SI       DISPATCH TABLE
+;       ES:DI       DRIVER NAME
 ;       BX          HANDLE
 RegisterNetDriver       MACRO
     OldOsGate register_net_driver_nr
                         ENDM
 
-;       DS:SI   DISPATCH TABLE
+;       DS:SI       DISPATCH TABLE
 ;       BX          HANDLE
 RegisterPppDriver       MACRO
     OldOsGate register_ppp_driver_nr
@@ -1746,6 +1728,24 @@ ListenUdpPort   MACRO
             ENDM
 
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
+
+;       ES:DI   Swap callback
+;       AL  Swap level (0 = highest priority, 15 = lowest priority)
+RegisterSwapProc    MACRO
+    OldOsGate register_swap_proc_nr
+                    ENDM
+
+;       IN  EAX     Table name
+;       OUT ES      Table selector
+GetAcpiTable    MACRO
+    OldOsGate get_acpi_table_nr
+                    ENDM
+
+; IN  BX    Thread #
+; OUT BX    Thread sel
+ThreadToSel     MACRO
+    OldOsGate thread_to_sel_nr
+            ENDM
             
 ;       ES:DI   PROCEDURE THAT INITS DISC
 HookInitDisc    MACRO

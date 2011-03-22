@@ -848,9 +848,9 @@ get_net_driver  Endp
 ;
 ;       Purpose:        Register driver class
 ;
-;       Parameters:         AL          class id
+;       Parameters:     AL          class id
 ;                       CX          Size of address
-;                       DS:SI   Broadcast address
+;                       DS:ESI      Broadcast address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -860,9 +860,9 @@ register_net_class      Proc far
     push ds
     push es
     push bx
-    push cx
-    push si
-    push di
+    push ecx
+    push esi
+    push edi
 ;
     push eax
     mov eax,OFFSET broadcast_addr
@@ -872,8 +872,9 @@ register_net_class      Proc far
     mov es:class_id,al
     mov es:addr_len,cl
     mov es:driver_count,0
-    mov di,OFFSET broadcast_addr
-    rep movsb
+    movzx ecx,cl
+    mov edi,OFFSET broadcast_addr
+    rep movs byte ptr es:[edi],ds:[esi]
 ;
     mov bx,SEG data
     mov ds,bx
@@ -882,13 +883,13 @@ register_net_class      Proc far
     add bx,bx
     mov ds:[bx].class_arr,es    
 ;
-    pop di
-    pop si
-    pop cx
+    pop edi
+    pop esi
+    pop ecx
     pop bx
     pop es
     pop ds
-    ret
+    retf32
 register_net_class      Endp
 
         
@@ -2583,7 +2584,7 @@ init    PROC far
     mov edi,OFFSET register_net_class_name
     xor cl,cl
     mov ax,register_net_class_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET register_net_protocol
     mov edi,OFFSET register_net_protocol_name
@@ -2669,17 +2670,17 @@ init    PROC far
     mov ax,notify_ethernet_packet_nr
     RegisterOldOsGate
 ;
-    mov si,OFFSET ether_broadcast
+    mov esi,OFFSET ether_broadcast
     mov cx,6
     mov al,1
     RegisterNetClass
 ;
-    mov si,OFFSET sernet_broadcast
+    mov esi,OFFSET sernet_broadcast
     mov cx,1
     mov al,100
     RegisterNetClass
 ;
-    mov si,OFFSET internet_broadcast
+    mov esi,OFFSET internet_broadcast
     mov cx,4
     mov al,0
     RegisterNetClass
