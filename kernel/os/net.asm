@@ -1212,7 +1212,7 @@ register_net_driver     Endp
 ;
 ;       Purpose:        Register PPP driver
 ;
-;       Parameters:         DS:SI   Dispatch table
+;       Parameters:     DS:ESI   Dispatch table
 ;
 ;       Returns:        BX          Driver handle
 ;
@@ -1224,27 +1224,27 @@ register_ppp_driver     Proc far
     push ds
     push es
     push ax
-    push cx
-    push si
-    push di
+    push ecx
+    push esi
+    push edi
 ;
     push eax
     mov eax,SIZE driver_data
     AllocateSmallGlobalMem
     pop eax
     mov es:d_packet_size,ecx
-    mov di,OFFSET d_preview
-    mov cx,SIZE driver_data - OFFSET d_preview
-    rep movsb
+    mov edi,OFFSET d_preview
+    mov ecx,SIZE driver_data - OFFSET d_preview
+    rep movs byte ptr es:[edi],ds:[esi]
 ;
     mov bx,SEG data
     mov ds,bx
     mov ds:ppp_handle,es
     mov bx,es
 ;
-    pop di
-    pop si
-    pop cx
+    pop edi
+    pop esi
+    pop ecx
     pop ax
     pop es
     pop ds

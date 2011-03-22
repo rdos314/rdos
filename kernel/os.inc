@@ -1512,10 +1512,10 @@ RegisterNetDriver       MACRO
     OsGate register_net_driver_nr
                         ENDM
 
-;       DS:SI       DISPATCH TABLE
+;       DS:ESI       DISPATCH TABLE
 ;       BX          HANDLE
 RegisterPppDriver       MACRO
-    OldOsGate register_ppp_driver_nr
+    OsGate register_ppp_driver_nr
                         ENDM
 
 ; IN  BX        PROTOCOL HANDLE
