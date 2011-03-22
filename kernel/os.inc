@@ -1492,15 +1492,15 @@ RegisterNetClass    MACRO
 
 ;       CX          Size of address
 ;       DX          Packet type
-;       DS:SI       My address
-;       ES:DI       receiver callback
+;       DS:ESI      My address
+;       ES:EDI      receiver callback
 ;                       ECX         size
 ;                       DX          packet type
-;                       DS:SI       source address
+;                       DS:ESI      source address
 ;                       ES          data selector
 ;       BX          Protocol handle
 RegisterNetProtocol     MACRO
-    OldOsGate register_net_protocol_nr
+    OsGate register_net_protocol_nr
                         ENDM
 
 ;       AL          CLASS

@@ -66,6 +66,13 @@ typedef void __far (__rdos_handle_delete_callback)(int handle);
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_net_prot_callback)(int size, short int packet_type, void *ads, int selector);
+
+#pragma aux __rdos_net_prot_callback "*" \
+                    parm caller [ecx] [dx] [ds esi] [es] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 // structures
 
 struct TKernelSection
@@ -243,6 +250,7 @@ long RdosAllocateFocusLinear(int size);
 void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
 
 void RdosRegisterNetClass(char class_id, int ads_size, void *broadcast_ads);
+int RdosRegisterNetProtocol(int ads_size, short int packet_type, void *my_ads, __rdos_net_prot_callback *packet_callb);
  
 /* 32-bit compact memory model (device-drivers) */
 
@@ -835,6 +843,14 @@ void RdosRegisterNetClass(char class_id, int ads_size, void *broadcast_ads);
     OsGate_register_net_class \
     "pop ds" \
     parm [al] [ecx] [dx esi];
+
+#pragma aux RdosRegisterNetProtocol = \
+    "push ds" \
+    "mov ds,bx" \
+    OsGate_register_net_protocol \
+    "pop ds" \
+    parm [ecx] [dx] [bx esi] [es edi] \
+    value [ebx];
 
 #ifdef __cplusplus
 }

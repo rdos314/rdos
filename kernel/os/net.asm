@@ -899,13 +899,13 @@ register_net_class      Endp
 ;
 ;       Purpose:        Register net protocol
 ;
-;       Parameters:         CX          Size of address
+;       Parameters:     CX          Size of address
 ;                       DX          Packet type
-;                       DS:SI   My address
-;                       ES:DI   receiver callback
+;                       DS:ESI      My address
+;                       ES:EDI      receiver callback
 ;                           ECX         size
 ;                           DX          packet type
-;                           DS:SI   source address
+;                           DS:ESI      source address
 ;                           ES          data selector
 ;
 ;       Returns:        BX          Protocol handle
@@ -917,9 +917,9 @@ register_net_protocol_name      DB 'Register Net Protocol',0
 register_net_protocol   Proc far
     push ds
     push es
-    push cx
-    push si
-    push di
+    push ecx
+    push esi
+    push edi
     push bp
 ;
     mov bp,es
@@ -928,13 +928,14 @@ register_net_protocol   Proc far
     add ax,cx
     AllocateSmallGlobalMem
     pop eax
-    mov word ptr es:p_callback,di
-    mov word ptr es:p_callback+2,bp
+    mov es:p_callback,edi
+    mov word ptr es:p_callback+4,bp
     mov es:p_logical_addr_len,cl
     mov es:p_packet_type,dx
     mov es:p_entry_list,0
-    mov di,OFFSET p_logical_my_addr
-    rep movsb
+    movzx ecx,cl
+    mov edi,OFFSET p_logical_my_addr
+    rep movs byte ptr es:[edi],ds:[esi]
 ;
     mov ax,SEG data
     mov ds,ax
@@ -945,12 +946,12 @@ register_net_protocol   Proc far
     mov bx,es
 ;
     pop bp
-    pop di
-    pop si
-    pop cx
+    pop edi
+    pop esi
+    pop ecx
     pop es
     pop ds
-    ret
+    retf32
 register_net_protocol   Endp
 
         
@@ -1069,7 +1070,7 @@ receive_data_prot_loop:
 receive_data_norm_rec:
     call fs:d_receive
     call fs:d_remove
-    call gs:p_callback
+    call fword ptr gs:p_callback
     xor ax,ax
     mov es,ax
     jmp receive_data_loop
@@ -2590,7 +2591,7 @@ init    PROC far
     mov edi,OFFSET register_net_protocol_name
     xor cl,cl
     mov ax,register_net_protocol_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET register_net_driver
     mov edi,OFFSET register_net_driver_name
