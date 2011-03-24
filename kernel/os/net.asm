@@ -815,7 +815,7 @@ ReceivedArp     Endp
 ;
 ;       Purpose:        Get bet driver for logical address
 ;
-;       Parameters:         BX          Protocol
+;       Parameters:     BX          Protocol
 ;                       FS:ESI  Logical address to find
 ;
 ;       Returns:        NC          Success
@@ -838,7 +838,7 @@ get_net_driver  Proc far
 get_net_driver_done:    
     pop ax
     pop ds
-    ret
+    retf32
 get_net_driver  Endp
 
         
@@ -1307,7 +1307,7 @@ add_net_source_address  Endp
 ;
 ;       Purpose:        Check if network address is valid (in use)
 ;
-;       Parameters:         BX          protocol handle
+;       Parameters:     BX      protocol handle
 ;                       DS:ESI  dest address
 ;
 ;       returns:        NC      Address is valid / in use
@@ -1389,7 +1389,7 @@ is_valid_done:
     pop eax
     pop fs
     pop ds
-    ret
+    retf32
 is_net_address_valid    Endp
 
         
@@ -1399,8 +1399,8 @@ is_net_address_valid    Endp
 ;
 ;       Purpose:        Get network buffer
 ;
-;       Parameters:         BX          protocol handle
-;                       ECX         size of data
+;       Parameters:     BX      protocol handle
+;                       ECX     size of data
 ;                       DS:ESI  dest address
 ;
 ;       returns:        ES:EDI  address of data
@@ -1488,7 +1488,7 @@ get_net_buffer_do:
 get_net_buf_done:
     pop eax
     pop fs
-    ret
+    retf32
 get_net_buffer  Endp
 
         
@@ -1498,9 +1498,9 @@ get_net_buffer  Endp
 ;
 ;       Purpose:        Send data to network
 ;
-;       Parameters:         BX          protocol handle
+;       Parameters:     BX          protocol handle
 ;                       ECX         size of data
-;                       DS:ESI  dest address
+;                       DS:ESI      dest address
 ;                       ES          address of data
 ;
 ;       returns:        NC      success
@@ -1598,7 +1598,7 @@ send_done:
     pop di
     pop eax
     pop fs
-    ret
+    retf32
 send_net    Endp
 
         
@@ -1608,7 +1608,7 @@ send_net    Endp
 ;
 ;       Purpose:        Get a broadcast buffer
 ;
-;       Parameters:         FS          driver handle
+;       Parameters:     FS          driver handle
 ;                       ECX         size of data
 ;                       ES:EDI  address of data
 ;
@@ -1618,7 +1618,7 @@ get_broadcast_buffer_name       DB 'Get Broadcast Buffer',0
 
 get_broadcast_buffer    Proc far
     call fword ptr fs:d_get_buffer
-    ret
+    retf32
 get_broadcast_buffer    Endp
 
         
@@ -1628,7 +1628,7 @@ get_broadcast_buffer    Endp
 ;
 ;       Purpose:        Send broadcast message
 ;
-;       Parameters:         BX          protocol
+;       Parameters:     BX          protocol
 ;                       FS          driver handle
 ;                       ECX         size of data
 ;                       ES:EDI  address of data
@@ -1649,7 +1649,7 @@ send_broadcast  Proc far
 ;
     pop esi
     pop ds
-    ret
+    retf32
 send_broadcast  Endp
 
         
@@ -1858,7 +1858,7 @@ net_received    Endp
 ;       Purpose:        Define protocol address
 ;
 ;       Parameters:         BX          Driver handle
-;           DS:ESI  Address
+;                           DS:ESI  Address
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1881,7 +1881,7 @@ define_protocol_address Proc far
     pop ecx
     pop es
     pop ds
-    ret
+    retf32
 define_protocol_address Endp
 
 
@@ -2572,13 +2572,13 @@ init    PROC far
     mov edi,OFFSET is_net_address_valid_name
     xor cl,cl
     mov ax,is_net_address_valid_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_net_driver
     mov edi,OFFSET get_net_driver_name
     xor cl,cl
     mov ax,get_net_driver_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET register_net_class
     mov edi,OFFSET register_net_class_name
@@ -2608,31 +2608,31 @@ init    PROC far
     mov edi,OFFSET define_protocol_address_name
     xor cl,cl
     mov ax,define_protocol_addr_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_net_buffer
     mov edi,OFFSET get_net_buffer_name
     xor cl,cl
     mov ax,get_net_buffer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_net
     mov edi,OFFSET send_net_name
     xor cl,cl
     mov ax,send_net_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_broadcast_buffer
     mov edi,OFFSET get_broadcast_buffer_name
     xor cl,cl
     mov ax,get_broadcast_buffer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_broadcast
     mov edi,OFFSET send_broadcast_name
     xor cl,cl
     mov ax,send_broadcast_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET net_broadcast
     mov edi,OFFSET net_broadcast_name

@@ -71,7 +71,26 @@ StartBoot:
 	db 0EAh
 	dw OFFSET JmpBootCode
 	dw 07C0h
+
 JmpBootCode:
+    call CheckDrive
+    jnc DriveOk
+;
+    mov dl,cs:BootMedia.boot_drive_nr
+    call CheckDrive
+    jnc DriveOk
+;
+    mov dl,80h
+
+DriveLoop:
+    inc dl
+    cmp dl,8Fh
+    ja BootFail
+;    
+    call CheckDrive
+    jc DriveLoop
+
+DriveOk:
     mov cs:BootMedia.boot_drive_nr,dl
 	cli
 	mov bx,5000h
@@ -146,6 +165,27 @@ WriteAsciiz	Proc near
 WriteAsciizDone:
 	ret
 WriteAsciiz	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CheckDrive
+;
+;		DESCRIPTION:	Check if drive is usable
+;
+;		PARAMETERS;     DL      Drive
+;
+;       RETURNS:        NC      Drive ok
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDrive	Proc near
+    push ax
+    mov ah,1
+    int 13h
+    pop ax
+	ret
+CheckDrive	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -1523,7 +1523,7 @@ RegisterPppDriver       MACRO
 ; OUT NC        SUCCESS
 ; OUT BX        DRIVER HANDLE
 GetNetDriver    MACRO
-    OldOsGate get_net_driver_nr
+    OsGate get_net_driver_nr
                         ENDM
 
 ; IN  BX        PROTOCOL HANDLE
@@ -1532,14 +1532,14 @@ GetNetDriver    MACRO
 ; OUT ES:EDI    DATA BUFFER TO USE
 ; OUT NC        SUCCESS
 GetNetBuffer    MACRO
-    OldOsGate get_net_buffer_nr
+    OsGate get_net_buffer_nr
                         ENDM
 
 ; IN  BX        PROTOCOL HANDLE
 ; IN  DS:ESI    DEST ADDRESS
 ; OUT NC        SUCCESS
 IsNetAddressValid       MACRO
-    OldOsGate is_net_address_valid_nr
+    OsGate is_net_address_valid_nr
                         ENDM
 
 ; IN  BX        PROTOCOL HANDLE
@@ -1548,21 +1548,21 @@ IsNetAddressValid       MACRO
 ; IN  ES        DATA
 ; OUT NC        SUCCESS
 SendNet MACRO
-    OldOsGate send_net_nr
+    OsGate send_net_nr
                         ENDM
 
 ; IN  BX        PROTOCOL HANDLE
 ; IN  DS:ESI    ADDRESS
 DefineProtocolAddress   MACRO
-    OldOsGate define_protocol_addr_nr
+    OsGate define_protocol_addr_nr
                         ENDM
 
 ; IN  FS        Driver handle
-; IN  ECX           Size
+; IN  ECX       Size
 ; OUT ES:EDI    Data buffer to use
 ; OUT NC        Success
 GetBroadcastBuffer      MACRO
-    OldOsGate get_broadcast_buffer_nr
+    OsGate get_broadcast_buffer_nr
                         ENDM
 
 ; IN  BX        Protocol handle
@@ -1571,7 +1571,7 @@ GetBroadcastBuffer      MACRO
 ; IN  ES        Data buffer
 ; OUT NC        Success
 SendBroadcast   MACRO
-    OldOsGate send_broadcast_nr
+    OsGate send_broadcast_nr
                         ENDM
 
 ; IN  ES:DI         Callback for each driver
