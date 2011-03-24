@@ -1,0 +1,2264 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; FATBOOT.ASM
+; Second stage boot-loader for FAT12, FAT16 and FAT32
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
+
+DATA_SEG = 6000h
+MAX_IMAGES = 20
+
+boot_struc      STRUC
+
+boot_jmp                    DB ?,?,?
+boot_name                       DB 8 DUP(?)
+boot_bytes_per_sector       DW ?
+boot_sectors_per_cluster    DB ?
+boot_resv_sectors               DW ?
+boot_fats                       DB ?
+boot_root_dirs              DW ?
+boot_sectors16              DW ?
+boot_media                      DB ?
+boot_fat_sectors16              DW ?
+boot_sectors_per_cyl        DW ?
+boot_heads                      DW ?
+boot_hidden_sectors             DD ?
+boot_sectors                DD ?
+boot_fat_sectors            DD ?
+boot_ext_flags              DW ?
+boot_fs_version             DW ?
+boot_root_cluster               DD ?
+boot_info_sector            DW ?
+boot_backup_sector              DW ?
+
+boot_struc          ENDS
+
+part_struc      STRUC
+
+part_status                 DB ?
+part_start_head         DB ?
+part_start_cyl_sector   DW ?
+part_type                   DB ?
+part_end_head           DB ?
+part_end_cyl_sector         DW ?
+part_start_sector           DD ?
+part_sectors            DD ?
+
+part_struc      ENDS
+
+fat_dir_struc   STRUC
+
+fat_base        DB 8 DUP(?)
+fat_ext         DB 3 DUP(?)
+fat_attrib          DB ?
+fat_case        DB ?
+fat_cr_time_ms  DB ?
+fat_cr_time         DW ?
+fat_cr_date         DW ?
+fat_acc_date    DW ?
+fat_cluster_hi  DW ?
+fat_time        DW ?
+fat_date        DW ?
+fat_cluster         DW ?
+fat_file_size   DD ?
+
+fat_dir_struc   ENDS
+
+bios_mem_type   STRUC
+
+mem_base    DD ?, ?
+mem_size    DD ?, ?
+mem_type    DD ?
+
+bios_mem_type   ENDS
+
+
+_TEXT segment byte public use16 'CODE'
+
+    extrn init:near
+
+    .386p
+
+; make sure the first instruction is a jump to the startup-code
+
+    jmp Start
+
+ReadCount           DW 0
+RdosSectors         DW 0,0
+DriveNr             DB 80h
+DefaultBoot     DB 0
+BootSector      DD 0
+FatSector       DD 0
+RootSector      DD 0
+DataSector      DD 0
+SectorsPerFat       DD 0
+CurrentCluster      DD 0
+RootEntries     DW 0
+PartType        DB 0
+FatSize         DB 0
+SafeBoot        DB 0
+SectorsPerCluster   DW 0
+ImageSize       DD 0
+CurrFatSector       DD 0
+
+Tics        DD ?
+
+OrgTimerVect    DD ?
+OrgIdeVect1     DD ?
+OrgIdeVect2     DD ?
+
+IntFlag         DB ?
+IoBase          DW 1F0h
+DiscSubUnit     DB ?
+LbaMode         DB ?
+Precomp         DB ?
+LbaSectors      DD ?
+DiscCyls        DW ?
+DiscHeads       DW ?
+SectorsPerCyl       DW ?
+
+BootMedia       DB 0
+CurrEntry       DW ?
+MenuEntries     DW 0
+MenuArr         DW MAX_IMAGES DUP(0)
+EntryCount      DW 0
+EntryArr        DB MAX_IMAGES * 32 DUP(0)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           singel_hex
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:         AL          Value
+;                           AX          Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+singel_hex      PROC near
+hex_conv_low:
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+    add al,7
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+    add ah,7
+ok_high1:
+    add ah,30h
+    ret
+singel_hex      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteChar
+;
+;           DESCRIPTION:    Write character
+;
+;           PARAMETERS:         AL          Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteChar       PROC near
+    push ax
+    push bx
+    mov ah,0Eh
+    mov bx,7
+    int 10h
+    pop bx
+    pop ax
+    ret
+WriteChar       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteHexByte
+;
+;           DESCRIPTION:    Write hex byte on screen
+;
+;           PARAMETERS:         AL          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexByte    PROC near
+    push ax
+    mov ah,al
+    and al,0F0h
+    rol al,4
+    cmp al,0Ah
+    jb write_byte_low1
+    add al,7
+write_byte_low1:
+    add al,'0'
+    push ax
+    push bx
+    mov ah,0Eh
+    mov bx,7
+    int 10h
+    pop bx
+    pop ax
+    mov al,ah
+    and al,0Fh
+    cmp al,0Ah
+    jb write_byte_high1
+    add al,7
+write_byte_high1:
+    add al,'0'
+    push bx
+    mov ah,0Eh
+    mov bx,7
+    int 10h
+    pop bx
+    pop ax
+    ret
+WriteHexByte    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteHexWord
+;
+;           DESCRIPTION:    Write hex word on screen
+;
+;           PARAMETERS:         AX          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexWord    PROC near
+    xchg al,ah
+    call WriteHexByte
+    xchg al,ah
+    call WriteHexByte
+    ret
+WriteHexWord    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteAsciiz
+;
+;           DESCRIPTION:    Write text to screen
+;
+;           PARAMETERS:         CS:SI       Message to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteAsciiz     Proc near
+    lods byte ptr cs:[si]
+    or al,al
+    jz WriteAsciizDone
+    mov ah,0Eh
+    mov bx,7
+    int 10h
+    jmp WriteAsciiz
+WriteAsciizDone:
+    ret
+WriteAsciiz     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TimerInt
+;
+;           DESCRIPTION:    TIMER INTERRUPT
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TimerInt:
+    push eax
+    mov eax,cs:Tics
+    or eax,eax
+    jz tiDone
+;
+    dec eax
+    mov cs:Tics,eax
+
+tiDone:
+    pop eax
+    jmp cs:OrgTimerVect
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IdeInt1
+;
+;           DESCRIPTION:    IDE INTERRUPT
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdeInt1:
+    push ax
+    mov al,62h
+    out 20h,al
+    mov cs:IntFlag,1
+;    
+    mov al,66h
+    out 0A0h,al
+    pop ax
+    iret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IdeInt2
+;
+;           DESCRIPTION:    IDE INTERRUPT
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdeInt2:
+    push ax
+    mov al,62h
+    out 20h,al
+    mov cs:IntFlag,1
+;    
+    mov al,67h
+    out 0A0h,al
+    pop ax
+    iret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CheckReady
+;
+;           DESCRIPTION:    Wait for ready
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckReady      PROC near
+    push ax
+    push cx
+    push dx
+;
+    mov dx,cs:IoBase
+    add dx,7
+    xor cx,cx
+    
+CheckReadyLoop:
+    in al,dx
+    test al,80h
+    clc
+    jz CheckReadyDone
+;       
+    loop CheckReadyLoop
+    stc
+CheckReadyDone:
+    pop dx
+    pop cx
+    pop ax
+    ret
+CheckReady      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WaitDrq
+;
+;           DESCRIPTION:    Wait for data request
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitDrq Proc near
+    push ax
+    push cx
+    push dx
+;
+    mov cx,100h
+    mov dx,cs:IoBase
+    add dx,7
+    
+WaitDrqLoop:
+    in al,dx
+    test al,8
+    clc
+    jnz WaitDrqDone
+    loop WaitDrqLoop
+    stc
+WaitDrqDone:
+    pop dx
+    pop cx
+    pop ax
+    ret
+WaitDrq Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CheckStatus
+;
+;           DESCRIPTION:    Check transfer status
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckStatus     Proc near
+    push ax
+    push dx
+;
+    mov dx,cs:IoBase
+    add dx,7
+    in al,dx
+    test al,80h
+    jnz CheckStatusFail
+    test al,20h
+    jnz CheckStatusFail
+    test al,40h
+    jz CheckStatusFail
+    test al,10h
+    jz CheckStatusFail
+    test al,1
+    clc
+    jz CheckStatusDone
+;
+    mov dx,cs:IoBase    
+    add dx,1
+    in al,dx
+CheckStatusFail:
+    stc
+CheckStatusDone:
+    pop dx
+    pop ax
+    ret
+CheckStatus     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupIdeTaskFile
+;
+;           DESCRIPTION:    Setup IDE comp. task file
+;
+;           PARAMETERS:         AH          Precomp
+;                           BH          Head #
+;                           BL          Sector
+;                           CX          Number of sectors
+;                           DX          Cylinder
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupIdeTaskFile    Proc near
+    push ax
+    push bx
+    push dx
+;
+    call CheckReady
+    jc SetupIdeTaskDone
+;       
+    push dx
+    mov dx,cs:IoBase
+    inc dx
+;
+    jmp short $+2
+    mov al,ah
+    out dx,al
+    inc dx
+;
+    jmp short $+2
+    mov ax,cx
+    out dx,al
+    inc dx
+;
+    jmp short $+2
+    mov al,bl
+    out dx,al
+    inc dx
+;
+    pop ax
+    jmp short $+2
+    out dx,al
+    inc dx
+;
+    jmp short $+2
+    mov al,ah
+    out dx,al
+    inc dx
+;
+    mov al,cs:DiscSubUnit
+    shl al,4
+    or al,bh
+    or al,0A0h
+    out dx,al
+    clc
+SetupIdeTaskDone:
+    pop dx
+    pop bx
+    pop ax
+    ret
+SetupIdeTaskFile    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupLbaTaskFile
+;
+;           DESCRIPTION:    Setup LBA comp. task file
+;
+;           PARAMETERS:         AH          Precomp
+;                           CX          Number of sectors
+;                           EDX         Sector #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupLbaTaskFile    Proc near
+    push ax
+    push bx
+    push dx
+;
+    call CheckReady
+    jc SetupLbaTaskDone
+;
+    push edx
+    mov dx,cs:IoBase
+    inc dx
+;
+    jmp short $+2
+    mov al,ah
+    out dx,al
+    inc dx
+;
+    jmp short $+2
+    mov al,cl
+    out dx,al
+    inc dx
+;
+    pop ax
+    jmp short $+2
+    out dx,al
+    inc dx
+;
+    mov al,ah
+    jmp short $+2
+    out dx,al
+    inc dx
+;
+    pop ax
+    jmp short $+2
+    out dx,al
+    inc dx
+;
+    mov bl,ah
+    mov al,cs:DiscSubUnit
+    shl al,4
+    or al,bl
+    or al,0E0h
+    out dx,al
+    clc
+    
+SetupLbaTaskDone:
+    pop dx
+    pop bx
+    pop ax
+    ret
+SetupLbaTaskFile    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RunTaskFile
+;
+;           DESCRIPTION:    Run command
+;
+;           PARAMETERS:         AL          COMMAND CODE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunTaskFile     Proc near
+    push dx
+    mov dx,cs:IoBase
+    add dx,7
+    out dx,al
+
+rtfWait:
+    mov al,cs:IntFlag
+    or al,al
+    jz rtfWait
+;       
+    call CheckStatus
+    
+RunTaskFileDone:
+    pop dx
+    ret
+RunTaskFile     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadTaskFile
+;
+;           DESCRIPTION:    Read data from device
+;
+;           PARAMETERS:         AL          COMMAND CODE
+;                           CX          Number of sectors
+;                           ES:DI   Logical address of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadTaskFile    Proc near
+    push cx
+    push dx
+    push di
+;
+    mov cs:IntFlag,0
+    mov dx,cs:IoBase
+    add dx,7
+    out dx,al
+    
+ReadTaskFileInt:
+    mov al,cs:IntFlag
+    or al,al
+    jz ReadTaskFileInt
+;    
+    push cx
+    mov dx,cs:IoBase
+    mov cx,256
+    rep insw
+    pop cx
+    call CheckStatus
+    jc ReadTaskFileDone
+;       
+    loop ReadTaskFileInt
+    clc
+    
+ReadTaskFileDone:
+    pop di
+    pop dx
+    pop cx
+    ret
+ReadTaskFile    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadSector
+;
+;           DESCRIPTION:    Read data
+;
+;           PARAMETERS:         EDX         Sector #
+;                           DS:BX   Address of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadSector      Proc near
+    push es
+    pushad
+;    
+    mov ax,ds
+    mov es,ax
+    mov di,bx
+    mov cx,1
+;    
+    cmp cs:LbaMode,0
+    jz ReadIde
+
+ReadLba:
+    mov ah,cs:Precomp
+    call SetupLbaTaskFile
+    jmp ReadStart
+
+ReadIde:
+    push edx
+    mov eax,edx
+    xor edx,edx
+    movzx ecx,cs:DiscHeads
+    div ecx
+;    
+    push ax
+    mov ax,dx
+    div byte ptr cs:SectorsPerCyl
+    mov bh,al
+    mov bl,ah
+    inc bl
+    mov ah,cs:Precomp
+    pop dx
+    call SetupIdeTaskFile
+    pop edx
+
+ReadStart:
+    jc ReadDone
+;       
+    mov al,20h
+    call ReadTaskFile
+
+ReadDone:
+    popad
+    pop es
+    ret
+ReadSector      Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadFatSector
+;
+;           DESCRIPTION:    Read fat sector
+;
+;           PARAMETERS:         EDX         Sector #
+;                           DS:200  Address of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadFatSector   Proc near
+    cmp edx,cs:CurrFatSector
+    clc
+    je ReadFatSectorDone
+;
+    call ReadSector
+    mov cs:CurrFatSector,edx
+
+ReadFatSectorDone:
+    ret
+ReadFatSector   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitIrq
+;
+;           DESCRIPTION:    Init IDE IRQ
+;
+;           PARAMETERS:         DS:BX       Sector 0 buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitIrq Proc near
+    push ds
+    push es
+    push bx
+;    
+    mov ax,ds
+    mov es,ax
+    mov di,bx
+;    
+    mov cs:IntFlag,0
+    xor ax,ax
+    mov ds,ax
+    mov bx,8 SHL 2
+    mov eax,[bx]
+    mov cs:OrgTimerVect,eax
+    mov word ptr [bx],OFFSET TimerInt
+    mov [bx+2],cs
+;
+    mov bx,76h SHL 2
+    mov eax,[bx]
+    mov cs:OrgIdeVect1,eax
+    mov word ptr [bx],OFFSET IdeInt1
+    mov [bx+2],cs
+;
+    mov bx,77h SHL 2
+    mov eax,[bx]
+    mov cs:OrgIdeVect2,eax
+    mov word ptr [bx],OFFSET IdeInt2
+    mov [bx+2],cs
+;
+    mov cs:Precomp,0FFh
+    xor dx,dx
+    xor bx,bx
+    mov cx,1
+    mov ah,cs:Precomp
+    call SetupIdeTaskFile
+    jc init_irq_done
+;
+    mov al,0ECh
+    call ReadTaskFile
+    jc init_irq_done
+;
+    mov eax,es:[di+120]
+    mov cs:LbaSectors,eax
+    mov ax,word ptr es:[di+2]
+    mov cs:DiscCyls,ax
+    mov ax,es:[di+6]
+    mov cs:DiscHeads,ax
+    mov ax,es:[di+12]
+    mov cs:SectorsPerCyl,ax
+;
+    mov cs:LbaMode,1
+    mov cx,1
+    mov ah,cs:Precomp
+    xor edx,edx
+    call SetupLbaTaskFile
+    jc init_irq_done
+;
+    mov al,20h
+    call ReadTaskFile       
+    jnc init_irq_done
+;
+    mov cs:LbaMode,0
+    mov bh,0
+    mov bl,1
+    mov cx,1
+    xor dx,dx
+    call SetupIdeTaskFile
+    jc init_irq_done
+;
+    mov al,20h
+    call ReadTaskFile
+
+init_irq_done:
+    pop bx
+    pop es
+    pop ds
+    ret
+InitIrq Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NextCluster12
+;
+;           DESCRIPTION:    Find next cluster for FAT12
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NextCluster12   PROC near
+    push ebx
+    push cx
+;
+    mov edx,cs:CurrentCluster
+    mov cx,dx
+    add dx,dx
+    add dx,cx
+    mov cx,dx
+    movzx edx,dx
+    shr edx,10
+    add edx,cs:FatSector
+    and cx,3FFh
+    clc
+    rcr cx,1
+    pushf
+    mov bx,200h
+    call ReadFatSector
+    jnc nc12Locked
+    popf
+    stc
+    jmp nc12Done
+
+nc12Locked:
+    mov bx,cx
+    add bx,200h
+    popf
+    jc nc12High
+    mov cl,[bx]
+    inc bx
+    test bx,1FFh
+    jnz nc12LowOk
+    inc edx
+    mov bx,200h
+    call ReadFatSector
+    jc nc12Done
+
+nc12LowOk:
+    mov ch,[bx]
+    and cx,0FFFh
+    jmp nc12Ok
+
+nc12High:
+    mov ch,[bx]
+    and ch,0F0h
+    inc bx
+    test bx,1FFh
+    jnz nc12HighOk
+    inc edx
+    mov bx,200h
+    call ReadFatSector
+    jc nc12Done
+
+nc12HighOk:
+    mov cl,[bx]
+    rol cx,4
+nc12Ok:
+    movzx edx,cx
+    mov cs:CurrentCluster,edx
+    cmp edx,0FF8h
+    cmc
+
+nc12Done:
+    pop cx
+    pop ebx
+    ret
+NextCluster12   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NextCluster16
+;
+;           DESCRIPTION:    Find next cluster for FAT16
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NextCluster16   PROC near
+    push bx
+    push cx
+;
+    mov bx,200h
+    mov edx,cs:CurrentCluster
+    add edx,edx
+    mov cx,dx
+    shr edx,9
+    add edx,cs:FatSector
+    and cx,1FFh
+    call ReadFatSector
+    jc nc16Done
+;
+    add bx,cx
+    movzx edx,word ptr [bx]
+    mov cs:CurrentCluster,edx
+    cmp edx,0FFF8h
+    cmc
+
+nc16Done:
+    pop cx
+    pop bx
+    ret
+NextCluster16   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NextCluster32
+;
+;           DESCRIPTION:    Find next cluster for FAT32
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NextCluster32   PROC near
+    push bx
+    push cx
+;
+    mov bx,200h
+    mov edx,cs:CurrentCluster
+    shl edx,2
+    mov cx,dx
+    shr edx,9
+    add edx,cs:FatSector
+    and cx,1FFh
+    call ReadFatSector
+    jc nc32Done
+;
+    add bx,cx
+    mov edx,[bx]
+    and edx,0FFFFFFFh
+    mov cs:CurrentCluster,edx
+    cmp edx,0FFFFFF8h
+    cmc
+
+nc32Done:
+    pop cx
+    pop bx
+    ret
+NextCluster32   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NextCluster
+;
+;           DESCRIPTION:    Find next cluster
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NextCluster     Proc near
+    cmp cs:FatSize,12
+    je nextc12
+;
+    cmp cs:FatSize,16
+    je nextc16
+
+nextc32:
+    call NextCluster32
+    jmp next_cluster_done
+
+nextc16:
+    call NextCluster16
+    jmp next_cluster_done
+
+nextc12:
+    call NextCluster12
+
+next_cluster_done:
+    ret
+NextCluster     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetCurrentSector
+;
+;           DESCRIPTION:    Get current sector
+;
+;       RETURNS:    EDX     Sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetCurrentSector    Proc near
+    mov edx,cs:CurrentCluster
+    sub edx,2
+    movzx eax,cs:SectorsPerCluster
+    mul edx
+    mov edx,eax
+    add edx,cs:DataSector
+    ret
+GetCurrentSector    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CheckDirEntry
+;
+;           DESCRIPTION:    Check a directory entry for a RDOS image file
+;
+;       PARAMETERS:     DS:SI       Dir entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDirEntry   Proc near
+    push es
+    pushad
+;
+    mov ax,word ptr [si].fat_ext
+    cmp ax,'IB'
+    jne cdeDone
+;
+    mov al,[si].fat_ext+2
+    cmp al,'N'
+    jne cdeDone
+;
+    mov al,[si].fat_attrib
+    test al,10h
+    jnz cdeDone
+;
+    push cs:CurrentCluster
+;    
+    movzx edx,ds:[si].fat_cluster
+    cmp cs:FatSize,32
+    jnz cdeClustOk
+;
+    movzx eax,ds:[si].fat_cluster_hi
+    shl eax,16
+    or edx,eax
+
+cdeClustOk:       
+    mov cs:CurrentCluster,edx
+;
+    call GetCurrentSector
+    mov bx,400h
+    call ReadSector
+    mov eax,[bx]    
+    cmp eax,5A1E75D4h
+    jne cdeNotRdos
+;
+    mov cx,cs:EntryCount
+    mov di,OFFSET EntryArr
+    mov ax,cx
+    shl ax,5
+    add di,ax
+    mov ax,cs
+    mov es,ax
+    mov cx,10h
+    rep movsw    
+    inc cs:EntryCount
+
+cdeNotRdos:
+    pop cs:CurrentCluster       
+
+cdeDone:    
+    popad
+    pop es
+    ret
+CheckDirEntry   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ScanDir
+;
+;           DESCRIPTION:    Scan directory for RDOS .bin files
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ScanDir Proc near
+    push es
+    push eax
+    push cx
+    push bp
+;    
+    mov ax,cs
+    mov es,ax
+
+sdClusterLoop:
+    call GetCurrentSector
+    mov cx,cs:SectorsPerCluster    
+
+sdSectorLoop:
+    mov si,200h
+    push bx
+    mov bx,si
+    call ReadSector
+    pop bx
+
+sdLoop:
+    call CheckDirEntry
+    add si,20h
+    test si,1FFh
+    jnz sdLoop
+;
+    inc edx
+    loop sdSectorLoop
+;
+    call NextCluster
+    jnc sdClusterLoop
+
+sdDone:
+    pop bp
+    pop cx
+    pop eax
+    pop es
+    ret
+ScanDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ScanRootDir
+;
+;           DESCRIPTION:    Scan root directory
+;
+;       PARAMETERS:     DI      File to scan for
+;
+;       RETURNS:    EDX     Start cluster # of file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ScanRootDir Proc near
+    push es
+    push eax
+    push cx
+;    
+    mov ax,cs
+    mov es,ax
+    xor si,si
+    mov cx,cs:RootEntries
+    mov edx,cs:RootSector
+    push bx
+    xor bx,bx
+    call ReadSector
+    pop bx
+
+srdLoop:
+    call CheckDirEntry
+    add si,20h
+    test si,1FFh
+    jnz srdNextEntry
+;
+    xor si,si
+    inc edx
+;    
+    push bx
+    xor bx,bx
+    call ReadSector
+    pop bx
+
+srdNextEntry:
+    loop srdLoop
+
+srdDone:
+    pop cx
+    pop eax
+    pop es
+    ret
+ScanRootDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FindRdosFiles
+;
+;           DESCRIPTION:    Find RDOS bootable files
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindRdosFiles   Proc near
+    mov al,cs:FatSize
+    cmp al,32
+    je frf32
+;
+    call ScanRootDir
+    ret
+
+frf32:
+    call ScanDir
+    ret
+FindRdosFiles   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FindLine
+;
+;           DESCRIPTION:    Find a specific line
+;
+;       PARAMETERS:     SI      Filename
+;
+;       RETURNS:    AX      Entry offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindLine    Proc near
+    push cx
+    push edx
+    push di
+;
+    mov cx,cs:EntryCount
+    mov di,OFFSET EntryArr
+    or cx,cx
+    jz flFail
+
+flLoop:
+    mov edx,cs:[si]
+    cmp edx,cs:[di]
+    jne flNext
+;
+    mov edx,cs:[si+4]
+    cmp edx,cs:[di+4]
+    jne flNext
+;
+    mov dword ptr cs:[di],0
+    mov ax,di
+    clc
+    jmp flDone
+
+flNext:
+    add di,20h
+    loop flLoop
+
+flFail:
+    stc
+
+flDone:
+    pop di
+    pop edx
+    pop cx      
+    ret
+FindLine    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteLine
+;
+;           DESCRIPTION:    Write one full line
+;
+;       PARAMETERS:     SI      Offset to text
+;               ES:DI   Screen buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteLine  Proc near
+    push ax
+    push cx
+    push si
+;
+    mov ah,7
+    mov cx,80
+
+wlLoop:
+    lods byte ptr cs:[si]
+    stosw
+    loop wlLoop
+;
+    pop si
+    pop cx
+    pop ax    
+    ret
+WriteLine   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteCust
+;
+;           DESCRIPTION:    Write a custom line
+;
+;       PARAMETERS:     SI      Offset to dir entry
+;               ES:DI   Screen buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cust_bl    DB '            บ  RDOS - ', 0
+cust_el    DB 'บ           ', 0
+cust_ext   DB '.BIN boot', 0
+
+WriteCust   Proc near
+    push cx
+    push si
+;
+    mov ah,7
+    mov cx,80
+
+    push si
+    mov si,OFFSET cust_bl
+
+wcBeginLoop:
+    lods byte ptr cs:[si]
+    or al,al
+    jz wcBeginDone
+;    
+    stosw
+    loop wcBeginLoop
+    
+wcBeginDone:
+    pop si
+;
+    mov cx,30
+
+wcNameLoop:
+    lods byte ptr cs:[si]
+    cmp al,' '
+    je wcNameDone
+;
+    stosw
+    loop wcNameLoop        
+
+wcNameDone:
+    mov si,OFFSET cust_ext
+
+wcExtLoop:
+    lods byte ptr cs:[si]
+    or al,al
+    je wcExtDone
+;
+    stosw
+    loop wcExtLoop
+    jmp wcAddEnd
+
+wcExtDone:
+    mov al,' '
+
+wcPadLoop:
+    stosw
+    loop wcPadLoop
+
+wcAddEnd:
+    mov si,OFFSET cust_el
+
+wcAddLoop:
+    lods byte ptr cs:[si]
+    or al,al
+    je wcDone
+;
+    stosw
+    jmp wcAddLoop 
+
+wcDone:   
+    pop si
+    pop cx    
+    ret
+WriteCust   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteMenu
+;
+;           DESCRIPTION:    Write boot-menu
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+blank_line DB '                                          '
+l1     DB '                  RDOS Bootloader                 '
+l2     DB '            ษอออออออออออออออออออออออออออออออออออออออป             '
+l4     DB '            ศอออออออออออออออออออออออออออออออออออออออผ             '
+org_line   DB '            บ  Boot original Operating system       บ             '
+norm_line  DB '            บ  RDOS - normal boot           บ             '
+safe_line  DB '            บ  RDOS - safe mode boot        บ             '
+
+norm_file   DB 'RDOS    '
+safe_file   DB 'SAFE    '
+                  
+WriteMenu  Proc near
+    push es
+    pushad
+;    
+    mov ax,0B800h
+    mov es,ax
+    xor di,di
+    mov si,OFFSET l1
+    call WriteLine
+    mov si,OFFSET l2
+    call WriteLine
+    mov cx,22
+;
+    mov bx,OFFSET MenuArr
+    mov cs:MenuEntries,0
+    mov al,cs:BootMedia
+    cmp al,0F0h
+    jne wmOrgDone
+;    
+    mov cs:MenuEntries,1
+    dec cx
+    mov si,OFFSET org_line
+    call WriteLine
+    mov word ptr cs:[bx],0
+    add bx,2
+
+wmOrgDone:    
+    mov si,OFFSET norm_file
+    call FindLine
+    jc wmNormOk
+;    
+    inc cs:MenuEntries
+    dec cx
+    mov si,OFFSET norm_line
+    call WriteLine
+    mov cs:[bx],ax
+    add bx,2
+
+wmNormOk:
+    mov si,OFFSET safe_file
+    call FindLine
+    jc wmSafeOk
+;    
+    inc cs:MenuEntries
+    dec cx
+    mov si,OFFSET safe_line
+    call WriteLine    
+    mov cs:[bx],ax
+    add bx,2
+
+wmSafeOk: 
+    mov dx,cs:EntryCount
+    mov si,OFFSET EntryArr
+    or dx,dx
+    jz wmEntryDone
+
+wmEntryLoop:
+    mov al,cs:[si]
+    or al,al
+    jz wmEntryNext
+;
+    inc cs:MenuEntries
+    dec cx
+    mov cs:[bx],si
+    add bx,2
+    call WriteCust
+
+wmEntryNext:
+    add si,20h
+    sub dx,1
+    jnz wmEntryLoop
+
+wmEntryDone:
+    mov si,OFFSET l4
+    call WriteLine
+    mov si,OFFSET blank_line
+
+wbl:
+    call WriteLine
+    loop wbl
+;
+    popad
+    pop es       
+    ret
+WriteMenu   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MarkEntry
+;
+;           DESCRIPTION:    Mark a entry
+;
+;       PARAMETERS:     AX      Entry #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MarkEntry   Proc near
+    push ds
+    pusha
+;
+    add ax,2
+    mov dx,2 * 80
+    mul dx
+    mov bx,ax
+    add bx,2 * 22
+    mov cx,37
+;
+    mov ax,0B800h
+    mov ds,ax
+    inc bx
+
+meLoop:
+    mov byte ptr [bx],70h
+    add bx,2
+    loop meLoop
+;    
+    popa
+    pop ds
+    ret
+MarkEntry   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnmarkEntry
+;
+;           DESCRIPTION:    Unmark a entry
+;
+;       PARAMETERS:     AX      Entry #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnmarkEntry   Proc near
+    push ds
+    pusha
+;
+    add ax,2
+    mov dx,2 * 80
+    mul dx
+    mov bx,ax
+    add bx,2 * 22
+    mov cx,37
+;
+    mov ax,0B800h
+    mov ds,ax
+    inc bx
+
+umeLoop:
+    mov byte ptr [bx],7
+    add bx,2
+    loop umeLoop
+;    
+    popa
+    pop ds
+    ret
+UnmarkEntry   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleMenu
+;
+;           DESCRIPTION:    Handle menu
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleMenu  Proc near    
+    mov cs:Tics, 5 * 17
+    movzx ax,cs:DefaultBoot
+    mov cs:CurrEntry,ax
+
+hmWaitKey:
+    mov ah,1
+    int 16h
+    jnz hmWait
+;
+    mov eax,cs:Tics
+    or eax,eax
+    jne hmWaitKey
+;
+    jmp hmOk
+    
+hmWait:
+    mov ax,0
+    int 16h 
+    cmp al,0Dh
+    je hmOk
+;
+    cmp ax,4800h
+    jne hmNotUp
+
+hmUp:
+    mov ax,cs:CurrEntry
+    or ax,ax
+    jz hmWait
+;
+    call UnmarkEntry
+    dec ax
+    call MarkEntry
+    mov cs:CurrEntry,ax
+    jmp hmWait   
+
+hmNotUp:
+    cmp ax,5000h
+    jne hmWait
+
+hmDown:
+    mov ax,cs:CurrEntry
+    inc ax
+    cmp ax,cs:MenuEntries
+    je hmWait
+;
+    dec ax
+    call UnmarkEntry    
+    inc ax
+    call MarkEntry
+    mov cs:CurrEntry,ax
+    jmp hmWait
+
+hmOk: 
+    mov si,cs:CurrEntry
+    add si,si
+    mov si,cs:[si].MenuArr
+    or si,si
+    jz hmOrgOs
+;    
+    movzx edx,cs:[si].fat_cluster
+    cmp cs:FatSize,32
+    jnz hmClustOk
+;
+    movzx eax,cs:[si].fat_cluster_hi
+    shl eax,16
+    or edx,eax
+
+hmClustOk:       
+    mov cs:CurrentCluster,edx
+    mov eax,cs:[si].fat_file_size
+    mov cs:ImageSize,eax
+    clc
+    jmp hmDone
+
+hmOrgOs:
+    mov cs:CurrentCluster,0
+    mov cs:ImageSize,0
+    stc
+
+hmDone:    
+    ret
+HandleMenu  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ClearScreen
+;
+;           DESCRIPTION:    Clear screen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                  
+ClearScreen  Proc near
+    push es
+    pusha
+;    
+    mov ax,0B800h
+    mov es,ax
+    xor di,di
+    mov ax,0720h
+    mov cx,80 * 25
+    rep stosw
+;
+    mov ax,3
+    int 10h
+;
+    popa
+    pop es
+    ret
+ClearScreen Endp       
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GateA20
+;
+;           DESCRIPTION:    Enable A20 line
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GateA20 Proc near
+wait_gate1:
+    in al,64h
+    and al,2
+    jnz wait_gate1
+    mov al,0D1h
+    out 64h,al
+wait_gate2:
+    in al,64h
+    and al,2
+    jnz wait_gate2
+    mov al,0DFh
+    out 60h,al
+wait_gate3:
+    in al,64h
+    and al,2
+    jnz wait_gate3
+    xor cx,cx
+gate_wait:
+    inc ax
+    loop gate_wait
+    ret
+GateA20 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitGdt
+;
+;           DESCRIPTION:    Init protected mode GDT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+source_sel      EQU 8
+dest_sel    EQU 10h
+flat_sel    EQU 18h
+
+LoadGdt:
+load_gdt0:
+            DW 27h
+            DD 0
+            DW 0
+load_gdt_source:
+        DW 0FFFFh
+        DD 92000000h
+        DW 0
+load_gdt_dest:
+        DW 0FFFFh
+        DD 92300000h
+        DW 0
+load_gdt_flat:
+            DW 0FFFFh
+            DD 92000000h
+            DW 008Fh
+load_gdt_cs:
+            DW 0FFFFh
+            DD 9A000000h
+            DW 0
+
+InitGdt Proc near
+    mov ax,cs
+    movzx eax,ax
+    shl eax,4
+    add eax,OFFSET LoadGdt
+    mov dword ptr cs:load_gdt0+2,eax
+    lgdt fword ptr cs:load_gdt0
+;
+    mov ax,cs
+    movzx eax,ax
+    shl eax,4
+    or dword ptr cs:load_gdt_cs+2,eax
+    ret
+InitGdt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MoveData
+;
+;           DESCRIPTION:    Move data to extended memory
+;
+;           PARAMETERS:         ESI         Linear source address
+;                           EDI         Linear dest address
+;                           ECX         Number of bytes to move
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MoveData    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,esi
+    mov dword ptr cs:load_gdt_source+2,eax
+    mov al,92h
+    xchg al,byte ptr cs:load_gdt_source+5
+    mov byte ptr cs:load_gdt_source+7,al
+;
+    mov eax,edi
+    mov dword ptr cs:load_gdt_dest+2,eax
+    mov al,92h
+    xchg al,byte ptr cs:load_gdt_dest+5
+    mov byte ptr cs:load_gdt_dest+7,al
+    mov word ptr cs:MoveDataRmCs,cs
+;
+    cli
+    mov eax,cr0
+    or al,1
+    mov cr0,eax
+;
+    db 0EAh
+    dw OFFSET MoveDataPm
+    dw 20h
+
+MoveDataPm:
+    mov ax,source_sel
+    mov ds,ax
+    mov ax,dest_sel
+    mov es,ax
+    xor esi,esi
+    xor edi,edi
+    rep movs byte ptr es:[edi],[esi]
+;
+    mov eax,cr0
+    and al,NOT 1
+    mov cr0,eax
+;
+    db 0EAh
+    dw OFFSET MoveDataRm
+MoveDataRmCs:
+    dw 0
+
+MoveDataRm:
+    sti
+    popad
+    pop es
+    pop ds
+    ret
+MoveData    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LoadAdapter
+;
+;           DESCRIPTION:    Load adapter into extended memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadAdapter     Proc near
+    push ds
+    push esi
+;    
+    mov ax,cs
+    mov es,ax
+
+laClusterLoop:
+    call GetCurrentSector
+    mov cx,cs:SectorsPerCluster    
+
+laSectorLoop:
+    xor si,si
+    push bx
+    xor bx,bx
+    call ReadSector
+    pop bx
+    jc laError
+;
+    push edx
+    push cx
+    mov esi,16 * DATA_SEG
+    mov ecx,512
+    call MoveData
+    add edi,ecx
+    pop cx
+    pop edx
+;
+    sub cs:ImageSize,200h
+    jbe laDone
+;
+    inc edx
+    loop laSectorLoop
+;
+    call NextCluster
+    jnc laClusterLoop
+    jmp laDone
+    
+laError:
+    mov si,OFFSET ReadError
+    call WriteAsciiz
+    
+laDone:
+    pop esi
+    pop ds
+    ret     
+LoadAdapter     Endp
+
+LoadAdapterDone DB 'Load adapter done',0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetRamSize
+;
+;           DESCRIPTION:    Get size of physical memory
+;
+;           RETURNS:        ECX         Number of bytes of physical memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+bios_buf bios_mem_type <>
+
+GetRamSize      Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push di
+;
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET bios_buf
+    xor ebx,ebx
+
+GetRamSizeRetry:    
+    mov eax,0E820h
+    mov ecx,20
+    mov edx,534D4150h
+    int 15h
+    jc GetRamSizeScan
+;
+    cmp eax,534D4150h
+    jne GetRamSizeScan
+;
+    mov eax,cs:bios_buf.mem_type
+    cmp eax,1
+    jne GetRamSizeNext 
+;
+    mov ecx,cs:bios_buf.mem_base
+    cmp ecx,100000h
+    jb GetRamSizeNext
+;
+    add ecx,cs:bios_buf.mem_size
+    jmp GetRamSizeExit
+
+GetRamSizeNext:
+    or ebx,ebx
+    jnz GetRamSizeRetry
+    
+GetRamSizeScan:
+    mov word ptr cs:GetRamSizeRmCs,cs
+    cli
+    mov eax,cr0
+    or al,1
+    mov cr0,eax
+;
+    db 0EAh
+    dw OFFSET GetRamSizePm
+    dw 20h
+
+GetRamSizePm:
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,110000h
+    mov eax,851A7EC2h
+
+GetRamSizeLoop:
+    mov [ebx],eax
+    cmp eax,[ebx]
+    jne GetRamSizeDone
+    add ebx,1000h
+    jnc GetRamSizeLoop
+
+GetRamSizeDone:
+    mov ax,source_sel
+    mov ds,ax
+;
+    mov eax,cr0
+    and al,NOT 1
+    mov cr0,eax
+;
+    db 0EAh
+    dw OFFSET GetRamSizeRm
+GetRamSizeRmCs:
+    dw 0
+
+GetRamSizeRm:
+    mov ecx,ebx
+    sti
+
+GetRamSizeExit: 
+    pop di
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+GetRamSize      Endp
+
+ReadError       db 'Cannot read rdos.bin',0Dh,0Ah,0
+InvFatMsg       db 0Dh,0Ah,'Unknown file-system.',0Dh,0Ah,0
+LoadMsg     db 0Dh,0Ah,'Loading Rdos operating system',0
+
+InvalidDisc db 'Cannot read partition table and / or disc', 0Dh, 0Ah, 0
+BootNotFound db 'Cannot find boot image', 0Dh, 0Ah, 0
+
+PartTypeTab:
+p00 DB 0
+p01 DB 12
+p02 DB 0
+p03 DB 0
+p04 DB 16
+p05 DB 0
+p06 DB 16
+p07 DB 0
+p08 DB 0
+p09 DB 0
+p0A DB 0
+p0B DB 32
+p0C DB 32
+p0D DB 0
+p0E DB 0
+p0F DB 0
+
+read_part_error:
+    mov si,OFFSET InvalidDisc
+    call WriteAsciiz
+
+part_stop:
+    jmp part_stop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;           DESCRIPTION:    Second stage boot-loader entry point
+;
+;           RETURNS:        DL      Bios disc #
+;               AL      Default boot #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public Start
+    
+Start:
+    sti
+    push ax
+    push dx
+    mov al,dl
+    call WriteHexByte
+    mov al,' '
+    call WriteChar
+    pop dx
+    pop ax
+;
+    mov cs:DriveNr,dl
+    test dl,2
+    jz boot_prim
+;
+    push ax
+    push dx
+    mov ax,170h
+    call WriteHexWord
+    mov al,' '
+    call WriteChar
+    pop dx
+    pop ax
+
+    mov cs:IoBase,170h
+    jmp boot_base_ok    
+
+boot_prim:
+    push ax
+    push dx
+    mov ax,1F0h
+    call WriteHexWord
+    mov al,' '
+    call WriteChar
+    pop dx
+    pop ax
+
+    mov cs:IoBase,1F0h
+
+boot_base_ok:
+    and dl,1
+    mov cs:DiscSubUnit,dl
+
+    push ax
+    push dx
+    mov al,dl
+    call WriteHexByte
+    mov al,' '
+    call WriteChar
+    pop dx
+    pop ax      
+;       
+    mov cs:DefaultBoot,al
+    mov ax,DATA_SEG
+    mov ds,ax
+    xor bx,bx
+    call InitIrq
+    jc read_part_error
+;
+    mov bx,1BEh
+    mov si,bx
+    mov al,[bx].part_type
+    mov cs:PartType,al
+;    
+    mov edx,[bx].part_start_sector
+    mov cs:BootSector,edx
+    xor bx,bx
+    call ReadSector
+    jc read_part_error
+;
+    cmp cs:LbaMode,0
+    jne boot_check_part_type
+;
+    mov ax,ds:boot_sectors_per_cyl
+    cmp ax,cs:SectorsPerCyl
+    jne read_part_error
+;    
+    mov ax,ds:boot_heads
+    cmp ax,cs:DiscHeads
+    jne read_part_error
+
+boot_check_part_type:
+    mov al,ds:boot_media
+    mov cs:BootMedia,al
+;    
+    mov al,cs:PartType
+    cmp al,10h
+    jae read_part_error
+;
+    mov bx,OFFSET PartTypeTab
+    xlat byte ptr cs:PartTypeTab
+    or al,al
+    je read_part_error
+;
+    mov cs:FatSize,al     
+;    
+    movzx eax,ds:boot_resv_sectors
+    add eax,cs:BootSector
+    mov cs:FatSector,eax
+;
+    movzx eax,ds:boot_fat_sectors16
+    or ax,ax
+    jnz boot_fat_sectors_ok
+;
+    mov eax,ds:boot_fat_sectors
+
+boot_fat_sectors_ok:
+    mov cs:SectorsPerFat,eax
+    mov eax,cs:FatSector
+;
+    mov cl,ds:boot_fats
+    or cl,cl
+    jz read_part_error
+
+boot_fat_adv_loop:
+    add eax,cs:SectorsPerFat
+    sub ds:boot_fats,1
+    jnz boot_fat_adv_loop
+;
+    cmp cs:FatSize,32
+    je boot_data_sector_ok
+;
+    mov cs:RootSector,eax
+    movzx ecx,ds:boot_root_dirs
+    shr ecx,4
+    add eax,ecx
+
+boot_data_sector_ok:    
+    mov cs:DataSector,eax
+    mov eax,ds:boot_root_cluster
+    mov cs:CurrentCluster,eax
+    mov ax,ds:boot_root_dirs
+    mov cs:RootEntries,ax
+    movzx ax,ds:boot_sectors_per_cluster
+    mov cs:SectorsPerCluster,ax
+    mov cs:EntryCount,0
+    call FindRdosFiles
+    call WriteMenu
+;
+    movzx ax,cs:DefaultBoot
+    cmp ax,cs:MenuEntries
+    jb LoadDefaultOk
+;
+    xor ax,ax
+
+LoadDefaultOk:
+    mov cs:CurrEntry,ax
+    call MarkEntry
+    call HandleMenu       
+    jnc LoadStart
+;    
+    call ClearScreen
+    xor ax,ax
+    mov ds,ax
+;    
+    xor edx,edx
+    mov bx,600h
+    call ReadSector
+;    
+    mov edx,cs:BootSector
+    mov bx,7C00h
+    call ReadSector
+;
+    mov bx,8 SHL 2
+    mov eax,cs:OrgTimerVect
+    mov [bx],eax
+;
+    mov bx,76h SHL 2
+    mov eax,cs:OrgIdeVect1
+    mov [bx],eax
+;
+    mov bx,77h SHL 2
+    mov eax,cs:OrgIdeVect2
+    mov [bx],eax
+;
+    mov si,600h + 1BEh    
+    db 0EAh
+    dw 7C00h
+    dw 0
+    
+LoadStart:
+    call ClearScreen
+    mov si,OFFSET LoadMsg
+    call WriteAsciiz
+    call GateA20
+    call InitGdt
+    call GetRamSize
+    mov edi,ecx
+    mov ecx,cs:ImageSize
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    push ecx
+    pop ax
+    pop ax
+    sub edi,ecx
+    push edi
+    push ecx
+    call LoadAdapter
+    mov dx,3F2h
+    mov al,0
+    out dx,al
+    pop ecx
+    pop edi
+    jmp init
+
+stop:
+    jmp stop
+
+pad db 44 DUP(0)
+
+_TEXT   ends    
+
+    END

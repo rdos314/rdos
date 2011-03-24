@@ -24,8 +24,6 @@
 ; Bootsector for disk / diskette
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        
-        NAME  bootsec
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -51,9 +49,9 @@ boot_fs                     DB 8 DUP(?)
 
 boot_struc          ENDS
 
-code segment byte public 'CODE' use16
+_TEXT segment byte public use16 'code'
 
-    public BootSectInit
+    .386
 
 BootSectInit:
     jmp StartBoot
@@ -227,11 +225,11 @@ ReadSector      Endp
 DiskError:
         db 'Diskette error',0Dh,0Ah,0
 
-Pad     db 195 dup(0)
+Pad     db 227 dup(0)
         db 55h
         db 0AAh
 
-code    ENDS
+_TEXT    ENDS
 
     END
     
