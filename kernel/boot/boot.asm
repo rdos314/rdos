@@ -113,14 +113,17 @@ RamFound:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetVideo    MACRO
+    local gvDone
     mov ax,flat_sel
     mov ds,ax
     mov ebx,0B8000h
     mov ax,720h
     mov [ebx],ax
     cmp ax,[ebx]
-    je GetVideoSel
+    je gvDone
+;    
     mov ebx,0B0000h
+gvDone:    
     ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -590,7 +593,7 @@ StartShutDeviceDo:
     mov ecx,[esi].len
     add esi,SIZE rdos_header
     push word ptr [esi].init_ip
-    add esi,SIZE dos_device_header
+    add esi,SIZE simple_device_header
     mov ax,gdt_sel
     mov ds,ax
     dec cx
@@ -801,6 +804,28 @@ ENDIF
     mov bx,OFFSET rom_gdt + idt_sel
     movzx edx,ax
     shl edx,4
+    add edx,OFFSET rom_idt
+    mov [bx+2],edx
+;
+    mov bx,OFFSET rom_gdt + gdt_sel
+    movzx edx,ax
+    shl edx,4
+    add edx,OFFSET rom_gdt
+    mov [bx+2],edx
+;
+    mov bx,OFFSET rom_gdt + device_code_sel
+    movzx edx,ax
+    shl edx,4
+    or edx,9A000000h
+    mov [bx+2],edx
+;
+    lgdt fword ptr ds:gdt10
+    lidt fword ptr ds:gdt8
+;
+    mov ax,cs
+    mov bx,OFFSET rom_gdt + idt_sel
+    movzx edx,ax
+    shl edx,4
     or edx,92000000h
     add edx,OFFSET rom_idt
     mov [bx+2],edx
@@ -812,14 +837,6 @@ ENDIF
     add edx,OFFSET rom_gdt
     mov [bx+2],edx
 ;
-    mov bx,OFFSET rom_gdt + device_code_sel
-    movzx edx,ax
-    shl edx,4
-    or edx,9A000000h
-    mov [bx+2],edx
-;
-    lgdt fword ptr gdt10
-    lidt fword ptr gdt8
     xor ax,ax
     lahf
     mov ebx,cr0
@@ -847,7 +864,7 @@ prot_init:
     mov ax,gdt_sel
     mov ds,ax
     mov ecx,2*5
-    rep movs dword ptr es:[edi],[esi]
+    rep movs dword ptr es:[edi],ds:[esi]
     mov ax,flat_sel
     mov ds,ax
     mov esi,edx
@@ -855,10 +872,11 @@ prot_init:
     add ebx,esi
     mov word ptr [ebx],0FFFh
     mov [ebx+2],esi
+    lgdt fword ptr ds:[ebx]
+;
     mov byte ptr [ebx+5],92h
     mov word ptr [ebx+6],0
-    lgdt fword ptr [esi+gdt_sel]
-;
+;    
     FindRam
     mov ax,gdt_sel
     mov ds,ax
@@ -890,6 +908,7 @@ prot_init:
     call StartShutDownDevice
     call GetBootDevice
     jnc DoBoot
+;
     GetVideo
     mov dh,23
     mov dl,0
@@ -906,11 +925,13 @@ DoBoot:
 ;
     mov ebx,0B8000h
     mov ax,720h
-GetVideoLoop:
+;
     mov [ebx],ax
     cmp ax,[ebx]
     je GetVideoSel
+;
     mov ebx,0B0000h
+
 GetVideoSel:
     mov si,dosB800
     mov word ptr es:[si],0FFFh
@@ -920,11 +941,11 @@ GetVideoSel:
 
 GetVideoDone:
     pop esi
-    push kernel_code
+    push word ptr kernel_code
     mov ecx,[esi].len
     add esi,SIZE rdos_header
-    push [esi].init_ip
-    add esi,SIZE dos_device_header
+    push word ptr [esi].init_ip
+    add esi,SIZE simple_device_header
     mov ax,gdt_sel
     mov ds,ax
     dec cx

@@ -67,24 +67,6 @@ StartBoot:
     dw 07C0h
 
 JmpBootCode:
-    call CheckDrive
-    jnc DriveOk
-;
-    mov dl,cs:BootMedia.boot_drive_nr
-    call CheckDrive
-    jnc DriveOk
-;
-    mov dl,80h
-
-DriveLoop:
-    inc dl
-    cmp dl,8Fh
-    ja BootFail
-;    
-    call CheckDrive
-    jc DriveLoop
-
-DriveOk:
     mov cs:BootMedia.boot_drive_nr,dl
     cli
     mov bx,5000h
@@ -163,27 +145,6 @@ WriteAsciiz     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CheckDrive
-;
-;           DESCRIPTION:    Check if drive is usable
-;
-;           PARAMETERS;     DL      Drive
-;
-;       RETURNS:    NC      Drive ok
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckDrive      Proc near
-    push ax
-    mov ah,1
-    int 13h
-    pop ax
-    ret
-CheckDrive      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           ReadSector
 ;
 ;           DESCRIPTION:    Read a sector
@@ -225,7 +186,7 @@ ReadSector      Endp
 DiskError:
         db 'Diskette error',0Dh,0Ah,0
 
-Pad     db 227 dup(0)
+Pad     db 263 dup(0)
         db 55h
         db 0AAh
 

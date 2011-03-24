@@ -97,13 +97,13 @@ bios_mem_type   ENDS
 
 _TEXT segment byte public use16 'CODE'
 
-    extrn init:near
-
     .386p
 
 ; make sure the first instruction is a jump to the startup-code
 
     jmp Start
+
+    extrn init:near
 
 ReadCount           DW 0
 RdosSectors         DW 0,0
@@ -753,24 +753,17 @@ ReadFatSector   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitIrq
+;           NAME:           SetupVectors
 ;
-;           DESCRIPTION:    Init IDE IRQ
-;
-;           PARAMETERS:         DS:BX       Sector 0 buffer
+;           DESCRIPTION:    Setup new int-vectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitIrq Proc near
+SetupVectors    Proc near
     push ds
-    push es
+    push eax
     push bx
 ;    
-    mov ax,ds
-    mov es,ax
-    mov di,bx
-;    
-    mov cs:IntFlag,0
     xor ax,ax
     mov ds,ax
     mov bx,8 SHL 2
@@ -790,6 +783,34 @@ InitIrq Proc near
     mov cs:OrgIdeVect2,eax
     mov word ptr [bx],OFFSET IdeInt2
     mov [bx+2],cs
+;
+    pop bx
+    pop eax
+    pop ds    
+    ret
+SetupVectors    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitIrq
+;
+;           DESCRIPTION:    Init IDE IRQ
+;
+;           PARAMETERS:         DS:BX       Sector 0 buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitIrq Proc near
+    push ds
+    push es
+    push bx
+;    
+    mov ax,ds
+    mov es,ax
+    mov di,bx
+;    
+    mov cs:IntFlag,0
 ;
     mov cs:Precomp,0FFh
     xor dx,dx
@@ -1327,8 +1348,8 @@ WriteLine   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-cust_bl    DB '            บ  RDOS - ', 0
-cust_el    DB 'บ           ', 0
+cust_bl    DB '                    บ  RDOS - ', 0
+cust_el    DB 'บ                   ', 0
 cust_ext   DB '.BIN boot', 0
 
 WriteCust   Proc near
@@ -1407,13 +1428,14 @@ WriteCust   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-blank_line DB '                                          '
-l1     DB '                  RDOS Bootloader                 '
-l2     DB '            ษอออออออออออออออออออออออออออออออออออออออป             '
-l4     DB '            ศอออออออออออออออออออออออออออออออออออออออผ             '
-org_line   DB '            บ  Boot original Operating system       บ             '
-norm_line  DB '            บ  RDOS - normal boot           บ             '
-safe_line  DB '            บ  RDOS - safe mode boot        บ             '
+
+blank_line DB '                                                                                  '
+l1         DB '                                  RDOS Bootloader                                 '
+l2         DB '                    ษอออออออออออออออออออออออออออออออออออออออป                     '
+l4         DB '                    ศอออออออออออออออออออออออออออออออออออออออผ                     '
+org_line   DB '                    บ  Boot original Operating system       บ                     '
+norm_line  DB '                    บ  RDOS - normal boot                   บ                     '
+safe_line  DB '                    บ  RDOS - safe mode boot                บ                     '
 
 norm_file   DB 'RDOS    '
 safe_file   DB 'SAFE    '
@@ -2049,6 +2071,7 @@ part_stop:
     public Start
     
 Start:
+    call SetupVectors
     sti
     push ax
     push dx
@@ -2060,6 +2083,8 @@ Start:
     pop ax
 ;
     mov cs:DriveNr,dl
+
+boot_retry:    
     test dl,2
     jz boot_prim
 ;
@@ -2105,8 +2130,17 @@ boot_base_ok:
     mov ds,ax
     xor bx,bx
     call InitIrq
-    jc read_part_error
+    jnc read_part_ok
 ;
+    mov dl,cs:DriveNr
+    cmp dl,84h
+    jae read_part_error
+;
+    inc dl
+    mov cs:DriveNr,dl
+    jmp boot_retry
+    
+read_part_ok:
     mov bx,1BEh
     mov si,bx
     mov al,[bx].part_type
@@ -2257,7 +2291,7 @@ LoadStart:
 stop:
     jmp stop
 
-pad db 44 DUP(0)
+pad db 301 DUP(0)
 
 _TEXT   ends    
 
