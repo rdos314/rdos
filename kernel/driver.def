@@ -261,6 +261,8 @@ net_mem_sel			EQU 680h
 
 focus_process_sel   EQU 688h
 
+pnp_code_sel        EQU 690h
+
 video_mem_focus_sel	EQU 6A0h
 video_mem_local_sel	EQU 6A8h
 

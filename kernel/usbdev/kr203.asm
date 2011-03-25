@@ -1398,7 +1398,7 @@ ForcePrint   Proc near
     push cx
     push di
 ;
-    add cx,2
+    mov cx,2
     call CreateSessionSel
 ;
     mov di,SIZE cmd_session_struc
@@ -1434,14 +1434,14 @@ SendCut   Proc near
     push cx
     push di
 ;
-    add cx,2
+    mov cx,2
     call CreateSessionSel
 ;
     mov di,SIZE cmd_session_struc
-    mov al,ESC
-    stosb
-;    
     mov al,RS
+    stosb
+;
+    xor al,al
     stosb
 ;    
     call InsertSessionSel
@@ -1506,11 +1506,14 @@ print_bitmap_loop:
 print_bitmap_wait:
     call ForcePrint
     push cx
-    mov cl,al
+    push dx
+    movzx cx,al
     mov ax,32000
-    div cl
+    xor dx,dx
+    div cx
+    pop dx
     pop cx
-    movzx ax,al
+    add ax,10
     WaitMilliSec
     xor bp,bp
 
@@ -1542,11 +1545,14 @@ print_bitmap_cut:
 print_bitmap_fwait:
     call ForcePrint
     push cx
-    mov cl,al
+    push dx
+    movzx cx,al
     mov ax,32000
-    div cl
+    xor dx,dx
+    div cx
+    pop dx
     pop cx
-    movzx ax,al
+    add ax,200
     WaitMilliSec
 ;
     call SendCut

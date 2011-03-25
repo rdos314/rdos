@@ -459,4 +459,7 @@ register_old_osgate_nr	    = 391
 
 test_gate_nr                = 392
 
+read_pnp_byte_nr            = 393
+write_pnp_byte_nr           = 394
+
 osgate_entries				= 400

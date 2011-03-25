@@ -2142,6 +2142,22 @@ SetMouseLimit   MACRO
     OldOsGate set_mouse_limit_nr
                     ENDM
 
+;;;;;;;;;;;;; PnP ;;;;;;;;;;;;;;
+
+; IN  CH    Function
+; IN  CL    Register
+; OUT AL    Data
+ReadPnpByte     MACRO
+    OsGate read_pnp_byte_nr
+                    ENDM
+
+; IN  CH    Function
+; IN  CL    Register
+; IN  AL    Data
+WritePnpByte     MACRO
+    OsGate write_pnp_byte_nr
+                    ENDM
+
 ;;;;;;;;;;;;; PCI ;;;;;;;;;;;;;;
 
 BiosPciInt      MACRO

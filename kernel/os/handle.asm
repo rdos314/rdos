@@ -463,9 +463,9 @@ allocate_handle ENDP
 free_handle_name    DB 'Free Handle',0
 
 free_handle     PROC far
-    push ds
     push ax
     push si
+    push ds
 ;
     mov ax,handle_sel
     mov ds,ax
@@ -487,12 +487,19 @@ free_handle     PROC far
     LeaveSection ds:handle_section
     xor bx,bx
 ;
+    pop ax
+    verr ax
+    jz free_handle_load_ds
+;
+    xor ax,ax
+
+free_handle_load_ds:
+    mov ds,ax
+;
     pop si
     pop ax
-    pop ds
     retf32
 free_handle     ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
