@@ -46,7 +46,7 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;           DESCRIPTION:    Read a 8-bit PNP register
 ;
-;           PARAMETERS:     CH          Function
+;           PARAMETERS:     CH          Device
 ;                           CL          Register
 ;
 ;           RETURNS:        AL         Data
@@ -57,6 +57,31 @@ read_pnp_byte_name     DB 'Read Pnp Byte',0
 
 read_pnp_byte  Proc far
     push dx
+;
+    mov dx,2Eh
+    mov al,87h
+    cli
+    out dx,al
+    out dx,al
+;
+    mov al,7
+    out dx,al
+    inc dx
+    mov al,ch
+    out dx,al
+    dec dx
+;
+    mov al,cl
+    out dx,al
+    inc dx
+    in al,dx
+    dec dx
+;
+    push ax
+    mov al,0AAh
+    out dx,al
+    sti
+    pop ax
 ;
     pop dx
     retf32
@@ -69,7 +94,7 @@ read_pnp_byte  Endp
 ;
 ;           DESCRIPTION:    Write a 8-bit PnP register
 ;
-;           PARAMETERS:     CH          Function
+;           PARAMETERS:     CH          Device
 ;                           CL          Register
 ;                           AL          Data
 ;
@@ -79,7 +104,33 @@ write_pnp_byte_name     DB 'Write Pnp Byte',0
 
 write_pnp_byte  Proc far
     push dx
+    push ax
 ;
+    push ax
+    mov dx,2Eh
+    mov al,87h
+    cli
+    out dx,al
+    out dx,al
+;
+    mov al,7
+    out dx,al
+    inc dx
+    mov al,ch
+    out dx,al
+    dec dx
+;
+    mov al,cl
+    out dx,al
+    inc dx
+    pop ax
+    out dx,al
+    dec dx
+;
+    mov al,0AAh
+    out dx,al
+;
+    pop ax
     pop dx
     retf32
 write_pnp_byte  Endp
