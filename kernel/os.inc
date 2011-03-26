@@ -1858,85 +1858,85 @@ GetDriveParam   MACRO
     OsGate get_drive_param_nr
                     ENDM
 
-;       AL          DRIVE #
-;       EBX         Handle
-;       EDX         SECTOR
-;       ESI         Logical address of data
+;  IN   AL          DRIVE #
+;  IN   EDX         SECTOR
+;  OUT  EBX         Handle
+;  OUT  ESI         Logical address of data
 LockSector      MACRO
     OsGate lock_sector_nr
                     ENDM
 
-;       EBX         Handle
+;  IN   EBX         Handle
 UnlockSector    MACRO
     OsGate unlock_sector_nr
                     ENDM
 
-;       EBX         Handle
+;  IN   EBX         Handle
 ModifySector    MACRO
     OsGate modify_sector_nr
                     ENDM
 
-;       EBX         Handle
+;  IN   EBX         Handle
 FlushSector     MACRO
     OsGate flush_sector_nr
                     ENDM
 
-;       AL          Drive #
-;       EBX         Handle
-;       EDX         Sector
-;       ESI         Logical address of data
+;  IN   AL          Drive #
+;  IN   EDX         Sector
+;  OUT  EBX         Handle
+;  OUT  ESI         Logical address of data
 NewSector       MACRO
     OsGate new_sector_nr
                     ENDM
 
-;       CX          Max number of entries
-;       AX          Seq handle
-CreateDiscSeq   MACRO
-    OldOsGate create_disc_seq_nr
-                    ENDM
-
-;       AX          Seq handle
-;       EBX         Handle
-ModifySeqSector MACRO
-    OldOsGate modify_seq_sector_nr
-                    ENDM
-
-;       AX          Seq handle
-PerformDiscSeq  MACRO
-    OldOsGate perform_disc_seq_nr
-                    ENDM
-
-;       AL          DRIVE #
-;       EBX         Handle
-;       EDX         SECTOR
-;       ESI         Logical address of data
+;  IN   AL          DRIVE #
+;  IN   EDX         SECTOR
+;  IN   ESI         Logical address of data
+;  OUT  EBX         Handle
 ReqSector       MACRO
-    OldOsGate req_sector_nr
+    OsGate req_sector_nr
                     ENDM
 
-;       AL          DRIVE #
-;       EBX         Handle
-;       EDX         SECTOR
-;       ESI         Logical address of data
+;  IN   AL          DRIVE #
+;  IN   EDX         SECTOR
+;  IN   ESI         Logical address of data
+;  OUT  EBX         Handle
 DefineSector    MACRO
-    OldOsGate define_sector_nr
+    OsGate define_sector_nr
                     ENDM
 
-;       AL          Drive #
-;       ECX         Number of sectors
-;       EDX         Start sector
+;  IN   CX          Max number of entries
+;  OUT  AX          Seq handle
+CreateDiscSeq   MACRO
+    OsGate create_disc_seq_nr
+                    ENDM
+
+;  IN   AX          Seq handle
+;  IN   EBX         Handle
+ModifySeqSector MACRO
+    OsGate modify_seq_sector_nr
+                    ENDM
+
+;  IN   AX          Seq handle
+PerformDiscSeq  MACRO
+    OsGate perform_disc_seq_nr
+                    ENDM
+
+;  IN   AL          Drive #
+;  IN   ECX         Number of sectors
+;  IN   EDX         Start sector
 EraseSectors    MACRO
-    OldOsGate erase_sectors_nr
+    OsGate erase_sectors_nr
                     ENDM
 
-;       EBX         Handle
+;  IN   EBX         Handle
 WaitForSector   MACRO
-    OldOsGate wait_for_sector_nr
+    OsGate wait_for_sector_nr
                     ENDM
 
-;       AL          Drive #
+;  IN   AL          Drive #
 ResetDrive      MACRO
-    OldOsGate reset_drive_nr
+    OsGate reset_drive_nr
                     ENDM
 
 ;;;;;;;;;;;; FILE SYSTEM ;;;;;;;;;;;;

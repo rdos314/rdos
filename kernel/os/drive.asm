@@ -3419,7 +3419,7 @@ create_disc_seq PROC far
     pop edi
     pop ecx
     pop es
-    ret
+    retf32
 create_disc_seq ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3429,7 +3429,7 @@ create_disc_seq ENDP
 ;
 ;           DESCRIPTION:    Modify sequential sector contents
 ;
-;           PARAMETERS:         AX              Seq handle
+;           PARAMETERS:     AX              Seq handle
 ;                           EBX             Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3483,7 +3483,7 @@ modify_seq_done:
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 modify_seq_sector       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3557,7 +3557,7 @@ perform_disc_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 perform_disc_seq    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3759,7 +3759,7 @@ req_done:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 req_sector      ENDP
 
 
@@ -3904,7 +3904,7 @@ define_done:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 define_sector   ENDP
 
 
@@ -3975,7 +3975,7 @@ erase_sectors_done:
     popad
     pop es  
     pop ds
-    ret
+    retf32
 erase_sectors   Endp
 
 
@@ -4120,7 +4120,7 @@ wait_sector_found:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 wait_for_sector ENDP
 
 
@@ -4158,7 +4158,7 @@ reset_drive_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 reset_drive     ENDP
 
 
@@ -5206,32 +5206,32 @@ init    PROC far
     mov esi,OFFSET create_disc_seq
     mov edi,OFFSET create_disc_seq_name
     mov ax,create_disc_seq_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET modify_seq_sector
     mov edi,OFFSET modify_seq_sector_name
     mov ax,modify_seq_sector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET perform_disc_seq
     mov edi,OFFSET perform_disc_seq_name
     mov ax,perform_disc_seq_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET req_sector
     mov edi,OFFSET req_sector_name
     mov ax,req_sector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET define_sector
     mov edi,OFFSET define_sector_name
     mov ax,define_sector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET erase_sectors
     mov edi,OFFSET erase_sectors_name
     mov ax,erase_sectors_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET wait_for_sector
     mov edi,OFFSET wait_for_sector_name

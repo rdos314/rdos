@@ -397,7 +397,16 @@ void RdosUnlockSector(int handle);
 void RdosModifySector(int handle);
 void RdosFlushSector(int handle);
 int RdosNewSector(int drive, int sector, void **data);
+int RdosReqSector(int drive, int sector, void *data);
+int RdosDefineSector(int drive, int sector, void *data);
+void RdosWaitForSector(int handle);
 
+int RdosCreateDiscSeq(int max_entries);
+void RdosModifySeqSector(int seq_handle, int handle);
+void RdosPerformDiscSeq(int seq_handle);
+
+void RdosEraseSectors(int drive, int start_sector, int sector_count);
+void RdosResetDrive(int drive);
 
 /* 32-bit compact memory model (device-drivers) */
 
@@ -1143,6 +1152,42 @@ int RdosNewSector(int drive, int sector, void **data);
     parm [eax] [edx] [es edi] \
     value [ebx] \
     modify [esi];
+
+#pragma aux RdosReqSector = \
+    OsGate_req_sector \
+    parm [eax] [edx] [es esi] \
+    value [ebx];
+
+#pragma aux RdosDefineSector = \
+    OsGate_define_sector \
+    parm [eax] [edx] [es esi] \
+    value [ebx];
+
+#pragma aux RdosWaitForSector = \
+    OsGate_wait_for_sector \
+    parm [edx];
+
+#pragma aux RdosCreateDiscSeq = \
+    OsGate_create_disc_seq \
+    "movzx eax,ax" \
+    parm [ecx] \
+    value [eax];
+
+#pragma aux RdosModifySeqSector = \
+    OsGate_modify_seq_sector \
+    parm [eax] [ebx];
+
+#pragma aux RdosPerformDiscSeq = \
+    OsGate_perform_disc_seq \
+    parm [eax];
+
+#pragma aux RdosEraseSectors = \
+    OsGate_erase_sectors \
+    parm [eax] [edx] [ecx];
+
+#pragma aux RdosResetDrive = \
+    OsGate_reset_drive \
+    parm [eax];
 
 #ifdef __cplusplus
 }
