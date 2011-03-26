@@ -369,6 +369,14 @@ int RdosRegisterNetDriver(char class_id, int max_size, __rdos_net_driver_table *
 void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
 int RdosInstallDisc(int disc_handle, int read_ahead, int *disc_nr);
 void RdosRegisterDiscChange(__rdos_disc_change_callback *callb_proc);
+void RdosStartDisc(int disc_sel);
+void RdosStopDisc(int disc_sel);
+void RdosSetDiscParam(  int disc_sel, 
+                        int bytes_per_sector, 
+                        int sectors_per_unit,
+                        int units,
+                        int bios_sectors_per_cyl,
+                        int bios_heads); 
 
 /* 32-bit compact memory model (device-drivers) */
 
@@ -998,6 +1006,18 @@ void RdosRegisterDiscChange(__rdos_disc_change_callback *callb_proc);
 #pragma aux RdosRegisterDiscChange = \
     OsGate_register_disc_change \
     parm [es edi];
+
+#pragma aux RdosStartDisc = \
+    OsGate_start_disc \
+    parm [ebx];
+
+#pragma aux RdosStopDisc = \
+    OsGate_stop_disc \
+    parm [ebx];
+
+#pragma aux RdosSetDiscParam = \
+    OsGate_set_disc_param \
+    parm [ebx] [ecx] [eax] [edx] [esi] [edi];
 
 #ifdef __cplusplus
 }

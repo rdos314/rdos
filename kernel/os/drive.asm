@@ -1697,7 +1697,7 @@ start_drives_next:
     popa
     pop es
     pop ds
-    ret
+    retf32
 start_disc      Endp
 
 
@@ -1748,7 +1748,7 @@ stop_drives_next:
     popa
     pop es
     pop ds
-    ret
+    retf32
 stop_disc       Endp
 
 
@@ -1834,7 +1834,7 @@ set_param_max:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 set_disc_param  Endp
 
 
@@ -5096,7 +5096,7 @@ init    PROC far
     mov esi,OFFSET set_disc_param
     mov edi,OFFSET set_disc_param_name
     mov ax,set_disc_param_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET register_disc_change
     mov edi,OFFSET register_disc_change_name
@@ -5106,12 +5106,12 @@ init    PROC far
     mov esi,OFFSET start_disc
     mov edi,OFFSET start_disc_name
     mov ax,start_disc_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET stop_disc
     mov edi,OFFSET stop_disc_name
     mov ax,stop_disc_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET wait_for_disc_request
     mov edi,OFFSET wait_for_disc_request_name

@@ -1756,12 +1756,12 @@ RegisterDiscChange      MACRO
 
 ;       IN  BX      Disc sel
 StartDisc       MACRO
-    OldOsGate start_disc_nr
+    OsGate start_disc_nr
                     ENDM
 
 ;       IN  BX      Disc sel
 StopDisc    MACRO
-    OldOsGate stop_disc_nr
+    OsGate stop_disc_nr
                     ENDM
 
 ;       IN  AX      Sectors per unit
@@ -1771,7 +1771,7 @@ StopDisc    MACRO
 ;       IN  SI      BIOS sectors / cylinder
 ;       IN  DI      BIOS heads
 SetDiscParam    MACRO
-    OldOsGate set_disc_param_nr
+    OsGate set_disc_param_nr
                     ENDM
 
 ;       IN  BX      Disc sel
