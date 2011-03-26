@@ -157,8 +157,8 @@ validate_drive_media:
     clc
     jz validate_drive_done
 ;
-    add si,si
-    call ds:[si].media_check_proc
+    shl si,2
+    call fword ptr ds:[si].media_check_proc
     clc
 
 validate_drive_done:

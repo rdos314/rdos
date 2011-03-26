@@ -78,7 +78,7 @@ disc_handle                 DW ?
 disc_pend_count     DW ?
 disc_io_count       DW ?
 
-disc_change_proc        DD ?
+disc_change_proc        DD ?,?
 disc_unit_arr           DD ?
 
 disc_def_struc      ENDS
@@ -1845,8 +1845,8 @@ set_disc_param  Endp
 ;
 ;           DESCRIPTION:    Register disc-change procedure
 ;
-;           PARAMETERS:         BX          Disc sel
-;                           ES:DI   Disc change proc
+;           PARAMETERS:     BX          Disc sel
+;                           ES:EDI   Disc change proc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1857,12 +1857,12 @@ register_disc_change    Proc far
     push bx
 ;
     mov ds,bx
-    mov word ptr ds:disc_change_proc,di
-    mov word ptr ds:disc_change_proc+2,es
+    mov dword ptr ds:disc_change_proc,edi
+    mov word ptr ds:disc_change_proc+4,es
 ;
     pop bx
     pop ds
-    ret
+    retf32
 register_disc_change    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2574,6 +2574,7 @@ install_disc_loop:
     mov ds:disc_timer_id,0
     mov ds:disc_thread,0
     mov ds:disc_change_proc,0
+    mov ds:disc_change_proc+4,0
     mov ds:disc_cached_sectors,0
     pop dword ptr ds:disc_param
     pop dword ptr ds:disc_param+4
@@ -2601,7 +2602,7 @@ install_disc_done:
     pop cx
     pop es
     pop ds
-    ret
+    retf32
 install_disc    Endp
 
 
@@ -2785,12 +2786,12 @@ open_drive      Proc far
     mov [si].drive_def_arr,es
 ;
     mov ds,bx
-    mov di,word ptr ds:disc_change_proc+2
+    mov di,word ptr ds:disc_change_proc+4
     or di,di
     jz open_drive_done
 ;
     mov es,di
-    mov di,word ptr ds:disc_change_proc
+    mov edi,dword ptr ds:disc_change_proc
     mov bx,ds:disc_handle
     DefineMediaCheck
 
@@ -5090,7 +5091,7 @@ init    PROC far
     mov esi,OFFSET install_disc
     mov edi,OFFSET install_disc_name
     mov ax,install_disc_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET set_disc_param
     mov edi,OFFSET set_disc_param_name
@@ -5100,7 +5101,7 @@ init    PROC far
     mov esi,OFFSET register_disc_change
     mov edi,OFFSET register_disc_change_name
     mov ax,register_disc_change_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET start_disc
     mov edi,OFFSET start_disc_name

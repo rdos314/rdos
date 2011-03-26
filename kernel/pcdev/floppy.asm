@@ -1586,7 +1586,7 @@ check_media_proc    Proc far
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 check_media_proc    Endp
 
 
@@ -1935,12 +1935,12 @@ install_unit    Proc near
     mov fs:disc_nr,al
     mov ds:[si],fs
 ;
-    push di
+    push edi
     mov ax,cs
     mov es,ax
-    mov di,OFFSET check_media_proc
+    mov edi,OFFSET check_media_proc
     RegisterDiscChange
-    pop di
+    pop edi
 ;
     mov ax,cs
     mov ds,ax

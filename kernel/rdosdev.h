@@ -157,6 +157,12 @@ typedef void __far (__rdos_drive_erase_callback)(int disc_handle, int start_sect
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_disc_change_callback)(int disc_sel);
+
+#pragma aux __rdos_disc_change_callback "*" \
+                    parm caller [fs]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
 
 // structures
 
@@ -361,6 +367,8 @@ int RdosRegisterNetProtocol(int ads_size, short int packet_type, void *my_ads, _
 int RdosRegisterNetDriver(char class_id, int max_size, __rdos_net_driver_table *table, const char *name); 
 
 void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
+int RdosInstallDisc(int disc_handle, int read_ahead, int *disc_nr);
+void RdosRegisterDiscChange(__rdos_disc_change_callback *callb_proc);
 
 /* 32-bit compact memory model (device-drivers) */
 
@@ -976,6 +984,19 @@ void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
 
 #pragma aux RdosHookInitDisc = \
     OsGate_hook_init_disc \
+    parm [es edi];
+
+#pragma aux RdosInstallDisc = \
+    OsGate_install_disc \
+    "movzx eax,al" \
+    "mov es:[edi],eax" \
+    "movzx ebx,bx" \
+    parm [ebx] [ecx] [es edi] \
+    value [ebx] \
+    modify [eax];
+
+#pragma aux RdosRegisterDiscChange = \
+    OsGate_register_disc_change \
     parm [es edi];
 
 #ifdef __cplusplus

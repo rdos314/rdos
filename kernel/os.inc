@@ -1745,13 +1745,13 @@ HookInitDisc    MACRO
 ;       OUT     AL          Disc #
 ;       OUT     BX          Disc sel
 InstallDisc     MACRO
-    OldOsGate install_disc_nr
+    OsGate install_disc_nr
                     ENDM
 
-;       IN  BX      Disc sel
-;       IN      ES:DI   Disc change procedure
+;       IN      BX      Disc sel
+;       IN      ES:EDI   Disc change procedure
 RegisterDiscChange      MACRO
-    OldOsGate register_disc_change_nr
+    OsGate register_disc_change_nr
                     ENDM
 
 ;       IN  BX      Disc sel
@@ -1979,9 +1979,9 @@ RegisterFileSystem      MACRO
 
 ;       AL              DRIVE #
 ;       BX              HANDLE
-;       ES:DI       MEDIA CHECK PROCEDURE
+;       ES:EDI       MEDIA CHECK PROCEDURE
 DefineMediaCheck    MACRO
-    OldOsGate define_media_check_nr
+    OsGate define_media_check_nr
                     ENDM
 
 ;       AL              DRIVE #
