@@ -1377,7 +1377,7 @@ drive_assign1   Proc far
     mov ecx,-1
     OpenDrive
     DemandLoadFileSystem
-    ret
+    retf32
 drive_assign1   Endp
 
 
@@ -1393,7 +1393,7 @@ drive_assign1   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign2   Proc far
-    ret
+    retf32
 drive_assign2   Endp
 
 
@@ -1446,7 +1446,7 @@ drive_assign_done1:
     popad
     pop es
     pop ds
-    ret
+    retf32
 demand_mount    Endp
 
 
@@ -1465,7 +1465,7 @@ demand_mount    Endp
 
 erase   Proc far
     stc
-    ret
+    retf32
 erase   Endp
 
 
@@ -1999,7 +1999,7 @@ disc_assign     Proc far
     popa
     pop es
     pop ds  
-    ret
+    retf32
 disc_assign     Endp
 
 
@@ -2060,11 +2060,11 @@ get_floppy_disc Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_ctrl:
-dct00   DW OFFSET disc_assign,      SEG code
-dct01   DW OFFSET drive_assign1,    SEG code
-dct02   DW OFFSET drive_assign2,    SEG code
-dct03   DW OFFSET demand_mount,     SEG code
-dct04   DW OFFSET erase,        SEG code
+dct00   DD OFFSET disc_assign,      SEG code
+dct01   DD OFFSET drive_assign1,    SEG code
+dct02   DD OFFSET drive_assign2,    SEG code
+dct03   DD OFFSET demand_mount,     SEG code
+dct04   DD OFFSET erase,        SEG code
 
 init    PROC far
     mov al,0
@@ -2099,7 +2099,7 @@ open_floppy_started:
     mov ax,get_floppy_disc_nr
     RegisterBimodalUserGate
 ;
-    mov di,OFFSET disc_ctrl
+    mov edi,OFFSET disc_ctrl
     HookInitDisc
 ;
     mov al,6

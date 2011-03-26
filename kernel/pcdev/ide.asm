@@ -2068,7 +2068,7 @@ disc_assign1    Proc far
     mov ds:IdeThread,0
 
 disc_assign1_done:
-    ret
+    retf32
 disc_assign1    Endp
 
 
@@ -2105,7 +2105,7 @@ disc_assign2    Proc far
     mov ds:IdeThread,0
 
 disc_assign2_done:
-    ret
+    retf32
 disc_assign2    Endp
 
 
@@ -2173,7 +2173,7 @@ disc_assign_pci_loop:
     loop disc_assign_pci_loop
 
 disc_assign_pci_done:
-    ret
+    retf32
 disc_assign_pci    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2223,7 +2223,7 @@ drive_assign_free1:
     mov edx,edi
     FreeLinear
 ;
-    ret
+    retf32
 drive_assign1   Endp
 
 
@@ -2407,7 +2407,7 @@ drive_assign_next_part2:
     mov bx,fs:disc_sel
     StartDisc
     clc
-    ret
+    retf32
 drive_assign2   Endp
 
 
@@ -2423,7 +2423,7 @@ drive_assign2   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 demand_mount    Proc far
-    ret
+    retf32
 demand_mount    Endp
 
 
@@ -2442,7 +2442,7 @@ demand_mount    Endp
 
 erase   Proc far
     stc
-    ret
+    retf32
 erase   Endp
 
 
@@ -2570,25 +2570,25 @@ get_ide_disc    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_ctrl1:
-dct100  DW OFFSET disc_assign1,     SEG code
-dct101  DW OFFSET drive_assign1,    SEG code
-dct102  DW OFFSET drive_assign2,    SEG code
-dct103  DW OFFSET demand_mount,     SEG code
-dct104  DW OFFSET erase,            SEG code
+dct100  DD OFFSET disc_assign1,     SEG code
+dct101  DD OFFSET drive_assign1,    SEG code
+dct102  DD OFFSET drive_assign2,    SEG code
+dct103  DD OFFSET demand_mount,     SEG code
+dct104  DD OFFSET erase,            SEG code
 
 disc_ctrl2:
-dct200  DW OFFSET disc_assign2,     SEG code
-dct201  DW OFFSET drive_assign1,    SEG code
-dct202  DW OFFSET drive_assign2,    SEG code
-dct203  DW OFFSET demand_mount,     SEG code
-dct204  DW OFFSET erase,            SEG code
+dct200  DD OFFSET disc_assign2,     SEG code
+dct201  DD OFFSET drive_assign1,    SEG code
+dct202  DD OFFSET drive_assign2,    SEG code
+dct203  DD OFFSET demand_mount,     SEG code
+dct204  DD OFFSET erase,            SEG code
 
 disc_ctrl_pci:
-dcp200  DW OFFSET disc_assign_pci,  SEG code
-dcp201  DW OFFSET drive_assign1,    SEG code
-dcp202  DW OFFSET drive_assign2,    SEG code
-dcp203  DW OFFSET demand_mount,     SEG code
-dcp204  DW OFFSET erase,            SEG code
+dcp200  DD OFFSET disc_assign_pci,  SEG code
+dcp201  DD OFFSET drive_assign1,    SEG code
+dcp202  DD OFFSET drive_assign2,    SEG code
+dcp203  DD OFFSET demand_mount,     SEG code
+dcp204  DD OFFSET erase,            SEG code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2783,7 +2783,7 @@ init_ide_primary:
     je init_ide_second
 ;
     inc bp
-    mov di,OFFSET disc_ctrl1
+    mov edi,OFFSET disc_ctrl1
     HookInitDisc
 ;
     mov eax,SIZE ide_data
@@ -2814,7 +2814,7 @@ init_ide_second:
     je init_ide_done
 ;
     inc bp
-    mov di,OFFSET disc_ctrl2
+    mov edi,OFFSET disc_ctrl2
     HookInitDisc
 ;
     mov eax,SIZE ide_data
@@ -2857,7 +2857,7 @@ init_ide_pci:
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov di,OFFSET disc_ctrl_pci
+    mov edi,OFFSET disc_ctrl_pci
     HookInitDisc
 
 init_ide_exit:

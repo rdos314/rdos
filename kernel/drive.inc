@@ -62,20 +62,20 @@ discbuf_handle		ENDS
 
 disc_system_struc 	STRUC
 
-disc_assign_proc	DD ?
+ds_disc_assign_proc	    DD ?,?
 
 ;	BX	Disc handle
-drive_assign1_proc	DD ?
+ds_drive_assign1_proc	DD ?,?
 
 ;	BX	Disc handle
-drive_assign2_proc	DD ?
+ds_drive_assign2_proc	DD ?,?
 
 ;	BX	Disc handle
-demand_mount_proc	DD ?
+ds_demand_mount_proc	DD ?,?
 
 ;   BX  Disc handle
 ;   EDX Start sector
 ;   ECX Number of sectors
-erase_proc          DD ?
+ds_erase_proc           DD ?,?
 
 disc_system_struc	ENDS

@@ -1735,9 +1735,9 @@ ListenUdpPort   MACRO
 
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
             
-;       ES:DI   PROCEDURE THAT INITS DISC
+;       ES:EDI   Disc system table
 HookInitDisc    MACRO
-    OldOsGate hook_init_disc_nr
+    OsGate hook_init_disc_nr
                     ENDM
 
 ;       IN      BX          Handle

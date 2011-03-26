@@ -129,6 +129,35 @@ typedef void __far (__rdos_net_get_address_callback)(int buf_sel);
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_disc_assign_callback)();
+
+#pragma aux __rdos_disc_assign_callback "*" \
+                    parm caller \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_drive_assign_callback)(int disc_handle);
+
+#pragma aux __rdos_drive_assign_callback "*" \
+                    parm caller [ebx]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_drive_mount_callback)(int disc_handle);
+
+#pragma aux __rdos_drive_mount_callback "*" \
+                    parm caller [ebx]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_drive_erase_callback)(int disc_handle, int start_sector, int sector_count);
+
+#pragma aux __rdos_drive_erase_callback "*" \
+                    parm caller [ebx] [edx] [ecx]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+
 // structures
 
 struct TKernelSection
@@ -160,6 +189,15 @@ struct TNetDriverTable
     __rdos_net_send_callback *send_proc;
     __rdos_net_address_callback *address_proc;
     __rdos_net_get_address_callback *get_address_proc;
+};
+
+struct TDiscSystemHeader
+{
+    __rdos_disc_assign_callback *disc_assign_proc;
+    __rdos_drive_assign_callback *drive_assign1_proc;
+    __rdos_drive_assign_callback *drive_assign2_proc;
+    __rdos_drive_mount_callback *mount_proc;
+    __rdos_drive_erase_callback *erase_proc;
 };
 
 // function definitions
@@ -321,7 +359,9 @@ void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
 void RdosRegisterNetClass(char class_id, int ads_size, void *broadcast_ads);
 int RdosRegisterNetProtocol(int ads_size, short int packet_type, void *my_ads, __rdos_net_prot_callback *packet_callb);
 int RdosRegisterNetDriver(char class_id, int max_size, __rdos_net_driver_table *table, const char *name); 
- 
+
+void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
+
 /* 32-bit compact memory model (device-drivers) */
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -933,6 +973,10 @@ int RdosRegisterNetDriver(char class_id, int max_size, __rdos_net_driver_table *
     "pop ds" \
     parm [al] [ecx] [dx esi] [es edi] \
     value [ebx];
+
+#pragma aux RdosHookInitDisc = \
+    OsGate_hook_init_disc \
+    parm [es edi];
 
 #ifdef __cplusplus
 }

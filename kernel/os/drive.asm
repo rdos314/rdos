@@ -72,7 +72,7 @@ disc_awrite_list        DD ?
 disc_awrite_timer           DW ?
 disc_awrite_timeout         DD ?,?
 disc_seq_list           DW ?
-disc_param                  DD ?
+disc_param                  DD ?,?
 disc_handle                 DW ?
 
 disc_pend_count     DW ?
@@ -144,7 +144,7 @@ data    SEGMENT byte public 'DATA'
 
 disc_params             DB ?
 disc_curr_param     DW ?
-disc_param_arr      DD MAX_DRIVES DUP(?)
+disc_param_arr      DD MAX_DRIVES DUP(?,?)
 disc_def_arr        DW MAX_DRIVES DUP(?)
 drive_def_arr       DW MAX_DRIVES DUP(?)
 drive_wait_arr      DB 4*DRIVE_WAIT_NUM DUP(?)
@@ -2546,6 +2546,7 @@ install_disc_loop:
 ;
     push bx
     mov bx,ds:disc_curr_param
+    push dword ptr [bx+4]
     push dword ptr [bx]
     mov eax,SIZE disc_def_struc
     AllocateSmallGlobalMem
@@ -2574,7 +2575,8 @@ install_disc_loop:
     mov ds:disc_thread,0
     mov ds:disc_change_proc,0
     mov ds:disc_cached_sectors,0
-    pop ds:disc_param
+    pop dword ptr ds:disc_param
+    pop dword ptr ds:disc_param+4
     pop ds:disc_handle
     pop cx
     mov ds:disc_readahead,ecx
@@ -3939,8 +3941,8 @@ erase_sectors   Proc far
     mov ds,bx
     mov ds,ds:drive_disc
     mov bx,ds:disc_handle
-    lds si,ds:disc_param
-    call [si].erase_proc
+    lds esi,ds:disc_param
+    call fword ptr ds:[esi].ds_erase_proc
     jnc erase_sectors_done
 ;
     mov bx,flat_sel
@@ -4012,8 +4014,8 @@ erase_disc_sectors   Proc near
 ;
     mov ds,bx
     mov bx,ds:disc_handle
-    lds si,ds:disc_param
-    call [si].erase_proc
+    lds esi,ds:disc_param
+    call fword ptr ds:[esi].ds_erase_proc
     jnc erase_disc_sectors_done
 ;
     mov bx,flat_sel
@@ -4811,7 +4813,7 @@ format_drive16  Endp
 ;
 ;           DESCRIPTION:    Add an InitDisc hook
 ;
-;           PARAMETERS:         ES:DI       Parameter block
+;           PARAMETERS:     ES:EDI       Parameter block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4827,17 +4829,17 @@ hook_init_disc  Proc far
     mov al,ds:disc_params
     mov bl,al
     xor bh,bh
-    shl bx,2
+    shl bx,3
     add bx,OFFSET disc_param_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc al
     mov ds:disc_params,al
     pop cx
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_init_disc  Endp
 
 
@@ -4866,15 +4868,15 @@ run_disc_assign Proc near
 
 run_disc_assign_loop:
     push ds
-    push bx
+    push ebx
     push cx
     mov ds:disc_curr_param,bx
-    lds bx,[bx]
-    call [bx].disc_assign_proc
+    lds ebx,[bx]
+    call fword ptr [ebx].ds_disc_assign_proc
     pop cx
-    pop bx
+    pop ebx
     pop ds
-    add bx,4
+    add bx,8
     loop run_disc_assign_loop       
 
 run_disc_assign_done:
@@ -4917,14 +4919,14 @@ run_drive_assign1_loop:
     push ds
     push bx
     push cx
-    push si
+    push esi
 ;
     mov ds,bx
     mov bx,ds:disc_handle
-    lds si,ds:disc_param
-    call [si].drive_assign1_proc
+    lds esi,ds:disc_param
+    call fword ptr ds:[esi].ds_drive_assign1_proc
 ;
-    pop si
+    pop esi
     pop cx
     pop bx
     pop ds
@@ -4974,14 +4976,14 @@ run_drive_assign2_loop:
     push ds
     push bx
     push cx
-    push si
+    push esi
 ;
     mov ds,bx
     mov bx,ds:disc_handle
-    lds si,ds:disc_param
-    call [si].drive_assign2_proc
+    lds esi,ds:disc_param
+    call fword ptr ds:[esi].ds_drive_assign2_proc
 ;
-    pop si
+    pop esi
     pop cx
     pop bx
     pop ds
@@ -5031,8 +5033,8 @@ demand_load_drive       Proc far
     mov ds,ax
     mov ds,ds:drive_disc
     mov bx,ds:disc_handle
-    lds si,ds:disc_param
-    call [si].demand_mount_proc
+    lds esi,ds:disc_param
+    call fword ptr ds:[esi].ds_demand_mount_proc
     jmp demand_load_drive_done
 
 demand_load_drive_fail:
@@ -5083,7 +5085,7 @@ init    PROC far
     mov esi,OFFSET hook_init_disc
     mov edi,OFFSET hook_init_disc_name
     mov ax,hook_init_disc_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET install_disc
     mov edi,OFFSET install_disc_name
