@@ -1774,61 +1774,61 @@ SetDiscParam    MACRO
     OsGate set_disc_param_nr
                     ENDM
 
-;       IN  BX      Disc sel
+;       IN      BX      Disc sel
 WaitForDiscRequest      MACRO
-    OldOsGate wait_for_disc_request_nr
+    OsGate wait_for_disc_request_nr
                     ENDM
 
-;       IN  BX      Disc sel
-;       OUT     EDI         Disc handle
+;       IN      BX      Disc sel
+;       OUT     EDI     Disc handle
 GetDiscRequest  MACRO
-    OldOsGate get_disc_request_nr
+    OsGate get_disc_request_nr
                     ENDM
 
-;       IN  BX      Disc sel
-;       OUT     EDI         Disc handle
+;       IN      BX      Disc sel
+;       OUT     EDI     Disc handle
 PollDiscRequest MACRO
-    OldOsGate poll_disc_request_nr
+    OsGate poll_disc_request_nr
                     ENDM
 
-;       IN  BX      Disc sel
-;       IN      EDI         Disc handle
+;       IN      BX      Disc sel
+;       IN      EDI     Disc handle
 DiscRequestCompleted    MACRO
-    OldOsGate disc_request_completed_nr
+    OsGate disc_request_completed_nr
                     ENDM
 
-;       IN  BX      Disc sel
-;       IN      AX          Sector
-;       IN      DX          Unit
-;       OUT EDI     Disc handle
+;       IN      BX      Disc sel
+;       IN      AX      Sector
+;       IN      DX      Unit
+;       OUT     EDI     Disc handle
 NewDiscRequest  MACRO
-    OldOsGate new_disc_request_nr
+    OsGate new_disc_request_nr
                     ENDM
 
-;       IN  BX      Disc sel
-;       IN      AX          Sector
-;       IN      DX          Unit
-;       OUT EDI     Disc handle
+;       IN      BX      Disc sel
+;       IN      AX      Sector
+;       IN      DX      Unit
+;       OUT     EDI     Disc handle
 LockDiscRequest MACRO
-    OldOsGate lock_disc_request_nr
+    OsGate lock_disc_request_nr
                     ENDM
 
-;       IN  EDI     Disc handle
+;       IN      EDI     Disc handle
 ModifyDiscRequest       MACRO
-    OldOsGate modify_disc_request_nr
+    OsGate modify_disc_request_nr
                     ENDM
 
-;       IN  EDI     Disc handle
+;       IN      EDI     Disc handle
 UnlockDiscRequest       MACRO
-    OldOsGate unlock_disc_request_nr
+    OsGate unlock_disc_request_nr
                     ENDM
 
-;       IN  BX      Disc sel
-;       IN  ECX     Max number of entries
-;       OUT     ESI         Disc handle array
-;       OUT ECX     Number of entries
+;       IN      BX      Disc sel
+;       IN      ECX     Max number of entries
+;       OUT     ESI     Disc handle array
+;       OUT     ECX     Number of entries
 GetDiscRequestArray     MACRO
-    OldOsGate get_disc_request_array_nr
+    OsGate get_disc_request_array_nr
                     ENDM
 
 ;       IN      AL          Drive #

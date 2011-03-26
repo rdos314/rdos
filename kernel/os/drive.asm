@@ -1872,7 +1872,7 @@ register_disc_change    Endp
 ;
 ;           DESCRIPTION:    wait for a new disc request
 ;
-;           PARAMETERS:         BX          Disc selector
+;           PARAMETERS:     BX          Disc selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1914,7 +1914,7 @@ wait_for_disc_req_done:
     popad
     pop es
     pop ds
-    ret
+    retf32
 wait_for_disc_request   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1924,7 +1924,7 @@ wait_for_disc_request   Endp
 ;
 ;           DESCRIPTION:    poll for a new disc request
 ;
-;           PARAMETERS:         BX          Disc selector
+;           PARAMETERS:     BX          Disc selector
 ;
 ;           RETURNS:        EDI         Disc handle
 ;
@@ -1945,7 +1945,7 @@ poll_disc_request       Proc far
 
 poll_disc_req_done:
     pop ds
-    ret
+    retf32
 poll_disc_request       Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1955,7 +1955,7 @@ poll_disc_request       Endp
 ;
 ;           DESCRIPTION:    get a disc request
 ;
-;           PARAMETERS:         BX          Disc selector
+;           PARAMETERS:     BX          Disc selector
 ;
 ;           RETURNS:        EDI         Disc handle
 ;
@@ -2000,7 +2000,7 @@ get_disc_req_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 get_disc_request    Endp
 
     
@@ -2074,7 +2074,7 @@ new_disc_req_done:
     pop cx
     pop es
     pop ds
-    ret
+    retf32
 new_disc_request    Endp
 
 
@@ -2144,7 +2144,7 @@ lock_disc_done:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 lock_disc_request       ENDP
 
 
@@ -2191,7 +2191,7 @@ modify_disc_done:
     popad
     pop es
     pop ds
-    ret
+    retf32
 modify_disc_request     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2215,7 +2215,7 @@ unlock_disc_request     PROC far
 ;
     pop ds
     clc
-    ret
+    retf32
 unlock_disc_request     ENDP
 
     
@@ -2323,7 +2323,7 @@ completed_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 disc_request_completed  Endp
 
     
@@ -2506,7 +2506,7 @@ get_disc_req_arr_end:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 get_disc_request_array  Endp
 
 
@@ -5116,22 +5116,22 @@ init    PROC far
     mov esi,OFFSET wait_for_disc_request
     mov edi,OFFSET wait_for_disc_request_name
     mov ax,wait_for_disc_request_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET poll_disc_request
     mov edi,OFFSET poll_disc_request_name
     mov ax,poll_disc_request_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_disc_request
     mov edi,OFFSET get_disc_request_name
     mov ax,get_disc_request_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET new_disc_request
     mov edi,OFFSET new_disc_request_name
     mov ax,new_disc_request_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET lock_disc_request
     mov edi,OFFSET lock_disc_request_name
@@ -5141,22 +5141,22 @@ init    PROC far
     mov esi,OFFSET modify_disc_request
     mov edi,OFFSET modify_disc_request_name
     mov ax,modify_disc_request_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET unlock_disc_request
     mov edi,OFFSET unlock_disc_request_name
     mov ax,unlock_disc_request_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET disc_request_completed
     mov edi,OFFSET disc_request_completed_name
     mov ax,disc_request_completed_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_disc_request_array
     mov edi,OFFSET get_disc_request_array_name
     mov ax,get_disc_request_array_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET open_drive
     mov edi,OFFSET open_drive_name

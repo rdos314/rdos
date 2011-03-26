@@ -378,6 +378,16 @@ void RdosSetDiscParam(  int disc_sel,
                         int bios_sectors_per_cyl,
                         int bios_heads); 
 
+void RdosWaitForDiscRequest(int disc_sel);
+long RdosGetDiscRequest(int disc_sel);
+long RdosPollDiscRequest(int disc_sel);
+void RdosDiscRequestCompleted(int disc_sel, long disc_handle);
+long RdosNewDiscRequest(int disc_sel, int sector, int unit);
+long RdosLockDiscRequest(int disc_sel, int sector, int unit);
+void RdosModifyDiscRequest(long disc_handle);
+void RdosUnlockDiscRequest(long disc_handle);
+int RdosGetDiscRequestArray(int disc, int max_entries, long **req_array);
+
 /* 32-bit compact memory model (device-drivers) */
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -1018,6 +1028,51 @@ void RdosSetDiscParam(  int disc_sel,
 #pragma aux RdosSetDiscParam = \
     OsGate_set_disc_param \
     parm [ebx] [ecx] [eax] [edx] [esi] [edi];
+
+#pragma aux RdosWaitForDiscRequest = \
+    OsGate_wait_for_disc_request \
+    parm [ebx];
+
+#pragma aux RdosGetDiscRequest = \
+    OsGate_get_disc_request \
+    parm [ebx] \
+    value [edi];
+
+#pragma aux RdosPollDiscRequest = \
+    OsGate_poll_disc_request \
+    parm [ebx] \
+    value [edi];
+
+#pragma aux RdosDiscRequestCompleted = \
+    OsGate_disc_request_completed \
+    parm [ebx] [edi];
+
+#pragma aux RdosNewDiscRequest = \
+    OsGate_new_disc_request \
+    parm [ebx] [eax] [edx] \
+    value [edi];
+
+#pragma aux RdosLockDiscRequest = \
+    OsGate_lock_disc_request \
+    parm [ebx] [eax] [edx] \
+    value [edi];
+
+#pragma aux RdosModifyDiscRequest = \
+    OsGate_modify_disc_request \
+    parm [edi];
+
+#pragma aux RdosUnlockDiscRequest = \
+    OsGate_unlock_disc_request \
+    parm [edi];
+
+#pragma aux RdosGetDiscRequestArray = \
+    OsGate_get_disc_request_array \
+    "mov es:[edi],esi" \
+    "mov esi,0x20" \
+    "mov es:[edi+4],esi" \
+    parm [ebx] [ecx] [es edi] \
+    value [ecx] \
+    modify [esi];
 
 #ifdef __cplusplus
 }
