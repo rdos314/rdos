@@ -2751,7 +2751,7 @@ allocate_dynamic_drive  Endp
 ;
 ;           DESCRIPTION:    Open drive
 ;
-;           PARAMETERS:         AL          Drive #
+;           PARAMETERS:     AL          Drive #
 ;                           AH          Disc #
 ;                           EDX         Start sector
 ;                           ECX         Sectors
@@ -2803,7 +2803,7 @@ open_drive_done:
     pop bx
     pop es
     pop ds
-    ret
+    retf32
 open_drive      Endp
 
 
@@ -2823,7 +2823,7 @@ close_drive_name    DB 'Close Drive',0
 close_drive     Proc far
     int 3
     FlushDrive
-    ret
+    retf32
 close_drive     Endp
 
 
@@ -2935,7 +2935,7 @@ flush_leave:
     popad
     pop es
     pop ds
-    ret
+    retf32
 flush_drive     Endp
 
 
@@ -3011,7 +3011,7 @@ get_drive_param_done:
     pop edx
     pop bx
     pop ds
-    ret
+    retf32
 get_drive_param ENDP
 
 
@@ -3098,7 +3098,7 @@ new_leave:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 new_sector      ENDP
 
 
@@ -3261,7 +3261,7 @@ lock_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 lock_sector     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3324,7 +3324,7 @@ modify_done:
     popad
     pop es
     pop ds
-    ret
+    retf32
 modify_sector   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3381,7 +3381,7 @@ flush_done:
     popad
     pop es
     pop ds
-    ret
+    retf32
 flush_sector    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3625,7 +3625,7 @@ unlock_done:
     pop es
     pop ds
     clc
-    ret
+    retf32
 unlock_sector   ENDP
 
 
@@ -5161,17 +5161,17 @@ init    PROC far
     mov esi,OFFSET open_drive
     mov edi,OFFSET open_drive_name
     mov ax,open_drive_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET close_drive
     mov edi,OFFSET close_drive_name
     mov ax,close_drive_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET flush_drive
     mov edi,OFFSET flush_drive_name
     mov ax,flush_drive_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET new_sector
     mov edi,OFFSET new_sector_name
@@ -5181,27 +5181,27 @@ init    PROC far
     mov esi,OFFSET get_drive_param
     mov edi,OFFSET get_drive_param_name
     mov ax,get_drive_param_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET lock_sector
     mov edi,OFFSET lock_sector_name
     mov ax,lock_sector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET unlock_sector
     mov edi,OFFSET unlock_sector_name
     mov ax,unlock_sector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET modify_sector
     mov edi,OFFSET modify_sector_name
     mov ax,modify_sector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET flush_sector
     mov edi,OFFSET flush_sector_name
     mov ax,flush_sector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_disc_seq
     mov edi,OFFSET create_disc_seq_name

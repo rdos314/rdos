@@ -1836,26 +1836,26 @@ GetDiscRequestArray     MACRO
 ;       IN      EDX         Start sector
 ;       IN      ECX         Number of sectors
 OpenDrive       MACRO
-    OldOsGate open_drive_nr
+    OsGate open_drive_nr
                     ENDM
 
 ;       IN      AL          Drive #
 CloseDrive      MACRO
-    OldOsGate close_drive_nr
+    OsGate close_drive_nr
                     ENDM
 
 ;       IN      AL          Drive #
 FlushDrive      MACRO
-    OldOsGate flush_drive_nr
+    OsGate flush_drive_nr
                     ENDM
 
 ;       IN      AL          Drive #
 ;       OUT     EAX         Readahead
-;       OUT ECX     Size
-;       OUT SI      Sectors per unit
-;       OUT DI      Units
+;       OUT     ECX     Size
+;       OUT     SI      Sectors per unit
+;       OUT     DI      Units
 GetDriveParam   MACRO
-    OldOsGate get_drive_param_nr
+    OsGate get_drive_param_nr
                     ENDM
 
 ;       AL          DRIVE #
@@ -1863,22 +1863,22 @@ GetDriveParam   MACRO
 ;       EDX         SECTOR
 ;       ESI         Logical address of data
 LockSector      MACRO
-    OldOsGate lock_sector_nr
+    OsGate lock_sector_nr
                     ENDM
 
 ;       EBX         Handle
 UnlockSector    MACRO
-    OldOsGate unlock_sector_nr
+    OsGate unlock_sector_nr
                     ENDM
 
 ;       EBX         Handle
 ModifySector    MACRO
-    OldOsGate modify_sector_nr
+    OsGate modify_sector_nr
                     ENDM
 
 ;       EBX         Handle
 FlushSector     MACRO
-    OldOsGate flush_sector_nr
+    OsGate flush_sector_nr
                     ENDM
 
 ;       AL          Drive #
@@ -1886,7 +1886,7 @@ FlushSector     MACRO
 ;       EDX         Sector
 ;       ESI         Logical address of data
 NewSector       MACRO
-    OldOsGate new_sector_nr
+    OsGate new_sector_nr
                     ENDM
 
 ;       CX          Max number of entries

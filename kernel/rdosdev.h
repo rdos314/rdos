@@ -388,6 +388,17 @@ void RdosModifyDiscRequest(long disc_handle);
 void RdosUnlockDiscRequest(long disc_handle);
 int RdosGetDiscRequestArray(int disc, int max_entries, long **req_array);
 
+void RdosOpenDrive(int drive, int disc_nr, int start_sector, int sector_count);
+void RdosCloseDrive(int drive);
+void RdosFlushDrive(int drive);
+int RdosGetDriveParam(int drive, int *read_ahead, int *sector_per_unit, int *units);
+int RdosLockSector(int drive, int sector, void **data);
+void RdosUnlockSector(int handle);
+void RdosModifySector(int handle);
+void RdosFlushSector(int handle);
+int RdosNewSector(int drive, int sector, void **data);
+
+
 /* 32-bit compact memory model (device-drivers) */
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -1072,6 +1083,65 @@ int RdosGetDiscRequestArray(int disc, int max_entries, long **req_array);
     "mov es:[edi+4],esi" \
     parm [ebx] [ecx] [es edi] \
     value [ecx] \
+    modify [esi];
+
+#pragma aux RdosOpenDrive = \
+    "mov ah,bl" \
+    OsGate_open_drive \
+    parm [eax] [ebx] [edx] [ecx] \
+    modify [eax];
+
+#pragma aux RdosCloseDrive = \
+    OsGate_close_drive \
+    parm [eax];
+
+#pragma aux RdosFlushDrive = \
+    OsGate_flush_drive \
+    parm [eax];
+
+#pragma aux RdosGetDriveParam = \
+    "push edi" \
+    "push esi" \
+    OsGate_flush_drive \
+    "mov gs:[edx],eax" \
+    "movzx eax,si" \
+    "pop esi" \
+    "mov fs:[esi],eax" \
+    "movzx eax,di" \
+    "pop edi" \
+    "mov es:[edi],eax
+    parm [eax] [gs edx] [fs esi] [es edi] \
+    value [ecx] \
+    modify [eax];
+
+#pragma aux RdosLockSector = \
+    OsGate_lock_sector \
+    "mov es:[edi],esi" \
+    "mov esi,0x20" \
+    "mov es:[edi+4],esi" \
+    parm [eax] [edx] [es edi] \
+    value [ebx] \
+    modify [esi];
+
+#pragma aux RdosUnlockSector = \
+    OsGate_unlock_sector \
+    parm [ebx];
+
+#pragma aux RdosModifySector = \
+    OsGate_modify_sector \
+    parm [ebx];
+
+#pragma aux RdosFlushSector = \
+    OsGate_flush_sector \
+    parm [ebx];
+
+#pragma aux RdosNewSector = \
+    OsGate_new_sector \
+    "mov es:[edi],esi" \
+    "mov esi,0x20" \
+    "mov es:[edi+4],esi" \
+    parm [eax] [edx] [es edi] \
+    value [ebx] \
     modify [esi];
 
 #ifdef __cplusplus
