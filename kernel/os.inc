@@ -613,6 +613,12 @@ AllocateMultiplePhysical    MACRO
     OsGate allocate_multiple_physical_nr
                     ENDM
 
+;       ES:EDI      Swap callback
+;       AL  Swap level (0 = highest priority, 15 = lowest priority)
+RegisterSwapProc    MACRO
+    OsGate register_swap_proc_nr
+                    ENDM
+
 ;;;;;;;;;;; Timers ;;;;;;;;;;;;;;;;
 
 ;       ES:EDI      Callback
@@ -1728,24 +1734,6 @@ ListenUdpPort   MACRO
             ENDM
 
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
-
-;       ES:DI   Swap callback
-;       AL  Swap level (0 = highest priority, 15 = lowest priority)
-RegisterSwapProc    MACRO
-    OldOsGate register_swap_proc_nr
-                    ENDM
-
-;       IN  EAX     Table name
-;       OUT ES      Table selector
-GetAcpiTable    MACRO
-    OldOsGate get_acpi_table_nr
-                    ENDM
-
-; IN  BX    Thread #
-; OUT BX    Thread sel
-ThreadToSel     MACRO
-    OldOsGate thread_to_sel_nr
-            ENDM
             
 ;       ES:DI   PROCEDURE THAT INITS DISC
 HookInitDisc    MACRO
@@ -1952,6 +1940,18 @@ ResetDrive      MACRO
                     ENDM
 
 ;;;;;;;;;;;; FILE SYSTEM ;;;;;;;;;;;;
+
+;       IN  EAX     Table name
+;       OUT ES      Table selector
+GetAcpiTable    MACRO
+    OldOsGate get_acpi_table_nr
+                    ENDM
+
+; IN  BX    Thread #
+; OUT BX    Thread sel
+ThreadToSel     MACRO
+    OldOsGate thread_to_sel_nr
+            ENDM
 
 ;       DS:ESI       Device read
 ;       ES:EDI       Device write

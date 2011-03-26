@@ -2630,7 +2630,7 @@ swap_loop:
     xor ax,ax
     mov es,ax
     LeaveSection ds:fs_file_section
-    ret
+    retf32
 swap_proc       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2653,7 +2653,7 @@ init_file       PROC near
     mov ax,FILE_HANDLE
     RegisterHandle
 ;
-    mov di,OFFSET swap_proc
+    mov edi,OFFSET swap_proc
     RegisterSwapProc
 ;
     mov esi,OFFSET get_file_list_entry

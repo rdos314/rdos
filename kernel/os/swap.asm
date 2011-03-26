@@ -34,102 +34,102 @@ INCLUDE system.inc
 
 swap_data_seg   STRUC
 
-swap_level          DB ?
-swap_hooks                  DB ?
+swap_level      DB ?
+swap_hooks          DB ?
 
-swap_arr                    DW 2*32 DUP(?)
+swap_arr            DD 2*32 DUP(?)
 
 swap_data_seg   ENDS
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   RegisterSwapProc
+;           NAME:           RegisterSwapProc
 ;
-;               DESCRIPTION:    Register a new swap-callback
+;           DESCRIPTION:    Register a new swap-callback
 ;
-;               PARAMETERS:             ES:DI   Callback address
+;           PARAMETERS:     ES:EDI   Callback address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-register_swap_proc_name                 DB 'Register Swap Proc',0
+register_swap_proc_name         DB 'Register Swap Proc',0
 
 register_swap_proc      PROC far
-        push ds
-        push ax
-        push bx
+    push ds
+    push ax
+    push bx
 ;
-        mov ax,swap_data_sel
-        mov ds,ax
-        mov al,ds:swap_hooks
-        mov bl,al
-        xor bh,bh
-        shl bx,2
-        add bx,OFFSET swap_arr
-        mov [bx],di
-        mov [bx+2],es
-        inc al
-        mov ds:swap_hooks,al
+    mov ax,swap_data_sel
+    mov ds,ax
+    mov al,ds:swap_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET swap_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc al
+    mov ds:swap_hooks,al
 ;
-        pop bx
-        pop ax
-        pop ds
-        ret
+    pop bx
+    pop ax
+    pop ds
+    retf32
 register_swap_proc      ENDP
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   run_hooks
+;           NAME:           run_hooks
 ;
-;               DESCRIPTION:    Run hooks
+;           DESCRIPTION:    Run hooks
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 run_hooks       Proc near
-        mov ax,swap_data_sel
-        mov ds,ax
-        mov cl,ds:swap_hooks
-        or cl,cl
-        je run_hooks_done
+    mov ax,swap_data_sel
+    mov ds,ax
+    mov cl,ds:swap_hooks
+    or cl,cl
+    je run_hooks_done
 ;
-        mov bx,OFFSET swap_arr
+    mov bx,OFFSET swap_arr
 
 run_hooks_loop:
-        push ds
-        push bx
-        push cx
+    push ds
+    push bx
+    push cx
 ;
-    mov al,ds:swap_level        
-        call dword ptr [bx]
+    mov al,ds:swap_level    
+    call fword ptr [bx]
 ;       
-        pop cx
-        pop bx
-        pop ds
-        add bx,4
-        dec cl
-        jnz run_hooks_loop
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    dec cl
+    jnz run_hooks_loop
 
 run_hooks_done:
-        ret
+    ret
 run_hooks       Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   swap_thread
+;           NAME:           swap_thread
 ;
-;               DESCRIPTION:    swap thread
+;           DESCRIPTION:    swap thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -139,51 +139,51 @@ swap_pr:
     int 3
 
 swap_loop:
-        mov bx,swap_data_sel
-        mov ds,bx
-        mov ds:swap_level,0
-        call run_hooks
-        mov eax,10
-        WaitMilliSec
-        jmp swap_loop
+    mov bx,swap_data_sel
+    mov ds,bx
+    mov ds:swap_level,0
+    call run_hooks
+    mov eax,10
+    WaitMilliSec
+    jmp swap_loop
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   init_swap_thread
+;           NAME:           init_swap_thread
 ;
-;               DESCRIPTION:    Init swap thread
+;           DESCRIPTION:    Init swap thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_swap_thread        PROC far
-        push ds
-        push es
-        pusha
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+init_swap_thread    PROC far
+    push ds
+    push es
+    pusha
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov si,OFFSET swap_pr
-        mov di,OFFSET swap_name
-        mov cx,256
-        mov ax,3
+    mov si,OFFSET swap_pr
+    mov di,OFFSET swap_name
+    mov cx,256
+    mov ax,3
 ;       CreateThread
 ;
-        popa
-        pop es
-        pop ds
-        retf32
-init_swap_thread        ENDP
+    popa
+    pop es
+    pop ds
+    retf32
+init_swap_thread    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   Init_swap
+;           NAME:           Init_swap
 ;
-;               DESCRIPTION:    Init module
+;           DESCRIPTION:    Init module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -194,31 +194,31 @@ init_swap       PROC near
     push es
     pushad
 ;    
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov edi,OFFSET init_swap_thread
-        HookInitTasking
+    mov edi,OFFSET init_swap_thread
+    HookInitTasking
 ;
-        mov esi,OFFSET register_swap_proc
-        mov edi,OFFSET register_swap_proc_name
-        xor cl,cl
-        mov ax,register_swap_proc_nr
-        RegisterOldOsGate
+    mov esi,OFFSET register_swap_proc
+    mov edi,OFFSET register_swap_proc_name
+    xor cl,cl
+    mov ax,register_swap_proc_nr
+    RegisterOsGate
 ;
-        mov bx,swap_data_sel
-        mov eax,SIZE swap_data_seg
-        AllocateFixedSystemMem
-        mov ds,bx
-        mov ds:swap_hooks,0
+    mov bx,swap_data_sel
+    mov eax,SIZE swap_data_seg
+    AllocateFixedSystemMem
+    mov ds,bx
+    mov ds:swap_hooks,0
 ;
     popad
     pop es
     pop ds
-        ret
+    ret
 init_swap       ENDP
 
 code    ENDS
 
-        END
+    END

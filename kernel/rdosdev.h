@@ -17,6 +17,13 @@ extern "C" {
 
 // callback pragmas
 
+typedef void __far (__rdos_swap_callback)(char level);
+
+#pragma aux __rdos_swap_callback "*" \
+                    parm caller [al] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 typedef void __far (__rdos_thread_callback)(void *);
 
 #pragma aux __rdos_thread_callback "*" \
@@ -225,6 +232,8 @@ void *RdosAllocateFixedProcessMem(int sel, long size);
 long RdosAllocatePhysical();
 long RdosAllocateMultiplePhysical(int pages);
 void RdosFreePhysical(long ads);
+
+void RdosRegisterSwapProc(__rdos_swap_callback *callb_proc);
 
 void RdosStartTimer(    int sel_id, 
                         unsigned long expire_msb, 
@@ -631,6 +640,10 @@ int RdosRegisterNetDriver(char class_id, int max_size, __rdos_net_driver_table *
 #pragma aux RdosFreePhysical = \
     OsGate_allocate_physical  \
     parm [eax];
+
+#pragma aux RdosRegisterSwapProc = \
+    OsGate_register_swap_proc  \
+    parm [es edi];
 
 #pragma aux RdosStartTimer = \
     OsGate_start_timer  \
