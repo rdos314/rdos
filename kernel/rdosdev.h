@@ -364,7 +364,7 @@ void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
 
 void RdosRegisterNetClass(char class_id, int ads_size, void *broadcast_ads);
 int RdosRegisterNetProtocol(int ads_size, short int packet_type, void *my_ads, __rdos_net_prot_callback *packet_callb);
-int RdosRegisterNetDriver(char class_id, int max_size, __rdos_net_driver_table *table, const char *name); 
+int RdosRegisterNetDriver(char class_id, int max_size, struct TNetDriverTable *table, const char *name); 
 
 void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
 int RdosInstallDisc(int disc_handle, int read_ahead, int *disc_nr);
@@ -1118,7 +1118,7 @@ void RdosResetDrive(int drive);
     "mov fs:[esi],eax" \
     "movzx eax,di" \
     "pop edi" \
-    "mov es:[edi],eax
+    "mov es:[edi],eax" \
     parm [eax] [gs edx] [fs esi] [es edi] \
     value [ecx] \
     modify [eax];
