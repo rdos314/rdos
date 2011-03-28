@@ -1258,9 +1258,9 @@ register_ppp_driver     Endp
 ;
 ;       Purpose:        Add source address of packet
 ;
-;       Parameters:         BX          protocol handle
+;       Parameters:     BX          protocol handle
 ;                       ES          packet
-;           FS      driver
+;                       FS          driver
 ;                       EDI         source address offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1297,7 +1297,7 @@ add_src_address_done:
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 add_net_source_address  Endp
 
         
@@ -1747,7 +1747,7 @@ net_broadcast   ENDP
 ;
 ;       Purpose:        Get PPP buffer
 ;
-;       Parameters:         BX          protocol handle
+;       Parameters:     BX          protocol handle
 ;                       ECX         size of data
 ;
 ;       returns:        ES:EDI  address of data
@@ -1771,7 +1771,7 @@ get_ppp_buffer  Proc far
 
 get_ppp_done:
     pop fs
-    ret
+    retf32
 get_ppp_buffer  Endp
 
         
@@ -1811,7 +1811,7 @@ send_ppp_done:
     pop eax
     pop fs
     pop ds
-    ret
+    retf32
 send_ppp    Endp
 
         
@@ -1821,7 +1821,7 @@ send_ppp    Endp
 ;
 ;       Purpose:        Net received callback. Called from ISR
 ;
-;       Parameters:         BX          Driver handle
+;       Parameters:     BX          Driver handle
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1851,7 +1851,7 @@ net_received_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 net_received    Endp
 
         
@@ -2648,25 +2648,25 @@ init    PROC far
     mov edi,OFFSET get_ppp_buffer_name
     xor cl,cl
     mov ax,get_ppp_buffer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_ppp
     mov edi,OFFSET send_ppp_name
     xor cl,cl
     mov ax,send_ppp_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET net_received
     mov edi,OFFSET net_received_name
     xor cl,cl
     mov ax,net_received_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET add_net_source_address
     mov edi,OFFSET add_net_source_address_name
     xor cl,cl
     mov ax,add_net_source_address_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET notify_ethernet_packet
     mov edi,OFFSET notify_ethernet_packet_name

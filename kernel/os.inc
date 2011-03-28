@@ -1591,32 +1591,32 @@ NetBroadcast    MACRO
     OsGate net_broadcast_nr
                 ENDM
 
-; IN  ECX           SIZE
+; IN  ECX       SIZE
 ; OUT ES:EDI    DATA BUFFER TO USE
 ; OUT NC        SUCCESS
 GetPppBuffer    MACRO
-    OldOsGate get_ppp_buffer_nr
+    OsGate get_ppp_buffer_nr
                         ENDM
 
-; IN  ECX           SIZE
+; IN  ECX       SIZE
 ; IN  ES        DATA
 ; OUT NC        SUCCESS
 SendPpp MACRO
-    OldOsGate send_ppp_nr
+    OsGate send_ppp_nr
                         ENDM
 
 ;       BX          HANDLE
 NetReceived     MACRO
-    OldOsGate net_received_nr
+    OsGate net_received_nr
                         ENDM
 
-;       IN      BX          protocol handle
+;       IN  BX      protocol handle
 ;       IN  FS      driver
 ;       IN  ES      packet
 ;       IN  EDI     source address offset
 ;       BX          HANDLE
 AddNetSourceAddress     MACRO
-    OldOsGate add_net_source_address_nr
+    OsGate add_net_source_address_nr
                         ENDM
 
 ;       AL          Protocol
