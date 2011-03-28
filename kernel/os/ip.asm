@@ -361,7 +361,7 @@ get_ip_mask     Endp
 ;
 ;       Purpose:        create an IP header, and allocate space for data
 ;
-;       Parameters:         AL          Protocol
+;       Parameters:     AL          Protocol
 ;                       AH          Time to live
 ;                       ECX         Size of data
 ;                       EDX         Destination IP
@@ -575,7 +575,7 @@ create_header_done:
     pop eax
     pop fs
     pop ds  
-    ret
+    retf32
 create_ip_header    Endp
 
         
@@ -627,7 +627,7 @@ CalcChecksum    Endp
 ;
 ;       Purpose:        send IP data
 ;
-;       Parameters:         ES          Data selector, IP datagram
+;       Parameters:     ES          Data selector, IP datagram
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -709,7 +709,7 @@ send_done:
     pop eax
     pop fs
     pop ds
-    ret
+    retf32
 send_ip_data    Endp
 
         
@@ -719,10 +719,10 @@ send_ip_data    Endp
 ;
 ;       Purpose:        create a broadcast IP header, and allocate space for data
 ;
-;       Parameters:         AL          Protocol
+;       Parameters:     AL          Protocol
 ;                       AH          Time to live
 ;                       ECX         Size of data
-;                       DS:ESI  Options
+;                       DS:ESI      Options
 ;                       FS          Driver handle
 ;
 ;       Returns:        ES:EDI  Ip data
@@ -847,7 +847,7 @@ create_broad_done:
     pop ecx
     pop bx
     pop eax
-    ret
+    retf32
 create_broadcast_ip     Endp
 
         
@@ -857,7 +857,7 @@ create_broadcast_ip     Endp
 ;
 ;       Purpose:        send broadcast IP data
 ;
-;       Parameters:         ES          Data selector, IP datagram
+;       Parameters:     ES          Data selector, IP datagram
 ;                       FS          Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -889,7 +889,7 @@ send_broadcast_ip       Proc far
     pop bx
     pop eax
     pop ds
-    ret
+    retf32
 send_broadcast_ip       Endp
 
         
@@ -1557,25 +1557,25 @@ init    PROC far
     mov edi,OFFSET create_ip_header_name
     xor cl,cl
     mov ax,create_ip_header_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_ip_data
     mov edi,OFFSET send_ip_data_name
     xor cl,cl
     mov ax,send_ip_data_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_broadcast_ip
     mov edi,OFFSET create_broadcast_ip_name
     xor cl,cl
     mov ax,create_broadcast_ip_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_broadcast_ip
     mov edi,OFFSET send_broadcast_ip_name
     xor cl,cl
     mov ax,send_broadcast_ip_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_ip_address
     mov edi,OFFSET get_ip_address_name

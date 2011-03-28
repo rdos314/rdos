@@ -1619,8 +1619,8 @@ AddNetSourceAddress     MACRO
     OsGate add_net_source_address_nr
                         ENDM
 
-;       AL          Protocol
-;       ES:EDI      Receiver callback
+; IN  AL          Protocol
+; IN  ES:EDI      Receiver callback
 ;           AX          Size of options
 ;           ECX         Size of data
 ;           EDX         Source IP address
@@ -1630,19 +1630,19 @@ HookIp  MACRO
     OsGate hook_ip_nr
                         ENDM
 
-;       AL          Protocol
-;       AH          Time to live
-;       ECX         Size of data
-;       EDX         Destination IP address
-;       DS:ESI  Options
-;       ES:EDI  IP Data
+; IN  AL          Protocol
+; IN  AH          Time to live
+; IN  ECX         Size of data
+; IN  EDX         Destination IP address
+; IN  DS:ESI    Options
+; OUT ES:EDI    IP Data
 CreateIpHeader  MACRO
-    OldOsGate create_ip_header_nr
+    OsGate create_ip_header_nr
                         ENDM
 
-;       ES          Datagram to send
+; IN  ES          Datagram to send
 SendIp  MACRO
-    OldOsGate send_ip_data_nr
+    OsGate send_ip_data_nr
                         ENDM
 
 ; IN  AL        Protocol
@@ -1652,13 +1652,13 @@ SendIp  MACRO
 ; IN  DS:ESI    Options
 ; OUT ES:EDI    IP Data
 CreateBroadcastIp       MACRO
-    OldOsGate create_broadcast_ip_nr
+    OsGate create_broadcast_ip_nr
                         ENDM
 
 ; IN  ES        Datagram to send
 ; IN  FS        Driver selector
 SendBroadcastIp MACRO
-    OldOsGate send_broadcast_ip_nr
+    OsGate send_broadcast_ip_nr
                         ENDM
 
 ; IN  AL        Option code
