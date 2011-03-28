@@ -399,6 +399,11 @@ void RdosSendBroadcastIp(char *data, int driver_sel);
 
 void RdosAddDhcpOption(char option_code, __rdos_dhcp_option_callback *callb_proc);
 
+int RdosGetIpCacheSel(long ip);
+char *RdosGetIpCacheHostName(long ip);
+long RdosGetHostTimeout(int cache_sel);
+void RdosUpdateRoundTripTime(int cache_sel, long time);
+
 void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
 int RdosInstallDisc(int disc_handle, int read_ahead, int *disc_nr);
 void RdosRegisterDiscChange(__rdos_disc_change_callback *callb_proc);
@@ -1092,6 +1097,34 @@ void RdosResetDrive(int drive);
 #pragma aux RdosAddDhcpOption = \
     OsGate_add_dhcp_option \
     parm [al] [es edi];
+
+#pragma aux RdosGetIpCacheSel = \
+    "push es" \
+    OsGate_lookup_ip_cache \
+    "mov eax,es" \
+    "pop es" \
+    parm [edx] \
+    value [eax];
+
+#pragma aux RdosGetIpCacheHostName = \
+    OsGate_lookup_ip_cache \
+    parm [edx] \
+    value [es edi];
+
+#pragma aux RdosGetHostTimeout = \
+    "push ds" \
+    "mov ds,bx" \
+    OsGate_get_host_timeout \
+    "pop ds" \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosUpdateRoundTripTime = \
+    "push ds" \
+    "mov ds,bx" \
+    OsGate_update_round_trip_time \
+    "pop ds" \
+    parm [ebx] [eax];
 
 #pragma aux RdosHookInitDisc = \
     OsGate_hook_init_disc \

@@ -1669,35 +1669,35 @@ AddDhcpOption   MACRO
     OsGate add_dhcp_option_nr
                         ENDM
 
-;       ES:DI   New IP cache entry callback
-;           ES      IP cache selector
+; IN  ES:EDI    New IP cache entry callback
+;        ES     IP cache selector
 HookIpCache     MACRO
-    OldOsGate hook_ip_cache_nr
+    OsGate hook_ip_cache_nr
                         ENDM
 
-;       AX          Size of IP cache data
-;       BX          Offset within IP cache data for
+; IN  AX          Size of IP cache data
+; OUT BX          Offset within IP cache data for
 AllocateIpCacheMem      MACRO
-    OldOsGate allocate_ip_cache_mem_nr
+    OsGate allocate_ip_cache_mem_nr
                         ENDM
 
-;       EDX         IP address
-;       ES          IP cache entry
-;       DI          Host name offset
+; IN  EDX         IP address
+; OUT ES          IP cache entry
+; OUT EDI         Host name offset
 LookupIpCache   MACRO
-    OldOsGate lookup_ip_cache_nr
+    OsGate lookup_ip_cache_nr
                         ENDM
 
-;       DS          IP cache entry
-;       EAX         Timeout in system tics
+; IN  DS          IP cache entry
+; OUT EAX         Timeout in system tics
 GetHostTimeout  MACRO
-    OldOsGate get_host_timeout_nr
+    OsGate get_host_timeout_nr
                         ENDM
 
-;       DS          IP cache entry
-;       EAX         Round trip time in system tics
+; IN  DS          IP cache entry
+; IN  EAX         Round trip time in system tics
 UpdateRoundTripTime     MACRO
-    OldOsGate update_round_trip_time_nr
+    OsGate update_round_trip_time_nr
                         ENDM
 
 ;       EDX         My PPP IP address

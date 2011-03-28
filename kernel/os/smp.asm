@@ -152,7 +152,7 @@ FindHost    Proc near
     push ds
     push es
     push bx
-    push di
+    push edi
 ;
     LookupIpCache
     jc find_host_done
@@ -196,7 +196,7 @@ find_host_buffered:
     clc
 
 find_host_done:
-    pop di
+    pop edi
     pop bx
     pop es
     pop ds
@@ -363,7 +363,7 @@ Receive Endp
 ;
 ;           DESCRIPTION:    add host from IP cache
 ;
-;           PARAMETERS:         ES          IP cache selector
+;           PARAMETERS:     ES          IP cache selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -378,7 +378,7 @@ add_host    PROC far
 ;
     pop bx
     pop ds
-    ret
+    retf32
 add_host    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -561,7 +561,7 @@ init_smp    PROC near
     mov edi,OFFSET Receive
     HookIp
 ;
-    mov di,OFFSET add_host
+    mov edi,OFFSET add_host
     HookIpCache
 ;
     mov ebx,OFFSET get_remote_mailslot16
