@@ -1662,10 +1662,11 @@ SendBroadcastIp MACRO
                         ENDM
 
 ; IN  AL        Option code
-; IN  ES:DI         Callback for option data
-;                       ES:DI       Receive option data
+; IN  ES:EDI    Callback for option data
+;        ECX    Size of option data
+;        ES:EDI Received option data
 AddDhcpOption   MACRO
-    OldOsGate add_dhcp_option_nr
+    OsGate add_dhcp_option_nr
                         ENDM
 
 ;       ES:DI   New IP cache entry callback

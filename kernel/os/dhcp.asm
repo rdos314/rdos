@@ -47,7 +47,7 @@ dhcp_option     STRUC
 
 dhcp_opt_next   DW ?
 dhcp_opt_code   DB ?
-dhcp_opt_callb  DD ?
+dhcp_opt_callb  DD ?,?
 
 dhcp_option     ENDS
 
@@ -2025,8 +2025,8 @@ DhcpDecline     Endp
 ;           DESCRIPTION:    Add a requested DHCP option to ask for
 ;
 ;       PARAMETERS:     AL              Option code
-;                           ES:DI       Callback
-;                               ES:DI   Pointer to option data
+;                       ES:EDI          Callback
+;                              ES:EDI   Pointer to option data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2044,8 +2044,8 @@ add_dhcp_option Proc far
     AllocateSmallGlobalMem
     pop eax
     mov es:dhcp_opt_code,al
-    mov word ptr es:dhcp_opt_callb,di
-    mov word ptr es:dhcp_opt_callb+2,dx
+    mov dword ptr es:dhcp_opt_callb,edi
+    mov word ptr es:dhcp_opt_callb+4,dx
     mov ax,SEG data
     mov ds,ax
     mov ax,ds:dhcp_option_list
@@ -2056,7 +2056,7 @@ add_dhcp_option Proc far
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 add_dhcp_option Endp
 
 
@@ -2218,13 +2218,14 @@ receive_ack_opt_loop:
     cmp al,fs:dhcp_opt_code
     jne receive_ack_opt_loop
 ;
-    push cx
-    push di
-    movzx cx,byte ptr es:[di+1]
-    add di,2
-    call fs:dhcp_opt_callb
-    pop di
-    pop cx
+    push ecx
+    push edi
+    movzx edi,di
+    movzx ecx,byte ptr es:[di+1]
+    add edi,2
+    call fword ptr fs:dhcp_opt_callb
+    pop edi
+    pop ecx
 
 receive_ack_next:
     inc di
@@ -2518,7 +2519,7 @@ init_dhcp_enabled_ok:
     mov edi,OFFSET add_dhcp_option_name
     xor cl,cl
     mov ax,add_dhcp_option_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     ret
 init_dhcp       ENDP

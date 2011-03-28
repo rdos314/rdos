@@ -1248,8 +1248,8 @@ define_ip       Endp
 ;
 ;       Purpose:        Define IP mask
 ;
-;       Parameters:         CX              Size of msg
-;                       ES:DI       mask
+;       Parameters:     ECX          Size of msg
+;                       ES:EDI       mask
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1275,7 +1275,7 @@ define_mask     Proc far
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 define_mask     Endp
 
         
@@ -1285,8 +1285,8 @@ define_mask     Endp
 ;
 ;       Purpose:        Define gateway
 ;
-;       Parameters:         CX              Size of msg
-;                       ES:DI       gateway
+;       Parameters:     ECX              Size of msg
+;                       ES:EDI       gateway
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1312,7 +1312,7 @@ define_gateway  Proc far
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 define_gateway  Endp
         
         
@@ -1614,11 +1614,11 @@ init    PROC far
     mov es,ax
 ;
     mov al,1
-    mov di,OFFSET define_mask
+    mov edi,OFFSET define_mask
     AddDhcpOption
 ;
     mov al,3
-    mov di,OFFSET define_gateway
+    mov edi,OFFSET define_gateway
     AddDhcpOption
 ;
     call init_cache

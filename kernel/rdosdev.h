@@ -143,6 +143,13 @@ typedef void __far (__rdos_ip_callback)(short int opt_size, int data_size, long 
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_dhcp_option_callback)(int size, char *data);
+
+#pragma aux __rdos_dhcp_option_callback "*" \
+                    parm caller [ecx] [es edi] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 typedef void __far (__rdos_disc_assign_callback)();
 
 #pragma aux __rdos_disc_assign_callback "*" \
@@ -383,6 +390,14 @@ int RdosRegisterNetDriver(char class_id, int max_size, struct TNetDriverTable *t
 void RdosNetBroadcast(__rdos_net_broadcast_callback *callb_proc);
 void RdosNetReceived(int prot_handle);
 void RdosHookIp(char protocol, __rdos_ip_callback *callb_proc);
+
+char *RdosCreateIpHeader(char protocol, char ttl, int data_size, long dest_ip, void *options);
+void RdosSendIp(char *data);
+
+char *RdosCreateBroadcastIp(char protocol, char ttl, int data_size, int driver_sel, void *options);
+void RdosSendBroadcastIp(char *data, int driver_sel);
+
+void RdosAddDhcpOption(char option_code, __rdos_dhcp_option_callback *callb_proc);
 
 void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
 int RdosInstallDisc(int disc_handle, int read_ahead, int *disc_nr);
@@ -1048,6 +1063,34 @@ void RdosResetDrive(int drive);
 
 #pragma aux RdosHookIp = \
     OsGate_hook_ip \
+    parm [al] [es edi];
+
+#pragma aux RdosCreateIpHeader = \
+    "push ds" \
+    "mov ds,bx" \
+    OsGate_create_ip_header \
+    "pop ds" \
+    parm [al] [ah] [ecx] [edx] [bx esi] \
+    value [es edi];
+
+#pragma aux RdosSendIp = \
+    OsGate_send_ip \
+    parm [es edi];
+
+#pragma aux RdosCreateBroadcastIp = \
+    "push ds" \
+    "mov ds,bx" \
+    OsGate_create_broadcast_ip \
+    "pop ds" \
+    parm [al] [ah] [ecx] [fs] [bx esi] \
+    value [es edi];
+
+#pragma aux RdosSendBroadcastIp = \
+    OsGate_send_broadcast_ip \
+    parm [es edi] [fs];
+
+#pragma aux RdosAddDhcpOption = \
+    OsGate_add_dhcp_option \
     parm [al] [es edi];
 
 #pragma aux RdosHookInitDisc = \

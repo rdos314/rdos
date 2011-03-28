@@ -35,249 +35,249 @@ INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ntp.inc
 
-        extrn WriteIpEnv:near
+    extrn WriteIpEnv:near
 
 data    SEGMENT byte public 'DATA'
 
-ntp_req         ntp_header <>
+ntp_req     ntp_header <>
 
 data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
 .386p
-        
-        assume cs:code
+    
+    assume cs:code
 
-            
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:                   GetTimestamp
+;       Name:           GetTimestamp
 ;
-;       Purpose:                Get current time in time-stamp format
+;       Purpose:        Get current time in time-stamp format
 ;
-;       Returns:                EDX:EAX         Time-stamp time
+;       Returns:        EDX:EAX     Time-stamp time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetTimestamp    Proc near
-        push ecx
+    push ecx
 ;
-        GetSystemTime
-        sub edx,1                               ; UTC + 1 time-zone
-        sub edx,0FE2440h                ; rel to 1/1 1900 (no leap in 1900)
-        mov ecx,edx
-        mov edx,3600
-        mul edx
-        push eax        
-        push edx
-        mov eax,3600
-        mul ecx
-        pop ecx
-        add eax,ecx
-        mov edx,eax
-        pop eax
+    GetSystemTime
+    sub edx,1                   ; UTC + 1 time-zone
+    sub edx,0FE2440h        ; rel to 1/1 1900 (no leap in 1900)
+    mov ecx,edx
+    mov edx,3600
+    mul edx
+    push eax    
+    push edx
+    mov eax,3600
+    mul ecx
+    pop ecx
+    add eax,ecx
+    mov edx,eax
+    pop eax
 ;
-        pop ecx 
-        ret
+    pop ecx 
+    ret
 GetTimestamp    Endp
 
-            
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:                   SyncTime
+;       Name:           SyncTime
 ;
-;       Purpose:                Sync time with NTP
+;       Purpose:        Sync time with NTP
 ;
-;       Parameters:             IP address of NTP-server
+;       Parameters:         IP address of NTP-server
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 sync_time_name DB 'Synchronize Time',0
 
 sync_time       Proc far
-        push ds
-        push es
-        push ax
-        push bx
-        push cx
-        push edx
-        push si
-        push di
+    push ds
+    push es
+    push ax
+    push bx
+    push cx
+    push edx
+    push si
+    push di
 ;
-        mov ax,SEG data
-        mov ds,ax
-        mov es,ax
-        mov cx,SIZE ntp_header
-        mov di,OFFSET ntp_req
-        xor al,al
-        rep stosb
-        mov di,OFFSET ntp_req
-        mov ds:ntp_req.ntp_flag,1Bh
-        mov ds:ntp_req.ntp_strat,3
-        mov ds:ntp_req.ntp_poll,100
-        mov ds:ntp_req.ntp_precision,-20
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+    mov cx,SIZE ntp_header
+    mov di,OFFSET ntp_req
+    xor al,al
+    rep stosb
+    mov di,OFFSET ntp_req
+    mov ds:ntp_req.ntp_flag,1Bh
+    mov ds:ntp_req.ntp_strat,3
+    mov ds:ntp_req.ntp_poll,100
+    mov ds:ntp_req.ntp_precision,-20
 ;
-        push edx
-        call GetTimestamp
-        xchg al,ah
-        ror eax,16
-        xchg al,ah
-        mov ds:ntp_req.ntp_orginate_timestamp+4,eax
-        xchg dl,dh
-        ror edx,16
-        xchg dl,dh
-        mov ds:ntp_req.ntp_orginate_timestamp,edx               ; t1
-        pop edx
+    push edx
+    call GetTimestamp
+    xchg al,ah
+    ror eax,16
+    xchg al,ah
+    mov ds:ntp_req.ntp_orginate_timestamp+4,eax
+    xchg dl,dh
+    ror edx,16
+    xchg dl,dh
+    mov ds:ntp_req.ntp_orginate_timestamp,edx           ; t1
+    pop edx
 ;
-        mov edi,OFFSET ntp_req
-        mov ecx,SIZE ntp_header
-        mov bx,123
-        mov eax,2000
-        QueryUdp
-        jc sync_time_done
+    mov edi,OFFSET ntp_req
+    mov ecx,SIZE ntp_header
+    mov bx,123
+    mov eax,2000
+    QueryUdp
+    jc sync_time_done
 ;
-        call GetTimestamp                                                               ; t4
-        mov ebx,es:[di].ntp_transmit_timestamp+4                ; t3
-        xchg bl,bh
-        ror ebx,16
-        xchg bl,bh
-        mov ecx,es:[di].ntp_transmit_timestamp
-        xchg cl,ch
-        ror ecx,16
-        xchg cl,ch
-        sub eax,ebx                                                                             ; t4 - t3
-        sbb edx,ecx
-        push eax
-        push edx        
+    call GetTimestamp                                   ; t4
+    mov ebx,es:[di].ntp_transmit_timestamp+4        ; t3
+    xchg bl,bh
+    ror ebx,16
+    xchg bl,bh
+    mov ecx,es:[di].ntp_transmit_timestamp
+    xchg cl,ch
+    ror ecx,16
+    xchg cl,ch
+    sub eax,ebx                                         ; t4 - t3
+    sbb edx,ecx
+    push eax
+    push edx    
 ;
-        mov ebx,ds:ntp_req.ntp_orginate_timestamp+4             ; t1
-        xchg bl,bh
-        ror ebx,16
-        xchg bl,bh
-        mov ecx,ds:ntp_req.ntp_orginate_timestamp
-        xchg cl,ch
-        ror ecx,16
-        xchg cl,ch      
-        mov eax,es:[di].ntp_receive_timestamp+4                 ; t2
-        xchg al,ah
-        ror eax,16
-        xchg al,ah
-        mov edx,es:[di].ntp_receive_timestamp
-        xchg dl,dh
-        ror edx,16
-        xchg dl,dh
-        sub eax,ebx
-        sbb edx,ecx                                                                             ; t2 - t1
+    mov ebx,ds:ntp_req.ntp_orginate_timestamp+4         ; t1
+    xchg bl,bh
+    ror ebx,16
+    xchg bl,bh
+    mov ecx,ds:ntp_req.ntp_orginate_timestamp
+    xchg cl,ch
+    ror ecx,16
+    xchg cl,ch      
+    mov eax,es:[di].ntp_receive_timestamp+4         ; t2
+    xchg al,ah
+    ror eax,16
+    xchg al,ah
+    mov edx,es:[di].ntp_receive_timestamp
+    xchg dl,dh
+    ror edx,16
+    xchg dl,dh
+    sub eax,ebx
+    sbb edx,ecx                                         ; t2 - t1
 ;
-        pop ecx
-        pop ebx                                                                                 ; t4 - t3
-        sub eax,ebx
-        sub edx,ecx                                                                             ; t2 - t1 - (t4 - t3)
-        mov ebx,eax
-        mov ecx,edx
-        test ecx,80000000h
-        pushf
-        jz diff_pos
+    pop ecx
+    pop ebx                                         ; t4 - t3
+    sub eax,ebx
+    sub edx,ecx                                         ; t2 - t1 - (t4 - t3)
+    mov ebx,eax
+    mov ecx,edx
+    test ecx,80000000h
+    pushf
+    jz diff_pos
 diff_neg:
-        not ebx
-        not ecx
+    not ebx
+    not ecx
 diff_pos:
-        mov eax,ecx
-        xor edx,edx
-        mov edi,3600*2
-        div edi
-        push eax
-        mov eax,ebx
-        div edi
-        pop edx
-        popf
-        jz sync_diff_found
-        not eax
-        not edx
+    mov eax,ecx
+    xor edx,edx
+    mov edi,3600*2
+    div edi
+    push eax
+    mov eax,ebx
+    div edi
+    pop edx
+    popf
+    jz sync_diff_found
+    not eax
+    not edx
 sync_diff_found:
-        FreeMem
-        UpdateTime
-        UpdateRtc
-        clc
+    FreeMem
+    UpdateTime
+    UpdateRtc
+    clc
 sync_time_done:
-        pop di
-        pop si
-        pop edx
-        pop cx
-        pop bx
-        pop ax
-        pop es
-        pop ds
-        retf32
+    pop di
+    pop si
+    pop edx
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    retf32
 sync_time       Endp
 
-            
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:                   define_ntp_server
+;       Name:           define_ntp_server
 ;
-;       Purpose:                Define a NTP server from DHCP
+;       Purpose:        Define a NTP server from DHCP
 ;
-;       Parameters:             CX                      Size of msg
-;                                       ES:DI           NTP server
+;       Parameters:     ECX          Size of msg
+;                       ES:EDI       NTP server
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ntp_name        DB 'NTP', 0
+ntp_name    DB 'NTP', 0
 
 define_ntp_server       Proc far
-        push ds
-        push es
-        push ax
-        push edx
-        push di
+    push ds
+    push es
+    push ax
+    push edx
+    push di
 ;
-        mov edx,es:[di]
+    mov edx,es:[di]
 ;
-        mov ax,cs
-        mov es,ax
-        mov di,OFFSET ntp_name
-        call WriteIpEnv
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET ntp_name
+    call WriteIpEnv
 ;
-        pop di
-        pop edx
-        pop ax
-        pop es
-        pop ds
-        ret
+    pop di
+    pop edx
+    pop ax
+    pop es
+    pop ds
+    retf32
 define_ntp_server       Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   init
+;           NAME:           init
 ;
-;               DESCRIPTION:    Init NTP driver
+;           DESCRIPTION:    Init NTP driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public init_ntp
+    public init_ntp
 
-init_ntp        PROC near
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+init_ntp    PROC near
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov esi,OFFSET sync_time
-        mov edi,OFFSET sync_time_name
-        xor dx,dx
-        mov ax,sync_time_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET sync_time
+    mov edi,OFFSET sync_time_name
+    xor dx,dx
+    mov ax,sync_time_nr
+    RegisterBimodalUserGate
 ;
-        mov al,42
-        mov di,OFFSET define_ntp_server
-        AddDhcpOption
+    mov al,42
+    mov edi,OFFSET define_ntp_server
+    AddDhcpOption
 ;
-        ret
-init_ntp        ENDP
+    ret
+init_ntp    ENDP
 
 code    ENDS
 
-        END
+    END
