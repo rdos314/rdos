@@ -256,7 +256,7 @@ Receive Proc far
 receive_done:
     pop bx
     pop ax
-    ret
+    retf32
 Receive Endp
 
         
@@ -404,7 +404,7 @@ init_icmp       PROC near
     mov es,ax
 ;
     mov al,1
-    mov di,OFFSET Receive
+    mov edi,OFFSET Receive
     HookIp
 ;
     mov esi,OFFSET ping_node

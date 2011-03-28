@@ -1620,14 +1620,14 @@ AddNetSourceAddress     MACRO
                         ENDM
 
 ;       AL          Protocol
-;       ES:DI   Receiver callback
+;       ES:EDI      Receiver callback
 ;           AX          Size of options
 ;           ECX         Size of data
 ;           EDX         Source IP address
-;           DS:ESI  Options
-;           ES:EDI  IP Data
+;           DS:ESI      Options
+;           ES:EDI      IP Data
 HookIp  MACRO
-    OldOsGate hook_ip_nr
+    OsGate hook_ip_nr
                         ENDM
 
 ;       AL          Protocol

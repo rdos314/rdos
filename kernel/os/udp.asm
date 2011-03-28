@@ -686,7 +686,7 @@ receive_done:
     pop cx
     pop bx
     pop ax
-    ret
+    retf32
 Receive Endp
 
         
@@ -792,7 +792,7 @@ query_list_create:
     RegisterOldOsGate
 ;
     mov al,17
-    mov di,OFFSET Receive
+    mov edi,OFFSET Receive
     HookIp
 ;
     popa

@@ -136,6 +136,13 @@ typedef void __far (__rdos_net_broadcast_callback)(int class_sel, int driver_han
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_ip_callback)(short int opt_size, int data_size, long source_ip, char *opt_data, char *ip_data);
+
+#pragma aux __rdos_ip_callback "*" \
+                    parm caller [ax] [ecx] [edx] [ds esi] [es edi] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 typedef void __far (__rdos_disc_assign_callback)();
 
 #pragma aux __rdos_disc_assign_callback "*" \
@@ -374,6 +381,8 @@ int RdosRegisterNetProtocol(int ads_size, short int packet_type, void *my_ads, _
 int RdosRegisterNetDriver(char class_id, int max_size, struct TNetDriverTable *table, const char *name); 
 
 void RdosNetBroadcast(__rdos_net_broadcast_callback *callb_proc);
+void RdosNetReceived(int prot_handle);
+void RdosHookIp(char protocol, __rdos_ip_callback *callb_proc);
 
 void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
 int RdosInstallDisc(int disc_handle, int read_ahead, int *disc_nr);
@@ -1032,6 +1041,14 @@ void RdosResetDrive(int drive);
 #pragma aux RdosNetBroadcast = \
     OsGate_net_broadcast \
     parm [es edi];
+
+#pragma aux RdosNetReceived = \
+    OsGate_net_received \
+    parm [ebx];
+
+#pragma aux RdosHookIp = \
+    OsGate_hook_ip \
+    parm [al] [es edi];
 
 #pragma aux RdosHookInitDisc = \
     OsGate_hook_init_disc \

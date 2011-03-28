@@ -42,7 +42,7 @@ ip_header	ENDS
 
 ip_protocol_data	STRUC
 
-prot_callback		DD ?
+prot_callback		DD ?,?
 prot_id				DB ?
 
 ip_protocol_data	ENDS

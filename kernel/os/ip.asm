@@ -240,14 +240,14 @@ get_ppp_dns     Endp
 ;
 ;       Purpose:        register IP receiver callback
 ;
-;       Parameters:         AL          Protocol
-;                       ES:DI   Receiver callback
+;       Parameters:     AL          Protocol
+;                       ES:EDI      Receiver callback
 ;                           AX          Size of options
 ;                           BX          Id
 ;                           CX          Size of data
 ;                           EDX         Source IP address
-;                           DS:ESI  Options
-;                           ES:EDI  Data
+;                           DS:ESI      Options
+;                           ES:EDI      Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -263,8 +263,8 @@ hook_ip Proc far
     mov bx,es
     mov eax,SIZE ip_protocol_data
     AllocateSmallGlobalMem
-    mov word ptr es:prot_callback,di
-    mov word ptr es:prot_callback+2,bx
+    mov dword ptr es:prot_callback,edi
+    mov word ptr es:prot_callback+4,bx
     pop ax
     mov es:prot_id,al
 ;
@@ -279,7 +279,7 @@ hook_ip Proc far
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 hook_ip Endp
 
         
@@ -1064,7 +1064,7 @@ receive_prot_loop:
     mov esi,edi
     sub ax,SIZE ip_header
     add di,ax
-    call fs:prot_callback
+    call fword ptr fs:prot_callback
     jmp receive_done
 
 receive_prot_next:

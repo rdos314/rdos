@@ -3353,7 +3353,7 @@ receive_free:
     xor ax,ax
     mov ds,ax
     FreeMem
-    ret
+    retf32
 Receive Endp
 
 
@@ -5682,7 +5682,7 @@ init_tcp    PROC near
     RegisterBimodalUserGate
 ;
     mov al,6
-    mov di,OFFSET Receive
+    mov edi,OFFSET Receive
     HookIp
 ;
     ret
