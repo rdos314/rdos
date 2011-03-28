@@ -1700,17 +1700,17 @@ UpdateRoundTripTime     MACRO
     OsGate update_round_trip_time_nr
                         ENDM
 
-;       EDX         My PPP IP address
+; OUT EDX         My PPP IP address
 GetPppIp    MACRO
-    OldOsGate get_ppp_ip_nr
+    OsGate get_ppp_ip_nr
                 ENDM
 
 OpenPpp MACRO
-    OldOsGate open_ppp_nr
+    OsGate open_ppp_nr
             ENDM
 
 ClosePpp    MACRO
-    OldOsGate close_ppp_nr
+    OsGate close_ppp_nr
             ENDM
 
 ; IN  EAX           timeout in ms

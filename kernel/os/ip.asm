@@ -209,7 +209,7 @@ get_ppp_ip      Proc far
     mov edx,ds:my_ip
     clc
     pop ds
-    ret
+    retf32
 get_ppp_ip      Endp
 
 

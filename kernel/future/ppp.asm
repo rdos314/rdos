@@ -3746,7 +3746,7 @@ get_ppp_ip	Proc far
 ;
 	pop ax
 	pop ds
-	ret
+	retf32
 get_ppp_ip	Endp
 
 PAGE
@@ -3806,7 +3806,7 @@ open_ppp	Proc far
 	pop bx
 	pop ax
 	pop ds
-	ret
+	retf32
 open_ppp	Endp
 
 PAGE
@@ -3857,7 +3857,7 @@ close_ppp_done:
 	pop ax
 	pop es
 	pop ds
-	ret
+	retf32
 close_ppp	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
