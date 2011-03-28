@@ -1804,7 +1804,7 @@ dhcp_disc_data_ok:
     pop di
     pop cx
     call SendDhcpBroadcast
-    ret
+    retf32
 DhcpDiscover    Endp
 
 
@@ -1909,7 +1909,7 @@ dhcp_req_data_ok:
     pop di
     pop cx
     call SendDhcpBroadcast
-    ret
+    retf32
 DhcpRequest     Endp
 
 
@@ -2013,7 +2013,7 @@ dhcp_decl_data_ok:
     pop di
     pop cx
     call SendDhcpBroadcast
-    ret
+    retf32
 DhcpDecline     Endp
 
 
@@ -2144,12 +2144,12 @@ receive_offer_loop:
     mov ds:dhcp_server,eax
 ;
     push es
-    push di
+    push edi
     mov ax,cs
     mov es,ax
-    mov di,OFFSET DhcpRequest
+    mov edi,OFFSET DhcpRequest
     NetBroadcast
-    pop di
+    pop edi
     pop es
     jmp receive_offer_leave
 
@@ -2379,7 +2379,7 @@ dhcp_thread_retry:
 ;       
     mov ax,cs
     mov es,ax
-    mov di,OFFSET DhcpDiscover
+    mov edi,OFFSET DhcpDiscover
     NetBroadcast
 ;
     mov ax,500
@@ -2397,7 +2397,7 @@ dhcp_thread_retry:
 ;
     mov ax,cs
     mov es,ax
-    mov di,OFFSET DhcpDecline
+    mov edi,OFFSET DhcpDecline
     NetBroadcast
 
 dhcp_thread_failed:

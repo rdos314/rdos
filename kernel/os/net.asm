@@ -1659,7 +1659,7 @@ send_broadcast  Endp
 ;
 ;       Purpose:        Broadcast to all devices
 ;
-;       Parameters:         ES:DI   Callback for each driver
+;       Parameters:     ES:EDI   Callback for each driver
 ;                           FS          driver handle
 ;                           GS          passed unchanged
 ;                           EDX         passed unchanged
@@ -1704,11 +1704,15 @@ net_br_driver_loop:
     pushad
 ;
     mov fs,ds:[bx]
-    push cs
-    push OFFSET net_br_driver_next
-    push es
-    push di
-    retf
+    xor eax,eax
+    mov ax,cs
+    push eax
+    mov ax,OFFSET net_br_driver_next
+    push eax
+    mov ax,es
+    push eax
+    push edi
+    retf32
 
 net_br_driver_next:
     popad
@@ -1733,7 +1737,7 @@ net_br_done:
     popad
     pop fs
     pop ds
-    ret
+    retf32
 net_broadcast   ENDP
 
         
@@ -2638,7 +2642,7 @@ init    PROC far
     mov edi,OFFSET net_broadcast_name
     xor cl,cl
     mov ax,net_broadcast_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_ppp_buffer
     mov edi,OFFSET get_ppp_buffer_name

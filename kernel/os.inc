@@ -1580,7 +1580,7 @@ SendBroadcast   MACRO
     OsGate send_broadcast_nr
                         ENDM
 
-; IN  ES:DI         Callback for each driver
+; IN  ES:EDI         Callback for each driver
 ;                           DS          class selector
 ;                           FS          driver handle
 ;                           GS          passed unchanged
@@ -1588,7 +1588,7 @@ SendBroadcast   MACRO
 ;                           ESI         passed unchanged
 ;                           EBP         passed unchanged
 NetBroadcast    MACRO
-    OldOsGate net_broadcast_nr
+    OsGate net_broadcast_nr
                 ENDM
 
 ; IN  ECX           SIZE

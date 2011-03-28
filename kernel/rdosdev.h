@@ -129,6 +129,13 @@ typedef void __far (__rdos_net_get_address_callback)(int buf_sel);
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_net_broadcast_callback)(int class_sel, int driver_handle);
+
+#pragma aux __rdos_net_broadcast_callback "*" \
+                    parm caller [ds] [fs] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 typedef void __far (__rdos_disc_assign_callback)();
 
 #pragma aux __rdos_disc_assign_callback "*" \
@@ -365,6 +372,8 @@ void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
 void RdosRegisterNetClass(char class_id, int ads_size, void *broadcast_ads);
 int RdosRegisterNetProtocol(int ads_size, short int packet_type, void *my_ads, __rdos_net_prot_callback *packet_callb);
 int RdosRegisterNetDriver(char class_id, int max_size, struct TNetDriverTable *table, const char *name); 
+
+void RdosNetBroadcast(__rdos_net_broadcast_callback *callb_proc);
 
 void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
 int RdosInstallDisc(int disc_handle, int read_ahead, int *disc_nr);
@@ -1019,6 +1028,10 @@ void RdosResetDrive(int drive);
     "pop ds" \
     parm [al] [ecx] [dx esi] [es edi] \
     value [ebx];
+
+#pragma aux RdosNetBroadcast = \
+    OsGate_net_broadcast \
+    parm [es edi];
 
 #pragma aux RdosHookInitDisc = \
     OsGate_hook_init_disc \

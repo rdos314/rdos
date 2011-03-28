@@ -35,6 +35,12 @@ INCLUDE ..\os.inc
 
     .386p
 
+data    SEGMENT byte public 'DATA'
+
+PnpSection      section_typ <>
+
+data    ENDS
+
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
@@ -56,11 +62,15 @@ code    SEGMENT byte public use16 'CODE'
 read_pnp_byte_name     DB 'Read Pnp Byte',0
 
 read_pnp_byte  Proc far
+    push ds
     push dx
+;
+    mov dx,SEG data
+    mov ds,dx
+    EnterSection ds:PnpSection
 ;
     mov dx,2Eh
     mov al,87h
-    cli
     out dx,al
     out dx,al
 ;
@@ -80,10 +90,11 @@ read_pnp_byte  Proc far
     push ax
     mov al,0AAh
     out dx,al
-    sti
     pop ax
+    LeaveSection ds:PnpSection    
 ;
     pop dx
+    pop ds
     retf32
 read_pnp_byte  Endp
 
@@ -103,13 +114,17 @@ read_pnp_byte  Endp
 write_pnp_byte_name     DB 'Write Pnp Byte',0
 
 write_pnp_byte  Proc far
+    push ds
     push dx
     push ax
+;
+    mov dx,SEG data
+    mov ds,dx
+    EnterSection ds:PnpSection
 ;
     push ax
     mov dx,2Eh
     mov al,87h
-    cli
     out dx,al
     out dx,al
 ;
@@ -129,9 +144,11 @@ write_pnp_byte  Proc far
 ;
     mov al,0AAh
     out dx,al
+    LeaveSection ds:PnpSection
 ;
     pop ax
     pop dx
+    pop ds
     retf32
 write_pnp_byte  Endp
 
@@ -147,6 +164,9 @@ write_pnp_byte  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
+    mov ax,SEG data
+    mov ds,ax
+    InitSection ds:PnpSection
 ;
     mov ax,cs
     mov ds,ax
