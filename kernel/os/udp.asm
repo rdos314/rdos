@@ -596,18 +596,19 @@ receive_not_query:
 ;
     push ds
     push es
-    push di
+    push edi
 ;
     mov cx,es:[di].udp_len
     xchg cl,ch
     sub cx,SIZE udp_header
     add di,SIZE udp_header
-    call dword ptr ds:udp_listen_callback
+    movzx edi,di
+    call fword ptr ds:udp_listen_callback
 ;
     mov ax,es
     mov fs,ax
 ;
-    pop di
+    pop edi
     pop es
     pop ds
 ;
@@ -692,12 +693,12 @@ Receive Endp
 ;
 ;       Purpose:        Listen on a udp port
 ;
-;       Parameters:         SI                  local port
-;                       ES:DI           connection callback
-;                           IN      CX          UDP request size
-;                           IN      ES:DI   UDP request data
-;                           OUT     CX          UDP reply size
-;                           OUT     ES:DI   UDP reply data
+;       Parameters:     SI                  local port
+;                       ES:EDI              connection callback
+;                           IN      CX      UDP request size
+;                           IN      ES:EDI  UDP request data
+;                           OUT     CX      UDP reply size
+;                           OUT     ES:EDI  UDP reply data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -712,8 +713,8 @@ listen_udp_port Proc far
     mov cx,es
     mov eax,SIZE udp_listen
     AllocateSmallGlobalMem
-    mov es:udp_listen_callback,di
-    mov es:udp_listen_callback+2,cx
+    mov dword ptr es:udp_listen_callback,edi
+    mov word ptr es:udp_listen_callback+4,cx
     mov es:udp_listen_port,si
 ;
     mov ax,es
@@ -732,7 +733,7 @@ listen_udp_port Proc far
     pop eax
     pop es
     pop ds  
-    ret
+    retf32
 listen_udp_port Endp
 
 
@@ -779,13 +780,13 @@ query_list_create:
     mov edi,OFFSET query_udp_name
     xor cl,cl
     mov ax,query_udp_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET listen_udp_port
     mov edi,OFFSET listen_udp_port_name
     xor cl,cl
     mov ax,listen_udp_port_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov al,17
     mov edi,OFFSET Receive

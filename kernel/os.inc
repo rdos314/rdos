@@ -1725,13 +1725,13 @@ QueryUdp    MACRO
             ENDM
 
 ; IN  SI        local port
-; IN  ES:DI         callback upon request
-; IN    CX          UDP request size
-; IN    ES:DI   UDP request data
-; OUT   CX          UDP reply size
-; OUT   ES          UDP reply data
+; IN  ES:EDI    callback upon request
+; IN    CX      UDP request size
+; IN    ES:EDI  UDP request data
+; OUT   CX      UDP reply size
+; OUT   ES:EDI  UDP reply data
 ListenUdpPort   MACRO
-    OldOsGate listen_udp_port_nr
+    OsGate listen_udp_port_nr
             ENDM
 
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;

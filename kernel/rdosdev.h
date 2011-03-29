@@ -404,6 +404,8 @@ char *RdosGetIpCacheHostName(long ip);
 long RdosGetHostTimeout(int cache_sel);
 void RdosUpdateRoundTripTime(int cache_sel, long time);
 
+int RdosQueryUdp(long timeout_ms, short int dest_port, long ip, char *buf, int size, char **answer_buf);
+
 void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
 int RdosInstallDisc(int disc_handle, int read_ahead, int *disc_nr);
 void RdosRegisterDiscChange(__rdos_disc_change_callback *callb_proc);
@@ -1125,6 +1127,15 @@ void RdosResetDrive(int drive);
     OsGate_update_round_trip_time \
     "pop ds" \
     parm [ebx] [eax];
+
+#pragma aux RdosQueryUdp = \
+    OsGate_query_udp \
+    "mov fs:[esi],edi" \
+    "mov fs:[esi+04],es" \
+    "movzx ecx,cx" \
+    parm [eax] [bx] [edx] [es edi] [ecx] [fs esi] \
+    value [ecx] \
+    modify [es esi];
 
 #pragma aux RdosHookInitDisc = \
     OsGate_hook_init_disc \
