@@ -1946,13 +1946,7 @@ ResetDrive      MACRO
     OsGate reset_drive_nr
                     ENDM
 
-;;;;;;;;;;;; FILE SYSTEM ;;;;;;;;;;;;
-
-;       IN  EAX     Table name
-;       OUT ES      Table selector
-GetAcpiTable    MACRO
-    OldOsGate get_acpi_table_nr
-                    ENDM
+;;;;;;;;;;;; File system ;;;;;;;;;;;;
 
 ;       DS:ESI       Device read
 ;       ES:EDI       Device write
@@ -1967,9 +1961,9 @@ CheckDeviceFile     MACRO
     OsGate check_device_file_nr
                     ENDM
 
-;       ES:DI       INIT CALLBACK
+;       ES:EDI      INIT CALLBACK
 HookInitFileSystem      MACRO
-    OldOsGate hook_init_file_system_nr
+    OsGate hook_init_file_system_nr
                     ENDM
 
 ;       DS:SI       FILE SYSTEM NAME
@@ -2051,6 +2045,12 @@ InsertFileEntry MACRO
                     ENDM
 
 ;;;;;;;;;;;; FILE ;;;;;;;;;;;
+
+;       IN  EAX     Table name
+;       OUT ES      Table selector
+GetAcpiTable    MACRO
+    OldOsGate get_acpi_table_nr
+                    ENDM
 
 ;       BX          FILE HANDLE
 ;       CL          ACCESS

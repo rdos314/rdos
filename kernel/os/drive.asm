@@ -5063,7 +5063,7 @@ init_disc       Proc far
     call run_disc_assign
     call run_drive_assign1
     call run_drive_assign2
-    ret
+    retf32
 init_disc       Endp
 
 
@@ -5312,7 +5312,7 @@ init    PROC far
     mov ax,erase_disc_sectors_nr
     RegisterUserGate
 ;
-    mov di,OFFSET init_disc
+    mov edi,OFFSET init_disc
     HookInitFileSystem
 ;
     mov bx,SEG data

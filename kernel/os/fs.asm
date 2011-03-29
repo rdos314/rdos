@@ -75,7 +75,7 @@ code    SEGMENT byte public 'CODE'
 ;
 ;           DESCRIPTION:    Hook init file system
 ;
-;           PARAMETERS:         ES:DI       CALLBACK
+;           PARAMETERS:     ES:EDI       CALLBACK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -92,17 +92,17 @@ hook_init_file_system   Proc far
     mov al,ds:fs_init_hooks
     mov bl,al
     xor bh,bh
-    shl bx,2
+    shl bx,3
     add bx,OFFSET fs_init_hook_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc al
     mov ds:fs_init_hooks,al
     pop cx
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 hook_init_file_system   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -571,11 +571,11 @@ hook_thread_loop:
     push ds
     push bx
     push cx
-    call dword ptr [bx]
+    call fword ptr [bx]
     pop cx
     pop bx
     pop ds
-    add bx,4
+    add bx,8
     dec cl
     jnz hook_thread_loop
 
@@ -674,7 +674,7 @@ init    PROC far
     mov esi,OFFSET hook_init_file_system
     mov edi,OFFSET hook_init_file_system_name
     mov ax,hook_init_file_system_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET register_file_system
     mov edi,OFFSET register_file_system_name
