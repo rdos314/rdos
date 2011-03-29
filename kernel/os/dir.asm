@@ -56,7 +56,7 @@ CallFileSystem  MACRO   call_proc
     mov ds,ds:[si].fs_sel
     lgs bp,ds:fs_sys_arr
     lds si,ds:fs_sys_arr+4
-    call gs:[bp].&call_proc
+    call fword ptr gs:[bp].&call_proc
     pop si
     pop bp
     pop gs
@@ -213,7 +213,7 @@ cache_dir       PROC far
     mov ebp,ds:fs_mount_id
 ;
     call CreateDirSel
-    CallFileSystem cache_dir_proc
+    CallFileSystem fs_cache_dir_proc
     mov es:[edx].de_sel,bx
 
 cache_dir_done:
@@ -349,7 +349,7 @@ CreateDirSel    PROC near
     push ds
 ;
     push bx
-    CallFileSystem allocate_dir_sel_proc
+    CallFileSystem fs_allocate_dir_sel_proc
     mov ds,bx
     pop bx
 ;
@@ -431,7 +431,7 @@ free_dir_del:
     mov bx,ds
     xor dx,dx
     mov ds,dx
-    CallFileSystem free_dir_sel_proc
+    CallFileSystem fs_free_dir_sel_proc
 ;
     pop edx
     pop ecx
@@ -621,7 +621,7 @@ parse_dir_root:
 ;
     xor edx,edx
     call CreateDirSel
-    CallFileSystem cache_dir_proc
+    CallFileSystem fs_cache_dir_proc
     mov ds:fs_root_dir_sel,bx
 ;
     push ds
@@ -743,7 +743,7 @@ parse_dir_tree_next:
     mov bx,ds
     mov edx,esi
     call CreateDirSel
-    CallFileSystem cache_dir_proc
+    CallFileSystem fs_cache_dir_proc
     mov fs:[esi].de_sel,bx
 
 parse_dir_tree_cached:
@@ -849,7 +849,7 @@ GetDeviceRoot   Proc near
     xor ebp,ebp
     xor edx,edx
     call CreateDirSel
-    CallFileSystem cache_dir_proc
+    CallFileSystem fs_cache_dir_proc
     mov ds:fs_root_dir_sel,bx
 ;
     push ds
@@ -1321,7 +1321,7 @@ create_dir_check:
 ;
     mov al,ds:ds_drive
     mov bx,ds
-    CallFileSystem create_dir_proc
+    CallFileSystem fs_create_dir_proc
     jc create_dir_leave_fail
 ;
     LeaveWriteSection ds:ds_access_section
@@ -1421,7 +1421,7 @@ delete_dir_unlink:
 delete_dir_leave:
     LeaveWriteSection ds:ds_access_section
     mov al,ds:ds_drive
-    CallFileSystem delete_dir_proc
+    CallFileSystem fs_delete_dir_proc
     pop ds
     call ParseEnd
     call FreeDirSel
@@ -1566,7 +1566,7 @@ set_file_attrib_file:
 ;
     mov fs:[edx].de_attrib,cl
     mov al,ds:ds_drive
-    CallFileSystem update_file_proc
+    CallFileSystem fs_update_file_proc
     jmp set_file_attrib_ok
 
 set_file_attrib_dir:
@@ -1576,7 +1576,7 @@ set_file_attrib_dir:
 ;
     mov fs:[edx].de_attrib,cl
     mov al,ds:ds_drive
-    CallFileSystem update_dir_proc
+    CallFileSystem fs_update_dir_proc
     jmp set_file_attrib_ok
 
 set_file_attrib_fail:
@@ -1632,12 +1632,12 @@ DeleteFilePhysical      Proc near
 delete_file_phys_opened:
     push edx
     xor edx,edx
-    CallFileSystem set_file_size_proc
+    CallFileSystem fs_set_file_size_proc
     pop edx
 ;
     push bx
     mov bx,ds
-    CallFileSystem delete_file_proc
+    CallFileSystem fs_delete_file_proc
     pop bx
 ;
     mov ds,bx
@@ -2130,7 +2130,7 @@ create_file_normal:
 ;
     mov al,ds:ds_drive
     mov bx,ds
-    CallFileSystem create_file_proc
+    CallFileSystem fs_create_file_proc
     call SetupFileSel
     LeaveWriteSection ds:ds_access_section
     pop edi
@@ -2141,7 +2141,7 @@ create_file_truncate:
     call SetupFileSel
     push edx
     xor edx,edx
-    CallFileSystem set_file_size_proc
+    CallFileSystem fs_set_file_size_proc
     pop edx
     LeaveWriteSection ds:ds_access_section
 
@@ -2190,7 +2190,7 @@ get_drive_info:
     call ValidateDrive
     jc get_drive_info_done
 ;
-    CallFileSystem info_proc
+    CallFileSystem fs_info_proc
     jc get_drive_info_done
 ;
 
@@ -2760,7 +2760,7 @@ stop_file_system    Proc far
 stop_file_enter:
     EnterWriteSection ds:fs_access_section
 ;
-    CallFileSystem flush_proc
+    CallFileSystem fs_flush_proc
     jc stop_leave_done
 ;
     movzx si,al

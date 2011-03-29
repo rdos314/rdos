@@ -732,7 +732,7 @@ set_file_size_done:
 	popad
 	pop fs
 	pop es
-	ret
+	retf32
 set_file_size	ENDP
 
 
@@ -802,7 +802,7 @@ allocate_file_list	PROC far
 	pop eax
 	pop fs
 	pop es
-	ret
+	retf32
 allocate_file_list	ENDP
 
 
@@ -885,7 +885,7 @@ file_list_unlock_next:
 	pop fs
 	pop es
 	clc
-	ret
+	retf32
 free_file_list	ENDP
 
 
@@ -1040,7 +1040,7 @@ read_file_done:
 	clc
 	pop fs
 	pop es
-	ret
+	retf32
 read_file_block	ENDP
 
 
@@ -1205,7 +1205,7 @@ write_file_done:
 	clc
 	pop fs
 	pop es
- 	ret
+ 	retf32
 write_file_block	ENDP
 
 code	ENDS

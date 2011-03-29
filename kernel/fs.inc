@@ -162,102 +162,102 @@ file_system_struc 	STRUC
 ;	IN	ES:DI		FS name
 ;	IN	ECX			Number of sectors
 ;	IN	FS:EDX		DRIVE DATA
-format_proc				DD ?
+fs_format_proc				DD ?,?
 
 ;	IN	FS:EDX		DRIVE DATA
-mount_proc				DD ?
+fs_mount_proc				DD ?,?
 
-flush_proc				DD ?
+fs_flush_proc				DD ?,?
 
-dismount_proc			DD ?
+fs_dismount_proc			DD ?,?
 
 ;	OUT	EAX			FREE UNITS
 ;	OUT	CX			NUMBER OF BYTES/UNIT
 ;	OUT	EDX			TOTAL NUMBER OF UNITS
-info_proc				DD ?
+fs_info_proc				DD ?,?
 
 ;	IN  AL			Drive
 ;	IN  BX			Parent dir selector
 ;	IN  EDX			Parent dir entry
 ;	OUT BX			DIR SELECTOR
-allocate_dir_sel_proc		DD ?
+fs_allocate_dir_sel_proc		DD ?,?
 
 ;	IN  BX			DIR SELECTOR
-free_dir_sel_proc			DD ?
+fs_free_dir_sel_proc			DD ?,?
 
 ;	IN  BX			DIR SELECTOR
 ;	IN	EDX			DIR ENTRY OR 0
-cache_dir_proc				DD ?
+fs_cache_dir_proc				DD ?,?
 
 ;	IN	EDX			DIR DIR ENTRY
-update_dir_proc		DD ?
+fs_update_dir_proc		DD ?,?
 
 ;	IN	EDX			DIR FILE ENTRY
-update_file_proc		DD ?
+fs_update_file_proc		DD ?,?
 
 ;	IN	ES:EDI		PATH NAME
 ;	IN  BX			DIR SELECTOR
 ;	OUT	EDX			DIR ENTRY
-create_dir_proc			DD ?
+fs_create_dir_proc			DD ?,?
 
 ;	IN  BX			DIR SELECTOR
 ;	IN	EDX			DIR ENTRY TO DELETE
-delete_dir_proc			DD ?
+fs_delete_dir_proc			DD ?,?
 
 ;	IN  BX			DIR SELECTOR
 ;	IN	EDX			FILE ENTRY TO DELETE
-delete_file_proc		DD ?
+fs_delete_file_proc		DD ?,?
 
 ;	IN	FS:ESI		CURRENT NAME
 ;	IN	ES:EDI		NEW NAME
-rename_file_proc		DD ?
+fs_rename_file_proc		DD ?,?
 
 ;	IN	ES:EDI		PATH NAME
 ;	IN  BX			DIR SELECTOR
 ;	IN	CX			FILE ATTRIBUTE
 ;	OUT	EDX			DIR ENTRY
-create_file_proc		DD ?
+fs_create_file_proc		DD ?,?
 
 ;	IN	BX			FILE HANDLE
 ;	OUT	DX			IOCTL DATA
-get_ioctl_data_proc		DD ?
+fs_get_ioctl_data_proc		DD ?,?
 
 ;	IN	BX			FILE HANDLE
 ;	IN	EDX			FILE SIZE
-set_file_size_proc		DD ?
+fs_set_file_size_proc		DD ?,?
 
 ;	IN	BX			FILE HANDLE
 ;	IN	ECX			NUMBER OF BYTES
 ;	IN	EDX			POSITION
 ;	IN	ES:EDI		DATA BUFFER
 ;	OUT	EAX			NUMBER OF BYTES READ
-read_file_proc			DD ?
+fs_read_file_proc			DD ?,?
 
 ;	IN	BX			FILE HANDLE
 ;	IN	ECX			NUMBER OF BYTES
 ;	IN	EDX			POSITION
 ;	IN	ES:EDI		DATA BUFFER
 ;	OUT	EAX			NUMBER OF BYTES WRITTEN
-write_file_proc			DD ?
+fs_write_file_proc			DD ?,?
 
 ;	IN	BX			FILE HANDLE
 ;	OUT	EDI			FILE LIST ENTRY
-allocate_file_list_proc			DD ?
+fs_allocate_file_list_proc			DD ?,?
 
 ;	IN	EDI			FILE LIST ENTRY
-free_file_list_proc			DD ?
+fs_free_file_list_proc			DD ?,?
 
 ;	IN	BX			FILE HANDLE
 ;	IN	ECX			BYTES TO READ
 ;	IN	EDX			POSITION
 ;	IN	EDI			FILE LIST ENTRY
-read_file_block_proc			DD ?
+fs_read_file_block_proc			DD ?,?
 
 ;	IN	BX			FILE HANDLE
 ;	IN	ECX			BYTES TO WRITE
 ;	IN	EDX			POSITION
 ;	IN	EDI			FILE LIST ENTRY
-write_file_block_proc			DD ?
+fs_write_file_block_proc			DD ?,?
 
 file_system_struc	ENDS
 

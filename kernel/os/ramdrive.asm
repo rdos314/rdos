@@ -126,7 +126,7 @@ code	SEGMENT byte public use16 'CODE'
 
 format	PROC far
 	stc
-	ret
+	retf32
 format	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -166,7 +166,7 @@ mount	PROC far
 ;
 	pop bx
 	pop es
-	ret
+	retf32
 mount	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -180,7 +180,7 @@ mount	ENDP
 
 flush	PROC far
 	stc
-	ret
+	retf32
 flush	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -193,7 +193,7 @@ flush	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dismount	PROC far
-	ret
+	retf32
 dismount	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -217,7 +217,7 @@ get_drive_info	PROC far
 	shr eax,12
 	mov cx,1000h
 	clc
-	ret
+	retf32
 get_drive_info	ENDP
 
 
@@ -240,7 +240,7 @@ allocate_dir_sel	PROC far
 ;
 	pop eax
 	pop es
-	ret
+	retf32
 allocate_dir_sel	ENDP
 
 
@@ -260,7 +260,7 @@ free_dir_sel	PROC far
 	FreeMem
 ;
 	pop es
-	ret
+	retf32
 free_dir_sel	ENDP
 
 
@@ -333,7 +333,7 @@ create_dir	PROC far
 	pop gs
 	pop fs
 	pop es
-	ret
+	retf32
 create_dir	ENDP
 
 
@@ -356,7 +356,7 @@ delete_dir	PROC far
 	FreeLinear
 	pop ecx
 	clc
-	ret
+	retf32
 delete_dir	ENDP
 
 
@@ -379,7 +379,7 @@ delete_file	PROC far
 	FreeLinear
 	pop ecx
 	clc
-	ret
+	retf32
 delete_file	ENDP
 
 
@@ -399,7 +399,7 @@ delete_file	ENDP
 rename_file	PROC far
 	int 3
 	stc
-	ret
+	retf32
 rename_file	ENDP
 
 
@@ -511,7 +511,7 @@ create_file	PROC far
 	pop gs
 	pop fs
 	pop es
-	ret
+	retf32
 create_file	ENDP
 
 
@@ -531,7 +531,7 @@ create_file	ENDP
 get_ioctl_data	PROC far
 	movzx dx,al
 	or dx,40h
-	ret
+	retf32
 get_ioctl_data	ENDP
 
 
@@ -563,7 +563,7 @@ set_file_size	PROC far
 	pop edi
 	pop fs
 	pop es
-	ret
+	retf32
 set_file_size	ENDP
 	
 
@@ -580,7 +580,7 @@ set_file_size	ENDP
 
 update_dir	PROC far
 	clc
-	ret
+	retf32
 update_dir	ENDP
 	
 
@@ -597,7 +597,7 @@ update_dir	ENDP
 
 update_file	PROC far
 	clc
-	ret
+	retf32
 update_file	ENDP
 	
 
@@ -660,7 +660,7 @@ read_file_done:
 	pop edx
 	pop ecx
 	pop ds
-	ret
+	retf32
 read_file	ENDP
 
 
@@ -682,7 +682,7 @@ read_file	ENDP
 
 write_file	PROC far
 	stc
- 	ret
+ 	retf32
 write_file	ENDP
 
 
@@ -710,7 +710,7 @@ allocate_file_list	PROC far
 	pop ecx
 	pop eax
 	clc
-	ret
+	retf32
 allocate_file_list	ENDP
 
 
@@ -736,7 +736,7 @@ free_file_list	PROC far
 	pop edx
 	pop ecx
 	clc
-	ret
+	retf32
 free_file_list	ENDP
 
 
@@ -756,7 +756,7 @@ free_file_list	ENDP
 
 read_file_block	PROC far
 	clc
-	ret
+	retf32
 read_file_block	ENDP
 
 
@@ -776,7 +776,7 @@ read_file_block	ENDP
 
 write_file_block	PROC far
 	clc
-	ret
+	retf32
 write_file_block	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1179,7 +1179,7 @@ cache_dir	PROC far
 cache_dir_subdir:
 
 cache_dir_done:
-	ret
+	retf32
 cache_dir	Endp
 
 
@@ -1194,35 +1194,35 @@ cache_dir	Endp
 
 dummy	Proc far
 	stc
-	ret
+	retf32
 dummy	Endp
 
 fs_name	DB 'MEMORY',0
 
 fs_ctrl:
-fs00	DW OFFSET format,			SEG code
-fs01	DW OFFSET mount,			SEG code
-fs02	DW OFFSET flush,			SEG code
-fs03	DW OFFSET dismount,			SEG code
-fs04	DW OFFSET get_drive_info,	SEG code
-fs05	DW OFFSET allocate_dir_sel,	SEG code
-fs06	DW OFFSET free_dir_sel,		SEG code
-fs07	DW OFFSET cache_dir,		SEG code
-fs08	DW OFFSET update_dir,		SEG code
-fs09	DW OFFSET update_file,		SEG code
-fs10	DW OFFSET create_dir,		SEG code
-fs11	DW OFFSET delete_dir,		SEG code
-fs12	DW OFFSET delete_file,		SEG code
-fs13	DW OFFSET rename_file,		SEG code
-fs14	DW OFFSET create_file,		SEG code
-fs15	DW OFFSET get_ioctl_data,	SEG code
-fs16	DW OFFSET set_file_size,	SEG code
-fs17	DW OFFSET read_file,		SEG code
-fs18	DW OFFSET write_file,		SEG code
-fs19	DW OFFSET allocate_file_list,SEG code
-fs20	DW OFFSET free_file_list,	SEG code
-fs21	DW OFFSET read_file_block,	SEG code
-fs22	DW OFFSET write_file_block,	SEG code
+fs00	DD OFFSET format,			SEG code
+fs01	DD OFFSET mount,			SEG code
+fs02	DD OFFSET flush,			SEG code
+fs03	DD OFFSET dismount,			SEG code
+fs04	DD OFFSET get_drive_info,	SEG code
+fs05	DD OFFSET allocate_dir_sel,	SEG code
+fs06	DD OFFSET free_dir_sel,		SEG code
+fs07	DD OFFSET cache_dir,		SEG code
+fs08	DD OFFSET update_dir,		SEG code
+fs09	DD OFFSET update_file,		SEG code
+fs10	DD OFFSET create_dir,		SEG code
+fs11	DD OFFSET delete_dir,		SEG code
+fs12	DD OFFSET delete_file,		SEG code
+fs13	DD OFFSET rename_file,		SEG code
+fs14	DD OFFSET create_file,		SEG code
+fs15	DD OFFSET get_ioctl_data,	SEG code
+fs16	DD OFFSET set_file_size,	SEG code
+fs17	DD OFFSET read_file,		SEG code
+fs18	DD OFFSET write_file,		SEG code
+fs19	DD OFFSET allocate_file_list,SEG code
+fs20	DD OFFSET free_file_list,	SEG code
+fs21	DD OFFSET read_file_block,	SEG code
+fs22	DD OFFSET write_file_block,	SEG code
 
     public init_ramdrive
     
@@ -1243,8 +1243,8 @@ init_ramdrive	PROC near
 	mov ds,ax
 	mov es,ax
 ;
-	mov si,OFFSET fs_name
-	mov di,OFFSET fs_ctrl
+	mov esi,OFFSET fs_name
+	mov edi,OFFSET fs_ctrl
 	RegisterFileSystem
 ;
 	AllocateDynamicDrive

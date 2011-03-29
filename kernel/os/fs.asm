@@ -48,7 +48,7 @@ CallFileSystem  MACRO   call_proc
     mov ds,ds:[si].fs_sel
     lgs bp,ds:fs_sys_arr
     lds si,ds:fs_sys_arr+4
-    call gs:[bp].&call_proc
+    call fword ptr gs:[bp].&call_proc
     pop si
     pop bp
     pop gs
@@ -112,8 +112,8 @@ hook_init_file_system   Endp
 ;
 ;           DESCRIPTION:    Register a file system
 ;
-;           PARAMETERS:         DS:SI       FILE SYSTEM NAME
-;                           ES:DI       FILE SYSTEM STRUC
+;           PARAMETERS:     DS:ESI       FILE SYSTEM NAME
+;                           ES:EDI       FILE SYSTEM STRUC
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -142,7 +142,7 @@ register_file_system    Proc far
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 register_file_system    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -210,7 +210,7 @@ demand_load_file_system Proc far
     cmp si,-1
     je demand_load_old_freed
 ;
-    CallFileSystem dismount_proc
+    CallFileSystem fs_dismount_proc
     mov es,si
     FreeMem
 
@@ -355,7 +355,7 @@ install_file_system     Proc far
     cmp si,-1
     je init_file_old_freed
 ;
-    CallFileSystem dismount_proc
+    CallFileSystem fs_dismount_proc
     mov es,si
     FreeMem
 
@@ -411,7 +411,7 @@ format_file_system      Proc far
     push di
 ;
     call GetFileSystem
-    call es:[di].format_proc
+    call fword ptr es:[di].fs_format_proc
 ;
     pop di
     pop es
@@ -446,7 +446,7 @@ start_file_system       Proc far
     mov ds,es:[di].fs_sel
     push ds
     lds si,ds:fs_sys_arr
-    call ds:[si].mount_proc
+    call fword ptr ds:[si].fs_mount_proc
     pop es
     mov word ptr es:fs_sys_arr+4,si
     mov word ptr es:fs_sys_arr+6,ds
@@ -679,7 +679,7 @@ init    PROC far
     mov esi,OFFSET register_file_system
     mov edi,OFFSET register_file_system_name
     mov ax,register_file_system_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET define_media_check
     mov edi,OFFSET define_media_check_name

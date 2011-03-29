@@ -471,7 +471,7 @@ format_root_dir_loop12:
     popad
     pop es
     pop ds
-	ret
+	retf32
 format12	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -638,7 +638,7 @@ format_root_dir_loop16:
     popad
     pop es
     pop ds
-	ret
+	retf32
 format16	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -842,7 +842,7 @@ format_root_dir_loop32:
     popad
     pop es
     pop ds
-	ret
+	retf32
 format32	Endp
 
 code	ENDS

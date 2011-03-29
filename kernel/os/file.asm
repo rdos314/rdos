@@ -59,7 +59,7 @@ CallFileSystem  MACRO   call_proc
     mov ds,ds:[si].fs_sel
     lgs bp,ds:fs_sys_arr
     lds si,ds:fs_sys_arr+4
-    call gs:[bp].&call_proc
+    call fword ptr gs:[bp].&call_proc
     pop si
     pop bp
     pop gs
@@ -273,7 +273,7 @@ CreateListEntry Proc near
     mov esi,eax
     mov al,ds:file_drive
     mov bx,ds
-    CallFileSystem allocate_file_list_proc
+    CallFileSystem fs_allocate_file_list_proc
 ;
     mov es:[edi].fl_usage,0
     mov es:[edi].fl_ref_count,1
@@ -330,7 +330,7 @@ FreeListEntry   Proc near
 ;
     mov al,ds:file_drive
     mov bx,ds
-    CallFileSystem free_file_list_proc
+    CallFileSystem fs_free_file_list_proc
     FreeLinear
     jmp free_list_done
 
@@ -395,7 +395,7 @@ free_small_fail:
     pop edi
     mov al,ds:file_drive
     mov bx,ds
-    CallFileSystem free_file_list_proc
+    CallFileSystem fs_free_file_list_proc
 
 free_list_done:
     pop edi
@@ -959,7 +959,7 @@ read_file_list_do:
     push bx
     mov al,ds:file_drive
     mov bx,ds
-    CallFileSystem read_file_block_proc
+    CallFileSystem fs_read_file_block_proc
     pop bx
     pop ecx
     pop edx
@@ -1373,7 +1373,7 @@ write_file_extend:
     add edx,ecx
     mov bx,ds
     mov al,ds:file_drive
-    CallFileSystem set_file_size_proc
+    CallFileSystem fs_set_file_size_proc
     pop edx
 
 write_file_size_ok:
@@ -1492,7 +1492,7 @@ write_file_do:
     mov ecx,ebx
     mov al,ds:file_drive
     mov bx,ds
-    CallFileSystem write_file_block_proc
+    CallFileSystem fs_write_file_block_proc
     pop edi
     pop ecx
     pop bx  
@@ -1735,7 +1735,7 @@ get_ioctl_data:
     stc
     jz get_ioctl_data_done
 ;
-    CallFileSystem get_ioctl_data_proc
+    CallFileSystem fs_get_ioctl_data_proc
 get_ioctl_data_done:
     pop ebx
     pop ax
@@ -1816,7 +1816,7 @@ set_file_size:
 ;
     mov ds,bx
     EnterWriteSection ds:file_size_section
-    CallFileSystem set_file_size_proc
+    CallFileSystem fs_set_file_size_proc
     LeaveWriteSection ds:file_size_section
 
 set_file_size_done:
@@ -1985,7 +1985,7 @@ set_file_time:
     mov es:[edi].de_time,ecx
     mov es:[edi].de_time+4,edx
     mov edx,edi
-    CallFileSystem update_file_proc
+    CallFileSystem fs_update_file_proc
     clc
 
 set_file_time_done:
@@ -2040,7 +2040,7 @@ read_file32:
     test ds:file_attrib, FILE_ATTRIB_NOBUFFER
     jz read_file32_buf
 ;
-    CallFileSystem read_file_proc
+    CallFileSystem fs_read_file_proc
     jmp read_file32_save
 
 read_file32_buf:
@@ -2091,7 +2091,7 @@ read_file16     PROC far
     test ds:file_attrib, FILE_ATTRIB_NOBUFFER
     jz read_file16_buf
 ;
-    CallFileSystem read_file_proc
+    CallFileSystem fs_read_file_proc
     jmp read_file16_save
 
 read_file16_buf:
@@ -2171,7 +2171,7 @@ write_file32:
     mov edx,esi
     pop esi
     pop eax
-    CallFileSystem update_file_proc
+    CallFileSystem fs_update_file_proc
 ;       
     pop edx
     pop es
@@ -2179,7 +2179,7 @@ write_file32:
     test ds:file_attrib, FILE_ATTRIB_NOBUFFER
     jz write_file32_buf
 ;
-    CallFileSystem write_file_proc
+    CallFileSystem fs_write_file_proc
     jmp write_file32_save
 
 write_file32_buf:
@@ -2237,7 +2237,7 @@ write_file16    PROC far
     mov edx,esi
     pop esi
     pop eax
-    CallFileSystem update_file_proc
+    CallFileSystem fs_update_file_proc
 ;       
     pop edx
     pop es
@@ -2245,7 +2245,7 @@ write_file16    PROC far
     test ds:file_attrib, FILE_ATTRIB_NOBUFFER
     jz write_file16_buf
 ;
-    CallFileSystem write_file_proc
+    CallFileSystem fs_write_file_proc
     jmp write_file16_save
 
 write_file16_buf:
@@ -2392,7 +2392,7 @@ map_to_file_read:
     mov si,flat_sel
     mov es,si
     mov ecx,1000h
-    CallFileSystem read_file_proc
+    CallFileSystem fs_read_file_proc
 
 map_to_file_done:
     popad
@@ -2467,7 +2467,7 @@ sync_memmap     Proc near
     mov edx,ebp
     mov al,ds:file_drive
     mov bx,ds
-    CallFileSystem write_file_block_proc
+    CallFileSystem fs_write_file_block_proc
     pop bx
 
 sync_memmap_leave:

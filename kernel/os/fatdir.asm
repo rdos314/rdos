@@ -196,7 +196,7 @@ allocate_dir_sel	PROC far
 ;
 	pop eax
 	pop es
-	ret
+	retf32
 allocate_dir_sel	ENDP
 
 
@@ -257,7 +257,7 @@ free_dir_del:
 	pop eax
 	pop es
 	pop ds
-	ret
+	retf32
 free_dir_sel	ENDP
 
 
@@ -2924,7 +2924,7 @@ cache_dir12_16_done:
 	pop edx
 	pop ax
 	pop es
-	ret
+	retf32
 cache_dir12_16	Endp
 
 
@@ -2965,7 +2965,7 @@ cache_dir32_done:
 	pop edx
 	pop ax
 	pop es
-	ret
+	retf32
 cache_dir32	Endp
 
 
@@ -3313,7 +3313,7 @@ create_dir_done:
 	pop gs
 	pop fs
 	pop es
-	ret
+	retf32
 create_dir	ENDP
 
 
@@ -3378,7 +3378,7 @@ delete_dir_done:
 	pop fs
 	pop es
 	clc
-	ret
+	retf32
 delete_dir	ENDP
 
 
@@ -3457,7 +3457,7 @@ delete_file_lfn_done:
 	pop es
 	pop ds
 	clc
-	ret
+	retf32
 delete_file	ENDP
 
 
@@ -3538,7 +3538,7 @@ rename_file_done:
 	pop eax
 	pop es
 	pop fs
-	ret
+	retf32
 rename_file	ENDP
 
 
@@ -3700,7 +3700,7 @@ create_file_done:
 	pop gs
 	pop fs
 	pop es
-	ret
+	retf32
 create_file	ENDP
 
 
@@ -3747,7 +3747,7 @@ update_dir	PROC far
 update_dir_entry_done:
 	popad
 	pop es
-	ret
+	retf32
 update_dir	ENDP
 	
 
@@ -3794,7 +3794,7 @@ update_file	PROC far
 update_file_entry_done:
 	popad
 	pop es
-	ret
+	retf32
 update_file	ENDP
 	
 

@@ -302,7 +302,7 @@ allocate_dir_sel    PROC far
 ;
     pop eax
     pop es
-    ret
+    retf32
 allocate_dir_sel    ENDP
 
 
@@ -322,7 +322,7 @@ free_dir_sel    PROC far
     FreeMem
 ;
     pop es
-    ret
+    retf32
 free_dir_sel    ENDP
 
 
@@ -399,7 +399,7 @@ cache_name_done:
     popad
     pop es
     clc
-    ret
+    retf32
 cache_dir       ENDP
 
 
@@ -428,7 +428,7 @@ open_file       PROC far
     clc
 
 open_file_done:
-    ret
+    retf32
 open_file       Endp
 
 
@@ -448,7 +448,7 @@ open_file       Endp
 
 close_file      PROC far
     clc
-    ret
+    retf32
 close_file      Endp
 
 
@@ -468,7 +468,7 @@ close_file      Endp
 get_ioctl_data  PROC far
     mov dx,0C0D3h
     clc
-    ret
+    retf32
 get_ioctl_data  Endp
 
 
@@ -497,7 +497,7 @@ read_file       PROC far
     mov ax,SEG data
     mov ds,ax
     call fword ptr ds:[bx].device_read
-    ret
+    retf32
 read_file       ENDP
 
 
@@ -526,7 +526,7 @@ write_file      PROC far
     mov ax,SEG data
     mov ds,ax
     call fword ptr ds:[bx].device_write
-    ret
+    retf32
 write_file      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1212,35 +1212,35 @@ init_device_process     ENDP
 
 dummy   Proc far
     stc
-    ret
+    retf32
 dummy   Endp
 
 fs_name DB 'DEVICE',0
 
 fs_ctrl:
-fs00    DW OFFSET dummy,            SEG code
-fs01    DW OFFSET dummy,            SEG code
-fs02    DW OFFSET dummy,            SEG code
-fs03    DW OFFSET dummy,            SEG code
-fs04    DW OFFSET dummy,            SEG code
-fs05    DW OFFSET allocate_dir_sel, SEG code
-fs06    DW OFFSET free_dir_sel,     SEG code
-fs07    DW OFFSET cache_dir,        SEG code
-fs08    DW OFFSET dummy,            SEG code
-fs09    DW OFFSET dummy,            SEG code
-fs10    DW OFFSET dummy,            SEG code
-fs11    DW OFFSET dummy,            SEG code
-fs12    DW OFFSET dummy,            SEG code
-fs13    DW OFFSET dummy,            SEG code
-fs14    DW OFFSET dummy,            SEG code
-fs15    DW OFFSET get_ioctl_data,   SEG code
-fs16    DW OFFSET dummy,            SEG code
-fs17    DW OFFSET read_file,        SEG code
-fs18    DW OFFSET write_file,       SEG code
-fs19    DW OFFSET dummy,            SEG code
-fs20    DW OFFSET dummy,            SEG code
-fs21    DW OFFSET dummy,            SEG code
-fs22    DW OFFSET dummy,            SEG code
+fs00    DD OFFSET dummy,            SEG code
+fs01    DD OFFSET dummy,            SEG code
+fs02    DD OFFSET dummy,            SEG code
+fs03    DD OFFSET dummy,            SEG code
+fs04    DD OFFSET dummy,            SEG code
+fs05    DD OFFSET allocate_dir_sel, SEG code
+fs06    DD OFFSET free_dir_sel,     SEG code
+fs07    DD OFFSET cache_dir,        SEG code
+fs08    DD OFFSET dummy,            SEG code
+fs09    DD OFFSET dummy,            SEG code
+fs10    DD OFFSET dummy,            SEG code
+fs11    DD OFFSET dummy,            SEG code
+fs12    DD OFFSET dummy,            SEG code
+fs13    DD OFFSET dummy,            SEG code
+fs14    DD OFFSET dummy,            SEG code
+fs15    DD OFFSET get_ioctl_data,   SEG code
+fs16    DD OFFSET dummy,            SEG code
+fs17    DD OFFSET read_file,        SEG code
+fs18    DD OFFSET write_file,       SEG code
+fs19    DD OFFSET dummy,            SEG code
+fs20    DD OFFSET dummy,            SEG code
+fs21    DD OFFSET dummy,            SEG code
+fs22    DD OFFSET dummy,            SEG code
 
     public init_stddev
     
@@ -1287,8 +1287,8 @@ init_stddev     PROC near
     mov edi,OFFSET con_write
     InstallDeviceFile
 ;
-    mov si,OFFSET fs_name
-    mov di,OFFSET fs_ctrl
+    mov esi,OFFSET fs_name
+    mov edi,OFFSET fs_ctrl
     RegisterFileSystem
 ;       
     mov al,80h

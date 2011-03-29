@@ -99,7 +99,7 @@ mount12	PROC far
 	call get_param12
 ;
 	pop es
-	ret
+	retf32
 mount12	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -128,7 +128,7 @@ mount16	PROC far
 	call get_param16
 ;
 	pop es
-	ret
+	retf32
 mount16	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -157,7 +157,7 @@ mount32	PROC far
 	call get_param32
 ;
 	pop es
-	ret
+	retf32
 mount32	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -171,7 +171,7 @@ mount32	ENDP
 
 flush	PROC far
 	clc
-	ret
+	retf32
 flush	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -184,7 +184,7 @@ flush	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dismount	PROC far
-	ret
+	retf32
 dismount	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -208,7 +208,7 @@ get_drive_info	PROC far
 	shl edx,cl
 	mov cx,200h
 	clc
-	ret
+	retf32
 get_drive_info	ENDP
 
 
@@ -228,7 +228,7 @@ get_drive_info	ENDP
 get_ioctl_data	PROC far
 	movzx dx,al
 	or dx,40h
-	ret
+	retf32
 get_ioctl_data	ENDP
 
 
@@ -243,105 +243,105 @@ get_ioctl_data	ENDP
 
 dummy	Proc far
 	stc
-	ret
+	retf32
 dummy	Endp
 
 fs12_name	DB 'FAT12',0
 
 fs12_ctrl:
-f12s00	DW OFFSET format12,			SEG code
-f12s01	DW OFFSET mount12,			SEG code
-f12s02	DW OFFSET flush,			SEG code
-f12s03	DW OFFSET dismount,			SEG code
-f12s04	DW OFFSET get_drive_info,	SEG code
-f12s05	DW OFFSET allocate_dir_sel,	SEG code
-f12s06	DW OFFSET free_dir_sel,		SEG code
-f12s07	DW OFFSET cache_dir12_16,	SEG code
-f12s08	DW OFFSET update_dir,		SEG code
-f12s09	DW OFFSET update_file,		SEG code
-f12s10	DW OFFSET create_dir,		SEG code
-f12s11	DW OFFSET delete_dir,		SEG code
-f12s12	DW OFFSET delete_file,		SEG code
-f12s13	DW OFFSET rename_file,		SEG code
-f12s14	DW OFFSET create_file,		SEG code
-f12s15	DW OFFSET get_ioctl_data,	SEG code
-f12s16	DW OFFSET set_file_size,	SEG code
-f12s17	DW OFFSET dummy,			SEG code
-f12s18	DW OFFSET dummy,			SEG code
-f12s19	DW OFFSET allocate_file_list,SEG code
-f12s20	DW OFFSET free_file_list,	SEG code
-f12s21	DW OFFSET read_file_block,	SEG code
-f12s22	DW OFFSET write_file_block,	SEG code
+f12s00	DD OFFSET format12,			SEG code
+f12s01	DD OFFSET mount12,			SEG code
+f12s02	DD OFFSET flush,			SEG code
+f12s03	DD OFFSET dismount,			SEG code
+f12s04	DD OFFSET get_drive_info,	SEG code
+f12s05	DD OFFSET allocate_dir_sel,	SEG code
+f12s06	DD OFFSET free_dir_sel,		SEG code
+f12s07	DD OFFSET cache_dir12_16,	SEG code
+f12s08	DD OFFSET update_dir,		SEG code
+f12s09	DD OFFSET update_file,		SEG code
+f12s10	DD OFFSET create_dir,		SEG code
+f12s11	DD OFFSET delete_dir,		SEG code
+f12s12	DD OFFSET delete_file,		SEG code
+f12s13	DD OFFSET rename_file,		SEG code
+f12s14	DD OFFSET create_file,		SEG code
+f12s15	DD OFFSET get_ioctl_data,	SEG code
+f12s16	DD OFFSET set_file_size,	SEG code
+f12s17	DD OFFSET dummy,			SEG code
+f12s18	DD OFFSET dummy,			SEG code
+f12s19	DD OFFSET allocate_file_list,SEG code
+f12s20	DD OFFSET free_file_list,	SEG code
+f12s21	DD OFFSET read_file_block,	SEG code
+f12s22	DD OFFSET write_file_block,	SEG code
 
 fs16_name	DB 'FAT16',0
 
 fs16_ctrl:
-f16s00	DW OFFSET format16,			SEG code
-f16s01	DW OFFSET mount16,			SEG code
-f16s02	DW OFFSET flush,			SEG code
-f16s03	DW OFFSET dismount,			SEG code
-f16s04	DW OFFSET get_drive_info,	SEG code
-f16s05	DW OFFSET allocate_dir_sel,	SEG code
-f16s06	DW OFFSET free_dir_sel,		SEG code
-f16s07	DW OFFSET cache_dir12_16,	SEG code
-f16s08	DW OFFSET update_dir,		SEG code
-f16s09	DW OFFSET update_file,		SEG code
-f16s10	DW OFFSET create_dir,		SEG code
-f16s11	DW OFFSET delete_dir,		SEG code
-f16s12	DW OFFSET delete_file,		SEG code
-f16s13	DW OFFSET rename_file,		SEG code
-f16s14	DW OFFSET create_file,		SEG code
-f16s15	DW OFFSET get_ioctl_data,	SEG code
-f16s16	DW OFFSET set_file_size,	SEG code
-f16s17	DW OFFSET dummy,			SEG code
-f16s18	DW OFFSET dummy,			SEG code
-f16s19	DW OFFSET allocate_file_list,SEG code
-f16s20	DW OFFSET free_file_list,	SEG code
-f16s21	DW OFFSET read_file_block,	SEG code
-f16s22	DW OFFSET write_file_block,	SEG code
+f16s00	DD OFFSET format16,			SEG code
+f16s01	DD OFFSET mount16,			SEG code
+f16s02	DD OFFSET flush,			SEG code
+f16s03	DD OFFSET dismount,			SEG code
+f16s04	DD OFFSET get_drive_info,	SEG code
+f16s05	DD OFFSET allocate_dir_sel,	SEG code
+f16s06	DD OFFSET free_dir_sel,		SEG code
+f16s07	DD OFFSET cache_dir12_16,	SEG code
+f16s08	DD OFFSET update_dir,		SEG code
+f16s09	DD OFFSET update_file,		SEG code
+f16s10	DD OFFSET create_dir,		SEG code
+f16s11	DD OFFSET delete_dir,		SEG code
+f16s12	DD OFFSET delete_file,		SEG code
+f16s13	DD OFFSET rename_file,		SEG code
+f16s14	DD OFFSET create_file,		SEG code
+f16s15	DD OFFSET get_ioctl_data,	SEG code
+f16s16	DD OFFSET set_file_size,	SEG code
+f16s17	DD OFFSET dummy,			SEG code
+f16s18	DD OFFSET dummy,			SEG code
+f16s19	DD OFFSET allocate_file_list,SEG code
+f16s20	DD OFFSET free_file_list,	SEG code
+f16s21	DD OFFSET read_file_block,	SEG code
+f16s22	DD OFFSET write_file_block,	SEG code
 
 fs32_name	DB 'FAT32',0
 
 fs32_ctrl:
-f32s00	DW OFFSET format32,			SEG code
-f32s01	DW OFFSET mount32,			SEG code
-f32s02	DW OFFSET flush,			SEG code
-f32s03	DW OFFSET dismount,			SEG code
-f32s04	DW OFFSET get_drive_info,	SEG code
-f32s05	DW OFFSET allocate_dir_sel,	SEG code
-f32s06	DW OFFSET free_dir_sel,		SEG code
-f32s07	DW OFFSET cache_dir32,		SEG code
-f32s08	DW OFFSET update_dir,		SEG code
-f32s09	DW OFFSET update_file,		SEG code
-f32s10	DW OFFSET create_dir,		SEG code
-f32s11	DW OFFSET delete_dir,		SEG code
-f32s12	DW OFFSET delete_file,		SEG code
-f32s13	DW OFFSET rename_file,		SEG code
-f32s14	DW OFFSET create_file,		SEG code
-f32s15	DW OFFSET get_ioctl_data,	SEG code
-f32s16	DW OFFSET set_file_size,	SEG code
-f32s17	DW OFFSET dummy,			SEG code
-f32s18	DW OFFSET dummy,			SEG code
-f32s19	DW OFFSET allocate_file_list,SEG code
-f32s20	DW OFFSET free_file_list,	SEG code
-f32s21	DW OFFSET read_file_block,	SEG code
-f32s22	DW OFFSET write_file_block,	SEG code
+f32s00	DD OFFSET format32,			SEG code
+f32s01	DD OFFSET mount32,			SEG code
+f32s02	DD OFFSET flush,			SEG code
+f32s03	DD OFFSET dismount,			SEG code
+f32s04	DD OFFSET get_drive_info,	SEG code
+f32s05	DD OFFSET allocate_dir_sel,	SEG code
+f32s06	DD OFFSET free_dir_sel,		SEG code
+f32s07	DD OFFSET cache_dir32,		SEG code
+f32s08	DD OFFSET update_dir,		SEG code
+f32s09	DD OFFSET update_file,		SEG code
+f32s10	DD OFFSET create_dir,		SEG code
+f32s11	DD OFFSET delete_dir,		SEG code
+f32s12	DD OFFSET delete_file,		SEG code
+f32s13	DD OFFSET rename_file,		SEG code
+f32s14	DD OFFSET create_file,		SEG code
+f32s15	DD OFFSET get_ioctl_data,	SEG code
+f32s16	DD OFFSET set_file_size,	SEG code
+f32s17	DD OFFSET dummy,			SEG code
+f32s18	DD OFFSET dummy,			SEG code
+f32s19	DD OFFSET allocate_file_list,SEG code
+f32s20	DD OFFSET free_file_list,	SEG code
+f32s21	DD OFFSET read_file_block,	SEG code
+f32s22	DD OFFSET write_file_block,	SEG code
 
 init	PROC far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
 ;
-	mov si,OFFSET fs12_name
-	mov di,OFFSET fs12_ctrl
+	mov esi,OFFSET fs12_name
+	mov edi,OFFSET fs12_ctrl
 	RegisterFileSystem
 ;
-	mov si,OFFSET fs16_name
-	mov di,OFFSET fs16_ctrl
+	mov esi,OFFSET fs16_name
+	mov edi,OFFSET fs16_ctrl
 	RegisterFileSystem
 ;
-	mov si,OFFSET fs32_name
-	mov di,OFFSET fs32_ctrl
+	mov esi,OFFSET fs32_name
+	mov edi,OFFSET fs32_ctrl
 	RegisterFileSystem
 	clc
 	ret

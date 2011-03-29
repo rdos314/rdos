@@ -1948,28 +1948,28 @@ ResetDrive      MACRO
 
 ;;;;;;;;;;;; File system ;;;;;;;;;;;;
 
-;       DS:ESI       Device read
-;       ES:EDI       Device write
-;       FS:EBX       Device name
+;  IN   DS:ESI       Device read
+;  IN   ES:EDI       Device write
+;  IN   FS:EBX       Device name
 InstallDeviceFile  MACRO
     OsGate install_device_file_nr
                     ENDM
 
-;       ES:EDI      FILENAME
-;       AL              DRIVE IN / OUT
+;  IN   ES:EDI      FILENAME
+;  IO   AL              DRIVE IN / OUT
 CheckDeviceFile     MACRO
     OsGate check_device_file_nr
                     ENDM
 
-;       ES:EDI      INIT CALLBACK
+;  IN  ES:EDI      INIT CALLBACK
 HookInitFileSystem      MACRO
     OsGate hook_init_file_system_nr
                     ENDM
 
-;       DS:SI       FILE SYSTEM NAME
-;       ES:DI       FILE SYSTEM STRUC
+;  IN   DS:ESI       File system name
+;  IN   ES:EDI       File system table
 RegisterFileSystem      MACRO
-    OldOsGate register_file_system_nr
+    OsGate register_file_system_nr
                     ENDM
 
 ;       AL              DRIVE #
