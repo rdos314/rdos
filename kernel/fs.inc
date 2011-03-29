@@ -159,7 +159,7 @@ dir_handle_struc	ENDS
 
 file_system_struc 	STRUC
 
-;	IN	ES:DI		FS name
+;	IN	ES:EDI		FS name
 ;	IN	ECX			Number of sectors
 ;	IN	FS:EDX		DRIVE DATA
 fs_format_proc				DD ?,?
