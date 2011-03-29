@@ -299,7 +299,7 @@ name_to_ip_move_part:
     or edx,edx
     jz name_to_ip_ppp
 ;    
-    xor di,di
+    xor edi,edi
     QueryUdp
     jc name_to_ip_second
 ;
@@ -318,7 +318,7 @@ name_to_ip_second:
     or edx,edx
     jz name_to_ip_ppp
 ;
-    xor di,di
+    xor edi,edi
     QueryUdp
     jc name_to_ip_fail
 ;
@@ -338,7 +338,7 @@ name_to_ip_ppp:
     or edx,edx
     jz name_to_ip_fail
 ;
-    xor di,di
+    xor edi,edi
     QueryUdp
     jc name_to_ip_ppp_second
 ;
@@ -357,7 +357,7 @@ name_to_ip_ppp_second:
     or edx,edx
     jz name_to_ip_fail
 ;
-    xor di,di
+    xor edi,edi
     QueryUdp
     jc name_to_ip_fail
     call DecodeNameRequest
@@ -744,7 +744,7 @@ ip_to_name_second:
     or edx,edx
     jz ip_to_name_fail
 ;
-    xor di,di
+    xor edi,edi
     QueryUdp
     jc ip_to_name_fail
     call DecodeNodeRequest

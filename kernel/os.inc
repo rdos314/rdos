@@ -1713,15 +1713,15 @@ ClosePpp    MACRO
     OsGate close_ppp_nr
             ENDM
 
-; IN  EAX           timeout in ms
+; IN  EAX       timeout in ms
 ; IN  BX        destination port
-; IN  EDX           IP-address
+; IN  EDX       IP-address
 ; IN  CX        Number of bytes to send
 ; IN  ES:EDI    Data buffer
-; OUT ES:DI     Answer buffer
+; OUT ES:EDI    Answer buffer
 ; OUT CX        Number of bytes received
 QueryUdp    MACRO
-    OldOsGate query_udp_nr
+    OsGate query_udp_nr
             ENDM
 
 ; IN  SI        local port

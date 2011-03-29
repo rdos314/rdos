@@ -103,7 +103,7 @@ sync_time       Proc far
     push cx
     push edx
     push si
-    push di
+    push edi
 ;
     mov ax,SEG data
     mov ds,ax
@@ -201,7 +201,7 @@ sync_diff_found:
     UpdateRtc
     clc
 sync_time_done:
-    pop di
+    pop edi
     pop si
     pop edx
     pop cx

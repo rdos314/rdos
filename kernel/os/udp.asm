@@ -302,15 +302,15 @@ StartTimeout    Endp
 ;
 ;       Purpose:        Query UDP port
 ;
-;       Parameters:         EAX             Timeout in ms
+;       Parameters:     EAX             Timeout in ms
 ;                       BX              destination port
 ;                       EDX             IP-address
 ;                       CX              Number of bytes to send
-;                       ES:EDI      Query buffer
+;                       ES:EDI          Query buffer
 ;
 ;       Returns:        NC              Ok
 ;                       CX              Number of bytes received
-;                       ES:DI       Answer buffer
+;                       ES:EDI          Answer buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -421,12 +421,8 @@ udp_query_port_ok:
     add di,SIZE udp_header
     call FreeQuery
     add sp,10
+    movzx edi,di
     clc
-    jmp udp_query_done
-    pop edi
-    pop ecx
-    pop es
-    stc
     jmp udp_query_done
 
 udp_query_pop_fail:
@@ -446,7 +442,7 @@ udp_query_done:
     pop eax
     pop fs
     pop ds  
-    ret
+    retf32
 query_udp       Endp
 
         
