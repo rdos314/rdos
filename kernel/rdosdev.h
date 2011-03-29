@@ -343,6 +343,8 @@ void RdosCreateKernelProcess(
             const char *name,
             void *parm);
 
+int RdosThreadToSel(int thread_id);
+
 void RdosHookInitTasking(__rdos_hook_callback *callb_proc);
 void RdosHookCreateProcess(__rdos_hook_callback *callb_proc);
 void RdosHookTerminateProcess(__rdos_hook_callback *callb_proc);
@@ -901,6 +903,12 @@ void RdosResetDrive(int drive);
     "pop ds" \
     parm [eax] [ecx] [fs esi] [es edi] [gs ebx] \
     modify [edx];
+
+#pragma aux RdosThreadToSel = \
+    OsGate_thread_to_sel \
+    "movzx ebx,bx" \
+    parm [ebx] \
+    value [ebx];
 
 #pragma aux RdosHookInitTasking = \
     OsGate_hook_init_tasking \

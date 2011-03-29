@@ -187,7 +187,7 @@ thread_to_sel_done:
     pop ax
     pop es
     pop ds    
-    ret
+    retf32
 thread_to_sel   Endp
 
 
@@ -675,7 +675,7 @@ init_state      PROC near
     mov edi,OFFSET thread_to_sel_name
     xor cl,cl
     mov ax,thread_to_sel_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov ebx,OFFSET get_thread_state16
     mov esi,OFFSET get_thread_state32

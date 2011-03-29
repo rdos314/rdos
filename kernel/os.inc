@@ -937,6 +937,12 @@ CreateProcess    MACRO
     OsGate create_process_nr
                         ENDM
 
+; IN  BX    Thread #
+; OUT BX    Thread sel
+ThreadToSel     MACRO
+    OsGate thread_to_sel_nr
+            ENDM
+
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
 
 CrashGate       MACRO
@@ -1947,12 +1953,6 @@ ResetDrive      MACRO
 GetAcpiTable    MACRO
     OldOsGate get_acpi_table_nr
                     ENDM
-
-; IN  BX    Thread #
-; OUT BX    Thread sel
-ThreadToSel     MACRO
-    OldOsGate thread_to_sel_nr
-            ENDM
 
 ;       DS:ESI       Device read
 ;       ES:EDI       Device write
