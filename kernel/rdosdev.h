@@ -657,6 +657,10 @@ void RdosStopFileSystem(int drive);
 int RdosGetFileListEntry(int file_sel, int pos);
 void RdosFreeFileListEntry(int file_sel, int file_list);
 
+int RdosCacheDir(int dir_sel, int dir_entry);
+void RdosInsertDirEntry(int dir_sel, int dir_entry);
+void RdosInsertFileEntry(int dir_sel, int file_entry);
+
 /* 32-bit compact memory model (device-drivers) */
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -1566,6 +1570,19 @@ void RdosFreeFileListEntry(int file_sel, int file_list);
 #pragma aux RdosFreeFileListEntry = \
     OsGate_free_file_list_entry \
     parm [ebx] [edi];
+
+#pragma aux RdosCacheDir = \
+    OsGate_cache_dir \
+    parm [ebx] [edx] \
+    value [ebx];
+
+#pragma aux RdosInsertDirEntry = \
+    OsGate_insert_dir_entry \
+    parm [ebx] [edx];
+
+#pragma aux RdosInsertFileEntry = \
+    OsGate_insert_file_entry \
+    parm [ebx] [edx];
 
 #ifdef __cplusplus
 }

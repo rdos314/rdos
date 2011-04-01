@@ -223,7 +223,7 @@ cache_dir_done:
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 cache_dir       Endp
 
 
@@ -275,7 +275,7 @@ insert_dir_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 insert_dir_entry    ENDP
 
 
@@ -325,7 +325,7 @@ insert_file_done:
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 insert_file_entry       ENDP
 
 
@@ -2898,19 +2898,19 @@ init_dir    PROC near
     mov edi,OFFSET cache_dir_name
     xor cl,cl
     mov ax,cache_dir_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET insert_dir_entry
     mov edi,OFFSET insert_dir_entry_name
     xor cl,cl
     mov ax,insert_dir_entry_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET insert_file_entry
     mov edi,OFFSET insert_file_entry_name
     xor cl,cl
     mov ax,insert_file_entry_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_drive_info
     mov edi,OFFSET get_drive_info_name

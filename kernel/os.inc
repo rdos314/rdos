@@ -2027,22 +2027,23 @@ FreeFileListEntry       MACRO
     OsGate free_file_list_entry_nr
                     ENDM
 
-;       BX              DIR SELECTOR
-;       EDX             DIR ENTRY
+;  IN   BX              DIR SELECTOR
+;  IN   EDX             DIR ENTRY
+;  OUT  BX              Cached dir sel
 CacheDir    MACRO
-    OldOsGate cache_dir_nr
+    OsGate cache_dir_nr
                     ENDM
 
-;       BX              DIR SELECTOR
-;       EDX             DIR ENTRY
+;  IN   BX              DIR SELECTOR
+;  IN   EDX             DIR ENTRY
 InsertDirEntry  MACRO
-    OldOsGate insert_dir_entry_nr
+    OsGate insert_dir_entry_nr
                     ENDM
 
-;       BX              DIR SELECTOR
-;       EDX             FILE ENTRY
+;  IN   BX              DIR SELECTOR
+;  IN   EDX             FILE ENTRY
 InsertFileEntry MACRO
-    OldOsGate insert_file_entry_nr
+    OsGate insert_file_entry_nr
                     ENDM
 
 ;;;;;;;;;;;; FILE ;;;;;;;;;;;
