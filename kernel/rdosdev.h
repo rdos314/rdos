@@ -648,6 +648,9 @@ void RdosResetDrive(int drive);
 void RdosHookInitFileSystem(__rdos_dhcp_option_callback *callb_proc);
 void RdosRegisterFileSystem(char *name, struct TFileSystemTable *table);
 void RdosInstallFileSystem(int drive, char *name);
+void RdosDemandLoadFileSystem(int drive);
+int RdosIsFileSystemAvailable(char *name);
+void RdosFormatFileSystem(int drive, char *name, void *format_data);
 
 /* 32-bit compact memory model (device-drivers) */
 
@@ -1527,6 +1530,20 @@ void RdosInstallFileSystem(int drive, char *name);
 #pragma aux RdosInstallFileSystem = \
     OsGate_install_file_system \
     parm [eax] [es edi];
+
+#pragma aux RdosDemandLoadFileSystem = \
+    OsGate_demand_load_file_system \
+    parm [eax];
+
+#pragma aux RdosIsFileSystemAvailable = \
+    OsGate_is_file_system_available \
+    CarryToBool \        
+    parm [es edi] \
+    value [eax];
+
+#pragma aux RdosFormatFileSystem = \
+    OsGate_format_file_system \
+    parm [eax] [es edi] [fs edx];
 
 #ifdef __cplusplus
 }
