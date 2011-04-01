@@ -46,8 +46,8 @@ CallFileSystem  MACRO   call_proc
     movzx si,al
     add si,si
     mov ds,ds:[si].fs_sel
-    lgs bp,ds:fs_sys_arr
-    lds si,ds:fs_sys_arr+4
+    lgs bp,ds:fs_table
+    lds si,ds:fs_drive_param
     call fword ptr gs:[bp].&call_proc
     pop si
     pop bp
@@ -366,9 +366,9 @@ init_file_old_freed:
     mov ds,ax
     pop eax
     pop es
-    mov word ptr ds:fs_sys_arr,di
-    mov word ptr ds:fs_sys_arr+2,es
-    mov dword ptr ds:fs_sys_arr+4,0
+    mov word ptr ds:fs_table,di
+    mov word ptr ds:fs_table+2,es
+    mov dword ptr ds:fs_drive_param+4,0
     InitSection ds:fs_list_section
     InitReadWriteSection ds:fs_access_section
 ;       EnterWriteSection ds:fs_access_section
@@ -445,11 +445,11 @@ start_file_system       Proc far
     add di,di
     mov ds,es:[di].fs_sel
     push ds
-    lds si,ds:fs_sys_arr
+    lds si,ds:fs_table
     call fword ptr ds:[si].fs_mount_proc
     pop es
-    mov word ptr es:fs_sys_arr+4,si
-    mov word ptr es:fs_sys_arr+6,ds
+    mov word ptr es:fs_drive_param,si
+    mov word ptr es:fs_drive_param+2,ds
     mov ax,es
     mov ds,ax
 ;       LeaveWriteSection ds:fs_access_section
