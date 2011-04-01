@@ -36,7 +36,7 @@ FILE_LIST_FLAG_READAHEAD = 1
 
 fs_drive_seg	STRUC
 
-fs_sys_arr			DD 2*256 DUP(?)
+fs_sys_arr			DD 4 DUP(?)
 fs_root_dir_sel		DW ?
 fs_mount_id			DD ?
 fs_list_section		section_typ <>
