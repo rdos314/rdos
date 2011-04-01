@@ -1290,7 +1290,7 @@ InstallPartition    Proc near
     pop ds
 ;
     pop ecx
-    xor di,di
+    xor edi,edi
     IsFileSystemAvailable
     jc install_part_free
 ;
@@ -1316,6 +1316,7 @@ install_check_type:
 install_part_test_avail:
     mov ecx,eax
     mov di,word ptr cs:[di].FsTab
+    movzx edi,di
     IsFileSystemAvailable
     jc install_part_done
 ;

@@ -1248,7 +1248,7 @@ init_ramdrive	PROC near
 	RegisterFileSystem
 ;
 	AllocateDynamicDrive
-	mov di,OFFSET fs_name
+	mov edi,OFFSET fs_name
 	InstallFileSystem
 	mov ecx,-1
 	StartFileSystem

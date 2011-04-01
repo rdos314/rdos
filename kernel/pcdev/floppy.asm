@@ -1334,21 +1334,21 @@ InstallMain     Proc near
     push bx
     push cx
     push edx
-    push di
+    push edi
 ;
     mov cl,es:boot_media
     cmp cl,0F0h
     je install_main_fat12
-    mov di,OFFSET boot_fs
+    mov edi,OFFSET boot_fs
     jmp install_main_fs
 install_main_fat12:
     mov cx,cs
     mov es,cx
-    mov di,OFFSET fat12
+    mov edi,OFFSET fat12
 install_main_fs:
     InstallFileSystem
 ;
-    pop di
+    pop edi
     pop edx
     pop cx
     pop bx

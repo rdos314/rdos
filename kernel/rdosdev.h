@@ -185,6 +185,174 @@ typedef void __far (__rdos_disc_change_callback)(int disc_sel);
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_init_fs_callback)();
+
+#pragma aux __rdos_init_fs_callback "*" \
+                    parm caller  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_format_callback)(void *drive_data, char *fs_name, int sectors);
+
+#pragma aux __rdos_fs_format_callback "*" \
+                    parm caller [fs edx] [es edi] [ecx]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void * __far (__rdos_fs_mount_callback)(void *drive_data);
+
+#pragma aux __rdos_fs_mount_callback "*" \
+                    parm caller [fs edx] \
+                    value struct routine [ds esi] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_flush_callback)(void *fs_data);
+
+#pragma aux __rdos_fs_flush_callback "*" \
+                    parm caller [ds esi]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_dismount_callback)(void *fs_data);
+
+#pragma aux __rdos_fs_dismount_callback "*" \
+                    parm caller [ds esi]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef long __far (__rdos_fs_info_callback)(void *fs_data);
+
+#pragma aux __rdos_fs_info_callback "*" \
+                    parm caller [ds esi]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef int __far (__rdos_fs_allocate_dir_sel_callback)(void *fs_data, char drive, int parent_dir_sel, int parent_dir_entry);
+
+#pragma aux __rdos_fs_allocate_dir_sel_callback "*" \
+                    parm caller [ds esi] [al] [ebx] [edx]  \
+                    value struct routine [ebx] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_free_dir_sel_callback)(void *fs_data, int dir_sel);
+
+#pragma aux __rdos_fs_free_dir_sel_callback "*" \
+                    parm caller [ds esi] [ebx]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_cache_dir_callback)(void *fs_data, int dir_sel, int dir_entry);
+
+#pragma aux __rdos_fs_cache_dir_callback "*" \
+                    parm caller [ds esi] [ebx] [edx]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_update_dir_callback)(void *fs_data, int dir_dir_entry);
+
+#pragma aux __rdos_fs_update_dir_callback "*" \
+                    parm caller [ds esi] [edx]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_update_file_callback)(void *fs_data, int dir_file_entry);
+
+#pragma aux __rdos_fs_update_file_callback "*" \
+                    parm caller [ds esi] [edx]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef long __far (__rdos_fs_create_dir_callback)(void *fs_data, char *name, int dir_sel);
+
+#pragma aux __rdos_fs_create_dir_callback "*" \
+                    parm caller [ds esi] [es edi] [ebx]  \
+                    value struct routine [edx] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_delete_dir_callback)(void *fs_data, int dir_sel, int dir_entry);
+
+#pragma aux __rdos_fs_delete_dir_callback "*" \
+                    parm caller [ds esi] [ebx] [edx]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_delete_file_callback)(void *fs_data, int dir_sel, int dir_entry);
+
+#pragma aux __rdos_fs_delete_file_callback "*" \
+                    parm caller [ds esi] [ebx] [edx]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_rename_file_callback)(char *from, char *to);
+
+#pragma aux __rdos_fs_rename_file_callback "*" \
+                    parm caller [fs esi] [es edi]  \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef int __far (__rdos_fs_create_file_callback)(void *fs_data, char *name, int dir_sel, int attrib);
+
+#pragma aux __rdos_fs_create_file_callback "*" \
+                    parm caller [ds esi] [es edi] [ebx] [ecx] \
+                    value struct routine [edx] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef int __far (__rdos_fs_get_ioctl_callback)(void *fs_data, int file_handle);
+
+#pragma aux __rdos_fs_get_ioctrl_callback "*" \
+                    parm caller [ds esi] [ebx] \
+                    value struct routine [edx] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_set_file_size_callback)(void *fs_data, int file_handle, int size);
+
+#pragma aux __rdos_fs_set_file_size_callback "*" \
+                    parm caller [ds esi] [ebx] [edx] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef int __far (__rdos_fs_read_file_callback)(void *fs_data, int file_handle, int start, int size, char *buf);
+
+#pragma aux __rdos_fs_read_file_callback "*" \
+                    parm caller [ds esi] [ebx] [edx] [ecx] [es edi] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef int __far (__rdos_fs_write_file_callback)(void *fs_data, int file_handle, int start, int size, char *buf);
+
+#pragma aux __rdos_fs_write_file_callback "*" \
+                    parm caller [ds esi] [ebx] [edx] [ecx] [es edi] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef int __far (__rdos_fs_allocate_file_list_callback)(void *fs_data, int file_handle);
+
+#pragma aux __rdos_fs_allocate_file_list_callback "*" \
+                    parm caller [ds esi] [ebx] \
+                    value struct routine [edi] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_free_file_list_callback)(void *fs_data, int file_list);
+
+#pragma aux __rdos_fs_free_file_list_callback "*" \
+                    parm caller [ds esi] [edi] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_read_block_callback)(void *fs_data, int file_handle, int start, int size, int file_list);
+
+#pragma aux __rdos_fs_read_block_callback "*" \
+                    parm caller [ds esi] [ebx] [edx] [ecx] [edi] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
+typedef void __far (__rdos_fs_write_block_callback)(void *fs_data, int file_handle, int start, int size, int file_list);
+
+#pragma aux __rdos_fs_write_block_callback "*" \
+                    parm caller [ds esi] [ebx] [edx] [ecx] [edi] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 // structures
 
 struct TKernelSection
@@ -225,6 +393,33 @@ struct TDiscSystemHeader
     __rdos_drive_assign_callback *drive_assign2_proc;
     __rdos_drive_mount_callback *mount_proc;
     __rdos_drive_erase_callback *erase_proc;
+};
+
+struct TFileSystemTable
+{
+    __rdos_fs_format_callback *format_proc;
+    __rdos_fs_mount_callback *mount_proc;
+    __rdos_fs_flush_callback *flush_proc;
+    __rdos_fs_dismount_callback *dismount_proc;
+    __rdos_fs_info_callback *info_proc;
+    __rdos_fs_allocate_dir_sel_callback *allocate_dir_sel_proc;
+    __rdos_fs_free_dir_sel_callback *free_dir_sel_proc;
+    __rdos_fs_cache_dir_callback *cache_dir_proc;
+    __rdos_fs_update_dir_callback *update_dir_proc;
+    __rdos_fs_update_file_callback *update_file_proc;
+    __rdos_fs_create_dir_callback *create_dir_proc;
+    __rdos_fs_delete_dir_callback *delete_dir_proc;
+    __rdos_fs_delete_file_callback *delete_file_proc;
+    __rdos_fs_rename_file_callback *rename_file_proc;
+    __rdos_fs_create_file_callback *create_file_proc;
+    __rdos_fs_get_ioctl_callback *get_ioctl_proc;
+    __rdos_fs_set_file_size_callback *set_file_size_proc;
+    __rdos_fs_read_file_callback *read_file_proc;
+    __rdos_fs_write_file_callback *write_file_proc;
+    __rdos_fs_allocate_file_list_callback *allocate_file_list_proc;
+    __rdos_fs_free_file_list_callback *free_file_list_proc;
+    __rdos_fs_read_block_callback *read_block_proc;
+    __rdos_fs_write_block_callback *write_block_proc;
 };
 
 // function definitions
@@ -449,6 +644,10 @@ void RdosPerformDiscSeq(int seq_handle);
 
 void RdosEraseSectors(int drive, int start_sector, int sector_count);
 void RdosResetDrive(int drive);
+
+void RdosHookInitFileSystem(__rdos_dhcp_option_callback *callb_proc);
+void RdosRegisterFileSystem(char *name, struct TFileSystemTable *table);
+void RdosInstallFileSystem(int drive, char *name);
 
 /* 32-bit compact memory model (device-drivers) */
 
@@ -1313,6 +1512,21 @@ void RdosResetDrive(int drive);
 #pragma aux RdosResetDrive = \
     OsGate_reset_drive \
     parm [eax];
+
+#pragma aux RdosHookInitFileSystem = \
+    OsGate_hook_init_file_system \
+    parm [es edi];
+
+#pragma aux RdosRegisterFileSystem = \
+    "push ds" \
+    "mov ds,dx" \
+    OsGate_register_file_system \
+    "pop ds" \
+    parm [dx esi] [es edi];
+
+#pragma aux RdosInstallFileSystem = \
+    OsGate_install_file_system \
+    parm [eax] [es edi];
 
 #ifdef __cplusplus
 }

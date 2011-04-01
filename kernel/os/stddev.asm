@@ -1292,7 +1292,7 @@ init_stddev     PROC near
     RegisterFileSystem
 ;       
     mov al,80h
-    mov di,OFFSET fs_name
+    mov edi,OFFSET fs_name
     InstallFileSystem
     ret
 init_stddev     ENDP

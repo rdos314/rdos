@@ -97,6 +97,7 @@ mount12	PROC far
 	pop ax
 	mov ds:fat_type,fat12
 	call get_param12
+	xor esi,esi
 ;
 	pop es
 	retf32
@@ -126,6 +127,7 @@ mount16	PROC far
 	pop ax
 	mov ds:fat_type,fat16
 	call get_param16
+	xor esi,esi
 ;
 	pop es
 	retf32
@@ -155,6 +157,7 @@ mount32	PROC far
 	pop ax
 	mov ds:fat_type,fat32
 	call get_param32
+	xor esi,esi
 ;
 	pop es
 	retf32

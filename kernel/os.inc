@@ -1989,10 +1989,10 @@ IsFileSystemAvailable   MACRO
     OldOsGate is_file_system_available_nr
                     ENDM
 
-;       AL              DRIVE #
-;       ES:DI       FILE SYSTEM NAME
+;  IN   AL              DRIVE #
+;  IN   ES:EDI          FILE SYSTEM NAME
 InstallFileSystem       MACRO
-    OldOsGate install_file_system_nr
+    OsGate install_file_system_nr
                     ENDM
 
 ;       AL              Drive #

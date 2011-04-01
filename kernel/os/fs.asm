@@ -322,9 +322,9 @@ is_file_system_available    Endp
 ;
 ;           DESCRIPTION:    Install a file system
 ;
-;           PARAMETERS:         AL              DRIVE #
+;           PARAMETERS:     AL              DRIVE #
 ;                           DX              DRIVE UNIT #
-;                           ES:DI       FILE SYSTEM NAME
+;                           ES:EDI          FILE SYSTEM NAME
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -337,8 +337,6 @@ install_file_system     Proc far
     push cx
     push si
     push edi
-;
-    movzx edi,di
 ;
     mov cx,fs_sys_data_sel
     mov ds,cx
@@ -370,6 +368,7 @@ init_file_old_freed:
     pop es
     mov dword ptr ds:fs_table,edi
     mov word ptr ds:fs_table+4,es
+    mov dword ptr ds:fs_drive_param,0
     mov dword ptr ds:fs_drive_param+4,0
     InitSection ds:fs_list_section
     InitReadWriteSection ds:fs_access_section
@@ -389,7 +388,7 @@ install_file_sys_done:
     pop bx
     pop es
     pop ds
-    ret
+    retf32
 install_file_system     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -706,7 +705,7 @@ init    PROC far
     mov esi,OFFSET install_file_system
     mov edi,OFFSET install_file_system_name
     mov ax,install_file_system_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET start_file_system
     mov edi,OFFSET start_file_system_name

@@ -166,45 +166,57 @@ file_system_struc 	STRUC
 fs_format_proc				DD ?,?
 
 ;	IN	FS:EDX		DRIVE DATA
+;	OUT	DS:ESI		Fs data
 fs_mount_proc				DD ?,?
 
+;	IN	DS:ESI		Fs data
 fs_flush_proc				DD ?,?
 
+;	IN	DS:ESI		Fs data
 fs_dismount_proc			DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	OUT	EAX			FREE UNITS
 ;	OUT	CX			NUMBER OF BYTES/UNIT
 ;	OUT	EDX			TOTAL NUMBER OF UNITS
 fs_info_proc				DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN  AL			Drive
 ;	IN  BX			Parent dir selector
 ;	IN  EDX			Parent dir entry
 ;	OUT BX			DIR SELECTOR
 fs_allocate_dir_sel_proc		DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN  BX			DIR SELECTOR
 fs_free_dir_sel_proc			DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN  BX			DIR SELECTOR
 ;	IN	EDX			DIR ENTRY OR 0
 fs_cache_dir_proc				DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	EDX			DIR DIR ENTRY
 fs_update_dir_proc		DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	EDX			DIR FILE ENTRY
 fs_update_file_proc		DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	ES:EDI		PATH NAME
 ;	IN  BX			DIR SELECTOR
 ;	OUT	EDX			DIR ENTRY
 fs_create_dir_proc			DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN  BX			DIR SELECTOR
 ;	IN	EDX			DIR ENTRY TO DELETE
 fs_delete_dir_proc			DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN  BX			DIR SELECTOR
 ;	IN	EDX			FILE ENTRY TO DELETE
 fs_delete_file_proc		DD ?,?
@@ -213,20 +225,24 @@ fs_delete_file_proc		DD ?,?
 ;	IN	ES:EDI		NEW NAME
 fs_rename_file_proc		DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	ES:EDI		PATH NAME
 ;	IN  BX			DIR SELECTOR
 ;	IN	CX			FILE ATTRIBUTE
 ;	OUT	EDX			DIR ENTRY
 fs_create_file_proc		DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	BX			FILE HANDLE
 ;	OUT	DX			IOCTL DATA
 fs_get_ioctl_data_proc		DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	BX			FILE HANDLE
 ;	IN	EDX			FILE SIZE
 fs_set_file_size_proc		DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	BX			FILE HANDLE
 ;	IN	ECX			NUMBER OF BYTES
 ;	IN	EDX			POSITION
@@ -234,6 +250,7 @@ fs_set_file_size_proc		DD ?,?
 ;	OUT	EAX			NUMBER OF BYTES READ
 fs_read_file_proc			DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	BX			FILE HANDLE
 ;	IN	ECX			NUMBER OF BYTES
 ;	IN	EDX			POSITION
@@ -241,19 +258,23 @@ fs_read_file_proc			DD ?,?
 ;	OUT	EAX			NUMBER OF BYTES WRITTEN
 fs_write_file_proc			DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	BX			FILE HANDLE
 ;	OUT	EDI			FILE LIST ENTRY
 fs_allocate_file_list_proc			DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	EDI			FILE LIST ENTRY
 fs_free_file_list_proc			DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	BX			FILE HANDLE
 ;	IN	ECX			BYTES TO READ
 ;	IN	EDX			POSITION
 ;	IN	EDI			FILE LIST ENTRY
 fs_read_file_block_proc			DD ?,?
 
+;	IN	DS:ESI		Fs data
 ;	IN	BX			FILE HANDLE
 ;	IN	ECX			BYTES TO WRITE
 ;	IN	EDX			POSITION
