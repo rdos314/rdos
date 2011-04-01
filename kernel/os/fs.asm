@@ -130,12 +130,12 @@ register_file_system    Proc far
     mov al,ds:file_defs
     mov bl,al
     xor bh,bh
-    shl bx,3
+    shl bx,4
     add bx,OFFSET file_def_arr
-    mov [bx],si
-    mov [bx+2],cx
-    mov [bx+4],di
-    mov [bx+6],es
+    mov [bx],esi
+    mov [bx+4],cx
+    mov [bx+8],edi
+    mov [bx+12],es
     inc al
     mov ds:file_defs,al
     pop cx
@@ -186,7 +186,7 @@ define_media_check      Endp
 ;
 ;           DESCRIPTION:    Set file-system to demand-load mode
 ;
-;           PARAMETERS:         AL              DRIVE #
+;           PARAMETERS:     AL              DRIVE #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -221,7 +221,7 @@ demand_load_old_freed:
     pop bx
     pop es
     pop ds
-    ret
+    retf32
 demand_load_file_system Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -231,9 +231,9 @@ demand_load_file_system Endp
 ;
 ;           DESCRIPTION:    Get a file system
 ;
-;           PARAMETERS:         ES:DI       FILE SYSTEM NAME
+;           PARAMETERS:     ES:EDI       FILE SYSTEM NAME
 ;
-;           RETURNS:        ED:DI       FILE SYSTEM CONTROL TABLE
+;           RETURNS:        ED:EDI       FILE SYSTEM CONTROL TABLE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -242,6 +242,7 @@ GetFileSystem   Proc near
     push ax
     push bx
     push cx
+    push esi
 ;
     mov cx,fs_sys_data_sel
     mov ds,cx
@@ -252,32 +253,32 @@ GetFileSystem   Proc near
 
 get_file_sys_find:
     push ds
-    push di
-    lds si,[bx]
+    push edi
+    lds esi,fword ptr [bx]
 
 get_file_sys_check:
-    lodsb
+    lods byte ptr ds:[esi]
     or al,al
     jz get_file_sys_ok
 ;
-    cmp al,es:[di]
+    cmp al,es:[edi]
     jne get_file_sys_next
 ;
-    inc di
+    inc edi
     jmp get_file_sys_check
 
 get_file_sys_next:
-    pop di
+    pop edi
     pop ds
-    add bx,8
+    add bx,16
     loop get_file_sys_find
 ;
     jmp get_file_sys_fail
 
 get_file_sys_ok:
-    pop di
+    pop edi
     pop ds
-    les di,[bx+4]
+    les edi,fword ptr [bx+8]
     clc
     jmp get_file_sys_done
 
@@ -285,6 +286,7 @@ get_file_sys_fail:
     stc
 
 get_file_sys_done:
+    pop esi
     pop cx
     pop bx
     pop ax
@@ -299,8 +301,8 @@ GetFileSystem   Endp
 ;
 ;           DESCRIPTION:    Check if file system is available
 ;
-;           PARAMETERS:         AL              DRIVE #
-;                           ES:DI       FILE SYSTEM NAME
+;           PARAMETERS:     AL              DRIVE #
+;                           ES:EDI       FILE SYSTEM NAME
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -308,11 +310,11 @@ is_file_system_available_name   DB 'Is File System Available',0
 
 is_file_system_available    Proc far
     push es
-    push di
+    push edi
     call GetFileSystem
-    pop di
+    pop edi
     pop es
-    ret
+    retf32
 is_file_system_available    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -398,10 +400,10 @@ install_file_system     Endp
 ;
 ;           DESCRIPTION:    Format a file system
 ;
-;           PARAMETERS:         AL              Drive #
+;           PARAMETERS:     AL              Drive #
 ;                           ECX             Drive size
-;                           ES:DI       File system name
-;               FS:EDX      Format data
+;                           ES:EDI          File system name
+;                           FS:EDX      Format data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -409,14 +411,14 @@ format_file_system_name DB 'Format File System',0
 
 format_file_system      Proc far
     push es
-    push di
+    push edi
 ;
     call GetFileSystem
-    call fword ptr es:[di].fs_format_proc
+    call fword ptr es:[edi].fs_format_proc
 ;
-    pop di
+    pop edi
     pop es
-    ret
+    retf32
 format_file_system      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -690,17 +692,17 @@ init    PROC far
     mov esi,OFFSET demand_load_file_system
     mov edi,OFFSET demand_load_file_system_name
     mov ax,demand_load_file_system_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET format_file_system
     mov edi,OFFSET format_file_system_name
     mov ax,format_file_system_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET is_file_system_available
     mov edi,OFFSET is_file_system_available_name
     mov ax,is_file_system_available_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET install_file_system
     mov edi,OFFSET install_file_system_name

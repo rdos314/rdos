@@ -301,7 +301,7 @@ create_file_drive   Proc near
 ;
     mov bp,ax
     push es
-    push di
+    push edi
     mov eax,SIZE file_disc_data_seg
     AllocateSmallGlobalMem
 ;
@@ -315,9 +315,9 @@ cfdMoveName:
     or al,al
     jnz cfdMoveName
 ;
-    mov di,OFFSET boot_param.boot_fs
+    mov edi,OFFSET boot_param.boot_fs
     IsFileSystemAvailable
-    pop di
+    pop edi
     pop es
     jc cfdFreeFail
 ;
@@ -488,7 +488,7 @@ open_file_drive Proc near
     ReadFile
     jc ofdFail
 ;
-    mov di,OFFSET boot_param.boot_fs
+    mov edi,OFFSET boot_param.boot_fs
     IsFileSystemAvailable
     jc ofdFail
 ;

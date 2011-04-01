@@ -1979,14 +1979,14 @@ DefineMediaCheck    MACRO
     OsGate define_media_check_nr
                     ENDM
 
-;       AL              DRIVE #
+;  IN   AL              DRIVE #
 DemandLoadFileSystem    MACRO
-    OldOsGate demand_load_file_system_nr
+    OsGate demand_load_file_system_nr
                     ENDM
 
-;       ES:DI       FILE SYSTEM NAME
+;  IN   ES:EDI       FILE SYSTEM NAME
 IsFileSystemAvailable   MACRO
-    OldOsGate is_file_system_available_nr
+    OsGate is_file_system_available_nr
                     ENDM
 
 ;  IN   AL              DRIVE #
@@ -1995,11 +1995,11 @@ InstallFileSystem       MACRO
     OsGate install_file_system_nr
                     ENDM
 
-;       AL              Drive #
-;       ES:DI       File system name
-;   FS:EDX      Format data
+;  IN   AL              Drive #
+;  IN   ES:EDI          File system name
+;  IN   FS:EDX          Format data
 FormatFileSystem    MACRO
-    OldOsGate format_file_system_nr
+    OsGate format_file_system_nr
                     ENDM
 
 ;       AL              Drive #

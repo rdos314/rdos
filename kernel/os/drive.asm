@@ -4646,7 +4646,7 @@ format_drive    Proc near
     movs dword ptr es:[edi],ds:[esi]
     movs dword ptr es:[edi],ds:[esi]
     pop ax
-    xor di,di
+    xor edi,edi
     IsFileSystemAvailable
     jc format_fail
 ;
