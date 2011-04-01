@@ -50,18 +50,18 @@ file_handle_seg     ENDS
 CallFileSystem  MACRO   call_proc
     push ds
     push gs
-    push bp
-    push si
+    push ebp
+    push esi
     mov si,fs_sys_data_sel
     mov ds,si
     movzx si,al
     add si,si
     mov ds,ds:[si].fs_sel
-    lgs bp,ds:fs_table
-    lds si,ds:fs_drive_param
-    call fword ptr gs:[bp].&call_proc
-    pop si
-    pop bp
+    lgs ebp,fword ptr ds:fs_table
+    lds esi,fword ptr ds:fs_drive_param
+    call fword ptr gs:[ebp].&call_proc
+    pop esi
+    pop ebp
     pop gs
     pop ds
                 ENDM

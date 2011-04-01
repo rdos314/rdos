@@ -39,18 +39,18 @@ INCLUDE ..\fs.inc
 CallFileSystem  MACRO   call_proc
     push ds
     push gs
-    push bp
-    push si
+    push ebp
+    push esi
     mov si,fs_sys_data_sel
     mov ds,si
     movzx si,al
     add si,si
     mov ds,ds:[si].fs_sel
-    lgs bp,ds:fs_table
-    lds si,ds:fs_drive_param
-    call fword ptr gs:[bp].&call_proc
-    pop si
-    pop bp
+    lgs ebp,fword ptr ds:fs_table
+    lds esi,fword ptr ds:fs_drive_param
+    call fword ptr gs:[ebp].&call_proc
+    pop esi
+    pop ebp
     pop gs
     pop ds
                 ENDM
@@ -336,7 +336,9 @@ install_file_system     Proc far
     push bx
     push cx
     push si
-    push di
+    push edi
+;
+    movzx edi,di
 ;
     mov cx,fs_sys_data_sel
     mov ds,cx
@@ -366,8 +368,8 @@ init_file_old_freed:
     mov ds,ax
     pop eax
     pop es
-    mov word ptr ds:fs_table,di
-    mov word ptr ds:fs_table+2,es
+    mov dword ptr ds:fs_table,edi
+    mov word ptr ds:fs_table+4,es
     mov dword ptr ds:fs_drive_param+4,0
     InitSection ds:fs_list_section
     InitReadWriteSection ds:fs_access_section
@@ -381,7 +383,7 @@ init_file_old_freed:
     clc
 
 install_file_sys_done:
-    pop di
+    pop edi
     pop si
     pop cx
     pop bx
@@ -436,7 +438,7 @@ start_file_system_name  DB 'Start File System',0
 start_file_system       Proc far
     push ds
     push es
-    push si
+    push esi
     push di
 ;
     mov si,fs_sys_data_sel
@@ -445,17 +447,17 @@ start_file_system       Proc far
     add di,di
     mov ds,es:[di].fs_sel
     push ds
-    lds si,ds:fs_table
-    call fword ptr ds:[si].fs_mount_proc
+    lds esi,fword ptr ds:fs_table
+    call fword ptr ds:[esi].fs_mount_proc
     pop es
-    mov word ptr es:fs_drive_param,si
-    mov word ptr es:fs_drive_param+2,ds
+    mov dword ptr es:fs_drive_param,esi
+    mov word ptr es:fs_drive_param+4,ds
     mov ax,es
     mov ds,ax
 ;       LeaveWriteSection ds:fs_access_section
 ;
     pop di
-    pop si
+    pop esi
     pop es
     pop ds
     ret
