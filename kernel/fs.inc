@@ -233,17 +233,17 @@ fs_rename_file_proc		DD ?,?
 fs_create_file_proc		DD ?,?
 
 ;	IN	DS:ESI		Fs data
-;	IN	BX			FILE HANDLE
+;	IN	BX			File sel
 ;	OUT	DX			IOCTL DATA
 fs_get_ioctl_data_proc		DD ?,?
 
 ;	IN	DS:ESI		Fs data
-;	IN	BX			FILE HANDLE
+;	IN	BX			File sel
 ;	IN	EDX			FILE SIZE
 fs_set_file_size_proc		DD ?,?
 
 ;	IN	DS:ESI		Fs data
-;	IN	BX			FILE HANDLE
+;	IN	BX			File sel
 ;	IN	ECX			NUMBER OF BYTES
 ;	IN	EDX			POSITION
 ;	IN	ES:EDI		DATA BUFFER
@@ -251,7 +251,7 @@ fs_set_file_size_proc		DD ?,?
 fs_read_file_proc			DD ?,?
 
 ;	IN	DS:ESI		Fs data
-;	IN	BX			FILE HANDLE
+;	IN	BX			File sel
 ;	IN	ECX			NUMBER OF BYTES
 ;	IN	EDX			POSITION
 ;	IN	ES:EDI		DATA BUFFER
@@ -259,7 +259,7 @@ fs_read_file_proc			DD ?,?
 fs_write_file_proc			DD ?,?
 
 ;	IN	DS:ESI		Fs data
-;	IN	BX			FILE HANDLE
+;	IN	BX			File sel
 ;	OUT	EDI			FILE LIST ENTRY
 fs_allocate_file_list_proc			DD ?,?
 
@@ -268,14 +268,14 @@ fs_allocate_file_list_proc			DD ?,?
 fs_free_file_list_proc			DD ?,?
 
 ;	IN	DS:ESI		Fs data
-;	IN	BX			FILE HANDLE
+;	IN	BX			File sel
 ;	IN	ECX			BYTES TO READ
 ;	IN	EDX			POSITION
 ;	IN	EDI			FILE LIST ENTRY
 fs_read_file_block_proc			DD ?,?
 
 ;	IN	DS:ESI		Fs data
-;	IN	BX			FILE HANDLE
+;	IN	BX			File sel
 ;	IN	ECX			BYTES TO WRITE
 ;	IN	EDX			POSITION
 ;	IN	EDI			FILE LIST ENTRY

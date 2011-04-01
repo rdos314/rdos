@@ -297,35 +297,35 @@ typedef int __far (__rdos_fs_create_file_callback)(void *fs_data, char *name, in
                     value struct routine [edx] \
                     modify [eax ebx ecx edx esi edi]
 
-typedef int __far (__rdos_fs_get_ioctl_callback)(void *fs_data, int file_handle);
+typedef int __far (__rdos_fs_get_ioctl_callback)(void *fs_data, int file_sel);
 
 #pragma aux __rdos_fs_get_ioctrl_callback "*" \
                     parm caller [ds esi] [ebx] \
                     value struct routine [edx] \
                     modify [eax ebx ecx edx esi edi]
 
-typedef void __far (__rdos_fs_set_file_size_callback)(void *fs_data, int file_handle, int size);
+typedef void __far (__rdos_fs_set_file_size_callback)(void *fs_data, int file_sel, int size);
 
 #pragma aux __rdos_fs_set_file_size_callback "*" \
                     parm caller [ds esi] [ebx] [edx] \
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
-typedef int __far (__rdos_fs_read_file_callback)(void *fs_data, int file_handle, int start, int size, char *buf);
+typedef int __far (__rdos_fs_read_file_callback)(void *fs_data, int file_sel, int start, int size, char *buf);
 
 #pragma aux __rdos_fs_read_file_callback "*" \
                     parm caller [ds esi] [ebx] [edx] [ecx] [es edi] \
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
-typedef int __far (__rdos_fs_write_file_callback)(void *fs_data, int file_handle, int start, int size, char *buf);
+typedef int __far (__rdos_fs_write_file_callback)(void *fs_data, int file_sel, int start, int size, char *buf);
 
 #pragma aux __rdos_fs_write_file_callback "*" \
                     parm caller [ds esi] [ebx] [edx] [ecx] [es edi] \
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
-typedef int __far (__rdos_fs_allocate_file_list_callback)(void *fs_data, int file_handle);
+typedef int __far (__rdos_fs_allocate_file_list_callback)(void *fs_data, int file_sel);
 
 #pragma aux __rdos_fs_allocate_file_list_callback "*" \
                     parm caller [ds esi] [ebx] \
@@ -339,14 +339,14 @@ typedef void __far (__rdos_fs_free_file_list_callback)(void *fs_data, int file_l
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
-typedef void __far (__rdos_fs_read_block_callback)(void *fs_data, int file_handle, int start, int size, int file_list);
+typedef void __far (__rdos_fs_read_block_callback)(void *fs_data, int file_sel, int start, int size, int file_list);
 
 #pragma aux __rdos_fs_read_block_callback "*" \
                     parm caller [ds esi] [ebx] [edx] [ecx] [edi] \
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
-typedef void __far (__rdos_fs_write_block_callback)(void *fs_data, int file_handle, int start, int size, int file_list);
+typedef void __far (__rdos_fs_write_block_callback)(void *fs_data, int file_sel, int start, int size, int file_list);
 
 #pragma aux __rdos_fs_write_block_callback "*" \
                     parm caller [ds esi] [ebx] [edx] [ecx] [edi] \
@@ -653,6 +653,9 @@ int RdosIsFileSystemAvailable(char *name);
 void RdosFormatFileSystem(int drive, char *name, void *mount_data);
 void RdosStartFileSystem(int drive, int sectors, void *mount_data);
 void RdosStopFileSystem(int drive);
+
+int RdosGetFileListEntry(int file_sel, int pos);
+void RdosFreeFileListEntry(int file_sel, int file_list);
 
 /* 32-bit compact memory model (device-drivers) */
 
@@ -1554,6 +1557,15 @@ void RdosStopFileSystem(int drive);
 #pragma aux RdosStopFileSystem = \
     OsGate_stop_file_system \
     parm [eax];
+
+#pragma aux RdosGetFileListEntry = \
+    OsGate_get_file_list_entry \
+    parm [ebx] [edx] \
+    value [eax];
+
+#pragma aux RdosFreeFileListEntry = \
+    OsGate_free_file_list_entry \
+    parm [ebx] [edi];
 
 #ifdef __cplusplus
 }

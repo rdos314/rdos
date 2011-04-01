@@ -833,7 +833,7 @@ get_list_done:
     pop ebx
     pop es
     pop ds
-    ret
+    retf32
 get_file_list_entry     Endp
 
 
@@ -844,7 +844,7 @@ get_file_list_entry     Endp
 ;
 ;           DESCRIPTION:    Free a file list entry
 ;
-;           PARAMETERS:         BX              File selector
+;           PARAMETERS:     BX              File selector
 ;                           EDI             File list entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -861,7 +861,7 @@ free_file_list_entry    Proc far
 ;
     pop eax
     pop ds
-    ret
+    retf32
 free_file_list_entry    Endp
 
 
@@ -2660,13 +2660,13 @@ init_file       PROC near
     mov edi,OFFSET get_file_list_entry_name
     xor cl,cl
     mov ax,get_file_list_entry_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET free_file_list_entry
     mov edi,OFFSET free_file_list_entry_name
     xor cl,cl
     mov ax,free_file_list_entry_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_file_info
     mov edi,OFFSET get_file_info_name

@@ -2014,16 +2014,17 @@ StopFileSystem  MACRO
     OsGate stop_file_system_nr
                     ENDM
 
-;       BX              File selector
-;       EDX             Position
+;  IN   BX              File selector
+;  IN   EDX             Position
+;  OUT  EAX             File list entry
 GetFileListEntry    MACRO
-    OldOsGate get_file_list_entry_nr
+    OsGate get_file_list_entry_nr
                     ENDM
 
-;       BX              File selector
-;       EDI             File list entry
+;  IN   BX              File selector
+;  IN   EDI             File list entry
 FreeFileListEntry       MACRO
-    OldOsGate free_file_list_entry_nr
+    OsGate free_file_list_entry_nr
                     ENDM
 
 ;       BX              DIR SELECTOR
