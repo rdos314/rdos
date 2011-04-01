@@ -650,7 +650,9 @@ void RdosRegisterFileSystem(char *name, struct TFileSystemTable *table);
 void RdosInstallFileSystem(int drive, char *name);
 void RdosDemandLoadFileSystem(int drive);
 int RdosIsFileSystemAvailable(char *name);
-void RdosFormatFileSystem(int drive, char *name, void *format_data);
+void RdosFormatFileSystem(int drive, char *name, void *mount_data);
+void RdosStartFileSystem(int drive, int sectors, void *mount_data);
+void RdosStopFileSystem(int drive);
 
 /* 32-bit compact memory model (device-drivers) */
 
@@ -1544,6 +1546,14 @@ void RdosFormatFileSystem(int drive, char *name, void *format_data);
 #pragma aux RdosFormatFileSystem = \
     OsGate_format_file_system \
     parm [eax] [es edi] [fs edx];
+
+#pragma aux RdosStartFileSystem = \
+    OsGate_start_file_system \
+    parm [eax] [ecx] [fs edx];
+
+#pragma aux RdosStopFileSystem = \
+    OsGate_stop_file_system \
+    parm [eax];
 
 #ifdef __cplusplus
 }

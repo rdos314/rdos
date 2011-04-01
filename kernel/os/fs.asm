@@ -428,9 +428,9 @@ format_file_system      Endp
 ;
 ;           DESCRIPTION:    Start file system
 ;
-;           PARAMETERS:         AL              Drive #
+;           PARAMETERS:     AL              Drive #
 ;                           ECX             Number of sectors to mount
-;               FS:EDX      Mount data
+;                           FS:EDX      Mount data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -461,7 +461,7 @@ start_file_system       Proc far
     pop esi
     pop es
     pop ds
-    ret
+    retf32
 start_file_system       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -490,7 +490,7 @@ stop_file_system    Proc far
     pop si
     pop es
     pop ds
-    ret
+    retf32
 stop_file_system    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -712,12 +712,12 @@ init    PROC far
     mov esi,OFFSET start_file_system
     mov edi,OFFSET start_file_system_name
     mov ax,start_file_system_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET stop_file_system
     mov edi,OFFSET stop_file_system_name
     mov ax,stop_file_system_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov ebx,OFFSET rename_file16
     mov esi,OFFSET rename_file32

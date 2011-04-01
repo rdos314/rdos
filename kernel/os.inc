@@ -2002,16 +2002,16 @@ FormatFileSystem    MACRO
     OsGate format_file_system_nr
                     ENDM
 
-;       AL              Drive #
-;       ECX             Number of sectors
-;   FS:EDX      Mount data
+;  IN   AL          Drive #
+;  IN   ECX         Number of sectors
+;  IN   FS:EDX      Mount data
 StartFileSystem MACRO
-    OldOsGate start_file_system_nr
+    OsGate start_file_system_nr
                     ENDM
 
-;       AL              DRIVE #
+;  IN   AL              DRIVE #
 StopFileSystem  MACRO
-    OldOsGate stop_file_system_nr
+    OsGate stop_file_system_nr
                     ENDM
 
 ;       BX              File selector
