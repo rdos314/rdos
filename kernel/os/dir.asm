@@ -840,6 +840,7 @@ GetDeviceRoot   Proc near
     stc
     jz get_device_root_end
 ;    
+    mov ds,bx
     EnterReadSection ds:fs_access_section
     EnterSection ds:fs_list_section
     mov bx,ds:fs_root_dir_sel
