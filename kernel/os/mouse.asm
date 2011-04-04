@@ -210,7 +210,7 @@ show_marker     ENDP
 ;           DESCRIPTION:    Set mouse limits for touch-screens
 ;
 ;           PARAMETERS:         CX          MaxX
-;                       DX      MaxY
+;                               DX      MaxY
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -227,7 +227,7 @@ set_mouse_limit PROC far
 ;       
     pop ax
     pop ds
-    ret
+    retf32
 set_mouse_limit ENDP
 
 
@@ -239,8 +239,8 @@ set_mouse_limit ENDP
 ;           DESCRIPTION:    update mouse from IRQ
 ;
 ;           PARAMETERS:         AX          Buttons
-;                           CX          Dx
-;                       DX      Dy
+;                               CX          Dx
+;                               DX      Dy
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -280,7 +280,7 @@ mouse_int_signal:
 update_mouse_done:
     pop bx
     pop ds
-    ret
+    retf32
 update_mouse    ENDP
 
 
@@ -291,9 +291,9 @@ update_mouse    ENDP
 ;
 ;           DESCRIPTION:    Set mouse from IRQ
 ;
-;           PARAMETERS:         AX          Buttons
+;           PARAMETERS:     AX          Buttons
 ;                           CX          AbsX
-;                       DX      AbsY
+;                           DX      AbsY
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -336,7 +336,7 @@ set_mouse_int_signal:
 set_mouse_done:
     pop bx
     pop ds
-    ret
+    retf32
 set_mouse       ENDP
 
 
@@ -1606,19 +1606,19 @@ init_mouse      PROC near
     mov edi,OFFSET set_mouse_limit_name
     xor cl,cl
     mov ax,set_mouse_limit_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET update_mouse
     mov edi,OFFSET update_mouse_name
     xor cl,cl
     mov ax,update_mouse_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET set_mouse
     mov edi,OFFSET set_mouse_name
     xor cl,cl
     mov ax,set_mouse_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET show_mouse
     mov edi,OFFSET show_mouse_name

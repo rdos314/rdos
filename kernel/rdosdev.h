@@ -664,6 +664,12 @@ void RdosInsertFileEntry(int dir_sel, int file_entry);
 int RdosGetFileInfo(int handle, char *access, char *drive, int *file_sel);
 int RdosDuplFileInfo(char access, char drive, int file_sel);
 
+void RdosInitMouse();
+void RdosUpdateMouse(int button_state, int delta_x, int delta_y);
+void RdosInvertMouse(int delta_x, int delta_y);
+void RdosSetMouse(int button_state, int x, int y);
+void RdosSetMouseLimit(int max_x, int max_y);
+
 /* 32-bit compact memory model (device-drivers) */
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -1602,6 +1608,25 @@ int RdosDuplFileInfo(char access, char drive, int file_sel);
     OsGate_dupl_file_info \
     parm [cl] [ch] [eax] \
     value [ebx];
+
+#pragma aux RdosInitMouse = \
+    OsGate_init_mouse;
+
+#pragma aux RdosUpdateMouse = \
+    OsGate_update_mouse \
+    parm [eax] [ecx] [edx];
+
+#pragma aux RdosInvertMouse = \
+    OsGate_invert_mouse \
+    parm [ecx] [edx];
+
+#pragma aux RdosSetMouse = \
+    OsGate_set_mouse \
+    parm [eax] [ecx] [edx];
+
+#pragma aux RdosSetMouseLimit = \
+    OsGate_set_mouse_limit \
+    parm [ecx] [edx];
 
 #ifdef __cplusplus
 }

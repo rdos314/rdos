@@ -2110,41 +2110,35 @@ ShowSpriteLine  MACRO
 
 ;;;;;;;;;; MOUSE ;;;;;;;;;
 
-;       IN  EAX     Table name
-;       OUT ES      Table selector
-GetAcpiTable    MACRO
-    OldOsGate get_acpi_table_nr
-                    ENDM
-
 InitMouse       MACRO
-    OldOsGate init_mouse_nr
+    OsGate init_mouse_nr
                     ENDM
 
-;       AX          Button status
-;       CX          Delta X
-;       DX          Delta Y
+;   IN  AX          Button status
+;   IN  CX          Delta X
+;   IN  DX          Delta Y
 UpdateMouse     MACRO
-    OldOsGate update_mouse_nr
+    OsGate update_mouse_nr
                     ENDM
 
-;       CX          Delta X
-;       DX          Delta Y
+;   IN  CX          Delta X
+;   IN  DX          Delta Y
 InvertMouse     MACRO
-    OldOsGate invert_mouse_nr
+    OsGate invert_mouse_nr
                     ENDM
 
 
-;       AX          Button status
-;       CX          Abs X (0..32767)
-;       DX          Abs Y (0..32767)
+;   IN  AX          Button status
+;   IN  CX          Abs X (0..32767)
+;   IN  DX          Abs Y (0..32767)
 SetMouse    MACRO
-    OldOsGate set_mouse_nr
+    OsGate set_mouse_nr
                     ENDM
 
-;       CX          Max x-position
-;       DX          Max y-position
+;   IN  CX          Max x-position
+;   IN  DX          Max y-position
 SetMouseLimit   MACRO
-    OldOsGate set_mouse_limit_nr
+    OsGate set_mouse_limit_nr
                     ENDM
 
 ;;;;;;;;;;;;; PnP ;;;;;;;;;;;;;;
@@ -2267,6 +2261,12 @@ GetPciIrqNr     MACRO
                     ENDM
 
 ;;;;;;;;;; POWER MANAGEMENT ;;;;;;;;;
+
+;       IN  EAX     Table name
+;       OUT ES      Table selector
+GetAcpiTable    MACRO
+    OldOsGate get_acpi_table_nr
+                    ENDM
 
 ;   AX      Port number
 ;   DX      Base address

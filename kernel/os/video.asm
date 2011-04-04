@@ -349,7 +349,7 @@ set_video_mode  ENDP
 ;
 ;           DESCRIPTION:    Invert colors for mouse-pointer
 ;
-;           PARAMETERS:         CX          COL (x)
+;           PARAMETERS:     CX          COL (x)
 ;                           DX          ROW (y)
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -367,7 +367,7 @@ invert_mouse    PROC far
     xchg bl,bh
     call ds:write_char_proc
     pop ds
-    ret
+    retf32
 invert_mouse    ENDP
 
     
@@ -3105,7 +3105,7 @@ init_video      PROC near
     mov edi,OFFSET invert_mouse_name
     xor cl,cl
     mov ax,invert_mouse_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_video_mode
     mov edi,OFFSET get_video_mode_name

@@ -1116,7 +1116,7 @@ init_mouse_done:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 init_mouse      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1401,7 +1401,7 @@ init    PROC far
     mov edi,OFFSET init_mouse_name
     xor cl,cl
     mov ax,init_mouse_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov ax,SEG data
     mov ds,ax
