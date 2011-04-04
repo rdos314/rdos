@@ -428,7 +428,7 @@ get_acpi_table_done:
     pop si
     pop cx
     pop ds
-    ret
+    retf32
 get_acpi_table  Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -548,7 +548,7 @@ acpi_load_save:
     mov edi,OFFSET get_acpi_table_name
     xor cl,cl
     mov ax,get_acpi_table_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;    
     mov ax,cs
     mov es,ax

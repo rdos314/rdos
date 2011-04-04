@@ -2072,13 +2072,6 @@ init    PROC far
     mov al,1
     AllocateFixedDrive
 ;
-    mov ax,start_floppy_nr
-    IsValidOsGate
-    jc open_floppy_started
-;
-    StartFloppy
-
-open_floppy_started:    
     mov dx,3F4h
     in al,dx
     cmp al,-1

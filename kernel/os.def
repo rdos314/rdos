@@ -255,15 +255,6 @@ allocate_small_kernel_mem_nr = 255
 hide_sprite_line_nr         = 256
 show_sprite_line_nr         = 257
 
-start_com_port_nr           = 258
-stop_com_port_nr            = 259
-
-start_keyboard_nr			= 260
-stop_keyboard_nr			= 261
-
-start_floppy_nr				= 262
-stop_floppy_nr				= 263
-
 set_keyboard_state_nr       = 264
 
 add_wait_nr                 = 266

@@ -1354,13 +1354,6 @@ init_keyb_thread    PROC far
     mov ds,ax
     mov es,ax
 ;
-    mov ax,start_keyboard_nr
-    IsValidOsGate
-    jc keyb_started
-;
-    StartKeyboard
-
-keyb_started:    
     mov si,OFFSET mode_pr
     mov di,OFFSET mode_name
     mov cx,500

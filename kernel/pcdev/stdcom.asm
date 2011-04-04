@@ -424,15 +424,6 @@ open_com    Proc far
     mov ds:dev_handle,es
     mov ds:flgs,0
     sti
-;
-    mov ax,start_com_port_nr
-    IsValidOsGate
-    jc open_com_started
-;
-    mov dx,es:pds_base
-    StartComPort
-
-open_com_started:   
     pop ax
 ;
     mov dl,ah
@@ -555,14 +546,6 @@ close_com   Proc far
     push ax
     push dx
 ;
-    mov ax,stop_com_port_nr
-    IsValidOsGate
-    jc close_com_stopped
-;
-    mov dx,ds:base
-    StopComPort
-
-close_com_stopped:
     mov dx,ds:base
     inc dx
     xor al,al

@@ -2344,8 +2344,8 @@ ctpExit:
 ;
 ;           description:    Notify reception of ethernet packet
 ;
-;       parameters:     ECX     Size of packet
-;               ES:EDI  Pointer to packet
+;       parameters:         ECX     Size of packet
+;                          ES:EDI  Pointer to packet
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2416,7 +2416,7 @@ nepLeave:
 ;    
     pop ax
     pop ds    
-    ret
+    retf32
 notify_ethernet_packet  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2672,7 +2672,7 @@ init    PROC far
     mov edi,OFFSET notify_ethernet_packet_name
     xor cl,cl
     mov ax,notify_ethernet_packet_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET ether_broadcast
     mov cx,6

@@ -965,13 +965,6 @@ init_keyb_thread    PROC far
     mov edi,OFFSET keyb_int
     RequestPrivateIrqHandler
 ;
-    mov ax,start_keyboard_nr
-    IsValidOsGate
-    jc keyb_started
-;
-    StartKeyboard
-
-keyb_started:    
     mov ax,cs
     mov ds,ax
     mov es,ax

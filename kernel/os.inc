@@ -1740,6 +1740,12 @@ ListenUdpPort   MACRO
     OsGate listen_udp_port_nr
             ENDM
 
+; IN  ES:EDI  Pointer to data
+; IN  ECX     Size of data
+NotifyEthernetPacket    MACRO
+    OsGate notify_ethernet_packet_nr
+                    ENDM
+
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
             
 ;       ES:EDI   Disc system table
@@ -2262,77 +2268,13 @@ GetPciIrqNr     MACRO
 
 ;;;;;;;;;; POWER MANAGEMENT ;;;;;;;;;
 
-;       IN  EAX     Table name
-;       OUT ES      Table selector
+;   IN  EAX     Table name
+;   OUT ES      Table selector
 GetAcpiTable    MACRO
-    OldOsGate get_acpi_table_nr
+    OsGate get_acpi_table_nr
                     ENDM
 
-;   AX      Port number
-;   DX      Base address
-StartComPort    MACRO
-    OldOsGate start_com_port_nr
-                    ENDM
-
-;   AX      Port number
-;   DX      Base address
-StopComPort     MACRO
-    OldOsGate stop_com_port_nr
-                    ENDM
-
-StartKeyboard   MACRO
-    OldOsGate start_keyboard_nr
-                    ENDM
-
-StopKeyboard    MACRO
-    OldOsGate stop_keyboard_nr
-                    ENDM
-
-StartFloppy     MACRO
-    OldOsGate start_floppy_nr
-                    ENDM
-
-StopFloppy      MACRO
-    OldOsGate stop_floppy_nr
-                    ENDM
-
-;   ES:EDI  Pointer to data
-;   ECX     Size of data
-NotifyEthernetPacket    MACRO
-    OldOsGate notify_ethernet_packet_nr
-                    ENDM
-
-;   DS      Usb device selector
-InitUsbDevice   MACRO
-    OldOsGate init_usb_device_nr
-                    ENDM
-
-;   AL      Port #
-;   AH      Low speed = 1, high speed / full speed = 0
-;   DS      Usb device selector
-NotifyUsbAttach MACRO
-    OldOsGate notify_usb_attach_nr
-                    ENDM
-
-;   AL      Port #
-;   DS      Usb device selector
-NotifyUsbDetach MACRO
-    OldOsGate notify_usb_detach_nr
-                    ENDM
-
-;   ES:DI   Callback
-;     BX    Controller #
-;     AL    Device address
-HookUsbAttach   MACRO
-    OldOsGate hook_usb_attach_nr
-                    ENDM
-
-;   ES:DI   Callback
-;     BX    Controller #
-;     AL    Device address
-HookUsbDetach   MACRO
-    OldOsGate hook_usb_detach_nr
-                    ENDM
+;;;;;;;;;; Com port ;;;;;;;;;
 
 ;   AX      Controller #
 ;   DX      Device #
@@ -2366,6 +2308,40 @@ WaitForLineStateChange  MACRO
 ;   NC AL   Line state
 GetLineState    MACRO
     OldOsGate get_line_state_nr
+                    ENDM
+
+;;;;;;;;;; USB ;;;;;;;;;
+
+;   DS      Usb device selector
+InitUsbDevice   MACRO
+    OldOsGate init_usb_device_nr
+                    ENDM
+
+;   AL      Port #
+;   AH      Low speed = 1, high speed / full speed = 0
+;   DS      Usb device selector
+NotifyUsbAttach MACRO
+    OldOsGate notify_usb_attach_nr
+                    ENDM
+
+;   AL      Port #
+;   DS      Usb device selector
+NotifyUsbDetach MACRO
+    OldOsGate notify_usb_detach_nr
+                    ENDM
+
+;   ES:DI   Callback
+;     BX    Controller #
+;     AL    Device address
+HookUsbAttach   MACRO
+    OldOsGate hook_usb_attach_nr
+                    ENDM
+
+;   ES:DI   Callback
+;     BX    Controller #
+;     AL    Device address
+HookUsbDetach   MACRO
+    OldOsGate hook_usb_detach_nr
                     ENDM
 
 ; IN  BX    Pipe handle
@@ -2445,16 +2421,7 @@ GetUsbInfo      MACRO
     OldOsGate get_usb_info_nr
                         ENDM
 
-; IN  ES:DI     Data buffer
-; IN  CX        Size
-NotifyIrData      MACRO
-    OldOsGate notify_ir_data_nr
-                        ENDM
-
-
-;
-; Audio CODEC related
-;
+;;;;;;;;;; Audio codec ;;;;;;;;;
 
 ; IN    BX Register
 ; OUT   AX Value
@@ -2468,9 +2435,7 @@ WriteCodec      MACRO
     OldOsGate write_codec_nr
                         ENDM
 
-;
-; Audio 
-;
+;;;;;;;;;; Audio ;;;;;;;;;
 
 ; OUT   AX Sample rate
 GetAudioDacRate      MACRO
@@ -2494,11 +2459,6 @@ GetAudioAdcRate      MACRO
 SetAudioAdcRate      MACRO
     OldOsGate set_audio_adc_rate_nr
                         ENDM
-
-
-;
-; Audio device related
-;
 
 ; IN    AX Sample rate
 OpenAudioOut      MACRO
@@ -2538,10 +2498,7 @@ IsAudioOutCompleted      MACRO
     OldOsGate is_audio_out_completed_nr
                         ENDM
 
-
-;
-; Printer device related
-;
+;;;;;;;;;; Printer ;;;;;;;;;
 
 ;   AX      Controller #
 ;   DX      Device #
@@ -2549,3 +2506,12 @@ IsAudioOutCompleted      MACRO
 AddPrinter      MACRO
     OldOsGate add_printer_nr
                     ENDM
+
+;;;;;;;;;; IR ;;;;;;;;;
+
+; IN  ES:DI     Data buffer
+; IN  CX        Size
+NotifyIrData      MACRO
+    OldOsGate notify_ir_data_nr
+                        ENDM
+
