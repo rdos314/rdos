@@ -147,6 +147,9 @@ apic_rest           DW ?
 ; ECX   Pages
 tlb_flush_proc      DD ?
 
+enter_patch_proc    DW ?
+leave_patch_proc    DW ?
+
 patch_spinlock      DW ?
 shut_spinlock       DW ?
 

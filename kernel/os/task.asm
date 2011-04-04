@@ -364,6 +364,7 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+    extrn SetupMpPatch:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3685,6 +3686,7 @@ null_thread0:
     IsValidOsGate
     jc null_ap_ok
 ;
+    call SetupMpPatch
     StartApCores    
 
 null_ap_ok:    

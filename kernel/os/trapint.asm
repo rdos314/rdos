@@ -137,8 +137,6 @@ emulate ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public enter_code_patch
-
 enter_code_patch    Proc near
     push ds
     push ax
@@ -172,8 +170,6 @@ enter_code_patch    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public leave_code_patch
-
 leave_code_patch    Proc near
     push ds
     push ax
@@ -186,6 +182,33 @@ leave_code_patch    Proc near
     pop ds
     ret
 leave_code_patch    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupMpPatch
+;
+;           DESCRIPTION:    Setup multiprocessor patch support
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetupMpPatch
+    
+SetupMpPatch    Proc near
+    push ds
+    push ax
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:enter_patch_proc,OFFSET enter_code_patch
+    mov ds:leave_patch_proc,OFFSET leave_code_patch
+;
+    pop ax
+    pop ds
+    ret
+SetupMpPatch    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -217,7 +240,10 @@ int67:
     push es
     pushad
 ;
-    call enter_code_patch
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:enter_patch_proc
+;
     mov ds,[bp+16]
     mov ebx,[bp+12]
     sub ebx,2
@@ -234,7 +260,10 @@ int67:
 int_call:    
     add si,si
     call word ptr cs:[si].int_call_tab    
-    call leave_code_patch
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:leave_patch_proc
 ;        
     popad
     pop es
@@ -243,7 +272,9 @@ int_call:
     iretd
 
 int_retry:
-    call leave_code_patch
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:leave_patch_proc
     mov [bp+12],ebx
 ;    
     popad
@@ -1268,7 +1299,9 @@ trap_13:
     push ebx
     push ds
 ;
-    call enter_code_patch
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:enter_patch_proc
 ;
     test byte ptr [bp+2].vm_eflags,2
     jnz t13_default
@@ -1301,7 +1334,12 @@ t13_not_int:
     cmp ax,2
     jne t13_retry    
 ;
-    call leave_code_patch
+    push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:leave_patch_proc
+    pop ds
+;
     push ecx
     push edx
 ;    
@@ -1338,7 +1376,14 @@ t13_not_oscall:
     or ax,ax
     jz t13_default
 ;
-    call leave_code_patch
+    push ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:leave_patch_proc
+    pop ax
+    pop ds
+;
     push OFFSET t13_check
     push ax
     retn
@@ -1363,7 +1408,14 @@ t13_not32:
     or ax,ax
     jz t13_default
 ;
-    call leave_code_patch
+    push ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:leave_patch_proc
+    pop ax
+    pop ds
+;    
     push OFFSET t13_check
     push ax
     retn
@@ -1371,16 +1423,23 @@ t13_not32:
 t13_check:    
     jnc t13_end
 ;
-    call enter_code_patch
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:enter_patch_proc
 
 t13_default:
-    call leave_code_patch
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:leave_patch_proc
+;    
     mov al,13
     call emulate
     jmp t13_end
 
 t13_retry:
-    call leave_code_patch
+    mov ax,system_data_sel
+    mov ds,ax
+    call ds:leave_patch_proc
 
 t13_end:
     pop ds
@@ -1679,8 +1738,6 @@ pretask13:
     push eax
     push ebx
     push ds
-;
-    call enter_code_patch
 ;    
     test byte ptr [bp+2].vm_eflags,2
     jnz pretask_gpf_default
@@ -1713,7 +1770,6 @@ pretask_gpf_not_int:
     cmp ax,2
     jne pretask_gpf_default
 ;
-    call leave_code_patch
     push ecx
     push edx
 ;    
@@ -1750,7 +1806,6 @@ pretask_gpf_not_oscall:
     or ax,ax
     jz pretask_gpf_default
 ;
-    call leave_code_patch
     push OFFSET pretask_gpf_check
     push ax
     retn  
@@ -1775,23 +1830,18 @@ pretask_gpf_not32:
     or ax,ax
     jz pretask_gpf_default
 ;
-    call leave_code_patch
     push OFFSET pretask_gpf_check
     push ax
     retn        
 
 pretask_gpf_check:      
     jnc pretask_gpf_retry
-;
-    call enter_code_patch    
 
 pretask_gpf_default:
-    call leave_code_patch
     mov al,13
     ShutDownPreTask
 
 pretask_gpf_reexec:
-    call leave_code_patch
 
 pretask_gpf_retry:
     pop ds

@@ -63,8 +63,6 @@ ENDIF
     extrn translate_segment:near
     extrn translate_selector:near
 
-    extrn enter_code_patch:near
-    extrn leave_code_patch:near
     assume cs:code
 
 
@@ -671,7 +669,6 @@ do_usercall16   PROC near
     mov eax,es:[edi].gate_entry_offset16
     mov [bp+8],ax
 ;
-    call enter_code_patch
     mov ax,0F5F5h
     shl eax,16
     mov ax,es:[edi].gate_entry_sel16
@@ -684,7 +681,6 @@ do_usercall16   PROC near
 ;
     mov ax,9090h
     xchg ax,ds:[ebx+6]
-    call leave_code_patch
     jmp do16_retry16
 
 do_call16_direct_cs16:
@@ -694,7 +690,6 @@ do_call16_direct_cs16:
     sub ax,[bp+14]
     add ax,2
 ;
-    call enter_code_patch
     movzx eax,ax
     or eax,0F5F50000h
     xchg eax,ds:[ebx+4]
@@ -704,7 +699,6 @@ do_call16_direct_cs16:
 ;
     mov ax,9090h
     xchg ax,ds:[ebx+6]
-    call leave_code_patch
     jmp do16_retry16
 
 do_call16_direct_to32:

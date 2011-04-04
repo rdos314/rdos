@@ -409,8 +409,6 @@ ApInit:
     mov ds,ax
     mov eax,12345678h
     mov ds:mp_processor_sign,eax
-    GetApicId
-    mov ds:mp_apic,edx
     cli
 
 ap_task_wait: 
@@ -418,6 +416,9 @@ ap_task_wait:
     test ax,MP_FLAG_TASK
     jz ap_task_wait
 ;        
+    GetApicId
+    mov ds:mp_apic,edx
+;
     call InitApic
     sti
     OsGate test_gate_nr

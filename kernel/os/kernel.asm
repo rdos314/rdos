@@ -368,6 +368,10 @@ init_pre_tasking    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+dummy_patch Proc near
+    ret
+dummy_patch Endp
+
 init_boot_system    PROC near
     mov ax,system_data_sel
     mov ds,ax
@@ -379,6 +383,8 @@ init_boot_system    PROC near
     mov ds:check_point,0
     mov ds:patch_spinlock,0
     mov ds:shut_spinlock,0
+    mov ds:enter_patch_proc,OFFSET dummy_patch
+    mov ds:leave_patch_proc,OFFSET dummy_patch
     ret
 init_boot_system    ENDP
 

@@ -53,9 +53,6 @@ ENDIF
 
     extrn local_allocate_fixed_system_mem:near
 
-    extrn enter_code_patch:near
-    extrn leave_code_patch:near
-
     assume cs:code
 
 
