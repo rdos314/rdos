@@ -635,21 +635,6 @@ do_usercall16   PROC near
     push edx
     push edi
 ;
-    mov ax,system_data_sel
-    mov es,ax
-    pushf
-    cli
-
-do_call16_lock_loop:
-    mov ax,1
-    xchg ax,es:usergate_spinlock
-    or ax,ax
-    jz do_call16_locked
-;
-    pause
-    jmp do_call16_lock_loop
-
-do_call16_locked:     
     mov al,ds:[ebx]
     cmp al,90h
     je do16_patched
@@ -788,11 +773,6 @@ do16_patch_near:
     mov [bp+8],ax
 
 do16_retry16:
-    mov ax,system_data_sel
-    mov es,ax
-    mov es:usergate_spinlock,0
-    popf
-;    
     pop edi
     pop edx
     pop ecx
@@ -807,11 +787,6 @@ do16_retry16:
     iret
 
 do16_retry32:
-    mov ax,system_data_sel
-    mov es,ax
-    mov es:usergate_spinlock,0
-    popf
-;    
     pop edi
     pop edx
     pop ecx
@@ -830,22 +805,6 @@ do_usercall16_gate:
     push ecx
     push edx
     push edi
-;
-    mov ax,system_data_sel
-    mov es,ax
-    pushf
-    cli
-
-do16_lock_loop:
-    mov ax,1
-    xchg ax,es:usergate_spinlock
-    or ax,ax
-    jz do16_locked
-;
-    pause
-    jmp do16_lock_loop
-
-do16_locked:     
     mov edi,ds:[ebx+2]
     shl edi,5
     mov ax,usergate_sel
@@ -910,11 +869,6 @@ do16_call_defined:
     mov byte ptr ds:[ebx+5],90h
     mov word ptr ds:[ebx+6],9090h
 ;
-    mov ax,system_data_sel
-    mov es,ax
-    mov es:usergate_spinlock,0
-    popf
-;
     pop edi
     pop edx
     pop ecx
@@ -946,22 +900,6 @@ do_usercall32   PROC near
     push ecx
     push edx
     push edi
-;
-    mov ax,system_data_sel
-    mov es,ax
-    pushf
-    cli
-
-do_call32_lock_loop:
-    mov ax,1
-    xchg ax,es:usergate_spinlock
-    or ax,ax
-    jz do_call32_locked
-;
-    pause
-    jmp do_call32_lock_loop
-
-do_call32_locked:     
     mov al,ds:[ebx]
     cmp al,66h
     jne do_kernel_no_ov32
@@ -1040,11 +978,6 @@ do_call32_direct32:
     mov byte ptr ds:[ebx+6],90h
 
 do_call32_direct_do32:
-    mov ax,system_data_sel
-    mov es,ax
-    mov es:usergate_spinlock,0
-    popf
-;
     pop edi
     pop edx
     pop ecx
@@ -1063,22 +996,6 @@ do_usercall32_gate:
     push ecx
     push edx
     push edi
-;
-    mov ax,system_data_sel
-    mov es,ax
-    pushf
-    cli
-
-do32_lock_loop:
-    mov ax,1
-    xchg ax,es:usergate_spinlock
-    or ax,ax
-    jz do32_locked
-;
-    pause
-    jmp do32_lock_loop
-
-do32_locked:     
     mov al,ds:[ebx]
     cmp al,66h
     jne do_no_ov32
@@ -1136,11 +1053,6 @@ do32_gate16:
     mov ds:[ebx+6],ax
 
 do32_done:
-    mov ax,system_data_sel
-    mov es,ax
-    mov es:usergate_spinlock,0
-    popf
-;
     pop edi
     pop edx
     pop ecx

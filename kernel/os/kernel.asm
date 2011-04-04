@@ -378,8 +378,6 @@ init_boot_system    PROC near
     mov ds:math_tss,ax
     mov ds:check_point,0
     mov ds:patch_spinlock,0
-    mov ds:osgate_spinlock,0
-    mov ds:usergate_spinlock,0
     mov ds:shut_spinlock,0
     ret
 init_boot_system    ENDP

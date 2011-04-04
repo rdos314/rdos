@@ -147,8 +147,6 @@ apic_rest           DW ?
 ; ECX   Pages
 tlb_flush_proc      DD ?
 
-osgate_spinlock     DW ?
-usergate_spinlock   DW ?
 patch_spinlock      DW ?
 shut_spinlock       DW ?
 
