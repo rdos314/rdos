@@ -695,8 +695,8 @@ int RdosCreateUsbReq(int pipe_handle);
 void RdosAddWriteUsbControlReq(int req_handle, int size, int sel);
 void RdosAddWriteUsbDataReq(int req_handle, int size, int sel);
 void RdosAddReadUsbDataReq(int req_handle, int size, int sel);
-void RdosAddUsbStatusIn(int req_handle);
-void RdosAddUsbStatusOut(int req_handle);
+void RdosAddUsbStatusInReq(int req_handle);
+void RdosAddUsbStatusOutReq(int req_handle);
 void RdosStartUsbReq(int req_handle, int signal_thread_sel, int out_buf_size);
 void RdosStopUsbReq(int req_handle);
 int RdosIsUsbReqStarted(int req_handle);
@@ -1355,7 +1355,7 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     value [es edi];
 
 #pragma aux RdosSendIp = \
-    OsGate_send_ip \
+    OsGate_send_ip_data \
     parm [es edi];
 
 #pragma aux RdosCreateBroadcastIp = \
@@ -1694,7 +1694,7 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     parm [al];
 
 #pragma aux RdosWaitForLineStateChange = \
-    OsGate_wait_for_line_state_change \
+    OsGate_wait_for_line_state \
     parm [al] \
     value [al];
 
@@ -1749,12 +1749,12 @@ void RdosSendAudioOut(int left_sel, int right_sel, int samples);
     OsGate_add_read_usb_data_req \
     parm [ebx] [ecx] [es];
 
-#pragma aux RdosAddUsbStatusIn = \
-    OsGate_add_usb_status_in \
+#pragma aux RdosAddUsbStatusInReq = \
+    OsGate_add_usb_status_in_req \
     parm [ebx];
 
-#pragma aux RdosAddUsbStatusOut = \
-    OsGate_add_usb_status_out \
+#pragma aux RdosAddUsbStatusOutReq = \
+    OsGate_add_usb_status_out_req \
     parm [ebx];
 
 #pragma aux RdosStartUsbReq = \

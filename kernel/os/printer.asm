@@ -667,7 +667,7 @@ add_printer    Proc far
     pop dx
     pop bx
     pop ds    
-    ret
+    retf32
 add_printer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -692,7 +692,7 @@ init    Proc far
     mov edi,OFFSET add_printer_name
     xor cl,cl
     mov ax,add_printer_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_max_printer
     mov edi,OFFSET get_max_printer_name

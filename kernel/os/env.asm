@@ -1222,25 +1222,25 @@ init_device_loop:
     mov edi,OFFSET lock_sys_env_name
     xor cl,cl
     mov ax,lock_sys_env_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET unlock_sys_env
     mov edi,OFFSET unlock_sys_env_name
     xor cl,cl
     mov ax,unlock_sys_env_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET lock_proc_env
     mov edi,OFFSET lock_proc_env_name
     xor cl,cl
     mov ax,lock_proc_env_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET unlock_proc_env
     mov edi,OFFSET unlock_proc_env_name
     xor cl,cl
     mov ax,unlock_proc_env_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET open_sys_env
     mov edi,OFFSET open_sys_env_name

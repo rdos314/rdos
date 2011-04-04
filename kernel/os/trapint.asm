@@ -2431,7 +2431,7 @@ init_irq_loop:
     mov edi,OFFSET segment_not_present_name
     xor cl,cl
     mov ax,segment_not_present_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET is_irq_free
     mov edi,OFFSET is_irq_free_name

@@ -2600,13 +2600,13 @@ init    PROC far
     mov edi,OFFSET register_net_driver_name
     xor cl,cl
     mov ax,register_net_driver_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET register_ppp_driver
     mov edi,OFFSET register_ppp_driver_name
     xor cl,cl
     mov ax,register_ppp_driver_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET define_protocol_address
     mov edi,OFFSET define_protocol_address_name

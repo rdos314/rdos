@@ -1539,13 +1539,13 @@ init    PROC far
     mov edi,OFFSET hook_ip_name
     xor cl,cl
     mov ax,hook_ip_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_ppp_ip
     mov edi,OFFSET get_ppp_ip_name
     xor cl,cl
     mov ax,get_ppp_ip_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_ppp_dns
     mov edi,OFFSET get_ppp_dns_name

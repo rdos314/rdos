@@ -117,27 +117,6 @@ Callf32 MACRO   sel,offs
     dw sel
         ENDM
 
-OldOsGate16     MACRO gate_nr
-    db 66h
-    db 9Ah
-    dd gate_nr
-    dw 3
-            ENDM
-
-OldOsGate32     MACRO gate_nr
-    db 9Ah
-    dd gate_nr
-    dw 3
-            ENDM
-
-OldOsGate       MACRO gate_nr
-IF (size $) EQ 0FF02h
-    OldOsGate16 gate_nr
-ELSE
-    OldOsGate32 gate_nr
-ENDIF
-            ENDM
-
 OsGate16    MACRO gate_nr
     db 67h
     db 66h
@@ -163,13 +142,6 @@ ENDIF
             ENDM
 
 ;;;;;;;;;; REGISTRATION / HOOKS ;;;;;;;;;;;
-
-;       AX          GATE NUMBER
-;       DS:ESI  GATE CALL ADDRESS
-;       ES:EDI  GATE NAME ADDRESS
-RegisterOldOsGate       MACRO
-    OsGate register_old_osgate_nr
-                    ENDM
 
 ;       AX          GATE NUMBER
 ;       DS:ESI  GATE CALL ADDRESS
@@ -2501,7 +2473,7 @@ IsAudioOutCompleted      MACRO
 ;   DX      Device #
 ;   DS      Printer device selector
 AddPrinter      MACRO
-    OldOsGate add_printer_nr
+    OsGate add_printer_nr
                     ENDM
 
 ;;;;;;;;;; IR ;;;;;;;;;
@@ -2509,6 +2481,6 @@ AddPrinter      MACRO
 ; IN  ES:DI     Data buffer
 ; IN  CX        Size
 NotifyIrData      MACRO
-    OldOsGate notify_ir_data_nr
+    OsGate notify_ir_data_nr
                         ENDM
 

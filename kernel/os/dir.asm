@@ -2892,7 +2892,7 @@ init_dir    PROC near
     mov esi,OFFSET stop_file_system
     mov edi,OFFSET stop_file_system_name
     mov ax,stop_file_system_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET cache_dir
     mov edi,OFFSET cache_dir_name

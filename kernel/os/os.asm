@@ -109,12 +109,6 @@ init_osgate_loop:
     add di,16
     loop init_osgate_loop
 ;
-    mov di,register_old_osgate_nr SHL 4
-    mov es:[di].gate_offset,OFFSET register_old_gate
-    mov es:[di].gate_sel,cs
-    mov es:[di].gate_name_offset,OFFSET register_old_gate_name
-    mov es:[di].gate_name_sel,cs
-;
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -186,33 +180,6 @@ register_gate   PROC far
     pop ds
     retf32
 register_gate   ENDP
-
-register_old_gate_name      DB 'Register Old Kernel Gate',0
-
-register_old_gate   PROC far
-    push ds
-    push fs
-    push gs
-    push bx
-;
-    push ds
-    mov bx,ax
-    mov ax,osgate_sel
-    mov ds,ax
-    pop ax
-    shl bx,4
-    mov [bx].gate_sel,ax
-    mov [bx].gate_offset,esi
-    mov [bx].gate_name_sel,es
-    mov [bx].gate_name_offset,edi
-;
-    pop bx
-    pop gs
-    pop fs
-    pop ds
-    retf32
-register_old_gate   ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -5136,7 +5136,7 @@ init    PROC far
     mov esi,OFFSET lock_disc_request
     mov edi,OFFSET lock_disc_request_name
     mov ax,lock_disc_request_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET modify_disc_request
     mov edi,OFFSET modify_disc_request_name
@@ -5176,7 +5176,7 @@ init    PROC far
     mov esi,OFFSET new_sector
     mov edi,OFFSET new_sector_name
     mov ax,new_sector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_drive_param
     mov edi,OFFSET get_drive_param_name
@@ -5236,12 +5236,12 @@ init    PROC far
     mov esi,OFFSET wait_for_sector
     mov edi,OFFSET wait_for_sector_name
     mov ax,wait_for_sector_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET reset_drive
     mov edi,OFFSET reset_drive_name
     mov ax,reset_drive_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_disc_info
     mov edi,OFFSET get_disc_info_name
