@@ -4354,7 +4354,7 @@ usb_attach  Proc far
     call AttachFTDI
     call AttachPL2303
     call AttachMct
-    ret
+    retf32
 usb_attach  Endp
     
 
@@ -4452,7 +4452,7 @@ udDone:
     popad
     pop es
     pop ds
-    ret
+    retf32
 usb_detach  Endp
 
 
@@ -4476,10 +4476,10 @@ init	Proc far
 	mov ds,ax
 	mov es,ax
 ;
-    mov di,OFFSET usb_attach
+    mov edi,OFFSET usb_attach
     HookUsbAttach
 ;
-    mov di,OFFSET usb_detach
+    mov edi,OFFSET usb_detach
     HookUsbDetach
     clc
 	ret

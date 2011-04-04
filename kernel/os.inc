@@ -2276,72 +2276,72 @@ GetAcpiTable    MACRO
 
 ;;;;;;;;;; Com port ;;;;;;;;;
 
-;   AX      Controller #
-;   DX      Device #
-;   DS      Com device selector
+; IN  AX      Controller #
+; IN  DX      Device #
+; IN  DS      Com device selector
 AddComPort      MACRO
-    OldOsGate add_com_port_nr
+    OsGate add_com_port_nr
                     ENDM
 
-;   AL      Port #
+; IN  AL      Port #
 ReserveComLine  MACRO
-    OldOsGate reserve_com_line_nr
+    OsGate reserve_com_line_nr
                     ENDM
 
-;   AL      Port #
+; IN  AL      Port #
 DeviceSetDtr    MACRO
-    OldOsGate device_set_dtr_nr
+    OsGate device_set_dtr_nr
                     ENDM
 
-;   AL      Port #
+; IN  AL      Port #
 DeviceResetDtr  MACRO
-    OldOsGate device_reset_dtr_nr
+    OsGate device_reset_dtr_nr
                     ENDM
 
-;   AL      Port #
-;   NC AL   Line state
+; IN   AL      Port #
+; OUT  AL   Line state
 WaitForLineStateChange  MACRO
-    OldOsGate wait_for_line_state_nr
+    OsGate wait_for_line_state_nr
                     ENDM
 
-;   AL      Port #
-;   NC AL   Line state
+; IN  AL      Port #
+; IN  AL   Line state
 GetLineState    MACRO
-    OldOsGate get_line_state_nr
+    OsGate get_line_state_nr
                     ENDM
 
 ;;;;;;;;;; USB ;;;;;;;;;
 
-;   DS      Usb device selector
+; IN  DS      Usb device selector
 InitUsbDevice   MACRO
-    OldOsGate init_usb_device_nr
+    OsGate init_usb_device_nr
                     ENDM
 
-;   AL      Port #
-;   AH      Low speed = 1, high speed / full speed = 0
-;   DS      Usb device selector
+; IN  AL      Port #
+; IN  AH      Low speed = 1, high speed / full speed = 0
+; IN  DS      Usb device selector
 NotifyUsbAttach MACRO
-    OldOsGate notify_usb_attach_nr
+    OsGate notify_usb_attach_nr
                     ENDM
 
-;   AL      Port #
-;   DS      Usb device selector
+; IN  AL      Port #
+; IN  DS      Usb device selector
 NotifyUsbDetach MACRO
-    OldOsGate notify_usb_detach_nr
+    OsGate notify_usb_detach_nr
                     ENDM
 
-;   ES:DI   Callback
-;     BX    Controller #
-;     AL    Device address
+; IN  ES:EDI  Callback
+;       BX    Controller #
+;       AL    Device address
 HookUsbAttach   MACRO
-    OldOsGate hook_usb_attach_nr
+    OsGate hook_usb_attach_nr
                     ENDM
 
-;   ES:DI   Callback
-;     BX    Controller #
-;     AL    Device address
+; IN  ES:EDI  Callback
+;       BX    Controller #
+;       AL    Device address
 HookUsbDetach   MACRO
-    OldOsGate hook_usb_detach_nr
+    OsGate hook_usb_detach_nr
                     ENDM
 
 ; IN  BX    Pipe handle

@@ -105,10 +105,10 @@ usb_dev_count       DW ?
 usb_dev_arr     DW 256 DUP(?)
 
 usb_attach_hooks    DW ?
-usb_attach_arr      DW 2 * MAX_ATTACH_HOOKS DUP(?)
+usb_attach_arr      DD 2 * MAX_ATTACH_HOOKS DUP(?)
 
 usb_detach_hooks    DW ?
-usb_detach_arr      DW 2 * MAX_DETACH_HOOKS DUP(?)
+usb_detach_arr      DD 2 * MAX_DETACH_HOOKS DUP(?)
 
 data    ENDS
 
@@ -166,7 +166,7 @@ init_usb_device Proc far
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 init_usb_device   Endp
 
 
@@ -635,12 +635,12 @@ trap_attach_loop:
     push ds
     push si
     push cx
-    call dword ptr [si]
+    call fword ptr [si]
     pop cx
     pop si
     pop ds
 ;       
-    add si,4
+    add si,8
     loop trap_attach_loop
 
 trap_attach_done:
@@ -680,12 +680,12 @@ trap_detach_loop:
     push ds
     push si
     push cx
-    call dword ptr [si]
+    call fword ptr [si]
     pop cx
     pop si
     pop ds
 ;       
-    add si,4
+    add si,8
     loop trap_detach_loop
 
 trap_detach_done:
@@ -843,7 +843,7 @@ nuaDone:
     pop es
     pop fs
     pop gs
-    ret
+    retf32
 notify_usb_attach   Endp
 
 
@@ -881,7 +881,7 @@ notify_usb_detach       Proc far
 nudDone:    
     popad
     pop es
-    ret
+    retf32
 notify_usb_detach   Endp
 
 
@@ -2904,7 +2904,7 @@ get_usb_info    Endp
 ;
 ;           description:    Hook USB attach event
 ;
-;       parameters:     ES:DI       Callback 
+;       parameters:     ES:EDI       Callback 
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2917,15 +2917,15 @@ hook_usb_attach Proc far
     mov bx,SEG data
     mov ds,bx
     mov bx,ds:usb_attach_hooks
-    shl bx,2
+    shl bx,3
     add bx,OFFSET usb_attach_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc ds:usb_attach_hooks
 ;
     pop bx
     pop ds
-    ret
+    retf32
 hook_usb_attach   Endp
 
 
@@ -2936,7 +2936,7 @@ hook_usb_attach   Endp
 ;
 ;           description:    Hook USB detach event
 ;
-;       parameters:     ES:DI       Callback
+;       parameters:     ES:EDI       Callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2949,15 +2949,15 @@ hook_usb_detach Proc far
     mov bx,SEG data
     mov ds,bx
     mov bx,ds:usb_detach_hooks
-    shl bx,2
+    shl bx,3
     add bx,OFFSET usb_detach_arr
-    mov [bx],di
-    mov [bx+2],es
+    mov [bx],edi
+    mov [bx+4],es
     inc ds:usb_detach_hooks
 ;
     pop bx
     pop ds
-    ret
+    retf32
 hook_usb_detach   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2984,31 +2984,31 @@ init    Proc far
     mov edi,OFFSET init_usb_device_name
     xor cl,cl
     mov ax,init_usb_device_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET notify_usb_attach
     mov edi,OFFSET notify_usb_attach_name
     xor cl,cl
     mov ax,notify_usb_attach_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET notify_usb_detach
     mov edi,OFFSET notify_usb_detach_name
     xor cl,cl
     mov ax,notify_usb_detach_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET hook_usb_attach
     mov edi,OFFSET hook_usb_attach_name
     xor cl,cl
     mov ax,hook_usb_attach_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET hook_usb_detach
     mov edi,OFFSET hook_usb_detach_name
     xor cl,cl
     mov ax,hook_usb_detach_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_usb_req
     mov edi,OFFSET create_usb_req_name

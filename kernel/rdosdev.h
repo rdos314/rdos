@@ -353,6 +353,13 @@ typedef void __far (__rdos_fs_write_block_callback)(void *fs_data, int file_sel,
                     value struct routine [eax] \
                     modify [eax ebx ecx edx esi edi]
 
+typedef void __far (__rdos_usb_state_callback)(int controller, char device);
+
+#pragma aux __rdos_usb_state_callback "*" \
+                    parm caller [ebx] [al] \
+                    value struct routine [eax] \
+                    modify [eax ebx ecx edx esi edi]
+
 // structures
 
 struct TKernelSection
@@ -669,6 +676,20 @@ void RdosUpdateMouse(int button_state, int delta_x, int delta_y);
 void RdosInvertMouse(int delta_x, int delta_y);
 void RdosSetMouse(int button_state, int x, int y);
 void RdosSetMouseLimit(int max_x, int max_y);
+
+void RdosAddComPort(int controller, int device, int com_sel);
+void RdosReserveComLine(char port);
+void RdosDeviceSetDtr(char port);
+void RdosDeviceResetDtr(char port);
+char RdosWaitForLineStateChange(char port);
+char RdosGetLineState(char port);
+
+void RdosInitUsbDevice(int usb_dev_sel);
+void RdosNotifyUsbAttach(int usb_dev_sel, char port, char speed);
+void RdosNotifyUsbDetach(int usb_dev_sel, char port);
+
+void RdosHookUsbAttach(__rdos_usb_state_callback *callb_proc);
+void RdosHookUsbDetach(__rdos_usb_state_callback *callb_proc);
 
 /* 32-bit compact memory model (device-drivers) */
 
@@ -1627,6 +1648,64 @@ void RdosSetMouseLimit(int max_x, int max_y);
 #pragma aux RdosSetMouseLimit = \
     OsGate_set_mouse_limit \
     parm [ecx] [edx];
+
+#pragma aux RdosAddComPort = \
+    "push ds" \
+    "mov ds,ebx" \
+    OsGate_add_com_port \
+    "pop ds" \
+    parm [ebx] [eax] [edx];
+
+#pragma aux RdosReserveComLine = \
+    OsGate_reserve_com_line \
+    parm [al];
+
+#pragma aux RdosDeviceSetDtr = \
+    OsGate_device_set_dtr \
+    parm [al];
+
+#pragma aux RdosDeviceResetDtr = \
+    OsGate_device_reset_dtr \
+    parm [al];
+
+#pragma aux RdosWaitForLineStateChange = \
+    OsGate_wait_for_line_state_change \
+    parm [al] \
+    value [al];
+
+#pragma aux RdosGetLineState = \
+    OsGate_get_line_state \
+    parm [al] \
+    value [al];
+
+#pragma aux RdosInitUsbDevice = \
+    "push ds" \
+    "mov ds,edx" \
+    OsGate_init_usb_device \
+    "pop ds" \
+    parm [edx];
+
+#pragma aux RdosNotifyUsbAttach = \
+    "push ds" \
+    "mov ds,edx" \
+    OsGate_notify_usb_attach \
+    "pop ds" \
+    parm [edx] [al] [ah];
+
+#pragma aux RdosNotifyUsbDetach = \
+    "push ds" \
+    "mov ds,edx" \
+    OsGate_notify_usb_detach \
+    "pop ds" \
+    parm [edx] [al];
+
+#pragma aux RdosHookUsbAttach = \
+    OsGate_hook_usb_attach \
+    parm [es edi];
+
+#pragma aux RdosHookUsbDetach = \
+    OsGate_hook_usb_detach \
+    parm [es edi];
 
 #ifdef __cplusplus
 }

@@ -66,16 +66,16 @@ MOD_RIGHT_GUI   = 80h
 hid_key_struc   STRUC
 
 hk_modifiers    DB ?
-hk_resv         DB ?
+hk_resv     DB ?
 hk_key_arr      DB 6 DUP(?)
 
 hid_key_struc   ENDS
 
 usb_hid_descr  STRUC
 
-uhd_len             DB ?
-uhd_type            DB ?
-uhd_hid_ver         DW ?
+uhd_len         DB ?
+uhd_type        DB ?
+uhd_hid_ver     DW ?
 uhd_country_code    DB ?
 uhd_descr_count     DB ?
 uhd_descr_arr       DB ?
@@ -91,20 +91,20 @@ usb_hid_arr_descr   ENDS
 
 hid_device_struc   STRUC
 
-hid_prev            DW ?
-hid_next            DW ?
+hid_prev        DW ?
+hid_next        DW ?
 
 hid_controller      DW ?
-hid_device          DB ?
+hid_device      DB ?
 
 hid_interface       DB ?
-hid_protocol        DB ?
-hid_intr_in         DB ?
+hid_protocol    DB ?
+hid_intr_in     DB ?
 hid_control_handle  DW ?
 hid_control_wait    DW ?
 hid_intr_handle     DW ?
-hid_intr_buf        DW ?
-hid_intr_req        DW ?
+hid_intr_buf    DW ?
+hid_intr_req    DW ?
 
 hid_country_code    DB ?
 hid_descr_count     DB ?
@@ -113,17 +113,17 @@ hid_device_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
-hid_section         section_typ <>
-hid_key_sel         DW ?
+hid_section     section_typ <>
+hid_key_sel     DW ?
 hid_mouse_sel       DW ?
-hid_dev_list        DW ?
+hid_dev_list    DW ?
 hid_key_thread      DW ?
 
-hid_key_leds        DB ?
-hid_key_mod         DB ?
-hid_key_arr         DB 6 DUP(?)
+hid_key_leds    DB ?
+hid_key_mod     DB ?
+hid_key_arr     DB 6 DUP(?)
 
-hid_last_key        DB ?
+hid_last_key    DB ?
 hid_last_time       DD ?
 
 data    ENDS
@@ -132,23 +132,23 @@ data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
-        assume cs:code
+    assume cs:code
 
-        .386p
+    .386p
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           CreateHidSel
+;           NAME:       CreateHidSel
 ;
-;               description:    Creates a new HID device selector
+;           description:    Creates a new HID device selector
 ;
-;               Parameters:     BX      Controller #
-;                       AL      Device address
-;                       ES:DI   USB descriptor
+;           Parameters:     BX      Controller #
+;               AL      Device address
+;               ES:DI   USB descriptor
 ;
-;       Returns:        BX      HID selector
+;       Returns:    BX      HID selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -175,11 +175,11 @@ CreateHidSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           FreeHidSel
+;           NAME:       FreeHidSel
 ;
-;               description:    Free HID device selector
+;           description:    Free HID device selector
 ;
-;               Parameters:     BX      HID selector
+;           Parameters:     BX      HID selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -200,7 +200,7 @@ FreeHidSel Proc near
     FreeMem
 ;
     pop ax
-    pop es        
+    pop es    
     ret
 FreeHidSel Endp
 
@@ -208,12 +208,12 @@ FreeHidSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           InitHidSel
+;           NAME:       InitHidSel
 ;
-;               description:    Init hid descriptor
+;           description:    Init hid descriptor
 ;
-;               Parameters:     ES:DI   First interface descriptor for device
-;                       BX      Hid sel
+;           Parameters:     ES:DI   First interface descriptor for device
+;               BX      Hid sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -318,21 +318,21 @@ ihsDone:
     pop ax
     pop ds
     ret
-InitHidSel  Endp        
+InitHidSel  Endp    
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           GetHidSel
+;           NAME:       GetHidSel
 ;
-;               description:    Get HID device selector from controller and device
+;           description:    Get HID device selector from controller and device
 ;
-;               Parameters:     BX      Controller #
-;                       AL      Device address
+;           Parameters:     BX      Controller #
+;               AL      Device address
 ;
-;       Returns:        NC
-;                           BX      HID selector
+;       Returns:    NC
+;               BX      HID selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -340,7 +340,7 @@ GetHidSel Proc near
     push ds
     push es
     push si
-        push di
+    push di
 ;
     mov di,SEG data
     mov ds,di
@@ -385,11 +385,11 @@ GetHidSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           InsertHidSel
+;           NAME:       InsertHidSel
 ;
-;               description:    Inserts a HID device selector into list of devices
+;           description:    Inserts a HID device selector into list of devices
 ;
-;               Parameters:     BX      HID selector
+;           Parameters:     BX      HID selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -397,34 +397,34 @@ InsertHidSel    Proc near
     push ds
     push es
     push ax
-        push di
+    push di
 ;
     mov ax,SEG data
     mov ds,ax
     EnterSection ds:hid_section
 ;
     mov es,bx
-        mov di,ds:hid_dev_list
-        or di,di
-        je ins_hid_sel_empty
+    mov di,ds:hid_dev_list
+    or di,di
+    je ins_hid_sel_empty
 ;
-        push ds
-        push si
-        mov ds,di
-        mov si,ds:hid_prev
-        mov ds:hid_prev,es
-        mov ds,si
-        mov ds:hid_next,es
-        mov es:hid_next,di
-        mov es:hid_prev,si
-        pop si
-        pop ds
-        jmp ins_hid_sel_leave
-        
+    push ds
+    push si
+    mov ds,di
+    mov si,ds:hid_prev
+    mov ds:hid_prev,es
+    mov ds,si
+    mov ds:hid_next,es
+    mov es:hid_next,di
+    mov es:hid_prev,si
+    pop si
+    pop ds
+    jmp ins_hid_sel_leave
+    
 ins_hid_sel_empty:
-        mov es:hid_next,es
-        mov es:hid_prev,es
-        mov ds:hid_dev_list,es
+    mov es:hid_next,es
+    mov es:hid_prev,es
+    mov ds:hid_dev_list,es
 
 ins_hid_sel_leave:
     LeaveSection ds:hid_section
@@ -440,11 +440,11 @@ InsertHidSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   RemoveHidSel
+;           NAME:           RemoveHidSel
 ;
-;               DESCRIPTION:    Remove a HID device selector
+;           DESCRIPTION:    Remove a HID device selector
 ;
-;               PARAMETERS:         BX      HID device selector
+;           PARAMETERS:     BX      HID device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -452,7 +452,7 @@ RemoveHidSel    Proc near
     push ds
     push es
     push ax
-        push si
+    push si
 ;
     mov ax,SEG data
     mov ds,ax
@@ -460,27 +460,27 @@ RemoveHidSel    Proc near
 ;
     mov es,bx
     cmp bx,es:hid_next
-        je rem_hid_sel_empty
+    je rem_hid_sel_empty
 ;       
-        push di
-        push ds
-        mov di,es:hid_next
-        mov ds:hid_dev_list,di
-        mov si,es:hid_prev
-        mov ds,di
-        mov ds:hid_prev,si
-        mov ds,si
-        mov ds:hid_next,di
-        pop ds
-        pop di
-        jmp rem_hid_sel_leave
+    push di
+    push ds
+    mov di,es:hid_next
+    mov ds:hid_dev_list,di
+    mov si,es:hid_prev
+    mov ds,di
+    mov ds:hid_prev,si
+    mov ds,si
+    mov ds:hid_next,di
+    pop ds
+    pop di
+    jmp rem_hid_sel_leave
 
 rem_hid_sel_empty:      
-        mov ds:hid_dev_list,0
+    mov ds:hid_dev_list,0
 
 rem_hid_sel_leave:
     LeaveSection ds:hid_section
-        pop si
+    pop si
     pop ax
     pop es
     pop ds 
@@ -491,13 +491,13 @@ RemoveHidSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           GetReport
+;           NAME:       GetReport
 ;
-;               Description:    Get current input report
+;           Description:    Get current input report
 ;
 ;       Parameters:     BX      HID selector
 ;
-;       Returns:        ES      8-byte report data
+;       Returns:    ES      8-byte report data
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -527,7 +527,7 @@ GetReport   Proc near
 ;
     mov cx,8
     ReqUsbData
-;        
+;    
     WriteUsbStatus
     StartUsbTransaction
 ;    
@@ -556,13 +556,13 @@ GetReport Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           GetProtocol
+;           NAME:       GetProtocol
 ;
-;               Description:    Get active protocol
+;           Description:    Get active protocol
 ;
 ;       Paramters:      BX      HID selector
 ;
-;       RETURNS:        AL      Protocol
+;       RETURNS:    AL      Protocol
 ;      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -594,7 +594,7 @@ GetProtocol   Proc near
     mov cx,1
     xor di,di
     ReqUsbData
-;        
+;    
     WriteUsbStatus
     StartUsbTransaction
 ;    
@@ -632,9 +632,9 @@ GetProtocol Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           SetBootProtocol
+;           NAME:       SetBootProtocol
 ;
-;               Description:    Set boot protocol
+;           Description:    Set boot protocol
 ;
 ;       Paramters:      BX      HID selector
 ;      
@@ -695,9 +695,9 @@ SetBootProtocol Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           SetIdle
+;           NAME:       SetIdle
 ;
-;               Description:    Set idle to suitable range for auto-repeat of keys
+;           Description:    Set idle to suitable range for auto-repeat of keys
 ;
 ;       Paramters:      BX      HID selector
 ;      
@@ -758,9 +758,9 @@ SetIdle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           UpdateLeds
+;           NAME:       UpdateLeds
 ;
-;               Description:    Update keyboard LEDs
+;           Description:    Update keyboard LEDs
 ;
 ;       Paramters:      AL      LED status
 ;      
@@ -807,7 +807,7 @@ UpdateLeds   Proc near
     mov di,SIZE usb_setup_data
     mov cx,1
     WriteUsbData
-;        
+;    
     ReqUsbStatus
     StartUsbTransaction
     FreeMem
@@ -839,17 +839,17 @@ UpdateLeds Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   GetKey
+;           NAME:           GetKey
 ;
-;               DESCRIPTION:    Get key
+;           DESCRIPTION:    Get key
 ;
 ;       PARAMETERS:     AL      Scan code
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CX      Shift states
-;                       CS:SI   Table entry
+;               DL      Virtual key code
+;               DH      Scan code
+;               CX      Shift states
+;               CS:SI   Table entry
 ;
-;       RETURNS:        AX      Key code
+;       RETURNS:    AX      Key code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -857,35 +857,35 @@ GetKey   Proc near
     test cx,ctrl_pressed
     jz gkNotCtrl
 ;
-        mov ah,cs:[si].ts_ctrl
-        cmp ah,-1
+    mov ah,cs:[si].ts_ctrl
+    cmp ah,-1
     jne gkCheck
 
 gkNotCtrl:
     test cx,alt_pressed
     jz gkNotAlt
 ;
-        mov ah,cs:[si].ts_alt
-        cmp ah,-1
+    mov ah,cs:[si].ts_alt
+    cmp ah,-1
     jne gkCheck
 
 gkNotAlt:
     test cx,shift_pressed
     jz gkNotShift
 ;
-        mov ah,cs:[si].ts_shift
-        cmp ah,-1
+    mov ah,cs:[si].ts_shift
+    cmp ah,-1
     jne gkCheck
 
 gkNotShift:
-        mov ah,cs:[si].ts_norm
+    mov ah,cs:[si].ts_norm
 
 gkCheck:
-        or ah,ah
-        jne gkNoExt
+    or ah,ah
+    jne gkNoExt
 ;
-        movzx ax,byte ptr cs:[si].ts_ext
-        
+    movzx ax,byte ptr cs:[si].ts_ext
+    
 gkNoExt:
     clc
     ret
@@ -895,17 +895,17 @@ GetKey   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   IgnoreKey
+;           NAME:           IgnoreKey
 ;
-;               DESCRIPTION:    Ignore key (not defined)
+;           DESCRIPTION:    Ignore key (not defined)
 ;
 ;       PARAMETERS:     AL      USB key
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CL      Action code
-;                       CS:SI   Table entry
+;               DL      Virtual key code
+;               DH      Scan code
+;               CL      Action code
+;               CS:SI   Table entry
 ;
-;       RETURNS:        AX      Key code
+;       RETURNS:    AX      Key code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -918,17 +918,17 @@ IgnoreKey   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   StdKey
+;           NAME:           StdKey
 ;
-;               DESCRIPTION:    Handle standard key
+;           DESCRIPTION:    Handle standard key
 ;
 ;       PARAMETERS:     AL      USB key
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CL      Action code
-;                       CS:SI   Table entry
+;               DL      Virtual key code
+;               DH      Scan code
+;               CL      Action code
+;               CS:SI   Table entry
 ;
-;       RETURNS:        AX      Key code
+;       RETURNS:    AX      Key code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -946,17 +946,17 @@ StdKey   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CapsKey
+;           NAME:           CapsKey
 ;
-;               DESCRIPTION:    Handle caps-lock aware key
+;           DESCRIPTION:    Handle caps-lock aware key
 ;
 ;       PARAMETERS:     AL      USB key
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CL      Action code
-;                       CS:SI   Table entry
+;               DL      Virtual key code
+;               DH      Scan code
+;               CL      Action code
+;               CS:SI   Table entry
 ;
-;       RETURNS:        AX      Key code
+;       RETURNS:    AX      Key code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -964,9 +964,9 @@ CapsKey   Proc near
     push cx
     GetKeyboardState
     mov cx,ax
-        and cx,107h
-        xor cl,ch
-        and cx,7
+    and cx,107h
+    xor cl,ch
+    and cx,7
     mov al,dh
     call GetKey
     pop cx
@@ -977,17 +977,17 @@ CapsKey   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FuncKey
+;           NAME:           FuncKey
 ;
-;               DESCRIPTION:    Handle function key
+;           DESCRIPTION:    Handle function key
 ;
 ;       PARAMETERS:     AL      USB key
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CL      Action code
-;                       CS:SI   Table entry
+;               DL      Virtual key code
+;               DH      Scan code
+;               CL      Action code
+;               CS:SI   Table entry
 ;
-;       RETURNS:        AX      Key code
+;       RETURNS:    AX      Key code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -995,14 +995,14 @@ FuncKey   Proc near
     push cx
     GetKeyboardState
     mov cx,ax
-        test cx,ctrl_pressed
-        jz fkNorm
+    test cx,ctrl_pressed
+    jz fkNorm
 ;
     mov al,dh
     SetFocus
     xor ax,ax
     jmp fkDone
-        
+    
 fkNorm:
     mov al,dh
     call GetKey
@@ -1017,17 +1017,17 @@ FuncKey   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   NumKey
+;           NAME:           NumKey
 ;
-;               DESCRIPTION:    Handle numpad key
+;           DESCRIPTION:    Handle numpad key
 ;
 ;       PARAMETERS:     AL      USB key
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CL      Action code
-;                       CS:SI   Table entry
+;               DL      Virtual key code
+;               DH      Scan code
+;               CL      Action code
+;               CS:SI   Table entry
 ;
-;       RETURNS:        AX      Key code
+;       RETURNS:    AX      Key code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1039,19 +1039,19 @@ NumKey   Proc near
     mov cx,ax
     mov al,dh
 ;
-        and cx,205h
-        shr ch,1
-        xor cl,ch
-        xor ch,ch
-        add si,cx
-        cmp cx,1
-        jne nkNoNum
+    and cx,205h
+    shr ch,1
+    xor cl,ch
+    xor ch,ch
+    add si,cx
+    cmp cx,1
+    jne nkNoNum
 ;
-        mov ah,cs:[si].ts_norm
-        jmp nkEnd
-        
+    mov ah,cs:[si].ts_norm
+    jmp nkEnd
+    
 nkNoNum:
-        movzx ax,byte ptr cs:[si].ts_norm
+    movzx ax,byte ptr cs:[si].ts_norm
 
 nkEnd:
     pop si
@@ -1063,17 +1063,17 @@ NumKey   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DelKey
+;           NAME:           DelKey
 ;
-;               DESCRIPTION:    Handle DEL key on numpad
+;           DESCRIPTION:    Handle DEL key on numpad
 ;
 ;       PARAMETERS:     AL      USB key
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CL      Action code
-;                       CS:SI   Table entry
+;               DL      Virtual key code
+;               DH      Scan code
+;               CL      Action code
+;               CS:SI   Table entry
 ;
-;       RETURNS:        AX      Key code
+;       RETURNS:    AX      Key code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1098,17 +1098,17 @@ DelKey  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   EscKey
+;           NAME:           EscKey
 ;
-;               DESCRIPTION:    Handle ESC key
+;           DESCRIPTION:    Handle ESC key
 ;
 ;       PARAMETERS:     AL      USB key
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CL      Action code
-;                       CS:SI   Table entry
+;               DL      Virtual key code
+;               DH      Scan code
+;               CL      Action code
+;               CS:SI   Table entry
 ;
-;       RETURNS:        AX      Key code
+;       RETURNS:    AX      Key code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1133,17 +1133,17 @@ EscKey  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CapsLock
+;           NAME:           CapsLock
 ;
-;               DESCRIPTION:    Handle caps lock key
+;           DESCRIPTION:    Handle caps lock key
 ;
 ;       PARAMETERS:     AL      USB key
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CL      Action code
-;                       CS:SI   Table entry
+;               DL      Virtual key code
+;               DH      Scan code
+;               CL      Action code
+;               CS:SI   Table entry
 ;
-;       RETURNS:        AX      Key code
+;       RETURNS:    AX      Key code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1164,17 +1164,17 @@ CapsLock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   NumLock
+;           NAME:           NumLock
 ;
-;               DESCRIPTION:    Handle num lock key
+;           DESCRIPTION:    Handle num lock key
 ;
 ;       PARAMETERS:     AL      USB key
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CL      Action code
-;                       CS:SI   Table entry
+;               DL      Virtual key code
+;               DH      Scan code
+;               CL      Action code
+;               CS:SI   Table entry
 ;
-;       RETURNS:        AX      Key code
+;       RETURNS:    AX      Key code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1194,16 +1194,16 @@ NumLock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   TranslateKey
+;           NAME:           TranslateKey
 ;
-;               DESCRIPTION:    Translate key to RDOS internal key mappings
+;           DESCRIPTION:    Translate key to RDOS internal key mappings
 ;
 ;       PARAMETERS:     AL      USB key
 ;
-;       RETURNS:        AX      Key code
-;                       DL      Virtual key code
-;                       DH      Scan code
-;                       CL      Action code
+;       RETURNS:    AX      Key code
+;               DL      Virtual key code
+;               DH      Scan code
+;               CL      Action code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1226,20 +1226,20 @@ atE DW OFFSET IgnoreKey
 atF DW OFFSET IgnoreKey
 
 TranslateTab:
-;           Ext     VK      Scan     Normal Shift   Alt     Ctrl    Action   Key descr
-tk00    DB  0,      0,      0,       0,     0,      0,      0,      0        ; No key
-tk01    DB  0,      0,      0,       0,         0,      0,      0,              0        ; Roll-over error
-tk02    DB  0,      0,      0,       0,         0,      0,      0,              0        ; Post fail
-tk03    DB  0,      0,      0,       0,         0,      0,      0,              0        ; Undefined error
+;       Ext     VK      Scan     Normal Shift   Alt     Ctrl    Action   Key descr
+tk00    DB  0,      0,      0,       0,     0,      0,      0,      0    ; No key
+tk01    DB  0,      0,      0,       0,     0,      0,      0,          0    ; Roll-over error
+tk02    DB  0,      0,      0,       0,     0,      0,      0,          0    ; Post fail
+tk03    DB  0,      0,      0,       0,     0,      0,      0,          0    ; Undefined error
 tk04    DB  1Eh,    'A',    1Eh,     'a',   'A',    0,      -1,     CAPS_KEY ; VK_A
-tk05    DB  30h,    'B',    30h,     'b',   'B',    0,      2,          CAPS_KEY ; VK_B
-tk06    DB  2Eh,    'C',    2Eh,     'c',   'C',    0,      3,          CAPS_KEY ; VK_C
-tk07    DB  20h,    'D',    20h,     'd',       'D',    0,      4,              CAPS_KEY ; VK_D
-tk08    DB  12h,    'E',    12h,     'e',       'E',    0,      5,              CAPS_KEY ; VK_E
-tk09    DB  21h,    'F',    21h,     'f',       'F',    0,      6,              CAPS_KEY ; VK_F
-tk0A    DB  22h,    'G',    22h,     'g',       'G',    0,      7,              CAPS_KEY ; VK_G
-tk0B    DB  23h,    'H',    23h,     'h',       'H',    0,      8,              CAPS_KEY ; VK_H
-tk0C    DB  17h,    'I',    17h,     'i',       'I',    0,      9,              CAPS_KEY ; VK_I
+tk05    DB  30h,    'B',    30h,     'b',   'B',    0,      2,      CAPS_KEY ; VK_B
+tk06    DB  2Eh,    'C',    2Eh,     'c',   'C',    0,      3,      CAPS_KEY ; VK_C
+tk07    DB  20h,    'D',    20h,     'd',       'D',    0,      4,          CAPS_KEY ; VK_D
+tk08    DB  12h,    'E',    12h,     'e',       'E',    0,      5,          CAPS_KEY ; VK_E
+tk09    DB  21h,    'F',    21h,     'f',       'F',    0,      6,          CAPS_KEY ; VK_F
+tk0A    DB  22h,    'G',    22h,     'g',       'G',    0,      7,          CAPS_KEY ; VK_G
+tk0B    DB  23h,    'H',    23h,     'h',       'H',    0,      8,          CAPS_KEY ; VK_H
+tk0C    DB  17h,    'I',    17h,     'i',       'I',    0,      9,          CAPS_KEY ; VK_I
 tk0D    DB  24h,    'J',    24h,     'j',       'J',    0,      0Ah,    CAPS_KEY ; VK_J
 tk0E    DB  25h,    'K',    25h,     'k',       'K',    0,      0Bh,    CAPS_KEY ; VK_K
 tk0F    DB  26h,    'L',    26h,     'l',       'L',    0,      0Ch,    CAPS_KEY ; VK_L
@@ -1257,33 +1257,33 @@ tk1A    DB  11h,    'W',    11h,     'w',       'W',    0,      17h,    CAPS_KEY
 tk1B    DB  2Dh,    'X',    2Dh,     'x',       'X',    0,      18h,    CAPS_KEY ; VK_X
 tk1C    DB  15h,    'Y',    15h,     'y',       'Y',    0,      19h,    CAPS_KEY ; VK_Y
 tk1D    DB  2Ch,    'Z',    2Ch,     'z',       'Z',    0,      1Ah,    CAPS_KEY ; VK_Z
-tk1E    DB  78h,    '1',    02h,     '1',       '!',    -1,     -1,             STD_KEY  ; VK_1
-tk1F    DB  79h,    '2',    03h,     '2',       22h,   '@',    -1,              STD_KEY  ; VK_2
-tk20    DB  7Ah,    '3',    04h,     '3',       '#',    'ú',    -1,             STD_KEY  ; VK_3
-tk21    DB  7Bh,    '4',    05h,     '4',       'œ',    '$',    -1,             STD_KEY  ; VK_4
-tk22    DB  7Ch,    '5',    06h,     '5',       '%',    -1,     -1,             STD_KEY  ; VK_5
-tk23    DB  7Dh,    '6',    07h,     '6',       '&',    -1,     -1,             STD_KEY  ; VK_6
-tk24    DB  7Eh,    '7',    08h,     '7',       '/',    '{',    -1,             STD_KEY  ; VK_7
-tk25    DB  7Fh,    '8',    09h,     '8',       '(',    '[',    -1,             STD_KEY  ; VK_8
-tk26    DB  80h,    '9',    0Ah,     '9',       ')',    ']',    -1,             STD_KEY  ; VK_9
-tk27    DB  81h,    '0',    0Bh,     '0',       '=',    '}',    -1,             STD_KEY  ; VK_0
+tk1E    DB  78h,    '1',    02h,     '1',       '!',    -1,     -1,         STD_KEY  ; VK_1
+tk1F    DB  79h,    '2',    03h,     '2',       22h,   '@',    -1,          STD_KEY  ; VK_2
+tk20    DB  7Ah,    '3',    04h,     '3',       '#',    'ú',    -1,         STD_KEY  ; VK_3
+tk21    DB  7Bh,    '4',    05h,     '4',       'œ',    '$',    -1,         STD_KEY  ; VK_4
+tk22    DB  7Ch,    '5',    06h,     '5',       '%',    -1,     -1,         STD_KEY  ; VK_5
+tk23    DB  7Dh,    '6',    07h,     '6',       '&',    -1,     -1,         STD_KEY  ; VK_6
+tk24    DB  7Eh,    '7',    08h,     '7',       '/',    '{',    -1,         STD_KEY  ; VK_7
+tk25    DB  7Fh,    '8',    09h,     '8',       '(',    '[',    -1,         STD_KEY  ; VK_8
+tk26    DB  80h,    '9',    0Ah,     '9',       ')',    ']',    -1,         STD_KEY  ; VK_9
+tk27    DB  81h,    '0',    0Bh,     '0',       '=',    '}',    -1,         STD_KEY  ; VK_0
 tk28    DB  -1,     0Dh,    1Ch,     0Dh,       0Dh,    0Dh,    0Ah,    STD_KEY  ; VK_RETURN
 tk29    DB  -1 ,    1Bh,    01h,     1Bh,       1Bh,    1Bh,    1Bh,    ESC_KEY  ; VK_ESCAPE
 tk2A    DB  -1,     08h,    0Eh,     08h,       08h,    08h,    08h,    STD_KEY  ; VK_BACK
 tk2B    DB  0Fh,    09h,    0Fh,     09h,       0,      09h,    09h,    STD_KEY  ; VK_TAB
 tk2C    DB  -1,     ' ',    39h,     ' ',   ' ',    ' ',    ' ',    STD_KEY      ; VK_SPACE
-tk2D    DB  -1,     '-',    0Ch,     '-',       '_',    -1,     -1,             STD_KEY  ; -, _
-tk2E    DB  -1,     0DBh,   0Dh,     27h,       60h,    -1,     -1,             STD_KEY  ; =, + 
-tk2F    DB  -1,     0DDh,   1Ah,     'Ü',       'è',    0,      -1,             CAPS_KEY ; [, {
-tk30    DB  -1,     0BAh,   1Bh,     '\',       '^',    '~',    -1,             STD_KEY  ; ], }
-tk31    DB  -1,     '\',    2Bh,     '\',       '|',    -1,     -1,             STD_KEY  ; \, |
-tk32    DB  -1,     2Bh,    2Bh,     27h,       '*',    -1,     -1,             STD_KEY  ; #, ~
-tk33    DB  -1,     0C0h,   27h,     'î',       'ô',    0,      -1,             CAPS_KEY ; ;, :
-tk34    DB  -1,     0DEh,   28h,     'Ñ',   'é',    0,      -1,         CAPS_KEY ;
-tk35    DB  -1,     0DCh,   29h,     '¯',       '´',    0,      -1,             STD_KEY  ;
-tk36    DB  -1,     ',',    33h,     ',',       ';',    -1,     -1,             STD_KEY  ; ;, <
-tk37    DB  -1,     0BEh,   34h,     '.',       ':',    -1,     -1,             STD_KEY  ; . >
-tk38    DB  -1,     0BDh,   35h,     '-',       '_',    -1,     -1,             STD_KEY  ; /, ?
+tk2D    DB  -1,     '-',    0Ch,     '-',       '_',    -1,     -1,         STD_KEY  ; -, _
+tk2E    DB  -1,     0DBh,   0Dh,     27h,       60h,    -1,     -1,         STD_KEY  ; =, + 
+tk2F    DB  -1,     0DDh,   1Ah,     'Ü',       'è',    0,      -1,         CAPS_KEY ; [, {
+tk30    DB  -1,     0BAh,   1Bh,     '\',       '^',    '~',    -1,         STD_KEY  ; ], }
+tk31    DB  -1,     '\',    2Bh,     '\',       '|',    -1,     -1,         STD_KEY  ; \, |
+tk32    DB  -1,     2Bh,    2Bh,     27h,       '*',    -1,     -1,         STD_KEY  ; #, ~
+tk33    DB  -1,     0C0h,   27h,     'î',       'ô',    0,      -1,         CAPS_KEY ; ;, :
+tk34    DB  -1,     0DEh,   28h,     'Ñ',   'é',    0,      -1,     CAPS_KEY ;
+tk35    DB  -1,     0DCh,   29h,     '¯',       '´',    0,      -1,         STD_KEY  ;
+tk36    DB  -1,     ',',    33h,     ',',       ';',    -1,     -1,         STD_KEY  ; ;, <
+tk37    DB  -1,     0BEh,   34h,     '.',       ':',    -1,     -1,         STD_KEY  ; . >
+tk38    DB  -1,     0BDh,   35h,     '-',       '_',    -1,     -1,         STD_KEY  ; /, ?
 tk39    DB  -1,     14h,    3Ah,     0,     0,      0,      0,      CAPS_LOCK; VK_CAPITAL
 tk3A    DB  70h,    70h,    3Bh,     3Bh,       54h,    68h,    5Eh,    FUNC_KEY ; VK_F1
 tk3B    DB  71h,    71h,    3Ch,     3Ch,       55h,    69h,    5Fh,    FUNC_KEY ; VK_F2
@@ -1297,192 +1297,192 @@ tk42    DB  78h,    78h,    43h,     43h,       5Ch,    70h,    66h,    FUNC_KEY
 tk43    DB  79h,    79h,    44h,     44h,       5Dh,    71h,    67h,    FUNC_KEY ; VK_F10
 tk44    DB  7Ah,    7Ah,    57h,     57h,       5Eh,    8Bh,    89h,    FUNC_KEY ; VK_F11
 tk45    DB  7Bh,    7Bh,    58h,     58h,       5Fh,    8Ch,    8Ah,    FUNC_KEY ; VK_F12
-tk46    DB  -1,     2Ah,    0,       0,     0,      0,      0,          0                ; VK_PRINT
+tk46    DB  -1,     2Ah,    0,       0,     0,      0,      0,      0        ; VK_PRINT
 tk47    DB  -1,     91h,    46h,     0,     0,      0,      0,      STD_KEY  ; VK_SCROLL
-tk48    DB  -1,     13h,    0,       0,     0,      0,      0,          0                ; VK_PAUSE
-tk49    DB  -1,     2Dh,    52h,     52h,   52h,    -1,     -1,         STD_KEY  ; VK_INSERT
-tk4A    DB  -1,     24h,    47h,     47h,       47h,    -1,     -1,             STD_KEY  ; VK_HOME
-tk4B    DB  -1,     26h,    49h,     49h,       49h,    -1,     -1,         STD_KEY  ; VK_UP (page up)
-tk4C    DB  -1,     2Eh,    53h,     53h,       53h,    -1,     -1,             DEL_KEY  ; VK_DELETE
-tk4D    DB  -1,     23h,    4Fh,     4Fh,       4Fh,    -1,     -1,             STD_KEY  ; VK_END
-tk4E    DB  -1,     28h,    51h,     51h,       51h,    -1,     -1,             STD_KEY  ; VK_DOWN (page down)
-tk4F    DB  -1,     27h,    4Dh,     4Dh,       4Dh,    -1,     -1,             STD_KEY  ; VK_RIGHT
-tk50    DB  -1,     25h,    4Bh,     4Bh,       4Bh,    -1,     -1,             STD_KEY  ; VK_LEFT
-tk51    DB  -1,     28h,    50h,     50h,       50h,    -1,     -1,             STD_KEY  ; VK_DOWN
-tk52    DB  -1,     26h,    48h,     48h,       48h,    -1,     -1,             STD_KEY  ; VK_UP
+tk48    DB  -1,     13h,    0,       0,     0,      0,      0,      0        ; VK_PAUSE
+tk49    DB  -1,     2Dh,    52h,     52h,   52h,    -1,     -1,     STD_KEY  ; VK_INSERT
+tk4A    DB  -1,     24h,    47h,     47h,       47h,    -1,     -1,         STD_KEY  ; VK_HOME
+tk4B    DB  -1,     26h,    49h,     49h,       49h,    -1,     -1,     STD_KEY  ; VK_UP (page up)
+tk4C    DB  -1,     2Eh,    53h,     53h,       53h,    -1,     -1,         DEL_KEY  ; VK_DELETE
+tk4D    DB  -1,     23h,    4Fh,     4Fh,       4Fh,    -1,     -1,         STD_KEY  ; VK_END
+tk4E    DB  -1,     28h,    51h,     51h,       51h,    -1,     -1,         STD_KEY  ; VK_DOWN (page down)
+tk4F    DB  -1,     27h,    4Dh,     4Dh,       4Dh,    -1,     -1,         STD_KEY  ; VK_RIGHT
+tk50    DB  -1,     25h,    4Bh,     4Bh,       4Bh,    -1,     -1,         STD_KEY  ; VK_LEFT
+tk51    DB  -1,     28h,    50h,     50h,       50h,    -1,     -1,         STD_KEY  ; VK_DOWN
+tk52    DB  -1,     26h,    48h,     48h,       48h,    -1,     -1,         STD_KEY  ; VK_UP
 tk53    DB  -1,     90h,    45h,     0,     0,      0,      0,      NUM_LOCK ; VK_NUMLOCK
-tk54    DB  -1,     6Fh,    35h,     '/',       '/',    '/',    -1,             STD_KEY  ; VK_DIVIDE
-tk55    DB  -1,     6Ah,    37h,     '*',       '*',    '*',    -1,             STD_KEY  ; VK_MULTIPLY  
-tk56    DB  -1,     6Dh,    4Ah,     '-',       '-',    '-',    -1,             STD_KEY  ; VK_SUBTRACT
-tk57    DB  -1,     6Bh,    4Eh,     '+',       '+',    '+',    -1,             STD_KEY  ; VK_ADD
+tk54    DB  -1,     6Fh,    35h,     '/',       '/',    '/',    -1,         STD_KEY  ; VK_DIVIDE
+tk55    DB  -1,     6Ah,    37h,     '*',       '*',    '*',    -1,         STD_KEY  ; VK_MULTIPLY  
+tk56    DB  -1,     6Dh,    4Ah,     '-',       '-',    '-',    -1,         STD_KEY  ; VK_SUBTRACT
+tk57    DB  -1,     6Bh,    4Eh,     '+',       '+',    '+',    -1,         STD_KEY  ; VK_ADD
 tk58    DB  0Dh,    0Dh,    0Dh,     0Dh,       0Dh,    0Dh,    0Ah,    STD_KEY  ; ENTER
 tk59    DB  -1,     61h,    4Fh,     4Fh,       '1',    -1,     75h,    NUM_KEY  ; VK_NUMPAD1
-tk5A    DB  -1,     62h,    50h,     50h,       '2',    -1,     -1,             NUM_KEY  ; VK_NUMPAD2
+tk5A    DB  -1,     62h,    50h,     50h,       '2',    -1,     -1,         NUM_KEY  ; VK_NUMPAD2
 tk5B    DB  -1,     63h,    51h,     51h,       '3',    -1,     76h,    NUM_KEY  ; VK_NUMPAD3
 tk5C    DB  -1,     64h,    4Bh,     4Bh,       '4',    -1,     73h,    NUM_KEY  ; VK_NUMPAD4
-tk5D    DB  -1,     65h,    4Ch,     '5',       '5',    -1,     -1,             NUM_KEY  ; VK_NUMPAD5
+tk5D    DB  -1,     65h,    4Ch,     '5',       '5',    -1,     -1,         NUM_KEY  ; VK_NUMPAD5
 tk5E    DB  -1,     66h,    4Dh,     4Dh,       '6',    -1,     74h,    NUM_KEY  ; VK_NUMPAD6
 tk5F    DB  -1,     67h,    47h,     47h,       '7',    -1,     77h,    NUM_KEY  ; VK_NUMPAD7
-tk60    DB  -1,     68h,    48h,     48h,       '8',    -1,     -1,             NUM_KEY  ; VK_NUMPAD8
+tk60    DB  -1,     68h,    48h,     48h,       '8',    -1,     -1,         NUM_KEY  ; VK_NUMPAD8
 tk61    DB  -1,     69h,    49h,     49h,       '9',    -1,     84h,    NUM_KEY  ; VK_NUMPAD9
-tk62    DB  -1,     60h,    52h,     52h,       '0',    -1,     -1,             NUM_KEY  ; VK_NUMPAD0
-tk63    DB  -1,     6Eh,    53h,     53h,       '-',    -1,     -1,             DEL_KEY  ; VK_DECIMAL
-tk64    DB  -1,     0E2h,   56h,     '<',       '>',    '|',    -1,             STD_KEY  ; <>|
-tk65    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk66    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk67    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk68    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk69    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk6A    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk6B    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk6C    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk6D    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk6E    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk6F    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk70    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk71    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk72    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk73    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk74    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk75    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk76    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk77    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk78    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk79    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk7A    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk7B    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk7C    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk7D    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk7E    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk7F    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk80    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk81    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk82    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk83    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk84    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk85    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk86    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk87    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk88    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk89    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk8A    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk8B    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk8C    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk8D    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk8E    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk8F    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk90    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk91    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk92    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk93    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk94    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk95    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk96    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk97    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk98    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk99    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk9A    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk9B    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk9C    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk9D    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk9E    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tk9F    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkA0    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkA1    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkA2    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkA3    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkA4    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkA5    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkA6    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkA7    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkA8    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkA9    DB  0,      0,      0,       0,     0,      0,      0,          0                ; 
-tkAA    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkAB    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkAC    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkAD    DB  0,      0,      0,       0,     0,      0,      0,          0                ; 
-tkAE    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkAF    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkB0    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkB1    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkB2    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkB3    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkB4    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkB5    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkB6    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkB7    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkB8    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkB9    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkBA    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkBB    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkBC    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkBD    DB  0,      0,      0,       0,     0,      0,      0,          0                ; 
-tkBE    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkBF    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkC0    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkC1    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkC2    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkC3    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkC4    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkC5    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkC6    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkC7    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkC8    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkC9    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkCA    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkCB    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkCC    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkCD    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkCE    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkCF    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkD0    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkD1    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkD2    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkD3    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkD4    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkD5    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkD6    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkD7    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkD8    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkD9    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkDA    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkDB    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkDC    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkDD    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkDE    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkDF    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkE0    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkE1    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkE2    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkE3    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkE4    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkE5    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkE6    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkE7    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkE8    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkE9    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkEA    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkEB    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkEC    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkED    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkEE    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkEF    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkF0    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkF1    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkF2    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkF3    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkF4    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkF5    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkF6    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkF7    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkF8    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkF9    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkFA    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkFB    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkFC    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkFD    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkFE    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
-tkFF    DB  0,      0,      0,       0,     0,      0,      0,          0                ;
+tk62    DB  -1,     60h,    52h,     52h,       '0',    -1,     -1,         NUM_KEY  ; VK_NUMPAD0
+tk63    DB  -1,     6Eh,    53h,     53h,       '-',    -1,     -1,         DEL_KEY  ; VK_DECIMAL
+tk64    DB  -1,     0E2h,   56h,     '<',       '>',    '|',    -1,         STD_KEY  ; <>|
+tk65    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk66    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk67    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk68    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk69    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk6A    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk6B    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk6C    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk6D    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk6E    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk6F    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk70    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk71    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk72    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk73    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk74    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk75    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk76    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk77    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk78    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk79    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk7A    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk7B    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk7C    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk7D    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk7E    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk7F    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk80    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk81    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk82    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk83    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk84    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk85    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk86    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk87    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk88    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk89    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk8A    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk8B    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk8C    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk8D    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk8E    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk8F    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk90    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk91    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk92    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk93    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk94    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk95    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk96    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk97    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk98    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk99    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk9A    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk9B    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk9C    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk9D    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk9E    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tk9F    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkA0    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkA1    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkA2    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkA3    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkA4    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkA5    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkA6    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkA7    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkA8    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkA9    DB  0,      0,      0,       0,     0,      0,      0,      0        ; 
+tkAA    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkAB    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkAC    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkAD    DB  0,      0,      0,       0,     0,      0,      0,      0        ; 
+tkAE    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkAF    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkB0    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkB1    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkB2    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkB3    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkB4    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkB5    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkB6    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkB7    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkB8    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkB9    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkBA    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkBB    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkBC    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkBD    DB  0,      0,      0,       0,     0,      0,      0,      0        ; 
+tkBE    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkBF    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkC0    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkC1    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkC2    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkC3    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkC4    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkC5    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkC6    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkC7    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkC8    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkC9    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkCA    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkCB    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkCC    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkCD    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkCE    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkCF    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkD0    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkD1    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkD2    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkD3    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkD4    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkD5    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkD6    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkD7    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkD8    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkD9    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkDA    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkDB    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkDC    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkDD    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkDE    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkDF    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkE0    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkE1    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkE2    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkE3    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkE4    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkE5    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkE6    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkE7    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkE8    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkE9    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkEA    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkEB    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkEC    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkED    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkEE    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkEF    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkF0    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkF1    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkF2    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkF3    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkF4    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkF5    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkF6    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkF7    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkF8    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkF9    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkFA    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkFB    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkFC    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkFD    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkFE    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
+tkFF    DB  0,      0,      0,       0,     0,      0,      0,      0        ;
 
 TranslateKey    Proc near
     push bx
@@ -1508,9 +1508,9 @@ TranslateKey    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReportKeyPress
+;           NAME:           ReportKeyPress
 ;
-;               DESCRIPTION:    Report a key is pressed
+;           DESCRIPTION:    Report a key is pressed
 ;
 ;       PARAMETERS:     AL      USB key
 ;
@@ -1558,9 +1558,9 @@ ReportKeyPress  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReportKeyRelease
+;           NAME:           ReportKeyRelease
 ;
-;               DESCRIPTION:    Report a key is release
+;           DESCRIPTION:    Report a key is release
 ;
 ;       PARAMETERS:     AL      USB key
 ;
@@ -1614,9 +1614,9 @@ ReportKeyRelease  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UpdateShiftState
+;           NAME:           UpdateShiftState
 ;
-;               DESCRIPTION:    Update shift-key state
+;           DESCRIPTION:    Update shift-key state
 ;
 ;       PARAMETERS:     AL      Modifier keys
 ;
@@ -1735,12 +1735,12 @@ UpdateShiftState    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:               HandlePressed
+;           NAME:           HandlePressed
 ;
-;               DESCRIPTION:    Handle newly pressed keys
+;           DESCRIPTION:    Handle newly pressed keys
 ;
 ;       PARAMETERS:     ES      USB report
-;                       FS      HID data sel
+;               FS      HID data sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1794,17 +1794,17 @@ hpDone:
     pop cx
     ret
 HandlePressed  Endp    
-        
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   HandleReleased
+;           NAME:           HandleReleased
 ;
-;               DESCRIPTION:    Handle newly released keys
+;           DESCRIPTION:    Handle newly released keys
 ;
 ;       PARAMETERS:     ES      USB report
-;                       FS      HID data sel
+;               FS      HID data sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1861,12 +1861,12 @@ HandleReleased  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   HandleKeyReport
+;           NAME:           HandleKeyReport
 ;
-;               DESCRIPTION:    Handles keyboard report
+;           DESCRIPTION:    Handles keyboard report
 ;
 ;       PARAMETERS:     ES      USB report
-;                       FS      HID data sel
+;               FS      HID data sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1929,9 +1929,9 @@ HandleKeyReport Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   HidKeyThread
+;           NAME:           HidKeyThread
 ;
-;               DESCRIPTION:    USB keyboard handler thread
+;           DESCRIPTION:    USB keyboard handler thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1979,7 +1979,7 @@ hktDataLoop:
     mov ax,fs:hid_key_sel
     or ax,ax
     jz hktExit
-;            
+;        
     GetKeyboardState
     mov cx,ax
     xor al,al
@@ -2051,11 +2051,11 @@ hid_key_thread_pr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           SetupBoot
+;           NAME:       SetupBoot
 ;
-;               description:    Setups boot device for keyboard or mouse
+;           description:    Setups boot device for keyboard or mouse
 ;
-;               Parameters:     BX      HID selector
+;           Parameters:     BX      HID selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2073,21 +2073,21 @@ SetupBootKeyboard    Proc near
     or ax,ax
     jnz sbkDone
 ;
-        mov ds:hid_key_thread,-1
+    mov ds:hid_key_thread,-1
     push ds
     push es
     push cx
     push si
     push di
 ;    
-        mov dx,cs
-        mov ds,dx
-        mov es,dx
-        mov di,OFFSET hid_key_thread_name
-        mov si,OFFSET hid_key_thread_pr
-        mov ax,2
-        mov cx,100h
-        CreateThread
+    mov dx,cs
+    mov ds,dx
+    mov es,dx
+    mov di,OFFSET hid_key_thread_name
+    mov si,OFFSET hid_key_thread_pr
+    mov ax,2
+    mov cx,100h
+    CreateThread
 ;
     pop di
     pop si
@@ -2140,12 +2140,12 @@ SetupBoot   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           usb_attach
+;           NAME:       usb_attach
 ;
-;               description:    USB attach callback
+;           description:    USB attach callback
 ;
-;               Parameters:     BX      Controller #
-;                       AL      Device address
+;           Parameters:     BX      Controller #
+;               AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2218,19 +2218,19 @@ uaDone:
     popad
     pop es
     pop ds
-    ret
+    retf32
 usb_attach  Endp
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           usb_detach
+;           NAME:       usb_detach
 ;
-;               description:    USB detach callback
+;           description:    USB detach callback
 ;
-;               Parameters:     BX      Controller #
-;                       AL      Device address
+;           Parameters:     BX      Controller #
+;               AL      Device address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2250,13 +2250,13 @@ usb_detach  Proc far
 ;
     mov ds:hid_key_sel,0
     mov ax,ds:hid_key_thread
-        or ax,ax
-        jz udKeyOk
+    or ax,ax
+    jz udKeyOk
 
 udStopKey:
     push bx
     mov bx,ds:hid_key_thread
-        Signal
+    Signal
     or bx,bx
     pop bx
     jz udKeyOk
@@ -2264,46 +2264,46 @@ udStopKey:
     mov ax,10
     WaitMilliSec
     jmp udStopKey       
-        
+    
 udKeyOk:
     call RemoveHidSel
     call FreeHidSel
-            
+        
 udDone:    
     popad
     pop es
     pop ds
-    ret
+    retf32
 usb_detach  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   init
+;           NAME:           init
 ;
-;               description:    Init device
+;           description:    Init device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
-        mov bx,SEG data
+    mov bx,SEG data
     mov ds,bx
     InitSection ds:hid_section
 ;       
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-    mov di,OFFSET usb_attach
+    mov edi,OFFSET usb_attach
     HookUsbAttach
 ;
-    mov di,OFFSET usb_detach
+    mov edi,OFFSET usb_detach
     HookUsbDetach
     clc
-        ret
+    ret
 init    Endp
 
 code    ENDS
 
-        END init
+    END init

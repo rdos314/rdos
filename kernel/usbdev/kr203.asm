@@ -1992,7 +1992,7 @@ aDone:
     FreeMem
 ;
     pop es    
-    ret
+    retf32
 usb_attach  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2009,7 +2009,7 @@ usb_attach  Endp
 
 usb_detach  Proc far
     int 3
-    ret
+    retf32
 usb_detach  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2032,10 +2032,10 @@ init    Proc far
     mov ds,ax
     mov es,ax
 ;
-    mov di,OFFSET usb_attach
+    mov edi,OFFSET usb_attach
     HookUsbAttach
 ;
-    mov di,OFFSET usb_detach
+    mov edi,OFFSET usb_detach
     HookUsbDetach
     clc
     ret
