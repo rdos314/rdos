@@ -661,6 +661,9 @@ int RdosCacheDir(int dir_sel, int dir_entry);
 void RdosInsertDirEntry(int dir_sel, int dir_entry);
 void RdosInsertFileEntry(int dir_sel, int file_entry);
 
+int RdosGetFileInfo(int handle, char *access, char *drive, int *file_sel);
+int RdosDuplFileInfo(char access, char drive, int file_sel);
+
 /* 32-bit compact memory model (device-drivers) */
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -1583,6 +1586,22 @@ void RdosInsertFileEntry(int dir_sel, int file_entry);
 #pragma aux RdosInsertFileEntry = \
     OsGate_insert_file_entry \
     parm [ebx] [edx];
+
+#pragma aux RdosGetFileInfo = \
+    OsGate_get_file_info \
+    CarryToBool \        
+    "mov es:[edi],cl" \
+    "mov fs:[esi],ch" \
+    "movzx eax,ax" \
+    "mov gs:[ebx],eax" \
+    parm [ebx] [es edi] [fs esi] [gs ebx] \
+    value [eax] \
+    modify [ecx];
+
+#pragma aux RdosDuplFileInfo = \
+    OsGate_dupl_file_info \
+    parm [cl] [ch] [eax] \
+    value [ebx];
 
 #ifdef __cplusplus
 }

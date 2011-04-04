@@ -796,7 +796,7 @@ init_mono_loop:
 	pop cx
 	pop es
 	pop ds
-	ret
+	retf32
 init_mode3	Endp
 
 
@@ -908,7 +908,7 @@ init_text_mode	Proc near
 	xor bl,bl
 	mov cx,80
 	mov dx,25
-	mov di,OFFSET init_mode3
+	mov edi,OFFSET init_mode3
 	RegisterVideoMode
 	ret
 init_text_mode	Endp

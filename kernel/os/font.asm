@@ -826,7 +826,7 @@ get_string_metrics16    Endp
 ;
 ;           DESCRIPTION:    Get mask for string
 ;
-;           PARAMETERS:         AL              char
+;           PARAMETERS:     AL              char
 ;                           BX              font handle
 ;
 ;           RETURNS:        CX              width
@@ -862,7 +862,7 @@ get_char_mask   Proc far
 get_char_mask_done:
     pop ebx
     pop ds
-    ret
+    retf32
 get_char_mask   Endp
 
 
@@ -943,7 +943,7 @@ init_font_loop:
     mov edi,OFFSET get_char_mask_name
     xor cl,cl
     mov ax,get_char_mask_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET open_font
     mov edi,OFFSET open_font_name

@@ -2066,38 +2066,32 @@ DuplFileInfo    MACRO
 
 ;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
 
-;       IN  EAX     Table name
-;       OUT ES      Table selector
-GetAcpiTable    MACRO
-    OldOsGate get_acpi_table_nr
-                    ENDM
-
-;       AL              char
-;       BX              font handle
-;       CX              width
-;       DX              height
-;       SI              row size
-;       ES:EDI      1-bit string bitmap
+;  IN   AL          char
+;  IN   BX          font handle
+;  OUT  CX          width
+;  OUT  DX          height
+;  OUT  SI          row size
+;  OUT  ES:EDI      1-bit string bitmap
 GetCharMask     MACRO
-    OldOsGate get_char_mask_nr
+    OsGate get_char_mask_nr
                     ENDM
 
-;       IN  AX      Mode nr
-;       IN  BL      bits / pixel
-;       IN  CX      x-resolution
-;       IN  DX      y-resolution
-;       ES:DI   Mode constructor
+;  IN  AX      Mode nr
+;  IN  BL      bits / pixel
+;  IN  CX      x-resolution
+;  IN  DX      y-resolution
+;  IN  ES:EDI  Mode constructor
 RegisterVideoMode       MACRO
-    OldOsGate register_video_mode_nr
+    OsGate register_video_mode_nr
                     ENDM
 
-;       IN  AL      Bits per pixel
-;       IN  CX      Width
-;       IN  DX      Height
-;       IN      ES          Video / bitmap selector
-;       OUT BX      Bitmap handle
+;  IN  AL      Bits per pixel
+;  IN  CX      Width
+;  IN  DX      Height
+;  IN  ES      Video / bitmap selector
+;  OUT BX      Bitmap handle
 InitVideoBitmap MACRO
-    OldOsGate init_video_bitmap_nr
+    OsGate init_video_bitmap_nr
                     ENDM
 
 ;   IN  AX      size
@@ -2106,15 +2100,21 @@ InitVideoBitmap MACRO
 ;   IN  ES:EDI  buffer
 ;   IN  DS      bitmap
 HideSpriteLine  MACRO
-    OldOsGate hide_sprite_line_nr
+    OsGate hide_sprite_line_nr
                     ENDM
 
 ;   IN  DS      bitmap
 ShowSpriteLine  MACRO
-    OldOsGate show_sprite_line_nr
+    OsGate show_sprite_line_nr
                     ENDM
 
 ;;;;;;;;;; MOUSE ;;;;;;;;;
+
+;       IN  EAX     Table name
+;       OUT ES      Table selector
+GetAcpiTable    MACRO
+    OldOsGate get_acpi_table_nr
+                    ENDM
 
 InitMouse       MACRO
     OldOsGate init_mouse_nr

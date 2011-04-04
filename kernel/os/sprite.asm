@@ -2053,7 +2053,7 @@ hide_sprite_l_next:
 
 hide_sprite_l_done:
     pop si
-    ret
+    retf32
 hide_sprite_line    Endp
 
 
@@ -2214,7 +2214,7 @@ show_sprite_l_next:
     pop ds:v_x_min
 
 show_sprite_l_done:
-    ret
+    retf32
 show_sprite_line    Endp
 
 
@@ -2273,13 +2273,13 @@ init_sprite     PROC near
     mov edi,OFFSET hide_sprite_line_name
     xor cl,cl
     mov ax,hide_sprite_line_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET show_sprite_line
     mov edi,OFFSET show_sprite_line_name
     xor cl,cl
     mov ax,show_sprite_line_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     ret
 init_sprite     ENDP

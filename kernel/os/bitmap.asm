@@ -234,7 +234,7 @@ init_video_done:
     pop si
     pop cx
     pop ds
-    ret
+    retf32
 init_video_bitmap       Endp
 
 
@@ -787,7 +787,7 @@ init_bitmap     PROC near
     mov edi,OFFSET init_video_bitmap_name
     xor cl,cl
     mov ax,init_video_bitmap_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET create_bitmap
     mov edi,OFFSET create_bitmap_name

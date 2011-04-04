@@ -40,12 +40,12 @@ INCLUDE ..\video.inc
 video_mode_entry    STRUC
 
 mode_link           DW ?
-mode_nr         DW ?
-mode_create         DD ?
-mode_x_resol    DW ?
-mode_y_resol    DW ?
-mode_bpp    DB ?
-mode_resv       DB ?
+mode_nr             DW ?
+mode_create         DD ?,?
+mode_x_resol        DW ?
+mode_y_resol        DW ?
+mode_bpp            DB ?
+mode_resv           DB ?
 
 video_mode_entry    ENDS
 
@@ -91,10 +91,10 @@ code    SEGMENT byte public use16 'CODE'
 ;           DESCRIPTION:    Register a video mode
 ;
 ;           PARAMETERS:         AX          Mode
-;               BL      BPP
-;               CX      x-resolution
-;               DX      y-resolution
-;                           ES:DI   Mode constructor
+;                               BL      BPP
+;                               CX      x-resolution
+;                               DX      y-resolution
+;                               ES:EDI   Mode constructor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -113,9 +113,9 @@ register_video_mode     PROC far
     AllocateSmallGlobalMem
     pop ax
     mov es:mode_nr,ax
-    mov word ptr es:mode_create,di
+    mov dword ptr es:mode_create,edi
     pop ax
-    mov word ptr es:mode_create+2,ax
+    mov word ptr es:mode_create+4,ax
     mov es:mode_bpp,bl
     mov es:mode_x_resol,cx
     mov es:mode_y_resol,dx
@@ -127,7 +127,7 @@ register_video_mode     PROC far
     pop eax
     pop es
     pop ds
-    ret
+    retf32
 register_video_mode     ENDP
 
     
@@ -279,7 +279,7 @@ set_video_mode_loop:
     cmp ax,es:mode_nr
     jnz set_video_mode_next
 ;
-    call es:mode_create
+    call fword ptr es:mode_create
     jc set_video_mode_done
 ;
     mov bx,video_local_sel
@@ -3099,7 +3099,7 @@ init_video      PROC near
     mov edi,OFFSET register_video_mode_name
     xor cl,cl
     mov ax,register_video_mode_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET invert_mouse
     mov edi,OFFSET invert_mouse_name

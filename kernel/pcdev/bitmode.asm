@@ -212,7 +212,7 @@ init_alias_bit_loop:
 	pop cx
 	pop es
 	pop ds
-	ret
+	retf32
 init_mode12	Endp
 
 
@@ -331,7 +331,7 @@ init_bit_mode	Proc near
 	xor bl,bl
 	mov cx,640
 	mov dx,480
-	mov di,OFFSET init_mode12
+	mov edi,OFFSET init_mode12
 ;	RegisterVideoMode
 	ret
 init_bit_mode	Endp
