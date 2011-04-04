@@ -975,7 +975,7 @@ curDone:
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 create_usb_req   Endp
 
 
@@ -1016,7 +1016,7 @@ awucDone:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 add_write_usb_control_req   Endp
 
 
@@ -1057,7 +1057,7 @@ awudDone:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 add_write_usb_data_req   Endp
 
 
@@ -1098,7 +1098,7 @@ arudDone:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 add_read_usb_data_req   Endp
 
 
@@ -1136,7 +1136,7 @@ ausiDone:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 add_usb_status_in_req   Endp
 
 
@@ -1174,7 +1174,7 @@ ausoDone:
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 add_usb_status_out_req   Endp
 
 
@@ -1376,7 +1376,7 @@ surDone:
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 start_usb_req   Endp
 
 
@@ -1429,7 +1429,7 @@ sturEnd:
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 stop_usb_req   Endp
 
 
@@ -1467,7 +1467,7 @@ iursDone:
     pop ebx
     pop ax
     pop ds
-    ret
+    retf32
 is_usb_req_started   Endp
 
 
@@ -1515,7 +1515,7 @@ iurrDone:
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 is_usb_req_ready   Endp
 
 
@@ -1578,7 +1578,7 @@ gurdDone:
     pop ax
     pop fs
     pop ds
-    ret
+    retf32
 get_usb_req_data   Endp
 
 
@@ -1649,7 +1649,7 @@ crDone:
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 close_usb_req   Endp
 
 
@@ -2893,7 +2893,7 @@ get_usb_info    Proc far
 guiDone:
     pop cx
     pop ebx
-    ret
+    retf32
 get_usb_info    Endp
 
 
@@ -3014,79 +3014,79 @@ init    Proc far
     mov edi,OFFSET create_usb_req_name
     xor cl,cl
     mov ax,create_usb_req_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET add_write_usb_control_req
     mov edi,OFFSET add_write_usb_control_req_name
     xor cl,cl
     mov ax,add_write_usb_control_req_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET add_write_usb_data_req
     mov edi,OFFSET add_write_usb_data_req_name
     xor cl,cl
     mov ax,add_write_usb_data_req_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET add_read_usb_data_req
     mov edi,OFFSET add_read_usb_data_req_name
     xor cl,cl
     mov ax,add_read_usb_data_req_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET add_usb_status_in_req
     mov edi,OFFSET add_usb_status_in_req_name
     xor cl,cl
     mov ax,add_usb_status_in_req_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET add_usb_status_out_req
     mov edi,OFFSET add_usb_status_out_req_name
     xor cl,cl
     mov ax,add_usb_status_out_req_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET start_usb_req
     mov edi,OFFSET start_usb_req_name
     xor cl,cl
     mov ax,start_usb_req_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET stop_usb_req
     mov edi,OFFSET stop_usb_req_name
     xor cl,cl
     mov ax,stop_usb_req_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET is_usb_req_started
     mov edi,OFFSET is_usb_req_started_name
     xor cl,cl
     mov ax,is_usb_req_started_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET is_usb_req_ready
     mov edi,OFFSET is_usb_req_ready_name
     xor cl,cl
     mov ax,is_usb_req_ready_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_usb_req_data
     mov edi,OFFSET get_usb_req_data_name
     xor cl,cl
     mov ax,get_usb_req_data_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET close_usb_req
     mov edi,OFFSET close_usb_req_name
     xor cl,cl
     mov ax,close_usb_req_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET get_usb_info
     mov edi,OFFSET get_usb_info_name
     xor cl,cl
     mov ax,get_usb_info_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov ebx,OFFSET get_usb_device16
     mov esi,OFFSET get_usb_device32

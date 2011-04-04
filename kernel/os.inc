@@ -2347,78 +2347,80 @@ HookUsbDetach   MACRO
 ; IN  BX    Pipe handle
 ; OUT BX    Req handle
 CreateUsbReq      MACRO
-    OldOsGate create_usb_req_nr
+    OsGate create_usb_req_nr
                         ENDM
                         
 ; IN  BX    Req handle
 ; IN  CX    Size of data
 ; IN  ES    Selector (do not free)
 AddWriteUsbContolReq      MACRO
-    OldOsGate add_write_usb_control_req_nr
+    OsGate add_write_usb_control_req_nr
                         ENDM
                         
 ; IN  BX    Req handle
 ; IN  CX    Size of data
 ; IN  ES    Selector (do not free)
 AddWriteUsbDataReq      MACRO
-    OldOsGate add_write_usb_data_req_nr
+    OsGate add_write_usb_data_req_nr
                         ENDM
 
 ; IN  BX    Req handle
 ; IN  CX    Size of data
 ; IN  ES    Selector (do not free)
 AddReadUsbDataReq      MACRO
-    OldOsGate add_read_usb_data_req_nr
+    OsGate add_read_usb_data_req_nr
                         ENDM
 
 ; IN  BX    Req handle
 AddUsbStatusInReq      MACRO
-    OldOsGate add_usb_status_in_req_nr
+    OsGate add_usb_status_in_req_nr
                         ENDM
 
 ; IN  BX    Req handle
 AddUsbStatusOutReq      MACRO
-    OldOsGate add_usb_status_out_req_nr
+    OsGate add_usb_status_out_req_nr
                         ENDM
 
 ; IN  AX    Thread to signal on completion
 ; IN  BX    Req handle
 ; IN  CX    Size of out buffer
 StartUsbReq      MACRO
-    OldOsGate start_usb_req_nr
+    OsGate start_usb_req_nr
                         ENDM
 
 ; IN  BX    Req handle
 StopUsbReq      MACRO
-    OldOsGate stop_usb_req_nr
+    OsGate stop_usb_req_nr
                         ENDM
 
 ; IN  BX    Req handle
 ; OUT NC    Req is started
 IsUsbReqStarted      MACRO
-    OldOsGate is_usb_req_started_nr
+    OsGate is_usb_req_started_nr
                         ENDM
 
 ; IN  BX    Req handle
 ; OUT NC    Req is done
 IsUsbReqReady      MACRO
-    OldOsGate is_usb_req_ready_nr
+    OsGate is_usb_req_ready_nr
                         ENDM
 
 ; IN  BX    Req handle
 ; OUT CX    Bytes transfered
 GetUsbReqData      MACRO
-    OldOsGate get_usb_req_data_nr
+    OsGate get_usb_req_data_nr
                         ENDM
 
 ; IN  BX    Req handle
 CloseUsbReq      MACRO
-    OldOsGate close_usb_req_nr
+    OsGate close_usb_req_nr
                         ENDM
 
-; IN  BX    Handle
+; IN  BX      Handle
+; OUT FS      Pipe sel
+; OUT DS      Function sel
 GetUsbInfo      MACRO
-    OldOsGate get_usb_info_nr
+    OsGate get_usb_info_nr
                         ENDM
 
 ;;;;;;;;;; Audio codec ;;;;;;;;;
