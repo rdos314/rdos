@@ -1557,7 +1557,7 @@ get_file_info   PROC far
 get_file_info_done:
     pop ebx
     pop ds
-    ret
+    retf32
 get_file_info   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1596,7 +1596,7 @@ dupl_file_info  PROC far
     mov bx,[ebx].hh_handle
     clc
     pop ds
-    ret
+    retf32
 dupl_file_info  ENDP
 
 
@@ -2672,13 +2672,13 @@ init_file       PROC near
     mov edi,OFFSET get_file_info_name
     xor cl,cl
     mov ax,get_file_info_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET dupl_file_info
     mov edi,OFFSET dupl_file_info_name
     xor cl,cl
     mov ax,dupl_file_info_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET close_file
     mov edi,OFFSET close_file_name

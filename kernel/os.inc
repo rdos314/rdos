@@ -2048,27 +2048,29 @@ InsertFileEntry MACRO
 
 ;;;;;;;;;;;; FILE ;;;;;;;;;;;
 
+;  IN   BX          File handle
+;  OUT  CL          Acess
+;  OUT  CH          Drive
+;  OUT  AX          File selector
+GetFileInfo     MACRO
+    OsGate get_file_info_nr
+                    ENDM
+
+;  IN   CL          Access
+;  IN   CH          Drive
+;  IN   AX          File selector
+;  OUT  BX          File handle
+DuplFileInfo    MACRO
+    OsGate dupl_file_info_nr
+                    ENDM
+
+;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
+
 ;       IN  EAX     Table name
 ;       OUT ES      Table selector
 GetAcpiTable    MACRO
     OldOsGate get_acpi_table_nr
                     ENDM
-
-;       BX          FILE HANDLE
-;       CL          ACCESS
-;       AX          FILE SELECTOR
-GetFileInfo     MACRO
-    OldOsGate get_file_info_nr
-                    ENDM
-
-;       CL          ACCESS
-;       AX          FILE SELECTOR
-;       BX          FILE HANDLE
-DuplFileInfo    MACRO
-    OldOsGate dupl_file_info_nr
-                    ENDM
-
-;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
 
 ;       AL              char
 ;       BX              font handle
