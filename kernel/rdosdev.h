@@ -691,6 +691,19 @@ void RdosNotifyUsbDetach(int usb_dev_sel, char port);
 void RdosHookUsbAttach(__rdos_usb_state_callback *callb_proc);
 void RdosHookUsbDetach(__rdos_usb_state_callback *callb_proc);
 
+int RdosCreateUsbReq(int pipe_handle);
+void RdosAddWriteUsbControlReq(int req_handle, int size, int sel);
+void RdosAddWriteUsbDataReq(int req_handle, int size, int sel);
+void RdosAddReadUsbDataReq(int req_handle, int size, int sel);
+void RdosAddUsbStatusIn(int req_handle);
+void RdosAddUsbStatusOut(int req_handle);
+void RdosStartUsbReq(int req_handle, int signal_thread_sel, int out_buf_size);
+void RdosStopUsbReq(int req_handle);
+int RdosIsUsbReqStarted(int req_handle);
+int RdosIsUsbReqReady(int req_handle);
+int RdosGetUsbReqData(int req_handle);
+void RdosCloseUsbReq(int req_handle);
+
 /* 32-bit compact memory model (device-drivers) */
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -1706,6 +1719,61 @@ void RdosHookUsbDetach(__rdos_usb_state_callback *callb_proc);
 #pragma aux RdosHookUsbDetach = \
     OsGate_hook_usb_detach \
     parm [es edi];
+
+#pragma aux RdosCreateUsbReq = \
+    OsGate_create_usb_req \
+    parm [ebx] \
+    value [ebx];
+
+#pragma aux RdosAddWriteUsbControlReq = \
+    OsGate_add_write_usb_control_req \
+    parm [ebx] [ecx] [es];
+
+#pragma aux RdosAddWriteUsbDataReq = \
+    OsGate_add_write_usb_data_req \
+    parm [ebx] [ecx] [es];
+
+#pragma aux RdosAddReadUsbDataReq = \
+    OsGate_add_read_usb_data_req \
+    parm [ebx] [ecx] [es];
+
+#pragma aux RdosAddUsbStatusIn = \
+    OsGate_add_usb_status_in \
+    parm [ebx];
+
+#pragma aux RdosAddUsbStatusOut = \
+    OsGate_add_usb_status_out \
+    parm [ebx];
+
+#pragma aux RdosStartUsbReq = \
+    OsGate_start_usb_req \
+    parm [ebx] [eax] [ecx];
+
+#pragma aux RdosStopUsbReq = \
+    OsGate_stop_usb_req \
+    parm [ebx];
+
+#pragma aux RdosIsUsbReqStarted = \
+    OsGate_is_usb_req_started \
+    CarryToBool \        
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosIsUsbReqReady = \
+    OsGate_is_usb_req_ready \
+    CarryToBool \        
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetUsbReqData = \
+    OsGate_get_usb_req_data \
+    "movzx ecx,cx" \
+    parm [ebx] \
+    value [ecx];
+
+#pragma aux RdosCloseUsbReq = \
+    OsGate_close_usb_req \
+    parm [ebx];
 
 #ifdef __cplusplus
 }
