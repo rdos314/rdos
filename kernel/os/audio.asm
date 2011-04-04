@@ -727,7 +727,7 @@ gaobDone:
     pop ebx
     pop ax
     pop ds
-    ret
+    retf32
 get_audio_out_buf   Endp
 
 
@@ -766,7 +766,7 @@ paobDone:
     pop ebx
     pop ax
     pop ds
-    ret
+    retf32
 post_audio_out_buf   Endp
 
 
@@ -806,7 +806,7 @@ iaocDone:
     pop ebx
     pop ax
     pop ds
-    ret
+    retf32
 is_audio_out_completed   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1230,17 +1230,17 @@ init    PROC far
     mov esi,OFFSET get_audio_out_buf
     mov edi,OFFSET get_audio_out_buf_name
     mov ax,get_audio_out_buf_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET post_audio_out_buf
     mov edi,OFFSET post_audio_out_buf_name
     mov ax,post_audio_out_buf_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET is_audio_out_completed
     mov edi,OFFSET is_audio_out_completed_name
     mov ax,is_audio_out_completed_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov bx,SEG data
     mov ds,bx

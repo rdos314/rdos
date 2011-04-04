@@ -32,26 +32,26 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\system.inc
 
-        .386p
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
 
-        assume cs:code
+    assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetMasterVolume
+;           NAME:           GetMasterVolume
 ;
-;               DESCRIPTION:    Get audio master volume
+;           DESCRIPTION:    Get audio master volume
 ;
-;               RETURNS:                AL      Left channel volume
-;                       AH      Right channel volume
+;           RETURNS:        AL      Left channel volume
+;               AH      Right channel volume
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_master_volume_name                  DB 'Get Master Volume',0
+get_master_volume_name          DB 'Get Master Volume',0
 
 get_master_volume       PROC far
     push bx
@@ -65,30 +65,30 @@ get_master_volume       PROC far
     xchg al,ah
     and ax,1F1Fh
     shl ax,2
-    jmp gmvDone        
+    jmp gmvDone    
 
 gmvMute:
     mov ax,8080h
 
 gmvDone:
     pop bx    
-        retf32
+    retf32
 get_master_volume       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetMasterVolume
+;           NAME:           SetMasterVolume
 ;
-;               DESCRIPTION:    Set audio master volume
+;           DESCRIPTION:    Set audio master volume
 ;
-;               PARAMETERS:             AL      Left channel volume
-;                       AH      Right channel volume
+;           PARAMETERS:         AL      Left channel volume
+;               AH      Right channel volume
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_master_volume_name                  DB 'Set Master Volume',0
+set_master_volume_name          DB 'Set Master Volume',0
 
 set_master_volume       PROC far
     push ax
@@ -100,7 +100,7 @@ set_master_volume       PROC far
     and ax,7F7Fh
     shr ax,2
 
-smvSet:        
+smvSet:    
     mov bx,2
     WriteCodec
 ;    
@@ -112,23 +112,23 @@ smvSet:
 ;
     pop bx    
     pop ax
-        retf32
+    retf32
 set_master_volume       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetLineOutVolume
+;           NAME:           GetLineOutVolume
 ;
-;               DESCRIPTION:    Get line out volume
+;           DESCRIPTION:    Get line out volume
 ;
-;               RETURNS:                AL      Left channel volume
-;                       AH      Right channel volume
+;           RETURNS:        AL      Left channel volume
+;               AH      Right channel volume
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_line_out_volume_name                        DB 'Get Line Out Volume',0
+get_line_out_volume_name            DB 'Get Line Out Volume',0
 
 get_line_out_volume     PROC far
     push bx
@@ -142,30 +142,30 @@ get_line_out_volume     PROC far
     xchg al,ah
     and ax,1F1Fh
     shl ax,2
-    jmp glovDone        
+    jmp glovDone    
 
 glovMute:
     mov ax,8080h
 
 glovDone:
     pop bx    
-        retf32
+    retf32
 get_line_out_volume     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetLineOutVolume
+;           NAME:           SetLineOutVolume
 ;
-;               DESCRIPTION:    Set line out volume
+;           DESCRIPTION:    Set line out volume
 ;
-;               PARAMETERS:             AL      Left channel volume
-;                       AH      Right channel volume
+;           PARAMETERS:         AL      Left channel volume
+;               AH      Right channel volume
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_line_out_volume_name                        DB 'Set Line Out Volume',0
+set_line_out_volume_name            DB 'Set Line Out Volume',0
 
 set_line_out_volume     PROC far
     push ax
@@ -177,7 +177,7 @@ set_line_out_volume     PROC far
     and ax,7F7Fh
     shr ax,2
 
-slovSet:        
+slovSet:    
     xor ax,ax
 ;    mov ax,0808h
     mov bx,18h
@@ -185,22 +185,22 @@ slovSet:
 ;
     pop bx    
     pop ax
-        retf32
+    retf32
 set_line_out_volume     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetDacRate
+;           NAME:           GetDacRate
 ;
-;               DESCRIPTION:    Get audio DAC rate
+;           DESCRIPTION:    Get audio DAC rate
 ;
-;               RETURNS:                AX      Sampling rate in Hz
+;           RETURNS:        AX      Sampling rate in Hz
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_dac_rate_name                       DB 'Get Audio DAC Rate',0
+get_dac_rate_name               DB 'Get Audio DAC Rate',0
 
 get_dac_rate    PROC far
     push bx
@@ -209,22 +209,22 @@ get_dac_rate    PROC far
     ReadCodec
 ;    
     pop bx    
-        ret
+    retf32
 get_dac_rate    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetDacRate
+;           NAME:           SetDacRate
 ;
-;               DESCRIPTION:    Set audio DAC rate
+;           DESCRIPTION:    Set audio DAC rate
 ;
-;               PARAMETERS:             AX      Sampling rate in Hz
+;           PARAMETERS:         AX      Sampling rate in Hz
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_dac_rate_name                       DB 'Set Audio DAC Rate',0
+set_dac_rate_name               DB 'Set Audio DAC Rate',0
 
 set_dac_rate    PROC far
     push bx
@@ -240,22 +240,22 @@ set_dac_rate    PROC far
     WriteCodec
 ;    
     pop bx    
-        ret
+    retf32
 set_dac_rate    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   GetAdcRate
+;           NAME:           GetAdcRate
 ;
-;               DESCRIPTION:    Get audio ADC rate
+;           DESCRIPTION:    Get audio ADC rate
 ;
-;               RETURNS:                AX      Sampling rate in Hz
+;           RETURNS:        AX      Sampling rate in Hz
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_adc_rate_name                       DB 'Get Audio ADC Rate',0
+get_adc_rate_name               DB 'Get Audio ADC Rate',0
 
 get_adc_rate    PROC far
     push bx
@@ -264,22 +264,22 @@ get_adc_rate    PROC far
     ReadCodec
 ;    
     pop bx    
-        ret
+    retf32
 get_adc_rate    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetAdcRate
+;           NAME:           SetAdcRate
 ;
-;               DESCRIPTION:    Set audio ADC rate
+;           DESCRIPTION:    Set audio ADC rate
 ;
-;               PARAMETERS:             AX      Sampling rate in Hz
+;           PARAMETERS:         AX      Sampling rate in Hz
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_adc_rate_name                       DB 'Set Audio ADC Rate',0
+set_adc_rate_name               DB 'Set Audio ADC Rate',0
 
 set_adc_rate    PROC far
     push bx
@@ -295,22 +295,22 @@ set_adc_rate    PROC far
     WriteCodec
 ;    
     pop bx    
-        ret
+    retf32
 set_adc_rate    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   SetCodecGpio0
+;           NAME:           SetCodecGpio0
 ;
-;               DESCRIPTION:    Set Codec GPIO 0 pin
+;           DESCRIPTION:    Set Codec GPIO 0 pin
 ;
-;               PARAMETERS:             AL      Pin value
+;           PARAMETERS:         AL      Pin value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_codec_gpio0_name                    DB 'Set Codec GPIO 0',0
+set_codec_gpio0_name            DB 'Set Codec GPIO 0',0
 
 set_codec_gpio0 PROC far
     push ax
@@ -332,81 +332,81 @@ set_codec_gpio0 PROC far
     pop dx
     pop bx    
     pop ax 
-        retf32
+    retf32
 set_codec_gpio0 ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:               Init
+;           NAME:           Init
 ;
-;               DESCRIPTION:    Module initialization
+;           DESCRIPTION:    Module initialization
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-        mov esi,OFFSET get_dac_rate
-        mov edi,OFFSET get_dac_rate_name
-        xor cl,cl
-        mov ax,get_audio_dac_rate_nr
-        RegisterOldOsGate
+    mov esi,OFFSET get_dac_rate
+    mov edi,OFFSET get_dac_rate_name
+    xor cl,cl
+    mov ax,get_audio_dac_rate_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET set_dac_rate
-        mov edi,OFFSET set_dac_rate_name
-        xor cl,cl
-        mov ax,set_audio_dac_rate_nr
-        RegisterOldOsGate
+    mov esi,OFFSET set_dac_rate
+    mov edi,OFFSET set_dac_rate_name
+    xor cl,cl
+    mov ax,set_audio_dac_rate_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET get_adc_rate
-        mov edi,OFFSET get_adc_rate_name
-        xor cl,cl
-        mov ax,get_audio_adc_rate_nr
-        RegisterOldOsGate
+    mov esi,OFFSET get_adc_rate
+    mov edi,OFFSET get_adc_rate_name
+    xor cl,cl
+    mov ax,get_audio_adc_rate_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET set_adc_rate
-        mov edi,OFFSET set_adc_rate_name
-        xor cl,cl
-        mov ax,set_audio_adc_rate_nr
-        RegisterOldOsGate
+    mov esi,OFFSET set_adc_rate
+    mov edi,OFFSET set_adc_rate_name
+    xor cl,cl
+    mov ax,set_audio_adc_rate_nr
+    RegisterOsGate
 ;
-        mov esi,OFFSET get_master_volume
-        mov edi,OFFSET get_master_volume_name
-        xor dx,dx
-        mov ax,get_master_volume_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET get_master_volume
+    mov edi,OFFSET get_master_volume_name
+    xor dx,dx
+    mov ax,get_master_volume_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_master_volume
-        mov edi,OFFSET set_master_volume_name
-        xor dx,dx
-        mov ax,set_master_volume_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_master_volume
+    mov edi,OFFSET set_master_volume_name
+    xor dx,dx
+    mov ax,set_master_volume_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET get_line_out_volume
-        mov edi,OFFSET get_line_out_volume_name
-        xor dx,dx
-        mov ax,get_line_out_volume_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET get_line_out_volume
+    mov edi,OFFSET get_line_out_volume_name
+    xor dx,dx
+    mov ax,get_line_out_volume_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_line_out_volume
-        mov edi,OFFSET set_line_out_volume_name
-        xor dx,dx
-        mov ax,set_line_out_volume_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_line_out_volume
+    mov edi,OFFSET set_line_out_volume_name
+    xor dx,dx
+    mov ax,set_line_out_volume_nr
+    RegisterBimodalUserGate
 ;
-        mov esi,OFFSET set_codec_gpio0
-        mov edi,OFFSET set_codec_gpio0_name
-        xor dx,dx
-        mov ax,set_codec_gpio0_nr
-        RegisterBimodalUserGate
+    mov esi,OFFSET set_codec_gpio0
+    mov edi,OFFSET set_codec_gpio0_name
+    xor dx,dx
+    mov ax,set_codec_gpio0_nr
+    RegisterBimodalUserGate
 ;
-        ret
+    ret
 init    ENDP
 
 code    ENDS
 
-        END init
+    END init

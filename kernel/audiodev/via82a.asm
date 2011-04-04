@@ -227,7 +227,7 @@ rcDone:
     pop dx
     pop cx
     pop ds    
-    ret
+    retf32
 read_codec  Endp
 
 
@@ -306,7 +306,7 @@ wcDone:
     pop dx
     pop cx
     pop ds    
-    ret
+    retf32
 write_codec  Endp
 
 
@@ -485,7 +485,7 @@ open_audio_out  Proc far
     pop bx
     pop eax
     pop ds
-    ret
+    retf32
 open_audio_out  Endp
 
 
@@ -520,7 +520,7 @@ close_audio_out Proc far
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 close_audio_out  Endp
 
 
@@ -618,7 +618,7 @@ saoDone:
     pop fs
     pop es
     pop ds    
-    ret
+    retf32
 send_audio_out  Endp
 
 
@@ -753,31 +753,31 @@ init    PROC far
     mov edi,OFFSET read_codec_name
     xor cl,cl
     mov ax,read_codec_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET write_codec
     mov edi,OFFSET write_codec_name
     xor cl,cl
     mov ax,write_codec_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET open_audio_out
     mov edi,OFFSET open_audio_out_name
     xor cl,cl
     mov ax,open_audio_out_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET close_audio_out
     mov edi,OFFSET close_audio_out_name
     xor cl,cl
     mov ax,close_audio_out_nr
-    RegisterOldOsGate
+    RegisterOsGate
 ;
     mov esi,OFFSET send_audio_out
     mov edi,OFFSET send_audio_out_name
     xor cl,cl
     mov ax,send_audio_out_nr
-    RegisterOldOsGate
+    RegisterOsGate
     clc
     ret
 init    ENDP

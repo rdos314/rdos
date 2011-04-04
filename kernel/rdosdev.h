@@ -704,6 +704,18 @@ int RdosIsUsbReqReady(int req_handle);
 int RdosGetUsbReqData(int req_handle);
 void RdosCloseUsbReq(int req_handle);
 
+short int RdosReadCodec(int reg);
+void RdosWriteCodec(int reg, short int val);
+
+short int RdosGetAudioDacRate();
+void RdosSetAudioDacRate(short int rate);
+short int RdosGetAudioAdcRate();
+void RdosSetAudioAdcRate(short int rate);
+
+void RdosOpenAudioOut(short int rate);
+void RdosCloseAudioOut();
+void RdosSendAudioOut(int left_sel, int right_sel, int samples);
+
 /* 32-bit compact memory model (device-drivers) */
 
 // check carry flag, and set eax=0 if set and eax=1 if clear
@@ -1774,6 +1786,48 @@ void RdosCloseUsbReq(int req_handle);
 #pragma aux RdosCloseUsbReq = \
     OsGate_close_usb_req \
     parm [ebx];
+
+#pragma aux RdosReadCodec = \
+    OsGate_read_codec \
+    parm [ebx] \
+    value [ax];
+
+#pragma aux RdosWriteCodec = \
+    OsGate_write_codec \
+    parm [ebx] [ax];
+
+#pragma aux RdosGetAudioDacRate = \
+    OsGate_get_audio_dac_rate \
+    value [ax];
+
+#pragma aux RdosSetAudioDacRate = \
+    OsGate_set_audio_dac_rate \
+    parm [ax];
+
+#pragma aux RdosGetAudioAdcRate = \
+    OsGate_get_audio_adc_rate \
+    value [ax];
+
+#pragma aux RdosSetAudioAdcRate = \
+    OsGate_set_audio_adc_rate \
+    parm [ax];
+
+#pragma aux RdosOpenAudioOut = \
+    OsGate_open_audio_out \
+    parm [ax];
+
+#pragma aux RdosCloseAudioOut = \
+    OsGate_close_audio_out;
+
+#pragma aux RdosSendAudioOut = \
+    "push ds" \
+    "push es" \
+    "mov ds,eax" \
+    "mov es,edx" \
+    OsGate_send_audio_out \
+    "pop es" \    
+    "pop ds" \    
+    parm [eax] [edx] [ecx];
 
 #ifdef __cplusplus
 }

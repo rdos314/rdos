@@ -2428,76 +2428,71 @@ GetUsbInfo      MACRO
 ; IN    BX Register
 ; OUT   AX Value
 ReadCodec      MACRO
-    OldOsGate read_codec_nr
+    OsGate read_codec_nr
                         ENDM
 
 ; IN    BX Register
 ; IN    AX Value
 WriteCodec      MACRO
-    OldOsGate write_codec_nr
+    OsGate write_codec_nr
                         ENDM
 
 ;;;;;;;;;; Audio ;;;;;;;;;
 
 ; OUT   AX Sample rate
 GetAudioDacRate      MACRO
-    OldOsGate get_audio_dac_rate_nr
+    OsGate get_audio_dac_rate_nr
                         ENDM
 
 
 ; IN    AX Sample rate
 SetAudioDacRate      MACRO
-    OldOsGate set_audio_dac_rate_nr
+    OsGate set_audio_dac_rate_nr
                         ENDM
-
 
 ; OUT   AX Sample rate
 GetAudioAdcRate      MACRO
-    OldOsGate get_audio_adc_rate_nr
+    OsGate get_audio_adc_rate_nr
                         ENDM
-
 
 ; IN    AX Sample rate
 SetAudioAdcRate      MACRO
-    OldOsGate set_audio_adc_rate_nr
+    OsGate set_audio_adc_rate_nr
                         ENDM
 
 ; IN    AX Sample rate
 OpenAudioOut      MACRO
-    OldOsGate open_audio_out_nr
+    OsGate open_audio_out_nr
                         ENDM
-
 
 CloseAudioOut      MACRO
-    OldOsGate close_audio_out_nr
+    OsGate close_audio_out_nr
                         ENDM
-
 
 ; IN    DS Left channel
 ; IN    ES Right channel
 ; IN    CX Samples
 SendAudioOut      MACRO
-    OldOsGate send_audio_out_nr
+    OsGate send_audio_out_nr
                         ENDM
-
 
 ; IN    BX  Handle
 ; OUT   CX  Buffer size
 ; OUT   SI  Left channel sel
 ; OUT   DI  Right channel sel
 GetAudioOutBuffers      MACRO
-    OldOsGate get_audio_out_buf_nr
+    OsGate get_audio_out_buf_nr
                         ENDM
 
 ; IN    BX  Handle
 PostAudioOutBuffers      MACRO
-    OldOsGate post_audio_out_buf_nr
+    OsGate post_audio_out_buf_nr
                         ENDM
 
 ; IN    BX  Handle
 ; OUT   NC  Completed
 IsAudioOutCompleted      MACRO
-    OldOsGate is_audio_out_completed_nr
+    OsGate is_audio_out_completed_nr
                         ENDM
 
 ;;;;;;;;;; Printer ;;;;;;;;;
