@@ -37,6 +37,7 @@ INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE tcp.inc
+INCLUDE ..\apicheck.inc
 
 Reverse MACRO
     xchg al,ah
@@ -3933,6 +3934,12 @@ delete_listen_handle    Endp
 delete_tcp_connection_name DB 'Delete TCP Connection',0
 
 delete_tcp_connection   Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ax
     push ebx
@@ -3970,6 +3977,12 @@ delete_tcp_done:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 delete_tcp_connection   Endp
 
@@ -3990,6 +4003,12 @@ delete_tcp_connection   Endp
 is_tcp_connection_idle_name DB 'Is TCP Connection Idle?',0
 
 is_tcp_connection_idle  Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ax
     push ebx
@@ -4027,6 +4046,12 @@ is_tcp_idle_done:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 is_tcp_connection_idle  Endp
 
@@ -4045,6 +4070,12 @@ is_tcp_connection_idle  Endp
 is_tcp_connection_closed_name DB 'Is TCP Connection Closed?',0
 
 is_tcp_connection_closed    Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ax
     push ebx
@@ -4082,6 +4113,12 @@ is_tcp_closed_done:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 is_tcp_connection_closed    Endp
 
@@ -4102,6 +4139,11 @@ is_tcp_connection_closed    Endp
 get_remote_tcp_connection_ip_name DB 'Get Remote TCP Connection IP',0
 
 get_remote_tcp_connection_ip    Proc far
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
 ;
@@ -4124,6 +4166,11 @@ get_rem_ip_fail:
 get_rem_ip_done:
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 get_remote_tcp_connection_ip    Endp
 
@@ -4144,6 +4191,11 @@ get_remote_tcp_connection_ip    Endp
 get_remote_tcp_connection_port_name DB 'Get Remote TCP Connection Port',0
 
 get_remote_tcp_connection_port  Proc far
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
 ;
@@ -4166,6 +4218,11 @@ get_rem_port_fail:
 get_rem_port_done:
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 get_remote_tcp_connection_port  Endp
 
@@ -4186,6 +4243,11 @@ get_remote_tcp_connection_port  Endp
 get_local_tcp_connection_port_name DB 'Get Local TCP Connection Port',0
 
 get_local_tcp_connection_port   Proc far
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
 ;
@@ -4208,6 +4270,11 @@ get_local_port_fail:
 get_local_port_done:
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 get_local_tcp_connection_port   Endp
 
@@ -5176,6 +5243,11 @@ push_tcp_connection     Endp
 poll_tcp_connection_name DB 'Poll TCP Connection',0
 
 poll_tcp_connection     Proc far
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
 ;
@@ -5197,6 +5269,11 @@ poll_tcp_connection     Proc far
 poll_tcp_done:
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 poll_tcp_connection     Endp
 

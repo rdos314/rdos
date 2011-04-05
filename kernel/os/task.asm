@@ -37,6 +37,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\pcdev\apic.inc
 INCLUDE proc.inc
 INCLUDE ..\handle.inc
+INCLUDE ..\apicheck.inc
 
 section_handle_seg          STRUC
 
@@ -5912,6 +5913,12 @@ delete_user_section     ENDP
 enter_user_section_name DB 'Enter User Section',0
 
 enter_user_section      PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ax
     push ebx
     push dx
@@ -5984,6 +5991,12 @@ eusDs:
     pop dx
     pop ebx
     pop ax
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 enter_user_section      ENDP
 
@@ -6002,6 +6015,12 @@ enter_user_section      ENDP
 leave_user_section_name DB 'Leave User Section',0
  
 leave_user_section      PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ax
     push ebx
     push dx
@@ -6105,6 +6124,12 @@ lusDs:
     pop dx
     pop ebx
     pop ax
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 leave_user_section      ENDP
 
