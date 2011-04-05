@@ -443,6 +443,9 @@ get_acpi_table  Endp
 acpi_name       DB 'Acpi Test',0
 
 acpi_pr:
+    int 3
+    mov ax,0
+    NewUserGate test_gate_nr
 
 acpi_loop:
     int 3
@@ -453,10 +456,6 @@ acpi_loop:
     mov dl,4
     ToggleSerialLine        
     jmp acpi_loop    
-;
-    OsGate test_gate_nr
-    mov ax,0ABCh
-    mov edx,12345678h
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -520,4 +520,6 @@ print_bitmap_nr             = 423
 present_printer_media_nr    = 424
 eject_printer_media_nr      = 425
 
+test_gate_nr                = 426
+
 usergate_entries			= 430

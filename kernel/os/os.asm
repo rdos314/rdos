@@ -56,13 +56,6 @@ ENDIF
     assume cs:code
 
 
-test_gate_name  DB 'Test', 0
-
-test_gate   Proc far
-    mov ax,3456h
-    retf32
-test_gate   Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -114,12 +107,6 @@ init_osgate_loop:
     mov edi,OFFSET is_valid_osgate_name
     mov ax,is_valid_osgate_nr
     xor cl,cl
-    RegisterOsGate
-;
-    mov esi,OFFSET test_gate
-    mov edi,OFFSET test_gate_name
-    xor cl,cl
-    mov ax,test_gate_nr
     RegisterOsGate
 ;
     popa

@@ -95,12 +95,37 @@ UserGateForce32 MACRO gate_nr
 			ENDM
 
 UserGate        MACRO gate_nr
-IF @WordSize == 4
-	UserGate32 gate_nr
-ELSE
+IF (size $) EQ 0FF02h
     UserGate16 gate_nr
+ELSE
+	UserGate32 gate_nr
 ENDIF
 			ENDM
+
+NewUserGate16	MACRO gate_nr
+    db 67h
+    db 66h
+    db 9Ah
+    dd gate_nr
+    dw 1
+			ENDM
+
+NewUserGate32	MACRO gate_nr
+    db 3Eh
+    db 67h
+    db 9Ah
+    dd gate_nr
+    dw 1
+			ENDM
+
+NewUserGate        MACRO gate_nr
+IF (size $) EQ 0FF02h
+    NewUserGate16 gate_nr
+ELSE
+	NewUserGate32 gate_nr
+ENDIF
+			ENDM
+			
 
 ;   NC      Valid
 IsValidUserGate	MACRO

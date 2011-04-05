@@ -89,10 +89,12 @@ code    SEGMENT byte use16 public 'CODE'
     extrn prot_exception:near
     extrn virt_exception:near
 
-    extrn do_usercall16:near
-    extrn do_usercall32:near
+    extrn old_do_usercall16:near
+    extrn old_do_usercall32:near
 
     extrn do_oscall:near
+    extrn do_usercall16:near
+    extrn do_usercall32:near
 
     assume cs:code
 
@@ -227,9 +229,9 @@ dummy_gate  Endp
 
 int_call_tab:
 ict00   DW OFFSET dummy_gate
-ict01   DW OFFSET dummy_gate
+ict01   DW OFFSET do_usercall16
 ict02   DW OFFSET do_oscall
-ict03   DW OFFSET dummy_gate
+ict03   DW OFFSET do_usercall32
 
 int66:
 int67:
@@ -293,8 +295,8 @@ int_retry:
 
 usercall_tab16:
 suct00   DW 0
-suct01   DW OFFSET do_usercall16
-suct02   DW OFFSET do_usercall32
+suct01   DW OFFSET old_do_usercall16
+suct02   DW OFFSET old_do_usercall32
 suct03   DW 0
 suct04   DW 0
 suct05   DW 0
@@ -304,7 +306,7 @@ suct07   DW 0
 usercall_tab32:
 luct00   DW 0
 luct01   DW 0
-luct02   DW OFFSET do_usercall32
+luct02   DW OFFSET old_do_usercall32
 luct03   DW 0
 luct04   DW 0
 luct05   DW 0
@@ -1324,7 +1326,7 @@ trap_13:
         
 t13_not_int:
     cmp al,67h
-    jne t13_not_oscall
+    jne t13_not_kernel_call
 ;
     mov al,[ebx+2]
     cmp al,9Ah
@@ -1332,8 +1334,12 @@ t13_not_int:
 ;
     mov ax,[ebx+7]
     cmp ax,2
-    jne t13_retry    
+    je t13_int_call
 ;
+    cmp ax,1
+    jne t13_retry
+
+t13_int_call:
     push ds
     mov ax,system_data_sel
     mov ds,ax
@@ -1357,7 +1363,7 @@ t13_not_int:
     pop ecx
     jmp t13_end
 
-t13_not_oscall:    
+t13_not_kernel_call:    
     cmp al,90h
     je t13_retry
 ;        
@@ -1768,8 +1774,12 @@ pretask_gpf_not_int:
 ;
     mov ax,[ebx+7]
     cmp ax,2
-    jne pretask_gpf_default
+    je pretask_kernel_gate
 ;
+    cmp ax,1    
+    jne pretask_gpf_default
+
+pretask_kernel_gate:
     push ecx
     push edx
 ;    
