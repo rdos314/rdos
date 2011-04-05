@@ -763,6 +763,7 @@ DeleteConnection    Proc near
     push bx
     push ecx
     push edx
+    push esi
 ;       
     mov si,ds:tcp_port
     call FreePort
@@ -811,6 +812,7 @@ delete_connect_unlinked:
     call CheckConnectionList
     FreeMem
 ;
+    pop esi
     pop edx
     pop ecx
     pop bx
@@ -4010,7 +4012,7 @@ is_tcp_connection_idle  Proc far
     ApiSaveEdi
 
     push ds
-    push ax
+    push eax
     push ebx
 ;
     mov ax,TCP_SOCKET_HANDLE
@@ -4044,7 +4046,7 @@ is_tcp_idle_fail:
 
 is_tcp_idle_done:       
     pop ebx
-    pop ax
+    pop eax
     pop ds
 
     ApiCheckEdi

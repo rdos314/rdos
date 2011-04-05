@@ -33,6 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\handle.inc
 INCLUDE system.def
+INCLUDE ..\apicheck.inc
 
 ini_handle_seg  STRUC
 
@@ -100,6 +101,7 @@ OpenSystemIni   Proc near
     push ds
     push es
     push eax
+    push ecx
     push si
     push di
 ;
@@ -161,6 +163,7 @@ open_sys_ini_free:
 open_sys_ini_done:
     pop di
     pop si
+    pop ecx
     pop eax
     pop es
     pop ds
@@ -866,6 +869,12 @@ CreateIniHandle Endp
 open_sys_ini_name       DB 'Open Sys Ini', 0
 
 open_sys_ini    Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push es
     push ax
@@ -901,6 +910,12 @@ osiDone:
     pop ax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 open_sys_ini    Endp
 
@@ -944,7 +959,19 @@ open_ini16 Proc far
 open_ini16  Endp
 
 open_ini32:
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     call open_ini
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
     
 
@@ -962,8 +989,15 @@ open_ini32:
 close_ini_name  DB 'Close Ini', 0
 
 close_ini       Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push es
+    push ax
     push ebx
     push esi
 ;
@@ -992,8 +1026,15 @@ ciCloseFile:
 ciDone:
     pop esi
     pop ebx
+    pop ax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 close_ini       Endp
 
@@ -1014,12 +1055,7 @@ goto_ini_section_name   DB 'Goto Ini Section', 0
 goto_ini_section    Proc near
     push ds
     push es
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
+    pushad
 ;
     mov ax,INI_HANDLE
     DerefHandle
@@ -1062,12 +1098,7 @@ gisSectSizeOk:
     clc
 
 gisDone:
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
+    popad
     pop es
     pop ds
     ret
@@ -1204,7 +1235,21 @@ remove_ini_section16  Proc far
 remove_ini_section16  Endp
 
 remove_ini_section32  Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call remove_ini_section
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 remove_ini_section32  Endp
 
@@ -1313,7 +1358,21 @@ read_ini16  Proc far
 read_ini16  Endp
 
 read_ini32  Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call read_ini
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 read_ini32  Endp
 

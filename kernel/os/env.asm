@@ -34,6 +34,7 @@ INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc
+INCLUDE ..\apicheck.inc
 
 ENV_MODE_GLOBAL     = 1
 ENV_MODE_PROCESS    = 2
@@ -295,6 +296,12 @@ unlock_proc_env    Endp
 open_sys_env_name       DB 'Open Sys Env',0
 
 open_sys_env    Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push cx
 ;
@@ -306,6 +313,12 @@ open_sys_env    Proc far
 ;
     pop cx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 open_sys_env    Endp
 
@@ -324,6 +337,12 @@ open_sys_env    Endp
 open_proc_env_name  DB 'Open Proc Env',0
 
 open_proc_env    Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push cx
 ;
@@ -335,6 +354,12 @@ open_proc_env    Proc far
 ;
     pop cx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 open_proc_env    Endp
 
@@ -353,9 +378,17 @@ open_proc_env    Endp
 close_env_name  DB 'Close Env',0
 
 close_env   Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push es
     push ax
+    push bx
 ;
     mov ax,ENV_HANDLE
     DerefHandle
@@ -365,9 +398,17 @@ close_env   Proc far
     clc
 
 close_env_done:
+    pop bx
     pop ax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 close_env   Endp
 
@@ -578,7 +619,21 @@ add_env_var16  Proc far
 add_env_var16  Endp
 
 add_env_var32:
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call add_env_var
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -719,7 +774,21 @@ delete_env_var16  Proc far
 delete_env_var16  Endp
 
 delete_env_var32:
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call delete_env_var
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -848,7 +917,21 @@ find_env_var16  Proc far
 find_env_var16  Endp
 
 find_env_var32:
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call find_env_var
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -885,6 +968,12 @@ get_env_var_size_loop:
 get_env_size_base   Endp
 
 get_env_size:
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push es
     push ebx
@@ -921,6 +1010,12 @@ get_env_size_done:
     pop ebx
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
