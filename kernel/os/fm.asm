@@ -33,6 +33,7 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\handle.inc
+INCLUDE ..\apicheck.inc
 
 MAX_FM_SELS = 8
 
@@ -454,6 +455,12 @@ delete_fm_instr Endp
 open_fm_name    DB 'Open FM',0
 
 open_fm    Proc 
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push es
     push ds
     push eax
@@ -506,6 +513,12 @@ open_fm    Proc
     pop eax
     pop ds
     pop es    
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 open_fm    Endp
 
@@ -525,6 +538,13 @@ open_fm    Endp
 close_fm_name   DB 'Close FM',0
 
 close_fm    Proc    
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push ax
     push ebx
@@ -540,6 +560,13 @@ cfDone:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 close_fm    Endp
 
@@ -560,6 +587,13 @@ close_fm    Endp
 fm_wait_name    DB 'FM Wait',0
 
 fm_wait    Proc 
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push eax
     push ebx
@@ -621,6 +655,13 @@ fwDone:
     pop ebx
     pop eax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 fm_wait    Endp
 
@@ -646,6 +687,12 @@ create_fm_instrument_name       DB 'Create FM Instrument',0
 rmaxint DT 1073741824.0
 
 create_fm_instrument    Proc    
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push es
     push ds
     push eax
@@ -697,6 +744,12 @@ cfiDone:
     pop eax
     pop ds
     pop es
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 create_fm_instrument    Endp
 
@@ -716,6 +769,13 @@ create_fm_instrument    Endp
 free_fm_instrument_name DB 'Free FM Instrument',0
 
 free_fm_instrument    Proc      
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push ax
     push ebx
@@ -730,6 +790,13 @@ ffiDone:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 free_fm_instrument    Endp
 
@@ -750,6 +817,13 @@ free_fm_instrument    Endp
 set_fm_attack_name      DB 'Set FM Attack',0
 
 set_fm_attack    Proc   
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push ax
     push ebx
@@ -767,6 +841,13 @@ sfaDone:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 set_fm_attack    Endp
 
@@ -788,6 +869,13 @@ set_fm_attack    Endp
 set_fm_sustain_name     DB 'Set FM Sustain',0
 
 set_fm_sustain    Proc  
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push eax
     push ebx
@@ -850,6 +938,13 @@ sfsDone:
     pop ebx
     pop eax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 set_fm_sustain    Endp
 
@@ -871,6 +966,13 @@ set_fm_sustain    Endp
 set_fm_release_name     DB 'Set FM Release',0
 
 set_fm_release    Proc  
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push eax
     push ebx
@@ -933,6 +1035,13 @@ sfrDone:
     pop ebx
     pop eax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 set_fm_release    Endp
 
@@ -958,10 +1067,17 @@ play_fm_note_name       DB 'Play FM Note',0
 SinSize DD 4000h
 
 play_fm_note    Proc    
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push es
     push fs
-    push ax
+    push eax
     push ebx
     push bp
 ;
@@ -1082,10 +1198,17 @@ pfnAttOk:
 pfnDone:
     pop bp
     pop ebx
-    pop ax
+    pop eax
     pop fs
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 play_fm_note    Endp
 
@@ -1101,6 +1224,13 @@ play_fm_note    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_fm_handle    Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push ax
     push ebx
@@ -1126,6 +1256,13 @@ delete_fm_handle_done:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 delete_fm_handle    Endp
 

@@ -2092,6 +2092,7 @@ CreateFileBase  Proc near
     push ds
     push fs
     push ax
+    push ecx
     push edx
 ;
     mov bx,flat_sel
@@ -2163,6 +2164,7 @@ create_file_pop_failed:
 
 create_file_done:
     pop edx
+    pop ecx
     pop ax
     pop fs
     pop ds
