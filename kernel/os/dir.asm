@@ -35,6 +35,7 @@ INCLUDE ..\driver.def
 INCLUDE system.inc
 INCLUDE ..\fs.inc
 INCLUDE ..\handle.inc
+INCLUDE ..\apicheck.inc
 
 dir_handle_seg  STRUC
 
@@ -2214,6 +2215,13 @@ get_drive_info_done:
 set_cur_drive_name      DB 'Set Current Drive',0
 
 set_cur_drive:
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push si
     mov si,fs_process_sel
@@ -2226,6 +2234,13 @@ set_cur_drive:
 set_cur_drive_done:
     pop si
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2267,7 +2282,21 @@ get_cur_drive:
 set_cur_dir_name    DB 'Set Current Directory',0
 
 set_cur_dir32:
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call SetCurDirBase
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 
 set_cur_dir16   PROC far
@@ -2294,7 +2323,21 @@ set_cur_dir16   ENDP
 get_cur_dir_name    DB 'Get Current Directory',0
 
 get_cur_dir32:
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call GetCurDirBase
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 
 get_cur_dir16   PROC far
@@ -2377,7 +2420,19 @@ remove_dir16    ENDP
 get_file_attribute_name DB 'Get File Attribute',0
 
 get_file_attrib32:
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call GetFileAttribBase
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 
 get_file_attrib16       PROC far
@@ -2405,7 +2460,21 @@ get_file_attrib16       ENDP
 set_file_attribute_name DB 'Set File Attribute',0
 
 set_file_attrib32:
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call SetFileAttribBase
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 
 set_file_attrib16       PROC far
@@ -2569,7 +2638,19 @@ close_dir       Endp
 open_file_name  DB 'Open File',0
 
 open_file32:
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call OpenFileBase
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 open_file16     PROC far
@@ -2598,12 +2679,20 @@ open_file16     ENDP
 
 create_file_name    DB 'Create File',0
 
-create_file32_done:
-    pop edi
-    pop ds
-
 create_file32:
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     call CreateFileBase
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 create_file16   PROC far
