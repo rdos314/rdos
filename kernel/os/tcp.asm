@@ -469,6 +469,7 @@ CreateBuffer    Endp
 
 FreeBuffer    Proc near
     push es
+    push eax
     push bx
     push ecx
     push edx
@@ -492,6 +493,7 @@ fbAlias:
     pop edx
     pop ecx
     pop bx
+    pop eax
     pop es
     ret
 FreeBuffer    Endp

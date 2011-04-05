@@ -1076,6 +1076,10 @@ set_clip_rect   PROC far
     push ds
     push es
     push ebx
+    push cx
+    push dx
+    push si
+    push di
 ;
     push ax
     mov ax,BITMAP_HANDLE
@@ -1151,6 +1155,10 @@ set_clip_ymax_noov:
     mov [ebx].bm_y_max,di
     
 set_clip_rect_done:
+    pop di
+    pop si
+    pop dx
+    pop cx
     pop ebx
     pop es
     pop ds
