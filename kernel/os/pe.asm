@@ -975,7 +975,7 @@ OpenDll Proc near
     mov edi,esi
 ;
     xor cl,cl
-    UserGateForce32 open_file_nr
+    OldUserGateForce32 open_file_nr
     jnc open_dll_done
 ;
     LockProcEnv
@@ -2182,7 +2182,7 @@ load_page_size_ok:
     mov ax,ds
     mov es,ax
     mov edi,edx
-    UserGateForce32 read_file_nr
+    OldUserGateForce32 read_file_nr
     add edi,eax
     mov ecx,1000h
     sub ecx,eax
@@ -2538,7 +2538,7 @@ create_image_alloced:
     mov ax,ds
     mov es,ax
     mov edi,edx
-    UserGateForce32 read_file_nr
+    OldUserGateForce32 read_file_nr
     pop es
 ;
     mov esi,es:lib_header
@@ -2588,7 +2588,7 @@ hook_object_do:
     UnhookPage
     mov ax,ds
     mov es,ax
-    UserGateForce32 read_file_nr
+    OldUserGateForce32 read_file_nr
     pop edi
     pop es
 
@@ -2944,7 +2944,7 @@ load_pe_name_size:
 ;
     mov eax,ecx
     add eax,ebx
-    UserGateForce32 allocate_app_mem_nr     
+    OldUserGateForce32 allocate_app_mem_nr     
     mov fs:app_cmd_line,edx
     mov fs:app_options,0
 ;
@@ -3344,11 +3344,11 @@ spawn_param_ok:
     mov ax,cs
     mov es,ax
     mov edi,OFFSET kernel_dll
-    UserGateForce32 get_module_nr
+    OldUserGateForce32 get_module_nr
     jc spawn_wd_debug
 ;
     mov edi,OFFSET debug_startup
-    UserGateForce32 get_module_proc_nr
+    OldUserGateForce32 get_module_proc_nr
     jc spawn_wd_debug
 ;
     xchg esi,[bp].load_eip
@@ -4808,7 +4808,7 @@ close_app       Proc far
     xor edx,edx
     mov eax,-1
     mov bx,es
-    UserGateForce32 free_app_mem_nr
+    OldUserGateForce32 free_app_mem_nr
     mov edi,es:lib_base
     push es
     call FreeImportedDlls
@@ -4889,7 +4889,7 @@ get_exe_size_loop:
     sub ax,OFFSET app_exe_name
     movzx eax,ax
     mov ecx,eax
-    UserGateForce32 allocate_app_mem_nr
+    OldUserGateForce32 allocate_app_mem_nr
     mov edi,edx
     mov esi,OFFSET app_exe_name
     rep movs byte ptr es:[edi],ds:[esi]
@@ -4947,7 +4947,7 @@ get_env_size_loop:
 ;
     movzx ecx,si
     mov eax,ecx
-    UserGateForce32 allocate_app_mem_nr
+    OldUserGateForce32 allocate_app_mem_nr
     mov edi,edx
     xor esi,esi
     rep movs byte ptr es:[edi],ds:[esi]
@@ -5025,7 +5025,7 @@ set_opt_size:
     jnz set_opt_size
 ;
     mov eax,ecx
-    UserGateForce32 allocate_app_mem_nr
+    OldUserGateForce32 allocate_app_mem_nr
     mov edi,edx
     xor esi,esi
     mov ax,flat_data_sel

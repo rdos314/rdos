@@ -1423,7 +1423,7 @@ cscLoop:
     mov dx,ax
     add edi,OFFSET dc_name
     mov ecx,12
-    UserGateForce32 read_dir_nr
+    OldUserGateForce32 read_dir_nr
     mov byte ptr es:[edi+12],0
     pop edi
 ;
@@ -1450,7 +1450,7 @@ cscLoop:
     pop bx
     loop cscLoop
 ;
-    UserGate close_dir_nr
+    OldUserGate close_dir_nr
     push es
     mov ax,ds
     mov es,ax

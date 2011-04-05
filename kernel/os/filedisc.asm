@@ -117,7 +117,7 @@ read_drive_loop:
     mov edi,es:[edi].dh_data
     mov ecx,200h
     mov bx,fs:fd_handle
-    UserGateForce32 read_file_nr
+    OldUserGateForce32 read_file_nr
     pop edi
     pop ecx
     jnc read_drive_ok
@@ -173,7 +173,7 @@ write_drive_loop:
     mov edi,es:[edi].dh_data
     mov ecx,200h
     mov bx,fs:fd_handle
-    UserGateForce32 write_file_nr
+    OldUserGateForce32 write_file_nr
     pop edi
     pop ecx
     jnc write_drive_ok
@@ -323,7 +323,7 @@ cfdMoveName:
 ;
     push ecx
     xor cx,cx
-    UserGateForce32 create_file_nr
+    OldUserGateForce32 create_file_nr
     pop ecx
     jc cfdFreeFail
 ;
@@ -477,7 +477,7 @@ open_file_drive Proc near
 ;
     mov bp,ax
     xor cx,cx
-    UserGateForce32 open_file_nr
+    OldUserGateForce32 open_file_nr
     jc ofdDone
 ;
     mov eax,SIZE file_disc_data_seg

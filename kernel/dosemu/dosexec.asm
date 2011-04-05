@@ -270,7 +270,7 @@ load_com    PROC near
     mov es,ax
     add edi,100h
     sub ecx,100h
-    UserGateForce32 read_file_nr
+    OldUserGateForce32 read_file_nr
     jc load_com_fail
 ;
     mov eax,edx
@@ -401,7 +401,7 @@ load_exe_whole_size:
 ;       sub ecx,edx
     mov ax,flat_sel
     mov es,ax
-    UserGateForce32 read_file_nr
+    OldUserGateForce32 read_file_nr
     jc load_exe_fail
 ;
     movzx eax,ds:exeh_reloc_ant
@@ -413,7 +413,7 @@ load_exe_whole_size:
     AllocateLocalMem
     movzx eax,ds:exeh_reloc_offs
     SetFilePos
-    UserGateForce32 read_file_nr
+    OldUserGateForce32 read_file_nr
 load_exe_noreloc1:
     CloseFile
     pop edx
@@ -748,7 +748,7 @@ load_ext_exe_whole_size:
 ;       sub ecx,edx
     mov ax,flat_sel
     mov es,ax
-    UserGateForce32 read_file_nr
+    OldUserGateForce32 read_file_nr
     jc load_ext_exe_fail
 ;
     movzx eax,ds:exeh_reloc_ant
@@ -761,7 +761,7 @@ load_ext_exe_whole_size:
     AllocateLocalMem
     movzx eax,ds:exeh_reloc_offs
     SetFilePos
-    UserGateForce32 read_file_nr
+    OldUserGateForce32 read_file_nr
 
 load_ext_exe_noreloc1:
     CloseFile

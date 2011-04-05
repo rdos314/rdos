@@ -187,11 +187,11 @@ OpenPrivIni     Proc near
     push cx
 ;
     mov cl,0
-    UserGateForce32 open_file_nr
+    OldUserGateForce32 open_file_nr
     jnc open_priv_ini_done
 ;
     xor cx,cx
-    UserGateForce32 create_file_nr
+    OldUserGateForce32 create_file_nr
 
 open_priv_ini_done:
     pop cx
@@ -245,7 +245,7 @@ LockIni Proc near
     xor eax,eax
     mov edi,ds:[esi].ih_base
     mov ecx,ds:[esi].ih_size
-    UserGateForce32 map_view_nr
+    OldUserGateForce32 map_view_nr
 ;    
     popad
     pop es
@@ -607,7 +607,7 @@ CreateIniSection Proc near
     mov ecx,ds:[esi].ih_name_size
     dec ecx
     xor edi,edi
-    UserGateForce32 write_file_nr
+    OldUserGateForce32 write_file_nr
 ;
     mov ax,ss
     mov es,ax
@@ -718,7 +718,7 @@ GrowIni Proc near
     pop ecx
 ;
     xor edi,edi
-    UserGateForce32 write_file_nr
+    OldUserGateForce32 write_file_nr
     FreeMem
 ;    
     pop bx

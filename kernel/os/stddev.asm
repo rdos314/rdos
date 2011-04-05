@@ -1164,7 +1164,7 @@ con_read_done:
 con_read    ENDP
 
 con_write       PROC far
-    UserGateForce32 write_size_string_nr
+    OldUserGateForce32 write_size_string_nr
     mov eax,ecx
     clc
     retf32

@@ -2234,7 +2234,7 @@ capture_thread_pr:
     jc ctpRewrite
 ;
     mov ecx,24
-    UserGateForce32 read_file_nr
+    OldUserGateForce32 read_file_nr
     cmp eax,24
     jne ctpRewrite
 ;
@@ -2280,7 +2280,7 @@ ctpRewrite:
 ;     
     mov ecx,24
     mov edi,edx
-    UserGateForce32 write_file_nr
+    OldUserGateForce32 write_file_nr
 ;
     mov ecx,24
     mov edx,edi
@@ -2321,7 +2321,7 @@ ctpWrite:
     mov ecx,es:[edi].cb_len1
     add ecx,16
     add edi,8
-    UserGateForce32 write_file_nr
+    OldUserGateForce32 write_file_nr
 ;
     add ecx,8
     FreeLinear    

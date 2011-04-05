@@ -445,7 +445,7 @@ acpi_name       DB 'Acpi Test',0
 acpi_pr:
     int 3
     mov ax,0
-    NewUserGate test_gate_nr
+;    NewUserGate test_gate_nr
 
 acpi_loop:
     int 3
