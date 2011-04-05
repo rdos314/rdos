@@ -36,6 +36,7 @@ INCLUDE system.inc
 INCLUDE ..\handle.inc
 INCLUDE bitmap.inc
 INCLUDE ..\video.inc
+INCLUDE ..\apicheck.inc
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -445,6 +446,12 @@ create_bitmap   Endp
 dup_bitmap_handle_name  DB 'Duplicate Bitmap Handle', 0
 
 dup_bitmap_handle       Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push es
     push ax
@@ -482,6 +489,12 @@ dph_done:
     pop ax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 dup_bitmap_handle       Endp
 
@@ -510,6 +523,12 @@ csb_y               EQU -10
 csb_x               EQU -12
 
 create_string_bitmap    Proc near
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push bp
     mov bp,sp
     sub sp,12
@@ -580,6 +599,12 @@ crs_bitmap_done:
     pop ds
     add sp,12
     pop bp
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     ret
 create_string_bitmap    Endp
 
@@ -717,6 +742,12 @@ delete_bitmap   Endp
 close_bitmap_name       DB 'Close Bitmap', 0
 
 close_bitmap    Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ax
     push ebx
@@ -731,6 +762,12 @@ cl_bitmap_done:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 close_bitmap    Endp
 

@@ -36,6 +36,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\handle.inc
 INCLUDE bitmap.inc
 INCLUDE ..\video.inc
+INCLUDE ..\apicheck.inc
 
 video_mode_entry    STRUC
 
@@ -1066,6 +1067,12 @@ write_size_string32     ENDP
 set_clip_rect_name      DB 'Set Clip Rect',0
 
 set_clip_rect   PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+;    
     push ds
     push es
     push ebx
@@ -1147,6 +1154,12 @@ set_clip_rect_done:
     pop ebx
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 set_clip_rect   ENDP
 
@@ -1165,6 +1178,12 @@ set_clip_rect   ENDP
 clear_clip_rect_name    DB 'Clear Clip Rect',0
 
 clear_clip_rect PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push es
     push ax
@@ -1190,6 +1209,12 @@ clear_clip_rect_done:
     pop ax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 clear_clip_rect ENDP
 
@@ -1209,7 +1234,14 @@ clear_clip_rect ENDP
 set_draw_color_name     DB 'Set Draw Color',0
 
 set_draw_color  PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
+    push eax
     push ebx
 ;
     push ax
@@ -1226,7 +1258,14 @@ set_draw_color  PROC far
     
 set_draw_color_done:
     pop ebx
+    pop eax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 set_draw_color  ENDP
 
@@ -1246,6 +1285,12 @@ set_draw_color  ENDP
 set_lgop_name   DB 'Set LGOP',0
 
 set_lgop    PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     cmp ax,13
     jbe set_lgop_ok
     mov ax,1
@@ -1265,6 +1310,12 @@ set_lgop_ok:
 set_lgop_done:
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 set_lgop    ENDP
 
@@ -1283,6 +1334,12 @@ set_lgop    ENDP
 set_hollow_style_name   DB 'Set Hollow Style',0
 
 set_hollow_style    PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
 ;
@@ -1297,6 +1354,12 @@ set_hollow_style    PROC far
 set_hollow_done:
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 set_hollow_style    ENDP
 
@@ -1315,6 +1378,12 @@ set_hollow_style    ENDP
 set_filled_style_name   DB 'Set Filled Style',0
 
 set_filled_style    PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
 ;
@@ -1329,6 +1398,12 @@ set_filled_style    PROC far
 set_filled_done:
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 set_filled_style    ENDP
 
@@ -1348,6 +1423,12 @@ set_filled_style    ENDP
 set_font_name   DB 'Set Font',0
 
 set_font    PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
 ;
@@ -1362,6 +1443,12 @@ set_font    PROC far
 set_font_done:
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 set_font    ENDP
 
@@ -1384,6 +1471,12 @@ set_font    ENDP
 get_pixel_name  DB 'Get Pixel',0
 
 get_pixel       PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ax
     push ebx
@@ -1399,12 +1492,24 @@ get_pixel       PROC far
     call ds:get_pixel_proc
     LeaveSection ds:v_section
     pop ds  
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 get_pixel_fail:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 get_pixel       ENDP
 
@@ -1425,6 +1530,11 @@ get_pixel       ENDP
 set_pixel_name  DB 'Set Pixel',0
 
 set_pixel       PROC far
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push eax
     push ebx
@@ -1452,12 +1562,24 @@ set_pixel       PROC far
     call ds:set_pixel_proc
     LeaveSection ds:v_section
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32  
 
 set_pixel_fail:
     pop ebx
     pop eax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 set_pixel       ENDP
 
@@ -1932,6 +2054,11 @@ draw_string16_done:
 draw_string16   ENDP
 
 draw_string32   PROC far
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push eax
     push ebx
@@ -1961,12 +2088,22 @@ draw_string32   PROC far
     call ds:draw_string_proc
     LeaveSection ds:v_section
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 
 draw_string32_fail:
     pop ebx
     pop eax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 draw_string32   ENDP
 
@@ -1989,6 +2126,11 @@ draw_string32   ENDP
 draw_line_name  DB 'Draw Line',0
 
 draw_line       PROC far
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push eax
     push ebx
@@ -2016,12 +2158,22 @@ draw_line       PROC far
     call ds:draw_line_proc
     LeaveSection ds:v_section
     pop ds  
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 
 draw_line_fail:
     pop ebx
     pop eax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 draw_line       ENDP
 
@@ -2044,6 +2196,12 @@ draw_line       ENDP
 draw_rect_name  DB 'Draw Rect',0
 
 draw_rect       PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ax
     push ebx
@@ -2073,12 +2231,24 @@ draw_rect       PROC far
     call ds:draw_rect_proc
     LeaveSection ds:v_section
     pop ds  
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 draw_rect_fail:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 draw_rect       ENDP
 
@@ -2101,6 +2271,12 @@ draw_rect       ENDP
 draw_ellipse_name       DB 'Draw Ellipse',0
 
 draw_ellipse    PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ax
     push ebx
@@ -2130,12 +2306,24 @@ draw_ellipse    PROC far
     call ds:draw_ellipse_proc
     LeaveSection ds:v_section
     pop ds  
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 draw_ellipse_fail:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 draw_ellipse    ENDP
 

@@ -34,6 +34,7 @@ INCLUDE ..\driver.def
 INCLUDE ..\handle.inc
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE ..\apicheck.inc
 
 font_handle_struc       STRUC
 
@@ -719,6 +720,12 @@ open_font       Endp
 close_font_name DB 'Close Font',0
 
 close_font      Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push es
     push ax
@@ -738,6 +745,12 @@ cl_font_done:
     pop ax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 close_font      Endp
 
@@ -759,6 +772,9 @@ close_font      Endp
 get_string_metrics_name DB 'Get String Metrics',0
 
 get_string_metrics      Proc near
+    ApiSaveEax
+    ApiSaveEsi
+
     push ds
     push ax
     push ebx
@@ -802,6 +818,9 @@ get_string_metr_done:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEsi
+    ApiCheckEax
     ret
 get_string_metrics      Endp
 

@@ -37,6 +37,7 @@ INCLUDE ..\handle.inc
 INCLUDE bitmap.inc
 INCLUDE sprite.inc
 INCLUDE ..\video.inc
+INCLUDE ..\apicheck.inc
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -186,6 +187,12 @@ CheckSprite     Endp
 create_sprite_name      DB 'Create Sprite', 0
 
 create_sprite   Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push es
     push eax
@@ -410,6 +417,12 @@ create_sprite_done:
     pop eax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 create_sprite   Endp
 
@@ -1874,6 +1887,12 @@ delete_sprite   Endp
 close_sprite_name       DB 'Close Sprite', 0
 
 close_sprite    Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ax
     push ebx
@@ -1888,6 +1907,12 @@ cl_sprite_done:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 close_sprite    Endp
 
