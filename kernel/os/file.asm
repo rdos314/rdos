@@ -35,6 +35,7 @@ INCLUDE ..\driver.def
 INCLUDE system.inc
 INCLUDE ..\fs.inc
 INCLUDE ..\handle.inc
+INCLUDE ..\apicheck.inc
 
 file_handle_seg     STRUC
 
@@ -1615,7 +1616,14 @@ dupl_file_info  ENDP
 close_file_name DB 'Close File',0
 
 close_file:     
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
+    push eax
     push ebx
     push esi
 ;
@@ -1644,7 +1652,14 @@ close_file_handle:
 close_file_done:
     pop esi
     pop ebx
+    pop eax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1663,6 +1678,12 @@ close_file_done:
 dupl_file_name  DB 'Duplicate File Handle',0
 
 dupl_file:
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push es
     push eax
@@ -1703,6 +1724,12 @@ dupl_file_done:
     pop eax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1721,6 +1748,11 @@ dupl_file_done:
 get_ioctl_data_name     DB 'Get IOCTL Data',0
 
 get_ioctl_data:
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ax
     push ebx
@@ -1740,6 +1772,11 @@ get_ioctl_data_done:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1758,6 +1795,11 @@ get_ioctl_data_done:
 get_file_size_name      DB 'Get File Size',0
 
 get_file_size:
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
     push edx
@@ -1781,6 +1823,11 @@ get_file_size_done:
     pop edx
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1798,6 +1845,12 @@ get_file_size_done:
 set_file_size_name      DB 'Set File Size',0
 
 set_file_size:
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push eax
     push ebx
@@ -1824,6 +1877,12 @@ set_file_size_done:
     pop ebx
     pop eax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1842,6 +1901,11 @@ set_file_size_done:
 get_file_pos_name       DB 'Get File Position',0
 
 get_file_pos:
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
 ;
@@ -1860,6 +1924,11 @@ get_file_pos:
 get_file_pos_done:
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1877,6 +1946,12 @@ get_file_pos_done:
 set_file_pos_name       DB 'Set File Position',0
 
 set_file_pos:
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
     push eax
@@ -1895,6 +1970,12 @@ set_file_pos_done:
     pop eax
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1913,6 +1994,10 @@ set_file_pos_done:
 get_file_time_name      DB 'Get File Time',0
 
 get_file_time:
+    ApiSaveEcx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push es
     push ebx
@@ -1941,6 +2026,10 @@ get_file_time_done:
     pop ebx
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEcx
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1958,6 +2047,12 @@ get_file_time_done:
 set_file_time_name      DB 'Set File Time',0
 
 set_file_time:
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push es
     push fs
@@ -1997,6 +2092,12 @@ set_file_time_done:
     pop fs
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2018,6 +2119,11 @@ set_file_time_done:
 read_file_name  DB 'Read File',0
 
 read_file32:
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
     push edx
@@ -2062,6 +2168,11 @@ read_file32_done:
     pop edx
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 
 read_file16     PROC far
@@ -2137,6 +2248,11 @@ read_file16     ENDP
 write_file_name DB 'Write File',0
 
 write_file32:
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+
     push ds
     push ebx
     push edx
@@ -2196,6 +2312,11 @@ write_file32_done:
     pop edx
     pop ebx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 
 write_file16    PROC far

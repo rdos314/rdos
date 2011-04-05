@@ -34,12 +34,14 @@ ApiCheckEax Macro
     
     push bp
     mov bp,sp
+    pushf
     cmp eax,[bp+2]
     je check_ok
 ;
     int 3
 
 check_ok:
+    popf
     pop bp
     pop eax
             Endm
@@ -53,12 +55,14 @@ ApiCheckEbx Macro
     
     push bp
     mov bp,sp
+    pushf
     cmp ebx,[bp+2]
     je check_ok
 ;
     int 3
 
 check_ok:
+    popf
     pop bp
     pop ebx
             Endm
@@ -73,12 +77,14 @@ ApiCheckEcx Macro
     
     push bp
     mov bp,sp
+    pushf
     cmp ecx,[bp+2]
     je check_ok
 ;
     int 3
 
 check_ok:
+    popf
     pop bp
     pop ecx
             Endm
@@ -93,12 +99,14 @@ ApiCheckEdx Macro
     
     push bp
     mov bp,sp
+    pushf
     cmp edx,[bp+2]
     je check_ok
 ;
     int 3
 
 check_ok:
+    popf
     pop bp
     pop edx
             Endm
@@ -112,12 +120,14 @@ ApiCheckEsi Macro
     
     push bp
     mov bp,sp
+    pushf
     cmp esi,[bp+2]
     je check_ok
 ;
     int 3
 
 check_ok:
+    popf
     pop bp
     pop esi
             Endm
@@ -132,12 +142,14 @@ ApiCheckEdi Macro
     
     push bp
     mov bp,sp
+    pushf
     cmp edi,[bp+2]
     je check_ok
 ;
     int 3
 
 check_ok:
+    popf
     pop bp
     pop edi
             Endm
@@ -154,6 +166,7 @@ ApiCheckEbp Macro
     mov eax,ebp
 ;    
     push bp
+    pushf
     mov bp,sp
     cmp eax,[bp+6]
     je check_ok
@@ -161,6 +174,7 @@ ApiCheckEbp Macro
     int 3
 
 check_ok:
+    popf
     pop bp
     pop eax
     pop ebp
