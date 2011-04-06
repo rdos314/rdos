@@ -613,6 +613,8 @@ void RDOSAPI RdosSetMasterVolume(int Left, int Right);
 void RDOSAPI RdosGetLineOutVolume(int *Left, int *Right);
 void RDOSAPI RdosSetLineOutVolume(int Left, int Right);
 
+int RDOSAPI RdosHasAudio();
+
 int RDOSAPI RdosCreateAudioOutChannel(int SampleRate, int Bits, int Volume);
 void RDOSAPI RdosCloseAudioOutChannel(int Handle);
 void RDOSAPI RdosWriteAudio(int Handle, int Size, const int *LSamples, const int*RSamples); 
@@ -2633,6 +2635,11 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
     "mov [edi],eax" \
     CarryToBool \
     parm [ebx] [edi] \
+    value [eax];
+
+#pragma aux RdosHasAudio = \
+    CallGate_has_audio \
+    CarryToBool \
     value [eax];
 
 #pragma aux RdosSetCodecGpio0 = \

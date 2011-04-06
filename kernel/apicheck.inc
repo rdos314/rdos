@@ -25,6 +25,10 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; DEFINE DO_API_CHECK       ; decomment to enable API checks 
+
+IFDEF DO_API_CHECK
+
 ApiSaveEax  Macro
     push eax
             Endm
@@ -180,3 +184,49 @@ check_ok:
     pop ebp
             Endm
 
+ELSE
+
+ApiSaveEax  Macro
+            Endm
+
+ApiCheckEax Macro
+            Endm
+
+ApiSaveEbx  Macro
+            Endm
+
+ApiCheckEbx Macro
+            Endm
+
+ApiSaveEcx  Macro
+            Endm
+
+ApiCheckEcx Macro
+            Endm
+
+ApiSaveEdx  Macro
+            Endm
+
+ApiCheckEdx Macro
+            Endm
+
+ApiSaveEsi  Macro
+            Endm
+
+ApiCheckEsi Macro
+            Endm
+
+ApiSaveEdi  Macro
+            Endm
+
+ApiCheckEdi Macro
+            Endm
+
+
+ApiSaveEbp  Macro
+            Endm
+
+ApiCheckEbp Macro
+            Endm
+
+ENDIF

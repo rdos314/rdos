@@ -522,4 +522,6 @@ eject_printer_media_nr      = 425
 
 test_gate_nr                = 426
 
+has_audio_nr                = 427
+
 usergate_entries			= 430

@@ -1108,17 +1108,25 @@ get_selector_info       PROC far
 get_selector_info_ldt:
     GetThread
     mov ds,ax
-    mov ds,ds:p_ldt_sel
+    mov ax,ds:p_ldt_sel
+    lsl ecx,eax
+    jnz get_selector_info_error
+;    
+    mov ds,ax    
     jmp get_selector_info_check
 
 get_selector_info_gdt:
     mov ax,gdt_sel
     mov ds,ax
+    mov cx,0EFFFh
 
 get_selector_info_check:
     and bx,0FFF8h
     jz get_selector_info_error
 ;
+    cmp bx,cx
+    jae get_selector_info_error
+;    
     mov al,[bx+5]
     test al,80h
     jz get_selector_info_error

@@ -35,6 +35,7 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
+INCLUDE ..\apicheck.inc
 
 wait_handle_seg STRUC
 
@@ -115,6 +116,12 @@ delete_wait Endp
 create_wait_name    DB 'Create Wait', 0
 
 create_wait Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push cx
 ;
@@ -130,6 +137,12 @@ create_wait Proc far
 ;
     pop cx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 create_wait ENDP
 
@@ -147,8 +160,16 @@ create_wait ENDP
 close_wait_name    DB 'Close Wait', 0
 
 close_wait Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push ax
+    push ebx
 ;
     mov ax,WAIT_HANDLE
     DerefHandle
@@ -160,8 +181,16 @@ close_wait Proc far
     clc
 
 close_wait_done:
+    pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 close_wait ENDP
 
@@ -210,6 +239,12 @@ delete_handle   Endp
 is_wait_idle_name    DB 'Is Wait Idle', 0
 
 is_wait_idle Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push es
     push eax
@@ -251,6 +286,12 @@ is_wait_idle_done:
     pop eax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 is_wait_idle  Endp
 
@@ -270,6 +311,12 @@ is_wait_idle  Endp
 wait_no_timeout_name    DB 'Wait Without Timeout', 0
 
 wait_no_timeout Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push es
     push eax
@@ -350,6 +397,12 @@ wait_no_timeout_done:
     pop eax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 wait_no_timeout  Endp
 
@@ -387,6 +440,12 @@ timeout_wait  Endp
 wait_timeout_name    DB 'Wait With Timeout', 0
 
 wait_timeout Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push es
     push eax
@@ -496,6 +555,12 @@ wait_timeout_done:
     pop eax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 wait_timeout  Endp
 
@@ -513,6 +578,13 @@ wait_timeout  Endp
 stop_wait_name    DB 'Stop Wait', 0
 
 stop_wait Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push es
     push eax
@@ -560,6 +632,13 @@ stop_wait_done:
     pop eax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 stop_wait  Endp
 
@@ -773,6 +852,12 @@ delete_signal_handle    Endp
 create_signal_name DB 'Create Signal',0
 
 create_signal   Proc far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push ax
     push cx
@@ -788,6 +873,12 @@ create_signal   Proc far
     pop cx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 create_signal   Endp    
 
@@ -806,6 +897,13 @@ create_signal   Endp
 reset_signal_name DB 'Reset Signal',0
 
 reset_signal   Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push ax
     push ebx
@@ -821,6 +919,13 @@ reset_sig_done:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 reset_signal Endp
 
@@ -839,6 +944,13 @@ reset_signal Endp
 is_signalled_name DB 'Is Signalled',0
 
 is_signalled   Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push ax
     push ebx
@@ -858,6 +970,13 @@ is_sig_done:
     pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 is_signalled Endp
 
@@ -876,6 +995,13 @@ is_signalled Endp
 set_signal_name DB 'Set Signal',0
 
 set_signal   Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push es
     push ax
@@ -901,6 +1027,13 @@ set_sig_done:
     pop ax
     pop es
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 set_signal Endp
 
@@ -919,8 +1052,16 @@ set_signal Endp
 free_signal_name DB 'Free Signal',0
 
 free_signal   Proc far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push ax
+    push ebx
 ;    
     mov ax,SIGNAL_HANDLE
     DerefHandle
@@ -929,8 +1070,16 @@ free_signal   Proc far
     FreeHandle
 
 free_sig_done:
+    pop ebx
     pop ax
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 free_signal Endp
 

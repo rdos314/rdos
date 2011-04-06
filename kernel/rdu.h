@@ -521,6 +521,10 @@
 #define CallGate_present_printer_media 0x9a 168 1 0 0 2 0
 #define CallGate_eject_printer_media 0x9a 169 1 0 0 2 0
 
+#define CallGate_test_gate 0x9a 170 1 0 0 2 0
+
+#define CallGate_has_audio 0x9a 171 1 0 0 2 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x9a 0 0 0 0 2 0 0x90 0x90 0x90
@@ -1043,5 +1047,9 @@
 
 #define CallGate_present_printer_media 0x9a 168 1 0 0 2 0 0x90 0x90 0x90
 #define CallGate_eject_printer_media 0x9a 169 1 0 0 2 0 0x90 0x90 0x90
+
+#define CallGate_test_gate 0x9a 170 1 0 0 2 0 0x90 0x90 0x90
+
+#define CallGate_has_audio 0x9a 171 1 0 0 2 0 0x90 0x90 0x90
 
 #endif

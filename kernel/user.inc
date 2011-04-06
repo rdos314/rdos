@@ -2573,6 +2573,11 @@ ReadICSPData      MACRO
 
 ;;;;;;;;;;; Audio ;;;;;;;;;;
 
+;   OUT NC          Audio hardware available
+HasAudio      MACRO
+	OldUserGate has_audio_nr
+						ENDM
+
 ;   IN  AL          GPIO 0 value
 SetCodecGpio0      MACRO
 	OldUserGate set_codec_gpio0_nr

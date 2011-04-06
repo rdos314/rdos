@@ -705,6 +705,39 @@ send_audio_out  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           HasAudio
+;
+;           DESCRIPTION:    Check if audio hardware is found & is working
+;
+;           RETURNS:        NC      Audio available
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_audio_name DB 'Has Audio',0
+
+has_audio      Proc far
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:IoBase
+    or ax,ax
+    stc
+    jz haDone
+;
+    clc
+
+haDone:
+    pop ax
+    pop ds
+    retf32    
+has_audio  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init_dev
 ;
 ;           DESCRIPTION:    inits adpater
@@ -724,6 +757,8 @@ detect_name     DB 'CS5536-AC97',0
 detect_thread   proc far
     mov ax,SEG data
     mov ds,ax
+    mov ds:IoBase,0
+;    
     mov si,OFFSET PciVendorTab
     xor ax,ax
 init_pci_loop:
@@ -838,6 +873,12 @@ init    PROC far
     mov es,ax
     mov edi,OFFSET init_dev
     HookInitTasking
+;
+    mov esi,OFFSET has_audio
+    mov edi,OFFSET has_audio_name
+    xor dx,dx
+    mov ax,has_audio_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET read_codec
     mov edi,OFFSET read_codec_name

@@ -35,6 +35,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\wait.inc
+INCLUDE ..\apicheck.inc
 
 key_buf_struc   STRUC
 
@@ -98,6 +99,9 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 remove_non_key Proc near
+    push ax
+    push bx
+;    
     mov bx,ds:key_buffer_head
 
 remove_nk_loop:
@@ -122,6 +126,9 @@ remove_nk_do:
 
 remove_nk_done:
     mov ds:key_buffer_head,bx
+;
+    pop bx
+    pop ax    
     ret
 remove_non_key Endp
 
@@ -431,6 +438,13 @@ read_keyboard_serial    ENDP
 poll_keyboard_name      DB 'Poll Keyboard',0
 
 poll_keyboard   PROC far
+    ApiSaveEax
+    ApiSaveEbx
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push bx
     sti
@@ -449,6 +463,13 @@ poll_key_avail:
     clc
     pop bx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
     
 poll_key_empty:
@@ -456,6 +477,13 @@ poll_key_empty:
     stc
     pop bx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEbx
+    ApiCheckEax
     retf32
 poll_keyboard   ENDP
     
@@ -616,6 +644,11 @@ add_wait_for_keyboard   ENDP
 read_keyboard_name      DB 'Read Keyboard',0
 
 read_keyboard   PROC far
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push bx
     sti
@@ -650,6 +683,11 @@ read_key_no_circ_buff:
 ;
     pop bx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
     retf32
 read_keyboard   ENDP
     
@@ -670,6 +708,10 @@ read_keyboard   ENDP
 peek_key_event_name     DB 'Peek Key Event',0
 
 peek_key_event  PROC far
+    ApiSaveEbx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push bx
     sti
@@ -696,6 +738,10 @@ peek_key_event_get:
 peek_key_event_done:
     pop bx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEbx
     retf32
 peek_key_event  ENDP
     
@@ -716,6 +762,10 @@ peek_key_event  ENDP
 read_key_event_name     DB 'Read Key Event',0
 
 read_key_event  PROC far
+    ApiSaveEbx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push bx
     sti
@@ -751,6 +801,10 @@ read_key_event_no_circ:
 read_key_event_done:
     pop bx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEbx
     retf32
 read_key_event  ENDP
     
@@ -768,6 +822,12 @@ read_key_event  ENDP
 flush_keyboard_name     DB 'Flush Keyboard',0
 
 flush_keyboard  PROC far
+    ApiSaveEax
+    ApiSaveEcx
+    ApiSaveEdx
+    ApiSaveEsi
+    ApiSaveEdi
+    
     push ds
     push bx
     mov bx,key_local_sel
@@ -778,6 +838,12 @@ flush_keyboard  PROC far
     LeaveSection ds:key_section
     pop bx
     pop ds
+
+    ApiCheckEdi
+    ApiCheckEsi
+    ApiCheckEdx
+    ApiCheckEcx
+    ApiCheckEax
     retf32
 flush_keyboard  ENDP
     
