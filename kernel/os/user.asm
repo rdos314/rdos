@@ -123,8 +123,8 @@ init_usergate_loop:
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET register_usergate
-    mov edi,OFFSET register_usergate_name
+    mov esi,OFFSET register_old_usergate
+    mov edi,OFFSET register_old_usergate_name
     xor cl,cl
     mov ax,register_old_usergate_nr
     RegisterOsGate
@@ -135,8 +135,8 @@ init_usergate_loop:
     mov ax,register_bimodal_usergate_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET register_usergate16
-    mov edi,OFFSET register_usergate16_name
+    mov esi,OFFSET register_old_usergate16
+    mov edi,OFFSET register_old_usergate16_name
     xor cl,cl
     mov ax,register_old_usergate16_nr
     RegisterOsGate
@@ -144,7 +144,7 @@ init_usergate_loop:
     mov esi,OFFSET register_usergate32
     mov edi,OFFSET register_usergate32_name
     xor cl,cl
-    mov ax,register_old_usergate32_nr
+    mov ax,register_usergate32_nr
     RegisterOsGate
 ;
     mov esi,OFFSET register_usergate_v86
@@ -233,9 +233,9 @@ is_valid_usergate       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           REGISTER_USERGATE
+;           NAME:           REGISTER_OLD_USERGATE
 ;
-;           DESCRIPTION:    Register 16- & 32-bit gate
+;           DESCRIPTION:    Register 16- & 32-bit gate (with 16-bit ret)
 ;
 ;           PARAMETERS:     AX          GATE NUMBER
 ;                           DX          SEGMENT TRANSFER
@@ -245,9 +245,9 @@ is_valid_usergate       ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-register_usergate_name  DB 'Register User Gate',0
+register_old_usergate_name  DB 'Register Old User Gate',0
 
-register_usergate       PROC far
+register_old_usergate       PROC far
     push fs
     push bx
     push ecx
@@ -266,22 +266,24 @@ register_usergate       PROC far
     mov fs:[bx].gate_entry_sel32,ds
     xchg dx,fs:[bx].gate_transfer
     or dx,dx
-    jnz register_user_nov86
+    jnz register_old_user_nov86
 ;
     mov fs:[bx].gate_entry_offset_v86,ecx
     mov fs:[bx].gate_entry_sel_v86,ds
-    jmp register_user_done
+    jmp register_old_user_done
 
-register_user_nov86:
+register_old_user_nov86:
     xchg dx,fs:[bx].gate_transfer
     
-register_user_done:
+register_old_user_done:
+    or fs:[bx].gate_transfer,gate_ret16
+;    
     pop dx
     pop ecx
     pop bx
     pop fs
     retf32
-register_usergate       ENDP
+register_old_usergate       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -327,8 +329,6 @@ register_bimodal_user_nov86:
     xchg dx,fs:[bx].gate_transfer
     
 register_bimodal_user_done:
-    or fs:[bx].gate_transfer,gate16_override
-;
     pop dx
     pop bx
     pop fs
@@ -339,9 +339,9 @@ register_bimodal_usergate       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           REGISTER_USERGATE16
+;           NAME:           REGISTER_OLD_USERGATE16
 ;
-;           DESCRIPTION:    Register 16-bit gate
+;           DESCRIPTION:    Register 16-bit gate (with 16-bit ret)
 ;
 ;           PARAMETERS:     AX          GATE NUMBER
 ;                           DX          SEGMENT TRANSFER
@@ -350,9 +350,9 @@ register_bimodal_usergate       ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-register_usergate16_name    DB 'Register 16-bit User Gate',0
+register_old_usergate16_name    DB 'Register Old 16-bit User Gate',0
 
-register_usergate16     PROC far
+register_old_usergate16     PROC far
     push fs
     push bx
     push dx
@@ -367,21 +367,23 @@ register_usergate16     PROC far
     mov fs:[bx].gate_entry_sel16,ds
     xchg dx,fs:[bx].gate_transfer
     or dx,dx
-    jnz register_user16_nov86
+    jnz register_old_user16_nov86
 ;
     mov fs:[bx].gate_entry_offset_v86,esi
     mov fs:[bx].gate_entry_sel_v86,ds
-    jmp register_user16_done
+    jmp register_old_user16_done
 
-register_user16_nov86:
+register_old_user16_nov86:
     xchg dx,fs:[bx].gate_transfer
     
-register_user16_done:
+register_old_user16_done:
+    or fs:[bx].gate_transfer,gate_ret16
+;    
     pop dx
     pop bx
     pop fs
     retf32
-register_usergate16     ENDP
+register_old_usergate16     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -574,8 +576,8 @@ do_usergate_vm  PROC near
     push ax
     push bp
 ;
-    test ds:[bx].gate_transfer, gate16_override
-    jnz do_virtgate32
+    test ds:[bx].gate_transfer, gate_ret16
+    jz do_virtgate32
 ;
     push cs
     push OFFSET gate_return
@@ -673,8 +675,8 @@ old_do_usercall16   PROC near
     mov ax,flat_sel
     mov ds,ax
 ;
-    test es:[edi].gate_transfer, gate16_override
-    jnz old_do_call16_direct_to32
+    test es:[edi].gate_transfer, gate_ret16
+    jz old_do_call16_direct_to32
 ;
     mov ax,[bp].vm_eflags
     mov [bp+12],ax
@@ -835,8 +837,8 @@ old_do_usercall16_gate:
     mov ax,flat_sel
     mov ds,ax
 ;
-    test es:[edi].gate_transfer, gate16_override
-    jnz old_do16_call_to32
+    test es:[edi].gate_transfer, gate_ret16
+    jz old_do16_call_to32
 
 old_do16_call_to16:
     mov ax,es:[edi].gate_sel16

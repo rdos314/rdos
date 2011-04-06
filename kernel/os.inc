@@ -184,8 +184,8 @@ RegisterOldUserGate16      MACRO
 ;       DX          SEGMENT TRANSFER
 ;       DS:ESI  32-BIT GATE CALL ADDRESS
 ;       ES:EDI  GATE NAME ADDRESS
-RegisterOldUserGate32      MACRO
-    OsGate register_old_usergate32_nr
+RegisterUserGate32      MACRO
+    OsGate register_usergate32_nr
                         ENDM
 
 ;       AX          GATE NUMBER

@@ -417,8 +417,8 @@ LocalUserGate   PROC near
     mov ax,flat_sel
     mov ds,ax
 ;
-    test es:[edi].ugate_transfer, gate16_override
-    jnz do_call16_direct_to32
+    test es:[edi].ugate_transfer, gate_ret16
+    jz do_call16_direct_to32
 ;
     mov ax,[bp].vm_eflags
     mov [bp+12],ax

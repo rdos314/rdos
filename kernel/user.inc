@@ -64,8 +64,7 @@ virt_gs_out		EQU 80h
 virt_seg_in		EQU 0Fh
 virt_seg_out	EQU 0F0h
 
-gate16_override	EQU 100h
-gate32_override	EQU 200h
+gate_ret16      EQU 100h
 
 OldUserGate16	MACRO gate_nr
     db 66h
