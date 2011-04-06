@@ -724,7 +724,7 @@ init    PROC far
     mov edi,OFFSET rename_file_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,rename_file_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov edi,OFFSET init_hook_thread
     HookInitTasking

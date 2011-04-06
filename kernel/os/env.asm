@@ -1360,21 +1360,21 @@ init_device_loop:
     mov edi,OFFSET add_env_var_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,add_env_var_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;    
     mov ebx,OFFSET delete_env_var16
     mov esi,OFFSET delete_env_var32
     mov edi,OFFSET delete_env_var_name
     mov dx,virt_ds_in
     mov ax,delete_env_var_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;    
     mov ebx,OFFSET find_env_var16
     mov esi,OFFSET find_env_var32
     mov edi,OFFSET find_env_var_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,find_env_var_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET get_env_size
     mov edi,OFFSET get_env_size_name
@@ -1387,14 +1387,14 @@ init_device_loop:
     mov edi,OFFSET get_env_data_name
     mov dx,virt_es_in
     mov ax,get_env_data_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;    
     mov ebx,OFFSET set_env_data16
     mov esi,OFFSET set_env_data32
     mov edi,OFFSET set_env_data_name
     mov dx,virt_es_in
     mov ax,set_env_data_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;   
     ret
 init_env    ENDP

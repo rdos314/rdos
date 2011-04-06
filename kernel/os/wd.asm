@@ -583,14 +583,14 @@ init    Proc far
     mov edi,OFFSET get_fault_thread_state_name
     mov dx,virt_es_in
     mov ax,get_fault_thread_state_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET get_fault_thread_tss16
     mov esi,OFFSET get_fault_thread_tss32
     mov edi,OFFSET get_fault_thread_tss_name
     mov dx,virt_es_in
     mov ax,get_fault_thread_tss_nr
-    RegisterUserGate
+    RegisterOldUserGate
     ret
 init    Endp
 

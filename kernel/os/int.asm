@@ -371,7 +371,7 @@ init_exc_loop:
     mov di,OFFSET raw_switch_name
     xor dx,dx
     mov ax,raw_switch_nr
-    RegisterUserGate16
+    RegisterOldUserGate16
 ;
     mov si,OFFSET raw_switch_v86
     mov di,OFFSET raw_switch_name

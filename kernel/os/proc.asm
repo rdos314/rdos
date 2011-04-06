@@ -515,7 +515,7 @@ init_thread     PROC near
     mov di,OFFSET create_thread_name
     mov dx,virt_seg_in
     mov ax,create_thread_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov si,OFFSET terminate_thread
     mov di,OFFSET terminate_thread_name

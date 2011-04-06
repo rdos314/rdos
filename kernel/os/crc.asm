@@ -337,7 +337,7 @@ init_crc    PROC near
     mov edi,OFFSET calc_crc_name
     mov dx,virt_es_in
     mov ax,calc_crc_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     popa
     pop es

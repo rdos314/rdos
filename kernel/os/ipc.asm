@@ -1044,7 +1044,7 @@ init    PROC far
     mov edi,OFFSET get_local_mailslot_name
     mov dx,virt_es_in
     mov ax,get_local_mailslot_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET free_mailslot
     mov edi,OFFSET free_mailslot_name
@@ -1057,28 +1057,28 @@ init    PROC far
     mov edi,OFFSET send_mailslot_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,send_mailslot_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET define_mailslot16
     mov esi,OFFSET define_mailslot32
     mov edi,OFFSET define_mailslot_name
     mov dx,virt_es_in
     mov ax,define_mailslot_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET receive_mailslot16
     mov esi,OFFSET receive_mailslot32
     mov edi,OFFSET receive_mailslot_name
     mov dx,virt_es_in
     mov ax,receive_mailslot_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET reply_mailslot16
     mov esi,OFFSET reply_mailslot32
     mov edi,OFFSET reply_mailslot_name
     mov dx,virt_es_in
     mov ax,reply_mailslot_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov edi,OFFSET init_thread
     HookCreateThread

@@ -618,14 +618,14 @@ init_filedisc   PROC near
     mov edi,OFFSET create_file_drive_name
     mov dx,virt_es_in
     mov ax,create_file_drive_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET open_file_drive16
     mov esi,OFFSET open_file_drive32
     mov edi,OFFSET open_file_drive_name
     mov dx,virt_es_in
     mov ax,open_file_drive_nr
-    RegisterUserGate
+    RegisterOldUserGate
     ret
 init_filedisc   ENDP
 

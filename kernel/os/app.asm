@@ -226,7 +226,7 @@ init_app    PROC near
     mov di,OFFSET load_dll_name
     mov dx,virt_es_in
     mov ax,load_dll_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov si,OFFSET free_dll
     mov di,OFFSET free_dll_name
@@ -245,7 +245,7 @@ init_app    PROC near
     mov di,OFFSET get_module_proc_name
     mov dx,virt_ds_out OR virt_es_in
     mov ax,get_module_proc_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov si,OFFSET get_module_resource
     mov di,OFFSET get_module_resource_name
@@ -258,7 +258,7 @@ init_app    PROC near
     mov di,OFFSET get_module_name_name
     mov dx,virt_es_in
     mov ax,get_module_name_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov si,OFFSET add_wait_for_debug_event
     mov di,OFFSET add_wait_for_debug_event_name
@@ -277,7 +277,7 @@ init_app    PROC near
     mov di,OFFSET get_debug_event_data_name
     mov dx,virt_es_in
     mov ax,get_debug_event_data_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov si,OFFSET clear_debug_event
     mov di,OFFSET clear_debug_event_name

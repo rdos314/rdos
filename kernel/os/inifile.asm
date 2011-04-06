@@ -1978,7 +1978,7 @@ init_inifile    Proc near
     mov edi,OFFSET open_ini_name
     mov dx,virt_es_in
     mov ax,open_ini_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET close_ini
     mov edi,OFFSET close_ini_name
@@ -1991,35 +1991,35 @@ init_inifile    Proc near
     mov edi,OFFSET goto_ini_section_name
     mov dx,virt_es_in
     mov ax,goto_ini_section_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;    
     mov ebx,OFFSET remove_ini_section16
     mov esi,OFFSET remove_ini_section32
     mov edi,OFFSET remove_ini_section_name
     mov dx,virt_es_in
     mov ax,remove_ini_section_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;    
     mov ebx,OFFSET read_ini16
     mov esi,OFFSET read_ini32
     mov edi,OFFSET read_ini_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,read_ini_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;    
     mov ebx,OFFSET write_ini16
     mov esi,OFFSET write_ini32
     mov edi,OFFSET write_ini_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,write_ini_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;    
     mov ebx,OFFSET delete_ini16
     mov esi,OFFSET delete_ini32
     mov edi,OFFSET delete_ini_name
     mov dx,virt_ds_in
     mov ax,delete_ini_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov edi,OFFSET delete_handle
     mov ax,INI_HANDLE

@@ -1094,7 +1094,7 @@ proc_init:
     mov di,OFFSET get_debug_tss_name
     mov dx,virt_es_in
     mov ax,get_debug_tss_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov si,OFFSET debug_trace
     mov di,OFFSET debug_trace_name
@@ -1125,21 +1125,21 @@ proc_init:
     mov edi,OFFSET set_code_break_name
     mov dx,virt_es_in
     mov ax,set_code_break_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov bx,OFFSET set_read_data_break16
     mov si,OFFSET set_read_data_break32
     mov di,OFFSET set_read_data_break_name
     mov dx,virt_es_in
     mov ax,set_read_data_break_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov bx,OFFSET set_write_data_break16
     mov si,OFFSET set_write_data_break32
     mov di,OFFSET set_write_data_break_name
     mov dx,virt_es_in
     mov ax,set_write_data_break_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov si,OFFSET clear_break
     mov di,OFFSET clear_break_name

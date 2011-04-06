@@ -5098,25 +5098,25 @@ init    PROC far
     mov edi,OFFSET notify_pe_exception_name
     xor dx,dx
     mov ax,notify_pe_exception_nr
-    RegisterUserGate32
+    RegisterOldUserGate32
 ;
     mov esi,OFFSET get_dll_handle
     mov edi,OFFSET get_dll_handle_name
     xor dx,dx
     mov ax,get_module_nr
-    RegisterUserGate32
+    RegisterOldUserGate32
 ;
     mov esi,OFFSET reserve_pe_mem
     mov edi,OFFSET reserve_pe_mem_name
     xor dx,dx
     mov ax,reserve_pe_mem_nr
-    RegisterUserGate32
+    RegisterOldUserGate32
 ;
     mov esi,OFFSET show_exception_text
     mov edi,OFFSET show_exception_text_name
     xor dx,dx
     mov ax,show_exception_text_nr
-    RegisterUserGate32
+    RegisterOldUserGate32
     clc
     ret
 init    ENDP

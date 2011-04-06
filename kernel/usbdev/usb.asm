@@ -3093,14 +3093,14 @@ init    Proc far
     mov edi,OFFSET get_usb_device_name
     mov dx,virt_es_in
     mov ax,get_usb_device_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET get_usb_config16
     mov esi,OFFSET get_usb_config32
     mov edi,OFFSET get_usb_config_name
     mov dx,virt_es_in
     mov ax,get_usb_config_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET config_usb_device
     mov edi,OFFSET config_usb_device_name
@@ -3143,7 +3143,7 @@ init    Proc far
     mov edi,OFFSET write_usb_control_name
     mov dx,virt_es_in
     mov ax,write_usb_control_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET req_usb_data
     mov edi,OFFSET req_usb_data_name
@@ -3156,14 +3156,14 @@ init    Proc far
     mov edi,OFFSET get_usb_data_size_name
     mov dx,virt_es_in
     mov ax,get_usb_data_size_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET write_usb_data16
     mov esi,OFFSET write_usb_data32
     mov edi,OFFSET write_usb_data_name
     mov dx,virt_es_in
     mov ax,write_usb_data_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET req_usb_status
     mov edi,OFFSET req_usb_status_name

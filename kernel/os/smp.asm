@@ -569,7 +569,7 @@ init_smp    PROC near
     mov edi,OFFSET get_remote_mailslot_name
     mov dx,virt_es_in
     mov ax,get_remote_mailslot_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;       
     call init_smp_response
     call init_smp_send

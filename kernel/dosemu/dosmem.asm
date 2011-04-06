@@ -778,7 +778,7 @@ init_dos_mem    PROC near
     mov edi,OFFSET allocate_dos_mem_name
     mov dx,virt_es_out
     mov ax,allocate_dos_mem_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET available_dos_linear
     mov edi,OFFSET available_dos_linear_name

@@ -352,14 +352,14 @@ init_mem    PROC near
     mov di,OFFSET read_thread_mem_name
     mov dx,virt_es_in
     mov ax,read_thread_mem_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov bx,OFFSET write_thread_mem16
     mov si,OFFSET write_thread_mem32
     mov di,OFFSET write_thread_mem_name
     mov dx,virt_es_in
     mov ax,write_thread_mem_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov si,OFFSET allocate_local_linear
     mov di,OFFSET allocate_local_linear_name
@@ -420,7 +420,7 @@ init_mem    PROC near
     mov di,OFFSET allocate_local_mem_name
     mov dx,virt_es_out
     mov ax,allocate_local_mem_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov si,OFFSET resize_flat_linear
     mov di,OFFSET resize_flat_linear_name

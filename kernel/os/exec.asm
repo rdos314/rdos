@@ -2170,7 +2170,7 @@ init    PROC far
     mov edi,OFFSET load_exe_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,load_exe_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET dos_ext_exec16
     mov edi,OFFSET dos_ext_exec_name
@@ -2189,14 +2189,14 @@ init    PROC far
     mov edi,OFFSET spawn_exe_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,spawn_exe_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET fork16
     mov esi,OFFSET fork32
     mov edi,OFFSET fork_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,fork_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET get_exit_code
     mov edi,OFFSET get_exit_code_name

@@ -1225,7 +1225,7 @@ init    PROC far
     mov edi,OFFSET write_audio_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,write_audio_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET get_audio_out_buf
     mov edi,OFFSET get_audio_out_buf_name

@@ -5729,14 +5729,14 @@ init_tcp    PROC near
     mov edi,OFFSET read_tcp_connection_name
     mov dx,virt_es_in
     mov ax,read_tcp_connection_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET write_tcp_connection16
     mov esi,OFFSET write_tcp_connection32
     mov edi,OFFSET write_tcp_connection_name
     mov dx,virt_es_in
     mov ax,write_tcp_connection_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET push_tcp_connection
     mov edi,OFFSET push_tcp_connection_name

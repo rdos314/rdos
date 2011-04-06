@@ -126,7 +126,7 @@ init_usergate_loop:
     mov esi,OFFSET register_usergate
     mov edi,OFFSET register_usergate_name
     xor cl,cl
-    mov ax,register_usergate_nr
+    mov ax,register_old_usergate_nr
     RegisterOsGate
 ;
     mov esi,OFFSET register_bimodal_usergate
@@ -138,13 +138,13 @@ init_usergate_loop:
     mov esi,OFFSET register_usergate16
     mov edi,OFFSET register_usergate16_name
     xor cl,cl
-    mov ax,register_usergate16_nr
+    mov ax,register_old_usergate16_nr
     RegisterOsGate
 ;
     mov esi,OFFSET register_usergate32
     mov edi,OFFSET register_usergate32_name
     xor cl,cl
-    mov ax,register_usergate32_nr
+    mov ax,register_old_usergate32_nr
     RegisterOsGate
 ;
     mov esi,OFFSET register_usergate_v86

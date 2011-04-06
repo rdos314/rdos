@@ -849,7 +849,7 @@ init_bitmap     PROC near
     mov edi,OFFSET create_string_bitmap_name
     mov dx,virt_es_in
     mov ax,create_string_bitmap_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET get_bitmap_info
     mov edi,OFFSET get_bitmap_info_name

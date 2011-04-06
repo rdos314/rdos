@@ -3356,14 +3356,14 @@ init_video      PROC near
     mov edi,OFFSET write_asciiz_name
     mov dx,virt_es_in
     mov ax,write_asciiz_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET write_size_string16
     mov esi,OFFSET write_size_string32
     mov edi,OFFSET write_size_string_name
     mov dx,virt_es_in
     mov ax,write_size_string_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET set_clip_rect
     mov edi,OFFSET set_clip_rect_name
@@ -3436,7 +3436,7 @@ init_video      PROC near
     mov edi,OFFSET draw_string_name
     mov dx,virt_es_in
     mov ax,draw_string_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET draw_line
     mov edi,OFFSET draw_line_name

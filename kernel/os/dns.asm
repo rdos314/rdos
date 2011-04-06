@@ -928,14 +928,14 @@ init_dns    PROC near
     mov edi,OFFSET name_to_ip_name
     mov dx,virt_es_in
     mov ax,name_to_ip_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET ip_to_name16
     mov esi,OFFSET ip_to_name32
     mov edi,OFFSET ip_to_name_name
     mov dx,virt_es_in
     mov ax,ip_to_name_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov esi,OFFSET get_dns
     mov edi,OFFSET get_dns_name

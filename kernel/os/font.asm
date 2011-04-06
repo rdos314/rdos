@@ -981,7 +981,7 @@ init_font_loop:
     mov edi,OFFSET get_string_metrics_name
     mov dx,virt_es_in
     mov ax,get_string_metrics_nr
-    RegisterUserGate
+    RegisterOldUserGate
     ret
 init    ENDP
         

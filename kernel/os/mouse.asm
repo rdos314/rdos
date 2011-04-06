@@ -1697,7 +1697,7 @@ init_mouse      PROC near
     mov edi,OFFSET hook_mouse_name
     xor dx,dx
     mov ax,hook_mouse_nr
-    RegisterUserGate
+    RegisteroldUserGate
 ;
     mov esi,OFFSET unhook_mouse
     mov edi,OFFSET unhook_mouse_name

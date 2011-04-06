@@ -148,7 +148,7 @@ init_cpu_gates  PROC near
         mov edi,OFFSET get_cpu_version_name
         mov dx,virt_es_in
         mov ax,get_cpu_version_nr
-        RegisterUserGate
+        RegisterOldUserGate
 ;
     popa
     pop es

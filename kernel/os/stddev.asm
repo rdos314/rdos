@@ -1267,7 +1267,7 @@ init_stddev     PROC near
     mov edi,OFFSET read_con_name
     mov dx,virt_es_in
     mov ax,read_con_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ax,SIZE std_device_process_seg
     mov bx,std_dev_process_sel

@@ -5289,28 +5289,28 @@ init    PROC far
     mov edi,OFFSET format_drive_name
     mov dx,virt_es_in
     mov ax,format_drive_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET read_disc16
     mov esi,OFFSET read_disc32
     mov edi,OFFSET read_disc_name
     mov dx,virt_es_in
     mov ax,read_disc_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET write_disc16
     mov esi,OFFSET write_disc32
     mov edi,OFFSET write_disc_name
     mov dx,virt_es_in
     mov ax,write_disc_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov ebx,OFFSET erase_disc_sectors16
     mov esi,OFFSET erase_disc_sectors32
     mov edi,OFFSET erase_disc_sectors_name
     xor dx,dx
     mov ax,erase_disc_sectors_nr
-    RegisterUserGate
+    RegisterOldUserGate
 ;
     mov edi,OFFSET init_disc
     HookInitFileSystem
