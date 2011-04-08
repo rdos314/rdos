@@ -89,7 +89,6 @@ code    SEGMENT byte use16 public 'CODE'
     extrn prot_exception:near
     extrn virt_exception:near
 
-    extrn old_do_usercall16:near
     extrn old_do_usercall32:near
 
     extrn do_oscall:near
@@ -295,8 +294,8 @@ int_retry:
 
 usercall_tab16:
 suct00   DW 0
-suct01   DW OFFSET old_do_usercall16
-suct02   DW OFFSET old_do_usercall32
+suct01   DW 0
+suct02   DW 0
 suct03   DW 0
 suct04   DW 0
 suct05   DW 0
