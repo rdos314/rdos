@@ -548,7 +548,7 @@ load_program16 Proc far
     pop esi
     pop ebx
     pop fs
-    ret
+    retf32
 load_program16  Endp
     
 load_program32 Proc far
@@ -1642,7 +1642,7 @@ spawn_program16 Proc far
 ;
     pop edi
     pop esi
-    ret
+    retf32
 spawn_program16 Endp
     
 spawn_program32 Proc far
@@ -1968,7 +1968,7 @@ fork16  Proc far
 ;
     pop edi
     pop esi    
-    ret
+    retf32
 fork16  Endp
     
 fork32  Proc far
@@ -2170,7 +2170,7 @@ init    PROC far
     mov edi,OFFSET load_exe_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,load_exe_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET dos_ext_exec16
     mov edi,OFFSET dos_ext_exec_name
@@ -2189,14 +2189,14 @@ init    PROC far
     mov edi,OFFSET spawn_exe_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,spawn_exe_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET fork16
     mov esi,OFFSET fork32
     mov edi,OFFSET fork_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,fork_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET get_exit_code
     mov edi,OFFSET get_exit_code_name
