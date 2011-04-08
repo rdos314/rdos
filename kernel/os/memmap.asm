@@ -879,7 +879,7 @@ create_named_mapping16  Proc far
     movzx edi,di
     call create_named_mapping
     pop edi
-    ret
+    retf32
 create_named_mapping16  Endp
 
 
@@ -980,7 +980,7 @@ create_named_file_mapping16     Proc far
     movzx edi,di
     call create_named_file_mapping
     pop edi
-    ret
+    retf32
 create_named_file_mapping16     Endp
 
 
@@ -1020,7 +1020,7 @@ open_named_mapping16    Proc far
     movzx edi,di
     call open_named_mapping
     pop edi
-    ret
+    retf32
 open_named_mapping16    Endp
 
 
@@ -1350,7 +1350,7 @@ map_view16      Proc far
     call map_view
     pop edi
     pop ecx
-    ret
+    retf32
 map_view16      Endp
 
 
@@ -1490,7 +1490,7 @@ init_memmap     PROC near
     mov edi,OFFSET create_named_mapping_name
     mov dx,virt_es_in
     mov ax,create_named_mapping_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET create_file_mapping
     mov edi,OFFSET create_file_mapping_name
@@ -1503,14 +1503,14 @@ init_memmap     PROC near
     mov edi,OFFSET create_named_file_mapping_name
     mov dx,virt_es_in
     mov ax,create_named_file_mapping_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET open_named_mapping16
     mov esi,OFFSET open_named_mapping32
     mov edi,OFFSET open_named_mapping_name
     mov dx,virt_es_in
     mov ax,open_named_mapping_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET sync_mapping
     mov edi,OFFSET sync_mapping_name
@@ -1529,7 +1529,7 @@ init_memmap     PROC near
     mov edi,OFFSET map_view_name
     mov dx,virt_es_in
     mov ax,map_view_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET unmap_view
     mov edi,OFFSET unmap_view_name
