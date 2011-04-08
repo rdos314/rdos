@@ -64,24 +64,6 @@ virt_gs_out		EQU 80h
 virt_seg_in		EQU 0Fh
 virt_seg_out	EQU 0F0h
 
-OldUserGate16	MACRO gate_nr
-    db 66h
-    db 9Ah
-    dd gate_nr
-    dw 1
-    db 90h
-    db 90h
-			ENDM
-
-OldUserGate32	MACRO gate_nr
-    db 9Ah
-    dd gate_nr
-    dw 2
-    db 90h
-    db 90h
-    db 90h
-			ENDM
-
 OldUserGateForce32 MACRO gate_nr
     db 66h
     db 9Ah
@@ -89,14 +71,6 @@ OldUserGateForce32 MACRO gate_nr
     dw 2
     db 90h
     db 90h
-			ENDM
-
-OldUserGate        MACRO gate_nr
-IF (size $) EQ 0FF02h
-    OldUserGate16 gate_nr
-ELSE
-	OldUserGate32 gate_nr
-ENDIF
 			ENDM
 
 UserGate16	MACRO gate_nr

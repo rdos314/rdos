@@ -1450,7 +1450,7 @@ cscLoop:
     pop bx
     loop cscLoop
 ;
-    OldUserGate close_dir_nr
+    UserGate close_dir_nr
     push es
     mov ax,ds
     mov es,ax
