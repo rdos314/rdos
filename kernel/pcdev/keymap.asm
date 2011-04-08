@@ -508,7 +508,7 @@ get_key_layout16    Proc far
     movzx edi,di
     call get_key_layout
     pop edi
-    ret
+    retf32
 get_key_layout16    Endp
 
 get_key_layout32    Proc far
@@ -569,7 +569,7 @@ set_key_layout16    Proc far
     movzx edi,di
     call set_key_layout
     pop edi
-    ret
+    retf32
 set_key_layout16    Endp
 
 set_key_layout32    Proc far
@@ -607,14 +607,14 @@ init    PROC far
     mov edi,OFFSET get_key_layout_name
     mov dx,virt_es_in
     mov ax,get_key_layout_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET set_key_layout16
     mov esi,OFFSET set_key_layout32
     mov edi,OFFSET set_key_layout_name
     mov dx,virt_es_in
     mov ax,set_key_layout_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     pop edi
     pop es
