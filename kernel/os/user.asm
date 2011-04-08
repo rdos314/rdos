@@ -571,19 +571,6 @@ do_usergate_vm  PROC near
     push ax
     push bp
 ;
-    test ds:[bx].gate_transfer, gate_ret16
-    jz do_virtgate32
-;
-    push cs
-    push OFFSET gate_return
-    mov ax,[bp].vm_eflags
-    and ax,03FFFh
-    push ax
-    push ds:[bx].gate_entry_sel_v86
-    push ds:[bx].gate_entry_offset_v86
-    jmp do_virtgate_translate
-
-do_virtgate32:
     push 0
     push cs
     push 0
@@ -670,58 +657,6 @@ old_do_usercall16   PROC near
     mov ax,flat_sel
     mov ds,ax
 ;
-    test es:[edi].gate_transfer, gate_ret16
-    jz old_do_call16_direct_to32
-;
-    mov ax,[bp].vm_eflags
-    mov [bp+12],ax
-    mov ax,[bp].vm_cs
-    mov [bp+16],ax
-    mov ax,[bp].vm_eip
-    add ax,8
-    mov [bp+14],ax  
-;
-    mov ax,es:[edi].gate_entry_sel16
-    cmp ax,[bp+16]
-    je old_do_call16_direct_cs16
-;
-    mov [bp+10],ax
-    mov eax,es:[edi].gate_entry_offset16
-    mov [bp+8],ax
-;
-    mov ax,0F5F5h
-    shl eax,16
-    mov ax,es:[edi].gate_entry_sel16
-    xchg eax,ds:[ebx+4]
-;    
-    mov eax,es:[edi].gate_entry_offset16
-    shl eax,16
-    mov ax,9A90h
-    xchg eax,ds:[ebx]
-;
-    mov ax,9090h
-    xchg ax,ds:[ebx+6]
-    jmp old_do16_retry16
-
-old_do_call16_direct_cs16:
-    mov [bp+10],ax
-    mov eax,es:[edi].gate_entry_offset16
-    mov [bp+8],ax
-    sub ax,[bp+14]
-    add ax,2
-;
-    movzx eax,ax
-    or eax,0F5F50000h
-    xchg eax,ds:[ebx+4]
-;
-    mov eax,0E80E9090h
-    xchg eax,ds:[ebx]
-;
-    mov ax,9090h
-    xchg ax,ds:[ebx+6]
-    jmp old_do16_retry16
-
-old_do_call16_direct_to32:
     mov ax,[bp].vm_eflags
     mov [bp+8],ax
     movzx eax,word ptr [bp].vm_cs
@@ -832,31 +767,6 @@ old_do_usercall16_gate:
     mov ax,flat_sel
     mov ds,ax
 ;
-    test es:[edi].gate_transfer, gate_ret16
-    jz old_do16_call_to32
-
-old_do16_call_to16:
-    mov ax,es:[edi].gate_sel16
-    or ax,ax
-    jnz old_do16_call_defined
-;
-    push ds
-    push bx
-    push esi
-    AllocateGdt
-    or bx,3
-    mov es:[edi].gate_sel16,bx
-    mov esi,es:[edi].gate_entry_offset16
-    mov ds,es:[edi].gate_entry_sel16
-    xor cl,cl
-    CreateCallGateSelector16
-    mov ax,bx
-    pop esi
-    pop bx
-    pop ds
-    jmp old_do16_call_defined
-
-old_do16_call_to32:
     mov ax,es:[edi].gate_sel32
     or ax,ax
     jnz old_do16_call_defined

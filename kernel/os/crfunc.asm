@@ -416,56 +416,6 @@ LocalUserGate   PROC near
     add     ebx,edx
     mov ax,flat_sel
     mov ds,ax
-;
-    test es:[edi].ugate_transfer, gate_ret16
-    jz do_call16_direct_to32
-;
-    mov ax,[bp].vm_eflags
-    mov [bp+12],ax
-    mov ax,[bp].vm_cs
-    mov [bp+16],ax
-    mov ax,[bp].vm_eip
-    add ax,8
-    mov [bp+14],ax  
-;
-    mov ax,es:[edi].ugate_entry_sel16
-    cmp ax,[bp+16]
-    je do_call16_direct_cs16
-;
-    mov ds:[ebx+3],ax
-    mov [bp+10],ax
-    mov eax,es:[edi].ugate_entry_offset16
-    mov ds:[ebx+1],ax
-    mov [bp+8],ax
-    mov byte ptr ds:[ebx],9Ah
-    mov word ptr ds:[ebx+5],9090h
-    mov byte ptr ds:[ebx+7],90h
-    jmp do_call16_direct_do16
-
-do_call16_direct_cs16:
-    mov [bp+10],ax
-    mov eax,es:[edi].ugate_entry_offset16
-    mov [bp+8],ax
-    sub ax,[bp+14]
-    add ax,4
-    mov ds:[ebx+2],ax
-    mov word ptr ds:[ebx],0E80Eh
-    mov word ptr ds:[ebx+4],9090h
-    mov word ptr ds:[ebx+6],9090h
-
-do_call16_direct_do16:
-    pop edi
-    pop edx
-    pop ecx
-    pop es
-;
-    mov ds,[bp].pm_ds
-    mov eax,[bp].vm_eax
-    mov ebx,[bp].vm_ebx
-    mov sp,bp
-    pop bp
-    add sp,6
-    iret
 
 do_call16_direct_to32:
     mov ax,[bp].vm_eflags
