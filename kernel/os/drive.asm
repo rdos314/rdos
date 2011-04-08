@@ -4063,7 +4063,7 @@ erase_disc_sectors16    Proc far
     call erase_disc_sectors
 ;
     pop ecx
-    ret
+    retf32
 erase_disc_sectors16    Endp
 
 
@@ -4413,7 +4413,7 @@ read_disc16     Proc far
 ;
     pop edi
     pop ecx
-    ret
+    retf32
 read_disc16     Endp
 
 
@@ -4553,7 +4553,7 @@ write_disc16    Proc far
 ;
     pop edi
     pop ecx
-    ret
+    retf32
 write_disc16    Endp
 
 
@@ -4803,7 +4803,7 @@ format_drive16  Proc far
     movzx edi,di
     call format_drive
     pop edi
-    ret
+    retf32
 format_drive16  Endp
 
 
@@ -5289,28 +5289,28 @@ init    PROC far
     mov edi,OFFSET format_drive_name
     mov dx,virt_es_in
     mov ax,format_drive_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET read_disc16
     mov esi,OFFSET read_disc32
     mov edi,OFFSET read_disc_name
     mov dx,virt_es_in
     mov ax,read_disc_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET write_disc16
     mov esi,OFFSET write_disc32
     mov edi,OFFSET write_disc_name
     mov dx,virt_es_in
     mov ax,write_disc_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET erase_disc_sectors16
     mov esi,OFFSET erase_disc_sectors32
     mov edi,OFFSET erase_disc_sectors_name
     xor dx,dx
     mov ax,erase_disc_sectors_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov edi,OFFSET init_disc
     HookInitFileSystem

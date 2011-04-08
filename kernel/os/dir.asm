@@ -2306,7 +2306,7 @@ set_cur_dir16   PROC far
     movzx edi,di
     call SetCurDirBase
     pop edi
-    ret
+    retf32
 set_cur_dir16   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2347,7 +2347,7 @@ get_cur_dir16   PROC far
     movzx edi,di
     call GetCurDirBase
     pop edi
-    ret
+    retf32
 get_cur_dir16   ENDP
 
 
@@ -2374,7 +2374,7 @@ make_dir16      PROC far
     movzx edi,di
     call CreateDirBase
     pop edi
-    ret
+    retf32
 make_dir16      ENDP
 
 
@@ -2401,7 +2401,7 @@ remove_dir16    PROC far
     movzx edi,di
     call DeleteDirBase
     pop edi
-    ret
+    retf32
 remove_dir16    ENDP
 
 
@@ -2442,7 +2442,7 @@ get_file_attrib16       PROC far
     movzx edi,di
     call GetFileAttribBase
     pop edi
-    ret
+    retf32
 get_file_attrib16       ENDP
 
 
@@ -2484,7 +2484,7 @@ set_file_attrib16       PROC far
     movzx edi,di
     call SetFileAttribBase
     pop edi
-    ret
+    retf32
 set_file_attrib16       ENDP
 
 
@@ -2511,7 +2511,7 @@ delete_file16   PROC far
     movzx edi,di
     call DeleteFileBase
     pop edi
-    ret
+    retf32
 delete_file16   ENDP
 
 
@@ -2540,7 +2540,7 @@ open_dir16      PROC far
     movzx edi,di
     call OpenDirBase
     pop edi
-    ret
+    retf32
 open_dir16      ENDP
 
 
@@ -2574,7 +2574,7 @@ read_dir16      PROC far
     movzx edi,di
     call ReadDirBase
     pop edi
-    ret
+    retf32
 read_dir16      ENDP
 
 
@@ -2660,7 +2660,7 @@ open_file16     PROC far
     movzx edi,di
     call OpenFileBase
     pop edi
-    ret
+    retf32
 open_file16     ENDP
 
 
@@ -2702,7 +2702,7 @@ create_file16   PROC far
     movzx edi,di
     call CreateFileBase
     pop edi
-    ret
+    retf32
 create_file16   ENDP
 
 
@@ -3026,63 +3026,63 @@ init_dir    PROC near
     mov edi,OFFSET set_cur_dir_name
     mov dx,virt_es_in
     mov ax,set_cur_dir_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET get_cur_dir16
     mov esi,OFFSET get_cur_dir32
     mov edi,OFFSET get_cur_dir_name
     mov dx,virt_es_in
     mov ax,get_cur_dir_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET make_dir16
     mov esi,OFFSET make_dir32
     mov edi,OFFSET make_dir_name
     mov dx,virt_es_in
     mov ax,make_dir_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET remove_dir16
     mov esi,OFFSET remove_dir32
     mov edi,OFFSET remove_dir_name
     mov dx,virt_es_in
     mov ax,remove_dir_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET get_file_attrib16
     mov esi,OFFSET get_file_attrib32
     mov edi,OFFSET get_file_attribute_name
     mov dx,virt_es_in
     mov ax,get_file_attribute_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET set_file_attrib16
     mov esi,OFFSET set_file_attrib32
     mov edi,OFFSET set_file_attribute_name
     mov dx,virt_es_in
     mov ax,set_file_attribute_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET delete_file16
     mov esi,OFFSET delete_file32
     mov edi,OFFSET delete_file_name
     mov dx,virt_es_in
     mov ax,delete_file_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET open_dir16
     mov esi,OFFSET open_dir32
     mov edi,OFFSET open_dir_name
     mov dx,virt_es_in
     mov ax,open_dir_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET read_dir16
     mov esi,OFFSET read_dir32
     mov edi,OFFSET read_dir_name
     mov dx,virt_es_in
     mov ax,read_dir_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET close_dir
     mov edi,OFFSET close_dir_name
@@ -3095,14 +3095,14 @@ init_dir    PROC near
     mov edi,OFFSET open_file_name
     mov dx,virt_es_in
     mov ax,open_file_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET create_file16
     mov esi,OFFSET create_file32
     mov edi,OFFSET create_file_name
     mov dx,virt_es_in
     mov ax,create_file_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     ret
 init_dir    ENDP

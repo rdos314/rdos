@@ -446,7 +446,7 @@ create_file_drive16 Proc far
     call create_file_drive
     pop edi
     pop esi
-    ret
+    retf32
 create_file_drive16 Endp
 
 
@@ -591,7 +591,7 @@ open_file_drive16 Proc far
     movzx edi,di
     call open_file_drive
     pop edi
-    ret
+    retf32
 open_file_drive16 Endp
 
 
@@ -618,14 +618,14 @@ init_filedisc   PROC near
     mov edi,OFFSET create_file_drive_name
     mov dx,virt_es_in
     mov ax,create_file_drive_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET open_file_drive16
     mov esi,OFFSET open_file_drive32
     mov edi,OFFSET open_file_drive_name
     mov dx,virt_es_in
     mov ax,open_file_drive_nr
-    RegisterOldUserGate
+    RegisterUserGate
     ret
 init_filedisc   ENDP
 

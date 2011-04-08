@@ -2226,7 +2226,7 @@ read_file16_done:
     pop ecx
     pop ebx
     pop ds
-    ret
+    retf32
 read_file16     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2385,7 +2385,7 @@ write_file16_done:
     pop ecx
     pop ebx
     pop ds
-    ret
+    retf32
 write_file16    ENDP
 
 
@@ -2860,14 +2860,14 @@ init_file       PROC near
     mov edi,OFFSET read_file_name
     mov dx,virt_es_in
     mov ax,read_file_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET write_file16
     mov esi,OFFSET write_file32
     mov edi,OFFSET write_file_name
     mov dx,virt_es_in
     mov ax,write_file_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ax,SEG data
     mov ds,ax   
