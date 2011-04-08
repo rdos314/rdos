@@ -326,7 +326,7 @@ get_local_mailslot16    Proc far
     movzx edi,di
     call get_local_mailslot
     pop edi
-    ret
+    retf32
 get_local_mailslot16    Endp
 
     
@@ -447,7 +447,7 @@ send_mailslot16 Proc far
     pop edi
     pop esi
     pop eax
-    ret
+    retf32
 send_mailslot16 Endp
 
     
@@ -541,7 +541,7 @@ define_mailslot16       Proc far
     call define_mailslot
     pop edi
     pop ecx
-    ret
+    retf32
 define_mailslot16       Endp
 
     
@@ -876,7 +876,7 @@ receive_mailslot16      Proc far
     movzx edi,di
     call receive_mailslot
     pop edi
-    ret
+    retf32
 receive_mailslot16      Endp
 
     
@@ -927,7 +927,7 @@ reply_mailslot16    Proc far
     call reply_mailslot
     pop edi
     pop ecx
-    ret
+    retf32
 reply_mailslot16    Endp
 
     
@@ -1044,7 +1044,7 @@ init    PROC far
     mov edi,OFFSET get_local_mailslot_name
     mov dx,virt_es_in
     mov ax,get_local_mailslot_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET free_mailslot
     mov edi,OFFSET free_mailslot_name
@@ -1057,28 +1057,28 @@ init    PROC far
     mov edi,OFFSET send_mailslot_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,send_mailslot_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET define_mailslot16
     mov esi,OFFSET define_mailslot32
     mov edi,OFFSET define_mailslot_name
     mov dx,virt_es_in
     mov ax,define_mailslot_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET receive_mailslot16
     mov esi,OFFSET receive_mailslot32
     mov edi,OFFSET receive_mailslot_name
     mov dx,virt_es_in
     mov ax,receive_mailslot_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET reply_mailslot16
     mov esi,OFFSET reply_mailslot32
     mov edi,OFFSET reply_mailslot_name
     mov dx,virt_es_in
     mov ax,reply_mailslot_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov edi,OFFSET init_thread
     HookCreateThread

@@ -230,7 +230,7 @@ get_remote_mailslot16   Proc far
     movzx edi,di
     call GetSendMailslot
     pop edi
-    ret
+    retf32
 get_remote_mailslot16   Endp
 
         
@@ -569,7 +569,7 @@ init_smp    PROC near
     mov edi,OFFSET get_remote_mailslot_name
     mov dx,virt_es_in
     mov ax,get_remote_mailslot_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;       
     call init_smp_response
     call init_smp_send

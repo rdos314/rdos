@@ -1094,7 +1094,7 @@ proc_init:
     mov di,OFFSET get_debug_tss_name
     mov dx,virt_es_in
     mov ax,get_debug_tss_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov si,OFFSET debug_trace
     mov di,OFFSET debug_trace_name
@@ -1125,21 +1125,21 @@ proc_init:
     mov edi,OFFSET set_code_break_name
     mov dx,virt_es_in
     mov ax,set_code_break_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov bx,OFFSET set_read_data_break16
     mov si,OFFSET set_read_data_break32
     mov di,OFFSET set_read_data_break_name
     mov dx,virt_es_in
     mov ax,set_read_data_break_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov bx,OFFSET set_write_data_break16
     mov si,OFFSET set_write_data_break32
     mov di,OFFSET set_write_data_break_name
     mov dx,virt_es_in
     mov ax,set_write_data_break_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov si,OFFSET clear_break
     mov di,OFFSET clear_break_name
@@ -1371,7 +1371,7 @@ get_debug_tss16 PROC far
 get_debug_tss_done16:   
     pop si
     pop ds
-    ret
+    retf32
 get_debug_tss16 ENDP
 
 get_debug_tss32 PROC far
@@ -1998,7 +1998,7 @@ set_code_break16  Proc far
     movzx edi,di
     call set_code_break
     pop edi
-    ret
+    retf32
 set_code_break16  Endp
 
 set_code_break32  Proc far
@@ -2050,8 +2050,7 @@ set_read_data_break16  Proc far
     movzx edi,di
     call set_read_data_break
     pop edi
-
-    ret
+    retf32
 set_read_data_break16  Endp
 
 set_read_data_break32  Proc far
@@ -2103,7 +2102,7 @@ set_write_data_break16  Proc far
     movzx edi,di
     call set_write_data_break
     pop edi
-    ret
+    retf32
 set_write_data_break16  Endp
 
 set_write_data_break32  Proc far

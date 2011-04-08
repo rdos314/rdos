@@ -1075,7 +1075,7 @@ read_con16      PROC far
     pop eax
     mov ax,cx
     pop ecx 
-    ret
+    retf32
 read_con16      ENDP
 
 read_con32      PROC far
@@ -1267,7 +1267,7 @@ init_stddev     PROC near
     mov edi,OFFSET read_con_name
     mov dx,virt_es_in
     mov ax,read_con_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ax,SIZE std_device_process_seg
     mov bx,std_dev_process_sel

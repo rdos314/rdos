@@ -515,7 +515,7 @@ init_thread     PROC near
     mov di,OFFSET create_thread_name
     mov dx,virt_seg_in
     mov ax,create_thread_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov si,OFFSET terminate_thread
     mov di,OFFSET terminate_thread_name
@@ -1630,7 +1630,7 @@ create_thread16 Proc far
     pop edi
     pop esi
     pop ecx
-    ret
+    retf32
 create_thread16 Endp
 
 create_thread32 Proc far

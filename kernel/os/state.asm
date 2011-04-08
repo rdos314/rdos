@@ -279,7 +279,7 @@ get_thread_state16      Proc far
     movzx edi,di
     call get_thread_state
     pop edi
-    ret
+    retf32
 get_thread_state16      Endp
 
 get_thread_state32      Proc far
@@ -512,7 +512,7 @@ get_thread_tss16    Proc far
     movzx edi,di
     call get_thread_tss
     pop edi
-    ret
+    retf32
 get_thread_tss16    Endp
 
 get_thread_tss32    Proc far
@@ -636,7 +636,7 @@ set_thread_tss16    Proc far
     movzx edi,di
     call set_thread_tss
     pop edi
-    ret
+    retf32
 set_thread_tss16    Endp
 
 set_thread_tss32    Proc far
@@ -682,21 +682,21 @@ init_state      PROC near
     mov edi,OFFSET get_thread_state_name
     mov dx,virt_es_in
     mov ax,get_thread_state_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET get_thread_tss16
     mov esi,OFFSET get_thread_tss32
     mov edi,OFFSET get_thread_tss_name
     mov dx,virt_es_in
     mov ax,get_thread_tss_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET set_thread_tss16
     mov esi,OFFSET set_thread_tss32
     mov edi,OFFSET set_thread_tss_name
     mov dx,virt_es_in
     mov ax,set_thread_tss_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET suspend_thread
     mov edi,OFFSET suspend_thread_name
