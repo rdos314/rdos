@@ -688,7 +688,7 @@ allocate_dos_mem_next_ldt:
     pop bx
     pop ds
     clc
-    ret
+    retf32
 allocate_dos_mem_fail16:
     mov dx,ax
     pop eax
@@ -700,7 +700,7 @@ allocate_dos_mem_fail16:
     pop bx
     pop ds
     stc
-    ret
+    retf32
 allocate_dos_mem16      ENDP
 
 allocate_dos_mem32      PROC far
@@ -778,7 +778,7 @@ init_dos_mem    PROC near
     mov edi,OFFSET allocate_dos_mem_name
     mov dx,virt_es_out
     mov ax,allocate_dos_mem_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET available_dos_linear
     mov edi,OFFSET available_dos_linear_name
