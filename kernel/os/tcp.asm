@@ -4945,7 +4945,7 @@ read_tcp_done16:
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 read_tcp_connection16   Endp
 
 read_tcp_connection32   Proc far
@@ -5148,7 +5148,7 @@ write_tcp_done16:
     pop fs
     pop es
     pop ds
-    ret
+    retf32
 write_tcp_connection16  Endp
 
 write_tcp_connection32  Proc far
@@ -5729,14 +5729,14 @@ init_tcp    PROC near
     mov edi,OFFSET read_tcp_connection_name
     mov dx,virt_es_in
     mov ax,read_tcp_connection_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET write_tcp_connection16
     mov esi,OFFSET write_tcp_connection32
     mov edi,OFFSET write_tcp_connection_name
     mov dx,virt_es_in
     mov ax,write_tcp_connection_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET push_tcp_connection
     mov edi,OFFSET push_tcp_connection_name
