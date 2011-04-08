@@ -99,7 +99,7 @@ ELSE
 ENDIF
 			ENDM
 
-NewUserGate16	MACRO gate_nr
+UserGate16	MACRO gate_nr
     db 67h
     db 66h
     db 9Ah
@@ -107,7 +107,7 @@ NewUserGate16	MACRO gate_nr
     dw 1
 			ENDM
 
-NewOldUserGate32	MACRO gate_nr
+UserGate32	MACRO gate_nr
     db 3Eh
     db 67h
     db 9Ah
@@ -115,11 +115,11 @@ NewOldUserGate32	MACRO gate_nr
     dw 1
 			ENDM
 
-NewOldUserGate        MACRO gate_nr
+UserGate        MACRO gate_nr
 IF (size $) EQ 0FF02h
-    NewOldUserGate16 gate_nr
+    UserGate16 gate_nr
 ELSE
-	NewOldUserGate32 gate_nr
+	UserGate32 gate_nr
 ENDIF
 			ENDM
 			
@@ -2438,7 +2438,7 @@ CalcCrc      MACRO
 ;   IN  ES:(E)DI    Buffer
 ;   OUT (E)AX       Size of descriptor
 GetUsbDevice      MACRO
-	OldUserGate get_usb_device_nr
+	UserGate get_usb_device_nr
 						ENDM
 
 ;   IN  BX          Controller #
@@ -2448,14 +2448,14 @@ GetUsbDevice      MACRO
 ;   IN  ES:(E)DI    Buffer
 ;   OUT (E)AX       Size of descriptor
 GetUsbConfig      MACRO
-	OldUserGate get_usb_config_nr
+	UserGate get_usb_config_nr
 						ENDM
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   IN  DL          Configuration id
 ConfigUsbDevice      MACRO
-	OldUserGate config_usb_device_nr
+	UserGate config_usb_device_nr
 						ENDM
 
 ;   IN  BX          Controller #
@@ -2463,78 +2463,78 @@ ConfigUsbDevice      MACRO
 ;   IN  DL          Pipe #
 ;   OUT BX          Handle
 OpenUsbPipe      MACRO
-	OldUserGate open_usb_pipe_nr
+	UserGate open_usb_pipe_nr
 						ENDM
 
 ;   IN  BX          Handle
 CloseUsbPipe      MACRO
-	OldUserGate close_usb_pipe_nr
+	UserGate close_usb_pipe_nr
 						ENDM
 
 ;   IN  BX          Handle
 LockUsbPipe      MACRO
-	OldUserGate lock_usb_pipe_nr
+	UserGate lock_usb_pipe_nr
 						ENDM
 
 ;   IN  BX          Handle
 UnlockUsbPipe      MACRO
-	OldUserGate unlock_usb_pipe_nr
+	UserGate unlock_usb_pipe_nr
 						ENDM
 
 ;   IN  BX          Handle
 ;   IN  CX          Size of data
 ;   IN  ES:(E)DI    Buffer
 WriteUsbControl      MACRO
-	OldUserGate write_usb_control_nr
+	UserGate write_usb_control_nr
 						ENDM
 
 ;   IN  BX          Handle
 ;   IN  CX          Size of data
 ;   IN  ES:(E)DI    Buffer
 ReqUsbData      MACRO
-	OldUserGate req_usb_data_nr
+	UserGate req_usb_data_nr
 						ENDM
 
 ;   IN  BX          Handle
 ;   OUT (E)AX       Read size
 GetUsbDataSize      MACRO
-	OldUserGate get_usb_data_size_nr
+	UserGate get_usb_data_size_nr
 						ENDM
 
 ;   IN  BX          Handle
 ;   IN  CX          Size of data
 ;   IN  ES:(E)DI    Buffer
 WriteUsbData      MACRO
-	OldUserGate write_usb_data_nr
+	UserGate write_usb_data_nr
 						ENDM
 
 ;   IN  BX          Handle
 ReqUsbStatus      MACRO
-	OldUserGate req_usb_status_nr
+	UserGate req_usb_status_nr
 						ENDM
 
 ;   IN  BX          Handle
 WriteUsbStatus      MACRO
-	OldUserGate write_usb_status_nr
+	UserGate write_usb_status_nr
 						ENDM
 
 ;   IN  BX          Handle
 StartUsbTransaction      MACRO
-	OldUserGate start_usb_transaction_nr
+	UserGate start_usb_transaction_nr
 						ENDM
 
 ;   IN  BX          Handle
 ;   IN  CY          Transaction pending
 ;   IN  NC          Transaction done
 IsUsbTransactionDone      MACRO
-	OldUserGate is_usb_trans_done_nr
+	UserGate is_usb_trans_done_nr
 						ENDM
 
 ;   IN  BX          Handle
 ;   IN  CY          Transaction failed
 ;   IN  NC          Transaction ok
 WasUsbTransactionOk      MACRO
-	OldUserGate was_usb_trans_ok_nr
+	UserGate was_usb_trans_ok_nr
 						ENDM
 
 ;;;;;;;;;;; ICSP (In-circuit serial programming) ;;;;;;;;;;
