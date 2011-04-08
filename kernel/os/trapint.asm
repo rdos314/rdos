@@ -89,7 +89,7 @@ code    SEGMENT byte use16 public 'CODE'
     extrn prot_exception:near
     extrn virt_exception:near
 
-    extrn old_do_usercall32:near
+    extrn do_app_usercall32:near
 
     extrn do_oscall:near
     extrn do_usercall16:near
@@ -284,33 +284,6 @@ int_retry:
     pop ebp
     add sp,8
     iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Call tables
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-usercall_tab16:
-suct00   DW 0
-suct01   DW 0
-suct02   DW 0
-suct03   DW 0
-suct04   DW 0
-suct05   DW 0
-suct06   DW 0
-suct07   DW 0
-
-usercall_tab32:
-luct00   DW 0
-luct01   DW 0
-luct02   DW OFFSET old_do_usercall32
-luct03   DW 0
-luct04   DW 0
-luct05   DW 0
-luct06   DW 0
-luct07   DW 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1370,60 +1343,23 @@ t13_not_kernel_call:
     jne t13_not32
 ;
     mov ax,[ebx+5]
-    cmp ax,8
-    jae t13_default
+    cmp ax,2
+    jne t13_default
 ;        
-    push bx
-    mov bx,ax
-    add bx,bx
-    mov ax,word ptr cs:[bx].usercall_tab32
-    pop bx
-    or ax,ax
-    jz t13_default
-;
     push ds
-    push ax
     mov ax,system_data_sel
     mov ds,ax
     call ds:leave_patch_proc
-    pop ax
     pop ds
 ;
-    push OFFSET t13_check
-    push ax
-    retn
+    call do_app_usercall32
+    jmp t13_check
 
 t13_not32:
     cmp al,66h
     jne t13_default
 ;
-    mov al,[ebx+1]
-    cmp al,9Ah
-    jne t13_default
-;
-    mov ax,[ebx+6]        
-    cmp ax,8
-    jae t13_default
-;    
-    push bx
-    mov bx,ax
-    add bx,bx
-    mov ax,word ptr cs:[bx].usercall_tab16
-    pop bx
-    or ax,ax
-    jz t13_default
-;
-    push ds
-    push ax
-    mov ax,system_data_sel
-    mov ds,ax
-    call ds:leave_patch_proc
-    pop ax
-    pop ds
-;    
-    push OFFSET t13_check
-    push ax
-    retn
+    jmp t13_default
 
 t13_check:    
     jnc t13_end
@@ -1804,44 +1740,17 @@ pretask_gpf_not_oscall:
     jne pretask_gpf_not32
 ;
     mov ax,[ebx+5]
-    cmp ax,8
-    jae pretask_gpf_default
-;    
-    push bx
-    mov bx,ax
-    add bx,bx
-    mov ax,word ptr cs:[bx].usercall_tab32
-    pop bx   
-    or ax,ax
-    jz pretask_gpf_default
+    cmp ax,2
+    jne pretask_gpf_default
 ;
-    push OFFSET pretask_gpf_check
-    push ax
-    retn  
+    call do_app_usercall32
+    jmp pretask_gpf_check
 
 pretask_gpf_not32:
     cmp al,66h
     jne pretask_gpf_default
 ;
-    mov al,[ebx+1]
-    cmp al,9Ah
-    jne pretask_gpf_default
-;
-    mov ax,[ebx+6]        
-    cmp ax,8
-    jae pretask_gpf_default
-;    
-    push bx
-    mov bx,ax
-    add bx,bx
-    mov ax, word ptr cs:[bx].usercall_tab16
-    pop bx
-    or ax,ax
-    jz pretask_gpf_default
-;
-    push OFFSET pretask_gpf_check
-    push ax
-    retn        
+    jmp pretask_gpf_default
 
 pretask_gpf_check:      
     jnc pretask_gpf_retry

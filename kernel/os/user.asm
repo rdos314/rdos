@@ -620,7 +620,7 @@ do_usergate_vm  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           OLD_DO_USERCALL32
+;           NAME:           DO_APP_USERCALL32
 ;
 ;           DESCRIPTION:    Translate a 32-bit protected mode user call
 ;
@@ -628,124 +628,24 @@ do_usergate_vm  ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public old_do_usercall32
+    public do_app_usercall32
 
-old_do_usercall32   PROC near
-    mov ax,ds
-    test ax,3
-    jnz old_do_usercall32_gate
-;
+do_app_usercall32   PROC near
     push es
     push ecx
     push edx
     push edi
     mov al,ds:[ebx]
     cmp al,66h
-    jne old_do_kernel_no_ov32
+    jne do_app_no_ov32
 ;
     mov edi,ds:[ebx+2]
-    jmp old_do_kernel_ov_ok32
+    jmp do_app_ov_ok32
 
-old_do_kernel_no_ov32:
+do_app_no_ov32:
     mov edi,ds:[ebx+1]
 
-old_do_kernel_ov_ok32:
-    shl edi,5
-    mov ax,usergate_sel
-    mov es,ax
-;
-    push ebx
-    mov bx,ds
-    call local_get_selector_base_size
-    pop ebx
-    add     ebx,edx
-    mov ax,flat_sel
-    mov ds,ax
-;
-    mov ax,[bp].vm_eflags
-    mov [bp+8],ax
-    movzx eax,word ptr [bp].vm_cs
-    mov [bp+14],eax
-    movzx eax,word ptr [bp].vm_eip
-    add eax,8
-    mov [bp+10],eax 
-;
-    mov ax,es:[edi].gate_entry_sel32
-    cmp ax,[bp+14]
-    je old_do_call32_direct_cs32
-;
-    mov ds:[ebx+6],ax
-    mov [bp+6],ax
-;
-    mov al,ds:[ebx]
-    cmp al,66h
-    jne old_do_call32_intra32       
-;
-    mov eax,es:[edi].gate_entry_offset32
-    mov ds:[ebx+2],eax
-    mov [bp+4],ax
-    mov word ptr ds:[ebx],9A66h
-    jmp old_do_call32_direct_do32
-
-old_do_call32_intra32:
-    mov eax,es:[edi].gate_entry_offset32
-    mov ds:[ebx+1],eax
-    mov [bp+4],ax
-    mov byte ptr ds:[ebx],9Ah
-    jmp old_do_call32_direct_do32
-
-old_do_call32_direct_cs32:
-    mov [bp+6],ax
-;
-    mov al,ds:[ebx]
-    cmp al,66h
-    jne old_do_call32_direct32      
-;    
-    mov eax,es:[edi].gate_entry_offset32
-    mov [bp+4],ax
-    sub eax,[bp+10]
-    mov ds:[ebx+4],eax
-    mov dword ptr ds:[ebx],0E8660E66h
-    jmp old_do_call32_direct_do32
-
-old_do_call32_direct32:
-    mov eax,es:[edi].gate_entry_offset32
-    mov [bp+4],ax
-    sub eax,[bp+10]
-    mov ds:[ebx+2],eax
-    mov word ptr ds:[ebx],0E80Eh
-    mov byte ptr ds:[ebx+6],90h
-
-old_do_call32_direct_do32:
-    pop edi
-    pop edx
-    pop ecx
-    pop es
-;
-    mov ds,[bp].pm_ds
-    mov eax,[bp].vm_eax
-    mov ebx,[bp].vm_ebx
-    mov sp,bp
-    pop bp
-    add sp,2
-    iret
-
-old_do_usercall32_gate:    
-    push es
-    push ecx
-    push edx
-    push edi
-    mov al,ds:[ebx]
-    cmp al,66h
-    jne old_do_no_ov32
-;
-    mov edi,ds:[ebx+2]
-    jmp old_do_ov_ok32
-
-old_do_no_ov32:
-    mov edi,ds:[ebx+1]
-
-old_do_ov_ok32:
+do_app_ov_ok32:
     shl edi,5
     mov ax,usergate_sel
     mov es,ax
@@ -760,7 +660,7 @@ old_do_ov_ok32:
 ;
     mov ax,es:[edi].gate_sel32
     or ax,ax
-    jnz old_do32_call_defined
+    jnz do_app_call_defined
 ;
     push ds
     push bx
@@ -777,28 +677,28 @@ old_do_ov_ok32:
     pop bx
     pop ds
 
-old_do32_call_defined:
+do_app_call_defined:
     mov cl,ds:[ebx]
     cmp cl,66h
-    je old_do32_gate16
+    je do_app_gate16
 
-old_do32_gate32:
+do_app_gate32:
     mov dword ptr ds:[ebx+1],0
     mov ds:[ebx+5],ax
-    jmp old_do32_done
+    jmp do_app_done
 
-old_do32_gate16:
+do_app_gate16:
     mov dword ptr ds:[ebx+2],0
     mov ds:[ebx+6],ax
 
-old_do32_done:
+do_app_done:
     pop edi
     pop edx
     pop ecx
     pop es
     clc
     ret
-old_do_usercall32   ENDP
+do_app_usercall32   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
