@@ -1336,9 +1336,6 @@ t13_int_call:
     jmp t13_end
 
 t13_not_kernel_call:    
-    cmp al,90h
-    je t13_retry
-;        
     cmp al,9Ah
     jne t13_not32
 ;
@@ -1733,18 +1730,7 @@ pretask_kernel_gate:
     jmp pretask_gpf_retry
 
 pretask_gpf_not_oscall:    
-    cmp al,90h
-    je pretask_gpf_reexec
-;        
-    cmp al,9Ah
-    jne pretask_gpf_not32
-;
-    mov ax,[ebx+5]
-    cmp ax,2
-    jne pretask_gpf_default
-;
-    call do_app_usercall32
-    jmp pretask_gpf_check
+    jmp pretask_gpf_default
 
 pretask_gpf_not32:
     cmp al,66h
