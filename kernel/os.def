@@ -449,4 +449,7 @@ crash_fault_nr              = 390
 read_pnp_byte_nr            = 393
 write_pnp_byte_nr           = 394
 
+register_usergate_nr		= 395
+register_usergate16_nr		= 396
+
 osgate_entries				= 400

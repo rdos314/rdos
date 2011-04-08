@@ -141,6 +141,18 @@ init_usergate_loop:
     mov ax,register_old_usergate16_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET register_usergate
+    mov edi,OFFSET register_usergate_name
+    xor cl,cl
+    mov ax,register_usergate_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET register_usergate16
+    mov edi,OFFSET register_usergate16_name
+    xor cl,cl
+    mov ax,register_usergate16_nr
+    RegisterOsGate
+;
     mov esi,OFFSET register_usergate32
     mov edi,OFFSET register_usergate32_name
     xor cl,cl
@@ -384,6 +396,107 @@ register_old_user16_done:
     pop fs
     retf32
 register_old_usergate16     ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           REGISTER_USERGATE
+;
+;           DESCRIPTION:    Register 16- & 32-bit gate
+;
+;           PARAMETERS:     AX          GATE NUMBER
+;                           DX          SEGMENT TRANSFER
+;                           DS:EBX   16-BIT GATE CALL ADDRESS
+;                           DS:ESI   32-BIT GATE CALL ADDRESS
+;                           ES:EDI   GATE NAME ADDRESS
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_usergate_name  DB 'Register User Gate',0
+
+register_usergate       PROC far
+    push fs
+    push bx
+    push ecx
+    push dx
+;
+    mov ecx,ebx
+    mov bx,usergate_sel
+    mov fs,bx
+    mov bx,ax
+    shl bx,5
+    mov fs:[bx].gate_name_offset,edi
+    mov fs:[bx].gate_name_sel,es
+    mov fs:[bx].gate_entry_offset16,ecx
+    mov fs:[bx].gate_entry_sel16,ds
+    mov fs:[bx].gate_entry_offset32,esi
+    mov fs:[bx].gate_entry_sel32,ds
+    xchg dx,fs:[bx].gate_transfer
+    or dx,dx
+    jnz register_user_nov86
+;
+    mov fs:[bx].gate_entry_offset_v86,ecx
+    mov fs:[bx].gate_entry_sel_v86,ds
+    jmp register_user_done
+
+register_user_nov86:
+    xchg dx,fs:[bx].gate_transfer
+    
+register_user_done:
+    pop dx
+    pop ecx
+    pop bx
+    pop fs
+    retf32
+register_usergate       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           REGISTER_USERGATE16
+;
+;           DESCRIPTION:    Register 16-bit gate
+;
+;           PARAMETERS:     AX          GATE NUMBER
+;                           DX          SEGMENT TRANSFER
+;                           DS:ESI   16-BIT GATE CALL ADDRESS
+;                           ES:EDI   GATE NAME ADDRESS
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_usergate16_name    DB 'Register 16-bit User Gate',0
+
+register_usergate16     PROC far
+    push fs
+    push bx
+    push dx
+;
+    mov bx,usergate_sel
+    mov fs,bx
+    mov bx,ax
+    shl bx,5
+    mov fs:[bx].gate_name_offset,edi
+    mov fs:[bx].gate_name_sel,es
+    mov fs:[bx].gate_entry_offset16,esi
+    mov fs:[bx].gate_entry_sel16,ds
+    xchg dx,fs:[bx].gate_transfer
+    or dx,dx
+    jnz register_user16_nov86
+;
+    mov fs:[bx].gate_entry_offset_v86,esi
+    mov fs:[bx].gate_entry_sel_v86,ds
+    jmp register_user16_done
+
+register_user16_nov86:
+    xchg dx,fs:[bx].gate_transfer
+    
+register_user16_done:
+    pop dx
+    pop bx
+    pop fs
+    retf32
+register_usergate16     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
