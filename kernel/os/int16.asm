@@ -141,55 +141,55 @@ init_int16      PROC near
     mov di,OFFSET get_exception_vector_name
     xor dx,dx
     mov ax,get_exception_nr
-    RegisterOldUserGate16
+    RegisterUserGate16
 ;
     mov si,OFFSET set_exception_vector
     mov di,OFFSET set_exception_vector_name
     xor dx,dx
     mov ax,set_exception_nr
-    RegisterOldUserGate16
+    RegisterUserGate16
 ;
     mov si,OFFSET get_pm_int
     mov di,OFFSET get_pm_int_name
     xor dx,dx
     mov ax,get_pm_int_nr
-    RegisterOldUserGate16
+    RegisterUserGate16
 ;
     mov si,OFFSET set_pm_int
     mov di,OFFSET set_pm_int_name
     xor dx,dx
     mov ax,set_pm_int_nr
-    RegisterOldUserGate16
+    RegisterUserGate16
 ;
     mov si,OFFSET dpmi_int
     mov di,OFFSET dpmi_int_name
     xor dx,dx
     mov ax,dpmi_int_nr
-    RegisterOldUserGate16
+    RegisterUserGate16
 ;
     mov si,OFFSET dpmi_call_int
     mov di,OFFSET dpmi_call_int_name
     xor dx,dx
     mov ax,dpmi_call_int_nr
-    RegisterOldUserGate16
+    RegisterUserGate16
 ;
     mov si,OFFSET dpmi_call
     mov di,OFFSET dpmi_call_name
     xor dx,dx
     mov ax,dpmi_call_nr
-    RegisterOldUserGate16
+    RegisterUserGate16
 ;
     mov si,OFFSET allocate_vm_callback
     mov di,OFFSET allocate_vm_callback_name
     xor dx,dx
     mov ax,allocate_vm_callback_nr
-    RegisterOldUserGate16
+    RegisterUserGate16
 ;
     mov si,OFFSET free_vm_callback
     mov di,OFFSET free_vm_callback_name
     xor dx,dx
     mov ax,free_vm_callback_nr
-    RegisterOldUserGate16
+    RegisterUserGate16
 ;
 ; create default reflection
 ;
@@ -401,7 +401,7 @@ get_exception_vector    PROC far
     mov es,word ptr ds:[bx+4].app_pm_exc
     pop bx
     pop ds
-    ret
+    retf32
 get_exception_vector    ENDP
 
 
@@ -433,7 +433,7 @@ set_exception_vector    PROC far
     mov word ptr ds:[bx+4].app_pm_exc,es
     pop bx
     pop ds
-    ret
+    retf32
 set_exception_vector    ENDP
 
 
@@ -522,7 +522,7 @@ get_pm_int      PROC far
     call fword ptr ds:[si].get_pm16_int_handlers
     pop si
     pop ds
-    ret
+    retf32
 get_pm_int      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -549,7 +549,7 @@ set_pm_int      PROC far
     call fword ptr ds:[si].set_pm16_int_handlers
     pop si
     pop ds
-    ret
+    retf32
 set_pm_int      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -678,7 +678,7 @@ sim16_end       PROC far
     pop es
     pop ds
     add sp,2
-    ret
+    retf32
 sim16_end       ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1103,7 +1103,7 @@ allocate_vm_callback    PROC far
     push dx
     pop edx
     and ax,0Fh
-    ret
+    retf32
 allocate_vm_callback    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1130,7 +1130,7 @@ free_vm_callback    PROC far
     FreeLinear
     pop edx
     pop ecx
-    ret
+    retf32
 free_vm_callback    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
