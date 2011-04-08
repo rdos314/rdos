@@ -848,13 +848,13 @@ old_do_call16_direct_to32:
     add eax,8
     mov [bp+10],eax 
 ;
-    mov ax,es:[edi].gate_entry_sel32
+    mov ax,es:[edi].gate_entry_sel16
     cmp ax,[bp+14]
     je old_do_call16_direct_cs32
 ;
     mov ds:[ebx+6],ax
     mov [bp+6],ax
-    mov eax,es:[edi].gate_entry_offset32
+    mov eax,es:[edi].gate_entry_offset16
     mov ds:[ebx+2],eax
     mov [bp+4],ax
     mov word ptr ds:[ebx],9A66h
@@ -862,7 +862,7 @@ old_do_call16_direct_to32:
 
 old_do_call16_direct_cs32:
     mov [bp+6],ax
-    mov eax,es:[edi].gate_entry_offset32
+    mov eax,es:[edi].gate_entry_offset16
     mov [bp+4],ax
     sub eax,[bp+10]
     mov ds:[ebx+4],eax
