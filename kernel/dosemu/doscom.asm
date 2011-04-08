@@ -1423,7 +1423,7 @@ cscLoop:
     mov dx,ax
     add edi,OFFSET dc_name
     mov ecx,12
-    OldUserGateForce32 read_dir_nr
+    UserGateForce32 read_dir_nr
     mov byte ptr es:[edi+12],0
     pop edi
 ;

@@ -203,7 +203,7 @@ set_int PROC far
     mov di,ds
     mov es,di
     mov edi,edx
-    OldUserGateForce32 set_pm_int_nr
+    UserGateForce32 set_pm_int_nr
     pop edi
     pop es
     and byte ptr [bp].vm_eflags,NOT 1
@@ -268,7 +268,7 @@ get_indos_flag  ENDP
 
 get_int PROC far
     push edi
-    OldUserGateForce32 get_pm_int_nr
+    UserGateForce32 get_pm_int_nr
     mov ebx,edi
     pop edi
     and byte ptr [bp].vm_eflags,NOT 1
@@ -293,7 +293,7 @@ make_dir    PROC far
     push es
     mov es,[bp].pm_ds
     mov edi,edx
-    OldUserGateForce32 make_dir_nr
+    UserGateForce32 make_dir_nr
     pop es
     pop edi
     jnc make_dir_done
@@ -326,7 +326,7 @@ remove_dir      PROC far
     push es
     mov es,[bp].pm_ds
     mov edi,edx
-    OldUserGateForce32 remove_dir_nr
+    UserGateForce32 remove_dir_nr
     pop edi
     pop es
     jnc remove_dir_done
@@ -359,7 +359,7 @@ set_cur_dir     PROC far
     push es
     mov es,[bp].pm_ds
     mov edi,edx
-    OldUserGateForce32 set_cur_dir_nr
+    UserGateForce32 set_cur_dir_nr
     pop es
     pop edi
     jnc setup_cur_do
@@ -408,7 +408,7 @@ create_handle_found:
     push edi
     mov es,[bp].pm_ds
     mov edi,edx
-    OldUserGateForce32 create_file_nr
+    UserGateForce32 create_file_nr
     pop edi
     pop es
     jnc create_handle_ok
@@ -462,7 +462,7 @@ open_handle_found:
     mov es,bx
     mov edi,edx
     mov cl,[bp].vm_eax
-    OldUserGateForce32 open_file_nr
+    UserGateForce32 open_file_nr
     pop edi
     pop es
     jnc open_handle_ok
@@ -522,7 +522,7 @@ read_handle_read:
     mov es,bx
     pop bx
     mov edi,edx
-    OldUserGateForce32 read_file_nr
+    UserGateForce32 read_file_nr
     pop edi
     jnc read_handle_ok
     mov ax,5
@@ -577,7 +577,7 @@ write_handle_write:
     mov di,ds
     mov es,di
     mov edi,edx
-    OldUserGateForce32 write_file_nr
+    UserGateForce32 write_file_nr
     pop edi
     jnc write_handle_ok
     mov ax,5
@@ -613,7 +613,7 @@ delete_file     PROC far
     push edi
     mov es,[bp].pm_ds
     mov edi,edx
-    OldUserGateForce32 delete_file_nr
+    UserGateForce32 delete_file_nr
     pop edi
     pop es
     jc delete_file_fail
@@ -653,7 +653,7 @@ get_file_attrib:
     mov bx,ds
     mov es,bx
     mov edi,edx
-    OldUserGateForce32 get_file_attribute_nr
+    UserGateForce32 get_file_attribute_nr
     pop edi
     pop es
     jnc file_attrib_ok
@@ -694,9 +694,9 @@ get_cur_dir     PROC far
     mov al,dl
     sub al,1
     jnc get_cur_not_default
-    OldUserGateForce32 get_cur_drive_nr
+    UserGateForce32 get_cur_drive_nr
 get_cur_not_default:
-    OldUserGateForce32 get_cur_dir_nr
+    UserGateForce32 get_cur_dir_nr
     pop es
     pop edi
     jc get_cur_dir_fail
@@ -771,7 +771,7 @@ load_program    PROC far
     SimSti
     mov esi,edx
     mov edi,[bp].vm_ebx
-    OldUserGateForce32 load_exe_nr
+    UserGateForce32 load_exe_nr
     jc load_fail
     and byte ptr [bp].vm_eflags,1
     jmp load_done
@@ -853,7 +853,7 @@ rename_file     PROC far
     push esi
     mov ds,[bp].pm_ds
     mov esi,edx
-    OldUserGateForce32 rename_file_nr
+    UserGateForce32 rename_file_nr
     jc rename_file_fail
     and byte ptr [bp].vm_eflags,NOT 1
     jmp rename_file_done

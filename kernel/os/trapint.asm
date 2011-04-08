@@ -1333,11 +1333,11 @@ t13_not_int:
     jne t13_retry
 ;
     mov ax,[ebx+7]
-    cmp ax,2
-    je t13_int_call
+    or ax,ax
+    jz t13_retry
 ;
-    cmp ax,1
-    jne t13_retry
+    cmp ax,3
+    ja t13_retry    
 
 t13_int_call:
     push ds
@@ -1773,11 +1773,11 @@ pretask_gpf_not_int:
     jne pretask_gpf_default
 ;
     mov ax,[ebx+7]
-    cmp ax,2
-    je pretask_kernel_gate
+    or ax,ax
+    jz pretask_gpf_default
 ;
-    cmp ax,1    
-    jne pretask_gpf_default
+    cmp ax,3
+    ja pretask_gpf_default
 
 pretask_kernel_gate:
     push ecx

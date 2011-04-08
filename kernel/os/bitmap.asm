@@ -545,7 +545,7 @@ create_string_bitmap    Proc near
     mov ax,es
     mov fs,ax
     mov [bp].csb_font_handle,bx
-    OldUserGateForce32 get_string_metrics_nr
+    UserGateForce32 get_string_metrics_nr
     mov [bp].csb_width,cx
     mov [bp].csb_height,dx
 ;

@@ -373,7 +373,7 @@ IntFarPm32:
         mov eax,[bp].reg_eip
         call PushDword
         pop ax
-        OldUserGateForce32 get_pm_int_nr
+        UserGateForce32 get_pm_int_nr
         mov [bp].reg_cs,es
         mov [bp].reg_eip,edi
 
@@ -491,7 +491,7 @@ ExcFarPm32:
         call PushDword
 ;
         pop ax
-        OldUserGateForce32 get_exception_nr
+        UserGateForce32 get_exception_nr
         mov [bp].reg_cs,es
         mov [bp].reg_eip,edi
 
