@@ -955,7 +955,7 @@ open_ini16 Proc far
     movzx edi,di
     call open_ini
     pop edi
-    ret
+    retf32
 open_ini16  Endp
 
 open_ini32:
@@ -1109,7 +1109,7 @@ goto_ini_section16  Proc far
     movzx edi,di
     call goto_ini_section
     pop edi
-    ret
+    retf32
 goto_ini_section16  Endp
 
 goto_ini_section32  Proc far
@@ -1231,7 +1231,7 @@ remove_ini_section16  Proc far
     movzx edi,di
     call remove_ini_section
     pop edi
-    ret
+    retf32
 remove_ini_section16  Endp
 
 remove_ini_section32  Proc far
@@ -1354,7 +1354,7 @@ read_ini16  Proc far
     pop edi
     pop esi
     pop ecx
-    ret
+    retf32
 read_ini16  Endp
 
 read_ini32  Proc far
@@ -1861,7 +1861,7 @@ write_ini16  Proc far
     call write_ini
     pop edi
     pop esi
-    ret
+    retf32
 write_ini16  Endp
 
 write_ini32  Proc far
@@ -1893,7 +1893,7 @@ delete_ini16  Proc far
     movzx esi,si
     call delete_ini
     pop esi
-    ret
+    retf32
 delete_ini16  Endp
 
 delete_ini32  Proc far
@@ -1978,7 +1978,7 @@ init_inifile    Proc near
     mov edi,OFFSET open_ini_name
     mov dx,virt_es_in
     mov ax,open_ini_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET close_ini
     mov edi,OFFSET close_ini_name
@@ -1991,35 +1991,35 @@ init_inifile    Proc near
     mov edi,OFFSET goto_ini_section_name
     mov dx,virt_es_in
     mov ax,goto_ini_section_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;    
     mov ebx,OFFSET remove_ini_section16
     mov esi,OFFSET remove_ini_section32
     mov edi,OFFSET remove_ini_section_name
     mov dx,virt_es_in
     mov ax,remove_ini_section_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;    
     mov ebx,OFFSET read_ini16
     mov esi,OFFSET read_ini32
     mov edi,OFFSET read_ini_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,read_ini_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;    
     mov ebx,OFFSET write_ini16
     mov esi,OFFSET write_ini32
     mov edi,OFFSET write_ini_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,write_ini_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;    
     mov ebx,OFFSET delete_ini16
     mov esi,OFFSET delete_ini32
     mov edi,OFFSET delete_ini_name
     mov dx,virt_ds_in
     mov ax,delete_ini_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov edi,OFFSET delete_handle
     mov ax,INI_HANDLE

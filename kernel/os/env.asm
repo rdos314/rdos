@@ -615,7 +615,7 @@ add_env_var16  Proc far
 ;
     pop edi
     pop esi
-    ret
+    retf32
 add_env_var16  Endp
 
 add_env_var32:
@@ -770,7 +770,7 @@ delete_env_var16  Proc far
     movzx esi,si
     call delete_env_var
     pop esi
-    ret
+    retf32
 delete_env_var16  Endp
 
 delete_env_var32:
@@ -913,7 +913,7 @@ find_env_var16  Proc far
 ;
     pop edi
     pop esi
-    ret
+    retf32
 find_env_var16  Endp
 
 find_env_var32:
@@ -1090,7 +1090,7 @@ get_env_data16  Proc far
     call get_env_data
 ;
     pop edi
-    ret
+    retf32
 get_env_data16  Endp
 
 get_env_data32:
@@ -1172,7 +1172,7 @@ set_env_data16  Proc far
     call set_env_data
 ;
     pop edi
-    ret
+    retf32
 set_env_data16  Endp
 
 set_env_data32:
@@ -1360,21 +1360,21 @@ init_device_loop:
     mov edi,OFFSET add_env_var_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,add_env_var_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;    
     mov ebx,OFFSET delete_env_var16
     mov esi,OFFSET delete_env_var32
     mov edi,OFFSET delete_env_var_name
     mov dx,virt_ds_in
     mov ax,delete_env_var_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;    
     mov ebx,OFFSET find_env_var16
     mov esi,OFFSET find_env_var32
     mov edi,OFFSET find_env_var_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,find_env_var_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET get_env_size
     mov edi,OFFSET get_env_size_name
@@ -1387,14 +1387,14 @@ init_device_loop:
     mov edi,OFFSET get_env_data_name
     mov dx,virt_es_in
     mov ax,get_env_data_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;    
     mov ebx,OFFSET set_env_data16
     mov esi,OFFSET set_env_data32
     mov edi,OFFSET set_env_data_name
     mov dx,virt_es_in
     mov ax,set_env_data_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;   
     ret
 init_env    ENDP
