@@ -1425,7 +1425,7 @@ hook_mouse16    Proc far
     movzx edi,di
     call hook_mouse
     pop edi
-    ret
+    retf32
 hook_mouse16    Endp
 
 hook_mouse32    Proc far
@@ -1697,7 +1697,7 @@ init_mouse      PROC near
     mov edi,OFFSET hook_mouse_name
     xor dx,dx
     mov ax,hook_mouse_nr
-    RegisteroldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET unhook_mouse
     mov edi,OFFSET unhook_mouse_name

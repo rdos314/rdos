@@ -1,9 +1,9 @@
 
 register_osgate_nr              = 0
 is_valid_osgate_nr		    	= 1
-register_old_usergate_nr		= 2
+register_usergate_nr		    = 2
 register_bimodal_usergate_nr	= 3
-register_old_usergate16_nr		= 4
+register_usergate16_nr		    = 4
 register_usergate32_nr		    = 5
 register_usergate_v86_nr	    = 6
 create_alias_sel16_nr           = 7
@@ -448,8 +448,5 @@ crash_fault_nr              = 390
 
 read_pnp_byte_nr            = 393
 write_pnp_byte_nr           = 394
-
-register_usergate_nr		= 395
-register_usergate16_nr		= 396
 
 osgate_entries				= 400

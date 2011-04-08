@@ -168,23 +168,6 @@ RegisterBimodalUserGate MACRO
 ;       DS:EBX  16-BIT GATE CALL ADDRESS
 ;       DS:ESI  32-BIT GATE CALL ADDRESS
 ;       ES:EDI  GATE NAME ADDRESS
-RegisterOldUserGate    MACRO
-    OsGate register_old_usergate_nr
-                        ENDM
-
-;       AX          GATE NUMBER
-;       DX          SEGMENT TRANSFER
-;       DS:ESI  16-BIT GATE CALL ADDRESS
-;       ES:EDI  GATE NAME ADDRESS
-RegisterOldUserGate16      MACRO
-    OsGate register_old_usergate16_nr
-                        ENDM
-
-;       AX          GATE NUMBER
-;       DX          SEGMENT TRANSFER
-;       DS:EBX  16-BIT GATE CALL ADDRESS
-;       DS:ESI  32-BIT GATE CALL ADDRESS
-;       ES:EDI  GATE NAME ADDRESS
 RegisterUserGate    MACRO
     OsGate register_usergate_nr
                         ENDM
