@@ -834,7 +834,7 @@ get_string_metrics16    Proc far
     movzx edi,di
     call get_string_metrics
     pop edi
-    ret
+    retf32
 get_string_metrics16    Endp    
 
 
@@ -981,7 +981,7 @@ init_font_loop:
     mov edi,OFFSET get_string_metrics_name
     mov dx,virt_es_in
     mov ax,get_string_metrics_nr
-    RegisterOldUserGate
+    RegisterUserGate
     ret
 init    ENDP
         

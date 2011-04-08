@@ -405,7 +405,7 @@ name_to_ip16    Proc far
     movzx edi,di
     call name_to_ip
     pop edi
-    ret
+    retf32
 name_to_ip16    Endp
 
 name_to_ip32    Proc far
@@ -820,7 +820,7 @@ ip_to_name16    Proc far
     call ip_to_name
     pop edi
     pop ecx
-    ret
+    retf32
 ip_to_name16    Endp
 
 ip_to_name32    Proc far
@@ -928,14 +928,14 @@ init_dns    PROC near
     mov edi,OFFSET name_to_ip_name
     mov dx,virt_es_in
     mov ax,name_to_ip_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov ebx,OFFSET ip_to_name16
     mov esi,OFFSET ip_to_name32
     mov edi,OFFSET ip_to_name_name
     mov dx,virt_es_in
     mov ax,ip_to_name_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET get_dns
     mov edi,OFFSET get_dns_name

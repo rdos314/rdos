@@ -259,7 +259,7 @@ calc_crc16  Proc far
 ;
     pop edi
     pop ecx
-    ret
+    retf32
 calc_crc16  Endp
     
 
@@ -337,7 +337,7 @@ init_crc    PROC near
     mov edi,OFFSET calc_crc_name
     mov dx,virt_es_in
     mov ax,calc_crc_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     popa
     pop es

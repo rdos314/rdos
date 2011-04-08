@@ -682,7 +682,7 @@ write_audio16   Proc far
 ;       
     pop edi
     pop esi
-    ret
+    retf32
 write_audio16   Endp    
 
 
@@ -1225,7 +1225,7 @@ init    PROC far
     mov edi,OFFSET write_audio_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,write_audio_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET get_audio_out_buf
     mov edi,OFFSET get_audio_out_buf_name

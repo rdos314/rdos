@@ -114,7 +114,7 @@ get_cpu_version16   Proc far
     movzx edi,di
     call get_cpu_version
     pop esi
-    ret
+    retf32
 get_cpu_version16   Endp
 
 get_cpu_version32   Proc far
@@ -148,7 +148,7 @@ init_cpu_gates  PROC near
         mov edi,OFFSET get_cpu_version_name
         mov dx,virt_es_in
         mov ax,get_cpu_version_nr
-        RegisterOldUserGate
+        RegisterUserGate
 ;
     popa
     pop es

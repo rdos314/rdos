@@ -618,7 +618,7 @@ create_string_bitmap16  Proc far
     movzx edi,di
     call create_string_bitmap
     pop edi
-    ret
+    retf32
 create_string_bitmap16  Endp    
 
 
@@ -849,7 +849,7 @@ init_bitmap     PROC near
     mov edi,OFFSET create_string_bitmap_name
     mov dx,virt_es_in
     mov ax,create_string_bitmap_nr
-    RegisterOldUserGate
+    RegisterUserGate
 ;
     mov esi,OFFSET get_bitmap_info
     mov edi,OFFSET get_bitmap_info_name
