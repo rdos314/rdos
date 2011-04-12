@@ -3423,12 +3423,13 @@ start_processor_name    DB 'Start Processor', 0
 start_processor:
     mov ax,task_sel
     mov ds,ax
-
-    jmp start_processor
-    
-    call ds:lock_proc
+;    call ds:lock_proc
     StartSysTimer
     or fs:ps_flags,PS_FLAG_PREEMPT    
+
+stopl:
+    jmp stopl
+
     jmp LoadCurrentThread
     
 
