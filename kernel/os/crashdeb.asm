@@ -69,7 +69,6 @@ code    SEGMENT byte public use16 'CODE'
     extrn ShowCrashCore:near
 
     extrn LocalOsGate:near
-    extrn LocalOldOsGate:near
     extrn LocalUserGate:near
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1308,23 +1307,12 @@ cint12:
     mov al,12
     ShutDownPreTask
 
-usercall_tab16:
-suct00   DW 0
-suct01   DW OFFSET LocalUserGate
-suct02   DW 0
-suct03   DW OFFSET LocalOldOsGate
-suct04   DW 0
-suct05   DW 0
-suct06   DW 0
-suct07   DW 0
-
 cint13:
     push bp
     mov bp,sp
     push eax
     push ebx
     push ds
-;
 ;
     test byte ptr [bp+2].vm_eflags,2
     jnz c13_default
@@ -1334,44 +1322,26 @@ cint13:
     mov al,[ebx]
 ;
     cmp al,67h
-    jne c13_not_oscall
+    jne c13_default
 ;
     mov al,[ebx+2]
     cmp al,9Ah
     jne c13_default
 ;
     mov ax,[ebx+7]
+    cmp ax,1
+    je c13_user
+;
     cmp ax,2
-    jne c13_default
+    je c13_os
 ;
+    jmp c13_default
+
+c13_user:
+    jmp LocalUserGate
+
+c13_os:
     jmp LocalOsGate
-
-c13_not_oscall:        
-    cmp al,66h
-    jne c13_default
-;
-    mov al,[ebx+1]
-    cmp al,9Ah
-    jne c13_default
-;
-    mov ax,[ebx+6]        
-    cmp ax,8
-    jae c13_default
-;    
-    push bx
-    mov bx,ax
-    add bx,bx
-    mov ax, word ptr cs:[bx].usercall_tab16
-    pop bx
-    or ax,ax
-    jz c13_default
-;
-    push OFFSET c13_check
-    push ax
-    retn        
-
-c13_check:      
-    jnc c13_retry
 
 c13_default:
     mov al,13

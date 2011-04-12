@@ -299,95 +299,6 @@ LocalOsGate:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           LocalOldOsGate
-;
-;       DESCRIPTION:    Translate old 16-bit gate
-;
-;       PARAMETERS:     DS:EBX          Fault address
-;                                               
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public LocalOldOsGate
-
-LocalOldOsGate PROC near
-    push es
-    push ecx
-    push edx
-    push di
-;
-    mov al,ds:[ebx]
-    cmp al,66h
-    je odo16_has_ov
-;
-    mov di,ds:[ebx+1]
-    jmp odo16_ov_done
-
-odo16_has_ov:
-    mov di,ds:[ebx+2]
-
-odo16_ov_done:    
-    shl di,4
-    mov ax,osgate_sel
-    mov es,ax
-;
-    push ebx
-    mov bx,ds
-    call LocalGetSelectorBaseSize
-    pop ebx
-    add     ebx,edx
-    mov ax,flat_sel
-    mov ds,ax
-;
-    mov ax,[bp].vm_eflags
-    mov [bp+12],ax
-    mov ax,[bp].vm_cs
-    mov [bp+16],ax
-    mov ax,[bp].vm_eip
-    add ax,8
-    mov [bp+14],ax  
-;
-    mov ax,es:[di].ogate_sel
-    cmp ax,[bp+16]
-    je odo16_direct
-;
-    mov ds:[ebx+3],ax
-    mov [bp+10],ax
-    mov eax,es:[di].ogate_offset
-    mov ds:[ebx+1],ax
-    mov [bp+8],ax
-    mov byte ptr ds:[ebx],9Ah
-    mov byte ptr ds:[ebx+5],90h
-    mov word ptr ds:[ebx+6],9090h
-    jmp odo16_direct_do
-
-odo16_direct:
-    mov [bp+10],ax
-    mov eax,es:[di].ogate_offset
-    mov [bp+8],ax
-    sub ax,[bp+14]
-    add ax,4
-    mov ds:[ebx+2],ax
-    mov word ptr ds:[ebx],0E80Eh
-    mov dword ptr ds:[ebx+4],90909090h
-
-odo16_direct_do:
-    pop di
-    pop edx
-    pop ecx
-    pop es
-;
-    mov ds,[bp].pm_ds
-    mov eax,[bp].vm_eax
-    mov ebx,[bp].vm_ebx
-    mov sp,bp
-    pop bp
-    add sp,6
-    iret
-LocalOldOsGate ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           LocalUserGate
 ;
 ;           DESCRIPTION:    Execute a 16-bit user-gate
@@ -398,13 +309,31 @@ LocalOldOsGate ENDP
 
     public LocalUserGate
 
-LocalUserGate   PROC near
+LocalUserGate:
+    sub sp,8
+;
     push es
     push ecx
     push edx
     push edi
 ;
-    mov edi,ds:[ebx+2]
+    mov ax,[bp].vm_bp
+    mov [bp-12],ax          ; save org bp to pm_call
+;
+    mov eax,[bp].vm_eax
+    mov [bp-16],eax         ; save org eax
+;    
+    mov eax,[bp].vm_eflags
+    push eax
+    mov eax,[bp].vm_cs
+    mov [bp+14],eax         ; old eflags
+    mov eax,[bp].vm_eip
+    add eax,9
+    mov [bp+10],eax         ; old cs
+    pop eax
+    mov [bp+6],eax          ; old eip
+;
+    mov edi,ds:[ebx+3]
     shl edi,5
     mov ax,usergate_sel
     mov es,ax
@@ -416,51 +345,32 @@ LocalUserGate   PROC near
     add     ebx,edx
     mov ax,flat_sel
     mov ds,ax
-
-do_call16_direct_to32:
-    mov ax,[bp].vm_eflags
-    mov [bp+8],ax
-    movzx eax,word ptr [bp].vm_cs
-    mov [bp+14],eax
-    movzx eax,word ptr [bp].vm_eip
-    add eax,8
-    mov [bp+10],eax 
 ;
     mov ax,es:[edi].ugate_entry_sel32
-    cmp ax,[bp+14]
-    je do_call16_direct_cs32
+    mov [bp+2],ax           ; old err
+    mov eax,es:[edi].ugate_entry_offset32
+    mov [bp-2],eax
 ;
-    mov ds:[ebx+6],ax
-    mov [bp+6],ax
     mov eax,es:[edi].ugate_entry_offset32
-    mov ds:[ebx+2],eax
-    mov [bp+4],ax
-    mov word ptr ds:[ebx],9A66h
-    jmp do_call16_direct_do32
-
-do_call16_direct_cs32:
-    mov [bp+6],ax
-    mov eax,es:[edi].ugate_entry_offset32
-    mov [bp+4],ax
-    sub eax,[bp+10]
-    mov ds:[ebx+4],eax
-    mov dword ptr ds:[ebx],0E8660E66h
-
-do_call16_direct_do32:
+    xchg eax,ds:[ebx+3]
+    mov ax,es:[edi].ugate_entry_sel32
+    xchg ax,ds:[ebx+7]
+    mov al,90h
+    xchg al,ds:[ebx]        
+;
     pop edi
     pop edx
     pop ecx
     pop es
 ;
     mov ds,[bp].pm_ds
-    mov eax,[bp].vm_eax
+    mov eax,[bp-16]
     mov ebx,[bp].vm_ebx
+    sub bp,12
     mov sp,bp
     pop bp
-    add sp,2
-    iret
-LocalUserGate   ENDP
-
+    add sp,8
+    iretd
 
 code    ENDS
 
