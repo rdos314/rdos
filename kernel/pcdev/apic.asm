@@ -128,7 +128,6 @@ mp_flags            DW ?
 mp_get_proc         DW ?
 
 mp_processor_sign   DD ?
-mp_apic             DD ?
 mp_proc             DW ?
 
 isa_redir_arr       DD 16 DUP(?,?)
@@ -415,14 +414,11 @@ ap_task_wait:
     mov ax,ds:mp_flags
     test ax,MP_FLAG_TASK
     jz ap_task_wait
-;        
-    GetApicId
-    mov ds:mp_apic,edx
 ;
     call InitApic
     sti
 
-stopl:
+ stopl:
     jmp stopl
         
     StartProcessor
