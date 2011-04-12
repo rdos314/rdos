@@ -418,8 +418,8 @@ ap_task_wait:
     call InitApic
     sti
 
- stopl:
-    jmp stopl
+; stopl:
+;    jmp stopl
         
     StartProcessor
 
