@@ -1250,7 +1250,7 @@ prot_exception32    PROC near
     push word ptr ds:[bx+4].app_pm_exc
     push ds:[bx].app_pm_exc
     push ax
-;
+;    
     mov ds,[bp].vm_ss
     mov ebx,[bp].vm_esp
 ;

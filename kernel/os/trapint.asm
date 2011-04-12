@@ -1302,14 +1302,14 @@ t13_not_int:
 ;
     mov al,[ebx+2]
     cmp al,9Ah
-    jne t13_retry
+    jne t13_default
 ;
     mov ax,[ebx+7]
     or ax,ax
-    jz t13_retry
+    jz t13_default
 ;
     cmp ax,3
-    ja t13_retry    
+    ja t13_default
 
 t13_int_call:
     push ds
@@ -1337,7 +1337,7 @@ t13_int_call:
 
 t13_not_kernel_call:    
     cmp al,9Ah
-    jne t13_not32
+    jne t13_default
 ;
     mov ax,[ebx+5]
     cmp ax,2
@@ -1351,12 +1351,6 @@ t13_not_kernel_call:
 ;
     call do_app_usercall32
     jmp t13_check
-
-t13_not32:
-    cmp al,66h
-    jne t13_default
-;
-    jmp t13_default
 
 t13_check:    
     jnc t13_end
@@ -1727,27 +1721,19 @@ pretask_kernel_gate:
     xchg al,ds:[ebx]
     pop edx
     pop ecx
-    jmp pretask_gpf_retry
+    jmp pretask_gpf_reexec
 
 pretask_gpf_not_oscall:    
     jmp pretask_gpf_default
 
-pretask_gpf_not32:
-    cmp al,66h
-    jne pretask_gpf_default
-;
-    jmp pretask_gpf_default
-
 pretask_gpf_check:      
-    jnc pretask_gpf_retry
+    jnc pretask_gpf_reexec
 
 pretask_gpf_default:
     mov al,13
     ShutDownPreTask
 
 pretask_gpf_reexec:
-
-pretask_gpf_retry:
     pop ds
     pop ebx
     pop eax
