@@ -418,9 +418,14 @@ ap_task_wait:
     call InitApic
     sti
 
-; stopl:
-;    jmp stopl
-        
+    GetApicId
+    cmp edx,2
+    je ap_start
+
+stopl:
+    jmp stopl
+
+ap_start:        
     StartProcessor
 
 apic_tab    DB 'APIC'
